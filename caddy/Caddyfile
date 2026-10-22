@@ -118,7 +118,15 @@
 
 	@ntfy host ntfy.{$DOMAIN}
 	handle @ntfy {
-		reverse_proxy localhost:8070
+		import theme ntfy
+		# ntfy's service worker serves "/" from a precached app.html; bump its
+		# revision so phones that installed it fetch the themed page again.
+		replace /sw.js {
+			"\",\"url\":\"app.html\"}" "-plint\",\"url\":\"app.html\"}"
+		}
+		reverse_proxy localhost:8070 {
+			header_up Accept-Encoding identity
+		}
 	}
 
 	@backup host backup.{$DOMAIN}
