@@ -3,16 +3,29 @@
 - logo:
     icon: /images/logo.svg
 
+- greeting:
+    text_size: 2xl
+    text: Plint
+
 - resources:
-    label: Plint
+    label: System
     cpu: true
     memory: true
     disk: /
     uptime: true
-    expanded: false
+
+# /storage is the disk BACKUP_PATH lives on (mounted read-only into homepage).
+- resources:
+    label: Storage
+    disk: /storage
 
 - datetime:
     text_size: xl
+    locale: en-GB
     format:
-      timeStyle: short
+      weekday: short
+      day: numeric
+      month: short
+      hour: 2-digit
+      minute: 2-digit
       hourCycle: h23

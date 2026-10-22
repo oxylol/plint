@@ -1,12 +1,19 @@
 ---
 # Plint · quiet links in the footer area
-- Admin:
+- Links:
     - Cloudflare:
-        - abbr: CF
+        - icon: cloudflare.png
           href: https://dash.cloudflare.com
+          description: Domain
     - Tailscale DNS:
-        - abbr: TS
+        - icon: tailscale-light.png
           href: https://login.tailscale.com/admin/dns
+          description: Tailnet
     - Repo:
-        - abbr: GH
+        - icon: github-light.png
           href: https://github.com/oxylol/plint
+          description: GitHub
+    - Claude:
+        - icon: claude-ai.png
+          href: https://claude.ai/code
+          description: Talk to Plint

@@ -28,9 +28,12 @@ layout:
   Everyday:
     style: row
     columns: 3
-  Network:
+  Health:
     style: row
     columns: 3
   System:
+    style: row
+    columns: 4
+  Links:
     style: row
     columns: 4

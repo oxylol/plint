@@ -63,6 +63,8 @@ services:
     volumes:
       - ../../dashboard:/app/config
       - ../../dashboard/images:/app/public/images:ro
+      # Only for the Storage gauge: the disk backups live on (Kopia's blobs are encrypted).
+      - ${BACKUP_PATH}:/storage:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:

@@ -30,10 +30,15 @@ kopia policy set --global \
   --keep-latest=3 --keep-hourly=0 --keep-daily=14 --keep-weekly=8 --keep-monthly=6 --keep-annual=0 \
   --snapshot-time=03:30 >/dev/null
 
+# The server only schedules sources that already have a snapshot, so each one
+# needs a first snapshot. `snapshot list` succeeds even when empty: check output.
+# It runs detached because AMP can be 100+ GB.
 for src in /sources/plint-data /sources/plint.env /sources/amp; do
   docker exec kopia test -e "$src" 2>/dev/null || continue
   kopia policy set "$src" --snapshot-time=03:30 >/dev/null 2>&1 || true
-  kopia snapshot list "$src" >/dev/null 2>&1 || kopia snapshot create "$src" >/dev/null 2>&1 || warn "first snapshot of $src failed; will retry tonight"
+  if [[ -z "$(kopia snapshot list "$src" 2>/dev/null)" ]]; then
+    docker exec -d kopia kopia snapshot create "$src" && say "First snapshot of $src started in the background"
+  fi
 done
 
 ok "Kopia ready at https://backup.${DOMAIN} (login: ${ADMIN_USER})"

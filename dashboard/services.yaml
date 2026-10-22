@@ -2,10 +2,11 @@
 # Plint · services on the home screen
 # Status dots come from Docker (container:) or a ping (siteMonitor:).
 # siteMonitor URLs go straight to the port, so they work even if DNS is down.
+# Cards with widgets live together in Health so every row keeps an even height.
 
 - Everyday:
     - Games:
-        icon: mdi-gamepad-variant
+        icon: amp.png
         href: https://games.{{HOMEPAGE_VAR_DOMAIN}}
         description: AMP · game servers
         siteMonitor: http://host.docker.internal:8080
@@ -13,18 +14,29 @@
     - Stremio:
         icon: stremio.png
         href: https://stremio.{{HOMEPAGE_VAR_DOMAIN}}
-        description: Streaming server
+        description: Movies & series
         server: plint
         container: stremio
 
+    - Notifications:
+        icon: ntfy.png
+        href: https://ntfy.{{HOMEPAGE_VAR_DOMAIN}}
+        description: ntfy · push to your phone
+        server: plint
+        container: ntfy
+
+- Health:
     - Status:
         icon: uptime-kuma.png
         href: https://status.{{HOMEPAGE_VAR_DOMAIN}}
-        description: Is everything up?
+        description: Uptime Kuma · checks every minute
         server: plint
         container: uptime-kuma
+        widget:
+          type: uptimekuma
+          url: https://status.{{HOMEPAGE_VAR_DOMAIN}}
+          slug: plint
 
-- Network:
     - AdGuard:
         icon: adguard-home.png
         href: https://dns.{{HOMEPAGE_VAR_DOMAIN}}
@@ -37,25 +49,27 @@
           username: "{{HOMEPAGE_VAR_ADMIN_USER}}"
           password: "{{HOMEPAGE_VAR_ADMIN_PASSWORD}}"
 
-    - Tailscale:
-        icon: tailscale.png
-        href: https://login.tailscale.com/admin/machines
-        description: Remote access
-        siteMonitor: http://host.docker.internal:9090
-
-    - Notifications:
-        icon: ntfy.png
-        href: https://ntfy.{{HOMEPAGE_VAR_DOMAIN}}
-        description: Push to your phone
+    - Backups:
+        icon: kopia.png
+        href: https://backup.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Kopia · game servers, nightly
         server: plint
-        container: ntfy
+        container: kopia
+        widget:
+          type: kopia
+          url: https://backup.{{HOMEPAGE_VAR_DOMAIN}}
+          username: "{{HOMEPAGE_VAR_ADMIN_USER}}"
+          password: "{{HOMEPAGE_VAR_ADMIN_PASSWORD}}"
+          snapshotHost: plint
+          snapshotPath: /sources/amp
 
 - System:
     - Host:
         icon: cockpit.png
         href: https://host.{{HOMEPAGE_VAR_DOMAIN}}
-        description: Cockpit · updates, disks, terminal
-        siteMonitor: http://host.docker.internal:9090
+        description: Cockpit · updates, disks
+        # Via Caddy: Cockpit's own HEAD reply trips Node's HTTP parser.
+        siteMonitor: https://host.{{HOMEPAGE_VAR_DOMAIN}}
 
     - Stacks:
         icon: dockge.png
@@ -67,13 +81,12 @@
     - Metrics:
         icon: beszel.png
         href: https://metrics.{{HOMEPAGE_VAR_DOMAIN}}
-        description: Beszel · CPU, memory, disk
+        description: Beszel · history
         server: plint
         container: beszel
 
-    - Backups:
-        icon: kopia.png
-        href: https://backup.{{HOMEPAGE_VAR_DOMAIN}}
-        description: Kopia · nightly snapshots
-        server: plint
-        container: kopia
+    # No dot here: Uptime Kuma pings the tailnet address instead.
+    - Tailscale:
+        icon: tailscale-light.png
+        href: https://login.tailscale.com/admin/machines
+        description: Remote access

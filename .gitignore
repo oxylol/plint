@@ -5,3 +5,7 @@ data/
 *.log
 .claude/settings.local.json
 stacks/*/compose.override.yaml
+
+# Homepage recreates these unused skeletons on start
+dashboard/kubernetes.yaml
+dashboard/proxmox.yaml
