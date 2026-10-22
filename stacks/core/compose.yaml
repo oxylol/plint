@@ -22,6 +22,7 @@ services:
       TZ: ${TZ}
     volumes:
       - ../../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../theme:/srv/_plint:ro
       - ../../data/caddy/data:/data
       - ../../data/caddy/config:/config
     healthcheck:

@@ -1,0 +1,199 @@
+/* ─────────────────────────────────────────────────────────────
+   Plint Soft UI · shared layer
+   Caddy injects this (plus apps/<app>.css and plint.js) into every
+   themed app. Tokens are prefixed --p- so they never collide with an
+   app's own variables. Light/dark follows the device.
+   ───────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: "Manrope";
+  src: url("/_plint/fonts/manrope.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/_plint/fonts/jetbrains-mono.woff2") format("woff2");
+  font-weight: 100 800;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+
+  --p-font: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --p-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --p-bg: #e4e9e5;          /* ground: everything sits on this */
+  --p-ink: #22302a;         /* moss: text */
+  --p-ink2: #56655d;        /* lichen: secondary text, still 5:1 */
+  --p-line: rgba(34, 48, 42, 0.1);
+  --p-hi: rgba(255, 255, 255, 0.92);   /* light shadow (top-left) */
+  --p-lo: rgba(146, 163, 152, 0.55);   /* dark shadow (bottom-right) */
+  --p-edge: rgba(255, 255, 255, 0.6);  /* hairline that catches the light */
+  --p-track: #d3dad5;       /* empty part of a gauge */
+  --p-accent: #3f6a53;      /* sage */
+  --p-accent-soft: rgba(63, 106, 83, 0.13);
+  --p-on-accent: #f2f6f3;
+  --p-warn: #8a5010;
+  --p-warn-soft: rgba(138, 80, 16, 0.12);
+  --p-bad: #a63d32;
+  --p-bad-soft: rgba(166, 61, 50, 0.12);
+  --p-info: #4a6585;
+  --p-info-soft: rgba(74, 101, 133, 0.13);
+
+  --p-raise: 9px 9px 20px var(--p-lo), -9px -9px 20px var(--p-hi);
+  --p-raise-sm: 4px 4px 10px var(--p-lo), -4px -4px 10px var(--p-hi);
+  --p-press: inset 6px 6px 12px var(--p-lo), inset -6px -6px 12px var(--p-hi);
+  --p-press-sm: inset 3px 3px 6px var(--p-lo), inset -3px -3px 6px var(--p-hi);
+
+  --p-r-lg: 26px;
+  --p-r: 18px;
+  --p-r-sm: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --p-bg: #1e2421;
+    --p-ink: #dde6e0;
+    --p-ink2: #9aa8a0;
+    --p-line: rgba(221, 230, 224, 0.08);
+    --p-hi: rgba(255, 255, 255, 0.05);
+    --p-lo: rgba(0, 0, 0, 0.5);
+    --p-edge: rgba(255, 255, 255, 0.04);
+    --p-track: #151a17;
+    --p-accent: #8ec3a4;
+    --p-accent-soft: rgba(142, 195, 164, 0.14);
+    --p-on-accent: #13201a;
+    --p-warn: #e0a458;
+    --p-warn-soft: rgba(224, 164, 88, 0.14);
+    --p-bad: #e5877b;
+    --p-bad-soft: rgba(229, 135, 123, 0.14);
+    --p-info: #93b0d6;
+    --p-info-soft: rgba(147, 176, 214, 0.14);
+  }
+}
+
+/* ── Plint pill: home · all apps · health ─────────────────────
+   plint.js mounts it inside each app's own header (or floats it). */
+
+#plint-pill {
+  all: initial;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 44px;
+  padding: 4px;
+  margin-right: 14px;
+  border-radius: 15px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise-sm);
+  border: 1px solid var(--p-edge);
+  font-family: var(--p-font);
+  color: var(--p-ink);
+  position: relative;
+  z-index: 2147483000;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+#plint-pill.plint-float {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  margin: 0;
+}
+#plint-pill * { box-sizing: border-box; font-family: inherit; }
+#plint-pill a, #plint-pill button {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  color: var(--p-ink);
+  font: 800 14px/1 var(--p-font);
+  transition: box-shadow 0.15s ease;
+}
+#plint-pill a:hover, #plint-pill button:hover { box-shadow: var(--p-raise-sm); }
+#plint-pill a:active, #plint-pill button:active,
+#plint-pill button[aria-expanded="true"] { box-shadow: var(--p-press-sm); }
+#plint-pill a:focus-visible, #plint-pill button:focus-visible {
+  outline: 2px solid var(--p-accent);
+  outline-offset: 2px;
+}
+#plint-pill .plint-home { padding: 0 10px 0 6px; }
+#plint-pill .plint-logo { width: 24px; height: 24px; flex: none; }
+#plint-pill .plint-logo rect { fill: var(--p-accent); }
+#plint-pill .plint-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--p-ink2);
+  flex: none;
+}
+#plint-pill .plint-dot.ok { background: var(--p-accent); }
+#plint-pill .plint-dot.warn { background: var(--p-warn); }
+#plint-pill .plint-dot.bad { background: var(--p-bad); }
+#plint-pill .plint-health { font: 700 13px/1 var(--p-font); font-variant-numeric: tabular-nums; color: var(--p-ink2); }
+#plint-pill svg.plint-ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+#plint-menu {
+  all: initial;
+  position: fixed;
+  z-index: 2147483001;
+  width: min(340px, calc(100vw - 24px));
+  padding: 14px;
+  border-radius: 22px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise), 0 18px 40px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--p-edge);
+  font-family: var(--p-font);
+  color: var(--p-ink);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+#plint-menu[hidden] { display: none; }
+#plint-menu a {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 4px 10px;
+  border-radius: 16px;
+  cursor: pointer;
+  color: var(--p-ink);
+  font: 700 12px/1.2 var(--p-font);
+  text-align: center;
+}
+#plint-menu a .plint-well {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--p-raise-sm);
+  color: var(--p-accent);
+}
+#plint-menu a:hover .plint-well { box-shadow: var(--p-press-sm); }
+#plint-menu a[aria-current="page"] .plint-well { box-shadow: var(--p-press-sm); }
+#plint-menu a:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 2px; }
+#plint-menu svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 600px) {
+  #plint-pill { margin-right: 8px; }
+  #plint-pill .plint-home span, #plint-pill .plint-health { display: none; }
+}
+
+/* ── shared infographic pieces (drawn by plint.js helpers) ── */
+.p-ring { display: block; overflow: visible; }
+.p-ring-track { fill: none; stroke: var(--p-track); }
+.p-ring-val { fill: none; stroke: var(--p-accent); transition: stroke-dasharray 0.6s ease; }
+.p-ring-val.p-info { stroke: var(--p-info); }
+.p-ring-val.p-warn { stroke: var(--p-warn); }
+.p-ring-val.p-bad { stroke: var(--p-bad); }

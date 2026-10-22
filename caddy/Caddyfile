@@ -27,10 +27,41 @@
 	}
 }
 
+# Plint Soft UI: serve /_plint/* from theme/ and slip the shared theme,
+# the app's own sheet and plint.js into every HTML page. Usage:
+#   import theme <app>         (app = the file name under theme/apps/)
+# The upstream must answer uncompressed so the page can be rewritten:
+#   reverse_proxy … { header_up Accept-Encoding identity }
+(theme) {
+	header /_plint/* Cache-Control "no-cache"
+	# Up/down for the Plint pill, from Uptime Kuma's public status page.
+	handle /_plint/health {
+		rewrite * /api/status-page/heartbeat/plint
+		reverse_proxy localhost:3001
+	}
+	handle /_plint/monitors {
+		rewrite * /api/status-page/plint
+		reverse_proxy localhost:3001
+	}
+	handle /_plint/* {
+		root * /srv
+		file_server
+	}
+	replace {
+		match {
+			header Content-Type text/html*
+		}
+		"</head>" "<link rel=\"stylesheet\" href=\"/_plint/plint.css\"><link rel=\"stylesheet\" href=\"/_plint/apps/{args[0]}.css\"><script src=\"/_plint/plint.js\" data-app=\"{args[0]}\" defer></script></head>"
+	}
+}
+
 # ── Home screen ──────────────────────────────────────────────
 {$DOMAIN}, dash.{$DOMAIN} {
 	import wildcard
-	reverse_proxy localhost:3100
+	import theme homepage
+	reverse_proxy localhost:3100 {
+		header_up Accept-Encoding identity
+	}
 }
 
 # ── One block for every subdomain ────────────────────────────

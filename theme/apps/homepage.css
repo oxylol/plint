@@ -1,0 +1,286 @@
+/* ─────────────────────────────────────────────────────────────
+   Plint Soft UI · Homepage (the home screen)
+   Homepage 2.x is Tailwind 4 in cascade layers, so these unlayered
+   rules win without !important. settings.yaml pins theme: dark, so
+   the dark: variants are always the active ones; the --color-* scale
+   below is remapped per device mode instead.
+   ───────────────────────────────────────────────────────────── */
+
+html.theme-zinc, html {
+  --color-50: 242 246 243;
+  --color-100: 34 48 42;
+  --color-200: 34 48 42;
+  --color-300: 86 101 93;
+  --color-400: 86 101 93;
+  --color-500: 86 101 93;
+  --color-600: 211 218 213;
+  --color-700: 211 218 213;
+  --color-800: 34 48 42;
+  --color-900: 211 218 213;
+  --color-logo-start: 63 106 83;
+  --color-logo-stop: 63 106 83;
+}
+@media (prefers-color-scheme: dark) {
+  html.theme-zinc, html {
+    --color-50: 19 32 26;
+    --color-100: 221 230 224;
+    --color-200: 221 230 224;
+    --color-300: 154 168 160;
+    --color-400: 154 168 160;
+    --color-500: 154 168 160;
+    --color-600: 21 26 23;
+    --color-700: 21 26 23;
+    --color-800: 221 230 224;
+    --color-900: 21 26 23;
+    --color-logo-start: 142 195 164;
+    --color-logo-stop: 142 195 164;
+  }
+}
+
+html, body, #__next, #page_wrapper, #inner_wrapper {
+  background: var(--p-bg);
+  color: var(--p-ink);
+  font-family: var(--p-font);
+  -webkit-font-smoothing: antialiased;
+}
+#background { display: none; }
+
+/* one centred column, 16px gutter on phones */
+#information-widgets, #layout-groups, #p-system, #footer {
+  width: calc(100% - 2rem);
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+#layout-groups { margin-top: 0; margin-bottom: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 0; }
+.services-group, .bookmark-group { padding: 0; margin: 0; }
+
+/* ── header: logo · title · greeting ─────────── health · time ── */
+#information-widgets { margin-top: 44px; margin-bottom: 0; padding: 0; }
+#widgets-wrap { align-items: center; justify-content: flex-start !important; gap: 14px 18px; }
+#widgets-wrap > div { margin: 0; }
+#widgets-wrap .resolved { margin: 0; }
+#widgets-wrap img[src$="logo.svg"] { display: none; }
+.p-logo {
+  width: 64px; height: 64px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 20px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise);
+  border: 1px solid var(--p-edge);
+  box-sizing: border-box;
+}
+.p-logo svg { width: 36px; height: 36px; }
+.p-logo rect { fill: var(--p-accent); }
+#widgets-wrap .text-2xl {
+  font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: -0.025em;
+  color: var(--p-ink); margin: 0;
+}
+.p-greet { display: block; font-size: 15px; font-weight: 600; color: var(--p-ink2); margin-top: 4px; letter-spacing: 0; }
+
+/* the resources widgets move into the System card (homepage.js) */
+#widgets-wrap > div:has(.resource-value) { display: none; }
+
+#information-widgets-right { margin: 0 0 0 auto !important; flex-grow: 0; gap: 14px; align-items: center; }
+.information-widget-datetime span {
+  display: inline-flex; align-items: center;
+  min-height: 44px; padding: 0 18px;
+  border-radius: 999px;
+  box-shadow: var(--p-press-sm);
+  font-size: 14px !important; font-weight: 700;
+  color: var(--p-ink2);
+}
+.p-healthpill {
+  display: inline-flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 18px;
+  border-radius: 999px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise-sm);
+  border: 1px solid var(--p-edge);
+  font: 700 14px/1 var(--p-font);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--p-ink);
+  text-decoration: none;
+}
+.p-healthpill i { width: 9px; height: 9px; border-radius: 50%; background: var(--p-ink2); }
+.p-healthpill.ok i { background: var(--p-accent); }
+.p-healthpill.warn i { background: var(--p-warn); }
+.p-healthpill.bad i { background: var(--p-bad); }
+
+/* ── System card: four rings + a few facts ──────────────────── */
+#p-system {
+  margin-top: 40px; margin-bottom: 44px;
+  box-sizing: border-box;
+  padding: 28px 32px;
+  border-radius: 32px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise);
+  border: 1px solid var(--p-edge);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 28px 32px;
+}
+#p-system .p-rings {
+  flex: 999 1 600px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 24px; justify-items: center;
+}
+.p-gauge { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.p-dial {
+  position: relative; width: 132px; height: 132px; border-radius: 50%;
+  background: var(--p-bg); box-shadow: var(--p-raise);
+  display: flex; align-items: center; justify-content: center;
+}
+.p-dial b {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.p-gauge strong { display: block; font-size: 15px; font-weight: 800; }
+.p-gauge small { display: block; font-size: 13px; color: var(--p-ink2); font-variant-numeric: tabular-nums; }
+#p-system .p-facts { flex: 1 1 220px; display: flex; flex-direction: column; gap: 12px; }
+.p-fact {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  min-height: 48px; padding: 0 18px;
+  border-radius: 16px; box-shadow: var(--p-press-sm);
+  font-size: 14px; font-weight: 700;
+}
+.p-fact span { color: var(--p-ink2); font-weight: 600; }
+.p-fact b { font-variant-numeric: tabular-nums; }
+
+/* ── groups ─────────────────────────────────────────────────── */
+.services-group > button, .bookmark-group > button { margin: 0 0 18px; padding: 0; cursor: default; }
+.services-group h2, .bookmark-group h2 {
+  font-size: 12px !important; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--p-ink2) !important; margin: 0;
+}
+.services-group > div > ul, .bookmark-group > div > ul { gap: 28px; padding: 4px 4px 22px; }
+.services-group > div, .bookmark-group > div { overflow: visible !important; }
+
+/* service cards */
+li.service { margin: 0; }
+li.service > div {
+  height: 100% !important;
+  margin: 0 !important;
+  border-radius: 26px !important;
+  background: var(--p-bg) !important;
+  box-shadow: var(--p-raise) !important;
+  border: 1px solid var(--p-edge);
+  padding: 8px;
+  transition: transform 0.18s ease;
+  --tw-inset-ring-shadow: 0 0 #0000;
+}
+li.service > div:hover { transform: translateY(-2px); }
+li.service > div:active { box-shadow: var(--p-press) !important; transform: none; }
+.service-title { position: relative; align-items: center; min-height: 64px; }
+.service-title > a:first-child { padding: 6px 8px 6px 8px; }
+.service-title > a:first-child img { display: none; }
+.p-well {
+  width: 52px; height: 52px; border-radius: 18px; flex: none;
+  box-shadow: var(--p-press-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--p-accent);
+}
+.p-well svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.service-title .text-sm { font-size: 17px !important; font-weight: 800; color: var(--p-ink); padding-left: 8px; }
+.service-title .text-sm p { font-size: 13px !important; font-weight: 500 !important; color: var(--p-ink2) !important; margin-top: 2px; }
+.service-title .absolute.top-0.right-0 { top: 50%; transform: translateY(-50%); right: 14px; }
+.service-title .absolute.top-0.right-0 > * { padding: 10px !important; }
+.service-title .h-3.w-3 { width: 10px; height: 10px; }
+.bg-emerald-500 { background: var(--p-accent) !important; }
+.bg-rose-500, .bg-red-500 { background: var(--p-bad) !important; }
+.bg-orange-400, .bg-orange-500, .bg-amber-500, .bg-yellow-500 { background: var(--p-warn) !important; }
+
+/* widget blocks under a card: small pressed tiles */
+li.service .relative.flex.flex-row.w-full { gap: 10px; padding: 8px 8px 8px; flex-wrap: wrap; }
+li.service .relative.flex.flex-row.w-full > div {
+  margin: 0 !important; flex: 1 1 0; min-width: 70px;
+  padding: 12px 8px !important;
+  border-radius: 16px !important;
+  background: transparent !important;
+  box-shadow: var(--p-press-sm);
+}
+.service-block-value { white-space: nowrap; font-size: 17px !important; font-weight: 800 !important; font-variant-numeric: tabular-nums; color: var(--p-ink); }
+.service-block-label { font-size: 11px !important; font-weight: 700 !important; letter-spacing: 0.08em; color: var(--p-ink2); margin-top: 2px; }
+
+/* container-stats drawer */
+li.service .max-h-0 + * , li.service [class*="max-h-"] { border-radius: 16px; }
+
+/* ── Status card: one strip per check (homepage.js) ─────────── */
+.p-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px 18px; padding: 4px 12px 12px; }
+.p-check { display: grid; grid-template-columns: 74px 1fr; align-items: center; gap: 8px; min-width: 0; }
+.p-check span { font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-strip { display: flex; gap: 2px; height: 14px; }
+.p-strip i { flex: 1 1 0; min-width: 2px; border-radius: 2px; background: var(--p-accent); }
+.p-strip i.s2 { background: var(--p-warn); }
+.p-strip i.s0 { background: var(--p-bad); }
+.p-strip i.sx { background: var(--p-track); }
+
+/* ── AdGuard card: blocked-share ring (homepage.js) ─────────── */
+.p-split { display: flex; align-items: center; gap: 22px; padding: 6px 12px 12px; }
+.p-split .p-dial { width: 112px; height: 112px; box-shadow: var(--p-press); background: transparent; flex: none; }
+.p-split .p-dial b { font-size: 21px; flex-direction: column; line-height: 1.05; }
+.p-split .p-dial b small { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--p-ink2); }
+.p-split dl { margin: 0; display: grid; grid-template-columns: auto auto; gap: 6px 16px; align-content: center; }
+.p-split dt { font-size: 12px; color: var(--p-ink2); align-self: center; }
+.p-split dd { margin: 0; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+li.service.p-has-split .relative.flex.flex-row.w-full { display: none; }
+li.service.p-has-checks .relative.flex.flex-row.w-full { display: none; }
+
+/* ── bookmarks ──────────────────────────────────────────────── */
+li.bookmark > a {
+  border-radius: 18px !important;
+  background: var(--p-bg) !important;
+  box-shadow: var(--p-raise-sm) !important;
+  border: 1px solid var(--p-edge);
+  min-height: 52px; display: flex; align-items: center;
+  padding: 0 10px;
+  margin: 0 !important;
+}
+li.bookmark > a:active { box-shadow: var(--p-press-sm) !important; }
+.bookmark-name { font-size: 14px !important; font-weight: 700; color: var(--p-ink); }
+li.bookmark .truncate { font-size: 13px; color: var(--p-ink2); }
+li.bookmark img { display: none; }
+li.bookmark .shrink-0.w-5.h-5 { display: none; }
+.p-mark {
+  width: 36px; height: 36px; border-radius: 12px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--p-press-sm); color: var(--p-accent);
+}
+.p-mark svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── footer, search dialog ──────────────────────────────────── */
+#footer { padding: 24px 0 40px; }
+#revalidate { box-shadow: var(--p-raise-sm); background: var(--p-bg); padding: 10px; border-radius: 50%; color: var(--p-ink2); }
+dialog { background: var(--p-bg) !important; border-radius: 22px !important; box-shadow: var(--p-raise) !important; color: var(--p-ink) !important; }
+dialog input { background: transparent !important; box-shadow: var(--p-press-sm); border: 0 !important; border-radius: 16px !important; color: var(--p-ink) !important; }
+
+/* ── phones: compact two-up tiles for the plain cards ───────── */
+@media (max-width: 640px) {
+  #information-widgets { margin-top: 24px; }
+  #widgets-wrap { flex-wrap: nowrap !important; }
+  .p-logo { width: 52px; height: 52px; border-radius: 17px; }
+  .p-logo svg { width: 30px; height: 30px; }
+  #widgets-wrap .text-2xl { font-size: 26px; }
+  .p-greet { font-size: 13px; }
+  #information-widgets-right { margin: 0 0 0 auto; }
+  .information-widget-datetime { display: none !important; }
+  .p-healthpill { padding: 0 14px; }
+  #p-system { padding: 22px 16px; border-radius: 28px; margin: 28px auto 32px; }
+  #p-system .p-rings { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 10px; flex-basis: 100%; }
+  .p-dial { width: 112px; height: 112px; }
+  .p-dial svg { width: 96px; height: 96px; }
+  .p-dial b { font-size: 22px; }
+  #layout-groups { gap: 28px; }
+  .services-group > div > ul { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 16px; }
+  li.service.p-wide { grid-column: 1 / -1; }
+  li.service:not(.p-wide) .service-title { flex-direction: column; align-items: flex-start; min-height: 0; }
+  li.service:not(.p-wide) .service-title > a:first-child { padding: 6px; }
+  li.service:not(.p-wide) .service-title .text-sm { padding: 4px 6px 6px; font-size: 15px !important; }
+  li.service:not(.p-wide) .service-title .text-sm p { font-size: 12px !important; }
+  li.service:not(.p-wide) .service-title .absolute.top-0.right-0 { top: 0; transform: none; right: 0; }
+  li.service .relative.flex.flex-row.w-full > div { flex: 1 1 calc(50% - 10px); }
+  .p-healthpill { gap: 8px; }
+  .p-well { width: 44px; height: 44px; border-radius: 15px; }
+  .p-well svg { width: 20px; height: 20px; }
+  .bookmark-group > div > ul { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px; }
+  li.bookmark .truncate { display: none; }
+}

@@ -4,6 +4,8 @@ title: Plint
 description: Home
 favicon: /images/favicon.svg
 
+# Keep dark: Plint Soft UI (theme/apps/homepage.css) remaps Homepage's colour
+# scale for light and dark itself, keyed off the device setting.
 theme: dark
 color: zinc
 headerStyle: clean
@@ -13,10 +15,6 @@ hideVersion: true
 disableCollapse: true
 iconStyle: theme
 useEqualHeights: true
-
-background:
-  image: /images/wallpaper.svg
-  opacity: 100
 
 quicklaunch:
   searchDescriptions: true
