@@ -135,6 +135,7 @@ systemctl enable --now cockpit.socket >/dev/null
 ok "cockpit on :9090 → https://host.${DOMAIN}"
 
 # ── 6. Stacks ────────────────────────────────────────────────
+"${PLINT_DIR}/scripts/cleanup.sh"
 step "Stacks"
 for s in core ops media; do ln -sf "${PLINT_ENV}" "${PLINT_DIR}/stacks/${s}/.env"; done
 say "building Caddy (first time takes a minute)"
