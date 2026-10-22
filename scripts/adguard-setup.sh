@@ -79,7 +79,7 @@ json "${AUTH[@]}" -X POST "$AG/control/filtering/config" \
 json "${AUTH[@]}" -X POST "$AG/control/filtering/refresh" -d '{"whitelist":false}' >/dev/null || true
 
 # ── Safe browsing on, parental off, query log 30 days ────────
-json "${AUTH[@]}" -X POST "$AG/control/safebrowsing/enable" >/dev/null || true
+curl -fsS "${AUTH[@]}" -X POST "$AG/control/safebrowsing/enable" >/dev/null || true
 json "${AUTH[@]}" -X PUT "$AG/control/querylog/config/update" \
   -d '{"enabled":true,"interval":2592000000,"anonymize_client_ip":false}' >/dev/null || true
 json "${AUTH[@]}" -X PUT "$AG/control/stats/config/update" \
