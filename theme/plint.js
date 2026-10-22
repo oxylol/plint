@@ -61,7 +61,7 @@
     adguard: [".header .header__container", ".header"],
     kuma: ["header"],
     dockge: ["header"],
-    beszel: ["#app > div > div:first-child nav", "nav"],
+    beszel: ["#app > div > .container:first-child > div"],
     kopia: [".navbar", "nav"],
     ntfy: ["header .MuiToolbar-root"],
     cockpit: [".masthead-toolbar", "#topnav", "nav"]
@@ -141,7 +141,10 @@
     // apps/<app>.js may set Plint.mount = [selectors] to override the table.
     var sels = window.Plint.mount || MOUNT[app] || [];
     for (var i = 0; i < sels.length; i++) {
-      var t = document.querySelector(sels[i]);
+      // Never mount inside our own menu (it is a <nav> too).
+      var t = Array.prototype.filter.call(document.querySelectorAll(sels[i]), function (n) {
+        return n !== menu && !menu.contains(n) && !pill.contains(n);
+      })[0];
       if (t) {
         if (pill.parentNode !== t || t.firstChild !== pill) {
           pill.classList.remove("plint-float");

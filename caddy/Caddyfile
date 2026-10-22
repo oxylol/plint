@@ -102,7 +102,10 @@
 
 	@metrics host metrics.{$DOMAIN}
 	handle @metrics {
-		reverse_proxy localhost:8090
+		import theme beszel
+		reverse_proxy localhost:8090 {
+			header_up Accept-Encoding identity
+		}
 	}
 
 	@status host status.{$DOMAIN}

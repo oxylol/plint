@@ -19,7 +19,9 @@
 
   var MARK = { Cloudflare: "cloud", "Tailscale DNS": "tailscale", Repo: "code", Claude: "chat" };
 
-  function set(node, html) { if (node && node.innerHTML !== html) node.innerHTML = html; }
+  // Compare with what we last wrote: the browser re-serialises innerHTML
+  // (<circle/> → <circle></circle>), so comparing against it never matches.
+  function set(node, html) { if (node && node.__plintHtml !== html) { node.__plintHtml = html; node.innerHTML = html; } }
   function q(sel, root) { return (root || document).querySelector(sel); }
   function qa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   function nameOf(li) {
