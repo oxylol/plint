@@ -91,6 +91,7 @@ plint doctor          DNS, certs, ports, tailscale — all green?
 plint logs stremio    follow a container
 plint update          refresh containers (add --os for apt as well)
 plint backup          snapshot now
+plint game            AMP game servers · plint game start|stop nissesky
 plint claude          attach to Claude on the box (Ctrl+B then D to leave)
 ```
 

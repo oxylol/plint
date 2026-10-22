@@ -11,7 +11,7 @@ app; they are usually on a phone, so keep answers short and lead with the result
 ```
 /opt/plint
 ├── install.sh          one-shot bootstrap (idempotent)
-├── bin/plint           the CLI: status · up/down/restart · logs · sync · update · backup · doctor · claude · notify
+├── bin/plint           the CLI: status · up/down/restart · logs · sync · update · backup · doctor · claude · notify · game
 ├── .env                secrets + detected values (DOMAIN, SERVER_IP, tokens). Never commit. Never print.
 ├── stacks/
 │   ├── core/           caddy · adguard · homepage · socket-proxy · dockge
@@ -57,7 +57,10 @@ host network and proxies to `localhost:<port>`:
   `dashboard/services.yaml`. Then `plint sync`. AdGuard's wildcard rewrite already covers
   the new name.
 - **Update**: `plint update` (containers) · `plint update --os` (also apt). Never update
-  AMP or restart game servers while players are online; check `ampinstmgr status` and ask.
+  AMP or restart game servers while players are online; check `plint game` and ask.
+- **Game servers**: `plint game` lists AMP servers (running? port, connections);
+  `plint game start|stop <name>` (name or prefix, e.g. `nissesky`). Stop refuses while
+  players are connected unless `--force`. `ampinstmgr` alone only starts the *panels*.
 - **Backups**: nightly 03:30 via Kopia to `BACKUP_PATH`. `plint backup` snapshots now.
 - **Notify Filip**: `plint notify "message"` (ntfy → phone). Use it when you finish
   something he asked for while away, or when something needs a decision.

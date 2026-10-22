@@ -11,6 +11,7 @@
 #    plint doctor            check DNS, certs, ports, tailscale
 #    plint claude            attach to Claude on the box (Ctrl+B, D to leave)
 #    plint notify "msg"      push a message to your phone
+#    plint game [start|stop <name>]   AMP game servers (list · start · stop)
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
 PLINT_DIR="${PLINT_DIR:-/opt/plint}"
@@ -19,7 +20,7 @@ source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
 STACKS=(core ops media)
-usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media) echo "$1";; *) die "unknown stack: $1";; esac; }
 
@@ -37,7 +38,7 @@ cmd_status() {
     printf '%s %-14s %-12s %s\n' "$dot$C_RESET" "${svc%.socket}" "$st" "$(url_for "$svc")"
   done
   if id amp >/dev/null 2>&1; then
-    local n; n="$(sudo -u amp -H ampinstmgr status 2>/dev/null | grep -c 'Running' || true)"
+    local n; n="$(amp_running | wc -l)"
     printf '%s %-14s %-12s %s\n' "$C_GREEN●$C_RESET" "amp" "${n} running" "https://games.${DOMAIN:-}"
   fi
   printf '\n%s' "$C_DIM"
@@ -62,6 +63,141 @@ url_for() {
     plint-claude) echo "claude.ai/code → Plint";;
     *) echo "";;
   esac
+}
+
+# ── AMP game servers ─────────────────────────────────────────
+# ampinstmgr only starts/stops instance *panels*; a game server is the child process of
+# its instance's AMP process. With no API login on the box, start/stop flips the
+# instance's AMP.AppStartupMode for one panel restart, then puts it back
+# (values: DoNothing · StartApplication · UpdateApplication · UpdateAndStart).
+AMP_INSTANCES="$(getent passwd amp 2>/dev/null | cut -d: -f6)/.ampdata/instances"
+amp() { sudo -u amp -H "$@"; }
+
+amp_table() {   # instance|friendly name|module
+  amp ampinstmgr status 2>/dev/null | awk -F'│' 'NF >= 6 && $1 !~ /Instance Name/ {
+    for (i = 1; i <= 3; i++) gsub(/^ +| +$/, "", $i); print $1 "|" $2 "|" $3 }'
+}
+
+amp_running() {   # instances whose game server is up
+  local pid exe
+  while read -r pid exe; do
+    pgrep -P "$pid" >/dev/null && basename "$(dirname "$exe")"
+  done < <(ps -u amp -o pid=,args= | awk '$2 ~ /\/instances\/[^\/]+\/AMP_Linux_x86_64$/ {print $1, $2}')
+  return 0
+}
+
+amp_server_pid() {
+  local p; p="$(ps -u amp -o pid=,args= | awk -v exe="$AMP_INSTANCES/$1/AMP_Linux_x86_64" '$2 == exe {print $1; exit}')"
+  [[ -n "$p" ]] && pgrep -P "$p" | head -n1
+  return 0
+}
+
+amp_ports() { sudo ss -Hltnp | awk -v p="pid=$1," 'index($0, p) {n = split($4, a, ":"); print a[n]}' | sort -un; }
+
+amp_players() {   # inbound, non-loopback TCP connections to the server's listening ports
+  local ports; ports=" $(amp_ports "$1" | tr '\n' ' ')"
+  sudo ss -Htn state established | awk -v ports="$ports" '$4 !~ /^(127\.|\[::1\]|\[::ffff:127\.)/ {
+    n = split($3, a, ":"); if (index(ports, " " a[n] " ")) c++ } END {print c + 0}'
+}
+
+amp_resolve() {   # Nissesky01 · nissesky · "nisse sky" → Nissesky01
+  local q="${1,,}" inst name module hits=()
+  q="${q// /}"
+  [[ -n "$q" ]] || die "which server? see: plint game"
+  while IFS='|' read -r inst name module; do
+    [[ "$module" == ADS ]] && continue
+    name="${name,,}"; name="${name// /}"
+    if [[ "${inst,,}" == "$q" || "$name" == "$q" ]]; then echo "$inst"; return; fi
+    [[ "${inst,,}" == "$q"* || "$name" == "$q"* ]] && hits+=("$inst")
+  done < <(amp_table)
+  (( ${#hits[@]} == 1 )) || die "no single server matches '$1' — see: plint game"
+  echo "${hits[0]}"
+}
+
+amp_mode() {   # amp_mode <instance> [mode]: print the startup mode, or set it
+  local conf="$AMP_INSTANCES/$1/AMPConfig.conf"
+  if [[ -n "${2:-}" ]]; then amp sed -i "s/^AMP\.AppStartupMode=.*/AMP.AppStartupMode=$2/" "$conf"
+  else amp sed -n 's/^AMP\.AppStartupMode=//p' "$conf"; fi
+}
+
+amp_log() { amp bash -c 'ls -t "$1"/AMP_Logs/*.log 2>/dev/null | head -n1' _ "$AMP_INSTANCES/$1"; }
+
+amp_bounce() {   # restart the instance's panel under a one-off startup mode
+  local inst="$1" was before log out i
+  was="$(amp_mode "$inst")"
+  [[ -n "$was" ]] || die "no AMP.AppStartupMode in $inst's AMPConfig.conf"
+  before="$(amp_log "$inst")"
+  trap 'amp_mode "'"$inst"'" "'"$was"'"' EXIT
+  amp_mode "$inst" "$2"
+  out="$(amp ampinstmgr -r "$inst" 2>&1)" || { printf '%s\n' "$out" >&2; die "ampinstmgr couldn't restart $inst"; }
+  # ampinstmgr returns before AMP reads the mode: wait for the new panel's webserver first
+  for i in $(seq 1 60); do
+    log="$(amp_log "$inst")"
+    [[ "$log" != "$before" ]] && amp grep -q "Webserver started" "$log" && break
+    sleep 1
+  done
+  sleep 5
+  amp_mode "$inst" "$was"; trap - EXIT
+}
+
+cmd_game() {
+  case "${1:-list}" in
+    list) cmd_game_list;;
+    start|stop) local c="$1"; shift; "cmd_game_$c" "$@";;
+    *) die "plint game [start|stop <name>]";;
+  esac
+}
+
+cmd_game_list() {
+  printf '%-16s %-16s %s\n' "INSTANCE" "NAME" "SERVER"
+  local inst name module pid ports
+  while IFS='|' read -r inst name module; do
+    [[ "$module" == ADS ]] && continue
+    pid="$(amp_server_pid "$inst")"
+    if [[ -n "$pid" ]]; then
+      ports="$(amp_ports "$pid" | sed 's/^/:/' | paste -sd' ')"
+      printf '%s %-14s %-16s %s\n' "$C_GREEN●$C_RESET" "$inst" "$name" "running ${ports:-(starting)} · $(amp_players "$pid") connected"
+    else
+      printf '%s %-14s %-16s %s\n' "$C_DIM●$C_RESET" "$inst" "$name" "stopped"
+    fi
+  done < <(amp_table)
+}
+
+cmd_game_start() {
+  local inst pid ports="" ready=0 i
+  inst="$(amp_resolve "$*")"
+  [[ -z "$(amp_server_pid "$inst")" ]] || { ok "$inst is already running"; return; }
+  say "starting $inst"
+  amp_bounce "$inst" StartApplication
+  for i in $(seq 1 150); do   # modpacks take a while
+    pid="$(amp_server_pid "$inst")"
+    [[ -n "$pid" ]] && ports="$(amp_ports "$pid" | paste -sd' ')"
+    if [[ -n "$ports" ]]; then
+      # Minecraft opens its port before the world loads; "Done (" means joinable
+      if ! amp test -f "$AMP_INSTANCES/$inst/MinecraftModule.kvp" || amp grep -q ']: Done (' "$(amp_log "$inst")"; then
+        ready=1; break
+      fi
+    fi
+    sleep 2
+  done
+  [[ -n "${pid:-}" ]] || die "$inst's panel is up but its server didn't start — check https://games.${DOMAIN:-}"
+  (( ready )) || { warn "$inst is running but still loading after 5 min"; return; }
+  ok "$inst is up on port $ports"
+}
+
+cmd_game_stop() {
+  local inst pid n i a force=0 args=()
+  for a in "$@"; do [[ "$a" == --force ]] && force=1 || args+=("$a"); done
+  inst="$(amp_resolve "${args[*]}")"
+  pid="$(amp_server_pid "$inst")"
+  [[ -n "$pid" ]] || { ok "$inst isn't running"; return; }
+  n="$(amp_players "$pid")"
+  (( n == 0 || force )) || die "$inst has $n player connection(s) — add --force to stop anyway"
+  say "stopping $inst"
+  amp_bounce "$inst" DoNothing
+  for i in $(seq 1 30); do [[ -z "$(amp_server_pid "$inst")" ]] && break; sleep 2; done
+  [[ -z "$(amp_server_pid "$inst")" ]] || die "$inst's server is still running"
+  ok "$inst stopped"
 }
 
 cmd_up()      { for s in $(stacks_for "${1:-all}"); do say "up $s"; compose "$s" up -d --remove-orphans; done; }
@@ -134,7 +270,7 @@ cmd_notify() { "$PLINT_DIR/scripts/notify.sh" "Plint" "$*"; ok "sent"; }
 
 case "${1:-}" in
   status|"") cmd_status;;
-  up|down|restart|logs|sync|update|backup|doctor|claude|notify) c="$1"; shift; "cmd_$c" "$@";;
+  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game) c="$1"; shift; "cmd_$c" "$@";;
   -h|--help|help) usage;;
   *) usage 1;;
 esac
