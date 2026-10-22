@@ -214,6 +214,16 @@ cmd_sync() {
   if [[ "$before" == "$after" ]]; then ok "already up to date ($after)"; else ok "$before → $after"; fi
   for s in "${STACKS[@]}"; do compose "$s" up -d --remove-orphans --build; done
   docker exec caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 || true
+  local u units=0
+  for u in plint-theme-data.service plint-theme-data.timer; do
+    if ! cmp -s "$PLINT_DIR/systemd/$u" "/etc/systemd/system/$u"; then
+      install -m 0644 "$PLINT_DIR/systemd/$u" /etc/systemd/system/
+      units=1
+    fi
+  done
+  if (( units )); then
+    systemctl daemon-reload && systemctl enable --now plint-theme-data.timer >/dev/null
+  fi
   if ! cmp -s "$PLINT_DIR/systemd/plint-claude.service" /etc/systemd/system/plint-claude.service; then
     install -m 0644 "$PLINT_DIR/systemd/plint-claude.service" /etc/systemd/system/
     systemctl daemon-reload && systemctl restart plint-claude

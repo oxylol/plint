@@ -1,0 +1,10 @@
+[Unit]
+Description=Plint · refresh Soft UI data hourly (and after the 03:30 backup)
+
+[Timer]
+OnBootSec=2min
+OnCalendar=*-*-* *:45:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

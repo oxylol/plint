@@ -225,6 +225,15 @@ li.service .max-h-0 + * , li.service [class*="max-h-"] { border-radius: 16px; }
 li.service.p-has-split .relative.flex.flex-row.w-full { display: none; }
 li.service.p-has-checks .relative.flex.flex-row.w-full { display: none; }
 
+/* ── Backups card: a dot per night (homepage.js) ───────────── */
+.p-nights { display: flex; flex-direction: column; gap: 8px; padding: 4px 12px 12px; }
+.p-nights-cap { font-size: 12px; color: var(--p-ink2); }
+.p-nights-grid { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 5px; }
+.p-nights-grid i { aspect-ratio: 1; border-radius: 5px; background: var(--p-accent); }
+.p-nights-grid i.miss { background: var(--p-warn); }
+.p-nights-grid i.next { background: var(--p-bg); box-shadow: var(--p-press-sm); }
+.p-nights-grid i.pre { background: var(--p-track); }
+
 /* ── bookmarks ──────────────────────────────────────────────── */
 li.bookmark > a {
   border-radius: 18px !important;

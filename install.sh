@@ -150,6 +150,11 @@ ok "core · ops · media are up"
 "${PLINT_DIR}/scripts/ntfy-setup.sh"
 "${PLINT_DIR}/scripts/kopia-setup.sh"
 
+# Soft UI data (backup history for the home screen), refreshed hourly.
+install -m 0644 "${PLINT_DIR}/systemd/plint-theme-data.service" "${PLINT_DIR}/systemd/plint-theme-data.timer" /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now plint-theme-data.timer >/dev/null
+
 # ── 7. Tailscale ─────────────────────────────────────────────
 if (( ! SKIP_TS )); then
   step "Tailscale"

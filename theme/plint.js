@@ -86,7 +86,7 @@
   }
   function fmt(n) { return Number(n).toLocaleString("en-GB"); }
 
-  window.Plint = { app: app, base: base, url: url, icon: icon, ring: ring, el: el, esc: esc, fmt: fmt, health: null };
+  window.Plint = { app: app, base: base, url: url, icon: icon, ring: ring, el: el, esc: esc, fmt: fmt, health: null, mount: null };
 
   // ── per-app extras (also inside Cockpit's iframes) ──────────
   if (app) {
@@ -138,7 +138,8 @@
   function place() {
     if (!document.body) return;
     if (!menu.isConnected) document.body.appendChild(menu);
-    var sels = MOUNT[app] || [];
+    // apps/<app>.js may set Plint.mount = [selectors] to override the table.
+    var sels = window.Plint.mount || MOUNT[app] || [];
     for (var i = 0; i < sels.length; i++) {
       var t = document.querySelector(sels[i]);
       if (t) {

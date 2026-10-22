@@ -43,6 +43,12 @@
 		rewrite * /api/status-page/plint
 		reverse_proxy localhost:3001
 	}
+	# Exported by scripts/theme-data.sh (backup history and the like).
+	handle /_plint/data/* {
+		uri strip_prefix /_plint/data
+		root * /srv/plint-data
+		file_server
+	}
 	handle /_plint/* {
 		root * /srv
 		file_server

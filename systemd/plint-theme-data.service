@@ -1,0 +1,8 @@
+[Unit]
+Description=Plint · export data for the Soft UI infographics
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/plint/scripts/theme-data.sh

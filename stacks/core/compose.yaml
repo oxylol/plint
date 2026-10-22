@@ -23,6 +23,7 @@ services:
     volumes:
       - ../../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ../../theme:/srv/_plint:ro
+      - ../../data/theme:/srv/plint-data:ro
       - ../../data/caddy/data:/data
       - ../../data/caddy/config:/config
     healthcheck:

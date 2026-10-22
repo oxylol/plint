@@ -33,7 +33,7 @@
   function num(s) { return parseFloat(String(s).replace(/[^0-9.]/g, "")) || 0; }
 
   // ── data ────────────────────────────────────────────────────
-  var res = {}, kuma = { names: null, beats: null };
+  var res = {}, kuma = { names: null, beats: null }, backups = null;
 
   function get(u) { return fetch(u, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
   function loadResources() {
@@ -57,6 +57,13 @@
       }
       if (r[1] && r[1].heartbeatList) kuma.beats = r[1].heartbeatList;
       decorate();
+    });
+  }
+
+  // Kopia snapshot history, exported hourly by scripts/theme-data.sh.
+  function loadBackups() {
+    get("/_plint/data/backups.json").then(function (d) {
+      if (d && d.snapshots) { backups = d.snapshots; decorate(); }
     });
   }
 
@@ -152,6 +159,7 @@
       if (hasBlocks !== li.classList.contains("p-wide")) li.classList.toggle("p-wide", hasBlocks);
       if (name === "Status") checks(li);
       if (name === "AdGuard") adguard(li);
+      if (name === "Backups") nights(li);
     });
   }
 
@@ -190,6 +198,35 @@
       "<dl><dt>Queries</dt><dd>" + P.fmt(queries) + "</dd><dt>Blocked</dt><dd>" + P.fmt(blocked) + "</dd><dt>Answer time</dt><dd>" + P.esc(latency.replace(/(\.\d)\d+/, "$1")) + "</dd></dl>");
   }
 
+  // One dot per night for the last four weeks: sage = a snapshot ran,
+  // amber = missed, hollow = tonight (not run yet), faint = before the first one.
+  function nights(li) {
+    if (!backups) return;
+    var box = q(".p-nights", li);
+    if (!box) { box = P.el("div", "p-nights"); li.firstElementChild.appendChild(box); }
+    var ran = {}, first = null;
+    backups.forEach(function (s) {
+      var d = new Date(s.start);
+      if (isNaN(d)) return;
+      ran[d.toDateString()] = true;
+      if (!first || d < first) first = d;
+    });
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var firstDay = first ? new Date(first.getFullYear(), first.getMonth(), first.getDate()) : null;
+    var ok = 0, miss = 0, cells = "";
+    for (var i = 27; i >= 0; i--) {
+      var d = new Date(today); d.setDate(today.getDate() - i);
+      var cls;
+      if (ran[d.toDateString()]) { cls = "ok"; ok++; }
+      else if (i === 0) cls = "next";
+      else if (firstDay && d >= firstDay) { cls = "miss"; miss++; }
+      else cls = "pre";
+      cells += '<i class="' + cls + '" title="' + d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) + '"></i>';
+    }
+    var label = "Backups, last 28 nights: " + ok + " ran" + (miss ? ", " + miss + " missed" : "") + (ran[today.toDateString()] ? "" : ", tonight still to run");
+    set(box, '<span class="p-nights-cap">Last 4 weeks</span><div class="p-nights-grid" role="img" aria-label="' + P.esc(label) + '">' + cells + "</div>");
+  }
+
   // ── run ─────────────────────────────────────────────────────
   var busy = false;
   function decorate() {
@@ -205,7 +242,8 @@
   }
   function start() {
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, characterData: true });
-    loadResources(); loadKuma();
+    loadResources(); loadKuma(); loadBackups();
+    setInterval(loadBackups, 600000);
     setInterval(loadResources, 15000);
     setInterval(loadKuma, 60000);
     decorate();
