@@ -18,7 +18,8 @@ app; they are usually on a phone, so keep answers short and lead with the result
 │   ├── ops/            beszel (+agent) · uptime-kuma · ntfy · kopia
 │   └── media/          stremio
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
-├── dashboard/          Homepage config (services/widgets/settings/custom.css/images)
+├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
+├── dashboard/          Homepage config (services/widgets/settings/images)
 ├── systemd/            plint-claude.service, cockpit.conf, resolved + sysctl + apt drop-ins
 ├── scripts/            setup scripts (adguard, beszel, ntfy, kopia, amp, claude) + notify.sh
 └── data/               container state (gitignored; backed up by Kopia)
@@ -56,6 +57,12 @@ host network and proxies to `localhost:<port>`:
   `127.0.0.1:<port>`), a `@name host name.{$DOMAIN}` block in `caddy/Caddyfile`, a card in
   `dashboard/services.yaml`. Then `plint sync`. AdGuard's wildcard rewrite already covers
   the new name.
+- **Look (Plint Soft UI)**: one neumorphic sage-grey theme, light/dark from the device.
+  Caddy injects `theme/plint.css`, `theme/apps/<app>.css` and `theme/plint.js` into every
+  themed app (`import theme <app>` + `header_up Accept-Encoding identity` in its handle).
+  Style a new app with its own `theme/apps/<app>.css/js`; tokens are the `--p-*` variables.
+  AMP and Stremio are deliberately left untouched. Theme files are served live, so a CSS
+  change needs no sync beyond `git pull`.
 - **Update**: `plint update` (containers) · `plint update --os` (also apt). Never update
   AMP or restart game servers while players are online; check `plint game` and ask.
 - **Game servers**: `plint game` lists AMP servers (running? port, connections);

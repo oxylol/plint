@@ -1,0 +1,893 @@
+/* ─────────────────────────────────────────────────────────────
+   Plint Soft UI · Kopia (backups)
+   Kopia's web UI is React + Bootstrap 5.3. Its own theme picker puts
+   .light / .dark / .pastel / .ocean on <html>; those classes set
+   Kopia's --color-* variables, and its component rules hang off
+   body#kopia. So this file:
+   1. remaps every Kopia and Bootstrap variable to a Plint token on
+      html:root, which outranks all four theme classes, so the palette
+      follows the device whichever Kopia theme is picked;
+   2. restyles components under #kopia. This sheet loads after
+      Kopia's, so equal specificity is enough and !important is only
+      used against Bootstrap utilities (.p-2, .mb-4 …).
+   kopia.js sets data-p-page on <html> for page-specific bits, adds the
+   page title, and draws the source cards (nightly calendar) and the
+   size bars.
+   ───────────────────────────────────────────────────────────── */
+
+/* ── 1 · palette: Kopia + Bootstrap variables → Plint tokens ──── */
+html:root {
+  --background-color: var(--p-bg);
+  --color-primary: var(--p-accent);
+  --color-secondary: var(--p-accent);
+  --color-warning: var(--p-warn);
+  --color-success: var(--p-accent);
+  --color-submit: var(--p-accent);
+  --color-select: transparent;
+  --color-link: var(--p-accent);
+  --color-light: var(--p-ink2);
+  --color-text: var(--p-ink);
+  --color-text-body: var(--p-ink);
+  --color-text-nav: var(--p-ink2);
+  --color-text-form-help: var(--p-ink2);
+  --color-error: var(--p-bad);
+  --color-danger: var(--p-bad);
+  --color-badge-warning: var(--p-warn);
+  --color-badge-primary: var(--p-info);
+  --color-badge-secondary: var(--p-ink2);
+  --color-badge-info: var(--p-info);
+  --color-badge-danger: var(--p-bad);
+  --color-badge-success: var(--p-accent);
+
+  --bs-body-bg: var(--p-bg);
+  --bs-body-color: var(--p-ink);
+  --bs-body-font-family: var(--p-font);
+  --bs-emphasis-color: var(--p-ink);
+  --bs-heading-color: var(--p-ink);
+  --bs-secondary-color: var(--p-ink2);
+  --bs-tertiary-color: var(--p-ink2);
+  --bs-secondary-bg: var(--p-bg);
+  --bs-tertiary-bg: var(--p-bg);
+  --bs-border-color: var(--p-line);
+  --bs-border-color-translucent: var(--p-line);
+  --bs-link-color: var(--p-accent);
+  --bs-link-hover-color: var(--p-ink);
+  --bs-code-color: var(--p-ink);
+  --bs-highlight-bg: var(--p-warn-soft);
+  --bs-form-valid-color: var(--p-accent);
+  --bs-form-valid-border-color: var(--p-accent);
+  --bs-form-invalid-color: var(--p-bad);
+  --bs-form-invalid-border-color: var(--p-bad);
+  --bs-focus-ring-color: var(--p-accent-soft);
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2356655d' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e");
+  --bs-form-check-bg-image-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f2f6f3' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m5 12.5 4.5 4.5L19 7.5'/%3e%3c/svg%3e");
+  background: var(--p-bg);
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  html:root {
+    --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239aa8a0' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e");
+    --bs-form-check-bg-image-on: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2313201a' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m5 12.5 4.5 4.5L19 7.5'/%3e%3c/svg%3e");
+  }
+}
+
+/* ── 2 · page frame: ground, type, one centred column ───────── */
+#kopia {
+  margin: 0;
+  background: var(--p-bg);
+  color: var(--p-ink);
+  font: 500 15px/1.5 var(--p-font);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+#kopia #root > .container-fluid {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1272px;
+  margin: 0 auto;
+  padding: 0 16px 8px;
+  color: var(--p-ink);
+}
+#kopia a { color: var(--p-accent); filter: none; text-underline-offset: 3px; }
+#kopia a:hover, #kopia a:active { color: var(--p-ink); filter: none; }
+#kopia a:focus-visible, #kopia button:focus-visible, #kopia [tabindex]:focus-visible {
+  outline: 2px solid var(--p-accent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+#kopia h1, #kopia h2, #kopia h3, #kopia h4, #kopia h5, #kopia .h4 { color: var(--p-ink); font-family: var(--p-font); }
+#kopia code, #kopia pre, #kopia kbd { font-family: var(--p-mono); }
+#kopia hr { border: 0; border-top: 1px solid var(--p-line); opacity: 1; margin: 24px 0; }
+#kopia .text-muted { color: var(--p-ink2) !important; }
+#kopia .text-success { color: var(--p-accent) !important; }
+#kopia .text-danger, #kopia .error { color: var(--p-bad) !important; }
+#kopia .text-warning { color: var(--p-warn) !important; }
+#kopia .text-primary, #kopia .text-info { color: var(--p-info) !important; }
+
+/* page title (kopia.js) + Kopia's repository line under it */
+#kopia .p-title {
+  margin: 4px 0 2px;
+  font: 800 30px/1.15 var(--p-font);
+  letter-spacing: -0.02em;
+  color: var(--p-ink);
+}
+#kopia #root > .container-fluid > a[href="/repo"] { display: inline-block; margin-bottom: 26px; }
+#kopia #root > .container-fluid > a[href="/repo"] h5 {
+  margin: 0 !important;
+  font: 600 14px/1.4 var(--p-font);
+  color: var(--p-ink2);
+}
+#kopia #root > .container-fluid > a[href="/repo"]:hover h5 { color: var(--p-ink); }
+
+/* sub-page headings: "Return · Directory: …", "Maintenance: …" */
+#kopia #root > .container-fluid h4 {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+  margin: 0 0 22px;
+  font: 800 21px/1.25 var(--p-font);
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+#kopia #root > .container-fluid h4 .btn { margin: 0; }
+#kopia .vpadded { padding: 14px 0 18px; font-size: 15px; color: var(--p-ink2); overflow-wrap: anywhere; }
+#kopia .vpadded b { color: var(--p-ink); font: 600 14px var(--p-mono); }
+#kopia .page-title { font-weight: 800; }
+
+/* ── 3 · header bar: raised; Plint pill · Backups · tabs ────── */
+#kopia nav.navbar {
+  box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 1240px;
+  margin: 16px auto 30px;
+  padding: 8px;
+  gap: 4px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  border-radius: 24px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise);
+  border: 1px solid var(--p-edge);
+}
+#kopia .navbar-brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin: 0 10px 0 0; padding: 0 6px 0 0;
+  font: 800 17px/1 var(--p-font);
+  color: var(--p-ink);
+  white-space: nowrap;
+  text-decoration: none;
+}
+#kopia .navbar-brand:has(.p-well) img { display: none; }
+#kopia .navbar-brand .p-well { width: 44px; height: 44px; border-radius: 14px; }
+#kopia .navbar-brand .p-well svg { width: 21px; height: 21px; }
+#kopia .navbar-brand:hover { color: var(--p-ink); }
+#kopia .navbar-toggler { display: none; }
+#kopia .navbar-collapse { min-width: 0; }
+#kopia .navbar-nav { gap: 4px; align-items: center; flex-wrap: nowrap; }
+#kopia .navbar-nav > span.d-inline-block { display: block !important; }
+#kopia .navbar-light .navbar-nav .nav-link,
+#kopia .navbar-light .navbar-nav .nav-link.active {
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: var(--p-ink2);
+  font: 700 14px/1 var(--p-font);
+  white-space: nowrap;
+  text-decoration: none;
+  filter: none;
+  transition: box-shadow 0.15s ease, color 0.15s ease;
+}
+#kopia .navbar-light .navbar-nav .nav-link:after { font-weight: 800; }
+#kopia .navbar-light .navbar-nav .nav-link:hover { color: var(--p-ink); filter: none; }
+@media (hover: hover) { #kopia .navbar-light .navbar-nav .nav-link:not(.active):hover { box-shadow: var(--p-raise-sm); } }
+#kopia .navbar-light .navbar-nav .nav-link.active {
+  color: var(--p-accent);
+  font-weight: 800;
+  box-shadow: var(--p-press-sm);
+}
+
+/* ── 4 · buttons: raised; primary = sage; danger = red text ─── */
+#kopia .btn, #kopia .btn-sm {
+  --bs-btn-padding-y: 0;
+  box-sizing: border-box;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 44px;
+  margin: 0 8px 0 0;
+  padding: 0 18px;
+  border: 1px solid var(--p-edge);
+  border-radius: 15px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise-sm);
+  color: var(--p-ink);
+  font: 700 14px/1.1 var(--p-font);
+  white-space: nowrap;
+  text-decoration: none;
+  filter: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+#kopia .btn:hover, #kopia .btn:focus { color: var(--p-ink); background: var(--p-bg); border-color: var(--p-edge); filter: none; }
+@media (hover: hover) { #kopia .btn:not(:disabled):hover { transform: translateY(-1px); } }
+#kopia .btn:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 2px; box-shadow: var(--p-raise-sm); }
+#kopia .btn:active, #kopia .btn.active, #kopia .btn.show, #kopia .btn:first-child:active {
+  background: var(--p-bg); border-color: var(--p-edge); color: var(--p-ink);
+  box-shadow: var(--p-press-sm); transform: none; filter: none;
+}
+#kopia .btn:disabled, #kopia .btn.disabled {
+  opacity: 1; color: var(--p-ink2); background: var(--p-bg);
+  box-shadow: none; border-color: var(--p-line); transform: none; filter: none; cursor: default;
+}
+#kopia .btn svg { color: var(--p-ink2); flex: none; }
+/* actions on a row: sage text */
+#kopia .btn-success, #kopia .btn-success:hover, #kopia .btn-success:focus { color: var(--p-accent); }
+#kopia .btn-success svg { color: var(--p-accent); }
+/* the one main action of a page: sage fill */
+#kopia [data-testid="new-snapshot"].btn,
+#kopia [data-testid="button-save"].btn,
+#kopia [data-testid="update-description"].btn:not(:disabled),
+#kopia .col-auto > [data-testid="snapshot-now"].btn:not(:disabled),
+#kopia .modal-footer .btn-primary:not(:disabled),
+#kopia .btn-primary[type="submit"]:not(:disabled),
+#kopia a.btn[href$="/restore"],
+#kopia #newProfileButton {
+  background: var(--p-accent); color: var(--p-on-accent); border-color: transparent;
+}
+#kopia [data-testid="new-snapshot"].btn svg, #kopia [data-testid="button-save"].btn svg { color: var(--p-on-accent); }
+#kopia [data-testid="new-snapshot"].btn:hover,
+#kopia [data-testid="button-save"].btn:hover,
+#kopia [data-testid="update-description"].btn:not(:disabled):hover,
+#kopia .col-auto > [data-testid="snapshot-now"].btn:not(:disabled):hover,
+#kopia .modal-footer .btn-primary:not(:disabled):hover,
+#kopia .btn-primary[type="submit"]:not(:disabled):hover,
+#kopia a.btn[href$="/restore"]:hover,
+#kopia #newProfileButton:hover { background: var(--p-accent); color: var(--p-on-accent); }
+#kopia .btn-danger, #kopia .btn-danger:hover, #kopia .btn-danger:focus { color: var(--p-bad); }
+/* dropdown toggles: Bootstrap's caret, in ink2 */
+#kopia .dropdown-toggle::after { margin-left: 2px; border-top-color: var(--p-ink2); vertical-align: 0.15em; }
+#kopia #newProfileButton.dropdown-toggle::after { border-top-color: currentColor; }
+/* the CLI-equivalent row */
+#kopia .input-group { gap: 8px; align-items: center; }
+#kopia .input-group:has(> [data-testid="show-cli-button"]) { flex-wrap: nowrap; margin: 4px 0 8px; }
+#kopia .input-group > .btn { margin: 0; border-radius: 15px !important; }
+#kopia .input-group > .form-control { border-radius: 14px !important; margin: 0 !important; }
+#kopia .input-group > .invalid-feedback { flex: 1 0 100%; margin: 0; }
+#kopia .cli-equivalent { font: 500 13px var(--p-mono) !important; }
+#kopia .btn-close {
+  position: relative;
+  width: 44px; height: 44px; padding: 0; margin: -6px -8px -6px auto; box-sizing: border-box;
+  border: 1px solid var(--p-edge); border-radius: 14px;
+  background: var(--p-bg) none; box-shadow: var(--p-raise-sm);
+  opacity: 1; filter: none;
+}
+#kopia .btn-close::before {
+  content: ""; position: absolute; inset: 0;
+  background: var(--p-ink2);
+  -webkit-mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3e%3cpath d='M6 6l12 12M18 6 6 18'/%3e%3c/svg%3e") center / 18px 18px no-repeat;
+  mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3e%3cpath d='M6 6l12 12M18 6 6 18'/%3e%3c/svg%3e") center / 18px 18px no-repeat;
+}
+#kopia .btn-close:hover { opacity: 1; }
+#kopia .btn-close:active { box-shadow: var(--p-press-sm); }
+#kopia .btn-close:focus { box-shadow: var(--p-raise-sm); outline: 2px solid var(--p-accent); outline-offset: 2px; }
+
+/* toolbars above tables */
+#kopia .list-actions { margin: 0 0 18px; }
+#kopia .list-actions .row, #kopia #root > .container-fluid > .row { --bs-gutter-x: 12px; row-gap: 12px; }
+#kopia .list-actions .col-auto .btn { margin: 0; }
+
+/* ── 5 · tables: flat hairline rows inside a raised card ────── */
+#kopia .p-2:has(> .table) {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0 0 26px;
+  padding: 6px 20px 18px !important;
+  border-radius: 26px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise);
+  border: 1px solid var(--p-edge);
+}
+#kopia .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--p-ink);
+  --bs-table-border-color: var(--p-line);
+  --bs-table-striped-bg: transparent;
+  --bs-table-striped-color: var(--p-ink);
+  --bs-table-hover-bg: transparent;
+  --bs-table-hover-color: var(--p-ink);
+  --bs-table-accent-bg: transparent;
+  margin: 0 0 14px;
+  color: var(--p-ink);
+  font-size: 14px;
+  border-color: var(--p-line);
+}
+#kopia .table > :not(caption) > * { border-width: 0 !important; }
+#kopia .table > :not(caption) > * > *,
+#kopia .table-striped > tbody > tr:nth-of-type(odd) > *,
+#kopia .table-striped > tbody > tr:nth-of-type(2n) > *,
+#kopia .table-hover > tbody > tr:hover > * {
+  padding: 13px 12px;
+  vertical-align: middle;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-width: 0 0 1px !important;
+  border-style: solid !important;
+  border-color: var(--p-line) !important;
+  color: var(--p-ink);
+}
+#kopia .table > tbody > tr:last-child > * { border-bottom-width: 0 !important; }
+#kopia .table-hover > tbody > tr:hover > * { background: var(--p-accent-soft) !important; }
+#kopia .table > thead > tr > th,
+#kopia .table > thead.table-dark > tr > th {
+  padding-top: 16px; padding-bottom: 12px;
+  font: 700 12px/1.2 var(--p-font);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--p-ink2);
+  border-bottom: 1px solid var(--p-line) !important;
+}
+#kopia .table thead .cursor-pointer:hover { color: var(--p-ink); }
+#kopia .table td p { margin: 0; }
+#kopia .table td > .btn { margin: 3px 8px 3px 0; }
+#kopia .table td > .btn:last-child { margin-right: 0; }
+#kopia .table td a[href*="single-source"],
+#kopia .table td a[href^="/snapshots/dir/"],
+#kopia .table td a[href^="/api/v1/objects/"] { font-weight: 700; text-decoration: none; }
+#kopia .table td a[href*="single-source"] { font-family: var(--p-mono); font-size: 13.5px; font-weight: 600; }
+#kopia .table td a[href^="/tasks/"] { text-decoration: none; font-weight: 700; }
+#kopia .table td > span:only-child, #kopia .table td:has(> span:only-child) { font-variant-numeric: tabular-nums; white-space: nowrap; }
+#kopia .snapshot-hash { font: 500 12.5px var(--p-mono); color: var(--p-ink2); }
+#kopia .snapshot-description { color: var(--p-ink2); }
+#kopia .snapshot-description svg { color: var(--p-ink2); }
+#kopia .snapshot-description-set { color: var(--p-warn); }
+#kopia .table svg[color="#ccc"] { color: var(--p-ink2); opacity: 0.6; }
+#kopia .multiselect { width: auto; padding: 0 0 0 4px; margin: 0; min-height: 0; }
+#kopia .multiselect .form-check-input { margin: 0; float: none; }
+[data-p-page="policies"] #kopia .table td:nth-child(3),
+[data-p-page="policies"] #kopia .table td:nth-child(1),
+[data-p-page="policies"] #kopia .table td:nth-child(2) { font-family: var(--p-mono); font-size: 13px; white-space: nowrap; }
+
+/* task status → chips (✓ green · ! red · spinner) */
+#kopia .table td p:has(> svg[color="green"]),
+#kopia .table td p:has(> svg[color="red"]),
+#kopia .table td p:has(> svg[data-icon="ban"]) {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 28px; padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--p-accent-soft); color: var(--p-accent);
+}
+#kopia .table td p:has(> svg[color="red"]) { background: var(--p-bad-soft); color: var(--p-bad); }
+#kopia .table td p:has(> svg[data-icon="ban"]) { background: var(--p-line); color: var(--p-ink2); }
+#kopia .table td p > svg[color] { color: currentColor; }
+#kopia .spinner-border { color: var(--p-warn); --bs-spinner-border-width: 0.2em; }
+#kopia .table td:has(> .spinner-border) { color: var(--p-warn); font-weight: 700; white-space: nowrap; }
+
+/* ── 6 · chips: policy sections, retention reasons, notes ───── */
+#kopia .badge {
+  display: inline-flex; align-items: center;
+  min-height: 26px; padding: 0 11px; margin: 3px 6px 3px 0;
+  border-radius: 999px;
+  font: 700 12px/1 var(--p-font);
+  letter-spacing: 0.01em;
+  background: var(--p-accent-soft); color: var(--p-accent);
+}
+#kopia .badge.bg-policy-badge, #kopia .badge.bg-snapshot-pin { background: var(--p-accent-soft); color: var(--p-accent); }
+#kopia .badge.bg-retention-badge-success { background: var(--p-accent-soft); color: var(--p-accent); }
+#kopia .badge.bg-retention-badge-info,
+#kopia .badge.bg-retention-badge-primary { background: var(--p-info-soft); color: var(--p-info); }
+#kopia .badge.bg-retention-badge-danger,
+#kopia .badge.bg-retention-badge-warning,
+#kopia .badge.bg-retention-badge-secondary { background: var(--p-line); color: var(--p-ink2); }
+#kopia .badge.bg-warning, #kopia .badge.text-dark.bg-warning { background: var(--p-warn-soft) !important; color: var(--p-warn) !important; }
+#kopia .badge.bg-danger { background: var(--p-bad-soft) !important; color: var(--p-bad) !important; }
+#kopia .badge.bg-success { background: var(--p-accent-soft) !important; color: var(--p-accent) !important; }
+
+/* ── 7 · forms: pressed wells ───────────────────────────────── */
+#kopia .form-control, #kopia .form-control-sm, #kopia .form-select, #kopia .form-select-sm {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 14px;
+  background-color: transparent;
+  box-shadow: var(--p-press-sm);
+  color: var(--p-ink);
+  font: 500 15px/1.4 var(--p-font);
+}
+#kopia .form-control::placeholder { color: var(--p-ink2) !important; opacity: 0.8; }
+#kopia .form-control:focus, #kopia .form-control-sm:focus, #kopia .form-select:focus {
+  color: var(--p-ink);
+  background-color: transparent;
+  box-shadow: var(--p-press-sm), inset 0 0 0 1.5px var(--p-accent);
+  outline: none;
+}
+#kopia .form-control[readonly] { color: var(--p-ink); }
+#kopia textarea.form-control { min-height: 96px; resize: vertical; font-family: var(--p-mono); font-size: 13.5px; }
+#kopia .form-select, #kopia select.form-control {
+  appearance: none;
+  padding-right: 44px;
+  background-image: var(--bs-form-select-bg-img);
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 18px 18px;
+  cursor: pointer;
+}
+#kopia select.form-control option, #kopia .form-select option { background: var(--p-bg); color: var(--p-ink); }
+#kopia .form-control.is-invalid, #kopia .was-validated .form-control:invalid {
+  background-image: none;
+  padding-right: 16px;
+  box-shadow: var(--p-press-sm), inset 0 0 0 1.5px var(--p-bad);
+}
+#kopia .invalid-feedback { color: var(--p-bad); font-size: 13px; font-weight: 600; padding: 6px 4px 0; }
+#kopia .form-label {
+  display: block;
+  padding: 18px 0 0;
+  margin: 0 0 8px;
+  font: 700 12px/1.2 var(--p-font);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--p-ink2);
+}
+#kopia .form-text, #kopia .text-muted.form-text { display: block; margin-top: 6px; font-size: 12.5px; color: var(--p-ink2) !important; }
+#kopia .form-check { min-height: 28px; display: flex; align-items: center; gap: 10px; padding-left: 0; }
+#kopia .form-check .form-check-input { float: none; margin: 0; }
+#kopia .form-check-input {
+  width: 24px; height: 24px; flex: none;
+  border: 0; border-radius: 8px;
+  background-color: var(--p-bg);
+  box-shadow: var(--p-press-sm);
+  cursor: pointer;
+}
+#kopia .form-check-input:checked {
+  background-color: var(--p-accent);
+  background-image: var(--bs-form-check-bg-image-on);
+  background-size: 16px 16px;
+  box-shadow: none;
+}
+#kopia .form-check-input:focus { box-shadow: var(--p-press-sm); outline: 2px solid var(--p-accent); outline-offset: 2px; }
+#kopia .form-check-label { font-weight: 600; }
+#kopia .form-switch .form-check-input { width: 44px; border-radius: 999px; }
+
+/* ── 8 · policy editor: each section is a raised card ───────── */
+#kopia .accordion {
+  --bs-accordion-bg: transparent;
+  --bs-accordion-border-width: 0;
+  --bs-accordion-btn-icon: none;
+  --bs-accordion-btn-active-icon: none;
+  --bs-accordion-btn-focus-box-shadow: none;
+  display: flex; flex-direction: column; gap: 16px;
+  margin-bottom: 26px;
+}
+#kopia .accordion-item {
+  border: 1px solid var(--p-edge) !important;
+  border-radius: 22px !important;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise-sm);
+  overflow: hidden;
+}
+#kopia .accordion-item:has(> .accordion-collapse.show) { box-shadow: var(--p-raise); }
+#kopia .accordion-header { margin: 0; }
+#kopia .accordion-button,
+#kopia .accordion-button.collapsed,
+#kopia .accordion-button:not(.collapsed) {
+  min-height: 60px;
+  padding: 0 22px;
+  gap: 4px;
+  border-radius: 22px !important;
+  background: transparent;
+  box-shadow: none;
+  color: var(--p-ink);
+  font: 800 16px/1.2 var(--p-font);
+  filter: none;
+}
+#kopia .accordion-button:not(.collapsed) { border-radius: 22px 22px 0 0 !important; box-shadow: inset 0 -1px 0 var(--p-line); }
+#kopia .accordion-button:hover, #kopia .accordion-button:focus, #kopia .accordion-button:active, #kopia .accordion-button:visited {
+  background: transparent; color: var(--p-ink); filter: none;
+}
+#kopia .accordion-button:focus-visible { outline: 2px solid var(--p-accent); outline-offset: -4px; }
+#kopia .accordion-button svg { width: 18px; color: var(--p-accent); margin-right: 6px; }
+#kopia .accordion-button::after {
+  width: 18px; height: 18px;
+  background: var(--p-ink2);
+  -webkit-mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e") center / 18px 18px no-repeat;
+  mask: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e") center / 18px 18px no-repeat;
+}
+#kopia .accordion-body { padding: 4px 22px 14px; background: transparent; color: var(--p-ink); }
+#kopia .accordion-body > .row { --bs-gutter-x: 24px; padding: 16px 0; border-top: 1px solid var(--p-line); }
+#kopia .accordion-body > .row:first-child { border-top: 0; padding: 14px 0 0; }
+#kopia .policyField { font-size: 15px; font-weight: 800; }
+#kopia .label-help { padding: 4px 0 0; margin: 0; font-size: 13px; line-height: 1.45; color: var(--p-ink2); }
+#kopia .policyEditorHeader {
+  padding: 0;
+  font: 700 12px/1.2 var(--p-font);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--p-ink2);
+}
+#kopia .policyFieldColumn { margin-top: 0; }
+#kopia .policyEffectiveValue ul { margin: 0; padding-left: 18px; font-variant-numeric: tabular-nums; font-size: 14px; line-height: 1.7; }
+#kopia .debug-json {
+  margin: 0; padding: 16px;
+  max-height: 360px; overflow: auto;
+  border-radius: 16px; box-shadow: var(--p-press-sm);
+  font: 500 12.5px/1.5 var(--p-mono); color: var(--p-ink);
+}
+#kopia .policy-editor > .btn { margin-top: 2px; }
+
+/* ── 9 · alerts, tabs, menus, pagination, dialogs ───────────── */
+#kopia .alert {
+  margin: 0 0 18px; padding: 16px 20px;
+  border: 0; border-radius: 18px;
+  background: var(--p-accent-soft); color: var(--p-ink);
+  font-weight: 600;
+}
+#kopia .alert-success { background: var(--p-accent-soft); color: var(--p-accent); }
+#kopia .alert { display: flex; align-items: center; gap: 10px; }
+#kopia .alert::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+#kopia .p-note-theme { display: block; margin-top: 8px; font-size: 12.5px; color: var(--p-ink2); }
+#kopia .alert-danger { background: var(--p-bad-soft); color: var(--p-bad); }
+#kopia .alert-warning { background: var(--p-warn-soft); color: var(--p-warn); }
+#kopia .alert-info, #kopia .alert-primary, #kopia .alert-secondary { background: var(--p-info-soft); color: var(--p-info); }
+
+#kopia .nav-tabs { gap: 6px; border: 0; margin-bottom: 18px !important; }
+#kopia .nav-tabs .nav-link {
+  min-height: 44px; padding: 0 18px;
+  border: 0; border-radius: 14px;
+  background: transparent; color: var(--p-ink2);
+  font: 700 14px/1 var(--p-font);
+}
+#kopia .nav-tabs .nav-link:hover { color: var(--p-ink); }
+@media (hover: hover) { #kopia .nav-tabs .nav-link:not(.active):hover { box-shadow: var(--p-raise-sm); } }
+#kopia .nav-tabs .nav-link.active { background: transparent; color: var(--p-accent); box-shadow: var(--p-press-sm); font-weight: 800; }
+
+#kopia .dropdown-menu {
+  --bs-dropdown-bg: var(--p-bg);
+  min-width: 200px;
+  padding: 8px;
+  border: 1px solid var(--p-edge);
+  border-radius: 18px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise), 0 18px 40px rgba(0, 0, 0, 0.16);
+  z-index: 1050;
+}
+#kopia .dropdown-item {
+  display: flex; align-items: center;
+  min-height: 44px; padding: 0 14px;
+  border-radius: 12px;
+  color: var(--p-ink); font-weight: 600; font-size: 14px;
+}
+#kopia .dropdown-item:hover, #kopia .dropdown-item:focus { background: var(--p-accent-soft); color: var(--p-ink); }
+#kopia .dropdown-item.active, #kopia .dropdown-item:active { background: var(--p-accent-soft); color: var(--p-accent); }
+#kopia .dropdown-divider { border-top-color: var(--p-line); margin: 6px 4px; }
+#kopia .dropdown-header { color: var(--p-ink2); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+
+#kopia .pagination { gap: 6px; flex-wrap: wrap; margin: 4px 0 14px; }
+#kopia .page-link {
+  display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; padding: 0 12px;
+  border: 1px solid var(--p-edge) !important; border-radius: 14px !important;
+  background: var(--p-bg); box-shadow: var(--p-raise-sm);
+  color: var(--p-ink); font-weight: 700; font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+#kopia .page-item.active .page-link { color: var(--p-accent); background: var(--p-bg); box-shadow: var(--p-press-sm); }
+#kopia .page-item.disabled .page-link { color: var(--p-ink2); box-shadow: none; border-color: var(--p-line) !important; opacity: 0.6; }
+
+#kopia .modal-backdrop { background: #000; }
+/* the Plint pill stays under Kopia's dialogs */
+body#kopia.modal-open #plint-pill { z-index: 1; }
+#kopia .modal-backdrop.show { opacity: 0.35; }
+#kopia .modal-content {
+  border: 1px solid var(--p-edge); border-radius: 26px;
+  background: var(--p-bg); color: var(--p-ink);
+  box-shadow: var(--p-raise), 0 30px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+#kopia .modal-header, #kopia .modal-body, #kopia .modal-footer { background: transparent; border-color: var(--p-line); padding: 18px 24px; }
+#kopia .modal-title { font: 800 19px/1.2 var(--p-font); }
+#kopia .tooltip-inner, #kopia .popover { background: var(--p-ink); color: var(--p-bg); border-radius: 10px; font: 600 12.5px/1.4 var(--p-font); }
+#kopia .popover-body { color: var(--p-bg); }
+
+/* ── 10 · pages ─────────────────────────────────────────────── */
+/* repository: status chip, then the forms as cards */
+[data-p-page="repo"] #kopia #root > .container-fluid > p.text-success,
+[data-p-page="repo"] #kopia #root > .container-fluid > p.text-danger {
+  display: flex; width: fit-content; align-items: center; gap: 6px;
+  min-height: 30px; padding: 0 14px; margin: -10px 0 20px !important;
+  border-radius: 999px;
+  font-size: 13px; font-weight: 700;
+  background: var(--p-accent-soft);
+}
+[data-p-page="repo"] #kopia #root > .container-fluid > p.text-danger { background: var(--p-bad-soft); }
+[data-p-page="repo"] #kopia #root > .container-fluid > form {
+  margin: 0 0 24px; padding: 8px 24px 24px;
+  border-radius: 26px; background: var(--p-bg);
+  box-shadow: var(--p-raise); border: 1px solid var(--p-edge);
+}
+[data-p-page="repo"] #kopia #root > .container-fluid > form:first-of-type { padding-top: 24px; }
+[data-p-page="repo"] #kopia #root > .container-fluid > hr { display: none; }
+[data-p-page="repo"] #kopia #root > .container-fluid > form .row { --bs-gutter-x: 20px; }
+[data-p-page="repo"] #kopia #root > .container-fluid > form input[readonly] { font-family: var(--p-mono); font-size: 13.5px; }
+[data-p-page="repo"] #kopia #root > .container-fluid > form .input-group { margin: 0; font-size: 0; gap: 0; }
+[data-p-page="repo"] #kopia #root > .container-fluid > form .input-group > .btn { margin-left: 12px; }
+[data-p-page="repo"] #kopia #root > .container-fluid > form .btn-danger { margin-top: 20px; }
+[data-p-page="repo"] #kopia #root > .container-fluid > form .row > .col > .row > .col { min-width: 0; }
+
+/* preferences: the tab body is a card */
+#kopia .tab-content > .tab-pane > .container-fluid,
+#kopia .tab-content > .tab-pane > .tab-content-fix > .container-fluid { padding: 0; }
+[data-p-page="prefs"] #kopia .tab-content {
+  padding: 8px 24px 26px;
+  border-radius: 26px; background: var(--p-bg);
+  box-shadow: var(--p-raise); border: 1px solid var(--p-edge);
+  margin-bottom: 26px;
+}
+[data-p-page="prefs"] #kopia .tab-content .row { --bs-gutter-x: 20px; row-gap: 4px; }
+[data-p-page="prefs"] #kopia .tab-content p { padding-top: 18px; line-height: 1.6; }
+#kopia div.tab-body { border: 0; padding: 0; }
+
+/* task detail: logs as a mono card */
+[data-p-page="task"] #kopia form > .row > .col-6 { min-width: 0; }
+#kopia .logs-table {
+  max-height: 460px; overflow: auto;
+  padding: 6px 14px;
+  border: 1px solid var(--p-edge);
+  border-radius: 22px; background: var(--p-bg);
+  box-shadow: var(--p-raise);
+  margin-bottom: 24px;
+}
+#kopia .logs-table .table { margin: 0; font: 500 12.5px/1.5 var(--p-mono); }
+#kopia .logs-table .table > tbody > tr > td { padding: 7px 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+#kopia .loglevel-1 > td { font-weight: 700; }
+#kopia .loglevel-2 > td { color: var(--p-warn) !important; font-weight: 700; }
+#kopia .loglevel-3 > td { color: var(--p-bad) !important; font-weight: 700; }
+
+/* snapshot browser: the path as mono crumbs */
+#kopia .breadcrumb {
+  --bs-breadcrumb-divider-color: var(--p-ink2);
+  display: inline-flex; flex-wrap: wrap; align-items: center;
+  margin: 0 0 18px; padding: 0 16px; min-height: 44px;
+  border-radius: 14px; box-shadow: var(--p-press-sm);
+  font: 600 14px/1.4 var(--p-mono);
+}
+#kopia .breadcrumb-item, #kopia .breadcrumb-item a { color: var(--p-accent); text-decoration: none; }
+#kopia .breadcrumb-item.active { color: var(--p-ink); }
+#kopia .breadcrumb-item + .breadcrumb-item::before { color: var(--p-ink2); }
+[data-p-page="dir"] #kopia #root > .container-fluid > .row > .col-md-6 { color: var(--p-ink2); font-size: 14px; align-self: center; }
+#kopia [data-p-spacer] { display: none; }
+[data-p-page="dir"] #kopia #root > .container-fluid > .row { margin-bottom: 18px; }
+#kopia .mounted-path { background: transparent; color: var(--p-ink); }
+
+/* repository connect form (only shown when disconnected): Kopia hard-codes light colours */
+#kopia .providerSpecificParams, #kopia .advancedOptions {
+  margin: 0 0 16px; padding: 8px 20px 20px;
+  border: 0; border-radius: 22px;
+  background: transparent; color: var(--p-ink);
+  box-shadow: var(--p-press-sm);
+}
+#kopia .providerIcon { border-radius: 18px; box-shadow: var(--p-raise-sm); border: 1px solid var(--p-edge); background: var(--p-bg); color: var(--p-ink); }
+
+/* new snapshot: Kopia's own h4 is the subtitle under our title */
+[data-p-page="new"] #kopia #root > .container-fluid > h4 { display: none; }
+[data-p-page="new"] #kopia #root > .container-fluid > br { display: none; }
+[data-p-page="new"] #kopia #root > .container-fluid > div:first-of-type { margin: 0 0 20px; }
+[data-p-page="new"] #kopia #root > .container-fluid > .row { margin-bottom: 20px; }
+#kopia #snapshot-path { width: 100%; max-width: 400px; }
+[data-p-page="restore"] #kopia #root > .container-fluid form { margin-bottom: 28px; }
+#kopia .estimateResults { margin-top: 12px; }
+
+/* footer: version line, quiet */
+#kopia #appVersion { max-width: 1272px; margin: 8px auto 0; padding: 0 16px 32px; box-sizing: border-box; }
+#kopia #appVersion hr { display: none; }
+#kopia .version-info { margin: 0; padding: 0; font: 500 11.5px/1.6 var(--p-mono); color: var(--p-ink2); opacity: 0.75; overflow-wrap: anywhere; }
+
+/* ── 11 · source cards (kopia.js) ───────────────────────────── */
+#kopia .p-sources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 28px;
+  margin: 0 0 34px;
+}
+#kopia .p-card {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 24px;
+  border-radius: 28px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise);
+  border: 1px solid var(--p-edge);
+  display: flex; flex-direction: column; gap: 22px;
+}
+#kopia .p-card-head { display: flex; align-items: center; gap: 14px; min-width: 0; }
+#kopia .p-well {
+  flex: none;
+  width: 46px; height: 46px; border-radius: 15px;
+  box-shadow: var(--p-press-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--p-accent);
+}
+#kopia .p-well svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#kopia .p-name { flex: 1 1 auto; min-width: 0; }
+#kopia .p-name h2 { margin: 0; font: 800 20px/1.2 var(--p-font); letter-spacing: -0.01em; }
+#kopia .p-name h2 a { color: var(--p-ink); text-decoration: none; }
+#kopia .p-name h2 a:hover { color: var(--p-accent); }
+#kopia .p-name h2 a::after { content: "\203A"; margin-left: 6px; color: var(--p-ink2); font-weight: 700; }
+#kopia .p-path { display: block; margin-top: 3px; font: 500 12.5px/1.3 var(--p-mono); color: var(--p-ink2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#kopia .p-chip {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 28px; padding: 0 12px;
+  border-radius: 999px;
+  font: 800 12px/1 var(--p-font);
+  white-space: nowrap;
+  background: var(--p-accent-soft); color: var(--p-accent);
+}
+#kopia .p-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+#kopia .p-chip.warn { background: var(--p-warn-soft); color: var(--p-warn); }
+#kopia .p-chip.bad { background: var(--p-bad-soft); color: var(--p-bad); }
+#kopia .p-chip.info { background: var(--p-info-soft); color: var(--p-info); }
+
+#kopia .p-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 20px; }
+#kopia .p-stat { min-width: 0; }
+#kopia .p-stat b { display: block; font-size: 26px; line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; white-space: nowrap; }
+#kopia .p-stat b .p-u { margin-left: 3px; font-size: 0.62em; font-weight: 700; letter-spacing: 0; color: var(--p-ink2); }
+#kopia .p-stat small { display: block; margin-top: 4px; font-size: 13px; color: var(--p-ink2); font-variant-numeric: tabular-nums; }
+#kopia .p-stat .p-lbl { display: block; margin-bottom: 7px; }
+
+#kopia .p-lbl { font: 700 12px/1.2 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2); }
+#kopia .p-block { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+#kopia .p-block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+#kopia .p-block-head b { font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--p-ink); white-space: nowrap; }
+#kopia .p-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--p-ink2); font-variant-numeric: tabular-nums; }
+
+/* nightly calendar: 28 nights, two rows of 14, oldest first */
+#kopia .p-cal { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 5px; }
+#kopia .p-cal i {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 5px;
+  background: var(--p-accent);
+}
+#kopia .p-cal i.miss { background: var(--p-warn); }
+#kopia .p-cal i.next, #kopia .p-cal i.run { background: var(--p-bg); box-shadow: var(--p-press-sm); }
+#kopia .p-cal i.run::after {
+  content: ""; position: absolute; inset: 30%;
+  border-radius: 50%; background: var(--p-warn);
+  animation: p-pulse 1.6s ease-in-out infinite;
+}
+#kopia .p-cal i.none { background: transparent; }
+#kopia .p-cal i.none::after {
+  content: ""; position: absolute; inset: 36%;
+  border-radius: 50%; background: var(--p-track);
+}
+@media (prefers-color-scheme: dark) { #kopia .p-cal i.none::after { background: var(--p-line); box-shadow: inset 0 0 0 1px var(--p-line); } }
+@keyframes p-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) { #kopia .p-cal i.run::after { animation: none; } }
+#kopia .p-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--p-ink2); }
+#kopia .p-legend span { display: inline-flex; align-items: center; gap: 6px; }
+#kopia .p-legend span::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--p-accent); }
+#kopia .p-legend .miss::before { background: var(--p-warn); }
+#kopia .p-legend .next::before { background: var(--p-bg); box-shadow: var(--p-press-sm); }
+#kopia .p-legend .none::before { width: 5px; height: 5px; margin: 0 2px; border-radius: 50%; background: var(--p-ink2); opacity: 0.45; }
+
+/* size history: one bar per snapshot, newest on the right */
+#kopia .p-history { margin: 0 0 30px; }
+#kopia .p-history .p-stats { max-width: 720px; }
+#kopia .p-chart { container-type: inline-size; display: flex; flex-direction: column; gap: 8px; }
+#kopia .p-bars {
+  position: relative;
+  height: 150px;
+  padding: 16px 16px 12px;
+  border-radius: 18px;
+  box-shadow: var(--p-press-sm);
+  display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 8px;
+  align-items: stretch;
+}
+#kopia .p-bars > span { position: relative; min-width: 0; }
+#kopia .p-bars i {
+  position: absolute; left: 0; right: 0;
+  display: block;
+  min-height: 3px;
+  border-radius: 5px;
+  background: var(--p-accent);
+}
+#kopia .p-bars i.neg { background: var(--p-info); }
+#kopia .p-bars i.zero { background: var(--p-accent); opacity: 0.5; }
+#kopia .p-bars i.err { background: var(--p-bad); }
+#kopia .p-bars i.last { box-shadow: 0 0 0 2px var(--p-bg), 0 0 0 4px var(--p-accent-soft); }
+#kopia .p-bars i.first { height: 8px !important; min-height: 8px; left: 50%; right: auto; width: 8px; margin-left: -4px; border-radius: 50%; background: var(--p-ink2); }
+#kopia .p-bars i.empty { height: 4px !important; min-height: 4px; border-radius: 2px; background: var(--p-track); }
+#kopia .p-note { position: absolute; inset: 0 16px 24px; display: flex; align-items: center; justify-content: center; text-align: center; font-style: normal; font-size: 13px; font-weight: 600; color: var(--p-ink2); pointer-events: none; }
+#kopia .p-zero { position: absolute; left: 16px; right: 16px; height: 0; border-top: 1px solid var(--p-line); pointer-events: none; }
+#kopia .p-days {
+  padding: 0 16px;
+  display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 8px;
+  font-size: 11.5px; font-weight: 700; color: var(--p-ink2);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+#kopia .p-days span { white-space: nowrap; overflow: hidden; }
+#kopia .p-days small { display: block; font-size: 10.5px; font-weight: 600; opacity: 0.8; }
+@container (max-width: 560px) {
+  #kopia .p-days small { display: none; }
+  #kopia .p-bars, #kopia .p-days { gap: 5px; padding-left: 12px; padding-right: 12px; }
+}
+
+/* snapshot browser: a size bar under each entry (kopia.js) */
+#kopia .p-sizebar { display: block; width: 100%; max-width: 160px; height: 6px; margin-top: 6px; border-radius: 3px; background: var(--p-track); overflow: hidden; }
+#kopia .p-sizebar b { display: block; height: 100%; min-width: 2px; border-radius: 3px; background: var(--p-info); }
+
+/* ── 12 · narrower screens ──────────────────────────────────── */
+@media (max-width: 991.98px) {
+  #kopia .navbar-brand .p-label { display: none; }
+  #kopia .navbar-brand { margin-right: 4px; padding: 0; }
+  #kopia .navbar-light .navbar-nav .nav-link { padding: 0 12px; }
+}
+@media (max-width: 767.98px) {
+  /* wide tables scroll inside their card, never the page */
+  #kopia .p-2:has(> .table) { padding: 4px 12px 14px !important; border-radius: 24px; }
+  #kopia .p-2 > .table { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #kopia .p-2 > .table th, #kopia .p-2 > .table td { white-space: nowrap; }
+  #kopia .p-2 > .table td p:has(> svg) { white-space: nowrap; }
+  #kopia .col-6:has(> div > .form-label) { flex: 1 1 100%; max-width: 100%; }
+  [data-p-page="repo"] #kopia #root > .container-fluid > form .row { flex-direction: column; }
+  [data-p-page="prefs"] #kopia .tab-content .row { flex-direction: column; }
+  #kopia .accordion-body > .row > [class*="col-"] { padding-top: 6px; }
+  #kopia .accordion-body > .row:first-child { display: none; }
+  #kopia .accordion-body > .row:nth-child(2) { border-top: 0; }
+  #kopia .policyValue::before { content: "Defined"; display: block; margin: 8px 0 6px; font: 700 11px/1.2 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2); }
+  #kopia .policyEffectiveValue::before { content: "Effective"; display: block; margin: 8px 0 6px; font: 700 11px/1.2 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2); }
+  #kopia .policyValue:empty::before, #kopia .policyEffectiveValue:empty::before { display: none; }
+}
+@media (max-width: 575.98px) {
+  #kopia nav.navbar { flex-wrap: wrap; row-gap: 8px; margin: 12px auto 24px; width: calc(100% - 24px); border-radius: 22px; }
+  #kopia .navbar-brand .p-label { display: inline; }
+  #kopia .navbar-brand { margin-right: 0; }
+  #kopia .navbar-collapse,
+  #kopia .navbar-collapse.collapse:not(.show) {
+    display: block !important;
+    flex: 1 0 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 0 -8px; padding: 2px 8px 2px;
+  }
+  #kopia .navbar-collapse::-webkit-scrollbar { display: none; }
+  #kopia .navbar-nav { flex-direction: row; width: max-content; padding: 4px 0; }
+  #kopia .navbar-collapse[data-p-more="end"] { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 44px), transparent); }
+  #kopia .navbar-collapse[data-p-more="start"] { -webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(270deg, #000 calc(100% - 44px), transparent); }
+  #kopia .navbar-collapse[data-p-more="both"] { -webkit-mask-image: linear-gradient(90deg, transparent, #000 44px, #000 calc(100% - 44px), transparent); mask-image: linear-gradient(90deg, transparent, #000 44px, #000 calc(100% - 44px), transparent); }
+  #kopia .navbar-light .navbar-nav .nav-link { padding: 0 13px; font-size: 13.5px; }
+  #kopia .p-title { font-size: 27px; }
+  #kopia #root > .container-fluid > a[href="/repo"] { margin-bottom: 20px; }
+  #kopia .p-sources { gap: 22px; margin-bottom: 28px; }
+  #kopia .p-card { padding: 20px 18px; border-radius: 26px; gap: 20px; }
+  #kopia .p-stats { gap: 14px 12px; }
+  #kopia .p-stat b { font-size: 22px; }
+  #kopia .p-stat small { font-size: 12.5px; }
+  #kopia .p-name h2 { font-size: 18px; }
+  #kopia .p-card-head { gap: 12px; }
+  #kopia .list-actions .btn { padding: 0 13px; font-size: 13.5px; }
+  #kopia .list-actions .dropdown-toggle > svg { display: none; }
+  #kopia .list-actions .col-4 { flex: 1 0 100%; max-width: 100%; }
+  #kopia #root > .container-fluid > .row > .col:empty { display: none; }
+  #kopia #root > .container-fluid > .row > .col:has(> .btn) { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0; }
+  #kopia #root > .container-fluid > .row > .col:has(> .btn) > .btn { margin: 0; }
+  #kopia .p-cal { gap: 4px; }
+  #kopia .p-cal i { border-radius: 4px; }
+  #kopia #root > .container-fluid h4 { font-size: 19px; }
+  #kopia .btn { padding: 0 15px; }
+  #kopia .list-actions .col { display: none; }
+  #kopia .accordion-button, #kopia .accordion-button.collapsed, #kopia .accordion-button:not(.collapsed) { padding: 0 18px; font-size: 15px; }
+  #kopia .accordion-body { padding: 0 18px 12px; }
+  [data-p-page="repo"] #kopia #root > .container-fluid > form,
+  [data-p-page="prefs"] #kopia .tab-content { padding-left: 18px; padding-right: 18px; }
+  [data-p-page="repo"] #kopia #root > .container-fluid > form .input-group { flex-wrap: wrap; }
+  [data-p-page="repo"] #kopia #root > .container-fluid > form .input-group > .form-control { flex: 1 1 100%; }
+  [data-p-page="repo"] #kopia #root > .container-fluid > form .input-group > .btn { margin: 14px 0 0; }
+  [data-p-page="new"] #kopia #root > .container-fluid > .row > .col { flex: 1 0 100%; max-width: 100%; }
+  [data-p-page="new"] #kopia #root > .container-fluid > .row > .col-auto { display: flex; gap: 10px; }
+  [data-p-page="new"] #kopia #root > .container-fluid > .row > .col-auto > .btn { margin: 0; }
+  #kopia .input-group > .cli-equivalent { min-width: 0; }
+}

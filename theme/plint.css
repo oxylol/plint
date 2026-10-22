@@ -93,11 +93,12 @@
   font-family: var(--p-font);
   color: var(--p-ink);
   position: relative;
-  z-index: 2147483000;
+  z-index: 20;               /* inside the app's header: stays under its dialogs */
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
 }
 #plint-pill.plint-float {
+  z-index: 2147483000;
   position: fixed;
   top: 12px;
   left: 12px;

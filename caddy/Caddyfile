@@ -117,7 +117,10 @@
 
 	@backup host backup.{$DOMAIN}
 	handle @backup {
-		reverse_proxy localhost:51515
+		import theme kopia
+		reverse_proxy localhost:51515 {
+			header_up Accept-Encoding identity
+		}
 	}
 
 	# Anything else under the wildcard goes home.
