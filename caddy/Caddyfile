@@ -1,0 +1,90 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · Caddyfile
+#  One wildcard certificate, one site block per service.
+#  Caddy runs on the host network, so every upstream is localhost.
+# ─────────────────────────────────────────────────────────────
+{
+	email admin@{$DOMAIN}
+	# Nothing here is public. Only LAN and tailnet clients ever reach this.
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+# Reusable snippet: wildcard cert via Cloudflare DNS challenge.
+(wildcard) {
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+		resolvers 1.1.1.1 1.0.0.1
+	}
+	encode zstd gzip
+	header {
+		# No search engines, no referrer leakage, no sniffing.
+		X-Robots-Tag "noindex, nofollow"
+		Referrer-Policy "same-origin"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+}
+
+# ── Home screen ──────────────────────────────────────────────
+{$DOMAIN}, dash.{$DOMAIN} {
+	import wildcard
+	reverse_proxy localhost:3100
+}
+
+# ── One block for every subdomain ────────────────────────────
+*.{$DOMAIN} {
+	import wildcard
+
+	@dns host dns.{$DOMAIN}
+	handle @dns {
+		reverse_proxy localhost:3000
+	}
+
+	@host host host.{$DOMAIN}
+	handle @host {
+		# cockpit.conf sets AllowUnencrypted + ProtocolHeader for this.
+		reverse_proxy localhost:9090
+	}
+
+	@games host games.{$DOMAIN}
+	handle @games {
+		reverse_proxy localhost:8080
+	}
+
+	@stremio host stremio.{$DOMAIN}
+	handle @stremio {
+		reverse_proxy localhost:8095
+	}
+
+	@stacks host stacks.{$DOMAIN}
+	handle @stacks {
+		reverse_proxy localhost:5001
+	}
+
+	@metrics host metrics.{$DOMAIN}
+	handle @metrics {
+		reverse_proxy localhost:8090
+	}
+
+	@status host status.{$DOMAIN}
+	handle @status {
+		reverse_proxy localhost:3001
+	}
+
+	@ntfy host ntfy.{$DOMAIN}
+	handle @ntfy {
+		reverse_proxy localhost:8070
+	}
+
+	@backup host backup.{$DOMAIN}
+	handle @backup {
+		reverse_proxy localhost:51515
+	}
+
+	# Anything else under the wildcard goes home.
+	handle {
+		redir https://{$DOMAIN}{uri} 302
+	}
+}

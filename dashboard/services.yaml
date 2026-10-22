@@ -1,0 +1,79 @@
+---
+# Plint · services on the home screen
+# Status dots come from Docker (container:) or a ping (siteMonitor:).
+# siteMonitor URLs go straight to the port, so they work even if DNS is down.
+
+- Everyday:
+    - Games:
+        icon: mdi-gamepad-variant
+        href: https://games.{{HOMEPAGE_VAR_DOMAIN}}
+        description: AMP · game servers
+        siteMonitor: http://host.docker.internal:8080
+
+    - Stremio:
+        icon: stremio.png
+        href: https://stremio.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Streaming server
+        server: plint
+        container: stremio
+
+    - Status:
+        icon: uptime-kuma.png
+        href: https://status.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Is everything up?
+        server: plint
+        container: uptime-kuma
+
+- Network:
+    - AdGuard:
+        icon: adguard-home.png
+        href: https://dns.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Ad blocking · DNS
+        server: plint
+        container: adguard
+        widget:
+          type: adguard
+          url: http://adguard:3000
+          username: "{{HOMEPAGE_VAR_ADMIN_USER}}"
+          password: "{{HOMEPAGE_VAR_ADMIN_PASSWORD}}"
+
+    - Tailscale:
+        icon: tailscale.png
+        href: https://login.tailscale.com/admin/machines
+        description: Remote access
+        siteMonitor: http://host.docker.internal:9090
+
+    - Notifications:
+        icon: ntfy.png
+        href: https://ntfy.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Push to your phone
+        server: plint
+        container: ntfy
+
+- System:
+    - Host:
+        icon: cockpit.png
+        href: https://host.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Cockpit · updates, disks, terminal
+        siteMonitor: http://host.docker.internal:9090
+
+    - Stacks:
+        icon: dockge.png
+        href: https://stacks.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Dockge · containers
+        server: plint
+        container: dockge
+
+    - Metrics:
+        icon: beszel.png
+        href: https://metrics.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Beszel · CPU, memory, disk
+        server: plint
+        container: beszel
+
+    - Backups:
+        icon: kopia.png
+        href: https://backup.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Kopia · nightly snapshots
+        server: plint
+        container: kopia

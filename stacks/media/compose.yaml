@@ -1,0 +1,32 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · media stack
+#  Stremio streaming server + web player. Point every Stremio app at
+#  https://stremio.${DOMAIN}/ as its streaming server.
+# ─────────────────────────────────────────────────────────────
+name: media
+
+services:
+  stremio:
+    image: tsaridas/stremio-docker:latest
+    container_name: stremio
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8095:8080/tcp"
+    environment:
+      TZ: ${TZ}
+      # The player takes the server URL from the address bar,
+      # so https://stremio.${DOMAIN} works on every device.
+      AUTO_SERVER_URL: 1
+      NO_CORS: 1
+      CASTING_DISABLED: 1
+    volumes:
+      - ../../data/stremio:/root/.stremio-server
+    # Uncomment for hardware transcoding on Intel/AMD iGPUs:
+    # devices:
+    #   - /dev/dri:/dev/dri
+    networks:
+      - media
+
+networks:
+  media:
+    name: plint-media

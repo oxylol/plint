@@ -1,0 +1,27 @@
+# Plint · Claude on the box
+# Runs Claude Code in Remote Control server mode inside tmux, as the `plint`
+# user, so the server shows up as a session called "Plint" in the Claude app.
+# Attach locally with:  plint claude
+[Unit]
+Description=Plint · Claude Code remote-control server
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=forking
+User=plint
+Group=plint
+WorkingDirectory=/opt/plint
+Environment=HOME=/home/plint
+Environment=PATH=/home/plint/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX=plint
+ExecStartPre=-/usr/bin/tmux kill-session -t claude
+ExecStart=/usr/bin/tmux new-session -d -s claude -c /opt/plint "claude remote-control --name Plint; sleep 5"
+ExecStop=/usr/bin/tmux kill-session -t claude
+Restart=always
+RestartSec=20s
+# Give Claude a few minutes to shut down subagents and tasks cleanly.
+TimeoutStopSec=180
+
+[Install]
+WantedBy=multi-user.target

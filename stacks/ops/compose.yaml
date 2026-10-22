@@ -1,0 +1,114 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · ops stack
+#  Metrics (Beszel), uptime + status page (Uptime Kuma),
+#  push notifications (ntfy) and backups (Kopia).
+# ─────────────────────────────────────────────────────────────
+name: ops
+
+services:
+  beszel:
+    image: henrygd/beszel:latest
+    container_name: beszel
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8090:8090/tcp"
+    environment:
+      TZ: ${TZ}
+      APP_URL: https://metrics.${DOMAIN}
+    volumes:
+      - ../../data/beszel/hub:/beszel_data
+      - ../../data/beszel/socket:/beszel_socket
+    networks:
+      - ops
+
+  beszel-agent:
+    image: henrygd/beszel-agent:latest
+    container_name: beszel-agent
+    restart: unless-stopped
+    # Host networking so the agent can read real interface and disk stats.
+    network_mode: host
+    environment:
+      TZ: ${TZ}
+      # Hub and agent share a Unix socket; nothing is exposed on the network.
+      LISTEN: /beszel_socket/beszel.sock
+      KEY: ${BESZEL_KEY}
+    volumes:
+      - ../../data/beszel/agent:/var/lib/beszel-agent
+      - ../../data/beszel/socket:/beszel_socket
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001/tcp"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ../../data/uptime-kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ops
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: ntfy
+    restart: unless-stopped
+    command: serve
+    ports:
+      - "127.0.0.1:8070:80/tcp"
+    environment:
+      TZ: ${TZ}
+      NTFY_BASE_URL: https://ntfy.${DOMAIN}
+      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
+      NTFY_ATTACHMENT_CACHE_DIR: /var/cache/ntfy/attachments
+      NTFY_BEHIND_PROXY: "true"
+      NTFY_ENABLE_LOGIN: "true"
+      NTFY_AUTH_FILE: /var/lib/ntfy/user.db
+      # Only logged-in users can publish or subscribe. Topics are created
+      # at install time; see scripts/ntfy-setup.sh
+      NTFY_AUTH_DEFAULT_ACCESS: deny-all
+      NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
+    volumes:
+      - ../../data/ntfy/cache:/var/cache/ntfy
+      - ../../data/ntfy/lib:/var/lib/ntfy
+    networks:
+      - ops
+
+  kopia:
+    image: kopia/kopia:latest
+    container_name: kopia
+    restart: unless-stopped
+    hostname: plint
+    user: "0:0"
+    command:
+      - server
+      - start
+      - --insecure
+      - --address=0.0.0.0:51515
+      - --server-username=${ADMIN_USER}
+      - --server-password=${ADMIN_PASSWORD}
+      - --disable-csrf-token-checks
+    ports:
+      - "127.0.0.1:51515:51515/tcp"
+    environment:
+      TZ: ${TZ}
+      KOPIA_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - ../../data/kopia/config:/app/config
+      - ../../data/kopia/cache:/app/cache
+      - ../../data/kopia/logs:/app/logs
+      - ${BACKUP_PATH}:/repository
+      # What gets backed up, mounted read-only. AMP's data is added by
+      # install.sh in compose.override.yaml once AMP exists.
+      - ../../data:/sources/plint-data:ro
+      - ../../.env:/sources/plint.env:ro
+    networks:
+      - ops
+
+networks:
+  ops:
+    name: plint-ops

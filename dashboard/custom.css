@@ -1,0 +1,73 @@
+/* ─────────────────────────────────────────────────────────────
+   Plint · home screen styling
+   Calm, quiet, system-font. One accent, hairline borders, soft depth.
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --plint-accent: #7aa2ff;
+  --plint-card: rgba(255, 255, 255, 0.045);
+  --plint-card-hover: rgba(255, 255, 255, 0.08);
+  --plint-line: rgba(255, 255, 255, 0.09);
+  --plint-text: rgba(255, 255, 255, 0.92);
+  --plint-muted: rgba(255, 255, 255, 0.55);
+}
+
+html, body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+/* page gutter */
+#page_container > div { padding-top: 2.5rem; }
+
+/* group titles: small caps, muted, generous spacing */
+.services-group > h2,
+.bookmark-group > h2 {
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--plint-muted) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* service cards */
+.service-card,
+.bookmark {
+  background: var(--plint-card) !important;
+  border: 1px solid var(--plint-line) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset,
+              0 10px 30px rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  transition: transform 160ms ease, background 160ms ease,
+              border-color 160ms ease;
+}
+.service-card:hover,
+.bookmark:hover {
+  background: var(--plint-card-hover) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  transform: translateY(-2px);
+}
+
+.service-title { color: var(--plint-text) !important; font-weight: 600; }
+.service-description { color: var(--plint-muted) !important; }
+
+/* status dots */
+.service-status-dot { box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.25); }
+
+/* header widgets: make the resource glyphs breathe */
+#information-widgets { padding-bottom: 1.5rem; }
+.information-widget-resource { opacity: 0.9; }
+
+/* quick launch overlay */
+#search-container input {
+  border-radius: 14px !important;
+  background: var(--plint-card) !important;
+  border: 1px solid var(--plint-line) !important;
+}
+
+/* accent for links */
+a { color: var(--plint-accent); }

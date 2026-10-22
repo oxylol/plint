@@ -1,0 +1,111 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · core stack
+#  The front door (Caddy), the network (AdGuard), the home screen
+#  (Homepage) and the stack manager (Dockge). If this is up, Plint is up.
+# ─────────────────────────────────────────────────────────────
+name: core
+
+services:
+  caddy:
+    build: ../../caddy
+    image: plint/caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    # Host networking: Caddy owns :80/:443 and proxies to localhost ports,
+    # which keeps native services (AMP, Cockpit) and containers identical.
+    network_mode: host
+    cap_add:
+      - NET_BIND_SERVICE
+    environment:
+      DOMAIN: ${DOMAIN}
+      CF_API_TOKEN: ${CF_API_TOKEN}
+      TZ: ${TZ}
+    volumes:
+      - ../../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../data/caddy/data:/data
+      - ../../data/caddy/config:/config
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:2019/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: adguard
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "127.0.0.1:3000:3000/tcp"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ../../data/adguard/work:/opt/adguardhome/work
+      - ../../data/adguard/conf:/opt/adguardhome/conf
+    networks:
+      - core
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:3000/tcp"
+    environment:
+      TZ: ${TZ}
+      PUID: ${PUID}
+      PGID: ${PGID}
+      HOMEPAGE_ALLOWED_HOSTS: ${DOMAIN},dash.${DOMAIN},localhost:3100
+      HOMEPAGE_VAR_DOMAIN: ${DOMAIN}
+      HOMEPAGE_VAR_ADMIN_USER: ${ADMIN_USER}
+      HOMEPAGE_VAR_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - ../../dashboard:/app/config
+      - ../../dashboard/images:/app/public/images:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - socket-proxy
+    networks:
+      - core
+
+  # Read-only, allow-listed access to the Docker API for the dashboard.
+  socket-proxy:
+    image: lscr.io/linuxserver/socket-proxy:latest
+    container_name: socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      INFO: 1
+      PING: 1
+      VERSION: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    read_only: true
+    tmpfs:
+      - /run
+    networks:
+      - core
+
+  dockge:
+    image: louislam/dockge:1
+    container_name: dockge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001/tcp"
+    environment:
+      TZ: ${TZ}
+      DOCKGE_STACKS_DIR: /opt/plint/stacks
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../data/dockge:/app/data
+      # Must be the same path inside and outside the container.
+      - /opt/plint/stacks:/opt/plint/stacks
+    networks:
+      - core
+
+networks:
+  core:
+    name: plint

@@ -1,0 +1,5 @@
+---
+# Plint · Docker access for status dots (read-only via socket-proxy)
+plint:
+  host: socket-proxy
+  port: 2375

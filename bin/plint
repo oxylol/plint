@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────
+#  plint · the one command for the box
+#
+#    plint status            what's running, what isn't
+#    plint up|down|restart   [stack]   (core | ops | media | all)
+#    plint logs <name>       follow a container's logs
+#    plint sync              pull the repo, apply any changes
+#    plint update            update images + OS packages, then sync
+#    plint backup            snapshot now
+#    plint doctor            check DNS, certs, ports, tailscale
+#    plint claude            attach to Claude on the box (Ctrl+B, D to leave)
+#    plint notify "msg"      push a message to your phone
+# ─────────────────────────────────────────────────────────────
+set -euo pipefail
+PLINT_DIR="${PLINT_DIR:-/opt/plint}"
+# shellcheck source=../scripts/lib.sh
+source "${PLINT_DIR}/scripts/lib.sh"
+load_env 2>/dev/null || true
+
+STACKS=(core ops media)
+usage() { sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+
+stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media) echo "$1";; *) die "unknown stack: $1";; esac; }
+
+cmd_status() {
+  printf '%s%s%s\n\n' "$C_BOLD" "Plint · $(hostname) · $(date '+%a %d %b %H:%M')" "$C_RESET"
+  printf '%-16s %-12s %s\n' "SERVICE" "STATE" "WHERE"
+  while IFS='|' read -r name state; do
+    [[ -z "$name" ]] && continue
+    local dot="$C_GREEN●"; [[ "$state" != running* ]] && dot="$C_RED●"
+    printf '%s %-14s %-12s %s\n' "$dot$C_RESET" "$name" "$state" "$(url_for "$name")"
+  done < <(docker ps -a --format '{{.Names}}|{{.State}}' | sort)
+  for svc in cockpit.socket tailscaled plint-claude; do
+    local st; st="$(systemctl is-active "$svc" 2>/dev/null || true)"
+    local dot="$C_GREEN●"; [[ "$st" != active ]] && dot="$C_YELLOW●"
+    printf '%s %-14s %-12s %s\n' "$dot$C_RESET" "${svc%.socket}" "$st" "$(url_for "$svc")"
+  done
+  if id amp >/dev/null 2>&1; then
+    local n; n="$(sudo -u amp -H ampinstmgr status 2>/dev/null | grep -c 'Running' || true)"
+    printf '%s %-14s %-12s %s\n' "$C_GREEN●$C_RESET" "amp" "${n} running" "https://games.${DOMAIN:-}"
+  fi
+  printf '\n%s' "$C_DIM"
+  df -h / | awk 'NR==2{printf "disk %s used of %s  ·  ", $3, $2}'
+  free -h | awk 'NR==2{printf "mem %s of %s  ·  ", $3, $2}'
+  uptime -p | sed 's/^up /up /'
+  printf '%s\n' "$C_RESET"
+}
+
+url_for() {
+  case "$1" in
+    homepage) echo "https://${DOMAIN:-}";;
+    adguard) echo "https://dns.${DOMAIN:-}";;
+    dockge) echo "https://stacks.${DOMAIN:-}";;
+    beszel) echo "https://metrics.${DOMAIN:-}";;
+    uptime-kuma) echo "https://status.${DOMAIN:-}";;
+    ntfy) echo "https://ntfy.${DOMAIN:-}";;
+    kopia) echo "https://backup.${DOMAIN:-}";;
+    stremio) echo "https://stremio.${DOMAIN:-}";;
+    cockpit.socket) echo "https://host.${DOMAIN:-}";;
+    tailscaled) tailscale ip -4 2>/dev/null | head -n1;;
+    plint-claude) echo "claude.ai/code → Plint";;
+    *) echo "";;
+  esac
+}
+
+cmd_up()      { for s in $(stacks_for "${1:-all}"); do say "up $s"; compose "$s" up -d --remove-orphans; done; }
+cmd_down()    { for s in $(stacks_for "${1:-all}"); do say "down $s"; compose "$s" down; done; }
+cmd_restart() { for s in $(stacks_for "${1:-all}"); do say "restart $s"; compose "$s" restart; done; }
+cmd_logs()    { [[ -n "${1:-}" ]] || die "plint logs <container>"; docker logs -f --tail 200 "$1"; }
+
+cmd_sync() {
+  step "Sync"
+  local before after
+  before="$(git -C "$PLINT_DIR" rev-parse --short HEAD)"
+  sudo -u plint -H git -C "$PLINT_DIR" pull --ff-only
+  after="$(git -C "$PLINT_DIR" rev-parse --short HEAD)"
+  if [[ "$before" == "$after" ]]; then ok "already up to date ($after)"; else ok "$before → $after"; fi
+  for s in "${STACKS[@]}"; do compose "$s" up -d --remove-orphans --build; done
+  docker exec caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 || true
+  if ! cmp -s "$PLINT_DIR/systemd/plint-claude.service" /etc/systemd/system/plint-claude.service; then
+    install -m 0644 "$PLINT_DIR/systemd/plint-claude.service" /etc/systemd/system/
+    systemctl daemon-reload && systemctl restart plint-claude
+  fi
+  ok "synced"
+}
+
+cmd_update() {
+  step "Update"
+  for s in "${STACKS[@]}"; do compose "$s" pull --quiet; done
+  cmd_sync
+  docker image prune -f >/dev/null
+  if [[ "${1:-}" == "--os" ]]; then
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq && apt-get upgrade -y -qq
+    [[ -f /var/run/reboot-required ]] && warn "reboot required (plan it around game servers)"
+  fi
+  "$PLINT_DIR/scripts/notify.sh" "Plint updated" "Containers refreshed on $(hostname)" low "arrows_counterclockwise"
+  ok "updated"
+}
+
+cmd_backup() {
+  step "Backup"
+  for src in /sources/plint-data /sources/plint.env /sources/amp; do
+    docker exec kopia test -e "$src" 2>/dev/null || continue
+    docker exec kopia kopia snapshot create "$src"
+  done
+  "$PLINT_DIR/scripts/notify.sh" "Backup done" "Kopia snapshot finished on $(hostname)" low "floppy_disk"
+}
+
+cmd_doctor() {
+  step "Doctor"
+  local fails=0
+  check() { if "$@" >/dev/null 2>&1; then ok "$*"; else warn "FAILED: $*"; ((fails++)) || true; fi; }
+  check dig +short +time=2 "@${SERVER_IP:-127.0.0.1}" "dash.${DOMAIN}"
+  check dig +short +time=2 "@${SERVER_IP:-127.0.0.1}" cloudflare.com
+  check curl -fsS -o /dev/null --max-time 5 "https://${DOMAIN}"
+  check curl -fsS -o /dev/null --max-time 5 "https://dns.${DOMAIN}"
+  check docker exec caddy caddy validate --config /etc/caddy/Caddyfile
+  check tailscale status
+  check systemctl is-active plint-claude
+  check bash -c "ss -lnu | grep -q ':53 '"
+  local exp
+  exp="$(echo | openssl s_client -servername "${DOMAIN}" -connect 127.0.0.1:443 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2 || true)"
+  [[ -n "$exp" ]] && say "certificate valid until $exp"
+  if (( fails == 0 )); then ok "all good"; else warn "$fails check(s) failed"; fi
+}
+
+cmd_claude() {
+  systemctl is-active --quiet plint-claude || systemctl start plint-claude
+  exec sudo -u plint -H tmux attach -t claude
+}
+
+cmd_notify() { "$PLINT_DIR/scripts/notify.sh" "Plint" "$*"; ok "sent"; }
+
+case "${1:-}" in
+  status|"") cmd_status;;
+  up|down|restart|logs|sync|update|backup|doctor|claude|notify) c="$1"; shift; "cmd_$c" "$@";;
+  -h|--help|help) usage;;
+  *) usage 1;;
+esac

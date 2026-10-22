@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Grep",
+      "Glob",
+      "Bash(plint status*)",
+      "Bash(plint doctor*)",
+      "Bash(plint logs *)",
+      "Bash(plint notify *)",
+      "Bash(docker ps*)",
+      "Bash(docker logs *)",
+      "Bash(docker compose * ps*)",
+      "Bash(docker compose * logs*)",
+      "Bash(docker stats --no-stream*)",
+      "Bash(systemctl status *)",
+      "Bash(systemctl is-active *)",
+      "Bash(journalctl *)",
+      "Bash(tailscale status*)",
+      "Bash(tailscale ip*)",
+      "Bash(dig *)",
+      "Bash(df *)",
+      "Bash(free *)",
+      "Bash(uptime*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./stacks/*/.env)",
+      "Bash(cat .env*)",
+      "Bash(cat /opt/plint/.env*)",
+      "Bash(rm -rf /opt/plint/data*)",
+      "Bash(docker volume rm *)",
+      "Bash(docker system prune*)"
+    ]
+  }
+}

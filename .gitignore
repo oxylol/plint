@@ -1,0 +1,7 @@
+# secrets and local state never leave the box
+.env
+stacks/*/.env
+data/
+*.log
+.claude/settings.local.json
+stacks/*/compose.override.yaml

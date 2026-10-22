@@ -1,0 +1,12 @@
+---
+# Plint · quiet links in the footer area
+- Admin:
+    - Cloudflare:
+        - abbr: CF
+          href: https://dash.cloudflare.com
+    - Tailscale DNS:
+        - abbr: TS
+          href: https://login.tailscale.com/admin/dns
+    - Repo:
+        - abbr: GH
+          href: https://github.com/oxylol/plint

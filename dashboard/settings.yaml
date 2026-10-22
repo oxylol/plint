@@ -1,0 +1,36 @@
+---
+# Plint · home screen
+title: Plint
+description: Home
+favicon: /images/favicon.svg
+
+theme: dark
+color: zinc
+headerStyle: clean
+cardStyle: hairline
+statusStyle: dot
+hideVersion: true
+disableCollapse: true
+iconStyle: theme
+useEqualHeights: true
+
+background:
+  image: /images/wallpaper.svg
+  opacity: 100
+
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+  hideVisitURL: true
+  showSearchSuggestions: false
+
+layout:
+  Everyday:
+    style: row
+    columns: 3
+  Network:
+    style: row
+    columns: 3
+  System:
+    style: row
+    columns: 4

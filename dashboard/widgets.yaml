@@ -1,0 +1,18 @@
+---
+# Plint · header widgets (kept deliberately sparse)
+- logo:
+    icon: /images/logo.svg
+
+- resources:
+    label: Plint
+    cpu: true
+    memory: true
+    disk: /
+    uptime: true
+    expanded: false
+
+- datetime:
+    text_size: xl
+    format:
+      timeStyle: short
+      hourCycle: h23
