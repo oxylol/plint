@@ -103,7 +103,10 @@
 
 	@stacks host stacks.{$DOMAIN}
 	handle @stacks {
-		reverse_proxy localhost:5001
+		import theme dockge
+		reverse_proxy localhost:5001 {
+			header_up Accept-Encoding identity
+		}
 	}
 
 	@metrics host metrics.{$DOMAIN}
@@ -116,7 +119,10 @@
 
 	@status host status.{$DOMAIN}
 	handle @status {
-		reverse_proxy localhost:3001
+		import theme kuma
+		reverse_proxy localhost:3001 {
+			header_up Accept-Encoding identity
+		}
 	}
 
 	@ntfy host ntfy.{$DOMAIN}
