@@ -195,7 +195,7 @@
     var box = q(".p-split", li);
     if (!box) { box = P.el("div", "p-split"); li.firstElementChild.appendChild(box); li.classList.add("p-has-split"); }
     var pct = blocked / queries * 100;
-    set(box, '<div class="p-dial">' + P.ring(pct, { size: 96, width: 15, butt: true, label: Math.round(pct) + " percent of queries blocked" }) +
+    set(box, '<div class="p-dial">' + P.ring(pct, { size: 96, width: 15, butt: true, tone: "warn", label: Math.round(pct) + " percent of queries blocked" }) +
       "<b>" + Math.round(pct) + "%<small>BLOCKED</small></b></div>" +
       "<dl><dt>Queries</dt><dd>" + P.fmt(queries) + "</dd><dt>Blocked</dt><dd>" + P.fmt(blocked) + "</dd><dt>Answer time</dt><dd>" + P.esc(latency.replace(/(\.\d)\d+/, "$1")) + "</dd></dl>");
   }
