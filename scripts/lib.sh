@@ -22,20 +22,29 @@ need_root() { [[ $EUID -eq 0 ]] || die "Run as root (sudo -i first)."; }
 
 load_env() {
   [[ -f "$PLINT_ENV" ]] || die "Missing $PLINT_ENV — run install.sh first."
-  set -a
+  # A damaged line must not take the whole script down; env_set repairs it.
+  set -a; set +e
   # shellcheck disable=SC1090
   source "$PLINT_ENV"
-  set +a
+  set -e; set +a
 }
 
 # env_set KEY VALUE — create or update a key in .env without touching the rest.
+# Values with spaces or shell-special characters are single-quoted, which both
+# bash and Docker Compose read back literally.
 env_set() {
-  local key="$1" val="$2"
+  local key="$1" val="$2" out
+  if [[ "$val" =~ [^A-Za-z0-9_./:@,=+-] ]]; then
+    out="'${val//\'/\'\\\'\'}'"
+  else
+    out="$val"
+  fi
   touch "$PLINT_ENV"
   if grep -qE "^${key}=" "$PLINT_ENV"; then
-    sed -i "s|^${key}=.*|${key}=${val}|" "$PLINT_ENV"
+    NEWVAL="$out" awk -v k="$key" 'BEGIN{v=ENVIRON["NEWVAL"]} index($0,k"=")==1 {print k"="v; next} {print}' \
+      "$PLINT_ENV" > "${PLINT_ENV}.tmp" && cat "${PLINT_ENV}.tmp" > "$PLINT_ENV" && rm -f "${PLINT_ENV}.tmp"
   else
-    printf '%s=%s\n' "$key" "$val" >> "$PLINT_ENV"
+    printf '%s=%s\n' "$key" "$out" >> "$PLINT_ENV"
   fi
 }
 
