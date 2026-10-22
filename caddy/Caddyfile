@@ -85,7 +85,10 @@
 	@host host host.{$DOMAIN}
 	handle @host {
 		# cockpit.conf sets AllowUnencrypted + ProtocolHeader for this.
-		reverse_proxy localhost:9090
+		import theme cockpit
+		reverse_proxy localhost:9090 {
+			header_up Accept-Encoding identity
+		}
 	}
 
 	@games host games.{$DOMAIN}
