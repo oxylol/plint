@@ -11,13 +11,6 @@
         description: AMP · game servers
         siteMonitor: http://host.docker.internal:8080
 
-    - Retro:
-        icon: romm.png
-        href: https://retro.{{HOMEPAGE_VAR_DOMAIN}}
-        description: RomM · retro games in the browser
-        server: plint
-        container: romm
-
     - Stremio:
         icon: stremio.png
         href: https://stremio.{{HOMEPAGE_VAR_DOMAIN}}

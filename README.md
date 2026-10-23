@@ -17,7 +17,6 @@ machine is this repository.
 | **dns.plint.net** | AdGuard Home — network-wide ad blocking, encrypted upstream DNS |
 | **games.plint.net** | AMP — game servers |
 | **stremio.plint.net** | Stremio streaming server + web player |
-| **retro.plint.net** | RomM — retro game library, playable in the browser |
 | **host.plint.net** | Cockpit — updates, disks, logs, terminal |
 | **stacks.plint.net** | Dockge — containers |
 | **metrics.plint.net** | Beszel — CPU, memory, disk, per-container |
@@ -93,7 +92,6 @@ plint logs stremio    follow a container
 plint update          refresh containers (add --os for apt as well)
 plint backup          snapshot now
 plint game            AMP game servers · plint game start|stop nissesky
-plint retro add gba <url|file>   add a game to RomM
 plint claude          attach to Claude on the box (Ctrl+B then D to leave)
 ```
 

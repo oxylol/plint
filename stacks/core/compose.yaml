@@ -21,7 +21,9 @@ services:
       CF_API_TOKEN: ${CF_API_TOKEN}
       TZ: ${TZ}
     volumes:
-      - ../../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # The folder, not the file: git replaces files on pull, and a single-file
+      # bind mount would keep showing Caddy the old copy.
+      - ../../caddy:/etc/caddy:ro
       - ../../theme:/srv/_plint:ro
       - ../../data/theme:/srv/plint-data:ro
       - ../../data/caddy/data:/data
