@@ -51,8 +51,10 @@ services:
       HASHEOUS_API_ENABLED: "true"
       TGDB_API_ENABLED: "true"
       HLTB_API_ENABLED: "true"
-      # Web API key from retroachievements.org → Settings → Keys (in .env).
+      # Keys live in .env: retroachievements.org → Settings → Keys;
+      # steamgriddb.com → Preferences → API.
       RETROACHIEVEMENTS_API_KEY: ${RETROACHIEVEMENTS_API_KEY:-}
+      STEAMGRIDDB_API_KEY: ${STEAMGRIDDB_API_KEY:-}
       ENABLE_SCHEDULED_RETROACHIEVEMENTS_PROGRESS_SYNC: "true"
       ENABLE_RESCAN_ON_FILESYSTEM_CHANGE: "true"
       RESCAN_ON_FILESYSTEM_CHANGE_DELAY: 1
