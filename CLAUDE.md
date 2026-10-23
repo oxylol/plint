@@ -16,7 +16,7 @@ app; they are usually on a phone, so keep answers short and lead with the result
 ├── stacks/
 │   ├── core/           caddy · adguard · homepage · socket-proxy · dockge
 │   ├── ops/            beszel (+agent) · uptime-kuma · ntfy · kopia
-│   └── media/          stremio
+│   └── media/          stremio · romm (+ mariadb)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
 ├── dashboard/          Homepage config (services/widgets/settings/images)
@@ -40,6 +40,7 @@ host network and proxies to `localhost:<port>`:
 | dns | 3000 | AdGuard Home |
 | games | 8080 | AMP |
 | stremio | 8095 | Stremio |
+| retro | 8096 | RomM |
 | host | 9090 | Cockpit |
 | stacks | 5001 | Dockge |
 | metrics | 8090 | Beszel |
@@ -68,6 +69,11 @@ host network and proxies to `localhost:<port>`:
 - **Game servers**: `plint game` lists AMP servers (running? port, connections);
   `plint game start|stop <name>` (name or prefix, e.g. `nissesky`). Stop refuses while
   players are connected unless `--force`. `ampinstmgr` alone only starts the *panels*.
+- **Retro games (RomM)**: "add X" → `plint retro add <platform> <url|file> [name]`. It
+  puts the file in `/mnt/storage/retro/roms/<platform>/` (RomM folder names: gb gbc gba
+  nes snes n64 nds psx …) and queues a scan. Only legal sources: homebrew, freeware,
+  public domain, or files Filip provides. Never fetch commercial ROMs. The library isn't
+  backed up (re-obtainable); RomM's DB and saves are, under `data/`.
 - **Backups**: nightly 03:30 via Kopia to `BACKUP_PATH`. `plint backup` snapshots now.
 - **Notify Filip**: `plint notify "message"` (ntfy → phone). Use it when you finish
   something he asked for while away, or when something needs a decision.

@@ -2,6 +2,7 @@
 #  Plint · media stack
 #  Stremio streaming server + web player. Point every Stremio app at
 #  https://stremio.${DOMAIN}/ as its streaming server.
+#  RomM: retro game library with in-browser play at https://retro.${DOMAIN}.
 # ─────────────────────────────────────────────────────────────
 name: media
 
@@ -24,6 +25,67 @@ services:
     # Uncomment for hardware transcoding on Intel/AMD iGPUs:
     # devices:
     #   - /dev/dri:/dev/dri
+    networks:
+      - media
+
+  # ROMs live on the storage array as <library>/roms/<platform>/<game>.
+  # Dropping a file there is enough: RomM rescans a minute later.
+  romm:
+    image: rommapp/romm:latest
+    container_name: romm
+    restart: unless-stopped
+    user: "1000:1000"
+    ports:
+      - "127.0.0.1:8096:8080/tcp"
+    environment:
+      TZ: ${TZ}
+      ROMM_BASE_URL: https://retro.${DOMAIN}
+      ROMM_SESSION_SECURE_COOKIE: "true"
+      DB_HOST: romm-db
+      DB_NAME: romm
+      DB_USER: romm
+      DB_PASSWD: ${ROMM_DB_PASSWORD}
+      ROMM_AUTH_SECRET_KEY: ${ROMM_AUTH_SECRET_KEY}
+      # Covers and game info from providers that need no account. (LaunchBox
+      # is left off: its index lives in RomM's in-memory cache, ~260 MB of RAM.)
+      HASHEOUS_API_ENABLED: "true"
+      TGDB_API_ENABLED: "true"
+      ENABLE_RESCAN_ON_FILESYSTEM_CHANGE: "true"
+      RESCAN_ON_FILESYSTEM_CHANGE_DELAY: 1
+      # Small box: fewer workers, less RAM.
+      WEB_SERVER_CONCURRENCY: 1
+      SCAN_WORKERS: 2
+    volumes:
+      - ${ROMM_LIBRARY:-/mnt/storage/retro}:/romm/library
+      - ../../data/romm/resources:/romm/resources
+      - ../../data/romm/assets:/romm/assets
+      - ../../data/romm/config:/romm/config
+      - ../../data/romm/redis:/redis-data
+    depends_on:
+      romm-db:
+        condition: service_healthy
+    networks:
+      - media
+
+  romm-db:
+    image: mariadb:11
+    container_name: romm-db
+    restart: unless-stopped
+    command: --innodb-buffer-pool-size=64M
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ROMM_DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: romm
+      MARIADB_USER: romm
+      MARIADB_PASSWORD: ${ROMM_DB_PASSWORD}
+    volumes:
+      - ../../data/romm-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      start_interval: 5s
+      interval: 30s
+      timeout: 5s
+      retries: 5
     networks:
       - media
 

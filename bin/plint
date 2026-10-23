@@ -12,6 +12,7 @@
 #    plint claude            attach to Claude on the box (Ctrl+B, D to leave)
 #    plint notify "msg"      push a message to your phone
 #    plint game [start|stop <name>]   AMP game servers (list · start · stop)
+#    plint retro add <platform> <url|file> · plint retro scan   RomM library
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
 PLINT_DIR="${PLINT_DIR:-/opt/plint}"
@@ -20,7 +21,7 @@ source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
 STACKS=(core ops media)
-usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media) echo "$1";; *) die "unknown stack: $1";; esac; }
 
@@ -200,6 +201,50 @@ cmd_game_stop() {
   ok "$inst stopped"
 }
 
+# ── RomM (retro games) ───────────────────────────────────────
+# ROMs live in <library>/roms/<platform>/ (platform = RomM's folder name: gb gbc gba
+# nes snes n64 nds psx …). RomM's watcher only notices files on platforms it already
+# knows, so every add queues a scan too — the same job the watcher queues, no login.
+ROMM_LIBRARY="${ROMM_LIBRARY:-/mnt/storage/retro}"
+
+cmd_retro() {
+  case "${1:-}" in
+    add) shift; retro_add "$@";;
+    scan) retro_scan;;
+    *) die "plint retro add <platform> <url|file> [name] · plint retro scan";;
+  esac
+}
+
+retro_add() {
+  local platform="${1:-}" src="${2:-}" name="${3:-}" dir tmp
+  [[ -n "$platform" && -n "$src" ]] || die "plint retro add <platform> <url|file> [name]"
+  [[ -n "$name" ]] || name="$(python3 -c 'import sys, urllib.parse as u; print(u.unquote(sys.argv[1]))' "$(basename "${src%%\?*}")")"
+  dir="$ROMM_LIBRARY/roms/$platform"
+  sudo install -d -o 1000 -g 1000 "$dir"
+  if [[ "$src" =~ ^https?:// ]]; then
+    tmp="$(mktemp)"
+    curl -fL --progress-bar -o "$tmp" "$src" || { rm -f "$tmp"; die "download failed: $src"; }
+    sudo install -o 1000 -g 1000 -m 0644 "$tmp" "$dir/$name"; rm -f "$tmp"
+  else
+    [[ -f "$src" ]] || die "no such file: $src"
+    sudo install -o 1000 -g 1000 -m 0644 "$src" "$dir/$name"
+  fi
+  ok "added $platform/$name"
+  retro_scan
+}
+
+retro_scan() {
+  docker exec -w /backend -e PYTHONPATH=/backend -e PYTHONWARNINGS=ignore romm /src/.venv/bin/python -c '
+from config import SCAN_TIMEOUT, TASK_RESULT_TTL
+from endpoints.sockets.scan import report_scan_failure, scan_job_meta, scan_platforms
+from handler.redis_handler import scan_queue
+from handler.scan_handler import ScanType, get_enabled_metadata_sources
+scan_queue.enqueue(scan_platforms, platform_ids=[], metadata_sources=get_enabled_metadata_sources(),
+    scan_type=ScanType.QUICK, on_failure=report_scan_failure, job_timeout=SCAN_TIMEOUT,
+    result_ttl=TASK_RESULT_TTL, meta=scan_job_meta(ScanType.QUICK))' >/dev/null
+  ok "scan queued; it shows up on https://retro.${DOMAIN:-} in a minute"
+}
+
 cmd_up()      { for s in $(stacks_for "${1:-all}"); do say "up $s"; compose "$s" up -d --remove-orphans; done; }
 cmd_down()    { for s in $(stacks_for "${1:-all}"); do say "down $s"; compose "$s" down; done; }
 cmd_restart() { for s in $(stacks_for "${1:-all}"); do say "restart $s"; compose "$s" restart; done; }
@@ -280,7 +325,7 @@ cmd_notify() { "$PLINT_DIR/scripts/notify.sh" "Plint" "$*"; ok "sent"; }
 
 case "${1:-}" in
   status|"") cmd_status;;
-  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game) c="$1"; shift; "cmd_$c" "$@";;
+  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game|retro) c="$1"; shift; "cmd_$c" "$@";;
   -h|--help|help) usage;;
   *) usage 1;;
 esac
