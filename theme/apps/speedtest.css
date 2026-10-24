@@ -1,0 +1,219 @@
+/* ─────────────────────────────────────────────────────────────
+   Plint Soft UI · Speedtest Tracker (speed.<domain>)
+   Filament 4 + Tailwind 4: colours are plain CSS variables (oklch by
+   default), so the palette is remapped here and the surfaces made
+   raised/pressed. Tailwind lives in cascade layers, so these unlayered
+   rules win without !important. speedtest.js keeps html.dark in step
+   with the device and recolours the Chart.js datasets.
+   ───────────────────────────────────────────────────────────── */
+
+/* ── palette ─────────────────────────────────────────────────── */
+:root {
+  --primary-50: color-mix(in oklab, var(--p-accent) 8%, var(--p-bg));
+  --primary-100: color-mix(in oklab, var(--p-accent) 16%, var(--p-bg));
+  --primary-200: color-mix(in oklab, var(--p-accent) 30%, var(--p-bg));
+  --primary-300: color-mix(in oklab, var(--p-accent) 55%, var(--p-bg));
+  --primary-400: var(--p-accent);
+  --primary-500: var(--p-accent);
+  --primary-600: var(--p-accent);
+  --primary-700: color-mix(in oklab, var(--p-accent) 85%, var(--p-ink));
+  --primary-800: color-mix(in oklab, var(--p-accent) 70%, var(--p-ink));
+  --primary-900: var(--p-on-accent);
+  --primary-950: var(--p-on-accent);
+
+  --danger-50: var(--p-bad-soft); --danger-400: var(--p-bad); --danger-500: var(--p-bad); --danger-600: var(--p-bad); --danger-700: var(--p-bad);
+  --warning-50: var(--p-warn-soft); --warning-400: var(--p-warn); --warning-500: var(--p-warn); --warning-600: var(--p-warn); --warning-700: var(--p-warn);
+  --success-50: var(--p-accent-soft); --success-400: var(--p-accent); --success-500: var(--p-accent); --success-600: var(--p-accent); --success-700: var(--p-accent);
+  --info-50: var(--p-info-soft); --info-400: var(--p-info); --info-500: var(--p-info); --info-600: var(--p-info); --info-700: var(--p-info);
+
+  --font-family: "Manrope";
+  --mono-font-family: "JetBrains Mono";
+}
+/* Light: Filament paints cards bg-white on gray-50; dark: gray-900 on gray-950. */
+html:not(.dark) {
+  --color-white: var(--p-bg);
+  --gray-50: var(--p-bg);
+  --gray-100: color-mix(in oklab, var(--p-ink) 5%, var(--p-bg));
+  --gray-200: color-mix(in oklab, var(--p-ink) 11%, var(--p-bg));
+  --gray-300: color-mix(in oklab, var(--p-ink) 20%, var(--p-bg));
+  --gray-400: color-mix(in oklab, var(--p-ink2) 75%, var(--p-bg));
+  --gray-500: var(--p-ink2);
+  --gray-600: var(--p-ink2);
+  --gray-700: color-mix(in oklab, var(--p-ink) 70%, var(--p-ink2));
+  --gray-800: var(--p-ink);
+  --gray-900: var(--p-ink);
+  --gray-950: var(--p-ink);
+}
+html.dark {
+  --color-white: var(--p-ink);
+  --gray-950: var(--p-bg);
+  --gray-900: var(--p-bg);
+  --gray-800: color-mix(in oklab, var(--p-ink) 8%, var(--p-bg));
+  --gray-700: color-mix(in oklab, var(--p-ink) 15%, var(--p-bg));
+  --gray-600: color-mix(in oklab, var(--p-ink) 30%, var(--p-bg));
+  --gray-500: var(--p-ink2);
+  --gray-400: var(--p-ink2);
+  --gray-300: color-mix(in oklab, var(--p-ink) 80%, var(--p-ink2));
+  --gray-200: var(--p-ink);
+  --gray-100: var(--p-ink);
+  --gray-50: var(--p-ink);
+}
+
+html, body, .fi-body, .fi-layout, .fi-main-ctn, main {
+  background: var(--p-bg) !important;
+  color: var(--p-ink);
+  font-family: var(--p-font);
+  -webkit-font-smoothing: antialiased;
+}
+.font-mono, code, pre { font-family: var(--p-mono); }
+
+/* Light/dark comes from the device (speedtest.js); the app's own switchers go. */
+[aria-label="Light mode"], .fi-theme-switcher { display: none !important; }
+div:has(> [aria-label="Light mode"]) { display: none !important; }
+
+/* ── public dashboard header: pill · title · actions ─────────── */
+main > header {
+  padding: 10px 14px 10px 10px;
+  border-radius: 24px;
+  background: var(--p-bg);
+  box-shadow: var(--p-raise);
+  border: 1px solid var(--p-edge);
+}
+main > header > div:first-child { display: flex; align-items: center; gap: 4px; min-width: 0; }
+main > header h1 { font-size: 22px !important; font-weight: 800; letter-spacing: -0.02em; color: var(--p-ink); }
+main > header > div:last-child { gap: 10px; }
+main > header > div:last-child > .py-3 { padding: 0; }
+
+/* ── admin chrome ────────────────────────────────────────────── */
+.fi-topbar-ctn { padding: 14px 16px 0; background: transparent; }
+.fi-topbar {
+  background: var(--p-bg) !important;
+  border-radius: 24px;
+  box-shadow: var(--p-raise) !important;
+  border: 1px solid var(--p-edge) !important;
+  min-height: 64px;
+  padding-left: 10px;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.fi-topbar-start { gap: 6px; }
+.fi-logo { font-weight: 800 !important; letter-spacing: -0.02em; color: var(--p-ink) !important; }
+.fi-sidebar, .fi-sidebar-header, .fi-sidebar-nav { background: transparent !important; box-shadow: none !important; }
+.fi-sidebar-header { border: 0 !important; --tw-ring-shadow: 0 0 #0000; }
+.fi-sidebar-group-label { font-size: 12px !important; font-weight: 700 !important; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2) !important; }
+.fi-sidebar-item-btn { min-height: 44px; border-radius: 14px !important; padding-inline: 12px !important; transition: box-shadow 0.15s ease; }
+.fi-sidebar-item-btn:hover { background: transparent !important; box-shadow: var(--p-raise-sm); }
+.fi-sidebar-item.fi-active .fi-sidebar-item-btn { background: transparent !important; box-shadow: var(--p-press-sm); }
+.fi-sidebar-item.fi-active .fi-sidebar-item-label, .fi-sidebar-item.fi-active .fi-sidebar-item-icon { color: var(--p-accent) !important; }
+.fi-sidebar-item-label { font-weight: 700; color: var(--p-ink) !important; }
+.fi-sidebar-item-icon { color: var(--p-ink2) !important; }
+.fi-header-heading { font-size: 30px !important; font-weight: 800 !important; letter-spacing: -0.025em; }
+
+/* ── cards: sections, stats, widgets ─────────────────────────── */
+.fi-section, .fi-wi-stats-overview-stat, .latest-result-stats > div:not(.col-span-full), .fi-ta-ctn, .fi-modal-window, .fi-dropdown-panel, .fi-simple-main {
+  background: var(--p-bg) !important;
+  border-radius: 26px !important;
+  box-shadow: var(--p-raise) !important;
+  border: 1px solid var(--p-edge) !important;
+  outline: 0 !important;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.fi-dropdown-panel { border-radius: 18px !important; }
+.fi-section-header { border: 0 !important; }
+.fi-section-header-heading, .latest-result-stats h3, .latest-result-stats dt { font-weight: 800 !important; color: var(--p-ink) !important; }
+.fi-section-content-ctn { border: 0 !important; }
+.latest-result-stats .text-xl, .latest-result-stats .text-2xl, .fi-section-content .text-xl, .fi-section-content .text-2xl, .fi-wi-stats-overview-stat-value {
+  font-weight: 800 !important; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+h2 { color: var(--p-ink) !important; font-weight: 800 !important; }
+.text-zinc-600, .text-zinc-500 { color: var(--p-ink2) !important; }
+.text-zinc-900 { color: var(--p-ink) !important; }
+
+/* the "Next speedtest at …" note */
+.bg-blue-50, .dark\:bg-blue-500\/10 {
+  background: var(--p-bg) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--p-press-sm);
+  outline: 0 !important;
+}
+.text-blue-700, .text-blue-300, .text-blue-400 { color: var(--p-ink) !important; }
+.bg-blue-50 svg, .dark\:bg-blue-500\/10 svg { color: var(--p-accent) !important; }
+
+/* chart wells; Filament reads chart colours from these hidden elements */
+.fi-wi-chart-canvas-ctn, .fi-wi-chart-frame { border-radius: 18px; }
+.fi-section-content:has(> .fi-wi-chart-frame), .fi-wi-chart .fi-section-content {
+  margin: 0 16px 16px; padding: 14px 12px 8px !important;
+  border-radius: 18px; box-shadow: var(--p-press-sm);
+}
+.fi-wi-chart-grid-color { color: var(--p-line) !important; }
+.fi-wi-chart-text-color { color: var(--p-ink2) !important; }
+.fi-wi-chart-tooltip-bg-color { color: var(--p-bg) !important; }
+.fi-wi-chart-tooltip-text-color { color: var(--p-ink) !important; }
+.fi-wi-chart-tooltip-border-color { color: var(--p-line) !important; }
+
+/* ── controls ────────────────────────────────────────────────── */
+.fi-btn {
+  min-height: 44px;
+  border-radius: 15px !important;
+  font-weight: 700 !important;
+  background: var(--p-bg) !important;
+  color: var(--p-ink) !important;
+  box-shadow: var(--p-raise-sm) !important;
+  border: 1px solid var(--p-edge);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.fi-btn:hover { transform: translateY(-1px); }
+.fi-btn:active { box-shadow: var(--p-press-sm) !important; transform: none; }
+.fi-btn.fi-color-primary {
+  background: var(--p-accent) !important;
+  color: var(--p-on-accent) !important;
+  border: 0;
+}
+.fi-btn.fi-color-primary svg { color: var(--p-on-accent) !important; }
+.fi-btn.fi-color-danger { color: var(--p-bad) !important; background: var(--p-bg) !important; }
+.fi-icon-btn { border-radius: 14px !important; min-width: 44px; min-height: 44px; }
+.fi-icon-btn:hover { background: transparent !important; box-shadow: var(--p-raise-sm); }
+
+.fi-input-wrp, .fi-select-input, textarea, input:not([type=checkbox]):not([type=radio]) {
+  background: var(--p-bg) !important;
+  border-radius: 15px !important;
+  box-shadow: var(--p-press-sm) !important;
+  border: 0 !important;
+  outline: 0;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.fi-input-wrp:focus-within { box-shadow: var(--p-press-sm), 0 0 0 2px var(--p-accent) !important; }
+.fi-input-wrp input, .fi-input-wrp select { box-shadow: none !important; background: transparent !important; }
+.fi-checkbox-input:checked, .fi-toggle.fi-toggle-on { background-color: var(--p-accent) !important; }
+
+.fi-badge {
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000;
+}
+.fi-badge.fi-color-success { background: var(--p-accent-soft) !important; color: var(--p-accent) !important; }
+.fi-badge.fi-color-danger { background: var(--p-bad-soft) !important; color: var(--p-bad) !important; }
+.fi-badge.fi-color-warning { background: var(--p-warn-soft) !important; color: var(--p-warn) !important; }
+.fi-badge.fi-color-info, .fi-badge.fi-color-gray { background: var(--p-info-soft) !important; color: var(--p-info) !important; }
+
+/* ── tables: flat rows inside the raised card ────────────────── */
+.fi-ta-ctn { overflow: hidden; }
+.fi-ta-header-cell { font-size: 12px !important; font-weight: 700 !important; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p-ink2) !important; background: transparent !important; }
+.fi-ta-table, .fi-ta-table thead, .fi-ta-row, .fi-ta-header, .fi-ta-header-toolbar, .fi-ta-footer, .fi-pagination { background: transparent !important; }
+.fi-ta-table > :not(:last-child), .fi-ta-row { border-color: var(--p-line) !important; }
+.fi-ta-row:hover { background: color-mix(in oklab, var(--p-ink) 4%, transparent) !important; }
+.fi-ta-text { font-variant-numeric: tabular-nums; }
+
+/* ── login (simple layout) ───────────────────────────────────── */
+.fi-simple-layout, .fi-simple-main-ctn { background: var(--p-bg) !important; }
+.fi-simple-main { padding: 32px !important; }
+.fi-simple-header-heading { font-weight: 800 !important; letter-spacing: -0.02em; }
+
+/* ── phones ──────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  main > header { padding: 10px; border-radius: 22px; }
+  main > header h1 { font-size: 18px !important; }
+  main > header > div:last-child { flex-wrap: wrap; }
+  .fi-topbar-ctn { padding: 10px 10px 0; }
+}

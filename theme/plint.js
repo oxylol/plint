@@ -29,6 +29,7 @@
     games: "M6 6h12a4 4 0 0 1 4 4v4a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4v-4a4 4 0 0 1 4-4zM6 12h4M8 10v4M15 11h.01M18 13h.01",
     stremio: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM10 8.5l5.5 3.5-5.5 3.5z",
     tailscale: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18",
+    speed: "M12 14l4-4M3.3 19a9 9 0 1 1 17.4 0",
     cloud: "M17.5 19H7a5 5 0 1 1 1.1-9.9A6 6 0 0 1 19.5 11a4 4 0 0 1-2 8z",
     code: "M8 6l-6 6 6 6M16 6l6 6-6 6",
     chat: "M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z",
@@ -52,6 +53,7 @@
     ["cockpit", "host", "Host", "host"],
     ["kopia", "backup", "Backups", "backup"],
     ["ntfy", "ntfy", "Notifications", "ntfy"],
+    ["speedtest", "speed", "Internet", "speed"],
     ["amp", "games", "Games", "games"],
     ["stremio", "stremio", "Stremio", "stremio"]
   ];

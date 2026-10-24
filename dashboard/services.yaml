@@ -63,6 +63,14 @@
           snapshotHost: plint
           snapshotPath: /sources/amp
 
+    # The graph is drawn by Plint Soft UI from data/theme/speedtest.json.
+    - Internet:
+        icon: speedtest-tracker.png
+        href: https://speed.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Speedtest Tracker · 4 tests a day
+        server: plint
+        container: speedtest-tracker
+
 - System:
     - Host:
         icon: cockpit.png

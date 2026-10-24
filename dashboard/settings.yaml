@@ -22,16 +22,17 @@ quicklaunch:
   hideVisitURL: true
   showSearchSuggestions: false
 
+# Games and Tailscale span their whole row (Soft UI draws servers/devices in them).
 layout:
   Everyday:
     style: row
-    columns: 3
+    columns: 2
   Health:
     style: row
-    columns: 3
+    columns: 2
   System:
     style: row
-    columns: 4
+    columns: 3
   Links:
     style: row
     columns: 4

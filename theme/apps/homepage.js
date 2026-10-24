@@ -14,8 +14,10 @@
   var ICON = {
     Games: "games", Stremio: "stremio", Notifications: "ntfy", Status: "status",
     AdGuard: "dns", Backups: "backup", Host: "host", Stacks: "stacks",
-    Metrics: "metrics", Tailscale: "tailscale"
+    Metrics: "metrics", Tailscale: "tailscale", Internet: "speed"
   };
+  // Cards Soft UI fills with its own infographics (full width for the first two).
+  var SPAN = { Games: 1, Tailscale: 1 }, WIDE = { Games: 1, Tailscale: 1, Internet: 1 };
 
   var MARK = { Cloudflare: "cloud", "Tailscale DNS": "tailscale", Repo: "code", Claude: "chat" };
 
@@ -36,6 +38,7 @@
 
   // ── data ────────────────────────────────────────────────────
   var res = {}, kuma = { names: null, beats: null }, backups = null;
+  var games = null, gamesHist = null, tail = null, speed = null;
 
   function get(u) { return fetch(u, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
   function loadResources() {
@@ -66,6 +69,16 @@
   function loadBackups() {
     get("/_plint/data/backups.json").then(function (d) {
       if (d && d.snapshots) { backups = d.snapshots; decorate(); }
+    });
+  }
+
+  // Game servers, tailnet devices and speed tests, exported every 2 min by theme-data.sh.
+  function loadLive() {
+    Promise.all([get("/_plint/data/games.json"), get("/_plint/data/games-history.json"),
+      get("/_plint/data/tailscale.json"), get("/_plint/data/speedtest.json")]).then(function (r) {
+      games = r[0] && r[0].servers; gamesHist = r[1] && r[1].samples;
+      tail = r[2] && r[2].devices; speed = r[3] && r[3].results;
+      decorate();
     });
   }
 
@@ -157,11 +170,15 @@
       var name = nameOf(li);
       var a = q(".service-title > a:first-child", li);
       if (a && !q(".p-well", a) && ICON[name]) a.appendChild(P.el("span", "p-well", P.icon(ICON[name], "")));
-      var hasBlocks = !!q(".relative.flex.flex-row.w-full", li);
-      if (hasBlocks !== li.classList.contains("p-wide")) li.classList.toggle("p-wide", hasBlocks);
+      var wide = !!q(".relative.flex.flex-row.w-full", li) || !!WIDE[name];
+      if (wide !== li.classList.contains("p-wide")) li.classList.toggle("p-wide", wide);
+      if (!!SPAN[name] !== li.classList.contains("p-span")) li.classList.toggle("p-span", !!SPAN[name]);
       if (name === "Status") checks(li);
       if (name === "AdGuard") adguard(li);
       if (name === "Backups") nights(li);
+      if (name === "Games") gamesCard(li);
+      if (name === "Tailscale") tailCard(li);
+      if (name === "Internet") speedCard(li);
     });
   }
 
@@ -229,6 +246,96 @@
     set(box, '<span class="p-nights-cap">Last 4 weeks</span><div class="p-nights-grid" role="img" aria-label="' + P.esc(label) + '">' + cells + "</div>");
   }
 
+  function box(li, cls) {
+    var b = q("." + cls, li);
+    if (!b) { b = P.el("div", cls); li.firstElementChild.appendChild(b); }
+    return b;
+  }
+  function ago(iso) {
+    var s = (Date.now() - new Date(iso)) / 1000;
+    if (!iso || isNaN(s)) return "";
+    if (s < 3600) return Math.max(1, Math.round(s / 60)) + " min ago";
+    if (s < 86400) return Math.round(s / 3600) + " h ago";
+    return Math.round(s / 86400) + " d ago";
+  }
+
+  // Each AMP server: players now as a ring of max players, and the last 24 h
+  // as 48 half-hour cells (faint = no data yet, grey = stopped, sage = online,
+  // deeper sage = people playing).
+  function gamesCard(li) {
+    if (!games) return;
+    var B = 48, nowS = Date.now() / 1000, t0 = nowS - 86400, w = 86400 / B;
+    var running = games.filter(function (g) { return g.running; }), online = 0;
+    running.forEach(function (g) { online += g.players; });
+    var tiles = games.map(function (g) {
+      var cells = [];
+      for (var i = 0; i < B; i++) cells.push(null);
+      (gamesHist || []).forEach(function (h) {
+        var v = h[1][g.id], b = Math.floor((h[0] - t0) / w);
+        if (v === undefined || b < 0 || b >= B) return;
+        cells[b] = cells[b] === null ? v : Math.max(cells[b], v);
+      });
+      var peak = 0, up = 0, seen = 0;
+      var strip = cells.map(function (v) {
+        if (v === null) return '<i class="x"></i>';
+        seen++;
+        if (v < 0) return '<i class="off"></i>';
+        up++; peak = Math.max(peak, v);
+        return '<i class="' + (v === 0 ? "idle" : "on") + '"></i>';
+      }).join("");
+      var max = g.max || 0, pct = g.running && max ? g.players / max * 100 : 0;
+      var dial = g.running
+        ? P.ring(pct, { size: 60, width: 7, label: g.players + " of " + (max || "?") + " players" }) + "<b>" + g.players + "</b>"
+        : '<span class="p-off">' + P.icon("games", "") + "</span>";
+      var state = !g.running ? "Stopped" : g.players ? g.players + (g.players === 1 ? " player" : " players") + (max ? " of " + max : "") : "Online · empty";
+      var label = g.name + ", last 24 hours: " + (seen ? "online " + Math.round(up / seen * 100) + "% of the time" + (peak ? ", peak " + peak + " players" : "") : "no data yet");
+      return '<div class="p-game' + (g.running ? " up" : "") + '"><div class="p-game-top"><div class="p-dial">' + dial + "</div><div><strong>" +
+        P.esc(g.name) + "</strong><small>" + P.esc(state) + '</small></div></div><span class="p-strip p-strip-24" role="img" aria-label="' + P.esc(label) + '">' + strip + "</span></div>";
+    }).join("");
+    var sum = "<b>" + online + "</b> " + (online === 1 ? "player" : "players") + " online · " + running.length + " of " + games.length + " servers running";
+    set(box(li, "p-games"), '<div class="p-sumline"><span>' + sum + '</span><span class="p-cap">last 24 h →</span></div><div class="p-games-grid">' + tiles + "</div>");
+  }
+
+  // Tailnet devices: online first, offline with when they were last seen.
+  function tailCard(li) {
+    if (!tail) return;
+    var on = tail.filter(function (d) { return d.online; }).length;
+    var OS = { iOS: "iPhone/iPad", android: "Android", windows: "Windows", linux: "Linux", macOS: "Mac" };
+    var devs = tail.map(function (d) {
+      var sub = d.self ? "this server" : (OS[d.os] || d.os) + (d.online ? "" : " · seen " + ago(d.lastSeen));
+      return '<div class="p-dev ' + (d.online ? "on" : "off") + '"><i></i><span><b>' + P.esc(d.name) + "</b><small>" + P.esc(sub) + "</small></span></div>";
+    }).join("");
+    set(box(li, "p-tail"), '<div class="p-sumline"><span><b>' + on + "</b> of " + tail.length + ' devices online</span></div><div class="p-devs">' + devs + "</div>");
+  }
+
+  // Latest speed test as numbers, the last week (28 tests) as a line.
+  function speedCard(li) {
+    var ok = (speed || []).filter(function (r) { return r.ok; });
+    if (!ok.length) return;
+    var last = ok[ok.length - 1], pts = ok.slice(-28);
+    var nums = '<div class="p-speed-nums"><div><span>Down</span><b>' + Math.round(last.down) + "<small> Mbit/s</small></b></div>" +
+      "<div><span>Up</span><b>" + Math.round(last.up) + "<small> Mbit/s</small></b></div>" +
+      "<div><span>Ping</span><b>" + (Math.round(last.ping * 10) / 10) + "<small> ms</small></b></div></div>";
+    var chart;
+    if (pts.length < 2) {
+      chart = '<p class="p-speed-note">The graph fills in as tests run, four a day.</p>';
+    } else {
+      var top = Math.max.apply(null, pts.map(function (r) { return Math.max(r.down, r.up); })) * 1.1 || 1;
+      var xy = function (key) {
+        return pts.map(function (r, i) { return (i / (pts.length - 1) * 300).toFixed(1) + " " + (80 - r[key] / top * 76).toFixed(1); });
+      };
+      var dl = xy("down"), ul = xy("up");
+      chart = '<div class="p-speed-chart"><svg viewBox="0 0 300 80" preserveAspectRatio="none" role="img" aria-label="Last ' + pts.length +
+        ' speed tests: download ' + Math.round(Math.min.apply(null, pts.map(function (r) { return r.down; }))) + " to " +
+        Math.round(Math.max.apply(null, pts.map(function (r) { return r.down; }))) + ' Mbit/s"><path class="area" d="M' + dl.join(" L") + " L300 80 L0 80 Z\"/>" +
+        '<path class="dl" d="M' + dl.join(" L") + '"/><path class="ul" d="M' + ul.join(" L") + '"/></svg></div>';
+    }
+    var at = new Date(last.at);
+    var when = isNaN(at) ? "" : at.toLocaleString("en-GB", { weekday: "short", hour: "2-digit", minute: "2-digit" });
+    set(box(li, "p-speed"), nums + chart + '<div class="p-speed-cap"><span>Last test ' + P.esc(when) + "</span>" +
+      (pts.length > 1 ? '<span><i class="k dl"></i>down <i class="k ul"></i>up</span>' : "") + "</div>");
+  }
+
   // ── run ─────────────────────────────────────────────────────
   var busy = false;
   function decorate() {
@@ -244,7 +351,8 @@
   }
   function start() {
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, characterData: true });
-    loadResources(); loadKuma(); loadBackups();
+    loadResources(); loadKuma(); loadBackups(); loadLive();
+    setInterval(loadLive, 60000);
     setInterval(loadBackups, 600000);
     setInterval(loadResources, 15000);
     setInterval(loadKuma, 60000);

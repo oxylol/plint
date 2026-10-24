@@ -23,8 +23,12 @@ machine is this repository.
 | **status.plint.net** | Uptime Kuma — status page |
 | **ntfy.plint.net** | ntfy — push notifications to your phone |
 | **backup.plint.net** | Kopia — nightly snapshots |
+| **speed.plint.net** | Speedtest Tracker — internet speed, four tests a day |
 | *Tailscale* | remote access, Tailscale SSH, LAN subnet routing |
 | *Claude* | Claude Code on the server, controlled from the Claude app |
+
+Every site except AMP and Stremio wears one theme, Plint Soft UI (`theme/`): neumorphic,
+sage-grey, light or dark with your device, numbers drawn as rings, bars and strips.
 
 Nothing is exposed to the internet. The domain's public DNS has no records pointing at the
 server; it exists so Caddy can get a wildcard certificate via Cloudflare's API.

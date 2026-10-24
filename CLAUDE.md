@@ -46,6 +46,7 @@ host network and proxies to `localhost:<port>`:
 | status | 3001 | Uptime Kuma |
 | ntfy | 8070 | ntfy |
 | backup | 51515 | Kopia |
+| speed | 8075 | Speedtest Tracker |
 
 ## How to do things
 

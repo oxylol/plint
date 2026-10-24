@@ -84,6 +84,9 @@ if ! id plint >/dev/null 2>&1; then
 fi
 echo 'plint ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/plint; chmod 440 /etc/sudoers.d/plint
 env_set PUID "$(id -u plint)"; env_set PGID "$(id -g plint)"
+[[ -n "${SPEEDTEST_APP_KEY:-}" ]] || env_set SPEEDTEST_APP_KEY "base64:$(openssl rand -base64 32)"
+[[ -n "${ADMIN_EMAIL:-}" ]] || env_set ADMIN_EMAIL "$(tr '[:upper:]' '[:lower:]' <<< "${ADMIN_USER}")@${DOMAIN}"
+load_env
 mkdir -p "${PLINT_DIR}/data" "${BACKUP_PATH}"
 # the repo belongs to plint; container data stays as the containers wrote it
 find "${PLINT_DIR}" -path "${PLINT_DIR}/data" -prune -o -exec chown plint:plint {} +
