@@ -73,7 +73,10 @@
     if (bar.getAttribute("data-p") === key) return;
     bar.setAttribute("data-p", key);
     var up = items.filter(function (i) { return tone(i.status) === "ok"; }).length;
-    setHTML(bar, '<span class="p-sum">' + up + " of " + items.length + " running</span>" + items.map(function (i) {
+    // Dockge sometimes can't read container states (it shows N/A); don't call that "0 running".
+    var known = items.filter(function (i) { return tone(i.status) !== ""; }).length;
+    var sum = known ? up + " of " + items.length + " running" : items.length + (items.length === 1 ? " container" : " containers");
+    setHTML(bar, '<span class="p-sum">' + sum + "</span>" + items.map(function (i) {
       return '<span class="p-chip ' + tone(i.status) + '" role="listitem" title="' + P.esc(i.name + ": " + i.status) + '"><i></i>' +
         P.esc(i.name) + "<small>" + P.esc(i.status) + "</small></span>";
     }).join(""));

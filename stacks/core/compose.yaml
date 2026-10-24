@@ -109,6 +109,9 @@ services:
       - ../../data/dockge:/app/data
       # Must be the same path inside and outside the container.
       - /opt/plint/stacks:/opt/plint/stacks
+      # Each stack's .env is a symlink to this file; without it compose can't
+      # load the projects and Dockge shows every container as N/A.
+      - /opt/plint/.env:/opt/plint/.env:ro
     networks:
       - core
 
