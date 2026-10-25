@@ -25,6 +25,12 @@
         server: plint
         container: stremio
 
+    - TV:
+        icon: mdi-television-play
+        href: https://tv.{{HOMEPAGE_VAR_DOMAIN}}
+        description: The Mac on the TV · remote
+        siteMonitor: http://{{HOMEPAGE_VAR_TV_IP}}:7000/health
+
     - Notifications:
         icon: ntfy.png
         href: https://ntfy.{{HOMEPAGE_VAR_DOMAIN}}

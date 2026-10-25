@@ -152,6 +152,17 @@
 		}
 	}
 
+	@tv host tv.{$DOMAIN}
+	handle @tv {
+		# The Mac on the TV (tv/ in this repo). Its remote service listens on :7000
+		# and only honours requests carrying the shared key, so the LAN can't drive it.
+		import theme tv
+		reverse_proxy {$TV_IP:127.0.0.1}:7000 {
+			header_up X-Plint-Key {$TV_KEY}
+			header_up Accept-Encoding identity
+		}
+	}
+
 	@backup host backup.{$DOMAIN}
 	handle @backup {
 		import theme kopia

@@ -1,5 +1,8 @@
 # Plint
 
+> On a Mac (`uname` says Darwin, hostname `tv`)? You're on **Plint TV**: read `tv/CLAUDE.md`
+> instead; only the Rules below carry over.
+
 You are Claude running **on** Plint, Filip's home server (Ubuntu, hostname `plint`).
 This repo *is* the server: everything that defines it lives here and is applied with
 `plint sync`. You run as the `plint` user (passwordless sudo, docker group) from a
@@ -33,6 +36,11 @@ Native (not in Docker): **AMP** (user `amp`, web :8080, `ampinstmgr`), **Cockpit
 (README there). Its data lives in `/srv/dnd/{adventures,library,data}`; `plint sync` pulls that
 repo too and rebuilds the `table` image. Secrets for it live in `/opt/plint-table/.env`.
 
+**Plint TV** is the Mac on the TV (`tv/` in this repo, its own `tv/CLAUDE.md`). It has its
+own Claude session ("Plint TV"). From here: `plint tv` shows its state, `plint tv register
+<ip> <key>` wires `tv.${DOMAIN}` to it (`TV_IP`/`TV_KEY` in `.env`). To change it, edit
+`tv/`, push, then ask Plint TV to `tv sync`.
+
 ## Names
 
 Every service is `https://<name>.${DOMAIN}`; the home screen is the apex `https://${DOMAIN}`.
@@ -53,6 +61,7 @@ host network and proxies to `localhost:<port>`:
 | backup | 51515 | Kopia |
 | speed | 8075 | Speedtest Tracker |
 | table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
+| tv | `TV_IP`:7000 | the Mac on the TV (remote page + API), key-gated |
 
 ## How to do things
 

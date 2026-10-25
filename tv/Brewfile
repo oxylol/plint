@@ -1,0 +1,24 @@
+# Plint TV · everything the Mac on the TV needs, in one place.
+#   brew bundle --file tv/Brewfile
+
+tap "henrygd/beszel"
+
+# tools
+brew "tmux"                      # keeps Claude's remote-control session alive
+brew "mas"                       # Mac App Store from the command line (Steam Link)
+brew "switchaudio-osx"           # route sound to the TV from a script
+brew "henrygd/beszel/beszel-agent"  # metrics → metrics.<domain>
+
+# the couch
+cask "stremio"                   # player; streaming server = Plint
+cask "google-chrome"             # hosts the YouTube TV layout in its own profile
+cask "moonlight"                 # game streaming (Sunshine on the PC)
+cask "spotify"
+cask "aerial"                    # Apple TV screensavers as the idle screen
+
+# the system
+cask "tailscale-app"             # same tailnet as Plint: ad blocking + names anywhere
+cask "claude"                    # Claude desktop: this Mac becomes a computer Claude can see
+cask "claude-code"               # Claude on the box, remote-control mode
+
+mas "Steam Link", id: 1246969117

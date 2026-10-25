@@ -1,0 +1,5 @@
+/* Plint Soft UI · TV remote (tv.<domain>)
+   The page itself is built on the --p- tokens; this sheet only places the
+   pill and keeps the page's own header quiet. */
+header.tv-head { display: flex; align-items: center; gap: 12px; }
+header.tv-head #plint-pill { margin-right: 0; }

@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────
+#  tv · the one command for the Mac on the TV
+#
+#    tv status                what's running, volume, now playing
+#    tv open <app>            stremio · youtube · steam · moonlight · spotify · music
+#    tv quit <app>
+#    tv screen off|on
+#    tv volume <0-100>|up|down|mute|unmute
+#    tv play                  play / pause whatever is on
+#    tv sound [name]          list audio outputs, or switch to one
+#    tv sync                  pull the repo, reinstall the launch agents
+#    tv claude                attach to Claude on the box (Ctrl+B, D to leave)
+#    tv logs                  follow the remote + Claude logs
+#    tv doctor                check services, Tailscale, permissions
+#    tv register              print the line that registers this Mac with Plint
+# ─────────────────────────────────────────────────────────────
+set -euo pipefail
+
+TV_DIR="${TV_DIR:-$HOME/plint/tv}"
+CONF="$HOME/.config/plint-tv"
+LOGS="$HOME/Library/Logs/plint-tv"
+AGENTS="$HOME/Library/LaunchAgents"
+KEY="$(cat "$CONF/key" 2>/dev/null || true)"
+# shellcheck disable=SC1091
+[[ -f "$CONF/env" ]] && source "$CONF/env"
+DOMAIN="${DOMAIN:-plint.net}"
+
+if [[ -t 1 ]]; then C_DIM=$'\e[2m'; C_GREEN=$'\e[32m'; C_YELLOW=$'\e[33m'; C_RED=$'\e[31m'; C_RESET=$'\e[0m'
+else C_DIM=""; C_GREEN=""; C_YELLOW=""; C_RED=""; C_RESET=""; fi
+ok()   { printf '%s✓ %s%s\n' "$C_GREEN" "$*" "$C_RESET"; }
+warn() { printf '%s! %s%s\n' "$C_YELLOW" "$*" "$C_RESET"; }
+die()  { printf '%s✗ %s%s\n' "$C_RED" "$*" "$C_RESET" >&2; exit 1; }
+usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+
+api() { # api METHOD PATH [json]
+  curl -fsS --max-time 8 -X "$1" -H "X-Plint-Key: $KEY" -H 'Content-Type: application/json' \
+    ${3:+-d "$3"} "http://127.0.0.1:7000$2"
+}
+state() { api GET /api/state; }
+act()   { api POST "$1" "${2:-{\}}" >/dev/null && ok "${3:-done}"; }
+
+lan_ip() { ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true; }
+
+cmd_status() {
+  local s; s="$(state 2>/dev/null)" || die "the remote service isn't answering — tv doctor"
+  python3 - "$s" <<'EOF'
+import json, sys
+s = json.loads(sys.argv[1])
+np = s.get("playing")
+print(f"Plint TV · {s['host']}")
+print(f"  in front   {s.get('front') or '—'}")
+print(f"  playing    {np['title'] + ' — ' + (np.get('artist') or np['app']) + ' (' + np['state'] + ')' if np else '—'}")
+print(f"  volume     {'muted' if s.get('muted') else s.get('volume')}  · {s.get('output') or 'default output'}")
+print("  apps       " + ", ".join(k for k, v in s['apps'].items() if v) if any(s['apps'].values()) else "  apps       none running")
+if s.get("accessibility") is False:
+    print("  keys       need Accessibility permission for osascript")
+EOF
+  printf '%s' "$C_DIM"
+  for a in net.plint.tv.remote net.plint.tv.claude; do
+    if launchctl print "gui/$(id -u)/$a" >/dev/null 2>&1; then printf '  %s running\n' "$a"; else printf '  %s NOT loaded\n' "$a"; fi
+  done
+  printf '  tailscale %s\n%s' "$(/Applications/Tailscale.app/Contents/MacOS/Tailscale ip -4 2>/dev/null | head -n1 || echo 'not connected')" "$C_RESET"
+}
+
+cmd_open()   { [[ -n "${1:-}" ]] || die "tv open <app>"; act /api/open "{\"app\":\"$1\"}" "opened $1"; }
+cmd_quit()   { [[ -n "${1:-}" ]] || die "tv quit <app>"; act /api/quit "{\"app\":\"$1\"}" "quit $1"; }
+cmd_screen() { case "${1:-}" in off|on) act /api/display "{\"action\":\"$1\"}" "screen $1";; *) die "tv screen off|on";; esac; }
+cmd_play()   { act /api/playpause '{}' "play/pause"; }
+cmd_volume() {
+  case "${1:-}" in
+    up)     act /api/volume '{"delta":6}' "volume up";;
+    down)   act /api/volume '{"delta":-6}' "volume down";;
+    mute)   act /api/volume '{"mute":true}' "muted";;
+    unmute) act /api/volume '{"mute":false}' "unmuted";;
+    ''|*[!0-9]*) die "tv volume <0-100>|up|down|mute|unmute";;
+    *)      act /api/volume "{\"level\":$1}" "volume $1";;
+  esac
+}
+cmd_sound() {
+  if [[ -n "${1:-}" ]]; then act /api/output "{\"name\":\"$*\"}" "sound → $*"
+  else command -v SwitchAudioSource >/dev/null || die "SwitchAudioSource missing (brew install switchaudio-osx)"; SwitchAudioSource -a -t output; fi
+}
+
+cmd_sync() {
+  git -C "$TV_DIR/.." pull --ff-only
+  "$TV_DIR/install.sh" --agents-only
+}
+
+cmd_claude_server() {   # used by the launch agent; stays alive while the tmux session lives
+  cd "$TV_DIR"
+  tmux has-session -t claude 2>/dev/null || tmux new-session -d -s claude -c "$TV_DIR" 'claude remote-control --name "Plint TV"; sleep 5'
+  while tmux has-session -t claude 2>/dev/null; do sleep 30; done
+}
+cmd_claude() {
+  launchctl print "gui/$(id -u)/net.plint.tv.claude" >/dev/null 2>&1 || launchctl bootstrap "gui/$(id -u)" "$AGENTS/net.plint.tv.claude.plist" 2>/dev/null || true
+  sleep 1
+  exec tmux attach -t claude
+}
+
+cmd_logs() { mkdir -p "$LOGS"; tail -n 50 -F "$LOGS"/remote.log "$LOGS"/claude.log; }
+
+cmd_doctor() {
+  local fails=0
+  check() { if "$@" >/dev/null 2>&1; then ok "$*"; else warn "FAILED: $*"; fails=$((fails + 1)); fi; }
+  check curl -fsS --max-time 3 http://127.0.0.1:7000/health
+  check launchctl print "gui/$(id -u)/net.plint.tv.remote"
+  check launchctl print "gui/$(id -u)/net.plint.tv.claude"
+  check tmux has-session -t claude
+  check /Applications/Tailscale.app/Contents/MacOS/Tailscale status
+  check test -f "$CONF/key"
+  check pgrep -x beszel-agent
+  local sl; sl="$(pmset -g | awk '$1=="sleep"{print $2}')"
+  if [[ "$sl" == 0 ]]; then ok "never sleeps"; else warn "system sleep is '$sl' (expected 0) — tv/install.sh --power"; fi
+  if curl -fsS --max-time 4 -o /dev/null "https://tv.${DOMAIN}/health" 2>/dev/null; then ok "https://tv.${DOMAIN} reaches this Mac"; else warn "https://tv.${DOMAIN} is not reaching this Mac yet — on Plint: $(cmd_register)"; fi
+  if (( fails == 0 )); then ok "all good"; else warn "$fails check(s) failed"; fi
+}
+
+cmd_register() { printf 'plint tv register %s %s\n' "$(lan_ip)" "$KEY"; }
+
+case "${1:-}" in
+  status|"") cmd_status;;
+  open|quit|screen|play|volume|sound|sync|claude|logs|doctor|register) c="$1"; shift; "cmd_$c" "$@";;
+  claude-server) cmd_claude_server;;
+  -h|--help|help) usage;;
+  *) usage 1;;
+esac

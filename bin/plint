@@ -12,6 +12,7 @@
 #    plint claude            attach to Claude on the box (Ctrl+B, D to leave)
 #    plint notify "msg"      push a message to your phone
 #    plint game [start|stop <name>]   AMP game servers (list · start · stop)
+#    plint tv [register <ip> <key>]   the Mac on the TV (state · register)
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
 PLINT_DIR="${PLINT_DIR:-/opt/plint}"
@@ -20,7 +21,7 @@ source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
 STACKS=(core ops media table)
-usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|table) echo "$1";; *) die "unknown stack: $1";; esac; }
 
@@ -281,9 +282,27 @@ cmd_claude() {
 
 cmd_notify() { "$PLINT_DIR/scripts/notify.sh" "Plint" "$*"; ok "sent"; }
 
+# ── The Mac on the TV (tv/ in this repo) ─────────────────────
+cmd_tv() {
+  case "${1:-state}" in
+    register)
+      local ip="${2:-}" key="${3:-}"
+      [[ -n "$ip" && -n "$key" ]] || die "plint tv register <ip> <key>   (both are printed by tv/install.sh on the Mac)"
+      env_set TV_IP "$ip"; env_set TV_KEY "$key"
+      compose core up -d caddy homepage >/dev/null
+      ok "tv.${DOMAIN} → ${ip}:7000"
+      ;;
+    state)
+      [[ -n "${TV_IP:-}" ]] || die "no TV registered yet — run tv/install.sh on the Mac, then: plint tv register <ip> <key>"
+      curl -fsS --max-time 5 -H "X-Plint-Key: ${TV_KEY:-}" "http://${TV_IP}:7000/api/state" | python3 -m json.tool
+      ;;
+    *) die "plint tv [register <ip> <key>]";;
+  esac
+}
+
 case "${1:-}" in
   status|"") cmd_status;;
-  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game) c="$1"; shift; "cmd_$c" "$@";;
+  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game|tv) c="$1"; shift; "cmd_$c" "$@";;
   -h|--help|help) usage;;
   *) usage 1;;
 esac

@@ -20,6 +20,9 @@ services:
       DOMAIN: ${DOMAIN}
       CF_API_TOKEN: ${CF_API_TOKEN}
       TZ: ${TZ}
+      # The Mac on the TV (set by `plint tv register`)
+      TV_IP: ${TV_IP:-127.0.0.1}
+      TV_KEY: ${TV_KEY:-}
     volumes:
       # The folder, not the file: git replaces files on pull, and a single-file
       # bind mount would keep showing Caddy the old copy.
@@ -64,6 +67,7 @@ services:
       HOMEPAGE_VAR_DOMAIN: ${DOMAIN}
       HOMEPAGE_VAR_ADMIN_USER: ${ADMIN_USER}
       HOMEPAGE_VAR_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      HOMEPAGE_VAR_TV_IP: ${TV_IP:-127.0.0.1}
     volumes:
       - ../../dashboard:/app/config
       - ../../dashboard/images:/app/public/images:ro

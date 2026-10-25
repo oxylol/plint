@@ -24,6 +24,7 @@ machine is this repository.
 | **ntfy.plint.net** | ntfy — push notifications to your phone |
 | **backup.plint.net** | Kopia — nightly snapshots |
 | **speed.plint.net** | Speedtest Tracker — internet speed, four tests a day |
+| **tv.plint.net** | Plint TV — the Mac on the TV: a phone remote, and its own Claude |
 | *Tailscale* | remote access, Tailscale SSH, LAN subnet routing |
 | *Claude* | Claude Code on the server, controlled from the Claude app |
 
@@ -112,10 +113,31 @@ Needs a Pro or Max plan. Sign-in happens once during install (`claude auth login
 the two one-time prompts (trust the folder, enable Remote Control) are answered with
 `plint claude`.
 
+## Plint TV — the Mac on the TV
+
+`tv/` turns a Mac hooked up to a TV into the second node: same domain, same look, same
+kind of Claude. It never sleeps (screen goes dark at 01:00, any key wakes it), runs
+Stremio against Plint's streaming server, YouTube in its TV layout, Steam Link and
+Moonlight for games from the PC, Spotify and Music, Aerial as the idle screen, Tailscale,
+a Beszel agent, and a small remote at **tv.plint.net** you open on your phone: open an
+app, play/pause, volume, sound output, screen off/on, arrow keys.
+
+On the Mac, as the user that's logged in on the TV:
+
+```bash
+git clone git@github.com:oxylol/plint.git ~/plint     # same deploy-key dance as the server
+~/plint/tv/install.sh
+```
+
+Then on the server, the line the installer prints: `plint tv register <ip> <key>`.
+Day to day: `tv status`, `tv open stremio`, `tv screen off`, `tv claude`, `tv doctor`.
+Claude on it appears as **Plint TV** in the Claude app; the Claude desktop app is
+installed too, so the Mac can be linked as a computer and Claude can see the TV screen.
+
 ## Change something
 
-Edit the file, `plint sync`, commit, push. That's the whole workflow. A rebuilt box is
-`git clone` + `install.sh` + restoring `data/` from Kopia.
+Edit the file, `plint sync` (or `tv sync` on the Mac), commit, push. That's the whole
+workflow. A rebuilt box is `git clone` + `install.sh` + restoring `data/` from Kopia.
 
 ## Not included, on purpose
 

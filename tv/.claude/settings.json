@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Grep",
+      "Glob",
+      "Bash(tv status*)",
+      "Bash(tv doctor*)",
+      "Bash(tv open *)",
+      "Bash(tv play*)",
+      "Bash(tv volume *)",
+      "Bash(tv screen *)",
+      "Bash(tv sound*)",
+      "Bash(tv logs*)",
+      "Bash(pmset -g*)",
+      "Bash(launchctl print *)",
+      "Bash(brew list*)",
+      "Bash(brew services list*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Read(~/.config/plint-tv/key)",
+      "Bash(cat ~/.config/plint-tv/key*)",
+      "Bash(sudo pmset -a sleep *)",
+      "Bash(sudo shutdown*)",
+      "Bash(sudo reboot*)"
+    ]
+  }
+}
