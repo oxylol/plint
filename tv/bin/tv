@@ -94,17 +94,27 @@ cmd_apps() {
   install_all
 }
 
-cmd_claude_server() {   # used by the launch agent; stays alive while the screen session lives
+# screen sessions named "claude". `screen -list` is read in full on purpose:
+# grep -q would close the pipe early, screen would die of SIGPIPE, and pipefail
+# would then report "no session" (which is how seven of them once got started).
+claude_sessions() { screen -list 2>/dev/null | awk '/[.]claude[[:space:]]/ {print $1}'; }
+
+cmd_claude_server() {   # used by the launch agent; stays alive while the one screen session lives
   cd "$TV_DIR"
-  if ! screen -list 2>/dev/null | grep -q '[.]claude[[:space:]]'; then
+  local list n
+  list="$(claude_sessions)"; n="$(printf '%s\n' "$list" | grep -c . || true)"
+  if (( n > 1 )); then   # never more than one Claude: quit the extras, keep the newest
+    printf '%s\n' "$list" | sort -t. -k1,1n | sed '$d' | while read -r sess; do screen -S "$sess" -X quit || true; done
+  elif (( n == 0 )); then
     screen -dmS claude bash -lc 'claude remote-control --name "Plint TV"; sleep 5'
   fi
-  while screen -list 2>/dev/null | grep -q '[.]claude[[:space:]]'; do sleep 30; done
+  while [[ -n "$(claude_sessions)" ]]; do sleep 30; done
 }
 cmd_claude() {
   agent_loaded net.plint.tv.claude || launchctl bootstrap "gui/$(id -u)" "$AGENTS/net.plint.tv.claude.plist" 2>/dev/null || true
-  sleep 1
-  exec screen -r claude
+  local sess; for _ in 1 2 3 4 5; do sess="$(claude_sessions | head -n1)"; [[ -n "$sess" ]] && break; sleep 1; done
+  [[ -n "$sess" ]] || die "Claude's session isn't running — tv doctor"
+  exec screen -r "$sess"
 }
 
 cmd_logs() { mkdir -p "$LOGS"; tail -n 50 -F "$LOGS"/remote.log "$LOGS"/claude.log "$LOGS"/beszel.log 2>/dev/null; }
@@ -115,7 +125,8 @@ cmd_doctor() {
   check curl -fsS --max-time 3 http://127.0.0.1:7000/health
   check agent_loaded net.plint.tv.remote
   check agent_loaded net.plint.tv.claude
-  check bash -c "screen -list | grep -q '[.]claude[[:space:]]'"
+  check test -n "$(claude_sessions)"
+  if [[ "$(claude_sessions | grep -c .)" -le 1 ]]; then ok "one Claude session"; else warn "more than one Claude screen session — tv sync fixes it"; fi
   check "$TS" status
   check test -f "$CONF/key"
   if agent_loaded net.plint.tv.beszel; then check pgrep -x beszel-agent; else warn "metrics agent not set up (re-run install.sh with the Beszel key)"; fi
