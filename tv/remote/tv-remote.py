@@ -109,7 +109,14 @@ def now_playing():
     return None
 
 
+AUDIODEV = str(HOME / ".local" / "bin" / "audiodev")
+
+
 def audio_outputs():
+    if os.access(AUDIODEV, os.X_OK):
+        _, cur, _ = run([AUDIODEV, "current"])
+        _, lst, _ = run([AUDIODEV, "list"])
+        return cur, [l.strip() for l in lst.splitlines() if l.strip()]
     exe = shutil.which("SwitchAudioSource")
     if not exe:
         return None, []
@@ -199,10 +206,14 @@ def do_display(body):
 
 
 def do_output(body):
+    name = str(body.get("name", ""))
+    if os.access(AUDIODEV, os.X_OK):
+        rc, _, err = run([AUDIODEV, "set", name])
+        return rc == 0, err or ("no output called %r" % name if rc else "")
     exe = shutil.which("SwitchAudioSource")
     if not exe:
-        return False, "SwitchAudioSource is not installed"
-    rc, _, err = run([exe, "-s", str(body.get("name", "")), "-t", "output"])
+        return False, "no audio switcher installed (tv apps builds one)"
+    rc, _, err = run([exe, "-s", name, "-t", "output"])
     return rc == 0, err
 
 

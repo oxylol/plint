@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Plint TV · Beszel agent: metrics for metrics.<domain>. The hub connects
+	     to this Mac on :45876 and proves itself with its key. -->
+	<key>Label</key>
+	<string>net.plint.tv.beszel</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__HOME__/.local/bin/beszel-agent</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>KEY</key>
+		<string>__KEY__</string>
+		<key>LISTEN</key>
+		<string>45876</string>
+		<key>HOME</key>
+		<string>__HOME__</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>10</integer>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/plint-tv/beszel.log</string>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/plint-tv/beszel.log</string>
+</dict>
+</plist>

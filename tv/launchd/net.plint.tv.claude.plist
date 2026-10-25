@@ -2,9 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Plint TV · Claude on the box: `claude remote-control` inside tmux.
+	<!-- Plint TV · Claude on the box: `claude remote-control` inside screen.
 	     `tv claude-server` starts the session and stays alive while it runs,
-	     so KeepAlive brings it back if it ever stops. Attach with: tv claude -->
+	     so KeepAlive brings it back if it ever stops. Attach with: tv claude (Ctrl+A, D to leave) -->
 	<key>Label</key>
 	<string>net.plint.tv.claude</string>
 	<key>ProgramArguments</key>
@@ -16,7 +16,7 @@
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PATH</key>
-		<string>__BREW__/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<string>__HOME__/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
 		<key>HOME</key>
 		<string>__HOME__</string>
 		<key>CLAUDE_REMOTE_CONTROL_SESSION_NAME_PREFIX</key>

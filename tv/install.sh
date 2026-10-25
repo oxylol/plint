@@ -4,7 +4,8 @@
 #
 #  Turns the Mac on the TV into the second node of Plint. Run as the
 #  user who is logged in on the TV (not root); it asks for sudo when it
-#  needs it. Safe to re-run.
+#  needs it. No Homebrew: every app comes straight from its publisher.
+#  Safe to re-run.
 #
 #    git clone git@github.com:oxylol/plint.git ~/plint
 #    ~/plint/tv/install.sh
@@ -19,7 +20,9 @@ TV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONF="$HOME/.config/plint-tv"
 LOGS="$HOME/Library/Logs/plint-tv"
 AGENTS="$HOME/Library/LaunchAgents"
+BIN="$HOME/.local/bin"
 ME="$(id -un)"
+export PATH="$BIN:/usr/local/bin:$PATH"
 
 if [[ -t 1 ]]; then C_DIM=$'\e[2m'; C_BOLD=$'\e[1m'; C_BLUE=$'\e[34m'; C_GREEN=$'\e[32m'; C_YELLOW=$'\e[33m'; C_RED=$'\e[31m'; C_RESET=$'\e[0m'
 else C_DIM=""; C_BOLD=""; C_BLUE=""; C_GREEN=""; C_YELLOW=""; C_RED=""; C_RESET=""; fi
@@ -37,16 +40,17 @@ for a in "$@"; do case "$a" in
 [[ "$(uname -s)" == Darwin ]] || die "This is the Mac installer."
 [[ $EUID -ne 0 ]] || die "Run as your normal user, not root."
 
-brew_prefix() { if [[ -x /opt/homebrew/bin/brew ]]; then echo /opt/homebrew; else echo /usr/local; fi; }
-
 # ── launch agents (also used by `tv sync`) ───────────────────
 install_agents() {
   step "Launch agents"
   mkdir -p "$AGENTS" "$LOGS"
-  local brew; brew="$(brew_prefix)"
+  # shellcheck disable=SC1091
+  [[ -f "$CONF/env" ]] && source "$CONF/env"
   for src in "$TV_DIR"/launchd/*.plist; do
     local label; label="$(basename "$src" .plist)"
-    sed -e "s|__HOME__|$HOME|g" -e "s|__BREW__|$brew|g" "$src" > "$AGENTS/$label.plist"
+    if [[ "$label" == net.plint.tv.beszel && -z "${BESZEL_KEY:-}" ]]; then continue; fi
+    sed -e "s|__HOME__|$HOME|g" -e "s|__KEY__|${BESZEL_KEY:-}|g" "$src" > "$AGENTS/$label.plist"
+    chmod 600 "$AGENTS/$label.plist"
     plutil -lint "$AGENTS/$label.plist" >/dev/null
     launchctl bootout "gui/$(id -u)/$label" >/dev/null 2>&1 || true
     launchctl bootstrap "gui/$(id -u)" "$AGENTS/$label.plist"
@@ -59,7 +63,7 @@ install_agents() {
 power_settings() {
   step "Power"
   sudo pmset -a sleep 0 disksleep 0 displaysleep 30 womp 1 autorestart 1 powernap 0 ttyskeepawake 1 lidwake 1 >/dev/null
-  sudo pmset -a disablesleep 1 >/dev/null 2>&1 || true   # lid sensor can't put it to sleep
+  sudo pmset -a disablesleep 1 >/dev/null 2>&1 || true   # the lid sensor can't put it to sleep
   sudo systemsetup -setrestartfreeze on >/dev/null 2>&1 || true
   sudo systemsetup -setwakeonnetworkaccess on >/dev/null 2>&1 || true
   sudo systemsetup -setremotelogin on >/dev/null 2>&1 || true
@@ -77,20 +81,17 @@ ver="$(sw_vers -productVersion)"
 [[ "${ver%%.*}" -ge 13 ]] || die "macOS 13 or newer required (found $ver)"
 ok "macOS $ver on $(uname -m)"
 if ! xcode-select -p >/dev/null 2>&1; then
-  say "Installing the command line tools (a dialog appears; click Install)"
+  say "Installing the command line tools (a dialog appears; click Install, not Get Xcode)"
   xcode-select --install >/dev/null 2>&1 || true
   until xcode-select -p >/dev/null 2>&1; do sleep 10; done
 fi
-if ! command -v brew >/dev/null 2>&1 && [[ ! -x "$(brew_prefix)/bin/brew" ]]; then
-  say "Installing Homebrew (asks for your password)"
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-fi
-eval "$("$(brew_prefix)/bin/brew" shellenv)"
-ok "brew $(brew --version | head -n1 | awk '{print $2}')"
+ok "command line tools"
+curl -fsS -o /dev/null --max-time 10 https://github.com || die "No internet"
 
 # ── 1. Answers ───────────────────────────────────────────────
 step "A few answers"
-mkdir -p "$CONF"; chmod 700 "$CONF"
+mkdir -p "$CONF" "$BIN"; chmod 700 "$CONF"
+# shellcheck disable=SC1091
 [[ -f "$CONF/env" ]] && source "$CONF/env"
 read -r -p "  Plint domain [${DOMAIN:-plint.net}]: " v; DOMAIN="${v:-${DOMAIN:-plint.net}}"
 read -r -p "  Beszel hub key (BESZEL_KEY from Plint's .env; blank to skip) [${BESZEL_KEY:+••••}]: " v; BESZEL_KEY="${v:-${BESZEL_KEY:-}}"
@@ -108,16 +109,13 @@ sudo scutil --set LocalHostName tv
 ok "this Mac is 'tv' → https://tv.${DOMAIN}"
 
 # ── 3. Apps ──────────────────────────────────────────────────
-step "Apps (Homebrew)"
-brew tap henrygd/beszel >/dev/null 2>&1 || true
-brew trust henrygd/beszel/beszel-agent >/dev/null 2>&1 || true
-if ! brew bundle --file "$TV_DIR/Brewfile" >/dev/null; then
-  warn "some items failed (usually Steam Link: sign in to the App Store once, then re-run). Continuing."
-  HOMEBREW_BUNDLE_MAS_SKIP=1246969117 brew bundle --file "$TV_DIR/Brewfile" >/dev/null || true
-fi
-ln -sf "$TV_DIR/bin/tv" "$(brew --prefix)/bin/tv"
+step "Apps"
+# shellcheck source=apps.sh
+source "$TV_DIR/apps.sh"
+install_all
 chmod +x "$TV_DIR/bin/tv" "$TV_DIR/install.sh" "$TV_DIR/remote/tv-remote.py"
-ok "installed · the tv command is ready"
+sudo mkdir -p /usr/local/bin && sudo ln -sf "$TV_DIR/bin/tv" /usr/local/bin/tv
+ok "the tv command is ready"
 
 # YouTube in its TV layout: Chrome in its own profile with a TV user agent.
 say "YouTube TV app"
@@ -160,32 +158,22 @@ sudo defaults write /Library/Preferences/com.apple.commerce AutoUpdate -bool tru
 sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
   -activate -configure -access -on -users "$ME" -privs -all -restart -agent -menu >/dev/null 2>&1 || warn "could not enable Screen Sharing — turn it on in System Settings → General → Sharing"
 # sound to the TV if we can see it
-if command -v SwitchAudioSource >/dev/null 2>&1; then
-  tvout="$(SwitchAudioSource -a -t output | grep -iE 'hdmi|tv|display|receiver' | head -n1 || true)"
-  [[ -n "$tvout" ]] && SwitchAudioSource -s "$tvout" -t output >/dev/null && ok "sound → $tvout"
+if [[ -x "$BIN/audiodev" ]]; then
+  tvout="$("$BIN/audiodev" list | grep -iE 'hdmi|tv|display|receiver' | head -n1 || true)"
+  [[ -n "$tvout" ]] && "$BIN/audiodev" set "$tvout" && ok "sound → $tvout"
 fi
 ok "dock and menu bar hidden · no desktop icons · Aerial after 15 min · updates download only"
 
-# ── 6. Metrics (Beszel agent) ────────────────────────────────
-step "Metrics"
-if [[ -n "$BESZEL_KEY" ]]; then
-  mkdir -p "$HOME/.config/beszel" "$HOME/.cache/beszel"
-  printf 'KEY="%s"\nLISTEN=45876\n' "$BESZEL_KEY" > "$HOME/.config/beszel/beszel-agent.env"
-  brew services restart beszel-agent >/dev/null 2>&1 || brew services start beszel-agent >/dev/null
-  ok "agent on :45876 — in metrics.${DOMAIN}: Add System → name 'tv', host $(ipconfig getifaddr en0 2>/dev/null || echo '<this Mac IP>')"
-else
-  warn "no Beszel key given — skipped (re-run install.sh with it later)"
-fi
-
-# ── 7. Tailscale ─────────────────────────────────────────────
+# ── 6. Tailscale ─────────────────────────────────────────────
 step "Tailscale"
 open -a Tailscale 2>/dev/null || true
 ok "Tailscale opened — sign in with the same account as Plint if it asks (menu bar icon)"
 
-# ── 8. Launch agents ─────────────────────────────────────────
+# ── 7. Launch agents: remote · Claude · screen-off · metrics ─
 install_agents
+[[ -n "$BESZEL_KEY" ]] || warn "no Beszel key given — metrics agent not started (re-run with the key later)"
 
-# ── 9. Claude on the box ─────────────────────────────────────
+# ── 8. Claude on the box ─────────────────────────────────────
 if (( ! SKIP_CLAUDE )); then
   step "Claude on the box"
   if ! claude auth status >/dev/null 2>&1; then
@@ -207,13 +195,14 @@ ${C_BOLD}1. Register it with Plint${C_RESET} (on the server, or ask Plint in the
    plint tv register ${ip} ${KEY}
    Then https://tv.${DOMAIN} is the remote, and TV gets a card on the home screen.
 
-${C_BOLD}2. Two one-time prompts for Claude:${C_RESET}   tv claude   → answer y, y → Ctrl+B then D
+${C_BOLD}2. Two one-time prompts for Claude:${C_RESET}   tv claude   → answer y, y → Ctrl+A then D
 
 ${C_BOLD}3. A few clicks only you can do:${C_RESET}
    · System Settings → Users & Groups → Automatic login → ${ME}   (needs FileVault off)
    · System Settings → Privacy & Security → Accessibility → allow osascript (for remote keys)
    · Stremio → Settings → Streaming server URL → https://stremio.${DOMAIN}/
-   · App Store → sign in, then:  mas install 1246969117   (Steam Link, if it was skipped)
+   · App Store → Steam Link → Get (if it isn't installed yet)
+   · metrics.${DOMAIN} → Add System → name 'tv', host ${ip}, port 45876
    · Phone: Screens or any VNC app → tv (over Tailscale) for a full view when you need it
 
    Then: tv status · tv doctor · tv open stremio

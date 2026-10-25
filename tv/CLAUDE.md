@@ -1,9 +1,10 @@
 # Plint TV
 
 You are Claude running **on the Mac on the TV** (macOS, hostname `tv`, Intel MacBook Pro
-with no built-in screen; the TV is its only display). It's the second node of Plint:
-the server does the heavy lifting, this Mac is the screen. You run as Filip's user from
-a tmux session kept alive by `net.plint.tv.claude` (launchd). People talk to you from
+with no built-in screen, macOS 13; the TV is its only display). There is no Homebrew:
+it no longer installs on Intel, so apps come straight from their publishers. It's the
+second node of Plint: the server does the heavy lifting, this Mac is the screen. You run as Filip's user from
+a `screen` session kept alive by `net.plint.tv.claude` (launchd). People talk to you from
 the Claude app, usually from the sofa: keep answers to a line or two, lead with the result.
 
 The server-side `CLAUDE.md` one level up describes Plint itself; it does not apply here
@@ -14,12 +15,13 @@ except for the rules.
 ```
 ~/plint/tv
 ├── install.sh           one-shot setup (idempotent); --agents-only · --power
-├── bin/tv               the CLI: status · open · quit · screen · volume · play · sound · sync · claude · logs · doctor
-├── Brewfile             everything installed (brew bundle)
-├── remote/              tv-remote.py (:7000, the API) + index.html (the phone page)
-└── launchd/             net.plint.tv.remote · net.plint.tv.claude · net.plint.tv.screenoff
+├── bin/tv               the CLI: status · open · quit · screen · volume · play · sound · sync · apps · claude · logs · doctor
+├── apps.sh              every app, fetched straight from its publisher (no Homebrew on Intel)
+├── remote/              tv-remote.py (:7000, the API) · index.html (the phone page) · audiodev.c
+└── launchd/             net.plint.tv.remote · net.plint.tv.claude · net.plint.tv.screenoff · net.plint.tv.beszel
 ~/.config/plint-tv/      env (DOMAIN, BESZEL_KEY) · key (shared with Plint's Caddy)
-~/Library/Logs/plint-tv/ remote.log · claude.log
+~/.local/bin/            claude · beszel-agent · audiodev
+~/Library/Logs/plint-tv/ remote.log · claude.log · beszel.log
 ```
 
 Apps: Stremio (streaming server = `https://stremio.<domain>/`), YouTube TV
@@ -39,9 +41,9 @@ the shared key. `tv status` shows the same state the page does.
   rest of the repo is the server's.
 - **macOS settings**: `defaults write …` for the user, `sudo` for system ones; the
   canonical set is in `install.sh` → "TV mode" and "Power". Add new ones there, not ad hoc.
-- **Apps**: add to `Brewfile`, `brew bundle --file ~/plint/tv/Brewfile`. Give it a tile in
-  `remote/tv-remote.py` (`APPS`) and `remote/index.html` (`LABEL`/`ICON`) so the remote
-  knows it.
+- **Apps**: add an `install_<name>` function to `apps.sh` (dmg/pkg/zip straight from the
+  publisher; see the helpers there) and call it from `install_all`; `tv apps` runs them.
+  Give it a tile in `remote/tv-remote.py` (`APPS`) and `remote/index.html` (`LABEL`/`ICON`).
 - **Keys from the remote** need Accessibility for `osascript` (System Settings → Privacy &
   Security). If `tv status` says so, tell Filip; you can't grant it.
 

@@ -116,7 +116,8 @@ the two one-time prompts (trust the folder, enable Remote Control) are answered 
 ## Plint TV — the Mac on the TV
 
 `tv/` turns a Mac hooked up to a TV into the second node: same domain, same look, same
-kind of Claude. It never sleeps (screen goes dark at 01:00, any key wakes it), runs
+kind of Claude. No Homebrew (it no longer installs on Intel Macs): every app is fetched
+straight from its publisher. It never sleeps (screen goes dark at 01:00, any key wakes it), runs
 Stremio against Plint's streaming server, YouTube in its TV layout, Steam Link and
 Moonlight for games from the PC, Spotify and Music, Aerial as the idle screen, Tailscale,
 a Beszel agent, and a small remote at **tv.plint.net** you open on your phone: open an
@@ -130,7 +131,7 @@ git clone git@github.com:oxylol/plint.git ~/plint     # same deploy-key dance as
 ```
 
 Then on the server, the line the installer prints: `plint tv register <ip> <key>`.
-Day to day: `tv status`, `tv open stremio`, `tv screen off`, `tv claude`, `tv doctor`.
+Day to day: `tv status`, `tv open stremio`, `tv screen off`, `tv claude`, `tv doctor`, `tv apps`.
 Claude on it appears as **Plint TV** in the Claude app; the Claude desktop app is
 installed too, so the Mac can be linked as a computer and Claude can see the TV screen.
 
