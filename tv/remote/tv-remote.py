@@ -15,15 +15,13 @@ open on your phone can drive the TV while nobody else on the LAN can.
   POST /api/playpause
   POST /api/key          {"key": "left|right|up|down|enter|back|space|f|k|esc"}
   POST /api/display      {"action": "off|on"}
-  POST /api/output       {"name": "<audio device>"}
 
 Everything is stdlib; nothing to install. Actions shell out to macOS tools
-(open, osascript, pmset, caffeinate, SwitchAudioSource).
+(open, osascript, pmset, caffeinate). Display sleep is what turns the TV off.
 """
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import time
@@ -109,31 +107,13 @@ def now_playing():
     return None
 
 
-AUDIODEV = str(HOME / ".local" / "bin" / "audiodev")
-
-
-def audio_outputs():
-    if os.access(AUDIODEV, os.X_OK):
-        _, cur, _ = run([AUDIODEV, "current"])
-        _, lst, _ = run([AUDIODEV, "list"])
-        return cur, [l.strip() for l in lst.splitlines() if l.strip()]
-    exe = shutil.which("SwitchAudioSource")
-    if not exe:
-        return None, []
-    _, cur, _ = run([exe, "-c", "-t", "output"])
-    _, lst, _ = run([exe, "-a", "-t", "output"])
-    return cur, [l.strip() for l in lst.splitlines() if l.strip()]
-
-
 def state():
     lvl, muted = volume()
-    cur, outs = audio_outputs()
     return {
         "host": os.uname().nodename,
         "uptime": int(time.time() - STARTED),
         "front": front_app(),
         "volume": lvl, "muted": muted,
-        "output": cur, "outputs": outs,
         "playing": now_playing(),
         "apps": {k: running(v[1]) for k, v in APPS.items()},
         "accessibility": run(["osascript", "-e",
@@ -205,16 +185,6 @@ def do_display(body):
     return rc == 0, err
 
 
-def do_output(body):
-    name = str(body.get("name", ""))
-    if os.access(AUDIODEV, os.X_OK):
-        rc, _, err = run([AUDIODEV, "set", name])
-        return rc == 0, err or ("no output called %r" % name if rc else "")
-    exe = shutil.which("SwitchAudioSource")
-    if not exe:
-        return False, "no audio switcher installed (tv apps builds one)"
-    rc, _, err = run([exe, "-s", name, "-t", "output"])
-    return rc == 0, err
 
 
 ACTIONS = {
@@ -224,7 +194,6 @@ ACTIONS = {
     "/api/playpause": lambda b: do_playpause(),
     "/api/key": do_key,
     "/api/display": do_display,
-    "/api/output": do_output,
 }
 
 

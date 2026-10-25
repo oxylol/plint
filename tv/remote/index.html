@@ -83,7 +83,6 @@
   .hint a { color: var(--accent); }
   .toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); opacity: 0; transition: all .2s ease; background: var(--bg); color: var(--ink); box-shadow: var(--raise); border: 1px solid var(--edge); border-radius: 14px; padding: 10px 16px; font: 700 13px/1 var(--font); pointer-events: none; max-width: 90vw; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  select { all: unset; width: 100%; height: 44px; padding: 0 14px; border-radius: var(--r-sm); box-shadow: var(--press-sm); font: 700 14px/44px var(--font); color: var(--ink); box-sizing: border-box; }
   @media (min-width: 480px) { .grid { grid-template-columns: repeat(6, 1fr); } }
 </style>
 </head>
@@ -116,9 +115,6 @@
     <button class="btn sq" id="mute" aria-label="Mute"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4zM16 9a4 4 0 0 1 0 6"/></svg></button>
     <div class="track"><div class="fill" id="fill"></div><input type="range" min="0" max="100" id="vol" aria-label="Volume"></div>
     <div class="n" id="volN">—</div>
-  </div>
-  <div id="outWrap" style="margin-top:12px; display:none">
-    <select id="out" aria-label="Audio output"></select>
   </div>
 </section>
 
@@ -182,7 +178,7 @@
   }
   function render(s) {
     $("dot").className = "dot ok";
-    $("sub").textContent = (s.front ? s.front + " in front" : "Idle") + (s.output ? " · " + s.output : "");
+    $("sub").textContent = s.front ? s.front + " in front" : "Idle";
     var np = s.playing;
     if (np) { $("nowTitle").textContent = np.title; $("nowSub").textContent = (np.artist ? np.artist + " · " : "") + np.app + (np.state === "paused" ? " · paused" : ""); }
     else { $("nowTitle").textContent = s.front || "Nothing in front"; $("nowSub").textContent = np === null ? "—" : ""; }
@@ -192,13 +188,6 @@
     }
     $("mute").classList.toggle("on", !!s.muted);
     Array.prototype.forEach.call(grid.children, function (b) { b.classList.toggle("on", !!(s.apps && s.apps[b.dataset.app])); });
-    if (s.outputs && s.outputs.length > 1) {
-      var sel = $("out"); $("outWrap").style.display = "";
-      if (sel.options.length !== s.outputs.length) {
-        sel.innerHTML = s.outputs.map(function (o) { return "<option>" + o.replace(/</g, "&lt;") + "</option>"; }).join("");
-      }
-      sel.value = s.output || sel.value;
-    }
     $("axHint").hidden = s.accessibility !== false;
   }
   function poll() {
@@ -210,7 +199,6 @@
   $("mute").addEventListener("click", function () { post("/api/volume", { mute: !$("mute").classList.contains("on") }); });
   $("vol").addEventListener("input", function () { $("fill").style.width = this.value + "%"; $("volN").textContent = this.value; });
   $("vol").addEventListener("change", function () { post("/api/volume", { level: +this.value }); });
-  $("out").addEventListener("change", function () { post("/api/output", { name: this.value }, "Sound → " + this.value); });
   document.querySelectorAll("[data-display]").forEach(function (b) { b.addEventListener("click", function () { post("/api/display", { action: b.dataset.display }, b.dataset.display === "off" ? "Screen off" : "Screen on"); }); });
   document.querySelectorAll("[data-key]").forEach(function (b) { b.addEventListener("click", function () { post("/api/key", { key: b.dataset.key }); }); });
 

@@ -15,12 +15,12 @@ except for the rules.
 ```
 ~/plint/tv
 ├── install.sh           one-shot setup (idempotent); --agents-only · --power
-├── bin/tv               the CLI: status · open · quit · screen · volume · play · sound · sync · apps · claude · logs · doctor
+├── bin/tv               the CLI: status · open · quit · screen · volume · play · sync · apps · claude · logs · doctor
 ├── apps.sh              every app, fetched straight from its publisher (no Homebrew on Intel)
-├── remote/              tv-remote.py (:7000, the API) · index.html (the phone page) · audiodev.c
+├── remote/              tv-remote.py (:7000, the API) · index.html (the phone page)
 └── launchd/             net.plint.tv.remote · net.plint.tv.claude · net.plint.tv.screenoff · net.plint.tv.beszel
 ~/.config/plint-tv/      env (DOMAIN, BESZEL_KEY) · key (shared with Plint's Caddy)
-~/.local/bin/            claude · beszel-agent · audiodev
+~/.local/bin/            claude · beszel-agent
 ~/Library/Logs/plint-tv/ remote.log · claude.log · beszel.log
 ```
 
@@ -35,7 +35,9 @@ the shared key. `tv status` shows the same state the page does.
 
 - **Health**: `tv status`, then `tv doctor`. Logs: `tv logs`.
 - **Open / control**: `tv open stremio|youtube|steam|moonlight|spotify|music`, `tv play`,
-  `tv volume 40`, `tv screen off|on`, `tv sound` (list) / `tv sound "LG TV"`.
+  `tv volume 40`, `tv screen off|on`. Sound always goes to the TV over HDMI.
+- **The TV turns itself off** when the Mac sleeps its display (no HDMI signal): 20 min
+  idle, 01:00, or `tv screen off`. `tv screen on` or any key brings it back.
 - **Change config**: edit files here, `tv sync` (pulls the repo, reinstalls launch
   agents). Commit and push so it survives a rebuild. Changes under `tv/` only; the
   rest of the repo is the server's.

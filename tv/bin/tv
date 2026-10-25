@@ -8,7 +8,6 @@
 #    tv screen off|on
 #    tv volume <0-100>|up|down|mute|unmute
 #    tv play                  play / pause whatever is on
-#    tv sound [name]          list audio outputs, or switch to one
 #    tv sync                  pull the repo, reinstall the launch agents
 #    tv apps                  install or update the apps (no Homebrew)
 #    tv claude                attach to Claude on the box (Ctrl+A, D to leave)
@@ -36,7 +35,7 @@ ok()   { printf '%s✓ %s%s\n' "$C_GREEN" "$*" "$C_RESET"; }
 warn() { printf '%s! %s%s\n' "$C_YELLOW" "$*" "$C_RESET"; }
 die()  { printf '%s✗ %s%s\n' "$C_RED" "$*" "$C_RESET" >&2; exit 1; }
 say()  { printf '%s▸ %s%s\n' "$C_DIM" "$*" "$C_RESET"; }
-usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 api() { # api METHOD PATH [json]
   curl -fsS --max-time 8 -X "$1" -H "X-Plint-Key: $KEY" -H 'Content-Type: application/json' \
@@ -57,7 +56,7 @@ np = s.get("playing")
 print(f"Plint TV · {s['host']}")
 print(f"  in front   {s.get('front') or '—'}")
 print(f"  playing    {np['title'] + ' — ' + (np.get('artist') or np['app']) + ' (' + np['state'] + ')' if np else '—'}")
-print(f"  volume     {'muted' if s.get('muted') else s.get('volume')}  · {s.get('output') or 'default output'}")
+print(f"  volume     {'muted' if s.get('muted') else s.get('volume')}")
 on = [k for k, v in s['apps'].items() if v]
 print("  apps       " + (", ".join(on) if on else "none running"))
 if s.get("accessibility") is False:
@@ -83,11 +82,6 @@ cmd_volume() {
     ''|*[!0-9]*) die "tv volume <0-100>|up|down|mute|unmute";;
     *)      act /api/volume "{\"level\":$1}" "volume $1";;
   esac
-}
-cmd_sound() {
-  [[ -x "$BIN/audiodev" ]] || die "audiodev isn't built — tv apps"
-  if [[ -n "${1:-}" ]]; then act /api/output "{\"name\":\"$*\"}" "sound → $*"
-  else printf '%s (current)\n' "$("$BIN/audiodev" current)"; "$BIN/audiodev" list; fi
 }
 
 cmd_sync() {
@@ -135,7 +129,7 @@ cmd_register() { printf 'plint tv register %s %s\n' "$(lan_ip)" "$KEY"; }
 
 case "${1:-}" in
   status|"") cmd_status;;
-  open|quit|screen|play|volume|sound|sync|apps|claude|logs|doctor|register) c="$1"; shift; "cmd_$c" "$@";;
+  open|quit|screen|play|volume|sync|apps|claude|logs|doctor|register) c="$1"; shift; "cmd_$c" "$@";;
   claude-server) cmd_claude_server;;
   -h|--help|help) usage;;
   *) usage 1;;

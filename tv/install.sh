@@ -62,12 +62,13 @@ install_agents() {
 # ── power: never sleep, screen off at night ──────────────────
 power_settings() {
   step "Power"
-  sudo pmset -a sleep 0 disksleep 0 displaysleep 30 womp 1 autorestart 1 powernap 0 ttyskeepawake 1 lidwake 1 >/dev/null
+  # displaysleep is what turns the TV off: no HDMI signal → the TV powers down by itself.
+  sudo pmset -a sleep 0 disksleep 0 displaysleep 20 womp 1 autorestart 1 powernap 0 ttyskeepawake 1 lidwake 1 >/dev/null
   sudo pmset -a disablesleep 1 >/dev/null 2>&1 || true   # the lid sensor can't put it to sleep
   sudo systemsetup -setrestartfreeze on >/dev/null 2>&1 || true
   sudo systemsetup -setwakeonnetworkaccess on >/dev/null 2>&1 || true
   sudo systemsetup -setremotelogin on >/dev/null 2>&1 || true
-  ok "never sleeps · display off after 30 min and at 01:00 · restarts after a freeze · SSH on"
+  ok "never sleeps · HDMI off after 20 min idle and at 01:00 (the TV turns itself off) · restarts after a freeze · SSH on"
 }
 
 if (( AGENTS_ONLY )); then install_agents; exit 0; fi
@@ -142,7 +143,7 @@ defaults write NSGlobalDomain _HIHideMenuBar -bool true
 defaults write com.apple.finder CreateDesktop -bool false
 defaults write com.apple.CrashReporter DialogType -string none
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
-defaults -currentHost write com.apple.screensaver idleTime -int 900
+defaults -currentHost write com.apple.screensaver idleTime -int 600
 if [[ -d "$HOME/Library/Screen Savers/Aerial.saver" ]]; then
   defaults -currentHost write com.apple.screensaver moduleDict -dict moduleName Aerial path "$HOME/Library/Screen Savers/Aerial.saver" type 0 || true
 fi
@@ -157,12 +158,7 @@ sudo defaults write /Library/Preferences/com.apple.commerce AutoUpdate -bool tru
 # screen sharing on, for Screens / VNC over the tailnet
 sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
   -activate -configure -access -on -users "$ME" -privs -all -restart -agent -menu >/dev/null 2>&1 || warn "could not enable Screen Sharing — turn it on in System Settings → General → Sharing"
-# sound to the TV if we can see it
-if [[ -x "$BIN/audiodev" ]]; then
-  tvout="$("$BIN/audiodev" list | grep -iE 'hdmi|tv|display|receiver' | head -n1 || true)"
-  [[ -n "$tvout" ]] && "$BIN/audiodev" set "$tvout" && ok "sound → $tvout"
-fi
-ok "dock and menu bar hidden · no desktop icons · Aerial after 15 min · updates download only"
+ok "dock and menu bar hidden · no desktop icons · Aerial after 10 min · updates download only"
 
 # ── 6. Tailscale ─────────────────────────────────────────────
 step "Tailscale"
@@ -203,6 +199,7 @@ ${C_BOLD}3. A few clicks only you can do:${C_RESET}
    · Stremio → Settings → Streaming server URL → https://stremio.${DOMAIN}/
    · App Store → Steam Link → Get (if it isn't installed yet)
    · metrics.${DOMAIN} → Add System → name 'tv', host ${ip}, port 45876
+   · TV settings → turn on "no signal → auto power off" so it switches off when the Mac goes dark
    · Phone: Screens or any VNC app → tv (over Tailscale) for a full view when you need it
 
    Then: tv status · tv doctor · tv open stremio

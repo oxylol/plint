@@ -108,15 +108,6 @@ install_claude_code() {
   if curl -fsSL https://claude.ai/install.sh | bash -s stable >/dev/null 2>&1; then ok "claude → ~/.local/bin"; else warn "Claude Code install failed — run: curl -fsSL https://claude.ai/install.sh | bash"; fi
 }
 
-install_audiodev() {   # tiny CoreAudio tool so the remote can switch sound output
-  [[ -x "$BIN/audiodev" ]] && { ok "audiodev (already built)"; return 0; }
-  say "audiodev (building with clang)"
-  if clang -O2 -framework CoreAudio -framework CoreFoundation -o "$BIN/audiodev" "$TV_DIR/remote/audiodev.c" 2>/dev/null; then
-    ok "audiodev → ~/.local/bin"
-  else
-    warn "audiodev didn't build; sound-output switching stays off (everything else works)"
-  fi
-}
 
 install_steam_link() {
   app_installed "Steam Link" && { ok "Steam Link (already installed)"; return 0; }
@@ -134,6 +125,5 @@ install_all() {
   install_claude_app
   install_claude_code
   install_beszel_agent
-  install_audiodev
   install_steam_link
 }

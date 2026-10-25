@@ -10,12 +10,10 @@
       "Bash(tv play*)",
       "Bash(tv volume *)",
       "Bash(tv screen *)",
-      "Bash(tv sound*)",
       "Bash(tv logs*)",
       "Bash(pmset -g*)",
       "Bash(launchctl print *)",
-      "Bash(brew list*)",
-      "Bash(brew services list*)",
+      "Bash(screen -list*)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)"

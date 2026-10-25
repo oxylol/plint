@@ -121,7 +121,7 @@ straight from its publisher. It never sleeps (screen goes dark at 01:00, any key
 Stremio against Plint's streaming server, YouTube in its TV layout, Steam Link and
 Moonlight for games from the PC, Spotify and Music, Aerial as the idle screen, Tailscale,
 a Beszel agent, and a small remote at **tv.plint.net** you open on your phone: open an
-app, play/pause, volume, sound output, screen off/on, arrow keys.
+app, play/pause, volume, screen off/on (which lets the TV switch itself off), arrow keys.
 
 On the Mac, as the user that's logged in on the TV:
 
