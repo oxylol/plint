@@ -28,11 +28,11 @@ install_dmg() {  # install_dmg "App Name" URL [file]
   dl "$url" "$file" || { warn "could not download $name"; return 0; }
   mnt="$(mktemp -d /tmp/plint-tv.XXXXXX)"
   if ! hdiutil attach -nobrowse -quiet -mountpoint "$mnt" "$DL/$file"; then warn "could not open $file"; return 0; fi
-  app="$(find "$mnt" -maxdepth 2 -name '*.app' -print -quit)"
+  app="$(find "$mnt" -maxdepth 2 -name '*.app' | head -n1)"
   if [[ -n "$app" ]]; then
     ditto "$app" "/Applications/$(basename "$app")" && ok "$name → /Applications"
   else
-    local pkg; pkg="$(find "$mnt" -maxdepth 2 -name '*.pkg' -print -quit)"
+    local pkg; pkg="$(find "$mnt" -maxdepth 2 -name '*.pkg' | head -n1)"
     [[ -n "$pkg" ]] && sudo installer -pkg "$pkg" -target / >/dev/null && ok "$name (pkg)"
   fi
   hdiutil detach -quiet "$mnt" || true
@@ -51,7 +51,7 @@ install_zip_app() {  # install_zip_app "App Name" URL file [dest dir]
   dl "$url" "$file" || { warn "could not download $name"; return 0; }
   tmp="$(mktemp -d /tmp/plint-tv.XXXXXX)"
   ditto -xk "$DL/$file" "$tmp"
-  local app; app="$(find "$tmp" -maxdepth 3 -name '*.app' -print -quit)"
+  local app; app="$(find "$tmp" -maxdepth 3 -name '*.app' | head -n1)"
   [[ -n "$app" ]] && ditto "$app" "$dest/$(basename "$app")" && ok "$name → $dest"
   rm -rf "$tmp"
 }
@@ -59,14 +59,17 @@ install_zip_app() {  # install_zip_app "App Name" URL file [dest dir]
 # ── the apps ─────────────────────────────────────────────────
 install_tailscale() {
   app_installed Tailscale && { ok "Tailscale (already installed)"; return 0; }
-  local pkg; pkg="$(curl -fsSL https://pkgs.tailscale.com/stable/ | grep -oE 'Tailscale-[0-9.]+-macos\.pkg' | sort -V | tail -n1)"
+  local pkg; pkg="$(curl -fsSL https://pkgs.tailscale.com/stable/ | python3 -c '
+import re, sys
+names = set(re.findall(r"Tailscale-[0-9.]+-macos\.pkg", sys.stdin.read()))
+print(max(names, key=lambda n: [int(x) for x in re.findall(r"\d+", n)]) if names else "")')" || pkg=""
   [[ -n "$pkg" ]] || { warn "could not find the Tailscale package"; return 0; }
   install_pkg "Tailscale" "https://pkgs.tailscale.com/stable/$pkg" "$pkg"
 }
 
 install_stremio() {
   app_installed Stremio && { ok "Stremio (already installed)"; return 0; }
-  local url; url="$(curl -fsSL https://www.stremio.com/downloads | grep -oE 'https://dl\.strem\.io/[^"]+\.dmg' | head -n1)"
+  local url; url="$(curl -fsSL https://www.stremio.com/downloads | grep -oE 'https://dl\.strem\.io/[^"]+\.dmg' | head -n1)" || url=""
   [[ -n "$url" ]] || { warn "could not find the Stremio download"; return 0; }
   install_dmg "Stremio" "$url" "Stremio.dmg"
 }
@@ -80,7 +83,7 @@ install_spotify() {
   say "Spotify"
   dl "https://download.scdn.co/SpotifyInstaller.zip" "SpotifyInstaller.zip" || { warn "could not download Spotify"; return 0; }
   local tmp; tmp="$(mktemp -d /tmp/plint-tv.XXXXXX)"; ditto -xk "$DL/SpotifyInstaller.zip" "$tmp"
-  local inst; inst="$(find "$tmp" -maxdepth 2 -name 'Install Spotify.app' -print -quit)"
+  local inst; inst="$(find "$tmp" -maxdepth 2 -name 'Install Spotify.app' | head -n1)"
   if [[ -n "$inst" ]] && open -W "$inst"; then ok "Spotify"; else warn "run the Spotify installer by hand later"; fi
   rm -rf "$tmp"
 }
@@ -116,14 +119,9 @@ install_steam_link() {
 }
 
 install_all() {
-  install_tailscale
-  install_stremio
-  install_chrome
-  install_moonlight
-  install_spotify
-  install_aerial
-  install_claude_app
-  install_claude_code
-  install_beszel_agent
-  install_steam_link
+  local f
+  for f in install_tailscale install_stremio install_chrome install_moonlight install_spotify \
+           install_aerial install_claude_app install_claude_code install_beszel_agent install_steam_link; do
+    "$f" || warn "${f#install_}: something went wrong, carrying on (re-run with: tv apps)"
+  done
 }
