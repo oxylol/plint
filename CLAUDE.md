@@ -16,7 +16,8 @@ app; they are usually on a phone, so keep answers short and lead with the result
 ├── stacks/
 │   ├── core/           caddy · adguard · homepage · socket-proxy · dockge
 │   ├── ops/            beszel (+agent) · uptime-kuma · ntfy · kopia
-│   └── media/          stremio
+│   ├── media/          stremio
+│   └── table/          includes /opt/plint-table/deploy/compose.yaml (D&D table, separate repo)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
 ├── dashboard/          Homepage config (services/widgets/settings/images)
@@ -27,6 +28,10 @@ app; they are usually on a phone, so keep answers short and lead with the result
 
 Native (not in Docker): **AMP** (user `amp`, web :8080, `ampinstmgr`), **Cockpit** (:9090),
 **Tailscale** (`tailscale`), **Claude Code** (you).
+
+**Plint Table** (D&D 5e, human DM + voice AI DM) is its own repo at `/opt/plint-table`
+(README there). Its data lives in `/srv/dnd/{adventures,library,data}`; `plint sync` pulls that
+repo too and rebuilds the `table` image. Secrets for it live in `/opt/plint-table/.env`.
 
 ## Names
 
@@ -47,6 +52,7 @@ host network and proxies to `localhost:<port>`:
 | ntfy | 8070 | ntfy |
 | backup | 51515 | Kopia |
 | speed | 8075 | Speedtest Tracker |
+| table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
 
 ## How to do things
 

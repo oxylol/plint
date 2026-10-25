@@ -11,6 +11,13 @@
         description: AMP · game servers
         siteMonitor: http://host.docker.internal:8080
 
+    - D&D Table:
+        icon: mdi-dice-d20
+        href: https://table.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Plint Table · campaigns, dice, DM screen
+        server: plint
+        container: table
+
     - Stremio:
         icon: stremio.png
         href: https://stremio.{{HOMEPAGE_VAR_DOMAIN}}

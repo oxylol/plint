@@ -19,10 +19,10 @@ PLINT_DIR="${PLINT_DIR:-/opt/plint}"
 source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
-STACKS=(core ops media)
+STACKS=(core ops media table)
 usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
-stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media) echo "$1";; *) die "unknown stack: $1";; esac; }
+stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|table) echo "$1";; *) die "unknown stack: $1";; esac; }
 
 cmd_status() {
   printf '%s%s%s\n\n' "$C_BOLD" "Plint · $(hostname) · $(date '+%a %d %b %H:%M')" "$C_RESET"
@@ -58,6 +58,7 @@ url_for() {
     ntfy) echo "https://ntfy.${DOMAIN:-}";;
     kopia) echo "https://backup.${DOMAIN:-}";;
     stremio) echo "https://stremio.${DOMAIN:-}";;
+    table) echo "https://table.${DOMAIN:-}";;
     cockpit.socket) echo "https://host.${DOMAIN:-}";;
     tailscaled) tailscale ip -4 2>/dev/null | head -n1;;
     plint-claude) echo "claude.ai/code → Plint";;
@@ -212,6 +213,8 @@ cmd_sync() {
   sudo -u plint -H git -C "$PLINT_DIR" pull --ff-only
   after="$(git -C "$PLINT_DIR" rev-parse --short HEAD)"
   if [[ "$before" == "$after" ]]; then ok "already up to date ($after)"; else ok "$before → $after"; fi
+  # Plint Table lives in its own repo; pull it too so `plint sync` rebuilds the table image.
+  if [[ -d /opt/plint-table/.git ]]; then sudo -u plint -H git -C /opt/plint-table pull --ff-only >/dev/null 2>&1 && ok "plint-table up to date" || warn "plint-table: git pull failed (local changes?)"; fi
   for s in "${STACKS[@]}"; do compose "$s" up -d --remove-orphans --build; done
   docker exec caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 || true
   local u units=0

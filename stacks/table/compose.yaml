@@ -1,0 +1,4 @@
+# Plint Table (D&D). The real compose lives in its own repo at /opt/plint-table;
+# this stub includes it so `plint status|up|logs table` work and Dockge can see it.
+include:
+  - path: /opt/plint-table/deploy/compose.yaml
