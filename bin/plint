@@ -290,11 +290,11 @@ cmd_tv() {
       [[ -n "$ip" && -n "$key" ]] || die "plint tv register <ip> <key>   (both are printed by tv/install.sh on the Mac)"
       env_set TV_IP "$ip"; env_set TV_KEY "$key"
       compose core up -d caddy homepage >/dev/null
-      ok "tv.${DOMAIN} → ${ip}:7000"
+      ok "tv.${DOMAIN} → ${ip}:7700"
       ;;
     state)
       [[ -n "${TV_IP:-}" ]] || die "no TV registered yet — run tv/install.sh on the Mac, then: plint tv register <ip> <key>"
-      curl -fsS --max-time 5 -H "X-Plint-Key: ${TV_KEY:-}" "http://${TV_IP}:7000/api/state" | python3 -m json.tool
+      curl -fsS --max-time 5 -H "X-Plint-Key: ${TV_KEY:-}" "http://${TV_IP}:7700/api/state" | python3 -m json.tool
       ;;
     *) die "plint tv [register <ip> <key>]";;
   esac

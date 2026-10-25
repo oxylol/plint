@@ -41,7 +41,7 @@ usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 api() { # api METHOD PATH [json]
   curl -fsS --max-time 8 -X "$1" -H "X-Plint-Key: $KEY" -H 'Content-Type: application/json' \
-    ${3:+-d "$3"} "http://127.0.0.1:7000$2"
+    ${3:+-d "$3"} "http://127.0.0.1:7700$2"
 }
 state() { api GET /api/state; }
 act()   { api POST "$1" "${2:-{\}}" >/dev/null && ok "${3:-done}"; }
@@ -138,9 +138,9 @@ cmd_logs() { mkdir -p "$LOGS"; tail -n 50 -F "$LOGS"/remote.log "$LOGS"/claude.l
 cmd_doctor() {
   local fails=0
   check() { if "$@" >/dev/null 2>&1; then ok "$*"; else warn "FAILED: $*"; fails=$((fails + 1)); fi; }
-  if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:7000/health 2>/dev/null; then ok "remote service on :7000"
+  if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:7700/health 2>/dev/null; then ok "remote service on :7700"
   else
-    warn "FAILED: remote service on :7000 — last log lines:"; fails=$((fails + 1))
+    warn "FAILED: remote service on :7700 — last log lines:"; fails=$((fails + 1))
     printf '%s' "$C_DIM"; tail -n 8 "$LOGS/remote.log" 2>/dev/null | sed 's/^/    │ /'; printf '%s\n' "$C_RESET"
   fi
   check agent_loaded net.plint.tv.remote

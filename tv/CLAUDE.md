@@ -17,7 +17,7 @@ except for the rules.
 ├── install.sh           one-shot setup (idempotent); --agents-only · --power
 ├── bin/tv               the CLI: status · open · quit · screen · volume · play · sync · apps · claude · logs · doctor
 ├── apps.sh              every app, fetched straight from its publisher (no Homebrew on Intel)
-├── remote/              tv-remote.py (:7000, the API) · index.html (the phone page)
+├── remote/              tv-remote.py (:7700, the API) · index.html (the phone page)
 └── launchd/             net.plint.tv.remote · net.plint.tv.claude · net.plint.tv.screenoff · net.plint.tv.beszel
 ~/.config/plint-tv/      env (DOMAIN, BESZEL_KEY) · key (shared with Plint's Caddy)
 ~/.local/bin/            claude · beszel-agent
@@ -28,7 +28,7 @@ Apps: Stremio (streaming server = `https://stremio.<domain>/`), YouTube TV
 (`~/Applications/YouTube TV.app` → Chrome in its own profile, TV layout), Steam Link,
 Moonlight, Spotify, Music, Aerial (idle screen), Tailscale, Beszel agent, Claude desktop.
 
-`https://tv.<domain>` is the remote: Plint's Caddy proxies it to `:7000` here and adds
+`https://tv.<domain>` is the remote: Plint's Caddy proxies it to `:7700` here and adds
 the shared key. `tv status` shows the same state the page does.
 
 ## How to do things
@@ -52,7 +52,7 @@ the shared key. `tv status` shows the same state the page does.
 ## Rules
 
 - The Mac must never sleep: don't change `pmset` beyond what `install.sh --power` sets.
-- Nothing listens on the internet; `:7000` is LAN-only and key-gated. Don't open more.
+- Nothing listens on the internet; `:7700` is LAN-only and key-gated. Don't open more.
 - No `reboot`/`shutdown` while something is playing; ask first.
 - Secrets stay in `~/.config/plint-tv`; never print the key.
 - Irreversible things (deleting apps, wiping profiles, changing the domain): stop and ask.

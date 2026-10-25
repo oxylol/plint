@@ -2,7 +2,7 @@
 """
 Plint TV · the remote.
 
-A tiny HTTP service on the Mac (port 7000). Plint's Caddy proxies it as
+A tiny HTTP service on the Mac (port 7700; 7000 is AirPlay on macOS). Plint's Caddy proxies it as
 https://tv.<domain> and adds the shared key to every request, so the page you
 open on your phone can drive the TV while nobody else on the LAN can.
 
@@ -32,7 +32,7 @@ HOME = Path(os.environ.get("HOME", str(Path.home())))
 HERE = Path(__file__).resolve().parent
 CONF = HOME / ".config" / "plint-tv"
 KEY = (CONF / "key").read_text().strip() if (CONF / "key").exists() else ""
-PORT = 7000
+PORT = 7700  # 7000 and 5000 belong to macOS AirPlay Receiver
 STARTED = time.time()
 
 CHROME_UA = ("Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/538.1 "

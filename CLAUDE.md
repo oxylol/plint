@@ -61,7 +61,7 @@ host network and proxies to `localhost:<port>`:
 | backup | 51515 | Kopia |
 | speed | 8075 | Speedtest Tracker |
 | table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
-| tv | `TV_IP`:7000 | the Mac on the TV (remote page + API), key-gated |
+| tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 
 ## How to do things
 
