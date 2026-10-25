@@ -11,6 +11,7 @@
 #    tv sync                  pull the repo, reinstall the launch agents
 #    tv apps                  install or update the apps (no Homebrew)
 #    tv claude                attach to Claude on the box (Ctrl+A, D to leave)
+#    tv claude-reset          stop every Claude session here and start one clean
 #    tv logs                  follow the remote + Claude logs
 #    tv doctor                check services, Tailscale, permissions
 #    tv register              print the line that registers this Mac with Plint
@@ -23,6 +24,7 @@ LOGS="$HOME/Library/Logs/plint-tv"
 AGENTS="$HOME/Library/LaunchAgents"
 BIN="$HOME/.local/bin"
 export PATH="$BIN:/usr/local/bin:$PATH"
+export SCREENDIR="$HOME/.screen"; mkdir -p "$SCREENDIR"; chmod 700 "$SCREENDIR"
 KEY="$(cat "$CONF/key" 2>/dev/null || true)"
 # shellcheck disable=SC1091
 [[ -f "$CONF/env" ]] && source "$CONF/env"
@@ -35,7 +37,7 @@ ok()   { printf '%s✓ %s%s\n' "$C_GREEN" "$*" "$C_RESET"; }
 warn() { printf '%s! %s%s\n' "$C_YELLOW" "$*" "$C_RESET"; }
 die()  { printf '%s✗ %s%s\n' "$C_RED" "$*" "$C_RESET" >&2; exit 1; }
 say()  { printf '%s▸ %s%s\n' "$C_DIM" "$*" "$C_RESET"; }
-usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 api() { # api METHOD PATH [json]
   curl -fsS --max-time 8 -X "$1" -H "X-Plint-Key: $KEY" -H 'Content-Type: application/json' \
@@ -87,6 +89,7 @@ cmd_volume() {
 cmd_sync() {
   git -C "$TV_DIR/.." pull --ff-only
   "$TV_DIR/install.sh" --agents-only
+  [[ "$(claude_sessions | grep -c . || true)" -le 1 ]] || cmd_claude_reset
 }
 cmd_apps() {
   # shellcheck source=../apps.sh
@@ -94,27 +97,40 @@ cmd_apps() {
   install_all
 }
 
-# screen sessions named "claude". `screen -list` is read in full on purpose:
-# grep -q would close the pipe early, screen would die of SIGPIPE, and pipefail
-# would then report "no session" (which is how seven of them once got started).
-claude_sessions() { screen -list 2>/dev/null | awk '/[.]claude[[:space:]]/ {print $1}'; }
+# screen sessions named "claude". `screen -list` exits non-zero on some macOS
+# versions even when it lists sessions, and grep -q would SIGPIPE it, so: read it
+# all, ignore its status, count with awk.
+claude_sessions() { { screen -list 2>/dev/null || true; } | awk '/[.]claude[[:space:]]/ {print $1}'; }
+claude_reset() {   # quit every claude screen and every stray remote-control process
+  local sess
+  while read -r sess; do [[ -n "$sess" ]] && screen -S "$sess" -X quit >/dev/null 2>&1 || true; done < <(claude_sessions)
+  pkill -f 'claude remote-control' >/dev/null 2>&1 || true
+  screen -wipe >/dev/null 2>&1 || true
+}
 
 cmd_claude_server() {   # used by the launch agent; stays alive while the one screen session lives
   cd "$TV_DIR"
-  local list n
-  list="$(claude_sessions)"; n="$(printf '%s\n' "$list" | grep -c . || true)"
-  if (( n > 1 )); then   # never more than one Claude: quit the extras, keep the newest
-    printf '%s\n' "$list" | sort -t. -k1,1n | sed '$d' | while read -r sess; do screen -S "$sess" -X quit || true; done
-  elif (( n == 0 )); then
+  local n; n="$(claude_sessions | grep -c . || true)"
+  if (( n != 1 )); then
+    (( n > 1 )) && claude_reset
     screen -dmS claude bash -lc 'claude remote-control --name "Plint TV"; sleep 5'
+    sleep 2
   fi
   while [[ -n "$(claude_sessions)" ]]; do sleep 30; done
 }
 cmd_claude() {
   agent_loaded net.plint.tv.claude || launchctl bootstrap "gui/$(id -u)" "$AGENTS/net.plint.tv.claude.plist" 2>/dev/null || true
-  local sess; for _ in 1 2 3 4 5; do sess="$(claude_sessions | head -n1)"; [[ -n "$sess" ]] && break; sleep 1; done
+  local sess=""; for _ in 1 2 3 4 5; do sess="$(claude_sessions | head -n1)"; [[ -n "$sess" ]] && break; sleep 1; done
   [[ -n "$sess" ]] || die "Claude's session isn't running — tv doctor"
   exec screen -r "$sess"
+}
+cmd_claude_reset() {
+  say "stopping every Claude session on this Mac"
+  launchctl bootout "gui/$(id -u)/net.plint.tv.claude" >/dev/null 2>&1 || true
+  claude_reset
+  launchctl bootstrap "gui/$(id -u)" "$AGENTS/net.plint.tv.claude.plist"
+  sleep 3
+  ok "one Claude session: $(claude_sessions | head -n1)  (attach: tv claude)"
 }
 
 cmd_logs() { mkdir -p "$LOGS"; tail -n 50 -F "$LOGS"/remote.log "$LOGS"/claude.log "$LOGS"/beszel.log 2>/dev/null; }
@@ -122,11 +138,15 @@ cmd_logs() { mkdir -p "$LOGS"; tail -n 50 -F "$LOGS"/remote.log "$LOGS"/claude.l
 cmd_doctor() {
   local fails=0
   check() { if "$@" >/dev/null 2>&1; then ok "$*"; else warn "FAILED: $*"; fails=$((fails + 1)); fi; }
-  check curl -fsS --max-time 3 http://127.0.0.1:7000/health
+  if curl -fsS --max-time 3 -o /dev/null http://127.0.0.1:7000/health 2>/dev/null; then ok "remote service on :7000"
+  else
+    warn "FAILED: remote service on :7000 — last log lines:"; fails=$((fails + 1))
+    printf '%s' "$C_DIM"; tail -n 8 "$LOGS/remote.log" 2>/dev/null | sed 's/^/    │ /'; printf '%s\n' "$C_RESET"
+  fi
   check agent_loaded net.plint.tv.remote
   check agent_loaded net.plint.tv.claude
-  check test -n "$(claude_sessions)"
-  if [[ "$(claude_sessions | grep -c .)" -le 1 ]]; then ok "one Claude session"; else warn "more than one Claude screen session — tv sync fixes it"; fi
+  local nsess; nsess="$(claude_sessions | grep -c . || true)"
+  case "$nsess" in 1) ok "one Claude session";; 0) warn "no Claude session — tv claude-reset";; *) warn "$nsess Claude sessions — tv claude-reset";; esac
   check "$TS" status
   check test -f "$CONF/key"
   if agent_loaded net.plint.tv.beszel; then check pgrep -x beszel-agent; else warn "metrics agent not set up (re-run install.sh with the Beszel key)"; fi
@@ -142,6 +162,7 @@ case "${1:-}" in
   status|"") cmd_status;;
   open|quit|screen|play|volume|sync|apps|claude|logs|doctor|register) c="$1"; shift; "cmd_$c" "$@";;
   claude-server) cmd_claude_server;;
+  claude-reset) cmd_claude_reset;;
   -h|--help|help) usage;;
   *) usage 1;;
 esac
