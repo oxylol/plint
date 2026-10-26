@@ -1,7 +1,8 @@
 // Claude agent loop (browser side) + chat rendering.
 // The server streams NDJSON events; tools run here against the simulator.
 
-const MAX_TOOL_TURNS = 8;
+// tool rounds per request before Claude pauses (a multi-operation job easily needs 15+); "continue" carries on
+const MAX_TOOL_TURNS = 25;
 
 // Decode the (possibly incomplete) JSON string value of `key` from a partial JSON object.
 export function partialJsonString(json, key) {
@@ -74,49 +75,63 @@ export class ClaudeAgent {
     for (const d of documents) content.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: d.data }, title: d.name });
     for (const img of images) content.push({ type: 'image', source: { type: 'base64', media_type: img.mediaType, data: img.data } });
     content.push({ type: 'text', text: `${context}\n\n<user_request>\n${text}\n</user_request>` });
-    this.history.push({ role: 'user', content });
+    // after a stop or an error the history can end with our own turn (tool results): add to it
+    const last = this.history[this.history.length - 1];
+    const merged = last?.role === 'user';
+    const keep = merged ? last.content.length : 0;
+    if (merged) last.content.push(...content); else this.history.push({ role: 'user', content });
     const turnStart = this.history.length - 1;
+    // the request never got an answer: take it back out so a retry starts clean
+    const dropRequest = () => {
+      if (this.history.length - 1 !== turnStart) return;
+      if (merged) this.history[turnStart].content.length = keep; else this.history.pop();
+    };
     this.view.addUser(text, images, documents);
     try {
-      for (let turn = 0; turn <= MAX_TOOL_TURNS; turn++) {
+      for (let turn = 1; ; turn++) {
         const final = await this.streamTurn();
-        if (!final) {
-          // the request never got an answer: drop it so a retry starts clean
-          if (this.history.length - 1 === turnStart) this.history.pop();
-          break;
-        }
+        if (!final) { dropRequest(); break; }
         this.history.push({ role: 'assistant', content: sanitizeAssistant(final.content) });
         this.addUsage(final.usage);
+        const uses = final.content.filter((b) => b.type === 'tool_use');
         if (final.stop_reason === 'refusal') {
           this.view.notice('Claude declined this request' + (final.stop_details?.explanation ? `: ${final.stop_details.explanation}` : '.'), 'error');
+          this.answerUnrun(uses, 'Not run: the reply was declined.');
           break;
         }
         if (final.stop_reason === 'max_tokens') {
           this.view.notice('The response hit the output limit before finishing.', 'warning');
-          if (final.content.some((b) => b.type === 'tool_use')) break; // truncated tool input: never run it
+          // truncated tool input: never run it, but answer it so the conversation can continue
+          if (uses.length) { this.answerUnrun(uses, 'Not run: the output limit cut this call off before its input was complete.'); break; }
         }
-        const uses = final.content.filter((b) => b.type === 'tool_use');
         if (final.stop_reason !== 'tool_use' || !uses.length) break;
-        if (turn === MAX_TOOL_TURNS) {
-          this.view.notice(`Stopped after ${MAX_TOOL_TURNS} tool rounds.`, 'warning');
-          // answer the pending calls so the history stays valid
-          this.history.push({ role: 'user', content: uses.map((u) => ({ type: 'tool_result', tool_use_id: u.id, content: 'Tool round limit reached; stop and summarise.', is_error: true })) });
-          break;
-        }
         const results = [];
         for (const u of uses) results.push(await this.runTool(u));
         this.history.push({ role: 'user', content: results });
         if (this.stopped) break;
+        if (turn >= MAX_TOOL_TURNS) {
+          this.view.notice(`Paused after ${MAX_TOOL_TURNS} tool rounds — everything so far is applied. Send “continue” to let Claude carry on.`, 'warning');
+          break;
+        }
       }
     } catch (e) {
-      if (this.history.length - 1 === turnStart) this.history.pop();
+      dropRequest();
       if (e.name !== 'AbortError') this.view.notice(e.message || String(e), 'error');
     } finally {
       this.busy = false;
       this.abort = null;
+      // a program that was streamed but never run must not stay in the editor, nor a card keep spinning
+      this.tools.abandonWrite?.();
+      this.view.finishPendingCards?.('Not run — the reply stopped before this step.');
       this.view.setBusy(false);
       this.view.setUsage(this.usage);
     }
+  }
+
+  // tool calls that will not run still need an answer, or the next request is rejected
+  answerUnrun(uses, why) {
+    if (!uses.length) return;
+    this.history.push({ role: 'user', content: uses.map((u) => ({ type: 'tool_result', tool_use_id: u.id, content: why, is_error: true })) });
   }
 
   addUsage(u) {
@@ -485,4 +500,8 @@ export class ChatView {
   }
 
   toolCard(id) { return this.cards.get(id); }
+
+  finishPendingCards(why) {
+    for (const card of this.cards.values()) if (!card.el.classList.contains('done')) card.done({ error: why });
+  }
 }

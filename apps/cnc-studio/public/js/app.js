@@ -1360,6 +1360,17 @@ const agent = new ClaudeAgent({
     },
     streamWrite(text) { editor.streamTo(text); },
     endWrite() { editor.setStreaming(false); },
+    // the reply ended before a streamed program was run: show the operation's real program again
+    abandonWrite() {
+      if (!preWrite) return;
+      preWrite = null;
+      editor.setStreaming(false);
+      if (editor.value !== activeOp().text) {
+        editor.setValue(activeOp().text, { silent: true });
+        simulate({ time: 'keep' });
+        toast('The unfinished program from Claude was not applied');
+      }
+    },
     async write_program(input, card) {
       editor.setStreaming(false);
       const i = resolveOp(input.operation, input.machine);
