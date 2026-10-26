@@ -144,6 +144,18 @@
 		reverse_proxy localhost:3200
 	}
 
+	@cnc host cnc.{$DOMAIN}
+	handle @cnc {
+		# CNC Studio. Own look; drawings/PDFs for Claude ride in the request,
+		# and answers stream for minutes, so no buffering.
+		request_body {
+			max_size 60MB
+		}
+		reverse_proxy localhost:5178 {
+			flush_interval -1
+		}
+	}
+
 	@speed host speed.{$DOMAIN}
 	handle @speed {
 		import theme speedtest

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CNC Studio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23f5a524'/%3E%3Cpath d='M9 22V10h3l4 7 4-7h3v12h-3v-7l-4 6-4-6v7z' fill='%23161b22'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/vendor/codemirror/lib/codemirror.css">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/vendor/codemirror/lib/codemirror.js"></script>
+  <script src="/vendor/codemirror/addon/mode/simple.js"></script>
+  <script src="/vendor/codemirror/addon/selection/active-line.js"></script>
+  <script src="/vendor/codemirror/addon/comment/comment.js"></script>
+  <script type="importmap">
+    { "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">M</span><span class="brand-name">CNC Studio</span></div>
+    <div class="seg" id="machineSeg" role="tablist" aria-label="Machine">
+      <button data-machine="mill" class="active">Mill</button>
+      <button data-machine="lathe">Lathe</button>
+    </div>
+    <nav class="menu">
+      <button class="btn ghost" id="btnNew" title="New program">New</button>
+      <button class="btn ghost" id="btnOpen" title="Open .nc files (extra files become subprograms) or a saved job (.cncjob.json)">Open</button>
+      <button class="btn ghost" id="btnSave" title="Download program (Ctrl+S)">Save</button>
+      <div class="dropdown">
+        <button class="btn ghost" id="btnExamples">Examples ▾</button>
+        <div class="dropdown-menu" id="examplesMenu"></div>
+      </div>
+      <button class="btn ghost" id="btnSubs" title="Subprogram files for M98">Subprograms <span class="count" id="subCount">0</span></button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="claude-status" id="claudeStatus" title="Claude API status"><span class="dot"></span><span class="label">Claude</span></div>
+    <button class="btn icon ghost" id="btnSettings" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+    <button class="btn icon ghost only-narrow" id="btnPanel" title="Claude panel" aria-label="Toggle side panel">☰</button>
+  </header>
+
+  <main class="layout">
+    <section class="pane editor-pane">
+      <div class="ops-bar">
+        <div class="ops-tabs" id="opsTabs" role="tablist" aria-label="Operations"></div>
+        <div class="dropdown">
+          <button class="op-add" id="btnAddOp" title="Add an operation: a second setup (flip, re-clamp), a lathe-to-mill transfer, or another program in the job">+</button>
+          <div class="dropdown-menu op-menu" id="opMenu">
+            <button data-act="next-mill">Next mill operation <span class="muted">— continues from the last result, flipped</span></button>
+            <button data-act="next-lathe">Next lathe operation <span class="muted">— turned around in the chuck</span></button>
+            <button data-act="open">Open file as a new operation…</button>
+            <button data-act="dup">Duplicate this operation</button>
+            <hr>
+            <button data-act="save-job">Save job (all operations)…</button>
+          </div>
+        </div>
+      </div>
+      <div class="pane-head">
+        <span class="file-name" id="fileName">untitled.nc</span>
+        <span class="badges" id="editorBadges"></span>
+        <span class="setup-info" id="setupInfo" hidden></span>
+        <button class="btn small machine-hint" id="machineHint" hidden></button>
+        <div class="spacer"></div>
+        <select id="versionSelect" class="select small" title="Program versions"><option>Versions</option></select>
+        <button class="btn small" id="btnSimulate" title="Re-run simulation">Simulate</button>
+      </div>
+      <div class="editor-wrap" id="editor"></div>
+      <div class="pane-foot" id="editorFoot"><span id="cursorInfo">Ln 1</span><span class="spacer"></span><label class="check"><input type="checkbox" id="autoSim" checked> auto-simulate</label></div>
+    </section>
+
+    <section class="pane view-pane">
+      <div class="viewport" id="viewport">
+        <div class="dro" id="dro">
+          <div class="dro-row"><span class="ax">X</span><span class="v" id="droX">0.000</span></div>
+          <div class="dro-row" id="droYRow"><span class="ax">Y</span><span class="v" id="droY">0.000</span></div>
+          <div class="dro-row"><span class="ax">Z</span><span class="v" id="droZ">0.000</span></div>
+          <div class="dro-row" id="droARow" hidden><span class="ax">A</span><span class="v" id="droA">0.000</span></div>
+          <div class="dro-row" id="droBRow" hidden><span class="ax">B</span><span class="v" id="droB">0.000</span></div>
+          <div class="dro-meta"><span id="droT">T0</span><span id="droF">F0</span><span id="droS">S0</span><span id="droMode">G00</span></div>
+        </div>
+        <div class="view-tools">
+          <div class="seg small" id="viewSeg">
+            <button data-view="iso" class="active">Iso</button><button data-view="top">Top</button><button data-view="front">Front</button><button data-view="side">Side</button>
+          </div>
+          <div class="toggles">
+            <label class="chip"><input type="checkbox" data-vis="path" checked>Path</label>
+            <label class="chip"><input type="checkbox" data-vis="rapids" checked>Rapids</label>
+            <label class="chip"><input type="checkbox" data-vis="stock" checked>Stock</label>
+            <label class="chip"><input type="checkbox" data-vis="tool" checked>Tool</label>
+            <label class="chip target-chip" id="targetChip" hidden><input type="checkbox" data-vis="target" checked>Target</label>
+            <label class="chip lathe-only"><input type="checkbox" id="sectionToggle">¾ section</label>
+          </div>
+        </div>
+        <div class="view-legend" id="legend"></div>
+        <div class="sim-busy" id="simBusy" hidden>Simulating…</div>
+      </div>
+      <div class="playbar">
+        <button class="btn icon" id="btnStart" title="Back to start" aria-label="Back to start">⏮</button>
+        <button class="btn icon primary" id="btnPlay" title="Play / pause (Space)" aria-label="Play">▶</button>
+        <button class="btn icon" id="btnStep" title="Next block" aria-label="Next block">⏭</button>
+        <button class="btn icon" id="btnEnd" title="Finish (show result)" aria-label="Show result">⏭⏭</button>
+        <input type="range" id="timeline" min="0" max="1000" value="1000" step="1" aria-label="Timeline">
+        <span class="time" id="timeLabel">0:00 / 0:00</span>
+        <select id="speedSelect" class="select small" title="Playback speed">
+          <option value="fit20" selected>≈20 s</option>
+          <option value="1">1×</option>
+          <option value="5">5×</option>
+          <option value="20">20×</option>
+          <option value="100">100×</option>
+          <option value="500">500×</option>
+        </select>
+      </div>
+    </section>
+
+    <aside class="pane side-pane" id="sidePane">
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="claude">Claude</button>
+        <button class="tab" data-tab="check">Check <span class="count" id="checkCount">0</span></button>
+        <button class="tab" data-tab="tools">Tools</button>
+        <button class="tab" data-tab="stock">Stock</button>
+      </div>
+
+      <div class="tab-panel active" data-panel="claude">
+        <div class="chat" id="chat"></div>
+        <div class="chips" id="quickChips"></div>
+        <div class="composer" id="composer">
+          <div class="attachments" id="attachments" hidden></div>
+          <textarea id="prompt" rows="3" placeholder="Describe the toolpath… e.g. “Mill a 40×25 mm pocket, 6 mm deep, R4 corners, centred on the part”"></textarea>
+          <div class="composer-bar">
+            <select id="modelSelect" class="select small" title="Model"></select>
+            <select id="effortSelect" class="select small" title="Effort — how hard Claude thinks">
+              <option value="low">low</option><option value="medium">medium</option><option value="high" selected>high</option><option value="xhigh">xhigh</option><option value="max">max</option>
+            </select>
+            <button class="btn small ghost" id="btnAttach" title="Attach a drawing (PNG/JPG/PDF) or a 3D model of the part (STL, STEP, IGES, OBJ, 3MF) — or drop / paste it here">📎 Attach</button>
+            <label class="check" title="Attach a screenshot of the current 3D view (rarely needed: Claude gets the simulation as measured data)"><input type="checkbox" id="attachView"> view</label>
+            <div class="spacer"></div>
+            <button class="btn small ghost" id="btnNewChat" title="Start a new conversation">New chat</button>
+            <button class="btn small" id="btnStop" hidden>Stop</button>
+            <button class="btn small primary" id="btnSend">Send <kbd>Ctrl ⏎</kbd></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" data-panel="check">
+        <div class="stats" id="stats"></div>
+        <div class="check-target" id="checkTarget" hidden></div>
+        <div class="issues" id="issues"></div>
+      </div>
+
+      <div class="tab-panel" data-panel="tools">
+        <div class="lib-source" id="libSource"></div>
+        <div class="row-actions top">
+          <button class="btn small primary" id="btnImportCncsim" title="Read MillTools.millreg / TurnTools.ini from your CncSimulator5 installation">Import from CncSimulator5</button>
+          <button class="btn small" id="btnImportFile" title="TurnTools.ini or MillTools.millreg">Import register file…</button>
+        </div>
+        <p class="hint">Tools defined in program comments (<code>(TOOL T1 FLAT D10 …)</code> or CAM headers like <code>(T6 D=10. CR=0.)</code>) override this library. Lathe tools use their real insert and holder outlines — the simulator checks holder collisions.</p>
+        <div id="toolTable"></div>
+        <div class="row-actions"><button class="btn small" id="btnAddTool">Add tool</button><button class="btn small ghost" id="btnResetTools">Reset to built-in tools</button></div>
+      </div>
+
+      <div class="tab-panel" data-panel="stock">
+        <div id="stockInfo" class="stock-info"></div>
+        <div class="field-row">
+          <label class="radio"><input type="radio" name="stockMode" value="program" checked> From program / auto-fit</label>
+          <label class="radio"><input type="radio" name="stockMode" value="manual"> Manual</label>
+        </div>
+        <div id="stockFields" class="stock-fields"></div>
+        <div class="row-actions"><button class="btn small" id="btnStockApply">Apply</button><button class="btn small ghost" id="btnStockInsert">Insert (STOCK) line into program</button></div>
+        <div class="target-box">
+          <h3>Target part (3D model)</h3>
+          <div id="targetInfo" class="target-info"></div>
+          <div class="target-place" id="targetPlace" hidden>
+            <label>Axis up / spindle<select data-pl="up"><option>+Z</option><option>-Z</option><option>+Y</option><option>-Y</option><option>+X</option><option>-X</option></select></label>
+            <label>Turn about Z<select data-pl="rotZ"><option value="0">0°</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label>
+            <label>Zero<select data-pl="align"><option value="top-center">top centre</option><option value="top-corner">top −X−Y corner</option><option value="lathe-front">lathe: axis + front face</option><option value="model">model coordinates</option></select></label>
+            <label>Units<select data-pl="scale"><option value="1">mm</option><option value="25.4">inch</option><option value="10">cm</option><option value="1000">m</option></select></label>
+            <label>Shift X<input type="number" step="0.5" data-pl="ox"></label>
+            <label>Shift Y<input type="number" step="0.5" data-pl="oy"></label>
+            <label>Shift Z<input type="number" step="0.5" data-pl="oz"></label>
+          </div>
+          <div class="row-actions">
+            <button class="btn small" id="btnLoadModel">Load model…</button>
+            <button class="btn small ghost" id="btnStockFromModel" hidden title="Insert a (STOCK) line: the model's size plus machining allowance">Stock from model</button>
+            <button class="btn small ghost" id="btnRemoveModel" hidden>Remove</button>
+          </div>
+          <pre class="target-compare" id="targetCompare" hidden></pre>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <input type="file" id="fileInput" accept=".nc,.txt,.tap,.gcode,.ngc,.cnc,.mpf,.h,.min,.eia,.ptp,.json" multiple hidden>
+  <input type="file" id="attachInput" accept="image/png,image/jpeg,image/webp,image/gif,.pdf,.stl,.obj,.3mf,.step,.stp,.iges,.igs,.brep" multiple hidden>
+  <input type="file" id="modelInput" accept=".stl,.obj,.3mf,.step,.stp,.iges,.igs,.brep" hidden>
+  <input type="file" id="opFileInput" accept=".nc,.txt,.tap,.gcode,.ngc,.cnc,.mpf,.h,.min,.eia,.ptp" multiple hidden>
+  <input type="file" id="subInput" accept=".nc,.txt,.tap,.gcode,.ngc,.cnc,.mpf,.h,.min,.eia,.ptp" multiple hidden>
+
+  <dialog id="settingsDlg" class="dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Settings</h2>
+      <label class="field">Anthropic API key
+        <input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-…  (not needed if the server has ANTHROPIC_API_KEY)">
+        <span class="hint" id="keyHint">Stored only in this browser and sent only to the local CNC Studio server.</span>
+      </label>
+      <div class="field-grid">
+        <label class="field">Mill rapid (mm/min)<input type="number" id="setRapidMill" min="1000" step="500"></label>
+        <label class="field">Lathe rapid (mm/min)<input type="number" id="setRapidLathe" min="1000" step="500"></label>
+        <label class="field">Tool change time (s)<input type="number" id="setToolChange" min="0" step="0.5"></label>
+        <label class="field">Max spindle (rpm)<input type="number" id="setMaxRpm" min="100" step="100"></label>
+        <label class="field">Mill resolution (cells)<input type="number" id="setResolution" min="100" max="900" step="20"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="setRadiusMode"> Lathe: X is programmed as radius (default diameter)</label>
+      <label class="check"><input type="checkbox" id="setBlockDelete"> Block delete on (skip lines starting with /)</label>
+      <div class="dialog-actions"><button class="btn primary" value="ok">Done</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="subsDlg" class="dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Subprograms</h2>
+      <p class="hint">Files used by <code>M98 P####</code>. A file named <code>3001.nc</code> (or containing <code>O3001</code>) is program 3001. Subprograms written after <code>M30</code> in the main program are found automatically.</p>
+      <ul id="subList" class="sub-list"></ul>
+      <div class="dialog-actions"><button class="btn" type="button" id="btnAddSubs">Add files…</button><button class="btn primary" value="ok">Done</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="regDlg" class="dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Import CncSimulator5 tool registers</h2>
+      <p class="hint">Found on this computer, in the order CncSimulator5 itself searches them. Importing replaces the CNC Studio library for that machine.</p>
+      <ul id="regList" class="reg-list"></ul>
+      <div class="dialog-actions"><button class="btn primary" value="ok">Close</button></div>
+    </form>
+  </dialog>
+  <input type="file" id="regInput" accept=".ini,.millreg,.txt" hidden>
+
+  <dialog id="imgDlg" class="dialog img-dialog"><form method="dialog"><img id="imgFull" alt="Simulation view"><button class="btn" value="ok">Close</button></form></dialog>
+
+  <div class="toast" id="toast" hidden></div>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

@@ -18,6 +18,13 @@
         server: plint
         container: table
 
+    - CNC Studio:
+        icon: mdi-cogs
+        href: https://cnc.{{HOMEPAGE_VAR_DOMAIN}}
+        description: G-code simulator · mill & lathe, with Claude
+        server: plint
+        container: cnc-studio
+
     - Stremio:
         icon: stremio.png
         href: https://stremio.{{HOMEPAGE_VAR_DOMAIN}}

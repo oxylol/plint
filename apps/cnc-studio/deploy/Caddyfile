@@ -1,0 +1,11 @@
+# Caddy: HTTPS certificate is obtained automatically. Replace the domain.
+cnc.example.com {
+	encode gzip
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy 127.0.0.1:5178 {
+		# stream Claude's answer as it is written
+		flush_interval -1
+	}
+}

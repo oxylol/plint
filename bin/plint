@@ -20,10 +20,10 @@ PLINT_DIR="${PLINT_DIR:-/opt/plint}"
 source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
-STACKS=(core ops media table)
+STACKS=(core ops media table cnc)
 usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
-stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|table) echo "$1";; *) die "unknown stack: $1";; esac; }
+stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|table|cnc) echo "$1";; *) die "unknown stack: $1";; esac; }
 
 cmd_status() {
   printf '%s%s%s\n\n' "$C_BOLD" "Plint · $(hostname) · $(date '+%a %d %b %H:%M')" "$C_RESET"
@@ -60,6 +60,7 @@ url_for() {
     kopia) echo "https://backup.${DOMAIN:-}";;
     stremio) echo "https://stremio.${DOMAIN:-}";;
     table) echo "https://table.${DOMAIN:-}";;
+    cnc-studio) echo "https://cnc.${DOMAIN:-}";;
     cockpit.socket) echo "https://host.${DOMAIN:-}";;
     tailscaled) tailscale ip -4 2>/dev/null | head -n1;;
     plint-claude) echo "claude.ai/code → Plint";;

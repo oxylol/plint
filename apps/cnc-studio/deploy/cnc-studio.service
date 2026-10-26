@@ -1,0 +1,22 @@
+[Unit]
+Description=CNC Studio (CNC simulator with Claude)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cncstudio
+Group=cncstudio
+WorkingDirectory=/opt/cnc-studio
+EnvironmentFile=/etc/cnc-studio.env
+ExecStart=/usr/bin/env node server.js
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/opt/cnc-studio
+
+[Install]
+WantedBy=multi-user.target

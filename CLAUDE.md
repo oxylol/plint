@@ -20,7 +20,9 @@ app; they are usually on a phone, so keep answers short and lead with the result
 │   ├── core/           caddy · adguard · homepage · socket-proxy · dockge
 │   ├── ops/            beszel (+agent) · uptime-kuma · ntfy · kopia
 │   ├── media/          stremio
-│   └── table/          includes /opt/plint-table/deploy/compose.yaml (D&D table, separate repo)
+│   ├── table/          includes /opt/plint-table/deploy/compose.yaml (D&D table, separate repo)
+│   └── cnc/            cnc-studio (built from apps/cnc-studio)
+├── apps/cnc-studio/    CNC Studio source (G-code sim + Claude; upstream zip, plus our Dockerfile)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
 ├── dashboard/          Homepage config (services/widgets/settings/images)
@@ -61,6 +63,7 @@ host network and proxies to `localhost:<port>`:
 | backup | 51515 | Kopia |
 | speed | 8075 | Speedtest Tracker |
 | table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
+| cnc | 5178 | CNC Studio (G-code simulator + Claude), no login, key `CNC_ANTHROPIC_API_KEY` |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 
 ## How to do things

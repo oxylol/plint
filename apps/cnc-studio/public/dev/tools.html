@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lathe tool geometry check</title>
+<style>
+  body { background: #0e1116; color: #dde3ea; font: 12px system-ui, sans-serif; margin: 12px; }
+  h2 { font-size: 13px; margin: 14px 0 6px; }
+  .grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .t { background: #161b22; border: 1px solid #2a323d; border-radius: 6px; padding: 6px; width: 210px; }
+  .t b { color: #f5a524; }
+  svg { width: 196px; height: 196px; background: #10151b; display: block; margin-top: 4px; }
+  .muted { color: #7a8796; }
+</style>
+</head>
+<body>
+<div id="out">Loading…</div>
+<script type="module">
+import { parseTurnToolsIni, buildLatheGeometry } from '/js/gcode/lathetools.js';
+import { decodeLegacyText, base64ToBytes } from '/js/gcode/textdecode.js';
+
+function svgFor(t) {
+  const all = [...(t.cutter || []), ...(t.holder || [])];
+  // frame: show the region near the tip (holders are long)
+  const span = 46;
+  const cx = Math.max(-span / 2, Math.min(span / 2, all.reduce((s, p) => s + p[0], 0) / all.length / 2));
+  const vb = [cx - span / 2, -span * 0.35, span, span]; // z right, x up (flip y)
+  const P = (pts) => pts.map(([z, x]) => `${z},${-x}`).join(' ');
+  const R = t.noseRadius || 0;
+  const [oz, ox] = t.noseOffset || [0, 0];
+  return `<svg viewBox="${vb[0]} ${-vb[1] - vb[3]} ${vb[2]} ${vb[3]}">
+    <line x1="-100" y1="0" x2="100" y2="0" stroke="#2c3743" stroke-width="0.2"/>
+    <line x1="0" y1="-100" x2="0" y2="100" stroke="#2c3743" stroke-width="0.2"/>
+    ${t.holder?.length ? `<polygon points="${P(t.holder)}" fill="#3a4350" stroke="#6b7785" stroke-width="0.25"/>` : ''}
+    <polygon points="${P(t.cutter)}" fill="#4cc9f0aa" stroke="#4cc9f0" stroke-width="0.25"/>
+    ${R ? `<circle cx="${oz}" cy="${-ox}" r="${R}" fill="none" stroke="#ff6b6b" stroke-width="0.15"/>` : ''}
+    <circle cx="0" cy="0" r="0.6" fill="#f5a524"/>
+  </svg>`;
+}
+
+const out = document.getElementById('out');
+const { registers } = await (await fetch('/api/cncsim/registers')).json();
+let html = '';
+for (const r of registers.filter((x) => x.kind === 'lathe')) {
+  const { tools, skipped } = parseTurnToolsIni(decodeLegacyText(base64ToBytes(r.b64)));
+  html += `<h2>${r.path} <span class="muted">${r.where}</span></h2>`;
+  if (skipped.length) html += `<div class="muted">skipped: ${skipped.join('; ')}</div>`;
+  html += '<div class="grid">' + Object.values(tools).map((t) => `<div class="t"><b>T${t.num}</b> ${t.registerType} → ${t.type}${t.hand ? ' ' + t.hand : ''} R${t.noseRadius}${t.insertAngle ? ' ' + t.insertAngle + '°' : ''}${t.width ? ' W' + t.width : ''}${t.diameter ? ' Ø' + t.diameter : ''}${t.origin ? ' o' + t.origin : ''}${svgFor(t)}</div>`).join('') + '</div>';
+}
+html += '<h2>Built-in defaults (generated)</h2><div class="grid">';
+for (const t of [
+  { num: 1, type: 'turn', noseRadius: 0.8, insertAngle: 80 }, { num: 2, type: 'turn', noseRadius: 0.4, insertAngle: 35 },
+  { num: 3, type: 'groove', width: 3, noseRadius: 0.2 }, { num: 4, type: 'thread', tipAngle: 60 },
+  { num: 5, type: 'drill', diameter: 10, tipAngle: 118 }, { num: 6, type: 'bore', noseRadius: 0.4, insertAngle: 55 },
+]) { buildLatheGeometry(t); html += `<div class="t"><b>T${t.num}</b> ${t.type}${svgFor(t)}</div>`; }
+out.innerHTML = html + '</div><p class="muted">orange dot = reference point · red circle = nose radius at NoseOffset · Z right, X up</p>';
+</script>
+</body>
+</html>
