@@ -148,7 +148,7 @@ export class ClaudeAgent {
     if (typeof input === 'string') { try { input = JSON.parse(input); } catch { input = null; } }
     const fn = this.tools[use.name];
     if (!fn) return { type: 'tool_result', tool_use_id: use.id, content: `Unknown tool ${use.name}`, is_error: true };
-    const QUERIES = ['summary', 'view', 'section', 'probe', 'compare', 'target'];
+    const QUERIES = ['summary', 'view', 'section', 'probe', 'compare', 'target', 'engagement']; // same list as server.js TOOLS
     const bad = !input || typeof input !== 'object'
       ? 'Invalid input: expected a JSON object'
       : use.name === 'write_program' && typeof input.gcode !== 'string' ? 'Invalid input: expected {"gcode": "<complete program>"}'

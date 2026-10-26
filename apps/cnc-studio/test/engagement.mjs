@@ -80,4 +80,11 @@ for (const ex of EXAMPLES) {
   const outs = simulateJob(ops.map((o, i) => ({ id: `${ex.id}${i}`, fileName: o.fileName || `${ex.id}${i}.nc`, machine: o.machine || ex.machine, text: o.text })), ops.length - 1, { interp: (m) => ({ machine: m }) });
   ok(outs.every((o) => o.engagement && Object.values(o.engagement.perTool).some((T) => T.cut > 0)), `example ${ex.id}: engagement recorded`);
 }
+// Claude can ask for it: the browser's check of inspect_part queries allows what the tool schema offers
+{
+  const { readFileSync } = await import('node:fs');
+  const list = (file, re) => JSON.parse(re.exec(readFileSync(new URL(file, import.meta.url), 'utf8'))[1].replace(/'/g, '"'));
+  const server = list('../server.js', /query: \{ type: 'string', enum: (\[[^\]]*\])/), client = list('../public/js/claude.js', /const QUERIES = (\[[^\]]*\])/);
+  ok(server.includes('engagement') && server.length === client.length && server.every((q) => client.includes(q)), `inspect_part queries: schema [${server}] = browser check [${client}]`);
+}
 process.exitCode = fails ? 1 : 0;
