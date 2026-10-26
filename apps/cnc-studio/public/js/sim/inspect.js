@@ -4,6 +4,7 @@
 // frame. Features come from depth grids seen along an axis (top, bottom, front …) and are
 // then measured precisely with rays at mid-depth (bisection on the material boundary).
 import { applyX, invertX } from './voxelsim.js';
+import { programThreads } from './threads.js';
 
 const fx = (v, d = 3) => { const s = (Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d); return s.includes('.') ? s.replace(/\.?0+$/, '') || '0' : s; };
 // measurements are printed to what the engine resolves: 0.01 mm on the mill models, 0.001 on the lathe profile
@@ -419,7 +420,14 @@ const sameShape = (a, b, tol) => {
 };
 const centreOf = (f) => (f.shape && 'cx' in f.shape ? [f.shape.cx, f.shape.cy] : f.shape ? [f.shape.cu, f.shape.cv] : [f.cu, f.cv]);
 
-function describeView(field, grid, res, { maxFeatures = 24 } = {}) {
+// "tapped M8×1.25 by T2 to Z-11" for a round hole on a tapped / thread-milled axis (views along Z)
+function threadLabel(f, view, threads) {
+  if (view.d !== 2 || !threads.length || (f.kind !== 'hole' && f.kind !== 'pocket') || f.shape?.kind !== 'circle') return '';
+  const th = threads.find((t) => Math.hypot(f.shape.cx - t.x, f.shape.cy - t.y) <= Math.max(0.3, 0.1 * t.d));
+  return th ? `; ${th.kind === 'tap' ? 'tapped' : 'thread-milled'} ${th.name} by T${th.tool} to Z${f2(th.zTip)}` : '';
+}
+
+function describeView(field, grid, res, { maxFeatures = 24, threads = [] } = {}) {
   const view = VIEWS[grid.view];
   const D = AX[view.d], U = AX[view.u], V = AX[view.v];
   const coord = (tv) => grid.start + grid.sign * tv;
@@ -429,7 +437,8 @@ function describeView(field, grid, res, { maxFeatures = 24 } = {}) {
   const tol = Math.max(0.02, field.step * 0.1);
   const groups = [];
   for (const f of res.feats.filter((x) => x.kind !== 'open').sort((a, b) => b.area - a.area)) {
-    const g = groups.find((x) => x.f.kind === f.kind && sameShape(x.f.shape, f.shape, tol) && sameProfile(x.f.profile, f.profile) && Math.abs((x.f.floor ?? 0) - (f.floor ?? 0)) <= tol && Math.abs(x.f.wallFrom - f.wallFrom) <= tol);
+    f.threadText = threadLabel(f, view, threads);
+    const g = groups.find((x) => x.f.kind === f.kind && x.f.threadText === f.threadText && sameShape(x.f.shape, f.shape, tol) && sameProfile(x.f.profile, f.profile) && Math.abs((x.f.floor ?? 0) - (f.floor ?? 0)) <= tol && Math.abs(x.f.wallFrom - f.wallFrom) <= tol);
     if (g) g.items.push(f); else groups.push({ f, items: [f] });
   }
   let shown = 0;
@@ -451,6 +460,7 @@ function describeView(field, grid, res, { maxFeatures = 24 } = {}) {
       depth = `floor ${D}${f3(f.floor)}, ${f3(Math.abs(f.floor - f.wallFrom))} deep below ${D}${f3(f.wallFrom)}`;
     }
     if (f.profile) depth += `; along the depth: ${f.profile.map((r) => (r.kind === 'taper' ? `Ø${f2(r.d0)}→Ø${f2(r.d1)} (cone/chamfer)` : `Ø${f3(r.d0)}`) + ` ${D}${f2(r.from)}..${f2(r.to)}`).join(', ')}`;
+    depth += f.threadText;
     if (n === 1) {
       out.push(`  ${what}: ${sh ? describeShape(sh, view, f.kind === 'hole') : 'unmeasured'}; ${depth}; area ${f2(f.area)} mm²`);
     } else {
@@ -564,7 +574,7 @@ function findThreads(z, d) {
   }).filter((t) => t.major - t.minor > 0.15);
 }
 
-function profileRows(sim, arr, isBore) {
+function profileRows(sim, arr, isBore, cut = []) {
   const zs = [], ds = [];
   for (let i = sim.n - 1; i >= 0; i--) {
     if (sim.outer[i] - sim.inner[i] < 1e-4) continue;
@@ -590,7 +600,8 @@ function profileRows(sim, arr, isBore) {
   for (const pc of pieces) {
     if (pc.th) {
       const t = pc.th;
-      rows.push({ text: `  Z${f2(zs[t.i0])} → Z${f2(zs[t.i1])}: ${isBore ? 'internal ' : ''}thread, pitch ${f3(t.pitch)}, ${isBore ? 'minor (bore) Ø' + f3(t.minor) + ', major Ø' + f3(t.major) : 'major Ø' + f3(t.major) + ', minor Ø' + f3(t.minor)} (depth ${f3((t.major - t.minor) / 2)})` });
+      const by = cut.find((th) => th.internal === isBore && th.zone[0] <= zs[t.i0] && th.zone[1] >= zs[t.i1]);
+      rows.push({ text: `  Z${f2(zs[t.i0])} → Z${f2(zs[t.i1])}: ${isBore ? 'internal ' : ''}thread, pitch ${f3(t.pitch)}, ${isBore ? 'minor (bore) Ø' + f3(t.minor) + ', major Ø' + f3(t.major) : 'major Ø' + f3(t.major) + ', minor Ø' + f3(t.minor)} (depth ${f3((t.major - t.minor) / 2)})${by ? ` — ${by.name}, cut by T${by.tool} (${by.cycle})` : ''}` });
       continue;
     }
     const [a, b] = pc;
@@ -637,17 +648,17 @@ function profileRows(sim, arr, isBore) {
   return rows.map((r) => r.text);
 }
 
-export function profileSummary(sim) {
+export function profileSummary(sim, threads = []) {
   const mb = sim.materialBounds();
   if (!mb) return 'Nothing is left of the part.';
   const out = [];
   out.push(`Part: Z${f2(mb.max[2])} (front face) to Z${f2(mb.min[2])}, max Ø${f3(mb.max[0] * 2)}; the chuck jaws hold it from Z${f2(sim.zChuck ?? mb.min[2])} back.`);
   if (sim.partedOff !== null && sim.partedOff !== undefined) out.push(`Parted off at Z${f2(sim.partedOff)}.`);
   out.push('Outside profile, front face → chuck:');
-  out.push(...profileRows(sim, sim.outer, false).slice(0, 60));
+  out.push(...profileRows(sim, sim.outer, false, threads).slice(0, 60));
   if (sim.inner.some((v) => v > 0.01)) {
     out.push('Bore profile, front face → chuck:');
-    out.push(...profileRows(sim, sim.inner, true).slice(0, 40));
+    out.push(...profileRows(sim, sim.inner, true, threads).slice(0, 40));
   }
   return out.join('\n');
 }
@@ -655,6 +666,7 @@ export function profileSummary(sim) {
 // ---------------------------------------------------------------- summaries
 function millSummary(out, field, { views = null } = {}) {
   const b = field.bounds;
+  const threads = programThreads(out, field);
   const o = [];
   o.push(`Part after this operation (work coordinates of this operation): X${f3(b.min[0])}..${f3(b.max[0])} Y${f3(b.min[1])}..${f3(b.max[1])} Z${f3(b.min[2])}..${f3(b.max[2])} — ${f3(b.max[0] - b.min[0])} × ${f3(b.max[1] - b.min[1])} × ${f3(b.max[2] - b.min[2])} mm`);
   o.push(field.kind === 'voxel'
@@ -667,7 +679,7 @@ function millSummary(out, field, { views = null } = {}) {
     const coarse = v !== 'top' && v !== 'bottom';
     const g = depthGrid(field, v, coarse ? 90 : 200);
     const res = viewFeatures(field, g);
-    const txt = describeView(field, g, res);
+    const txt = describeView(field, g, res, { threads });
     if (txt) o.push(txt);
     else if (v === 'top' || v === 'bottom') o.push(`Seen ${VIEWS[v].label}: plain face at ${AX[VIEWS[v].d]}${f3(g.start + g.sign * (res.outer?.v ?? 0))}, no features.`);
   }
@@ -679,7 +691,7 @@ export function partSummary(out) {
   usePrecision(out.engine);
   let txt;
   try {
-    if (out.engine === 'lathe') txt = profileSummary(out.final);
+    if (out.engine === 'lathe') txt = profileSummary(out.final, programThreads(out));
     else {
       const field = materialField(out);
       txt = field.bounds ? millSummary(out, field) : 'Nothing is left of the part.';
@@ -744,7 +756,7 @@ function marchingSquares(field, plane, at, b, maxCells = 260) {
 
 export function section(out, axis, at) {
   usePrecision(out.engine);
-  if (out.engine === 'lathe') return profileSummary(out.final);
+  if (out.engine === 'lathe') return profileSummary(out.final, programThreads(out));
   const field = materialField(out);
   if (!field.bounds) return 'Nothing is left of the part.';
   const a = 'xyz'.indexOf(String(axis).toLowerCase());
@@ -796,13 +808,13 @@ export function probe(out, points) {
 // one view in detail: features + a character depth map
 export function viewDetail(out, viewName) {
   usePrecision(out.engine);
-  if (out.engine === 'lathe') return profileSummary(out.final);
+  if (out.engine === 'lathe') return profileSummary(out.final, programThreads(out));
   const field = materialField(out);
   if (!field.bounds) return 'Nothing is left of the part.';
   if (!VIEWS[viewName]) return `view must be one of ${Object.keys(VIEWS).join(', ')}`;
   const g = depthGrid(field, viewName, 200);
   const res = viewFeatures(field, g);
-  const txt = describeView(field, g, res, { maxFeatures: 60 }) || `Seen ${VIEWS[viewName].label}: plain face, no features.`;
+  const txt = describeView(field, g, res, { maxFeatures: 60, threads: programThreads(out, field) }) || `Seen ${VIEWS[viewName].label}: plain face, no features.`;
   const m = depthMap(g);
   return `${txt}\nDepth map (${m.legend}):\n${m.text}`;
 }

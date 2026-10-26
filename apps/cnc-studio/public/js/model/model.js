@@ -3,6 +3,7 @@
 // operation's result is from it — as text.
 import { VoxelSim, IDENTITY, mulXform, rotX, rotY, rotZ, translate, applyX, invertX, snapX } from '../sim/voxelsim.js';
 import { partSummary, materialField, profileSummary, boundsUnder } from '../sim/inspect.js';
+import { programThreads, tapDrillOf, threadSource, holeAt } from '../sim/threads.js';
 
 const fx = (v, d = 2) => { const s = (Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d); return s.includes('.') ? s.replace(/\.?0+$/, '') || '0' : s; };
 
@@ -291,11 +292,16 @@ function latheProfileArrays(target, W) {
   return { n, zMin, zMax, dz, outer, inner };
 }
 
-function latheTargetProfile(target, W) {
+function profileFor(target, W) {
   target.profiles ||= new Map();
   const key = JSON.stringify([W.R, W.t]);
   let p = target.profiles.get(key);
   if (!p) { p = latheProfileArrays(target, W); target.profiles.set(key, p); }
+  return p;
+}
+
+function latheTargetProfile(target, W) {
+  const p = profileFor(target, W);
   const stub = {
     ...p, zChuck: null, partedOff: null,
     materialBounds() {
@@ -329,7 +335,12 @@ function compareMill(out, target) {
   const g = Math.max(tsim.h * 0.9, field.step * 0.9, Math.max(...size) / 240);
   const n = size.map((s) => Math.max(2, Math.ceil(s / g) + 1));
   const tol = Math.max(0.05, tsim.h * 0.6, field.step * (field.kind === 'height' ? 0.6 : 0.6));
+  // tapped / thread-milled holes are judged as threads below; the simulation cuts a plain bore
+  const threads = programThreads(out, field);
+  const zones = threads.map((th) => ({ x: th.x, y: th.y, r2: (th.d / 2 + tol + g) ** 2, z0: th.zTip - g, z1: th.zTop + g }));
+  const inZone = (p) => zones.some((zn) => p[2] >= zn.z0 && p[2] <= zn.z1 && (p[0] - zn.x) ** 2 + (p[1] - zn.y) ** 2 <= zn.r2);
   const lab = new Int8Array(n[0] * n[1] * n[2]);
+  const sIn = new Uint8Array(lab.length), tIn = new Uint8Array(lab.length);
   // fill fractions of each sample cell: stock minus target = excess, target minus stock = gouge
   const exF = new Float32Array(lab.length), goF = new Float32Array(lab.length);
   const sd = field.distance;
@@ -340,10 +351,24 @@ function compareMill(out, target) {
     const td = tAt(p);
     const s = field.inside(p);
     const q = (k * n[1] + j) * n[0] + i;
+    sIn[q] = s ? 1 : 0; tIn[q] = td < 0 ? 1 : 0;
+    if (zones.length && inZone(p)) continue;
     const fs = sd ? clamp01(0.5 - sd(p) / g) : s ? 1 : 0, ft = clamp01(0.5 - td / g);
     exF[q] = Math.max(0, fs - ft); goF[q] = Math.max(0, ft - fs);
     if (s && td > tol) { lab[q] = 1; ex++; } else if (!s && td < -tol) { lab[q] = 2; go++; }
   }
+  // a sample on a convex edge of the material it is in (air next to it along two axes): both
+  // distance fields round such edges by about a cell, so regions made only of these are slivers
+  const onEdge = (c, inside) => {
+    const i = c % n[0], j = ((c - i) / n[0]) % n[1], k = Math.floor(c / (n[0] * n[1]));
+    const idx = [i, j, k], st = [1, n[0], n[0] * n[1]];
+    let axes = 0;
+    for (let a = 0; a < 3; a++) {
+      const lo = idx[a] === 0 || !inside[c - st[a]], hi = idx[a] === n[a] - 1 || !inside[c + st[a]];
+      if (lo || hi) axes++;
+    }
+    return axes >= 2;
+  };
   const regions = [];
   const seen = new Uint8Array(lab.length);
   for (let q = 0; q < lab.length; q++) {
@@ -351,13 +376,15 @@ function compareMill(out, target) {
     const L = lab[q];
     const stack = [q];
     seen[q] = 1;
-    let cnt = 0, deep = 0;
+    let cnt = 0, deep = 0, solid = 0;
     const F = L === 1 ? exF : goF;
+    const own = L === 1 ? sIn : tIn;
     const ring = new Set();
     const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
     while (stack.length) {
       const c = stack.pop();
       cnt++;
+      if (!onEdge(c, own)) solid++;
       const i = c % n[0], j = ((c - i) / n[0]) % n[1], k = Math.floor(c / (n[0] * n[1]));
       const p = [b.min[0] + i * g, b.min[1] + j * g, b.min[2] + k * g];
       for (let a = 0; a < 3; a++) { mn[a] = Math.min(mn[a], p[a]); mx[a] = Math.max(mx[a], p[a]); }
@@ -369,7 +396,7 @@ function compareMill(out, target) {
         if (!seen[r] && lab[r] === L) { seen[r] = 1; stack.push(r); } else if (lab[r] !== L) ring.add(r);
       }
     }
-    if (cnt < 2) continue;
+    if (cnt < 2 || solid < Math.max(2, 0.25 * cnt)) continue;
     // volume: the region's cells plus the partly-off cells around it (inside the tolerance band)
     let w = 0;
     stack.length = 0;
@@ -393,28 +420,31 @@ function compareMill(out, target) {
   const exR = regions.filter((r) => r.kind === 'excess'), goR = regions.filter((r) => r.kind === 'gouge');
   const o = [];
   const box = (r) => `X${fx(r.mn[0] - g / 2)}..${fx(r.mx[0] + g / 2)} Y${fx(r.mn[1] - g / 2)}..${fx(r.mx[1] + g / 2)} Z${fx(r.mn[2] - g / 2)}..${fx(r.mx[2] + g / 2)}`;
+  const checks = threads.length ? ['Threads, checked as threads (the simulation cuts a plain bore, models usually show the tap drill or a plain hole):', ...threads.map((th) => `  ${holeThreadCheck(th, target, W, tol)}`)] : [];
   if (!exR.length && !goR.length) {
-    o.push(`Compared with the target model: matches within ±${fx(tol)} mm everywhere (sampled every ${fx(g)} mm).`);
+    o.push(`Compared with the target model: matches within ±${fx(tol)} mm everywhere${zones.length ? ' outside the thread zones' : ''} (sampled every ${fx(g)} mm).`, ...checks);
     return o.join('\n');
   }
-  o.push(`Compared with the target model (sampled every ${fx(g)} mm, tolerance ±${fx(tol)} mm, this operation's work coordinates):`);
+  o.push(`Compared with the target model (sampled every ${fx(g)} mm, tolerance ±${fx(tol)} mm, this operation's work coordinates${zones.length ? ', thread zones checked separately' : ''}):`);
   const vsum = (rs) => rs.reduce((s, r) => s + r.vol, 0);
   o.push(exR.length ? `  Material still to remove: ${exR.length} region${exR.length > 1 ? 's' : ''}, ${fx(vsum(exR) / 1000, 2)} cm³ in total` : '  No excess material — everything that should be removed is gone.');
   for (const r of exR.slice(0, 10)) o.push(`    ${box(r)}: ${fx(r.vol)} mm³, up to ${r.clipped ? 'more than ' : ''}${fx(r.deep)} mm beyond the target surface`);
   if (exR.length > 10) o.push(`    … ${exR.length - 10} smaller regions`);
   o.push(goR.length ? `  GOUGES — cut into the finished part: ${goR.length} region${goR.length > 1 ? 's' : ''}, ${fx(vsum(goR), 1)} mm³` : '  No gouges (nothing cut into the finished part).');
   for (const r of goR.slice(0, 10)) o.push(`    ${box(r)}: ${fx(r.vol)} mm³, up to ${r.clipped ? 'more than ' : ''}${fx(r.deep)} mm too deep`);
+  o.push(...checks);
   return o.join('\n');
 }
 
 function compareLathe(out, target) {
   const s = out.final;
   const W = out.workFromPart || IDENTITY;
-  target.profiles ||= new Map();
-  const key = JSON.stringify([W.R, W.t]);
-  let p = target.profiles.get(key);
-  if (!p) { p = latheProfileArrays(target, W); target.profiles.set(key, p); }
+  const p = profileFor(target, W);
   const tol = 0.02;
+  // thread zones are judged as threads below, not as an outline (the simulation cuts rings)
+  const threads = programThreads(out);
+  const zones = threads.filter((th) => !th.internal).map((th) => ({ lo: th.zone[0] - th.pitch, hi: th.zone[1] + th.pitch, r0: th.rootR - 0.05, r1: Math.max(th.crestR, (th.nominal || 0) / 2) + 0.05 }));
+  const inZone = (z, so, to) => zones.some((zn) => z >= zn.lo && z <= zn.hi && so >= zn.r0 && so <= zn.r1 && to >= zn.r0 && to <= zn.r1);
   // target outline as (z, r) points (including the vertical faces between samples)
   const tz = (i) => p.zMin + i * p.dz;
   const at = (z) => { const u = (z - p.zMin) / p.dz; if (u < 0 || u > p.n - 1) return 0; const i = Math.min(p.n - 2, Math.floor(u)), a = u - i; return p.outer[i] * (1 - a) + p.outer[i + 1] * a; };
@@ -439,6 +469,7 @@ function compareLathe(out, target) {
     const so = s.outer[i] - s.inner[i] > 1e-4 ? s.outer[i] : 0;
     const to = at(z);
     if (so <= tol && to <= tol) { cur = null; continue; } // neither has material here
+    if (inZone(z, so, to)) { cur = null; continue; }
     const d = dist(z, so);
     const kind = d <= tol ? null : so > to ? 'excess' : 'gouge';
     if (kind && cur && cur.kind === kind && cur.z1 - z < s.dz * 1.5) { cur.z1 = z; cur.max = Math.max(cur.max, d); }
@@ -446,8 +477,114 @@ function compareLathe(out, target) {
     else cur = null;
   }
   const big = runs.filter((r) => r.z0 - r.z1 >= 0.1 || r.max > 0.1);
-  if (!big.length) return `Compared with the target model: the outside profile from the front face to the chuck (Z${fx(zEnd)}) is within ±${tol} mm of the target outline.`;
-  const o = [`Compared with the target model (outside profile, ±${tol} mm from the target outline, up to the chuck at Z${fx(zEnd)}):`];
-  for (const r of big.slice(0, 14)) o.push(`  Z${fx(r.z0)} → Z${fx(r.z1)}: ${r.kind === 'excess' ? 'material still to remove' : 'GOUGE — cut under size'}, up to ${fx(r.max, 3)} mm from the target outline (target Ø${fx(r.d0, 3)} at Z${fx(r.z0)})`);
+  const besides = zones.length ? ' outside the thread zones' : '';
+  const o = [];
+  if (!big.length) o.push(`Compared with the target model: the outside profile from the front face to the chuck (Z${fx(zEnd)}) is within ±${tol} mm of the target outline${besides}.`);
+  else {
+    o.push(`Compared with the target model (outside profile${besides}, ±${tol} mm from the target outline, up to the chuck at Z${fx(zEnd)}):`);
+    for (const r of big.slice(0, 14)) o.push(`  Z${fx(r.z0)} → Z${fx(r.z1)}: ${r.kind === 'excess' ? 'material still to remove' : 'GOUGE — cut under size'}, up to ${fx(r.max, 3)} mm from the target outline (target Ø${fx(r.d0, 3)} at Z${fx(r.z0)})`);
+  }
+  if (threads.length) o.push('Threads, checked as threads (the simulation cuts them as rings, models usually show them as a plain diameter):', ...threads.map((th) => `  ${latheThreadCheck(th, p)}`));
   return o.join('\n');
+}
+
+// ---------------------------------------------------------------- threads vs the target
+// a target radius along a thread zone: plain (a cosmetic thread), a modeled thread (the radius
+// rises through its middle once per pitch), or neither
+function readThreadSeries(zs, rs, depth) {
+  const live = rs.filter((r) => r > 1e-3);
+  if (live.length < Math.max(3, rs.length / 2)) return { kind: 'none' };
+  const srt = live.slice().sort((a, b) => a - b);
+  const q = (f) => srt[Math.min(srt.length - 1, Math.floor(f * srt.length))];
+  const lo = q(0.05), med = q(0.5), hi = q(0.95);
+  if (live.filter((r) => Math.abs(r - med) <= Math.max(0.03, 0.15 * depth)).length >= 0.8 * live.length) return { kind: 'plain', r: med };
+  const mid = (lo + hi) / 2, hys = 0.2 * (hi - lo);
+  const ups = [];
+  let state = 0;
+  zs.forEach((z, k) => {
+    if (rs[k] > mid + hys) { if (state < 0) ups.push(z); state = 1; } else if (rs[k] < mid - hys) state = -1;
+  });
+  if (ups.length >= 3) {
+    const steps = ups.slice(1).map((z, k) => Math.abs(z - ups[k]));
+    const pitch = Math.abs(ups[ups.length - 1] - ups[0]) / steps.length;
+    if (steps.every((s) => Math.abs(s - pitch) <= 0.15 * pitch)) return { kind: 'thread', pitch, rMin: lo, rMax: hi };
+  }
+  return { kind: 'irregular', rMin: lo, rMax: hi };
+}
+
+const pitchesMatch = (a, b) => Math.abs(a - b) <= Math.max(0.03, 0.04 * b);
+const fp = (v) => { const t = fx(v, 2); return t.includes('.') ? t : `${t}.0`; }; // pitch 1.0, not 1
+
+function latheThreadCheck(th, p) {
+  const D = (r) => `Ø${fx(2 * r, 3)}`;
+  const head = `Thread ${th.name} ${th.internal ? 'internal' : 'external'} (${threadSource(th)}) Z${fx(th.full[1])}..Z${fx(th.full[0])}, ${th.internal ? `bore ${D(th.crestR)} / root ${D(th.rootR)}` : `${D(th.crestR)} / root ${D(th.rootR)}`}`;
+  // judged half a lead in from both ends of the full-depth part
+  const lo = th.full[1] - th.full[0] > 2 * th.pitch ? th.full[0] + th.pitch / 2 : th.full[0], hi = th.full[1] - th.full[0] > 2 * th.pitch ? th.full[1] - th.pitch / 2 : th.full[1];
+  const arr = th.internal ? p.inner : p.outer;
+  const zs = [], rs = [];
+  for (let i = 0; i < p.n; i++) { const z = p.zMin + i * p.dz; if (z >= lo && z <= hi) { zs.push(z); rs.push(arr[i]); } }
+  const depth = Math.abs(th.crestR - th.rootR);
+  const tolD = Math.max(0.1, 0.1 * th.pitch);
+  const m = readThreadSeries(zs, rs, depth);
+  if (m.kind === 'none') return `${head}: the model has no ${th.internal ? 'bore' : 'material'} there — MISMATCH: the program cuts a thread.`;
+  if (m.kind === 'irregular') return `${head}: the model's diameter varies there (Ø${fx(2 * m.rMin)}..Ø${fx(2 * m.rMax)}) without a regular pitch — MISMATCH: check the model against the program's ${th.name}.`;
+  if (m.kind === 'thread') {
+    const what = `the model has a modeled thread of pitch ${fp(m.pitch)} (Ø${fx(2 * m.rMax)} / ${th.internal ? 'bore' : 'root'} Ø${fx(2 * m.rMin)})`;
+    if (!pitchesMatch(m.pitch, th.pitch)) return `${head}: ${what} — MISMATCH: the program cuts pitch ${fp(th.pitch)}.`;
+    const crest = th.internal ? m.rMin : m.rMax;
+    if (Math.abs(crest - th.crestR) * 2 > tolD && !(th.nominal && !th.internal && Math.abs(2 * crest - th.nominal) <= tolD)) return `${head}: ${what} — MISMATCH: the program's ${th.internal ? 'bore' : 'crests'} are at ${D(th.crestR)}.`;
+    return `${head}: ${what} — consistent.`;
+  }
+  const d = 2 * m.r;
+  const shape = th.internal ? 'bore' : 'cylinder';
+  if (Math.abs(d - 2 * th.crestR) <= tolD) return `${head}: the model has a plain Ø${fx(d)} ${shape} there (cosmetic thread) — consistent.`;
+  if (th.nominal && Math.abs(d - th.nominal) <= tolD) return `${head}: the model has a plain Ø${fx(d)} ${shape} there (the nominal Ø of ${th.name} — cosmetic thread) — consistent.`;
+  if (th.internal && Math.abs(d - 2 * th.rootR) <= tolD) return `${head}: the model has a plain Ø${fx(d)} ${shape} there (the thread's major Ø — cosmetic thread) — consistent.`;
+  return `${head}: the model has a plain Ø${fx(d)} ${shape} there — MISMATCH: the program's thread ${th.internal ? 'bore is' : 'crests are'} at ${D(th.crestR)} (root ${D(th.rootR)}).`;
+}
+
+// a tapped / thread-milled hole: the model is cut exactly with half-planes from the hole axis
+// toward +X, +Y, −X, −Y, which gives the hole radius along the depth in each direction
+function holeThreadCheck(th, target, W, tol) {
+  const head = `${th.kind === 'tap' ? 'Tapped hole' : 'Thread-milled hole'} ${th.name} (${threadSource(th)}) at ${holeAt(th)} to Z${fx(th.zTip)}`;
+  const series = [0, 90, 180, 270].map((deg) => {
+    const p = profileFor(target, mulXform(rotZ(-deg), mulXform(translate([-th.x, -th.y, 0]), W)));
+    return { p, at: (z) => Math.max(0, Math.min(p.n - 1, Math.round((z - p.zMin) / p.dz))) };
+  });
+  // depth range: the tapped length inside the model's material, a pitch in from both ends
+  const { p: p0 } = series[0];
+  let zLoM = Infinity, zHiM = -Infinity;
+  for (let i = 0; i < p0.n; i++) if (p0.outer[i] > 0) { const z = p0.zMin + i * p0.dz; zLoM = Math.min(zLoM, z); zHiM = Math.max(zHiM, z); }
+  if (zHiM < zLoM) return `${head}: the model has no material there — MISMATCH: the program taps ${th.name}.`;
+  let lo = Math.max(th.zTip, zLoM) + th.pitch, hi = Math.min(th.zTop, zHiM) - th.pitch;
+  if (hi < lo) lo = hi = (Math.max(th.zTip, zLoM) + Math.min(th.zTop, zHiM)) / 2;
+  const reads = series.map(({ p, at }) => {
+    const zs = [], rs = [];
+    let solid = 0;
+    for (let i = at(lo); i <= at(hi); i++) { zs.push(p.zMin + i * p.dz); rs.push(p.inner[i]); if (p.outer[i] > 0 && !(p.inner[i] > 0)) solid++; }
+    return { ...readThreadSeries(zs, rs, (th.d - th.minor) / 2), solid: solid > zs.length / 2 };
+  });
+  if (reads.filter((r) => r.solid).length >= 2) return `${head}: the model has no hole there — MISMATCH: the program taps ${th.name}.`;
+  const tolD = Math.max(0.15, 0.1 * th.pitch, tol);
+  const threads = reads.filter((r) => r.kind === 'thread');
+  if (threads.length >= 3) {
+    const pitch = threads.map((r) => r.pitch).sort((a, b) => a - b)[threads.length >> 1];
+    const major = 2 * Math.max(...threads.map((r) => r.rMax)), minor = 2 * Math.min(...threads.map((r) => r.rMin));
+    const what = `the model has a modeled thread of pitch ${fp(pitch)} (Ø${fx(major)} / minor Ø${fx(minor)})`;
+    if (!pitchesMatch(pitch, th.pitch)) return `${head}: ${what} — MISMATCH: the program cuts pitch ${fp(th.pitch)}.`;
+    if (Math.abs(major - th.d) > tolD) return `${head}: ${what} — MISMATCH: the program taps ${th.name}.`;
+    return `${head}: ${what} — consistent.`;
+  }
+  if (!reads.every((r) => r.kind === 'plain')) return `${head}: the model's hole there is not round or not plain (no regular thread either) — MISMATCH: check it against ${th.name}.`;
+  const [r0, r90, r180, r270] = reads.map((r) => r.r);
+  const d = (r0 + r90 + r180 + r270) / 2, off = [(r0 - r180) / 2, (r90 - r270) / 2];
+  if (Math.hypot(...off) > Math.max(0.1, tol)) return `${head}: the model's Ø${fx(d)} hole is centred X${fx(th.x + off[0])} Y${fx(th.y + off[1])} — MISMATCH: the program taps ${th.name} at ${holeAt(th)}.`;
+  const size = th.nominal ? `M${fx(th.nominal)}` : th.name;
+  const plain = `the model has a plain Ø${fx(d)} hole there`;
+  if (Math.abs(d - th.drill) <= tolD) return `${head}: ${plain} (tap drill for ${size} — cosmetic thread) — consistent.`;
+  if (Math.abs(d - th.minor) <= tolD) return `${head}: ${plain} (the minor Ø of ${th.name} — cosmetic thread) — consistent.`;
+  if (Math.abs(d - th.d) <= tolD) return `${head}: ${plain} (the nominal Ø of ${size} — cosmetic thread) — consistent.`;
+  if (d > th.minor && d < th.d) return `${head}: ${plain} (between the minor Ø${fx(th.minor)} and the nominal Ø${fx(th.d)} — a simplified thread) — consistent.`;
+  const other = tapDrillOf(d);
+  return `${head}: ${plain}${other ? ` (tap drill for ${other})` : ''} — MISMATCH: the program taps ${th.name} (tap drill Ø${fx(th.drill)}, nominal Ø${fx(th.d)}).`;
 }

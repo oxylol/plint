@@ -10,3 +10,6 @@ stacks/*/compose.override.yaml
 dashboard/kubernetes.yaml
 dashboard/proxmox.yaml
 __pycache__/
+
+# local test installs of app dependencies
+apps/*/node_modules/

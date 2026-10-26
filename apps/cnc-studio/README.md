@@ -56,7 +56,9 @@ see [DEPLOY.md](DEPLOY.md).
   the lathe. Each tool tints the surfaces it cuts. You get playback, block stepping, a timeline, a DRO and
   iso / top / front / side views.
 - **Check.** Cycle time, tool changes, removed volume, the comparison with the target model and an issue list.
-  "Ask Claude to fix these" hands the list to Claude.
+  "Ask Claude to fix these" hands the list to Claude. Threads are judged as threads: the simulator cuts them as rings
+  (lathe) or a plain bore (tap), and models usually draw them as a plain diameter or the tap drill, so each thread zone
+  is left out of the surface comparison and gets one line instead — consistent, or MISMATCH (wrong pitch, size or place).
 - **Tools.** On first start, CNC Studio finds your CncSimulator5 installation and imports its tool registers
   (`MillTools.millreg`, `TurnTools.ini`). It looks in the same places, in the same order, as CncSimulator5:
   `%APPDATA%\CamModul6\Tools`, then `%APPDATA%\CncSimulator5UserFiles\Tools`, then the install folder.
@@ -128,6 +130,7 @@ node test/job.mjs             # multi-setup jobs: flips, stock hand-off, lathe�
 node test/voxel.mjs           # 3D material engine: cutting, volumes, meshing, lathe/heightmap conversion
 node test/inspect.mjs         # measured geometry Claude gets (features, holes, profiles, sections, probes)
 node test/model.mjs           # STL/OBJ/3MF/STEP readers, target placement, stock-vs-target comparison
+node test/threads.mjs         # threads vs target models: cosmetic, modeled and wrong threads, tapped holes
 node test/real-path.mjs       # server ↔ Anthropic SDK request shape, against a local fake API
 node test/registers.mjs       # CncSimulator5 register import (needs CncSimulator5 installed)
 node test/register-sim.mjs    # the original's samples simulated with your own register

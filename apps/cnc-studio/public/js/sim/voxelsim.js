@@ -203,12 +203,15 @@ export class VoxelSim {
     for (let ax = 0; ax < 3; ax++) {
       const a1 = (ax + 1) % 3, a2 = (ax + 2) % 3; // the row is along ax, rows indexed by (a1, a2)
       const o = this.origin;
+      // rays are nudged off the grid so they miss shared edges; bin triangles at the nudged
+      // position too, or a ray just past a mesh row at a grid plane falls between two triangles
+      const jp = 1e-7 * (ax + 1), jq = 1.3e-7 * (ax + 1);
       const rows = new Map();
       for (let t = 0; t < tris.length; t += 9) {
         let p0 = Infinity, p1 = -Infinity, q0 = Infinity, q1 = -Infinity;
         for (let v = 0; v < 3; v++) { const p = tris[t + v * 3 + a1], q = tris[t + v * 3 + a2]; p0 = Math.min(p0, p); p1 = Math.max(p1, p); q0 = Math.min(q0, q); q1 = Math.max(q1, q); }
-        const i0 = Math.max(0, Math.ceil((p0 - o[a1]) / h)), i1 = Math.min(n[a1] - 1, Math.floor((p1 - o[a1]) / h));
-        const j0 = Math.max(0, Math.ceil((q0 - o[a2]) / h)), j1 = Math.min(n[a2] - 1, Math.floor((q1 - o[a2]) / h));
+        const i0 = Math.max(0, Math.ceil((p0 - o[a1] - jp) / h)), i1 = Math.min(n[a1] - 1, Math.floor((p1 - o[a1] - jp) / h));
+        const j0 = Math.max(0, Math.ceil((q0 - o[a2] - jq) / h)), j1 = Math.min(n[a2] - 1, Math.floor((q1 - o[a2] - jq) / h));
         for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
           const key = j * n[a1] + i;
           let list = rows.get(key);
@@ -218,7 +221,7 @@ export class VoxelSim {
       }
       for (const [key, list] of rows) {
         const i = key % n[a1], j = (key - i) / n[a1];
-        const p = o[a1] + i * h + 1e-7 * (ax + 1), q = o[a2] + j * h + 1.3e-7 * (ax + 1);
+        const p = o[a1] + i * h + jp, q = o[a2] + j * h + jq;
         const cs = [];
         for (const t of list) {
           const ap = tris[t + a1], aq = tris[t + a2], aa = tris[t + ax];

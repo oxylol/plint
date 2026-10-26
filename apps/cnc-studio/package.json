@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "node test/run-samples.mjs",
-    "check": "node test/geometry.mjs && node test/sim.mjs && node test/examples.mjs && node test/job.mjs && node test/voxel.mjs && node test/inspect.mjs && node test/model.mjs && node test/real-path.mjs"
+    "check": "node test/geometry.mjs && node test/sim.mjs && node test/examples.mjs && node test/job.mjs && node test/voxel.mjs && node test/inspect.mjs && node test/model.mjs && node test/real-path.mjs && node test/threads.mjs"
   },
   "engines": {
     "node": ">=20"
