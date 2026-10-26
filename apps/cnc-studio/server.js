@@ -2,11 +2,12 @@
 // Run: npm start  (reads ANTHROPIC_API_KEY, or a key entered in the app's settings)
 // Environment: PORT (5178), HOST (127.0.0.1), ANTHROPIC_API_KEY, APP_PASSWORD / APP_USER (password-protect
 // the whole site — use it whenever the site is reachable from other machines), CNCSIM_TOOLS_DIR (a folder
-// with TurnTools.ini / MillTools.millreg to offer in "Import from CncSimulator5").
+// with TurnTools.ini / MillTools.millreg to offer in "Import from CncSimulator5"), DATA_DIR (keep the work
+// — programs, jobs, settings, tool libraries, the target model — on the server instead of in each browser).
 import http from 'node:http';
 import { timingSafeEqual, createHash } from 'node:crypto';
-import { createReadStream, readFileSync } from 'node:fs';
-import { readFile, stat } from 'node:fs/promises';
+import { createReadStream, createWriteStream, readFileSync } from 'node:fs';
+import { mkdir, readFile, readdir, rename, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Anthropic from '@anthropic-ai/sdk';
@@ -335,6 +336,90 @@ async function mockStream(body, send) {
 }
 
 // --------------------------------------------------------------------------
+// The work kept on the server (DATA_DIR): one JSON file per browser-storage key, binary blobs
+// (the target model's triangles) and backups of a browser's older work. `rev` changes on every
+// write so a page can tell that another device saved something since it loaded.
+// --------------------------------------------------------------------------
+const DATA_DIR = process.env.DATA_DIR || '';
+const STORE_KEY = /^[A-Za-z0-9._-]{1,80}$/;
+const BLOB_LIMIT = 300 * 1024 * 1024;
+let storeRev = 0;
+const dataPath = (...p) => join(DATA_DIR, ...p);
+const bumpRev = () => (storeRev = Math.max(Date.now(), storeRev + 1));
+
+async function initStore() {
+  for (const d of ['store', 'blob', 'backup']) await mkdir(dataPath(d), { recursive: true });
+  for (const d of ['store', 'blob']) for (const f of await readdir(dataPath(d))) storeRev = Math.max(storeRev, (await stat(dataPath(d, f))).mtimeMs);
+}
+
+// write next to the file, then rename: a reader never sees half a file
+async function writeAtomic(file, data) {
+  const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
+  await writeFile(tmp, data);
+  await rename(tmp, file);
+}
+
+function saveBody(req, file, limit) {
+  return new Promise((resolve, reject) => {
+    const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
+    const ws = createWriteStream(tmp);
+    let size = 0;
+    req.on('data', (c) => { size += c.length; if (size > limit) { req.unpipe(ws); ws.destroy(); unlink(tmp).catch(() => {}); reject(new Error('Request too large')); } });
+    ws.on('finish', () => rename(tmp, file).then(resolve, reject));
+    ws.on('error', reject);
+    req.pipe(ws);
+  });
+}
+
+const sendJson = (res, status, o) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(o)); };
+
+async function handleStore(req, res, url) {
+  const m = /^\/api\/(store|blob)(?:\/([^/]+))?$/.exec(url.pathname);
+  if (url.pathname === '/api/backup' && req.method === 'POST') {
+    const body = await readJson(req, 40 * 1024 * 1024);
+    await writeAtomic(dataPath('backup', `${new Date().toISOString().replace(/[:.]/g, '-')}.json`), JSON.stringify(body));
+    return sendJson(res, 200, { ok: true });
+  }
+  if (!m) return false;
+  const [, kind, raw] = m;
+  if (kind === 'store' && !raw && req.method === 'GET') {
+    const values = {};
+    for (const f of await readdir(dataPath('store'))) {
+      if (!f.endsWith('.json')) continue;
+      try { values[f.slice(0, -5)] = JSON.parse(await readFile(dataPath('store', f), 'utf8')); } catch { /* skip a damaged file */ }
+    }
+    return sendJson(res, 200, { rev: storeRev, values });
+  }
+  if (kind === 'store' && raw === 'rev' && req.method === 'GET') return sendJson(res, 200, { rev: storeRev });
+  const key = decodeURIComponent(raw || '');
+  if (!STORE_KEY.test(key)) return sendJson(res, 400, { error: 'bad key' });
+  const file = kind === 'store' ? dataPath('store', `${key}.json`) : dataPath('blob', key);
+  if (req.method === 'GET' && kind === 'blob') {
+    try { await stat(file); } catch { res.writeHead(404); res.end(); return true; }
+    res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'no-store' });
+    createReadStream(file).pipe(res);
+    return true;
+  }
+  if (req.method === 'PUT' && kind === 'store') {
+    const value = await readJson(req, 20 * 1024 * 1024);
+    // a key typed into Settings stays in that browser
+    if (key === 'settings' && value && typeof value === 'object') delete value.apiKey;
+    if (value === null) await rm(file, { force: true });
+    else await writeAtomic(file, JSON.stringify(value));
+    return sendJson(res, 200, { rev: bumpRev() });
+  }
+  if (req.method === 'PUT' && kind === 'blob') {
+    await saveBody(req, file, BLOB_LIMIT);
+    return sendJson(res, 200, { rev: bumpRev() });
+  }
+  if (req.method === 'DELETE' && kind === 'blob') {
+    await rm(file, { force: true });
+    return sendJson(res, 200, { rev: bumpRev() });
+  }
+  return sendJson(res, 405, { error: 'method not allowed' });
+}
+
+// --------------------------------------------------------------------------
 // Installed CncSimulator5 tool registers, in the simulator's own search order
 // (%appdata%\CamModul6\Tools, %appdata%\CncSimulator5UserFiles\Tools, [ExeDir]\CncSimulator5UserFiles\Tools)
 // --------------------------------------------------------------------------
@@ -398,6 +483,10 @@ const server = http.createServer(async (req, res) => {
       await handleChat(req, res);
       return;
     }
+    if (url.pathname.startsWith('/api/store') || url.pathname.startsWith('/api/blob') || url.pathname === '/api/backup') {
+      if (!DATA_DIR) { sendJson(res, url.pathname === '/api/store' && req.method === 'GET' ? 200 : 404, { enabled: false }); return; }
+      if (await handleStore(req, res, url) !== false) return;
+    }
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405); res.end(); return;
     }
@@ -409,6 +498,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+if (DATA_DIR) await initStore();
 server.listen(PORT, HOST, () => {
   console.log(`CNC Studio running at http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}${MOCK ? '  (mock Claude)' : ''}${APP_PASSWORD ? `  (password protected, user "${APP_USER}")` : ''}`);
   if (!APP_PASSWORD && !['127.0.0.1', 'localhost', '::1'].includes(HOST)) {
@@ -417,4 +507,5 @@ server.listen(PORT, HOST, () => {
   if (!MOCK && !process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) {
     console.log('No ANTHROPIC_API_KEY in the environment — enter a key in the app (Settings), or restart with the variable set.');
   }
+  if (DATA_DIR) console.log(`Work is kept on the server in ${DATA_DIR}`);
 });

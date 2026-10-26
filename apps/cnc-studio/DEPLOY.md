@@ -34,6 +34,7 @@ sudo chmod 600 /etc/cnc-studio.env
 | `ANTHROPIC_API_KEY` | The server's key. Every Claude request from the app is billed to it. |
 | `APP_PASSWORD`, `APP_USER` | Password-protects the whole site (browser login, user defaults to `cnc`). **Set it whenever the site is reachable from the internet**, otherwise anyone who finds it can use your API key. |
 | `CNCSIM_TOOLS_DIR` | Optional folder with `TurnTools.ini` / `MillTools.millreg` copied from CncSimulator5, offered by *Tools → Import from CncSimulator5*. |
+| `DATA_DIR` | Optional writable folder: the work (job, settings, tool libraries, target model) is kept there instead of in each browser, so every device opens the same job. A browser's older, different job is saved in `DATA_DIR/backup/` before the server's replaces it. An API key typed into Settings stays in the browser. |
 
 ## 4. Run as a service
 
@@ -63,8 +64,9 @@ Open `https://your.domain`, log in, load *Examples → Mill job — plate machin
 
 ## Notes
 
-- Programs, jobs, versions, the tool library and the target model are kept **in each user's browser** (local storage),
-  per site address. Work made on `http://localhost:5178` does not show up on the domain: save it with *+ → Save job*
+- Without `DATA_DIR`, programs, jobs, the tool library and the target model are kept **in each user's browser** (local storage),
+  per site address. With `DATA_DIR` they are kept on the server and every browser opens the same job (the last change wins;
+  a tab that comes back after another device saved offers to load the newer job). Work made on `http://localhost:5178` does not show up on the domain: save it with *+ → Save job*
   there and open it on the server site. Re-import the tool registers with *Tools → Import register file…*
   (or put them in `CNCSIM_TOOLS_DIR`).
 - Updating: replace the files (keep `/etc/cnc-studio.env`), run `npm ci --omit=dev`, `sudo systemctl restart cnc-studio`.

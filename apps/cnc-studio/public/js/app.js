@@ -11,6 +11,7 @@ import { ClaudeAgent, ChatView } from './claude.js';
 import { EXAMPLES } from './examples.js';
 import { parseTurnToolsIni, parseMillReg, detectRegister } from './gcode/lathetools.js';
 import { decodeLegacyText, base64ToBytes } from './gcode/textdecode.js';
+import { openServerStore } from './serverstore.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -43,6 +44,9 @@ const idb = {
     } catch { /* storage unavailable: the model just won't survive a reload */ }
   },
 };
+// with DATA_DIR on the server, the work lives there (local storage stays as a cache)
+const serverStore = await openServerStore();
+serverStore?.wrap(store, idb);
 
 const SETTINGS_DEFAULTS = {
   model: 'claude-opus-5-5', effort: 'high', apiKey: '',

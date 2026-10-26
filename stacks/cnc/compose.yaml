@@ -2,7 +2,8 @@
 #  Plint · cnc stack
 #  CNC Studio: browser G-code simulator (mill + lathe) with Claude built in.
 #  Source in apps/cnc-studio. No login (LAN + tailnet only); chats bill
-#  CNC_ANTHROPIC_API_KEY from .env. Programs live in each browser's storage.
+#  CNC_ANTHROPIC_API_KEY from .env. The work (jobs, settings, tool libraries,
+#  target model) is kept in data/cnc-studio, so every device sees the same job.
 # ─────────────────────────────────────────────────────────────
 name: cnc
 
@@ -12,11 +13,15 @@ services:
     image: plint/cnc-studio:local
     container_name: cnc-studio
     restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
     ports:
       - "127.0.0.1:5178:5178"
     environment:
       TZ: ${TZ}
       ANTHROPIC_API_KEY: ${CNC_ANTHROPIC_API_KEY:-}
+      DATA_DIR: /data
+    volumes:
+      - ../../data/cnc-studio:/data
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 512m

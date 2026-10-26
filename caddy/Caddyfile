@@ -146,10 +146,10 @@
 
 	@cnc host cnc.{$DOMAIN}
 	handle @cnc {
-		# CNC Studio. Own look; drawings/PDFs for Claude ride in the request,
-		# and answers stream for minutes, so no buffering.
+		# CNC Studio. Own look; drawings/PDFs for Claude and saved target models
+		# ride in the request, and answers stream for minutes, so no buffering.
 		request_body {
-			max_size 60MB
+			max_size 300MB
 		}
 		reverse_proxy localhost:5178 {
 			flush_interval -1

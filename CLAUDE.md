@@ -63,7 +63,7 @@ host network and proxies to `localhost:<port>`:
 | backup | 51515 | Kopia |
 | speed | 8075 | Speedtest Tracker |
 | table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
-| cnc | 5178 | CNC Studio (G-code simulator + Claude), no login, key `CNC_ANTHROPIC_API_KEY` |
+| cnc | 5178 | CNC Studio (G-code simulator + Claude), no login, key `CNC_ANTHROPIC_API_KEY`; work in `data/cnc-studio` |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 
 ## How to do things
