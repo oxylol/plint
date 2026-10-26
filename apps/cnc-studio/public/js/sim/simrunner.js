@@ -130,7 +130,9 @@ export class SimRunner {
       for (let s = 0; s < n; s++) {
         const fa = f0 + ((f1 - f0) * s) / n, fb = f0 + ((f1 - f0) * (s + 1)) / n;
         const a = this.pointAt(m, fa), b = this.pointAt(m, fb);
-        const res = this.sim.cutSegment(a, b, m, this.xformAt(m, (fa + fb) / 2));
+        const Xm = this.xformAt(m, (fa + fb) / 2);
+        this.engagement?.probe(a, b, m, Xm, fa * L);
+        const res = this.sim.cutSegment(a, b, m, Xm);
         if (res) this.check(m, res, a, b);
         this.checkFixtures(m, a, b);
       }
@@ -145,6 +147,8 @@ export class SimRunner {
       const seg = s1 - s0 || 1;
       const a = s0 >= from ? pts[i - 1] : lerp3(pts[i - 1], pts[i], (from - s0) / seg);
       const b = s1 <= to ? pts[i] : lerp3(pts[i - 1], pts[i], (to - s0) / seg);
+      // engagement is measured on the material as it is just before this piece is cut
+      this.engagement?.probe(a, b, m, X, Math.max(s0, from));
       const res = this.sim.cutSegment(a, b, m, X);
       this.checkFixtures(m, a, b);
       if (!res) continue;

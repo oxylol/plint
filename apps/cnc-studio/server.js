@@ -44,7 +44,7 @@ const TOOLS = [
     description:
       'Write a complete NC program into an operation of the job (replacing its program) and run the simulation. ' +
       'Returns the simulation report: errors, warnings, collisions (rapids into material, shank, holder, chuck, vise), cycle time, ' +
-      'removed volume, the cut envelope of each tool, the measured geometry of the result (features, sizes, positions in work ' +
+      'removed volume, the cut envelope and engagement (width/depth of cut, removal rate) of each tool, the measured geometry of the result (features, sizes, positions in work ' +
       'coordinates) and, with a target model, what is still to remove or gouged. Always pass the whole program, never a fragment.',
     input_schema: {
       type: 'object',
@@ -65,11 +65,12 @@ const TOOLS = [
       'query "summary": size, outline and all features (pockets, holes with diameter along the depth, slots, steps, islands; lathe: profile). ' +
       '"view": features seen from one side plus a character depth map. "section": the exact material outline in a plane. ' +
       '"probe": material or air at given points. "compare": deviations from the target model (material still to remove, gouges). ' +
-      '"target": the target model\'s own features in this operation\'s coordinates.',
+      '"target": the target model\'s own features in this operation\'s coordinates. "engagement": how much of each tool is in the ' +
+      'material, line by line (mill: radial width of cut ae, contact arc, axial depth ap; lathe: depth of cut, feed per rev; removal rate; feed moves in air).',
     input_schema: {
       type: 'object',
       properties: {
-        query: { type: 'string', enum: ['summary', 'view', 'section', 'probe', 'compare', 'target'] },
+        query: { type: 'string', enum: ['summary', 'view', 'section', 'probe', 'compare', 'target', 'engagement'] },
         operation: { type: 'string', description: 'Operation whose result to measure, e.g. "OP10". Default: the active operation.' },
         view: { type: 'string', enum: ['top', 'bottom', 'front', 'back', 'left', 'right'], description: 'For "view": the side to look from (front = from −Y).' },
         axis: { type: 'string', enum: ['x', 'y', 'z'], description: 'For "section": the axis the cutting plane is perpendicular to.' },

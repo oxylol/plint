@@ -12,6 +12,8 @@ import { EXAMPLES } from './examples.js';
 import { parseTurnToolsIni, parseMillReg, detectRegister } from './gcode/lathetools.js';
 import { decodeLegacyText, base64ToBytes } from './gcode/textdecode.js';
 import { openServerStore } from './serverstore.js';
+import { engagementReport, engagementAt } from './sim/engagement.js';
+import { exportJob } from './gcode/export.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -206,6 +208,7 @@ function simulate({ time = 'end' } = {}) {
   if (guess) { hint.textContent = `Looks like a ${guess} program — switch`; hint.onclick = () => setMachine(guess); }
   renderBadges();
   renderChecks();
+  renderEngagement();
   renderTools();
   renderStock();
   renderLegend();
@@ -225,15 +228,17 @@ function seek(t, force = false) {
   if (state.result.usesRotary) viewer.setRotary(st.rot?.[0] || 0, st.rot?.[1] || 0);
   viewer.setTool(st.pos, st.move);
   viewer.setTime(t >= state.total ? 1e9 : t);
-  updateDro(st);
+  updateDro(st, t);
+  if (state.total) $('#engHead').style.left = `${Math.min(100, (t / state.total) * 100)}%`;
   if (st.move) editor.setExecLine(st.move.callLine, state.playing || force === 'line');
   $('#timeline').value = state.total ? Math.round((t / state.total) * 1000) : 1000;
   $('#timeLabel').textContent = `${fmtTime(t)} / ${fmtTime(state.total)}`;
 }
 
-function updateDro(st) {
+function updateDro(st, t) {
   const p = st.pos || [0, 0, 0];
   const m = st.move;
+  droEngagement(m, st.index, t);
   if (state.machine === 'lathe') {
     $('#droX').textContent = n3(p[0] * 2);
     $('#droZ').textContent = n3(p[2]);
@@ -622,6 +627,54 @@ function saveProgram() {
 }
 $('#btnSave').onclick = saveProgram;
 
+// ------------------------------------------------------------------ export for the machine
+function buildExport() {
+  syncEditorToOp();
+  const outs = simulateAll();
+  state.outs = outs;
+  const names = opNames(state.ops);
+  const machine = state.ops[state.active].machine;
+  const same = state.ops.map((op, i) => i).filter((i) => state.ops[i].machine === machine);
+  const all = $('input[name=expScope][value=all]').checked && same.length > 1;
+  const idx = all ? same : [state.active];
+  const num = parseInt($('#expNum').value, 10);
+  const r = exportJob({
+    ops: idx.map((i) => ({ ...state.ops[i], name: names[i], out: outs[i] })),
+    subprograms: state.subprograms,
+    keepComments: $('#expComments').checked,
+    inlineSubs: $('#expSubs').value === 'inline',
+    toolList: $('#expTools').checked,
+    programNumber: num > 0 && num <= 9999 ? num : null,
+    interpOptions,
+  });
+  const skipped = all ? state.ops.map((op, i) => i).filter((i) => !same.includes(i)).map((i) => `${names[i]} (${state.ops[i].machine})`) : [];
+  if (skipped.length) r.notes.push(`Not included — another machine: ${skipped.join(', ')}`);
+  const o = r.text.split('\r\n')[1].match(/^O(\d+)/)?.[1] || '1000';
+  const base = (state.ops[idx[0]].fileName || 'program').replace(/\.[^.]+$/, '').replace(/[^\w-]+/g, '_');
+  state.exported = { text: r.text, name: `${base}${all ? '_all' : ''}_O${o}.nc` };
+  $('#expPreview').textContent = r.text.replace(/\r\n/g, '\n');
+  $('#expCheck').innerHTML = [...r.verify.map((v) => `<li class="${v.ok ? 'ok' : 'bad'}">${escapeHtml(v.text)}</li>`), ...r.notes.map((n) => `<li>${escapeHtml(n)}</li>`)].join('');
+}
+
+$('#btnExport').onclick = () => {
+  const names = opNames(state.ops);
+  const machine = state.ops[state.active].machine;
+  const same = state.ops.map((op, i) => i).filter((i) => state.ops[i].machine === machine);
+  $('#expScopeOp').textContent = `This operation (${names[state.active]})`;
+  $('#expScopeAll').textContent = same.length > 1 ? `All ${same.length} ${machine} operations (${same.map((i) => names[i]).join(', ')}) — M00 between setups` : 'All operations (only one here)';
+  $('input[name=expScope][value=all]').disabled = same.length < 2;
+  if (same.length < 2) $('input[name=expScope][value=op]').checked = true;
+  try { buildExport(); } catch (e) { console.error(e); toast(`Export failed: ${e.message}`); return; }
+  $('#exportDlg').showModal();
+};
+for (const el of ['#expSubs', '#expNum', '#expComments', '#expTools']) $(el).addEventListener('change', () => buildExport());
+for (const el of $$('input[name=expScope]')) el.addEventListener('change', () => buildExport());
+$('#btnExpDownload').onclick = () => { if (state.exported) download(state.exported.text, state.exported.name); };
+$('#btnExpCopy').onclick = () => {
+  if (!state.exported) return;
+  navigator.clipboard?.writeText(state.exported.text).then(() => toast('Copied'), () => toast('Copy is blocked here — use Download'));
+};
+
 // examples
 $('#examplesMenu').innerHTML = EXAMPLES.map((ex) => `<button data-ex="${ex.id}">${escapeHtml(ex.name)}</button>`).join('');
 $('#btnExamples').onclick = (e) => { e.stopPropagation(); $('#btnExamples').parentElement.classList.toggle('open'); };
@@ -718,6 +771,108 @@ function renderChecks() {
     const m = state.issues[Number(it.dataset.i)];
     if (m.callLine !== null && m.callLine !== undefined) { editor.goToLine(m.callLine); jumpToLine(m.callLine); }
   };
+}
+
+// ------------------------------------------------------------------ tool engagement
+const pctOf = (v, D) => (D ? `${Math.round((100 * v) / D)}%` : '');
+const mm = (v) => (v < 10 ? v.toFixed(2) : v.toFixed(1));
+
+function droEngagement(m, index, t) {
+  const el = $('#droEng');
+  const eng = state.out?.engagement;
+  const e = m?.kind === 'feed' ? engagementAt(eng, t, index) : null;
+  el.hidden = !e;
+  if (!e) return;
+  const tool = state.result.tools[m.tool];
+  const on = e.ap > 1e-3 || e.angle > 0;
+  el.classList.toggle('air', !on);
+  if (!on) el.textContent = 'in air';
+  else if (eng.machine === 'lathe') el.textContent = `ap ${mm(e.ap)} · f ${e.f.toFixed(3)} · ${e.q.toFixed(1)} cm³/min`;
+  else if (e.plunge) el.textContent = `plunge · ap ${mm(e.ap)}`;
+  else el.textContent = `ae ${pctOf(e.ae, tool?.diameter)} (${mm(e.ae)}) · ${Math.round(e.angle)}° · ap ${mm(e.ap)}`;
+}
+
+function renderEngagement() {
+  const eng = state.out?.engagement;
+  const s = eng?.samples;
+  const tools = state.result.tools;
+  const used = eng ? Object.values(eng.perTool).filter((T) => T.cut > 0) : [];
+  const lathe = eng?.machine === 'lathe';
+  $('#engStrip').hidden = !used.length;
+  // Check tab: one row per tool, tap = go to its heaviest line
+  $('#engTable').innerHTML = !eng || !Object.keys(eng.perTool).length ? '' : '<h4>Tool engagement</h4>' + Object.values(eng.perTool).sort((a, b) => a.tool - b.tool).map((T) => {
+    const tool = tools[T.tool], D = tool?.diameter || 0;
+    const air = T.len ? Math.round((100 * (T.len - T.cut)) / T.len) : 0;
+    const name = `T${T.tool}${D && !lathe ? ` Ø${D}` : ''} ${escapeHtml(tool?.type || '')}`;
+    const peak = lathe ? T.max.ap : T.max.ae;
+    const line = peak ? state.result.moves[s.move[peak.k]].callLine : null;
+    if (!T.cut) return `<div class="eng-row" style="--sw:${tool?.color}"><b>${name}</b> — never in material</div>`;
+    const body = lathe
+      ? `depth of cut up to <span class="big">${mm(T.max.ap.v)}</span> (typical ${mm(T.apTyp)}) · f up to ${(T.max.f?.v || 0).toFixed(3)}`
+      : `ae up to <span class="big">${pctOf(T.max.ae.v, D)}</span>${T.max.ae.v >= 0.95 * D ? ' (full slot)' : ''} · ap up to <span class="big">${mm(T.max.ap.v)}</span> (${(T.max.ap.v / D).toFixed(2)}×Ø) · typical ${pctOf(T.aeTyp, D)} / ${mm(T.apTyp)}${T.slot > 0.5 ? ` · slotting ${Math.round(T.slot)} mm` : ''}`;
+    return `<div class="eng-row" style="--sw:${tool?.color}" data-line="${line ?? ''}"><b>${name}</b> — ${body} · up to ${T.max.q.v.toFixed(1)} cm³/min${air ? ` · ${air}% of feed in air` : ''}</div>`;
+  }).join('');
+  if (!used.length) return;
+  drawEngChart();
+}
+
+// bars: the heaviest cut in each pixel column (mill: ae as % of Ø, lathe: depth of cut), in the tool's
+// colour; line: axial depth (mill)
+function drawEngChart() {
+  const eng = state.out?.engagement, s = eng?.samples;
+  const cv = $('#engChart');
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (!s || !w || !h) return;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  const lathe = eng.machine === 'lathe', total = state.total || 1, moves = state.result.moves, tools = state.result.tools;
+  let apMax = 0;
+  for (const v of s.ap) apMax = Math.max(apMax, v);
+  const bar = new Float32Array(w), barTool = new Int32Array(w).fill(-1), depth = new Float32Array(w);
+  for (let k = 0; k < s.t.length; k++) {
+    const x = Math.min(w - 1, Math.max(0, Math.floor((s.t[k] / total) * w)));
+    const m = moves[s.move[k]];
+    const D = tools[m.tool]?.diameter;
+    const v = lathe ? (apMax ? s.ap[k] / apMax : 0) : D ? Math.min(1, s.ae[k] / D) : 0;
+    if (v >= bar[x] && (v > 0 || barTool[x] < 0)) { bar[x] = v; barTool[x] = m.tool; }
+    depth[x] = Math.max(depth[x], s.ap[k]);
+  }
+  const top = 12, span = h - top - 1;
+  for (let x = 0; x < w; x++) {
+    if (barTool[x] < 0 || !(bar[x] > 0)) continue;
+    g.fillStyle = tools[barTool[x]]?.color || '#888';
+    g.fillRect(x, h - 1 - bar[x] * span, 1, bar[x] * span);
+  }
+  if (!lathe && apMax > 0) {
+    g.strokeStyle = 'rgba(238,243,248,.75)';
+    g.lineWidth = 1;
+    g.beginPath();
+    let pen = false;
+    for (let x = 0; x < w; x++) {
+      if (!(depth[x] > 0)) { pen = false; continue; }
+      const y = h - 1 - (depth[x] / apMax) * span;
+      if (pen) g.lineTo(x + 0.5, y); else g.moveTo(x + 0.5, y);
+      pen = true;
+    }
+    g.stroke();
+  }
+  $('#engLabel').textContent = lathe ? `depth of cut (max ${mm(apMax)} mm)` : `bars: ae % of Ø · line: ap (max ${mm(apMax)} mm)`;
+}
+
+{
+  const strip = $('#engStrip');
+  const go = (e) => { const r = strip.getBoundingClientRect(); pause(); seek(((e.clientX - r.left) / r.width) * state.total, 'line'); };
+  strip.addEventListener('pointerdown', (e) => { strip.setPointerCapture(e.pointerId); go(e); });
+  strip.addEventListener('pointermove', (e) => { if (strip.hasPointerCapture(e.pointerId)) go(e); });
+  $('#engTable').addEventListener('click', (e) => {
+    const row = e.target.closest('.eng-row');
+    const ln = row?.dataset.line;
+    if (ln) { editor.goToLine(Number(ln)); jumpToLine(Number(ln)); }
+  });
+  window.addEventListener('resize', () => { if (!$('#engStrip').hidden) drawEngChart(); });
 }
 
 function renderLegend() {
@@ -1209,6 +1364,8 @@ function buildReport(out = state.out, { brief = false } = {}) {
           : `  T${n}: X${n3(e.min[0])}..${n3(e.max[0])}  Y${n3(e.min[1])}..${n3(e.max[1])}  Z${n3(e.min[2])}..${n3(e.max[2])} · ${e.length.toFixed(0)} mm cut, ${fmtTimeLong(e.time)}`);
       }
     }
+    const eng = engagementReport(out);
+    if (eng) o.push(eng);
     o.push(partSummary(out));
     if (state.target) o.push(compareTarget(out, state.target));
   }
@@ -1421,6 +1578,7 @@ const agent = new ClaudeAgent({
         case 'probe': title = `${input.points.length} probe${input.points.length > 1 ? 's' : ''}`; txt = probe(out, input.points); break;
         case 'compare': title = 'vs target'; txt = state.target ? compareTarget(out, state.target) : 'No target model is loaded (the user can load one in the Stock tab or drop it on the chat).'; break;
         case 'target': title = 'target model'; txt = state.target ? targetSummary(state.target, out) : 'No target model is loaded.'; break;
+        case 'engagement': title = 'tool engagement'; txt = engagementReport(out, { detail: true }) || 'No feed moves of milling or turning tools in this operation.'; break;
       }
       card?.done({ title: `${names[i]} · ${title}`, text: txt });
       return { content: `${names[i]} (${out.op.fileName}, ${out.op.machine}), work coordinates of ${names[i]}:\n${txt}` };

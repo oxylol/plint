@@ -59,6 +59,15 @@ see [DEPLOY.md](DEPLOY.md).
   "Ask Claude to fix these" hands the list to Claude. Threads are judged as threads: the simulator cuts them as rings
   (lathe) or a plain bore (tap), and models usually draw them as a plain diameter or the tap drill, so each thread zone
   is left out of the surface comparison and gets one line instead — consistent, or MISMATCH (wrong pitch, size or place).
+- **Tool engagement.** Every feed move is measured on the material as it is just before the cut: on the mill the radial
+  width of cut (ae, mm and % of Ø), the arc of the cutter in contact and the axial depth (ap); on the lathe the depth of
+  cut and feed per rev; plus the removal rate and the feed spent in air. It shows in the DRO while playing, as a strip
+  above the timeline (tap it to go there) and per tool in the Check tab. Claude gets the per-tool summary in every report
+  and the line-by-line table with `inspect_part` (query "engagement").
+- **Export for the machine.** *Export* builds one NC program with standard content only: CNC Studio's directives
+  (STOCK, TOOL, SETUP, ORIENT, ZERO, VISE, CHUCK, ROTARY, `$Set…`) are removed, comments become plain upper-case ASCII,
+  M98 subprograms are built in (appended as O programs when they jump), and several operations of one machine are joined
+  with M00 and a re-clamp note. The export is simulated again and compared move by move with the original.
 - **Tools.** On first start, CNC Studio finds your CncSimulator5 installation and imports its tool registers
   (`MillTools.millreg`, `TurnTools.ini`). It looks in the same places, in the same order, as CncSimulator5:
   `%APPDATA%\CamModul6\Tools`, then `%APPDATA%\CncSimulator5UserFiles\Tools`, then the install folder.
@@ -131,6 +140,9 @@ node test/voxel.mjs           # 3D material engine: cutting, volumes, meshing, l
 node test/inspect.mjs         # measured geometry Claude gets (features, holes, profiles, sections, probes)
 node test/model.mjs           # STL/OBJ/3MF/STEP readers, target placement, stock-vs-target comparison
 node test/threads.mjs         # threads vs target models: cosmetic, modeled and wrong threads, tapped holes
+node test/engagement.mjs      # tool engagement of known cuts (slot, stepover, plunge, air, lathe depth of cut)
+node test/export.mjs          # export: standard content only, subprograms built in, same toolpath
+node test/store.mjs           # the work kept on the server (DATA_DIR)
 node test/real-path.mjs       # server ↔ Anthropic SDK request shape, against a local fake API
 node test/registers.mjs       # CncSimulator5 register import (needs CncSimulator5 installed)
 node test/register-sim.mjs    # the original's samples simulated with your own register

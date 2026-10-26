@@ -7,6 +7,7 @@ import { IDENTITY, VoxelSim, applyX, mulXform } from './voxelsim.js';
 import { MillSim } from './millsim.js';
 import { LatheSim } from './lathesim.js';
 import { SimRunner } from './simrunner.js';
+import { EngagementRecorder } from './engagement.js';
 
 export function opLabel(i) { return `OP${(i + 1) * 10}`; }
 
@@ -160,13 +161,17 @@ function runOp(op, name, setup, src, srcError, opts, jobMode) {
     fixtures.push(...viseBoxes(setup.vise, wb));
   }
   runner.fixtures = fixtures;
+  // only the full run records tool engagement; playback re-runs the same moves
+  runner.engagement = new EngagementRecorder(result, sim);
   const t0 = performance.now();
   runner.runAll();
   const simMs = performance.now() - t0;
+  const engagement = runner.engagement.finish();
+  runner.engagement = null;
   const final = sim.clone();
   const issues = [...pre, ...result.messages, ...runner.finalIssues(), ...extraIssues(result, sim, engine)];
   const workFromPart = mulXform(engine === 'voxel' ? X : IDENTITY, simFromPart);
-  return { op, name, setup, engine, X, result, sim, runner, final, start, issues, src: src?.name || null, fixtures, simMs, simFromPart, workFromPart };
+  return { op, name, setup, engine, X, result, sim, runner, final, start, issues, src: src?.name || null, fixtures, simMs, simFromPart, workFromPart, engagement };
 }
 
 function extraIssues(result, sim, engine) {

@@ -26,6 +26,7 @@
       <button class="btn ghost" id="btnNew" title="New program">New</button>
       <button class="btn ghost" id="btnOpen" title="Open .nc files (extra files become subprograms) or a saved job (.cncjob.json)">Open</button>
       <button class="btn ghost" id="btnSave" title="Download program (Ctrl+S)">Save</button>
+      <button class="btn ghost" id="btnExport" title="One NC program for the machine: standard content only, subprograms built in, checked against the simulation">Export</button>
       <div class="dropdown">
         <button class="btn ghost" id="btnExamples">Examples ▾</button>
         <div class="dropdown-menu" id="examplesMenu"></div>
@@ -78,6 +79,7 @@
           <div class="dro-row" id="droARow" hidden><span class="ax">A</span><span class="v" id="droA">0.000</span></div>
           <div class="dro-row" id="droBRow" hidden><span class="ax">B</span><span class="v" id="droB">0.000</span></div>
           <div class="dro-meta"><span id="droT">T0</span><span id="droF">F0</span><span id="droS">S0</span><span id="droMode">G00</span></div>
+          <div class="dro-eng" id="droEng" hidden></div>
         </div>
         <div class="view-tools">
           <div class="seg small" id="viewSeg">
@@ -94,6 +96,11 @@
         </div>
         <div class="view-legend" id="legend"></div>
         <div class="sim-busy" id="simBusy" hidden>Simulating…</div>
+      </div>
+      <div class="eng-strip" id="engStrip" hidden title="Tool engagement over the program — tap to go there">
+        <canvas id="engChart"></canvas>
+        <div class="eng-head" id="engHead"></div>
+        <span class="eng-label" id="engLabel"></span>
       </div>
       <div class="playbar">
         <button class="btn icon" id="btnStart" title="Back to start" aria-label="Back to start">⏮</button>
@@ -144,6 +151,7 @@
 
       <div class="tab-panel" data-panel="check">
         <div class="stats" id="stats"></div>
+        <div class="eng-table" id="engTable"></div>
         <div class="check-target" id="checkTarget" hidden></div>
         <div class="issues" id="issues"></div>
       </div>
@@ -213,6 +221,26 @@
       <label class="check"><input type="checkbox" id="setRadiusMode"> Lathe: X is programmed as radius (default diameter)</label>
       <label class="check"><input type="checkbox" id="setBlockDelete"> Block delete on (skip lines starting with /)</label>
       <div class="dialog-actions"><button class="btn primary" value="ok">Done</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="exportDlg" class="dialog export-dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Export for the machine</h2>
+      <p class="hint">One NC program with standard content only: CNC Studio's own comments (STOCK, TOOL, SETUP, ORIENT, ZERO, VISE…) are taken out, comments become plain upper-case text, M98 subprograms are built in. The result is simulated again and compared move by move with this one.</p>
+      <div class="field-row">
+        <label class="radio"><input type="radio" name="expScope" value="op" checked> <span id="expScopeOp">This operation</span></label>
+        <label class="radio"><input type="radio" name="expScope" value="all"> <span id="expScopeAll">All operations</span></label>
+      </div>
+      <div class="field-grid">
+        <label class="field">Subprograms (M98)<select id="expSubs" class="select"><option value="inline">Build them in</option><option value="append">Append as O programs</option></select></label>
+        <label class="field">Program number<input type="number" id="expNum" min="1" max="9999" placeholder="from the program"></label>
+      </div>
+      <label class="check"><input type="checkbox" id="expComments" checked> Keep comments (plain text)</label>
+      <label class="check"><input type="checkbox" id="expTools" checked> Tool list at the top</label>
+      <ul class="exp-check" id="expCheck"></ul>
+      <pre class="exp-preview" id="expPreview"></pre>
+      <div class="dialog-actions"><button class="btn" type="button" id="btnExpCopy">Copy</button><button class="btn primary" type="button" id="btnExpDownload">Download .nc</button><button class="btn" value="ok">Close</button></div>
     </form>
   </dialog>
 
