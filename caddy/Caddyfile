@@ -156,6 +156,15 @@
 		}
 	}
 
+	@poly host poly.{$DOMAIN}
+	handle @poly {
+		# Polybot (apps/polybot): the page and its JSON come from the bot itself.
+		import theme poly
+		reverse_proxy localhost:5190 {
+			header_up Accept-Encoding identity
+		}
+	}
+
 	@speed host speed.{$DOMAIN}
 	handle @speed {
 		import theme speedtest

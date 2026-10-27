@@ -3,7 +3,7 @@
 #  plint · the one command for the box
 #
 #    plint status            what's running, what isn't
-#    plint up|down|restart   [stack]   (core | ops | media | all)
+#    plint up|down|restart   [stack]   (core | ops | media | table | cnc | poly | all)
 #    plint logs <name>       follow a container's logs
 #    plint sync              pull the repo, apply any changes
 #    plint update            update images + OS packages, then sync
@@ -20,10 +20,10 @@ PLINT_DIR="${PLINT_DIR:-/opt/plint}"
 source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
-STACKS=(core ops media table cnc)
+STACKS=(core ops media table cnc poly)
 usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
-stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|table|cnc) echo "$1";; *) die "unknown stack: $1";; esac; }
+stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|table|cnc|poly) echo "$1";; *) die "unknown stack: $1";; esac; }
 
 cmd_status() {
   printf '%s%s%s\n\n' "$C_BOLD" "Plint · $(hostname) · $(date '+%a %d %b %H:%M')" "$C_RESET"
@@ -61,6 +61,7 @@ url_for() {
     stremio) echo "https://stremio.${DOMAIN:-}";;
     table) echo "https://table.${DOMAIN:-}";;
     cnc-studio) echo "https://cnc.${DOMAIN:-}";;
+    polybot) echo "https://poly.${DOMAIN:-}";;
     cockpit.socket) echo "https://host.${DOMAIN:-}";;
     tailscaled) tailscale ip -4 2>/dev/null | head -n1;;
     plint-claude) echo "claude.ai/code → Plint";;

@@ -21,8 +21,10 @@ app; they are usually on a phone, so keep answers short and lead with the result
 │   ├── ops/            beszel (+agent) · uptime-kuma · ntfy · kopia
 │   ├── media/          stremio
 │   ├── table/          includes /opt/plint-table/deploy/compose.yaml (D&D table, separate repo)
-│   └── cnc/            cnc-studio (built from apps/cnc-studio)
+│   ├── cnc/            cnc-studio (built from apps/cnc-studio)
+│   └── poly/           polybot (built from apps/polybot)
 ├── apps/cnc-studio/    CNC Studio source (G-code sim + Claude; upstream zip, plus our Dockerfile)
+├── apps/polybot/       Polybot: Polymarket leaderboard-consensus trader (Python; README there)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
 ├── dashboard/          Homepage config (services/widgets/settings/images)
@@ -64,6 +66,7 @@ host network and proxies to `localhost:<port>`:
 | speed | 8075 | Speedtest Tracker |
 | table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
 | cnc | 5178 | CNC Studio (G-code simulator + Claude), no login, key `CNC_ANTHROPIC_API_KEY`; work in `data/cnc-studio` |
+| poly | 5190 | Polybot: buys what the top Polymarket traders agree on. Paper mode until `POLY_PRIVATE_KEY`, `POLY_WALLET` and `POLY_LIVE=1` are in `.env`; tunables `POLY_*` (apps/polybot/README.md); book in `data/polybot` |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 
 ## How to do things
@@ -88,6 +91,9 @@ host network and proxies to `localhost:<port>`:
   `plint game start|stop <name>` (name or prefix, e.g. `nissesky`). Stop refuses while
   players are connected unless `--force`. `ampinstmgr` alone only starts the *panels*.
 - **Backups**: nightly 03:30 via Kopia to `BACKUP_PATH`. `plint backup` snapshots now.
+- **Polybot**: `plint logs polybot` · one cycle with its reasoning: `docker exec polybot python -m polybot once`
+  · account check before going live: `docker exec polybot python -m polybot check`. Real money: never set
+  `POLY_LIVE=1` or raise `POLY_STAKE_USD` / `POLY_DAILY_BUDGET_USD` unless Filip asks.
 - **Notify Filip**: `plint notify "message"` (ntfy → phone). Use it when you finish
   something he asked for while away, or when something needs a decision.
 

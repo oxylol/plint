@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#e4e9e5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e2421" media="(prefers-color-scheme: dark)">
+<title>Polybot</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233f6a53'/%3E%3Cpath d='M14 44l12-12 9 9 15-17' fill='none' stroke='%23e4e9e5' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  /* Plint Soft UI tokens, with fallbacks so the page also works straight off its port */
+  :root {
+    color-scheme: light dark;
+    --bg: var(--p-bg, #e4e9e5); --ink: var(--p-ink, #22302a); --ink2: var(--p-ink2, #56655d);
+    --hi: var(--p-hi, rgba(255,255,255,.92)); --lo: var(--p-lo, rgba(146,163,152,.55));
+    --edge: var(--p-edge, rgba(255,255,255,.6)); --track: var(--p-track, #d3dad5);
+    --accent: var(--p-accent, #3f6a53); --accent-soft: var(--p-accent-soft, rgba(63,106,83,.13));
+    --on-accent: var(--p-on-accent, #f2f6f3); --bad: var(--p-bad, #a63d32); --bad-soft: var(--p-bad-soft, rgba(166,61,50,.12));
+    --warn: var(--p-warn, #8a5010); --warn-soft: var(--p-warn-soft, rgba(138,80,16,.12));
+    --info: var(--p-info, #4a6585); --info-soft: var(--p-info-soft, rgba(74,101,133,.13));
+    --font: var(--p-font, "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif);
+    --mono: var(--p-mono, "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace);
+    --raise: var(--p-raise, 9px 9px 20px var(--lo), -9px -9px 20px var(--hi));
+    --raise-sm: var(--p-raise-sm, 4px 4px 10px var(--lo), -4px -4px 10px var(--hi));
+    --press-sm: var(--p-press-sm, inset 3px 3px 6px var(--lo), inset -3px -3px 6px var(--hi));
+    --r-lg: var(--p-r-lg, 26px); --r: var(--p-r, 18px); --r-sm: var(--p-r-sm, 12px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: var(--p-bg, #1e2421); --ink: var(--p-ink, #dde6e0); --ink2: var(--p-ink2, #9aa8a0);
+      --hi: var(--p-hi, rgba(255,255,255,.05)); --lo: var(--p-lo, rgba(0,0,0,.5));
+      --edge: var(--p-edge, rgba(255,255,255,.04)); --track: var(--p-track, #151a17);
+      --accent: var(--p-accent, #8ec3a4); --accent-soft: var(--p-accent-soft, rgba(142,195,164,.14));
+      --on-accent: var(--p-on-accent, #13201a); --bad: var(--p-bad, #e5877b); --bad-soft: var(--p-bad-soft, rgba(229,135,123,.14));
+      --warn: var(--p-warn, #e0a458); --warn-soft: var(--p-warn-soft, rgba(224,164,88,.14));
+      --info: var(--p-info, #93b0d6); --info-soft: var(--p-info-soft, rgba(147,176,214,.14));
+    }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  body { padding: max(14px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom)); max-width: 680px; margin: 0 auto; }
+  a { color: inherit; text-decoration: none; }
+  header.poly-head { display: flex; align-items: center; gap: 12px; min-height: 52px; margin-bottom: 14px; }
+  header.poly-head h1 { font: 800 22px/1 var(--font); margin: 0; letter-spacing: -.02em; }
+  header.poly-head .sub { font: 600 13px/1.2 var(--font); color: var(--ink2); margin-top: 3px; }
+  header.poly-head .who { flex: 1; min-width: 0; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font: 800 11px/1 var(--font); letter-spacing: .08em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+  .chip.live { background: var(--bad-soft); color: var(--bad); }
+  .chip.sell { background: var(--warn-soft); color: var(--warn); }
+  .chip.info { background: var(--info-soft); color: var(--info); }
+  .chip.dim { background: var(--track); color: var(--ink2); }
+  .chip i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  section { margin: 0 0 16px; padding: 16px; border-radius: var(--r-lg); background: var(--bg); box-shadow: var(--raise); border: 1px solid var(--edge); }
+  h2 { font: 800 11px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin: 0 0 12px; display: flex; justify-content: space-between; align-items: center; }
+  h2 small { font: 600 11px/1 var(--font); letter-spacing: 0; text-transform: none; }
+  .empty { color: var(--ink2); font-size: 14px; font-weight: 600; padding: 6px 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0; background: none; box-shadow: none; border: 0; }
+  .tile { padding: 12px 8px 10px; border-radius: var(--r); box-shadow: var(--raise-sm); border: 1px solid var(--edge); text-align: center; min-width: 0; }
+  .tile b { display: block; font: 800 20px/1.1 var(--font); font-variant-numeric: tabular-nums; letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile span { display: block; font: 700 10px/1.2 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); margin-top: 5px; }
+  .up { color: var(--accent); } .down { color: var(--bad); }
+
+  .banner { margin: 0 0 14px; padding: 12px 14px; border-radius: var(--r-sm); background: var(--bad-soft); color: var(--bad); font: 600 13px/1.4 var(--font); }
+  .banner.note { background: var(--info-soft); color: var(--info); }
+
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .card { padding: 12px 14px; border-radius: var(--r); box-shadow: var(--press-sm); border: 1px solid var(--edge); }
+  .card .top { display: flex; align-items: flex-start; gap: 10px; }
+  .card .top .t { flex: 1; min-width: 0; font: 700 14px/1.3 var(--font); }
+  .card .top .t a:hover { text-decoration: underline; }
+  .card .meta { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 7px; font: 600 12.5px/1.4 var(--font); color: var(--ink2); }
+  .card .meta b { color: var(--ink); font-weight: 700; }
+  .card .decision { margin-top: 8px; font: 700 12.5px/1.3 var(--font); color: var(--ink2); }
+  .card .decision.good { color: var(--accent); }
+  .card .names { margin-top: 6px; font: 500 12px/1.5 var(--font); color: var(--ink2); }
+  .bar { position: relative; height: 10px; border-radius: 5px; background: var(--track); box-shadow: var(--press-sm); margin-top: 9px; overflow: hidden; }
+  .bar i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--accent); min-width: 4px; }
+  .bar i.sell { background: var(--warn); }
+  .bar em { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink2); opacity: .6; }
+  .outcome { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font: 800 12px/1.4 var(--font); margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; }
+  table { width: 100%; border-collapse: collapse; font: 600 13px/1.4 var(--font); }
+  td, th { padding: 7px 4px; text-align: left; border-bottom: 1px solid var(--edge); vertical-align: top; }
+  th { font: 700 10px/1.2 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
+  td.r, th.r { text-align: right; white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  .muted { color: var(--ink2); font-weight: 600; }
+  .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; font: 600 13px/1.4 var(--font); }
+  .kv div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--edge); padding: 5px 0; }
+  .kv span { color: var(--ink2); }
+  .kv b { font-variant-numeric: tabular-nums; }
+  footer { text-align: center; font: 600 12px/1.5 var(--font); color: var(--ink2); padding: 6px 0 0; }
+  code { font: 600 12px/1.4 var(--mono); background: var(--track); padding: 1px 5px; border-radius: 6px; }
+  @media (max-width: 420px) { .stats { grid-template-columns: repeat(2, 1fr); } .kv { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="poly-head">
+  <div class="who"><h1>Polybot</h1><div class="sub">Polymarket · trades where the leaderboard agrees</div></div>
+  <span class="chip" id="mode"><i></i>…</span>
+</header>
+<div id="banners"></div>
+<section class="stats" id="stats"></section>
+<section><h2>Where the leaders agree <small id="sigcount"></small></h2><div class="list" id="signals"><div class="empty">Loading…</div></div></section>
+<section><h2>Positions <small id="poscount"></small></h2><div id="positions"></div></section>
+<section><h2>Trades</h2><div id="trades"></div></section>
+<section><h2>Leaders watched <small id="leadcount"></small></h2><div id="leaders"></div></section>
+<section><h2>Setup</h2><div id="setup"></div></section>
+<footer id="foot"></footer>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function money(n, sign) { n = Number(n || 0); var s = (sign && n > 0 ? "+" : n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return s; }
+  function big(n) { n = Number(n || 0); var a = Math.abs(n); var s = a >= 1e6 ? (a / 1e6).toFixed(1) + "M" : a >= 1e3 ? (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "k" : a.toFixed(0); return (n < 0 ? "−" : "") + "$" + s; }
+  function cents(p) { return p == null ? "?" : Math.round(Number(p) * 100) + "¢"; }
+  function ago(iso) {
+    if (!iso) return ""; var s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (s < 60) return "just now"; if (s < 3600) return Math.round(s / 60) + " min ago";
+    if (s < 86400) return Math.round(s / 3600) + " h ago"; return Math.round(s / 86400) + " d ago";
+  }
+  function when(iso) { if (!iso) return ""; var d = new Date(iso); return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }
+  function link(s) { return s.event_slug ? "https://polymarket.com/event/" + encodeURIComponent(s.event_slug) : s.slug ? "https://polymarket.com/market/" + encodeURIComponent(s.slug) : "https://polymarket.com/"; }
+  function tone(n) { return n > 0 ? "up" : n < 0 ? "down" : ""; }
+
+  function render(d) {
+    var cfg = d.config || {}, live = d.mode === "live", t = d.totals || {};
+    var mode = $("mode"); mode.className = "chip " + (live ? "live" : ""); mode.innerHTML = "<i></i>" + (live ? "Live" : "Paper");
+    var bn = "";
+    (d.errors || []).slice(-2).forEach(function (e) { bn += '<div class="banner">' + esc(e.message) + ' <span class="muted">· ' + esc(ago(e.at)) + "</span></div>"; });
+    if (d.starting) bn += '<div class="banner note">Starting up: the first look at the leaderboard takes a minute.</div>';
+    else if (!live) bn += '<div class="banner note">Paper mode: every trade here is pretend. ' + (cfg.has_key ? "Set <code>POLY_LIVE=1</code> to trade for real." : "Add <code>POLY_PRIVATE_KEY</code> and <code>POLY_WALLET</code> to <code>.env</code>, then <code>POLY_LIVE=1</code>, to trade for real.") + "</div>";
+    $("banners").innerHTML = bn;
+
+    var agreeing = (d.signals || []).filter(function (s) { return s.side === "BUY" && s.score >= cfg.min_agree; }).length;
+    $("stats").innerHTML =
+      '<div class="tile"><b>' + (d.leaders || []).length + "</b><span>leaders</span></div>" +
+      '<div class="tile"><b>' + agreeing + "</b><span>agreeing now</span></div>" +
+      '<div class="tile"><b>' + (t.open || 0) + "</b><span>open</span></div>" +
+      '<div class="tile"><b class="' + tone(t.total) + '">' + money(t.total, true) + "</b><span>" + (live ? "P&amp;L" : "paper P&amp;L") + "</span></div>";
+
+    var sig = d.signals || [];
+    $("sigcount").textContent = sig.length ? "last " + cfg.lookback_hours + " h · " + cfg.min_agree + " must agree" : "";
+    $("signals").innerHTML = sig.length ? sig.map(function (s) {
+      var buy = s.side === "BUY", need = Math.max(0, cfg.min_agree - s.score), pct = Math.max(4, Math.min(100, s.score / cfg.min_agree * 100));
+      var dec = s.decision || "", good = /bought|sold/.test(dec);
+      if (s.closed && s.price != null) dec = (s.price >= 0.99 ? "resolved: won" : s.price <= 0.01 ? "resolved: lost" : dec) + " · leaders paid " + cents(s.avg_price);
+      return '<div class="card"><div class="top"><span class="chip ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span>" +
+        '<div class="t"><a href="' + esc(link(s)) + '" target="_blank" rel="noopener">' + esc(s.title || s.slug) + "</a>" + (s.outcome ? '<span class="outcome">' + esc(s.outcome) + "</span>" : "") + (s.holding ? ' <span class="chip info">held</span>' : "") + "</div></div>" +
+        '<div class="bar"><i class="' + (buy ? "" : "sell") + '" style="width:' + pct + '%"></i></div>' +
+        '<div class="meta"><span><b>' + s.agree.length + "</b> agree</span><span><b>" + s.disagree.length + "</b> against</span>" +
+        "<span>leaders paid <b>" + cents(s.avg_price) + "</b></span>" + (s.price != null ? "<span>" + (s.closed ? "closed at" : "now") + " <b>" + cents(s.price) + "</b></span>" : "") +
+        "<span>net <b>" + big(s.net_usd) + "</b></span><span>" + esc(ago(s.last_at)) + "</span></div>" +
+        '<div class="names">' + esc(s.agree.join(", ")) + (s.disagree.length ? ' <span class="muted">· against: ' + esc(s.disagree.join(", ")) + "</span>" : "") + "</div>" +
+        (dec ? '<div class="decision' + (good ? " good" : "") + '">→ ' + esc(dec) + "</div>" : "") + "</div>";
+    }).join("") : '<div class="empty">No outcome has two or more leaders behind it right now.</div>';
+
+    var pos = d.positions || [];
+    $("poscount").textContent = pos.length ? money(t.open_cost) + " in · " + money(t.open_value) + " now" : "";
+    $("positions").innerHTML = pos.length ? '<table><tr><th>Market</th><th class="r">Shares</th><th class="r">In → now</th><th class="r">P&amp;L</th></tr>' + pos.map(function (p) {
+      return "<tr><td><a href=\"" + esc(link(p)) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a><br><span class=\"muted\">" + esc(p.outcome) + " · " + esc(ago(p.opened_at)) + (p.mode === "paper" && live ? " · paper" : "") + (p.note ? " · " + esc(p.note) : "") + "</span></td>" +
+        '<td class="r num">' + Number(p.shares).toFixed(1) + '</td><td class="r num">' + cents(p.price) + " → " + cents(p.current_price) + '</td><td class="r num ' + tone(p.pnl) + '">' + money(p.pnl, true) + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">Nothing open.</div>';
+
+    var tr = d.trades || [];
+    $("trades").innerHTML = tr.length ? '<table><tr><th>When</th><th>What</th><th class="r">Shares @</th><th class="r">P&amp;L</th></tr>' + tr.map(function (x) {
+      var buy = x.side === "BUY";
+      return '<tr><td class="muted num">' + esc(when(x.at)) + '</td><td><span class="chip ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span> " + esc(x.title) + '<br><span class="muted">' + esc(x.outcome) + (x.mode ? " · " + esc(x.mode) : "") + (x.reason ? " · " + esc(x.reason) : buy ? " · " + x.agree + " agreed" : "") + "</span></td>" +
+        '<td class="r num">' + Number(x.shares).toFixed(1) + " @ " + cents(x.price) + '</td><td class="r num ' + (buy ? "muted" : tone(x.pnl)) + '">' + (buy ? money(x.cost) : money(x.pnl, true)) + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">No trades yet.</div>';
+
+    var ld = d.leaders || [];
+    $("leadcount").textContent = ld.length ? "top " + ld.length + " by profit · " + cfg.window : "";
+    $("leaders").innerHTML = ld.length ? '<table><tr><th>#</th><th>Trader</th><th class="r">Profit</th><th class="r">Fills</th></tr>' + ld.map(function (l) {
+      return '<tr><td class="muted num">' + l.rank + '</td><td><a href="https://polymarket.com/profile/' + esc(l.wallet) + '" target="_blank" rel="noopener">' + esc(l.name) + '</a></td><td class="r num up">' + big(l.pnl) + '</td><td class="r num muted">' + l.fills + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">Waiting for the leaderboard.</div>';
+
+    var a = d.account || {};
+    $("setup").innerHTML = '<div class="kv">' +
+      "<div><span>Leaderboard</span><b>top " + cfg.top_n + " · " + esc(cfg.window) + (cfg.category && cfg.category !== "overall" ? " · " + esc(cfg.category) : "") + "</b></div>" +
+      "<div><span>Agreement</span><b>" + cfg.min_agree + " leaders in " + cfg.lookback_hours + " h</b></div>" +
+      "<div><span>Counts from</span><b>" + money(cfg.min_leader_usd) + " net per leader</b></div>" +
+      "<div><span>Stake</span><b>" + money(cfg.stake_usd) + " a trade</b></div>" +
+      "<div><span>Price band</span><b>" + cents(cfg.min_price) + " – " + cents(cfg.max_price) + "</b></div>" +
+      "<div><span>Chase limit</span><b>+" + cents(cfg.max_above_leaders) + " over leaders</b></div>" +
+      "<div><span>Daily budget</span><b>" + money(cfg.daily_budget_usd) + " · " + money(t.spent_24h) + " used</b></div>" +
+      "<div><span>Open at most</span><b>" + cfg.max_open + "</b></div>" +
+      "<div><span>Follow sells</span><b>" + (cfg.follow_sells ? "yes" : "no") + "</b></div>" +
+      "<div><span>Checks every</span><b>" + Math.round(cfg.poll_seconds / 60) + " min</b></div>" +
+      (a.wallet_type ? "<div><span>Wallet</span><b>" + esc(cfg.wallet) + " · " + esc(a.wallet_type) + "</b></div>" : "") +
+      (a.balance != null ? "<div><span>pUSD</span><b>" + money(a.balance) + "</b></div>" : "") +
+      "</div>";
+    $("foot").textContent = d.updated_at ? "updated " + ago(d.updated_at) + " · next look " + when(d.next_run_at) : "";
+  }
+
+  function load() {
+    fetch("/api/status", { cache: "no-store" }).then(function (r) { return r.json(); }).then(render).catch(function () {
+      $("banners").innerHTML = '<div class="banner">Can’t reach the bot.</div>';
+    });
+  }
+  load();
+  setInterval(load, 60000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
+})();
+</script>
+</body>
+</html>

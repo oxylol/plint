@@ -31,6 +31,7 @@
     tailscale: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18",
     speed: "M12 14l4-4M3.3 19a9 9 0 1 1 17.4 0",
     tv: "M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 21h8M12 17v4M10 9l4 2.5-4 2.5z",
+    poly: "M3 17l6-6 4 4 8-9M15 6h6v6",
     cloud: "M17.5 19H7a5 5 0 1 1 1.1-9.9A6 6 0 0 1 19.5 11a4 4 0 0 1-2 8z",
     code: "M8 6l-6 6 6 6M16 6l6 6-6 6",
     chat: "M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z",
@@ -57,7 +58,8 @@
     ["speedtest", "speed", "Internet", "speed"],
     ["amp", "games", "Games", "games"],
     ["stremio", "stremio", "Stremio", "stremio"],
-    ["tv", "tv", "TV", "tv"]
+    ["tv", "tv", "TV", "tv"],
+    ["poly", "poly", "Polybot", "poly"]
   ];
 
   // Where the pill goes in each app's own header. First match wins.

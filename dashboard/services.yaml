@@ -25,6 +25,13 @@
         server: plint
         container: cnc-studio
 
+    - Polybot:
+        icon: mdi-chart-timeline-variant
+        href: https://poly.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Polymarket · trades where the leaders agree
+        server: plint
+        container: polybot
+
     - Stremio:
         icon: stremio.png
         href: https://stremio.{{HOMEPAGE_VAR_DOMAIN}}

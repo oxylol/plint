@@ -25,6 +25,7 @@ machine is this repository.
 | **backup.plint.net** | Kopia — nightly snapshots |
 | **speed.plint.net** | Speedtest Tracker — internet speed, four tests a day |
 | **tv.plint.net** | Plint TV — the Mac on the TV: a phone remote, and its own Claude |
+| **poly.plint.net** | Polybot — follows the Polymarket leaderboard, trades where the leaders agree |
 | *Tailscale* | remote access, Tailscale SSH, LAN subnet routing |
 | *Claude* | Claude Code on the server, controlled from the Claude app |
 
