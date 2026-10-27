@@ -42,6 +42,12 @@
   body { padding: max(14px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom)); max-width: 680px; margin: 0 auto; }
   a { color: inherit; text-decoration: none; }
   header.poly-head { display: flex; align-items: center; gap: 12px; min-height: 52px; margin-bottom: 14px; }
+  /* Phones: the Plint pill and the mode chip share the first row, the title sits below. */
+  @media (max-width: 520px) {
+    header.poly-head { flex-wrap: wrap; row-gap: 10px; }
+    header.poly-head .who { flex-basis: 100%; order: 3; }
+    header.poly-head #mode { margin-left: auto; }
+  }
   header.poly-head h1 { font: 800 22px/1 var(--font); margin: 0; letter-spacing: -.02em; }
   header.poly-head .sub { font: 600 13px/1.2 var(--font); color: var(--ink2); margin-top: 3px; }
   header.poly-head .who { flex: 1; min-width: 0; }
@@ -92,6 +98,8 @@
   .kv div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--edge); padding: 5px 0; }
   .kv span { color: var(--ink2); }
   .kv b { font-variant-numeric: tabular-nums; }
+  .more { all: unset; display: block; width: 100%; margin-top: 12px; padding: 13px 0; text-align: center; border-radius: var(--r-sm); box-shadow: var(--raise-sm); border: 1px solid var(--edge); font: 800 13px/1 var(--font); color: var(--accent); cursor: pointer; }
+  .more:active { box-shadow: var(--press-sm); }
   footer { text-align: center; font: 600 12px/1.5 var(--font); color: var(--ink2); padding: 6px 0 0; }
   code { font: 600 12px/1.4 var(--mono); background: var(--track); padding: 1px 5px; border-radius: 6px; }
   @media (max-width: 420px) { .stats { grid-template-columns: repeat(2, 1fr); } .kv { grid-template-columns: 1fr; } }
@@ -104,8 +112,8 @@
 </header>
 <div id="banners"></div>
 <section class="stats" id="stats"></section>
-<section><h2>Where the leaders agree <small id="sigcount"></small></h2><div class="list" id="signals"><div class="empty">Loading…</div></div></section>
 <section><h2>Positions <small id="poscount"></small></h2><div id="positions"></div></section>
+<section><h2>Where the leaders agree <small id="sigcount"></small></h2><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
 <section><h2>Trades</h2><div id="trades"></div></section>
 <section><h2>Leaders watched <small id="leadcount"></small></h2><div id="leaders"></div></section>
 <section><h2>Setup</h2><div id="setup"></div></section>
@@ -127,7 +135,9 @@
   function link(s) { return s.event_slug ? "https://polymarket.com/event/" + encodeURIComponent(s.event_slug) : s.slug ? "https://polymarket.com/market/" + encodeURIComponent(s.slug) : "https://polymarket.com/"; }
   function tone(n) { return n > 0 ? "up" : n < 0 ? "down" : ""; }
 
+  var last = null, showAll = false, SHOW = 8;
   function render(d) {
+    last = d;
     var cfg = d.config || {}, live = d.mode === "live", t = d.totals || {};
     var mode = $("mode"); mode.className = "chip " + (live ? "live" : ""); mode.innerHTML = "<i></i>" + (live ? "Live" : "Paper");
     var bn = "";
@@ -145,7 +155,10 @@
 
     var sig = d.signals || [];
     $("sigcount").textContent = sig.length ? "last " + cfg.lookback_hours + " h · " + cfg.min_agree + " must agree" : "";
-    $("signals").innerHTML = sig.length ? sig.map(function (s) {
+    var more = $("more");
+    more.hidden = sig.length <= SHOW;
+    more.textContent = showAll ? "Show fewer" : "Show all " + sig.length;
+    $("signals").innerHTML = sig.length ? sig.slice(0, showAll ? sig.length : SHOW).map(function (s) {
       var buy = s.side === "BUY", need = Math.max(0, cfg.min_agree - s.score), pct = Math.max(4, Math.min(100, s.score / cfg.min_agree * 100));
       var dec = s.decision || "", good = /bought|sold/.test(dec);
       if (s.closed && s.price != null) dec = (s.price >= 0.99 ? "resolved: won" : s.price <= 0.01 ? "resolved: lost" : dec) + " · leaders paid " + cents(s.avg_price);
@@ -202,6 +215,7 @@
       $("banners").innerHTML = '<div class="banner">Can’t reach the bot.</div>';
     });
   }
+  $("more").addEventListener("click", function () { showAll = !showAll; if (last) render(last); if (!showAll) $("signals").scrollIntoView({ block: "start" }); });
   load();
   setInterval(load, 60000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });

@@ -7,6 +7,7 @@ configured and POLY_LIVE=1. Without that, the same decisions are paper trades.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -30,6 +31,7 @@ from .store import Store, iso, utcnow
 
 log = logging.getLogger("polybot")
 CENT = Decimal("0.01")
+AUTO_NAME = re.compile(r"^0x[0-9a-fA-F]{40}(-\d+)?$")  # Polymarket's placeholder for traders without a name
 
 
 @dataclass
@@ -160,7 +162,8 @@ class Engine:
         leaders = []
         for e in page.items[: self.cfg.top_n]:
             w = str(e.wallet).lower()
-            leaders.append(Leader(w, e.user_name or _short(w), int(e.rank), Decimal(str(e.pnl)), Decimal(str(e.volume))))
+            name = e.user_name if e.user_name and not AUTO_NAME.match(e.user_name) else _short(w)
+            leaders.append(Leader(w, name, int(e.rank), Decimal(str(e.pnl)), Decimal(str(e.volume))))
         return leaders
 
     @staticmethod
