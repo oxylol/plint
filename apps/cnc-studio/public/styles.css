@@ -328,6 +328,25 @@ table.tools .src.reg { color: var(--accent); }
 .dialog h2 { margin: 0; font-size: 16px; }
 .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 12px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+
+/* ---------- projects (kept on the server) ---------- */
+.project-btn .proj-dot { display: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.project-btn.open-project { color: var(--text); }
+.project-btn.open-project .proj-dot { display: inline-block; }
+.project-btn.dirty .proj-dot { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+.project-btn #projectName { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.project-current { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--text-2); }
+.project-current b, .project-row b { color: var(--text); }
+.project-new { display: flex; gap: 6px; }
+.project-new input { flex: 1; min-width: 0; height: 30px; padding: 0 9px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 6px; }
+.project-list { display: flex; flex-direction: column; gap: 6px; max-height: min(50vh, 420px); overflow: auto; }
+.project-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; }
+.project-row.current { border-color: var(--accent); }
+.project-main { min-width: 0; }
+.project-main .muted { font-size: 11.5px; margin-top: 2px; }
+.project-acts { display: flex; gap: 4px; flex-shrink: 0; }
+.warn-text { color: var(--warn); }
+@media (max-width: 760px) { .project-row { flex-direction: column; align-items: stretch; } .project-acts { justify-content: flex-end; } }
 .export-dialog { width: min(760px, calc(100vw - 32px)); }
 .exp-preview { margin: 0; max-height: 42vh; overflow: auto; padding: 10px 12px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; font-family: var(--mono); font-size: 11.5px; line-height: 1.45; color: var(--text); white-space: pre; }
 .exp-check { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 12px; color: var(--text-2); }

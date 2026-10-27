@@ -64,6 +64,10 @@ see [DEPLOY.md](DEPLOY.md).
   cut and feed per rev; plus the removal rate and the feed spent in air. It shows in the DRO while playing, as a strip
   above the timeline (tap it to go there) and per tool in the Check tab. Claude gets the per-tool summary in every report
   and the line-by-line table with `inspect_part` (query "engagement").
+- **Projects.** *Projects* (top left) keeps jobs on the server under a name: the operations, subprograms and the target
+  model with its placement. Save the job as a new project or back into the open one, and open, rename or delete any of
+  them from any device; the button shows the open project's name, with a dot while it has unsaved changes. (Needs
+  `DATA_DIR`, see DEPLOY.md; *+ → Save job* still writes a `.cncjob.json` file for taking a job elsewhere.)
 - **Hide Claude.** Settings → *Hide Claude* takes everything Claude off the screen (the chat tab, the status pill, the
   API key field, *Ask Claude to fix these*) — CNC Studio is then a plain simulator. Separately, ☰ (top right) or × in
   the panel's tab row hides the whole side panel (Check, Tools, Stock and the chat) so the 3D view gets the room; ☰
@@ -147,6 +151,7 @@ node test/threads.mjs         # threads vs target models: cosmetic, modeled and 
 node test/engagement.mjs      # tool engagement of known cuts (slot, stepover, plunge, air, lathe depth of cut)
 node test/export.mjs          # export: standard content only, subprograms built in, same toolpath
 node test/store.mjs           # the work kept on the server (DATA_DIR)
+node test/projects.mjs        # projects kept on the server (DATA_DIR/projects)
 node test/real-path.mjs       # server ↔ Anthropic SDK request shape, against a local fake API
 node test/registers.mjs       # CncSimulator5 register import (needs CncSimulator5 installed)
 node test/register-sim.mjs    # the original's samples simulated with your own register

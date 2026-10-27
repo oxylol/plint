@@ -34,7 +34,7 @@ sudo chmod 600 /etc/cnc-studio.env
 | `ANTHROPIC_API_KEY` | The server's key. Every Claude request from the app is billed to it. |
 | `APP_PASSWORD`, `APP_USER` | Password-protects the whole site (browser login, user defaults to `cnc`). **Set it whenever the site is reachable from the internet**, otherwise anyone who finds it can use your API key. |
 | `CNCSIM_TOOLS_DIR` | Optional folder with `TurnTools.ini` / `MillTools.millreg` copied from CncSimulator5, offered by *Tools → Import from CncSimulator5*. |
-| `DATA_DIR` | Optional writable folder: the work (job, settings, tool libraries, target model) is kept there instead of in each browser, so every device opens the same job. A browser's older, different job is saved in `DATA_DIR/backup/` before the server's replaces it. An API key typed into Settings stays in the browser. |
+| `DATA_DIR` | Optional writable folder: the work (job, settings, tool libraries, target model) is kept there instead of in each browser, so every device opens the same job, and *Projects* (named jobs, in `DATA_DIR/projects/`) are kept there too. A browser's older, different job is saved in `DATA_DIR/backup/` before the server's replaces it. An API key typed into Settings stays in the browser. |
 
 ## 4. Run as a service
 

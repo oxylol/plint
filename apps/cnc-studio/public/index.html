@@ -23,6 +23,7 @@
       <button data-machine="lathe">Lathe</button>
     </div>
     <nav class="menu">
+      <button class="btn ghost project-btn" id="btnProjects" title="Projects kept on the server"><span class="proj-dot"></span><span id="projectName">Projects</span></button>
       <button class="btn ghost" id="btnNew" title="New program">New</button>
       <button class="btn ghost" id="btnOpen" title="Open .nc files (extra files become subprograms) or a saved job (.cncjob.json)">Open</button>
       <button class="btn ghost" id="btnSave" title="Download program (Ctrl+S)">Save</button>
@@ -204,6 +205,20 @@
   <input type="file" id="modelInput" accept=".stl,.obj,.3mf,.step,.stp,.iges,.igs,.brep" hidden>
   <input type="file" id="opFileInput" accept=".nc,.txt,.tap,.gcode,.ngc,.cnc,.mpf,.h,.min,.eia,.ptp" multiple hidden>
   <input type="file" id="subInput" accept=".nc,.txt,.tap,.gcode,.ngc,.cnc,.mpf,.h,.min,.eia,.ptp" multiple hidden>
+
+  <dialog id="projectsDlg" class="dialog projects-dialog">
+    <form method="dialog" class="dialog-body">
+      <h2>Projects</h2>
+      <p class="hint">A project is this job — its operations, subprograms and target model — kept on the server under a name, to open again from any device.</p>
+      <div class="project-current" id="projectCurrent"></div>
+      <div class="project-new">
+        <input type="text" id="projectNewName" placeholder="Project name" maxlength="120" autocomplete="off">
+        <button type="button" class="btn small primary" id="btnProjectSaveAs">Save as new project</button>
+      </div>
+      <div class="project-list" id="projectList"></div>
+      <div class="dialog-actions"><button class="btn" value="close">Close</button></div>
+    </form>
+  </dialog>
 
   <dialog id="settingsDlg" class="dialog">
     <form method="dialog" class="dialog-body">

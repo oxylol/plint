@@ -3,7 +3,8 @@
 // Environment: PORT (5178), HOST (127.0.0.1), ANTHROPIC_API_KEY, APP_PASSWORD / APP_USER (password-protect
 // the whole site — use it whenever the site is reachable from other machines), CNCSIM_TOOLS_DIR (a folder
 // with TurnTools.ini / MillTools.millreg to offer in "Import from CncSimulator5"), DATA_DIR (keep the work
-// — programs, jobs, settings, tool libraries, the target model — on the server instead of in each browser).
+// — programs, jobs, settings, tool libraries, the target model — and the saved projects on the server
+// instead of in each browser).
 import http from 'node:http';
 import { timingSafeEqual, createHash } from 'node:crypto';
 import { createReadStream, createWriteStream, readFileSync } from 'node:fs';
@@ -349,7 +350,7 @@ const dataPath = (...p) => join(DATA_DIR, ...p);
 const bumpRev = () => (storeRev = Math.max(Date.now(), storeRev + 1));
 
 async function initStore() {
-  for (const d of ['store', 'blob', 'backup']) await mkdir(dataPath(d), { recursive: true });
+  for (const d of ['store', 'blob', 'backup', 'projects']) await mkdir(dataPath(d), { recursive: true });
   for (const d of ['store', 'blob']) for (const f of await readdir(dataPath(d))) storeRev = Math.max(storeRev, (await stat(dataPath(d, f))).mtimeMs);
 }
 
@@ -421,6 +422,93 @@ async function handleStore(req, res, url) {
 }
 
 // --------------------------------------------------------------------------
+// Projects: a job (operations, subprograms, target model and its placement) saved under a name
+// in DATA_DIR/projects/<id>/ — project.json, plus model.bin for the model's triangles — so it
+// can be opened again from any device. GET /api/projects lists them (newest first); a project is
+// PUT whole, PATCHed to rename, DELETEd with its folder; its model is PUT/GET/DELETEd as a blob.
+// --------------------------------------------------------------------------
+const projectPath = (id, ...p) => dataPath('projects', id, ...p);
+const projectName = (v) => String(v ?? '').trim().slice(0, 120);
+async function readProject(id) {
+  try { return JSON.parse(await readFile(projectPath(id, 'project.json'), 'utf8')); } catch { return null; }
+}
+const projectSummary = (id, p) => ({
+  id, name: p.name, createdAt: p.createdAt, savedAt: p.savedAt,
+  ops: (p.ops || []).length, machines: [...new Set((p.ops || []).map((o) => o.machine))],
+  model: p.model?.name || null, subprograms: (p.subprograms || []).length,
+});
+
+async function handleProjects(req, res, url) {
+  const m = /^\/api\/projects(?:\/([^/]+))?(\/model)?$/.exec(url.pathname);
+  if (!m) return false;
+  const [, raw, wantModel] = m;
+  if (!raw) {
+    if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
+    const projects = [];
+    for (const id of await readdir(dataPath('projects'))) {
+      const p = await readProject(id);
+      if (p) projects.push(projectSummary(id, p));
+    }
+    projects.sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')));
+    return sendJson(res, 200, { projects });
+  }
+  const id = decodeURIComponent(raw);
+  if (!STORE_KEY.test(id)) return sendJson(res, 400, { error: 'bad project id' });
+  if (wantModel) {
+    const file = projectPath(id, 'model.bin');
+    if (req.method === 'GET') {
+      try { await stat(file); } catch { res.writeHead(404); res.end(); return true; }
+      res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Cache-Control': 'no-store' });
+      createReadStream(file).pipe(res);
+      return true;
+    }
+    if (req.method === 'PUT') { // may arrive before project.json on a first save
+      await mkdir(projectPath(id), { recursive: true });
+      await saveBody(req, file, BLOB_LIMIT);
+      return sendJson(res, 200, { ok: true });
+    }
+    if (req.method === 'DELETE') { await rm(file, { force: true }); return sendJson(res, 200, { ok: true }); }
+    return sendJson(res, 405, { error: 'method not allowed' });
+  }
+  const file = projectPath(id, 'project.json');
+  if (req.method === 'GET') {
+    const p = await readProject(id);
+    return p ? sendJson(res, 200, { id, ...p }) : sendJson(res, 404, { error: 'no such project' });
+  }
+  if (req.method === 'PUT') {
+    const body = await readJson(req, 40 * 1024 * 1024);
+    const name = projectName(body?.name);
+    if (!name || !Array.isArray(body.ops) || !body.ops.length) return sendJson(res, 400, { error: 'a project needs a name and at least one operation' });
+    const old = await readProject(id);
+    const now = new Date().toISOString();
+    const project = {
+      format: 'cnc-studio-project', version: 1, name, createdAt: old?.createdAt || now, savedAt: now,
+      ops: body.ops.map((o) => ({ fileName: String(o?.fileName || 'untitled.nc'), machine: o?.machine === 'lathe' ? 'lathe' : 'mill', text: String(o?.text || '') })),
+      subprograms: Array.isArray(body.subprograms) ? body.subprograms.map((s) => ({ name: String(s?.name || ''), text: String(s?.text || '') })) : [],
+      model: body.model && typeof body.model === 'object' ? body.model : null,
+    };
+    await mkdir(projectPath(id), { recursive: true });
+    await writeAtomic(file, JSON.stringify(project));
+    if (!project.model) await rm(projectPath(id, 'model.bin'), { force: true });
+    return sendJson(res, 200, { id, savedAt: now, createdAt: project.createdAt });
+  }
+  if (req.method === 'PATCH') { // rename
+    const p = await readProject(id);
+    if (!p) return sendJson(res, 404, { error: 'no such project' });
+    const name = projectName((await readJson(req, 1024 * 1024))?.name);
+    if (!name) return sendJson(res, 400, { error: 'a project needs a name' });
+    p.name = name;
+    await writeAtomic(file, JSON.stringify(p));
+    return sendJson(res, 200, { id, name });
+  }
+  if (req.method === 'DELETE') {
+    await rm(projectPath(id), { recursive: true, force: true });
+    return sendJson(res, 200, { ok: true });
+  }
+  return sendJson(res, 405, { error: 'method not allowed' });
+}
+
+// --------------------------------------------------------------------------
 // Installed CncSimulator5 tool registers, in the simulator's own search order
 // (%appdata%\CamModul6\Tools, %appdata%\CncSimulator5UserFiles\Tools, [ExeDir]\CncSimulator5UserFiles\Tools)
 // --------------------------------------------------------------------------
@@ -487,6 +575,10 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname.startsWith('/api/store') || url.pathname.startsWith('/api/blob') || url.pathname === '/api/backup') {
       if (!DATA_DIR) { sendJson(res, url.pathname === '/api/store' && req.method === 'GET' ? 200 : 404, { enabled: false }); return; }
       if (await handleStore(req, res, url) !== false) return;
+    }
+    if (url.pathname.startsWith('/api/projects')) {
+      if (!DATA_DIR) { sendJson(res, 404, { enabled: false }); return; }
+      if (await handleProjects(req, res, url) !== false) return;
     }
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.writeHead(405); res.end(); return;

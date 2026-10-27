@@ -12,6 +12,7 @@ import { EXAMPLES } from './examples.js';
 import { parseTurnToolsIni, parseMillReg, detectRegister } from './gcode/lathetools.js';
 import { decodeLegacyText, base64ToBytes } from './gcode/textdecode.js';
 import { openServerStore } from './serverstore.js';
+import { initProjects } from './projects.js';
 import { engagementReport, engagementAt } from './sim/engagement.js';
 import { exportJob } from './gcode/export.js';
 
@@ -512,28 +513,35 @@ function saveJob() {
   download(JSON.stringify(job, null, 1), jobFileName(), 'application/json');
 }
 function loadJob(job, name, { quiet = false } = {}) {
-  if (!job || !Array.isArray(job.ops) || !job.ops.length) { toast('Not a CNC Studio job file'); return; }
+  if (!job || !Array.isArray(job.ops) || !job.ops.length) { toast('Not a CNC Studio job file'); return false; }
   pause();
   state.ops = job.ops.map((o) => ({ id: uid(), fileName: o.fileName || 'untitled.nc', machine: o.machine === 'lathe' ? 'lathe' : 'mill', text: String(o.text || '') }));
   state.jobCache.clear();
   state.versions = [];
+  // a job is complete in itself: its subprograms and model replace what was loaded before
+  state.subprograms = [];
   if (Array.isArray(job.subprograms) && job.subprograms.length) addSubprograms(job.subprograms);
+  else { store.set('subs', state.subprograms); renderSubs(); }
   if (job.model?.tris) {
-    const bin = atob(job.model.tris);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const tris = new Float32Array(bytes.buffer);
+    let tris = job.model.tris;
+    if (!(tris instanceof Float32Array)) { // base64 in a .cncjob.json file
+      const bin = atob(tris);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      tris = new Float32Array(bytes.buffer);
+    }
     let mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
     for (let i = 0; i < tris.length; i += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], tris[i + k]); mx[k] = Math.max(mx[k], tris[i + k]); }
     const model = { name: job.model.name, format: job.model.format, tris, triCount: tris.length / 9, bounds: { min: mn, max: mx } };
     setModel(model, job.model.placement);
     idb.set('model', { ...model, placement: job.model.placement });
-  }
+  } else if (state.model) removeModel();
   state.active = -1;
   selectOp(0);
   for (const op of state.ops) state.versions.push({ id: ++state.versionSeq, opId: op.id, title: name || 'Job', text: op.text, source: 'user', at: new Date() });
   renderVersions();
   if (!quiet) toast(`Opened job with ${state.ops.length} operation${state.ops.length > 1 ? 's' : ''}`);
+  return true;
 }
 
 // ------------------------------------------------------------------ program / files / versions
@@ -587,6 +595,7 @@ $('#btnNew').onclick = () => {
     state.active = 0;
     renderOps();
   }
+  projects.detach();
   const tpl = state.machine === 'lathe'
     ? '%\nO0001 (NEW PROGRAM)\n(STOCK D40 L60)\nG18 G21 G40 G99\nG50 S3000\nT0101\nG96 S200 M03\nG00 X42. Z2. M08\n\nM30\n%\n'
     : '%\nO0001 (NEW PROGRAM)\n(STOCK X-50:50 Y-40:40 Z-20:0)\nG90 G17 G21 G40 G49 G80 G94\nT1 M06\nS8000 M03\nG54 G00 X0. Y0.\nG43 Z25. H01 M08\n\nM30\n%\n';
@@ -599,7 +608,7 @@ $('#fileInput').onchange = async (e) => {
   if (!files.length) return;
   const texts = await Promise.all(files.map(readTextFile));
   if (/\.json$/i.test(files[0].name)) {
-    try { loadJob(JSON.parse(texts[0]), files[0].name); } catch { toast('Could not read that job file'); }
+    try { if (loadJob(JSON.parse(texts[0]), files[0].name)) projects.detach(); } catch { toast('Could not read that job file'); }
     return;
   }
   if (files.length > 1) {
@@ -1783,6 +1792,7 @@ document.addEventListener('keydown', (e) => {
 
 // ------------------------------------------------------------------ boot
 renderSubs();
+const projects = initProjects({ enabled: !!serverStore, state, store, idb, syncEditorToOp, loadJob, toast, escapeHtml });
 refreshStatus();
 if (state.ops.some((op) => op.text.trim())) {
   for (const op of state.ops) if (op.text.trim()) state.versions.push({ id: ++state.versionSeq, opId: op.id, title: 'Restored session', text: op.text, source: 'user', at: new Date() });
@@ -1795,4 +1805,4 @@ if (state.ops.some((op) => op.text.trim())) {
 autoImportRegisters();
 renderTarget();
 idb.get('model').then((m) => { if (m?.tris && !state.model) setModel({ name: m.name, format: m.format, tris: m.tris, triCount: m.triCount, bounds: m.bounds, warnings: m.warnings }, m.placement); });
-window.cncStudio = { state, simulate, buildReport, buildContext, viewer, editor, agent, loadModelFile };
+window.cncStudio = { state, simulate, buildReport, buildContext, viewer, editor, agent, loadModelFile, projects };
