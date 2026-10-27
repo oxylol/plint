@@ -20,7 +20,8 @@ services:
       TZ: ${TZ}
       DATA_DIR: /data
       PORT: 8000
-      NTFY_URL: http://host.docker.internal:8070/plint
+      # ntfy only listens on the host's loopback, so talk to it over the ops network.
+      NTFY_URL: http://ntfy:80/plint
       NTFY_TOKEN: ${NTFY_TOKEN:-}
       # Account: leave empty to paper trade with public data only.
       POLY_PRIVATE_KEY: ${POLY_PRIVATE_KEY:-}
@@ -49,8 +50,6 @@ services:
       POLY_POLL_SECONDS: ${POLY_POLL_SECONDS:-300}
     volumes:
       - ../../data/polybot:/data
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 256m
@@ -61,7 +60,11 @@ services:
       retries: 3
     networks:
       - poly
+      - ops
 
 networks:
   poly:
     name: plint-poly
+  ops:
+    external: true
+    name: plint-ops
