@@ -33,6 +33,20 @@ EOF
   sudo -u plint -H claude auth login
 fi
 
+# ── Skills ───────────────────────────────────────────────────
+# Emil Kowalski's design-engineering skills (emil-design-eng, review-animations,
+# mobile-native, break-ui, …) for design reviews of the Plint Soft UI.
+if [[ ! -d /home/plint/.claude/skills/emil-design-eng ]]; then
+  say "Installing emilkowalski/skills"
+  tmp="$(mktemp -d)"
+  git clone -q --depth 1 https://github.com/emilkowalski/skills "$tmp/skills"
+  install -d -o plint -g plint /home/plint/.claude /home/plint/.claude/skills
+  cp -r "$tmp/skills/skills/." /home/plint/.claude/skills/
+  chown -R plint:plint /home/plint/.claude/skills
+  rm -rf "$tmp"
+fi
+ok "design skills (emilkowalski/skills)"
+
 # ── Service ──────────────────────────────────────────────────
 install -m 0644 "${PLINT_DIR}/systemd/plint-claude.service" /etc/systemd/system/plint-claude.service
 systemctl daemon-reload
