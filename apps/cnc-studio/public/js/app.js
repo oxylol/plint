@@ -1131,8 +1131,26 @@ $('.tabs').onclick = (e) => {
   $$('.tab').forEach((t) => t.classList.toggle('active', t === b));
   $$('.tab-panel').forEach((p) => p.classList.toggle('active', p.dataset.panel === b.dataset.tab));
 };
-function showTab(name) { $(`.tab[data-tab="${name}"]`).click(); }
-$('#btnPanel').onclick = () => document.body.classList.toggle('panel-open');
+function showTab(name) { $(`.tab[data-tab="${name}"]`).click(); if (!narrowScreen.matches) setSideHidden(false); }
+
+// hide/show the side pane (Claude, Check, Tools, Stock). Wide screens: the column goes away and the 3D view takes
+// the room, remembered across reloads. Narrow screens: the pane is a drawer, so the same buttons open/close it.
+const narrowScreen = window.matchMedia('(max-width: 1180px)');
+function setSideHidden(hidden) {
+  document.body.classList.toggle('side-hidden', hidden);
+  $('#btnPanel').setAttribute('aria-pressed', String(!hidden));
+  $('#btnPanel').title = hidden ? 'Show Claude panel' : 'Hide Claude panel';
+  store.set('sideHidden', hidden);
+}
+$('#btnPanel').onclick = () => {
+  if (narrowScreen.matches) document.body.classList.toggle('panel-open');
+  else setSideHidden(!document.body.classList.contains('side-hidden'));
+};
+$('#btnHidePanel').onclick = () => {
+  if (narrowScreen.matches) document.body.classList.remove('panel-open');
+  else setSideHidden(true);
+};
+setSideHidden(store.get('sideHidden', false));
 
 // ------------------------------------------------------------------ target model (3D part)
 async function loadModelFile(file) {
