@@ -54,6 +54,7 @@ const SETTINGS_DEFAULTS = {
   model: 'claude-opus-5-5', effort: 'high', apiKey: '',
   rapidMill: DEFAULT_SETTINGS.rapidMill, rapidLathe: DEFAULT_SETTINGS.rapidLathe, toolChangeTime: DEFAULT_SETTINGS.toolChangeTime,
   maxRpm: DEFAULT_SETTINGS.maxRpm, resolution: 420, latheRadiusMode: false, blockDelete: false, autoSim: true,
+  hideClaude: false,
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -1131,7 +1132,20 @@ $('.tabs').onclick = (e) => {
   $$('.tab').forEach((t) => t.classList.toggle('active', t === b));
   $$('.tab-panel').forEach((p) => p.classList.toggle('active', p.dataset.panel === b.dataset.tab));
 };
-function showTab(name) { $(`.tab[data-tab="${name}"]`).click(); if (!narrowScreen.matches) setSideHidden(false); }
+function showTab(name) {
+  if (name === 'claude' && state.settings.hideClaude) name = 'check';
+  $(`.tab[data-tab="${name}"]`).click();
+  if (!narrowScreen.matches) setSideHidden(false);
+}
+
+// Settings → Hide Claude: no chat tab, status pill, API key field or "Ask Claude" buttons — a plain simulator.
+function applyClaudeVisibility() {
+  const off = !!state.settings.hideClaude;
+  document.body.classList.toggle('no-claude', off);
+  $('#btnHidePanel').title = off ? 'Hide side panel' : 'Hide Claude panel';
+  setSideHidden(document.body.classList.contains('side-hidden'));
+  if (off && $('.tab[data-tab="claude"]').classList.contains('active')) showTab('check');
+}
 
 // hide/show the side pane (Claude, Check, Tools, Stock). Wide screens: the column goes away and the 3D view takes
 // the room, remembered across reloads. Narrow screens: the pane is a drawer, so the same buttons open/close it.
@@ -1139,7 +1153,8 @@ const narrowScreen = window.matchMedia('(max-width: 1180px)');
 function setSideHidden(hidden) {
   document.body.classList.toggle('side-hidden', hidden);
   $('#btnPanel').setAttribute('aria-pressed', String(!hidden));
-  $('#btnPanel').title = hidden ? 'Show Claude panel' : 'Hide Claude panel';
+  const what = state.settings.hideClaude ? 'side panel' : 'Claude panel';
+  $('#btnPanel').title = (hidden ? 'Show ' : 'Hide ') + what;
   store.set('sideHidden', hidden);
 }
 $('#btnPanel').onclick = () => {
@@ -1151,6 +1166,7 @@ $('#btnHidePanel').onclick = () => {
   else setSideHidden(true);
 };
 setSideHidden(store.get('sideHidden', false));
+applyClaudeVisibility();
 
 // ------------------------------------------------------------------ target model (3D part)
 async function loadModelFile(file) {
@@ -1162,7 +1178,7 @@ async function loadModelFile(file) {
     const pl = defaultPlacement(model, state.ops[0].machine);
     setModel(model, pl);
     idb.set('model', { name: model.name, format: model.format, tris: model.tris, triCount: model.triCount, bounds: model.bounds, warnings: model.warnings, placement: pl });
-    toast(`Target: ${model.name} — Claude now gets its measured features and a comparison with every operation`, 5000);
+    toast(state.settings.hideClaude ? `Target: ${model.name} — every operation is now compared with it` : `Target: ${model.name} — Claude now gets its measured features and a comparison with every operation`, 5000);
     for (const w of model.warnings || []) toast(w);
   } catch (e) {
     console.error(e);
@@ -1201,7 +1217,9 @@ function renderTarget() {
   $('#btnStockFromModel').hidden = !t;
   $('#targetCompare').hidden = !t;
   if (!t) {
-    $('#targetInfo').innerHTML = 'No model loaded. Load (or drop on the chat) an STL, STEP, IGES, OBJ or 3MF of the finished part: Claude gets its measured features, and every operation is compared with it — no screenshots needed.';
+    $('#targetInfo').innerHTML = state.settings.hideClaude
+      ? 'No model loaded. Load an STL, STEP, IGES, OBJ or 3MF of the finished part: every operation is compared with it.'
+      : 'No model loaded. Load (or drop on the chat) an STL, STEP, IGES, OBJ or 3MF of the finished part: Claude gets its measured features, and every operation is compared with it — no screenshots needed.';
     return;
   }
   const b = t.bounds, sz = [0, 1, 2].map((k) => n1(b.max[k] - b.min[k]));
@@ -1691,6 +1709,8 @@ $('#quickChips').onclick = (e) => {
 function saveSettings() { store.set('settings', state.settings); }
 function openSettings() {
   const s = state.settings;
+  $('#setHideClaude').checked = !!s.hideClaude;
+  $('#apiKeyField').hidden = !!s.hideClaude;
   $('#apiKey').value = s.apiKey || '';
   $('#setRapidMill').value = s.rapidMill;
   $('#setRapidLathe').value = s.rapidLathe;
@@ -1702,6 +1722,7 @@ function openSettings() {
   $('#settingsDlg').showModal();
 }
 $('#btnSettings').onclick = openSettings;
+$('#setHideClaude').onchange = (e) => { $('#apiKeyField').hidden = e.target.checked; };
 $('#claudeStatus').onclick = openSettings;
 $('#settingsDlg').addEventListener('close', () => {
   const s = state.settings;
@@ -1713,7 +1734,10 @@ $('#settingsDlg').addEventListener('close', () => {
   s.resolution = Math.min(900, Math.max(100, Number($('#setResolution').value) || 420));
   s.latheRadiusMode = $('#setRadiusMode').checked;
   s.blockDelete = $('#setBlockDelete').checked;
+  const wasHidden = !!s.hideClaude;
+  s.hideClaude = $('#setHideClaude').checked;
   saveSettings();
+  if (wasHidden !== s.hideClaude) { applyClaudeVisibility(); renderTarget(); if (!s.hideClaude) showTab('claude'); }
   refreshStatus();
   simulate({ time: 'keep' });
 });

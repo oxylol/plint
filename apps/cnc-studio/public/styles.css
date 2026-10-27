@@ -343,6 +343,9 @@ table.tools .src.reg { color: var(--accent); }
 .img-dialog img { width: 100%; border-radius: 8px; }
 .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 50; background: #26303c; border: 1px solid var(--line-2); padding: 8px 14px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: 12.5px; }
 
+/* ---------- Settings → Hide Claude: nothing Claude-related on screen ---------- */
+body.no-claude #claudeStatus, body.no-claude .tab[data-tab="claude"], body.no-claude .tab-panel[data-panel="claude"], body.no-claude .ask-fix { display: none !important; }
+
 /* ---------- Claude panel hidden (wide screens; narrow ones have the drawer below) ---------- */
 @media (min-width: 1181px) {
   body.side-hidden .layout { grid-template-columns: minmax(300px, 30%) 1fr; }

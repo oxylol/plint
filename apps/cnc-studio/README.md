@@ -64,8 +64,10 @@ see [DEPLOY.md](DEPLOY.md).
   cut and feed per rev; plus the removal rate and the feed spent in air. It shows in the DRO while playing, as a strip
   above the timeline (tap it to go there) and per tool in the Check tab. Claude gets the per-tool summary in every report
   and the line-by-line table with `inspect_part` (query "engagement").
-- **Hide Claude.** ☰ (top right) or × in the panel's tab row hides the side panel (Claude, Check, Tools, Stock) so the
-  3D view gets the room; ☰ brings it back, and the choice is remembered.
+- **Hide Claude.** Settings → *Hide Claude* takes everything Claude off the screen (the chat tab, the status pill, the
+  API key field, *Ask Claude to fix these*) — CNC Studio is then a plain simulator. Separately, ☰ (top right) or × in
+  the panel's tab row hides the whole side panel (Check, Tools, Stock and the chat) so the 3D view gets the room; ☰
+  brings it back. Both choices are remembered.
 - **Export for the machine.** *Export* builds one NC program with standard content only: CNC Studio's directives
   (STOCK, TOOL, SETUP, ORIENT, ZERO, VISE, CHUCK, ROTARY, `$Set…`) are removed, comments become plain upper-case ASCII,
   M98 subprograms are built in (appended as O programs when they jump), and several operations of one machine are joined

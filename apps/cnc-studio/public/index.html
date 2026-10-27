@@ -208,7 +208,8 @@
   <dialog id="settingsDlg" class="dialog">
     <form method="dialog" class="dialog-body">
       <h2>Settings</h2>
-      <label class="field">Anthropic API key
+      <label class="check" title="No chat tab, status pill, API key or “Ask Claude” buttons: CNC Studio as a plain simulator"><input type="checkbox" id="setHideClaude"> Hide Claude (chat, status, API key — a plain simulator)</label>
+      <label class="field" id="apiKeyField">Anthropic API key
         <input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-…  (not needed if the server has ANTHROPIC_API_KEY)">
         <span class="hint" id="keyHint">Stored only in this browser and sent only to the local CNC Studio server.</span>
       </label>
