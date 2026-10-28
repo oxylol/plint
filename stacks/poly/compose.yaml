@@ -52,7 +52,7 @@ services:
       POLY_POLL_SECONDS: ${POLY_POLL_SECONDS:-300}
       # Extra consensus setups to compare, each with its own paper book:
       # name:setting=value,setting=value;name2:... (settings are POLY_* names without the prefix).
-      POLY_VARIANTS: ${POLY_VARIANTS:-month:window=month;day:window=day;all:window=all}
+      POLY_VARIANTS: ${POLY_VARIANTS:-week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4}
       # Strategy 2, underdog: buy the cheaper side of a game at kickoff, sell into the bounce.
       UD_ENABLED: ${UD_ENABLED:-1}
       UD_SPORTS: ${UD_SPORTS:-}

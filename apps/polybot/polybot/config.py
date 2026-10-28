@@ -140,7 +140,7 @@ class Config:
             follow_sells=_bool("POLY_FOLLOW_SELLS", True),
             auto_redeem=_bool("POLY_AUTO_REDEEM", True),
             poll_seconds=_int("POLY_POLL_SECONDS", 300),
-            variants=_str("POLY_VARIANTS", "month:window=month;day:window=day;all:window=all"),
+            variants=_str("POLY_VARIANTS", "week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4"),
             ud_enabled=_bool("UD_ENABLED", True),
             ud_tick_seconds=_int("UD_TICK_SECONDS", 30),
             ud_lookahead_hours=float(_str("UD_LOOKAHEAD_HOURS", "3")),

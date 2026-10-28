@@ -25,10 +25,11 @@ Follow the **leaderboard**. Every five minutes the bot
 `POLY_VARIANTS` runs extra copies of the consensus strategy with some settings
 changed, each with its own paper book, so the page can compare them. The
 syntax is `name:setting=value,setting=value;name2:...` where the settings are
-the `POLY_*` names without the prefix. The default compares leaderboard windows:
+the `POLY_*` names without the prefix. The default compares the four
+leaderboard windows, each at the base threshold and at four agreeing:
 
 ```
-POLY_VARIANTS=month:window=month;day:window=day;all:window=all
+POLY_VARIANTS=week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4
 ```
 
 Other ideas: `week4:min_agree=4` (a lower bar), `top50:top_n=50` (a bigger
@@ -118,7 +119,7 @@ Consensus:
 | `POLY_FOLLOW_SELLS` | `1` | sell when the leaders sell |
 | `POLY_AUTO_REDEEM` | `1` | claim winnings (needs the Relayer key) |
 | `POLY_POLL_SECONDS` | `300` | how often to look |
-| `POLY_VARIANTS` | `month:window=month;day:window=day;all:window=all` | extra setups to compare, see above |
+| `POLY_VARIANTS` | windows × thresholds, see above | extra setups to compare |
 
 Underdog:
 
