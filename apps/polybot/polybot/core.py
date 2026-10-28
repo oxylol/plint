@@ -168,13 +168,22 @@ class Core:
             self._markets[str(m.condition_id)] = (utcnow(), m)
 
     @staticmethod
-    def not_tradeable(m, now: datetime, min_hours_to_end: float = 0) -> str | None:
+    def end_of(m, by_date: bool = False) -> datetime | None:
+        """The market's end; with by_date, midnight UTC of its end date, which is how the research data sees it."""
+        if not m.state.end_date:
+            return None
+        end = aware(m.state.end_date)
+        return end.replace(hour=0, minute=0, second=0, microsecond=0) if by_date else end
+
+    @classmethod
+    def not_tradeable(cls, m, now: datetime, min_hours_to_end: float = 0, end_by_date: bool = False) -> str | None:
         st = m.state
         if st.closed or st.archived:
             return "market is closed"
         if st.active is False or st.accepting_orders is False or st.enable_order_book is False:
             return "market is not accepting orders"
-        if min_hours_to_end and st.end_date and aware(st.end_date) - now < timedelta(hours=min_hours_to_end):
+        end = cls.end_of(m, end_by_date)
+        if min_hours_to_end and end and end - now < timedelta(hours=min_hours_to_end):
             return "market ends too soon"
         return None
 

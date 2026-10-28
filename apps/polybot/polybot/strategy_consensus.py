@@ -57,6 +57,7 @@ class ConsensusParams:
     no_sports: bool = False      # skip sports markets (the data says copying them loses)
     only: str = ""               # trade only these market types, comma-separated (weather, politics, …); empty = all
     max_per_day: int = 0         # buys per rolling day at most (0 = only the daily budget limits it)
+    end_by_date: bool = False    # measure "time to the end" against midnight UTC of the end date, as the research data does
     overridden: frozenset = frozenset()  # settings given explicitly in POLY_VARIANTS
 
     @classmethod
@@ -242,7 +243,8 @@ class ConsensusStrategy:
             pol = self.model.policy
             defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
                         "no_sports": not pol.get("sports", True), "min_price": Decimal(str(pol.get("min_price", 0.05))),
-                        "max_price": Decimal(str(pol.get("max_price", 0.95))), "min_hours_to_end": 24 * float(pol.get("min_days", 0.5))}
+                        "max_price": Decimal(str(pol.get("max_price", 0.95))), "min_hours_to_end": 24 * float(pol.get("min_days", 0.5)),
+                        "end_by_date": True}
             self.p = params = replace(params, **{k: v for k, v in defaults.items() if k not in params.overridden})
         self._records = {}
         self._sizes: dict[str, float] = {}
@@ -310,8 +312,9 @@ class ConsensusStrategy:
             days, neg_risk = None, False
             try:
                 m = self.core.market(sig.condition_id, sig.slug)
-                if m is not None and m.state.end_date:
-                    days = max(0.0, (aware(m.state.end_date) - sig.last_at).total_seconds() / 86400)
+                end = self.core.end_of(m, self.p.end_by_date) if m is not None else None
+                if end is not None:
+                    days = max(0.0, (end - sig.last_at).total_seconds() / 86400)
                 if m is not None:
                     neg_risk = bool(m.state.neg_risk)
             except Exception:
@@ -486,7 +489,7 @@ class ConsensusStrategy:
         m = core.market(sig.condition_id, sig.slug)
         if m is None:
             return skip("market not found")
-        why = core.not_tradeable(m, now, p.min_hours_to_end)
+        why = core.not_tradeable(m, now, p.min_hours_to_end, p.end_by_date)
         if why:
             return skip(why)
         if p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
