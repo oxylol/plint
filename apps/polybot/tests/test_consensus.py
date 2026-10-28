@@ -64,6 +64,16 @@ class ConsensusTests(unittest.TestCase):
         self.assertEqual(find_signals(trades, min_leader_usd=MIN, min_show=1), [])
         self.assertNotEqual(trades[0].key, trades[1].key)
 
+    def test_weights_and_conviction(self):
+        trades = [trade("w1", "BUY", size="250", price="0.40"), trade("w2", "BUY", size="25", price="0.40"), trade("w3", "BUY", asset="B", price="0.60")]
+        plain = next(s for s in find_signals(trades, min_leader_usd=MIN, min_show=1) if s.asset_id == "A")
+        self.assertEqual((plain.agree, plain.disagree, plain.score, plain.weight), (["w1"], ["w3"], 0, 0.0))  # w2's $10 is noise at $25
+        self.assertEqual(plain.stance, {"w1": Decimal("100"), "w3": Decimal("-60")})
+        weighted = next(s for s in find_signals(trades, min_leader_usd=Decimal(5), weights={"w1": 1.4, "w2": 0.6, "w3": 1.0}, sizes={"w1": 50, "w2": 50, "w3": 60}) if s.asset_id == "A")
+        # w1: 1.4 × min(2, 100/50) = 2.8; w2: 0.6 × max(0.5, 10/50) = 0.3; w3 against: 1.0 × 1 = 1.0
+        self.assertEqual(weighted.weight, 2.1)
+        self.assertEqual(weighted.agree, ["w1", "w2"])
+
     def test_sorted_strongest_first(self):
         trades = [trade(f"w{i}", "BUY") for i in range(5)] + [trade(f"v{i}", "BUY", asset="C", cid="c2") for i in range(2)]
         sigs = find_signals(trades, min_leader_usd=MIN)

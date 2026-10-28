@@ -66,7 +66,7 @@ host network and proxies to `localhost:<port>`:
 | speed | 8075 | Speedtest Tracker |
 | table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
 | cnc | 5178 | CNC Studio (G-code simulator + Claude), no login, key `CNC_ANTHROPIC_API_KEY`; work in `data/cnc-studio` |
-| poly | 5190 | Polybot: Polymarket strategies compared on one page. "Consensus" buys what the top traders agree on (`POLY_*`; `POLY_VARIANTS` runs extra setups such as other leaderboard windows), "underdog" buys the cheaper side of a game at kickoff and sells into the bounce (`UD_*`). Paper mode until `POLY_PRIVATE_KEY`, `POLY_WALLET` and `POLY_LIVE=1` are in `.env` (apps/polybot/README.md); book in `data/polybot` |
+| poly | 5190 | Polybot: Polymarket strategies compared on one page. "Consensus" buys what the top traders agree on (`POLY_*`; `POLY_VARIANTS` runs extra setups such as other leaderboard windows), "credible"/"smart" copy only traders who pass credibility rules (`CR_*`), "underdog" buys the cheaper side of a game at kickoff and sells into the bounce (`UD_*`). Paper mode until `POLY_PRIVATE_KEY`, `POLY_WALLET` and `POLY_LIVE=1` are in `.env` (apps/polybot/README.md); book in `data/polybot` |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 
 ## How to do things

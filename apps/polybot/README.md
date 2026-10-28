@@ -25,17 +25,55 @@ Follow the **leaderboard**. Every five minutes the bot
 `POLY_VARIANTS` runs extra copies of the consensus strategy with some settings
 changed, each with its own paper book, so the page can compare them. The
 syntax is `name:setting=value,setting=value;name2:...` where the settings are
-the `POLY_*` names without the prefix. The default compares the four
-leaderboard windows, each at the base threshold and at four agreeing:
+the `POLY_*` names without the prefix. The built-in set (used when
+`POLY_VARIANTS` is empty) compares the four leaderboard windows, each at the
+base threshold and at four agreeing, plus the two credible-pack setups below:
 
 ```
-POLY_VARIANTS=week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4
+week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4;credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,label=Credible pack;smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,label=Smart money
 ```
 
 Other ideas: `week4:min_agree=4` (a lower bar), `top50:top_n=50` (a bigger
 pack), `politics:category=politics` (one category's board),
 `fast:lookback_hours=6,min_agree=3`. Leaders and fills are fetched once and
 shared, so variants are cheap. The base setup is always called `consensus`.
+
+### Credible pack: only take advice from traders worth copying
+
+A leaderboard ranks by profit, and profit comes from three kinds of trader a
+copier cannot use: in-game sports scalpers (the edge is gone minutes later),
+market makers (the profit is the spread, not a view) and one-bet whales. Setups
+with `pack=1` therefore measure the top `CR_POOL` of their board every
+`CR_REFRESH_HOURS` (closed positions, a week of fills, account age) and keep
+the `CR_PACK_SIZE` most credible traders: active now (`CR_MIN_FILLS_7D`,
+`CR_MAX_IDLE_HOURS`), a real history (`CR_MIN_CLOSED` closed positions,
+account ≥ `CR_MIN_AGE_DAYS` days), profit factor ≥ `CR_MIN_PROFIT_FACTOR`,
+win rate ≥ `CR_MIN_WIN_RATE`, best position ≤ `CR_MAX_TOP_SHARE` of the
+profit, median hold ≥ `CR_MIN_HOLD_HOURS`, and profit ≥ `CR_MIN_EDGE` per
+dollar of volume. Each gets a score (profit factor, win rate, return on cost,
+spread of profit, length of history) and a vote weight of ½ + score. A vote is
+then weight × conviction, where conviction is the size of this bet relative to
+the trader's usual position (capped at ½–2). The page lists who passed, who
+did not and why.
+
+Two such setups run by default:
+
+- **Credible pack** (`credible`): the monthly board's credible traders, acting
+  when at least two agree and the weighted agreement minus dissent reaches
+  2.5, on markets with 12 hours or more to go, with a 48-hour lookback.
+- **Smart money** (`smart`): my own system. One credible trader is enough
+  when the bet is a *fresh* conviction entry (they had at most a quarter of it
+  before the window), weighted 1.5 or more. Trust in each trader then adapts:
+  a copied position that closes with a profit raises their weight by 10%, a
+  loss lowers it by 20%, and below 0.5 they are muted. The page's "Who was
+  worth following" table shows the result per trader. The idea: real edge in
+  prediction markets is mostly idiosyncratic, one informed trader at a time,
+  so waiting for a crowd mostly selects in-game sports; a fresh, large bet by
+  someone with a proven record, caught early, is the better signal.
+
+Pack options for `POLY_VARIANTS`: `pack=1`, `pool=`, `min_weight=`,
+`fresh_only=1`, `adaptive_trust=1`, `max_hold_days=` (sell what is still open
+after that many days; 0 holds to resolution).
 
 ## Strategy 2 · Underdog
 
@@ -119,7 +157,13 @@ Consensus:
 | `POLY_FOLLOW_SELLS` | `1` | sell when the leaders sell |
 | `POLY_AUTO_REDEEM` | `1` | claim winnings (needs the Relayer key) |
 | `POLY_POLL_SECONDS` | `300` | how often to look |
-| `POLY_VARIANTS` | windows × thresholds, see above | extra setups to compare |
+| `POLY_VARIANTS` | the built-in set above | extra setups to compare |
+| `CR_POOL` / `CR_PACK_SIZE` / `CR_REFRESH_HOURS` | `80` / `12` / `6` | credible pack: how many to measure, keep, how often |
+| `CR_MIN_FILLS_7D` / `CR_MAX_IDLE_HOURS` | `10` / `72` | active right now |
+| `CR_MIN_CLOSED` / `CR_MIN_AGE_DAYS` | `30` / `30` | a real history |
+| `CR_MIN_PROFIT_FACTOR` / `CR_MIN_WIN_RATE` | `1.3` / `0.40` | quality of that history |
+| `CR_MAX_TOP_SHARE` | `0.50` | not one lucky bet |
+| `CR_MIN_HOLD_HOURS` / `CR_MIN_EDGE` | `12` / `0.02` | not an in-game scalper or a market maker |
 
 Underdog:
 
@@ -145,7 +189,8 @@ Change a value, then `plint restart poly`.
 ## Files
 
 - `polybot/core.py` — Polymarket calls, paper and live orders, resting sells, settlement, fees
-- `polybot/consensus.py` + `strategy_consensus.py` — the agreement logic (pure, tested) and its strategy
+- `polybot/consensus.py` + `strategy_consensus.py` — the agreement logic (pure, tested) and its strategy, variants included
+- `polybot/credibility.py` + `pack.py` — who is worth copying (pure rules, tested) and the measuring of a board
 - `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
 - `polybot/runner.py` — runs both on their own clocks, writes the page's JSON
 - `polybot/store.py` — `data/polybot/state.json`, `trades.jsonl`, `status.json`

@@ -8,6 +8,7 @@ from decimal import Decimal
 from .config import Config, parse_variants
 from .core import Core
 from .notify import Notifier
+from .pack import CrediblePack
 from .store import Store, iso
 from .strategy_consensus import ConsensusParams, ConsensusStrategy, LeaderFeed
 from .strategy_underdog import UnderdogStrategy
@@ -24,7 +25,17 @@ class Runner:
         params = [base] + [base.variant(name, overrides) for name, overrides in parse_variants(cfg.variants)]
         self.feed = LeaderFeed(self.core, keep_hours=max(p.lookback_hours for p in params),
                                board_ttl=min(p.poll_seconds for p in params))
-        self.consensus = [ConsensusStrategy(self.core, p, self.feed) for p in params]
+        self.packs: dict[tuple, CrediblePack] = {}
+        self.consensus = []
+        for p in params:
+            pack = None
+            if p.pack:
+                key = (p.window, p.category, p.pool)
+                pack = self.packs.get(key)
+                if pack is None:
+                    pack = self.packs[key] = CrediblePack(self.core, cfg.rules(), window=p.window, category=p.category,
+                                                          pool=p.pool, size=cfg.cr_pack_size, refresh_hours=cfg.cr_refresh_hours)
+            self.consensus.append(ConsensusStrategy(self.core, p, self.feed, pack))
         self.underdog = UnderdogStrategy(self.core)
         self.strategies = [*self.consensus, self.underdog]
         self.last_run: dict[str, datetime] = {}
@@ -108,13 +119,15 @@ class Runner:
             "mode": core.mode,
             "config": cfg.public(),
             "account": {**core.account, "balance": float(core.balance) if core.balance is not None else None},
-            "variants": [self._consensus_status.get(s.name, {"name": s.name, "label": s.label, "params": s.p.public(),
-                                                              "leaders": [], "fills": 0, "signals": []}) for s in self.consensus],
+            "variants": [self._consensus_status.get(s.name, {"name": s.name, "label": s.label, "params": s.p.public(), "note": s.note,
+                                                              "leaders": [], "fills": 0, "signals": [], "followed": [],
+                                                              **({"pack": s.pack.key} if s.pack else {})}) for s in self.consensus],
             "underdog": self.underdog.status(now),
             "positions": positions,
             "trades": self.store.recent_trades(40),
             "totals": self.store.totals(now),
             "strategies": strategies,
             "labels": labels,
+            "packs": {"|".join(map(str, k)): v.status() for k, v in self.packs.items()},
             "errors": core.errors[-5:],
         }

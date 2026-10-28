@@ -130,7 +130,8 @@
 <section><h2>Underdog · games around kickoff <small id="udnote"></small></h2><div id="games"></div></section>
 <section><h2>Consensus · where the leaders agree <small id="sigcount"></small></h2><div class="picker" id="picker"></div><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
 <section><h2>Trades</h2><div id="trades"></div></section>
-<section><h2>Leaders watched <small id="leadcount"></small></h2><div id="leaders"></div></section>
+<section><h2>Leaders watched <small id="leadcount"></small></h2><div id="leadnote"></div><div id="leaders"></div></section>
+<section id="followedsec" hidden><h2>Who was worth following <small id="folnote"></small></h2><div id="followed"></div></section>
 <section><h2>Setup</h2><div id="setup"></div></section>
 <footer id="foot"></footer>
 <script>
@@ -212,19 +213,19 @@
     var more = $("more");
     more.hidden = sig.length <= SHOW;
     more.textContent = showAll ? "Show fewer" : "Show all " + sig.length;
-    $("signals").innerHTML = sig.length ? sig.slice(0, showAll ? sig.length : SHOW).map(function (s) {
-      var buy = s.side === "BUY", p = Math.max(4, Math.min(100, s.score / (vp.min_agree || cfg.min_agree) * 100));
+    $("signals").innerHTML = (cur.note ? '<div class="empty">' + esc(cur.note) + "</div>" : "") + (sig.length ? sig.slice(0, showAll ? sig.length : SHOW).map(function (s) {
+      var buy = s.side === "BUY", p = vp.min_weight > 0 ? Math.max(4, Math.min(100, s.weight / vp.min_weight * 100)) : Math.max(4, Math.min(100, s.score / (vp.min_agree || cfg.min_agree) * 100));
       var dec = s.decision || "", good = /bought|sold/.test(dec);
       if (s.closed && s.price != null) dec = (s.price >= 0.99 ? "resolved: won" : s.price <= 0.01 ? "resolved: lost" : dec);
       return '<div class="card"><div class="top"><span class="chip ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span>" +
         '<div class="t"><a href="' + esc(link(s)) + '" target="_blank" rel="noopener">' + esc(s.title || s.slug) + "</a>" + (s.outcome ? '<span class="outcome">' + esc(s.outcome) + "</span>" : "") + (s.holding ? ' <span class="chip info sm">held</span>' : "") + "</div></div>" +
         '<div class="bar"><i class="' + (buy ? "" : "sell") + '" style="width:' + p + '%"></i></div>' +
-        '<div class="meta"><span><b>' + s.agree.length + "</b> agree</span><span><b>" + s.disagree.length + "</b> against</span>" +
+        '<div class="meta"><span><b>' + s.agree.length + "</b> agree</span><span><b>" + s.disagree.length + "</b> against</span>" + (vp.min_weight > 0 ? "<span>weight <b>" + Number(s.weight).toFixed(1) + "</b> of " + vp.min_weight + "</span>" : "") +
         "<span>leaders paid <b>" + cents(s.avg_price) + "</b></span>" + (s.price != null ? "<span>" + (s.closed ? "closed at" : "now") + " <b>" + cents(s.price) + "</b></span>" : "") +
         "<span>net <b>" + big(s.net_usd) + "</b></span><span>" + esc(ago(s.last_at)) + "</span></div>" +
         '<div class="names">' + esc(s.agree.join(", ")) + (s.disagree.length ? ' <span class="muted">· against: ' + esc(s.disagree.join(", ")) + "</span>" : "") + "</div>" +
         (dec ? '<div class="decision' + (good ? " good" : "") + '">→ ' + esc(dec) + "</div>" : "") + "</div>";
-    }).join("") : '<div class="empty">No outcome has two or more leaders behind it right now.</div>';
+    }).join("") : (cur.note ? "" : '<div class="empty">No outcome has two or more leaders behind it right now.</div>'));
 
     var tr = d.trades || [];
     $("trades").innerHTML = tr.length ? '<table><tr><th>When</th><th>What</th><th class="r">Shares @</th><th class="r">P&amp;L</th></tr>' + tr.map(function (x) {
@@ -234,10 +235,36 @@
     }).join("") + "</table>" : '<div class="empty">No trades yet.</div>';
 
     var ld = cur.leaders || [];
-    $("leadcount").textContent = ld.length ? "top " + ld.length + " by profit · " + (vp.window || cfg.window) + " · " + (cur.fills || 0) + " fills" : "";
-    $("leaders").innerHTML = ld.length ? '<table><tr><th>#</th><th>Trader</th><th class="r">Profit</th><th class="r">Fills</th></tr>' + ld.map(function (l) {
-      return '<tr><td class="muted num">' + l.rank + '</td><td><a href="https://polymarket.com/profile/' + esc(l.wallet) + '" target="_blank" rel="noopener">' + esc(l.name) + '</a></td><td class="r num up">' + big(l.pnl) + '</td><td class="r num muted">' + l.fills + "</td></tr>";
-    }).join("") + "</table>" : '<div class="empty">Waiting for the leaderboard.</div>';
+    var pack = cur.pack ? (d.packs || {})[cur.pack.join("|")] : null;
+    if (pack) {
+      var judged = pack.judged || [], rejected = judged.filter(function (m) { return !m.ok; });
+      $("leadcount").textContent = (pack.refreshed_at ? "measured " + ago(pack.refreshed_at) : "measuring…") + " · " + judged.length + " on the " + pack.window + " board · " + (pack.members || []).length + " credible";
+      $("leadnote").innerHTML = '<div class="muted" style="font-size:12.5px;margin:-4px 0 10px">Score = profit factor, win rate, return on cost, how spread out the profit is, and history. Weight = ½ + score, times how big each bet is for them.' + (cur.muted && cur.muted.length ? " Muted after losing copies: " + esc(cur.muted.join(", ")) + "." : "") + "</div>";
+      $("leaders").innerHTML = ld.length ? '<table><tr><th>Trader</th><th class="r">Score</th><th class="r">Record</th><th class="r">Fills</th></tr>' + ld.map(function (l) {
+        var m = (pack.members || []).filter(function (x) { return x.wallet === l.wallet; })[0] || {};
+        return '<tr><td><a href="https://polymarket.com/profile/' + esc(l.wallet) + '" target="_blank" rel="noopener">' + esc(l.name) + '</a><br><span class="muted">#' + l.rank + " · " + big(l.pnl) + (m.category ? " · " + esc(m.category) + " " + pct(m.category_share) : "") + (m.hold_hours != null ? " · holds " + Math.round(m.hold_hours) + " h" : "") + "</span></td>" +
+          '<td class="r num"><b>' + (m.score != null ? m.score.toFixed(2) : "–") + "</b>" + (l.weight != null ? '<br><span class="muted">×' + l.weight.toFixed(2) + "</span>" : "") + "</td>" +
+          '<td class="r num">' + (m.closed || 0) + " · " + pct(m.win_rate) + "<br><span class=\"muted\">PF " + (m.profit_factor != null ? m.profit_factor : "–") + "</span></td>" +
+          '<td class="r num muted">' + l.fills + "</td></tr>";
+      }).join("") + "</table>" : '<div class="empty">' + esc(cur.note || "Nobody passed the rules.") + "</div>";
+      if (rejected.length) {
+        $("leaders").innerHTML += '<details style="margin-top:12px"><summary class="muted" style="cursor:pointer;font-weight:700;font-size:13px">Not credible: ' + rejected.length + ' of the board</summary><table style="margin-top:8px">' + rejected.slice(0, 40).map(function (m) {
+          return '<tr><td><a href="https://polymarket.com/profile/' + esc(m.wallet) + '" target="_blank" rel="noopener">' + esc(m.name) + '</a> <span class="muted">#' + m.rank + "</span></td><td class=\"muted\">" + esc((m.reasons || []).join("; ")) + "</td></tr>";
+        }).join("") + "</table></details>";
+      }
+    } else {
+      $("leadcount").textContent = ld.length ? "top " + ld.length + " by profit · " + (vp.window || cfg.window) + " · " + (cur.fills || 0) + " fills" : "";
+      $("leadnote").innerHTML = "";
+      $("leaders").innerHTML = ld.length ? '<table><tr><th>#</th><th>Trader</th><th class="r">Profit</th><th class="r">Fills</th></tr>' + ld.map(function (l) {
+        return '<tr><td class="muted num">' + l.rank + '</td><td><a href="https://polymarket.com/profile/' + esc(l.wallet) + '" target="_blank" rel="noopener">' + esc(l.name) + '</a></td><td class="r num up">' + big(l.pnl) + '</td><td class="r num muted">' + l.fills + "</td></tr>";
+      }).join("") + "</table>" : '<div class="empty">Waiting for the leaderboard.</div>';
+    }
+    var fol = cur.followed || [];
+    $("followedsec").hidden = !fol.length;
+    $("folnote").textContent = fol.length ? "per leader, from this setup's closed copies" : "";
+    $("followed").innerHTML = fol.length ? '<table><tr><th>Trader</th><th class="r">Copied</th><th class="r">Won</th><th class="r">P&amp;L</th><th class="r">Trust</th></tr>' + fol.map(function (f) {
+      return '<tr><td><a href="https://polymarket.com/profile/' + esc(f.wallet) + '" target="_blank" rel="noopener">' + esc(f.name || f.wallet.slice(0, 6) + "…" + f.wallet.slice(-4)) + '</a></td><td class="r num">' + f.follows + '</td><td class="r num">' + f.wins + '</td><td class="r num ' + tone(f.pnl) + '">' + money(f.pnl, true) + '</td><td class="r num">' + (f.trust != null ? Number(f.trust).toFixed(2) : "–") + "</td></tr>";
+    }).join("") + "</table>" : "";
 
     var a = d.account || {};
     $("setup").innerHTML = "<h3>Consensus</h3>" + '<div class="kv">' +
@@ -257,8 +284,16 @@
         ["window", "category", "top_n", "min_agree", "lookback_hours", "min_leader_usd", "stake_usd", "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours", "min_hours_to_end", "follow_sells", "poll_seconds"].forEach(function (k) {
           if (q[k] !== undefined && String(q[k]) !== String(cfg[k])) diffs.push(k.replace(/_/g, " ") + " " + q[k]);
         });
+        if (q.pack) diffs.push("credible pack of " + cfg.cr_pack_size + (q.min_weight ? " · weight ≥ " + q.min_weight : "") + (q.fresh_only ? " · fresh entries only" : "") + (q.adaptive_trust ? " · adaptive trust" : "") + (q.max_hold_days ? " · out after " + q.max_hold_days + " d" : ""));
         return "<div><span>" + esc(v.name) + "</span><b>" + esc(diffs.join(" · ") || "same as base") + "</b></div>";
-      }).join("") + "</div>" : "") + "<h3>Underdog</h3>" + '<div class="kv">' +
+      }).join("") + "</div>" : "") + "<h3>Credibility rules (pack setups)</h3>" + '<div class="kv">' +
+      "<div><span>Measured</span><b>top " + cfg.cr_pool + " · keep " + cfg.cr_pack_size + " · every " + cfg.cr_refresh_hours + " h</b></div>" +
+      "<div><span>Active</span><b>≥ " + cfg.cr_min_fills_7d + " fills in 7 d · one within " + cfg.cr_max_idle_hours + " h</b></div>" +
+      "<div><span>History</span><b>≥ " + cfg.cr_min_closed + " closed · account ≥ " + cfg.cr_min_age_days + " d</b></div>" +
+      "<div><span>Quality</span><b>PF ≥ " + cfg.cr_min_profit_factor + " · wins ≥ " + pct(cfg.cr_min_win_rate) + "</b></div>" +
+      "<div><span>Not one lucky bet</span><b>best position ≤ " + pct(cfg.cr_max_top_share) + " of profit</b></div>" +
+      "<div><span>Not in-game / maker</span><b>holds ≥ " + cfg.cr_min_hold_hours + " h · edge ≥ " + pct(cfg.cr_min_edge) + " of volume</b></div>" +
+      "</div>" + "<h3>Underdog</h3>" + '<div class="kv">' +
       "<div><span>Enabled</span><b>" + (cfg.ud_enabled ? "yes" : "no") + "</b></div>" +
       "<div><span>Sports</span><b>" + (cfg.sports && cfg.sports.length ? esc(cfg.sports.join(", ")) : "all") + "</b></div>" +
       "<div><span>Underdog is</span><b>" + cents(cfg.ud_min_price) + " – " + cents(cfg.ud_max_price) + "</b></div>" +

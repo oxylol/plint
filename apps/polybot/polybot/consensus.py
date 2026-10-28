@@ -10,10 +10,12 @@ the stance is at most minus that. A signal's score is agree minus against.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Iterable
+
+from .credibility import conviction
 
 
 @dataclass(frozen=True)
@@ -56,6 +58,8 @@ class Signal:
     avg_price: Decimal | None  # what the agreeing leaders paid (or got) for this outcome
     net_usd: Decimal           # the agreeing leaders' combined stance
     last_at: datetime          # most recent agreeing trade
+    stance: dict[str, Decimal] = field(default_factory=dict)  # each voter's USD stance on this outcome
+    weight: float = 0.0        # credibility × conviction, for minus against (= score when unweighted)
 
     @property
     def score(self) -> int:
@@ -76,12 +80,16 @@ def _held(held: Iterable, condition_id: str, asset_id: str, outcome: str) -> boo
 
 
 def find_signals(trades: Iterable[LeaderTrade], *, min_leader_usd: Decimal, min_show: int = 2,
-                 held: Iterable = frozenset()) -> list[Signal]:
+                 held: Iterable = frozenset(), weights: dict[str, float] | None = None,
+                 sizes: dict[str, float] | None = None) -> list[Signal]:
     """Outcomes at least `min_show` leaders agree on buying, strongest first.
 
     SELL signals are only produced for outcomes in `held` (asset ids, or
     (condition_id, lower-cased outcome) pairs), since selling only matters for
-    something we own. The caller decides what is enough to trade.
+    something we own. With `weights` (per wallet, from credibility) and `sizes`
+    (each wallet's typical position in USD) a signal also gets a weight: the
+    sum over voters of credibility × conviction, those against subtracted.
+    The caller decides what is enough to trade.
     """
     held = set(held)
     flows: dict[tuple[str, str], dict[str, dict]] = defaultdict(lambda: defaultdict(_flow))
@@ -128,13 +136,21 @@ def find_signals(trades: Iterable[LeaderTrade], *, min_leader_usd: Decimal, min_
             net = sum((stance[w] for w in yes), Decimal(0))
             last = max(wallets[w]["last"] for w in yes if w in wallets) if any(w in wallets for w in yes) else max(
                 flows[(cid, a)][w]["last"] for a in others for w in yes if w in flows[(cid, a)])
+
+            def vote(w: str) -> float:
+                if weights is None:
+                    return 1.0
+                return weights.get(w, 1.0) * conviction(float(stance[w]), (sizes or {}).get(w))
+
+            weight = sum(vote(w) for w in yes) - sum(vote(w) for w in no)
             return Signal(side, cid, aid, m.outcome, m.outcome_index, m.title, m.slug, m.event_slug,
-                          yes, no, avg, net if side == "BUY" else -net, last)
+                          yes, no, avg, net if side == "BUY" else -net, last,
+                          stance={w: stance[w] for w in yes + no}, weight=round(weight, 3))
 
         if len(agree) >= min_show:
             signals.append(make("BUY", agree, against))
         if len(against) >= min_show and _held(held, cid, aid, m.outcome):
             signals.append(make("SELL", against, agree))
 
-    signals.sort(key=lambda s: (-s.score, -abs(s.net_usd), s.title))
+    signals.sort(key=lambda s: (-s.score, -s.weight, -abs(s.net_usd), s.title))
     return signals

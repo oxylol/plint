@@ -65,7 +65,7 @@ class Store:
         self.state = self._load()
 
     def _load(self) -> dict:
-        default = {"positions": {}, "closed": [], "acted": {}, "trades": []}
+        default = {"positions": {}, "closed": [], "acted": {}, "trades": [], "leaders": {}}
         if not self.state_path.exists():
             return default
         try:
@@ -153,8 +153,35 @@ class Store:
         self.state["closed"] = self.state["closed"][-2000:]
         self.mark_acted(asset_id, strategy, now)
         self._log({**rec, "at": iso(now)})
+        for w in pos.get("agree_wallets") or []:
+            self.record_follow(strategy, w, pos.get("agree_names", {}).get(w, ""), rec["pnl"])
         self.save()
         return rec
+
+    # ---- who was worth following ----
+    def leader(self, strategy: str, wallet: str) -> dict:
+        return self.state["leaders"].setdefault(strategy, {}).setdefault(wallet, {"name": "", "follows": 0, "wins": 0, "pnl": 0.0, "trust": None})
+
+    def trust(self, strategy: str, wallet: str, default: float) -> float:
+        t = self.state["leaders"].get(strategy, {}).get(wallet, {}).get("trust")
+        return float(t) if t is not None else default
+
+    def record_follow(self, strategy: str, wallet: str, name: str, pnl: float, default_trust: float = 1.0) -> None:
+        """A copied position closed: remember how the leader did, and trust them a little more or less."""
+        entry = self.leader(strategy, wallet)
+        if name:
+            entry["name"] = name
+        entry["follows"] += 1
+        entry["wins"] += 1 if pnl > 0 else 0
+        entry["pnl"] = round(entry["pnl"] + pnl, 4)
+        trust = entry["trust"] if entry["trust"] is not None else default_trust
+        trust = trust * (1.1 if pnl > 0 else 0.8)
+        entry["trust"] = round(min(2.0, max(0.2, trust)), 3)
+
+    def leaders_followed(self, strategy: str) -> list[dict]:
+        rows = [{"wallet": w, **v} for w, v in self.state["leaders"].get(strategy, {}).items()]
+        rows.sort(key=lambda r: (-r["pnl"], -r["follows"]))
+        return rows
 
     def update_price(self, asset_id: str, price: Decimal) -> None:
         for pos in self.positions_for_asset(asset_id):

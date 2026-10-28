@@ -8,7 +8,6 @@ its own paper book so the page can compare them.
 from __future__ import annotations
 
 import logging
-import re
 from dataclasses import dataclass, fields, replace
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
@@ -16,11 +15,10 @@ from typing import Iterator
 
 from .config import Config, WINDOWS
 from .consensus import LeaderTrade, Signal, find_signals
-from .core import CENT, Core, aware, short
+from .core import CENT, Core, aware, pretty_name, short
 from .store import iso
 
 log = logging.getLogger("polybot.consensus")
-AUTO_NAME = re.compile(r"^0x[0-9a-fA-F]{40}(-\d+)?$")  # Polymarket's placeholder for traders without a name
 
 
 @dataclass(frozen=True)
@@ -43,6 +41,13 @@ class ConsensusParams:
     min_hours_to_end: float
     follow_sells: bool
     poll_seconds: int
+    # credible-pack options (pack=1 setups)
+    pack: bool = False           # take the leaders from the credible pack instead of the raw board
+    pool: int = 80               # how many of the board the pack measures
+    min_weight: float = 0.0      # credibility × conviction, agree minus against, needed to act (0 = ignore)
+    fresh_only: bool = False     # only act when an agreeing leader's position is new
+    adaptive_trust: bool = False # trust a leader more or less as their copied trades resolve
+    max_hold_days: float = 0.0   # sell what is still open after this long (0 = hold to resolution)
 
     @classmethod
     def base(cls, cfg: Config) -> "ConsensusParams":
@@ -51,7 +56,8 @@ class ConsensusParams:
                    min_leader_usd=cfg.min_leader_usd, stake_usd=cfg.stake_usd, max_price=cfg.max_price,
                    min_price=cfg.min_price, max_above_leaders=cfg.max_above_leaders, max_open=cfg.max_open,
                    daily_budget_usd=cfg.daily_budget_usd, cooldown_hours=cfg.cooldown_hours,
-                   min_hours_to_end=cfg.min_hours_to_end, follow_sells=cfg.follow_sells, poll_seconds=cfg.poll_seconds)
+                   min_hours_to_end=cfg.min_hours_to_end, follow_sells=cfg.follow_sells, poll_seconds=cfg.poll_seconds,
+                   pool=cfg.cr_pool)
 
     def variant(self, name: str, overrides: dict[str, str]) -> "ConsensusParams":
         """A copy with some settings changed (values arrive as strings from .env)."""
@@ -74,7 +80,7 @@ class ConsensusParams:
                 changes[key] = raw.strip().lower()
         p = replace(self, name=name, **changes)
         if "label" not in overrides:
-            bits = [p.window]
+            bits = [("credible " if p.pack else "") + p.window]
             if p.category and p.category != "overall":
                 bits.append(p.category)
             if p.top_n != self.top_n:
@@ -140,8 +146,7 @@ class LeaderFeed:
         leaders = []
         for e in page.items[:top_n]:
             w = str(e.wallet).lower()
-            name = e.user_name if e.user_name and not AUTO_NAME.match(e.user_name) else short(w)
-            leaders.append(Leader(w, name, int(e.rank), Decimal(str(e.pnl)), Decimal(str(e.volume))))
+            leaders.append(Leader(w, pretty_name(e.user_name, w), int(e.rank), Decimal(str(e.pnl)), Decimal(str(e.volume))))
         self._boards[key] = (now, leaders)
         return leaders
 
@@ -201,17 +206,22 @@ class LeaderFeed:
 class ConsensusStrategy:
     kind = "consensus"
     PRICED_SIGNALS = 15           # how many signals get a live price on the page
+    MUTED_TRUST = 0.5             # adaptive trust below this silences a leader
 
-    def __init__(self, core: Core, params: ConsensusParams, feed: LeaderFeed):
+    def __init__(self, core: Core, params: ConsensusParams, feed: LeaderFeed, pack=None):
         self.core = core
         self.p = params
         self.store = core.store
         self.feed = feed
+        self.pack = pack          # a CrediblePack when params.pack
         self.decisions: dict[str, str] = {}
         self._prev_decisions: dict[str, str] = {}
         self.leaders: list[Leader] = []
         self.signals: list[Signal] = []
         self.fills = 0
+        self.weights: dict[str, float] = {}
+        self.muted: list[str] = []
+        self.note: str = ""
         self._trades_by_wallet: dict[str, list[LeaderTrade]] = {}
 
     @property
@@ -227,10 +237,42 @@ class ConsensusStrategy:
         return self.p.poll_seconds
 
     # ── one cycle ────────────────────────────────────────────
+    def pick_leaders(self, now: datetime) -> tuple[list[Leader], dict[str, float] | None, dict[str, float] | None]:
+        """The raw board, or the credible pack with vote weights and typical sizes."""
+        p = self.p
+        if self.pack is None:
+            return self.feed.leaders(p.window, p.category, p.top_n, now), None, None
+        self.pack.ensure_fresh(now)
+        members, weights, sizes = self.pack.snapshot()
+        leaders = [Leader(m.wallet, m.name, m.rank, Decimal(str(m.record.pnl)), Decimal(str(m.record.volume))) for m in members]
+        self.muted = []
+        if p.adaptive_trust:
+            weights = {w: self.store.trust(self.name, w, default) for w, default in weights.items()}
+            self.muted = [w for w, t in weights.items() if t < self.MUTED_TRUST]
+            leaders = [l for l in leaders if l.wallet not in self.muted]
+        self.weights = weights
+        return leaders, weights, sizes
+
+    def enough(self, sig: Signal) -> str | None:
+        """Why a signal is not strong enough yet, or None when it is."""
+        p = self.p
+        if sig.score < p.min_agree:
+            return f"needs {p.min_agree - sig.score} more"
+        if p.min_weight > 0 and sig.weight < p.min_weight:
+            return f"weight {sig.weight:.1f} of {p.min_weight:g}"
+        return None
+
     def run(self, now: datetime) -> None:
         p = self.p
         since = now - timedelta(hours=p.lookback_hours)
-        self.leaders = self.feed.leaders(p.window, p.category, p.top_n, now)
+        self.leaders, weights, sizes = self.pick_leaders(now)
+        if self.pack is not None and not self.leaders:
+            self.note = "measuring the leaderboard, back in a few minutes" if self.pack.building or self.pack.refreshed_at is None else "nobody on the board passed the credibility rules"
+            log.info("[%s] %s", self.name, self.note)
+            self.signals, self.fills = [], 0
+            self.expire_positions(now)
+            return
+        self.note = ""
         self._trades_by_wallet = self.feed.trades(self.leaders, since, now)
         all_trades = [t for ts in self._trades_by_wallet.values() for t in ts]
         self.fills = len(all_trades)
@@ -238,18 +280,19 @@ class ConsensusStrategy:
         for pos in self.store.open_positions(self.name):
             held.add(pos["asset_id"])
             held.add((pos.get("condition_id", ""), str(pos.get("outcome", "")).lower()))
-        self.signals = find_signals(all_trades, min_leader_usd=p.min_leader_usd, held=held)
+        self.signals = find_signals(all_trades, min_leader_usd=p.min_leader_usd, held=held, weights=weights, sizes=sizes)
         log.info("[%s] %d leaders · %d fills in the last %gh · %d outcomes with 2+ agreeing",
                  self.name, len(self.leaders), self.fills, p.lookback_hours, len(self.signals))
 
+        self.expire_positions(now)
         self._prev_decisions = self.decisions
         self.decisions = {}
         for sig in self.signals:
-            short_by = p.min_agree - sig.score
+            why = self.enough(sig)
             try:
                 if sig.side == "BUY":
-                    if short_by > 0:
-                        self.decisions[sig.key] = f"needs {short_by} more"
+                    if why:
+                        self.decisions[sig.key] = why
                     else:
                         self.consider_buy(sig, now)
                 else:
@@ -258,14 +301,49 @@ class ConsensusStrategy:
                         self.decisions[sig.key] = "not holding"
                     elif not p.follow_sells:
                         self.decisions[sig.key] = "following sells is off"
-                    elif short_by > 0:
-                        self.decisions[sig.key] = f"needs {short_by} more"
+                    elif why:
+                        self.decisions[sig.key] = why
                     else:
                         self.consider_sell(sig, pos, now)
             except Exception as e:  # one bad market must not stop the others
                 log.exception("[%s] could not act on %s · %s", self.name, sig.title, sig.outcome)
                 self.decisions[sig.key] = f"error: {e}"
                 self.core.record_error(f"{self.name}: {sig.side} {sig.title} · {sig.outcome}: {e}")
+
+    def expire_positions(self, now: datetime) -> None:
+        """Sell what has been open longer than max_hold_days (0 = hold to resolution)."""
+        if self.p.max_hold_days <= 0:
+            return
+        from .store import parse_iso
+        for pos in self.store.open_positions(self.name):
+            opened = parse_iso(pos["opened_at"]) if pos.get("opened_at") else now
+            if now - opened < timedelta(days=self.p.max_hold_days):
+                continue
+            shares = Decimal(str(pos.get("shares", 0)))
+            est = self.core.estimate(pos["asset_id"], "SELL", shares=shares)
+            if est is None:
+                continue
+            m = self.core.market(pos.get("condition_id", ""), pos.get("slug", ""))
+            fill = self.core.sell(pos["asset_id"], shares, est, f"{pos.get('title')} · {pos.get('outcome')}",
+                                  fee_rate=self.core.fee_rate(m) if m else Decimal(0))
+            if fill:
+                rec = self.store.close_position(pos["asset_id"], Decimal(str(fill["price"])), Decimal(str(fill["proceeds"])),
+                                                "time's up", now, mode=self.core.mode, strategy=self.name)
+                log.info("[%s] sold %s after %g days, P&L $%.2f", self.name, pos.get("title"), self.p.max_hold_days, rec["pnl"])
+
+    def fresh_voters(self, sig: Signal) -> list[str]:
+        """Agreeing leaders whose position in this outcome is (mostly) new in the window."""
+        fresh = []
+        for w in sig.agree:
+            bought = Decimal(str(sig.stance.get(w, 0)))
+            if bought <= 0:
+                continue
+            cost_now = self.core.position_cost(w, sig.condition_id, sig.asset_id)
+            if cost_now is None:
+                continue
+            if cost_now - bought <= bought * Decimal("0.25"):  # at most a quarter was there before
+                fresh.append(w)
+        return fresh
 
     def _skip(self, sig: Signal, what: str, reason: str) -> None:
         self.decisions[sig.key] = reason
@@ -305,6 +383,11 @@ class ConsensusStrategy:
             return skip(f"price {est:.2f} is below the min {p.min_price}")
         if sig.avg_price and est > sig.avg_price + p.max_above_leaders:
             return skip(f"too late: {est:.2f} now, leaders paid {sig.avg_price:.2f}")
+        fresh: list[str] = []
+        if p.fresh_only:
+            fresh = self.fresh_voters(sig)
+            if not fresh:
+                return skip("no fresh entry: the leaders held this already")
         amount = p.stake_usd
         shares = (amount / est).quantize(CENT, rounding=ROUND_DOWN)
         min_size = Decimal(str(m.trading.minimum_order_size or 0))
@@ -323,15 +406,17 @@ class ConsensusStrategy:
             "strategy": self.name, "side": "BUY", "asset_id": asset_id, "condition_id": sig.condition_id,
             "title": sig.title or m.question or "", "outcome": label or sig.outcome,
             "slug": sig.slug or m.slug or "", "event_slug": sig.event_slug or "",
-            "agree": len(sig.agree), "disagree": len(sig.disagree),
+            "agree": len(sig.agree), "disagree": len(sig.disagree), "weight": sig.weight,
+            "agree_wallets": list(sig.agree), "agree_names": {w: self.name_of(w) for w in sig.agree},
+            "fresh": [self.name_of(w) for w in fresh],
             "leaders_price": float(sig.avg_price) if sig.avg_price is not None else None,
             "mode": core.mode, **fill,
         }
         self.store.open_position(rec, now)
         verb = "Bought" if core.mode == "live" else "Paper buy"
         self.decisions[sig.key] = "bought" if core.mode == "live" else "paper bought"
-        log.info("[%s] %s %s: %s shares at %.2f ($%s) · %d agree, %d against",
-                 self.name, verb, what, rec["shares"], rec["price"], rec["cost"], len(sig.agree), len(sig.disagree))
+        log.info("[%s] %s %s: %s shares at %.2f ($%s) · %d agree, %d against, weight %.1f",
+                 self.name, verb, what, rec["shares"], rec["price"], rec["cost"], len(sig.agree), len(sig.disagree), sig.weight)
         core.notifier.send(f"Polybot: {verb.lower()}",
                            f"[{self.label}] {what}\n{rec['shares']:.2f} shares at {rec['price']:.2f} (${rec['cost']:.2f})\n"
                            f"{len(sig.agree)} leaders agree, {len(sig.disagree)} against",
@@ -365,6 +450,12 @@ class ConsensusStrategy:
                            tags="chart_with_downwards_trend")
         return rec
 
+    def name_of(self, wallet: str) -> str:
+        for l in self.leaders:
+            if l.wallet == wallet:
+                return l.name
+        return short(wallet)
+
     # ── the page ─────────────────────────────────────────────
     def status(self) -> dict:
         core = self.core
@@ -395,17 +486,22 @@ class ConsensusStrategy:
                 "condition_id": s.condition_id, "asset_id": s.asset_id,
                 "agree": [by_wallet.get(w, short(w)) for w in s.agree],
                 "disagree": [by_wallet.get(w, short(w)) for w in s.disagree],
-                "score": s.score, "avg_price": float(s.avg_price) if s.avg_price is not None else None,
+                "score": s.score, "weight": s.weight, "avg_price": float(s.avg_price) if s.avg_price is not None else None,
                 "net_usd": float(s.net_usd), "last_at": iso(s.last_at),
                 "price": float(price) if price is not None else None,
                 "decision": decision, "closed": closed,
                 "holding": self.store.position(s.asset_id, self.name) is not None,
             })
-        rows.sort(key=lambda r: (r["closed"], -r["score"]))
-        return {
-            "name": self.name, "label": self.label, "params": self.p.public(),
-            "leaders": [{"rank": l.rank, "name": l.name, "wallet": l.wallet, "pnl": float(l.pnl), "volume": float(l.volume),
-                         "fills": len(self._trades_by_wallet.get(l.wallet, []))} for l in self.leaders],
-            "fills": self.fills,
-            "signals": rows,
+        rows.sort(key=lambda r: (r["closed"], -r["score"], -r["weight"]))
+        leaders = [{"rank": l.rank, "name": l.name, "wallet": l.wallet, "pnl": float(l.pnl), "volume": float(l.volume),
+                    "fills": len(self._trades_by_wallet.get(l.wallet, [])),
+                    "weight": round(self.weights.get(l.wallet, 1.0), 2) if self.weights else None} for l in self.leaders]
+        out = {
+            "name": self.name, "label": self.label, "params": self.p.public(), "note": self.note,
+            "leaders": leaders, "fills": self.fills, "signals": rows,
+            "followed": self.store.leaders_followed(self.name)[:15],
         }
+        if self.pack is not None:
+            out["pack"] = self.pack.key
+            out["muted"] = [self.name_of(w) for w in self.muted]
+        return out

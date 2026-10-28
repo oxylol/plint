@@ -7,6 +7,7 @@ calls become paper trades at the prices the order book shows right now.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_DOWN
@@ -35,6 +36,13 @@ def aware(dt: datetime) -> datetime:
 
 def short(wallet: str) -> str:
     return wallet[:6] + "…" + wallet[-4:] if len(wallet) > 12 else wallet
+
+
+AUTO_NAME = re.compile(r"^0x[0-9a-fA-F]{40}(-\d+)?$")  # Polymarket's placeholder for traders without a name
+
+
+def pretty_name(user_name: str | None, wallet: str) -> str:
+    return user_name if user_name and not AUTO_NAME.match(user_name) else short(wallet)
 
 
 class Core:
@@ -332,6 +340,18 @@ class Core:
         for p in page.items:
             if str(p.asset_id) == asset_id:
                 return Decimal(str(p.current_size))
+        return Decimal(0)
+
+    def position_cost(self, wallet: str, condition_id: str, asset_id: str) -> Decimal | None:
+        """What a trader currently has in an outcome, at cost (USD); None when unknown."""
+        try:
+            page = self.call(lambda: self.public.list_positions(user=wallet, condition_id=[condition_id], page_size=10).first_page())
+        except Exception as e:
+            log.info("positions of %s in %s: %s", short(wallet), condition_id[:10], e)
+            return None
+        for p in page.items:
+            if str(p.asset_id) == asset_id:
+                return Decimal(str(p.total_cost_usdc or p.entry_cost_usdc or 0))
         return Decimal(0)
 
     # ── bookkeeping shared by every strategy ─────────────────

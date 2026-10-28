@@ -52,7 +52,24 @@ services:
       POLY_POLL_SECONDS: ${POLY_POLL_SECONDS:-300}
       # Extra consensus setups to compare, each with its own paper book:
       # name:setting=value,setting=value;name2:... (settings are POLY_* names without the prefix).
-      POLY_VARIANTS: ${POLY_VARIANTS:-week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4}
+      # Leave empty for the built-in set: every board at 5 and 4 agreeing, plus the two credible-pack
+      # setups "credible" (weighted agreement among credible traders) and "smart" (one credible
+      # trader's fresh conviction bet, trust adapting to results). See apps/polybot/README.md.
+      POLY_VARIANTS: ${POLY_VARIANTS:-}
+      # Credibility rules for the pack setups
+      CR_POOL: ${CR_POOL:-80}
+      CR_PACK_SIZE: ${CR_PACK_SIZE:-12}
+      CR_REFRESH_HOURS: ${CR_REFRESH_HOURS:-6}
+      CR_MIN_FILLS_7D: ${CR_MIN_FILLS_7D:-10}
+      CR_MAX_IDLE_HOURS: ${CR_MAX_IDLE_HOURS:-72}
+      CR_MIN_CLOSED: ${CR_MIN_CLOSED:-30}
+      CR_MIN_PROFIT_FACTOR: ${CR_MIN_PROFIT_FACTOR:-1.3}
+      CR_MIN_WIN_RATE: ${CR_MIN_WIN_RATE:-0.40}
+      CR_MAX_TOP_SHARE: ${CR_MAX_TOP_SHARE:-0.50}
+      CR_MIN_HOLD_HOURS: ${CR_MIN_HOLD_HOURS:-12}
+      CR_MIN_EDGE: ${CR_MIN_EDGE:-0.02}
+      CR_MIN_AGE_DAYS: ${CR_MIN_AGE_DAYS:-30}
+      CR_MAX_TWO_SIDED: ${CR_MAX_TWO_SIDED:-0.30}
       # Strategy 2, underdog: buy the cheaper side of a game at kickoff, sell into the bounce.
       UD_ENABLED: ${UD_ENABLED:-1}
       UD_SPORTS: ${UD_SPORTS:-}

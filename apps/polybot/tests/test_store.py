@@ -40,6 +40,21 @@ class StoreTests(unittest.TestCase):
         self.assertEqual(self.store.acted_at("A", "month"), T0)
         self.assertIsNone(self.store.acted_at("B", "month"))
 
+    def test_follow_stats_and_trust(self):
+        r = rec("smart"); r["agree_wallets"] = ["0xa", "0xb"]; r["agree_names"] = {"0xa": "alice"}
+        self.store.open_position(r, T0)
+        self.store.close_position("A", Decimal("0.7"), Decimal("7"), "test", T0, strategy="smart")
+        rows = self.store.leaders_followed("smart")
+        self.assertEqual([(x["wallet"], x["name"], x["follows"], x["wins"], x["pnl"], x["trust"]) for x in rows],
+                         [("0xa", "alice", 1, 1, 2.0, 1.1), ("0xb", "", 1, 1, 2.0, 1.1)])
+        self.assertEqual(self.store.trust("smart", "0xa", 0.9), 1.1)
+        self.assertEqual(self.store.trust("smart", "0xz", 0.9), 0.9)
+        r = rec("smart", asset="B"); r["agree_wallets"] = ["0xa"]
+        self.store.open_position(r, T0)
+        self.store.close_position("B", Decimal("0.4"), Decimal("4"), "test", T0, strategy="smart")
+        self.assertAlmostEqual(self.store.trust("smart", "0xa", 1.0), 0.88)
+        self.assertEqual(self.store.leaders_followed("consensus"), [])
+
     def test_old_state_is_migrated(self):
         path = Path(self.tmp.name) / "state.json"
         path.write_text(json.dumps({"positions": {"A": rec("underdog")}, "acted": {"A": "2026-10-28T10:00:00+00:00", "B": "2026-10-28T11:00:00+00:00"},

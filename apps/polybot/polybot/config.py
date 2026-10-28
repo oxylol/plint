@@ -10,7 +10,19 @@ WINDOWS = ("day", "week", "month", "all")
 # Settings a consensus variant may override (the POLY_* name without the prefix).
 VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_hours", "min_leader_usd", "stake_usd",
                 "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours",
-                "min_hours_to_end", "follow_sells", "poll_seconds")
+                "min_hours_to_end", "follow_sells", "poll_seconds",
+                # credible-pack options
+                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days")
+DEFAULT_VARIANTS = ";".join([
+    "week4:min_agree=4",
+    "month:window=month", "month4:window=month,min_agree=4",
+    "day:window=day", "day4:window=day,min_agree=4",
+    "all:window=all", "all4:window=all,min_agree=4",
+    # only credible, active traders from the monthly board; two of them agreeing (weighted) is enough
+    "credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,label=Credible pack",
+    # a single credible trader's fresh conviction bet, with trust that adapts to how their copies do
+    "smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,label=Smart money",
+])
 RESERVED_NAMES = ("consensus", "underdog")
 
 
@@ -91,6 +103,20 @@ class Config:
     auto_redeem: bool
     poll_seconds: int
     variants: str                # extra consensus setups to compare, see parse_variants()
+    # Credibility rules for pack=1 setups (CR_*): who on the board is worth copying
+    cr_pool: int                 # how many of the board to measure
+    cr_pack_size: int            # how many credible traders to follow
+    cr_refresh_hours: float
+    cr_min_fills_7d: int
+    cr_max_idle_hours: float
+    cr_min_closed: int
+    cr_min_profit_factor: float
+    cr_min_win_rate: float
+    cr_max_top_share: float
+    cr_min_hold_hours: float
+    cr_min_edge: float
+    cr_min_age_days: float
+    cr_max_two_sided: float
     # Underdog strategy: buy the cheaper side of a game at kickoff, sell into the early bounce
     ud_enabled: bool
     ud_tick_seconds: int
@@ -140,7 +166,20 @@ class Config:
             follow_sells=_bool("POLY_FOLLOW_SELLS", True),
             auto_redeem=_bool("POLY_AUTO_REDEEM", True),
             poll_seconds=_int("POLY_POLL_SECONDS", 300),
-            variants=_str("POLY_VARIANTS", "week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4"),
+            variants=_str("POLY_VARIANTS", DEFAULT_VARIANTS),
+            cr_pool=_int("CR_POOL", 80),
+            cr_pack_size=_int("CR_PACK_SIZE", 12),
+            cr_refresh_hours=float(_str("CR_REFRESH_HOURS", "6")),
+            cr_min_fills_7d=_int("CR_MIN_FILLS_7D", 10),
+            cr_max_idle_hours=float(_str("CR_MAX_IDLE_HOURS", "72")),
+            cr_min_closed=_int("CR_MIN_CLOSED", 30),
+            cr_min_profit_factor=float(_str("CR_MIN_PROFIT_FACTOR", "1.3")),
+            cr_min_win_rate=float(_str("CR_MIN_WIN_RATE", "0.40")),
+            cr_max_top_share=float(_str("CR_MAX_TOP_SHARE", "0.50")),
+            cr_min_hold_hours=float(_str("CR_MIN_HOLD_HOURS", "12")),
+            cr_min_edge=float(_str("CR_MIN_EDGE", "0.02")),
+            cr_min_age_days=float(_str("CR_MIN_AGE_DAYS", "30")),
+            cr_max_two_sided=float(_str("CR_MAX_TWO_SIDED", "0.30")),
             ud_enabled=_bool("UD_ENABLED", True),
             ud_tick_seconds=_int("UD_TICK_SECONDS", 30),
             ud_lookahead_hours=float(_str("UD_LOOKAHEAD_HOURS", "3")),
@@ -180,12 +219,21 @@ class Config:
         if self.poll_seconds < 30:
             raise ValueError("POLY_POLL_SECONDS must be at least 30")
         parse_variants(self.variants)
+        if not (1 <= self.cr_pack_size <= self.cr_pool <= 1000) or self.cr_refresh_hours < 1:
+            raise ValueError("need 1 <= CR_PACK_SIZE <= CR_POOL <= 1000 and CR_REFRESH_HOURS >= 1")
         if self.ud_tick_seconds < 10:
             raise ValueError("UD_TICK_SECONDS must be at least 10")
         if not (0 < self.ud_min_price < self.ud_max_price < 1):
             raise ValueError("need 0 < UD_MIN_PRICE < UD_MAX_PRICE < 1")
         if self.ud_stake_usd < 1 or self.ud_take_profit_pct <= 0 or self.ud_stop_loss_pct <= 0:
             raise ValueError("UD_STAKE_USD, UD_TAKE_PROFIT_PCT and UD_STOP_LOSS_PCT must be positive")
+
+    def rules(self):
+        from .credibility import Rules
+        return Rules(min_fills_7d=self.cr_min_fills_7d, max_idle_hours=self.cr_max_idle_hours, min_closed=self.cr_min_closed,
+                     min_profit_factor=self.cr_min_profit_factor, min_win_rate=self.cr_min_win_rate,
+                     max_top_share=self.cr_max_top_share, min_hold_hours=self.cr_min_hold_hours,
+                     min_edge=self.cr_min_edge, min_age_days=self.cr_min_age_days, max_two_sided=self.cr_max_two_sided)
 
     @property
     def can_trade(self) -> bool:
