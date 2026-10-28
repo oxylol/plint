@@ -1,11 +1,11 @@
-"""On-disk state: open/closed positions, the trade log and the status page's JSON."""
+"""On-disk state: open/closed positions per strategy, the trade log and the page's JSON."""
 from __future__ import annotations
 
 import json
 import logging
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -23,6 +23,11 @@ def iso(dt: datetime) -> str:
 def parse_iso(s: str) -> datetime:
     dt = datetime.fromisoformat(s)
     return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+
+
+def pkey(strategy: str, asset_id: str) -> str:
+    """Positions are per strategy: two strategies may hold the same outcome."""
+    return f"{strategy}|{asset_id}"
 
 
 def _json_default(o):
@@ -49,7 +54,7 @@ def _atomic_write(path: Path, text: str) -> None:
 
 
 class Store:
-    KEEP_TRADES = 300
+    KEEP_TRADES = 500
 
     def __init__(self, data_dir: str):
         self.dir = Path(data_dir)
@@ -67,31 +72,48 @@ class Store:
             data = json.loads(self.state_path.read_text())
             for k, v in default.items():
                 data.setdefault(k, v)
-            return data
         except Exception as e:  # a damaged file must not stop the bot
             log.error("state.json unreadable (%s); starting fresh, old file kept as state.json.bad", e)
             self.state_path.replace(self.dir / "state.json.bad")
             return default
+        # Older files keyed positions by asset id alone; make them per strategy.
+        for k in list(data["positions"]):
+            if "|" not in k:
+                rec = data["positions"].pop(k)
+                rec.setdefault("strategy", "consensus")
+                data["positions"][pkey(rec["strategy"], k)] = rec
+        for k in list(data["acted"]):
+            if "|" not in k:
+                v = data["acted"].pop(k)
+                data["acted"][pkey("consensus", k)] = v
+                data["acted"][pkey("underdog", k)] = v
+        return data
 
     def save(self) -> None:
         _atomic_write(self.state_path, json.dumps(self.state, indent=1, default=_json_default))
 
     # ---- positions ----
-    def position(self, asset_id: str) -> dict | None:
-        return self.state["positions"].get(asset_id)
+    def position(self, asset_id: str, strategy: str) -> dict | None:
+        return self.state["positions"].get(pkey(strategy, asset_id))
+
+    def positions_for_asset(self, asset_id: str) -> list[dict]:
+        return [p for p in self.state["positions"].values() if p.get("asset_id") == asset_id]
 
     def open_positions(self, strategy: str | None = None) -> list[dict]:
         return [p for p in self.state["positions"].values() if strategy is None or p.get("strategy", "consensus") == strategy]
 
-    def find_position(self, condition_id: str, outcome: str) -> dict | None:
-        for p in self.state["positions"].values():
+    def find_position(self, condition_id: str, outcome: str, strategy: str) -> dict | None:
+        for p in self.open_positions(strategy):
             if p.get("condition_id") == condition_id and str(p.get("outcome", "")).lower() == (outcome or "").lower():
                 return p
         return None
 
-    def acted_at(self, asset_id: str) -> datetime | None:
-        s = self.state["acted"].get(asset_id)
+    def acted_at(self, asset_id: str, strategy: str) -> datetime | None:
+        s = self.state["acted"].get(pkey(strategy, asset_id))
         return parse_iso(s) if s else None
+
+    def mark_acted(self, asset_id: str, strategy: str, now: datetime) -> None:
+        self.state["acted"][pkey(strategy, asset_id)] = iso(now)
 
     def spent_since(self, since: datetime, strategy: str | None = None) -> Decimal:
         total = Decimal(0)
@@ -107,15 +129,15 @@ class Store:
         rec["opened_at"] = iso(now)
         rec.setdefault("strategy", "consensus")
         rec.setdefault("current_price", rec.get("price"))
-        self.state["positions"][rec["asset_id"]] = rec
-        self.state["acted"][rec["asset_id"]] = iso(now)
+        self.state["positions"][pkey(rec["strategy"], rec["asset_id"])] = rec
+        self.mark_acted(rec["asset_id"], rec["strategy"], now)
         self._log({**rec, "at": iso(now)})
         self.save()
         return rec
 
     def close_position(self, asset_id: str, price: Decimal, proceeds: Decimal, reason: str, now: datetime,
-                       mode: str | None = None) -> dict | None:
-        pos = self.state["positions"].pop(asset_id, None)
+                       mode: str | None = None, strategy: str = "consensus") -> dict | None:
+        pos = self.state["positions"].pop(pkey(strategy, asset_id), None)
         if pos is None:
             return None
         cost = Decimal(str(pos.get("cost", 0)))
@@ -125,30 +147,28 @@ class Store:
             "event_slug": pos.get("event_slug"), "shares": pos.get("shares"), "price": float(price),
             "proceeds": float(proceeds), "cost": float(cost), "pnl": float(proceeds - cost),
             "opened_at": pos.get("opened_at"), "closed_at": iso(now), "mode": mode or pos.get("mode", "paper"),
-            "strategy": pos.get("strategy", "consensus"),
+            "strategy": strategy,
         }
         self.state["closed"].append(rec)
-        self.state["closed"] = self.state["closed"][-500:]
-        self.state["acted"][asset_id] = iso(now)
+        self.state["closed"] = self.state["closed"][-2000:]
+        self.mark_acted(asset_id, strategy, now)
         self._log({**rec, "at": iso(now)})
         self.save()
         return rec
 
     def update_price(self, asset_id: str, price: Decimal) -> None:
-        pos = self.state["positions"].get(asset_id)
-        if pos is None:
-            return
-        pos["current_price"] = float(price)
-        pos["value"] = float(Decimal(str(pos.get("shares", 0))) * price)
-        pos["priced_at"] = iso(utcnow())
+        for pos in self.positions_for_asset(asset_id):
+            pos["current_price"] = float(price)
+            pos["value"] = float(Decimal(str(pos.get("shares", 0))) * price)
+            pos["priced_at"] = iso(utcnow())
 
-    def note_position(self, asset_id: str, note: str) -> None:
-        pos = self.state["positions"].get(asset_id)
+    def note_position(self, asset_id: str, note: str, strategy: str) -> None:
+        pos = self.position(asset_id, strategy)
         if pos is not None:
             pos["note"] = note
 
-    def update_position(self, asset_id: str, **fields) -> None:
-        pos = self.state["positions"].get(asset_id)
+    def update_position(self, asset_id: str, strategy: str, **fields) -> None:
+        pos = self.position(asset_id, strategy)
         if pos is not None:
             pos.update(fields)
 
@@ -181,7 +201,6 @@ class Store:
         wins = sum(1 for c in closed if float(c.get("pnl", 0)) > 0)
         losses = sum(1 for c in closed if float(c.get("pnl", 0)) < 0)
         returns = [float(c["pnl"]) / float(c["cost"]) for c in closed if float(c.get("cost", 0)) > 0]
-        from datetime import timedelta
         return {
             "open": len(positions), "closed": len(closed), "wins": wins, "losses": losses,
             "win_rate": (wins / len(closed)) if closed else None,

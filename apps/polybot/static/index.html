@@ -74,13 +74,15 @@
   .banner.note { background: var(--info-soft); color: var(--info); }
 
   .compare { width: 100%; border-collapse: collapse; font: 600 13px/1.4 var(--font); }
-  .compare th { font: 800 12px/1.2 var(--font); padding: 0 6px 10px; text-align: right; }
-  .compare th:first-child { text-align: left; font: 700 10px/1.2 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
-  .compare td { padding: 8px 6px; border-top: 1px solid var(--edge); text-align: right; font-variant-numeric: tabular-nums; }
-  .compare td:first-child { text-align: left; color: var(--ink2); }
-  .compare tr.big td { font: 800 18px/1.2 var(--font); padding-top: 10px; }
-  .compare tr.big td:first-child { font: 600 13px/1.4 var(--font); }
-  .compare .off { color: var(--ink2); font-weight: 600; }
+  .compare th { font: 700 10px/1.2 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); padding: 0 4px 8px; text-align: right; }
+  .compare th:first-child { text-align: left; }
+  .compare td { padding: 9px 4px; border-top: 1px solid var(--edge); text-align: right; font-variant-numeric: tabular-nums; vertical-align: top; white-space: nowrap; }
+  .compare td:first-child { text-align: left; white-space: normal; font-weight: 700; }
+  .compare td.big { font: 800 16px/1.3 var(--font); }
+  .compare tr.off td { color: var(--ink2); font-weight: 600; }
+  .picker { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 12px; }
+  .picker button { all: unset; cursor: pointer; padding: 6px 11px; border-radius: 999px; font: 800 11px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); box-shadow: var(--raise-sm); border: 1px solid var(--edge); }
+  .picker button[aria-pressed="true"] { color: var(--accent); box-shadow: var(--press-sm); }
 
   .list { display: flex; flex-direction: column; gap: 10px; }
   .card { padding: 12px 14px; border-radius: var(--r); box-shadow: var(--press-sm); border: 1px solid var(--edge); }
@@ -118,7 +120,7 @@
 </head>
 <body>
 <header class="poly-head">
-  <div class="who"><h1>Polybot</h1><div class="sub">Polymarket · two strategies, side by side</div></div>
+  <div class="who"><h1>Polybot</h1><div class="sub">Polymarket · strategies, side by side</div></div>
   <span class="chip" id="mode"><i></i>…</span>
 </header>
 <div id="banners"></div>
@@ -126,7 +128,7 @@
 <section><h2>Strategies <small id="cmpnote"></small></h2><div id="compare"></div></section>
 <section><h2>Positions <small id="poscount"></small></h2><div id="positions"></div></section>
 <section><h2>Underdog · games around kickoff <small id="udnote"></small></h2><div id="games"></div></section>
-<section><h2>Consensus · where the leaders agree <small id="sigcount"></small></h2><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
+<section><h2>Consensus · where the leaders agree <small id="sigcount"></small></h2><div class="picker" id="picker"></div><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
 <section><h2>Trades</h2><div id="trades"></div></section>
 <section><h2>Leaders watched <small id="leadcount"></small></h2><div id="leaders"></div></section>
 <section><h2>Setup</h2><div id="setup"></div></section>
@@ -149,12 +151,16 @@
   function clock(iso) { if (!iso) return ""; return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }
   function link(s) { return s.event_slug ? "https://polymarket.com/event/" + encodeURIComponent(s.event_slug) : s.slug ? "https://polymarket.com/market/" + encodeURIComponent(s.slug) : "https://polymarket.com/"; }
   function tone(n) { return n > 0 ? "up" : n < 0 ? "down" : ""; }
-  function stag(name) { return '<span class="chip sm ' + (name === "underdog" ? "info" : "") + '">' + (name === "underdog" ? "Underdog" : "Consensus") + "</span>"; }
+  var LABELS = {};
+  function stag(name) { var l = LABELS[name] || name; return '<span class="chip sm ' + (name === "underdog" ? "info" : "") + '">' + esc(String(l).replace(/^Consensus · /, "")) + "</span>"; }
 
-  var last = null, showAll = false, SHOW = 8;
+  var last = null, showAll = false, SHOW = 8, picked = localStorage.getItem("polybot-variant") || "consensus";
   function render(d) {
     last = d;
-    var cfg = d.config || {}, live = d.mode === "live", t = d.totals || {}, st = d.strategies || {}, ud = d.underdog || {};
+    LABELS = d.labels || {};
+    var cfg = d.config || {}, live = d.mode === "live", t = d.totals || {}, st = d.strategies || [], ud = d.underdog || {};
+    var rows = Array.isArray(st) ? st : [];
+    var byName = {}; rows.forEach(function (r) { byName[r.name] = r; });
     var mode = $("mode"); mode.className = "chip " + (live ? "live" : ""); mode.innerHTML = "<i></i>" + (live ? "Live" : "Paper");
     var bn = "";
     (d.errors || []).slice(-2).forEach(function (e) { bn += '<div class="banner">' + esc(e.message) + ' <span class="muted">· ' + esc(ago(e.at)) + "</span></div>"; });
@@ -164,24 +170,18 @@
 
     var games = ud.games || [];
     $("stats").innerHTML =
-      '<div class="tile"><b>' + (d.leaders || []).length + "</b><span>leaders</span></div>" +
+      '<div class="tile"><b>' + (d.variants || []).length + "</b><span>setups</span></div>" +
       '<div class="tile"><b>' + (ud.games_total || 0) + "</b><span>games " + cfg.ud_lookahead_hours + " h</span></div>" +
       '<div class="tile"><b>' + (t.open || 0) + "</b><span>open</span></div>" +
       '<div class="tile"><b class="' + tone(t.total) + '">' + money(t.total, true) + "</b><span>" + (live ? "P&amp;L" : "paper P&amp;L") + "</span></div>";
 
-    var c = st.consensus || {}, u = st.underdog || {};
-    function cell(fn, s) { return "<td" + (s.enabled === false ? ' class="off"' : "") + ">" + fn(s) + "</td>"; }
-    function row(label, fn, cls) { return "<tr" + (cls ? ' class="' + cls + '"' : "") + "><td>" + label + "</td>" + cell(fn, c) + cell(fn, u) + "</tr>"; }
-    $("cmpnote").textContent = (c.closed || 0) + (u.closed || 0) ? "closed trades decide this" : "nothing closed yet";
-    $("compare").innerHTML = '<table class="compare"><tr><th></th><th>Consensus</th><th>Underdog' + (u.enabled === false ? ' <span class="chip sm dim">off</span>' : "") + "</th></tr>" +
-      row((live ? "" : "Paper ") + "P&amp;L", function (s) { return '<span class="' + tone(s.total) + '">' + money(s.total, true) + "</span>"; }, "big") +
-      row("Realized", function (s) { return '<span class="' + tone(s.realized) + '">' + money(s.realized, true) + "</span>"; }) +
-      row("Open now", function (s) { return (s.open || 0) + " · " + '<span class="' + tone(s.unrealized) + '">' + money(s.unrealized, true) + "</span>"; }) +
-      row("Closed trades", function (s) { return s.closed || 0; }) +
-      row("Win rate", function (s) { return pct(s.win_rate); }) +
-      row("Avg per trade", function (s) { return '<span class="' + tone(s.avg_return) + '">' + pct(s.avg_return, true) + "</span>"; }) +
-      row("Spent 24 h", function (s) { return money(s.spent_24h); }) +
-      "</table>";
+    var closedTotal = rows.reduce(function (n, r) { return n + (r.closed || 0); }, 0);
+    $("cmpnote").textContent = closedTotal ? "closed trades decide this" : "nothing closed yet";
+    $("compare").innerHTML = rows.length ? '<table class="compare"><tr><th>Strategy</th><th>' + (live ? "" : "Paper ") + 'P&amp;L</th><th>Trades</th><th>Win</th><th>Avg</th></tr>' + rows.map(function (r) {
+      var off = r.enabled === false;
+      return '<tr' + (off ? ' class="off"' : "") + '><td>' + esc(r.label) + (off ? ' <span class="chip sm dim">off</span>' : "") + '<br><span class="muted">' + (r.open || 0) + " open · " + money(r.open_cost) + " in" + ((r.unrealized || 0) ? ' · <span class="' + tone(r.unrealized) + '">' + money(r.unrealized, true) + "</span>" : "") + "</span></td>" +
+        '<td class="big ' + tone(r.total) + '">' + money(r.total, true) + "</td><td>" + (r.closed || 0) + "</td><td>" + pct(r.win_rate) + '</td><td class="' + tone(r.avg_return) + '">' + pct(r.avg_return, true) + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">Waiting for the first cycle.</div>';
 
     var pos = d.positions || [];
     $("poscount").textContent = pos.length ? money(t.open_cost) + " in · " + money(t.open_value) + " now" : "";
@@ -198,13 +198,22 @@
       return '<tr><td class="muted num">' + esc(whenTxt) + "<br>" + esc(clock(g.game_start)) + '</td><td><a href="' + esc(link(g)) + '" target="_blank" rel="noopener">' + esc(g.title) + '</a> <span class="chip sm dim">' + esc(g.sport) + "</span>" + dec + '</td><td class="r num">' + esc(g.outcome) + "<br>" + cents(g.price) + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">No game with an underdog between ' + cents(cfg.ud_min_price) + " and " + cents(cfg.ud_max_price) + " starts in the next " + cfg.ud_lookahead_hours + " h.</div>";
 
-    var sig = d.signals || [];
-    $("sigcount").textContent = sig.length ? "last " + cfg.lookback_hours + " h · " + cfg.min_agree + " must agree" : "";
+    var variants = d.variants || [];
+    var cur = variants.filter(function (v) { return v.name === picked; })[0] || variants[0] || { leaders: [], signals: [], params: {} };
+    var vp = cur.params || {};
+    $("picker").innerHTML = variants.length > 1 ? variants.map(function (v) {
+      return '<button type="button" data-v="' + esc(v.name) + '" aria-pressed="' + (v.name === cur.name) + '">' + esc((v.label || v.name).replace(/^Consensus · /, "")) + "</button>";
+    }).join("") : "";
+    Array.prototype.forEach.call($("picker").querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () { picked = b.getAttribute("data-v"); localStorage.setItem("polybot-variant", picked); showAll = false; if (last) render(last); });
+    });
+    var sig = cur.signals || [];
+    $("sigcount").textContent = sig.length ? "last " + (vp.lookback_hours || cfg.lookback_hours) + " h · " + (vp.min_agree || cfg.min_agree) + " must agree" : "";
     var more = $("more");
     more.hidden = sig.length <= SHOW;
     more.textContent = showAll ? "Show fewer" : "Show all " + sig.length;
     $("signals").innerHTML = sig.length ? sig.slice(0, showAll ? sig.length : SHOW).map(function (s) {
-      var buy = s.side === "BUY", p = Math.max(4, Math.min(100, s.score / cfg.min_agree * 100));
+      var buy = s.side === "BUY", p = Math.max(4, Math.min(100, s.score / (vp.min_agree || cfg.min_agree) * 100));
       var dec = s.decision || "", good = /bought|sold/.test(dec);
       if (s.closed && s.price != null) dec = (s.price >= 0.99 ? "resolved: won" : s.price <= 0.01 ? "resolved: lost" : dec);
       return '<div class="card"><div class="top"><span class="chip ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span>" +
@@ -224,8 +233,8 @@
         '<td class="r num">' + Number(x.shares).toFixed(1) + " @ " + cents(x.price) + '</td><td class="r num ' + (buy ? "muted" : tone(x.pnl)) + '">' + (buy ? money(x.cost) : money(x.pnl, true)) + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">No trades yet.</div>';
 
-    var ld = d.leaders || [];
-    $("leadcount").textContent = ld.length ? "top " + ld.length + " by profit · " + cfg.window : "";
+    var ld = cur.leaders || [];
+    $("leadcount").textContent = ld.length ? "top " + ld.length + " by profit · " + (vp.window || cfg.window) + " · " + (cur.fills || 0) + " fills" : "";
     $("leaders").innerHTML = ld.length ? '<table><tr><th>#</th><th>Trader</th><th class="r">Profit</th><th class="r">Fills</th></tr>' + ld.map(function (l) {
       return '<tr><td class="muted num">' + l.rank + '</td><td><a href="https://polymarket.com/profile/' + esc(l.wallet) + '" target="_blank" rel="noopener">' + esc(l.name) + '</a></td><td class="r num up">' + big(l.pnl) + '</td><td class="r num muted">' + l.fills + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">Waiting for the leaderboard.</div>';
@@ -238,11 +247,18 @@
       "<div><span>Stake</span><b>" + money(cfg.stake_usd) + " a trade</b></div>" +
       "<div><span>Price band</span><b>" + cents(cfg.min_price) + " – " + cents(cfg.max_price) + "</b></div>" +
       "<div><span>Chase limit</span><b>+" + cents(cfg.max_above_leaders) + " over leaders</b></div>" +
-      "<div><span>Daily budget</span><b>" + money(cfg.daily_budget_usd) + " · " + money(c.spent_24h) + " used</b></div>" +
+      "<div><span>Daily budget</span><b>" + money(cfg.daily_budget_usd) + " a setup</b></div>" +
       "<div><span>Open at most</span><b>" + cfg.max_open + "</b></div>" +
       "<div><span>Follow sells</span><b>" + (cfg.follow_sells ? "yes" : "no") + "</b></div>" +
       "<div><span>Checks every</span><b>" + Math.round(cfg.poll_seconds / 60) + " min</b></div>" +
-      "</div><h3>Underdog</h3>" + '<div class="kv">' +
+      "<div><span>Budget used</span><b>" + money((byName.consensus || {}).spent_24h) + " of " + money(cfg.daily_budget_usd) + "</b></div>" +
+      "</div>" + (variants.length > 1 ? "<h3>Variants (same rules unless noted)</h3>" + '<div class="kv">' + variants.filter(function (v) { return v.name !== "consensus"; }).map(function (v) {
+        var q = v.params || {}, diffs = [];
+        ["window", "category", "top_n", "min_agree", "lookback_hours", "min_leader_usd", "stake_usd", "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours", "min_hours_to_end", "follow_sells", "poll_seconds"].forEach(function (k) {
+          if (q[k] !== undefined && String(q[k]) !== String(cfg[k])) diffs.push(k.replace(/_/g, " ") + " " + q[k]);
+        });
+        return "<div><span>" + esc(v.name) + "</span><b>" + esc(diffs.join(" · ") || "same as base") + "</b></div>";
+      }).join("") + "</div>" : "") + "<h3>Underdog</h3>" + '<div class="kv">' +
       "<div><span>Enabled</span><b>" + (cfg.ud_enabled ? "yes" : "no") + "</b></div>" +
       "<div><span>Sports</span><b>" + (cfg.sports && cfg.sports.length ? esc(cfg.sports.join(", ")) : "all") + "</b></div>" +
       "<div><span>Underdog is</span><b>" + cents(cfg.ud_min_price) + " – " + cents(cfg.ud_max_price) + "</b></div>" +
@@ -250,7 +266,7 @@
       "<div><span>Stake</span><b>" + money(cfg.ud_stake_usd) + " a game</b></div>" +
       "<div><span>Sells at</span><b>+" + cfg.ud_take_profit_pct + "% · stop −" + cfg.ud_stop_loss_pct + "% · " + cfg.ud_max_hold_min + " min</b></div>" +
       "<div><span>Needs</span><b>spread ≤ " + cents(cfg.ud_max_spread) + " · liquidity ≥ " + big(cfg.ud_min_liquidity) + "</b></div>" +
-      "<div><span>Daily budget</span><b>" + money(cfg.ud_daily_budget_usd) + " · " + money(u.spent_24h) + " used</b></div>" +
+      "<div><span>Daily budget</span><b>" + money(cfg.ud_daily_budget_usd) + " · " + money((byName.underdog || {}).spent_24h) + " used</b></div>" +
       "<div><span>Open at most</span><b>" + cfg.ud_max_open + "</b></div>" +
       "<div><span>Checks every</span><b>" + cfg.ud_tick_seconds + " s</b></div>" +
       (a.wallet_type ? "<div><span>Wallet</span><b>" + esc(cfg.wallet) + " · " + esc(a.wallet_type) + "</b></div>" : "") +

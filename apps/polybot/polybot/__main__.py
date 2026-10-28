@@ -33,11 +33,15 @@ def main(argv: list[str]) -> int:
         runner.connect()
         runner.run_due(utcnow(), force=True)
         status = store.read_status() or {}
-        print(json.dumps({k: status.get(k) for k in ("mode", "fills", "strategies")}, indent=2))
-        print("\nconsensus:")
-        for s in status.get("signals", [])[:12]:
-            print(f"  {s['score']:+3d}  {s['side']:4s} {s['title'][:56]} · {s['outcome']}  agree {len(s['agree'])} / against {len(s['disagree'])}"
-                  f"  leaders {s['avg_price'] if s['avg_price'] is not None else '?'}  now {s['price'] if s['price'] is not None else '?'}  → {s['decision']}")
+        print(f"mode {status.get('mode')}")
+        for st in status.get("strategies", []):
+            print(f"  {st['label']:34s} open {st['open']:2d} closed {st['closed']:3d} wins {st['wins']:3d} total {st['total']:+8.2f}"
+                  f"  avg {st['avg_return'] if st['avg_return'] is None else round(100 * st['avg_return'], 1)}%")
+        for v in status.get("variants", []):
+            print(f"\n{v['label']}: {len(v['leaders'])} leaders · {v['fills']} fills")
+            for s in v.get("signals", [])[:6]:
+                print(f"  {s['score']:+3d}  {s['side']:4s} {s['title'][:56]} · {s['outcome']}  agree {len(s['agree'])} / against {len(s['disagree'])}"
+                      f"  leaders {s['avg_price'] if s['avg_price'] is not None else '?'}  now {s['price'] if s['price'] is not None else '?'}  → {s['decision']}")
         ud = status.get("underdog", {})
         print(f"\nunderdog: {ud.get('games_total', 0)} games with an underdog in band in the window")
         for g in ud.get("games", [])[:12]:
@@ -50,11 +54,11 @@ def main(argv: list[str]) -> int:
     web.serve(cfg.port, store, cfg.mode)
     runner.connect()
     log = logging.getLogger("polybot")
-    log.info("Polybot in %s mode: consensus (top %d, %s, %d must agree, $%s) · underdog (%s, $%s, +%s%% target)",
-             runner.core.mode, cfg.top_n, cfg.window, cfg.min_agree, cfg.stake_usd,
-             "on" if cfg.ud_enabled else "off", cfg.ud_stake_usd, cfg.ud_take_profit_pct)
+    names = ", ".join(s.label for s in runner.consensus)
+    log.info("Polybot in %s mode: %s · underdog (%s, $%s, +%s%% target)",
+             runner.core.mode, names, "on" if cfg.ud_enabled else "off", cfg.ud_stake_usd, cfg.ud_take_profit_pct)
     notifier.send("Polybot started",
-                  f"{runner.core.mode} mode · consensus: top {cfg.top_n} ({cfg.window}), {cfg.min_agree} must agree, ${cfg.stake_usd} a trade"
+                  f"{runner.core.mode} mode · {len(runner.consensus)} consensus setups ({', '.join(s.p.window for s in runner.consensus)})"
                   f" · underdog: {'on' if cfg.ud_enabled else 'off'}, ${cfg.ud_stake_usd} a game, +{cfg.ud_take_profit_pct}% target",
                   priority="low", tags="robot")
 

@@ -111,12 +111,13 @@ class UnderdogStrategy:
         what = f"{cand.title} · {cand.outcome}"
 
         def skip(reason: str, final: bool = False) -> None:
-            self.decisions[cand.condition_id] = reason
             if final:
-                self.store.state["acted"][cand.asset_id] = iso(now)
-            log.info("skip %s: %s", what, reason)
+                self.store.mark_acted(cand.asset_id, self.name, now)
+            if self.decisions.get(cand.condition_id) != reason:  # say it once, not every tick
+                log.info("skip %s: %s", what, reason)
+            self.decisions[cand.condition_id] = reason
 
-        if self.store.position(cand.asset_id) or self.store.acted_at(cand.asset_id):
+        if self.store.position(cand.asset_id, self.name) or self.store.acted_at(cand.asset_id, self.name):
             return None  # bought already, or decided for good
         if not self.wanted_sport(cand.sport):
             return skip(f"{cand.sport}: not in UD_SPORTS", final=True)
@@ -208,7 +209,7 @@ class UnderdogStrategy:
                 if matched >= state["original"] - Decimal("0.01"):
                     return self.close(pos, state["price"], matched * state["price"], "target", now)
                 if matched > 0 and float(matched) != float(pos.get("matched", 0)):
-                    self.store.update_position(asset_id, matched=float(matched))
+                    self.store.update_position(asset_id, self.name, matched=float(matched))
 
         bid = core.estimate(asset_id, "SELL", shares=shares)
         if bid is not None:
@@ -237,7 +238,7 @@ class UnderdogStrategy:
             return self.close(pos, target, shares * target, "target", now)
         est = core.estimate(asset_id, "SELL", shares=remaining)
         if est is None:
-            self.store.note_position(asset_id, f"wanted to sell ({reason}) but found no bid")
+            self.store.note_position(asset_id, f"wanted to sell ({reason}) but found no bid", self.name)
             return
         m = core.market(pos["condition_id"], pos.get("slug", ""))
         fill = core.sell(asset_id, remaining, est, what, fee_rate=core.fee_rate(m) if m else Decimal(str(pos.get("fee_rate", 0))))
@@ -251,7 +252,7 @@ class UnderdogStrategy:
     def close(self, pos: dict, price: Decimal, proceeds: Decimal, reason: str, now: datetime) -> None:
         core = self.core
         label = {"target": "target hit", "stop": "stop loss", "time": "time's up"}.get(reason, reason)
-        rec = self.store.close_position(pos["asset_id"], price, proceeds, label, now, mode=core.mode)
+        rec = self.store.close_position(pos["asset_id"], price, proceeds, label, now, mode=core.mode, strategy=self.name)
         if rec is None:
             return
         self._checked_at.pop(pos["asset_id"], None)
@@ -266,7 +267,7 @@ class UnderdogStrategy:
     def status(self, now: datetime) -> dict:
         rows = []
         for c in sorted(self.schedule.values(), key=lambda c: c.game_start):
-            pos = self.store.position(c.asset_id)
+            pos = self.store.position(c.asset_id, self.name)
             rows.append({
                 "condition_id": c.condition_id, "title": c.title, "outcome": c.outcome, "sport": c.sport,
                 "slug": c.slug, "event_slug": c.event_slug, "game_start": iso(c.game_start),

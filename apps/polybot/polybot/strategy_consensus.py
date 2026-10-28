@@ -1,19 +1,108 @@
-"""Strategy 1, "consensus": buy what the leaderboard's top traders agree on."""
+"""Strategy 1, "consensus": buy what the leaderboard's top traders agree on.
+
+Several *variants* of it can run at once (POLY_VARIANTS): a different
+leaderboard window, threshold, size of the pack, and so on. They share one
+LeaderFeed, so a trader who is on two boards is fetched once, and each keeps
+its own paper book so the page can compare them.
+"""
 from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, replace
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from typing import Iterator
 
+from .config import Config, WINDOWS
 from .consensus import LeaderTrade, Signal, find_signals
 from .core import CENT, Core, aware, short
 from .store import iso
 
 log = logging.getLogger("polybot.consensus")
 AUTO_NAME = re.compile(r"^0x[0-9a-fA-F]{40}(-\d+)?$")  # Polymarket's placeholder for traders without a name
+
+
+@dataclass(frozen=True)
+class ConsensusParams:
+    name: str
+    label: str
+    window: str
+    category: str
+    top_n: int
+    min_agree: int
+    lookback_hours: float
+    min_leader_usd: Decimal
+    stake_usd: Decimal
+    max_price: Decimal
+    min_price: Decimal
+    max_above_leaders: Decimal
+    max_open: int
+    daily_budget_usd: Decimal
+    cooldown_hours: float
+    min_hours_to_end: float
+    follow_sells: bool
+    poll_seconds: int
+
+    @classmethod
+    def base(cls, cfg: Config) -> "ConsensusParams":
+        return cls(name="consensus", label=f"Consensus · {cfg.window}", window=cfg.window, category=cfg.category,
+                   top_n=cfg.top_n, min_agree=cfg.min_agree, lookback_hours=cfg.lookback_hours,
+                   min_leader_usd=cfg.min_leader_usd, stake_usd=cfg.stake_usd, max_price=cfg.max_price,
+                   min_price=cfg.min_price, max_above_leaders=cfg.max_above_leaders, max_open=cfg.max_open,
+                   daily_budget_usd=cfg.daily_budget_usd, cooldown_hours=cfg.cooldown_hours,
+                   min_hours_to_end=cfg.min_hours_to_end, follow_sells=cfg.follow_sells, poll_seconds=cfg.poll_seconds)
+
+    def variant(self, name: str, overrides: dict[str, str]) -> "ConsensusParams":
+        """A copy with some settings changed (values arrive as strings from .env)."""
+        types = {f.name: f.type for f in fields(self)}
+        changes: dict = {}
+        for key, raw in overrides.items():
+            if key == "label":
+                changes["label"] = raw
+                continue
+            t = types[key]
+            if t in ("int",):
+                changes[key] = int(raw)
+            elif t in ("float",):
+                changes[key] = float(raw)
+            elif t in ("Decimal",):
+                changes[key] = Decimal(raw)
+            elif t in ("bool",):
+                changes[key] = raw.strip().lower() in ("1", "true", "yes", "on")
+            else:
+                changes[key] = raw.strip().lower()
+        p = replace(self, name=name, **changes)
+        if "label" not in overrides:
+            bits = [p.window]
+            if p.category and p.category != "overall":
+                bits.append(p.category)
+            if p.top_n != self.top_n:
+                bits.append(f"top {p.top_n}")
+            if p.min_agree != self.min_agree:
+                bits.append(f"{p.min_agree} agree")
+            if p.lookback_hours != self.lookback_hours:
+                bits.append(f"{p.lookback_hours:g} h")
+            p = replace(p, label="Consensus · " + " · ".join(bits))
+        p.validate()
+        return p
+
+    def validate(self) -> None:
+        if self.window not in WINDOWS:
+            raise ValueError(f"variant {self.name}: window must be one of {WINDOWS}, not {self.window!r}")
+        if not (1 <= self.top_n <= 1000) or self.min_agree < 1 or self.stake_usd < 1:
+            raise ValueError(f"variant {self.name}: top_n 1–1000, min_agree ≥ 1, stake ≥ 1")
+        if not (0 < self.min_price < self.max_price <= 1):
+            raise ValueError(f"variant {self.name}: need 0 < min_price < max_price <= 1")
+        if self.poll_seconds < 30:
+            raise ValueError(f"variant {self.name}: poll_seconds must be at least 30")
+
+    def public(self) -> dict:
+        out = {}
+        for f in fields(self):
+            v = getattr(self, f.name)
+            out[f.name] = float(v) if isinstance(v, Decimal) else v
+        return out
 
 
 @dataclass
@@ -25,38 +114,35 @@ class Leader:
     volume: Decimal
 
 
-class ConsensusStrategy:
-    name = "consensus"
+class LeaderFeed:
+    """Leaderboards and the leaders' fills, fetched once and shared by every variant."""
     PAGE_SIZE = 500
     MAX_PAGES_PER_LEADER = 3      # 1500 fills per leader per refresh is plenty
-    PRICED_SIGNALS = 15           # how many signals get a live price on the page
 
-    def __init__(self, core: Core):
+    def __init__(self, core: Core, keep_hours: float, board_ttl: int):
         self.core = core
-        self.cfg = core.cfg
-        self.store = core.store
+        self.keep = timedelta(hours=keep_hours)
+        self.board_ttl = timedelta(seconds=board_ttl)
+        self._boards: dict[tuple, tuple[datetime, list[Leader]]] = {}
         self._trades: dict[str, dict[tuple, LeaderTrade]] = {}
         self._fetched_at: dict[str, datetime] = {}
-        self.decisions: dict[str, str] = {}
-        self.leaders: list[Leader] = []
-        self.signals: list[Signal] = []
-        self.fills = 0
+        self._wanted_at: dict[str, datetime] = {}
 
-    @property
-    def interval(self) -> int:
-        return self.cfg.poll_seconds
-
-    # ── leaders and their trades ─────────────────────────────
-    def fetch_leaders(self) -> list[Leader]:
-        kwargs: dict = {"window": self.cfg.window, "sort_by": "PNL", "page_size": min(self.cfg.top_n, 1000)}
-        if self.cfg.category and self.cfg.category != "overall":
-            kwargs["category"] = self.cfg.category
+    def leaders(self, window: str, category: str, top_n: int, now: datetime) -> list[Leader]:
+        key = (window, category, top_n)
+        hit = self._boards.get(key)
+        if hit and now - hit[0] < self.board_ttl:
+            return hit[1]
+        kwargs: dict = {"window": window, "sort_by": "PNL", "page_size": min(top_n, 1000)}
+        if category and category != "overall":
+            kwargs["category"] = category
         page = self.core.call(lambda: self.core.public.list_trader_leaderboard(**kwargs).first_page())
         leaders = []
-        for e in page.items[: self.cfg.top_n]:
+        for e in page.items[:top_n]:
             w = str(e.wallet).lower()
             name = e.user_name if e.user_name and not AUTO_NAME.match(e.user_name) else short(w)
             leaders.append(Leader(w, name, int(e.rank), Decimal(str(e.pnl)), Decimal(str(e.volume))))
+        self._boards[key] = (now, leaders)
         return leaders
 
     @staticmethod
@@ -80,51 +166,86 @@ class ConsensusStrategy:
                 return
             page = self.core.call(pages.from_cursor(page.next_cursor).first_page)
 
-    def refresh_trades(self, leaders: list[Leader], since: datetime, now: datetime) -> dict[str, list[LeaderTrade]]:
-        """Keep every leader's fills inside the lookback window, fetching only what's new."""
-        keep = {l.wallet for l in leaders}
-        for w in list(self._trades):
-            if w not in keep:
-                self._trades.pop(w, None)
-                self._fetched_at.pop(w, None)
+    def trades(self, leaders: list[Leader], since: datetime, now: datetime) -> dict[str, list[LeaderTrade]]:
+        """Each leader's fills since `since`, fetching only what is new."""
+        keep_since = now - self.keep
+        out: dict[str, list[LeaderTrade]] = {}
         for l in leaders:
+            self._wanted_at[l.wallet] = now
             bucket = self._trades.setdefault(l.wallet, {})
-            start = since
+            start = keep_since
             last = self._fetched_at.get(l.wallet)
             if last:  # overlap a little: fills show up in the data API with some delay
-                start = max(since, last - timedelta(minutes=15))
-            try:
-                for t in self._wallet_trades(l.wallet, start):
-                    if t.timestamp >= since:
-                        bucket[t.key] = t
-                self._fetched_at[l.wallet] = now
-            except Exception as e:
-                self.core.warn(f"trades:{l.wallet}", f"could not fetch trades for {l.name}: {e}")
+                start = max(keep_since, last - timedelta(minutes=15))
+            if last is None or now - last >= timedelta(seconds=60):
+                try:
+                    for t in self._wallet_trades(l.wallet, start):
+                        if t.timestamp >= keep_since:
+                            bucket[t.key] = t
+                    self._fetched_at[l.wallet] = now
+                except Exception as e:
+                    self.core.warn(f"trades:{l.wallet}", f"could not fetch trades for {l.name}: {e}")
             for k, t in list(bucket.items()):
-                if t.timestamp < since:
+                if t.timestamp < keep_since:
                     del bucket[k]
-        return {w: list(b.values()) for w, b in self._trades.items()}
+            out[l.wallet] = [t for t in bucket.values() if t.timestamp >= since]
+        # Forget wallets no board has wanted for a while.
+        for w, at in list(self._wanted_at.items()):
+            if now - at > timedelta(hours=1):
+                self._wanted_at.pop(w, None)
+                self._trades.pop(w, None)
+                self._fetched_at.pop(w, None)
+        return out
+
+
+class ConsensusStrategy:
+    kind = "consensus"
+    PRICED_SIGNALS = 15           # how many signals get a live price on the page
+
+    def __init__(self, core: Core, params: ConsensusParams, feed: LeaderFeed):
+        self.core = core
+        self.p = params
+        self.store = core.store
+        self.feed = feed
+        self.decisions: dict[str, str] = {}
+        self._prev_decisions: dict[str, str] = {}
+        self.leaders: list[Leader] = []
+        self.signals: list[Signal] = []
+        self.fills = 0
+        self._trades_by_wallet: dict[str, list[LeaderTrade]] = {}
+
+    @property
+    def name(self) -> str:
+        return self.p.name
+
+    @property
+    def label(self) -> str:
+        return self.p.label
+
+    @property
+    def interval(self) -> int:
+        return self.p.poll_seconds
 
     # ── one cycle ────────────────────────────────────────────
     def run(self, now: datetime) -> None:
-        cfg = self.cfg
-        since = now - timedelta(hours=cfg.lookback_hours)
-        self.leaders = self.fetch_leaders()
-        trades_by_wallet = self.refresh_trades(self.leaders, since, now)
-        self._trades_by_wallet = trades_by_wallet
-        all_trades = [t for ts in trades_by_wallet.values() for t in ts]
+        p = self.p
+        since = now - timedelta(hours=p.lookback_hours)
+        self.leaders = self.feed.leaders(p.window, p.category, p.top_n, now)
+        self._trades_by_wallet = self.feed.trades(self.leaders, since, now)
+        all_trades = [t for ts in self._trades_by_wallet.values() for t in ts]
         self.fills = len(all_trades)
         held: set = set()
-        for p in self.store.open_positions(self.name):
-            held.add(p["asset_id"])
-            held.add((p.get("condition_id", ""), str(p.get("outcome", "")).lower()))
-        self.signals = find_signals(all_trades, min_leader_usd=cfg.min_leader_usd, held=held)
-        log.info("%d leaders · %d fills in the last %gh · %d outcomes with 2+ agreeing",
-                 len(self.leaders), self.fills, cfg.lookback_hours, len(self.signals))
+        for pos in self.store.open_positions(self.name):
+            held.add(pos["asset_id"])
+            held.add((pos.get("condition_id", ""), str(pos.get("outcome", "")).lower()))
+        self.signals = find_signals(all_trades, min_leader_usd=p.min_leader_usd, held=held)
+        log.info("[%s] %d leaders · %d fills in the last %gh · %d outcomes with 2+ agreeing",
+                 self.name, len(self.leaders), self.fills, p.lookback_hours, len(self.signals))
 
+        self._prev_decisions = self.decisions
         self.decisions = {}
         for sig in self.signals:
-            short_by = cfg.min_agree - sig.score
+            short_by = p.min_agree - sig.score
             try:
                 if sig.side == "BUY":
                     if short_by > 0:
@@ -132,62 +253,64 @@ class ConsensusStrategy:
                     else:
                         self.consider_buy(sig, now)
                 else:
-                    pos = self.store.position(sig.asset_id) or self.store.find_position(sig.condition_id, sig.outcome)
-                    if pos is None or pos.get("strategy", "consensus") != self.name:
+                    pos = self.store.position(sig.asset_id, self.name) or self.store.find_position(sig.condition_id, sig.outcome, self.name)
+                    if pos is None:
                         self.decisions[sig.key] = "not holding"
-                    elif not cfg.follow_sells:
+                    elif not p.follow_sells:
                         self.decisions[sig.key] = "following sells is off"
                     elif short_by > 0:
                         self.decisions[sig.key] = f"needs {short_by} more"
                     else:
                         self.consider_sell(sig, pos, now)
             except Exception as e:  # one bad market must not stop the others
-                log.exception("could not act on %s · %s", sig.title, sig.outcome)
+                log.exception("[%s] could not act on %s · %s", self.name, sig.title, sig.outcome)
                 self.decisions[sig.key] = f"error: {e}"
-                self.core.record_error(f"{sig.side} {sig.title} · {sig.outcome}: {e}")
+                self.core.record_error(f"{self.name}: {sig.side} {sig.title} · {sig.outcome}: {e}")
+
+    def _skip(self, sig: Signal, what: str, reason: str) -> None:
+        self.decisions[sig.key] = reason
+        if self._prev_decisions.get(sig.key) != reason:  # say it once, not every five minutes
+            log.info("[%s] skip %s %s: %s", self.name, sig.side, what, reason)
 
     def consider_buy(self, sig: Signal, now: datetime) -> dict | None:
-        cfg = self.cfg
+        p = self.p
         core = self.core
         what = f"{sig.title} · {sig.outcome}"
+        skip = lambda reason: self._skip(sig, what, reason)  # noqa: E731
 
-        def skip(reason: str) -> None:
-            self.decisions[sig.key] = reason
-            log.info("skip BUY %s: %s", what, reason)
-
-        if self.store.position(sig.asset_id):
+        if self.store.position(sig.asset_id, self.name):
             return skip("already holding")
-        last = self.store.acted_at(sig.asset_id)
-        if last and now - last < timedelta(hours=cfg.cooldown_hours):
+        last = self.store.acted_at(sig.asset_id, self.name)
+        if last and now - last < timedelta(hours=p.cooldown_hours):
             return skip("cooling down after the last trade")
-        if len(self.store.open_positions(self.name)) >= cfg.max_open:
+        if len(self.store.open_positions(self.name)) >= p.max_open:
             return skip("max open positions reached")
-        if self.store.spent_since(now - timedelta(hours=24), self.name) + cfg.stake_usd > cfg.daily_budget_usd:
+        if self.store.spent_since(now - timedelta(hours=24), self.name) + p.stake_usd > p.daily_budget_usd:
             return skip("daily budget used up")
         m = core.market(sig.condition_id, sig.slug)
         if m is None:
             return skip("market not found")
-        why = core.not_tradeable(m, now, cfg.min_hours_to_end)
+        why = core.not_tradeable(m, now, p.min_hours_to_end)
         if why:
             return skip(why)
         asset_id, label = core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
-        if self.store.position(asset_id):
+        if self.store.position(asset_id, self.name):
             return skip("already holding")
-        est = core.estimate(asset_id, "BUY", amount=cfg.stake_usd)
+        est = core.estimate(asset_id, "BUY", amount=p.stake_usd)
         if est is None:
             return skip("not enough liquidity")
-        if est > cfg.max_price:
-            return skip(f"price {est:.2f} is above the max {cfg.max_price}")
-        if est < cfg.min_price:
-            return skip(f"price {est:.2f} is below the min {cfg.min_price}")
-        if sig.avg_price and est > sig.avg_price + cfg.max_above_leaders:
+        if est > p.max_price:
+            return skip(f"price {est:.2f} is above the max {p.max_price}")
+        if est < p.min_price:
+            return skip(f"price {est:.2f} is below the min {p.min_price}")
+        if sig.avg_price and est > sig.avg_price + p.max_above_leaders:
             return skip(f"too late: {est:.2f} now, leaders paid {sig.avg_price:.2f}")
-        amount = cfg.stake_usd
+        amount = p.stake_usd
         shares = (amount / est).quantize(CENT, rounding=ROUND_DOWN)
         min_size = Decimal(str(m.trading.minimum_order_size or 0))
         if shares < min_size:  # the book wants at least this many shares
             amount = (min_size * est * Decimal("1.02")).quantize(CENT, rounding=ROUND_UP)
-            if self.store.spent_since(now - timedelta(hours=24), self.name) + amount > cfg.daily_budget_usd:
+            if self.store.spent_since(now - timedelta(hours=24), self.name) + amount > p.daily_budget_usd:
                 return skip(f"minimum order (${amount}) does not fit the daily budget")
         if core.mode == "live" and core.balance is not None and core.balance < amount:
             core.warn("funds", f"not enough pUSD for a ${amount} order (balance ${core.balance:.2f})")
@@ -207,10 +330,10 @@ class ConsensusStrategy:
         self.store.open_position(rec, now)
         verb = "Bought" if core.mode == "live" else "Paper buy"
         self.decisions[sig.key] = "bought" if core.mode == "live" else "paper bought"
-        log.info("%s %s: %s shares at %.2f ($%s) · %d agree, %d against",
-                 verb, what, rec["shares"], rec["price"], rec["cost"], len(sig.agree), len(sig.disagree))
+        log.info("[%s] %s %s: %s shares at %.2f ($%s) · %d agree, %d against",
+                 self.name, verb, what, rec["shares"], rec["price"], rec["cost"], len(sig.agree), len(sig.disagree))
         core.notifier.send(f"Polybot: {verb.lower()}",
-                           f"[consensus] {what}\n{rec['shares']:.2f} shares at {rec['price']:.2f} (${rec['cost']:.2f})\n"
+                           f"[{self.label}] {what}\n{rec['shares']:.2f} shares at {rec['price']:.2f} (${rec['cost']:.2f})\n"
                            f"{len(sig.agree)} leaders agree, {len(sig.disagree)} against",
                            tags="chart_with_upwards_trend")
         return rec
@@ -219,10 +342,7 @@ class ConsensusStrategy:
         core = self.core
         asset_id = pos["asset_id"]
         what = f"{pos.get('title')} · {pos.get('outcome')}"
-
-        def skip(reason: str) -> None:
-            self.decisions[sig.key] = reason
-            log.info("skip SELL %s: %s", what, reason)
+        skip = lambda reason: self._skip(sig, what, reason)  # noqa: E731
 
         shares = Decimal(str(pos.get("shares", 0)))
         if shares <= 0:
@@ -234,12 +354,13 @@ class ConsensusStrategy:
         fill = core.sell(asset_id, shares, est, what, fee_rate=core.fee_rate(m) if m else Decimal(0))
         if fill is None:
             return skip("order rejected")
-        rec = self.store.close_position(asset_id, Decimal(str(fill["price"])), Decimal(str(fill["proceeds"])), "leaders sold", now, mode=core.mode)
+        rec = self.store.close_position(asset_id, Decimal(str(fill["price"])), Decimal(str(fill["proceeds"])), "leaders sold", now,
+                                        mode=core.mode, strategy=self.name)
         verb = "Sold" if core.mode == "live" else "Paper sell"
         self.decisions[sig.key] = "sold" if core.mode == "live" else "paper sold"
-        log.info("%s %s: %s shares at %.2f, P&L $%.2f", verb, what, shares, fill["price"], rec["pnl"])
+        log.info("[%s] %s %s: %s shares at %.2f, P&L $%.2f", self.name, verb, what, shares, fill["price"], rec["pnl"])
         core.notifier.send(f"Polybot: {verb.lower()}",
-                           f"[consensus] {what}\n{shares:.2f} shares at {fill['price']:.2f}, P&L ${rec['pnl']:+.2f}\n"
+                           f"[{self.label}] {what}\n{shares:.2f} shares at {fill['price']:.2f}, P&L ${rec['pnl']:+.2f}\n"
                            f"{len(sig.agree)} leaders sold, {len(sig.disagree)} against",
                            tags="chart_with_downwards_trend")
         return rec
@@ -247,7 +368,6 @@ class ConsensusStrategy:
     # ── the page ─────────────────────────────────────────────
     def status(self) -> dict:
         core = self.core
-        names = {l.name: l.name for l in self.leaders}
         by_wallet = {l.wallet: l.name for l in self.leaders}
         rows = []
         priced = 0
@@ -279,13 +399,13 @@ class ConsensusStrategy:
                 "net_usd": float(s.net_usd), "last_at": iso(s.last_at),
                 "price": float(price) if price is not None else None,
                 "decision": decision, "closed": closed,
-                "holding": self.store.position(s.asset_id) is not None,
+                "holding": self.store.position(s.asset_id, self.name) is not None,
             })
         rows.sort(key=lambda r: (r["closed"], -r["score"]))
-        trades_by_wallet = getattr(self, "_trades_by_wallet", {})
         return {
+            "name": self.name, "label": self.label, "params": self.p.public(),
             "leaders": [{"rank": l.rank, "name": l.name, "wallet": l.wallet, "pnl": float(l.pnl), "volume": float(l.volume),
-                         "fills": len(trades_by_wallet.get(l.wallet, []))} for l in self.leaders],
+                         "fills": len(self._trades_by_wallet.get(l.wallet, []))} for l in self.leaders],
             "fills": self.fills,
             "signals": rows,
         }

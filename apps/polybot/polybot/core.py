@@ -349,8 +349,9 @@ class Core:
             for o in (m.outcomes.yes, m.outcomes.no):
                 if pos["asset_id"] in {str(o.token_id or ""), str(o.position_id or "")}:
                     price = o.price
+            strategy = pos.get("strategy", "consensus")
             if price is None:
-                self.store.note_position(pos["asset_id"], "market closed, waiting for resolution")
+                self.store.note_position(pos["asset_id"], "market closed, waiting for resolution", strategy)
                 continue
             price = Decimal(str(price))
             if price >= Decimal("0.99"):
@@ -358,10 +359,12 @@ class Core:
             elif price <= Decimal("0.01"):
                 final = Decimal(0)
             else:
-                self.store.note_position(pos["asset_id"], "market closed, waiting for resolution")
+                self.store.note_position(pos["asset_id"], "market closed, waiting for resolution", strategy)
                 continue
             shares = Decimal(str(pos.get("shares", 0)))
-            rec = self.store.close_position(pos["asset_id"], final, shares * final, "resolved", now)
+            rec = self.store.close_position(pos["asset_id"], final, shares * final, "resolved", now, strategy=strategy)
+            if rec is None:
+                continue
             won = final == 1
             claim = ""
             if self.mode == "live" and won:
@@ -372,7 +375,11 @@ class Core:
                                tags="tada" if won else "x")
 
     def mark(self, positions: list[dict]) -> None:
+        done: set[str] = set()
         for pos in positions:
+            if pos["asset_id"] in done:
+                continue
+            done.add(pos["asset_id"])
             mid = self.midpoint(pos["asset_id"])
             if mid is not None:
                 self.store.update_price(pos["asset_id"], mid)

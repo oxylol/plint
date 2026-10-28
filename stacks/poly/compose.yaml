@@ -50,6 +50,9 @@ services:
       POLY_FOLLOW_SELLS: ${POLY_FOLLOW_SELLS:-1}
       POLY_AUTO_REDEEM: ${POLY_AUTO_REDEEM:-1}
       POLY_POLL_SECONDS: ${POLY_POLL_SECONDS:-300}
+      # Extra consensus setups to compare, each with its own paper book:
+      # name:setting=value,setting=value;name2:... (settings are POLY_* names without the prefix).
+      POLY_VARIANTS: ${POLY_VARIANTS:-month:window=month;day:window=day;all:window=all}
       # Strategy 2, underdog: buy the cheaper side of a game at kickoff, sell into the bounce.
       UD_ENABLED: ${UD_ENABLED:-1}
       UD_SPORTS: ${UD_SPORTS:-}

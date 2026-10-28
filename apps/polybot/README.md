@@ -20,6 +20,22 @@ Follow the **leaderboard**. Every five minutes the bot
 5. **sells** a position when the same number of leaders net-sell it
    (`POLY_FOLLOW_SELLS`), and books resolved markets at 1 or 0.
 
+### Variants: comparing consensus setups
+
+`POLY_VARIANTS` runs extra copies of the consensus strategy with some settings
+changed, each with its own paper book, so the page can compare them. The
+syntax is `name:setting=value,setting=value;name2:...` where the settings are
+the `POLY_*` names without the prefix. The default compares leaderboard windows:
+
+```
+POLY_VARIANTS=month:window=month;day:window=day;all:window=all
+```
+
+Other ideas: `week4:min_agree=4` (a lower bar), `top50:top_n=50` (a bigger
+pack), `politics:category=politics` (one category's board),
+`fast:lookback_hours=6,min_agree=3`. Leaders and fills are fetched once and
+shared, so variants are cheap. The base setup is always called `consensus`.
+
 ## Strategy 2 · Underdog
 
 Filip's observation: the underdog gets a boost once a match begins. Every
@@ -46,10 +62,11 @@ left.
 
 ## Comparing them
 
-The page's **Strategies** section shows both side by side: paper (or live)
-P&L, realized and open, number of trades, win rate and average return per
-trade. Positions and trades carry a strategy tag. Everything is tracked per
-strategy in `data/polybot/state.json` and `trades.jsonl`.
+The page's **Strategies** table lists every setup: paper (or live) P&L,
+number of closed trades, win rate and average return per trade, with what is
+open underneath. The consensus section has a picker to look at any variant's
+leaders and signals. Positions and trades carry a strategy tag. Everything is
+tracked per strategy in `data/polybot/state.json` and `trades.jsonl`.
 
 ## Paper first
 
@@ -101,6 +118,7 @@ Consensus:
 | `POLY_FOLLOW_SELLS` | `1` | sell when the leaders sell |
 | `POLY_AUTO_REDEEM` | `1` | claim winnings (needs the Relayer key) |
 | `POLY_POLL_SECONDS` | `300` | how often to look |
+| `POLY_VARIANTS` | `month:window=month;day:window=day;all:window=all` | extra setups to compare, see above |
 
 Underdog:
 

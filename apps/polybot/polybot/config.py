@@ -7,6 +7,43 @@ from decimal import Decimal
 
 WINDOWS = ("day", "week", "month", "all")
 
+# Settings a consensus variant may override (the POLY_* name without the prefix).
+VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_hours", "min_leader_usd", "stake_usd",
+                "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours",
+                "min_hours_to_end", "follow_sells", "poll_seconds")
+RESERVED_NAMES = ("consensus", "underdog")
+
+
+def parse_variants(raw: str) -> list[tuple[str, dict[str, str]]]:
+    """`month:window=month;day:window=day,min_agree=4` → [("month", {...}), ("day", {...})].
+
+    Each variant is a name, optionally followed by a colon and comma-separated
+    overrides; everything else comes from the base POLY_* settings.
+    """
+    out: list[tuple[str, dict[str, str]]] = []
+    seen: set[str] = set()
+    for chunk in (raw or "").split(";"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        name, _, rest = chunk.partition(":")
+        name = name.strip().lower()
+        if not name or name in RESERVED_NAMES or name in seen or not all(c.isalnum() or c in "-_" for c in name):
+            raise ValueError(f"POLY_VARIANTS: bad or duplicate variant name {name!r}")
+        overrides: dict[str, str] = {}
+        for kv in rest.split(","):
+            kv = kv.strip()
+            if not kv:
+                continue
+            key, eq, val = kv.partition("=")
+            key = key.strip().lower().removeprefix("poly_")
+            if not eq or key not in VARIANT_KEYS:
+                raise ValueError(f"POLY_VARIANTS: variant {name!r} has an unknown setting {kv!r}")
+            overrides[key] = val.strip()
+        out.append((name, overrides))
+        seen.add(name)
+    return out
+
 
 def _str(name: str, default: str) -> str:
     v = os.environ.get(name, "")
@@ -53,6 +90,7 @@ class Config:
     follow_sells: bool
     auto_redeem: bool
     poll_seconds: int
+    variants: str                # extra consensus setups to compare, see parse_variants()
     # Underdog strategy: buy the cheaper side of a game at kickoff, sell into the early bounce
     ud_enabled: bool
     ud_tick_seconds: int
@@ -102,6 +140,7 @@ class Config:
             follow_sells=_bool("POLY_FOLLOW_SELLS", True),
             auto_redeem=_bool("POLY_AUTO_REDEEM", True),
             poll_seconds=_int("POLY_POLL_SECONDS", 300),
+            variants=_str("POLY_VARIANTS", "month:window=month;day:window=day;all:window=all"),
             ud_enabled=_bool("UD_ENABLED", True),
             ud_tick_seconds=_int("UD_TICK_SECONDS", 30),
             ud_lookahead_hours=float(_str("UD_LOOKAHEAD_HOURS", "3")),
@@ -140,6 +179,7 @@ class Config:
             raise ValueError("need 0 < POLY_MIN_PRICE < POLY_MAX_PRICE <= 1")
         if self.poll_seconds < 30:
             raise ValueError("POLY_POLL_SECONDS must be at least 30")
+        parse_variants(self.variants)
         if self.ud_tick_seconds < 10:
             raise ValueError("UD_TICK_SECONDS must be at least 10")
         if not (0 < self.ud_min_price < self.ud_max_price < 1):
@@ -157,7 +197,7 @@ class Config:
 
     def public(self) -> dict:
         """The non-secret settings, for the status page."""
-        skip = {"private_key", "relayer_key", "relayer_address", "ntfy_token", "ntfy_url", "data_dir", "port"}
+        skip = {"private_key", "relayer_key", "relayer_address", "ntfy_token", "ntfy_url", "data_dir", "port", "variants"}
         out = {}
         for f in fields(self):
             if f.name in skip:
