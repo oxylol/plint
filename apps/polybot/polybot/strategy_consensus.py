@@ -358,7 +358,11 @@ class ConsensusStrategy:
         self.decisions = {}
         self._preds = {}
         self._bought_this_cycle = 0
+        if self.model is not None:
+            self.signals = self.shortlist(self.signals)
         for sig in self.signals:
+            if sig.key in self.decisions:   # settled by the shortlist
+                continue
             why = self.enough(sig)
             try:
                 if sig.side == "BUY":
@@ -380,6 +384,34 @@ class ConsensusStrategy:
                 log.exception("[%s] could not act on %s · %s", self.name, sig.title, sig.outcome)
                 self.decisions[sig.key] = f"error: {e}"
                 self.core.record_error(f"{self.name}: {sig.side} {sig.title} · {sig.outcome}: {e}")
+
+    SCORE_LIMIT = 150   # model setups score at most this many signals a cycle (each needs a market lookup)
+
+    def shortlist(self, signals: list[Signal]) -> list[Signal]:
+        """For model setups: cheap filters first, then the biggest bets, scored and ordered by the model."""
+        p = self.p
+        keep, rest = [], []
+        for sig in signals:
+            if sig.side == "SELL":
+                keep.append(sig)
+                continue
+            price = sig.avg_price
+            if price is None or price < p.min_price or price > p.max_price:
+                self.decisions[sig.key] = "price outside the band"
+                rest.append(sig)
+            elif p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
+                self.decisions[sig.key] = "sports: the data says copying these loses"
+                rest.append(sig)
+            else:
+                keep.append(sig)
+        buys = sorted((x for x in keep if x.side == "BUY"), key=lambda x: -abs(x.net_usd))
+        sells = [x for x in keep if x.side == "SELL"]
+        scored, unscored = buys[: self.SCORE_LIMIT], buys[self.SCORE_LIMIT:]
+        for sig in unscored:
+            self.decisions[sig.key] = "not among the biggest bets this cycle"
+        scored.sort(key=lambda x: -self.predict(x)[0])
+        self._prev_decisions = {**self._prev_decisions}
+        return sells + scored + unscored + rest
 
     def expire_positions(self, now: datetime) -> None:
         """Sell what has been open longer than max_hold_days (0 = hold to resolution)."""
@@ -578,7 +610,10 @@ class ConsensusStrategy:
                 "decision": decision, "closed": closed,
                 "holding": self.store.position(s.asset_id, self.name) is not None,
             })
-        rows.sort(key=lambda r: (r["closed"], -r["score"], -r["weight"]))
+        if self.model is not None:
+            rows.sort(key=lambda r: (r["closed"], -(r.get("predicted") if r.get("predicted") is not None else -9)))
+        else:
+            rows.sort(key=lambda r: (r["closed"], -r["score"], -r["weight"]))
         leaders = [{"rank": l.rank, "name": l.name, "wallet": l.wallet, "pnl": float(l.pnl), "volume": float(l.volume),
                     "fills": len(self._trades_by_wallet.get(l.wallet, [])),
                     "weight": round(self.weights.get(l.wallet, 1.0), 2) if self.weights else None} for l in self.leaders]
