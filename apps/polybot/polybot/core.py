@@ -57,6 +57,7 @@ class Core:
         self.account: dict = {}
         self.balance: Decimal | None = None
         self._markets: dict[str, tuple[datetime, object]] = {}
+        self._mids: dict[str, tuple[datetime, Decimal | None]] = {}
         self._warned: dict[str, datetime] = {}
         self.errors: list[dict] = []
 
@@ -206,11 +207,22 @@ class Core:
             log.info("no price for %s: %s", asset_id[:12], e)
             return None
 
+    MID_TTL = timedelta(seconds=90)
+
     def midpoint(self, asset_id: str) -> Decimal | None:
+        """The order book's midpoint, cached briefly: a dozen setups ask about the same markets."""
+        hit = self._mids.get(asset_id)
+        now = utcnow()
+        if hit and now - hit[0] < self.MID_TTL:
+            return hit[1]
         try:
-            return Decimal(str(self.call(self.public.get_midpoint, asset_id=asset_id)))
+            mid = Decimal(str(self.call(self.public.get_midpoint, asset_id=asset_id)))
         except Exception:
-            return None
+            mid = None
+        self._mids[asset_id] = (now, mid)
+        if len(self._mids) > 2000:
+            self._mids = {k: v for k, v in self._mids.items() if now - v[0] < self.MID_TTL}
+        return mid
 
     def book(self, asset_id: str) -> dict | None:
         """Best bid and ask, the tick size and the minimum order size."""

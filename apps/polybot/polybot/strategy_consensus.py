@@ -212,7 +212,7 @@ class LeaderFeed:
 
 class ConsensusStrategy:
     kind = "consensus"
-    PRICED_SIGNALS = 15           # how many signals get a live price on the page
+    PRICED_SIGNALS = 10           # how many signals get a live price on the page
     MUTED_TRUST = 0.5             # adaptive trust below this silences a leader
 
     def __init__(self, core: Core, params: ConsensusParams, feed: LeaderFeed, pack=None):

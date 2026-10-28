@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -62,20 +63,24 @@ class Runner:
 
     def run_due(self, now: datetime, force: bool = False) -> list[str]:
         ran: list[str] = []
+        timings: list[str] = []
         for s in self.strategies:
             if not force and not self.due(s, now):
                 continue
             self.last_run[s.name] = now
             if not self.enabled(s):
                 continue
+            t0 = time.monotonic()
             try:
                 s.run(now)
             except Exception as e:
                 log.exception("%s cycle failed", s.name)
                 self.core.record_error(f"{s.name} cycle failed: {e}")
+            timings.append(f"{s.name} {time.monotonic() - t0:.0f}s")
             ran.append(s.name)
         if not ran:
             return ran
+        t0 = time.monotonic()
         consensus_ran = [s for s in self.consensus if s.name in ran]
         try:
             self.core.settle(now, self.store.open_positions())
@@ -92,6 +97,8 @@ class Runner:
             self.core.record_error(f"bookkeeping failed: {e}")
         self.store.save()
         self.store.write_status(self.status(now))
+        if consensus_ran:
+            log.info("cycle: %s · bookkeeping and page %.0fs", ", ".join(timings), time.monotonic() - t0)
         return ran
 
     # ── the page ─────────────────────────────────────────────
