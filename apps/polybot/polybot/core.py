@@ -42,7 +42,9 @@ AUTO_NAME = re.compile(r"^0x[0-9a-fA-F]{40}(-\d+)?$")  # Polymarket's placeholde
 
 
 def pretty_name(user_name: str | None, wallet: str) -> str:
-    return user_name if user_name and not AUTO_NAME.match(user_name) else short(wallet)
+    if not user_name or AUTO_NAME.match(user_name) or (user_name.lower().startswith("0x") and len(user_name) > 14):
+        return short(wallet)
+    return user_name
 
 
 class Core:
