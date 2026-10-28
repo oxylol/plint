@@ -80,8 +80,8 @@ class Store:
     def position(self, asset_id: str) -> dict | None:
         return self.state["positions"].get(asset_id)
 
-    def open_positions(self) -> list[dict]:
-        return list(self.state["positions"].values())
+    def open_positions(self, strategy: str | None = None) -> list[dict]:
+        return [p for p in self.state["positions"].values() if strategy is None or p.get("strategy", "consensus") == strategy]
 
     def find_position(self, condition_id: str, outcome: str) -> dict | None:
         for p in self.state["positions"].values():
@@ -93,9 +93,11 @@ class Store:
         s = self.state["acted"].get(asset_id)
         return parse_iso(s) if s else None
 
-    def spent_since(self, since: datetime) -> Decimal:
+    def spent_since(self, since: datetime, strategy: str | None = None) -> Decimal:
         total = Decimal(0)
         for t in self.state["trades"]:
+            if strategy is not None and t.get("strategy", "consensus") != strategy:
+                continue
             if t.get("side") == "BUY" and parse_iso(t["at"]) >= since:
                 total += Decimal(str(t.get("cost", 0)))
         return total
@@ -103,6 +105,7 @@ class Store:
     def open_position(self, rec: dict, now: datetime) -> dict:
         rec = dict(rec)
         rec["opened_at"] = iso(now)
+        rec.setdefault("strategy", "consensus")
         rec.setdefault("current_price", rec.get("price"))
         self.state["positions"][rec["asset_id"]] = rec
         self.state["acted"][rec["asset_id"]] = iso(now)
@@ -122,6 +125,7 @@ class Store:
             "event_slug": pos.get("event_slug"), "shares": pos.get("shares"), "price": float(price),
             "proceeds": float(proceeds), "cost": float(cost), "pnl": float(proceeds - cost),
             "opened_at": pos.get("opened_at"), "closed_at": iso(now), "mode": mode or pos.get("mode", "paper"),
+            "strategy": pos.get("strategy", "consensus"),
         }
         self.state["closed"].append(rec)
         self.state["closed"] = self.state["closed"][-500:]
@@ -143,6 +147,11 @@ class Store:
         if pos is not None:
             pos["note"] = note
 
+    def update_position(self, asset_id: str, **fields) -> None:
+        pos = self.state["positions"].get(asset_id)
+        if pos is not None:
+            pos.update(fields)
+
     # ---- trades ----
     def _log(self, rec: dict) -> None:
         self.state["trades"].append(rec)
@@ -153,29 +162,34 @@ class Store:
         except OSError as e:
             log.warning("could not append to trades.jsonl: %s", e)
 
-    def recent_trades(self, n: int = 30) -> list[dict]:
-        return list(reversed(self.state["trades"][-n:]))
+    def recent_trades(self, n: int = 30, strategy: str | None = None) -> list[dict]:
+        rows = [t for t in self.state["trades"] if strategy is None or t.get("strategy", "consensus") == strategy]
+        return list(reversed(rows[-n:]))
 
-    def totals(self, now: datetime | None = None) -> dict:
+    def totals(self, now: datetime | None = None, strategy: str | None = None) -> dict:
         now = now or utcnow()
         open_cost = Decimal(0)
         open_value = Decimal(0)
-        for p in self.state["positions"].values():
+        positions = self.open_positions(strategy)
+        for p in positions:
             open_cost += Decimal(str(p.get("cost", 0)))
             shares = Decimal(str(p.get("shares", 0)))
             price = Decimal(str(p.get("current_price") or p.get("price") or 0))
             open_value += shares * price
-        closed = self.state["closed"]
+        closed = [c for c in self.state["closed"] if strategy is None or c.get("strategy", "consensus") == strategy]
         realized = sum((Decimal(str(c.get("pnl", 0))) for c in closed), Decimal(0))
         wins = sum(1 for c in closed if float(c.get("pnl", 0)) > 0)
         losses = sum(1 for c in closed if float(c.get("pnl", 0)) < 0)
+        returns = [float(c["pnl"]) / float(c["cost"]) for c in closed if float(c.get("cost", 0)) > 0]
         from datetime import timedelta
         return {
-            "open": len(self.state["positions"]), "closed": len(closed), "wins": wins, "losses": losses,
+            "open": len(positions), "closed": len(closed), "wins": wins, "losses": losses,
+            "win_rate": (wins / len(closed)) if closed else None,
+            "avg_return": (sum(returns) / len(returns)) if returns else None,
             "open_cost": float(open_cost), "open_value": float(open_value),
             "unrealized": float(open_value - open_cost), "realized": float(realized),
             "total": float(open_value - open_cost + realized),
-            "spent_24h": float(self.spent_since(now - timedelta(hours=24))),
+            "spent_24h": float(self.spent_since(now - timedelta(hours=24), strategy)),
         }
 
     # ---- status for the page ----

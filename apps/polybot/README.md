@@ -1,33 +1,61 @@
 # Polybot
 
-A Polymarket bot that watches the **leaderboard** and trades where the top
-traders agree. It runs on Plint as the `poly` stack and has a page at
+Two Polymarket strategies, paper-traded side by side so they can be compared,
+with the option to go live. Runs on Plint as the `poly` stack with a page at
 `https://poly.<domain>`.
 
-## What it does
+## Strategy 1 · Consensus
 
-Every few minutes it
+Follow the **leaderboard**. Every five minutes the bot
 
 1. takes the top *N* traders by profit (day / week / month / all-time board),
 2. pulls every fill they made in the last *L* hours,
-3. works out each leader's **net flow** per outcome (buys minus sells, in USD) —
-   a leader counts as *agreeing* when they net-bought an outcome for at least
-   `POLY_MIN_LEADER_USD`, and as *against* when they net-sold it or net-bought the
-   other side of the same market,
-4. **buys** an outcome when `agree − against ≥ POLY_MIN_AGREE`, with a market
-   order of `POLY_STAKE_USD`, if the price is still inside the band and not more
-   than `POLY_MAX_ABOVE_LEADERS` above what the leaders paid,
-5. **sells** a position it holds when the same number of leaders net-sold it
+3. works out each leader's **stance** per market: money into one outcome minus
+   money into the other, so market makers who buy both sides count as flat.
+   A leader *agrees* with an outcome when the stance is at least
+   `POLY_MIN_LEADER_USD`, and is *against* it below minus that,
+4. **buys** when `agree − against ≥ POLY_MIN_AGREE`, with a market order of
+   `POLY_STAKE_USD`, if the price is inside the band and not more than
+   `POLY_MAX_ABOVE_LEADERS` above what the leaders paid,
+5. **sells** a position when the same number of leaders net-sell it
    (`POLY_FOLLOW_SELLS`), and books resolved markets at 1 or 0.
 
-Each check, each trade and each problem is pushed to the phone through ntfy.
+## Strategy 2 · Underdog
+
+Filip's observation: the underdog gets a boost once a match begins. Every
+30 seconds the bot
+
+1. keeps a schedule of moneyline (match winner) markets starting in the next
+   `UD_LOOKAHEAD_HOURS`, with the cheaper side priced between `UD_MIN_PRICE`
+   and `UD_MAX_PRICE` (team markets use the cheaper side; soccer-style
+   "Will X win?" markets use Yes only),
+2. in the window from `UD_BUY_BEFORE_MIN` before kickoff to `UD_BUY_UNTIL_MIN`
+   after, **buys** the underdog for `UD_STAKE_USD` if the market is liquid
+   enough and the spread is tight enough,
+3. **sells** at `+UD_TAKE_PROFIT_PCT` (live: a resting sell order at that
+   price; paper: the first trade at or above it), at `−UD_STOP_LOSS_PCT`, or
+   `UD_MAX_HOLD_MIN` minutes after kickoff, whichever comes first.
+
+A quick backtest on four days of games (349 underdogs priced 10–45¢, minute
+price history): from the first in-game print the underdog was up on average
+about 3% after 15 minutes and 5% after 30, and the "+15% target, out after 30
+minutes" rule averaged about +1% to +5% per trade before fees, winning about
+70% of the time. Sports markets charge a taker fee of about that size, which
+is why paper trades charge the fee too. The page will show whether anything is
+left.
+
+## Comparing them
+
+The page's **Strategies** section shows both side by side: paper (or live)
+P&L, realized and open, number of trades, win rate and average return per
+trade. Positions and trades carry a strategy tag. Everything is tracked per
+strategy in `data/polybot/state.json` and `trades.jsonl`.
 
 ## Paper first
 
 Without a key the bot runs in **paper mode**: the same decisions, no orders,
-and a paper P&L on the page. Leave it there for a week or two before going live;
-the leaderboard is full of high-frequency sports and market-making bots whose
-fills are hard to copy five minutes late.
+fills at the prices the order book shows at that moment, minus Polymarket's
+taker fee. Leave it there for a week or two before going live.
 
 ## Going live
 
@@ -48,10 +76,12 @@ fills are hard to copy five minutes late.
    should show the wallet type, the pUSD balance and `approved: true`.
 
 The bot only spends pUSD that is already in the account; it cannot withdraw.
-Without a Relayer key, winnings from resolved markets are claimed on
-polymarket.com as usual.
+Going live applies to both strategies; set `UD_ENABLED=0` to run only the
+consensus one.
 
 ## Settings (`.env`, all optional)
+
+Consensus:
 
 | variable | default | meaning |
 |---|---|---|
@@ -60,7 +90,7 @@ polymarket.com as usual.
 | `POLY_TOP_N` | `25` | how many leaders to watch |
 | `POLY_MIN_AGREE` | `5` | agree minus against needed to trade |
 | `POLY_LOOKBACK_HOURS` | `24` | how far back a leader's fills count |
-| `POLY_MIN_LEADER_USD` | `25` | a leader's net flow below this is noise |
+| `POLY_MIN_LEADER_USD` | `25` | a leader's stance below this is noise |
 | `POLY_STAKE_USD` | `5` | per trade (Polymarket's minimum order is about $5) |
 | `POLY_MAX_PRICE` / `POLY_MIN_PRICE` | `0.90` / `0.05` | only buy inside this band |
 | `POLY_MAX_ABOVE_LEADERS` | `0.05` | never pay more than this above the leaders' average |
@@ -72,18 +102,39 @@ polymarket.com as usual.
 | `POLY_AUTO_REDEEM` | `1` | claim winnings (needs the Relayer key) |
 | `POLY_POLL_SECONDS` | `300` | how often to look |
 
+Underdog:
+
+| variable | default | meaning |
+|---|---|---|
+| `UD_ENABLED` | `1` | run the strategy at all |
+| `UD_SPORTS` | *(all)* | comma-separated slug prefixes to allow, e.g. `nba,nhl,epl,wta` |
+| `UD_STAKE_USD` | `5` | per game |
+| `UD_TAKE_PROFIT_PCT` | `15` | sell this much above entry |
+| `UD_STOP_LOSS_PCT` | `30` | or this much below |
+| `UD_MAX_HOLD_MIN` | `30` | or this many minutes after kickoff |
+| `UD_MIN_PRICE` / `UD_MAX_PRICE` | `0.10` / `0.45` | what counts as an underdog |
+| `UD_MAX_SPREAD` | `0.03` | skip wider books |
+| `UD_MIN_LIQUIDITY` | `5000` | skip thinner markets |
+| `UD_BUY_BEFORE_MIN` / `UD_BUY_UNTIL_MIN` | `3` / `2` | the buying window around kickoff |
+| `UD_MAX_OPEN` | `6` | open games at most |
+| `UD_DAILY_BUDGET_USD` | `50` | buys per rolling 24 h at most |
+| `UD_LOOKAHEAD_HOURS` | `3` | games this far ahead are watched |
+| `UD_TICK_SECONDS` | `30` | how often to look |
+
 Change a value, then `plint restart poly`.
 
 ## Files
 
-- `polybot/consensus.py` — the agreement logic (pure; `tests/`)
-- `polybot/engine.py` — Polymarket calls, trading, paper trading, the page's JSON
+- `polybot/core.py` — Polymarket calls, paper and live orders, resting sells, settlement, fees
+- `polybot/consensus.py` + `strategy_consensus.py` — the agreement logic (pure, tested) and its strategy
+- `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
+- `polybot/runner.py` — runs both on their own clocks, writes the page's JSON
 - `polybot/store.py` — `data/polybot/state.json`, `trades.jsonl`, `status.json`
 - `static/index.html` — the page (Plint Soft UI tokens)
 
-Commands: `docker exec polybot python -m polybot once` runs one cycle and prints
-the signals; `… check` shows the account state. Tests:
-`docker run --rm -v $PWD:/app -w /app python:3.12-slim sh -c "pip install -q -r requirements.txt && python -m unittest discover -s tests"`.
+Commands: `docker exec polybot python -m polybot once` runs one cycle of both
+strategies and prints their reasoning; `… check` shows the account state.
+Tests: `docker run --rm -v $PWD:/app -w /app python:3.12-slim sh -c "pip install -q -r requirements.txt && python -m unittest discover -s tests"`.
 
 Uses the official [`polymarket-client`](https://pypi.org/project/polymarket-client/)
-SDK; data from `data-api.polymarket.com`, orders through the CLOB.
+SDK; data from Gamma and `data-api.polymarket.com`, orders through the CLOB.

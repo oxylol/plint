@@ -1,7 +1,9 @@
 # ─────────────────────────────────────────────────────────────
 #  Plint · poly stack
-#  Polybot: follows the Polymarket leaderboard and trades where the top
-#  traders agree. Source in apps/polybot (README there). Paper mode until
+#  Polybot: two Polymarket strategies side by side. "Consensus" buys what the
+#  leaderboard's top traders agree on; "underdog" buys the cheaper side of a
+#  game at kickoff and sells into the early bounce. Source in apps/polybot
+#  (README there). Paper mode until
 #  POLY_PRIVATE_KEY + POLY_WALLET are in .env and POLY_LIVE=1. Its book
 #  lives in data/polybot; it pushes trades to the phone through ntfy.
 # ─────────────────────────────────────────────────────────────
@@ -48,6 +50,23 @@ services:
       POLY_FOLLOW_SELLS: ${POLY_FOLLOW_SELLS:-1}
       POLY_AUTO_REDEEM: ${POLY_AUTO_REDEEM:-1}
       POLY_POLL_SECONDS: ${POLY_POLL_SECONDS:-300}
+      # Strategy 2, underdog: buy the cheaper side of a game at kickoff, sell into the bounce.
+      UD_ENABLED: ${UD_ENABLED:-1}
+      UD_SPORTS: ${UD_SPORTS:-}
+      UD_STAKE_USD: ${UD_STAKE_USD:-5}
+      UD_TAKE_PROFIT_PCT: ${UD_TAKE_PROFIT_PCT:-15}
+      UD_STOP_LOSS_PCT: ${UD_STOP_LOSS_PCT:-30}
+      UD_MAX_HOLD_MIN: ${UD_MAX_HOLD_MIN:-30}
+      UD_MIN_PRICE: ${UD_MIN_PRICE:-0.10}
+      UD_MAX_PRICE: ${UD_MAX_PRICE:-0.45}
+      UD_MAX_SPREAD: ${UD_MAX_SPREAD:-0.03}
+      UD_MIN_LIQUIDITY: ${UD_MIN_LIQUIDITY:-5000}
+      UD_BUY_BEFORE_MIN: ${UD_BUY_BEFORE_MIN:-3}
+      UD_BUY_UNTIL_MIN: ${UD_BUY_UNTIL_MIN:-2}
+      UD_MAX_OPEN: ${UD_MAX_OPEN:-6}
+      UD_DAILY_BUDGET_USD: ${UD_DAILY_BUDGET_USD:-50}
+      UD_LOOKAHEAD_HOURS: ${UD_LOOKAHEAD_HOURS:-3}
+      UD_TICK_SECONDS: ${UD_TICK_SECONDS:-30}
     volumes:
       - ../../data/polybot:/data
     read_only: true

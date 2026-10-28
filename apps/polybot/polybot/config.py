@@ -53,6 +53,23 @@ class Config:
     follow_sells: bool
     auto_redeem: bool
     poll_seconds: int
+    # Underdog strategy: buy the cheaper side of a game at kickoff, sell into the early bounce
+    ud_enabled: bool
+    ud_tick_seconds: int
+    ud_lookahead_hours: float    # games this far ahead show up on the page
+    ud_buy_before_min: float     # buy from this many minutes before the start…
+    ud_buy_until_min: float      # …until this many minutes after it
+    ud_min_price: Decimal
+    ud_max_price: Decimal
+    ud_max_spread: Decimal       # skip when ask minus bid is wider than this
+    ud_min_liquidity: Decimal    # skip thin markets (Polymarket's liquidity figure)
+    ud_stake_usd: Decimal
+    ud_take_profit_pct: Decimal  # sell when the price is this much above entry
+    ud_stop_loss_pct: Decimal    # or this much below
+    ud_max_hold_min: float       # or this many minutes after the start, whatever comes first
+    ud_max_open: int
+    ud_daily_budget_usd: Decimal
+    ud_sports: str               # comma-separated slug prefixes (nba,nhl,epl…); empty = every sport
     # Plumbing
     data_dir: str
     port: int
@@ -85,6 +102,22 @@ class Config:
             follow_sells=_bool("POLY_FOLLOW_SELLS", True),
             auto_redeem=_bool("POLY_AUTO_REDEEM", True),
             poll_seconds=_int("POLY_POLL_SECONDS", 300),
+            ud_enabled=_bool("UD_ENABLED", True),
+            ud_tick_seconds=_int("UD_TICK_SECONDS", 30),
+            ud_lookahead_hours=float(_str("UD_LOOKAHEAD_HOURS", "3")),
+            ud_buy_before_min=float(_str("UD_BUY_BEFORE_MIN", "3")),
+            ud_buy_until_min=float(_str("UD_BUY_UNTIL_MIN", "2")),
+            ud_min_price=_dec("UD_MIN_PRICE", "0.10"),
+            ud_max_price=_dec("UD_MAX_PRICE", "0.45"),
+            ud_max_spread=_dec("UD_MAX_SPREAD", "0.03"),
+            ud_min_liquidity=_dec("UD_MIN_LIQUIDITY", "5000"),
+            ud_stake_usd=_dec("UD_STAKE_USD", "5"),
+            ud_take_profit_pct=_dec("UD_TAKE_PROFIT_PCT", "15"),
+            ud_stop_loss_pct=_dec("UD_STOP_LOSS_PCT", "30"),
+            ud_max_hold_min=float(_str("UD_MAX_HOLD_MIN", "30")),
+            ud_max_open=_int("UD_MAX_OPEN", 6),
+            ud_daily_budget_usd=_dec("UD_DAILY_BUDGET_USD", "50"),
+            ud_sports=_str("UD_SPORTS", "").lower().replace(" ", ""),
             data_dir=_str("DATA_DIR", "/data"),
             port=_int("PORT", 8000),
             ntfy_url=_str("NTFY_URL", ""),
@@ -107,6 +140,12 @@ class Config:
             raise ValueError("need 0 < POLY_MIN_PRICE < POLY_MAX_PRICE <= 1")
         if self.poll_seconds < 30:
             raise ValueError("POLY_POLL_SECONDS must be at least 30")
+        if self.ud_tick_seconds < 10:
+            raise ValueError("UD_TICK_SECONDS must be at least 10")
+        if not (0 < self.ud_min_price < self.ud_max_price < 1):
+            raise ValueError("need 0 < UD_MIN_PRICE < UD_MAX_PRICE < 1")
+        if self.ud_stake_usd < 1 or self.ud_take_profit_pct <= 0 or self.ud_stop_loss_pct <= 0:
+            raise ValueError("UD_STAKE_USD, UD_TAKE_PROFIT_PCT and UD_STOP_LOSS_PCT must be positive")
 
     @property
     def can_trade(self) -> bool:
@@ -127,6 +166,7 @@ class Config:
             out[f.name] = float(v) if isinstance(v, Decimal) else v
         out["wallet"] = (self.wallet[:6] + "…" + self.wallet[-4:]) if self.wallet else ""
         out["mode"] = self.mode
+        out["sports"] = [x for x in self.ud_sports.split(",") if x]
         out["has_key"] = bool(self.private_key)
         out["has_relayer"] = bool(self.relayer_key and self.relayer_address)
         return out

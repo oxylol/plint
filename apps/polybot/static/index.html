@@ -51,16 +51,17 @@
     header.poly-head .who { flex-basis: 100%; order: 3; }
     header.poly-head #mode { margin-left: auto; }
   }
-  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font: 800 11px/1 var(--font); letter-spacing: .08em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font: 800 11px/1 var(--font); letter-spacing: .08em; text-transform: uppercase; background: var(--accent-soft); color: var(--accent); white-space: nowrap; vertical-align: middle; }
   .chip.live { background: var(--bad-soft); color: var(--bad); }
   .chip.sell { background: var(--warn-soft); color: var(--warn); }
   .chip.info { background: var(--info-soft); color: var(--info); }
   .chip.dim { background: var(--track); color: var(--ink2); }
+  .chip.sm { padding: 3px 7px; font-size: 10px; }
   .chip i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
   section { margin: 0 0 16px; padding: 16px; border-radius: var(--r-lg); background: var(--bg); box-shadow: var(--raise); border: 1px solid var(--edge); }
-  h2 { font: 800 11px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin: 0 0 12px; display: flex; justify-content: space-between; align-items: center; }
-  h2 small { font: 600 11px/1 var(--font); letter-spacing: 0; text-transform: none; }
+  h2 { font: 800 11px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin: 0 0 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  h2 small { font: 600 11px/1 var(--font); letter-spacing: 0; text-transform: none; text-align: right; }
   .empty { color: var(--ink2); font-size: 14px; font-weight: 600; padding: 6px 0; }
 
   .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0; background: none; box-shadow: none; border: 0; }
@@ -71,6 +72,15 @@
 
   .banner { margin: 0 0 14px; padding: 12px 14px; border-radius: var(--r-sm); background: var(--bad-soft); color: var(--bad); font: 600 13px/1.4 var(--font); }
   .banner.note { background: var(--info-soft); color: var(--info); }
+
+  .compare { width: 100%; border-collapse: collapse; font: 600 13px/1.4 var(--font); }
+  .compare th { font: 800 12px/1.2 var(--font); padding: 0 6px 10px; text-align: right; }
+  .compare th:first-child { text-align: left; font: 700 10px/1.2 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--ink2); }
+  .compare td { padding: 8px 6px; border-top: 1px solid var(--edge); text-align: right; font-variant-numeric: tabular-nums; }
+  .compare td:first-child { text-align: left; color: var(--ink2); }
+  .compare tr.big td { font: 800 18px/1.2 var(--font); padding-top: 10px; }
+  .compare tr.big td:first-child { font: 600 13px/1.4 var(--font); }
+  .compare .off { color: var(--ink2); font-weight: 600; }
 
   .list { display: flex; flex-direction: column; gap: 10px; }
   .card { padding: 12px 14px; border-radius: var(--r); box-shadow: var(--press-sm); border: 1px solid var(--edge); }
@@ -85,7 +95,6 @@
   .bar { position: relative; height: 10px; border-radius: 5px; background: var(--track); box-shadow: var(--press-sm); margin-top: 9px; overflow: hidden; }
   .bar i { position: absolute; inset: 2px auto 2px 2px; border-radius: 3px; background: var(--accent); min-width: 4px; }
   .bar i.sell { background: var(--warn); }
-  .bar em { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink2); opacity: .6; }
   .outcome { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font: 800 12px/1.4 var(--font); margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
   .num { font-variant-numeric: tabular-nums; }
   table { width: 100%; border-collapse: collapse; font: 600 13px/1.4 var(--font); }
@@ -97,7 +106,9 @@
   .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; font: 600 13px/1.4 var(--font); }
   .kv div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--edge); padding: 5px 0; }
   .kv span { color: var(--ink2); }
-  .kv b { font-variant-numeric: tabular-nums; }
+  .kv b { font-variant-numeric: tabular-nums; text-align: right; }
+  h3 { font: 800 12px/1.2 var(--font); margin: 14px 0 8px; color: var(--ink); }
+  h3:first-child { margin-top: 0; }
   .more { all: unset; display: block; width: 100%; margin-top: 12px; padding: 13px 0; text-align: center; border-radius: var(--r-sm); box-shadow: var(--raise-sm); border: 1px solid var(--edge); font: 800 13px/1 var(--font); color: var(--accent); cursor: pointer; }
   .more:active { box-shadow: var(--press-sm); }
   footer { text-align: center; font: 600 12px/1.5 var(--font); color: var(--ink2); padding: 6px 0 0; }
@@ -107,13 +118,15 @@
 </head>
 <body>
 <header class="poly-head">
-  <div class="who"><h1>Polybot</h1><div class="sub">Polymarket · trades where the leaderboard agrees</div></div>
+  <div class="who"><h1>Polybot</h1><div class="sub">Polymarket · two strategies, side by side</div></div>
   <span class="chip" id="mode"><i></i>…</span>
 </header>
 <div id="banners"></div>
 <section class="stats" id="stats"></section>
+<section><h2>Strategies <small id="cmpnote"></small></h2><div id="compare"></div></section>
 <section><h2>Positions <small id="poscount"></small></h2><div id="positions"></div></section>
-<section><h2>Where the leaders agree <small id="sigcount"></small></h2><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
+<section><h2>Underdog · games around kickoff <small id="udnote"></small></h2><div id="games"></div></section>
+<section><h2>Consensus · where the leaders agree <small id="sigcount"></small></h2><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
 <section><h2>Trades</h2><div id="trades"></div></section>
 <section><h2>Leaders watched <small id="leadcount"></small></h2><div id="leaders"></div></section>
 <section><h2>Setup</h2><div id="setup"></div></section>
@@ -123,35 +136,67 @@
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function money(n, sign) { n = Number(n || 0); var s = (sign && n > 0 ? "+" : n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); return s; }
+  function money(n, sign) { n = Number(n || 0); return (sign && n > 0 ? "+" : n < 0 ? "−" : "") + "$" + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function big(n) { n = Number(n || 0); var a = Math.abs(n); var s = a >= 1e6 ? (a / 1e6).toFixed(1) + "M" : a >= 1e3 ? (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "k" : a.toFixed(0); return (n < 0 ? "−" : "") + "$" + s; }
   function cents(p) { return p == null ? "?" : Math.round(Number(p) * 100) + "¢"; }
+  function pct(x, sign) { if (x == null) return "–"; var v = Math.round(Number(x) * 100); return (sign && v > 0 ? "+" : "") + v + "%"; }
   function ago(iso) {
     if (!iso) return ""; var s = (Date.now() - new Date(iso).getTime()) / 1000;
     if (s < 60) return "just now"; if (s < 3600) return Math.round(s / 60) + " min ago";
     if (s < 86400) return Math.round(s / 3600) + " h ago"; return Math.round(s / 86400) + " d ago";
   }
   function when(iso) { if (!iso) return ""; var d = new Date(iso); return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }
+  function clock(iso) { if (!iso) return ""; return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }
   function link(s) { return s.event_slug ? "https://polymarket.com/event/" + encodeURIComponent(s.event_slug) : s.slug ? "https://polymarket.com/market/" + encodeURIComponent(s.slug) : "https://polymarket.com/"; }
   function tone(n) { return n > 0 ? "up" : n < 0 ? "down" : ""; }
+  function stag(name) { return '<span class="chip sm ' + (name === "underdog" ? "info" : "") + '">' + (name === "underdog" ? "Underdog" : "Consensus") + "</span>"; }
 
   var last = null, showAll = false, SHOW = 8;
   function render(d) {
     last = d;
-    var cfg = d.config || {}, live = d.mode === "live", t = d.totals || {};
+    var cfg = d.config || {}, live = d.mode === "live", t = d.totals || {}, st = d.strategies || {}, ud = d.underdog || {};
     var mode = $("mode"); mode.className = "chip " + (live ? "live" : ""); mode.innerHTML = "<i></i>" + (live ? "Live" : "Paper");
     var bn = "";
     (d.errors || []).slice(-2).forEach(function (e) { bn += '<div class="banner">' + esc(e.message) + ' <span class="muted">· ' + esc(ago(e.at)) + "</span></div>"; });
     if (d.starting) bn += '<div class="banner note">Starting up: the first look at the leaderboard takes a minute.</div>';
-    else if (!live) bn += '<div class="banner note">Paper mode: every trade here is pretend. ' + (cfg.has_key ? "Set <code>POLY_LIVE=1</code> to trade for real." : "Add <code>POLY_PRIVATE_KEY</code> and <code>POLY_WALLET</code> to <code>.env</code>, then <code>POLY_LIVE=1</code>, to trade for real.") + "</div>";
+    else if (!live) bn += '<div class="banner note">Paper mode: every trade here is pretend, filled at the prices the book showed, minus Polymarket’s fee. ' + (cfg.has_key ? "Set <code>POLY_LIVE=1</code> to trade for real." : "Add <code>POLY_PRIVATE_KEY</code> and <code>POLY_WALLET</code> to <code>.env</code>, then <code>POLY_LIVE=1</code>, to trade for real.") + "</div>";
     $("banners").innerHTML = bn;
 
-    var agreeing = (d.signals || []).filter(function (s) { return s.side === "BUY" && s.score >= cfg.min_agree; }).length;
+    var games = ud.games || [];
     $("stats").innerHTML =
       '<div class="tile"><b>' + (d.leaders || []).length + "</b><span>leaders</span></div>" +
-      '<div class="tile"><b>' + agreeing + "</b><span>agreeing now</span></div>" +
+      '<div class="tile"><b>' + (ud.games_total || 0) + "</b><span>games " + cfg.ud_lookahead_hours + " h</span></div>" +
       '<div class="tile"><b>' + (t.open || 0) + "</b><span>open</span></div>" +
       '<div class="tile"><b class="' + tone(t.total) + '">' + money(t.total, true) + "</b><span>" + (live ? "P&amp;L" : "paper P&amp;L") + "</span></div>";
+
+    var c = st.consensus || {}, u = st.underdog || {};
+    function cell(fn, s) { return "<td" + (s.enabled === false ? ' class="off"' : "") + ">" + fn(s) + "</td>"; }
+    function row(label, fn, cls) { return "<tr" + (cls ? ' class="' + cls + '"' : "") + "><td>" + label + "</td>" + cell(fn, c) + cell(fn, u) + "</tr>"; }
+    $("cmpnote").textContent = (c.closed || 0) + (u.closed || 0) ? "closed trades decide this" : "nothing closed yet";
+    $("compare").innerHTML = '<table class="compare"><tr><th></th><th>Consensus</th><th>Underdog' + (u.enabled === false ? ' <span class="chip sm dim">off</span>' : "") + "</th></tr>" +
+      row((live ? "" : "Paper ") + "P&amp;L", function (s) { return '<span class="' + tone(s.total) + '">' + money(s.total, true) + "</span>"; }, "big") +
+      row("Realized", function (s) { return '<span class="' + tone(s.realized) + '">' + money(s.realized, true) + "</span>"; }) +
+      row("Open now", function (s) { return (s.open || 0) + " · " + '<span class="' + tone(s.unrealized) + '">' + money(s.unrealized, true) + "</span>"; }) +
+      row("Closed trades", function (s) { return s.closed || 0; }) +
+      row("Win rate", function (s) { return pct(s.win_rate); }) +
+      row("Avg per trade", function (s) { return '<span class="' + tone(s.avg_return) + '">' + pct(s.avg_return, true) + "</span>"; }) +
+      row("Spent 24 h", function (s) { return money(s.spent_24h); }) +
+      "</table>";
+
+    var pos = d.positions || [];
+    $("poscount").textContent = pos.length ? money(t.open_cost) + " in · " + money(t.open_value) + " now" : "";
+    $("positions").innerHTML = pos.length ? '<table><tr><th>Market</th><th class="r">Shares</th><th class="r">In → now</th><th class="r">P&amp;L</th></tr>' + pos.map(function (p) {
+      var extra = p.strategy === "underdog" ? " · sell at " + cents(p.target) + ", stop " + cents(p.stop) + ", out by " + clock(p.deadline) : "";
+      return "<tr><td>" + stag(p.strategy) + ' <a href="' + esc(link(p)) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a><br><span class=\"muted\">" + esc(p.outcome) + " · " + esc(ago(p.opened_at)) + (p.mode === "paper" && live ? " · paper" : "") + esc(extra) + (p.note ? " · " + esc(p.note) : "") + "</span></td>" +
+        '<td class="r num">' + Number(p.shares).toFixed(1) + '</td><td class="r num">' + cents(p.price) + " → " + cents(p.current_price) + '</td><td class="r num ' + tone(p.pnl) + '">' + money(p.pnl, true) + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">Nothing open.</div>';
+
+    $("udnote").textContent = ud.enabled === false ? "off" : games.length ? "buys " + cfg.ud_buy_before_min + " min before kickoff · " + cents(cfg.ud_min_price) + "–" + cents(cfg.ud_max_price) : "";
+    $("games").innerHTML = ud.enabled === false ? '<div class="empty">Switched off (<code>UD_ENABLED=0</code>).</div>' : games.length ? '<table><tr><th>Kickoff</th><th>Game</th><th class="r">Dog</th></tr>' + games.map(function (g) {
+      var m = g.minutes, whenTxt = m > 0 ? "in " + (m >= 90 ? Math.round(m / 60) + " h" : m + " min") : m === 0 ? "now" : Math.abs(m) + " min ago";
+      var dec = g.decision ? '<br><span class="muted">→ ' + esc(g.decision) + "</span>" : g.wanted ? "" : '<br><span class="muted">not in UD_SPORTS</span>';
+      return '<tr><td class="muted num">' + esc(whenTxt) + "<br>" + esc(clock(g.game_start)) + '</td><td><a href="' + esc(link(g)) + '" target="_blank" rel="noopener">' + esc(g.title) + '</a> <span class="chip sm dim">' + esc(g.sport) + "</span>" + dec + '</td><td class="r num">' + esc(g.outcome) + "<br>" + cents(g.price) + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">No game with an underdog between ' + cents(cfg.ud_min_price) + " and " + cents(cfg.ud_max_price) + " starts in the next " + cfg.ud_lookahead_hours + " h.</div>";
 
     var sig = d.signals || [];
     $("sigcount").textContent = sig.length ? "last " + cfg.lookback_hours + " h · " + cfg.min_agree + " must agree" : "";
@@ -159,12 +204,12 @@
     more.hidden = sig.length <= SHOW;
     more.textContent = showAll ? "Show fewer" : "Show all " + sig.length;
     $("signals").innerHTML = sig.length ? sig.slice(0, showAll ? sig.length : SHOW).map(function (s) {
-      var buy = s.side === "BUY", need = Math.max(0, cfg.min_agree - s.score), pct = Math.max(4, Math.min(100, s.score / cfg.min_agree * 100));
+      var buy = s.side === "BUY", p = Math.max(4, Math.min(100, s.score / cfg.min_agree * 100));
       var dec = s.decision || "", good = /bought|sold/.test(dec);
-      if (s.closed && s.price != null) dec = (s.price >= 0.99 ? "resolved: won" : s.price <= 0.01 ? "resolved: lost" : dec) + " · leaders paid " + cents(s.avg_price);
+      if (s.closed && s.price != null) dec = (s.price >= 0.99 ? "resolved: won" : s.price <= 0.01 ? "resolved: lost" : dec);
       return '<div class="card"><div class="top"><span class="chip ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span>" +
-        '<div class="t"><a href="' + esc(link(s)) + '" target="_blank" rel="noopener">' + esc(s.title || s.slug) + "</a>" + (s.outcome ? '<span class="outcome">' + esc(s.outcome) + "</span>" : "") + (s.holding ? ' <span class="chip info">held</span>' : "") + "</div></div>" +
-        '<div class="bar"><i class="' + (buy ? "" : "sell") + '" style="width:' + pct + '%"></i></div>' +
+        '<div class="t"><a href="' + esc(link(s)) + '" target="_blank" rel="noopener">' + esc(s.title || s.slug) + "</a>" + (s.outcome ? '<span class="outcome">' + esc(s.outcome) + "</span>" : "") + (s.holding ? ' <span class="chip info sm">held</span>' : "") + "</div></div>" +
+        '<div class="bar"><i class="' + (buy ? "" : "sell") + '" style="width:' + p + '%"></i></div>' +
         '<div class="meta"><span><b>' + s.agree.length + "</b> agree</span><span><b>" + s.disagree.length + "</b> against</span>" +
         "<span>leaders paid <b>" + cents(s.avg_price) + "</b></span>" + (s.price != null ? "<span>" + (s.closed ? "closed at" : "now") + " <b>" + cents(s.price) + "</b></span>" : "") +
         "<span>net <b>" + big(s.net_usd) + "</b></span><span>" + esc(ago(s.last_at)) + "</span></div>" +
@@ -172,17 +217,10 @@
         (dec ? '<div class="decision' + (good ? " good" : "") + '">→ ' + esc(dec) + "</div>" : "") + "</div>";
     }).join("") : '<div class="empty">No outcome has two or more leaders behind it right now.</div>';
 
-    var pos = d.positions || [];
-    $("poscount").textContent = pos.length ? money(t.open_cost) + " in · " + money(t.open_value) + " now" : "";
-    $("positions").innerHTML = pos.length ? '<table><tr><th>Market</th><th class="r">Shares</th><th class="r">In → now</th><th class="r">P&amp;L</th></tr>' + pos.map(function (p) {
-      return "<tr><td><a href=\"" + esc(link(p)) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a><br><span class=\"muted\">" + esc(p.outcome) + " · " + esc(ago(p.opened_at)) + (p.mode === "paper" && live ? " · paper" : "") + (p.note ? " · " + esc(p.note) : "") + "</span></td>" +
-        '<td class="r num">' + Number(p.shares).toFixed(1) + '</td><td class="r num">' + cents(p.price) + " → " + cents(p.current_price) + '</td><td class="r num ' + tone(p.pnl) + '">' + money(p.pnl, true) + "</td></tr>";
-    }).join("") + "</table>" : '<div class="empty">Nothing open.</div>';
-
     var tr = d.trades || [];
     $("trades").innerHTML = tr.length ? '<table><tr><th>When</th><th>What</th><th class="r">Shares @</th><th class="r">P&amp;L</th></tr>' + tr.map(function (x) {
       var buy = x.side === "BUY";
-      return '<tr><td class="muted num">' + esc(when(x.at)) + '</td><td><span class="chip ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span> " + esc(x.title) + '<br><span class="muted">' + esc(x.outcome) + (x.mode ? " · " + esc(x.mode) : "") + (x.reason ? " · " + esc(x.reason) : buy ? " · " + x.agree + " agreed" : "") + "</span></td>" +
+      return '<tr><td class="muted num">' + esc(when(x.at)) + "</td><td>" + stag(x.strategy || "consensus") + ' <span class="chip sm ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span> " + esc(x.title) + '<br><span class="muted">' + esc(x.outcome) + (x.mode ? " · " + esc(x.mode) : "") + (x.reason ? " · " + esc(x.reason) : buy && x.agree ? " · " + x.agree + " agreed" : "") + (x.fee ? " · fee " + money(x.fee) : "") + "</span></td>" +
         '<td class="r num">' + Number(x.shares).toFixed(1) + " @ " + cents(x.price) + '</td><td class="r num ' + (buy ? "muted" : tone(x.pnl)) + '">' + (buy ? money(x.cost) : money(x.pnl, true)) + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">No trades yet.</div>';
 
@@ -193,17 +231,28 @@
     }).join("") + "</table>" : '<div class="empty">Waiting for the leaderboard.</div>';
 
     var a = d.account || {};
-    $("setup").innerHTML = '<div class="kv">' +
+    $("setup").innerHTML = "<h3>Consensus</h3>" + '<div class="kv">' +
       "<div><span>Leaderboard</span><b>top " + cfg.top_n + " · " + esc(cfg.window) + (cfg.category && cfg.category !== "overall" ? " · " + esc(cfg.category) : "") + "</b></div>" +
       "<div><span>Agreement</span><b>" + cfg.min_agree + " leaders in " + cfg.lookback_hours + " h</b></div>" +
       "<div><span>Counts from</span><b>" + money(cfg.min_leader_usd) + " net per leader</b></div>" +
       "<div><span>Stake</span><b>" + money(cfg.stake_usd) + " a trade</b></div>" +
       "<div><span>Price band</span><b>" + cents(cfg.min_price) + " – " + cents(cfg.max_price) + "</b></div>" +
       "<div><span>Chase limit</span><b>+" + cents(cfg.max_above_leaders) + " over leaders</b></div>" +
-      "<div><span>Daily budget</span><b>" + money(cfg.daily_budget_usd) + " · " + money(t.spent_24h) + " used</b></div>" +
+      "<div><span>Daily budget</span><b>" + money(cfg.daily_budget_usd) + " · " + money(c.spent_24h) + " used</b></div>" +
       "<div><span>Open at most</span><b>" + cfg.max_open + "</b></div>" +
       "<div><span>Follow sells</span><b>" + (cfg.follow_sells ? "yes" : "no") + "</b></div>" +
       "<div><span>Checks every</span><b>" + Math.round(cfg.poll_seconds / 60) + " min</b></div>" +
+      "</div><h3>Underdog</h3>" + '<div class="kv">' +
+      "<div><span>Enabled</span><b>" + (cfg.ud_enabled ? "yes" : "no") + "</b></div>" +
+      "<div><span>Sports</span><b>" + (cfg.sports && cfg.sports.length ? esc(cfg.sports.join(", ")) : "all") + "</b></div>" +
+      "<div><span>Underdog is</span><b>" + cents(cfg.ud_min_price) + " – " + cents(cfg.ud_max_price) + "</b></div>" +
+      "<div><span>Buys</span><b>" + cfg.ud_buy_before_min + " min before to " + cfg.ud_buy_until_min + " min after kickoff</b></div>" +
+      "<div><span>Stake</span><b>" + money(cfg.ud_stake_usd) + " a game</b></div>" +
+      "<div><span>Sells at</span><b>+" + cfg.ud_take_profit_pct + "% · stop −" + cfg.ud_stop_loss_pct + "% · " + cfg.ud_max_hold_min + " min</b></div>" +
+      "<div><span>Needs</span><b>spread ≤ " + cents(cfg.ud_max_spread) + " · liquidity ≥ " + big(cfg.ud_min_liquidity) + "</b></div>" +
+      "<div><span>Daily budget</span><b>" + money(cfg.ud_daily_budget_usd) + " · " + money(u.spent_24h) + " used</b></div>" +
+      "<div><span>Open at most</span><b>" + cfg.ud_max_open + "</b></div>" +
+      "<div><span>Checks every</span><b>" + cfg.ud_tick_seconds + " s</b></div>" +
       (a.wallet_type ? "<div><span>Wallet</span><b>" + esc(cfg.wallet) + " · " + esc(a.wallet_type) + "</b></div>" : "") +
       (a.balance != null ? "<div><span>pUSD</span><b>" + money(a.balance) + "</b></div>" : "") +
       "</div>";
@@ -217,7 +266,7 @@
   }
   $("more").addEventListener("click", function () { showAll = !showAll; if (last) render(last); if (!showAll) $("signals").scrollIntoView({ block: "start" }); });
   load();
-  setInterval(load, 60000);
+  setInterval(load, 30000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
 })();
 </script>
