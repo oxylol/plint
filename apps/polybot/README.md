@@ -71,6 +71,29 @@ Two such setups run by default:
   so waiting for a crowd mostly selects in-game sports; a fresh, large bet by
   someone with a proven record, caught early, is the better signal.
 
+### Data model: a system reconstructed from the data
+
+`research/collect.py` downloads the closed positions of hundreds of traders
+(every leaderboard plus a control group of ordinary holders of busy markets)
+and `research/analyze.py` measures what predicted that a position was worth
+following, using only what a follower could know at entry time: the trader's
+record *before* that position, the size of the bet for them, the entry price,
+days to the market's end, the market type, their specialisation and win rate
+in that type, how many others in the pool took the side, their taker share and
+their board membership. It prints the tables, fits a small ridge model for the
+return and a logistic one for winning on positions closed before a time split,
+judges them on the positions closed after it, and writes `polybot/model.json`.
+The **Data model** setup (`learned`, `model=1`) scores every signal from every
+measured trader on the monthly board with that model and buys when the best
+predicted return clears the model's top-quarter cut (`min_pred=` overrides).
+It skips sports (`no_sports=1`) and buys between 15¢ and 75¢, because that is
+what the data said; the findings are in `research/REPORT.md`.
+
+```
+docker run --rm -v $PWD/research:/r -v /tmp/research:/out python:3.12-slim sh -c "pip install -q polymarket-client && python /r/collect.py /out 700"
+docker run --rm -v $PWD:/app -v /tmp/research:/data python:3.12-slim sh -c "pip install -q numpy && python /app/research/analyze.py /data --model /app/polybot/model.json"
+```
+
 Pack options for `POLY_VARIANTS`: `pack=1`, `pool=`, `min_weight=`,
 `fresh_only=1`, `adaptive_trust=1`, `max_hold_days=` (sell what is still open
 after that many days; 0 holds to resolution). Any setup also takes
@@ -193,6 +216,7 @@ Change a value, then `plint restart poly`.
 - `polybot/core.py` — Polymarket calls, paper and live orders, resting sells, settlement, fees
 - `polybot/consensus.py` + `strategy_consensus.py` — the agreement logic (pure, tested) and its strategy, variants included
 - `polybot/credibility.py` + `pack.py` — who is worth copying (pure rules, tested) and the measuring of a board
+- `polybot/model.py` + `model.json`, `research/` — the data model and the scripts that collected and fitted it
 - `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
 - `polybot/runner.py` — runs both on their own clocks, writes the page's JSON
 - `polybot/store.py` — `data/polybot/state.json`, `trades.jsonl`, `status.json`

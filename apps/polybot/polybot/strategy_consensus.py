@@ -14,8 +14,11 @@ from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from typing import Iterator
 
 from .config import Config, WINDOWS
+from .categories import category as market_category
 from .consensus import LeaderTrade, Signal, find_signals
 from .core import CENT, Core, aware, pretty_name, short
+from .credibility import conviction as conviction_of
+from .model import Model
 from .store import iso
 
 log = logging.getLogger("polybot.consensus")
@@ -49,6 +52,9 @@ class ConsensusParams:
     adaptive_trust: bool = False # trust a leader more or less as their copied trades resolve
     max_hold_days: float = 0.0   # sell what is still open after this long (0 = hold to resolution)
     max_per_cycle: int = 5       # buys per cycle at most, strongest signals first (spreads the budget out)
+    model: bool = False          # judge each signal with the data model (research/analyze.py) instead of rules
+    min_pred: float = 0.0        # predicted return on cost needed to act (0 = the model's top-25% cut)
+    no_sports: bool = False      # skip sports markets (the data says copying them loses)
 
     @classmethod
     def base(cls, cfg: Config) -> "ConsensusParams":
@@ -81,7 +87,7 @@ class ConsensusParams:
                 changes[key] = raw.strip().lower()
         p = replace(self, name=name, **changes)
         if "label" not in overrides:
-            bits = [("credible " if p.pack else "") + p.window]
+            bits = [("model " if p.model else "credible " if p.pack else "") + p.window]
             if p.category and p.category != "overall":
                 bits.append(p.category)
             if p.top_n != self.top_n:
@@ -225,6 +231,10 @@ class ConsensusStrategy:
         self.note: str = ""
         self._bought_this_cycle = 0
         self._trades_by_wallet: dict[str, list[LeaderTrade]] = {}
+        self.model = Model() if params.model else None
+        self._records = {}
+        self._sizes: dict[str, float] = {}
+        self._preds: dict[str, tuple[float, float, str]] = {}  # signal key → (pred return, win prob, best leader)
 
     @property
     def name(self) -> str:
@@ -245,6 +255,14 @@ class ConsensusStrategy:
         if self.pack is None:
             return self.feed.leaders(p.window, p.category, p.top_n, now), None, None
         self.pack.ensure_fresh(now)
+        if p.model:
+            # The model does the judging: every measured trader with some history is in the pool.
+            members = [m for m in self.pack.everyone() if m.record.closed_n >= 5 and m.record.fills_7d > 0]
+            self._records = {m.wallet: m.record for m in members}
+            self._sizes = {m.wallet: (m.record.median_cost or 0.0) for m in members}
+            leaders = [Leader(m.wallet, m.name, m.rank, Decimal(str(m.record.pnl)), Decimal(str(m.record.volume))) for m in members]
+            self.weights = {}
+            return leaders, None, self._sizes
         members, weights, sizes = self.pack.snapshot()
         leaders = [Leader(m.wallet, m.name, m.rank, Decimal(str(m.record.pnl)), Decimal(str(m.record.volume))) for m in members]
         self.muted = []
@@ -262,7 +280,42 @@ class ConsensusStrategy:
             return f"needs {p.min_agree - sig.score} more"
         if p.min_weight > 0 and sig.weight < p.min_weight:
             return f"weight {sig.weight:.1f} of {p.min_weight:g}"
+        if self.model is not None:
+            if not self.model.ok:
+                return "no model file yet"
+            pred, win, who = self.predict(sig)
+            cut = p.min_pred if p.min_pred else self.model.cut_top25
+            if pred < cut:
+                return f"predicted {pred:+.0%} by {who}, needs {cut:+.0%}"
         return None
+
+    def predict(self, sig: Signal) -> tuple[float, float, str]:
+        """The best predicted return among the agreeing leaders (and who it is)."""
+        if sig.key in self._preds:
+            return self._preds[sig.key]
+        best = (-9.0, 0.0, "nobody")
+        if sig.side == "BUY" and self.model is not None and self.model.ok:
+            days = None
+            try:
+                m = self.core.market(sig.condition_id, sig.slug)
+                if m is not None and m.state.end_date:
+                    days = max(0.0, (aware(m.state.end_date) - sig.last_at).total_seconds() / 86400)
+            except Exception:
+                m = None
+            cat = market_category(sig.title, sig.event_slug or sig.slug)
+            price = float(sig.avg_price) if sig.avg_price else 0.5
+            for w in sig.agree:
+                rec = self._records.get(w)
+                if rec is None:
+                    continue
+                conv = conviction_of(float(sig.stance.get(w, 0)), self._sizes.get(w))
+                x = self.model.vector(rec, conviction=conv, price=price, days_to_end=days, is_sports=(cat == "sports"),
+                                      category=cat, crowd=len(sig.agree) - 1, on_month=(self.p.window == "month"), on_all=(self.p.window == "all"))
+                pred, win = self.model.predict(x)
+                if pred > best[0]:
+                    best = (pred, win, self.name_of(w))
+        self._preds[sig.key] = best
+        return best
 
     def run(self, now: datetime) -> None:
         p = self.p
@@ -289,6 +342,7 @@ class ConsensusStrategy:
         self.expire_positions(now)
         self._prev_decisions = self.decisions
         self.decisions = {}
+        self._preds = {}
         self._bought_this_cycle = 0
         for sig in self.signals:
             why = self.enough(sig)
@@ -376,6 +430,8 @@ class ConsensusStrategy:
         why = core.not_tradeable(m, now, p.min_hours_to_end)
         if why:
             return skip(why)
+        if p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
+            return skip("sports: the data says copying these loses")
         asset_id, label = core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
         if self.store.position(asset_id, self.name):
             return skip("already holding")
@@ -414,6 +470,7 @@ class ConsensusStrategy:
             "agree": len(sig.agree), "disagree": len(sig.disagree), "weight": sig.weight,
             "agree_wallets": list(sig.agree), "agree_names": {w: self.name_of(w) for w in sig.agree},
             "fresh": [self.name_of(w) for w in fresh],
+            **({"predicted": round(self.predict(sig)[0], 3), "predicted_by": self.predict(sig)[2]} if self.model is not None else {}),
             "leaders_price": float(sig.avg_price) if sig.avg_price is not None else None,
             "mode": core.mode, **fill,
         }
@@ -487,9 +544,11 @@ class ConsensusStrategy:
             elif priced < self.PRICED_SIGNALS:
                 priced += 1
                 price = core.midpoint(s.asset_id)
+            pred = self._preds.get(s.key)
             rows.append({
                 "side": s.side, "title": s.title, "outcome": s.outcome, "slug": s.slug, "event_slug": s.event_slug,
                 "condition_id": s.condition_id, "asset_id": s.asset_id,
+                **({"predicted": round(pred[0], 3), "predicted_by": pred[2]} if pred else {}),
                 "agree": [by_wallet.get(w, short(w)) for w in s.agree],
                 "disagree": [by_wallet.get(w, short(w)) for w in s.disagree],
                 "score": s.score, "weight": s.weight, "avg_price": float(s.avg_price) if s.avg_price is not None else None,
@@ -510,4 +569,6 @@ class ConsensusStrategy:
         if self.pack is not None:
             out["pack"] = self.pack.key
             out["muted"] = [self.name_of(w) for w in self.muted]
+        if self.model is not None:
+            out["model"] = {"ok": self.model.ok, "trained_at": self.model.trained_at, "cut": self.p.min_pred or self.model.cut_top25}
         return out

@@ -12,7 +12,7 @@ VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_h
                 "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours",
                 "min_hours_to_end", "follow_sells", "poll_seconds",
                 # credible-pack options
-                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle")
+                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports")
 DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",
@@ -22,6 +22,8 @@ DEFAULT_VARIANTS = ";".join([
     "credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack",
     # a single credible trader's fresh conviction bet, with trust that adapts to how their copies do
     "smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money",
+    # judged by the data model fitted on collected trader histories (research/analyze.py → polybot/model.json)
+    "learned:pack=1,model=1,no_sports=1,window=month,min_agree=1,lookback_hours=48,min_hours_to_end=12,min_price=0.15,max_price=0.75,max_per_cycle=3,label=Data model",
 ])
 RESERVED_NAMES = ("consensus", "underdog")
 

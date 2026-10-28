@@ -12,6 +12,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from .categories import category
 from .core import Core, aware, pretty_name
 from .credibility import Judgement, Record, Rules, judge
 from .store import iso, utcnow
@@ -118,6 +119,9 @@ class CrediblePack:
                 holds.append((aware(p.last_event_at) - aware(p.first_entry_at)).total_seconds() / 3600)
             k = (p.event_slug or p.slug or "").split("-")[0]
             cats[k] = cats.get(k, 0) + 1
+            c = category(p.title, p.event_slug or p.slug)
+            cn, cw = rec.cat_stats.get(c, (0, 0))
+            rec.cat_stats[c] = (cn + 1, cw + (1 if x > 0 else 0))
             sides.setdefault(str(p.condition_id), set()).add(p.outcome_index if p.outcome_index is not None else p.outcome)
         both = sum(1 for v in sides.values() if len(v) > 1)
         rec.two_sided_share = (both / len(sides)) if sides else 0.0
@@ -152,6 +156,16 @@ class CrediblePack:
         return rec
 
     # ── what strategies use ──────────────────────────────────
+    def records(self) -> dict[str, Record]:
+        """Everyone measured on the board (credible or not), by wallet."""
+        with self._lock:
+            return {m.wallet: m.record for m in self.judged}
+
+    def everyone(self) -> list[Member]:
+        """Everyone measured, board order (for setups that judge with the data model instead)."""
+        with self._lock:
+            return sorted(self.judged, key=lambda m: m.rank)
+
     def snapshot(self) -> tuple[list[Member], dict[str, float], dict[str, float]]:
         """(members, vote weights, typical position sizes) of the last finished build."""
         with self._lock:
