@@ -106,9 +106,16 @@ resolution (a row's current price is the token's final price once the market
 ended); leaderboard membership is known today, not back then, so it is not a
 feature; and a single win counts for at most +300% when ranking rules.
 
+Two more copies of it run on weather markets only (`only=weather`), at $5
+and at $10 a trade, to see where those thin books start to cost more than the
+edge is worth; paper fills walk the live order book for the stake, so the
+two rows will diverge if the books are too thin for $10.
+
 Pack options for `POLY_VARIANTS`: `pack=1`, `pool=`, `min_weight=`,
 `fresh_only=1`, `adaptive_trust=1`, `max_hold_days=` (sell what is still open
-after that many days; 0 holds to resolution). Any setup also takes
+after that many days; 0 holds to resolution), `only=` (market types to trade,
+comma-separated: weather, politics, geopolitics, crypto, culture, economics,
+tech, sports, other). Any setup also takes
 `max_per_cycle=` (buys per cycle, strongest signals first; 5 by default, 3 for
 the pack setups) so a budget is spread over a day rather than spent at once.
 

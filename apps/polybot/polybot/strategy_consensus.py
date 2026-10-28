@@ -55,6 +55,7 @@ class ConsensusParams:
     model: bool = False          # judge each signal with the data model (research/analyze.py) instead of rules
     min_pred: float = 0.0        # predicted return on cost needed to act (0 = the model's top-25% cut)
     no_sports: bool = False      # skip sports markets (the data says copying them loses)
+    only: str = ""               # trade only these market types, comma-separated (weather, politics, …); empty = all
     max_per_day: int = 0         # buys per rolling day at most (0 = only the daily budget limits it)
     overridden: frozenset = frozenset()  # settings given explicitly in POLY_VARIANTS
 
@@ -90,6 +91,8 @@ class ConsensusParams:
         p = replace(self, name=name, overridden=frozenset(overrides), **changes)
         if "label" not in overrides:
             bits = [("model " if p.model else "credible " if p.pack else "") + p.window]
+            if p.only:
+                bits.append(p.only)
             if p.category and p.category != "overall":
                 bits.append(p.category)
             if p.top_n != self.top_n:
@@ -402,6 +405,9 @@ class ConsensusStrategy:
             elif p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
                 self.decisions[sig.key] = "sports: the data says copying these loses"
                 rest.append(sig)
+            elif p.only and market_category(sig.title, sig.event_slug or sig.slug) not in p.only.split(","):
+                self.decisions[sig.key] = f"not {p.only}"
+                rest.append(sig)
             else:
                 keep.append(sig)
         buys = sorted((x for x in keep if x.side == "BUY"), key=lambda x: -abs(x.net_usd))
@@ -485,6 +491,8 @@ class ConsensusStrategy:
             return skip(why)
         if p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
             return skip("sports: the data says copying these loses")
+        if p.only and market_category(sig.title, sig.event_slug or sig.slug) not in p.only.split(","):
+            return skip(f"not {p.only}")
         asset_id, label = core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
         if self.store.position(asset_id, self.name):
             return skip("already holding")

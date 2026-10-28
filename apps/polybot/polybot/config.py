@@ -12,7 +12,7 @@ VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_h
                 "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours",
                 "min_hours_to_end", "follow_sells", "poll_seconds",
                 # credible-pack options
-                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports", "max_per_day")
+                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports", "max_per_day", "only")
 DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",
@@ -25,6 +25,9 @@ DEFAULT_VARIANTS = ";".join([
     # judged by the data model fitted on collected trader histories (research/analyze.py → polybot/model.json)
     # the tournament winner's policy (sports or not, price band, trades a day, days to the end) comes from model.json
     "learned:pack=1,model=1,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Data model",
+    # the same model on weather markets only, at two stakes, to see where the thin books start to bite
+    "weather5:pack=1,model=1,only=weather,stake_usd=5,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Weather model 5 a trade",
+    "weather10:pack=1,model=1,only=weather,stake_usd=10,daily_budget_usd=100,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Weather model 10 a trade",
 ])
 RESERVED_NAMES = ("consensus", "underdog")
 

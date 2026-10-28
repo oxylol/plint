@@ -29,6 +29,9 @@ from polybot.categories import category as _category  # noqa: E402
 
 DATA = Path(sys.argv[1])
 MODEL_OUT = REPORT_OUT = None
+PAYOFF = None       # --payoff MODEL.json: score the recent weeks with a saved model and report the money, no tournament
+PAYOFF_DAYS = 28
+STAKE = 5.0
 BOOT = 400
 args = sys.argv[2:]
 while args:
@@ -39,6 +42,12 @@ while args:
         REPORT_OUT = Path(args.pop(0))
     elif a == "--boot":
         BOOT = int(args.pop(0))
+    elif a == "--payoff":
+        PAYOFF = Path(args.pop(0))
+    elif a == "--days":
+        PAYOFF_DAYS = int(args.pop(0))
+    elif a == "--stake":
+        STAKE = float(args.pop(0))
 rng = np.random.default_rng(7)
 T_START = time.time()
 lines: list[str] = []
@@ -283,6 +292,83 @@ ret_raw = np.array([r["ret"] for r in usable])
 day_idx = np.array([int(r["entry"].timestamp() // 86400) for r in usable])
 fee_rate = np.array([FEE[c] for c in cat])
 say(f"{len(usable)} positions with 5+ prior positions for the models")
+
+# ── payoff of a saved model under the live policy ────────────
+if PAYOFF is not None:
+    mdl = json.loads(PAYOFF.read_text())
+    feats = mdl["features"]
+    col = {f: i for i, f in enumerate(FEATURES)}
+    Xp = X_all[:, [col[f] for f in feats]]
+    if mdl["kind"] == "gbm":
+        total = np.full(len(Xp), float(mdl["init"]))
+        for t in mdl["trees"]:
+            left, right, feat, thr, val = (np.array(t[k]) for k in ("left", "right", "feature", "threshold", "value"))
+            node = np.zeros(len(Xp), dtype=int)
+            for _ in range(12):
+                leaf = left[node] == -1
+                if leaf.all():
+                    break
+                go_left = Xp[np.arange(len(Xp)), np.maximum(feat[node], 0)] <= thr[node]
+                node = np.where(leaf, node, np.where(go_left, left[node], right[node]))
+            total += float(mdl["lr"]) * val[node]
+        if mdl.get("target") == "gbm_win":
+            sc = 1 / (1 + np.exp(-np.clip(total, -30, 30))) - price
+        else:
+            sc = total
+    else:
+        Z = (Xp - np.array(mdl["mean"])) / np.array(mdl["std"])
+        sc = np.hstack([Z, np.ones((len(Z), 1))]) @ np.array(mdl["w"])
+        if mdl.get("target") == "logit":
+            sc = 1 / (1 + np.exp(-np.clip(sc, -30, 30))) - price
+    pol = mdl["policy"]
+    since = entry.max() - PAYOFF_DAYS * 86400
+    ok = (entry >= since) & (sc >= pol["threshold"]) & (price >= pol["min_price"]) & (price <= pol["max_price"]) & (days >= pol["min_days"])
+    if not pol.get("sports", True):
+        ok &= cat != "sports"
+    sel = np.where(ok)[0]
+    byday: dict[int, list] = defaultdict(list)
+    for i in sel:
+        byday[day_idx[i]].append(i)
+    chosen = []
+    for dd, items in sorted(byday.items()):
+        items.sort(key=lambda i: -sc[i])
+        chosen.extend(items[: int(pol["per_day"])])
+    ch = np.array(chosen)
+    pb = price[ch] + 0.01
+    fr_cap = np.minimum(3.0, (1 + ret_raw[ch]) * price[ch] / pb - 1 - fee_rate[ch] * (1 - pb))
+    fr_raw = (1 + ret_raw[ch]) * price[ch] / pb - 1 - fee_rate[ch] * (1 - pb)
+    hold = np.array([max(0.0, (usable[i]["exit"] - usable[i]["entry"]).total_seconds() / 86400) for i in ch])
+    ndays = len(set(day_idx[ch]))
+    span = (entry[ch].max() - entry[ch].min()) / 86400 + 1
+    say(f"\n=== Payoff of {PAYOFF.name} under its policy, last {PAYOFF_DAYS} days of entries, ${STAKE:.0f} a trade ===")
+    say(f"policy: score ≥ {pol['threshold']:+.3f}, {pol['per_day']} a day, {'any market' if pol.get('sports', True) else 'no sports'}, "
+        f"{100*pol['min_price']:.0f}–{100*pol['max_price']:.0f}¢, ≥ {pol['min_days']:g} days to the end  (note: the saved model was fit on this period too; "
+        f"the tournament's out-of-sample numbers are the honest ones)")
+    say(f"{len(ch)} trades over {span:.0f} days ({len(ch)/span:.1f} a day; {ndays} days had a trade) · win {100*(fr_cap>0).mean():.0f}% · "
+        f"mean return per trade {100*fr_cap.mean():+.0f}% capped, {100*fr_raw.mean():+.0f}% uncapped, median {100*np.median(fr_cap):+.0f}%")
+    say(f"per $5 trade: {STAKE*fr_cap.mean():+.2f} $ on average → {STAKE*fr_cap.mean()*len(ch)/span:+.2f} $ a day, {30*STAKE*fr_cap.mean()*len(ch)/span:+.0f} $ a month, "
+        f"on {STAKE*len(ch)/span*30:.0f} $ staked a month")
+    say(f"hold until resolution: median {np.median(hold):.1f} days, mean {hold.mean():.1f}, 90th pct {np.quantile(hold, .9):.0f} days")
+    # capital tied up: stakes open on each day
+    t_open = entry[ch]; t_close = t_open + hold * 86400
+    grid = np.arange(t_open.min(), t_close.max() + 86400, 86400)
+    open_now = np.array([((t_open <= g) & (t_close > g)).sum() for g in grid])
+    say(f"money tied up at once: average {STAKE*open_now.mean():.0f} $, peak {STAKE*open_now.max():.0f} $ "
+        f"→ about {100*30*fr_cap.mean()*len(ch)/span/max(1, open_now.mean()):+.0f}% a month on the average capital tied up")
+    cats_c = defaultdict(list)
+    for j, i in enumerate(ch):
+        cats_c[cat[i]].append(fr_cap[j])
+    say("by market type: " + " · ".join(f"{k} {len(v)} ({100*np.mean(v):+.0f}%, win {100*np.mean(np.array(v)>0):.0f}%)" for k, v in sorted(cats_c.items(), key=lambda kv: -len(kv[1]))))
+    pbk = defaultdict(list)
+    for j, i in enumerate(ch):
+        pbk["<30¢" if price[i] < .3 else "30–50¢" if price[i] < .5 else "50–75¢"].append(fr_cap[j])
+    say("by price: " + " · ".join(f"{k} {len(v)} ({100*np.mean(v):+.0f}%, win {100*np.mean(np.array(v)>0):.0f}%)" for k, v in pbk.items()))
+    # week by week
+    wk = ((entry[ch] - since) // (7 * 86400)).astype(int)
+    say("week by week: " + " · ".join(f"w{w+1}: {int((wk==w).sum())} trades {100*fr_cap[wk==w].mean():+.0f}%" for w in sorted(set(wk))))
+    if REPORT_OUT:
+        REPORT_OUT.write_text("\n".join(lines))
+    sys.exit(0)
 
 # ── models ───────────────────────────────────────────────────
 try:
