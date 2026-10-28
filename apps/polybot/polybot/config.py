@@ -12,7 +12,7 @@ VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_h
                 "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours",
                 "min_hours_to_end", "follow_sells", "poll_seconds",
                 # credible-pack options
-                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports")
+                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports", "max_per_day")
 DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",
@@ -23,7 +23,8 @@ DEFAULT_VARIANTS = ";".join([
     # a single credible trader's fresh conviction bet, with trust that adapts to how their copies do
     "smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money",
     # judged by the data model fitted on collected trader histories (research/analyze.py → polybot/model.json)
-    "learned:pack=1,model=1,no_sports=1,window=month,min_agree=1,lookback_hours=48,min_hours_to_end=12,min_price=0.15,max_price=0.75,max_per_cycle=3,label=Data model",
+    # the tournament winner's policy (sports or not, price band, trades a day, days to the end) comes from model.json
+    "learned:pack=1,model=1,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Data model",
 ])
 RESERVED_NAMES = ("consensus", "underdog")
 
@@ -169,7 +170,7 @@ class Config:
             auto_redeem=_bool("POLY_AUTO_REDEEM", True),
             poll_seconds=_int("POLY_POLL_SECONDS", 300),
             variants=_str("POLY_VARIANTS", DEFAULT_VARIANTS),
-            cr_pool=_int("CR_POOL", 80),
+            cr_pool=_int("CR_POOL", 200),
             cr_pack_size=_int("CR_PACK_SIZE", 12),
             cr_refresh_hours=float(_str("CR_REFRESH_HOURS", "6")),
             cr_min_fills_7d=_int("CR_MIN_FILLS_7D", 10),

@@ -105,7 +105,7 @@ class CrediblePack:
         if page.next_cursor:
             page = core.call(pages.from_cursor(page.next_cursor).first_page)
             closed.extend(page.items)
-        pnls, costs, holds, cats = [], [], [], {}
+        pnls, costs, holds, cats, prices = [], [], [], {}, []
         sides: dict[str, set] = {}
         for p in closed:
             # Closed rows carry a ~0 residual cost; what was really put in is total size × average price.
@@ -115,6 +115,7 @@ class CrediblePack:
             x = float(p.realized_pnl)
             pnls.append(x)
             costs.append(cost)
+            prices.append(float(p.avg_price or 0))
             if p.last_event_at and p.first_entry_at:
                 holds.append((aware(p.last_event_at) - aware(p.first_entry_at)).total_seconds() / 3600)
             k = (p.event_slug or p.slug or "").split("-")[0]
@@ -135,6 +136,7 @@ class CrediblePack:
         rec.top_pnl = max(pnls) if pnls else 0.0
         rec.median_hold_hours = statistics.median(holds) if holds else None
         rec.median_cost = statistics.median(costs) if costs else None
+        rec.median_price = statistics.median(prices) if prices else None
         if cats:
             k, n = max(cats.items(), key=lambda kv: kv[1])
             rec.top_category, rec.top_category_share = k, n / max(1, len(closed))

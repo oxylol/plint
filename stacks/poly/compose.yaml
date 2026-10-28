@@ -57,7 +57,7 @@ services:
       # trader's fresh conviction bet, trust adapting to results). See apps/polybot/README.md.
       POLY_VARIANTS: ${POLY_VARIANTS:-}
       # Credibility rules for the pack setups
-      CR_POOL: ${CR_POOL:-80}
+      CR_POOL: ${CR_POOL:-200}
       CR_PACK_SIZE: ${CR_PACK_SIZE:-12}
       CR_REFRESH_HOURS: ${CR_REFRESH_HOURS:-6}
       CR_MIN_FILLS_7D: ${CR_MIN_FILLS_7D:-10}

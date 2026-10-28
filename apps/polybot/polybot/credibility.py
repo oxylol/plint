@@ -45,6 +45,7 @@ class Record:
     top_pnl: float = 0.0         # best single position
     median_hold_hours: float | None = None
     median_cost: float | None = None   # typical position size in USD
+    median_price: float | None = None  # typical entry price
     fills_7d: int = 0
     taker_share: float | None = None
     hours_since_fill: float | None = None

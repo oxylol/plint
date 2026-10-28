@@ -55,6 +55,8 @@ class ConsensusParams:
     model: bool = False          # judge each signal with the data model (research/analyze.py) instead of rules
     min_pred: float = 0.0        # predicted return on cost needed to act (0 = the model's top-25% cut)
     no_sports: bool = False      # skip sports markets (the data says copying them loses)
+    max_per_day: int = 0         # buys per rolling day at most (0 = only the daily budget limits it)
+    overridden: frozenset = frozenset()  # settings given explicitly in POLY_VARIANTS
 
     @classmethod
     def base(cls, cfg: Config) -> "ConsensusParams":
@@ -85,7 +87,7 @@ class ConsensusParams:
                 changes[key] = raw.strip().lower() in ("1", "true", "yes", "on")
             else:
                 changes[key] = raw.strip().lower()
-        p = replace(self, name=name, **changes)
+        p = replace(self, name=name, overridden=frozenset(overrides), **changes)
         if "label" not in overrides:
             bits = [("model " if p.model else "credible " if p.pack else "") + p.window]
             if p.category and p.category != "overall":
@@ -232,6 +234,13 @@ class ConsensusStrategy:
         self._bought_this_cycle = 0
         self._trades_by_wallet: dict[str, list[LeaderTrade]] = {}
         self.model = Model() if params.model else None
+        if self.model is not None and self.model.ok and self.model.policy:
+            # The policy that won the tournament, unless the variant says otherwise.
+            pol = self.model.policy
+            defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
+                        "no_sports": not pol.get("sports", True), "min_price": Decimal(str(pol.get("min_price", 0.05))),
+                        "max_price": Decimal(str(pol.get("max_price", 0.95))), "min_hours_to_end": 24 * float(pol.get("min_days", 0.5))}
+            self.p = params = replace(params, **{k: v for k, v in defaults.items() if k not in params.overridden})
         self._records = {}
         self._sizes: dict[str, float] = {}
         self._preds: dict[str, tuple[float, float, str]] = {}  # signal key → (pred return, win prob, best leader)
@@ -283,37 +292,42 @@ class ConsensusStrategy:
         if self.model is not None:
             if not self.model.ok:
                 return "no model file yet"
-            pred, win, who = self.predict(sig)
-            cut = p.min_pred if p.min_pred else self.model.cut_top25
-            if pred < cut:
-                return f"predicted {pred:+.0%} by {who}, needs {cut:+.0%}"
+            score, text, who = self.predict(sig)
+            cut = p.min_pred if p.min_pred else self.model.threshold
+            if score < cut:
+                return f"{text} by {who}, below the cut"
         return None
 
-    def predict(self, sig: Signal) -> tuple[float, float, str]:
-        """The best predicted return among the agreeing leaders (and who it is)."""
+    def predict(self, sig: Signal) -> tuple[float, str, str]:
+        """The best model score among the agreeing leaders, its description, and who it is."""
         if sig.key in self._preds:
             return self._preds[sig.key]
-        best = (-9.0, 0.0, "nobody")
+        best = (-9.0, "no score", "nobody")
         if sig.side == "BUY" and self.model is not None and self.model.ok:
-            days = None
+            days, neg_risk = None, False
             try:
                 m = self.core.market(sig.condition_id, sig.slug)
                 if m is not None and m.state.end_date:
                     days = max(0.0, (aware(m.state.end_date) - sig.last_at).total_seconds() / 86400)
+                if m is not None:
+                    neg_risk = bool(m.state.neg_risk)
             except Exception:
                 m = None
             cat = market_category(sig.title, sig.event_slug or sig.slug)
             price = float(sig.avg_price) if sig.avg_price else 0.5
+            ranks = {l.wallet: l.rank for l in self.leaders}
             for w in sig.agree:
                 rec = self._records.get(w)
                 if rec is None:
                     continue
                 conv = conviction_of(float(sig.stance.get(w, 0)), self._sizes.get(w))
-                x = self.model.vector(rec, conviction=conv, price=price, days_to_end=days, is_sports=(cat == "sports"),
-                                      category=cat, crowd=len(sig.agree) - 1, on_month=(self.p.window == "month"), on_all=(self.p.window == "all"))
-                pred, win = self.model.predict(x)
-                if pred > best[0]:
-                    best = (pred, win, self.name_of(w))
+                x = self.model.vector(rec, conviction=conv, price=price, days_to_end=days, is_sports=(cat == "sports"), category=cat,
+                                      crowd=len(sig.agree) - 1, on_month=(self.p.window == "month"), on_all=(self.p.window == "all"),
+                                      on_week=(self.p.window == "week"), rank=ranks.get(w, 100),
+                                      is_no=(sig.outcome or "").lower() == "no", neg_risk=neg_risk)
+                score = self.model.score(x, price)
+                if score > best[0]:
+                    best = (score, self.model.describe(x, price), self.name_of(w))
         self._preds[sig.key] = best
         return best
 
@@ -388,6 +402,11 @@ class ConsensusStrategy:
                                                 "time's up", now, mode=self.core.mode, strategy=self.name)
                 log.info("[%s] sold %s after %g days, P&L $%.2f", self.name, pos.get("title"), self.p.max_hold_days, rec["pnl"])
 
+    def bought_last_day(self, now: datetime) -> int:
+        from .store import parse_iso
+        since = now - timedelta(hours=24)
+        return sum(1 for t in self.store.state["trades"] if t.get("strategy") == self.name and t.get("side") == "BUY" and parse_iso(t["at"]) >= since)
+
     def fresh_voters(self, sig: Signal) -> list[str]:
         """Agreeing leaders whose position in this outcome is (mostly) new in the window."""
         fresh = []
@@ -417,6 +436,8 @@ class ConsensusStrategy:
             return skip("already holding")
         if self._bought_this_cycle >= p.max_per_cycle:
             return skip("enough for this cycle, next look in a few minutes")
+        if p.max_per_day and self.bought_last_day(now) >= p.max_per_day:
+            return skip(f"{p.max_per_day} a day is the rule")
         last = self.store.acted_at(sig.asset_id, self.name)
         if last and now - last < timedelta(hours=p.cooldown_hours):
             return skip("cooling down after the last trade")
@@ -570,5 +591,6 @@ class ConsensusStrategy:
             out["pack"] = self.pack.key
             out["muted"] = [self.name_of(w) for w in self.muted]
         if self.model is not None:
-            out["model"] = {"ok": self.model.ok, "trained_at": self.model.trained_at, "cut": self.p.min_pred or self.model.cut_top25}
+            out["model"] = {"ok": self.model.ok, "kind": self.model.kind, "target": self.model.target, "trained_at": self.model.trained_at,
+                            "cut": self.p.min_pred or self.model.threshold, "policy": self.model.policy, "tournament": self.model.tournament}
         return out

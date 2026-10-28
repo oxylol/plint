@@ -90,9 +90,21 @@ It skips sports (`no_sports=1`) and buys between 15¢ and 75¢, because that is
 what the data said; the findings are in `research/REPORT.md`.
 
 ```
-docker run --rm -v $PWD/research:/r -v /tmp/research:/out python:3.12-slim sh -c "pip install -q polymarket-client && python /r/collect.py /out 700"
-docker run --rm -v $PWD:/app -v /tmp/research:/data python:3.12-slim sh -c "pip install -q numpy && python /app/research/analyze.py /data --model /app/polybot/model.json"
+# 1. traders and their finished positions (both passes), threaded; resumable
+docker run --rm -v $PWD/research:/r -v /tmp/research2:/out python:3.12-slim sh -c "pip install -q polymarket-client && python /r/collect2.py /out 3000 4"
+# 2. optional: closed markets with tags, for better market types
+docker run --rm -v $PWD/research:/r -v /tmp/research2:/out python:3.12-slim sh -c "pip install -q polymarket-client && python /r/collect_markets.py /out 2026-01-01"
+# 3. the tournament: models × trading rules × walk-forward folds × bootstrap; writes the winner with its policy
+docker run --rm -v $PWD:/app -v /tmp/research2:/data python:3.12-slim sh -c "pip install -q numpy scikit-learn && python /app/research/analyze2.py /data --model /app/polybot/model.json --report /app/research/TOURNAMENT.md"
 ```
+
+Things the data taught us that every script now handles: the API's `CLOSED` set
+omits resolved losses (they stay `REDEEMABLE` forever); the cost basis of "No"
+positions in multi-candidate (negative-risk) markets is unreliable; a trader's
+own exit flatters a follower, so positions are scored at the market's
+resolution (a row's current price is the token's final price once the market
+ended); leaderboard membership is known today, not back then, so it is not a
+feature; and a single win counts for at most +300% when ranking rules.
 
 Pack options for `POLY_VARIANTS`: `pack=1`, `pool=`, `min_weight=`,
 `fresh_only=1`, `adaptive_trust=1`, `max_hold_days=` (sell what is still open

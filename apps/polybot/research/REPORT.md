@@ -179,3 +179,107 @@ Control group only (ordinary holders, never on a board) [predicted return]: 9978
 The **Data model** setup in the bot (`learned`) is this model: it scores every signal from every measured trader on the
 monthly board, skips sports, buys between 15¢ and 75¢ with 12 hours or more to go, and acts when the predicted return
 clears the model's top-quarter cut.
+
+
+# Round 2 (2026-10-28, later): 3,000 traders, resolution-based, a tournament
+
+`collect2.py` pulled 1.42 million position rows for 3,000 traders (2,600 from every leaderboard window and category,
+400 ordinary holders of busy markets), plus `collect_markets.py` for 2 million closed markets (tags, resolutions).
+Three corrections to round 1 changed the picture:
+
+1. **Score at resolution, not at the trader's exit.** A follower does not get the trader's well-timed sale. Once a
+   market has resolved, a position row's current price is the token's final price (0 or 1), so every position can be
+   scored as "bought at the trader's average price, held to the end". Unresolved positions are excluded.
+2. **Drop "No" positions in multi-candidate (negative-risk) markets.** The API's cost basis for them is broken
+   (a 10¢ "No" appeared to win 43% of the time); a model happily learns that artifact.
+3. **No leaderboard features.** Board membership and rank are known today, not at the time of the old positions.
+
+Then `analyze2.py` ran a tournament: six model families (ridge on return, logistic on winning, boosted trees on
+return, boosted trees on winning scored as predicted win probability minus price, plus two hand rules: "copy the
+leaderboard" and "credible traders only") × 108 trading rules (score threshold, trades per day, sports or not, price
+band, minimum days to the market's end) × 7 walk-forward folds (fit on everything entered and finished before a date,
+trade the next two weeks) × 300 bootstrap resamples of days per fold. Each rule is ranked by the average bootstrap 5th
+percentile of its mean return per trade, with any single win capped at +300%, so lottery tickets cannot carry a rule.
+That is 648 rules × 7 folds × 300 resamples: about 1.4 million simulated fortnights.
+
+```
+648 (model, policy) pairs had enough trades; ranked by the average bootstrap 5th percentile of the mean return per trade
+
+model               q  k sports        band days | trades /fold    mean 5th pct   worst  win
+gbm_win          0.90  5    yes 0.15–0.75  0.5 |    525    75  +65.3%  +34.3%  +28.5%  66%
+gbm_win          0.50  5    yes 0.15–0.75  0.5 |    525    75  +65.3%  +33.7%  +28.5%  66%
+gbm_win          0.75  5    yes 0.15–0.75  0.5 |    525    75  +65.3%  +33.5%  +28.5%  66%
+gbm_win          0.90  5     no 0.15–0.75  0.5 |    520    74  +64.7%  +33.3%  +28.5%  66%
+gbm_win          0.50  5     no 0.15–0.75  0.5 |    522    75  +64.1%  +33.2%  +28.5%  66%
+gbm_win          0.75  5     no 0.15–0.75  0.5 |    521    74  +64.4%  +32.8%  +28.5%  66%
+gbm_win          0.90  2     no 0.25–0.70  0.5 |    208    30  +70.0%  +31.0%  +23.6%  69%
+gbm              0.90  5    yes 0.15–0.75  0.5 |    525    75  +59.3%  +31.0%  +14.6%  61%
+gbm              0.75  5    yes 0.15–0.75  0.5 |    525    75  +59.3%  +30.8%  +14.6%  61%
+gbm_win          0.90  2    yes 0.25–0.70  0.5 |    210    30  +69.7%  +30.7%  +23.6%  69%
+gbm_win          0.75  2     no 0.25–0.70  0.5 |    209    30  +69.2%  +30.2%  +23.6%  68%
+logit            0.75  5     no 0.15–0.75  0.5 |    521    74  +55.2%  +30.2%  +25.8%  68%
+logit            0.90  3     no 0.15–0.75  0.5 |    313    45  +60.2%  +30.0%  +31.8%  69%
+logit            0.75  3     no 0.15–0.75  0.5 |    313    45  +60.2%  +29.8%  +31.8%  69%
+gbm_win          0.50  3    yes 0.15–0.75  0.5 |    315    45  +69.2%  +29.6%  +32.3%  63%
+logit            0.50  5     no 0.15–0.75  0.5 |    522    75  +54.9%  +29.6%  +25.8%  68%
+gbm_win          0.75  5    yes 0.05–0.95  0.5 |    525    75  +62.7%  +29.5%  +22.5%  61%
+gbm_win          0.50  2     no 0.25–0.70  0.5 |    210    30  +68.4%  +29.3%  +23.6%  68%
+gbm_win          0.75  3    yes 0.15–0.75  0.5 |    315    45  +69.2%  +29.3%  +32.3%  63%
+gbm              0.50  5    yes 0.15–0.75  0.5 |    525    75  +59.3%  +29.3%  +14.6%  61%
+logit            0.50  3     no 0.15–0.75  0.5 |    314    45  +59.7%  +29.2%  +31.8%  68%
+logit            0.90  5     no 0.15–0.75  0.5 |    521    74  +55.2%  +29.1%  +25.8%  68%
+gbm_win          0.90  3    yes 0.15–0.75  0.5 |    315    45  +69.2%  +28.9%  +32.3%  63%
+gbm_win          0.90  3    yes 0.25–0.70  0.5 |    315    45  +60.8%  +28.9%  +31.5%  69%
+gbm_win          0.90  5    yes 0.05–0.95  0.5 |    525    75  +62.7%  +28.9%  +22.5%  61%
+gbm              0.75  2    yes 0.15–0.75  0.5 |    210    30  +76.7%  +28.7%  +54.7%  60%
+gbm_win          0.75  2    yes 0.25–0.70  0.5 |    210    30  +69.7%  +28.6%  +23.6%  69%
+gbm_win          0.75  3     no 0.25–0.70  0.5 |    313    45  +60.5%  +28.6%  +31.5%  69%
+gbm_win          0.75  3     no 0.15–0.75  0.5 |    313    45  +69.1%  +28.6%  +35.5%  63%
+gbm_win          0.90  3     no 0.25–0.70  0.5 |    312    45  +61.0%  +28.4%  +31.5%  69%
+
+Best per model:
+  gbm_win          mean  +65.3%  5th pct  +34.3%  win  66%  trades/fold 75  (q 0.9, k 5, sports yes, band 0.15–0.75, days ≥ 0.5)
+  gbm              mean  +59.3%  5th pct  +31.0%  win  61%  trades/fold 75  (q 0.9, k 5, sports yes, band 0.15–0.75, days ≥ 0.5)
+  logit            mean  +55.2%  5th pct  +30.2%  win  68%  trades/fold 74  (q 0.75, k 5, sports no, band 0.15–0.75, days ≥ 0.5)
+  ridge            mean  +50.3%  5th pct  +25.6%  win  72%  trades/fold 45  (q 0.9, k 3, sports yes, band 0.05–0.95, days ≥ 0.5)
+  rule:credible    mean  +50.5%  5th pct  +24.6%  win  67%  trades/fold 74  (q 0.9, k 5, sports yes, band 0.15–0.75, days ≥ 0.5)
+  rule:leaderboard mean   -7.5%  5th pct  -27.1%  win  47%  trades/fold 75  (q 0.75, k 5, sports yes, band 0.25–0.7, days ≥ 0.5)
+
+For scale, 'copy the leaderboard, anything, 3 a day': mean -12.2% per trade, 5th pct -40.0%, win 46%
+
+What the winner trades (last three folds):
+  fold Sep 16: 75 trades, mean +91%, win 77% · types {'geopolitics': 6, 'culture': 5, 'crypto': 4, 'weather': 40, 'politics': 5, 'economics': 5, 'other': 9, 'sports': 1} · price <30¢ 32%, 30–70¢ 55%, >70¢ 13%
+      +300%  weather     0.22  Will the highest temperature in Paris be 24°C on · Yes  (trader prior wr 100%, n 105)
+      +300%  weather     0.19  Will the highest temperature in Manila be 32°C o · Yes  (trader prior wr 97%, n 198)
+      +300%  weather     0.22  Will the highest temperature in Shanghai be 24°C · Yes  (trader prior wr 97%, n 190)
+      +300%  weather     0.23  Will the highest temperature in Singapore be 33° · Yes  (trader prior wr 97%, n 190)
+  fold Sep 30: 75 trades, mean +84%, win 68% · types {'weather': 48, 'culture': 7, 'politics': 8, 'other': 4, 'geopolitics': 3, 'tech': 3, 'sports': 2} · price <30¢ 31%, 30–70¢ 61%, >70¢ 8%
+      +300%  culture     0.17  Will "Other Mommy" Opening Weekend Box Office be · Yes  (trader prior wr 100%, n 191)
+      +300%  weather     0.18  Will the highest temperature in Kuala Lumpur be  · Yes  (trader prior wr 100%, n 6)
+      +300%  weather     0.22  Will the highest temperature in Miami be between · Yes  (trader prior wr 100%, n 6)
+      +300%  geopolitics 0.15  Israel military action against Lebanon on Octobe · Yes  (trader prior wr 88%, n 78)
+  fold Oct 14: 75 trades, mean +71%, win 63% · types {'geopolitics': 1, 'weather': 59, 'sports': 10, 'tech': 1, 'other': 2, 'crypto': 1, 'culture': 1} · price <30¢ 47%, 30–70¢ 48%, >70¢ 5%
+      +300%  weather     0.18  Will the highest temperature in Chengdu be 27°C  · Yes  (trader prior wr 100%, n 17)
+      +300%  weather     0.21  Will the highest temperature in Tel Aviv be 26°C · Yes  (trader prior wr 100%, n 12)
+      +300%  weather     0.22  Will the highest temperature in Amsterdam be 11° · Yes  (trader prior wr 100%, n 12)
+      +300%  weather     0.23  Will the highest temperature in Miami be between · Yes  (trader prior wr 100%, n 12)
+
+winner: gbm_win with q=0.9, k=5, sports=yes, band (0.15, 0.75), days ≥ 0.5 → /out/model_big.json (threshold +0.0496, 966211 rows)
+
+total 2069s```
+
+## Reading round 2
+
+- **Naive leaderboard copying loses**: −12% per trade, 46% winners, bootstrap-worst −40%. Round 1's positive number for it
+  came entirely from crediting the follower with the traders' exits.
+- **Every trained model, and the credible-trader rule, is far ahead**: +50% to +65% mean per trade (capped), 5th
+  percentile +25% to +34%, 61–72% winners, and every fold positive. The ordering is boosted-trees-on-winning >
+  boosted-trees-on-return > logistic > credible rule ≈ ridge.
+- **What the winner actually trades is mostly daily temperature markets** ("Will the highest temperature in Paris be
+  24°C on…") bought at 15–25¢ by traders with 97–100% prior win rates, resolving the same or next day; the rest is
+  politics, geopolitics and culture. The model found the forecast-driven traders. Whether a follower can get filled near
+  their price in those thin markets is the open question that paper trading answers; the simulation assumes 1¢ of
+  slippage and the taker fee.
+- The shipped `polybot/model.json` is the winner: boosted trees on winning, scored as predicted win probability minus
+  price, acting when that edge is at least 5 points, up to 5 trades a day, any market type, 15–75¢, 12 hours or more to
+  the end. The "Data model" setup applies that policy automatically.
