@@ -55,6 +55,21 @@ class StoreTests(unittest.TestCase):
         self.assertAlmostEqual(self.store.trust("smart", "0xa", 1.0), 0.88)
         self.assertEqual(self.store.leaders_followed("consensus"), [])
 
+    def test_reset_one_strategy(self):
+        self.store.open_position(rec("learned"), T0)
+        self.store.open_position(rec("learned", asset="B"), T0)
+        self.store.close_position("B", Decimal("0.6"), Decimal("6"), "test", T0, strategy="learned")
+        self.store.open_position(rec("credible", asset="C"), T0)
+        before = self.store.reset_strategy("learned", T0)
+        self.assertEqual(before, {"positions": 1, "trades": 3, "closed": 1})
+        self.assertEqual(self.store.open_positions("learned"), [])
+        self.assertEqual(self.store.totals(T0, "learned")["closed"], 0)
+        self.assertIsNone(self.store.acted_at("A", "learned"))
+        self.assertEqual(len(self.store.open_positions("credible")), 1)
+        self.assertIsNotNone(self.store.acted_at("C", "credible"))
+        self.assertEqual(self.store.since("learned"), "2026-10-28T12:00:00+00:00")
+        self.assertIsNone(self.store.since("credible"))
+
     def test_old_state_is_migrated(self):
         path = Path(self.tmp.name) / "state.json"
         path.write_text(json.dumps({"positions": {"A": rec("underdog")}, "acted": {"A": "2026-10-28T10:00:00+00:00", "B": "2026-10-28T11:00:00+00:00"},

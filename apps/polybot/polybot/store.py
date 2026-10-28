@@ -65,7 +65,7 @@ class Store:
         self.state = self._load()
 
     def _load(self) -> dict:
-        default = {"positions": {}, "closed": [], "acted": {}, "trades": [], "leaders": {}}
+        default = {"positions": {}, "closed": [], "acted": {}, "trades": [], "leaders": {}, "since": {}}
         if not self.state_path.exists():
             return default
         try:
@@ -158,6 +158,25 @@ class Store:
         self.save()
         return rec
 
+    # ---- starting over ----
+    def reset_strategy(self, strategy: str, now: datetime) -> dict:
+        """Forget one setup's book so its record starts fresh (positions, trades, closed, cooldowns, leader stats)."""
+        st = self.state
+        before = {"positions": len(self.open_positions(strategy)), "trades": sum(1 for t in st["trades"] if t.get("strategy") == strategy),
+                  "closed": sum(1 for c in st["closed"] if c.get("strategy") == strategy)}
+        st["positions"] = {k: v for k, v in st["positions"].items() if v.get("strategy", "consensus") != strategy}
+        st["trades"] = [t for t in st["trades"] if t.get("strategy", "consensus") != strategy]
+        st["closed"] = [c for c in st["closed"] if c.get("strategy", "consensus") != strategy]
+        st["acted"] = {k: v for k, v in st["acted"].items() if not k.startswith(strategy + "|")}
+        st.get("leaders", {}).pop(strategy, None)
+        st.setdefault("since", {})[strategy] = iso(now)
+        self._log({"strategy": strategy, "side": "RESET", "at": iso(now), "note": "book cleared, record starts here"})
+        self.save()
+        return before
+
+    def since(self, strategy: str) -> str | None:
+        return self.state.get("since", {}).get(strategy)
+
     # ---- who was worth following ----
     def leader(self, strategy: str, wallet: str) -> dict:
         return self.state["leaders"].setdefault(strategy, {}).setdefault(wallet, {"name": "", "follows": 0, "wins": 0, "pnl": 0.0, "trust": None})
@@ -201,6 +220,13 @@ class Store:
 
     # ---- trades ----
     def _log(self, rec: dict) -> None:
+        if rec.get("side") == "RESET":   # only the file remembers resets; the in-memory list is trades
+            try:
+                with self.log_path.open("a") as f:
+                    f.write(json.dumps(rec, default=_json_default) + "\n")
+            except OSError:
+                pass
+            return
         self.state["trades"].append(rec)
         self.state["trades"] = self.state["trades"][-self.KEEP_TRADES:]
         try:

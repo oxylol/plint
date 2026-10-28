@@ -118,7 +118,7 @@ class Runner:
         strategies = []
         for s in self.strategies:
             strategies.append({**self.store.totals(now, s.name), "name": s.name, "label": s.label if hasattr(s, "label") else "Underdog",
-                               "kind": getattr(s, "kind", "underdog"), "enabled": self.enabled(s),
+                               "kind": getattr(s, "kind", "underdog"), "enabled": self.enabled(s), "since": self.store.since(s.name),
                                "last_run": iso(self.last_run[s.name]) if s.name in self.last_run else None})
         return {
             "updated_at": iso(now),

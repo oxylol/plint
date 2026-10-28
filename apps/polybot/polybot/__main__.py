@@ -47,8 +47,17 @@ def main(argv: list[str]) -> int:
         for g in ud.get("games", [])[:12]:
             print(f"  {g['minutes']:+5d} min  {g['sport']:6s} {g['title'][:50]} · {g['outcome']} at {g['price']:.2f}  → {g['decision']}")
         return 0
+    if cmd == "reset":
+        name = argv[2] if len(argv) > 2 else ""
+        known = [s.name for s in runner.strategies]
+        if name not in known:
+            print(f"usage: python -m polybot reset <setup>   one of: {', '.join(known)}", file=sys.stderr)
+            return 2
+        before = store.reset_strategy(name, utcnow())
+        print(f"{name}: cleared {before['positions']} open positions, {before['trades']} trades, {before['closed']} closed; its record starts now")
+        return 0
     if cmd != "run":
-        print("usage: python -m polybot [run|once|check]", file=sys.stderr)
+        print("usage: python -m polybot [run|once|check|reset <setup>]", file=sys.stderr)
         return 2
 
     web.serve(cfg.port, store, cfg.mode)

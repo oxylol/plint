@@ -180,7 +180,7 @@
     $("cmpnote").textContent = closedTotal ? "closed trades decide this" : "nothing closed yet";
     $("compare").innerHTML = rows.length ? '<table class="compare"><tr><th>Strategy</th><th>' + (live ? "" : "Paper ") + 'P&amp;L</th><th>Trades</th><th>Win</th><th>Avg</th></tr>' + rows.map(function (r) {
       var off = r.enabled === false;
-      return '<tr' + (off ? ' class="off"' : "") + '><td>' + esc(r.label) + (off ? ' <span class="chip sm dim">off</span>' : "") + '<br><span class="muted">' + (r.open || 0) + " open · " + money(r.open_cost) + " in" + ((r.unrealized || 0) ? ' · <span class="' + tone(r.unrealized) + '">' + money(r.unrealized, true) + "</span>" : "") + "</span></td>" +
+      return '<tr' + (off ? ' class="off"' : "") + '><td>' + esc(r.label) + (off ? ' <span class="chip sm dim">off</span>' : "") + '<br><span class="muted">' + (r.open || 0) + " open · " + money(r.open_cost) + " in" + ((r.unrealized || 0) ? ' · <span class="' + tone(r.unrealized) + '">' + money(r.unrealized, true) + "</span>" : "") + (r.since ? " · since " + esc(when(r.since)) : "") + "</span></td>" +
         '<td class="big ' + tone(r.total) + '">' + money(r.total, true) + "</td><td>" + (r.closed || 0) + "</td><td>" + pct(r.win_rate) + '</td><td class="' + tone(r.avg_return) + '">' + pct(r.avg_return, true) + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">Waiting for the first cycle.</div>';
 
