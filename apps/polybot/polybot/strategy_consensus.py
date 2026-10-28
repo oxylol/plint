@@ -48,6 +48,7 @@ class ConsensusParams:
     fresh_only: bool = False     # only act when an agreeing leader's position is new
     adaptive_trust: bool = False # trust a leader more or less as their copied trades resolve
     max_hold_days: float = 0.0   # sell what is still open after this long (0 = hold to resolution)
+    max_per_cycle: int = 5       # buys per cycle at most, strongest signals first (spreads the budget out)
 
     @classmethod
     def base(cls, cfg: Config) -> "ConsensusParams":
@@ -222,6 +223,7 @@ class ConsensusStrategy:
         self.weights: dict[str, float] = {}
         self.muted: list[str] = []
         self.note: str = ""
+        self._bought_this_cycle = 0
         self._trades_by_wallet: dict[str, list[LeaderTrade]] = {}
 
     @property
@@ -287,6 +289,7 @@ class ConsensusStrategy:
         self.expire_positions(now)
         self._prev_decisions = self.decisions
         self.decisions = {}
+        self._bought_this_cycle = 0
         for sig in self.signals:
             why = self.enough(sig)
             try:
@@ -358,6 +361,8 @@ class ConsensusStrategy:
 
         if self.store.position(sig.asset_id, self.name):
             return skip("already holding")
+        if self._bought_this_cycle >= p.max_per_cycle:
+            return skip("enough for this cycle, next look in a few minutes")
         last = self.store.acted_at(sig.asset_id, self.name)
         if last and now - last < timedelta(hours=p.cooldown_hours):
             return skip("cooling down after the last trade")
@@ -413,6 +418,7 @@ class ConsensusStrategy:
             "mode": core.mode, **fill,
         }
         self.store.open_position(rec, now)
+        self._bought_this_cycle += 1
         verb = "Bought" if core.mode == "live" else "Paper buy"
         self.decisions[sig.key] = "bought" if core.mode == "live" else "paper bought"
         log.info("[%s] %s %s: %s shares at %.2f ($%s) · %d agree, %d against, weight %.1f",

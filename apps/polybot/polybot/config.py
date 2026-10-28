@@ -12,16 +12,16 @@ VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_h
                 "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours",
                 "min_hours_to_end", "follow_sells", "poll_seconds",
                 # credible-pack options
-                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days")
+                "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle")
 DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",
     "day:window=day", "day4:window=day,min_agree=4",
     "all:window=all", "all4:window=all,min_agree=4",
     # only credible, active traders from the monthly board; two of them agreeing (weighted) is enough
-    "credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,label=Credible pack",
+    "credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack",
     # a single credible trader's fresh conviction bet, with trust that adapts to how their copies do
-    "smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,label=Smart money",
+    "smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money",
 ])
 RESERVED_NAMES = ("consensus", "underdog")
 

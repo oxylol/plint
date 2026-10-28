@@ -30,7 +30,7 @@ the `POLY_*` names without the prefix. The built-in set (used when
 base threshold and at four agreeing, plus the two credible-pack setups below:
 
 ```
-week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4;credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,label=Credible pack;smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,label=Smart money
+week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4;credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack;smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money
 ```
 
 Other ideas: `week4:min_agree=4` (a lower bar), `top50:top_n=50` (a bigger
@@ -73,7 +73,9 @@ Two such setups run by default:
 
 Pack options for `POLY_VARIANTS`: `pack=1`, `pool=`, `min_weight=`,
 `fresh_only=1`, `adaptive_trust=1`, `max_hold_days=` (sell what is still open
-after that many days; 0 holds to resolution).
+after that many days; 0 holds to resolution). Any setup also takes
+`max_per_cycle=` (buys per cycle, strongest signals first; 5 by default, 3 for
+the pack setups) so a budget is spread over a day rather than spent at once.
 
 ## Strategy 2 · Underdog
 
