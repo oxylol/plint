@@ -222,7 +222,7 @@
         '<div class="bar"><i class="' + (buy ? "" : "sell") + '" style="width:' + p + '%"></i></div>' +
         '<div class="meta"><span><b>' + s.agree.length + "</b> agree</span><span><b>" + s.disagree.length + "</b> against</span>" + (vp.min_weight > 0 ? "<span>weight <b>" + Number(s.weight).toFixed(1) + "</b> of " + vp.min_weight + "</span>" : "") +
         "<span>leaders paid <b>" + cents(s.avg_price) + "</b></span>" + (s.price != null ? "<span>" + (s.closed ? "closed at" : "now") + " <b>" + cents(s.price) + "</b></span>" : "") +
-        "<span>net <b>" + big(s.net_usd) + "</b></span>" + (s.predicted != null ? "<span>model <b>" + pct(s.predicted, true) + "</b> via " + esc(s.predicted_by) + "</span>" : "") + "<span>" + esc(ago(s.last_at)) + "</span></div>" +
+        "<span>net <b>" + big(s.net_usd) + "</b></span>" + (s.predicted != null ? "<span>" + (cur.model && /win|logit/.test(cur.model.target || "") ? "edge" : "model") + " <b>" + pct(s.predicted, true) + "</b> via " + esc(s.predicted_by) + "</span>" : "") + "<span>" + esc(ago(s.last_at)) + "</span></div>" +
         '<div class="names">' + esc(s.agree.join(", ")) + (s.disagree.length ? ' <span class="muted">· against: ' + esc(s.disagree.join(", ")) + "</span>" : "") + "</div>" +
         (dec ? '<div class="decision' + (good ? " good" : "") + '">→ ' + esc(dec) + "</div>" : "") + "</div>";
     }).join("") : (cur.note ? "" : '<div class="empty">No outcome has two or more leaders behind it right now.</div>'));
@@ -284,7 +284,7 @@
         ["window", "category", "top_n", "min_agree", "lookback_hours", "min_leader_usd", "stake_usd", "max_price", "min_price", "max_above_leaders", "max_open", "daily_budget_usd", "cooldown_hours", "min_hours_to_end", "follow_sells", "poll_seconds"].forEach(function (k) {
           if (q[k] !== undefined && String(q[k]) !== String(cfg[k])) diffs.push(k.replace(/_/g, " ") + " " + q[k]);
         });
-        if (q.model) diffs.push("data model" + (q.min_pred ? " · predicted ≥ " + pct(q.min_pred, true) : " · top-25% cut"));
+        if (q.model) diffs.push("data model: " + (v.model && v.model.kind ? v.model.kind + " " + (v.model.target || "") : "") + " · cut " + pct(v.model ? v.model.cut : q.min_pred, true) + " · " + (v.model && v.model.policy ? v.model.policy.per_day + " a day · " + (v.model.policy.sports ? "any market" : "no sports") : ""));
         else if (q.pack) diffs.push("credible pack of " + cfg.cr_pack_size + (q.min_weight ? " · weight ≥ " + q.min_weight : "") + (q.fresh_only ? " · fresh entries only" : "") + (q.adaptive_trust ? " · adaptive trust" : "") + (q.max_hold_days ? " · out after " + q.max_hold_days + " d" : ""));
         return "<div><span>" + esc(v.name) + "</span><b>" + esc(diffs.join(" · ") || "same as base") + "</b></div>";
       }).join("") + "</div>" : "") + "<h3>Credibility rules (pack setups)</h3>" + '<div class="kv">' +
