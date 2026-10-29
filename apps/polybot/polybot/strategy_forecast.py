@@ -266,5 +266,7 @@ class ForecastStrategy:
 
     # ── the page ─────────────────────────────────────────────
     def status(self) -> dict:
+        # Tomorrow's cities first (where a decision is still live), today's at the end.
+        rows = sorted(self.rows, key=lambda r: ((r.get("decision") or "").startswith("day already"), r.get("day", ""), r.get("city", "")))
         return {"enabled": self.cfg.fc_enabled, "plus_c": self.cfg.fc_plus_c, "agg": self.cfg.fc_agg, "models": self.cfg.fc_models.split(","),
-                "rows": self.rows[:80], "events": len(self.events)}
+                "rows": rows[:100], "events": len(self.events)}
