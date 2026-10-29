@@ -127,6 +127,7 @@
 <section class="stats" id="stats"></section>
 <section><h2>Strategies <small id="cmpnote"></small></h2><div id="compare"></div></section>
 <section><h2>Positions <small id="poscount"></small></h2><div id="positions"></div></section>
+<section><h2>Forecast · tomorrow's temperatures <small id="fcnote"></small></h2><div id="forecast"></div></section>
 <section><h2>Underdog · games around kickoff <small id="udnote"></small></h2><div id="games"></div></section>
 <section><h2>Consensus · where the leaders agree <small id="sigcount"></small></h2><div class="picker" id="picker"></div><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
 <section><h2>Trades</h2><div id="trades"></div></section>
@@ -153,7 +154,7 @@
   function link(s) { return s.event_slug ? "https://polymarket.com/event/" + encodeURIComponent(s.event_slug) : s.slug ? "https://polymarket.com/market/" + encodeURIComponent(s.slug) : "https://polymarket.com/"; }
   function tone(n) { return n > 0 ? "up" : n < 0 ? "down" : ""; }
   var LABELS = {};
-  function stag(name) { var l = LABELS[name] || name; return '<span class="chip sm ' + (name === "underdog" ? "info" : "") + '">' + esc(String(l).replace(/^Consensus · /, "")) + "</span>"; }
+  function stag(name) { var l = LABELS[name] || name; return '<span class="chip sm ' + (name === "underdog" || name === "forecast" ? "info" : "") + '">' + esc(String(l).replace(/^Consensus · /, "")) + "</span>"; }
 
   var last = null, showAll = false, SHOW = 8, picked = localStorage.getItem("polybot-variant") || "consensus";
   function render(d) {
@@ -191,6 +192,15 @@
       return "<tr><td>" + stag(p.strategy) + ' <a href="' + esc(link(p)) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a><br><span class=\"muted\">" + esc(p.outcome) + " · " + esc(ago(p.opened_at)) + (p.mode === "paper" && live ? " · paper" : "") + esc(extra) + (p.note ? " · " + esc(p.note) : "") + "</span></td>" +
         '<td class="r num">' + Number(p.shares).toFixed(1) + '</td><td class="r num">' + cents(p.price) + " → " + cents(p.current_price) + '</td><td class="r num ' + tone(p.pnl) + '">' + money(p.pnl, true) + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">Nothing open.</div>';
+
+    var fc = d.forecast || {}, fr = fc.rows || [];
+    $("fcnote").textContent = fc.enabled === false ? "off" : fr.length ? "No on the " + fc.agg + " of " + (fc.models || []).length + " models +" + fc.plus_c + "°C · " + fc.events + " events" : "";
+    $("forecast").innerHTML = fc.enabled === false ? '<div class="empty">Switched off (<code>FC_ENABLED=0</code>).</div>' : fr.length ? '<table><tr><th>City · day</th><th class="r">Forecast</th><th class="r">Bet No on</th><th class="r">No</th></tr>' + fr.map(function (r) {
+      var good = /bought|holding/.test(r.decision || "");
+      return '<tr><td>' + esc(r.city) + ' <span class="muted">' + esc(r.day ? r.day.slice(5) : "") + (r.station ? " · " + esc(r.station) : "") + (r.local_time ? " · " + esc(r.local_time) : "") + "</span>" + (r.decision ? '<br><span class="' + (good ? "up" : "muted") + '" style="font-size:12px;font-weight:700">→ ' + esc(r.decision) + "</span>" : "") + "</td>" +
+        '<td class="r num">' + (r.forecast != null ? r.forecast + "°C" + (r.spread != null ? '<br><span class="muted">±' + r.spread + "</span>" : "") : "–") + "</td>" +
+        '<td class="r num">' + (r.bucket ? esc(r.bucket) : "–") + '</td><td class="r num">' + cents(r.no_price) + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">No temperature events found yet.</div>';
 
     $("udnote").textContent = ud.enabled === false ? "off" : games.length ? "buys " + cfg.ud_buy_before_min + " min before kickoff · " + cents(cfg.ud_min_price) + "–" + cents(cfg.ud_max_price) : "";
     $("games").innerHTML = ud.enabled === false ? '<div class="empty">Switched off (<code>UD_ENABLED=0</code>).</div>' : games.length ? '<table><tr><th>Kickoff</th><th>Game</th><th class="r">Dog</th></tr>' + games.map(function (g) {
@@ -305,6 +315,15 @@
       "<div><span>Daily budget</span><b>" + money(cfg.ud_daily_budget_usd) + " · " + money((byName.underdog || {}).spent_24h) + " used</b></div>" +
       "<div><span>Open at most</span><b>" + cfg.ud_max_open + "</b></div>" +
       "<div><span>Checks every</span><b>" + cfg.ud_tick_seconds + " s</b></div>" +
+      "</div><h3>Forecast</h3>" + '<div class="kv">' +
+      "<div><span>Enabled</span><b>" + (cfg.fc_enabled ? "yes" : "no") + (cfg.fc_lowest ? " · lows too" : "") + "</b></div>" +
+      "<div><span>Bets No on</span><b>" + cfg.fc_agg + " forecast high +" + cfg.fc_plus_c + "°C</b></div>" +
+      "<div><span>Models</span><b>" + esc(cfg.fc_models) + "</b></div>" +
+      "<div><span>Stake</span><b>" + money(cfg.fc_stake_usd) + " a city · " + cfg.fc_max_per_tick + " a tick</b></div>" +
+      "<div><span>No price band</span><b>" + cents(cfg.fc_min_price) + " – " + cents(cfg.fc_max_price) + "</b></div>" +
+      "<div><span>Daily budget</span><b>" + money(cfg.fc_daily_budget_usd) + " · " + money((byName.forecast || {}).spent_24h) + " used</b></div>" +
+      "<div><span>Sell if forecast moves</span><b>" + (cfg.fc_exit_if_forecast_moves ? "yes" : "no") + "</b></div>" +
+      "<div><span>Checks every</span><b>" + Math.round(cfg.fc_tick_seconds / 60) + " min</b></div>" +
       (a.wallet_type ? "<div><span>Wallet</span><b>" + esc(cfg.wallet) + " · " + esc(a.wallet_type) + "</b></div>" : "") +
       (a.balance != null ? "<div><span>pUSD</span><b>" + money(a.balance) + "</b></div>" : "") +
       "</div>";

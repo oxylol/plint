@@ -143,6 +143,27 @@ minutes" rule averaged about +1% to +5% per trade before fees, winning about
 is why paper trades charge the fee too. The page will show whether anything is
 left.
 
+## Strategy 3 · Forecast
+
+Filip's second idea: Polymarket runs a daily temperature event for about fifty
+cities (one market per degree: "Will the highest temperature in Paris be 24°C
+on October 30?", with "or higher" / "or below" at the ends, °F ranges for US
+cities), resolved on the METAR observations of a named airport. Every half
+hour the bot
+
+1. loads the next days' temperature events and finds each one's station,
+2. pulls the day's forecast for that airport from Open-Meteo in several weather
+   models (`FC_MODELS`) and takes the highest expected maximum across them
+   (`FC_AGG`, "the highest expected from the data"),
+3. adds `FC_PLUS_C` (2°C) and buys **No** on the degree bucket that would
+   resolve for that temperature, for `FC_STAKE_USD`, if No is between
+   `FC_MIN_PRICE` and `FC_MAX_PRICE`, before the day has started in that city;
+   the surest forecasts (models agree) go first, `FC_MAX_PER_TICK` a tick,
+4. holds to resolution, or sells if a fresh forecast climbs to within half the
+   margin of the bucket (`FC_EXIT_IF_FORECAST_MOVES`). `FC_LOWEST=1` also
+   plays the lows (No on the forecast low minus the margin); `FC_DAYS_AHEAD`
+   (1) is how far ahead it bets, in the city's own calendar.
+
 ## Comparing them
 
 The page's **Strategies** table lists every setup: paper (or live) P&L,
@@ -237,6 +258,7 @@ Change a value, then `plint restart poly`.
 - `polybot/credibility.py` + `pack.py` — who is worth copying (pure rules, tested) and the measuring of a board
 - `polybot/model.py` + `model.json`, `research/` — the data model and the scripts that collected and fitted it
 - `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
+- `polybot/weather.py` + `strategy_forecast.py` — temperature markets, stations, Open-Meteo forecasts (pure parts tested) and the forecast strategy
 - `polybot/runner.py` — runs both on their own clocks, writes the page's JSON
 - `polybot/store.py` — `data/polybot/state.json`, `trades.jsonl`, `status.json`
 - `static/index.html` — the page (Plint Soft UI tokens)

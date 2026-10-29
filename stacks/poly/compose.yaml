@@ -87,6 +87,21 @@ services:
       UD_DAILY_BUDGET_USD: ${UD_DAILY_BUDGET_USD:-50}
       UD_LOOKAHEAD_HOURS: ${UD_LOOKAHEAD_HOURS:-3}
       UD_TICK_SECONDS: ${UD_TICK_SECONDS:-30}
+      # Strategy 3, forecast: No on tomorrow's high being the forecast (Open-Meteo, several models) plus a margin.
+      FC_ENABLED: ${FC_ENABLED:-1}
+      FC_PLUS_C: ${FC_PLUS_C:-2}
+      FC_STAKE_USD: ${FC_STAKE_USD:-5}
+      FC_MIN_PRICE: ${FC_MIN_PRICE:-0.50}
+      FC_MAX_PRICE: ${FC_MAX_PRICE:-0.95}
+      FC_DAILY_BUDGET_USD: ${FC_DAILY_BUDGET_USD:-50}
+      FC_MAX_OPEN: ${FC_MAX_OPEN:-40}
+      FC_MAX_PER_TICK: ${FC_MAX_PER_TICK:-5}
+      FC_MODELS: ${FC_MODELS:-best_match,ecmwf_ifs025,gfs_seamless,icon_seamless,gem_seamless}
+      FC_AGG: ${FC_AGG:-max}
+      FC_EXIT_IF_FORECAST_MOVES: ${FC_EXIT_IF_FORECAST_MOVES:-1}
+      FC_LOWEST: ${FC_LOWEST:-0}
+      FC_DAYS_AHEAD: ${FC_DAYS_AHEAD:-1}
+      FC_TICK_SECONDS: ${FC_TICK_SECONDS:-1800}
     volumes:
       - ../../data/polybot:/data
     read_only: true

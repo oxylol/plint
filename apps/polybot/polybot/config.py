@@ -140,6 +140,21 @@ class Config:
     ud_max_open: int
     ud_daily_budget_usd: Decimal
     ud_sports: str               # comma-separated slug prefixes (nba,nhl,epl…); empty = every sport
+    # Forecast strategy: No on tomorrow's high being the forecast plus a margin
+    fc_enabled: bool
+    fc_tick_seconds: int
+    fc_plus_c: float             # margin above the forecast high, in °C
+    fc_stake_usd: Decimal
+    fc_min_price: Decimal        # only buy No between these prices
+    fc_max_price: Decimal
+    fc_daily_budget_usd: Decimal
+    fc_max_open: int
+    fc_max_per_tick: int
+    fc_models: str               # Open-Meteo models, comma-separated
+    fc_agg: str                  # max | median | mean across the models
+    fc_exit_if_forecast_moves: bool
+    fc_lowest: bool              # also play the lows (No on forecast low minus the margin)
+    fc_days_ahead: int           # how many days ahead to bet (1 = tomorrow only, in the city's own calendar)
     # Plumbing
     data_dir: str
     port: int
@@ -202,6 +217,20 @@ class Config:
             ud_max_open=_int("UD_MAX_OPEN", 6),
             ud_daily_budget_usd=_dec("UD_DAILY_BUDGET_USD", "50"),
             ud_sports=_str("UD_SPORTS", "").lower().replace(" ", ""),
+            fc_enabled=_bool("FC_ENABLED", True),
+            fc_tick_seconds=_int("FC_TICK_SECONDS", 1800),
+            fc_plus_c=float(_str("FC_PLUS_C", "2")),
+            fc_stake_usd=_dec("FC_STAKE_USD", "5"),
+            fc_min_price=_dec("FC_MIN_PRICE", "0.50"),
+            fc_max_price=_dec("FC_MAX_PRICE", "0.95"),
+            fc_daily_budget_usd=_dec("FC_DAILY_BUDGET_USD", "50"),
+            fc_max_open=_int("FC_MAX_OPEN", 40),
+            fc_max_per_tick=_int("FC_MAX_PER_TICK", 5),
+            fc_models=_str("FC_MODELS", "best_match,ecmwf_ifs025,gfs_seamless,icon_seamless,gem_seamless").replace(" ", ""),
+            fc_agg=_str("FC_AGG", "max").lower(),
+            fc_exit_if_forecast_moves=_bool("FC_EXIT_IF_FORECAST_MOVES", True),
+            fc_lowest=_bool("FC_LOWEST", False),
+            fc_days_ahead=_int("FC_DAYS_AHEAD", 1),
             data_dir=_str("DATA_DIR", "/data"),
             port=_int("PORT", 8000),
             ntfy_url=_str("NTFY_URL", ""),
@@ -227,6 +256,8 @@ class Config:
         parse_variants(self.variants)
         if not (1 <= self.cr_pack_size <= self.cr_pool <= 1000) or self.cr_refresh_hours < 1:
             raise ValueError("need 1 <= CR_PACK_SIZE <= CR_POOL <= 1000 and CR_REFRESH_HOURS >= 1")
+        if self.fc_tick_seconds < 300 or self.fc_agg not in ("max", "median", "mean") or self.fc_stake_usd < 1:
+            raise ValueError("FC_TICK_SECONDS ≥ 300, FC_AGG max|median|mean, FC_STAKE_USD ≥ 1")
         if self.ud_tick_seconds < 10:
             raise ValueError("UD_TICK_SECONDS must be at least 10")
         if not (0 < self.ud_min_price < self.ud_max_price < 1):
