@@ -16,8 +16,13 @@ Collected and run 2026-10-31. Code: `collect3*.py`, `build3.py`, `prep3.py`, `fi
    signals**: +1.4% in the selection weeks and +0.4% in the holdout, which includes the live paper period. Through the
    bot's budget that is **≈ +$1 to +$4 a week at $5 a trade, CI about −$14 to +$23**.
 4. It beats naive copying by +6.9 points per trade (P 98%) and the day board's sports bets at 40–60¢ by +5.8 (P 94%).
-   It **does not beat the current `learned` setup's rules on point estimate**: those made +10.2% on 162 signals, CI −7 to
-   +28, P(new better) 21%.
+   It **does not beat two live setups on point estimate**:
+   - The current `learned` rules made +10.2% on 162 signals (CI −7 to +28, P(new better) 21%).
+   - The live `day4` rules (four day-board leaders agree), replayed on the same Sep 15–Oct 27 days, made +2.4% a trade
+     and +$8.3 a week against the new model's +0.9% and +$2.0. The gap is +$6.7 a week (90% CI −$26 to +$39, P(day4
+     better) 63%).
+
+   Neither result is significant, but day4 is the front-runner on the evidence.
 5. **Weather:** at the bot's own timing, the market prices temperature buckets better than the bot's five forecast
    models (log loss 0.344 against 0.396), and nothing forecast-based beats it. The +2°C rule is +4.0% per trade when it
    buys at 12:00 UTC the day before (CI +1.3 to +6.7) and +1.3% when it buys just before the city's day starts.
@@ -180,6 +185,9 @@ model that the data exposed.
 
 ### Where it would lose
 
+- **Against the live `day4` rules** (replayed with complete fills): +$8.3 against +$2.0 a week over the same 43 days, a gap
+  of +$6.7 (90% CI −$26 to +$39). The replay picks its 29 wallets with hindsight (the ones day4 copied this week), which
+  flatters it somewhat. day4 was not in the original tournament; it should have been.
 - **Against the current `learned` rules**, on point estimate: −9.2 points per trade, P(new better) 21%. That comparison
   rests on 162 signals; two weeks of side-by-side paper trading will say more than another backtest.
 - **Against the round-2 model run under the new policy:** −2.8 points (P 33%), mostly from that setup's holdout (+15.3%).
