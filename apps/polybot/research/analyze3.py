@@ -478,12 +478,50 @@ for name, pr in preds.items():
     metrics[name] = {"logloss": ll, "brier": float(np.mean((pr[ok] - y[ok]) ** 2)), "auc": float(roc_auc_score(y[ok], pr[ok])),
                      "slope": float(sl), "intercept": float(ic), "top_decile": float(P.ret_c.values[top].mean())}
 
+pool_mask = P.in_pool.values == 1
+
+# ── selection quality without the budget: more signals, tighter intervals ──
+def boot_mean(vals, days, boot=BOOT):
+    ud = np.unique(days)
+    if len(ud) < 3:
+        return float("nan"), float("nan")
+    sums = np.array([vals[days == d].sum() for d in ud])
+    cnts = np.array([(days == d).sum() for d in ud])
+    dr = rng.integers(0, len(ud), size=(boot, len(ud)))
+    bm = sums[dr].sum(1) / cnts[dr].sum(1)
+    return float(np.quantile(bm, 0.05)), float(np.quantile(bm, 0.95))
+
+
+say("\n## Selection quality without the budget (pool signals, out of sample)\n")
+say("Each model's top 10% and top 2% of the pool's signals by expected return, every one taken: what the model predicted "
+    "(mean P/price − 1 − fee) against what happened (capped at +300%), 90% CI over days.\n")
+say(f"{'model':16s} {'top 10%: n':>10s} {'predicted':>9s} {'realized':>9s} {'90% CI':>17s} | {'top 2%: n':>9s} {'predicted':>9s} {'realized':>9s} {'90% CI':>17s}")
+sel_quality = {}
+day_all = (P.t_d.values // DAY).astype(int)
+for name in preds:
+    er = er_all.get(name)
+    if er is None:
+        continue
+    pool_oos = oos & pool_mask & np.isfinite(er)
+    if pool_oos.sum() < 200:
+        continue
+    out = []
+    for q in (0.9, 0.98):
+        m = pool_oos & (er >= np.quantile(er[pool_oos], q))
+        lo_, hi_ = boot_mean(P.ret_c.values[m], day_all[m])
+        out.append((int(m.sum()), float(er[m].mean()), float(P.ret_c.values[m].mean()), lo_, hi_))
+    sel_quality[name] = out
+    a1, a2 = out
+    say(f"{name:16s} {a1[0]:10d} {100 * a1[1]:+8.1f}% {100 * a1[2]:+8.1f}% [{100 * a1[3]:+6.1f}, {100 * a1[4]:+6.1f}] | "
+        f"{a2[0]:9d} {100 * a2[1]:+8.1f}% {100 * a2[2]:+8.1f}% [{100 * a2[3]:+6.1f}, {100 * a2[4]:+6.1f}]")
+
 # ── the portfolio simulator ──────────────────────────────────
 CYCLE = 300
 
 
-def simulate(idx, er, pol, budgets=(10, 20, 3)):
-    """Chronological paper book over candidate signals `idx` (sorted by time). Returns per-trade (row, return, day)."""
+def simulate(idx, er, pol, budgets=(10, 20, 3), state=None):
+    """Chronological paper book over candidate signals `idx` (sorted by time). Returns per-trade (row, return, day).
+    `state` carries the open book, the day's buys and the cooldowns from one fold into the next."""
     per_day, max_open, per_cycle = budgets
     lo, hi = pol["band"]
     p = pf[idx]
@@ -504,9 +542,10 @@ def simulate(idx, er, pol, budgets=(10, 20, 3)):
     res = P.resolved_at.values
     exit_t = np.where(np.isfinite(P.t_lsell.values) & (P.t_lsell.values < res), P.t_lsell.values + 300, res) if pol.get("exit") else res
     r = P.ret_exit.values if pol.get("exit") else P.ret.values
-    open_until: list = []          # (release time, event, wallet, asset)
-    buys: list = []                # buy times (rolling 24 h)
-    last_buy_asset: dict = {}
+    st = state if state is not None else {}
+    open_until: list = st.setdefault("open", [])      # (release time, event, wallet, asset)
+    buys: list = st.setdefault("buys", [])            # buy times (rolling 24 h)
+    last_buy_asset: dict = st.setdefault("last", {})
     trades = []
     cyc_key, cyc_n = None, 0
     # within a 5-minute cycle the strongest signals go first
@@ -514,13 +553,13 @@ def simulate(idx, er, pol, budgets=(10, 20, 3)):
     for k in order:
         i = cand[k]
         now = t[i]
-        open_until = [o for o in open_until if o[0] > now]
+        open_until[:] = [o for o in open_until if o[0] > now]
         ck = int(now // CYCLE)
         if ck != cyc_key:
             cyc_key, cyc_n = ck, 0
         if cyc_n >= per_cycle or len(open_until) >= max_open:
             continue
-        buys = [b for b in buys if b > now - DAY]
+        buys[:] = [b for b in buys if b > now - DAY]
         if len(buys) >= per_day:
             continue
         a = P.asset.values[i]
@@ -544,6 +583,45 @@ def simulate(idx, er, pol, budgets=(10, 20, 3)):
     return trades
 
 
+def qualify(idx, er, pol, state=None):
+    """Every signal the policy would take with no budget: the filters, one buy per outcome per 72 hours, and (with
+    per_event=1) no second position in an event while the first is unresolved. Returns (row, return, day)."""
+    lo, hi = pol["band"]
+    p = pf[idx]
+    h = P.hours.values[idx]
+    ok = (er[idx] >= pol["thr"]) & (p >= lo) & (p <= hi) & (h >= pol["min_h"]) & (h <= pol["max_h"])
+    if pol.get("cats"):
+        ok &= np.isin(P.cat.values[idx], pol["cats"])
+    if pol.get("max_drift") is not None:
+        ok &= P.f_drift.values[idx] <= pol["max_drift"]
+    if pol.get("in_play") is False:
+        ok &= P.f_in_game.values[idx] < 0.5
+    cand = idx[ok]
+    if len(cand) == 0:
+        return []
+    cand = cand[np.argsort(P.t_d.values[cand], kind="stable")]
+    t = P.t_d.values
+    res = P.resolved_at.values
+    exit_t = np.where(np.isfinite(P.t_lsell.values) & (P.t_lsell.values < res), P.t_lsell.values + 300, res) if pol.get("exit") else res
+    r = P.ret_exit.values if pol.get("exit") else P.ret.values
+    st = state if state is not None else {}
+    last_asset: dict = st.setdefault("last", {})
+    ev_busy: dict = st.setdefault("busy", {})
+    out = []
+    for i in cand:
+        a = P.asset.values[i]
+        if a in last_asset and t[i] - last_asset[a] < 72 * 3600:
+            continue
+        if pol.get("per_event", 99) < 99:
+            e = P.ev.values[i]
+            if ev_busy.get(e, -1) > t[i]:
+                continue
+            ev_busy[e] = exit_t[i]
+        last_asset[a] = t[i]
+        out.append((i, r[i], int(t[i] // DAY)))
+    return out
+
+
 def summarize(trades):
     if not trades:
         return {"n": 0, "mean": float("nan"), "lo": float("nan"), "hi": float("nan"), "pnl_week": 0.0, "win": float("nan")}
@@ -556,8 +634,10 @@ def summarize(trades):
     draws = rng.integers(0, len(ud), size=(BOOT, len(ud)))
     bm = sums[draws].sum(1) / cnts[draws].sum(1)
     span_days = max(7.0, (dd.max() - dd.min() + 1))
+    per_day = len(rr) / span_days
+    # dollars a week at $5 a trade, with the bot's budget: at most 10 buys a day
     return {"n": len(rr), "mean": float(rr.mean()), "mean_c": float(rc.mean()), "lo": float(np.quantile(bm, 0.05)), "hi": float(np.quantile(bm, 0.95)),
-            "win": float((rr > 0).mean()), "pnl_week": float(5 * rr.sum() / span_days * 7), "days": len(ud)}
+            "win": float((rr > 0).mean()), "per_day": per_day, "pnl_week": float(5 * 7 * rr.mean() * min(10.0, per_day)), "days": len(ud)}
 
 
 POLICY_GRID = []
@@ -578,32 +658,60 @@ SELECT_END = pd.Timestamp("2026-10-20", tz="UTC").timestamp()    # families and 
 say(f"\n{len(POLICY_GRID)} policies per model; each fold's policy is the one with the most P&L on the folds before it (at least 20 trades); "
     f"the winning family is picked on folds before {pd.to_datetime(SELECT_END, unit='s'):%b %d} and judged on the folds after (holdout)")
 
-pool_mask = P.in_pool.values == 1
+def policy_score(trades, days):
+    """What a policy would earn under the budget: mean return (single wins capped at +300%) × the buys a day the
+    budget lets through (at most 10). Needs 30 signals."""
+    if len(trades) < 30:
+        return -1e9
+    return float(np.mean([min(x[1], 3.0) for x in trades])) * min(10.0, len(trades) / max(1.0, days))
 
 
 def walk_policy(name, er, mask=pool_mask, grid=POLICY_GRID):
-    """Nested walk-forward: per fold, pick the policy by P&L on earlier folds, trade it on this fold."""
+    """Nested walk-forward on every qualifying signal: per fold, the policy that would have earned most under the budget
+    on the earlier folds; the signals it takes in this fold. Returns (trades, picks, final policy, per-fold trades)."""
     per_fold = defaultdict(dict)
+    fold_days = {}
     for fi in range(len(FOLDS)):
         idx = np.where((fold_of == fi) & mask & np.isfinite(er))[0]
         if len(idx) == 0:
             continue
+        fold_days[fi] = (FOLDS[fi][1] - FOLDS[fi][0]) / DAY
         for pi, pol in enumerate(grid):
-            per_fold[fi][pi] = simulate(idx, er, pol)
+            per_fold[fi][pi] = qualify(idx, er, pol)
     out, picks = [], []
     folds = sorted(per_fold)
     for k, fi in enumerate(folds):
         if k < 2:
             continue           # need two earlier folds to choose on
         prev = folds[:k]
-        def score(pi):
-            tr = [x for f in prev for x in per_fold[f].get(pi, [])]
-            return sum(x[1] for x in tr) if len(tr) >= 20 else -1e9
-        best = max(range(len(grid)), key=score)
+        days = sum(fold_days[f] for f in prev)
+        best = max(range(len(grid)), key=lambda pi: policy_score([x for f in prev for x in per_fold[f].get(pi, [])], days))
         picks.append((fi, best))
-        out += per_fold[fi].get(best, [])
-    allbest = max(range(len(grid)), key=lambda pi: sum(x[1] for f in folds for x in per_fold[f].get(pi, [])) if sum(len(per_fold[f].get(pi, [])) for f in folds) >= 30 else -1e9)
+    out = qualify_walk(er, picks, mask)
+    sel = [f for f in folds if FOLDS[f][0] < SELECT_END]
+    days = sum(fold_days[f] for f in sel)
+    allbest = max(range(len(grid)), key=lambda pi: policy_score([x for f in sel for x in per_fold[f].get(pi, [])], days))
     return out, picks, grid[allbest], per_fold
+
+
+def qualify_walk(er, picks, mask=None, change=None):
+    """Every qualifying signal under each fold's policy, the cooldowns and event locks carried from fold to fold."""
+    mask = pool_mask if mask is None else mask
+    st, tr = {}, []
+    for fi, best in picks:
+        idx = np.where((fold_of == fi) & mask & np.isfinite(er))[0]
+        tr += qualify(idx, er, {**POLICY_GRID[best], **(change or {})}, state=st)
+    return tr
+
+
+def budget_check(er, picks, mask=None, change=None, budgets=(10, 20, 3)):
+    """The same per-fold policies through the bot's book (one book, carried from fold to fold): what it would really take."""
+    mask = pool_mask if mask is None else mask
+    st, tr = {}, []
+    for fi, best in picks:
+        idx = np.where((fold_of == fi) & mask & np.isfinite(er))[0]
+        tr += simulate(idx, er, {**POLICY_GRID[best], **(change or {})}, budgets=budgets, state=st)
+    return tr
 
 
 def split(trades):
@@ -611,18 +719,21 @@ def split(trades):
     return ([x for x in trades if P.t_d.values[x[0]] < SELECT_END], [x for x in trades if P.t_d.values[x[0]] >= SELECT_END])
 
 
-say("\n## The bot's portfolio, out of sample (pool signals, nested policy choice, $5 a trade)\n")
-say(f"{'model':16s} {'trades':>6s} {'mean/trade':>10s} {'90% CI':>17s} {'win':>5s} {'$/week':>8s} | {'select: n':>9s} {'mean':>7s} {'$/wk':>7s} | {'holdout: n':>10s} {'mean':>7s} {'90% CI':>17s} {'$/wk':>7s}")
+say("\n## Every qualifying pool signal, out of sample (nested policy choice); $/week at $5 a trade within the budget\n")
+say("'all' is every fold from Sep 15; 'select' the folds the winner is chosen on; 'holdout' Oct 20 → (never chosen on). "
+    "'book' is the same policies run through the bot's budget (10 a day, 20 open, 3 a cycle, 25% per leader), as a check.\n")
+say(f"{'model':16s} {'signals':>6s} {'mean/trade':>10s} {'90% CI':>17s} {'win':>5s} {'$/week':>8s} | {'select: n':>9s} {'mean':>7s} {'$/wk':>7s} | {'holdout: n':>10s} {'mean':>7s} {'90% CI':>17s} {'$/wk':>7s} | book: n, mean, $/wk")
 
 
-def row(name, tr, extra=""):
+def row(name, tr, extra="", book=None):
     sm = summarize(tr)
     a, b = split(tr)
     sa, sb = summarize(a), summarize(b)
+    bk = summarize(book) if book is not None else None
     say(f"{name:16s} {sm['n']:6d} {100 * sm['mean']:+9.1f}% [{100 * sm['lo']:+6.1f}, {100 * sm['hi']:+6.1f}] {100 * sm['win']:4.0f}% {sm['pnl_week']:+8.2f} | "
         f"{sa['n']:9d} {100 * sa['mean']:+6.1f}% {sa['pnl_week']:+7.2f} | {sb['n']:10d} {100 * sb['mean']:+6.1f}% [{100 * sb['lo']:+6.1f}, {100 * sb['hi']:+6.1f}] "
-        f"{sb['pnl_week']:+7.2f} {extra}")
-    return sm, sa, sb
+        f"{sb['pnl_week']:+7.2f}" + (f" | book {bk['n']:4d} {100 * bk['mean']:+6.1f}% {bk['pnl_week']:+7.2f}" if bk else "") + f" {extra}")
+    return sm, sa, sb, bk
 results = {}
 for name in sorted(preds, key=lambda k: k.startswith("abl_")):
     er = er_all.get(name)
@@ -631,38 +742,40 @@ for name in sorted(preds, key=lambda k: k.startswith("abl_")):
     if name.startswith("abl_") and "gbm_anchor" in results:
         # feature ablations trade the base model's policy fold by fold, so only the inputs differ
         base = results["gbm_anchor"]
-        tr = []
-        for fi, best in base["picks"]:
-            idx = np.where((fold_of == fi) & pool_mask & np.isfinite(er))[0]
-            tr += simulate(idx, er, POLICY_GRID[best])
-        sm, sa, sb = row(name, tr, "(gbm_anchor's policies)")
+        tr = qualify_walk(er, base["picks"])
+        sm, sa, sb, bk = row(name, tr, "(gbm_anchor's policies)")
         results[name] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb, "picks": base["picks"], "final_policy": base["final_policy"]}
         continue
     tr, picks, final_pol, per_fold = walk_policy(name, er)
-    sm, sa, sb = row(name, tr)
-    results[name] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb, "picks": picks, "final_policy": final_pol, "per_fold": per_fold}
+    book = budget_check(er, picks)
+    sm, sa, sb, bk = row(name, tr, book=book)
+    results[name] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb, "picks": picks, "final_policy": final_pol, "book": book,
+                     "book_summary": bk}
 
 # ── rival rules on the same simulator ─────────────────────────
 say("\n## Rival rules on the same book\n")
 rules = {}
+first_fold = min((fi for fi, _ in results.get("gbm_anchor", {}).get("picks", [])), default=0)
+oos_scored = oos & (fold_of >= first_fold)          # the same folds the models are scored on
 # copy the day board's sports bets at 40–60¢ (the live paper run's one positive setup)
-m_day = (P.in_day25.values == 1) & (P.cat.values == "sports") & oos
-rules["day_sports_40_60"] = simulate(np.where(m_day)[0], np.ones(len(P)), {"thr": 0.0, "band": (0.40, 0.60), "min_h": 0.0, "max_h": 1e9})
+m_day = (P.in_day25.values == 1) & (P.cat.values == "sports") & oos_scored
+rules["day_sports_40_60"] = (np.where(m_day)[0], np.ones(len(P)), {"thr": 0.0, "band": (0.40, 0.60), "min_h": 0.0, "max_h": 1e9}, (10, 20, 3))
 # copy every pool signal, any market, 5–95¢
-rules["copy_pool_all"] = simulate(np.where(pool_mask & oos)[0], np.ones(len(P)), {"thr": 0.0, "band": (0.05, 0.95), "min_h": 0.0, "max_h": 1e9})
+rules["copy_pool_all"] = (np.where(pool_mask & oos_scored)[0], np.ones(len(P)), {"thr": 0.0, "band": (0.05, 0.95), "min_h": 0.0, "max_h": 1e9}, (10, 20, 3))
 # the current `learned` setup: round-2 model, its policy, two pool leaders needed (find_signals' min_show), 5 a day
 if "old_r2" in preds:
     od = json.loads(old_path.read_text())["policy"]
-    m_old = pool_mask & oos & (P.crowd.values >= 1) & (P.leader_px.values >= od["min_price"]) & (P.leader_px.values <= od["max_price"])
+    m_old = pool_mask & oos_scored & (P.crowd.values >= 1) & (P.leader_px.values >= od["min_price"]) & (P.leader_px.values <= od["max_price"])
     end_by_date_h = (P.o_end_date.values - P.t_d.values) / 3600
     m_old &= end_by_date_h >= 24 * od["min_days"]
-    rules["learned_now"] = simulate(np.where(m_old)[0], np.nan_to_num(old_score, nan=-9),
-                                    {"thr": od["threshold"], "band": (od["min_price"], od["max_price"]), "min_h": 0.0, "max_h": 1e9,
-                                     "max_drift": 0.05},     # POLY_MAX_ABOVE_LEADERS
-                                    budgets=(od["per_day"], 20, 3))
-for k, tr in rules.items():
-    sm, sa, sb = row(k, tr)
-    results[k] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb}
+    rules["learned_now"] = (np.where(m_old)[0], np.nan_to_num(old_score, nan=-9),
+                            {"thr": od["threshold"], "band": (od["min_price"], od["max_price"]), "min_h": 0.0, "max_h": 1e9,
+                             "max_drift": 0.05}, (od["per_day"], 20, 3))     # max_drift: POLY_MAX_ABOVE_LEADERS
+for k, (idx, sc, pol, bud) in rules.items():
+    tr = qualify(idx, sc, pol)
+    book = simulate(idx, sc, pol, budgets=bud)
+    sm, sa, sb, bk = row(k, tr, book=book)
+    results[k] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb, "book": book, "book_summary": bk}
 
 
 # ── the winner, against each rival ───────────────────────────
@@ -697,7 +810,8 @@ if winner:
     W = results[winner]
     say(f"chosen on the folds before {pd.to_datetime(SELECT_END, unit='s'):%b %d} ({W['select']['n']} trades, {100 * W['select']['mean']:+.1f}% per trade, "
         f"${W['select']['pnl_week']:+.2f}/week); holdout after: {W['holdout']['n']} trades, {100 * W['holdout']['mean']:+.1f}% per trade "
-        f"[90% CI {100 * W['holdout']['lo']:+.1f}, {100 * W['holdout']['hi']:+.1f}], ${W['holdout']['pnl_week']:+.2f}/week\n")
+        f"[90% CI {100 * W['holdout']['lo']:+.1f}, {100 * W['holdout']['hi']:+.1f}], ${W['holdout']['pnl_week']:+.2f}/week; "
+        f"through the bot's book: {W['book_summary']['n']} trades, {100 * W['book_summary']['mean']:+.1f}% per trade, ${W['book_summary']['pnl_week']:+.2f}/week\n")
     say("Winner minus each rival, mean return per trade, all out-of-sample folds (bootstrap over days):")
     for k, v in results.items():
         if k == winner or v["summary"]["n"] < 10:
@@ -738,22 +852,29 @@ if winner:
     say("\n## Policy rules, one at a time (the winner's model and fold policies otherwise)\n")
     W = results[winner]
     er = er_all[winner]
+    say("Every qualifying signal (left) and the bot's book (right); 'two-sided' counts events held on two outcomes at once.\n")
+
+    def two_sided(tr, pol_exit=False):
+        res = P.resolved_at.values
+        spans = defaultdict(list)
+        for i, _, _ in tr:
+            end = P.t_lsell.values[i] + 300 if (pol_exit and np.isfinite(P.t_lsell.values[i]) and P.t_lsell.values[i] < res[i]) else res[i]
+            spans[P.ev.values[i]].append((P.t_d.values[i], end, P.asset.values[i]))
+        n = 0
+        for v in spans.values():
+            v.sort()
+            n += any(b[0] < a[1] and b[2] != a[2] for a, b in zip(v, v[1:]))
+        return n
+
     for label, change in (("as chosen", {}), ("no per-event limit", {"per_event": 99}), ("no leader cap", {"leader_cap": 1.0}),
                           ("exit when the leader sells", {"exit": True}), ("in-play signals allowed", {"in_play": True}),
                           ("5 a day instead of 10", {"_budget": (5, 20, 3)})):
-        tr = []
-        for fi, best in W["picks"]:
-            pol = {**POLICY_GRID[best], **{k: v for k, v in change.items() if not k.startswith("_")}}
-            idx = np.where((fold_of == fi) & pool_mask & np.isfinite(er))[0]
-            tr += simulate(idx, er, pol, budgets=change.get("_budget", (10, 20, 3)))
-        sm = summarize(tr)
-        same_ev = 0
-        evs = defaultdict(set)
-        for i, _, _ in tr:
-            evs[P.ev.values[i]].add(P.asset.values[i])
-        same_ev = sum(1 for v in evs.values() if len(v) > 1)
-        say(f"  {label:28s} {sm['n']:5d} trades, mean {100 * sm['mean']:+6.1f}% [{100 * sm['lo']:+.1f}, {100 * sm['hi']:+.1f}], ${sm['pnl_week']:+.2f}/week, "
-            f"events held on two outcomes: {same_ev}")
+        ch = {k: v for k, v in change.items() if not k.startswith("_")}
+        q = qualify_walk(er, W["picks"], change=ch)
+        bk = budget_check(er, W["picks"], change=ch, budgets=change.get("_budget", (10, 20, 3)))
+        sq, sb_ = summarize(q), summarize(bk)
+        say(f"  {label:28s} signals {sq['n']:5d}, mean {100 * sq['mean']:+6.1f}% [{100 * sq['lo']:+.1f}, {100 * sq['hi']:+.1f}], two-sided {two_sided(q, change.get('exit')):3d} | "
+            f"book {sb_['n']:4d}, mean {100 * sb_['mean']:+6.1f}%, ${sb_['pnl_week']:+.2f}/week, two-sided {two_sided(bk, change.get('exit'))}")
 
 # ── robustness: who the wallets are, how late the follower is, what the book costs ──
 if winner:
@@ -766,12 +887,9 @@ if winner:
     ub = P[unbiased]
     say(f"wallets not picked by a profit board (random takers, volume boards): {ub.wallet.nunique()} wallets, {len(ub)} signals")
     for label, mask in (("unbiased wallets, any", unbiased), ("profit-board wallets, any", ~unbiased)):
-        tr = []
-        for fi, best in W["picks"]:
-            idx = np.where((fold_of == fi) & mask & np.isfinite(er))[0]
-            tr += simulate(idx, er, POLICY_GRID[best], budgets=(10, 20, 3))
+        tr = qualify_walk(er, W["picks"], mask=mask)
         sm = summarize(tr)
-        say(f"  {label:28s} {sm['n']:5d} trades, mean {100 * sm['mean']:+.1f}% [{100 * sm['lo']:+.1f}, {100 * sm['hi']:+.1f}], ${sm['pnl_week']:+.2f}/week")
+        say(f"  {label:28s} {sm['n']:5d} signals, mean {100 * sm['mean']:+.1f}% [{100 * sm['lo']:+.1f}, {100 * sm['hi']:+.1f}]")
     sel = np.array([i for i, _, _ in W["trades"]])
     if len(sel):
         def m(col):
