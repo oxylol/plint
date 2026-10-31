@@ -483,6 +483,7 @@ for k in FAMILIES:
         continue
     m_, lo_, hi_, pw = gap(res_all[k], res_all["day4 rule (hold to the end)"])
     print(f"  {k:16s} {m_:+6.2f} [{lo_:+6.2f}, {hi_:+6.2f}]  P(better) {100 * pw:.0f}%")
+json.dump({k: [(int(i), float(r), int(d)) for i, r, d in v] for k, v in res_all.items()}, open(CACHE / f"consensus_trades_{LABEL}.json", "w"))
 json.dump({"feats": FEATS, "n": len(rows)}, open(CACHE / f"consensus_{LABEL}.json", "w"))
 np.save(CACHE / f"consensus_X_{LABEL}.npy", X)
 json.dump([{k: v for k, v in r.items() if k != "x"} for r in rows], open(CACHE / f"consensus_rows_{LABEL}.json", "w"),
