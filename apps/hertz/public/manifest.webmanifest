@@ -1,0 +1,14 @@
+{
+  "name": "Hertz",
+  "short_name": "Hertz",
+  "description": "A music maker made of waves: dials, thresholds and sines on Plint.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050607",
+  "theme_color": "#050607",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · music stack
+#  Hertz: a music maker made of waves, not keys. Every voice fires when its
+#  pulse wave crosses a threshold; a second sine (drift) bends the timing and
+#  the pitch. Source in apps/hertz. All sound is made in the browser (Web
+#  Audio); the container only serves the page and keeps saved songs in
+#  data/hertz, so every device sees the same list.
+# ─────────────────────────────────────────────────────────────
+name: music
+
+services:
+  hertz:
+    build: ../../apps/hertz
+    image: plint/hertz:local
+    container_name: hertz
+    restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
+    ports:
+      - "127.0.0.1:5200:5200"
+    environment:
+      TZ: ${TZ}
+      DATA_DIR: /data
+    volumes:
+      - ../../data/hertz:/data
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 128m
+    networks:
+      - music
+
+networks:
+  music:
+    name: plint-music
