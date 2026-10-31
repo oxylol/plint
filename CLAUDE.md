@@ -22,9 +22,11 @@ app; they are usually on a phone, so keep answers short and lead with the result
 │   ├── media/          stremio
 │   ├── table/          includes /opt/plint-table/deploy/compose.yaml (D&D table, separate repo)
 │   ├── cnc/            cnc-studio (built from apps/cnc-studio)
-│   └── poly/           polybot (built from apps/polybot)
+│   ├── poly/           polybot (built from apps/polybot)
+│   └── music/          hertz (built from apps/hertz)
 ├── apps/cnc-studio/    CNC Studio source (G-code sim + Claude; upstream zip, plus our Dockerfile)
 ├── apps/polybot/       Polybot: Polymarket leaderboard-consensus trader (Python; README there)
+├── apps/hertz/         Hertz: music maker made of waves (Web Audio in the browser; README there)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
 ├── dashboard/          Homepage config (services/widgets/settings/images)
@@ -67,6 +69,7 @@ host network and proxies to `localhost:<port>`:
 | table | 3200 | Plint Table (D&D), own repo `/opt/plint-table` |
 | cnc | 5178 | CNC Studio (G-code simulator + Claude), no login, key `CNC_ANTHROPIC_API_KEY`; work in `data/cnc-studio` |
 | poly | 5190 | Polybot: Polymarket strategies compared on one page. "Consensus" buys what the top traders agree on (`POLY_*`; `POLY_VARIANTS` runs extra setups such as other leaderboard windows), "credible"/"smart" copy only traders who pass credibility rules (`CR_*`), "underdog" buys the cheaper side of a game at kickoff and sells into the bounce (`UD_*`). Paper mode until `POLY_PRIVATE_KEY`, `POLY_WALLET` and `POLY_LIVE=1` are in `.env` (apps/polybot/README.md); book in `data/polybot` |
+| music | 5200 | Hertz: a music maker with no keys. Each voice fires when its pulse wave crosses a threshold; a second sine (drift) bends timing and pitch; tones are FM sines. Sound is made in the browser; saved songs in `data/hertz` |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 
 ## How to do things

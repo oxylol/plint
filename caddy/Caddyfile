@@ -165,6 +165,13 @@
 		}
 	}
 
+	@music host music.{$DOMAIN}
+	handle @music {
+		# Hertz (apps/hertz): a music maker of waves and dials. Own look; the
+		# sound is made in the browser, the container keeps saved songs.
+		reverse_proxy localhost:5200
+	}
+
 	@speed host speed.{$DOMAIN}
 	handle @speed {
 		import theme speedtest

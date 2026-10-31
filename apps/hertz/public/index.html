@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#050607">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hertz">
+<title>Hertz</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="hertz.css">
+</head>
+<body>
+<main class="hz" id="app">
+  <header class="top">
+    <div class="brand" aria-label="Hertz">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" class="b1"/><circle cx="12" cy="12" r="6.2" class="b2"/><path d="M12 12V1.5" class="b3"/></svg>
+      <span>Hertz</span>
+    </div>
+    <button class="song-btn" id="songBtn" aria-haspopup="dialog">
+      <span id="songName">First Light</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+    </button>
+    <button class="rec-btn" id="recBtn" aria-label="Record">
+      <span class="rec-dot"></span><span class="rec-time" id="recTime">Rec</span>
+    </button>
+  </header>
+
+  <section class="stage">
+    <div class="orbit" id="orbitWrap">
+      <canvas id="orbit" aria-label="All voices as rings: each wave around one bar, dots where it crosses its threshold"></canvas>
+      <button class="core" id="core" aria-label="Play">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.6v12.8a1 1 0 0 0 1.52.85l10.2-6.4a1 1 0 0 0 0-1.7L10 4.75a1 1 0 0 0-1.5.85z"/></svg>
+      </button>
+    </div>
+  </section>
+
+  <section class="deck">
+    <nav class="rail" id="rail" aria-label="Voices"></nav>
+    <div class="strip glass-inset" id="stripWrap">
+      <canvas id="strip"></canvas>
+      <div class="strip-tag" id="stripTag"></div>
+    </div>
+    <div class="panel-head">
+      <div class="seg" id="seg" role="tablist">
+        <span class="seg-thumb"></span>
+        <button role="tab" data-page="wave">Wave</button>
+        <button role="tab" data-page="sound">Sound</button>
+      </div>
+      <div class="song-title" id="songTitle">Song</div>
+      <div class="tools" id="tools"></div>
+    </div>
+    <div class="dials" id="dials"></div>
+  </section>
+
+  <footer class="transport glass">
+    <button class="pos" id="posBtn" aria-label="Position">
+      <span class="pos-num" id="pos">1.1</span>
+      <span class="pos-tide"><i id="tideFill"></i></span>
+    </button>
+    <button class="play" id="playBtn" aria-label="Play">
+      <svg viewBox="0 0 24 24" class="i-play" aria-hidden="true"><path d="M8.5 5.6v12.8a1 1 0 0 0 1.52.85l10.2-6.4a1 1 0 0 0 0-1.7L10 4.75a1 1 0 0 0-1.5.85z"/></svg>
+      <svg viewBox="0 0 24 24" class="i-stop" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.6"/></svg>
+    </button>
+    <button class="tempo" id="tempoBtn" aria-label="Tempo">
+      <span class="tempo-num" id="bpm">112</span><span class="tempo-unit">BPM</span>
+    </button>
+  </footer>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet glass" id="sheet" role="dialog" aria-modal="true" aria-label="Songs">
+  <div class="grabber"></div>
+  <div class="sheet-head">
+    <h2>Songs</h2>
+    <button class="sheet-done" id="sheetDone">Done</button>
+  </div>
+  <div class="save-row">
+    <input id="nameInput" maxlength="60" autocomplete="off" spellcheck="false" aria-label="Song name">
+    <button class="btn-primary" id="saveBtn">Save</button>
+  </div>
+  <div class="sheet-scroll">
+    <h3>On Plint</h3>
+    <ul class="list" id="savedList"><li class="empty">Nothing saved yet.</li></ul>
+    <h3>Starters</h3>
+    <ul class="list" id="presetList"></ul>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
