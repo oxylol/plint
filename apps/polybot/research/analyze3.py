@@ -953,21 +953,44 @@ def export_lgbm(m, feats):
     return trees, names
 
 
-if winner and MODEL_OUT and winner in FAMILIES and isinstance(FAMILIES[winner][0](), LGBModel):
+EXPORTABLE = (LGBModel, LogitAnchor, SkillEB)
+
+
+def exportable(k):
+    if k not in FAMILIES or k.startswith("abl_") or isinstance(FAMILIES[k][1], str):
+        return False
+    m = FAMILIES[k][0]()
+    return isinstance(m, EXPORTABLE) and not isinstance(m, WalletTE)
+
+
+ship = winner if (winner and exportable(winner)) else max((k for k in model_cands if exportable(k)),
+                                                        key=lambda k: cands[k]["select"]["pnl_week"], default=None)
+if ship and ship != winner:
+    say(f"\n{winner} cannot be shipped as a model file; the best shippable family on the selection folds is {ship}")
+winner_overall, winner = winner, ship
+if winner and MODEL_OUT:
     cfgs = chosen_cfg[winner]
     cfg = max(cfgs, key=lambda c: sum(1 for x in cfgs if x == c))          # the configuration chosen most often
     end_t = P.t_d.max()
     tr = np.where(P.resolved_at.values < end_t)[0]
     tr = subsample(tr)
     mdl = FAMILIES[winner][0]().fit(tr, end_t, cfg)
-    trees, names = export_lgbm(mdl, mdl.feats)
-    feats_out = [f[2:] for f in mdl.feats]
+    if isinstance(mdl, LGBModel):
+        trees, names = export_lgbm(mdl, mdl.feats)
+        feats_out = [f[2:] for f in mdl.feats]
+        body = {"kind": "lgbm", "anchor": "logit_p" if mdl.anchor else None, "features": feats_out, "init": 0.0, "lr": 1.0, "trees": trees}
+    elif isinstance(mdl, LogitAnchor):
+        feats_out = [f[2:] for f in mdl.feats]
+        body = {"kind": "linear", "target": "anchor", "anchor": "logit_p", "features": feats_out, "mean": mdl.mu.tolist(),
+                "std": mdl.sd.tolist(), "w": mdl.w.tolist()}
+    else:
+        feats_out = list(F.FEATURES)
+        body = {"kind": "skill", "anchor": "logit_p", "features": feats_out, "k": float(mdl.k), "b": float(mdl.b)}
     # the bot's scorer must give LightGBM's numbers
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from polybot.model import Model
     pol = results[winner]["final_policy"]
-    out = {"kind": "lgbm", "version": 3, "target": "win", "anchor": "logit_p" if mdl.anchor else None, "features": feats_out,
-           "init": 0.0, "lr": 1.0, "trees": trees,
+    out = {**body, "version": 3, "target": body.get("target", "win"),
            "policy": {"threshold": pol["thr"], "decision": "expected return per $ after fee", "per_day": 10,
                       "min_price": pol["band"][0], "max_price": pol["band"][1], "min_hours": pol["min_h"],
                       "max_hours": pol["max_h"] if pol["max_h"] < 1e8 else 0.0, "per_event": pol.get("per_event", 99) if pol.get("per_event", 99) < 99 else 0,
@@ -985,7 +1008,7 @@ if winner and MODEL_OUT and winner in FAMILIES and isinstance(FAMILIES[winner][0
     chk = rng.choice(len(P), 2000, replace=False)
     want = mdl.predict(chk)
     got = np.array([bot.win_probability({f: float(P[f"f_{f}"].values[i]) for f in feats_out}) for i in chk])
-    say(f"\nexported {winner} ({len(trees)} trees, {len(tr)} rows, config {cfg}) → {MODEL_OUT}; "
+    say(f"\nexported {winner} ({body['kind']}, {len(tr)} rows, config {cfg}) → {MODEL_OUT}; "
         f"bot scorer vs LightGBM on 2000 rows: max |Δp| = {np.max(np.abs(got - want)):.2e}")
     assert np.max(np.abs(got - want)) < 1e-4
 

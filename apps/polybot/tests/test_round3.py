@@ -106,7 +106,7 @@ class Round3Setup(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             model = Path(d) / "m.json"
             # one stump: a leader with a positive record edge adds +2 to the market's log-odds
-            model.write_text(json.dumps({"kind": "lgbm", "anchor": "logit_p", "features": F.FEATURES, "init": 0.0, "lr": 1.0,
+            model.write_text(json.dumps({"kind": "lgbm", "version": 3, "anchor": "logit_p", "features": F.FEATURES, "init": 0.0, "lr": 1.0,
                                          "trees": [{"left": [1, -1, -1], "right": [2, -1, -1], "feature": [F.FEATURES.index("rec_edge"), -2, -2],
                                                     "threshold": [0.0, -2, -2], "value": [0.0, -2.0, 2.0]}],
                                          "policy": {"threshold": 0.1, "per_day": 10, "min_price": 0.05, "max_price": 0.95, "min_hours": 1,

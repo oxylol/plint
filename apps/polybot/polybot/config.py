@@ -26,10 +26,13 @@ DEFAULT_VARIANTS = ";".join([
     "smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money",
     # judged by the data model fitted on collected trader histories (research/analyze.py → polybot/model.json)
     # the tournament winner's policy (sports or not, price band, trades a day, days to the end) comes from model.json
-    "learned:pack=1,model=1,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Data model",
+    "learned:pack=1,model=1,model_file=model_r2.json,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Data model",
     # the same model on weather markets only, at two stakes, to see where the thin books start to bite
-    "weather5:pack=1,model=1,only=weather,stake_usd=5,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Weather model 5 a trade",
-    "weather10:pack=1,model=1,only=weather,stake_usd=10,daily_budget_usd=100,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Weather model 10 a trade",
+    "weather5:pack=1,model=1,model_file=model_r2.json,only=weather,stake_usd=5,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Weather model 5 a trade",
+    "weather10:pack=1,model=1,model_file=model_r2.json,only=weather,stake_usd=10,daily_budget_usd=100,window=month,min_agree=1,min_leader_usd=10,lookback_hours=48,max_per_cycle=3,label=Weather model 10 a trade",
+    # round 3 (research/REPORT3.md): a fresh single-leader bet scored at the price a buy pays now, anchored on the market;
+    # one position per event, a quarter of the book per leader at most; the rest of its policy comes from model.json
+    "edge:pack=1,model=1,model_file=model.json,window=month,min_agree=1,lookback_hours=48,max_per_cycle=3,label=Edge model (round 3)",
 ])
 RESERVED_NAMES = ("consensus", "underdog")
 

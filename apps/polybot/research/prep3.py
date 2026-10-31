@@ -119,6 +119,7 @@ log(f"{seen} price spans read; {np.isfinite(ev.mid_d).sum()} signals have a midp
 # ── the real tape where we have it (thin markets) ──
 tape_px = np.full(n, np.nan)
 tape_dt = np.full(n, np.nan)
+tape_none = np.zeros(n, dtype=bool)     # a complete tape with no taker buy within 2 hours: no fill can be verified
 td = DATA / "tapes"
 if td.exists():
     by_cid = defaultdict(list)
@@ -143,18 +144,20 @@ if td.exists():
                 continue
             want = ev.oi.values[i]
             j0 = np.searchsorted(tt, t_d[i])
+            tape_none[i] = True
             for x in trades[j0: j0 + 400]:
                 if x[0] - t_d[i] > 7200:
                     break
                 # a taker buying our outcome at p, or selling the other one at q (our ask ≤ 1 − q)
                 if x[1] == want and x[2] == 1:
-                    tape_px[i], tape_dt[i] = x[4], x[0] - t_d[i]
+                    tape_px[i], tape_dt[i], tape_none[i] = x[4], x[0] - t_d[i], False
                     break
                 if x[1] == 1 - want and x[2] == -1:
-                    tape_px[i], tape_dt[i] = 1 - x[4], x[0] - t_d[i]
+                    tape_px[i], tape_dt[i], tape_none[i] = 1 - x[4], x[0] - t_d[i], False
                     break
             k += 1
-    log(f"tape prices for {np.isfinite(tape_px).sum()} of {k} signals in markets with a complete tape")
+    log(f"tape prices for {np.isfinite(tape_px).sum()} of {k} signals in markets with a complete tape; "
+        f"{tape_none.sum()} had no taker buy within 2 hours (dropped: no fill could be verified)")
 ev["tape_px"] = tape_px
 ev["tape_dt"] = tape_dt
 
@@ -171,6 +174,7 @@ ev["cost75"] = cost75
 p_model = mid + cost
 ev["p_f"] = np.where(np.isfinite(tape_px), np.maximum(tape_px, mid - 0.0), p_model)
 ev["p_f"] = ev.p_f.clip(0.01, 0.99)
+ev.loc[tape_none, "p_f"] = np.nan
 ev["p_f75"] = np.where(np.isfinite(tape_px), ev.p_f, (mid + cost75)).clip(0.01, 0.99)
 fee = ev.fee_rate.values
 
@@ -223,7 +227,7 @@ for a, g in ev[ev.in_pool == 1].groupby("asset"):
         j0 = np.searchsorted(tt, tt[k] - 48 * 3600)
         crowd[i] = len(set(ww[j0:k]) - {ww[k]})
 ev["crowd"] = crowd
-keep = ev
+keep = ev[np.isfinite(ev.p_f.values)].reset_index(drop=True)
 keep.to_parquet(DATA / "panel.parquet", index=False)
 log(f"panel: {len(keep)} signals with a follower price ({keep.wallet.nunique()} wallets, {keep.cid.nunique()} markets), "
     f"{int(keep.in_pool.sum())} from the rebuilt monthly top 200; "

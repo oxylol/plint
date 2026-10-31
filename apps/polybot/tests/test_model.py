@@ -48,5 +48,38 @@ class ModelTests(unittest.TestCase):
             self.assertFalse(Model(Path(d) / "missing.json").ok)
 
 
+class Round3ModelTests(unittest.TestCase):
+    """Round-3 files are anchored on the follower's price and score the expected return per dollar after the fee."""
+
+    def x(self, price=0.4, edge=0.05, n=99):
+        from polybot import features as F
+        x = {k: 0.0 for k in F.FEATURES}
+        x.update(F.price_terms(price, 0.38))
+        x["rec_edge"], x["rec_n_log"] = edge, math.log1p(n)
+        return x
+
+    def test_kinds(self):
+        from polybot import features as F
+        with tempfile.TemporaryDirectory() as d:
+            x = self.x()
+            # trees: one stump on rec_edge, +1 to the log-odds above 0
+            lg = write({"kind": "lgbm", "version": 3, "anchor": "logit_p", "features": F.FEATURES, "init": 0.0, "lr": 1.0,
+                        "trees": [{"left": [1, -1, -1], "right": [2, -1, -1], "feature": [F.FEATURES.index("rec_edge"), -2, -2],
+                                   "threshold": [0.0, -2, -2], "value": [0, -1.0, 1.0]}], "policy": {"threshold": 0.05}}, Path(d) / "l.json")
+            p = 1 / (1 + math.exp(-(math.log(0.4 / 0.6) + 1.0)))
+            self.assertAlmostEqual(lg.win_probability(x), p)
+            self.assertAlmostEqual(lg.score(x, 0.4, fee_rate=0.05), p / 0.4 - 1 - 0.05 * 0.6)
+            self.assertTrue(lg.round3 and lg.threshold == 0.05)
+            # linear: one standardised input
+            feats = ["rec_edge"]
+            li = write({"kind": "linear", "version": 3, "anchor": "logit_p", "features": feats, "mean": [0.0], "std": [0.1], "w": [2.0, -0.5]},
+                       Path(d) / "i.json")
+            self.assertAlmostEqual(li.win_probability(x), 1 / (1 + math.exp(-(math.log(0.4 / 0.6) + 2.0 * 0.5 - 0.5))))
+            # skill: edge 0.05 over 99 positions, k 1 → shrink 0.99
+            sk = write({"kind": "skill", "version": 3, "anchor": "logit_p", "features": F.FEATURES, "k": 1.0, "b": 2.0}, Path(d) / "s.json")
+            self.assertAlmostEqual(sk.win_probability(x), 1 / (1 + math.exp(-(math.log(0.4 / 0.6) + 2.0 * 0.05 * 0.99 * 4))))
+            self.assertIn("win chance", sk.describe(x, 0.4))
+
+
 if __name__ == "__main__":
     unittest.main()

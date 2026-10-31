@@ -27,10 +27,12 @@ changed, each with its own paper book, so the page can compare them. The
 syntax is `name:setting=value,setting=value;name2:...` where the settings are
 the `POLY_*` names without the prefix. The built-in set (used when
 `POLY_VARIANTS` is empty) compares the four leaderboard windows, each at the
-base threshold and at four agreeing, plus the two credible-pack setups below:
+base threshold and at four agreeing, the two credible-pack setups, the three
+round-2 data-model setups and the round-3 edge model below
+(`polybot/config.py` has the full string):
 
 ```
-week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4;credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack;smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money
+week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4;credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack;smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money;learned:pack=1,model=1,model_file=model_r2.json,…;weather5:…;weather10:…;edge:pack=1,model=1,model_file=model.json,window=month,min_agree=1,lookback_hours=48,max_per_cycle=3,label=Edge model (round 3)
 ```
 
 Other ideas: `week4:min_agree=4` (a lower bar), `top50:top_n=50` (a bigger
@@ -118,6 +120,53 @@ comma-separated: weather, politics, geopolitics, crypto, culture, economics,
 tech, sports, other). Any setup also takes
 `max_per_cycle=` (buys per cycle, strongest signals first; 5 by default, 3 for
 the pack setups) so a budget is spread over a day rather than spent at once.
+
+### Edge model (round 3): the follower's price, not the leader's
+
+`research/REPORT3.md` has the findings; in short, round 3 rebuilt the data
+model around what a follower can actually get. The **Edge model** setup
+(`edge`, `model=1`, `model_file=model.json`) uses it:
+
+- **Who:** everyone measured on the monthly board (the same pool as `learned`),
+  judged by a record that counts resolved losses too (CLOSED + REDEEMABLE,
+  scored at resolution; `polybot/features.py`). The live `learned` setup reads
+  CLOSED only, which put the average leader's win rate at 0.71 instead of 0.52.
+- **When:** a single leader's fresh bet is enough (`min_show=1`), but only
+  while it is fresh (`max_signal_age_min`, 15): the model was trained on bets
+  caught five minutes after they were made, and the edge decays.
+- **At what price:** each bet is scored at what a $5 buy costs right now (the
+  book walked for the stake), and the model anchors on that price: its win
+  chance is sigmoid(logit(price) + trees), so it only buys when the leader adds
+  information the market has not priced. The decision quantity is the expected
+  return per dollar after the taker fee.
+- **How much:** at most one open position per event (`per_event=1`, no more
+  "No on both horses"), at most a quarter of the book behind one leader
+  (`leader_cap`), plus the threshold, price band, horizon and in-play rule that
+  won the walk-forward tournament. All of it ships in `model.json`'s policy.
+
+`polybot/model_r2.json` keeps the round-2 model for `learned`, `weather5` and
+`weather10`, so their records stay comparable. Round-3 setup options:
+`model_file=`, `min_show=`, `per_event=`, `leader_cap=`, `max_hours_to_end=`,
+`max_signal_age_min=`, `no_in_play=1`.
+
+```
+# 1. boards, controls, wallets (positions + fills), markets; book snapshots and weather run alongside
+python research/collect3.py DATA boards && python research/collect3.py DATA controls 1500
+python research/collect3.py DATA wallets 14 && python research/collect3.py DATA markets 6
+python research/collect3_books.py DATA 20 48 &
+python research/collect3_weather.py DATA markets 2026-05-01   # then obs, forecasts, tapes
+# 2. signals, prices, thin-market tapes, panel
+python research/build3.py DATA 2 && python research/collect3_prices.py DATA 8 0 0.15
+python research/collect3_tapes.py DATA 4 250000 4 20 && python research/fillmodel3.py DATA && python research/prep3.py DATA
+# 3. the tournament (writes model.json with its policy) and the weather study
+python research/analyze3.py DATA --model polybot/model.json --report research/TOURNAMENT3.md
+python research/analyze3_weather.py DATA --late
+```
+
+They run in the `plint/polybot` image plus numpy, pandas, pyarrow,
+scikit-learn, lightgbm and scipy; `research/common3.py` is the research side's
+numpy-free part, so `tests/test_features.py` can prove in the bot's own image
+that research and bot compute the same inputs.
 
 ## Strategy 2 · Underdog
 
@@ -256,7 +305,7 @@ Change a value, then `plint restart poly`.
 - `polybot/core.py` — Polymarket calls, paper and live orders, resting sells, settlement, fees
 - `polybot/consensus.py` + `strategy_consensus.py` — the agreement logic (pure, tested) and its strategy, variants included
 - `polybot/credibility.py` + `pack.py` — who is worth copying (pure rules, tested) and the measuring of a board
-- `polybot/model.py` + `model.json`, `research/` — the data model and the scripts that collected and fitted it
+- `polybot/model.py` + `model.json` (round 3) / `model_r2.json`, `polybot/features.py`, `research/` — the data models, the shared feature code and the scripts that collected and fitted them
 - `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
 - `polybot/weather.py` + `strategy_forecast.py` — temperature markets, stations, Open-Meteo forecasts (pure parts tested) and the forecast strategy
 - `polybot/runner.py` — runs both on their own clocks, writes the page's JSON

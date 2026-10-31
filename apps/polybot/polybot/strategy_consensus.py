@@ -268,7 +268,7 @@ class ConsensusStrategy:
         if self.model is not None and self.model.ok and self.model.policy:
             # The policy that won the tournament, unless the variant says otherwise.
             pol = self.model.policy
-            if self.model.kind == "lgbm":
+            if self.model.round3:
                 defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
                             "min_price": Decimal(str(pol.get("min_price", 0.05))), "max_price": Decimal(str(pol.get("max_price", 0.95))),
                             "min_hours_to_end": float(pol.get("min_hours", 0.0)), "max_hours_to_end": float(pol.get("max_hours", 0.0)),
@@ -290,7 +290,7 @@ class ConsensusStrategy:
 
     @property
     def round3(self) -> bool:
-        return self.model is not None and self.model.kind == "lgbm"
+        return self.model is not None and self.model.ok and self.model.round3
 
     @property
     def name(self) -> str:

@@ -39,12 +39,15 @@ class Model:
             self.policy = d.get("policy", {})
             self.trained_at = d.get("trained_at", "")
             self.tournament = d.get("tournament", {})
-            if self.kind == "linear":
+            self.version = int(d.get("version", 2))
+            self.anchor = d.get("anchor")            # "logit_p": the model corrects the market's log-odds (round 3)
+            if self.kind == "skill":
+                self.k, self.b = float(d["k"]), float(d["b"])
+            elif self.kind == "linear":
                 self.mean, self.std = d["mean"], d["std"]
                 self.w = d.get("w") or d.get("return")   # older files: ridge on return
             elif self.kind in ("gbm", "lgbm"):
                 self.lr, self.init, self.trees = float(d.get("lr", 1.0)), float(d.get("init", 0.0)), d["trees"]
-                self.anchor = d.get("anchor")            # "logit_p": trees correct the market's log-odds
             elif self.kind == "rule":
                 self.name = d["name"]
             else:
@@ -105,16 +108,29 @@ class Model:
             total += self.lr * val[node]
         return total
 
+    @property
+    def round3(self) -> bool:
+        return self.version >= 3
+
     def win_probability(self, x: dict[str, float]) -> float:
-        """Round-3 models: the chance the outcome wins, given everything in x (x["logit_p"] is the follower's price)."""
-        z = self._trees(self.row(x)) + (x["logit_p"] if self.anchor == "logit_p" else 0.0)
+        """Round-3 models: the chance the outcome wins, given everything in x (x["logit_p"] is the follower's price).
+        lgbm: trees; linear: standardised inputs × weights; skill: the leader's record edge, shrunk by n / (n + k)."""
+        if self.kind == "skill":
+            n = math.expm1(x["rec_n_log"])
+            z = self.b * x["rec_edge"] * n / (n + self.k) * 4.0
+        elif self.kind == "linear":
+            v = self.row(x)
+            z = sum((a - m) / sd * w for a, m, sd, w in zip(v, self.mean, self.std, self.w)) + self.w[-1]
+        else:
+            z = self._trees(self.row(x))
+        z += x["logit_p"] if self.anchor == "logit_p" else 0.0
         return 1 / (1 + math.exp(-max(-30.0, min(30.0, z))))
 
     def score(self, x: dict[str, float], price: float, fee_rate: float = 0.0) -> float:
         """Higher is better; compare with `threshold`. Linear/ridge and gbm give an expected return on cost;
         the round-2 win-probability models give (predicted win probability − price); round-3 (lgbm) models give
         the expected return per dollar at `price` after the taker fee: P/price − 1 − fee_rate × (1 − price)."""
-        if self.kind == "lgbm":
+        if self.round3:
             p = min(0.999, max(0.001, price))
             return self.win_probability(x) / p - 1.0 - fee_rate * (1.0 - p)
         v = self.row(x)
@@ -138,7 +154,7 @@ class Model:
         return -9.0
 
     def describe(self, x: dict[str, float], price: float) -> str:
-        if self.kind == "lgbm":
+        if self.round3:
             return f"win chance {100 * self.win_probability(x):.0f}% vs price {100 * price:.0f}¢"
         s = self.score(x, price)
         if self.target in ("logit", "gbm_win"):
