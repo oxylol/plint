@@ -99,3 +99,38 @@ def signal_context(rec, fills, asset, td, m, title, slug, ev_slug, outcome, join
                     minutes_since_first=ls["minutes_since_first"], game_minutes=(td - gs) / 60 if gs else None,
                     age_days=(td - joined) / 86400 if joined else None, taker_share=taker)
     return ctx, ls, cat
+
+
+def gz_lines(path, chunk=1 << 20):
+    """Lines of an append-only .gz file (one gzip member per append), streamed, skipping a member damaged by an
+    interrupted write: on a decompression error, resume at the next gzip header."""
+    import zlib
+    data = Path(path).read_bytes()          # compressed bytes only (tens of MB); the text is streamed
+    n = len(data)
+    pos = 0
+    d = zlib.decompressobj(31)
+    tail = b""
+    while pos < n:
+        piece = data[pos: pos + chunk]
+        try:
+            out = d.decompress(piece)
+        except zlib.error:
+            nxt = data.find(b"\x1f\x8b\x08", pos + 1)
+            if nxt < 0:
+                return
+            pos, d, tail = nxt, zlib.decompressobj(31), b""
+            continue
+        if out:
+            lines = (tail + out).split(b"\n")
+            tail = lines.pop()
+            for ln in lines:
+                if ln:
+                    yield ln.decode("utf-8", "replace")
+        if d.eof:                            # end of a member: the rest of this piece starts the next one
+            rest = d.unused_data
+            pos += len(piece) - len(rest)
+            d = zlib.decompressobj(31)
+        else:
+            pos += len(piece)
+    if tail:
+        yield tail.decode("utf-8", "replace")

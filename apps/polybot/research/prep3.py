@@ -31,6 +31,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from common3 import gz_lines  # noqa: E402
 from fillmodel3 import FillModel  # noqa: E402
 from polybot import features as F  # noqa: E402
 
@@ -40,21 +41,47 @@ T0 = time.time()
 
 
 def log(*a):
-    print(f"[{time.time() - T0:5.0f}s]", *a, flush=True)
+    rss = next((int(l.split()[1]) // 1024 for l in open("/proc/self/status") if l.startswith("VmRSS")), 0)
+    print(f"[{time.time() - T0:5.0f}s {rss} MB]", *a, flush=True)
 
 
 import pyarrow.parquet as pq  # noqa: E402
 
-cols_all = pq.ParquetDataset(DATA / "events").schema.names
-cols = [c for c in cols_all if c not in ("title", "slug", "outcome", "boards")]
-ev = pd.read_parquet(DATA / "events", columns=cols, filters=[("has_market", "=", True), ("rec_n", ">=", 5),
-                                                              ("leader_px", ">", 0.03), ("leader_px", "<", 0.97)])
-ev = ev[ev.final.notna()].reset_index(drop=True)
-for c in ev.columns:
-    if ev[c].dtype == np.float64 and (c.startswith("o_") or c in ("stance", "lsell_px", "fee_rate")):
-        ev[c] = ev[c].astype(np.float32)
+import pyarrow as pa  # noqa: E402
+import pyarrow.dataset as pds  # noqa: E402
+
+# 2.7 million signals: read part by part, strings as dictionaries, features as float32 (timestamps stay float64)
+STR = ("wallet", "cid", "asset", "ev", "cat")
+dset = pds.dataset(DATA / "events", format="parquet")
+cols_all = [c for c in dset.schema.names if c not in ("title", "slug", "outcome", "boards", "fill_px", "lsell_px", "n_window", "final")] + ["final"]
+filt = (pds.field("has_market") == True) & (pds.field("rec_n") >= 5) & (pds.field("leader_px") > 0.03) & (pds.field("leader_px") < 0.97)  # noqa: E712
+CODES = {c: {} for c in ("wallet", "cid", "asset", "ev")}     # strings → integer codes (the panel stores codes)
+
+
+def batches(columns):
+    """The resolved signals, part by part, always in the same order (pass 1 and pass 2 line up row for row)."""
+    want = columns if "final" in columns else columns + ["final"]
+    for batch in dset.to_batches(columns=want, filter=filt, batch_size=200_000):
+        df = batch.to_pandas()
+        yield df[df.final.notna()].drop(columns=[] if "final" in columns else ["final"])
+
+
+def encode(df):
+    for c in df.columns:
+        if c in CODES:
+            m = CODES[c]
+            df[c] = np.array([m.setdefault(v, len(m)) for v in df[c].values], dtype=np.int32)
+        elif c == "cat":
+            df[c] = pd.Categorical(df[c].values, categories=F.CATS)
+        elif df[c].dtype == np.float64 and (c.startswith("f_") or c.startswith("o_") or c in ("stance", "fee_rate", "leader_px")):
+            df[c] = df[c].astype(np.float32)
+    return df
+
+
+# pass 1: just what the price join needs
+ev = pd.concat([encode(df) for df in batches(["asset", "t_d", "t_fill", "t_lsell"])], ignore_index=True)
 ev["t_d"] = ev.t_d + LAT
-log(f"{len(ev)} resolved signals with a record, {ev.wallet.nunique()} wallets")
+log(f"{len(ev)} resolved signals with a record")
 
 # ── midpoints from the price history, streamed (the paths do not fit in memory) ──
 idx = defaultdict(list)
@@ -66,15 +93,17 @@ t_d = ev.t_d.values
 t_fill = ev.t_fill.values
 t_ls = ev.t_lsell.values
 seen = 0
+log("price join starts")
 for p in sorted((DATA / "prices").glob("*.jsonl.gz")):
+    if p.name.startswith(("10", "50", "90")):
+        log(f"  {p.name}: {seen} spans so far")
     try:
-        f = gzip.open(p, "rt")
-        for line in f:
+        for line in gz_lines(p):
             try:
                 j = json.loads(line)
             except ValueError:
                 continue
-            rows = idx.get(j["a"])
+            rows = idx.get(CODES["asset"].get(j["a"], -1))
             if not rows or not j["p"]:
                 continue
             seen += 1
@@ -110,9 +139,24 @@ for p in sorted((DATA / "prices").glob("*.jsonl.gz")):
 for k, v in cols.items():
     ev[k] = v
 del cols, idx
-ev = ev[np.isfinite(ev.mid_d.values)].reset_index(drop=True)      # only signals a follower could have priced
+keep_rows = np.isfinite(ev.mid_d.values)                          # only signals a follower could have priced
+mids = ev[keep_rows].reset_index(drop=True)
+del ev
+# pass 2: every other column, for the priced rows only
+parts, off = [], 0
+for df in batches([c for c in cols_all if c not in ("t_d", "t_fill", "t_lsell")]):
+    m = keep_rows[off: off + len(df)]
+    off += len(df)
+    parts.append(encode(df[m].copy()))
+ev = pd.concat(parts, ignore_index=True)
+del parts
+for c in mids.columns:
+    ev[c] = mids[c].values
+del mids
+REV = {c: np.array(list(m.keys()), dtype=object) for c, m in CODES.items()}
 n = len(ev)
 t_d = ev.t_d.values
+log(f"{n} priced signals loaded")
 log(f"{seen} price spans read; {np.isfinite(ev.mid_d).sum()} signals have a midpoint when the follower acts "
     f"({(ev.bucket == 300).sum()} at 5-minute, {(ev.bucket == 3600).sum()} at hourly resolution)")
 
@@ -127,7 +171,7 @@ if td.exists():
         by_cid[c].append(i)
     k = 0
     for c, rows in by_cid.items():
-        pth = td / f"{c}.json.gz"
+        pth = td / f"{REV['cid'][c]}.json.gz"
         if not pth.exists():
             continue
         try:
@@ -208,6 +252,9 @@ wd = pd.read_parquet(DATA / "wallet_days.parquet")
 wd["rank30"] = wd.groupby("day").pnl30.rank(ascending=False, method="first")
 wd["rank1"] = wd.groupby("day").pnl1.rank(ascending=False, method="first")
 ev["day"] = (ev.t_d // 86400).astype(int)
+wd["wallet"] = wd.wallet.map(CODES["wallet"])
+wd = wd[wd.wallet.notna()]
+wd["wallet"] = wd.wallet.astype(np.int32)
 look = wd.set_index(["wallet", "day"])[["rank30", "rank1", "pnl30"]]
 key = pd.MultiIndex.from_arrays([ev.wallet.values, ev.day.values])          # the board as of the start of the day
 got = look.reindex(key)
@@ -229,6 +276,9 @@ for a, g in ev[ev.in_pool == 1].groupby("asset"):
 ev["crowd"] = crowd
 keep = ev[np.isfinite(ev.p_f.values)].reset_index(drop=True)
 keep.to_parquet(DATA / "panel.parquet", index=False)
+for c in ("wallet", "cid", "asset", "ev"):     # the strings behind the codes, for reports
+    used = np.unique(keep[c].values)
+    pd.DataFrame({"code": used, c: REV[c][used]}).to_parquet(DATA / f"panel_{c}s.parquet", index=False)
 log(f"panel: {len(keep)} signals with a follower price ({keep.wallet.nunique()} wallets, {keep.cid.nunique()} markets), "
     f"{int(keep.in_pool.sum())} from the rebuilt monthly top 200; "
     f"{pd.to_datetime(keep.t_d.min(), unit='s'):%Y-%m-%d} → {pd.to_datetime(keep.t_d.max(), unit='s'):%Y-%m-%d}")

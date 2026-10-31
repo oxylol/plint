@@ -1,5 +1,7 @@
 # What the data says about copying Polymarket traders
 
+> Round 3 (`REPORT3.md`, 2026-10-31) re-tests all of this at the follower's real price, five minutes late, on 10,325 wallets: the edges below shrink to roughly zero.
+
 Collected 2026-10-28 with `collect.py` + `collect_settled.py`: 278,099 finished positions by 683 traders (606 from every leaderboard window and category, 94 ordinary holders of busy markets as a control group). Finished = exited (sold or redeemed) **plus** resolved-and-never-redeemed; the second group is 85k positions, 93% of them losses, and the Data API hides it from the `CLOSED` set, which is why any analysis of `CLOSED` alone looks far too rosy. Return = P&L / cost of the position; `$ pnl/$1k` = dollars made per $1,000 put in.
 
 ## Everything

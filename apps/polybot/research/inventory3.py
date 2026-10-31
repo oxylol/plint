@@ -11,6 +11,9 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from common3 import gz_lines  # noqa: E402
+
 DATA = Path(sys.argv[1])
 U = dt.timezone.utc
 
@@ -71,17 +74,14 @@ out.append(f"| markets | {nm} touched by the positions and fills: {closed} close
 bk = sorted((DATA / "books").glob("*.jsonl.gz"))
 nb = 0
 for f in bk:
-    try:
-        nb += sum(1 for _ in gzip.open(f, "rt"))
-    except EOFError:
-        pass
+    nb += sum(1 for _ in gz_lines(f))
 out.append(f"| order books | {nb} snapshots (top 12 levels a side, $1–$100 walk costs) of ~6,000 markets every 20 min | "
            f"{bk[0].name[:10] if bk else '-'} → {bk[-1].name[:10] if bk else '-'} (UTC hours) | {size(DATA / 'books') / 1e6:.0f} MB |")
 ns = npts = 0
 b5 = b60 = 0
 for f in (DATA / "prices").glob("*.jsonl.gz"):
     try:
-        for line in gzip.open(f, "rt"):
+        for line in gz_lines(f):
             j = json.loads(line)
             ns += 1
             npts += len(j["p"])

@@ -66,6 +66,7 @@ def sig(z):
 # ── data ─────────────────────────────────────────────────────
 P = pd.read_parquet(DATA / "panel.parquet")
 P = P[(P.p_f >= 0.02) & (P.p_f <= 0.98) & np.isfinite(P.f_logit_p)].sort_values("t_d").reset_index(drop=True)
+P["cat"] = P.cat.astype(str)
 FEATS = ["f_" + k for k in F.FEATURES]
 for c in FEATS:
     P[c] = P[c].astype(np.float32).fillna(0.0)
@@ -721,8 +722,9 @@ def split(trades):
 
 say("\n## Every qualifying pool signal, out of sample (nested policy choice); $/week at $5 a trade within the budget\n")
 say("'all' is every fold from Sep 15; 'select' the folds the winner is chosen on; 'holdout' Oct 20 → (never chosen on). "
-    "'book' is the same policies run through the bot's budget (10 a day, 20 open, 3 a cycle, 25% per leader), as a check.\n")
-say(f"{'model':16s} {'signals':>6s} {'mean/trade':>10s} {'90% CI':>17s} {'win':>5s} {'$/week':>8s} | {'select: n':>9s} {'mean':>7s} {'$/wk':>7s} | {'holdout: n':>10s} {'mean':>7s} {'90% CI':>17s} {'$/wk':>7s} | book: n, mean, $/wk")
+    "'book' is the same policies run through the bot's budget (10 a day, 20 open, 3 a cycle, 25% per leader), as a check. "
+    "'capped' counts any single win at most +300%.\n")
+say(f"{'model':16s} {'signals':>6s} {'mean/trade':>10s} {'90% CI':>17s} {'capped':>7s} {'win':>5s} {'$/week':>8s} | {'select: n':>9s} {'mean':>7s} {'$/wk':>7s} | {'holdout: n':>10s} {'mean':>7s} {'90% CI':>17s} {'$/wk':>7s} | book: n, mean, $/wk")
 
 
 def row(name, tr, extra="", book=None):
@@ -730,7 +732,7 @@ def row(name, tr, extra="", book=None):
     a, b = split(tr)
     sa, sb = summarize(a), summarize(b)
     bk = summarize(book) if book is not None else None
-    say(f"{name:16s} {sm['n']:6d} {100 * sm['mean']:+9.1f}% [{100 * sm['lo']:+6.1f}, {100 * sm['hi']:+6.1f}] {100 * sm['win']:4.0f}% {sm['pnl_week']:+8.2f} | "
+    say(f"{name:16s} {sm['n']:6d} {100 * sm['mean']:+9.1f}% [{100 * sm['lo']:+6.1f}, {100 * sm['hi']:+6.1f}] {100 * sm.get('mean_c', float('nan')):+6.1f}% {100 * sm['win']:4.0f}% {sm['pnl_week']:+8.2f} | "
         f"{sa['n']:9d} {100 * sa['mean']:+6.1f}% {sa['pnl_week']:+7.2f} | {sb['n']:10d} {100 * sb['mean']:+6.1f}% [{100 * sb['lo']:+6.1f}, {100 * sb['hi']:+6.1f}] "
         f"{sb['pnl_week']:+7.2f}" + (f" | book {bk['n']:4d} {100 * bk['mean']:+6.1f}% {bk['pnl_week']:+7.2f}" if bk else "") + f" {extra}")
     return sm, sa, sb, bk
@@ -805,6 +807,25 @@ cands = {k: v for k, v in results.items() if v["select"]["n"] >= 30 and not k.st
 model_cands = [k for k in cands if k in preds]
 # the winner is the family with the most P&L per week on the selection folds; the holdout is not looked at to choose
 winner = max(model_cands, key=lambda k: cands[k]["select"]["pnl_week"]) if model_cands else None
+EXPORTABLE = (LGBModel, LogitAnchor, SkillEB)
+
+
+def exportable(k):
+    if k not in FAMILIES or k.startswith("abl_") or isinstance(FAMILIES[k][1], str):
+        return False
+    m = FAMILIES[k][0]()
+    return isinstance(m, EXPORTABLE) and not isinstance(m, WalletTE)
+
+
+winner_overall = winner
+if winner and not exportable(winner):
+    ship = max((k for k in model_cands if exportable(k)), key=lambda k: cands[k]["select"]["pnl_week"], default=None)
+    W0 = results[winner]
+    say(f"\nThe selection folds' best family is {winner} ({W0['select']['n']} signals, {100 * W0['select']['mean']:+.1f}% per trade); "
+        f"on the holdout it made {100 * W0['holdout']['mean']:+.1f}% [{100 * W0['holdout']['lo']:+.1f}, {100 * W0['holdout']['hi']:+.1f}]. "
+        f"It needs a per-wallet table the bot cannot rebuild, so the same rule over the shippable families picks {ship}; "
+        f"everything below describes {ship}.")
+    winner = ship
 if winner:
     say(f"\n## Winner: {winner}\n")
     W = results[winner]
@@ -953,21 +974,6 @@ def export_lgbm(m, feats):
     return trees, names
 
 
-EXPORTABLE = (LGBModel, LogitAnchor, SkillEB)
-
-
-def exportable(k):
-    if k not in FAMILIES or k.startswith("abl_") or isinstance(FAMILIES[k][1], str):
-        return False
-    m = FAMILIES[k][0]()
-    return isinstance(m, EXPORTABLE) and not isinstance(m, WalletTE)
-
-
-ship = winner if (winner and exportable(winner)) else max((k for k in model_cands if exportable(k)),
-                                                        key=lambda k: cands[k]["select"]["pnl_week"], default=None)
-if ship and ship != winner:
-    say(f"\n{winner} cannot be shipped as a model file; the best shippable family on the selection folds is {ship}")
-winner_overall, winner = winner, ship
 if winner and MODEL_OUT:
     cfgs = chosen_cfg[winner]
     cfg = max(cfgs, key=lambda c: sum(1 for x in cfgs if x == c))          # the configuration chosen most often
@@ -1012,6 +1018,10 @@ if winner and MODEL_OUT:
         f"bot scorer vs LightGBM on 2000 rows: max |Δp| = {np.max(np.abs(got - want)):.2e}")
     assert np.max(np.abs(got - want)) < 1e-4
 
+# out-of-sample predictions and each family's trades, for follow-up questions without a re-run
+pd.DataFrame({"row": np.arange(len(P)), "fold": fold_of, **{f"p_{k}": v.astype(np.float32) for k, v in preds.items()}}).to_parquet(DATA / "oos_preds.parquet", index=False)
+pd.DataFrame([(k, i, r, d, src) for k, v in results.items() for src in ("signals", "book") for i, r, d in v.get("trades" if src == "signals" else "book", []) or []],
+             columns=["family", "row", "ret", "day", "kind"]).to_parquet(DATA / "oos_trades.parquet", index=False)
 if REPORT:
     REPORT.write_text("\n".join(lines) + "\n")
 json.dump({k: {kk: vv for kk, vv in v["summary"].items()} for k, v in results.items()}, open(DATA / "tournament3.json", "w"), indent=1, default=float)
