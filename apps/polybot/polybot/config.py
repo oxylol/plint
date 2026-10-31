@@ -19,6 +19,8 @@ DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",
     "day:window=day", "day4:window=day,min_agree=4",
+    # day4 without games already in play: in the replay (research/REPORT3.md) its in-play buys lost 13.5% a trade
+    "day4pre:window=day,min_agree=4,no_in_play=1,label=Consensus · day · 4 agree · before the game",
     "all:window=all", "all4:window=all,min_agree=4",
     # only credible, active traders from the monthly board; two of them agreeing (weighted) is enough
     "credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack",
