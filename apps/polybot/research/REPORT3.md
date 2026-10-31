@@ -123,6 +123,27 @@ Gaps:
   pool leader and ≤5¢ above the leaders gives the shipped model +2.4% [−3.3, +7.8] on 910 signals. That is not
   enough to change what ships.
 
+### The live `day4` setup, replayed (added 2026-10-31, `collect3_group.py` + `replay_day4.py`)
+
+day4 (four day-board leaders agree) made +30% a trade on its first 22 paper trades. Replaying its exact rules on Sep 15 → Oct 27, weeks the
+paper run never saw, gives a much smaller number. The replay uses the complete fills of the 29 wallets it copied (3.2 M fills), 5-minute
+prices plus book cost, follows their sells and holds the rest to resolution.
+
+| replay | trades | mean / trade [90% CI] |
+|---|---|---|
+| day4's rules, the 29 wallets, Sep 15–Oct 27 | 424 | +2.4% [−3.8, +8.8] |
+| same, bought before the game (subset) | 311 | +9.3% [+0.8, +18.1] |
+| same, bought in play (subset) | 107 | −13.5% [−30.3, +4.9] |
+| rule changed to skip games in play | 413 | +3.1% [−4.6, +11.0] |
+| 36 wallets (adds today's day-board top 25) | 424 | +1.7% [−4.7, +8.2] |
+| replay of the live days, Oct 28–31 (real paper record: 22 trades, +30%) | 33 | +18.3% [−14.5, +49.9] |
+
+- Weekly results swing from −8.2% to +16.7%.
+- The replay matches the live days in direction but not trade for trade: 8 of 26 outcomes are the same, because the
+  live board changes daily.
+- day4's long-run edge looks like about +2% a trade. At ten buys a day that is ≈ +$460 a year at $5 a trade
+  (90% range −$780 to +$1,630).
+
 ## Why this is the best way to build this model
 
 The evidence does not support "this model makes money". It supports a narrower claim: of everything tried, this is
