@@ -114,12 +114,14 @@ class Round3Setup(unittest.TestCase):
             store = Store(d)
             mk = {c: market(c, f"Q {c}?", "texas-senate") for c in ("rep", "dem", "old")}
             mk["old"].events = [NS(slug="other-event")]
-            trades = [buy("0xa", "rep", 1, 6), buy("0xb", "dem", 1, 5), buy("0xc", "old", 0, 120)]
+            # 0xc's bet is two hours old; 0xd's older bet on the Democrat's Yes puts it against 0xb's No, which must not
+            # veto 0xb for this setup (each leader is judged on their own)
+            trades = [buy("0xa", "rep", 1, 6), buy("0xb", "dem", 1, 5), buy("0xc", "old", 0, 120), buy("0xd", "dem", 0, 120, usd=50.0, price=0.6)]
             cfg = NS(window="month", category="overall", top_n=25, min_agree=1, lookback_hours=48, min_leader_usd=Decimal(10),
                      stake_usd=Decimal(5), max_price=Decimal("0.9"), min_price=Decimal("0.05"), max_above_leaders=Decimal("0.05"), max_open=20,
                      daily_budget_usd=Decimal(50), cooldown_hours=72, min_hours_to_end=1, follow_sells=True, poll_seconds=300, cr_pool=200)
             p = ConsensusParams.base(cfg).variant("edge", {"pack": "1", "model": "1", "model_file": str(model), "max_per_cycle": "3"})
-            s = ConsensusStrategy(FakeCore(store, mk), p, FakeFeed(trades), FakePack([member(w) for w in ("0xa", "0xb", "0xc")]))
+            s = ConsensusStrategy(FakeCore(store, mk), p, FakeFeed(trades), FakePack([member(w) for w in ("0xa", "0xb", "0xc", "0xd")]))
             self.assertTrue(s.round3)
             self.assertEqual((s.p.min_show, s.p.per_event, s.p.max_signal_age_min, s.p.max_above_leaders), (1, 1, 15.0, Decimal(1)))
             s.run(NOW)
@@ -131,6 +133,7 @@ class Round3Setup(unittest.TestCase):
             self.assertIn("older than", s.decisions["BUY:old-y"])   # 0xc's bet is two hours old
             other = "BUY:dem-n" if held[0]["leader"] == "0xa" else "BUY:rep-n"
             self.assertEqual(s.decisions[other], "already holding this event")
+            self.assertEqual(next(x for x in s.signals if x.key == "BUY:dem-n").disagree, ["0xd"])
 
 
 if __name__ == "__main__":

@@ -335,7 +335,11 @@ class ConsensusStrategy:
     def enough(self, sig: Signal) -> str | None:
         """Why a signal is not strong enough yet, or None when it is."""
         p = self.p
-        if sig.score < p.min_agree:
+        if self.round3:
+            # each leader's bet is judged on its own, as the research tested it: a leader on the other side is no veto
+            if not sig.agree:
+                return "no leader buying"
+        elif sig.score < p.min_agree:
             return f"needs {p.min_agree - sig.score} more"
         if p.min_weight > 0 and sig.weight < p.min_weight:
             return f"weight {sig.weight:.1f} of {p.min_weight:g}"
@@ -458,8 +462,8 @@ class ConsensusStrategy:
             held.add(pos["asset_id"])
             held.add((pos.get("condition_id", ""), str(pos.get("outcome", "")).lower()))
         self.signals = find_signals(all_trades, min_leader_usd=p.min_leader_usd, min_show=p.min_show, held=held, weights=weights, sizes=sizes)
-        log.info("[%s] %d leaders · %d fills in the last %gh · %d outcomes with 2+ agreeing",
-                 self.name, len(self.leaders), self.fills, p.lookback_hours, len(self.signals))
+        log.info("[%s] %d leaders · %d fills in the last %gh · %d outcomes with %d+ agreeing",
+                 self.name, len(self.leaders), self.fills, p.lookback_hours, len(self.signals), p.min_show)
 
         self.expire_positions(now)
         self._prev_decisions = self.decisions
