@@ -47,10 +47,13 @@ def log(*a):
         print(dt.datetime.now().strftime("%H:%M:%S"), *a, flush=True)
 
 
-def markets():
+def markets(wanted):
     meta = {}
     with gzip.open(DATA / "markets" / "markets.jsonl.gz", "rt") as f:
         for line in f:
+            j = line.find('"cid": "')
+            if j < 0 or line[j + 8: j + 8 + 66] not in wanted:
+                continue
             m = json.loads(line)
             if not m.get("missing"):
                 meta[m["cid"]] = (m.get("vol") or 0.0, m.get("tokens") or ["", ""], m.get("pos_ids") or ["", ""], m.get("q") or "")
@@ -58,11 +61,19 @@ def markets():
 
 
 def main():
-    meta = markets()
-    ev = pd.read_parquet(DATA / "events", columns=["cid", "t_d", "final", "has_market", "leader_px", "rec_n"])
-    ev = ev[ev.final.notna() & ev.has_market & (ev.leader_px > 0.03) & (ev.leader_px < 0.97) & (ev.rec_n >= 5)
-            & (ev.t_d >= time.time() - 62 * 86400)]
+    ev = pd.read_parquet(DATA / "events", columns=["cid", "wallet", "t_d", "final"],
+                         filters=[("has_market", "=", True), ("rec_n", ">=", 5), ("leader_px", ">", 0.03), ("leader_px", "<", 0.97),
+                                  ("t_d", ">=", time.time() - 62 * 86400)])
+    ev = ev[ev.final.notna()]
     first = ev.groupby("cid").t_d.min()
+    # markets the bot's pool (the rebuilt 30-day board's top 300) signalled in come first
+    wd = pd.read_parquet(DATA / "wallet_days.parquet")
+    wd["rank30"] = wd.groupby("day").pnl30.rank(ascending=False, method="first")
+    top = set(zip(wd.wallet[wd.rank30 <= 300], wd.day[wd.rank30 <= 300]))
+    day = (ev.t_d // 86400).astype(int)
+    pool_cids = set(ev.cid.values[[(w, d) in top for w, d in zip(ev.wallet.values, day.values)]])
+    del ev
+    meta = markets(set(first.index))
     todo = []
     for cid, t0 in first.items():
         m = meta.get(cid)
@@ -70,7 +81,8 @@ def main():
             continue
         if m[0] < MAX_VOL or "temperature in" in m[3]:
             todo.append((cid, float(t0), m))
-    todo.sort(key=lambda x: -x[1])
+    todo.sort(key=lambda x: (x[0] not in pool_cids, -x[1]))
+    log(f"{sum(1 for x in todo if x[0] in pool_cids)} of them carry a pool signal (fetched first)")
     log(f"{len(todo)} thin markets to fetch (of {len(first)} with signals)")
 
     def one(item):

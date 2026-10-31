@@ -854,6 +854,7 @@ if winner and MODEL_OUT and winner in FAMILIES and isinstance(FAMILIES[winner][0
                       "min_price": pol["band"][0], "max_price": pol["band"][1], "min_hours": pol["min_h"],
                       "max_hours": pol["max_h"] if pol["max_h"] < 1e8 else 0.0, "per_event": pol.get("per_event", 99) if pol.get("per_event", 99) < 99 else 0,
                       "leader_cap": pol.get("leader_cap", 0.0), "follow_sells": bool(pol.get("exit")), "max_signal_age_min": 15,
+                      "no_in_play": not pol.get("in_play", True),
                       "min_leader_usd": 10, "max_above_leaders": 1},
            "tournament": {"winner": winner, "config": cfg, "folds": len(FOLDS), "families": list(FAMILIES), "policies": len(POLICY_GRID),
                           "oos_trades": results[winner]["summary"]["n"], "oos_mean_per_trade": results[winner]["summary"]["mean"],

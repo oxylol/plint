@@ -37,12 +37,16 @@ while a:
         REPORT = Path(a.pop(0))
     elif k == "--model":
         MODEL_OUT = Path(a.pop(0))
-    elif k in ("--mids", "--no-regress"):
+    elif k in ("--mids", "--no-regress", "--day2", "--late"):
         pass
 U = dt.timezone.utc
 MODELS = ["best_match", "ecmwf_ifs025", "gfs_seamless", "icon_seamless", "gem_seamless"]
 USE_TAPES = "--mids" not in sys.argv     # default: prices from the real taker tape; --mids uses the midpoint history
 REGRESS = "--no-regress" not in sys.argv  # per-city ridge on the five models (else ensemble mean + bias)
+# previous_day1: the run from about a day before each hour (for afternoons in the Americas that can be later than the
+# decision at 12:00 UTC the day before); previous_day2 (--day2) is a day older still, certainly known in time
+LEAD = "previous_day2" if "--day2" in sys.argv else "previous_day1"
+LATE = "--late" in sys.argv
 rng = np.random.default_rng(3)
 lines = []
 
@@ -104,10 +108,10 @@ for icao, s in st.items():
     if not p.exists():
         continue
     d = json.loads(p.read_text())
-    h = d.get("temperature_2m_previous_day1") or {}
+    h = d.get(f"temperature_2m_{LEAD}") or {}
     times = h.get("time") or []
     for m in MODELS:
-        vals = h.get(f"temperature_2m_previous_day1_{m}") or []
+        vals = h.get(f"temperature_2m_{LEAD}_{m}") or []
         by = defaultdict(list)
         for t, v in zip(times, vals):
             if v is not None:
@@ -227,7 +231,10 @@ for (city, day, kind), ms in events.items():
         mismatch += 1
     tz = ZoneInfo(st[icao]["tz"])
     d0 = dt.datetime.fromisoformat(day).replace(tzinfo=tz)
-    t_dec = min(d0.astimezone(U) - dt.timedelta(hours=1), dt.datetime.fromisoformat(day).replace(tzinfo=U) - dt.timedelta(hours=12))
+    if LATE:   # the bot's own timing: just before the city's day starts (the previous-day run is out well before)
+        t_dec = d0.astimezone(U) - dt.timedelta(hours=1)
+    else:      # 12:00 UTC the day before, everywhere
+        t_dec = min(d0.astimezone(U) - dt.timedelta(hours=1), dt.datetime.fromisoformat(day).replace(tzinfo=U) - dt.timedelta(hours=12))
     rows.append({"city": city, "day": day, "kind": kind, "unit": ms[0]["unit"], "val": val, "fc": f[kind], "markets": ms,
                  "t_dec": t_dec.timestamp(), "official_lo": w["lo"], "official_hi": w["hi"]})
 say(f"{len(rows)} events with observations, forecasts and one winning bucket; METAR max/min falls in the winning bucket in "

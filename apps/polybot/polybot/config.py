@@ -14,7 +14,7 @@ VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_h
                 # credible-pack options
                 "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports", "max_per_day", "only",
                 # round-3 model setups
-                "model_file", "min_show", "per_event", "leader_cap", "max_hours_to_end", "max_signal_age_min")
+                "model_file", "min_show", "per_event", "leader_cap", "max_hours_to_end", "max_signal_age_min", "no_in_play")
 DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",

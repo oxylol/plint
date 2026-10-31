@@ -22,12 +22,14 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from polymarket import PublicClient
 
 DATA = Path(sys.argv[1])
 WORKERS = int(sys.argv[2]) if len(sys.argv) > 2 else 6
 MIN_T = float(sys.argv[3]) if len(sys.argv) > 3 else 0.0
+SAMPLE = float(sys.argv[4]) if len(sys.argv) > 4 else 1.0   # share of the other signals to price (pool and unbiased wallets always)
 U = dt.timezone.utc
 FIVE_MIN_SINCE = time.time() - 59 * 86400      # 5-minute buckets exist for about 60 days
 SPAN = 14.8 * 86400
@@ -61,8 +63,19 @@ def log(*a):
 def windows(have):
     """Per token: spans of at most ~15 days (the API's limit) from 10 minutes before a signal to the market's resolution,
     for the signals not already inside a span fetched earlier."""
-    ev = pd.read_parquet(DATA / "events", columns=["asset", "t_d", "final", "resolved_at", "leader_px", "rec_n", "has_market"])
+    ev = pd.read_parquet(DATA / "events", columns=["asset", "wallet", "t_d", "final", "resolved_at", "leader_px", "rec_n", "has_market",
+                                                    "pnl_boards"])
     ev = ev[ev.final.notna() & ev.has_market & (ev.t_d >= MIN_T) & (ev.leader_px > 0.03) & (ev.leader_px < 0.97) & (ev.rec_n >= 5)]
+    if SAMPLE < 1.0:
+        # every signal the bot's pool could have sent (the 30-day board's top 300, rebuilt from resolved P&L), twice the
+        # share of the signals of wallets no profit board picked, a fixed random share of the rest (by token: spans stay whole)
+        wd = pd.read_parquet(DATA / "wallet_days.parquet")
+        wd["rank30"] = wd.groupby("day").pnl30.rank(ascending=False, method="first")
+        top = set(zip(wd.wallet[wd.rank30 <= 300], wd.day[wd.rank30 <= 300]))
+        day = (ev.t_d // 86400).astype(int)
+        keep = np.array([(w, d) in top for w, d in zip(ev.wallet.values, day.values)])
+        u = np.array([(hash(a) % 1000) / 1000.0 for a in ev.asset.values])
+        ev = ev[keep | ((ev.pnl_boards.values == 0) & (u < 2 * SAMPLE)) | (u < SAMPLE)]
     spans = defaultdict(list)
     for asset, g in ev.groupby("asset"):
         got = have.get(asset, [])

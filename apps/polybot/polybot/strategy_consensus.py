@@ -65,6 +65,7 @@ class ConsensusParams:
     leader_cap: float = 0.0      # largest share of the open book one leader may be behind (0 = no limit)
     max_hours_to_end: float = 0.0  # skip markets that end later than this (0 = no limit)
     max_signal_age_min: float = 0.0  # act only while a leader's bet is this fresh (0 = any time in the lookback)
+    no_in_play: bool = False     # skip games that have already started
     overridden: frozenset = frozenset()  # settings given explicitly in POLY_VARIANTS
 
     @classmethod
@@ -274,7 +275,8 @@ class ConsensusStrategy:
                             "per_event": int(pol.get("per_event", 0)), "leader_cap": float(pol.get("leader_cap", 0.0)),
                             "follow_sells": bool(pol.get("follow_sells", False)), "max_signal_age_min": float(pol.get("max_signal_age_min", 0.0)),
                             "max_above_leaders": Decimal(str(pol.get("max_above_leaders", 1))), "only": ",".join(pol.get("cats") or []),
-                            "min_show": 1, "min_leader_usd": Decimal(str(pol.get("min_leader_usd", 10)))}
+                            "min_show": 1, "min_leader_usd": Decimal(str(pol.get("min_leader_usd", 10))),
+                            "no_in_play": bool(pol.get("no_in_play", False))}
             else:
                 defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
                             "no_sports": not pol.get("sports", True), "min_price": Decimal(str(pol.get("min_price", 0.05))),
@@ -598,6 +600,8 @@ class ConsensusStrategy:
             return skip(why)
         if p.max_hours_to_end and m.state.end_date and aware(m.state.end_date) - now > timedelta(hours=p.max_hours_to_end):
             return skip(f"ends more than {p.max_hours_to_end:g} h from now")
+        if p.no_in_play and m.sports and m.sports.game_start_time and aware(m.sports.game_start_time) <= now:
+            return skip("game in play: a follower minutes late loses there")
         ev_key = self.event_key(m, sig)
         if p.per_event and ev_key and sum(1 for x in self.store.open_positions(self.name) if x.get("event_key") == ev_key) >= p.per_event:
             return skip("already holding this event")

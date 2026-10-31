@@ -17,6 +17,7 @@ Writes DATA_DIR/events/part-*.parquet and DATA_DIR/wallet_days.parquet (each wal
 from __future__ import annotations
 
 import datetime as dt
+import gc
 import gzip
 import json
 import math
@@ -257,16 +258,21 @@ def main():
         part += 1
         buf = []
 
-    with Pool(WORKERS) as pool:
-        for ev, dd in pool.imap_unordered(wallet_events, paths, chunksize=4):
-            buf += ev
-            n_ev += len(ev)
-            days += dd
-            n += 1
-            if len(buf) > 40000:
-                flush()
-            if n % 500 == 0:
-                print(f"  {n}/{len(paths)} wallets, {n_ev} signals, {time.time() - t0:.0f}s", flush=True)
+    # batches with a fresh pool each: a worker's memory is returned between batches (one OOM-killed worker would hang a pool)
+    BATCH = 1200
+    for b0 in range(0, len(paths), BATCH):
+        with Pool(WORKERS, maxtasksperchild=100) as pool:
+            for ev, dd in pool.imap_unordered(wallet_events, paths[b0:b0 + BATCH], chunksize=4):
+                buf += ev
+                n_ev += len(ev)
+                days += dd
+                n += 1
+                if len(buf) > 20000:
+                    flush()
+                if n % 500 == 0:
+                    print(f"  {n}/{len(paths)} wallets, {n_ev} signals, {time.time() - t0:.0f}s", flush=True)
+        flush()
+        gc.collect()
     flush()
     pd.DataFrame(days, columns=["wallet", "day", "pnl30", "n30", "pnl1"]).to_parquet(DATA / "wallet_days.parquet", index=False)
     print(f"{n_ev} signals from {n} wallets in {part} parts; {time.time() - t0:.0f}s", flush=True)
