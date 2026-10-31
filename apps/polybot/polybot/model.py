@@ -1,10 +1,13 @@
-"""The data model: scores a (trader, position) the way research/analyze2.py's winner does.
+"""The data model: scores a (trader, position) the way the research tournaments' winners do.
 
-model.json is written by the tournament. It is either a linear model (ridge on
-return, or logistic on winning scored as predicted win probability minus the
-price), a gradient-boosted tree ensemble exported tree by tree, or a hand rule;
-it also carries the trading policy that won with it (threshold, trades per day,
-sports or not, price band, minimum days to the market's end).
+A model file is written by a tournament. Round 2 (research/analyze2.py, kept as
+model_r2.json) is a linear model (ridge on return, or logistic on winning scored
+as predicted win probability minus the price), a gradient-boosted tree ensemble
+exported tree by tree, or a hand rule. Round 3 (research/analyze3.py, model.json)
+is kind "lgbm": LightGBM trees over polybot/features.py's inputs, anchored on the
+market: the win probability is sigmoid(logit(price the follower pays) + trees),
+and its decision quantity is the expected return per dollar after the taker fee.
+Each file also carries the trading policy that won with it.
 """
 from __future__ import annotations
 
@@ -15,6 +18,7 @@ from pathlib import Path
 from .credibility import Record
 
 MODEL_PATH = Path(__file__).resolve().parent / "model.json"
+MODEL_DIR = MODEL_PATH.parent
 CATS = ["sports", "politics", "geopolitics", "crypto", "culture", "economics", "tech", "weather", "other"]
 
 
@@ -38,8 +42,9 @@ class Model:
             if self.kind == "linear":
                 self.mean, self.std = d["mean"], d["std"]
                 self.w = d.get("w") or d.get("return")   # older files: ridge on return
-            elif self.kind == "gbm":
-                self.lr, self.init, self.trees = float(d["lr"]), float(d["init"]), d["trees"]
+            elif self.kind in ("gbm", "lgbm"):
+                self.lr, self.init, self.trees = float(d.get("lr", 1.0)), float(d.get("init", 0.0)), d["trees"]
+                self.anchor = d.get("anchor")            # "logit_p": trees correct the market's log-odds
             elif self.kind == "rule":
                 self.name = d["name"]
             else:
@@ -51,6 +56,11 @@ class Model:
     @property
     def threshold(self) -> float:
         return float(self.policy.get("threshold", 0.0))
+
+    @classmethod
+    def load(cls, name: str = "") -> "Model":
+        """A model file by name, from the package directory (empty: model.json)."""
+        return cls(MODEL_DIR / name) if name else cls()
 
     # ── features ─────────────────────────────────────────────
     @staticmethod
@@ -85,9 +95,28 @@ class Model:
         return [float(x.get(f, 0.0)) for f in self.features]
 
     # ── scoring ──────────────────────────────────────────────
-    def score(self, x: dict[str, float], price: float) -> float:
+    def _trees(self, v: list[float]) -> float:
+        total = self.init
+        for t in self.trees:
+            node = 0
+            left, right, feat, thr, val = t["left"], t["right"], t["feature"], t["threshold"], t["value"]
+            while left[node] != -1:
+                node = left[node] if v[feat[node]] <= thr[node] else right[node]
+            total += self.lr * val[node]
+        return total
+
+    def win_probability(self, x: dict[str, float]) -> float:
+        """Round-3 models: the chance the outcome wins, given everything in x (x["logit_p"] is the follower's price)."""
+        z = self._trees(self.row(x)) + (x["logit_p"] if self.anchor == "logit_p" else 0.0)
+        return 1 / (1 + math.exp(-max(-30.0, min(30.0, z))))
+
+    def score(self, x: dict[str, float], price: float, fee_rate: float = 0.0) -> float:
         """Higher is better; compare with `threshold`. Linear/ridge and gbm give an expected return on cost;
-        the win-probability models give (predicted win probability − price)."""
+        the round-2 win-probability models give (predicted win probability − price); round-3 (lgbm) models give
+        the expected return per dollar at `price` after the taker fee: P/price − 1 − fee_rate × (1 − price)."""
+        if self.kind == "lgbm":
+            p = min(0.999, max(0.001, price))
+            return self.win_probability(x) / p - 1.0 - fee_rate * (1.0 - p)
         v = self.row(x)
         if self.kind == "linear":
             z = [(a - m) / s for a, m, s in zip(v, self.mean, self.std)] + [1.0]
@@ -96,13 +125,7 @@ class Model:
                 return 1 / (1 + math.exp(-max(-30, min(30, s)))) - price
             return s
         if self.kind == "gbm":
-            total = self.init
-            for t in self.trees:
-                node = 0
-                left, right, feat, thr, val = t["left"], t["right"], t["feature"], t["threshold"], t["value"]
-                while left[node] != -1:
-                    node = left[node] if v[feat[node]] <= thr[node] else right[node]
-                total += self.lr * val[node]
+            total = self._trees(v)
             if self.target == "gbm_win":
                 return 1 / (1 + math.exp(-max(-30, min(30, total)))) - price
             return total
@@ -115,6 +138,8 @@ class Model:
         return -9.0
 
     def describe(self, x: dict[str, float], price: float) -> str:
+        if self.kind == "lgbm":
+            return f"win chance {100 * self.win_probability(x):.0f}% vs price {100 * price:.0f}¢"
         s = self.score(x, price)
         if self.target in ("logit", "gbm_win"):
             return f"win chance {100 * (s + price):.0f}% vs price {100 * price:.0f}¢"

@@ -18,6 +18,7 @@ from .categories import category as market_category
 from .consensus import LeaderTrade, Signal, find_signals
 from .core import CENT, Core, aware, pretty_name, short
 from .credibility import conviction as conviction_of
+from . import features as F
 from .model import Model
 from .store import iso
 
@@ -58,6 +59,12 @@ class ConsensusParams:
     only: str = ""               # trade only these market types, comma-separated (weather, politics, …); empty = all
     max_per_day: int = 0         # buys per rolling day at most (0 = only the daily budget limits it)
     end_by_date: bool = False    # measure "time to the end" against midnight UTC of the end date, as the research data does
+    model_file: str = ""         # which model file in polybot/ judges the signals ("" = model.json, the newest)
+    min_show: int = 2            # leaders needed before an outcome becomes a signal at all (1: one leader's bet is enough)
+    per_event: int = 0           # open positions per event at most, e.g. 1 = never both sides of a two-horse race (0 = no limit)
+    leader_cap: float = 0.0      # largest share of the open book one leader may be behind (0 = no limit)
+    max_hours_to_end: float = 0.0  # skip markets that end later than this (0 = no limit)
+    max_signal_age_min: float = 0.0  # act only while a leader's bet is this fresh (0 = any time in the lookback)
     overridden: frozenset = frozenset()  # settings given explicitly in POLY_VARIANTS
 
     @classmethod
@@ -122,6 +129,25 @@ class ConsensusParams:
             v = getattr(self, f.name)
             out[f.name] = float(v) if isinstance(v, Decimal) else v
         return out
+
+
+def leader_fills(trades: list[LeaderTrade], condition_id: str) -> list[tuple]:
+    """A leader's fills in one market as features.leader_stats wants them: (time, asset, ±1, size, price)."""
+    return [(x.timestamp.timestamp(), x.asset_id, 1 if x.side == "BUY" else -1, float(x.size), float(x.price))
+            for x in trades if x.condition_id == condition_id]
+
+
+def signal_vector(rec, ls: dict, sig: Signal, m, price: float, t: float) -> dict[str, float]:
+    """Round-3 model inputs for one leader's bet (rec: their Record; ls: features.leader_stats of their fills; m: the
+    Gamma market; price: what a stake-sized buy pays now; t: now, epoch seconds). research/build3.py + prep3.py compute
+    the same thing from the collected data; tests/test_features.py checks that the two agree."""
+    end = m.state.end_date
+    gs = m.sports.game_start_time if (m.sports and m.sports.game_start_time) else None
+    return F.vector(rec.rec3, price=price, leader_price=ls["leader_price"], stance_usd=ls["stance"],
+                    hours_to_end=(aware(end).timestamp() - t) / 3600 if end else None,
+                    category=market_category(sig.title, sig.event_slug or sig.slug), is_no=(sig.outcome or "").lower() == "no",
+                    neg_risk=bool(m.state.neg_risk), n_fills=ls["n_fills"], minutes_since_first=ls["minutes_since_first"],
+                    game_minutes=(t - aware(gs).timestamp()) / 60 if gs else None, age_days=rec.age_days, taker_share=rec.taker_share)
 
 
 @dataclass
@@ -237,18 +263,32 @@ class ConsensusStrategy:
         self.note: str = ""
         self._bought_this_cycle = 0
         self._trades_by_wallet: dict[str, list[LeaderTrade]] = {}
-        self.model = Model() if params.model else None
+        self.model = Model.load(params.model_file) if params.model else None
         if self.model is not None and self.model.ok and self.model.policy:
             # The policy that won the tournament, unless the variant says otherwise.
             pol = self.model.policy
-            defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
-                        "no_sports": not pol.get("sports", True), "min_price": Decimal(str(pol.get("min_price", 0.05))),
-                        "max_price": Decimal(str(pol.get("max_price", 0.95))), "min_hours_to_end": 24 * float(pol.get("min_days", 0.5)),
-                        "end_by_date": True}
+            if self.model.kind == "lgbm":
+                defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
+                            "min_price": Decimal(str(pol.get("min_price", 0.05))), "max_price": Decimal(str(pol.get("max_price", 0.95))),
+                            "min_hours_to_end": float(pol.get("min_hours", 0.0)), "max_hours_to_end": float(pol.get("max_hours", 0.0)),
+                            "per_event": int(pol.get("per_event", 0)), "leader_cap": float(pol.get("leader_cap", 0.0)),
+                            "follow_sells": bool(pol.get("follow_sells", False)), "max_signal_age_min": float(pol.get("max_signal_age_min", 0.0)),
+                            "max_above_leaders": Decimal(str(pol.get("max_above_leaders", 1))), "only": ",".join(pol.get("cats") or []),
+                            "min_show": 1, "min_leader_usd": Decimal(str(pol.get("min_leader_usd", 10)))}
+            else:
+                defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
+                            "no_sports": not pol.get("sports", True), "min_price": Decimal(str(pol.get("min_price", 0.05))),
+                            "max_price": Decimal(str(pol.get("max_price", 0.95))), "min_hours_to_end": 24 * float(pol.get("min_days", 0.5)),
+                            "end_by_date": True}
             self.p = params = replace(params, **{k: v for k, v in defaults.items() if k not in params.overridden})
+        self._est: dict[str, Decimal | None] = {}   # asset → price of a stake-sized buy, this cycle
         self._records = {}
         self._sizes: dict[str, float] = {}
         self._preds: dict[str, tuple[float, float, str]] = {}  # signal key → (pred return, win prob, best leader)
+
+    @property
+    def round3(self) -> bool:
+        return self.model is not None and self.model.kind == "lgbm"
 
     @property
     def name(self) -> str:
@@ -271,7 +311,10 @@ class ConsensusStrategy:
         self.pack.ensure_fresh(now)
         if p.model:
             # The model does the judging: every measured trader with some history is in the pool.
-            members = [m for m in self.pack.everyone() if m.record.closed_n >= 5 and m.record.fills_7d > 0]
+            if self.round3:
+                members = [m for m in self.pack.everyone() if m.record.rec3.get("n", 0) >= 5 and m.record.fills_7d > 0]
+            else:
+                members = [m for m in self.pack.everyone() if m.record.closed_n >= 5 and m.record.fills_7d > 0]
             self._records = {m.wallet: m.record for m in members}
             self._sizes = {m.wallet: (m.record.median_cost or 0.0) for m in members}
             leaders = [Leader(m.wallet, m.name, m.rank, Decimal(str(m.record.pnl)), Decimal(str(m.record.volume))) for m in members]
@@ -307,6 +350,9 @@ class ConsensusStrategy:
         """The best model score among the agreeing leaders, its description, and who it is."""
         if sig.key in self._preds:
             return self._preds[sig.key]
+        if self.round3:
+            self._preds[sig.key] = self.predict3(sig)
+            return self._preds[sig.key]
         best = (-9.0, "no score", "nobody")
         if sig.side == "BUY" and self.model is not None and self.model.ok:
             days, neg_risk = None, False
@@ -337,8 +383,62 @@ class ConsensusStrategy:
         self._preds[sig.key] = best
         return best
 
+    def stake_price(self, asset_id: str) -> Decimal | None:
+        """What buying the stake costs right now (the book walked for the full amount), once per cycle."""
+        if asset_id not in self._est:
+            self._est[asset_id] = self.core.estimate(asset_id, "BUY", amount=self.p.stake_usd)
+        return self._est[asset_id]
+
+    def event_key(self, m, sig_or_pos) -> str:
+        """The event a market belongs to (the market's own event first, as the research does)."""
+        ev = m.events[0].slug if (m is not None and m.events) else None
+        get = sig_or_pos.get if isinstance(sig_or_pos, dict) else (lambda k, d=None: getattr(sig_or_pos, k, d))
+        return ev or get("event_slug") or get("slug") or ""
+
+    def predict3(self, sig: Signal, now: datetime | None = None) -> tuple[float, str, str]:
+        """Round-3 model: each agreeing leader's fresh bet, scored at the price a stake-sized buy pays now
+        (features.vector, exactly as research/build3.py + prep3.py compute it); the best leader's expected return."""
+        best = (-9.0, "no score", "nobody")
+        if sig.side != "BUY":
+            return best
+        now = now or self._now
+        try:
+            m = self.core.market(sig.condition_id, sig.slug)
+        except Exception:
+            m = None
+        if m is None:
+            return (-9.0, "market not found", "nobody")
+        asset_id, _ = self.core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
+        t = now.timestamp()
+        fee = float(self.core.fee_rate(m))
+        est = None
+        for w in sig.agree:
+            rec = self._records.get(w)
+            if rec is None or rec.rec3.get("n", 0) < 5:
+                continue
+            ls = F.leader_stats(leader_fills(self._trades_by_wallet.get(w, []), sig.condition_id), sig.asset_id, t,
+                                self.p.lookback_hours * 3600, float(self.p.min_leader_usd))
+            if self.p.max_signal_age_min and (ls["crossed_at"] is None or t - ls["crossed_at"] > 60 * self.p.max_signal_age_min):
+                if best[0] <= -9.0:
+                    best = (-9.0, "the leaders' bets are older than the model's window", self.name_of(w))
+                continue
+            if est is None:
+                est = self.stake_price(asset_id)
+                if est is None:
+                    return (-9.0, "not enough liquidity", "nobody")
+            price = float(est)
+            x = signal_vector(rec, ls, sig, m, price, t)
+            score = self.model.score(x, price, fee)
+            if score > best[0]:
+                best = (score, self.model.describe(x, price), self.name_of(w))
+                self._lead[sig.key] = w
+        return best
+
     def run(self, now: datetime) -> None:
         p = self.p
+        self._now = now
+        self._est = {}
+        self._lead: dict[str, str] = {}
         since = now - timedelta(hours=p.lookback_hours)
         self.leaders, weights, sizes = self.pick_leaders(now)
         if self.pack is not None and not self.leaders:
@@ -355,7 +455,7 @@ class ConsensusStrategy:
         for pos in self.store.open_positions(self.name):
             held.add(pos["asset_id"])
             held.add((pos.get("condition_id", ""), str(pos.get("outcome", "")).lower()))
-        self.signals = find_signals(all_trades, min_leader_usd=p.min_leader_usd, held=held, weights=weights, sizes=sizes)
+        self.signals = find_signals(all_trades, min_leader_usd=p.min_leader_usd, min_show=p.min_show, held=held, weights=weights, sizes=sizes)
         log.info("[%s] %d leaders · %d fills in the last %gh · %d outcomes with 2+ agreeing",
                  self.name, len(self.leaders), self.fills, p.lookback_hours, len(self.signals))
 
@@ -402,7 +502,8 @@ class ConsensusStrategy:
                 keep.append(sig)
                 continue
             price = sig.avg_price
-            if price is None or price < p.min_price or price > p.max_price:
+            if not self.round3 and (price is None or price < p.min_price or price > p.max_price):
+                # (round-3 setups judge the band on what a buy costs now, in consider_buy)
                 self.decisions[sig.key] = "price outside the band"
                 rest.append(sig)
             elif p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
@@ -413,7 +514,10 @@ class ConsensusStrategy:
                 rest.append(sig)
             else:
                 keep.append(sig)
-        buys = sorted((x for x in keep if x.side == "BUY"), key=lambda x: -abs(x.net_usd))
+        if self.round3:   # the model was trained on bets caught minutes after they were made: freshest first
+            buys = sorted((x for x in keep if x.side == "BUY"), key=lambda x: x.last_at, reverse=True)
+        else:
+            buys = sorted((x for x in keep if x.side == "BUY"), key=lambda x: -abs(x.net_usd))
         sells = [x for x in keep if x.side == "SELL"]
         scored, unscored = buys[: self.SCORE_LIMIT], buys[self.SCORE_LIMIT:]
         for sig in unscored:
@@ -492,6 +596,17 @@ class ConsensusStrategy:
         why = core.not_tradeable(m, now, p.min_hours_to_end, p.end_by_date)
         if why:
             return skip(why)
+        if p.max_hours_to_end and m.state.end_date and aware(m.state.end_date) - now > timedelta(hours=p.max_hours_to_end):
+            return skip(f"ends more than {p.max_hours_to_end:g} h from now")
+        ev_key = self.event_key(m, sig)
+        if p.per_event and ev_key and sum(1 for x in self.store.open_positions(self.name) if x.get("event_key") == ev_key) >= p.per_event:
+            return skip("already holding this event")
+        lead = self._lead.get(sig.key) if self.round3 else None
+        if p.leader_cap and lead:
+            book = self.store.open_positions(self.name)
+            mine = sum(1 for x in book if x.get("leader") == lead)
+            if len(book) >= 3 and (mine + 1) / (len(book) + 1) > p.leader_cap:
+                return skip(f"{self.name_of(lead)} is already behind {mine} of {len(book)} open positions")
         if p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
             return skip("sports: the data says copying these loses")
         if p.only and market_category(sig.title, sig.event_slug or sig.slug) not in p.only.split(","):
@@ -499,7 +614,7 @@ class ConsensusStrategy:
         asset_id, label = core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
         if self.store.position(asset_id, self.name):
             return skip("already holding")
-        est = core.estimate(asset_id, "BUY", amount=p.stake_usd)
+        est = self.stake_price(asset_id) if self.round3 else core.estimate(asset_id, "BUY", amount=p.stake_usd)
         if est is None:
             return skip("not enough liquidity")
         if est > p.max_price:
@@ -533,7 +648,7 @@ class ConsensusStrategy:
             "slug": sig.slug or m.slug or "", "event_slug": sig.event_slug or "",
             "agree": len(sig.agree), "disagree": len(sig.disagree), "weight": sig.weight,
             "agree_wallets": list(sig.agree), "agree_names": {w: self.name_of(w) for w in sig.agree},
-            "fresh": [self.name_of(w) for w in fresh],
+            "fresh": [self.name_of(w) for w in fresh], "event_key": ev_key, **({"leader": lead} if lead else {}),
             **({"predicted": round(self.predict(sig)[0], 3), "predicted_by": self.predict(sig)[2]} if self.model is not None else {}),
             "leaders_price": float(sig.avg_price) if sig.avg_price is not None else None,
             "mode": core.mode, **fill,

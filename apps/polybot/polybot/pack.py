@@ -12,12 +12,38 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from . import features as F
 from .categories import category
 from .core import Core, aware, pretty_name
 from .credibility import Judgement, Record, Rules, judge
 from .store import iso, utcnow
 
 log = logging.getLogger("polybot.pack")
+
+
+def positions_from_api(rows, now: datetime) -> list[F.Pos]:
+    """API positions (CLOSED first, then REDEEMABLE) as the round-3 record sees them: scored at resolution.
+
+    A row's current price is the token's final price once its market has resolved; a REDEEMABLE row has resolved by
+    definition, a CLOSED one only once its end date has come (and then only a price of 0 or 1 counts)."""
+    seen: set[str] = set()
+    out: list[F.Pos] = []
+    today = now.date()
+    for p in rows:
+        aid = str(p.asset_id)
+        if aid in seen:
+            continue
+        seen.add(aid)
+        resolved = bool(getattr(p, "redeemable", False)) or str(getattr(p, "status", "")).endswith("REDEEMABLE") or (
+            p.end_date is not None and (p.end_date.date() if isinstance(p.end_date, datetime) else p.end_date) <= today)
+        final = F.final_from_price(float(p.current_price)) if (resolved and p.current_price is not None) else None
+        avg = float(p.avg_price or 0)
+        out.append(F.Pos(cost=float(p.total_size or 0) * avg, avg=avg, final=final,
+                         category=category(p.title, p.event_slug or p.slug),
+                         first=F.epoch(aware(p.first_entry_at)) if p.first_entry_at else None,
+                         last=F.epoch(aware(p.last_event_at)) if p.last_event_at else None, resolved=None,
+                         is_no=str(p.outcome or "").lower() == "no", neg_risk=bool(p.negative_risk)))
+    return out
 
 
 @dataclass
@@ -97,14 +123,18 @@ class CrediblePack:
         core = self.core
         now = utcnow()
         rec = Record(wallet=wallet, name=name, rank=rank, pnl=pnl, volume=volume)
-        # Closed positions: the track record (up to 200, newest first).
-        closed = []
-        pages = core.public.list_positions(user=wallet, status="CLOSED", sort_by="TIMESTAMP", sort_direction="DESC", page_size=100)
-        page = core.call(pages.first_page)
-        closed.extend(page.items)
-        if page.next_cursor:
-            page = core.call(pages.from_cursor(page.next_cursor).first_page)
-            closed.extend(page.items)
+        # Closed positions: the track record (the rules use the newest 200; the round-3 record up to 500).
+        all_closed = core.call(core.public.list_positions(user=wallet, status="CLOSED", sort_by="TIMESTAMP", sort_direction="DESC",
+                                                          page_size=500).first_page).items
+        closed = list(all_closed[:200])
+        # Resolved positions never redeemed (mostly losses, which the CLOSED set leaves out): the round-3 record needs them.
+        try:
+            redeemable = core.call(core.public.list_positions(user=wallet, status="REDEEMABLE", sort_by="TIMESTAMP", sort_direction="DESC",
+                                                              page_size=500).first_page).items
+        except Exception as ex:
+            log.debug("redeemable positions of %s: %s", name, ex)
+            redeemable = []
+        rec.rec3 = F.record(positions_from_api(list(all_closed) + list(redeemable), now), now.timestamp())
         pnls, costs, holds, cats, prices = [], [], [], {}, []
         sides: dict[str, set] = {}
         for p in closed:

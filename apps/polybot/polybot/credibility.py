@@ -54,6 +54,7 @@ class Record:
     top_category_share: float = 0.0
     two_sided_share: float = 0.0  # markets where they held both outcomes
     cat_stats: dict = field(default_factory=dict)  # category → (closed positions, wins)
+    rec3: dict = field(default_factory=dict)       # round-3 record (features.record: CLOSED + REDEEMABLE, scored at resolution)
 
     @property
     def win_rate(self) -> float:
