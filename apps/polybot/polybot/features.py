@@ -174,6 +174,49 @@ FEATURES = list(vector({}, price=0.5, leader_price=0.5, stance_usd=10, hours_to_
                        n_fills=1, minutes_since_first=0, game_minutes=None, age_days=1, taker_share=0.5))
 
 
+LEAGUES = {"nba": "nba", "wnba": "nba", "nfl": "nfl", "cfb": "cfb", "ncaaf": "cfb", "cbb": "cbb", "ncaab": "cbb", "mlb": "mlb", "kbo": "mlb",
+           "npb": "mlb", "nhl": "nhl", "ahl": "nhl", "atp": "tennis", "wta": "tennis", "lol": "esports", "cs2": "esports", "val": "esports",
+           "dota2": "esports", "hok": "esports", "ufc": "fight", "mma": "fight", "box": "fight"}
+SOCCER = {"epl", "ucl", "uel", "lal", "sea", "bun", "fl1", "mls", "ere", "el1", "elc", "por", "ned", "sco", "arg", "bra", "tur", "bel",
+          "mex", "nor", "jap", "ja2", "kor", "chi", "col1", "usl", "spl", "acle", "itsb", "azec", "gtm"}
+LEAGUE_KEYS = ["nba", "nfl", "cfb", "cbb", "mlb", "nhl", "soccer", "tennis", "esports", "fight"]
+
+
+def league(slug: str) -> str:
+    head = (slug or "").split("-")[0].lower()
+    return "soccer" if head in SOCCER else LEAGUES.get(head, "other")
+
+
+def market_kind(title: str, sports_type: str | None) -> str:
+    st = (sports_type or "").lower()
+    t = title or ""
+    if "spread" in st or t.startswith("Spread"):
+        return "spread"
+    if "total" in st or "O/U" in t:
+        return "total"
+    return "moneyline" if (st == "moneyline" or " vs" in t) else "other"
+
+
+def consensus_context(*, score: int, n_agree: int, n_against: int, agree_usd: float, leader_price: float | None, price: float,
+                      hours_to_end: float | None, game_minutes: float | None, slug: str, title: str, sports_type: str | None) -> dict[str, float]:
+    """Inputs for the consensus model: how strong the agreement is, what the follower pays against the leaders, the game's
+    clock, the league and the kind of market. Research (consensus_model.py) and the bot (strategy_consensus.py) both call it."""
+    lp = leader_price if leader_price is not None else price
+    lg_, kind = league(slug), market_kind(title, sports_type)
+    x = {
+        "logit_p": _logit(price), "price": price, "drift": price - lp, "fav": 1.0 if price > 0.5 else 0.0,
+        "score": float(score), "n_agree": float(n_agree), "n_against": float(n_against),
+        "agree_usd_log": math.log1p(max(0.0, agree_usd)),
+        "hours_log": math.log1p(max(0.0, hours_to_end)) if hours_to_end is not None else math.log1p(24 * 7),
+        "in_play": 1.0 if (game_minutes is not None and game_minutes >= 0) else 0.0,
+        "pre_game_h_log": math.log1p(max(0.0, -game_minutes) / 60) if (game_minutes is not None and game_minutes < 0) else 0.0,
+        "spread": 1.0 if kind == "spread" else 0.0, "total": 1.0 if kind == "total" else 0.0,
+    }
+    for k in LEAGUE_KEYS:
+        x[f"lg_{k}"] = 1.0 if lg_ == k else 0.0
+    return x
+
+
 def leader_stats(fills, asset: str, now: float, lookback: float = 48 * 3600.0, min_usd: float = 10.0) -> dict:
     """One leader's bet on `asset`, from their fills in its market over (now − lookback, now].
 

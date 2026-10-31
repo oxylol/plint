@@ -134,3 +134,10 @@ def gz_lines(path, chunk=1 << 20):
             pos += len(piece)
     if tail:
         yield tail.decode("utf-8", "replace")
+
+
+def consensus_row(*, score, n_agree, n_against, avg, agree_usd, price, end, game_start, t, slug, ev, title, sports_type):
+    """consensus_model.py's inputs for one candidate (times are epoch seconds; end and game_start may be None)."""
+    return F.consensus_context(score=score, n_agree=n_agree, n_against=n_against, agree_usd=agree_usd, leader_price=avg, price=price,
+                               hours_to_end=(end - t) / 3600 if end else None, game_minutes=(t - game_start) / 60 if game_start else None,
+                               slug=slug or ev or "", title=title, sports_type=sports_type)

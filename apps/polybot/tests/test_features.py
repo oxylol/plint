@@ -145,5 +145,24 @@ class ResearchEqualsBot(unittest.TestCase):
         self.assertEqual(bot["in_game"], 1.0)
 
 
+class ConsensusResearchEqualsBot(unittest.TestCase):
+    def test_consensus_vector(self):
+        from polybot.strategy_consensus import consensus_vector
+        t = NOW.timestamp()
+        gs, end = NOW + dt.timedelta(hours=3), NOW + dt.timedelta(hours=6)
+        sig = Signal("BUY", "c9", "tok", "Lakers", 0, "Spread: Lakers (-4.5)", "nba-lal-bos-2026-10-30-spread", "nba-lal-bos-2026-10-30",
+                     ["a", "b", "c", "d", "e"], ["f"], Decimal("0.47"), Decimal("812.5"), NOW)
+        m = NS(state=NS(end_date=end), sports=NS(game_start_time=gs, sports_market_type="spreads"))
+        bot = consensus_vector(sig, m, 0.49, t)
+        research = common3.consensus_row(score=4, n_agree=5, n_against=1, avg=0.47, agree_usd=812.5, price=0.49, end=end.timestamp(),
+                                         game_start=gs.timestamp(), t=t, slug="nba-lal-bos-2026-10-30-spread", ev="nba-lal-bos-2026-10-30",
+                                         title="Spread: Lakers (-4.5)", sports_type="spreads")
+        self.assertEqual(list(bot), list(research))
+        for k in bot:
+            self.assertAlmostEqual(bot[k], research[k], places=9, msg=k)
+        self.assertEqual((bot["score"], bot["spread"], bot["lg_nba"], bot["in_play"]), (4.0, 1.0, 1.0, 0.0))
+        self.assertAlmostEqual(bot["drift"], 0.02)
+
+
 if __name__ == "__main__":
     unittest.main()

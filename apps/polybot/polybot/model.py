@@ -31,6 +31,8 @@ class Model:
         self.policy: dict = {}
         self.trained_at = ""
         self.tournament: dict = {}
+        self.inputs = "leader"
+        self.version = 2
         try:
             d = json.loads(path.read_text())
             self.features = d["features"]
@@ -41,6 +43,7 @@ class Model:
             self.tournament = d.get("tournament", {})
             self.version = int(d.get("version", 2))
             self.anchor = d.get("anchor")            # "logit_p": the model corrects the market's log-odds (round 3)
+            self.inputs = d.get("inputs", "leader")  # round 3: "leader" (features.vector) or "consensus" (features.consensus_context)
             if self.kind == "skill":
                 self.k, self.b = float(d["k"]), float(d["b"])
             elif self.kind == "linear":

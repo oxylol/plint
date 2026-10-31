@@ -151,6 +151,17 @@ def signal_vector(rec, ls: dict, sig: Signal, m, price: float, t: float) -> dict
                     game_minutes=(t - aware(gs).timestamp()) / 60 if gs else None, age_days=rec.age_days, taker_share=rec.taker_share)
 
 
+def consensus_vector(sig: Signal, m, price: float, t: float) -> dict[str, float]:
+    """Consensus-model inputs for a board signal (research/consensus_model.py computes the same through common3.consensus_row)."""
+    end = m.state.end_date
+    gs = m.sports.game_start_time if (m.sports and m.sports.game_start_time) else None
+    return F.consensus_context(score=sig.score, n_agree=len(sig.agree), n_against=len(sig.disagree), agree_usd=float(sig.net_usd),
+                               leader_price=float(sig.avg_price) if sig.avg_price is not None else None, price=price,
+                               hours_to_end=(aware(end).timestamp() - t) / 3600 if end else None,
+                               game_minutes=(t - aware(gs).timestamp()) / 60 if gs else None, slug=sig.slug or sig.event_slug,
+                               title=sig.title, sports_type=m.sports.sports_market_type if m.sports else None)
+
+
 @dataclass
 class Leader:
     wallet: str
@@ -268,7 +279,12 @@ class ConsensusStrategy:
         if self.model is not None and self.model.ok and self.model.policy:
             # The policy that won the tournament, unless the variant says otherwise.
             pol = self.model.policy
-            if self.model.round3:
+            if self.model.round3 and self.model.inputs == "consensus":
+                defaults = {"min_pred": pol.get("threshold", 0.0), "min_agree": int(pol.get("min_score", params.min_agree)),
+                            "min_price": Decimal(str(pol.get("min_price", 0.05))), "max_price": Decimal(str(pol.get("max_price", 0.90))),
+                            "no_in_play": bool(pol.get("no_in_play", False)), "max_above_leaders": Decimal(str(pol.get("max_above_leaders", 1))),
+                            "max_per_day": int(pol.get("per_day", 0))}
+            elif self.model.round3:
                 defaults = {"min_pred": pol.get("threshold", 0.0), "max_per_day": int(pol.get("per_day", 0)),
                             "min_price": Decimal(str(pol.get("min_price", 0.05))), "max_price": Decimal(str(pol.get("max_price", 0.95))),
                             "min_hours_to_end": float(pol.get("min_hours", 0.0)), "max_hours_to_end": float(pol.get("max_hours", 0.0)),
@@ -290,7 +306,13 @@ class ConsensusStrategy:
 
     @property
     def round3(self) -> bool:
-        return self.model is not None and self.model.ok and self.model.round3
+        """A round-3 model judging each leader's own bet (features.vector)."""
+        return self.model is not None and self.model.ok and self.model.round3 and self.model.inputs != "consensus"
+
+    @property
+    def consensus3(self) -> bool:
+        """A round-3 model judging the board's consensus itself (features.consensus_context), e.g. day4's signals."""
+        return self.model is not None and self.model.ok and self.model.round3 and self.model.inputs == "consensus"
 
     @property
     def name(self) -> str:
@@ -358,6 +380,9 @@ class ConsensusStrategy:
             return self._preds[sig.key]
         if self.round3:
             self._preds[sig.key] = self.predict3(sig)
+            return self._preds[sig.key]
+        if self.consensus3:
+            self._preds[sig.key] = self.predict_consensus(sig)
             return self._preds[sig.key]
         best = (-9.0, "no score", "nobody")
         if sig.side == "BUY" and self.model is not None and self.model.ok:
@@ -440,6 +465,24 @@ class ConsensusStrategy:
                 self._lead[sig.key] = w
         return best
 
+    def predict_consensus(self, sig: Signal) -> tuple[float, str, str]:
+        """Consensus model: the board's agreement on an outcome, scored at the price a stake-sized buy pays now."""
+        if sig.side != "BUY":
+            return (-9.0, "no score", "nobody")
+        try:
+            m = self.core.market(sig.condition_id, sig.slug)
+        except Exception:
+            m = None
+        if m is None:
+            return (-9.0, "market not found", "nobody")
+        asset_id, _ = self.core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
+        est = self.stake_price(asset_id)
+        if est is None:
+            return (-9.0, "not enough liquidity", "nobody")
+        price = float(est)
+        x = consensus_vector(sig, m, price, self._now.timestamp())
+        return (self.model.score(x, price, float(self.core.fee_rate(m))), self.model.describe(x, price), f"{len(sig.agree)} leaders")
+
     def run(self, now: datetime) -> None:
         p = self.p
         self._now = now
@@ -508,9 +551,12 @@ class ConsensusStrategy:
                 keep.append(sig)
                 continue
             price = sig.avg_price
-            if not self.round3 and (price is None or price < p.min_price or price > p.max_price):
+            if not (self.round3 or self.consensus3) and (price is None or price < p.min_price or price > p.max_price):
                 # (round-3 setups judge the band on what a buy costs now, in consider_buy)
                 self.decisions[sig.key] = "price outside the band"
+                rest.append(sig)
+            elif self.consensus3 and sig.score < p.min_agree:   # not a consensus yet: no need to price it
+                self.decisions[sig.key] = f"needs {p.min_agree - sig.score} more"
                 rest.append(sig)
             elif p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
                 self.decisions[sig.key] = "sports: the data says copying these loses"
@@ -622,7 +668,7 @@ class ConsensusStrategy:
         asset_id, label = core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
         if self.store.position(asset_id, self.name):
             return skip("already holding")
-        est = self.stake_price(asset_id) if self.round3 else core.estimate(asset_id, "BUY", amount=p.stake_usd)
+        est = self.stake_price(asset_id) if (self.round3 or self.consensus3) else core.estimate(asset_id, "BUY", amount=p.stake_usd)
         if est is None:
             return skip("not enough liquidity")
         if est > p.max_price:

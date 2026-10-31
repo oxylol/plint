@@ -136,5 +136,19 @@ class Round3Setup(unittest.TestCase):
             self.assertEqual(next(x for x in s.signals if x.key == "BUY:dem-n").disagree, ["0xd"])
 
 
+class ConsensusSetup(unittest.TestCase):
+    def test_policy_from_the_model_file(self):
+        cfg = NS(window="day", category="overall", top_n=25, min_agree=5, lookback_hours=24, min_leader_usd=Decimal(25), stake_usd=Decimal(5),
+                 max_price=Decimal("0.9"), min_price=Decimal("0.05"), max_above_leaders=Decimal("0.05"), max_open=20, daily_budget_usd=Decimal(50),
+                 cooldown_hours=72, min_hours_to_end=1, follow_sells=True, poll_seconds=300, cr_pool=200)
+        p = ConsensusParams.base(cfg).variant("day4model", {"window": "day", "model": "1", "model_file": "model_day4.json", "follow_sells": "0"})
+        with tempfile.TemporaryDirectory() as d:
+            s = ConsensusStrategy(FakeCore(Store(d), {}), p, FakeFeed([]), None)
+        self.assertTrue(s.consensus3 and not s.round3)
+        self.assertEqual((s.p.min_agree, s.p.min_show, s.p.follow_sells, s.p.max_above_leaders, s.p.min_price, s.p.max_price),
+                         (4, 2, False, Decimal("0.05"), Decimal("0.05"), Decimal("0.9")))
+        self.assertAlmostEqual(s.p.min_pred, -0.02)
+
+
 if __name__ == "__main__":
     unittest.main()

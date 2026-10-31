@@ -149,6 +149,34 @@ prices plus book cost, follows their sells and holds the rest to resolution.
 - day4's long-run edge looks like about +2% a trade. At ten buys a day that is ≈ +$460 a year at $5 a trade
   (90% range −$780 to +$1,630).
 
+### A model on day4's own signals (`consensus_model.py`, `export_consensus.py` → `model_day4.json`, setup `day4model`)
+
+Every moment a consensus forms or strengthens among the 29 wallets is a candidate: 73,219 moments, 20,805 of them priced
+and resolved. A market-anchored logistic regression scores each candidate on `features.consensus_context`'s inputs:
+- the score and the agree / against counts, and the money behind the agreement;
+- the price against the leaders' own price;
+- the hours to the end and to kick-off, and whether the game is in play;
+- the league, and whether it is a spread, a total or a moneyline.
+
+The policy is chosen per week on the weeks before it, and day4's book decides what is bought. Scored Sep 29 → Oct 31:
+
+| | trades | mean / trade [90% CI] | $/week at $5 | holdout Oct 20–31 |
+|---|---|---|---|---|
+| day4's rule (hold to the end) | 313 | +7.6% [−1.7, +17.1] | +25.3 | +1.3% [−16.0, +21.3] |
+| day4's rule, settings re-tuned weekly | 309 | +10.8% [+2.9, +18.6] | +35.5 | +6.6% |
+| **consensus model, λ = 1000** | 295 | **+12.0% [+4.5, +19.4]** | **+37.7** | **+16.9% [+4.4, +28.9]** |
+| same model, λ = 100 / λ = 10 / boosted trees | 291 / 288 / 236 | +6.3% / +4.0% / +0.9% | +19.3 / +12.2 / +2.2 | +3.0% / −3.6% / −0.7% |
+
+- **It beats day4's rule** by +$12.7 a week (90% CI −$18 to +$42, P(better) 75%), with the best holdout of all.
+- **Its lead is not proven.** It was the best of four model variants, and a weekly re-tuning of day4's own settings
+  comes close.
+- **What it changes:** it keeps day4's signals, drops those it expects to lose on, and buys the best first when the
+  budget binds.
+- **What it weighs:** more money behind the consensus and favourites count for a bet; NFL, spreads, dissenting leaders
+  and a long time to the end count against.
+- **Testing:** `tests/test_features.py` checks that the bot computes the same inputs as the research. It runs as the
+  `day4model` paper setup beside `day4` and `day4pre`.
+
 ## Why this is the best way to build this model
 
 The evidence does not support "this model makes money". It supports a narrower claim: of everything tried, this is

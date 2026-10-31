@@ -21,6 +21,8 @@ DEFAULT_VARIANTS = ";".join([
     "day:window=day", "day4:window=day,min_agree=4",
     # day4 without games already in play: in the replay (research/REPORT3.md) its in-play buys lost 13.5% a trade
     "day4pre:window=day,min_agree=4,no_in_play=1,label=Consensus · day · 4 agree · before the game",
+    # day4's signals judged by a model fitted on them (research/consensus_model.py → model_day4.json; held to the end as tested)
+    "day4model:window=day,model=1,model_file=model_day4.json,follow_sells=0,label=Day board model (round 3)",
     "all:window=all", "all4:window=all,min_agree=4",
     # only credible, active traders from the monthly board; two of them agreeing (weighted) is enough
     "credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack",
