@@ -37,8 +37,12 @@ while a:
         REPORT = Path(a.pop(0))
     elif k == "--model":
         MODEL_OUT = Path(a.pop(0))
+    elif k in ("--mids", "--no-regress"):
+        pass
 U = dt.timezone.utc
 MODELS = ["best_match", "ecmwf_ifs025", "gfs_seamless", "icon_seamless", "gem_seamless"]
+USE_TAPES = "--mids" not in sys.argv     # default: prices from the real taker tape; --mids uses the midpoint history
+REGRESS = "--no-regress" not in sys.argv  # per-city ridge on the five models (else ensemble mean + bias)
 rng = np.random.default_rng(3)
 lines = []
 
@@ -118,7 +122,7 @@ for icao, s in st.items():
 # ── prices at the decision time ──
 px: dict[str, list] = {}
 pp = DATA / "prices.jsonl.gz"
-if pp.exists():
+if pp.exists() and not USE_TAPES:
     try:   # the collector may still be appending: read what is complete
         for line in gzip.open(pp, "rt"):
             try:
@@ -129,6 +133,39 @@ if pp.exists():
                 px[j["cid"]] = j["p"]
     except EOFError:
         pass
+
+
+TAPE_DIR = DATA / "tapes"
+
+
+def tape_quotes(cid, t, ask_window=3 * 3600):
+    """From the market's taker trades: the last trade before t (in Yes terms) and the prices a taker actually paid for
+    Yes and for No in the `ask_window` after t (a Yes buy at p, or a No sale at q, which means Yes was offered at 1 − q)."""
+    pth = TAPE_DIR / f"{cid}.json.gz"
+    if not pth.exists():
+        return None
+    try:
+        rows = json.load(gzip.open(pth, "rt"))
+    except Exception:
+        return None
+    rows.sort(key=lambda r: r[0])
+    last = ask_y = ask_n = None
+    for ts_, idx, side, size, price, _w in rows:
+        yes_px = price if idx == 0 else 1 - price
+        if ts_ <= t:
+            if ts_ >= t - 86400:
+                last = yes_px
+            continue
+        if ts_ > t + ask_window:
+            break
+        buys_yes = (idx == 0 and side == 1) or (idx == 1 and side == -1)
+        if buys_yes and ask_y is None:
+            ask_y = yes_px
+        if not buys_yes and ask_n is None:
+            ask_n = 1 - yes_px
+        if ask_y is not None and ask_n is not None:
+            break
+    return {"last": last, "ask_yes": ask_y, "ask_no": ask_n, "n": len(rows)}
 
 
 def price_at(cid, t):
@@ -199,6 +236,7 @@ rows.sort(key=lambda r: r["day"])
 
 # ── the forecast distribution, walk-forward ──────────────────
 hist: dict[tuple, list] = defaultdict(list)     # (city, kind) → [(day, residual)]
+fhist: dict[tuple, list] = defaultdict(list)    # (city, kind) → [(day, [model forecasts], actual)] for the regression
 DF = 4
 
 
@@ -212,25 +250,45 @@ trades = []          # one row per market with a price: features for the policy
 for r in rows:
     key = (r["city"], r["kind"])
     ens = float(np.mean(list(r["fc"].values())))
-    past = [x for d, x in hist[key] if d < (dt.date.fromisoformat(r["day"]) - dt.timedelta(days=1)).isoformat()][-45:]
+    cutoff = (dt.date.fromisoformat(r["day"]) - dt.timedelta(days=1)).isoformat()
+    past = [x for d, x in hist[key] if d < cutoff][-45:]
     unit_scale = 1.8 if r["unit"] == "F" else 1.0
+    fx = [r["fc"].get(m, ens) for m in MODELS]
     if len(past) >= 10:
         bias = float(np.mean(past))
         sd = max(0.6 * unit_scale, float(np.std(past)) * math.sqrt((DF - 2) / DF))
         spread = float(np.std(list(r["fc"].values())))
         sd = math.sqrt(sd ** 2 + (0.5 * spread) ** 2)
         mu = ens + bias
+        # per-city ridge on the five models (60 past days), when it has enough history: weights the better models
+        fp = [(f, v) for d, f, v in fhist[key] if d < cutoff][-60:]
+        if REGRESS and len(fp) >= 30:
+            Xr = np.array([[1.0] + f for f, _ in fp])
+            yr = np.array([v for _, v in fp])
+            lam = np.diag([0.0] + [5.0] * len(MODELS))
+            wr = np.linalg.solve(Xr.T @ Xr + lam, Xr.T @ yr)
+            res = yr - Xr @ wr
+            mu = float(np.array([1.0] + fx) @ wr)
+            sd = max(0.6 * unit_scale, float(np.std(res)) * math.sqrt(len(fp) / max(1, len(fp) - 6)) * math.sqrt((DF - 2) / DF))
         hi_max = max(r["fc"].values())
         for m in r["markets"]:
-            mid = price_at(m["cid"], r["t_dec"])
+            tq = tape_quotes(m["cid"], r["t_dec"]) if USE_TAPES else None
+            if USE_TAPES:
+                if tq is None or tq["last"] is None:
+                    continue
+                mid = tq["last"]
+            else:
+                mid = price_at(m["cid"], r["t_dec"])
             if mid is None or not (0.005 < mid < 0.995):
                 continue
             pm = bucket_prob(mu, sd, m["lo"], m["hi"])
             trades.append({"day": r["day"], "city": r["city"], "kind": r["kind"], "unit": r["unit"], "cid": m["cid"], "lo": m["lo"], "hi": m["hi"],
-                           "mid": mid, "p_model": pm, "final": m["final"], "fee": m.get("fee_rate", 0.05),
+                           "mid": mid, "ask_yes": tq["ask_yes"] if tq else None, "ask_no": tq["ask_no"] if tq else None,
+                           "p_model": pm, "final": m["final"], "fee": m.get("fee_rate", 0.05),
                            "rule_target": rnd(max(r["fc"].values()) + 2 * unit_scale) if r["kind"] == "highest" else None,
                            "mu": mu, "sd": sd, "ev": (r["city"], r["day"], r["kind"])})
     hist[key].append((r["day"], r["val"] - ens))
+    fhist[key].append((r["day"], fx, r["val"]))
 say(f"{len(trades)} priced markets with a walk-forward forecast distribution "
     f"({len({t['ev'] for t in trades})} events, {min(t['day'] for t in trades) if trades else '-'} → {max(t['day'] for t in trades) if trades else '-'})")
 if not trades:
@@ -298,12 +356,25 @@ calib(p_blend[ok], T["final"][ok], "blend")
 
 
 # ── trading ──────────────────────────────────────────────────
-def pnl_for(side_yes, mid, final, fee):
-    """Return per $ for buying Yes (or No) at the mid plus the cost of a $5 order, held to resolution, after the taker fee."""
-    p = np.where(side_yes, mid, 1 - mid)
-    p = np.clip(p + np.array([cost_above_mid(x) for x in p]), 0.01, 0.995)
+def entry_price(i, side_yes):
+    """What buying costs: the tape's next taker price (tapes), else the mid plus the book's typical $5 cost."""
+    t = trades[i]
+    if USE_TAPES:
+        return t["ask_yes"] if side_yes else t["ask_no"]
+    m = t["mid"] if side_yes else 1 - t["mid"]
+    return m + cost_above_mid(m)
+
+
+def pnl_for(side_yes, mid, final, fee, ii=None):
+    """Return per $ for buying Yes (or No) at the entry price, held to resolution, after the taker fee."""
+    if ii is not None:
+        p = np.array([entry_price(i, s) for i, s in zip(ii, side_yes)], dtype=float)
+    else:
+        p = np.where(side_yes, mid, 1 - mid)
+        p = p + np.array([cost_above_mid(x) for x in p])
+    p = np.clip(p, 0.01, 0.995)
     won = np.where(side_yes, final, 1 - final)
-    return won / p - 1 - fee * (1 - p), p
+    return won / p - 1 - fee * (1 - p), p   # fee per $ = rate × (1 − p)
 
 
 def simulate(choose, name, per_day=10, per_event=2):
@@ -333,7 +404,7 @@ def simulate(choose, name, per_day=10, per_event=2):
         return None
     ii = np.array([p[1] for p in picks])
     side = np.array([p[2] for p in picks])
-    r, paid = pnl_for(side, T["mid"][ii], T["final"][ii], T["fee"][ii])
+    r, paid = pnl_for(side, T["mid"][ii], T["final"][ii], T["fee"][ii], ii)
     dd = np.array([p[0] for p in picks])
     ud = sorted(set(dd))
     sums = np.array([r[dd == x].sum() for x in ud])
@@ -356,8 +427,8 @@ def rule(i):
     if t["kind"] != "highest" or t["rule_target"] is None:
         return None
     if (t["lo"] is None or t["rule_target"] >= t["lo"]) and (t["hi"] is None or t["rule_target"] <= t["hi"]):
-        no_px = 1 - t["mid"] + cost_above_mid(1 - t["mid"])
-        if 0.50 <= no_px <= 0.95:
+        no_px = entry_price(i, False)
+        if no_px is not None and 0.50 <= no_px <= 0.95:
             return (False, no_px)
     return None
 
@@ -369,11 +440,9 @@ for src, P in (("forecast", T["p_model"]), ("blend", p_blend)):
         def ch(i, P=P, thr=thr):
             if np.isnan(P[i]):
                 return None
-            m = T["mid"][i]
-            ay = m + cost_above_mid(m)
-            an = 1 - m + cost_above_mid(1 - m)
-            ey = P[i] - ay - T["fee"][i] * (1 - ay)
-            en = (1 - P[i]) - an - T["fee"][i] * (1 - an)
+            ay, an = entry_price(i, True), entry_price(i, False)
+            ey = P[i] - ay - T["fee"][i] * ay * (1 - ay) if ay is not None else -9
+            en = (1 - P[i]) - an - T["fee"][i] * an * (1 - an) if an is not None else -9
             if max(ey, en) < thr:
                 return None
             return (True, ey) if ey >= en else (False, en)
@@ -382,9 +451,10 @@ for src, P in (("forecast", T["p_model"]), ("blend", p_blend)):
         def ch_no(i, P=P, thr=thr):
             if np.isnan(P[i]):
                 return None
-            m = T["mid"][i]
-            an = 1 - m + cost_above_mid(1 - m)
-            en = (1 - P[i]) - an - T["fee"][i] * (1 - an)
+            an = entry_price(i, False)
+            if an is None:
+                return None
+            en = (1 - P[i]) - an - T["fee"][i] * an * (1 - an)
             return (False, en) if en >= thr and 0.5 <= an <= 0.97 else None
         res[f"{src}_no_{thr}"] = simulate(ch_no, f"{src}: No only, edge ≥ {100 * thr:.0f}¢, No 50–97¢")
 

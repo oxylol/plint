@@ -103,7 +103,7 @@ import lightgbm as lgb  # noqa: E402
 from sklearn.isotonic import IsotonicRegression  # noqa: E402
 from sklearn.metrics import roc_auc_score  # noqa: E402
 
-MAX_TRAIN = 350_000 if not QUICK else 120_000
+MAX_TRAIN = 250_000 if not QUICK else 120_000
 LGB_GRID = [dict(num_leaves=15, learning_rate=0.05, n_estimators=200, min_child_samples=200, reg_lambda=5.0, colsample_bytree=0.8),
             dict(num_leaves=31, learning_rate=0.05, n_estimators=300, min_child_samples=300, reg_lambda=10.0, colsample_bytree=0.7),
             dict(num_leaves=7, learning_rate=0.05, n_estimators=300, min_child_samples=500, reg_lambda=5.0, colsample_bytree=0.8),
@@ -306,6 +306,62 @@ class OldModel:
         return sig(total)
 
 
+class WalletTE(LGBModel):
+    """Trader embedding: each wallet's mean residual at the follower's price (final − price) over its earlier signals,
+    shrunk toward 0 by count / (count + 20), as two extra inputs. Point in time: a training row only sees the wallet's
+    signals resolved before it; a test row sees the training window (the bot would ship this as a frozen table)."""
+    K = 20.0
+
+    def __init__(self):
+        super().__init__(FEATS)
+
+    def _enc_train(self, idx):
+        te = np.zeros(len(idx))
+        tn = np.zeros(len(idx))
+        w = P.wallet.values[idx]
+        res = P.resolved_at.values[idx]
+        r = y[idx] - pf[idx]
+        td = P.t_d.values[idx]
+        order = np.argsort(w, kind="stable")
+        ws = w[order]
+        bounds = np.flatnonzero(np.r_[True, ws[1:] != ws[:-1], True])
+        for a, b in zip(bounds[:-1], bounds[1:]):
+            g = order[a:b]
+            o = np.argsort(res[g])
+            cum = np.r_[0.0, np.cumsum(r[g][o])]
+            k = np.searchsorted(res[g][o], td[g], side="left")
+            te[g] = cum[k] / (k + self.K)
+            tn[g] = np.log1p(k)
+        self.table = {}
+        for a, b in zip(bounds[:-1], bounds[1:]):
+            g = order[a:b]
+            self.table[ws[a]] = (r[g].sum() / (len(g) + self.K), math.log1p(len(g)))
+        return np.column_stack([te, tn])
+
+    def _enc_test(self, idx):
+        return np.array([self.table.get(w, (0.0, 0.0)) for w in P.wallet.values[idx]])
+
+    def fit(self, idx, t_ref, cfg):
+        X = np.hstack([P[self.feats].values[idx], self._enc_train(idx)])
+        self.m = lgb.LGBMClassifier(objective="binary", verbose=-1, num_threads=3, subsample=0.8, subsample_freq=1, **cfg)
+        self.m.fit(X, y[idx], init_score=lg(pf[idx]))
+        return self
+
+    def predict(self, idx):
+        X = np.hstack([P[self.feats].values[idx], self._enc_test(idx)])
+        return sig(self.m.predict(X, raw_score=True) + lg(pf[idx]))
+
+
+class RuleSkill:
+    """A hand rule on the round-3 record: copy leaders whose resolved record shows a real edge (t ≥ 2 over 30+ positions)."""
+    def fit(self, idx, t_ref, cfg=None):
+        return self
+
+    def predict(self, idx):
+        ok = (P.f_rec_edge_t.values[idx] >= 2.0) & (np.expm1(P.f_rec_n_log.values[idx]) >= 30)
+        return np.clip(pf[idx] + np.where(ok, 0.10, -0.10) * pf[idx], 1e-3, 1 - 1e-3)
+
+
 def drop(group):
     return [f for f in FEATS if f not in GROUPS[group]]
 
@@ -318,6 +374,8 @@ FAMILIES = {
     "gbm_anchor": (lambda: LGBModel(FEATS), LGB_GRID),
     "gbm_decay30": (lambda: LGBModel(FEATS, decay=30), LGB_GRID),
     "gbm_percat": (lambda: PerCat(FEATS), LGB_GRID),
+    "gbm_wallet_te": (lambda: WalletTE(), LGB_GRID),
+    "rule_skill": (lambda: RuleSkill(), [None]),
     "rank": (lambda: Rank(FEATS), [dict(num_leaves=15, learning_rate=0.05, n_estimators=200, min_child_samples=200),
                                    dict(num_leaves=31, learning_rate=0.05, n_estimators=300, min_child_samples=300),
                                    dict(num_leaves=7, learning_rate=0.05, n_estimators=300, min_child_samples=500),
@@ -335,7 +393,7 @@ if json.loads(old_path.read_text()).get("kind") == "gbm" and "prior_pf" in json.
     FAMILIES["old_r2"] = (lambda: OldModel(old_path), [None])
 if QUICK:
     for k in list(FAMILIES):
-        if k.startswith("abl_") or k in ("gbm_percat", "rank", "gbm_decay30"):
+        if k.startswith("abl_") or k in ("gbm_percat", "rank", "gbm_decay30", "gbm_wallet_te"):
             FAMILIES.pop(k)
 
 preds = {k: np.full(len(P), np.nan) for k in FAMILIES}
@@ -357,9 +415,13 @@ for fi, (s0, s1) in enumerate(FOLDS):
     inner_tr = inner_tr[P.resolved_at.values[inner_tr] < cut]
     inner_va = trs[P.t_d.values[trs] >= cut]
     t1 = time.time()
+    n_used = len(set(fold_of[fold_of >= 0].tolist()))
+    tune_now = (n_used - 1) % 3 == 0          # every family is re-tuned on the 1st, 4th, 7th… fold (same budget for all)
     for name, (mk, grid) in FAMILIES.items():
         if isinstance(grid, str):
             grid = [best_cfg_last.get(grid.split(":")[1], LGB_GRID[0])]
+        if len(grid) > 1 and not tune_now and chosen_cfg.get(name):
+            grid = [chosen_cfg[name][-1]]
         if len(grid) > 1 and len(inner_tr) > 5000 and len(inner_va) > 1000:
             scores = []
             for cfg in grid:
@@ -433,6 +495,8 @@ def simulate(idx, er, pol, budgets=(10, 20, 3)):
         ok &= ~np.isin(P.cat.values[idx], pol["no_cats"])
     if pol.get("max_drift") is not None:
         ok &= P.f_drift.values[idx] <= pol["max_drift"]
+    if pol.get("in_play") is False:
+        ok &= P.f_in_game.values[idx] < 0.5
     cand = idx[ok]
     if len(cand) == 0:
         return []
@@ -497,15 +561,22 @@ def summarize(trades):
 
 
 POLICY_GRID = []
+# per-event (one position per event) and the 25% cap on one leader's share of the book are design rules (the live run's
+# two structural flaws); they, and exiting on the leader's sale, are tested as ablations below, not tuned per fold
 for thr in (0.0, 0.04, 0.08, 0.12, 0.2, 0.3):
     for band in ((0.05, 0.95), (0.15, 0.85), (0.3, 0.7)):
-        for min_h, max_h in ((0.0, 1e9), (1.0, 1e9), (0.0, 72.0), (1.0, 24 * 14)):
-            for per_event in (1, 99):
-                for exit_ in (False, True):
-                    POLICY_GRID.append({"thr": thr, "band": band, "min_h": min_h, "max_h": max_h, "per_event": per_event, "leader_cap": 0.34, "exit": exit_})
+        for min_h in (0.0, 1.0, 6.0, 24.0):
+            for max_h in (72.0, 24 * 14.0, 1e9):
+                if max_h <= min_h:
+                    continue
+                for inplay in (True, False):
+                    POLICY_GRID.append({"thr": thr, "band": band, "min_h": min_h, "max_h": max_h, "in_play": inplay,
+                                        "per_event": 1, "leader_cap": 0.25, "exit": False})
 if QUICK:
-    POLICY_GRID = [p for p in POLICY_GRID if not p["exit"] and p["per_event"] == 1]
-say(f"\n{len(POLICY_GRID)} policies per model; each fold's policy is the one with the most P&L on the folds before it (at least 20 trades)")
+    POLICY_GRID = [p for p in POLICY_GRID if p["band"] == (0.15, 0.85)]
+SELECT_END = pd.Timestamp("2026-10-20", tz="UTC").timestamp()    # families and policies are chosen on folds before this
+say(f"\n{len(POLICY_GRID)} policies per model; each fold's policy is the one with the most P&L on the folds before it (at least 20 trades); "
+    f"the winning family is picked on folds before {pd.to_datetime(SELECT_END, unit='s'):%b %d} and judged on the folds after (holdout)")
 
 pool_mask = P.in_pool.values == 1
 
@@ -535,19 +606,41 @@ def walk_policy(name, er, mask=pool_mask, grid=POLICY_GRID):
     return out, picks, grid[allbest], per_fold
 
 
+def split(trades):
+    """(selection-period trades, holdout trades)"""
+    return ([x for x in trades if P.t_d.values[x[0]] < SELECT_END], [x for x in trades if P.t_d.values[x[0]] >= SELECT_END])
+
+
 say("\n## The bot's portfolio, out of sample (pool signals, nested policy choice, $5 a trade)\n")
-say(f"{'model':16s} {'trades':>6s} {'mean/trade':>10s} {'90% CI':>17s} {'win':>5s} {'$/week':>8s}  last policy")
+say(f"{'model':16s} {'trades':>6s} {'mean/trade':>10s} {'90% CI':>17s} {'win':>5s} {'$/week':>8s} | {'select: n':>9s} {'mean':>7s} {'$/wk':>7s} | {'holdout: n':>10s} {'mean':>7s} {'90% CI':>17s} {'$/wk':>7s}")
+
+
+def row(name, tr, extra=""):
+    sm = summarize(tr)
+    a, b = split(tr)
+    sa, sb = summarize(a), summarize(b)
+    say(f"{name:16s} {sm['n']:6d} {100 * sm['mean']:+9.1f}% [{100 * sm['lo']:+6.1f}, {100 * sm['hi']:+6.1f}] {100 * sm['win']:4.0f}% {sm['pnl_week']:+8.2f} | "
+        f"{sa['n']:9d} {100 * sa['mean']:+6.1f}% {sa['pnl_week']:+7.2f} | {sb['n']:10d} {100 * sb['mean']:+6.1f}% [{100 * sb['lo']:+6.1f}, {100 * sb['hi']:+6.1f}] "
+        f"{sb['pnl_week']:+7.2f} {extra}")
+    return sm, sa, sb
 results = {}
-for name in preds:
+for name in sorted(preds, key=lambda k: k.startswith("abl_")):
     er = er_all.get(name)
     if er is None:
         continue
+    if name.startswith("abl_") and "gbm_anchor" in results:
+        # feature ablations trade the base model's policy fold by fold, so only the inputs differ
+        base = results["gbm_anchor"]
+        tr = []
+        for fi, best in base["picks"]:
+            idx = np.where((fold_of == fi) & pool_mask & np.isfinite(er))[0]
+            tr += simulate(idx, er, POLICY_GRID[best])
+        sm, sa, sb = row(name, tr, "(gbm_anchor's policies)")
+        results[name] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb, "picks": base["picks"], "final_policy": base["final_policy"]}
+        continue
     tr, picks, final_pol, per_fold = walk_policy(name, er)
-    sm = summarize(tr)
-    results[name] = {"trades": tr, "summary": sm, "picks": picks, "final_policy": final_pol, "per_fold": per_fold}
-    lp = POLICY_GRID[picks[-1][1]] if picks else None
-    say(f"{name:16s} {sm['n']:6d} {100 * sm['mean']:+9.1f}% [{100 * sm['lo']:+6.1f}, {100 * sm['hi']:+6.1f}] {100 * sm['win']:4.0f}% {sm['pnl_week']:+8.2f}  "
-        f"{lp if lp else '-'}")
+    sm, sa, sb = row(name, tr)
+    results[name] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb, "picks": picks, "final_policy": final_pol, "per_fold": per_fold}
 
 # ── rival rules on the same simulator ─────────────────────────
 say("\n## Rival rules on the same book\n")
@@ -564,12 +657,12 @@ if "old_r2" in preds:
     end_by_date_h = (P.o_end_date.values - P.t_d.values) / 3600
     m_old &= end_by_date_h >= 24 * od["min_days"]
     rules["learned_now"] = simulate(np.where(m_old)[0], np.nan_to_num(old_score, nan=-9),
-                                    {"thr": od["threshold"], "band": (od["min_price"], od["max_price"]), "min_h": 0.0, "max_h": 1e9},
+                                    {"thr": od["threshold"], "band": (od["min_price"], od["max_price"]), "min_h": 0.0, "max_h": 1e9,
+                                     "max_drift": 0.05},     # POLY_MAX_ABOVE_LEADERS
                                     budgets=(od["per_day"], 20, 3))
 for k, tr in rules.items():
-    sm = summarize(tr)
-    results[k] = {"trades": tr, "summary": sm}
-    say(f"{k:16s} {sm['n']:6d} {100 * sm['mean']:+9.1f}% [{100 * sm['lo']:+6.1f}, {100 * sm['hi']:+6.1f}] {100 * sm['win']:4.0f}% {sm['pnl_week']:+8.2f}")
+    sm, sa, sb = row(k, tr)
+    results[k] = {"trades": tr, "summary": sm, "select": sa, "holdout": sb}
 
 
 # ── the winner, against each rival ───────────────────────────
@@ -595,17 +688,22 @@ def paired(a_tr, b_tr):
     return float(np.median(diff)), float(np.quantile(diff, 0.05)), float((diff > 0).mean())
 
 
-cands = {k: v for k, v in results.items() if v["summary"]["n"] >= 30 and not k.startswith("abl_")}
+cands = {k: v for k, v in results.items() if v["select"]["n"] >= 30 and not k.startswith("abl_")}
 model_cands = [k for k in cands if k in preds]
-winner = max(model_cands, key=lambda k: cands[k]["summary"]["pnl_week"]) if model_cands else None
+# the winner is the family with the most P&L per week on the selection folds; the holdout is not looked at to choose
+winner = max(model_cands, key=lambda k: cands[k]["select"]["pnl_week"]) if model_cands else None
 if winner:
     say(f"\n## Winner: {winner}\n")
     W = results[winner]
+    say(f"chosen on the folds before {pd.to_datetime(SELECT_END, unit='s'):%b %d} ({W['select']['n']} trades, {100 * W['select']['mean']:+.1f}% per trade, "
+        f"${W['select']['pnl_week']:+.2f}/week); holdout after: {W['holdout']['n']} trades, {100 * W['holdout']['mean']:+.1f}% per trade "
+        f"[90% CI {100 * W['holdout']['lo']:+.1f}, {100 * W['holdout']['hi']:+.1f}], ${W['holdout']['pnl_week']:+.2f}/week\n")
+    say("Winner minus each rival, mean return per trade, all out-of-sample folds (bootstrap over days):")
     for k, v in results.items():
         if k == winner or v["summary"]["n"] < 10:
             continue
         med, lo5, pwin = paired(W["trades"], v["trades"])
-        say(f"  vs {k:16s}: +{100 * med:5.1f} points per trade (median of bootstrap), 5th pct {100 * lo5:+6.1f}, "
+        say(f"  vs {k:16s}: {100 * med:+5.1f} points per trade (median of bootstrap), 5th pct {100 * lo5:+6.1f}, "
             f"P(winner better) {100 * pwin:.0f}%; $/week {W['summary']['pnl_week']:+.2f} vs {v['summary']['pnl_week']:+.2f}")
 
     def breakdown(trades, key, labels):
@@ -634,6 +732,143 @@ if winner:
             lv = [x for x in results[k]["trades"] if P.t_d.values[x[0]] >= LIVE0]
             s2 = summarize(lv)
             say(f"    {k}: {s2['n']} trades, mean {100 * s2['mean']:+.1f}% per trade")
+
+# ── the policy's design rules, switched off one at a time (winner's model and per-fold policies otherwise) ──
+if winner:
+    say("\n## Policy rules, one at a time (the winner's model and fold policies otherwise)\n")
+    W = results[winner]
+    er = er_all[winner]
+    for label, change in (("as chosen", {}), ("no per-event limit", {"per_event": 99}), ("no leader cap", {"leader_cap": 1.0}),
+                          ("exit when the leader sells", {"exit": True}), ("in-play signals allowed", {"in_play": True}),
+                          ("5 a day instead of 10", {"_budget": (5, 20, 3)})):
+        tr = []
+        for fi, best in W["picks"]:
+            pol = {**POLICY_GRID[best], **{k: v for k, v in change.items() if not k.startswith("_")}}
+            idx = np.where((fold_of == fi) & pool_mask & np.isfinite(er))[0]
+            tr += simulate(idx, er, pol, budgets=change.get("_budget", (10, 20, 3)))
+        sm = summarize(tr)
+        same_ev = 0
+        evs = defaultdict(set)
+        for i, _, _ in tr:
+            evs[P.ev.values[i]].add(P.asset.values[i])
+        same_ev = sum(1 for v in evs.values() if len(v) > 1)
+        say(f"  {label:28s} {sm['n']:5d} trades, mean {100 * sm['mean']:+6.1f}% [{100 * sm['lo']:+.1f}, {100 * sm['hi']:+.1f}], ${sm['pnl_week']:+.2f}/week, "
+            f"events held on two outcomes: {same_ev}")
+
+# ── robustness: who the wallets are, how late the follower is, what the book costs ──
+if winner:
+    W = results[winner]
+    er = er_all[winner]
+    pol = W["final_policy"]
+    say("\n## Robustness of the winner\n")
+    unbiased = P.pnl_boards.values == 0 if "pnl_boards" in P else (P.control.values | (P.boards.values == 0))
+    # the pool rebuilt from wallets whose place in the data does not depend on recent profit
+    ub = P[unbiased]
+    say(f"wallets not picked by a profit board (random takers, volume boards): {ub.wallet.nunique()} wallets, {len(ub)} signals")
+    for label, mask in (("unbiased wallets, any", unbiased), ("profit-board wallets, any", ~unbiased)):
+        tr = []
+        for fi, best in W["picks"]:
+            idx = np.where((fold_of == fi) & mask & np.isfinite(er))[0]
+            tr += simulate(idx, er, POLICY_GRID[best], budgets=(10, 20, 3))
+        sm = summarize(tr)
+        say(f"  {label:28s} {sm['n']:5d} trades, mean {100 * sm['mean']:+.1f}% [{100 * sm['lo']:+.1f}, {100 * sm['hi']:+.1f}], ${sm['pnl_week']:+.2f}/week")
+    sel = np.array([i for i, _, _ in W["trades"]])
+    if len(sel):
+        def m(col):
+            v = P[col].values[sel]
+            v = v[np.isfinite(v)]
+            return f"{100 * np.mean(v):+.1f}% (n {len(v)})"
+        say(f"  same trades, entered at the leader's own price: {m('ret_leader')}; 5 minutes after (the simulation): {m('ret')}; "
+            f"30 min: {m('ret_30')}; 60 min: {m('ret_60')}; 4 h: {m('ret_240')}")
+        say(f"  same trades at the 75th-percentile book cost instead of the median: {m('ret75')}; exiting when the leader sells: {m('ret_exit')}")
+        tp = np.isfinite(P.tape_px.values[sel])
+        say(f"  {tp.sum()} of {len(sel)} trades priced off the real tape (thin markets); mean cost above mid on the others "
+            f"{100 * np.nanmean(P.cost.values[sel][~tp]):.1f}¢")
+        # capacity: how many dollars a trade takes before the extra slippage eats the expected edge
+        try:
+            sys.path.insert(0, str(Path(__file__).resolve().parent))
+            from fillmodel3 import FillModel
+            fm = FillModel(DATA / "fill_model.json")
+            caps = []
+            for i in sel:
+                c = fm.cell(P.cat.values[i], P.mid_d.values[i], P.hours.values[i], P.f_in_game.values[i] > 0.5)
+                if c is None:
+                    continue
+                e = er[i]
+                best = 5
+                for stake in ("10", "20", "50"):
+                    extra = c.get(f"c{stake}_med", np.nan) - c.get("c5_med", 0.0)
+                    if np.isfinite(extra) and e - extra / pf[i] > 0.5 * e:
+                        best = int(stake)
+                caps.append(best)
+            caps = np.array(caps)
+            per_day = len(sel) / max(1, len(set(int(P.t_d.values[i] // DAY) for i in sel)))
+            say(f"  stake each trade can take while keeping half its expected edge: median ${np.median(caps):.0f}, "
+                f"share at $50: {100 * (caps >= 50).mean():.0f}%; at {per_day:.1f} trades a day that is about ${np.mean(caps) * per_day:.0f} a day")
+        except Exception as e:
+            say(f"  capacity: {e}")
+
+# ── the deployable model: refit on everything resolved, export for the bot ──
+def export_lgbm(m, feats):
+    booster = m.m.booster_
+    dump = booster.dump_model()
+    names = dump["feature_names"]
+    trees = []
+    for ti in dump["tree_info"]:
+        left, right, feat, thr, val = [], [], [], [], []
+
+        def walk(node):
+            k = len(left)
+            left.append(-1); right.append(-1); feat.append(-2); thr.append(-2.0); val.append(0.0)
+            if "leaf_value" in node:
+                val[k] = float(node["leaf_value"])
+                return k
+            assert node["decision_type"] == "<=", node["decision_type"]
+            feat[k] = int(node["split_feature"])
+            thr[k] = float(node["threshold"])
+            left[k] = walk(node["left_child"])
+            right[k] = walk(node["right_child"])
+            return k
+
+        walk(ti["tree_structure"])
+        trees.append({"left": left, "right": right, "feature": feat, "threshold": thr, "value": val})
+    return trees, names
+
+
+if winner and MODEL_OUT and winner in FAMILIES and isinstance(FAMILIES[winner][0](), LGBModel):
+    cfgs = chosen_cfg[winner]
+    cfg = max(cfgs, key=lambda c: sum(1 for x in cfgs if x == c))          # the configuration chosen most often
+    end_t = P.t_d.max()
+    tr = np.where(P.resolved_at.values < end_t)[0]
+    tr = subsample(tr)
+    mdl = FAMILIES[winner][0]().fit(tr, end_t, cfg)
+    trees, names = export_lgbm(mdl, mdl.feats)
+    feats_out = [f[2:] for f in mdl.feats]
+    # the bot's scorer must give LightGBM's numbers
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from polybot.model import Model
+    pol = results[winner]["final_policy"]
+    out = {"kind": "lgbm", "version": 3, "target": "win", "anchor": "logit_p" if mdl.anchor else None, "features": feats_out,
+           "init": 0.0, "lr": 1.0, "trees": trees,
+           "policy": {"threshold": pol["thr"], "decision": "expected return per $ after fee", "per_day": 10,
+                      "min_price": pol["band"][0], "max_price": pol["band"][1], "min_hours": pol["min_h"],
+                      "max_hours": pol["max_h"] if pol["max_h"] < 1e8 else 0.0, "per_event": pol.get("per_event", 99) if pol.get("per_event", 99) < 99 else 0,
+                      "leader_cap": pol.get("leader_cap", 0.0), "follow_sells": bool(pol.get("exit")), "max_signal_age_min": 15,
+                      "min_leader_usd": 10, "max_above_leaders": 1},
+           "tournament": {"winner": winner, "config": cfg, "folds": len(FOLDS), "families": list(FAMILIES), "policies": len(POLICY_GRID),
+                          "oos_trades": results[winner]["summary"]["n"], "oos_mean_per_trade": results[winner]["summary"]["mean"],
+                          "oos_ci90": [results[winner]["summary"]["lo"], results[winner]["summary"]["hi"]],
+                          "oos_usd_per_week": results[winner]["summary"]["pnl_week"], "metrics": metrics.get(winner, {})},
+           "trained_at": pd.Timestamp.utcnow().isoformat(timespec="seconds"), "rows": int(len(tr)),
+           "data_until": pd.to_datetime(end_t, unit="s").isoformat()}
+    MODEL_OUT.write_text(json.dumps(out))
+    bot = Model(MODEL_OUT)
+    chk = rng.choice(len(P), 2000, replace=False)
+    want = mdl.predict(chk)
+    got = np.array([bot.win_probability({f: float(P[f"f_{f}"].values[i]) for f in feats_out}) for i in chk])
+    say(f"\nexported {winner} ({len(trees)} trees, {len(tr)} rows, config {cfg}) → {MODEL_OUT}; "
+        f"bot scorer vs LightGBM on 2000 rows: max |Δp| = {np.max(np.abs(got - want)):.2e}")
+    assert np.max(np.abs(got - want)) < 1e-4
 
 if REPORT:
     REPORT.write_text("\n".join(lines) + "\n")

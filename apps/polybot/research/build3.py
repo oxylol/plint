@@ -224,6 +224,7 @@ def wallet_events(path: Path):
                 "leader_px": lpx, "fill_px": price, "stance": st_td, "rec_n": rec.get("n", 0),
                 "t_lsell": t_ls if t_ls else np.nan, "lsell_px": ls_px if ls_px else np.nan, "n_window": len(seen),
                 "control": bool(info.get("control")), "boards": len(info.get("boards", [])),
+                "pnl_boards": sum(1 for b in info.get("boards", []) if b[2] == "PNL"),
                 **{f"f_{k}": v for k, v in vec.items()},
                 **{f"o_{k}": v for k, v in ov.items()}, "o_end_date": (end // 86400) * 86400 if end else np.nan,
             })

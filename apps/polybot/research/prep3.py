@@ -43,8 +43,16 @@ def log(*a):
     print(f"[{time.time() - T0:5.0f}s]", *a, flush=True)
 
 
-ev = pd.read_parquet(DATA / "events")
-ev = ev[ev.final.notna() & ev.has_market & (ev.leader_px > 0.03) & (ev.leader_px < 0.97) & (ev.rec_n >= 5)].reset_index(drop=True)
+import pyarrow.parquet as pq  # noqa: E402
+
+cols_all = pq.ParquetDataset(DATA / "events").schema.names
+cols = [c for c in cols_all if c not in ("title", "slug", "outcome", "boards")]
+ev = pd.read_parquet(DATA / "events", columns=cols, filters=[("has_market", "=", True), ("rec_n", ">=", 5),
+                                                              ("leader_px", ">", 0.03), ("leader_px", "<", 0.97)])
+ev = ev[ev.final.notna()].reset_index(drop=True)
+for c in ev.columns:
+    if ev[c].dtype == np.float64 and (c.startswith("o_") or c in ("stance", "lsell_px", "fee_rate")):
+        ev[c] = ev[c].astype(np.float32)
 ev["t_d"] = ev.t_d + LAT
 log(f"{len(ev)} resolved signals with a record, {ev.wallet.nunique()} wallets")
 
@@ -101,6 +109,10 @@ for p in sorted((DATA / "prices").glob("*.jsonl.gz")):
         pass
 for k, v in cols.items():
     ev[k] = v
+del cols, idx
+ev = ev[np.isfinite(ev.mid_d.values)].reset_index(drop=True)      # only signals a follower could have priced
+n = len(ev)
+t_d = ev.t_d.values
 log(f"{seen} price spans read; {np.isfinite(ev.mid_d).sum()} signals have a midpoint when the follower acts "
     f"({(ev.bucket == 300).sum()} at 5-minute, {(ev.bucket == 3600).sum()} at hourly resolution)")
 
@@ -178,9 +190,14 @@ ex = ev.exit_mid.values - cost
 ev["ret_exit"] = np.where(np.isfinite(ex) & (ev.t_lsell.values < ev.resolved_at.values),
                           np.clip(ex, 0.0, 1.0) / ev.p_f.values - 1.0 - fee * (1 - ev.p_f.values) - fee * np.clip(ex, 0, 1) * (1 - np.clip(ex, 0, 1)) / ev.p_f.values,
                           ev.ret.values)
-pt = [F.price_terms(p, lp) if p == p else {"logit_p": np.nan, "price": np.nan, "drift": np.nan} for p, lp in zip(ev.p_f.values, ev.f_leader_price.values)]
-for k in ("logit_p", "price", "drift"):
-    ev[f"f_{k}"] = np.array([x[k] for x in pt], dtype=np.float32)
+# the price-dependent inputs, with the bot's own function (features.price_terms), row by row
+out = {k: np.empty(n, dtype=np.float32) for k in ("logit_p", "price", "drift")}
+for i, (p, lp) in enumerate(zip(ev.p_f.values, ev.f_leader_price.values)):
+    x = F.price_terms(float(p), float(lp))
+    out["logit_p"][i], out["price"][i], out["drift"][i] = x["logit_p"], x["price"], x["drift"]
+for k, v in out.items():
+    ev[f"f_{k}"] = v
+del out
 
 # ── boards, point in time ──
 wd = pd.read_parquet(DATA / "wallet_days.parquet")
@@ -206,7 +223,7 @@ for a, g in ev[ev.in_pool == 1].groupby("asset"):
         j0 = np.searchsorted(tt, tt[k] - 48 * 3600)
         crowd[i] = len(set(ww[j0:k]) - {ww[k]})
 ev["crowd"] = crowd
-keep = ev[np.isfinite(ev.mid_d)].reset_index(drop=True)
+keep = ev
 keep.to_parquet(DATA / "panel.parquet", index=False)
 log(f"panel: {len(keep)} signals with a follower price ({keep.wallet.nunique()} wallets, {keep.cid.nunique()} markets), "
     f"{int(keep.in_pool.sum())} from the rebuilt monthly top 200; "

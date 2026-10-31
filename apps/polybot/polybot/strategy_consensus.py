@@ -82,8 +82,8 @@ class ConsensusParams:
         types = {f.name: f.type for f in fields(self)}
         changes: dict = {}
         for key, raw in overrides.items():
-            if key == "label":
-                changes["label"] = raw
+            if key in ("label", "model_file"):
+                changes[key] = raw.strip()
                 continue
             t = types[key]
             if t in ("int",):
