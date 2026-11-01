@@ -1,4 +1,4 @@
-"""Entry point: `python -m polybot [run|once|check]`."""
+"""Entry point: `python -m polybot [run|once|check|reset <setup>|ledger [base]]`."""
 from __future__ import annotations
 
 import json
@@ -56,8 +56,14 @@ def main(argv: list[str]) -> int:
         before = store.reset_strategy(name, utcnow())
         print(f"{name}: cleared {before['positions']} open positions, {before['trades']} trades, {before['closed']} closed; its record starts now")
         return 0
+    if cmd == "ledger":
+        from .ledger import finals_from_markets, report
+        rows = store.ledger_rows()
+        runner.connect()
+        print(report(rows, finals_from_markets(rows, runner.core.market), base=argv[2] if len(argv) > 2 else "day4"))
+        return 0
     if cmd != "run":
-        print("usage: python -m polybot [run|once|check|reset <setup>]", file=sys.stderr)
+        print("usage: python -m polybot [run|once|check|reset <setup>|ledger [base]]", file=sys.stderr)
         return 2
 
     web.serve(cfg.port, store, cfg.mode)

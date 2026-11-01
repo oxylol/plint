@@ -623,7 +623,24 @@ class ConsensusStrategy:
         if self._prev_decisions.get(sig.key) != reason:  # say it once, not every five minutes
             log.info("[%s] skip %s %s: %s", self.name, sig.side, what, reason)
 
+    def portfolio_block(self, now: datetime) -> str | None:
+        """The book's own limits (not the signal's merit): a signal they block still goes in the ledger."""
+        p = self.p
+        if self._bought_this_cycle >= p.max_per_cycle:
+            return "enough for this cycle, next look in a few minutes"
+        if p.max_per_day and self.bought_last_day(now) >= p.max_per_day:
+            return f"{p.max_per_day} a day is the rule"
+        if len(self.store.open_positions(self.name)) >= p.max_open:
+            return "max open positions reached"
+        if self.store.spent_since(now - timedelta(hours=24), self.name) + p.stake_usd > p.daily_budget_usd:
+            return "daily budget used up"
+        return None
+
     def consider_buy(self, sig: Signal, now: datetime) -> dict | None:
+        """The signal's rules and price first, then the ledger, then the book's limits, then the buy.
+
+        Every signal that passes the rules at a real price is logged once per cooldown (ledger.jsonl), whether or not
+        the budget lets the setup buy it, so setups can be compared on every signal instead of ten a day."""
         p = self.p
         core = self.core
         what = f"{sig.title} · {sig.outcome}"
@@ -631,17 +648,12 @@ class ConsensusStrategy:
 
         if self.store.position(sig.asset_id, self.name):
             return skip("already holding")
-        if self._bought_this_cycle >= p.max_per_cycle:
-            return skip("enough for this cycle, next look in a few minutes")
-        if p.max_per_day and self.bought_last_day(now) >= p.max_per_day:
-            return skip(f"{p.max_per_day} a day is the rule")
         last = self.store.acted_at(sig.asset_id, self.name)
         if last and now - last < timedelta(hours=p.cooldown_hours):
             return skip("cooling down after the last trade")
-        if len(self.store.open_positions(self.name)) >= p.max_open:
-            return skip("max open positions reached")
-        if self.store.spent_since(now - timedelta(hours=24), self.name) + p.stake_usd > p.daily_budget_usd:
-            return skip("daily budget used up")
+        blocked = self.portfolio_block(now)
+        if blocked and self.store.ledger_seen(self.name, sig.asset_id, now, p.cooldown_hours):
+            return skip(blocked)            # already logged: spare the API
         m = core.market(sig.condition_id, sig.slug)
         if m is None:
             return skip("market not found")
@@ -650,17 +662,9 @@ class ConsensusStrategy:
             return skip(why)
         if p.max_hours_to_end and m.state.end_date and aware(m.state.end_date) - now > timedelta(hours=p.max_hours_to_end):
             return skip(f"ends more than {p.max_hours_to_end:g} h from now")
-        if p.no_in_play and m.sports and m.sports.game_start_time and aware(m.sports.game_start_time) <= now:
+        in_play = bool(m.sports and m.sports.game_start_time and aware(m.sports.game_start_time) <= now)
+        if p.no_in_play and in_play:
             return skip("game in play: a follower minutes late loses there")
-        ev_key = self.event_key(m, sig)
-        if p.per_event and ev_key and sum(1 for x in self.store.open_positions(self.name) if x.get("event_key") == ev_key) >= p.per_event:
-            return skip("already holding this event")
-        lead = self._lead.get(sig.key) if self.round3 else None
-        if p.leader_cap and lead:
-            book = self.store.open_positions(self.name)
-            mine = sum(1 for x in book if x.get("leader") == lead)
-            if len(book) >= 3 and (mine + 1) / (len(book) + 1) > p.leader_cap:
-                return skip(f"{self.name_of(lead)} is already behind {mine} of {len(book)} open positions")
         if p.no_sports and market_category(sig.title, sig.event_slug or sig.slug) == "sports":
             return skip("sports: the data says copying these loses")
         if p.only and market_category(sig.title, sig.event_slug or sig.slug) not in p.only.split(","):
@@ -682,13 +686,32 @@ class ConsensusStrategy:
             fresh = self.fresh_voters(sig)
             if not fresh:
                 return skip("no fresh entry: the leaders held this already")
+
+        # the book's limits
+        ev_key = self.event_key(m, sig)
+        lead = self._lead.get(sig.key) if self.round3 else None
+        if not blocked and p.per_event and ev_key and sum(1 for x in self.store.open_positions(self.name) if x.get("event_key") == ev_key) >= p.per_event:
+            blocked = "already holding this event"
+        if not blocked and p.leader_cap and lead:
+            book = self.store.open_positions(self.name)
+            mine = sum(1 for x in book if x.get("leader") == lead)
+            if len(book) >= 3 and (mine + 1) / (len(book) + 1) > p.leader_cap:
+                blocked = f"{self.name_of(lead)} is already behind {mine} of {len(book)} open positions"
         amount = p.stake_usd
         shares = (amount / est).quantize(CENT, rounding=ROUND_DOWN)
         min_size = Decimal(str(m.trading.minimum_order_size or 0))
-        if shares < min_size:  # the book wants at least this many shares
+        if not blocked and shares < min_size:  # the book wants at least this many shares
             amount = (min_size * est * Decimal("1.02")).quantize(CENT, rounding=ROUND_UP)
             if self.store.spent_since(now - timedelta(hours=24), self.name) + amount > p.daily_budget_usd:
-                return skip(f"minimum order (${amount}) does not fit the daily budget")
+                blocked = f"minimum order (${amount}) does not fit the daily budget"
+        if not self.store.ledger_seen(self.name, asset_id, now, p.cooldown_hours):
+            self.store.ledger_add({
+                "strategy": self.name, "asset_id": asset_id, "condition_id": sig.condition_id, "slug": sig.slug or m.slug or "",
+                "title": sig.title or m.question or "", "outcome": label or sig.outcome, "price": est, "fee_rate": core.fee_rate(m),
+                "agree": len(sig.agree), "disagree": len(sig.disagree), "leaders_price": sig.avg_price, "in_play": in_play,
+                "taken": blocked is None, "why_not": blocked}, now)
+        if blocked:
+            return skip(blocked)
         if core.mode == "live" and core.balance is not None and core.balance < amount:
             core.warn("funds", f"not enough pUSD for a ${amount} order (balance ${core.balance:.2f})")
             return skip("not enough pUSD in the wallet")

@@ -62,10 +62,11 @@ class Store:
         self.state_path = self.dir / "state.json"
         self.status_path = self.dir / "status.json"
         self.log_path = self.dir / "trades.jsonl"
+        self.ledger_path = self.dir / "ledger.jsonl"
         self.state = self._load()
 
     def _load(self) -> dict:
-        default = {"positions": {}, "closed": [], "acted": {}, "trades": [], "leaders": {}, "since": {}}
+        default = {"positions": {}, "closed": [], "acted": {}, "trades": [], "leaders": {}, "since": {}, "ledger": {}}
         if not self.state_path.exists():
             return default
         try:
@@ -234,6 +235,35 @@ class Store:
                 f.write(json.dumps(rec, default=_json_default) + "\n")
         except OSError as e:
             log.warning("could not append to trades.jsonl: %s", e)
+
+    # ---- the ledger: every qualifying signal at its real price, bought or not ----
+    def ledger_seen(self, strategy: str, asset_id: str, now: datetime, hours: float) -> bool:
+        """Has this setup logged this outcome in the last `hours` (its cooldown)?"""
+        t = self.state["ledger"].get(pkey(strategy, asset_id))
+        return t is not None and now - parse_iso(t) < timedelta(hours=hours)
+
+    def ledger_add(self, rec: dict, now: datetime) -> None:
+        """Append one qualifying signal to ledger.jsonl (once per setup and outcome per cooldown)."""
+        self.state["ledger"][pkey(rec["strategy"], rec["asset_id"])] = iso(now)
+        cutoff = now - timedelta(days=7)
+        self.state["ledger"] = {k: v for k, v in self.state["ledger"].items() if parse_iso(v) >= cutoff}
+        try:
+            with self.ledger_path.open("a") as f:
+                f.write(json.dumps({"t": iso(now), **rec}, default=_json_default) + "\n")
+        except OSError as e:
+            log.warning("could not append to ledger.jsonl: %s", e)
+
+    def ledger_rows(self) -> list[dict]:
+        if not self.ledger_path.exists():
+            return []
+        rows = []
+        with self.ledger_path.open() as f:
+            for line in f:
+                try:
+                    rows.append(json.loads(line))
+                except ValueError:
+                    pass
+        return rows
 
     def recent_trades(self, n: int = 30, strategy: str | None = None) -> list[dict]:
         rows = [t for t in self.state["trades"] if strategy is None or t.get("strategy", "consensus") == strategy]
