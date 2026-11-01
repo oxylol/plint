@@ -14,13 +14,17 @@ VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_h
                 # credible-pack options
                 "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports", "max_per_day", "only",
                 # round-3 model setups
-                "model_file", "min_show", "per_event", "leader_cap", "max_hours_to_end", "max_signal_age_min", "no_in_play")
+                "model_file", "min_show", "per_event", "leader_cap", "max_hours_to_end", "max_signal_age_min", "no_in_play",
+                "skip_lo", "skip_hi")
 DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",
     "day:window=day", "day4:window=day,min_agree=4",
     # day4 without games already in play: in the replay (research/REPORT3.md) its in-play buys lost 13.5% a trade
     "day4pre:window=day,min_agree=4,no_in_play=1,label=Consensus · day · 4 agree · before the game",
+    # day4 without 30–50¢ buys: the one tweak that helped in both trader groups and both periods of the replay (weak:
+    # one of eleven rules tried; REPORT3 "Looking for a better day4 model"); here to be tested on live prices
+    "day4x:window=day,min_agree=4,skip_lo=0.30,skip_hi=0.50,label=Consensus · day · 4 agree · no 30–50¢",
     # day4's signals judged by a model fitted on them (research/consensus_model.py → model_day4.json; held to the end as tested)
     "day4model:window=day,model=1,model_file=model_day4.json,follow_sells=0,label=Day board model (round 3)",
     "all:window=all", "all4:window=all,min_agree=4",

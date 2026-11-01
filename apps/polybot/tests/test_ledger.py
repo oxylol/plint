@@ -82,5 +82,22 @@ class LoggedEvenWhenNotBought(unittest.TestCase):
                     self.assertEqual(s.decisions[sig.key], "daily budget used up")
 
 
+    def test_skipped_price_band(self):
+        with tempfile.TemporaryDirectory() as d:
+            store = Store(d)
+            mk = {"far": market("far", "Q far?", "other-event")}
+            cfg = NS(window="day", category="overall", top_n=25, min_agree=4, lookback_hours=24, min_leader_usd=Decimal(25),
+                     stake_usd=Decimal(5), max_price=Decimal("0.9"), min_price=Decimal("0.05"), max_above_leaders=Decimal("0.05"), max_open=20,
+                     daily_budget_usd=Decimal(50), cooldown_hours=72, min_hours_to_end=1, follow_sells=True, poll_seconds=300, cr_pool=200)
+            p = ConsensusParams.base(cfg).variant("day4x", {"window": "day", "min_agree": "4", "skip_lo": "0.30", "skip_hi": "0.50"})
+            self.assertEqual((p.skip_lo, p.skip_hi), (Decimal("0.30"), Decimal("0.50")))
+            s = ConsensusStrategy(FakeCore(store, mk), p, FakeFeed([]), None)
+            sig = NS(asset_id="far-n", condition_id="far", slug="far", title="Q far?", outcome="No", outcome_index=1, event_slug="other-event",
+                     key="BUY:far-n", side="BUY", avg_price=Decimal("0.39"), agree=["0xa"] * 4, disagree=[])
+            self.assertIsNone(s.consider_buy(sig, NOW))                      # the fake book prices it at 0.40
+            self.assertIn("skipped 0.30–0.50 band", s.decisions["BUY:far-n"])
+            self.assertEqual((store.open_positions("day4x"), store.ledger_rows()), ([], []))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -66,6 +66,8 @@ class ConsensusParams:
     max_hours_to_end: float = 0.0  # skip markets that end later than this (0 = no limit)
     max_signal_age_min: float = 0.0  # act only while a leader's bet is this fresh (0 = any time in the lookback)
     no_in_play: bool = False     # skip games that have already started
+    skip_lo: Decimal = Decimal(0)  # skip buys priced in [skip_lo, skip_hi), e.g. 0.30–0.50: day4's weakest band in the replays
+    skip_hi: Decimal = Decimal(0)
     overridden: frozenset = frozenset()  # settings given explicitly in POLY_VARIANTS
 
     @classmethod
@@ -681,6 +683,8 @@ class ConsensusStrategy:
             return skip(f"price {est:.2f} is below the min {p.min_price}")
         if sig.avg_price and est > sig.avg_price + p.max_above_leaders:
             return skip(f"too late: {est:.2f} now, leaders paid {sig.avg_price:.2f}")
+        if p.skip_hi and p.skip_lo <= est < p.skip_hi:
+            return skip(f"price {est:.2f} is in the skipped {p.skip_lo}–{p.skip_hi} band")
         fresh: list[str] = []
         if p.fresh_only:
             fresh = self.fresh_voters(sig)
