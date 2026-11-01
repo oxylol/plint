@@ -27,6 +27,13 @@ Collected and run 2026-10-31. Code: `collect3*.py`, `build3.py`, `prep3.py`, `fi
    models (log loss 0.344 against 0.396), and nothing forecast-based beats it. The +2°C rule is +4.0% per trade when it
    buys at 12:00 UTC the day before (CI +1.3 to +6.7) and +1.3% when it buys just before the city's day starts.
 
+6. **No model of the price alone works either (added 2026-11-01).** On a random sample of every sports market Gamma
+   lists, kick-off underdogs win 0.2–2.5 points *less* often than their price says, and at the prices people actually
+   paid, outcomes are calibrated to about a point, which is less than the taker fee. An apparent +36%-a-bet price
+   model came from three backtest traps (market list built from wallets, a look-ahead volume filter, stale in-play
+   history). See "A model of the price itself" below. After this and the day4 searches, no setup has a demonstrated
+   edge; live paper weeks are the only remaining test.
+
 ## Data
 
 | dataset | what | dates | size |
