@@ -398,6 +398,13 @@ Full tables: `WEATHER3.md`.
 
 ## What changed in the bot
 
+- **The ledger (2026-11-01).** Each consensus setup now logs every signal that passes its rules once per cooldown,
+  at the real price of a $5 buy at that moment, bought or not (`ledger.jsonl`, `polybot/ledger.py`). `python -m
+  polybot ledger` settles it and compares setups per signal, paired by day against day4. The paper books buy about
+  ten signals a day; the ledger counts all of them (day4 qualified about 29 a day in the replay), at real prices and
+  with no hindsight, which is the test every replay above lacked. Separating a 5-point gap per signal still takes
+  roughly 2,000 signals per setup, so expect months, not weeks.
+
 - **`polybot/features.py`** (new): the record and signal inputs, shared with research.
 - **`pack.py`** also fetches REDEEMABLE positions, so the record counts resolved losses (`Record.rec3`).
 - **`model.py`** reads round-3 files (`version: 3`: kinds `lgbm`, `linear`, `skill`, anchored on the follower's price;

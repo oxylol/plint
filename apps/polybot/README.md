@@ -314,6 +314,8 @@ Change a value, then `plint restart poly`.
 
 Commands: `docker exec polybot python -m polybot once` runs one cycle of both
 strategies and prints their reasoning; `… check` shows the account state.
+`… ledger [base]` settles the ledger (`data/polybot/ledger.jsonl`: every signal that passed a consensus setup's rules, at
+the real price of a $5 buy, bought or not) and compares setups per signal against `base` (default `day4`), paired by day.
 Tests: `docker run --rm -v $PWD:/app -w /app python:3.12-slim sh -c "pip install -q -r requirements.txt && python -m unittest discover -s tests"`.
 
 Uses the official [`polymarket-client`](https://pypi.org/project/polymarket-client/)
