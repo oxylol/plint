@@ -206,7 +206,15 @@ hours lose, and lose more the bigger the crowd (Sep 15 → Oct 31, 5–90¢, fol
 | 5+ (6+ agreeing) | 1,876 | −10.6% [−16.5, −5.2] |
 | sports, 3+ / 5+ | 4,464 / 1,816 | −3.3% / −9.5% |
 
-Consensus among top traders, picked without hindsight, has no edge; crowded consensus loses. day4's positive replays
+Counting each outcome once (`fade_crowd.py`, the first moment the crowd reaches a size; follower price, taker fee):
+
+| first moment … pool traders agree | outcomes | follow it | select / holdout | fade it (buy the other side) |
+|---|---|---|---|---|
+| 4+ | 1,738 | +3.2% [−1.7, +7.9] | −2.8% / +8.6% | −6.9% [−11.3, −2.5] |
+| 5+ | 1,047 | −1.9% [−6.5, +2.2] | −6.3% / +1.6% | — |
+| 6+ | 668 | −7.8% [−12.7, −3.3] | −12.3% / −4.7% | −2.2% [−8.7, +4.6] |
+
+Consensus among top traders, picked without hindsight, has no edge; crowded consensus loses, and fading it loses too. day4's positive replays
 use groups taken from today's leaderboards (which reflect their recent wins), and its live +30% is 22 trades. The
 safest reading: none of the copy setups, day4 and day4model included, has a demonstrated edge. Keep them on paper,
 and judge them on weeks of live record, not on these replays.
