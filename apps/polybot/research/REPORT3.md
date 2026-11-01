@@ -219,6 +219,46 @@ use groups taken from today's leaderboards (which reflect their recent wins), an
 safest reading: none of the copy setups, day4 and day4model included, has a demonstrated edge. Keep them on paper,
 and judge them on weeks of live record, not on these replays.
 
+### A model of the price itself (2026-11-01): the backtest trap, and why sports prices leave nothing after the fee
+
+`collect3_kickoff.py`, `kickoff_model.py`, `kickoff_vs_real.py`, `calibration_real.py`. 48,190 resolved sports markets
+(moneyline, child moneyline, spread, total; ≥ $5k traded; game start Sep 3 → Oct 31), the first outcome's 5-minute
+price history from 3 h before to 4 h after kick-off, with no leaders involved.
+
+**On the price history, underdogs look badly underpriced.** At 5 minutes before kick-off, outcomes priced 2–10¢ won
+14%, 10–20¢ won 24% and 20–30¢ won 32%. A weekly-refitted price model (slope and intercept by market type) "makes"
+**+36% a bet [+31, +41] on 23,837 bets, +33% in the selection weeks and +46% in the holdout, $150+ a week**. Every
+variant agrees, which is the warning sign: nothing in sports is that easy.
+
+**It is an artifact of the price series.** The same markets have 430,151 real buys inside the window. When the history
+says an outcome costs 6.7¢, buyers actually paid 14.1¢; at 15.5¢ they paid 21.4¢, and at 93.2¢ they paid 90.0¢. Half the
+buys are more than 3¢ away from the history (median gap 1.8¢ on moneylines, 3.6¢ on child moneylines). Against the
+price really paid, the underdogs' excess wins drop from +7.5 to +0.1 points (2–10¢) and from +4.6 to +0.7 (20–30¢).
+The history is a noisy, partly stale midpoint. Noise in the price makes extremes look mispriced (regression to 50%),
+and the fill model's 0.5¢ cost, measured on the books the pool trades, is far too small for these markets.
+
+**At real prices, sports are calibrated to about a point, and the taker fee is larger** (first buy per outcome,
+every collected wallet, `calibration_real.py`):
+
+| price paid | before the game (last hour): won − paid | after fee | in play, random control wallets: won − paid | after fee |
+|---|---|---|---|---|
+| 2–10¢ | +0.05 pts | −6.5% | −1.09 pts | −21.5% |
+| 10–20¢ | +0.34 | −3.2% | +0.21 | −4.8% |
+| 20–30¢ | +0.44 | −1.3% | +0.30 | −2.1% |
+| 30–40¢ | −0.82 | −5.6% | −0.81 | −5.6% |
+| 40–50¢ | +0.88 | −0.3% | +0.74 | −0.9% |
+| 50–70¢ | −0.9 / +0.1 | −3.6% / −1.6% | −0.58 | −2.9% |
+| 70–98¢ | ±0.9 | −0.4% to −1.8% | −0.80 | −1.8% |
+
+The sports taker fee is 5% × (1 − price) per dollar (3% on NFL/CFB), or 2.5–4.7 points for a 10–50¢ buy, more than
+any calibration gap. In-play underdog buys by profit-board wallets do look good (+11% at 20–30¢), but those wallets
+were chosen from today's board, and the random controls lose on the same buys. Of 18 league × side cells, 4 are
+positive in both periods, about what chance gives.
+
+**Verdict:** there is no price-only model to build. Prices at kick-off and in play are right to within the fee. Any
+backtest that buys at a price-history or midpoint value in sports will show a large, false edge. That includes the
+underdog strategy's own +1–5% backtest; it is −25% over 40 live paper trades.
+
 ## Why this is the best way to build this model
 
 The evidence does not support "this model makes money". It supports a narrower claim: of everything tried, this is
