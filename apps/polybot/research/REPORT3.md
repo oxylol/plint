@@ -168,6 +168,8 @@ The policy is chosen per week on the weeks before it, and day4's book decides wh
 | same model, λ = 100 / λ = 10 / boosted trees | 291 / 288 / 236 | +6.3% / +4.0% / +0.9% | +19.3 / +12.2 / +2.2 | +3.0% / −3.6% / −0.7% |
 
 - **It beats day4's rule** by +$12.7 a week (90% CI −$18 to +$42, P(better) 75%), with the best holdout of all.
+  **Later, more powerful checks undo this** (next section): over every qualifying signal, its filter does worse than
+  taking them all.
 - **Its lead is not proven.** It was the best of four model variants, and a weekly re-tuning of day4's own settings
   comes close.
 - **What it changes:** it keeps day4's signals, drops those it expects to lose on, and buys the best first when the
@@ -176,6 +178,38 @@ The policy is chosen per week on the weeks before it, and day4's book decides wh
   and a long time to the end count against.
 - **Testing:** `tests/test_features.py` checks that the bot computes the same inputs as the research. It runs as the
   `day4model` paper setup beside `day4` and `day4pre`.
+
+### Looking for a better day4 model (2026-11-01): what did not work, and why day4's edge is doubtful
+
+Checks run on the same replay data (`consensus_filter.py`, `day4_checks/*.py`, inside the research image with `/data` = `data/polybot/research3`):
+
+| idea | result |
+|---|---|
+| sell at kick-off (closing-line value) | −5.5% a trade (1,449 pre-game buys, sd 12%): the price does not move toward the consensus before games (−0.4¢) |
+| who agrees (leaders' records), price momentum | worse than day4model by $30–46 a week; more inputs fit noise on 20k candidates |
+| more consensus levels / a kick-off window in the policy | worse (nested choice picks up noise): +9.7% vs +12.0% |
+| **every qualifying signal, not just the budgeted 10 a day** | **day4's rule +3.8% a signal (1,339; CI −1.6 to +9.2); the day4model filter keeps 714 at +0.7%. No model filter beats taking them all; the one picked on the earlier weeks lost 7% on the holdout. day4model's book advantage came from which 10 a day it happened to buy.** |
+| 144 top sports traders instead of the 29 | rule +2.9% a signal (2,188); filters move it ±2 points; no robust winner |
+| maker entry (rest a bid, no fee) | −2.6% vs +3.8% taker: bids fill when the price moves against the consensus (filled bets −13%) |
+| faster entry | 5 min sooner −2.5 to −3.3 points, 5/15/60 min later −1 to −1.6 / −4 to −5 / −9 to −14: the 5-minute poll is already near the best moment |
+| rule tweaks across both groups and both periods | only "skip 30–50¢ underdogs" improves all four cells (29: +12.5% / +3.6% vs +8.3% / −6.9%; 144: +6.2% / +1.0% vs +4.9% / −1.4%); 11 rules were tried and the groups overlap, so this is weak |
+
+**The point-in-time consensus test.** In the 986k-signal panel, the monthly top-200 pool is rebuilt from resolved
+P&L day by day, so there is no hindsight. Pool signals on outcomes other pool members also bought in the previous 48
+hours lose, and lose more the bigger the crowd (Sep 15 → Oct 31, 5–90¢, follower price):
+
+| other pool members on the same outcome | signals | mean / signal [90% CI] |
+|---|---|---|
+| 0 or more (all pool signals) | 36,137 | −4.4% [−5.5, −3.2] |
+| 1+ | 14,364 | −1.8% [−4.0, +0.2] |
+| 3+ (4+ agreeing) | 4,653 | −4.6% [−8.5, −1.0] |
+| 5+ (6+ agreeing) | 1,876 | −10.6% [−16.5, −5.2] |
+| sports, 3+ / 5+ | 4,464 / 1,816 | −3.3% / −9.5% |
+
+Consensus among top traders, picked without hindsight, has no edge; crowded consensus loses. day4's positive replays
+use groups taken from today's leaderboards (which reflect their recent wins), and its live +30% is 22 trades. The
+safest reading: none of the copy setups, day4 and day4model included, has a demonstrated edge. Keep them on paper,
+and judge them on weeks of live record, not on these replays.
 
 ## Why this is the best way to build this model
 

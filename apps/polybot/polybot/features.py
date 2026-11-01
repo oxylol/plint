@@ -217,6 +217,24 @@ def consensus_context(*, score: int, n_agree: int, n_against: int, agree_usd: fl
     return x
 
 
+def agree_quality(recs: list[dict]) -> dict[str, float]:
+    """Who agrees: the agreeing leaders' records (features.record outputs), averaged over those with 5+ resolved
+    positions. Research (consensus_model.py) and the bot compute it from the same records."""
+    known = [r for r in recs if r.get("n", 0) >= 5]
+    k = len(known)
+
+    def mean(f, default):
+        return sum(f(r) for r in known) / k if k else default
+
+    def sports_wr(r):
+        cn, cw, _ = r.get("cats", {}).get("sports", (0, 0.0, 0.0))
+        return (cw + 1.0) / (cn + 2.0)
+
+    return {"aq_known": float(k), "aq_edge": mean(lambda r: r.get("edge", 0.0), 0.0), "aq_edge_t": mean(lambda r: r.get("edge_t", 0.0), 0.0),
+            "aq_best_edge_t": max((r.get("edge_t", 0.0) for r in known), default=0.0), "aq_wr": mean(lambda r: r.get("wr_shrunk", 0.5), 0.5),
+            "aq_roi30": mean(lambda r: max(-1.0, min(3.0, r.get("roi30", 0.0))), 0.0), "aq_sports_wr": mean(sports_wr, 0.5)}
+
+
 def leader_stats(fills, asset: str, now: float, lookback: float = 48 * 3600.0, min_usd: float = 10.0) -> dict:
     """One leader's bet on `asset`, from their fills in its market over (now − lookback, now].
 

@@ -1,6 +1,6 @@
 """Every fill of a fixed group of wallets since a date (no 6,000-fill cap), for replaying a consensus setup.
 
-    python collect3_group.py DATA_DIR WALLETS.json SINCE [rate]
+    python collect3_group.py DATA_DIR WALLETS.json SINCE [rate] [max_pages]
 
 Pages each wallet's trades (maker and taker, as the bot's LeaderFeed sees them) back from the newest until the
 oldest fill is before SINCE. Writes DATA_DIR/group/<wallet>.json.gz: [[t, asset, cid, ±1, size, price, outcome
@@ -23,6 +23,7 @@ DATA = Path(sys.argv[1])
 WALLETS = json.loads(Path(sys.argv[2]).read_text())
 SINCE = dt.datetime.fromisoformat(sys.argv[3]).replace(tzinfo=dt.timezone.utc).timestamp()
 RATE = float(sys.argv[4]) if len(sys.argv) > 4 else 18.0
+MAX_PAGES = int(sys.argv[5]) if len(sys.argv) > 5 else 1500
 OUT = DATA / "group"
 OUT.mkdir(exist_ok=True)
 c = PublicClient()
@@ -63,7 +64,7 @@ def one(w):
             rows.append([int(t.timestamp.timestamp()), str(t.asset_id), str(t.condition_id), 1 if str(t.side).upper() == "BUY" else -1,
                          float(t.size), float(t.price), t.outcome_index, t.slug or "", t.event_slug or "", (t.title or "")[:90], t.outcome or ""])
         oldest = min((r[0] for r in rows), default=SINCE)
-        if not page.next_cursor or oldest < SINCE or n >= 1500:
+        if not page.next_cursor or oldest < SINCE or n >= MAX_PAGES:
             break
         cur = page.next_cursor
         page = call(lambda: pages.from_cursor(cur).first_page())

@@ -34,8 +34,13 @@ from polybot.categories import category  # noqa: E402
 DATA = Path(sys.argv[1])
 GROUP = json.loads(Path(sys.argv[2]).read_text())
 LABEL = sys.argv[3] if len(sys.argv) > 3 else "copied29"
+MIN_CAND = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--min-score=")), 2))   # smallest consensus kept as a candidate
+NO_QUALITY = "--no-quality" in sys.argv
 U = dt.timezone.utc
 POLL, LAG, LOOK, MIN_USD = 300, 60, 24 * 3600, 25.0
+MIN_AGREE_CAND = 2      # markets need at least this many of the group trading them
+BOARD = int(next((a.split("=")[1] for a in sys.argv if a.startswith("--board=")), 0))   # >0: only that day's top-N of the group count
+BOARD_COL = next((a.split("=")[1] for a in sys.argv if a.startswith("--board-col=")), "pnl1")  # pnl1: the day before; pnl30: 30 days
 TRAIN0 = dt.datetime(2026, 9, 2, tzinfo=U).timestamp()
 TEST0 = dt.datetime(2026, 9, 15, tzinfo=U).timestamp()
 SELECT_END = dt.datetime(2026, 10, 20, tzinfo=U).timestamp()
@@ -58,7 +63,8 @@ def ts(s):
 
 
 # ── fills → consensus states (score ≥ 2) ─────────────────────
-# two passes, so only markets that 2+ of the group trade are held in memory
+# markets that 2+ of the group trade, written to shards on disk, then processed shard by shard (bounded memory)
+NSH = 16
 who = defaultdict(set)
 for w in GROUP:
     p = DATA / "group" / f"{w}.json.gz"
@@ -66,23 +72,51 @@ for w in GROUP:
         for r in json.load(gzip.open(p, "rt"))["fills"]:
             if r[0] >= TRAIN0 - LOOK - 3600:
                 who[r[2]].add(w)
-keep_cids = {c_ for c_, ws in who.items() if len(ws) >= 2}
+keep_cids = {c_ for c_, ws in who.items() if len(ws) >= MIN_AGREE_CAND}
 del who
-by_cid = defaultdict(list)
+shard_dir = CACHE / f"shards_{LABEL}"
+shard_dir.mkdir(exist_ok=True)
+outs = [gzip.open(shard_dir / f"{k:02d}.jsonl.gz", "wt") for k in range(NSH)]
 n_f = 0
 for w in GROUP:
     p = DATA / "group" / f"{w}.json.gz"
     if p.exists():
         for r in json.load(gzip.open(p, "rt"))["fills"]:
             if r[0] >= TRAIN0 - LOOK - 3600 and r[2] in keep_cids:
-                by_cid[r[2]].append((r[0], w, r[1], r[2], r[3], r[4], r[5], r[7], r[8], r[9]))
+                outs[int(r[2][2:10], 16) % NSH].write(json.dumps([r[0], w, r[1], r[2], r[3], r[4], r[5], r[7], r[8], r[9]]) + "\n")
                 n_f += 1
-by_cid = {k: sorted(v) for k, v in by_cid.items()}
-log(f"{n_f} fills in {len(by_cid)} markets with 2+ of the group")
+for o in outs:
+    o.close()
+log(f"{n_f} fills in {len(keep_cids)} markets with {MIN_AGREE_CAND}+ of the group, in {NSH} shards")
+
+
+def shard_markets():
+    for k in range(NSH):
+        bc = defaultdict(list)
+        for line in gzip.open(shard_dir / f"{k:02d}.jsonl.gz", "rt"):
+            r = json.loads(line)
+            bc[r[3]].append(tuple(r))
+        for cid_, fl_ in bc.items():
+            yield cid_, sorted(fl_)
+
+
+ON_BOARD = None
+if BOARD:
+    # the day board, point in time: each day the BOARD wallets of the group with the best resolved P&L of the day before
+    import pandas as pd  # noqa: E402
+    wd = pd.read_parquet(DATA / "wallet_days.parquet", columns=["wallet", "day", BOARD_COL]).rename(columns={BOARD_COL: "pnl"})
+    wd = wd[wd.wallet.isin(set(GROUP)) & (wd.pnl > 0)]
+    wd["r"] = wd.groupby("day").pnl.rank(ascending=False, method="first")
+    ON_BOARD = defaultdict(set)
+    for w_, d_ in zip(wd.wallet[wd.r <= BOARD], wd.day[wd.r <= BOARD]):
+        ON_BOARD[w_].add(int(d_))
+    ON_BOARD = {w_: np.array(sorted(v)) for w_, v in ON_BOARD.items()}
+    per_day = wd[wd.r <= BOARD].groupby("day").size()
+    log(f"rebuilt board: top {BOARD} of {len(GROUP)} by {BOARD_COL} (resolved P&L before that day), {per_day.mean():.1f} wallets a day on average")
 
 events = []      # candidates: (t, cid, asset, score, n_agree, n_against, avg, usd, title, slug, ev)
 sells = defaultdict(list)    # asset → times when 4+ more leaders net-sell (day4's exit)
-for cid, fl in by_cid.items():
+for cid, fl in shard_markets():
     t_arr = np.array([f[0] for f in fl], dtype=float)
     wallets = sorted({f[1] for f in fl})
     assets = sorted({f[2] for f in fl})
@@ -107,6 +141,10 @@ for cid, fl in by_cid.items():
     net = cu[hi] - cu[lo]
     stance = 2 * net - net.sum(2, keepdims=True)
     wbu, wbs = cbu[hi] - cbu[lo], cbs[hi] - cbs[lo]
+    if ON_BOARD is not None:     # only leaders on that day's board count
+        pd_ = (polls // 86400).astype(int)
+        onb = np.column_stack([np.isin(pd_, ON_BOARD.get(w, np.array([], int))) for w in wallets])
+        stance = np.where(onb[:, :, None], stance, 0.0)
     meta = fl[-1]
     for a, j in ai.items():
         ag, ng = stance[:, :, j] >= MIN_USD, stance[:, :, j] <= -MIN_USD
@@ -115,7 +153,7 @@ for cid, fl in by_cid.items():
         for k in np.where((nn >= 2) & (nn - na >= 4))[0]:
             sells[a].append(polls[k])
         best, prev_k = -1, -10
-        for k in np.where((na >= 2) & (score >= 2))[0]:
+        for k in np.where((na >= 2) & (score >= MIN_CAND))[0]:
             if k != prev_k + 1:
                 best = -1                      # a new episode
             prev_k = k
@@ -123,7 +161,8 @@ for cid, fl in by_cid.items():
                 best = score[k]
                 sh = (wbs[k, :, j] * ag[k]).sum()
                 events.append((polls[k], cid, a, int(score[k]), int(na[k]), int(nn[k]), (wbu[k, :, j] * ag[k]).sum() / sh if sh > 0 else None,
-                               float((stance[k, :, j] * ag[k]).sum()), meta[9], meta[7], meta[8]))
+                               float((stance[k, :, j] * ag[k]).sum()), meta[9], meta[7], meta[8],
+                               tuple(wallets[i] for i in np.where(ag[k])[0])))
 events.sort(key=lambda e: e[0])
 log(f"{len(events)} candidate moments on {len({e[2] for e in events})} outcomes "
     f"({sum(1 for e in events if e[3] >= 4)} at day4's level, score ≥ 4)")
@@ -233,7 +272,7 @@ def mid_at(a, t):
 # ── the candidate table ──────────────────────────────────────
 fm = FillModel(DATA / "fill_model.json")
 rows = []
-for (t, cid, a, score, na, nn, avg, usdv, title, slug, ev) in events:
+for (t, cid, a, score, na, nn, avg, usdv, title, slug, ev, agree_w) in events:
     m = mk.get(cid)
     if m is None or not m.get("closed"):
         continue
@@ -255,10 +294,51 @@ for (t, cid, a, score, na, nn, avg, usdv, title, slug, ev) in events:
                       slug=slug, ev=ev, title=title, sports_type=m.get("sports_type"))
     rate = float(m.get("fee_rate") or 0) if m.get("fee_on") else 0.0
     sl = [s for s in sells.get(a, []) if s > t]
-    rows.append({"t": t, "asset": a, "cid": cid, "ev": ev or slug, "score": score, "avg": avg if avg else est, "est": est, "final": final,
+    m15, m60 = mid_at(a, t - 900), mid_at(a, t - 3600)
+    rows.append({"agree_w": agree_w, "mom15": (mid - m15) if m15 is not None else None, "mom60": (mid - m60) if m60 is not None else None,
+                 "t": t, "asset": a, "cid": cid, "ev": ev or slug, "score": score, "avg": avg if avg else est, "est": est, "final": final,
                  "res": res, "fee": rate, "ret": final / est - 1 - rate * (1 - est), "in_play": gs is not None and t >= gs,
                  "sell_t": sl[0] if sl and sl[0] < res else None, "x": x, "title": title})
 log(f"{len(rows)} priced, resolved candidates ({sum(1 for r in rows if r['t'] >= TEST0)} from Sep 15)")
+# who agrees: each agreeing leader's resolved record as of the last 6-hourly refresh (features.record over CLOSED +
+# REDEEMABLE, as the bot's pack measures it), averaged over the agreeing leaders (features.agree_quality)
+from common3 import M as _M, positions_of  # noqa: E402
+need_w = set() if NO_QUALITY else {w for r in rows for w in r["agree_w"]}
+pos_by_w, cids = {}, set()
+raw = {}
+for w in need_w:
+    pth = DATA / "wallets" / w[2:4] / f"{w}.json.gz"
+    if pth.exists():
+        raw[w] = json.load(gzip.open(pth, "rt"))
+        for k in ("closed", "redeemable", "open"):
+            cids.update(x["cid"] for x in raw[w].get(k, []))
+mm = {}
+with gzip.open(DATA / "markets" / "markets.jsonl.gz", "rt") as f:
+    for line in f:
+        j = line.find('"cid": "')
+        if j >= 0 and line[j + 8: j + 74] in cids:
+            m = json.loads(line)
+            if not m.get("missing"):
+                mm[m["cid"]] = _M(m)
+for w, d in raw.items():
+    pos_by_w[w] = positions_of(d, mm)
+del raw, mm
+rec_cache = {}
+
+
+def rec_of(w, t):
+    slot = int(t // (6 * 3600))
+    key = (w, slot)
+    if key not in rec_cache:
+        rec_cache[key] = F.record(pos_by_w[w], slot * 6 * 3600) if w in pos_by_w else {"n": 0}
+    return rec_cache[key]
+
+
+for r in rows:
+    r["x"].update(F.agree_quality([rec_of(w, r["t"]) for w in r["agree_w"]]))
+    r["x"]["mom15"] = r["mom15"] if r["mom15"] is not None else 0.0
+log(f"leader records for {len(pos_by_w)} of {len(need_w)} agreeing wallets")
+BASE_FEATS = [k for k in rows[0]["x"] if not k.startswith("aq_") and k != "mom15"]
 FEATS = list(rows[0]["x"])
 X = np.array([[r["x"][k] for k in FEATS] for r in rows], float)
 y = np.array([r["final"] for r in rows], float)
@@ -278,11 +358,12 @@ def sig(z):
 
 class Anchored:
     """L2 logistic regression with the price's log-odds as offset (the shipped kind 'consensus')."""
-    def __init__(self, lam):
+    def __init__(self, lam, feats=None):
         self.lam = lam
+        self.cols = [FEATS.index(f) for f in (feats or BASE_FEATS)]
 
     def fit(self, idx):
-        Xi = X[idx]
+        Xi = X[idx][:, self.cols]
         self.mu, self.sd = Xi.mean(0), Xi.std(0) + 1e-6
         Z = np.hstack([(Xi - self.mu) / self.sd, np.ones((len(idx), 1))])
         off = lgt(est[idx])
@@ -298,7 +379,7 @@ class Anchored:
         return self
 
     def p(self, idx):
-        Z = np.hstack([(X[idx] - self.mu) / self.sd, np.ones((len(idx), 1))])
+        Z = np.hstack([(X[idx][:, self.cols] - self.mu) / self.sd, np.ones((len(idx), 1))])
         return sig(Z @ self.w + lgt(est[idx]))
 
 
@@ -324,9 +405,13 @@ class Price:
         return est[idx]
 
 
-FAMILIES = {"day4_rule": lambda: Price(), "anchored_l100": lambda: Anchored(100.0), "anchored_l1000": lambda: Anchored(1000.0),
-            "anchored_l10": lambda: Anchored(10.0),
-            "trees": lambda: Trees(dict(num_leaves=7, learning_rate=0.05, n_estimators=150, min_child_samples=100, reg_lambda=10.0))}
+QUAL = [f for f in FEATS if f.startswith("aq_")]
+FAMILIES = {"day4_rule": lambda: Price(), "anchored_l1000": lambda: Anchored(1000.0),
+            "anchored_l3000": lambda: Anchored(3000.0), "anchored_l300": lambda: Anchored(300.0)}
+if "--features" in sys.argv:
+    FAMILIES.update({"l1000+quality": lambda: Anchored(1000.0, BASE_FEATS + QUAL), "l1000+momentum": lambda: Anchored(1000.0, BASE_FEATS + ["mom15"]),
+                     "l1000+both": lambda: Anchored(1000.0, BASE_FEATS + QUAL + ["mom15"])})
+SHIPPED_GRID = "--old-grid" in sys.argv
 
 weeks = []
 s = TEST0
@@ -396,15 +481,17 @@ def summ(tr):
 
 GRID = []
 for thr in (-0.02, 0.0, 0.02, 0.05, 0.1):
-    for smin in (2, 3, 4):
+    for smin in (2, 3, 4, 5, 6):
         for band in ((0.05, 0.90), (0.30, 0.70), (0.40, 0.65)):
             for pre in (False, True):
                 for drift in (None, 0.05):
-                    GRID.append({"thr": thr, "smin": smin, "band": band, "pre": pre, "drift": drift})
-DAY4 = {"thr": -9.0, "smin": 4, "band": (0.05, 0.90), "pre": False, "drift": 0.05}
+                    for kick in (None, 3.0, 12.0):     # buy pre-game only within this many hours of kick-off (in play unaffected)
+                        GRID.append({"thr": thr, "smin": smin, "band": band, "pre": pre, "drift": drift, "kick": kick})
+DAY4 = {"thr": -9.0, "smin": 4, "band": (0.05, 0.90), "pre": False, "drift": 0.05, "kick": None}
 score_a = np.array([r["score"] for r in rows])
 avg_a = np.array([r["avg"] for r in rows])
 inplay = np.array([r["in_play"] for r in rows])
+pre_h = np.array([np.expm1(r["x"]["pre_game_h_log"]) if r["x"]["pre_game_h_log"] > 0 else (0.0 if r["in_play"] else 999.0) for r in rows])
 
 
 def candidates(k, pol, w0, w1):
@@ -416,6 +503,8 @@ def candidates(k, pol, w0, w1):
         ok &= ~inplay
     if pol["drift"] is not None:
         ok &= est <= avg_a + pol["drift"]
+    if pol.get("kick") is not None:
+        ok &= inplay | (pre_h <= pol["kick"])
     return list(np.where(ok)[0]), er
 
 
@@ -477,14 +566,15 @@ def gap(a, b):
     return np.median(g), np.quantile(g, .05), np.quantile(g, .95), (g > 0).mean()
 
 
-print("\nEach model minus the day4 rule (hold to the end), $ a week, bootstrap over days:")
+print("\nEach model minus the day4 rule (hold to the end), and minus the shipped day4model (anchored_l1000), $ a week, bootstrap over days:")
 for k in FAMILIES:
     if k == "day4_rule":
         continue
     m_, lo_, hi_, pw = gap(res_all[k], res_all["day4 rule (hold to the end)"])
-    print(f"  {k:16s} {m_:+6.2f} [{lo_:+6.2f}, {hi_:+6.2f}]  P(better) {100 * pw:.0f}%")
+    m2, lo2, hi2, pw2 = gap(res_all[k], res_all["anchored_l1000"])
+    print(f"  {k:16s} vs day4 {m_:+6.2f} [{lo_:+6.2f}, {hi_:+6.2f}] P {100 * pw:.0f}%  |  vs day4model {m2:+6.2f} [{lo2:+6.2f}, {hi2:+6.2f}] P {100 * pw2:.0f}%")
 json.dump({k: [(int(i), float(r), int(d)) for i, r, d in v] for k, v in res_all.items()}, open(CACHE / f"consensus_trades_{LABEL}.json", "w"))
 json.dump({"feats": FEATS, "n": len(rows)}, open(CACHE / f"consensus_{LABEL}.json", "w"))
 np.save(CACHE / f"consensus_X_{LABEL}.npy", X)
-json.dump([{k: v for k, v in r.items() if k != "x"} for r in rows], open(CACHE / f"consensus_rows_{LABEL}.json", "w"),
+json.dump([{k: v for k, v in r.items() if k not in ("x", "agree_w")} for r in rows], open(CACHE / f"consensus_rows_{LABEL}.json", "w"),
           default=lambda o: o.item() if hasattr(o, "item") else str(o))
