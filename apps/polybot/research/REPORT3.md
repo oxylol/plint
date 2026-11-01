@@ -289,6 +289,22 @@ histories), no filter on what a market later traded, and prices confirmed by rea
 strategy's own backtest (+1–5% on 349 games, from price history) has the stale-price problem, and it is −25% over 40
 live paper trades.
 
+### The other exchange (2026-11-01, `collect_kalshi.py`, `kalshi_vs_poly.py`)
+
+Kalshi's public API covers the same games. 1,423 of its settled game-winner markets (NFL, NBA, NHL, MLB, WNBA, CFB,
+six soccer leagues, Sep–Oct) were matched to Polymarket moneylines by league, local date and team codes. The two
+agree on the winner in 1,422. On 703 games, at Polymarket's 5-minute marks from 60 to 5 minutes before kick-off,
+against Kalshi's 1-minute bid/ask midpoint:
+
+- **They agree almost exactly:** median gap 0.00¢, more than 2¢ apart in 1% of marks, more than 4¢ in none.
+- **Kalshi adds no information we can detect:** log loss 0.6072 (Polymarket), 0.6069 (Kalshi), 0.6070 (average).
+  Outcome on Polymarket's logit + b × the gap gives b = +1.8 [90% CI −1.5, +4.5].
+- **Trading the gaps:** buying on Polymarket at the same mark when Kalshi says it is cheap gives +12.5% [−2.5, +31.6]
+  on 219 bets: +20% in the selection weeks, −1.0% in the holdout. A version priced at Polymarket's next mark showed
+  +97% on 26 bets, but nearly all of those are the kick-off mark itself, where Polymarket clears sports books and
+  the history shows an empty book's ~50¢ (95.6 → 50.0 → 94.0). That is a fourth price trap: never price anything at
+  the minute of kick-off.
+
 ### Structural mispricing (2026-11-01, `arb_scan.py`)
 
 A live scan of 1,555 open one-winner events (negative risk, ending within 48 h) priced one share of every outcome at
