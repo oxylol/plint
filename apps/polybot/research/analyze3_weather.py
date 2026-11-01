@@ -37,11 +37,14 @@ while a:
         REPORT = Path(a.pop(0))
     elif k == "--model":
         MODEL_OUT = Path(a.pop(0))
-    elif k in ("--mids", "--no-regress", "--day2", "--late"):
+    elif k in ("--mids", "--no-regress", "--day2", "--late", "--entry-last"):
         pass
 U = dt.timezone.utc
 MODELS = ["best_match", "ecmwf_ifs025", "gfs_seamless", "icon_seamless", "gem_seamless"]
 USE_TAPES = "--mids" not in sys.argv     # default: prices from the real taker tape; --mids uses the midpoint history
+# --entry-last: buy at the last trade before the decision plus the book's typical $5 cost, known at the decision (the
+# default prices a buy at the next taker trade on that side within 3 h, which also skips markets nobody traded after)
+ENTRY_LAST = "--entry-last" in sys.argv
 REGRESS = "--no-regress" not in sys.argv  # per-city ridge on the five models (else ensemble mean + bias)
 # previous_day1: the run from about a day before each hour (for afternoons in the Americas that can be later than the
 # decision at 12:00 UTC the day before); previous_day2 (--day2) is a day older still, certainly known in time
@@ -366,7 +369,7 @@ calib(p_blend[ok], T["final"][ok], "blend")
 def entry_price(i, side_yes):
     """What buying costs: the tape's next taker price (tapes), else the mid plus the book's typical $5 cost."""
     t = trades[i]
-    if USE_TAPES:
+    if USE_TAPES and not ENTRY_LAST:
         return t["ask_yes"] if side_yes else t["ask_no"]
     m = t["mid"] if side_yes else 1 - t["mid"]
     return m + cost_above_mid(m)
@@ -441,6 +444,12 @@ def rule(i):
 
 
 res["rule"] = simulate(rule, "bot rule: No at max forecast +2°C", per_event=1)
+if res["rule"]:
+    rr, dd = res["rule"]["ret"], np.array(res["rule"]["dd"])
+    for lo_, hi_ in (("2026-08-15", "2026-09-15"), ("2026-09-15", "2026-10-20"), ("2026-10-20", "2026-11-01")):
+        s_ = (dd >= lo_) & (dd < hi_)
+        if s_.sum():
+            say(f"    {lo_} → {hi_}: {s_.sum():4d} trades, {100 * rr[s_].mean():+5.1f}% per trade, win {100 * (rr[s_] > 0).mean():.0f}%")
 
 for src, P in (("forecast", T["p_model"]), ("blend", p_blend)):
     for thr in (0.03, 0.05, 0.08, 0.12):

@@ -358,6 +358,19 @@ Full tables: `WEATHER3.md`.
 - **The +2°C rule is small, positive and timing-dependent:** +4.0% [+1.3, +6.7] (544 trades) and +4.7% [+1.8, +7.4]
   with older runs when buying at 12:00 UTC the day before; +1.3% [−1.7, +4.4] just before the city's day starts.
 - **Books are thin:** a $5 buy costs 2–5¢ above the mid; $15–140 rests within 1¢ of the ask.
+- **Re-check 2026-11-01: the rule's +4.7% also looks ahead.** The backtest priced each buy at the *next* taker trade
+  on that side within 3 hours, and skipped markets where nobody traded after the decision. That trades only when
+  someone else later bought the same side. Priced at what was known at the decision (`--entry-last`: last trade
+  before it + the book's typical $5 cost), with two-days-before runs:
+
+  | +2°C rule (No at max forecast + 2°C, No 50–95¢) | trades | mean [90% CI] | Aug 15 → Sep 14 | Sep 15 → Oct 19 | Oct 20 → 31 |
+  |---|---|---|---|---|---|
+  | 12:00 UTC the day before, next taker price (as reported) | 505 | +4.7% [+1.8, +7.4] | +4.0% | +3.5% | +10.3% |
+  | 12:00 UTC the day before, known at decision | 540 | **+2.2% [−0.7, +4.9]** | +0.4% | +1.0% | +9.1% |
+  | just before the city's day (bot timing), known at decision | 537 | **+0.1% [−2.6, +2.8]** | −0.5% | +1.4% | −2.9% |
+
+  So the forecast strategy has no demonstrated edge either. Its best honest version is about where day4 is (+2%,
+  not significant), and most of that came in the last 12 days.
 
 ## What changed in the bot
 
