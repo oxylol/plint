@@ -289,6 +289,14 @@ histories), no filter on what a market later traded, and prices confirmed by rea
 strategy's own backtest (+1–5% on 349 games, from price history) has the stale-price problem, and it is −25% over 40
 live paper trades.
 
+### Structural mispricing (2026-11-01, `arb_scan.py`)
+
+A live scan of 1,555 open one-winner events (negative risk, ending within 48 h) priced one share of every outcome at
+the best asks plus fees. No complete set costs under $1. The cheapest are $1.008 (a GPU-price event) and $1.013
+(Wuhan temperature), the median is $1.06 for sports-like and $1.17 for temperature events. The five "sets" under $1
+were release-date events with only some of their dates listed. There is nothing riskless to collect at the top of
+the book.
+
 ## Why this is the best way to build this model
 
 The evidence does not support "this model makes money". It supports a narrower claim: of everything tried, this is
