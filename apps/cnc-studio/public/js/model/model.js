@@ -316,9 +316,12 @@ function latheTargetProfile(target, W) {
 // how far an operation's result is from the target: excess (still to remove) and gouges
 export function compareTarget(out, target) {
   target.compares ||= new Map();
-  if (target.compares.has(out.key)) return target.compares.get(out.key);
+  const hit = target.compares.get(out.key);
+  if (hit) { out.compareRegions = hit.regions; out.compareTol = hit.tol; return hit.txt; }
+  out.compareRegions = [];
+  out.compareTol = null;
   const txt = out.engine === 'lathe' ? compareLathe(out, target) : compareMill(out, target);
-  target.compares.set(out.key, txt);
+  target.compares.set(out.key, { txt, regions: out.compareRegions, tol: out.compareTol });
   return txt;
 }
 
@@ -417,6 +420,9 @@ function compareMill(out, target) {
     regions.push({ kind: L === 1 ? 'excess' : 'gouge', vol: w * g ** 3, mn, mx, deep, clipped: deep >= tsim.S * 0.98 });
   }
   regions.sort((a, b) => b.vol - a.vol);
+  // for the view: the regions as boxes, and the tolerance the painting uses
+  out.compareRegions = regions.map((r) => ({ kind: r.kind, vol: r.vol, deep: r.deep, clipped: r.clipped, min: r.mn.map((v) => v - g / 2), max: r.mx.map((v) => v + g / 2) }));
+  out.compareTol = tol;
   const exR = regions.filter((r) => r.kind === 'excess'), goR = regions.filter((r) => r.kind === 'gouge');
   const o = [];
   const box = (r) => `X${fx(r.mn[0] - g / 2)}..${fx(r.mx[0] + g / 2)} Y${fx(r.mn[1] - g / 2)}..${fx(r.mx[1] + g / 2)} Z${fx(r.mn[2] - g / 2)}..${fx(r.mx[2] + g / 2)}`;

@@ -1,5 +1,8 @@
 # CNC Studio — next iteration (plan to check, 2026-11-02)
 
+> **Status:** implemented on 2026-11-02 (branch `cnc-iteration2`), everything behind Settings → *Iteration 2*.
+> The README's *Iteration 2* bullet is the short user-facing summary; this file is the spec it was built from.
+
 Draft for Filip. Seven parts; each can be handed over as a task of its own (A–D and G are the substance,
 E–F the UI and small things). Phones are out of scope. Once a part is approved it becomes a `TASK-<name>.md` in the
 style of `TASK-threads.md`.

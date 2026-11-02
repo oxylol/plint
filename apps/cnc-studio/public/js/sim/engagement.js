@@ -44,7 +44,7 @@ export class EngagementRecorder {
 
   // ---------------------------------------------------------------- mill
   probeMill(a, b, m, tool, X, s0) {
-    if (DRILLING.has(tool.type) || !(tool.diameter > 0)) return;
+    if (DRILLING.has(tool.type) || tool.type === 'probe' || !(tool.diameter > 0)) return;
     const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
     const L = Math.hypot(dx, dy, dz), Lxy = Math.hypot(dx, dy);
     if (L < 1e-9) return;

@@ -8,6 +8,9 @@
 //   (CHUCK GRIP 20)              lathe: length of the part inside the chuck jaws
 //   (ROTARY A)                   4th axis about X (B about Y) through the work zero; ISO sense: +A moves the
 //                                tool right-hand around +X relative to the part. (ROTARY A REVERSE) flips it
+//   (FIXTURE ERROR X0.1 Y-0.05 Z0.2)  the part sits that far from where the program assumes (so a probing
+//                                routine has something to find); the comparison with the target shows whether
+//                                the program compensates
 //
 // The part frame is the coordinate system the part was first described in (the first
 // operation's work coordinates). Each operation has X = part -> work transform.
@@ -15,7 +18,7 @@
 import { IDENTITY, mulXform, rotX, rotY, rotZ, translate, applyX, snapX } from '../sim/voxelsim.js';
 
 export function parseSetup(comments) {
-  const s = { name: null, stockFrom: null, orient: [], zero: null, vise: null, chuck: null, rotary: null };
+  const s = { name: null, stockFrom: null, orient: [], zero: null, vise: null, chuck: null, rotary: null, fixtureError: null };
   for (const c of comments) {
     const t = c.text.toUpperCase().replace(/\s+/g, ' ').trim();
     let m;
@@ -50,6 +53,11 @@ export function parseSetup(comments) {
       s.chuck = { grip: mm ? parseFloat(mm[1]) : 15 };
     }
     if ((m = /^ROTARY\s+([AB])(.*)$/.exec(t))) s.rotary = { axis: m[1], reverse: /REV/.test(m[2]) };
+    if ((m = /^FIXTURE\s+ERROR\b(.*)$/.exec(t))) {
+      const g = (L) => { const mm = new RegExp(`${L}\\s*(-?\\d*\\.?\\d+)`).exec(m[1]); return mm ? parseFloat(mm[1]) : 0; };
+      const e = [g('X'), g('Y'), g('Z')];
+      if (e.some((v) => v)) s.fixtureError = e;
+    }
   }
   return s;
 }
@@ -93,6 +101,7 @@ export function describeSetup(setup, X, machine) {
   if (setup.vise) parts.push(`vise grip ${setup.vise.grip} mm`);
   if (setup.chuck) parts.push(`chuck grip ${setup.chuck.grip} mm`);
   if (setup.rotary) parts.push(`rotary ${setup.rotary.axis} axis${setup.rotary.reverse ? ' (reversed)' : ''}`);
+  if (setup.fixtureError) parts.push(`part sits X${fmt(setup.fixtureError[0])} Y${fmt(setup.fixtureError[1])} Z${fmt(setup.fixtureError[2])} off where the program assumes (fixture error)`);
   if (X && X !== IDENTITY && !isIdentity(X)) {
     const o = applyX(X, [0, 0, 0]);
     parts.push(`part origin is at work X${fmt(o[0])} Y${fmt(o[1])} Z${fmt(o[2])}`);

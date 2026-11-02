@@ -3,12 +3,15 @@
 import { parseProgram } from '../gcode/parser.js';
 import { interpret } from '../gcode/interpreter.js';
 import { parseSetup, setupTransform, isIdentity } from '../gcode/setup.js';
-import { IDENTITY, VoxelSim, applyX, mulXform } from './voxelsim.js';
+import { IDENTITY, VoxelSim, applyX, mulXform, translate } from './voxelsim.js';
 import { MillSim } from './millsim.js';
 import { LatheSim } from './lathesim.js';
 import { SimRunner } from './simrunner.js';
 import { EngagementRecorder } from './engagement.js';
 import { craftIssues } from './craft.js';
+import { makeProbeOracle, datumCheck } from './probe.js';
+import { PROBE_CYCLES } from '../gcode/probecycles.js';
+import { parseStockFromComments } from '../gcode/stock.js';
 
 export function opLabel(i) { return `OP${(i + 1) * 10}`; }
 
@@ -113,6 +116,7 @@ function runOp(op, name, setup, src, srcError, opts, jobMode) {
       const mb = base.materialBounds() || base.bounds;
       const pb = { min: mb.min.map(r3), max: mb.max.map(r3) };
       X = setupTransform(setup, pb, 'mill');
+      if (setup.fixtureError) X = mulXform(translate(setup.fixtureError), X);
       start = src.engine === 'voxel' ? base.clone() : base;
       stockOverride = { kind: 'box', ...boundsUnder(X, pb), source: `result of ${src.name}` };
       engine = 'voxel';
@@ -123,6 +127,23 @@ function runOp(op, name, setup, src, srcError, opts, jobMode) {
   const interp = { ...(typeof opts.interp === 'function' ? opts.interp(machine) : opts.interp), machine };
   if (stockOverride) interp.stockOverride = stockOverride;
   else if (opts.manualStock?.[machine]) interp.stockOverride = { ...opts.manualStock[machine], source: 'manual' };
+  // a fresh part placed with a fixture error: the stock sits that far from where the program says
+  if (setup.fixtureError && machine === 'mill' && !src) {
+    const st = interp.stockOverride || parseStockFromComments(parseProgram(op.text).comments, machine);
+    if (st?.min) interp.stockOverride = { ...st, min: st.min.map((v, k) => v + setup.fixtureError[k]), max: st.max.map((v, k) => v + setup.fixtureError[k]), source: st.source || 'program' };
+  }
+  const probing = !!opts.features?.probe && machine === 'mill';
+  if (probing) {
+    // the built-in probing cycles, unless the job brings its own program of that number
+    const have = new Set();
+    for (const sp of interp.subprograms || []) for (const mm of String(sp.text).matchAll(/^\s*[O:]\s*(\d+)/gm)) have.add(parseInt(mm[1], 10));
+    interp.subprograms = [...(interp.subprograms || []), ...PROBE_CYCLES.filter((c) => !have.has(parseInt(c.name.slice(1), 10)))];
+    const oracleStart = start, oracleEngine = engine, oracleX = X;
+    interp.makeProbeOracle = () => makeProbeOracle({
+      start: oracleStart, engine: oracleEngine, X: oracleX, setup, jobMode, budget, resolution: opts.resolution, rotReverse: !!setup.rotary?.reverse,
+      fixturesFor: (sim, eng, Xo) => (setup.vise ? viseBoxes(setup.vise, eng === 'voxel' ? boundsUnder(Xo, sim.materialBounds() || sim.bounds) : { min: sim.stock.min, max: sim.stock.max }) : []),
+    });
+  }
   const result = interpret(op.text, interp);
 
   if (!start) {
@@ -172,7 +193,16 @@ function runOp(op, name, setup, src, srcError, opts, jobMode) {
   const final = sim.clone();
   const issues = [...pre, ...result.messages, ...runner.finalIssues(), ...extraIssues(result, sim, engine), ...(opts.features?.craft ? craftIssues({ result, engagement }) : [])];
   const workFromPart = mulXform(engine === 'voxel' ? X : IDENTITY, simFromPart);
-  return { op, name, setup, engine, X, result, sim, runner, final, start, issues, src: src?.name || null, fixtures, simMs, simFromPart, workFromPart, engagement };
+  const out = { op, name, setup, engine, X, result, sim, runner, final, start, issues, src: src?.name || null, fixtures, simMs, simFromPart, workFromPart, engagement };
+  if (probing) {
+    // can this setup's work zero be set with the probe? (the standard probe of the library)
+    const probe = Object.values(result.tools).find((t) => t.type === 'probe');
+    try {
+      const d = datumCheck({ ...out, start: engine === 'height' ? sim : start }, probe);
+      if (d) { out.datum = d.text; issues.push(...d.issues); }
+    } catch (e) { out.datum = `(datum check failed: ${e.message})`; }
+  }
+  return out;
 }
 
 function extraIssues(result, sim, engine) {

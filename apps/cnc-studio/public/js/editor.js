@@ -51,7 +51,7 @@ export class Editor {
     this.silent = false;
     this.cm.on('change', () => { if (!this.silent) onChange?.(this.value); });
     this.cm.on('cursorActivity', () => onCursorLine?.(this.cm.getCursor().line));
-    this.cm.on('gutterClick', (cm, line) => onLineClick?.(line));
+    this.cm.on('gutterClick', (cm, line, gutter) => { if (gutter === 'cm-issues' && this.issueTexts?.has(line)) this.toggleIssueWidget(line); else onLineClick?.(line); });
     this.cm.on('dblclick', () => onLineClick?.(this.cm.getCursor().line));
   }
 
@@ -87,7 +87,23 @@ export class Editor {
     this.cm.getWrapperElement().classList.toggle('streaming', on);
   }
 
+  // the message(s) of a line as a widget under it (gutter click; no hover on touch screens)
+  toggleIssueWidget(line) {
+    this.issueWidgets ||= new Map();
+    const w = this.issueWidgets.get(line);
+    if (w) { w.clear(); this.issueWidgets.delete(line); return; }
+    const info = this.issueTexts.get(line);
+    const node = document.createElement('div');
+    node.className = `cm-issue-widget ${info.level}`;
+    node.innerHTML = info.texts.map((t) => `<div>${t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</div>`).join('');
+    node.onclick = () => this.toggleIssueWidget(line);
+    this.issueWidgets.set(line, this.cm.addLineWidget(line, node, { coverGutter: false, noHScroll: true }));
+  }
+
   setIssues(messages) {
+    for (const w of this.issueWidgets?.values() || []) w.clear();
+    this.issueWidgets = new Map();
+    this.issueTexts = new Map();
     this.cm.clearGutter('cm-issues');
     for (const h of this.issueLines || []) this.cm.removeLineClass(h, 'background', 'cm-issue-error');
     this.issueLines = [];
@@ -101,6 +117,7 @@ export class Editor {
     }
     for (const [line, info] of byLine) {
       if (line >= this.cm.lineCount()) continue;
+      this.issueTexts.set(line, info);
       const el = document.createElement('div');
       el.className = `cm-issue-marker ${info.level}`;
       el.title = info.texts.join('\n');

@@ -294,6 +294,11 @@ export class Viewer {
         const inv = 1 / Math.hypot(gx, gy, 1);
         nor[k * 3] = gx * inv; nor[k * 3 + 1] = gy * inv; nor[k * 3 + 2] = inv;
         const t = toolIdx[k];
+        if (this.devFn) {
+          const c = this.devColor(this.devFn([sim.minX + i * cx, sim.minY + j * cy, Math.max(h, sim.bottom)]));
+          col[k * 3] = c[0]; col[k * 3 + 1] = c[1]; col[k * 3 + 2] = c[2];
+          continue;
+        }
         // deeper cuts slightly darker for depth perception
         const f = t ? 1 - 0.28 * Math.min(1, (sim.top - Math.max(h, sim.bottom)) / shade) : 1;
         col[k * 3] = ct[t * 3] * f; col[k * 3 + 1] = ct[t * 3 + 1] * f; col[k * 3 + 2] = ct[t * 3 + 2] * f;
@@ -476,6 +481,14 @@ export class Viewer {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(m.positions, 3));
     g.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
+    if (this.devFn) {
+      // deviation view: the vertex (part frame) → work frame → distance to the target
+      const P = m.positions, C = m.colors, X = this.partX;
+      for (let i = 0; i < P.length; i += 3) {
+        const c = this.devColor(this.devFn(applyX(X, [P[i], P[i + 1], P[i + 2]])));
+        C[i] = c[0]; C[i + 1] = c[1]; C[i + 2] = c[2];
+      }
+    }
     g.setAttribute('color', new THREE.BufferAttribute(m.colors, 3));
     g.setIndex(new THREE.BufferAttribute(m.index, 1));
     g.computeBoundingSphere();
@@ -645,6 +658,11 @@ export class Viewer {
           const s = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16), flute);
           s.position.z = r; g.add(s);
           zCyl(r, r, L - r, r, flute); z = L;
+          break;
+        }
+        case 'probe': {
+          const s = new THREE.Mesh(new THREE.SphereGeometry(r, 32, 16), new THREE.MeshStandardMaterial({ color: '#e0405a', roughness: 0.25, metalness: 0.2, emissive: '#3a0a12' }));
+          s.position.z = r; g.add(s); z = 2 * r;
           break;
         }
         case 'drill': case 'spot': {
@@ -837,6 +855,66 @@ export class Viewer {
     this.groups.stock.visible = this.visible.stock;
     this.groups.target.visible = this.visible.target && this.groups.target.children.length > 0;
     this.groups.tool.visible = this.visible.tool && !!this.toolKey && !this.toolKey.startsWith('0|');
+    this.needsRender = true;
+  }
+
+  // ---------------------------------------------------------------- deviation view (Iteration 2)
+  // fn(work point) → signed distance to the target (+ outside = material left, − = gouge), or null
+  setDeviation(fn, tol = 0.1) {
+    this.devFn = fn;
+    this.devTol = tol;
+    if (this.engine === 'height') this.updateMillStock(true);
+    else if (this.engine === 'voxel') this.updateVoxelStock(true);
+    this.needsRender = true;
+  }
+  devColor(d) {
+    if (!Number.isFinite(d)) return [0.72, 0.76, 0.8];
+    const tol = this.devTol;
+    if (d > tol) { const f = Math.min(1, (d - tol) / 1.0); return [0.55 - 0.45 * f, 0.7 - 0.2 * f, 0.9 + 0.1 * f]; } // material left: blue
+    if (d < -tol) { const f = Math.min(1, (-d - tol) / 0.5); return [0.95, 0.55 - 0.45 * f, 0.5 - 0.45 * f]; } // gouge: red
+    return [0.76, 0.8, 0.78];
+  }
+
+  // a box or a point to look at (issues with a position, comparison regions)
+  showFocus({ box = null, point = null } = {}) {
+    if (!this.groups.focus) { this.groups.focus = new THREE.Group(); this.rotGroup.add(this.groups.focus); }
+    this.clearGroup('focus');
+    const mat = new THREE.LineBasicMaterial({ color: '#ff6b6b', depthTest: false, transparent: true, opacity: 0.95 });
+    if (box) {
+      const sz = [0, 1, 2].map((k) => Math.max(0.5, box.max[k] - box.min[k]));
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(...sz)), mat);
+      const c = [0, 1, 2].map((k) => (box.min[k] + box.max[k]) / 2);
+      edges.position.copy(this.workToScene(c));
+      edges.renderOrder = 21;
+      this.groups.focus.add(edges);
+    }
+    if (point) {
+      const size = this.bounds().getSize(new THREE.Vector3()).length() || 100;
+      const r = Math.max(0.4, size * 0.008);
+      const s = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), new THREE.MeshBasicMaterial({ color: '#ff6b6b', depthTest: false, transparent: true, opacity: 0.9 }));
+      s.position.copy(this.workToScene(point));
+      s.renderOrder = 21;
+      const ring = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 40 }, (_, i) => { const a = (i / 40) * 2 * Math.PI; return new THREE.Vector3(Math.cos(a) * r * 3, Math.sin(a) * r * 3, 0); })), mat);
+      ring.position.copy(s.position);
+      ring.renderOrder = 21;
+      this.groups.focus.add(s, ring);
+    }
+    this.needsRender = true;
+  }
+  clearFocus() { if (this.groups.focus) this.clearGroup('focus'); this.needsRender = true; }
+
+  // move the camera to look at a box or a point (keeps the viewing direction)
+  flyTo(box = null, point = null) {
+    const c = box ? [0, 1, 2].map((k) => (box.min[k] + box.max[k]) / 2) : point;
+    if (!c) return;
+    const target = this.workToScene(c).applyMatrix4(this.rotGroup.matrixWorld);
+    const dir = this.camera.position.clone().sub(this.controls.target).normalize();
+    const span = box ? Math.max(4, Math.hypot(...[0, 1, 2].map((k) => box.max[k] - box.min[k]))) : 8;
+    const vHalf = (this.camera.fov * Math.PI) / 360;
+    const dist = Math.max(span * 2.2, (span / 2 / Math.sin(vHalf)) * 1.2);
+    this.controls.target.copy(target);
+    this.camera.position.copy(target).addScaledVector(dir, dist);
+    this.controls.update();
     this.needsRender = true;
   }
 

@@ -4,6 +4,7 @@
 import { MillSim } from './millsim.js';
 import { LatheSim } from './lathesim.js';
 import { IDENTITY, mulXform, rotX, rotY } from './voxelsim.js';
+import { materialTest, probeContact } from './probegeom.js';
 
 // part rotation for 4th/5th-axis words, through the work zero. ISO sense: +A moves the tool
 // right-hand around +X relative to the part, so the table turns the part by -A (B likewise
@@ -92,7 +93,7 @@ export class SimRunner {
   }
 
   // group: issues of one kind for one tool collapse into a single entry with a block count
-  addIssue(level, text, m, key, group) {
+  addIssue(level, text, m, key, group, at = null) {
     if (group) {
       const g = this.issueGroups.get(group);
       if (g) {
@@ -100,7 +101,7 @@ export class SimRunner {
         if (g.worst !== undefined && g.value > g.worst) { g.worst = g.value; }
         return;
       }
-      const issue = { level, text, line: m.line, file: m.file, callLine: m.callLine, source: 'sim', count: 1 };
+      const issue = { level, text, line: m.line, file: m.file, callLine: m.callLine, source: 'sim', count: 1, at };
       this.issueGroups.set(group, { issue, lines: new Set([m.callLine]) });
       this.issues.push(issue);
       return;
@@ -108,7 +109,7 @@ export class SimRunner {
     const k = key || `${text}|${m.callLine}`;
     if (this.issueKeys.has(k)) return;
     this.issueKeys.add(k);
-    this.issues.push({ level, text, line: m.line, file: m.file, callLine: m.callLine, source: 'sim' });
+    this.issues.push({ level, text, line: m.line, file: m.file, callLine: m.callLine, source: 'sim', at });
   }
 
   // issues with "(N blocks)" suffixes for grouped entries
@@ -120,6 +121,14 @@ export class SimRunner {
     if (m.kind !== 'rapid' && m.kind !== 'feed') return;
     if (to <= from) return;
     const voxel = this.sim.kind === 'voxel';
+    // a touch probe removes nothing: it may touch on a G31 move, anything else is a collision
+    if (this.result.tools[m.tool]?.type === 'probe') {
+      const X = voxel ? this.xformAt(m, 1) : undefined;
+      const a = this.pointAt(m, Math.min(1, from / (m.len || 1))), b = this.pointAt(m, Math.min(1, to / (m.len || 1)));
+      this.probeMove(m, a, b, X);
+      this.checkFixtures(m, a, b);
+      return;
+    }
     // rotary moves: split so the part turns at most ~1° per piece
     const turning = voxel && m.rot && (m.rot[0] !== m.rot[1] || m.rot[2] !== m.rot[3]);
     if (turning || (voxel && m.rotOnly)) {
@@ -156,6 +165,23 @@ export class SimRunner {
     }
   }
 
+  probeMove(m, a, b, X) {
+    if (this.quiet) return;
+    const tool = this.result.tools[m.tool];
+    const fmt = (p) => `X${p[0].toFixed(2)} Y${p[1].toFixed(2)} Z${p[2].toFixed(2)}`;
+    if (m.skip) {
+      if (m.probe === 'stylus' || m.probe === 'body') this.addIssue('error', `The probe ${m.probe} of T${m.tool} hits the part at ${fmt(b)} before the ball touches — it cannot reach there (stylus ${tool.stylusLength} mm, body Ø${tool.holderDiameter})`, m, null, `probe|${m.probe}|${m.tool}`, b.slice());
+      return;
+    }
+    const inside = materialTest(this.sim, X || this.sim.xform);
+    for (const p of [b, lerp3(a, b, 0.5)]) {
+      const hit = probeContact(inside, p, tool);
+      if (!hit) continue;
+      this.addIssue('error', `T${m.tool} probe ${hit === 'ball' ? 'touches' : `${hit} hits`} the part on a ${m.kind === 'rapid' ? 'G00' : 'G01'} move at ${fmt(p)} — only G31 may touch`, m, null, `probehit|${m.tool}|${m.kind}`, p.slice());
+      return;
+    }
+  }
+
   // tool vs fixtures (vise jaws): boxes in the work frame
   checkFixtures(m, a, b) {
     const fx = this.fixtures;
@@ -168,7 +194,7 @@ export class SimRunner {
       if (zLow >= f.max[2]) continue;
       const d = segRectDist(a, b, f);
       if (d < r - 0.01 || (zLow + Lo < f.max[2] && d < Rh - 0.01)) {
-        this.addIssue('error', `T${m.tool} hits the ${f.name} — ${d < r ? 'the cutter' : 'the holder'} reaches below the jaw top (Z${f.max[2].toFixed(2)})`, m, null, `fix|${f.name}|${m.tool}`);
+        this.addIssue('error', `T${m.tool} hits the ${f.name} — ${d < r ? 'the cutter' : 'the holder'} reaches below the jaw top (Z${f.max[2].toFixed(2)})`, m, null, `fix|${f.name}|${m.tool}`, b.slice());
       }
     }
   }
@@ -189,18 +215,18 @@ export class SimRunner {
     const fmt = (p) => lathe ? `X${(p[0] * 2).toFixed(2)} Z${p[2].toFixed(2)}` : `X${p[0].toFixed(2)} Y${p[1].toFixed(2)} Z${p[2].toFixed(2)}`;
     if (m.kind === 'rapid' && (res.removedVol !== undefined ? res.removedVol > 0.5 : res.removed > 0.02)) {
       const amount = res.removedVol !== undefined ? `${res.removedVol.toFixed(1)} mm³ cut` : `${res.removed.toFixed(2)} mm cut`;
-      this.addIssue('error', `Rapid move (G00) into material — ${amount} at rapid near ${fmt(b)}`, m);
+      this.addIssue('error', `Rapid move (G00) into material — ${amount} at rapid near ${fmt(b)}`, m, null, null, b.slice());
     }
     if (res.shank > 0.05) {
       const t = this.result.tools[m.tool];
-      this.addIssue('warning', `Tool T${m.tool} goes deeper than its ${t?.fluteLength ?? '?'} mm flutes — the shank rubs the part`, m, null, `shank|${m.tool}`);
+      this.addIssue('warning', `Tool T${m.tool} goes deeper than its ${t?.fluteLength ?? '?'} mm flutes — the shank rubs the part`, m, null, `shank|${m.tool}`, b.slice());
     }
     if (res.holder > 0.1) {
       const t = this.result.tools[m.tool];
       const hint = lathe
         ? t?.type === 'groove' ? ` (blade is ${t.height ?? 16} mm long)` : t?.type === 'drill' ? ` (drill is ${t.length ?? '?'} mm long)` : ''
         : ` (stick-out ${t?.overallLength} mm)`;
-      this.addIssue('error', `The holder of T${m.tool} hits the part — ${res.holder.toFixed(2)} mm interference${hint}`, m, null, `holder|${m.tool}`);
+      this.addIssue('error', `The holder of T${m.tool} hits the part — ${res.holder.toFixed(2)} mm interference${hint}`, m, null, `holder|${m.tool}`, b.slice());
     }
     if (res.chuck) this.addIssue('error', `Tool goes past the chuck face (Z${(-this.result.stock.length).toFixed(1)}) — chuck collision`, m, 'chuck');
     if (!lathe && m.kind === 'feed' && res.removed > 0.05) {

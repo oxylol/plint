@@ -16,7 +16,7 @@ export function toolColor(num) {
   return TOOL_COLORS[(Math.abs(num | 0) + TOOL_COLORS.length - 1) % TOOL_COLORS.length];
 }
 
-export const MILL_TYPES = ['flat', 'bull', 'ball', 'drill', 'spot', 'chamfer', 'tap', 'threadmill', 'face', 'engrave'];
+export const MILL_TYPES = ['flat', 'bull', 'ball', 'drill', 'spot', 'chamfer', 'tap', 'threadmill', 'face', 'engrave', 'probe'];
 export const LATHE_TYPES = ['turn', 'bore', 'groove', 'thread', 'drill'];
 
 export function defaultLibrary(machine) {
@@ -40,6 +40,7 @@ export function defaultLibrary(machine) {
     7: { num: 7, type: 'tap', diameter: 8, pitch: 1.25, fluteLength: 25, name: 'Tap M8×1.25' },
     8: { num: 8, type: 'face', diameter: 50, fluteLength: 6, name: 'Face mill Ø50' },
     9: { num: 9, type: 'flat', diameter: 3, fluteLength: 10, name: 'End mill Ø3' },
+    20: { num: 20, type: 'probe', diameter: 6, stylusLength: 50, shankDiameter: 4.5, holderDiameter: 40, name: 'Touch probe Ø6' },
   };
 }
 
@@ -111,6 +112,7 @@ export function parseToolComment(text, machine) {
   else if (/DRILL|BORR|\bBOR\b/.test(rest)) type = 'drill';
   else if (/FACE|PLAN|SHELL/.test(rest)) type = 'face';
   else if (/ENGRAV|GRAVER/.test(rest)) type = 'engrave';
+  else if (/PROBE|TOUCH|MÄTPROB|RENISHAW/.test(rest)) type = 'probe';
   else if (/BULL/.test(rest) || (cr !== undefined && cr > 0)) type = 'bull';
   for (const k of MILL_TYPES) if (explicit && new RegExp(`\\b${k.toUpperCase()}\\b`).test(rest)) type = k;
   tool.type = type;
@@ -122,11 +124,14 @@ export function parseToolComment(text, machine) {
     // CAM posts give a chamfer mill's TAPER as the half angle (90° tool → TAPER=45DEG)
     tool.tipAngle = type === 'chamfer' && /TAPER/.test(rest) && taper <= 60 ? taper * 2 : taper;
   }
-  if (len !== undefined) tool.fluteLength = len;
+  // a probe's L is its stylus length (ball tip to body); SD the stylus shaft, HD / BD the body
+  if (len !== undefined) { if (type === 'probe') tool.stylusLength = len; else tool.fluteLength = len; }
   const sl = num(/\b(?:SL|STICKOUT|OAL)\s*=?\s*(\d*\.?\d+)/, rest);
   if (sl !== undefined) tool.overallLength = sl;
-  const hd = num(/\b(?:HD|HOLDER)\s*=?\s*(\d*\.?\d+)/, rest);
+  const hd = num(/\b(?:HD|HOLDER|BD|BODY)\s*=?\s*(\d*\.?\d+)/, rest);
   if (hd !== undefined) tool.holderDiameter = hd;
+  const sd = num(/\b(?:SD|SHANK|STYLUS)\s*=?\s*(\d*\.?\d+)/, rest);
+  if (sd !== undefined) tool.shankDiameter = sd;
   const z = num(/\b(?:Z|FLUTES|TEETH)\s*=?\s*(\d{1,2})\b/, rest);
   if (z !== undefined && z > 0) tool.flutes = z;
   if (type === 'ball' && tool.diameter) tool.cornerRadius = tool.diameter / 2;
@@ -163,6 +168,20 @@ export function normalizeTool(t, machine) {
   }
   tool.type = MILL_TYPES.includes(tool.type) ? tool.type : 'flat';
   tool.diameter = tool.diameter > 0 ? tool.diameter : 10;
+  if (tool.type === 'probe') {
+    // touch probe: a ball on a thin stylus under a body. The sim treats the ball as the "flutes",
+    // the stylus as the shank and the body as the holder (any contact of those is a collision).
+    const D = tool.diameter;
+    tool.cornerRadius = D / 2;
+    tool.fluteLength = D;
+    tool.stylusLength = tool.stylusLength > D ? tool.stylusLength : tool.overallLength > D ? tool.overallLength : 50;
+    tool.overallLength = tool.stylusLength;
+    tool.shankDiameter = tool.shankDiameter > 0 ? Math.min(tool.shankDiameter, D) : Math.max(1, Math.min(D * 0.75, D - 0.5));
+    tool.holderDiameter = tool.holderDiameter > 0 ? tool.holderDiameter : 40;
+    tool.flutes = 0;
+    tool.name = tool.name || `T${tool.num}`;
+    return tool;
+  }
   if (tool.type === 'ball') tool.cornerRadius = tool.diameter / 2;
   tool.cornerRadius = Math.min(tool.cornerRadius || 0, tool.diameter / 2);
   if (['drill', 'spot'].includes(tool.type)) tool.tipAngle = tool.tipAngle || (tool.type === 'spot' ? 90 : 118);
@@ -200,6 +219,12 @@ export function describeTool(t, machine, { detail = false } = {}) {
     return parts.join(' ');
   }
   const parts = [`T${t.num}`, t.type, `Ø${t.diameter}`];
+  if (t.type === 'probe') {
+    parts.push(`ball, stylus ${t.stylusLength} mm Ø${t.shankDiameter}, body Ø${t.holderDiameter}`);
+    if (t.name) parts.push(`"${t.name}"`);
+    if (detail) parts.push('— touches with the ball on G31; the stylus or body hitting anything is a collision');
+    return parts.join(' ');
+  }
   if (t.cornerRadius && t.type === 'bull') parts.push(`CR${t.cornerRadius}`);
   if (t.tipAngle && ['drill', 'spot', 'chamfer', 'engrave'].includes(t.type)) parts.push(`${t.tipAngle}°`);
   if (t.fluteLength) parts.push(`L${t.fluteLength}`);
@@ -216,6 +241,7 @@ export function millProfile(tool) {
   const r = tool.diameter / 2;
   switch (tool.type) {
     case 'ball':
+    case 'probe':
       return (d) => r - Math.sqrt(Math.max(0, r * r - d * d));
     case 'bull': {
       const cr = tool.cornerRadius;

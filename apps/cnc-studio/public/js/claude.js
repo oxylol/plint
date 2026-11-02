@@ -152,6 +152,7 @@ export class ClaudeAgent {
     const bad = !input || typeof input !== 'object'
       ? 'Invalid input: expected a JSON object'
       : use.name === 'write_program' && typeof input.gcode !== 'string' ? 'Invalid input: expected {"gcode": "<complete program>"}'
+      : use.name === 'read_program' && typeof input.operation !== 'string' ? 'Invalid input: expected {"operation": "OP10"}'
       : use.name === 'edit_program' && !(Array.isArray(input.edits) && input.edits.length && input.edits.every((e) => e && typeof e === 'object' && typeof e.old === 'string' && typeof e.new === 'string')) ? 'Invalid input: expected {"edits": [{"old": "<exact text>", "new": "<replacement>"}, …]}'
       : use.name === 'inspect_part' && !QUERIES.includes(input.query) ? `Invalid input: query must be one of ${QUERIES.join(', ')}`
       : use.name === 'inspect_part' && input.query === 'section' && (!['x', 'y', 'z'].includes(String(input.axis).toLowerCase()) || !Number.isFinite(Number(input.at))) ? 'Invalid input: a section needs axis (x, y or z) and at (mm)'
@@ -449,7 +450,7 @@ export class ChatView {
   makeToolCard(name, id) {
     const el = document.createElement('div');
     el.className = `tool-card ${name}`;
-    const label = name === 'write_program' ? 'Writing program' : name === 'edit_program' ? 'Editing program' : name === 'view_simulation' ? 'Looking at the simulation' : name === 'inspect_part' ? 'Measuring the part' : name;
+    const label = name === 'write_program' ? 'Writing program' : name === 'edit_program' ? 'Editing program' : name === 'read_program' ? 'Reading program' : name === 'view_simulation' ? 'Looking at the simulation' : name === 'inspect_part' ? 'Measuring the part' : name;
     el.innerHTML = `<div class="tool-top"><span class="spin"></span><span class="tool-label">${label}</span><span class="tool-title"></span><span class="tool-meta"></span></div><div class="tool-detail"></div>`;
     const meta = el.querySelector('.tool-meta');
     const detail = el.querySelector('.tool-detail');
@@ -484,6 +485,9 @@ export class ChatView {
             pre.innerHTML = d.text.split('\n').map((l) => `<span class="${l[0] === '+' ? 'add' : l[0] === '-' ? 'del' : l[0] === '@' ? 'hunk' : ''}">${esc(l)}</span>`).join('\n');
             detail.querySelector('.showdiff').onclick = () => { pre.hidden = !pre.hidden; };
           }
+        } else if (name === 'read_program') {
+          el.querySelector('.tool-label').textContent = 'Read program';
+          el.querySelector('.tool-title').textContent = r.title ? `— ${r.title}` : '';
         } else if (name === 'inspect_part') {
           el.querySelector('.tool-label').textContent = 'Measured the part';
           el.querySelector('.tool-title').textContent = r.title ? `— ${r.title}` : '';

@@ -5,6 +5,7 @@
 - Each `old` must match the program exactly once. Copy it from the `<program>` block as it stands, spaces included; one or two more lines around the change make it unique. `new` replaces it; an empty `new` deletes it. An edit that does not match once is refused with the closest lines, and nothing is applied: correct that edit and call again.
 - The number of tokens used to edit files is best minimized, all else being equal. Therefore, when it will not affect the end result, try to surgically edit a file rather than rewrite the entire thing.
 - The report after an edit covers the whole program, as always; read it the same way, and fix with another edit.
+- With several operations, only the active operation's program is in the context; the others appear as a line with their brief and a short report. Call `read_program` for one before editing it or when its details matter (both `write_program` and `edit_program` take `operation`).
 
 # The brief
 
@@ -26,3 +27,12 @@ Choose like a machinist, and read the engagement and the craft checks in every r
 - **Holes.** Spot, drill with the tap drill from the table, then tap or ream; chamfer last.
 
 The report says when the checks flagged something (a centred face mill, rubbing, a plunging face mill, a ball tip on a floor, thin lathe cuts) and the issue list names the line. Fix those like any other issue, and say what you changed.
+
+# Probing
+
+The mill has a touch probe: `T20 probe Ø6 ball, stylus 50 mm Ø4.5, body Ø40` in the library (define another with `(TOOL T20 PROBE D6 L50 SD4.5 HD40 "TOUCH PROBE")`: D = ball, L = stylus length from the ball tip to the body, SD = stylus shaft, HD = body). Call it like a tool (`T20 M06`, `G43 H20`, spindle stopped, no coolant), and keep it away from everything except on G31 moves: a probe touching the part on a G00/G01 move, or its stylus or body hitting anything, is an error.
+
+- `G31 X.. Y.. Z.. F300` feeds toward the target and stops where the ball touches the material as it is at that line of the program (everything cut so far, earlier operations included). `#5061–#5063` then hold the ball centre, `#5090` is 1 when it touched (0 = no skip signal: the move ran to its end), `#5098` is the ball radius, `#5221/#5222/#5223` are G54's X/Y/Z offsets (+20 per offset: G55 is `#5241…`). The report lists every touch and what it found.
+- Cycles, Inspection Plus style, are built in: `G65 P9810 X.. Y.. Z.. F1000` protected positioning (touching anything is an error), `G65 P9811 Z0. S1` single surface (X, Y or Z: the surface's target; S1 updates G54 to what was measured, T a tolerance), `G65 P9812 X40. Z-5. S1` web (with Z: the probe goes around the outside down to Z) or pocket (no Z) of that size, `G65 P9814 D20. S1` bore or `G65 P9814 D30. Z-5. S1` boss. They leave `#135–#137` (measured X/Y/Z), `#138` (size), `#139–#142` (errors) and update the work offset when S is given; `#3000` alarms when nothing was touched or the path is obstructed. Start each cycle from the nominal position (above a surface, at the centre of a bore, over a boss).
+- Set up each operation like a machinist: after a re-clamp, find Z on the top face and X/Y from two opposite sides or a bore before cutting. The report's "Setting the work zero" block says, per axis, which reference the probe can reach (flat sides above the jaws, a bore or boss) and when it is difficult (sides inside the jaws, no reference, raw stock only). When it says difficult, change the plan: leave a reference feature or a flat pad in the earlier operation, raise the part in the vise, or take that axis from the fixed jaw — and say so.
+- To test a routine, `(FIXTURE ERROR X0.1 Y-0.05 Z0.2)` in the setup comments puts the part that far from where the program assumes; the probing must then find it, and the comparison with the target shows whether the program compensated. Exported programs keep the G31 and G65 P98xx calls as written (the real machine's own cycles run them) and drop the directive.

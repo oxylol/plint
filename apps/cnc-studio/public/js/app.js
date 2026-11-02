@@ -5,6 +5,7 @@ import { simulateJob, opNames, toolEnvelopes } from './sim/job.js';
 import { parseSetup, describeSetup } from './gcode/setup.js';
 import { partSummary, viewDetail, section, probe } from './sim/inspect.js';
 import { readModel, isModelFile, defaultPlacement, buildTarget, targetSummary, compareTarget, describePlacement } from './model/model.js';
+import { invertX as invX, applyX as appX } from './sim/voxelsim.js';
 import { Viewer } from './view/viewer.js';
 import { Editor } from './editor.js';
 import { ClaudeAgent, ChatView } from './claude.js';
@@ -16,8 +17,9 @@ import { initProjects } from './projects.js';
 import { engagementReport, engagementAt } from './sim/engagement.js';
 import { exportJob } from './gcode/export.js';
 import { applyEdits } from './edit/edit.js';
-import { describeRanges } from './edit/diff.js';
+import { describeRanges, diffLines, diffCounts, unifiedDiff } from './edit/diff.js';
 import { measureContext, pointItem, distanceItem } from './sim/measure.js';
+import { probeReport } from './sim/probe.js';
 import { normalizeBrief, relocateBrief, briefText, addItem as briefAddItem, setFixed as briefSetFixed, removeItem as briefRemoveItem, describeLines, sanitizeBrief } from './brief/brief.js';
 
 const $ = (s) => document.querySelector(s);
@@ -209,6 +211,8 @@ function simulate({ time = 'end' } = {}) {
   state.rotAxes = { a: result.moves.some((m) => m.rot && (m.rot[0] || m.rot[1])), b: result.moves.some((m) => m.rot && (m.rot[2] || m.rot[3])) };
   state.issues = sortIssues(out.issues);
   viewer.load(result, out.sim, { engine: out.engine, X: out.X, fixtures: out.fixtures, rotReverse: !!out.setup.rotary?.reverse, workFromPart: out.workFromPart });
+  viewer.clearFocus();
+  if (state.deviationOn) applyDeviation();
   scheduleCompare();
   editor.setIssues(state.issues);
   renderOps();
@@ -583,6 +587,35 @@ function renderVersions() {
   sel.innerHTML = '<option value="">Versions</option>' + state.versions.filter((v) => v.opId === opId).reverse()
     .map((v) => `<option value="${v.id}">${v.source === 'claude' ? '✦ ' : ''}${escapeHtml(v.title).slice(0, 40)} · ${v.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</option>`).join('');
 }
+// Iteration 2: the history as a list with what each version changed
+function openVersions() {
+  const opId = activeOp()?.id;
+  const list = state.versions.filter((v) => v.opId === opId);
+  const el = $('#versionList');
+  if (!list.length) { el.innerHTML = '<div class="muted">No versions yet.</div>'; $('#versionsDlg').showModal(); return; }
+  el.innerHTML = list.map((v, i) => {
+    const prev = list[i - 1];
+    const ops = prev ? diffLines(prev.text.split('\n'), v.text.split('\n')) : null;
+    const c = ops ? diffCounts(ops) : null;
+    const cur = v.text === editor.value;
+    return `<div class="version-row${cur ? ' current' : ''}" data-v="${v.id}"><div class="version-main"><b>${v.source === 'claude' ? '✦ ' : ''}${escapeHtml(v.title)}</b><div class="muted">${v.at.toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })} · ${v.text.split('\n').length} lines${c ? ` · <span class="add">+${c.added}</span> <span class="del">−${c.removed}</span> vs the one before` : ' · first version'}${cur ? ' · in the editor' : ''}</div></div><div class="version-acts">${c ? '<button type="button" class="btn small ghost" data-act="diff">diff</button>' : ''}${cur ? '' : '<button type="button" class="btn small" data-act="restore">Restore</button>'}</div><pre class="report diff" hidden></pre></div>`;
+  }).reverse().join('');
+  el.onclick = (e) => {
+    const b = e.target.closest('button[data-act]');
+    if (!b) return;
+    const row = b.closest('.version-row');
+    const v = state.versions.find((x) => x.id === Number(row.dataset.v));
+    if (b.dataset.act === 'restore') { restoreVersion(v.id); $('#versionsDlg').close(); return; }
+    const pre = row.querySelector('.diff');
+    if (!pre.hidden) { pre.hidden = true; return; }
+    const idx = list.indexOf(v);
+    const ops = diffLines(list[idx - 1].text.split('\n'), v.text.split('\n'));
+    pre.innerHTML = unifiedDiff(ops).split('\n').map((l) => `<span class="${l[0] === '+' ? 'add' : l[0] === '-' ? 'del' : l[0] === '@' ? 'hunk' : ''}">${escapeHtml(l)}</span>`).join('\n');
+    pre.hidden = false;
+  };
+  $('#versionsDlg').showModal();
+}
+$('#btnVersions').onclick = openVersions;
 $('#versionSelect').onchange = (e) => {
   const v = state.versions.find((x) => x.id === Number(e.target.value));
   if (v) { setProgram(v.text, { source: 'restore' }); toast(`Restored “${v.title}”`); }
@@ -784,7 +817,8 @@ function renderChecks() {
     const ln = m.callLine === null || m.callLine === undefined ? '—' : `L${m.callLine + 1}`;
     const icon = m.level === 'error' ? '●' : m.level === 'warning' ? '▲' : 'ℹ';
     const code = m.callLine !== null && m.callLine !== undefined && lines[m.callLine] ? `<div class="muted"><code>${escapeHtml(lines[m.callLine].trim().slice(0, 70))}</code></div>` : '';
-    return `<div class="issue" data-i="${i}"><span class="lvl ${m.level}">${icon}</span><span class="ln">${ln}</span><div>${escapeHtml(m.text)}${m.file && m.file !== 'main' ? ` <span class="muted">(${escapeHtml(m.file)})</span>` : ''}${code}</div></div>`;
+    const at = it2() && m.at ? '<span class="at" title="Shown in the 3D view when clicked">◎</span>' : '';
+    return `<div class="issue${m.at ? ' has-at' : ''}" data-i="${i}"><span class="lvl ${m.level}">${icon}</span><span class="ln">${ln}</span><div>${escapeHtml(m.text)}${at}${m.file && m.file !== 'main' ? ` <span class="muted">(${escapeHtml(m.file)})</span>` : ''}${code}</div></div>`;
   }).join('') + (counts().error + counts().warning ? '<button class="btn small ask-fix" id="btnAskFix">Ask Claude to fix these</button>' : '');
   list.onclick = (e) => {
     if (e.target.id === 'btnAskFix') { askFix(); return; }
@@ -792,6 +826,8 @@ function renderChecks() {
     if (!it) return;
     const m = state.issues[Number(it.dataset.i)];
     if (m.callLine !== null && m.callLine !== undefined) { editor.goToLine(m.callLine); jumpToLine(m.callLine); }
+    if (it2() && m.at) { viewer.showFocus({ point: m.at }); viewer.flyTo(null, m.at); }
+    else if (it2()) viewer.clearFocus();
   };
 }
 
@@ -821,6 +857,7 @@ function renderEngagement() {
   const used = eng ? Object.values(eng.perTool).filter((T) => T.cut > 0) : [];
   const lathe = eng?.machine === 'lathe';
   $('#engStrip').hidden = !used.length;
+  document.body.classList.toggle('has-strip', used.length > 0);
   // Check tab: one row per tool, tap = go to its heaviest line
   $('#engTable').innerHTML = !eng || !Object.keys(eng.perTool).length ? '' : '<h4>Tool engagement</h4>' + Object.values(eng.perTool).sort((a, b) => a.tool - b.tool).map((T) => {
     const tool = tools[T.tool], D = tool?.diameter || 0;
@@ -899,6 +936,11 @@ function drawEngChart() {
 
 function renderLegend() {
   const r = state.result;
+  if (state.deviationOn && it2() && state.target && state.machine === 'mill') {
+    const tol = state.out?.compareTol || 0.1;
+    $('#legend').innerHTML = `<span><span class="sw" style="background:#6fa8e8"></span>material left (beyond ±${tol.toFixed(2)})</span><span><span class="sw" style="background:#f06a6a"></span>gouge</span><span><span class="sw" style="background:#c2ccc7"></span>within tolerance</span>`;
+    return;
+  }
   const used = r.usedTools.map((n) => r.tools[n]).filter(Boolean);
   $('#legend').innerHTML = used.map((t) => `<span><span class="sw" style="background:${t.color}"></span>T${t.num} ${escapeHtml(t.type)}${t.diameter && state.machine === 'mill' ? ' Ø' + t.diameter : ''}</span>`).join('') +
     '<span><span class="sw" style="background:repeating-linear-gradient(90deg,#ff6b6b 0 3px,transparent 3px 5px)"></span>rapid</span>';
@@ -1221,6 +1263,8 @@ function rebuildTarget() {
   state.target = state.model ? buildTarget(state.model, state.placement) : null;
   viewer.setTarget(state.target ? state.target.tris : null);
   $('#targetChip').hidden = !state.target;
+  $('#deviationChip').hidden = !state.target;
+  if (!state.target && state.deviationOn) { state.deviationOn = false; $('#deviationToggle').checked = false; viewer.setDeviation(null); }
   renderTarget();
   scheduleCompare();
 }
@@ -1313,8 +1357,37 @@ function scheduleCompare() {
     el.hidden = false;
     el.className = `check-target ${gouge ? 'err' : ok ? 'ok' : 'warn'}`;
     el.innerHTML = `<b>vs target model</b> — ${escapeHtml(txt.split('\n').slice(0, 4).join(' · ').replace(/\s+/g, ' '))}`;
+    renderRegions();
+    if (state.deviationOn) applyDeviation();
   }, 400);
 }
+
+// Iteration 2: the comparison's regions as clickable rows, and the part painted by its deviation
+function renderRegions() {
+  const el = $('#regions');
+  const regs = it2() ? state.out?.compareRegions || [] : [];
+  const fx = (v) => (Math.abs(v) < 0.005 ? 0 : v).toFixed(2);
+  el.innerHTML = regs.slice(0, 12).map((r, i) => `<div class="region ${r.kind}" data-i="${i}" title="Click to look at it"><span class="sw"></span><span>${r.kind === 'excess' ? 'material left' : 'gouge'} · X${fx(r.min[0])}..${fx(r.max[0])} Y${fx(r.min[1])}..${fx(r.max[1])} Z${fx(r.min[2])}..${fx(r.max[2])}</span><span class="v">${fx(r.vol)} mm³${r.deep ? ` · ${r.clipped ? '>' : ''}${fx(r.deep)}` : ''}</span></div>`).join('');
+  el.onclick = (e) => {
+    const row = e.target.closest('.region');
+    if (!row) return;
+    const r = regs[Number(row.dataset.i)];
+    viewer.showFocus({ box: r });
+    viewer.flyTo(r);
+  };
+}
+function applyDeviation() {
+  const out = state.out, t = state.target;
+  if (!state.deviationOn || !out || !t?.sim || out.engine === 'lathe') { viewer.setDeviation(null); return; }
+  const inv = invX(out.workFromPart);
+  const sim = t.sim;
+  viewer.setDeviation((p) => sim.sample(...appX(inv, p)), out.compareTol || 0.1);
+}
+$('#deviationToggle').onchange = (e) => {
+  state.deviationOn = e.target.checked;
+  applyDeviation();
+  renderLegend();
+};
 
 // ------------------------------------------------------------------ attachments (drawings, models)
 const IMG_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
@@ -1426,6 +1499,11 @@ function buildReport(out = state.out, { brief = false } = {}) {
     if (eng) o.push(eng);
     const craft = out.issues.filter((m) => m.source === 'craft');
     if (craft.length) o.push(`Craft checks on the engagement flagged ${craft.length} thing${craft.length > 1 ? 's' : ''} (centred face mill, rubbing, plunging face mill, ball tip on a floor, thin lathe cuts): see the issues below and fix them like any other.`);
+    if (it2()) {
+      const pr = probeReport(r);
+      if (pr) o.push(pr);
+      if (out.datum) o.push(out.datum);
+    }
     o.push(partSummary(out));
     if (state.target) o.push(compareTarget(out, state.target));
   }
@@ -1484,11 +1562,17 @@ function buildContext() {
     o.push(targetSummary(state.target, outs[state.active] || state.out));
     o.push('</target_model>');
   }
-  // the other operations: program + short report (the active one comes last, in full)
+  // the other operations: program + short report (the active one comes last, in full).
+  // Iteration 2: their brief and a short report only; read_program fetches a program on demand.
   state.ops.forEach((op, i) => {
     if (i === state.active) return;
     const lines = op.text.split('\n');
     if (it2() && op.brief?.items?.length) o.push(briefText(relocateBrief(op.brief, op.text), names[i]));
+    if (it2()) {
+      o.push(`${names[i]} program (${op.fileName}, ${op.machine}, ${lines.length} lines): not shown — call read_program("${names[i]}") to see it.`);
+      if (outs[i]) o.push(buildReport(outs[i], { brief: true }));
+      return;
+    }
     o.push(`${names[i]} program (${op.fileName}, ${op.machine}, ${lines.length} lines):`);
     o.push('<program>');
     o.push(lines.length > 400 ? `${lines.slice(0, 300).join('\n')}\n… (${lines.length - 300} more lines)` : op.text);
@@ -1596,6 +1680,18 @@ function renderBrief() {
   $('#briefNewText').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } });
 }
 
+// the standard touch probe (Iteration 2): T20 in the mill library unless a probe is there already
+function ensureProbeTool() {
+  const lib = state.library.mill;
+  if (Object.values(lib).some((t) => t.type === 'probe')) return;
+  let n = 20;
+  while (lib[n]) n++;
+  lib[n] = { num: n, type: 'probe', diameter: 6, stylusLength: 50, shankDiameter: 4.5, holderDiameter: 40, name: 'Touch probe Ø6' };
+  store.set('lib.mill', lib);
+  toast(`Added T${n} touch probe (Ø6 ball, 50 mm stylus, Ø40 body) to the mill tools`, 5000);
+  if (state.machine === 'mill') simulate({ time: 'keep' }); else renderTools();
+}
+
 // ------------------------------------------------------------------ measuring in the view (Iteration 2)
 function measureCtx() {
   const out = state.out;
@@ -1682,7 +1778,13 @@ chatView.onBusy = (b) => {
   }
 };
 chatView.onUsage = (u) => {
-  $('#claudeStatus').title = `This session: ${(u.input / 1000).toFixed(1)}k input (+${(u.cacheRead / 1000).toFixed(1)}k cached) · ${(u.output / 1000).toFixed(1)}k output tokens`;
+  const price = serverStatus?.models?.find((m) => m.id === state.settings.model)?.price;
+  const cost = price ? (u.input * price.in + u.output * price.out + u.cacheRead * price.cacheRead + u.cacheWrite * price.in * 1.25) / 1e6 : null;
+  state.cost = cost;
+  $('#claudeStatus').title = `This session: ${(u.input / 1000).toFixed(1)}k input (+${(u.cacheRead / 1000).toFixed(1)}k cached, ${(u.cacheWrite / 1000).toFixed(1)}k written to cache) · ${(u.output / 1000).toFixed(1)}k output tokens${cost !== null ? ` ≈ $${cost.toFixed(2)} at ${state.settings.model} prices` : ''}`;
+  const c = $('#claudeCost');
+  c.hidden = !(it2() && cost !== null && cost > 0);
+  c.textContent = cost !== null ? `$${cost < 0.1 ? cost.toFixed(3) : cost.toFixed(2)}` : '';
 };
 
 // the operation a streamed program is shown in, with its program from before (put back if
@@ -1812,6 +1914,24 @@ const agent = new ClaudeAgent({
       const head = `Applied ${n} edit${n > 1 ? 's' : ''}: +${r.added} −${r.removed} line${r.added + r.removed === 1 ? '' : 's'}${r.changed.length ? ` (line${r.changed.length > 1 || r.changed[0][0] !== r.changed[0][1] ? 's' : ''} ${describeRanges(r.changed)})` : ''}.`;
       card?.done({ summary: { errors: c.error, warnings: c.warning, lines: r.text.split('\n').length, time: fmtTime(state.total), report, versionId: v.id, diff: { added: r.added, removed: r.removed, text: r.patch } } });
       return { content: `${head}\n${report}${briefNote ? `\n${briefNote}` : ''}` };
+    },
+    async read_program(input, card) {
+      syncEditorToOp();
+      const i = findOp(input.operation);
+      if (i < 0) {
+        const msg = `There is no operation called ${input.operation}. Operations: ${opNames(state.ops).join(', ')}.`;
+        card?.done({ error: msg });
+        return { content: msg, isError: true };
+      }
+      const outs = simulateAll();
+      state.outs = outs;
+      const op = state.ops[i], name = opNames(state.ops)[i];
+      const o = [];
+      if (op.brief?.items?.length) o.push(briefText(relocateBrief(op.brief, op.text), name));
+      o.push(`${name} program (${op.fileName}, ${op.machine}, ${op.text.split('\n').length} lines):`, '<program>', op.text, '</program>');
+      if (outs[i]) o.push(`Latest simulation of ${name}:`, buildReport(outs[i]));
+      card?.done({ title: name });
+      return { content: o.join('\n') };
     },
     async inspect_part(input, card) {
       syncEditorToOp();
@@ -1964,6 +2084,7 @@ $('#settingsDlg').addEventListener('close', () => {
   if (wasIt2 !== s.iteration2) {
     // the tool list and the prompt change: the conversation starts over
     applyIteration2();
+    if (s.iteration2) ensureProbeTool();
     if (!s.iteration2 && $('.tab[data-tab="brief"]').classList.contains('active')) showTab('check');
     if (s.iteration2) renderBrief(); else { editor.setBriefMarks([]); if (state.measure.on) setMeasure(false); }
     agent.reset();
@@ -1997,8 +2118,14 @@ async function refreshStatus() {
     sel.value = state.settings.model;
     if (!sel.value) sel.value = serverStatus.models[0].id;
   }
+  renderModelLabel();
 }
-$('#modelSelect').onchange = (e) => { state.settings.model = e.target.value; saveSettings(); };
+$('#modelSelect').onchange = (e) => { state.settings.model = e.target.value; saveSettings(); renderModelLabel(); };
+function renderModelLabel() {
+  const m = serverStatus?.models?.find((x) => x.id === state.settings.model);
+  $('#modelLabel').textContent = m ? m.label.replace(/^Claude /, '') : state.settings.model.replace(/^claude-/, '');
+}
+$('#modelLabel').onclick = openSettings;
 $('#effortSelect').value = state.settings.effort;
 $('#effortSelect').onchange = (e) => { state.settings.effort = e.target.value; saveSettings(); };
 
@@ -2017,6 +2144,7 @@ document.addEventListener('keydown', (e) => {
 
 // ------------------------------------------------------------------ boot
 renderSubs();
+if (it2()) ensureProbeTool();
 const projects = initProjects({ enabled: !!serverStore, state, store, idb, syncEditorToOp, loadJob, toast, escapeHtml });
 refreshStatus();
 if (state.ops.some((op) => op.text.trim())) {

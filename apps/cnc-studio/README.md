@@ -72,6 +72,26 @@ see [DEPLOY.md](DEPLOY.md).
   API key field, *Ask Claude to fix these*) — CNC Studio is then a plain simulator. Separately, ☰ (top right) or × in
   the panel's tab row hides the whole side panel (Check, Tools, Stock and the chat) so the 3D view gets the room; ☰
   brings it back. Both choices are remembered.
+- **Iteration 2** (Settings → *Iteration 2*, off by default; turning it on or off starts a new chat). With it on:
+  - Claude edits programs in place with `edit_program` (exact replacements, all or nothing, the same report as a
+    write); the changed lines flash in the editor and the chat card shows a diff. Only the active operation's
+    program is in the context; `read_program` fetches another one.
+  - Every operation carries a **brief** (Brief tab): what you, the drawing or the model require and what Claude
+    chose on its own, each tied to program lines (gutter marks, hover to highlight). Locked items are not changed
+    without asking; Claude must never take its own items for requirements. It is saved with the job and the
+    projects, never exported.
+  - **Craft checks** on the engagement: a centred face mill, an edge rubbing on a chip too thin (`Z<n>` in a
+    TOOL comment gives the flute count), a plunging face mill, a ball tip on a floor, thin lathe cuts.
+  - A **touch probe** (`T20 probe Ø6`, or `(TOOL T20 PROBE D6 L50 SD4.5 HD40 …)`): `G31` stops where the ball
+    touches the material as it is at that line, `#5061–#5063`/`#5090`/`#5098` hold the result, the stylus or body
+    hitting anything is an error, and Renishaw-style cycles `G65 P9810/9811/9812/9814` are built in (they update
+    work offsets with `S`). The report says per operation whether the work zero can be set with the probe (the
+    datum check). `(FIXTURE ERROR X.. Y.. Z..)` mislocates the part so a routine has something to find.
+  - **Measure** (📏, `M`): click the part for a point (snapped to hole centres, walls, corners, floors, lathe
+    shoulders) with its deviation from the model, two points for a distance.
+  - **Deviation** view with the target: blue = material left, red = gouge; the comparison's regions are rows in
+    Check that fly the camera there; issues with a position show a marker; a gutter click opens the message under
+    the line; Versions is a history with diffs; the session's cost shows in the status pill.
 - **Export for the machine.** *Export* builds one NC program with standard content only: CNC Studio's directives
   (STOCK, TOOL, SETUP, ORIENT, ZERO, VISE, CHUCK, ROTARY, `$Set…`) are removed, comments become plain upper-case ASCII,
   M98 subprograms are built in (appended as O programs when they jump), and several operations of one machine are joined

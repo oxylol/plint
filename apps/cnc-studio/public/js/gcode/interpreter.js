@@ -46,6 +46,13 @@ export function interpret(source, opts = {}) {
 class Interpreter {
   constructor(source, opts) {
     this.opts = opts;
+    // touch probe (Iteration 2): G31 skip moves ask an oracle where the material is
+    this.skipNext = false;
+    this.skipState = null;
+    this.probes = [];
+    this.probeCycles = [];
+    this.oracle = null;
+    this.macroStack = [];
     this.machine = opts.machine;
     this.lathe = this.machine === 'lathe';
     this.settings = { ...DEFAULT_SETTINGS, ...(opts.settings || {}) };
@@ -236,6 +243,8 @@ class Interpreter {
       usedTools,
       stock,
       lineMap,
+      probes: this.probes,
+      probeCycles: this.probeCycles,
       totalTime: this.time,
       home: this.home,
       stats: {
@@ -264,6 +273,10 @@ class Interpreter {
     if (n >= 1 && n <= 33) return this.locals[this.locals.length - 1].get(n) ?? null;
     if (n >= 5001 && n <= 5003) return this.toProg(this.pos)[n - 5001];
     if (n >= 5021 && n <= 5023) return this.pos[n - 5021];
+    if (n >= 5061 && n <= 5063) return this.skipState ? this.toProg(this.skipState.pos)[n - 5061] : null; // skip position
+    if (n === 5090) return this.skipState?.hit === 'ball' ? 1 : 0; // skip signal came
+    if (n === 5098) { const t = this.tools[this.tool]; return t?.type === 'probe' ? t.diameter / 2 : 0; } // stylus ball radius
+    if (n >= 5221 && n <= 5343) { const g = 54 + Math.floor((n - 5221) / 20), ax = (n - 5221) % 20; if (ax < 3 && this.offsets[g]) return this.offsets[g][ax]; } // work offsets
     if (n === 4001) return this.motion;
     if (n === 4120) return this.tool;
     if (n === 4109) return this.F;
@@ -390,11 +403,12 @@ class Interpreter {
       this.stats.warnedFeed = true;
       this.msg('error', 'Feed move without a feed rate (F) — programme F before G01/G02/G03', b?.line, b?.file, this.curCallLine);
     }
-    if (this.spindle === 'off' && !this.stats.warnedSpindle) {
+    const probing = this.tools[this.tool]?.type === 'probe'; // a probe feeds with the spindle stopped
+    if (this.spindle === 'off' && !this.stats.warnedSpindle && !probing) {
       this.stats.warnedSpindle = true;
       this.msg('warning', 'Feed move with the spindle stopped — M03/M04 missing before cutting', b?.line, b?.file, this.curCallLine);
     }
-    if (!this.S && !this.stats.warnedS) {
+    if (!this.S && !this.stats.warnedS && !probing) {
       this.stats.warnedS = true;
       this.msg('warning', 'No spindle speed (S) programmed before cutting', b?.line, b?.file, this.curCallLine);
     }
@@ -478,6 +492,7 @@ class Interpreter {
       arc: prim.type === 'arc' ? (prim.sweep < 0 ? 'cw' : 'ccw') : null,
       rot: m.rot || null,
       rotOnly,
+      skip: !!m.skip, probe: m.probe || null,
     });
   }
 
@@ -500,6 +515,7 @@ class Interpreter {
   }
 
   execBlock(b, f, frames) {
+    this.skipNext = false;
     const { G, M, w, corner } = this.collectWords(b);
     let motionCmd = null;   // G0/1/2/3/32 in this block
     let cycleCmd = null;    // canned cycle code in this block
@@ -519,7 +535,7 @@ class Interpreter {
         case 20: this.units = 25.4; break;
         case 21: this.units = 1; break;
         case 28: case 30: nonModal = 28; break;
-        case 31: motionCmd = 1; break;
+        case 31: motionCmd = 1; if (!this.lathe) this.skipNext = true; break;
         case 40: compCmd = 0; break;
         case 41: compCmd = 1; break;
         case 42: compCmd = -1; break;
@@ -752,6 +768,7 @@ class Interpreter {
 
   doMotion(b, w, corner) {
     const target = this.toMach(this.targetFrom(w));
+    if (this.skipNext) { this.skipNext = false; this.skipMove(b, target); return; }
     const opt = this.compOptions(target);
     if (corner) opt.corner = corner;
     let mode = this.motion;
@@ -799,6 +816,38 @@ class Interpreter {
     this.pos = bpt.slice();
     if (!prim) { this.emit({ type: 'line', kind: 'feed', a, b: bpt, meta: this.meta('feed') }, opt); return; }
     this.emit(prim, opt);
+  }
+
+  // G31: feed toward the target until the probe's ball touches material (the oracle, fed with the
+  // moves so far, says where), then stop there. #5061–#5063 hold the ball centre, #5090 the signal.
+  skipMove(b, target) {
+    this.checkFeedMove();
+    this.flushPath();
+    const a = this.pos.slice();
+    const tool = this.tools[this.tool];
+    const rec = { line: b.line, file: b.file, callLine: this.curCallLine, tool: this.tool, from: this.toProg(a), hit: null, point: null, radius: tool?.type === 'probe' ? tool.diameter / 2 : 0 };
+    let end = target.slice();
+    if (this.opts.makeProbeOracle) {
+      if (!tool || tool.type !== 'probe') {
+        this.warnOnceGlobal('g31tool', 'warning', `G31 with T${this.tool} (${tool ? tool.type : 'no tool'}) — only a probe tool stops at the material; this move runs to its end`, b);
+      } else {
+        this.oracle ||= this.opts.makeProbeOracle();
+        const r = this.oracle.touch(this, a, target, tool);
+        if (r.error) { rec.error = r.error; this.warnOnceGlobal('g31stock', 'warning', `G31 not simulated: ${r.error}`, b); }
+        else {
+          end = r.point.slice();
+          rec.hit = r.hit;
+          if (!r.hit && this.macroStack[this.macroStack.length - 1] !== 9810) this.msg('info', 'G31: no skip signal — the probe reached the end of the move without touching anything', b.line, b.file, this.curCallLine);
+        }
+      }
+    }
+    rec.point = this.toProg(end);
+    this.probes.push(rec);
+    const prim = { type: 'line', kind: 'feed', a, b: end, meta: this.meta('feed', { skip: true, probe: rec.hit }) };
+    this.pos = end.slice();
+    this.emit(prim, {});
+    this.flushPath();
+    this.skipState = { pos: end.slice(), hit: rec.hit };
   }
 
   // ------------------------------------------------------------------ mill canned cycles
@@ -922,12 +971,20 @@ class Interpreter {
         return; // bare "G90" in a safety line
       }
     }
+    // G00–G03 end a modal box or thread cycle (they share modal group 01)
+    if (this.latheCycle && motionCmd !== null && motionCmd <= 3) this.latheCycle = null;
     if (this.latheCycle && motionCmd === null) {
       if (!this.hasAxis(w)) return;
       if (w.R !== undefined) this.latheCycle.R = w.R * this.units;
       this.flushPath();
       const start = this.pos.slice();
-      const target = this.toMach(this.targetFrom(w));
+      // the cycle is modal: a pass that names only X (or only Z) repeats the other axis of the pass before
+      const lc = this.latheCycle;
+      const prog = this.targetFrom(w);
+      if (w.X === undefined && w.U === undefined && lc.x !== undefined) prog[0] = lc.x;
+      if (w.Z === undefined && w.W === undefined && lc.z !== undefined) prog[2] = lc.z;
+      lc.x = prog[0]; lc.z = prog[2];
+      const target = this.toMach(prog);
       const api = this.cycleApi();
       if (this.latheCycle.code === 92) latheThreadCycle(api, start, target, this.latheCycle.R);
       else latheBoxCycle(api, this.latheCycle.code, start, target, this.latheCycle.R);
@@ -1190,8 +1247,13 @@ class Interpreter {
     if (!target) { this.msg('error', `G65 P${num}: macro program not found`, b.line, b.file, this.curCallLine); return; }
     const loc = new Map();
     for (const [letter, v] of Object.entries(w)) if (ARG_VARS[letter] && letter !== 'P' && letter !== 'L') loc.set(ARG_VARS[letter], v);
+    // which axes the call named (a vacant and a zero argument look alike in Macro B): #27 X, #28 Y, #29 Z
+    loc.set(27, w.X !== undefined ? 1 : 0);
+    loc.set(28, w.Y !== undefined ? 1 : 0);
+    loc.set(29, w.Z !== undefined ? 1 : 0);
     this.locals.push(loc);
-    frames.push({ file: target.file, pc: target.idx, start: target.idx, repeat: Math.max(1, Math.round(w.L ?? 1)), callLine: this.curCallLine, isMain: false, macro: true });
+    this.macroStack.push(num);
+    frames.push({ file: target.file, pc: target.idx, start: target.idx, repeat: Math.max(1, Math.round(w.L ?? 1)), callLine: this.curCallLine, isMain: false, macro: true, num });
   }
 
   returnFromSub(frames, P) {
@@ -1207,7 +1269,17 @@ class Interpreter {
     }
     if (f.repeat > 1) { f.repeat--; f.pc = f.start; return; }
     frames.pop();
-    if (f.macro) this.locals.pop();
+    if (f.macro) {
+      const loc = this.locals[this.locals.length - 1];
+      if (f.num >= 9811 && f.num <= 9814) {
+        const vars = {};
+        for (const n of [135, 136, 137, 138, 139, 140, 141, 142]) vars[n] = this.vars.get(n) ?? null;
+        const S = loc.get(19);
+        this.probeCycles.push({ num: f.num, callLine: f.callLine, axes: { x: loc.get(27) === 1, y: loc.get(28) === 1, z: loc.get(29) === 1 }, vars, offset: S > 0 ? `G${53 + Math.round(S)}` : null });
+      }
+      this.locals.pop();
+      this.macroStack.pop();
+    }
     if (P !== undefined) {
       const caller = frames[frames.length - 1];
       const idx = caller.file.labels.get(Math.round(P));

@@ -31,11 +31,12 @@ function authorized(req) {
   return timingSafeEqual(digest(given), digest(`${APP_USER}:${APP_PASSWORD}`));
 }
 
+// price: US$ per million tokens — input, output, cache read (cache writes cost 1.25 × input)
 export const MODELS = [
-  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', fallbacks: true },
-  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', fallbacks: true },
-  { id: 'claude-fable-5-1', label: 'Claude Fable 5.1', fallbacks: true },
-  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', fallbacks: false }, // no server-side fallback for Haiku
+  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', fallbacks: true, price: { in: 4, out: 20, cacheRead: 0.2 } },
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', fallbacks: true, price: { in: 2, out: 10, cacheRead: 0.2 } },
+  { id: 'claude-fable-5-1', label: 'Claude Fable 5.1', fallbacks: true, price: { in: 10, out: 50, cacheRead: 0.25 } },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', fallbacks: false, price: { in: 0.1, out: 0.5, cacheRead: 0.01 } }, // no server-side fallback for Haiku
 ];
 const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 
@@ -154,9 +155,15 @@ const BRIEF_SCHEMA = {
   required: ['items'],
 };
 const withBrief = (tool) => ({ ...tool, input_schema: { ...tool.input_schema, properties: { ...tool.input_schema.properties, brief: BRIEF_SCHEMA } } });
+// only the active operation's program is in the context: the others are read on demand
+const READ_TOOL = {
+  name: 'read_program',
+  description: 'Return the full program of another operation of the job (its text, its brief and its latest simulation report). The context only carries the active operation\'s program; read another one before editing it or when its details matter.',
+  input_schema: { type: 'object', properties: { operation: { type: 'string', description: 'Operation name, e.g. "OP10".' } }, required: ['operation'] },
+};
 export function toolsFor(features) {
   if (!features?.iteration2) return TOOLS;
-  return [withBrief(TOOLS[0]), withBrief(EDIT_TOOL), ...TOOLS.slice(1)];
+  return [withBrief(TOOLS[0]), withBrief(EDIT_TOOL), READ_TOOL, ...TOOLS.slice(1)];
 }
 export function systemPromptFor(features) {
   const base = readFileSync(join(ROOT, 'prompts', 'system.md'), 'utf8');
@@ -641,7 +648,7 @@ const server = http.createServer(async (req, res) => {
         ok: true,
         mock: MOCK,
         serverKey: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
-        models: MODELS.map(({ id, label }) => ({ id, label })),
+        models: MODELS.map(({ id, label, price }) => ({ id, label, price })),
         efforts: EFFORTS,
       }));
       return;

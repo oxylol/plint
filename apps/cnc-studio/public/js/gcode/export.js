@@ -15,6 +15,7 @@ const DIRECTIVES = [
   /^\$/,
   /^TOOL\s+T\s*\d+/,
   /^(SETUP|OPERATION)\s*[:=]?\s*\S/,
+  /^FIXTURE\s+ERROR\b/,
   /^OP\s*\d+$/,
   /^ORIENT(ATION)?\s+/,
   /^ZERO\s+(SAME|TOP|FACE|PART)\b/,
@@ -203,7 +204,8 @@ function verifyOp(op, opts) {
   const io = opts.interpOptions(op.machine);
   const radius = /\$SETRADIUSPRG\s*\(\s*1|\(\s*RADIUS\s+PROGRAMMING\s*\)/i.test(op.text) && !/\(\s*DIAMETER\s+PROGRAMMING\s*\)/i.test(op.text);
   const single = buildJob({ ...opts, ops: [op], toolList: false }).text;
-  const a = op.out?.result || interpret(op.text, io);
+  // a job result may hold probe moves cut short by the simulated skip signal: compare plain interpretations
+  const a = op.out?.result && !op.out.result.probes?.length ? op.out.result : interpret(op.text, io);
   // same tools and stock as the original (home height comes from the stock), nothing else
   const b = interpret(single, { ...io, toolLibrary: a.tools, stockOverride: a.stock, subprograms: [], settings: { ...io.settings, latheRadiusMode: io.settings?.latheRadiusMode || radius } });
   const ma = a.moves.filter((m) => m.kind === 'feed' || m.kind === 'rapid'), mb = b.moves.filter((m) => m.kind === 'feed' || m.kind === 'rapid');
