@@ -37,7 +37,7 @@ export class Editor {
       mode: 'gcode',
       lineNumbers: true,
       styleActiveLine: true,
-      gutters: ['cm-issues', 'CodeMirror-linenumbers'],
+      gutters: ['cm-brief', 'cm-issues', 'CodeMirror-linenumbers'],
       indentUnit: 2,
       tabSize: 2,
       lineWrapping: false,
@@ -125,6 +125,26 @@ export class Editor {
       const top = this.cm.heightAtLine(line, 'local');
       if (top < info.top + 20 || top > info.top + info.clientHeight - 40) this.cm.scrollTo(null, top - info.clientHeight / 2);
     }
+  }
+
+  // the brief's lines: a bar in the gutter per line, locked items in the accent colour
+  setBriefMarks(marks) {
+    this.cm.clearGutter('cm-brief');
+    for (const m of marks || []) {
+      if (m.line < 0 || m.line >= this.cm.lineCount()) continue;
+      const el = document.createElement('div');
+      el.className = `cm-brief-mark ${m.fixed ? 'fixed' : 'free'}`;
+      el.title = m.title;
+      this.cm.setGutterMarker(m.line, 'cm-brief', el);
+    }
+  }
+
+  // highlight the lines of a brief item while it is hovered (ranges: 1-based inclusive); [] clears
+  highlightLines(ranges) {
+    const cm = this.cm;
+    for (const h of this.hlHandles || []) cm.removeLineClass(h, 'background', 'cm-brief-hl');
+    this.hlHandles = [];
+    for (const [a, b] of ranges || []) for (let ln = a - 1; ln < b && ln < cm.lineCount(); ln++) if (ln >= 0) this.hlHandles.push(cm.addLineClass(ln, 'background', 'cm-brief-hl'));
   }
 
   // lines Claude just changed light up and fade (ranges: 1-based inclusive)

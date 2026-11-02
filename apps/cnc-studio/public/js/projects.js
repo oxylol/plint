@@ -12,7 +12,7 @@ export function initProjects({ enabled, state, store, idb, syncEditorToOp, loadJ
 
   const hash = (s) => { let h = 5381; for (let i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; return h.toString(36); };
   const modelSig = () => (state.model ? `${state.model.name}|${state.model.triCount}` : '');
-  const signature = () => hash(JSON.stringify([state.ops.map((o) => [o.fileName, o.machine, o.text]), state.subprograms.map((s) => [s.name, s.text]), modelSig(), state.placement]));
+  const signature = () => hash(JSON.stringify([state.ops.map((o) => [o.fileName, o.machine, o.text, o.brief?.items?.map((i) => [i.text, i.by, i.fixed]) || null]), state.subprograms.map((s) => [s.name, s.text]), modelSig(), state.placement]));
   const dirty = () => !!current && signature() !== current.sig;
   const when = (iso) => (iso ? new Date(iso).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '');
   const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -46,7 +46,7 @@ export function initProjects({ enabled, state, store, idb, syncEditorToOp, loadJ
     name = (name || '').trim();
     if (!name) { toast('Give the project a name'); return false; }
     syncEditorToOp();
-    const ops = state.ops.map(({ fileName, machine, text }) => ({ fileName, machine, text }));
+    const ops = state.ops.map(({ fileName, machine, text, brief }) => ({ fileName, machine, text, ...(brief?.items?.length ? { brief } : {}) }));
     if (!ops.some((o) => o.text.trim())) { toast('Nothing to save yet'); return false; }
     if (!id) id = newId();
     const m = state.model;

@@ -271,8 +271,32 @@ details.thinking.empty summary::before { visibility: hidden; }
 .report.diff .add { background: rgba(74,210,149,.1); }
 .report.diff .del { background: rgba(255,107,107,.1); }
 /* Iteration 2 (Settings): parts of the UI that only exist with the switch on */
-.it2-only { display: none !important; }
-body.it2 .it2-only { display: revert !important; }
+body:not(.it2) .it2-only { display: none !important; }
+
+/* ---------- the brief ---------- */
+.cm-brief { width: 5px; }
+.cm-brief-mark { width: 3px; height: 100%; margin-left: 1px; border-radius: 1px; background: var(--text-3); opacity: .7; cursor: help; }
+.cm-brief-mark.fixed { background: var(--accent); opacity: .9; }
+.cm-brief-hl { background: rgba(108,180,255,.14) !important; }
+.brief-list { display: flex; flex-direction: column; gap: 4px; }
+.brief-list h4 { margin: 8px 0 2px; font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; }
+.brief-row { display: grid; grid-template-columns: 24px 1fr auto; gap: 4px 8px; align-items: center; padding: 5px 8px; border-radius: 6px; background: var(--bg-2); border: 1px solid var(--line); font-size: 12px; }
+.brief-row:hover { border-color: var(--line-2); }
+.brief-row .lock { background: none; border: 0; cursor: pointer; font-size: 13px; padding: 0; color: var(--text-3); line-height: 1; }
+.brief-row.fixed .lock { color: var(--accent); }
+.brief-row .txt { color: var(--text); cursor: pointer; }
+.brief-row .meta { display: flex; gap: 6px; align-items: center; color: var(--text-3); font-size: 11px; white-space: nowrap; }
+.brief-row .src { padding: 0 5px; border-radius: 8px; background: var(--line); color: var(--text-2); font-size: 10px; font-weight: 600; }
+.brief-row .src.user { background: rgba(245,165,36,.18); color: var(--accent); }
+.brief-row .src.drawing { background: rgba(108,180,255,.16); color: var(--info); }
+.brief-row .src.model { background: rgba(88,214,164,.16); color: #58d6a4; }
+.brief-row .lines { font-family: var(--mono); cursor: pointer; }
+.brief-row .lines.moved { color: var(--warn); }
+.brief-row .x { background: none; border: 0; color: var(--text-3); cursor: pointer; font-size: 13px; padding: 0 2px; }
+.brief-row .x:hover { color: var(--text); }
+.brief-empty { color: var(--text-3); font-size: 12px; padding: 8px 2px; }
+.brief-add { display: flex; gap: 6px; margin-top: 10px; }
+.brief-add input { flex: 1; min-width: 0; height: 28px; padding: 0 9px; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: 6px; }
 .msg.notice { font-size: 12px; padding: 7px 10px; border-radius: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .msg.notice.error { background: rgba(255,107,107,.1); color: #ffb3b3; border: 1px solid rgba(255,107,107,.3); }
 .msg.notice.warning { background: rgba(242,193,78,.08); color: #f5d98b; border: 1px solid rgba(242,193,78,.25); }

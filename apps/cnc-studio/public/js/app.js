@@ -17,6 +17,7 @@ import { engagementReport, engagementAt } from './sim/engagement.js';
 import { exportJob } from './gcode/export.js';
 import { applyEdits } from './edit/edit.js';
 import { describeRanges } from './edit/diff.js';
+import { normalizeBrief, relocateBrief, briefText, addItem as briefAddItem, setFixed as briefSetFixed, removeItem as briefRemoveItem, describeLines, sanitizeBrief } from './brief/brief.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -66,7 +67,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 function loadOps() {
   const ops = store.get('ops', null);
   const legacy = store.get('program', '') || '';
-  if (Array.isArray(ops) && ops.length && !(ops.length === 1 && !ops[0].text && legacy.trim())) return ops.map((o) => ({ id: o.id || uid(), fileName: o.fileName || 'untitled.nc', machine: o.machine === 'lathe' ? 'lathe' : 'mill', text: o.text || '' }));
+  if (Array.isArray(ops) && ops.length && !(ops.length === 1 && !ops[0].text && legacy.trim())) return ops.map((o) => ({ id: o.id || uid(), fileName: o.fileName || 'untitled.nc', machine: o.machine === 'lathe' ? 'lathe' : 'mill', text: o.text || '', brief: sanitizeBrief(o.brief) }));
   return [{ id: uid(), fileName: store.get('fileName', 'untitled.nc'), machine: store.get('machine', 'mill'), text: store.get('program', '') || '' }];
 }
 const initialOps = loadOps();
@@ -215,6 +216,7 @@ function simulate({ time = 'end' } = {}) {
   if (guess) { hint.textContent = `Looks like a ${guess} program — switch`; hint.onclick = () => setMachine(guess); }
   renderBadges();
   renderChecks();
+  renderBrief();
   renderEngagement();
   renderTools();
   renderStock();
@@ -369,7 +371,7 @@ function detectMachine(text) {
 // ------------------------------------------------------------------ operations (job)
 function activeOp() { return state.ops[state.active]; }
 function saveOps() {
-  store.set('ops', state.ops.map(({ id, fileName, machine, text }) => ({ id, fileName, machine, text })));
+  store.set('ops', state.ops.map(({ id, fileName, machine, text, brief }) => ({ id, fileName, machine, text, ...(brief?.items?.length ? { brief } : {}) })));
   store.set('activeOp', state.active);
 }
 let saveOpsTimer = null;
@@ -415,9 +417,9 @@ function nextOpTemplate(machine) {
     : `%\nO${num} (${name} - SECOND SIDE)\n(SETUP ${name})\n(STOCK FROM ${prev})\n(ORIENT FLIP X)\n(ZERO TOP CENTER)\n(VISE GRIP 8)\nG90 G17 G21 G40 G49 G80 G94\nT1 M06\nS8000 M03\nG54 G00 X0. Y0.\nG43 Z25. H01 M08\n\nM30\n%\n`;
 }
 
-function addOp({ text = '', fileName, machine = state.machine } = {}) {
+function addOp({ text = '', fileName, machine = state.machine, brief = null } = {}) {
   syncEditorToOp();
-  const op = { id: uid(), fileName: fileName || `${newOpName().toLowerCase()}.nc`, machine, text };
+  const op = { id: uid(), fileName: fileName || `${newOpName().toLowerCase()}.nc`, machine, text, brief: brief ? structuredClone(brief) : null };
   state.ops.push(op);
   saveOps();
   selectOp(state.ops.length - 1);
@@ -489,7 +491,7 @@ $('#opMenu').onclick = (e) => {
     // the copy gets its own operation name so (STOCK FROM …) stays unambiguous
     const name = newOpName();
     const text = /\(\s*(?:SETUP|OPERATION)[^)]*\)/i.test(op.text) ? op.text.replace(/\(\s*(?:SETUP|OPERATION)[^)]*\)/i, `(SETUP ${name})`) : op.text;
-    addOp({ text, fileName: op.fileName.replace(/(\.[^.]+)?$/, '-copy$1'), machine: op.machine });
+    addOp({ text, fileName: op.fileName.replace(/(\.[^.]+)?$/, '-copy$1'), machine: op.machine, brief: op.brief });
   } else if (act === 'save-job') saveJob();
 };
 $('#opFileInput').onchange = async (e) => {
@@ -507,7 +509,7 @@ function jobFileName() {
 }
 function saveJob() {
   syncEditorToOp();
-  const job = { format: 'cnc-studio-job', version: 1, savedAt: new Date().toISOString(), ops: state.ops.map(({ fileName, machine, text }) => ({ fileName, machine, text })), subprograms: state.subprograms };
+  const job = { format: 'cnc-studio-job', version: 2, savedAt: new Date().toISOString(), ops: state.ops.map(({ fileName, machine, text, brief }) => ({ fileName, machine, text, ...(brief?.items?.length ? { brief } : {}) })), subprograms: state.subprograms };
   if (state.model) {
     const m = state.model;
     const bytes = new Uint8Array(m.tris.buffer, m.tris.byteOffset, m.tris.byteLength);
@@ -520,7 +522,7 @@ function saveJob() {
 function loadJob(job, name, { quiet = false } = {}) {
   if (!job || !Array.isArray(job.ops) || !job.ops.length) { toast('Not a CNC Studio job file'); return false; }
   pause();
-  state.ops = job.ops.map((o) => ({ id: uid(), fileName: o.fileName || 'untitled.nc', machine: o.machine === 'lathe' ? 'lathe' : 'mill', text: String(o.text || '') }));
+  state.ops = job.ops.map((o) => ({ id: uid(), fileName: o.fileName || 'untitled.nc', machine: o.machine === 'lathe' ? 'lathe' : 'mill', text: String(o.text || ''), brief: sanitizeBrief(o.brief) }));
   state.jobCache.clear();
   state.versions = [];
   // a job is complete in itself: its subprograms and model replace what was loaded before
@@ -604,6 +606,7 @@ $('#btnNew').onclick = () => {
   const tpl = state.machine === 'lathe'
     ? '%\nO0001 (NEW PROGRAM)\n(STOCK D40 L60)\nG18 G21 G40 G99\nG50 S3000\nT0101\nG96 S200 M03\nG00 X42. Z2. M08\n\nM30\n%\n'
     : '%\nO0001 (NEW PROGRAM)\n(STOCK X-50:50 Y-40:40 Z-20:0)\nG90 G17 G21 G40 G49 G80 G94\nT1 M06\nS8000 M03\nG54 G00 X0. Y0.\nG43 Z25. H01 M08\n\nM30\n%\n';
+  activeOp().brief = null;
   setProgram(tpl, { name: 'untitled.nc', title: 'New program' });
 };
 $('#btnOpen').onclick = () => $('#fileInput').click();
@@ -1479,6 +1482,7 @@ function buildContext() {
   state.ops.forEach((op, i) => {
     if (i === state.active) return;
     const lines = op.text.split('\n');
+    if (it2() && op.brief?.items?.length) o.push(briefText(relocateBrief(op.brief, op.text), names[i]));
     o.push(`${names[i]} program (${op.fileName}, ${op.machine}, ${lines.length} lines):`);
     o.push('<program>');
     o.push(lines.length > 400 ? `${lines.slice(0, 300).join('\n')}\n… (${lines.length - 300} more lines)` : op.text);
@@ -1493,6 +1497,10 @@ function buildContext() {
   }
   if (text.trim()) {
     const lines = text.split('\n');
+    if (it2()) {
+      const b = activeOp().brief;
+      o.push(b?.items?.length ? briefText(relocateBrief(b, text), names[state.active]) : `<brief op="${names[state.active]}">\n(empty — send one with your next write or edit)\n</brief>`);
+    }
     o.push(`${multi ? `Active operation ${names[state.active]}` : 'Current program'} in the editor (${state.fileName}, ${lines.length} lines):`);
     o.push('<program>');
     o.push(text);
@@ -1506,6 +1514,80 @@ function buildContext() {
   if (sel) o.push(`The user has selected lines ${sel.from + 1}–${sel.to + 1}:\n<selection>\n${sel.text}\n</selection>`);
   o.push('</simulator_state>');
   return o.join('\n');
+}
+
+// ------------------------------------------------------------------ the brief (Iteration 2)
+// Claude's `brief` input on a write or edit replaces the operation's brief; without one the stored
+// brief follows the new text. Returns the line for the tool result.
+function storeBrief(op, input, text) {
+  if (!it2()) return '';
+  if (input && typeof input === 'object') {
+    op.brief = normalizeBrief(input, text, op.brief);
+    saveOps();
+    renderBrief();
+    const n = op.brief.items.length, f = op.brief.items.filter((i) => i.fixed).length;
+    return `Brief of ${opName(state.ops.indexOf(op))} stored: ${n} item${n === 1 ? '' : 's'} (${f} fixed).`;
+  }
+  if (op.brief?.items?.length) { relocateBrief(op.brief, text); renderBrief(); return ''; }
+  return `No brief stored for ${opName(state.ops.indexOf(op))} yet — send \`brief\` with your next write or edit.`;
+}
+
+function renderBrief() {
+  if (!it2()) return;
+  const op = activeOp();
+  const b = op?.brief;
+  if (b?.items?.length) relocateBrief(b, editor.value);
+  const items = b?.items || [];
+  const cnt = $('#briefCount');
+  cnt.hidden = !items.length;
+  cnt.textContent = items.length;
+  const row = (it) => {
+    const live = it.ranges.filter((r) => r.from);
+    const ln = describeLines(it.ranges);
+    return `<div class="brief-row${it.fixed ? ' fixed' : ''}" data-id="${it.id}">
+      <button class="lock" title="${it.fixed ? 'Locked: Claude asks before changing this. Click to let it change it.' : 'Claude may change this. Click to lock it.'}">${it.fixed ? '🔒' : '🔓'}</button>
+      <span class="txt" title="${live.length ? 'Click to go to its lines' : ''}">${escapeHtml(it.text)}</span>
+      <span class="meta"><span class="src ${it.by}">${it.by}</span>${ln ? `<span class="lines${live.length ? '' : ' moved'}" title="${live.length ? 'Program lines' : 'The anchored lines were not found after an edit'}">${escapeHtml(ln.replace(/^lines /, 'L'))}</span>` : ''}<button class="x" title="Remove">✕</button></span>
+    </div>`;
+  };
+  const req = items.filter((i) => i.by !== 'claude'), own = items.filter((i) => i.by === 'claude');
+  $('#briefList').innerHTML = items.length
+    ? `${req.length ? `<h4>Required (user, drawing, model)</h4>${req.map(row).join('')}` : ''}${own.length ? `<h4>Claude's choices</h4>${own.map(row).join('')}` : ''}`
+    : '<div class="brief-empty">No brief yet. Claude fills it in with its next write or edit: what you asked for, what the drawing says, and what it decided itself. You can add requirements below.</div>';
+  const marks = [];
+  for (const it of items) for (const r of it.ranges) if (r.from) for (let ln = r.from; ln <= r.to; ln++) marks.push({ line: ln - 1, fixed: it.fixed, title: `${it.by}${it.fixed ? ', fixed' : ''}: ${it.text}` });
+  // one mark per line; a fixed item wins
+  const byLine = new Map();
+  for (const m of marks) { const p = byLine.get(m.line); if (!p) byLine.set(m.line, m); else { p.title += `\n${m.title}`; p.fixed = p.fixed || m.fixed; } }
+  editor.setBriefMarks([...byLine.values()]);
+}
+{
+  const list = $('#briefList');
+  const itemOf = (e) => { const row = e.target.closest('.brief-row'); return row ? activeOp().brief?.items?.find((i) => i.id === row.dataset.id) : null; };
+  list.addEventListener('mouseover', (e) => { const it = itemOf(e); if (it) editor.highlightLines(it.ranges.filter((r) => r.from).map((r) => [r.from, r.to])); });
+  list.addEventListener('mouseleave', () => editor.highlightLines([]));
+  list.addEventListener('click', (e) => {
+    const it = itemOf(e);
+    if (!it) return;
+    const b = activeOp().brief;
+    if (e.target.closest('.lock')) { briefSetFixed(b, it.id, !it.fixed); saveOps(); renderBrief(); return; }
+    if (e.target.closest('.x')) { briefRemoveItem(b, it.id); saveOps(); renderBrief(); editor.highlightLines([]); return; }
+    const first = it.ranges.find((r) => r.from);
+    if (first) { editor.goToLine(first.from - 1); jumpToLine(first.from - 1); }
+  });
+  const add = () => {
+    const inp = $('#briefNewText');
+    const text = inp.value.trim();
+    if (!text) return;
+    const op = activeOp();
+    const sel = editor.selection();
+    op.brief = briefAddItem(op.brief, { text, ranges: sel ? [{ from: sel.from + 1, to: sel.to + 1, first: sel.text.split('\n')[0].trim(), last: sel.text.split('\n').at(-1).trim() }] : [] });
+    inp.value = '';
+    saveOps();
+    renderBrief();
+  };
+  $('#btnBriefAdd').onclick = add;
+  $('#briefNewText').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } });
 }
 
 // ------------------------------------------------------------------ Claude
@@ -1609,13 +1691,14 @@ const agent = new ClaudeAgent({
       saveOps();
       preWrite = null;
       const v = addVersion(input.title || 'Claude', text, 'claude');
+      const briefNote = storeBrief(activeOp(), input.brief, text);
       await nextFrame();
       simulate({ time: 'end' });
       state.wroteThisRun = true;
       const report = buildReport();
       const c = counts();
       card?.done({ summary: { errors: c.error, warnings: c.warning, lines: text.split('\n').length, time: fmtTime(state.total), report, versionId: v.id } });
-      return { content: report };
+      return { content: briefNote ? `${report}\n${briefNote}` : report };
     },
     // Iteration 2: exact replacements in the existing program, then the same report as a write
     async edit_program(input, card) {
@@ -1645,6 +1728,7 @@ const agent = new ClaudeAgent({
       syncEditorToOp();
       saveOps();
       const v = addVersion(input.title || `Edit (+${r.added} −${r.removed})`, r.text, 'claude');
+      const briefNote = storeBrief(activeOp(), input.brief, r.text);
       await nextFrame();
       simulate({ time: 'end' });
       state.wroteThisRun = true;
@@ -1654,7 +1738,7 @@ const agent = new ClaudeAgent({
       const n = input.edits.length;
       const head = `Applied ${n} edit${n > 1 ? 's' : ''}: +${r.added} −${r.removed} line${r.added + r.removed === 1 ? '' : 's'}${r.changed.length ? ` (line${r.changed.length > 1 || r.changed[0][0] !== r.changed[0][1] ? 's' : ''} ${describeRanges(r.changed)})` : ''}.`;
       card?.done({ summary: { errors: c.error, warnings: c.warning, lines: r.text.split('\n').length, time: fmtTime(state.total), report, versionId: v.id, diff: { added: r.added, removed: r.removed, text: r.patch } } });
-      return { content: `${head}\n${report}` };
+      return { content: `${head}\n${report}${briefNote ? `\n${briefNote}` : ''}` };
     },
     async inspect_part(input, card) {
       syncEditorToOp();
@@ -1807,6 +1891,8 @@ $('#settingsDlg').addEventListener('close', () => {
   if (wasIt2 !== s.iteration2) {
     // the tool list and the prompt change: the conversation starts over
     applyIteration2();
+    if (!s.iteration2 && $('.tab[data-tab="brief"]').classList.contains('active')) showTab('check');
+    if (s.iteration2) renderBrief(); else editor.setBriefMarks([]);
     agent.reset();
     $('#quickChips').classList.remove('hidden-in-chat');
     toast(s.iteration2 ? 'Iteration 2 is on — new conversation' : 'Iteration 2 is off — back to the old behaviour, new conversation', 4000);

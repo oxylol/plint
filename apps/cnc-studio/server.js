@@ -132,9 +132,31 @@ const EDIT_TOOL = {
     required: ['edits'],
   },
 };
+// the brief of an operation travels with every write and edit (Iteration 2)
+const BRIEF_SCHEMA = {
+  type: 'object',
+  description: 'The brief of this operation after this change: every requirement from the user, the drawing or the target model, and every choice you made yourself, each with the program lines it concerns. Send the complete list; it replaces the stored brief (unchanged items keep their ids and the user\'s locks).',
+  properties: {
+    items: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          text: { type: 'string', description: 'One requirement or decision in a few words, e.g. "Material: S355" or "T8 Ø50 face mill, one pass, offset 12 mm".' },
+          by: { type: 'string', enum: ['user', 'drawing', 'model', 'claude'], description: 'Who decided it: the user said it, the drawing shows it, it follows from the target model, or you chose it.' },
+          fixed: { type: 'boolean', description: 'Do not change without asking. Default: true for user and drawing, false for model and claude.' },
+          lines: { type: 'string', description: 'Lines of the program (as it is after this call) that implement it, e.g. "6, 21-25".' },
+        },
+        required: ['text', 'by'],
+      },
+    },
+  },
+  required: ['items'],
+};
+const withBrief = (tool) => ({ ...tool, input_schema: { ...tool.input_schema, properties: { ...tool.input_schema.properties, brief: BRIEF_SCHEMA } } });
 export function toolsFor(features) {
   if (!features?.iteration2) return TOOLS;
-  return [TOOLS[0], EDIT_TOOL, ...TOOLS.slice(1)];
+  return [withBrief(TOOLS[0]), withBrief(EDIT_TOOL), ...TOOLS.slice(1)];
 }
 export function systemPromptFor(features) {
   const base = readFileSync(join(ROOT, 'prompts', 'system.md'), 'utf8');
@@ -365,12 +387,21 @@ async function mockStream(body, send) {
   const request = /<user_request>([\s\S]*?)<\/user_request>/.exec(lastText)?.[1] || '';
   if (!results.length && /feed|edit/i.test(request)) {
     await text('Lowering the feed with an edit.');
-    await tool('edit_program', { title: 'Feed 600', edits: [{ old: 'G03 X0. Y0. Z-2. I2. J0. F800', new: 'G03 X0. Y0. Z-2. I2. J0. F600' }] });
+    await tool('edit_program', { title: 'Feed 600', edits: [{ old: 'G03 X0. Y0. Z-2. I2. J0. F800', new: 'G03 X0. Y0. Z-2. I2. J0. F600' }], brief: { items: [
+      { text: 'Pocket 40×30 mm, 4 deep, R4 corners, centred', by: 'user', lines: '2-4' },
+      { text: 'Entry feed F600', by: 'user', lines: '13' },
+      { text: 'Ø8 end mill T1, helical entry 2 mm per turn', by: 'claude', lines: '4, 13-14' },
+      { text: 'Aluminium assumed: S6000, F800', by: 'claude', lines: '7, 13' },
+    ] } });
     stop = 'tool_use';
   } else if (!results.length) {
     await text('Planning a 40×30 pocket, 4 mm deep, helical entry with an Ø8 end mill in aluminium.', 'thinking');
     await text('I will write the program and simulate it.');
-    await tool('write_program', { title: 'Mock pocket 40x30', gcode: MOCK_PROGRAM });
+    await tool('write_program', { title: 'Mock pocket 40x30', gcode: MOCK_PROGRAM, brief: { items: [
+      { text: 'Pocket 40×30 mm, 4 deep, R4 corners, centred', by: 'user', lines: '2-4' },
+      { text: 'Ø8 end mill T1, helical entry 2 mm per turn', by: 'claude', lines: '4, 13-14' },
+      { text: 'Aluminium assumed: S6000, F800', by: 'claude', lines: '7, 13' },
+    ] } });
     stop = 'tool_use';
   } else if (lastToolName === 'edit_program') {
     await text('Done — the entry feed is now F600.');
@@ -530,7 +561,7 @@ async function handleProjects(req, res, url) {
     const now = new Date().toISOString();
     const project = {
       format: 'cnc-studio-project', version: 1, name, createdAt: old?.createdAt || now, savedAt: now,
-      ops: body.ops.map((o) => ({ fileName: String(o?.fileName || 'untitled.nc'), machine: o?.machine === 'lathe' ? 'lathe' : 'mill', text: String(o?.text || '') })),
+      ops: body.ops.map((o) => ({ fileName: String(o?.fileName || 'untitled.nc'), machine: o?.machine === 'lathe' ? 'lathe' : 'mill', text: String(o?.text || ''), ...(o?.brief && typeof o.brief === 'object' ? { brief: o.brief } : {}) })),
       subprograms: Array.isArray(body.subprograms) ? body.subprograms.map((s) => ({ name: String(s?.name || ''), text: String(s?.text || '') })) : [],
       model: body.model && typeof body.model === 'object' ? body.model : null,
     };

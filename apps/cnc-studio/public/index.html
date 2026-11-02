@@ -125,6 +125,7 @@
       <div class="tabs" role="tablist">
         <button class="tab active" data-tab="claude">Claude</button>
         <button class="tab" data-tab="check">Check <span class="count" id="checkCount">0</span></button>
+        <button class="tab it2-only" data-tab="brief" title="What this operation must do, and what Claude decided on its own">Brief <span class="count" id="briefCount" hidden>0</span></button>
         <button class="tab" data-tab="tools">Tools</button>
         <button class="tab" data-tab="stock">Stock</button>
         <button class="btn icon ghost tab-close" id="btnHidePanel" title="Hide Claude panel" aria-label="Hide the Claude panel">×</button>
@@ -149,6 +150,12 @@
             <button class="btn small primary" id="btnSend">Send <kbd>Ctrl ⏎</kbd></button>
           </div>
         </div>
+      </div>
+
+      <div class="tab-panel it2-only" data-panel="brief">
+        <p class="hint">What this operation must do — from you, the drawing or the model — and what Claude decided on its own. Locked items are not changed without asking; lock a Claude choice you want kept, unlock one it may change. Hover an item to see its lines.</p>
+        <div id="briefList" class="brief-list"></div>
+        <div class="brief-add"><input type="text" id="briefNewText" placeholder="Add a requirement, e.g. “No chamfers on the back”" maxlength="300" autocomplete="off"><button class="btn small" id="btnBriefAdd">Add</button></div>
       </div>
 
       <div class="tab-panel" data-panel="check">
