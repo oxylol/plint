@@ -127,6 +127,8 @@ export function parseToolComment(text, machine) {
   if (sl !== undefined) tool.overallLength = sl;
   const hd = num(/\b(?:HD|HOLDER)\s*=?\s*(\d*\.?\d+)/, rest);
   if (hd !== undefined) tool.holderDiameter = hd;
+  const z = num(/\b(?:Z|FLUTES|TEETH)\s*=?\s*(\d{1,2})\b/, rest);
+  if (z !== undefined && z > 0) tool.flutes = z;
   if (type === 'ball' && tool.diameter) tool.cornerRadius = tool.diameter / 2;
   return tool;
 }
@@ -177,6 +179,8 @@ export function normalizeTool(t, machine) {
   tool.shankDiameter = tool.shankDiameter || (tool.type === 'face' ? Math.min(tool.diameter * 0.45, 32) : Math.max(3, Math.min(tool.diameter, 32)));
   tool.overallLength = Math.max(tool.overallLength || tool.fluteLength + Math.max(15, tool.diameter * 1.5), tool.fluteLength + 2);
   tool.holderDiameter = tool.holderDiameter || Math.max(32, tool.shankDiameter + 18);
+  // number of cutting edges (Z in the TOOL comment); the chip-thickness check needs it
+  if (!(tool.flutes > 0)) tool.flutes = { flat: 3, bull: 3, ball: 2, face: 5, chamfer: 4, spot: 2, drill: 2, tap: 0, threadmill: 3, engrave: 1 }[tool.type] ?? 2;
   tool.name = tool.name || `T${tool.num}`;
   return tool;
 }
@@ -201,7 +205,7 @@ export function describeTool(t, machine, { detail = false } = {}) {
   if (t.fluteLength) parts.push(`L${t.fluteLength}`);
   if (t.name) parts.push(`"${t.name}"`);
   if (detail) {
-    parts.push(`— flutes ${t.fluteLength} mm, stick-out ${t.overallLength} mm (max depth before the Ø${t.holderDiameter} holder hits the stock)`);
+    parts.push(`— ${t.flutes ? `z${t.flutes}, ` : ''}flutes ${t.fluteLength} mm, stick-out ${t.overallLength} mm (max depth before the Ø${t.holderDiameter} holder hits the stock)`);
     if (t.feed || t.speed) parts.push(`(register: F${t.feed ?? '–'} S${t.speed ?? '–'})`);
   }
   return parts.join(' ');

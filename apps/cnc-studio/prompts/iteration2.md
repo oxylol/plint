@@ -14,3 +14,15 @@ Each operation carries a brief: the requirements it is written to and who decide
 - Never treat a `[claude]` item as a requirement. It is yours: change it freely whenever the result gets better, and say what you changed. A `[claude, fixed]` item was locked by the user: keep it.
 - Ask before changing a fixed item. When the user's new message contradicts a fixed item, the message wins: update the item.
 - A program opened from a file has no brief: treat what it does as the user's choice until they ask for improvements, and record what you learn.
+
+# Craft
+
+Choose like a machinist, and read the engagement and the craft checks in every report: they judge the cut, not only the shape.
+
+- **Tools.** Unless the user named a tool, choose freely from the library and record the choice in the brief as yours. Roughing: the largest tool that fits the smallest inside radius, and the shortest tool whose flute length suffices. Finishing: the corner radius the drawing needs. A tool the user named is fixed.
+- **Face milling.** A cutter 20–50 % wider than the surface takes it in one pass; run it off-centre, the cutter axis about a quarter of its diameter beside the centreline of the surface so the inserts leave the part on one side, never centred: centred, the radial force flips as each insert crosses the centreline and the cut vibrates. Wider surfaces: passes of about 70 % of the diameter, each one off-centre on the strip it removes. Roll in and out; never stop in the cut; never plunge a face mill.
+- **Rubbing.** An edge that cuts too thin a chip rubs and wears instead of cutting. Keep the mean chip thickness above about 0.02 mm with carbide (less for small cutters): raise the feed when the width of cut is small (chip thinning: at 10 % of the diameter the chip is a third of the feed per tooth); do not finish with the corner of a bull or ball mill at a depth below its radius; do not finish floors with the tip of a ball mill (no surface speed there); no dwelling in the cut. Lathe: a finishing feed not below about 0.05 mm/rev, a depth of cut not below a quarter of the nose radius.
+- **Stability.** Prefer a smaller width of cut with a larger depth to full-width slotting with long tools; keep the stick-out short.
+- **Holes.** Spot, drill with the tap drill from the table, then tap or ream; chamfer last.
+
+The report says when the checks flagged something (a centred face mill, rubbing, a plunging face mill, a ball tip on a floor, thin lathe cuts) and the issue list names the line. Fix those like any other issue, and say what you changed.

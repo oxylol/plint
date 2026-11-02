@@ -155,10 +155,11 @@ function jobOptions() {
   const manual = state.stockMode === 'manual' ? state.manualStock : null;
   return {
     interp: interpOptions,
-    key: hashStr(JSON.stringify([s.rapidMill, s.rapidLathe, s.toolChangeTime, s.maxRpm, s.latheRadiusMode, s.blockDelete, s.resolution, state.library, state.subprograms, manual])),
+    key: hashStr(JSON.stringify([s.rapidMill, s.rapidLathe, s.toolChangeTime, s.maxRpm, s.latheRadiusMode, s.blockDelete, s.resolution, state.library, state.subprograms, manual, !!s.iteration2])),
     resolution: s.resolution,
     voxelBudget: VOXEL_BUDGET,
     manualStock: manual,
+    features: { craft: it2(), probe: it2() },
   };
 }
 
@@ -1420,6 +1421,8 @@ function buildReport(out = state.out, { brief = false } = {}) {
     }
     const eng = engagementReport(out);
     if (eng) o.push(eng);
+    const craft = out.issues.filter((m) => m.source === 'craft');
+    if (craft.length) o.push(`Craft checks on the engagement flagged ${craft.length} thing${craft.length > 1 ? 's' : ''} (centred face mill, rubbing, plunging face mill, ball tip on a floor, thin lathe cuts): see the issues below and fix them like any other.`);
     o.push(partSummary(out));
     if (state.target) o.push(compareTarget(out, state.target));
   }

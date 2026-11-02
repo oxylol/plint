@@ -8,6 +8,7 @@ import { MillSim } from './millsim.js';
 import { LatheSim } from './lathesim.js';
 import { SimRunner } from './simrunner.js';
 import { EngagementRecorder } from './engagement.js';
+import { craftIssues } from './craft.js';
 
 export function opLabel(i) { return `OP${(i + 1) * 10}`; }
 
@@ -169,7 +170,7 @@ function runOp(op, name, setup, src, srcError, opts, jobMode) {
   const engagement = runner.engagement.finish();
   runner.engagement = null;
   const final = sim.clone();
-  const issues = [...pre, ...result.messages, ...runner.finalIssues(), ...extraIssues(result, sim, engine)];
+  const issues = [...pre, ...result.messages, ...runner.finalIssues(), ...extraIssues(result, sim, engine), ...(opts.features?.craft ? craftIssues({ result, engagement }) : [])];
   const workFromPart = mulXform(engine === 'voxel' ? X : IDENTITY, simFromPart);
   return { op, name, setup, engine, X, result, sim, runner, final, start, issues, src: src?.name || null, fixtures, simMs, simFromPart, workFromPart, engagement };
 }

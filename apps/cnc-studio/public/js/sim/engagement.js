@@ -19,7 +19,7 @@ export class EngagementRecorder {
     this.result = result;
     this.sim = sim;
     this.lathe = result.machine === 'lathe';
-    this.cols = { t: [], move: [], len: [], ae: [], angle: [], ap: [], f: [], q: [], plunge: [] };
+    this.cols = { t: [], move: [], len: [], ae: [], angle: [], ap: [], f: [], q: [], plunge: [], lo: [], hi: [] };
     this.index = new Map(result.moves.map((m, i) => [m, i]));
     this.shapes = new Map();
   }
@@ -39,6 +39,7 @@ export class EngagementRecorder {
     c.move.push(this.index.get(m));
     c.len.push(len);
     c.ae.push(v.ae); c.angle.push(v.angle); c.ap.push(v.ap); c.f.push(v.f || 0); c.q.push(v.q); c.plunge.push(v.plunge ? 1 : 0);
+    c.lo.push(Number.isFinite(v.lo) ? v.lo : 0); c.hi.push(Number.isFinite(v.hi) ? v.hi : 0);
   }
 
   // ---------------------------------------------------------------- mill
@@ -145,7 +146,8 @@ export class EngagementRecorder {
       from = Math.min(from, a);
       to = Math.max(to, b);
     }
-    return { ae: shape.R * (Math.sin(to * D2R) - Math.sin(from * D2R)), angle, ap };
+    // lo/hi: where the contact arc sits relative to the motion (−90° = left of the cutter, +90° = right)
+    return { ae: shape.R * (Math.sin(to * D2R) - Math.sin(from * D2R)), angle, ap, lo: from, hi: to };
   }
 
   // straight down into material: the whole bottom leads
