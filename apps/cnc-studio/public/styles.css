@@ -153,6 +153,8 @@ kbd { font-size: 10px; opacity: 0.7; margin-left: 4px; }
 .cm-exec-line { background: var(--exec) !important; box-shadow: inset 3px 0 0 var(--accent); }
 .cm-issue-error { background: rgba(255,107,107,.08); }
 .CodeMirror.streaming { box-shadow: inset 0 0 0 1px rgba(245,165,36,.45); }
+.cm-changed { animation: changed 2.5s ease-out forwards; }
+@keyframes changed { from { background: rgba(245,165,36,.4); } 60% { background: rgba(245,165,36,.25); } to { background: transparent; } }
 .CodeMirror.streaming .CodeMirror-lines { animation: none; }
 .cm-s-default .cm-comment { color: #6f8496; font-style: italic; }
 .cm-s-default .cm-meta { color: #8b7cff; }
@@ -261,6 +263,16 @@ details.thinking.empty summary::before { visibility: hidden; }
 .tool-result { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; width: 100%; }
 .report { width: 100%; margin: 6px 0 0; max-height: 240px; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px; white-space: pre-wrap; font-size: 11px; color: var(--text-2); }
 .fallback-note { font-size: 11px; color: var(--warn); }
+.badge.diffn { background: var(--panel-2); font-family: var(--mono); font-weight: 600; }
+.badge.diffn .add, .report.diff .add { color: var(--ok); }
+.badge.diffn .del, .report.diff .del { color: var(--err); }
+.report.diff { white-space: pre; font-family: var(--mono); }
+.report.diff .hunk { color: var(--info); }
+.report.diff .add { background: rgba(74,210,149,.1); }
+.report.diff .del { background: rgba(255,107,107,.1); }
+/* Iteration 2 (Settings): parts of the UI that only exist with the switch on */
+.it2-only { display: none !important; }
+body.it2 .it2-only { display: revert !important; }
 .msg.notice { font-size: 12px; padding: 7px 10px; border-radius: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .msg.notice.error { background: rgba(255,107,107,.1); color: #ffb3b3; border: 1px solid rgba(255,107,107,.3); }
 .msg.notice.warning { background: rgba(242,193,78,.08); color: #f5d98b; border: 1px solid rgba(242,193,78,.25); }

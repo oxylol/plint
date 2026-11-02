@@ -15,6 +15,8 @@ import { openServerStore } from './serverstore.js';
 import { initProjects } from './projects.js';
 import { engagementReport, engagementAt } from './sim/engagement.js';
 import { exportJob } from './gcode/export.js';
+import { applyEdits } from './edit/edit.js';
+import { describeRanges } from './edit/diff.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -56,6 +58,7 @@ const SETTINGS_DEFAULTS = {
   rapidMill: DEFAULT_SETTINGS.rapidMill, rapidLathe: DEFAULT_SETTINGS.rapidLathe, toolChangeTime: DEFAULT_SETTINGS.toolChangeTime,
   maxRpm: DEFAULT_SETTINGS.maxRpm, resolution: 420, latheRadiusMode: false, blockDelete: false, autoSim: true,
   hideClaude: false,
+  iteration2: false, // Settings → Iteration 2: edits in place, the brief, craft checks, the probe, measuring
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -89,6 +92,8 @@ const state = {
 };
 
 // ------------------------------------------------------------------ helpers
+const it2 = () => !!state.settings.iteration2;
+function applyIteration2() { document.body.classList.toggle('it2', it2()); }
 const fmtTime = (s) => {
   if (!Number.isFinite(s)) return '–';
   s = Math.max(0, s);
@@ -1176,6 +1181,7 @@ $('#btnHidePanel').onclick = () => {
 };
 setSideHidden(store.get('sideHidden', false));
 applyClaudeVisibility();
+applyIteration2();
 
 // ------------------------------------------------------------------ target model (3D part)
 async function loadModelFile(file) {
@@ -1528,6 +1534,15 @@ chatView.onUsage = (u) => {
 // Claude's program turns out to be for another operation)
 let preWrite = null;
 
+// index of the operation called `name` (by (SETUP …) name or file name), or -1
+function findOp(name) {
+  const want = String(name).trim();
+  const names = opNames(state.ops).map((n) => n.toUpperCase());
+  let i = names.indexOf(want.toUpperCase());
+  if (i < 0) i = state.ops.findIndex((o) => o.fileName.toLowerCase() === want.toLowerCase());
+  return i;
+}
+
 // index of the operation called `name` (by (SETUP …) name or file name); a new name adds one
 function resolveOp(name, machine) {
   if (!name) return state.active;
@@ -1548,7 +1563,7 @@ function resolveOp(name, machine) {
 }
 
 const agent = new ClaudeAgent({
-  getSettings: () => ({ model: state.settings.model, effort: state.settings.effort, apiKey: state.settings.apiKey }),
+  getSettings: () => ({ model: state.settings.model, effort: state.settings.effort, apiKey: state.settings.apiKey, features: { iteration2: it2() } }),
   buildContext,
   view: chatView,
   tools: {
@@ -1601,6 +1616,45 @@ const agent = new ClaudeAgent({
       const c = counts();
       card?.done({ summary: { errors: c.error, warnings: c.warning, lines: text.split('\n').length, time: fmtTime(state.total), report, versionId: v.id } });
       return { content: report };
+    },
+    // Iteration 2: exact replacements in the existing program, then the same report as a write
+    async edit_program(input, card) {
+      syncEditorToOp();
+      if (input.operation) {
+        const i = findOp(input.operation);
+        if (i < 0) {
+          const msg = `There is no operation called ${input.operation}. Operations: ${opNames(state.ops).join(', ')}. Use write_program to add one.`;
+          card?.done({ error: msg });
+          return { content: msg, isError: true };
+        }
+        if (i !== state.active) selectOp(i);
+      }
+      const before = editor.value.replace(/\r\n?/g, '\n');
+      if (!before.trim()) {
+        const msg = 'The program is empty — use write_program for a new program.';
+        card?.done({ error: msg });
+        return { content: msg, isError: true };
+      }
+      let r;
+      try { r = applyEdits(before, input.edits); } catch (e) {
+        card?.done({ error: e.message });
+        return { content: `Nothing applied. ${e.message}`, isError: true };
+      }
+      pause();
+      editor.setValue(r.text, { silent: true, keepCursor: true });
+      syncEditorToOp();
+      saveOps();
+      const v = addVersion(input.title || `Edit (+${r.added} −${r.removed})`, r.text, 'claude');
+      await nextFrame();
+      simulate({ time: 'end' });
+      state.wroteThisRun = true;
+      editor.flashLines(r.changed);
+      const report = buildReport();
+      const c = counts();
+      const n = input.edits.length;
+      const head = `Applied ${n} edit${n > 1 ? 's' : ''}: +${r.added} −${r.removed} line${r.added + r.removed === 1 ? '' : 's'}${r.changed.length ? ` (line${r.changed.length > 1 || r.changed[0][0] !== r.changed[0][1] ? 's' : ''} ${describeRanges(r.changed)})` : ''}.`;
+      card?.done({ summary: { errors: c.error, warnings: c.warning, lines: r.text.split('\n').length, time: fmtTime(state.total), report, versionId: v.id, diff: { added: r.added, removed: r.removed, text: r.patch } } });
+      return { content: `${head}\n${report}` };
     },
     async inspect_part(input, card) {
       syncEditorToOp();
@@ -1718,6 +1772,7 @@ $('#quickChips').onclick = (e) => {
 function saveSettings() { store.set('settings', state.settings); }
 function openSettings() {
   const s = state.settings;
+  $('#setIteration2').checked = !!s.iteration2;
   $('#setHideClaude').checked = !!s.hideClaude;
   $('#apiKeyField').hidden = !!s.hideClaude;
   $('#apiKey').value = s.apiKey || '';
@@ -1745,8 +1800,17 @@ $('#settingsDlg').addEventListener('close', () => {
   s.blockDelete = $('#setBlockDelete').checked;
   const wasHidden = !!s.hideClaude;
   s.hideClaude = $('#setHideClaude').checked;
+  const wasIt2 = !!s.iteration2;
+  s.iteration2 = $('#setIteration2').checked;
   saveSettings();
   if (wasHidden !== s.hideClaude) { applyClaudeVisibility(); renderTarget(); if (!s.hideClaude) showTab('claude'); }
+  if (wasIt2 !== s.iteration2) {
+    // the tool list and the prompt change: the conversation starts over
+    applyIteration2();
+    agent.reset();
+    $('#quickChips').classList.remove('hidden-in-chat');
+    toast(s.iteration2 ? 'Iteration 2 is on — new conversation' : 'Iteration 2 is off — back to the old behaviour, new conversation', 4000);
+  }
   refreshStatus();
   simulate({ time: 'keep' });
 });

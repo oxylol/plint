@@ -107,6 +107,15 @@ try {
   await fetch('http://127.0.0.1:5180/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-haiku-5-5', effort: 'low', messages: history.slice(0, 1) }) }).then((r) => r.text());
   const req3 = captured[2];
   ok(!('fallbacks' in req3.body) && !String(req3.headers['anthropic-beta'] || '').includes('fallback'), 'Haiku request has no fallbacks');
+
+  // Iteration 2 (Settings switch): the edit tool and its prompt section only when asked for
+  ok(!b.tools.some((t) => t.name === 'edit_program') && !b.system[0].text.includes('# Editing programs'), 'without features: no edit_program, old prompt');
+  await fetch('http://127.0.0.1:5180/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-opus-5-5', effort: 'high', features: { iteration2: true }, messages: history.slice(0, 1) }) }).then((r) => r.text());
+  const req4 = captured[3].body;
+  const names4 = req4.tools.map((t) => t.name);
+  ok(names4.join(',') === 'write_program,edit_program,inspect_part,view_simulation', `iteration2 tools: ${names4.join(', ')}`);
+  ok(req4.tools[1].input_schema.required.includes('edits') && req4.tools[1].input_schema.properties.edits.items.required.join() === 'old,new', 'edit_program schema: edits[{old,new}]');
+  ok(req4.system[0].text.startsWith(b.system[0].text) && req4.system[0].text.includes('# Editing programs') && req4.system[0].cache_control?.type === 'ephemeral', 'iteration2 prompt = old prompt + the editing section, cached');
 } finally {
   srv.kill();
   fake.close();

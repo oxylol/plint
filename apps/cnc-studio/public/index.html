@@ -223,6 +223,7 @@
   <dialog id="settingsDlg" class="dialog">
     <form method="dialog" class="dialog-body">
       <h2>Settings</h2>
+      <label class="check" title="Experimental: Claude edits programs in place, keeps a brief of requirements and decisions per operation, the simulator judges face milling, rubbing and probing, and the view can measure. Off: everything works as before."><input type="checkbox" id="setIteration2"> Iteration 2 — program edits, brief, craft checks, probe, measure (off = the old behaviour; turning it on or off starts a new chat)</label>
       <label class="check" title="No chat tab, status pill, API key or “Ask Claude” buttons: CNC Studio as a plain simulator"><input type="checkbox" id="setHideClaude"> Hide Claude (chat, status, API key — a plain simulator)</label>
       <label class="field" id="apiKeyField">Anthropic API key
         <input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-…  (not needed if the server has ANTHROPIC_API_KEY)">

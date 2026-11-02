@@ -127,6 +127,17 @@ export class Editor {
     }
   }
 
+  // lines Claude just changed light up and fade (ranges: 1-based inclusive)
+  flashLines(ranges) {
+    const cm = this.cm;
+    for (const h of this.flashHandles || []) cm.removeLineClass(h, 'background', 'cm-changed');
+    this.flashHandles = [];
+    for (const [a, b] of ranges || []) for (let ln = a - 1; ln < b && ln < cm.lineCount(); ln++) if (ln >= 0) this.flashHandles.push(cm.addLineClass(ln, 'background', 'cm-changed'));
+    clearTimeout(this.flashTimer);
+    this.flashTimer = setTimeout(() => { for (const h of this.flashHandles) cm.removeLineClass(h, 'background', 'cm-changed'); this.flashHandles = []; }, 2600);
+    if (ranges?.length) cm.scrollIntoView({ line: Math.max(0, ranges[0][0] - 1), ch: 0 }, 120);
+  }
+
   goToLine(line) {
     this.cm.setCursor({ line, ch: 0 });
     this.cm.scrollIntoView({ line, ch: 0 }, 120);

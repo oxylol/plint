@@ -152,6 +152,7 @@ export class ClaudeAgent {
     const bad = !input || typeof input !== 'object'
       ? 'Invalid input: expected a JSON object'
       : use.name === 'write_program' && typeof input.gcode !== 'string' ? 'Invalid input: expected {"gcode": "<complete program>"}'
+      : use.name === 'edit_program' && !(Array.isArray(input.edits) && input.edits.length && input.edits.every((e) => e && typeof e === 'object' && typeof e.old === 'string' && typeof e.new === 'string')) ? 'Invalid input: expected {"edits": [{"old": "<exact text>", "new": "<replacement>"}, …]}'
       : use.name === 'inspect_part' && !QUERIES.includes(input.query) ? `Invalid input: query must be one of ${QUERIES.join(', ')}`
       : use.name === 'inspect_part' && input.query === 'section' && (!['x', 'y', 'z'].includes(String(input.axis).toLowerCase()) || !Number.isFinite(Number(input.at))) ? 'Invalid input: a section needs axis (x, y or z) and at (mm)'
       : use.name === 'inspect_part' && input.query === 'probe' && (!Array.isArray(input.points) || !input.points.every((p) => Array.isArray(p) && p.length === 3 && p.every((v) => Number.isFinite(Number(v))))) ? 'Invalid input: probe needs points as [[x, y, z], …]'
@@ -177,7 +178,7 @@ export class ClaudeAgent {
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ model: s.model, effort: s.effort, messages: this.history }),
+      body: JSON.stringify({ model: s.model, effort: s.effort, features: s.features || {}, messages: this.history }),
       signal: this.abort.signal,
     });
     if (!resp.ok || !resp.body) {
@@ -448,7 +449,7 @@ export class ChatView {
   makeToolCard(name, id) {
     const el = document.createElement('div');
     el.className = `tool-card ${name}`;
-    const label = name === 'write_program' ? 'Writing program' : name === 'view_simulation' ? 'Looking at the simulation' : name === 'inspect_part' ? 'Measuring the part' : name;
+    const label = name === 'write_program' ? 'Writing program' : name === 'edit_program' ? 'Editing program' : name === 'view_simulation' ? 'Looking at the simulation' : name === 'inspect_part' ? 'Measuring the part' : name;
     el.innerHTML = `<div class="tool-top"><span class="spin"></span><span class="tool-label">${label}</span><span class="tool-title"></span><span class="tool-meta"></span></div><div class="tool-detail"></div>`;
     const meta = el.querySelector('.tool-meta');
     const detail = el.querySelector('.tool-detail');
@@ -461,20 +462,28 @@ export class ChatView {
         el.classList.add('done');
         el.querySelector('.spin')?.remove();
         if (r.error) { el.classList.add('error'); detail.textContent = r.error; return; }
-        if (name === 'write_program') {
-          el.querySelector('.tool-label').textContent = 'Wrote program';
+        if (name === 'write_program' || name === 'edit_program') {
+          const edit = name === 'edit_program';
+          el.querySelector('.tool-label').textContent = edit ? 'Edited program' : 'Wrote program';
           const s = r.summary;
           const badge = (n, cls, word) => (n ? `<span class="badge ${cls}">${n} ${word}${n > 1 ? 's' : ''}</span>` : '');
+          const d = s.diff;
           detail.innerHTML = `<div class="tool-result">
+            ${d ? `<span class="badge diffn"><span class="add">+${d.added}</span> <span class="del">−${d.removed}</span></span>` : ''}
             ${s.errors || s.warnings ? '' : '<span class="badge ok">✓ clean</span>'}
             ${badge(s.errors, 'error', 'error')}${badge(s.warnings, 'warning', 'warning')}
             <span class="muted">${s.lines} lines · ${s.time}</span>
             <button class="link restore">restore</button>
-            <button class="link details">report</button></div>
-            <pre class="report" hidden></pre>`;
+            <button class="link details">report</button>${d ? '<button class="link showdiff">diff</button>' : ''}</div>
+            <pre class="report" hidden></pre>${d ? '<pre class="report diff" hidden></pre>' : ''}`;
           detail.querySelector('.report').textContent = s.report;
-          detail.querySelector('.details').onclick = () => { const p = detail.querySelector('.report'); p.hidden = !p.hidden; };
+          detail.querySelector('.details').onclick = () => { const p = detail.querySelector('.report:not(.diff)'); p.hidden = !p.hidden; };
           detail.querySelector('.restore').onclick = () => this.onRestoreVersion?.(s.versionId);
+          if (d) {
+            const pre = detail.querySelector('.diff');
+            pre.innerHTML = d.text.split('\n').map((l) => `<span class="${l[0] === '+' ? 'add' : l[0] === '-' ? 'del' : l[0] === '@' ? 'hunk' : ''}">${esc(l)}</span>`).join('\n');
+            detail.querySelector('.showdiff').onclick = () => { pre.hidden = !pre.hidden; };
+          }
         } else if (name === 'inspect_part') {
           el.querySelector('.tool-label').textContent = 'Measured the part';
           el.querySelector('.tool-title').textContent = r.title ? `— ${r.title}` : '';

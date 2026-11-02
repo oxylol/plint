@@ -103,6 +103,44 @@ const TOOLS = [
   },
 ];
 
+// Iteration 2 (Settings → Iteration 2 in the app): changes to an existing program are made in place
+const EDIT_TOOL = {
+  name: 'edit_program',
+  description:
+    'Change the existing program of an operation in place with exact text replacements, then run the simulation and return the same report as write_program. ' +
+    'Use it for every change to a program that already exists; use write_program for a new program, a new operation, or when more than about a third of the lines change. ' +
+    'Each edit replaces exactly one occurrence of `old` (copied verbatim from the program, usually one to four lines) with `new`; an empty `new` deletes it. ' +
+    'If any `old` does not match exactly once, nothing is applied and the error names the closest lines.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      title: { type: 'string', description: 'What the change does, for the version history, e.g. "Feed 600 on T3".' },
+      operation: { type: 'string', description: 'Operation to edit, e.g. "OP20". Default: the active operation. It must exist.' },
+      edits: {
+        type: 'array',
+        minItems: 1,
+        items: {
+          type: 'object',
+          properties: {
+            old: { type: 'string', description: 'Exact text to replace; it must occur once in the program.' },
+            new: { type: 'string', description: 'The replacement (an empty string deletes the old text).' },
+          },
+          required: ['old', 'new'],
+        },
+      },
+    },
+    required: ['edits'],
+  },
+};
+export function toolsFor(features) {
+  if (!features?.iteration2) return TOOLS;
+  return [TOOLS[0], EDIT_TOOL, ...TOOLS.slice(1)];
+}
+export function systemPromptFor(features) {
+  const base = readFileSync(join(ROOT, 'prompts', 'system.md'), 'utf8');
+  return features?.iteration2 ? `${base}\n\n${readFileSync(join(ROOT, 'prompts', 'iteration2.md'), 'utf8')}` : base;
+}
+
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png',
@@ -201,6 +239,7 @@ async function handleChat(req, res) {
   }
   const model = MODELS.find((m) => m.id === body.model) || MODELS[0];
   const effort = EFFORTS.includes(body.effort) ? body.effort : 'high';
+  const features = body.features && typeof body.features === 'object' ? body.features : {};
   if (!Array.isArray(body.messages) || !body.messages.length) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'messages must be a non-empty array' }));
@@ -211,12 +250,12 @@ async function handleChat(req, res) {
 
   if (MOCK) { await mockStream(body, send); res.end(); return; }
 
-  const system = readFileSync(join(ROOT, 'prompts', 'system.md'), 'utf8');
+  const system = systemPromptFor(features);
   const params = {
     model: model.id,
     max_tokens: 64000,
     system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
-    tools: TOOLS,
+    tools: toolsFor(features),
     thinking: { type: 'adaptive', display: 'summarized' },
     output_config: { effort },
     messages: withCacheBreakpoint(body.messages),
@@ -322,11 +361,19 @@ async function mockStream(body, send) {
     idx++;
   };
   let stop = 'end_turn';
-  if (!results.length) {
+  const lastText = Array.isArray(last.content) ? last.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n') : String(last.content || '');
+  const request = /<user_request>([\s\S]*?)<\/user_request>/.exec(lastText)?.[1] || '';
+  if (!results.length && /feed|edit/i.test(request)) {
+    await text('Lowering the feed with an edit.');
+    await tool('edit_program', { title: 'Feed 600', edits: [{ old: 'G03 X0. Y0. Z-2. I2. J0. F800', new: 'G03 X0. Y0. Z-2. I2. J0. F600' }] });
+    stop = 'tool_use';
+  } else if (!results.length) {
     await text('Planning a 40×30 pocket, 4 mm deep, helical entry with an Ø8 end mill in aluminium.', 'thinking');
     await text('I will write the program and simulate it.');
     await tool('write_program', { title: 'Mock pocket 40x30', gcode: MOCK_PROGRAM });
     stop = 'tool_use';
+  } else if (lastToolName === 'edit_program') {
+    await text('Done — the entry feed is now F600.');
   } else if (lastToolName === 'write_program') {
     await text('Report looks clean — checking the shape visually.');
     await tool('view_simulation', { views: ['iso', 'top'] });
