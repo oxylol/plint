@@ -508,7 +508,7 @@ export function depthMap(grid, maxCols = 64) {
 }
 
 // ---------------------------------------------------------------- outline (footprint) of the part
-function footprint(field, view) {
+export function footprint(field, view) {
   const b = field.bounds;
   const cu = (b.min[view.u] + b.max[view.u]) / 2, cv = (b.min[view.v] + b.max[view.v]) / 2;
   const R = Math.hypot(b.max[view.u] - b.min[view.u], b.max[view.v] - b.min[view.v]);

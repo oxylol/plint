@@ -93,9 +93,18 @@
             <label class="chip"><input type="checkbox" data-vis="tool" checked>Tool</label>
             <label class="chip target-chip" id="targetChip" hidden><input type="checkbox" data-vis="target" checked>Target</label>
             <label class="chip lathe-only"><input type="checkbox" id="sectionToggle">¾ section</label>
+            <button class="chip it2-only measure-chip" id="btnMeasure" title="Measure the machined part: click a point, a hole, a wall or a corner; two points for a distance (M, Esc leaves)" aria-pressed="false">📏 Measure</button>
           </div>
         </div>
         <div class="view-legend" id="legend"></div>
+        <div class="measure-panel it2-only" id="measurePanel" hidden>
+          <div class="measure-head"><b>Measure</b>
+            <div class="seg small" id="measureMode"><button data-mode="point" class="active" title="One click: a point, what it sits on, the deviation from the model">Point</button><button data-mode="distance" title="Two clicks: the distance and the deltas per axis">Distance</button></div>
+            <button class="link" id="btnMeasureClear">clear</button><button class="link" id="btnMeasureCopy">copy</button>
+          </div>
+          <div class="measure-hint" id="measureHint">Click the part. Points snap to hole centres and rims, walls, corners, floors and shoulders.</div>
+          <div class="measure-list" id="measureList"></div>
+        </div>
         <div class="sim-busy" id="simBusy" hidden>Simulating…</div>
       </div>
       <div class="eng-strip" id="engStrip" hidden title="Tool engagement over the program — tap to go there">

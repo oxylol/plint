@@ -100,7 +100,7 @@ export class Viewer {
     const loop = () => {
       requestAnimationFrame(loop);
       const moved = this.controls.update();
-      if (moved || this.needsRender) { this.needsRender = false; this.renderer.render(this.scene, this.camera); }
+      if (moved || this.needsRender) { this.needsRender = false; this.renderer.render(this.scene, this.camera); if (this.labels?.length) this.updateLabels(); }
     };
     loop();
   }
@@ -838,6 +838,95 @@ export class Viewer {
     this.groups.target.visible = this.visible.target && this.groups.target.children.length > 0;
     this.groups.tool.visible = this.visible.tool && !!this.toolKey && !this.toolKey.startsWith('0|');
     this.needsRender = true;
+  }
+
+  // ---------------------------------------------------------------- measuring (Iteration 2)
+  // scene (rotary table frame) ↔ work coordinates; the lathe scene shows work Z along X and the radius along Y
+  workToScene(p) { return this.machine === 'lathe' ? new THREE.Vector3(p[2], p[0], 0) : new THREE.Vector3(p[0], p[1], p[2]); }
+  sceneToWork(v) { return this.machine === 'lathe' ? [Math.hypot(v.y, v.z), 0, v.x] : [v.x, v.y, v.z]; }
+
+  // what is under a screen point (NDC): the part or the target ghost → work point, work normal
+  pickAt(nx, ny) {
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(nx, ny), this.camera);
+    const objs = [];
+    if (this.groups.stock.visible) this.groups.stock.traverse((o) => { if (o.isMesh) objs.push(o); });
+    const tgt = this.groups.target.visible ? this.groups.target.children.find((c) => c.isMesh) : null;
+    if (tgt) objs.push(tgt);
+    if (!objs.length) return null;
+    const inv = new THREE.Matrix4().copy(this.rotGroup.matrixWorld).invert();
+    for (const h of ray.intersectObjects(objs, false)) {
+      const local = h.point.clone().applyMatrix4(inv);
+      // the height map's floor under a through-hole is drawn away by the shader: not a surface
+      if (this.engine === 'height' && h.object === this.millMesh && local.z < this.sim.bottom + 1e-3) continue;
+      const n = h.face ? h.face.normal.clone().transformDirection(h.object.matrixWorld).transformDirection(inv) : null;
+      const p = this.sceneToWork(local);
+      let normal = null;
+      if (n) normal = this.machine === 'lathe' ? [Math.hypot(n.y, n.z), 0, n.x] : [n.x, n.y, n.z];
+      return { p, n: normal, on: tgt && h.object === tgt ? 'target' : 'part', scene: local };
+    }
+    return null;
+  }
+
+  // clicks without a drag reach the handler as NDC coordinates while measuring
+  setMeasureMode(on, handler) {
+    const el = this.renderer.domElement;
+    if (this.measureHandlers) { el.removeEventListener('pointerdown', this.measureHandlers.down); el.removeEventListener('pointerup', this.measureHandlers.up); this.measureHandlers = null; }
+    el.style.cursor = on ? 'crosshair' : '';
+    if (!on) return;
+    let start = null;
+    const down = (e) => { if (e.button === 0) start = [e.clientX, e.clientY]; };
+    const up = (e) => {
+      if (!start || e.button !== 0) return;
+      const moved = Math.hypot(e.clientX - start[0], e.clientY - start[1]);
+      start = null;
+      if (moved > 4) return;
+      const r = el.getBoundingClientRect();
+      handler({ x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1, shift: e.shiftKey });
+    };
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointerup', up);
+    this.measureHandlers = { down, up };
+  }
+
+  // markers for the measurements (work coordinates; `scene` points override for lathe picks)
+  drawMeasurements(items) {
+    if (!this.groups.measure) { this.groups.measure = new THREE.Group(); this.rotGroup.add(this.groups.measure); }
+    this.clearGroup('measure');
+    const size = this.bounds().getSize(new THREE.Vector3()).length() || 100;
+    const r = Math.max(0.25, size * 0.005);
+    const mat = new THREE.MeshBasicMaterial({ color: '#ffbf52', depthTest: false, transparent: true, opacity: 0.95 });
+    const lineMat = new THREE.LineBasicMaterial({ color: '#ffbf52', depthTest: false, transparent: true, opacity: 0.9 });
+    const sphere = new THREE.SphereGeometry(r, 12, 8);
+    const add = (o) => { o.renderOrder = 20; this.groups.measure.add(o); };
+    const at = (p, sp) => (sp ? new THREE.Vector3(sp.x, sp.y, sp.z) : this.workToScene(p));
+    for (const it of items) {
+      (it.points || []).forEach((p, i) => { const m = new THREE.Mesh(sphere, mat); m.position.copy(at(p, it.scenePoints?.[i])); add(m); });
+      if (it.line) add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(it.line.map((p, i) => at(p, it.scenePoints?.[i]))), lineMat));
+      if (it.circle) {
+        const c = it.circle, pts = [];
+        for (let k = 0; k <= 48; k++) { const a = (k / 48) * 2 * Math.PI; pts.push(this.workToScene([c.c[0] + Math.cos(a) * c.r, c.c[1] + Math.sin(a) * c.r, c.c[2]])); }
+        add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat));
+      }
+    }
+    this.labels = items.flatMap((it) => (it.labels || []).map((l, i) => ({ ...l, sp: it.scenePoints?.length === 1 ? it.scenePoints[0] : null })));
+    this.needsRender = true;
+    this.updateLabels();
+  }
+
+  updateLabels() {
+    if (!this.labelLayer) { this.labelLayer = document.createElement('div'); this.labelLayer.className = 'measure-labels'; this.el.appendChild(this.labelLayer); }
+    const L = this.labelLayer, labels = this.labels || [];
+    while (L.children.length > labels.length) L.lastChild.remove();
+    while (L.children.length < labels.length) { const d = document.createElement('div'); d.className = 'measure-label'; L.appendChild(d); }
+    const w = this.el.clientWidth, h = this.el.clientHeight;
+    labels.forEach((l, i) => {
+      const el = L.children[i];
+      if (el.textContent !== l.text) el.textContent = l.text;
+      const v = (l.sp ? new THREE.Vector3(l.sp.x, l.sp.y, l.sp.z) : this.workToScene(l.p)).applyMatrix4(this.rotGroup.matrixWorld).project(this.camera);
+      el.style.transform = `translate(${Math.round(((v.x + 1) / 2) * w)}px, ${Math.round(((1 - v.y) / 2) * h)}px)`;
+      el.style.display = v.z < 1 ? '' : 'none';
+    });
   }
 
   // JPEG snapshots of named views (restores the camera afterwards)

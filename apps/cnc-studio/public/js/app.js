@@ -17,6 +17,7 @@ import { engagementReport, engagementAt } from './sim/engagement.js';
 import { exportJob } from './gcode/export.js';
 import { applyEdits } from './edit/edit.js';
 import { describeRanges } from './edit/diff.js';
+import { measureContext, pointItem, distanceItem } from './sim/measure.js';
 import { normalizeBrief, relocateBrief, briefText, addItem as briefAddItem, setFixed as briefSetFixed, removeItem as briefRemoveItem, describeLines, sanitizeBrief } from './brief/brief.js';
 
 const $ = (s) => document.querySelector(s);
@@ -90,6 +91,7 @@ const state = {
   time: 0, total: 0, playing: false, lastFrame: 0,
   versions: [], versionSeq: 0,
   wroteThisRun: false,
+  measure: { on: false, mode: 'point', items: [], pending: null },
 };
 
 // ------------------------------------------------------------------ helpers
@@ -218,6 +220,7 @@ function simulate({ time = 'end' } = {}) {
   renderBadges();
   renderChecks();
   renderBrief();
+  if (state.measure.items.length || state.measure.pending) viewer.drawMeasurements(state.measure.pending ? [...state.measure.items, state.measure.pending] : state.measure.items);
   renderEngagement();
   renderTools();
   renderStock();
@@ -1593,6 +1596,73 @@ function renderBrief() {
   $('#briefNewText').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } });
 }
 
+// ------------------------------------------------------------------ measuring in the view (Iteration 2)
+function measureCtx() {
+  const out = state.out;
+  if (!out) return null;
+  const key = `${out.key}|${state.target ? state.target.name + state.target.triCount : ''}`;
+  if (out.measureCtx?.key !== key) { out.measureCtx = measureContext(out, state.target); out.measureCtx.key = key; }
+  return out.measureCtx;
+}
+function setMeasure(on) {
+  const m = state.measure;
+  m.on = on;
+  m.pending = null;
+  $('#btnMeasure').setAttribute('aria-pressed', String(on));
+  $('#viewport').classList.toggle('measuring', on);
+  $('#measurePanel').hidden = !on && !m.items.length;
+  viewer.setMeasureMode(on, onMeasureClick);
+  renderMeasure();
+}
+function onMeasureClick({ x, y }) {
+  const hit = viewer.pickAt(x, y);
+  const ctx = measureCtx();
+  if (!hit || !ctx) { toast('Nothing there — click the part'); return; }
+  const m = state.measure;
+  const pt = pointItem(ctx, hit.p, hit.n, hit.on);
+  pt.scenePoints = [hit.scene];
+  if (m.mode === 'distance') {
+    if (!m.pending) { m.pending = pt; renderMeasure(); return; }
+    const d = distanceItem(ctx, m.pending, pt);
+    d.scenePoints = [m.pending.scenePoints[0], hit.scene];
+    m.pending = null;
+    m.items.push(d);
+  } else m.items.push(pt);
+  if (m.items.length > 40) m.items.shift();
+  renderMeasure();
+}
+function renderMeasure() {
+  const m = state.measure;
+  const list = $('#measureList');
+  const rows = m.items.map((it, i) => `<div class="measure-row" data-i="${i}" title="Double-click to look at it"><span class="n">${i + 1}</span><div><span class="v">${escapeHtml(it.text)}</span>${it.detail ? `<div class="d">${escapeHtml(it.detail)}</div>` : ''}</div><button class="x" title="Remove">✕</button></div>`);
+  if (m.pending) rows.push(`<div class="measure-row pending"><span class="n">…</span><div><span class="v">${escapeHtml(m.pending.text)}</span><div class="d">first point — click the second</div></div><span></span></div>`);
+  list.innerHTML = rows.join('');
+  $('#measureHint').hidden = m.items.length > 0 || !!m.pending;
+  $('#measurePanel').hidden = !m.on && !m.items.length;
+  viewer.drawMeasurements(m.pending ? [...m.items, m.pending] : m.items);
+}
+{
+  $('#btnMeasure').onclick = () => setMeasure(!state.measure.on);
+  $('#measureMode').onclick = (e) => {
+    const b = e.target.closest('button[data-mode]');
+    if (!b) return;
+    state.measure.mode = b.dataset.mode;
+    state.measure.pending = null;
+    $$('#measureMode button').forEach((x) => x.classList.toggle('active', x === b));
+    renderMeasure();
+  };
+  $('#btnMeasureClear').onclick = () => { state.measure.items = []; state.measure.pending = null; renderMeasure(); };
+  $('#btnMeasureCopy').onclick = () => {
+    const txt = state.measure.items.map((it, i) => `${i + 1}. ${it.text}${it.detail ? ` — ${it.detail}` : ''}`).join('\n');
+    navigator.clipboard?.writeText(txt).then(() => toast('Measurements copied'), () => toast('Copy is blocked here'));
+  };
+  $('#measureList').onclick = (e) => {
+    const row = e.target.closest('.measure-row[data-i]');
+    if (!row) return;
+    if (e.target.closest('.x')) { state.measure.items.splice(Number(row.dataset.i), 1); renderMeasure(); }
+  };
+}
+
 // ------------------------------------------------------------------ Claude
 const chatView = new ChatView($('#chat'), {
   onRestoreVersion: restoreVersion,
@@ -1895,7 +1965,7 @@ $('#settingsDlg').addEventListener('close', () => {
     // the tool list and the prompt change: the conversation starts over
     applyIteration2();
     if (!s.iteration2 && $('.tab[data-tab="brief"]').classList.contains('active')) showTab('check');
-    if (s.iteration2) renderBrief(); else editor.setBriefMarks([]);
+    if (s.iteration2) renderBrief(); else { editor.setBriefMarks([]); if (state.measure.on) setMeasure(false); }
     agent.reset();
     $('#quickChips').classList.remove('hidden-in-chat');
     toast(s.iteration2 ? 'Iteration 2 is on — new conversation' : 'Iteration 2 is off — back to the old behaviour, new conversation', 4000);
@@ -1937,6 +2007,8 @@ document.addEventListener('keydown', (e) => {
   const inField = e.target.closest('textarea, input, select, .CodeMirror');
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveProgram(); return; }
   if (inField) return;
+  if (it2() && (e.key === 'm' || e.key === 'M') && !e.ctrlKey && !e.metaKey) { setMeasure(!state.measure.on); return; }
+  if (e.key === 'Escape' && state.measure.on) { setMeasure(false); return; }
   if (e.key === ' ') { e.preventDefault(); state.playing ? pause() : play(); }
   else if (e.key === 'ArrowRight') stepBlock();
   else if (e.key === 'Home') { pause(); seek(0, true); }
