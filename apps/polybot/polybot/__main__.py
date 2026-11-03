@@ -1,4 +1,4 @@
-"""Entry point: `python -m polybot [run|once|check|reset <setup>|ledger [base]]`."""
+"""Entry point: `python -m polybot [run|once|check|reset <setup>|ledger [base]|collector]`."""
 from __future__ import annotations
 
 import json
@@ -14,6 +14,18 @@ from .store import Store, utcnow
 from . import web
 
 TICK = 5  # seconds between looks at the strategies' clocks
+
+
+def print_collector(cl: dict) -> None:
+    rows = cl.get("rows", [])
+    print(f"\ncollector: {cl.get('events', 0)} temperature events, lock from {cl.get('lock_hour')}:00 local, buys up to {cl.get('max_price')}")
+    for r in rows[:40]:
+        head = f"  {r['city']:14s} {r['day']} {r['kind']:7s} {r.get('station', ''):4s} {r.get('local_time', ''):9s}"
+        if r.get("reports") is not None:
+            head += f" {r['reports']:3d} reports · {r['kind'][:-3]} {r.get('value_c')}°C at {r.get('value_at')} · now {r.get('latest')}°C"
+        print(head + f"  → {r.get('winner') or ''} {r.get('decision', '')}")
+        for tk in r.get("tokens", []) or []:
+            print(f"      {tk['outcome']:3s} {tk['bucket']:18s} {tk['price'] if tk['price'] is not None else '?':>6}  {tk.get('decision', '')}")
 
 
 def main(argv: list[str]) -> int:
@@ -46,6 +58,12 @@ def main(argv: list[str]) -> int:
         print(f"\nunderdog: {ud.get('games_total', 0)} games with an underdog in band in the window")
         for g in ud.get("games", [])[:12]:
             print(f"  {g['minutes']:+5d} min  {g['sport']:6s} {g['title'][:50]} · {g['outcome']} at {g['price']:.2f}  → {g['decision']}")
+        print_collector(status.get("collector", {}))
+        return 0
+    if cmd == "collector":   # scan the finished days without buying (reads the markets and the station reports)
+        runner.collector.trade = False
+        runner.collector.run(utcnow())
+        print_collector(runner.collector.status())
         return 0
     if cmd == "reset":
         name = argv[2] if len(argv) > 2 else ""
@@ -63,7 +81,7 @@ def main(argv: list[str]) -> int:
         print(report(rows, finals_from_markets(rows, runner.core.market), base=argv[2] if len(argv) > 2 else "day4"))
         return 0
     if cmd != "run":
-        print("usage: python -m polybot [run|once|check|reset <setup>|ledger [base]]", file=sys.stderr)
+        print("usage: python -m polybot [run|once|check|reset <setup>|ledger [base]|collector]", file=sys.stderr)
         return 2
 
     web.serve(cfg.port, store, cfg.mode)

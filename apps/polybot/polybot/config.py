@@ -168,6 +168,20 @@ class Config:
     fc_exit_if_forecast_moves: bool
     fc_lowest: bool              # also play the lows (No on forecast low minus the margin)
     fc_days_ahead: int           # how many days ahead to bet (1 = tomorrow only, in the city's own calendar)
+    # Collector strategy: buy what a finished day has already decided (the station's METAR reports), redeem at $1
+    cl_enabled: bool
+    cl_tick_seconds: int
+    cl_lock_hour: int            # from this local hour a high counts as set…
+    cl_lock_margin_c: float      # …once the latest reading is this far below it (°C); lows wait for the day to end
+    cl_max_gap_min: float        # a longer silence from the station blocks a buy (a report may still turn up)
+    cl_stake_usd: Decimal
+    cl_min_price: Decimal        # below this the market disagrees with the reports: don't buy, something is off
+    cl_max_price: Decimal        # above this there is too little left to gain
+    cl_daily_budget_usd: Decimal
+    cl_max_open: int
+    cl_max_per_tick: int
+    cl_lowest: bool              # also the lows (only once the day is over)
+    cl_skip_cities: str          # comma-separated; Hong Kong resolves on the Observatory, not on METAR
     # Plumbing
     data_dir: str
     port: int
@@ -244,6 +258,19 @@ class Config:
             fc_exit_if_forecast_moves=_bool("FC_EXIT_IF_FORECAST_MOVES", True),
             fc_lowest=_bool("FC_LOWEST", False),
             fc_days_ahead=_int("FC_DAYS_AHEAD", 1),
+            cl_enabled=_bool("CL_ENABLED", True),
+            cl_tick_seconds=_int("CL_TICK_SECONDS", 600),
+            cl_lock_hour=_int("CL_LOCK_HOUR", 20),
+            cl_lock_margin_c=float(_str("CL_LOCK_MARGIN_C", "1")),
+            cl_max_gap_min=float(_str("CL_MAX_GAP_MIN", "180")),
+            cl_stake_usd=_dec("CL_STAKE_USD", "5"),
+            cl_min_price=_dec("CL_MIN_PRICE", "0.70"),
+            cl_max_price=_dec("CL_MAX_PRICE", "0.975"),
+            cl_daily_budget_usd=_dec("CL_DAILY_BUDGET_USD", "100"),
+            cl_max_open=_int("CL_MAX_OPEN", 80),
+            cl_max_per_tick=_int("CL_MAX_PER_TICK", 10),
+            cl_lowest=_bool("CL_LOWEST", True),
+            cl_skip_cities=_str("CL_SKIP_CITIES", "Hong Kong"),
             data_dir=_str("DATA_DIR", "/data"),
             port=_int("PORT", 8000),
             ntfy_url=_str("NTFY_URL", ""),
@@ -271,6 +298,8 @@ class Config:
             raise ValueError("need 1 <= CR_PACK_SIZE <= CR_POOL <= 1000 and CR_REFRESH_HOURS >= 1")
         if self.fc_tick_seconds < 300 or self.fc_agg not in ("max", "median", "mean") or self.fc_stake_usd < 1:
             raise ValueError("FC_TICK_SECONDS ≥ 300, FC_AGG max|median|mean, FC_STAKE_USD ≥ 1")
+        if self.cl_tick_seconds < 120 or not (0 <= self.cl_lock_hour <= 23) or not (0 < self.cl_min_price < self.cl_max_price < 1) or self.cl_stake_usd < 1:
+            raise ValueError("CL_TICK_SECONDS ≥ 120, CL_LOCK_HOUR 0–23, 0 < CL_MIN_PRICE < CL_MAX_PRICE < 1, CL_STAKE_USD ≥ 1")
         if self.ud_tick_seconds < 10:
             raise ValueError("UD_TICK_SECONDS must be at least 10")
         if not (0 < self.ud_min_price < self.ud_max_price < 1):

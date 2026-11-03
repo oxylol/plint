@@ -11,6 +11,7 @@ from .core import Core
 from .notify import Notifier
 from .pack import CrediblePack
 from .store import Store, iso
+from .strategy_collector import CollectorStrategy
 from .strategy_consensus import ConsensusParams, ConsensusStrategy, LeaderFeed
 from .strategy_forecast import ForecastStrategy
 from .strategy_underdog import UnderdogStrategy
@@ -40,7 +41,8 @@ class Runner:
             self.consensus.append(ConsensusStrategy(self.core, p, self.feed, pack))
         self.underdog = UnderdogStrategy(self.core)
         self.forecast = ForecastStrategy(self.core)
-        self.strategies = [*self.consensus, self.underdog, self.forecast]
+        self.collector = CollectorStrategy(self.core)
+        self.strategies = [*self.consensus, self.underdog, self.forecast, self.collector]
         self.last_run: dict[str, datetime] = {}
         self._consensus_status: dict[str, dict] = {}
 
@@ -52,6 +54,8 @@ class Runner:
             return self.cfg.ud_enabled
         if strategy.name == "forecast":
             return self.cfg.fc_enabled
+        if strategy.name == "collector":
+            return self.cfg.cl_enabled
         return True
 
     def due(self, strategy, now: datetime) -> bool:
@@ -92,6 +96,8 @@ class Runner:
             self.core.settle(now, self.store.open_positions())
             if "forecast" in ran:
                 self.core.mark(self.store.open_positions("forecast"))
+            if "collector" in ran:
+                self.core.mark(self.store.open_positions("collector"))
             if consensus_ran:
                 self.core.mark([p for s in consensus_ran for p in self.store.open_positions(s.name)])
                 if self.core.mode == "live":
@@ -124,6 +130,7 @@ class Runner:
         labels = {s.name: s.label for s in self.consensus}
         labels["underdog"] = "Underdog"
         labels["forecast"] = self.forecast.label
+        labels["collector"] = self.collector.label
         strategies = []
         for s in self.strategies:
             strategies.append({**self.store.totals(now, s.name), "name": s.name, "label": s.label if hasattr(s, "label") else "Underdog",
@@ -140,6 +147,7 @@ class Runner:
                                                               **({"pack": s.pack.key} if s.pack else {})}) for s in self.consensus],
             "underdog": self.underdog.status(now),
             "forecast": self.forecast.status(),
+            "collector": self.collector.status(),
             "positions": positions,
             "trades": self.store.recent_trades(40),
             "totals": self.store.totals(now),

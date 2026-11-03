@@ -1,8 +1,9 @@
 # ─────────────────────────────────────────────────────────────
 #  Plint · poly stack
-#  Polybot: two Polymarket strategies side by side. "Consensus" buys what the
+#  Polybot: Polymarket strategies side by side. "Consensus" buys what the
 #  leaderboard's top traders agree on; "underdog" buys the cheaper side of a
-#  game at kickoff and sells into the early bounce. Source in apps/polybot
+#  game at kickoff; "forecast" bets No on a temperature; "collector" buys what
+#  a finished day has already decided. Source in apps/polybot
 #  (README there). Paper mode until
 #  POLY_PRIVATE_KEY + POLY_WALLET are in .env and POLY_LIVE=1. Its book
 #  lives in data/polybot; it pushes trades to the phone through ntfy.
@@ -102,6 +103,20 @@ services:
       FC_LOWEST: ${FC_LOWEST:-0}
       FC_DAYS_AHEAD: ${FC_DAYS_AHEAD:-1}
       FC_TICK_SECONDS: ${FC_TICK_SECONDS:-1800}
+      # Strategy 4, collector: buy what a finished day has already decided (the station's METAR reports), redeem at $1.
+      CL_ENABLED: ${CL_ENABLED:-1}
+      CL_LOCK_HOUR: ${CL_LOCK_HOUR:-20}
+      CL_LOCK_MARGIN_C: ${CL_LOCK_MARGIN_C:-1}
+      CL_MAX_GAP_MIN: ${CL_MAX_GAP_MIN:-180}
+      CL_STAKE_USD: ${CL_STAKE_USD:-5}
+      CL_MIN_PRICE: ${CL_MIN_PRICE:-0.70}
+      CL_MAX_PRICE: ${CL_MAX_PRICE:-0.975}
+      CL_DAILY_BUDGET_USD: ${CL_DAILY_BUDGET_USD:-100}
+      CL_MAX_OPEN: ${CL_MAX_OPEN:-80}
+      CL_MAX_PER_TICK: ${CL_MAX_PER_TICK:-10}
+      CL_LOWEST: ${CL_LOWEST:-1}
+      CL_SKIP_CITIES: ${CL_SKIP_CITIES:-Hong Kong}
+      CL_TICK_SECONDS: ${CL_TICK_SECONDS:-600}
     volumes:
       - ../../data/polybot:/data
     read_only: true

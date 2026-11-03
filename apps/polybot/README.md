@@ -213,6 +213,37 @@ hour the bot
    plays the lows (No on the forecast low minus the margin); `FC_DAYS_AHEAD`
    (1) is how far ahead it bets, in the city's own calendar.
 
+## Strategy 4 · Collector
+
+No forecasting at all. Every daily temperature event resolves on the station's routine
+METAR reports: the market's description spells the rule out (the hourly temperature
+remark in tenths of °C, else the body temperature; SPECI reports don't count; nearest
+whole degree with halves up, converted to °F first for US cities; an observation
+belongs to the local date its time stamp falls on) and names the Aviation Weather
+Center API as the source. The bot reads the same reports (`polybot/metar.py`) the same
+way (`polybot/collector.py`). Once a city's high is set, from `CL_LOCK_HOUR` (20:00
+local) with the latest reading `CL_LOCK_MARGIN_C` below it, or once the day is over
+(lows only then), the winning bucket is known, yet its Yes and the other buckets' No
+still trade below $1 until the next day's first report settles the event (the study
+in `research/weather_carry.py`: about $1,000 a day changes hands at 98¢ or less, and
+the day's high is first reached after 20:00 on 0.4% of days). Every `CL_TICK_SECONDS`
+the bot
+
+1. loads the three days of temperature events a city's clock can be on and reads each
+   event's station and rule from its description (cities on another source, such as
+   Hong Kong's Observatory, are skipped; so is anything in `CL_SKIP_CITIES`),
+2. fetches the reports of the stations whose day is in its window,
+3. buys every token that is now worth $1 (the winner's Yes, the losers' No) for
+   `CL_STAKE_USD` when it costs between `CL_MIN_PRICE` and `CL_MAX_PRICE` (below the
+   minimum the market disagrees with the reports, so something is off; above the
+   maximum there is too little to gain), `CL_MAX_PER_TICK` a tick, within the budget,
+4. holds to resolution. A silence of more than `CL_MAX_GAP_MIN` from the station blocks
+   a buy (a report may still turn up). A lost position means the rule was read wrong:
+   it is reported loudly and the city is skipped for 30 days.
+
+`python -m polybot collector` scans the finished days without buying and prints what
+it sees.
+
 ## Comparing them
 
 The page's **Strategies** table lists every setup: paper (or live) P&L,
@@ -308,12 +339,13 @@ Change a value, then `plint restart poly`.
 - `polybot/model.py` + `model.json` (round 3) / `model_r2.json`, `polybot/features.py`, `research/` — the data models, the shared feature code and the scripts that collected and fitted them
 - `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
 - `polybot/weather.py` + `strategy_forecast.py` — temperature markets, stations, Open-Meteo forecasts (pure parts tested) and the forecast strategy
+- `polybot/metar.py` + `collector.py` + `strategy_collector.py` — the station reports read by the markets' rule, when a day's value is final (tested), and the collector strategy
 - `polybot/runner.py` — runs both on their own clocks, writes the page's JSON
 - `polybot/store.py` — `data/polybot/state.json`, `trades.jsonl`, `status.json`
 - `static/index.html` — the page (Plint Soft UI tokens)
 
-Commands: `docker exec polybot python -m polybot once` runs one cycle of both
-strategies and prints their reasoning; `… check` shows the account state.
+Commands: `docker exec polybot python -m polybot once` runs one cycle of every
+strategy and prints their reasoning; `… check` shows the account state; `… collector` scans the finished temperature days without buying.
 `… ledger [base]` settles the ledger (`data/polybot/ledger.jsonl`: every signal that passed a consensus setup's rules, at
 the real price of a $5 buy, bought or not) and compares setups per signal against `base` (default `day4`), paired by day.
 Tests: `docker run --rm -v $PWD:/app -w /app python:3.12-slim sh -c "pip install -q -r requirements.txt && python -m unittest discover -s tests"`.
