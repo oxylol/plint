@@ -1,0 +1,47 @@
+# Tungaloy DNMG150608-TM negative 55 deg rhombic inserts in the PDJNR2525M15E lever-lock holder,
+# read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03 (B069, B032, B004, C036, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-dnmg1506-turning
+maker: "Tungaloy Corporation"
+series: "DNMG150608-TM (T9215 / T9225) in PDJNR2525M15E (93 deg, copying / profiling)"
+src: tungaloy-2023-gc-insert
+notes: "Insert (B069): RE 0.8, IC 12.7, S 6.35, D1 5.16 mm, 55 deg rhombic, negative, double-sided. TM pictogram (B032): 0.2 mm land, 6 deg rake. Window = ap and f of the TM row of the standard cutting conditions (B004, steel). Holder PDJNR2525M15E (C036): H 25, B 25, LF 150, LH 36, HF 25, WF 32 mm, insert DN**/FNGA1506, standard RE 0.8, clamping torque 3 N m, 93 deg approach (cutting edge style J, 30 deg back clearance for copying). No holder rake / inclination printed (db/models/tooling.yaml negative-holder defaults apply); the overhang is a set-up value, estimated."
+defaults:
+  type: turning_insert
+  hand: right
+  tool_material: {class: carbide, grade: "CVD-coated carbide (substrate not stated)", id: carbide-p30, src: est, note: "CVD P/M/K grade mapped to the P30 substrate entry"}
+items:
+  - id: tungaloy-dnmg150608-tm-t9215-pdjnr2525m15e
+    order_code: "DNMG150608-TM T9215 + PDJNR2525M15E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9215 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry: &dnmg_geo
+      insert:
+        iso_code: "DNMG150608-TM"
+        shape: D
+        included_angle_deg: 55
+        ic_mm: 12.7
+        thickness_mm: 6.35
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: TM, land_mm: {value: 0.2, page: "B032 pictogram"}, rake_deg: {value: 6, page: "B032 pictogram"}, window: {f_mm: [0.2, 0.5], ap_mm: [1, 5]}, page: "B004 medium cutting row"}
+        page: "B069"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002"}
+      holder: {iso_code: "PDJNR2525M15E", approach_angle_deg: {value: 93, src: tungaloy-2023-gc-ext-toolholder, page: "C036"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C036 (H, B)"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H beyond the turret clamp; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners (double-sided 55 deg rhombic), not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning, profiling], vc_m_min: {min: 150, max: 400}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004 medium cutting TM T9215", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi4140-qt30, operation: [turning, profiling], vc_m_min: {min: 150, max: 400}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning, profiling], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}
+  - id: tungaloy-dnmg150608-tm-t9225-pdjnr2525m15e
+    order_code: "DNMG150608-TM T9225 + PDJNR2525M15E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9225 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry: *dnmg_geo
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning, profiling], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004 medium cutting TM T9225", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi4140-qt30, operation: [turning, profiling], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning, profiling], vc_m_min: {min: 100, max: 250}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}

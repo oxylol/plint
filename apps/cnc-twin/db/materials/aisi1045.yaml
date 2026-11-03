@@ -1,0 +1,147 @@
+# AISI 1045 / C45 (1.0503), normalised. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: aisi1045
+name: "AISI 1045 / C45 medium-carbon steel, normalised"
+family: steel
+iso_group: P
+condition: "+N: normalised 840-880 C, air cooled (saarstahl-2016-c45); ferritic-pearlitic"
+designations: {UNS: G10450, EN: "C45 (1.0503); C45E (1.1191)", DIN: "C45 / Ck45", SAE: "1045", JIS: "S45C"}
+stock_forms: []                    # no published through-thickness residual-stress profile of as-supplied bar was found
+
+physical:
+  src: xiu-2019-1045-grinding-fe   # section default: Tables 1 and 3 (AISI 1045, temperature dependent)
+  density_kg_m3: {value: 7850, note: "20 C; Table 1 gives 7850 (20 C) falling to 7649 (1000 C)"}
+  specific_heat_J_kgK: {table: [[20, 460], [100, 480], [200, 498], [300, 524], [400, 524], [500, 615], [600, 690], [700, 720], [800, 682], [900, 637], [1000, 602]]}
+  conductivity_W_mK: {table: [[20, 49.77], [100, 46.76], [200, 43.24], [300, 40.29], [400, 37.87], [500, 35.96], [600, 33.18], [700, 30.52], [800, 27.96], [900, 25.92], [1000, 24.02]]}
+  expansion_1_K: {table: [[20, 11.56e-6], [100, 11.90e-6], [200, 12.32e-6], [300, 13.09e-6], [500, 14.18e-6], [800, 14.50e-6], [1000, 14.40e-6]], note: "source does not say whether mean (from 20 C) or instantaneous; treated as mean"}
+  youngs_modulus_GPa: {table: [[20, 206], [100, 200], [200, 192], [300, 184], [500, 163], [800, 125], [1000, 99]]}
+  poisson: {value: 0.3}
+  solidus_degC: {value: 1445, src: est, note: "binary Fe-C diagram at 0.45 % C: gamma solidus interpolated between 0.17 % C / 1495 C and 2.11 % C / 1148 C"}
+  liquidus_degC: {value: 1500, src: est, note: "binary Fe-C diagram at 0.45 % C: liquidus interpolated between pure Fe 1538 C and the peritectic liquid 0.53 % C / 1495 C"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 190, src: ovako-2025-c45, note: "typical, +N round bar 10-50 mm (variant 047A)"}
+  yield_MPa: {value: 420, src: klippel-2022-ck45-cutting-database, range: [305, 420], note: "420 = supplier test of the ETH Ck45 batch (Table 2, rolled bar); 305 = minimum for +N, 16-100 mm (saarstahl-2016-c45)"}
+  ultimate_MPa: {value: 671, src: klippel-2022-ck45-cutting-database, range: [580, 671], note: "671 = ETH batch; 580 = +N minimum 16-100 mm (saarstahl-2016-c45); Ovako typical +N 600-660"}
+  elongation_pct: {value: 22.2, src: klippel-2022-ck45-cutting-database, note: "A5 of the ETH batch; +N minimum 16 % (saarstahl-2016-c45)"}
+  fracture_strain: {value: 0.6, src: est, note: "true strain at fracture from an assumed reduction of area of 45 % (ln(1/0.55)); no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 553.1
+  B_MPa: 600.8
+  n: 0.234
+  C: 0.0134
+  m: 1.0
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: 1490
+  src: burns-2012-1045-cutting-temperature
+  note: "Jaspers & Dautzenberg (2002) constants as stated by Burns et al. 2012 Eq. (1.2), with Tr = 20 C and Tf = 1490 C; also used by xiu-2019-1045-grinding-fe Table 4. Burns et al. report that FE simulations with this set under-predict the peak tool-chip temperature by hundreds of C and that rapidly heated 1045 is stiffer below the eutectoid (723 C). Alternative: Murugesan & Jung 2019 (Materials 12:609) fitted A 50.1, B 176.1 for hot forming at 1223 K reference, not suitable for cutting."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 1672
+      mc: 0.32
+      rake_ref_deg: 0
+      vc_ref_m_min: 100
+      src: klippel-2022-ck45-cutting-database
+      note: "Table C.17, dry quasi-orthogonal cutting, Sandvik CCMW 09T304 H13A, edge radius 20-50 um, f = 0.01-0.4 mm. Other speeds (kc1.1 N/mm2 / mc): 10: 1935/0.19, 30: 1803/0.17, 50: 1417/0.51, 70: 1729/0.35, 150: 1707/0.28, 200: 1716/0.26, 250: 1794/0.22, 300: 1851/0.22 (rise attributed to dynamic strain ageing), 350: 1575/0.27, 450: 1368/0.29. Feed force kf1.1 at 100 m/min: 809 N/mm2, mf 0.65."
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 1700
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed; a typical carbide turning speed is assumed"}
+      src: walter-2025-technical-compendium
+      note: "Walter machining group P2 (C45 / 1.0503 per the material comparison table): standard value for a neutral cutting edge geometry, p. F9"
+  mechanistic: []                  # no published linear edge-force calibration for 1045 was read
+  min_chip_thickness_ratio: {value: 0.27, src: est, note: "taken from the 0.25-0.30 ratio found for 304 stainless (zou-2026-304-min-cutting-thickness); no 1045-specific value read"}
+  indentation_coeff_N_mm3: {value: 2.9e4, src: est, note: "order-of-magnitude placeholder: 3.0e4 N/mm3 assumed for a ~200 HB carbon steel and scaled by hardness (190/200); replace with an identified value"}
+  work_hardening:
+    layer_depth_um: {value: 50, src: est, note: "typical of ferritic-pearlitic steels turned with sharp carbide; no measurement read"}
+    hardness_increase_pct: {value: 15, src: est, note: "modest strain hardening (JC n = 0.234); no measurement read"}
+    strain_hardening_exponent: {value: 0.234, src: burns-2012-1045-cutting-temperature, note: "JC exponent n"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.5, src: est, range: [0.3, 0.78], note: "0.78 = Albrecht-method estimate from the ETH force data (klippel-2022 Sect. 3.4), which the authors call very high and likely inaccurate because of BUE and segmentation; 0.3-0.6 is the range of Coulomb coefficients used in the FE studies read for other steels; 0.5 chosen"}
+    sticking_ratio: {value: 0.5, src: est, note: "Zorev sticking fraction assumed; no measurement read"}
+  - tool_class: carbide
+    coating: TiN
+    mu_sliding: {value: 0.4, src: est, note: "assumed 20 % below uncoated; no measurement read"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 300, src: est, note: "klippel-2024-ck45-orthogonal Fig. 28 shows segmentation only towards high vc and f (graph not read numerically); klippel-2022 attributes a temperature drop above ~450 m/min to a change in chip formation. 300 m/min at f >= 0.1 mm assumed"}
+  bue:
+    interface_temp_degC: {range: [200, 550], src: est, note: "lower bound ~ chip temperatures from temper colours at low speed (klippel-2022 Sect. 3.5, up to 360 C); upper bound assumed where BUE disappears"}
+    vc_m_min: [10, 50]
+    src: klippel-2024-ck45-orthogonal
+    note: "BUE traces in chips at vc = 10-50 m/min for f = 0.02-0.1 mm; at 150 m/min only at f = 0.02 mm; none at 450 m/min"
+  breakability: {value: medium, src: est, note: "continuous ductile chips that need a chip breaker at small feeds; no quantitative source read"}
+  oxide_colours:
+    table: [[200, "#EDE4B0", "white-yellow (weissgelb)"], [220, "#E3C770", "straw yellow (strohgelb)"], [230, "#D4A93F", "golden yellow (goldgelb)"], [240, "#B98745", "yellow-brown (gelbbraun)"], [250, "#9B5B34", "brown-red (braunrot)"], [260, "#8C3A2E", "red (rot)"], [270, "#7B2E56", "purple-red (purpurrot)"], [280, "#5E2C78", "violet (violett)"], [290, "#2E2F82", "dark blue (dunkelblau)"], [300, "#3C64C4", "cornflower blue (kornblumenblau)"], [320, "#76A9DA", "light blue (hellblau)"], [340, "#7F8FA2", "blue-grey (blaugrau)"], [360, "#8E8E8E", "grey (grau)"]]
+    src: wikipedia-de-anlassen
+    note: "temperatures and colour names from the table for unalloyed tool steel (Tabellenbuch Metall); hex values are this database's rendering of the named colours (est). Colours depend on time at temperature."
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: carbide
+    coating: "CVD TiCN/Al2O3"
+    C_m_min: 650
+    n: 0.25
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit for 1045 was read. C set so that T = 15 min at vc = 330 m/min, a speed typical of current CVD P15-P25 catalogue recommendations for 150-200 HB medium-carbon steel (author's general knowledge, not a cited source); n, a, b typical of coated carbide"
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 290
+    n: 0.22
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 15 min at vc = 160 m/min (uncoated P20, general knowledge); n typical of uncoated carbide"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 50
+    n: 0.125
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 30 m/min (HSS turning of ~190 HB steel, general knowledge); n = 0.125 typical of HSS"
+tool_life_usui: null               # template puts `usui` under the tool_life list, which is not valid YAML; kept as a sibling key
+
+residual_stress: []                # as-supplied bar: no published profile read
+
+skin:
+  type: mill_scale
+  thickness_mm: {value: 0.05, src: est, note: "hot-rolled or normalised bar not peeled/ground; iron-oxide scale assumed 10-100 um. Bright (peeled, ground or drawn) bar: set type none"}
+  hardness_factor: {value: 2.0, src: est, note: "iron oxides (wustite, magnetite, hematite) are several times harder than 190 HB ferrite-pearlite; factor not measured"}
+  abrasiveness_factor: {value: 2.0, src: est, note: "assumed wear-rate multiplier while cutting through scale; a decarburised layer under the scale (softer) is not modelled"}
+
+thermal_damage:
+  burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour (white-yellow)"}
+  white_layer_degC: {value: 725, src: ovako-2025-c45, range: [725, 760], note: "Ac1 725 C, Ac3 760 C (typical); rapid heating in cutting raises the effective transformation temperature (burns-2012 discusses rapid-heating effects below the 723 C eutectoid)"}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "Normalised AISI 1045 for general machining. Measured cutting data (Kienzle, BUE window) come from the ETH Ck45 orthogonal-cutting database (uncoated carbide, dry). All tool-life constants, friction, work-hardening, skin and K_sp values are estimates. Burns et al. 2012 measured Ks ~ 2400 N/mm2 at h = 23-48 um and vc = 222 m/min (orthogonal), useful for validating the small-h end of the Kienzle law."

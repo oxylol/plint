@@ -1,0 +1,111 @@
+# Machine thermal models: spindle, ballscrew axes, structure (cnctwin/thermal/machine.py,
+# docs/models/thermal.md "Machine"). Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: thermal-machine
+description: "Bearing heat vs speed, spindle growth length, warm-up state, structure time constant, ballscrew defaults"
+params:
+  bearing_heat_speed_exponent:
+    value: 1.6666666666666667
+    unit: "-"
+    range: [1.0, 2.0]
+    src: palmgren-1959-bearings
+    note: "load-independent (viscous) friction moment M0 ~ (nu n)^(2/3), so the heat M0 * omega ~ omega^(5/3) (also harris-kotzalas-2007-bearings ch. 6); load-dependent friction (~ omega) is not separated"
+  spindle_growth_length_m:
+    value: 250.0
+    unit: mm
+    range: [150.0, 400.0]
+    src: est
+    note: "effective length of spindle shaft and housing between the axially fixed bearing and the nose; turns the machine's growth at max speed into a temperature rise (motor spindles of 30-50 taper)"
+  spindle_material:
+    value: aisi4140-qt30
+    unit: "-"
+    src: est
+    note: "spindle shaft and housing steel (CTE, density, cp from db/materials)"
+  default_spindle_growth_m:
+    value: 20.0
+    unit: um
+    range: [5.0, 60.0]
+    src: est
+    note: "steady axial growth at max speed when the machine file has no spindle thermal section (10-40 um typical of 40-taper spindles)"
+  default_spindle_time_constant_s:
+    value: 25.0
+    unit: min
+    range: [10.0, 60.0]
+    src: est
+    note: "first-order spindle warm-up time constant when the machine file gives none (15-40 min typical)"
+  default_bearing_heat_W:
+    value: 400.0
+    unit: W
+    range: [100.0, 2000.0]
+    src: est
+    note: "front-bearing heat at max speed when the machine file gives none"
+  default_comp_residual_fraction:
+    value: 0.3
+    unit: "-"
+    range: [0.1, 0.6]
+    src: est
+    note: "growth left after a control's model-based compensation when the machine file says compensation is on but gives no residual"
+  warmup_speed_fraction:
+    value: 0.5
+    unit: "-"
+    range: [0.25, 0.75]
+    src: est
+    note: "a 'warm' machine is taken as having run its warm-up program at this fraction of max speed for warmup.cold_to_warm_min"
+  warmup_axis_speed_m_s:
+    value: 0.05
+    unit: m_s
+    src: est
+    note: "mean axis speed of the warm-up program (heats the ballscrews of a 'warm' machine)"
+  structure_time_constant_s:
+    value: 4.0
+    unit: h
+    range: [1.0, 10.0]
+    src: est
+    note: "first-order response of a cast-iron machine structure to its environment: hours (bryan-1990-thermal-errors; mayr-2012-thermal-issues sec. 3)"
+  ballscrew_material:
+    value: aisi4140-qt30
+    unit: "-"
+    src: est
+    note: "ballscrew steel (induction-hardened alloy steel; CTE, density, cp from db/materials)"
+  ballscrew_fixed_end:
+    value: max
+    unit: "-"
+    src: est
+    note: "the axially fixed (motor-end) bearing is taken at the positive end of travel when the machine file says 'motor' without a position"
+  default_ballscrew_diameter_m:
+    value: 32.0
+    unit: mm
+    src: est
+    note: "when an axis gives no ballscrew data"
+  ballscrew_extra_length_m:
+    value: 200.0
+    unit: mm
+    src: est
+    note: "screw length beyond the travel (bearings, nut) when the axis gives no ballscrew length"
+  default_axis_heat_per_m_J:
+    value: 50.0
+    unit: J
+    src: est
+    note: "ballscrew nut and bearing heat per metre of travel when the machine has no axis_drift section"
+  default_axis_time_constant_s:
+    value: 40.0
+    unit: min
+    src: est
+    note: "ballscrew thermal time constant when the machine gives none"
+  default_screw_expansion_1_K:
+    value: 1.15e-5
+    unit: 1_K
+    src: est
+    note: "steel; used when the machine's axis_drift gives no expansion"
+  structure_material:
+    value: grey-cast-iron-gjl250
+    unit: "-"
+    src: est
+    note: "machine bed and column (cp for the structure's heat capacity)"
+  default_machine_mass_kg:
+    value: 3500.0
+    unit: kg
+    range: [500.0, 50000.0]
+    src: est
+    note: "structure mass when the machine file gives no power.machine_mass_kg (a mid-size VMC)"

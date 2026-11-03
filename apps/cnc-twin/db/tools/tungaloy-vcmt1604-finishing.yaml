@@ -1,0 +1,62 @@
+# Tungaloy VCMT160404 positive 35 deg rhombic finishing inserts (PS, PSS chipbreakers) in the
+# SVJCR2525M16 screw-on holder, read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03
+# (B155, B016, C048, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-vcmt1604-finishing
+maker: "Tungaloy Corporation"
+series: "VCMT160404-PS (T9215) and -PSS (NS9530 cermet) in SVJCR2525M16 (93 deg) for finishing and profiling"
+src: tungaloy-2023-gc-insert
+notes: "Insert (B155): VC = 35 deg rhombic, 7 deg clearance, with hole; VCMT160404: RE 0.4, IC 9.525, S 4.76, D1 4.4 mm. Pictograms B155: PS 10 deg rake (no land), PSS 0.15 mm land with 10 deg rake. Window = ap and f of the positive-insert standard cutting conditions for steel (B016). Holder SVJCR2525M16 (C048): H 25, B 25, LF 150, LH 40, HF 25, WF 32 mm, insert VC**1604, standard RE 0.8, 93 deg approach, 50 deg back clearance (cutting edge style J). VBMT (5 deg clearance) inserts are listed with Tungaloy's internal toolholders (B152) and were not paired here. No holder rake / inclination printed; the overhang is a set-up value, estimated."
+defaults:
+  type: turning_insert
+  hand: right
+items:
+  - id: tungaloy-vcmt160404-ps-t9215-svjcr2525m16
+    order_code: "VCMT160404-PS T9215 + SVJCR2525M16"
+    tool_material: {class: carbide, grade: "T9215 CVD-coated carbide (substrate not stated)", id: carbide-p30, src: est, note: "CVD P grade mapped to the P30 substrate entry"}
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9215 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry:
+      insert:
+        iso_code: "VCMT160404-PS"
+        shape: V
+        included_angle_deg: 35
+        ic_mm: 9.525
+        thickness_mm: 4.76
+        nose_radius_mm: 0.4
+        clearance_deg: 7
+        wiper: false
+        chip_breaker: {name: PS, rake_deg: {value: 10, page: "B155 pictogram"}, window: {f_mm: [0.08, 0.3], ap_mm: [0.3, 2]}, page: "B016 finishing to light cutting, PS T9215"}
+        page: "B155"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002"}
+      holder: {iso_code: "SVJCR2525M16", approach_angle_deg: {value: 93, src: tungaloy-2023-gc-ext-toolholder, page: "C048"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C048 (H, B)"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 2 corners (single-sided 35 deg rhombic), not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning, profiling], vc_m_min: {min: 120, max: 350}, f_mm: {min: 0.08, max: 0.3}, ap_max_mm: 2, page: "B016 PS T9215", note: "ap 0.3-2 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi1045, operation: [turning, profiling], vc_m_min: {min: 100, max: 350}, f_mm: {min: 0.08, max: 0.3}, ap_max_mm: 2, page: "B016", note: "ap 0.3-2 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning, profiling], vc_m_min: {min: 80, max: 250}, f_mm: {min: 0.08, max: 0.3}, ap_max_mm: 2, page: "B016", note: "ap 0.3-2 mm"}
+      - {iso_group: S, material_hint: "titanium alloy Ti-6Al-4V (grade AH8015 per B024; listed for the PS breaker)", material: ti6al4v, operation: [turning], vc_m_min: {min: 20, max: 150}, f_mm: {min: 0.02, max: 0.3}, ap_max_mm: 2.5, page: "B024 PS AH8015 finishing to medium", note: "ap 0.5-2.5 mm; conditions are for grade AH8015, not T9215"}
+  - id: tungaloy-vcmt160404-pss-ns9530-svjcr2525m16
+    order_code: "VCMT160404-PSS NS9530 + SVJCR2525M16"
+    tool_material: {class: cermet, grade: "NS9530 cermet", id: cermet-ticn}
+    coating: {id: none}
+    geometry:
+      insert:
+        iso_code: "VCMT160404-PSS"
+        shape: V
+        included_angle_deg: 35
+        ic_mm: 9.525
+        thickness_mm: 4.76
+        nose_radius_mm: 0.4
+        clearance_deg: 7
+        wiper: false
+        chip_breaker: {name: PSS, land_mm: {value: 0.15, page: "B155 pictogram"}, rake_deg: {value: 10, page: "B155 pictogram"}, window: {f_mm: [0.05, 0.3], ap_mm: [0.1, 0.5]}, page: "B016 finishing, PSS NS9530"}
+        page: "B155"
+      holder: {iso_code: "SVJCR2525M16", approach_angle_deg: {value: 93, src: tungaloy-2023-gc-ext-toolholder, page: "C048"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C048"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 2 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning, profiling], vc_m_min: {min: 150, max: 250}, f_mm: {min: 0.05, max: 0.3}, ap_max_mm: 0.5, page: "B016 PSS NS9530", note: "ap 0.1-0.5 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi1045, operation: [turning, profiling], vc_m_min: {min: 80, max: 220}, f_mm: {min: 0.05, max: 0.3}, ap_max_mm: 0.5, page: "B016", note: "ap 0.1-0.5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning, profiling], vc_m_min: {min: 80, max: 180}, f_mm: {min: 0.05, max: 0.3}, ap_max_mm: 0.5, page: "B016", note: "ap 0.1-0.5 mm"}

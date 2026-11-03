@@ -1,0 +1,394 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-tungmeister-vtb-tslot
+maker: Tungaloy Corporation
+series: TungMeister VTB..-06 6 flute T-slotting heads on VSTD straight shank
+src: tungaloy-2023-gc-endmill
+notes: T-slot cutter assembled from an exchangeable carbide head and a VSTD steel shank (catalogue p. I094 heads, p. I103 shanks, p. I095 cutting data).
+items:
+- id: tungaloy-vtb195w500r04-06s08-vstd12l090s08
+  order_code: VTB195W5.00R04-06S08 GH730 head + VSTD12L090S08-S shank
+  type: tslot
+  hand: {value: right, src: est, note: right-hand assumed (R in the designation is the corner radius code; hand not stated)}
+  tool_material: {class: carbide, grade: GH730 (coated carbide head), id: carbide-submicron-10co, src: est, note: 'GH730 is marked as the available grade for VTB heads (GH130 is marked ''to be discontinued'', p. I094); its substrate is not described; submicron carbide assumed'}
+  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed}
+  geometry:
+    diameter_mm: 19.5
+    width_mm: 5
+    flutes: 6
+    corner_radius_mm: 0.4
+    cutting_length_mm: 5
+    helix_deg: {value: 0, src: est, note: not published; straight teeth assumed (FHA 0 deg printed in the head table)}
+    pitch_deg:
+      value: [60.0, 60.0, 60.0, 60.0, 60.0, 60.0]
+      src: est
+      note: equal spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published}
+    edge_radius_um: {value: 8, src: est, note: not published; 8 um assumed for a coated head}
+    edge_prep: {type: hone, src: est, note: not published}
+    neck:
+      diameter_mm: 12
+      length_mm: {value: 90, src: est, note: 'VSTD12 body length LF 90 mm used as the neck length (body diameter BD = 12 mm, no relief)'}
+    shank: {diameter_mm: 12, length_mm: 90, form: plain, page: 'p. I103 VSTD table (DCONMS 12, BD 12, LF 90, CRKS S08)', note: 'VSTD12L090S08-S steel shank (shank material: steel)'}
+    overall_length_mm: {value: 95, src: est, note: shank LF 90 mm + head width (head seat-to-tip length not published)}
+    centre_cutting: {value: false, src: est, note: 'T-slot head cuts on its periphery and faces, no centre cutting (not stated)'}
+    coolant_holes: null
+    src: tungaloy-2023-gc-endmill
+    page: p. I094 VTB**-06 table (NOF 6, FHA 0 deg, DC, CW +/-0.02, CDX, CRKS, RE)
+    note: max_radial_doc_mm = 3.45; connection = TungMeister screw-in thread S08
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 98.3, src: est, note: 'steel shank 12 x 90 mm (7.85 g/cm3, assumed) + carbide head D x CW x 0.85 (14.5 g/cm3)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel S45C/S55C, C45/C55, <= 300 HB (e.g. aisi1045)
+    operation: [t_slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: P
+    material_hint: alloy steel SCM440/SCr420, 42CrMo4/20Cr4, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [t_slotting]
+    vc_m_min: {min: 60, max: 120}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: M
+    material_hint: stainless steel SUS304/316, X5CrNi18-9, <= 200 HB (e.g. aisi304)
+    operation: [t_slotting]
+    vc_m_min: {min: 50, max: 120}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: K
+    material_hint: grey cast iron FC250/FC300, GG250/GG300, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: K
+    material_hint: ductile cast iron FCD450, GGG450, 150-250 HB
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: N
+    material_hint: aluminium alloys Si < 13 % (e.g. al6061-t6, al7075-t6)
+    operation: [t_slotting]
+    vc_m_min: {min: 200, max: 600}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: N
+    material_hint: aluminium alloys Si >= 13 %
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (e.g. ti6al4v)
+    operation: [t_slotting]
+    vc_m_min: {min: 40, max: 60}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: S
+    material_hint: heat-resistant alloys Inconel 718, <= 40 HRC (e.g. inconel718)
+    operation: [t_slotting]
+    vc_m_min: {min: 15, max: 35}
+    fz_mm: {min: 0.02, max: 0.1}
+    ap_max_mm: 5
+    ae_max_mm: 3.45
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 5 mm, radial depth <= CDX 3.45 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'exchangeable head, replaced not reground'}
+  note: exchangeable 6-flute T-slotting head on a straight steel shank; recommended head clamping torque 15 N m (p. I094); price not published
+- id: tungaloy-vtb225w600r04-06s08-vstd12l090s08
+  order_code: VTB225W6.00R04-06S08 GH730 head + VSTD12L090S08-S shank
+  type: tslot
+  hand: {value: right, src: est, note: right-hand assumed (R in the designation is the corner radius code; hand not stated)}
+  tool_material: {class: carbide, grade: GH730 (coated carbide head), id: carbide-submicron-10co, src: est, note: 'GH730 is marked as the available grade for VTB heads (GH130 is marked ''to be discontinued'', p. I094); its substrate is not described; submicron carbide assumed'}
+  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed}
+  geometry:
+    diameter_mm: 22.5
+    width_mm: 6
+    flutes: 6
+    corner_radius_mm: 0.4
+    cutting_length_mm: 6
+    helix_deg: {value: 0, src: est, note: not published; straight teeth assumed (FHA 0 deg printed in the head table)}
+    pitch_deg:
+      value: [60.0, 60.0, 60.0, 60.0, 60.0, 60.0]
+      src: est
+      note: equal spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published}
+    edge_radius_um: {value: 8, src: est, note: not published; 8 um assumed for a coated head}
+    edge_prep: {type: hone, src: est, note: not published}
+    neck:
+      diameter_mm: 12
+      length_mm: {value: 90, src: est, note: 'VSTD12 body length LF 90 mm used as the neck length (body diameter BD = 12 mm, no relief)'}
+    shank: {diameter_mm: 12, length_mm: 90, form: plain, page: 'p. I103 VSTD table (DCONMS 12, BD 12, LF 90, CRKS S08)', note: 'VSTD12L090S08-S steel shank (shank material: steel)'}
+    overall_length_mm: {value: 96, src: est, note: shank LF 90 mm + head width (head seat-to-tip length not published)}
+    centre_cutting: {value: false, src: est, note: 'T-slot head cuts on its periphery and faces, no centre cutting (not stated)'}
+    coolant_holes: null
+    src: tungaloy-2023-gc-endmill
+    page: p. I094 VTB**-06 table (NOF 6, FHA 0 deg, DC, CW +/-0.02, CDX, CRKS, RE)
+    note: max_radial_doc_mm = 4.95; connection = TungMeister screw-in thread S08
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 109.3, src: est, note: 'steel shank 12 x 90 mm (7.85 g/cm3, assumed) + carbide head D x CW x 0.85 (14.5 g/cm3)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel S45C/S55C, C45/C55, <= 300 HB (e.g. aisi1045)
+    operation: [t_slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: P
+    material_hint: alloy steel SCM440/SCr420, 42CrMo4/20Cr4, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [t_slotting]
+    vc_m_min: {min: 60, max: 120}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: M
+    material_hint: stainless steel SUS304/316, X5CrNi18-9, <= 200 HB (e.g. aisi304)
+    operation: [t_slotting]
+    vc_m_min: {min: 50, max: 120}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: K
+    material_hint: grey cast iron FC250/FC300, GG250/GG300, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: K
+    material_hint: ductile cast iron FCD450, GGG450, 150-250 HB
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: N
+    material_hint: aluminium alloys Si < 13 % (e.g. al6061-t6, al7075-t6)
+    operation: [t_slotting]
+    vc_m_min: {min: 200, max: 600}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: N
+    material_hint: aluminium alloys Si >= 13 %
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (e.g. ti6al4v)
+    operation: [t_slotting]
+    vc_m_min: {min: 40, max: 60}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: S
+    material_hint: heat-resistant alloys Inconel 718, <= 40 HRC (e.g. inconel718)
+    operation: [t_slotting]
+    vc_m_min: {min: 15, max: 35}
+    fz_mm: {min: 0.02, max: 0.1}
+    ap_max_mm: 6
+    ae_max_mm: 4.95
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 6 mm, radial depth <= CDX 4.95 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'exchangeable head, replaced not reground'}
+  note: exchangeable 6-flute T-slotting head on a straight steel shank; recommended head clamping torque 15 N m (p. I094); price not published
+- id: tungaloy-vtb250w800r04-06s08-vstd12l090s08
+  order_code: VTB250W8.00R04-06S08 GH730 head + VSTD12L090S08-S shank
+  type: tslot
+  hand: {value: right, src: est, note: right-hand assumed (R in the designation is the corner radius code; hand not stated)}
+  tool_material: {class: carbide, grade: GH730 (coated carbide head), id: carbide-submicron-10co, src: est, note: 'GH730 is marked as the available grade for VTB heads (GH130 is marked ''to be discontinued'', p. I094); its substrate is not described; submicron carbide assumed'}
+  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed}
+  geometry:
+    diameter_mm: 25
+    width_mm: 8
+    flutes: 6
+    corner_radius_mm: 0.4
+    cutting_length_mm: 8
+    helix_deg: {value: 0, src: est, note: not published; straight teeth assumed (FHA 0 deg printed in the head table)}
+    pitch_deg:
+      value: [60.0, 60.0, 60.0, 60.0, 60.0, 60.0]
+      src: est
+      note: equal spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published}
+    edge_radius_um: {value: 8, src: est, note: not published; 8 um assumed for a coated head}
+    edge_prep: {type: hone, src: est, note: not published}
+    neck:
+      diameter_mm: 12
+      length_mm: {value: 90, src: est, note: 'VSTD12 body length LF 90 mm used as the neck length (body diameter BD = 12 mm, no relief)'}
+    shank: {diameter_mm: 12, length_mm: 90, form: plain, page: 'p. I103 VSTD table (DCONMS 12, BD 12, LF 90, CRKS S08)', note: 'VSTD12L090S08-S steel shank (shank material: steel)'}
+    overall_length_mm: {value: 98, src: est, note: shank LF 90 mm + head width (head seat-to-tip length not published)}
+    centre_cutting: {value: false, src: est, note: 'T-slot head cuts on its periphery and faces, no centre cutting (not stated)'}
+    coolant_holes: null
+    src: tungaloy-2023-gc-endmill
+    page: p. I094 VTB**-06 table (NOF 6, FHA 0 deg, DC, CW +/-0.02, CDX, CRKS, RE)
+    note: max_radial_doc_mm = 5.9; connection = TungMeister screw-in thread S08
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 128.3, src: est, note: 'steel shank 12 x 90 mm (7.85 g/cm3, assumed) + carbide head D x CW x 0.85 (14.5 g/cm3)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel S45C/S55C, C45/C55, <= 300 HB (e.g. aisi1045)
+    operation: [t_slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: P
+    material_hint: alloy steel SCM440/SCr420, 42CrMo4/20Cr4, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [t_slotting]
+    vc_m_min: {min: 60, max: 120}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: M
+    material_hint: stainless steel SUS304/316, X5CrNi18-9, <= 200 HB (e.g. aisi304)
+    operation: [t_slotting]
+    vc_m_min: {min: 50, max: 120}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: K
+    material_hint: grey cast iron FC250/FC300, GG250/GG300, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: K
+    material_hint: ductile cast iron FCD450, GGG450, 150-250 HB
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: N
+    material_hint: aluminium alloys Si < 13 % (e.g. al6061-t6, al7075-t6)
+    operation: [t_slotting]
+    vc_m_min: {min: 200, max: 600}
+    fz_mm: {min: 0.08, max: 0.18}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: N
+    material_hint: aluminium alloys Si >= 13 %
+    operation: [t_slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (e.g. ti6al4v)
+    operation: [t_slotting]
+    vc_m_min: {min: 40, max: 60}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  - iso_group: S
+    material_hint: heat-resistant alloys Inconel 718, <= 40 HRC (e.g. inconel718)
+    operation: [t_slotting]
+    vc_m_min: {min: 15, max: 35}
+    fz_mm: {min: 0.02, max: 0.1}
+    ap_max_mm: 8
+    ae_max_mm: 5.9
+    src: tungaloy-2023-gc-endmill
+    page: p. I095 STANDARD CUTTING CONDITIONS, Slotting, VTB columns
+    note: ap = full width CW 8 mm, radial depth <= CDX 5.9 mm (p. I094); VSTD shank has no external clearance, so the shank may touch the workpiece (p. I103)
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'exchangeable head, replaced not reground'}
+  note: exchangeable 6-flute T-slotting head on a straight steel shank; recommended head clamping torque 15 N m (p. I094); price not published

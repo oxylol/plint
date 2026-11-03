@@ -1,0 +1,153 @@
+# Workpiece material: aluminium 7075-T7351 (over-aged, stress relieved by stretching) plate.
+# Physical and mechanical data: Kaiser 2006 sheet/plate datasheet; alloy-level data from NASA 1972.
+format: cnctwin-material
+version: 1
+id: al7075-t7351
+name: "Aluminium 7075-T7351"
+family: aluminium
+iso_group: N
+condition: "T7351: solution heat treated, stress relieved by stretching, over-aged for stress-corrosion resistance (plate)"
+designations: {UNS: A97075, EN: "EN AW-7075", DIN: "AlZn5.5MgCu"}
+stock_forms: [rolled_plate]        # estimated profile only, see residual_stress
+
+physical:
+  src: kaiser-2006-al7075-datasheet
+  density_kg_m3: {value: 2800, note: "also NASA 2.80 g/cm3"}
+  specific_heat_J_kgK: {table: [[-18, 837], [93, 920], [200, 1013], [300, 1096]], src: muraca-1972-al7075-handbook, digitised: true, uncertainty_pct: 5, note: "alloy curve digitised from NASA Fig. 9.2111; Kaiser gives 960 J/kgK at 100 C"}
+  conductivity_W_mK: {table: [[20, 155]], note: "T7351 at 20 C (90 Btu/ft h F)"}
+  expansion_1_K: {table: [[38, 23.0e-6], [93, 23.8e-6], [149, 24.3e-6], [204, 24.7e-6]], src: muraca-1972-al7075-handbook, digitised: true, uncertainty_pct: 3, note: "alloy curve digitised from NASA Fig. 9.2111 (mean from room temperature, assumed); Kaiser: 23.4e-6 for 20-100 C"}
+  youngs_modulus_GPa: {table: [[20, 71.0]], range: [71.0, 71.7], note: "Kaiser 10.3e3 ksi / 71.0 GPa; NASA typical 71.7 GPa"}
+  poisson: {value: 0.33, src: muraca-1972-al7075-handbook}
+  solidus_degC: {value: 477, src: muraca-1972-al7075-handbook, range: [477, 532], note: "NASA 477 C (eutectic melting); Kaiser melting range starts at 532 C"}
+  liquidus_degC: {value: 635, range: [635, 638], note: "Kaiser 635 C; NASA 638 C"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 135, src: est, note: "Kaiser gives no Brinell value for T7351; scaled from T651 (150 HB) by the UTS ratio 503/572"}
+  yield_MPa: {value: 434, note: "typical, T7351 plate"}
+  ultimate_MPa: {value: 503, note: "typical, T7351 plate; ultimate shear strength 303 MPa"}
+  elongation_pct: {value: 13, note: "in 4D"}
+  fracture_strain: {value: 0.35, src: est, note: "ln(1/(1-RA)) with an assumed reduction of area of about 30 %; no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 390
+  B_MPa: {value: 457, note: "B of the 7075-T6 set kept: the T7351 and T6 tensile ranges (UTS - YS = 69 MPa) are equal"}
+  n: {value: 0.357, note: "n of the 7075-T6 set"}
+  C: {value: 0.01, note: "C of the 7075-T6 set"}
+  m: {value: 1.1, note: "m of the 7075-T6 set"}
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: {value: 604, src: luo-2021-al7075-drilling, note: "value used with the 7075-T6 set"}
+  src: est
+  note: "No published JC set for T7351 was found. Derived from the 7075-T6 machining set of luo-2021-al7075-drilling (A 452, B 457, n 0.357, C 0.01, m 1.1) by scaling A with the typical yield ratio T7351/T6 = 434/503 (A = 390 MPa). Treat as an estimate."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 800
+      mc: 0.25
+      rake_ref_deg: {value: 0, src: est, note: "reference geometry not stated by ISCAR; neutral 0 deg rake assumed"}
+      vc_ref_m_min: {value: 300, src: est, note: "no reference speed in the catalogue; assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR group 22: aluminium wrought alloy, hardenable (100 HB nominal)"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 920
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 60
+      src: est
+      note: "carbide catalogue value x 1.15 assumed for HSS"
+  mechanistic: []                  # no T7351 calibration read; the averaged 'Al-7075' coefficients of Engin & Altintas are in al7075-t6.yaml
+  min_chip_thickness_ratio: {value: 0.3, src: wojciechowski-2022-min-chip-thickness, range: [0.2, 0.45], note: "no 7075 entry; chosen inside the aluminium-alloy range of Table 1"}
+  indentation_coeff_N_mm3: {value: 2.1e4, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (135/95)"}
+  work_hardening:
+    layer_depth_um: {value: 30, src: est, note: "assumed; no measurement read"}
+    hardness_increase_pct: {value: 10, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.357, src: est, note: "n of the derived JC set"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.55, src: est, range: [0.5, 0.6], note: "the 7075-T6 FE value of luo-2021-al7075-drilling adopted for T7351"}
+    sticking_ratio: {value: 0.6, src: est, note: "assumed"}
+  - tool_class: carbide
+    coating: TiN
+    mu_sliding: {value: 0.5, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.55, src: est, note: "assumed"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation: null
+  bue:
+    interface_temp_degC: {range: [150, 400], src: est, note: "assumed"}
+    vc_m_min: [40, 300]
+    src: est
+    note: "taken over from 7075 measured in other tempers (trujillo-2017-al7075-adhesion: BUE/BUL at 40-200 m/min, temper not stated; jomaa-2014-al7075-orthogonal: T651, BUE at 300 m/min, reduced at 1000 m/min); assumed to apply to T7351"
+  breakability: {value: medium, src: est, note: "assumed similar to 7075-T6"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 1600
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge)"
+  - tool_class: pcd
+    coating: uncoated
+    C_m_min: 5500
+    n: 0.35
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.1
+    src: est
+    note: "placeholder: T = 15 min at vc ~ 2100 m/min; not a cited value"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 185
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 100 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress:
+  - form: rolled_plate
+    thickness_mm: {value: 50, src: est, note: "assumed representative plate"}
+    direction: L
+    profile: [[0.0, -20], [0.1, -5], [0.25, 15], [0.5, -10], [0.75, 15], [0.9, -5], [1.0, -20]]
+    src: est
+    note: "PLACEHOLDER for stretched (TX51) plate: low-amplitude (+-20 MPa) self-equilibrating profile assumed. Measured through-thickness profiles of stretched 7xxx plate exist (e.g. Prime & Hill, Scripta Mater. 46 (2002) 77-82, crack-compliance method) but were not accessible here; replace this profile with such data"
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 477, src: muraca-1972-al7075-handbook, note: "start of the NASA melting range (eutectic melting); Kaiser 532 C"}
+
+ignition: null
+composite: null
+
+notes: "Over-aged, stretched 7075 plate (aerospace structural parts). Sourced: T7351 tensile, conductivity, density, E (Kaiser 2006); alloy-level cp/alpha (NASA, digitised), Kienzle (ISCAR). Estimated: hardness, JC set (scaled from the 7075-T6 machining set), friction, BUE window (carried over from other 7075 tempers), work hardening, K_sp, Taylor constants and the plate residual-stress profile (main gap: Prime & Hill data not read)."

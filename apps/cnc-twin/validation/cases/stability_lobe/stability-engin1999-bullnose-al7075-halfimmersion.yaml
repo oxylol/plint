@@ -1,0 +1,51 @@
+# Engin & Altintas: bull-nose inserted cutter on a 40-taper machining centre, Al-7075,
+# half-immersion down-milling. Two measured tests (chatter at 9500 rpm, stable at 14000 rpm).
+format: cnctwin-validation-case
+version: 1
+id: stability-engin1999-bullnose-al7075-halfimmersion
+quantity: stability_lobe
+reference:
+  src: engin-1999-general-milling
+  location: "Fig. 8 (cutter), Fig. 9 caption (conditions, average cutting coefficients), Table 1 (measured modal parameters), text p. 8 (test results)"
+  digitised: false
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: al7075-t6, note: "the paper says Al-7075 without temper; T6 assumed"}
+  tool:
+    type: shoulder_mill
+    maker_tool: "Kennametal KIRP125-RP3 end mill with two round inserts RPGB-325"
+    tool_class: carbide
+    coating: "coated (temper of coating not given)"
+    flutes: 2
+    diameter_mm: 31.75               # D = 5/4 in
+    insert_radius_mm: 4.7625         # R = Rz = h = 3/16 in (round insert)
+    Rr_mm: 11.1125                   # 7/16 in, radial offset of the insert centre in the generalised geometry
+    Rz_mm: 4.7625
+    h_mm: 4.7625
+    alpha_deg: 0
+    beta_deg: 0
+  holder: {interface: "40-taper spindle", type: "mechanical chuck"}
+  conditions:
+    direction: down
+    radial_immersion_ratio: 0.5
+    ae_mm: 15.875
+    feed_mm_tooth: 0.05
+    coolant: {value: dry, src: est, note: "not stated"}
+  dynamics:
+    model: "tool-point FRF from impact tests, two modes per direction: x/F = sum_k (R1 + R2 s) / (s^2 + 2 zeta wn s + wn^2), R1 = 2 (zeta wn sigma - wd upsilon), R2 = 2 sigma"
+    modes_x:
+      - {natural_freq_Hz: 452.77, damping_pct: 12.37, residue_e6: [92.02966, -186.2195]}
+      - {natural_freq_Hz: 1448.53, damping_pct: 1.65, residue_e6: [-41.81562, -304.362]}
+    modes_y:
+      - {natural_freq_Hz: 516.17, damping_pct: 2.43, residue_e6: [-2.39290, -172.1539]}
+      - {natural_freq_Hz: 1407.64, damping_pct: 3.24, residue_e6: [40.55052, -361.8808]}
+    residue_note: "residue_e6 = [sigma, upsilon] of one of the conjugate residues (sigma +- i upsilon) as printed in Table 1, x 1e-6, unit printed as m/N"
+    cutting_coefficients: {Ktc_N_mm2: 1319.41, Krc_N_mm2: 788.83, Kac_N_mm2: 48.75, Kte_N_mm: 19.65, Kre_N_mm: 26.77, Kae_N_mm: 2.05}
+  program: null
+reference_values:
+  - {name: chatter_test, value: 4.7, unit: mm, x: 9500, x_name: spindle_speed, x_unit: rpm, note: "significant chatter; force magnitudes at least twice the chatter-free test; wavy surface"}
+  - {name: chatter_frequency, value: 1448, unit: Hz, x: 9500, x_name: spindle_speed, x_unit: rpm, note: "coincides with the second bending mode of the spindle in the feed direction (1448.53 Hz)"}
+  - {name: stable_test, value: 4.7, unit: mm, x: 14000, x_name: spindle_speed, x_unit: rpm, note: "no chatter; forces show only the tooth-passing pulsation (467 Hz in the force spectrum)"}
+reference_curves: []
+notes: "Only two measured tests are reported (same axial depth 4.7 mm, about the insert radius). The analytical (Altintas-Budak) and time-domain lobes in Fig. 9 are model results and are not stored. The modal residues are kept as printed; their stated unit (m/N) is loose, so rebuild the FRF from the stated formula rather than from the unit. Cutting coefficients are averages along the insert edge (Fig. 9 caption)."

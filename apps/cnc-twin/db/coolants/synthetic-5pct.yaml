@@ -1,0 +1,34 @@
+# Synthetic (oil-free) metalworking fluid, 5 % concentrate in water: true solution of glycols,
+# amines, corrosion inhibitors and (optionally) polymer lubricity additives.
+# Properties are water (NIST) corrected for the solute; corrections are estimates.
+format: cnctwin-coolant
+version: 1
+id: synthetic-5pct
+name: "Synthetic (oil-free) solution, 5 % concentrate in water"
+kind: synthetic
+src: est
+concentration_pct: 5
+density_kg_m3: {table: [[20, 1002.3], [40, 996.1], [60, 987.0], [80, 975.6]], src: est, note: "volume mixing of water (nist-webbook-water-2026) with 5 % concentrate of 1080 kg/m3 at 20 C (glycol/amine solution, assumed)"}
+viscosity_mPa_s: {table: [[20, 1.152], [40, 0.751], [60, 0.536], [80, 0.407]], src: est, note: "water viscosity (NIST) x (1 + 3.0 phi) for dissolved glycols/polymers, assumed"}
+specific_heat_J_kgK: {table: [[20, 4131], [40, 4130], [60, 4139], [80, 4153]], src: est, note: "mass-weighted water (NIST) and concentrate (3200 J/kgK, assumed)"}
+conductivity_W_mK: {table: [[20, 0.587], [40, 0.616], [60, 0.637], [80, 0.652]], src: est, note: "Maxwell-type mixing with concentrate k 0.40 W/mK (assumed)"}
+surface_tension_mN_m: {value: 42, range: [35, 50], src: est, note: "fewer surfactants than emulsions; below water's 72.7 mN/m (nist-webbook-water-2026)"}
+boiling_degC: {value: 100.5, src: est, note: "small boiling-point elevation by dissolved solids"}
+leidenfrost_degC: {value: 240, range: [190, 300], src: est, note: "water ~193-257 C (wikipedia-leidenfrost-2026); higher surface tension than emulsions and dissolved salts tend to raise it, assumed"}
+leidenfrost_water_reference_degC: {value: 193, range: [193, 257], src: wikipedia-leidenfrost-2026, note: "pure water: ~193 C (smooth hot metal), 257 C for a saturated water-copper interface; reference for the estimate above"}
+flash_point_degC: null
+smoke_point_degC: null
+friction_factor:
+  - {tool_class: carbide, work_family: steel, value: 0.9, range: [0.8, 1.0], src: est, note: "oil-free fluids give little boundary lubrication unless EP/polymer additives are present, assumed"}
+  - {tool_class: carbide, work_family: aluminium, value: 0.8, src: est}
+  - {tool_class: carbide, work_family: titanium, value: 0.95, src: est}
+  - {tool_class: hss, work_family: steel, value: 0.85, src: est}
+lubricity_index: {value: 0.3, src: est}
+heat_transfer:
+  latent_heat_kJ_kg: {value: 2256, src: nist-webbook-water-2026, note: "water at 100 C"}
+  flood_htc_W_m2K: {value: 7000, range: [2500, 20000], src: est, note: "best cooling of the water-based fluids (highest k and cp)"}
+drag_out_ml_per_kg_chips: {value: 30, range: [15, 60], src: est, note: "thin, low-viscosity film; drains best"}
+evaporation_l_per_h_per_m2: {value: 0.3, range: [0.1, 0.6], src: est}
+mist_loss_fraction: {value: 2.0e-6, src: est}
+cost_eur_per_l: {value: 7.0, src: est, note: "concentrate price"}
+notes: "Derived estimates on NIST water data. Common for grinding and cast iron."

@@ -1,0 +1,107 @@
+# Ti6Al4V orthogonal turning: tool temperature near the edge by IR thermography (2 x 1 mm window).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: tooltemp-orth-ti64-slusarczyk2025-ir
+quantity: tool_temperature
+reference:
+  src: slusarczyk-2025-ti6al4v-rake-temperature
+  location: Table 5 (average contact temperature from thermograms in the stable cutting phase), Sect. 3.2 and 4
+  digitised: false
+  uncertainty_pct: 8
+  measured: true
+  note: IR thermography with emissivity 0.48 assumed for uncoated WC-Co (from the literature, ref. [33] of the source);
+    maximum error of the thermovision measurements +-8 % (Sect. 4)
+setup:
+  operation: orthogonal_turning
+  material:
+    db: ti6al4v
+    note: 'Ti-6Al-4V shaft; only the composition is given (Table 1: Al 5.5-6.75, V 3.5-4.5, Fe 0.03, O 0.20, C 0.08, N 0.05,
+      H 0.015 wt%); condition not stated'
+  tool:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.2
+    tool_class: carbide
+    tool_material: uncoated WC-Co
+    rake_face: flat (no chip breaker)
+    rake_per_test_deg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+    clearance_deg: 5
+    inclination_deg: 0
+    coating: none
+    edge_radius_um: {value: 10, src: est, note: 'assumed: not stated; typical of a ground uncoated WC-Co edge (est.)'}
+    assumed_inputs: [edge_radius_um]
+  machine:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.2, Fig. 3-4
+    model: KNUTH Masterturn 400 precision lathe
+    dynamometer: Kistler 9257B on the auxiliary slide, Kistler 5070B amplifier, DynoWare
+    force_sampling_Hz: 3000
+    thermal_camera: FLIR SC 620, 640 x 480 px, 30 Hz, f = 38 mm lens, on the tailstock side
+    high_speed_camera: Phantom v5.2, 3000 fps, 512 x 512 px (chip flow speed by marker tracking)
+  stock:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.1-3.2
+    form: shaft prepared for orthogonal turning (geometry not given); knurled markers on the side for chip-flow tracking
+  conditions:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Tables 2-3
+    test_ids: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
+      '20']
+    vc_per_test_m_min: [60, 50, 40, 30, 20, 60, 50, 40, 30, 20, 60, 50, 40, 30, 20, 60, 50, 40, 30, 20]
+    feed_per_test_mm_rev: [0.104, 0.104, 0.104, 0.104, 0.104, 0.069, 0.069, 0.069, 0.069, 0.069, 0.104, 0.104, 0.104, 0.104,
+      0.104, 0.069, 0.069, 0.069, 0.069, 0.069]
+    width_of_cut_mm: {value: 4, note: 'ap = 4 mm, constant'}
+    coolant:
+      value: dry
+      src: est
+      note: 'assumed: not stated; the side-view thermography of the cutting zone implies no coolant'
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: 'T_avg test 1 (rake 0, f 0.104)', value: 556, unit: degC, uncertainty: 44.5, x: 60, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 2 (rake 0, f 0.104)', value: 532, unit: degC, uncertainty: 42.6, x: 50, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 3 (rake 0, f 0.104)', value: 501, unit: degC, uncertainty: 40.1, x: 40, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 4 (rake 0, f 0.104)', value: 480, unit: degC, uncertainty: 38.4, x: 30, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 5 (rake 0, f 0.104)', value: 451, unit: degC, uncertainty: 36.1, x: 20, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 6 (rake 0, f 0.069)', value: 472, unit: degC, uncertainty: 37.8, x: 60, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 7 (rake 0, f 0.069)', value: 470, unit: degC, uncertainty: 37.6, x: 50, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 8 (rake 0, f 0.069)', value: 458, unit: degC, uncertainty: 36.6, x: 40, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 9 (rake 0, f 0.069)', value: 445, unit: degC, uncertainty: 35.6, x: 30, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 10 (rake 0, f 0.069)', value: 447, unit: degC, uncertainty: 35.8, x: 20, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 11 (rake 10, f 0.104)', value: 444, unit: degC, uncertainty: 35.5, x: 60, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 12 (rake 10, f 0.104)', value: 440, unit: degC, uncertainty: 35.2, x: 50, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 13 (rake 10, f 0.104)', value: 435, unit: degC, uncertainty: 34.8, x: 40, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 14 (rake 10, f 0.104)', value: 431, unit: degC, uncertainty: 34.5, x: 30, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 15 (rake 10, f 0.104)', value: 417, unit: degC, uncertainty: 33.4, x: 20, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 16 (rake 10, f 0.069)', value: 469, unit: degC, uncertainty: 37.5, x: 60, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 17 (rake 10, f 0.069)', value: 419, unit: degC, uncertainty: 33.5, x: 50, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 18 (rake 10, f 0.069)', value: 403, unit: degC, uncertainty: 32.2, x: 40, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 19 (rake 10, f 0.069)', value: 393, unit: degC, uncertainty: 31.4, x: 30, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+- {name: 'T_avg test 20 (rake 10, f 0.069)', value: 391, unit: degC, uncertainty: 31.3, x: 20, x_name: vc, x_unit: m/min,
+  note: uncertainty = the stated maximum thermography error of 8 %}
+reference_curves: []
+notes: 'What is measured: the mean apparent temperature of a 2 x 1 mm area on the tool, seen from the side (the source writes
+  ''tool flank'') next to the chip-tool contact, recorded at 30 Hz during stable cutting. It is not the peak rake-face temperature:
+  the source''s own contact model gives 24-73 C higher maximum values (~17 %). A simulator should average its tool side-face
+  temperature over the same 2 x 1 mm window at the cutting edge. The camera position was chosen so that the flowing chip
+  does not obstruct the window (Sect. 3.2).'

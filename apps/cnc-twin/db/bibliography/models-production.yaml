@@ -1,0 +1,49 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/models/production-*.yaml and docs/models/production.md (cycle time, operator,
+# energy per part, consumables, tool cost).
+entries:
+  palmgren-1959:
+    type: book
+    authors: "Palmgren, A."
+    title: "Ball and Roller Bearing Engineering"
+    edition: 3
+    publisher: "S. H. Burbank & Co., Philadelphia"
+    year: 1959
+    pages: "frictional moment of rolling bearings: load-dependent and load-independent (lubricant) parts, M0 = 1e-7 f0 (nu n)^(2/3) dm^3"
+  gutowski-2006:
+    type: conference
+    authors: "Gutowski, T.; Dahmus, J.; Thiriez, A."
+    title: "Electrical energy requirements for manufacturing processes"
+    venue: "13th CIRP International Conference on Life Cycle Engineering, Leuven"
+    year: 2006
+    pages: "machine tool power as constant (idle) plus variable (process) power"
+  balogun-mativenga-2013:
+    type: article
+    authors: "Balogun, V.A.; Mativenga, P.T."
+    title: "Modelling of direct energy requirements in mechanical machining processes"
+    venue: "Journal of Cleaner Production 41, 179-186"
+    year: 2013
+    pages: "basic, ready (spindle and axes on, no cut) and cutting power states of a machine tool"
+  cengel-boles-2015:
+    type: book
+    authors: "Cengel, Y.A.; Boles, M.A."
+    title: "Thermodynamics: An Engineering Approach"
+    edition: 8
+    publisher: "McGraw-Hill Education, New York"
+    year: 2015
+    pages: "isothermal compression work of an ideal gas, w = R T ln(P2/P1)"
+  iec-60034-30-1-2014:
+    type: standard
+    authors: "IEC"
+    title: "IEC 60034-30-1:2014 Rotating electrical machines - Part 30-1: Efficiency classes of line operated AC motors (IE code)"
+    publisher: "International Electrotechnical Commission, Geneva"
+    year: 2014
+    pages: "efficiency class limits IE1-IE4 by rated power and pole number"
+  doe-compressed-air-2003:
+    type: report
+    authors: "U.S. Department of Energy, Office of Industrial Technologies"
+    title: "Improving Compressed Air System Performance: A Sourcebook for Industry"
+    publisher: "U.S. Department of Energy, Washington DC"
+    year: 2003
+    pages: "compressor specific power and the cost of compressed air"

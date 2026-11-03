@@ -1,0 +1,188 @@
+# Oxley's predictive machining theory with the Johnson-Cook flow stress (Lalwani et al. 2009) as
+# solved by cnctwin.mechanics (docs/models/mechanics.md, "Oxley"). Values are SI as written.
+format: cnctwin-model-params
+version: 1
+model: mechanics-oxley
+description: "Constants of the extended Oxley model (temperatures, heat partition, search ranges) and the solver settings"
+params:
+  eta_shear_plane_temp:
+    value: 0.9
+    unit: "-"
+    range: [0.5, 1.0]
+    src: pantale-2022-extoxley-software
+    note: "eta: fraction of the primary-zone temperature rise reached at the shear plane AB, T_AB = T_w + eta dT_SZ (Oxley 1989 value used by Lalwani 2009 and the ExtOxley code)"
+  psi_interface_temp:
+    value: 0.9
+    unit: "-"
+    range: [0.5, 1.0]
+    src: pantale-2022-extoxley-software
+    note: "psi: ratio of the mean to the maximum interface temperature rise, T_int = T_w + dT_SZ + psi dT_M"
+  beta_low_a:
+    value: 0.5
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "beta = a - b log10(R_T tan phi) for R_T tan phi <= beta_switch (Boothroyd's results as fitted by Oxley)"
+  beta_low_b:
+    value: 0.35
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "slope of the low branch of beta"
+  beta_high_a:
+    value: 0.3
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "beta = a - b log10(R_T tan phi) for R_T tan phi > beta_switch"
+  beta_high_b:
+    value: 0.15
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "slope of the high branch of beta"
+  beta_switch_RTtanphi:
+    value: 10.0
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "R_T tan phi where the two branches of beta meet (both give 0.15 there)"
+  min_beta_RTtanphi:
+    value: 0.04
+    unit: "-"
+    src: est
+    note: "lower end of the validity range 0.04 <= R_T tan phi <= 10 quoted for the Boothroyd/Oxley beta fit in the extended-Oxley literature (not read in the original); below it beta is held at its value at 0.04 (0.989), i.e. nearly all shear heat to the work"
+  dTM_a:
+    value: 0.06
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "log10(dT_M/dT_C) = a - b delta sqrt(R_T t2/l_c) + c log10(R_T t2/l_c) (Boothroyd's numerical chip temperatures fitted by Oxley); with delta -> 0 it gives 1.148 sqrt(R_T t2/l_c), Jaeger's fast band-source maximum (1.128)"
+  dTM_b:
+    value: 0.195
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "coefficient of delta in the dT_M fit"
+  dTM_c:
+    value: 0.5
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "exponent of (R_T t2/l_c) in the dT_M fit"
+  min_phi_rad:
+    value: 0.017453292519943295
+    unit: rad
+    src: est
+    note: "1 deg: lower end of the shear-angle search (ExtOxley uses 5 deg); widened so negative-rake and low-speed solutions are found instead of failing"
+  max_phi_rad:
+    value: 1.0471975511965976
+    unit: rad
+    src: est
+    note: "60 deg: upper end of the shear-angle search (ExtOxley uses 45 deg); widened for high positive rakes and soft aluminium; Oxley's geometry becomes invalid (tan theta <= 0) before 60 deg in practice"
+  phi_grid_n:
+    value: 40
+    unit: "-"
+    range: [8, 400]
+    src: est
+    note: "numerical setting: shear-angle nodes scanned for sign changes of the interface condition (1.5 deg spacing); roots are refined by Brent's method, so the spacing only decides which roots are seen"
+  min_C0:
+    value: 2.0
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "lower end of the strain-rate constant C0 = l_AB / shear-zone thickness"
+  max_C0:
+    value: 10.0
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "upper end of C0"
+  C0_grid_n:
+    value: 9
+    unit: "-"
+    range: [3, 200]
+    src: est
+    note: "numerical setting: C0 nodes scanned for sign changes of the hydrostatic-stress condition (step 1.0), refined by Brent's method"
+  min_delta:
+    value: 0.005
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "lower end of delta = secondary-zone thickness / chip thickness"
+  max_delta:
+    value: 0.2
+    unit: "-"
+    src: pantale-2022-extoxley-software
+    note: "upper end of delta"
+  delta_grid_n:
+    value: 12
+    unit: "-"
+    range: [3, 200]
+    src: est
+    note: "numerical setting: log-spaced delta nodes for the minimum cutting force search, refined by golden section around the best node"
+  delta_refine_iter:
+    value: 16
+    unit: "-"
+    range: [0, 200]
+    src: est
+    note: "numerical setting: golden-section iterations in log(delta) (bracket shrinks by 0.618^16 = 4.6e-4)"
+  max_c0_residual:
+    value: 0.25
+    unit: "-"
+    range: [0.0, 10.0]
+    src: est
+    note: "when the hydrostatic-stress condition sigma_N' = sigma_N has no root in [min_C0, max_C0] (weakly hardening materials make it insensitive to C0), the C0 minimising the mismatch is used if the mismatch is below this fraction of k_AB (as the ExtOxley grid search does); above it the shear angle node is rejected"
+  tol_phi_rad:
+    value: 1.0e-9
+    unit: rad
+    src: est
+    note: "numerical setting: Brent tolerance on the shear angle"
+  tol_C0:
+    value: 1.0e-7
+    unit: "-"
+    src: est
+    note: "numerical setting: Brent tolerance on C0"
+  tol_T_K:
+    value: 1.0e-7
+    unit: K
+    src: est
+    note: "numerical setting: tolerance of the shear-plane and interface temperature solutions"
+  max_iter:
+    value: 100
+    unit: "-"
+    src: est
+    note: "numerical setting: iteration cap of every inner solve (Brent converges in < 40 steps for these tolerances)"
+  max_jc_Tstar:
+    value: 0.99
+    unit: "-"
+    range: [0.5, 0.9999]
+    src: est
+    note: "homologous temperature T* is clamped to [0, max_jc_Tstar]: the flow stress never reaches zero (at T* = 0.99 and m = 1 it is 1 % of the cold value); temperatures solved above the clamp are capped and flagged"
+  min_jc_rate_ratio:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "strain-rate ratio below which the Johnson-Cook rate term is held at 1 (rates below the reference rate do not soften the material), as in common JC implementations"
+  map_t1_lo_m:
+    value: 2.0e-7
+    unit: m
+    src: est
+    note: "numerical setting: smallest effective uncut chip thickness node of a process map (0.2 um; below it specific forces are held, forces scale with t1)"
+  map_t1_hi_m:
+    value: 2.0e-3
+    unit: m
+    src: est
+    note: "numerical setting: largest effective uncut chip thickness node of a process map (2 mm)"
+  map_t1_n:
+    value: 18
+    unit: "-"
+    range: [2, 200]
+    src: est
+    note: "numerical setting: log-spaced chip-thickness nodes of a process map (factor 1.72 between nodes; specific forces vary by < 4 % between neighbours)"
+  map_speed_n:
+    value: 6
+    unit: "-"
+    range: [1, 100]
+    src: est
+    note: "numerical setting: log-spaced speed nodes of a process map"
+  map_speed_span:
+    value: 3.0
+    unit: "-"
+    range: [1.0, 100.0]
+    src: est
+    note: "numerical setting: a process map around speed V covers [V / span, V x span] when the caller gives no speed grid"
+  map_ttool_K:
+    value: [293.15, 573.15, 873.15, 1173.15]
+    unit: K
+    src: est
+    note: "numerical setting: tool rake temperature nodes of a process map (20, 300, 600, 900 degC); the interface partition is linear-ish in T_tool between them"

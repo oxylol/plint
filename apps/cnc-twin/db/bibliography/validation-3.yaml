@@ -1,0 +1,196 @@
+# Sources for validation/cases/ (validation references, part 3: milling forces in aluminium, steel,
+# stainless and Inconel 718, milling and drilling torque, drilling thrust, steel tool temperature,
+# tool life of carbide, ceramic and CBN tools). All read on 2026-11-03: open-access journal papers as
+# full text (JATS XML) through the Europe PMC REST service; figures from the PMC open-data bucket
+# (pmc-oa-opendata.s3.amazonaws.com, same files as the article pages) and digitised locally (method
+# stated in each case); other PDFs downloaded and text-extracted locally.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  xue-2022-in718-ceramic-tool-wear:
+    type: article
+    authors: "Xue, C.; Wang, D.; Zhang, J.; Songmene, V."
+    title: "Wear mechanisms and notch formation of whisker-reinforced alumina and sialon ceramic tools during high-speed turning of Inconel 718"
+    venue: "Materials 15(11), 3860"
+    year: 2022
+    doi: "10.3390/ma15113860"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9181757/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (solution-treated and aged IN718 bar D 140 x 250 mm; Greenleaf WG300 Al2O3-SiCw and NTK SX9 sialon, SNGN 120416T01020 in CSRNR 2020K12: rake -6, clearance 6, inclination -6, cutting edge angle 75 deg; EMCO Maxxturn 65, dry; criteria VB >= 0.3 mm, VN >= 0.6 mm, chipping or fracture per ISO 3685); Tables 1-2 (composition; 1430/1300 MPa, 40 HRC, 14.7 W/m K); Table 3 (WG300 vc 190-370 m/min, f 0.1 mm/rev; SX9 vc 150-250 m/min, f 0.15 mm/rev; ap 1 mm); Sect. 3.2 (wear measured every 30 s; WG300 fails by notch wear below 370 m/min, SX9 by flank wear); Fig. 2 (VB and VN versus cutting time, digitised from https://pmc-oa-opendata.s3.amazonaws.com/PMC9181757.1/materials-15-03860-g002.jpg)"
+
+  plodzien-2023-42crmo4-toroidal-face-milling:
+    type: article
+    authors: "Płodzień, M.; Żyłka, Ł.; Stoić, A.; Churyumov, A.Y."
+    title: "Modelling of the face-milling process by toroidal cutter"
+    venue: "Materials 16(7), 2829"
+    year: 2023
+    doi: "10.3390/ma16072829"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10096468/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.2 (DMU 100 monoBLOCK, Kistler 9257B with 5070 amplifier and NI USB-6003; 42CrMo4 at 220 HB; Sandvik Coromant R300-050Q22-08H cutter, 42 mm diameter, one R300-0828E-PL 1030 round insert r 4 mm, PVD TiAlN carbide, rake 7, relief 8 deg; new insert per test; dry, repeated with emulsion for the roughness; down milling at vc 230 m/min and ae 20 mm; forces in the workpiece frame); Table 1 (composition ranges); Table 2 (test plan fz 0.05-0.15 mm, ap 0.5-2.5 mm); Table 3 (measured and FEM FfN, Ff, Fa); Sect. 3.1 (FEM deviations -9, -12 and +4 % on average)"
+
+  zheng-2023-in718-ball-end-milling-forces:
+    type: article
+    authors: "Zheng, J.; Zhang, Y.; Qiao, H.; Sheng, L."
+    title: "Milling mechanism and chattering stability of nickel-based superalloy Inconel 718"
+    venue: "Materials 16(17), 5748"
+    year: 2023
+    doi: "10.3390/ma16175748"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10488871/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.2 (Sandvik 1B240-0800-XA 1630 carbide ball-end mill, D 8 mm; slot milling, depth of cut 0.5 mm, 1000 rpm; measured average forces); Table 1 (fz 0.02-0.12 mm/z, feed speed 80-480 mm/min, mean Fx, Fy, Fz); Table 2 (fitted coefficients); Sect. 5.1 (DMG DMC635V, Kistler 9527B force gauge (printed so; presumably 9257B) with 5073A amplifier and DynoWare; average force over a stable cutting range, Sect. 5.2); Tables 9-11 (orthogonal tests at 800-1400 rpm, fz 0.015-0.06, ap 0.1-0.4 mm, mean forces; radial depth not stated)"
+
+  kus-2015-4140-thermocouple-ir-turning:
+    type: article
+    authors: "Kus, A.; Isik, Y.; Cakir, M.C.; Coşkun, S.; Özdemir, K."
+    title: "Thermocouple and infrared sensor-based measurement of temperature distribution in metal cutting"
+    venue: "Sensors 15(1), 1274-1291"
+    year: 2015
+    doi: "10.3390/s150101274"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4327076/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (Harrison M300; AISI 4140 cylinders 45 x 350 mm; PVD TiAlN-TiN carbide WNVG 080404 in DWLNR 2020K-08, inclination -6, rake -6, clearance 6, edge angle 80, nose radius 0.4 mm; Optris CF4 pyrometer, K-type thermocouple with TESTO 177; vc 76/114/170 m/min, f 0.05/0.08/0.12 mm/rev, ap 0.4/0.6 mm; dry); Table 2 (composition); Table 3 and 'Infrared Pyrometer' (spot 1.5 mm at 1 mm from the cutting edge on the rake face, 385-1600 C, emissivity 0.60); 'The Thermocouple' and Fig. 7 (0.5 mm thermocouple 1 mm from the front and top faces at the corner, +-2.5 C or +-1 %); 'Experimental Procedure' (L18, new insert per test, three repeats averaged); Table 5 (tool and rake-face temperatures for 18 tests); Table 6 (FE inputs); Fig. 10 (thermocouple temperature versus cutting time, digitised from https://pmc-oa-opendata.s3.amazonaws.com/PMC4327076.1/sensors-15-01274f10.jpg); Conclusions (workpiece 50 HRC)"
+
+  bouchelaghem-2007-cbn-d3-wear:
+    type: article
+    authors: "Bouchelaghem, H.; Yallese, M.A.; Amirat, A.; Belhadi, S."
+    title: "Wear behaviour of CBN tool when turning hardened AISI D3 steel"
+    venue: "Mechanika (Kaunas) 3(65), 57-65"
+    year: 2007
+    doi: "10.5755/j02.mech.14804"
+    url: "https://mechanika.ktu.lt/index.php/Mech/article/download/14804/18895"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (AISI D3 bars 80 x 400 mm hardened to 60 HRC, quenched 940 C, tempered 280 C; Table 1 composition; TOS Trencin SN40 lathe 6.6 kW; TiN-covered CBN (57 % CBN) SNGA120408 T01020 in PSBNR2525K12, kappa_r 75, alpha 6, gamma -6, lambda -6 deg; Kistler 9257B; Raytek Raynger 3I pyrometer; dry, f 0.08 mm/rev, ap 0.5 mm, vc 85-310 m/min; [VB] = 0.3 mm); Sect. 3.1-3.2 (wear curves, mechanisms); Sect. 3.3, Fig. 7 (tool life for [VB] 0.3 and 0.4 mm, vector bar chart read from the PDF) and Fig. 8 (chip volumes 136/153 cm3 at 85 m/min, 37.2/49.6 cm3 at 310 m/min)"
+
+  aouici-2010-cbn-h11-hard-turning:
+    type: article
+    authors: "Aouici, H.; Yallese, M.A.; Fnides, B.; Mabrouki, T."
+    title: "Machinability investigation in hard turning of AISI H11 hot work steel with CBN tool"
+    venue: "Mechanika (Kaunas) 6(86), 71-77"
+    year: 2010
+    doi: "10.5755/j02.mech.15967"
+    url: "https://mechanika.ktu.lt/index.php/Mech/article/download/15967/18659"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (dry turning on an SN 40C lathe 6.6 kW; AISI H11 bars D 80 mm hardened to 50 HRC, Table 1 composition; Sandvik CBN7020, 57 % CBN + 35 % Ti(C,N), SNGA 12 04 08 S01020 in PSBNR25x25M12: kappa_r 75, lambda -6, gamma -6, alpha 6 deg; Table 2 tool properties; Kistler 9257B; Raytek Raynger 3I pyrometer); Sect. 3.1 (nose radius 0.8 mm); Sect. 3.3 and Table 4 (tool life T for VB = 0.30 mm, ap 0.15 mm, vc 120-240 m/min, f 0.08-0.16 mm/rev); Table 5 (ANOVA)"
+
+  wang-2025-304-milling-force-wear:
+    type: article
+    authors: "Wang, C.; Li, Y.; Gao, F.; Wu, K.; Yin, K.; He, P.; Xu, Y."
+    title: "Milling-force prediction model for 304 stainless steel considering tool wear"
+    venue: "Machines 13(1), 72"
+    year: 2025
+    doi: "10.3390/machines13010072"
+    url: "https://mdpi-res.com/d_attachment/machines/machines-13-00072/article_deploy/machines-13-00072.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (frame: Z tool axis, Y feed, X normal); Sect. 3 and Table 1 (side milling of 304 by climb milling; Heye and Sumitomo HSS end mill D 8 mm, 4 edges, helix 30, rake 12, flank 12 deg); Table 2 (Jingdiao JDHGT400A10SH, Kistler 9257B, 5070, 12 kHz); Table 3 (identification test 750 rpm, fz 0.04, ap 3, ae 0.5 mm); Table 4 (fitted coefficients); Table 5 (validation tests 830 rpm / 0.05 / 3.5 / 0.6 and 900 rpm / 0.03 / 4 / 0.7 with VB 0-0.21 mm); Fig. 9 (experimental and predicted average forces, values printed on the bars); Sect. 3.2 (mean errors 8.03 / 7.85 / 11.81 %)"
+
+  krivokapic-2020-42crmo4-drilling-torque:
+    type: article
+    authors: "Krivokapić, Z.; Vučurević, R.; Kramar, D.; Šaković Jovanović, J."
+    title: "Modelling surface roughness in the function of torque when drilling"
+    venue: "Metals 10(3), 337"
+    year: 2020
+    doi: "10.3390/met10030337"
+    url: "https://mdpi-res.com/d_attachment/metals/metals-10-00337/article_deploy/metals-10-00337.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (L9 plan; Tables 1-2: d 3/5/8 mm, n 300/500/800 rpm, f 0.03/0.05/0.10 mm/rev, workpiece angle 0/3/5 deg; DIN 338 HS6-5-2 twist drills with cruciform blade, 64-68 HRC, Swisslion; Table 4: 42CrMo4 at 28 HRC; Table 5: test pieces, depth 3d; EMCO MILL 250; Kistler force and torque chain, 100 Nm, +-1.2 %; mean torque over the process); Sect. 3.1 and Table 6 (torque and Ra at VB = 0, 0.02d, 0.04d)"
+
+  zylka-2023-al7075-edge-microgeometry-forces:
+    type: article
+    authors: "Żyłka, Ł.; Flejszar, R.; Lajmert, P.; Tashiro, S."
+    title: "Influence of cutting-edge microgeometry on cutting forces in high-speed milling of 7075 aluminum alloy"
+    venue: "Materials 16(10), 3859"
+    year: 2023
+    doi: "10.3390/ma16103859"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10221921/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (7075 from 100 x 100 mm bar; Engram solid carbide end mills D 16 mm, three flutes, 90/40 mm, helix 45, rake 12, second clearance 25 deg, abrasive-jet edge preparation, 2 um PVD ZrN; DMU 100 monoBLOCK; Kistler 9257B, 5070, NI USB-6003, 12 kHz; side milling vc 900 m/min, n 18000 rpm, ap 20 mm, fz 0.06-0.1 mm, ae 0.4-1.0 mm; 6 % Fuchs Ecocool 68 CF emulsion); Table 1 (measured R and MAR of the 12 tools); Table 2 (plan); Sect. 2.2 (FXY, 1150 Hz low-pass filter, MeanF, MeanUpF); Fig. 9 (MeanF and MeanUpF versus R for three margin ranges, fz 0.1, ae 0.7; digitised from https://pmc-oa-opendata.s3.amazonaws.com/PMC10221921.1/materials-16-03859-g009.jpg); Tables 3-4 (ANOVA)"
+
+  zawada-2025-al7050-thin-wall-forces:
+    type: article
+    authors: "Zawada-Michałowska, M.; Abramovich, H.; Berardi, V.P."
+    title: "Thin wall milling at a maximized axial depth of cut: an analysis of thermal and mechanical interactions"
+    venue: "Materials 18(23), 5347"
+    year: 2025
+    doi: "10.3390/ma18235347"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12693476/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (7050-T7451 samples 100 x 65 mm from 50 mm plate, wall 48 mm high and 1/1.5/2 mm thick on a 2 mm base; Avia VMC 800HS; Kyocera SGS 44985 roughing and 44748 finishing end mills in ERICKSON HSK63 shrink-fit holders; dry down-milling in two finishing passes; Kistler 9257B, 5070A, 5697A; natural thermocouple at 10 kHz); Tables 2-5 (plan, material, cutting parameters: finishing vc 300/600/900 m/min, fz 0.025 mm, ap 48 mm, ae 0.2 mm; tools D 12 mm, 4 flutes, helix 41 deg, TiB2); Sect. 3 (Fx1, Fx2 = absolute maxima of Fx in passes 1 and 2 without chatter extremes); Table A1 (Fx1, Fx2 and T for 13 runs); Tables 6-7 (ANOVA)"
+
+  sklenicka-2024-c45-drilling-feed-force:
+    type: article
+    authors: "Sklenička, J.; Hnátík, J.; Fulemová, J.; Gombár, M.; Vagaská, A.; Jirásko, A.; Legutko, S.; Wojciechowski, S."
+    title: "Experimental analysis of effect of machined material on cutting forces during drilling"
+    venue: "Materials 17(11), 2775"
+    year: 2024
+    doi: "10.3390/ma17112775"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11173584/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 3.1 and Table 2 (C45: HV10 221.5, Rm 740.5 MPa, 17.5 % ferrite); Sect. 3.2 (DMU eVo40 linear, ground stock D 118 x 30 mm, hydro-plastic chuck, Kistler 9272; drills by RTI Pilsen of Ceratizit CTS20D coated Triple Cr SHM; Blasocut BC 35 Kombi 6.9 %); Table 4 (web 0.3D, margin 0.115D, bevel 0.135D, edge radius 15 um, depth 2D, chisel 0.025D); Table 5 (levels of D, fn, vc, point, clearance, helix angles); Sect. 5 (verification experiment, 10 repeats: Ff per feed at D 8 mm, vc 80.21 m/min; feed-averaged Ff for D 8/12 mm and vc 80.21/149.79 m/min; deviation of the handbook model)"
+
+  hnatik-2025-c45-drilling-torque:
+    type: article
+    authors: "Hnátík, J.; Fulemová, J.; Sklenička, J.; Gombár, M.; Vagaská, A.; Sýkora, J.; Lukáš, A.; Tashiro, S."
+    title: "Comprehensive experimental analysis of the effect of drilled material on torque using machine learning decision trees"
+    venue: "Materials 18(13), 3145"
+    year: 2025
+    doi: "10.3390/ma18133145"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12251476/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (C45 and 16MnCr5 properties); Sect. 2.2 (DMU eVo 40 linear, hydraulic holder, Kistler 9272, ground bar D 118 x 30 mm in a three-jaw chuck); Sect. 2.3 and Table 2 (constant factors: clearance 10 deg, core 0.3D, facets 0.115D / 0.135D, edge radius 15 um, depth 2D, chisel 0.025D; 10 repeats; Blasocut BC 35 Kombi 6.9 %; CTS20D drills with Triple Cr SHM, new drill per trial); Sect. 3 text (feed-averaged torques 3.956 and 3.769 Nm for C45 at D 8 mm); Fig. 8 (torque versus feed for D 8/12 mm, vc 80.21/149.79 m/min; digitised from https://pmc-oa-opendata.s3.amazonaws.com/PMC12251476.1/materials-18-03145-g008.jpg)"
+
+  zhao-2023-ti64-carbide-cooling-tool-life:
+    type: article
+    authors: "Zhao, J.; Liu, Z.; Gong, Z.; Liu, A.; Cai, Y.; Wang, B.; Song, Q.; Liang, X.; Zhang, Y.; Zhang, Z.; Ji, H.; Xing, Y."
+    title: "Comparison of surface morphology and tool wear in the machining of Ti-6Al-4V alloys with uncoated and TiAlN tools under dry, minimum quantity lubrication, flood cooling, and low-temperature spray jet cooling conditions"
+    venue: "Micromachines 14(6), 1263"
+    year: 2023
+    doi: "10.3390/mi14061263"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10300943/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (Ti-6Al-4V, 700-800 C 1-4 h, air cooled, 91.7 % alpha); Sect. 2.2 (Kennametal VNMP160408 K313 uncoated and KC5010 PVD TiAlN 2.1 um; included angle 55, lead 90, side rake 12.8, clearance 11 deg, edge radius 0.08 mm); Sect. 3.1 and Table 4 (Baoji CK6560A, holder DDNNR2525M15KC06, vc 75/150 m/min, f 0.1 mm/rev, ap 1 mm; dry, flood LN6889, cold spray at 0 C, MQL 200 mL/h); Sect. 4.4 and Fig. 13 (time to VB 0.1/0.2/0.3 mm at 150 m/min, values printed on the bars, read from https://pmc-oa-opendata.s3.amazonaws.com/PMC10300943.1/micromachines-14-01263-g013.jpg)"
+
+  craciun-2024-al2024-drilling-forces:
+    type: article
+    authors: "Crăciun, R.S.; Teodor, V.G.; Baroiu, N.; Păunoiu, V.; Moroșanu, G.-A."
+    title: "Study of cutting forces in drilling of aluminum alloy 2024-T351"
+    venue: "Machines 12(12), 937"
+    year: 2024
+    doi: "10.3390/machines12120937"
+    url: "https://mdpi-res.com/d_attachment/machines/machines-12-00937/article_deploy/machines-12-00937.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (Kistler 9257B, DynoWare 2825A, 2500 Hz; HAAS VF 1; 2024-T351, Table 1 composition; HSSCo5 drills D 6/8/10 mm; Table 2: 27 regimes, f 0.1/0.25/0.4 mm/rev, vc 50/60/70 m/min; stabilised range averaged, one hole per regime); Table 3 (measured mean Fz and Mz for the 27 runs); Table 9 (handbook models vs two measured cases)"
+
+  beranoagirre-2018-tial-ti64-drilling:
+    type: article
+    authors: "Beranoagirre, A.; Urbikain, G.; Calleja, A.; López de Lacalle, L.N."
+    title: "Drilling process in γ-TiAl intermetallic alloys"
+    venue: "Materials 11(12), 2379"
+    year: 2018
+    doi: "10.3390/ma11122379"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6317033/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (alloy properties); Sect. 2.2 (Kondia B640, Kistler 9257B); Sect. 2.3 and Table 2 (pilot holes D0 3-7 mm opened to 8.5 mm, depth 20 mm, f 0.05/0.1 mm/rev, Ti-6Al-4V at vc 50 m/min and 1874 rpm; Mitsubishi MPS0850S-DIN-C solid carbide drill; internal Rhenus FU 70 W emulsion at 8.5 bar, Table 3); Sect. 3 (mechanistic model, h = 0.5 f sin 70 deg); Table 4 (measured Fz and Tc for Ti-6Al-4V); Table 8 (fitted coefficients)"
+
+  gok-2013-aisi1040-drilling-thrust-torque:
+    type: article
+    authors: "Gök, K.; Türkes, E.; Neseli, S.; Saglam, H.; Gök, A."
+    title: "The validation as experimental and numerical of the values of thrust force and torque in drilling process"
+    venue: "Journal of Engineering Science and Technology Review 6(3), 93-99"
+    year: 2013
+    doi: "10.25103/jestr.063.17"
+    url: "https://jestr.org/downloads/Volume6Issue3/fulltext17632013.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 and Table 2 (TEZSAN M20MS 9 kW; HSS-E 10 % Co drills D 10 mm, web 3.2 mm, helix 20/25/30, point 118 deg; f 0.1/0.2/0.3 mm/rev, vc 18/22/28 m/min; AISI 1040 heat treated; Kistler 9257BA/9272A; depth 30 mm; averages between 1/4 and 3/4 of the depth; two repeats; centre hole); Table 3 (material data); Sect. 3 (0.38 % error at 0.1 mm/rev and 18 m/min); Table 5 (measured and predicted force and torque per helix angle)"
+
+  villarrazo-2023-aisi1045-cryomql-milling:
+    type: article
+    authors: "Villarrazo, N.; Caneda, S.; Pereira, O.; Rodríguez, A.; López de Lacalle, L.N.; Čep, R."
+    title: "The effects of lubricooling ecosustainable techniques on tool wear in carbon steel milling"
+    venue: "Materials 16(7), 2936"
+    year: 2023
+    doi: "10.3390/ma16072936"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10095608/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (Ibarmia ZV25; AISI 1045 at 220 HB, Table 1; 16 mm two-insert cutter with internal coolant, Mitsubishi AOMT123612PEER-M MP6120 TiAlCrN inserts, 20 deg incidence, 90 deg position angle; Kistler '9955A' table dynamometer and OROS OR35 at 12800 samples/s; MQL canola oil 100 mL/h, CryoMQL with CO2 at 10 bar; three repeats); Table 2 (vc 340/380/400 m/min at 6000/6700/7000 rpm, fz 0.15 mm, ap 3 mm, ae 9 mm, pass 315 mm); Eqs. 1-2 (RMS definitions); Table 3 (RMS cutting forces)"

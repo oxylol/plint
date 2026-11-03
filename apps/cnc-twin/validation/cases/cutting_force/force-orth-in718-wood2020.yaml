@@ -1,0 +1,88 @@
+# Inconel 718 (extruded tube) orthogonal turning, TiAlN-coated carbide, rake 16 deg, f 0.1 mm, vc 60-120 m/min.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-in718-wood2020
+quantity: cutting_force
+reference:
+  src: wood-2020-in718-orthogonal-tubes
+  location: Fig. 5, bars of the 'Extruded' tube (mean of five tests, error bars = range), digitised from the 773 x 370 px
+    figure (2.9 N/px)
+  digitised: true
+  uncertainty_pct: 1
+  measured: true
+  note: uncertainty_pct is the digitisation error of the bar tops (+-2 px); the test-to-test range is much larger (about
+    +-15 % at 60 m/min, +-6-10 % at 90-120 m/min) and is given per curve; the coefficient of variation of Fc during each
+    cut is below 10 % (Fig. 9)
+setup:
+  operation: orthogonal_turning
+  material:
+    db: inconel718
+    note: 'extruded, homogenised IN718 tube (composition Table 3: Ni 52.3, Cr 18.3, Fe 18.6, Mo 3.04, Ti 1.10, Al 0.53,
+      C 0.053 m%); no strengthening heat treatment is mentioned, so it may be softer than the solution-treated-and-aged
+      DB entry. The stated ''macro hardness 64 HRC'' is not credible for IN718 and is not used'
+  tool:
+    src: wood-2020-in718-orthogonal-tubes
+    page: Sect. 2.2
+    type: turning_insert
+    designation: SECO TS200 carbide-tipped tool
+    tool_class: carbide
+    coating: TiAl/TiAlN
+    tip_angle_deg: 80
+    nose_radius_mm: 0.4
+    rake_deg: 16
+    clearance_deg: 7
+    edge_radius_um: 25
+    fresh_edge_per_test: true
+  machine:
+    src: wood-2020-in718-orthogonal-tubes
+    page: Sect. 2.2, Fig. 3
+    model: Pinacho SmartTurn 6/165 lathe
+    dynamometer: Kistler 9257B with Kistler 5070 amplifier, NI USB 6361
+    force_sampling_Hz: 1000
+  stock:
+    src: wood-2020-in718-orthogonal-tubes
+    page: Sect. 2.1
+    form: tube
+    outer_diameter_mm: 50
+    wall_thickness_mm: 2
+    height_mm: 55
+  conditions:
+    src: wood-2020-in718-orthogonal-tubes
+    page: Sect. 2.2
+    vc_m_min: [60, 90, 120]
+    feed_mm_rev: 0.1
+    width_of_cut_mm: {value: 2, note: WoC 2 mm (tube wall)}
+    coolant: dry
+    cut_duration_s: {value: 2, note: 'typical duration of each test cut, new edge each test'}
+    repetitions: 5
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+- name: Fc extruded
+  x_name: vc
+  x_unit: m/min
+  y_name: Fc
+  y_unit: N
+  points:
+  - [60, 613]
+  - [90, 576]
+  - [120, 570]
+  uncertainty: 6
+  note: 'mean of five tests; their range (error bars, digitised): about 540-721, 520-619, 529-602 N'
+- name: Ff extruded
+  x_name: vc
+  x_unit: m/min
+  y_name: Ff
+  y_unit: N
+  points:
+  - [60, 361]
+  - [90, 294]
+  - [120, 280]
+  uncertainty: 6
+  note: 'mean of five tests; their range (error bars, digitised): about 262-384, 276-314, 265-299 N'
+notes: 'Orthogonal tube turning of wrought (extruded) Inconel 718, the reference material of a study on porous LM-PBF tubes;
+  the AM tubes of the same figure are not used. Same laboratory and lathe as force-orth-in718-diazalvarez2017 but a coated
+  16 deg rake tool: the two cases together test the rake-angle and coating effect. Forces are totals for the 2 mm wall.
+  The source attributes the drop of Fc and Ff from 60 to 120 m/min to thermal softening.'

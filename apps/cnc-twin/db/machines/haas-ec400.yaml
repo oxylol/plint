@@ -1,0 +1,290 @@
+# Haas EC-400 40-taper horizontal machining centre, 2-pallet changer, full 4th-axis B rotary
+# (2018 redesign). Frames: base origin = B-axis centre on the pallet top surface; +x across the
+# pallet, +y vertical UP (gravity is -y), +z horizontal along the spindle axis toward the column
+# (tool retract direction). Haas home is the + end of each axis (travel negative).
+format: cnctwin-machine
+version: 1
+id: haas-ec400
+maker: "Haas Automation"
+model: "EC-400"
+type: horizontal_mill
+src: haas-ec-flyer-2022
+
+controller:
+  dialect: haas
+  model: "Haas NGC (Next Generation Control)"
+  alarms: haas-ngc
+  ipo_period_ms: {value: 1.0, src: est, note: "not published; as haas-vf2ss"}
+  block_processing_ms: {value: 1.0, src: est, note: "not published; as haas-vf2ss"}
+  lookahead_blocks: {value: 80, src: est, note: "not published; as haas-vf2ss"}
+  least_input_increment_mm: {value: 0.001, src: est, note: "Haas metric resolution"}
+  least_input_increment_deg: {value: 0.001, src: est, note: "full 4th axis (not the 1-degree indexer)"}
+  max_feed_mm_min: 21200
+  rapid_mm_min: {X: 35600, Y: 35600, Z: 35600}
+  smoothing:
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: est, note: "as haas-vf2ss"}
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.010, src: est}
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025, src: est}
+  corner_default: {value: blend, src: est}
+  in_position_mm: {value: 0.005, src: est}
+  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: est}
+  feed_override_range_pct: {value: [0, 200], src: est}
+  tool_life_management: {value: true, src: est}
+  probing: {value: true, src: haas-ec-flyer-2022, note: "automatic tool-probe arm, M104 raise / M105 retract"}
+  tcpc_dwo: {value: option, src: haas-uk-ec400-flyer-2018, note: "DWO/TCPC listed as optional control features"}
+
+axes:
+  X:
+    type: linear
+    travel_mm: [-559, 0]
+    rapid_mm_min: 35600
+    max_feed_mm_min: 21200
+    accel_m_s2: {value: 5.0, src: est, note: "not published; 0.5 g typical of 400 mm-pallet HMCs with ballscrews"}
+    jerk_m_s3: {value: 100, src: est, note: "typical 50-200 m/s3"}
+    servo:
+      kv_1_s: {value: 40, src: est, note: "as haas-vf2ss"}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 60, src: est, note: "column axis (heavier moving mass than a VMC table)"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nuts assumed, as on Haas VMCs"}
+    reversal_spike_um: {value: 3, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1100, fixed_end: both, src: est, note: "as haas-vf2ss"}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "not published"}
+    motor_force_N: {value: 11300, src: est, note: "not in the sources read; scaled from the Haas 40-taper VF thrust table (11343 N X/Y) in haas-europe-vmc-brochure-2013 p. 42"}
+    moving_mass_kg: {value: 900, src: est, note: "column with spindle head on the stepped X base (haas-ec-flyer-2022), assumed"}
+  Y:
+    type: linear
+    travel_mm: [-635, 0]
+    rapid_mm_min: 35600
+    max_feed_mm_min: 21200
+    accel_m_s2: {value: 5.0, src: est, note: "vertical axis, carries gravity"}
+    jerk_m_s3: {value: 100, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 70, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 2, src: est, note: "gravity preloads the screw"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1000, fixed_end: both, src: est}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est}
+    motor_force_N: {value: 18700, src: est, note: "scaled from the Haas VF Z-axis thrust (18683 N) for a vertical head axis"}
+    moving_mass_kg: {value: 450, src: est, note: "spindle head with inline motor"}
+    brake: {holds_on_power_loss: true, src: est}
+  Z:
+    type: linear
+    travel_mm: [-559, 0]
+    rapid_mm_min: 35600
+    max_feed_mm_min: 21200
+    accel_m_s2: {value: 5.0, src: est}
+    jerk_m_s3: {value: 100, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 60, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 3, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1100, fixed_end: both, src: est}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est}
+    motor_force_N: {value: 11300, src: est, note: "as X"}
+    moving_mass_kg: {value: 1500, src: est, note: "Z moves the column assembly toward the pallet (assumed layout)"}
+  B:
+    type: rotary
+    travel_deg: [0, 360]
+    continuous: true
+    rapid_deg_s: {value: 150, src: haas-ec400-web-2026}
+    max_rpm: {value: 25, src: haas-ec400-web-2026, note: "150 deg/s = 25 rpm"}
+    rotation_90deg_s: {value: 3.0, src: haas-ec400-web-2026, note: "published 90 deg rotation time (full 4th); includes unclamp/clamp, which are not stated separately"}
+    accel_rad_s2: {value: 10, src: est, note: "chosen so that 90 deg takes ~0.75 s of motion, leaving ~2.2 s of the published 3.0 s for unclamp + clamp + settle"}
+    jerk_rad_s3: {value: 200, src: est}
+    drive: {value: "cycloidal reducer", src: haas-ec-flyer-2022, note: "shock-load capacity 5x the rated gearbox torque"}
+    servo:
+      kv_1_s: {value: 30, src: est}
+      feedforward: {value: 0.9, src: est}
+      velocity_bw_Hz: {value: 40, src: est}
+    backlash_arcsec: {value: 10, src: est, note: "cycloidal drives have low lost motion; 10 arcsec assumed, within the published 10 arcsec repeatability"}
+    brake:
+      clamp_torque_Nm: {value: 3390, src: haas-ec400-web-2026, note: "brake torque 2500 ft-lbf"}
+      clamp_time_s: {value: 0.5, src: est}
+      unclamped_stiffness_Nm_rad: {value: 1.5e6, src: est, note: "cycloidal reducer torsional stiffness at the table, assumed"}
+      clamped_stiffness_Nm_rad: {value: 6.0e6, src: est, note: "hydraulic/brake clamping typically 3-5x the drive stiffness"}
+    positioning: {accuracy_arcsec: 15, repeatability_arcsec: 10, src: haas-ec400-web-2026, note: "published as indexing accuracy +-15 arc-sec, repeatability 10 arc-sec"}
+    motor_torque_Nm: {value: 575, range: [407, 575], src: haas-ec400-web-2026, note: "a Haas comparison table lists continuous rotational torque 424 ft-lb and 300 ft-lb in two columns; which column is the current EC-400 is uncertain; 575 Nm (424 ft-lb) used"}
+    max_load_kg: {value: 400, src: haas-ec400-web-2026, note: "880 lb on the platter (full 4th); 227 kg with the pallet pool"}
+
+kinematics:
+  workpiece_chain:
+    - {link: rotary, axis: B, axis_point_mm: [0, 0, 0], direction: [0, -1, 0], note: "table axis: +B rotates the pallet negatively about +y so the tool moves positively relative to the part (ISO 841)"}
+    - {link: pallet_top, fixed: {translate_mm: [0, 0, 0]}}
+  tool_chain:
+    - {link: column, axis: X, direction: [1, 0, 0]}
+    - {link: column_z, axis: Z, direction: [0, 0, 1]}
+    - {link: head, axis: Y, direction: [0, 1, 0]}
+    - {link: spindle_nose, fixed: {translate_mm: [279.5, 688, 660]}, src: haas-ec400-mld-2018, note: "p. 4: spindle home 279 mm from the pallet CL in X (travel 559 centred), spindle CL 53-688 mm above the pallet (2.1 in clearance + 635 mm Y; flyer: 689 mm), nose 102-660 mm from the B axis. Which X end is home, and that X/Y/Z all move the tool, are assumptions (src: est)."}
+  home_mm: {X: 0, Y: 0, Z: 0, B: 0}
+  tool_axis: [0, 0, 1]
+  gravity_direction: [0, -1, 0]
+  singularities: null
+
+spindles:
+  - id: main
+    kind: milling
+    nose: CAT40
+    max_rpm: 8100
+    drive: "inline direct-drive"
+    max_torque_published: {value_Nm: 122, at_rpm: 2000}
+    direction_reversible: {value: true, src: est}
+    gear_ranges:
+      - rpm: [0, 8100]
+        rating: "peak = 200 % spindle load, 3 min (haas-torque-note-2026)"
+        src: haas-torque-vf40t-2016
+        digitised: true
+        uncertainty_pct: 3
+        page: "p. 1, 8100/10,000-rpm inline drive, 22.4 kW chart (metric); standard on EC-400"
+        power_kW: [[0, 0], [500, 6.5], [1000, 12.9], [1500, 19.1], [2000, 25.1], [2400, 29.8], [2600, 31.7], [2800, 33.2], [3000, 34.0], [3500, 34.4], [3800, 34.5], [4000, 34.3], [5000, 33.3], [5700, 32.9], [6000, 33.3], [6400, 33.6], [7000, 33.6], [7500, 33.3], [8000, 32.5], [8100, 32.4]]
+        torque_Nm: [[0, 125], [500, 125.2], [1000, 123.9], [1500, 122.5], [2000, 120.8], [2400, 119.3], [2600, 117.2], [2800, 114.1], [3000, 109.7], [3500, 94.7], [3800, 87.6], [4000, 82.2], [5000, 64.1], [5700, 55.5], [6000, 53.4], [6400, 50.6], [7000, 46.2], [7500, 42.6], [8000, 39.8], [8100, 39.4]]
+        additional_ratings:
+          - {rating: "S2 10 min = 150 % load", scale_of_peak: 0.75, src: haas-torque-note-2026}
+          - {rating: "S1 continuous = 100 % load", scale_of_peak: 0.50, src: haas-torque-note-2026}
+    accel_time_s: {value: 0.9, src: est, note: "0 to 8100 rpm with J = 0.05 kg m2 over the digitised peak curve"}
+    decel_time_s: {value: 0.9, src: est}
+    gear_change_s: null
+    orient_time_s: {value: 0.5, src: est}
+    rotor_inertia_kgm2: {value: 0.05, src: est, note: "as haas-vf2ss"}
+    efficiency: {value: 0.85, src: est}
+    idle_power_W: {value: 450, src: est, note: "40-taper bearings at 8100 rpm"}
+    runout_um: {value: 2, src: est}
+    frf_modes:
+      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "40-taper motor-spindle flange mode, typical 700-1200 Hz"}
+      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est}
+    thermal:
+      growth_um_at_max_rpm: {value: 20, src: est, note: "8100 rpm inline spindle; growth along +z (spindle axis horizontal)"}
+      time_constant_min: {value: 25, src: est}
+      bearing_heat_W_at_max_rpm: {value: 300, src: est}
+      thermal_comp: {value: true, src: est}
+      comp_residual_fraction: {value: 0.3, src: est}
+    optional: "10,000 / 12,000 / 15,000 rpm inline spindles; HSK-A63 available (haas-ec-flyer-2022)"
+
+structure:
+  modes:
+    - {fn_Hz: 60, zeta: 0.05, k_N_um: 40, direction: x, src: est, note: "column side-sway on the stepped X base; HMC frame modes typically 40-150 Hz"}
+    - {fn_Hz: 75, zeta: 0.05, k_N_um: 45, direction: z, src: est, note: "column pitch"}
+    - {fn_Hz: 140, zeta: 0.04, k_N_um: 80, direction: y, src: est}
+  table_modes:
+    - {fn_Hz: 150, zeta: 0.05, k_N_um: 100, direction: x, src: est, note: "pallet on clamped rotary (hydraulic pallet clamping: haas-ec-flyer-2022)"}
+  rotary_modes:
+    - {axis: B, fn_Hz: 120, zeta: 0.04, k_Nm_rad: 6.0e6, src: est, note: "torsional mode of the clamped pallet with a 200 kg fixture"}
+
+error_map:
+  squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est}
+  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est}
+  angular_urad: {}
+  pivot_errors: {B: {position_um: [10, 0, 10], tilt_urad: [20, 0, 20], src: est, note: "B-axis centre location and squareness to Y after calibration"}}
+
+thermal:
+  axis_drift:
+    expansion_1_K: {value: 11.5e-6, src: est}
+    heat_per_m_travel_J: {value: 60, src: est}
+    time_constant_min: {value: 40, src: est}
+  structure_sensitivity_um_per_K: {value: 4, src: est}
+  warmup: {cold_to_warm_min: 60, src: est}
+
+tool_changer:
+  type: side_mount
+  capacity: 30                       # 30+1; 50+1 and 100+1 optional
+  tool_to_tool_s: 2.8
+  chip_to_chip_s: {value: 3.6}
+  max_tool_diameter_mm: 64
+  max_tool_diameter_adjacent_empty_mm: 127
+  max_tool_length_mm: 305
+  max_tool_mass_kg: 5.4
+  pocket_pitch_mm: {value: 72, src: est, note: "arm swing diameter 686 mm at the spindle CL (haas-ec400-mld-2018 p. 5); carousel pitch assumed"}
+  arm_swing_diameter_mm: {value: 767, src: haas-ec400-mld-2018, page: "p. 5 (686 mm at spindle CL; tool change at Z = 660 mm from the pallet CL; arm drops 114 mm)"}
+
+turrets: []
+pallet_changer:
+  pallets: 2
+  pallet_size_mm: [400, 400]
+  change_time_s: {value: 15, src: haas-ec400-web-2026}
+  apc_swing_diameter_mm: {value: 1408, src: haas-ec400-mld-2018, page: "p. 5"}
+  max_part_swing_mm: {value: 559, src: haas-ec400-mld-2018, page: "p. 5"}
+  pallet_top_height_mm: {value: 1067, src: haas-ec400-mld-2018, page: "p. 1 'Table Height' above floor"}
+  pallet_pattern: {value: "metric pallet: M12x1.75 tapped holes on a 50 mm grid, 20 mm centre dowel", src: haas-ec400-mld-2018, page: "p. 5"}
+  pool_option: {value: "6+1 pallet pool (EC-400 only, needs 50+1 or 100+1 SMTC)", src: haas-ec-flyer-2022}
+  clamping: {value: hydraulic, src: haas-ec-flyer-2022}
+tailstock: null
+steady_rest: null
+guide_bushing: null
+doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null, side_door_width_mm: {value: 685, src: haas-ec400-mld-2018, page: "p. 1"}}
+
+probes:
+  spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS)", trigger_force_N: 0.50, trigger_force_z_N: 5.85, repeatability_um: 1.0, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS hardware assumed (est.)"}
+  tool_setter: {model: "Renishaw OTS on automatic probe arm (M104/M105)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], src: renishaw-ots-2026, note: "arm described in haas-ec-flyer-2022; setter model assumed"}
+  tool_setter_extra: {position_mm: [-200, 450, 300], src: est, note: "deployed position in the base frame, assumed"}
+  laser: null
+
+coolant:
+  tank_l: {value: 360, src: haas-ec400-mld-2018, page: "p. 1: 95 gal (360 L) coolant tank (standard)"}
+  pumps:
+    - {id: flood, kind: flood, pressure_bar: 2.0, flow_l_min: 45, power_kW: 0.75, src: est, note: "Haas standard 1 hp pump (12 gpm @ 30 psi, haas-coolant-pump-web-2026) assumed for this machine"}
+    - {id: tsc, kind: through_spindle, option: true, src: haas-tsc-web-2026, pressure_bar: {value: 21, src: haas-tsc-web-2026}, flow_l_min: {value: 11, src: est, note: "as haas-vf2ss"}}
+    - {id: tsc1000, kind: through_spindle, option: true, pressure_bar: 69, flow_l_min: 26.5, src: haas-tsc-web-2026}
+  nozzles:
+    - {id: ring1, kind: flood, attached_to: head, position_mm: [45, 0, 60], aim: [-0.55, 0, -0.84], diameter_mm: 4, pump: flood, src: est, note: "4-nozzle coolant ring around the spindle nose (haas-ec-flyer-2022); nozzle positions/aims assumed (head frame, z along the spindle axis)"}
+    - {id: ring2, kind: flood, attached_to: head, position_mm: [0, 45, 60], aim: [0, -0.55, -0.84], diameter_mm: 4, pump: flood, src: est}
+    - {id: ring3, kind: flood, attached_to: head, position_mm: [-45, 0, 60], aim: [0.45, 0, -0.89], diameter_mm: 4, pump: flood, src: est, note: "aimed for longer tools"}
+    - {id: ring4, kind: flood, attached_to: head, position_mm: [0, -45, 60], aim: [0, 0.45, -0.89], diameter_mm: 4, pump: flood, src: est}
+    - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
+  pcool: {value: "not available on EC-400/500", src: haas-ec-flyer-2022}
+  air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: est, note: "air gun as on Haas VMCs (6 scfm), assumed"}
+  machine_air_l_min: {value: 255, note: "air required 9 scfm @ 100 psi (255 L/min @ 6.9 bar)"}
+  chiller: null
+  filtration_um: {value: 40, src: est}
+
+chip_conveyor: {type: belt, position: "centre, under the spindle", src: haas-ec-flyer-2022, rate_kg_h: {value: 120, src: est}, discharge_height_mm: {value: 1041, src: haas-ec400-mld-2018, page: "p. 1"}}
+
+enclosure:
+  box_mm: {value: [[-1000, -700, -800], [1000, 1400, 1300]], src: est, note: "work zone between the pallet changer wall and the column; base frame (y up); assumed from the 4524 x 3436 mm footprint and the APC swing (haas-ec400-mld-2018 p. 1, 5)"}
+  floor_slope_deg: {value: 45, src: est, note: "steep interior walls funnel chips to the central conveyor (haas-ec-flyer-2022)"}
+
+power:
+  base_W: {value: 1500, src: est, note: "control, cabinet cooler, hydraulics for pallet clamping, lights"}
+  servo_standby_W: {value: 400, src: est}
+  air_consumption_l_min: 255
+
+geometry:
+  - name: rotary_table_body
+    attached_to: base
+    primitives:
+      - {cylinder: {p0_mm: [0, -420, 0], p1_mm: [0, -60, 0], radius_mm: 260}}
+    collide: true
+    src: est
+    note: "B-axis housing below the pallet (cylinder axis along y)"
+  - name: pallet
+    attached_to: rotary
+    primitives:
+      - {box: {min_mm: [-200, -60, -200], max_mm: [200, 0, 200]}}
+    collide: true
+    src: est
+    note: "400 x 400 mm pallet (haas-ec-flyer-2022); 60 mm thickness assumed; y up"
+  - name: pallet_changer_arm
+    attached_to: base
+    primitives:
+      - {box: {min_mm: [-356, -120, -900], max_mm: [356, -60, -500]}}
+    collide: true
+    src: est
+    note: "712 mm wide changer arm (haas-ec400-mld-2018 p. 5) parked between the pallets; position assumed"
+  - name: column
+    attached_to: column_z
+    primitives:
+      - {box: {min_mm: [-100, -500, 1050], max_mm: [700, 1500, 1700]}}
+    collide: true
+    src: est
+  - name: spindle_head
+    attached_to: head
+    primitives:
+      - {box: {min_mm: [70, 480, 790], max_mm: [490, 900, 1300]}}
+      - {cylinder: {p0_mm: [279.5, 688, 660], p1_mm: [279.5, 688, 790], radius_mm: 85}}
+    collide: true
+    src: est
+    note: "head frame = base at home; nose housing diameter 170 mm assumed"
+
+notes: "Values from the 2022 EC-400/500 flyer, the 2018 layout drawing and (B axis, pallets) search-engine excerpts of the Haas US spec page. Axis thrusts, accelerations, servo data and modal data are not published and are estimates. Machine weight not found."

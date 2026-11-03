@@ -1,0 +1,46 @@
+format: cnctwin-holder
+version: 1
+series_id: haimer-weldon
+maker: "HAIMER"
+series: "Weldon (side-lock) tool holder, DIN 69893-1 HSK-A63, for DIN 1835 B / DIN 6535 HB shanks"
+src: haimer-shop-a63-000-16
+items:
+  - id: haimer-a63-000-16
+    order_code: "A63.000.16"
+    type: side_lock
+    taper: HSK-A63
+    bore_mm: {value: 16, src: haimer-shop-a63-000-16}
+    gauge_length_mm: {value: 80, src: haimer-shop-a63-000-16, note: "length A, short version"}
+    nose_diameter_mm: {value: 48, src: haimer-shop-a63-000-16, note: "body diameter A1 = D2 = 48"}
+    overall_length_mm: {value: 112, src: haimer-shop-a63-000-16}
+    profile_mm: {value: [[0, 48], [54, 48], [80, 48]], src: est, note: "body diameter 48 over B1 = 54 (printed); same diameter assumed to the flange"}
+    clamping_torque_Nm: null           # form fit through the clamping screw on the shank flat; not published
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null                    # not printed
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm (chuck body)", src: haimer-shop-a63-000-16}
+    max_rpm: {value: 25000, src: haimer-shop-a63-000-16}
+    mass_kg: {value: 1.290, src: haimer-shop-a63-000-16}
+    clamp_length_mm: {value: 56, src: haimer-shop-a63-000-16, note: "functional length B71, read as bore depth"}
+    price_eur: null
+  - id: haimer-a63-000-32
+    order_code: "A63.000.32"
+    type: side_lock
+    taper: HSK-A63
+    bore_mm: {value: 32, src: haimer-shop-a63-000-32}
+    gauge_length_mm: {value: 110, src: haimer-shop-a63-000-32}
+    nose_diameter_mm: {value: 72, src: haimer-shop-a63-000-32, note: "D2 = A1 = 72"}
+    overall_length_mm: {value: 142, src: haimer-shop-a63-000-32}
+    profile_mm: {value: [[0, 72], [84, 72], [110, 72]], src: est, note: "body diameter 72 over B1 = 84 (printed); interference diameter A6 = 56 and 45° taper angle B51 are also printed but not placed"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm (chuck body)", src: haimer-shop-a63-000-32}
+    max_rpm: {value: 25000, src: haimer-shop-a63-000-32}
+    mass_kg: {value: 2.600, src: haimer-shop-a63-000-32}
+    clamp_length_mm: {value: 86, src: haimer-shop-a63-000-32, note: "functional length B71"}
+    price_eur: null
+notes: "Weldon holders transmit torque by form fit on the shank flat; the limit is the tool shank, so clamping_torque_Nm is left null."

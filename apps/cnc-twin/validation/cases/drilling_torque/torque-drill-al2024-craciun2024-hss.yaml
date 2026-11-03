@@ -1,0 +1,57 @@
+# Al 2024-T351 drilling with HSS-Co5 twist drills of 6, 8 and 10 mm, f 0.1-0.4 mm/rev, vc 50-70 m/min:
+# steady mean torque Mz of each hole (Table 3, 27 runs).
+format: cnctwin-validation-case
+version: 1
+id: torque-drill-al2024-craciun2024-hss
+quantity: drilling_torque
+reference:
+  src: craciun-2024-al2024-drilling-forces
+  location: "Sect. 2 (setup, Tables 1-2), Sect. 2 text (selection of the stabilised range, averaging), Table 3 (Mz per run)"
+  digitised: false
+  measured: true
+  note: "Values read directly (two decimals); one hole per condition. No scatter is stated; the curve uncertainty is est. (about 0.05 Nm reading resolution plus 3 %). Example in the text: a 5, f 0.1, vc 50 gives Mz 1.86 Nm; Table 9 gives 1.854 Nm."
+setup:
+  operation: drilling
+  material:
+    db: al7075-t7351
+    note: "Al 2024-T351 (Table 1: Cu 3.8-4.9, Mg 1.2-1.8, Mn 0.3-0.9 %); not in the DB: the over-aged 7075-T7351 entry is taken as the nearest high-strength wrought alloy; use 2024-T351 data when available"
+  tool:
+    src: craciun-2024-al2024-drilling-forces
+    page: Sect. 2
+    type: twist_drill
+    tool_class: hss
+    tool_material: HSS-Co5
+    diameter_mm: [6, 8, 10]
+    lip_count: {value: 2, src: est, note: "assumed: two-flute twist drill"}
+    point_angle_deg: {value: 118, src: est, note: "assumed: not stated (common point of general-purpose HSS drills)"}
+    helix_deg: {value: 30, src: est, note: "assumed: not stated"}
+    web_thickness: {value: "0.15 D", src: est, note: "assumed: not stated"}
+    assumed_inputs: [lip_count, point_angle_deg, helix_deg, web_thickness]
+  machine:
+    src: craciun-2024-al2024-drilling-forces
+    page: Sect. 2
+    model: HAAS VF-1 vertical machining centre
+    dynamometer: "Kistler 9257B, DynoWare 2825A, 2500 Hz; stabilised range of each signal selected and averaged (normal-distribution fit)"
+  conditions:
+    src: craciun-2024-al2024-drilling-forces
+    page: Table 2, Table 3
+    feed_mm_rev: [0.1, 0.25, 0.4]
+    vc_m_min: [50, 60, 70]
+    plan: "full factorial 3 x 3 x 3; the source's 'cutting depth' a = D/2 (3, 4, 5 mm)"
+    coolant: {value: dry, src: est, note: "assumed: no coolant is mentioned in the source"}
+    hole_depth_mm: {value: 15, src: est, note: "assumed: not stated in the text (shown only in the sample drawing, Fig. 4b, not read)"}
+    assumed_inputs: [coolant, hole_depth_mm]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: Mz_D6_vc50, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 0.71], [0.25, 1.18], [0.4, 1.86]]}
+  - {name: Mz_D6_vc60, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 0.58], [0.25, 1.2], [0.4, 1.85]]}
+  - {name: Mz_D6_vc70, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 0.6], [0.25, 1.27], [0.4, 1.88]]}
+  - {name: Mz_D8_vc50, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 1.44], [0.25, 2.42], [0.4, 3.86]]}
+  - {name: Mz_D8_vc60, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 1.22], [0.25, 2.43], [0.4, 3.62]]}
+  - {name: Mz_D8_vc70, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 1.23], [0.25, 2.56], [0.4, 3.66]]}
+  - {name: Mz_D10_vc50, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 1.85], [0.25, 3.25], [0.4, 4.97]]}
+  - {name: Mz_D10_vc60, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 1.54], [0.25, 3.76], [0.4, 5.01]]}
+  - {name: Mz_D10_vc70, x_name: f, x_unit: mm/rev, y_name: 'Mz (torque, steady mean)', y_unit: Nm, points: [[0.1, 1.61], [0.25, 3.32], [0.4, 5.87]]}
+notes: "Order-of-magnitude check (computed here, est.): M = kc f D^2 / 8 with kc 1 GPa gives 1.25 Nm at D 10, f 0.1 (1.5-1.9 Nm measured) and 5.0 Nm at f 0.4 (5.0-5.9 Nm). As for the thrust, the 8 mm drill does not scale with the 6 and 10 mm drills (e.g. 1.44 Nm at D 8 against 1.85 Nm at D 10, f 0.1, vc 50, a smaller ratio than D^2), and the drill geometry is not stated. Paired thrust data: thrust-drill-al2024-craciun2024-hss."

@@ -1,0 +1,81 @@
+# Tungaloy TungDrillTwisted TDX-F L/D=3 indexable drills with XPMT-DJ inserts (two effective edges:
+# central + peripheral insert), read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03
+# (J070, J076, J078, L085, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-tdx-indexable-drill
+maker: "Tungaloy Corporation"
+series: "TungDrillTwisted TDX-F L/D=3 indexable drill (flat cotter shank) with XPMT-DJ inserts, 20 and 25 mm"
+src: tungaloy-2023-gc-drilling
+notes: "Bodies (J070): DC, DCONMS (shank), DCSFMS (flange), LU (max drilling depth), LS, LCF, LF, OAL, max radial offset (the drill can be offset on a lathe to enlarge the hole), mass. Inserts XPMT (J076): 11 deg clearance, one insert designation for both central and peripheral pockets; DJ = general-purpose breaker; DS = sharp breaker for low-carbon / low-alloy / stainless / S materials, DW = wiper / troubleshooting. Recommended insert and grade per material and the standard cutting conditions are on J078 (the conditions are per drill, the first-choice insert is given in each note). Feed f is per revolution; 2D/3D and 4D/5D series have different feed ranges. Use the low end of the feed range at the small end of a diameter range; for difficult materials set the speed 25 % below carbon steel; high-feed machining: 1.5x the standard feed (J078 notes). Cutting forces for SCM440 at 100 m/min: guideline chart L085. The entering angle of the inserts is not published (est)."
+defaults:
+  type: indexable_drill
+  hand: right
+  tool_material: {class: carbide, grade: "AH6030 PVD-coated carbide (substrate not stated)", id: carbide-submicron-10co, src: est, note: "PVD grade M25-M35 / S15-S30 (A002); substrate mapped to the fine-grain 10 % Co entry"}
+  coating: {id: tialn, src: est, note: "AH6030: (Ti,Al)N (A002); thickness not read"}
+items:
+  - id: tungaloy-tdx200f25-3-xpmt06x308r-dj-ah6030
+    order_code: "TDX200F25-3 + 2 x XPMT06X308R-DJ AH6030"
+    geometry:
+      diameter_mm: 20
+      flutes: {value: 2, src: est, note: "one twisted chip flute per insert (central and peripheral); flute count not printed"}
+      inserts:
+        count: 2
+        iso_code: "XPMT06X308R-DJ"
+        ic_mm: 6
+        nose_radius_mm: 0.8
+        edge_length_mm: {value: 7, note: "LE"}
+        clearance_deg: 11
+        lead_angle_deg: {value: 90, src: est, note: "insert edges taken perpendicular to the drill axis (flat-bottomed hole); Tungaloy prints no point or entering angle for TDX"}
+        page: "J076 (IC 6, LE 7, S 3, D1 2.5, RE 0.8; drill range DCN 17.5 - DCX 21.5)"
+      cutting_length_mm: {value: 60.5, note: "LU, maximum drilling depth (3 x D)"}
+      flute_length_mm: 65.5
+      shank: {diameter_mm: 25, length_mm: 54, form: weldon}
+      overall_length_mm: 135.5
+      coolant_holes: {count: {value: 2, src: est, note: "through coolant is shown (J070 icon); one outlet per insert pocket assumed"}, diameter_mm: {value: 1.5, src: est, note: "not published"}, exit: tip}
+      centre_cutting: true
+      note: "DCONMS 25, DCSFMS 32, LU 60.5, LS 54, LCF 65.5, LF 81, OAL 135.5 mm, max radial offset 0.5 mm (J070); flat cotter (Weldon-type) shank"
+    max_rpm: null
+    mass_g: 300
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable drill: inserts are indexed (XPMT has 4 corners), body not reground"}
+    cutting_data: &tdx_17_26
+      - {iso_group: P, material_hint: "low carbon steels C < 0.3 (SS400, SM490, S25C, St52-3, C25), <= 200 HB", operation: [drilling], vc_m_min: {min: 160, max: 320}, f_mm: {min: 0.04, max: 0.1}, page: "J078, 17.5-26 mm column, 2D/3D", note: "first-choice insert DS AH6030; 4D/5D: same feed"}
+      - {iso_group: P, material_hint: "carbon steels C > 0.3 (S45C, S55C, C45, C55), <= 300 HB", material: aisi1045, operation: [drilling], vc_m_min: {min: 80, max: 250}, f_mm: {min: 0.06, max: 0.13}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DJ AH6030; 4D/5D: 0.06-0.1"}
+      - {iso_group: P, material_hint: "low alloy steels SCM415, <= 200 HB", operation: [drilling], vc_m_min: {min: 160, max: 320}, f_mm: {min: 0.06, max: 0.12}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DS AH6030; 4D/5D: same"}
+      - {iso_group: P, material_hint: "alloy steels SCM440, SCr420, 42CrMo4, 20Cr4, <= 300 HB", material: aisi4140-qt30, operation: [drilling], vc_m_min: {min: 80, max: 200}, f_mm: {min: 0.06, max: 0.13}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DJ AH6030; 4D/5D: 0.06-0.1"}
+      - {iso_group: M, material_hint: "austenitic stainless SUS304, SUS316 (X5CrNi18-9, X5CrNiMo17-12-2), <= 200 HB", material: aisi304, operation: [drilling], vc_m_min: {min: 100, max: 200}, f_mm: {min: 0.04, max: 0.1}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DS AH6030"}
+      - {iso_group: M, material_hint: "martensitic / ferritic stainless SUS430, SUS416, X6Cr17, X20Cr13, <= 200 HB", operation: [drilling], vc_m_min: {min: 100, max: 220}, f_mm: {min: 0.04, max: 0.1}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DS AH6030"}
+      - {iso_group: M, material_hint: "precipitation-hardening stainless SUS630, X5CrNiCuNb16-4", operation: [drilling], vc_m_min: {min: 80, max: 120}, f_mm: {min: 0.04, max: 0.08}, page: "J078, 17.5-26 mm, 2D/3D"}
+      - {iso_group: K, material_hint: "grey cast iron FC250, GG25, 150-250 HB", material: grey-cast-iron-gjl250, operation: [drilling], vc_m_min: {min: 80, max: 250}, f_mm: {min: 0.06, max: 0.15}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DJ AH9030; 4D/5D: 0.06-0.12"}
+      - {iso_group: K, material_hint: "ductile cast iron FCD700, 600-3, 150-250 HB", operation: [drilling], vc_m_min: {min: 80, max: 200}, f_mm: {min: 0.06, max: 0.15}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DJ AH9030; 4D/5D: 0.06-0.12"}
+      - {iso_group: N, material_hint: "aluminium alloys A2017, ADC12, AlCu4SiMg, AlSi11Cu3", material: al6061-t6, operation: [drilling], vc_m_min: {min: 200, max: 400}, f_mm: {min: 0.15, max: 0.2}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DJ AH725; 4D/5D: 0.12-0.16"}
+      - {iso_group: S, material_hint: "heat-resistant alloys Inconel 718, <= 40 HRC", material: inconel718, operation: [drilling], vc_m_min: {min: 20, max: 60}, f_mm: {min: 0.04, max: 0.1}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DS AH6030"}
+      - {iso_group: S, material_hint: "titanium alloys Ti-6Al-4V, <= 40 HRC", material: ti6al4v, operation: [drilling], vc_m_min: {min: 40, max: 120}, f_mm: {min: 0.06, max: 0.12}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DS AH6030; 4D/5D: 0.06-0.1"}
+      - {iso_group: H, material_hint: "hardened steel, <= 50 HRC", operation: [drilling], vc_m_min: {min: 40, max: 100}, f_mm: {min: 0.04, max: 0.1}, page: "J078, 17.5-26 mm, 2D/3D", note: "first choice DJ AH9030; 4D/5D: 0.04-0.08"}
+  - id: tungaloy-tdx250f25-3-xpmt07h308r-dj-ah6030
+    order_code: "TDX250F25-3 + 2 x XPMT07H308R-DJ AH6030"
+    geometry:
+      diameter_mm: 25
+      flutes: {value: 2, src: est, note: "one twisted chip flute per insert (central and peripheral); flute count not printed"}
+      inserts:
+        count: 2
+        iso_code: "XPMT07H308R-DJ"
+        ic_mm: 7
+        nose_radius_mm: 0.8
+        edge_length_mm: {value: 8.2, note: "LE"}
+        clearance_deg: 11
+        lead_angle_deg: {value: 90, src: est, note: "insert edges taken perpendicular to the drill axis; not published"}
+        page: "J076 (IC 7, LE 8.2, S 3.6, D1 2.8, RE 0.8; drill range DCN 22 - DCX 26)"
+      cutting_length_mm: {value: 75.6, note: "LU, maximum drilling depth (3 x D)"}
+      flute_length_mm: 80.6
+      shank: {diameter_mm: 25, length_mm: 54, form: weldon}
+      overall_length_mm: 153.6
+      coolant_holes: {count: {value: 2, src: est, note: "through coolant shown; one outlet per insert pocket assumed"}, diameter_mm: {value: 1.8, src: est, note: "not published"}, exit: tip}
+      centre_cutting: true
+      note: "DCONMS 25, DCSFMS 37, LU 75.6, LS 54, LCF 80.6, LF 99, OAL 153.6 mm, max radial offset 0.4 mm (J070)"
+    max_rpm: null
+    mass_g: 500
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable drill: inserts are indexed, body not reground"}
+    cutting_data: *tdx_17_26

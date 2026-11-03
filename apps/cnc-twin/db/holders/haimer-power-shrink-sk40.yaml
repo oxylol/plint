@@ -1,0 +1,46 @@
+format: cnctwin-holder
+version: 1
+series_id: haimer-power-shrink-sk40
+maker: "HAIMER"
+series: "Power Shrink Chuck, DIN ISO 7388-1 (SK40, formerly DIN 69871), ultra short"
+src: haimer-shop-40-445-25-3
+items:
+  - id: haimer-40-445-25-3
+    order_code: "40.445.25.3"
+    type: shrink_fit
+    taper: SK40
+    bore_mm: {value: 25, src: haimer-shop-40-445-25-3}
+    gauge_length_mm: {value: 75, src: haimer-shop-40-445-25-3, note: "length A (protruding)"}
+    nose_diameter_mm: {value: 45.5, src: haimer-shop-40-445-25-3, note: "D2 / interference diameter A6"}
+    overall_length_mm: {value: 143.4, src: haimer-shop-40-445-25-3}
+    profile_mm: {value: [[0, 45.5], [17, 45.5], [75, 51.7]], src: est, note: "nose 45.5 over functional length B71 = 17, then 4.5° contour to body diameter A1 = 51.688 at the flange (haimer-shop-40-445-25-3)"}
+    clamping_torque_Nm: null           # HAIMER does not print it on the page
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 3, src: haimer-shop-40-445-25-3, note: "'high runout accuracy (< 0.003 mm)'"}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm", src: haimer-shop-40-445-25-3}
+    max_rpm: {value: 25000, src: haimer-shop-40-445-25-3}
+    mass_kg: {value: 1.700, src: haimer-shop-40-445-25-3}
+    clamp_length_mm: {value: 58, range: [48, 58], src: haimer-shop-40-445-25-3, note: "clamping length max./nominal 58, min. 48"}
+    price_eur: null
+  - id: haimer-40-445-32-3
+    order_code: "40.445.32.3"
+    type: shrink_fit
+    taper: SK40
+    bore_mm: {value: 32, src: haimer-shop-40-445-32-3}
+    gauge_length_mm: {value: 80, src: haimer-shop-40-445-32-3}
+    nose_diameter_mm: {value: 45.5, src: haimer-shop-40-445-32-3, note: "D2"}
+    overall_length_mm: {value: 148.4, src: haimer-shop-40-445-32-3}
+    profile_mm: {value: [[0, 45.5], [22, 45.5], [44.5, 52.5], [80, 52.5]], src: est, note: "nose 45.5 over B71 = 22, 4.5° contour to A1 = 52.453 at B1 = 44.458, cylinder to the flange"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 3, src: haimer-shop-40-445-32-3, note: "< 0.003 mm"}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm", src: haimer-shop-40-445-32-3}
+    max_rpm: {value: 25000, src: haimer-shop-40-445-32-3}
+    mass_kg: {value: 1.700, src: haimer-shop-40-445-32-3}
+    clamp_length_mm: {value: 58, range: [48, 58], src: haimer-shop-40-445-32-3}
+    price_eur: null
+notes: "SK40 is the DIN/ISO 7388-1 steep taper; flange diameter 63.55 mm on both items. Transmissible torque for shrink chucks is in schunk-celsio."

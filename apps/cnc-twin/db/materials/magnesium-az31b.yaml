@@ -1,0 +1,140 @@
+# Workpiece material: wrought magnesium alloy AZ31B (Mg-3Al-1Zn).
+# Physical data: open-access papers (Guo et al. 2020, Kim et al. 2016); flow stress: Hasenpouth 2010 via Sun 2022.
+format: cnctwin-material
+version: 1
+id: magnesium-az31b
+name: "Magnesium AZ31B (wrought)"
+family: magnesium
+iso_group: N
+condition: "wrought sheet/plate/extrusion; flow-stress set for partially hardened (H24-type) sheet, tensile data for as-extruded sheet"
+designations: {UNS: M11311, ASTM: "AZ31B", composition: "Mg - 2.5-3.5 Al - 0.7-1.3 Zn - 0.2-1.0 Mn (smiths-2025-az31b-datasheet)"}
+stock_forms: []                    # no residual-stress profile read
+
+physical:
+  src: guo-2020-az31b-thermography
+  density_kg_m3: {value: 1770, note: "also 1.77 g/cm3 in sun-2022-az31b-ballistic-uq"}
+  specific_heat_J_kgK: {table: [[20, 1000]]}
+  conductivity_W_mK: {table: [[20, 96]], note: "same value in kim-2016-mg-al-clad Table 2"}
+  expansion_1_K: {table: [[20, 26.4e-6]], src: kim-2016-mg-al-clad, note: "temperature range not stated"}
+  youngs_modulus_GPa: {table: [[20, 45.0]], src: sun-2022-az31b-ballistic-uq, note: "listed without a source in Table 2"}
+  poisson: {value: 0.35, src: sun-2022-az31b-ballistic-uq, note: "listed without a source in Table 2"}
+  solidus_degC: {value: 605, src: kim-2016-mg-al-clad}
+  liquidus_degC: {value: 630, src: kim-2016-mg-al-clad, note: "the JC set uses Tm = 905 K (632 C)"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 60, src: est, note: "no hardness read; estimated from UTS ~250 MPa with HB ~ UTS/4"}
+  yield_MPa: {value: 145, range: [105, 200], note: "extrusion direction of extruded sheet (130 MPa transverse); specified minima: O temper 105-125, H24 200 MPa (smiths-2025-az31b-datasheet)"}
+  ultimate_MPa: {value: 251, range: [220, 270], note: "extrusion direction (232 MPa transverse); minima O 220, H24 270 MPa (smiths-2025-az31b-datasheet)"}
+  elongation_pct: {value: 9, note: "extrusion direction (12 % transverse); minima O 8-10 %, H24 5 %"}
+  fracture_strain: {value: 0.2, src: est, note: "hcp alloy with limited ductility; assumed, no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: {value: 225.2, range: [200.4, 250.0]}
+  B_MPa: {value: 168.3, range: [150.7, 186.0]}
+  n: {value: 0.242, range: [0.160, 0.324]}
+  C: {value: 0.013, range: [0.012, 0.014]}
+  m: {value: 1.55, range: [1.523, 1.577]}
+  ref_strain_rate_1_s: 0.001
+  T_ref_degC: 25
+  T_melt_degC: 632
+  src: sun-2022-az31b-ballistic-uq
+  note: "Hasenpouth (2010, MASc thesis, Waterloo) constants for partially hardened AZ31B sheet in the rolling direction, as listed by Sun 2022 Table 1 with 95 % confidence bounds (ranges) and Table 2 (eps0 = 0.001 1/s, Tref = 298 K, Tm = 905 K). Identified on tensile tests (not machining); AZ31B is strongly anisotropic and tension/compression asymmetric, which a JC law ignores."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 560
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 500
+      src: est
+      note: "no Kienzle value for magnesium was read (ISCAR has no magnesium group). Estimated by scaling ISCAR group 22 (hardenable wrought aluminium, 800 N/mm2, mc 0.25) by the shear-strength ratio ~145/207 (AZ31B shear assumed 0.58 x UTS; 6061-T6 shear 207 MPa, kaiser-2006-al6061-datasheet)"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 645
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 150
+      src: est
+      note: "carbide estimate x 1.15"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.2, src: est, range: [0.1, 0.4], note: "no AZ31B value read; korpysa-2025-az91d-micromilling saw shearing start at fz/rn = 0.1 on AZ91D (not a minimum chip thickness); 0.2 assumed, inside the 0.08-0.63 range of wojciechowski-2022-min-chip-thickness"}
+  indentation_coeff_N_mm3: {value: 9.5e3, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (60/95)"}
+  work_hardening:
+    layer_depth_um: {value: 40, src: est, note: "assumed; machining of AZ31B is known to refine grains near the surface but no depth was read"}
+    hardness_increase_pct: {value: 15, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.242, src: sun-2022-az31b-ballistic-uq, note: "JC exponent n (Hasenpouth set)"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, range: [0.25, 0.5], note: "assumed; no tool-chip friction measurement for magnesium was read"}
+    sticking_ratio: {value: 0.4, src: est, note: "assumed"}
+  - tool_class: carbide
+    coating: TiAlN
+    mu_sliding: {value: 0.35, src: est, note: "assumed equal to uncoated"}
+    sticking_ratio: {value: 0.4, src: est, note: "assumed"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.45, src: est, note: "assumed"}
+
+chip:
+  tendency: segmented
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: null, src: est, note: "chip-segmentation onset for AZ31B not read; magnesium (hcp, few slip systems) is assumed to segment over the whole practical speed range"}
+  bue: null                        # no BUE data for AZ31B read
+  breakability: {value: medium, src: est, note: "assumed; no AZ31B chip-form study read"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 2700
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 1200 m/min (general knowledge, not a cited source); magnesium is gentle on tools, and chip temperature/ignition, not wear, usually limits speed"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 555
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 300 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress: []                # no as-supplied profile read
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 605, src: kim-2016-mg-al-clad, note: "solidus"}
+
+ignition:
+  bulk_ignition_degC: {value: 628, src: zagorski-2024-mg-chip-temperature, note: "AZ31 bulk ignition point from Liu et al. 2012 (Corros. Sci. 54:139) as quoted; WE43 644 C and AZ91 600 C in the same study"}
+  chip_hazard_degC: {value: 500, src: zagorski-2024-mg-chip-temperature, note: "chip temperatures above approx. 500 C are regarded as dangerous in machining; dry rough milling of AZ31B reached about 418 C without ignition"}
+  powder_ignition_degC: {value: 522, src: wang-2026-combustion-database, note: "AZ31 powder, ref [26] of the database (521.6 C); chip-ignition tests give markedly lower values than DTA on bulk samples"}
+  min_ignition_energy_mJ: {value: null, note: "no minimum ignition energy for AZ31 dust or fines was found in the sources read"}
+  note: "Fine chips and dust are the fire risk; bulk parts ignite near the melting range. Values depend strongly on heating rate, specimen size and atmosphere."
+
+composite: null
+
+notes: "Wrought AZ31B. Sourced: density, cp, k, tensile data (Guo et al. 2020, extruded sheet), solidus/liquidus/CTE (Kim et al. 2016), E and nu (Sun 2022, unsourced there), JC set with confidence bounds (Hasenpouth via Sun 2022), ignition temperatures (Zagorski 2024 quoting Liu 2012; Wang 2026 database). Estimated: hardness, Kienzle (scaled from aluminium), h_min/r_n, friction, chip behaviour, work hardening, K_sp, Taylor constants. Main gaps: magnesium-specific cutting-force data and dust MIE."

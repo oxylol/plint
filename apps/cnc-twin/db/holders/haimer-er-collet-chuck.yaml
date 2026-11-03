@@ -1,0 +1,130 @@
+format: cnctwin-holder
+version: 1
+series_id: haimer-er-collet-chuck
+maker: "HAIMER"
+series: "Collet chucks type ER (ISO 15488 collets) for HSK-A63, CAT40 and BT40"
+src: haimer-shop-a63-020-32
+collet: {standard: "ISO 15488 (formerly DIN 6499)", runout_um: 5, src: haimer-shop-collet-81-320, note: "HAIMER high-precision ER collet runout accuracy 5 µm (measuring distance not printed); standard-class collets are not covered here"}
+items:
+  - id: haimer-a63-020-32
+    order_code: "A63.020.32"
+    type: er_collet
+    taper: HSK-A63
+    collet_size: ER32
+    bore_mm: {value: [1.5, 20.0], src: haimer-shop-a63-020-32, note: "clamping range"}
+    gauge_length_mm: {value: 100.0, src: haimer-shop-a63-020-32, note: "length A 3.937 in"}
+    nose_diameter_mm: {value: 50.0, src: haimer-shop-a63-020-32, note: "clamping nut diameter D 1.969 in"}
+    nut_height_mm: {value: 22.5, src: haimer-shop-a63-020-32, note: "B6 0.886 in"}
+    functional_length_mm: {value: 53.0, src: haimer-shop-a63-020-32, note: "B71 2.087 in"}
+    overall_length_mm: {value: 132.0, src: haimer-shop-a63-020-32, note: "B4 5.197 in"}
+    profile_mm: {value: [[0, 50.0], [22.5, 50.0], [100.0, 50.0]], src: est, note: "revolved outline from the printed nut diameter (50) and body diameter A1 (1.969 in = 50); body assumed cylindrical up to the flange face"}
+    clamping_torque_Nm: null           # not published on the product page
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320, note: "collet accuracy with the HAIMER high-precision ER collet; chuck page says only 'high runout accuracy'"}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm", src: haimer-shop-a63-020-32}
+    max_rpm: {value: 25000, src: haimer-shop-a63-020-32}
+    mass_kg: {value: 1.370, src: haimer-shop-a63-020-32, note: "3.021 lb"}
+    nut: {value: "locknut, balanced, slide-coated", src: haimer-shop-a63-020-32}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-40-720-32
+    order_code: "40.720.32"
+    type: er_collet
+    taper: CAT40
+    collet_size: ER32
+    bore_mm: {value: [1.5, 20.0], src: haimer-shop-40-720-32}
+    gauge_length_mm: {value: 70, src: haimer-shop-40-720-32}
+    nose_diameter_mm: {value: 50, src: haimer-shop-40-720-32}
+    profile_mm: {value: [[0, 50], [70, 50]], src: est, note: "only the nut diameter is printed; cylinder of nut diameter assumed up to the flange"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320, note: "high-precision ER32 collet"}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 22000 rpm", src: haimer-shop-40-720-32, note: "the page also says 'fine balanced G2.5 at 25,000 rpm'; the lower figure is kept"}
+    max_rpm: {value: 22000, src: est, note: "no max speed printed; set to the balancing speed"}
+    mass_kg: {value: 1.009, src: haimer-shop-40-720-32}
+    taper_tolerance: {value: "AT3", src: haimer-shop-40-720-32}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-40-520-32
+    order_code: "40.520.32"
+    type: er_collet
+    taper: BT40
+    collet_size: ER32
+    bore_mm: {value: [1.5, 20.0], src: haimer-shop-40-520-32}
+    gauge_length_mm: {value: 70, src: haimer-shop-40-520-32}
+    nose_diameter_mm: {value: 50, src: haimer-shop-40-520-32}
+    length_L_mm: {value: 64, src: haimer-shop-40-520-32}
+    profile_mm: {value: [[0, 50], [70, 50]], src: est, note: "cylinder of nut diameter assumed"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 22000 rpm", src: haimer-shop-40-520-32}
+    max_rpm: {value: 22000, src: est, note: "no max speed printed; set to the balancing speed"}
+    mass_kg: {value: 1.260, src: haimer-shop-40-520-32}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-a63-026-16
+    order_code: "A63.026.16"
+    type: er_collet
+    taper: HSK-A63
+    collet_size: ER16
+    bore_mm: {value: [0.5, 10.0], src: haimer-shop-a63-026-16}
+    gauge_length_mm: {value: 200, src: haimer-shop-a63-026-16, note: "ZG200 long version"}
+    nose_diameter_mm: {value: 28, src: haimer-shop-a63-026-16}
+    length_L_mm: {value: 32.5, src: haimer-shop-a63-026-16}
+    profile_mm: {value: [[0, 28], [200, 28]], src: est, note: "slim extension; only nut diameter printed, body assumed not wider than the nut"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320, note: "high-precision ER collet (value printed for ER32; assumed equal for ER16)"}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm", src: haimer-shop-a63-026-16}
+    max_rpm: {value: 25000, src: est, note: "no max speed printed; set to the balancing speed"}
+    mass_kg: {value: 1.388, src: haimer-shop-a63-026-16}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-40-720-16
+    order_code: "40.720.16"
+    type: er_collet
+    taper: CAT40
+    collet_size: ER16
+    bore_mm: {value: [0.5, 10.0], src: haimer-shop-40-720-16}
+    gauge_length_mm: {value: 70, src: haimer-shop-40-720-16}
+    nose_diameter_mm: {value: 28, src: haimer-shop-40-720-16}
+    profile_mm: {value: [[0, 28], [70, 28]], src: est, note: "cylinder of nut diameter assumed"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 22000 rpm", src: haimer-shop-40-720-16, note: "page also states 25,000 rpm; lower kept"}
+    max_rpm: {value: 22000, src: est, note: "set to the balancing speed"}
+    mass_kg: {value: 0.900, src: haimer-shop-40-720-16}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-40-520-16
+    order_code: "40.520.16"
+    type: er_collet
+    taper: BT40
+    collet_size: ER16
+    bore_mm: {value: [0.5, 10.0], src: haimer-shop-40-520-16}
+    gauge_length_mm: {value: 70, src: haimer-shop-40-520-16}
+    nose_diameter_mm: {value: 28, src: haimer-shop-40-520-16}
+    profile_mm: {value: [[0, 28], [70, 28]], src: est, note: "cylinder of nut diameter assumed"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 22000 rpm", src: haimer-shop-40-520-16}
+    max_rpm: {value: 22000, src: est, note: "set to the balancing speed"}
+    mass_kg: {value: 1.130, src: haimer-shop-40-520-16}
+    clamp_length_mm: null
+    price_eur: null
+notes: "Transmissible torque of ER chucks depends on nut torque and collet; HAIMER does not print it on these pages (gap). Prices need a login (gap)."

@@ -1,0 +1,197 @@
+# Tungaloy CNMG120408 negative 80 deg rhombic turning inserts with chipbreakers TF / TSF / TM / TH
+# (steel), SM (stainless), CH (cast iron) and the FW / AFW wipers, each in the PCLNR2525M12E
+# lever-lock holder. Read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03.
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-cnmg1204-turning
+maker: "Tungaloy Corporation"
+series: "CNMG120408 with chipbreakers TF, TSF, TM, TH, SM, CH and wipers FW / AFW in PCLNR2525M12E (95 deg)"
+src: tungaloy-2023-gc-insert
+notes: "Insert dimensions (B054-B057): RE 0.8, IC 12.7, S 4.76, D1 5.16 mm, negative (0 deg clearance), double-sided M-class. Chipbreaker rake angle and land width are the pictogram values of the chipbreaker overview (B030-B036). The chipbreaker window is the depth-of-cut and feed range of Tungaloy's standard cutting conditions (B004 steel, B006 stainless, B008 cast iron), not the shaded chip-control chart, except for the wipers (no tabulated conditions; window digitised from the B034 chart). Tungaloy's counterparts of the Sandvik -PF/-MF, -PM and -PR/-MR breakers are TSF, TM and TH (steel) and SF, SM and SH (stainless). Holder PCLNR2525M12E (C018): H 25, B 25, LF 150, LH 28, HF 25, WF 32 mm, standard RE 0.8, clamping torque 3 N m, 95 deg approach; Tungaloy prints no rake / inclination for the lever-lock holders (db/models/tooling.yaml negative-holder defaults apply). The overhang is a set-up value, estimated."
+defaults:
+  type: turning_insert
+  hand: right
+  tool_material: {class: carbide, grade: "CVD-coated carbide (substrate not stated)", id: carbide-p30, src: est, note: "Tungaloy gives ISO ranges and coating only; CVD P/M/K grades are mapped to the P30 substrate entry"}
+items:
+  - id: tungaloy-cnmg120408-tsf-t9215-pclnr2525m12e
+    order_code: "CNMG120408-TSF T9215 + PCLNR2525M12E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9215 CVD, P10-P20 / M10-M20 / K10-K20 (A002); layer chemistry not printed for T92xx, mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-TSF"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: TSF, rake_deg: {value: 13, page: "B030 pictogram"}, window: {f_mm: [0.08, 0.4], ap_mm: [0.2, 1.5]}, page: "B004 finishing row"}
+        page: "B054"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002: steel-cutting grades are honed (hone size not read)"}
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018 (H, B)"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H (25 mm) beyond the turret clamp; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert: 4 corners (double-sided 80 deg rhombic), not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400 (C10, 18CrMo4, E275A, 20Cr4)", operation: [turning, facing], vc_m_min: {min: 150, max: 400}, f_mm: {min: 0.08, max: 0.4}, ap_max_mm: 1.5, page: "B004 finishing TSF T9215", note: "ap 0.2-1.5 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440 (C45, 42CrMo4)", material: aisi1045, operation: [turning, facing], vc_m_min: {min: 150, max: 400}, f_mm: {min: 0.08, max: 0.4}, ap_max_mm: 1.5, page: "B004", note: "ap 0.2-1.5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439 (41CrNiMo2)", operation: [turning, facing], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.08, max: 0.4}, ap_max_mm: 1.5, page: "B004", note: "ap 0.2-1.5 mm"}
+  - id: tungaloy-cnmg120408-tm-t9215-pclnr2525m12e
+    order_code: "CNMG120408-TM T9215 + PCLNR2525M12E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9215 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-TM"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: TM, land_mm: {value: 0.2, page: "B032 pictogram"}, rake_deg: {value: 6, page: "B032 pictogram"}, window: {f_mm: [0.2, 0.5], ap_mm: [1, 5]}, page: "B004 medium cutting row"}
+        page: "B057"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002"}
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning, facing], vc_m_min: {min: 150, max: 400}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004 medium cutting TM T9215", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi4140-qt30, operation: [turning, facing], vc_m_min: {min: 150, max: 400}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning, facing], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}
+  - id: tungaloy-cnmg120408-tm-t9225-pclnr2525m12e
+    order_code: "CNMG120408-TM T9225 + PCLNR2525M12E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9225 CVD, P15-P25 / M15-M25 (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-TM"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: TM, land_mm: {value: 0.2, page: "B032 pictogram"}, rake_deg: {value: 6, page: "B032 pictogram"}, window: {f_mm: [0.2, 0.5], ap_mm: [1, 5]}, page: "B004 medium cutting row"}
+        page: "B057"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002"}
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning, facing], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004 medium cutting TM T9225", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi4140-qt30, operation: [turning, facing], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning, facing], vc_m_min: {min: 100, max: 250}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 5, page: "B004", note: "ap 1-5 mm"}
+  - id: tungaloy-cnmg120408-th-t9225-pclnr2525m12e
+    order_code: "CNMG120408-TH T9225 + PCLNR2525M12E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9225 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-TH"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: TH, land_mm: {value: 0.3, page: "B036 pictogram"}, rake_deg: {value: 20, page: "B036 pictogram"}, window: {f_mm: [0.3, 0.6], ap_mm: [3, 6]}, page: "B004 medium to heavy cutting row"}
+        page: "B061"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002"}
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.3, max: 0.6}, ap_max_mm: 6, page: "B004 medium to heavy TH T9225", note: "ap 3-6 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi1045, operation: [turning], vc_m_min: {min: 120, max: 300}, f_mm: {min: 0.3, max: 0.6}, ap_max_mm: 6, page: "B004", note: "ap 3-6 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning], vc_m_min: {min: 100, max: 250}, f_mm: {min: 0.3, max: 0.6}, ap_max_mm: 6, page: "B004", note: "ap 3-6 mm"}
+  - id: tungaloy-cnmg120408-tf-ns9530-pclnr2525m12e
+    order_code: "CNMG120408-TF NS9530 + PCLNR2525M12E"
+    tool_material: {class: cermet, grade: "NS9530 cermet", id: cermet-ticn}
+    coating: {id: none}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-TF"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: TF, rake_deg: {value: 12, page: "B030 pictogram"}, window: {f_mm: [0.03, 0.15], ap_mm: [0.05, 0.5]}, page: "B004 precision finishing row"}
+        page: "B054"
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [turning, facing], vc_m_min: {min: 150, max: 250}, f_mm: {min: 0.03, max: 0.15}, ap_max_mm: 0.5, page: "B004 precision finishing TF NS9530", note: "ap 0.05-0.5 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi1045, operation: [turning, facing], vc_m_min: {min: 100, max: 250}, f_mm: {min: 0.03, max: 0.15}, ap_max_mm: 0.5, page: "B004", note: "ap 0.05-0.5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [turning, facing], vc_m_min: {min: 100, max: 200}, f_mm: {min: 0.03, max: 0.15}, ap_max_mm: 0.5, page: "B004", note: "ap 0.05-0.5 mm"}
+  - id: tungaloy-cnmg120408-sm-t6215-pclnr2525m12e
+    order_code: "CNMG120408-SM T6215 + PCLNR2525M12E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 8, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T6215 CVD TiCN-Al2O3, P10-P30 / M10-M30 (A002)"}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-SM"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: SM, land_mm: {value: 0.25, page: "B033 pictogram"}, rake_deg: {value: 10, page: "B033 pictogram"}, window: {f_mm: [0.2, 0.5], ap_mm: [1, 4]}, page: "B006 medium cutting row"}
+        page: "B059"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002"}
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: M, material_hint: "austenitic stainless SUS304, SUS316 (X5CrNi18-9, X5CrNiMo17-12-3)", material: aisi304, operation: [turning], vc_m_min: {min: 140, max: 240}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 4, page: "B006 medium cutting SM T6215", note: "ap 1-4 mm; SM is Tungaloy's first choice for stainless"}
+      - {iso_group: M, material_hint: "ferritic / martensitic stainless", operation: [turning], vc_m_min: {min: 160, max: 280}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 4, page: "B006", note: "ap 1-4 mm"}
+      - {iso_group: M, material_hint: "precipitation-hardened stainless", operation: [turning], vc_m_min: {min: 80, max: 150}, f_mm: {min: 0.2, max: 0.5}, ap_max_mm: 4, page: "B006", note: "ap 1-4 mm"}
+  - id: tungaloy-cnmg120408-ch-t515-pclnr2525m12e
+    order_code: "CNMG120408-CH T515 + PCLNR2525M12E"
+    tool_material: {class: carbide, grade: "T515 CVD (substrate not stated)", id: carbide-k20-6co, src: est, note: "K10-K20 cast-iron grade mapped to the straight WC-Co K20 entry"}
+    coating: {id: al2o3-cvd, thickness_um: {value: 16, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T515 CVD TiCN-Al2O3, K10-K20 (A002)"}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-CH"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: false
+        chip_breaker: {name: CH, land_mm: {value: 0.4, page: "B036 pictogram"}, rake_deg: {value: 15, page: "B036 pictogram"}, window: {f_mm: [0.2, 0.6], ap_mm: [3, 6]}, page: "B008 medium / medium-heavy CH row"}
+        page: "B062"
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: K, material_hint: "grey cast iron FC250 (GG25)", material: grey-cast-iron-gjl250, operation: [turning], vc_m_min: {min: 150, max: 700}, f_mm: {min: 0.2, max: 0.6}, ap_max_mm: 6, page: "B008 CH T515", note: "ap 3-6 mm; reinforced edge (negative land) for heavy and interrupted cuts"}
+      - {iso_group: K, material_hint: "ductile cast iron FCD450", operation: [turning], vc_m_min: {min: 150, max: 300}, f_mm: {min: 0.2, max: 0.6}, ap_max_mm: 6, page: "B008", note: "ap 3-6 mm"}
+  - id: tungaloy-cnmg120408-fw-t9215-pclnr2525m12e
+    order_code: "CNMG120408-FW T9215 (wiper) + PCLNR2525M12E"
+    coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9215 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+    geometry:
+      insert:
+        iso_code: "CNMG120408-FW"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 12.7
+        thickness_mm: 4.76
+        nose_radius_mm: 0.8
+        clearance_deg: 0
+        wiper: true
+        chip_breaker: {name: FW, rake_deg: {value: 12, page: "B031 pictogram"}, window: {f_mm: {value: [0.22, 0.4], digitised: true, uncertainty_pct: 15}, ap_mm: {value: [0.55, 1.45], digitised: true, uncertainty_pct: 15}}, page: "B034 chip control range chart (P), FW box"}
+        page: "B056 finishing (wiper)"
+        note: "wiper flat length not published; Tungaloy refers to B011-B015 for program adjustment with wiper inserts (not read). AFW is the variant with a sharper geometry (window 0.2-0.4 mm/rev, 0.5-1.5 mm on the same chart)"
+      edge_prep: {type: hone, src: tungaloy-2023-gc-users-guide, page: "L002"}
+      holder: {iso_code: "PCLNR2525M12E", approach_angle_deg: {value: 95, src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, shank_mm: {value: [25, 25], src: tungaloy-2023-gc-ext-toolholder, page: "C018"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 4 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "carbon and alloy steels, finishing with wiper", material: aisi1045, operation: [turning], vc_m_min: {min: 150, max: 400, src: est, note: "no tabulated speeds for FW; the T9215 finishing range of the TSF row (B004) is used"}, f_mm: {min: 0.22, max: 0.4, digitised: true, uncertainty_pct: 15}, ap_max_mm: {value: 1.45, digitised: true, uncertainty_pct: 15}, page: "B034 chart (feed, depth)"}

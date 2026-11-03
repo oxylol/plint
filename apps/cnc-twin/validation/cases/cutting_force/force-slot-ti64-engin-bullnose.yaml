@@ -1,0 +1,72 @@
+# Ti6Al4V slot milling with a bull-nose cutter, one round insert: peak forces (digitised).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-slot-ti64-engin-bullnose
+quantity: cutting_force
+reference:
+  src: engin-altintas-milling-preprint
+  location: Fig. 8 'Cutting forces' (217 rpm, ap 4 mm, 0.1 mm/tooth, one insert), 'Experimental' thin curves; digitised
+    from the vector PDF at 360 dpi (13.8, 15.1 and 4.6 N/px)
+  digitised: true
+  uncertainty_pct: 4
+  measured: true
+  note: digitisation and curve-overlap uncertainty about +-30 N (Fx, Fy), +-20 N (Fz)
+setup:
+  operation: slotting
+  material:
+    db: ti6al4v
+    note: 'Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed)'
+  tool:
+    src: engin-altintas-milling-preprint
+    page: Fig. 8
+    type: toroidal_endmill
+    shape: bull-nose inserted end mill; parameters of the source's general end-mill model
+    body: Kennametal KIRP125-RP3
+    insert: RPGB-325 round insert, coated (coating not named)
+    D_mm: 31.75
+    R_mm: 4.7625
+    Rz_mm: 4.7625
+    h_mm: 4.7625
+    Rr_mm: 11.1125
+    alpha_deg: 0
+    beta_deg: 0
+    inserts_in_body: 2
+    inserts_used: 1
+    rake_deg:
+      value: 0
+      src: est
+      note: 'assumed: not stated; a P-type (11 deg clearance) round insert is assumed in a neutral pocket (est.). The source
+        takes the cutting coefficients from orthogonal tests'
+    note: D = 5/4 in, R = Rz = h = 3/16 in, Rr = 7/16 in (values in inches in the source)
+    assumed_inputs: [rake_deg]
+  machine:
+    src: engin-altintas-milling-preprint
+    page: Sect. 4
+    type: machining centre of the authors' laboratory (make, spindle and dynamometer not given); the source notes severe
+      chatter at the larger depths on it
+  conditions:
+    src: engin-altintas-milling-preprint
+    page: Fig. 8
+    spindle_rpm: 217
+    fz_mm_tooth: 0.1
+    ap_mm: 4.0
+    radial_engagement: full slot
+    coolant:
+      value: dry
+      src: est
+      note: 'assumed: not stated; dry assumed, as usual for force-model validation cuts (est.)'
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fx_min, value: -830, unit: N, uncertainty: 30, note: most negative value of the measured curve (-819 and -840 N
+    in the two engagements shown)}
+- {name: Fy_max, value: 955, unit: N, uncertainty: 30, note: peak of the measured curve (949 and 964 N in the two engagements)}
+- {name: Fz_max, value: 360, unit: N, uncertainty: 20, note: peak of the measured (fluctuating) curve; plateau ~320-340
+    N}
+reference_curves: []
+notes: 'Slot milling of Ti6Al4V with one round insert on a 31.75 mm bull-nose body (the insert''s corner radius forms the
+  whole 4 mm axial engagement). Insert rake not given (assumed 0 deg): this adds roughly +-5-8 % to the force uncertainty
+  (est.). The source''s simulated forces (orthogonal-cutting coefficients of Budak et al. 1996) are ''in good agreement''
+  and visibly lower in Fx peak (~-675 N).'

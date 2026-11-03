@@ -1,0 +1,16 @@
+format: cnctwin-coating
+version: 1
+id: ticn
+name: "TiCN (PVD arc; Oerlikon Balzers BALINIT B / IHI Ionbond 10 as references)"
+process: PVD
+src: balzers-web-balinit-b
+colour: {value: "blue-grey", src: balzers-web-balinit-b}
+hardness_HV: {value: 2800, src: ionbond-coating-portfolio, page: "Ionbond 10 TiCN, microhardness 2800 HV"}
+hardness_HIT_GPa: {value: 37, range: [34, 40], src: balzers-web-balinit-b, page: "HIT 37 +/- 3 GPa (nanoindentation ISO 14577)"}
+max_service_temp_degC: {value: 400, range: [300, 400], src: balzers-web-balinit-b, note: "Ionbond 10 lists 300 °C"}
+process_temp_degC: {value: 500, src: balzers-web-balinit-b, note: "printed as '< 500'; Ionbond 10 450 °C"}
+conductivity_W_mK: {value: 3.5, src: est, note: "no TiCN value read; between the sputtered-film values for c-TiN (3.1) and c-CrN (3.6) in moraes-2015-nitride-conductivity"}
+friction_vs_steel: {value: 0.2, src: ionbond-coating-portfolio, page: "Ionbond 10 TiCN, friction vs steel (dry) 0.2"}
+typical_thickness_um: {value: [2, 4], src: ionbond-coating-portfolio, page: "Ionbond 10 TiCN 2-4 µm"}
+wear_rate_factor: {value: 0.45, src: est, note: "slightly better abrasion resistance than TiN at moderate temperature; no study read"}
+thermal_barrier_factor: {value: 0.9, src: est, note: "same thin-film resistance argument as tin"}

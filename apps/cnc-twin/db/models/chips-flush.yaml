@@ -1,0 +1,38 @@
+# Flushing of settled chips by coolant (cnctwin.chips, docs/models/chips.md "Flushing"): incipient motion
+# (Shields) and bed-load transport (Meyer-Peter and Mueller as corrected by Wong and Parker), capillary
+# adhesion of beds that are wet but not submerged.
+format: cnctwin-model-params
+version: 1
+model: chips-flush
+description: "Bed-load transport of chips by the coolant film: threshold, rate, capillary adhesion"
+params:
+  skin_friction_coefficient:
+    value: 0.006
+    unit: "-"
+    range: [0.003, 0.012]
+    src: est
+    note: "bed shear stress / dynamic pressure of the coolant flow over the pile (tau_b = C_f q): turbulent flat-plate skin friction C_f = 0.074 Re^-1/5 (schlichting-gersten-2017) for Re = 1e4-1e6 of a wall jet spreading over a part"
+  critical_shields:
+    value: 0.0495
+    unit: "-"
+    src: wong-parker-2006
+    note: "critical Shields number of the corrected Meyer-Peter and Mueller relation (threshold of motion, shields-1936)"
+  bedload_coefficient:
+    value: 3.97
+    unit: "-"
+    src: wong-parker-2006
+    note: "q* = a (theta - theta_c)^n, q* = q_s / sqrt((s - 1) g d^3)"
+  bedload_exponent:
+    value: 1.5
+    unit: "-"
+    src: wong-parker-2006
+  capillary_bridge_factor:
+    value: 8.0
+    unit: "-"
+    src: israelachvili-2011
+    note: "adhesion stress of a wet but not submerged bed sigma = 8 gamma cos(theta) / d: the sphere-plate capillary bridge F = 4 pi R gamma cos(theta) over the projected area pi R^2 with R = d/2 (cos(theta) from chips-contact); applies to MQL and mist, not to flood coolant (submerged bed)"
+  bed_friction:
+    value: 0.6
+    unit: "-"
+    src: est
+    note: "friction of chips on the chip bed below: the capillary adhesion stress is resisted through it"

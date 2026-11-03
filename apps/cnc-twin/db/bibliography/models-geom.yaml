@@ -1,0 +1,269 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of the geometry library (cnctwin.geom, docs/models/geom.md): bounding-volume trees, ray and
+# proximity queries, overlap tests, grid traversal, rotations, control conventions and file formats.
+entries:
+  pharr-2016-pbrt:
+    type: book
+    authors: "Pharr, M.; Jakob, W.; Humphreys, G."
+    title: "Physically Based Rendering: From Theory to Implementation"
+    edition: 3
+    publisher: "Morgan Kaufmann, Cambridge MA"
+    year: 2016
+    isbn: "978-0-12-800645-0"
+    pages: "4.3 Bounding volume hierarchies (SAH with 12 buckets, traversal cost 1/8, maxPrimsInNode 4; flattened depth-first layout); 3.9.2 conservative ray-bounds intersection"
+  wald-2007-bvh:
+    type: conference
+    authors: "Wald, I."
+    title: "On fast construction of SAH-based bounding volume hierarchies"
+    venue: "IEEE Symposium on Interactive Ray Tracing 2007, 33-40"
+    year: 2007
+    doi: "10.1109/RT.2007.4342588"
+    pages: "section 3: binned SAH build"
+  macdonald-booth-1990:
+    type: article
+    authors: "MacDonald, J.D.; Booth, K.S."
+    title: "Heuristics for ray tracing using space subdivision"
+    venue: "The Visual Computer 6(3), 153-166"
+    year: 1990
+    doi: "10.1007/BF01911006"
+    pages: "surface area heuristic"
+  woop-2013-watertight:
+    type: article
+    authors: "Woop, S.; Benthin, C.; Wald, I."
+    title: "Watertight ray/triangle intersection"
+    venue: "Journal of Computer Graphics Techniques 2(1), 65-82"
+    year: 2013
+    url: "https://jcgt.org/published/0002/01/05/"
+    accessed: 2026-11-03
+    pages: "section 3, figure 2: shear to ray space, edge functions, watertightness"
+  ize-2013-robust-bvh:
+    type: article
+    authors: "Ize, T."
+    title: "Robust BVH ray traversal"
+    venue: "Journal of Computer Graphics Techniques 2(2), 12-27"
+    year: 2013
+    url: "https://jcgt.org/published/0002/02/02/"
+    accessed: 2026-11-03
+    pages: "section 3: far-plane distance scaled by 1 + 2 gamma(3)"
+  moller-trumbore-1997:
+    type: article
+    authors: "Moller, T.; Trumbore, B."
+    title: "Fast, minimum storage ray-triangle intersection"
+    venue: "Journal of Graphics Tools 2(1), 21-28"
+    year: 1997
+    doi: "10.1080/10867651.1997.10487468"
+  moller-1997-tritri:
+    type: article
+    authors: "Moller, T."
+    title: "A fast triangle-triangle intersection test"
+    venue: "Journal of Graphics Tools 2(2), 25-30"
+    year: 1997
+    doi: "10.1080/10867651.1997.10487472"
+    pages: "interval overlap on the line of intersection; coplanar case by 2-D edge tests"
+  akenine-moller-2001-tribox:
+    type: article
+    authors: "Akenine-Moller, T."
+    title: "Fast 3D triangle-box overlap testing"
+    venue: "Journal of Graphics Tools 6(1), 29-33"
+    year: 2001
+    doi: "10.1080/10867651.2001.10487535"
+    pages: "separating axis test on 13 axes"
+  gottschalk-1996-obbtree:
+    type: conference
+    authors: "Gottschalk, S.; Lin, M.C.; Manocha, D."
+    title: "OBBTree: a hierarchical structure for rapid interference detection"
+    venue: "Proceedings of SIGGRAPH 96, 171-180"
+    year: 1996
+    doi: "10.1145/237170.237244"
+    pages: "section 5: separating axis test for two oriented boxes (15 axes)"
+  ericson-2005-rtcd:
+    type: book
+    authors: "Ericson, C."
+    title: "Real-Time Collision Detection"
+    publisher: "Morgan Kaufmann, San Francisco"
+    year: 2005
+    isbn: "978-1-55860-732-3"
+    pages: "4.4.1 OBB-OBB separating axes with epsilon for parallel edges; 5.1.5 closest point on a triangle (Voronoi regions)"
+  baerentzen-aanaes-2005:
+    type: article
+    authors: "Baerentzen, J.A.; Aanaes, H."
+    title: "Signed distance computation using the angle weighted pseudonormal"
+    venue: "IEEE Transactions on Visualization and Computer Graphics 11(3), 243-253"
+    year: 2005
+    doi: "10.1109/TVCG.2005.49"
+    pages: "theorem 1: the sign of (p - c) . n_alpha at the closest point c"
+  thurmer-wuthrich-1998:
+    type: article
+    authors: "Thurmer, G.; Wuthrich, C.A."
+    title: "Computing vertex normals from polygonal facets"
+    venue: "Journal of Graphics Tools 3(1), 43-46"
+    year: 1998
+    doi: "10.1080/10867651.1998.10487487"
+  jacobson-2013-winding:
+    type: article
+    authors: "Jacobson, A.; Kavan, L.; Sorkine-Hornung, O."
+    title: "Robust inside-outside segmentation using generalized winding numbers"
+    venue: "ACM Transactions on Graphics 32(4), article 33"
+    year: 2013
+    doi: "10.1145/2461912.2461916"
+  vanoosterom-strackee-1983:
+    type: article
+    authors: "Van Oosterom, A.; Strackee, J."
+    title: "The solid angle of a plane triangle"
+    venue: "IEEE Transactions on Biomedical Engineering BME-30(2), 125-126"
+    year: 1983
+    doi: "10.1109/TBME.1983.325207"
+  amanatides-woo-1987:
+    type: conference
+    authors: "Amanatides, J.; Woo, A."
+    title: "A fast voxel traversal algorithm for ray tracing"
+    venue: "Eurographics '87, 3-10"
+    year: 1987
+  kay-kajiya-1986:
+    type: conference
+    authors: "Kay, T.L.; Kajiya, J.T."
+    title: "Ray tracing complex scenes"
+    venue: "Computer Graphics (SIGGRAPH 86) 20(4), 269-278"
+    year: 1986
+    doi: "10.1145/15886.15916"
+    pages: "slab intersection of bounding volumes"
+  williams-2005-raybox:
+    type: article
+    authors: "Williams, A.; Barrus, S.; Morley, R.K.; Shirley, P."
+    title: "An efficient and robust ray-box intersection algorithm"
+    venue: "Journal of Graphics Tools 10(1), 49-54"
+    year: 2005
+    doi: "10.1080/2151237X.2005.10129188"
+  shoemake-1985-slerp:
+    type: conference
+    authors: "Shoemake, K."
+    title: "Animating rotation with quaternion curves"
+    venue: "Computer Graphics (SIGGRAPH 85) 19(3), 245-254"
+    year: 1985
+    doi: "10.1145/325165.325242"
+  shepperd-1978-quaternion:
+    type: article
+    authors: "Shepperd, S.W."
+    title: "Quaternion from rotation matrix"
+    venue: "Journal of Guidance and Control 1(3), 223-224"
+    year: 1978
+    doi: "10.2514/3.55767b"
+  shoemake-1994-euler:
+    type: chapter
+    authors: "Shoemake, K."
+    title: "Euler angle conversion"
+    venue: "Graphics Gems IV (ed. Heckbert, P.S.), 222-229, Academic Press"
+    year: 1994
+  kahan-2006-angles:
+    type: report
+    authors: "Kahan, W."
+    title: "How futile are mindless assessments of roundoff in floating-point computation?"
+    institution: "University of California, Berkeley"
+    year: 2006
+    url: "https://people.eecs.berkeley.edu/~wkahan/Mindless.pdf"
+    accessed: 2026-11-03
+    pages: "section 12: angle between vectors as 2 atan(|u - v| / |u + v|)"
+  press-2007-nr:
+    type: book
+    authors: "Press, W.H.; Teukolsky, S.A.; Vetterling, W.T.; Flannery, B.P."
+    title: "Numerical Recipes: The Art of Scientific Computing"
+    edition: 3
+    publisher: "Cambridge University Press"
+    year: 2007
+    isbn: "978-0-521-88068-8"
+    pages: "5.6 quadratic roots without cancellation; 9.4 rtsafe (Newton safeguarded by bisection); 10.2 golden section search"
+  kiefer-1953-golden:
+    type: article
+    authors: "Kiefer, J."
+    title: "Sequential minimax search for a maximum"
+    venue: "Proceedings of the American Mathematical Society 4(3), 502-506"
+    year: 1953
+    doi: "10.1090/S0002-9939-1953-0055639-3"
+  boyd-vandenberghe-2004:
+    type: book
+    authors: "Boyd, S.; Vandenberghe, L."
+    title: "Convex Optimization"
+    publisher: "Cambridge University Press"
+    year: 2004
+    isbn: "978-0-521-83378-3"
+    pages: "3.2.5: partial minimisation of a jointly convex function is convex"
+  fanuc-30i-b-operator:
+    type: manual
+    authors: "FANUC Corporation"
+    title: "FANUC Series 30i/31i/32i-MODEL B Operator's Manual (Common to Lathe System/Machining Center System), B-64484EN"
+    year: 2010
+    pages: "Tilted working plane indexing (G68.2): Euler angles I, J, K (Z, X', Z''); P1 roll-pitch-yaw with Q; P2 three points; P3 two vectors"
+  siemens-840d-cycles:
+    type: manual
+    authors: "Siemens AG"
+    title: "SINUMERIK 840D sl / 828D Cycles Programming Manual (CYCLE800 swivel plane)"
+    year: 2019
+    pages: "CYCLE800 parameters _MODE (swivel mode, axis sequence), _X0.._Z0 reference point, _A, _B, _C, _X1.._Z1 zero point after swivelling"
+  heidenhain-tnc640-plane:
+    type: manual
+    authors: "DR. JOHANNES HEIDENHAIN GmbH"
+    title: "TNC 640 User's Manual for Klartext Programming: Tilting the working plane, PLANE function"
+    year: 2020
+    pages: "PLANE SPATIAL (rotation sequence A, B, C about the machine-based axes), PLANE EULER, PLANE VECTOR, PLANE POINTS, PLANE RELATIVE"
+  iso-10303-242-2020:
+    type: standard
+    title: "ISO 10303-242:2020 Industrial automation systems and integration - Product data representation and exchange - Part 242: Application protocol: Managed model-based 3D engineering"
+    institution: "International Organization for Standardization"
+    year: 2020
+  cax-if-pmi-2014:
+    type: report
+    authors: "CAx Implementor Forum"
+    title: "Recommended Practices for the Representation and Presentation of Product Manufacturing Information (PMI) (AP242), version 4.0"
+    institution: "CAx-IF / PDES Inc., ProSTEP iViP"
+    year: 2014
+    pages: "5 semantic representation: dimensional_size / dimensional_location, plus_minus_tolerance, geometric_tolerance with datum_system and modifiers, datum and datum_feature"
+  occt-8-reference:
+    type: software
+    authors: "Open Cascade SAS"
+    title: "Open CASCADE Technology 8.0: STEPCAFControl, XCAFDoc_DimTolTool, XCAFDimTolObjects, BRepMesh_IncrementalMesh"
+    accessed: 2026-11-03
+    url: "https://dev.opencascade.org/doc/overview/html/"
+  khronos-gltf-2:
+    type: standard
+    title: "glTF 2.0 Specification"
+    institution: "The Khronos Group"
+    year: 2021
+    url: "https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html"
+    accessed: 2026-11-03
+    pages: "3.7 binary data storage, 3.6.2 accessors, application-specific attribute semantics start with an underscore; 4.4 GLB file format"
+  khronos-khr-mesh-quantization:
+    type: standard
+    title: "KHR_mesh_quantization glTF extension"
+    institution: "The Khronos Group"
+    year: 2019
+    url: "https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_mesh_quantization"
+    accessed: 2026-11-03
+  threemf-core-1-3:
+    type: standard
+    title: "3MF Core Specification, version 1.3.0"
+    institution: "3MF Consortium"
+    year: 2022
+    url: "https://github.com/3MFConsortium/spec_core/blob/master/3MF%20Core%20Specification.md"
+    accessed: 2026-11-03
+    pages: "3.3 model units; 4.1 resources and objects; 4.2 mesh; 4.3 components; 3.4 build items and the 3x4 transform (row vectors)"
+  stl-3dsystems-1989:
+    type: manual
+    authors: "3D Systems Inc."
+    title: "Stereolithography Interface Specification (SLA file format, STL)"
+    year: 1989
+    pages: "ASCII and binary STL: facet normal, outer loop, 80-byte header, uint32 count, 50-byte facet records"
+  turk-1994-ply:
+    type: web
+    authors: "Turk, G."
+    title: "The PLY polygon file format"
+    year: 1994
+    url: "https://paulbourke.net/dataformats/ply/"
+    accessed: 2026-11-03
+  wavefront-obj:
+    type: manual
+    authors: "Wavefront Technologies"
+    title: "Object Files (.obj), Appendix B1 of the Advanced Visualizer Manual"
+    year: 1992
+    url: "https://paulbourke.net/dataformats/obj/"
+    accessed: 2026-11-03

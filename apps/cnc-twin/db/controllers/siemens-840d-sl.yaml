@@ -1,0 +1,208 @@
+# SIEMENS SINUMERIK 840D sl (SINUMERIK Operate): alarms, supported words, timing, system variables.
+#
+# STATUS: NOTHING IN THIS FILE WAS READ IN A SOURCE THIS SESSION. The SINUMERIK manuals
+# (Diagnostics Manual / alarms, Programming Manual Fundamentals and Job Planning, Lists System
+# Variables, Cycles) are only offered through support.industry.siemens.com, which refused automated
+# access (HTTP 403 to plain clients, JavaScript-only pages to the fetch tool), and web search was
+# exhausted. Therefore:
+#   * alarms: empty. Only read alarms may be listed; fill from the SINUMERIK 840D sl/828D
+#     Diagnostics Manual (NCK alarms 10000-27999 such as the 10xxx/12xxx/14xxx program alarms,
+#     cycle alarms 61000-62999) in a later pass.
+#   * words, timing, variables: src est from general knowledge of SINUMERIK programming; verify.
+format: cnctwin-controller
+version: 1
+id: siemens-840d-sl
+dialect: siemens840d
+name: "SIEMENS SINUMERIK 840D sl (SINUMERIK Operate)"
+src: est
+note: "no SINUMERIK manual could be read this session (Siemens support portal blocks automated access; web search budget exhausted); every entry is an estimate from general SINUMERIK knowledge and must be verified against the 840D sl Diagnostics Manual, Programming Manuals Fundamentals / Job Planning, Lists System Variables and the cycles manuals"
+
+alarms: []
+
+messages:
+  src: est
+  note: "SINUMERIK message and alarm statements as generally documented; verify"
+  MSG: "MSG(\"text\") shows an operator message without stopping (with the next motion block; MSG() clears it)"
+  SETAL: "SETAL(n) sets a cycle/user alarm n (user cycle alarms in the 6xxxx range) and stops according to the alarm's reaction"
+  M0: "programmed stop"
+  M1: "conditional (optional) stop"
+
+timing:
+  src: est
+  note: "the 840D sl IPO cycle, block change time and look-ahead depth are set by the machine maker through machine data and were not read in a source this session; values kept equal to db/machines/dmg-dmu50-3rd-siemens.yaml"
+  ipo_period_ms: {value: 2.0, note: "IPO cycle = basic system clock x ratio, set in machine data by the machine builder (typically 1-4 ms); 2 ms assumed"}
+  block_processing_ms: {value: 1.0, note: "minimum block change time assumed 1 ms"}
+  lookahead_blocks: {value: 500, note: "number of blocks in the velocity look-ahead (machine data dependent) assumed 500 with COMPCAD/CYCLE832"}
+  smoothing:
+    - code: "G60 + G601 / G602 / G603, G9"
+      name: exact_stop
+      note: "exact stop modal (G60) with fine / coarse exact stop window or end of interpolation; G9 exact stop for one block. Estimate."
+    - code: "G64 / G641 ADIS= / G642 / G643 / G644 / G645"
+      name: continuous_path
+      note: "G64 continuous path with speed reduction by overload factor; G641 smoothing with a programmable rounding distance ADIS (ADISPOS for rapid); G642 smoothing within the axial tolerances (machine data / CTOL, OTOL, ATOL); G643 block-internal smoothing; G644 smoothing with maximum dynamics; G645 smoothing of corners and tangential transitions within tolerance. Estimate."
+    - code: "CYCLE832(_TOL, _TOLM, ...) / COMPCAD / COMPCURV / COMPSURF / COMPOF"
+      name: high_speed_settings
+      note: "CYCLE832 high-speed settings: _TOL = contour tolerance, technology _FINISH / _SEMIFIN / _ROUGH / _OFF; switches G642 (or G645), the compressor (COMPCAD / COMPSURF), feed forward (FFWON) and jerk limitation (SOFT) and sets the tolerance (CTOL/OTOL); _OFF resets to the defaults. COMPCAD compresses short linear blocks into polynomials within the compressor tolerance. Estimate."
+
+words:
+  src: est
+  note: "SINUMERIK 840D sl G functions, cycles, frames and program-control statements from general knowledge; verify"
+  G:
+    "0": "rapid traverse (also G00)"
+    "1": "linear interpolation with feed"
+    "2": "circular interpolation clockwise (end point + I/J/K centre, CR= radius, AR= angle)"
+    "3": "circular interpolation counterclockwise"
+    "4": "dwell (F seconds or S spindle revolutions, own block)"
+    "9": "exact stop, non-modal"
+    "17": "working plane X/Y, infeed Z"
+    "18": "working plane Z/X, infeed Y"
+    "19": "working plane Y/Z, infeed X"
+    "25": "lower spindle speed limit (S) or lower working-area limit (axes)"
+    "26": "upper spindle speed limit (S) or upper working-area limit (axes)"
+    "33": "thread cutting with constant lead"
+    "331": "rigid tapping"
+    "332": "rigid tapping, retraction"
+    "40": "tool radius compensation off"
+    "41": "tool radius compensation left of contour"
+    "42": "tool radius compensation right of contour"
+    "450": "TRC outer corners: transition circle"
+    "451": "TRC outer corners: intersection"
+    "500": "deactivate settable work offset (G54...)"
+    "53": "suppress settable and programmable frames, non-modal"
+    "153": "as G53 including basic frames, non-modal"
+    "54": "1st settable work offset"
+    "55": "2nd settable work offset"
+    "56": "3rd settable work offset"
+    "57": "4th settable work offset"
+    "505-599": "5th to 99th settable work offset"
+    "60": "exact stop, modal"
+    "601": "block change at exact stop fine"
+    "602": "block change at exact stop coarse"
+    "603": "block change at end of interpolation"
+    "64": "continuous-path mode"
+    "641": "continuous-path mode with smoothing by distance ADIS"
+    "642": "continuous-path mode with smoothing within axial tolerances"
+    "643": "block-internal smoothing"
+    "644": "smoothing with maximum dynamics"
+    "645": "smoothing of corners and tangential block transitions within tolerance"
+    "70": "inch dimensions for geometric data"
+    "71": "metric dimensions for geometric data"
+    "700": "inch dimensions including feeds"
+    "710": "metric dimensions including feeds"
+    "74": "reference point approach"
+    "75": "fixed point approach"
+    "90": "absolute dimensions"
+    "91": "incremental dimensions"
+    "93": "inverse-time feed"
+    "94": "feed in mm/min (inch/min)"
+    "95": "feed in mm/rev (inch/rev)"
+    "96": "constant cutting rate on"
+    "97": "constant cutting rate off"
+    "110": "pole relative to the last programmed position"
+    "111": "pole relative to the workpiece zero"
+    "112": "pole relative to the last valid pole"
+  path_and_programming:
+    CIP: "circular interpolation through an intermediate point (I1= J1= K1=)"
+    CT: "circle with tangential transition"
+    AC: "absolute dimension for one coordinate, X=AC(..)"
+    IC: "incremental dimension for one coordinate, X=IC(..)"
+    "DC / ACP / ACN": "rotary axis absolute: shortest path / positive / negative direction"
+    "CHF / CHR": "chamfer (length along chamfer / leg length)"
+    "RND / RNDM": "rounding / modal rounding"
+    "AP / RP": "polar angle / polar radius"
+    "DIAMON / DIAMOF": "diameter / radius programming (turning)"
+    SPOS: "spindle positioning"
+    "BRISK / SOFT": "acceleration without / with jerk limitation"
+    "FFWON / FFWOF": "feed forward on / off"
+    "CTOL / OTOL / ATOL": "contour / orientation / axis tolerance for compressor and smoothing"
+    STOPRE: "preprocessing (look-ahead) stop"
+  frames:
+    TRANS: "programmable zero offset, absolute (replaces the programmable frame)"
+    ATRANS: "programmable zero offset, additive"
+    ROT: "programmable rotation, absolute (RPL= rotation in the plane)"
+    AROT: "programmable rotation, additive"
+    "ROTS / AROTS": "frame rotation by solid angles, absolute / additive"
+    SCALE: "programmable scale factor, absolute"
+    ASCALE: "programmable scale factor, additive"
+    MIRROR: "programmable mirroring, absolute"
+    AMIRROR: "programmable mirroring, additive"
+    TRAORI: "5-axis orientation transformation on (tool centre point)"
+    TRAFOOF: "transformation off"
+    TRANSMIT: "face-end (polar) transformation, turning machines"
+    TRACYL: "cylinder surface transformation"
+  cycles:
+    CYCLE81: "drilling, centering"
+    CYCLE82: "drilling, counterboring (dwell at depth)"
+    CYCLE83: "deep-hole drilling (chip breaking / chip removal)"
+    CYCLE84: "rigid tapping"
+    CYCLE840: "tapping with compensating chuck"
+    CYCLE85: "boring 1 (reaming: feed in, feed out)"
+    CYCLE86: "boring 2 (oriented spindle stop, lift-off, rapid out)"
+    CYCLE87: "boring 3 (spindle stop and program stop at depth)"
+    CYCLE88: "boring 4 (dwell, spindle stop and program stop at depth)"
+    CYCLE89: "boring 5 (dwell, feed out)"
+    HOLES1: "row of holes"
+    HOLES2: "circle of holes"
+    POCKET3: "rectangular pocket"
+    POCKET4: "circular pocket"
+    SLOT1: "longitudinal slots on a circle"
+    SLOT2: "circumferential slots"
+    LONGHOLE: "elongated holes on a circle"
+    CYCLE71: "face milling"
+    CYCLE72: "contour milling (path milling)"
+    CYCLE800: "swivel plane / align tool (tilted working plane with swivel data record)"
+    CYCLE832: "high-speed settings (tolerance and technology)"
+    CYCLE95: "stock removal along a contour (turning)"
+    CYCLE97: "thread cutting (turning)"
+  control_structures:
+    "IF / ELSE / ENDIF": "conditional block"
+    "LOOP / ENDLOOP": "endless loop"
+    "FOR / TO / ENDFOR": "counting loop"
+    "WHILE / ENDWHILE": "loop with test at the start"
+    "REPEAT / UNTIL": "loop with test at the end"
+    "CASE / OF / DEFAULT": "branch on an expression"
+    "GOTOF / GOTOB / GOTO / GOTOC": "jump forward / backward / search both ways / jump without alarm if the label is missing"
+    "LABEL:": "jump label"
+    "REPEAT <label> P=<n>": "program section repetition"
+    "DEF": "define a local user variable (INT, REAL, BOOL, CHAR, STRING, AXIS, FRAME)"
+    "PROC": "subprogram with parameters"
+    "CALL / PCALL / MCALL": "subprogram call / with path / modal call"
+  M:
+    "0": "programmed stop"
+    "1": "conditional stop"
+    "2": "end of main program, return to start"
+    "30": "end of program (as M2)"
+    "17": "end of subprogram"
+    "3": "spindle clockwise"
+    "4": "spindle counterclockwise"
+    "5": "spindle stop"
+    "6": "tool change"
+    "40": "automatic gear stage selection"
+    "41-45": "gear stage 1-5"
+    "70": "switch spindle to axis mode"
+  addresses: [N, G, X, Y, Z, A, B, C, I, J, K, CR, AR, AP, RP, F, S, T, D, M, H, R, P, L]
+
+variables:
+  src: est
+  note: "SINUMERIK system variables as generally documented ($P_ = preprocessing / programmed values, $A_/$AA_/$AC_ = main-run / actual values, $TC_ = tool data, $M.._ machine data, $S.._ setting data); reading $A_/$AA_ variables in the part program causes an implicit preprocessing stop. Verify against 'Lists System Variables'."
+  list:
+    - {var: "R0-R99", access: rw, meaning: "arithmetic parameters (number set in machine data)"}
+    - {var: "DEF INT/REAL/BOOL/CHAR/STRING/AXIS/FRAME", access: rw, meaning: "local user variables (LUD), global user data GUD"}
+    - {var: "$P_EP[axis]", access: r, meaning: "programmed end point (preprocessing)"}
+    - {var: "$P_F", access: r, meaning: "programmed feed"}
+    - {var: "$P_TOOLNO", access: r, meaning: "active tool number"}
+    - {var: "$P_TOOL", access: r, meaning: "active D (cutting edge) number"}
+    - {var: "$TC_DP1[t,d]-$TC_DP25[t,d]", access: rw, meaning: "tool edge data: type, lengths, radius, wear (e.g. $TC_DP3 length 1, $TC_DP6 radius)"}
+    - {var: "$P_UIFR[n]", access: rw, meaning: "settable frames (n = 1 -> G54 ...)"}
+    - {var: "$P_IFRAME / $P_PFRAME / $P_ACTFRAME", access: rw, meaning: "current settable / programmable / total frame"}
+    - {var: "$AA_IW[axis]", access: r, meaning: "actual position in workpiece coordinates (main run)"}
+    - {var: "$AA_IM[axis]", access: r, meaning: "actual position in machine coordinates (main run)"}
+    - {var: "$AA_MM[axis]", access: r, meaning: "measured (probe) position, machine coordinates"}
+    - {var: "$AA_MW[axis]", access: r, meaning: "measured (probe) position, workpiece coordinates"}
+    - {var: "$AC_MEA[n]", access: r, meaning: "probe n has switched (1) after MEAS/MEAW"}
+    - {var: "$AC_TIME", access: r, meaning: "time since block start"}
+    - {var: "$A_YEAR / $A_MONTH / $A_DAY / $A_HOUR / $A_MINUTE / $A_SECOND", access: r, meaning: "date and time"}
+    - {var: "$P_SEARCH", access: r, meaning: "block search active"}
+    - {var: "$P_DRYRUN", access: r, meaning: "dry run feed active"}
+    - {var: "$MN_.. / $MC_.. / $MA_..", access: r, meaning: "general / channel / axis machine data"}
+    - {var: "$SN_.. / $SC_.. / $SA_..", access: rw, meaning: "general / channel / axis setting data"}

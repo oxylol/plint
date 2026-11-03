@@ -1,0 +1,67 @@
+# 7075 side milling at vc 900 m/min (18000 rpm), ap 20 mm, ae 0.7 mm, fz 0.1 mm/tooth with 16 mm three-flute
+# ZrN-coated carbide end mills of measured edge radius (9-25 um) and margin width (12-111 um): mean and
+# mean-of-peaks of the in-plane resultant force (Fig. 9, digitised).
+format: cnctwin-validation-case
+version: 1
+id: force-sidemill-al7075-zylka2023-edge-microgeometry
+quantity: cutting_force
+reference:
+  src: zylka-2023-al7075-edge-microgeometry-forces
+  location: "Sect. 2.1 and Table 1 (tools, measured R and MAR), Sect. 2.2 (force parameters, filtering), Fig. 9 (MeanF and MeanUpF versus R for three margin ranges at fz 0.1 mm/tooth, ae 0.7 mm; digitised)"
+  digitised: true
+  uncertainty_pct: 1.5
+  measured: true
+  note: "Markers located by colour on the 711 x 371 px PMC image; gridlines every 100 N at 34.2 px per 100 N; digitisation about +-3 N. Each point is one test (one tool per point); no repeat scatter is given."
+setup:
+  operation: peripheral_milling
+  material:
+    db: al7075-t6
+    note: "'7075-aluminium alloy' cut from 100 x 100 mm square bar; temper not stated (DB entry T6)"
+  tool:
+    src: zylka-2023-al7075-edge-microgeometry-forces
+    page: Sect. 2.1, Table 1
+    type: square_endmill
+    maker: Engram (solid carbide)
+    tool_class: carbide
+    diameter_mm: 16
+    flutes: 3
+    helix_deg: 45
+    rake_deg: 12
+    second_clearance_deg: 25
+    overall_length_mm: 90
+    flute_length_mm: 40
+    coating: "PVD ZrN, 2 um"
+    edge_preparation: "abrasive-jet rounded edge and cylindrical margin, measured per tool (Alicona)"
+    tools_used: "tool 4 (R 9.6 um, MAR 30.4 um), 8 (18.4, 12.4), 12 (25.0, 13.2); tool 3 (9.0, 56.0), 7 (18.5, 41.5), 11 (25.1, 44.9); tool 2 (9.2, 100.8), 5 (18.6, 111.4), 10 (24.8, 95.2)"
+    first_clearance_deg: {value: 12, src: est, note: "assumed: only the second clearance (25 deg) is stated"}
+    stickout_mm: {value: 50, src: est, note: "assumed: not stated"}
+    assumed_inputs: [first_clearance_deg, stickout_mm]
+  machine:
+    src: zylka-2023-al7075-edge-microgeometry-forces
+    page: Sect. 2.1-2.2
+    model: DMG Mori DMU 100 monoBLOCK
+    dynamometer: "Kistler 9257B, 5070 amplifier (cut-off 2 kHz), NI USB-6003, 12 kHz sampling"
+    tool_holder_mode_Hz: {value: 1800, note: "dominant mode of the cutter-holder system from an impulse test (Fig. 5)"}
+  conditions:
+    src: zylka-2023-al7075-edge-microgeometry-forces
+    page: Sect. 2.1, Table 2
+    vc_m_min: 900
+    spindle_rpm: 18000
+    ap_mm: 20
+    ae_mm: 0.7
+    fz_mm_tooth: 0.1
+    direction: {value: down, src: est, note: "assumed: not stated in the text (Fig. 3 is a perspective sketch)"}
+    coolant: "external flood, Fuchs Ecocool 68 CF semi-synthetic emulsion 6 %"
+    force_definition: "FXY = sqrt(Fx^2 + Fy^2) (feed and normal-to-feed components) after a 1150 Hz low-pass filter (tooth frequency 900 Hz); MeanF = mean of a 0.4 s window, MeanUpF = mean of the per-tooth peaks"
+    assumed_inputs: [direction]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: MeanF_MAR0-30, x_name: edge radius R, x_unit: um, y_name: MeanF (mean of FXY), y_unit: N, uncertainty: 3, points: [[9.6, 321], [18.4, 222], [25.0, 346]], note: "tools 4, 8, 12 (MAR 30.4, 12.4, 13.2 um)"}
+  - {name: MeanUpF_MAR0-30, x_name: edge radius R, x_unit: um, y_name: MeanUpF (mean of FXY peaks), y_unit: N, uncertainty: 3, points: [[9.6, 458], [18.4, 359], [25.0, 461]], note: "tools 4, 8, 12"}
+  - {name: MeanF_MAR40-60, x_name: edge radius R, x_unit: um, y_name: MeanF (mean of FXY), y_unit: N, uncertainty: 5, points: [[9.0, 518], [18.5, 365], [25.1, 434]], note: "tools 3, 7, 11 (MAR 56.0, 41.5, 44.9 um); the 18.5 um square is partly hidden behind the blue circle"}
+  - {name: MeanUpF_MAR40-60, x_name: edge radius R, x_unit: um, y_name: MeanUpF (mean of FXY peaks), y_unit: N, uncertainty: 3, points: [[9.0, 672], [18.5, 547], [25.1, 642]], note: "tools 3, 7, 11"}
+  - {name: MeanF_MAR95-110, x_name: edge radius R, x_unit: um, y_name: MeanF (mean of FXY), y_unit: N, uncertainty: 3, points: [[9.2, 609], [18.6, 640], [24.8, 620]], note: "tools 2, 5, 10 (MAR 100.8, 111.4, 95.2 um; tool 5 assigned by its R and MAR from Table 1)"}
+  - {name: MeanUpF_MAR95-110, x_name: edge radius R, x_unit: um, y_name: MeanUpF (mean of FXY peaks), y_unit: N, uncertainty: 3, points: [[9.2, 711], [18.6, 806], [24.8, 773]], note: "tools 2, 5, 10"}
+notes: "A test of edge-microgeometry (edge radius and cylindrical margin, i.e. flank-contact ploughing) effects at high speed: with the narrowest margins (MAR 12-30 um) the mean force is 222-346 N, with margins of about 100 um it is 609-640 N, so the margin, not the edge radius, dominates (75 % contribution in the source's ANOVA of MeanF). A model without margin contact should be compared with the MAR 0-30 curves. The peaks are attenuated by the 1150 Hz low-pass filter (tooth frequency 900 Hz, holder mode 1800 Hz), so MeanUpF is not the raw peak. The regression models of the source (Eqs. 6-7) are fits and are not used."

@@ -1,0 +1,66 @@
+format: cnctwin-holder
+version: 1
+series_id: bigdaishowa-mega-synchro
+maker: "BIG DAISHOWA (BIG KAISER)"
+series: "MEGA SYNCHRO tapping holder (synchronous / rigid tapping with micro compensation), BIG-PLUS BT40"
+src: bigdaishowa-web-mega-synchro
+feature: {value: "compensates synchronisation errors in rigid tapping; thrust load reduced by up to 90 %", src: bigdaishowa-web-mega-synchro}
+items:
+  - id: bigdaishowa-bbt40-mgt12-75
+    order_code: "BBT40-MGT12-75"
+    type: tapping_synchro
+    taper: BT40                        # BIG-PLUS dual contact
+    gauge_length_mm: {value: 75, src: bigdaishowa-web-mega-synchro, note: "L in the item description"}
+    mass_kg: {value: 1.45, src: bigdaishowa-web-mega-synchro, note: "3.20 lb"}
+    tap_range: null                    # MGT12 tap range not printed in the listing
+    bore_mm: null
+    nose_diameter_mm: null
+    profile_mm: null
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    clamp_length_mm: null
+    price_eur: null
+  - id: bigdaishowa-bbt40-mgt20-95
+    order_code: "BBT40-MGT20-95"
+    type: tapping_synchro
+    taper: BT40
+    gauge_length_mm: {value: 95, src: bigdaishowa-web-mega-synchro}
+    mass_kg: {value: 1.93, src: bigdaishowa-web-mega-synchro, note: "4.25 lb"}
+    tap_range: null
+    bore_mm: null
+    nose_diameter_mm: null
+    profile_mm: null
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    clamp_length_mm: null
+    price_eur: null
+  - id: bigdaishowa-bbt40-mgt3-90
+    order_code: "BBT40-MGT3-90"
+    type: tapping_synchro
+    taper: BT40
+    gauge_length_mm: {value: 90, src: bigdaishowa-web-mega-synchro, note: "'MEGA Synchro Tapper' with MGT3 adapter"}
+    mass_kg: {value: 1.18, src: bigdaishowa-web-mega-synchro, note: "2.60 lb"}
+    tap_range: null
+    bore_mm: null
+    nose_diameter_mm: null
+    profile_mm: null
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    clamp_length_mm: null
+    price_eur: null
+notes: "Listing shows only BIG-PLUS BT items on page 1; CAT40 and HSK-A63 versions exist in the filter but were not listed. Compensation stroke/stiffness are in the catalogue (not read; gap)."

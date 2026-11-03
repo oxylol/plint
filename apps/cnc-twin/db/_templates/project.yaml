@@ -1,0 +1,123 @@
+# Project file: examples/<name>/project.yaml (plain text, versionable, migrated forward by cnctwin.project.migrate)
+# Paths are relative to the project file. Database items are referenced by id (db/<kind>/<id>), or a path to a file.
+format: cnctwin-project
+version: 1
+name: "Pocket with islands, Al 6061-T6"
+description: "3-axis roughing and finishing of a pocket with two islands"
+seed: 1234
+
+machine: haas-vf2ss                  # db id, or path to a machine file
+controller_overrides: {}             # optional: any key of the machine's controller section
+
+material:
+  id: al6061-t6
+  batch:                             # material batch variation (uncertainty runs); 1-sigma
+    kc_scale_sigma: 0.04
+    hardness_sigma_pct: 3
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 22                   # tank temperature at the start
+  machine_state: warm                # cold | warm | {spindle_degC: 30, axes_degC: 24, structure_degC: 21}
+  time_between_ops_min: 10           # carried state cools / relaxes for this long between operations
+
+stock:
+  kind: block                        # block | cylinder | tube | mesh
+  size_mm: [100, 80, 30]             # block: x y z; cylinder: [diameter, length]; tube: [od, id, length]
+  tolerance_mm: [0.2, 0.2, 0.1]      # +- on each size (uncertainty runs draw within it)
+  non_squareness_deg: 0.05
+  form: rolled_plate                 # rolled_plate | extruded_bar | forged | cast | hot_rolled_bar | cold_drawn_bar
+  mesh: null                         # for kind mesh: STL / 3MF / OBJ / STEP (e.g. a casting or the previous op's result)
+
+cad:
+  path: part.step                    # STEP AP242 (PMI read when present), or STL / 3MF / OBJ
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}   # CAD frame in the stock frame
+  datums:                            # by hand (merged with PMI datums); a feature is a face selector
+    - {label: A, feature: {face: "plane", normal: [0, 0, -1], near_mm: [50, 40, 0]}}
+    - {label: B, feature: {face: "plane", normal: [-1, 0, 0], near_mm: [0, 40, 15]}}
+    - {label: C, feature: {face: "plane", normal: [0, -1, 0], near_mm: [50, 0, 15]}}
+  tolerances:                        # by hand (merged with PMI)
+    - {id: pocket-depth, kind: distance, between: [{face: plane, normal: [0, 0, 1], near_mm: [50, 40, 30]},
+       {face: plane, normal: [0, 0, 1], near_mm: [30, 40, 20]}], nominal_mm: 10, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: island-flatness, kind: flatness, feature: {face: plane, normal: [0, 0, 1], near_mm: [30, 40, 26]}, tolerance_mm: 0.02}
+    - {id: hole-position, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [80, 60, 15]}, tolerance_mm: 0.05,
+       datums: [A, B, C], basic_mm: [80, 60], diameter_mm: {nominal: 8, fit: H7}}
+    - {id: floor-finish, kind: roughness, feature: {face: plane, normal: [0, 0, 1], near_mm: [30, 40, 20]}, Ra_um: 1.6}
+
+tools:
+  library: null                      # tools.csv | iso13399/ (directory of ISO 13399 p21 files) | null
+  list:
+    - number: 1                      # T number (mill pocket / lathe station) the program calls
+      tool: sandvik-2p342-1000-pa    # db id, or an inline tool item (db/_templates/tool.yaml `items` entry)
+      holder: haas-cat40-er32        # db id or inline holder item
+      stickout_mm: 35                # holder nose to tool tip
+      length_offset_mm: 120.53       # H/length geometry as set on the machine (null = measure with the tool setter)
+      radius_offset_mm: 5.0          # D/radius geometry
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5                   # measured TIR at the cutting edge
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 1, limit_min: 60, used_min: 12, sister_of: null}
+      initial_wear: {VB_mm: 0.02}
+      comment: "D10 4FL CARBIDE"     # what the program's tool comment should say (sanity check)
+
+coolant:
+  fluid: emulsion-8pct               # db id
+  concentration_pct: 8
+  tank_fill_fraction: 0.9
+
+operations:
+  - name: OP10
+    program: op10.nc                 # in the machine's dialect
+    setup:
+      workholding:
+        - {device: kurt-d688, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 100,
+           input_torque_Nm: 80, grip_depth_mm: 8, parallels_mm: 10}
+      stock_pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}      # stock frame in the workholding frame
+      work_offsets_mm: {G54: [-381.0, -203.2, -406.4]}   # machine coordinates of the work zero, as set on the machine
+      fixture_pose: {translate_mm: [-381.0, -203.2, -460.0], rotate_deg: [0, 0, 0]}   # workholding frame in the table frame
+    from_previous: null              # {op: OP10, flip: {axis: X, angle_deg: 180}} | {op: OP10, transfer: sub_spindle}
+    nozzle_positions: {1: 12}        # programmable coolant nozzle position per tool number
+
+production:
+  parts: 1
+  operator: {load_s: 30, unload_s: 20, door_s: 4, clean_s: 15, inspect_every: 0, inspect_s: 60}
+
+physics:
+  tick_s: 1.0e-6                     # base clock (fixed)
+  max_deg_per_step: 0.5              # L0 stride rule: spindle angle per step at the highest speed
+  steps_per_tooth: 96                # L0 stride rule: steps per tooth period
+  macro_ipo: 10                      # L1 ticks per macro step
+  lag_macro: 1                       # 1 = staggered by one step; 2 = slow domains overlap the next hot loop
+  lattice_mm: 0.25                   # dexel lattice spacing (twin check: <= min(ae)/4 or a refine box)
+  refine: []                         # [{box: {min_mm: [x0,y0,z0], max_mm: [x1,y1,z1]}, factor: 4}]
+  edge_element_mm: 0.5               # edge discretisation along the cutting edge (arc length)
+  memory_bins: 720                   # surface-memory angle bins per revolution
+  polar_theta_bins: 720              # turning field
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 2.0}
+  structure: {every_n_macro: 50, max_dof: 50000}
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}                       # written by 'twin check --write': per operation l0_ticks, ipo_ticks (the recorded timestep)
+
+recording:
+  fast: windows                      # windows | all | none
+  fast_window_revs: 4
+  fast_period_s: 1.0
+  keyframe_period_s: 0.5
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: {fps: 25, speed: 10}        # 10x real time
+  audio: true
+
+uncertainty:
+  runs: 20
+  method: lhs                        # lhs | monte_carlo
+  vary: {stock_size: true, tool_offsets_um: 5, runout_um: 3, kc_scale_sigma: 0.04, clamping_force_rel: 0.1}
+
+machine_data: null                   # {kind: mtconnect | opcua | focas | csv, path: ..., mapping: {...}}

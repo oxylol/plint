@@ -1,0 +1,88 @@
+# 7075-T6 drilling with a 10 mm twist drill, 800-1200 rpm, 60-140 mm/min: steady thrust (digitised).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: thrust-drill-al7075-luo2021
+quantity: drilling_thrust
+reference:
+  src: luo-2021-al7075-drilling-thrust-torque
+  location: Fig. 8a-c, 'Experimental' bars (digitised; 8.4, 10.8 and 11.9 N/px)
+  digitised: true
+  uncertainty_pct: 2
+  measured: true
+  note: digitisation uncertainty about +-1 px on the bar top (+-10 N); no measurement uncertainty stated
+setup:
+  operation: drilling
+  material:
+    db: al7075-t6
+    note: '7075-T6 workpiece (application: space-station suspended-ball structure); form, thickness and clamping identical
+      for all tests but not given in numbers'
+  tool:
+    src: luo-2021-al7075-drilling-thrust-torque
+    page: Table 1, Sect. 2.2 and 3
+    type: twist_drill
+    diameter_mm: 10
+    point_angle_deg: 118
+    helix_deg: 30
+    lip_count: {value: 2, src: est, note: 'assumed: not stated; a standard two-flute twist drill is assumed'}
+    tool_material:
+      value: W6 high-speed steel (Sect. 3) or WC (Sect. 2.2)
+      note: 'the source is inconsistent: the test drill is ''W6'' in Sect. 3, the modelled drill ''WC'' in Sect. 2.2; maker
+        Dongguan Xuhua Tool Technology'
+    web_thickness_mm: {value: 1.5, src: est, note: 'assumed: not stated; ~0.15 D, typical of a standard jobber drill (est.)'}
+    chisel_edge_angle_deg: {value: 125, src: est, note: 'assumed: not stated; typical conventional point (est.)'}
+    assumed_inputs: [lip_count, web_thickness_mm, chisel_edge_angle_deg]
+  machine:
+    src: luo-2021-al7075-drilling-thrust-torque
+    page: Sect. 3
+    max_spindle_rpm: 2200
+    force_measurement: rotating sensor with electromagnetically coupled wireless power and data transmission (ASK modulation);
+      make and calibration not given
+  conditions:
+    src: luo-2021-al7075-drilling-thrust-torque
+    page: Table 1
+    spindle_rpm: [800, 1000, 1200]
+    feed_rate_mm_min: [60, 100, 140]
+    note: feed per revolution = feed rate / speed (0.05-0.175 mm/rev); same drilling depth for all tests (value not given);
+      steady-drilling values
+    coolant: {value: dry, src: est, note: 'assumed: not stated'}
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+- name: thrust feed 60 mm/min
+  x_name: spindle speed
+  x_unit: rpm
+  y_name: Fz (thrust)
+  y_unit: N
+  points:
+  - [800, 1089]
+  - [1000, 1021]
+  - [1200, 988]
+  uncertainty: 12
+- name: thrust feed 100 mm/min
+  x_name: spindle speed
+  x_unit: rpm
+  y_name: Fz (thrust)
+  y_unit: N
+  points:
+  - [800, 1398]
+  - [1000, 1226]
+  - [1200, 1107]
+  uncertainty: 12
+- name: thrust feed 140 mm/min
+  x_name: spindle speed
+  x_unit: rpm
+  y_name: Fz (thrust)
+  y_unit: N
+  points:
+  - [800, 1618]
+  - [1000, 1428]
+  - [1200, 1309]
+  uncertainty: 12
+notes: 'Quality caveat: the drill material is stated inconsistently and the torque is high for a 10 mm drill in 7075-T6
+  at 0.05-0.18 mm/rev (kc ~ 1 GPa on the lips, M = kc f D^2 / 8, would give ~0.9-2.2 Nm, est.), so chisel-edge extrusion,
+  chip packing or the unconventional wireless sensor may be involved. Fig. 7 of the source gives slightly different numbers
+  for the 100 mm/min series (about 1390/1210/1130 N and 5.3/5.1/4.5 Nm); the bars and markers explicitly labelled ''Experimental''
+  in Figs. 8-9 are used. The source''s own FE model matched within 3.25 % (force) and 4.16 % (torque).'

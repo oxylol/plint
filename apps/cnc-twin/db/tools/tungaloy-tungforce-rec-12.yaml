@@ -1,0 +1,902 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-tungforce-rec-12
+maker: Tungaloy Corporation
+series: TungForce-Rec square shoulder mills, insert size 12 (EPAV12 shank type, TPAV12 bore type) with AVMT1204 inserts
+src: tungaloy-2026-506g-tungforce-rec
+notes: Indexable 90 deg square shoulder mill, the Tungaloy counterpart of CoroMill 390 / R390-11T3 (Sandvik's own pages are script-only and could not be read). Each item is a body with a full set of AVMT120408PDER-MM inserts in the grade named; cutting data are the first-choice rows for that grade.
+items:
+- id: tungaloy-epav12m016c160r02-avmt1204-ah3225
+  order_code: EPAV12M016C16.0R02 + 2 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 16
+    flutes: 2
+    cutting_length_mm: 11.5
+    inserts:
+      count: 2
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 180.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 3.5 deg, max plunging 0.5 mm; helical interpolation: min machining dia 25.3 mm, max machining dia 31 mm, max flat-bottom dia 30 mm (p. 26); head_length_mm = 25'
+    coolant_holes: {count: 2, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 16, length_mm: 60}
+    overall_length_mm: 85
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: 34000
+  balance_grade: 'cutter with arbor: G16 up to 20,000 min-1, G6.3 up to 30,000 min-1, G2.5 above; dynamic balancing required at >= 10,000 min-1 (p. 27)'
+  mass_g: 120
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'cylindrical shank type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: p. 27 table; price not published'
+- id: tungaloy-epav12m020c200r03-avmt1204-ah3225
+  order_code: EPAV12M020C20.0R03 + 3 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 20
+    flutes: 3
+    cutting_length_mm: 11.5
+    inserts:
+      count: 3
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 120.0, 240.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 3.0 deg, max plunging 0.5 mm; helical interpolation: min machining dia 33 mm, max machining dia 39 mm, max flat-bottom dia 38 mm (p. 26); head_length_mm = 30'
+    coolant_holes: {count: 3, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 20, length_mm: 70}
+    overall_length_mm: 100
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: 31000
+  balance_grade: 'cutter with arbor: G16 up to 20,000 min-1, G6.3 up to 30,000 min-1, G2.5 above; dynamic balancing required at >= 10,000 min-1 (p. 27)'
+  mass_g: 220
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 3.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'cylindrical shank type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: p. 27 table; price not published'
+- id: tungaloy-epav12m025c250r04-avmt1204-ah3225
+  order_code: EPAV12M025C25.0R04 + 4 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 25
+    flutes: 4
+    cutting_length_mm: 11.5
+    inserts:
+      count: 4
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 90.0, 180.0, 270.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 2.5 deg, max plunging 0.5 mm; helical interpolation: min machining dia 42.6 mm, max machining dia 49 mm, max flat-bottom dia 48 mm (p. 26); head_length_mm = 35'
+    coolant_holes: {count: 4, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 25, length_mm: 80}
+    overall_length_mm: 115
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: 27000
+  balance_grade: 'cutter with arbor: G16 up to 20,000 min-1, G6.3 up to 30,000 min-1, G2.5 above; dynamic balancing required at >= 10,000 min-1 (p. 27)'
+  mass_g: 380
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.5 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'cylindrical shank type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: p. 27 table; price not published'
+- id: tungaloy-epav12m032c320r04-avmt1204-ah3225
+  order_code: EPAV12M032C32.0R04 + 4 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 32
+    flutes: 4
+    cutting_length_mm: 11.5
+    inserts:
+      count: 4
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 90.0, 180.0, 270.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 2.0 deg, max plunging 0.5 mm; helical interpolation: min machining dia 56.4 mm, max machining dia 63 mm, max flat-bottom dia 62 mm (p. 26); head_length_mm = 40'
+    coolant_holes: {count: 4, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 32, length_mm: 80}
+    overall_length_mm: 120
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: 24000
+  balance_grade: 'cutter with arbor: G16 up to 20,000 min-1, G6.3 up to 30,000 min-1, G2.5 above; dynamic balancing required at >= 10,000 min-1 (p. 27)'
+  mass_g: 680
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'cylindrical shank type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: p. 27 table; price not published'
+- id: tungaloy-tpav12m050b220r06-avmt1204-ah3225
+  order_code: TPAV12M050B22.0R06 + 6 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 50
+    flutes: 6
+    cutting_length_mm: 11.5
+    inserts:
+      count: 6
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 60.0, 120.0, 180.0, 240.0, 300.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 2.0 deg, max plunging 0.5 mm; helical interpolation: min machining dia 90.4 mm, max machining dia 99 mm, max flat-bottom dia 98 mm (p. 26)'
+    coolant_holes: {count: 6, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 22, form: arbor, note: 'bore DCONMS 22 mm; contact face DCSFMS 47 mm, counterbore depth CBDP 20 mm, keyway width KWW 10.4 mm, keyway depth b 6.3 mm (p. 23)'}
+    overall_length_mm: 40
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: 19000
+  balance_grade: 'cutter with arbor: G16 up to 20,000 min-1, G6.3 up to 30,000 min-1, G2.5 above; dynamic balancing required at >= 10,000 min-1 (p. 27)'
+  mass_g: 370
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 2.0 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'shell (bore) type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: p. 27 table; price not published'
+- id: tungaloy-tpav12m063b220r08-avmt1204-ah3225
+  order_code: TPAV12M063B22.0R08 + 8 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 63
+    flutes: 8
+    cutting_length_mm: 11.5
+    inserts:
+      count: 8
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 1.7 deg, max plunging 0.5 mm; helical interpolation: min machining dia 115.6 mm, max machining dia 125 mm, max flat-bottom dia 124 mm (p. 26)'
+    coolant_holes: {count: 8, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 22, form: arbor, note: 'bore DCONMS 22 mm; contact face DCSFMS 47 mm, counterbore depth CBDP 20 mm, keyway width KWW 10.4 mm, keyway depth b 6.3 mm (p. 23)'}
+    overall_length_mm: 40
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: 17000
+  balance_grade: 'cutter with arbor: G16 up to 20,000 min-1, G6.3 up to 30,000 min-1, G2.5 above; dynamic balancing required at >= 10,000 min-1 (p. 27)'
+  mass_g: 520
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'shell (bore) type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: p. 27 table; price not published'
+- id: tungaloy-tpav12m080b270r10-avmt1204-ah3225
+  order_code: TPAV12M080B27.0R10 + 10 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 80
+    flutes: 10
+    cutting_length_mm: 11.5
+    inserts:
+      count: 10
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 36.0, 72.0, 108.0, 144.0, 180.0, 216.0, 252.0, 288.0, 324.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 1.2 deg, max plunging 0.5 mm; helical interpolation: min machining dia 150 mm, max machining dia 159 mm, max flat-bottom dia 158 mm (p. 26)'
+    coolant_holes: {count: 10, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 27, form: arbor, note: 'bore DCONMS 27 mm; contact face DCSFMS 60 mm, counterbore depth CBDP 22 mm, keyway width KWW 12.4 mm, keyway depth b 7 mm (p. 23)'}
+    overall_length_mm: 50
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: null
+  balance_grade: null
+  mass_g: 1120
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.2 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.2 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.2 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.2 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.2 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'shell (bore) type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: not listed for this diameter (p. 27 covers DC 12-63); price not published'
+- id: tungaloy-tpav12m100b320r12-avmt1204-ah3225
+  order_code: TPAV12M100B32.0R12 + 12 x AVMT120408PDER-MM AH3225
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 100
+    flutes: 12
+    cutting_length_mm: 11.5
+    inserts:
+      count: 12
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 0.9 deg, max plunging 0.5 mm; helical interpolation: min machining dia 190 mm, max machining dia 199 mm, max flat-bottom dia 198 mm (p. 26)'
+    coolant_holes: {count: 12, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 32, form: arbor, note: 'bore DCONMS 32 mm; contact face DCSFMS 66 mm, counterbore depth CBDP 28.5 mm, keyway width KWW 14.4 mm, keyway depth b 8 mm (p. 23)'}
+    overall_length_mm: 50
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: null
+  balance_grade: null
+  mass_g: 1390
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C/SS400, C15E/E275A, <= 200 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 0.9 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: carbon and alloy steel S55C/SCM440, C55/42CrMo4, <= 300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 0.9 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.06, max: 0.22}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 0.9 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: M
+    material_hint: stainless steel SUS304/SUS316, X5CrNi18-9/X5CrNiMo17-12-3 (e.g. aisi304, aisi316l)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 80, max: 180}
+    fz_mm: {min: 0.07, max: 0.2}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 0.9 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH3225 listed for fracture resistance; first choice is AH8015) (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH3225 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 0.9 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'shell (bore) type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: not listed for this diameter (p. 27 covers DC 12-63); price not published'
+- id: tungaloy-tpav12m063b220r08-avmt1204-ah8015
+  order_code: TPAV12M063B22.0R08 + 8 x AVMT120408PDER-MM AH8015
+  type: shoulder_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH8015 (PVD coated carbide), id: carbide-k20-6co, src: est, note: 'AH8015: ''dedicated carbide substrate with excellent wear resistance'' for cast iron, HRSA and hardened steel (506-G p. 4); K20-type substrate assumed'}
+  coating: {id: altin, src: est, note: 'AH8015: ''PVD grade featuring high aluminum-content multilayered coating'' (506-G p. 4); mapped to altin (Al-rich)'}
+  geometry:
+    diameter_mm: 63
+    flutes: 8
+    cutting_length_mm: 11.5
+    inserts:
+      count: 8
+      iso_code: AVMT120408PDER-MM
+      nose_radius_mm: 0.8
+      edge_length_mm: 11.8
+      wiper: false
+      axial_rake_deg:
+        value: 6.8
+        range: [6.0, 7.6]
+        note: GAMP = +6 ~ +7.6 deg (body, p. 21/23); value = midpoint
+      radial_rake_deg:
+        value: -34.75
+        range: [-37.1, -32.4]
+        note: GAMF = -37.1 ~ -32.4 deg as printed (p. 21/23; ISO 13399 rake in the working plane of the body); value = midpoint. The insert's chip-former rake is not published and adds to this
+      lead_angle_deg: 90
+      positions_deg:
+        value: [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-506g-tungforce-rec
+      page: 'p. 24 (AVMT12-MM: RE, APMX, W1, INSL, S, BS, LE)'
+      note: 'width_mm = 6.6; length_mm = 14.2; thickness_mm = 3.6; max_depth_mm = 11.5; wiper_flat_mm = 1.1; edges = 2 (est: AVMT parallelogram insert: 2 usable corners assumed (not stated in 506-G))'
+    corner_radius_mm: 0.8
+    centre_cutting: false
+    note: 'max ramping angle RMPX 1.7 deg, max plunging 0.5 mm; helical interpolation: min machining dia 115.6 mm, max machining dia 125 mm, max flat-bottom dia 124 mm (p. 26)'
+    coolant_holes: {count: 8, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (body tables p. 21/23); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    shank: {diameter_mm: 22, form: arbor, note: 'bore DCONMS 22 mm; contact face DCSFMS 47 mm, counterbore depth CBDP 20 mm, keyway width KWW 10.4 mm, keyway depth b 6.3 mm (p. 23)'}
+    overall_length_mm: 40
+    neck: null
+    src: tungaloy-2026-506g-tungforce-rec
+    page: EPAV12 p. 21, TPAV12 p. 23 (APMX, DC, CICT, DCONMS, LS, LH, LF, DCSFMS, CBDP, KWW, b, WT); KAPR 90 deg p. 21; RMPX and helical interpolation p. 26
+  max_rpm: 17000
+  balance_grade: 'cutter with arbor: G16 up to 20,000 min-1, G6.3 up to 30,000 min-1, G2.5 above; dynamic balancing required at >= 10,000 min-1 (p. 27)'
+  mass_g: 520
+  cutting_data:
+  - iso_group: K
+    material_hint: grey cast iron FC250/FC300, GG25/GG30, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 300}
+    fz_mm: {min: 0.05, max: 0.18}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH8015 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: K
+    material_hint: ductile cast iron FCD400/FCD600, GGG60, 150-250 HB
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.05, max: 0.18}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH8015 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (e.g. ti6al4v)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 60}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH8015 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: S
+    material_hint: superalloys Inconel 718, <= 40 HRC (e.g. inconel718)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 20, max: 40}
+    fz_mm: {min: 0.04, max: 0.15}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH8015 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: H
+    material_hint: hardened steel SKD61 / X40CrMoV5-1, 40-50 HRC (e.g. h13-50hrc)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 50, max: 150}
+    fz_mm: {min: 0.04, max: 0.07}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH8015 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  - iso_group: H
+    material_hint: hardened steel SKD11 / X153CrMoV12, 50-60 HRC (e.g. d2-60hrc)
+    operation: [shoulder_milling, slotting]
+    vc_m_min: {min: 40, max: 70}
+    fz_mm: {min: 0.04, max: 0.07}
+    ap_max_mm: 11.5
+    ae_max_xD: 1.0
+    src: tungaloy-2026-506g-tungforce-rec
+    page: p. 25 STANDARD CUTTING CONDITIONS (insert size 12); p. 26 machining applications
+    note: 'grade AH8015 first choice for this material unless stated; ap <= APMX 11.5 mm (AVMT1204..16; RE 2-3 inserts: 10.5 mm); slotting, ramping (max 1.7 deg), plunging (max 0.5 mm) and helical interpolation are listed applications; chip-thickness table on p. 27 converts fz to hex at low ae'
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed, not reground (2 edges per AVMT insert assumed)'}
+  note: 'shell (bore) type; R in the designation = right hand; clamping screw CSPB-2.5, recommended torque 1.3 N m; max rpm: p. 27 table; price not published'

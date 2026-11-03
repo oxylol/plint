@@ -1,0 +1,93 @@
+# OSG AT-1 EgiAs-coated one-pass solid carbide thread mills, read from the OSG General Catalogue
+# 2025-2026 on 2026-11-03 (p. 505 dimensions and icons, p. 852 cutting conditions).
+format: cnctwin-tool
+version: 1
+series_id: osg-at-1-thread-mill
+maker: "OSG Corporation"
+series: "AT-1 EgiAs coated one-pass (one revolution) solid carbide thread mill, ISO metric M6x1 / M8x1.25 / M10x1.5"
+src: osg-2025-gc-drilling-threading
+notes: "Icons p. 505: carbide, EgiAs, helix 9-13 deg, shank h6. Type 1 (M6) has a neck LU, type 2 (M8, M10) none. Each size is listed by 'minimum processing diameter' (the thread it can mill) and pitch TP; APMX is the length of the threaded cutting portion. The thread is milled in one helical revolution over the full depth. Cutting conditions p. 852 are for water-soluble oil; fz in mm per tooth (feed-rate calculation p. 861, not read). Note 7 p. 852: if the go gauge does not pass, mill the first pass at 75 % and finish with a second pass."
+defaults:
+  type: thread_mill
+  hand: right
+  tool_material: {class: carbide, grade: "carbide (grade not stated)", id: carbide-submicron-10co, src: est, note: "OSG states only 'carbide'; mapped to the submicron 10 % Co rod grade"}
+  coating: {id: tialn, src: est, note: "EgiAs (OSG proprietary); chemistry and thickness not stated, mapped to TiAlN"}
+items:
+  - id: osg-8331001-at-1-m6x1
+    order_code: "AT-1 M6 x 1 (EDP 8331001)"
+    geometry:
+      diameter_mm: 4.5
+      flutes: 4
+      helix_deg: {value: 11, range: [9, 13], note: "printed as 9-13 deg; midpoint used"}
+      thread: {standard: "ISO metric", pitch_mm: 1.0, form_angle_deg: {value: 60, src: iso-68-1-1998}, diameter_mm: 6, hand: right, starts: 1}
+      rows: {value: 14, src: est, note: "APMX 14 mm / pitch 1 mm; tooth rows not printed"}
+      single_profile: false
+      rake_deg: {value: 3, src: est, note: "not published by OSG; small positive radial rake assumed for a steel-cutting solid carbide thread mill"}
+      clearance_deg: {value: 10, src: est, note: "not published by OSG; primary relief of the thread teeth assumed"}
+      cutting_length_mm: {value: 14, note: "APMX"}
+      overall_length_mm: 75
+      shank: {diameter_mm: 6, form: plain}
+      centre_cutting: false
+      coolant_holes: null
+      note: "type 1: neck, LU 16 (neck diameter not printed); 26 g (p. 505)"
+    max_rpm: null
+    mass_g: 26
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "thread mills are not normally reground"}
+    cutting_data: &at1_data
+      - {iso_group: P, material_hint: "mild / low carbon steel (C <= 0.25 %)", operation: [thread_milling], vc_m_min: {min: 80, max: 160}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: P, material_hint: "medium carbon steel (C 0.25-0.45 %)", material: aisi1045, operation: [thread_milling], vc_m_min: {min: 80, max: 160}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: P, material_hint: "high carbon steel (C > 0.45 %)", operation: [thread_milling], vc_m_min: {min: 80, max: 160}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: P, material_hint: "alloy steel SCM", material: aisi4140-annealed, operation: [thread_milling], vc_m_min: {min: 60, max: 120}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: H, material_hint: "hardened steel 25-45 HRC (45-60 HRC not recommended)", material: aisi4140-qt30, operation: [thread_milling], vc_m_min: {min: 80, max: 200}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: M, material_hint: "stainless steel SUS304, SUS420", material: aisi304, operation: [thread_milling], vc_m_min: {min: 60, max: 120}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: P, material_hint: "cast steel SC", operation: [thread_milling], vc_m_min: {min: 60, max: 120}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: K, material_hint: "cast iron FC", material: grey-cast-iron-gjl250, operation: [thread_milling], vc_m_min: {min: 80, max: 160}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: K, material_hint: "ductile cast iron FCD", operation: [thread_milling], vc_m_min: {min: 60, max: 120}, fz_mm: {min: 0.01, max: 0.05}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: N, material_hint: "copper, brass, brass castings, bronze, rolled aluminium", material: brass-c360, operation: [thread_milling], vc_m_min: {min: 80, max: 160}, fz_mm: {min: 0.03, max: 0.1}, coolant: "water-soluble", page: "p. 852"}
+      - {iso_group: N, material_hint: "aluminium / magnesium / zinc alloy castings (AC, ADC, MC, ZDC)", operation: [thread_milling], vc_m_min: {min: 100, max: 300}, fz_mm: {min: 0.05, max: 0.2}, coolant: "water-soluble (not for magnesium)", page: "p. 852"}
+      - {iso_group: O, material_hint: "thermosetting and thermoplastic plastics", operation: [thread_milling], vc_m_min: {min: 80, max: 160}, fz_mm: {min: 0.03, max: 0.1}, page: "p. 852"}
+  - id: osg-8331004-at-1-m8x1.25
+    order_code: "AT-1 M8 x 1.25 (EDP 8331004)"
+    geometry:
+      diameter_mm: 5.7
+      flutes: 4
+      helix_deg: {value: 11, range: [9, 13], note: "printed as 9-13 deg; midpoint used"}
+      thread: {standard: "ISO metric", pitch_mm: 1.25, form_angle_deg: {value: 60, src: iso-68-1-1998}, diameter_mm: 8, hand: right, starts: 1}
+      rows: {value: 15, src: est, note: "APMX 18.75 mm / pitch 1.25 mm; tooth rows not printed"}
+      single_profile: false
+      rake_deg: {value: 3, src: est, note: "not published by OSG; small positive radial rake assumed for a steel-cutting solid carbide thread mill"}
+      clearance_deg: {value: 10, src: est, note: "not published by OSG; primary relief of the thread teeth assumed"}
+      cutting_length_mm: {value: 18.75, note: "APMX"}
+      overall_length_mm: 75
+      shank: {diameter_mm: 6, form: plain}
+      centre_cutting: false
+      coolant_holes: null
+      note: "type 2 (no neck); 27 g (p. 505)"
+    max_rpm: null
+    mass_g: 27
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "thread mills are not normally reground"}
+    cutting_data: *at1_data
+  - id: osg-8331007-at-1-m10x1.5
+    order_code: "AT-1 M10 x 1.5 (EDP 8331007)"
+    geometry:
+      diameter_mm: 7.7
+      flutes: 4
+      helix_deg: {value: 11, range: [9, 13], note: "printed as 9-13 deg; midpoint used"}
+      thread: {standard: "ISO metric", pitch_mm: 1.5, form_angle_deg: {value: 60, src: iso-68-1-1998}, diameter_mm: 10, hand: right, starts: 1}
+      rows: {value: 16, src: est, note: "APMX 24 mm / pitch 1.5 mm; tooth rows not printed"}
+      single_profile: false
+      rake_deg: {value: 3, src: est, note: "not published by OSG; small positive radial rake assumed for a steel-cutting solid carbide thread mill"}
+      clearance_deg: {value: 10, src: est, note: "not published by OSG; primary relief of the thread teeth assumed"}
+      cutting_length_mm: {value: 24, note: "APMX"}
+      overall_length_mm: 85
+      shank: {diameter_mm: 8, form: plain}
+      centre_cutting: false
+      coolant_holes: null
+      note: "type 2 (no neck); 52 g (p. 505)"
+    max_rpm: null
+    mass_g: 52
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "thread mills are not normally reground"}
+    cutting_data: *at1_data

@@ -1,0 +1,14 @@
+# Coatings: db/coatings/<id>.yaml (one per coating)
+format: cnctwin-coating
+version: 1
+id: tialn
+name: "TiAlN (PVD)"
+process: PVD                         # PVD | CVD
+src: key
+hardness_HV: 3300
+max_service_temp_degC: 800           # oxidation onset
+conductivity_W_mK: 4.5
+friction_vs_steel: 0.45              # dry, against steel, pin-on-disc or published
+typical_thickness_um: [2, 4]
+wear_rate_factor: 0.6                # flank wear rate relative to the uncoated substrate at the same conditions
+thermal_barrier_factor: 0.9          # fraction of the uncoated heat flux into the tool (heat partition)

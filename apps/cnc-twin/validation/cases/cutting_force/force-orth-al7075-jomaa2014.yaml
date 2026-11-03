@@ -1,0 +1,82 @@
+# AA7075-T651 orthogonal disc cutting, 300 and 1000 m/min, f 0.05/0.25 mm, uncoated carbide: Fc, Ft.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-al7075-jomaa2014
+quantity: cutting_force
+reference:
+  src: jomaa-2014-al7075-cutting-table
+  location: Table 2 (experimental results of the orthogonal machining), Table 3 (conditions)
+  digitised: false
+  measured: true
+  note: no uncertainty stated; one test per condition with a new edge
+setup:
+  operation: orthogonal_turning
+  material: {db: al7075-t6, note: AA7075-T651 discs (T6 plus stress relief by stretching)}
+  tool:
+    src: jomaa-2014-al7075-cutting-table
+    page: Experimental Procedure
+    type: turning_insert
+    iso_code: TNMA 120408
+    grade: Kennametal K68 (uncoated carbide)
+    tool_class: carbide
+    coating: none
+    rake_deg: {value: -5, note: '''back rake angle of -5 deg'' given by the holder, taken as the orthogonal rake'}
+    clearance_deg:
+      value: 5
+      src: est
+      note: 'assumed: not stated: a TNMA insert has 0 deg own clearance, tilted 5 deg negative in the holder'
+    edge_radius_um:
+      value: 30
+      src: est
+      note: 'assumed: not stated; TNMA inserts are edge-honed (typically 25-50 um, est.)'
+    nose_radius_mm: {value: 0.8, src: est, note: 'assumed: ISO code ''08'' = 0.8 mm corner radius (code convention)'}
+    fresh_edge_per_test: true
+    assumed_inputs: [clearance_deg, edge_radius_um, nose_radius_mm]
+  holder:
+    src: jomaa-2014-al7075-cutting-table
+    page: Experimental Procedure
+    model: Kennametal DTFNR2525M16KC04 (right hand)
+  machine:
+    src: jomaa-2014-al7075-cutting-table
+    page: Experimental Procedure
+    model: Mazak NEXUS 410A 3-axis CNC machine
+    dynamometer: Kistler 9255B quartz 3-component with Kistler charge amplifier
+  stock:
+    src: jomaa-2014-al7075-cutting-table
+    page: Experimental Procedure
+    form: disc
+    outer_diameter_mm: 70
+    inner_diameter_mm: 19
+    thickness_mm: 4
+  conditions:
+    src: jomaa-2014-al7075-cutting-table
+    page: Table 3
+    test_ids: ['1', '2', '3', '4']
+    vc_per_test_m_min: [300, 300, 1000, 1000]
+    feed_per_test_mm_rev: [0.05, 0.25, 0.05, 0.25]
+    depth_of_cut_mm: {value: 2, note: '''DOC'' column of Table 3'}
+    width_of_cut_mm:
+      value: 4
+      src: est
+      note: 'assumed: not stated which dimension is the width; the disc thickness (4 mm) is assumed'
+    coolant: dry
+    assumed_inputs: [width_of_cut_mm]
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fc trial 1, value: 271, unit: N, x: 0.05, x_name: f, x_unit: mm/rev, note: vc 300 m/min; column 'Fc (N)'}
+- {name: Ft trial 1, value: 168, unit: N, x: 0.05, x_name: f, x_unit: mm/rev, note: vc 300 m/min; column 'Ft (N)'}
+- {name: Fc trial 2, value: 901, unit: N, x: 0.25, x_name: f, x_unit: mm/rev, note: vc 300 m/min; column 'Fc (N)'}
+- {name: Ft trial 2, value: 323, unit: N, x: 0.25, x_name: f, x_unit: mm/rev, note: vc 300 m/min; column 'Ft (N)'}
+- {name: Fc trial 3, value: 234, unit: N, x: 0.05, x_name: f, x_unit: mm/rev, note: vc 1000 m/min; column 'Fc (N)'}
+- {name: Ft trial 3, value: 108, unit: N, x: 0.05, x_name: f, x_unit: mm/rev, note: vc 1000 m/min; column 'Ft (N)'}
+- {name: Fc trial 4, value: 707, unit: N, x: 0.25, x_name: f, x_unit: mm/rev, note: vc 1000 m/min; column 'Fc (N)'}
+- {name: Ft trial 4, value: 171, unit: N, x: 0.25, x_name: f, x_unit: mm/rev, note: vc 1000 m/min; column 'Ft (N)'}
+reference_curves: []
+notes: Use with caution. The text calls the components 'tangential force Ft and thrust force Ff' but the table headers are
+  Ft and Fc; the friction angles of trials 2 and 3 in the same table (15 and 20 deg) are reproduced only if 'Fc' is the
+  cutting force and 'Ft' the thrust (beta = rake + atan(Ft/Fc) with rake -5 deg), so that reading is used. Trial 1's printed
+  friction angle (45 deg) and trial 4's shear angle (63 deg) do not follow from the printed forces and chip thicknesses;
+  the chip thicknesses at f = 0.25 mm (0.217 and 0.196 mm) are thinner than the uncut chip, so the shear and chip-ratio
+  columns are not used. BUE intensifies with feed (source conclusions).

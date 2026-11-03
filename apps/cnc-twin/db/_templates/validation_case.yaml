@@ -1,0 +1,30 @@
+# Validation case against a published experiment: validation/cases/<quantity>/<id>.yaml
+# The reference values must be read from the source (table, text, or a digitised figure, said which).
+# The setup must be complete enough to simulate: every input the source states, plus what it does
+# not state marked `assumed: true` with the value assumed.
+format: cnctwin-validation-case
+version: 1
+id: force-endmill-al7075-budak1996-c1
+quantity: cutting_force
+# cutting_force | torque | tool_temperature | chip_temperature | taylor_life | stability_lobe |
+# drilling_thrust | drilling_torque | roughness | wall_error | spindle_growth | chip_form |
+# coolant_reach | cycle_time | shear_angle | chip_ratio
+reference:
+  src: budak-1996                    # bibliography key
+  location: "Table 3, test 4"        # or "Fig. 7 (digitised)"
+  digitised: false
+  uncertainty_pct: 3                 # measurement uncertainty the source states, or the digitisation error
+  measured: true                     # true = experiment; false = analytical/numerical benchmark (labelled as such)
+setup:
+  operation: peripheral_milling      # peripheral_milling | slotting | face_milling | ball_end_milling | orthogonal_turning |
+                                     # oblique_turning | longitudinal_turning | drilling | tapping | boring | grooving | threading |
+                                     # machine_motion | spindle_warmup | coolant_jet
+  material: {db: al7075-t6}          # or inline {name, properties...} when the source's material differs from the DB
+  tool: {diameter_mm: 19.05, flutes: 4, helix_deg: 30, rake_deg: 12, clearance_deg: 6, tool_class: carbide, coating: none}
+  conditions: {spindle_rpm: 1000, feed_mm_tooth: 0.05, ae_mm: 4.76, ap_mm: 5.08, direction: down, coolant: dry}
+  dynamics: null                     # modal parameters if the case needs them
+  program: null                      # for cycle-time cases: the NC program text or file name
+reference_values:                    # scalar results
+  - {name: Fx_peak_N, value: 410, unit: N, uncertainty: 20}
+reference_curves: []                 # curves: [{name, x_name, x_unit, y_name, y_unit, points: [[x, y], ...]}]
+notes: ""

@@ -1,0 +1,13 @@
+format: cnctwin-coating
+version: 1
+id: diamond-cvd
+name: "CVD diamond coating on carbide (polycrystalline, for graphite, CFRP, high-Si aluminium)"
+process: CVD
+src: balmer-2009-cvd-diamond
+hardness_HV: {value: 9400, range: [8670, 10200], src: balmer-2009-cvd-diamond, page: "Table 4, Vickers hardness polycrystalline 85-100 GPa", note: "mid value 92.5 GPa / 0.009807; measured on bulk CVD diamond, a thin coating on carbide reads lower"}
+max_service_temp_degC: {value: 650, src: est, note: "oxidation of diamond in air starts around 600-700 °C; 650 used. Maker datasheets (CemeCon CCDia) reportedly give 650 °C but could not be read"}
+conductivity_W_mK: {value: 1000, range: [1000, 2000], src: balmer-2009-cvd-diamond, page: "section 4: 2000 W/mK, lower grades 1000 W/mK", note: "free-standing CVD diamond; fine-grained coatings are lower, lower end chosen"}
+friction_vs_steel: {value: 0.1, src: est, note: "no value read; diamond is not used on ferrous work (carbon dissolves in iron)"}
+typical_thickness_um: {value: [6, 20], src: est, note: "no value read; typical tool coatings 6-12 µm, up to about 20 µm"}
+wear_rate_factor: {value: 0.1, src: est, note: "for abrasive non-ferrous work only; no study read"}
+thermal_barrier_factor: {value: 1.0, src: est, note: "conductivity far above the substrate, no barrier"}

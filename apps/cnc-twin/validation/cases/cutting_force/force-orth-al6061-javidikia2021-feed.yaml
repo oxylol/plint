@@ -1,0 +1,74 @@
+# AA6061-T6 orthogonal tube cutting, 950 m/min, f 0.1-0.2 mm, dry and flood: Fc, Ft (4 mm width).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-al6061-javidikia2021-feed
+quantity: cutting_force
+reference:
+  src: javidikia-2021-al6061-orthogonal
+  location: 'Fig. 4 (feed series at 950 m/min) and Fig. 5 (speed series at 0.16 mm): values printed on the bars'
+  digitised: false
+  measured: true
+  note: values are the numbers printed above each bar, not read off the axis; no uncertainty stated
+setup:
+  operation: orthogonal_turning
+  material: {db: al6061-t6, note: 'AA6061-T6 cylinder, 150 mm diameter, 120 mm long'}
+  tool:
+    src: javidikia-2021-al6061-orthogonal
+    page: Sect. 2, Table 1
+    type: turning_insert
+    iso_code: CCGX 120408-AL
+    grade: H10 (uncoated carbide)
+    tool_class: carbide
+    coating: none
+    rake_deg: 17.5
+    clearance_deg: 7
+    edge_radius_um: 20
+    fresh_edge_per_test: true
+    nose_radius_mm:
+      value: 0.8
+      src: est
+      note: 'assumed: ISO code ''08'' = 0.8 mm corner radius (code convention); outside the cut on a 4 mm tube wall'
+    assumed_inputs: [nose_radius_mm]
+  holder: {src: javidikia-2021-al6061-orthogonal, page: Sect. 2, model: SCLCR 2020 K12 (right hand)}
+  machine:
+    src: javidikia-2021-al6061-orthogonal
+    page: Sect. 2
+    model: MAZAK NEXUS 100-II M CNC machine
+    dynamometer: Kistler 9121 three-component, LabVIEW acquisition, MATLAB treatment
+  stock:
+    src: javidikia-2021-al6061-orthogonal
+    page: Sect. 2
+    form: tube
+    outer_diameter_mm: 150
+    wall_thickness_mm: 4
+    length_mm: 120
+    preparation: cylinder groove-machined into tube-shaped sections with a 4 mm wall
+  conditions:
+    src: javidikia-2021-al6061-orthogonal
+    page: Table 1, Sect. 2
+    vc_m_min: 950
+    feed_mm_rev: [0.1, 0.16, 0.2]
+    width_of_cut_mm: {value: 4, note: tube wall; the force signals are for the 4 mm width (Fig. 15 caption)}
+    coolant: [dry, flood]
+    flood_fluid: OEMETA
+    flood_flow_l_min: 7.2
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fc dry f0.1, value: 270, unit: N, x: 0.1, x_name: f, x_unit: mm/rev}
+- {name: Fc flood f0.1, value: 268, unit: N, x: 0.1, x_name: f, x_unit: mm/rev}
+- {name: Ft dry f0.1, value: 74, unit: N, x: 0.1, x_name: f, x_unit: mm/rev}
+- {name: Ft flood f0.1, value: 75, unit: N, x: 0.1, x_name: f, x_unit: mm/rev}
+- {name: Fc dry f0.16, value: 384, unit: N, x: 0.16, x_name: f, x_unit: mm/rev}
+- {name: Fc flood f0.16, value: 390, unit: N, x: 0.16, x_name: f, x_unit: mm/rev}
+- {name: Ft dry f0.16, value: 77, unit: N, x: 0.16, x_name: f, x_unit: mm/rev}
+- {name: Ft flood f0.16, value: 77, unit: N, x: 0.16, x_name: f, x_unit: mm/rev}
+- {name: Fc dry f0.2, value: 467, unit: N, x: 0.2, x_name: f, x_unit: mm/rev}
+- {name: Fc flood f0.2, value: 475, unit: N, x: 0.2, x_name: f, x_unit: mm/rev}
+- {name: Ft dry f0.2, value: 81, unit: N, x: 0.2, x_name: f, x_unit: mm/rev}
+- {name: Ft flood f0.2, value: 78, unit: N, x: 0.2, x_name: f, x_unit: mm/rev}
+reference_curves: []
+notes: High-speed orthogonal tube cutting of AA6061-T6 (Table 1 tests 3, 5, 6). Dry and flood differ by less than 2 % in
+  Fc and 4 % in Ft here; the source calls the coolant effect negligible (Sect. 3.1). The thrust force is nearly independent
+  of feed (74-81 N), which suggests that edge (r 20 um) and flank contact dominate it.

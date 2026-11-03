@@ -1,0 +1,71 @@
+# OSG CRM solid carbide straight-flute machine reamers, read from the OSG General Catalogue 2025-2026
+# on 2026-11-03 (p. 375-378 dimensions and icons, p. 453 cutting conditions).
+format: cnctwin-tool
+version: 1
+series_id: osg-crm-carbide-reamer
+maker: "OSG Corporation"
+series: "CRM carbide straight reamer (machine reamer for H7 holes), 8 mm and 10 mm"
+src: osg-2025-gc-drilling-threading
+notes: "Icons p. 375: carbide (uncoated), diameter tolerance 0 / +0.005 mm (inside the H7 band of 0 / +0.015 mm for 6-10 mm and 0 / +0.018 mm for 10-18 mm), shank h6; drawing: 30 deg lead chamfer of length PLGL, straight flutes; 6 flutes (ZEFP) from 4.01 mm. Sizes are stocked in 0.01 mm steps (EDP 8900000 + DC x 100). Cutting conditions p. 453: feed per rev and removal amount (reaming allowance) by reamer diameter; apply cutting fluid generously, use a rigid, accurate holder. Land (margin) width and rake are not published (db/models/tooling.yaml defaults apply)."
+defaults:
+  type: reamer
+  hand: right
+  tool_material: {class: carbide, grade: "uncoated carbide (grade not stated)", id: carbide-submicron-10co, src: est, note: "OSG states only 'carbide'; mapped to the submicron rod grade used for solid round tools"}
+  coating: {id: none}
+items:
+  - id: osg-8900800-crm-8
+    order_code: "CRM 8 (EDP 8900800)"
+    geometry:
+      diameter_mm: 8
+      flutes: 6
+      helix_deg: 0
+      cutting_length_mm: {value: 40, note: "L, flute length"}
+      flute_length_mm: 40
+      corner_chamfer_mm: {value: 0.8, note: "PLGL, axial length of the lead chamfer"}
+      tip_angle_deg: {value: 60, note: "30 deg lead chamfer to the axis as drawn on p. 375, stored as the included angle"}
+      shank: {diameter_mm: 8, form: plain}
+      overall_length_mm: 90
+      centre_cutting: false
+      coolant_holes: null
+      note: "OAL 90, L 40, PLGL 0.8, DCON 8, ZEFP 6, 61 g (p. 378); diameter tolerance 0 / +0.005 mm"
+    max_rpm: null
+    mass_g: 61
+    price_eur: null
+    regrinds: {value: 1, src: est, note: "carbide reamers can be reground on the chamfer only, reducing the diameter after a few regrinds; no count published"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / mild steel S15C, SS400 (AISI 1015)", operation: [reaming], vc_m_min: {min: 12, max: 20}, f_mm: {min: 0.08, max: 0.15}, page: "p. 453, 8 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: P, material_hint: "carbon steel S45C, S50C (AISI 1045, 1050)", material: aisi1045, operation: [reaming], vc_m_min: {min: 10, max: 16}, f_mm: {min: 0.08, max: 0.15}, page: "p. 453, 8 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: P, material_hint: "alloy steel SCM, SNC, SNCM", material: aisi4140-annealed, operation: [reaming], vc_m_min: {min: 8, max: 12}, f_mm: {min: 0.08, max: 0.15}, page: "p. 453, 8 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: N, material_hint: "aluminium alloy castings A7075, ADC", material: al7075-t6, operation: [reaming], vc_m_min: {min: 15, max: 30}, f_mm: {min: 0.08, max: 0.18}, page: "p. 453, 8 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: H, material_hint: "hardened steel SKT, SKD up to 40 HRC", operation: [reaming], vc_m_min: {min: 6, max: 12}, f_mm: {min: 0.06, max: 0.13}, page: "p. 453, 8 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: H, material_hint: "hardened steel SKT, SKD up to 50 HRC", material: h13-50hrc, operation: [reaming], vc_m_min: {min: 4, max: 10}, f_mm: {min: 0.03, max: 0.075}, page: "p. 453, 8 mm row", note: "removal amount 0.03-0.08 mm"}
+      - {iso_group: K, material_hint: "cast iron FC250", material: grey-cast-iron-gjl250, operation: [reaming], vc_m_min: {min: 8, max: 16}, f_mm: {min: 0.08, max: 0.15}, page: "p. 453, 8 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: N, material_hint: "copper and copper alloys C1100", material: copper-c101, operation: [reaming], vc_m_min: {min: 10, max: 25}, f_mm: {min: 0.08, max: 0.15}, page: "p. 453, 8 mm row", note: "removal amount 0.1-0.2 mm"}
+  - id: osg-8901000-crm-10
+    order_code: "CRM 10 (EDP 8901000)"
+    geometry:
+      diameter_mm: 10
+      flutes: 6
+      helix_deg: 0
+      cutting_length_mm: {value: 45, note: "L, flute length"}
+      flute_length_mm: 45
+      corner_chamfer_mm: {value: 1.0, note: "PLGL, axial length of the lead chamfer"}
+      tip_angle_deg: {value: 60, note: "30 deg lead chamfer to the axis as drawn on p. 375, stored as the included angle"}
+      shank: {diameter_mm: 10, form: plain}
+      overall_length_mm: 100
+      centre_cutting: false
+      coolant_holes: null
+      note: "OAL 100, L 45, PLGL 1, DCON 10, ZEFP 6, 104 g (p. 378); diameter tolerance 0 / +0.005 mm"
+    max_rpm: null
+    mass_g: 104
+    price_eur: null
+    regrinds: {value: 1, src: est, note: "carbide reamers can be reground on the chamfer only; no count published"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / mild steel S15C, SS400 (AISI 1015)", operation: [reaming], vc_m_min: {min: 12, max: 20}, f_mm: {min: 0.1, max: 0.2}, page: "p. 453, 10 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: P, material_hint: "carbon steel S45C, S50C (AISI 1045, 1050)", material: aisi1045, operation: [reaming], vc_m_min: {min: 10, max: 16}, f_mm: {min: 0.1, max: 0.2}, page: "p. 453, 10 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: P, material_hint: "alloy steel SCM, SNC, SNCM", material: aisi4140-annealed, operation: [reaming], vc_m_min: {min: 8, max: 12}, f_mm: {min: 0.1, max: 0.2}, page: "p. 453, 10 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: N, material_hint: "aluminium alloy castings A7075, ADC", material: al7075-t6, operation: [reaming], vc_m_min: {min: 15, max: 30}, f_mm: {min: 0.1, max: 0.23}, page: "p. 453, 10 mm row", note: "removal amount 0.1-0.3 mm"}
+      - {iso_group: H, material_hint: "hardened steel SKT, SKD up to 40 HRC", operation: [reaming], vc_m_min: {min: 6, max: 12}, f_mm: {min: 0.08, max: 0.18}, page: "p. 453, 10 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: H, material_hint: "hardened steel SKT, SKD up to 50 HRC", material: h13-50hrc, operation: [reaming], vc_m_min: {min: 4, max: 10}, f_mm: {min: 0.04, max: 0.08}, page: "p. 453, 10 mm row", note: "removal amount 0.03-0.08 mm"}
+      - {iso_group: K, material_hint: "cast iron FC250", material: grey-cast-iron-gjl250, operation: [reaming], vc_m_min: {min: 8, max: 16}, f_mm: {min: 0.1, max: 0.2}, page: "p. 453, 10 mm row", note: "removal amount 0.1-0.2 mm"}
+      - {iso_group: N, material_hint: "copper and copper alloys C1100", material: copper-c101, operation: [reaming], vc_m_min: {min: 10, max: 25}, f_mm: {min: 0.1, max: 0.2}, page: "p. 453, 10 mm row", note: "removal amount 0.1-0.2 mm"}

@@ -1,0 +1,1110 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: harvey-undercutting-270deg-4fl
+maker: Harvey Tool (Harvey Performance Company)
+series: Undercutting End Mills - 270 deg (lollipop), 4 flutes, metric diameters, solid carbide
+src: harvey-2026-undercut-270
+notes: Lollipop cutters with metric ball diameters and inch neck/shank dimensions (as published). Chart SF_23200 (series 231xx, 232xx, 295xx, 397xx, 413xx, 529xx, ... 9743xx).
+items:
+- id: harvey-5296m
+  order_code: '5296M (uncoated; AlTiN: 5296M-C3)'
+  type: lollipop
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 6.0
+    flutes: 4
+    cutting_length_mm: 5.1054
+    helix_deg: {value: 30, src: est, note: chart lists 'Standard Helix' without a value; 30 deg assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 3.0
+    neck: {diameter_mm: 3.7592, length_mm: 9.525}
+    shank:
+      diameter_mm: 6.35
+      length_mm: {value: 48.8696, src: est, note: OAL - neck length - LOC; transitions not published}
+    overall_length_mm: 63.5
+    centre_cutting: {value: true, src: est, note: ball-type head; centre cutting assumed (not stated)}
+    coolant_holes: null
+    note: 'wrap_angle_deg = 270; inch dimensions as published: cutting_length 0.201 in, neck.diameter 0.148 in, neck.length 0.375 in, shank.diameter 0.25 in, shank.length 1.924 (est) in, overall_length 2.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 27.7, src: est, note: 'rho V: shank taken as a 6.35 mm cylinder over 63.5 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [deburring]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.050546}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.00199 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [profiling]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.043942}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 2 pass(es); D = 6 mm read from the 0.250 in column; passes = 2; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.00173 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.043942}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.00173 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.017018}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00067 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.017018}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00067 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.014986}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00059 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.012954}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00051 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.012954}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00051 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.010668}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00042 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.009398}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00037 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.010668}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00042 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.009398}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00037 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.010668}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00042 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.009398}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00037 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 2.5, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 85.48, src: est, note: 'list price USD 99.40 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 270 deg spherical head, Type I, 4 flutes; D1 tolerance per the metric table header; LOC is the axial length of the ball segment (0.201 in). Centre cutting assumed for a ball tip (not stated).
+- id: harvey-2326m
+  order_code: '2326M (uncoated; AlTiN: 2326M-C3)'
+  type: lollipop
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 6.0
+    flutes: 4
+    cutting_length_mm: 5.1054
+    helix_deg: {value: 30, src: est, note: chart lists 'Standard Helix' without a value; 30 deg assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 3.0
+    neck: {diameter_mm: 3.7592, length_mm: 19.05}
+    shank:
+      diameter_mm: 6.35
+      length_mm: {value: 39.3446, src: est, note: OAL - neck length - LOC; transitions not published}
+    overall_length_mm: 63.5
+    centre_cutting: {value: true, src: est, note: ball-type head; centre cutting assumed (not stated)}
+    coolant_holes: null
+    note: 'wrap_angle_deg = 270; inch dimensions as published: cutting_length 0.201 in, neck.diameter 0.148 in, neck.length 0.75 in, shank.diameter 0.25 in, shank.length 1.549 (est) in, overall_length 2.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 27.7, src: est, note: 'rho V: shank taken as a 6.35 mm cylinder over 63.5 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [deburring]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.050546}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.0; published values: vc 1000 SFM, fz 0.00199 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [profiling]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.043942}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 2 pass(es); D = 6 mm read from the 0.250 in column; passes = 2; neck_chip_load_factor = 1.0; published values: vc 1000 SFM, fz 0.00173 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.043942}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.0; published values: vc 1000 SFM, fz 0.00173 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.017018}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.0; published values: vc 200 SFM, fz 0.00067 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.0; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.0; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.017018}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.0; published values: vc 200 SFM, fz 0.00067 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.014986}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 1 pass(es); passes = 1; neck_chip_load_factor = 1.0; published values: vc 100 SFM, fz 0.00059 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.0; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.012954}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 4 pass(es); passes = 4; neck_chip_load_factor = 1.0; published values: vc 100 SFM, fz 0.00051 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.014732}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.0; published values: vc 200 SFM, fz 0.00058 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.012954}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 5 pass(es); passes = 5; neck_chip_load_factor = 1.0; published values: vc 100 SFM, fz 0.00051 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.010668}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.0; published values: vc 150 SFM, fz 0.00042 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.009398}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 1 pass(es); passes = 1; neck_chip_load_factor = 1.0; published values: vc 90 SFM, fz 0.00037 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.0; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 4 pass(es); passes = 4; neck_chip_load_factor = 1.0; published values: vc 90 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.0; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 5 pass(es); passes = 5; neck_chip_load_factor = 1.0; published values: vc 90 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.010668}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.0; published values: vc 150 SFM, fz 0.00042 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.009398}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 1 pass(es); passes = 1; neck_chip_load_factor = 1.0; published values: vc 75 SFM, fz 0.00037 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.0; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 4 pass(es); passes = 4; neck_chip_load_factor = 1.0; published values: vc 75 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.0; published values: vc 150 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 5 pass(es); passes = 5; neck_chip_load_factor = 1.0; published values: vc 75 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.010668}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 1 pass(es); D = 6 mm read from the 0.250 in column; passes = 1; neck_chip_load_factor = 1.0; published values: vc 70 SFM, fz 0.00042 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.009398}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Deburring', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 1 pass(es); passes = 1; neck_chip_load_factor = 1.0; published values: vc 50 SFM, fz 0.00037 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 3 pass(es); D = 6 mm read from the 0.250 in column; passes = 3; neck_chip_load_factor = 1.0; published values: vc 70 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Profiling', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 4 pass(es); passes = 4; neck_chip_load_factor = 1.0; published values: vc 50 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.009144}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.00 (neck length/neck diameter = 5.1, nearest Table 1 entry 5x); depth of cut given as 4 pass(es); D = 6 mm read from the 0.250 in column; passes = 4; neck_chip_load_factor = 1.0; published values: vc 70 SFM, fz 0.00036 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.008128}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Slotting', 0.250 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.00; 5 pass(es); passes = 5; neck_chip_load_factor = 1.0; published values: vc 50 SFM, fz 0.00032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 95.37, src: est, note: 'list price USD 110.90 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 270 deg spherical head, Type I, 4 flutes; D1 tolerance per the metric table header; LOC is the axial length of the ball segment (0.201 in). Centre cutting assumed for a ball tip (not stated).
+- id: harvey-23225
+  order_code: '23225 (uncoated; AlTiN: 23225-C3)'
+  type: lollipop
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 10.0
+    flutes: 4
+    cutting_length_mm: 8.509
+    helix_deg: {value: 30, src: est, note: chart lists 'Standard Helix' without a value; 30 deg assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 5.0
+    neck: {diameter_mm: 6.4008, length_mm: 19.05}
+    shank:
+      diameter_mm: 11.1125
+      length_mm: {value: 42.291, src: est, note: OAL - neck length - LOC; transitions not published}
+    overall_length_mm: 69.85
+    centre_cutting: {value: true, src: est, note: ball-type head; centre cutting assumed (not stated)}
+    coolant_holes: null
+    note: 'wrap_angle_deg = 270; inch dimensions as published: cutting_length 0.335 in, neck.diameter 0.252 in, neck.length 0.75 in, shank.diameter 0.4375 in, shank.length 1.665 (est) in, overall_length 2.75 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 93.3, src: est, note: 'rho V: shank taken as a 11.1125 mm cylinder over 69.85 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [deburring]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.075946}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 10 mm read from the 0.375 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.00299 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [profiling]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.06604}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 2 pass(es); D = 10 mm read from the 0.375 in column; passes = 2; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.0026 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.06604}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 10 mm read from the 0.375 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.0026 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.0254}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 10 mm read from the 0.375 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.022098}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 10 mm read from the 0.375 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00087 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.022098}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 10 mm read from the 0.375 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00087 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.0254}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 10 mm read from the 0.375 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.022352}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00088 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.022098}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 10 mm read from the 0.375 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00087 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.019558}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00077 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.022098}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 10 mm read from the 0.375 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00087 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.019558}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00077 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.015748}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 10 mm read from the 0.375 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00062 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.01397}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00055 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013716}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 10 mm read from the 0.375 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00054 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.012192}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00048 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013716}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 10 mm read from the 0.375 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00054 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.012192}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00048 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.015748}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 10 mm read from the 0.375 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00062 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.01397}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00055 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013716}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 10 mm read from the 0.375 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00054 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.012192}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00048 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013716}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 10 mm read from the 0.375 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00054 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.012192}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00048 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.015748}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 10 mm read from the 0.375 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00062 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.01397}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Deburring', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00055 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.013716}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 10 mm read from the 0.375 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00054 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.012192}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Profiling', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00048 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.013716}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.0, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 10 mm read from the 0.375 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00054 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.012192}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Slotting', 0.375 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00048 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 172.17, src: est, note: 'list price USD 200.20 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 270 deg spherical head, Type I, 4 flutes; D1 tolerance per the metric table header; LOC is the axial length of the ball segment (0.335 in). Centre cutting assumed for a ball tip (not stated).
+- id: harvey-23231
+  order_code: '23231 (uncoated; AlTiN: 23231-C3)'
+  type: lollipop
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 12.0
+    flutes: 4
+    cutting_length_mm: 10.2362
+    helix_deg: {value: 30, src: est, note: chart lists 'Standard Helix' without a value; 30 deg assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 6.0
+    neck: {diameter_mm: 7.8232, length_mm: 25.4}
+    shank:
+      diameter_mm: 12.7
+      length_mm: {value: 40.5638, src: est, note: OAL - neck length - LOC; transitions not published}
+    overall_length_mm: 76.2
+    centre_cutting: {value: true, src: est, note: ball-type head; centre cutting assumed (not stated)}
+    coolant_holes: null
+    note: 'wrap_angle_deg = 270; inch dimensions as published: cutting_length 0.403 in, neck.diameter 0.308 in, neck.length 1 in, shank.diameter 0.5 in, shank.length 1.597 (est) in, overall_length 3 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 133.0, src: est, note: 'rho V: shank taken as a 12.7 mm cylinder over 76.2 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [deburring]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.101092}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 12 mm read from the 0.500 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.00398 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [profiling]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.088138}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 2 pass(es); D = 12 mm read from the 0.500 in column; passes = 2; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.00347 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.088138}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 12 mm read from the 0.500 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 1000 SFM, fz 0.00347 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.033782}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 12 mm read from the 0.500 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00133 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.029464}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 12 mm read from the 0.500 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00116 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.029464}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 12 mm read from the 0.500 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00116 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.033782}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 12 mm read from the 0.500 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00133 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.029718}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00117 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.029464}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 12 mm read from the 0.500 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00116 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.025908}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00102 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.029464}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 12 mm read from the 0.500 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 200 SFM, fz 0.00116 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.025908}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 100 SFM, fz 0.00102 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.021082}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 12 mm read from the 0.500 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00083 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.018542}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00073 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.018288}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 12 mm read from the 0.500 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00072 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.016256}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00064 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.018288}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 12 mm read from the 0.500 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00072 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.016256}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 90 SFM, fz 0.00064 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.021082}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 12 mm read from the 0.500 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00083 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.018542}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00073 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.018288}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 12 mm read from the 0.500 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00072 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.016256}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00064 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.018288}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 12 mm read from the 0.500 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 150 SFM, fz 0.00072 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.016256}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 75 SFM, fz 0.00064 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [deburring]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.021082}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for <= 20 deg engagement around the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 1 pass(es); D = 12 mm read from the 0.500 in column; passes = 1; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00083 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [deburring]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.018542}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Deburring', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 1 pass(es); passes = 1; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00073 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [profiling]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.018288}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for 90 deg engagement along the ball; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 3 pass(es); D = 12 mm read from the 0.500 in column; passes = 3; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00072 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [profiling]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.016256}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Profiling', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 4 pass(es); passes = 4; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00064 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.018288}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1 (neck length factor)
+    note: 'base chip load for full 180 deg engagement of the ball end; multiply by the neck-length factor 1.20 (neck length/neck diameter = 3.2, nearest Table 1 entry 3x); depth of cut given as 4 pass(es); D = 12 mm read from the 0.500 in column; passes = 4; neck_chip_load_factor = 1.2; published values: vc 70 SFM, fz 0.00072 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [undercut_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.016256}
+    src: harvey-2022-sf-23200
+    page: SF_23200 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, 'Slotting', 0.500 in column; p. 1 Table 1
+    note: 'base chip load x neck factor 1.20; 5 pass(es); passes = 5; neck_chip_load_factor = 1.2; published values: vc 50 SFM, fz 0.00064 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 229.19, src: est, note: 'list price USD 266.50 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 270 deg spherical head, Type I, 4 flutes; D1 tolerance per the metric table header; LOC is the axial length of the ball segment (0.403 in). Centre cutting assumed for a ball tip (not stated).

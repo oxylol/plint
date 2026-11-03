@@ -1,0 +1,84 @@
+# Kus et al. (2015): dry turning of hardened AISI 4140 (50 HRC) with a PVD TiAlN-TiN coated carbide
+# WNVG 080404 insert: rake-face temperature by IR pyrometer and insert temperature by an embedded K-type
+# thermocouple, 18 conditions (vc 76-170 m/min, f 0.05-0.12 mm/rev, ap 0.4/0.6 mm).
+format: cnctwin-validation-case
+version: 1
+id: tooltemp-turn-aisi4140-kus2015-ir-tc
+quantity: tool_temperature
+reference:
+  src: kus-2015-4140-thermocouple-ir-turning
+  location: "Table 1 (setup), sections 'Infrared Pyrometer', 'The Thermocouple' and 'Experimental Procedure' (sensor positions, averaging, repeats), Table 5 (results), Fig. 7 (thermocouple position), Fig. 10 (thermocouple readings versus cutting time, digitised)"
+  digitised: false
+  uncertainty_pct: 1
+  measured: true
+  note: "Table 5 values are read directly (means of three repeats, new insert for each test). Stated accuracies: pyrometer +-(0.3 % of reading + 2 C), thermocouple chain +-2.5 C or +-1 %. The pyrometer emissivity was set to 0.60 after a calibration over 0.45-0.85 at constant cutting conditions; that systematic error is not quantified. The Fig. 10 curves are digitised (about +-0.5 C)."
+setup:
+  operation: longitudinal_turning
+  material:
+    db: aisi4140-qt30
+    note: "AISI 4140 heat treated to 50 HRC (induction hardened, then described as solution treated, oil quenched and normalised; the conclusions state 'heat-treated AISI 4140, hardness 50 HRC'). The DB entry is Q&T 30 HRC, so the flow stress must be raised to the 50 HRC condition. Table 2 composition: C 0.38, Cr 0.80, Mn 0.75, Si 0.15, Mo 0.15, P 0.035, S 0.04 and 'Ni 9.58' (an obvious misprint for 4140)"
+  stock:
+    src: kus-2015-4140-thermocouple-ir-turning
+    page: Table 1 and 'Experimental Conditions'
+    form: cylinder between chuck and tailstock, pre-machined
+    diameter_mm: 45
+    length_mm: {value: 350, note: "Table 1: 350 mm; the text says 300 mm"}
+  tool:
+    src: kus-2015-4140-thermocouple-ir-turning
+    page: Table 1, Table 6
+    type: turning_insert
+    iso_designation: WNVG 080404-IC907
+    tool_class: carbide
+    coating: PVD TiAlN-TiN
+    holder: DWLNR 2020K-08
+    rake_deg: -6
+    clearance_deg: 6
+    inclination_deg: -6
+    edge_angle_deg: {value: 80, note: "'edge angle: 80' as stated in Table 1 (the included angle of the W-type trigon insert)"}
+    nose_radius_mm: 0.4
+    entering_angle_deg: {value: 95, src: est, note: "assumed: not stated; the L in the DWLNR holder code denotes a 95 deg approach (ISO holder coding, not read in this run)"}
+    insert_thickness_mm: {value: 4.0, note: "Table 6 (input of the source's FE model)"}
+    insert_conductivity_W_mK: {value: 36, note: "Table 6 (input of the source's FE model)"}
+    insert_density_kg_m3: {value: 14900, note: "Table 6"}
+    insert_specific_heat_J_kgK: {value: 302, note: "Table 6"}
+    holder_conductivity_W_mK: {value: 16, note: "Table 6"}
+    holder_section_mm: {value: [20, 20], note: "Table 6: holder width and height 20 mm, length 120 mm"}
+    assumed_inputs: [entering_angle_deg]
+  machine:
+    src: kus-2015-4140-thermocouple-ir-turning
+    page: Table 1
+    model: Harrison M300 lathe
+  conditions:
+    src: kus-2015-4140-thermocouple-ir-turning
+    page: Tables 1, 4 and 5
+    vc_m_min: [76, 114, 170]
+    feed_mm_rev: [0.05, 0.08, 0.12]
+    ap_mm: [0.4, 0.6]
+    coolant: dry
+    cut_duration_s: {value: 20, src: est, note: "read from Fig. 10, whose thermocouple readings run from 5 to 20 s of cutting; the duration of the Table 5 tests is not stated"}
+    ambient_temp_degC: {value: 25, src: est, note: "assumed: not stated for the tests; the source's FE model used ambient 20-30 C"}
+    ir_spot: "Optris CF4 pyrometer 45 cm above the rake face, spot 1.5 mm, aimed at the rake face 1 mm from the cutting edge 'just beside the leading edge in order to avoid chip obstruction'; range 385-1600 C; 5 readings per second averaged over the cut"
+    thermocouple: "K-type, 0.5 mm, in the insert 1 mm from the front (flank) face and 1 mm below the top (rake) face at the cutting corner (Fig. 7); read every 5 s with a TESTO 177"
+    assumed_inputs: [cut_duration_s, ambient_temp_degC, entering_angle_deg]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: T_IR_ap0.4_f0.05, x_name: vc, x_unit: m/min, y_name: rake-face temperature (IR), y_unit: degC, uncertainty: 3.5, points: [[76, 410], [114, 460], [170, 520]]}
+  - {name: T_IR_ap0.4_f0.08, x_name: vc, x_unit: m/min, y_name: rake-face temperature (IR), y_unit: degC, uncertainty: 3.5, points: [[76, 405], [114, 465], [170, 500]]}
+  - {name: T_IR_ap0.4_f0.12, x_name: vc, x_unit: m/min, y_name: rake-face temperature (IR), y_unit: degC, uncertainty: 3.5, points: [[76, 410], [114, 445], [170, 475]]}
+  - {name: T_IR_ap0.6_f0.05, x_name: vc, x_unit: m/min, y_name: rake-face temperature (IR), y_unit: degC, uncertainty: 3.5, points: [[76, 400], [114, 430], [170, 485]]}
+  - {name: T_IR_ap0.6_f0.08, x_name: vc, x_unit: m/min, y_name: rake-face temperature (IR), y_unit: degC, uncertainty: 3.5, points: [[76, 390], [114, 435], [170, 525]]}
+  - {name: T_IR_ap0.6_f0.12, x_name: vc, x_unit: m/min, y_name: rake-face temperature (IR), y_unit: degC, uncertainty: 3.5, points: [[76, 395], [114, 420], [170, 480]]}
+  - {name: T_TC_ap0.4_f0.05, x_name: vc, x_unit: m/min, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 2.5, points: [[76, 57], [114, 65], [170, 65]]}
+  - {name: T_TC_ap0.4_f0.08, x_name: vc, x_unit: m/min, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 2.5, points: [[76, 66], [114, 61], [170, 67]]}
+  - {name: T_TC_ap0.4_f0.12, x_name: vc, x_unit: m/min, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 2.5, points: [[76, 72], [114, 67], [170, 71]]}
+  - {name: T_TC_ap0.6_f0.05, x_name: vc, x_unit: m/min, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 2.5, points: [[76, 72], [114, 80], [170, 81]]}
+  - {name: T_TC_ap0.6_f0.08, x_name: vc, x_unit: m/min, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 2.5, points: [[76, 80], [114, 75], [170, 67]]}
+  - {name: T_TC_ap0.6_f0.12, x_name: vc, x_unit: m/min, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 2.5, points: [[76, 76], [114, 83], [170, 69]]}
+  - {name: T_TC_transient_vc76_ap0.4_f0.05, x_name: cutting_time, x_unit: s, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 0.5, points: [[5, 50.1], [10, 54.6], [15, 58.1], [20, 60.1]], note: "Fig. 10 (both panels show this series)"}
+  - {name: T_TC_transient_vc76_ap0.4_f0.08, x_name: cutting_time, x_unit: s, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 0.5, points: [[5, 58.8], [10, 64.3], [15, 67.8], [20, 70.7]], note: "Fig. 10 left"}
+  - {name: T_TC_transient_vc76_ap0.4_f0.12, x_name: cutting_time, x_unit: s, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 0.5, points: [[5, 61.9], [10, 69.9], [15, 75.1], [20, 78.6]], note: "Fig. 10 left"}
+  - {name: T_TC_transient_vc114_ap0.4_f0.05, x_name: cutting_time, x_unit: s, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 0.5, points: [[5, 56.7], [10, 62.3], [15, 65.9], [20, 69.0]], note: "Fig. 10 right"}
+  - {name: T_TC_transient_vc170_ap0.4_f0.05, x_name: cutting_time, x_unit: s, y_name: insert temperature (thermocouple), y_unit: degC, uncertainty: 0.5, points: [[5, 57.2], [10, 65.6], [15, 71.0], [20, 73.3]], note: "Fig. 10 right"}
+notes: "Two different locations: the IR value is a rake-face spot (1.5 mm) beside the chip, about 1 mm from the edge, and is not the hottest contact temperature (compare with the simulated rake-face surface temperature at that spot, at the end of a ~20 s cut); the thermocouple sits inside the insert about 1.4 mm from the corner and is far from steady state (Fig. 10 still rises 2-4 C per 5 s at 20 s). The Table 5 thermocouple values agree within about 1.5 C with the average of the Fig. 10 readings over 5-20 s (computed here), so they are time averages over the cut, not end values. Several IR readings (390-410 C) lie close to the 385 C lower limit of the pyrometer. The trends are weak and partly non-monotonic (e.g. thermocouple at ap 0.6, f 0.08: 80, 75, 67 C), so compare levels rather than slopes. Figs. 10 and the Fig. 7 sketch are from https://pmc-oa-opendata.s3.amazonaws.com/PMC4327076.1/."

@@ -1,0 +1,164 @@
+# Workpiece material: acetal copolymer POM-C, unfilled, extruded stock shapes (rod, plate, tube).
+# Representative grade: Ensinger TECAFORM AH natural. Sources: db/bibliography/materials-nonmetals.yaml
+# Template sections follow db/_templates/material.yaml. Data the template has no key for (impact strength,
+# service temperature, hazards, maker process windows ...) is collected in the top-level `extensions` block.
+format: cnctwin-material
+version: 1
+id: pom-c
+name: "Acetal copolymer POM-C, unfilled (extruded rod/plate)"
+family: polymer
+iso_group: O
+condition: "extruded semi-finished stock as supplied, dry (water absorption 0.05-0.1 % in 24 h/96 h)"
+designations: {ISO_1043: "POM-C", trade: "TECAFORM AH natural (Ensinger); comparable: Hostaform C, Celcon, Ultraform, Duracon", walter_group: "O1"}
+stock_forms: []                    # no residual-stress data for extruded polymer stock was read
+
+physical:
+  src: ensinger-2023-tecaform-ah-datasheet
+  density_kg_m3: {value: 1410}
+  specific_heat_J_kgK: {table: [[23, 1400]], note: "1.4 J/gK (ISO 22007-4), one room-temperature value; cp of semi-crystalline POM rises with T and has a melting endotherm at ~166 C that is not tabulated here"}
+  conductivity_W_mK: {table: [[23, 0.39]], note: "ISO 22007-4, room temperature"}
+  expansion_1_K: {table: [[60, 1.3e-4], [100, 1.4e-4]], note: "mean CLTE from 23 C to 60 C and to 100 C, longitudinal (extrusion direction)"}
+  youngs_modulus_GPa: {table: [[23, 2.8]], note: "tensile, 1 mm/min (ISO 527-2); flexural 2.6 GPa, compression 2.3 GPa"}
+  poisson: {value: 0.35, src: est, note: "typical of semi-crystalline engineering thermoplastics; no value in the sources read"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: {value: -60, note: "DSC (ISO 11357); POM is used far above Tg, its stiffness comes from the crystalline phase"}
+  melting_degC: {value: 166, note: "crystalline melting peak, DSC (ISO 11357); the handling sheet also gives ca. 166 C"}
+  decomposition_degC: {value: 240, src: ensinger-2024-tecaform-ah-phis, note: "'decomposition temperature > 240 C' (PHIS sect. 9); decomposition releases formaldehyde and paraformaldehyde"}
+  hardness: {shore_D: 82}
+  yield_MPa: {value: 67, note: "tensile strength at yield, 50 mm/min"}
+  ultimate_MPa: {value: 67}
+  elongation_pct: {value: 32, note: "at break; 9 % at yield"}
+  fracture_strain: {value: 0.28, src: est, note: "ln(1 + 0.32) from the elongation at break; the local strain in the neck is larger"}
+  compressive_MPa: {value: 68, note: "at 5 % strain; 20 / 35 / 68 MPa at 1 / 2 / 5 % (EN ISO 604)"}
+  flexural_MPa: {value: 91, note: "flexural strength (ISO 178)"}
+
+flow_stress:
+  model: none                      # task rule for polymers without a published fit; current schemas.py accepts only johnson_cook or null
+  yield_MPa: {value: 67, src: ensinger-2023-tecaform-ah-datasheet, note: "tension, 50 mm/min, 23 C"}
+  compressive_flow_MPa: {value: 68, src: ensinger-2023-tecaform-ah-datasheet, note: "at 5 % compressive strain"}
+  T_soft_degC: {value: 140, src: ensinger-2023-tecaform-ah-datasheet, note: "short-term service limit, used as the start of strong softening"}
+  T_melt_degC: {value: 166, src: ensinger-2023-tecaform-ah-datasheet, note: "crystalline melting peak (DSC)"}
+  note: "No Johnson-Cook or G'Sell-Jonas fit for POM-C was read. Cutting model: forces from the Kienzle values (Walter O1). For thermal softening of the shear zone scale the flow stress linearly from yield_MPa at 23 C to zero between T_soft and T_melt (shape assumed; only room-temperature strength was read). POM yield is strain-rate sensitive; no rate constants were read, so none are applied."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 150
+      mc: 0.2
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 300, src: est, note: "Walter gives no reference speed; a typical carbide speed for unfilled thermoplastics is assumed (Leitz shank routers run 10-40 m/s = 600-2400 m/min)"}
+      src: walter-2025-technical-compendium
+      note: "Walter machining group O1 (acetal/Delrin/Celcon listed as O1 on p. F31); p. F9 class value 'thermoplasts and thermosetting plastics without abrasive fillers', standard values for a neutral cutting edge geometry (hence rake_ref 0). One value for the whole class: no POM-specific kc1.1 or orthogonal cutting energy was read"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 150
+      mc: 0.2
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 150
+      src: est
+      note: "Walter O1 class value assumed to hold for sharp HSS as well (no tool-material dependence read); reference speed assumed"
+  mechanistic: []                  # no published end-milling calibration for POM-C was read
+  min_chip_thickness_ratio: {value: 0.4, src: est, note: "viscoelastic recovery of polymers under the edge radius is assumed to raise h_min/r_n above the ~0.2-0.3 of metals; no polymer measurement read"}
+  indentation_coeff_N_mm3: {value: 2.5e3, src: est, note: "aluminium placeholder 1.5e4 N/mm3 (al6061-t6, itself an estimate) scaled by an indentation-hardness ratio ~160 / ~930 MPa; POM ball-indentation hardness not read (PMMA's 175 MPa used as a proxy)"}
+  work_hardening:
+    src: est
+    note: "no strain-hardened layer is modelled for thermoplastics; the machined surface instead carries orientation and residual stress from heating (annealing is used in practice)"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:                          # tool-chip interface
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.25, src: est, range: [0.2, 0.35], note: "POM is a low-friction bearing polymer; dry polymer-on-steel values of 0.2-0.35 are typical (general knowledge, not read); rises sharply as the interface approaches the melt"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.25, src: est, note: "as for carbide (assumed)"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous             # ductile ribbon/curl below the melt; molten/smeared above it (extensions.chip)
+  segmentation: null
+  bue: null                        # no BUE; the polymer analogue is melt adhesion on the rake (see thermal_damage)
+  breakability: {value: medium, src: est, note: "POM forms continuous ribbons/curls that break moderately well; no quantitative source read"}
+  oxide_colours: null
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; T in min at VB_limit
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 2400
+    n: 0.3
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: unfilled POM is not abrasive and flank wear is slow; C set so that T = 60 min at vc = 700 m/min (general knowledge, not read). In practice the edge is replaced when rounding starts to cause heating, burrs and melt smear, hence the small VB_limit"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 500
+    n: 0.15
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 60 min at vc ~ 270 m/min assumed"
+tool_life_usui: []
+
+residual_stress: []                # extruded stock carries internal stresses (distortion after machining); no profile read
+
+skin:
+  src: est
+  note: "machined from extruded stock: no surface skin modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 240, src: ensinger-2024-tecaform-ah-phis, note: "decomposition onset (> 240 C); used as the burn/decomposition threshold of the surface and chips"}
+  white_layer_degC: null
+  melt_smear_degC: {value: 166, src: ensinger-2023-tecaform-ah-datasheet, note: "crystalline melting; strong softening and dimensional change from ~140 C (short-term service limit)"}
+
+ignition:
+  chip_ignition_degC: {value: 320, range: [320, 340], src: ensinger-2024-tecaform-ah-phis, note: "PHIS sect. 9 'flammability (solid, gas): 320-340 C'; lower bound used. Polymer chips are combustible, not pyrophoric like Mg/Ti fines"}
+
+composite: null
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  physical:
+    src: ensinger-2023-tecaform-ah-datasheet
+    notched_charpy_kJ_m2: {value: 8, note: "ISO 179-1eA; unit kJ/m2 has no suffix in cnctwin.units and passes through"}
+    service_temperature_degC: {value: 100, range: [100, 140], note: "long-term 100 C, short-term 140 C"}
+    water_absorption_pct: {value: 0.1, range: [0.05, 0.1], note: "24 h / 96 h at 23 C (ISO 62); upper value used"}
+  chip:
+    molten_above_degC: {value: 166, src: ensinger-2023-tecaform-ah-datasheet, note: "crystalline melt: chip and surface smear and weld back above this"}
+  hazards:
+    dust: {src: ensinger-2024-tecaform-ah-phis, note: "mechanical processing should generate as little dust as possible; local extraction or good ventilation; avoid dry sweeping; the general dust limit applies"}
+    fumes:
+      src: ensinger-2024-tecaform-ah-phis
+      formaldehyde_WEL_mg_m3: {value: 2.5, note: "8 h TWA (UK, 2 ppm) quoted in the PHIS; formaldehyde is released on strong overheating; ABEK-P3 filter if ventilation is insufficient; unit mg/m3 passes through unconverted"}
+  recommended:
+    vc_m_s: {value: [40, 60], src: leitz-2017-lexicon-ed7-ch11, note: "window, Leitz cutting-speed guide for thermoplastics, tools > 100 mm diameter (sawing 40-70 m/s); shank router cutters 10-40 m/s. Thermoplastics soften from around 60 C in general: chips melt and tools become sticky above the softening temperature (11.1.3)"}
+
+notes: "Unfilled POM-C stock (TECAFORM AH natural). Measured/catalogue: density, thermal and tensile/compressive data, Tg/Tm, decomposition and ignition (Ensinger datasheet and PHIS), Kienzle class value (Walter O1). Estimates: Poisson, flow-stress softening shape, h_min, K_sp, friction, chip breakability, all tool-life constants. Gaps: no POM-specific orthogonal cutting energy, friction against carbide or temperature-dependent yield was read."

@@ -1,0 +1,150 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/models/chips-*.yaml and docs/models/chips.md (cnctwin.chips). Read on 2026-11-03:
+# chemie-de-span and kws-bulk-material-table (web pages, values copied from the page); the journal
+# papers and books are the standard references of the equations used (equations and constants as
+# commonly reproduced; the cited page or table is named).
+entries:
+  haider-levenspiel-1989:
+    type: article
+    authors: "Haider, A.; Levenspiel, O."
+    title: "Drag coefficient and terminal velocity of spherical and nonspherical particles"
+    venue: "Powder Technology 58(1), 63-70"
+    year: 1989
+    doi: "10.1016/0032-5910(89)80008-7"
+    pages: "Eq. 10 and Table 3 (A, B, C, D as functions of sphericity)"
+  ranz-marshall-1952:
+    type: article
+    authors: "Ranz, W.E.; Marshall, W.R."
+    title: "Evaporation from drops"
+    venue: "Chemical Engineering Progress 48(3), 141-146 and 48(4), 173-180"
+    year: 1952
+    pages: "Nu = 2 + 0.6 Re^1/2 Pr^1/3"
+  ennis-1991-granulation:
+    type: article
+    authors: "Ennis, B.J.; Tardos, G.; Pfeffer, R."
+    title: "A microlevel-based characterization of granulation phenomena"
+    venue: "Powder Technology 65(1-3), 257-272"
+    year: 1991
+    doi: "10.1016/0032-5910(91)80189-P"
+    pages: "viscous Stokes number St_v = 8 rho v a / (9 mu) and critical St* = (1 + 1/e) ln(h/h_a)"
+  wilhelmy-1863:
+    type: article
+    authors: "Wilhelmy, L."
+    title: "Ueber die Abhaengigkeit der Capillaritaets-Constanten des Alkohols von Substanz und Gestalt des benetzten festen Koerpers"
+    venue: "Annalen der Physik und Chemie 119, 177-217"
+    year: 1863
+    pages: "meniscus force on a plate F = gamma P cos(theta)"
+  israelachvili-2011:
+    type: book
+    authors: "Israelachvili, J.N."
+    title: "Intermolecular and Surface Forces"
+    edition: 3
+    publisher: "Academic Press, Amsterdam"
+    year: 2011
+    pages: "Ch. 17, capillary force between a sphere and a flat F = 4 pi R gamma cos(theta)"
+  shields-1936:
+    type: report
+    authors: "Shields, A."
+    title: "Anwendung der Aehnlichkeitsmechanik und der Turbulenzforschung auf die Geschiebebewegung"
+    venue: "Mitteilungen der Preussischen Versuchsanstalt fuer Wasserbau und Schiffbau, Heft 26, Berlin"
+    year: 1936
+    pages: "critical dimensionless bed shear stress (Shields number) for incipient motion"
+  wong-parker-2006:
+    type: article
+    authors: "Wong, M.; Parker, G."
+    title: "Reanalysis and correction of bed-load relation of Meyer-Peter and Mueller using their own database"
+    venue: "Journal of Hydraulic Engineering 132(11), 1159-1168"
+    year: 2006
+    doi: "10.1061/(ASCE)0733-9429(2006)132:11(1159)"
+    pages: "q* = 3.97 (theta - 0.0495)^1.5"
+  kawakita-ludde-1971:
+    type: article
+    authors: "Kawakita, K.; Luedde, K.-H."
+    title: "Some considerations on powder compression equations"
+    venue: "Powder Technology 4(2), 61-68"
+    year: 1971
+    doi: "10.1016/0032-5910(71)80001-3"
+    pages: "C = (V0 - V)/V0 = a b P / (1 + b P)"
+  roberts-1999-screw:
+    type: article
+    authors: "Roberts, A.W."
+    title: "The influence of granular vortex motion on the volumetric performance of enclosed screw conveyors"
+    venue: "Powder Technology 104(1), 56-67"
+    year: 1999
+    pages: "material path angle in a rotating screw against a stationary casing; high-speed limit used for drill flutes"
+  mellinger-2003:
+    type: article
+    authors: "Mellinger, J.C.; Ozdoganlar, O.B.; DeVor, R.E.; Kapoor, S.G."
+    title: "Modeling chip-evacuation forces in drilling for various flute geometries"
+    venue: "Journal of Manufacturing Science and Engineering 125(3), 405-415"
+    year: 2003
+    note: "cited for the observation that chip-evacuation torque and thrust grow exponentially with hole depth (a reference list read on 2026-11-03 gives the same volume and pages with the year 2005); no coefficient of the paper is used"
+  brach-1991:
+    type: book
+    authors: "Brach, R.M."
+    title: "Mechanical Impact Dynamics: Rigid Body Collisions"
+    publisher: "Wiley, New York"
+    year: 1991
+    pages: "impulse-momentum collision with normal restitution and Coulomb tangential impulse ratio"
+  pope-2000:
+    type: book
+    authors: "Pope, S.B."
+    title: "Turbulent Flows"
+    publisher: "Cambridge University Press"
+    year: 2000
+    pages: "Ch. 5.1, round jet: u_c/u_J = B d/(x - x0), B = 5.8, spreading rate S = 0.094 (Table 5.1, Hussein, Capp and George 1994)"
+  schlichting-gersten-2017:
+    type: book
+    authors: "Schlichting, H.; Gersten, K."
+    title: "Boundary-Layer Theory"
+    edition: 9
+    publisher: "Springer, Berlin"
+    year: 2017
+    pages: "turbulent flat-plate skin friction c_f = 0.074 Re^-1/5"
+  schlunder-1984:
+    type: article
+    authors: "Schluender, E.U."
+    title: "Heat transfer to packed and stirred beds from the surface of immersed bodies"
+    venue: "Chemical Engineering and Processing 18(1), 31-53"
+    year: 1984
+    pages: "particle-to-wall contact heat transfer coefficient"
+  kazakov-1985:
+    type: book
+    authors: "Kazakov, N.F. (ed.)"
+    title: "Diffusion Bonding of Materials"
+    publisher: "Pergamon Press / Mir, Oxford and Moscow"
+    year: 1985
+    pages: "bonding temperatures of 0.5-0.8 of the melting temperature (K)"
+  jaky-1944:
+    type: article
+    authors: "Jaky, J."
+    title: "The coefficient of earth pressure at rest"
+    venue: "Journal of the Society of Hungarian Architects and Engineers 78(22), 355-358"
+    year: 1944
+    pages: "K0 = 1 - sin(phi)"
+  janssen-1895:
+    type: article
+    authors: "Janssen, H.A."
+    title: "Versuche ueber Getreidedruck in Silozellen"
+    venue: "Zeitschrift des Vereines Deutscher Ingenieure 39(35), 1045-1049"
+    year: 1895
+    pages: "exponential saturation of the wall-supported stress in a column of granular material"
+  chemie-de-span:
+    type: web
+    authors: "chemie.de (text of the German Wikipedia article 'Span (Zerspanen)')"
+    title: "Span - Spanformen und Spanraumzahl"
+    venue: "chemie.de Lexikon"
+    year: 2026
+    url: "https://www.chemie.de/lexikon/Span.html"
+    accessed: 2026-11-03
+    pages: "section Spanraumzahl: Bandspan > 100, Wirrspan > 100, Schraubenspan 60, kurzer Schraubenspan 30, Spiralspan 10, kurze Spanbruchstuecke 3"
+  kws-bulk-material-table:
+    type: web
+    authors: "KWS Manufacturing Company"
+    title: "Screw Conveyor Bulk Material Table"
+    venue: "KWS Engineering Guides"
+    year: 2026
+    url: "https://kwsmfg.com/engineering-guides/screw-conveyor/bulk-material-table"
+    accessed: 2026-11-03
+    pages: "Aluminum chips, dry and oily 7-15 lb/ft3; Bronze chips 30-50; Cast iron chips 130-200; Steel turnings (chips), crushed 100-150"

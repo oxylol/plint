@@ -1,0 +1,197 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/models/mdata-*.yaml and docs/models/calibration.md (machine data import, alignment
+# of measured and simulated time series, calibration by bounded least squares). Works already in
+# other bibliography files are cited by their key there (altintas-2012-mfg-automation, palmgren-1959,
+# harris-kotzalas-2007-bearings, bryan-1990-thermal-errors, mayr-2012-thermal-issues).
+entries:
+  # ------------------------------------------------------------------ data sources
+  ansi-mtc1-4-2018:
+    type: standard
+    authors: "MTConnect Institute"
+    title: "ANSI/MTC1.4-2018 MTConnect Standard, Version 1.4"
+    venue: "MTConnect Institute / ANSI, McLean VA"
+    year: 2018
+    url: "https://www.mtconnect.org/standard-download20181"
+    pages: "Part 1 protocol (probe, current, sample; from, count, nextSequence, firstSequence, lastSequence, instanceId; OUT_OF_RANGE), Part 2 device model (Linear, Rotary, Path, Controller), Part 3 streams (Samples, Events, Condition; Position, PathPosition, PathFeedrate, RotaryVelocity, SpindleSpeed (deprecated), Load, Line (deprecated), LineNumber, Block, Program, ToolNumber, Execution; units MILLIMETER, REVOLUTION/MINUTE, PERCENT, CELSIUS; UNAVAILABLE)"
+  mtconnect-2-2-2023:
+    type: standard
+    authors: "MTConnect Institute"
+    title: "MTConnect Standard, Version 2.2 (Fundamentals, Device Information Model, Observation Information Model, Interface Interaction Model)"
+    venue: "MTConnect Institute, McLean VA (docs.mtconnect.org)"
+    year: 2023
+    url: "https://docs.mtconnect.org/"
+    pages: "TIME_SERIES representation (sampleCount, sampleRate; timestamp of the last observation), LineLabel, ToolAssetId, coordinateSystem MACHINE/WORK, Condition Normal/Warning/Fault/Unavailable with nativeCode"
+  opc-10000-11-2022:
+    type: standard
+    authors: "OPC Foundation"
+    title: "OPC 10000-11: OPC Unified Architecture, Part 11: Historical Access, Release 1.05"
+    venue: "OPC Foundation, Scottsdale AZ (also IEC 62541-11)"
+    year: 2022
+    url: "https://reference.opcfoundation.org/Core/Part11/v105/docs/"
+    pages: "HistoryRead with ReadRawModifiedDetails (start, end, numValuesPerNode, continuation points), SourceTimestamp and ServerTimestamp"
+  opc-10000-8-2022:
+    type: standard
+    authors: "OPC Foundation"
+    title: "OPC 10000-8: OPC Unified Architecture, Part 8: Data Access, Release 1.05"
+    venue: "OPC Foundation, Scottsdale AZ (also IEC 62541-8)"
+    year: 2022
+    url: "https://reference.opcfoundation.org/Core/Part8/v105/docs/"
+    pages: "AnalogItemType, EngineeringUnits property (EUInformation with unitId encoded from the UNECE common code, 5.6.3)"
+  unece-rec20-2021:
+    type: standard
+    authors: "UN/CEFACT"
+    title: "Recommendation No. 20: Codes for Units of Measure Used in International Trade, Revision 17"
+    venue: "United Nations Economic Commission for Europe, Geneva"
+    year: 2021
+    url: "https://unece.org/trade/uncefact/cl-recommendations"
+    pages: "common codes MMT, MTR, CEL, KEL, WTT, KWT, P1, C62, RPM, NEW, NU, MTS, C16, 2X, AMP, VLT, SEC, MIN, HUR, DD, C81, HTZ"
+  asyncua-2-1-software:
+    type: software
+    authors: "FreeOpcUa contributors"
+    title: "opcua-asyncio (asyncua) 2.1.0: OPC UA client and server library for Python"
+    url: "https://github.com/FreeOpcUa/opcua-asyncio"
+    accessed: 2026-11-03
+    pages: "Client.get_node, Node.read_raw_history (continuation points handled), Node.get_children, EngineeringUnits property"
+  fanuc-focas2-reference:
+    type: manual
+    authors: "FANUC Corporation"
+    title: "FANUC Open CNC API Specifications (FOCAS1/FOCAS2 Library), function reference"
+    venue: "FANUC Corporation, Oshino-mura (library documentation shipped with FOCAS2)"
+    accessed: 2026-11-03
+    pages: "cnc_rdspload (ODBSPN, load meter %), cnc_rdspmeter (ODBSPLOAD: LOADELM data/dec/unit/name for load meter and motor speed), cnc_absolute / cnc_machine / cnc_relative / cnc_distance (ODBAXIS in least input increments), cnc_rdposition (POSELM data/dec/unit), cnc_acts, cnc_actf, cnc_rdsvmeter, cnc_srvdelay, cnc_rdblkcount, cnc_rdseqnum (ODBSEQ), cnc_rdprgnum (ODBPRO), cnc_modal, cnc_statinfo (ODBST aut, run), cnc_rdalmmsg / cnc_rdalmmsg2 (ODBALMMSG alm_no, type, axis, alm_msg; type 0 SW ... 19 PC), cnc_diagnoss"
+    note: "FOCAS is a proprietary library and is not used by CNC Twin; only the record layouts that FOCAS-based collectors write are read."
+  iso-8601-1-2019:
+    type: standard
+    authors: "ISO"
+    title: "ISO 8601-1:2019 Date and time - Representations for information interchange - Part 1: Basic rules"
+    venue: "International Organization for Standardization, Geneva"
+    year: 2019
+  # ------------------------------------------------------------------ alignment and statistics
+  knapp-carter-1976:
+    type: article
+    authors: "Knapp, C.H.; Carter, G.C."
+    title: "The generalized correlation method for estimation of time delay"
+    venue: "IEEE Transactions on Acoustics, Speech, and Signal Processing 24(4), 320-327"
+    year: 1976
+    doi: "10.1109/TASSP.1976.1162830"
+    pages: "delay = argmax of the cross-correlation; sub-sample peak by interpolation; ambiguity from secondary peaks"
+  padfield-2012-masked-ncc:
+    type: article
+    authors: "Padfield, D."
+    title: "Masked object registration in the Fourier domain"
+    venue: "IEEE Transactions on Image Processing 21(5), 2706-2718"
+    year: 2012
+    doi: "10.1109/TIP.2011.2181402"
+    pages: "normalised cross-correlation of signals with masks (gaps) from six FFT correlations; the overlap-normalised coefficient at every lag"
+  needleman-wunsch-1970:
+    type: article
+    authors: "Needleman, S.B.; Wunsch, C.D."
+    title: "A general method applicable to the search for similarities in the amino acid sequence of two proteins"
+    venue: "Journal of Molecular Biology 48(3), 443-453"
+    year: 1970
+    doi: "10.1016/0022-2836(70)90057-4"
+    pages: "global alignment of two ordered sequences with gaps by dynamic programming"
+  huber-1981:
+    type: book
+    authors: "Huber, P.J."
+    title: "Robust Statistics"
+    publisher: "Wiley, New York"
+    year: 1981
+    doi: "10.1002/0471725250"
+    pages: "Huber's psi with k = 1.345 (95 % efficiency at the normal model); MAD scale, MAD / 0.6745 consistent for the normal standard deviation"
+  jcgm-100-2008:
+    type: standard
+    authors: "JCGM (BIPM, IEC, IFCC, ILAC, ISO, IUPAC, IUPAP, OIML)"
+    title: "JCGM 100:2008 Evaluation of measurement data - Guide to the expression of uncertainty in measurement (GUM)"
+    venue: "Bureau International des Poids et Mesures, Sevres"
+    year: 2008
+    pages: "4.3.7 and F.2.2.1: a reading quantised with resolution q has standard uncertainty q / sqrt(12) (rectangular distribution); 6.2-6.3 coverage, expanded uncertainty near 95 %"
+  # ------------------------------------------------------------------ least squares
+  branch-coleman-li-1999:
+    type: article
+    authors: "Branch, M.A.; Coleman, T.F.; Li, Y."
+    title: "A subspace, interior, and conjugate gradient method for large-scale bound-constrained minimization problems"
+    venue: "SIAM Journal on Scientific Computing 21(1), 1-23"
+    year: 1999
+    doi: "10.1137/S1064827595289108"
+    pages: "trust region reflective algorithm (scipy.optimize.least_squares method trf)"
+  virtanen-2020-scipy:
+    type: article
+    authors: "Virtanen, P.; Gommers, R.; Oliphant, T.E.; et al."
+    title: "SciPy 1.0: fundamental algorithms for scientific computing in Python"
+    venue: "Nature Methods 17, 261-272"
+    year: 2020
+    doi: "10.1038/s41592-019-0686-2"
+    pages: "scipy.optimize.least_squares (bounds, x_scale, diff_step, max_nfev default 100 n for trf), scipy.special.betainc, scipy.stats.t"
+  bates-watts-1988:
+    type: book
+    authors: "Bates, D.M.; Watts, D.G."
+    title: "Nonlinear Regression Analysis and Its Applications"
+    publisher: "Wiley, New York"
+    year: 1988
+    doi: "10.1002/9780470316757"
+    isbn: "978-0-471-81643-0"
+    pages: "ch. 2.3: linear approximation inference, s^2 = S(theta)/(N - P), covariance s^2 (J'J)^-1, t intervals; ch. 7: curvature, when linearisation intervals mislead"
+  seber-wild-2003:
+    type: book
+    authors: "Seber, G.A.F.; Wild, C.J."
+    title: "Nonlinear Regression"
+    publisher: "Wiley-Interscience, Hoboken NJ"
+    year: 2003
+    doi: "10.1002/0471725315"
+    pages: "ch. 5: asymptotic (Wald) confidence regions and profile methods; ch. 3.2: ill-conditioning and parameter redundancy"
+  # ------------------------------------------------------------------ physical models calibrated
+  kienzle-1952:
+    type: article
+    authors: "Kienzle, O."
+    title: "Die Bestimmung von Kraeften und Leistungen an spanenden Werkzeugen und Werkzeugmaschinen"
+    venue: "VDI-Z 94(11/12), 299-305"
+    year: 1952
+    pages: "specific cutting force kc = kc1.1 h^-mc (h in mm, b = 1 mm reference)"
+  martellotti-1941:
+    type: article
+    authors: "Martellotti, M.E."
+    title: "An analysis of the milling process"
+    venue: "Transactions of the ASME 63, 677-700"
+    year: 1941
+    pages: "trochoidal tooth path; chip thickness h = fz sin(phi) to first order in fz / R"
+  taylor-1907:
+    type: article
+    authors: "Taylor, F.W."
+    title: "On the art of cutting metals"
+    venue: "Transactions of the American Society of Mechanical Engineers 28, 31-350"
+    year: 1907
+    pages: "v T^n = C"
+  usui-1984-tool-wear:
+    type: article
+    authors: "Usui, E.; Shirakashi, T.; Kitagawa, T."
+    title: "Analytical prediction of cutting tool wear"
+    venue: "Wear 100(1-3), 129-151"
+    year: 1984
+    doi: "10.1016/0043-1648(84)90010-3"
+    pages: "dW/dt = A sigma_n V_s exp(-B / theta)"
+  yen-2004-tool-wear-fem:
+    type: article
+    authors: "Yen, Y.-C.; Soehner, J.; Lilly, B.; Altan, T."
+    title: "Estimation of tool wear in orthogonal cutting using the finite element analysis"
+    venue: "Journal of Materials Processing Technology 146(1), 82-91"
+    year: 2004
+    doi: "10.1016/S0924-0136(03)00847-1"
+    pages: "Usui wear rate integrated on the flank; growth of the wear land from the normal wear depth and the tool angles"
+  ellis-2012-control-design:
+    type: book
+    authors: "Ellis, G."
+    title: "Control System Design Guide, 4th edition"
+    publisher: "Butterworth-Heinemann, Waltham MA"
+    year: 2012
+    doi: "10.1016/C2010-0-65994-3"
+    pages: "ch. 17 (position loops): following error of a proportional position loop v (1 - K_ff) / K_p; velocity feed-forward"
+  armstrong-1994-friction:
+    type: article
+    authors: "Armstrong-Helouvry, B.; Dupont, P.; Canudas de Wit, C."
+    title: "A survey of models, analysis tools and compensation methods for the control of machines with friction"
+    venue: "Automatica 30(7), 1083-1138"
+    year: 1994
+    doi: "10.1016/0005-1098(94)90209-7"
+    pages: "Coulomb plus viscous friction F = F_c sign(v) + F_v v as the static friction model of machine axes"

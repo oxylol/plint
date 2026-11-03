@@ -1,0 +1,520 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-dotriple-mill-tasn13
+maker: Tungaloy Corporation
+series: DoTriple-Mill TASN13 45 deg face mill with double-sided SNMU1307 inserts
+src: tungaloy-2026-503g-dotriple-mill
+notes: Indexable 45 deg face mill (comparable class to CoroMill 345; Sandvik pages could not be read). Each item is a body with a full set of SNMU1307ANEN-MJ inserts in the grade named.
+items:
+- id: tungaloy-tasn13m050b220r05-snmu1307-ah3225
+  order_code: TASN13M050B22.0R05 + 5 x SNMU1307ANEN-MJ AH3225
+  type: face_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 50
+    flutes: 5
+    cutting_length_mm: 6
+    overall_length_mm: 40
+    neck: null
+    shank: {diameter_mm: 22, form: arbor, note: 'bore DCONMS 22 mm; contact face DCSFMS 41 mm, counterbore depth CBDP 20 mm, keyway width KWW 10.4 mm, keyway depth b 6.3 mm (p. 10)'}
+    corner_radius_mm: 0.5
+    centre_cutting: false
+    inserts:
+      count: 5
+      iso_code: SNMU1307ANEN-MJ
+      ic_mm: 13
+      nose_radius_mm: 0.5
+      edge_length_mm: 9.4
+      wiper: true
+      axial_rake_deg: 6.0
+      radial_rake_deg:
+        value: -6.55
+        range: [-6.8, -6.3]
+        note: GAMF = -6.8 ~ -6.3 deg as printed (p. 10/11); value = midpoint
+      lead_angle_deg: 45
+      positions_deg:
+        value: [0.0, 72.0, 144.0, 216.0, 288.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-503g-dotriple-mill
+      page: 'p. 12 (SNMU-MJ: RE, APMX, LE, IC, S, BS); p. 10 GAMP/GAMF; p. 6: double-sided, eight cutting edges'
+      note: thickness_mm = 7; max_depth_mm = 6; wiper_flat_mm = 2; edges = 8
+    coolant_holes: {count: 5, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (p. 10); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 10 TASN13 body table (DC, DC2, DC3, CICT, DCSFMS, LF, DCONMS, CBDP, KWW, b, WT), KAPR 45 deg
+    note: 'max_diameter_mm = 64.0 (source: outer diameter with square inserts = DC + 14.0 (figure p. 10)); other_inserts = same pocket accepts octagonal ONMU0507 (DC2 = cutting dia, ap 3.4 mm) and round RNMU1307 (DC3) inserts (p. 10/12)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: 400
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C / C15, 200-300 HB (as printed)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.5}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: high carbon and alloy steel S55C/SCM440, C55/42CrMo4, 150-300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: H
+    material_hint: hardened steel SKD61 / X40CrMoV5-1, 40-50 HRC (AH3225 listed for fracture resistance; first choice AH8015) (e.g. h13-50hrc)
+    operation: [face_milling]
+    vc_m_min: {min: 80, max: 130}
+    fz_mm: {min: 0.05, max: 0.2}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed (8 edges per SNMU insert, p. 6), not reground'}
+  note: 45 deg face mill, bore type, screw clamp (CSPB-4, 3.5 N m, p. 10); R = right hand; DC is the cutting diameter with square inserts; max rpm and price not published in 503-G
+- id: tungaloy-tasn13m063b220r06-snmu1307-ah3225
+  order_code: TASN13M063B22.0R06 + 6 x SNMU1307ANEN-MJ AH3225
+  type: face_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 63
+    flutes: 6
+    cutting_length_mm: 6
+    overall_length_mm: 40
+    neck: null
+    shank: {diameter_mm: 22, form: arbor, note: 'bore DCONMS 22 mm; contact face DCSFMS 47 mm, counterbore depth CBDP 20 mm, keyway width KWW 10.4 mm, keyway depth b 6.3 mm (p. 10)'}
+    corner_radius_mm: 0.5
+    centre_cutting: false
+    inserts:
+      count: 6
+      iso_code: SNMU1307ANEN-MJ
+      ic_mm: 13
+      nose_radius_mm: 0.5
+      edge_length_mm: 9.4
+      wiper: true
+      axial_rake_deg: 6.0
+      radial_rake_deg:
+        value: -6.55
+        range: [-6.8, -6.3]
+        note: GAMF = -6.8 ~ -6.3 deg as printed (p. 10/11); value = midpoint
+      lead_angle_deg: 45
+      positions_deg:
+        value: [0.0, 60.0, 120.0, 180.0, 240.0, 300.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-503g-dotriple-mill
+      page: 'p. 12 (SNMU-MJ: RE, APMX, LE, IC, S, BS); p. 10 GAMP/GAMF; p. 6: double-sided, eight cutting edges'
+      note: thickness_mm = 7; max_depth_mm = 6; wiper_flat_mm = 2; edges = 8
+    coolant_holes: {count: 6, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (p. 10); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 10 TASN13 body table (DC, DC2, DC3, CICT, DCSFMS, LF, DCONMS, CBDP, KWW, b, WT), KAPR 45 deg
+    note: 'max_diameter_mm = 77.0 (source: outer diameter with square inserts = DC + 14.0 (figure p. 10)); other_inserts = same pocket accepts octagonal ONMU0507 (DC2 = cutting dia, ap 3.4 mm) and round RNMU1307 (DC3) inserts (p. 10/12)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: 600
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C / C15, 200-300 HB (as printed)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.5}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: high carbon and alloy steel S55C/SCM440, C55/42CrMo4, 150-300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: H
+    material_hint: hardened steel SKD61 / X40CrMoV5-1, 40-50 HRC (AH3225 listed for fracture resistance; first choice AH8015) (e.g. h13-50hrc)
+    operation: [face_milling]
+    vc_m_min: {min: 80, max: 130}
+    fz_mm: {min: 0.05, max: 0.2}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed (8 edges per SNMU insert, p. 6), not reground'}
+  note: 45 deg face mill, bore type, screw clamp (CSPB-4, 3.5 N m, p. 10); R = right hand; DC is the cutting diameter with square inserts; max rpm and price not published in 503-G
+- id: tungaloy-tasn13m080b270r08-snmu1307-ah3225
+  order_code: TASN13M080B27.0R08 + 8 x SNMU1307ANEN-MJ AH3225
+  type: face_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 80
+    flutes: 8
+    cutting_length_mm: 6
+    overall_length_mm: 50
+    neck: null
+    shank: {diameter_mm: 27, form: arbor, note: 'bore DCONMS 27 mm; contact face DCSFMS 58 mm, counterbore depth CBDP 22 mm, keyway width KWW 12.4 mm, keyway depth b 7 mm (p. 10)'}
+    corner_radius_mm: 0.5
+    centre_cutting: false
+    inserts:
+      count: 8
+      iso_code: SNMU1307ANEN-MJ
+      ic_mm: 13
+      nose_radius_mm: 0.5
+      edge_length_mm: 9.4
+      wiper: true
+      axial_rake_deg: 6.0
+      radial_rake_deg:
+        value: -6.55
+        range: [-6.8, -6.3]
+        note: GAMF = -6.8 ~ -6.3 deg as printed (p. 10/11); value = midpoint
+      lead_angle_deg: 45
+      positions_deg:
+        value: [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-503g-dotriple-mill
+      page: 'p. 12 (SNMU-MJ: RE, APMX, LE, IC, S, BS); p. 10 GAMP/GAMF; p. 6: double-sided, eight cutting edges'
+      note: thickness_mm = 7; max_depth_mm = 6; wiper_flat_mm = 2; edges = 8
+    coolant_holes: {count: 8, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (p. 10); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 10 TASN13 body table (DC, DC2, DC3, CICT, DCSFMS, LF, DCONMS, CBDP, KWW, b, WT), KAPR 45 deg
+    note: 'max_diameter_mm = 94.0 (source: outer diameter with square inserts = DC + 14.0 (figure p. 10)); other_inserts = same pocket accepts octagonal ONMU0507 (DC2 = cutting dia, ap 3.4 mm) and round RNMU1307 (DC3) inserts (p. 10/12)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: 1100
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C / C15, 200-300 HB (as printed)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.5}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: high carbon and alloy steel S55C/SCM440, C55/42CrMo4, 150-300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: H
+    material_hint: hardened steel SKD61 / X40CrMoV5-1, 40-50 HRC (AH3225 listed for fracture resistance; first choice AH8015) (e.g. h13-50hrc)
+    operation: [face_milling]
+    vc_m_min: {min: 80, max: 130}
+    fz_mm: {min: 0.05, max: 0.2}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed (8 edges per SNMU insert, p. 6), not reground'}
+  note: 45 deg face mill, bore type, screw clamp (CSPB-4, 3.5 N m, p. 10); R = right hand; DC is the cutting diameter with square inserts; max rpm and price not published in 503-G
+- id: tungaloy-tasn13m100b320r08-snmu1307-ah3225
+  order_code: TASN13M100B32.0R08 + 8 x SNMU1307ANEN-MJ AH3225
+  type: face_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 100
+    flutes: 8
+    cutting_length_mm: 6
+    overall_length_mm: 50
+    neck: null
+    shank: {diameter_mm: 32, form: arbor, note: 'bore DCONMS 32 mm; contact face DCSFMS 60 mm, counterbore depth CBDP 28.5 mm, keyway width KWW 14.4 mm, keyway depth b 8 mm (p. 10)'}
+    corner_radius_mm: 0.5
+    centre_cutting: false
+    inserts:
+      count: 8
+      iso_code: SNMU1307ANEN-MJ
+      ic_mm: 13
+      nose_radius_mm: 0.5
+      edge_length_mm: 9.4
+      wiper: true
+      axial_rake_deg: 6.0
+      radial_rake_deg:
+        value: -6.55
+        range: [-6.8, -6.3]
+        note: GAMF = -6.8 ~ -6.3 deg as printed (p. 10/11); value = midpoint
+      lead_angle_deg: 45
+      positions_deg:
+        value: [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-503g-dotriple-mill
+      page: 'p. 12 (SNMU-MJ: RE, APMX, LE, IC, S, BS); p. 10 GAMP/GAMF; p. 6: double-sided, eight cutting edges'
+      note: thickness_mm = 7; max_depth_mm = 6; wiper_flat_mm = 2; edges = 8
+    coolant_holes: {count: 8, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (p. 10); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 10 TASN13 body table (DC, DC2, DC3, CICT, DCSFMS, LF, DCONMS, CBDP, KWW, b, WT), KAPR 45 deg
+    note: 'max_diameter_mm = 114.0 (source: outer diameter with square inserts = DC + 14.0 (figure p. 10)); other_inserts = same pocket accepts octagonal ONMU0507 (DC2 = cutting dia, ap 3.4 mm) and round RNMU1307 (DC3) inserts (p. 10/12)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: 1400
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C / C15, 200-300 HB (as printed)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.5}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: high carbon and alloy steel S55C/SCM440, C55/42CrMo4, 150-300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: H
+    material_hint: hardened steel SKD61 / X40CrMoV5-1, 40-50 HRC (AH3225 listed for fracture resistance; first choice AH8015) (e.g. h13-50hrc)
+    operation: [face_milling]
+    vc_m_min: {min: 80, max: 130}
+    fz_mm: {min: 0.05, max: 0.2}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed (8 edges per SNMU insert, p. 6), not reground'}
+  note: 45 deg face mill, bore type, screw clamp (CSPB-4, 3.5 N m, p. 10); R = right hand; DC is the cutting diameter with square inserts; max rpm and price not published in 503-G
+- id: tungaloy-tasn13m125b400r10-snmu1307-ah3225
+  order_code: TASN13M125B40.0R10 + 10 x SNMU1307ANEN-MJ AH3225
+  type: face_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  geometry:
+    diameter_mm: 125
+    flutes: 10
+    cutting_length_mm: 6
+    overall_length_mm: 63
+    neck: null
+    shank: {diameter_mm: 40, form: arbor, note: 'bore DCONMS 40 mm; contact face DCSFMS 71 mm, counterbore depth CBDP 32 mm, keyway width KWW 16.4 mm, keyway depth b 9 mm (p. 10)'}
+    corner_radius_mm: 0.5
+    centre_cutting: false
+    inserts:
+      count: 10
+      iso_code: SNMU1307ANEN-MJ
+      ic_mm: 13
+      nose_radius_mm: 0.5
+      edge_length_mm: 9.4
+      wiper: true
+      axial_rake_deg: 6.0
+      radial_rake_deg:
+        value: -6.55
+        range: [-6.8, -6.3]
+        note: GAMF = -6.8 ~ -6.3 deg as printed (p. 10/11); value = midpoint
+      lead_angle_deg: 45
+      positions_deg:
+        value: [0.0, 36.0, 72.0, 108.0, 144.0, 180.0, 216.0, 252.0, 288.0, 324.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-503g-dotriple-mill
+      page: 'p. 12 (SNMU-MJ: RE, APMX, LE, IC, S, BS); p. 10 GAMP/GAMF; p. 6: double-sided, eight cutting edges'
+      note: thickness_mm = 7; max_depth_mm = 6; wiper_flat_mm = 2; edges = 8
+    coolant_holes: {count: 10, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (p. 10); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 10 TASN13 body table (DC, DC2, DC3, CICT, DCSFMS, LF, DCONMS, CBDP, KWW, b, WT), KAPR 45 deg
+    note: 'max_diameter_mm = 139.0 (source: outer diameter with square inserts = DC + 14.0 (figure p. 10)); other_inserts = same pocket accepts octagonal ONMU0507 (DC2 = cutting dia, ap 3.4 mm) and round RNMU1307 (DC3) inserts (p. 10/12)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: 2300
+  cutting_data:
+  - iso_group: P
+    material_hint: low carbon steel S15C / C15, 200-300 HB (as printed)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.5}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: high carbon and alloy steel S55C/SCM440, C55/42CrMo4, 150-300 HB (e.g. aisi1045, aisi4140-qt30)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: P
+    material_hint: prehardened steel NAK80/PX5, 30-40 HRC
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 200}
+    fz_mm: {min: 0.1, max: 0.4}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: H
+    material_hint: hardened steel SKD61 / X40CrMoV5-1, 40-50 HRC (AH3225 listed for fracture resistance; first choice AH8015) (e.g. h13-50hrc)
+    operation: [face_milling]
+    vc_m_min: {min: 80, max: 130}
+    fz_mm: {min: 0.05, max: 0.2}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH3225, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed (8 edges per SNMU insert, p. 6), not reground'}
+  note: 45 deg face mill, bore type, screw clamp (CSPB-4, 3.5 N m, p. 10); R = right hand; DC is the cutting diameter with square inserts; max rpm and price not published in 503-G
+- id: tungaloy-tasn13m080b270r08-snmu1307-ah8015
+  order_code: TASN13M080B27.0R08 + 8 x SNMU1307ANEN-MJ AH8015
+  type: face_mill
+  hand: right
+  tool_material: {class: carbide, grade: AH8015 (PVD coated carbide), id: carbide-k20-6co, src: est, note: 'AH8015: ''dedicated carbide substrate with excellent wear resistance'' for cast iron, HRSA and hardened steel (506-G p. 4); K20-type substrate assumed'}
+  coating: {id: altin, src: est, note: 'AH8015: ''PVD grade featuring high aluminum-content multilayered coating'' (506-G p. 4); mapped to altin (Al-rich)'}
+  geometry:
+    diameter_mm: 80
+    flutes: 8
+    cutting_length_mm: 6
+    overall_length_mm: 50
+    neck: null
+    shank: {diameter_mm: 27, form: arbor, note: 'bore DCONMS 27 mm; contact face DCSFMS 58 mm, counterbore depth CBDP 22 mm, keyway width KWW 12.4 mm, keyway depth b 7 mm (p. 10)'}
+    corner_radius_mm: 0.5
+    centre_cutting: false
+    inserts:
+      count: 8
+      iso_code: SNMU1307ANEN-MJ
+      ic_mm: 13
+      nose_radius_mm: 0.5
+      edge_length_mm: 9.4
+      wiper: true
+      axial_rake_deg: 6.0
+      radial_rake_deg:
+        value: -6.55
+        range: [-6.8, -6.3]
+        note: GAMF = -6.8 ~ -6.3 deg as printed (p. 10/11); value = midpoint
+      lead_angle_deg: 45
+      positions_deg:
+        value: [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
+        src: est
+        note: equal pitch assumed (not published)
+      src: tungaloy-2026-503g-dotriple-mill
+      page: 'p. 12 (SNMU-MJ: RE, APMX, LE, IC, S, BS); p. 10 GAMP/GAMF; p. 6: double-sided, eight cutting edges'
+      note: thickness_mm = 7; max_depth_mm = 6; wiper_flat_mm = 2; edges = 8
+    coolant_holes: {count: 8, diameter_mm: 1.0, exit: flute, src: est, note: '''Air hole: With'' (p. 10); one hole per insert pocket and 1.0 mm diameter assumed (count and size not published)'}
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 10 TASN13 body table (DC, DC2, DC3, CICT, DCSFMS, LF, DCONMS, CBDP, KWW, b, WT), KAPR 45 deg
+    note: 'max_diameter_mm = 94.0 (source: outer diameter with square inserts = DC + 14.0 (figure p. 10)); other_inserts = same pocket accepts octagonal ONMU0507 (DC2 = cutting dia, ap 3.4 mm) and round RNMU1307 (DC3) inserts (p. 10/12)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: 1100
+  cutting_data:
+  - iso_group: K
+    material_hint: grey cast iron FC250 / GG250, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [face_milling]
+    vc_m_min: {min: 100, max: 250}
+    fz_mm: {min: 0.1, max: 0.5}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH8015, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: K
+    material_hint: ductile cast iron FCD600 / GGG600, 150-250 HB
+    operation: [face_milling]
+    vc_m_min: {min: 80, max: 200}
+    fz_mm: {min: 0.1, max: 0.5}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH8015, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: S
+    material_hint: titanium alloys Ti-6Al-4V, <= 40 HRC (AH8015 listed for wear resistance; first choice AH3135) (e.g. ti6al4v)
+    operation: [face_milling]
+    vc_m_min: {min: 30, max: 60}
+    fz_mm: {min: 0.1, max: 0.3}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH8015, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: S
+    material_hint: heat-resistant alloys Inconel 718, <= 40 HRC (e.g. inconel718)
+    operation: [face_milling]
+    vc_m_min: {min: 10, max: 40}
+    fz_mm: {min: 0.05, max: 0.15}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH8015, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: H
+    material_hint: hardened steel SKD61 / X40CrMoV5-1, 40-50 HRC (e.g. h13-50hrc)
+    operation: [face_milling]
+    vc_m_min: {min: 80, max: 130}
+    fz_mm: {min: 0.05, max: 0.2}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH8015, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  - iso_group: H
+    material_hint: hardened steel SKD11 / X153CrMoV12, 50-60 HRC (e.g. d2-60hrc)
+    operation: [face_milling]
+    vc_m_min: {min: 50, max: 70}
+    fz_mm: {min: 0.03, max: 0.1}
+    ap_max_mm: 6
+    src: tungaloy-2026-503g-dotriple-mill
+    page: p. 13 STANDARD CUTTING CONDITIONS, SNMU/SNGU/ONMU/ONGU table, chip-breaker MJ
+    note: grade AH8015, chip-breaker MJ; ap <= APMX 6 mm (SNMU1307, p. 12); ae limit not published
+  price_eur: null
+  regrinds: {value: 0, src: est, note: 'indexable: inserts are indexed (8 edges per SNMU insert, p. 6), not reground'}
+  note: 45 deg face mill, bore type, screw clamp (CSPB-4, 3.5 N m, p. 10); R = right hand; DC is the cutting diameter with square inserts; max rpm and price not published in 503-G

@@ -1,0 +1,325 @@
+# DMG MORI DMU 50 3rd generation, 5-axis universal machining centre with NC swivel rotary table
+# (B swivel -35/+110 deg, C 360 deg), SIEMENS SINUMERIK 840D sl version. Mechanics, spindle, geometry
+# and all non-controller values are identical to dmg-dmu50-3rd.yaml (HEIDENHAIN TNC 640 version);
+# the brochure lists both controls (dmgmori-dmu50-3rd-2018 p. 11).
+# Frames: base origin = C-axis centre on the table top at B = 0 with X = Y = 0; +x right, +y toward
+# the column, +z up. Cross-slide layout assumed: X and Y move the table, Z moves the spindle head.
+format: cnctwin-machine
+version: 1
+id: dmg-dmu50-3rd-siemens
+maker: "DMG MORI"
+model: "DMU 50 3rd Generation (SIEMENS 840D sl)"
+same_mechanics_as: dmg-dmu50-3rd
+type: five_axis_mill
+src: dmgmori-dmu50-3rd-2018
+
+controller:
+  dialect: siemens840d
+  model: "SIEMENS SINUMERIK 840D solution line (ERGOline 21.5 in multi-touch, CELOS)"
+  alarms: siemens-840d-sl
+  ipo_period_ms: {value: 2.0, src: est, note: "IPO cycle is set by the machine builder (typically 1-4 ms); not published"}
+  block_processing_ms: {value: 1.0, src: est, note: "assumed"}
+  lookahead_blocks: {value: 500, src: est, note: "look-ahead depth with CYCLE832 / COMPCAD, assumed"}
+  least_input_increment_mm: {value: 0.001, src: est, note: "default input resolution 1 um (machine data dependent)"}
+  least_input_increment_deg: {value: 0.001, src: est}
+  max_feed_mm_min: {value: 42000, src: est, note: "only the 42 m/min rapid is published; max programmable feed assumed equal"}
+  rapid_mm_min: {X: 42000, Y: 42000, Z: 42000}
+  smoothing:
+    - {code: "CYCLE832(0.05,_ROUGH,1)", name: rough, tolerance_mm: 0.05, src: est, note: "CYCLE832 high-speed settings (tolerance + technology) switching G642/G645, COMPCAD/COMPSURF, FFWON, SOFT; tolerance values are typical user choices"}
+    - {code: "CYCLE832(0.02,_SEMIFIN,1)", name: medium, tolerance_mm: 0.02, src: est}
+    - {code: "CYCLE832(0.005,_FINISH,1)", name: finish, tolerance_mm: 0.005, src: est}
+  five_axis: {tcp: "TRAORI / TRAFOOF", tilted_plane: "CYCLE800", src: est, note: "SINUMERIK syntax names; not read in a source this session"}
+  corner_default: {value: exact_stop, src: est, note: "G60 is the SINUMERIK default unless the machine builder sets G64 in machine data; assumed"}
+  in_position_mm: {value: 0.002, src: est, note: "linear scales on all axes, tight exact-stop fine window assumed"}
+  rapid_override_steps_pct: {value: [0, 100], src: est}
+  feed_override_range_pct: {value: [0, 120], src: est}
+  tool_life_management: {value: true, src: est}
+  probing: {value: true, src: est, note: "measuring cycles standard; probe hardware is an option"}
+axes:
+  X:
+    type: linear
+    travel_mm: {value: [-325, 325], src: est, note: "650 mm travel published; machine-coordinate origin assumed at the C axis"}
+    rapid_mm_min: 42000
+    max_feed_mm_min: {value: 42000, src: est}
+    accel_m_s2: {value: 4.0, src: est, note: "not in the brochure; cross slide + swivel rotary table + 300 kg part vs 4.8 kN published thrust gives ~4.4 m/s2 at full load"}
+    jerk_m_s3: {value: 80, src: est}
+    servo:
+      kv_1_s: {value: 45, src: est, note: "direct-driven ballscrews with linear scales (brochure p. 4); typical closed-loop gains 30-60 1/s"}
+      feedforward: {value: 0.98, src: est}
+      velocity_bw_Hz: {value: 80, src: est}
+    backlash_um: {value: 0.5, src: est, note: "closed loop on linear scales (brochure p. 4) removes screw backlash from the position"}
+    reversal_spike_um: {value: 2, src: est, note: "friction quadrant glitch remains with scales"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 20, length_mm: 1100, fixed_end: motor, cooled_nut: true, src: est, note: "cooled ball-screw nuts and bearings are published (brochure p. 4); size/lead assumed (42 m/min at 2100 rpm)"}
+    positioning: {accuracy_um: 6, repeatability_um: 3, src: est, note: "ISO 230-2 values not published in the 2018 brochure; typical for scale-equipped machines of this class"}
+    motor_force_N: 4800
+    moving_mass_kg: {value: 800, src: est, note: "X slide + swivel rotary table (cross-slide design, brochure p. 5)"}
+  Y:
+    type: linear
+    travel_mm: {value: [-260, 260], src: est, note: "520 mm published; origin assumed at the C axis"}
+    rapid_mm_min: 42000
+    max_feed_mm_min: {value: 42000, src: est}
+    accel_m_s2: {value: 3.5, src: est, note: "heavier stack (Y slide carries X slide + table)"}
+    jerk_m_s3: {value: 70, src: est}
+    servo:
+      kv_1_s: {value: 45, src: est}
+      feedforward: {value: 0.98, src: est}
+      velocity_bw_Hz: {value: 70, src: est}
+    backlash_um: {value: 0.5, src: est}
+    reversal_spike_um: {value: 2, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 20, length_mm: 950, fixed_end: motor, cooled_nut: true, src: est}
+    positioning: {accuracy_um: 6, repeatability_um: 3, src: est}
+    motor_force_N: 4800
+    moving_mass_kg: {value: 1200, src: est}
+  Z:
+    type: linear
+    travel_mm: {value: [-475, 0], src: est, note: "475 mm published; Z0 at the upper limit assumed"}
+    rapid_mm_min: 42000
+    max_feed_mm_min: {value: 42000, src: est}
+    accel_m_s2: {value: 5.0, src: est}
+    jerk_m_s3: {value: 100, src: est}
+    servo:
+      kv_1_s: {value: 45, src: est}
+      feedforward: {value: 0.98, src: est}
+      velocity_bw_Hz: {value: 90, src: est}
+    backlash_um: {value: 0.5, src: est}
+    reversal_spike_um: {value: 1.5, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 20, length_mm: 850, fixed_end: motor, cooled_nut: true, src: est}
+    positioning: {accuracy_um: 5, repeatability_um: 2.5, src: est}
+    motor_force_N: 4800
+    moving_mass_kg: {value: 450, src: est, note: "head with speedMASTER motor spindle"}
+    brake: {holds_on_power_loss: true, src: est}
+  B:
+    type: rotary
+    travel_deg: [-35, 110]
+    continuous: false
+    max_rpm: {value: 30, note: "B/C speed 30 rpm for HEIDENHAIN/SIEMENS controls (180 deg/s)"}
+    rapid_deg_s: {value: 180, note: "30 rpm"}
+    accel_rad_s2: {value: 15, src: est, note: "swivel with 300 kg load"}
+    jerk_rad_s3: {value: 300, src: est}
+    servo:
+      kv_1_s: {value: 35, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 40, src: est}
+    backlash_arcsec: {value: 5, src: est, note: "rotary encoder on the axis assumed (direct measuring on all axes per dmgmori-dmu50-web-2026)"}
+    brake:
+      clamp_torque_Nm: {value: 2000, src: est, note: "not published"}
+      clamp_time_s: {value: 0.3, src: est}
+      unclamped_stiffness_Nm_rad: {value: 8.0e5, src: est}
+      clamped_stiffness_Nm_rad: {value: 3.0e6, src: est}
+    positioning: {accuracy_arcsec: 8, repeatability_arcsec: 4, src: est, note: "not published; direct angle measurement assumed"}
+    motor_torque_Nm: {value: 1000, src: est, note: "not published"}
+    cooled_bearing: {value: true, src: dmgmori-dmu50-3rd-2018, page: "p. 4: two cooled table bearings (B and C axes)"}
+  C:
+    type: rotary
+    travel_deg: [0, 360]
+    continuous: true
+    max_rpm: {value: 30, note: "HEIDENHAIN/SIEMENS"}
+    rapid_deg_s: {value: 180, note: "30 rpm"}
+    accel_rad_s2: {value: 20, src: est}
+    jerk_rad_s3: {value: 400, src: est}
+    servo:
+      kv_1_s: {value: 35, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 40, src: est}
+    backlash_arcsec: {value: 5, src: est}
+    brake:
+      clamp_torque_Nm: {value: 1200, src: est}
+      clamp_time_s: {value: 0.3, src: est}
+      unclamped_stiffness_Nm_rad: {value: 5.0e5, src: est}
+      clamped_stiffness_Nm_rad: {value: 2.0e6, src: est}
+    positioning: {accuracy_arcsec: 8, repeatability_arcsec: 4, src: est}
+    motor_torque_Nm: {value: 600, src: est}
+
+kinematics:
+  workpiece_chain:
+    - {link: y_slide, axis: Y, direction: [0, -1, 0]}
+    - {link: x_slide, axis: X, direction: [-1, 0, 0]}
+    - {link: swivel, axis: B, axis_point_mm: [0, 0, -120], direction: [0, -1, 0], src: est, note: "swivel axis parallel to y, assumed 120 mm below the table top through the C axis; DMG MORI publishes no pivot data"}
+    - {link: rotary_table, axis: C, axis_point_mm: [0, 0, 0], direction: [0, 0, -1]}
+    - {link: table_top, fixed: {translate_mm: [0, 0, 0]}}
+  tool_chain:
+    - {link: head, axis: Z, direction: [0, 0, 1]}
+    - {link: spindle_nose, fixed: {translate_mm: [0, 0, 625]}, src: est, note: "spindle nose 625 mm above the table top at Z0 assumed (max workpiece height 600 mm, dmgmori-dmu50-web-2026)"}
+  home_mm: {X: 0, Y: 0, Z: 0, B: 0, C: 0}
+  tool_axis: [0, 0, 1]
+  singularities: [{axis: C, when: "B = 0", behaviour: slow_down, note: "C parallel to the tool axis"}]
+
+spindles:
+  - id: main
+    kind: milling
+    nose: SK40                       # HSK-A63 alternative
+    max_rpm: 15000
+    min_rpm: 20
+    drive: "speedMASTER motor spindle (standard)"
+    direction_reversible: {value: true, src: est}
+    gear_ranges:
+      - rpm: [20, 15000]
+        rating: "S6 40 % duty cycle"
+        src: dmgmori-dmu50-3rd-2018
+        digitised: true
+        uncertainty_pct: 15
+        page: "p. 10 power diagram (15,000 rpm / 21 kW / 111 Nm), p. 11 table (21/16 kW, 111/85 Nm at 40/100 % DC)"
+        note: "schematic log-log diagram; plateaus use the labelled values (111 Nm and 21 kW at 40 % DC from 1800 rpm), the dip near 3500-3700 rpm and the roll-off above ~9000 rpm are read from the drawing"
+        power_kW: [[0, 0], [1800, 21], [3300, 21], [3500, 17], [3700, 21], [9000, 21], [10000, 16], [15000, 10.5]]
+        torque_Nm: [[0, 111], [1800, 111], [3300, 60.8], [3500, 46.4], [3700, 54.2], [9000, 22.3], [10000, 15.3], [15000, 6.7]]
+        additional_ratings:
+          - rating: "S1 100 % duty cycle"
+            src: dmgmori-dmu50-3rd-2018
+            digitised: true
+            uncertainty_pct: 15
+            power_kW: [[0, 0], [1800, 16], [10000, 16], [15000, 10.5]]
+            torque_Nm: [[0, 85], [1800, 85], [10000, 15.3], [15000, 6.7]]
+    accel_time_s: {value: 1.5, src: est, note: "0-15,000 rpm with J ~0.02 kg m2 (motor spindle + SK40 holder) on the S6 curve gives ~1.2 s; drive ramp limits assumed"}
+    decel_time_s: {value: 1.5, src: est}
+    gear_change_s: null
+    orient_time_s: {value: 0.4, src: est}
+    rotor_inertia_kgm2: {value: 0.02, src: est}
+    efficiency: {value: 0.88, src: est, note: "synchronous/asynchronous motor spindle at rated load"}
+    idle_power_W: {value: 900, src: est, note: "bearing + windage losses at 15,000 rpm; part removed by the spindle cooling"}
+    runout_um: {value: 2, src: est}
+    frf_modes:
+      - {fn_Hz: 1000, zeta: 0.035, k_N_um: 80, direction: x, src: est, note: "40-taper motor spindle flange mode, typical 700-1200 Hz"}
+      - {fn_Hz: 1000, zeta: 0.035, k_N_um: 80, direction: y, src: est}
+      - {fn_Hz: 2300, zeta: 0.03, k_N_um: 220, direction: x, src: est}
+      - {fn_Hz: 2300, zeta: 0.03, k_N_um: 220, direction: y, src: est}
+    thermal:
+      growth_um_at_max_rpm: {value: 15, src: est, note: "cooled motor spindle (brochure p. 4); 10-25 um typical"}
+      time_constant_min: {value: 20, src: est}
+      bearing_heat_W_at_max_rpm: {value: 600, src: est}
+      thermal_comp: {value: true, src: est}
+      comp_residual_fraction: {value: 0.3, src: est}
+    optional: "15,000 rpm / 46 kW / 200 Nm and 20,000 rpm / 35 kW / 130 Nm speedMASTER spindles (SK40 or HSK-A63)"
+
+structure:
+  modes:
+    - {fn_Hz: 65, zeta: 0.05, k_N_um: 30, direction: x, src: est, note: "column/head rocking; one-piece bed (brochure p. 5)"}
+    - {fn_Hz: 75, zeta: 0.05, k_N_um: 35, direction: y, src: est}
+    - {fn_Hz: 140, zeta: 0.04, k_N_um: 80, direction: z, src: est}
+  table_modes:
+    - {fn_Hz: 85, zeta: 0.05, k_N_um: 50, direction: x, src: est, note: "cross slide on linear guides"}
+  rotary_modes:
+    - {axis: B, fn_Hz: 60, zeta: 0.05, k_Nm_rad: 3.0e6, src: est, note: "one-sided swivel table with load"}
+    - {axis: C, fn_Hz: 140, zeta: 0.05, k_Nm_rad: 2.0e6, src: est}
+
+error_map:
+  squareness_urad: {XY: 10, XZ: 10, YZ: 10, src: est}
+  straightness_um_per_m: {X: 5, Y: 5, Z: 5, src: est}
+  angular_urad: {}
+  pivot_errors:
+    B: {position_um: [0, 0, 10], tilt_urad: [0, 0, 15], src: est, note: "after kinematics measurement (KinematicsOpt-type calibration)"}
+    C: {position_um: [8, 8, 0], tilt_urad: [15, 15, 0], src: est}
+
+thermal:
+  axis_drift:
+    expansion_1_K: {value: 11.5e-6, src: est}
+    heat_per_m_travel_J: {value: 40, src: est, note: "cooled ball-screw nuts and bearings (brochure p. 4); position read on linear scales, so screw growth barely reaches the TCP"}
+    time_constant_min: {value: 40, src: est}
+    scale_feedback: {value: true, src: dmgmori-dmu50-3rd-2018, page: "p. 4: linear scales in all axes"}
+  structure_sensitivity_um_per_K: {value: 2.5, src: est}
+  warmup: {cold_to_warm_min: 45, src: est}
+
+tool_changer:
+  type: {value: chain, src: est, note: "magazine type not stated; outside the work area with double gripper"}
+  capacity: 30                       # 60 / 120 optional
+  tool_to_tool_s: {value: 1.6, src: est, note: "double gripper; not published"}
+  chip_to_chip_s: {value: 5.5, src: est, note: "not published; typical of magazine-outside-the-work-area 40-taper machines"}
+  max_tool_diameter_mm: 80
+  max_tool_diameter_adjacent_empty_mm: 130
+  max_tool_length_mm: 300
+  max_tool_mass_kg: 8
+  pocket_pitch_mm: {value: 90, src: est}
+  loading: {value: "front loading during machining (set-up station)", src: dmgmori-dmu50-3rd-2018, page: "p. 6-7"}
+
+turrets: []
+pallet_changer: null
+tailstock: null
+steady_rest: null
+guide_bushing: null
+doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null}
+
+workholding_interface:
+  clamping_area_mm: {value: "diameter 630 x 500", note: "round table 630 mm with 500 mm across flats"}
+  max_load_kg: 300
+  max_workpiece: {diameter_mm: 630, height_mm: 600, src: dmgmori-dmu50-web-2026}
+
+probes:
+  spindle_probe: {model: "Renishaw OMP400", trigger_force_N: 0.06, trigger_force_z_N: 2.55, repeatability_um: 0.25, stylus_length_mm: 50, src: renishaw-omp400-2024, note: "probe model is an assumption (DMG MORI fits Renishaw or HEIDENHAIN probes as options)"}
+  tool_setter: null
+  laser: {model: "Renishaw NC4", repeatability_um: 1.0, laser: "class 2, 670 nm", src: renishaw-nc4-2026, note: "'laser tool measurement' is a published option (brochure p. 11); NC4 model assumed"}
+
+coolant:
+  tank_l: {value: 300, src: est, note: "not published"}
+  pumps:
+    - {id: flood, kind: flood, pressure_bar: 3, flow_l_min: 50, power_kW: 0.9, src: est, note: "not published"}
+    - {id: ics, kind: through_spindle, option: true, pressure_bar: {value: 40, src: dmgmori-dmu50-3rd-2018, page: "p. 11: internal coolant supply up to 40 bar"}, flow_l_min: {value: 20, src: est}, power_kW: {value: 3.0, src: est}}
+  nozzles:
+    - {id: n1, kind: flood, attached_to: head, position_mm: [60, -60, 50], aim: [-0.5, 0.5, -0.7], diameter_mm: 3, pump: flood, src: est}
+    - {id: n2, kind: flood, attached_to: head, position_mm: [-60, -60, 50], aim: [0.5, 0.5, -0.7], diameter_mm: 3, pump: flood, src: est}
+    - {id: n3, kind: flood, attached_to: head, position_mm: [0, 80, 50], aim: [0, -0.6, -0.8], diameter_mm: 3, pump: flood, src: est}
+    - {id: ics, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: ics}
+  air_blast: {flow_l_min: 200, pressure_bar: 6, src: est, note: "coolant/air blast switch and through-spindle air blast are published options (brochure p. 11); flow assumed"}
+  chiller: {value: "spindle, ballscrew-nut and table-bearing cooling unit", src: dmgmori-dmu50-3rd-2018, page: "p. 4"}
+  filtration_um: {value: 50, src: est}
+  mist_separator: {value: option, src: dmgmori-dmu50-3rd-2018, page: "p. 11 options: oil mist separator"}
+
+chip_conveyor: {type: hinged_belt, option: true, src: dmgmori-dmu50-3rd-2018, note: "chip conveyor is a published option; type assumed", rate_kg_h: {value: 100, src: est}}
+
+enclosure:
+  box_mm: {value: [[-900, -600, -500], [900, 700, 1150]], src: est, note: "interior around the 650 x 520 x 475 travels and the swivel table; floor plan 2350 x 2850 mm (brochure p. 10)"}
+  floor_slope_deg: {value: 40, src: est}
+
+power:
+  base_W: {value: 1500, src: est, note: "control, cooling unit, hydraulics, lights"}
+  servo_standby_W: {value: 500, src: est}
+  air_consumption_l_min: {value: 300, src: est}
+  connected_power_kW: {value: 28, note: "brochure p. 11; max current 40 A"}
+  machine_mass_kg: {value: 7480}
+
+geometry:
+  - name: bed
+    attached_to: base
+    primitives:
+      - {box: {min_mm: [-1100, -800, -1100], max_mm: [1100, 1300, -350]}}
+    collide: true
+    src: est
+  - name: column
+    attached_to: base
+    primitives:
+      - {box: {min_mm: [-350, 750, -350], max_mm: [350, 1250, 1700]}}
+    collide: true
+    src: est
+  - name: cross_slide
+    attached_to: x_slide
+    primitives:
+      - {box: {min_mm: [-450, -380, -350], max_mm: [450, 380, -260]}}
+    collide: true
+    src: est
+  - name: swivel_housing
+    attached_to: x_slide
+    primitives:
+      - {cylinder: {p0_mm: [0, 330, -120], p1_mm: [0, 520, -120], radius_mm: 220}}
+    collide: true
+    src: est
+    note: "one-sided swivel drive housing behind the table (B axis along y), assumed"
+  - name: swivel_cradle
+    attached_to: swivel
+    primitives:
+      - {box: {min_mm: [-320, -320, -260], max_mm: [320, 330, -90]}}
+    collide: true
+    src: est
+  - name: rotary_table
+    attached_to: rotary_table
+    primitives:
+      - {cylinder: {p0_mm: [0, 0, -90], p1_mm: [0, 0, 0], radius_mm: 315}}
+    collide: true
+    src: est
+    note: "630 mm table (published), flats at +-250 mm not modelled; 90 mm thickness assumed"
+  - name: spindle_head
+    attached_to: head
+    primitives:
+      - {box: {min_mm: [-220, -150, 780], max_mm: [220, 800, 1500]}}
+      - {cylinder: {p0_mm: [0, 0, 625], p1_mm: [0, 0, 780], radius_mm: 90}}
+    collide: true
+    src: est
+
+notes: "Catalogue values from the DMG MORI DMU 50 3rd generation brochure (05/2018). Not published there: ISO 230-2 accuracy, accelerations, B/C torques and pivot geometry, magazine times, coolant tank; all estimates. Spindle curves read from a schematic log-log diagram (+-15 %)."

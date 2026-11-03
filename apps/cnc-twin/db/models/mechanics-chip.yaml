@@ -1,0 +1,110 @@
+# Chip form model of cnctwin.mechanics.chipform (docs/models/mechanics.md, "Chip form"):
+# curl, breaking (Nakayama's criterion), ISO 3685 class, segmentation, built-up edge dynamics.
+format: cnctwin-model-params
+version: 1
+model: mechanics-chip
+description: "Curl, breaking, form classification, segmentation and BUE constants of the chip form model"
+params:
+  natural_curl_ratio:
+    value: 15.0
+    unit: "-"
+    range: [1.0, 200.0]
+    src: est
+    note: "natural up-curl radius of a chip on a flat rake face / tool-chip contact length; assumed so that 0.2 mm steel chips without a breaker curl at about 5-10 mm and stay unbroken, while groove radii of 1-2 mm break them (common practice); uncertainty about a factor 2"
+  ribbon_curl_ratio:
+    value: 500.0
+    unit: "-"
+    src: est
+    note: "curl radius / chip thickness above which the chip is classed as a straight ribbon (ISO 3685 class 1)"
+  break_strain_ratio:
+    value: 0.1
+    unit: "-"
+    range: [0.01, 1.0]
+    src: est
+    note: "fracture strain of the formed chip in bending / bulk fracture strain of the material (the chip has used most of its ductility in the shear zones); Nakayama's measured chip fracture strains of a few percent for steels motivate the value"
+  min_break_strain:
+    value: 0.005
+    unit: "-"
+    src: est
+    note: "lower bound of the chip fracture strain (brittle materials with near-zero bulk fracture strain still need some bending to break)"
+  breakability_factor_good:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "multiplier on the chip fracture strain for materials the database rates 'good' breakability (free-cutting); 'medium' is 1"
+  breakability_factor_poor:
+    value: 2.0
+    unit: "-"
+    src: est
+    note: "multiplier on the chip fracture strain for materials rated 'poor' breakability (gummy, ductile chips)"
+  turns_upcurl_break:
+    value: 0.75
+    unit: "-"
+    src: est
+    note: "turns a broken up-curl chip makes before its free end meets the workpiece or flank and it breaks (C- and arc-shaped chips)"
+  turns_helical_break:
+    value: 3.0
+    unit: "-"
+    src: est
+    note: "turns of a side-curled helical chip before it breaks against the workpiece (short washer/conical helical chips)"
+  max_turns_short:
+    value: 5.0
+    unit: "-"
+    src: est
+    note: "chips of more turns than this are classed long (ISO 3685 subclass 1 instead of 2)"
+  min_turns_snarled:
+    value: 50.0
+    unit: "-"
+    src: est
+    note: "unbroken chips of more turns than this are classed snarled (subclass 3)"
+  min_side_curl_rad:
+    value: 0.08726646259971647
+    unit: rad
+    src: est
+    note: "5 deg: chip flow angles below this give planar (spiral/arc) chips, above it helical chips"
+  nose_conical_ratio:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "when the engaged nose (corner) radius exceeds this fraction of the chip width, the chip radius varies across its width and helical chips become conical (ISO 3685 class 5, spiral 3.2)"
+  flute_curl_ratio:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "curl radius imposed by a milling/drilling flute / equivalent flute radius sqrt(gullet area / pi)"
+  segment_pitch_ratio:
+    value: 0.8
+    unit: "-"
+    range: [0.1, 5.0]
+    src: est
+    note: "saw-tooth segment pitch / uncut chip thickness (segments of adiabatic-shear chips are typically spaced by about the uncut thickness)"
+  recht_threshold:
+    value: 1.0
+    unit: "-"
+    src: recht-1964-catastrophic-shear
+    note: "shear localisation (segmented chip) when Recht's ratio (dtau/dgamma)/(-(dtau/dT) dT/dgamma) is below 1"
+  bue_saturation_ratio:
+    value: 0.8
+    unit: "-"
+    src: est
+    note: "steady built-up edge height / uncut chip thickness inside the BUE window (BUE heights comparable to the feed are typical); assumed"
+  bue_growth_time_s:
+    value: 0.002
+    unit: s
+    src: est
+    note: "time constant of BUE growth toward its saturation height; assumed (BUE growth/fracture cycles of 10-1000 Hz are described)"
+  bue_decay_time_s:
+    value: 0.001
+    unit: s
+    src: est
+    note: "time constant of BUE removal outside the window (swept away by the chip); assumed"
+  bue_breakoff_rate_1_s:
+    value: 100.0
+    unit: 1/s
+    src: est
+    note: "break-off hazard rate at the saturation height (proportional to height / saturation height); each break-off is a counter-based draw; assumed"
+  bue_residual_fraction:
+    value: 0.2
+    unit: "-"
+    src: est
+    note: "fraction of the BUE height that stays on the edge after a break-off; assumed"

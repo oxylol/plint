@@ -1,0 +1,44 @@
+# Tungaloy TungCap FBHO-DE fine boring head (digital display) with a 254.015.006.090 boring bar and a
+# CCMT060204-PSS cermet insert, read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03
+# (K053, B116, B016).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-fbho-fine-boring
+maker: "Tungaloy Corporation"
+series: "TungCap PSC63-FBHO-DE-1690 fine boring head + 254.015.006.090 bar + CCMT060204-PSS (NS9530), bore 14.75-20.1 mm"
+src: tungaloy-2023-gc-tooling
+notes: "Head PSC63-FBHO-DE-1690 (K053): Capto C6 (PSC63), DCN 9.75 - DCX 88.1 mm over the bar range, LF 90 mm, diameter adjustment range 2.7 mm, digital display, through coolant 7 MPa. Bar 254.015.006.090 (K053): DCN 14.75, DCX 20.1, LH 51, OAL 90 mm, 90 deg edge (drawing), insert CC**0602, clamping screw CSTB-2.5L054DR. Insert CCMT060204-PSS (B116): IC 6.35, S 2.38, D1 2.8, RE 0.4 mm, 7 deg clearance, PSS pictogram 0.15 mm land / 10 deg rake. Cutting data = PSS NS9530 finishing row of the positive-insert standard cutting conditions for steel (B016). No maximum speed or balance grade read for the head."
+items:
+  - id: tungaloy-psc63-fbho-de-1690-254.015.006.090-ccmt060204-pss
+    order_code: "PSC63-FBHO-DE-1690 + 254.015.006.090 + CCMT060204-PSS NS9530"
+    type: boring_head
+    hand: right
+    tool_material: {class: cermet, grade: "NS9530 cermet", id: cermet-ticn}
+    coating: {id: none}
+    geometry:
+      diameter_range_mm: {value: [14.75, 20.1], note: "DCN - DCX of the 254.015.006.090 bar"}
+      diameter_mm: {value: 18, src: est, note: "default set diameter (a set-up value inside the bar range); a project sets the real one with radius_offset_mm"}
+      shank: {diameter_mm: {value: 63, note: "Capto C6 coupling size"}, form: capto}
+      overall_length_mm: {value: 141, src: est, note: "head LF 90 + bar projection LH 51 mm; the bar's insertion depth is not printed"}
+      insert:
+        iso_code: "CCMT060204-PSS"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 6.35
+        thickness_mm: 2.38
+        nose_radius_mm: 0.4
+        clearance_deg: 7
+        wiper: false
+        chip_breaker: {name: PSS, land_mm: {value: 0.15, src: tungaloy-2023-gc-insert, page: "B116 pictogram"}, rake_deg: {value: 10, src: tungaloy-2023-gc-insert, page: "B116 pictogram"}, window: {f_mm: [0.05, 0.3], ap_mm: [0.1, 0.5]}, src: tungaloy-2023-gc-insert, page: "B016 PSS NS9530"}
+        src: tungaloy-2023-gc-insert
+        page: "B116"
+      holder: {iso_code: "254.015.006.090", approach_angle_deg: {value: 90, note: "90 deg in the bar drawing (K053)"}, overhang_mm: {value: 51, note: "LH of the bar"}}
+      coolant_holes: {count: {value: 1, src: est, note: "through coolant (7 MPa) is printed; outlet count not stated"}, diameter_mm: {value: 1.5, src: est, note: "not published"}, exit: face}
+    max_rpm: null
+    balance_grade: null
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 2 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [boring], vc_m_min: {min: 150, max: 250}, f_mm: {min: 0.05, max: 0.3}, ap_max_mm: 0.5, src: tungaloy-2023-gc-insert, page: "B016 PSS NS9530", note: "ap 0.1-0.5 mm (radial)"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi1045, operation: [boring], vc_m_min: {min: 80, max: 220}, f_mm: {min: 0.05, max: 0.3}, ap_max_mm: 0.5, src: tungaloy-2023-gc-insert, page: "B016", note: "ap 0.1-0.5 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [boring], vc_m_min: {min: 80, max: 180}, f_mm: {min: 0.05, max: 0.3}, ap_max_mm: 0.5, src: tungaloy-2023-gc-insert, page: "B016", note: "ap 0.1-0.5 mm"}

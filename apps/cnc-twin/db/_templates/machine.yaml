@@ -1,0 +1,181 @@
+# Machine definition: db/machines/<id>.yaml
+# Catalogue values cite the maker's spec sheet. Values a maker does not publish (jerk, servo gains,
+# modal parameters, thermal constants) are `src: est` with a note naming the literature they are
+# typical of. Geometry is in mm in the frame of the link it is attached to.
+format: cnctwin-machine
+version: 1
+id: haas-vf2ss
+maker: "Haas Automation"
+model: "VF-2SS"
+type: vertical_mill                  # vertical_mill | horizontal_mill | five_axis_mill | lathe | mill_turn | swiss
+src: haas-vf2ss-specs-2026           # default for catalogue values below
+
+controller:
+  dialect: haas                      # fanuc | haas | siemens840d | heidenhain_klartext | heidenhain_iso
+  model: "Haas NGC"
+  alarms: haas-ngc                   # db/controllers/<id>.yaml
+  ipo_period_ms: {value: 1.0, src: est, note: ""}
+  block_processing_ms: {value: 1.0, src: est, note: ""}   # minimum time per block (data starvation)
+  lookahead_blocks: {value: 80, src: key}
+  least_input_increment_mm: 0.001
+  least_input_increment_deg: 0.001
+  max_feed_mm_min: 21200
+  rapid_mm_min: {X: 35560, Y: 35560, Z: 35560}
+  smoothing:                         # high-speed / smoothing modes and their tolerance bands
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: key}
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.010}
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025}
+  corner_default: blend              # blend (G64) | exact_stop (G61)
+  in_position_mm: {value: 0.005, src: est, note: ""}
+  rapid_override_steps_pct: [5, 25, 50, 100]
+  feed_override_range_pct: [0, 200]
+  tool_life_management: true
+  probing: true
+
+axes:                                # every NC axis; direction = motion of that axis' link in the base frame for +command
+  X:
+    type: linear
+    travel_mm: [-762, 0]             # machine coordinates (G53)
+    rapid_mm_min: 35560
+    max_feed_mm_min: 21200
+    accel_m_s2: {value: 5.0, src: est, note: ""}
+    jerk_m_s3: {value: 200, src: est, note: ""}
+    servo: {kv_1_s: {value: 40, src: est}, feedforward: 0.9, velocity_bw_Hz: {value: 80, src: est}}
+    backlash_um: {value: 2, src: est}
+    reversal_spike_um: {value: 3, src: est}         # quadrant glitch from stick-slip at reversal
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1100, fixed_end: motor, src: est}
+    positioning: {accuracy_um: 5, repeatability_um: 2.5, src: key}   # ISO 230-2 A and R, as published
+    motor_force_N: {value: 15000, src: est}                          # axis thrust limit for axis-load checks
+    moving_mass_kg: {value: 450, src: est}
+  # Y, Z ... ; rotary axes:
+  # A: {type: rotary, travel_deg: [-120, 35], continuous: false, max_rpm: 85, accel_rad_s2, jerk_rad_s3,
+  #     servo: {...}, backlash_arcsec, brake: {clamp_torque_Nm, clamp_time_s, unclamped_stiffness_Nm_rad, clamped_stiffness_Nm_rad},
+  #     positioning: {accuracy_arcsec, repeatability_arcsec}, motor_torque_Nm}
+
+kinematics:
+  # Two chains from the machine base: to the workpiece mounting face and to the spindle nose.
+  # A link is either an NC axis (moves by the axis value) or fixed (translate/rotate).
+  workpiece_chain:
+    - {link: saddle, axis: Y, direction: [0, -1, 0]}       # table moves -Y for +Y
+    - {link: table, axis: X, direction: [-1, 0, 0]}
+    - {link: table_top, fixed: {translate_mm: [0, 0, 0]}}  # origin of the fixture frame
+  tool_chain:
+    - {link: head, axis: Z, direction: [0, 0, 1]}
+    - {link: spindle_nose, fixed: {translate_mm: [0, 0, 508]}}
+  # rotary links: {link: tilt, axis: A, axis_point_mm: [x, y, z], direction: [1, 0, 0]}
+  home_mm: {X: 0, Y: 0, Z: 0}
+  tool_axis: [0, 0, 1]               # spindle axis in the spindle-nose frame (points from tool tip to spindle)
+  singularities: null                # five-axis: [{axis: C, when: "A = 0", behaviour: slow_down | alarm}]
+
+spindles:
+  - id: main
+    kind: milling                    # milling | turning | live_tool | sub
+    nose: CAT40                      # BT40 | CAT40 | HSK-A63 | ... | A2-6 (lathe spindle nose)
+    max_rpm: 10000
+    direction_reversible: true
+    gear_ranges:
+      - rpm: [0, 10000]
+        power_kW: [[0, 0], [2000, 22.4], [10000, 22.4]]     # S1 or as published; say which
+        torque_Nm: [[0, 122], [1750, 122], [10000, 21]]
+        rating: "peak, 15 min"       # which duty the curves are
+    accel_time_s: {value: 1.2, src: est, note: "0 to max rpm"}
+    decel_time_s: {value: 1.0, src: est}
+    gear_change_s: null
+    orient_time_s: {value: 0.5, src: est}
+    position_loop:                   # spindle as a servo axis (rigid tapping G84, threading G33/G76, C axis)
+      kv_1_s: {value: 30, src: est}
+      feedforward: {value: 0.9, src: est}
+      encoder_counts: 4096
+      max_accel_rad_s2_per_gear: [{value: 800, src: est}]
+    rotor_inertia_kgm2: {value: 0.02, src: est}
+    efficiency: {value: 0.85, src: est}            # electrical to shaft at rated load (energy model)
+    idle_power_W: {value: 400, src: est}           # at speed, no load (bearings + air)
+    runout_um: {value: 2, src: est}                # spindle taper runout
+    frf_modes:                       # modes at the holder flange (for receptance coupling with the tool)
+      - {fn_Hz: 900, zeta: 0.04, k_N_um: 60, direction: x, src: est, note: "typical 40-taper spindle, Schmitz & Smith 2009"}
+      - {fn_Hz: 900, zeta: 0.04, k_N_um: 60, direction: y, src: est}
+    thermal:
+      growth_at_max_speed_um: {value: 25, src: est}  # steady-state axial growth at max speed
+      time_constant_min: {value: 30, src: est}
+      bearing_heat_at_max_speed_W: {value: 400, src: est}
+      thermal_comp: true             # the control compensates part of the growth
+      comp_residual_fraction: {value: 0.3, src: est}
+
+structure:                           # tool-to-workpiece relative modes of frame, table, column (not the spindle above)
+  modes:
+    - {fn_Hz: 45, zeta: 0.05, k_N_um: 30, direction: x, src: est}
+  table_modes: []
+  rotary_modes: []
+
+error_map:                           # optional geometric errors (ISO 230-1 notation)
+  squareness_urad: {XY: 10, XZ: 10, YZ: 10, src: est}
+  straightness_um_per_m: {X: 5, Y: 5, Z: 5, src: est}
+  angular_urad: {}                   # pitch/yaw/roll per axis if known
+  pivot_errors: {}                   # rotary axes: location and orientation errors
+
+thermal:
+  axis_drift:                        # ballscrew heating with motion
+    expansion_1_K: 11.5e-6
+    heat_per_m_travel_J: {value: 50, src: est}
+    time_constant_min: {value: 40, src: est}
+  structure_sensitivity_um_per_K: {value: 3, src: est}   # tool-to-table drift per K of ambient change
+  warmup: {cold_to_warm_min: 60, src: est}
+
+tool_changer:
+  type: side_mount                   # umbrella | side_mount | chain | turret | none
+  capacity: 24
+  tool_to_tool_s: 2.8
+  chip_to_chip_s: {value: 3.6}
+  max_tool_diameter_mm: 76           # all pockets full
+  max_tool_diameter_adjacent_empty_mm: 127
+  max_tool_length_mm: 279
+  max_tool_mass_kg: 5.4
+  pocket_pitch_mm: {value: 90, src: est}
+
+turrets: []                          # lathes: [{id, stations, mount: VDI30|BMT65|BOT, index_time_s: {adjacent, max}, live_stations: [...], live_spindle: main-live, chain: [...]}]
+pallet_changer: null                 # {pallets: 2, change_time_s}
+tailstock: null                      # {travel_mm, thrust_N: [lo, hi], quill_mm, centre: live|dead}
+steady_rest: null                    # {grip_range_mm: [lo, hi], rollers: 3}
+guide_bushing: null                  # Swiss: {type: rotary|fixed, clearance_um, position_mm}
+doors: {count: 1, auto: false, open_time_s: null}
+
+probes:
+  spindle_probe: {model: "Renishaw OMP40-2", trigger_force_N: 0.5, pretravel_um: 1, repeatability_um: 1.0, stylus_ball_mm: 6, stylus_length_mm: 50, src: key}
+  tool_setter: {model: "Renishaw OTS", position_mm: [-700, -50, -500], repeatability_um: 1.0, disc_mm: 12.7, src: key}
+  laser: null
+
+coolant:
+  tank_l: 208
+  pumps:
+    - {id: flood, kind: flood, pressure_bar: 2, flow_l_min: 45, power_kW: 0.75}
+    - {id: tsc, kind: through_spindle, pressure_bar: 21, flow_l_min: 10, power_kW: 1.1}
+  nozzles:
+    - {id: n1, kind: flood, attached_to: head, position_mm: [60, 0, -60], aim: [-0.7, 0, -0.7], diameter_mm: 3, pump: flood,
+       programmable: {code: "M34/M35", positions: 34, step_deg: 7.5}, src: key}
+  air_blast: {flow_l_min: 300, pressure_bar: 6}
+  chiller: null                      # {capacity_kW, setpoint_degC}
+  filtration_um: 25
+
+chip_conveyor: {type: auger, rate_kg_h: {value: 50, src: est}}
+
+enclosure:
+  box_mm: [[-1500, -900, -900], [600, 900, 1100]]   # interior, machine coordinates
+  floor_slope_deg: 30
+
+power:                               # energy per part
+  base_W: {value: 900, src: est}     # control, lights, fans, hydraulics at idle
+  servo_standby_W: {value: 300, src: est}
+  air_consumption_l_min: {value: 140, src: est}
+
+geometry:                            # 3D parts of every moving and fixed component, attached to a link
+  - name: table
+    attached_to: table
+    primitives:
+      - {box: {min_mm: [-457, -178, -80], max_mm: [457, 178, 0]}}
+    collide: true
+  - name: spindle_head
+    attached_to: head
+    primitives:
+      - {cylinder: {p0_mm: [0, 0, 508], p1_mm: [0, 0, 700], radius_mm: 90}}
+    collide: true
+notes: ""

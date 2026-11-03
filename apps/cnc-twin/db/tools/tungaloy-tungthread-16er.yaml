@@ -1,0 +1,55 @@
+# Tungaloy TungThread 16ER15ISO full-profile ISO metric threading insert (laydown) in the CER2525M16DT
+# external threading holder, read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03
+# (E018, E036, E066, E067, L029, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-tungthread-16er
+maker: "Tungaloy Corporation"
+series: "TungThread 16ER15ISO (AH725) full-profile external ISO metric 1.5 mm insert in CER2525M16DT"
+src: tungaloy-2023-gc-threading
+notes: "Insert 16ER15ISO (E018): insert size 16, pitch 1.5 mm, right hand, external, IC 9.525, PDX 0.9, PDY 0.7, RE 0.19 mm; grades AH8015, AH725, T313V, TH10. Full-profile inserts also finish the thread crest, so the major diameter is turned with about 0.1 mm stock (L029). Holder CER2525M16DT (E036): H 25, B 25, LF 150, LH 28, HF 25, WF 32 mm, 16ER/L inserts; L029: the rake angle of Tungaloy's threading toolholders is -10 deg for external and -15 deg for internal holders. Infeed (E066, external metric threads): 1.5 mm pitch is cut in 7 passes of 0.3, 0.25, 0.15, 0.1, 0.05, 0.05, 0.02 mm (total 0.92 mm = H2; H = 1.299 mm). The overhang is a set-up value, estimated."
+defaults:
+  type: threading_insert
+  hand: right
+items:
+  - id: tungaloy-16er15iso-ah725-cer2525m16dt
+    order_code: "16ER15ISO AH725 + CER2525M16DT"
+    tool_material: {class: carbide, grade: "AH725 PVD-coated carbide (substrate not stated)", id: carbide-submicron-10co, src: est, note: "PVD grade P15-P30 / M15-M30 / K25-K30 / S15-S25 (A002); substrate mapped to the fine-grain 10 % Co entry"}
+    coating: {id: tialn, thickness_um: {value: 2, src: tungaloy-2023-gc-grade, page: "A002"}, note: "AH725: (Ti,Al)N (A002)"}
+    geometry:
+      thread: {standard: "ISO metric", pitch_mm: 1.5, form_angle_deg: 60, class: "full profile (crest finished)", hand: right, starts: 1}
+      insert:
+        iso_code: "16ER15ISO"
+        included_angle_deg: {value: 60, note: "thread form angle of the profile (60 deg thread angle, E018)"}
+        ic_mm: 9.525
+        nose_radius_mm: 0.19
+        page: "E018 (IC, PDX 0.9, PDY 0.7, RE)"
+      holder: {iso_code: "CER2525M16DT", rake_deg: {value: -10, src: tungaloy-2023-gc-users-guide, page: "L029"}, shank_mm: {value: [25, 25], page: "E036 (H, B)"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable laydown insert with 3 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "steel / alloy steel S45C, SCM440 (C45, 42CrMoS4), < 200 HB", material: aisi1045, operation: [threading], vc_m_min: {min: 80, max: 180}, f_mm: {value: 1.5, note: "feed per rev = pitch"}, ap_max_mm: {value: 0.3, src: tungaloy-2023-gc-threading, page: "E066", note: "first of 7 radial passes"}, page: "E067 AH725"}
+      - {iso_group: P, material_hint: "steel / alloy steel, > 200 HB", material: aisi4140-qt30, operation: [threading], vc_m_min: {min: 60, max: 160}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH725"}
+      - {iso_group: M, material_hint: "stainless steel SUS304 (X5CrNi18-9)", material: aisi304, operation: [threading], vc_m_min: {min: 50, max: 130}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH725"}
+      - {iso_group: K, material_hint: "cast iron FC250, FC300", material: grey-cast-iron-gjl250, operation: [threading], vc_m_min: {min: 50, max: 100}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH725"}
+  - id: tungaloy-16er15iso-ah8015-cer2525m16dt
+    order_code: "16ER15ISO AH8015 + CER2525M16DT"
+    tool_material: {class: carbide, grade: "AH8015 PVD-coated carbide (substrate not stated)", id: carbide-submicron-10co, src: est, note: "PVD grade P10-P20 / M10-M20 / K10-K25 / S10-S20 / H10-H20 (A002); substrate mapped to the fine-grain 10 % Co entry"}
+    coating: {id: altin, thickness_um: {value: 3.5, src: tungaloy-2023-gc-grade, page: "A002"}, note: "AH8015: (Al,Ti)N (A002)"}
+    geometry:
+      thread: {standard: "ISO metric", pitch_mm: 1.5, form_angle_deg: 60, class: "full profile (crest finished)", hand: right, starts: 1}
+      insert:
+        iso_code: "16ER15ISO"
+        included_angle_deg: {value: 60, note: "thread form angle of the profile (E018)"}
+        ic_mm: 9.525
+        nose_radius_mm: 0.19
+        page: "E018"
+      holder: {iso_code: "CER2525M16DT", rake_deg: {value: -10, src: tungaloy-2023-gc-users-guide, page: "L029"}, shank_mm: {value: [25, 25], page: "E036"}, overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable laydown insert, 3 corners, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "steel / alloy steel, < 200 HB", material: aisi1045, operation: [threading], vc_m_min: {min: 80, max: 180}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH8015"}
+      - {iso_group: P, material_hint: "steel / alloy steel, > 200 HB", material: aisi4140-qt30, operation: [threading], vc_m_min: {min: 60, max: 160}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH8015"}
+      - {iso_group: M, material_hint: "stainless steel SUS304", material: aisi304, operation: [threading], vc_m_min: {min: 50, max: 130}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH8015"}
+      - {iso_group: K, material_hint: "cast iron FC250, FC300", material: grey-cast-iron-gjl250, operation: [threading], vc_m_min: {min: 60, max: 150}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH8015"}
+      - {iso_group: S, material_hint: "superalloys Ti-6Al-4V, Inconel 718", material: ti6al4v, operation: [threading], vc_m_min: {min: 20, max: 80}, f_mm: {value: 1.5, note: "pitch"}, ap_max_mm: {value: 0.3, page: "E066"}, page: "E067 AH8015"}

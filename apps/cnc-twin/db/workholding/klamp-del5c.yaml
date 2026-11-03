@@ -1,0 +1,50 @@
+format: cnctwin-workholding
+version: 1
+series_id: klamp-del5c
+maker: "Kitagawa (KLAMP)"
+series: "DEL5C low profile pull-back power collet chuck for 5C spring collets"
+src: klamp-2023-collet-chucks
+items:
+  - id: klamp-del5c-a5
+    order_code: "DEL5C-A5"
+    type: collet_chuck
+    mounting: {value: "A5 (printed; short-taper spindle nose size 5)", src: klamp-2023-collet-chucks, page: "p. 43"}
+    collet: {value: "5C spring collet", src: klamp-2023-collet-chucks}
+    range_mm: {value: [1, 27], src: klamp-2023-collet-chucks, note: "spring collet gripping range; collets in 0.5 mm steps"}
+    pull_back_ratio: {value: 3, src: klamp-2023-collet-chucks, note: "printed 1:3"}
+    max_input_force_kN: {value: 20, src: klamp-2023-collet-chucks}
+    gripping_force_kN: {value: 60, src: est, note: "max input 20 kN x pull-back ratio 3; friction in the collet taper ignored"}
+    max_rpm: {value: 6000, src: klamp-2023-collet-chucks}
+    mass_kg: {value: 6.8, src: klamp-2023-collet-chucks}
+    body_mm: {nose_diameter_A: 72, length_B: 139, flange_diameter_I: 135, D: 90, src: klamp-2023-collet-chucks, page: "p. 43 dimension table"}
+    matching_cylinder: {value: "S1246 / SS1246 / SR1146", src: klamp-2023-collet-chucks}
+    grip_length_mm: null
+  - id: klamp-del5c-a6
+    order_code: "DEL5C-A6"
+    type: collet_chuck
+    mounting: {value: "A6 (printed; short-taper spindle nose size 6)", src: klamp-2023-collet-chucks}
+    collet: {value: "5C spring collet", src: klamp-2023-collet-chucks}
+    range_mm: {value: [1, 27], src: klamp-2023-collet-chucks}
+    pull_back_ratio: {value: 3, src: klamp-2023-collet-chucks}
+    max_input_force_kN: {value: 20, src: klamp-2023-collet-chucks}
+    gripping_force_kN: {value: 60, src: est, note: "20 kN x 3"}
+    max_rpm: {value: 6000, src: klamp-2023-collet-chucks}
+    mass_kg: {value: 10.8, src: klamp-2023-collet-chucks}
+    body_mm: {nose_diameter_A: 72, length_B: 141, flange_diameter_I: 170, D: 98, src: klamp-2023-collet-chucks}
+    matching_cylinder: {value: "S1246 / SS1246 / SR1146", src: klamp-2023-collet-chucks}
+    grip_length_mm: null
+  - id: klamp-del5c-z140
+    order_code: "DEL5C-Z140"
+    type: collet_chuck
+    mounting: {value: "Z140 (straight mount)", src: klamp-2023-collet-chucks}
+    collet: {value: "5C spring collet", src: klamp-2023-collet-chucks}
+    range_mm: {value: [1, 27], src: klamp-2023-collet-chucks}
+    pull_back_ratio: {value: 3, src: klamp-2023-collet-chucks}
+    max_input_force_kN: {value: 20, src: klamp-2023-collet-chucks}
+    gripping_force_kN: {value: 60, src: est, note: "20 kN x 3"}
+    max_rpm: {value: 6000, src: klamp-2023-collet-chucks}
+    mass_kg: {value: 9.3, src: klamp-2023-collet-chucks}
+    body_mm: {nose_diameter_A: 72, length_B: 139, flange_diameter_I: 159, D: 90, src: klamp-2023-collet-chucks}
+    matching_cylinder: {value: "S1246 / SS1246 / SR1146", src: klamp-2023-collet-chucks}
+    grip_length_mm: null
+notes: "An ER collet chuck for lathes was not found in the sources read; 5C covers the lathe collet case."

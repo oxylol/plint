@@ -1,0 +1,267 @@
+# Workpiece material: CFRP, Toray T300 standard-modulus carbon fibre in epoxy, fibre volume fraction ~0.6.
+# Unidirectional (UD) and quasi-isotropic (QI) laminates: the physical section holds the QI laminate; fibre,
+# matrix, UD-lamina, layup and fibre-orientation data have no key in the material template and are in
+# `extensions`. Sources: db/bibliography/materials-nonmetals.yaml
+# Paywalled machining literature (orthogonal forces vs fibre angle, CFRP tool wear, G_IC data) could not be read
+# in this session: those values are estimates and are flagged.
+format: cnctwin-material
+version: 1
+id: cfrp-t300-epoxy
+name: "CFRP T300/epoxy, Vf 0.6 (UD and quasi-isotropic laminates)"
+family: composite
+iso_group: O
+condition: "cured laminate, dry; reference resin for the Toray composite data: Toray #2500 epoxy cured at 130 C"
+designations: {fibre: "TORAYCA T300 (standard modulus, 7 um filament)", walter_group: "O4 (Walter class 'fibre-reinforced plastics', O3-O5)"}
+stock_forms: []
+
+physical:                          # quasi-isotropic laminate [0/45/90/-45]ns as the default bulk
+  src: est
+  note: "laminate values by micromechanics and laminate theory from the Toray T300 fibre/UD data and an assumed generic epoxy (extensions.matrix_properties)"
+  density_kg_m3: {value: 1540, note: "rule of mixtures 0.6 x 1760 (T300, toray-2025-t300-datasheet) + 0.4 x 1200 (cured epoxy, assumed) = 1536"}
+  specific_heat_J_kgK: {table: [[20, 910]], note: "mass-weighted: fibre mass fraction 0.69 x 777 J/kgK (toray-2025-t300-datasheet) + 0.31 x 1200 J/kgK (epoxy, assumed)"}
+  conductivity_W_mK: {table: [[20, 0.47]], note: "TRANSVERSE / through-thickness k2: Maxwell-type mixing of epoxy 0.2 W/mK (assumed) and fibre transverse 1.0 W/mK (assumed). Along the fibres k1 ~6.4 W/mK (extensions.lamina); QI in-plane ~(k1 + k2)/2 ~3.4 W/mK"}
+  expansion_1_K: {table: [[50, 2.3e-6]], note: "QI in-plane, stiffness-weighted from lamina alpha1 0.2e-6 and alpha2 37e-6 (est); through-thickness ~alpha2"}
+  youngs_modulus_GPa: {table: [[20, 52.6]], note: "QI in-plane modulus by classical laminate theory from E1 140 GPa (toray-2025-t300-datasheet) and est E2 8.3, G12 3.9 GPa, nu12 0.26"}
+  poisson: {value: 0.31, note: "QI in-plane, laminate theory"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: {value: 135, range: [120, 200], note: "matrix Tg: #2500 epoxy cured at 130 C, Tg not given (assumed ~135 C dry); 180 C-cure aerospace epoxies reach 180-200 C; wet Tg is lower"}
+  decomposition_degC: {value: 300, range: [280, 350], note: "epoxy matrix thermal decomposition onset assumed (general knowledge, not read); carbon fibre is stable far above this in machining"}
+  hardness: {shore_D: 88, note: "placeholder: no hardness was read; Shore D typical of cured epoxy laminates assumed"}
+  yield_MPa: {value: 600, note: "brittle: yield = ultimate. QI tensile strength from E_QI x UD failure strain (52.6 GPa x 1.26 % = 660 MPa, toray strain) reduced ~10 % for ply interaction"}
+  ultimate_MPa: {value: 600, note: "as yield_MPa"}
+  elongation_pct: {value: 1.26, src: toray-2025-t300-datasheet, note: "UD 0 deg tensile strain at failure"}
+  fracture_strain: {value: 0.0126, src: toray-2025-t300-datasheet, note: "UD 0 deg"}
+
+flow_stress:
+  model: none                      # task rule for composites (no flow stress); current schemas.py accepts only johnson_cook or null
+  note: "Brittle fibre composite: no flow stress. Cutting model: fibre-orientation dependent edge forces (cutting.kienzle class value x extensions.cutting.fibre_orientation factors per ply), chips are powder; damage checks from composite.delamination (drilling exit push-out), fibre pull-out/uncut fibres at fibre cutting angles above 90 deg, and matrix temperature against Tg."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 300
+      mc: 0.3
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed; assumed"}
+      src: walter-2025-technical-compendium
+      note: "Walter class 'fibre-reinforced plastics' (O3, O4, O5), p. F9, neutral cutting edge geometry; one value for GFRP, CFRP and AFRP. Taken here as the orientation-averaged (QI) value"
+    - tool_class: carbide
+      coating: "CVD diamond"
+      kc11_N_mm2: 300
+      mc: 0.3
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 250
+      src: est
+      note: "Walter class value assumed for diamond-coated carbide; reference speed assumed"
+    - tool_class: pcd
+      coating: uncoated
+      kc11_N_mm2: 300
+      mc: 0.3
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 400
+      src: est
+      note: "Walter class value assumed for PCD; reference speed assumed"
+  mechanistic: []                  # no published milling calibration was readable
+  min_chip_thickness_ratio: {value: 0.5, src: est, note: "fibres bend and spring back under the edge radius instead of being cut; assumed"}
+  indentation_coeff_N_mm3: {value: 5.0e3, src: est, note: "placeholder between polymers (2.5e3) and aluminium (1.5e4); fibre spring-back under the flank gives strong flank contact; not identified"}
+  work_hardening:
+    src: est
+    note: "not applicable; machining leaves a damaged layer (matrix cracks, fibre pull-out) instead"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.25, src: est, range: [0.15, 0.4], note: "assumed; no carbide/CFRP friction measurement was read"}
+    sticking_ratio: {value: 0.0, src: est, note: "powder chip, no sticking zone"}
+  - tool_class: carbide
+    coating: "CVD diamond"
+    mu_sliding: {value: 0.15, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.15, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+
+chip:
+  tendency: powder                 # fractured fibre fragments and matrix powder
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "no coherent chip"}
+  oxide_colours: null
+
+tool_life:                         # wear is abrasive edge rounding by the fibres; temperatures stay low (matrix limit)
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 224
+    n: 0.35
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.05
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 10 min at vc = 100 m/min assumed for uncoated K-grade carbide; the practical end of life is set by edge rounding causing delamination, fibre pull-out and uncut fibres, not by VB alone. No CFRP tool-life fit could be read"
+  - tool_class: carbide
+    coating: "CVD diamond"
+    C_m_min: 780
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.05
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 30 min at 200 m/min assumed; coating delamination ends life abruptly"
+  - tool_class: pcd
+    coating: uncoated
+    C_m_min: 1550
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.05
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 60 min at 300 m/min assumed. Leitz recommends DP for very abrasive materials including fibre reinforced plastics (leitz-2017-lexicon-ed7-ch11)"
+tool_life_usui: []
+
+residual_stress: []                # cure stresses from ply CTE mismatch are not represented
+
+skin:
+  src: est
+  note: "resin-rich surface layer / peel-ply texture not modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 300, src: est, note: "matrix decomposition onset (see physical); burnt/charred matrix at the cut surface"}
+  white_layer_degC: null
+  melt_smear_degC: {value: 135, src: est, note: "matrix Tg (est): above it the matrix softens and smears, fibres lose support, pull-out and surface damage grow"}
+
+ignition: null
+
+composite:
+  fibre: carbon
+  matrix: "epoxy (Toray #2500 class, 130 C cure, for the Toray composite data)"
+  fibre_volume_fraction: {value: 0.6, src: toray-2025-t300-datasheet, note: "Toray composite properties are normalised to 60 % fibre volume"}
+  layup: "quasi-isotropic [0/45/90/-45]ns (physical section); unidirectional [0]n data in extensions.lamina"
+  delamination:
+    src: est
+    note: "Hocheng & Dharan (J. Eng. Ind. 112, 1990, 236-239) push-out model for a twist drill, F_crit = pi * sqrt(8 G_IC E h^3 / (3 (1 - nu^2))), h = uncut thickness under the drill; standard form as widely reproduced, not read in the original in this session. E = 52.6 GPa and nu = 0.31 (QI laminate, est); for UD an orthotropic plate solution is needed. More h values in extensions.delamination"
+    model: hocheng-dharan
+    G_IC_J_m2: {value: 200, range: [100, 300], src: est, note: "mode I interlaminar toughness typical of untoughened 120-180 C-cure carbon/epoxy (general knowledge; no T300/epoxy DCB value could be read); toughened systems reach 300-600 J/m2"}
+    critical_thrust_N: {value: 196, src: est, note: "at h = 0.5 mm (four 0.125 mm plies left), G_IC 200 J/m2, E 52.6 GPa, nu 0.31"}
+  dust_mass_fraction: {value: 1.0, src: est, note: "no coherent chips: all removed mass leaves as powder and fibre fragments; the airborne fine fraction is not quantified"}
+  abrasive_wear_factor: {value: 10, src: est, note: "multiplier on the abrasive (Archard-type) part of the tool wear model relative to plain carbon steel AISI 1045 at equal sliding distance and contact stress; assumed - carbon fibres wear carbide by abrasion and edge rounding at low temperature"}
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  fibre_properties:
+    src: toray-2025-t300-datasheet
+    density_kg_m3: {value: 1760}
+    tensile_strength_MPa: {value: 3530}
+    tensile_modulus_GPa: {value: 230}
+    strain_pct: {value: 1.5}
+    diameter_um: {value: 7}
+    expansion_axial_1_K: {value: -0.41e-6}
+    specific_heat_J_kgK: {value: 777, note: "0.777 J/g C"}
+    conductivity_axial_W_mK: {value: 10.5, note: "0.105 J/(cm s C); direction not stated, taken as axial"}
+    electrical_resistivity_ohm_m: {value: 1.7e-5, note: "1.7e-3 ohm cm"}
+  matrix_properties:
+    src: est
+    note: "generic cured epoxy assumed (no #2500 resin data read); used only for the micromechanics estimates"
+    density_kg_m3: 1200
+    youngs_modulus_GPa: 3.5
+    poisson: 0.35
+    specific_heat_J_kgK: 1200
+    conductivity_W_mK: 0.2
+    expansion_1_K: 6.0e-5
+  lamina:                          # UD ply at Vf 0.6; 1 = fibre direction
+    E1_GPa: {value: 140, src: toray-2025-t300-datasheet, note: "0 deg tensile modulus; rule of mixtures with Em 3.5 GPa gives 139 GPa (consistency check)"}
+    E2_GPa: {value: 8.3, src: est, note: "Halpin-Tsai, xi = 2, fibre transverse modulus 15 GPa (assumed), Em 3.5 GPa (assumed)"}
+    G12_GPa: {value: 3.9, src: est, note: "Halpin-Tsai, xi = 1, fibre shear modulus 15 GPa (assumed), Gm 1.3 GPa"}
+    nu12: {value: 0.26, src: est, note: "rule of mixtures, fibre 0.20 (assumed), matrix 0.35 (assumed)"}
+    Xt_MPa: {value: 1820, src: toray-2025-t300-datasheet, note: "0 deg tensile strength (ASTM D3039)"}
+    Xc_MPa: {value: 1470, src: toray-2025-t300-datasheet, note: "0 deg compressive strength (SACMA SRM 1R-94)"}
+    Yt_MPa: {value: 76, src: toray-2025-t300-datasheet, note: "90 deg tensile strength (ASTM D3039)"}
+    S12_MPa: {value: 95, src: toray-2025-t300-datasheet, note: "in-plane shear strength (ASTM D3518)"}
+    ILSS_MPa: {value: 94.1, src: toray-2025-t300-datasheet, note: "SACMA SRM 8R-94"}
+    flexural_strength_MPa: {value: 1790, src: toray-2025-t300-datasheet}
+    flexural_modulus_GPa: {value: 123, src: toray-2025-t300-datasheet}
+    k1_W_mK: {value: 6.4, src: est, note: "rule of mixtures 0.6 x 10.5 (toray) + 0.4 x 0.2 (assumed)"}
+    k2_W_mK: {value: 0.47, src: est, note: "see physical.conductivity_W_mK"}
+    alpha1_1_K: {value: 0.2e-6, src: est, note: "Schapery, fibre -0.41e-6 (toray), matrix 60e-6 (assumed); measured T300/epoxy values are near zero, sign uncertain"}
+    alpha2_1_K: {value: 3.7e-5, src: est, note: "Schapery, fibre transverse 7e-6 (assumed)"}
+    ply_thickness_mm: {value: 0.125, src: est, note: "typical cured UD prepreg ply"}
+  layups:
+    - id: ud
+      layup: "[0]n"
+      note: "orthotropic; use the lamina constants; edge forces from cutting.fibre_orientation at the local theta"
+    - id: qi
+      layup: "[0/45/90/-45]ns"
+      E_inplane_GPa: {value: 52.6, src: est, note: "classical laminate theory with the lamina values"}
+      nu_inplane: {value: 0.31, src: est, note: "classical laminate theory"}
+      note: "each tooth pass meets 0, 45, 90 and 135 deg plies; sum the per-ply forces over the engaged thickness"
+  cutting:
+    fibre_orientation:             # UD ply: theta = angle from the cutting velocity to the fibres, 0-180 deg
+      src: est
+      note: "factors on the Walter class kc (kc_factor) and the thrust/cutting force ratio (Ft_over_Fc) per ply. ASSUMED shape: the commonly reported trend for UD CFRP is a cutting force minimum near theta 0-15 deg rising to a maximum around 90-135 deg, and a high thrust force at 0 deg (fibres bent under the edge) falling towards 45-90 deg. The measured values of Wang, Ramulu & Arola (Int. J. Mach. Tools Manuf. 35, 1995) and later studies could not be read (paywalled). Mean of kc_factor over 0/45/90/135 deg = 1.0, so the QI value equals the Walter class value. Above 90 deg expect subsurface cracking, fibre pull-out and uncut fibres"
+      points:
+        - {theta_deg: 0, kc_factor: 0.6, Ft_over_Fc: 1.0}
+        - {theta_deg: 15, kc_factor: 0.65, Ft_over_Fc: 0.8}
+        - {theta_deg: 30, kc_factor: 0.75, Ft_over_Fc: 0.6}
+        - {theta_deg: 45, kc_factor: 0.85, Ft_over_Fc: 0.5}
+        - {theta_deg: 60, kc_factor: 1.0, Ft_over_Fc: 0.45}
+        - {theta_deg: 90, kc_factor: 1.2, Ft_over_Fc: 0.45}
+        - {theta_deg: 120, kc_factor: 1.35, Ft_over_Fc: 0.55}
+        - {theta_deg: 135, kc_factor: 1.35, Ft_over_Fc: 0.65}
+        - {theta_deg: 150, kc_factor: 1.1, Ft_over_Fc: 0.8}
+        - {theta_deg: 180, kc_factor: 0.6, Ft_over_Fc: 1.0}
+  delamination:
+    src: est
+    note: "Hocheng-Dharan critical thrust for the QI laminate (E 52.6 GPa, nu 0.31, G_IC 200 J/m2) at other uncut thicknesses; F scales with h^1.5 and sqrt(G_IC)"
+    E_GPa: 52.6
+    nu: 0.31
+    examples:
+      - {h_mm: 0.25, F_N: 69}
+      - {h_mm: 0.5, F_N: 196}
+      - {h_mm: 1.0, F_N: 554}
+  fibre_pull_out: {src: est, note: "fibre pull-out, uncut fibres and subsurface matrix cracking grow at fibre cutting angles above ~90 deg, with edge rounding (tool wear) and with matrix temperature above Tg; the outer plies at entry and exit are unsupported (peel-up at entry, push-out at exit)"}
+  hazards:
+    dust:
+      src: toray-2025-t300-datasheet
+      fibre_diameter_um: {value: 7, note: "T300 filament diameter; thinner fragments arise only if fibres split (not quantified)"}
+      electrical_resistivity_ohm_m: {value: 1.7e-5, note: "fibre resistivity: CFRP dust is electrically conductive, a risk to unprotected electrical equipment (consequence assumed)"}
+      note: "machining CFRP produces fine powder with respirable matrix/fibre particles; extraction at source and P2/P3 protection are normal practice (general knowledge, not read)"
+  recommended:
+    n_rpm: {value: [10000, 16000], src: leitz-2020-lexicon-ed7-ch05, note: "window, Leitz serrated HW solid Z2 router (D 2-8 mm) for glass and carbon fibre materials; multi-tooth geometry to avoid delamination"}
+    vf_m_min: {value: [1.5, 2.0], src: leitz-2020-lexicon-ed7-ch05, note: "window, same tool"}
+
+notes: "T300/epoxy Vf 0.6. Sourced: fibre properties and UD lamina strengths/modulus (Toray T300 datasheet), Kienzle class value (Walter FRP), router window (Leitz). Estimated: laminate density, cp, conductivities and CTEs (micromechanics with assumed matrix and fibre-transverse values), E2/G12/nu12, QI modulus and strength, hardness, Tg, decomposition, the fibre-orientation force table, G_IC and critical thrust, friction, tool life, abrasive factor. Gaps (paywalled): Wang/Ramulu/Arola orthogonal forces vs fibre angle, CFRP carbide/PCD tool-wear data, T300/epoxy G_IC, dust particle size and respirable fraction."

@@ -1,0 +1,143 @@
+# AISI 304 (annealed) orthogonal tube turning, two TPGN inserts: measured chip thickness and chip ratio.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: chipratio-orth-ss304-marcicano2005
+quantity: chip_ratio
+reference:
+  src: marcicano-2005-aisi304-cutting-tests
+  location: Tables 3 and 4, columns t0 and t1
+  digitised: false
+  measured: true
+  note: t1 = mean of 7 digital-caliper readings per chip sample (Sect. 3.2); no uncertainty stated
+setup:
+  operation: orthogonal_turning
+  material:
+    db: aisi304
+    note: annealed AISI 304 tubes; quasi-static compression gives JC A 360 MPa, B 1244 MPa, n 0.72 (Table 1); hardness not
+      stated
+  tool:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    type: turning_insert
+    iso_code: TPGN 160308
+    grade: ISO M-type carbide, uncoated, no chip breaker
+    maker: A for tests A1-A11, B for tests B1-B13 (not named)
+    tool_class: carbide
+    coating: none
+    rake_deg: 5
+    clearance_deg:
+      value: 6
+      src: est
+      note: 'assumed: not stated: ISO 1832 letter P = 11 deg insert clearance (code convention, standard not read) minus
+        the 5 deg positive tilt that gives the stated rake'
+    edge_radius_um:
+      value: 15
+      src: est
+      note: 'assumed: not stated; typical of a ground (G-tolerance) uncoated insert edge (est.)'
+    nose_radius_mm:
+      value: 0.8
+      src: est
+      note: 'assumed: ISO code ''08'' = 0.8 mm corner radius (code convention); outside the cut when the tube wall lies
+        on the straight edge'
+    assumed_inputs: [clearance_deg, edge_radius_um, nose_radius_mm]
+  machine:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    model: ROMI S-30 lathe
+    dynamometer: load-cell type dynamometer with PC acquisition (make not given)
+  stock:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    form: machined tube (dimensions not given)
+  conditions:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2, Tables 3-4
+    test_ids: [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11, B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13]
+    h_per_test_mm: [0.097, 0.428, 0.428, 0.097, 0.06, 0.06, 0.097, 0.428, 0.205, 0.205, 0.205, 0.06, 0.097, 0.205, 0.428,
+      0.428, 0.06, 0.097, 0.205, 0.205, 0.205, 0.205, 0.205, 0.205]
+    vc_per_test_m_min: [38, 38, 60, 60, 60, 24, 24, 24, 24, 38, 60, 17, 17, 17, 17, 13, 13, 13, 13, 13, 17, 27, 42, 67]
+    width_of_cut_mm: {value: 1.0, note: '1 mm for tool A tests, 1.5 mm for tool B tests (width_per_test_mm)'}
+    kinematics: 'orthogonal tube turning: feed per rev = uncut chip thickness t0, depth of cut = width'
+    coolant: {value: dry, src: est, note: 'assumed: not stated; dry orthogonal tests are implied by the analysis'}
+    width_per_test_mm: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5,
+      1.5, 1.5, 1.5, 1.5]
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: t1 A1, value: 0.388, unit: mm, x: 0.097, x_name: h, x_unit: mm, note: 'vc 38 m/min, width 1.0 mm'}
+- {name: chip_ratio A1 (derived), value: 0.25, unit: '', x: 0.097, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.097 / 0.388; not printed in the source}
+- {name: t1 A2, value: 0.963, unit: mm, x: 0.428, x_name: h, x_unit: mm, note: 'vc 38 m/min, width 1.0 mm'}
+- {name: chip_ratio A2 (derived), value: 0.444, unit: '', x: 0.428, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.428 / 0.963; not printed in the source}
+- {name: t1 A3, value: 1.12, unit: mm, x: 0.428, x_name: h, x_unit: mm, note: 'vc 60 m/min, width 1.0 mm'}
+- {name: chip_ratio A3 (derived), value: 0.382, unit: '', x: 0.428, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.428 / 1.12; not printed in the source}
+- {name: t1 A4, value: 0.33, unit: mm, x: 0.097, x_name: h, x_unit: mm, note: 'vc 60 m/min, width 1.0 mm'}
+- {name: chip_ratio A4 (derived), value: 0.294, unit: '', x: 0.097, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.097 / 0.33; not printed in the source}
+- {name: t1 A5, value: 0.256, unit: mm, x: 0.06, x_name: h, x_unit: mm, note: 'vc 60 m/min, width 1.0 mm'}
+- {name: chip_ratio A5 (derived), value: 0.234, unit: '', x: 0.06, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.06 / 0.256; not printed in the source}
+- {name: t1 A6, value: 0.193, unit: mm, x: 0.06, x_name: h, x_unit: mm, note: 'vc 24 m/min, width 1.0 mm'}
+- {name: chip_ratio A6 (derived), value: 0.311, unit: '', x: 0.06, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.06 / 0.193; not printed in the source}
+- {name: t1 A7, value: 0.235, unit: mm, x: 0.097, x_name: h, x_unit: mm, note: 'vc 24 m/min, width 1.0 mm'}
+- {name: chip_ratio A7 (derived), value: 0.413, unit: '', x: 0.097, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.097 / 0.235; not printed in the source}
+- {name: t1 A8, value: 1.347, unit: mm, x: 0.428, x_name: h, x_unit: mm, note: 'vc 24 m/min, width 1.0 mm'}
+- {name: chip_ratio A8 (derived), value: 0.318, unit: '', x: 0.428, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.428 / 1.347; not printed in the source}
+- {name: t1 A9, value: 0.623, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 24 m/min, width 1.0 mm'}
+- {name: chip_ratio A9 (derived), value: 0.329, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.623; not printed in the source}
+- {name: t1 A10, value: 0.597, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 38 m/min, width 1.0 mm'}
+- {name: chip_ratio A10 (derived), value: 0.343, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.597; not printed in the source}
+- {name: t1 A11, value: 0.513, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 60 m/min, width 1.0 mm'}
+- {name: chip_ratio A11 (derived), value: 0.4, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.513; not printed in the source}
+- {name: t1 B1, value: 0.196, unit: mm, x: 0.06, x_name: h, x_unit: mm, note: 'vc 17 m/min, width 1.5 mm'}
+- {name: chip_ratio B1 (derived), value: 0.306, unit: '', x: 0.06, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.06 / 0.196; not printed in the source}
+- {name: t1 B2, value: 0.243, unit: mm, x: 0.097, x_name: h, x_unit: mm, note: 'vc 17 m/min, width 1.5 mm'}
+- {name: chip_ratio B2 (derived), value: 0.399, unit: '', x: 0.097, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.097 / 0.243; not printed in the source}
+- {name: t1 B3, value: 0.464, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 17 m/min, width 1.5 mm'}
+- {name: chip_ratio B3 (derived), value: 0.442, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.464; not printed in the source}
+- {name: t1 B4, value: 0.799, unit: mm, x: 0.428, x_name: h, x_unit: mm, note: 'vc 17 m/min, width 1.5 mm'}
+- {name: chip_ratio B4 (derived), value: 0.536, unit: '', x: 0.428, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.428 / 0.799; not printed in the source}
+- {name: t1 B5, value: 0.81, unit: mm, x: 0.428, x_name: h, x_unit: mm, note: 'vc 13 m/min, width 1.5 mm'}
+- {name: chip_ratio B5 (derived), value: 0.528, unit: '', x: 0.428, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.428 / 0.81; not printed in the source}
+- {name: t1 B6, value: 0.194, unit: mm, x: 0.06, x_name: h, x_unit: mm, note: 'vc 13 m/min, width 1.5 mm'}
+- {name: chip_ratio B6 (derived), value: 0.309, unit: '', x: 0.06, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.06 / 0.194; not printed in the source}
+- {name: t1 B7, value: 0.237, unit: mm, x: 0.097, x_name: h, x_unit: mm, note: 'vc 13 m/min, width 1.5 mm'}
+- {name: chip_ratio B7 (derived), value: 0.409, unit: '', x: 0.097, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.097 / 0.237; not printed in the source}
+- {name: t1 B8, value: 0.419, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 13 m/min, width 1.5 mm'}
+- {name: chip_ratio B8 (derived), value: 0.489, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.419; not printed in the source}
+- {name: t1 B9, value: 0.379, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 13 m/min, width 1.5 mm'}
+- {name: chip_ratio B9 (derived), value: 0.541, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.379; not printed in the source}
+- {name: t1 B10, value: 0.546, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 17 m/min, width 1.5 mm'}
+- {name: chip_ratio B10 (derived), value: 0.375, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.546; not printed in the source}
+- {name: t1 B11, value: 0.453, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 27 m/min, width 1.5 mm'}
+- {name: chip_ratio B11 (derived), value: 0.453, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.453; not printed in the source}
+- {name: t1 B12, value: 0.494, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 42 m/min, width 1.5 mm'}
+- {name: chip_ratio B12 (derived), value: 0.415, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.494; not printed in the source}
+- {name: t1 B13, value: 0.469, unit: mm, x: 0.205, x_name: h, x_unit: mm, note: 'vc 67 m/min, width 1.5 mm'}
+- {name: chip_ratio B13 (derived), value: 0.437, unit: '', x: 0.205, x_name: h, x_unit: mm, note: derived here as t0 / t1
+    = 0.205 / 0.469; not printed in the source}
+reference_curves: []
+notes: Chip ratio 0.23-0.54. Caliper measurement of a curled, possibly serrated 304 chip tends to overestimate t1 slightly
+  (est.).

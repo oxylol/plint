@@ -1,0 +1,64 @@
+# Chips in the flutes (cnctwin.chips.flutes, docs/models/chips.md "Flute fill and packing"): confinement,
+# screw conveying of the flute, coolant transport, depth attenuation, compaction stress and packing loads.
+format: cnctwin-model-params
+version: 1
+model: chips-flute
+description: "Flute fill, evacuation rate and packing torque/force of confined chips (drilling, tapping, deep slots)"
+params:
+  flute_friction:
+    value: 0.3
+    unit: "-"
+    range: [0.1, 0.6]
+    src: est
+    note: "friction coefficient of chips sliding on the flute face (polished, often coated, wetted); enters the screw-conveying efficiency eta = sin(delta) (sin(delta) - mu cos(delta)) of the flute (high-speed limit of enclosed screw conveyor theory, roberts-1999-screw)"
+  wall_friction:
+    value: 0.5
+    unit: "-"
+    range: [0.3, 0.8]
+    src: est
+    note: "friction coefficient of compacted chips on the machined hole wall (fresh metal)"
+  depth_attenuation_per_diameter:
+    value: 0.1
+    unit: "-"
+    range: [0.03, 0.3]
+    src: est
+    note: "conveying velocity falls as exp(-k L/D) with the evacuation length L in diameters: wall friction along a longer chip column slows it (Janssen-type), so evacuation forces grow exponentially with depth as observed in drilling (mellinger-2003); k chosen so that conveying halves at about 7 D"
+  coolant_slip_ratio:
+    value: 0.5
+    unit: "-"
+    range: [0.2, 0.9]
+    src: est
+    note: "chip velocity / coolant velocity in the flute for through-tool coolant (chips lag the fluid)"
+  confinement_onset:
+    value: 0.75
+    unit: "-"
+    src: est
+    note: "fraction of a ring just outside the tool whose surface lies above the tool tip from which chips stay in the flutes: 1 for a drilled hole, about 0.75 for a full slot (open behind the tool, where chips are thrown out and handled as particles), below for open cuts"
+  critical_fill:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "flute fill (bulk chip volume / gullet volume of the engaged length) above which the chips must be compressed: the packing stress starts here"
+  kawakita_half_stress_ratio:
+    value: 0.003
+    unit: "-"
+    range: [0.001, 0.02]
+    src: est
+    note: "1/b of the Kawakita compaction law C = a b P / (1 + b P) (kawakita-ludde-1971) as a fraction of the chip material's yield strength: cold compaction of loose aluminium chips reaches about half the solid density at about 10 MPa, i.e. 1/b about 0.003 x 276 MPa"
+  max_stress_yield_ratio:
+    value: 3.0
+    unit: "-"
+    src: est
+    note: "the compaction stress cannot exceed about 3 x the yield strength (a fully dense billet flows; Heckel-type limit)"
+  gullet_area_fraction:
+    value: 0.25
+    unit: "-"
+    range: [0.15, 0.4]
+    src: est
+    note: "total flute (gullet) cross-section / tool cross-section pi D^2/4 when the tool file gives no gullet_area_mm2 (two-flute drills about 0.3, four-flute end mills about 0.25, taps about 0.15)"
+  conveying_by_form:
+    value: {11: 0.6, 12: 0.8, 13: 0.3, 21: 0.6, 22: 1.0, 23: 0.3, 31: 1.0, 32: 1.0, 41: 1.2, 42: 1.0, 43: 0.3,
+            51: 1.2, 52: 1.0, 61: 1.0, 62: 1.0, 70: 1.0, 80: 1.0, 90: 0.8, 95: 0.5}
+    unit: "-"
+    src: est
+    note: "multiplier on the conveying velocity by chip form: coherent conical/washer helices are pushed out by the chip being formed, granular broken chips convey like bulk solids, ribbons and snarls jam (qualitative drilling observations of continuous chip formation and clogging)"

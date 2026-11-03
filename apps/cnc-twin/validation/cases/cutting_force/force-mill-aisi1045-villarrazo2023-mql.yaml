@@ -1,0 +1,61 @@
+# AISI 1045 (220 HB) shoulder milling with a 16 mm two-insert cutter (Mitsubishi AOMT 1236 inserts, TiAlCrN MP6120),
+# fz 0.15 mm, ap 3 mm, ae 9 mm, MQL and CryoMQL: RMS-combined cutting force over a pass at increasing cut length (Table 3).
+format: cnctwin-validation-case
+version: 1
+id: force-mill-aisi1045-villarrazo2023-mql
+quantity: cutting_force
+reference:
+  src: villarrazo-2023-aisi1045-cryomql-milling
+  location: "Sect. 2 (setup, Table 2 cutting parameters, Eqs. 1-2 RMS definition), Table 3 (RMS cutting forces at 630, 5040, 6300 and 7245 mm of cut length)"
+  digitised: false
+  measured: true
+  note: "Values printed with a decimal comma (e.g. '178,837' read as 178.837 N). Each test was carried out three times and averaged. Kistler table dynamometer (printed '9955A') with an OROS OR35 analyser at 12800 samples/s."
+setup:
+  operation: peripheral_milling
+  material:
+    db: aisi1045
+    note: "AISI 1045 at 220 HB (Table 1: C 0.40-0.50, Mn 0.50-0.80, Si 0.15-0.40 %); harder than the normalised DB entry (190 HB)"
+  tool:
+    src: villarrazo-2023-aisi1045-cryomql-milling
+    page: Sect. 2
+    type: indexable_shoulder_mill
+    diameter_mm: 16
+    inserts: 2
+    body_length_mm: 85
+    internal_coolant: true
+    insert: "Mitsubishi AOMT123612PEER-M (printed 'AOMT1233612PEER-M'), grade MP6120, TiAlCrN-coated carbide, parallelogram 85 deg"
+    clearance_deg: {value: 20, note: "'incidence angle' 20 deg"}
+    entering_angle_deg: {value: 90, note: "'position angle' 90 deg"}
+    corner_radius_mm: {value: 1.2, src: est, note: "decoded from the insert code (12 = 1.2 mm corner radius per the usual AOMT coding); not stated in words"}
+    rake_deg: {value: 10, src: est, note: "assumed: not stated (positive AOMT milling insert)"}
+    assumed_inputs: [corner_radius_mm, rake_deg]
+  machine:
+    src: villarrazo-2023-aisi1045-cryomql-milling
+    page: Sect. 2
+    model: Ibarmia ZV25 machining centre
+  conditions:
+    src: villarrazo-2023-aisi1045-cryomql-milling
+    page: Table 2
+    spindle_rpm: {value: [6000, 6700, 7000], note: "for the stages 0-5040, 5040-6300 and 6300-7245 mm of cut length; the source pairs them with vc 340, 380 and 400 m/min, which would need a 18 mm diameter (6000 rpm on 16 mm gives 302 m/min, computed here)"}
+    vc_m_min: [340, 380, 400]
+    fz_mm_tooth: 0.15
+    ap_mm: 3
+    ae_mm: 9
+    pass_length_mm: 315
+    direction: {value: down, src: est, note: "assumed: not stated"}
+    coolant: "MQL: biodegradable canola oil 100 mL/h; CryoMQL: the same with CO2 at 10 bar through a special holder (-78 C at the tool tip)"
+    force_statistic: "F_RMS = sqrt((Fx^2 + Fy^2 + Fz^2) / 3) of the RMS values of the three components over a pass (Eqs. 1-2)"
+    assumed_inputs: [direction]
+  dynamics: null
+  program: null
+reference_values:
+  - {name: F_RMS_MQL_630mm, value: 178.837, unit: N, note: "fresh inserts (630 mm cut), vc 340 m/min / 6000 rpm"}
+  - {name: F_RMS_CryoMQL_630mm, value: 179.325, unit: N, note: "fresh inserts (630 mm cut)"}
+  - {name: F_RMS_MQL_5040mm, value: 188.341, unit: N, note: "after 5040 mm of cut, vc 340 m/min"}
+  - {name: F_RMS_CryoMQL_5040mm, value: 185.394, unit: N}
+  - {name: F_RMS_MQL_6300mm, value: 189.532, unit: N, note: "vc 380 m/min / 6700 rpm"}
+  - {name: F_RMS_CryoMQL_6300mm, value: 192.346, unit: N}
+  - {name: F_RMS_MQL_7245mm, value: 192.127, unit: N, note: "vc 400 m/min / 7000 rpm"}
+  - {name: F_RMS_CryoMQL_7245mm, value: 195.338, unit: N}
+reference_curves: []
+notes: "An unusual statistic: the simulator must compute the RMS of each component over the pass (including the zero-force part of each revolution, est.) and combine them as in Eq. 2; it is neither the mean nor the peak. Tool wear grows along the cut (flank wear about 27 % higher with MQL at the end), so only the 630 mm values are fresh-tool references. The speed-diameter mismatch (see conditions) must be resolved before use (the stated rpm is the machine setting and is taken as primary, est.)."

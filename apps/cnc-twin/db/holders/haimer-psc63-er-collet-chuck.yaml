@@ -1,0 +1,50 @@
+format: cnctwin-holder
+version: 1
+series_id: haimer-psc63-er-collet-chuck
+maker: "HAIMER"
+series: "Collet chuck type ER on polygon shank PSC63 (ISO 26623-1, the Capto C6 size), modular interface"
+src: haimer-shop-cc6-021-32
+items:
+  - id: haimer-cc6-021-32
+    order_code: "CC6.021.32"
+    type: er_collet
+    modular_interface: true
+    taper: Capto-C6                    # PSC63 to ISO 26623-1
+    collet_size: ER32
+    bore_mm: {value: [1.5, 20.0], src: haimer-shop-cc6-021-32}
+    gauge_length_mm: {value: 100, src: haimer-shop-cc6-021-32, note: "length A, long version"}
+    nose_diameter_mm: {value: 50, src: haimer-shop-cc6-021-32, note: "clamping nut D"}
+    length_L_mm: {value: 47.5, src: haimer-shop-cc6-021-32}
+    profile_mm: {value: [[0, 50], [100, 50]], src: est, note: "only nut and flange (63 mm) diameters printed; body assumed not wider than the nut"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320, note: "high-precision ER collet"}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm", src: haimer-shop-cc6-021-32}
+    max_rpm: {value: 25000, src: est, note: "not printed; set to the balancing speed"}
+    mass_kg: {value: 1.402, src: haimer-shop-cc6-021-32}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-cc6-021-16
+    order_code: "CC6.021.16"
+    type: er_collet
+    modular_interface: true
+    taper: Capto-C6
+    collet_size: ER16
+    bore_mm: {value: [0.5, 10.0], src: haimer-shop-cc6-021}
+    gauge_length_mm: {value: 100, src: haimer-shop-cc6-021}
+    nose_diameter_mm: {value: 28, src: haimer-shop-cc6-021}
+    length_L_mm: {value: 33, src: haimer-shop-cc6-021}
+    profile_mm: {value: [[0, 28], [100, 28]], src: est, note: "only nut diameter printed"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 5, src: haimer-shop-collet-81-320}
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm", src: haimer-shop-cc6-021}
+    max_rpm: {value: 25000, src: est, note: "set to the balancing speed"}
+    mass_kg: {value: 1.035, src: haimer-shop-cc6-021}
+    clamp_length_mm: null
+    price_eur: null
+notes: "Variant table also lists CC6.021.20/.25/.40 (100 mm) and CC6.022.xx (160 mm). A KM63 adaptor and a Capto C6-to-HSK adaptor were not read (gap)."

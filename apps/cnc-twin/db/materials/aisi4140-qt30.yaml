@@ -1,0 +1,129 @@
+# AISI 4140 / 42CrMo4 (1.7225), quenched and tempered to ~30 HRC. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: aisi4140-qt30
+name: "AISI 4140 / 42CrMo4, quenched and tempered ~30 HRC"
+family: steel
+iso_group: P
+condition: "+QT: 840-880 C oil or water, tempered 540-680 C (ovako-2026-42crmo4); 270-320 HB for 40-100 mm bar"
+designations: {UNS: G41400, EN: "42CrMo4 (1.7225)", SAE: "4140", JIS: "SCM440"}
+stock_forms: []                    # no published residual-stress profile of quenched and tempered bar was read
+
+physical:
+  src: thyssenkrupp-2017-42crmo4   # indicative values, not condition specific
+  density_kg_m3: {value: 7850}
+  specific_heat_J_kgK: {table: [[20, 461], [100, 480], [200, 498], [300, 524], [400, 524], [500, 615], [600, 690], [700, 720], [800, 682]], src: est, note: "20 C value from thyssenkrupp-2017-42crmo4; temperature dependence copied from AISI 1045 (xiu-2019-1045-grinding-fe)"}
+  conductivity_W_mK: {table: [[20, 45.1], [100, 42.8], [200, 40.1], [300, 37.9], [400, 36.0], [500, 34.7], [600, 32.4], [700, 30.2], [800, 28.0]], src: est, note: "20 C value from thyssenkrupp-2017-42crmo4 (not condition specific; tempered martensite is a few per cent lower); shape from AISI 1045 (xiu-2019) scaled as in aisi4140-annealed"}
+  expansion_1_K: {table: [[100, 12.1e-6], [200, 12.7e-6], [300, 13.2e-6], [400, 13.6e-6], [500, 14.0e-6]], note: "mean CTE from 20 C"}
+  youngs_modulus_GPa: {table: [[20, 212], [100, 207], [200, 199], [300, 192]]}
+  poisson: {value: 0.3, src: zielinski-2021-42crmo4-precision-turning, note: "Table 5 (FE input)"}
+  solidus_degC: {value: 1440, src: est, note: "binary Fe-C estimate for 0.4 % C"}
+  liquidus_degC: {value: 1500, src: est, note: "binary Fe-C estimate for 0.4 % C"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 295, src: ovako-2026-42crmo4, range: [270, 320], note: "+QT round bar 40-100 mm: 270-320 HB (midpoint ~ 31 HRC)"}
+  yield_MPa: {value: 650, src: ovako-2026-42crmo4, note: "minimum Rp0.2 for 40-100 mm (also thyssenkrupp-2017-42crmo4); actual values are typically higher (cf. JC A = 792 MPa for 4340 at Rc 30)"}
+  ultimate_MPa: {value: 1000, src: ovako-2026-42crmo4, range: [900, 1100], note: "midpoint of the 900-1100 MPa band for 40-100 mm"}
+  elongation_pct: {value: 12, src: ovako-2026-42crmo4, note: "minimum A for 40-100 mm"}
+  fracture_strain: {value: 0.69, src: est, note: "from the minimum reduction of area Z = 50 % (ovako/thyssenkrupp, 40-100 mm): ln(1/0.5)"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 792
+  B_MPa: {value: 510, src: bertarelli-2016-beam-damage, note: "B is illegible in the archive.org OCR copy of Johnson & Cook 1983; read in Bertarelli 2016 Table 2, which reproduces the 1983 table"}
+  n: 0.26
+  C: 0.014
+  m: 1.03
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: {value: 20, src: est, note: "Johnson & Cook use room temperature as reference; 20 C assumed"}
+  T_melt_degC: 1520
+  src: johnson-cook-1983
+  note: "Surrogate: AISI 4340 at Rockwell C 30 (Johnson & Cook 1983 Table 1, Tm = 1793 K). 4340 (Ni-Cr-Mo) and 4140 (Cr-Mo) Q&T to 30 HRC have similar strength; no 4140 Q&T set from an identifiable source was read. Alternative: zielinski-2021 lists A 900, B 650, n 0.45, C 0.034, m 0.328, eps0 0.001, Tm 1536 C for 42CrMo4 at 42 HRC (origin of the set unclear)."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 2000
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "Walter row 'low and high-alloy steels, low heat treatment level, Rm 750-1100 N/mm2' (groups P5, P8, P11, P12), chosen by the 900-1100 MPa strength of this condition; the comparison table lists 42CrMo4 as P7/P9, and P9 (Rm 1100-1400) has kc1.1 = 2500, mc = 0.25"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.25, src: est, note: "assumed; lower than for annealed steel because of the stronger, less ductile structure"}
+  indentation_coeff_N_mm3: {value: 4.4e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (295/200)"}
+  work_hardening:
+    layer_depth_um: {value: 30, src: est, note: "tempered martensite hardens less than ferrite-pearlite; not measured"}
+    hardness_increase_pct: {value: 10, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.26, src: johnson-cook-1983, note: "JC n of the 4340 Rc 30 surrogate"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.45, src: est, range: [0.3, 0.6], note: "assumed; zielinski-2021 used Coulomb 0.6 for TiAlN-coated carbide on 42CrMo4 at 42 HRC in precision-turning FE"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+  - tool_class: carbide
+    coating: TiAlN
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 200, src: est, note: "Q&T medium-carbon alloy steels at ~30 HRC form shear-localised chips at lower speeds than annealed steel; value assumed, no measurement read"}
+  bue:
+    interface_temp_degC: {range: [200, 500], src: est, note: "assumed"}
+    vc_m_min: [5, 40]
+    src: est
+    note: "BUE window assumed narrower and at lower speed than for annealed steel; not measured"
+  breakability: {value: good, src: est, note: "higher strength and lower ductility give shorter chips; not measured"}
+  oxide_colours:
+    table: [[200, "#EDE4B0", "white-yellow (weissgelb)"], [220, "#E3C770", "straw yellow (strohgelb)"], [230, "#D4A93F", "golden yellow (goldgelb)"], [240, "#B98745", "yellow-brown (gelbbraun)"], [250, "#9B5B34", "brown-red (braunrot)"], [260, "#8C3A2E", "red (rot)"], [270, "#7B2E56", "purple-red (purpurrot)"], [280, "#5E2C78", "violet (violett)"], [290, "#2E2F82", "dark blue (dunkelblau)"], [300, "#3C64C4", "cornflower blue (kornblumenblau)"], [320, "#76A9DA", "light blue (hellblau)"], [340, "#7F8FA2", "blue-grey (blaugrau)"], [360, "#8E8E8E", "grey (grau)"]]
+    src: wikipedia-de-anlassen
+    note: "table for unalloyed tool steel applied to 1 % Cr steel; hex values are this database's rendering (est)"
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: carbide
+    coating: "CVD TiCN/Al2O3"
+    C_m_min: 453
+    n: 0.25
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 230 m/min (typical P-grade recommendation for ~300 HB alloy steel, general knowledge)"
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 200
+    n: 0.22
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 15 min at vc = 110 m/min (general knowledge)"
+tool_life_usui: null
+
+residual_stress: []                # quenched-and-tempered bar profile: none published in the sources read
+
+skin:
+  type: mill_scale
+  thickness_mm: {value: 0.05, src: est, note: "hardening-and-tempering scale on unpeeled bar assumed 10-100 um; peeled/ground bar: type none"}
+  hardness_factor: {value: 1.5, src: est, note: "iron oxide vs ~300 HB tempered martensite"}
+  abrasiveness_factor: {value: 2.0, src: est, note: "assumed"}
+
+thermal_damage:
+  burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour"}
+  white_layer_degC: {value: 740, src: ovako-2026-42crmo4, range: [740, 770], note: "Ac1 740 C, Ac3 770 C"}
+  overtemper_degC: {value: 600, src: est, range: [540, 680], note: "range is the +QT tempering range (ovako-2026-42crmo4, thyssenkrupp-2017-42crmo4); 600 C assumed as the tempering temperature that gives ~30 HRC. Surface heating above it softens the surface (overtempering)."}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "Q&T 4140 at ~30 HRC (EN 10083-3 40-100 mm strength band). Flow stress is the Johnson-Cook 1983 set for 4340 at Rc 30 used as a surrogate. Kienzle values are Walter standard values chosen by tensile strength. Friction, segmentation onset, BUE window, tool life, skin are estimates."

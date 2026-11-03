@@ -1,0 +1,32 @@
+# Sources for db/models/controller-*.yaml and docs/dialects.md (controller core, FANUC and Haas dialects).
+format: cnctwin-bibliography
+version: 1
+entries:
+  smid-2005-fanuc-macros:
+    type: book
+    authors: "Smid, Peter"
+    title: "Fanuc CNC Custom Macros: Programming Resources for Fanuc Custom Macro B Users"
+    publisher: "Industrial Press, New York"
+    year: 2005
+    isbn: "978-0-8311-3157-9"
+    pages: "variables and <vacant> (ch. 4-6), arithmetic and functions (ch. 8), branching and loops (ch. 9-10), system variables (ch. 13-15), G65/G66 and argument assignment I/II (ch. 7, 16)"
+  smid-2008-cnc-handbook:
+    type: book
+    authors: "Smid, Peter"
+    title: "CNC Programming Handbook, 3rd edition"
+    publisher: "Industrial Press, New York"
+    year: 2008
+    isbn: "978-0-8311-3347-4"
+    pages: "word address format and decimal point (ch. 5), circular interpolation R and IJK (ch. 29), coordinate systems G52/G54/G92 (ch. 18-19), subprograms (ch. 39)"
+  iso-6983-1-2009:
+    type: standard
+    title: "ISO 6983-1:2009 Automation systems and integration - Numerical control of machines - Program format and definitions of address words - Part 1: Data format for positioning, line motion and contouring control systems"
+    publisher: "ISO, Geneva"
+    year: 2009
+  erkorkmaz-altintas-2001:
+    type: article
+    authors: "Erkorkmaz, K.; Altintas, Y."
+    title: "High speed CNC system design. Part I: jerk limited trajectory generation and quintic spline interpolation"
+    venue: "International Journal of Machine Tools and Manufacture 41(9), 1323-1345"
+    year: 2001
+    doi: "10.1016/S0890-6955(01)00002-5"

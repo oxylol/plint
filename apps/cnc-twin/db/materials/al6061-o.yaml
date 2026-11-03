@@ -1,0 +1,132 @@
+# Workpiece material: aluminium 6061-O (annealed).
+# Physical and mechanical data: NASA 1972 materials handbook and Kaiser 2006 datasheet.
+format: cnctwin-material
+version: 1
+id: al6061-o
+name: "Aluminium 6061-O"
+family: aluminium
+iso_group: N
+condition: "O: annealed (fully soft)"
+designations: {UNS: A96061, EN: "EN AW-6061", DIN: "AlMg1SiCu"}
+stock_forms: []                    # annealed stock: no residual-stress profile (low by construction)
+
+physical:
+  src: muraca-1972-al6061-handbook
+  density_kg_m3: {value: 2700}
+  specific_heat_J_kgK: {table: [[100, 962]], range: [896, 962], note: "0.23 cal/g C at 100 C; Kaiser lists 896 J/kgK (labelled 212 F/100 C). Alloy property, taken as temper independent"}
+  conductivity_W_mK: {table: [[25, 180]], note: "O temper 0.43 cal/cm s C = 179.9 W/mK at 25 C; Kaiser: 180 W/mK (O temper, 20 C)"}
+  expansion_1_K: {table: [[100, 23.4e-6]], range: [23.4e-6, 23.6e-6], note: "mean 20-100 C; Kaiser gives 23.6e-6"}
+  youngs_modulus_GPa: {table: [[20, 68.9]], note: "typical E = 10.0e3 ksi, all tempers"}
+  poisson: {value: 0.33}
+  solidus_degC: {value: 582, note: "melting range 582-649 C (NASA); Kaiser 582-652 C"}
+  liquidus_degC: {value: 652, src: kaiser-2006-al6061-datasheet, range: [649, 652]}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 30, note: "Brinell 500 kg, O temper (section 7.31)"}
+  yield_MPa: {value: 55, note: "typical Fty 8.0 ksi, O temper"}
+  ultimate_MPa: {value: 124, note: "typical Ftu 18.0 ksi, O temper"}
+  elongation_pct: {value: 30, note: "in 2 in (50.8 mm), O temper"}
+  fracture_strain: {value: 1.0, src: est, note: "ln(1/(1-RA)) with an assumed reduction of area of about 63 % for annealed aluminium; no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: {value: 55, src: muraca-1972-al6061-handbook, note: "A = typical O-temper yield strength"}
+  B_MPa: 153
+  n: 0.29
+  C: {value: 0.002, note: "rate constant of the 6061-T6 set (dawara-2023-impact-framework), adopted as a proxy"}
+  m: {value: 1.34, note: "thermal exponent usually reproduced with the 6061-T6 Lesuer set (see al6061-t6.yaml), adopted as a proxy"}
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: {value: 652, src: kaiser-2006-al6061-datasheet, note: "liquidus"}
+  src: est
+  note: "No published JC set for 6061-O was found. B and n fitted here to the NASA typical tensile data (Fty 55, Ftu 124 MPa) with Considere's condition at an ASSUMED uniform true strain of 0.18 (total elongation 30 %): true stress at necking 148.6 MPa -> B = 152.6 MPa, n = 0.286. C and m borrowed from the 6061-T6 set. Quasi-static fit only; treat as a rough estimate."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 700
+      mc: 0.25
+      rake_ref_deg: {value: 0, src: est, note: "reference geometry not stated by ISCAR; neutral 0 deg rake assumed (Sandvik's kc1 convention)"}
+      vc_ref_m_min: {value: 300, src: est, note: "no reference speed in the catalogue; assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR group 21: aluminium wrought alloy, not hardenable (60 HB). Annealed 6061 (30 HB) is softer than the group's nominal hardness but gummy (BUE), so the group value is used unchanged"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 805
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 60
+      src: est
+      note: "carbide catalogue value x 1.15 assumed for HSS; no published HSS value read"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.23, src: wojciechowski-2022-min-chip-thickness, range: [0.08, 0.45], note: "6061 (temper not stated), analytic, Table 1; aluminium alloys 0.08-0.45"}
+  indentation_coeff_N_mm3: {value: 4.7e3, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (30/95)"}
+  work_hardening:
+    layer_depth_um: {value: 80, src: est, note: "annealed aluminium strain-hardens deeply under the tool; assumed, no measurement read"}
+    hardness_increase_pct: {value: 30, src: est, note: "assumed; the strain-hardening capacity of the O temper is large (Ftu/Fty = 2.25)"}
+    strain_hardening_exponent: {value: 0.29, src: est, note: "n of the estimated JC fit above"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.6, src: est, range: [0.5, 0.7], note: "assumed slightly above the 0.5-0.6 range used for aged alloys because annealed aluminium adheres more"}
+    sticking_ratio: {value: 0.7, src: est, note: "assumed long sticking zone"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.35, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation: null
+  bue:
+    interface_temp_degC: {range: [80, 300], src: est, note: "assumed"}
+    vc_m_min: [5, 250]
+    src: est
+    note: "assumed wider than for the aged tempers: soft, ductile aluminium forms BUE readily; by analogy with 7075 data (trujillo-2017-al7075-adhesion, jomaa-2014-al7075-orthogonal) where BUE/BUL persisted up to 300 m/min"
+  breakability: {value: poor, src: est, note: "very ductile; long stringy chips"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 1600
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge); life is usually limited by BUE and surface finish rather than flank wear in the O temper"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 200
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 110 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress: []                # annealed: as-supplied residual stresses assumed negligible; none read
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 582, src: muraca-1972-al6061-handbook, note: "solidus (start of melting range)"}
+
+ignition: null
+composite: null
+
+notes: "Annealed 6061, mainly relevant for parts formed in the O temper and machined before heat treatment. Sourced: physical and tensile data (NASA, Kaiser), Kienzle (ISCAR group 21), h_min/r_n range. Estimated: the whole JC set (fit to tensile data), friction, BUE window, work hardening, K_sp and Taylor constants."

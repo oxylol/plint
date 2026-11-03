@@ -1,0 +1,60 @@
+# Chip colour model of cnctwin.mechanics.colour (docs/models/mechanics.md, "Chip colour"): oxide films
+# grow parabolically with an Arrhenius rate (Wagner); the material's temper/oxide colour table is read
+# as the colour reached after oxide_reference_time_s at each listed temperature, so a chip's colour is
+# the table colour at the temperature that gives the same Arrhenius exposure in that time.
+format: cnctwin-model-params
+version: 1
+model: mechanics-colour
+description: "Oxide growth activation temperatures, reference time of the colour tables, and bare-metal colours"
+params:
+  oxide_activation_steel_K:
+    value: 16838
+    unit: K
+    range: [6014, 36082]
+    src: est
+    note: "activation temperature Q/R (Q = 1.4e+05 J/mol) of the parabolic rate constant of thin iron-oxide films on steels in air; assumed inside the 1e5-1.7e5 J/mol usually reported for iron oxidation. A +-20 % error shifts the temperature equivalent of a millisecond exposure by about +-40 K"
+  oxide_activation_titanium_K:
+    value: 24054
+    unit: K
+    range: [6014, 48109]
+    src: est
+    note: "activation temperature Q/R (Q = 2e+05 J/mol) of TiO2 film growth on titanium alloys in air; assumed"
+  oxide_activation_other_K:
+    value: 18041
+    unit: K
+    range: [6014, 48109]
+    src: est
+    note: "activation temperature Q/R (Q = 1.5e+05 J/mol) used for other alloys that carry an oxide colour table (stainless steels, nickel alloys); assumed"
+  oxide_reference_time_s:
+    value: 1800.0
+    unit: s
+    range: [1.0, 1.0e5]
+    src: est
+    note: "holding time the database oxide colour tables refer to (tempering colours of steels after minutes to an hour, the titanium table states about 30 min); 30 min assumed for all"
+  min_oxide_exposure_s:
+    value: 1.0e-30
+    unit: s
+    src: est
+    note: "numerical floor of the Arrhenius exposure integral (below it the chip is bare metal)"
+  bare_colours:
+    value:
+      steel: "#A8A9AD"
+      tool_steel: "#9EA0A4"
+      stainless: "#B4B6B9"
+      titanium: "#8A8D8F"
+      nickel: "#A3A39D"
+      aluminium: "#D0D4D8"
+      copper: "#B87333"
+      brass: "#C9AE5D"
+      bronze: "#B08D57"
+      magnesium: "#C9CACB"
+      cast_iron: "#55585B"
+      zinc: "#BAC4C8"
+      cobalt: "#9497A0"
+      polymer: "#EDEBE4"
+      wood: "#C8A165"
+      foam: "#F4F4F2"
+      composite: "#2E2E2E"
+    unit: "-"
+    src: est
+    note: "sRGB rendering colours of bare (unoxidised) chips and swarf per material family; chosen to match the usual appearance, not measured"

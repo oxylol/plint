@@ -1,0 +1,46 @@
+format: cnctwin-workholding
+version: 1
+series_id: carrlane-strap-clamps
+maker: "Carr Lane"
+series: "Standard clamp straps on T-slot studs, 2:1 lever ratio (approximate clamping force per stud size)"
+src: carrlane-strap-clamp-force
+basis: {text: "clean, dry clamping stud torqued to about 33 % of its 100,000 psi yield strength, 2:1 lever ratio (clamping force = half the stud tension)", src: carrlane-strap-clamp-force}
+friction_example: {value: 0.19, src: carrlane-clamping-force-calc, note: "coefficient of friction used in Carr Lane's clamping force example (workpiece on fixture), with a recommended 2:1 safety factor"}
+items:
+  - id: carrlane-strap-m10
+    order_code: null
+    type: clamp
+    stud: {value: "M10", src: carrlane-strap-clamp-force}
+    recommended_torque_Nm: {value: 27.1, src: carrlane-strap-clamp-force, note: "20 ft-lb"}
+    clamping_force_kN: {value: 6.67, at_handle_torque_Nm: 27.1, src: carrlane-strap-clamp-force, note: "1500 lb"}
+    stud_preload_kN: {value: 13.34, src: carrlane-strap-clamp-force, note: "tensile force in stud 3000 lb"}
+    lever_ratio: 2.0
+    jaw_friction: {value: 0.19, src: carrlane-clamping-force-calc}
+  - id: carrlane-strap-m12
+    order_code: null
+    type: clamp
+    stud: {value: "M12", src: carrlane-strap-clamp-force}
+    recommended_torque_Nm: {value: 47.5, src: carrlane-strap-clamp-force, note: "35 ft-lb"}
+    clamping_force_kN: {value: 9.79, at_handle_torque_Nm: 47.5, src: carrlane-strap-clamp-force, note: "2200 lb"}
+    stud_preload_kN: {value: 19.57, src: carrlane-strap-clamp-force, note: "4400 lb"}
+    lever_ratio: 2.0
+    jaw_friction: {value: 0.19, src: carrlane-clamping-force-calc}
+  - id: carrlane-strap-m16
+    order_code: null
+    type: clamp
+    stud: {value: "M16", src: carrlane-strap-clamp-force}
+    recommended_torque_Nm: {value: 113.9, src: carrlane-strap-clamp-force, note: "84 ft-lb"}
+    clamping_force_kN: {value: 17.79, at_handle_torque_Nm: 113.9, src: carrlane-strap-clamp-force, note: "4000 lb"}
+    stud_preload_kN: {value: 35.59, src: carrlane-strap-clamp-force, note: "8000 lb"}
+    lever_ratio: 2.0
+    jaw_friction: {value: 0.19, src: carrlane-clamping-force-calc}
+  - id: carrlane-strap-m20
+    order_code: null
+    type: clamp
+    stud: {value: "M20", src: carrlane-strap-clamp-force}
+    recommended_torque_Nm: {value: 223.7, src: carrlane-strap-clamp-force, note: "165 ft-lb"}
+    clamping_force_kN: {value: 28.02, at_handle_torque_Nm: 223.7, src: carrlane-strap-clamp-force, note: "6300 lb"}
+    stud_preload_kN: {value: 56.05, src: carrlane-strap-clamp-force, note: "12600 lb"}
+    lever_ratio: 2.0
+    jaw_friction: {value: 0.19, src: carrlane-clamping-force-calc}
+notes: "Unit conversions: 1 ft-lb = 1.3558 N m, 1 lb = 4.4482 N. Implied torque-preload factor K = T/(F d) is about 0.2 for all sizes."

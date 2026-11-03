@@ -1,0 +1,74 @@
+# AISI 304 side milling (climb) with a 4-flute HSS end mill, D 8 mm, helix 30 deg: measured average
+# Fx, Fy, Fz per revolution for a sharp tool and two flank-wear states at two conditions.
+format: cnctwin-validation-case
+version: 1
+id: force-sidemill-ss304-wang2025-hss
+quantity: cutting_force
+reference:
+  src: wang-2025-304-milling-force-wear
+  location: "Sect. 3 (setup), Table 1 (tool), Table 5 (tests), Fig. 9 a-f (experimental average forces, values printed on the bars)"
+  digitised: false
+  uncertainty_pct: 1
+  measured: true
+  note: "The printed bar labels are read directly (rendered at 300 dpi). Averages over five randomly chosen tool revolutions of each 100 mm pass (Sect. 3.1.2); Kistler 9257B, 12 kHz. No measurement scatter is stated; uncertainty_pct only covers reading."
+setup:
+  operation: peripheral_milling
+  material:
+    db: aisi304
+    note: "304 stainless steel; condition, hardness and supplier are not given in the source"
+  tool:
+    src: wang-2025-304-milling-force-wear
+    page: Sect. 3, Table 1
+    type: square_endmill
+    maker: "Heye and Sumitomo (as stated)"
+    tool_class: hss
+    coating: {value: none stated, note: "not mentioned in the source"}
+    diameter_mm: 8
+    flutes: 4
+    helix_deg: 30
+    rake_deg: 12
+    clearance_deg: {value: 12, note: "'flank angle' 12 deg in Table 1"}
+    edge_radius_um: {value: 10, src: est, note: "assumed, not derived from a source: sharp ground HSS edge"}
+    stickout_mm: {value: 30, src: est, note: "assumed: not stated"}
+    assumed_inputs: [edge_radius_um, stickout_mm]
+  machine:
+    src: wang-2025-304-milling-force-wear
+    page: Table 2
+    model: Beijing Jingdiao JDHGT400A10SH three-axis machining centre
+    dynamometer: Kistler 9257B with Kistler 5070 amplifier, Yiheng MI7008 acquisition at 12 kHz
+  conditions:
+    src: wang-2025-304-milling-force-wear
+    page: Table 5, Sect. 3.1.2
+    direction: down
+    operation_note: "side milling (climb) along +Y over a 100 mm long workpiece; X normal to the feed, Y feed direction, Z tool axis (machine frame, source Fig. 1); signs as printed"
+    test_A: {value: "tests 1-3: 830 rpm, fz 0.05 mm, ap 3.5 mm, ae 0.6 mm", note: "tool flank wear VB 0, 0.1098, 0.2109 mm (ISO 8688-2, mean of five readings per edge)"}
+    test_B: {value: "tests 4-6: 900 rpm, fz 0.03 mm, ap 4.0 mm, ae 0.7 mm", note: "tool flank wear VB 0, 0.1185, 0.2003 mm"}
+    spindle_rpm: [830, 900]
+    fz_mm_tooth: [0.05, 0.03]
+    ap_mm: [3.5, 4.0]
+    ae_mm: [0.6, 0.7]
+    coolant: {value: dry, src: est, note: "assumed: no coolant is mentioned in the source"}
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+  - {name: Fx_mean_test1_VB0, value: -74.02, unit: N, uncertainty: 1, note: "830 rpm, fz 0.05, ap 3.5, ae 0.6, sharp tool"}
+  - {name: Fy_mean_test1_VB0, value: 76.61, unit: N, uncertainty: 1}
+  - {name: Fz_mean_test1_VB0, value: 9.76, unit: N, uncertainty: 0.5}
+  - {name: Fx_mean_test2_VB0.11, value: -98.41, unit: N, uncertainty: 1, note: "same conditions, VB 0.1098 mm"}
+  - {name: Fy_mean_test2_VB0.11, value: 93.14, unit: N, uncertainty: 1}
+  - {name: Fz_mean_test2_VB0.11, value: 6.75, unit: N, uncertainty: 0.5}
+  - {name: Fx_mean_test3_VB0.21, value: -121.83, unit: N, uncertainty: 1, note: "same conditions, VB 0.2109 mm"}
+  - {name: Fy_mean_test3_VB0.21, value: 108.42, unit: N, uncertainty: 1}
+  - {name: Fz_mean_test3_VB0.21, value: -5.92, unit: N, uncertainty: 0.5}
+  - {name: Fx_mean_test4_VB0, value: -60.13, unit: N, uncertainty: 1, note: "900 rpm, fz 0.03, ap 4.0, ae 0.7, sharp tool"}
+  - {name: Fy_mean_test4_VB0, value: 54.99, unit: N, uncertainty: 1}
+  - {name: Fz_mean_test4_VB0, value: 8.21, unit: N, uncertainty: 0.5}
+  - {name: Fx_mean_test5_VB0.12, value: -69.39, unit: N, uncertainty: 1, note: "same conditions, VB 0.1185 mm"}
+  - {name: Fy_mean_test5_VB0.12, value: 77.73, unit: N, uncertainty: 1}
+  - {name: Fz_mean_test5_VB0.12, value: 6.41, unit: N, uncertainty: 0.5}
+  - {name: Fx_mean_test6_VB0.20, value: -115.19, unit: N, uncertainty: 1, note: "same conditions, VB 0.2003 mm"}
+  - {name: Fy_mean_test6_VB0.20, value: 91.91, unit: N, uncertainty: 1}
+  - {name: Fz_mean_test6_VB0.20, value: -3.08, unit: N, uncertainty: 0.5}
+reference_curves: []
+notes: "Mean (not peak) forces over a revolution. For a fresh-tool check use tests 1 and 4; tests 2, 3, 5, 6 test a flank-wear (ploughing) model at measured VB. The peak forces of the same tests are visible in Fig. 8 (e.g. test 4: Fx about -170 to -200 N, Fy about +140 N, read only roughly here and not stored). The source's own mechanistic model (coefficients from a separate 750 rpm, fz 0.04, ap 3, ae 0.5 mm test) agreed within 8.0 % (Fx), 7.9 % (Fy) and 11.8 % (Fz) on average. Low cutting speeds (vc 20.9 and 22.6 m/min, computed here from D 8 mm) suit an HSS tool but are in the range where built-up edge may form."

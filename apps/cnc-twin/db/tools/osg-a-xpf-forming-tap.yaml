@@ -1,0 +1,91 @@
+# OSG A-XPF VI-coated CPM thread-forming (fluteless) taps, read from the OSG General Catalogue
+# 2025-2026 on 2026-11-03 (p. 545 dimensions and icons, p. 847 cutting speeds, PDF p. 597 tap limits).
+format: cnctwin-tool
+version: 1
+series_id: osg-a-xpf-forming-tap
+maker: "OSG Corporation"
+series: "A-XPF highly efficient multi-purpose VI-coated CPM forming tap, M6x1 / M8x1.25 / M10x1.5, 6H (STD)"
+src: osg-2025-gc-drilling-threading
+notes: "Icons p. 545: CPM (powder HSS), VI coating. Grade 'STD' = recommended tap for class 2 / 6H internal threads (PDF p. 597); the tap limit of the forming tap is RH7. Chamfer 4P (also 2P / 1P). Type 1 has a neck (LU), type 2 none. Cutting speeds p. 847 (column up to M12) are for chlorine-free water-soluble coolant. The number of lobes and the pilot-hole diameter for forming are not on these pages: forming_tap_lobes in db/models/tooling.yaml applies, and a forming tap needs a larger pilot hole than a cutting tap (OSG's drill selection tables, not read)."
+defaults:
+  type: tap_forming
+  hand: right
+  tool_material: {class: hss, grade: "CPM powder-metallurgy HSS", id: hss-m42, src: est, note: "OSG prints 'CPM'; mapped to the cobalt HSS entry (M42 reference)"}
+  coating: {id: ticn, src: est, note: "OSG 'VI coating'; chemistry and thickness not stated, mapped to TiCN"}
+items:
+  - id: osg-8327849-a-xpf-m6x1
+    order_code: "A-XPF STD RH7 4P M6x1 (EDP 8327849)"
+    geometry:
+      diameter_mm: 6
+      thread: {standard: "ISO metric coarse", pitch_mm: 1.0, form_angle_deg: {value: 60, src: iso-68-1-1998}, class: "6H (OSG STD, tap limit RH7)", diameter_mm: 6, hand: right, starts: 1}
+      tap_kind: forming
+      spiral: straight
+      chamfer_threads: 4
+      cutting_length_mm: {value: 10, note: "THLGTH thread length"}
+      overall_length_mm: 62
+      shank: {diameter_mm: 6, form: plain}
+      centre_cutting: false
+      coolant_holes: null
+      note: "type 1 (neck), LU 24, external centre: yes, 14 g (p. 545)"
+    max_rpm: null
+    mass_g: 14
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "forming taps are not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "mild / low / medium carbon steel, C < 0.45 %", material: aisi1045, operation: [tapping], vc_m_min: {min: 10, max: 50}, f_mm: {value: 1.0, note: "feed per rev = pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847, column ~M12"}
+      - {iso_group: P, material_hint: "high carbon steel, 0.45 % <= C", operation: [tapping], vc_m_min: {min: 10, max: 40}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: P, material_hint: "alloy steel SCM", material: aisi4140-annealed, operation: [tapping], vc_m_min: {min: 10, max: 35}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: H, material_hint: "hardened steel 25-35 HRC", material: aisi4140-qt30, operation: [tapping], vc_m_min: {min: 5, max: 30}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: P, material_hint: "cast steel SC", operation: [tapping], vc_m_min: {min: 10, max: 40}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: M, material_hint: "stainless steel SUS304, SUS420", material: aisi304, operation: [tapping], vc_m_min: {min: 5, max: 15}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847", note: "OSG recommends non-water-soluble fluid or highly lubricated water-soluble fluid for stainless"}
+      - {iso_group: N, material_hint: "copper Cu, brass Bs / BsC", material: copper-c101, operation: [tapping], vc_m_min: {min: 10, max: 30}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: N, material_hint: "aluminium rolled (AL) and aluminium alloy castings (AC, ADC)", material: al6061-t6, operation: [tapping], vc_m_min: {min: 20, max: 50}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: N, material_hint: "zinc alloy castings ZDC", operation: [tapping], vc_m_min: {min: 10, max: 30}, f_mm: {value: 1.0, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+  - id: osg-8327851-a-xpf-m8x1.25
+    order_code: "A-XPF STD RH7 4P M8x1.25 (EDP 8327851)"
+    geometry:
+      diameter_mm: 8
+      thread: {standard: "ISO metric coarse", pitch_mm: 1.25, form_angle_deg: {value: 60, src: iso-68-1-1998}, class: "6H (OSG STD, tap limit RH7)", diameter_mm: 8, hand: right, starts: 1}
+      tap_kind: forming
+      spiral: straight
+      chamfer_threads: 4
+      cutting_length_mm: {value: 12, note: "THLGTH thread length"}
+      overall_length_mm: 70
+      shank: {diameter_mm: 6.2, form: plain}
+      centre_cutting: false
+      coolant_holes: null
+      note: "type 2 (no neck), no external centre, 21 g (p. 545)"
+    max_rpm: null
+    mass_g: 21
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "forming taps are not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "mild / low / medium carbon steel, C < 0.45 %", material: aisi1045, operation: [tapping], vc_m_min: {min: 10, max: 50}, f_mm: {value: 1.25, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: P, material_hint: "alloy steel SCM", material: aisi4140-annealed, operation: [tapping], vc_m_min: {min: 10, max: 35}, f_mm: {value: 1.25, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: H, material_hint: "hardened steel 25-35 HRC", material: aisi4140-qt30, operation: [tapping], vc_m_min: {min: 5, max: 30}, f_mm: {value: 1.25, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: M, material_hint: "stainless steel SUS304, SUS420", material: aisi304, operation: [tapping], vc_m_min: {min: 5, max: 15}, f_mm: {value: 1.25, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: N, material_hint: "aluminium rolled and castings", material: al6061-t6, operation: [tapping], vc_m_min: {min: 20, max: 50}, f_mm: {value: 1.25, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+  - id: osg-8327855-a-xpf-m10x1.5
+    order_code: "A-XPF STD RH7 4P M10x1.5 (EDP 8327855)"
+    geometry:
+      diameter_mm: 10
+      thread: {standard: "ISO metric coarse", pitch_mm: 1.5, form_angle_deg: {value: 60, src: iso-68-1-1998}, class: "6H (OSG STD, tap limit RH7)", diameter_mm: 10, hand: right, starts: 1}
+      tap_kind: forming
+      spiral: straight
+      chamfer_threads: 4
+      cutting_length_mm: {value: 15, note: "THLGTH thread length"}
+      overall_length_mm: 75
+      shank: {diameter_mm: 7, form: plain}
+      centre_cutting: false
+      coolant_holes: null
+      note: "type 2 (no neck), no external centre, 30 g (p. 545)"
+    max_rpm: null
+    mass_g: 30
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "forming taps are not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "mild / low / medium carbon steel, C < 0.45 %", material: aisi1045, operation: [tapping], vc_m_min: {min: 10, max: 50}, f_mm: {value: 1.5, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: P, material_hint: "alloy steel SCM", material: aisi4140-annealed, operation: [tapping], vc_m_min: {min: 10, max: 35}, f_mm: {value: 1.5, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: H, material_hint: "hardened steel 25-35 HRC", material: aisi4140-qt30, operation: [tapping], vc_m_min: {min: 5, max: 30}, f_mm: {value: 1.5, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: M, material_hint: "stainless steel SUS304, SUS420", material: aisi304, operation: [tapping], vc_m_min: {min: 5, max: 15}, f_mm: {value: 1.5, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}
+      - {iso_group: N, material_hint: "aluminium rolled and castings", material: al6061-t6, operation: [tapping], vc_m_min: {min: 20, max: 50}, f_mm: {value: 1.5, note: "pitch"}, coolant: "chlorine-free water-soluble", page: "p. 847"}

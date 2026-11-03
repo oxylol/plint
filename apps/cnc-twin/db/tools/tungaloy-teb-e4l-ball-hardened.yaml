@@ -1,0 +1,602 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-teb-e4l-ball-hardened
+maker: Tungaloy Corporation
+series: TEB..E4L..CF 4 flute ball nose end mill, 38 deg helix, variable pitch, relieved neck, for hardened steel (grade AH710)
+src: tungaloy-2023-gc-endmill
+notes: Dimensions p. I048 (DC, DCONMS, NOF, APMX, LH, LF), cutting data p. I053 (ball nose standard conditions).
+items:
+- id: tungaloy-teb060e4l-12-18c06cfh57
+  order_code: TEB060E4L-12/18C06CFH57 AH710
+  type: ball_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: carbide, grade: AH710 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  geometry:
+    diameter_mm: 6
+    flutes: 4
+    pitch_deg:
+      value: [85.0, 95.0, 85.0, 95.0]
+      src: est
+      note: variable pitch stated (p. I048), spacing not published; 85/95 deg assumed
+    helix_deg: 38
+    rake_deg: {value: -5, src: est, note: not published; -5 deg assumed for a hard-milling ball nose}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 6, src: est, note: not published; 6 um assumed for a coated ultra-fine-grain ball edge}
+    edge_prep: {type: hone, src: est, note: not published}
+    corner_radius_mm: 3.0
+    cutting_length_mm: 12
+    flute_length_mm: {value: 12, src: est, note: taken equal to APMX}
+    neck:
+      diameter_mm: {value: 5.8, src: est, note: 'relieved neck: neck diameter not published; DC - 0.2 mm assumed'}
+      length_mm: 18
+      note: LH = length from tip to end of the relieved neck (p. I048)
+    shank:
+      diameter_mm: 6
+      length_mm: {value: 39, src: est, note: LF - LH}
+    overall_length_mm: 57
+    gullet_area_mm2: {value: 3.39, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 6 mm, dc = 3.60 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 3.6, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 4-flute end mills (task brief); no maker value published'}
+    centre_cutting: {value: true, src: est, note: 'ball nose: cutting edges run to the tool axis (not stated explicitly)'}
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 21.0, src: est, note: 'rho V: shank cylinder d 6 x 45 mm plus fluted cylinder D 6 x 12 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 125, max: 200}
+    fz_mm: {min: 0.02, max: 0.055}
+    ap_max_xD: 0.12
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 3-6 mm
+    note: ap = 0.05-0.12 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 100, max: 150}
+    fz_mm: {min: 0.01, max: 0.035}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 3-6 mm
+    note: ap = 0.04-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 110, max: 110}
+    fz_mm: {min: 0.015, max: 0.03}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 3-6 mm
+    note: ap = 0.05-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 150, max: 180}
+    fz_mm: {min: 0.03, max: 0.06}
+    ap_max_xD: 0.15
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 3-6 mm
+    note: ap = 0.08-0.15 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC (e.g. h13-50hrc lower end)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 70, max: 80}
+    fz_mm: {min: 0.008, max: 0.02}
+    ap_max_xD: 0.08
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 3-6 mm
+    note: ap = 0.04-0.08 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 30, max: 40}
+    fz_mm: {min: 0.005, max: 0.008}
+    ap_max_xD: 0.06
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 3-6 mm
+    note: ap = 0.03-0.06 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {min: 170, max: 280}
+    fz_mm: {min: 0.017, max: 0.046}
+    ap_max_xD: 0.02
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 3-6 mm
+    note: ap = 0.02 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {min: 120, max: 165}
+    fz_mm: {min: 0.008, max: 0.03}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 3-6 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [finishing]
+    vc_m_min: {min: 150, max: 150}
+    fz_mm: {min: 0.012, max: 0.026}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 3-6 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {min: 200, max: 220}
+    fz_mm: {min: 0.025, max: 0.051}
+    ap_max_xD: 0.03
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 3-6 mm
+    note: ap = 0.03 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC
+    operation: [finishing]
+    vc_m_min: {min: 100, max: 100}
+    fz_mm: {min: 0.007, max: 0.017}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 3-6 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {min: 40, max: 50}
+    fz_mm: {min: 0.004, max: 0.007}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 3-6 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  price_eur: null
+  regrinds: {value: 1, src: est, note: assumed one regrind for a carbide ball nose}
+  note: 4 flute chatter-dampening ball nose (2xD), 38 deg helix, variable pitch, relieved neck, for hardened steel (p. I048); grade AH710; corner radius = DC/2 (ball); price not published
+- id: tungaloy-teb080e4l-16-24c08cfh63
+  order_code: TEB080E4L-16/24C08CFH63 AH710
+  type: ball_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: carbide, grade: AH710 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  geometry:
+    diameter_mm: 8
+    flutes: 4
+    pitch_deg:
+      value: [85.0, 95.0, 85.0, 95.0]
+      src: est
+      note: variable pitch stated (p. I048), spacing not published; 85/95 deg assumed
+    helix_deg: 38
+    rake_deg: {value: -5, src: est, note: not published; -5 deg assumed for a hard-milling ball nose}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 6, src: est, note: not published; 6 um assumed for a coated ultra-fine-grain ball edge}
+    edge_prep: {type: hone, src: est, note: not published}
+    corner_radius_mm: 4.0
+    cutting_length_mm: 16
+    flute_length_mm: {value: 16, src: est, note: taken equal to APMX}
+    neck:
+      diameter_mm: {value: 7.8, src: est, note: 'relieved neck: neck diameter not published; DC - 0.2 mm assumed'}
+      length_mm: 24
+      note: LH = length from tip to end of the relieved neck (p. I048)
+    shank:
+      diameter_mm: 8
+      length_mm: {value: 39, src: est, note: LF - LH}
+    overall_length_mm: 63
+    gullet_area_mm2: {value: 6.03, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 8 mm, dc = 4.80 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 4.8, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 4-flute end mills (task brief); no maker value published'}
+    centre_cutting: {value: true, src: est, note: 'ball nose: cutting edges run to the tool axis (not stated explicitly)'}
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 40.3, src: est, note: 'rho V: shank cylinder d 8 x 47 mm plus fluted cylinder D 8 x 16 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 125, max: 200}
+    fz_mm: {min: 0.04, max: 0.08}
+    ap_max_xD: 0.12
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.05-0.12 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 100, max: 150}
+    fz_mm: {min: 0.03, max: 0.05}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.04-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 110, max: 110}
+    fz_mm: {min: 0.03, max: 0.04}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.05-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 150, max: 180}
+    fz_mm: {min: 0.06, max: 0.09}
+    ap_max_xD: 0.15
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.08-0.15 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC (e.g. h13-50hrc lower end)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 70, max: 80}
+    fz_mm: {min: 0.025, max: 0.03}
+    ap_max_xD: 0.08
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.04-0.08 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 30, max: 40}
+    fz_mm: {min: 0.007, max: 0.013}
+    ap_max_xD: 0.06
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.03-0.06 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {min: 170, max: 280}
+    fz_mm: {min: 0.034, max: 0.068}
+    ap_max_xD: 0.02
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.02 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {min: 120, max: 165}
+    fz_mm: {min: 0.025, max: 0.043}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [finishing]
+    vc_m_min: {min: 150, max: 150}
+    fz_mm: {min: 0.025, max: 0.034}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {min: 200, max: 220}
+    fz_mm: {min: 0.051, max: 0.077}
+    ap_max_xD: 0.03
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.03 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC
+    operation: [finishing]
+    vc_m_min: {min: 100, max: 100}
+    fz_mm: {min: 0.021, max: 0.026}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {min: 40, max: 50}
+    fz_mm: {min: 0.006, max: 0.011}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  price_eur: null
+  regrinds: {value: 1, src: est, note: assumed one regrind for a carbide ball nose}
+  note: 4 flute chatter-dampening ball nose (2xD), 38 deg helix, variable pitch, relieved neck, for hardened steel (p. I048); grade AH710; corner radius = DC/2 (ball); price not published
+- id: tungaloy-teb100e4l-20-30c10cfh72
+  order_code: TEB100E4L-20/30C10CFH72 AH710
+  type: ball_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: carbide, grade: AH710 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  geometry:
+    diameter_mm: 10
+    flutes: 4
+    pitch_deg:
+      value: [85.0, 95.0, 85.0, 95.0]
+      src: est
+      note: variable pitch stated (p. I048), spacing not published; 85/95 deg assumed
+    helix_deg: 38
+    rake_deg: {value: -5, src: est, note: not published; -5 deg assumed for a hard-milling ball nose}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 6, src: est, note: not published; 6 um assumed for a coated ultra-fine-grain ball edge}
+    edge_prep: {type: hone, src: est, note: not published}
+    corner_radius_mm: 5.0
+    cutting_length_mm: 20
+    flute_length_mm: {value: 20, src: est, note: taken equal to APMX}
+    neck:
+      diameter_mm: {value: 9.8, src: est, note: 'relieved neck: neck diameter not published; DC - 0.2 mm assumed'}
+      length_mm: 30
+      note: LH = length from tip to end of the relieved neck (p. I048)
+    shank:
+      diameter_mm: 10
+      length_mm: {value: 42, src: est, note: LF - LH}
+    overall_length_mm: 72
+    gullet_area_mm2: {value: 9.42, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 10 mm, dc = 6.00 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 6.0, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 4-flute end mills (task brief); no maker value published'}
+    centre_cutting: {value: true, src: est, note: 'ball nose: cutting edges run to the tool axis (not stated explicitly)'}
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 71.1, src: est, note: 'rho V: shank cylinder d 10 x 52 mm plus fluted cylinder D 10 x 20 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 125, max: 200}
+    fz_mm: {min: 0.04, max: 0.08}
+    ap_max_xD: 0.12
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.05-0.12 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 100, max: 150}
+    fz_mm: {min: 0.03, max: 0.05}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.04-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 110, max: 110}
+    fz_mm: {min: 0.03, max: 0.04}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.05-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 150, max: 180}
+    fz_mm: {min: 0.06, max: 0.09}
+    ap_max_xD: 0.15
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.08-0.15 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC (e.g. h13-50hrc lower end)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 70, max: 80}
+    fz_mm: {min: 0.025, max: 0.03}
+    ap_max_xD: 0.08
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.04-0.08 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 30, max: 40}
+    fz_mm: {min: 0.007, max: 0.013}
+    ap_max_xD: 0.06
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.03-0.06 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {min: 170, max: 280}
+    fz_mm: {min: 0.034, max: 0.068}
+    ap_max_xD: 0.02
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.02 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {min: 120, max: 165}
+    fz_mm: {min: 0.025, max: 0.043}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [finishing]
+    vc_m_min: {min: 150, max: 150}
+    fz_mm: {min: 0.025, max: 0.034}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {min: 200, max: 220}
+    fz_mm: {min: 0.051, max: 0.077}
+    ap_max_xD: 0.03
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.03 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC
+    operation: [finishing]
+    vc_m_min: {min: 100, max: 100}
+    fz_mm: {min: 0.021, max: 0.026}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {min: 40, max: 50}
+    fz_mm: {min: 0.006, max: 0.011}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  price_eur: null
+  regrinds: {value: 1, src: est, note: assumed one regrind for a carbide ball nose}
+  note: 4 flute chatter-dampening ball nose (2xD), 38 deg helix, variable pitch, relieved neck, for hardened steel (p. I048); grade AH710; corner radius = DC/2 (ball); price not published
+- id: tungaloy-teb120e4l-24-36c12cfh83
+  order_code: TEB120E4L-24/36C12CFH83 AH710
+  type: ball_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: carbide, grade: AH710 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  geometry:
+    diameter_mm: 12
+    flutes: 4
+    pitch_deg:
+      value: [85.0, 95.0, 85.0, 95.0]
+      src: est
+      note: variable pitch stated (p. I048), spacing not published; 85/95 deg assumed
+    helix_deg: 38
+    rake_deg: {value: -5, src: est, note: not published; -5 deg assumed for a hard-milling ball nose}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 6, src: est, note: not published; 6 um assumed for a coated ultra-fine-grain ball edge}
+    edge_prep: {type: hone, src: est, note: not published}
+    corner_radius_mm: 6.0
+    cutting_length_mm: 24
+    flute_length_mm: {value: 24, src: est, note: taken equal to APMX}
+    neck:
+      diameter_mm: {value: 11.8, src: est, note: 'relieved neck: neck diameter not published; DC - 0.2 mm assumed'}
+      length_mm: 36
+      note: LH = length from tip to end of the relieved neck (p. I048)
+    shank:
+      diameter_mm: 12
+      length_mm: {value: 47, src: est, note: LF - LH}
+    overall_length_mm: 83
+    gullet_area_mm2: {value: 13.57, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 12 mm, dc = 7.20 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 7.2, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 4-flute end mills (task brief); no maker value published'}
+    centre_cutting: {value: true, src: est, note: 'ball nose: cutting edges run to the tool axis (not stated explicitly)'}
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 117.2, src: est, note: 'rho V: shank cylinder d 12 x 59 mm plus fluted cylinder D 12 x 24 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 125, max: 200}
+    fz_mm: {min: 0.04, max: 0.08}
+    ap_max_xD: 0.12
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.05-0.12 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 100, max: 150}
+    fz_mm: {min: 0.03, max: 0.05}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.04-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 110, max: 110}
+    fz_mm: {min: 0.03, max: 0.04}
+    ap_max_xD: 0.1
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.05-0.1 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 150, max: 180}
+    fz_mm: {min: 0.06, max: 0.09}
+    ap_max_xD: 0.15
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.08-0.15 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC (e.g. h13-50hrc lower end)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 70, max: 80}
+    fz_mm: {min: 0.025, max: 0.03}
+    ap_max_xD: 0.08
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.04-0.08 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [profiling, semi_finishing]
+    vc_m_min: {min: 30, max: 40}
+    fz_mm: {min: 0.007, max: 0.013}
+    ap_max_xD: 0.06
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Shape machining (Roughing to semi-finishing)', fz column dia 8-12 mm
+    note: ap = 0.03-0.06 x D (value = upper end); pick feed (ae) not published; when using AH710 reduce Vc by 20-30 % for longer tool life (only stated for AH750); air blow recommended; reduce speed and feed together if chatter occurs (20-40 % for long overhang)
+  - iso_group: P
+    material_hint: carbon steel, <= 300 HB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {min: 170, max: 280}
+    fz_mm: {min: 0.034, max: 0.068}
+    ap_max_xD: 0.02
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.02 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: P
+    material_hint: alloy steel, <= 300 HB (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {min: 120, max: 165}
+    fz_mm: {min: 0.025, max: 0.043}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: M
+    material_hint: stainless steel, <= 200 HB (e.g. aisi304)
+    operation: [finishing]
+    vc_m_min: {min: 150, max: 150}
+    fz_mm: {min: 0.025, max: 0.034}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: K
+    material_hint: cast iron, 150-250 HB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {min: 200, max: 220}
+    fz_mm: {min: 0.051, max: 0.077}
+    ap_max_xD: 0.03
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.03 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, <= 49 HRC
+    operation: [finishing]
+    vc_m_min: {min: 100, max: 100}
+    fz_mm: {min: 0.021, max: 0.026}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  - iso_group: H
+    material_hint: hardened steel, 50-60 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {min: 40, max: 50}
+    fz_mm: {min: 0.006, max: 0.011}
+    ap_max_xD: 0.01
+    src: tungaloy-2023-gc-endmill
+    page: p. I053 STANDARD CUTTING CONDITIONS - Ball nose type, 'Finishing', fz column dia 8-12 mm
+    note: ap = 0.01 x D; pick feed not published; tilt the tool about 15 deg to avoid cutting at zero speed at the axis (p. I054)
+  price_eur: null
+  regrinds: {value: 1, src: est, note: assumed one regrind for a carbide ball nose}
+  note: 4 flute chatter-dampening ball nose (2xD), 38 deg helix, variable pitch, relieved neck, for hardened steel (p. I048); grade AH710; corner radius = DC/2 (ball); price not published

@@ -1,0 +1,136 @@
+# OSG NC-LDS HSSE starter (spot) drills, read from the OSG General Catalogue 2025-2026 on 2026-11-03.
+# Values without src: est are as printed (p. 324 dimensions and icons, p. 441 cutting conditions).
+format: cnctwin-tool
+version: 1
+series_id: osg-nc-lds-starter-drill
+maker: "OSG Corporation"
+series: "NC-LDS HSSE starter drill (NC spot drill), 90 deg (countersinking) and 120 deg (centering) points"
+src: osg-2025-gc-drilling-threading
+notes: "OSG states that the 90 deg point is for countersinking (45 deg chamfer) and 120 / 130 deg points are for centering EX-GOLD drills on curved and inclined surfaces. Point angle tolerance 90 +/-1 deg, 120 +/-2 deg, 130 +/-2 deg. Bright HSSE (TIN-NC-LDS is the TiN-coated version). Shank tolerance h7, helix 20 deg (icons p. 324). Cutting conditions p. 441 are for water-soluble coolant; with non-water-soluble oil reduce the speed by 20 %; for long-shank versions reduce the feed; for countersinking the speed may be raised up to 2x the centering speed."
+defaults:
+  type: spot_drill
+  hand: right
+  tool_material: {class: hss, grade: "HSSE (cobalt HSS, grade not stated)", id: hss-m42, src: est, note: "OSG prints only 'HSSE'; mapped to the cobalt HSS entry (M42 reference), the closest of the two HSS ids"}
+  coating: {id: none}
+items:
+  - id: osg-62906-nc-lds-6x90
+    order_code: "NC-LDS 6 x 90 deg (EDP 62906)"
+    geometry:
+      diameter_mm: 6
+      flutes: {value: 2, note: "two lips in the end-view drawing on p. 324"}
+      point_angle_deg: 90
+      tip_angle_deg: 90
+      tip_diameter_mm: {value: 0, src: est, note: "pointed spot drill (no flat); a chisel edge remains, see web_thickness_mm"}
+      helix_deg: 20
+      cutting_length_mm: 20
+      flute_length_mm: 20
+      shank: {diameter_mm: 6, length_mm: 52, form: plain}
+      overall_length_mm: 72
+      web_thickness_mm: {value: 0.36, src: est, note: "spot drills are ground with a small chisel; 0.06 D (db/models/tooling.yaml spot_drill_web_ratio), not published"}
+      centre_cutting: true
+      coolant_holes: null
+      note: "LCF 20, OAL 72, DCON 6, LS 52, point length PL 3, minimum pre-drilled hole for chamfering 1.5 mm (p. 324)"
+    max_rpm: null
+    balance_grade: null
+    mass_g: 16
+    price_eur: null
+    regrinds: {value: 3, src: est, note: "HSS spot drills are reground on the point; OSG offers resharpening but publishes no count"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / mild steel S15C, SS400, <= 500 N/mm2", operation: [centering], vc_m_min: {min: 32, max: 40}, f_mm: {min: 0.06, max: 0.12}, coolant: "water-soluble", page: "p. 441, centering, 6 mm row (1,900 min-1)"}
+      - {iso_group: P, material_hint: "carbon steel S45C", material: aisi1045, operation: [centering], vc_m_min: {min: 22, max: 30}, f_mm: {min: 0.06, max: 0.12}, coolant: "water-soluble", page: "p. 441, 6 mm row (1,320 min-1)"}
+      - {iso_group: P, material_hint: "alloy steel SCM440", material: aisi4140-annealed, operation: [centering], vc_m_min: {min: 20, max: 25}, f_mm: {min: 0.06, max: 0.12}, coolant: "water-soluble", page: "p. 441, 6 mm row (1,180 min-1)"}
+      - {iso_group: H, material_hint: "hardened tool steel SKD61 (H13), 35 HRC", operation: [centering], vc_m_min: {min: 10, max: 13}, f_mm: {min: 0.06, max: 0.12}, coolant: "water-soluble", page: "p. 441, 6 mm row (610 min-1)"}
+      - {iso_group: K, material_hint: "cast iron / ductile iron FC250, FCD400", material: grey-cast-iron-gjl250, operation: [centering], vc_m_min: {min: 25, max: 32}, f_mm: {min: 0.06, max: 0.18}, coolant: "water-soluble", page: "p. 441, 6 mm row (1,600 min-1)"}
+      - {iso_group: M, material_hint: "stainless steel SUS304", material: aisi304, operation: [centering], vc_m_min: {min: 8, max: 12}, f_mm: {min: 0.06, max: 0.12}, coolant: "water-soluble", page: "p. 441, 6 mm row (530 min-1)"}
+      - {iso_group: N, material_hint: "aluminium alloy castings ADC, AC4D", operation: [centering], vc_m_min: {min: 51, max: 100}, f_mm: {min: 0.14, max: 0.28}, coolant: "water-soluble", page: "p. 441, 6 mm row (4,000 min-1)"}
+      - {iso_group: P, material_hint: "countersinking (all listed materials)", operation: [countersinking], f_mm: {min: 0.06, max: 0.18}, page: "p. 441 countersinking table, 6 mm", note: "speed up to 2x the centering speed of the material"}
+  - id: osg-62908-nc-lds-8x90
+    order_code: "NC-LDS 8 x 90 deg (EDP 62908)"
+    geometry:
+      diameter_mm: 8
+      flutes: {value: 2, note: "two lips in the end-view drawing on p. 324"}
+      point_angle_deg: 90
+      tip_angle_deg: 90
+      tip_diameter_mm: {value: 0, src: est, note: "pointed spot drill (no flat)"}
+      helix_deg: 20
+      cutting_length_mm: 26
+      flute_length_mm: 26
+      shank: {diameter_mm: 8, length_mm: 55, form: plain}
+      overall_length_mm: 81
+      web_thickness_mm: {value: 0.48, src: est, note: "0.06 D (db/models/tooling.yaml spot_drill_web_ratio), not published"}
+      centre_cutting: true
+      coolant_holes: null
+      note: "LCF 26, OAL 81, DCON 8, LS 55, point length PL 4 (p. 324)"
+    max_rpm: null
+    balance_grade: null
+    mass_g: 30
+    price_eur: null
+    regrinds: {value: 3, src: est, note: "HSS spot drills are reground on the point; no count published"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / mild steel S15C, SS400", operation: [centering], vc_m_min: {min: 32, max: 40}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (1,400 min-1)"}
+      - {iso_group: P, material_hint: "carbon steel S45C", material: aisi1045, operation: [centering], vc_m_min: {min: 22, max: 30}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (1,000 min-1)"}
+      - {iso_group: P, material_hint: "alloy steel SCM440", material: aisi4140-annealed, operation: [centering], vc_m_min: {min: 20, max: 25}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (900 min-1)"}
+      - {iso_group: H, material_hint: "hardened tool steel SKD61 (H13), 35 HRC", operation: [centering], vc_m_min: {min: 10, max: 13}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (450 min-1)"}
+      - {iso_group: K, material_hint: "cast iron / ductile iron FC250, FCD400", material: grey-cast-iron-gjl250, operation: [centering], vc_m_min: {min: 25, max: 32}, f_mm: {min: 0.08, max: 0.2}, coolant: "water-soluble", page: "p. 441, 8 mm row (1,200 min-1)"}
+      - {iso_group: M, material_hint: "stainless steel SUS304", material: aisi304, operation: [centering], vc_m_min: {min: 8, max: 12}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (400 min-1)"}
+      - {iso_group: N, material_hint: "aluminium alloy castings ADC, AC4D", operation: [centering], vc_m_min: {min: 51, max: 100}, f_mm: {min: 0.18, max: 0.32}, coolant: "water-soluble", page: "p. 441, 8 mm row (3,000 min-1)"}
+      - {iso_group: P, material_hint: "countersinking (all listed materials)", operation: [countersinking], f_mm: {min: 0.08, max: 0.24}, page: "p. 441 countersinking table, 8 mm", note: "speed up to 2x the centering speed of the material"}
+  - id: osg-62910-nc-lds-10x90
+    order_code: "NC-LDS 10 x 90 deg (EDP 62910)"
+    geometry:
+      diameter_mm: 10
+      flutes: {value: 2, note: "two lips in the end-view drawing on p. 324"}
+      point_angle_deg: 90
+      tip_angle_deg: 90
+      tip_diameter_mm: {value: 0, src: est, note: "pointed spot drill (no flat)"}
+      helix_deg: 20
+      cutting_length_mm: 30
+      flute_length_mm: 30
+      shank: {diameter_mm: 10, length_mm: 63, form: plain}
+      overall_length_mm: 93
+      web_thickness_mm: {value: 0.6, src: est, note: "0.06 D (db/models/tooling.yaml spot_drill_web_ratio), not published"}
+      centre_cutting: true
+      coolant_holes: null
+      note: "LCF 30, OAL 93, DCON 10, LS 63, point length PL 5, minimum pre-drilled hole for chamfering 2.1 mm (p. 324)"
+    max_rpm: null
+    balance_grade: null
+    mass_g: 57
+    price_eur: null
+    regrinds: {value: 3, src: est, note: "HSS spot drills are reground on the point; no count published"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / mild steel S15C, SS400", operation: [centering], vc_m_min: {min: 32, max: 40}, f_mm: {min: 0.1, max: 0.18}, coolant: "water-soluble", page: "p. 441, 10 mm row (1,120 min-1)"}
+      - {iso_group: P, material_hint: "carbon steel S45C", material: aisi1045, operation: [centering], vc_m_min: {min: 22, max: 30}, f_mm: {min: 0.1, max: 0.18}, coolant: "water-soluble", page: "p. 441, 10 mm row (800 min-1)"}
+      - {iso_group: P, material_hint: "alloy steel SCM440", material: aisi4140-annealed, operation: [centering], vc_m_min: {min: 20, max: 25}, f_mm: {min: 0.1, max: 0.18}, coolant: "water-soluble", page: "p. 441, 10 mm row (710 min-1)"}
+      - {iso_group: H, material_hint: "hardened tool steel SKD61 (H13), 35 HRC", operation: [centering], vc_m_min: {min: 10, max: 13}, f_mm: {min: 0.1, max: 0.18}, coolant: "water-soluble", page: "p. 441, 10 mm row (360 min-1)"}
+      - {iso_group: K, material_hint: "cast iron / ductile iron FC250, FCD400", material: grey-cast-iron-gjl250, operation: [centering], vc_m_min: {min: 25, max: 32}, f_mm: {min: 0.1, max: 0.25}, coolant: "water-soluble", page: "p. 441, 10 mm row (950 min-1)"}
+      - {iso_group: M, material_hint: "stainless steel SUS304", material: aisi304, operation: [centering], vc_m_min: {min: 8, max: 12}, f_mm: {min: 0.1, max: 0.18}, coolant: "water-soluble", page: "p. 441, 10 mm row (320 min-1)"}
+      - {iso_group: N, material_hint: "aluminium alloy castings ADC, AC4D", operation: [centering], vc_m_min: {min: 51, max: 100}, f_mm: {min: 0.22, max: 0.36}, coolant: "water-soluble", page: "p. 441, 10 mm row (2,400 min-1)"}
+      - {iso_group: P, material_hint: "countersinking (all listed materials)", operation: [countersinking], f_mm: {min: 0.1, max: 0.3}, page: "p. 441 countersinking table, 10 mm", note: "speed up to 2x the centering speed of the material"}
+  - id: osg-62928-nc-lds-8x120
+    order_code: "NC-LDS 8 x 120 deg (EDP 62928)"
+    geometry:
+      diameter_mm: 8
+      flutes: {value: 2, note: "two lips in the end-view drawing on p. 324"}
+      point_angle_deg: 120
+      tip_angle_deg: 120
+      tip_diameter_mm: {value: 0, src: est, note: "pointed spot drill (no flat)"}
+      helix_deg: 20
+      cutting_length_mm: 26
+      flute_length_mm: 26
+      shank: {diameter_mm: 8, length_mm: 55, form: plain}
+      overall_length_mm: 81
+      web_thickness_mm: {value: 0.48, src: est, note: "0.06 D (db/models/tooling.yaml spot_drill_web_ratio), not published"}
+      centre_cutting: true
+      coolant_holes: null
+      note: "for centering 118-140 deg drills; LCF 26, OAL 81, DCON 8, LS 55, point length PL 2.3, point angle tolerance 120 +/-2 deg (p. 324)"
+    max_rpm: null
+    balance_grade: null
+    mass_g: 30
+    price_eur: null
+    regrinds: {value: 3, src: est, note: "HSS spot drills are reground on the point; no count published"}
+    cutting_data:
+      - {iso_group: P, material_hint: "low carbon / mild steel S15C, SS400", operation: [centering], vc_m_min: {min: 32, max: 40}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (1,400 min-1)"}
+      - {iso_group: P, material_hint: "carbon steel S45C", material: aisi1045, operation: [centering], vc_m_min: {min: 22, max: 30}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (1,000 min-1)"}
+      - {iso_group: K, material_hint: "cast iron / ductile iron FC250, FCD400", material: grey-cast-iron-gjl250, operation: [centering], vc_m_min: {min: 25, max: 32}, f_mm: {min: 0.08, max: 0.2}, coolant: "water-soluble", page: "p. 441, 8 mm row (1,200 min-1)"}
+      - {iso_group: M, material_hint: "stainless steel SUS304", material: aisi304, operation: [centering], vc_m_min: {min: 8, max: 12}, f_mm: {min: 0.08, max: 0.15}, coolant: "water-soluble", page: "p. 441, 8 mm row (400 min-1)"}
+      - {iso_group: N, material_hint: "aluminium alloy castings ADC, AC4D", operation: [centering], vc_m_min: {min: 51, max: 100}, f_mm: {min: 0.18, max: 0.32}, coolant: "water-soluble", page: "p. 441, 8 mm row (3,000 min-1)"}

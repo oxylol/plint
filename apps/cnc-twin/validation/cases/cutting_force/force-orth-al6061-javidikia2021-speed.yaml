@@ -1,0 +1,77 @@
+# AA6061-T6 orthogonal tube cutting, f 0.16 mm, vc 361-1250 m/min, dry and flood: Fc, Ft (4 mm width).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-al6061-javidikia2021-speed
+quantity: cutting_force
+reference:
+  src: javidikia-2021-al6061-orthogonal
+  location: 'Fig. 4 (feed series at 950 m/min) and Fig. 5 (speed series at 0.16 mm): values printed on the bars'
+  digitised: false
+  measured: true
+  note: values are the numbers printed above each bar, not read off the axis; no uncertainty stated
+setup:
+  operation: orthogonal_turning
+  material: {db: al6061-t6, note: 'AA6061-T6 cylinder, 150 mm diameter, 120 mm long'}
+  tool:
+    src: javidikia-2021-al6061-orthogonal
+    page: Sect. 2, Table 1
+    type: turning_insert
+    iso_code: CCGX 120408-AL
+    grade: H10 (uncoated carbide)
+    tool_class: carbide
+    coating: none
+    rake_deg: 17.5
+    clearance_deg: 7
+    edge_radius_um: 20
+    fresh_edge_per_test: true
+    nose_radius_mm:
+      value: 0.8
+      src: est
+      note: 'assumed: ISO code ''08'' = 0.8 mm corner radius (code convention); outside the cut on a 4 mm tube wall'
+    assumed_inputs: [nose_radius_mm]
+  holder: {src: javidikia-2021-al6061-orthogonal, page: Sect. 2, model: SCLCR 2020 K12 (right hand)}
+  machine:
+    src: javidikia-2021-al6061-orthogonal
+    page: Sect. 2
+    model: MAZAK NEXUS 100-II M CNC machine
+    dynamometer: Kistler 9121 three-component, LabVIEW acquisition, MATLAB treatment
+  stock:
+    src: javidikia-2021-al6061-orthogonal
+    page: Sect. 2
+    form: tube
+    outer_diameter_mm: 150
+    wall_thickness_mm: 4
+    length_mm: 120
+    preparation: cylinder groove-machined into tube-shaped sections with a 4 mm wall
+  conditions:
+    src: javidikia-2021-al6061-orthogonal
+    page: Table 1, Sect. 2
+    vc_m_min: [361, 650, 950, 1250]
+    feed_mm_rev: 0.16
+    width_of_cut_mm: {value: 4, note: tube wall; the force signals are for the 4 mm width (Fig. 15 caption)}
+    coolant: [dry, flood]
+    flood_fluid: OEMETA
+    flood_flow_l_min: 7.2
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fc dry vc361, value: 420, unit: N, x: 361, x_name: vc, x_unit: m/min}
+- {name: Fc flood vc361, value: 426, unit: N, x: 361, x_name: vc, x_unit: m/min}
+- {name: Ft dry vc361, value: 138, unit: N, x: 361, x_name: vc, x_unit: m/min}
+- {name: Ft flood vc361, value: 146, unit: N, x: 361, x_name: vc, x_unit: m/min}
+- {name: Fc dry vc650, value: 399, unit: N, x: 650, x_name: vc, x_unit: m/min}
+- {name: Fc flood vc650, value: 402, unit: N, x: 650, x_name: vc, x_unit: m/min}
+- {name: Ft dry vc650, value: 99, unit: N, x: 650, x_name: vc, x_unit: m/min}
+- {name: Ft flood vc650, value: 107, unit: N, x: 650, x_name: vc, x_unit: m/min}
+- {name: Fc dry vc950, value: 384, unit: N, x: 950, x_name: vc, x_unit: m/min}
+- {name: Fc flood vc950, value: 390, unit: N, x: 950, x_name: vc, x_unit: m/min}
+- {name: Ft dry vc950, value: 77, unit: N, x: 950, x_name: vc, x_unit: m/min}
+- {name: Ft flood vc950, value: 77, unit: N, x: 950, x_name: vc, x_unit: m/min}
+- {name: Fc dry vc1250, value: 385, unit: N, x: 1250, x_name: vc, x_unit: m/min}
+- {name: Fc flood vc1250, value: 394, unit: N, x: 1250, x_name: vc, x_unit: m/min}
+- {name: Ft dry vc1250, value: 61, unit: N, x: 1250, x_name: vc, x_unit: m/min}
+- {name: Ft flood vc1250, value: 60, unit: N, x: 1250, x_name: vc, x_unit: m/min}
+reference_curves: []
+notes: 'Speed series 361-1250 m/min at f = 0.16 mm (Table 1 tests 1-4): Fc falls ~8 % and Ft ~56 % from 361 to 1250 m/min
+  (dry); the source attributes the drop to thermal softening.'

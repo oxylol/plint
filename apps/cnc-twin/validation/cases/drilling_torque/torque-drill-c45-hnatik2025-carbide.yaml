@@ -1,0 +1,64 @@
+# C45 (221 HV10) drilling with coated solid-carbide twist drills of controlled geometry (point 137.5 deg, helix
+# 30 deg, lip clearance 10 deg, web 0.3D, chisel 0.025D), emulsion: drilling torque versus feed for D 8 and 12 mm
+# at vc 80.21 and 149.79 m/min (Fig. 8, digitised; feed-averaged values stated in the text).
+format: cnctwin-validation-case
+version: 1
+id: torque-drill-c45-hnatik2025-carbide
+quantity: drilling_torque
+reference:
+  src: hnatik-2025-c45-drilling-torque
+  location: "Sects. 2.1-2.3 (material, machine, tools, constant factors), Table 2 (factor levels), Sect. 3 and Fig. 8 a-d (torque Mc versus fn for C45, black squares with error bars; digitised), Sect. 3 text (feed-averaged Mc)"
+  digitised: true
+  uncertainty_pct: 2
+  measured: true
+  note: "Markers read on 2.6x enlargements of the 738 x 597 px PMC image against the axis ticks (31.3 px/Nm for D 8, 18.4 px/Nm for D 12): about +-0.07 Nm (D 8) and +-0.12 Nm (D 12). The C45 markers are drawn slightly left of the nominal feeds (dodged against the 16MnCr5 series) and are assigned to the nominal feeds. Check: the means of the digitised values (3.98 and 3.76 Nm) reproduce the feed-averaged torques stated in the text, 3.956 and 3.769 Nm. The error bars of Fig. 8 (the 10-repeat scatter) are much larger at the lowest feed (e.g. 1.2-3.2 Nm at D 8, vc 80.21, fn 0.09)."
+setup:
+  operation: drilling
+  material:
+    db: aisi1045
+    note: "C45 ground bar D 118 x 30 mm held in a three-jaw chuck on the dynamometer; HV10 221.5, Rm 740.5 MPa, ferritic-pearlitic, 17.5 % ferrite (Sect. 2.1); same material and tools as thrust-drill-c45-sklenicka2024-carbide"
+  tool:
+    src: hnatik-2025-c45-drilling-torque
+    page: Sect. 2.3, Table 2
+    type: twist_drill
+    tool_class: carbide
+    tool_material: "Ceratizit CTS20D, coated 'Triple Cr SHM', slightly convex cutting edge; new drill for each trial"
+    diameter_mm: [8, 12]
+    lip_count: {value: 2, src: est, note: "assumed: two-flute twist drill (not stated in words)"}
+    point_angle_deg: 137.5
+    helix_deg: 30
+    lip_clearance_deg: 10
+    web_diameter: "0.3 D (core diameter)"
+    margin_width: "0.115 D (flute facet width)"
+    supporting_bevel_width: "0.135 D (flank facet width)"
+    edge_radius_um: 15
+    chisel_edge_length: "0.025 D"
+    assumed_inputs: [lip_count]
+  holder:
+    src: hnatik-2025-c45-drilling-torque
+    page: Sect. 2.2
+    type: hydraulic
+  machine:
+    src: hnatik-2025-c45-drilling-torque
+    page: Sect. 2.2
+    model: DMG DMU eVo 40 linear
+    dynamometer: Kistler 9272
+  conditions:
+    src: hnatik-2025-c45-drilling-torque
+    page: Sect. 2.3, Fig. 8
+    hole_depth: "2 D"
+    coolant: "Blaser Blasocut BC 35 Kombi emulsion, 6.9 %"
+    fn_mm_rev: [0.09, 0.13, 0.175, 0.22, 0.26]
+    vc_m_min: [80.21, 149.79]
+    repeats: 10
+  dynamics: null
+  program: null
+reference_values:
+  - {name: Mc_feedavg_D8_vc80.21, value: 3.956, unit: Nm, uncertainty: 0.07, note: "text: mean torque across the tested feeds, 3.956 +- 0.352 Nm"}
+  - {name: Mc_feedavg_D8_vc149.79, value: 3.769, unit: Nm, uncertainty: 0.07, note: "text: 3.769 +- 0.372 Nm"}
+reference_curves:
+  - {name: Mc_D8_vc80.21, x_name: fn, x_unit: mm/rev, y_name: Mc (torque), y_unit: Nm, uncertainty: 0.07, points: [[0.09, 2.22], [0.13, 3.33], [0.175, 3.92], [0.22, 4.64], [0.26, 5.77]]}
+  - {name: Mc_D8_vc149.79, x_name: fn, x_unit: mm/rev, y_name: Mc (torque), y_unit: Nm, uncertainty: 0.07, points: [[0.09, 1.82], [0.13, 3.12], [0.175, 3.78], [0.22, 4.41], [0.26, 5.69]]}
+  - {name: Mc_D12_vc80.21, x_name: fn, x_unit: mm/rev, y_name: Mc (torque), y_unit: Nm, uncertainty: 0.12, points: [[0.09, 3.48], [0.13, 5.84], [0.175, 7.82], [0.22, 9.74], [0.26, 12.18]]}
+  - {name: Mc_D12_vc149.79, x_name: fn, x_unit: mm/rev, y_name: Mc (torque), y_unit: Nm, uncertainty: 0.12, points: [[0.09, 3.23], [0.13, 5.76], [0.175, 7.59], [0.22, 9.53], [0.26, 12.06]]}
+notes: "Order-of-magnitude check (computed here, est.): M = kc f D^2 / 8 with kc 2.5 GPa gives 3.5 Nm at D 8, f 0.175 mm/rev (3.9 Nm measured) and 7.9 Nm at D 12 (7.8 Nm measured). Raising vc from 80 to 150 m/min lowers the torque by about 5 % (D 8, stated in the text). The statistic of each torque record (steady mean) is not defined in the source; Fig. 10b of the source shows a time signal at the centre point."

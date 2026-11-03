@@ -1,0 +1,88 @@
+# Sources for validation/cases/{taylor_life, stability_lobe, roughness, wall_error, chip_form}/
+# (validation references, part 2). All read on 2026-11-03. PDFs were downloaded, text-extracted
+# and rendered locally (figures digitised from the renders, method stated in each case);
+# open-access journal papers were read as PMC full text (JATS XML) with their figures from PMC.
+# Two further keys used by part-2 cases already exist elsewhere and are not repeated here:
+# engin-1999-general-milling (materials-light.yaml; same PDF, md5-checked) and
+# matras-2020-h13-cbn-milling (materials-steels.yaml).
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  insperger-2004-updated-sd:
+    type: article
+    authors: "Insperger, T.; Stépán, G."
+    title: "Updated semi-discretization method for periodic delay-differential equations with discrete delay"
+    venue: "International Journal for Numerical Methods in Engineering 61(1), 117-141"
+    year: 2004
+    doi: "10.1002/nme.1061"
+    url: "http://www.mm.bme.hu/~insperger/j2004_IJNME.pdf"
+    accessed: "2026-11-03"
+    pages: "Sect. 4 (1 DOF milling model, Eqs. 32-38, parameters N 2, fn 922 Hz, zeta 0.011, mt 0.03993 kg, Kt 6e8 N/m2, Kn 2e8 N/m2, down-milling, m = 40); Fig. 6 (1 DOF stability charts a/D = 1, 0.5, 0.1, 0.05); Sect. 5 and Fig. 7 (2 DOF symmetric tool, same parameters); Appendices B and C (MATLAB code)"
+    note: "Author-hosted copy of the published article (journal page numbers printed). Analytical/numerical benchmark, not an experiment."
+
+  mann-2003-up-down-milling-part2:
+    type: article
+    authors: "Mann, B.P.; Insperger, T.; Bayly, P.V.; Stépán, G."
+    title: "Stability of up-milling and down-milling, part 2: experimental verification"
+    venue: "International Journal of Machine Tools and Manufacture 43(1), 35-40"
+    year: 2003
+    url: "http://www.mm.bme.hu/~insperger/j2003_IJMTM_2.pdf"
+    accessed: "2026-11-03"
+    pages: "Manuscript pp. 3-8: Sect. 3 (flexure fn 146.5 Hz, k 2.18e6 N/m, zeta 0.0032, m 2.573 kg; Kn 2.0e8, Kt 5.5e8 N/m2; 7075-T6 samples 6.35 mm wide, 19.05 mm carbide end mill with one flute, a = 4.515 mm, a/D = 0.237, 0.1016 mm/rev); Sect. 4 (points A-H with speed and depth); Fig. 6 (up-milling) and Fig. 7 (down-milling) experimental results (stable, chatter, border)"
+    note: "The hosted PDF is the authors' manuscript (own page numbers 1-15; text in Type 3 fonts, read from page renders). Venue and pages from the author's publication list on the same site."
+
+  insperger-2006-chatter-sle:
+    type: article
+    authors: "Insperger, T.; Gradišek, J.; Kalveram, M.; Stépán, G.; Weinert, K.; Govekar, E."
+    title: "Machine tool chatter and surface location error in milling processes"
+    venue: "Journal of Manufacturing Science and Engineering 128(4), 913-920"
+    year: 2006
+    url: "http://www.mm.bme.hu/~insperger/j2006_ASME-JMSE.pdf"
+    accessed: "2026-11-03"
+    pages: "Sect. 4 (SLE definition, Eq. 24, Fig. 5); Sect. 5 p. 916-917 (N 1, D 8 mm, fz 0.16 mm, AlMgSi0.5, Kt 644e6, Kn 237e6 N/m2, minimal coolant, M diag(0.0199, 0.0201) kg, C diag(1.603, 1.557) Ns/m, K diag(409000, 413000) N/m, ft about 722 Hz); Fig. 7 (a) experimental stability chart, 10 % immersion down-milling, (b), (c) experimental SLE for ap 0.4 and 0.8 mm"
+    note: "Author-hosted copy of the published article. The co-author printed as 'Winert' on the paper is K. Weinert (Dortmund). Fig. 7 is a raster image in this copy."
+
+  gradisek-2005-stability-prediction:
+    type: article
+    authors: "Gradišek, J.; Kalveram, M.; Insperger, T.; Weinert, K.; Stépán, G.; Govekar, E.; Grabec, I."
+    title: "On stability prediction for milling"
+    venue: "International Journal of Machine Tools and Manufacture 45(7-8), 769-781"
+    year: 2005
+    url: "http://www.mm.bme.hu/~insperger/j2005_IJMTM.pdf"
+    accessed: "2026-11-03"
+    pages: "Sect. 3 p. 773-774 (single-edge cylindrical end mill D 8 mm, 45 deg helix, 96 mm overhang, HSK40E shrink-fit holder, one of two teeth removed, AlMgSi0.5, Kt 644 MPa, kr 0.37, minimal coolant, laser displacement sensors 65 mm above the tip); Table 1 (tip-tip modal matrices: M 20.1 / 19.9 g, C 1.56 / 1.60 kg/s, K 414 / 409 kN/m; cross terms 0.04 g, 0.032 kg/s, 8.2 kN/m); Fig. 7 (experimental stability charts, up-milling)"
+    note: "Used here only for the tool and holder details of the same test rig as insperger-2006-chatter-sle (which refers to it for them). Its Table 1 lists the diagonal M, C, K in the opposite x/y order to the 2006 paper."
+
+  magalhaes-2022-1045-dry-turning:
+    type: article
+    authors: "Magalhães, L.C.; Carlesso, G.C.; López de Lacalle, L.N.; Souza, M.T.; de Oliveira Palheta, F.; Binder, C."
+    title: "Tool wear effect on surface integrity in AISI 1045 steel dry turning"
+    venue: "Materials 15(6), 2031"
+    year: 2022
+    doi: "10.3390/ma15062031"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8949504/"
+    accessed: "2026-11-03"
+    pages: "Sect. 2.1 (AISI 1045 bars D 30 x 55 mm, 248 HB, Boxford 160 VMCi lathe; Sumitomo T1200A uncoated cermet DNMG090202N-SC, 6 deg rake, SDACR062B holder; Table 2 vc 175 and 275 m/min, f 0.025-0.1 mm/rev, doc 0.2 mm, dry); Sect. 2.4 (tool life criterion VBB = 0.1 mm per ISO 3685, wear measured every 150 mm of machined length); Sect. 3 text (tool life 35 min at 175 m/min, 23 min at 275 m/min); Fig. 11 (VBB versus cutting time, digitised from the PMC figure image materials-15-02031-g011.jpg)"
+
+  magalhaes-2026-304-cermet-turning:
+    type: article
+    authors: "Magalhães, L.C.; Sorte, N.A.; Souza, M.T.; Marques, A."
+    title: "Tool wear and surface finish in AISI 304 stainless steel dry turning with cermet inserts"
+    venue: "Materials 19(6), 1274"
+    year: 2026
+    doi: "10.3390/ma19061274"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC13028188/"
+    accessed: "2026-11-03"
+    pages: "Sect. 2 (AISI 304 bars D 30 x 55 mm, 215 HB, Boxford 160 VMCi; Sumitomo T1200A cermet DNMG090202N-SC, 6 deg rake, SDACR062B; vc 120 and 150 m/min, f 0.025 and 0.05 mm/rev, doc 0.2 mm, dry); Sect. 2.3 (VBB = 0.1 mm criterion, ISO 3685); Sect. 3.1 text (contact Ra 0.44 / 0.64 um at 120 m/min, 0.59 / 0.92 um at 150 m/min, repeatability about 5 %); Sect. 3.2 text (tool life about 18 min at 120 m/min, about 10 min at 150 m/min)"
+    note: "The abstract states 15 min and 9 min for the same tool lives; the results section and conclusions state 18 and 10 min."
+
+  tungaloy-2023-gc-turning-us:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024: Turning and Grooving (US, inch edition)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_US_Turning-Grooving.pdf"
+    accessed: "2026-11-03"
+    pages: "p. B004 (PDF p. 12): chipbreaker system and standard cutting conditions for negative inserts in P steels (TM: T9215 ap 0.039-0.197 in, f 0.008-0.020 ipr, 492-1312 sfm in medium carbon / alloy steels such as 1045 and 4140); p. B057 (PDF p. 65): CN negative inserts TM/PM/ZM with dimensions and 'Chip control range' charts (feed ipr versus depth of cut in) per ISO group"

@@ -1,0 +1,47 @@
+# Block-time model of the control's interpreter (cnctwin/controller/executor.py, docs/dialects.md
+# "Structure of the controller", block-time model). Names carry the SI unit; `unit:` is the unit written.
+# t_ready(k) = max(t_ready(k-1), t_free(k)) + t_block(k), with t_block = block_processing (machine file)
+# for an NC block and statement + terms * term for a macro statement (Altintas 2012 ch. 6: the
+# interpreter fills the look-ahead buffer ahead of the interpolator; when blocks are shorter than the
+# distance travelled in one block time the feed is limited by data starvation).
+format: cnctwin-model-params
+version: 1
+model: controller-block-time
+description: "Interpreter cost per macro statement, per expression term, per call and per GOTO search step"
+params:
+  macro_statement_s:
+    value: 0.05
+    unit: ms
+    range: [0.005, 2.0]
+    src: est
+    note: "fixed cost of one custom-macro statement (assignment, IF, WHILE, GOTO, END); not published by FANUC or Haas. Shop-floor reports put older FANUC macro execution near 1-2 ms per statement and current controls one to two orders faster; 0.05 ms (20 000 simple statements/s) assumed for 0i-F / NGC class controls"
+  macro_term_s:
+    value: 0.005
+    unit: ms
+    range: [0.0, 0.2]
+    src: est
+    note: "extra cost per operator, function or variable access in a statement (so a 20-term trigonometric expression costs about 3x a simple assignment); assumed"
+  call_s:
+    value: 0.2
+    unit: ms
+    range: [0.0, 5.0]
+    src: est
+    note: "subprogram / macro call (M98, M97, G65, G66 calls, M99 return): program search and local-variable frame set-up; assumed"
+  goto_scan_s:
+    value: 0.002
+    unit: ms
+    range: [0.0, 0.1]
+    src: est
+    note: "per block searched by GOTO / M99 Pn / M97 for the target sequence number (the control searches the program text sequentially); assumed"
+  min_block_s:
+    value: 1
+    unit: us
+    range: [1, 1]
+    src: est
+    note: "every processed block or statement costs at least one base tick (1 us) so that a macro loop without motion advances simulated time; a modelling floor, not a control property"
+  horizon_s:
+    value: 10
+    unit: ms
+    range: [1, 100]
+    src: est
+    note: "how far the interpreter may run ahead of the current simulated time in one produce() call when the look-ahead buffer is not the limit (one default macro step); results do not depend on it as long as it is >= the macro step, because the interpreter's own clock (ready_tick) is what the planner uses"

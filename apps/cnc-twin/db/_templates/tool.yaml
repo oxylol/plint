@@ -1,0 +1,63 @@
+# Cutting tool (catalogue item). One file per tool family or per tool: db/tools/<maker>-<series>.yaml
+# A file may hold several sizes of one series under `items:`; each item is a complete tool.
+format: cnctwin-tool
+version: 1
+series_id: sandvik-2p342            # lowercase, dashes; file name
+maker: "Sandvik Coromant"
+series: "CoroMill Plura 2P342 (4-flute, variable pitch)"
+src: sandvik-plura-catalogue-2023   # section default for everything below
+items:
+  - id: sandvik-2p342-1000-pa        # unique tool id (catalogue code, lowercased)
+    order_code: "2P342-1000-PA 1730"
+    type: square_endmill
+    # square_endmill | ball_endmill | toroidal_endmill | roughing_endmill | serrated_endmill |
+    # face_mill | shoulder_mill | chamfer_mill | engraver | keyseat | tslot | dovetail | lollipop |
+    # slitting_saw | spot_drill | centre_drill | twist_drill | indexable_drill | gun_drill | reamer |
+    # tap_cutting | tap_forming | thread_mill | boring_head | boring_bar |
+    # turning_insert | grooving_insert | parting_insert | threading_insert | form_tool
+    hand: right                      # right | left (spindle direction for which it cuts)
+    tool_material: {class: carbide, grade: "GC1730", id: carbide-submicron-10co}   # id in db/tool_materials
+    coating: {id: tialn, thickness_um: 3}          # id in db/coatings, or {id: none}
+    geometry:
+      diameter_mm: 10
+      flutes: 4
+      pitch_deg: [86, 94, 86, 94]    # angular spacing between consecutive flutes (sums to 360)
+      helix_deg: [36, 38, 36, 38]    # per flute; one number if all equal
+      rake_deg: 8                    # radial rake (normal rake for inserts)
+      clearance_deg: {primary: 10, secondary: 18}
+      edge_radius_um: 8
+      edge_prep: {type: hone}        # hone | chamfer {width_um, angle_deg} | sharp | waterfall
+      corner_radius_mm: 0            # end mills; ball nose: radius = D/2
+      cutting_length_mm: 22          # length of flute with cutting edges (ap max)
+      flute_length_mm: 22
+      neck: {diameter_mm: 9.6, length_mm: 32}   # null if no neck
+      shank: {diameter_mm: 10, length_mm: 40}
+      overall_length_mm: 72
+      gullet_area_mm2: 9.5           # flute cross-section area available for chips (est if not published)
+      core_diameter_mm: 6.0          # web/core of the fluted section (stiffness)
+      centre_cutting: true
+      coolant_holes: null            # {count: 2, diameter_mm: 0.8, exit: tip | flute}
+      # drills: point_angle_deg, chisel_edge_angle_deg, chisel_length_mm, web_thickness_mm, margin_width_mm, lip_count
+      # taps: thread {standard: ISO metric, pitch_mm, form_angle_deg: 60, class: 6H}, chamfer_threads, tap_kind: cutting|forming, spiral: point|flute|straight
+      # thread mills: thread {...}, rows, single_profile: false
+      # chamfer/spot: tip_angle_deg, tip_diameter_mm
+      # engraver: tip_angle_deg, tip_width_mm
+      # slitting/keyseat/tslot: width_mm, hub/neck geometry
+      # indexable mills: inserts {count, iso_code, ic_mm, nose_radius_mm, axial_rake_deg, radial_rake_deg, lead_angle_deg (kappa_r), wiper: bool, positions_deg: [...]}
+      # turning/grooving/parting/threading inserts: insert {iso_code, shape: C|D|V|W|T|S|R|..., included_angle_deg, ic_mm, thickness_mm, nose_radius_mm, clearance_deg, chip_breaker: {name, land_mm, groove_width_mm, groove_depth_mm, rake_deg, window: {f_mm: [lo, hi], ap_mm: [lo, hi]}}, width_mm (grooving)}, holder {iso_code, approach_angle_deg, inclination_deg, rake_deg, shank_mm: [h, b], overhang_mm}
+      # boring bars: bar {diameter_mm, overhang_mm, material: steel|carbide|damped}, min_bore_mm
+    max_rpm: 40000                   # maker's limit for the tool, null if none published
+    balance_grade: null              # ISO 21940 G-grade if published
+    mass_g: 40                       # est if not published
+    cutting_data:                    # maker's recommended data, per ISO group / material
+      - iso_group: N
+        material_hint: "wrought aluminium"
+        vc_m_min: {min: 300, start: 500, max: 900}
+        fz_mm: {min: 0.03, start: 0.06, max: 0.10}  # at this diameter
+        ap_max_mm: 15                # or ap_max_xD: 1.5
+        ae_max_xD: 1.0               # radial engagement limit as a fraction of D
+        operation: [slotting, side_milling]
+        src: sandvik-plura-catalogue-2023
+        page: "p. 214"
+    price_eur: 85                    # list price if published (tool cost per part), else est with note
+    regrinds: 2                      # number of regrinds possible (cost model), est if not published

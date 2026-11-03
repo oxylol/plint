@@ -1,0 +1,72 @@
+# AISI 304 orthogonal cutting on a lathe, YG8 carbide, vc 90-210 m/min, f 0.05-0.15 mm: Fc and thrust.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-ss304-zou2026
+quantity: cutting_force
+reference:
+  src: zou-2026-304-cutting-forces
+  location: Table 3 (orthogonal cutting experimental conditions and results)
+  digitised: false
+  measured: true
+  note: no measurement uncertainty or repeat count stated
+setup:
+  operation: orthogonal_turning
+  material:
+    db: aisi304
+    note: '304 stainless steel bar stock; the paper''s model data: rho 7950, cp 500, k 16.2, E 193 GPa, yield 235 MPa (Table
+      1); condition not stated'
+  tool:
+    src: zou-2026-304-cutting-forces
+    page: Sect. 3.1 (Workpiece and Tool Materials; FE model set-up)
+    tool_class: carbide
+    grade: YG8 (WC-8Co) cemented carbide
+    rake_deg:
+      value: 10
+      note: geometry given for the tool of the FE model that reproduces the tests; taken as that of the test tool
+    clearance_deg: {value: 7, note: as rake_deg}
+    edge_radius_um:
+      value: 20
+      note: '''tool nose radius of 20 um'' of the FE model, i.e. the cutting-edge radius; as rake_deg'
+    coating: {value: none, src: est, note: 'assumed: not stated; YG8 is normally used uncoated'}
+    assumed_inputs: [coating]
+  machine:
+    src: zou-2026-304-cutting-forces
+    page: Sect. 3.2.1
+    model: C6136HK CNC lathe
+    dynamometer: Kistler 9257B
+  stock:
+    src: zou-2026-304-cutting-forces
+    page: Sect. 3.1
+    form:
+      value: tube end
+      src: est
+      note: 'assumed: not described; an orthogonal cut on a lathe with ap = width implies a tube or disc end'
+    assumed_inputs: [form]
+  conditions:
+    src: zou-2026-304-cutting-forces
+    page: Table 3
+    test_ids: ['1', '2', '3', '4', '5']
+    vc_per_test_m_min: [90, 90, 90, 150, 210]
+    feed_per_test_mm_rev: [0.05, 0.1, 0.15, 0.1, 0.1]
+    width_of_cut_mm: {value: 1, note: 'ap = 1 mm (Table 3), taken as the orthogonal width'}
+    coolant: {value: dry, src: est, note: 'assumed: not stated'}
+    note: parameters chosen from the tool supplier's recommendations for 304 (Sect. 3.2.2)
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fc case 1, value: 159, unit: N, x: 0.05, x_name: f, x_unit: mm/rev, note: vc 90 m/min (main cutting force)}
+- {name: Ft case 1, value: 58, unit: N, x: 0.05, x_name: f, x_unit: mm/rev, note: vc 90 m/min (radial thrust force)}
+- {name: Fc case 2, value: 264, unit: N, x: 0.1, x_name: f, x_unit: mm/rev, note: vc 90 m/min (main cutting force)}
+- {name: Ft case 2, value: 96, unit: N, x: 0.1, x_name: f, x_unit: mm/rev, note: vc 90 m/min (radial thrust force)}
+- {name: Fc case 3, value: 357, unit: N, x: 0.15, x_name: f, x_unit: mm/rev, note: vc 90 m/min (main cutting force)}
+- {name: Ft case 3, value: 117, unit: N, x: 0.15, x_name: f, x_unit: mm/rev, note: vc 90 m/min (radial thrust force)}
+- {name: Fc case 4, value: 239, unit: N, x: 0.1, x_name: f, x_unit: mm/rev, note: vc 150 m/min (main cutting force)}
+- {name: Ft case 4, value: 81, unit: N, x: 0.1, x_name: f, x_unit: mm/rev, note: vc 150 m/min (radial thrust force)}
+- {name: Fc case 5, value: 225, unit: N, x: 0.1, x_name: f, x_unit: mm/rev, note: vc 210 m/min (main cutting force)}
+- {name: Ft case 5, value: 75, unit: N, x: 0.1, x_name: f, x_unit: mm/rev, note: vc 210 m/min (radial thrust force)}
+reference_curves: []
+notes: Weaker set-up description than the other 304 case (workpiece form, coolant and the test tool's edge are not described;
+  the tool geometry is that of the paper's FE model). The source's FE model reproduces cases 1-3 with mean errors of 8.1
+  % (cutting force) and 14.8 % (thrust) (Sect. 3.2.3).

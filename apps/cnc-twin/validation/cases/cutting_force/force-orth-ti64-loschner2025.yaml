@@ -1,0 +1,141 @@
+# Ti6Al4V orthogonal turning (rake 20 deg), vc 40-90 m/min, f 0.05-0.15 mm: Fc and back force (digitised).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-ti64-loschner2025
+quantity: cutting_force
+reference:
+  src: loschner-2025-ti6al4v-jc-sensitivity
+  location: Fig. 2a (main cutting force) and Fig. 2b (back force), experiment lines (digitised from the 784 x 649 px figure)
+  digitised: true
+  uncertainty_pct: 3
+  measured: true
+  note: digitisation uncertainty about +-2 px (+-6 N on Fc, +-1 N on Fp) plus the line width; the experimental error bars
+    belong to the simulation bars and are not used
+setup:
+  operation: orthogonal_turning
+  material:
+    db: ti6al4v
+    note: 'Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed)'
+  tool:
+    src: loschner-2025-ti6al4v-jc-sensitivity
+    page: Sect. 2.1
+    type: grooving_insert
+    designation: Tungaloy DGG500-0400 (orthogonal-turning carbide insert)
+    holder_designation: CTER2020-5T12
+    tool_class: carbide
+    rake_deg: {value: 20, note: orthogonal rake in the working system}
+    clearance_deg: {value: 7, note: normal clearance in the working system}
+    coating: not stated in the source
+    edge_radius_um:
+      value: 15
+      src: est
+      note: 'assumed: not stated; typical honed edge of a ground carbide grooving insert (est.)'
+    assumed_inputs: [edge_radius_um]
+  machine:
+    src: loschner-2025-ti6al4v-jc-sensitivity
+    page: Sect. 2.1
+    model: Okuma Genos L200E-M 3-axis CNC lathe
+    dynamometer: Kistler 9129AA
+    temperature: natural (tool-work) thermocouple; calibration and accuracy in Loeschner et al. (2024) Machines 12, 709
+      (ref. [21] of the source, not read)
+  conditions:
+    src: loschner-2025-ti6al4v-jc-sensitivity
+    page: Sect. 2.1
+    vc_m_min: [40, 50, 60, 70, 80, 90]
+    feed_mm_rev: [0.05, 0.1, 0.15]
+    width_of_cut_mm: {value: 3, note: ap = 3 mm (constant)}
+    coolant: dry
+    ambient_temp_degC: 20
+    note: full factorial 6 x 3, except vc 90 m/min at f 0.15 mm (catastrophic tool wear, no repeatable data, Sect. 2.3)
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+- name: Fc f=0.05
+  x_name: vc
+  x_unit: m/min
+  y_name: Fc
+  y_unit: N
+  points:
+  - [40, 269]
+  - [50, 268]
+  - [60, 272]
+  - [70, 272]
+  - [80, 269]
+  - [90, 271]
+  uncertainty: 8
+  note: experiment line of Fig. 2a read at each speed
+- name: Fc f=0.1
+  x_name: vc
+  x_unit: m/min
+  y_name: Fc
+  y_unit: N
+  points:
+  - [40, 484]
+  - [50, 483]
+  - [60, 481]
+  - [70, 484]
+  - [80, 483]
+  - [90, 479]
+  uncertainty: 8
+  note: experiment line of Fig. 2a read at each speed
+- name: Fc f=0.15
+  x_name: vc
+  x_unit: m/min
+  y_name: Fc
+  y_unit: N
+  points:
+  - [40, 635]
+  - [50, 627]
+  - [60, 624]
+  - [70, 614]
+  - [80, 613]
+  uncertainty: 8
+  note: experiment line of Fig. 2a read at each speed
+- name: Fp f=0.05
+  x_name: vc
+  x_unit: m/min
+  y_name: Fp (back force)
+  y_unit: N
+  points:
+  - [40, 74.3]
+  - [50, 74.1]
+  - [60, 70.1]
+  - [70, 68.2]
+  - [80, 68.1]
+  - [90, 64.0]
+  uncertainty: 2.5
+  note: experiment line of Fig. 2b read at each speed
+- name: Fp f=0.1
+  x_name: vc
+  x_unit: m/min
+  y_name: Fp (back force)
+  y_unit: N
+  points:
+  - [40, 64.2]
+  - [50, 62.3]
+  - [60, 51.4]
+  - [70, 50.5]
+  - [80, 60.4]
+  - [90, 53.3]
+  uncertainty: 2.5
+  note: experiment line of Fig. 2b read at each speed
+- name: Fp f=0.15
+  x_name: vc
+  x_unit: m/min
+  y_name: Fp (back force)
+  y_unit: N
+  points:
+  - [40, 69.1]
+  - [50, 63.6]
+  - [60, 45.4]
+  - [70, 52.4]
+  - [80, 60.8]
+  uncertainty: 2.5
+  note: experiment line of Fig. 2b read at each speed
+notes: Orthogonal turning of Ti6Al4V with a 20 deg rake grooving insert, dry. The source's FE model (DEFORM, JC set identified
+  analytically in its ref. [21], Coulomb mu 0.7) matches Fc within 8 % in most cases (<2 % at low feed) but the back force
+  only within 42 % (Sect. 2.3). Fp (called back force) is the second, in-plane component the source reports, i.e. the thrust
+  of this orthogonal cut (the kinematics are not described; for a radial plunge the thrust is radial); it is small (45-75
+  N) at a 20 deg rake.

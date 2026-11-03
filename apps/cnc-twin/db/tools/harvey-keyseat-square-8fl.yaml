@@ -1,0 +1,720 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: harvey-keyseat-square-8fl
+maker: Harvey Tool (Harvey Performance Company)
+series: Keyseat Cutters - Square, Standard Slotting (Type I), 1.5x reach, 8 flutes, solid carbide
+src: harvey-2026-keyseat-square
+notes: 'Square keyseat (woodruff-type) cutters, inch. Chart SF_22500 covers series 225xx, 226xx, 709xx, 718xx. Hardness blocks: steels are given for 29-37 HRC and 38-45 HRC (for <= 28 HRC ferrous, the chart allows +10-20 % chip load).'
+items:
+- id: harvey-22560
+  order_code: '22560 (uncoated; AlTiN: 22560-C3)'
+  type: keyseat
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 9.525
+    width_mm: 3.175
+    flutes: 8
+    helix_deg: {value: 0, src: est, note: flute form not published; straight teeth assumed for a square keyseat cutter}
+    pitch_deg:
+      value: [45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0]
+      src: est
+      note: equal tooth spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: rake not published; 5 deg assumed for a carbide keyseat cutter}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: 'not published; both side faces are dished for clearance (product page), peripheral clearance 10/18 deg assumed'}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    cutting_length_mm: 3.175
+    neck: {diameter_mm: 4.7625, length_mm: 14.2875, note: 'reach (1.5x) D; max radial DOC 0.084 in, accounting for the max transition radius at the neck (product table)'}
+    shank:
+      diameter_mm: 9.525
+      length_mm: {value: 46.0375, src: est, note: OAL - neck length - width; transition lengths not published}
+    overall_length_mm: 63.5
+    centre_cutting: {value: false, src: est, note: 'disc-type keyseat cutter: no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'profile = square (Type I, standard slotting); max_radial_doc_in = 0.084; inch dimensions as published: diameter 0.375 in, width 0.125 in, cutting_length 0.125 in, neck.diameter 0.1875 in, neck.length 0.5625 in, shank.diameter 0.375 in, shank.length 1.8125 (est) in, overall_length 2.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 62.3, src: est, note: 'rho V: shank taken as a 9.525 mm cylinder over 63.5 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (and 2xx/5xx/7xx/8xx castings share the chip loads; wrought SFM used) (e.g. al6061-t6); <= 28 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.047244}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.12
+    ae_max_mm: 2.1336
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, 0.375 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .12 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.084 in; published values: vc 1000 SFM, fz 0.00186 in, ap_max 0.125 in, ae_max 0.084 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 1140-1151, 13xx, 15xx, 2xxx-9xxx incl. 41xx/43xx (e.g. aisi1045, aisi4140-qt30); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.015748}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 2.1336
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, 0.375 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.084 in; published values: vc 200 SFM, fz 0.00062 in, ap_max 0.125 in, ae_max 0.084 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.015748}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 2.1336
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 29-37 HRC block, 0.375 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.084 in; published values: vc 200 SFM, fz 0.00062 in, ap_max 0.125 in, ae_max 0.084 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.01397}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 38-45 HRC block, 0.375 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 100 SFM, fz 0.00055 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009906}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 2.1336
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 0.375 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.084 in; published values: vc 150 SFM, fz 0.00039 in, ap_max 0.125 in, ae_max 0.084 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.008636}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 0.375 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 90 SFM, fz 0.00034 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.009906}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 2.1336
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 0.375 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.084 in; published values: vc 150 SFM, fz 0.00039 in, ap_max 0.125 in, ae_max 0.084 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.008636}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 0.375 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 75 SFM, fz 0.00034 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.009906}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 2.1336
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 0.375 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.084 in; published values: vc 70 SFM, fz 0.00039 in, ap_max 0.125 in, ae_max 0.084 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.008636}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 0.375 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 50 SFM, fz 0.00034 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 112.49, src: est, note: 'list price USD 130.80 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: small solid-carbide keyseat cutter assumed not reground}
+  note: 'D1 +.000/-.002 in, width L2 +/-.0005 in, neck length +.020/-.000 in (product table header). Disc cutter: stiffness governed by the published neck; core/gullet not applicable (null).'
+- id: harvey-22670
+  order_code: '22670 (uncoated; AlTiN: 22670-C3)'
+  type: keyseat
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 12.7
+    width_mm: 4.7498
+    flutes: 8
+    helix_deg: {value: 0, src: est, note: flute form not published; straight teeth assumed for a square keyseat cutter}
+    pitch_deg:
+      value: [45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0]
+      src: est
+      note: equal tooth spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: rake not published; 5 deg assumed for a carbide keyseat cutter}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: 'not published; both side faces are dished for clearance (product page), peripheral clearance 10/18 deg assumed'}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    cutting_length_mm: 4.7498
+    neck: {diameter_mm: 6.35, length_mm: 19.05, note: 'reach (1.5x) D; max radial DOC 0.115 in, accounting for the max transition radius at the neck (product table)'}
+    shank:
+      diameter_mm: 12.7
+      length_mm: {value: 52.4002, src: est, note: OAL - neck length - width; transition lengths not published}
+    overall_length_mm: 76.2
+    centre_cutting: {value: false, src: est, note: 'disc-type keyseat cutter: no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'profile = square (Type I, standard slotting); max_radial_doc_in = 0.115; inch dimensions as published: diameter 0.5 in, width 0.187 in, cutting_length 0.187 in, neck.diameter 0.25 in, neck.length 0.75 in, shank.diameter 0.5 in, shank.length 2.063 (est) in, overall_length 3 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 133.0, src: est, note: 'rho V: shank taken as a 12.7 mm cylinder over 76.2 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (and 2xx/5xx/7xx/8xx castings share the chip loads; wrought SFM used) (e.g. al6061-t6); <= 28 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.062992}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.12
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .12 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 1000 SFM, fz 0.00248 in, ap_max 0.187 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 1140-1151, 13xx, 15xx, 2xxx-9xxx incl. 41xx/43xx (e.g. aisi1045, aisi4140-qt30); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.021082}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 200 SFM, fz 0.00083 in, ap_max 0.187 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.021082}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 200 SFM, fz 0.00083 in, ap_max 0.187 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.018542}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 100 SFM, fz 0.00073 in, ap_max 0.187 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013208}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 150 SFM, fz 0.00052 in, ap_max 0.187 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.011684}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 90 SFM, fz 0.00046 in, ap_max 0.187 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013208}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 150 SFM, fz 0.00052 in, ap_max 0.187 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.011684}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 75 SFM, fz 0.00046 in, ap_max 0.187 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.013208}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 70 SFM, fz 0.00052 in, ap_max 0.187 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.011684}
+    ap_max_mm: 4.7498
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 50 SFM, fz 0.00046 in, ap_max 0.187 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 147.92, src: est, note: 'list price USD 172.00 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: small solid-carbide keyseat cutter assumed not reground}
+  note: 'D1 +.000/-.002 in, width L2 +/-.0005 in, neck length +.020/-.000 in (product table header). Disc cutter: stiffness governed by the published neck; core/gullet not applicable (null).'
+- id: harvey-22680
+  order_code: '22680 (uncoated; AlTiN: 22680-C3)'
+  type: keyseat
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 12.7
+    width_mm: 6.35
+    flutes: 8
+    helix_deg: {value: 0, src: est, note: flute form not published; straight teeth assumed for a square keyseat cutter}
+    pitch_deg:
+      value: [45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0]
+      src: est
+      note: equal tooth spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: rake not published; 5 deg assumed for a carbide keyseat cutter}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: 'not published; both side faces are dished for clearance (product page), peripheral clearance 10/18 deg assumed'}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    cutting_length_mm: 6.35
+    neck: {diameter_mm: 6.35, length_mm: 19.05, note: 'reach (1.5x) D; max radial DOC 0.115 in, accounting for the max transition radius at the neck (product table)'}
+    shank:
+      diameter_mm: 12.7
+      length_mm: {value: 50.8, src: est, note: OAL - neck length - width; transition lengths not published}
+    overall_length_mm: 76.2
+    centre_cutting: {value: false, src: est, note: 'disc-type keyseat cutter: no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'profile = square (Type I, standard slotting); max_radial_doc_in = 0.115; inch dimensions as published: diameter 0.5 in, width 0.25 in, cutting_length 0.25 in, neck.diameter 0.25 in, neck.length 0.75 in, shank.diameter 0.5 in, shank.length 2 (est) in, overall_length 3 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 133.0, src: est, note: 'rho V: shank taken as a 12.7 mm cylinder over 76.2 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (and 2xx/5xx/7xx/8xx castings share the chip loads; wrought SFM used) (e.g. al6061-t6); <= 28 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.062992}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.12
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .12 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 1000 SFM, fz 0.00248 in, ap_max 0.25 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 1140-1151, 13xx, 15xx, 2xxx-9xxx incl. 41xx/43xx (e.g. aisi1045, aisi4140-qt30); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.021082}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 200 SFM, fz 0.00083 in, ap_max 0.25 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.021082}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 200 SFM, fz 0.00083 in, ap_max 0.25 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.018542}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 100 SFM, fz 0.00073 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013208}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 150 SFM, fz 0.00052 in, ap_max 0.25 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.011684}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 90 SFM, fz 0.00046 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013208}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 150 SFM, fz 0.00052 in, ap_max 0.25 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.011684}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 75 SFM, fz 0.00046 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.013208}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 2.921
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 0.500 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.115 in; published values: vc 70 SFM, fz 0.00052 in, ap_max 0.25 in, ae_max 0.115 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.011684}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 0.500 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 50 SFM, fz 0.00046 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 147.92, src: est, note: 'list price USD 172.00 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: small solid-carbide keyseat cutter assumed not reground}
+  note: 'D1 +.000/-.002 in, width L2 +/-.0005 in, neck length +.020/-.000 in (product table header). Disc cutter: stiffness governed by the published neck; core/gullet not applicable (null).'
+- id: harvey-70960
+  order_code: '70960 (uncoated; AlTiN: 70960-C3)'
+  type: keyseat
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 15.875
+    width_mm: 3.175
+    flutes: 8
+    helix_deg: {value: 0, src: est, note: flute form not published; straight teeth assumed for a square keyseat cutter}
+    pitch_deg:
+      value: [45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0]
+      src: est
+      note: equal tooth spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: rake not published; 5 deg assumed for a carbide keyseat cutter}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: 'not published; both side faces are dished for clearance (product page), peripheral clearance 10/18 deg assumed'}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    cutting_length_mm: 3.175
+    neck: {diameter_mm: 7.9375, length_mm: 25.4, note: 'reach (1.5x) D; max radial DOC 0.146 in, accounting for the max transition radius at the neck (product table)'}
+    shank:
+      diameter_mm: 15.875
+      length_mm: {value: 60.325, src: est, note: OAL - neck length - width; transition lengths not published}
+    overall_length_mm: 88.9
+    centre_cutting: {value: false, src: est, note: 'disc-type keyseat cutter: no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'profile = square (Type I, standard slotting); max_radial_doc_in = 0.146; inch dimensions as published: diameter 0.625 in, width 0.125 in, cutting_length 0.125 in, neck.diameter 0.3125 in, neck.length 1 in, shank.diameter 0.625 in, shank.length 2.375 (est) in, overall_length 3.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 242.4, src: est, note: 'rho V: shank taken as a 15.875 mm cylinder over 88.9 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (and 2xx/5xx/7xx/8xx castings share the chip loads; wrought SFM used) (e.g. al6061-t6); <= 28 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.078486}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.12
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .12 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 1000 SFM, fz 0.00309 in, ap_max 0.125 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 1140-1151, 13xx, 15xx, 2xxx-9xxx incl. 41xx/43xx (e.g. aisi1045, aisi4140-qt30); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.026162}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 200 SFM, fz 0.00103 in, ap_max 0.125 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.026162}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 200 SFM, fz 0.00103 in, ap_max 0.125 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.023114}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 100 SFM, fz 0.00091 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 150 SFM, fz 0.00065 in, ap_max 0.125 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.014478}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 90 SFM, fz 0.00057 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 150 SFM, fz 0.00065 in, ap_max 0.125 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.014478}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 75 SFM, fz 0.00057 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 70 SFM, fz 0.00065 in, ap_max 0.125 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.014478}
+    ap_max_mm: 3.175
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 50 SFM, fz 0.00057 in, ap_max 0.125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 231.77, src: est, note: 'list price USD 269.50 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: small solid-carbide keyseat cutter assumed not reground}
+  note: 'D1 +.000/-.002 in, width L2 +/-.0005 in, neck length +.020/-.000 in (product table header). Disc cutter: stiffness governed by the published neck; core/gullet not applicable (null).'
+- id: harvey-70980
+  order_code: '70980 (uncoated; AlTiN: 70980-C3)'
+  type: keyseat
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 15.875
+    width_mm: 6.35
+    flutes: 8
+    helix_deg: {value: 0, src: est, note: flute form not published; straight teeth assumed for a square keyseat cutter}
+    pitch_deg:
+      value: [45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0, 45.0]
+      src: est
+      note: equal tooth spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: rake not published; 5 deg assumed for a carbide keyseat cutter}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: 'not published; both side faces are dished for clearance (product page), peripheral clearance 10/18 deg assumed'}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    cutting_length_mm: 6.35
+    neck: {diameter_mm: 7.9375, length_mm: 25.4, note: 'reach (1.5x) D; max radial DOC 0.146 in, accounting for the max transition radius at the neck (product table)'}
+    shank:
+      diameter_mm: 15.875
+      length_mm: {value: 57.15, src: est, note: OAL - neck length - width; transition lengths not published}
+    overall_length_mm: 88.9
+    centre_cutting: {value: false, src: est, note: 'disc-type keyseat cutter: no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'profile = square (Type I, standard slotting); max_radial_doc_in = 0.146; inch dimensions as published: diameter 0.625 in, width 0.25 in, cutting_length 0.25 in, neck.diameter 0.3125 in, neck.length 1 in, shank.diameter 0.625 in, shank.length 2.25 (est) in, overall_length 3.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 242.4, src: est, note: 'rho V: shank taken as a 15.875 mm cylinder over 88.9 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (and 2xx/5xx/7xx/8xx castings share the chip loads; wrought SFM used) (e.g. al6061-t6); <= 28 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.078486}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.12
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .12 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 1000 SFM, fz 0.00309 in, ap_max 0.25 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 1140-1151, 13xx, 15xx, 2xxx-9xxx incl. 41xx/43xx (e.g. aisi1045, aisi4140-qt30); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.026162}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 200 SFM, fz 0.00103 in, ap_max 0.25 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.026162}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 200 SFM, fz 0.00103 in, ap_max 0.25 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic/ferritic/martensitic stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.023114}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, STAINLESS STEELS 201...304...316...502 row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 100 SFM, fz 0.00091 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 150 SFM, fz 0.00065 in, ap_max 0.25 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.014478}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 90 SFM, fz 0.00057 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 150 SFM, fz 0.00065 in, ap_max 0.25 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.014478}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 75 SFM, fz 0.00057 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 29-37 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.08
+    ae_max_mm: 3.7084
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 0.625 in column; ae_max_mm = max radial DOC from the product table
+    note: 'Depth of cut: radial .08 x Dia, axial full width (chart); chip loads for one-side engagement and cutter width < 0.5 D; if engaged on both sides reduce to 50-60 %; if width > 0.5 D reduce radial step to 80 % (chart notes); radial depth also limited by the tool''s max radial DOC 0.146 in; published values: vc 70 SFM, fz 0.00065 in, ap_max 0.25 in, ae_max 0.146 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel, Nimonic, Haynes, Incoloy (e.g. inconel718); 38-45 HRC
+    operation: [keyseat_slotting]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.014478}
+    ap_max_mm: 6.35
+    ae_max_xD: 0.06
+    src: harvey-2021-sf-22500
+    page: SF_22500 p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 0.625 in column
+    note: 'Depth of cut: radial .06 x Dia, axial full width (chart); same engagement notes as the 29-37 HRC entry; published values: vc 50 SFM, fz 0.00057 in, ap_max 0.25 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 231.77, src: est, note: 'list price USD 269.50 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: small solid-carbide keyseat cutter assumed not reground}
+  note: 'D1 +.000/-.002 in, width L2 +/-.0005 in, neck length +.020/-.000 in (product table header). Disc cutter: stiffness governed by the published neck; core/gullet not applicable (null).'

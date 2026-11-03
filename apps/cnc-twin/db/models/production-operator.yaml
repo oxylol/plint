@@ -1,0 +1,62 @@
+# Default operator times for takt time (cnctwin.production.operator, docs/models/production.md),
+# used where the project's production.operator does not give a value. SI values as written.
+format: cnctwin-model-params
+version: 1
+model: production-operator
+description: "Operator actions per part: load, unload, door, cleaning, program-stop actions, inspection, tool replacement"
+params:
+  load_s:
+    value: 30.0
+    unit: s
+    src: est
+    note: "the value of db/_templates/project.yaml: place and clamp a part in a vise"
+  unload_s:
+    value: 20.0
+    unit: s
+    src: est
+    note: "the value of db/_templates/project.yaml"
+  door_s:
+    value: 4.0
+    unit: s
+    src: est
+    note: "one door movement (open or close) by hand, the value of db/_templates/project.yaml"
+  clean_s:
+    value: 15.0
+    unit: s
+    src: est
+    note: "blow chips off fixture and locators before loading, the value of db/_templates/project.yaml"
+  inspect_every:
+    value: 0
+    unit: "-"
+    src: est
+    note: "no periodic inspection unless the project asks (0 = never)"
+  inspect_s:
+    value: 60.0
+    unit: s
+    src: est
+    note: "the value of db/_templates/project.yaml"
+  stop_s:
+    value: 30.0
+    unit: s
+    src: est
+    note: "operator action at an M00 (or an active M01): clear chips, turn or check the part, then cycle start (door movements counted separately)"
+  optional_stop:
+    value: false
+    unit: "-"
+    src: est
+    note: "M01 optional stops are skipped in series production (the optional-stop switch is off)"
+  inspect_parallel:
+    value: false
+    unit: "-"
+    src: est
+    note: "the machine waits while a part is inspected (the result may change an offset before the next part)"
+  first_article_inspection:
+    value: true
+    unit: "-"
+    src: est
+    note: "when periodic inspection is on, the first part of the batch is inspected too"
+  tool_replace_s:
+    value: 120.0
+    unit: s
+    src: est
+    note: "replace a worn tool (or index an edge) and set its length offset, machine waiting"

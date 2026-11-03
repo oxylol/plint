@@ -1,0 +1,31 @@
+format: cnctwin-tool-material
+version: 1
+id: hss-m42
+class: hss
+name: "HSS M42 (HS2-9-1-8, 1.3247, 8 % Co), hardened and tempered 66-68 HRC (BÖHLER S500 as the reference grade)"
+src: bohler-2026-s500
+composition: {text: "C 1.1, Si 0.5, Mn 0.2, Cr 3.9, Mo 9.2, V 1.1, W 1.5, Co 7.8 wt%", src: bohler-2026-s500, page: "p. 1"}
+density_kg_m3: {value: 8100, src: bohler-2026-s500, page: "p. 4, 20 °C"}
+youngs_modulus_GPa: {value: 220, src: bohler-2026-s500, page: "p. 4, 20 °C"}
+poisson: {value: 0.29, src: est, note: "not in the BÖHLER sheet; typical value for hardened tool steels (0.28-0.30)"}
+hardness_HV: {value: 900, range: [860, 940], src: est, note: "M42 is normally used at 66-68 HRC (not stated in bohler-2026-s500); converted with the ASTM E140 HRC-HV table (66 HRC ~ 865 HV, 68 HRC ~ 940 HV)"}
+transverse_rupture_MPa: {value: 3400, range: [2800, 4000], src: est, note: "bend fracture strength at 66-68 HRC; lower than M2 because of the higher hardness; no source read"}
+compressive_MPa: {value: 3500, range: [3200, 3800], src: est, note: "BÖHLER rates the compressive strength 'very high' (bohler-2026-s500 p. 1) without a number; value is engineering judgement above M2"}
+fracture_toughness_MPa_sqrt_m: {value: 13, range: [10, 16], src: est, note: "BÖHLER rates toughness 'good' (lower than S600 'high'); no number read"}
+conductivity_W_mK:
+  table: [[20, 20.0], [400, 23.3], [600, 22.5]]
+  src: est
+  note: "20 °C value 20 W/mK from bohler-2026-s500 p. 4; 400/600 °C scaled with the Vanadis 23 ratios 28/24 and 27/24 (uddeholm-vanadis23-datasheet p. 4), no Co-HSS table read"
+specific_heat_J_kgK:
+  table: [[20, 429], [400, 521], [600, 613]]
+  src: est
+  note: "20 °C value 0.429 kJ/kgK from bohler-2026-s500 p. 4; 400/600 °C scaled with the Vanadis 23 ratios 510/420 and 600/420"
+expansion_1_K:
+  table: [[100, 11.0e-6], [200, 11.5e-6], [300, 11.9e-6], [400, 12.3e-6], [500, 12.4e-6], [600, 12.5e-6], [700, 12.5e-6]]
+  src: bohler-2026-s500
+  page: "p. 4, mean expansion between 20 °C and T"
+max_service_temp_degC: {value: 620, src: est, note: "tempering 550-570 °C (bohler-2026-s500 p. 2) and 'very high' red hardness from 8 % Co; 20 °C above the M2 value assumed"}
+weibull_modulus: {value: 20, src: est, note: "no published value read; same assumption as hss-m2"}
+thermal_shock_parameter: null
+usui: []
+notes: "Reference grade BÖHLER S500 ('the fireproof one'). Temperature dependence borrowed from Vanadis 23 as for hss-m2."

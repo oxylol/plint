@@ -1,0 +1,87 @@
+# Thresholds of the chip findings (cnctwin.chips.hazards, docs/models/chips.md "Findings"). These are
+# judgement values of practice, not measured constants; each says how it was chosen.
+format: cnctwin-model-params
+version: 1
+model: chips-hazards
+description: "When chip states become findings: packing, recutting, nesting, wrapping, welding, blocking, debris, fire"
+params:
+  flute_fill_warn:
+    value: 0.7
+    unit: "-"
+    src: est
+    note: "flute fill above which chip evacuation is marginal (a peck or more coolant is advised)"
+  flute_fill_clog:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "flute fill at which chips are compressed into a plug (packing torque rises steeply): error for drills, taps and reamers"
+  flute_fill_rearm:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "a packing finding of a tool is raised again only after its fill fell below this"
+  recut_fraction_warn:
+    value: 0.02
+    unit: "-"
+    src: est
+    note: "recut chip mass / chip mass the tool made over the same steps above which recutting is reported (recut chips damage the edge and the surface)"
+  recut_window_s:
+    value: 0.5
+    unit: s
+    src: est
+    note: "time window of the recut fraction"
+  nested_mass_warn_kg:
+    value: 0.2
+    unit: g
+    src: est
+    note: "chip mass lying inside the footprint of a tool when it enters (first cut after a tool change) above which 'chips nested in the pocket' is reported"
+  nest_fraction_warn:
+    value: 0.3
+    unit: "-"
+    src: est
+    note: "bulk volume of long-form chips in the ring R..3R around the tool, above its tip, over the ring volume, above which bird-nesting is reported"
+  wrap_mass_warn_kg:
+    value: 0.5
+    unit: g
+    src: est
+    note: "chip mass wrapped on one tool or bar above which wrapping is reported (a warning; on lathes wrapped chips scratch the part and are an operator hazard)"
+  wrap_mass_error_kg:
+    value: 20.0
+    unit: g
+    src: est
+    note: "wrapped mass above which the wrap is an error (a bird's nest around the part or tool that stops the program)"
+  weld_mass_warn_kg:
+    value: 0.01
+    unit: g
+    src: est
+    note: "chip mass welded to one cutting edge above which edge welding is reported"
+  nozzle_block_fraction:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "a nozzle is blocked when the bulk volume of chips stuck on it reaches this many times pi r^3 (a plug of one nozzle radius over its orifice)"
+  probe_debris_m:
+    value: 0.02
+    unit: mm
+    src: est
+    note: "chip height at a probing point above which the probe is reported blocked (a chip under the stylus shifts the measured position by its thickness; probe repeatability is about 1 um)"
+  locator_debris_tolerance_m:
+    value: 0.01
+    unit: mm
+    src: est
+    note: "chip/burr height on a face that is clamped or located in the next setup above which mislocation is reported"
+  ignition_margin_K:
+    value: 0.0
+    unit: K
+    src: est
+    note: "chips are reported as an ignition risk when hotter than the material's chip ignition (or hazard) temperature minus this margin"
+  fines_mass_warn_kg:
+    value: 1.0
+    unit: g
+    src: est
+    note: "accumulated fines (thin chips) of an ignitable material (magnesium, titanium) in the work zone above which a fire-risk warning is raised in dry machining"
+  pan_capacity_height_m:
+    value: 150.0
+    unit: mm
+    src: est
+    note: "the chip pan / conveyor trough overflows when the uncleared bulk volume exceeds the enclosure floor area times this height"

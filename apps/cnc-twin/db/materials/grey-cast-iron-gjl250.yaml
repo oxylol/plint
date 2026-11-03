@@ -1,0 +1,146 @@
+# Grey cast iron EN-GJL-250 (EN-JL1040, GG-25; ~ASTM A48 class 35-40), as cast. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: grey-cast-iron-gjl250
+name: "Grey cast iron EN-GJL-250 (GG-25), pearlitic, as cast"
+family: cast_iron
+iso_group: K
+condition: "as cast (sand casting), pearlitic matrix with flake graphite"
+designations: {EN: "EN-GJL-250 (EN-JL1040)", DIN: "GG-25 (0.6025)", ASTM: "A48 class 35-40", UNS: "F12401 (class 35)", JIS: "FC250"}
+stock_forms: []
+
+physical:
+  src: pacurar-2021-gjl250-castings # Table 3 (SolidWorks library plus own tensile tests) - approximate FE input values
+  density_kg_m3: {value: 7250, range: [7100, 7250], note: "7100 in sawczuk-2022 and wu-2025 (FC220P)"}
+  specific_heat_J_kgK: {value: 460, range: [460, 599], note: "sawczuk-2022 gives 598.7"}
+  conductivity_W_mK: {value: 50.2, src: sawczuk-2022-brake-disc, range: [50.2, 58], note: "pacurar-2021 gives 58; grey iron conductivity falls with temperature and rises with graphite content (temperature dependence not read)"}
+  expansion_1_K: {value: 1.05e-5, note: "single value, range not stated"}
+  youngs_modulus_GPa: {value: 110, src: sawczuk-2022-brake-disc, range: [110, 120], note: "pacurar-2021: 120 GPa; grey iron modulus is stress dependent (non-linear)"}
+  poisson: {value: 0.26}
+  solidus_degC: {value: 1150, src: est, note: "approx. Fe-C eutectic temperature (~1150 C); general knowledge"}
+  liquidus_degC: {value: 1220, src: est, note: "for a carbon equivalent of about 4.0-4.3 (general knowledge)"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 180, src: sawczuk-2022-brake-disc, range: [145, 240], note: "range is the section-dependent typical range of westyorkssteel-gjl250"}
+  yield_MPa: {value: 165.59, note: "Rp0.2 (Table 3); grey iron has no distinct yield point"}
+  ultimate_MPa: {value: 250, note: "EN-GJL-250 class value (also sawczuk-2022); westyorkssteel quotes 155-195 typical for thick continuous-cast sections"}
+  elongation_pct: {value: 0.5, src: sawczuk-2022-brake-disc}
+  fracture_strain: {value: 0.005, src: est, note: "equal to the 0.5 % elongation; brittle"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 260
+  B_MPa: 283
+  n: 0.234
+  C: 0.0134
+  m: 1.0
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: 1150
+  src: est
+  note: "No Johnson-Cook set for grey cast iron was found. Estimate: the AISI 1045 set of Jaspers & Dautzenberg (burns-2012-1045-cutting-temperature) with A and B scaled by the ratio of Walter kc1.1 values K3/P2 = 800/1700; T_melt = eutectic. JC has no brittle-fracture term: chip formation in grey iron is governed by cracking along graphite flakes, so the chip model must treat the chip as discontinuous. wu-2025 used a power-law model for FC220P instead."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 800
+      mc: 0.28
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 250, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "Walter group K3 (0.6025 EN-GJL-250 listed as K3; row 'grey cast iron + CGI + malleable cast iron with low tensile strength, Rm 200-400'), p. F9. Walter K4 'grey cast iron with higher tensile strength' is 1200 / 0.28. Measured forces with chamfered PCBN in wu-2025 (FC220P, f 0.4-0.6 mm, ap 1 mm, 416-625 m/min: Fc 1018-1495 N) imply kc ~ 2500 N/mm2, far above this value because of the strongly negative chamfered edge"
+    - tool_class: ceramic
+      coating: uncoated
+      kc11_N_mm2: 800
+      mc: 0.28
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 600, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "same K3 value applied to Si3N4 ceramics (tool-class assignment is this database's)"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.2, src: est, note: "assumed; brittle material separates at small h"}
+  indentation_coeff_N_mm3: {value: 2.7e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (180/200)"}
+  work_hardening:
+    layer_depth_um: {value: 20, src: est, note: "little work hardening in grey iron; machined surface shows smeared graphite and a thin deformed pearlite layer"}
+    hardness_increase_pct: {value: 5, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.234, src: est, note: "JC n of the estimated set"}
+
+friction:
+  - tool_class: carbide
+    coating: "CVD TiCN/Al2O3"
+    mu_sliding: {value: 0.3, src: est, note: "graphite lubricates the contact; assumed equal to the PCBN value below"}
+    sticking_ratio: {value: 0.3, src: est, note: "short contact, discontinuous chip; assumed"}
+  - tool_class: cbn
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: wu-2025-pcbn-cast-iron, note: "tool-chip friction coefficient set in their DEFORM model 'based on the cutting experiment results' (FC220P, PCBN)"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+  - tool_class: ceramic
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+
+chip:
+  tendency: powder                 # template: powder for cast iron (discontinuous fragments plus graphite-rich dust)
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "chips break into small fragments; no chip control needed"}
+  oxide_colours:
+    table: [[200, "#EDE4B0", "white-yellow (weissgelb)"], [220, "#E3C770", "straw yellow (strohgelb)"], [230, "#D4A93F", "golden yellow (goldgelb)"], [240, "#B98745", "yellow-brown (gelbbraun)"], [250, "#9B5B34", "brown-red (braunrot)"], [260, "#8C3A2E", "red (rot)"], [270, "#7B2E56", "purple-red (purpurrot)"], [280, "#5E2C78", "violet (violett)"], [290, "#2E2F82", "dark blue (dunkelblau)"], [300, "#3C64C4", "cornflower blue (kornblumenblau)"], [320, "#76A9DA", "light blue (hellblau)"], [340, "#7F8FA2", "blue-grey (blaugrau)"], [360, "#8E8E8E", "grey (grau)"]]
+    src: wikipedia-de-anlassen
+    note: "table for unalloyed steel, applied to the iron matrix of grey iron by assumption (est); hex values are this database's rendering"
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: ceramic
+    coating: uncoated
+    grade: Si3N4
+    C_m_min: 2711
+    n: 0.5
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 700 m/min (silicon nitride turning of pearlitic grey iron, general knowledge); n typical of ceramics"
+  - tool_class: carbide
+    coating: "CVD TiCN/Al2O3"
+    C_m_min: 689
+    n: 0.25
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 15 min at vc = 350 m/min (K-grade CVD carbide, general knowledge)"
+  - tool_class: cbn
+    coating: uncoated
+    C_m_min: 3486
+    n: 0.5
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.3
+    ap_ref_mm: 1
+    VB_limit_mm: 0.3
+    src: est
+    note: "high-CBN on pearlitic grey iron: C set so that T = 15 min at vc = 900 m/min (general knowledge); wu-2025 turned brake discs with PCBN at 416-625 m/min (tool life given only as a comparison chart)"
+tool_life_usui: null
+
+residual_stress: []                # as-cast residual stresses depend on casting geometry; no profile read
+
+skin:
+  type: sand_inclusions            # cast skin with embedded moulding sand
+  thickness_mm: {value: 1.0, src: est, note: "as-cast surface layer (ferritic or fine-graphite rim, possible chill carbides at edges, embedded silica sand) assumed ~0.5-2 mm; the first cut should go below it"}
+  hardness_factor: {value: 1.3, src: est, note: "net effect of harder chill/carbide spots and softer ferritic rim; not measured"}
+  abrasiveness_factor: {value: 3.0, src: est, note: "embedded quartz sand is much harder than the pearlitic matrix; wear-rate multiplier assumed"}
+
+thermal_damage:
+  burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour of iron oxide films; applied to cast iron by assumption"}
+  white_layer_degC: {value: 760, src: est, note: "Ac1 of Si-rich (~2 % Si) pearlitic grey iron is above that of steel; ~760-800 C assumed (not read)"}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "EN-GJL-250 as cast. Physical values are FE-input values from two open-access papers (approximate; EN 1561 informative data were not accessible). Kienzle constants are Walter K3 standard values. Flow stress, tool life, friction (except the PCBN FE value) and skin parameters are estimates. Dust: grey iron machining produces graphite-rich fine dust; no mass fraction is given."

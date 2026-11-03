@@ -1,0 +1,260 @@
+# Workpiece material: GFRP, E-glass fibre in epoxy, fibre volume fraction ~0.6; UD and quasi-isotropic laminates.
+# The physical section holds the QI laminate; fibre, matrix, UD-lamina, layup and fibre-orientation data have no
+# key in the material template and are in `extensions`. Only the E-glass fibre properties (secondary source) and
+# the Walter class kc were readable; laminate values are micromechanics estimates.
+# Sources: db/bibliography/materials-nonmetals.yaml
+format: cnctwin-material
+version: 1
+id: gfrp-eglass-epoxy
+name: "GFRP E-glass/epoxy, Vf 0.6 (UD and quasi-isotropic laminates)"
+family: composite
+iso_group: O
+condition: "cured laminate, dry; generic epoxy matrix"
+designations: {fibre: "E-glass (alumino-borosilicate, < 1 % alkali oxides)", walter_group: "O3 (Walter class 'fibre-reinforced plastics', O3-O5)"}
+stock_forms: []
+
+physical:                          # quasi-isotropic laminate [0/45/90/-45]ns as the default bulk
+  src: est
+  note: "laminate values by micromechanics and laminate theory from the E-glass fibre data (wikipedia-en-glass-fiber-2026) and an assumed generic epoxy (extensions.matrix_properties)"
+  density_kg_m3: {value: 2030, note: "rule of mixtures 0.6 x 2580 (E-glass) + 0.4 x 1200 (cured epoxy, assumed) = 2028"}
+  specific_heat_J_kgK: {table: [[20, 895]], note: "mass-weighted: fibre mass fraction 0.76 x 800 J/kgK (E-glass, assumed) + 0.24 x 1200 J/kgK (epoxy, assumed)"}
+  conductivity_W_mK: {table: [[20, 0.51]], note: "TRANSVERSE / through-thickness k2: Maxwell-type mixing of glass 1.3 W/mK (assumed) and epoxy 0.2 W/mK (assumed); along the fibres ~0.86 W/mK (rule of mixtures)"}
+  expansion_1_K: {table: [[50, 1.37e-5]], note: "QI in-plane, stiffness-weighted from lamina alpha1 7.0e-6 and alpha2 34e-6 (est)"}
+  youngs_modulus_GPa: {table: [[20, 24.3]], note: "QI in-plane modulus by classical laminate theory from the est lamina values (extensions.lamina)"}
+  poisson: {value: 0.33, note: "QI in-plane, laminate theory"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: {value: 120, range: [80, 180], note: "generic epoxy matrix Tg assumed; depends on resin and cure (room-temperature/80 C cures 60-100 C, hot-cured anhydride/amine systems 120-180 C)"}
+  decomposition_degC: {value: 300, range: [280, 350], note: "epoxy decomposition onset assumed; E-glass softens only at 846 C (wikipedia-en-glass-fiber-2026)"}
+  hardness: {shore_D: 85, note: "placeholder: no hardness was read; Shore D typical of cured epoxy laminates assumed"}
+  yield_MPa: {value: 450, note: "brittle: yield = ultimate. QI tensile strength from E_QI x UD failure strain (24.3 GPa x 2.4 % = 590 MPa) reduced ~25 % for early transverse-ply cracking (assumed)"}
+  ultimate_MPa: {value: 450, note: "as yield_MPa"}
+  elongation_pct: null
+  fracture_strain: {value: 0.024, note: "UD 0 deg: Xt 1140 MPa (est) / E1 47 GPa"}
+
+flow_stress:
+  model: none                      # task rule for composites; current schemas.py accepts only johnson_cook or null
+  note: "Brittle fibre composite: no flow stress. Cutting model as for cfrp-t300-epoxy: Walter FRP class kc times the fibre-orientation factors per ply (extensions.cutting.fibre_orientation); powder chips; delamination check with the Hocheng-Dharan thrust; matrix temperature against Tg."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 300
+      mc: 0.3
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed; assumed"}
+      src: walter-2025-technical-compendium
+      note: "Walter class 'fibre-reinforced plastics' (O3, O4, O5), p. F9, neutral cutting edge geometry; same value as CFRP. Taken as the orientation-averaged (QI) value"
+    - tool_class: carbide
+      coating: "CVD diamond"
+      kc11_N_mm2: 300
+      mc: 0.3
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 250
+      src: est
+      note: "Walter class value assumed for diamond-coated carbide; reference speed assumed"
+    - tool_class: pcd
+      coating: uncoated
+      kc11_N_mm2: 300
+      mc: 0.3
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 400
+      src: est
+      note: "Walter class value assumed for PCD; reference speed assumed"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.5, src: est, note: "fibres bend under the edge radius; assumed"}
+  indentation_coeff_N_mm3: {value: 5.0e3, src: est, note: "placeholder as for CFRP"}
+  work_hardening:
+    src: est
+    note: "not applicable; machining leaves a damaged layer instead"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, range: [0.2, 0.45], note: "assumed; no measurement read"}
+    sticking_ratio: {value: 0.0, src: est, note: "powder chip, no sticking zone"}
+  - tool_class: carbide
+    coating: "CVD diamond"
+    mu_sliding: {value: 0.15, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.15, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+
+chip:
+  tendency: powder
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "no coherent chip"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 224
+    n: 0.35
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.05
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: same as CFRP (T = 10 min at 100 m/min); glass fibres (E 76 GPa) are hard and abrade the carbide binder; no GFRP tool-life fit could be read"
+  - tool_class: carbide
+    coating: "CVD diamond"
+    C_m_min: 780
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.05
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 30 min at 200 m/min assumed"
+  - tool_class: pcd
+    coating: uncoated
+    C_m_min: 1550
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.05
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 60 min at 300 m/min assumed; Leitz recommends DP for fibre reinforced plastics (leitz-2017-lexicon-ed7-ch11)"
+tool_life_usui: []
+
+residual_stress: []
+
+skin:
+  src: est
+  note: "gelcoat or resin-rich surface not modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 300, src: est, note: "matrix decomposition onset (see physical)"}
+  white_layer_degC: null
+  melt_smear_degC: {value: 120, src: est, note: "matrix Tg (est); above it the matrix smears and fibres pull out"}
+
+ignition: null
+
+composite:
+  fibre: glass
+  matrix: "epoxy (generic)"
+  fibre_volume_fraction: {value: 0.6, src: est, note: "nominal for this file (task spec)"}
+  layup: "quasi-isotropic [0/45/90/-45]ns (physical section); unidirectional [0]n data in extensions.lamina"
+  delamination:
+    src: est
+    note: "Hocheng & Dharan (J. Eng. Ind. 112, 1990) push-out model, F_crit = pi * sqrt(8 G_IC E h^3 / (3 (1 - nu^2))), standard form as widely reproduced, not read in the original in this session; E 24.3 GPa, nu 0.33 (QI laminate, est). More h values in extensions.delamination"
+    model: hocheng-dharan
+    G_IC_J_m2: {value: 400, range: [300, 600], src: est, note: "mode I interlaminar toughness typical of glass/epoxy (general knowledge; no DCB value could be read)"}
+    critical_thrust_N: {value: 189, src: est, note: "at h = 0.5 mm, G_IC 400 J/m2, E 24.3 GPa, nu 0.33"}
+  dust_mass_fraction: {value: 1.0, src: est, note: "powder and fibre fragments, no coherent chips"}
+  abrasive_wear_factor: {value: 10, src: est, note: "relative to AISI 1045 as defined in cfrp-t300-epoxy; assumed equal to CFRP (glass is harder than carbon fibre but less stiff; no comparison data read)"}
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  fibre_properties:
+    src: wikipedia-en-glass-fiber-2026
+    note: "E-glass row of the properties table (secondary, citing Wallenberger & Bingham 2009)"
+    density_kg_m3: {value: 2580}
+    tensile_strength_MPa: {value: 3445}
+    compressive_strength_MPa: {value: 1080}
+    tensile_modulus_GPa: {value: 76.0}
+    expansion_1_K: {value: 5.4e-6}
+    softening_degC: {value: 846}
+    diameter_um: {value: 13, src: est, range: [10, 17], note: "typical continuous E-glass reinforcement filament diameter (general knowledge, not read)"}
+  matrix_properties:
+    src: est
+    note: "generic cured epoxy assumed, as in cfrp-t300-epoxy"
+    density_kg_m3: 1200
+    youngs_modulus_GPa: 3.5
+    poisson: 0.35
+    specific_heat_J_kgK: 1200
+    conductivity_W_mK: 0.2
+    expansion_1_K: 6.0e-5
+  lamina:                          # UD ply at Vf 0.6; 1 = fibre direction
+    E1_GPa: {value: 47.0, src: est, note: "rule of mixtures 0.6 x 76 (wikipedia-en-glass-fiber-2026) + 0.4 x 3.5 (assumed)"}
+    E2_GPa: {value: 15.1, src: est, note: "Halpin-Tsai, xi = 2 (glass isotropic, E 76 GPa)"}
+    G12_GPa: {value: 4.5, src: est, note: "Halpin-Tsai, xi = 1; glass shear modulus 31 GPa from nu 0.22 (assumed), Gm 1.3 GPa"}
+    nu12: {value: 0.27, src: est, note: "rule of mixtures, glass 0.22 (assumed), epoxy 0.35 (assumed)"}
+    Xt_MPa: {value: 1140, src: est, range: [1000, 1300], note: "typical UD E-glass/epoxy at Vf ~0.6 (general knowledge, not read)"}
+    Xc_MPa: {value: 600, src: est, range: [550, 800], note: "typical, not read"}
+    Yt_MPa: {value: 35, src: est, range: [30, 45], note: "typical, not read"}
+    Yc_MPa: {value: 120, src: est, note: "typical, not read"}
+    S12_MPa: {value: 70, src: est, range: [60, 80], note: "typical, not read"}
+    k1_W_mK: {value: 0.86, src: est, note: "rule of mixtures 0.6 x 1.3 (glass, assumed) + 0.4 x 0.2"}
+    k2_W_mK: {value: 0.51, src: est, note: "see physical.conductivity_W_mK"}
+    alpha1_1_K: {value: 7.0e-6, src: est, note: "Schapery, fibre 5.4e-6 (wikipedia-en-glass-fiber-2026), matrix 60e-6 (assumed)"}
+    alpha2_1_K: {value: 3.4e-5, src: est, note: "Schapery, transverse"}
+    ply_thickness_mm: {value: 0.2, src: est, note: "typical UD glass prepreg/infused ply"}
+  layups:
+    - id: ud
+      layup: "[0]n"
+      note: "orthotropic; use the lamina constants and cutting.fibre_orientation"
+    - id: qi
+      layup: "[0/45/90/-45]ns"
+      E_inplane_GPa: {value: 24.3, src: est, note: "classical laminate theory with the lamina values"}
+      nu_inplane: {value: 0.33, src: est, note: "classical laminate theory"}
+  cutting:
+    fibre_orientation:             # theta = angle from the cutting velocity to the fibres, 0-180 deg
+      src: est
+      note: "same assumed shape as cfrp-t300-epoxy (no GFRP orthogonal-cutting data read). E-glass fibres strain ~4.5 % to failure (3445 MPa / 76 GPa, wikipedia-en-glass-fiber-2026) against 1.5 % for T300 (toray-2025-t300-datasheet), so they bend more before breaking: uncut/protruding fibres and fuzzing are more common than in CFRP"
+      points:
+        - {theta_deg: 0, kc_factor: 0.6, Ft_over_Fc: 1.0}
+        - {theta_deg: 15, kc_factor: 0.65, Ft_over_Fc: 0.8}
+        - {theta_deg: 30, kc_factor: 0.75, Ft_over_Fc: 0.6}
+        - {theta_deg: 45, kc_factor: 0.85, Ft_over_Fc: 0.5}
+        - {theta_deg: 60, kc_factor: 1.0, Ft_over_Fc: 0.45}
+        - {theta_deg: 90, kc_factor: 1.2, Ft_over_Fc: 0.45}
+        - {theta_deg: 120, kc_factor: 1.35, Ft_over_Fc: 0.55}
+        - {theta_deg: 135, kc_factor: 1.35, Ft_over_Fc: 0.65}
+        - {theta_deg: 150, kc_factor: 1.1, Ft_over_Fc: 0.8}
+        - {theta_deg: 180, kc_factor: 0.6, Ft_over_Fc: 1.0}
+  delamination:
+    src: est
+    note: "Hocheng-Dharan critical thrust for the QI laminate (E 24.3 GPa, nu 0.33, G_IC 400 J/m2) at other uncut thicknesses"
+    E_GPa: 24.3
+    nu: 0.33
+    examples:
+      - {h_mm: 0.25, F_N: 67}
+      - {h_mm: 0.5, F_N: 189}
+      - {h_mm: 1.0, F_N: 535}
+  fibre_pull_out: {src: est, note: "glass fibres bend rather than fracture: protruding/uncut fibres and fuzzing, especially at fibre cutting angles above 90 deg and with rounded edges"}
+  hazards:
+    dust:
+      src: wikipedia-en-glass-fiber-2026
+      note: "glass fibre fragments and resin dust. Wikipedia (secondary): rat studies found glass fibres < 3 um diameter and > 20 um long potent; fibreglass is usually made with diameters > 3 um; ACGIH A4 'not classifiable as a human carcinogen'. Skin and eye irritation from fibre fragments and extraction at source are normal practice (general knowledge, not read)"
+  recommended:
+    n_rpm: {value: [10000, 16000], src: leitz-2020-lexicon-ed7-ch05, note: "window, Leitz serrated HW solid Z2 router (D 2-8 mm) for glass and carbon fibre materials"}
+    vf_m_min: {value: [1.5, 2.0], src: leitz-2020-lexicon-ed7-ch05, note: "window, same tool"}
+
+notes: "E-glass/epoxy Vf 0.6. Sourced: E-glass fibre density, strength, modulus, CTE, softening point (Wikipedia, secondary, citing Wallenberger & Bingham), Kienzle class value (Walter FRP), router window (Leitz), dust notes (Wikipedia). Estimated: every laminate and lamina property (micromechanics with an assumed epoxy), hardness, QI strength, Tg, decomposition, fibre-orientation factors, G_IC and critical thrust, friction, tool life, abrasive factor, fibre diameter. Gaps: no E-glass/epoxy lamina datasheet, no GFRP orthogonal-cutting forces, tool-wear data or G_IC could be read."

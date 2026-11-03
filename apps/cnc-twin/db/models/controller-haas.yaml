@@ -1,0 +1,83 @@
+# Haas NGC parameter and setting defaults the twin's executor uses when the project does not set them
+# (physics.controller, cnctwin/controller/schema.py). Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: controller-haas
+description: "Default control settings of the Haas NGC dialect"
+params:
+  arc_tolerance_m:
+    value: 0.0254
+    unit: mm
+    range: [0.001, 0.1]
+    src: est
+    note: "end-point radius mismatch accepted in G02/G03 before alarm 304; not published; 0.001 in assumed"
+  macro_nesting_levels:
+    value: 9
+    unit: "-"
+    src: est
+    note: "G65 macro call nesting; Haas manuals describe nesting up to nine levels (recalled, page not verified this session)"
+  sub_nesting_levels:
+    value: 9
+    unit: "-"
+    src: est
+    note: "M97/M98 subprogram nesting; nine levels assumed as for macros"
+  max_m_codes_per_block:
+    value: 1
+    unit: "-"
+    src: est
+    note: "Haas operator's manuals state that only one M code is allowed per block and that M codes take effect at the end of the block (recalled; page not verified this session)"
+  macro_alarm_base:
+    value: 1000
+    unit: "-"
+    src: haas-ngc-mill-om-2020
+    page: "266"
+    note: "#3000 = n (n = 1-999) raises programmable alarm 1000 + n with the comment as its text"
+  max_macro_alarm:
+    value: 999
+    unit: "-"
+    src: haas-ngc-mill-om-2020
+    page: "266"
+    note: "largest n of #3000 = n"
+  g37_feed_m_s:
+    value: 100
+    unit: mm_min
+    range: [10, 1000]
+    src: est
+    note: "G37 measuring feed; not published; 100 mm/min assumed"
+  g37_approach_m:
+    value: 5
+    unit: mm
+    range: [0.5, 50]
+    src: est
+    note: "distance before the expected touch position where the measuring feed starts; assumed"
+  g37_tolerance_m:
+    value: 2
+    unit: mm
+    range: [0.1, 20]
+    src: est
+    note: "touch window around the expected position; assumed"
+  same_group_alarm:
+    value: true
+    unit: "-"
+    src: est
+    note: "two G codes of one group, or the same address twice, in one block raise an alarm on Haas controls (alarm 'MULTIPLE CODES' of the classic control; recalled)"
+  feed_mode_change_clears_f:
+    value: true
+    unit: "-"
+    src: est
+    note: "as for FANUC: a new F is required after G93/G94/G95 changes"
+  g92_cancels_g52:
+    value: true
+    unit: "-"
+    src: est
+    note: "Setting 33 = FANUC coordinate behaviour assumed (G52 local shift, cancelled by G92)"
+  lathe_offsets_in_diameter:
+    value: true
+    unit: "-"
+    src: est
+    note: "X tool shifts and wear are diameter values on Haas lathes"
+  offsets_diameter:
+    value: false
+    unit: "-"
+    src: est
+    note: "Setting 40 (tool offset measure) = radius assumed: D offsets and #2401-#2800 are radii"

@@ -1,0 +1,48 @@
+format: cnctwin-workholding
+version: 1
+series_id: roehm-hm-pro-live-centre
+maker: "RÖHM"
+series: "HM Pro live centre, carbide insert, 60° point, 3-fold bearing (A06)"
+src: roehm-2025-centres
+dimension_key: "drawing letters: A length from point to taper start, B body diameter, C and D point/nose diameters, G Morse taper gauge diameter, K point to body face"
+items:
+  - id: roehm-hm-pro-mt3-104
+    order_code: "090089"
+    type: tailstock_centre
+    taper: {value: "MT 3", src: roehm-2025-centres}
+    size: {value: 104, src: roehm-2025-centres}
+    angle_deg: {value: 60, src: roehm-2025-centres}
+    live: true
+    max_rpm: {value: 6300, src: roehm-2025-centres}
+    max_workpiece_mass_kg: {value: 240, src: roehm-2025-centres, note: "'workpiece weight max.'; the radial load chart (workpiece kg vs speed) falls with speed and is not digitised"}
+    concentricity_mm: {value: 0.005, src: roehm-2025-centres}
+    mass_kg: {value: 0.9, src: roehm-2025-centres, note: "approx. 900 g"}
+    dims_mm: {A: 70.5, B: 48.5, C: 11, D: 22, G: 23.825, K: 27, src: roehm-2025-centres, page: "p. 2008"}
+    radial_load_N: null
+  - id: roehm-hm-pro-mt4-108
+    order_code: "093306"
+    type: tailstock_centre
+    taper: {value: "MT 4", src: roehm-2025-centres}
+    size: {value: 108, src: roehm-2025-centres}
+    angle_deg: {value: 60, src: roehm-2025-centres}
+    live: true
+    max_rpm: {value: 3800, src: roehm-2025-centres}
+    max_workpiece_mass_kg: {value: 500, src: roehm-2025-centres}
+    concentricity_mm: {value: 0.005, src: roehm-2025-centres}
+    mass_kg: {value: 2.3, src: roehm-2025-centres}
+    dims_mm: {A: 102.5, B: 68.5, C: 14, D: 32, G: 31.267, K: 40, src: roehm-2025-centres}
+    radial_load_N: null
+  - id: roehm-hm-pro-mt5-110
+    order_code: "221016"
+    type: tailstock_centre
+    taper: {value: "MT 5", src: roehm-2025-centres}
+    size: {value: 110, src: roehm-2025-centres}
+    angle_deg: {value: 60, src: roehm-2025-centres}
+    live: true
+    max_rpm: {value: 3000, src: roehm-2025-centres}
+    max_workpiece_mass_kg: {value: 1000, src: roehm-2025-centres}
+    concentricity_mm: {value: 0.005, src: roehm-2025-centres}
+    mass_kg: {value: 4.7, src: roehm-2025-centres}
+    dims_mm: {A: 129, B: 88.5, C: 18, D: 40, G: 44.399, K: 49.5, src: roehm-2025-centres}
+    radial_load_N: null
+notes: "Load ratings are for 2000 h roller-bearing life (radial: workpiece mass; axial: daN), charts only."

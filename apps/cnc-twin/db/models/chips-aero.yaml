@@ -1,0 +1,102 @@
+# Flight of chips (cnctwin.chips, docs/models/chips.md "Flight"): shape-dependent drag, coolant jets,
+# emission scatter. Read with cnctwin.db.models.params("chips-aero"); names carry the SI unit, `unit:`
+# is the unit the value is written in.
+format: cnctwin-model-params
+version: 1
+model: chips-aero
+description: "Drag of non-spherical chips (Haider-Levenspiel), round-jet decay, emission scatter"
+params:
+  hl_stokes:
+    value: 24.0
+    unit: "-"
+    src: haider-levenspiel-1989
+    note: "Stokes-law constant of C_D = 24/Re (1 + A Re^B) + C/(1 + D/Re)"
+  hl_a0:
+    value: 2.3288
+    unit: "-"
+    src: haider-levenspiel-1989
+    note: "A = exp(a0 + a1 psi + a2 psi^2), psi = sphericity"
+  hl_a1:
+    value: -6.4581
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_a2:
+    value: 2.4486
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_b0:
+    value: 0.0964
+    unit: "-"
+    src: haider-levenspiel-1989
+    note: "B = b0 + b1 psi"
+  hl_b1:
+    value: 0.5565
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_c0:
+    value: 4.905
+    unit: "-"
+    src: haider-levenspiel-1989
+    note: "C = exp(c0 + c1 psi + c2 psi^2 + c3 psi^3)"
+  hl_c1:
+    value: -13.8944
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_c2:
+    value: 18.4222
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_c3:
+    value: -10.2599
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_d0:
+    value: 1.4681
+    unit: "-"
+    src: haider-levenspiel-1989
+    note: "D = exp(d0 + d1 psi + d2 psi^2 + d3 psi^3)"
+  hl_d1:
+    value: 12.2584
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_d2:
+    value: -20.7322
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_d3:
+    value: 15.8855
+    unit: "-"
+    src: haider-levenspiel-1989
+  hl_min_sphericity:
+    value: 0.026
+    unit: "-"
+    src: haider-levenspiel-1989
+    note: "lowest sphericity of the particles the correlation was fitted to (thin disks); flatter chips are clamped to it (their drag is then underestimated, see the model doc)"
+  jet_centreline_B:
+    value: 5.8
+    unit: "-"
+    src: pope-2000
+    note: "self-similar round jet u_c / u_0 = B d0 / x (Pope 2000 Table 5.1, from Hussein, Capp and George 1994); used for gas jets (air blast, mist, MQL)"
+  jet_spreading_S:
+    value: 0.094
+    unit: "-"
+    src: pope-2000
+    note: "spreading rate d r_1/2 / dx of the round jet (Pope 2000 Table 5.1, Hussein et al. 1994)"
+  spray_half_angle_rad:
+    value: 5.0
+    unit: deg
+    range: [2.0, 15.0]
+    src: est
+    note: "half angle of a liquid coolant jet when the coolant domain publishes none (half_angle_rad = 0): flood nozzles of 2-6 mm form a coherent jet that spreads by a few degrees before it breaks up (Lefebvre-type observation, not measured here)"
+  scatter_angle_rad:
+    value: 10.0
+    unit: deg
+    range: [3.0, 25.0]
+    src: est
+    note: "1-sigma scatter of the chip departure direction around the hot loop's mean direction (curl, breaking and flute contact vary from tooth to tooth); high-speed video of milling chips shows departure fans of a few tens of degrees"
+  scatter_speed_fraction:
+    value: 0.15
+    unit: "-"
+    range: [0.05, 0.3]
+    src: est
+    note: "1-sigma relative scatter of the chip departure speed"

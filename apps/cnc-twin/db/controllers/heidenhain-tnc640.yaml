@@ -1,0 +1,651 @@
+# HEIDENHAIN TNC 640, NC software 34059x-18 (10/2023): NC error messages, Klartext and ISO words,
+# timing, Q parameters and FN 18 system data.
+#
+# Alarms: number and text exactly as in HEIDENHAIN "NC Error Messages" (xxxxxx-18, 10/2023), the
+# list the control's error window and HELP use. The list is shared by TNC7/TNC 640/TNC 620/TNC 320/
+# TNC 128; only messages for functions documented for the TNC 640 are kept here (the IF/WHILE/FOR
+# control-structure errors 160-0315..031F exist in the list but those structures are not in the
+# TNC 640 SW18 Klartext manual, so they are left out). "%1", "%2" are run-time parameters the control
+# fills in (axis name, sign, tool number ...). cause = the list's "Cause of error" text (shortened
+# where it ended in "[...]"); page = page of the PDF. trigger = simulator condition the alarm
+# belongs to (same vocabulary in every db/controllers/*.yaml file).
+# The same control runs ISO (DIN/ISO) programs: dialect heidenhain_iso uses this file too; ISO words
+# are under words.G / words.addresses, Klartext words under words.klartext / plane / tcpm / fn.
+format: cnctwin-controller
+version: 1
+id: heidenhain-tnc640
+dialect: heidenhain_klartext
+name: "HEIDENHAIN TNC 640 (NC software 34059x-18)"
+src: heidenhain-nc-errors-2023
+
+alarms:
+  - {code: "160-0003", text: "Block format incorrect", trigger: syntax, cause: "Keyword or G function not programmed.", page: "70"}
+  - {code: "160-0036", text: "NC block not found", trigger: syntax, cause: "The block specified for mid-program startup was not found.", page: "74"}
+  - {code: "160-00CF", text: "NC command not available", trigger: illegal_function, cause: "The given command is not available because the corresponding configuration data are missing. It is probably not supported on this machine.", page: "92"}
+  - {code: "160-00C3", text: "M function not permitted", trigger: illegal_m_code, cause: "An M function was programmed with a number that is not permitted on this control.", page: "90"}
+  - {code: "160-0122", text: "Contradictory M functions", trigger: illegal_m_code, cause: "In the same block, you tried to output multiple effective M functions that cancel each other. For example, you cannot program M3 and M4 in the same NC block because both go into effect at beginning of the block. [...]", page: "109"}
+  - {code: "1A0-0008", text: "Axis double programmed", trigger: duplicate_address, cause: "In a circle-center block or a pole block (CC, ISO: I,J,K) you programmed the same axis twice.", page: "129"}
+  - {code: "160-0082", text: "Axis double programmed", trigger: duplicate_address, cause: "You programmed an axis twice in a single positioning block.", page: "78"}
+  - {code: "160-001F", text: "Wrong axis programmed", trigger: illegal_axis, cause: "An axis programmed in the NC block is not configured.", page: "72"}
+  - {code: "1A0-0051", text: "Illegal axis programmed", trigger: illegal_axis, cause: "You programmed an illegal axis.", page: "142"}
+  - {code: "160-00C4", text: "No program selected", trigger: program_not_found, cause: "An attempt was made to call an NC program with CALL SELECTED, although no program was selected.", page: "90"}
+  - {code: "201-0804", text: "Program not found", trigger: program_not_found, cause: "You attempted to call a program that is not stored in TNC memory.", page: "234"}
+  - {code: "280-0400", text: "Program start undefined", trigger: syntax, cause: "Type of interpolation undefined.", page: "873"}
+  - {code: "160-0069", text: "Feed rate is missing", trigger: feed_zero, cause: "No feed rate was programmed, or the feed rate 0 was programmed.", page: "78"}
+  - {code: "280-03F2", text: "Feed rate is missing", trigger: feed_zero, cause: "You did not program a feed rate.", page: "870"}
+  - {code: "160-006B", text: "Feed rate for tool is missing", trigger: feed_zero, cause: "In an NC block you programmed F AUTO, but you did not program a feed rate in the TOOL CALL block.", page: "78"}
+  - {code: "160-00E0", text: "FZ was programmed in conjunction with the number of teeth 0", trigger: feed_zero, cause: "You used FZ to define a feed per tooth, although no tooth number is defined in the tool table.", page: "95"}
+  - {code: "1A0-000B", text: "No arc end point programmed", trigger: arc_definition, cause: "Arc end point data missing", page: "129"}
+  - {code: "1A0-000C", text: "Arc block: No direction of rotation programmed", trigger: arc_definition, cause: "You programmed a circle without a direction of rotation.", page: "129"}
+  - {code: "160-0026", text: "Direction of rotation missing", trigger: arc_definition, cause: "A circle was programmed without direction of rotation.", page: "73"}
+  - {code: "1A0-000D", text: "No arc radius programmed in CR block", trigger: arc_definition, cause: "Missing arc radius in CR block", page: "130"}
+  - {code: "1A0-000F", text: "Pole is missing", trigger: arc_definition, cause: "You tried to move with polar coordinates (LP/CP/CTP, DIN/ ISO: G10/G11/G12/G13/G15/G16), without first programming a pole (CC) (ISO: I/J/K); or you did not first enter a circle center when programming a circle.", page: "130"}
+  - {code: "160-0021", text: "Pole incorrectly defined", trigger: arc_definition, cause: "In the NC program both coordinates of a pole must be programmed in the plain. Either you forgot one coordinate, entered more than two coordinates, or programmed one coordinate twice.", page: "72"}
+  - {code: "1A0-0082", text: "Circle incorrectly programmed", trigger: arc_definition, cause: "Start point and end point are the same in a programmed arc.", page: "151"}
+  - {code: "1A0-0083", text: "Circle incorrectly programmed", trigger: arc_definition, cause: "Radius for circular arc programming too small (radius of 0 or insufficient distance between start point and end point).", page: "152"}
+  - {code: "1A0-0084", text: "Circle incorrectly programmed", trigger: arc_radius_tolerance, cause: "Center or end point of CC data is incorrect. The distances from the start point to the midpoint and from the end point to the midpoint differ by more than the tolerance value.", page: "152"}
+  - {code: "145-000E", text: "Incorrect circular arc", trigger: arc_radius_tolerance, cause: "Start point and end point of the circular arc are at different distances from the center.", page: "64"}
+  - {code: "1A0-0085", text: "Circle incorrectly programmed", trigger: arc_definition, cause: "The end point of a CT block lies in the extension of the tangent of the previously programmed contour element.", page: "152"}
+  - {code: "1A0-0081", text: "Invalid helix definition", trigger: arc_definition, cause: "You programmed a helical path with more than one coordinate outside the plane of the arc.", page: "151"}
+  - {code: "1A0-00BE", text: "General error in the calculation of a circle", trigger: arc_definition, cause: "No circle can be calculated from the given input data", page: "164"}
+  - {code: "1A0-0013", text: "Tool radius too large", trigger: cutter_comp_interference, cause: "- Inside contour radius smaller than tool radius - Tool compensation results in contour damage (loop in the path of the tool center) - Contour offset too large", page: "131"}
+  - {code: "1A0-0094", text: "Cannot calculate tool radius compensation", trigger: cutter_comp_no_solution, cause: "Cannot calculate a tool radius compensation for the programmed contour in the working plane.", page: "155"}
+  - {code: "1A0-00CC", text: "Error in tool radius compensation", trigger: cutter_comp_no_solution, cause: "The tool radius compensation is missing or the entered tool radius compensation cannot be machined.", page: "166"}
+  - {code: "1A0-0030", text: "Path comp wrongly started", trigger: cutter_comp_start_end, cause: "You tried to activate the tool radius compensation with RL or RR (ISO: G41 or G42) in an arc block.", page: "135"}
+  - {code: "1A0-0031", text: "Path comp wrongly ended", trigger: cutter_comp_start_end, cause: "You tried to cancel the tool radius compensation with R0 (ISO: G40) in an arc block.", page: "135"}
+  - {code: "1A0-002D", text: "Compensation switching not permitted", trigger: cutter_comp_start_end, cause: "Change of compensation without previous end of compensation", page: "134"}
+  - {code: "1A0-0064", text: "Tool change not allowed with tool compensation active", trigger: cutter_comp_start_end, cause: "You programmed a tool change while the tool radius compensation was active.", page: "146"}
+  - {code: "1A0-0071", text: "APPR/DEP CT or APPR/DEP LN not allowed with inactive tool radius compensation", trigger: cutter_comp_start_end, cause: "You programmed APPR/DEP CT or APPR/DEP LN with inactive tool radius compensation.", page: "148"}
+  - {code: "1A0-0072", text: "Approach movement cannot be calculated", trigger: cutter_comp_no_solution, cause: "The given geometric data do not result in a defined approach.", page: "149"}
+  - {code: "1A0-0073", text: "Departure movement cannot be calculated", trigger: cutter_comp_no_solution, cause: "The given geometric data do not result in a defined departure.", page: "149"}
+  - {code: "1A0-0033", text: "Rounding cannot be calculated", trigger: rounding_chamfer, cause: "- The rounding was programmed in the first positioning block of the NC program. - Before the rounding, a contour element was programmed that does not lie exclusively in the working plane. - Before the rounding, a contour element was programmed that has no geometric length. [...]", page: "136"}
+  - {code: "1A0-0034", text: "Chamfer cannot be calculated", trigger: rounding_chamfer, cause: "- The chamfer was programmed in the first positioning block of the NC program. - Before the chamfer, a contour element was programmed that does not lie exclusively in the working plane. - Before the chamfer, a contour element was programmed that has no geometric length. [...]", page: "136"}
+  - {code: "1A0-0035", text: "Two successive transitional elements not permitted", trigger: rounding_chamfer, cause: "- Two transition elements were programmed in succesion - CHF after transition element - RND after transition element - APPRLT after transition element - APPRLN after transition element - APPRCT after transition element - APPRLCT after transition element - DEPLT after transition element - DEPLN after transition element - DEPCT af [...]", page: "137"}
+  - {code: "1A0-0076", text: "Rounding or chamfer cannot be calculated", trigger: rounding_chamfer, cause: "Connecting geometrical element is too small or has the same tangent.", page: "149"}
+  - {code: "280-03FF", text: "Rounding radius too large", trigger: rounding_chamfer, cause: "- In the definition of a contour, a contour pocket or a contour train, you programmed a rounding arc (RND, ISO: G25) with so large a radius that it does not fit between the adjoining elements. - In a fixed cycle (rectangular pocket/rectangular stud), you defined a rounding arc that cannot be inserted.", page: "873"}
+  - {code: "1A0-012A", text: "Contour element with length=0 programmed", trigger: syntax, cause: "The starting the ending points of a profile contour are identical.", page: "187"}
+  - {code: "160-000B", text: "CYCL DEF not defined", trigger: cycle_parameter, cause: "You have programmed a cycle call without first defining the cycle, or you tried to call a DEF-active cycle.", page: "70"}
+  - {code: "280-03F9", text: "CYCL DEF incomplete", trigger: cycle_parameter, cause: "- You deleted part of a cycle. - You have inserted other part program blocks within a cycle.", page: "872"}
+  - {code: "280-0403", text: "No fixed cycle defined", trigger: cycle_parameter, cause: "There is no fixed cycle defined before Cycle 220/221 (circular/linear point pattern).", page: "874"}
+  - {code: "280-0404", text: "Insufficient slot width", trigger: cycle_parameter, cause: "The width defined in the slot cycle cannot be machined with the active tool.", page: "874"}
+  - {code: "280-0405", text: "Pocket too small", trigger: cycle_parameter, cause: "The side lengths defined in the Pocket Milling cycle are too small.", page: "874"}
+  - {code: "280-0406", text: "Q202 not defined", trigger: cycle_parameter, cause: "There is no plunging depth (Q202) defined in the fixed cycles 200 to 215.", page: "875"}
+  - {code: "280-0408", text: "Q218 must be greater than Q219", trigger: cycle_parameter, cause: "Pocket milling cycle: Q218 must be greater than Q219.", page: "875"}
+  - {code: "280-040B", text: "Q220 too large", trigger: cycle_parameter, cause: "Pocket finishing or stud finishing cycle: Rounding radius Q220 is too large.", page: "875"}
+  - {code: "280-0435", text: "Check the depth sign", trigger: cycle_parameter, cause: "The cycle can only be performed in the negative direction (Cycle 204: positive direction) because the configuration parameter displayDepthErr is set to \"on\".", page: "884"}
+  - {code: "280-042E", text: "Thread depth too large", trigger: cycle_parameter, cause: "The programmed thread depth plus 1/3 of the pitch is greater than the drilling or sinking depth.", page: "882"}
+  - {code: "280-0442", text: "Enter an infeed not equal to 0", trigger: cycle_parameter, cause: "You defined a fixed cycle with the depth 0.", page: "888"}
+  - {code: "280-0450", text: "Plunging type is not possible", trigger: cycle_parameter, cause: "In one of the cycles 251 to 254 you defined a plunging strategy that is not possible with the dimensions defined in the cycle.", page: "891"}
+  - {code: "280-044F", text: "Tool radius too large", trigger: cycle_parameter, cause: "- The dimensions you defined in one of the Cycles 251 to 254 are too small. - The lateral oversize in one of the Cycles 251 to 254 is too large.", page: "891"}
+  - {code: "1A0-0060", text: "Plunging depth in tapping cycle too small", trigger: cycle_parameter, cause: "Excessively small plunging depth was programmed in a tapping cycle.", page: "145"}
+  - {code: "1A0-0061", text: "Plunging depth in tapping cycle has wrong sign", trigger: cycle_parameter, cause: "In a tapping cyle the plunging depth was programmed with negative sign.", page: "145"}
+  - {code: "1A0-005F", text: "Thread cutting not allowed with tool compensation active", trigger: cycle_parameter, cause: "A tapping cycle was programmed with the tool compensation switched on.", page: "145"}
+  - {code: "1A0-00B3", text: "No spindle available for tapping", trigger: spindle, cause: "No spindle available for tapping", page: "162"}
+  - {code: "160-00EE", text: "No point pattern defined", trigger: cycle_parameter, cause: "CYCL CALL PAT can only work if beforehand a point pattern was selected with SEL PATTERN or PATTERN DEF.", page: "98"}
+  - {code: "1A0-009E", text: "SL cycle call with active tool radius compensation", trigger: cycle_parameter, cause: "Before an SL cycle is called the tool radius compensation must be switched off.", page: "157"}
+  - {code: "1A0-00AD", text: "Contour intersects itself", trigger: cycle_parameter, cause: "The edge contour of a pocket cannot be programmed to intersect itself.", page: "160"}
+  - {code: "280-0488", text: "Machining depth defined as 0", trigger: cycle_parameter, cause: "There is no machining because the machining depth has been programmed with the value zero.", page: "904"}
+  - {code: "160-0032", text: "Arithmetical error", trigger: macro_division_by_zero, cause: "Incorrect Q parameter calculation: Division by 0, square root of a negative number, or similar error", page: "74"}
+  - {code: "160-0028", text: "Invalid Q parameter", trigger: macro_undefined_variable, cause: "The given index for a Q parameter is out of range.", page: "73"}
+  - {code: "160-00FE", text: "Global Q parameter not defined", trigger: macro_undefined_variable, cause: "A program run (test run) showed that a globally effective Q parameter is not defined.", page: "102"}
+  - {code: "160-00D3", text: "Variable in calling program not defined", trigger: macro_undefined_variable, cause: "In a subprogram, you tried to change a variable that is not declared in the calling program.", page: "93"}
+  - {code: "160-00AF", text: "Undeclared string variable", trigger: macro_undefined_variable, cause: "You used a string variable without first declaring it.", page: "85"}
+  - {code: "280-0064", text: "FN 14: error code %1", trigger: user_alarm, cause: "Error forced by the function FN14 (ISO: D14). This function calls preprogrammed messages of the machine tool builder (for example from an OEM cycle). If with FN14 (D14) is reached during a program run or test run, the program is interrupted and the corresponding message is displayed.", page: "868"}
+  - {code: "160-00C1", text: "FN14 error without text", trigger: user_alarm, cause: "With the FN14 (ISO: D14) function you provoked an error in the NC program or cycle. The string variable to be shown as an error text does not exist.", page: "89"}
+  - {code: "160-0089", text: "Incorrect number for FN17/FN18", trigger: macro_error, cause: "The number combination for the system data (FN17/FN18) is not allowed.", page: "79"}
+  - {code: "160-008A", text: "Incorrect axis index for FN17/FN18", trigger: macro_error, cause: "An incorrect axis index was specified while reading from/ writing to system data (FN17/FN18).", page: "80"}
+  - {code: "160-0018", text: "Jump to label 0 not permitted", trigger: subprogram_not_found, cause: "In a LBL CALL (ISO: L 0,0) block of a part program or in a jump instruction (parametric calculation) you attempted to program a jump to the label 0.", page: "71"}
+  - {code: "160-001B", text: "Label number not found", trigger: subprogram_not_found, cause: "With LBL CALL (ISO: L x,x), you tried to call a label that does not exist.", page: "71"}
+  - {code: "160-001C", text: "Label number already assigned", trigger: subprogram_not_found, cause: "You attempted to program the same label number in several LBL SET (ISO: G98 Lxx) blocks in a part program.", page: "71"}
+  - {code: "160-00A8", text: "Recursive label call", trigger: macro_nesting, cause: "Within a subprogram, you tried to call the label with which the subprogram begins.", page: "84"}
+  - {code: "160-00AA", text: "Excessive program nesting", trigger: macro_nesting, cause: "Program nesting through CALL LBL or CALL PGM is too deep, presumably because of a recursive call.", page: "84"}
+  - {code: "160-00AB", text: "Recursive program call", trigger: macro_nesting, cause: "Within an NC program, you tried to call the NC program itself as a subprogram. Maybe you tried to call one of the NC programs that called the current NC program.", page: "84"}
+  - {code: "160-0160", text: "M2/M30 in subprogram", trigger: subprogram_not_found, cause: "The NC program was ended by a call from M2 or M30 in a subprogram called with CALL PGM.", page: "117"}
+  - {code: "160-00C5", text: "Tool not defined", trigger: tool, cause: "You have called a tool that is not defined in the tool table.", page: "90"}
+  - {code: "280-05E4", text: "Tool number 0 not permitted", trigger: tool, cause: "A tool definition with the number \"0\" is not permitted.", page: "924"}
+  - {code: "280-05E8", text: "Tool definition is missing", trigger: tool, cause: "In a TOOL CALL (ISO: T..) you entered a tool number for which there is no definition in the program.", page: "925"}
+  - {code: "160-0056", text: "Tool axis is missing", trigger: tool, cause: "You programmed a positioning block with tool radius compensation without first calling a tool.", page: "76"}
+  - {code: "1A0-000A", text: "No tool axis defined", trigger: tool, cause: "No plane selection or tool axis direction programmed, or no default plane specified.", page: "129"}
+  - {code: "280-05EC", text: "Max. tool age expired", trigger: tool_life, cause: "The service life of the called tool has expired and you have not defined a replacement tool.", page: "926"}
+  - {code: "280-0618", text: "Tool life expired", trigger: tool_life, cause: "The remaining tool life is not enough for the precalculated machining time. - The service life of the called tool is insufficient and you haven’t defined a sister tool. - The tool-usage file is not available or not up to date.", page: "935"}
+  - {code: "280-05ED", text: "Tool locked", trigger: tool_life, cause: "The tool was locked (e.g. after breakage).", page: "926"}
+  - {code: "280-049A", text: "A replacement tool is not available", trigger: tool_life, cause: "The programmed tool is locked or the tool life has expired and no replacement tool is available.", page: "909"}
+  - {code: "280-0608", text: "Tool broken", trigger: tool_life, cause: "Automatic tool measurement: The breakage tolerance (LBREAK or RBREAK) from the tool table was exceeded.", page: "932"}
+  - {code: "280-03E8", text: "Spindle must be turning", trigger: spindle, cause: "You called a fixed cycle without first switching on the spindle.", page: "868"}
+  - {code: "160-00A0", text: "Spindle is not rotating", trigger: spindle, cause: "A machining cycle was called although the spindle is stopped.", page: "83"}
+  - {code: "160-00DC", text: "Wrong rpm", trigger: spindle, cause: "The programmed spindle speed does not lie in the existing pattern of spindle speed stages.", page: "94"}
+  - {code: "160-00FC", text: "0 rpm not permitted", trigger: spindle, cause: "You called a Rigid Tapping or Tapping cycle with a programmed spindle speed of 0.", page: "101"}
+  - {code: "160-00E3", text: "Spindle speed S is greater than NMAX from the tool table", trigger: spindle, cause: "You entered a spindle speed S greater than the maximum speed defined for this tool in the tool table.", page: "96"}
+  - {code: "1A1-0010", text: "Limit switch %1%2", trigger: overtravel, cause: "The calculated tool path exceeds the machine's positive traverse limits. The current machine setting was presumably not used and the workpiece is therefore in the wrong position in the working space. The positive software limit switch is defined with the configuration datum CfgPositionLimits->swLimitSwitchPos.", page: "217"}
+  - {code: "1A1-0011", text: "Limit switch %1%2", trigger: overtravel, cause: "The calculated tool path exceeds the machine's negative traverse limits. The current machine setting was presumably not used and the workpiece is therefore in the wrong position in the working space. The negative software limit switch is defined with the configuration datum CfgPositionLimits->swLimitSwitchNeg.", page: "217"}
+  - {code: "230-00FA", text: "Limit switch %2 +", trigger: overtravel, cause: "The calculated tool path exceeds the machine's positive traverse limits.", page: "306"}
+  - {code: "230-00FB", text: "Limit switch %2 -", trigger: overtravel, cause: "The calculated tool path exceeds the machine's traverse limits.", page: "307"}
+  - {code: "1A1-0016", text: "Program position not accessible", trigger: overtravel, cause: "The machine cannot reach all points in the space. The three linear axes with which the control moves to programmed positions all lie in one plane. [...]", page: "219"}
+  - {code: "1A0-00F5", text: "Tilting the working plane is not allowed", trigger: tilted_plane, cause: "You tried to tilt the working plane although this function is not allowed with the active kinematic configuration.", page: "175"}
+  - {code: "1A0-00F7", text: "Entered angle not permitted", trigger: tilted_plane, cause: "- The solid angles programmed in Cycle 19 Tilt Working Plane (DIN/ISO: G80) cannot be realized with the current attachment (e.g. universal head where only one hemisphere is accessible). - Run probing cycle only with paraxial angular position. - The point angle (T-ANGLE) defined for the active tool is 180°.", page: "176"}
+  - {code: "1A0-00F8", text: "Angle cannot be calculated", trigger: tilted_plane, cause: "In the tilted-working-plane function you have the spatial-angle input mode active although this mode is not supported for your machine configuration.", page: "176"}
+  - {code: "1A0-00FC", text: "No solution in limited range", trigger: tilted_plane, cause: "You tried to limit the range for the master axis with SEQ+ or SEQ-. In this range the control cannot tilt the working plane.", page: "177"}
+  - {code: "1A0-00FD", text: "Vectors are not perpendicular", trigger: tilted_plane, cause: "You tried to define a working plane with PLANE VECTOR, entering vectors that are not perpendicular or do not intersect.", page: "177"}
+  - {code: "1A0-00FE", text: "Points on a plane too close to each other", trigger: tilted_plane, cause: "You tried to define a working plane with PLANE POINTS, entering plane points that lie too close together.", page: "177"}
+  - {code: "1A0-00FF", text: "Points on a plane lie on a line", trigger: tilted_plane, cause: "You tried to define a working plane with PLANE POINTS, entering plane points that lie one a straight line. Therefore the control cannot calculate an unambiguous plane.", page: "177"}
+  - {code: "1A0-0100", text: "No rotary axes available", trigger: tilted_plane, cause: "You attempted to tilt the working plane in a kinematic configuration without rotary axes.", page: "178"}
+  - {code: "1A0-0101", text: "Vectors are too short", trigger: tilted_plane, cause: "You tried to define a working plane with PLANE VECTOR, when at least one of the vectors is too short.", page: "178"}
+  - {code: "1A0-0038", text: "Incorrect application of Cycle 19", trigger: tilted_plane, cause: "- Before Cycle 19 was called, tilted working plane was switched off (FN17 ID210 NR6).", page: "137"}
+  - {code: "1A0-005E", text: "Tool not perpendicular to working plane", trigger: tilted_plane, cause: "You tried to use a function that requires the tool to be perpendicular to the working plane (e.g. tapping) when it was not.", page: "145"}
+  - {code: "160-00D0", text: "M128 / M129 not allowed here", trigger: tcp, cause: "No switch-over of the TCPM is possible while the radius compensation is active (RR/RL, or G41/G42).", page: "92"}
+  - {code: "160-00F2", text: "M118/M128 at the same time is not allowed", trigger: tcp, cause: "You tried to use M118 to activate a handwheel superimposition during active TCPM.", page: "99"}
+  - {code: "1A0-0058", text: "TCPM must not be switched on or off right after a contour transition element", trigger: tcp, cause: "An attempt was made to switch the TCPM mode on or off immediately after a contour transition element.", page: "144"}
+  - {code: "1A0-004F", text: "Tool compensation not switched off for 5-axis movement", trigger: tcp, cause: "You programmed a linear 5-axis movement although the tool radius compensation was active.", page: "142"}
+  - {code: "1A0-00B1", text: "Rotary axes mixed with tool polar vectors", trigger: tcp, cause: "Rotary axis values and tool direction vectors must never be in the same NC block, and during active 3-D tool radius compensation they also must not appear alternately in successive blocks.", page: "161"}
+  - {code: "1A0-00B2", text: "Programmed direction vector is zero vector", trigger: tcp, cause: "A programmed direction vector in an LN block must have at least one component not equal to zero.", page: "162"}
+  - {code: "1A1-0052", text: "Tool inclination cannot be calculated", trigger: tcp, cause: "There are too many or too few rotary axes present in order to calculate the tool angle of inclination", page: "227"}
+  - {code: "280-03EE", text: "Rotation not permitted", trigger: transformation, cause: "Rotation was programmed before a touch probe cycle.", page: "870"}
+  - {code: "280-03F1", text: "Datum shift not permitted", trigger: transformation, cause: "Datum shift is active.", page: "870"}
+  - {code: "1A0-0086", text: "Scaling factor invalid", trigger: transformation, cause: "- The programmed scaling factor is outside of the permitted range.", page: "152"}
+  - {code: "1A0-008A", text: "Illegal coordinate transformation", trigger: transformation, cause: "The coordinate transformation applies to a nonexistent axis.", page: "153"}
+  - {code: "160-00E4", text: "Probe cycle started with stylus already deflected", trigger: probing, cause: "You tried to start a probing cycle although the stylus is still deflected.", page: "96"}
+  - {code: "280-03F6", text: "Touch point inaccessible", trigger: probing, cause: "No touch point was reached during the TCH-PROBE 0 cycle (ISO: G55) or when using the manual probing cycles.", page: "871"}
+  - {code: "280-042F", text: "Missing calibration data", trigger: probing, cause: "You have attempted to perform a measurement with Cycle 440 without first performing a calibration.", page: "883"}
+  - {code: "280-05FB", text: "Calibrate touch probe", trigger: probing, cause: "You tried to automatically measure a tool although the tool touch probe is not yet calibrated.", page: "929"}
+  - {code: "280-0430", text: "Tolerance exceeded", trigger: probing, cause: "The limits entered in the tool table TOOL.T in the LTOL or RTOL column were exceeded.", page: "883"}
+  - {code: "160-011C", text: "Touch probe not defined", trigger: probing, cause: "- You called a touch probe that is not defined in the touch probe table. - The touch probe table is write-protected or it does not exist.", page: "108"}
+  - {code: "280-0431", text: "Mid-program startup active", trigger: restart, cause: "Mid-program startup is not permitted with the programmed function.", page: "883"}
+  - {code: "1A0-0070", text: "Mid-program startup not possible", trigger: restart, cause: "The target position of the mid-program startup is within a thread or measuring cycle.", page: "148"}
+  - {code: "1A0-0087", text: "Mid-program startup not allowed", trigger: restart, cause: "Mid-program startup not allowed after an approach block that was programmed immediately before the program end.", page: "152"}
+  - {code: "280-05FA", text: "Tool change during mid-program startup not possible", trigger: restart, cause: "Tool change not possible during mid-program startup. The active tool is not in the spindle for program run after mid-program startup.", page: "928"}
+  - {code: "1A0-00AA", text: "Incorrect tool at start of block scan (current T%1, programmed T%2)", trigger: restart, cause: "Mid-program startup with incorrect tool.", page: "160"}
+  - {code: "1A0-00AB", text: "Block scan cannot jump over probing functions", trigger: restart, cause: "A probing function was found before the block being searched for with the block scan.", page: "160"}
+  - {code: "1A0-00E9", text: "Program resumption not possible", trigger: restart, cause: "The program cannot be continued from the point of interruption.", page: "172"}
+  - {code: "280-044A", text: "Contradictory workpc. blank dim.", trigger: blank_form, cause: "The workpiece blank dimensions you have defined in a fixed cycle are smaller than the dimensions of the finished part.", page: "889"}
+  - {code: "1A0-011E", text: "Workpiece blank definition: contour is not closed", trigger: blank_form, cause: "The start point and end point do not agree in the definition for the workpiece blank contour.", page: "185"}
+  - {code: "292-0006", text: "Thread cutting: Spindle synchronized too late (distance, position controller)", trigger: spindle, cause: "During thread cutting with controlled spindle, the control could not synchronize the spindle soon enough.", page: "999"}
+
+messages:
+  src: heidenhain-tnc640-klartext-2023
+  page: "300-301, 313-314, 622"
+  FN 14: "FN 14: ERROR = n (ISO: D14) interrupts program run and shows the message; the NC program must be restarted. Ranges: 0-999 machine-dependent dialog, 1000-2999 control-dependent dialog, 3000-9999 machine-dependent dialog, 10000 and higher control-dependent dialog (input range in the specification table: 0 to 1199). Numbers 1000-1199 are HEIDENHAIN's predefined texts; they correspond to NC errors 280-03E8 ... (hexadecimal of n, e.g. FN 14: ERROR = 1000 -> 280-03E8, 1001 -> 280-03E9). The two documents word some texts differently (FN 14 table 1000 'Spindle?', error list 280-03E8 'Spindle must be turning'); a number without a defined text shows 280-0064 'FN 14: error code %1'."
+  FN 16: "FN 16: F-PRINT <mask file> / SCREEN: shows a text window the operator has to react to before continuing (variable values allowed); FN 16: F-PRINT / SCLR: closes the window; M_CLOSE or M_TRUNCATE in the mask overwrites instead of appending."
+  STOP: "a STOP block interrupts program run or test run at that block (an M function may be entered in it); M0 program stop, M1 optional program stop."
+
+timing:
+  src: heidenhain-tnc640-setup-2023
+  page: "620 (14.3 Specifications)"
+  ipo_period_ms: {value: 0.2, src: est, note: "HEIDENHAIN publishes no separate path-interpolation period; set equal to the published position-controller cycle time (200 us standard, 100 us with option 49, setup manual p. 620)"}
+  block_processing_ms: {value: 0.5, note: "block processing time for a 3-D straight line without radius compensation"}
+  lookahead_blocks: {value: 1000, src: est, note: "depth of the motion (feed-rate profile) look-ahead is not given in the manuals read (the Klartext manual p. 526 only says ADP 'expands the conventional look-ahead'); 1000 blocks kept for consistency with db/machines/dmg-dmu50-3rd.yaml"}
+  position_controller_cycle_ms: {value: 0.2, note: "0.1 ms with option 49"}
+  speed_controller_cycle_ms: {value: 0.2, note: "0.1 ms with option 49"}
+  current_controller_cycle_ms: {value: 0.1, note: "minimum; minimum 0.05 ms with option 49"}
+  radius_comp_lookahead_blocks: {value: 99, src: heidenhain-tnc640-klartext-2023, page: "242", note: "M120 LA<n>: radius-compensated contour calculated up to 99 NC blocks ahead to remove undercuts and path intersections; the more blocks, the longer the block processing time; reset by M120 LA0, M120 without LA, R0 or a DEP block"}
+  arc_end_point_tolerance_mm: {value: 0.016, src: heidenhain-tnc640-klartext-2023, page: "166", note: "maximum input tolerance for start and end point of an arc lying on the circle, set by the machine maker in machine parameter circleDeviation (no. 200901); beyond it error 1A0-0084 'Circle incorrectly programmed'"}
+  min_circle_mm: {value: 0.016, src: heidenhain-tnc640-klartext-2023, page: "166", note: "smallest possible circle the control can traverse"}
+  input_resolution_linear_um: {value: 0.01, note: "input resolution and display step 'as fine as 0.01 um' for linear axes"}
+  input_resolution_rotary_deg: {value: 0.00001, note: "'as fine as 0.000 01 deg' for rotary axes"}
+  smoothing:
+    - code: "CYCL DEF 32.0 TOLERANCE / 32.1 T<t> / 32.2 HSC-MODE:<0|1> TA<ta>  (ISO: G62)"
+      name: tolerance
+      src: heidenhain-tnc640-cycles-2023
+      page: "448-451"
+      tolerance_range_mm: [0, 10]
+      rotary_tolerance_range_deg: [0, 10]
+      note: "T = permitted contour deviation in mm (inch in an inch program); 0 or NO ENT = the machine maker's value from machine parameters. The control smooths between any two contour elements (compensated or not) and also on arcs, reducing the programmed feed so that it never leaves the tolerance; larger T = faster, smaller T can force strong slow-downs. HSC-MODE 0 = finishing filter (contour accuracy), 1 = roughing filter (feed rate). TA = permitted position error of rotary axes in degrees with M128/FUNCTION TCPM (0 = machine value), the TCP position being corrected. DEF-active; reset by redefining cycle 32 and answering the tolerance prompt with NO ENT or by selecting a new NC program. Best smoothing with T between 110% and 200% of the CAM chord error. As T grows the diameter of circular movements usually decreases unless HSC filters are active."
+
+words:
+  src: heidenhain-tnc640-klartext-2023
+  klartext:
+    page: "160-171, 132-134, 276-301, 502-503"
+    "BEGIN PGM": "first block: program name and unit of measure (MM or INCH)"
+    "END PGM": "last block of the NC program"
+    "BLK FORM 0.1": "workpiece blank: tool axis and MIN point (BLK FORM 0.1 Z X.. Y.. Z..)"
+    "BLK FORM 0.2": "workpiece blank: MAX point (absolute or incremental)"
+    "BLK FORM CYLINDER": "cylindrical workpiece blank"
+    "BLK FORM ROTATION": "rotationally symmetric blank defined by a contour subprogram (label)"
+    "TOOL DEF": "define number, length L and radius R of a tool in the program; with tool tables: preselect the next tool"
+    "TOOL CALL": "call tool (number, name or QS) with tool axis, spindle speed S, feed F and deltas DL/DR/DR2 (e.g. TOOL CALL 5.2 Z S2500 F350 DL+0.2 DR-1)"
+    L: "straight line to the end point"
+    CHF: "chamfer of given side length between two straight lines"
+    CC: "circle centre or pole (no motion)"
+    C: "circular arc around CC to the end point, direction DR+ / DR-"
+    CR: "circular arc with radius R to the end point (R<0 = arc > 180 deg), direction DR+ / DR-"
+    CT: "circular arc tangential to the preceding element, to the end point"
+    RND: "corner rounding arc of radius R, tangential to both adjacent elements"
+    LP: "straight line in polar coordinates (PR radius, PA angle about the pole CC)"
+    CP: "circular arc around the pole in polar coordinates (PA, DR; helix with incremental tool-axis coordinate)"
+    CTP: "tangential arc in polar coordinates"
+    FL: "FK free contour programming: straight line"
+    FLT: "FK: straight line with tangential connection"
+    FC: "FK: circular arc"
+    FCT: "FK: circular arc with tangential connection"
+    FPOL: "FK: pole for free contour programming"
+    "APPR LT": "approach on a straight line tangential to the contour"
+    "APPR LN": "approach on a straight line perpendicular to the contour"
+    "APPR CT": "approach on a circular arc tangential to the contour"
+    "APPR LCT": "approach on a tangential arc connected by a straight line"
+    "APPR PLT / PLN / PCT / PLCT": "approach variants with polar coordinates"
+    "DEP LT": "depart on a tangential straight line"
+    "DEP LN": "depart on a straight line perpendicular to the contour"
+    "DEP CT": "depart on a tangential circular arc"
+    "DEP LCT": "depart on a tangential arc and a straight line"
+    "DEP PLT / PLN / PCT / PLCT": "departure variants with polar coordinates"
+    R0: "no tool radius compensation"
+    RL: "tool radius compensation, tool left of the contour"
+    RR: "tool radius compensation, tool right of the contour"
+    "R+ / R-": "paraxial positioning block lengthened / shortened by the tool radius"
+    F: "feed rate (mm/min, or with FZ per tooth, FU per revolution)"
+    FMAX: "rapid traverse, effective only in its block"
+    FAUTO: "feed rate from the TOOL CALL block"
+    "DR+ / DR-": "arc direction counterclockwise / clockwise"
+    "LBL": "label (number 0-65535 or name in quotes); LBL 0 ends a subprogram"
+    "CALL LBL": "call subprogram / program-section repeat (CALL LBL n REP m)"
+    "CALL PGM": "call another NC program as a subprogram"
+    "SEL PGM / CALL SELECTED": "select a program (QS allowed) and call it later"
+    "CYCL DEF": "define a fixed cycle (DEF-active cycles take effect at once)"
+    "CYCL CALL": "call the last defined CALL-active cycle"
+    "CYCL CALL POS": "call the cycle at the given position"
+    "CYCL CALL PAT": "call the cycle at every point of PATTERN DEF / SEL PATTERN"
+    "PATTERN DEF": "define a point pattern (point, row, pattern, frame, circle, pitch circle)"
+    "TRANS DATUM": "datum shift (AXIS, TABLE, RESET)"
+    "TRANS MIRROR": "mirroring about axes"
+    "TRANS ROTATION": "rotation in the working plane (ROT)"
+    "TRANS SCALE": "scaling factor"
+    "FUNCTION MODE": "switch milling / turning mode"
+    "FUNCTION FEED DWELL / FUNCTION DWELL": "cyclic dwell during feed / dwell time"
+    "STOP": "program stop"
+  plane:
+    src: heidenhain-tnc640-klartext-2023
+    page: "679-697"
+    "PLANE SPATIAL": "tilt the working plane by spatial angles SPA, SPB, SPC"
+    "PLANE PROJECTED": "tilt by projection angles PROPR, PROMIN and rotation ROT"
+    "PLANE EULER": "tilt by Euler angles EULPR, EULNU, EULROT"
+    "PLANE VECTOR": "tilt by base vector BX BY BZ and normal vector NX NY NZ"
+    "PLANE POINTS": "tilt by three points P1, P2, P3 of the plane"
+    "PLANE RELATIV": "incremental spatial angle on the active tilted plane"
+    "PLANE AXIAL": "tilt by axis angles A, B, C"
+    "PLANE RESET": "reset the tilted working plane"
+    "MOVE / TURN / STAY": "positioning: rotate with compensating tool motion / rotate only / do not move (rotary axes positioned later)"
+    "SEQ+ / SEQ-": "choose the solution with the master axis in the positive / negative tilting range"
+    "TABLE ROT / COORD ROT": "optional transformation type: orientation of the working-plane coordinate system through the position of a free rotary axis (one parallel to the tool axis)"
+  tcpm:
+    src: heidenhain-tnc640-klartext-2023
+    page: "501-503"
+    "FUNCTION TCPM": "tool centre point management (option 9), an improvement of M128; options: F TCP / F CONT (feed at tool tip or contouring feed), AXIS POS / AXIS SPAT (rotary values are axis positions or spatial angles), PATHCTRL AXIS / PATHCTRL VECTOR (orientation interpolation), REFPNT TIP-TIP / TIP-CENTER / CENTER-CENTER, optional feed limit F"
+    "FUNCTION RESET TCPM": "cancel TCPM (required before M91/M92 positioning and before TOOL CALL)"
+    M128: "maintain the tool tip position when positioning tilted axes (TCPM)"
+    M129: "reset M128"
+  fn:
+    src: heidenhain-tnc640-klartext-2023
+    page: "280-301, 310-316"
+    "FN 0": "assignment (Q5 = +60; SET UNDEFINED)"
+    "FN 1": "addition"
+    "FN 2": "subtraction"
+    "FN 3": "multiplication"
+    "FN 4": "division (DIV)"
+    "FN 5": "square root (SQRT)"
+    "FN 6": "sine (SIN)"
+    "FN 7": "cosine (COS)"
+    "FN 8": "root of the sum of squares (LEN)"
+    "FN 9": "IF ... EQU ... GOTO LBL (also IS DEFINED / IS UNDEFINED)"
+    "FN 10": "IF ... NE ... GOTO LBL"
+    "FN 11": "IF ... GT ... GOTO LBL"
+    "FN 12": "IF ... LT ... GOTO LBL"
+    "FN 13": "angle from two sides (ANG)"
+    "FN 14": "ERROR: output an error message and stop"
+    "FN 16": "F-PRINT: formatted output of text and values (file, screen, printer)"
+    "FN 18": "SYSREAD: read system data into Q/QL/QR"
+    "FN 19": "PLC: transfer values to the PLC"
+    "FN 20": "WAIT FOR: NC and PLC synchronization (FN 20: WAIT FOR SYNC stops the look-ahead)"
+    "FN 23": "circle data from three points (CDATA)"
+    "FN 24": "circle data from four points (CDATA)"
+    "FN 26": "TABOPEN: open a freely definable table"
+    "FN 27": "TABWRITE: write to the opened table"
+    "FN 28": "TABREAD: read from the opened table"
+    "FN 29": "PLC: transfer up to eight values to the PLC"
+    "FN 37": "EXPORT: needed when creating own cycles to integrate them in the control"
+    "FN 38": "SEND: send information from the NC program"
+  cycles:
+    src: heidenhain-tnc640-cycles-2023
+    page: "790-792 (16.1 Table of cycles); active = DEF-active (effective when defined) or CALL-active (needs CYCL CALL / M89 / M99)"
+    "7": {name: "DATUM SHIFT", active: def}
+    "8": {name: "MIRRORING", active: def}
+    "9": {name: "DWELL TIME", active: def}
+    "10": {name: "ROTATION", active: def}
+    "11": {name: "SCALING FACTOR", active: def}
+    "12": {name: "PGM CALL", active: def}
+    "13": {name: "ORIENTATION", active: def}
+    "14": {name: "CONTOUR", active: def}
+    "18": {name: "THREAD CUTTING", active: call}
+    "19": {name: "WORKING PLANE", active: def}
+    "20": {name: "CONTOUR DATA", active: def}
+    "21": {name: "PILOT DRILLING", active: call}
+    "22": {name: "ROUGH-OUT", active: call}
+    "23": {name: "FLOOR FINISHING", active: call}
+    "24": {name: "SIDE FINISHING", active: call}
+    "25": {name: "CONTOUR TRAIN", active: call}
+    "26": {name: "AXIS-SPECIFIC SCALING", active: def}
+    "27": {name: "CYLINDER SURFACE", active: call}
+    "28": {name: "CYLINDER SURFACE", active: call}
+    "29": {name: "CYL SURFACE RIDGE", active: call}
+    "32": {name: "TOLERANCE", active: def}
+    "39": {name: "CYL. SURFACE CONTOUR", active: call}
+    "200": {name: "DRILLING", active: call}
+    "201": {name: "REAMING", active: call}
+    "202": {name: "BORING", active: call}
+    "203": {name: "UNIVERSAL DRILLING", active: call}
+    "204": {name: "BACK BORING", active: call}
+    "205": {name: "UNIVERSAL PECKING", active: call}
+    "206": {name: "TAPPING", active: call}
+    "207": {name: "RIGID TAPPING", active: call}
+    "208": {name: "BORE MILLING", active: call}
+    "209": {name: "TAPPING W/ CHIP BRKG", active: call}
+    "220": {name: "POLAR PATTERN", active: def}
+    "221": {name: "CARTESIAN PATTERN", active: def}
+    "224": {name: "DATAMATRIX CODE PATTERN", active: def}
+    "225": {name: "ENGRAVING", active: call}
+    "232": {name: "FACE MILLING", active: call}
+    "233": {name: "FACE MILLING (milling direction can be selected, take the side walls into account)", active: call}
+    "238": {name: "MEASURE MACHINE STATUS", active: def}
+    "239": {name: "ASCERTAIN THE LOAD", active: def}
+    "240": {name: "CENTERING", active: call}
+    "241": {name: "SINGLE-LIP D.H.DRLNG", active: call}
+    "247": {name: "PRESETTING", active: def}
+    "251": {name: "RECTANGULAR POCKET", active: call}
+    "252": {name: "CIRCULAR POCKET", active: call}
+    "253": {name: "SLOT MILLING", active: call}
+    "254": {name: "CIRCULAR SLOT", active: call}
+    "256": {name: "RECTANGULAR STUD", active: call}
+    "257": {name: "CIRCULAR STUD", active: call}
+    "258": {name: "POLYGON STUD", active: call}
+    "262": {name: "THREAD MILLING", active: call}
+    "263": {name: "THREAD MLLNG/CNTSNKG", active: call}
+    "264": {name: "THREAD DRILLNG/MLLNG", active: call}
+    "265": {name: "HEL. THREAD DRLG/MLG", active: call}
+    "267": {name: "OUTSIDE THREAD MLLNG", active: call}
+    "270": {name: "CONTOUR TRAIN DATA", active: call}
+    "271": {name: "OCM CONTOUR DATA", active: call}
+    "272": {name: "OCM ROUGHING", active: call}
+    "273": {name: "OCM FINISHING FLOOR", active: call}
+    "274": {name: "OCM FINISHING SIDE", active: call}
+    "275": {name: "TROCHOIDAL SLOT", active: call}
+    "276": {name: "THREE-D CONT. TRAIN", active: call}
+    "277": {name: "OCM CHAMFERING", active: call}
+    "285": {name: "DEFINE GEAR", active: def}
+    "286": {name: "GEAR HOBBING", active: call}
+    "287": {name: "GEAR SKIVING", active: call}
+    "291": {name: "COUPLG.TURNG.INTERP.", active: call}
+    "292": {name: "CONTOUR.TURNG.INTRP.", active: call}
+    "1271": {name: "OCM RECTANGLE", active: def}
+    "1272": {name: "OCM CIRCLE", active: def}
+    "1273": {name: "OCM SLOT / RIDGE", active: def}
+    "1274": {name: "OCM CIRCULAR SLOT", active: def}
+    "1278": {name: "OCM POLYGON", active: def}
+    "1281": {name: "OCM RECTANGLE BOUNDARY", active: def}
+    "1282": {name: "OCM CIRCLE BOUNDARY", active: def}
+  M:
+    src: heidenhain-tnc640-iso-2023
+    page: "621-622 (17.2 Overview tables, Miscellaneous functions)"
+    "0": "program STOP / spindle STOP / coolant OFF"
+    "1": "optional program STOP / spindle STOP / coolant OFF"
+    "2": "program STOP / spindle STOP / coolant OFF / clear status display (machine parameter) / return to block 0"
+    "3": "spindle ON clockwise"
+    "4": "spindle ON counterclockwise"
+    "5": "spindle STOP"
+    "8": "coolant ON"
+    "9": "coolant OFF"
+    "13": "spindle ON clockwise / coolant ON"
+    "14": "spindle ON counterclockwise / coolant ON"
+    "30": "same function as M2"
+    "89": "cycle call, modally effective"
+    "91": "within the positioning block: coordinates referenced to the machine datum"
+    "92": "within the positioning block: coordinates referenced to a position defined by the machine maker (e.g. tool change position)"
+    "94": "reduce the rotary axis display to a value below 360 deg"
+    "97": "machine small contour steps"
+    "98": "machine open contours completely"
+    "99": "blockwise cycle call"
+    "101": "automatic tool change with replacement tool if maximum tool life has expired"
+    "102": "reset M101"
+    "103": "feed rate factor for plunging movements"
+    "107": "suppress error message for replacement tools with oversize"
+    "108": "reset M107"
+    "109": "constant contouring speed at cutting edge (feed increase and reduction)"
+    "110": "constant contouring speed at cutting edge (only feed reduction)"
+    "111": "reset M109/M110"
+    "116": "feed rate in mm/min on rotary axes"
+    "117": "reset M116"
+    "118": "superimpose handwheel positioning during program run"
+    "120": "pre-calculate the radius-compensated contour (LOOK AHEAD)"
+    "126": "shorter-path traverse of rotary axes"
+    "127": "reset M126"
+    "128": "maintain the position of the tool tip when positioning tilted axes (TCPM)"
+    "129": "reset M128"
+    "130": "within the positioning block: points referenced to the untilted coordinate system"
+    "136": "feed rate F in millimeters per spindle revolution"
+    "137": "reset M136"
+    "138": "selection of tilted axes"
+    "140": "retraction from the contour in the tool-axis direction"
+    "141": "suppress touch probe monitoring"
+    "143": "delete basic rotation"
+    "144": "compensate the machine's kinematic configuration for ACTUAL/NOMINAL positions at end of block"
+    "145": "reset M144"
+    "148": "automatically retract tool from the contour at an NC stop"
+    "149": "reset M148"
+    "197": "corner rounding"
+  G:
+    src: heidenhain-tnc640-iso-2023
+    page: "627-632 (17.3 ISO function overview TNC 640); cycle G numbers equal the Klartext cycle numbers except G28 mirroring, G53/G54 datum shift, G72 scaling, G73 rotation, G80 working plane, G37 contour, G120-G139 SL cycles, G4 dwell, G36 orientation, G39 PGM CALL, G62 tolerance, G86 thread cutting"
+    "00": "Cartesian line in rapid traverse"
+    "01": "Cartesian line at feed rate"
+    "02": "Cartesian circle clockwise"
+    "03": "Cartesian circle CCW"
+    "04": "DWELL TIME (cycle 9)"
+    "05": "Cartesian circle"
+    "06": "Cartesian circle, tangential transition"
+    "07": "Cartesian line, paraxial"
+    "10": "polar line in rapid traverse"
+    "11": "polar line at feed rate"
+    "12": "polar circle clockwise"
+    "13": "polar circle counterclockwise"
+    "15": "polar circle"
+    "16": "polar circle, tangential transition"
+    "17": "spindle axis Z - plane XY"
+    "18": "spindle axis Y - plane ZX"
+    "19": "spindle axis X - plane YZ"
+    "24": "chamfer with chamfer length R"
+    "25": "corner rounding with radius R"
+    "26": "tangential approach of a contour with radius R"
+    "27": "tangential departure from a contour with radius R"
+    "28": "MIRRORING (cycle 8)"
+    "29": "load current position"
+    "30": "workpiece blank definition: MIN point (G17/G18/G19)"
+    "31": "workpiece blank definition: MAX point (G90/G91)"
+    "36": "ORIENTATION (cycle 13, spindle orientation)"
+    "37": "CONTOUR (cycle 14, list of contour subprograms)"
+    "38": "stop program run"
+    "39": "PGM CALL (cycle 12)"
+    "40": "path of tool centre without tool radius compensation"
+    "41": "radius compensation left of path"
+    "42": "radius compensation right of path"
+    "43": "radius compensation: extend path for G07"
+    "44": "radius compensation: shorten path for G07"
+    "51": "prepare tool changer (next tool)"
+    "53": "DATUM SHIFT from datum table (cycle 7)"
+    "54": "DATUM SHIFT (cycle 7)"
+    "55": "REF. PLANE (touch probe cycle 0)"
+    "62": "TOLERANCE (cycle 32)"
+    "70": "unit of measure: inch"
+    "71": "unit of measure: mm"
+    "72": "SCALING FACTOR (cycle 11)"
+    "73": "ROTATION (cycle 10)"
+    "79": "cycle call"
+    "80": "WORKING PLANE (cycle 19)"
+    "86": "THREAD CUTTING (cycle 18)"
+    "90": "absolute dimension"
+    "91": "incremental dimension"
+    "98": "set label"
+    "99": "tool definition with tool number T, length L and radius R"
+    "120": "CONTOUR DATA"
+    "121": "PILOT DRILLING"
+    "122": "ROUGH-OUT"
+    "123": "FLOOR FINISHING"
+    "124": "SIDE FINISHING"
+    "125": "CONTOUR TRAIN"
+    "127": "CYLINDER SURFACE"
+    "128": "CYLINDER SURFACE (slot)"
+    "129": "CYL SURFACE RIDGE"
+    "139": "CYL. SURFACE CONTOUR"
+    "200": "DRILLING"
+    "201": "REAMING"
+    "202": "BORING"
+    "203": "UNIVERSAL DRILLING"
+    "204": "BACK BORING"
+    "205": "UNIVERSAL PECKING"
+    "206": "TAPPING with floating tap holder"
+    "207": "RIGID TAPPING without floating tap holder"
+    "208": "BORE MILLING"
+    "209": "TAPPING W/ CHIP BRKG"
+    "220": "POLAR PATTERN"
+    "221": "CARTESIAN PATTERN"
+    "224": "DATAMATRIX CODE PATTERN"
+    "225": "ENGRAVING"
+    "232": "FACE MILLING"
+    "233": "FACE MILLING"
+    "238": "MEASURE MACHINE STATUS"
+    "239": "ASCERTAIN THE LOAD"
+    "240": "CENTERING"
+    "241": "SINGLE-LIP D.H.DRLNG"
+    "247": "PRESETTING"
+    "251": "RECTANGULAR POCKET"
+    "252": "CIRCULAR POCKET"
+    "253": "SLOT MILLING"
+    "254": "CIRCULAR SLOT"
+    "256": "RECTANGULAR STUD"
+    "257": "CIRCULAR STUD"
+    "258": "POLYGON STUD"
+    "262": "THREAD MILLING"
+    "263": "THREAD MLLNG/CNTSNKG"
+    "265": "HEL. THREAD DRLG/MLG"
+    "267": "OUTSIDE THREAD MLLNG"
+    "270": "CONTOUR TRAIN DATA"
+    "271": "OCM CONTOUR DATA"
+    "272": "OCM ROUGHING"
+    "273": "OCM FINISHING FLOOR"
+    "274": "OCM FINISHING SIDE"
+    "275": "TROCHOIDAL SLOT"
+    "276": "THREE-D CONT. TRAIN"
+    "285": "DEFINE GEAR"
+    "286": "GEAR HOBBING"
+    "287": "GEAR SKIVING"
+    "291": "COUPLG.TURNG.INTERP."
+    "292": "CONTOUR.TURNG.INTRP."
+    "400": "BASIC ROTATION (touch probe)"
+    "408": "SLOT CENTER PRESET (touch probe)"
+    "410": "PRESET INSIDE RECTAN (touch probe)"
+    "412": "PRESET INSIDE CIRCLE (touch probe)"
+    "413": "PRESET OUTS. CIRCLE (touch probe)"
+    "417": "PRESET IN TS AXIS (touch probe)"
+    "421": "MEASURE HOLE (touch probe)"
+    "427": "MEASURE COORDINATE (touch probe)"
+    "480": "CALIBRATE TT (tool touch probe)"
+    "481": "CAL. TOOL LENGTH (tool touch probe)"
+    "482": "CAL. TOOL RADIUS (tool touch probe)"
+    "483": "MEASURE TOOL (tool touch probe)"
+  addresses:
+    src: heidenhain-tnc640-iso-2023
+    page: "633-634 (Addresses)"
+    "%": "program start, program call"
+    "#": "datum number with G53"
+    A: "rotation about X axis"
+    B: "rotation about Y axis"
+    C: "rotation about Z axis"
+    D: "Q parameter definitions (D00-D38 = FN 0-FN 38)"
+    DL: "wear compensation for length with T"
+    DR: "wear compensation for radius with T"
+    E: "tolerance with M112 / M124"
+    F: "feed rate; dwell time with G04; scaling factor with G72; feed reduction factor with M103"
+    G: "G codes"
+    H: "polar coordinate angle; rotation angle with G73"
+    I: "X coordinate of the circle centre / pole"
+    J: "Y coordinate of the circle centre / pole"
+    K: "Z coordinate of the circle centre / pole"
+    L: "set a label with G98; jump to a label; tool length with G99"
+    M: "M functions"
+    N: "block number"
+    P: "cycle parameters in machining cycles; value or Q parameter in Q parameter definitions"
+    Q: "Q parameter"
+    R: "polar coordinate radius; radius with G02/G03/G05; rounding radius with G25/G26/G27; tool radius with G99"
+    S: "spindle speed; spindle orientation with G36"
+    T: "tool definition with G99; tool call; next tool with G51"
+    U: "axis parallel to X"
+    V: "axis parallel to Y"
+    W: "axis parallel to Z"
+    X: "X axis"
+    Y: "Y axis"
+    Z: "Z axis"
+    "*": "end of block"
+
+variables:
+  src: heidenhain-tnc640-klartext-2023
+  page: "277-279 (ranges), 333-339 (preassigned), 628-680 (17.1 System data, FN 18)"
+  notes: "Values -999 999 999 to +999 999 999 (16 digits, 9 before the decimal point), IEEE 754 binary internally; QS up to 255 characters. SET UNDEFINED makes a variable undefined: a position programmed with an undefined Q parameter is ignored, an undefined Q parameter in a calculation raises an error and stops the program. Q100-Q199 / QS100-QS199 must not be used as calculation parameters. FN 18 values are always output in metric units."
+  ranges:
+    - {var: "Q0-Q99", access: rw, meaning: "user Q parameters (global); local inside macros and cycles (changes not returned to the program)"}
+    - {var: "Q100-Q199", access: r, meaning: "special functions of the control (preassigned, see below)"}
+    - {var: "Q200-Q1199", access: rw, meaning: "functions defined by HEIDENHAIN (cycle parameters)"}
+    - {var: "Q1200-Q1399", access: rw, meaning: "functions defined by the machine manufacturer (OEM cycles)"}
+    - {var: "Q1400-Q1999", access: rw, meaning: "user Q parameters"}
+    - {var: "QL0-QL499", access: rw, meaning: "local to one NC program"}
+    - {var: "QR0-QR99", access: rw, meaning: "user, retained after a restart (remanent)"}
+    - {var: "QR100-QR199", access: rw, meaning: "remanent, HEIDENHAIN functions (cycles)"}
+    - {var: "QR200-QR499", access: rw, meaning: "remanent, machine-manufacturer functions"}
+    - {var: "QS0-QS99", access: rw, meaning: "user string parameters (local in macros and cycles)"}
+    - {var: "QS100-QS199", access: r, meaning: "strings for special functions of the control"}
+    - {var: "QS200-QS1199", access: rw, meaning: "strings for HEIDENHAIN functions"}
+    - {var: "QS1200-QS1399", access: rw, meaning: "strings for machine-manufacturer functions"}
+    - {var: "QS1400-QS1999", access: rw, meaning: "user string parameters"}
+  preassigned:
+    - {var: "Q100-Q107", access: r, meaning: "values from the PLC"}
+    - {var: "Q108", access: r, meaning: "active tool radius (R + DR table + DR program), unit of the active program"}
+    - {var: "Q109", access: r, meaning: "tool axis: -1 none, 0 X, 1 Y, 2 Z, 6 U, 7 V, 8 W"}
+    - {var: "Q110", access: r, meaning: "spindle status: -1 undefined, 0 M3, 1 M4, 2 M5 after M3, 3 M5 after M4"}
+    - {var: "Q111", access: r, meaning: "coolant: 1 M8, 0 M9"}
+    - {var: "Q112", access: r, meaning: "overlap factor for pocket milling"}
+    - {var: "Q113", access: r, meaning: "unit of the main program: 0 mm, 1 inch"}
+    - {var: "Q114", access: r, meaning: "active tool length (L + DL table + DL program)"}
+    - {var: "Q115-Q119", access: r, meaning: "touch point X, Y, Z, 4th, 5th axis after a programmable probing cycle (stylus radius and length not applied); after automatic tool measurement Q115/Q116 = length/radius deviation"}
+    - {var: "Q120-Q122", access: r, meaning: "calculated axis angles of A, B, C"}
+    - {var: "Q141-Q149", access: r, meaning: "kinematics measurement results (measured error, optimisation error, offset in A/B/C)"}
+    - {var: "Q150-Q160", access: r, meaning: "measured actual values (angle, reference/minor axis, diameter, pocket length/width, length, centreline, projected angles, coordinate of measuring axis)"}
+    - {var: "Q161-Q167", access: r, meaning: "calculated deviations (centre, diameter, pocket, length, centreline)"}
+    - {var: "Q170-Q172", access: r, meaning: "determined spatial angles A, B, C"}
+    - {var: "Q180-Q182", access: r, meaning: "workpiece status: good / needs rework / scrap"}
+    - {var: "Q190-Q192", access: r, meaning: "reserved for laser tool measurement results"}
+    - {var: "Q195-Q198", access: r, meaning: "reserved for internal use"}
+  fn18_sysread:
+    - {var: "ID10 NR3", access: r, meaning: "number of the active machining cycle"}
+    - {var: "ID10 NR6", access: r, meaning: "number of the most recently executed touch probe cycle (-1 none)"}
+    - {var: "ID10 NR10", access: r, meaning: "repeat counter of the current code since the program call"}
+    - {var: "ID13 NR2", access: r, meaning: "label jumped to on FN 14 with NC CANCEL reaction instead of aborting (0 = normal)"}
+    - {var: "ID15 NR11/NR12/NR13 IDX n", access: r, meaning: "indexed read of Q(n), QL(n), QR(n)"}
+    - {var: "ID20 NR1", access: r, meaning: "active tool number"}
+    - {var: "ID20 NR2", access: r, meaning: "prepared tool number"}
+    - {var: "ID20 NR3", access: r, meaning: "active tool axis (0 X, 1 Y, 2 Z, 6 U, 7 V, 8 W)"}
+    - {var: "ID20 NR4", access: r, meaning: "programmed spindle speed"}
+    - {var: "ID20 NR5", access: r, meaning: "spindle condition (-1 undefined, 0 M3, 1 M4, 2 M5 after M3, 3 M5 after M4)"}
+    - {var: "ID20 NR8", access: r, meaning: "coolant status (0 off, 1 on)"}
+    - {var: "ID20 NR9", access: r, meaning: "active feed rate"}
+    - {var: "ID30 NR1-NR15", access: r, meaning: "active cycle parameters (set-up clearance, depth, plunging depth, plunge feed, pocket/slot sides, radius, milling feed, direction, dwell, thread pitch, allowance, roughing angle)"}
+    - {var: "ID30 NR48/NR49/NR50", access: r, meaning: "cycle 32: tolerance, HSC mode, rotary-axis tolerance"}
+    - {var: "ID35 NR1", access: r, meaning: "dimensions: 0 absolute (G90), 1 incremental (G91)"}
+    - {var: "ID35 NR2", access: r, meaning: "radius compensation: 0 R0, 1 RR/RL, 10 face milling, 11 peripheral milling"}
+    - {var: "ID50 NR1..NR47 IDX tool", access: r, meaning: "tool table of tool IDX: 1 L, 2 R, 3 R2, 4 DL, 5 DR, 6 DR2, 7 TL locked, 8 RT replacement, 9 TIME1, 10 TIME2, 11 CUR.TIME, 13 LCUTS, 14 ANGLE, 15 CUT, 16 LTOL, 17 RTOL, 21 LBREAK, 22 RBREAK, 28 NMAX, 32 TANGLE, 44 tool life exceeded"}
+    - {var: "ID60 NR1-NR7", access: r, meaning: "values programmed in TOOL CALL: T, tool axis, S, DL, DR, automatic TOOL CALL, DR2"}
+    - {var: "ID210 NR1-NR7", access: r, meaning: "coordinate transformations: basic rotation, programmed rotation, mirror axes (bits), scaling factor per axis (IDX), 3D-ROT (IDX A/B/C), tilt active in program run / manual (0 no, -1 yes)"}
+    - {var: "ID220 NR2 IDX axis", access: r, meaning: "current datum shift in mm (IDX 1-9 = X Y Z A B C U V W)"}
+    - {var: "ID230 NR2/NR3 IDX axis", access: r, meaning: "negative / positive software limit switch"}
+    - {var: "ID240 NR1 IDX axis", access: r, meaning: "current nominal position in the REF (machine) system"}
+    - {var: "ID270 NR1 IDX axis", access: r, meaning: "current nominal position in the active (input) coordinate system"}
+    - {var: "ID280 NR1", access: r, meaning: "M128 active: -1 yes, 0 no"}
+    - {var: "ID350 NR51-NR57", access: r, meaning: "TS touch probe: effective length, stylus tip radius, centre offset, orientation angle, feeds, measuring range, set-up clearance"}
+    - {var: "ID360 NR1-NR6 IDX coordinate", access: r, meaning: "last touch point / preset from probing (input, machine, workpiece system)"}
+    - {var: "ID360 NR11", access: r, meaning: "error status of probing: 0 success, -1 touch point not reached, -2 probe already deflected at start"}
+    - {var: "ID990 NR4", access: r, meaning: "stylus deflected: 0 no, 1 yes"}
+    - {var: "ID990 NR8", access: r, meaning: "momentary spindle angle in degrees"}

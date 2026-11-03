@@ -1,0 +1,135 @@
+# AISI 52100 / 100Cr6 (1.3505), through-hardened ~62 HRC: the hard-turning reference material.
+# Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: aisi52100-62hrc
+name: "AISI 52100 / 100Cr6 bearing steel, hardened ~62 HRC"
+family: steel
+iso_group: H
+condition: "martensitic hardening 830-870 C oil, tempered 150-180 C (thyssenkrupp-2017-100cr6; ovako-2026-100cr6: temper >= 160 C), ~61-62 HRC"
+designations: {UNS: G52986, EN: "100Cr6 (1.3505)", SAE: "52100", JIS: "SUJ2", GB: "GCr15"}
+stock_forms: []
+
+physical:
+  src: thyssenkrupp-2017-100cr6
+  density_kg_m3: {value: 7850, range: [7800, 7850], note: "DEW gives 7800 (dew-2015-100cr6)"}
+  specific_heat_J_kgK: {table: [[20, 461], [100, 480], [200, 498], [300, 524], [400, 524], [500, 615], [600, 690], [700, 720], [800, 682]], src: est, note: "20 C value 461 (thyssenkrupp; DEW 460); temperature dependence copied from AISI 1045 (xiu-2019-1045-grinding-fe); hardened martensite tempers further above ~180 C, which this table ignores"}
+  conductivity_W_mK: {table: [[20, 33.0], [100, 32.6], [200, 32.0], [300, 31.6], [400, 31.3], [500, 31.3], [600, 30.3], [700, 29.2], [800, 28.0]], src: est, range: [33.0, 39.6], note: "20 C: DEW 33.0 (chosen, closer to hardened martensite), thyssenkrupp 39.6 (not condition specific); temperature shape from AISI 1045 (xiu-2019) scaled by a factor rising linearly from 33.0/49.77 at 20 C to 1.0 at 800 C"}
+  expansion_1_K: {table: [[100, 12.1e-6], [200, 12.7e-6], [300, 13.2e-6], [400, 13.6e-6], [500, 14.0e-6]], note: "mean from 20 C (thyssenkrupp); DEW gives 11.5/12.5/13.3/13.9 for the soft-annealed state"}
+  youngs_modulus_GPa: {table: [[20, 212], [100, 207], [200, 199], [300, 192]], note: "DEW: 210 at 20 C"}
+  poisson: {value: 0.3, src: li-2019-gcr15-textured-tools, note: "Table 3 (GCr15)"}
+  solidus_degC: {value: 1345, src: est, note: "binary Fe-C diagram at 1.0 % C (gamma solidus 0.17 % C/1495 C to 2.11 % C/1148 C); Cr not accounted for"}
+  liquidus_degC: {value: 1450, src: est, note: "binary Fe-C diagram at 1.0 % C (liquidus 0.53 % C/1495 C to 4.3 % C/1148 C)"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HRC: 62, src: ovako-2026-100cr6, range: [61, 62], note: "Ovako +Q/T(m) typical 61 HRC; 62 HRC is the usual hard-turning reference hardness"}
+  yield_MPa: {value: 1700, src: ovako-2026-100cr6, note: "minimum, +Q/T(m)"}
+  ultimate_MPa: {value: 2300, src: ovako-2026-100cr6, note: "typical, +Q/T(m)"}
+  elongation_pct: {value: 2, src: ovako-2026-100cr6, note: "+Q/T(m)"}
+  fracture_strain: {value: 0.08, src: est, note: "brittle; assumed from the 2 % elongation and limited necking"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 1204
+  B_MPa: 1208
+  n: 0.12
+  C: 0.036
+  m: 0.89
+  ref_strain_rate_1_s: {value: 1.0, src: est, note: "not stated in li-2019; JC convention assumed"}
+  T_ref_degC: 20
+  T_melt_degC: 1180
+  src: li-2019-gcr15-textured-tools
+  note: "GCr15 (Chinese 52100) set from Li et al. 2019 Table 2, which quotes refs [32, 33]; the hardness is not stated, but the steel was turned with PCBN (hardened). With n = 0.12 the flow stress is 2.2 GPa at strain 0.2 and 2.4 GPa at strain 1, consistent with hardened 52100. Tm = 1180 C is far below the real solidus (~1345 C) and is kept only because the constants were published with it. The usual references for 52100 at 62 HRC are Guo & Liu 2002 (J. Manuf. Sci. Eng. 124(1)) and the hardness-based flow stress model of Umbrello, Hua & Shivpuri (2004); neither was accessible, so their constants are not given."
+
+cutting:
+  kienzle:
+    - tool_class: cbn
+      coating: uncoated
+      kc11_N_mm2: 4300
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "Walter group H3 'hardened steels 58-62 HRC', p. F9, chosen by hardness (the comparison table lists 1.3505 as P7/H2, H2 = 52-58 HRC: 3700, 0.25). One value per workpiece group, independent of tool class"
+    - tool_class: ceramic
+      coating: uncoated
+      kc11_N_mm2: 4300
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 120, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "same Walter H3 value applied to ceramic tools (tool-class assignment is this database's)"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.2, src: est, note: "assumed lower for hardened steel"}
+  indentation_coeff_N_mm3: {value: 1.1e5, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (~720 HB equivalent / 200)"}
+  work_hardening:
+    layer_depth_um: {value: 5, src: est, note: "little strain hardening; in hard turning the surface layer is governed by white layer (rehardening) and dark layer (overtempering)"}
+    hardness_increase_pct: {value: 3, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.12, src: li-2019-gcr15-textured-tools, note: "JC n"}
+
+friction:
+  - tool_class: cbn
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, note: "assumed; wu-2025 and the other FE studies read use 0.3 for PCBN or carbide contacts"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+  - tool_class: ceramic
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: segmented
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 30, src: est, note: "hardened 52100 forms saw-tooth chips over practically the whole hard-turning speed range; no onset study was read"}
+  bue: null
+  breakability: {value: good, src: est, note: "segmented chips"}
+  oxide_colours:
+    table: [[200, "#EDE4B0", "white-yellow (weissgelb)"], [220, "#E3C770", "straw yellow (strohgelb)"], [230, "#D4A93F", "golden yellow (goldgelb)"], [240, "#B98745", "yellow-brown (gelbbraun)"], [250, "#9B5B34", "brown-red (braunrot)"], [260, "#8C3A2E", "red (rot)"], [270, "#7B2E56", "purple-red (purpurrot)"], [280, "#5E2C78", "violet (violett)"], [290, "#2E2F82", "dark blue (dunkelblau)"], [300, "#3C64C4", "cornflower blue (kornblumenblau)"], [320, "#76A9DA", "light blue (hellblau)"], [340, "#7F8FA2", "blue-grey (blaugrau)"], [360, "#8E8E8E", "grey (grau)"]]
+    src: wikipedia-de-anlassen
+    note: "table for unalloyed tool steel applied to 1.5 % Cr bearing steel; hex values are this database's rendering (est)"
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: cbn
+    coating: uncoated
+    C_m_min: 443
+    n: 0.4
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 0.2
+    VB_limit_mm: 0.2
+    src: est
+    note: "no published Taylor fit read (Kundrak et al. 2020, Teh. Vjesn. 27:166, fitted CBN tool life on 100Cr6 at 60 HRC but was not accessible). C set so that T = 15 min at vc = 150 m/min (low-CBN finishing, general knowledge)"
+  - tool_class: ceramic
+    coating: uncoated
+    grade: "mixed Al2O3-TiC"
+    C_m_min: 355
+    n: 0.4
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 0.2
+    VB_limit_mm: 0.2
+    src: est
+    note: "C set so that T = 15 min at vc = 120 m/min (general knowledge)"
+tool_life_usui: null
+
+residual_stress: []                # through-hardened bar/ring: no published as-supplied profile read
+
+skin:
+  type: none
+  thickness_mm: {value: 0, src: est, note: "rings and bars are normally hardened after soft turning and ground or hard turned; a decarburised layer can exist if the heat treatment was unprotected"}
+  hardness_factor: {value: 1.0, src: est, note: "no skin"}
+  abrasiveness_factor: {value: 1.0, src: est, note: "no skin"}
+
+thermal_damage:
+  burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour; softening starts lower (see overtemper_degC)"}
+  white_layer_degC: {value: 750, src: ovako-2026-100cr6, range: [745, 760], note: "Ac1 745 C (Ovako), 760 C (dew-2015-100cr6 CCT); white (rehardened) layer forms when the surface briefly exceeds Ac1 and is quenched by the bulk; rapid heating raises the effective value"}
+  overtemper_degC: {value: 180, src: thyssenkrupp-2017-100cr6, range: [150, 180], note: "tempering range 150-180 C; the upper bound is used as the threshold above which the surface overtempers (dark layer, softening)"}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "Through-hardened 52100 at ~62 HRC. Physical data from thyssenkrupp/DEW datasheets (20 C values); flow stress from a published GCr15 set of unstated hardness (see note). Kienzle values are Walter H3 standard values. Tool life, segmentation onset and friction are estimates."

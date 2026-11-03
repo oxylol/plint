@@ -1,0 +1,66 @@
+format: cnctwin-holder
+version: 1
+series_id: schunk-celsio
+maker: "SCHUNK"
+series: "CELSIO shrink-fit toolholder, HSK-A63, DIN 69882-8 contour"
+src: schunk-web-celsio-208123
+dimension_key: "D6 nose diameter, D2 body diameter at L4 from the nose, L1 projecting length, L2 read as clamping length (labels not explained on the pages)"
+items:
+  - id: schunk-celsio-hsk-a63-6x80
+    order_code: "208120"
+    type: shrink_fit
+    taper: HSK-A63
+    bore_mm: {value: 6, src: schunk-web-celsio-208120}
+    gauge_length_mm: {value: 80, src: schunk-web-celsio-208120}
+    nose_diameter_mm: {value: 21.0, src: schunk-web-celsio-208120, note: "D6"}
+    profile_mm: {value: [[0, 21.0], [54.0, 27.0], [80, 27.0]], src: est, note: "taper from D6 = 21 at the nose to D2 = 27 at L4 = 54, cylinder behind"}
+    clamping_torque_Nm: {value: 20, src: schunk-web-celsio-208120, note: "minimum torque"}
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 3, src: schunk-web-celsio-208120, note: "<= 0.003 mm measured in the clamping bore (DIN 69882-8)"}
+    runout_at_mm: 0
+    balance_grade: {value: "G2.5 at 25000 rpm or Umax < 1 gmm", src: schunk-web-celsio-208120}
+    max_rpm: null
+    mass_kg: {value: 1.0, src: schunk-web-celsio-208120}
+    clamp_length_mm: {value: 37.0, src: schunk-web-celsio-208120, note: "L2"}
+    shank_tolerance: {value: "h6", src: schunk-web-celsio-208120}
+    price_eur: null
+  - id: schunk-celsio-hsk-a63-12x90
+    order_code: "208123"
+    type: shrink_fit
+    taper: HSK-A63
+    bore_mm: {value: 12, src: schunk-web-celsio-208123}
+    gauge_length_mm: {value: 90, src: schunk-web-celsio-208123}
+    nose_diameter_mm: {value: 24.0, src: schunk-web-celsio-208123, note: "D6"}
+    profile_mm: {value: [[0, 24.0], [64.0, 32.0], [90, 32.0]], src: est, note: "D6 = 24 to D2 = 32 at L4 = 64"}
+    clamping_torque_Nm: {value: 150, src: schunk-web-celsio-208123, note: "minimum torque"}
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 3, src: schunk-web-celsio-208123, note: "<= 0.003 mm in the clamping bore"}
+    runout_at_mm: 0
+    balance_grade: {value: "G2.5 at 25000 rpm or Umax < 1 gmm", src: schunk-web-celsio-208123}
+    max_rpm: null
+    mass_kg: {value: 1.0, src: schunk-web-celsio-208123}
+    clamp_length_mm: {value: 48.0, src: schunk-web-celsio-208123, note: "L2"}
+    shank_tolerance: {value: "h6", src: schunk-web-celsio-208123}
+    price_eur: null
+  - id: schunk-celsio-hsk-a63-16x95
+    order_code: "208125"
+    type: shrink_fit
+    taper: HSK-A63
+    bore_mm: {value: 16, src: schunk-web-celsio-208125}
+    gauge_length_mm: {value: 95, src: schunk-web-celsio-208125}
+    nose_diameter_mm: {value: 27.0, src: schunk-web-celsio-208125, note: "D6"}
+    profile_mm: {value: [[0, 27.0], [69.0, 34.0], [95, 34.0]], src: est, note: "D6 = 27 to D2 = 34 at L4 = 69"}
+    clamping_torque_Nm: {value: 300, src: schunk-web-celsio-208125, note: "minimum torque"}
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: {value: 3, src: schunk-web-celsio-208125}
+    runout_at_mm: 0
+    balance_grade: {value: "G2.5 at 25000 rpm or Umax < 1 gmm", src: schunk-web-celsio-208125}
+    max_rpm: null
+    mass_kg: {value: 0.9, src: schunk-web-celsio-208125}
+    clamp_length_mm: {value: 51.0, src: schunk-web-celsio-208125, note: "L2"}
+    shank_tolerance: {value: "h6", src: schunk-web-celsio-208125}
+    price_eur: null
+notes: "runout_at_mm 0 means runout measured in the bore, as SCHUNK states for CELSIO."

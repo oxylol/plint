@@ -1,0 +1,442 @@
+# Sources for db/materials/{aisi1045, aisi4140-annealed, aisi4140-qt30, h13-50hrc, d2-60hrc,
+# aisi52100-62hrc, aisi304, aisi316l, inconel718, grey-cast-iron-gjl250}.yaml
+# All read on 2026-11-03. PDFs were text-extracted locally; open-access journal papers were read
+# as full text through the Europe PMC REST service (url given). Where a value was read in a
+# secondary source that quotes an original paper, the secondary source is the entry and the
+# original is named in `note` (the original was not read).
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  # ------------------------------------------------------------------ AISI 1045 / C45
+  burns-2012-1045-cutting-temperature:
+    type: article
+    authors: "Burns, T.J.; Mates, S.P.; Rhorer, R.L.; Whitenton, E.P.; Basak, D."
+    title: "Modeling the peak cutting temperature during high-speed machining of AISI 1045 steel"
+    venue: "Engineering Transactions 60(2), 113-124"
+    year: 2012
+    url: "https://et.ippt.pan.pl/index.php/et/article/download/119/60"
+    accessed: 2026-11-03
+    pages: "Eq. (1.1)-(1.2), p. 114-115 (Johnson-Cook constants, Tr = 20 C, Tf = 1490 C); Table 1, p. 116 (orthogonal cutting at 3.7 m/s, Ks ~ 2400 N/mm2); Eq. (3.1), p. 117 (rho = 7800 kg/m3, c = 474 J/kgK)"
+    note: "Secondary source for the constants of Jaspers, S.P.F.C. & Dautzenberg, J.H. (2002) J. Mater. Process. Technol. 122, 322-330 (not read)."
+
+  xiu-2019-1045-grinding-fe:
+    type: article
+    authors: "Xiu, S.; Deng, Y.; Kong, X."
+    title: "Effects of stress on phase transformations in grinding by FE modeling and experimental approaches"
+    venue: "Materials 12(14), 2327"
+    year: 2019
+    doi: "10.3390/ma12142327"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6678647/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (AISI 1045 rho, cp, k at 20-1000 C), Table 3 (E, alpha, nu at 20-1000 C), Table 4 (JC constants quoted from Jaspers & Dautzenberg 2002)"
+
+  klippel-2022-ck45-cutting-database:
+    type: article
+    authors: "Klippel, H.; Süssmaier, S.; Kuffa, M.; Wegener, K."
+    title: "Dry cutting experiments database Ti6Al4V and Ck45"
+    venue: "arXiv:2209.04197 (ETH Zurich, IWF)"
+    year: 2022
+    url: "https://arxiv.org/pdf/2209.04197"
+    accessed: 2026-11-03
+    pages: "Table 2 (Ck45 batch: Rm 671 MPa, Rp0.2 420 MPa, A5 22.2 %); Table 7 (uncoated Sandvik CCMW 09T304 H13A, rake 0 deg, edge radius 20-50 um); Sect. 3.2/Table 10 (BUE and segmentation); Sect. 3.4 (mu_fr ~ 0.78); Sect. 3.5 (tempering colours 200-360 C); Table C.17 (Kienzle kc1.1, mc vs vc 10-450 m/min)"
+
+  klippel-2024-ck45-orthogonal:
+    type: article
+    authors: "Klippel, H.; Süssmaier, S.; Zhang, N.; Kuffa, M.; Wegener, K."
+    title: "Large-scale investigation of dry orthogonal cutting experiments Ti6Al4V and Ck45"
+    venue: "International Journal of Advanced Manufacturing Technology 135(5-6), 2871-2908"
+    year: 2024
+    doi: "10.1007/s00170-024-14597-2"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11528021/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Section 'Chip shapes', Table 12 and Fig. 28 (BUE traces up to vc = 50 m/min at f = 0.02-0.1 mm; at 150 m/min only at f = 0.02 mm; none at 450 m/min; segmentation towards higher vc and f)"
+
+  saarstahl-2016-c45:
+    type: datasheet
+    authors: "Saarstahl AG"
+    title: "Material specification sheet Saarstahl - C45, material no. 1.0503"
+    venue: "Saarstahl material specification sheet (PDF, file dated 2016)"
+    year: 2016
+    url: "https://en.saarstahl.com/app/uploads/2024/03/20160401102929-0503_C45.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 heat treatment (normalising 840-880 C, soft annealing 680-710 C); p. 2 +N minimum properties"
+
+  ovako-2025-c45:
+    type: datasheet
+    authors: "Ovako"
+    title: "Material data sheet, steel grade C45"
+    venue: "Ovako Steel Navigator, last revised 30 Jan 2025"
+    year: 2025
+    url: "https://steelnavigator.ovako.com/steel-grades/c45/pdf"
+    accessed: 2026-11-03
+    pages: "p. 2 mechanical properties (+N typical 190 HB, Rm 600-660 typical) and transformation temperatures (Ms 305, Ac1 725, Ac3 760 C); p. 3 heat treatment recommendations"
+
+  # ------------------------------------------------------------------ 42CrMo4 / 4140
+  ovako-2026-42crmo4:
+    type: datasheet
+    authors: "Ovako"
+    title: "Material data sheet, steel grade 42CrMo4"
+    venue: "Ovako Steel Navigator, last revised 02 Nov 2026"
+    year: 2026
+    url: "https://steelnavigator.ovako.com/steel-grades/42crmo4/pdf"
+    accessed: 2026-11-03
+    pages: "Mechanical properties table (+A typical 200-241 HB; +QT round bar 40-100 mm: Rp0.2 >= 650 MPa, Rm 900-1100 MPa, A 12 %, Z 50 %, 270-320 HB); transformation temperatures (Ms 320, Ac1 740, Ac3 770 C); heat treatment (QT 840-880 C, temper 540-680 C)"
+
+  thyssenkrupp-2017-42crmo4:
+    type: datasheet
+    authors: "thyssenkrupp Materials Services GmbH"
+    title: "Werkstoffblatt 42CrMo4 / 42CrMoS4, 1.7225 / 1.7227"
+    venue: "Werkstoffblatt MX/TIS-TS_00/01.2017"
+    year: 2017
+    url: "https://ucpcdn.thyssenkrupp.com/_binary/UCPthyssenkruppBAMaterialsSchulte/dc4e3d67-9afe-4b41-8794-a82c0d3ab7bb/42CrMo4-42CrMoS4-1.7225-1.7227.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1-2 +QT properties by diameter; p. 2 hardness (+A max 241 HBW), 'Anhaltsangaben ueber physikalische Eigenschaften' (density, E at 20-300 C, k and cp at 20 C, mean CTE 20-100...500 C), heat treatment"
+
+  zielinski-2021-42crmo4-precision-turning:
+    type: article
+    authors: "Zielinski, T.; Vovk, A.; Riemer, O.; Karpuschewski, B."
+    title: "An investigation on internal material loads and modifications in precision turning of steel 42CrMo4"
+    venue: "Micromachines 12(5), 526"
+    year: 2021
+    doi: "10.3390/mi12050526"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8148541/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (42CrMo4 at 42 HRC); Table 4 (JC: A 900, B 650, C 0.034, m 0.328, n 0.45, eps0 0.001 1/s, Tm 1536 C); Table 5 (properties); Table 6 (Coulomb friction 0.6)"
+    note: "The JC table cites references [11, 12] that are a Ti-6Al-4V and a friction paper; the origin of the set is therefore unclear. Used only as a noted alternative."
+
+  johnson-cook-1983:
+    type: article
+    authors: "Johnson, G.R.; Cook, W.H."
+    title: "A constitutive model and data for metals subjected to large strains, high strain rates and high temperatures"
+    venue: "Proceedings of the 7th International Symposium on Ballistics, The Hague, 541-547"
+    year: 1983
+    url: "https://ia800406.us.archive.org/4/items/AConstitutiveModelAndDataForMetals/A%20constitutive%20model%20and%20data%20for%20metals_text.pdf"
+    accessed: 2026-11-03
+    pages: "Model definition (eps0 = 1.0 1/s); Table 1 (4340 steel, Rockwell C-30: rho 7830, c 477, Tm 1793 K, A 792, n 0.26, C 0.014, m 1.03; S-7 tool steel C-50: A 1539, B 477, n 0.18, C 0.012, m 1.00, Tm 1763 K)"
+    note: "Read as the archive.org OCR copy; B for 4340 is illegible in that copy and was read in bertarelli-2016-beam-damage Table 2."
+
+  bertarelli-2016-beam-damage:
+    type: article
+    authors: "Bertarelli, A."
+    title: "Beam-induced damage mechanisms and their calculation"
+    venue: "arXiv:1608.03056 (CERN Accelerator School proceedings)"
+    year: 2016
+    url: "https://arxiv.org/pdf/1608.03056"
+    accessed: 2026-11-03
+    pages: "Table 2, p. 30 (Johnson-Cook parameters for selected materials, reproducing Johnson & Cook 1983: 4340 steel Tm 1793 K, A 792, B 510, n 0.26, C 0.014, m 1.03)"
+
+  # ------------------------------------------------------------------ H13 / X40CrMoV5-1
+  bohler-w302-fr-es:
+    type: datasheet
+    authors: "BÖHLER Edelstahl GmbH"
+    title: "BÖHLER W302 - acier pour travail à chaud / acero para trabajar en caliente"
+    venue: "BÖHLER W302 French/Spanish datasheet (undated; hosted by voestalpine High Performance Metals Argentina, upload 2024-11)"
+    year: null
+    url: "https://voestalpine.com/highperformancemetals/argentina/app/uploads/sites/264/2024/11/W302FSP.pdf"
+    accessed: 2026-11-03
+    pages: "p. 11 physical properties (density 20/500/600 C, specific heat 20/500/600 C, E 20/500/600 C, mean CTE 20-100...700 C, thermal conductivity of hardened and tempered material 100-700 C); p. 10 machining recommendations for the soft-annealed state"
+
+  voestalpine-2025-w302-isodisc:
+    type: datasheet
+    authors: "voestalpine BÖHLER Edelstahl GmbH & Co KG"
+    title: "BÖHLER W302 ISODISC hot work tool steel"
+    venue: "Datasheet W302 ISODISC EN_US - 10.2025"
+    year: 2025
+    url: "https://www.voestalpine.com/highperformancemetals/usa/app/uploads/sites/294/2025/11/w302-isodisc_en_us.pdf"
+    accessed: 2026-11-03
+    pages: "Physical properties (20 C: 7.8 kg/dm3, 24.3 W/mK, 0.46 kJ/kgK, 215 GPa); thermal expansion 20-100...700 C; heat treatment (hardening 1020-1080 C, annealing 750-800 C)"
+
+  industeel-2344-h13:
+    type: datasheet
+    authors: "ArcelorMittal Industeel"
+    title: "2344 - H13: hot work tool steel for die casting dies"
+    venue: "Industeel datasheet (undated)"
+    year: null
+    url: "https://industeel.arcelormittal.com/fichier/ds-tools-2344-h13"
+    accessed: 2026-11-03
+    pages: "p. 2 physical properties after hardening (k 25 W/mK at 20 C, 28.5 at 500 C; CTE; cp 460-555); p. 2-3 heat treatment (austenitise 1010 C; first temper 550 C, second 550-650 C; avoid 430-550 C)"
+
+  matras-2020-h13-cbn-milling:
+    type: article
+    authors: "Matras, A.; Zębala, W."
+    title: "Optimization of cutting data and tool inclination angles during hard milling with CBN tools, based on force predictions and surface roughness measurements"
+    venue: "Materials 13(5), 1109"
+    year: 2020
+    doi: "10.3390/ma13051109"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7085022/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 2 (H13: tensile 1200 MPa, k 17.6 W/mC, 7750 kg/m3, E 215 GPa, nu 0.27); Table 6 (JC for H13 at 50 HRC: A 1469, B 321.39, n 0.278, C 0.028, m 1.18, eps0 1.0)"
+    note: "Table 6 cites Li, B.; Zhang, S.; Zhang, Q.; Chen, J.; Zhang, J. (2018) Int. J. Mech. Sci. 149, 241-253 (not read)."
+
+  zhang-2021-h13-jc-hard-milling:
+    type: article
+    authors: "Zhang, S.; Li, B.; Li, J.; Man, J."
+    title: "Effects of constitutive model parameters on finite element simulation process for hard milling of AISI H13 steel"
+    venue: "MM Science Journal, November 2021 (Special Issue HSM2021), 5235-5240"
+    year: 2021
+    doi: "10.17973/MMSJ.2021_11_2021134"
+    url: "https://mmscience.eu/journal/issues/november-2021/articles/effects-of-constitutive-model-parameters-on-finite-element-simulation-process-for-hard-milling-of-aisi-h13-steel/download"
+    accessed: 2026-11-03
+    pages: "Tab. 1 (three JC sets: M1 Umer 2012, M2 Yan et al. 2005/2007 (52 HRC), M3 Lu & He 2008 (50 HRC)); Sect. 3 (Coulomb mu = 0.3); Sect. 2 and 4 (50 +- 2 HRC block, serrated chips in experiments)"
+
+  # ------------------------------------------------------------------ D2 / X153CrMoV12
+  voestalpine-2026-k110:
+    type: datasheet
+    authors: "voestalpine BÖHLER Edelstahl GmbH & Co KG"
+    title: "BÖHLER K110 cold work tool steel (1.2379, X153CrMoV12, D2)"
+    venue: "Datasheet K110 EN_GB - 09.2026"
+    year: 2026
+    url: "https://www.bohler-edelstahl.com/app/uploads/sites/248/productdb/api/k110_en_gb.pdf"
+    accessed: 2026-11-03
+    pages: "p. 3 heat treatment (annealing 800-850 C, hardening 1030-1070 C, temper three times above the secondary hardness maximum); p. 4 physical properties at 20 C and mean thermal expansion 20-100...700 C"
+
+  tang-2016-skd11-milling:
+    type: article
+    authors: "Tang, D.W.; Zhao, R.L.; Lv, X.J.; Liu, J."
+    title: "Simulation study of milling force and milling temperature for high speed milling thin-wall SKD11 hardened steel part"
+    venue: "Atlantis Press conference proceedings (published 2016)"
+    year: 2016
+    url: "https://www.atlantis-press.com/article/25864250.pdf"
+    accessed: 2026-11-03
+    pages: "Tab. 1 (modified J-C constants of SKD11 hardened steel: A 2480, B 1440, n 0.45, C 0.012, m 1.1, k 0.01, theta_tran 20, theta_melt 1500, eps0 0.01); Tab. 2 (E, nu 0.28, density 7.7 g/cm3, 255 HBS); p. 3 (friction)"
+    note: "SHPB-based constants; Tab. 2 lists 255 HBS although the part is described as hardened, so the hardness the constants refer to is uncertain."
+
+  # ------------------------------------------------------------------ 52100 / 100Cr6
+  ovako-2026-100cr6:
+    type: datasheet
+    authors: "Ovako"
+    title: "Material data sheet, steel grade 100Cr6"
+    venue: "Ovako Steel Navigator, last revised 02 Nov 2026"
+    year: 2026
+    url: "https://steelnavigator.ovako.com/steel-grades/100cr6/pdf"
+    accessed: 2026-11-03
+    pages: "Mechanical properties (+SA 410/700 MPa, 27 %, 210 HB; +Q/T(m) Rp >= 1700 MPa, Rm 2300 MPa typical, A 2 %, 61 HRC typical); transformation temperatures (Ms 218, Ac1 745, Ac3 910 C); heat treatment (830-870 C oil, temper >= 160 C; tempering 160-500 C)"
+
+  thyssenkrupp-2017-100cr6:
+    type: datasheet
+    authors: "thyssenkrupp Materials Services GmbH"
+    title: "Werkstoffblatt 100Cr6, 1.3505"
+    venue: "Werkstoffblatt MX/TIS-TS_00/01.2017"
+    year: 2017
+    url: "https://ucpcdn.thyssenkrupp.com/_binary/UCPthyssenkruppBAMaterialsSchulte/e58c0027-2b6f-4194-ae6c-00e76ca64ea0/100Cr6_1.3505.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2 physical properties (density 7.85, E 212/207/199/192 GPa at 20/100/200/300 C, k 39.6 W/mK, cp 461 J/kgK at 20 C, CTE 20-100...500 C) and heat treatment (harden 830-870 C, temper 150-180 C, soft anneal 780-800 C)"
+
+  dew-2015-100cr6:
+    type: datasheet
+    authors: "Deutsche Edelstahlwerke GmbH"
+    title: "Werkstoffdatenblatt 100Cr6, 1.3505 (Durapur 3505)"
+    venue: "DEW datasheet 2015-0032, 16/10/2015"
+    year: 2015
+    url: "https://swisssteel-group.com/content-media/documents/Data-Sheets/Engineering-Steel/1.3505_de.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2 heat treatment and physical properties (7.8 kg/dm3, 210 GPa, 33.0 W/mK, 460 J/kgK, CTE soft annealed 20-100...400 C); p. 3 CCT diagram (Ac1 760 C, Ac3 790 C)"
+
+  li-2019-gcr15-textured-tools:
+    type: article
+    authors: "Li, Q.; Pan, C.; Jiao, Y.; Hu, K."
+    title: "Investigation on cutting performance of micro-textured cutting tools"
+    venue: "Micromachines 10(6), 352"
+    year: 2019
+    doi: "10.3390/mi10060352"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6630967/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 2 (GCr15 JC: A 1.204 GPa, B 1.208 GPa, c 0.036, m 0.89, n 0.12, T0 20 C, Tm 1180 C, citing refs 32, 33); Table 3 (GCr15: E 210 GPa, k 38 W/mK, nu 0.3, 7.85 g/cm3, cp 480); PCBN turning at 60-85 m/min"
+
+  # ------------------------------------------------------------------ austenitic stainless
+  thyssenkrupp-2020-14301:
+    type: datasheet
+    authors: "thyssenkrupp Materials Services GmbH"
+    title: "Werkstoffdatenblatt 1.4301 (X5CrNi18-10)"
+    venue: "Werkstoffdatenblatt, MX Materials Germany 03.2020"
+    year: 2020
+    url: "https://ucpcdn.thyssenkrupp.com/_binary/UCPthyssenkruppBAMaterialsSchulte/53d4cf63-3089-4d84-8e6f-abfd3cd9a0d4/Werkstoffdatenblatt-1.4301.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2 mechanical properties, solution annealed (bars L <= 160 mm: Rp0.2 >= 190, Rm 500-700, A >= 45); physical properties (7.9 kg/dm3, E 200/186/172/165 GPa at 20/200/400/500 C, 15 W/mK, 500 J/kgK); mean CTE 20-100...500 C; solution annealing 1000-1100 C"
+
+  outokumpu-steel-grades:
+    type: catalogue
+    authors: "Outokumpu Oyj"
+    title: "Steel grades, properties and global standards"
+    venue: "Outokumpu brochure (PDF, undated)"
+    year: null
+    url: "https://www.outokumpu.com/-/media/from-sharepoint/documents/product/outokumpu-steel-grades-properties-global-standards.pdf"
+    accessed: 2026-11-03
+    pages: "Mechanical property table (4301: 270/300/600 MPa, 55 %; 4404: 260/300/570 MPa, 55 %, Outokumpu typical, hot rolled plate); Table 13 physical properties (density, E RT/400 C, CTE 20-100/20-400 C, k RT/400 C, cp, resistivity), n/Ahom (0.6/40 for 4301, 0.6/35 for 4404), machining index (4301: 105, 4404: 100)"
+
+  zou-2026-304-min-cutting-thickness:
+    type: article
+    authors: "Zou, Z.; Xin, Y.; Ma, C."
+    title: "Influence of cutting-edge micro-geometry on material separation and minimum cutting thickness in the turning of 304 stainless steel"
+    venue: "Materials 19(3), 591"
+    year: 2026
+    doi: "10.3390/ma19030591"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12898621/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 2 (JC for 304: A 452, B 694, n 0.311, C 0.0067, m 0.996, eps0 0.001, Tm 1673 K, Tr 273 K, citing Zhou F., PhD thesis, Huazhong Univ. Sci. Tech. 2014); Abstract and Sect. 3.4 (minimum cutting thickness / tool nose radius = 0.25-0.30); Sect. 2.2 (mu = 0.6); Sect. 4.3 and Fig. 21 (hardened layer ~100-120 um at v = 90-210 m/min, f = 0.1 mm/rev; simulated peak 381-401 HV)"
+
+  jiang-2024-304-jc-ga:
+    type: article
+    authors: "Jiang, X.; Ding, J.; Wang, C.; Shiju, E.; Hong, L.; Yao, W.; Wang, H.; Zhou, C.; Yu, W."
+    title: "Parameter identification of Johnson-Cook constitutive model based on genetic algorithm and simulation analysis for 304 stainless steel"
+    venue: "Scientific Reports 14, 21221"
+    year: 2024
+    doi: "10.1038/s41598-024-71671-1"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11390902/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 4 (literature JC sets JC1-JC5 for 304 with references), Table 7 (304 properties used in simulation)"
+
+  marcicano-2005-304-machining:
+    type: article
+    authors: "Marcicano, J.P.P.; de Almeida, L.O.; Machado, I.F.; Hassui, A."
+    title: "Determination of the mechanical behavior of AISI 304 austenitic stainless steel in machining processes"
+    venue: "Proceedings of COBEM 2005, 18th International Congress of Mechanical Engineering, Ouro Preto, Brazil"
+    year: 2005
+    url: "https://abcm.org.br/app/webroot/anais/cobem/2005/PDF/COBEM2005-1123.pdf"
+    accessed: 2026-11-03
+    pages: "Table 1 (A 360, B 1244, n 0.72); Tables 3-4 (orthogonal cutting of annealed AISI 304 tubes, uncoated M-type carbide TPGN 160308, rake 5 deg: t0, t1, Fa, Fc, vc 13-67 m/min; width 1 mm tool A, 1.5 mm tool B); Table 5 (C, m fitted, negative C)"
+
+  mao-2026-304-milling-shear:
+    type: article
+    authors: "Mao, Y.; Cui, Y."
+    title: "Adiabatic shearing and performances of milling 304 stainless steel based on cooling strategies of flood, LN2 and LN2+LCO2"
+    venue: "Scientific Reports 16, 12463"
+    year: 2026
+    doi: "10.1038/s41598-026-46264-9"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13083870/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Chip morphology section, Figs. 6-7 (TiAlN-coated carbide end milling; band-like chips at 50 m/min, serrated chip edges from vc = 100 m/min under flood cooling)"
+
+  benmeddour-2021-316l-turning:
+    type: article
+    authors: "Benmeddour, A."
+    title: "Experimental investigation and numerical prediction of the effects of cutting tool geometry during turning of AISI 316L steel"
+    venue: "Periodica Polytechnica Mechanical Engineering 65(4), 293-301"
+    year: 2021
+    doi: "10.3311/PPme.16844"
+    url: "https://pp.bme.hu/me/article/download/16844/9177"
+    accessed: 2026-11-03
+    pages: "Table 1 (316L properties from Nasr et al. 2007: 8000 kg/m3, E 193 GPa, nu 0.3, cp 500, k 16.2 at 100 C / 21.4 at 500 C, Tm 1385 C); Table 2 (JC sets: Chandrasekaran et al. 2005, Miguelez et al., Tounsi et al. 2002, present work); Sect. 2.1 (mu = 0.3); Sect. 3.2 (machining-induced residual stress)"
+    note: "Secondary source for Chandrasekaran, H.; M'Saoubi, R.; Chazal, H. (2005) Mach. Sci. Technol. 9(1), 131-145 (not read)."
+
+  bssa-heat-tint:
+    type: web
+    authors: "British Stainless Steel Association"
+    title: "Heat tint (temper) colours on stainless steel surfaces heated in air"
+    venue: "BSSA technical article"
+    year: null
+    url: "https://bssa.org.uk/bssa_articles/heat-tint-temper-colours-on-stainless-steel-surface-heated-in-air/"
+    accessed: 2026-11-03
+    pages: "Table of colour vs approximate temperature for 1.4301 (304) heated in air; notes on exposure time and chromium content"
+
+  # ------------------------------------------------------------------ Inconel 718
+  special-metals-2007-in718:
+    type: datasheet
+    authors: "Special Metals Corporation"
+    title: "INCONEL alloy 718 (Publication SMC-045)"
+    venue: "Special Metals technical bulletin, Sept 2007"
+    year: 2007
+    url: "https://www.specialmetals.com/documents/technical-bulletins/inconel/inconel-alloy-718.pdf"
+    accessed: 2026-11-03
+    pages: "Table 2 (density, melting range 1260-1336 C, cp 435 J/kgK at 21 C); Table 4 (E, G, Poisson of aged hot-rolled flat, 70-2000 F); Table 5 (thermal conductivity annealed and aged, mean CTE from 70 F); p. 2 heat treatments; p. 3 AMS minimum properties; Table 18 (plate Rc 42-43); Table 20 (5/8-in. round annealed 1800 F + aged: TS 190.5 ksi, YS 153.5 ksi, El 22 %, RA 32.5 % at 80 F)"
+
+  qiu-2019-in718-jc-sensitivity:
+    type: article
+    authors: "Qiu, X.; Cheng, X.; Dong, P.; Peng, H.; Xing, Y.; Zhou, X."
+    title: "Sensitivity analysis of Johnson-Cook material constants and friction coefficient influence on finite element simulation of turning Inconel 718"
+    venue: "Materials 12(19), 3121"
+    year: 2019
+    doi: "10.3390/ma12193121"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6804042/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (JC: A 1290, B 895, n 0.526, C 0.016, m 1.55, eps0 0.03, from DeMange et al. 2009); Table 2 (properties, melting temperature 1573 K); Sect. 2.1 (tool-workpiece Coulomb friction 0.3); PVD-coated carbide turning tests"
+    note: "Secondary source for DeMange, J.J.; Prakash, V.; Pereira, J.M. (2009) Int. J. Impact Eng. 36, 1027-1043 (not read)."
+
+  wang-2018-in718-chip-formation:
+    type: article
+    authors: "Wang, B.; Liu, Z.; Hou, X.; Zhao, J."
+    title: "Influences of cutting speed and material mechanical properties on chip deformation and fracture during high-speed cutting of Inconel 718"
+    venue: "Materials 11(4), 461"
+    year: 2018
+    doi: "10.3390/ma11040461"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5951307/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (JC, same DeMange set); Table 2 (cp 435/481.4/514.8/573.4 J/kgK at 293/573/773/973 K, melting temperature 1573 K); Table 3 (JC fracture D1-D5); Sect. 3.1 (continuous chip at 50 m/min, serrated at higher speed, fragmented at 7000 m/min; h = 0.1 mm, FE validated by experiments)"
+
+  zhou-2022-in718-work-hardening:
+    type: article
+    authors: "Zhou, B.; Zhang, W.; Gao, Z.; Luo, G."
+    title: "Machining-induced work hardening behavior of Inconel 718 considering edge geometries"
+    venue: "Materials 15(2), 397"
+    year: 2022
+    doi: "10.3390/ma15020397"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8780571/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 3 (orthogonal dry cutting, chamfered carbide, rake -5 deg, 100 m/min); Sect. 4-5 (nanoindentation microhardness from 560 HV at the machined surface to 378 HV bulk); Table 3 (alternative JC set)"
+
+  # ------------------------------------------------------------------ grey cast iron
+  wu-2025-pcbn-cast-iron:
+    type: article
+    authors: "Wu, X.; Su, Z.; Zhang, C.; Zhao, X.; Yao, H.; Jiang, F."
+    title: "The cutting edge geometric optimization of the PCBN tool for the machining of cast iron"
+    venue: "Micromachines 16(9), 978"
+    year: 2025
+    doi: "10.3390/mi16090978"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12471497/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (grey iron FC220P: 7.1 g/cm3, Rm 220 MPa, yield 180 MPa, 175 HV); Sect. 2.2 (tool-chip friction coefficient 0.3); Table 2 and Fig. 6 (turning brake discs with PCBN at 416-625 m/min, f 0.4-0.6 mm/rev, ap 1 mm: Fc 1018-1495 N)"
+
+  pacurar-2021-gjl250-castings:
+    type: article
+    authors: "Păcurar, R.; Berce, P.; Nemeş, O.; Băilă, D.I.; Stan, D.S.; Oarcea, A.; Popişter, F.; Borzan, C.M.; Maricic, S.; Legutko, S.; Păcurar, A."
+    title: "Cast iron parts obtained in ceramic molds produced by binder jetting 3D printing - morphological and mechanical characterization"
+    venue: "Materials 14(16), 4502"
+    year: 2021
+    doi: "10.3390/ma14164502"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8402146/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 3 (EN-GJL-250: E 120000 MPa, nu 0.26, G 6500 MPa, 7250 kg/m3, Rm 250 MPa, Rp0.2 165.59 MPa, alpha 1.05e-5 1/K, k 58 W/mK, cp 460 J/kgK; from the SolidWorks library and the authors' tensile tests)"
+
+  sawczuk-2022-brake-disc:
+    type: article
+    authors: "Sawczuk, W.; Merkisz-Guranowska, A.; Ulbrich, D.; Kowalczyk, J.; Cañás, A.R."
+    title: "Investigation and modelling of the weight wear of friction pads of a railway disc brake"
+    venue: "Materials 15(18), 6312"
+    year: 2022
+    doi: "10.3390/ma15186312"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9501449/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (grey cast iron brake disc: E 110000 N/mm2, lambda 50.2 W/mK, c 598.7 J/kgK, alpha 1.80e-5 1/K, A5 0.5 %, rho 7.1e3 kg/m3, Rm 250 N/mm2, 180 HB)"
+
+  westyorkssteel-gjl250:
+    type: datasheet
+    authors: "West Yorkshire Steel Ltd"
+    title: "EN1561 GJL 250 cast iron datasheet"
+    venue: "West Yorkshire Steel datasheet (undated)"
+    year: null
+    url: "https://www.westyorkssteel.com/files/en_gjl_250.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2 typical analysis and typical properties (tensile 155-195 N/mm2 and hardness 145-240 HB, subject to section)"
+
+  # ------------------------------------------------------------------ cross-material
+  walter-2025-technical-compendium:
+    type: catalogue
+    authors: "Walter AG"
+    title: "Technical Compendium - General, Edition 2025"
+    venue: "Walter AG, Tuebingen"
+    year: 2025
+    url: "https://cdn2.walter-tools.com/files/a5ea48ae-5fa6-0161-3cb3-0ac22248a0fb/3ee25a79-8681-4b3e-bf39-9e7f3ca0d193/technical-compendium-general-2025-en.pdf"
+    accessed: 2026-11-03
+    pages: "p. F9 'Cutting forces of Walter machining groups' (kc1.1, mc; standard values for a neutral cutting edge geometry); pp. F10-F31 material comparison table (Walter machining group per material: 1.0503 P2, 1.7225 P7/P9, 1.2344 P11/H1, 1.3505 P7/H2, 1.4301 M1, 1.4404/1.4435 M1, 2.4668 S4, 0.6025 EN-GJL-250 K3)"
+
+  wikipedia-de-anlassen:
+    type: web
+    authors: "Wikipedia contributors"
+    title: "Anlassen (table 'Anlassfarben fuer unlegierten Werkzeugstahl')"
+    venue: "de.wikipedia.org, revision oldid=248056367"
+    year: null
+    url: "https://de.wikipedia.org/wiki/Anlassen"
+    accessed: 2026-11-03
+    pages: "Table of temper colours 200-360 C"
+    note: "Secondary source; the table is referenced to Fischer, U.: Tabellenbuch Metall, 41st ed., Verlag Europa-Lehrmittel 2001, ISBN 3-8085-1721-2, p. 128B (not read). Klippel et al. (2022, Sect. 3.5) use an equivalent tabulation (Foerster & Foerster 2018) covering 200-360 C for Ck45 chips."

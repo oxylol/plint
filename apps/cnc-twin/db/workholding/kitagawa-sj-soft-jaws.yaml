@@ -1,0 +1,36 @@
+format: cnctwin-workholding
+version: 1
+series_id: kitagawa-sj-soft-jaws
+maker: "Kitagawa"
+series: "SJ series standard soft top jaws for power chucks (bored to the part; 3 pcs per set)"
+src: kitagawa-jaws-catalogue
+items:
+  - id: kitagawa-sj06l1a
+    order_code: "SJ06L1A"
+    type: soft_jaws
+    fits: {value: "B-206, BL206, BS306, HOH-206", src: kitagawa-jaws-catalogue, page: "pp. 105-106"}
+    jaws_per_set: {value: 3, src: kitagawa-jaws-catalogue, page: "p. 105 model key"}
+    length_mm: {value: 66, src: kitagawa-jaws-catalogue, page: "p. 107, S-1"}
+    width_mm: {value: 26, src: kitagawa-jaws-catalogue, page: "S-2"}
+    height_mm: {value: 28, src: kitagawa-jaws-catalogue, page: "S-3"}
+    serration: {value: "1.5 x 60°", src: kitagawa-jaws-catalogue}
+    mounting_bolts: {value: "M10x25", src: kitagawa-jaws-catalogue, page: "p. 106"}
+    form: {value: "L = light weight type", src: kitagawa-jaws-catalogue, page: "p. 105 model key"}
+    mass_kg: {value: 0.30, src: est, note: "66 x 26 x 28 mm steel block 0.38 kg less bolt holes and serration"}
+    material: {value: "machinable carbon steel", src: est, note: "material not printed on the pages read"}
+    jaw_friction: {value: 0.1, src: kitagawa-gripforce-setting, note: "Kitagawa default for jaw/work; bored soft jaws on a turned part"}
+  - id: kitagawa-sj08b1
+    order_code: "SJ08B1"
+    type: soft_jaws
+    fits: {value: "B-208, BB208, BS308, BL208, HOH-208, BR08, QJR08", src: kitagawa-jaws-catalogue, page: "pp. 105-106"}
+    jaws_per_set: {value: 3, src: kitagawa-jaws-catalogue}
+    length_mm: {value: 95, src: kitagawa-jaws-catalogue, page: "p. 107, S-1"}
+    width_mm: {value: 35, src: kitagawa-jaws-catalogue, page: "S-2"}
+    height_mm: {value: 38, src: kitagawa-jaws-catalogue, page: "S-3"}
+    serration: {value: "1.5 x 60°", src: kitagawa-jaws-catalogue}
+    mounting_bolts: {value: "M12x30", src: kitagawa-jaws-catalogue, page: "p. 106"}
+    form: {value: "B = cut of crest", src: kitagawa-jaws-catalogue, page: "p. 105 model key"}
+    mass_kg: {value: 0.95, src: est, note: "95 x 35 x 38 mm steel block 0.99 kg less holes; Kitagawa's BB208 example uses a 1.2 kg (taller) jaw"}
+    material: {value: "machinable carbon steel", src: est, note: "not printed"}
+    jaw_friction: {value: 0.1, src: kitagawa-gripforce-setting}
+notes: "Vise soft jaws (aluminium) are not covered; these are lathe chuck soft jaws."

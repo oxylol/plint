@@ -1,0 +1,16 @@
+format: cnctwin-coating
+version: 1
+id: tin
+name: "TiN (PVD; Oerlikon Balzers BALINIT A as reference)"
+process: PVD
+src: balzers-2010-hq040
+colour: {value: "gold-yellow", src: balzers-2010-hq040}
+hardness_HV: {value: 2300, range: [2300, 2800], src: balzers-2010-hq040, page: "p. 21, BALINIT A typical microhardness HK0.01 2300 (HK ~ HV per the table note)", note: "IHI Ionbond 01 TiN 2800 HV (ionbond-coating-portfolio)"}
+hardness_HIT_GPa: {value: 30, range: [27, 33], src: balzers-web-balinit-a, page: "HIT 30 +/- 3 GPa, ISO 14577"}
+max_service_temp_degC: {value: 600, range: [500, 600], src: balzers-web-balinit-a, note: "same 600 °C in balzers-2010-hq040; Ionbond 01 lists 500 °C"}
+process_temp_degC: {value: 500, src: balzers-web-balinit-a, note: "printed as '< 500'"}
+conductivity_W_mK: {value: 3.1, range: [3.1, 4.8], src: moraes-2015-nitride-conductivity, page: "sputtered c-TiN film, 3-omega, 295 K", note: "Moraes cites about 4.8 W/mK for cubic Ti/Cr nitride films (ref. 2); arc films can differ"}
+friction_vs_steel: {value: 0.4, range: [0.4, 0.6], src: balzers-2010-hq040, page: "p. 21, coefficient of friction against steel (dry) 0.4", note: "current Balzers page gives ~0.6 (balzers-web-balinit-a); Ionbond 01 0.55"}
+typical_thickness_um: {value: [1, 4], src: balzers-2010-hq040, page: "p. 21"}
+wear_rate_factor: {value: 0.5, src: est, note: "coated carbide commonly lasts about twice as long as uncoated at equal conditions; reciprocal used; no study read"}
+thermal_barrier_factor: {value: 0.9, src: est, note: "a 1-4 µm film with k ~3 W/mK adds t/k ~1e-6 m2K/W, about a quarter of the conduction resistance of a carbide substrate over a 0.3 mm contact (0.3 mm / 80 W/mK); the interface temperature rises in response, so the heat flux into the tool falls by less; 0.9 chosen"}

@@ -1,0 +1,143 @@
+# Ck45 (AISI 1045) quasi-orthogonal turning, h = 0.1 mm: chip temperature from tempering colours (indirect).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: chiptemp-orth-ck45-klippel2022-temper
+quantity: chip_temperature
+reference:
+  src: klippel-2022-arxiv-orthogonal-data
+  location: Table B.15 (Ck45), column Tchip, tests V0072, V0073, V0074, V0123, V0124, V0125, V0160, V0161, V0162, V0084,
+    V0085, V0093, V0094, V0095, V0236, V0245, V0246, V0247, V0292, V0293, V0294, V0298, V0299, V0300; Sect. 3.5 and Fig.
+    31
+  digitised: false
+  measured: true
+  note: 'indirect: oxide tint of the chip matched by eye to a tempering-colour table covering 200-360 C (Sect. 3.5, reference
+    [11] of the source, Foerster & Foerster 2018). The column header says [K] but the values are degrees Celsius (Sect.
+    3.5 text). No uncertainty is stated.'
+setup:
+  operation: orthogonal_turning
+  material:
+    db: aisi1045
+    note: 'Ck45 (C45E) rolled bar, one batch for all tests: supplier tensile test Rm 671 MPa, Rp0.2 420 MPa, A5 22.2 % (Table
+      2), ferritic-pearlitic; the outer scale and decarburised zone were turned off before the tests (Sect. 2.6). The DB
+      entry is normalised AISI 1045 (+N, ~190 HB): use the batch strength above when calibrating flow stress.'
+  tool:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 13-14), Table 7, Sect. 2.6.1
+    type: turning_insert
+    iso_code: CCMW 09T304
+    grade: Sandvik Coromant H13A (uncoated WC-Co)
+    tool_class: carbide
+    coating: none
+    rake_deg: 0
+    clearance_deg: 7
+    inclination_deg: 0
+    entering_angle_deg: 90
+    nose_radius_mm: 0.397
+    ic_mm: 9.525
+    cutting_edge_length_mm: 9.272
+    edge_height_mm: 3.969
+    edge_radius_um:
+      value: 37.5
+      note: mean over all 149 inserts (sd 4.9 um, range ~20-50 um along an edge); simulate each test with its own edge_radius_per_test_um
+        (average over the ~2 mm cut width at the cut position, measured before the test by focus variation)
+    edge_radius_per_test_um: [42.3, 39.2, 39.0, 43.1, 39.0, 38.4, 42.2, 39.5, 33.6, 38.2, 43.8, 41.5, 43.4, 36.1, 38.6,
+      40.1, 37.7, 39.5, 41.8, 37.5, 37.4, 37.2, 40.2, 42.0]
+    edge_radius_sd_per_test_um: [2.4, 3.0, 3.8, 2.1, 2.9, 2.5, 3.0, 2.0, 3.0, 4.1, 2.3, 3.5, 2.0, 3.0, 2.2, 2.5, 2.6, 2.7,
+      2.1, 2.8, 2.1, 3.8, 3.4, 2.4]
+    fresh_edge_per_test: true
+  holder:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 14)
+    model: Applitec SCACL-2020X-09 (ISO 2216)
+    entering_angle_deg: 90
+    inclination_deg: 0
+  machine:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 12)
+    model: Schaublin 42L CNC lathe
+    dynamometer: Kistler 9121A5 with 5019A charge amplifier, NI USB-6211
+    force_lowpass_Hz: 30
+    force_sampling_kHz: 1.1
+    drift_correction: idle force recorded 1 mm before the cut and subtracted
+  stock:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2 and 2.6
+    form: tube
+    outer_diameter_mm: {value: 72, note: D ~ 72 mm (approximate in the source)}
+    wall_thickness_mm: {value: 2, note: d ~ 2 mm (approximate in the source)}
+    preparation: turned inside and outside in the same clamping from 80 mm bars
+  conditions:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6, Table 8, Tables A.12/A.13, Tables B.14/B.15
+    test_ids: [V0072, V0073, V0074, V0123, V0124, V0125, V0160, V0161, V0162, V0084, V0085, V0093, V0094, V0095, V0236,
+      V0245, V0246, V0247, V0292, V0293, V0294, V0298, V0299, V0300]
+    kinematics: 'quasi-orthogonal longitudinal turning of a thin-walled tube end: feed per rev = uncut chip thickness h,
+      width of cut = tube wall'
+    width_of_cut_mm:
+      value: 2
+      note: wall thickness d ~ 2 mm (approximate in the source); all forces are reported normalised to w = 1 mm
+    coolant: dry
+    cut_length_per_test_mm: [1317, 1317, 1317, 3440, 3440, 3440, 3308, 3308, 3308, 4391, 4391, 4391, 4391, 4391, 3256, 3256,
+      3256, 3256, 3260, 3260, 3260, 3260, 3260, 3260]
+    feed_mm_rev: 0.1
+    vc_per_test_m_min: [10.1, 10.1, 10.1, 30.0, 30.0, 30.0, 50.1, 50.1, 50.1, 70.1, 70.1, 150.0, 150.0, 150.0, 250.1, 349.9,
+      349.9, 349.9, 450.0, 450.0, 450.0, 500.0, 500.0, 500.0]
+  dynamics: null
+  program: null
+reference_values:
+- {name: T_chip V0072, value: 360.0, unit: degC, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0072: tempering colour of the
+    chip (top of the colour table: lower bound)'}
+- {name: T_chip V0073, value: 360.0, unit: degC, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0073: tempering colour of the
+    chip (top of the colour table: lower bound)'}
+- {name: T_chip V0074, value: 360.0, unit: degC, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0074: tempering colour of the
+    chip (top of the colour table: lower bound)'}
+- {name: T_chip V0123, value: 360.0, unit: degC, x: 30.0, x_name: vc, x_unit: m/min, note: 'V0123: tempering colour of the
+    chip (top of the colour table: lower bound)'}
+- {name: T_chip V0124, value: 360.0, unit: degC, x: 30.0, x_name: vc, x_unit: m/min, note: 'V0124: tempering colour of the
+    chip (top of the colour table: lower bound)'}
+- {name: T_chip V0125, value: 360.0, unit: degC, x: 30.0, x_name: vc, x_unit: m/min, note: 'V0125: tempering colour of the
+    chip (top of the colour table: lower bound)'}
+- {name: T_chip V0160, value: 240.0, unit: degC, x: 50.1, x_name: vc, x_unit: m/min, note: 'V0160: tempering colour of the
+    chip'}
+- {name: T_chip V0161, value: 240.0, unit: degC, x: 50.1, x_name: vc, x_unit: m/min, note: 'V0161: tempering colour of the
+    chip'}
+- {name: T_chip V0162, value: 240.0, unit: degC, x: 50.1, x_name: vc, x_unit: m/min, note: 'V0162: tempering colour of the
+    chip'}
+- {name: T_chip V0084, value: 300.0, unit: degC, x: 70.1, x_name: vc, x_unit: m/min, note: 'V0084: tempering colour of the
+    chip'}
+- {name: T_chip V0085, value: 290.0, unit: degC, x: 70.1, x_name: vc, x_unit: m/min, note: 'V0085: tempering colour of the
+    chip'}
+- {name: T_chip V0093, value: 290.0, unit: degC, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0093: tempering colour of
+    the chip'}
+- {name: T_chip V0094, value: 290.0, unit: degC, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0094: tempering colour of
+    the chip'}
+- {name: T_chip V0095, value: 290.0, unit: degC, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0095: tempering colour of
+    the chip'}
+- {name: T_chip V0236, value: 360.0, unit: degC, x: 250.1, x_name: vc, x_unit: m/min, note: 'V0236: tempering colour of
+    the chip (top of the colour table: lower bound)'}
+- {name: T_chip V0245, value: 360.0, unit: degC, x: 349.9, x_name: vc, x_unit: m/min, note: 'V0245: tempering colour of
+    the chip (top of the colour table: lower bound)'}
+- {name: T_chip V0246, value: 360.0, unit: degC, x: 349.9, x_name: vc, x_unit: m/min, note: 'V0246: tempering colour of
+    the chip (top of the colour table: lower bound)'}
+- {name: T_chip V0247, value: 360.0, unit: degC, x: 349.9, x_name: vc, x_unit: m/min, note: 'V0247: tempering colour of
+    the chip (top of the colour table: lower bound)'}
+- {name: T_chip V0292, value: 300.0, unit: degC, x: 450.0, x_name: vc, x_unit: m/min, note: 'V0292: tempering colour of
+    the chip'}
+- {name: T_chip V0293, value: 300.0, unit: degC, x: 450.0, x_name: vc, x_unit: m/min, note: 'V0293: tempering colour of
+    the chip'}
+- {name: T_chip V0294, value: 300.0, unit: degC, x: 450.0, x_name: vc, x_unit: m/min, note: 'V0294: tempering colour of
+    the chip'}
+- {name: T_chip V0298, value: 280.0, unit: degC, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0298: tempering colour of
+    the chip'}
+- {name: T_chip V0299, value: 280.0, unit: degC, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0299: tempering colour of
+    the chip'}
+- {name: T_chip V0300, value: 280.0, unit: degC, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0300: tempering colour of
+    the chip'}
+reference_curves: []
+notes: 'Weak reference: a tempering colour records the highest temperature the chip''s free surface held long enough to
+  grow an oxide film while it cooled in air, not the tool-chip interface temperature. 360 C is the top of the colour scale,
+  so 360 means ''at least 360 C'' (most low-speed and the 250-350 m/min tests). The informative values are the ones below
+  360 C (50, 70, 150, 450, 500 m/min: 240-300 C). Compare with the simulated chip back-surface temperature after the chip
+  leaves the contact, with an estimated +-30 C colour-reading resolution (est: steps of the colour table, not stated in
+  the source).'

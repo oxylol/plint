@@ -1,0 +1,397 @@
+# DMG MORI (SEIKI) NTX 1000, type S: integrated mill-turn centre with B-axis milling head (turret 1 =
+# tool spindle), main spindle 1 and opposed spindle 2, FANUC F31iB with MAPPS IV. Catalogue data valid
+# March 2013 (1st generation). Frames: base origin = spindle-1 nose face on the spindle axis; +z toward
+# spindle 2, +x radial toward the tool spindle (up), +y completes. Fixed rotations use
+# rotate_deg = [rx, ry, rz] (intrinsic, degrees, applied x then y then z).
+format: cnctwin-machine
+version: 1
+id: dmg-ntx1000
+maker: "DMG MORI"
+model: "NTX 1000 (S type: spindle 2, no turret 2)"
+type: mill_turn
+src: dmgmori-ntx1000-2013
+
+controller:
+  dialect: fanuc
+  model: "FANUC F31iB with DMG MORI MAPPS IV (F31iB5 for simultaneous 5-axis)"
+  alarms: fanuc-31i-b
+  ipo_period_ms: {value: 1.0, src: est, note: "not published"}
+  block_processing_ms: {value: 1.0, src: est, note: "not published"}
+  lookahead_blocks: {value: 200, src: est, note: "AI contour control look-ahead, assumed"}
+  least_input_increment_mm: {value: 0.001, src: est, note: "IS-B input unit assumed"}
+  least_input_increment_deg: {value: 0.0001, note: "min. B-axis and spindle indexing increment 0.0001 deg (published)"}
+  max_feed_mm_min: {value: 40000, src: est, note: "max cutting feed not read; X/Y rapid used"}
+  rapid_mm_min: {X: 40000, Y: 40000, Z: 50000, A: 36000}
+  smoothing:
+    - {code: "G05.1 Q1 (AI contour control)", name: finish, tolerance_mm: 0.005, src: est, note: "FANUC look-ahead mode; tolerance set by parameters, assumed"}
+  five_axis: {tcp: "G43.4 / G43.5 (tool centre point control, F31iB5)", tilted_plane: "G68.2", src: est, note: "FANUC syntax names; 5-axis simultaneous requires the F31iB5 (dmgmori-ntx1000-2013 p. 4)"}
+  corner_default: {value: blend, src: est}
+  in_position_mm: {value: 0.005, src: est}
+  rapid_override_steps_pct: {value: [0, 25, 50, 100], src: est}
+  feed_override_range_pct: {value: [0, 200], src: est}
+  tool_life_management: {value: true, src: est}
+  probing: {value: true, src: est}
+
+axes:
+  X:
+    type: linear
+    travel_mm: [-380, 0]
+    travel_note: "380 mm = 330 mm + 50 mm (published as '380 (330 + 50)')"
+    rapid_mm_min: 40000
+    max_feed_mm_min: {value: 40000, src: est}
+    accel_m_s2: {value: 5.0, src: est, note: "not published"}
+    jerk_m_s3: {value: 100, src: est}
+    servo:
+      kv_1_s: {value: 45, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 60, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 2, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 20, length_mm: 650, fixed_end: both, src: est}
+    positioning: {accuracy_um: 5, repeatability_um: 2.5, src: est, note: "not published"}
+    motor_force_N: {value: 8000, src: est}
+    moving_mass_kg: {value: 700, src: est, note: "octagonal ram with tool spindle and DDM B axis"}
+    guideways: {value: "box (square) guideways, 4 located diagonally (octagonal ram construction)", src: dmgmori-ntx1000-2013, page: "p. 4"}
+  Y:
+    type: linear
+    travel_mm: [-105, 105]
+    rapid_mm_min: 40000
+    max_feed_mm_min: {value: 40000, src: est}
+    accel_m_s2: {value: 5.0, src: est}
+    jerk_m_s3: {value: 100, src: est}
+    servo:
+      kv_1_s: {value: 45, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 60, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 2, src: est}
+    ballscrew: {diameter_mm: 32, pitch_mm: 16, length_mm: 450, fixed_end: both, src: est}
+    positioning: {accuracy_um: 5, repeatability_um: 2.5, src: est}
+    motor_force_N: {value: 8000, src: est}
+    moving_mass_kg: {value: 500, src: est}
+  Z:
+    type: linear
+    travel_mm: [-615, 0]
+    travel_note: "460 mm + 155 mm for ATC (published)"
+    rapid_mm_min: 50000
+    max_feed_mm_min: {value: 50000, src: est}
+    accel_m_s2: {value: 5.0, src: est}
+    jerk_m_s3: {value: 100, src: est}
+    servo:
+      kv_1_s: {value: 45, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 50, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 2, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 20, length_mm: 950, fixed_end: both, src: est}
+    positioning: {accuracy_um: 6, repeatability_um: 3, src: est}
+    motor_force_N: {value: 10000, src: est}
+    moving_mass_kg: {value: 1200, src: est}
+  A:
+    type: linear
+    description: "spindle 2 travel along z"
+    travel_mm: {value: [-470, 0], src: est, note: "spindle-2 stroke not given in the catalogue table; assumed from the 424 mm max turning length"}
+    rapid_mm_min: 36000
+    max_feed_mm_min: {value: 36000, src: est}
+    accel_m_s2: {value: 4.0, src: est}
+    jerk_m_s3: {value: 80, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 50, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 2, src: est}
+    ballscrew: {diameter_mm: 32, pitch_mm: 16, length_mm: 700, fixed_end: both, src: est}
+    positioning: {accuracy_um: 6, repeatability_um: 3, src: est}
+    motor_force_N: {value: 8000, src: est}
+    moving_mass_kg: {value: 400, src: est}
+  B:
+    type: rotary
+    travel_deg: [-120, 120]
+    continuous: false
+    max_rpm: 100
+    index_90deg_s: {value: 0.49, note: "published; clamp/unclamp time not included"}
+    accel_rad_s2: {value: 60, src: est, note: "DDM torque motor; consistent with 90 deg in 0.49 s at a 100 rpm limit"}
+    jerk_rad_s3: {value: 2000, src: est}
+    drive: {value: "DDM direct-drive motor, zero backlash", src: dmgmori-ntx1000-2013, page: "p. 4"}
+    servo:
+      kv_1_s: {value: 50, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 80, src: est}
+    backlash_arcsec: {value: 0, src: dmgmori-ntx1000-2013, note: "direct drive: 'zero backlash' (p. 4)"}
+    brake:
+      clamp_torque_Nm: {value: 1000, src: est}
+      clamp_time_s: {value: 0.2, src: est}
+      unclamped_stiffness_Nm_rad: {value: 3.0e5, src: est, note: "torque-motor servo stiffness"}
+      clamped_stiffness_Nm_rad: {value: 2.0e6, src: est}
+    positioning: {accuracy_arcsec: 5, repeatability_arcsec: 2, src: est, note: "not published"}
+    motor_torque_Nm: {value: 300, src: est}
+  C1:
+    type: rotary
+    description: "spindle 1 C axis"
+    travel_deg: [0, 360]
+    continuous: true
+    max_rpm: {value: 250, note: "rapid traverse C 250 min-1"}
+    accel_rad_s2: {value: 50, src: est}
+    jerk_rad_s3: {value: 1000, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.9, src: est}
+      velocity_bw_Hz: {value: 40, src: est}
+    backlash_arcsec: {value: 0, src: est, note: "built-in (DDS) spindle motor"}
+    brake:
+      clamp_torque_Nm: {value: 600, src: est}
+      clamp_time_s: {value: 0.2, src: est}
+      unclamped_stiffness_Nm_rad: {value: 1.0e5, src: est}
+      clamped_stiffness_Nm_rad: {value: 8.0e5, src: est}
+    positioning: {accuracy_arcsec: 10, repeatability_arcsec: 5, src: est}
+    motor_torque_Nm: 223
+  C2:
+    type: rotary
+    description: "spindle 2 C axis"
+    travel_deg: [0, 360]
+    continuous: true
+    max_rpm: {value: 250, src: est, note: "assumed equal to C1"}
+    accel_rad_s2: {value: 80, src: est}
+    jerk_rad_s3: {value: 1500, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.9, src: est}
+      velocity_bw_Hz: {value: 40, src: est}
+    backlash_arcsec: {value: 0, src: est}
+    brake:
+      clamp_torque_Nm: {value: 200, src: est}
+      clamp_time_s: {value: 0.2, src: est}
+      unclamped_stiffness_Nm_rad: {value: 3.0e4, src: est}
+      clamped_stiffness_Nm_rad: {value: 2.0e5, src: est}
+    positioning: {accuracy_arcsec: 10, repeatability_arcsec: 5, src: est}
+    motor_torque_Nm: 37
+
+kinematics:
+  workpiece_chain:
+    - {link: spindle1, axis: C1, axis_point_mm: [0, 0, 0], direction: [0, 0, -1]}
+    - {link: chuck1_face, fixed: {translate_mm: [0, 0, 0]}}
+  workpiece_chain_sub:
+    - {link: spindle2_slide, axis: A, direction: [0, 0, 1]}
+    - {link: spindle2, axis: C2, axis_point_mm: [0, 0, 900], direction: [0, 0, 1], src: est, note: "spindle 2 faces spindle 1, so its C sense is mirrored; position assumed (see chuck2_face)"}
+    - {link: chuck2_face, fixed: {translate_mm: [0, 0, 900], rotate_deg: [0, 180, 0]}, src: est, note: "spindle-2 face 900 mm from spindle 1 at A = 0 (home), 430 mm at A min; assumed"}
+  tool_chain:
+    - {link: saddle, axis: Z, direction: [0, 0, 1]}
+    - {link: ram, axis: X, direction: [1, 0, 0]}
+    - {link: y_slide, axis: Y, direction: [0, 1, 0]}
+    - {link: b_head, axis: B, axis_point_mm: [450, 0, 700], direction: [0, 1, 0], src: est, note: "B-axis centre at home assumed 450 mm from the spindle axis and 700 mm from the spindle-1 face"}
+    - {link: spindle_nose, fixed: {translate_mm: [-120, 0, 0], rotate_deg: [0, 90, 0]}, src: est, note: "nose 120 mm from the B axis (assumed); at B = 0 the tool points toward -x (radial), so the nose z axis is base +x"}
+  home_mm: {X: 0, Y: 0, Z: 0, A: 0, B: 0, C1: 0, C2: 0}
+  tool_axis: [0, 0, 1]
+  singularities: [{axis: C1, when: "B = 90 or -90 with Y = 0", behaviour: slow_down, note: "tool axis parallel to the spindle axis"}]
+
+spindles:
+  - id: main
+    kind: turning
+    nose: A2-5                       # A2-6 with the 65 mm bar option
+    max_rpm: 6000
+    drive: "built-in motor (DDS), 2 ranges by winding change-over"
+    bore_mm: 61
+    bar_capacity_mm: 52
+    chuck_mm: {value: 152, note: "6-inch chuck standard, 8-inch optional"}
+    bearing_id_mm: 100
+    direction_reversible: {value: true, src: est}
+    gear_ranges:
+      - rpm: [0, 6000]
+        rating: "40 % ED (S3-40 %)"
+        src: est
+        note: "no curve in the catalogue; built from the tabulated values (motor 11/11/7.5 kW at 40 % ED / 30 min / cont, torque 223/172/158 Nm): constant torque to P/T, then constant power. The two winding ranges are not resolved."
+        power_kW: [[0, 0], [471, 11], [6000, 11]]
+        torque_Nm: [[0, 223], [471, 223], [6000, 17.5]]
+        additional_ratings:
+          - {rating: "S2 30 min", src: est, power_kW: [[0, 0], [611, 11], [6000, 11]], torque_Nm: [[0, 172], [611, 172], [6000, 17.5]]}
+          - {rating: "S1 continuous", src: est, power_kW: [[0, 0], [453, 7.5], [6000, 7.5]], torque_Nm: [[0, 158], [453, 158], [6000, 11.9]]}
+    tabulated: {motor_kW: [11, 11, 7.5], torque_Nm: [223, 172, 158], duties: ["40 % ED", "30 min", "cont"]}
+    accel_time_s: {value: 1.2, src: est, note: "0-6000 rpm with J = 0.06 kg m2 (built-in rotor + 6 in chuck) at 11 kW"}
+    decel_time_s: {value: 1.2, src: est}
+    gear_change_s: {value: 0, src: est, note: "electronic winding change-over"}
+    orient_time_s: {value: 0.5, src: est}
+    rotor_inertia_kgm2: {value: 0.06, src: est}
+    efficiency: {value: 0.85, src: est}
+    idle_power_W: {value: 500, src: est}
+    runout_um: {value: 2, src: est}
+    frf_modes: []
+    thermal:
+      growth_um_at_max_rpm: {value: 15, src: est, note: "zero-centre-displacement spindle design keeps the centre in place radially (p. 5); axial growth assumed"}
+      time_constant_min: {value: 30, src: est}
+      bearing_heat_W_at_max_rpm: {value: 400, src: est}
+      thermal_comp: {value: true, src: est}
+      comp_residual_fraction: {value: 0.3, src: est}
+  - id: sub
+    kind: sub
+    nose: "flat nose dia 80 g6"
+    max_rpm: 6000
+    bore_mm: 38
+    bearing_id_mm: 70
+    chuck_mm: {value: 127, note: "5-inch chuck standard, 6-inch optional"}
+    direction_reversible: {value: true, src: est}
+    gear_ranges:
+      - rpm: [0, 6000]
+        rating: "25 % ED"
+        src: est
+        note: "built from the tabulated values: motor 7.5/5.5 kW (25 % ED / cont), torque 37/22 Nm"
+        power_kW: [[0, 0], [1936, 7.5], [6000, 7.5]]
+        torque_Nm: [[0, 37], [1936, 37], [6000, 11.9]]
+        additional_ratings:
+          - {rating: "S1 continuous", src: est, power_kW: [[0, 0], [2387, 5.5], [6000, 5.5]], torque_Nm: [[0, 22], [2387, 22], [6000, 8.8]]}
+    accel_time_s: {value: 0.8, src: est}
+    decel_time_s: {value: 0.8, src: est}
+    orient_time_s: {value: 0.4, src: est}
+    rotor_inertia_kgm2: {value: 0.012, src: est}
+    efficiency: {value: 0.85, src: est}
+    idle_power_W: {value: 250, src: est}
+    runout_um: {value: 2, src: est}
+    frf_modes: []
+  - id: tool
+    kind: milling
+    nose: "Capto C5"                 # HSK-A50 (T50) or KM-50 optional
+    max_rpm: 12000                   # NTX1000 HSC: 20,000
+    clamping_force_N: {value: 28000, note: "Capto C5 tool clamping force (p. 3)"}
+    bearing_id_mm: 65
+    direction_reversible: {value: true, src: est}
+    gear_ranges:
+      - rpm: [0, 12000]
+        rating: "25 % ED"
+        src: est
+        note: "built from the tabulated values: motor 9/5.5 kW (25 % ED / cont), torque 49/37/22 Nm (15 % ED / 25 % ED / cont)"
+        power_kW: [[0, 0], [2323, 9], [12000, 9]]
+        torque_Nm: [[0, 37], [2323, 37], [12000, 7.2]]
+        additional_ratings:
+          - {rating: "15 % ED (torque only published)", src: est, power_kW: [[0, 0], [1754, 9], [12000, 9]], torque_Nm: [[0, 49], [1754, 49], [12000, 7.2]]}
+          - {rating: "S1 continuous", src: est, power_kW: [[0, 0], [2387, 5.5], [12000, 5.5]], torque_Nm: [[0, 22], [2387, 22], [12000, 4.4]]}
+    accel_time_s: {value: 1.0, src: est}
+    decel_time_s: {value: 1.0, src: est}
+    orient_time_s: {value: 0.4, src: est}
+    rotor_inertia_kgm2: {value: 0.008, src: est}
+    efficiency: {value: 0.85, src: est}
+    idle_power_W: {value: 400, src: est}
+    runout_um: {value: 2, src: est}
+    frf_modes:
+      - {fn_Hz: 900, zeta: 0.04, k_N_um: 40, direction: x, src: est, note: "Capto C5 motor spindle on a B-axis head (head compliance included)"}
+      - {fn_Hz: 900, zeta: 0.04, k_N_um: 40, direction: y, src: est}
+    thermal:
+      growth_um_at_max_rpm: {value: 15, src: est}
+      time_constant_min: {value: 20, src: est}
+      bearing_heat_W_at_max_rpm: {value: 300, src: est}
+      thermal_comp: {value: true, src: est}
+      comp_residual_fraction: {value: 0.3, src: est}
+
+structure:
+  modes:
+    - {fn_Hz: 60, zeta: 0.05, k_N_um: 30, direction: x, src: est, note: "ram/column of the tool spindle"}
+    - {fn_Hz: 80, zeta: 0.05, k_N_um: 35, direction: y, src: est}
+  table_modes: []
+  rotary_modes:
+    - {axis: B, fn_Hz: 120, zeta: 0.04, k_Nm_rad: 2.0e6, src: est, note: "clamped DDM B axis"}
+
+error_map:
+  squareness_urad: {XZ: 10, YZ: 12, XY: 12, src: est}
+  straightness_um_per_m: {X: 5, Y: 5, Z: 5, src: est}
+  angular_urad: {}
+  pivot_errors: {B: {position_um: [8, 8, 8], tilt_urad: [15, 0, 15], src: est}}
+
+thermal:
+  axis_drift:
+    expansion_1_K: {value: 11.5e-6, src: est}
+    heat_per_m_travel_J: {value: 60, src: est}
+    time_constant_min: {value: 40, src: est}
+  structure_sensitivity_um_per_K: {value: 3, src: est, note: "symmetric diagonal guideways keep the centre in place (p. 4)"}
+  warmup: {cold_to_warm_min: 45, src: est}
+
+tool_changer:
+  type: {value: chain, src: est, note: "magazine type not stated in the catalogue text read"}
+  capacity: 38                       # 76 optional
+  tool_to_tool_s: 1.2
+  chip_to_chip_s: {value: 4.4, note: "published 'tool changing time including axis travel' from X/Y/Z zero points with B at -90 deg"}
+  max_tool_diameter_mm: 70
+  max_tool_diameter_adjacent_empty_mm: 130
+  max_tool_length_mm: 250            # 210 mm for tools > 70 mm diameter
+  max_tool_mass_kg: 5
+  max_tool_mass_moment_Nm: 3.9
+  pocket_pitch_mm: {value: 80, src: est}
+
+turrets: []
+pallet_changer: null
+tailstock: null
+steady_rest: null
+guide_bushing: null
+doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null}
+
+capacity:
+  max_swing_mm: 370
+  max_turning_diameter_mm: 370
+  max_turning_length_mm: 424
+
+probes:
+  spindle_probe: {model: "Renishaw OMP40-2 (in the tool spindle)", trigger_force_N: 0.50, trigger_force_z_N: 5.85, repeatability_um: 1.0, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "probe fitment and model are assumptions"}
+  tool_setter: {model: "Renishaw HPRA-type tool presetter arm", repeatability_um: 5, src: renishaw-hpra-2004, note: "fitment assumed"}
+  laser: null
+
+coolant:
+  tank_l: 450
+  pumps:
+    - {id: flood, kind: flood, pressure_bar: 3, flow_l_min: 40, power_kW: 0.75, src: est, note: "not published"}
+    - {id: through_tool, kind: through_spindle, option: true, pressure_bar: 15, flow_l_min: 20, power_kW: 1.5, src: est, note: "through-tool coolant for the tool spindle, assumed"}
+  nozzles:
+    - {id: tool_nozzle, kind: flood, attached_to: b_head, position_mm: [-100, 50, 0], aim: [-1, 0, 0], diameter_mm: 4, pump: flood, src: est}
+    - {id: through_tool, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: through_tool}
+  air_blast: {flow_l_min: 300, pressure_bar: 5, note: "tool-tip air blow needs >300 L/min extra (p. 20); supply 0.5 MPa"}
+  machine_air_l_min: {value: 650, note: "compressed air 0.5 MPa, 650 L/min (ANR)"}
+  chiller: null
+  filtration_um: {value: 50, src: est}
+
+chip_conveyor: {type: hinged_belt, discharge: right, src: dmgmori-ntx1000-2013, page: "p. 12 (right disposal only; two conveyor types)", rate_kg_h: {value: 80, src: est}}
+
+enclosure:
+  box_mm: {value: [[-200, -500, -300], [800, 500, 1300]], src: est, note: "interior around spindles and the B-head; floor space 2554 x 2701 mm, height 2397 mm (p. 20)"}
+  floor_slope_deg: {value: 45, src: est}
+
+power:
+  base_W: {value: 1500, src: est}
+  servo_standby_W: {value: 500, src: est}
+  air_consumption_l_min: 650
+  supply_kVA: {value: 35.1, note: "S type (41.2 kVA for SZ/SZM, read from the column order on p. 20)"}
+  machine_mass_kg: {value: 8450, note: "S type (SZ 8950, SZM 9000)"}
+
+geometry:
+  - name: headstock1
+    attached_to: base
+    primitives:
+      - {box: {min_mm: [-250, -250, -600], max_mm: [250, 250, -30]}}
+    collide: true
+    src: est
+  - name: chuck1
+    attached_to: spindle1
+    primitives:
+      - {cylinder: {p0_mm: [0, 0, 0], p1_mm: [0, 0, 80], radius_mm: 85}}
+    collide: true
+    src: est
+    note: "6 in chuck (published); length assumed"
+  - name: spindle2_housing
+    attached_to: spindle2_slide
+    primitives:
+      - {box: {min_mm: [-200, -200, 930], max_mm: [200, 200, 1400]}}
+      - {cylinder: {p0_mm: [0, 0, 830], p1_mm: [0, 0, 900], radius_mm: 70}}
+    collide: true
+    src: est
+  - name: b_head
+    attached_to: b_head
+    primitives:
+      - {cylinder: {p0_mm: [450, -150, 700], p1_mm: [450, 150, 700], radius_mm: 140}}
+      - {box: {min_mm: [420, -110, 620], max_mm: [700, 110, 780]}}
+    collide: true
+    src: est
+    note: "DDM B-axis housing (axis along y) and spindle body, assumed"
+  - name: tool_spindle_nose
+    attached_to: spindle_nose
+    primitives:
+      - {cylinder: {p0_mm: [0, 0, 0], p1_mm: [0, 0, 110], radius_mm: 60}}
+    collide: true
+    src: est
+
+notes: "1st-generation NTX 1000 (catalogue valid March 2013). Spindle curves are constructed from the catalogue's tabulated duty values (no curves published there). Spindle-2 stroke, all geometry offsets, accelerations, servo, modal and thermal data are estimates."

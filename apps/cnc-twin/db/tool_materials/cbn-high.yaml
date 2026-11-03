@@ -1,0 +1,29 @@
+format: cnctwin-tool-material
+version: 1
+id: cbn-high
+class: cbn
+name: "High-content PCBN (90-95 % cBN, metallic binder) for cast iron, sintered steel and roughing hard materials (Sumitomo BN7000 as reference grade)"
+src: sumitomo-2025-general-catalog
+grain_size_um: {value: 2, src: sumitomo-2025-general-catalog, page: "p. L7, BN7000 grain size 2 µm"}
+cbn_content_vol_pct: {value: 92.5, range: [90, 95], src: sumitomo-2025-general-catalog, page: "p. L7, BN7000 CBN content 90-95 %", note: "mid value"}
+density_kg_m3: {value: 3700, src: est, note: "cBN 3.48 g/cm3 with 5-10 % metallic/WC-Co binder; no value read"}
+youngs_modulus_GPa: {value: 800, src: est, note: "close to polycrystalline cBN (~850 GPa) at 90-95 % content; no value read"}
+poisson: {value: 0.15, src: est, note: "no value read"}
+hardness_HV: {value: 4330, range: [3980, 4490], src: sumitomo-2025-general-catalog, page: "p. L7, BN7000 hardness HV 41-44 GPa", note: "mid value 42.5 GPa / 0.009807; Kyocera KBN475 (high content) 39 GPa = 3980 HV (kyocera-2015-insert-grades p. A16)"}
+transverse_rupture_MPa: {value: 1850, range: [1400, 1900], src: sumitomo-2025-general-catalog, page: "p. L7, BN7000 TRS 1.8-1.9 GPa (measured on a test piece equal to the insert CBN layer)", note: "Kyocera KBN475 1400 MPa"}
+compressive_MPa: {value: 6000, src: est, note: "no value read"}
+fracture_toughness_MPa_sqrt_m: {value: 7.0, src: est, note: "no value read"}
+conductivity_W_mK:
+  table: [[20, 100], [500, 85], [1000, 70]]
+  src: est
+  note: "no value read; high cBN content with direct cBN-cBN bonding conducts well (Kyocera calls CBN 'high thermal conductivity', kyocera-2015-insert-grades p. A16)"
+specific_heat_J_kgK:
+  table: [[20, 750], [500, 1100], [1000, 1250]]
+  src: est
+  note: "no value read; cBN heat capacity rises strongly with temperature (Debye temperature ~1700 K)"
+expansion_1_K: {value: 4.5e-6, src: est, note: "no value read; close to cBN"}
+max_service_temp_degC: {value: 1200, src: est, note: "no value read"}
+weibull_modulus: {value: 10, src: est, note: "no value read"}
+thermal_shock_parameter: null
+usui: []
+notes: "Only grain size, cBN content, hardness and TRS are maker values."

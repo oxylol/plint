@@ -1,0 +1,46 @@
+format: cnctwin-tool-material
+version: 1
+id: carbide-k20-6co
+class: carbide
+name: "Straight WC-6%Co, medium grain (ISO K10-K20 uncoated insert grade, e.g. Sandvik H13A; Mitsubishi RT9010 / HTi10 as reference grades)"
+src: mitsubishi-2026-tm102g
+composition: {text: "RT9010: K20, Co 5.7 %, grain < 1.5 µm; HTi10: K10, Co 6.0 %, grain < 1.0 µm", src: mitsubishi-2026-tm102g, page: "pp. 4 and 8"}
+grain_size_um: {value: 1.5, src: mitsubishi-2026-tm102g, page: "RT9010 '< 1.5 µm'", note: "upper bound as printed"}
+binder_wt_pct: {value: 6.0, range: [5.7, 6.0], src: mitsubishi-2026-tm102g}
+density_kg_m3: {value: 15000, range: [15000, 15250], src: kyocera-2015-insert-grades, page: "p. A19, KW10 (WC+Co) specific gravity 15.0", note: "Co content of KW10 not printed; zhang-2025-mmsj-ti64-usui Tab. 2 uses 15250 kg/m3 for H13A (WC-6Co)"}
+youngs_modulus_GPa: {value: 630, src: mitsubishi-2026-tm102g, page: "p. 8, HTi10 rod (6 % Co)", note: "roebuck-2009-npl-mgpg20 eq. (44) gives 629 GPa at Vf(Co) = 0.10"}
+poisson: {value: 0.22, src: est, note: "no value read; usual WC-Co value"}
+hardness_HV: {value: 1620, range: [1560, 1700], src: mitsubishi-2026-tm102g, page: "p. 4, RT9010 1620 HV", note: "HTi10 1700 HV; H13A measured 1561 HV10 after edge preparation in zhang-2025-mmsj-ti64-usui 2.1"}
+transverse_rupture_MPa: {value: 2200, range: [1470, 3200], src: mitsubishi-2026-tm102g, page: "p. 4, RT9010 2.2 GPa", note: "Kyocera KW10 1470 MPa (kyocera-2015-insert-grades p. A19); HTi10 rod (HIP) 3.2 GPa (p. 8)"}
+compressive_MPa: {value: 5500, range: [4000, 8000], src: est, note: "roebuck-2009-npl-mgpg20 gives 4-8 GPa for hardmetals; 5500 assumed for a medium-grain 6 % Co grade"}
+fracture_toughness_MPa_sqrt_m: {value: 10.0, range: [7.8, 10.0], src: mitsubishi-2026-tm102g, page: "p. 4, RT9010 10.0", note: "HTi10 7.8 (p. 8); Kyocera KW10 10.0"}
+conductivity_W_mK:
+  table: [[20, 79], [500, 67], [1000, 55]]
+  src: est
+  note: "20 °C value 79 W/mK for RT9010 (mitsubishi-2026-tm102g p. 4; zhang-2025 Tab. 2 uses 88 for H13A); 30 % loss RT->1000 °C after vornberger-2020-carbide-hot-hardness, linear in T"
+specific_heat_J_kgK:
+  table: [[20, 195], [400, 230], [800, 255]]
+  src: est
+  note: "rule of mixtures WC + 6 % Co at RT (0.195 J/gK), inside hyperion-thermal-properties range; +30 % to 800 °C assumed; zhang-2025 Tab. 2 uses 292 J/kgK (simulation input, not a measurement)"
+expansion_1_K: {value: 5.0e-6, range: [5.0e-6, 6.0e-6], src: roebuck-2009-npl-mgpg20, page: "section 1", note: "low end of the WC/Co range chosen for 6 % Co"}
+max_service_temp_degC: {value: 1000, src: est, note: "as carbide-submicron-10co"}
+weibull_modulus: {value: 20, src: roebuck-2009-npl-mgpg20, page: "4.3.3: high m (>= about 20) for medium/coarse WC/Co"}
+thermal_shock_parameter: null
+usui:
+  - work_family: titanium
+    surface: rake
+    A: 4.02148e-12                     # = C1 4021.48 [1/GPa µm/m] x 1e-15
+    B_K: 10456.69
+    T_range_K: null
+    src: zhang-2025-mmsj-ti64-usui
+    page: "Tab. 3, rake, physical based"
+    note: "uncoated WC-6Co (Sandvik H13A) on Ti6Al4V, dry, vc 150-350 m/min, h = 0.1 mm; C1 converted from µm per m sliding per GPa to 1/Pa (dW/dt [m/s] = A sigma_n[Pa] V_s[m/s] exp(-B/T))"
+  - work_family: titanium
+    surface: flank
+    A: 6.8567295e-10                   # = C1 685672.95 [1/GPa µm/m] x 1e-15
+    B_K: 15909.42
+    T_range_K: null
+    src: zhang-2025-mmsj-ti64-usui
+    page: "Tab. 3, clearance, physical based"
+    note: "same tests as the rake set; flank C2 is higher than crater C2 (different mechanism)"
+notes: "Usui constants for this grade against steel (Usui 1984) are stored under carbide-p30 (the original work used a P20 grade)."

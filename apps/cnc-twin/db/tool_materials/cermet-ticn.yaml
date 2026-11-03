@@ -1,0 +1,32 @@
+format: cnctwin-tool-material
+version: 1
+id: cermet-ticn
+class: cermet
+name: "TiCN-based cermet (Ti(C,N)+NbC, Co/Ni binder), ISO P10-P20 finishing grade (Kyocera TN60 / TC0300 as reference grades)"
+src: kyocera-2015-insert-grades
+composition: {text: "TN60: TiCN + NbC; Mitsubishi cermets: binder Co+Ni 19-23 mass%", src: kyocera-2015-insert-grades, page: "p. A19; mitsubishi-2026-tm102g p. 5"}
+density_kg_m3: {value: 6600, range: [6000, 6900], src: kyocera-2015-insert-grades, page: "p. A19, TN60 specific gravity 6.6", note: "TC0300 6.0 (kyocera-2023-tc0300), TN620 6.9"}
+youngs_modulus_GPa: {value: 440, src: kyocera-2023-tc0300, page: "JIS R 1602"}
+poisson: {value: 0.21, src: kyocera-2023-tc0300, page: "JIS R 1602"}
+hardness_HV: {value: 1600, range: [1370, 1700], src: kyocera-2015-insert-grades, page: "p. A19, TN60 1600 HV (15.7 GPa)", note: "Mitsubishi NR800 1370 HV, NR200 1570 HV (mitsubishi-2026-tm102g p. 5); TN6010 1700 HV"}
+transverse_rupture_MPa: {value: 1760, range: [1470, 2500], src: kyocera-2015-insert-grades, page: "p. A19, TN60 transverse strength 1760 MPa", note: "TC0300 3-point flexural 1470 MPa; TN620 2500 MPa; Mitsubishi NR200 2.1 GPa"}
+compressive_MPa: {value: 3430, src: kyocera-2023-tc0300, page: "JIS R 1608"}
+fracture_toughness_MPa_sqrt_m: {value: 9.0, range: [6.3, 10.5], src: kyocera-2015-insert-grades, page: "p. A19, TN60 K1C 9.0", note: "Mitsubishi NR200 6.3 (p. 5); Kyocera TN100M 10.5"}
+conductivity_W_mK:
+  table: [[20, 17], [400, 18], [800, 19]]
+  src: est
+  note: "20 °C value 17 W/mK from kyocera-2023-tc0300 (Mitsubishi cermets 13-19 W/mK, mitsubishi-2026-tm102g p. 5); a slight rise with temperature assumed because Ti(C,N) conducts partly by electrons; no table read"
+specific_heat_J_kgK:
+  table: [[20, 450], [400, 560], [800, 610]]
+  src: est
+  note: "no value read (kyocera-2023-tc0300 leaves it blank); rule of mixtures of TiC/TiN (~0.55-0.6 J/gK) and Ni/Co/NbC/WC phases, rising like ceramics"
+expansion_1_K:
+  table: [[400, 7.4e-6], [800, 8.3e-6]]
+  src: kyocera-2023-tc0300
+  page: "JIS R 1618, mean 40-400 °C and 40-800 °C"
+thermal_shock_deltaT_degC: {value: 310, src: kyocera-2023-tc0300, page: "JIS R 1648 water quench"}
+max_service_temp_degC: {value: 1100, src: est, note: "cermets keep hardness and resist oxidation better than WC-Co (Kyocera high-temperature hardness chart, kyocera-2015-insert-grades p. A15, not digitised); 1100 °C assumed"}
+weibull_modulus: {value: 8, range: [5, 10], src: roebuck-2009-npl-mgpg20, page: "4.3.3: 'low values of m (<= about 10), for example for most of the Ti(C,N) cermet materials'", note: "8 chosen inside the stated band"}
+thermal_shock_parameter: null
+usui: []
+notes: "Mechanical values from the Kyocera insert grade TN60; elastic, compressive and thermal values from the Kyocera Fineceramics cermet TC0300."

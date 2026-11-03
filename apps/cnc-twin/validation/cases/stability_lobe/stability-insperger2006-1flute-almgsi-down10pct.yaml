@@ -1,0 +1,109 @@
+# Insperger et al. (2006): single-flute 8 mm end mill on a high-speed milling centre, AlMgSi0.5,
+# 10 % radial immersion down-milling. Experimental stability map (measured: true).
+format: cnctwin-validation-case
+version: 1
+id: stability-insperger2006-1flute-almgsi-down10pct
+quantity: stability_lobe
+reference:
+  src: insperger-2006-chatter-sle
+  location: "Sect. 5 (setup, modal matrices, cutting coefficients), Fig. 7(a) (experimental markers, digitised)"
+  digitised: true
+  uncertainty_pct: 3                 # speeds sit on 0.5/1 krpm steps and depths on 0.2 mm steps; markers read on a calibrated grid
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: al6061-t6, note: "source material AlMgSi0.5 (EN AW-6060), not in the database; 6061-T6 is the nearest Al-Mg-Si alloy. The cutting coefficients below are the source's own, so the material enters only through them"}
+  tool:
+    type: square_endmill
+    diameter_mm: 8
+    flutes: 1                        # originally two teeth, one ground off to avoid runout
+    helix_deg: {value: 45, src: gradisek-2005-stability-prediction, page: "Sect. 3"}
+    overhang_mm: {value: 96, src: gradisek-2005-stability-prediction, page: "Sect. 3 (L/D = 12)"}
+    tool_class: {value: carbide, src: est, note: "material of the end mill not stated"}
+  holder: {type: shrink_fit, interface: HSK40E, src: gradisek-2005-stability-prediction, page: "Sect. 3"}
+  conditions:
+    direction: down
+    radial_immersion_ratio: 0.1
+    ae_mm: 0.8
+    feed_mm_tooth: 0.16
+    coolant: mql                     # "minimal amount of coolant"
+  dynamics:
+    model: "2 DOF tool, diagonal modal matrices at the tool tip (impact test); natural frequency of the tool about 722 Hz"
+    modal_mass_kg: [0.0199, 0.0201]          # M = diag(x, y)
+    stiffness_N_per_m: [409000, 413000]      # K = diag(x, y)
+    damping_ratio: [0.00888, 0.00854]        # derived: c / (2 sqrt(k m)) from the printed C = diag(1.603, 1.557) Ns/m
+    damping_note: "printed damping matrix C = diag(1.603, 1.557) N s/m (x, y); the ratios above are computed from it, not printed"
+    cutting_coefficients: {Kt_N_mm2: 644, Kn_N_mm2: 237, note: "Kt 644e6, Kn 237e6 N/m2, identified mechanistically at 4000 rpm"}
+  program: null
+reference_values:
+  - {name: stable_test, value: 0.2, unit: mm, x: 11000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 12000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 12500, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 13000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 14000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 14000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 14000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.8, unit: mm, x: 14000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1, unit: mm, x: 14000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.2, unit: mm, x: 14000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 15000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 15000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 16000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 17000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 17500, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 19000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 19000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 19000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.8, unit: mm, x: 19000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1, unit: mm, x: 19000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.2, unit: mm, x: 19000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.4, unit: mm, x: 19000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 20000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 20000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 20000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.8, unit: mm, x: 20000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1, unit: mm, x: 20000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.2, unit: mm, x: 20000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.4, unit: mm, x: 20000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 21000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 21000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 21000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.8, unit: mm, x: 21000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1, unit: mm, x: 21000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.2, unit: mm, x: 21000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.4, unit: mm, x: 21000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 22000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 22000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 22000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.8, unit: mm, x: 22000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 23000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 23000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 23000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.8, unit: mm, x: 23000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 24000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 24000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 25000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 25000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 25000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.2, unit: mm, x: 26000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.4, unit: mm, x: 26000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.6, unit: mm, x: 26000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.8, unit: mm, x: 26000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.4, unit: mm, x: 10000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.6, unit: mm, x: 10000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.6, unit: mm, x: 11000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.4, unit: mm, x: 12000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.4, unit: mm, x: 13000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.6, unit: mm, x: 15000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.4, unit: mm, x: 16000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.6, unit: mm, x: 16000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.6, unit: mm, x: 17000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.6, unit: mm, x: 17500, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1, unit: mm, x: 22000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.8, unit: mm, x: 24000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.8, unit: mm, x: 25000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1, unit: mm, x: 25000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1, unit: mm, x: 26000, x_name: spindle_speed, x_unit: rpm}
+  - {name: period_doubling_test, value: 0.6, unit: mm, x: 12500, x_name: spindle_speed, x_unit: rpm}
+reference_curves: []
+notes: "Value = axial depth of cut of a test, x = spindle speed. Circles = stable, crosses = quasi-periodic chatter, diamonds = period-doubling chatter (Fig. 7 caption). Stability was judged from laser-measured tool deflections, sound and surface roughness. Markers that are not legible in the raster figure of this copy were left out: 10 krpm / 0.2 mm, 11 and 17 krpm / 0.4 mm (filled-looking symbols on the 0.4 mm line), 12.5 and 17.5 krpm / 0.4 mm, 18 krpm and 24 krpm / 0.4 mm. The theoretical boundary (semi-discretisation) in the same panel is a model result and is not stored. Same rig and parameters as the wall_error cases wallerror-insperger2006-sle-*."

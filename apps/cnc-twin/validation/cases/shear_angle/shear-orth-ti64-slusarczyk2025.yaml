@@ -1,0 +1,123 @@
+# Ti6Al4V orthogonal turning, rake 0 and 10 deg: shear angle (from measured chip flow speed).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: shear-orth-ti64-slusarczyk2025
+quantity: shear_angle
+reference:
+  src: slusarczyk-2025-ti6al4v-rake-temperature
+  location: Table 4 (shear angle phi), Table 5 (average chip flow speed from high-speed video, 3000 fps)
+  digitised: false
+  measured: true
+  note: 'phi is computed by the source from the measured chip flow speed: chip ratio = v_chip / vc, tan(phi) = r cos(rake)
+    / (1 - r sin(rake)) (consistent with Table 4 within 0.05 deg for tests 1 and 11)'
+setup:
+  operation: orthogonal_turning
+  material:
+    db: ti6al4v
+    note: 'Ti-6Al-4V shaft; only the composition is given (Table 1: Al 5.5-6.75, V 3.5-4.5, Fe 0.03, O 0.20, C 0.08, N 0.05,
+      H 0.015 wt%); condition not stated'
+  tool:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.2
+    tool_class: carbide
+    tool_material: uncoated WC-Co
+    rake_face: flat (no chip breaker)
+    rake_per_test_deg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+    clearance_deg: 5
+    inclination_deg: 0
+    coating: none
+    edge_radius_um: {value: 10, src: est, note: 'assumed: not stated; typical of a ground uncoated WC-Co edge (est.)'}
+    assumed_inputs: [edge_radius_um]
+  machine:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.2, Fig. 3-4
+    model: KNUTH Masterturn 400 precision lathe
+    dynamometer: Kistler 9257B on the auxiliary slide, Kistler 5070B amplifier, DynoWare
+    force_sampling_Hz: 3000
+    thermal_camera: FLIR SC 620, 640 x 480 px, 30 Hz, f = 38 mm lens, on the tailstock side
+    high_speed_camera: Phantom v5.2, 3000 fps, 512 x 512 px (chip flow speed by marker tracking)
+  stock:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.1-3.2
+    form: shaft prepared for orthogonal turning (geometry not given); knurled markers on the side for chip-flow tracking
+  conditions:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Tables 2-3
+    test_ids: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
+      '20']
+    vc_per_test_m_min: [60, 50, 40, 30, 20, 60, 50, 40, 30, 20, 60, 50, 40, 30, 20, 60, 50, 40, 30, 20]
+    feed_per_test_mm_rev: [0.104, 0.104, 0.104, 0.104, 0.104, 0.069, 0.069, 0.069, 0.069, 0.069, 0.104, 0.104, 0.104, 0.104,
+      0.104, 0.069, 0.069, 0.069, 0.069, 0.069]
+    width_of_cut_mm: {value: 4, note: 'ap = 4 mm, constant'}
+    coolant:
+      value: dry
+      src: est
+      note: 'assumed: not stated; the side-view thermography of the cutting zone implies no coolant'
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: 'phi test 1 (rake 0, f 0.104)', value: 26.68, unit: deg, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 1 (rake 0, f 0.104)', value: 30.2, unit: m/min, x: 60, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 2 (rake 0, f 0.104)', value: 26.65, unit: deg, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 2 (rake 0, f 0.104)', value: 25.1, unit: m/min, x: 50, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 3 (rake 0, f 0.104)', value: 26.53, unit: deg, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 3 (rake 0, f 0.104)', value: 20.0, unit: m/min, x: 40, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 4 (rake 0, f 0.104)', value: 26.29, unit: deg, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 4 (rake 0, f 0.104)', value: 14.8, unit: m/min, x: 30, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 5 (rake 0, f 0.104)', value: 26.16, unit: deg, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 5 (rake 0, f 0.104)', value: 9.8, unit: m/min, x: 20, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 6 (rake 0, f 0.069)', value: 23.83, unit: deg, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 6 (rake 0, f 0.069)', value: 26.5, unit: m/min, x: 60, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 7 (rake 0, f 0.069)', value: 23.58, unit: deg, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 7 (rake 0, f 0.069)', value: 21.8, unit: m/min, x: 50, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 8 (rake 0, f 0.069)', value: 23.59, unit: deg, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 8 (rake 0, f 0.069)', value: 17.5, unit: m/min, x: 40, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 9 (rake 0, f 0.069)', value: 24.03, unit: deg, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 9 (rake 0, f 0.069)', value: 13.4, unit: m/min, x: 30, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 10 (rake 0, f 0.069)', value: 24.33, unit: deg, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 10 (rake 0, f 0.069)', value: 9.0, unit: m/min, x: 20, x_name: vc, x_unit: m/min, note: measured chip
+    flow speed on the rake face (Table 5)}
+- {name: 'phi test 11 (rake 10, f 0.104)', value: 30.28, unit: deg, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 11 (rake 10, f 0.104)', value: 32.3, unit: m/min, x: 60, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 12 (rake 10, f 0.104)', value: 30.19, unit: deg, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 12 (rake 10, f 0.104)', value: 26.8, unit: m/min, x: 50, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 13 (rake 10, f 0.104)', value: 30.07, unit: deg, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 13 (rake 10, f 0.104)', value: 21.3, unit: m/min, x: 40, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 14 (rake 10, f 0.104)', value: 29.77, unit: deg, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 14 (rake 10, f 0.104)', value: 15.8, unit: m/min, x: 30, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 15 (rake 10, f 0.104)', value: 29.49, unit: deg, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 15 (rake 10, f 0.104)', value: 10.4, unit: m/min, x: 20, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 16 (rake 10, f 0.069)', value: 26.16, unit: deg, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 16 (rake 10, f 0.069)', value: 27.5, unit: m/min, x: 60, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 17 (rake 10, f 0.069)', value: 26.0, unit: deg, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 17 (rake 10, f 0.069)', value: 22.8, unit: m/min, x: 50, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 18 (rake 10, f 0.069)', value: 25.79, unit: deg, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 18 (rake 10, f 0.069)', value: 18.1, unit: m/min, x: 40, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 19 (rake 10, f 0.069)', value: 25.58, unit: deg, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 19 (rake 10, f 0.069)', value: 13.4, unit: m/min, x: 30, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+- {name: 'phi test 20 (rake 10, f 0.069)', value: 25.43, unit: deg, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'v_chip test 20 (rake 10, f 0.069)', value: 8.9, unit: m/min, x: 20, x_name: vc, x_unit: m/min, note: measured
+    chip flow speed on the rake face (Table 5)}
+reference_curves: []
+notes: 'The chip ratio follows directly from the listed chip flow speeds (r = v_chip / vc, e.g. test 1: 30.2 / 60 = 0.50).
+  The chips are lamellar/segmented for Ti6Al4V; phi is an average shear angle.'

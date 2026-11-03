@@ -1,0 +1,316 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: harvey-chamfer-cobalt-pointed
+maker: Harvey Tool (Harvey Performance Company)
+series: Chamfer Cutters - Cobalt (M-42) - Pointed, 4 flutes
+src: harvey-2026-chamfer-cobalt
+notes: HSS-Co (M-42) chamfer cutters; chart SF_18000 (series 180xx, 181xx).
+items:
+- id: harvey-18016
+  order_code: 18016 (uncoated, M-42)
+  type: chamfer_mill
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: hss, grade: M-42 (8 % cobalt), id: hss-m42}
+  coating: {id: none}
+  geometry:
+    diameter_mm: 6.35
+    flutes: 4
+    tip_angle_deg: 90.0
+    tip_diameter_mm: 0.254
+    cutting_length_mm: 3.175
+    helix_deg: {value: 0, src: est, note: straight flutes assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed for an HSS chamfer cutter}
+    clearance_deg: {primary: 8, secondary: 15, src: est, note: not published; 8/15 deg assumed for HSS}
+    edge_radius_um: {value: 4, src: est, note: not published; 4 um assumed for a sharp ground HSS edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    neck: null
+    shank:
+      diameter_mm: 6.35
+      length_mm: {value: 47.625, src: est, note: OAL - LOC}
+    overall_length_mm: 50.8
+    core_diameter_mm: {value: 3.49, src: est, note: 0.55 x body diameter assumed; conical fluted section}
+    centre_cutting: {value: true, src: est, note: 'pointed Type I with 2 of the 4 flutes to centre (product page: ''4 flutes (2 flutes to center)''); web at the tip'}
+    coolant_holes: null
+    note: 'angle_per_side_deg = 45.0; inch dimensions as published: diameter 0.25 in, tip_diameter 0.01 in, cutting_length 0.125 in, shank.diameter 0.25 in, shank.length 1.875 (est) in, overall_length 2 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 12.4, src: est, note: 'rho V: body taken as a 6.35 mm cylinder over 50.8 mm x 0.95 (neck/head relief); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 121.92}
+    fz_mm: {start: 0.0381}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.125 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.130 in (whole flank engaged) -> column 0.125 in; full row [D_eff in, fz in]: [[0.015, 0.00018], [0.031, 0.00037], [0.047, 0.00056], [0.062, 0.00074], [0.078, 0.00094], [0.093, 0.00112], [0.125, 0.0015], [0.187, 0.00224], [0.25, 0.003], [0.312, 0.00374], [0.375, 0.0045], [0.5, 0.006]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 400 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 121.92}
+    fz_mm: {start: 0.03175}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.125 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.130 in (whole flank engaged) -> column 0.125 in; full row [D_eff in, fz in]: [[0.015, 0.00015], [0.031, 0.00031], [0.047, 0.00047], [0.062, 0.00062], [0.078, 0.00078], [0.093, 0.00093], [0.125, 0.00125], [0.187, 0.00187], [0.25, 0.0025], [0.312, 0.00312], [0.375, 0.00375], [0.5, 0.005]]; depth of cut in 2 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 400 SFM, fz 0.00125 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.013208}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.125 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.130 in (whole flank engaged) -> column 0.125 in; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00052 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.010922}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.125 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.130 in (whole flank engaged) -> column 0.125 in; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; depth of cut in 3 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00043 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 29-37 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.013208}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.125 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.130 in (whole flank engaged) -> column 0.125 in; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00052 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 38-45 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 12.192}
+    fz_mm: {start: 0.013208}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.125 in
+    note: 'D_eff column 0.125 in as above; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; 1 pass(es); published values: vc 40 SFM, fz 0.00052 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 29-37 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.010922}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.125 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.130 in (whole flank engaged) -> column 0.125 in; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; depth of cut in 3 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00043 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 38-45 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 12.192}
+    fz_mm: {start: 0.010922}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.125 in
+    note: 'D_eff column 0.125 in as above; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; 4 pass(es); published values: vc 40 SFM, fz 0.00043 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 60.11, src: est, note: 'list price USD 69.90 (harveytool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 3, src: est, note: assumed for an HSS chamfer cutter}
+  note: M-42 (8 % Co) HSS, fully ground; 4 flutes, 2 to centre; Type I pointed, web thickness at tip T = 0.01 in (product page); angle per side 45 deg +/-30'
+- id: harvey-18024
+  order_code: 18024 (uncoated, M-42)
+  type: chamfer_mill
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: hss, grade: M-42 (8 % cobalt), id: hss-m42}
+  coating: {id: none}
+  geometry:
+    diameter_mm: 9.525
+    flutes: 4
+    tip_angle_deg: 90.0
+    tip_diameter_mm: 0.254
+    cutting_length_mm: 4.7752
+    helix_deg: {value: 0, src: est, note: straight flutes assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed for an HSS chamfer cutter}
+    clearance_deg: {primary: 8, secondary: 15, src: est, note: not published; 8/15 deg assumed for HSS}
+    edge_radius_um: {value: 4, src: est, note: not published; 4 um assumed for a sharp ground HSS edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    neck: null
+    shank:
+      diameter_mm: 9.525
+      length_mm: {value: 58.7248, src: est, note: OAL - LOC}
+    overall_length_mm: 63.5
+    core_diameter_mm: {value: 5.24, src: est, note: 0.55 x body diameter assumed; conical fluted section}
+    centre_cutting: {value: true, src: est, note: 'pointed Type I with 2 of the 4 flutes to centre (product page: ''4 flutes (2 flutes to center)''); web at the tip'}
+    coolant_holes: null
+    note: 'angle_per_side_deg = 45.0; inch dimensions as published: diameter 0.375 in, tip_diameter 0.01 in, cutting_length 0.188 in, shank.diameter 0.375 in, shank.length 2.312 (est) in, overall_length 2.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 34.8, src: est, note: 'rho V: body taken as a 9.525 mm cylinder over 63.5 mm x 0.95 (neck/head relief); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 121.92}
+    fz_mm: {start: 0.056896}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.187 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.193 in (whole flank engaged) -> column 0.187 in; full row [D_eff in, fz in]: [[0.015, 0.00018], [0.031, 0.00037], [0.047, 0.00056], [0.062, 0.00074], [0.078, 0.00094], [0.093, 0.00112], [0.125, 0.0015], [0.187, 0.00224], [0.25, 0.003], [0.312, 0.00374], [0.375, 0.0045], [0.5, 0.006]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 400 SFM, fz 0.00224 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 121.92}
+    fz_mm: {start: 0.047498}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.187 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.193 in (whole flank engaged) -> column 0.187 in; full row [D_eff in, fz in]: [[0.015, 0.00015], [0.031, 0.00031], [0.047, 0.00047], [0.062, 0.00062], [0.078, 0.00078], [0.093, 0.00093], [0.125, 0.00125], [0.187, 0.00187], [0.25, 0.0025], [0.312, 0.00312], [0.375, 0.00375], [0.5, 0.005]]; depth of cut in 2 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 400 SFM, fz 0.00187 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.019812}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.187 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.193 in (whole flank engaged) -> column 0.187 in; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00078 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.01651}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.187 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.193 in (whole flank engaged) -> column 0.187 in; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; depth of cut in 3 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 29-37 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.019812}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.187 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.193 in (whole flank engaged) -> column 0.187 in; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00078 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 38-45 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 12.192}
+    fz_mm: {start: 0.019812}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.187 in
+    note: 'D_eff column 0.187 in as above; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; 1 pass(es); published values: vc 40 SFM, fz 0.00078 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 29-37 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.01651}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.187 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.193 in (whole flank engaged) -> column 0.187 in; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; depth of cut in 3 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 38-45 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 12.192}
+    fz_mm: {start: 0.01651}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.187 in
+    note: 'D_eff column 0.187 in as above; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; 4 pass(es); published values: vc 40 SFM, fz 0.00065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 72.15, src: est, note: 'list price USD 83.90 (harveytool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 3, src: est, note: assumed for an HSS chamfer cutter}
+  note: M-42 (8 % Co) HSS, fully ground; 4 flutes, 2 to centre; Type I pointed, web thickness at tip T = 0.01 in (product page); angle per side 45 deg +/-30'
+- id: harvey-18032
+  order_code: 18032 (uncoated, M-42)
+  type: chamfer_mill
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: hss, grade: M-42 (8 % cobalt), id: hss-m42}
+  coating: {id: none}
+  geometry:
+    diameter_mm: 12.7
+    flutes: 4
+    tip_angle_deg: 90.0
+    tip_diameter_mm: 0.254
+    cutting_length_mm: 6.35
+    helix_deg: {value: 0, src: est, note: straight flutes assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed for an HSS chamfer cutter}
+    clearance_deg: {primary: 8, secondary: 15, src: est, note: not published; 8/15 deg assumed for HSS}
+    edge_radius_um: {value: 4, src: est, note: not published; 4 um assumed for a sharp ground HSS edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    corner_radius_mm: 0
+    neck: null
+    shank:
+      diameter_mm: 12.7
+      length_mm: {value: 69.85, src: est, note: OAL - LOC}
+    overall_length_mm: 76.2
+    core_diameter_mm: {value: 6.99, src: est, note: 0.55 x body diameter assumed; conical fluted section}
+    centre_cutting: {value: true, src: est, note: 'pointed Type I with 2 of the 4 flutes to centre (product page: ''4 flutes (2 flutes to center)''); web at the tip'}
+    coolant_holes: null
+    note: 'angle_per_side_deg = 45.0; inch dimensions as published: diameter 0.5 in, tip_diameter 0.01 in, cutting_length 0.25 in, shank.diameter 0.5 in, shank.length 2.75 (est) in, overall_length 3 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 74.3, src: est, note: 'rho V: body taken as a 12.7 mm cylinder over 76.2 mm x 0.95 (neck/head relief); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 121.92}
+    fz_mm: {start: 0.0762}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.250 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.255 in (whole flank engaged) -> column 0.250 in; full row [D_eff in, fz in]: [[0.015, 0.00018], [0.031, 0.00037], [0.047, 0.00056], [0.062, 0.00074], [0.078, 0.00094], [0.093, 0.00112], [0.125, 0.0015], [0.187, 0.00224], [0.25, 0.003], [0.312, 0.00374], [0.375, 0.0045], [0.5, 0.006]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 400 SFM, fz 0.003 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 121.92}
+    fz_mm: {start: 0.0635}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.250 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.255 in (whole flank engaged) -> column 0.250 in; full row [D_eff in, fz in]: [[0.015, 0.00015], [0.031, 0.00031], [0.047, 0.00047], [0.062, 0.00062], [0.078, 0.00078], [0.093, 0.00093], [0.125, 0.00125], [0.187, 0.00187], [0.25, 0.0025], [0.312, 0.00312], [0.375, 0.00375], [0.5, 0.005]]; depth of cut in 2 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 400 SFM, fz 0.0025 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.026416}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.250 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.255 in (whole flank engaged) -> column 0.250 in; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00104 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.021844}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.250 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.255 in (whole flank engaged) -> column 0.250 in; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; depth of cut in 3 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00086 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 29-37 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.026416}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.250 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.255 in (whole flank engaged) -> column 0.250 in; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; depth of cut in 1 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00104 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 38-45 HRC
+    operation: [chamfering_edge_break]
+    vc_m_min: {start: 12.192}
+    fz_mm: {start: 0.026416}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Edge Break (.010-.015 in)', effective-diameter column 0.250 in
+    note: 'D_eff column 0.250 in as above; full row [D_eff in, fz in]: [[0.015, 6e-05], [0.031, 0.00013], [0.047, 0.00019], [0.062, 0.00026], [0.078, 0.00032], [0.093, 0.00039], [0.125, 0.00052], [0.187, 0.00078], [0.25, 0.00104], [0.312, 0.00129], [0.375, 0.00156], [0.5, 0.00207]]; 1 pass(es); published values: vc 40 SFM, fz 0.00104 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 29-37 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 24.384}
+    fz_mm: {start: 0.021844}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 29-37 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.250 in
+    note: 'chip load is chosen by the effective cutter diameter D_eff = (major + minor diameter)/2 of the engaged cone (chart note); value given for D_eff = (D + tip)/2 = 0.255 in (whole flank engaged) -> column 0.250 in; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; depth of cut in 3 pass(es) with descending stepover; one side of the workpiece; two sides: 60-80 %, vertical plunging: 40-50 % of the posted chip load; published values: vc 80 SFM, fz 0.00086 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304); 38-45 HRC
+    operation: [chamfering]
+    vc_m_min: {start: 12.192}
+    fz_mm: {start: 0.021844}
+    src: harvey-2019-sf-18000
+    page: SF_18000 p. 1, STAINLESS STEELS 201...502 row, 38-45 HRC block, 'Full Chamfer (>= 25 deg)', effective-diameter column 0.250 in
+    note: 'D_eff column 0.250 in as above; full row [D_eff in, fz in]: [[0.015, 5e-05], [0.031, 0.00011], [0.047, 0.00016], [0.062, 0.00021], [0.078, 0.00027], [0.093, 0.00032], [0.125, 0.00043], [0.187, 0.00065], [0.25, 0.00086], [0.312, 0.00108], [0.375, 0.0013], [0.5, 0.00173]]; 4 pass(es); published values: vc 40 SFM, fz 0.00086 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 93.4, src: est, note: 'list price USD 108.60 (harveytool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 3, src: est, note: assumed for an HSS chamfer cutter}
+  note: M-42 (8 % Co) HSS, fully ground; 4 flutes, 2 to centre; Type I pointed, web thickness at tip T = 0.01 in (product page); angle per side 45 deg +/-30'

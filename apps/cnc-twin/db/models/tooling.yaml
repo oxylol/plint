@@ -1,0 +1,392 @@
+# Coefficients of the tooling library (cnctwin.tooling, docs/models/tooling.md): defaults for tool
+# geometry that a catalogue item does not state, standard profile proportions and section-model
+# constants. Read in SI by cnctwin.db.models.params("tooling"): the name carries the SI unit, `unit:`
+# is the unit the value is written in. Mappings are returned as written (their unit is in the name).
+# Every default is used only when the tool item does not give the value; the tool's own values win.
+format: cnctwin-model-params
+version: 1
+model: tooling
+description: "Default tool geometry, standard thread and insert proportions, fluted-section constants"
+params:
+  # ------------------------------------------------------------------ edges
+  end_dish_rad:
+    value: 1.0
+    unit: deg
+    range: [0.5, 3.0]
+    src: est
+    note: "dish (concavity) of the end teeth of solid end mills, so that only the outer corner generates the floor; tool-grinding practice uses 0.5-3 deg; 1 deg taken"
+  sharp_edge_radius_m:
+    value: 3
+    unit: um
+    range: [1, 5]
+    src: est
+    note: "edge rounding of an unprepared ground carbide edge; Denkena & Biermann (2014) describe ground edges below about 5-10 um; used when edge_prep is sharp and no edge_radius_um is given"
+  hone_edge_radius_m:
+    value: 20
+    unit: um
+    range: [10, 40]
+    src: est
+    note: "light hone of a coated solid carbide edge (typical 10-40 um in Denkena & Biermann 2014); used when edge_prep is hone and no edge_radius_um is given"
+  chamfer_corner_radius_m:
+    value: 8
+    unit: um
+    src: est
+    note: "rounding at the corners of a T-land (chamfer) preparation when no edge_radius_um is given"
+  insert_edge_radius_m:
+    value: 35
+    unit: um
+    range: [20, 60]
+    src: est
+    note: "honed indexable insert (edge condition E), 20-60 um; used for inserts without edge_radius_um"
+  # ------------------------------------------------------------------ fluted section
+  core_ratio_by_flutes:
+    value: [0.5, 0.5, 0.55, 0.6, 0.65, 0.7]
+    unit: "-"
+    src: est
+    note: "core (web) diameter / D for 1, 2, 3, 4, 5 and 6 or more flutes, used when core_diameter_mm is not given; the usual 0.5-0.7 D band of solid end mills, rising with the flute count"
+  flute_void_fraction:
+    value: 0.75
+    unit: "-"
+    range: [0.6, 0.85]
+    src: est
+    note: "share of the annulus between core and D taken by the flutes when gullet_area_mm2 is not given; the same rule the tool database uses for its gullet estimates"
+  kops_vo_ratio:
+    value: 0.8
+    unit: "-"
+    src: kops-vo-1990
+    note: "equivalent diameter of the fluted section / D from compliance measurements; used when the core and gullet of the tool are not known"
+  # ------------------------------------------------------------------ roughing and serrated end mills
+  knuckle_wavelength_per_D:
+    value: 0.15
+    unit: "-"
+    range: [0.08, 0.25]
+    src: est
+    note: "axial wavelength of the knuckle (round) roughing profile / D; catalogue roughers D 10-25 mm show 1.5-3 mm pitch; wave form sinusoidal as in Merdol & Altintas (2004)"
+  knuckle_depth_per_D:
+    value: 0.03
+    unit: "-"
+    range: [0.015, 0.05]
+    src: est
+    note: "peak-to-valley depth of the knuckle profile / D (0.3-0.6 mm on D 10-20 roughers)"
+  serration_wavelength_per_D:
+    value: 0.08
+    unit: "-"
+    range: [0.04, 0.12]
+    src: est
+    note: "axial pitch of fine-pitch serrations / D; used when geometry.serration.pitch_mm is not given"
+  serration_depth_per_D:
+    value: 0.015
+    unit: "-"
+    range: [0.005, 0.03]
+    src: est
+    note: "serration notch depth / D; used when geometry.serration.depth_mm is not given"
+  serration_notch_fraction:
+    value: 0.35
+    unit: "-"
+    range: [0.2, 0.5]
+    src: est
+    note: "share of each serration wavelength that is notch (trapezoidal serration of Merdol & Altintas 2004); the rest is the cylindrical land"
+  # ------------------------------------------------------------------ twist and spot drills
+  drill_web_ratio:
+    value: 0.15
+    unit: "-"
+    range: [0.08, 0.25]
+    src: est
+    note: "web thickness at the point / D when neither web_thickness_mm nor chisel_length_mm is given (thinned points 0.08-0.12, unthinned 0.15-0.25)"
+  spot_drill_web_ratio:
+    value: 0.06
+    unit: "-"
+    src: est
+    note: "spot drills are ground with a very small chisel; web / D"
+  drill_chisel_angle_rad:
+    value: 125
+    unit: deg
+    range: [115, 135]
+    src: est
+    note: "chisel edge angle of conventional drills, 115-135 deg (Stephenson & Agapiou 2016 ch. 3 describe this range)"
+  drill_helix_rad:
+    value: 30
+    unit: deg
+    range: [20, 40]
+    src: est
+    note: "helix of general-purpose twist drills (type N) when helix_deg is not given"
+  spot_drill_helix_rad:
+    value: 20
+    unit: deg
+    src: est
+    note: "spot drills have short, low-helix flutes"
+  drill_margin_width_ratio:
+    value: 0.07
+    unit: "-"
+    range: [0.04, 0.1]
+    src: est
+    note: "margin land width / D when margin_width_mm is not given"
+  drill_back_taper:
+    value: 0.0005
+    unit: "-"
+    range: [0.0002, 0.0008]
+    src: est
+    note: "diameter reduction per unit flute length (0.02-0.08 mm per 100 mm on standard drills); applied to the margins"
+  drill_flute_area_fraction:
+    value: 0.45
+    unit: "-"
+    range: [0.35, 0.55]
+    src: est
+    note: "both flutes of a twist drill together take this share of the cross-section when gullet_area_mm2 is not given"
+  drill_lip_clearance_rad:
+    value: 10
+    unit: deg
+    range: [6, 14]
+    src: est
+    note: "lip relief angle at the periphery when clearance_deg is not given"
+  # ------------------------------------------------------------------ gun drills
+  gun_outer_angle_rad:
+    value: 30
+    unit: deg
+    src: est
+    note: "outer cutting edge angle of the standard single-lip gundrill (the geometry discussed by Astakhov 2014)"
+  gun_inner_angle_rad:
+    value: 20
+    unit: deg
+    src: est
+    note: "inner cutting edge angle of the standard gundrill (Astakhov 2014)"
+  gun_point_offset_ratio:
+    value: 0.25
+    unit: "-"
+    src: est
+    note: "radial position of the drill point / D (the standard m_d = D/4, Astakhov 2014)"
+  gun_pad_angles_rad:
+    value: [90, 180]
+    unit: deg
+    src: est
+    note: "angular positions of the two supporting pads behind the cutting edge (cutting sense)"
+  gun_pad_width_ratio:
+    value: 0.1
+    unit: "-"
+    src: est
+    note: "width of a supporting pad / D"
+  # ------------------------------------------------------------------ indexable drills
+  idrill_split_ratio:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "radius / R where the central insert hands over to the peripheral insert"
+  idrill_overlap_ratio:
+    value: 0.06
+    unit: "-"
+    src: est
+    note: "radial overlap of central and peripheral insert / R"
+  # ------------------------------------------------------------------ reamers
+  reamer_lead_half_angle_rad:
+    value: 45
+    unit: deg
+    src: est
+    note: "chamfer lead of machine reamers (45 deg standard lead)"
+  reamer_lead_length_ratio:
+    value: 0.05
+    unit: "-"
+    src: est
+    note: "axial length of the chamfer lead / D when corner_chamfer_mm is not given"
+  reamer_margin_width_ratio:
+    value: 0.02
+    unit: "-"
+    src: est
+    note: "cylindrical land (margin) width / D"
+  # ------------------------------------------------------------------ threads
+  thread_form_angle_rad:
+    value: 60
+    unit: deg
+    src: iso-68-1-1998
+    note: "ISO metric flank angle, used when thread.form_angle_deg is not given"
+  tap_crest_flat_per_pitch:
+    value: 0.125
+    unit: "-"
+    src: iso-68-1-1998
+    note: "flat P/8 at the major diameter of the internal thread = crest of the tap / thread mill tooth"
+  tap_depth_per_H:
+    value: 0.7083333333
+    unit: "-"
+    src: iso-965-1-2013
+    note: "tooth depth 17/24 H (d3 = d - 1.226869 P), H = P / (2 tan(form/2)); the proportion is applied to other form angles as well"
+  tap_chamfer_threads:
+    value: 4
+    unit: "-"
+    range: [1.5, 8]
+    src: est
+    note: "chamfer length in threads when chamfer_threads is not given (form B taps 3.5-5.5)"
+  tap_spiral_flute_helix_rad:
+    value: 40
+    unit: deg
+    range: [15, 50]
+    src: est
+    note: "flute helix of spiral-flute taps when helix_deg is not given"
+  tap_spiral_point_angle_rad:
+    value: 12
+    unit: deg
+    range: [8, 18]
+    src: est
+    note: "gun-nose (spiral point) angle: inclination of the chamfer cutting faces that drives the chips ahead"
+  tap_lands_small:
+    value: 3
+    unit: "-"
+    src: est
+    note: "flutes (lands) of taps up to tap_lands_split_m when flutes is not given"
+  tap_lands_large:
+    value: 4
+    unit: "-"
+    src: est
+    note: "flutes (lands) of larger taps"
+  tap_lands_split_m:
+    value: 6.5
+    unit: mm
+    src: est
+    note: "nominal diameter above which taps have tap_lands_large lands"
+  tap_rake_rad:
+    value: 8
+    unit: deg
+    range: [0, 20]
+    src: est
+    note: "radial rake of cutting taps when rake_deg is not given (general-purpose steel taps 5-12 deg)"
+  tap_chamfer_clearance_rad:
+    value: 6
+    unit: deg
+    range: [2, 12]
+    src: est
+    note: "relief of the chamfer teeth of cutting taps when clearance_deg is not given (full-thread lands concentric)"
+  forming_tap_lobes:
+    value: 4
+    unit: "-"
+    src: est
+    note: "lobes of a thread-forming tap when flutes is not given (3-6 by size)"
+  # ------------------------------------------------------------------ centre drills
+  centre_drill_countersink_rad:
+    value: 60
+    unit: deg
+    src: din-333-1986
+    note: "included angle of the countersink of form A centre drills"
+  centre_drill_body_ratio:
+    value: 2.5
+    unit: "-"
+    src: est
+    note: "body diameter / pilot diameter when shank.diameter_mm is not given (form A sizes 2.5x6.3, 4x10, 6.3x16 give 2.5)"
+  centre_drill_pilot_length_ratio:
+    value: 1.2
+    unit: "-"
+    src: est
+    note: "pilot length / pilot diameter when cutting_length_mm is not given"
+  # ------------------------------------------------------------------ slotting, undercutting, saws
+  neck_ratio_default:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "neck diameter / D of keyseat, T-slot and undercutting tools when the neck is not given"
+  lollipop_wrap_rad:
+    value: 270
+    unit: deg
+    src: est
+    note: "wrap of the ball's cutting edge (meridian section) when neither wrap_angle_deg nor the neck is given"
+  slitting_hub_ratio:
+    value: 0.4
+    unit: "-"
+    src: est
+    note: "hub (arbor collar) diameter / D of slitting saws without hub data"
+  # ------------------------------------------------------------------ indexable milling inserts
+  indexable_body_ratio:
+    value: 0.8
+    unit: "-"
+    range: [0.5, 0.95]
+    src: est
+    note: "cutter body (chip pocket floor) diameter / D of indexable mills when hub_diameter_mm is not given; sets the chip-pocket estimate"
+  wiper_flat_per_ic:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "wiper flat length / inscribed circle when the wiper length is not given"
+  insert_minor_dish_rad:
+    value: 1.0
+    unit: deg
+    src: est
+    note: "dish of the minor (face) edge of milling inserts without wiper so it does not drag on the floor"
+  insert_shape_symbols:
+    value: [A, B, C, D, E, H, K, L, M, O, P, S, T, V, W]
+    unit: "-"
+    src: iso-1832-2017
+    note: "insert shape symbols (first symbol of the designation) with a corner; R (round) has none"
+  insert_included_angle_rad:
+    value: [85, 82, 80, 55, 75, 120, 55, 90, 86, 135, 108, 90, 60, 35, 80]
+    unit: deg
+    src: iso-1832-2017
+    note: "included (corner) angle of each shape in insert_shape_symbols, same order"
+  insert_clearance_symbols:
+    value: [A, B, C, D, E, F, G, N, P]
+    unit: "-"
+    src: iso-1832-2017
+    note: "normal clearance symbols (second symbol of the designation)"
+  insert_clearance_rad:
+    value: [3, 5, 7, 15, 20, 25, 30, 0, 11]
+    unit: deg
+    src: iso-1832-2017
+    note: "normal clearance of each symbol in insert_clearance_symbols, same order"
+  negative_holder_rake_rad:
+    value: -6
+    unit: deg
+    src: est
+    note: "rake tilt of holders for negative (0 deg clearance) inserts when the holder rake is not given"
+  negative_holder_incl_rad:
+    value: -6
+    unit: deg
+    src: est
+    note: "inclination tilt of holders for negative inserts when the holder inclination is not given"
+  turning_wiper_flat_per_nose:
+    value: 1.5
+    unit: "-"
+    src: est
+    note: "wiper flat length / nose radius of wiper turning inserts"
+  groove_side_clearance_rad:
+    value: 3
+    unit: deg
+    range: [1, 5]
+    src: est
+    note: "side relief of grooving and parting inserts"
+  boring_bar_approach_rad:
+    value: 95
+    unit: deg
+    src: est
+    note: "approach angle of boring bars when holder.approach_angle_deg is not given (S..CL 95 deg type)"
+  boring_head_approach_rad:
+    value: 90
+    unit: deg
+    src: est
+    note: "approach angle of boring-head cartridges when not given"
+  holder_nose_to_bore_ratio:
+    value: 2.6
+    unit: "-"
+    range: [2.0, 2.8]
+    src: est
+    note: "nose diameter / bore of the chucks in db/holders (shrink fit 2.0, collet 2.5, hydraulic 2.7); used when a holder gives neither nose_diameter_mm nor profile_mm (the outline is then a cylinder of that diameter to the gauge line; the upper end of the range keeps collision checks on the safe side)"
+  # ------------------------------------------------------------------ masses and coolant
+  holder_density_kg_m3:
+    value: 7850
+    unit: kg_m3
+    src: est
+    note: "case-hardened alloy steel of holders, boring heads and steel boring bars"
+  heavy_metal_density_kg_m3:
+    value: 17500
+    unit: kg_m3
+    src: est
+    note: "tungsten heavy alloy boring bars (90-97 % W)"
+  damped_bar_density_kg_m3:
+    value: 8000
+    unit: kg_m3
+    src: est
+    note: "steel damped bar with an internal tuned mass, mean density"
+  tool_material_by_class:
+    value: {carbide: carbide-submicron-10co, hss: hss-m2, cermet: cermet-ticn, ceramic: ceramic-al2o3-tic, cbn: cbn-high, pcd: pcd}
+    unit: "-"
+    src: est
+    note: "representative db/tool_materials item per class, for the density when the tool's own material cannot be read"
+  coolant_exit_radius_ratio:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "radial position / R of coolant exits on the tip or flank"

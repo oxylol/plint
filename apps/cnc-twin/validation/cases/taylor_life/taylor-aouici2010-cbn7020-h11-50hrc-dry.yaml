@@ -1,0 +1,65 @@
+# Aouici et al. (2010): Sandvik CBN7020 SNGA 120408 S01020 in dry hard turning of AISI H11 at 50 HRC,
+# ap 0.15 mm: tool life to VB = 0.3 mm for vc 120/180/240 m/min x f 0.08/0.12/0.16 mm/rev (Table 4).
+format: cnctwin-validation-case
+version: 1
+id: taylor-aouici2010-cbn7020-h11-50hrc-dry
+quantity: taylor_life
+reference:
+  src: aouici-2010-cbn-h11-hard-turning
+  location: "Sect. 2 (setup), Table 2 (CBN7020 properties), Sect. 3.3 and Table 4 (tool life for VB = 0.30 mm, 3 x 3 full factorial)"
+  digitised: false
+  measured: true
+  note: "Table values read directly; how the lives were interpolated from the wear readings and the scatter are not stated."
+setup:
+  operation: longitudinal_turning
+  material:
+    db: h13-50hrc
+    note: "AISI H11 (not H13) hardened to 50 HRC; Table 1: C 0.35, Cr 5.26, Mo 1.19, V 0.50, Si 1.01, Mn 0.32 %. H11 is the lower-vanadium sister grade of H13 (DB entry, 50 HRC)."
+  stock:
+    src: aouici-2010-cbn-h11-hard-turning
+    page: Sect. 2
+    form: round bar
+    diameter_mm: 80
+  tool:
+    src: aouici-2010-cbn-h11-hard-turning
+    page: Sect. 2, Table 2
+    type: turning_insert
+    iso_designation: SNGA 120408 S01020
+    grade: "Sandvik CBN7020 (57 % CBN, 35 % Ti(C,N); HV 2800 daN/mm2, K1c 4.2 MPa m1/2, E 570 GPa, 4.3 g/cm3, grain 2.5 um)"
+    tool_class: cbn
+    coating: none stated
+    holder: PSBNR 25x25 M12
+    entering_angle_deg: 75
+    inclination_deg: -6
+    rake_deg: -6
+    clearance_deg: 6
+    nose_radius_mm: {value: 0.8, note: "stated in Sect. 3.1 ('nose radius is equal to 0.8 mm') and Table 3 (r 0.8 mm)"}
+    edge_preparation: {value: "S-type edge: chamfer 0.10 mm x 20 deg plus hone", src: est, note: "decoded from the edge code S01020 of the designation; not stated in words"}
+    assumed_inputs: [edge_preparation]
+  machine:
+    src: aouici-2010-cbn-h11-hard-turning
+    page: Sect. 2
+    model: SN 40C lathe
+    power_kW: 6.6
+  conditions:
+    src: aouici-2010-cbn-h11-hard-turning
+    page: Table 4
+    cutting_speed_m_min: [120, 180, 240]
+    feed_mm_rev: [0.08, 0.12, 0.16]
+    ap_mm: 0.15
+    coolant: dry
+    wear_criterion_VB_mm: 0.3
+  dynamics: null
+  program: null
+reference_values:
+  - {name: tool_life_f0.08, value: 76.00, unit: min, uncertainty: 4, x: 120, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.08, value: 40.00, unit: min, uncertainty: 2, x: 180, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.08, value: 20.50, unit: min, uncertainty: 1, x: 240, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.12, value: 67.50, unit: min, uncertainty: 4, x: 120, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.12, value: 37.00, unit: min, uncertainty: 2, x: 180, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.12, value: 20.00, unit: min, uncertainty: 1, x: 240, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.16, value: 56.60, unit: min, uncertainty: 3, x: 120, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.16, value: 32.67, unit: min, uncertainty: 2, x: 180, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_f0.16, value: 18.34, unit: min, uncertainty: 1, x: 240, x_name: cutting_speed, x_unit: m/min}
+reference_curves: []
+notes: "The uncertainties (about 5 % of each life) are est.: the source states none; they stand for reading the life off wear curves measured at intervals. Speed dominates (91.6 % contribution in the source's ANOVA, feed 3.8 %). At f 0.08 the three points give a Taylor exponent n = ln(240/120) / ln(76/20.5) = 0.53 (computed here, not in the paper). The same paper gives forces, roughness and IR 'cutting zone' temperatures at other conditions (ap 0.15 mm, Figs. 1-9), which are not used here."

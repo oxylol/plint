@@ -1,0 +1,71 @@
+# OSG ADO-3D EgiAs-coated carbide drills with internal coolant (3D type), read from the OSG General
+# Catalogue 2025-2026 on 2026-11-03 (p. 145-146 dimensions and icons, p. 392 cutting conditions).
+format: cnctwin-tool
+version: 1
+series_id: osg-ado-3d-carbide-drill
+maker: "OSG Corporation"
+series: "ADO-3D EgiAs coated carbide drill with internal coolant supply, 3D type (tap drills 6.8 mm for M8 and 8.5 mm for M10)"
+src: osg-2025-gc-drilling-threading
+notes: "Icons p. 145: carbide, EgiAs coating, diameter tolerance h8, 30 deg helix, shank for shrink fit; drawing: 140 deg point, R gash (R thinning), coolant holes exiting at the point. Two shank versions per size: DC - DCON (shank one size up, EDP 869xxxx, used here) and DCON = next even size (EDP 870xxxx). LU is the effective flute length (usable drilling depth), LCF the flute length. Cutting conditions p. 392 are for water-soluble coolant (dilution <= 20x) or MQL; with neat oil or > 20x dilution reduce the speed by 30 %. Web thickness, chisel and margin geometry are not published; the db/models/tooling.yaml defaults apply."
+defaults:
+  type: twist_drill
+  hand: right
+  tool_material: {class: carbide, grade: "carbide (grade not stated)", id: carbide-submicron-10co, src: est, note: "OSG states only 'carbide'; solid drills are made from fine-grain WC-Co rod, mapped to the submicron 10 % Co entry"}
+  coating: {id: tialn, src: est, note: "EgiAs is OSG's proprietary PVD coating; chemistry and thickness not stated, mapped to TiAlN"}
+items:
+  - id: osg-8690680-ado-3d-6.8
+    order_code: "ADO-3D 6.8 (EDP 8690680, DC 6.8 - DCON 7)"
+    geometry:
+      diameter_mm: 6.8
+      flutes: 2
+      point_angle_deg: 140
+      helix_deg: 30
+      cutting_length_mm: {value: 21, note: "LU, effective flute length"}
+      flute_length_mm: 34
+      shank: {diameter_mm: 7, length_mm: 53, form: plain}
+      overall_length_mm: 88
+      lip_count: 2
+      centre_cutting: true
+      coolant_holes: {count: {value: 2, src: est, note: "one outlet per flank as drawn for ADO; count not printed"}, diameter_mm: {value: 0.7, src: est, note: "about 0.1 D, typical of internally cooled solid drills of this size; not published"}, exit: tip}
+      note: "LU 21, LCF 34, OAL 88, DCON 7, LS 53, point length PL 1.2 (p. 146)"
+    max_rpm: null
+    mass_g: 40
+    price_eur: null
+    regrinds: {value: 2, src: est, note: "solid carbide drills are usually reground 2-3 times (OSG offers resharpening and recoating, catalogue front matter); no count published"}
+    cutting_data:
+      - {iso_group: P, material_hint: "mild / low carbon steel SS400, S10C, <= 150 HB", operation: [drilling], vc_m_min: {min: 80, max: 120}, f_mm: {min: 0.14, max: 0.26}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (4,500 min-1)"}
+      - {iso_group: P, material_hint: "carbon steel S35C, S50C, <= 210 HB", material: aisi1045, operation: [drilling], vc_m_min: {min: 80, max: 160}, f_mm: {min: 0.14, max: 0.26}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (4,500 min-1)"}
+      - {iso_group: P, material_hint: "alloy steel SCM, SCr, SNCM, 16-28 HRC", material: aisi4140-qt30, operation: [drilling], vc_m_min: {min: 80, max: 120}, f_mm: {min: 0.14, max: 0.26}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (4,500 min-1)"}
+      - {iso_group: P, material_hint: "alloy steel SCM, SCr, SNCM, 28-35 HRC", operation: [drilling], vc_m_min: {min: 60, max: 90}, f_mm: {min: 0.14, max: 0.26}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (3,200 min-1)"}
+      - {iso_group: K, material_hint: "cast iron FC250", material: grey-cast-iron-gjl250, operation: [drilling], vc_m_min: {min: 80, max: 120}, f_mm: {min: 0.14, max: 0.26}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (4,500 min-1)"}
+      - {iso_group: K, material_hint: "ductile cast iron FCD450, FCD600", operation: [drilling], vc_m_min: {min: 60, max: 100}, f_mm: {min: 0.14, max: 0.26}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (3,600 min-1)"}
+      - {iso_group: M, material_hint: "stainless steel SUS300 / SUS400 series, 480-800 N/mm2", material: aisi304, operation: [drilling], vc_m_min: {min: 40, max: 80}, f_mm: {min: 0.14, max: 0.26}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (2,700 min-1)"}
+      - {iso_group: H, material_hint: "special / prehardened steel SKD61 34-40 HRC", operation: [drilling], vc_m_min: {min: 30, max: 60}, f_mm: {min: 0.14, max: 0.21}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 7 mm row (2,000 min-1)"}
+  - id: osg-8690850-ado-3d-8.5
+    order_code: "ADO-3D 8.5 (EDP 8690850, DC 8.5 - DCON 9)"
+    geometry:
+      diameter_mm: 8.5
+      flutes: 2
+      point_angle_deg: 140
+      helix_deg: 30
+      cutting_length_mm: {value: 26, note: "LU, effective flute length"}
+      flute_length_mm: 43
+      shank: {diameter_mm: 9, length_mm: 57, form: plain}
+      overall_length_mm: 101
+      lip_count: 2
+      centre_cutting: true
+      coolant_holes: {count: {value: 2, src: est, note: "one outlet per flank as drawn for ADO; count not printed"}, diameter_mm: {value: 0.85, src: est, note: "about 0.1 D, typical of internally cooled solid drills of this size; not published"}, exit: tip}
+      note: "LU 26, LCF 43, OAL 101, DCON 9, LS 57, point length PL 1.5 (p. 146)"
+    max_rpm: null
+    mass_g: 71
+    price_eur: null
+    regrinds: {value: 2, src: est, note: "solid carbide drills are usually reground 2-3 times; no count published"}
+    cutting_data:
+      - {iso_group: P, material_hint: "mild / low carbon steel SS400, S10C, <= 150 HB", operation: [drilling], vc_m_min: {min: 80, max: 120}, f_mm: {min: 0.16, max: 0.28}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (4,000 min-1); 9 mm row 0.18-0.3"}
+      - {iso_group: P, material_hint: "carbon steel S35C, S50C, <= 210 HB", material: aisi1045, operation: [drilling], vc_m_min: {min: 80, max: 160}, f_mm: {min: 0.16, max: 0.28}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (4,000 min-1)"}
+      - {iso_group: P, material_hint: "alloy steel SCM, SCr, SNCM, 16-28 HRC", material: aisi4140-qt30, operation: [drilling], vc_m_min: {min: 80, max: 120}, f_mm: {min: 0.16, max: 0.28}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (4,000 min-1)"}
+      - {iso_group: P, material_hint: "alloy steel SCM, SCr, SNCM, 28-35 HRC", operation: [drilling], vc_m_min: {min: 60, max: 90}, f_mm: {min: 0.16, max: 0.28}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (2,800 min-1)"}
+      - {iso_group: K, material_hint: "cast iron FC250", material: grey-cast-iron-gjl250, operation: [drilling], vc_m_min: {min: 80, max: 120}, f_mm: {min: 0.16, max: 0.28}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (4,000 min-1)"}
+      - {iso_group: K, material_hint: "ductile cast iron FCD450, FCD600", operation: [drilling], vc_m_min: {min: 60, max: 100}, f_mm: {min: 0.16, max: 0.28}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (3,200 min-1)"}
+      - {iso_group: M, material_hint: "stainless steel SUS300 / SUS400 series, 480-800 N/mm2", material: aisi304, operation: [drilling], vc_m_min: {min: 40, max: 80}, f_mm: {min: 0.16, max: 0.28}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (2,400 min-1)"}
+      - {iso_group: H, material_hint: "special / prehardened steel SKD61 34-40 HRC", operation: [drilling], vc_m_min: {min: 30, max: 60}, f_mm: {min: 0.16, max: 0.24}, coolant: "water-soluble or MQL, through-tool", page: "p. 392, 8 mm row (1,800 min-1)"}

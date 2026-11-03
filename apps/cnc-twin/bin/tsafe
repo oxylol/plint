@@ -1,0 +1,21 @@
+#!/bin/bash
+# Run a command at nice 10 inside a memory-capped cgroup, so a runaway test or build cannot
+# push the home server into swap or the OOM killer. Usage: bin/tsafe <command> [args...]
+# TSAFE_MEM sets the cap (default 900M). Working directory and the useful environment are kept.
+# The Numba cache directory is keyed by a hash of every kernel source file: Numba does not
+# notice that a cached caller's callee in another file changed, so a stale cache is never reused.
+set -euo pipefail
+root=/opt/plint/apps/cnc-twin
+mem="${TSAFE_MEM:-900M}"
+if [ -z "${NUMBA_CACHE_DIR:-}" ]; then
+  key=$( (cd "$root" && grep -rl --include='*.py' -e '@njit' -e '@numba' -e 'cuda.jit' cnctwin 2>/dev/null | LC_ALL=C sort | xargs -r sha256sum; \
+          /home/plint/.venvs/cnc-twin/bin/python -c 'import numba, llvmlite; print(numba.__version__, llvmlite.__version__)' 2>/dev/null; \
+          grep -m1 'model name' /proc/cpuinfo) | sha256sum | cut -c1-16)
+  NUMBA_CACHE_DIR="$root/.numba-cache/$key"
+fi
+exec sudo -n systemd-run --scope -q -p "MemoryMax=${mem}" -p MemorySwapMax=256M --uid=plint --gid=plint \
+  /usr/bin/env HOME=/home/plint PATH="/home/plint/.venvs/cnc-twin/bin:/usr/local/bin:/usr/bin:/bin" \
+  NUMBA_CACHE_DIR="$NUMBA_CACHE_DIR" PYTHONHASHSEED=0 PYTHONDONTWRITEBYTECODE=1 \
+  OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1 \
+  NUMBA_ENABLE_CUDASIM="${NUMBA_ENABLE_CUDASIM:-0}" NUMBA_BOUNDSCHECK="${NUMBA_BOUNDSCHECK:-0}" \
+  /bin/bash -c 'cd "$1" && shift && exec nice -n 10 "$@"' tsafe "$PWD" "$@"

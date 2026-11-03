@@ -1,0 +1,93 @@
+# Sources for db/controllers/*.yaml (alarm lists, supported words, timing, system variables).
+# All read on 2026-11-03 from the maker's own download servers (PDF text extracted locally).
+# Not available this session: FANUC 0i-F operator/alarm manuals (B-64604EN, B-64694EN; not published
+# by FANUC; only FANUC's function catalogue below), SIEMENS SINUMERIK 840D sl manuals
+# (support.industry.siemens.com refuses automated access), the Haas NGC alarm pages (haascnc.com
+# HTML returns HTTP 403); web search was exhausted.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  # ---------------------------------------------------------------- HEIDENHAIN
+  heidenhain-nc-errors-2023:
+    type: manual
+    authors: "DR. JOHANNES HEIDENHAIN GmbH"
+    title: "NC Error Messages: TNC7, TNC7 basic, TNC 640, TNC 620, TNC 320, TNC 128, CNC PILOT 640, MANUALplus 620 (NC software xxxxxx-18)"
+    venue: "HEIDENHAIN TNCguide, PDF, English, 10/2023; valid for 81762x-18, 34059x-18, 81760x-18, 77185x-18, 77184x-18, 68894x-18, 54843x-18"
+    year: 2023
+    url: "https://content.heidenhain.de/doku/tnc_guide/pdf_files/Fehlermeldungen_TNC/pdf/errors_en.pdf"
+    accessed: 2026-11-03
+    pages: "List of All Error Messages, pp. 2-1330 (error number, message, cause of error, error correction); the page of every alarm used is given per alarm"
+
+  heidenhain-tnc640-klartext-2023:
+    type: manual
+    authors: "DR. JOHANNES HEIDENHAIN GmbH"
+    title: "TNC 640 User's Manual Klartext Programming, NC software 34059x-18 (ID 892903-2C)"
+    venue: "HEIDENHAIN TNCguide, PDF, English, 10/2023"
+    year: 2023
+    url: "https://content.heidenhain.de/doku/tnc_guide/pdf_files/TNC640/34059x-18/bhb/892903-2C.pdf"
+    accessed: 2026-11-03
+    pages: "pp. 132-134 TOOL DEF/TOOL CALL; 147, 160-171 path functions (DR+/DR-, CR sign, arc input tolerance 0.016 mm, circleDeviation MP 200901); 233 STOP; 242 M120 LA (max 99 blocks); 276-301 Q parameters (ranges, FN 0-FN 14, FN 14 error list); 310-319 FN 16/18/19/20/29/37/38; 333-339 preassigned Q parameters; 461-503 PLANE, FUNCTION TCPM; 526 ADP; 628-680 17.1 System data (FN 18 SYSREAD list)"
+
+  heidenhain-tnc640-iso-2023:
+    type: manual
+    authors: "DR. JOHANNES HEIDENHAIN GmbH"
+    title: "TNC 640 User's Manual ISO Programming, NC software 34059x-18 (ID 892909-2C)"
+    venue: "HEIDENHAIN TNCguide, PDF, English, 10/2023"
+    year: 2023
+    url: "https://content.heidenhain.de/doku/tnc_guide/pdf_files/TNC640/34059x-18/diniso/892909-2C.pdf"
+    accessed: 2026-11-03
+    pages: "p. 164 full circle / input tolerance; pp. 621-622 17.2 overview table of miscellaneous functions (M); pp. 627-634 17.3 ISO function overview TNC 640 (G codes, addresses)"
+
+  heidenhain-tnc640-cycles-2023:
+    type: manual
+    authors: "DR. JOHANNES HEIDENHAIN GmbH"
+    title: "TNC 640 User's Manual Programming of Machining Cycles, NC software 34059x-18 (ID 1303406-23)"
+    venue: "HEIDENHAIN TNCguide, PDF, English, 10/2023"
+    year: 2023
+    url: "https://content.heidenhain.de/doku/tnc_guide/pdf_files/TNC640/34059x-18/zyklen_bearbeitung/1303406-23.pdf"
+    accessed: 2026-11-03
+    pages: "pp. 448-451 13.5 Cycle 32 TOLERANCE (ISO G62); pp. 790-792 16.1 Table of cycles (number, name, DEF/CALL active)"
+
+  heidenhain-tnc640-setup-2023:
+    type: manual
+    authors: "DR. JOHANNES HEIDENHAIN GmbH"
+    title: "TNC 640 User's Manual Setup, Testing and Running NC Programs, NC software 34059x-18 (ID 1261174-25)"
+    venue: "HEIDENHAIN TNCguide, PDF, English, 10/2023"
+    year: 2023
+    url: "https://content.heidenhain.de/doku/tnc_guide/pdf_files/TNC640/34059x-18/einrichten/1261174-25.pdf"
+    accessed: 2026-11-03
+    pages: "pp. 620-623 14.3 Specifications (block processing time 0.5 ms for a 3-D line without radius compensation; position/speed controller cycle 200 us, 100 us with option 49; current controller min. 100 us / 50 us; input resolution 0.01 um and 0.00001 deg; input formats and ranges; M120 look-ahead up to 99 blocks)"
+
+  # ---------------------------------------------------------------- Haas Automation
+  haas-ngc-mill-om-2020:
+    type: manual
+    authors: "Haas Automation, Inc."
+    title: "Mill Operator's Manual, Next Generation Control, 96-8210 Revision N"
+    venue: "Haas Automation, Oxnard CA, December 2020, PDF (English, original instructions)"
+    year: 2020
+    url: "https://haascnc.com/content/dam/haascnc/en/service/manual/operator/english---mill-ngc---operator's-manual---2020.pdf"
+    accessed: 2026-11-03
+    pages: "manual (printed) page numbers: p. 226 6.7 High-Speed Machining; pp. 253-254 macro argument tables; pp. 257-263 6.13.7 Macro Variables Table; p. 266 #3000 programmable alarms; p. 268 #3006; pp. 297-302 7.1.1 List of G-codes; p. 324 G31; p. 370 G103; p. 393 G187; pp. 407-433 8 M-codes; p. 456 Setting 85; pp. 462-463 Settings 188-191 (alarm 467); alarm numbers quoted in the text: 253, 312, 314, 332, 370, 467, 973"
+
+  haas-ngc-lathe-om-2020:
+    type: manual
+    authors: "Haas Automation, Inc."
+    title: "Lathe Operator's Manual, Next Generation Control, 96-8910 Revision N"
+    venue: "Haas Automation, Oxnard CA, December 2020, PDF (English, original instructions)"
+    year: 2020
+    url: "https://haascnc.com/content/dam/haascnc/en/service/manual/operator/english---lathe-ngc---operator's-manual---2020.pdf"
+    accessed: 2026-11-03
+    pages: "manual (printed) page numbers: pp. 297-303 7.1.1 List of G-codes; pp. 391-412 8 M-codes; macro variables table (Macros section); alarm numbers quoted in the text: 253, 312, 560, 605, 973, 9109, 9111"
+
+  # ---------------------------------------------------------------- FANUC
+  fanuc-cnc-functions-catalog-2024:
+    type: catalogue
+    authors: "FANUC Corporation / FANUC America Corporation"
+    title: "CNC Controls: Functions, Communication, Software. FANUC Series 0i-MODEL F Plus, 30i/31i/32i-MODEL B Plus, Power Motion i-A Plus"
+    venue: "FANUC function catalogue, PDF (719 pages), (c) FANUC 2024; hosted by FANUC America"
+    year: 2024
+    url: "https://www.fanucamerica.com/uploads/files/cnc-catalog-plus-series.pdf"
+    accessed: 2026-11-03
+    pages: "printed pages: 162 polar coordinate interpolation; 163 cylindrical interpolation; 173 high-speed and high-quality machining package; 174 Smooth Tolerance+ Control; 185 continuous high-speed skip (G31 P90, #5061-#5068); 237 inverse time feed (G93, group 05); 244-247 AI Contour Control I/II and look-ahead 200/400 blocks; 250 jerk control; 262-265 workpiece coordinate systems, 48/300 additional pairs, G53.2; 266-268 direct drawing dimension programming, G-code system A/B/C table; 270-272 chamfering/corner rounding, optional chamfering ,C/,R, custom macro common variables; 278-279 multiple repetitive cycles G70-G76; 286 tilted working plane; 374 tool centre point control (30i-B Plus only); 377 Smooth TCP; 396 3-D cutter compensation; 504 machine alarm diagnosis (alarm numbers 1000-1999 external, 3000-3200 macro #3000). The catalogue says FANUC manuals prevail."
+

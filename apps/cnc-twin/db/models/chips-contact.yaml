@@ -1,0 +1,94 @@
+# Contacts of chips (cnctwin.chips, docs/models/chips.md "Contacts"): restitution and friction by material
+# pair, the flute-face impulse, settling, wet sticking, welding to a hot edge, wrapping and hooking.
+format: cnctwin-model-params
+version: 1
+model: chips-contact
+description: "Impact restitution and friction of chips by pair, settling, wet sticking, welding, wrapping"
+params:
+  restitution_by_family:
+    value: {aluminium: 0.3, steel: 0.45, tool_steel: 0.45, stainless: 0.4, titanium: 0.4, nickel: 0.4, copper: 0.3,
+            brass: 0.35, magnesium: 0.3, cast_iron: 0.3, polymer: 0.5, wood: 0.4, foam: 0.2, composite: 0.3}
+    unit: "-"
+    src: est
+    note: "normal coefficient of restitution of a thin chip striking hardened steel at 1-20 m/s; thin plates lose most of the impact energy in bending, plastic indentation and rotation, so values lie well below the 0.6-0.9 of metal spheres at low speed (Goldsmith-type sphere data); aluminium and copper chips are softer"
+  friction_by_family:
+    value: {aluminium: 0.6, steel: 0.5, tool_steel: 0.5, stainless: 0.55, titanium: 0.5, nickel: 0.5, copper: 0.55,
+            brass: 0.4, magnesium: 0.5, cast_iron: 0.3, polymer: 0.35, wood: 0.4, foam: 0.6, composite: 0.3}
+    unit: "-"
+    src: est
+    note: "dry sliding friction coefficient of the chip on steel: metal pairs 0.4-0.6, aluminium adheres, graphite in cast iron lubricates, polymers lower"
+  restitution_default:
+    value: 0.4
+    unit: "-"
+    src: est
+    note: "for a material family not in the table"
+  friction_default:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "for a material family not in the table"
+  surface_restitution_factor:
+    value: {part: 1.0, fixture: 1.0, machine_table: 1.0, pile: 0.35, enclosure: 0.9, tool: 1.1, holder: 1.0, nozzle: 0.8,
+            body: 1.0}
+    unit: "-"
+    src: est
+    note: "multiplier on the family restitution for the surface struck: a chip bed absorbs most of the impact (granular damping), sheet-steel walls ring, carbide is stiffer than steel"
+  surface_friction_factor:
+    value: {part: 1.2, fixture: 1.0, machine_table: 1.0, pile: 1.3, enclosure: 1.0, tool: 0.8, holder: 1.0, nozzle: 0.8,
+            body: 1.2}
+    unit: "-"
+    src: est
+    note: "multiplier on the family friction: the part and a rotating bar are the chip's own material (similar metals adhere), chips interlock with a chip bed, coated carbide slides more easily"
+  paddle_restitution:
+    value: 0.3
+    unit: "-"
+    range: [0.1, 0.6]
+    src: est
+    note: "restitution of a chip struck by a flute face along the face normal (the chip leaves at (1 + e) times the flute speed when struck at rest); plastic impact of a thin chip on a fast face"
+  settle_bounce_sizes:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "a chip settles when its rebound would lift it by less than this many chip sizes (volume-equivalent diameters): it then cannot leave the surface"
+  film_thickness_m:
+    value: 50.0
+    unit: um
+    range: [10.0, 500.0]
+    src: est
+    note: "coolant film thickness on wetted surfaces, used in the viscous Stokes number and the capillary escape energy; flood films of water-based coolants are tens to hundreds of micrometres"
+  asperity_height_m:
+    value: 2.0
+    unit: um
+    src: est
+    note: "roughness height that ends the viscous approach (Ennis et al. 1991 critical Stokes number (1 + 1/e) ln(h / h_a)); a machined face, Ra about 0.5-3 um"
+  contact_angle_cos:
+    value: 0.9
+    unit: "-"
+    src: est
+    note: "cosine of the contact angle of water-based coolant on metal (about 25 degrees)"
+  wilhelmy_factor:
+    value: 1.0
+    unit: "-"
+    src: wilhelmy-1863
+    note: "capillary force of a meniscus along a plate's perimeter F = gamma P cos(theta) (Wilhelmy plate); a chip lying in a film is held by its perimeter meniscus"
+  weld_homologous_temperature:
+    value: 0.6
+    unit: "-"
+    range: [0.5, 0.8]
+    src: kazakov-1985
+    note: "solid-state (diffusion) welding of clean metal contacts needs about 0.5-0.8 of the melting temperature in kelvin; a hot chip pressed against a fresh cutting edge for milliseconds needs the middle of the range (value used 0.6 of the solidus)"
+  wrap_turns:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "a long, unbroken chip wraps around a rotating tool or bar when its length is at least this many circumferences (it then hooks around and is pulled along)"
+  hook_radii:
+    value: 4.0
+    unit: "-"
+    src: est
+    note: "a chip hooks on a running nozzle when it is longer than this many nozzle radii (short chips are blown off)"
+  nozzle_radius_default_m:
+    value: 1.5
+    unit: mm
+    src: est
+    note: "exit radius of a coolant nozzle the coolant domain has not reported running yet (radius = sqrt(flow / (pi speed)) once it runs); flood nozzles are 2-6 mm"

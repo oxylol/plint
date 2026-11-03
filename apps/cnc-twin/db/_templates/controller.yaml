@@ -1,0 +1,20 @@
+# Controller reference: db/controllers/<id>.yaml (alarms, supported words, timing)
+format: cnctwin-controller
+version: 1
+id: fanuc-0i-mf
+dialect: fanuc                       # fanuc | haas | siemens840d | heidenhain_klartext | heidenhain_iso
+name: "FANUC Series 0i-MF Plus"
+src: key                             # manual the alarm list comes from
+alarms:                              # number and text exactly as the control shows them
+  - {code: "PS0010", text: "IMPROPER G-CODE", cause: "a G code not in the specification was commanded"}
+  - {code: "PS0011", text: "FEED ZERO ( COMMAND )", cause: "the cutting feedrate is zero"}
+  # ...
+messages: {}                         # operator message conventions (#3000 / #3006 on Fanuc; MSG on Siemens; FN 14 on Heidenhain)
+timing:
+  ipo_period_ms: {value: 1.0, src: key}
+  block_processing_ms: {value: 0.4, src: key}
+  lookahead_blocks: {value: 200, src: key}
+words:                               # supported G/M/address words with one-line meaning
+  G: {"00": "rapid", "01": "linear", ...}
+  M: {"03": "spindle CW", ...}
+  addresses: [N, G, X, Y, Z, ...]

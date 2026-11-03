@@ -1,0 +1,207 @@
+# Workpiece material: Ti-6Al-4V Grade 5, mill annealed (alpha+beta).
+# Physical data: ATI, Aubert & Duval and UPMET (ELI) datasheets; cutting data: Klippel et al. 2024 (ETH)
+# orthogonal database; flow stress: Seo et al. 2005 set recommended by Ducobu et al. 2017.
+format: cnctwin-material
+version: 1
+id: ti6al4v
+name: "Titanium Ti-6Al-4V Grade 5, annealed"
+family: titanium
+iso_group: S
+condition: "mill annealed (anneal 691-760 C, air or furnace cool), alpha+beta"
+designations: {UNS: R56400, ASTM: "Grade 5", AFNOR: "TA6V", DIN: "3.7165"}
+stock_forms: []                    # no residual-stress profile of annealed bar or plate read
+
+physical:
+  src: upmet-2026-ti64-eli
+  density_kg_m3: {value: 4430, src: aubert-duval-2018-ta6v, range: [4420, 4470], note: "Aubert & Duval 4.43; ATI 4.47; UPMET (ELI) 4.42"}
+  specific_heat_J_kgK: {table: [[20, 580], [425, 670], [870, 930]], note: "ELI grade datasheet; the 870 C point is inside the alpha+beta to beta transition range"}
+  conductivity_W_mK: {table: [[20, 6.6], [315, 10.6]], range: [6.6, 7.3], note: "ELI grade, mill annealed; Aubert & Duval Grade 5: 6.7 W/mK at 20 C; ducobu-2017-jc-ti6al4v uses 7.3"}
+  expansion_1_K: {table: [[100, 9.0e-6], [425, 9.4e-6], [650, 9.7e-6]], note: "mean coefficients 0-100 C, 20-425 C and 20-650 C; Aubert & Duval Grade 5: 9.0e-6 for 20-200 C"}
+  youngs_modulus_GPa: {table: [[20, 114.5], [230, 103]], note: "mid-points of the ranges 107-122 GPa at 20 C and 95-111 GPa at 230 C; Aubert & Duval 110 GPa; Ducobu et al. 113.8 GPa"}
+  poisson: {value: 0.31}
+  solidus_degC: {value: 1538, src: ati-2012-ti64-datasheet, note: "lower end of the melting range 2,800-3,000 F (1,538-1,649 C) quoted by ATI (rounded values)"}
+  liquidus_degC: {value: 1655, range: [1649, 1660], note: "UPMET 1650-1660 C; ATI upper end 1649 C"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HRC: 32, range: [30, 34], src: ati-2012-ti64-datasheet, note: "annealed HRC 30-34; the ETH bar of klippel-2024-ck45-orthogonal: 30.0 HRC"}
+  yield_MPa: {value: 869, src: klippel-2024-ck45-orthogonal, range: [827, 869], note: "supplier certificate of the ETH test bar (Table 2); Aubert & Duval annealed minimum 827 MPa"}
+  ultimate_MPa: {value: 952, src: klippel-2024-ck45-orthogonal, range: [896, 952], note: "supplier certificate (Table 2); Aubert & Duval minimum 896 MPa"}
+  elongation_pct: {value: 16.5, src: klippel-2024-ck45-orthogonal, note: "A (4D); reduction of area 39 %"}
+  fracture_strain: {value: 0.49, src: est, note: "ln(1/(1-Z)) with Z = 39 % from klippel-2024-ck45-orthogonal Table 2"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 997.9
+  B_MPa: 653.1
+  n: 0.45
+  C: 0.0198
+  m: 0.7
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: {value: 20, src: est, note: "room temperature assumed; not stated in Ducobu et al. Table 1"}
+  T_melt_degC: {value: 1660, src: upmet-2026-ti64-eli, note: "upper liquidus; the melting temperature used by Seo et al. was not read"}
+  src: ducobu-2017-jc-ti6al4v
+  note: "Set 16 of Ducobu et al. 2017 Table 1 (Seo, Min & Yang 2005, SHPB up to 1273 K and 1400 1/s), which Ducobu et al. recommend after comparing 20 sets in a CEL orthogonal-cutting model against experiments (best cutting force, mid-range feed force and chip thickness). Alternatives in the same table: Lee & Lin 1998 (782.7, 498.4, n 0.28, C 0.028, m 1, eps0 1e-5), Johnson 1985 (862.5, 331.2, 0.34, 0.012, 0.8), Meyer & Kleponis 2001 (896, 656, 0.5, 0.0128, 0.8), Kay 2002 (1098, 1092, 0.93, 0.014, 1.1). klippel-2024-ck45-orthogonal fitted A 867, B 344, n 0.361, C 0.0145 to their own bar (Table 9)."
+
+cutting:
+  kienzle:                         # F_c = kc1.1 * b * h^(1-mc), h in mm; measured, dry orthogonal, Table 19 of Klippel et al. 2024
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 1265
+      mc: 0.22
+      rake_ref_deg: 0
+      vc_ref_m_min: 20
+      src: klippel-2024-ck45-orthogonal
+      note: "Table 19 (Sandvik CCMW 09T304 H13A, WC-6Co uncoated, rake 0, clearance 7, edge radius 20-50 um, mean 37.5 um; f = 0.01-0.4 mm). Feed force kf1.1 421 N/mm2, mf 0.54. Neighbours: 11 m/min 1299/0.21, 13: 1264/0.22, 40: 1253/0.22"
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 1146
+      mc: 0.27
+      rake_ref_deg: 0
+      vc_ref_m_min: 60
+      src: klippel-2024-ck45-orthogonal
+      note: "Table 19; kf1.1 300, mf 0.69. Neighbours: 50 m/min 1061/0.28, 52: 1156/0.27, 70: 1156/0.24"
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 932
+      mc: 0.33
+      rake_ref_deg: 0
+      vc_ref_m_min: 100
+      src: klippel-2024-ck45-orthogonal
+      note: "Table 19; kf1.1 226, mf 0.77. Neighbours: 74: 941/0.32, 80: 1084/0.28, 89: 891/0.34, 125: 962/0.31, 150: 998/0.30, 159: 869/0.31, 162: 1027/0.28"
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 859
+      mc: 0.32
+      rake_ref_deg: 0
+      vc_ref_m_min: 212
+      src: klippel-2024-ck45-orthogonal
+      note: "Table 19; kf1.1 248, mf 0.72. Neighbours: 191: 881/0.32, 254: 749/0.37"
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 712
+      mc: 0.36
+      rake_ref_deg: 0
+      vc_ref_m_min: 318
+      src: klippel-2024-ck45-orthogonal
+      note: "Table 19; kf1.1 186, mf 0.78. Higher speeds: 381: 663/0.38, 400: 803/0.35, 500: 662/0.41"
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 2110
+      mc: 0.22
+      rake_ref_deg: {value: 0, src: est, note: "reference geometry not stated by ISCAR; neutral 0 deg rake assumed"}
+      vc_ref_m_min: {value: 60, src: est, note: "no reference speed in the catalogue; assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR group 37, titanium alpha+beta alloys hardened (Rm 1050). About 1.7x the measured values above at h = 0.06 mm; catalogue values serve machine-power sizing and are conservative. The measured entries are preferred; a 15 deg rake orthogonal test at 30 m/min, h = 60 um (ducobu-2017-jc-ti6al4v Table 3: 113 N/mm, i.e. 1883 N/mm2) agrees with them within the rake-angle effect"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 1400
+      mc: 0.22
+      rake_ref_deg: 0
+      vc_ref_m_min: 15
+      src: est
+      note: "measured carbide value at 11-20 m/min (1265-1299) x ~1.1 assumed for HSS; no HSS data read"
+  mechanistic:
+    - tool_class: carbide
+      coating: uncoated
+      helix_deg: {value: 30, src: est, note: "geometry chosen for this computed entry"}
+      rake_deg: {value: 10, src: est, note: "normal rake chosen for this computed entry"}
+      Ktc_N_mm2: {value: 1549, src: est, note: "computed here from the Ti6Al4V orthogonal database (tau_s 613 MPa, beta = 19.1 + 0.29 alpha, r_c = C0 h^C1) of altintas-2000-mal-review Table 1 with the orthogonal-to-oblique transformation (Stabler chip flow, eta = i), h = 0.05 mm; 1654 at h = 0.02, 1541 at h = 0.10"}
+      Krc_N_mm2: {value: 263, src: est, note: "computed as for Ktc (281 at h = 0.02, 262 at h = 0.10)"}
+      Kac_N_mm2: {value: 535, src: est, note: "computed as for Ktc (572 at h = 0.02, 533 at h = 0.10)"}
+      Kte_N_mm: 24
+      Kre_N_mm: 43
+      Kae_N_mm: {value: 0, src: est, note: "axial edge coefficient not given; neglected"}
+      src: altintas-2000-mal-review
+      note: "Edge coefficients Kte = 24 and Kfe (= Kre) = 43 N/mm read in Table 1; the database is that of Budak, Altintas & Armarego 1996 (tube turning). Recompute Ktc/Krc/Kac for other helix/rake angles with the same transformation."
+  min_chip_thickness_ratio: {value: 0.37, src: wojciechowski-2022-min-chip-thickness, range: [0.25, 0.49], note: "Ti-6Al-4V micro-milling, dry: 25-49 % of the edge radius (Rezaei et al., from specific cutting force); 15-34 % with MQL; mid-value used"}
+  indentation_coeff_N_mm3: {value: 4.7e4, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (~300 HB)"}
+  work_hardening:
+    layer_depth_um: {value: 50, src: est, note: "assumed; Ti-6Al-4V sub-surfaces deform plastically under worn tools, but no depth was read"}
+    hardness_increase_pct: {value: 15, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.45, src: ducobu-2017-jc-ti6al4v, note: "JC exponent n of the Seo et al. set"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: klippel-2024-ck45-orthogonal, range: [0.3, 0.6], note: "Albrecht-method friction coefficient 0.3 (edge ploughing separated); apparent coefficient 0.4-0.6 at higher feeds, higher at small feeds; H13A, rake 0, dry"}
+    sticking_ratio: {value: 0.6, src: est, note: "assumed; short contact with a large sticking fraction is typical of titanium, no measurement read"}
+  - tool_class: carbide
+    coating: TiAlN
+    mu_sliding: {value: 0.3, src: est, note: "assumed equal to uncoated (titanium adheres to and reacts with most coatings)"}
+    sticking_ratio: {value: 0.6, src: est, note: "assumed"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.6, src: est, note: "assumed"}
+
+chip:
+  tendency: segmented
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 11, src: klippel-2024-ck45-orthogonal, note: "upper bound: all chips were wavy/segmented from the lowest tested speed (11 m/min, f down to 0.01 mm) with a 0 deg rake, more pronounced with higher f and vc. With a 15 deg rake, 20 um edge and h = 40-100 um the chips were continuous at 30 m/min (ducobu-2017-jc-ti6al4v), so onset rises with rake angle and falls with h"}
+  bue: null                        # klippel-2024-ck45-orthogonal found no BUE traces on any Ti6Al4V chip (vc 11-500 m/min)
+  breakability: {value: medium, src: est, note: "segmented but connected chips; no quantitative source read"}
+  oxide_colours:
+    table: [[300, "#E9DDA6", "light straw"], [350, "#D9BE6A", "straw"], [400, "#C49A3C", "dark straw / gold"], [450, "#9A6B3C", "bronze / brown"], [500, "#6B4C9A", "purple / violet"], [550, "#3E5FB0", "blue"], [600, "#7FA3C8", "light blue"], [650, "#8E9399", "grey"]]
+    src: est
+    note: "ESTIMATE: the colour sequence (silver, straw, gold, bronze, purple, blue, grey) follows growing interference-oxide thickness; the temperatures are assumed for roughly 30 min in air and were not read in an authoritative source (only supplier/popular web pages were found, which disagree by up to ~100 C). Chips heated for milliseconds need higher temperatures for the same colour. Hex values are this database's rendering"
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 135
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 60 m/min (uncoated K-grade carbide in annealed Ti-6Al-4V, general knowledge, not a cited source); n, a, b assumed"
+  - tool_class: carbide
+    coating: TiAlN
+    C_m_min: 170
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 15 min at vc = 75 m/min (general knowledge); coatings help less in titanium than in steel"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 22
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 12 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress: []                # annealed mill product: no profile read
+
+skin:
+  type: none                       # machined/ground annealed stock; an oxygen-enriched alpha case on unconditioned hot-worked or heat-treated surfaces is not modelled
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: {value: 300, src: est, note: "onset of visible (light straw) heat tint, from the estimated oxide-colour table above"}
+  white_layer_degC: null           # no austenite-type rehardening in titanium
+  melt_smear_degC: null
+
+ignition:
+  bulk_ignition_degC: {value: null, note: "no ignition data for Ti-6Al-4V bulk, chips or fines were found in the sources read (the combustion database wang-2026-combustion-database has no titanium ignition entries)"}
+  chip_ignition_degC: {value: null, note: "not found"}
+  powder_ignition_degC: {value: null, note: "not found"}
+  min_ignition_energy_mJ: {value: null, note: "not found"}
+  note: "Gap: titanium fines and thin chips are a recognised fire hazard (high temperatures at worn edges, heavy chip accumulation); add ignition temperatures and dust MIE from a combustible-metal-dust data source."
+
+composite: null
+
+notes: "Annealed Ti-6Al-4V Grade 5. Sourced: physical data (UPMET ELI, Aubert & Duval, ATI), tensile data and measured Kienzle coefficients vs speed, friction, chip segmentation (Klippel et al. 2024, uncoated carbide, dry orthogonal), JC set (Seo et al. via Ducobu et al. 2017), orthogonal database and edge coefficients (Altintas review), h_min/r_n (review). Estimated: HSS Kienzle, computed Ktc/Krc/Kac, sticking ratios, coated/HSS friction, work hardening, K_sp, Taylor constants, oxide colours, burn temperature. Gaps: ignition data, published Taylor constants."

@@ -1,0 +1,124 @@
+# Workpiece material: polyurethane modelling/tooling board, ~0.7 g/cm3 (filled PU block for models, jigs, checking fixtures).
+# Representative grade: RAMPF RAKU TOOL MB-0720 (0.72 g/cm3); MB-0670 (0.67 g/cm3) as the neighbour.
+# Sources: db/bibliography/materials-nonmetals.yaml. Data the material template has no key for is in `extensions`.
+format: cnctwin-material
+version: 1
+id: pu-tooling-board
+name: "Polyurethane modelling board ~0.7 g/cm3 (RAKU TOOL MB-0720 type)"
+family: polymer
+iso_group: O
+condition: "cast and cured PU board as supplied (crosslinked, filled); processed at 20-25 C"
+designations: {trade: "RAKU TOOL MB-0720 (RAMPF); comparable boards from other makers in the 0.65-0.75 g/cm3 class", walter_group: "O2 (thermoset; assignment by this database)"}
+stock_forms: []
+
+physical:
+  src: rampf-2024-mb0720
+  density_kg_m3: {value: 720, range: [670, 720], note: "ca. 0.72 g/cm3 (ISO 1183); MB-0670 0.67 g/cm3 (rampf-2024-mb0670)"}
+  specific_heat_J_kgK: {table: [[20, 1500]], src: est, note: "typical of polyurethanes (1.4-1.8 kJ/kgK) lowered slightly for mineral filler; not read"}
+  conductivity_W_mK: {table: [[20, 0.11]], src: est, note: "Maxwell-Eucken for closed pores: k_solid 0.22 W/mK (assumed solid PU) x (1 - 0.4)/(1 + 0.4/2) with porosity ~0.4 assumed (0.72 vs ~1.2 g/cm3 solid); not read"}
+  expansion_1_K: {table: [[50, 5.25e-5]], range: [5.0e-5, 5.5e-5], note: "50-55e-6 1/K (ISO 11359), midpoint used; temperature range not stated"}
+  youngs_modulus_GPa: {table: [[20, 1.1]], src: est, note: "flexural modulus not given; flexural strength 25-30 MPa / an assumed strain at failure of ~2.5 % gives ~1.1 GPa"}
+  poisson: {value: 0.33, src: est, note: "assumed"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: {value: 85, src: est, range: [80, 95], note: "not given; assumed a little above the HDT (75-80 C, ISO 75)"}
+  decomposition_degC: {value: 230, src: est, range: [200, 260], note: "urethane linkages begin to dissociate around 200-250 C in polyurethanes generally (general knowledge, not read)"}
+  hardness: {shore_D: 62.5, range: [60, 65], note: "60-65 Shore D (ISO 868), midpoint used"}
+  yield_MPa: {value: 22.5, range: [20, 25], note: "compressive strength 20-25 MPa (ISO 604), midpoint used as the flow value"}
+  ultimate_MPa: {value: 27.5, range: [25, 30], note: "flexural strength 25-30 MPa (ISO 178), midpoint; tensile strength not given"}
+  elongation_pct: null
+  fracture_strain: {value: 0.025, src: est, note: "assumed, brittle filled thermoset"}
+  compressive_MPa: {value: 22.5, range: [20, 25], note: "compressive strength (ISO 604), midpoint"}
+  flexural_MPa: {value: 27.5, range: [25, 30], note: "flexural strength (ISO 178), midpoint"}
+
+flow_stress:
+  model: none                      # task rule; current schemas.py accepts only johnson_cook or null
+  yield_MPa: {value: 22.5, src: rampf-2024-mb0720, note: "compressive strength, midpoint of 20-25 MPa"}
+  note: "Filled, crosslinked PU: brittle-ductile crushing, no melt. Cutting model: the Kienzle value (Walter thermoset class scaled by compressive strength); above the HDT (~77 C) the board softens and the surface tears/smears rather than melting; no temperature-dependent strength was read."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: {value: 50, src: est, note: "Walter O1/O2 class value 150 N/mm2 (walter-2025-technical-compendium, unfilled thermoplastics and thermosets) scaled by compressive strength 22.5 MPa (MB-0720) / 68 MPa (POM-C at 5 %, ensinger-2023-tecaform-ah-datasheet)"}
+      mc: {value: 0.2, src: walter-2025-technical-compendium, note: "Walter O1/O2 class exponent kept"}
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: {value: 0, src: walter-2025-technical-compendium, note: "Walter values refer to a neutral cutting edge geometry"}
+      vc_ref_m_min: {value: 600, src: est, note: "assumed"}
+      src: est
+      note: "no cutting-force data for PU modelling board was read; the maker states 'excellent milling characteristics' and 'high edge strength' (rampf-2024-mb0720)"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.25, src: est, note: "assumed"}
+  indentation_coeff_N_mm3: {value: 1.0e3, src: est, note: "scaled from the PMMA placeholder (2.8e3) by compressive strength 22.5/110 and rounded up; order of magnitude"}
+  work_hardening:
+    src: est
+    note: "not applicable to a filled thermoset"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.0, src: est, note: "crumb/powder chip, no sticking zone"}
+
+chip:
+  tendency: powder                 # fine crumbs and dust
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "no coherent chip"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 3000
+    n: 0.35
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: mineral fillers make filled PU boards mildly abrasive; T = 120 min at ~560 m/min assumed (not read). Leitz lists HW solid serrated routers for 'PU hard foams' (leitz-2020-lexicon-ed7-ch05)"
+tool_life_usui: []
+
+residual_stress: []
+
+skin:
+  src: est
+  note: "board cut from cast block: no skin modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 230, src: est, note: "decomposition onset assumed (see physical)"}
+  white_layer_degC: null
+  melt_smear_degC: {value: 77.5, src: rampf-2024-mb0720, note: "HDT 75-80 C (midpoint) used as the softening/smear threshold (thermoset: softens, does not melt)"}
+
+ignition: null
+
+composite: null
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  physical:
+    hdt_degC: {value: 77.5, range: [75, 80], src: rampf-2024-mb0720, note: "deflection temperature HDT (ISO 75), midpoint"}
+  chip:
+    dust_mass_fraction: {value: 0.6, src: est, note: "modelling boards are milled to fine crumbs and dust; assumed"}
+  hazards:
+    dust: {src: rampf-2024-mb0720, note: "maker: ensure good workplace ventilation during processing and follow the hygiene rules for reaction resins and hardeners; see the safety data sheet (not read)"}
+    fumes: {src: est, note: "overheated polyurethane can release isocyanates and other decomposition products (general knowledge, not read)"}
+  recommended:
+    n_rpm: {value: [10000, 16000], src: leitz-2020-lexicon-ed7-ch05, note: "window, serrated HW solid Z2 grooving cutter for fibre-reinforced materials and PU hard foams, D 2-8 mm"}
+    vf_m_min: {value: [1.5, 2.0], src: leitz-2020-lexicon-ed7-ch05, note: "window, same tool"}
+
+notes: "PU modelling board ~0.7 g/cm3 (RAMPF MB-0720). Sourced: density, Shore D, CTE, HDT, compressive and flexural strength (RAMPF datasheet), router window for PU hard foams (Leitz). Estimated: cp, k, E, Poisson, Tg, decomposition, all cutting, friction, chip, wear and fume values. Gaps: no flexural modulus, thermal conductivity, specific heat, Tg or safety data sheet values for the board, and no cutting-force data, were read."

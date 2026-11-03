@@ -1,0 +1,134 @@
+# AISI D2 / X153CrMoV12 (1.2379), hardened and tempered to ~60 HRC. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: d2-60hrc
+name: "AISI D2 cold-work tool steel, hardened and tempered ~60 HRC"
+family: tool_steel
+iso_group: H
+condition: "hardened 1030-1070 C, tempered (three times above the secondary-hardness maximum per voestalpine-2026-k110) to ~60 HRC"
+designations: {UNS: T30402, EN: "X153CrMoV12 (1.2379)", AISI: "D2", JIS: "SKD11 (similar)", trade: "BÖHLER K110"}
+stock_forms: []
+
+physical:
+  src: voestalpine-2026-k110       # BÖHLER K110 p. 4
+  density_kg_m3: {value: 7670}
+  specific_heat_J_kgK: {value: 470, note: "20 C only"}
+  conductivity_W_mK: {value: 23.9, note: "20 C only; temperature dependence not given (H13 data in h13-50hrc suggest k of hardened high-Cr tool steels changes little up to 700 C)"}
+  expansion_1_K: {table: [[100, 11.0e-6], [200, 11.4e-6], [300, 11.9e-6], [400, 12.2e-6], [500, 12.7e-6], [600, 12.8e-6], [700, 12.1e-6]], note: "mean from 20 C"}
+  youngs_modulus_GPa: {value: 200, note: "20 C"}
+  poisson: {value: 0.28, src: tang-2016-skd11-milling, note: "SKD11 (JIS equivalent), Tab. 2"}
+  solidus_degC: {value: 1250, src: est, note: "ledeburitic 12 % Cr steel; eutectic carbide forms on solidification; general knowledge, not read"}
+  liquidus_degC: {value: 1420, src: est, note: "general knowledge, not read"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HRC: 60, src: est, note: "nominal condition of this file (the task definition); the K110 tempering chart was not read numerically"}
+  yield_MPa: {value: 2000, src: est, note: "compressive yield of D2 near 60 HRC is roughly 2.0-2.2 GPa (general knowledge); tensile strength is limited by brittle fracture"}
+  ultimate_MPa: {value: 2100, src: est, note: "assumed; brittle"}
+  elongation_pct: {value: 1, src: est, note: "brittle ledeburitic structure"}
+  fracture_strain: {value: 0.05, src: est, note: "assumed, brittle"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 2480
+  B_MPa: 1440
+  n: 0.45
+  C: 0.012
+  m: 1.1
+  ref_strain_rate_1_s: 0.01
+  T_ref_degC: 20
+  T_melt_degC: 1500
+  src: tang-2016-skd11-milling
+  note: "SKD11 (JIS equivalent of D2), 'hardened', SHPB-based modified J-C (Tab. 1). The source adds a recrystallisation term (k = 0.01, flow stress 800.094 MPa before and 1560.975 MPa after recrystallisation) that is dropped here; theta_tran = 20 C is used as T_ref and theta_melt = 1500 C as T_melt. Quality caveat: the same paper lists 255 HBS for the workpiece, so the hardness the constants refer to is uncertain; A = 2480 MPa is consistent with ~60-62 HRC. Tounsi & Elbestawi identified a JC set for D2 at 62 HRC from orthogonal cutting (not accessible)."
+
+cutting:
+  kienzle:
+    - tool_class: cbn
+      coating: uncoated
+      kc11_N_mm2: 4300
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 120, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "Walter group H3 'hardened steels 58-62 HRC', p. F9 (D2 itself is not in Walter's comparison table; the 12 % Cr steels 1.2080 and 1.2601 are listed as P11/H3 and P14/H3). One value per workpiece group, independent of tool class"
+    - tool_class: ceramic
+      coating: uncoated
+      kc11_N_mm2: 4300
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 100, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "same Walter H3 value applied to ceramic tools (tool-class assignment is this database's)"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.2, src: est, note: "assumed lower for brittle hardened steel"}
+  indentation_coeff_N_mm3: {value: 9.5e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (~630 HB equivalent / 200)"}
+  work_hardening:
+    layer_depth_um: {value: 5, src: est, note: "little strain hardening; white/dark layers dominate surface integrity"}
+    hardness_increase_pct: {value: 3, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.45, src: tang-2016-skd11-milling, note: "JC n"}
+
+friction:
+  - tool_class: cbn
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, note: "assumed; tang-2016 used a shear friction factor of 0.4 (not a Coulomb coefficient) between tool and SKD11 in DEFORM"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+  - tool_class: ceramic
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: segmented
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 30, src: est, note: "hardened D2 forms saw-tooth chips at practically all hard-machining speeds; not measured here"}
+  bue: null
+  breakability: {value: good, src: est, note: "segmented brittle chips"}
+  oxide_colours:
+    table: [[290, "#EFE3A6", "pale yellow"], [340, "#DDBE6A", "straw yellow"], [370, "#C9A046", "dark yellow"], [390, "#9A6A3A", "brown"], [420, "#7D4A55", "purple brown"], [450, "#56306E", "dark purple"], [540, "#3E5FB8", "blue"], [600, "#253A7A", "dark blue"]]
+    src: bssa-heat-tint
+    note: "BSSA table for 1.4301 stainless; applied to 12 % Cr D2 on the assumption that its oxidation is closer to a 12-18 % Cr stainless than to plain carbon steel (assumption of this database). Hex values are this database's rendering (est)"
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: cbn
+    coating: uncoated
+    C_m_min: 355
+    n: 0.4
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 0.2
+    VB_limit_mm: 0.2
+    src: est
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 120 m/min (CBN finishing of ~60 HRC ledeburitic steel, general knowledge; the hard primary carbides make D2 more abrasive than 52100)"
+  - tool_class: ceramic
+    coating: uncoated
+    grade: "mixed Al2O3-TiC"
+    C_m_min: 266
+    n: 0.4
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 0.2
+    VB_limit_mm: 0.2
+    src: est
+    note: "C set so that T = 15 min at vc = 90 m/min (general knowledge)"
+tool_life_usui: null
+
+residual_stress: []
+
+skin:
+  type: none
+  thickness_mm: {value: 0, src: est, note: "hardened blank, pre-machined; decarburisation possible if hardened without protection"}
+  hardness_factor: {value: 1.0, src: est, note: "no skin"}
+  abrasiveness_factor: {value: 1.0, src: est, note: "no skin"}
+
+thermal_damage:
+  burn_degC: {value: 290, src: bssa-heat-tint, note: "first heat tint (pale yellow) on 1.4301; assumed for 12 % Cr D2"}
+  white_layer_degC: {value: 810, src: est, note: "Ac1 of D2 not read in an accessible source; ~800-830 C typical of 12 % Cr ledeburitic steels (general knowledge)"}
+  overtemper_degC: {value: 520, src: est, range: [200, 540], note: "depends on the temper: K110 is recommended to be tempered three times above the secondary-hardness maximum (voestalpine-2026-k110, ~500-540 C, chart not read); low-temperature tempered D2 (~200 C) softens above ~200 C. 520 C assumed for high-temper 60 HRC"}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "D2 at ~60 HRC. Physical data from BÖHLER K110 (20 C values plus thermal expansion). Flow stress from an SHPB-based SKD11 set of uncertain quality (see flow_stress.note). Kienzle values are Walter H3 standard values. Tool life, Ac1, tempering temperature and work hardening are estimates."

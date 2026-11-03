@@ -1,0 +1,33 @@
+# Conventional (mineral-oil) emulsion, 8 % concentrate in water. Properties are those of water
+# (NIST) corrected for the dispersed concentrate; the corrections are estimates.
+format: cnctwin-coolant
+version: 1
+id: emulsion-8pct
+name: "Conventional mineral-oil emulsion, 8 % concentrate in water"
+kind: emulsion
+src: est
+concentration_pct: 8
+density_kg_m3: {table: [[20, 992.0], [40, 985.4], [60, 976.1], [80, 964.6]], src: est, note: "volume mixing of water (nist-webbook-water-2026: 998.21/992.22/983.20/971.79 kg/m3 at 20/40/60/80 C) with 8 % concentrate of 920 kg/m3 at 20 C (beta 7e-4 1/K), concentrate density assumed"}
+viscosity_mPa_s: {table: [[20, 1.196], [40, 0.780], [60, 0.557], [80, 0.423]], src: est, note: "water viscosity (NIST: 1.0016/0.65273/0.46604/0.35405 mPa s) x (1 + 2.43 phi), Taylor's dilute-droplet relation for oil/water viscosity ratio ~20; Newtonian at low shear"}
+specific_heat_J_kgK: {table: [[20, 4022], [40, 4024], [60, 4035], [80, 4052]], src: est, note: "mass-weighted water (NIST cp 4184-4197 J/kgK) and concentrate (2000 J/kgK + 3.5 J/kgK2, assumed)"}
+conductivity_W_mK: {table: [[20, 0.550], [40, 0.577], [60, 0.597], [80, 0.611]], src: est, note: "Maxwell relation for dispersed oil (k 0.14 W/mK) in water (NIST 0.598-0.667 W/mK)"}
+surface_tension_mN_m: {value: 35, range: [30, 40], src: est, note: "emulsifiers lower water's 72.7 mN/m at 20 C (nist-webbook-water-2026) to the 30-40 mN/m typical of surfactant solutions"}
+boiling_degC: {value: 100, src: est, note: "water phase at 1 atm (NIST saturation 99.97 C); concentrate raises it negligibly"}
+leidenfrost_degC: {value: 220, range: [190, 300], src: est, note: "water ~193 C on smooth hot metal and 257 C on copper (wikipedia-leidenfrost-2026); dispersed oil/additives assumed to raise it slightly while surfactants lower surface tension"}
+leidenfrost_water_reference_degC: {value: 193, range: [193, 257], src: wikipedia-leidenfrost-2026, note: "pure water: ~193 C (smooth hot metal), 257 C for a saturated water-copper interface; reference for the estimate above"}
+flash_point_degC: null
+smoke_point_degC: null
+friction_factor:
+  - {tool_class: carbide, work_family: steel, value: 0.8, range: [0.7, 0.95], src: est, note: "water-based fluids lubricate mainly at low sliding speeds; at cutting speeds the dry-like contact dominates the rake face (assumed)"}
+  - {tool_class: carbide, work_family: aluminium, value: 0.65, src: est, note: "reduced adhesion/BUE with emulsions, assumed"}
+  - {tool_class: carbide, work_family: titanium, value: 0.9, src: est}
+  - {tool_class: hss, work_family: steel, value: 0.7, src: est, note: "low speeds let the fluid reach the interface, assumed"}
+lubricity_index: {value: 0.55, src: est, note: "between water (0) and straight oil (1)"}
+heat_transfer:
+  latent_heat_kJ_kg: {value: 2256, src: nist-webbook-water-2026, note: "water at 100 C: vapour 2675.6 - liquid 419.17 kJ/kg"}
+  flood_htc_W_m2K: {value: 6000, range: [2000, 20000], src: est, note: "forced convection of water-based coolant jets at 1-5 m/s on tool/workpiece surfaces; nucleate boiling locally raises it"}
+drag_out_ml_per_kg_chips: {value: 42, range: [20, 80], src: est, note: "drained film ~25 um on ~1.3 m2/kg steel chips (= 33 ml/kg) plus pockets"}
+evaporation_l_per_h_per_m2: {value: 0.3, range: [0.1, 0.6], src: est, note: "water evaporation from a 25-35 C tank surface in shop air; replaced by make-up water"}
+mist_loss_fraction: {value: 2.0e-6, src: est, note: "as straight-oil; aerosol fraction of the pumped volume"}
+cost_eur_per_l: {value: 4.0, src: est, note: "concentrate price"}
+notes: "All values are derived estimates on NIST water data; no emulsion property measurements were available to this session."

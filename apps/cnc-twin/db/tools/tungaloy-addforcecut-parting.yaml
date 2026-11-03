@@ -1,0 +1,35 @@
+# Tungaloy AddForceCut QGM single-ended parting inserts in the QSP26-3D parting blade, read from the
+# Tungaloy General Catalogue 2023-2024 on 2026-11-03 (F224, F227, F228, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-addforcecut-parting
+maker: "Tungaloy Corporation"
+series: "AddForceCut QGM3-020 (AH7025) in the QSP26-3D blade for deep grooving and parting off (CW 3, cut-off diameter 75 mm)"
+src: tungaloy-2023-gc-parting-grooving
+notes: "Insert QGM3-020 (F227): seat size 3, CW 3 +/-0.05, RE 0.2, INSL 11, h 5.3 mm, grade AH7025; QGM is the first choice for grooving and parting, QGS the low-force variant. Blade QSP26-3D (F224): CW 3, CUTDIA 75 (largest bar that can be parted off), seat size 3, H 26, B 2.4, LF 150, HF 21.4 mm; it is clamped in a QS tool block (F225, not read). Cutting speeds F228 (AH7025), feed from the QGM standard feed chart (F227, digitised; higher feeds are listed for the TungFeed-Blade holder). The blade projection (overhang) is a set-up value, estimated."
+defaults:
+  type: parting_insert
+  hand: neutral
+  tool_material: {class: carbide, grade: "AH7025 PVD-coated carbide (substrate not stated)", id: carbide-submicron-10co, src: est, note: "PVD grooving grade; substrate mapped to the fine-grain 10 % Co entry"}
+  coating: {id: tialn, thickness_um: {value: 3.5, src: tungaloy-2023-gc-grade, page: "A002"}, note: "AH7025: (Ti,Al)N (A002)"}
+items:
+  - id: tungaloy-qgm3-020-ah7025-qsp26-3d
+    order_code: "QGM3-020 AH7025 + QSP26-3D"
+    geometry:
+      insert:
+        iso_code: "QGM3-020"
+        width_mm: 3
+        nose_radius_mm: 0.2
+        edge_length_mm: {value: 11, note: "INSL"}
+        max_depth_mm: {value: 37.5, note: "half the blade's CUTDIA 75 mm"}
+        page: "F227"
+      holder: {iso_code: "QSP26-3D blade", approach_angle_deg: {value: 90, note: "square (neutral) front edge as drawn on F227"}, shank_mm: {value: [26, 2.4], note: "blade height H x width B"}, overhang_mm: {value: 40, src: est, note: "set-up value: blade projection for parting a 75 mm bar (CUTDIA / 2 plus clearance); not a catalogue value"}, max_depth_mm: 37.5, page: "F224"}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "single-ended insert, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "steels C45, 34CrMo4, < 300 HB", material: aisi1045, operation: [parting, grooving], vc_m_min: {min: 50, max: 180}, f_mm: {min: 0.07, max: 0.27, digitised: true, uncertainty_pct: 15, page: "F227 QGM standard feed, CW 3"}, page: "F228 AH7025"}
+      - {iso_group: M, material_hint: "stainless steel X10CrNiS18-9, < 200 HB", material: aisi304, operation: [parting, grooving], vc_m_min: {min: 50, max: 120}, f_mm: {min: 0.07, max: 0.27, digitised: true, uncertainty_pct: 15, page: "F227"}, page: "F228 AH7025"}
+      - {iso_group: K, material_hint: "grey cast iron GG25, 250", material: grey-cast-iron-gjl250, operation: [parting, grooving], vc_m_min: {min: 50, max: 180}, f_mm: {min: 0.07, max: 0.27, digitised: true, uncertainty_pct: 15, page: "F227"}, page: "F228 AH7025"}
+      - {iso_group: K, material_hint: "ductile cast iron GGG45, 450-10S", operation: [parting, grooving], vc_m_min: {min: 50, max: 120}, f_mm: {min: 0.07, max: 0.27, digitised: true, uncertainty_pct: 15, page: "F227"}, page: "F228 AH7025"}
+      - {iso_group: S, material_hint: "superalloys Inconel 718, < 40 HRC", material: inconel718, operation: [parting, grooving], vc_m_min: {min: 20, max: 60}, f_mm: {min: 0.07, max: 0.27, digitised: true, uncertainty_pct: 15, page: "F227"}, page: "F228 AH7025"}
+      - {iso_group: S, material_hint: "titanium alloys Ti-6Al-4V, < 40 HRC", material: ti6al4v, operation: [parting, grooving], vc_m_min: {min: 20, max: 80}, f_mm: {min: 0.07, max: 0.27, digitised: true, uncertainty_pct: 15, page: "F227"}, page: "F228 AH7025"}

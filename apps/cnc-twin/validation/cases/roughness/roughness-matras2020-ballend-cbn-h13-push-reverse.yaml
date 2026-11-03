@@ -1,0 +1,75 @@
+# Matras & Zebala (2020): finish ball-end milling of flat AISI H13 (50 HRC) with a 2 mm two-flute CBN
+# ball-end mill at 27 000 rpm; Taguchi L16 over step-over, feed, lead and tilt angle; tool-path
+# kinematics "push-oblique revers". Average Ra and Rz per run (Table A2).
+format: cnctwin-validation-case
+version: 1
+id: roughness-matras2020-ballend-cbn-h13-push-reverse
+quantity: roughness
+reference:
+  src: matras-2020-h13-cbn-milling
+  location: "Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'push-oblique revers' (average Ra, Rz)"
+  digitised: false
+  measured: true
+setup:
+  operation: ball_end_milling
+  material: {db: h13-50hrc}
+  stock: {surface_length_mm: 5, surface_width_mm: 5, note: "flat test surfaces 5 x 5 mm, one per run"}
+  tool:
+    type: ball_endmill
+    tool_class: cbn
+    diameter_mm: 2
+    flutes: 2
+    flute_length_mm: 1.5             # Table A1 'ap'
+    neck_length_mm: 5                # Table A1 L3
+    neck_diameter_mm: 1.9            # Table A1 D5
+    neck_angle_deg: 7.3              # Table A1 B2
+    overall_length_mm: 52            # Table A1 second 'L1'
+    shank_diameter_mm: 4             # Table A1 D4
+    table_a1_first_L1_mm: 1          # first 'L1' column of Table A1 (most likely the ball radius, 1 mm)
+  machine: {model: "DMG DMU Ultrasonic 20 linear (5-axis)"}
+  conditions:
+    spindle_rpm: 27000
+    cutting_speed_m_min: 150         # Table 3/4 (nominal)
+    ap_mm: 0.1
+    kinematics: "push-oblique revers"            # cutting-edge engagement case named after Bouzakis et al. (ref. 19 of the source)
+    coolant: {value: dry, src: est, note: "not stated"}
+    run_ae_mm: [0.1, 0.1, 0.1, 0.1, 0.075, 0.075, 0.075, 0.075, 0.05, 0.05, 0.05, 0.05, 0.025, 0.025, 0.025, 0.025]
+    run_lead_angle_deg: [0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 12, 18, 0, 6, 12, 18]     # delta1, tool inclination in the feed direction
+    run_tilt_angle_deg: [0, 6, 12, 18, 6, 0, 18, 12, 12, 18, 0, 6, 18, 12, 6, 0]     # delta2, inclination perpendicular to the feed
+    run_feed_mm_min: [720, 960, 1440, 1920, 1440, 1920, 720, 960, 1920, 1440, 960, 720, 960, 720, 1920, 1440]
+  program: null
+reference_values:
+  - {name: Ra, value: 0.36, unit: um, x: 1, x_name: run, x_unit: index, note: "ae 0.1 mm, lead 0 deg, tilt 0 deg, feed 720 mm/min"}
+  - {name: Ra, value: 0.5, unit: um, x: 2, x_name: run, x_unit: index, note: "ae 0.1 mm, lead 6 deg, tilt 6 deg, feed 960 mm/min"}
+  - {name: Ra, value: 0.38, unit: um, x: 3, x_name: run, x_unit: index, note: "ae 0.1 mm, lead 12 deg, tilt 12 deg, feed 1440 mm/min"}
+  - {name: Ra, value: 0.41, unit: um, x: 4, x_name: run, x_unit: index, note: "ae 0.1 mm, lead 18 deg, tilt 18 deg, feed 1920 mm/min"}
+  - {name: Ra, value: 0.95, unit: um, x: 5, x_name: run, x_unit: index, note: "ae 0.075 mm, lead 0 deg, tilt 6 deg, feed 1440 mm/min"}
+  - {name: Ra, value: 0.66, unit: um, x: 6, x_name: run, x_unit: index, note: "ae 0.075 mm, lead 6 deg, tilt 0 deg, feed 1920 mm/min"}
+  - {name: Ra, value: 0.28, unit: um, x: 7, x_name: run, x_unit: index, note: "ae 0.075 mm, lead 12 deg, tilt 18 deg, feed 720 mm/min"}
+  - {name: Ra, value: 0.3, unit: um, x: 8, x_name: run, x_unit: index, note: "ae 0.075 mm, lead 18 deg, tilt 12 deg, feed 960 mm/min"}
+  - {name: Ra, value: 0.43, unit: um, x: 9, x_name: run, x_unit: index, note: "ae 0.05 mm, lead 0 deg, tilt 12 deg, feed 1920 mm/min"}
+  - {name: Ra, value: 0.19, unit: um, x: 10, x_name: run, x_unit: index, note: "ae 0.05 mm, lead 6 deg, tilt 18 deg, feed 1440 mm/min"}
+  - {name: Ra, value: 0.27, unit: um, x: 11, x_name: run, x_unit: index, note: "ae 0.05 mm, lead 12 deg, tilt 0 deg, feed 960 mm/min"}
+  - {name: Ra, value: 0.24, unit: um, x: 12, x_name: run, x_unit: index, note: "ae 0.05 mm, lead 18 deg, tilt 6 deg, feed 720 mm/min"}
+  - {name: Ra, value: 0.23, unit: um, x: 13, x_name: run, x_unit: index, note: "ae 0.025 mm, lead 0 deg, tilt 18 deg, feed 960 mm/min"}
+  - {name: Ra, value: 0.18, unit: um, x: 14, x_name: run, x_unit: index, note: "ae 0.025 mm, lead 6 deg, tilt 12 deg, feed 720 mm/min"}
+  - {name: Ra, value: 0.33, unit: um, x: 15, x_name: run, x_unit: index, note: "ae 0.025 mm, lead 12 deg, tilt 6 deg, feed 1920 mm/min"}
+  - {name: Ra, value: 0.27, unit: um, x: 16, x_name: run, x_unit: index, note: "ae 0.025 mm, lead 18 deg, tilt 0 deg, feed 1440 mm/min"}
+  - {name: Rz, value: 2.75, unit: um, x: 1, x_name: run, x_unit: index}
+  - {name: Rz, value: 2.96, unit: um, x: 2, x_name: run, x_unit: index}
+  - {name: Rz, value: 2.75, unit: um, x: 3, x_name: run, x_unit: index}
+  - {name: Rz, value: 2.91, unit: um, x: 4, x_name: run, x_unit: index}
+  - {name: Rz, value: 4.98, unit: um, x: 5, x_name: run, x_unit: index}
+  - {name: Rz, value: 3.42, unit: um, x: 6, x_name: run, x_unit: index}
+  - {name: Rz, value: 2.73, unit: um, x: 7, x_name: run, x_unit: index}
+  - {name: Rz, value: 2.35, unit: um, x: 8, x_name: run, x_unit: index}
+  - {name: Rz, value: 2.7, unit: um, x: 9, x_name: run, x_unit: index}
+  - {name: Rz, value: 1.57, unit: um, x: 10, x_name: run, x_unit: index}
+  - {name: Rz, value: 1.65, unit: um, x: 11, x_name: run, x_unit: index}
+  - {name: Rz, value: 1.73, unit: um, x: 12, x_name: run, x_unit: index}
+  - {name: Rz, value: 1.66, unit: um, x: 13, x_name: run, x_unit: index}
+  - {name: Rz, value: 1.26, unit: um, x: 14, x_name: run, x_unit: index}
+  - {name: Rz, value: 2.54, unit: um, x: 15, x_name: run, x_unit: index}
+  - {name: Rz, value: 1.74, unit: um, x: 16, x_name: run, x_unit: index}
+reference_curves: []
+notes: "x = run number 1-16 of the L16 plan; the run's step-over ae, lead and tilt angles and feed are listed in setup.conditions (run_* lists, same order) and in each Ra note. Feed per tooth = feed / (27 000 x 2) = 0.013-0.036 mm. Measurement uncertainty, instrument and cut-off are not given in the paper; values are averages as printed. The four kinematics cases share the 16 parameter sets: compare across cases to test the effect of the tool inclination direction. The paper's Table 8 machining times are CAM-calculated, not measured."

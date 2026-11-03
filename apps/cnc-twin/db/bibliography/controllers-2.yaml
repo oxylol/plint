@@ -1,0 +1,71 @@
+# Sources for db/controllers/*.yaml, second research round (2026-11-03): FANUC 30i-B Plus manuals,
+# SIEMENS SINUMERIK diagnostics and programming manuals. PDF text was extracted locally (pypdf and
+# pdfminer; alarm texts were confirmed in both text layers).
+# Still not readable: FANUC 0i-F / 0i-F Plus alarm manuals (B-64605EN, B-64695EN), the English edition of
+# the SINUMERIK 840D sl Diagnostics Manual (support.industry.siemens.com refuses automated access; only
+# the Chinese edition is on the open download server), the Haas NGC alarm pages (haascnc.com HTML 403).
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  # ---------------------------------------------------------------- FANUC
+  fanuc-30ibplus-maint-2019:
+    type: manual
+    authors: "FANUC CORPORATION"
+    title: "FANUC Series 30i/31i/32i-MODEL B Plus MAINTENANCE MANUAL, B-64725EN/01 (file revision 01.02)"
+    venue: "FANUC CORPORATION, Yamanashi, (c) 2019; PDF from the FANUC DVD Manual A08B-9012-J019#12 (FANUC Series 30i/31i/32i-MODEL B Plus & FANUC AC SERVO MOTOR alpha-i/beta-i series, 2020, Version 2.0), as published on the Internet Archive (item 9012-j-019-12, ISO image, file PDF/B-64725EN_01_02.PDF)"
+    year: 2019
+    url: "https://archive.org/download/9012-j-019-12/9012_J019_12.ISO/PDF%2FB-64725EN_01_02.PDF"
+    accessed: 2026-11-03
+    pages: "Appendix A.1 ALARM LIST (CNC): (1) PS/BG/SR alarms pp. 665-716, (4)-(12) SW, SV, OT, IO, PW, SP, OH, DS, IE alarms pp. 716-742; A.3 ALARM LIST (SERIAL SPINDLE) pp. 777-779 (printed page numbers; the page of every alarm used is given per alarm)"
+
+  fanuc-30ibplus-om-2019:
+    type: manual
+    authors: "FANUC CORPORATION"
+    title: "FANUC Series 30i/31i/32i-MODEL B Plus OPERATOR'S MANUAL (Common to Lathe System/Machining Center System), B-64724EN/01"
+    venue: "FANUC CORPORATION, (c) 2019; PDF from the FANUC DVD Manual A08B-9012-J019#12 (2020, Version 2.0), Internet Archive item 9012-j-019-12, file PDF/B-64724EN_01.PDF"
+    year: 2019
+    url: "https://archive.org/download/9012-j-019-12/9012_J019_12.ISO/PDF%2FB-64724EN_01.PDF"
+    accessed: 2026-11-03
+    pages: "printed pages: 37-41 Table 3.2 (a) G code list in the lathe system; 286-287 11 AUXILIARY FUNCTION (M00, M01, M02, M30, M98, M99, M198, multiple M codes); 314-316 Tables 13.2 (b) major functions and addresses, 13.2 (c) ranges of command values; 440 local and common variables; 455-466 system variables (tool compensation, #3000-#3902, modal information #4001-#4530, positions #5001-#5200, workpiece origin offsets #5201-#5340, #7001-#7960); 483-484 #3000 macro alarm (MC display, parameter 6008 bit 1 MCA); 486 #3006 stop with a message; 665-667 20 HIGH-SPEED CUTTING FUNCTIONS, Table 20.1 (a) number of blocks read ahead and the G05.1/G08/G05 AI contour control formats"
+
+  # ---------------------------------------------------------------- SIEMENS
+  siemens-802dsl-diag-2011:
+    type: manual
+    authors: "Siemens AG, Industry Sector, Drive Technologies, Motion Control Systems"
+    title: "SINUMERIK 802D sl Diagnostics Manual, Alarms, 03/2011, 6FC5398-2CP10-3BA0"
+    venue: "Siemens AG, Erlangen; PDF on the Siemens Industry Online Support download server"
+    year: 2011
+    url: "https://cache.industry.siemens.com/dl/files/590/51096590/att_97501/v1/802Dsl_DIA_0311_en.pdf"
+    accessed: 2026-11-03
+    pages: "NCK alarms 10203-29033 pp. 43-217, cycle alarms 61000-62934 pp. 219-331 (printed page numbers; the page of every alarm used is given per alarm)"
+
+  siemens-840dsl-diag-zh-2022:
+    type: manual
+    authors: "Siemens AG"
+    title: "SINUMERIK 840D sl / SINAMICS S120 Alarms Diagnostics Manual (Chinese edition), 01/2022, 6FC5398-6BP40-6RA6 (CNC software 4.95 SP1)"
+    venue: "Siemens AG; PDF (zh-CHS) on the Siemens Industry Online Support download server"
+    year: 2022
+    url: "https://cache.industry.siemens.com/dl/files/981/109806981/att_1095701/v1/840Dsl_alarms_diagnostics_man_0122_zh-CHS.pdf"
+    accessed: 2026-11-03
+    pages: "NC alarms and cycle alarms (used only to confirm that every alarm number listed in siemens-840d-sl.yaml exists in the 840D sl alarm list; the texts there are Chinese)"
+
+  siemens-840d-diag-2002:
+    type: manual
+    authors: "Siemens AG, Automation and Drives, Motion Control Systems"
+    title: "SINUMERIK 840D/840Di/810D Diagnostics Guide, 11/2002 edition (DA), control software version 6"
+    venue: "Siemens AG, Erlangen; PDF on the Siemens Industry Online Support download server"
+    year: 2002
+    url: "https://cache.industry.siemens.com/dl/files/916/107586916/att_32376/v1/DA_1102_en.pdf"
+    accessed: 2026-11-03
+    pages: "NCK alarms 10000-27999, cycle alarms 61000-62999 (cross-check of numbers and wording only)"
+
+  siemens-840dsl-jobplan-ru-2018:
+    type: manual
+    authors: "Siemens AG"
+    title: "SINUMERIK 840D sl / 828D Programming Manual Job Planning (Russian edition, 'Rukovodstvo po programmirovaniyu. Rasshirennoe programmirovanie'), 08/2018, 6FC5398-2BP40-6PA2"
+    venue: "Siemens AG; PDF (ru-RU) as published on the Internet Archive in the Danobat TTB-16 documentation package (item TTB-16-Manual)"
+    year: 2018
+    url: "https://archive.org/download/TTB-16-Manual/840Dsl_828D_job_planning_progr_man_0818_ru-RU.pdf"
+    accessed: 2026-11-03
+    pages: "20.1 Technology cycles (external cycle programming): list of cycles pp. 741-743, CYCLE81 p. 784, CYCLE82 pp. 785-787, CYCLE83 pp. 787-790, CYCLE84 pp. 790-793, CYCLE85 p. 793, CYCLE86 pp. 794-795, CYCLE800 pp. 810-813, CYCLE832 pp. 825-828, CYCLE840 pp. 829-831 (syntax and parameter tables; parameter names are language-neutral, the meanings were translated from Russian)"

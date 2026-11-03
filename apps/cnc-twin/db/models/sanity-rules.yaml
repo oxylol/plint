@@ -1,0 +1,133 @@
+# Thresholds and tables of the machinist's program checks (cnctwin.sanity, docs/models/sanity.md).
+# Values are SI as written (cnctwin.db.models.params("sanity-rules") returns them unchanged; the name
+# carries the unit). These are judgement values of practice, not measured constants: most are
+# estimates and say how they were chosen.
+format: cnctwin-model-params
+version: 1
+model: sanity-rules
+description: "Thresholds, tolerances and requirement tables of the static program sanity rules"
+params:
+  default_units:
+    value: mm
+    unit: "-"
+    src: est
+    note: "unit mode assumed when a program writes neither G20 nor G21 (metric power-on setting); the real control uses its parameter/setting"
+  default_least_increment_m:
+    value: 1.0e-6
+    unit: m
+    range: [1.0e-8, 1.0e-4]
+    src: est
+    note: "metric least input increment (IS-B, 0.001 mm) when the machine file gives no controller.least_input_increment_mm"
+  fanuc_inch_increment_m:
+    value: 2.54e-6
+    unit: m
+    src: est
+    note: "Fanuc IS-B least input increment in inch mode, applied to coordinates written without a decimal point (metric: the machine file's least_input_increment_mm)"
+  arc_accept_increments:
+    value: 2.0
+    unit: "-"
+    range: [1.0, 10.0]
+    src: est
+    note: "CAM output rounded to the least input increment leaves start/end radius differences of up to about one increment per coordinate; up to two increments pass without a finding"
+  arc_alarm_tolerance_m:
+    value: 2.0e-5
+    unit: m
+    range: [1.0e-6, 2.0e-4]
+    src: est
+    note: "radius difference at which the control alarms (Fanuc parameter 3410; a machine setting). Used when the machine file gives no controller.arc_radius_tolerance_mm; set the machine value there"
+  rapid_min_clearance_m:
+    value: 5.0e-4
+    unit: m
+    range: [0.0, 5.0e-3]
+    src: est
+    note: "a rapid ending closer than this above the remaining material is treated as going into it (stock size tolerance and offsets eat smaller gaps); R levels are normally 1-3 mm above the surface (smid-2008, canned cycles)"
+  toolchange_clearance_m:
+    value: 0.025
+    unit: m
+    range: [0.0, 0.2]
+    src: est
+    note: "the tool tip should be at least this far above the highest of stock and clamps when M06 starts (the changer sequence of many builders moves X/Y before or while Z retracts)"
+  hole_match_tolerance_m:
+    value: 1.0e-4
+    unit: m
+    range: [1.0e-6, 1.0e-3]
+    src: est
+    note: "a tap and a drilled hole are the same hole when their axes are this close in X/Y"
+  tap_bottom_margin_pitches:
+    value: 1.0
+    unit: "-"
+    range: [0.0, 5.0]
+    src: est
+    note: "the tap end should stay this many thread pitches above the full-diameter bottom of the tap-drill hole (chip room under the tap; blind-hole practice in smid-2008 and oberg-2016 asks for extra drill depth beyond the thread)"
+  deep_hole_depth_ratio:
+    value: 3.0
+    unit: "-"
+    range: [1.0, 20.0]
+    src: est
+    note: "drilling deeper than 3 x D is deep-hole drilling: coolant (and pecking) is required for chip evacuation (common rule of practice)"
+  cutting_data_error_factor:
+    value: 1.5
+    unit: "-"
+    range: [1.0, 5.0]
+    src: est
+    note: "cutting data more than 1.5 x the maker's maximum (or below the minimum divided by it) is an error; between the limit and this factor a warning"
+  slotting_ae_fraction:
+    value: 0.95
+    unit: "-"
+    range: [0.5, 1.0]
+    src: est
+    note: "a cut whose estimated width is at least this fraction of the diameter is slotting (the maker's slotting data apply), narrower cuts side milling"
+  diameter_match_tolerance_m:
+    value: 5.0e-5
+    unit: m
+    range: [0.0, 1.0e-3]
+    src: est
+    note: "a diameter in a tool comment matches the tool table within this tolerance (comments are usually written to 0.1 mm)"
+  tapping_feed_tolerance_frac:
+    value: 0.01
+    unit: "-"
+    range: [0.0, 0.1]
+    src: est
+    note: "relative tolerance between the tapping feed per revolution and the tap pitch (rigid tapping needs them equal; floating holders absorb small differences)"
+  zmap_cell_m:
+    value: 5.0e-4
+    unit: m
+    range: [5.0e-5, 0.01]
+    src: est
+    note: "cell size of the static height map used to estimate depth and width of cut (numerical setting; the error of ap and ae is about one cell)"
+  zmap_max_cells:
+    value: 4000000
+    unit: "-"
+    src: est
+    note: "the cell grows until the map has at most this many cells (32 MB of float64)"
+  vise_jaw_thickness_m:
+    value: 0.025
+    unit: m
+    range: [0.005, 0.1]
+    src: est
+    note: "thickness of a vise jaw plate outside the part when the device file gives none (machine-vise jaws are typically 20-30 mm)"
+  coolant_need_by_iso_group:
+    value: {P: recommended, M: required, K: optional, N: required, S: required, H: optional, O: optional}
+    unit: "-"
+    src: est
+    note: "general practice of cutting-tool makers: stainless (M) and heat-resistant alloys (S) need coolant against heat and work hardening, wrought aluminium (N) against built-up edge; grey cast iron (K) and hardened steel (H) are commonly cut dry; steel (P) benefits but is often cut dry with coated carbide. ISO 513 groups (iso-513-2012)"
+  coolant_required_tool_types:
+    value: [tap_cutting, tap_forming, reamer, gun_drill]
+    unit: "-"
+    src: est
+    note: "taps and reamers need lubrication for size and finish; gun drills run only with high-pressure coolant"
+  water_free_families:
+    value: [magnesium]
+    unit: "-"
+    src: est
+    note: "magnesium is machined dry or with mineral oil: water-based fluids react with magnesium fines (hydrogen) and raise the fire hazard of the swarf"
+  dry_tool_classes:
+    value: [ceramic, cbn]
+    unit: "-"
+    src: est
+    note: "ceramic and CBN cutting edges are usually run dry: intermittent wetting causes thermal-shock cracking unless the maker's data call for coolant"
+  max_call_depth:
+    value: 10
+    unit: "-"
+    src: est
+    note: "subprogram nesting depth the static scan follows (controls allow 4 to 10 levels); deeper calls are reported as not evaluated"

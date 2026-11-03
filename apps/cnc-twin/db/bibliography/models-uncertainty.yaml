@@ -1,0 +1,129 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/models/uncertainty.yaml and docs/models/uncertainty.md (sampling plans, propagation
+# of distributions, capability indices, confidence intervals, rank-correlation sensitivity).
+entries:
+  mckay-beckman-conover-1979:
+    type: article
+    authors: "McKay, M.D.; Beckman, R.J.; Conover, W.J."
+    title: "A comparison of three methods for selecting values of input variables in the analysis of output from a computer code"
+    venue: "Technometrics 21(2), 239-245"
+    year: 1979
+    doi: "10.1080/00401706.1979.10489755"
+    pages: "Latin hypercube sampling: one sample per equal-probability stratum of every input; unbiased mean and distribution estimators, variance no larger than random sampling for monotone responses"
+  stein-1987:
+    type: article
+    authors: "Stein, M."
+    title: "Large sample properties of simulations using Latin hypercube sampling"
+    venue: "Technometrics 29(2), 143-151"
+    year: 1987
+    doi: "10.1080/00401706.1987.10488205"
+    pages: "the variance of an LHS mean is that of random sampling minus the variance of the additive main effects, asymptotically"
+  helton-davis-2003:
+    type: article
+    authors: "Helton, J.C.; Davis, F.J."
+    title: "Latin hypercube sampling and the propagation of uncertainty in analyses of complex systems"
+    venue: "Reliability Engineering & System Safety 81(1), 23-69"
+    year: 2003
+    doi: "10.1016/S0951-8320(03)00058-9"
+    pages: "LHS construction, spurious correlation between sampled inputs of order 1/sqrt(n), sensitivity analysis with rank correlation and partial rank correlation"
+  iman-conover-1980:
+    type: article
+    authors: "Iman, R.L.; Conover, W.J."
+    title: "Small sample sensitivity analysis techniques for computer models, with an application to risk assessment"
+    venue: "Communications in Statistics - Theory and Methods 9(17), 1749-1842"
+    year: 1980
+    doi: "10.1080/03610928008827996"
+    pages: "rank transformation, standardised rank regression coefficients and partial rank correlation coefficients for monotone input-output relations"
+  marino-2008:
+    type: article
+    authors: "Marino, S.; Hogue, I.B.; Ray, C.J.; Kirschner, D.E."
+    title: "A methodology for performing global uncertainty and sensitivity analysis in systems biology"
+    venue: "Journal of Theoretical Biology 254(1), 178-196"
+    year: 2008
+    doi: "10.1016/j.jtbi.2008.04.011"
+    pages: "LHS with PRCC: computation by residual correlation of rank regressions, the t test of a PRCC with n - 2 - p degrees of freedom, sample size well above the number of inputs"
+  spearman-1904:
+    type: article
+    authors: "Spearman, C."
+    title: "The proof and measurement of association between two things"
+    venue: "The American Journal of Psychology 15(1), 72-101"
+    year: 1904
+    doi: "10.2307/1412159"
+    pages: "rank correlation coefficient"
+  zar-1972:
+    type: article
+    authors: "Zar, J.H."
+    title: "Significance testing of the Spearman rank correlation coefficient"
+    venue: "Journal of the American Statistical Association 67(339), 578-580"
+    year: 1972
+    doi: "10.1080/01621459.1972.10481251"
+    pages: "the t approximation t = r sqrt((n - 2)/(1 - r^2)) with n - 2 degrees of freedom is adequate for n >= 10"
+  jcgm-100-2008:
+    type: standard
+    authors: "JCGM (BIPM, IEC, IFCC, ILAC, ISO, IUPAC, IUPAP, OIML)"
+    title: "JCGM 100:2008 Evaluation of measurement data - Guide to the expression of uncertainty in measurement (GUM 1995 with minor corrections)"
+    publisher: "Joint Committee for Guides in Metrology"
+    year: 2008
+    pages: "4.3.7: a quantity known only to lie between bounds is given a rectangular distribution; 6.2: expanded uncertainty and its coverage probability (about 95 % with k = 2)"
+  jcgm-101-2008:
+    type: standard
+    authors: "JCGM (BIPM, IEC, IFCC, ILAC, ISO, IUPAC, IUPAP, OIML)"
+    title: "JCGM 101:2008 Evaluation of measurement data - Supplement 1 to the Guide to the expression of uncertainty in measurement - Propagation of distributions using a Monte Carlo method"
+    publisher: "Joint Committee for Guides in Metrology"
+    year: 2008
+    pages: "6.4: assigning probability density functions from the information available (rectangular for bounds, Gaussian for a stated standard uncertainty, truncated forms); 7: Monte Carlo propagation and coverage intervals from the sorted model values"
+  iso-22514-2-2017:
+    type: standard
+    authors: "ISO"
+    title: "ISO 22514-2:2017 Statistical methods in process management - Capability and performance - Part 2: Process capability and performance of time-dependent process models"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2017
+    pages: "capability indices from the 0.135 % and 99.865 % quantiles (the reference interval) and the median for any distribution; Cp, Cpk, one-sided indices"
+  aiag-spc-2005:
+    type: manual
+    authors: "AIAG (Automotive Industry Action Group)"
+    title: "Statistical Process Control (SPC) Reference Manual"
+    edition: 2
+    publisher: "AIAG, Southfield, Michigan"
+    year: 2005
+    pages: "Cp, Cpk, Pp, Ppk; one-sided specifications use CPU or CPL; 1.33 as the customary capability requirement"
+  bissell-1990:
+    type: article
+    authors: "Bissell, A.F."
+    title: "How reliable is your capability index?"
+    venue: "Journal of the Royal Statistical Society, Series C (Applied Statistics) 39(3), 331-340"
+    year: 1990
+    doi: "10.2307/2347383"
+    pages: "standard error of the estimated Cpk, sqrt(1/(9n) + Cpk^2/(2(n - 1))), and the normal-approximation confidence interval"
+  wilson-1927:
+    type: article
+    authors: "Wilson, E.B."
+    title: "Probable inference, the law of succession, and statistical inference"
+    venue: "Journal of the American Statistical Association 22(158), 209-212"
+    year: 1927
+    doi: "10.1080/01621459.1927.10502953"
+    pages: "score interval of a binomial proportion"
+  brown-cai-dasgupta-2001:
+    type: article
+    authors: "Brown, L.D.; Cai, T.T.; DasGupta, A."
+    title: "Interval estimation for a binomial proportion"
+    venue: "Statistical Science 16(2), 101-133"
+    year: 2001
+    doi: "10.1214/ss/1009213286"
+    pages: "the Wald interval fails at small n and p near 0 or 1; the Wilson interval keeps close to nominal coverage for all n and p"
+  hyndman-fan-1996:
+    type: article
+    authors: "Hyndman, R.J.; Fan, Y."
+    title: "Sample quantiles in statistical packages"
+    venue: "The American Statistician 50(4), 361-365"
+    year: 1996
+    doi: "10.1080/00031305.1996.10473566"
+    pages: "definition 7 (linear interpolation between order statistics at p (n - 1)), the default of NumPy"
+  kotz-johnson-1993:
+    type: book
+    authors: "Kotz, S.; Johnson, N.L."
+    title: "Process Capability Indices"
+    publisher: "Chapman & Hall, London"
+    year: 1993
+    pages: "Cp, Cpk and the one-sided indices CPU and CPL, their estimators and sampling distributions under normality"

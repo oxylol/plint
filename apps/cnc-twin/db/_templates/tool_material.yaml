@@ -1,0 +1,29 @@
+# Tool substrate material: db/tool_materials/<id>.yaml
+format: cnctwin-tool-material
+version: 1
+id: carbide-submicron-10co
+class: carbide                       # hss | carbide | cermet | ceramic | cbn | pcd
+name: "Submicron WC-10%Co (ISO K20-K30 / P30 end-mill grade)"
+src: key
+density_kg_m3: 14500
+youngs_modulus_GPa: 580
+poisson: 0.22
+hardness_HV: 1600
+transverse_rupture_MPa: 4000         # TRS: bending strength used for breakage
+compressive_MPa: 6000
+fracture_toughness_MPa_sqrt_m: 10
+conductivity_W_mK: {table: [[20, 80], [400, 65], [800, 55]]}
+specific_heat_J_kgK: {table: [[20, 200], [400, 240], [800, 270]]}
+expansion_1_K: 5.5e-6
+max_service_temp_degC: 1000          # hot hardness / softening limit used in wear and deformation checks
+weibull_modulus: 12                  # strength scatter for the chipping probability
+thermal_shock_parameter: null        # R = TRS (1 - nu) k / (E alpha) if not given; null = computed
+usui:                                # optional published wear constants per workpiece family
+  # dW/dt = A * sigma_n * V_s * exp(-B / T). Give A in the units of the source, named in the key:
+  # A_per_MPa (dW/dt in mm/min with sigma_n in MPa and V_s in m/min) or A_per_Pa (all SI).
+  - work_family: steel
+    A_per_MPa: 1.198e-8
+    rate_unit: "mm/min with sigma_n in MPa, V_s in m/min"
+    B_K: 2.195e4
+    T_range_K: [1150, 1500]
+    src: usui-1984

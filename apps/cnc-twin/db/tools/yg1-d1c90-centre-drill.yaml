@@ -1,0 +1,91 @@
+# YG-1 D1C90 HSS combination drills & countersinks (plain 60 deg centre drills), read from the YG-1
+# Holemaking catalogue YU25 on 2026-11-03 (p. A275 dimensions, p. A277 cutting conditions).
+# The catalogue is in inch: lengths are converted exactly (1 in = 25.4 mm), speeds from ft/min
+# (x 0.3048) and feeds from in/rev (x 25.4); the printed inch values are kept in the notes.
+format: cnctwin-tool
+version: 1
+series_id: yg1-d1c90-centre-drill
+maker: "YG-1 Co., Ltd."
+series: "D1C90 HSS combination drill & countersink / centre drill, 60 deg, bright (ANSI sizes #2-#4)"
+src: yg1-2025-yu25-holemaking
+notes: "Plain centre drill: pilot drill D1 x L1 followed by a 60 deg countersink to the body/shank diameter D2, double ended. This is the same form as DIN 333 form A (60 deg, no protecting chamfer); DIN 333 metric sizes (e.g. A 2.5 x 6.3) were not found in an accessible catalogue, so the ANSI sizes are given. Icons p. A275: HSS, h8, k12, 60 deg, bright. Cutting data p. A277 by VDI 3323 group; the feed column of the nearest metric drill diameter is used (2.0 mm for #2, 3.0 mm / 1/8 in for #3 and #4)."
+defaults:
+  type: centre_drill
+  hand: right
+  tool_material: {class: hss, grade: "HSS (grade not stated)", id: hss-m2, src: est, note: "YG-1 prints only 'HSS' for D1C90; mapped to M2"}
+  coating: {id: none}
+items:
+  - id: yg1-d1c90142-no2
+    order_code: "D1C90142 (size #2, 60 deg)"
+    geometry:
+      diameter_mm: {value: 1.984, note: "pilot D1 = 5/64 in"}
+      flutes: {value: 2, src: est, note: "two-flute pilot, as on all combined drills; flute count not printed"}
+      point_angle_deg: {value: 118, src: est, note: "pilot point angle not printed; 118 deg is the usual point of general-purpose drills (YG-1 p. A399 point angle for type N)"}
+      tip_angle_deg: 60
+      cutting_length_mm: {value: 1.984, note: "pilot length L1 = 5/64 in"}
+      shank: {diameter_mm: {value: 4.7625, note: "D2 = 3/16 in"}, form: plain}
+      overall_length_mm: {value: 47.625, note: "L2 = 1-7/8 in"}
+      centre_cutting: true
+      coolant_holes: null
+    max_rpm: null
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "centre drills are usually discarded (double ended: 2 uses)"}
+    cutting_data:
+      - {iso_group: P, material_hint: "VDI 3323 group 1: non-alloy steel ~0.15 % C annealed, 125 HB", operation: [centering], vc_m_min: 40.2, f_mm: {min: 0.030, max: 0.061}, page: "p. A277: 132 SFM, 2.0 mm column 6,370 rpm, .0012-.0024 in/rev"}
+      - {iso_group: P, material_hint: "VDI 2 (0.45 % C annealed, 190 HB) and VDI 6 (low alloy annealed, 180 HB)", material: aisi1045, operation: [centering], vc_m_min: 30.2, f_mm: {min: 0.030, max: 0.061}, page: "p. A277: 99 SFM, 2.0 mm column 4,770 rpm, .0012-.0024 in/rev"}
+      - {iso_group: P, material_hint: "VDI 3: 0.45 % C quenched and tempered, 250 HB", operation: [centering], vc_m_min: 25.0, f_mm: {min: 0.010, max: 0.036}, page: "p. A277: 82 SFM, 3,980 rpm, .0004-.0014 in/rev"}
+      - {iso_group: P, material_hint: "VDI 7: low alloy steel quenched and tempered, 275 HB", material: aisi4140-qt30, operation: [centering], vc_m_min: 26.2, f_mm: {min: 0.010, max: 0.036}, page: "p. A277: 86 SFM, 3,180 rpm, .0004-.0014 in/rev"}
+      - {iso_group: M, material_hint: "VDI 12: stainless steel ferritic / martensitic annealed, 200 HB", operation: [centering], vc_m_min: 10.1, f_mm: {min: 0.010, max: 0.036}, page: "p. A277: 33 SFM, 1,590 rpm, .0004-.0014 in/rev"}
+      - {iso_group: K, material_hint: "VDI 15 grey cast iron pearlitic/ferritic 180 HB; VDI 17 nodular ferritic 160 HB", material: grey-cast-iron-gjl250, operation: [centering], vc_m_min: 40.2, f_mm: {min: 0.030, max: 0.061}, page: "p. A277: 132 SFM, 6,370 rpm, .0012-.0024 in/rev"}
+      - {iso_group: K, material_hint: "VDI 16: grey cast iron pearlitic, 260 HB", operation: [centering], vc_m_min: 30.2, f_mm: {min: 0.010, max: 0.036}, page: "p. A277: 99 SFM, 4,770 rpm, .0004-.0014 in/rev"}
+      - {iso_group: K, material_hint: "VDI 19: malleable cast iron ferritic, 130 HB", operation: [centering], vc_m_min: 25.0, f_mm: {min: 0.030, max: 0.061}, page: "p. A277: 82 SFM, 3,980 rpm, .0012-.0024 in/rev"}
+  - id: yg1-d1c90143-no3
+    order_code: "D1C90143 (size #3, 60 deg)"
+    geometry:
+      diameter_mm: {value: 2.778, note: "pilot D1 = 7/64 in (2.7781 mm)"}
+      flutes: {value: 2, src: est, note: "two-flute pilot; flute count not printed"}
+      point_angle_deg: {value: 118, src: est, note: "pilot point angle not printed; usual 118 deg (YG-1 p. A399, type N)"}
+      tip_angle_deg: 60
+      cutting_length_mm: {value: 2.778, note: "pilot length L1 = 7/64 in"}
+      shank: {diameter_mm: {value: 6.35, note: "D2 = 1/4 in"}, form: plain}
+      overall_length_mm: {value: 50.8, note: "L2 = 2 in"}
+      centre_cutting: true
+      coolant_holes: null
+      note: "nearest DIN 333 form A size is A 2.5 x 6.3"
+    max_rpm: null
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "centre drills are usually discarded (double ended: 2 uses)"}
+    cutting_data:
+      - {iso_group: P, material_hint: "VDI 3323 group 1: non-alloy steel ~0.15 % C annealed, 125 HB", operation: [centering], vc_m_min: 40.2, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 132 SFM, 3.0 mm / 1/8 in column 4,240 rpm, .0016-.0031 in/rev"}
+      - {iso_group: P, material_hint: "VDI 2 (0.45 % C annealed, 190 HB) and VDI 6 (low alloy annealed, 180 HB)", material: aisi1045, operation: [centering], vc_m_min: 30.2, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 99 SFM, 3,180 rpm, .0016-.0031 in/rev"}
+      - {iso_group: P, material_hint: "VDI 3: 0.45 % C quenched and tempered, 250 HB", operation: [centering], vc_m_min: 25.0, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 82 SFM, 2,650 rpm, .0004-.0020 in/rev"}
+      - {iso_group: P, material_hint: "VDI 7: low alloy steel quenched and tempered, 275 HB", material: aisi4140-qt30, operation: [centering], vc_m_min: 26.2, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 86 SFM, 2,120 rpm, .0004-.0020 in/rev"}
+      - {iso_group: M, material_hint: "VDI 12: stainless steel ferritic / martensitic annealed, 200 HB", operation: [centering], vc_m_min: 10.1, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 33 SFM, 1,060 rpm, .0004-.0020 in/rev"}
+      - {iso_group: K, material_hint: "VDI 15 grey cast iron 180 HB; VDI 17 nodular ferritic 160 HB", material: grey-cast-iron-gjl250, operation: [centering], vc_m_min: 40.2, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 132 SFM, 4,240 rpm, .0016-.0031 in/rev"}
+      - {iso_group: K, material_hint: "VDI 16: grey cast iron pearlitic, 260 HB", operation: [centering], vc_m_min: 30.2, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 99 SFM, 3,180 rpm, .0004-.0020 in/rev"}
+      - {iso_group: K, material_hint: "VDI 19: malleable cast iron ferritic, 130 HB", operation: [centering], vc_m_min: 25.0, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 82 SFM, 2,650 rpm, .0016-.0031 in/rev"}
+  - id: yg1-d1c90144-no4
+    order_code: "D1C90144 (size #4, 60 deg)"
+    geometry:
+      diameter_mm: {value: 3.175, note: "pilot D1 = 1/8 in"}
+      flutes: {value: 2, src: est, note: "two-flute pilot; flute count not printed"}
+      point_angle_deg: {value: 118, src: est, note: "pilot point angle not printed; usual 118 deg (YG-1 p. A399, type N)"}
+      tip_angle_deg: 60
+      cutting_length_mm: {value: 3.175, note: "pilot length L1 = 1/8 in"}
+      shank: {diameter_mm: {value: 7.9375, note: "D2 = 5/16 in"}, form: plain}
+      overall_length_mm: {value: 53.975, note: "L2 = 2-1/8 in"}
+      centre_cutting: true
+      coolant_holes: null
+      note: "nearest DIN 333 form A size is A 3.15 x 8"
+    max_rpm: null
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "centre drills are usually discarded (double ended: 2 uses)"}
+    cutting_data:
+      - {iso_group: P, material_hint: "VDI 3323 group 1: non-alloy steel ~0.15 % C annealed, 125 HB", operation: [centering], vc_m_min: 40.2, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 132 SFM, 3.0 mm / 1/8 in column 4,240 rpm, .0016-.0031 in/rev"}
+      - {iso_group: P, material_hint: "VDI 2 (0.45 % C annealed, 190 HB) and VDI 6 (low alloy annealed, 180 HB)", material: aisi1045, operation: [centering], vc_m_min: 30.2, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 99 SFM, 3,180 rpm, .0016-.0031 in/rev"}
+      - {iso_group: P, material_hint: "VDI 3: 0.45 % C quenched and tempered, 250 HB", operation: [centering], vc_m_min: 25.0, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 82 SFM, 2,650 rpm, .0004-.0020 in/rev"}
+      - {iso_group: P, material_hint: "VDI 7: low alloy steel quenched and tempered, 275 HB", material: aisi4140-qt30, operation: [centering], vc_m_min: 26.2, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 86 SFM, 2,120 rpm, .0004-.0020 in/rev"}
+      - {iso_group: M, material_hint: "VDI 12: stainless steel ferritic / martensitic annealed, 200 HB", operation: [centering], vc_m_min: 10.1, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 33 SFM, 1,060 rpm, .0004-.0020 in/rev"}
+      - {iso_group: K, material_hint: "VDI 15 grey cast iron 180 HB; VDI 17 nodular ferritic 160 HB", material: grey-cast-iron-gjl250, operation: [centering], vc_m_min: 40.2, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 132 SFM, 4,240 rpm, .0016-.0031 in/rev"}
+      - {iso_group: K, material_hint: "VDI 16: grey cast iron pearlitic, 260 HB", operation: [centering], vc_m_min: 30.2, f_mm: {min: 0.010, max: 0.051}, page: "p. A277: 99 SFM, 3,180 rpm, .0004-.0020 in/rev"}
+      - {iso_group: K, material_hint: "VDI 19: malleable cast iron ferritic, 130 HB", operation: [centering], vc_m_min: 25.0, f_mm: {min: 0.041, max: 0.079}, page: "p. A277: 82 SFM, 2,650 rpm, .0016-.0031 in/rev"}

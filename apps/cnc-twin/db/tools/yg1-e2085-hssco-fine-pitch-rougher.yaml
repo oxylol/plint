@@ -1,0 +1,430 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: yg1-e2085-hssco-fine-pitch-rougher
+maker: YG-1 Co., Ltd. (YG-1 America)
+series: E2085 HSS-Co8 (M42) multi flute regular length fine pitch roughing end mills, center cutting
+src: yg1-2025-yu25-milling
+notes: Serrated (fine pitch) HSS-Co rougher, inch. Dimensions p. C882 (PDF p. 461), cutting data p. C927 (PDF p. 483).
+items:
+- id: yg1-e2085-76297
+  order_code: 76297 (E2085, uncoated M42)
+  type: serrated_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: hss, grade: 8 % cobalt HSS (M42), id: hss-m42}
+  coating: {id: none, note: uncoated EDP; TiN/TiCN/TiAlN on request (p. C882)}
+  geometry:
+    diameter_mm: 6.35
+    flutes: 3
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: equal spacing assumed
+    helix_deg: 30
+    rake_deg: {value: 10, src: est, note: not published; 10 deg assumed for an HSS-Co rougher}
+    clearance_deg: {primary: 7, secondary: 15, src: est, note: not published; 7/15 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed (ground HSS)}
+    edge_prep: {type: sharp, src: est, note: not published; YG-1 marks an 'enforced cutting edge' on p. C882 without detail}
+    corner_radius_mm: 0
+    cutting_length_mm: 15.875
+    flute_length_mm: {value: 15.875, src: est, note: taken equal to length of cut}
+    neck: null
+    shank:
+      diameter_mm: 9.525
+      length_mm: {value: 46.0375, src: est, note: OAL - LOC}
+      form: weldon
+      note: FLAT SHANK in the series heading (p. C882)
+    overall_length_mm: 61.9125
+    gullet_area_mm2: {value: 5.52, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 6.35 mm, dc = 3.49 mm, z = 3 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 3.49, src: est, note: 'dc = 0.55 D: assumed low end of the 0.55-0.65 D rule of thumb (3-5 flute HSS rougher); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+    note: 'profile = fine pitch roughing (serrated cutting edge); serration = {''pitch_mm'': None, ''depth_mm'': None, ''note'': ''fine-pitch serration form not published''}; inch dimensions as published: diameter 0.25 in, cutting_length 0.625 in, flute_length 0.625 (est) in, shank.diameter 0.375 in, shank.length 1.8125 (est) in, overall_length 2.4375 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 28.5, src: est, note: 'rho V: shank cylinder d 9.525 x 46.0375 mm plus fluted cylinder D 6.35 x 15.875 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: non-alloy steel about 0.45 % C, annealed, 190 HB (VDI 3323 group 2; e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 32.004}
+    fz_mm:
+      start: {value: 0.010668, src: est, note: 'derived: feed 2 in/min / (RPM 1600 x 3 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 2, 0.25 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 105 SFM, fz 0.00042 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel, quenched and tempered, 275 HB / 29 HRC (VDI 3323 group 7; e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 24.384}
+    fz_mm:
+      start: {value: 0.014224, src: est, note: 'derived: feed 2 in/min / (RPM 1200 x 3 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 7, 0.25 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 80 SFM, fz 0.00056 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: high alloyed steel and tool steel, annealed, 200 HB (VDI 3323 group 10)
+    operation: [side_milling]
+    vc_m_min: {start: 32.004}
+    fz_mm:
+      start: {value: 0.010668, src: est, note: 'derived: feed 2 in/min / (RPM 1600 x 3 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 10, 0.25 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 105 SFM, fz 0.00042 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: aluminium wrought alloy, 60-100 HB (VDI 3323 groups 21-22; e.g. al6061-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 89.916}
+    fz_mm:
+      start: {value: 0.014986, src: est, note: 'derived: feed 8 in/min / (RPM 4500 x 3 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 21-22, 0.25 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 295 SFM, fz 0.00059 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: null
+  regrinds: {value: 3, src: est, note: assumed for an HSS-Co rougher}
+  note: HSS Co8 multi flute regular length fine pitch roughing, center cutting (p. C882); 30 deg helix (selection guide p. C834, PDF p. 438); mill diameter tolerance 0/+.0030 in up to 1 in
+- id: yg1-e2085-76305
+  order_code: 76305 (E2085, uncoated M42)
+  type: serrated_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: hss, grade: 8 % cobalt HSS (M42), id: hss-m42}
+  coating: {id: none, note: uncoated EDP; TiN/TiCN/TiAlN on request (p. C882)}
+  geometry:
+    diameter_mm: 9.525
+    flutes: 4
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed
+    helix_deg: 30
+    rake_deg: {value: 10, src: est, note: not published; 10 deg assumed for an HSS-Co rougher}
+    clearance_deg: {primary: 7, secondary: 15, src: est, note: not published; 7/15 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed (ground HSS)}
+    edge_prep: {type: sharp, src: est, note: not published; YG-1 marks an 'enforced cutting edge' on p. C882 without detail}
+    corner_radius_mm: 0
+    cutting_length_mm: 19.05
+    flute_length_mm: {value: 19.05, src: est, note: taken equal to length of cut}
+    neck: null
+    shank:
+      diameter_mm: 9.525
+      length_mm: {value: 44.45, src: est, note: OAL - LOC}
+      form: weldon
+      note: FLAT SHANK in the series heading (p. C882)
+    overall_length_mm: 63.5
+    gullet_area_mm2: {value: 9.32, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 9.525 mm, dc = 5.24 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 5.24, src: est, note: 'dc = 0.55 D: assumed low end of the 0.55-0.65 D rule of thumb (3-5 flute HSS rougher); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+    note: 'profile = fine pitch roughing (serrated cutting edge); serration = {''pitch_mm'': None, ''depth_mm'': None, ''note'': ''fine-pitch serration form not published''}; inch dimensions as published: diameter 0.375 in, cutting_length 0.75 in, flute_length 0.75 (est) in, shank.diameter 0.375 in, shank.length 1.75 (est) in, overall_length 2.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 30.9, src: est, note: 'rho V: shank cylinder d 9.525 x 44.45 mm plus fluted cylinder D 9.525 x 19.05 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: non-alloy steel about 0.45 % C, annealed, 190 HB (VDI 3323 group 2; e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 27.432}
+    fz_mm:
+      start: {value: 0.035306, src: est, note: 'derived: feed 5 in/min / (RPM 900 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 2, 0.375 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 90 SFM, fz 0.00139 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel, quenched and tempered, 275 HB / 29 HRC (VDI 3323 group 7; e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 24.384}
+    fz_mm:
+      start: {value: 0.03175, src: est, note: 'derived: feed 4 in/min / (RPM 800 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 7, 0.375 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 80 SFM, fz 0.00125 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: high alloyed steel and tool steel, annealed, 200 HB (VDI 3323 group 10)
+    operation: [side_milling]
+    vc_m_min: {start: 27.432}
+    fz_mm:
+      start: {value: 0.035306, src: est, note: 'derived: feed 5 in/min / (RPM 900 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 10, 0.375 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 90 SFM, fz 0.00139 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: aluminium wrought alloy, 60-100 HB (VDI 3323 groups 21-22; e.g. al6061-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 74.676}
+    fz_mm:
+      start: {value: 0.03556, src: est, note: 'derived: feed 14 in/min / (RPM 2500 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 21-22, 0.375 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 245 SFM, fz 0.0014 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: null
+  regrinds: {value: 3, src: est, note: assumed for an HSS-Co rougher}
+  note: HSS Co8 multi flute regular length fine pitch roughing, center cutting (p. C882); 30 deg helix (selection guide p. C834, PDF p. 438); mill diameter tolerance 0/+.0030 in up to 1 in
+- id: yg1-e2085-76321
+  order_code: 76321 (E2085, uncoated M42)
+  type: serrated_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: hss, grade: 8 % cobalt HSS (M42), id: hss-m42}
+  coating: {id: none, note: uncoated EDP; TiN/TiCN/TiAlN on request (p. C882)}
+  geometry:
+    diameter_mm: 12.7
+    flutes: 4
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed
+    helix_deg: 30
+    rake_deg: {value: 10, src: est, note: not published; 10 deg assumed for an HSS-Co rougher}
+    clearance_deg: {primary: 7, secondary: 15, src: est, note: not published; 7/15 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed (ground HSS)}
+    edge_prep: {type: sharp, src: est, note: not published; YG-1 marks an 'enforced cutting edge' on p. C882 without detail}
+    corner_radius_mm: 0
+    cutting_length_mm: 31.75
+    flute_length_mm: {value: 31.75, src: est, note: taken equal to length of cut}
+    neck: null
+    shank:
+      diameter_mm: 12.7
+      length_mm: {value: 50.8, src: est, note: OAL - LOC}
+      form: weldon
+      note: FLAT SHANK in the series heading (p. C882)
+    overall_length_mm: 82.55
+    gullet_area_mm2: {value: 16.57, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 12.7 mm, dc = 6.99 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 6.99, src: est, note: 'dc = 0.55 D: assumed low end of the 0.55-0.65 D rule of thumb (3-5 flute HSS rougher); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+    note: 'profile = fine pitch roughing (serrated cutting edge); serration = {''pitch_mm'': None, ''depth_mm'': None, ''note'': ''fine-pitch serration form not published''}; inch dimensions as published: diameter 0.5 in, cutting_length 1.25 in, flute_length 1.25 (est) in, shank.diameter 0.5 in, shank.length 2 (est) in, overall_length 3.25 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 67.7, src: est, note: 'rho V: shank cylinder d 12.7 x 50.8 mm plus fluted cylinder D 12.7 x 31.75 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: non-alloy steel about 0.45 % C, annealed, 190 HB (VDI 3323 group 2; e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 32.004}
+    fz_mm:
+      start: {value: 0.047498, src: est, note: 'derived: feed 6 in/min / (RPM 800 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 2, 0.5 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 105 SFM, fz 0.00187 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel, quenched and tempered, 275 HB / 29 HRC (VDI 3323 group 7; e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 24.384}
+    fz_mm:
+      start: {value: 0.040386, src: est, note: 'derived: feed 4 in/min / (RPM 630 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 7, 0.5 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 80 SFM, fz 0.00159 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: high alloyed steel and tool steel, annealed, 200 HB (VDI 3323 group 10)
+    operation: [side_milling]
+    vc_m_min: {start: 32.004}
+    fz_mm:
+      start: {value: 0.047498, src: est, note: 'derived: feed 6 in/min / (RPM 800 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 10, 0.5 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 105 SFM, fz 0.00187 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: aluminium wrought alloy, 60-100 HB (VDI 3323 groups 21-22; e.g. al6061-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 79.248}
+    fz_mm:
+      start: {value: 0.0508, src: est, note: 'derived: feed 16 in/min / (RPM 2000 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 21-22, 0.5 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 260 SFM, fz 0.002 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: null
+  regrinds: {value: 3, src: est, note: assumed for an HSS-Co rougher}
+  note: HSS Co8 multi flute regular length fine pitch roughing, center cutting (p. C882); 30 deg helix (selection guide p. C834, PDF p. 438); mill diameter tolerance 0/+.0030 in up to 1 in
+- id: yg1-e2085-76359
+  order_code: 76359 (E2085, uncoated M42)
+  type: serrated_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: hss, grade: 8 % cobalt HSS (M42), id: hss-m42}
+  coating: {id: none, note: uncoated EDP; TiN/TiCN/TiAlN on request (p. C882)}
+  geometry:
+    diameter_mm: 19.05
+    flutes: 4
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed
+    helix_deg: 30
+    rake_deg: {value: 10, src: est, note: not published; 10 deg assumed for an HSS-Co rougher}
+    clearance_deg: {primary: 7, secondary: 15, src: est, note: not published; 7/15 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed (ground HSS)}
+    edge_prep: {type: sharp, src: est, note: not published; YG-1 marks an 'enforced cutting edge' on p. C882 without detail}
+    corner_radius_mm: 0
+    cutting_length_mm: 41.275
+    flute_length_mm: {value: 41.275, src: est, note: taken equal to length of cut}
+    neck: null
+    shank:
+      diameter_mm: 19.05
+      length_mm: {value: 57.15, src: est, note: OAL - LOC}
+      form: weldon
+      note: FLAT SHANK in the series heading (p. C882)
+    overall_length_mm: 98.425
+    gullet_area_mm2: {value: 37.28, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 19.05 mm, dc = 10.48 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 10.48, src: est, note: 'dc = 0.55 D: assumed low end of the 0.55-0.65 D rule of thumb (3-5 flute HSS rougher); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+    note: 'profile = fine pitch roughing (serrated cutting edge); serration = {''pitch_mm'': None, ''depth_mm'': None, ''note'': ''fine-pitch serration form not published''}; inch dimensions as published: diameter 0.75 in, cutting_length 1.625 in, flute_length 1.625 (est) in, shank.diameter 0.75 in, shank.length 2.25 (est) in, overall_length 3.875 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 177.4, src: est, note: 'rho V: shank cylinder d 19.05 x 57.15 mm plus fluted cylinder D 19.05 x 41.275 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: non-alloy steel about 0.45 % C, annealed, 190 HB (VDI 3323 group 2; e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 27.432}
+    fz_mm:
+      start: {value: 0.0762, src: est, note: 'derived: feed 6 in/min / (RPM 500 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 2, 0.6875 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); the table has no 3/4 in column, 0.6875 in column used; published values: vc 90 SFM, fz 0.003 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel, quenched and tempered, 275 HB / 29 HRC (VDI 3323 group 7; e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 21.336}
+    fz_mm:
+      start: {value: 0.0635, src: est, note: 'derived: feed 4 in/min / (RPM 400 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 7, 0.6875 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); the table has no 3/4 in column, 0.6875 in column used; published values: vc 70 SFM, fz 0.0025 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: high alloyed steel and tool steel, annealed, 200 HB (VDI 3323 group 10)
+    operation: [side_milling]
+    vc_m_min: {start: 27.432}
+    fz_mm:
+      start: {value: 0.0762, src: est, note: 'derived: feed 6 in/min / (RPM 500 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 10, 0.6875 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); the table has no 3/4 in column, 0.6875 in column used; published values: vc 90 SFM, fz 0.003 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: aluminium wrought alloy, 60-100 HB (VDI 3323 groups 21-22; e.g. al6061-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 76.2}
+    fz_mm:
+      start: {value: 0.086106, src: est, note: 'derived: feed 19 in/min / (RPM 1400 x 4 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 21-22, 0.6875 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); the table has no 3/4 in column, 0.6875 in column used; published values: vc 250 SFM, fz 0.00339 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: null
+  regrinds: {value: 3, src: est, note: assumed for an HSS-Co rougher}
+  note: HSS Co8 multi flute regular length fine pitch roughing, center cutting (p. C882); 30 deg helix (selection guide p. C834, PDF p. 438); mill diameter tolerance 0/+.0030 in up to 1 in
+- id: yg1-e2085-76426
+  order_code: 76426 (E2085, uncoated M42)
+  type: serrated_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
+  tool_material: {class: hss, grade: 8 % cobalt HSS (M42), id: hss-m42}
+  coating: {id: none, note: uncoated EDP; TiN/TiCN/TiAlN on request (p. C882)}
+  geometry:
+    diameter_mm: 25.4
+    flutes: 5
+    pitch_deg:
+      value: [72.0, 72.0, 72.0, 72.0, 72.0]
+      src: est
+      note: equal spacing assumed
+    helix_deg: 30
+    rake_deg: {value: 10, src: est, note: not published; 10 deg assumed for an HSS-Co rougher}
+    clearance_deg: {primary: 7, secondary: 15, src: est, note: not published; 7/15 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed (ground HSS)}
+    edge_prep: {type: sharp, src: est, note: not published; YG-1 marks an 'enforced cutting edge' on p. C882 without detail}
+    corner_radius_mm: 0
+    cutting_length_mm: 50.8
+    flute_length_mm: {value: 50.8, src: est, note: taken equal to length of cut}
+    neck: null
+    shank:
+      diameter_mm: 25.4
+      length_mm: {value: 63.5, src: est, note: OAL - LOC}
+      form: weldon
+      note: FLAT SHANK in the series heading (p. C882)
+    overall_length_mm: 114.3
+    gullet_area_mm2: {value: 53.01, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 25.4 mm, dc = 13.97 mm, z = 5 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 13.97, src: est, note: 'dc = 0.55 D: assumed low end of the 0.55-0.65 D rule of thumb (3-5 flute HSS rougher); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+    note: 'profile = fine pitch roughing (serrated cutting edge); serration = {''pitch_mm'': None, ''depth_mm'': None, ''note'': ''fine-pitch serration form not published''}; inch dimensions as published: diameter 1 in, cutting_length 2 in, flute_length 2 (est) in, shank.diameter 1 in, shank.length 2.5 (est) in, overall_length 4.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 360.1, src: est, note: 'rho V: shank cylinder d 25.4 x 63.5 mm plus fluted cylinder D 25.4 x 50.8 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 8.1 g/cm3 (db/tool_materials/hss-m42, Bohler S500)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: non-alloy steel about 0.45 % C, annealed, 190 HB (VDI 3323 group 2; e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 32.004}
+    fz_mm:
+      start: {value: 0.0889, src: est, note: 'derived: feed 7 in/min / (RPM 400 x 5 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 2, 1 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 105 SFM, fz 0.0035 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel, quenched and tempered, 275 HB / 29 HRC (VDI 3323 group 7; e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 24.384}
+    fz_mm:
+      start: {value: 0.098298, src: est, note: 'derived: feed 6 in/min / (RPM 310 x 5 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 7, 1 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 80 SFM, fz 0.00387 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: high alloyed steel and tool steel, annealed, 200 HB (VDI 3323 group 10)
+    operation: [side_milling]
+    vc_m_min: {start: 32.004}
+    fz_mm:
+      start: {value: 0.0889, src: est, note: 'derived: feed 7 in/min / (RPM 400 x 5 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 10, 1 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 105 SFM, fz 0.0035 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: aluminium wrought alloy, 60-100 HB (VDI 3323 groups 21-22; e.g. al6061-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 79.248}
+    fz_mm:
+      start: {value: 0.09144, src: est, note: 'derived: feed 18 in/min / (RPM 1000 x 5 flutes); the table gives SFM, RPM and IPM only, rounded to whole in/min'}
+    ap_max_xD: 1.5
+    ae_max_xD: 0.5
+    src: yg1-2025-yu25-milling
+    page: p. C927 (PDF p. 483), table 'E2086, E2085, E2079, ... SERIES, MULTI FLUTE ROUGHING - SIDE CUTTING', VDI 21-22, 1 in column
+    note: 'Ae 0.5 D, Ap 1.5 D (table); published values: vc 260 SFM, fz 0.0036 (est) in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: null
+  regrinds: {value: 3, src: est, note: assumed for an HSS-Co rougher}
+  note: HSS Co8 multi flute regular length fine pitch roughing, center cutting (p. C882); 30 deg helix (selection guide p. C834, PDF p. 438); mill diameter tolerance 0/+.0030 in up to 1 in

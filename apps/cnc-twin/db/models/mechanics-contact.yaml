@@ -1,0 +1,75 @@
+# Tool-chip friction, edge ploughing, flank wear land and the fallback force models of
+# cnctwin.mechanics (docs/models/mechanics.md, "Interface", "Edge", "Flank", "Fallbacks").
+format: cnctwin-model-params
+version: 1
+model: mechanics-contact
+description: "Interface friction (Coulomb-Tresca limit, Zorev split), BUE effect, edge indentation, flank wear land, fallback regimes"
+params:
+  zorev_exponent:
+    value: 3.0
+    unit: "-"
+    range: [1.0, 6.0]
+    src: est
+    note: "exponent a of Zorev's normal stress sigma(x) = sigma_max (1 - x/l_c)^a; a = 3 assumed inside the 2-4 usually reported for steels. Only the reported sticking/sliding split depends on it (the force solution uses the mean stresses)"
+  indentation_pressure_factor:
+    value: 5.141592653589793
+    unit: "-"
+    src: hill-1950-plasticity
+    note: "(2 + pi): Prandtl's mean pressure of a flat punch on a rigid-perfectly plastic half-space in units of the shear flow stress k; used for the material pressed under the rounded edge (below the stagnation point) and under the flank wear land"
+  flank_plastic_land_m:
+    value: 1.0e-4
+    unit: m
+    range: [1.0e-6, 1.0e-3]
+    src: est
+    note: "critical wear-land length VB* of the Smithey et al. (2001) flank model: the land stresses are plastic (constant) up to VB*, beyond it they decay as ((VB - x)/(VB - VB*))^2; 0.1 mm assumed (their fitted values were not read)"
+  min_shear_speed_m_s:
+    value: 0.05
+    unit: m/s
+    range: [0.0, 1.0]
+    src: est
+    note: "v_min: below 3 m/min (drill centre, chisel edge near the axis) chip formation by shear is replaced by indentation/extrusion; assumed"
+  min_shear_rake_rad:
+    value: -0.7853981633974483
+    unit: rad
+    range: [-1.5, 0.0]
+    src: est
+    note: "-45 deg: normal rakes below this (chisel edges, about -55 deg) are treated by the indentation/extrusion model; Oxley's and Merchant's shear-plane solutions degenerate there"
+  min_merchant_phi_rad:
+    value: 0.03490658503988659
+    unit: rad
+    src: est
+    note: "2 deg: a fallback shear angle below this is not a chip-forming solution; the element is then treated as indentation"
+  merchant_C0:
+    value: 6.0
+    unit: "-"
+    src: est
+    note: "strain-rate constant of the fallback shear-plane model when no converged Oxley solution exists nearby (middle of Oxley's 2-10 range)"
+  merchant_delta:
+    value: 0.05
+    unit: "-"
+    src: est
+    note: "secondary-zone thickness ratio of the fallback interface temperature when no converged Oxley solution exists nearby"
+  bue_rake_rad:
+    value: 0.4363323129985824
+    unit: rad
+    range: [0.0, 0.8]
+    src: est
+    note: "25 deg: effective rake angle presented by a fully developed built-up edge (the BUE nose acts as a positive-rake extension of the tool); assumed inside the 20-30 deg usually described, not read"
+  bue_full_height_ratio:
+    value: 1.0
+    unit: "-"
+    range: [0.1, 10.0]
+    src: est
+    note: "BUE height / uncut chip thickness at which the effective rake reaches bue_rake_rad (linear in between); assumed"
+  default_contact_aspect:
+    value: 10.0
+    unit: "-"
+    range: [1.0, 1000.0]
+    src: est
+    note: "contact width / contact length of the tool-side heat source when the caller gives no contact width (long straight edge in contact); the steady stationary-source resistance grows only logarithmically with it"
+  default_min_chip_thickness_ratio:
+    value: 0.3
+    unit: "-"
+    range: [0.05, 1.0]
+    src: est
+    note: "minimum chip thickness / edge radius used when the material file gives no min_chip_thickness_ratio (middle of the 0.2-0.4 found for most metals in wojciechowski-2022-min-chip-thickness)"

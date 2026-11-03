@@ -1,0 +1,62 @@
+format: cnctwin-holder
+version: 1
+series_id: bigdaishowa-hi-power-milling-chuck
+maker: "BIG DAISHOWA (BIG KAISER)"
+series: "New Hi-Power Milling Chuck (HMC), BIG-PLUS BT40, inch bores"
+src: bigdaishowa-web-hmc
+items:
+  - id: bigdaishowa-bbt40-hmc-750s-3-5
+    order_code: "BBT40-HMC.750S-3.5"
+    type: milling_chuck
+    taper: BT40                        # BIG-PLUS dual contact
+    bore_mm: {value: 19.05, src: bigdaishowa-web-hmc, note: "Ø 3/4 in"}
+    gauge_length_mm: {value: 88.9, src: bigdaishowa-web-hmc, note: "L 3.5 in"}
+    mass_kg: {value: 1.84, src: bigdaishowa-web-hmc, note: "4.05 lb"}
+    nose_diameter_mm: null             # not in the listing
+    profile_mm: null
+    clamping_torque_Nm: null           # gripping torque chart is in the catalogue (not read)
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    clamp_length_mm: null
+    price_eur: null
+  - id: bigdaishowa-bbt40-hmc1-000s-3-5
+    order_code: "BBT40-HMC1.000S-3.5"
+    type: milling_chuck
+    taper: BT40
+    bore_mm: {value: 25.4, src: bigdaishowa-web-hmc, note: "Ø 1 in"}
+    gauge_length_mm: {value: 88.9, src: bigdaishowa-web-hmc, note: "L 3.5 in"}
+    mass_kg: {value: 2.02, src: bigdaishowa-web-hmc, note: "4.45 lb"}
+    nose_diameter_mm: null
+    profile_mm: null
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    clamp_length_mm: null
+    price_eur: null
+  - id: bigdaishowa-bbt40-hmc1-250s-4
+    order_code: "BBT40-HMC1.250S-4"
+    type: milling_chuck
+    taper: BT40
+    bore_mm: {value: 31.75, src: bigdaishowa-web-hmc, note: "Ø 1-1/4 in"}
+    gauge_length_mm: {value: 101.6, src: bigdaishowa-web-hmc, note: "L 4.0 in"}
+    mass_kg: {value: 2.45, src: bigdaishowa-web-hmc, note: "5.40 lb"}
+    nose_diameter_mm: null
+    profile_mm: null
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    clamp_length_mm: null
+    price_eur: null
+notes: "Only bore, gauge length and mass were readable from the web listing; gripping torque, nose diameter, runout and balance are in the BIG catalogue (not read; gap)."

@@ -1,0 +1,42 @@
+format: cnctwin-tool-material
+version: 1
+id: carbide-p30
+class: carbide
+name: "WC-(Ti,Ta,Nb)C-Co steel-cutting grade, ISO P30 (Mitsubishi ZU525H / Kyocera CA530 substrate as reference grades)"
+src: mitsubishi-2026-tm102g
+composition: {text: "ZU525H: P30, Co 12.5 %, grain < 3.0 µm (cubic carbide content not printed)", src: mitsubishi-2026-tm102g, page: "p. 4"}
+grain_size_um: {value: 3.0, src: mitsubishi-2026-tm102g, page: "ZU525H '< 3.0 µm'", note: "upper bound as printed"}
+binder_wt_pct: {value: 12.5, src: mitsubishi-2026-tm102g}
+density_kg_m3: {value: 13900, src: kyocera-2015-insert-grades, page: "p. A19, CA530 (P30 CVD grade substrate) specific gravity 13.9"}
+youngs_modulus_GPa: {value: 540, src: est, note: "Doi fit (roebuck-2009-npl-mgpg20 eq. 44) gives 560 GPa at 12.5 wt% Co (Vf 0.20); cubic carbides (TiC, TaC) are less stiff than WC, so 540 assumed"}
+poisson: {value: 0.22, src: est, note: "usual WC-Co value"}
+hardness_HV: {value: 1450, range: [1340, 1450], src: mitsubishi-2026-tm102g, page: "p. 4, ZU525H 1450 HV", note: "Kyocera CA530 1340 HV (kyocera-2015-insert-grades p. A19)"}
+transverse_rupture_MPa: {value: 2100, range: [2100, 2850], src: mitsubishi-2026-tm102g, page: "p. 4, ZU525H 2.1 GPa", note: "Kyocera CA530 2850 MPa"}
+compressive_MPa: {value: 4500, range: [4000, 8000], src: est, note: "low end of the 4-8 GPa hardmetal range (roebuck-2009-npl-mgpg20) for a 12.5 % Co grade"}
+fracture_toughness_MPa_sqrt_m: {value: 9.5, range: [9.5, 14.5], src: mitsubishi-2026-tm102g, page: "p. 4, ZU525H 9.5", note: "Kyocera CA530 14.5 (cobalt-enriched CVD substrate)"}
+conductivity_W_mK:
+  table: [[20, 41], [500, 39], [1000, 37]]
+  src: est
+  note: "20 °C value 41 W/mK for ZU525H (mitsubishi-2026-tm102g p. 4); hyperion-thermal-properties says gamma phase lowers conductivity; a 10 % loss to 1000 °C assumed (low-conductivity grades lose less than the 30 % reported for high-conductivity grades in vornberger-2020)"
+specific_heat_J_kgK:
+  table: [[20, 230], [400, 270], [800, 300]]
+  src: est
+  note: "higher than straight WC-Co because of 12.5 % Co and the lighter cubic carbides; +30 % to 800 °C assumed"
+expansion_1_K: {value: 6.0e-6, src: est, note: "upper end of the WC/Co range 5-6e-6 (roebuck-2009-npl-mgpg20) because TiC raises the CTE slightly (hyperion-thermal-properties)"}
+max_service_temp_degC: {value: 1100, src: est, note: "cubic carbides improve hot hardness and crater resistance; 100 °C above WC-Co assumed"}
+weibull_modulus: {value: 15, src: est, note: "inside the 10-20 band for WC/Co in roebuck-2009-npl-mgpg20; no grade-specific value"}
+thermal_shock_parameter: null
+usui:
+  - work_family: steel
+    A: 7.8e-15                         # 7.8e-9 mm2/N in the usual DEFORM form (p in MPa, v in mm/s, w in mm)
+    B_K: 5302
+    T_range_K: [null, 1150]
+    src: est
+    note: "NOT VERIFIED: constants widely quoted for P20 carbide vs plain carbon steel (Usui, Shirakashi, Kitagawa, Wear 100 (1984) 129-151; Kitagawa et al. 1988), seen only in secondary-source excerpts, original not read. Converted from mm2/N to 1/Pa (x 1e-6). The two branches meet near 1150 K, which supports the pairing"
+  - work_family: steel
+    A: 1.198e-8                        # 1.198e-2 mm2/N
+    B_K: 21950
+    T_range_K: [1150, null]
+    src: est
+    note: "NOT VERIFIED: high-temperature branch of the same quoted constant set; see the first entry"
+notes: "The Usui entries are flagged as unverified estimates until the 1984 paper is read."

@@ -1,0 +1,1395 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: helical-mhsv-4-square-metric-aplus
+maker: Helical Solutions (Harvey Performance Company)
+series: MHSV-4 4 flute square, variable pitch, metric, Aplus coated - end mills for steels, tool steels and cast iron
+src: helical-2026-mhsv4-sq-metric-aplus
+notes: Dimensions, tool numbers and list prices from the product table; running data from the HSV-4 speeds & feeds chart that the product page links (shared by HSV-4 / HSV-RN-4 / HSM-4). Sizes chosen where a 2xD length of cut exists and an inch chart column lies within 6 % of the metric diameter (16 mm has none and is left out).
+items:
+- id: helical-89608-mhsv-020-40300
+  order_code: 89608 (MHSV-020-40300)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Aplus'' (black/grey PVD, max usage 2,012 F = 1100 C, 4079 HV0.05 = 40 GPa, CoF 0.45 per helical-2026-coatings); chemistry not stated, mapped to altin'}
+  geometry:
+    diameter_mm: 3.0
+    flutes: 4
+    pitch_deg:
+      value: [90.5, 88.2, 90.3, 91.0]
+      src: est
+      note: Helical states variable pitch but not the spacing; the illustrative 4-flute variable-pitch spacing from harveyperformance-2017-end-mill-anatomy (90.5/88.2/90.3/91 deg) is used
+    helix_deg: {value: 35, src: est, note: 'helix not published for HSV-4; 35 deg assumed (harveyperformance-2017-end-mill-anatomy: 35 deg = stronger roughing edge, 40 deg = moderate)'}
+    rake_deg: {value: 8, src: est, note: 'radial rake not published; 8 deg assumed, typical of coated carbide end mills for steel'}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published (Helical states eccentric relief); 10/18 deg assumed}
+    edge_radius_um: {value: 8, src: est, note: edge radius not published; 8 um assumed for a coated (Aplus/Tplus PVD) carbide edge}
+    edge_prep: {type: hone, src: est, note: edge preparation not published; light hone assumed under PVD coating}
+    corner_radius_mm: 0
+    cutting_length_mm: 6.0
+    flute_length_mm: {value: 6.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 6.0
+      length_mm: {value: 57.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 0.85, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 3 mm, dc = 1.80 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 1.8, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 3-4 flute end mills (task brief); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 23.7, src: est, note: 'rho V: shank cylinder d 6 x 57 mm plus fluted cylinder D 3 x 6 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [slotting]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.0127}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 445 SFM, fz 0.0005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.02286}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 445 SFM, fz 0.0009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 445 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [slotting]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.00762}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 340 SFM, fz 0.0003 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.01524}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 340 SFM, fz 0.0006 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.02794}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 340 SFM, fz 0.0011 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [slotting]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.01016}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 265 SFM, fz 0.0004 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [side_milling]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.02032}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 265 SFM, fz 0.0008 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [finishing]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.03302}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 265 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [slotting]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.01778}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 410 SFM, fz 0.0007 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [side_milling]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.03302}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 410 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.04318}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 410 SFM, fz 0.0017 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [slotting]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.01016}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 180 SFM, fz 0.0004 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [side_milling]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.01778}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 180 SFM, fz 0.0007 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [finishing]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.03302}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 180 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.00762}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 75 SFM, fz 0.0003 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [side_milling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.0127}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 75 SFM, fz 0.0005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [finishing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.02794}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 75 SFM, fz 0.0011 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [slotting]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.00762}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 145 SFM, fz 0.0003 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.0127}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 145 SFM, fz 0.0005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [finishing]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.0254}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 145 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [slotting]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.00508}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 85 SFM, fz 0.0002 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.01016}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 85 SFM, fz 0.0004 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.02286}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3.00 mm; published values: vc 85 SFM, fz 0.0009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 25.03, src: est, note: 'list price USD 29.10 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: D1 tolerance +0.00/-0.05 mm, shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.013 mm max TIR (product table); 3 mm cutter on a 6 mm shank, shank-to-cutter transition not published
+- id: helical-59476-mhsv-020-40600
+  order_code: 59476 (MHSV-020-40600)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Aplus'' (black/grey PVD, max usage 2,012 F = 1100 C, 4079 HV0.05 = 40 GPa, CoF 0.45 per helical-2026-coatings); chemistry not stated, mapped to altin'}
+  geometry:
+    diameter_mm: 6.0
+    flutes: 4
+    pitch_deg:
+      value: [90.5, 88.2, 90.3, 91.0]
+      src: est
+      note: Helical states variable pitch but not the spacing; the illustrative 4-flute variable-pitch spacing from harveyperformance-2017-end-mill-anatomy (90.5/88.2/90.3/91 deg) is used
+    helix_deg: {value: 35, src: est, note: 'helix not published for HSV-4; 35 deg assumed (harveyperformance-2017-end-mill-anatomy: 35 deg = stronger roughing edge, 40 deg = moderate)'}
+    rake_deg: {value: 8, src: est, note: 'radial rake not published; 8 deg assumed, typical of coated carbide end mills for steel'}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published (Helical states eccentric relief); 10/18 deg assumed}
+    edge_radius_um: {value: 8, src: est, note: edge radius not published; 8 um assumed for a coated (Aplus/Tplus PVD) carbide edge}
+    edge_prep: {type: hone, src: est, note: edge preparation not published; light hone assumed under PVD coating}
+    corner_radius_mm: 0
+    cutting_length_mm: 12.0
+    flute_length_mm: {value: 12.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 6.0
+      length_mm: {value: 51.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 3.39, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 6 mm, dc = 3.60 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 3.6, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 3-4 flute end mills (task brief); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 23.5, src: est, note: 'rho V: shank cylinder d 6 x 51 mm plus fluted cylinder D 6 x 12 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [slotting]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.0254}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 445 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.04572}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 445 SFM, fz 0.0018 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.04572}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 445 SFM, fz 0.0018 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [slotting]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.01778}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 340 SFM, fz 0.0007 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.03048}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 340 SFM, fz 0.0012 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 340 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [slotting]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.02286}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 265 SFM, fz 0.0009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [side_milling]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.0381}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 265 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [finishing]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.04318}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 265 SFM, fz 0.0017 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [slotting]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.03556}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 410 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [side_milling]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.0635}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 410 SFM, fz 0.0025 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.05334}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 410 SFM, fz 0.0021 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [slotting]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.02032}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 180 SFM, fz 0.0008 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [side_milling]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 180 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [finishing]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.04064}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 180 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.01524}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 75 SFM, fz 0.0006 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [side_milling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.0254}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 75 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [finishing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 75 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [slotting]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.0127}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 145 SFM, fz 0.0005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.0254}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 145 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [finishing]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.03302}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 145 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [slotting]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.0127}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 85 SFM, fz 0.0005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.02032}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 85 SFM, fz 0.0008 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.03048}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6.00 mm; published values: vc 85 SFM, fz 0.0012 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 43.0, src: est, note: 'list price USD 50.00 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: D1 tolerance +0.00/-0.05 mm, shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.013 mm max TIR (product table)
+- id: helical-59482-mhsv-020-41000
+  order_code: 59482 (MHSV-020-41000)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Aplus'' (black/grey PVD, max usage 2,012 F = 1100 C, 4079 HV0.05 = 40 GPa, CoF 0.45 per helical-2026-coatings); chemistry not stated, mapped to altin'}
+  geometry:
+    diameter_mm: 10.0
+    flutes: 4
+    pitch_deg:
+      value: [90.5, 88.2, 90.3, 91.0]
+      src: est
+      note: Helical states variable pitch but not the spacing; the illustrative 4-flute variable-pitch spacing from harveyperformance-2017-end-mill-anatomy (90.5/88.2/90.3/91 deg) is used
+    helix_deg: {value: 35, src: est, note: 'helix not published for HSV-4; 35 deg assumed (harveyperformance-2017-end-mill-anatomy: 35 deg = stronger roughing edge, 40 deg = moderate)'}
+    rake_deg: {value: 8, src: est, note: 'radial rake not published; 8 deg assumed, typical of coated carbide end mills for steel'}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published (Helical states eccentric relief); 10/18 deg assumed}
+    edge_radius_um: {value: 8, src: est, note: edge radius not published; 8 um assumed for a coated (Aplus/Tplus PVD) carbide edge}
+    edge_prep: {type: hone, src: est, note: edge preparation not published; light hone assumed under PVD coating}
+    corner_radius_mm: 0
+    cutting_length_mm: 20.0
+    flute_length_mm: {value: 20.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 10.0
+      length_mm: {value: 43.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 9.42, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 10 mm, dc = 6.00 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 6.0, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 3-4 flute end mills (task brief); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 60.8, src: est, note: 'rho V: shank cylinder d 10 x 43 mm plus fluted cylinder D 10 x 20 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [slotting]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.0381}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 445 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.06604}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 445 SFM, fz 0.0026 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.05334}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 445 SFM, fz 0.0021 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [slotting]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.0254}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 340 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.04318}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 340 SFM, fz 0.0017 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.04318}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 340 SFM, fz 0.0017 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [slotting]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.03302}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 265 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [side_milling]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.05588}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 265 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [finishing]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.04826}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 265 SFM, fz 0.0019 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [slotting]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.05334}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 410 SFM, fz 0.0021 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [side_milling]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.09398}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 410 SFM, fz 0.0037 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.0635}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 410 SFM, fz 0.0025 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [slotting]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.03048}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 180 SFM, fz 0.0012 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [side_milling]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.05334}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 180 SFM, fz 0.0021 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [finishing]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.04826}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 180 SFM, fz 0.0019 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.02286}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 75 SFM, fz 0.0009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [side_milling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.0381}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 75 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [finishing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.04064}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 75 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [slotting]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.02032}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 145 SFM, fz 0.0008 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 145 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [finishing]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.0381}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 145 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [slotting]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.01778}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 85 SFM, fz 0.0007 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.03048}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 85 SFM, fz 0.0012 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10.00 mm; published values: vc 85 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 70.0, src: est, note: 'list price USD 81.40 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: D1 tolerance +0.00/-0.05 mm, shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.013 mm max TIR (product table)
+- id: helical-59485-mhsv-020-41200
+  order_code: 59485 (MHSV-020-41200)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Aplus'' (black/grey PVD, max usage 2,012 F = 1100 C, 4079 HV0.05 = 40 GPa, CoF 0.45 per helical-2026-coatings); chemistry not stated, mapped to altin'}
+  geometry:
+    diameter_mm: 12.0
+    flutes: 4
+    pitch_deg:
+      value: [90.5, 88.2, 90.3, 91.0]
+      src: est
+      note: Helical states variable pitch but not the spacing; the illustrative 4-flute variable-pitch spacing from harveyperformance-2017-end-mill-anatomy (90.5/88.2/90.3/91 deg) is used
+    helix_deg: {value: 35, src: est, note: 'helix not published for HSV-4; 35 deg assumed (harveyperformance-2017-end-mill-anatomy: 35 deg = stronger roughing edge, 40 deg = moderate)'}
+    rake_deg: {value: 8, src: est, note: 'radial rake not published; 8 deg assumed, typical of coated carbide end mills for steel'}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published (Helical states eccentric relief); 10/18 deg assumed}
+    edge_radius_um: {value: 8, src: est, note: edge radius not published; 8 um assumed for a coated (Aplus/Tplus PVD) carbide edge}
+    edge_prep: {type: hone, src: est, note: edge preparation not published; light hone assumed under PVD coating}
+    corner_radius_mm: 0
+    cutting_length_mm: 24.0
+    flute_length_mm: {value: 24.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 12.0
+      length_mm: {value: 51.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 75.0
+    gullet_area_mm2: {value: 13.57, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 12 mm, dc = 7.20 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 7.2, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 3-4 flute end mills (task brief); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 104.1, src: est, note: 'rho V: shank cylinder d 12 x 51 mm plus fluted cylinder D 12 x 24 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [slotting]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.0508}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 445 SFM, fz 0.002 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.08636}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 445 SFM, fz 0.0034 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.06096}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 445 SFM, fz 0.0024 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [slotting]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.03302}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 340 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.05588}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 340 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.04826}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 340 SFM, fz 0.0019 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [slotting]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.04318}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 265 SFM, fz 0.0017 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [side_milling]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.07366}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 265 SFM, fz 0.0029 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [finishing]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.05588}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 265 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [slotting]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.06858}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 410 SFM, fz 0.0027 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [side_milling]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.12192}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 410 SFM, fz 0.0048 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.07366}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 410 SFM, fz 0.0029 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [slotting]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.04064}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 180 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [side_milling]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.07112}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 180 SFM, fz 0.0028 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [finishing]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.05588}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 180 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.02794}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 75 SFM, fz 0.0011 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [side_milling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.0508}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 75 SFM, fz 0.002 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [finishing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.04572}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 75 SFM, fz 0.0018 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [slotting]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.0254}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 145 SFM, fz 0.001 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.04826}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 145 SFM, fz 0.0019 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [finishing]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.04572}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 145 SFM, fz 0.0018 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [slotting]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.02286}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 85 SFM, fz 0.0009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.0381}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 85 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.04064}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12.00 mm; published values: vc 85 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 113.26, src: est, note: 'list price USD 131.70 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: D1 tolerance +0.00/-0.05 mm, shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.013 mm max TIR (product table)
+- id: helical-59491-mhsv-020-42000
+  order_code: 59491 (MHSV-020-42000)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Aplus'' (black/grey PVD, max usage 2,012 F = 1100 C, 4079 HV0.05 = 40 GPa, CoF 0.45 per helical-2026-coatings); chemistry not stated, mapped to altin'}
+  geometry:
+    diameter_mm: 20.0
+    flutes: 4
+    pitch_deg:
+      value: [90.5, 88.2, 90.3, 91.0]
+      src: est
+      note: Helical states variable pitch but not the spacing; the illustrative 4-flute variable-pitch spacing from harveyperformance-2017-end-mill-anatomy (90.5/88.2/90.3/91 deg) is used
+    helix_deg: {value: 35, src: est, note: 'helix not published for HSV-4; 35 deg assumed (harveyperformance-2017-end-mill-anatomy: 35 deg = stronger roughing edge, 40 deg = moderate)'}
+    rake_deg: {value: 8, src: est, note: 'radial rake not published; 8 deg assumed, typical of coated carbide end mills for steel'}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published (Helical states eccentric relief); 10/18 deg assumed}
+    edge_radius_um: {value: 8, src: est, note: edge radius not published; 8 um assumed for a coated (Aplus/Tplus PVD) carbide edge}
+    edge_prep: {type: hone, src: est, note: edge preparation not published; light hone assumed under PVD coating}
+    corner_radius_mm: 0
+    cutting_length_mm: 40.0
+    flute_length_mm: {value: 40.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 20.0
+      length_mm: {value: 60.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 100.0
+    gullet_area_mm2: {value: 37.7, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 20 mm, dc = 12.00 mm, z = 4 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 12.0, src: est, note: 'dc = 0.60 D: mid value of the 0.55-0.65 D rule of thumb for 3-4 flute end mills (task brief); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 368.1, src: est, note: 'rho V: shank cylinder d 20 x 60 mm plus fluted cylinder D 20 x 40 mm x solid fraction 0.52 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [slotting]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.07112}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 445 SFM, fz 0.0028 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [side_milling]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.12446}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 445 SFM, fz 0.0049 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steel 10xx/11xx/12xx/12Lxx, ASTM A27/A36, 75-98 HRB (e.g. aisi1045)
+    operation: [finishing]
+    vc_m_min: {start: 135.636}
+    fz_mm: {start: 0.07366}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'CARBON STEEL 75-98 HRB' (SFM 445), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 445 SFM, fz 0.0029 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [slotting]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.04572}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 340 SFM, fz 0.0018 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [side_milling]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.08128}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 340 SFM, fz 0.0032 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: low alloy steel 13xx/41xx/43xx/51xx/86xx/93xx, 21-36 HRC (e.g. aisi4140-qt30)
+    operation: [finishing]
+    vc_m_min: {start: 103.632}
+    fz_mm: {start: 0.05842}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'LOW ALLOY STEEL 21-36 HRC' (SFM 340), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 340 SFM, fz 0.0023 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [slotting]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.06096}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 265 SFM, fz 0.0024 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [side_milling]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.10668}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 265 SFM, fz 0.0042 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: austenitic stainless 301/303/304/304L/316/316L/321/347, Nitronic 50/60, 75-98 HRB (e.g. aisi304, aisi316l)
+    operation: [finishing]
+    vc_m_min: {start: 80.772}
+    fz_mm: {start: 0.06604}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'AUSTENITIC STAINLESS STEEL 75-98 HRB' (SFM 265), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 265 SFM, fz 0.0026 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [slotting]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.09906}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 410 SFM, fz 0.0039 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [side_milling]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.17526}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 410 SFM, fz 0.0069 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: grey cast iron SAE J431 / ASTM A48, 75-98 HRB (e.g. grey-cast-iron-gjl250)
+    operation: [finishing]
+    vc_m_min: {start: 124.968}
+    fz_mm: {start: 0.08636}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'GRAY CAST IRON 75-98 HRB' (SFM 410), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 410 SFM, fz 0.0034 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [slotting]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.05842}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 180 SFM, fz 0.0023 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [side_milling]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.1016}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 180 SFM, fz 0.004 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys Ti-3Al-2.5V, Ti-6Al-4V, Ti-10V-2Fe-3Al, 21-36 HRC (e.g. ti6al4v)
+    operation: [finishing]
+    vc_m_min: {start: 54.864}
+    fz_mm: {start: 0.06604}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TITANIUM ALLOY 21-36 HRC' (SFM 180), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 180 SFM, fz 0.0026 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [slotting]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.04064}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 75 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [side_milling]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.07366}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 30-40 % D (< 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 75 SFM, fz 0.0029 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: nickel alloys Hastelloy C-22, Inconel 625/718, Waspaloy, Rene 41, Incoloy 20, 21-36 HRC (e.g. inconel718)
+    operation: [finishing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.05588}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'NICKEL ALLOY 21-36 HRC' (SFM 75), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 75 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [slotting]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.0381}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 145 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.06858}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 145 SFM, fz 0.0027 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, 36-50 HRC (e.g. h13-50hrc)
+    operation: [finishing]
+    vc_m_min: {start: 44.196}
+    fz_mm: {start: 0.05334}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL 36-50 HRC' (SFM 145), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 145 SFM, fz 0.0021 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [slotting]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.03048}
+    ap_max_xD: 1.0
+    ae_max_xD: 1.0
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 60-100 % D, RDOC 100 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 85 SFM, fz 0.0012 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [side_milling]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.05588}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.35
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 25-35 % D (>= 35 HRC); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 85 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: tool steel A2/H13/L6/P20/S7, > 50 HRC (e.g. d2-60hrc)
+    operation: [finishing]
+    vc_m_min: {start: 25.908}
+    fz_mm: {start: 0.04826}
+    ap_max_mm: 40.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-hsv4
+    page: SF_HSV-4 p. 1, row 'TOOL STEEL > 50 HRC' (SFM 85), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20.00 mm; published values: vc 85 SFM, fz 0.0019 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 360.51, src: est, note: 'list price USD 419.20 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: D1 tolerance +0.00/-0.05 mm, shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.013 mm max TIR (product table)

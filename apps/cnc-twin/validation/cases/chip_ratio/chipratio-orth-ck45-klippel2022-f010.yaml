@@ -1,0 +1,145 @@
+# Ck45 (AISI 1045) quasi-orthogonal turning, h = 0.1 mm, vc 10-500 m/min: measured chip thickness, chip ratio.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: chipratio-orth-ck45-klippel2022-f010
+quantity: chip_ratio
+reference:
+  src: klippel-2022-arxiv-orthogonal-data
+  location: Table B.15 (Ck45), column havg, tests V0072, V0073, V0074, V0125, V0162, V0084, V0085, V0093, V0094, V0095,
+    V0236, V0245, V0293, V0299, V0300
+  digitised: false
+  measured: true
+  note: havg = chip area / unrolled chip length on polished, Nital-etched sections (Sect. 2.6.2); uncertainty = sd over
+    several chips where the source gives one
+setup:
+  operation: orthogonal_turning
+  material:
+    db: aisi1045
+    note: 'Ck45 (C45E) rolled bar, one batch for all tests: supplier tensile test Rm 671 MPa, Rp0.2 420 MPa, A5 22.2 % (Table
+      2), ferritic-pearlitic; the outer scale and decarburised zone were turned off before the tests (Sect. 2.6). The DB
+      entry is normalised AISI 1045 (+N, ~190 HB): use the batch strength above when calibrating flow stress.'
+  tool:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 13-14), Table 7, Sect. 2.6.1
+    type: turning_insert
+    iso_code: CCMW 09T304
+    grade: Sandvik Coromant H13A (uncoated WC-Co)
+    tool_class: carbide
+    coating: none
+    rake_deg: 0
+    clearance_deg: 7
+    inclination_deg: 0
+    entering_angle_deg: 90
+    nose_radius_mm: 0.397
+    ic_mm: 9.525
+    cutting_edge_length_mm: 9.272
+    edge_height_mm: 3.969
+    edge_radius_um:
+      value: 37.5
+      note: mean over all 149 inserts (sd 4.9 um, range ~20-50 um along an edge); simulate each test with its own edge_radius_per_test_um
+        (average over the ~2 mm cut width at the cut position, measured before the test by focus variation)
+    edge_radius_per_test_um: [42.3, 39.2, 39.0, 38.4, 33.6, 38.2, 43.8, 41.5, 43.4, 36.1, 38.6, 40.1, 37.5, 40.2, 42.0]
+    edge_radius_sd_per_test_um: [2.4, 3.0, 3.8, 2.5, 3.0, 4.1, 2.3, 3.5, 2.0, 3.0, 2.2, 2.5, 2.8, 3.4, 2.4]
+    fresh_edge_per_test: true
+  holder:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 14)
+    model: Applitec SCACL-2020X-09 (ISO 2216)
+    entering_angle_deg: 90
+    inclination_deg: 0
+  machine:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 12)
+    model: Schaublin 42L CNC lathe
+    dynamometer: Kistler 9121A5 with 5019A charge amplifier, NI USB-6211
+    force_lowpass_Hz: 30
+    force_sampling_kHz: 1.1
+    drift_correction: idle force recorded 1 mm before the cut and subtracted
+  stock:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2 and 2.6
+    form: tube
+    outer_diameter_mm: {value: 72, note: D ~ 72 mm (approximate in the source)}
+    wall_thickness_mm: {value: 2, note: d ~ 2 mm (approximate in the source)}
+    preparation: turned inside and outside in the same clamping from 80 mm bars
+  conditions:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6, Table 8, Tables A.12/A.13, Tables B.14/B.15
+    test_ids: [V0072, V0073, V0074, V0125, V0162, V0084, V0085, V0093, V0094, V0095, V0236, V0245, V0293, V0299, V0300]
+    kinematics: 'quasi-orthogonal longitudinal turning of a thin-walled tube end: feed per rev = uncut chip thickness h,
+      width of cut = tube wall'
+    width_of_cut_mm:
+      value: 2
+      note: wall thickness d ~ 2 mm (approximate in the source); all forces are reported normalised to w = 1 mm
+    coolant: dry
+    cut_length_per_test_mm: [1317, 1317, 1317, 3440, 3308, 4391, 4391, 4391, 4391, 4391, 3256, 3256, 3260, 3260, 3260]
+    feed_mm_rev: 0.1
+    vc_per_test_m_min: [10.1, 10.1, 10.1, 30.0, 50.1, 70.1, 70.1, 150.0, 150.0, 150.0, 250.1, 349.9, 450.0, 500.0, 500.0]
+  dynamics: null
+  program: null
+reference_values:
+- {name: h_chip V0072, value: 228.6, unit: um, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0072: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0072 (derived), value: 0.437, unit: '', x: 10.1, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 228.6 um; not printed in the source}
+- {name: h_chip V0073, value: 190.2, unit: um, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0073: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0073 (derived), value: 0.526, unit: '', x: 10.1, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 190.2 um; not printed in the source}
+- {name: h_chip V0074, value: 231.3, unit: um, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0074: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0074 (derived), value: 0.432, unit: '', x: 10.1, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 231.3 um; not printed in the source}
+- {name: h_chip V0125, value: 147.3, unit: um, x: 30.0, x_name: vc, x_unit: m/min, note: 'V0125: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0125 (derived), value: 0.679, unit: '', x: 30.0, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 147.3 um; not printed in the source}
+- {name: h_chip V0162, value: 253.0, unit: um, x: 50.1, x_name: vc, x_unit: m/min, note: 'V0162: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0162 (derived), value: 0.395, unit: '', x: 50.1, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 253.0 um; not printed in the source}
+- {name: h_chip V0084, value: 395.5, unit: um, x: 70.1, x_name: vc, x_unit: m/min, note: 'V0084: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0084 (derived), value: 0.253, unit: '', x: 70.1, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 395.5 um; not printed in the source}
+- {name: h_chip V0085, value: 414.8, unit: um, uncertainty: 4.3, x: 70.1, x_name: vc, x_unit: m/min, note: 'V0085: average
+    chip thickness Achip/lchip of one embedded chip (sd over several chips given)'}
+- {name: chip_ratio V0085 (derived), value: 0.241, unit: '', x: 70.1, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 414.8 um; not printed in the source}
+- {name: h_chip V0093, value: 318.0, unit: um, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0093: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0093 (derived), value: 0.314, unit: '', x: 150.0, x_name: vc, x_unit: m/min, note: derived here as
+    h / h_chip = 0.1 mm / 318.0 um; not printed in the source}
+- {name: h_chip V0094, value: 346.2, unit: um, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0094: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0094 (derived), value: 0.289, unit: '', x: 150.0, x_name: vc, x_unit: m/min, note: derived here as
+    h / h_chip = 0.1 mm / 346.2 um; not printed in the source}
+- {name: h_chip V0095, value: 353.2, unit: um, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0095: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0095 (derived), value: 0.283, unit: '', x: 150.0, x_name: vc, x_unit: m/min, note: derived here as
+    h / h_chip = 0.1 mm / 353.2 um; not printed in the source}
+- {name: h_chip V0236, value: 312.8, unit: um, x: 250.1, x_name: vc, x_unit: m/min, note: 'V0236: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0236 (derived), value: 0.32, unit: '', x: 250.1, x_name: vc, x_unit: m/min, note: derived here as h
+    / h_chip = 0.1 mm / 312.8 um; not printed in the source}
+- {name: h_chip V0245, value: 263.8, unit: um, x: 349.9, x_name: vc, x_unit: m/min, note: 'V0245: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0245 (derived), value: 0.379, unit: '', x: 349.9, x_name: vc, x_unit: m/min, note: derived here as
+    h / h_chip = 0.1 mm / 263.8 um; not printed in the source}
+- {name: h_chip V0293, value: 237.7, unit: um, x: 450.0, x_name: vc, x_unit: m/min, note: 'V0293: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0293 (derived), value: 0.421, unit: '', x: 450.0, x_name: vc, x_unit: m/min, note: derived here as
+    h / h_chip = 0.1 mm / 237.7 um; not printed in the source}
+- {name: h_chip V0299, value: 240.7, unit: um, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0299: average chip thickness
+    Achip/lchip of one embedded chip (single chip, no sd)'}
+- {name: chip_ratio V0299 (derived), value: 0.415, unit: '', x: 500.0, x_name: vc, x_unit: m/min, note: derived here as
+    h / h_chip = 0.1 mm / 240.7 um; not printed in the source}
+- {name: h_chip V0300, value: 228.2, unit: um, uncertainty: 8.4, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0300: average
+    chip thickness Achip/lchip of one embedded chip (sd over several chips given)'}
+- {name: chip_ratio V0300 (derived), value: 0.438, unit: '', x: 500.0, x_name: vc, x_unit: m/min, note: derived here as
+    h / h_chip = 0.1 mm / 228.2 um; not printed in the source}
+reference_curves: []
+notes: 'The source reports high scatter of havg (manual measurement, chip misalignment in the mould, skewing of thin chips,
+  Sect. 3.3), so single values may be off by 10-30 %. Trend: havg rises from 10 to ~70 m/min and falls again at higher speed
+  (Fig. 27). Shear angle for rake 0 follows from tan(phi) = chip_ratio.'

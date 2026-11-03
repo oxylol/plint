@@ -1,0 +1,137 @@
+# Workpiece material: magnesium die-casting alloy AZ91D (Mg-9Al-1Zn), as cast.
+# Physical and mechanical data: MatWeb AZ91D-F datasheet (printout); flow stress estimated.
+format: cnctwin-material
+version: 1
+id: magnesium-az91d
+name: "Magnesium AZ91D (high-pressure die cast)"
+family: magnesium
+iso_group: N
+condition: "F: as high-pressure die cast"
+designations: {UNS: M11916, EN: "EN 1753 MC21120", ASTM: "AZ91D (B94)"}
+stock_forms: []                    # castings: residual stresses depend on the part; none read
+
+physical:
+  src: matweb-az91d-cast
+  density_kg_m3: {value: 1810}
+  specific_heat_J_kgK: {table: [[20, 1047]], note: "1.047 J/g C, temperature not stated"}
+  conductivity_W_mK: {table: [[20, 72.7]], note: "temperature not stated"}
+  expansion_1_K: {table: [[25, 26.0e-6], [200, 27.2e-6]], note: "26.0e-6 at 25 C; 27.2e-6 mean 20-200 C"}
+  youngs_modulus_GPa: {table: [[20, 44.8]], note: "in tension; shear modulus 17 GPa"}
+  poisson: {value: 0.35}
+  solidus_degC: {value: 470, note: "incipient melting >= 421 C"}
+  liquidus_degC: {value: 595}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 63, note: "500 kg / 10 mm"}
+  yield_MPa: {value: 150, note: "0.2 % offset; compressive yield 165 MPa; shear strength 140 MPa"}
+  ultimate_MPa: {value: 230}
+  elongation_pct: {value: 3, note: "in 50 mm"}
+  fracture_strain: {value: 0.05, src: est, note: "brittle die-cast alloy, porosity controlled; assumed slightly above the 3 % elongation"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: {value: 150, src: matweb-az91d-cast, note: "A = tensile yield strength"}
+  B_MPa: 249
+  n: 0.30
+  C: {value: 0.013, note: "rate constant of the AZ31B set (sun-2022-az31b-ballistic-uq), adopted as a proxy"}
+  m: {value: 1.55, note: "thermal exponent of the AZ31B set, adopted as a proxy"}
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: {value: 595, src: matweb-az91d-cast, note: "liquidus"}
+  src: est
+  note: "No published JC set for die-cast AZ91D was read (a set quoted for an AZ91 foam matrix by Kannan et al. 2021 was not adopted). Estimate: A = yield 150 MPa; n = 0.30 ASSUMED; B fitted so that the true stress at the 3 % fracture elongation equals the true UTS (237 MPa): B = 249 MPa. C and m borrowed from AZ31B. Extrapolation beyond strain 0.03 is unsupported by tensile data."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 540
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 500
+      src: est
+      note: "no Kienzle value for magnesium was read. Estimated by scaling ISCAR group 22 (hardenable wrought aluminium, 800 N/mm2, mc 0.25) by the shear-strength ratio 140/207 (AZ91D shear 140 MPa, matweb-az91d-cast; 6061-T6 207 MPa, kaiser-2006-al6061-datasheet)"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 620
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 150
+      src: est
+      note: "carbide estimate x 1.15"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.2, src: est, range: [0.1, 0.4], note: "korpysa-2025-az91d-micromilling: shearing began at fz/rn = 0.1 (fz 0.54 um/tooth, rn 5.4 um), which the author says is not the minimum chip thickness; 0.2 assumed"}
+  indentation_coeff_N_mm3: {value: 1.0e4, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (63/95)"}
+  work_hardening:
+    layer_depth_um: {value: 30, src: est, note: "assumed; no measurement read"}
+    hardness_increase_pct: {value: 10, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.30, src: est, note: "n of the estimated JC set"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, range: [0.25, 0.5], note: "assumed; no measurement read"}
+    sticking_ratio: {value: 0.35, src: est, note: "assumed"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.4, src: est, note: "assumed"}
+
+chip:
+  tendency: segmented
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: null, src: est, note: "onset not read; assumed to segment at all practical speeds (low-ductility cast hcp alloy)"}
+  bue: null                        # no BUE data for AZ91D read
+  breakability: {value: medium, src: kulisz-2022-az91d-milling, note: "milling with a 2-tooth HSS-Co cutter at vc 754 m/min gave snarled (long, entangled) chips at some feeds/depths and loose arc chips at others"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 2700
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 1200 m/min (general knowledge, not a cited source); the hard die-cast skin and Mg17Al12 particles wear tools more than AZ31B"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 500
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 270 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress: []
+
+skin:
+  type: cast_skin
+  thickness_mm: {value: 0.2, src: est, range: [0.05, 0.5], note: "die-cast parts have a fine-grained, low-porosity surface layer (chill zone); thickness assumed, no measurement read"}
+  hardness_factor: {value: 1.15, src: est, note: "assumed: the fine-grained skin is harder than the porous core"}
+  abrasiveness_factor: {value: 1.3, src: est, note: "assumed wear-rate multiplier (fine Mg17Al12 network, oxide/release-agent residues)"}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 421, src: matweb-az91d-cast, note: "incipient melting (as-cast eutectic); solidus 470 C"}
+
+ignition:
+  bulk_ignition_degC: {value: 600, src: zagorski-2024-mg-chip-temperature, range: [525, 670], note: "AZ91 600 C (Liu et al. 2012), 525 C (Lin et al. 2008), 580-590 C (Ravi Kumar et al. 2003), all as quoted by Zagorski et al.; wang-2026-combustion-database lists AZ91 bulk 549 and 601 C and AZ91D bulk (60 mm) 670 C"}
+  chip_ignition_degC: {value: 474, src: est, note: "proxy: chips of Mg-6Al (Kim et al. 2011) ignited at 474 C in wang-2026-combustion-database; no AZ91D chip-ignition test was read"}
+  chip_hazard_degC: {value: 500, src: zagorski-2024-mg-chip-temperature, note: "chip temperatures above approx. 500 C regarded as dangerous in machining; kulisz-2022-az91d-milling measured about 300 C at vc 754 m/min with no ignition"}
+  powder_ignition_degC: {value: null, note: "no AZ91 powder value read"}
+  min_ignition_energy_mJ: {value: null, note: "no minimum ignition energy for AZ91 dust or fines was found in the sources read"}
+  note: "Ignition temperature depends strongly on heating rate, specimen size, test method and atmosphere; chip tests give lower values than bulk or DTA tests."
+
+composite: null
+
+notes: "Die-cast AZ91D. Sourced: all physical and tensile data (MatWeb datasheet printout), ignition temperatures (Zagorski 2024 quoting Liu 2012, Lin 2008, Ravi Kumar 2003; Wang 2026 database), chip form and temperature (Kulisz 2022). Estimated: JC set, Kienzle (scaled from aluminium), h_min/r_n, friction, work hardening, K_sp, Taylor constants and the die-cast skin (thickness, hardness and abrasiveness factors)."

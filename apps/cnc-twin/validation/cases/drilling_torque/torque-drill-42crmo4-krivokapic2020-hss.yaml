@@ -1,0 +1,64 @@
+# Krivokapic et al. (2020): drilling 42CrMo4 (28 HRC) with HSS (HS6-5-2) DIN 338 twist drills of 3, 5
+# and 8 mm, depth 3d: measured mean torque for a new drill and at VB = 0.02d and 0.04d (Table 6, L9 plan).
+format: cnctwin-validation-case
+version: 1
+id: torque-drill-42crmo4-krivokapic2020-hss
+quantity: drilling_torque
+reference:
+  src: krivokapic-2020-42crmo4-drilling-torque
+  location: "Sect. 2 (setup, Tables 1-5), Sect. 3.1 and Table 6 (mean torque M for VB = 0, 0.02d, 0.04d)"
+  digitised: false
+  uncertainty_pct: 1.2
+  measured: true
+  note: "uncertainty_pct is the stated precision of the Kistler torque chain (+-1.2 %, basis not stated; taken of the reading). Torque is the mean over the whole drilling process (Sect. 2). One test per combination (no repeats stated)."
+setup:
+  operation: drilling
+  material:
+    db: aisi4140-qt30
+    note: "EN 42CrMo4 heat treated to 28 HRC (Table 4: C 0.38-0.45, Si 0.15-0.4, Mn 0.5-0.8, Cr 0.9-1.2, Mo 0.15-0.3 %); matches the DB Q&T entry"
+  stock:
+    src: krivokapic-2020-42crmo4-drilling-torque
+    page: Table 5
+    form: round test pieces 60 mm in diameter, thickness 15 / 20 / 30 mm for the 3 / 5 / 8 mm drills
+  tool:
+    src: krivokapic-2020-42crmo4-drilling-torque
+    page: Sect. 2, Table 3
+    type: twist_drill
+    standard: DIN 338
+    tool_class: hss
+    tool_material: "EN HS6-5-2 (M2), 64-68 HRC, black (steam-tempered) finish"
+    maker: Swisslion Industrija Alata, Trebinje
+    point: "'cruciform blade' (cross-sharpened point)"
+    diameter_mm: [3, 5, 8]
+    lip_count: {value: 2, src: est, note: "assumed: two-flute DIN 338 twist drill"}
+    point_angle_deg: {value: 118, src: est, note: "assumed: not stated; the usual point of DIN 338 type N drills (standard not read in this run)"}
+    helix_deg: {value: 30, src: est, note: "assumed: not stated; typical type-N helix"}
+    web_thickness_mm: {value: "0.15 D", src: est, note: "assumed: not stated; typical jobber-drill web; the cross-sharpened point shortens the chisel edge"}
+    assumed_inputs: [lip_count, point_angle_deg, helix_deg, web_thickness_mm]
+  machine:
+    src: krivokapic-2020-42crmo4-drilling-torque
+    page: Sect. 2
+    model: EMCO MILL 250 CNC milling machine (max 10000 rpm, 41 Nm), Sinumerik 810/840D
+    torque_measurement: "Kistler axial-force and torque chain (range 100 Nm, +-1.2 %) with Kistler 5006 amplifier"
+  conditions:
+    src: krivokapic-2020-42crmo4-drilling-torque
+    page: Tables 1, 2 and 6
+    hole_depth: {value: "3 d (9, 15, 24 mm)", note: "Table 5"}
+    workpiece_tilt_deg: {value: [0, 3, 5], note: "'angle of installation of the work piece' epsilon, a factor of the L9 plan (Table 2)"}
+    coolant: {value: dry, src: est, note: "assumed: no coolant is mentioned in the source"}
+    plan: "L9: (d mm, n rpm, f mm/rev, epsilon deg) = (3,300,0.03,0) (3,500,0.05,3) (3,800,0.10,5) (5,300,0.05,5) (5,500,0.10,0) (5,800,0.03,3) (8,300,0.10,3) (8,500,0.03,5) (8,800,0.05,0)"
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+  - {name: M_mean_c1_new, value: 0.30, unit: Nm, uncertainty: 0.02, note: "d 3, n 300, f 0.03, eps 0; VB 0.02d: 0.43, VB 0.04d: 0.58 Nm"}
+  - {name: M_mean_c2_new, value: 0.23, unit: Nm, uncertainty: 0.02, note: "d 3, n 500, f 0.05, eps 3; worn 0.28 / 0.33 Nm"}
+  - {name: M_mean_c3_new, value: 0.49, unit: Nm, uncertainty: 0.02, note: "d 3, n 800, f 0.10, eps 5; worn 0.58 / 0.66 Nm"}
+  - {name: M_mean_c4_new, value: 0.75, unit: Nm, uncertainty: 0.02, note: "d 5, n 300, f 0.05, eps 5; worn 0.88 / 1.12 Nm"}
+  - {name: M_mean_c5_new, value: 1.30, unit: Nm, uncertainty: 0.02, note: "d 5, n 500, f 0.10, eps 0; worn 1.46 / 1.63 Nm"}
+  - {name: M_mean_c6_new, value: 0.45, unit: Nm, uncertainty: 0.02, note: "d 5, n 800, f 0.03, eps 3; worn 0.46 / 0.50 Nm"}
+  - {name: M_mean_c7_new, value: 3.00, unit: Nm, uncertainty: 0.04, note: "d 8, n 300, f 0.10, eps 3; worn 3.06 / 3.13 Nm"}
+  - {name: M_mean_c8_new, value: 1.01, unit: Nm, uncertainty: 0.02, note: "d 8, n 500, f 0.03, eps 5; worn 1.20 / 1.40 Nm"}
+  - {name: M_mean_c9_new, value: 1.61, unit: Nm, uncertainty: 0.02, note: "d 8, n 800, f 0.05, eps 0; worn 1.68 / 1.74 Nm"}
+reference_curves: []
+notes: "New-drill values (VB = 0) are the primary references; the worn values (VB = 0.02d and 0.04d, measured on a Guehring PG 100) are given in the notes for a wear-aware model. Order-of-magnitude check (computed here, est.): M = kc f D^2 / 8 with kc 2.5 GPa gives 0.60 Nm at D 8, f 0.03 mm/rev (where kc is higher because the chip is only about 13 um thick) against 1.01 Nm measured, and 2.0 Nm at D 8, f 0.10 against 3.0 Nm. The mean is taken over the whole process including entry, so it is somewhat below the steady full-diameter torque; with tilted workpieces (eps 3 and 5 deg) the entry is longer. The thrust force was recorded by the same chain but is not reported."

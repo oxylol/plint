@@ -1,0 +1,645 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: helical-mh35al-3-square-metric
+maker: Helical Solutions (Harvey Performance Company)
+series: MH35AL-3 3 flute square, 35 deg helix, metric - end mills for aluminium alloys and non-ferrous materials
+src: helical-2026-mh35al3-sq-metric
+notes: 3-flute, 35 deg helix (published), center cutting, cylindrically ground. Uncoated tool numbers chosen; running data from the H35AL-3 speeds & feeds chart (H35AL-3 / H35AL-RN-3).
+items:
+- id: helical-89597-mh35al-020-30300
+  order_code: 89597 (MH35AL-020-30300, uncoated)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: none, note: uncoated tool number chosen (the Zplus-coated twin has its own tool number)}
+  geometry:
+    diameter_mm: 3.0
+    flutes: 3
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: series is not described as variable pitch (Helical sells separate variable-pitch 40 deg aluminium lines); equal spacing assumed
+    helix_deg: 35
+    rake_deg: {value: 15, src: est, note: 'radial rake not published; 15 deg assumed, typical of 3-flute aluminium end mills'}
+    clearance_deg: {primary: 12, secondary: 22, src: est, note: not published (Helical states the tool is cylindrically ground for edge strength); 12/22 deg assumed}
+    edge_radius_um: {value: 4, src: est, note: edge radius not published; 4 um assumed for a sharp uncoated aluminium edge}
+    edge_prep: {type: sharp, src: est, note: not published; sharp edge assumed for an uncoated aluminium tool}
+    corner_radius_mm: 0
+    cutting_length_mm: 6.0
+    flute_length_mm: {value: 6.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 6.0
+      length_mm: {value: 57.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 1.23, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 3 mm, dc = 1.65 mm, z = 3 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 1.65, src: est, note: 'dc = 0.55 D: low end of the 0.55-0.65 D rule of thumb, because aluminium tools have deeper flute valleys (harveyperformance-2017-flute-count, qualitative); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 23.7, src: est, note: 'rho V: shank cylinder d 6 x 57 mm plus fluted cylinder D 3 x 6 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [slotting]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.01778}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 2100 SFM, fz 0.0007 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.03302}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 2100 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [finishing]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.04064}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 2100 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [slotting]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.02794}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 1400 SFM, fz 0.0011 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [side_milling]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.0508}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 1400 SFM, fz 0.002 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [finishing]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.0508}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 1400 SFM, fz 0.002 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [slotting]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.02032}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 770 SFM, fz 0.0008 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [side_milling]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.03556}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 770 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [finishing]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.04064}
+    ap_max_mm: 6.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/8 in (3.17 mm) column, nearest published size to D = 3 mm; published values: vc 770 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 20.3, src: est, note: 'list price USD 23.60 (helicaltool.com product table, uncoated tool number, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: 'Zplus-coated version: tool # 89598 ($33.90). D1 and shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.008 mm max TIR (product table); 3 mm cutter on a 6 mm shank, transition not published'
+- id: helical-59726-mh35al-020-30600
+  order_code: 59726 (MH35AL-020-30600, uncoated)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: none, note: uncoated tool number chosen (the Zplus-coated twin has its own tool number)}
+  geometry:
+    diameter_mm: 6.0
+    flutes: 3
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: series is not described as variable pitch (Helical sells separate variable-pitch 40 deg aluminium lines); equal spacing assumed
+    helix_deg: 35
+    rake_deg: {value: 15, src: est, note: 'radial rake not published; 15 deg assumed, typical of 3-flute aluminium end mills'}
+    clearance_deg: {primary: 12, secondary: 22, src: est, note: not published (Helical states the tool is cylindrically ground for edge strength); 12/22 deg assumed}
+    edge_radius_um: {value: 4, src: est, note: edge radius not published; 4 um assumed for a sharp uncoated aluminium edge}
+    edge_prep: {type: sharp, src: est, note: not published; sharp edge assumed for an uncoated aluminium tool}
+    corner_radius_mm: 0
+    cutting_length_mm: 12.0
+    flute_length_mm: {value: 12.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 6.0
+      length_mm: {value: 51.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 4.93, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 6 mm, dc = 3.30 mm, z = 3 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 3.3, src: est, note: 'dc = 0.55 D: low end of the 0.55-0.65 D rule of thumb, because aluminium tools have deeper flute valleys (harveyperformance-2017-flute-count, qualitative); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 23.3, src: est, note: 'rho V: shank cylinder d 6 x 51 mm plus fluted cylinder D 6 x 12 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [slotting]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.03556}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 2100 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.06604}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 2100 SFM, fz 0.0026 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [finishing]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.0508}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 2100 SFM, fz 0.002 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [slotting]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.05588}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 1400 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [side_milling]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.1016}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 1400 SFM, fz 0.004 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [finishing]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.0635}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 1400 SFM, fz 0.0025 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [slotting]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.0381}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 770 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [side_milling]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.06858}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 770 SFM, fz 0.0027 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [finishing]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.05334}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/4 in (6.35 mm) column, nearest published size to D = 6 mm; published values: vc 770 SFM, fz 0.0021 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 32.85, src: est, note: 'list price USD 38.20 (helicaltool.com product table, uncoated tool number, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: 'Zplus-coated version: tool # 59727 ($49.40). D1 and shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.008 mm max TIR (product table)'
+- id: helical-59766-mh35al-025-31000
+  order_code: 59766 (MH35AL-025-31000, uncoated)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: none, note: uncoated tool number chosen (the Zplus-coated twin has its own tool number)}
+  geometry:
+    diameter_mm: 10.0
+    flutes: 3
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: series is not described as variable pitch (Helical sells separate variable-pitch 40 deg aluminium lines); equal spacing assumed
+    helix_deg: 35
+    rake_deg: {value: 15, src: est, note: 'radial rake not published; 15 deg assumed, typical of 3-flute aluminium end mills'}
+    clearance_deg: {primary: 12, secondary: 22, src: est, note: not published (Helical states the tool is cylindrically ground for edge strength); 12/22 deg assumed}
+    edge_radius_um: {value: 4, src: est, note: edge radius not published; 4 um assumed for a sharp uncoated aluminium edge}
+    edge_prep: {type: sharp, src: est, note: not published; sharp edge assumed for an uncoated aluminium tool}
+    corner_radius_mm: 0
+    cutting_length_mm: 25.0
+    flute_length_mm: {value: 25.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 10.0
+      length_mm: {value: 50.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 75.0
+    gullet_area_mm2: {value: 13.7, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 10 mm, dc = 5.50 mm, z = 3 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 5.5, src: est, note: 'dc = 0.55 D: low end of the 0.55-0.65 D rule of thumb, because aluminium tools have deeper flute valleys (harveyperformance-2017-flute-count, qualitative); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 70.5, src: est, note: 'rho V: shank cylinder d 10 x 50 mm plus fluted cylinder D 10 x 25 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [slotting]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.05334}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 2100 SFM, fz 0.0021 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.09652}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 2100 SFM, fz 0.0038 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [finishing]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.05842}
+    ap_max_mm: 25.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 2100 SFM, fz 0.0023 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [slotting]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.08382}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 1400 SFM, fz 0.0033 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [side_milling]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.14986}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 1400 SFM, fz 0.0059 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [finishing]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.07366}
+    ap_max_mm: 25.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 1400 SFM, fz 0.0029 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [slotting]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.05588}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 3/8 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 770 SFM, fz 0.0022 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [side_milling]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.1016}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 3/8 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 770 SFM, fz 0.004 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [finishing]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.06096}
+    ap_max_mm: 25.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/8 in (9.52 mm) column, nearest published size to D = 10 mm; published values: vc 770 SFM, fz 0.0024 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 66.22, src: est, note: 'list price USD 77.00 (helicaltool.com product table, uncoated tool number, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: 'Zplus-coated version: tool # 59767 ($95.50). D1 and shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.008 mm max TIR (product table)'
+- id: helical-59744-mh35al-020-31200
+  order_code: 59744 (MH35AL-020-31200, uncoated)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: none, note: uncoated tool number chosen (the Zplus-coated twin has its own tool number)}
+  geometry:
+    diameter_mm: 12.0
+    flutes: 3
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: series is not described as variable pitch (Helical sells separate variable-pitch 40 deg aluminium lines); equal spacing assumed
+    helix_deg: 35
+    rake_deg: {value: 15, src: est, note: 'radial rake not published; 15 deg assumed, typical of 3-flute aluminium end mills'}
+    clearance_deg: {primary: 12, secondary: 22, src: est, note: not published (Helical states the tool is cylindrically ground for edge strength); 12/22 deg assumed}
+    edge_radius_um: {value: 4, src: est, note: edge radius not published; 4 um assumed for a sharp uncoated aluminium edge}
+    edge_prep: {type: sharp, src: est, note: not published; sharp edge assumed for an uncoated aluminium tool}
+    corner_radius_mm: 0
+    cutting_length_mm: 24.0
+    flute_length_mm: {value: 24.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 12.0
+      length_mm: {value: 51.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 75.0
+    gullet_area_mm2: {value: 19.72, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 12 mm, dc = 6.60 mm, z = 3 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 6.6, src: est, note: 'dc = 0.55 D: low end of the 0.55-0.65 D rule of thumb, because aluminium tools have deeper flute valleys (harveyperformance-2017-flute-count, qualitative); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 102.4, src: est, note: 'rho V: shank cylinder d 12 x 51 mm plus fluted cylinder D 12 x 24 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [slotting]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.06858}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 2100 SFM, fz 0.0027 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.127}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 2100 SFM, fz 0.005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [finishing]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.06858}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 2100 SFM, fz 0.0027 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [slotting]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.10922}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 1400 SFM, fz 0.0043 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [side_milling]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.19812}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 1400 SFM, fz 0.0078 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [finishing]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.08636}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 1400 SFM, fz 0.0034 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [slotting]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.07366}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/2 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 770 SFM, fz 0.0029 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [side_milling]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.13208}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/2 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 770 SFM, fz 0.0052 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [finishing]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.07112}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 1/2 in (12.70 mm) column, nearest published size to D = 12 mm; published values: vc 770 SFM, fz 0.0028 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 88.92, src: est, note: 'list price USD 103.40 (helicaltool.com product table, uncoated tool number, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: 'Zplus-coated version: tool # 59745 ($125.10). D1 and shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.008 mm max TIR (product table)'
+- id: helical-59784-mh35al-025-32000
+  order_code: 59784 (MH35AL-025-32000, uncoated)
+  type: square_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: none, note: uncoated tool number chosen (the Zplus-coated twin has its own tool number)}
+  geometry:
+    diameter_mm: 20.0
+    flutes: 3
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: series is not described as variable pitch (Helical sells separate variable-pitch 40 deg aluminium lines); equal spacing assumed
+    helix_deg: 35
+    rake_deg: {value: 15, src: est, note: 'radial rake not published; 15 deg assumed, typical of 3-flute aluminium end mills'}
+    clearance_deg: {primary: 12, secondary: 22, src: est, note: not published (Helical states the tool is cylindrically ground for edge strength); 12/22 deg assumed}
+    edge_radius_um: {value: 4, src: est, note: edge radius not published; 4 um assumed for a sharp uncoated aluminium edge}
+    edge_prep: {type: sharp, src: est, note: not published; sharp edge assumed for an uncoated aluminium tool}
+    corner_radius_mm: 0
+    cutting_length_mm: 50.0
+    flute_length_mm: {value: 50.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 20.0
+      length_mm: {value: 75.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 125.0
+    gullet_area_mm2: {value: 54.78, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 20 mm, dc = 11.00 mm, z = 3 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 11.0, src: est, note: 'dc = 0.55 D: low end of the 0.55-0.65 D rule of thumb, because aluminium tools have deeper flute valleys (harveyperformance-2017-flute-count, qualitative); no maker value published'}
+    centre_cutting: true
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 450.3, src: est, note: 'rho V: shank cylinder d 20 x 75 mm plus fluted cylinder D 20 x 50 mm x solid fraction 0.48 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [slotting]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.09906}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 2100 SFM, fz 0.0039 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [side_milling]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.18288}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 2100 SFM, fz 0.0072 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: wrought aluminium 2014/5052/6061/7050/7075/7475 (e.g. al6061-t6, al7075-t6)
+    operation: [finishing]
+    vc_m_min: {start: 640.08}
+    fz_mm: {start: 0.08382}
+    ap_max_mm: 50.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'WROUGHT ALUMINUM ALLOY' (SFM 2100), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 2100 SFM, fz 0.0033 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [slotting]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.15494}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 1400 SFM, fz 0.0061 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [side_milling]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.28194}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 1400 SFM, fz 0.0111 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: cast aluminium 319/328/355/360/380/383/390/520/535
+    operation: [finishing]
+    vc_m_min: {start: 426.72}
+    fz_mm: {start: 0.1016}
+    ap_max_mm: 50.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'CAST ALUMINUM ALLOY' (SFM 1400), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 1400 SFM, fz 0.004 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [slotting]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.10414}
+    ap_max_xD: 1.25
+    ae_max_xD: 1.0
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 3/4 in column, 'Slot'; milling-process table
+    note: 'ADOC 75-125 % D, RDOC 100 % D (non-reached); IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 770 SFM, fz 0.0041 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [side_milling]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.18796}
+    ap_max_xD: 2.0
+    ae_max_xD: 0.4
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 3/4 in column, 'Rgh'; milling-process table
+    note: 'ADOC 125-200 % D (non-reached; up to max LOC for reached tools), RDOC 30-40 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 770 SFM, fz 0.0074 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: copper alloys Cu-ETP, CuBe2, CuZn30, CuZn36Pb3, CuZn10, CuSn5 (e.g. brass-c360, copper-c101)
+    operation: [finishing]
+    vc_m_min: {start: 234.696}
+    fz_mm: {start: 0.08382}
+    ap_max_mm: 50.0
+    ae_max_xD: 0.06
+    src: helical-2021-sf-h35al3
+    page: SF_H35AL-3 p. 1, row 'COPPER ALLOY' (SFM 770), 3/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 4-6 % D; IPT values are for 2.5xD length-of-cut, non-reached tools (chart note); ap limited by the tool''s LOC; chip load read from the 3/4 in (19.05 mm) column, nearest published size to D = 20 mm; published values: vc 770 SFM, fz 0.0033 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 317.25, src: est, note: 'list price USD 368.90 (helicaltool.com product table, uncoated tool number, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: 'Zplus-coated version: tool # 59785 ($410.50). D1 and shank h6, LOC +0.80/-0.00 mm, OAL +/-1.60 mm, 0.008 mm max TIR (product table)'

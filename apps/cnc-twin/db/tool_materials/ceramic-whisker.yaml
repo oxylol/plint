@@ -1,0 +1,28 @@
+format: cnctwin-tool-material
+version: 1
+id: ceramic-whisker
+class: ceramic
+name: "Whisker-reinforced alumina Al2O3-SiCw (about 20-30 % SiC whiskers), ISO S/K grades for nickel alloys and cast iron"
+src: krawczynska-2006-al2o3-sicw
+composition: {text: "Al2O3 + 20 wt% SiC whiskers (hot pressed 1650 °C, 35 MPa) in the reference study", src: krawczynska-2006-al2o3-sicw}
+density_kg_m3: {value: 3800, src: est, note: "rule of mixtures 76 vol% Al2O3 (3.98 g/cm3) + 24 vol% SiC (3.21 g/cm3), i.e. 20 wt% whiskers"}
+youngs_modulus_GPa: {value: 390, src: est, note: "between alumina (370-400 GPa) and SiC (400-410 GPa) from syalons-2023-material-properties"}
+poisson: {value: 0.22, src: est, note: "alumina 0.22, SSiC 0.21 (syalons-2023-material-properties)"}
+hardness_HV: {value: 1835, src: krawczynska-2006-al2o3-sicw, page: "HV 18 GPa for Al2O3 + 20 wt% SiCw", note: "18 GPa / 0.009807 = 1835 HV"}
+transverse_rupture_MPa: {value: 700, range: [600, 900], src: est, note: "no strength value read; whisker alumina is stronger than plain alumina (330-500 MPa, syalons-2023-material-properties); 700 assumed"}
+compressive_MPa: {value: 3500, src: est, note: "no value read; above the > 2000-2500 MPa lower bounds listed for alumina"}
+fracture_toughness_MPa_sqrt_m: {value: 6.0, src: krawczynska-2006-al2o3-sicw, page: "KIC 6 MPa m^0.5 for Al2O3 + 20 wt% SiCw"}
+conductivity_W_mK:
+  table: [[20, 32], [400, 22], [800, 16]]
+  src: est
+  note: "alumina 30 W/mK (Aloxalon 995) and SiC 150 W/mK (Sycarb 10) at RT from syalons-2023-material-properties; whiskers raise the matrix value slightly; alumina-like fall with temperature assumed"
+specific_heat_J_kgK:
+  table: [[20, 760], [400, 1030], [800, 1150]]
+  src: est
+  note: "alumina-like heat capacity (~0.78 J/gK at RT) with a small SiC share"
+expansion_1_K: {value: 7.0e-6, src: est, note: "rule of mixtures of alumina 7.8e-6 and SiC 4.4e-6 (syalons-2023-material-properties) at 24 vol% SiC"}
+max_service_temp_degC: {value: 1200, src: est, note: "alumina matrix; SiC whiskers oxidise above about 1200-1300 °C in air; 1200 assumed"}
+weibull_modulus: {value: 10, src: est, note: "typical ceramic scatter; no value read"}
+thermal_shock_parameter: null
+usui: []
+notes: "Only hardness and K1C are measured values (laboratory hot-pressed composite, not a commercial insert grade). Commercial grade data (e.g. Greenleaf WG-300) could not be read."

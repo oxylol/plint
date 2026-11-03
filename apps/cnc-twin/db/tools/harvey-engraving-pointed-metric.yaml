@@ -1,0 +1,458 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: harvey-engraving-pointed-metric
+maker: Harvey Tool (Harvey Performance Company)
+series: Engraving Cutters - Pointed, metric shanks, solid carbide
+src: harvey-2026-engraving-pointed
+notes: Single-flute pointed engravers, 60 and 90 deg included angle. Chart SF_25000 lists chip loads by series and material class.
+items:
+- id: harvey-898657
+  order_code: '898657 (uncoated; AlTiN: 898657-C3)'
+  type: engraver
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 3.0
+    flutes: 1
+    tip_angle_deg: 60.0
+    tip_width_mm: 0.0
+    cutting_length_mm: 2.6
+    helix_deg: {value: 0, src: est, note: single straight flute (half-round 'split' engraver) assumed}
+    rake_deg: {value: 0, src: est, note: not published; 0 deg assumed for a half-round single-flute engraver}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 3, src: est, note: not published; 3 um assumed for a sharp pointed carbide engraver}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank:
+      diameter_mm: 3.0
+      length_mm: {value: 28.0, src: est, note: OAL - split length}
+    overall_length_mm: 38.0
+    centre_cutting: true
+    coolant_holes: null
+    note: split_length_mm = 10.0
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 3.8, src: est, note: 'rho V: rod taken as a 3 mm cylinder over 38 mm x 0.97 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: plastics (non-filled, glass filled, carbon fibre, G10)
+    operation: [engraving]
+    fz_mm: {start: 0.04572}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0018 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: 'non-ferrous: aluminium, magnesium, copper alloys (e.g. al6061-t6, brass-c360)'
+    operation: [engraving]
+    fz_mm: {start: 0.03048}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0012 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: cast iron < 30 HRC (e.g. grey-cast-iron-gjl250)
+    operation: [engraving]
+    fz_mm: {start: 0.03048}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0012 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: ductile / malleable iron
+    operation: [engraving]
+    fz_mm: {start: 0.01524}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0006 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels < 29 HRC (e.g. aisi1045)
+    operation: [engraving]
+    fz_mm: {start: 0.018288}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00072 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 30-39 HRC (e.g. aisi4140-qt30)
+    operation: [engraving]
+    fz_mm: {start: 0.013716}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00054 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 40-45 HRC (prehardened)
+    operation: [engraving]
+    fz_mm: {start: 0.00762}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0003 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless steels < 30 HRC (e.g. aisi304)
+    operation: [engraving]
+    fz_mm: {start: 0.01524}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0006 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium < 30 HRC (e.g. ti6al4v)
+    operation: [engraving]
+    fz_mm: {start: 0.01524}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0006 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Waspaloy, Monel (e.g. inconel718)
+    operation: [engraving]
+    fz_mm: {start: 0.012192}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00048 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 25.37, src: est, note: 'list price USD 29.50 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 1, src: est, note: 'assumed: pointed engravers can be re-pointed once'}
+  note: '1 flute, pointed tip (chart: ''Characteristics: 1 Flute, Pointed Tip''), Type II; tip width 0 = pointed (as published); LOC is the axial length of the cone (2.6 mm)'
+- id: harvey-898666
+  order_code: '898666 (uncoated; AlTiN: 898666-C3)'
+  type: engraver
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 6.0
+    flutes: 1
+    tip_angle_deg: 60.0
+    tip_width_mm: 0.0
+    cutting_length_mm: 5.2
+    helix_deg: {value: 0, src: est, note: single straight flute (half-round 'split' engraver) assumed}
+    rake_deg: {value: 0, src: est, note: not published; 0 deg assumed for a half-round single-flute engraver}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 3, src: est, note: not published; 3 um assumed for a sharp pointed carbide engraver}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank:
+      diameter_mm: 6.0
+      length_mm: {value: 53.0, src: est, note: OAL - split length}
+    overall_length_mm: 63.0
+    centre_cutting: true
+    coolant_holes: null
+    note: split_length_mm = 10.0
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 25.1, src: est, note: 'rho V: rod taken as a 6 mm cylinder over 63 mm x 0.97 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: plastics (non-filled, glass filled, carbon fibre, G10)
+    operation: [engraving]
+    fz_mm: {start: 0.04572}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0018 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: 'non-ferrous: aluminium, magnesium, copper alloys (e.g. al6061-t6, brass-c360)'
+    operation: [engraving]
+    fz_mm: {start: 0.03048}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0012 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: cast iron < 30 HRC (e.g. grey-cast-iron-gjl250)
+    operation: [engraving]
+    fz_mm: {start: 0.03048}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0012 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: ductile / malleable iron
+    operation: [engraving]
+    fz_mm: {start: 0.01524}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0006 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels < 29 HRC (e.g. aisi1045)
+    operation: [engraving]
+    fz_mm: {start: 0.018288}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00072 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 30-39 HRC (e.g. aisi4140-qt30)
+    operation: [engraving]
+    fz_mm: {start: 0.013716}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00054 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 40-45 HRC (prehardened)
+    operation: [engraving]
+    fz_mm: {start: 0.00762}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0003 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless steels < 30 HRC (e.g. aisi304)
+    operation: [engraving]
+    fz_mm: {start: 0.01524}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0006 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium < 30 HRC (e.g. ti6al4v)
+    operation: [engraving]
+    fz_mm: {start: 0.01524}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.0006 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Waspaloy, Monel (e.g. inconel718)
+    operation: [engraving]
+    fz_mm: {start: 0.012192}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8986xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00048 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 41.37, src: est, note: 'list price USD 48.10 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 1, src: est, note: 'assumed: pointed engravers can be re-pointed once'}
+  note: '1 flute, pointed tip (chart: ''Characteristics: 1 Flute, Pointed Tip''), Type II; tip width 0 = pointed (as published); LOC is the axial length of the cone (5.2 mm)'
+- id: harvey-884157
+  order_code: '884157 (uncoated; AlTiN: 884157-C3)'
+  type: engraver
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 3.0
+    flutes: 1
+    tip_angle_deg: 90.0
+    tip_width_mm: 0.0
+    cutting_length_mm: 1.5
+    helix_deg: {value: 0, src: est, note: single straight flute (half-round 'split' engraver) assumed}
+    rake_deg: {value: 0, src: est, note: not published; 0 deg assumed for a half-round single-flute engraver}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 3, src: est, note: not published; 3 um assumed for a sharp pointed carbide engraver}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank:
+      diameter_mm: 3.0
+      length_mm: {value: 28.0, src: est, note: OAL - split length}
+    overall_length_mm: 38.0
+    centre_cutting: true
+    coolant_holes: null
+    note: split_length_mm = 10.0
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 3.8, src: est, note: 'rho V: rod taken as a 3 mm cylinder over 38 mm x 0.97 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: plastics (non-filled, glass filled, carbon fibre, G10)
+    operation: [engraving]
+    fz_mm: {start: 0.050292}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00198 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: 'non-ferrous: aluminium, magnesium, copper alloys (e.g. al6061-t6, brass-c360)'
+    operation: [engraving]
+    fz_mm: {start: 0.033528}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00132 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: cast iron < 30 HRC (e.g. grey-cast-iron-gjl250)
+    operation: [engraving]
+    fz_mm: {start: 0.033528}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00132 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: ductile / malleable iron
+    operation: [engraving]
+    fz_mm: {start: 0.016764}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00066 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels < 29 HRC (e.g. aisi1045)
+    operation: [engraving]
+    fz_mm: {start: 0.020066}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00079 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 30-39 HRC (e.g. aisi4140-qt30)
+    operation: [engraving]
+    fz_mm: {start: 0.014986}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00059 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 40-45 HRC (prehardened)
+    operation: [engraving]
+    fz_mm: {start: 0.008382}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00033 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless steels < 30 HRC (e.g. aisi304)
+    operation: [engraving]
+    fz_mm: {start: 0.016764}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00066 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium < 30 HRC (e.g. ti6al4v)
+    operation: [engraving]
+    fz_mm: {start: 0.016764}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00066 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Waspaloy, Monel (e.g. inconel718)
+    operation: [engraving]
+    fz_mm: {start: 0.013462}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00053 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 25.37, src: est, note: 'list price USD 29.50 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 1, src: est, note: 'assumed: pointed engravers can be re-pointed once'}
+  note: '1 flute, pointed tip (chart: ''Characteristics: 1 Flute, Pointed Tip''), Type II; tip width 0 = pointed (as published); LOC is the axial length of the cone (1.5 mm)'
+- id: harvey-884166
+  order_code: '884166 (uncoated; AlTiN: 884166-C3)'
+  type: engraver
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 6.0
+    flutes: 1
+    tip_angle_deg: 90.0
+    tip_width_mm: 0.0
+    cutting_length_mm: 3.0
+    helix_deg: {value: 0, src: est, note: single straight flute (half-round 'split' engraver) assumed}
+    rake_deg: {value: 0, src: est, note: not published; 0 deg assumed for a half-round single-flute engraver}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 3, src: est, note: not published; 3 um assumed for a sharp pointed carbide engraver}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank:
+      diameter_mm: 6.0
+      length_mm: {value: 53.0, src: est, note: OAL - split length}
+    overall_length_mm: 63.0
+    centre_cutting: true
+    coolant_holes: null
+    note: split_length_mm = 10.0
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 25.1, src: est, note: 'rho V: rod taken as a 6 mm cylinder over 63 mm x 0.97 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: plastics (non-filled, glass filled, carbon fibre, G10)
+    operation: [engraving]
+    fz_mm: {start: 0.050292}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00198 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: N
+    material_hint: 'non-ferrous: aluminium, magnesium, copper alloys (e.g. al6061-t6, brass-c360)'
+    operation: [engraving]
+    fz_mm: {start: 0.033528}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00132 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: cast iron < 30 HRC (e.g. grey-cast-iron-gjl250)
+    operation: [engraving]
+    fz_mm: {start: 0.033528}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00132 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: K
+    material_hint: ductile / malleable iron
+    operation: [engraving]
+    fz_mm: {start: 0.016764}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00066 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels < 29 HRC (e.g. aisi1045)
+    operation: [engraving]
+    fz_mm: {start: 0.020066}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00079 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 30-39 HRC (e.g. aisi4140-qt30)
+    operation: [engraving]
+    fz_mm: {start: 0.014986}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00059 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon steels 40-45 HRC (prehardened)
+    operation: [engraving]
+    fz_mm: {start: 0.008382}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00033 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless steels < 30 HRC (e.g. aisi304)
+    operation: [engraving]
+    fz_mm: {start: 0.016764}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00066 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium < 30 HRC (e.g. ti6al4v)
+    operation: [engraving]
+    fz_mm: {start: 0.016764}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00066 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Waspaloy, Monel (e.g. inconel718)
+    operation: [engraving]
+    fz_mm: {start: 0.013462}
+    ap_max_mm: 0.2286
+    src: harvey-2019-sf-25000
+    page: SF_25000 p. 1, series row 8841xx
+    note: 'chip loads posted for axial depths up to .009 in; .010-.015 in: reduce 20 %; .016-.020 in: reduce 30 %; vertical plunge: reduce 50 % (ramping preferred); speed 6000 rpm or more (no SFM given); spindle_rpm = {''min'': 6000}; published values: fz 0.00053 in, ap_max 0.009 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 41.37, src: est, note: 'list price USD 48.10 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 1, src: est, note: 'assumed: pointed engravers can be re-pointed once'}
+  note: '1 flute, pointed tip (chart: ''Characteristics: 1 Flute, Pointed Tip''), Type II; tip width 0 = pointed (as published); LOC is the axial length of the cone (3 mm)'

@@ -1,0 +1,16 @@
+format: cnctwin-coating
+version: 1
+id: alcrn
+name: "AlCrN (PVD arc; Oerlikon Balzers BALINIT ALCRONA / ALCRONA EVO as reference)"
+process: PVD
+src: surftech-alcrona
+colour: {value: "blue-grey (ALCRONA) / bright grey (ALCRONA EVO)", src: surftech-alcrona}
+hardness_HV: {value: 3200, range: [3000, 3200], src: surftech-alcrona, page: "Alcrona 3200 HV", note: "Ionbond 25 AlCrN 3000 HV (ionbond-coating-portfolio)"}
+hardness_HIT_GPa: {value: 44, range: [40, 48], src: balzers-web-alcrona-evo, page: "ALCRONA EVO HIT 44 +/- 4 GPa"}
+max_service_temp_degC: {value: 1100, range: [1050, 1100], src: balzers-web-alcrona-evo, note: "surftech-alcrona also 1100 °C; Ionbond 25 1050 °C"}
+process_temp_degC: {value: 500, src: balzers-web-alcrona-evo, note: "printed as '< 500'"}
+conductivity_W_mK: {value: 3.6, range: [3.6, 4.7], src: est, note: "no cubic AlCrN value read; sputtered c-CrN 3.6 and wurtzite Al0.90Cr0.10N 4.7 W/mK in moraes-2015-nitride-conductivity bracket it"}
+friction_vs_steel: {value: 0.35, range: [0.35, 0.55], src: surftech-alcrona, note: "Ionbond 25 0.55"}
+typical_thickness_um: {value: [2, 4], src: ionbond-coating-portfolio, page: "Ionbond 25 AlCrN 2-4 µm", note: "surftech-alcrona gives 4 µm"}
+wear_rate_factor: {value: 0.3, src: est, note: "oxidation limit 1100 °C; no study read"}
+thermal_barrier_factor: {value: 0.9, src: est, note: "thin-film resistance argument as tin"}

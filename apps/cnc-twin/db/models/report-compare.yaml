@@ -1,0 +1,25 @@
+# How two runs are compared (cnctwin.report.compare, docs/report.md "Comparing two runs"): when two
+# findings are the same finding, and when a change is worth flagging. SI values as written.
+format: cnctwin-model-params
+version: 1
+model: report-compare
+description: "Finding matching window and the thresholds above which a change between two runs is flagged"
+params:
+  finding_match_progress_frac:
+    value: 0.02
+    unit: "-"
+    range: [0.001, 0.2]
+    src: est
+    note: "findings of the same category at the same program line or feature that are not in the same execution of that line pair up when their times, each as a fraction of its own run's cycle time, differ by at most this (2 % of the cycle: a changed feed shifts every later finding in absolute time but hardly in program progress)"
+  dimension_change_tolerance_frac:
+    value: 0.1
+    unit: "-"
+    range: [0.01, 0.5]
+    src: aiag-msa-2010
+    note: "a measured characteristic is flagged as changed when the two runs differ by more than a tenth of its tolerance band: the 10:1 rule asks a measuring system to resolve a tenth of the tolerance, so smaller changes would not be seen on the real part either"
+  relative_change_significant:
+    value: 0.01
+    unit: "-"
+    range: [0.0, 0.2]
+    src: est
+    note: "cycle time, energy, cost and wear changes below 1 % of the larger of the two values are listed but not flagged (below the repeatability of a real machine's cycle time and power meter)"

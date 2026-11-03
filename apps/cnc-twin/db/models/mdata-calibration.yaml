@@ -1,0 +1,209 @@
+# Calibration by bounded least squares (cnctwin.mdata.fit / calibrate, docs/models/calibration.md
+# "Calibration"): solver settings, the confidence level of the reported intervals, identifiability
+# flags and the bounds of every calibrated parameter. Names carry the SI unit; `unit:` is the unit
+# written. Bounds are physical plausibility limits, not priors: the fit is free inside them.
+format: cnctwin-model-params
+version: 1
+model: mdata-calibration
+description: "Solver settings, interval level, identifiability flags and parameter bounds of the calibration"
+params:
+  # ---------------------------------------------------------------- solver and statistics
+  confidence_level:
+    value: 0.95
+    unit: "-"
+    range: [0.5, 0.9999]
+    src: jcgm-100-2008
+    note: "two-sided level of the reported parameter intervals (the GUM's conventional coverage near 95 %)"
+  max_nfev_per_param:
+    value: 100
+    unit: "-"
+    range: [10, 100000]
+    src: virtanen-2020-scipy
+    note: "function evaluations allowed per free parameter (scipy's default for method trf is 100 n)"
+  tol_surrogate:
+    value: 1.0e-10
+    unit: "-"
+    range: [1.0e-15, 1.0e-3]
+    src: est
+    note: "ftol = xtol = gtol of least_squares when the simulator is an analytic surrogate (smooth, cheap: converge to the noise floor of double precision)"
+  tol_loop:
+    value: 1.0e-6
+    unit: "-"
+    range: [1.0e-12, 1.0e-2]
+    src: est
+    note: "ftol = xtol = gtol when every evaluation is a full simulation (cnctwin.core.loop): results are quantised by the base tick, so tighter tolerances only follow that quantisation"
+  diff_step_surrogate:
+    value: 1.0e-6
+    unit: "-"
+    range: [1.0e-10, 1.0e-2]
+    src: est
+    note: "relative finite-difference step of the Jacobian for surrogates (near the square root of the double precision epsilon times the scale of the residuals)"
+  diff_step_loop:
+    value: 1.0e-3
+    unit: "-"
+    range: [1.0e-6, 1.0e-1]
+    src: est
+    note: "relative finite-difference step for full simulations: large enough that the change of the outputs exceeds their tick quantisation"
+  sv_rel_cutoff:
+    value: 1.0e-10
+    unit: "-"
+    range: [1.0e-16, 1.0e-3]
+    src: seber-wild-2003
+    note: "singular values of the weighted Jacobian below this fraction of the largest are treated as zero: the parameter combination along that direction is not identifiable from the data (no interval is given for the parameters in it)"
+  correlation_flag:
+    value: 0.95
+    unit: "-"
+    range: [0.5, 1.0]
+    src: seber-wild-2003
+    note: "pairs of parameters whose estimated correlation exceeds this in magnitude are reported as confounded (the data determine mainly their combination)"
+  ci_check_ratio_max:
+    value: 2.0
+    unit: "-"
+    range: [1.05, 100.0]
+    src: bates-watts-1988
+    note: "the cost is re-evaluated at both ends of each interval; when the actual increase differs from the linearised one by more than this factor (either way) the interval is flagged as approximate (curvature, Bates & Watts ch. 7)"
+  reweight_passes:
+    value: 2
+    unit: "-"
+    range: [0, 10]
+    src: est
+    note: "passes of variance-component reweighting: after a fit each observation set's sigma is set to its RMS residual (floored at its resolution / sqrt(12)) and the fit repeated, so that sets in different units weigh by their actual scatter"
+  # ---------------------------------------------------------------- bounds of the calibrated parameters
+  efficiency_bounds:
+    value: [0.3, 0.99]
+    unit: "-"
+    src: est
+    note: "spindle drive and motor efficiency, electrical to shaft at load"
+  idle_power_rel_bounds:
+    value: [0.0, 10.0]
+    unit: "-"
+    src: est
+    note: "spindle idle power at maximum speed relative to the machine file's value"
+  idle_power_max_W:
+    value: 50.0
+    unit: kW
+    range: [1.0, 1000.0]
+    src: est
+    note: "absolute upper bound of the idle power when the machine file gives none"
+  bearing_power_rel_bounds:
+    value: [0.0, 10.0]
+    unit: "-"
+    src: est
+    note: "bearing friction power at maximum speed relative to the machine file's bearing heat"
+  bearing_power_max_W:
+    value: 20.0
+    unit: kW
+    range: [0.1, 1000.0]
+    src: est
+    note: "absolute upper bound of the bearing friction power when the machine file gives none"
+  kc_scale_bounds:
+    value: [0.3, 3.0]
+    unit: "-"
+    src: est
+    note: "multiplier on the specific cutting forces of the material; handbook kc1.1 values scatter by about +-20 %, the bounds allow a wrong material class"
+  kc11_rel_bounds:
+    value: [0.2, 5.0]
+    unit: "-"
+    src: est
+    note: "kc1.1 relative to the database value (Kienzle fit)"
+  mc_bounds:
+    value: [0.0, 0.7]
+    unit: "-"
+    src: kienzle-1952
+    note: "Kienzle exponent; published values lie between about 0.1 and 0.45"
+  edge_coeff_max_N_per_m:
+    value: 300.0
+    unit: N/mm
+    range: [1.0, 10000.0]
+    src: est
+    note: "upper bound of the tangential edge coefficient Kte (published milling values are 5-100 N/mm)"
+  cut_coeff_rel_bounds:
+    value: [0.2, 5.0]
+    unit: "-"
+    src: est
+    note: "tangential cutting coefficient Ktc relative to the database value (mechanistic fit)"
+  kv_bounds_1_s:
+    value: [1.0, 1000.0]
+    unit: 1/s
+    src: est
+    note: "position loop gain of a feed axis (ballscrew axes 20-80 1/s, linear motors up to several hundred)"
+  feedforward_bounds:
+    value: [0.0, 1.0]
+    unit: "-"
+    src: ellis-2012-control-design
+    note: "velocity feed-forward fraction"
+  block_time_bounds_s:
+    value: [0.01, 100.0]
+    unit: ms
+    src: est
+    note: "block processing time of the control (0.01 ms to 100 ms per block)"
+  growth_bounds_m:
+    value: [0.0, 500.0]
+    unit: um
+    src: mayr-2012-thermal-issues
+    note: "steady axial spindle growth at maximum speed (10-100 um typical of machining centres)"
+  thermal_tau_bounds_s:
+    value: [1.0, 1000.0]
+    unit: min
+    src: mayr-2012-thermal-issues
+    note: "spindle thermal time constant"
+  growth_offset_bounds_m:
+    value: [-5000.0, 5000.0]
+    unit: um
+    src: est
+    note: "unknown zero of an absolute length or position measurement used for the growth (nuisance parameter)"
+  comp_residual_bounds:
+    value: [0.0, 1.0]
+    unit: "-"
+    src: est
+    note: "fraction of the spindle growth the control's compensation leaves"
+  taylor_n_bounds:
+    value: [0.05, 1.5]
+    unit: "-"
+    src: taylor-1907
+    note: "Taylor exponent (HSS about 0.1-0.2, carbide 0.2-0.5, ceramics up to 0.7)"
+  taylor_C_rel_bounds:
+    value: [0.05, 20.0]
+    unit: "-"
+    src: est
+    note: "Taylor constant relative to the database value"
+  taylor_exponent_bounds:
+    value: [-1.0, 3.0]
+    unit: "-"
+    src: est
+    note: "extended Taylor exponents a (feed) and b (depth), as the material schema allows"
+  usui_A_bounds_per_Pa:
+    value: [1.0e-24, 1.0e-3]
+    unit: per_Pa
+    src: usui-1984-tool-wear
+    note: "Usui A in SI rates (dW/dt in m/s with sigma_n in Pa and V_s in m/s); published values span many decades, so A is fitted in log space"
+  usui_B_bounds_K:
+    value: [10.0, 100000.0]
+    unit: K
+    src: usui-1984-tool-wear
+    note: "Usui B (published 1000-20000 K)"
+  stiffness_factor_bounds:
+    value: [0.1, 10.0]
+    unit: "-"
+    src: est
+    note: "multiplier on the modelled static stiffness of the tool-holder-spindle chain at the tool tip"
+  runout_bounds_m:
+    value: [0.0, 200.0]
+    unit: um
+    src: est
+    note: "radial runout of the cutting edge (TIR / 2 for the largest tooth)"
+  seal_drag_bounds_N:
+    value: [0.0, 5000.0]
+    unit: N
+    src: armstrong-1994-friction
+    note: "load-independent (Coulomb) drag of guides, seals, nut and covers per axis"
+  friction_coeff_bounds:
+    value: [0.0, 0.3]
+    unit: "-"
+    src: armstrong-1994-friction
+    note: "guide friction coefficient on the weight of horizontal axes (rolling guides 0.002-0.01, plain slideways up to 0.2)"
+  meter_tau_bounds_s:
+    value: [0.0, 5.0]
+    unit: s
+    src: est
+    note: "time constant of the low-pass filter a load or power meter applies (nuisance parameter of the observation)"

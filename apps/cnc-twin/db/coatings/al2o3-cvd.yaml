@@ -1,0 +1,14 @@
+format: cnctwin-coating
+version: 1
+id: al2o3-cvd
+name: "CVD alpha/kappa-Al2O3 (usually in a TiCN-Al2O3-TiN multilayer on P/K grades; IHI Ionbond CVD 29 as reference)"
+process: CVD
+src: ionbond-coating-portfolio
+hardness_HV: {value: 3000, src: ionbond-coating-portfolio, page: "Ionbond CVD 29 alpha/kappa Al2O3, 3000 HV"}
+max_service_temp_degC: {value: 1200, src: ionbond-coating-portfolio, page: "Ionbond CVD 29 service temperature 1200 °C"}
+process_temp_degC: {value: 1000, src: ionbond-coating-portfolio}
+conductivity_W_mK: {value: 10, src: est, note: "dense bulk alumina is 30 W/mK at 20 °C (syalons-2023-material-properties, Aloxalon 995) and roughly a third of that at 800 °C; CVD layers are not denser than bulk; 10 W/mK used at cutting temperatures"}
+friction_vs_steel: {value: 0.30, src: ionbond-coating-portfolio, page: "Ionbond CVD 29, 0.30"}
+typical_thickness_um: {value: [8, 15], src: ionbond-coating-portfolio, page: "Ionbond CVD 29, 8-15 µm"}
+wear_rate_factor: {value: 0.3, src: est, note: "chemically stable against steel chips; crater resistance at high speed; no study read"}
+thermal_barrier_factor: {value: 0.8, src: est, note: "thick (8-15 µm) low-conductivity layer: t/k ~1e-6 to 1.5e-6 m2K/W, comparable to the substrate contact resistance; stronger barrier than thin PVD films"}

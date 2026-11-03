@@ -1,0 +1,318 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: helical-mhvhs-6-corner-radius-metric
+maker: Helical Solutions (Harvey Performance Company)
+series: MHVHS-6 6 flute corner radius, variable pitch, metric, Tplus coated - end mills for hardened steels (50-65 HRC)
+src: helical-2026-mhvhs6-cr-metric
+notes: Toroidal end mill for die finishing / HEM in hardened steel (tested in 62 HRC D2 per the product page). Running data from the HVHS-6 chart.
+items:
+- id: helical-89462-mhvhs-020-60600-r100
+  order_code: 89462 (MHVHS-020-60600-R1.00)
+  type: toroidal_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Tplus'' (copper colour, max usage 2,192 F = 1200 C, 4487 HV0.05 = 44 GPa, CoF 0.35 per helical-2026-coatings); chemistry not stated, mapped to altin as the closest high-temperature PVD coating in db/coatings'}
+  geometry:
+    diameter_mm: 6.0
+    flutes: 6
+    pitch_deg:
+      value: [58.0, 62.0, 58.0, 62.0, 58.0, 62.0]
+      src: est
+      note: variable pitch stated, spacing not published; +/-2 deg alternating spacing assumed
+    helix_deg: {value: 40, src: est, note: helix not published; 40 deg assumed for a 6-flute hard-milling finisher}
+    rake_deg: {value: -5, src: est, note: 'radial rake not published; -5 deg assumed, typical of end mills for > 50 HRC steel'}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 10, src: est, note: edge radius not published; 10 um assumed for a honed and Tplus-coated hard-milling edge}
+    edge_prep: {type: hone, src: est, note: not published; hone assumed}
+    corner_radius_mm: 1.0
+    cutting_length_mm: 12.0
+    flute_length_mm: {value: 12.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 6.0
+      length_mm: {value: 51.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 1.8, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 6 mm, dc = 4.20 mm, z = 6 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 4.2, src: est, note: 'dc = 0.70 D: assumed; Helical describes its hardened-steel end mills as having a ''massive core diameter'' (harveyperformance-2025-hardened-geometry) and more flutes mean a larger core (harveyperformance-2017-flute-count); no maker value published'}
+    centre_cutting: false
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 23.9, src: est, note: 'rho V: shank cylinder d 6 x 51 mm plus fluted cylinder D 6 x 12 mm x solid fraction 0.62 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.04318}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 1/4 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/4 in (6.35 mm) column, nearest to D = 6 mm; published values: vc 260 SFM, fz 0.0017 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/4 in (6.35 mm) column, nearest to D = 6 mm; published values: vc 260 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.0381}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 1/4 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/4 in (6.35 mm) column, nearest to D = 6 mm; published values: vc 260 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.03302}
+    ap_max_mm: 12.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 1/4 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/4 in (6.35 mm) column, nearest to D = 6 mm; published values: vc 260 SFM, fz 0.0013 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 65.79, src: est, note: 'list price USD 76.50 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: end cutting, non-center cutting (product page); corner radius +/-0.05 mm, D1 +0.00/-0.05 mm, shank h6, 0.013 mm max TIR
+- id: helical-89474-mhvhs-020-61000-r100
+  order_code: 89474 (MHVHS-020-61000-R1.00)
+  type: toroidal_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Tplus'' (copper colour, max usage 2,192 F = 1200 C, 4487 HV0.05 = 44 GPa, CoF 0.35 per helical-2026-coatings); chemistry not stated, mapped to altin as the closest high-temperature PVD coating in db/coatings'}
+  geometry:
+    diameter_mm: 10.0
+    flutes: 6
+    pitch_deg:
+      value: [58.0, 62.0, 58.0, 62.0, 58.0, 62.0]
+      src: est
+      note: variable pitch stated, spacing not published; +/-2 deg alternating spacing assumed
+    helix_deg: {value: 40, src: est, note: helix not published; 40 deg assumed for a 6-flute hard-milling finisher}
+    rake_deg: {value: -5, src: est, note: 'radial rake not published; -5 deg assumed, typical of end mills for > 50 HRC steel'}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 10, src: est, note: edge radius not published; 10 um assumed for a honed and Tplus-coated hard-milling edge}
+    edge_prep: {type: hone, src: est, note: not published; hone assumed}
+    corner_radius_mm: 1.0
+    cutting_length_mm: 20.0
+    flute_length_mm: {value: 20.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 10.0
+      length_mm: {value: 43.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 5.01, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 10 mm, dc = 7.00 mm, z = 6 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 7.0, src: est, note: 'dc = 0.70 D: assumed; Helical describes its hardened-steel end mills as having a ''massive core diameter'' (harveyperformance-2025-hardened-geometry) and more flutes mean a larger core (harveyperformance-2017-flute-count); no maker value published'}
+    centre_cutting: false
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 63.0, src: est, note: 'rho V: shank cylinder d 10 x 43 mm plus fluted cylinder D 10 x 20 mm x solid fraction 0.62 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.0635}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 3/8 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0025 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.0381}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.05842}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 3/8 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0023 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 99.93, src: est, note: 'list price USD 116.20 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: end cutting, non-center cutting (product page); corner radius +/-0.05 mm, D1 +0.00/-0.05 mm, shank h6, 0.013 mm max TIR
+- id: helical-89477-mhvhs-020-61000-r200
+  order_code: 89477 (MHVHS-020-61000-R2.00)
+  type: toroidal_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Tplus'' (copper colour, max usage 2,192 F = 1200 C, 4487 HV0.05 = 44 GPa, CoF 0.35 per helical-2026-coatings); chemistry not stated, mapped to altin as the closest high-temperature PVD coating in db/coatings'}
+  geometry:
+    diameter_mm: 10.0
+    flutes: 6
+    pitch_deg:
+      value: [58.0, 62.0, 58.0, 62.0, 58.0, 62.0]
+      src: est
+      note: variable pitch stated, spacing not published; +/-2 deg alternating spacing assumed
+    helix_deg: {value: 40, src: est, note: helix not published; 40 deg assumed for a 6-flute hard-milling finisher}
+    rake_deg: {value: -5, src: est, note: 'radial rake not published; -5 deg assumed, typical of end mills for > 50 HRC steel'}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 10, src: est, note: edge radius not published; 10 um assumed for a honed and Tplus-coated hard-milling edge}
+    edge_prep: {type: hone, src: est, note: not published; hone assumed}
+    corner_radius_mm: 2.0
+    cutting_length_mm: 20.0
+    flute_length_mm: {value: 20.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 10.0
+      length_mm: {value: 43.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 63.0
+    gullet_area_mm2: {value: 5.01, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 10 mm, dc = 7.00 mm, z = 6 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 7.0, src: est, note: 'dc = 0.70 D: assumed; Helical describes its hardened-steel end mills as having a ''massive core diameter'' (harveyperformance-2025-hardened-geometry) and more flutes mean a larger core (harveyperformance-2017-flute-count); no maker value published'}
+    centre_cutting: false
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 63.0, src: est, note: 'rho V: shank cylinder d 10 x 43 mm plus fluted cylinder D 10 x 20 mm x solid fraction 0.62 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.0635}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 3/8 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0025 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.0381}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0015 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.05842}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 3/8 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0023 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.03556}
+    ap_max_mm: 20.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 3/8 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 3/8 in (9.52 mm) column, nearest to D = 10 mm; published values: vc 260 SFM, fz 0.0014 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 99.93, src: est, note: 'list price USD 116.20 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: end cutting, non-center cutting (product page); corner radius +/-0.05 mm, D1 +0.00/-0.05 mm, shank h6, 0.013 mm max TIR
+- id: helical-89483-mhvhs-020-61200-r100
+  order_code: 89483 (MHVHS-020-61200-R1.00)
+  type: toroidal_endmill
+  hand: {value: right, src: est, note: right-hand cut assumed; hand of cut not stated on the product page (standard for this catalogue line)}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Helical publishes 'solid carbide' only; submicron 10 % Co end-mill grade assumed}
+  coating: {id: altin, src: est, note: 'Helical ''Tplus'' (copper colour, max usage 2,192 F = 1200 C, 4487 HV0.05 = 44 GPa, CoF 0.35 per helical-2026-coatings); chemistry not stated, mapped to altin as the closest high-temperature PVD coating in db/coatings'}
+  geometry:
+    diameter_mm: 12.0
+    flutes: 6
+    pitch_deg:
+      value: [58.0, 62.0, 58.0, 62.0, 58.0, 62.0]
+      src: est
+      note: variable pitch stated, spacing not published; +/-2 deg alternating spacing assumed
+    helix_deg: {value: 40, src: est, note: helix not published; 40 deg assumed for a 6-flute hard-milling finisher}
+    rake_deg: {value: -5, src: est, note: 'radial rake not published; -5 deg assumed, typical of end mills for > 50 HRC steel'}
+    clearance_deg: {primary: 8, secondary: 16, src: est, note: not published; 8/16 deg assumed}
+    edge_radius_um: {value: 10, src: est, note: edge radius not published; 10 um assumed for a honed and Tplus-coated hard-milling edge}
+    edge_prep: {type: hone, src: est, note: not published; hone assumed}
+    corner_radius_mm: 1.0
+    cutting_length_mm: 24.0
+    flute_length_mm: {value: 24.0, src: est, note: taken equal to the published length of cut (flute run-out not published)}
+    neck: null
+    shank:
+      diameter_mm: 12.0
+      length_mm: {value: 51.0, src: est, note: OAL - LOC; shank-to-flute transition not published}
+    overall_length_mm: 75.0
+    gullet_area_mm2: {value: 7.21, src: est, note: 'per-flute chip space = 0.75 pi (D^2 - dc^2) / (4 z) with D = 12 mm, dc = 8.40 mm, z = 6 (75 % of the annulus outside the core assumed to be flute space; reproduces the template example D10/z4/dc6 -> 9.4 mm2)'}
+    core_diameter_mm: {value: 8.4, src: est, note: 'dc = 0.70 D: assumed; Helical describes its hardened-steel end mills as having a ''massive core diameter'' (harveyperformance-2025-hardened-geometry) and more flutes mean a larger core (harveyperformance-2017-flute-count); no maker value published'}
+    centre_cutting: false
+    coolant_holes: null
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 107.9, src: est, note: 'rho V: shank cylinder d 12 x 51 mm plus fluted cylinder D 12 x 24 mm x solid fraction 0.62 (1 - 0.75 (1 - (dc/D)^2)); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.08382}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 1/2 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/2 in (12.70 mm) column, nearest to D = 12 mm; published values: vc 260 SFM, fz 0.0033 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel 50-60 HRC (e.g. d2-60hrc, aisi52100-62hrc at the top end)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.04572}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '50-60 HRC' (SFM 260), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/2 in (12.70 mm) column, nearest to D = 12 mm; published values: vc 260 SFM, fz 0.0018 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [hem]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.0762}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 1/2 in column, 'HEM'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/2 in (12.70 mm) column, nearest to D = 12 mm; published values: vc 260 SFM, fz 0.003 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: H
+    material_hint: hardened steel > 60 HRC (e.g. aisi52100-62hrc; Helical tested in 62 HRC D2)
+    operation: [finishing]
+    vc_m_min: {start: 79.248}
+    fz_mm: {start: 0.04064}
+    ap_max_mm: 24.0
+    ae_max_xD: 0.05
+    src: helical-2024-sf-hvhs6
+    page: SF_HVHS-6 p. 1, row '> 60 HRC' (SFM 260), 1/2 in column, 'Fin'; milling-process table
+    note: 'ADOC up to max LOC, RDOC 3-5 % D; not for traditional slotting or roughing (product page); chip load read from the 1/2 in (12.70 mm) column, nearest to D = 12 mm; published values: vc 260 SFM, fz 0.0016 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 143.28, src: est, note: 'list price USD 166.60 (helicaltool.com product table, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 2, src: est, note: not published; assumed for Helical's tool renewal (regrind) service on a solid carbide end mill}
+  note: end cutting, non-center cutting (product page); corner radius +/-0.05 mm, D1 +0.00/-0.05 mm, shank h6, 0.013 mm max TIR

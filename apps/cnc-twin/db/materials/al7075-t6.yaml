@@ -1,0 +1,165 @@
+# Workpiece material: aluminium 7075-T6 (also T651 stretched plate).
+# Physical and mechanical data: NASA 1972 materials handbook and Kaiser 2006 datasheet.
+format: cnctwin-material
+version: 1
+id: al7075-t6
+name: "Aluminium 7075-T6"
+family: aluminium
+iso_group: N
+condition: "T6: solution heat treated and artificially aged (values for T6/T651 sheet, plate and bar)"
+designations: {UNS: A97075, EN: "EN AW-7075", DIN: "AlZn5.5MgCu"}
+stock_forms: [rolled_plate]        # estimated profile only, see residual_stress
+
+physical:
+  src: muraca-1972-al7075-handbook
+  density_kg_m3: {value: 2800, note: "Kaiser 2.80 Mg/m3 as well"}
+  specific_heat_J_kgK: {table: [[-18, 837], [93, 920], [200, 1013], [300, 1096]], digitised: true, uncertainty_pct: 5, note: "digitised from Fig. 9.2111 (C in cal/g C x 4184). The tabulated value 0.23 cal/g C = 962 J/kgK at 100 C (NASA; Kaiser 960) lies about 4 % above the digitised curve"}
+  conductivity_W_mK: {table: [[25, 130]], note: "T6: 0.31 cal/cm s C = 129.7 W/mK at 25 C; Kaiser T651 130 W/mK. Fig. 9.2111 shows K rising to about 177 W/mK above ~230 C, an over-ageing effect of exposure, not used here"}
+  expansion_1_K: {table: [[38, 23.0e-6], [93, 23.8e-6], [149, 24.3e-6], [204, 24.7e-6]], digitised: true, uncertainty_pct: 3, note: "digitised from Fig. 9.2111 (alpha in 1e-6/F x 1.8), read as the mean coefficient from room temperature (MIL-HDBK-5 convention, assumed); tabulated mean 20-100 C: 23.6e-6 (NASA), 23.4e-6 (Kaiser)"}
+  youngs_modulus_GPa: {table: [[20, 71.7]], range: [71.0, 71.7], note: "typical E = 10.4e3 ksi; Kaiser 71.0 GPa; design value 10.3e3 ksi"}
+  poisson: {value: 0.33}
+  solidus_degC: {value: 477, range: [477, 532], note: "NASA melting range approx. 477-638 C (477 = incipient eutectic melting); Kaiser lists 532-635 C"}
+  liquidus_degC: {value: 635, src: kaiser-2006-al7075-datasheet, range: [635, 638], note: "NASA 638 C"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 150, note: "Brinell 500 kg, T6 (section 7.3); Kaiser T651 150"}
+  yield_MPa: {value: 503, note: "typical Fty 73 ksi, T6/T651; Kaiser T651 503"}
+  ultimate_MPa: {value: 572, note: "typical Ftu 83 ksi, T6/T651; Kaiser T651 572"}
+  elongation_pct: {value: 11, note: "in 2 in; Kaiser T651 11 % (4D)"}
+  fracture_strain: {value: 0.3, src: est, note: "ln(1/(1-RA)) with an assumed reduction of area of about 25 %; no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 452
+  B_MPa: 457
+  n: 0.357
+  C: 0.01
+  m: 1.1
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: 604
+  src: luo-2021-al7075-drilling
+  note: "Table 3 of Luo et al. 2021, used there for 7075-T6 drilling FE validated against measured thrust and torque; the authors attribute the constants to Nemat-Nasser et al. 2007 (JoMMS 2:1901, not read). Tm = 604 C is the value used with the set (below the 635 C liquidus). Alternatives seen but not adopted: Brar, Joshi & Harris 2009 (AIP Conf. Proc. 1195:945) determined JC constants for 7075-T6 and T651 from quasi-static and Hopkinson-bar data, but the constants could not be read (abstract only)."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 800
+      mc: 0.25
+      rake_ref_deg: {value: 0, src: est, note: "reference geometry not stated by ISCAR; neutral 0 deg rake assumed (Sandvik's kc1 convention)"}
+      vc_ref_m_min: {value: 300, src: est, note: "no reference speed in the catalogue; assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR group 22: aluminium wrought alloy, hardenable (100 HB nominal; 7075-T6 is 150 HB, so forces may be under-predicted)"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 920
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 60
+      src: est
+      note: "carbide catalogue value x 1.15 assumed for HSS; no published HSS value read"
+  mechanistic:
+    - tool_class: carbide
+      coating: "coated (type not stated)"
+      helix_deg: {value: null, note: "round inserts in a bull-nose cutter, no helix"}
+      rake_deg: {value: null, note: "not stated"}
+      Ktc_N_mm2: 1319.41
+      Krc_N_mm2: 788.83
+      Kac_N_mm2: 48.75
+      Kte_N_mm: 19.65
+      Kre_N_mm: 26.77
+      Kae_N_mm: 2.05
+      src: engin-1999-general-milling
+      note: "Average cutting coefficients for 'Al-7075' (temper not stated) for a Kennametal KIRP125-RP3 bull-nose cutter with two coated RPGB-325 round inserts, half-immersion down milling, fz = 0.05 mm/tooth (Fig. 9 caption). Obtained from an orthogonal cutting database (Budak et al. 1996 method), not from a slotting calibration with a helical end mill. Use with care for helical end mills."
+  min_chip_thickness_ratio: {value: 0.3, src: wojciechowski-2022-min-chip-thickness, range: [0.2, 0.45], note: "no 7075 entry in Table 1; value chosen inside the aluminium-alloy range (6061 0.23, 6082-T6 0.2-0.4, 2024-T6 0.29-0.45)"}
+  indentation_coeff_N_mm3: {value: 2.4e4, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (150/95)"}
+  work_hardening:
+    layer_depth_um: {value: 30, src: est, note: "assumed; no microhardness profile read (Jomaa et al. 2014 measured residual stresses, not hardness)"}
+    hardness_increase_pct: {value: 8, src: est, note: "assumed; peak-aged 7075 hardens little"}
+    strain_hardening_exponent: {value: 0.357, src: luo-2021-al7075-drilling, note: "JC exponent n"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.55, src: luo-2021-al7075-drilling, range: [0.5, 0.6], note: "Coulomb coefficient chosen for 7075-T6 drilling FE from the 0.5-0.6 range of Ceretti and Arrazola; an FE input, not a tribometer measurement. Jomaa et al. 2014 report Merchant friction angles of 11-45 deg (mu 0.19-1.0) depending on speed and feed"}
+    sticking_ratio: {value: 0.6, src: est, note: "assumed; BUL forms on the rake face at high speed (jomaa-2014-al7075-orthogonal)"}
+  - tool_class: carbide
+    coating: TiN
+    mu_sliding: {value: 0.5, src: est, note: "assumed; TiN-coated WC still shows BUE/BUL in dry turning of 7075 (trujillo-2017-al7075-adhesion)"}
+    sticking_ratio: {value: 0.55, src: est, note: "assumed"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation: null
+  bue:
+    interface_temp_degC: {range: [150, 400], src: est, note: "assumed; no interface temperature measured in the sources read (Trujillo et al. argue thermo-mechanical adhesion at the edge)"}
+    vc_m_min: [40, 300]
+    src: trujillo-2017-al7075-adhesion
+    note: "Trujillo et al. 2017: BUE/BUL at every tested speed 40-200 m/min (dry, TiN-coated WC), intensity driven by feed (highest at 0.2-0.3 mm), speed of little influence. jomaa-2014-al7075-orthogonal (T651, uncoated carbide, dry): BUE present at 300 m/min, reduced on the flank at 1000 m/min where a BUL forms on the rake. Upper bound 300 m/min = highest speed with clear BUE read; it fades between 300 and 1000 m/min"
+  breakability: {value: medium, src: est, note: "high-strength 7075 chips curl and break more readily than 6061 chips; no quantitative source read"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 1600
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge, not a cited source); adhesion and edge chipping often limit life before flank wear"
+  - tool_class: pcd
+    coating: uncoated
+    C_m_min: 5500
+    n: 0.35
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.1
+    src: est
+    note: "placeholder: T = 15 min at vc ~ 2100 m/min; not a cited value"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 185
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 100 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress:
+  - form: rolled_plate
+    thickness_mm: {value: 50, src: est, note: "assumed representative plate"}
+    direction: L
+    profile: [[0.0, -25], [0.1, -5], [0.25, 20], [0.5, -15], [0.75, 20], [0.9, -5], [1.0, -25]]
+    src: est
+    note: "PLACEHOLDER for T651 (stretched) plate: low-amplitude self-equilibrating profile assumed; no measured 7075-T651 plate profile was read. Unstretched T6 parts carry much larger quench stresses that are not represented"
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 477, src: muraca-1972-al7075-handbook, note: "start of melting (eutectic) per the NASA melting range; Kaiser gives 532 C. Over-ageing of T6 starts far lower after time at temperature (Fig. 9.2111 conductivity rise above ~200 C reflects it)"}
+
+ignition: null
+composite: null
+
+notes: "High-strength aerospace alloy. Sourced: physical/tensile data (NASA 1972, Kaiser 2006; cp and alpha digitised from the NASA figure), JC set used in a validated drilling FE (Luo et al. 2021), Kienzle (ISCAR), averaged mechanistic coefficients (Engin & Altintas, bull-nose insert cutter), BUE window (Trujillo 2017, Jomaa 2014), FE friction coefficient (Luo 2021). Estimated: HSS Kienzle, coated/PCD friction, work hardening, K_sp, all Taylor constants and the plate residual-stress profile."

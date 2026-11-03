@@ -1,0 +1,25 @@
+# Coefficients of coolant, MQL and compressed-air consumption (cnctwin.production.consumables).
+# The coolant file gives drag-out, evaporation, mist loss, concentration and price. SI values as written.
+format: cnctwin-model-params
+version: 1
+model: production-consumables
+description: "Tank surface for evaporation, MQL dosage and air when the databases give none"
+params:
+  tank_depth_m:
+    value: 0.35
+    unit: m
+    range: [0.1, 1.0]
+    src: est
+    note: "coolant tank liquid depth: the free surface for evaporation is the tank volume divided by it (machine-tool tanks under the base are shallow and wide)"
+  mql_dosage_m3_s:
+    value: 5.556e-9
+    unit: "-"
+    range: [1.389e-9, 1.389e-8]
+    src: est
+    note: "SI value in m3/s (cnctwin.db.keyunits has no m3_s key token, so the unit is not written): 20 ml/h when the MQL fluid file gives no dosage_default_ml_h; DGUV gives 5-50 ml per process hour (dguv-209-025-mql-2010)"
+  mql_air_m3_s:
+    value: 1.667e-3
+    unit: "-"
+    range: [5.0e-4, 5.0e-3]
+    src: est
+    note: "SI value in m3/s of free air (see mql_dosage_m3_s on the unit): an external or one-channel MQL system uses about 100 l/min at 4-6 bar"

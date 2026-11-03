@@ -1,0 +1,86 @@
+# Alignment of measured machine data with a simulated run (cnctwin.mdata.align, docs/models/calibration.md
+# "Alignment"): t_sim = offset + scale * t_meas from line markers (robust fit) or the cross-correlation
+# of spindle load / power. Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: mdata-align
+description: "Marker matching, robust fit, cross-correlation and resampling settings of the alignment"
+params:
+  huber_k:
+    value: 1.345
+    unit: "-"
+    range: [0.5, 5.0]
+    src: huber-1981
+    note: "Huber psi threshold in units of the robust residual scale: 95 % efficiency at normal errors while bounding the weight of mismatched markers"
+  mad_to_sigma:
+    value: 1.4826
+    unit: "-"
+    range: [1.4826, 1.4826]
+    src: huber-1981
+    note: "1 / Phi^-1(3/4): median absolute deviation times this is a consistent estimate of the normal standard deviation"
+  marker_outlier_sigma:
+    value: 4.0
+    unit: "-"
+    range: [2.0, 10.0]
+    src: est
+    note: "a matched marker whose residual exceeds 4 robust standard deviations after the robust fit is dropped as a mismatch (repeated line numbers in loops, missed polls) and the fit repeated"
+  marker_min_for_scale:
+    value: 3
+    unit: "-"
+    range: [2, 1000]
+    src: est
+    note: "matched markers needed before the time scale is fitted; with fewer only the offset is fitted (scale 1)"
+  scale_min_span_s:
+    value: 30.0
+    unit: s
+    range: [0.0, 86400.0]
+    src: est
+    note: "the time scale is fitted only when the matched markers (or correlation windows) span at least this long; over shorter spans clock drift (ppm) is below the polling quantisation and a fitted scale would only follow noise"
+  max_scale_deviation:
+    value: 0.01
+    unit: "-"
+    range: [0.0, 0.5]
+    src: est
+    note: "accepted |scale - 1|: quartz clocks drift by parts per million; 1 % covers a mis-stated sampling rate, beyond that the alignment is refused"
+  xcorr_min_overlap_frac:
+    value: 0.5
+    unit: "-"
+    range: [0.05, 1.0]
+    src: est
+    note: "cross-correlation lags are searched only where the two series overlap by at least this fraction of the shorter one, so that a high correlation of a few edge samples cannot win"
+  xcorr_max_points:
+    value: 262144
+    unit: "-"
+    range: [1024, 16777216]
+    src: est
+    note: "resampling grid size cap for the cross-correlation (2^18 points: two FFTs of 2^19 complex values, about 16 MB)"
+  xcorr_ambiguity_ratio:
+    value: 0.9
+    unit: "-"
+    range: [0.5, 1.0]
+    src: knapp-carter-1976
+    note: "the delay is reported ambiguous when a secondary peak outside the main lobe reaches this fraction of the main peak (periodic cutting patterns)"
+  xcorr_scale_windows:
+    value: 4
+    unit: "-"
+    range: [2, 64]
+    src: est
+    note: "windows over which local delays are estimated to fit the time scale when no markers are available"
+  xcorr_min_correlation:
+    value: 0.3
+    unit: "-"
+    range: [0.0, 1.0]
+    src: est
+    note: "normalised correlation below which a cross-correlation alignment is refused (the signals do not show the same process)"
+  resample_max_gap_factor:
+    value: 3.0
+    unit: "-"
+    range: [1.0, 1000.0]
+    src: est
+    note: "a measured sample channel is not interpolated across gaps longer than this multiple of its median sampling interval (dropped polls, agent restarts): the overlay shows a gap"
+  overlay_max_points:
+    value: 20000
+    unit: "-"
+    range: [100, 10000000]
+    src: est
+    note: "points per overlay series written for the UI and report; longer series are reduced to per-bucket minimum and maximum (peaks kept)"

@@ -1,0 +1,46 @@
+# Convection and radiation correlations of the thermal domain (cnctwin/thermal/convection.py,
+# docs/models/thermal.md "Convection"). Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: thermal-convection
+description: "Free convection (Churchill-Chu, horizontal plates), rotating cylinders, pipe flow, air properties, emissivities"
+params:
+  # Churchill & Chu (1975a), vertical plate, all Rayleigh numbers:
+  # Nu_L = {a + b Ra^(1/6) / [1 + (c/Pr)^(9/16)]^(8/27)}^2
+  cc_vertical_a: {value: 0.825, unit: "-", src: churchill-chu-1975-vertical-plate, note: "eq. for the whole range of Ra"}
+  cc_vertical_b: {value: 0.387, unit: "-", src: churchill-chu-1975-vertical-plate}
+  cc_vertical_pr: {value: 0.492, unit: "-", src: churchill-chu-1975-vertical-plate}
+  # Churchill & Chu (1975b), long horizontal cylinder, Ra_D <= 1e12
+  cc_cylinder_a: {value: 0.60, unit: "-", src: churchill-chu-1975-horizontal-cylinder}
+  cc_cylinder_b: {value: 0.387, unit: "-", src: churchill-chu-1975-horizontal-cylinder}
+  cc_cylinder_pr: {value: 0.559, unit: "-", src: churchill-chu-1975-horizontal-cylinder}
+  # Horizontal plates, L = A/P (Incropera et al. 2007, sec. 9.6.2, after McAdams and Lloyd & Moran)
+  plate_up_low_c: {value: 0.54, unit: "-", src: incropera-2007-heat-mass-transfer, note: "upper surface of a hot plate (or lower of a cold one), 1e4 <= Ra_L <= 1e7"}
+  plate_up_low_n: {value: 0.25, unit: "-", src: incropera-2007-heat-mass-transfer}
+  plate_up_high_c: {value: 0.15, unit: "-", src: incropera-2007-heat-mass-transfer, note: "1e7 <= Ra_L <= 1e11"}
+  plate_up_high_n: {value: 0.3333333333333333, unit: "-", src: incropera-2007-heat-mass-transfer}
+  plate_up_ra_switch: {value: 1.0e7, unit: "-", src: incropera-2007-heat-mass-transfer}
+  plate_down_c: {value: 0.27, unit: "-", src: incropera-2007-heat-mass-transfer, note: "lower surface of a hot plate (or upper of a cold one), 1e5 <= Ra_L <= 1e10 (6th ed. form)"}
+  plate_down_n: {value: 0.25, unit: "-", src: incropera-2007-heat-mass-transfer}
+  face_vertical_cos: {value: 0.7071067811865476, unit: "-", src: est, note: "a face whose outward normal makes more than 45 deg with the vertical uses the vertical-plate correlation, otherwise a horizontal-plate one (classification choice, no source)"}
+  # Rotating cylinder in quiescent air: Nu_D = c Re_D^m Pr^n, Re_D = Omega D^2 / nu < 4.3e5
+  rot_cyl_c: {value: 0.133, unit: "-", src: kays-bjorklund-1958-rotating-cylinder, note: "as given in incropera-2007-heat-mass-transfer sec. 7.4 for Re_D < 4.3e5, 0.7 < Pr < 670; coefficient recalled from that text, not re-read in this session"}
+  rot_cyl_re_exp: {value: 0.6666666666666666, unit: "-", src: kays-bjorklund-1958-rotating-cylinder}
+  rot_cyl_pr_exp: {value: 0.3333333333333333, unit: "-", src: kays-bjorklund-1958-rotating-cylinder}
+  rot_cyl_re_max: {value: 4.3e5, unit: "-", src: kays-bjorklund-1958-rotating-cylinder, note: "upper end of the correlation; above it the value at the limit is used (tools rarely exceed it)"}
+  # Fully developed pipe flow (through-tool coolant channels)
+  dittus_boelter_c: {value: 0.023, unit: "-", src: dittus-boelter-1930-tubes, note: "Nu = 0.023 Re^0.8 Pr^0.4, fluid being heated, Re >= 1e4 (incropera-2007-heat-mass-transfer eq. 8.60)"}
+  dittus_boelter_re_exp: {value: 0.8, unit: "-", src: dittus-boelter-1930-tubes}
+  dittus_boelter_pr_exp: {value: 0.4, unit: "-", src: dittus-boelter-1930-tubes}
+  laminar_nusselt: {value: 4.36, unit: "-", src: incropera-2007-heat-mass-transfer, note: "fully developed laminar flow, uniform wall heat flux"}
+  pipe_re_transition: {value: 2300.0, unit: "-", src: incropera-2007-heat-mass-transfer, note: "below: laminar Nu; above: the larger of the laminar value and Dittus-Boelter (transition range handled by the maximum, an approximation)"}
+  # Air: Sutherland's law for viscosity and conductivity, ideal gas density
+  air_ref_temp_K: {value: 273.15, unit: K, src: white-2006-viscous-fluid-flow}
+  air_mu_ref_Pa_s: {value: 1.716e-5, unit: Pa_s, src: white-2006-viscous-fluid-flow, note: "Table 1-2"}
+  air_sutherland_mu_K: {value: 110.4, unit: K, src: white-2006-viscous-fluid-flow}
+  air_k_ref_W_mK: {value: 0.0241, unit: W_mK, src: white-2006-viscous-fluid-flow, note: "Table 1-3"}
+  air_sutherland_k_K: {value: 194.0, unit: K, src: white-2006-viscous-fluid-flow}
+  # Emissivity of workpiece surfaces by material family (machined state; radiation matters only when hot)
+  emissivity_families: {value: [aluminium, steel, tool_steel, stainless, titanium, nickel, copper, brass, magnesium, cast_iron, polymer, wood, foam, composite], unit: "-", src: est, note: "family names of the material database"}
+  emissivity_values: {value: [0.08, 0.35, 0.35, 0.3, 0.3, 0.3, 0.05, 0.1, 0.1, 0.45, 0.9, 0.9, 0.9, 0.85], unit: "-", src: est, note: "machined (bright) metal surfaces after incropera-2007-heat-mass-transfer Table A.11 ranges (polished Al 0.04-0.06, stainless 0.17-0.3, lightly oxidised steels 0.3-0.6); non-metals 0.85-0.95; one value per family, uncertain by about a factor 2 for metals (oxidation raises it)"}
+  emissivity_default: {value: 0.3, unit: "-", src: est, note: "families not listed"}

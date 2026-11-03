@@ -1,0 +1,87 @@
+format: cnctwin-holder
+version: 1
+series_id: haimer-shell-mill-arbor
+maker: "HAIMER"
+series: "Combination shell end mill arbor, DIN 69893-1 HSK-A63"
+src: haimer-shop-a63-040
+dimension_key: "D1 arbor (pilot) diameter, D2 collar diameter, L1 and L2 printed lengths (pilot length from the cutter seat is taken as L1 - L2, an inference)"
+items:
+  - id: haimer-a63-040-16
+    order_code: "A63.040.16"
+    type: arbor
+    taper: HSK-A63
+    bore_mm: {value: 16, src: haimer-shop-a63-040, note: "arbor diameter D1"}
+    gauge_length_mm: {value: 60, src: haimer-shop-a63-040}
+    nose_diameter_mm: {value: 32, src: haimer-shop-a63-040, note: "collar D2"}
+    length_L1_mm: {value: 27, src: haimer-shop-a63-040}
+    length_L2_mm: {value: 17, src: haimer-shop-a63-040}
+    profile_mm: {value: [[0, 16], [10, 16], [10, 32], [60, 32]], src: est, note: "pilot D1 for L1 - L2 = 10 mm, collar D2 to the flange"}
+    clamping_torque_Nm: null           # drive keys; not published
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm (chuck body)", src: haimer-shop-a63-040}
+    max_rpm: null
+    mass_kg: {value: 0.930, src: haimer-shop-a63-040}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-a63-040-22
+    order_code: "A63.040.22"
+    type: arbor
+    taper: HSK-A63
+    bore_mm: {value: 22, src: haimer-shop-a63-040-22}
+    gauge_length_mm: {value: 60, src: haimer-shop-a63-040-22}
+    nose_diameter_mm: {value: 40, src: haimer-shop-a63-040-22, note: "D2"}
+    length_L1_mm: {value: 31, src: haimer-shop-a63-040-22}
+    length_L2_mm: {value: 19, src: haimer-shop-a63-040-22}
+    profile_mm: {value: [[0, 22], [12, 22], [12, 40], [60, 40]], src: est, note: "pilot D1 for L1 - L2 = 12 mm, collar D2 to the flange"}
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: {value: "G2.5 at 25000 rpm or U < 1 gmm (chuck body)", src: haimer-shop-a63-040-22}
+    max_rpm: null
+    mass_kg: {value: 1.070, src: haimer-shop-a63-040-22}
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-a63-040-27
+    order_code: "A63.040.27"
+    type: arbor
+    taper: HSK-A63
+    bore_mm: {value: 27, src: haimer-shop-a63-040}
+    gauge_length_mm: {value: 60, src: haimer-shop-a63-040}
+    length_L1_mm: {value: 33, src: haimer-shop-a63-040}
+    nose_diameter_mm: null             # not in the variant table
+    profile_mm: null
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    mass_kg: null
+    clamp_length_mm: null
+    price_eur: null
+  - id: haimer-a63-040-40
+    order_code: "A63.040.40"
+    type: arbor
+    taper: HSK-A63
+    bore_mm: {value: 40, src: haimer-shop-a63-040}
+    gauge_length_mm: {value: 70, src: haimer-shop-a63-040}
+    length_L1_mm: {value: 41, src: haimer-shop-a63-040}
+    nose_diameter_mm: null
+    profile_mm: null
+    clamping_torque_Nm: null
+    axial_retention_N: null
+    radial_stiffness_N_um: null
+    runout_um: null
+    runout_at_mm: null
+    balance_grade: null
+    max_rpm: null
+    mass_kg: null
+    clamp_length_mm: null
+    price_eur: null
+notes: "Items A63.040.27 and A63.040.40 come from the variant table only (diameter, A, L1)."

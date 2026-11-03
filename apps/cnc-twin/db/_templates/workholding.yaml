@@ -1,0 +1,27 @@
+# Workholding device (catalogue item): db/workholding/<maker>-<series>.yaml, `items:` like tools
+format: cnctwin-workholding
+version: 1
+series_id: kurt-anglock
+maker: "Kurt Manufacturing"
+series: "AngLock D688 precision vise"
+src: key
+items:
+  - id: kurt-d688
+    type: vise                       # vise | clamp | fixture_plate | soft_jaws | vacuum | magnetic | adhesive | chuck_3jaw | chuck_4jaw | collet_chuck | collet | tailstock_centre | steady_rest | tabs
+    jaw_width_mm: 152
+    jaw_height_mm: 44
+    max_opening_mm: 229
+    clamping_force_kN: {value: 28.5, at_handle_torque_Nm: 108, src: key}   # force vs input torque as published
+    force_per_torque_N_per_Nm: null  # if a linear relation is published
+    jaw_friction: {value: 0.2, src: key}           # jaw-to-part static friction coefficient (est if not published)
+    jaw_stiffness_N_um: {value: 200, src: est}
+    body_mm: [[-80, -200, -100], [80, 250, 0]]     # outline for collision, in the vise frame
+    mass_kg: 45
+    accuracy: {jaw_parallelism_um: 10, src: key}
+  # chucks: {jaws: 3, max_rpm, gripping_force_kN, jaw_mass_kg, jaw_cg_radius_mm, centrifugal_loss_model: {...}, grip_length_mm, through_hole_mm, accuracy_um}
+  # vacuum: {min_abs_pressure_kPa, seal: ..., area_utilisation}
+  # magnetic: {holding_pressure_N_cm2: {table: [[thickness, N_cm2], ...], x: mm}, pole_pitch_mm}
+  # adhesive: {shear_strength_MPa, peel_strength_N_mm, cure_s}
+  # collet: {range_mm, grip_length_mm, gripping_force_kN, max_rpm}
+  # tailstock_centre: {angle_deg: 60, live: true, max_rpm, radial_load_N}
+  # steady_rest: {grip_range_mm, rollers: 3, roller_stiffness_N_um}

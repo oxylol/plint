@@ -1,0 +1,32 @@
+# Expected sanity findings of tests/fixtures/sanity_all_mistakes.nc run against the setup in
+# tests/fixtures/sanity_setup.yaml (cnctwin.sanity.check_operation / check_program).
+# One entry per mistake, each from its own rule; the program has no other finding.
+# examples/sanity-mistakes reuses the program: with the same setup it must give exactly this list.
+format: cnctwin-sanity-expected
+version: 1
+program: sanity_all_mistakes.nc
+setup: sanity_setup.yaml
+findings:
+  - {rule: tool-comment, line: 7, severity: warning, mistake: "header comment says T5 is D12; the tool table has a D6 end mill"}
+  - {rule: tool-unknown, line: 12, severity: error, mistake: "T7 pre-selected, not in the tool table"}
+  - {rule: feed-missing, line: 16, severity: error, mistake: "first G01 of the program has no F"}
+  - {rule: cutting-data, line: 17, severity: warning, mistake: "S6000 with a D10 end mill: vc 188 m/min below the maker's 200 m/min for ISO N"}
+  - {rule: rapid-below-stock, line: 28, severity: warning, mistake: "G00 Z-1. into the pocket, below the stock top"}
+  - {rule: offset-radius, line: 39, severity: error, mistake: "G41 D11: no radius offset D11"}
+  - {rule: arc-endpoint, line: 41, severity: warning, mistake: "arc end Y20.006 is 0.006 mm off the R5 radius (below the control's alarm)"}
+  - {rule: g28-absolute, line: 45, severity: error, mistake: "G28 Z0. in G90: goes to work Z0, below the clamp tops, before home"}
+  - {rule: feed-inherited, line: 50, severity: warning, mistake: "T2 drills with F600 left from T1"}
+  - {rule: coolant-required, line: 50, severity: warning, mistake: "T2 spot-drills aluminium without M08"}
+  - {rule: retract-below-clamps, line: 51, severity: error, mistake: "G99 R2. retract: the move to the next hole crosses the back clamp"}
+  - {rule: coolant-unavailable, line: 57, severity: error, mistake: "M88 through-spindle coolant on a machine without it"}
+  - {rule: spindle-direction, line: 58, severity: error, mistake: "M04 with a right-hand drill (spindle started at line 56)"}
+  - {rule: flute-length, line: 59, severity: error, mistake: "Z-24. hole, the drill has 20 mm of flute"}
+  - {rule: tap-depth, line: 66, severity: error, mistake: "tap to Z-14. in a hole drilled to Z-12."}
+  - {rule: restart-modal, line: 69, severity: warning, mistake: "restart at N50 runs in G94 although the program reaches it in G95 (F0.05 per rev)"}
+  - {rule: missing-g43, line: 72, severity: error, mistake: "T5 moves in Z with the G43 H4 of T4"}
+  - {rule: spindle-stopped, line: 73, severity: error, mistake: "T5 cuts without M03"}
+  - {rule: toolchange-clearance, line: 76, severity: warning, mistake: "T6 M06 with the tool at Z2., over the part"}
+  - {rule: part-outside-travel, line: 77, severity: error, mistake: "G55 puts X at -840 mm, travel ends at -762 mm"}
+  - {rule: offset-length, line: 78, severity: error, mistake: "G43 H00"}
+  - {rule: work-offset-unset, line: 82, severity: error, mistake: "G56 is not set in the setup"}
+  - {rule: program-end, line: 86, severity: warning, mistake: "M30 with spindle and coolant still on"}

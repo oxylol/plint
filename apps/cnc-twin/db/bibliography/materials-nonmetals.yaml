@@ -1,0 +1,266 @@
+# Sources for db/materials/{pom-c, pa66, pmma, wood-beech, mdf, pu-tooling-board, eps-foam,
+# cfrp-t300-epoxy, gfrp-eglass-epoxy}.yaml
+# All read on 2026-11-03. PDFs were downloaded and text-extracted locally; web pages were read as HTML.
+# Wikipedia articles are used only as secondary sources; the revision read is given (oldid) and the
+# primary source they cite is named in `note` (the primary was not read unless it has its own entry).
+# Paywalled machining papers (Elsevier, Springer, ASME) could not be opened in this session; values
+# that would normally come from them are estimates in the material files and are listed there as gaps.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  # ------------------------------------------------------------------ cutting-force catalogue
+  # Entry copied verbatim from materials-steels.yaml (the loader requires identical duplicates).
+  # Used here for p. F9 rows 'thermoplasts and thermosetting plastics, without abrasive fillers'
+  # 150 N/mm2, mc 0.2 (O1, O2) and 'fibre-reinforced plastics' 300 N/mm2, mc 0.3 (O3, O4, O5), and
+  # pp. F30-F31 (O1 = PMMA/acrylic, PC, UHMW, PA, acetal (Delrin, Celcon), PTFE, nylon; O2 = epoxy,
+  # Bakelite, Pertinax, Resitex).
+  walter-2025-technical-compendium:
+    type: catalogue
+    authors: "Walter AG"
+    title: "Technical Compendium - General, Edition 2025"
+    venue: "Walter AG, Tuebingen"
+    year: 2025
+    url: "https://cdn2.walter-tools.com/files/a5ea48ae-5fa6-0161-3cb3-0ac22248a0fb/3ee25a79-8681-4b3e-bf39-9e7f3ca0d193/technical-compendium-general-2025-en.pdf"
+    accessed: 2026-11-03
+    pages: "p. F9 'Cutting forces of Walter machining groups' (kc1.1, mc; standard values for a neutral cutting edge geometry); pp. F10-F31 material comparison table (Walter machining group per material: 1.0503 P2, 1.7225 P7/P9, 1.2344 P11/H1, 1.3505 P7/H2, 1.4301 M1, 1.4404/1.4435 M1, 2.4668 S4, 0.6025 EN-GJL-250 K3)"
+
+  # ------------------------------------------------------------------ POM-C
+  ensinger-2023-tecaform-ah-datasheet:
+    type: datasheet
+    authors: "Ensinger GmbH"
+    title: "TECAFORM AH natural - Stock Shapes (rods, plates, tubes), technical data sheet"
+    venue: "Ensinger GmbH, Nufringen; data sheet version AF, 2023/07/19 (also shown on the product web page)"
+    year: 2023
+    url: "https://www.ensingerplastics.com/en/shapes/acetal-tecaform-ah-natural"
+    accessed: 2026-11-03
+    pages: "Technical details tables: density 1.41 g/cm3; E (tensile, 1 mm/min) 2800 MPa; tensile strength 67 MPa; strength at yield 67 MPa; elongation at yield 9 %, at break 32 %; flexural strength 91 MPa; flexural modulus 2600 MPa; compression modulus 2300 MPa; compression strength 20/35/68 MPa at 1/2/5 % strain; Charpy notched 8 kJ/m2; Shore D 82; Tg -60 C and Tm 166 C (DSC, ISO 11357); thermal conductivity 0.39 W/mK and specific heat 1.4 J/gK (ISO 22007-4); service temperature 140 C short / 100 C long term; CLTE 13e-5 (23-60 C) and 14e-5 1/K (23-100 C); water absorption 0.05-0.1 % (24 h/96 h). PDF: values 'determined by tests at reference dimensions (typically rods with diameter 40-60 mm according to DIN EN 15860) on extruded and machined specimen'"
+    note: "PDF datasheet: https://www.ensinger-online.com/modules/public/sheet/createsheet.php?SID=1344&FL=0&FILENAME=TECAFORM_AH_natural_0.PDF"
+
+  ensinger-2024-tecaform-ah-phis:
+    type: datasheet
+    authors: "Ensinger GmbH"
+    title: "Product Handling Information Sheet (PHIS) TECAFORM AH"
+    venue: "Ensinger GmbH, PHIB_TECAFORM AH_EN_en_04.1, V 04.1, edition of 26.03.2024"
+    year: 2024
+    url: "https://www.ensinger-online.com/modules/nonpublic/customersheet/openpdf.php?pdf=SH_TECAFORM%20AH_en_04_1.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 7 (mechanical processing should generate as little dust as possible; local extraction); Sect. 8 (formaldehyde WEL 2.5 mg/m3 = 2 ppm, 8 h TWA, UK; ABEK-P3 filter if ventilation insufficient); Sect. 9 (melting point ca. 166 C; decomposition temperature > 240 C; flammability 320-340 C); Sect. 10 (strong overheating releases formaldehyde and paraformaldehyde)"
+
+  # ------------------------------------------------------------------ PA66
+  ensinger-2023-tecamid66-datasheet:
+    type: datasheet
+    authors: "Ensinger GmbH"
+    title: "TECAMID 66 natural - Stock Shapes (rods, plates, tubes), technical data sheet"
+    venue: "Ensinger GmbH, Nufringen; data sheet version AD, 2023/07/19 (also shown on the product web page)"
+    year: 2023
+    url: "https://www.ensingerplastics.com/en/shapes/pa66-tecamid-66-natural"
+    accessed: 2026-11-03
+    pages: "Technical details tables: density 1.15 g/cm3; E (tensile) 3500 MPa; tensile strength 85 MPa; strength at yield 84 MPa; elongation at yield 7 %, at break 70 %; flexural strength 110 MPa; flexural modulus 3100 MPa; compression modulus 2700 MPa; compression strength 20/35/81 MPa at 1/2/5 %; Charpy notched 5 kJ/m2; Shore D 82; Tg 47 C (footnote: 'found in public sources'); Tm 258 C (ISO 11357); thermal conductivity 0.36 W/mK; specific heat 1.5 J/gK; service temperature 170 C short / 100 C long term; CLTE 11e-5 (23-60 C), 12e-5 1/K (23-100 C); water absorption 0.2-0.4 % (24 h/96 h). Same test-condition statement as the TECAFORM AH sheet; moisture conditioning of the specimens is not stated"
+    note: "PDF datasheet: https://www.ensinger-online.com/modules/public/sheet/createsheet.php?SID=792&FL=0&FILENAME=TECAMID_66_natural_0.PDF"
+
+  ensinger-2026-tecamid66-phis:
+    type: datasheet
+    authors: "Ensinger GmbH"
+    title: "Product Handling Information Sheet (PHIS) TECAMID 66"
+    venue: "Ensinger GmbH, PHIB_TECAMID 66_EN_en_03.0, V 03.0, edition of 05.05.2026"
+    year: 2026
+    url: "https://www.ensinger-online.com/modules/nonpublic/customersheet/openpdf.php?pdf=SH_TECAMID%2066_en.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 7 (little dust, local extraction); Sect. 8 (general dust limit applies; FFP1/FFP2 if dusty); Sect. 9 (melting range ca. 253-263 C; decomposition temperature > 300 C; flammability > 400 C); Sect. 10 (strong overheating: carbon monoxide, nitrogen oxides, caprolactam and traces of hydrogen cyanide)"
+
+  # ------------------------------------------------------------------ PMMA
+  polyvantis-2025-plexiglas-gs-xt:
+    type: datasheet
+    authors: "POLYVANTIS GmbH (PLEXIGLAS, trademark of Roehm GmbH)"
+    title: "PLEXIGLAS Solid sheet, block, multi-skin sheet, corrugated sheet, tube and rod - Technical Information, Ref. No. 211-1"
+    venue: "POLYVANTIS GmbH, Weiterstadt; issue 04/25"
+    year: 2025
+    url: "https://www.plexiglas.de/files/plexiglas-content/pdf/technische-informationen/211-1-EN-PLEXIGLAS-GS-XT.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 (GS = cast, max. service temperature approx. 80 C); p. 4 typical values at 23 C/50 % RH for GS 0F00: density 1.19 g/cm3; tensile strength 110 MPa at -40 C, 80 MPa at 23 C, 40 MPa at 70 C; elongation at break 5.5 %; flexural strength 115 MPa; compressive yield stress 110 MPa; E 3300 MPa; dynamic shear modulus 1700 MPa (10 Hz); indentation hardness H961/30 175 MPa; coefficient of friction plastic/plastic 0.8, plastic/steel 0.5, steel/plastic 0.45; Poisson 0.37. p. 5 thermal: CTE 7e-5 1/K (0-50 C); thermal conductivity 0.19 W/mK; specific heat 1.47 J/gK; forming temperature 160-175 C; max. surface temperature (IR radiator) 200 C; max. permanent service temperature 80 C; ignition temperature 425 C (DIN 51794); Vicat B50 115 C; HDT 105 C (1.8 MPa) and 113 C (0.45 MPa)"
+
+  polyvantis-2024-machining-plexiglas:
+    type: manual
+    authors: "POLYVANTIS GmbH (PLEXIGLAS)"
+    title: "Guidelines for Workshop Practice: Machining PLEXIGLAS, Ref. No. 311-1"
+    venue: "POLYVANTIS GmbH, Weiterstadt (PDF created 2024-07-25; no printed issue date)"
+    year: 2024
+    url: "https://www.plexiglas.de/files/plexiglas-content/pdf/verarbeitungsrichtlinie/311-1-Machining-PLEXIGLAS.pdf"
+    accessed: 2026-11-03
+    pages: "1.7 Tools (HSS, carbide or diamond; carbide longest life; pigments reduce tool life noticeably; oil-free coolants); 2.1 circular saws (carbide: clearance 10-15 deg, rake 0-15 deg, vc up to 4500 m/min); 3.1 twist drills (clearance 3-8, rake 0-4, point angle 60-90, helix 12-16 deg; vc 10-60 m/min; f 0.1-0.3 mm/rev; Fig. 14 chip types: speed/feed too high -> crumbly chip; too slow -> overheating, decomposition, molten chip; optimal -> smooth continuous chip); 4 routing (clearance 2-10, rake 0-5 deg; vc 200-4500 m/min; f up to 0.5 mm/rev; depth up to 6 mm; cooling normally not necessary); 5 turning (clearance 5-10, rake 0 to -4 deg, kappa ca. 45 deg; vc 20-300 m/min; f 0.1-0.5 mm/rev; depth up to 6 mm; 'ten times the cutting speed for steel'); 8 annealing (GS 80 C, unformed parts up to 100 C; time = thickness[mm]/3 h, min. 2 h; cooling <= 15 C/h; remove below 60 C); 1.2 CTE 0.07 mm/m K"
+
+  lucite-2015-perspex-cast-tds:
+    type: datasheet
+    authors: "Lucite International UK Ltd (distributed by The Plastic Shop)"
+    title: "Perspex Cell Cast Acrylic - Technical Data Sheet (A guide to the technical properties and data of Perspex Sheet (cast))"
+    venue: "PDF hosted by theplasticshop.co.uk (file dated 2014-07/2015-08)"
+    year: 2015
+    url: "https://www.theplasticshop.co.uk/plastic_technical_data_sheets/perspex_technical_properties_data_sheet.pdf"
+    accessed: 2026-11-03
+    pages: "Table of properties: density 1.19 g/cm3 (ISO 1183); Rockwell M 102 (ISO 2039-2); water absorption 0.2 % (ISO 62); Vicat > 110 C (ISO 306 A); CTE 7.7e-5 1/K (ASTM D696); tensile strength 75 MPa and elongation at break 4 % (ISO 527, 5 mm/min); flexural strength 116 MPa and modulus 3210 MPa (ISO 178); Charpy unnotched 12 kJ/m2; Poisson 0.38"
+
+  wikipedia-en-pmma-2026:
+    type: web
+    authors: "Wikipedia contributors"
+    title: "Poly(methyl methacrylate)"
+    venue: "en.wikipedia.org, revision oldid=1378742053 (2026-10-06)"
+    year: 2026
+    url: "https://en.wikipedia.org/w/index.php?title=Poly(methyl_methacrylate)&oldid=1378742053"
+    accessed: 2026-11-03
+    pages: "section 'Properties': Tg of atactic PMMA 105 C; commercial grades 85-165 C (cites Ashby, Materials Selection in Mechanical Design, 3rd ed., 2005, p. 519); infobox density 1.18 g/cm3"
+    note: "secondary source; Ashby 2005 not read"
+
+  # ------------------------------------------------------------------ wood
+  fpl-2010-wood-handbook:
+    type: handbook
+    authors: "Forest Products Laboratory"
+    title: "Wood handbook - Wood as an engineering material. General Technical Report FPL-GTR-190"
+    venue: "USDA Forest Service, Forest Products Laboratory, Madison, WI"
+    year: 2010
+    doi: "10.2737/FPL-GTR-190"
+    url: "https://research.fs.usda.gov/download/treesearch/37440.pdf"
+    accessed: 2026-11-03
+    pages: "Ch. 4 p. 4-10 to 4-14: Eq. 4-15 k across grain = Gx(B + C x) + A (A 0.01864, B 0.1941, C 0.004064, Gx > 0.3, x < 25 % MC, ~24 C); along grain 1.5-2.8x (avg 1.8x) across; k rises 2-3 % per 10 C; Table 4-7 (American beech SG 0.68: 0.15 ovendry, 0.18 W/mK at 12 % MC); Eq. 4-16a cp0 = 0.1031 + 0.003867 T (kJ/kgK, T in K); Eqs. 4-17/4-18 moisture correction (valid 280-420 K); Table 4-8 heat capacity at 12 % MC 1.5/1.6/1.7/1.8/1.9/2.0 kJ/kgK at 280/290/300/320/340/360 K; CTE parallel to grain 3.1-4.5e-6 1/K (ovendry, species independent), Eqs. 4-19a/4-20a alpha_r = (32.4 G0 + 9.9)e-6, alpha_t = (32.4 G0 + 18.4)e-6 1/K. Ch. 5: Table 5-1 elastic ratios, Table 5-2 Poisson ratios (12 % MC); Table 5-3a American beech (Fagus grandifolia) at 12 % MC: SG 0.64, MOR 103 MPa, MOE 11.9 GPa, compression parallel 50.3 MPa, compression perpendicular 7.0 MPa, shear parallel 13.9 MPa, tension perpendicular 7.0 MPa, side hardness 5800 N; note: EL ~ bending MOE + 10 %. Ch. 18 p. 18-8 to 18-10: pyrolysis regimes (100-200 C dehydration; 200-300 C hemicellulose and onset of lignin pyrolysis, CO and tar; 300-450 C cellulose depolymerisation 300-350 C, vigorous volatiles; glowing possible from 200 C surface temperature); piloted ignition surface temperature 300-400 C (avg 347-377 C); Table 18-2 ignition temperatures: particleboard (794 kg/m3) 563 K, hardboard (1026 kg/m3) 593 K, OSB 599 K"
+
+  wikipedia-de-buchenholz-2024:
+    type: web
+    authors: "Wikipedia-Autoren"
+    title: "Buchenholz"
+    venue: "de.wikipedia.org, revision oldid=249121765 (2024-10-04)"
+    year: 2024
+    url: "https://de.wikipedia.org/w/index.php?title=Buchenholz&oldid=249121765"
+    accessed: 2026-11-03
+    pages: "Infobox Holz (Rotbuche, Fagus sylvatica): Rohdichte mean 720 kg/m3 (12-15 % MC per text), limits 540-910 kg/m3; shrinkage axial 0.3 %, radial 5.8 %, tangential 11.8 %; bending strength 105-123 N/mm2; compressive strength 53-62 N/mm2; tensile strength 135 N/mm2; thermal conductivity 0.176 W/mK (cites Niemz, Bauphysik 29(4), 2007, 311-312, doi 10.1002/bapi.200710040); text: very hard, homogeneous, strong shrinkage"
+    note: "secondary source; the infobox values (except conductivity) are uncited in the article (literature list names Grosser & Teetz 1998, 'Einheimische Nutzhoelzer: Buche'); Niemz 2007 not read"
+
+  leitz-2017-lexicon-ed7-ch11:
+    type: catalogue
+    authors: "Leitz GmbH & Co. KG"
+    title: "Leitz Lexicon Edition 7 - 11 User encyclopedia"
+    venue: "Leitz GmbH & Co. KG, Oberkochen (PDF created 2017-09, modified 2021-03)"
+    year: 2017
+    url: "https://www.leitz.org/fileadmin/Downloads/Lexicon/EN/Leitz_Lexicon_Edition_7_-_11_User_encyclopedia.pdf"
+    accessed: 2026-11-03
+    pages: "(printed page numbers) 11.1.1 p. 2-4: tool wear rises in direct proportion to bulk density; silicate inclusions cause abrasive wear; table 'bulk densities and strength values (moisture content 12 %)' from Wagenfuehr Holzatlas 2007: beech (red beech) 540-910 kg/m3, compressive 41-99, bending 74-210, shear 6.5-19.0 N/mm2; hardness parallel to fibres ~2x perpendicular. 11.1.2 p. 7-8: MDF bulk density usually 600-1000 kg/m3; EN 316 classes HDF >= 800, light MDF <= 650, ultra-light <= 550 kg/m3; glued joints and corundum overlays cause most edge wear. 11.1.3 p. 9-10: thermoplastics soften from around 60 C, above which chips melt and tools become sticky; thermosets pyrolyse above 150 C; abrasive fibres in thermosets need other cutting materials. 11.1.6 p. 13: composites (CFRP, GRP) risk delamination from cutting forces. 11.2 p. 14-18: HW (WC-Co, HV 1300-2500) universal for wood, panels and plastics; DP (PCD, 0.3-0.6 mm layer, grain 1-30 um) for chipboard/fibreboard and very abrasive materials including fibre reinforced plastics. 11.3.2 p. 21: climb (with-feed) cutting gives about 30 % shorter tool life than up-cut. 11.3.5 p. 25: cutting speed guide values (tools > 100 mm): softwoods 50-90, hardwoods 50-80, MDF 60-90, thermoplastics 40-60, thermosets 30-50 m/s (sawing 60-100, 60-100, 60-90, 40-70, 40-60 m/s); shank router cutters 10-40 m/s, drills 5-10 m/s; p. 26 tooth feed fz: fine finishing 0.3-0.8, finishing 0.8-2.5, roughing 2.5-5.0 mm"
+
+  leitz-2020-lexicon-ed7-ch05:
+    type: catalogue
+    authors: "Leitz GmbH & Co. KG"
+    title: "Leitz Lexicon Edition 7 - 05 Routing"
+    venue: "Leitz GmbH & Co. KG, Oberkochen (PDF created 2020-08, modified 2026-05)"
+    year: 2020
+    url: "https://www.leitz.org/fileadmin/Downloads/Lexicon/EN/Leitz_Lexicon_Edition_7_-_05_Routing.pdf"
+    accessed: 2026-11-03
+    pages: "(PDF page numbers) p. 4, 5.1: cutting materials per workpiece (chipboard/MDF: HW, HW solid, DP; duromers: HW, HW solid, DP; plastomers: HS, HW, HW solid, DP). p. 22 serrated grooving cutter WO 110 1 for 'glass and carbon fiber materials or other fiber reinforced materials, PU hard foams': HW solid Z2, D 2-8 mm, n = 10000-16000 1/min, vf = 1.5-2.0 m/min, multi-teeth geometry to avoid delamination. p. 115 multi-purpose cutterhead table: vc HW softwood 60-90, hardwood 50-80, chipboard/MDF 60-80 m/s; fz solid wood along grain 0.3-0.5 mm, across grain 0.25-0.35 mm, chipboard/MDF 0.3-0.5 mm; application note: solid wood along grain climb cut, across grain conventional cut"
+
+  leitz-2020-lexicon-ed7-ch06:
+    type: catalogue
+    authors: "Leitz GmbH & Co. KG"
+    title: "Leitz Lexicon Edition 7 - 06 Drilling"
+    venue: "Leitz GmbH & Co. KG, Oberkochen (PDF created 2020-11, modified 2026-03)"
+    year: 2020
+    url: "https://www.leitz.org/fileadmin/Downloads/Lexicon/EN/Leitz_Lexicon_Edition_7_-_06_Drilling.pdf"
+    accessed: 2026-11-03
+    pages: "PDF p. 55 'Signs of wear': abrasive spur wear sets the end of drill life and raises cutting forces; thermal wear from high rpm at low feed, dwell at the reversal point, poor chip removal or resin build-up destroys HS, HW and DP cutting materials (binder attacked, grain breakage)"
+
+  # ------------------------------------------------------------------ MDF
+  wikipedia-en-mdf-2026:
+    type: web
+    authors: "Wikipedia contributors"
+    title: "Medium-density fibreboard"
+    venue: "en.wikipedia.org, revision oldid=1382854549 (2026-10-30)"
+    year: 2026
+    url: "https://en.wikipedia.org/w/index.php?title=Medium-density_fibreboard&oldid=1382854549"
+    accessed: 2026-11-03
+    pages: "intro: typically 82 % wood fibre, 9 % urea-formaldehyde resin, 8 % water, 1 % paraffin wax (cites Kozlowski & Helwig 1996, FAO); 'Physical properties': typical density 600-800 kg/m3, MOR 40 MPa, MOE 3 GPa; 'Safety concerns': cutting releases a large quantity of dust; formaldehyde resins; IARC classification of formaldehyde (cites IARC Monograph 88); E0/E1/E2 emission classes"
+    note: "secondary source; primary references not read"
+
+  wikipedia-de-mdf-2026:
+    type: web
+    authors: "Wikipedia-Autoren"
+    title: "Mitteldichte Holzfaserplatte"
+    venue: "de.wikipedia.org, revision oldid=269740402 (2026-08-17)"
+    year: 2026
+    url: "https://de.wikipedia.org/w/index.php?title=Mitteldichte_Holzfaserplatte&oldid=269740402"
+    accessed: 2026-11-03
+    pages: "intro: densities 600-1000 kg/m3 in trade; composition of an E1 furniture board with UF glue: 80-83 % wood, 9-10.5 % glue, 0.5-2.5 % additives (mainly paraffin), 6-8 % water; mostly UF resins, sometimes MUF/PF, rarely pMDI; press skin ('Presshaut') from the hot press is sanded off"
+    note: "secondary source"
+
+  # ------------------------------------------------------------------ dust hazards
+  hse-2022-wis23:
+    type: manual
+    authors: "Health and Safety Executive (UK)"
+    title: "Wood dust: Controlling the risks. Woodworking Information Sheet No 23 (Revision 3), WIS23(rev3)"
+    venue: "HSE, published 05/22 (revised 06/22)"
+    year: 2022
+    url: "https://www.hse.gov.uk/pubns/wis23.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1: biggest risk from fine dust; composite boards (chipboard, fibre boards) listed as dust sources; health risks asthma, dermatitis, irritation; hardwood dust can cause a rare nasal cancer; wood dust is flammable and can cause fire or explosion. p. 2: WEL hardwood dust 3 mg/m3, softwood dust 5 mg/m3 (8 h TWA); hardwood WEL applies to mixtures; ALARP for carcinogens/asthmagens. LEV section: BS EN 12779 air transport velocity 20-25 m/s"
+
+  ntp-2021-roc15-wood-dust:
+    type: web
+    authors: "National Toxicology Program (US DHHS)"
+    title: "Report on Carcinogens, Fifteenth Edition: Wood Dust (profile)"
+    venue: "NTP, Research Triangle Park, NC; 15th RoC (2021)"
+    year: 2021
+    url: "https://ntp.niehs.nih.gov/sites/default/files/ntp/roc/content/profiles/wooddust.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1: 'known to be a human carcinogen' (first listed in the 10th RoC, 2002); strongest association with nasal adenocarcinoma; solvent extracts of beech and oak dust caused DNA damage in mammalian cells. p. 2 'Exposure': particles > 5 um deposit almost completely in the nose, 0.5-5 um (respirable) in the lower airways; most of the dust mass is in particles > 10 um aerodynamic diameter, while 61-65 % of particles by count are 1-5 um (IARC 1995)"
+
+  # ------------------------------------------------------------------ PU modelling board
+  rampf-2024-mb0720:
+    type: datasheet
+    authors: "RAMPF Advanced Polymers GmbH & Co. KG"
+    title: "RAKU TOOL MB-0720 Board material - Polyurethane board for models, technical data sheet"
+    venue: "RAMPF Advanced Polymers, Grafenberg; Rev.Status 02-2024/07/01-GB"
+    year: 2024
+    url: "https://www.rampf-group.com/fileadmin/Tooling/TDS/tds-EN/MB-0720-GB-board-material-product-datasheet.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1: density ca. 0.72 g/cm3 (ISO 1183); hardness 60-65 Shore D (ISO 868); CTE 50-55e-6 1/K (ISO 11359); HDT 75-80 C (ISO 75); compressive strength 20-25 MPa (ISO 604); flexural strength 25-30 MPa (ISO 178); 'excellent milling characteristics', 'high edge strength'; process at 20-25 C. p. 2: workplace ventilation during processing; reaction-resin hygiene rules apply"
+    note: "board list page https://www.rampf-group.com/en/tooling/board-materials/ (read the same day) gives MB-0600 0.60, MB-0670 0.67, MB-0720 0.72 g/cm3 (PU) and WB-0700 0.70 g/cm3 (epoxy)"
+
+  rampf-2024-mb0670:
+    type: datasheet
+    authors: "RAMPF Advanced Polymers GmbH & Co. KG"
+    title: "RAKU TOOL MB-0670 Board material - Polyurethane board for models, technical data sheet"
+    venue: "RAMPF Advanced Polymers, Grafenberg; Rev.Status 02-2024/07/01-GB"
+    year: 2024
+    url: "https://www.rampf-group.com/fileadmin/Tooling/TDS/tds-EN/MB-0670-GB-board-material-product-datasheet.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1: density ca. 0.67 g/cm3; 60-65 Shore D; CTE 50-55e-6 1/K; HDT 75-80 C; compressive strength 15-20 MPa; flexural strength 20-25 MPa"
+
+  # ------------------------------------------------------------------ EPS
+  wikipedia-en-polystyrene-2026:
+    type: web
+    authors: "Wikipedia contributors"
+    title: "Polystyrene"
+    venue: "en.wikipedia.org, revision oldid=1382514230 (2026-10-29)"
+    year: 2026
+    url: "https://en.wikipedia.org/w/index.php?title=Polystyrene&oldid=1382514230"
+    accessed: 2026-11-03
+    pages: "properties table (solid PS): E 3000-3600 MPa, tensile strength 46-60 MPa, elongation 3-4 %, Tg 100 C (cites Mark, Polymer Data Handbook 2009), Vicat 90 C, CTE 8e-5 1/K, cp 1.3 kJ/kgK; text: atactic PS Tg ~90 C; pyrolysis to styrene 'usually goes up to 430 C'; 'Expanded polystyrene (EPS)': closed-cell foam, normal density range 11-32 kg/m3 (cites Australian Urethane & Styrene TDS 2010); foams 95-98 % air; thermal conductivity (EN 12667) 0.032-0.038 W/mK, 0.038 at 15 kg/m3 and 0.032 at 40 kg/m3 (StyroChem K-710 datasheet); building EPS cut with hot wires; typical EPS oxygen index ~18 % so flame retardant is added"
+    note: "secondary source; primary sources named there not read"
+
+  # ------------------------------------------------------------------ composites
+  toray-2025-t300-datasheet:
+    type: datasheet
+    authors: "Toray Composite Materials America, Inc."
+    title: "TORAYCA T300 Standard Modulus Carbon Fiber Data Sheet"
+    venue: "Toray CMA, Tacoma WA; TORAYCA T300_Rev.04/22/2025"
+    year: 2025
+    url: "https://www.toraycma.com/wp-content/uploads/T300-Data-Sheet.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 fibre: tensile strength 3530 MPa, tensile modulus 230 GPa, strain 1.5 %, density 1.76 g/cm3, filament diameter 7 um; composite (normalised to 60 % fibre volume, #2500 epoxy cured at 130 C): 0 deg tensile strength 1820 MPa, modulus 140 GPa, strain 1.26 %; compressive strength 1470 MPa; flexural strength 1790 MPa, flexural modulus 123 GPa; ILSS 94.1 MPa; in-plane shear strength 95 MPa (ASTM D3518); 90 deg tensile strength 76 MPa; functional: CTE -0.41e-6 1/C, specific heat 0.777 J/g C, thermal conductivity 0.105 J/(cm s C) (= 10.5 W/mK), electrical resistivity 1.7e-3 ohm cm; carbon > 93 %"
+    note: "fetched via the data-sheet index https://www.toraycma.com/resources/data-sheets/"
+
+  wikipedia-en-glass-fiber-2026:
+    type: web
+    authors: "Wikipedia contributors"
+    title: "Glass fiber"
+    venue: "en.wikipedia.org, revision oldid=1378370089 (2026-10-04)"
+    year: 2026
+    url: "https://en.wikipedia.org/w/index.php?title=Glass_fiber&oldid=1378370089"
+    accessed: 2026-11-03
+    pages: "'Properties' table, E-glass (cites Wallenberger & Bingham, Fiberglass and Glass Technology, Springer 2009, p. 211): tensile strength 3445 MPa, compressive strength 1080 MPa, E 76.0 GPa, density 2.58 g/cm3, CTE 5.4e-6 1/K, softening point 846 C; E-glass is alumino-borosilicate with < 1 % alkali oxides. 'Health problems': rat studies (1970s) found fibrous glass < 3 um diameter and > 20 um long potent; fibreglass is usually made with diameters > 3 um; ACGIH group A4 (not classifiable)"
+    note: "secondary source; Wallenberger & Bingham 2009 not read"

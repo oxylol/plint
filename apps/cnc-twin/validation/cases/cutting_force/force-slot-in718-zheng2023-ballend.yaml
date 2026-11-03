@@ -1,0 +1,57 @@
+# Inconel 718 slot milling with an 8 mm carbide ball-end mill (Sandvik 1B240-0800-XA 1630), 1000 rpm,
+# depth 0.5 mm: measured average Fx, Fy, Fz for fz 0.02-0.12 mm/tooth (Table 1).
+format: cnctwin-validation-case
+version: 1
+id: force-slot-in718-zheng2023-ballend
+quantity: cutting_force
+reference:
+  src: zheng-2023-in718-ball-end-milling-forces
+  location: "Sect. 2.2 and Table 1 (coefficient-identification slot tests, measured average forces); Sect. 5.1-5.2 (machine, dynamometer, averaging)"
+  digitised: false
+  measured: true
+  note: "Table values read directly; average force over a stable cutting range selected in DynoWare (Sect. 5.2). No repeat scatter or calibration uncertainty is stated."
+setup:
+  operation: ball_end_milling
+  material:
+    db: inconel718
+    note: "Inconel 718; heat treatment, hardness and supplier are not given in the source (DB entry: solution treated and aged)"
+  tool:
+    src: zheng-2023-in718-ball-end-milling-forces
+    page: Sect. 2.2, Sect. 5.1
+    type: ball_endmill
+    designation: Sandvik 1B240-0800-XA 1630
+    tool_class: carbide
+    diameter_mm: 8
+    overall_length_mm: {value: 100, note: "printed as '100 m'"}
+    flutes: {value: 4, src: est, note: "not stated; computed here from Table 1: feed speed / (fz x n) = 80 / (0.02 x 1000) = 4"}
+    helix_deg: {value: 30, src: est, note: "assumed: not stated"}
+    rake_deg: {value: 0, src: est, note: "assumed: not stated (radial rake of a ground ball-nose mill)"}
+    coating: {value: not stated, note: "the grade code 1630 is given without a coating description"}
+    stickout_mm: {value: 32, src: est, note: "assumed: not stated (4 D)"}
+    assumed_inputs: [flutes, helix_deg, rake_deg, stickout_mm]
+  machine:
+    src: zheng-2023-in718-ball-end-milling-forces
+    page: Sect. 5.1
+    model: DMG DMC635V vertical machining centre
+    dynamometer: "Kistler '9527B' as printed (presumably 9257B), 5073A charge amplifier, DynoWare"
+  conditions:
+    src: zheng-2023-in718-ball-end-milling-forces
+    page: Sect. 2.2, Table 1
+    radial_engagement: full slot
+    tool_axis: {value: "vertical, no tilt", src: est, note: "assumed: plain 3-axis slotting with the ball end; not stated"}
+    spindle_rpm: 1000
+    ap_mm: 0.5
+    fz_mm_tooth: [0.02, 0.04, 0.06, 0.08, 0.10, 0.12]
+    feed_rate_mm_min: [80, 160, 240, 320, 400, 480]
+    direction: {value: "slot (half up-milling, half down-milling)", note: "full slot"}
+    coolant: {value: dry, src: est, note: "assumed: no coolant is mentioned in the source"}
+    force_frame: "x feed, y normal to the feed, z axial (the f-n-z frame of the source's force model, Sect. 2.1); signs as printed"
+    assumed_inputs: [tool_axis, coolant]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: Fx_mean, x_name: fz, x_unit: mm/tooth, y_name: Fx (average), y_unit: N, points: [[0.02, 76.88], [0.04, 174.5], [0.06, 251.7], [0.08, 314.1], [0.10, 353.4], [0.12, 421.6]]}
+  - {name: Fy_mean, x_name: fz, x_unit: mm/tooth, y_name: Fy (average), y_unit: N, points: [[0.02, -59.25], [0.04, -210.7], [0.06, -378.8], [0.08, -572.0], [0.10, -720.6], [0.12, -830.1]]}
+  - {name: Fz_mean, x_name: fz, x_unit: mm/tooth, y_name: Fz (average), y_unit: N, points: [[0.02, 11.97], [0.04, 44.67], [0.06, 133.1], [0.08, 265.2], [0.10, 430.1], [0.12, 552.3]]}
+notes: "Caveats: the effective cutting speed is low (about 12 m/min at the 3.9 mm engaged diameter of the 0.5 mm deep slot, computed here) and the ball centre cuts at zero speed, so the axial force is dominated by indentation; Fy (normal to the feed) is larger than Fx (feed) and grows almost linearly with fz, which a mechanistic model must reproduce with the source's frame and rotation sense. The fitted coefficients of the source (Table 2: Ktc -15935, Krc -6636, Kac 8949 N/mm2) carry signs of its frame and are not used. The orthogonal tests of Tables 9-10 (800-1400 rpm, fz 0.015-0.06, ap 0.1-0.4 mm) are not included because their radial engagement is not stated."

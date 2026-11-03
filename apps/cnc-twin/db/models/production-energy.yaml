@@ -1,0 +1,79 @@
+# Coefficients of the energy-per-part model (cnctwin.production.energy, docs/models/production.md).
+# SI values as written; the machine file gives the machine-specific numbers (spindle efficiency and
+# idle power, pump powers, base load, servo standby, air consumption); these are the model's own.
+format: cnctwin-model-params
+version: 1
+model: production-energy
+description: "Speed law of spindle idle losses, axis friction and drive efficiencies, pump, conveyor and compressor coefficients"
+params:
+  palmgren_speed_exponent:
+    value: 1.6667
+    unit: "-"
+    range: [1.0, 3.0]
+    src: palmgren-1959
+    note: "load-independent (viscous) bearing friction torque M0 = 1e-7 f0 (nu n)^(2/3) dm^3 for nu n >= 2000 mm2/s rpm, so the loss power M0 omega grows as n^(5/3); the machine file's idle power is scaled from its maximum speed with this exponent"
+  spindle_regen_recovered_frac:
+    value: 0.0
+    unit: "-"
+    range: [0.0, 0.9]
+    src: est
+    note: "braking energy of the spindle assumed dissipated in the drive's braking resistor (no regenerative supply); drives with a regenerative front end recover part of it"
+  axis_guide_friction_coeff:
+    value: 0.003
+    unit: "-"
+    range: [0.002, 0.005]
+    src: est
+    note: "rolling-element linear guides: friction coefficient of a few thousandths, as guide makers quote; applied to the weight carried by horizontal axes"
+  axis_seal_drag_N:
+    value: 30.0
+    unit: N
+    range: [5.0, 150.0]
+    src: est
+    note: "seal and preload drag of guide blocks, ball nut and covers per axis, independent of load (order of tens of newtons)"
+  ballscrew_efficiency:
+    value: 0.9
+    unit: "-"
+    range: [0.8, 0.97]
+    src: est
+    note: "forward efficiency of preloaded ball screws, typically 0.9 or more"
+  axis_drive_efficiency:
+    value: 0.85
+    unit: "-"
+    range: [0.6, 0.95]
+    src: est
+    note: "servo motor and amplifier at part load"
+  axis_regen_recovered_frac:
+    value: 0.0
+    unit: "-"
+    range: [0.0, 0.9]
+    src: est
+    note: "axis braking energy assumed dissipated (no regenerative supply)"
+  pump_motor_efficiency:
+    value: 0.8
+    unit: "-"
+    range: [0.6, 0.92]
+    src: est
+    note: "small (0.5-2 kW) induction motors driving coolant pumps; the IE2 class limits of IEC 60034-30-1 lie near 0.8 at 0.75-1.1 kW (iec-60034-30-1-2014)"
+  pump_load_factor:
+    value: 1.0
+    unit: "-"
+    range: [0.3, 1.2]
+    src: est
+    note: "the pump runs at its rated duty point: shaft power = the machine file's pump power"
+  conveyor_power_W:
+    value: {auger: 200.0, hinged_belt: 370.0, hinge_belt: 370.0, scraper: 370.0, magnetic: 370.0, drum_filter: 750.0, none: 0.0}
+    unit: W
+    src: est
+    note: "electrical power of chip conveyor gear motors by type (fractional-horsepower augers, 0.37 kW belt and scraper drives, drum filters with their pump), when the machine file gives none"
+  compressor_isothermal_efficiency:
+    value: 0.55
+    unit: "-"
+    range: [0.4, 0.7]
+    src: est
+    note: "isothermal work p0 ln(p/p0) per m3 of free air divided by the electrical energy of an industrial screw compressor package at 6-7 bar(g); typical packages draw about 0.1-0.12 kWh per m3 of free air (doe-compressed-air-2003), which gives 0.5-0.6"
+  air_supply_gauge_pressure_Pa:
+    value: 6.0e5
+    unit: Pa
+    range: [3.0e5, 1.0e6]
+    src: est
+    note: "shop compressed-air supply pressure when the machine file gives none (6-7 bar gauge is usual)"

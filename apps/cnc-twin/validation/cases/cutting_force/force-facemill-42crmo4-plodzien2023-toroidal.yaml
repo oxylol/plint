@@ -1,0 +1,125 @@
+# 42CrMo4 (220 HB) face milling with a toroidal cutter carrying one round insert (r 4 mm), vc 230 m/min,
+# ae 20 mm, down milling: measured FfN, Ff and Fa for fz 0.05-0.15 mm and ap 0.5-2.5 mm (Table 3).
+format: cnctwin-validation-case
+version: 1
+id: force-facemill-42crmo4-plodzien2023-toroidal
+quantity: cutting_force
+reference:
+  src: plodzien-2023-42crmo4-toroidal-face-milling
+  location: "Sect. 2.2 (setup), Table 2 (plan), Table 3 'Real' columns (measured forces)"
+  digitised: false
+  uncertainty_pct: 3
+  measured: true
+  note: "uncertainty_pct is the repeatability at the centre point (five repeats at fz 0.1, ap 1.5 mm: standard deviation 1.5 % of FfN, 2.1 % of Ff, 2.8 % of Fa, computed here from Table 3); no dynamometer uncertainty is stated."
+setup:
+  operation: face_milling
+  material:
+    db: aisi4140-annealed
+    note: "42CrMo4 at 220 HB (source Sect. 2.2; DB entry +A 200-241 HB); composition (Table 1, ranges): C 0.38-0.45, Mn 0.6-0.9, Si <= 0.4, Cr 0.9-1.2, Mo 0.15-0.3 %"
+  tool:
+    src: plodzien-2023-42crmo4-toroidal-face-milling
+    page: Sect. 2.2
+    type: toroidal_face_mill
+    body: Sandvik Coromant R300-050Q22-08H
+    diameter_mm: {value: 42, note: "'face-milling cutter, 42 mm in diameter' as stated; the designation code 050 suggests 50 mm over the inserts, so 42 mm is probably the diameter through the insert centres (not checked against a catalogue)"}
+    insert: R300-0828E-PL 1030 round insert
+    insert_radius_mm: 4
+    inserts_used: 1
+    tool_class: carbide
+    coating: PVD TiAlN
+    rake_deg: 7
+    relief_deg: 8
+    fresh_edge_per_test: true
+    edge_radius_um: {value: 30, src: est, note: "assumed, not derived from a source: the edge was scanned for the FE model but no radius is given; 30 um is a judgement for a honed PVD-coated milling insert"}
+    assumed_inputs: [edge_radius_um]
+  machine:
+    src: plodzien-2023-42crmo4-toroidal-face-milling
+    page: Sect. 2.2
+    model: DMG DMU 100 monoBLOCK
+    dynamometer: Kistler 9257B with 5070 charge amplifier, NI USB-6003 converter
+  conditions:
+    src: plodzien-2023-42crmo4-toroidal-face-milling
+    page: Sect. 2.2, Table 2
+    vc_m_min: 230
+    spindle_rpm: {value: 1743, src: est, note: "computed here from vc 230 m/min and D 42 mm (n = 1000 vc / (pi D)); not stated"}
+    ae_mm: 20
+    fz_mm_tooth: [0.05, 0.10, 0.15]
+    ap_mm: [0.5, 1.5, 2.5]
+    direction: down
+    radial_position: {value: "partial immersion from the exit side: the insert exits the cut tangentially, engagement arc about 87 deg", src: est, note: "assumed: the source says only 'milling was carried out concurrently' (down milling) with ae 20 mm; the position of the cutter axis relative to the workpiece edges is not stated"}
+    coolant: {value: dry, note: "the force tests were run dry as recommended by the maker; tests were repeated with 6 % Fuchs Ecocool 68 CF emulsion because of built-up material on the surface, and the roughness models use the wet tests (Sect. 2.2, 3.2)"}
+    force_frame: "Ff along the feed, FfN normal to the feed in the plane of the face, Fa along the tool axis (workpiece coordinate system, source Fig. 5)"
+    assumed_inputs: [spindle_rpm, radial_position]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - name: FfN_fz0.05
+    x_name: ap
+    x_unit: mm
+    y_name: FfN
+    y_unit: N
+    uncertainty: 8
+    points: [[0.5, 172], [1.5, 372], [2.5, 588]]
+    note: "tests 6, 3, 9"
+  - name: FfN_fz0.10
+    x_name: ap
+    x_unit: mm
+    y_name: FfN
+    y_unit: N
+    uncertainty: 8
+    points: [[0.5, 288], [1.5, 525], [2.5, 812]]
+    note: "tests 12, (1, 5, 7, 10, 11: 528, 515, 532, 519, 533, mean 525), 4"
+  - name: FfN_fz0.15
+    x_name: ap
+    x_unit: mm
+    y_name: FfN
+    y_unit: N
+    uncertainty: 8
+    points: [[0.5, 289], [1.5, 645], [2.5, 1033]]
+    note: "tests 2, 13, 8"
+  - name: Ff_fz0.05
+    x_name: ap
+    x_unit: mm
+    y_name: Ff
+    y_unit: N
+    uncertainty: 4
+    points: [[0.5, 89], [1.5, 155], [2.5, 206]]
+  - name: Ff_fz0.10
+    x_name: ap
+    x_unit: mm
+    y_name: Ff
+    y_unit: N
+    uncertainty: 4
+    points: [[0.5, 121], [1.5, 196], [2.5, 305]]
+    note: "centre point = mean of 193, 196, 192, 199, 202 N"
+  - name: Ff_fz0.15
+    x_name: ap
+    x_unit: mm
+    y_name: Ff
+    y_unit: N
+    uncertainty: 4
+    points: [[0.5, 177], [1.5, 302], [2.5, 415]]
+  - name: Fa_fz0.05
+    x_name: ap
+    x_unit: mm
+    y_name: Fa
+    y_unit: N
+    uncertainty: 7
+    points: [[0.5, 144], [1.5, 221], [2.5, 321]]
+  - name: Fa_fz0.10
+    x_name: ap
+    x_unit: mm
+    y_name: Fa
+    y_unit: N
+    uncertainty: 7
+    points: [[0.5, 165], [1.5, 257], [2.5, 331]]
+    note: "centre point = mean of 258, 249, 256, 252, 268 N"
+  - name: Fa_fz0.15
+    x_name: ap
+    x_unit: mm
+    y_name: Fa
+    y_unit: N
+    uncertainty: 7
+    points: [[0.5, 152], [1.5, 278], [2.5, 377]]
+notes: "The source does not say whether the tabulated forces are peak or mean values of the recorded signals. With one insert engaged over about a quarter of each revolution, a mean over the revolution would be several times smaller than the values given (e.g. FfN 525 N at fz 0.1, ap 1.5 mm, where the largest chip section is only about 0.15 mm2), so they are taken as per-pass maxima: compare with the simulated peak of each component (est., not stated in the source). The entering angle of the round insert changes with ap (source Fig. 1), which makes this case a test of the local-edge (chip thickness along the curved edge) model. Built-up material was observed on the dry-cut surfaces. The source's FEM (AdvantEdge power law) differed by -9 % (FfN), -12 % (Ff) and +4 % (Fa) on average."

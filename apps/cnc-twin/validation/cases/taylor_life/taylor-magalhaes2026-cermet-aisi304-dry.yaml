@@ -1,0 +1,37 @@
+# Magalhaes et al. (2026): uncoated cermet DNMG090202 in dry turning of AISI 304 (215 HB);
+# tool life to VBB = 0.1 mm at 120 and 150 m/min.
+format: cnctwin-validation-case
+version: 1
+id: taylor-magalhaes2026-cermet-aisi304-dry
+quantity: taylor_life
+reference:
+  src: magalhaes-2026-304-cermet-turning
+  location: "Sect. 2 (setup), Sect. 2.3 (criterion), Sect. 3.2 text and conclusions (tool lives); the abstract gives different numbers (see notes)"
+  digitised: false
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: aisi304, note: "as received, 215 HB; wt% 19.28 Cr, 11.25 Ni, 0.03 C, 1.73 Mn, 0.54 Si, 0.04 N (maker's datasheet)"}
+  stock: {diameter_mm: 30, length_mm: 55, hardness_HB: 215}
+  tool:
+    type: turning_insert
+    iso_designation: DNMG090202N-SC
+    grade: "Sumitomo T1200A"
+    tool_class: cermet
+    coating: none
+    nose_radius_mm: 0.2
+    rake_deg: 6
+    holder: SDACR062B
+  machine: {model: "Boxford 160 VMCi CNC lathe", max_rpm: 3200, power_kW: 0.5}
+  conditions:
+    cutting_speed_m_min: [120, 150]
+    feed_mm_rev: {value: 0.025, src: est, note: "not stated for the tool-life tests; the SEM wear analyses at end of life were made at the lower feed, 0.025 mm/rev (the other feed tested is 0.05 mm/rev)"}
+    ap_mm: 0.2
+    coolant: dry
+    wear_criterion_VBB_mm: 0.1
+  program: null
+reference_values:
+  - {name: tool_life, value: 18, unit: min, uncertainty: 3, x: 120, x_name: cutting_speed, x_unit: m/min, note: "'approximately 18 min' (Sect. 3.2, conclusions); abstract: 15 min"}
+  - {name: tool_life, value: 10, unit: min, uncertainty: 1, x: 150, x_name: cutting_speed, x_unit: m/min, note: "'about 10 min' (Sect. 3.2, conclusions); abstract: 9 min"}
+reference_curves: []
+notes: "The paper is internally inconsistent: the abstract states 15 and 9 min, the results section and conclusions about 18 and 10 min; the results-section values are stored and the uncertainty covers the abstract values. The wear curves (Fig. 8) could not be fetched from PMC in this run. At 150 m/min chipping and adhesion ended the life, at 120 m/min abrasion and adhesion with an intact tip. Wear measured every 150 mm of machined length (mean of three readings)."

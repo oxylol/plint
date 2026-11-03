@@ -1,0 +1,712 @@
+"""Tool, holder and cutting-edge temperatures of one tool slot (docs/models/thermal.md "Tool").
+
+Body: axial 1-D finite volumes of the tool (fluted part, neck, shank) and of its holder (nose to
+gauge line, plus a lumped taper node in the spindle), coupled radially over the clamp length by a
+contact conductance; lateral convection (rotating cylinder in air, coolant on the fluted part,
+through-tool channels), radiation to the enclosure, taper contact to the spindle nose. Turning
+tools: insert and holder bar, seat contact, the clamped part of the bar to the turret. Implicit
+(backward Euler), banded, exactly conservative (kernels.ladder_step).
+
+Edge: temperature at the cutting edge, over the rake contact (l_c = h zeta^n) and over the flank
+contact (VB + edge radius) per element = body temperature at the element + the local field of
+the periodic heating per revolution (Stephenson & Ali 1992; kernels.edge_temperatures), at
+Gauss points of the in-cut interval (ToolHeat.q_weights) and the cycle amplitude.
+"""
+
+from __future__ import annotations
+
+import functools
+import math
+import re
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+
+import numpy as np
+
+from ..core.abi import EdgeModel
+from ..core.bus import ToolHeat
+from ..core.errors import InputError
+from ..db.models import params
+from . import convection as cv
+from . import kernels as K
+from . import props
+from .abi import (EDGE_CONTINUOUS, EDGE_INTERRUPTED, EDGE_NONE, LD_AIR, LD_COOL, LD_DU, LD_SP, LD_SRC, LD_U0,
+                  LD_U1, N_LD, Ladder, MatTable, f64, new_edge_input, new_edge_output)
+from .ledger import SolverLedger
+from .response import edge_response, gauss_legendre, heating_phase_nodes
+
+TURNING_TYPES = ("turning_insert", "grooving_insert", "parting_insert", "threading_insert", "boring_bar",
+                 "form_tool")
+
+NODE_TOOL_EXPOSED = 0
+NODE_TOOL_INSIDE = 1
+NODE_HOLDER = 2
+NODE_END = 3          # taper in the spindle, or the clamped bar of a turning tool
+
+
+@functools.lru_cache(maxsize=1)
+def _p() -> dict:
+    return dict(params("thermal-tool"))
+
+
+def _get(obj, *names, default=None):
+    """First non-None attribute/key along a path of names (SIMap or mapping)."""
+    cur = obj
+    for name in names:
+        if cur is None:
+            return default
+        if isinstance(cur, Mapping):
+            cur = cur.get(name)
+        else:
+            cur = getattr(cur, name, None)
+    return default if cur is None else cur
+
+
+def _num(value, default=None):
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+@dataclass
+class ToolSpec:
+    """Plain geometry of one tool instance and its holder (SI)."""
+
+    kind: str = "rotating"                 # rotating | turning
+    diameter_m: float = 0.01
+    flutes: int = 2
+    flute_length_m: float = 0.02
+    overall_length_m: float = 0.07
+    shank_diameter_m: float = 0.01
+    neck_diameter_m: float = 0.0
+    neck_length_m: float = 0.0
+    fluted_area_m2: float = 0.0
+    fluted_perimeter_m: float = 0.0
+    coolant_holes: int = 0
+    coolant_hole_diameter_m: float = 0.0
+    stickout_m: float = 0.035
+    tool_material_id: str = "carbide-submicron-10co"
+    insert_ic_m: float = 0.0127
+    insert_thickness_m: float = 0.00476
+    bar_h_m: float = 0.025
+    bar_b_m: float = 0.025
+    bar_overhang_m: float = 0.03
+    holder_gauge_length_m: float = 0.08
+    holder_profile_m: list = field(default_factory=list)     # [[z from nose, diameter], ...]
+    holder_nose_diameter_m: float = 0.0
+    holder_clamp_length_m: float = 0.0
+    holder_mass_kg: float = 0.0
+    taper: str = ""
+    holder_material_id: str = ""
+
+
+def tool_spec(entry, tool_item=None, holder_item=None) -> ToolSpec:
+    """ToolSpec of a project tools.list entry (its resolved ``tool`` and ``holder`` items)."""
+    p = _p()
+    tool_item = tool_item if tool_item is not None else _get(entry, "tool")
+    holder_item = holder_item if holder_item is not None else _get(entry, "holder")
+    geo = _get(tool_item, "geometry")
+    kind = "turning" if str(_get(tool_item, "type", default="")) in TURNING_TYPES else "rotating"
+    spec = ToolSpec(kind=kind)
+    tm = _get(tool_item, "tool_material")
+    tm_id = _get(tm, "id")
+    if tm_id is None:
+        cls = str(_get(tm, "class", default="carbide"))
+        names = list(p["class_names"])
+        tm_id = list(p["class_materials"])[names.index(cls)] if cls in names else list(p["class_materials"])[0]
+    spec.tool_material_id = str(tm_id)
+    spec.holder_material_id = str(p["holder_material"])
+    if kind == "turning":
+        insert = _get(geo, "insert")
+        bar = _get(geo, "holder")
+        spec.insert_ic_m = _num(_get(insert, "ic_m"), p["default_insert_ic_m"])
+        spec.insert_thickness_m = _num(_get(insert, "thickness_m"), p["default_insert_thickness_m"])
+        shank = _get(bar, "shank_m")
+        if isinstance(shank, (list, tuple)) or hasattr(shank, "__len__"):
+            values = [float(v) for v in shank]
+            spec.bar_h_m, spec.bar_b_m = values[0], values[-1]
+        else:
+            spec.bar_h_m = spec.bar_b_m = p["default_bar_section_m"]
+        spec.bar_overhang_m = _num(_get(bar, "overhang_m"), _num(_get(entry, "stickout_m"), p["default_bar_overhang_m"]))
+        return spec
+    d = _num(_get(geo, "diameter_m"), None)
+    if d is None or d <= 0.0:
+        raise InputError("thermal: tool geometry needs diameter_mm")
+    spec.diameter_m = d
+    spec.flutes = int(_num(_get(geo, "flutes"), 2))
+    spec.flute_length_m = _num(_get(geo, "flute_length_m"), _num(_get(geo, "cutting_length_m"), 2.0 * d))
+    spec.shank_diameter_m = _num(_get(geo, "shank", "diameter_m"), d)
+    spec.neck_diameter_m = _num(_get(geo, "neck", "diameter_m"), 0.0)
+    spec.neck_length_m = _num(_get(geo, "neck", "length_m"), 0.0)
+    spec.stickout_m = _num(_get(entry, "stickout_m"), None) or 0.0
+    clamp = _num(_get(holder_item, "clamp_length_m"), None)
+    if clamp is None or clamp <= 0.0:
+        clamp = p["holder_clamp_ratio"] * spec.shank_diameter_m
+    spec.holder_clamp_length_m = clamp
+    overall = _num(_get(geo, "overall_length_m"), None)
+    if overall is None or overall <= 0.0:
+        overall = spec.stickout_m + clamp
+    spec.overall_length_m = overall
+    if spec.stickout_m <= 0.0 or spec.stickout_m > overall:
+        spec.stickout_m = max(overall - clamp, 0.5 * overall)
+    gullet = _num(_get(geo, "gullet_area_m2"), None)
+    full = math.pi * d * d / 4.0
+    if gullet is not None and gullet > 0.0:
+        spec.fluted_area_m2 = max(full - spec.flutes * gullet, 0.2 * full)
+    else:
+        spec.fluted_area_m2 = p["fluted_solid_fraction"] * full
+    spec.fluted_perimeter_m = p["fluted_perimeter_factor"] * math.pi * d
+    holes = _get(geo, "coolant_holes")
+    if holes is not None:
+        spec.coolant_holes = int(_num(_get(holes, "count"), 0))
+        spec.coolant_hole_diameter_m = _num(_get(holes, "diameter_m"), 0.0)
+    spec.holder_gauge_length_m = _num(_get(holder_item, "gauge_length_m"), 2.0 * clamp)
+    profile = _get(holder_item, "profile_m")
+    if profile is not None:
+        rows = [[float(r[0]), float(r[1])] for r in list(profile)]
+        spec.holder_profile_m = sorted(rows)
+    spec.holder_nose_diameter_m = _num(_get(holder_item, "nose_diameter_m"),
+                                       p["holder_nose_diameter_ratio"] * spec.shank_diameter_m)
+    spec.holder_mass_kg = _num(_get(holder_item, "mass_kg"), 0.0)
+    spec.taper = str(_get(holder_item, "taper", default=""))
+    return spec
+
+
+def taper_dims(taper: str) -> tuple[float, float, float]:
+    """(contact area m2, frustum volume m3, mean diameter m) of a spindle taper designation."""
+    p = _p()
+    text = taper.upper()
+    sizes = re.findall(r"\d+", text)
+    d1, length, ratio = None, None, None
+    if "HSK" in text and sizes:
+        size = int(sizes[0])
+        if size in [int(s) for s in p["hsk_sizes"]]:
+            idx = [int(s) for s in p["hsk_sizes"]].index(size)
+            d1, length, ratio = p["hsk_gauge_diameter_m"][idx], p["hsk_length_m"][idx], 0.1
+    elif sizes:
+        size = int(sizes[-1])
+        if size in [int(s) for s in p["steep_taper_sizes"]]:
+            idx = [int(s) for s in p["steep_taper_sizes"]].index(size)
+            d1, length, ratio = p["steep_taper_gauge_diameter_m"][idx], p["steep_taper_length_m"][idx], 7.0 / 24.0
+    if d1 is None:               # unrecognised: the size-40 steep taper
+        idx = [int(s) for s in p["steep_taper_sizes"]].index(40)
+        d1, length, ratio = p["steep_taper_gauge_diameter_m"][idx], p["steep_taper_length_m"][idx], 7.0 / 24.0
+    d2 = d1 - ratio * length
+    mean = 0.5 * (d1 + d2)
+    area = math.pi * mean * length
+    volume = math.pi * length * (d1 * d1 + d1 * d2 + d2 * d2) / 12.0
+    return area, volume, mean
+
+
+def strain_from(mat: MatTable, temp_K, ref_K: float):
+    """Free thermal strain between ref_K and temp_K from a mean-CTE (from 20 degC) table (arrays)."""
+    from ..units import REFERENCE_TEMP_K
+    t = np.asarray(temp_K, dtype=float)
+    return (np.interp(t, mat.T_K, mat.alpha_1_K) * (t - REFERENCE_TEMP_K)
+            - float(np.interp(ref_K, mat.T_K, mat.alpha_1_K)) * (ref_K - REFERENCE_TEMP_K))
+
+
+@dataclass
+class LadderLayout:
+    z_m: np.ndarray                # node centre along the tool axis from the tip (rotating) / along insert+bar
+    kind: np.ndarray               # NODE_*
+    diameter_m: np.ndarray         # outer diameter for the convection correlation
+    perimeter_m: np.ndarray        # lateral perimeter (0: not exposed)
+    fluted: np.ndarray             # int8: wetted by the coolant jet
+    channel: np.ndarray            # int8: carries a through-tool coolant channel
+    tool_nodes: np.ndarray         # tool-strand node indices, tip first
+    holder_nodes: np.ndarray       # holder-strand node indices (nose first), end node last
+    stick_nodes: np.ndarray        # exposed tool nodes
+    holder_strand: np.ndarray      # holder nodes between nose and gauge line
+    end_node: int
+    end_conductance_W_K: float     # taper-spindle or bar-turret contact conductance
+    turning: bool
+
+
+def _profile_diameter(spec: ToolSpec, z_from_nose: float) -> float:
+    rows = spec.holder_profile_m
+    if rows:
+        zs = [r[0] for r in rows]
+        ds = [r[1] for r in rows]
+        return float(np.interp(z_from_nose, zs, ds))
+    return spec.holder_nose_diameter_m
+
+
+def build_ladder(spec: ToolSpec, mat_tool: MatTable, mat_holder: MatTable, cell_m: float,
+                 temp0_K: float) -> tuple[Ladder, LadderLayout]:
+    """Nodes, links and masses of the tool/holder ladder at a uniform initial temperature."""
+    p = _p()
+    nodes = []          # dicts: z, dz, area, perim, diam, kind, fluted, channel, mat
+    links = []          # (a, b, kind, g)
+    h_contact = p["shank_contact_conductance_W_m2K"]
+    if spec.kind == "turning":
+        ic = spec.insert_ic_m
+        n_ins = max(1, int(round(ic / cell_m)))
+        dz = ic / n_ins
+        for i in range(n_ins):
+            nodes.append(dict(z=(i + 0.5) * dz, dz=dz, area=ic * spec.insert_thickness_m,
+                              perim=2.0 * (ic + spec.insert_thickness_m), diam=ic, kind=NODE_TOOL_EXPOSED, fluted=1,
+                              channel=0, mat=0))
+        clamp = p["bar_clamp_length_ratio"] * max(spec.bar_h_m, spec.bar_b_m)
+        n_over = max(1, int(round(spec.bar_overhang_m / cell_m)))
+        n_cl = max(1, int(round(clamp / cell_m)))
+        section = spec.bar_h_m * spec.bar_b_m
+        perim = 2.0 * (spec.bar_h_m + spec.bar_b_m)
+        z0 = ic
+        for i in range(n_over):
+            dzb = spec.bar_overhang_m / n_over
+            nodes.append(dict(z=z0 + (i + 0.5) * dzb, dz=dzb, area=section, perim=perim, diam=max(spec.bar_h_m, spec.bar_b_m),
+                              kind=NODE_HOLDER, fluted=0, channel=0, mat=1))
+        z0 += spec.bar_overhang_m
+        for i in range(n_cl):
+            dzc = clamp / n_cl
+            nodes.append(dict(z=z0 + (i + 0.5) * dzc, dz=dzc, area=section, perim=0.0, diam=max(spec.bar_h_m, spec.bar_b_m),
+                              kind=NODE_END, fluted=0, channel=0, mat=1))
+        for a in range(len(nodes) - 1):
+            if a == n_ins - 1:
+                links.append((a, a + 1, 1, h_contact * p["insert_seat_area_ratio"] * ic * ic))
+            else:
+                links.append((a, a + 1, 0, 0.0))
+        end_g = h_contact * perim * clamp
+        layout_nodes = nodes
+        turning = True
+    else:
+        turning = False
+        length = spec.overall_length_m
+        stick = min(spec.stickout_m, length)
+        inside = min(length - stick, spec.holder_gauge_length_m)
+        n_stick = max(1, int(round(stick / cell_m)))
+        dz1 = stick / n_stick
+        n_in = int(round(inside / cell_m))
+        if inside > 0.0 and n_in == 0:
+            n_in = 1
+        dz2 = inside / n_in if n_in else 0.0
+        rest = max(spec.holder_gauge_length_m - inside, 0.0)
+        n_rest = max(1, int(round(rest / cell_m))) if rest > 0.0 else 0
+        dz3 = rest / n_rest if n_rest else 0.0
+
+        def tool_node(zc, dzn, kind):
+            if zc <= spec.flute_length_m:
+                area, perim, diam, fluted = spec.fluted_area_m2, spec.fluted_perimeter_m, spec.diameter_m, 1
+            elif spec.neck_diameter_m > 0.0 and zc <= spec.flute_length_m + spec.neck_length_m:
+                d = spec.neck_diameter_m
+                area, perim, diam, fluted = math.pi * d * d / 4.0, math.pi * d, d, 0
+            else:
+                d = spec.shank_diameter_m
+                area, perim, diam, fluted = math.pi * d * d / 4.0, math.pi * d, d, 0
+            if kind != NODE_TOOL_EXPOSED:
+                perim = 0.0
+            channel = 1 if spec.coolant_holes > 0 and spec.coolant_hole_diameter_m > 0.0 else 0
+            if channel:
+                area = max(area - spec.coolant_holes * math.pi * spec.coolant_hole_diameter_m ** 2 / 4.0, 0.1 * area)
+            return dict(z=zc, dz=dzn, area=area, perim=perim, diam=diam, kind=kind, fluted=fluted, channel=channel,
+                        mat=0)
+
+        def holder_node(zc, dzn):
+            z_nose = zc - stick
+            d = _profile_diameter(spec, z_nose)
+            bore_depth = max(spec.holder_clamp_length_m, inside)
+            area = math.pi * d * d / 4.0
+            if z_nose < bore_depth:
+                area -= math.pi * spec.shank_diameter_m ** 2 / 4.0
+            area = max(area, 0.05 * math.pi * d * d / 4.0)
+            return dict(z=zc, dz=dzn, area=area, perim=math.pi * d, diam=d, kind=NODE_HOLDER, fluted=0, channel=0,
+                        mat=1)
+
+        layout_nodes = []
+        for i in range(n_stick):
+            layout_nodes.append(tool_node((i + 0.5) * dz1, dz1, NODE_TOOL_EXPOSED))
+        tool_in_idx = []
+        holder_idx = []
+        for i in range(n_in):
+            zc = stick + (i + 0.5) * dz2
+            tool_in_idx.append(len(layout_nodes))
+            layout_nodes.append(tool_node(zc, dz2, NODE_TOOL_INSIDE))
+            holder_idx.append(len(layout_nodes))
+            layout_nodes.append(holder_node(zc, dz2))
+        for i in range(n_rest):
+            holder_idx.append(len(layout_nodes))
+            layout_nodes.append(holder_node(stick + inside + (i + 0.5) * dz3, dz3))
+        area_t, volume_t, mean_t = taper_dims(spec.taper)
+        strand_mass = sum(mat_holder.rho_kg_m3[0] * layout_nodes[h]["area"] * layout_nodes[h]["dz"] for h in holder_idx)
+        taper_mass = max(spec.holder_mass_kg - strand_mass, mat_holder.rho_kg_m3[0] * volume_t)
+        taper_len = volume_t / (math.pi * mean_t * mean_t / 4.0)
+        end_index = len(layout_nodes)
+        layout_nodes.append(dict(z=stick + spec.holder_gauge_length_m + 0.5 * taper_len, dz=taper_len,
+                                 area=math.pi * mean_t * mean_t / 4.0, perim=0.0, diam=mean_t, kind=NODE_END,
+                                 fluted=0, channel=0, mat=1, mass=taper_mass))
+        tool_seq = list(range(n_stick)) + tool_in_idx
+        for a, b in zip(tool_seq, tool_seq[1:]):
+            links.append((a, b, 0, 0.0))
+        holder_seq = holder_idx + [end_index]
+        for a, b in zip(holder_seq, holder_seq[1:]):
+            links.append((a, b, 0, 0.0))
+        for t_idx, h_idx in zip(tool_in_idx, holder_idx):
+            z_nose = layout_nodes[t_idx]["z"] - stick
+            dzn = layout_nodes[t_idx]["dz"]
+            within = min(max(spec.holder_clamp_length_m - (z_nose - 0.5 * dzn), 0.0), dzn)
+            if within > 0.0:
+                links.append((t_idx, h_idx, 1, h_contact * math.pi * spec.shank_diameter_m * within))
+        if not tool_in_idx:
+            first_holder = holder_seq[0]
+            links.append((tool_seq[-1], first_holder, 1,
+                          h_contact * math.pi * spec.shank_diameter_m * min(spec.holder_clamp_length_m, dz1)))
+        end_g = p["taper_contact_conductance_W_m2K"] * area_t
+    n = len(layout_nodes)
+    m = np.zeros(n)
+    for idx, nd in enumerate(layout_nodes):
+        rho = (mat_tool if nd["mat"] == 0 else mat_holder).rho_kg_m3[0]
+        m[idx] = nd.get("mass", rho * nd["area"] * nd["dz"])
+    link_a = np.array([a for a, _, _, _ in links], dtype=np.int32)
+    link_b = np.array([b for _, b, _, _ in links], dtype=np.int32)
+    bw = int(np.max(np.abs(link_b - link_a))) if links else 1
+    if bw > 2:
+        raise InputError("thermal: tool ladder bandwidth exceeds 2 (layout error)")
+    mat_flag = np.array([nd["mat"] for nd in layout_nodes], dtype=np.int8)
+    h0 = np.array([props.h_of_T(mat_tool if f == 0 else mat_holder, temp0_K) for f in mat_flag])
+    ladder = Ladder(m=m, h=h0, T=np.full(n, float(temp0_K)), mat=mat_flag,
+                    area=np.array([nd["area"] for nd in layout_nodes]), dz=np.array([nd["dz"] for nd in layout_nodes]),
+                    link_a=link_a, link_b=link_b, link_kind=np.array([k for _, _, k, _ in links], dtype=np.int8),
+                    link_g=np.array([g for _, _, _, g in links]), g_air=f64(n), g_cool=f64(n), g_sp=f64(n),
+                    src=f64(n), band=f64((n, 3)), rhs=f64(n), scal=f64(4))
+    kinds = np.array([nd["kind"] for nd in layout_nodes], dtype=np.int8)
+    tool_nodes = np.array([i for i in range(n) if mat_flag[i] == 0], dtype=np.int64)
+    tool_nodes = tool_nodes[np.argsort([layout_nodes[i]["z"] for i in tool_nodes], kind="stable")]
+    holder_nodes = np.array([i for i in range(n) if mat_flag[i] == 1], dtype=np.int64)
+    layout = LadderLayout(
+        z_m=np.array([nd["z"] for nd in layout_nodes]), kind=kinds,
+        diameter_m=np.array([nd["diam"] for nd in layout_nodes]),
+        perimeter_m=np.array([nd["perim"] for nd in layout_nodes]),
+        fluted=np.array([nd["fluted"] for nd in layout_nodes], dtype=np.int8),
+        channel=np.array([nd["channel"] for nd in layout_nodes], dtype=np.int8),
+        tool_nodes=tool_nodes, holder_nodes=holder_nodes,
+        stick_nodes=np.array([i for i in range(n) if kinds[i] == NODE_TOOL_EXPOSED], dtype=np.int64),
+        holder_strand=np.array([i for i in range(n) if kinds[i] == NODE_HOLDER], dtype=np.int64),
+        end_node=int(n - 1), end_conductance_W_K=float(end_g), turning=turning)
+    return ladder, layout
+
+
+@dataclass
+class ToolEnvironment:
+    """What surrounds the tool during one step."""
+
+    in_spindle: bool = False
+    omega_rad_s: float = 0.0               # |spindle speed| (0 for turning tools and stopped spindles)
+    T_air_K: float = 293.15
+    T_end_K: float = 293.15                # spindle nose (in the spindle) / turret (turning)
+    coolant_on: bool = False
+    T_fluid_K: float = 293.15
+    h_coolant_W_m2K: float = 0.0           # on the wetted (fluted / insert) surface
+    reach: float = 0.0                     # fraction of the wetted surface the coolant reaches
+    channel_h_W_m2K: float = 0.0           # through-tool channel wall
+
+
+@dataclass
+class EdgeState:
+    n_cyc: np.ndarray                      # [nt, ne] cycles since entering continuous engagement
+    t_eng: np.ndarray                      # [nt, ne] continuous engagement time (s)
+
+
+class ToolThermal:
+    """Thermal state and model of one tool slot."""
+
+    def __init__(self, slot: int, spec: ToolSpec, mat_tool: MatTable, mat_holder: MatTable, cell_m: float,
+                 temp0_K: float, time_s: float):
+        self.slot = slot
+        self.spec = spec
+        self.mat_tool = mat_tool
+        self.mat_holder = mat_holder
+        self.ladder, self.layout = build_ladder(spec, mat_tool, mat_holder, cell_m, temp0_K)
+        self.temp_ref_K = float(temp0_K)
+        self.time_s = float(time_s)
+        self.edge = EdgeState(np.zeros((0, 0)), np.zeros((0, 0)))
+        self.ledger = SolverLedger(f"tool.{slot}", u_J=float(K.ladder_energy(self.ladder)))
+        self.ledger.u0_J = self.ledger.u_J
+        self.last_heat = ToolHeat(body_temp_K=temp0_K, holder_temp_K=temp0_K)
+        self.emissivity_tool = cv.emissivity("tool_steel" if spec.tool_material_id.startswith("hss") else None)
+        self.emissivity_holder = cv.emissivity("tool_steel")
+        self.to_spindle_J = 0.0            # heat into the spindle nose / turret in the last step
+        self.to_coolant_J = 0.0
+        self.rise = None                   # last local edge rise (rake, peak, flank [nt, ne, nq], amp [nt, ne])
+        self.edge_calls = 0
+
+    # ------------------------------------------------------------------ body
+    def set_environment(self, env: ToolEnvironment) -> None:
+        """Lateral (air incl. radiation, coolant, channel) and end conductances for the coming step."""
+        lad = self.ladder
+        lay = self.layout
+        exposed = lay.perimeter_m > 0.0
+        area = lay.perimeter_m * lad.dz
+        temp = lad.T
+        diam = np.where(exposed, lay.diameter_m, 1.0)
+        if env.in_spindle and not lay.turning and env.omega_rad_s > 0.0:
+            h_conv = cv.h_rotating_cylinder(env.omega_rad_s, diam, temp, env.T_air_K)
+        else:
+            h_conv = cv.h_horizontal_cylinder(temp, env.T_air_K, diam)
+        eps = np.where(lad.mat == 0, self.emissivity_tool, self.emissivity_holder)
+        h_air = h_conv + cv.h_radiation(eps, temp, env.T_air_K)
+        wet = exposed & (lay.fluted == 1) & env.coolant_on & (env.h_coolant_W_m2K > 0.0)
+        reach = np.where(wet, min(max(env.reach, 0.0), 1.0), 0.0)
+        lad.g_air[:] = np.where(exposed, (1.0 - reach) * h_air * area, 0.0)
+        lad.g_cool[:] = np.where(exposed, reach * env.h_coolant_W_m2K * area, 0.0)
+        if env.coolant_on and env.channel_h_W_m2K > 0.0:
+            lad.g_cool[:] += np.where(lay.channel == 1, env.channel_h_W_m2K * self.spec.coolant_holes * math.pi
+                                      * self.spec.coolant_hole_diameter_m * lad.dz, 0.0)
+        lad.g_sp[:] = 0.0
+        if lay.turning:
+            ends = lay.kind == NODE_END
+            lad.g_sp[:] = np.where(ends, lay.end_conductance_W_K * lad.dz / lad.dz[ends].sum(), 0.0)
+        elif env.in_spindle:
+            lad.g_sp[lay.end_node] = lay.end_conductance_W_K
+        lad.scal[0] = env.T_air_K
+        lad.scal[1] = env.T_fluid_K
+        lad.scal[2] = env.T_end_K
+
+    def deposit(self, z_m: np.ndarray, energy_J: np.ndarray) -> float:
+        """Add element heats at positions z (from the tip) to the tool nodes (linear weights)."""
+        lad = self.ladder
+        nodes = self.layout.tool_nodes
+        z = np.ravel(np.asarray(z_m, dtype=float))
+        q = np.ravel(np.asarray(energy_J, dtype=float))
+        if self.layout.turning or nodes.size == 1:
+            lad.src[nodes[0]] += q.sum()
+            return float(q.sum())
+        zs = self.layout.z_m[nodes]
+        zc = np.clip(z, zs[0], zs[-1])
+        i = np.clip(np.searchsorted(zs, zc, side="right") - 1, 0, zs.size - 2)
+        t = (zc - zs[i]) / (zs[i + 1] - zs[i])
+        np.add.at(lad.src, nodes[i], q * (1.0 - t))
+        np.add.at(lad.src, nodes[i + 1], q * t)
+        return float(q.sum())
+
+    def deposit_uniform(self, length_m: float, energy_J: float) -> None:
+        """Spread heat over the tool nodes within ``length_m`` of the tip (no element geometry)."""
+        nodes = self.layout.tool_nodes
+        zs = self.layout.z_m[nodes]
+        chosen = nodes[zs <= max(length_m, zs[0])]
+        for idx in chosen:
+            self.ladder.src[idx] += energy_J / chosen.size
+
+    def step(self, dt_s: float, env: ToolEnvironment, energy_tol: float) -> dict:
+        """Advance the ladder by dt with the heat in ``ladder.src``; books the ledger."""
+        self.set_environment(env)
+        out = np.zeros(N_LD)
+        K.ladder_step(self.ladder, self.mat_tool, self.mat_holder, float(dt_s), out)
+        self.time_s += dt_s
+        losses = out[LD_AIR] + out[LD_COOL] + out[LD_SP]
+        self.ledger.book(out[LD_U0], out[LD_U1], out[LD_SRC], losses, 0.0, energy_tol, self.time_s)
+        self.ladder.src[:] = 0.0
+        self.to_spindle_J = float(out[LD_SP])
+        self.to_coolant_J = float(out[LD_COOL])
+        return {"source_J": float(out[LD_SRC]), "air_J": float(out[LD_AIR]), "coolant_J": float(out[LD_COOL]),
+                "spindle_J": float(out[LD_SP]), "du_J": float(out[LD_DU])}
+
+    def advance_idle(self, until_s: float, env: ToolEnvironment, steps: int, energy_tol: float) -> dict:
+        """Bring an idle tool up to ``until_s`` in ``steps`` implicit steps (no heat input)."""
+        span = until_s - self.time_s
+        totals = {"air_J": 0.0, "coolant_J": 0.0, "spindle_J": 0.0}
+        if span <= 0.0:
+            return totals
+        for _ in range(max(1, steps)):
+            result = self.step(span / max(1, steps), env, energy_tol)
+            for key in totals:
+                totals[key] += result[key]
+        self.time_s = float(until_s)
+        self.edge.n_cyc[:] = 0.0
+        self.edge.t_eng[:] = 0.0
+        return totals
+
+    # ------------------------------------------------------------------ outputs
+    def body_temp_at(self, z_m: np.ndarray) -> np.ndarray:
+        nodes = self.layout.tool_nodes
+        if self.layout.turning:
+            return np.full(np.shape(z_m), self.ladder.T[nodes[0]])
+        return np.interp(z_m, self.layout.z_m[nodes], self.ladder.T[nodes])
+
+    def strain(self, nodes: np.ndarray) -> np.ndarray:
+        """Free thermal strain of nodes relative to the initial temperature (mean-CTE tables)."""
+        out = np.zeros(nodes.size)
+        temp = self.ladder.T[nodes]
+        for flag, mat in ((0, self.mat_tool), (1, self.mat_holder)):
+            sel = self.ladder.mat[nodes] == flag
+            if sel.any():
+                out[sel] = strain_from(mat, temp[sel], self.temp_ref_K)
+        return out
+
+    def growths(self) -> tuple[float, float]:
+        """(tool length growth, holder growth) in m (relative to the initial temperature)."""
+        stick = self.layout.stick_nodes
+        if self.layout.turning:
+            stick = np.array([i for i in range(self.ladder.m.size) if self.layout.kind[i] in
+                              (NODE_TOOL_EXPOSED, NODE_HOLDER)], dtype=np.int64)
+            return float(np.sum(self.strain(stick) * self.ladder.dz[stick])), 0.0
+        strand = self.layout.holder_strand
+        tool = float(np.sum(self.strain(stick) * self.ladder.dz[stick]))
+        holder = float(np.sum(self.strain(strand) * self.ladder.dz[strand])) if strand.size else 0.0
+        return tool, holder
+
+    def mean_temp(self, nodes: np.ndarray) -> float:
+        if nodes.size == 0:
+            return float("nan")
+        m = self.ladder.m[nodes]
+        return float(np.sum(m * self.ladder.T[nodes]) / np.sum(m))
+
+    def edge_heat(self, edges: EdgeModel | None, heat, in_cut_s: np.ndarray | None, entries: np.ndarray | None,
+                  vb_m: np.ndarray | None, dt_s: float, settings) -> ToolHeat:
+        """ToolHeat of the step: edge temperatures at the quadrature points, growths, temperatures."""
+        xi, weights = heating_phase_nodes(settings.edge_quadrature)
+        tool_len, holder_len = self.growths()
+        body_mean = self.mean_temp(self.layout.stick_nodes if self.layout.stick_nodes.size else self.layout.tool_nodes)
+        holder_nodes = self.layout.holder_nodes
+        result = ToolHeat(q_weights=weights.copy(), body_temp_K=body_mean, holder_temp_K=self.mean_temp(holder_nodes),
+                          length_growth_m=tool_len, holder_growth_m=holder_len)
+        if edges is None:
+            self.last_heat = result
+            return result
+        z = np.asarray(edges.elem_z_m, dtype=float)
+        shape = z.shape
+        if self.edge.n_cyc.shape != shape:
+            self.edge = EdgeState(np.zeros(shape), np.zeros(shape))
+        t_body = self.body_temp_at(z)
+        inp = new_edge_input(shape, xi.size)
+        inp.xi[:] = xi
+        inp.scal[0] = settings.sa_direct_cycles
+        inp.scal[1] = settings.window_points
+        inp.T_body[:] = t_body
+        tab = self.mat_tool
+        k = np.interp(t_body, tab.T_K, tab.k_W_mK)
+        cp = np.interp(t_body, tab.T_K, tab.cp_J_kgK)
+        inp.k[:] = k
+        inp.alpha[:] = k / (tab.rho_kg_m3[0] * cp)
+        if heat is not None and in_cut_s is not None and np.shape(in_cut_s) == shape:
+            self._fill_edge_input(inp, edges, heat, np.asarray(in_cut_s, dtype=float),
+                                  np.asarray(entries, dtype=float) if entries is not None and np.shape(entries) == shape
+                                  else np.zeros(shape), vb_m, dt_s)
+        else:
+            self.edge.n_cyc[:] = 0.0
+            self.edge.t_eng[:] = 0.0
+        out = new_edge_output(shape, xi.size)
+        fresh = (self.rise is None or self.rise[0].shape != out.rake_q.shape
+                 or self.edge_calls % max(1, settings.edge_every_n_macro) == 0)
+        self.edge_calls += 1
+        if fresh:
+            glx, glw = gauss_legendre(settings.window_points)
+            K.edge_temperatures(inp, edge_response(), glx, glw, out)
+            base = t_body[:, :, None]
+            self.rise = (out.rake_q - base, out.peak_q - base, out.flank_q - base, out.amp.copy())
+        else:
+            # between evaluations: the last local rise on the current body temperature, for the elements
+            # still in cut (others: body temperature)
+            cutting = (inp.mode != EDGE_NONE)[:, :, None]
+            base = t_body[:, :, None]
+            out.rake_q[:] = base + np.where(cutting, self.rise[0], 0.0)
+            out.peak_q[:] = base + np.where(cutting, self.rise[1], 0.0)
+            out.flank_q[:] = base + np.where(cutting, self.rise[2], 0.0)
+            out.amp[:] = np.where(cutting[:, :, 0], self.rise[3], 0.0)
+        valid = np.asarray(edges.elem_valid) != 0
+        strain = strain_from(self.mat_tool, t_body, self.temp_ref_K)
+        result.edge_temp_q_K = out.rake_q
+        result.flank_temp_q_K = out.flank_q
+        result.edge_peak_q_K = out.peak_q
+        result.edge_cycle_amp_K = out.amp
+        result.rake_temp_mean_K = np.einsum("ijq,q->ij", out.rake_q, weights)
+        result.body_temp_at_elem_K = t_body
+        result.radial_growth_m = np.where(valid, np.asarray(edges.elem_r_m, dtype=float) * strain, 0.0) \
+            if not self.layout.turning else np.zeros(shape)
+        self.last_heat = result
+        return result
+
+    def _fill_edge_input(self, inp, edges, heat, in_cut, entries, vb_m, dt_s) -> None:
+        p = _p()
+        shape = in_cut.shape
+        valid = np.asarray(edges.elem_valid) != 0
+        db = np.maximum(np.asarray(edges.elem_db_m, dtype=float), 1e-6)
+        edge_r = np.asarray(edges.elem_edge_radius_m, dtype=float)
+        rake = np.asarray(edges.elem_rake_rad, dtype=float)
+        clear = np.asarray(edges.elem_clear_rad, dtype=float)
+        radius = np.asarray(edges.elem_r_m, dtype=float)
+        vb = np.asarray(vb_m, dtype=float) if vb_m is not None and np.shape(vb_m) == shape else np.zeros(shape)
+        h_mean = heat.h_mean_m if heat.h_mean_m.shape == shape else np.zeros(shape)
+        zeta = heat.compression if heat.compression.shape == shape else np.full(shape, p["default_compression_ratio"])
+        q_rake = heat.tool_rake_elem_J if heat.tool_rake_elem_J.shape == shape else np.zeros(shape)
+        q_flank = heat.tool_flank_elem_J if heat.tool_flank_elem_J.shape == shape else np.zeros(shape)
+        contact_factor = np.minimum(np.maximum(zeta, 1.0) ** p["poletika_exponent"], p["max_contact_ratio"])
+        l_c = np.maximum(h_mean * contact_factor, np.maximum(edge_r, 1e-6))
+        l_f = np.maximum(vb + p["flank_contact_edge_factor"] * edge_r, 1e-6)
+        wedge = np.clip(0.5 * math.pi - rake - clear, p["min_wedge_angle_rad"], p["max_wedge_angle_rad"])
+        active = valid & (in_cut > 0.0) & ((q_rake > 0.0) | (q_flank > 0.0))
+        t_in = np.where(active, in_cut, 1.0)
+        interrupted = active & (entries >= 1.0) & (in_cut < dt_s * (1.0 - 1e-6))
+        continuous = active & ~interrupted
+        inp.mode[:] = np.where(interrupted, EDGE_INTERRUPTED, np.where(continuous, EDGE_CONTINUOUS, EDGE_NONE))
+        inp.a_r[:] = l_c
+        inp.a_f[:] = l_f
+        inp.b[:] = 0.5 * db
+        inp.q_r[:] = np.where(active, q_rake / (l_c * db * t_in), 0.0)
+        inp.q_f[:] = np.where(active, q_flank / (l_f * db * t_in), 0.0)
+        inp.wedge[:] = 0.5 * math.pi / wedge
+        inp.r_far[:] = np.maximum(p["far_field_radius_ratio"] * radius, 2.0 * np.maximum(np.maximum(l_c, l_f), db))
+        n_ent = np.where(entries >= 1.0, entries, 1.0)
+        inp.period[:] = np.where(interrupted, dt_s / n_ent, 0.0)
+        inp.t_h[:] = np.where(interrupted, in_cut / n_ent, 0.0)
+        self.edge.n_cyc[:] = np.where(interrupted, self.edge.n_cyc + entries, 0.0)
+        self.edge.t_eng[:] = np.where(continuous, self.edge.t_eng + in_cut, 0.0)
+        inp.n_cyc[:] = self.edge.n_cyc
+        inp.t_eng[:] = self.edge.t_eng
+
+    # ------------------------------------------------------------------ checkpoint
+    def to_arrays(self, prefix: str) -> tuple[dict, dict]:
+        lad = self.ladder
+        arrays = {f"{prefix}{name}": np.array(getattr(lad, name)) for name in lad._fields}
+        for name in ("z_m", "kind", "diameter_m", "perimeter_m", "fluted", "channel", "tool_nodes", "holder_nodes",
+                     "stick_nodes", "holder_strand"):
+            arrays[f"{prefix}layout.{name}"] = np.array(getattr(self.layout, name))
+        for name in self.mat_tool._fields:
+            arrays[f"{prefix}mat_tool.{name}"] = np.array(getattr(self.mat_tool, name))
+            arrays[f"{prefix}mat_holder.{name}"] = np.array(getattr(self.mat_holder, name))
+        arrays[f"{prefix}edge.n_cyc"] = self.edge.n_cyc.copy()
+        arrays[f"{prefix}edge.t_eng"] = self.edge.t_eng.copy()
+        if self.rise is not None:
+            for i, name in enumerate(("rake", "peak", "flank", "amp")):
+                arrays[f"{prefix}rise.{name}"] = self.rise[i].copy()
+        meta = {"slot": self.slot, "spec": dict(self.spec.__dict__), "temp_ref_K": self.temp_ref_K,
+                "edge_calls": self.edge_calls, "has_rise": self.rise is not None,
+                "time_s": self.time_s, "ledger": self.ledger.to_dict(),
+                "end_node": self.layout.end_node, "end_conductance_W_K": self.layout.end_conductance_W_K,
+                "turning": self.layout.turning, "emissivity_tool": self.emissivity_tool,
+                "emissivity_holder": self.emissivity_holder}
+        return arrays, meta
+
+    @classmethod
+    def from_arrays(cls, arrays: dict, meta: dict, prefix: str) -> "ToolThermal":
+        obj = cls.__new__(cls)
+        obj.slot = int(meta["slot"])
+        obj.spec = ToolSpec(**meta["spec"])
+        obj.ladder = Ladder(*(np.ascontiguousarray(arrays[f"{prefix}{name}"]).copy() for name in Ladder._fields))
+        obj.layout = LadderLayout(
+            *(np.ascontiguousarray(arrays[f"{prefix}layout.{name}"]).copy() for name in
+              ("z_m", "kind", "diameter_m", "perimeter_m", "fluted", "channel", "tool_nodes", "holder_nodes",
+               "stick_nodes", "holder_strand")),
+            end_node=int(meta["end_node"]), end_conductance_W_K=float(meta["end_conductance_W_K"]),
+            turning=bool(meta["turning"]))
+        obj.mat_tool = MatTable(*(np.ascontiguousarray(arrays[f"{prefix}mat_tool.{name}"]).copy()
+                                  for name in MatTable._fields))
+        obj.mat_holder = MatTable(*(np.ascontiguousarray(arrays[f"{prefix}mat_holder.{name}"]).copy()
+                                    for name in MatTable._fields))
+        obj.edge = EdgeState(arrays[f"{prefix}edge.n_cyc"].copy(), arrays[f"{prefix}edge.t_eng"].copy())
+        obj.temp_ref_K = float(meta["temp_ref_K"])
+        obj.time_s = float(meta["time_s"])
+        obj.ledger = SolverLedger.from_dict(meta["ledger"])
+        obj.emissivity_tool = float(meta["emissivity_tool"])
+        obj.emissivity_holder = float(meta["emissivity_holder"])
+        obj.last_heat = ToolHeat(body_temp_K=obj.mean_temp(obj.layout.tool_nodes),
+                                 holder_temp_K=obj.mean_temp(obj.layout.holder_nodes))
+        obj.to_spindle_J = 0.0
+        obj.to_coolant_J = 0.0
+        obj.edge_calls = int(meta["edge_calls"])
+        obj.rise = tuple(np.array(arrays[f"{prefix}rise.{name}"]) for name in ("rake", "peak", "flank", "amp")) \
+            if meta["has_rise"] else None
+        return obj

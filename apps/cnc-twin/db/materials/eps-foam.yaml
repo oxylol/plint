@@ -1,0 +1,120 @@
+# Workpiece material: expanded polystyrene (EPS) bead foam, 20-30 kg/m3 (moulded blocks for patterns, lost-foam, models).
+# Sources: db/bibliography/materials-nonmetals.yaml. Only secondary sources for EPS were readable; most foam
+# mechanical values are estimates. Data the material template has no key for is in `extensions`.
+format: cnctwin-material
+version: 1
+id: eps-foam
+name: "Expanded polystyrene (EPS) foam, ~25 kg/m3"
+family: foam
+iso_group: O
+condition: "moulded block, aged and dry; closed-cell bead foam (95-98 % air)"
+designations: {ISO_1043: "PS-E", EN_13163: "EPS 100-200 class typical for 20-30 kg/m3 (not read)"}
+stock_forms: []
+
+physical:
+  src: wikipedia-en-polystyrene-2026
+  density_kg_m3: {value: 25, src: est, range: [11, 32], note: "nominal for this file (task spec 20-30 kg/m3); normal EPS range 11-32 kg/m3 (wikipedia-en-polystyrene-2026)"}
+  specific_heat_J_kgK: {table: [[20, 1300]], note: "solid polystyrene 1.3 kJ/kgK; the cell gas adds < 5 % of the mass and is ignored"}
+  conductivity_W_mK: {table: [[20, 0.0356]], range: [0.032, 0.038], note: "linear interpolation at 25 kg/m3 between 0.038 (15 kg/m3) and 0.032 W/mK (40 kg/m3), EN 12667 values of the StyroChem K-710 datasheet quoted by Wikipedia; test temperature not stated, single point held at all T"}
+  expansion_1_K: {table: [[50, 8.0e-5]], src: est, note: "solid PS 8e-5 1/K (wikipedia-en-polystyrene-2026) used for the foam (the cell walls set the expansion); EPS also shrinks on ageing and near Tg"}
+  youngs_modulus_GPa: {table: [[20, 0.008]], src: est, note: "compressive modulus ~8 MPa assumed for 25 kg/m3 EPS; Gibson-Ashby closed-cell scaling with E_s = 3.3 GPa (solid PS 3.0-3.6 GPa, Wikipedia) and relative density 0.024 gives 5-17 MPa depending on the face fraction"}
+  poisson: {value: 0.1, src: est, note: "foams have a low Poisson ratio; assumed"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: {value: 100, note: "Tg of polystyrene (Wikipedia citing Mark 2009); atactic PS ~90 C in the text, Vicat 90 C"}
+  decomposition_degC: {value: 300, src: est, range: [250, 350], note: "thermal depolymerisation onset of PS assumed; Wikipedia: pyrolysis to styrene 'usually goes up to 430 C'"}
+  hardness: {shore_A: 10, src: est, note: "placeholder only: foams are not rated on Shore scales in the sources read; a very soft value is required by the schema"}
+  yield_MPa: {value: 0.15, src: est, range: [0.10, 0.20], note: "compressive stress at 10 % strain typical of 20-30 kg/m3 EPS (EN 13163 classes EPS 100 to EPS 200; standard not read)"}
+  ultimate_MPa: {value: 0.25, src: est, note: "bending strength assumed ~1.7x the 10 % compressive stress"}
+  elongation_pct: null
+  fracture_strain: {value: 0.02, src: est, note: "tensile failure of the bead-to-bead fusion assumed at ~2 %"}
+  compressive_MPa: {value: 0.15, src: est, range: [0.10, 0.20], note: "compressive stress at 10 % strain, see yield_MPa"}
+
+flow_stress:
+  model: none                      # task rule for foams; current schemas.py accepts only johnson_cook or null
+  yield_MPa: {value: 0.15, src: est, note: "crushing plateau (10 % strain) assumed, see physical"}
+  note: "Cellular solid: cutting is cell-wall tearing and bead pull-out with almost no force. Cutting model: the Kienzle value (scaled polymer class value) for spindle load; the relevant limits are thermal (cell collapse and melting above Tg ~90-100 C) and part deflection under clamping (E ~ 8 MPa)."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: {value: 0.33, src: est, note: "Walter O1 class value 150 N/mm2 (walter-2025-technical-compendium) scaled by compressive strength 0.15 MPa (est) / 68 MPa (POM-C at 5 %)"}
+      mc: {value: 0.2, src: walter-2025-technical-compendium, note: "class exponent kept"}
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: {value: 0, src: walter-2025-technical-compendium, note: "Walter values refer to a neutral cutting edge geometry"}
+      vc_ref_m_min: {value: 600, src: est, note: "assumed"}
+      src: est
+      note: "no cutting-force data for EPS foam were read"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 1.0, src: est, note: "the edge tears whole beads (bead size ~2-5 mm, assumed) rather than forming a chip thinner than the edge radius; placeholder"}
+  indentation_coeff_N_mm3: {value: 1.0, src: est, note: "negligible process damping from ploughing foam; placeholder"}
+  work_hardening:
+    src: est
+    note: "not applicable; a crushed cell layer forms under a blunt tool"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+
+chip:
+  tendency: powder                 # torn beads and bead fragments; statically charged
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "loose beads, no coherent chip"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 50000
+    n: 0.5
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.5
+    ap_ref_mm: 10
+    VB_limit_mm: 0.2
+    T_ref_min: 1
+    src: est
+    note: "placeholder: wear in EPS is negligible; effectively infinite tool life"
+tool_life_usui: []
+
+residual_stress: []
+
+skin:
+  src: est
+  note: "moulded block skin (fused bead surface) not modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 300, src: est, note: "decomposition/styrene release assumed (see physical)"}
+  white_layer_degC: null
+  melt_smear_degC: {value: 100, src: wikipedia-en-polystyrene-2026, note: "Tg of PS; EPS is cut with hot wires because it melts locally (Wikipedia); the foam shrinks and collapses above ~90-100 C"}
+
+ignition: null                     # combustible; no chip ignition temperature read (see extensions.hazards)
+
+composite: null
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  chip:
+    molten_above_degC: {value: 100, src: wikipedia-en-polystyrene-2026, note: "Tg of PS; cell gas expansion and wall softening collapse the foam"}
+    dust_mass_fraction: {value: 1.0, src: est, note: "all removed mass leaves as loose beads/fragments, which are light, static and travel like dust; assumed"}
+  hazards:
+    fire: {src: wikipedia-en-polystyrene-2026, note: "EPS is combustible; typical EPS has an oxygen index of ~18 % and a flame retardant is added to building grades. Bead dust in extraction systems is a fire load (assumed)"}
+    dust: {src: est, note: "nuisance dust; beads charge statically and cling to machine and part; good extraction needed (general knowledge, not read)"}
+    fumes: {src: est, note: "overheated or hot-wire-cut EPS releases styrene vapour (general knowledge, not read)"}
+
+notes: "EPS ~25 kg/m3. Sourced (secondary, Wikipedia): density range, thermal conductivity vs density, PS cp, CTE, Tg/Vicat, hot-wire cutting, flame retardancy. Estimated: chosen density, foam modulus and strengths (EN 13163 classes not read), hardness placeholder, decomposition, every cutting, friction, chip, wear and hazard value. Gaps: no EPS maker datasheet, EN 13163 tables or foam cutting-force data could be read (EUMEPS, EPS-IA and Australian supplier sites failed)."

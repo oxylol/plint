@@ -1,0 +1,102 @@
+# Ti6Al4V orthogonal turning, uncoated WC-Co, rake 0 and 10 deg, f 0.069/0.104 mm, vc 20-60 m/min: Fc, Ft.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-ti64-slusarczyk2025
+quantity: cutting_force
+reference:
+  src: slusarczyk-2025-ti6al4v-rake-temperature
+  location: Table 4 (average of three tests in the stable cutting phase), test plan Table 3
+  digitised: false
+  measured: true
+  note: no measurement uncertainty is stated for the forces
+setup:
+  operation: orthogonal_turning
+  material:
+    db: ti6al4v
+    note: 'Ti-6Al-4V shaft; only the composition is given (Table 1: Al 5.5-6.75, V 3.5-4.5, Fe 0.03, O 0.20, C 0.08, N 0.05,
+      H 0.015 wt%); condition not stated'
+  tool:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.2
+    tool_class: carbide
+    tool_material: uncoated WC-Co
+    rake_face: flat (no chip breaker)
+    rake_per_test_deg: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
+    clearance_deg: 5
+    inclination_deg: 0
+    coating: none
+    edge_radius_um: {value: 10, src: est, note: 'assumed: not stated; typical of a ground uncoated WC-Co edge (est.)'}
+    assumed_inputs: [edge_radius_um]
+  machine:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.2, Fig. 3-4
+    model: KNUTH Masterturn 400 precision lathe
+    dynamometer: Kistler 9257B on the auxiliary slide, Kistler 5070B amplifier, DynoWare
+    force_sampling_Hz: 3000
+    thermal_camera: FLIR SC 620, 640 x 480 px, 30 Hz, f = 38 mm lens, on the tailstock side
+    high_speed_camera: Phantom v5.2, 3000 fps, 512 x 512 px (chip flow speed by marker tracking)
+  stock:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Sect. 3.1-3.2
+    form: shaft prepared for orthogonal turning (geometry not given); knurled markers on the side for chip-flow tracking
+  conditions:
+    src: slusarczyk-2025-ti6al4v-rake-temperature
+    page: Tables 2-3
+    test_ids: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19',
+      '20']
+    vc_per_test_m_min: [60, 50, 40, 30, 20, 60, 50, 40, 30, 20, 60, 50, 40, 30, 20, 60, 50, 40, 30, 20]
+    feed_per_test_mm_rev: [0.104, 0.104, 0.104, 0.104, 0.104, 0.069, 0.069, 0.069, 0.069, 0.069, 0.104, 0.104, 0.104, 0.104,
+      0.104, 0.069, 0.069, 0.069, 0.069, 0.069]
+    width_of_cut_mm: {value: 4, note: 'ap = 4 mm, constant'}
+    coolant:
+      value: dry
+      src: est
+      note: 'assumed: not stated; the side-view thermography of the cutting zone implies no coolant'
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: 'Fc test 1 (rake 0, f 0.104)', value: 924.3, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 1 (rake 0, f 0.104)', value: 687.2, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 2 (rake 0, f 0.104)', value: 938.0, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 2 (rake 0, f 0.104)', value: 699.0, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 3 (rake 0, f 0.104)', value: 963.5, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 3 (rake 0, f 0.104)', value: 724.5, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 4 (rake 0, f 0.104)', value: 976.3, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 4 (rake 0, f 0.104)', value: 746.9, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 5 (rake 0, f 0.104)', value: 984.0, unit: N, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 5 (rake 0, f 0.104)', value: 760.2, unit: N, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 6 (rake 0, f 0.069)', value: 705.0, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 6 (rake 0, f 0.069)', value: 642.3, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 7 (rake 0, f 0.069)', value: 730.2, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 7 (rake 0, f 0.069)', value: 677.3, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 8 (rake 0, f 0.069)', value: 740.0, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 8 (rake 0, f 0.069)', value: 685.5, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 9 (rake 0, f 0.069)', value: 762.2, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 9 (rake 0, f 0.069)', value: 685.0, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 10 (rake 0, f 0.069)', value: 781.0, unit: N, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 10 (rake 0, f 0.069)', value: 687.1, unit: N, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 11 (rake 10, f 0.104)', value: 762.1, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 11 (rake 10, f 0.104)', value: 430.2, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 12 (rake 10, f 0.104)', value: 774.3, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 12 (rake 10, f 0.104)', value: 440.3, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 13 (rake 10, f 0.104)', value: 782.5, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 13 (rake 10, f 0.104)', value: 449.1, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 14 (rake 10, f 0.104)', value: 796.3, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 14 (rake 10, f 0.104)', value: 468.2, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 15 (rake 10, f 0.104)', value: 810.0, unit: N, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 15 (rake 10, f 0.104)', value: 487.2, unit: N, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 16 (rake 10, f 0.069)', value: 584.8, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 16 (rake 10, f 0.069)', value: 451.8, unit: N, x: 60, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 17 (rake 10, f 0.069)', value: 589.3, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 17 (rake 10, f 0.069)', value: 460.4, unit: N, x: 50, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 18 (rake 10, f 0.069)', value: 598.8, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 18 (rake 10, f 0.069)', value: 475.0, unit: N, x: 40, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 19 (rake 10, f 0.069)', value: 596.3, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 19 (rake 10, f 0.069)', value: 480.2, unit: N, x: 30, x_name: vc, x_unit: m/min}
+- {name: 'Fc test 20 (rake 10, f 0.069)', value: 601.3, unit: N, x: 20, x_name: vc, x_unit: m/min}
+- {name: 'Ft test 20 (rake 10, f 0.069)', value: 489.3, unit: N, x: 20, x_name: vc, x_unit: m/min}
+reference_curves: []
+notes: Total forces for the 4 mm width of cut (Fc cutting, Ft thrust/feed). Increasing the rake from 0 to 10 deg lowers
+  Fc by ~18 % and Ft by ~36 % at f = 0.104 mm; speed has a weak effect over 20-60 m/min.

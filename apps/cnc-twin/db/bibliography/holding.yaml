@@ -1,0 +1,623 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/tool_materials, db/coatings, db/holders, db/workholding.
+# Every entry was opened and read on the accessed date; `pages` says where the values are.
+entries:
+
+  # ------------------------------------------------------------------ tool materials: HSS
+  bohler-2026-s600:
+    type: datasheet
+    authors: "voestalpine BÖHLER Edelstahl GmbH & Co KG"
+    title: "BÖHLER S600 High speed steel (1.3343, HS6-5-2C) data sheet, S600 EN_GB 09.2026"
+    venue: "voestalpine BÖHLER Edelstahl, Kapfenberg"
+    year: 2026
+    url: "https://www.bohler-edelstahl.com/app/uploads/sites/248/productdb/api/s600_en_gb.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2 composition, delivery condition, heat treatment; p. 4 Physical properties (20 °C) and thermal expansion table 100-700 °C"
+  bohler-2026-s500:
+    type: datasheet
+    authors: "voestalpine BÖHLER Edelstahl GmbH & Co KG"
+    title: "BÖHLER S500 High speed steel (1.3247, HS2-9-1-8, AISI M42) data sheet, S500 EN_GB 09.2026"
+    venue: "voestalpine BÖHLER Edelstahl, Kapfenberg"
+    year: 2026
+    url: "https://www.bohler-edelstahl.com/app/uploads/sites/248/productdb/api/s500_en_gb.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 composition; p. 2 heat treatment; p. 4 Physical properties (20 °C) and thermal expansion table 100-700 °C"
+  uddeholm-vanadis23-datasheet:
+    type: datasheet
+    authors: "Uddeholms AB"
+    title: "VANADIS 23 (PM HS6-5-3, AISI M3:2) high performance powder metallurgical tool steel, product brochure"
+    venue: "Uddeholm (copy hosted by Alpha Knife Supply)"
+    year: null
+    url: "https://www.alphaknifesupply.com/Pictures/Info/Steel/Vanadis23-DS.pdf"
+    accessed: 2026-11-03
+    pages: "p. 4 PHYSICAL DATA table (20, 400, 600 °C): density, modulus, CTE, thermal conductivity, specific heat. Brochure edition/year not printed on the copy"
+
+  # ------------------------------------------------------------------ tool materials: carbide, cermet
+  mitsubishi-2026-tm102g:
+    type: catalogue
+    authors: "Mitsubishi Materials Hardmetal Corporation"
+    title: "CARBIDE MATERIALS TM102G (carbide rods, PCB drill rods, saw tips, plates)"
+    venue: "Mitsubishi Materials Hardmetal"
+    year: 2026
+    url: "https://mmhm.co.jp/en/pdf/products/material/TM102G_Carbide%20Materials_20260710.pdf"
+    accessed: 2026-11-03
+    pages: "p. 4 carbide grades for saw tips (ISO code, grain size, Co, TRS, HRA, HV, thermal conductivity, K1C); p. 5 cermet grades; p. 8 carbide rod grades (TRS, HRA, HV, K1C, Young's modulus; rods are HIPed)"
+  hyperion-insert-blanks-grades:
+    type: web
+    authors: "Hyperion Materials & Technologies"
+    title: "Insert Blanks - Grade Properties (typical values)"
+    venue: "hyperionmt.com"
+    year: 2026
+    url: "https://www.hyperionmt.com/en/products/Insert-Blanks/grade-properties/"
+    accessed: 2026-11-03
+    pages: "carbide grade table: H10F (89.5 WC, 10.5 binder, 0.8 µm, 14.5 g/cm3, TRS 4500 N/mm2, compressive 6300 N/mm2, 1600 HV30, 92.1 HRA); cermet table"
+  hyperion-thermal-properties:
+    type: web
+    authors: "Hyperion Materials & Technologies"
+    title: "Cemented carbide - thermal properties"
+    venue: "hyperionmt.com"
+    year: 2026
+    url: "https://www.hyperionmt.com/en/Resources/materials/cemented-carbide/thermal-properties/"
+    accessed: 2026-11-03
+    pages: "text: specific heat of straight WC-Co about 150-350 J/(kg °C) at room temperature; conductivity about twice unalloyed steel; gamma phase lowers conductivity; TiC raises CTE slightly"
+  kyocera-2015-insert-grades:
+    type: catalogue
+    authors: "KYOCERA Corporation"
+    title: "Cutting tools catalogue, section A: Insert Grades (grade properties)"
+    venue: "KYOCERA Asia Pacific"
+    year: 2015
+    url: "https://asia.kyocera.com/products/cuttingtools/wp-content/uploads/2015/02/A-Insert-Grades.pdf"
+    accessed: 2026-11-03
+    pages: "pp. A14-A15 ceramic grades (KA30, KS6050, KT66, KS6030, KS6040: substrate hardness GPa, K1C, transverse strength); p. A16 CBN grades (grain size, hardness GPa, transverse strength); pp. A18-A19 grade properties of cermets and carbides (specific gravity, HV, GPa, K1C, transverse strength)"
+  kyocera-2023-tc0300:
+    type: datasheet
+    authors: "KYOCERA Fineceramics Europe GmbH"
+    title: "TC0300 cermet, mechanical & physical characteristics (typ.), 2023.04.03"
+    venue: "KYOCERA Fineceramics Europe"
+    year: 2023
+    url: "https://www.kyocera-fineceramics.de/fileadmin/user_upload/Download/werkstoffdatenblaetter/cermet/Kyocera_Fineceramics_Europe_TC0300.pdf"
+    accessed: 2026-11-03
+    pages: "single page table (JIS test methods)"
+  roebuck-2009-npl-mgpg20:
+    type: manual
+    authors: "Roebuck, B.; Gee, M.; Bennett, E.G.; Morrell, R."
+    title: "Mechanical tests for hardmetals, Measurement Good Practice Guide No. 20 (issue 2)"
+    venue: "National Physical Laboratory, Teddington"
+    year: 2009
+    url: "https://eprintspublications.npl.co.uk/1913/1/mgpg20.pdf"
+    accessed: 2026-11-03
+    pages: "section 1 property review (compressive 4-8 GPa, conductivity 100 ± 20 W/mK, CTE 5-6e-6/K, friction about 0.2 against steel); 4.3.3 Weibull analysis (WC/Co m >= about 20 or 10-20, Ti(C,N) cermets m <= about 10); 5.1.1 eq. (44) E = 708 - 821 Vf + 412 Vf^2 (Doi et al.)"
+  vornberger-2020-carbide-hot-hardness:
+    type: article
+    authors: "Vornberger, A.; Picker, T.; Pötschke, J.; Herrmann, M.; Denkena, B.; Krödel, A.; Michaelis, A."
+    title: "Influence of cemented carbide composition on cutting temperatures and corresponding hot hardnesses"
+    venue: "Materials 13(20), 4571"
+    year: 2020
+    doi: "10.3390/ma13204571"
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7602276/"
+    accessed: 2026-11-03
+    pages: "Table 2 (RT hardness and conductivity of four grades); text to Fig. 3: high-conductivity grades lose approx. 30 % conductivity between RT and 1000 °C"
+  zhang-2025-mmsj-ti64-usui:
+    type: article
+    authors: "Zhang, N.; Kneubühler, F.; Klippel, H.; Wegener, K."
+    title: "Simulation-based analysis of tool wear progression and mechanisms in titanium alloy machining"
+    venue: "MM Science Journal, Special Issue HSM2025, 8908-8915"
+    year: 2025
+    doi: "10.17973/MMSJ.2025_11_2025146"
+    url: "https://www.mmscience.eu/journal/issues/november-2025/articles/simulation-based-analysis-of-tool-wear-progression-and-mechanisms-in-titanium-alloy-machining/download"
+    accessed: 2026-11-03
+    pages: "2.1 (uncoated WC-6Co Sandvik H13A CCMW 09T304, dry, vc 150-350 m/min, h 0.1 mm); Tab. 2 (WC(Co) density 15250, cp 292, k 88); Tab. 3 calibrated Usui C1 [1/GPa µm/m], C2 [K] for rake and clearance"
+
+  # ------------------------------------------------------------------ tool materials: ceramics, superhard
+  syalons-101-datasheet:
+    type: datasheet
+    authors: "International Syalons (Newcastle) Ltd"
+    title: "Syalon 101 data sheet"
+    venue: "International Syalons"
+    year: 2018
+    url: "https://www.syalons.com/wp-content/uploads/2018/03/syalon-101-datasheet.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 property table"
+  syalons-2023-material-properties:
+    type: datasheet
+    authors: "International Syalons (Newcastle) Ltd"
+    title: "Material Properties (Syalon 101/050/110/201/501, Aloxalon 96/995/999, Zircalon, Sycarb)"
+    venue: "International Syalons"
+    year: 2023
+    url: "https://www.syalons.com/wp-content/uploads/2023/01/Material-Properties-Datasheet.pdf"
+    accessed: 2026-11-03
+    pages: "single page comparison table"
+  krawczynska-2006-al2o3-sicw:
+    type: article
+    authors: "Krawczyńska, A.; Biesiada, K.; Olszyna, A."
+    title: "Composites Al2O3-SiCw"
+    venue: "Kompozyty (Composites Theory and Practice) 6(2), 38-43"
+    year: 2006
+    url: "https://kompozyty.ptmk.net/article,composites-al2o3-sicw"
+    accessed: 2026-11-03
+    pages: "abstract and results: hot pressed 1650 °C, 35 MPa, 1 h; HV 18 GPa and KIC 6 MPa m^0.5 for Al2O3 + 20 wt% SiCw"
+  sumitomo-2025-general-catalog:
+    type: catalogue
+    authors: "Sumitomo Electric Carbide"
+    title: "Sumitomo General Catalog 2025-2026 (SUMIBORON CBN grades)"
+    venue: "Sumitomo Electric Carbide Inc."
+    year: 2025
+    url: "https://online.flippingbook.com/view/410142785/1045/"
+    accessed: 2026-11-03
+    pages: "p. L7 (viewer page 1045) CBN grade table for cast iron (BN7000 90-95 % CBN, 2 µm, HV 41-44 GPa, TRS 1.8-1.9 GPa, TRS measured on test piece equal to insert CBN layer); viewer page 1047 (BN7115/BN7500/BN7125)"
+  element-six-us8590643:
+    type: web
+    authors: "Element Six Abrasives SA (assignee)"
+    title: "US 8,590,643 B2 Polycrystalline diamond structure"
+    venue: "US patent (Google Patents full text)"
+    year: 2013
+    url: "https://patents.google.com/patent/US8590643B2/en"
+    accessed: 2026-11-03
+    pages: "description, table of PCD grades I, II, III (grain size, Co vol%, TRS, K1C, E, CTE)"
+  element-six-us9039798:
+    type: web
+    authors: "Element Six (assignee)"
+    title: "US 9,039,798 B2 Super-hard construction and method for making same"
+    venue: "US patent (Google Patents full text)"
+    year: 2015
+    url: "https://patents.google.com/patent/US9039798B2/en"
+    accessed: 2026-11-03
+    pages: "definitions: thermally stable PCD shows no substantial degradation after exposure above about 400 °C or 700 °C; PCD CTE 2.5-4e-6/°C, E 900-1400 GPa"
+  balmer-2009-cvd-diamond:
+    type: article
+    authors: "Balmer, R.S.; Brandon, J.R.; Clewes, S.L.; Dhillon, H.K.; Dodson, J.M.; Friel, I.; Inglis, P.N.; Madgwick, T.D.; Markham, M.L.; Mollart, T.P.; Perkins, N.; Scarsbrook, G.A.; Twitchen, D.J.; Whitehead, A.J.; Wilman, J.J.; Woollard, S.M."
+    title: "Chemical vapour deposition synthetic diamond: materials, technology and applications"
+    venue: "Journal of Physics: Condensed Matter 21, 364221"
+    year: 2009
+    doi: "10.1088/0953-8984/21/36/364221"
+    url: "https://arxiv.org/pdf/0909.1185"
+    accessed: 2026-11-03
+    pages: "Table 4 hardness (Vickers polycrystalline 85-100 GPa, after Field 1992); section 4 thermal conductivity 2000 W/mK, lower grades 1000 W/mK"
+
+  # ------------------------------------------------------------------ coatings
+  balzers-2010-hq040:
+    type: catalogue
+    authors: "Oerlikon Balzers Coating AG"
+    title: "Coated components - BALINIT coatings for precision components, HQ040EN, 3rd edition November 2010"
+    venue: "Oerlikon Balzers, Balzers (LI)"
+    year: 2010
+    url: "https://www.oerlikon.com/ecoma/files/HQ040EN_Coated-Components.pdf?download=1"
+    accessed: 2026-11-03
+    pages: "pp. 20-21 'Properties of BALINIT coatings' table (microhardness HK0.01, thickness, friction against steel dry, coating and max service temperature, colour); p. 20 coating thickness 0.5-5 µm"
+  balzers-web-balinit-a:
+    type: web
+    authors: "Oerlikon Balzers"
+    title: "BALINIT A (TiN) product page, specifications"
+    venue: "oerlikon.com/balzers"
+    year: 2026
+    url: "https://www.oerlikon.com/balzers/us/en/portfolio/balzers-surface-solutions/pvd-and-pacvd-based-coating-solutions/balinit/tin-based/balinit-a/"
+    accessed: 2026-11-03
+    pages: "specifications: HIT 30 ± 3 GPa (ISO 14577), friction ~0.6 dry vs steel, max service 600 °C, process < 500 °C"
+  balzers-web-balinit-b:
+    type: web
+    authors: "Oerlikon Balzers"
+    title: "BALINIT B (TiCN) product page, specifications"
+    venue: "oerlikon.com/balzers"
+    year: 2026
+    url: "https://www.oerlikon.com/balzers/us/en/portfolio/balzers-surface-solutions/pvd-and-pacvd-based-coating-solutions/balinit/tin-based/balinit-b/"
+    accessed: 2026-11-03
+    pages: "specifications: arc, HIT 37 ± 3 GPa, max service 400 °C, process < 500 °C, blue-grey"
+  balzers-web-futura-nano:
+    type: web
+    authors: "Oerlikon Balzers"
+    title: "BALINIT FUTURA NANO (TiAlN) product page, specifications tab"
+    venue: "oerlikon.com/balzers"
+    year: 2026
+    url: "https://www.oerlikon.com/balzers/us/en/portfolio/balzers-surface-solutions/pvd-and-pacvd-based-coating-solutions/balinit/tialn-based/balinit-futura-nano/?tab=specifications_3"
+    accessed: 2026-11-03
+    pages: "specifications: arc, HIT 33 ± 3 GPa, friction ~0.6 (ball-on-disc ASTM G99), max service 900 °C, process 500 °C, violet-grey"
+  balzers-web-latuma:
+    type: web
+    authors: "Oerlikon Balzers"
+    title: "BALINIT LATUMA (AlTiN-based) product page, specifications tab"
+    venue: "oerlikon.com/balzers"
+    year: 2026
+    url: "https://www.oerlikon.com/balzers/us/en/portfolio/balzers-surface-solutions/pvd-and-pacvd-based-coating-solutions/balinit/tialn-based/balinit-latuma/?tab=specifications_4"
+    accessed: 2026-11-03
+    pages: "specifications: arc, HIT 35 ± 3 GPa, max service 1000 °C, process < 500 °C, grey"
+  balzers-web-alcrona-evo:
+    type: web
+    authors: "Oerlikon Balzers"
+    title: "BALINIT ALCRONA EVO (AlCrN-based) product page, specifications tab"
+    venue: "oerlikon.com/balzers"
+    year: 2026
+    url: "https://www.oerlikon.com/balzers/us/en/portfolio/balzers-surface-solutions/pvd-and-pacvd-based-coating-solutions/balinit/alcrn-based/balinit-alcrona-evo/?tab=balinit_alcrona_evo_specifications"
+    accessed: 2026-11-03
+    pages: "specifications: arc, HIT 44 ± 4 GPa, max service 1100 °C, process < 500 °C, bright grey"
+  balzers-web-dlc:
+    type: web
+    authors: "Oerlikon Balzers"
+    title: "BALINIT DLC (a-C:H) product page, specifications tab"
+    venue: "oerlikon.com/balzers"
+    year: 2026
+    url: "https://www.oerlikon.com/balzers/us/en/portfolio/balzers-surface-solutions/pvd-and-pacvd-based-coating-solutions/balinit/carbon-dlc-based/balinit-dlc/?tab=specifications_11"
+    accessed: 2026-11-03
+    pages: "specifications: PACVD a-C:H, HIT ~15-25 GPa, friction 0.1-0.2 dry vs steel, max service 300 °C, process < 250 °C, black"
+  surftech-alcrona:
+    type: web
+    authors: "Surftech (Australia), coating service"
+    title: "Coatings - Alcrona (AlCrN)"
+    venue: "surftech.com.au"
+    year: 2026
+    url: "https://www.surftech.com.au/?p=25"
+    accessed: 2026-11-03
+    pages: "Alcrona row: 3200 HV, friction 0.35 vs steel, up to 1100 °C, 4 µm, blue-grey"
+  ionbond-coating-portfolio:
+    type: web
+    authors: "IHI Ionbond AG"
+    title: "Forming & Molding Tools - coating portfolio"
+    venue: "ionbond.com"
+    year: 2026
+    url: "https://www.ionbond.com/coating-services/forming-molding-tools/coating-portfolio/"
+    accessed: 2026-11-03
+    pages: "portfolio table: thickness, microhardness HV, friction vs steel (dry), service and process temperature for CVD 13/29/10 and PVD 01 (TiN), 10 (TiCN), 22 (AlTiCrN), 25 (AlCrN), 40/41 (a-C:H:W), Tetrabond (ta-C)"
+  moraes-2015-nitride-conductivity:
+    type: thesis
+    authors: "Moraes, V."
+    title: "Thermal conductivity of nitride based thin films (Diplomarbeit)"
+    venue: "TU Wien, Institute of Materials Science and Technology"
+    year: 2015
+    url: "https://repositum.tuwien.at/bitstream/20.500.12708/5225/2/Moraes%20Vincent%20-%202015%20-%20Thermal%20conductivity%20of%20nitride%20based%20thin%20films.pdf"
+    accessed: 2026-11-03
+    pages: "abstract and publication I: 3-omega conductivity at 295 K of sputtered c-TiN 3.1, c-Ti0.36Al0.64N 2.5, c-CrN 3.6, w-Al0.90Cr0.10N 4.7 W/mK; cubic Ti/Cr nitride films about 4.8 W/mK (literature, ref. 2)"
+
+  # ------------------------------------------------------------------ holders
+  schunk-web-tendo-ec-206404:
+    type: catalogue
+    authors: "SCHUNK GmbH & Co. KG"
+    title: "TENDO EC HSK-A63 Ø12x80, ID 206404, technical data"
+    venue: "schunk.com product page"
+    year: 2026
+    url: "https://schunk.com/ie/en/tools/toolholder-quickfinder/tendo-e-compact/tendo-ec-hsk-a63-12x80/p/000000000000206404"
+    accessed: 2026-11-03
+    pages: "technical data list"
+  schunk-web-tendo-ec-206405:
+    type: catalogue
+    authors: "SCHUNK GmbH & Co. KG"
+    title: "TENDO EC HSK-A63 Ø16x80, ID 206405, technical data"
+    venue: "schunk.com product page"
+    year: 2026
+    url: "https://schunk.com/at/en/tool-clamping-technology/toolholders/tendo-hydraulic-expansion-chuck/tendo-e-compact/tendo-ec-hsk-a-63-16x80/p/000000000000206405"
+    accessed: 2026-11-03
+    pages: "technical data list"
+  schunk-web-tendo-ec-206406:
+    type: catalogue
+    authors: "SCHUNK GmbH & Co. KG"
+    title: "TENDO EC HSK-A63 Ø20x80, ID 206406, technical data"
+    venue: "schunk.com product page"
+    year: 2026
+    url: "https://schunk.com/gb/en/tool-clamping-technology/toolholders/tendo-hydraulic-expansion-toolholder/tendo-e-compact/tendo-ec-hsk-a-63-20x80/p/000000000000206406"
+    accessed: 2026-11-03
+    pages: "technical data list"
+  schunk-web-tendo-ec-1323447:
+    type: catalogue
+    authors: "SCHUNK GmbH & Co. KG"
+    title: "TENDO EC HSK-A63 Ø32x120, ID 1323447, technische Daten"
+    venue: "schunk.com product page (German)"
+    year: 2026
+    url: "https://schunk.com/at/de/werkzeugspanntechnik/werkzeughalter/tendo-hydro-dehnspannfutter/tendo-e-compact/tendo-ec-hsk-a63-o32x120/p/000000000001323447"
+    accessed: 2026-11-03
+    pages: "technical data list"
+  mrosupply-schunk-206406:
+    type: web
+    authors: "MRO Supply"
+    title: "SCHUNK 206406 TENDO EC HSK-A63 Ø20x80 toolholder, listing"
+    venue: "mrosupply.com"
+    year: 2026
+    url: "https://www.mrosupply.com/machining/6174582_206406_schunk"
+    accessed: 2026-11-03
+    pages: "price USD 335.00 each"
+  schunk-web-celsio-208120:
+    type: catalogue
+    authors: "SCHUNK GmbH & Co. KG"
+    title: "CELSIO HSK-A63 Ø6x80, ID 208120, technical data"
+    venue: "schunk.com product page"
+    year: 2026
+    url: "https://schunk.com/tw/en/tools/toolholder-quickfinder/celsio/celsio-hsk-a-63-6x80/p/000000000000208120"
+    accessed: 2026-11-03
+    pages: "technical data list"
+  schunk-web-celsio-208123:
+    type: catalogue
+    authors: "SCHUNK GmbH & Co. KG"
+    title: "CELSIO HSK-A63 Ø12x90, ID 208123, technical data"
+    venue: "schunk.com product page"
+    year: 2026
+    url: "https://schunk.com/us/en/tools/toolholder-quickfinder/celsio/celsio-hsk-a-63-12x90/p/000000000000208123"
+    accessed: 2026-11-03
+    pages: "technical data list"
+  schunk-web-celsio-208125:
+    type: catalogue
+    authors: "SCHUNK GmbH & Co. KG"
+    title: "CELSIO HSK-A63 Ø16x95, ID 208125, technical data"
+    venue: "schunk.com product page"
+    year: 2026
+    url: "https://schunk.com/tr/en/tools/toolholder-quickfinder/celsio/celsio-hsk-a-63-16x95/p/000000000000208125"
+    accessed: 2026-11-03
+    pages: "technical data list"
+  haimer-shop-a63-020-32:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Collet Chuck Type ER, DIN 69893-1, HSK-A63, A63.020.32"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/us/Collet-Chuck-Type-ER-DIN-69893-1-HSK-A63/A63.020.32"
+    accessed: 2026-11-03
+    pages: "technical data (inch units on the US page)"
+  haimer-shop-a63-026-16:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Collet Chuck Type ER, DIN 69893-1, HSK-A63, A63.026.16 (ER16, ZG200)"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Collet-Chuck-Type-ER-DIN-69893-1-HSK-A63/A63.026.16"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-40-720-32:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "ER Collet Chuck, ASME B5.50, CAT40, 40.720.32 (with variant table)"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/ER-Collet-Chuck-ASME-B5.50-CAT40/40.720.32"
+    accessed: 2026-11-03
+    pages: "technical data; order table of short versions"
+  haimer-shop-40-720-16:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "ER Collet Chuck, ASME B5.50, CAT40, 40.720.16"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/ER-Collet-Chuck-ASME-B5.50-CAT40/40.720.16"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-40-520-32:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Collet Chuck Type ER, JIS B 6339-2, BT40, 40.520.32"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Collet-Chuck-Type-ER-JIS-B-6339-2-BT40/40.520.32"
+    accessed: 2026-11-03
+    pages: "technical data; order table"
+  haimer-shop-40-520-16:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Collet Chuck Type ER, JIS B 6339-2, BT40, 40.520.16"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Collet-Chuck-Type-ER-JIS-B-6339-2-BT40/40.520.16"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-collet-81-320:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "High precision collet ER, 81.320.03 (ER32)"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/us/High-precision-collet-ER/81.320.03"
+    accessed: 2026-11-03
+    pages: "features: runout accuracy 5 µm, manufactured to ISO 15488 (formerly DIN 6499)"
+  haimer-shop-a63-000-16:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Weldon Tool Holder, DIN 69893-1, HSK-A63, A63.000.16"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Weldon-Tool-Holder-DIN-69893-1-HSK-A63/A63.000.16"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-a63-000-32:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Weldon Tool Holder, DIN 69893-1, HSK-A63, A63.000.32"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Weldon-Tool-Holder-DIN-69893-1-HSK-A63/A63.000.32"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-40-445-25-3:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Power Shrink Chuck, DIN ISO 7388-1, SK40, 40.445.25.3"
+    venue: "shop.haimer.com (print page)"
+    year: 2026
+    url: "https://shop.haimer.com/us/printpage/cd5328fc241b4daaac84c64434b88ecb"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-40-445-32-3:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Power Shrink Chuck, DIN ISO 7388-1, SK40, 40.445.32.3"
+    venue: "shop.haimer.com (print page)"
+    year: 2026
+    url: "https://shop.haimer.com/en/printpage/0bb1a5e023694403834e960a2db1bba5"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-a63-040:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Combination Shell End Mill Arbor, DIN 69893-1, HSK-A63 (A63.040.16 data and variant table)"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Combination-Shell-End-Mill-Arbor-DIN-69893-1-HSK-A63/1-WA-2-054000-3-054030-4-054000-5-054005"
+    accessed: 2026-11-03
+    pages: "technical data of A63.040.16; order table A63.040.xx / A63.041.xx"
+  haimer-shop-a63-040-22:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Combination Shell End Mill Arbor, DIN 69893-1, HSK-A63, A63.040.22"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Combination-Shell-End-Mill-Arbor-DIN-69893-1-HSK-A63/A63.040.22"
+    accessed: 2026-11-03
+    pages: "technical data"
+  haimer-shop-a63-070:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Quick Change Tapping Chuck, DIN 69893-1, HSK-A63, A63.070.01 / A63.070.03"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Quick-Change-Tapping-Chuck-DIN-69893-1-HSK-A63/A63.070.01"
+    accessed: 2026-11-03
+    pages: "technical data: M3-M14, D1 20, D2 36, length compensation ± 3 mm, internal coolant up to 50 bar; variant A63.070.03 D1 28"
+  haimer-shop-cc6-021:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Collet Chuck Type ER, ISO 26623-1, HAIMER PSC63 (CC6.021.16 data and variant table)"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Collet-Chuck-Type-ER-ISO-26623-1-HAIMER-PSC-63/1-WA-2-055000-3-055020-4-052000-5-052005"
+    accessed: 2026-11-03
+    pages: "technical data of CC6.021.16; order table CC6.021.xx / CC6.022.xx"
+  haimer-shop-cc6-021-32:
+    type: catalogue
+    authors: "HAIMER GmbH"
+    title: "Collet Chuck Type ER, ISO 26623-1, HAIMER PSC63, CC6.021.32"
+    venue: "shop.haimer.com"
+    year: 2026
+    url: "https://shop.haimer.com/en/Collet-Chuck-Type-ER-ISO-26623-1-HAIMER-PSC-63/CC6.021.32"
+    accessed: 2026-11-03
+    pages: "technical data"
+  bigdaishowa-web-hmc:
+    type: catalogue
+    authors: "BIG DAISHOWA Inc. (BIG KAISER)"
+    title: "New Hi-Power Milling Chuck, product listing"
+    venue: "bigdaishowa.com"
+    year: 2026
+    url: "https://www.bigdaishowa.com/en/products/tool-holders/cnc-milling-chucks/new-hi-power-milling-chuck"
+    accessed: 2026-11-03
+    pages: "listing page 1 of 17: item numbers, descriptions (bore, gauge length L), weights"
+  bigdaishowa-web-mega-synchro:
+    type: catalogue
+    authors: "BIG DAISHOWA Inc. (BIG KAISER)"
+    title: "MEGA SYNCHRO Tapping Holder, product listing"
+    venue: "bigdaishowa.com"
+    year: 2026
+    url: "https://www.bigdaishowa.com/en/products/tool-holders/cnc-tapping-holders/mega-synchro-tapping-holder"
+    accessed: 2026-11-03
+    pages: "listing page 1 of 5: item numbers, descriptions (L), weights; thrust load reduction up to 90 %"
+
+  # ------------------------------------------------------------------ workholding
+  kitagawa-open-centre-catalogue:
+    type: catalogue
+    authors: "Kitagawa Corporation"
+    title: "Open centre power chucks catalogue (B-200 series pages)"
+    venue: "kitagawa.global"
+    year: null
+    url: "https://kitagawa.global/media/technical/Open_centre_chucks2.pdf"
+    accessed: 2026-11-03
+    pages: "catalogue p. 9 (PDF p. 3): B-200 dimensions table, specifications table, gripping characteristic graph. Year not printed in the PDF"
+  kitagawa-2021-b200-manual:
+    type: manual
+    authors: "Kitagawa Corporation"
+    title: "Instruction manual, Large thru-hole power chuck B/BT type (B-200/BT200), version 1.11 (2021.08.03)"
+    venue: "kitagawa.global"
+    year: 2021
+    url: "https://kitagawa.global/media/technical/manu_B-200_BT200_en.pdf"
+    accessed: 2026-11-03
+    pages: "section 3: allowable max speed = speed at which dynamic gripping force is about 1/3 of max static force with standard soft jaws; centrifugal force proportional to speed squared; B-206 example: standard soft jaw mass moment 39 kg mm, 6000 min-1, gripping force loss 38 kN, required static force 57 kN, input 22 kN, H <= 14 mm"
+  kitagawa-gripforce-setting:
+    type: manual
+    authors: "Kitagawa Corporation"
+    title: "Gripping force setting of power chucks"
+    venue: "kitagawa.global technical document"
+    year: null
+    url: "https://kitagawa.global/media/technical/gripforceset_en.pdf"
+    accessed: 2026-11-03
+    pages: "pp. 2-5: worked example BB208 (jaw mass 1.2 kg, rm 72 mm, mass moment m rm 3 = 259.2 kg mm, loss 38 kN at 3500 min-1), friction coefficient jaw/work mu = 0.1, gripping torque = FgD mu rg, overturning resistance, safety factor 2.5 continuous / 3.0 interrupted. Year not printed"
+  kitagawa-jaws-catalogue:
+    type: catalogue
+    authors: "Kitagawa Corporation"
+    title: "Jaws and accessories catalogue (SJ series soft jaws)"
+    venue: "kitagawa.global"
+    year: null
+    url: "https://kitagawa.global/media/technical/Jaws_Acc2.pdf"
+    accessed: 2026-11-03
+    pages: "p. 105 SJ model key; p. 106 combination table (B-206 SJ06L1A M10x25, B-208 SJ08B1 M12x30, B-210 SJ10B1 M12x30); p. 107 soft jaw dimensions table. Year not printed"
+  kitagawa-2013-steady-rests:
+    type: catalogue
+    authors: "Kitagawa Europe Ltd"
+    title: "Steady Rest catalogue (FRUN/FRU/FRUA/FRUB series), I/2013"
+    venue: "kitagawaeurope.com"
+    year: 2013
+    url: "https://kitagawa.global/media/technical/Kitagawa_-_Steady_Rests.pdf"
+    accessed: 2026-11-03
+    pages: "p. 7 FRU series dimensions and specifications"
+  klamp-2023-collet-chucks:
+    type: catalogue
+    authors: "Kitagawa (KLAMP brand)"
+    title: "KLAMP collet chuck catalogue 2023"
+    venue: "klamp.global / kitagawa.global"
+    year: 2023
+    url: "https://kitagawa.global/media/technical/2023-Klamp-Collet-Chuck.pdf"
+    accessed: 2026-11-03
+    pages: "p. 43 DEL5C / DEL16C low profile pull back power collet chucks"
+  roehm-2025-centres:
+    type: catalogue
+    authors: "RÖHM GmbH"
+    title: "Centres catalogue (live centres), 2025-08"
+    venue: "roehm.biz"
+    year: 2025
+    url: "https://www.roehm.biz/fileadmin/user_upload/produkte/PG2_Spitzen/2025_08/2025-08_02_Zentrierspitzen_FINISH_2025_en.pdf"
+    accessed: 2026-11-03
+    pages: "catalogue p. 2008 (PDF p. 10) HM Pro carbide insert live centres A06: dimensions, weight, max workpiece weight, concentricity, max speed; radial and axial load charts"
+  lang-2024-catalogue:
+    type: catalogue
+    authors: "LANG Technik GmbH"
+    title: "LANG Technik catalogue 2024-12 (EN)"
+    venue: "lang-technik.de"
+    year: 2024
+    url: "https://www.lang-technik.de/sites/default/files/2025-09/2024-12_lang_katalog-inhalt_EN_vrz-interaktiv.pdf"
+    accessed: 2026-11-03
+    pages: "p. 18 Quick-Point plates: actuation torque 30 Nm (60 Nm 4-fold), holding force up to 6000 kg, repeatability < 0.005 mm; p. 23 Quick-Point 52 grid plates; p. 123 holding force vs actuation torque chart (Makro-Grip 46/125: 20000 N at 100 Nm; Makro-Grip 77: 14000 N at 60 Nm); p. 126 Makro-Grip 77 jaw width 46 mm item table"
+  miteebite-2024-catalog:
+    type: catalogue
+    authors: "Mitee-Bite Products LLC"
+    title: "Mitee-Bite 2024 catalog"
+    venue: "miteebite.com"
+    year: 2024
+    url: "https://www.miteebite.com/2024%20CATALOG-FINAL_8-24.pdf"
+    accessed: 2026-11-03
+    pages: "p. 4 fixture clamps (cam action) metric MB-xM: max torque N m and holding force N; p. 37 Multi-Power Vac pallet; p. 41 vacuum pump 46350 (4 cfm, 12-13 psi vacuum at dead head)"
+  carrlane-strap-clamp-force:
+    type: web
+    authors: "Carr Lane Manufacturing Co."
+    title: "Approximate clamping force of standard clamp straps"
+    venue: "carrlane.com engineering resources"
+    year: 2026
+    url: "https://www.carrlane.com/engineering-resources/fixture-design-priciples/approximate-clamping-force-of-standard-clamp-straps"
+    accessed: 2026-11-03
+    pages: "inch and metric tables: stud size, recommended torque (ft-lb), clamping force (lb), tensile force in stud (lb); clean dry stud torqued to about 33 % of 100000 psi yield, 2:1 lever ratio"
+  carrlane-clamping-force-calc:
+    type: web
+    authors: "Carr Lane Manufacturing Co."
+    title: "Clamping force calculations"
+    venue: "carrlane.com engineering resources"
+    year: 2026
+    url: "https://www.carrlane.com/engineering-resources/fixture-design-principles/clamping-force-calculations"
+    accessed: 2026-11-03
+    pages: "worked example: coefficient of friction 0.19, recommended 2:1 safety factor"
+  henkel-2012-loctite-401:
+    type: datasheet
+    authors: "Henkel"
+    title: "Technical Data Sheet LOCTITE 401, February 2012"
+    venue: "Henkel / datasheets.tdx.henkel.com"
+    year: 2012
+    url: "https://datasheets.tdx.henkel.com/LOCTITE-401-en_GL.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 uncured properties (specific gravity 1.1), fixture time vs substrate (time to 0.1 N/mm2); p. 2 cured performance: lap shear ISO 4587 after 72 h at 22 °C (steel grit blasted 20 N/mm2, aluminium etched 12.4 N/mm2), hot strength and heat ageing charts"
+  tecnomagnete-web-milltec:
+    type: web
+    authors: "Tecnomagnete S.p.A. (MAG-AUTOBLOK)"
+    title: "MILLTec electro-permanent magnetic chuck for milling (Italian product page)"
+    venue: "tecnomagnete.com"
+    year: 2026
+    url: "https://www.tecnomagnete.com/prodotto/milltec"
+    accessed: 2026-11-03
+    pages: "text: holding up to 16 kg/cm2; /SC version for thin workpieces (from 10 mm); ST200/R control with 8 magnetisation levels"

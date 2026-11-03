@@ -1,0 +1,112 @@
+# Sources for db/tools (hole-making, threading and turning tools). Every entry was downloaded and
+# read on the accessed date (PDF text extraction plus page renders for tables and charts);
+# `pages` says where the values are. Tungaloy page numbers are the printed catalogue pages
+# (section letter + number); OSG page numbers are the printed pages of gc_1.pdf.
+format: cnctwin-bibliography
+version: 1
+entries:
+  osg-2025-gc-drilling-threading:
+    type: catalogue
+    authors: "OSG Corporation"
+    title: "OSG General Catalogue 2025-2026: Drilling & Threading Tools (Japanese / English)"
+    venue: "OSG Corporation, Toyokawa, Japan; distributed as gc_1.zip (gc_1.pdf, 1258 PDF pages)"
+    year: 2025
+    url: "https://www.osg.co.jp/en/media_dl/catalog/file/gc_1.zip"
+    accessed: "2026-11-03"
+    pages: "p. 145-146 ADO-3D (dimensions, icons: carbide, EgiAs, h8, 30 deg helix, 140 deg point, R gash, shrink-fit shank); p. 293-294 EX-GDR (HSS-Co, TiN, h8, h7 shank, 30 deg helix, 130 deg point, X/R thinning); p. 324 NC-LDS starter drill (HSSE, h7 shank, 20 deg helix, point angle tolerances); p. 375-378 CRM carbide straight reamer (0/+0.005 mm, h6 shank, 30 deg lead); p. 392 carbide drill cutting conditions (ADO-3D/5D/8D); p. 431 EX-GDR cutting conditions; p. 441 starter drill cutting conditions (centering and countersinking); p. 453 CRM cutting conditions; p. 505 AT-1 thread mill; p. 545 A-XPF forming tap; p. 587-589 A-SFT spiral fluted tap; p. 661-662 A-POT spiral pointed tap; p. 845-847 tap cutting speeds (advisable / possible ranges); p. 852 thread mill cutting conditions; p. 1054 ISO 286-2 hole tolerances (H7: 0/+0.015 mm over 6-10 mm, 0/+0.018 mm over 10-18 mm); PDF p. 597 tap limit notice ('STD' = recommended tap for class 2 / 6H internal threads)"
+  yg1-2025-yu25-holemaking:
+    type: catalogue
+    authors: "YG-1 Co., Ltd. / YG-1 America Inc."
+    title: "YG-1 Holemaking Cutting Tools Catalog YU25 (2025/2026, America)"
+    venue: "YG-1 product catalogue (inch edition)"
+    year: 2025
+    url: "https://www.yg1usa.com/downloads/YU25_Holemaking_spread.pdf"
+    accessed: "2026-11-03"
+    pages: "p. A274-A275 D1C90 HSS combination drills & countersink / center drill (60 deg, h8, sizes #1-#6, D1, D2, L1, L2); p. A277 recommended cutting conditions D1C90 (SFM, RPM, feed in/rev by VDI 3323 group and drill diameter); p. A396-A399 technical data: twist drill terms (point angle sigma, chisel edge angle psi), point angle 118 deg for types N/H and 130 deg for type W, Fig. 2 minimum web thickness kmin vs diameter, Fig. 4 margin width b_alpha lower/guide/upper values vs diameter, Fig. 5 side rake (helix) by tool type"
+  tungaloy-2023-gc-grade:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section A: Grade (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_A_Grade.pdf"
+    accessed: "2026-11-03"
+    pages: "p. A002-A005 grade tables: ISO application ranges, coating composition and coating thickness (T9215/T9225 18 um CVD, T6215 TiCN-Al2O3 8 um, T515 TiCN-Al2O3 16 um, AH725 (Ti,Al)N 2 um, AH7025 (Ti,Al)N 3.5 um, AH8015 (Al,Ti)N 3.5 um, AH9130 (Ti,Al)SiCrN 4.5 um, AH9030 / AH6030 (Ti,Al)N, GT9530 coated cermet Ti(C,N,O) 3 um, NS9530 cermet, KS05F uncoated)"
+  tungaloy-2023-gc-insert:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section B: Insert (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_B_Insert.pdf"
+    accessed: "2026-11-03"
+    pages: "p. B004 chipbreaker guide negative / steel (standard cutting conditions TF, TSF, TM, TH); p. B006 negative / stainless (SF, SM, SDM, SH); p. B008 negative / cast iron (All-round, CH); p. B016 positive / steel (01, PSS, PS, PM); p. B024 positive / superalloys (PS, PSS, PSF); p. B030-B036 chipbreaker overview (rake angle and land width pictograms, chip control charts incl. wiper AFW/FW/SW/ASW on B034); p. B054-B057 CNMG; p. B069 DNMG; p. B114, B116 CCMT; p. B132 RCMT; p. B152 VBMT; p. B155 VCMT (dimensions RE, IC, S, D1, grades)"
+  tungaloy-2023-gc-ext-toolholder:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section C: External Toolholder (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_C_ExternalToolholder.pdf"
+    accessed: "2026-11-03"
+    pages: "p. C018 PCLNR/L (95 deg, H, B, LF, LH, HF, WF, torque); p. C019 PCLNR-CHP, ACLNR-CHP-MC (GAMP/GAMF 6 deg as printed); p. C036 PDJNR/L (93 deg); p. C048 SVJCR/L (93 deg); p. C078 SRDCN-6F FixRTurn for RCMT1204M0; p. C120 standard cutting conditions FixRTurn (6RS/6RM)"
+  tungaloy-2023-gc-int-toolholder:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section D: Internal Toolholder (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_D_InternalToolholder.pdf"
+    accessed: "2026-11-03"
+    pages: "p. D004 quick guide: L/D limits by shank material (steel <= 3, carbide reinforced <= 4, carbide <= 5, BoreMeister <= 10); p. D010 BoreMeister anti-vibration (damped) bar; p. D014 StreamJetBar A/E-SCLCR (DMIN, DCONMS, WF, LF, LH, H, GAMP, GAMF, RE, torque); p. D017 S-SCLCR-H exchangeable heads; p. D090 BoreMeister anti-vibration bars (material, DCONWS, DCONMS, OAL, OHX)"
+  tungaloy-2023-gc-threading:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section E: Threading Tool (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_E_ThreadingTool.pdf"
+    accessed: "2026-11-03"
+    pages: "p. E018 TungThread full-profile ISO metric inserts (IC, PDX, PDY, RE, grades); p. E036 CER/L external threading holders; p. E066 number of passes and depth per pass for external metric threads; p. E067 standard cutting speeds by grade"
+  tungaloy-2023-gc-parting-grooving:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section F: Parting, Grooving (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_F_Parting-Grooving.pdf"
+    accessed: "2026-11-03"
+    pages: "p. F014 TungCut CTER/L holders; p. F028 chipbreaker guide (DGM standard feed by CW, chart); p. F030 DTR full-radius standard feed and depth of cut (chart); p. F032 DGM inserts; p. F039 DTR inserts; p. F043 standard cutting speeds; p. F224 AddForceCut QSER/L holders and QSP blades; p. F227 QGM inserts and standard feed (chart); p. F228 QGS inserts and standard cutting speeds"
+  tungaloy-2023-gc-drilling:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section J: Drilling Tool (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_J_DrillingTool.pdf"
+    accessed: "2026-11-03"
+    pages: "p. J070 TungDrillTwisted TDX-F L/D=3 bodies; p. J076 XPMT-DJ / -DS inserts (IC, LE, S, D1, RE, DCN-DCX, 11 deg clearance); p. J078 recommended inserts and standard cutting conditions TDX; p. J092 indexable gundrill guide (IT class, straightness); p. J094 DeepTri-Drill MCTR L/D=10; p. J108 TOHT-NDL inserts; p. J112 MCTR standard cutting conditions; p. J113 SLJ brazed gundrill (DC, DCONMS, L2, OAL, tube diameter BD)"
+  tungaloy-2023-gc-tooling:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section K: Tooling System (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_K_ToolingSystem.pdf"
+    accessed: "2026-11-03"
+    pages: "p. K053 TungCap FBHO-DE fine boring head for digital display (C, DCN, DCX, LF, adjustment range 2.7 mm) and 254.0**.006 boring bars (DCN, DCX, LH, OAL, insert CC**0602)"
+  tungaloy-2023-gc-users-guide:
+    type: catalogue
+    authors: "Tungaloy Corporation"
+    title: "General Catalogue 2023-2024, Section L: User's Guide (metric edition G)"
+    venue: "Tungaloy general catalogue"
+    year: 2023
+    url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_L_UsersGuide.pdf"
+    accessed: "2026-11-03"
+    pages: "p. L002-L003 turning tool nomenclature ('TAC indexable inserts of steel cutting grades are honed'); p. L029 threading: rake angle of toolholders -10 deg external / -15 deg internal, full-profile inserts; p. L085 TDX cutting force guideline (power, thrust, torque vs drill diameter, SCM440 at 100 m/min); p. L089 gundrill nomenclature (primary clearance angle 8-15 deg)"
+  iso-68-1-1998:
+    type: standard
+    title: "ISO 68-1:1998 ISO general purpose screw threads - Basic profile - Part 1: Metric screw threads"
+    institution: "International Organization for Standardization"
+    year: 1998
+    pages: "basic profile: H = 0.866025 P, flat P/8 at the major diameter, P/4 at the minor diameter"

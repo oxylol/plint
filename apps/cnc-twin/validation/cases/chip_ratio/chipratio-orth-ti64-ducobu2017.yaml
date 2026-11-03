@@ -1,0 +1,70 @@
+# Ti6Al4V plane-strain orthogonal cut (planing) at 30 m/min: chip thickness and chip ratio.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: chipratio-orth-ti64-ducobu2017
+quantity: chip_ratio
+reference:
+  src: ducobu-2017-ti6al4v-orthogonal-reference
+  location: 'Table 3 (experimental reference: average RMS forces per mm width and average chip thickness for h = 40, 60,
+    100 um)'
+  digitised: false
+  uncertainty_pct: 10
+  measured: true
+  note: 'uncertainty_pct: the source states that the standard deviations of the forces and of the chip thickness stay under
+    10 % of the average; the +- values printed in Table 3 are given per value'
+setup:
+  operation: orthogonal_turning
+  material:
+    db: ti6al4v
+    note: 'Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed); the
+      paper''s model uses E 113.8 GPa, rho 4430 kg/m3, k 7.3 W/mK, cp 580 J/kgK (Table 4)'
+  tool:
+    src: ducobu-2017-ti6al4v-orthogonal-reference
+    page: Table 2 (cutting conditions and tool geometry, after ref. [36])
+    tool_class: carbide
+    rake_deg: 15
+    clearance_deg: 2
+    edge_radius_um: 20
+    tool_material:
+      value: tungsten carbide
+      note: material of the tool in the paper's model (Sect. 5); grade not given
+    coating:
+      value: none
+      src: est
+      note: 'assumed: not stated; the FE model of the same paper uses uncoated tungsten carbide'
+    assumed_inputs: [coating]
+  machine:
+    src: ducobu-2017-ti6al4v-orthogonal-reference
+    page: Sect. 4
+    type: 'conventional milling machine used as a planer: the table moves the workpiece past a fixed tool (plane-strain
+      2D orthogonal cut)'
+    dynamometer: Kistler 9257B
+  conditions:
+    src: ducobu-2017-ti6al4v-orthogonal-reference
+    page: Table 2, Sect. 4
+    vc_m_min: 30
+    uncut_chip_thickness_per_test_um: [40, 60, 100]
+    note: vc = 30 m/min is the maximum table feed of the machine; at least three repetitions per condition; width of cut
+      not given (forces are per mm of width)
+    coolant: {value: dry, src: est, note: 'assumed: not stated in this paper'}
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: h_chip h40, value: 59, unit: um, uncertainty: 5, x: 40, x_name: h, x_unit: um, note: average chip thickness from
+    25 points along the chip}
+- {name: chip_ratio h40 (derived), value: 0.678, unit: '', x: 40, x_name: h, x_unit: um, note: derived here as h / h_chip
+    = 40 / 59; not printed in the source}
+- {name: h_chip h60, value: 80, unit: um, uncertainty: 4, x: 60, x_name: h, x_unit: um, note: average chip thickness from
+    25 points along the chip}
+- {name: chip_ratio h60 (derived), value: 0.75, unit: '', x: 60, x_name: h, x_unit: um, note: derived here as h / h_chip
+    = 60 / 80; not printed in the source}
+- {name: h_chip h100, value: 135, unit: um, uncertainty: 6, x: 100, x_name: h, x_unit: um, note: average chip thickness
+    from 25 points along the chip}
+- {name: chip_ratio h100 (derived), value: 0.741, unit: '', x: 100, x_name: h, x_unit: um, note: derived here as h / h_chip
+    = 100 / 135; not printed in the source}
+reference_curves: []
+notes: 'Chip thickness of continuous Ti6Al4V chips measured at 25 points along each chip (Sect. 4). Shear angle for rake
+  15 deg: tan(phi) = r cos(15) / (1 - r sin(15)). In the source''s model comparison (Table 5, h = 60 um) the twenty JC sets
+  give chip thicknesses of 76 to more than 115 um against the measured 80 um.'

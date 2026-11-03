@@ -1,0 +1,79 @@
+# Mann et al. (2003), part 2: single-degree-of-freedom flexure, 7075-T6, down-milling.
+# Experimental stable/chatter/border tests (measured: true).
+format: cnctwin-validation-case
+version: 1
+id: stability-mann2003-flexure-al7075-downmilling
+quantity: stability_lobe
+reference:
+  src: mann-2003-up-down-milling-part2
+  location: "Sect. 3 (flexure, cutting coefficients, test procedure), Sect. 4 (points E, F, G, H: exact), Fig. 7 (all other test markers, digitised)"
+  digitised: true
+  uncertainty_pct: 2                 # digitised markers: about +-3 rpm and +-0.03 mm
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: al7075-t6}
+  stock: {width_mm: 6.35, note: "test samples 6.35 mm (1/4 in) wide, clamped on the flexure"}
+  tool:
+    type: square_endmill
+    tool_class: carbide
+    diameter_mm: 19.05
+    flutes: 1                        # two-flute end mill with the second flute ground off (no runout effects)
+    helix_deg: {value: 30, src: est, note: "not stated in the paper; typical of a 3/4 in two-flute carbide end mill"}
+  workholding: {type: flexure, note: "monolithic unidirectional aluminium flexure; stiffness in y and z more than 20 times that in x"}
+  conditions:
+    direction: down
+    ae_mm: 4.515
+    radial_immersion_ratio: 0.237
+    feed_mm_rev: 0.1016              # = feed per tooth (one flute)
+    coolant: {value: dry, src: est, note: "not stated"}
+    min_spindle_rpm: 3200
+    max_spindle_rpm: 4350
+  dynamics:
+    model: "1 DOF: the workpiece flexure in x (feed direction), tool and spindle treated as rigid"
+    natural_freq_Hz: 146.5
+    stiffness_N_um: 2.18
+    damping_ratio: 0.0032
+    modal_mass_kg: 2.573
+    cutting_coefficients: {Kt_N_mm2: 550, Kn_N_mm2: 200, note: "Kt 5.5e8 and Kn 2.0e8 N/m2 from the slope of force versus chip load on a Kistler 9255B dynamometer"}
+  program: null
+reference_values:
+  - {name: chatter_test, value: 1.3, unit: mm, x: 3450, x_name: spindle_speed, x_unit: rpm, note: "point E (Sect. 4 text, exact): unstable, period doubling (flip); drawn at about 3456 rpm in Fig. 7"}
+  - {name: stable_test, value: 1.1, unit: mm, x: 3550, x_name: spindle_speed, x_unit: rpm, note: "point F (Sect. 4 text, exact): stable"}
+  - {name: chatter_test, value: 1.1, unit: mm, x: 3700, x_name: spindle_speed, x_unit: rpm, note: "point G (Sect. 4 text, exact): unstable, Hopf (quasi-periodic chatter)"}
+  - {name: stable_test, value: 0.5, unit: mm, x: 4100, x_name: spindle_speed, x_unit: rpm, note: "point H (Sect. 4 text, exact): stable; drawn at about 4106 rpm in Fig. 7"}
+  - {name: stable_test, value: 3.8, unit: mm, x: 3200, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 2.3, unit: mm, x: 3300, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.7, unit: mm, x: 3350, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.1, unit: mm, x: 3400, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 2.3, unit: mm, x: 3500, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.7, unit: mm, x: 3525, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.1, unit: mm, x: 3600, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.5, unit: mm, x: 3800, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 0.5, unit: mm, x: 3900, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 3, unit: mm, x: 4256, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.4, unit: mm, x: 4307, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 3, unit: mm, x: 4350, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 2.3, unit: mm, x: 3340, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 3, unit: mm, x: 3340, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 3.8, unit: mm, x: 3350, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 2.3, unit: mm, x: 3400, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 3, unit: mm, x: 3400, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.7, unit: mm, x: 3450, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 3, unit: mm, x: 3480, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 2.1, unit: mm, x: 3600, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 3664, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 2, unit: mm, x: 3900, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1, unit: mm, x: 3905, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.1, unit: mm, x: 4049, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 0.9, unit: mm, x: 4099, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 3, unit: mm, x: 4099, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.1, unit: mm, x: 4200, x_name: spindle_speed, x_unit: rpm}
+  - {name: border_test, value: 3, unit: mm, x: 3300, x_name: spindle_speed, x_unit: rpm}
+  - {name: border_test, value: 1.7, unit: mm, x: 3400, x_name: spindle_speed, x_unit: rpm}
+  - {name: border_test, value: 3, unit: mm, x: 3450, x_name: spindle_speed, x_unit: rpm}
+  - {name: border_test, value: 1.7, unit: mm, x: 3470, x_name: spindle_speed, x_unit: rpm}
+  - {name: border_test, value: 1.7, unit: mm, x: 3489, x_name: spindle_speed, x_unit: rpm}
+  - {name: border_test, value: 2, unit: mm, x: 4246, x_name: spindle_speed, x_unit: rpm}
+reference_curves: []
+notes: "Value = axial depth of cut b of a test, x = spindle speed. stable_test: the once-per-revolution sampled tool position settled to a constant value; chatter_test: unstable cut; border_test: marked '+' (border) by the authors. Labelled points A-H come from the text; the other markers were digitised from a 5x render of the manuscript figure (axes calibrated on the frame and the tick marks). The authors' predicted boundary (FEAT, E = 4) is drawn in the same figure but is a model result and is not stored. Displacement sampled at 12 800 samples/s by an eddy-current sensor on the flexure; tests were run first in predicted-stable regions, then near lobes, then in predicted-unstable regions. The vertical marker lines of E and H sit at about 3456 and 4106 rpm in the figure while the text gives 3450 and 4100 rpm; the text values are used for E and H."

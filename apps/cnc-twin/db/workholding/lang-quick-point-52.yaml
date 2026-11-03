@@ -1,0 +1,27 @@
+format: cnctwin-workholding
+version: 1
+series_id: lang-quick-point-52
+maker: "LANG Technik"
+series: "Quick-Point 52 zero-point grid plates (mechanical zero-point fixture plate, 52 mm grid)"
+src: lang-2024-catalogue
+system:
+  repeatability_mm: {value: 0.005, src: lang-2024-catalogue, page: "p. 18, 'less than 0.005 mm'"}
+  actuation_torque_Nm: {value: 30, src: lang-2024-catalogue, page: "p. 18, 30 Nm (60 Nm for 4-fold grid plates)"}
+  holding_force_kN: {value: 58.8, src: lang-2024-catalogue, page: "p. 18, 'holding forces of up to 6,000 kg'", note: "6000 kgf x 9.81; stated for Quick-Point plates in general, not per stud"}
+  clamping_stud_diameter_mm: {value: 16, src: lang-2024-catalogue, page: "p. 22-23, Ø16 mm stud, 30 Nm, for vises 46 Micro / 46 / 77"}
+items:
+  - id: lang-45600
+    order_code: "45600"
+    type: fixture_plate
+    plate_mm: {value: [104, 104, 27], src: lang-2024-catalogue, page: "p. 23, grid plate without mounting bores"}
+    grid_mm: {value: 52, src: lang-2024-catalogue}
+    mass_kg: {value: 2.0, src: lang-2024-catalogue}
+    flatness_um: null
+  - id: lang-45602
+    order_code: "45602"
+    type: fixture_plate
+    plate_mm: {value: [85, 85, 27], src: lang-2024-catalogue, page: "p. 22, Quick-Point 52 DUO2 grid plate"}
+    grid_mm: {value: 52, src: lang-2024-catalogue}
+    mass_kg: {value: 1.4, src: lang-2024-catalogue}
+    flatness_um: null
+notes: "Plate flatness/parallelism not printed for these plates (the Quick-Tower tombstone is ±0.02 mm plane parallel, p. 60)."

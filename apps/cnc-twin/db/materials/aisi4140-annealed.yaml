@@ -1,0 +1,128 @@
+# AISI 4140 / 42CrMo4 (1.7225), soft annealed. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: aisi4140-annealed
+name: "AISI 4140 / 42CrMo4 Cr-Mo steel, soft annealed"
+family: steel
+iso_group: P
+condition: "+A: soft annealed 680-720 C, slow cooled (ovako-2026-42crmo4); max 241 HBW (thyssenkrupp-2017-42crmo4)"
+designations: {UNS: G41400, EN: "42CrMo4 (1.7225)", SAE: "4140", JIS: "SCM440"}
+stock_forms: []                    # no published as-supplied residual-stress profile was found
+
+physical:
+  src: thyssenkrupp-2017-42crmo4   # 'Anhaltsangaben ueber physikalische Eigenschaften' (indicative values)
+  density_kg_m3: {value: 7850}
+  specific_heat_J_kgK: {table: [[20, 461], [100, 480], [200, 498], [300, 524], [400, 524], [500, 615], [600, 690], [700, 720], [800, 682]], src: est, note: "20 C value 461 from thyssenkrupp-2017-42crmo4; temperature dependence copied from AISI 1045 (xiu-2019-1045-grinding-fe Table 1), cp of low-alloy steels differs by a few per cent"}
+  conductivity_W_mK: {table: [[20, 45.1], [100, 42.8], [200, 40.1], [300, 37.9], [400, 36.0], [500, 34.7], [600, 32.4], [700, 30.2], [800, 28.0]], src: est, note: "20 C value 45.1 from thyssenkrupp-2017-42crmo4; shape from AISI 1045 (xiu-2019 Table 1) multiplied by a factor rising linearly from 45.1/49.77 at 20 C to 1.0 at 800 C (alloy and carbon steels converge near 800 C)"}
+  expansion_1_K: {table: [[100, 12.1e-6], [200, 12.7e-6], [300, 13.2e-6], [400, 13.6e-6], [500, 14.0e-6]], note: "mean CTE from 20 C"}
+  youngs_modulus_GPa: {table: [[20, 212], [100, 207], [200, 199], [300, 192]]}
+  poisson: {value: 0.3, src: zielinski-2021-42crmo4-precision-turning, note: "Table 5 (FE input)"}
+  solidus_degC: {value: 1440, src: est, note: "estimated as for 0.4 % C steel from the binary Fe-C diagram; alloying not accounted for"}
+  liquidus_degC: {value: 1500, src: est, note: "as solidus"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 200, src: ovako-2026-42crmo4, range: [200, 241], note: "+A typical 200 HB (variant 326C) to 241 HB (other variants); 241 HBW is also the +A maximum in thyssenkrupp-2017-42crmo4"}
+  yield_MPa: {value: 415, src: est, note: "0.6 x the estimated UTS, a typical ratio for spheroidised/annealed low-alloy steel; no annealed tensile test read"}
+  ultimate_MPa: {value: 690, src: est, note: "3.45 x HB (200 HB) hardness-to-strength conversion"}
+  elongation_pct: {value: 25, src: est, note: "typical of annealed low-alloy steel; not read"}
+  fracture_strain: {value: 0.8, src: est, note: "assumed reduction of area 55 % (ln(1/0.45))"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 569
+  B_MPa: 618
+  n: 0.234
+  C: 0.0134
+  m: 1.0
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: 1490
+  src: est
+  note: "No Johnson-Cook set for annealed 4140 was found in an accessible source. Estimate: the AISI 1045 set of Jaspers & Dautzenberg (burns-2012-1045-cutting-temperature) with A and B multiplied by 690/671 (estimated UTS of annealed 4140 / UTS of the ETH Ck45 batch); n, C, m, T_melt unchanged (both are ferritic-pearlitic/spheroidised 0.4 % C steels). Pujana et al. 2007 (IJMTM 47:2153) identified a 42CrMo4 set by inverse cutting but was not accessible."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 1700
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "Walter machining group P7 (42CrMo4 listed as P7 / P9; P7 = not heat treated), p. F9; standard value for a neutral cutting edge"
+  mechanistic: []                  # no published calibration read
+  min_chip_thickness_ratio: {value: 0.27, src: est, note: "taken from the 0.25-0.30 found for 304 (zou-2026-304-min-cutting-thickness)"}
+  indentation_coeff_N_mm3: {value: 3.0e4, src: est, note: "order-of-magnitude placeholder: 3.0e4 N/mm3 assumed for ~200 HB steel"}
+  work_hardening:
+    layer_depth_um: {value: 50, src: est, note: "assumed as for 1045"}
+    hardness_increase_pct: {value: 15, src: est, note: "assumed as for 1045"}
+    strain_hardening_exponent: {value: 0.234, src: est, note: "JC n of the estimated set"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.5, src: est, range: [0.3, 0.6], note: "range of Coulomb coefficients used in the FE studies read (0.6 for 42CrMo4 in zielinski-2021)"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+  - tool_class: carbide
+    coating: TiAlN
+    mu_sliding: {value: 0.4, src: est, note: "assumed 20 % below uncoated"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 300, src: est, note: "assumed as for annealed/normalised 0.4 % C steel (see aisi1045)"}
+  bue:
+    interface_temp_degC: {range: [200, 550], src: est, note: "assumed as for 1045"}
+    vc_m_min: [10, 60]
+    src: est
+    note: "BUE window assumed similar to the measured 10-50 m/min window of Ck45 (klippel-2024-ck45-orthogonal), widened slightly for the softer, more adhesive annealed structure"
+  breakability: {value: medium, src: est, note: "continuous ductile chips; chip breaker needed"}
+  oxide_colours:
+    table: [[200, "#EDE4B0", "white-yellow (weissgelb)"], [220, "#E3C770", "straw yellow (strohgelb)"], [230, "#D4A93F", "golden yellow (goldgelb)"], [240, "#B98745", "yellow-brown (gelbbraun)"], [250, "#9B5B34", "brown-red (braunrot)"], [260, "#8C3A2E", "red (rot)"], [270, "#7B2E56", "purple-red (purpurrot)"], [280, "#5E2C78", "violet (violett)"], [290, "#2E2F82", "dark blue (dunkelblau)"], [300, "#3C64C4", "cornflower blue (kornblumenblau)"], [320, "#76A9DA", "light blue (hellblau)"], [340, "#7F8FA2", "blue-grey (blaugrau)"], [360, "#8E8E8E", "grey (grau)"]]
+    src: wikipedia-de-anlassen
+    note: "table for unalloyed tool steel (Tabellenbuch Metall) applied to 1 % Cr steel; hex values are this database's rendering (est); Cr slightly delays the colours"
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: carbide
+    coating: "CVD TiCN/Al2O3"
+    C_m_min: 590
+    n: 0.25
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 300 m/min (typical CVD P-grade recommendation for annealed low-alloy steel, general knowledge)"
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 263
+    n: 0.22
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.3
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 15 min at vc = 145 m/min (general knowledge)"
+tool_life_usui: null
+
+residual_stress: []                # no published profile of annealed bar read; soft annealing leaves low residual stress
+
+skin:
+  type: mill_scale
+  thickness_mm: {value: 0.05, src: est, note: "hot-rolled and annealed bar, not peeled; 10-100 um scale assumed. Peeled or bright bar: type none"}
+  hardness_factor: {value: 2.0, src: est, note: "iron oxide scale vs ~200 HB matrix; not measured"}
+  abrasiveness_factor: {value: 2.0, src: est, note: "assumed"}
+
+thermal_damage:
+  burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour"}
+  white_layer_degC: {value: 740, src: ovako-2026-42crmo4, range: [740, 770], note: "Ac1 740 C, Ac3 770 C; rapid heating raises the effective value"}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "Annealed 4140. Physical data are thyssenkrupp indicative values; the flow stress, strength, friction and tool-life entries are estimates (no annealed-4140 cutting data were accessible). Kienzle constants are Walter standard values."

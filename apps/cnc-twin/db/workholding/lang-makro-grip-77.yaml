@@ -1,0 +1,37 @@
+format: cnctwin-workholding
+version: 1
+series_id: lang-makro-grip-77
+maker: "LANG Technik"
+series: "Makro-Grip 77 self-centring 5-axis vise (form-fit clamping of pre-stamped blanks), jaw width 46 mm"
+src: lang-2024-catalogue
+force_vs_torque:
+  makro_grip_77: {holding_force_N: 14000, at_torque_Nm: 60, src: lang-2024-catalogue, page: "p. 123 chart, labelled point; line through the origin"}
+  makro_grip_46_125: {holding_force_N: 20000, at_torque_Nm: 100, src: lang-2024-catalogue, page: "p. 123 chart; 6000 N at 30 Nm also labelled"}
+items:
+  - id: lang-48085-46
+    order_code: "48085-46"
+    type: vise
+    self_centring: true
+    jaw_width_mm: {value: 46, src: lang-2024-catalogue, page: "p. 126"}
+    base_length_mm: {value: 102, src: lang-2024-catalogue}
+    max_opening_mm: {value: 85, src: lang-2024-catalogue, note: "clamping range 0-85 mm"}
+    clamping_force_kN: {value: 14.0, at_handle_torque_Nm: 60, src: lang-2024-catalogue, page: "p. 123", note: "holding force with the form-fit serration on a pre-stamped blank (LANG wording 'holding force')"}
+    force_per_torque_N_per_Nm: {value: 233, src: lang-2024-catalogue, note: "14000 N / 60 Nm, linear chart"}
+    jaw_friction: {value: null, note: "form-fit; no friction coefficient applies to stamped blanks"}
+    jaw_stiffness_N_um: {value: 100, src: est, note: "not published; compact 46 mm jaws assumed ~100 N/µm"}
+    mass_kg: {value: 2.1, src: lang-2024-catalogue}
+    accuracy: null
+  - id: lang-48120-46
+    order_code: "48120-46"
+    type: vise
+    self_centring: true
+    jaw_width_mm: {value: 46, src: lang-2024-catalogue}
+    base_length_mm: {value: 130, src: lang-2024-catalogue}
+    max_opening_mm: {value: 120, src: lang-2024-catalogue, note: "clamping range 0-120 mm"}
+    clamping_force_kN: {value: 14.0, at_handle_torque_Nm: 60, src: lang-2024-catalogue, page: "p. 123"}
+    force_per_torque_N_per_Nm: {value: 233, src: lang-2024-catalogue}
+    jaw_friction: {value: null, note: "form-fit"}
+    jaw_stiffness_N_um: {value: 100, src: est, note: "not published"}
+    mass_kg: {value: 2.5, src: lang-2024-catalogue}
+    accuracy: null
+notes: "A conventional precision machine vise (Kurt D688 AngLock) could not be read (site blocked); this self-centring vise is the only vise with a published force-torque relation in this set."

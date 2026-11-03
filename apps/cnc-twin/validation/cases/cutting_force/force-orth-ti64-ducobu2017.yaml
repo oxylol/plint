@@ -1,0 +1,68 @@
+# Ti6Al4V plane-strain orthogonal cut (planing) at 30 m/min: RMS cutting and feed force per mm width.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-ti64-ducobu2017
+quantity: cutting_force
+reference:
+  src: ducobu-2017-ti6al4v-orthogonal-reference
+  location: 'Table 3 (experimental reference: average RMS forces per mm width and average chip thickness for h = 40, 60,
+    100 um)'
+  digitised: false
+  uncertainty_pct: 10
+  measured: true
+  note: 'uncertainty_pct: the source states that the standard deviations of the forces and of the chip thickness stay under
+    10 % of the average; the +- values printed in Table 3 are given per value'
+setup:
+  operation: orthogonal_turning
+  material:
+    db: ti6al4v
+    note: 'Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed); the
+      paper''s model uses E 113.8 GPa, rho 4430 kg/m3, k 7.3 W/mK, cp 580 J/kgK (Table 4)'
+  tool:
+    src: ducobu-2017-ti6al4v-orthogonal-reference
+    page: Table 2 (cutting conditions and tool geometry, after ref. [36])
+    tool_class: carbide
+    rake_deg: 15
+    clearance_deg: 2
+    edge_radius_um: 20
+    tool_material:
+      value: tungsten carbide
+      note: material of the tool in the paper's model (Sect. 5); grade not given
+    coating:
+      value: none
+      src: est
+      note: 'assumed: not stated; the FE model of the same paper uses uncoated tungsten carbide'
+    assumed_inputs: [coating]
+  machine:
+    src: ducobu-2017-ti6al4v-orthogonal-reference
+    page: Sect. 4
+    type: 'conventional milling machine used as a planer: the table moves the workpiece past a fixed tool (plane-strain
+      2D orthogonal cut)'
+    dynamometer: Kistler 9257B
+  conditions:
+    src: ducobu-2017-ti6al4v-orthogonal-reference
+    page: Table 2, Sect. 4
+    vc_m_min: 30
+    uncut_chip_thickness_per_test_um: [40, 60, 100]
+    note: vc = 30 m/min is the maximum table feed of the machine; at least three repetitions per condition; width of cut
+      not given (forces are per mm of width)
+    coolant: {value: dry, src: est, note: 'assumed: not stated in this paper'}
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fc h40, value: 86, unit: N/mm, uncertainty: 2, x: 40, x_name: h, x_unit: um, note: average of the RMS cutting force}
+- {name: Ff h40, value: 40, unit: N/mm, uncertainty: 1, x: 40, x_name: h, x_unit: um, note: average of the RMS feed force}
+- {name: Fc h60, value: 113, unit: N/mm, uncertainty: 2, x: 60, x_name: h, x_unit: um, note: average of the RMS cutting
+    force}
+- {name: Ff h60, value: 44, unit: N/mm, uncertainty: 1, x: 60, x_name: h, x_unit: um, note: average of the RMS feed force}
+- {name: Fc h100, value: 174, unit: N/mm, uncertainty: 2, x: 100, x_name: h, x_unit: um, note: average of the RMS cutting
+    force}
+- {name: Ff h100, value: 50, unit: N/mm, uncertainty: 1, x: 100, x_name: h, x_unit: um, note: average of the RMS feed force}
+reference_curves: []
+notes: 'Plane-strain orthogonal cutting of Ti6Al4V at 30 m/min with a sharp-ish (20 um) 15 deg rake carbide tool; continuous
+  chips at all three uncut chip thicknesses (Sect. 4). The same paper simulates the h = 60 um case with twenty published
+  Johnson-Cook sets and gets RMS cutting forces of 89-192 N/mm and feed forces of 18-50 N/mm against the measured 113 and
+  44 N/mm (Table 5): see validation/budgets.yaml. The experiments were first published in Ducobu et al. (2015) Int. J. Mater.
+  Form. 8(3), 455-468 (not read).'

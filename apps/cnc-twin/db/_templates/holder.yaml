@@ -1,0 +1,28 @@
+# Tool holder (catalogue item): db/holders/<maker>-<series>.yaml, `items:` like tools
+format: cnctwin-holder
+version: 1
+series_id: schunk-tendo-e-compact
+maker: "SCHUNK"
+series: "TENDO E compact hydraulic expansion toolholder"
+src: key
+items:
+  - id: schunk-tendo-ec-hsk-a63-12
+    order_code: "..."
+    type: hydraulic                  # er_collet | hydraulic | shrink_fit | side_lock | milling_chuck | modular | arbor | boring_head | tapping_floating | tapping_synchro | turret_vdi | turret_bmt | lathe_holder
+    taper: HSK-A63                   # BT40 | CAT40 | HSK-A63 | HSK-A100 | SK40 | Capto-C6 | VDI30 | BMT65 | ...
+    bore_mm: 12                      # clamping diameter (or collet range [lo, hi] for ER)
+    gauge_length_mm: 80              # spindle face to holder nose
+    nose_diameter_mm: 32
+    profile_mm: [[0, 32], [40, 32], [60, 44], [80, 44]]   # [z from nose toward spindle, diameter] revolved outline for collision
+    clamping_torque_Nm: 520          # transmissible torque at the bore (catalogue, at nominal shank tolerance h6)
+    axial_retention_N: null          # axial pull-out force if published
+    radial_stiffness_N_um: null      # at the nose, est if not published
+    runout_um: 3                     # at 2.5xD (or as published)
+    runout_at_mm: 30
+    balance_grade: "G2.5 at 25000 rpm"
+    max_rpm: 40000
+    mass_kg: 1.6
+    clamp_length_mm: 45              # length of shank engaged
+    price_eur: 300
+    axial_float_mm: null             # tapping_floating / tapping_synchro holders: axial compensation travel
+    axial_stiffness_N_um: null       # and its stiffness

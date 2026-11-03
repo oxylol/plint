@@ -1,0 +1,48 @@
+# Insperger et al. (2006): surface location error (dimensional error of the milled wall) versus spindle
+# speed, 10 % immersion down-milling, ap = 0.8 mm, single-flute 8 mm end mill with a 722 Hz tool mode.
+format: cnctwin-validation-case
+version: 1
+id: wallerror-insperger2006-sle-down10pct-ap0.8
+quantity: wall_error
+reference:
+  src: insperger-2006-chatter-sle
+  location: "Sect. 4 (SLE definition, Eq. 24, Fig. 5), Sect. 5 (setup), Fig. 7(c) (crosses = experimental SLE, digitised)"
+  digitised: true
+  uncertainty_pct: 6                 # +-0.012 mm on SLE values up to 0.2 mm
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: al6061-t6, note: "source material AlMgSi0.5 (EN AW-6060), not in the database; 6061-T6 is the nearest Al-Mg-Si alloy. The cutting coefficients below are the source's own, so the material enters only through them"}
+  tool:
+    type: square_endmill
+    diameter_mm: 8
+    flutes: 1                        # originally two teeth, one ground off to avoid runout
+    helix_deg: {value: 45, src: gradisek-2005-stability-prediction, page: "Sect. 3"}
+    overhang_mm: {value: 96, src: gradisek-2005-stability-prediction, page: "Sect. 3 (L/D = 12)"}
+    tool_class: {value: carbide, src: est, note: "material of the end mill not stated"}
+  holder: {type: shrink_fit, interface: HSK40E, src: gradisek-2005-stability-prediction, page: "Sect. 3"}
+  conditions:
+    direction: down
+    radial_immersion_ratio: 0.1
+    ae_mm: 0.8
+    feed_mm_tooth: 0.16
+    ap_mm: 0.8
+    coolant: mql                     # "minimal amount of coolant"
+  dynamics:
+    model: "2 DOF tool, diagonal modal matrices at the tool tip (impact test); natural frequency of the tool about 722 Hz"
+    modal_mass_kg: [0.0199, 0.0201]          # M = diag(x, y)
+    stiffness_N_per_m: [409000, 413000]      # K = diag(x, y)
+    damping_ratio: [0.00888, 0.00854]        # derived: c / (2 sqrt(k m)) from the printed C = diag(1.603, 1.557) Ns/m
+    damping_note: "printed damping matrix C = diag(1.603, 1.557) N s/m (x, y); the ratios above are computed from it, not printed"
+    cutting_coefficients: {Kt_N_mm2: 644, Kn_N_mm2: 237, note: "Kt 644e6, Kn 237e6 N/m2, identified mechanistically at 4000 rpm"}
+  program: null
+reference_values: []
+reference_curves:
+  - name: surface_location_error
+    x_name: spindle_speed
+    x_unit: rpm
+    y_name: SLE
+    y_unit: mm
+    uncertainty: 0.012               # mm, absolute (digitising a raster figure, crosses partly covered by the model curve)
+    points: [[14000, 0.200], [18000, -0.060], [19000, -0.050], [20000, -0.005], [21000, 0.200], [22000, 0.060], [23000, 0.020], [24000, 0.000], [25000, -0.010], [26000, -0.010]]
+notes: "SLE is the signed difference between the desired and the actual machined surface in the surface-normal (y) direction: positive when the tool cut less deep than commanded (material left), negative when it cut deeper. The experimental SLE was computed by the authors from the tool deflection measured by two laser displacement sensors on the spindle housing (65 mm above the tool tip, scaled to the tip); they call it a good estimate of the real SLE rather than a direct surface measurement. Values digitised on a calibrated grid from an 8x render of the raster figure; crosses at 22-26 krpm are partly hidden by the theoretical curve (about +-0.015 mm there). SLE is large near the resonant speeds where ft / ftpe = 2, 3, 4 (21.7, 14.4, 10.8 krpm). Feed per tooth 0.16 mm; only stable cuts are physically meaningful (see stability-insperger2006-1flute-almgsi-down10pct for which speeds were stable at this depth)."

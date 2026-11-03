@@ -1,0 +1,16 @@
+format: cnctwin-coating
+version: 1
+id: tialn
+name: "TiAlN (PVD arc; Oerlikon Balzers BALINIT FUTURA NANO as reference)"
+process: PVD
+src: balzers-2010-hq040
+colour: {value: "violet-grey", src: balzers-2010-hq040}
+hardness_HV: {value: 3300, src: balzers-2010-hq040, page: "p. 21, BALINIT FUTURA NANO microhardness HK0.01 3300"}
+hardness_HIT_GPa: {value: 33, range: [30, 36], src: balzers-web-futura-nano, page: "HIT 33 +/- 3 GPa"}
+max_service_temp_degC: {value: 900, src: balzers-web-futura-nano, note: "same 900 °C in balzers-2010-hq040"}
+process_temp_degC: {value: 500, src: balzers-web-futura-nano}
+conductivity_W_mK: {value: 3.0, range: [2.5, 3.1], src: est, note: "between sputtered c-TiN 3.1 and Al-rich c-Ti0.36Al0.64N 2.5 W/mK (moraes-2015-nitride-conductivity); TiAlN with Al/Ti about 1 assumed in between"}
+friction_vs_steel: {value: 0.4, range: [0.4, 0.6], src: balzers-2010-hq040, page: "p. 21, 0.4", note: "current Balzers page ~0.6 ball-on-disc ASTM G99 (balzers-web-futura-nano)"}
+typical_thickness_um: {value: [1, 4], src: balzers-2010-hq040, page: "p. 21"}
+wear_rate_factor: {value: 0.35, src: est, note: "oxidation-resistant (900 °C) coating; better than TiN at high cutting speed; no study read"}
+thermal_barrier_factor: {value: 0.88, src: est, note: "thin-film resistance argument as tin with k ~3 W/mK"}

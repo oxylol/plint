@@ -1,0 +1,128 @@
+# Workpiece material: free-machining leaded brass CuZn39Pb3 (CW614N) / C36000, drawn rod.
+# Physical data: Jacques Allemann CuZn39Pb3 datasheet; tensile data: Protolabs C360 sheet (C36000 values).
+format: cnctwin-material
+version: 1
+id: brass-c360
+name: "Free-machining brass CuZn39Pb3 / C36000 (C360)"
+family: brass
+iso_group: N
+condition: "drawn rod, half-hard (C36000 H02 / CuZn39Pb3 R430-type); alpha-beta brass with 2.5-3.5 % Pb"
+designations: {UNS: C36000, EN: "CuZn39Pb3 (CW614N)", DIN: "2.0401", ASTM: "C38500 (closest composition, per Jacques Allemann)"}
+stock_forms: []                    # no residual-stress profile read
+
+physical:
+  src: jacques-allemann-2021-cuzn39pb3
+  density_kg_m3: {value: 8470, range: [8470, 8500], note: "CuZn39Pb3; Protolabs gives 0.307 lb/in3 = 8.50 g/cm3 for C360"}
+  specific_heat_J_kgK: {table: [[20, 377]]}
+  conductivity_W_mK: {table: [[20, 123]], range: [116, 123], note: "Protolabs C360: 67 Btu/ft h F = 116 W/mK. A 50 W/mK figure circulating for CW614N looks like a -200 C value and is not used"}
+  expansion_1_K: {table: [[200, 21.0e-6], [300, 20.5e-6]], note: "21.0e-6 mean 20-200 C (Jacques Allemann); 20.5e-6 = 11.4e-6/F for 68-572 F (protolabs-2026-brass-c360). Two sources, so the table is not monotone; use as +-2 % data"}
+  youngs_modulus_GPa: {table: [[20, 97]], range: [96.5, 97], note: "Protolabs C360 14,000 ksi = 96.5 GPa"}
+  poisson: {value: 0.32, src: est, note: "nu = E/(2G) - 1 with E = 14,000 ksi and G = 5,300 ksi from protolabs-2026-brass-c360"}
+  solidus_degC: {value: 888, src: protolabs-2026-brass-c360, note: "1630 F (C360)"}
+  liquidus_degC: {value: 899, src: protolabs-2026-brass-c360, note: "1650 F (C360)"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HRB: 72, src: protolabs-2026-brass-c360, note: "C360 half-hard rod"}
+  yield_MPa: {value: 310, src: protolabs-2026-brass-c360, note: "45 ksi at 0.5 % extension, C360"}
+  ultimate_MPa: {value: 386, src: protolabs-2026-brass-c360, range: [386, 850], note: "56 ksi (C360 rod); cold-drawn CuZn39Pb3 wire reaches 450-850 MPa (Jacques Allemann)"}
+  elongation_pct: {value: 25, src: protolabs-2026-brass-c360, note: "in 2 in"}
+  fracture_strain: {value: 0.6, src: est, note: "ln(1/(1-RA)) with an assumed reduction of area of about 45 %; no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: {value: 310, src: protolabs-2026-brass-c360, note: "A = yield strength of half-hard C360 rod"}
+  B_MPa: 271
+  n: 0.37
+  C: {value: 0.009, note: "rate constant of cartridge brass (CuZn30) in johnson-cook-1983 Table 1, adopted as a proxy"}
+  m: {value: 1.68, note: "thermal exponent of cartridge brass in johnson-cook-1983 Table 1, adopted as a proxy"}
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: {value: 899, src: protolabs-2026-brass-c360, note: "liquidus of C360 (cartridge brass was fitted with Tm = 1189 K)"}
+  src: est
+  note: "No published JC set for CuZn39Pb3/C36000 was found. B and n fitted to the C360 tensile data (YS 310, UTS 386 MPa) with Considere's condition at an ASSUMED uniform true strain of 0.10: true stress at necking 426.7 MPa -> B = 270.7 MPa, n = 0.367. C and m from Johnson & Cook's cartridge brass (single-phase alpha CuZn30, A 112, B 505, n 0.42), which is not the same alloy: the alpha-beta leaded alloy is stronger, less ductile and its lead particles promote chip fracture. Rough estimate."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 700
+      mc: 0.27
+      rake_ref_deg: {value: 0, src: est, note: "reference geometry not stated by ISCAR; neutral 0 deg rake assumed"}
+      vc_ref_m_min: {value: 250, src: est, note: "no reference speed in the catalogue; assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR group 26: copper alloys > 1 % Pb, free cutting (110 HB)"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 805
+      mc: 0.27
+      rake_ref_deg: 0
+      vc_ref_m_min: 60
+      src: est
+      note: "carbide catalogue value x 1.15 assumed for HSS"
+  mechanistic: []                  # no published end-milling calibration for leaded brass was read
+  min_chip_thickness_ratio: {value: 0.3, src: wojciechowski-2022-min-chip-thickness, range: [0.2, 0.4], note: "brass 360, experimental micro-milling (Kim et al. 2004) in Table 1; aluminium/copper/brass analytic range 0.2-0.4 (Son et al.)"}
+  indentation_coeff_N_mm3: {value: 2.0e4, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (~125 HB for HRB 72)"}
+  work_hardening:
+    layer_depth_um: {value: 40, src: est, note: "assumed; drawn rod is already cold worked"}
+    hardness_increase_pct: {value: 10, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.37, src: est, note: "n of the estimated JC fit"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, range: [0.25, 0.5], note: "assumed low: lead smears on the rake face and acts as an internal lubricant; no measurement read"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed short contact (short, fractured chips)"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.35, src: est, note: "assumed"}
+
+chip:
+  tendency: discontinuous
+  segmentation: null               # discontinuous chips; adiabatic-shear segmentation not applicable
+  bue: null                        # no BUE reported for leaded free-cutting brass in the sources read
+  breakability: {value: good, src: jacques-allemann-2021-cuzn39pb3, note: "'very short chips', the reason the alloy dominates bar-turning (decolletage)"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 1130
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 500 m/min (general knowledge, not a cited source)"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 185
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 100 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress: []                # drawn rod: profile not read (stress relief 250-350 C per Jacques Allemann)
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 888, src: protolabs-2026-brass-c360, note: "solidus; the lead particles melt far lower, so lead smearing can occur well below it; zinc evaporates from 906 C (jacques-allemann-2021-cuzn39pb3)"}
+
+ignition: null
+composite: null
+
+notes: "Free-machining leaded brass (CuZn39Pb3 is the EN alloy; C36000 is the nearest US alloy: Cu 60-63 %, slightly more Cu). Sourced: physical data (Jacques Allemann), tensile/thermal data (Protolabs C360 sheet), Kienzle (ISCAR group 26), h_min/r_n (review), chip breakability. Estimated: JC set (fit + cartridge-brass C and m), Poisson (from E and G), friction, work hardening, K_sp, Taylor constants."

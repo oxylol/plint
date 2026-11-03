@@ -1,0 +1,64 @@
+# Tungaloy internal boring bars with CCMT09T304-PS inserts: StreamJetBar A20R-SCLCR09-D220 (steel),
+# E20S-SCLCR09-D220 (carbide shank) and the BoreMeister D25-L330-10D-C anti-vibration (damped) bar
+# with the S25-SCLCR09-H head. Read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03
+# (D004, D010, D014, D017, D090, B116, B016, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-sclcr-boring-bars
+maker: "Tungaloy Corporation"
+series: "SCLCR 95 deg boring bars for CCMT09T3 inserts: steel, carbide and damped (BoreMeister) shanks with their L/D limits"
+src: tungaloy-2023-gc-int-toolholder
+notes: "L/D limits by shank material (D004): steel <= 3, carbide-reinforced <= 4, carbide <= 5, BoreMeister anti-vibration bar <= 10 (D010: a spring-supported weight inside the bar damps the vibration). The bar overhang stored is the maximum allowed by these limits; the minimum is the clamping set-up. A/E-SCLCR (D014): cutting edge style L, 95 deg, GAMP 0 deg (axial rake), GAMF -8 deg (radial rake) for the 20 mm bars, RE 0.8 standard, insert CC**09T3, torque 3 N m, through coolant. Insert CCMT09T304-PS (B116): IC 9.525, S 3.97, D1 4.4, RE 0.4 mm, 7 deg clearance, PS pictogram 10 deg rake. Window and data = PS T9215 row of the positive-insert standard cutting conditions for steel (B016); Tungaloy gives no reduction for long overhangs."
+defaults:
+  type: boring_bar
+  hand: right
+  tool_material: {class: carbide, grade: "T9215 CVD-coated carbide (substrate not stated)", id: carbide-p30, src: est, note: "CVD P grade mapped to the P30 substrate entry"}
+  coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9215 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+items:
+  - id: tungaloy-a20r-sclcr09-d220-ccmt09t304-ps-t9215
+    order_code: "A20R-SCLCR09-D220 (steel) + CCMT09T304-PS T9215"
+    geometry:
+      bar: {diameter_mm: 20, overhang_mm: {value: 60, note: "L/D 3 x 20 mm, the limit for steel shanks (D004)"}, material: steel}
+      min_bore_mm: 22
+      insert: &ccmt09
+        iso_code: "CCMT09T304-PS"
+        shape: C
+        included_angle_deg: 80
+        ic_mm: 9.525
+        thickness_mm: 3.97
+        nose_radius_mm: 0.4
+        clearance_deg: 7
+        wiper: false
+        chip_breaker: {name: PS, rake_deg: {value: 10, src: tungaloy-2023-gc-insert, page: "B116 pictogram"}, window: {f_mm: [0.08, 0.3], ap_mm: [0.3, 2]}, src: tungaloy-2023-gc-insert, page: "B016 PS T9215"}
+        src: tungaloy-2023-gc-insert
+        page: "B116"
+      holder: {iso_code: "A20R-SCLCR09-D220", approach_angle_deg: 95, rake_deg: {value: -8, note: "GAMF (radial rake) as printed; GAMP (axial rake) 0 deg"}, inclination_deg: {value: -0.7, src: est, note: "from GAMP 0 deg, GAMF -8 deg and kappa_r 95 deg: tan(lambda_s) = tan(GAMP) sin(kappa_r) - tan(GAMF) cos(kappa_r); not printed"}, overhang_mm: 60}
+      note: "A20R-SCLCR09-D220 (D014): steel, DMIN 22, DCONMS 20, WF 11, LF 200, LH 32, H 18 mm"
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 2 corners, not reground"}
+    cutting_data: &ps_t9215
+      - {iso_group: P, material_hint: "low carbon / alloy steels S10C, SCM415, SS400", operation: [boring], vc_m_min: {min: 120, max: 350}, f_mm: {min: 0.08, max: 0.3}, ap_max_mm: 2, src: tungaloy-2023-gc-insert, page: "B016 PS T9215", note: "ap 0.3-2 mm"}
+      - {iso_group: P, material_hint: "medium carbon / alloy steels S45C, SCM440", material: aisi1045, operation: [boring], vc_m_min: {min: 100, max: 350}, f_mm: {min: 0.08, max: 0.3}, ap_max_mm: 2, src: tungaloy-2023-gc-insert, page: "B016", note: "ap 0.3-2 mm"}
+      - {iso_group: P, material_hint: "high carbon / alloy steels SNCM439", operation: [boring], vc_m_min: {min: 80, max: 250}, f_mm: {min: 0.08, max: 0.3}, ap_max_mm: 2, src: tungaloy-2023-gc-insert, page: "B016", note: "ap 0.3-2 mm"}
+  - id: tungaloy-e20s-sclcr09-d220-ccmt09t304-ps-t9215
+    order_code: "E20S-SCLCR09-D220 (carbide shank) + CCMT09T304-PS T9215"
+    geometry:
+      bar: {diameter_mm: 20, overhang_mm: {value: 100, note: "L/D 5 x 20 mm, the limit for carbide shanks (D004)"}, material: carbide}
+      min_bore_mm: 22
+      insert: *ccmt09
+      holder: {iso_code: "E20S-SCLCR09-D220", approach_angle_deg: 95, rake_deg: {value: -8, note: "GAMF as printed; GAMP 0 deg"}, inclination_deg: {value: -0.7, src: est, note: "from GAMP 0, GAMF -8, kappa_r 95 deg; not printed"}, overhang_mm: 100}
+      note: "E20S-SCLCR09-D220 (D014): carbide, DMIN 22, DCONMS 20, WF 11, LF 250, LH 36, H 18 mm"
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 2 corners, not reground"}
+    cutting_data: *ps_t9215
+  - id: tungaloy-boremeister-d25-l330-10d-c-s25-sclcr09-h-ccmt09t304-ps
+    order_code: "D25-L330-10D-C (BoreMeister anti-vibration bar) + S25-SCLCR09-H + CCMT09T304-PS T9215"
+    geometry:
+      bar: {diameter_mm: 25, overhang_mm: {value: 250, note: "L/D 10 x 25 mm, the BoreMeister limit (D004, D010); the bar alone allows OHX 230 mm plus the 20 mm head"}, material: damped}
+      min_bore_mm: {value: 32, note: "DMIN of the S25-SCLCR09-H head (D017)"}
+      insert: *ccmt09
+      holder: {iso_code: "S25-SCLCR09-H", approach_angle_deg: 95, overhang_mm: 250}
+      note: "bar D25-L330-10D-C (D090): steel, DCONWS 25, DCONMS 25, OAL 332.5, OHX 230 mm, coolant G1/4; head S25-SCLCR09-H (D017): DMIN 32, DCONMS 25, WF 17, LF 20 mm, screw-on, insert CC**09T3; head rake angles not read"
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable insert, 2 corners, not reground"}
+    cutting_data: *ps_t9215

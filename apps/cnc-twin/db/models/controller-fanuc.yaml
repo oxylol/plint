@@ -1,0 +1,90 @@
+# FANUC Series 0i-F (M and T) parameter defaults the twin's executor uses when the project does not
+# set them (physics.controller, cnctwin/controller/schema.py). Names carry the SI unit; `unit:` is the
+# unit written. FANUC's operator manual (B-64604EN) could not be read this session; values from
+# general FANUC knowledge are src est with the parameter number they stand for.
+format: cnctwin-model-params
+version: 1
+model: controller-fanuc
+description: "Default control parameters of the FANUC 0i-F custom macro B dialect"
+params:
+  arc_tolerance_m:
+    value: 0.02
+    unit: mm
+    range: [0.001, 0.1]
+    src: est
+    note: "parameter 3410 (limit of arc radius error, PS0020 OVER TOLERANCE OF RADIUS); machine-builder setting, 0.01-0.05 mm typical; 0.02 mm assumed"
+  macro_nesting_levels:
+    value: 5
+    unit: "-"
+    src: est
+    note: "custom macro calls (G65, G66, G/M-code calls) nest up to 5 levels (general FANUC custom macro B knowledge; Smid 2005)"
+  sub_nesting_levels:
+    value: 15
+    unit: "-"
+    src: est
+    note: "subprogram calls nest up to 15 levels including macro calls on 30i-generation software such as the 0i-F (older 0i: 10); PS0077 beyond"
+  max_m_codes_per_block:
+    value: 3
+    unit: "-"
+    src: est
+    note: "parameter 3404#7 M3B = 1 (up to three M codes in one block) assumed, as commonly set on 0i-F machines; with M3B = 0 only one"
+  first_wait_code:
+    value: 100
+    unit: "-"
+    src: est
+    note: "parameter 8110 (smallest waiting M code) of multi-path systems; machine-builder setting, M100 typical"
+  last_wait_code:
+    value: 999
+    unit: "-"
+    src: est
+    note: "parameter 8111 (largest waiting M code); machine-builder setting, M999 assumed"
+  macro_alarm_base:
+    value: 3000
+    unit: "-"
+    src: fanuc-cnc-functions-catalog-2024
+    page: "504"
+    note: "macro alarms #3000 = n are numbered 3000-3200 (alarm = 3000 + n, n = 0-200)"
+  max_macro_alarm:
+    value: 200
+    unit: "-"
+    src: fanuc-cnc-functions-catalog-2024
+    page: "504"
+    note: "largest n of #3000 = n (alarm numbers 3000-3200)"
+  g37_feed_m_s:
+    value: 100
+    unit: mm_min
+    range: [10, 1000]
+    src: est
+    note: "parameter 6241 (G37 measuring feedrate); machine-builder setting; 100 mm/min assumed"
+  g37_approach_m:
+    value: 5
+    unit: mm
+    range: [0.5, 50]
+    src: est
+    note: "parameter 6251 (gamma: distance before the measuring position where the measuring feed starts); 5 mm assumed"
+  g37_tolerance_m:
+    value: 2
+    unit: mm
+    range: [0.1, 20]
+    src: est
+    note: "parameter 6254 (epsilon: measuring position window; outside it the control raises an alarm); 2 mm assumed"
+  same_group_alarm:
+    value: false
+    unit: "-"
+    src: est
+    note: "G codes of one group in one block: FANUC executes the last one (general FANUC rule); no alarm"
+  feed_mode_change_clears_f:
+    value: true
+    unit: "-"
+    src: est
+    note: "after G93/G94/G95 changes the F value must be given again (a cutting move without it raises PS0011); interpretation chosen so a per-minute F is never reused as per-revolution"
+  g92_cancels_g52:
+    value: true
+    unit: "-"
+    src: est
+    note: "a G92 coordinate system setting cancels the G52 local coordinate system"
+  lathe_offsets_in_diameter:
+    value: true
+    unit: "-"
+    src: est
+    note: "parameter 5004#1 ORC = 0: X tool offsets and work shifts are diameter values on a diameter-programmed lathe"

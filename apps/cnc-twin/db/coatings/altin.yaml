@@ -1,0 +1,16 @@
+format: cnctwin-coating
+version: 1
+id: altin
+name: "AlTiN, Al-rich (PVD arc; Oerlikon Balzers BALINIT LATUMA as reference)"
+process: PVD
+src: balzers-web-latuma
+colour: {value: "grey", src: balzers-web-latuma}
+hardness_HV: {value: 3500, src: est, note: "no microhardness read; HIT 35 GPa (balzers-web-latuma) scaled by the Balzers TiAlN pair HK 3300 / HIT 33 (balzers-2010-hq040, balzers-web-futura-nano)"}
+hardness_HIT_GPa: {value: 35, range: [32, 38], src: balzers-web-latuma, page: "HIT 35 +/- 3 GPa"}
+max_service_temp_degC: {value: 1000, src: balzers-web-latuma}
+process_temp_degC: {value: 500, src: balzers-web-latuma, note: "printed as '< 500'"}
+conductivity_W_mK: {value: 2.5, src: moraes-2015-nitride-conductivity, page: "sputtered c-Ti0.36Al0.64N, 295 K"}
+friction_vs_steel: {value: 0.55, src: est, note: "no AlTiN value read; taken from Ionbond 22 (AlTiCrN, 0.55, ionbond-coating-portfolio), the closest Al-rich nitride listed"}
+typical_thickness_um: {value: [1, 4], src: est, note: "Balzers BALINIT coatings are 0.5-5 µm (balzers-2010-hq040 p. 20); 1-4 assumed as for TiAlN"}
+wear_rate_factor: {value: 0.3, src: est, note: "higher Al content, oxidation limit 1000 °C; no study read"}
+thermal_barrier_factor: {value: 0.88, src: est, note: "thin-film resistance argument as tin with k 2.5 W/mK"}

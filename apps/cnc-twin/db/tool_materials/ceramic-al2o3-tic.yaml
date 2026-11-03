@@ -1,0 +1,28 @@
+format: cnctwin-tool-material
+version: 1
+id: ceramic-al2o3-tic
+class: ceramic
+name: "Mixed (black) ceramic Al2O3-TiC, ISO K01-K10 / H01-H10 (Kyocera KT66 / A66N substrate as reference grade)"
+src: kyocera-2015-insert-grades
+composition: {text: "Al2O3 + TiC (about 30 % TiC typical; fraction not printed by Kyocera)", src: kyocera-2015-insert-grades, page: "p. A14"}
+density_kg_m3: {value: 4270, src: est, note: "rule of mixtures 70 vol% Al2O3 (3.98 g/cm3) + 30 vol% TiC (4.93 g/cm3); the TiC fraction itself is assumed"}
+youngs_modulus_GPa: {value: 400, src: est, note: "between dense alumina (370-400 GPa, syalons-2023-material-properties Aloxalon 995/999) and TiC (~450 GPa)"}
+poisson: {value: 0.22, src: est, note: "alumina 0.22 (syalons-2023-material-properties); TiC similar"}
+hardness_HV: {value: 2050, src: kyocera-2015-insert-grades, page: "p. A14, KT66 substrate hardness 20.1 GPa", note: "20.1 GPa / 0.009807 = 2050 HV"}
+transverse_rupture_MPa: {value: 980, src: kyocera-2015-insert-grades, page: "p. A14, KT66 transverse strength 980 MPa"}
+compressive_MPa: {value: 4000, src: est, note: "dense alumina > 2000-2500 MPa (syalons-2023-material-properties lists lower bounds); TiC addition raises it; 4000 assumed"}
+fracture_toughness_MPa_sqrt_m: {value: 4.1, src: kyocera-2015-insert-grades, page: "p. A14, KT66 K1C 4.1"}
+conductivity_W_mK:
+  table: [[20, 22], [400, 15], [800, 12]]
+  src: est
+  note: "alumina 30 W/mK at RT (syalons-2023-material-properties, Aloxalon 995), Al2O3-TiC composites lower; alumina-like fall with temperature assumed"
+specific_heat_J_kgK:
+  table: [[20, 720], [400, 1000], [800, 1100]]
+  src: est
+  note: "rule of mixtures alumina (~0.78 J/gK RT) and TiC (~0.56 J/gK RT), rising like alumina"
+expansion_1_K: {value: 7.6e-6, src: est, note: "alumina 7.8e-6 (syalons-2023-material-properties, Aloxalon 995) and TiC ~7.4e-6"}
+max_service_temp_degC: {value: 1200, src: est, note: "oxide matrix; hot hardness of Al2O3+TiC stays above carbide past 1000 °C in the Kyocera chart (kyocera-2015-insert-grades p. A15, not digitised); 1200 assumed"}
+weibull_modulus: {value: 10, src: est, note: "typical structural ceramic scatter; no published value read"}
+thermal_shock_parameter: null
+usui: []
+notes: "Only hardness, TRS and K1C are maker values; all physical values are estimates."

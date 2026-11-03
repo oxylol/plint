@@ -1,0 +1,145 @@
+# AISI H13 / X40CrMoV5-1 (1.2344), hardened and tempered to ~50 HRC. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: h13-50hrc
+name: "AISI H13 hot-work tool steel, hardened and tempered ~50 HRC"
+family: tool_steel
+iso_group: H
+condition: "hardened 1010-1080 C (industeel-2344-h13, voestalpine-2025-w302-isodisc), double tempered 550-650 C to ~50 HRC"
+designations: {UNS: T20813, EN: "X40CrMoV5-1 (1.2344)", AISI: "H13", JIS: "SKD61", trade: "BÖHLER W302, Uddeholm Orvar"}
+stock_forms: []
+
+physical:
+  src: bohler-w302-fr-es           # BÖHLER W302 p. 11, hardened and tempered material where stated
+  density_kg_m3: {value: 7800, note: "20 C; 7640 at 500 C, 7600 at 600 C"}
+  specific_heat_J_kgK: {table: [[20, 460], [500, 550], [600, 590]]}
+  conductivity_W_mK: {table: [[100, 24.3], [200, 26.1], [300, 27.3], [400, 27.8], [500, 27.7], [600, 27.5], [700, 27.3]], note: "condition V = hardened and tempered. Industeel gives 25 (20 C) and 28.5 (500 C) after hardening"}
+  expansion_1_K: {table: [[100, 11.5e-6], [200, 12.0e-6], [300, 12.2e-6], [400, 12.5e-6], [500, 12.9e-6], [600, 13.0e-6], [700, 13.2e-6]], note: "mean from 20 C; same values in voestalpine-2025-w302-isodisc; Industeel after hardening: 10.7/11.9/12.2/12.5 for 20-100...400 C"}
+  youngs_modulus_GPa: {table: [[20, 215], [500, 176], [600, 165]]}
+  poisson: {value: 0.27, src: matras-2020-h13-cbn-milling, note: "Table 2"}
+  solidus_degC: {value: 1390, src: est, note: "no solidus read; typical of 5 % Cr hot-work steel (general knowledge)"}
+  liquidus_degC: {value: 1480, src: est, note: "no liquidus read; general knowledge"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HRC: 50, src: zhang-2021-h13-jc-hard-milling, note: "workpiece in the hard-milling study: 50 +- 2 HRC; W302 achieves 50-56 HRC after hardening (bohler-w302-fr-es)"}
+  yield_MPa: {value: 1500, src: est, note: "estimated as 0.87 x UTS for tempered martensite"}
+  ultimate_MPa: {value: 1720, src: est, note: "hardness conversion for 50 HRC (approximate ASTM E140-type relation); matras-2020 Table 2 lists 1200 MPa for H13 without stating the hardness"}
+  elongation_pct: {value: 10, src: est, note: "typical of H13 at 48-52 HRC; not read"}
+  fracture_strain: {value: 0.3, src: est, note: "assumed reduction of area ~26 %"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 1469
+  B_MPa: 321.39
+  n: 0.278
+  C: 0.028
+  m: 1.18
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: {value: 20, src: est, note: "not stated in matras-2020; room temperature assumed"}
+  T_melt_degC: {value: 1480, src: est, note: "not stated in matras-2020; taken equal to the estimated liquidus"}
+  src: matras-2020-h13-cbn-milling
+  note: "Table 6, H13 at 50 HRC, quoting Li et al. 2018 (Int. J. Mech. Sci. 149:241); B, n, C, m equal the hardness-based set of Yan, Hua & Shivpuri (2005, 2007). Alternatives in zhang-2021-h13-jc-hard-milling Tab. 1: M2 (Yan et al., 52 HRC) A 908.54 with the same B, n, C, m; M1 (Umer 2012, 50 HRC) A 674.8, B 239.2, n 0.44, C 0.056, m 2.7; M3 (Lu & He 2008, 50 HRC) A 1695, B 1088, n 0.6272, C 0.0048, m 0.52, eps0 0.001 1/s. Zhang et al. found only M3 reproduced the serrated chips seen in their experiments; M3 is the second choice if segmentation must come out of the flow law. Johnson & Cook 1983 give S-7 tool steel at Rc 50: A 1539, B 477, n 0.18, C 0.012, m 1.00, Tm 1763 K (cross-check of A)."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 3000
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 100, src: est, note: "Walter gives no reference speed; typical hard-milling speed assumed"}
+      src: walter-2025-technical-compendium
+      note: "Walter machining group H1 'hardened steels 46-52 HRC' (1.2344 listed as P11/H1), p. F9. Walter gives one value per workpiece group, independent of tool class"
+    - tool_class: cbn
+      coating: uncoated
+      kc11_N_mm2: 3000
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "same Walter H1 value applied to CBN (assignment to tool class is this database's; real CBN edges are chamfered and negative, which raises kc)"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.25, src: est, note: "assumed"}
+  indentation_coeff_N_mm3: {value: 7.2e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (~480 HB equivalent / 200)"}
+  work_hardening:
+    layer_depth_um: {value: 10, src: est, note: "tempered martensite at 50 HRC strain-hardens little; thermal softening/rehardening layers dominate"}
+    hardness_increase_pct: {value: 5, src: est, note: "assumed"}
+    strain_hardening_exponent: {value: 0.278, src: matras-2020-h13-cbn-milling, note: "JC n"}
+
+friction:
+  - tool_class: carbide
+    coating: TiAlN
+    mu_sliding: {value: 0.3, src: zhang-2021-h13-jc-hard-milling, note: "Coulomb coefficient assumed in their FE model of hard milling H13 (50 HRC) with a carbide insert; not measured"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+  - tool_class: cbn
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed equal to the carbide value"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: segmented
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 50, src: est, note: "zhang-2021 report serrated (saw-tooth) chips in hard milling of 50 HRC H13 (speed of onset not stated); hardened steels above ~45 HRC segment at practically all industrial speeds, 50 m/min assumed"}
+  bue: null
+  breakability: {value: good, src: est, note: "segmented chips of hardened steel break readily"}
+  oxide_colours:
+    table: [[200, "#EDE4B0", "white-yellow (weissgelb)"], [220, "#E3C770", "straw yellow (strohgelb)"], [230, "#D4A93F", "golden yellow (goldgelb)"], [240, "#B98745", "yellow-brown (gelbbraun)"], [250, "#9B5B34", "brown-red (braunrot)"], [260, "#8C3A2E", "red (rot)"], [270, "#7B2E56", "purple-red (purpurrot)"], [280, "#5E2C78", "violet (violett)"], [290, "#2E2F82", "dark blue (dunkelblau)"], [300, "#3C64C4", "cornflower blue (kornblumenblau)"], [320, "#76A9DA", "light blue (hellblau)"], [340, "#7F8FA2", "blue-grey (blaugrau)"], [360, "#8E8E8E", "grey (grau)"]]
+    src: wikipedia-de-anlassen
+    note: "table for unalloyed tool steel; with 5 % Cr the colours of H13 form at somewhat higher temperatures (bssa-heat-tint: higher Cr delays heat tint), shift not quantified; hex values are this database's rendering (est)"
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: cbn
+    coating: uncoated
+    C_m_min: 532
+    n: 0.4
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 0.2
+    VB_limit_mm: 0.2
+    src: est
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 180 m/min (typical low-CBN finishing speed for ~50 HRC steel, general knowledge); n typical of CBN in hard turning"
+  - tool_class: ceramic
+    coating: uncoated
+    grade: "mixed Al2O3-TiC"
+    C_m_min: 443
+    n: 0.4
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 0.2
+    VB_limit_mm: 0.2
+    src: est
+    note: "C set so that T = 15 min at vc = 150 m/min (general knowledge)"
+  - tool_class: carbide
+    coating: TiAlN
+    C_m_min: 197
+    n: 0.25
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 0.5
+    VB_limit_mm: 0.2
+    src: est
+    note: "hard milling: C set so that T = 15 min at vc = 100 m/min (general knowledge)"
+tool_life_usui: null
+
+residual_stress: []                # hardened block/bar: no published as-supplied profile read
+
+skin:
+  type: none
+  thickness_mm: {value: 0, src: est, note: "hardened tool steel is normally machined from a pre-machined, vacuum-hardened blank; if hardened in air a decarburised layer forms (industeel-2344-h13 recommends vacuum or protective gas)"}
+  hardness_factor: {value: 1.0, src: est, note: "no skin"}
+  abrasiveness_factor: {value: 1.0, src: est, note: "no skin"}
+
+thermal_damage:
+  burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour"}
+  white_layer_degC: {value: 860, src: est, note: "Ac1 of H13 not read in an accessible source; ~860 C is typical of 5 % Cr hot-work steels (general knowledge). Rapid heating raises the effective value"}
+  overtemper_degC: {value: 600, src: est, range: [550, 650], note: "range is the second-temper range of industeel-2344-h13; ~600 C assumed for 50 HRC. Surface heating above it softens the surface (dark layer)"}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "H13 at ~50 HRC for hard milling/turning. Physical data from BÖHLER W302 (hardened and tempered); flow stress is the hardness-based set at 50 HRC quoted by Matras & Zebala 2020. Kienzle values are Walter H1 standard values. Tool life, segmentation onset, Ac1, tempering temperature and work hardening are estimates."

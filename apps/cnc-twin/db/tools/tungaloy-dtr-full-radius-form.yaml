@@ -1,0 +1,36 @@
+# Tungaloy TungCut DTR300-150 ground full-radius insert (R 1.5 mm, CW 3 mm) used as a form tool in
+# the CTER2525-3T20 holder, read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03
+# (F014, F030, F039, F043, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-dtr-full-radius-form
+maker: "Tungaloy Corporation"
+series: "TungCut DTR300-150 full-radius profiling insert (high-precision ground, RE 1.5, CW 3) in CTER2525-3T20"
+src: tungaloy-2023-gc-parting-grooving
+notes: "Insert DTR300-150 (F039, 'profiling and undercutting, for high precision'): seat size 3, CW 3 +/-0.02 mm, RE 1.5 mm (full radius), INSL 20, h 5 mm, 7 deg clearance (drawing), grades T9225, AH7025, AH725, GH130, NS9530. The cutting edge profile is the semicircle RE 1.5 over the 3 mm width: profile_mm lists [z, x] points of that arc every 15 deg in the tool frame (tip at x = 0, z across the width, x <= 0 behind the tip). Holder CTER2525-3T20 (F014): H 25, B 25, LF 150, LH 38.5, HF 25, WF 25.3 mm, CDX 20. Speeds F043; feed and depth from the DTR standard feed and DoC chart (F030, CW 3 region, digitised). The overhang is a set-up value, estimated."
+items:
+  - id: tungaloy-dtr300-150-ah7025-cter2525-3t20
+    order_code: "DTR300-150 AH7025 + CTER2525-3T20"
+    type: form_tool
+    hand: neutral
+    tool_material: {class: carbide, grade: "AH7025 PVD-coated carbide (substrate not stated)", id: carbide-submicron-10co, src: est, note: "PVD grade; substrate mapped to the fine-grain 10 % Co entry"}
+    coating: {id: tialn, thickness_um: {value: 3.5, src: tungaloy-2023-gc-grade, page: "A002"}, note: "AH7025: (Ti,Al)N (A002)"}
+    geometry:
+      profile_mm:
+        value: [[0.0, -1.5], [0.0511, -1.1118], [0.201, -0.75], [0.4393, -0.4393], [0.75, -0.201], [1.1118, -0.0511], [1.5, 0.0], [1.8882, -0.0511], [2.25, -0.201], [2.5607, -0.4393], [2.799, -0.75], [2.9489, -1.1118], [3.0, -1.5]]
+        note: "computed from CW 3 and RE 1.5 (F039): z = 1.5 + 1.5 cos t, x = -1.5 + 1.5 sin t, t = 180..0 deg in 15 deg steps"
+      insert:
+        iso_code: "DTR300-150"
+        width_mm: 3
+        nose_radius_mm: 1.5
+        clearance_deg: 7
+        edge_length_mm: {value: 20, note: "INSL"}
+        max_depth_mm: {value: 20, note: "CDX of the holder"}
+        page: "F039"
+      holder: {iso_code: "CTER2525-3T20", approach_angle_deg: 90, shank_mm: [25, 25], overhang_mm: {value: 40, src: est, note: "set-up value: LH 38.5 mm plus a short projection; not a catalogue value"}, max_depth_mm: 20, page: "F014"}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "double-ended ground insert, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "steel S45C, SCM435 (C45, 34CrMo4), < 300 HB", material: aisi1045, operation: [profiling, grooving, turning], vc_m_min: {min: 50, max: 180}, f_mm: {min: 0.1, max: 0.5, digitised: true, uncertainty_pct: 20, page: "F030 DTR chart, CW 3 region"}, ap_max_mm: {value: 1.5, digitised: true, uncertainty_pct: 20, page: "F030"}, page: "F043 first choice AH7025 / AH725"}
+      - {iso_group: M, material_hint: "stainless steel SUS304, < 200 HB", material: aisi304, operation: [profiling, grooving], vc_m_min: {min: 50, max: 120}, f_mm: {min: 0.1, max: 0.5, digitised: true, uncertainty_pct: 20, page: "F030"}, ap_max_mm: {value: 1.5, digitised: true, uncertainty_pct: 20, page: "F030"}, page: "F043"}
+      - {iso_group: S, material_hint: "titanium alloys Ti-6Al-4V, < 40 HRC", material: ti6al4v, operation: [profiling, grooving], vc_m_min: {min: 20, max: 80}, f_mm: {min: 0.1, max: 0.5, digitised: true, uncertainty_pct: 20, page: "F030"}, page: "F043 impact resistance AH7025 / AH725"}

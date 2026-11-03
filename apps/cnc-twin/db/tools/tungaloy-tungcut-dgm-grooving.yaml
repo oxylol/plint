@@ -1,0 +1,35 @@
+# Tungaloy TungCut DGM double-ended grooving / parting inserts in the CTER2525-3T20 holder, read from
+# the Tungaloy General Catalogue 2023-2024 on 2026-11-03 (F014, F028, F032, F043, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-tungcut-dgm-grooving
+maker: "Tungaloy Corporation"
+series: "TungCut DGM3-020 (AH7025 / AH725) in CTER2525-3T20, external grooving and parting, CW 3 mm"
+src: tungaloy-2023-gc-parting-grooving
+notes: "Insert DGM3-020 (F032): seat size 3, neutral, CW 3 +/-0.05 mm, RE 0.2, INSL 20, h 5 mm, 7 deg clearance (drawing), two corners; DGM is Tungaloy's first choice for grooving and parting (F028). Holder CTER2525-3T20 (F014): CW 3, seat size 3, CDX (max grooving depth) 20, H 25, B 25, LF 150, LH 38.5, HF 25, WF 25.3 mm, clamping torque 5 N m. Cutting speeds F043; feed from the DGM standard feed chart (F028, digitised). The overhang is a set-up value, estimated."
+defaults:
+  type: grooving_insert
+  hand: neutral
+  tool_material: {class: carbide, grade: "PVD-coated carbide (substrate not stated)", id: carbide-submicron-10co, src: est, note: "PVD grooving grade; substrate mapped to the fine-grain 10 % Co entry"}
+items:
+  - id: tungaloy-dgm3-020-ah7025-cter2525-3t20
+    order_code: "DGM3-020 AH7025 + CTER2525-3T20"
+    coating: {id: tialn, thickness_um: {value: 3.5, src: tungaloy-2023-gc-grade, page: "A002"}, note: "AH7025: (Ti,Al)N, P20-P30 / M20-M30 / S15-S25 (A002)"}
+    geometry:
+      insert:
+        iso_code: "DGM3-020"
+        width_mm: 3
+        nose_radius_mm: 0.2
+        clearance_deg: 7
+        max_depth_mm: {value: 20, note: "CDX of the holder"}
+        edge_length_mm: {value: 20, note: "INSL"}
+        page: "F032"
+      holder: {iso_code: "CTER2525-3T20", approach_angle_deg: {value: 90, note: "neutral DGM3-020 has PSIRL = PSIRR = 0 deg (F032), i.e. a square front edge"}, shank_mm: [25, 25], overhang_mm: {value: 40, src: est, note: "set-up value: LH 38.5 mm plus a short projection; not a catalogue value"}, max_depth_mm: 20, page: "F014"}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "double-ended insert, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "steel S45C, SCM435 (C45, 34CrMo4), < 300 HB", material: aisi1045, operation: [grooving, parting], vc_m_min: {min: 50, max: 180}, f_mm: {min: 0.07, max: 0.26, digitised: true, uncertainty_pct: 10, page: "F028 DGM standard feed, CW 3"}, page: "F043 first choice AH7025 / AH725"}
+      - {iso_group: M, material_hint: "stainless steel SUS303, SUS304 (X10CrNiS18-9, X5CrNi18-9), < 200 HB", material: aisi304, operation: [grooving, parting], vc_m_min: {min: 50, max: 120}, f_mm: {min: 0.07, max: 0.26, digitised: true, uncertainty_pct: 10, page: "F028"}, page: "F043 first choice AH7025 / AH725"}
+      - {iso_group: K, material_hint: "grey / ductile cast iron (impact resistance grade)", material: grey-cast-iron-gjl250, operation: [grooving, parting], vc_m_min: {min: 50, max: 180}, f_mm: {min: 0.07, max: 0.26, digitised: true, uncertainty_pct: 10, page: "F028"}, page: "F043 impact resistance AH8005 / AH7025 / AH6235 / GH130 (grey iron; ductile 50-120)", note: "first choice for cast iron is T515 at 150-700 m/min"}
+      - {iso_group: S, material_hint: "superalloys Inconel 718, < 40 HRC (impact resistance grade)", material: inconel718, operation: [grooving, parting], vc_m_min: {min: 20, max: 40}, f_mm: {min: 0.07, max: 0.26, digitised: true, uncertainty_pct: 10, page: "F028"}, page: "F043 impact resistance AH7025 / AH725 / AH6235"}
+      - {iso_group: S, material_hint: "titanium alloys Ti-6Al-4V, < 40 HRC", material: ti6al4v, operation: [grooving, parting], vc_m_min: {min: 20, max: 80}, f_mm: {min: 0.07, max: 0.26, digitised: true, uncertainty_pct: 10, page: "F028"}, page: "F043 impact resistance AH7025 / AH725"}

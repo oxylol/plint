@@ -1,0 +1,41 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/models/report-compare.yaml and docs/report.md (reports, setup sheets, comparison of
+# two runs): the inspection conventions the report displays and the change thresholds it applies.
+entries:
+  aiag-msa-2010:
+    type: manual
+    authors: "AIAG (Automotive Industry Action Group)"
+    title: "Measurement Systems Analysis (MSA) Reference Manual"
+    edition: 4
+    publisher: "AIAG, Southfield, Michigan"
+    year: 2010
+    pages: "discrimination (resolution) of a measuring system: at least one tenth of the tolerance (the 10:1 rule)"
+  iso-1101-2017:
+    type: standard
+    authors: "ISO"
+    title: "ISO 1101:2017 Geometrical product specifications (GPS) - Geometrical tolerancing - Tolerances of form, orientation, location and run-out"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2017
+    pages: "tolerance zones of form (flatness, straightness, roundness, cylindricity), orientation (perpendicularity, parallelism, angularity), location (position, symmetry, concentricity) and run-out; datum references"
+  iso-286-1-2010:
+    type: standard
+    authors: "ISO"
+    title: "ISO 286-1:2010 Geometrical product specifications (GPS) - ISO code system for tolerances on linear sizes - Part 1: Basis of tolerances, deviations and fits"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2010
+    pages: "fundamental deviations and IT grades: tolerance classes such as H7 and g6"
+  iso-1-2016:
+    type: standard
+    authors: "ISO"
+    title: "ISO 1:2016 Geometrical product specifications (GPS) - Standard reference temperature for the specification of geometrical and dimensional properties"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2016
+    pages: "dimensions are specified and inspected at 20 degC"
+  iso-4287-1997:
+    type: standard
+    authors: "ISO"
+    title: "ISO 4287:1997 Geometrical Product Specifications (GPS) - Surface texture: Profile method - Terms, definitions and surface texture parameters"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1997
+    pages: "Ra (arithmetical mean deviation) and Rz (maximum height) of the roughness profile"

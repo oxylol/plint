@@ -1,0 +1,132 @@
+# Inconel 718 orthogonal disc cutting, uncoated carbide, vc 60-180 m/min, f 0.05-0.1 mm: Fc, Ft (digitised).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-in718-diazalvarez2017
+quantity: cutting_force
+reference:
+  src: diazalvarez-2017-in718-orthogonal
+  location: Fig. 8a (cutting force) and Fig. 8b (thrust force) vs cutting speed, markers digitised from the 737 x 231 px
+    figure (5.6 N/px in a, 4.0 N/px in b)
+  digitised: true
+  uncertainty_pct: 3
+  measured: true
+  note: digitisation uncertainty +-1.5 px on the marker centres (+-8 N on Fc, +-6 to +-10 N on Ft where markers overlap);
+    no measurement uncertainty stated
+setup:
+  operation: orthogonal_turning
+  material:
+    db: inconel718
+    note: Inconel 718 disc; heat-treatment condition not stated ('heat-treatable Inconel 718 disk', Sect. 2.3)
+  tool:
+    src: diazalvarez-2017-in718-orthogonal
+    page: Sect. 2.1
+    type: turning_insert
+    iso_code: TCMW 16T308
+    grade: Sandvik H13A (uncoated carbide)
+    tool_class: carbide
+    coating: none
+    rake_deg: 0
+    clearance_deg: 7
+    edge_radius_um: 25
+    nose_radius_mm:
+      value: 0.8
+      src: est
+      note: 'assumed: ISO code ''08'' = 0.8 mm corner radius (code convention); outside the cut on a 2 mm disc'
+    assumed_inputs: [nose_radius_mm]
+  machine:
+    src: diazalvarez-2017-in718-orthogonal
+    page: Sect. 2.1
+    model: Pinacho Smart lathe 6/165
+    dynamometer: Kistler 9257B
+    other_sensor: two-colour fibre-optic pyrometer in the tool holder (machined-surface temperature)
+  stock:
+    src: diazalvarez-2017-in718-orthogonal
+    page: Sect. 2.1
+    form: disc
+    outer_diameter_mm: 100
+    thickness_mm: 2
+  conditions:
+    src: diazalvarez-2017-in718-orthogonal
+    page: Table 1, Sect. 2.1
+    vc_m_min: [60, 90, 120, 180]
+    feed_mm_rev: [0.05, 0.08, 0.1]
+    width_of_cut_mm: {value: 2, note: '''depth of pass'' 2 mm = disc thickness'}
+    coolant: dry
+    note: Table 1 also lists 30 m/min; Fig. 8 shows 60-180 m/min only
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+- name: Fc f=0.05
+  x_name: vc
+  x_unit: m/min
+  y_name: Fc
+  y_unit: N
+  points:
+  - [60, 429]
+  - [90, 412]
+  - [120, 387]
+  - [180, 359]
+  uncertainty: 8
+- name: Fc f=0.08
+  x_name: vc
+  x_unit: m/min
+  y_name: Fc
+  y_unit: N
+  points:
+  - [60, 576]
+  - [90, 562]
+  - [120, 545]
+  - [180, 486]
+  uncertainty: 8
+- name: Fc f=0.1
+  x_name: vc
+  x_unit: m/min
+  y_name: Fc
+  y_unit: N
+  points:
+  - [60, 661]
+  - [90, 646]
+  - [120, 632]
+  - [180, 598]
+  uncertainty: 8
+- name: Ft f=0.05
+  x_name: vc
+  x_unit: m/min
+  y_name: Ft (thrust)
+  y_unit: N
+  points:
+  - [60, 406]
+  - [90, 360]
+  - [120, 310]
+  - [180, 326]
+  uncertainty: 10
+  note: markers of f = 0.08 and 0.1 overlap at 60 m/min and those of 0.05 and 0.08 at 180 m/min
+- name: Ft f=0.08
+  x_name: vc
+  x_unit: m/min
+  y_name: Ft (thrust)
+  y_unit: N
+  points:
+  - [60, 446]
+  - [90, 382]
+  - [120, 370]
+  - [180, 330]
+  uncertainty: 10
+  note: markers of f = 0.08 and 0.1 overlap at 60 m/min and those of 0.05 and 0.08 at 180 m/min
+- name: Ft f=0.1
+  x_name: vc
+  x_unit: m/min
+  y_name: Ft (thrust)
+  y_unit: N
+  points:
+  - [60, 446]
+  - [90, 420]
+  - [120, 416]
+  - [180, 444]
+  uncertainty: 10
+  note: markers of f = 0.08 and 0.1 overlap at 60 m/min and those of 0.05 and 0.08 at 180 m/min
+notes: Orthogonal disc-edge cutting of Inconel 718 with an uncoated, 25 um-honed, 0 deg rake insert, dry. The thrust force
+  is of the same order as the cutting force at f = 0.05 mm (edge radius ~ h), so this case tests the edge/ploughing model.
+  Forces are totals for the 2 mm width.

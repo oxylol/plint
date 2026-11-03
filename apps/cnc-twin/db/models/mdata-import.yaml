@@ -1,0 +1,49 @@
+# Settings of the machine data importers (cnctwin.mdata, docs/models/calibration.md "Import").
+# Names carry the SI unit of the value params("mdata-import") returns; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: mdata-import
+description: "Request sizes, time-outs and memory caps of the MTConnect, OPC UA, FOCAS-log and CSV importers"
+params:
+  mtconnect_count:
+    value: 1000
+    unit: "-"
+    range: [1, 1000000]
+    src: est
+    note: "observations asked for per /sample request (the agent's default count is 100, ansi-mtc1-4-2018 Part 1); ten times that cuts the round trips, the agent caps it at its buffer size; the result does not depend on it because requests are chained by nextSequence"
+  mtconnect_max_requests:
+    value: 100000
+    unit: "-"
+    range: [1, 10000000]
+    src: est
+    note: "upper bound on chained /sample requests of one collection (1e8 observations at the request size above): a guard against an agent that never reports a later nextSequence"
+  http_timeout_s:
+    value: 10.0
+    unit: s
+    range: [0.1, 600.0]
+    src: est
+    note: "time-out of one HTTP request to an MTConnect agent on the shop network"
+  opcua_timeout_s:
+    value: 10.0
+    unit: s
+    range: [0.1, 600.0]
+    src: est
+    note: "time-out of the OPC UA session requests (connect, browse, read, history read)"
+  opcua_browse_max_depth:
+    value: 4
+    unit: "-"
+    range: [1, 32]
+    src: est
+    note: "levels below the start node that browse() follows (Objects > machine > component > variable is three)"
+  opcua_browse_max_nodes:
+    value: 5000
+    unit: "-"
+    range: [1, 1000000]
+    src: est
+    note: "nodes browse() lists at most (a CNC server exposes hundreds to a few thousand)"
+  max_observations:
+    value: 20000000
+    unit: "-"
+    range: [1000, 1000000000]
+    src: est
+    note: "observations a machine log may hold (16 bytes each: about 320 MB); a larger log is refused with a request to import a time window"

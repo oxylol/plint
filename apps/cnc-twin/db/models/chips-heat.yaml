@@ -1,0 +1,58 @@
+# Heat of chips (cnctwin.chips, docs/models/chips.md "Heat"): convective cooling of flying chips
+# (Ranz-Marshall), radiation, heat of resting chips to the surface below, to the coolant and the air.
+format: cnctwin-model-params
+version: 1
+model: chips-heat
+description: "Ranz-Marshall convection, chip emissivity by material family, chip-bed heat transfer coefficients"
+params:
+  rm_a:
+    value: 2.0
+    unit: "-"
+    src: ranz-marshall-1952
+    note: "Nu = a + b Re^m Pr^n (conduction limit of a sphere)"
+  rm_b:
+    value: 0.6
+    unit: "-"
+    src: ranz-marshall-1952
+  rm_m:
+    value: 0.5
+    unit: "-"
+    src: ranz-marshall-1952
+  rm_n:
+    value: 0.3333333333333333
+    unit: "-"
+    src: ranz-marshall-1952
+  emissivity_by_family:
+    value: {aluminium: 0.1, steel: 0.7, tool_steel: 0.7, stainless: 0.6, titanium: 0.5, nickel: 0.6, copper: 0.3,
+            brass: 0.3, magnesium: 0.2, cast_iron: 0.8, polymer: 0.9, wood: 0.9, foam: 0.9, composite: 0.9}
+    unit: "-"
+    src: est
+    note: "total hemispherical emissivity of fresh, lightly oxidised chip surfaces: bright aluminium about 0.05-0.1, oxidised steel 0.6-0.8, non-metals 0.9 (ranges as tabulated in heat-transfer textbooks); radiation matters only above about 300 degC"
+  emissivity_default:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "for a material family not in the table"
+  h_bed_W_m2K:
+    value: 200.0
+    unit: "W/(m2 K)"
+    range: [50.0, 500.0]
+    src: est
+    note: "contact heat transfer coefficient between a bed of mm-sized chips and the surface it rests on; Schlunder's particle-wall model (schlunder-1984) gives 300-400 W/m2K for 1 mm spheres in air with micrometre roughness, flat chips touch better and curled chips worse"
+  h_top_air_W_m2K:
+    value: 10.0
+    unit: "W/(m2 K)"
+    range: [3.0, 25.0]
+    src: est
+    note: "natural convection from the top of a hot chip pile in still air (horizontal plate facing up, characteristic length a few mm to cm); radiation is added separately"
+  h_top_wet_W_m2K:
+    value: 2000.0
+    unit: "W/(m2 K)"
+    range: [500.0, 10000.0]
+    src: est
+    note: "forced convection from a chip pile under a running coolant film (water-based, film velocity 0.1-1 m/s)"
+  pan_layer_m:
+    value: 30.0
+    unit: mm
+    src: est
+    note: "mean height of the chip layer in the chip pan: the pan's heat transfer area is its bulk volume / this height"

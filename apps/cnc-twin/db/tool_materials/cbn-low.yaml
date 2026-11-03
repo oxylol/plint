@@ -1,0 +1,30 @@
+format: cnctwin-tool-material
+version: 1
+id: cbn-low
+class: cbn
+name: "Low-content PCBN with ceramic (TiN/TiC) binder for hard turning of hardened steel (Kyocera KBN510 as reference grade)"
+src: kyocera-2015-insert-grades
+composition: {text: "about 45-65 vol% cBN in a TiN/TiCN ceramic binder (typical of the hard-turning class; content not printed for KBN510)", src: est}
+grain_size_um: {value: 2, src: kyocera-2015-insert-grades, page: "p. A16, KBN510 average grain size 2 µm"}
+cbn_content_vol_pct: {value: 55, range: [45, 65], src: est, note: "class range for hard-turning PCBN; not printed by Kyocera"}
+density_kg_m3: {value: 4300, src: est, note: "rule of mixtures 55 vol% cBN (3.48 g/cm3) + 45 vol% TiN/TiC binder (~5.2 g/cm3)"}
+youngs_modulus_GPa: {value: 600, src: est, note: "between cBN (~850 GPa) and TiN (~450 GPa) at 55 % cBN"}
+poisson: {value: 0.20, src: est, note: "no value read"}
+hardness_HV: {value: 2855, range: [2550, 2855], src: kyocera-2015-insert-grades, page: "p. A16, KBN510 substrate hardness 28 GPa = 2855 HV", note: "KBN525 25 GPa (2550 HV)"}
+transverse_rupture_MPa: {value: 1000, range: [1000, 1250], src: kyocera-2015-insert-grades, page: "p. A16, KBN510 1000 MPa", note: "KBN525 1250 MPa"}
+compressive_MPa: {value: 4500, src: est, note: "no value read"}
+fracture_toughness_MPa_sqrt_m: {value: 5.0, src: est, note: "no value read; low-content PCBN is less tough than high-content PCBN"}
+conductivity_W_mK:
+  table: [[20, 45], [500, 40], [1000, 35]]
+  src: est
+  note: "no value read; the ceramic binder makes low-content PCBN a poor conductor compared with high-content PCBN"
+specific_heat_J_kgK:
+  table: [[20, 700], [500, 1000], [1000, 1150]]
+  src: est
+  note: "no value read; cBN and TiN heat capacities rise strongly with temperature"
+expansion_1_K: {value: 5.0e-6, src: est, note: "no value read; between cBN (~4.7e-6) and TiN (~9e-6) weighted toward cBN"}
+max_service_temp_degC: {value: 1200, src: est, note: "cBN is chemically stable against iron to high temperature; the ceramic binder limits; no value read"}
+weibull_modulus: {value: 10, src: est, note: "no value read"}
+thermal_shock_parameter: null
+usui: []
+notes: "Only grain size, hardness and transverse strength are maker values. No published Usui constants for PCBN in hardened steel were read (gap)."

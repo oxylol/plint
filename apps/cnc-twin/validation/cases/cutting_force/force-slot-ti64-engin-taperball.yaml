@@ -1,0 +1,68 @@
+# Ti6Al4V slot milling with a tapered helical ball end mill (D 6 mm, 1 flute): peak forces (digitised).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-slot-ti64-engin-taperball
+quantity: cutting_force
+reference:
+  src: engin-altintas-milling-preprint
+  location: Fig. 6, upper plot (ap 10 mm, 0.05 mm/tooth, 500 rpm), thin 'Measured' curves; digitised from the vector PDF
+    rendered at 360 dpi (3.7 N/px)
+  digitised: true
+  uncertainty_pct: 3
+  measured: true
+  note: 'uncertainty: thin and thick curves overlap away from the extremes; values are taken at the extremes where the measured
+    curve is separate'
+setup:
+  operation: slotting
+  material:
+    db: ti6al4v
+    note: 'Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed)'
+  tool:
+    src: engin-altintas-milling-preprint
+    page: Fig. 6 caption
+    type: ball_endmill
+    shape: taper helical ball end mill (constant lead on the taper); parameters of the source's general end-mill model (Fig.
+      1)
+    D_mm: 6.0
+    R_mm: 3.0
+    Rr_mm: 0.0
+    Rz_mm: 3.0
+    alpha_deg: 0
+    beta_deg: 4.0
+    h_mm: 38.0
+    lead_mm: 105.0
+    flutes: 1
+    rake_deg: 10
+    relief_deg: 10
+    tool_class: carbide
+    note: D = ball diameter, R = corner (ball) radius, Rr/Rz = radial/axial offsets of its centre, alpha = tip cone angle,
+      beta = taper angle, h = flute height
+  machine:
+    src: engin-altintas-milling-preprint
+    page: Sect. 4
+    type: machining centre of the authors' laboratory (make, spindle and dynamometer not given); the source notes severe
+      chatter at the larger depths on it
+  conditions:
+    src: engin-altintas-milling-preprint
+    page: Fig. 6 (upper plot)
+    spindle_rpm: 500
+    fz_mm_tooth: 0.05
+    ap_mm: 10.0
+    radial_engagement: full slot
+    coolant:
+      value: dry
+      src: est
+      note: 'assumed: not stated; dry assumed, as usual for force-model validation cuts (est.)'
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fy_max, value: 1015, unit: N, uncertainty: 20, note: peak of the measured (thin) curve}
+- {name: Fx_min, value: -940, unit: N, uncertainty: 20, note: most negative value of the measured curve}
+- {name: Fz_plateau, value: 310, unit: N, uncertainty: 30, note: approximate level of the measured Fz over the engagement}
+reference_curves: []
+notes: 'Slot milling of Ti6Al4V with a one-flute tapered helical ball end mill (10 mm axial depth: 3 mm ball + 7 mm taper).
+  Axes X, Y, Z as defined in the source''s Fig. 3; signs as plotted. The simulated curve of the source (mechanistic model
+  with Ti6Al4V orthogonal-cutting coefficients of Budak et al. 1996) peaks ~10 % above the measured Fy. One revolution is
+  shown twice (0-720 deg).'

@@ -1,0 +1,244 @@
+# Sources of the mechanics library (cnctwin/mechanics, docs/models/mechanics.md):
+# Oxley / Johnson-Cook chip formation, heat partition, edge and flank forces, chip form and colour.
+# Entries marked "read" in `note` were read on 2026-11-03 (code or full text); the others are the
+# standard references of the equations used (their equations are reproduced in the model doc) and
+# no numerical value in db/models/mechanics-*.yaml is attributed to them unless it is the equation's
+# own exact constant.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  oxley-1989-mechanics-of-machining:
+    type: book
+    authors: "Oxley, P.L.B."
+    title: "Mechanics of Machining: An Analytical Approach to Assessing Machinability"
+    venue: "Ellis Horwood, Chichester"
+    year: 1989
+    note: "Predictive machining theory: shear-plane analysis (Ch. 5-6), temperatures after Boothroyd (Ch. 6), oblique and nose-radius cutting (Ch. 8). Equations used as reproduced by lalwani-2009 / pantale-2022; the book itself was not read here."
+
+  lalwani-2009-extended-oxley:
+    type: article
+    authors: "Lalwani, D.I.; Mehta, N.K.; Jain, P.K."
+    title: "Extension of Oxley's predictive machining theory for Johnson and Cook flow stress model"
+    venue: "Journal of Materials Processing Technology 209(12-13), 5305-5312"
+    year: 2009
+    doi: "10.1016/j.jmatprotec.2009.03.020"
+    note: "Johnson-Cook flow stress in Oxley's theory with the equivalent strain-hardening index n_eq = n B eps^n / (A + B eps^n). Equations as implemented in pantale-2022-extoxley-software (read)."
+
+  adibi-sedeh-2003-oxley-material-models:
+    type: article
+    authors: "Adibi-Sedeh, A.H.; Madhavan, V.; Bahr, B."
+    title: "Extension of Oxley's analysis of machining to use different material models"
+    venue: "Journal of Manufacturing Science and Engineering 125(4), 656-666"
+    year: 2003
+    doi: "10.1115/1.1617287"
+
+  pantale-2022-extended-oxley-python:
+    type: article
+    authors: "Pantalé, O.; Dawoua Kaoutoing, M.; Houé Ngouna, R."
+    title: "A new algorithm to solve the extended-Oxley analytical model of orthogonal metal cutting in Python"
+    venue: "Applied Mechanics 3(3), article 51"
+    year: 2022
+    doi: "10.3390/applmech3030051"
+    note: "Implementation of lalwani-2009; the article text could not be retrieved (publisher blocks automated access), its code was read (pantale-2022-extoxley-software)."
+
+  pantale-2022-extoxley-software:
+    type: web
+    authors: "Pantalé, O."
+    title: "The ExtOxley-LMFIT software (OxleyPython v1.1): ExtOxley_Lalwani.py and ExtOxley_LMFIT.py"
+    venue: "Zenodo record 6698434"
+    year: 2022
+    url: "https://zenodo.org/records/6698434"
+    accessed: 2026-11-03
+    pages: "ExtOxley_Lalwani.py: eta = 0.9, psi = 0.9; beta = 0.5 - 0.35 log10(RT tan phi) for RT tan phi <= 10, 0.3 - 0.15 log10(RT tan phi) above; log10(dTM/dTC) = 0.06 - 0.195 delta sqrt(RT t2/lc) + 0.5 log10(RT t2/lc); search ranges delta 0.005-0.2, C0 2-10, phi 5-45 deg; AISI 1045 default case (JC 553.1/600.8/0.234/0.0134/1, Tm 1460 C, K = 52.61 - 0.0281 (T - 273.15), cp = 420 + 0.504 (T - 273.15), rho 8000)"
+    note: "read: source code (as text) of the published implementation of the extended Oxley model"
+
+  ning-liang-2019-force-temperature:
+    type: article
+    authors: "Ning, J.; Liang, S.Y."
+    title: "Predictive modeling of machining temperatures with force-temperature correlation using cutting mechanics and constitutive relation"
+    venue: "Materials 12(2), 284"
+    year: 2019
+    doi: "10.3390/ma12020284"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6356257/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 2 (AISI 1045, alpha = -7 deg, documented extended-Oxley forces and temperatures of Lalwani 2009 and Aydin 2016); Table 4 (shear angle and stresses); Table 5 (JC sets of AISI 1045)"
+    note: "read (full text)"
+
+  budak-1996-milling-coefficients:
+    type: article
+    authors: "Budak, E.; Altintas, Y.; Armarego, E.J.A."
+    title: "Prediction of milling force coefficients from orthogonal cutting data"
+    venue: "Journal of Manufacturing Science and Engineering 118(2), 216-224"
+    year: 1996
+    doi: "10.1115/1.2831014"
+    note: "Orthogonal-to-oblique transformation of tau_s, phi_n, beta into Ktc, Krc, Kac (equations reproduced in the model doc)."
+
+  armarego-whitfield-1985:
+    type: article
+    authors: "Armarego, E.J.A.; Whitfield, R.C."
+    title: "Computer based modelling of popular machining operations for force and power prediction"
+    venue: "CIRP Annals 34(1), 65-69"
+    year: 1985
+    note: "Equivalence of the orthogonal cutting database at the normal rake with oblique cutting."
+
+  stabler-1951-chip-flow:
+    type: article
+    authors: "Stabler, G.V."
+    title: "The fundamental geometry of cutting tools"
+    venue: "Proceedings of the Institution of Mechanical Engineers 165, 14-26"
+    year: 1951
+    note: "Chip flow rule eta_c = i; effective rake sin(alpha_e) = sin(eta_c) sin(i) + cos(eta_c) cos(i) sin(alpha_n)."
+
+  merchant-1945-orthogonal:
+    type: article
+    authors: "Merchant, M.E."
+    title: "Mechanics of the metal cutting process. I. Orthogonal cutting and a type 2 chip"
+    venue: "Journal of Applied Physics 16(5), 267-275"
+    year: 1945
+    doi: "10.1063/1.1707586"
+
+  lee-shaffer-1951-plasticity-machining:
+    type: article
+    authors: "Lee, E.H.; Shaffer, B.W."
+    title: "The theory of plasticity applied to a problem of machining"
+    venue: "Journal of Applied Mechanics 18, 405-413"
+    year: 1951
+
+  boothroyd-1963-temperatures:
+    type: article
+    authors: "Boothroyd, G."
+    title: "Temperatures in orthogonal metal cutting"
+    venue: "Proceedings of the Institution of Mechanical Engineers 177(1), 789-810"
+    year: 1963
+    note: "Shear-zone heat partition and chip temperature solutions behind Oxley's beta and Delta T_M fits."
+
+  loewen-shaw-1954-tool-temperatures:
+    type: article
+    authors: "Loewen, E.G.; Shaw, M.C."
+    title: "On the analysis of cutting-tool temperatures"
+    venue: "Transactions of the ASME 76, 217-231"
+    year: 1954
+    note: "Rake heat partition by equal mean temperatures of the moving (chip) and stationary (tool) sources; area factor of a uniform rectangular stationary source."
+
+  jaeger-1942-moving-sources:
+    type: article
+    authors: "Jaeger, J.C."
+    title: "Moving sources of heat and the temperature at sliding contacts"
+    venue: "Journal and Proceedings of the Royal Society of New South Wales 76, 203-224"
+    year: 1942
+    note: "Moving band source on a semi-infinite body (the e^{-u} K0(|u|) integral)."
+
+  blok-1937-flash-temperature:
+    type: article
+    authors: "Blok, H."
+    title: "Theoretical study of temperature rise at surfaces of actual contact under oiliness lubricating conditions"
+    venue: "Proceedings of the General Discussion on Lubrication and Lubricants, IMechE London, vol. 2, 222-235"
+    year: 1937
+    note: "Heat partition between sliding bodies by equal mean surface temperatures."
+
+  komanduri-hou-2001-interface-source:
+    type: article
+    authors: "Komanduri, R.; Hou, Z.B."
+    title: "Thermal modeling of the metal cutting process - Part II: temperature rise distribution due to frictional heat source at the tool-chip interface"
+    venue: "International Journal of Mechanical Sciences 43(1), 57-88"
+    year: 2001
+    note: "Image-source treatment of the tool as a quarter-infinite body with adiabatic boundaries."
+
+  carslaw-jaeger-1959-conduction:
+    type: book
+    authors: "Carslaw, H.S.; Jaeger, J.C."
+    title: "Conduction of Heat in Solids"
+    edition: "2nd"
+    publisher: "Oxford University Press"
+    year: 1959
+    pages: "ch. 2 (semi-infinite solid), 10.4-10.5 (instantaneous and continuous point and plane sources, circular disc source)"
+    note: "Surface temperature of a semi-infinite solid under constant flux, 2 q sqrt(kappa t / pi) / k; point and line sources."
+
+  zorev-1963-tool-face-shear:
+    type: conference
+    authors: "Zorev, N.N."
+    title: "Interrelationship between shear processes occurring along tool face and on shear plane in metal cutting"
+    venue: "Proceedings of the International Production Engineering Research Conference, Pittsburgh, 9-12 September 1963, ASME, 42-49"
+    year: 1963
+    note: "Sticking-sliding model of the tool-chip contact: power-law normal stress, constant shear in the sticking zone, Coulomb friction in the sliding zone. Citation read in PMC9105213 (reference 4)."
+
+  shaw-1960-friction-cutting:
+    type: article
+    authors: "Shaw, M.C.; Ber, A.; Mamin, P.A."
+    title: "Friction characteristics of sliding surfaces undergoing subsurface plastic flow"
+    venue: "Journal of Basic Engineering 82(2), 342-345"
+    year: 1960
+    note: "Interface shear stress limited by the shear flow stress of the softer body (Coulomb-Tresca limit)."
+
+  hill-1950-plasticity:
+    type: book
+    authors: "Hill, R."
+    title: "The Mathematical Theory of Plasticity"
+    venue: "Clarendon Press, Oxford"
+    year: 1950
+    note: "Prandtl flat-punch solution: mean indentation pressure (2 + pi) k on a rigid-perfectly plastic half-space."
+
+  tabor-1951-hardness:
+    type: book
+    authors: "Tabor, D."
+    title: "The Hardness of Metals"
+    venue: "Clarendon Press, Oxford"
+    year: 1951
+    note: "Indentation pressure about 3 times the flow stress (constraint factor)."
+
+  albrecht-1960-ploughing:
+    type: article
+    authors: "Albrecht, P."
+    title: "New developments in the theory of the metal-cutting process: part I. The ploughing process in metal cutting"
+    venue: "Journal of Engineering for Industry 82(4), 348-357"
+    year: 1960
+
+  smithey-2001-worn-tool-forces:
+    type: article
+    authors: "Smithey, D.W.; Kapoor, S.G.; DeVor, R.E."
+    title: "A new mechanistic model for predicting worn tool cutting forces"
+    venue: "Machining Science and Technology 5(1), 23-42"
+    year: 2001
+    note: "Flank wear land stresses: constant (plastic) up to a critical wear land length, then decaying with the square of the distance to the land end."
+
+  nakayama-1962-chip-breaker:
+    type: article
+    authors: "Nakayama, K."
+    title: "A study on chip-breaker"
+    venue: "Bulletin of JSME 5(17), 142-150"
+    year: 1962
+    note: "Chip breaking criterion: bending strain (t/2)(1/R_u - 1/R_L) against the fracture strain of the chip; geometric curl radius at a step breaker."
+
+  jawahir-1993-chip-control:
+    type: article
+    authors: "Jawahir, I.S.; van Luttervelt, C.A."
+    title: "Recent developments in chip control research and applications"
+    venue: "CIRP Annals 42(2), 659-693"
+    year: 1993
+    note: "Chip curl modes (up, side, lateral), groove-type breakers and chip form classes."
+
+  iso-3685-1993:
+    type: standard
+    authors: "ISO"
+    title: "ISO 3685:1993 Tool-life testing with single-point turning tools, Annex G: chip forms"
+    venue: "International Organization for Standardization, Geneva"
+    year: 1993
+    note: "Chip form classes 1 ribbon, 2 tubular, 3 spiral, 4 washer-type helical, 5 conical helical, 6 arc, 7 elemental, 8 needle (codes in cnctwin.core.bus.CHIP_FORMS)."
+
+  recht-1964-catastrophic-shear:
+    type: article
+    authors: "Recht, R.F."
+    title: "Catastrophic thermoplastic shear"
+    venue: "Journal of Applied Mechanics 31(2), 189-193"
+    year: 1964
+    doi: "10.1115/1.3629585"
+    note: "Shear localisation when thermal softening outruns strain hardening: ratio (dtau/dgamma) / (-(dtau/dT)(dT/dgamma)) below 1."
+
+  wagner-1933-parabolic-oxidation:
+    type: article
+    authors: "Wagner, C."
+    title: "Beitrag zur Theorie des Anlaufvorgangs"
+    venue: "Zeitschrift für Physikalische Chemie 21B, 25-41"
+    year: 1933
+    note: "Parabolic growth law of diffusion-controlled oxide films, x^2 = k_p t with Arrhenius k_p."

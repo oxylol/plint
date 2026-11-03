@@ -1,0 +1,43 @@
+# Insperger & Stepan (2004) semi-discretisation benchmark, 1 DOF down-milling, a/D = 0.5.
+# ANALYTICAL/NUMERICAL BENCHMARK (measured: false): the reference curve is the stability boundary
+# computed by the authors (updated semi-discretisation, m = 40), digitised from Fig. 6(b).
+format: cnctwin-validation-case
+version: 1
+id: stability-insperger2004-sd-1dof-down-ad0.5
+quantity: stability_lobe
+reference:
+  src: insperger-2004-updated-sd
+  location: "Sect. 4 (model and parameters), Fig. 6(b) (digitised)"
+  digitised: true
+  uncertainty_pct: 2                 # of the chart's full depth scale (5 mm); see notes
+  measured: false
+setup:
+  operation: peripheral_milling
+  tool:
+    flutes: 2
+    helix_deg: 0                     # the model has no helix (straight teeth, Eq. 33)
+    diameter_mm: {value: 20, src: est, note: "not given: the model depends on a/D only; any diameter with ae = a/D x D reproduces it"}
+  conditions:
+    direction: down
+    radial_immersion_ratio: 0.5         # a/D
+    ae_mm: {value: 10, src: est, note: "a/D x the assumed 20 mm diameter"}
+    min_spindle_rpm: 5000
+    max_spindle_rpm: 25000
+  dynamics:
+    model: "1 DOF (Eq. 32): x'' + 2 zeta wn x' + wn^2 x = -(w h(t) / mt) (x(t) - x(t - tau)), tau = 60 / (N Omega)"
+    natural_freq_Hz: 922             # wn = 5793 rad/s
+    damping_ratio: 0.011
+    modal_mass_kg: 0.03993
+    cutting_coefficients: {Kt_N_mm2: 600, Kn_N_mm2: 200}   # 6e8 and 2e8 N/m2, linear (no edge forces)
+    note: "h(t) = sum_j g(phi_j) sin(phi_j) (Kt cos(phi_j) + Kn sin(phi_j)), phi_j = 2 pi Omega t / 60 + 2 pi j / N; down-milling: phi_st = arccos(2a/D - 1), phi_ex = pi (Eqs. 33-35)"
+  program: null
+reference_values: []
+reference_curves:
+  - name: stability_limit
+    x_name: spindle_speed
+    x_unit: rpm
+    y_name: axial_depth_limit
+    y_unit: mm
+    uncertainty: 0.05                # mm, absolute (pixel size, line width and curve thinning)
+    points: [[5104, 0.828], [5192, 0.706], [5252, 0.828], [5281, 0.939], [5311, 1.083], [5340, 1.439], [5370, 2.150], [5399, 2.461], [5518, 2.483], [5606, 2.372], [6021, 1.283], [6169, 0.950], [6346, 0.706], [6405, 0.672], [6464, 0.706], [6583, 0.894], [6642, 1.128], [6672, 1.339], [6701, 1.617], [6731, 2.294], [6760, 2.628], [6968, 2.683], [7027, 2.650], [7766, 1.250], [7973, 0.928], [8210, 0.706], [8358, 0.650], [8506, 0.683], [8683, 0.828], [8831, 1.161], [8890, 1.450], [8950, 1.861], [8979, 2.217], [9009, 2.872], [9098, 2.928], [9453, 2.694], [9926, 2.261], [9956, 2.261], [9985, 2.383], [10074, 2.361], [10843, 1.339], [11021, 1.139], [11346, 0.861], [11701, 0.694], [11908, 0.650], [12470, 0.683], [12678, 0.761], [12914, 0.928], [13121, 1.194], [13210, 1.383], [13299, 1.650], [13388, 2.039], [13447, 2.472], [13506, 3.083], [13536, 3.317], [13565, 3.328], [13743, 3.283], [15843, 2.217], [16790, 1.650], [17766, 0.961], [17796, 1.894], [18240, 1.483], [18890, 1.072], [19630, 0.817], [20429, 0.683], [21169, 0.628], [23032, 0.672], [24098, 0.817], [24867, 1.028]]
+notes: "Analytical benchmark, not an experiment. Points: top edge of the grey (stable) domain of Fig. 6(b), traced column by column on a 4x render of the vector figure (axes calibrated on the frame and tick marks: 5000-25000 rpm, 0-5 mm), then thinned with a 0.05 mm Douglas-Peucker tolerance; the stable domain lies below the curve. The paper used a 400 x 200 grid (Omega, w), so lobe tips narrower than about 50 rpm are blunted in the source itself. The published MATLAB code (Appendix B) reproduces the chart exactly and is the stronger check of an implementation; this curve is what the paper shows."

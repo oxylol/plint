@@ -1,0 +1,84 @@
+# AISI 304 (annealed) orthogonal tube turning (maker B insert): shear angle from measured chip thickness.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: shear-orth-ss304-marcicano2005-b
+quantity: shear_angle
+reference:
+  src: marcicano-2005-aisi304-cutting-tests
+  location: Table 4 (maker B), column phi_n
+  digitised: false
+  measured: true
+  note: 'phi_n is computed by the source from the measured chip thickness t1 (digital caliper, mean of 7 points) and t0
+    with rake 5 deg; checked: tan(phi_n) = r cos5/(1 - r sin5) reproduces every Table 4 value within 0.1 deg. Table 3 (maker
+    A) is not used for phi: its phi_n column is printed one row out of step with t0/t1 (each phi_n matches the t0/t1 of
+    the row above, and the strain column matches t0/t1 of its own row)'
+setup:
+  operation: orthogonal_turning
+  material:
+    db: aisi304
+    note: annealed AISI 304 tubes; quasi-static compression gives JC A 360 MPa, B 1244 MPa, n 0.72 (Table 1); hardness not
+      stated
+  tool:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    type: turning_insert
+    iso_code: TPGN 160308
+    grade: ISO M-type carbide, uncoated, no chip breaker
+    maker: B (not named)
+    tool_class: carbide
+    coating: none
+    rake_deg: 5
+    clearance_deg:
+      value: 6
+      src: est
+      note: 'assumed: not stated: ISO 1832 letter P = 11 deg insert clearance (code convention, standard not read) minus
+        the 5 deg positive tilt that gives the stated rake'
+    edge_radius_um:
+      value: 15
+      src: est
+      note: 'assumed: not stated; typical of a ground (G-tolerance) uncoated insert edge (est.)'
+    nose_radius_mm:
+      value: 0.8
+      src: est
+      note: 'assumed: ISO code ''08'' = 0.8 mm corner radius (code convention); outside the cut when the tube wall lies
+        on the straight edge'
+    assumed_inputs: [clearance_deg, edge_radius_um, nose_radius_mm]
+  machine:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    model: ROMI S-30 lathe
+    dynamometer: load-cell type dynamometer with PC acquisition (make not given)
+  stock:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    form: machined tube (dimensions not given)
+  conditions:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2, Tables 3-4
+    test_ids: [B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13]
+    h_per_test_mm: [0.06, 0.097, 0.205, 0.428, 0.428, 0.06, 0.097, 0.205, 0.205, 0.205, 0.205, 0.205, 0.205]
+    vc_per_test_m_min: [17, 17, 17, 17, 13, 13, 13, 13, 13, 17, 27, 42, 67]
+    width_of_cut_mm: 1.5
+    kinematics: 'orthogonal tube turning: feed per rev = uncut chip thickness t0, depth of cut = width'
+    coolant: {value: dry, src: est, note: 'assumed: not stated; dry orthogonal tests are implied by the analysis'}
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: phi_n B1, value: 17.4, unit: deg, x: 0.06, x_name: h, x_unit: mm, note: vc 17 m/min; t1 0.196 mm}
+- {name: phi_n B2, value: 22.4, unit: deg, x: 0.097, x_name: h, x_unit: mm, note: vc 17 m/min; t1 0.243 mm}
+- {name: phi_n B3, value: 24.6, unit: deg, x: 0.205, x_name: h, x_unit: mm, note: vc 17 m/min; t1 0.464 mm}
+- {name: phi_n B4, value: 29.3, unit: deg, x: 0.428, x_name: h, x_unit: mm, note: vc 17 m/min; t1 0.799 mm}
+- {name: phi_n B5, value: 28.9, unit: deg, x: 0.428, x_name: h, x_unit: mm, note: vc 13 m/min; t1 0.81 mm}
+- {name: phi_n B6, value: 17.5, unit: deg, x: 0.06, x_name: h, x_unit: mm, note: vc 13 m/min; t1 0.194 mm}
+- {name: phi_n B7, value: 22.9, unit: deg, x: 0.097, x_name: h, x_unit: mm, note: vc 13 m/min; t1 0.237 mm}
+- {name: phi_n B8, value: 27.0, unit: deg, x: 0.205, x_name: h, x_unit: mm, note: vc 13 m/min; t1 0.419 mm}
+- {name: phi_n B9, value: 29.5, unit: deg, x: 0.205, x_name: h, x_unit: mm, note: vc 13 m/min; t1 0.379 mm}
+- {name: phi_n B10, value: 21.2, unit: deg, x: 0.205, x_name: h, x_unit: mm, note: vc 17 m/min; t1 0.546 mm}
+- {name: phi_n B11, value: 25.1, unit: deg, x: 0.205, x_name: h, x_unit: mm, note: vc 27 m/min; t1 0.453 mm}
+- {name: phi_n B12, value: 23.2, unit: deg, x: 0.205, x_name: h, x_unit: mm, note: vc 42 m/min; t1 0.494 mm}
+- {name: phi_n B13, value: 24.4, unit: deg, x: 0.205, x_name: h, x_unit: mm, note: vc 67 m/min; t1 0.469 mm}
+reference_curves: []
+notes: Shear angle 17-30 deg rising with uncut chip thickness; a caliper-measured chip thickness carries maybe +-0.01-0.02
+  mm (est.), i.e. +-1-2 deg at small t0.

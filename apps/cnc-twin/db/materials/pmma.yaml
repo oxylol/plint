@@ -1,0 +1,214 @@
+# Workpiece material: PMMA, cast acrylic sheet and block (PLEXIGLAS GS 0F00 type; Perspex cast as a cross-check).
+# Sources: db/bibliography/materials-nonmetals.yaml. Data the material template has no key for (Vicat,
+# compressive yield, chip-form transitions, annealing, maker process windows ...) is in `extensions`.
+format: cnctwin-material
+version: 1
+id: pmma
+name: "PMMA, cast acrylic (cell-cast sheet / block)"
+family: polymer
+iso_group: O
+condition: "cast (GS), as supplied; values at 23 C / 50 % RH; blocks are cast sheet from 30 mm thickness"
+designations: {ISO_1043: "PMMA", trade: "PLEXIGLAS GS (POLYVANTIS/Roehm), Perspex cast (Lucite)", walter_group: "O1"}
+stock_forms: []
+
+physical:
+  src: polyvantis-2025-plexiglas-gs-xt
+  density_kg_m3: {value: 1190, note: "also 1.19 g/cm3 in lucite-2015-perspex-cast-tds"}
+  specific_heat_J_kgK: {table: [[23, 1470]], note: "1.47 J/gK, single value"}
+  conductivity_W_mK: {table: [[23, 0.19]], note: "DIN 52612"}
+  expansion_1_K: {table: [[50, 7.0e-5]], range: [7.0e-5, 7.7e-5], note: "mean 0-50 C (DIN 53752-A); Perspex cast 7.7e-5 (ASTM D696)"}
+  youngs_modulus_GPa: {table: [[23, 3.3]], note: "short-term tensile modulus; Perspex flexural modulus 3.21 GPa"}
+  shear_modulus_GPa: {table: [[23, 1.7]], note: "dynamic shear modulus at ~10 Hz (ISO 537)"}
+  poisson: {value: 0.37, range: [0.37, 0.38], note: "Perspex 0.38"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: {value: 105, src: wikipedia-en-pmma-2026, range: [105, 115], note: "105 C for atactic PMMA (secondary, citing Ashby 2005); for this cast grade Vicat B50 is 115 C and HDT(0.45 MPa) 113 C (polyvantis-2025-plexiglas-gs-xt), so the effective Tg is ~105-115 C"}
+  decomposition_degC: {value: 250, src: est, range: [200, 300], note: "depolymerisation (unzipping to methyl methacrylate monomer) onset not read; 200 C is the maker's maximum surface temperature for IR heating (polyvantis 211-1 p. 5); TGA onsets of 250-300 C are typical of cast PMMA (general knowledge)"}
+  hardness: {shore_D: 88, src: est, note: "Shore D not in the sources read (placeholder typical of PMMA); measured: Rockwell M 102 (lucite-2015-perspex-cast-tds) and ball indentation hardness H961/30 175 MPa (polyvantis), both in extensions.physical"}
+  yield_MPa: {value: 80, note: "PMMA breaks in tension at 23 C before yielding, so yield = tensile strength here; compressive yield 110 MPa is physical.compressive_MPa"}
+  ultimate_MPa: {value: 80, range: [75, 80], note: "tensile strength at 23 C; Perspex cast 75 MPa"}
+  elongation_pct: {value: 5.5, range: [4, 5.5], note: "at break; Perspex 4 %"}
+  fracture_strain: {value: 0.054, src: est, note: "ln(1 + 0.055); brittle in tension"}
+  compressive_MPa: {value: 110, note: "compressive yield stress (ISO 604), 23 C"}
+  flexural_MPa: {value: 115, range: [115, 116], note: "flexural strength (ISO 178); Perspex 116 MPa"}
+
+flow_stress:
+  model: temperature_table         # best available: strength vs temperature (no strain or rate terms); not in current schemas.py
+  tensile_strength_MPa: {table: [[-40, 110], [23, 80], [70, 40]], src: polyvantis-2025-plexiglas-gs-xt, note: "GS 0F00, ISO 527-2/1B/5"}
+  compressive_yield_MPa: {value: 110, src: polyvantis-2025-plexiglas-gs-xt, note: "23 C, ISO 604"}
+  T_soft_degC: {value: 115, src: polyvantis-2025-plexiglas-gs-xt, note: "Vicat B50; above Tg/Vicat the material is rubbery (forming range 160-175 C)"}
+  note: "No Johnson-Cook or G'Sell-Jonas fit for PMMA was read. Cutting model: forces from the Walter O1 Kienzle values; thermal softening of the shear zone from the strength table scaled by compressive/tensile = 110/80 (assumed), extrapolated linearly from 40 MPa at 70 C to ~0 at T_soft (assumed). Chip form switches with the cutting conditions (extensions.chip.transitions); above Tg the chip and surface smear."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 150
+      mc: 0.2
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 300, src: est, note: "Walter gives no reference speed; assumed at the top of the maker's turning window 20-300 m/min"}
+      src: walter-2025-technical-compendium
+      note: "Walter group O1 (PMMA/Plexiglas/acrylic listed as O1 on p. F30-F31); p. F9 class value for a neutral cutting edge geometry. No PMMA-specific kc1.1 or orthogonal cutting energy was read"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 150
+      mc: 0.2
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 100
+      src: est
+      note: "Walter O1 value assumed for sharp HSS (the maker recommends HSS for fine finishing); reference speed assumed"
+    - tool_class: pcd
+      coating: uncoated
+      kc11_N_mm2: 150
+      mc: 0.2
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 1000
+      src: est
+      note: "Walter O1 value assumed for (polished) diamond tools used for high-gloss finishing (polyvantis-2024-machining-plexiglas sect. 4 and 5); reference speed assumed"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.3, src: est, note: "assumed; glassy PMMA recovers less than POM/PA66"}
+  indentation_coeff_N_mm3: {value: 2.8e3, src: est, note: "aluminium placeholder 1.5e4 N/mm3 scaled by indentation hardness 175 MPa (polyvantis) / ~930 MPa (6061-T6, HB 95 in MPa)"}
+  work_hardening:
+    src: est
+    note: "no strain hardening; machining leaves tensile stresses that cause crazing with solvents, removed by annealing (extensions.thermal_damage)"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.45, src: polyvantis-2025-plexiglas-gs-xt, range: [0.45, 0.5], note: "coefficient of friction steel/plastic 0.45, plastic/steel 0.5 (p. 4); applied to carbide by assumption"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.45, src: polyvantis-2025-plexiglas-gs-xt, note: "steel/plastic"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous             # at correct speed/feed; crumbly or molten otherwise (extensions.chip.transitions)
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "glassy PMMA chips break readily; brittle fragments at large uncut chip thickness"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 2000
+    n: 0.3
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.05
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 60 min at vc ~ 580 m/min assumed. Maker: carbide tools have the longest life, but pigments in densely coloured grades may reduce tool life very noticeably; blunt tools cause burrs, chipping and stress (polyvantis-2024-machining-plexiglas sect. 1.7), hence the small VB limit"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 400
+    n: 0.15
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.05
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 60 min at vc ~ 220 m/min assumed"
+tool_life_usui: []
+
+residual_stress: []                # cast sheet is low-stress; machining and local heating add tensile stress (annealing advised)
+
+skin:
+  src: est
+  note: "cast sheet/block, masking film removed: no skin modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 200, src: polyvantis-2025-plexiglas-gs-xt, note: "maximum surface temperature for IR heating of GS (p. 5), used as the onset of surface degradation (bubbles, monomer); the drilling guide reports 'signs of decomposition in the drill hole' when speed/feed are too low"}
+  white_layer_degC: null
+  melt_smear_degC: {value: 115, src: polyvantis-2025-plexiglas-gs-xt, note: "Vicat B50; Tg ~105-115 C"}
+
+ignition:
+  autoignition_degC: {value: 425, src: polyvantis-2025-plexiglas-gs-xt, note: "ignition temperature of GS by DIN 51794 (an auto-ignition test); burns 'more or less like hardwood', very little smoke"}
+
+composite: null
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  physical:
+    src: polyvantis-2025-plexiglas-gs-xt
+    vicat_degC: {value: 115, note: "ISO 306 B50, GS 0F00; Perspex cast > 110 C (ISO 306 A)"}
+    hdt_degC: {value: 113, note: "ISO 75 at 0.45 MPa (105 C at 1.8 MPa)"}
+    ball_indentation_MPa: {value: 175, note: "indentation hardness H961/30 (ISO 2039-1)"}
+    rockwell_M: {value: 102, src: lucite-2015-perspex-cast-tds, note: "ISO 2039-2"}
+    service_temperature_degC: {value: 80, note: "max. permanent service temperature, GS"}
+    water_absorption_pct: {value: 0.2, src: lucite-2015-perspex-cast-tds, note: "ISO 62"}
+  chip:
+    molten_above_degC: {value: 115, src: polyvantis-2025-plexiglas-gs-xt, note: "Vicat B50 used as the smear/melt threshold of the amorphous polymer"}
+    transitions:
+      src: polyvantis-2024-machining-plexiglas
+      note: "Fig. 14 (drilling GS): speed and/or feed too high -> crumbly chip, uneven cut; speed and/or feed too slow -> overheating, signs of decomposition in the hole, molten chip; optimal -> smooth surface and smooth continuous chip. Turning: 'a continuous chip flow is proof of the correct tool grinding angle, feed rate and cutting speed'. Thin sheet chips out at the exit side unless supported"
+  thermal_damage:
+    stress_relief:
+      src: polyvantis-2024-machining-plexiglas
+      anneal_degC: {value: 80, range: [80, 100], note: "GS: 80 C, unformed parts up to 100 C"}
+      max_cooling_rate_K_per_h: {value: 15, note: "unit K/h has no suffix in cnctwin.units and passes through"}
+      note: "anneal time in h = thickness in mm / 3 (minimum 2 h); oven cooling time in h = thickness / 4; remove below 60 C. Tensile stress from machining plus solvents or monomer vapours causes crazing (sect. 8)"
+  hazards:
+    fumes: {src: polyvantis-2024-machining-plexiglas, note: "monomer vapours are released in laser cutting and flame polishing and promote crazing of stressed parts (sect. 8); overheated chips are expected to release methyl methacrylate by the same mechanism (assumption)"}
+    dust: {src: polyvantis-2024-machining-plexiglas, note: "saws and sanders should have dust extraction for immediate removal of swarf (sect. 1.6); plastics charge statically and attract dust (sect. 9)"}
+  recommended:                     # maker process windows, PLEXIGLAS GS and XT (value: [lo, hi] = window)
+    src: polyvantis-2024-machining-plexiglas
+    turning:
+      note: "sect. 5; carbide for roughing, HSS for finishing, polished diamond for high gloss (no coolant in precision work)"
+      clearance_deg: {value: [5, 10]}
+      rake_deg: {value: [-4, 0]}
+      kappa_deg: {value: 45}
+      vc_m_min: {value: [20, 300]}
+      f_mm_rev: {value: [0.1, 0.5]}
+      ap_max_mm: {value: 6}
+    routing:
+      note: "sect. 4; single- or double-flute end mills from ~10000 rpm; multi-flute cutters clog at high speed; cooling normally not needed"
+      clearance_deg: {value: [2, 10]}
+      rake_deg: {value: [0, 5]}
+      vc_m_min: {value: [200, 4500]}
+      f_max_mm_rev: {value: 0.5}
+      ap_max_mm: {value: 6}
+    drilling:
+      note: "sect. 3.1; the edge must scrape rather than cut; coolant (emulsion) from 5 mm thickness"
+      clearance_deg: {value: [3, 8]}
+      rake_deg: {value: [0, 4]}
+      point_angle_deg: {value: [60, 90]}
+      helix_deg: {value: [12, 16]}
+      vc_m_min: {value: [10, 60]}
+      f_mm_rev: {value: [0.1, 0.3]}
+    sawing:
+      note: "sect. 2.1, carbide-tipped circular saws"
+      clearance_deg: {value: [10, 15]}
+      rake_deg: {value: [0, 15]}
+      vc_max_m_min: {value: 4500}
+
+notes: "Cast PMMA (PLEXIGLAS GS). Measured/catalogue: density, thermal data, strength at -40/23/70 C, compressive yield, Vicat/HDT, friction against steel, ignition (POLYVANTIS 211-1), cross-checked with Perspex cast; machining windows and chip-form transitions (POLYVANTIS 311-1); Kienzle class value (Walter O1); Tg (Wikipedia, secondary). Estimates: Shore D, decomposition onset, softening extrapolation, h_min, K_sp, tool life. Gaps: no orthogonal cutting energy, ductile-brittle transition chip thickness, or Johnson-Cook/G'Sell-Jonas fit for PMMA was read (published, but behind paywalls)."

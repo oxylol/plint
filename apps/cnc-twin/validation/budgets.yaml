@@ -1,0 +1,184 @@
+# Error budgets of the simulator against the measured validation references (validation/cases/).
+# Part 1 covers the quantities of the cases written so far: cutting_force, torque, drilling_thrust,
+# drilling_torque, tool_temperature, chip_temperature, shear_angle, chip_ratio. Other quantities
+# (taylor_life, stability_lobe, roughness, ...) get their entries when their cases exist.
+#
+# How a budget is applied (per reference value or curve point):
+#   tolerance = max(budget_pct / 100 * |reference|, 2 * uncertainty of that reference value)
+#   for temperatures the percentage applies to the rise above ambient (T - T_ambient), not to T.
+# A case passes when every compared value lies within its tolerance; a quantity passes when at least
+# 80 % of its cases pass and no case misses by more than twice its tolerance.
+#
+# The budget numbers themselves are judgements (src: est); the evidence they rest on is sourced.
+# The CIRP 'Assessment of Machining Models' benchmark (Ivester et al. 2000) and its successor could
+# not be read in this session (no reachable full text), so no number from them is used.
+format: cnctwin-validation-budgets
+version: 1
+budgets:
+
+  cutting_force:
+    metric: "relative error of the simulated steady mean force component (turning, orthogonal cutting) or of the peak / extreme value of a force component (milling) against the reference value"
+    components:
+      main_force_pct:
+        value: 15
+        src: est
+        note: "Cutting (tangential, power) component. Measured repeats agree to 1-5 % and the stated measurement scatter is below 10 %, so the references are not the limit. Calibrated models reach 8 % (Loeschner 2025, Zou 2026) and mechanistic milling models 10 % for 85 % of cases with no case above 20 % (Altintas review); literature JC sets alone scatter from -21 % to +70 % (Ducobu 2017). 15 % is therefore achievable with good material data and still discriminates a wrong flow-stress or friction model."
+      thrust_force_pct:
+        value: 30
+        src: est
+        note: "Feed / thrust / back component in the orthogonal plane. It depends on edge radius, flank contact and friction much more than the main force: calibrated FE models miss it by 14.8 % on average (Zou 2026) and up to 42 % (Loeschner 2025); twenty JC sets give -59 % to +14 % (Ducobu 2017)."
+      milling_peak_force_pct:
+        value: 20
+        src: est
+        note: "Peak or extreme values of Fx, Fy, Fz in milling: the reference is digitised from force-time curves (3-4 % added uncertainty), runout and dynamics add to the cutting-mechanics error; the review's 'maximum deviation in all cases less than 20 %' for mechanistic milling models is taken as the bound."
+    evidence:
+      - src: klippel-2022-arxiv-orthogonal-data
+        page: "Table B.15, tests V0093-V0095 and V0096-V0098 / V0172-V0174"
+        kind: experiment_repeatability
+        statement: "Repeats at vc 150 m/min, h 0.1 mm give Fc 344.4, 346.8, 342.9 N/mm (about 1 % spread); two series at h 0.2 mm give 544.6-549.0 and 517.5-520.0 N/mm (about 5 % between series run with different cut lengths). The within-test signal sd (computed here from the table over the 'ok' tests) is 0.3-2.3 % of Fc for Ck45 at vc >= 150 m/min and h >= 0.06 mm, up to 26 % in the low-speed BUE range and up to 38 % at h <= 0.02 mm; 0.5-5.5 % for all Ti6Al4V tests."
+      - src: ducobu-2017-ti6al4v-orthogonal-reference
+        page: "Sect. 4, Table 3"
+        kind: experiment_repeatability
+        statement: "Standard deviations of forces and chip thickness stay under 10 % of the average (at least three repetitions)."
+        sd_limit_pct: 10
+      - src: ducobu-2017-ti6al4v-orthogonal-reference
+        page: "Table 5 (h = 60 um)"
+        kind: model_comparison
+        statement: "Twenty published Johnson-Cook sets in one FE model: RMS cutting force 89-192 N/mm and feed force 18-50 N/mm against measured 113 +- 2 and 44 +- 1 N/mm."
+        measured_cutting_force_N_mm: 113
+        model_cutting_force_N_mm: [89, 192]
+        measured_feed_force_N_mm: 44
+        model_feed_force_N_mm: [18, 50]
+        deviation_cutting_pct: {value: [-21, 70], src: est, note: "computed here from the read forces: 89/113 - 1 and 192/113 - 1"}
+        deviation_feed_pct: {value: [-59, 14], src: est, note: "computed here from the read forces: 18/44 - 1 and 50/44 - 1"}
+      - src: loschner-2025-ti6al4v-jc-sensitivity
+        page: "Sect. 2.3"
+        kind: model_comparison
+        statement: "Calibrated FE model of Ti6Al4V orthogonal turning: main cutting force within 8 % in most cases (below 2 % at low feed), back force deviations up to 42 %."
+        main_force_deviation_pct: 8
+        back_force_deviation_max_pct: 42
+      - src: zou-2026-304-cutting-forces
+        page: "Sect. 3.2.3"
+        kind: model_comparison
+        statement: "FE model of 304 orthogonal cutting: average error 8.1 % (main cutting force) and 14.8 % (thrust); the authors regard errors below 15 % as generally acceptable."
+        main_force_mean_error_pct: 8.1
+        thrust_force_mean_error_pct: 14.8
+      - src: altintas-mal-review-milling-accuracy
+        page: "p. 11"
+        kind: model_comparison
+        statement: "Mechanistic (orthogonal-to-oblique) milling force predictions over a variety of end-mill geometries: about 85 % within 10 % of the measurements, maximum deviation below 20 % in all cases."
+        share_within_10pct_pct: 85
+        max_deviation_pct: 20
+      - src: engin-altintas-milling-preprint
+        page: "Fig. 6 and Fig. 8"
+        kind: model_comparison
+        statement: "The source's own mechanistic simulations differ visibly from its measured Ti6Al4V milling forces: simulated Fy peak ~1110 N vs measured ~1015 N (taper ball end mill); simulated Fx extreme ~-675 N vs measured ~-830 N (bull-nose cutter); values digitised in this work."
+
+  torque:
+    metric: "relative error of the simulated mean (or peak) spindle torque in milling against the reference"
+    budget_pct:
+      value: 15
+      src: est
+      note: "No milling-torque case or torque-specific model comparison was found in the sources read; the torque is the moment of the tangential (main) cutting force, so the main_force_pct budget of cutting_force is carried over."
+    evidence: []
+
+  drilling_thrust:
+    metric: "relative error of the simulated steady thrust (axial) force during full-diameter drilling"
+    budget_pct:
+      value: 20
+      src: est
+      note: "The thrust is dominated by the chisel edge (extrusion at near-zero speed and strongly negative rake), which cutting-force models describe less well than the lips. Luo et al. quote Ucun's 80-90 % agreement for drilling simulations, i.e. 10-20 % deviation; their own tuned FE model reached 3.25 %. 20 % keeps a margin for the poorly specified drill geometry of the available references."
+    evidence:
+      - src: luo-2021-al7075-drilling-thrust-torque
+        page: "Sect. 2.3 and 4.2"
+        kind: model_comparison
+        statement: "FE drilling model of 7075-T6 vs tests: maximum error 3.25 % in axial force (800 rpm, 100 mm/min) and 4.16 % in torque (1000 rpm, 140 mm/min); Ucun (J. Mech. Sci. Technol. 2016, cited, not read) found 80-90 % consistency between simulation and test."
+        fe_thrust_max_error_pct: 3.25
+        fe_torque_max_error_pct: 4.16
+        cited_consistency_pct: [80, 90]
+
+  drilling_torque:
+    metric: "relative error of the simulated steady drilling torque"
+    budget_pct:
+      value: 15
+      src: est
+      note: "Torque comes mostly from the lips (oblique cutting at known speed), so it is predicted better than the thrust; same evidence as drilling_thrust (luo-2021-al7075-drilling-thrust-torque). The one available torque reference is itself doubtful (see its case notes)."
+    evidence: []
+
+  tool_temperature:
+    metric: "relative error of the simulated temperature rise above ambient at the measured location (IR window average, or contact-area average for a tool-work thermocouple)"
+    budget_pct:
+      value: 15
+      src: est
+      note: "IR measurements carry +-8 % (Slusarczyk 2025) and NIST IR microscopy +-52 C at 2 sigma on peaks of several hundred C (Burns 2012), so a reference rise is known to about 8-10 %. Calibrated thermal models reach 3-4 % against a tool-work thermocouple (Loeschner 2025) and 17 % against IR (Slusarczyk 2025), while FE with literature constitutive data has missed the peak interface temperature by hundreds of C (Burns 2012). 15 % of the rise is a demanding but reachable bound."
+    evidence:
+      - src: slusarczyk-2025-ti6al4v-rake-temperature
+        page: "Sect. 4"
+        kind: measurement_uncertainty
+        statement: "Maximum error of the thermovision measurements +-8 %."
+        ir_max_error_pct: 8
+      - src: slusarczyk-2025-ti6al4v-rake-temperature
+        page: "Sect. 4, Fig. 21-22"
+        kind: model_comparison
+        statement: "Analytical contact-temperature model vs IR: 24-53 C (rake 0) and 33-73 C (rake 10) above the measurement, about 17 %."
+        model_minus_ir_degC: [24, 73]
+        model_vs_ir_pct: 17
+      - src: burns-2012-nist-peak-temperature
+        page: "Fig. 1 caption, Sect. 2"
+        kind: measurement_uncertainty
+        statement: "Peak tool-chip interface temperature in orthogonal cutting of AISI 1045 at 3.7 m/s measured with an overall uncertainty of +-52 C (2 sigma); FE simulations with the Jaspers-Dautzenberg JC and ZA models underpredicted it by hundreds of degrees Celsius."
+        uncertainty_2sigma_degC: 52
+      - src: loschner-2025-ti6al4v-jc-sensitivity
+        page: "Sect. 2.3"
+        kind: model_comparison
+        statement: "Calibrated FE model vs natural-thermocouple temperature in Ti6Al4V orthogonal turning: 3-4 % regardless of the cutting parameters."
+        deviation_pct: [3, 4]
+      - src: diazalvarez-2017-in718-orthogonal
+        page: "Sect. 2.2"
+        kind: measurement_uncertainty
+        statement: "Two-colour fibre-optic pyrometer calibration: full-scale temperature error 5 %."
+        full_scale_error_pct: 5
+
+  chip_temperature:
+    metric: "relative error of the simulated chip (free-surface) temperature rise above ambient"
+    budget_pct:
+      value: 20
+      src: est
+      note: "The only chip-temperature reference (Ck45 tempering colours, klippel-2022-arxiv-orthogonal-data Sect. 3.5) is indirect, capped at 360 C and has no stated uncertainty; a looser bound than for tool temperature is used, and values at the cap count only as lower bounds."
+    evidence: []
+
+  chip_ratio:
+    metric: "relative error of the simulated chip compression ratio h / h_chip (mean chip thickness for segmented chips)"
+    budget_pct:
+      value: 20
+      src: est
+      note: "Measured chip thickness scatters by about 10 % even in careful work (Ducobu 2017) and by 10-30 % for manually measured sections (Klippel 2022; spread estimated here from repeats such as V0096-V0098). Calibrated FE models reach 14-15 % (Loeschner 2025, Qiu 2019); twenty JC sets give -5 % to more than +44 % (Ducobu 2017)."
+    evidence:
+      - src: klippel-2022-arxiv-orthogonal-data
+        page: "Sect. 3.3, Table B.15 V0096-V0098"
+        kind: experiment_repeatability
+        statement: "The average chip thicknesses show high scatter (manual measurement, chip misalignment, skewing of thin chips); e.g. three chips at the same condition (vc 150, h 0.2 mm): 512.8, 529.6, 409.5 um."
+      - src: ducobu-2017-ti6al4v-orthogonal-reference
+        page: "Table 5 (h = 60 um)"
+        kind: model_comparison
+        statement: "Twenty JC sets give chip thicknesses from 76 to more than 115 um against the measured 80 +- 4 um."
+        measured_chip_thickness_um: 80
+        model_chip_thickness_um: [76, 115]
+      - src: loschner-2025-ti6al4v-jc-sensitivity
+        page: "Sect. 2.3"
+        kind: model_comparison
+        statement: "Chip thickness differences between FE and experiment did not exceed 14 %."
+        max_deviation_pct: 14
+      - src: qiu-2019-in718-fe-chip-thickness
+        page: "Sect. 2.2"
+        kind: model_comparison
+        statement: "3D FE of Inconel 718 turning: simulated chip thickness 15 % below the experiment at the low cutting condition."
+        deviation_pct: 15
+
+  shear_angle:
+    metric: "relative error of the simulated (mean) shear angle"
+    budget_pct:
+      value: 20
+      src: est
+      note: "The shear angles of the references are computed from measured chip thickness or chip flow speed, so they inherit the chip-ratio uncertainty: for rake 0, d(phi)/phi = (dr/r) * r / ((1 + r^2) atan r), i.e. 0.8-0.95 times the chip-ratio error for r = 0.3-0.7. The chip_ratio budget is carried over."
+    evidence: []

@@ -1,0 +1,161 @@
+# Workpiece material: polyamide 66, unfilled, extruded stock shapes (rod, plate, tube).
+# Representative grade: Ensinger TECAMID 66 natural. Sources: db/bibliography/materials-nonmetals.yaml
+# Data the material template has no key for is collected in the top-level `extensions` block.
+format: cnctwin-material
+version: 1
+id: pa66
+name: "Polyamide 66 (nylon 66), unfilled (extruded rod/plate)"
+family: polymer
+iso_group: O
+condition: "extruded semi-finished stock as supplied; moisture state of the datasheet specimens not stated (PA66 absorbs 0.2-0.4 % water in 24 h/96 h and much more at saturation, which lowers stiffness, strength and Tg)"
+designations: {ISO_1043: "PA66", trade: "TECAMID 66 natural (Ensinger); comparable: Zytel 101, Ultramid A", walter_group: "O1"}
+stock_forms: []
+
+physical:
+  src: ensinger-2023-tecamid66-datasheet
+  density_kg_m3: {value: 1150}
+  specific_heat_J_kgK: {table: [[23, 1500]], note: "1.5 J/gK (ISO 22007-4), room temperature only"}
+  conductivity_W_mK: {table: [[23, 0.36]], note: "ISO 22007-4, room temperature"}
+  expansion_1_K: {table: [[60, 1.1e-4], [100, 1.2e-4]], note: "mean CLTE from 23 C to 60 C and to 100 C, longitudinal"}
+  youngs_modulus_GPa: {table: [[23, 3.5]], note: "tensile, 1 mm/min; flexural 3.1 GPa, compression 2.7 GPa; moisture state not stated"}
+  poisson: {value: 0.39, src: est, note: "typical of polyamides; no value in the sources read"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: {value: 47, note: "datasheet footnote: 'found in public sources'; Tg falls as the material absorbs water"}
+  melting_degC: {value: 258, range: [253, 263], note: "DSC (ISO 11357); PHIS: melting range ca. 253-263 C (ensinger-2026-tecamid66-phis)"}
+  decomposition_degC: {value: 300, src: ensinger-2026-tecamid66-phis, note: "'decomposition temperature > 300 C' (PHIS sect. 9)"}
+  hardness: {shore_D: 82}
+  yield_MPa: {value: 84, note: "tensile strength at yield, 50 mm/min"}
+  ultimate_MPa: {value: 85}
+  elongation_pct: {value: 70, note: "at break; 7 % at yield"}
+  fracture_strain: {value: 0.53, src: est, note: "ln(1 + 0.70) from the elongation at break"}
+  compressive_MPa: {value: 81, note: "at 5 % strain; 20 / 35 / 81 MPa at 1 / 2 / 5 %"}
+  flexural_MPa: {value: 110, note: "flexural strength (ISO 178)"}
+
+flow_stress:
+  model: none                      # task rule for polymers without a published fit; current schemas.py accepts only johnson_cook or null
+  yield_MPa: {value: 84, src: ensinger-2023-tecamid66-datasheet, note: "tension, 50 mm/min, 23 C, moisture state not stated"}
+  compressive_flow_MPa: {value: 81, src: ensinger-2023-tecamid66-datasheet, note: "at 5 % compressive strain"}
+  T_soft_degC: {value: 170, src: ensinger-2023-tecamid66-datasheet, note: "short-term service limit, used as the start of strong softening"}
+  T_melt_degC: {value: 258, src: ensinger-2023-tecamid66-datasheet, note: "crystalline melting (DSC)"}
+  note: "No Johnson-Cook or G'Sell-Jonas fit for PA66 was read. Cutting model: forces from the Kienzle values (Walter O1). Thermal softening: scale yield_MPa linearly from 23 C to about half at Tg + 50 C and to zero between T_soft and T_melt (shape assumed; PA66 loses stiffness above Tg ~47 C, close to cutting-zone temperatures even at moderate speeds). Moisture lowers the flow stress; not modelled."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      kc11_N_mm2: 150
+      mc: 0.2
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 300, src: est, note: "Walter gives no reference speed; assumed"}
+      src: walter-2025-technical-compendium
+      note: "Walter group O1 (PA and nylon listed as O1 on p. F31); class value on p. F9 for a neutral cutting edge geometry. No PA66-specific kc1.1 or orthogonal cutting energy was read"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 150
+      mc: 0.2
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 0
+      vc_ref_m_min: 150
+      src: est
+      note: "Walter O1 value assumed for sharp HSS; reference speed assumed"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.45, src: est, note: "tough, viscoelastic PA66 is assumed to plough more than POM below the edge radius; no measurement read"}
+  indentation_coeff_N_mm3: {value: 2.5e3, src: est, note: "as for pom-c: aluminium placeholder scaled by an assumed indentation-hardness ratio (~160 / ~930 MPa)"}
+  work_hardening:
+    src: est
+    note: "no strain-hardened layer is modelled for thermoplastics"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, range: [0.25, 0.45], note: "dry polyamide on steel is typically 0.3-0.4 (general knowledge, not read); rises with interface temperature above Tg"}
+    sticking_ratio: {value: 0.4, src: est, note: "assumed; PA66 is tough and adheres more than POM when warm"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, note: "as for carbide (assumed)"}
+    sticking_ratio: {value: 0.4, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous             # long, tough, stringy chips; molten above the melt (extensions.chip)
+  segmentation: null
+  bue: null
+  breakability: {value: poor, src: est, note: "tough PA66 (70 % elongation at break) forms long stringy chips that wrap tools and parts; a chip breaker or interrupted cut is needed; no quantitative source read"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 2000
+    n: 0.3
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: unfilled PA66 is not abrasive; T = 60 min at vc ~ 580 m/min assumed (general knowledge, not read). Edges are replaced when rounding causes burrs and melting"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 450
+    n: 0.15
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 60 min at vc ~ 240 m/min assumed"
+tool_life_usui: []
+
+residual_stress: []
+
+skin:
+  src: est
+  note: "machined from extruded stock: no surface skin modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 300, src: ensinger-2026-tecamid66-phis, note: "decomposition onset (> 300 C); used as the burn/decomposition threshold"}
+  white_layer_degC: null
+  melt_smear_degC: {value: 258, src: ensinger-2023-tecamid66-datasheet, note: "crystalline melt; the surface softens and smears well below this when the edge is blunt (Tg 47 C, short-term service limit 170 C)"}
+
+ignition:
+  chip_ignition_degC: {value: 400, src: ensinger-2026-tecamid66-phis, note: "PHIS sect. 9 'flammability (solid, gas): > 400 C' (a lower bound)"}
+
+composite: null
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  physical:
+    src: ensinger-2023-tecamid66-datasheet
+    notched_charpy_kJ_m2: {value: 5, note: "ISO 179-1eA (unit kJ/m2 passes through unconverted)"}
+    service_temperature_degC: {value: 100, range: [100, 170], note: "long-term 100 C, short-term 170 C"}
+    water_absorption_pct: {value: 0.4, range: [0.2, 0.4], note: "24 h / 96 h at 23 C (ISO 62), upper value used; saturation uptake is much higher (not read)"}
+  chip:
+    molten_above_degC: {value: 258, src: ensinger-2023-tecamid66-datasheet, note: "crystalline melt"}
+  hazards:
+    dust: {src: ensinger-2026-tecamid66-phis, note: "generate as little dust as possible; local extraction; general dust limit; FFP1/FFP2 in dusty conditions"}
+    fumes: {src: ensinger-2026-tecamid66-phis, note: "strong overheating releases carbon monoxide, nitrogen oxides, caprolactam and traces of hydrogen cyanide (PHIS sect. 10)"}
+  recommended:
+    vc_m_s: {value: [40, 60], src: leitz-2017-lexicon-ed7-ch11, note: "window, Leitz guide for thermoplastics, tools > 100 mm (sawing 40-70 m/s); shank router cutters 10-40 m/s"}
+
+notes: "Unfilled PA66 stock (TECAMID 66 natural). Measured/catalogue: density, thermal and mechanical data, Tg (from public sources per Ensinger), Tm, decomposition and ignition (Ensinger datasheet and PHIS), Kienzle class value (Walter O1). Estimates: Poisson, softening shape, friction, h_min, K_sp, chip breakability, tool life. Moisture effects (PA66 is hygroscopic) are not quantified. Gaps: no PA66 orthogonal cutting data, friction against carbide or conditioned (wet) properties were read."

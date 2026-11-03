@@ -1,0 +1,67 @@
+# Zhao et al. (2023): uncoated (K313) and PVD TiAlN-coated (KC5010) carbide in turning of Ti-6Al-4V at
+# vc 150 m/min, f 0.1 mm/rev, ap 1 mm: time to VB = 0.1, 0.2 and 0.3 mm, dry and with flood, MQL and
+# cold-spray cooling (values printed on the bars of Fig. 13).
+format: cnctwin-validation-case
+version: 1
+id: taylor-zhao2023-carbide-ti64-150mmin
+quantity: taylor_life
+reference:
+  src: zhao-2023-ti64-carbide-cooling-tool-life
+  location: "Sect. 2 (workpiece, tools), Sect. 3.1 and Table 4 (cutting and cooling conditions), Sect. 4.4 and Fig. 13 (cutting time to VB = 0.1, 0.2, 0.3 mm; values printed on the bars), Fig. 12 (wear curves, not digitised)"
+  digitised: false
+  measured: true
+  note: "Bar labels read directly (they reproduce the coating gains stated in Sect. 4.4: 142/130 = +9.23 %, 180/159.4 = +12.92 %, 262/230.4 = +13.72 %, 190/186.19 = +2.05 %). Repeats and scatter are not stated."
+setup:
+  operation: longitudinal_turning
+  material:
+    db: ti6al4v
+    note: "Ti-6Al-4V heat treated 1-4 h at 700-800 C and air cooled, 91.7 % alpha / 8.3 % beta (Sect. 2.1; Tables 1-3 of the source give composition and properties)"
+  tool:
+    src: zhao-2023-ti64-carbide-cooling-tool-life
+    page: Sect. 2.2, Sect. 3.1
+    type: turning_insert
+    iso_designation: {value: VNMP160408, note: "as printed; with the stated 55 deg included angle and the DDNNR holder this is presumably a D-type (55 deg) insert, since V-type inserts have 35 deg"}
+    grades: "Kennametal K313 (uncoated, WC 89.5 % / Co 10.5 %) and KC5010 (PVD TiAlN, 2.1 um)"
+    tool_class: carbide
+    holder: DDNNR2525M15KC06
+    included_angle_deg: 55
+    lead_angle_deg: {value: 90, note: "as stated ('lead angle of 90 deg')"}
+    rake_deg: {value: 12.8, note: "'side rake angle'"}
+    clearance_deg: 11
+    edge_radius_um: 80
+    nose_radius_mm: {value: 0.8, src: est, note: "decoded from the designation (code 08); not stated in words"}
+    assumed_inputs: [nose_radius_mm]
+  machine:
+    src: zhao-2023-ti64-carbide-cooling-tool-life
+    page: Sect. 3.1
+    model: Baoji CK6560A CNC lathe
+  conditions:
+    src: zhao-2023-ti64-carbide-cooling-tool-life
+    page: Sect. 3.1, Table 4
+    cutting_speed_m_min: 150
+    feed_mm_rev: 0.1
+    ap_mm: 1
+    coolant: "dry; flood with water-soluble LN6889 (FC); cryogenic spray jet of LN6889 at 0 C with 6-8 bar air (CSJC, SM4000); MQL animal oil 200 mL/h with 6-8 bar air"
+    nozzle_angle_deg: {value: 15, note: "jet axis 15 deg to the flank face for CSJC and MQL"}
+    wear_criterion_VB_mm: [0.1, 0.2, 0.3]
+  dynamics: null
+  program: null
+reference_values:
+  - {name: t_VB0.3_dry_uncoated, value: 130.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.2_dry_uncoated, value: 103.85, unit: s, uncertainty: 5}
+  - {name: t_VB0.1_dry_uncoated, value: 39.84, unit: s, uncertainty: 5}
+  - {name: t_VB0.3_dry_TiAlN, value: 142.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.2_dry_TiAlN, value: 105.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.1_dry_TiAlN, value: 60.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.3_flood_uncoated, value: 159.40, unit: s, uncertainty: 5}
+  - {name: t_VB0.2_flood_uncoated, value: 130.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.1_flood_uncoated, value: 66.86, unit: s, uncertainty: 5}
+  - {name: t_VB0.3_flood_TiAlN, value: 180.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.2_flood_TiAlN, value: 108.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.1_flood_TiAlN, value: 67.76, unit: s, uncertainty: 5}
+  - {name: t_VB0.3_mql_uncoated, value: 186.19, unit: s, uncertainty: 5}
+  - {name: t_VB0.3_mql_TiAlN, value: 190.00, unit: s, uncertainty: 5}
+  - {name: t_VB0.3_coldspray_uncoated, value: 230.40, unit: s, uncertainty: 5}
+  - {name: t_VB0.3_coldspray_TiAlN, value: 262.00, unit: s, uncertainty: 5}
+reference_curves: []
+notes: "One cutting speed only (150 m/min), so this case checks the level of a carbide wear model in Ti-6Al-4V, not the Taylor slope; the source's 75 m/min tests report wear after a removed volume, not a life. The uncertainty of 5 s per value is est. (no scatter stated; wear was read at intervals, Fig. 12). Other values of Fig. 13 for MQL and cold spray at VB 0.1 and 0.2 mm: MQL uncoated 79.68 / 141.16 s, MQL TiAlN 96.00 / 158.18 s, cold spray uncoated 120.00 / 186.00 s, cold spray TiAlN 132.00 / 212.00 s. The large edge radius (80 um) and the inconsistent insert designation should be kept in mind."

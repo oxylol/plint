@@ -1,0 +1,147 @@
+# Inconel 718 (UNS N07718, 2.4668), solution treated and aged. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: inconel718
+name: "Inconel 718 nickel superalloy, solution treated and aged"
+family: nickel
+iso_group: S
+condition: "solution annealed 1700-1850 F (927-1010 C) and rapidly cooled, aged 1325 F (718 C) 8 h, furnace cooled to 1150 F (621 C), held to 18 h total (special-metals-2007-in718, p. 2)"
+designations: {UNS: N07718, EN: "NiCr19Fe19Nb5Mo3 (2.4668)", trade: "INCONEL alloy 718", AMS: "5662/5663 (bar), 5596 (sheet)"}
+stock_forms: []
+
+physical:
+  src: special-metals-2007-in718
+  density_kg_m3: {value: 8221, note: "annealed and aged 0.297 lb/in3 (Table 2)"}
+  specific_heat_J_kgK: {table: [[20, 435], [300, 481.4], [500, 514.8], [700, 573.4]], src: wang-2018-in718-chip-formation, note: "Table 2 at 293/573/773/973 K; 435 J/kgK at 21 C also in special-metals-2007-in718 Table 2"}
+  conductivity_W_mK: {table: [[21.1, 11.39], [93.3, 12.55], [204.4, 14.42], [315.6, 16.15], [426.7, 17.88], [537.8, 19.61], [648.9, 21.35], [760.0, 23.22], [871.1, 24.95], [982.2, 26.83], [1093.3, 28.70]], note: "Table 5, annealed and aged, converted from Btu in/(ft2 h F) x 0.14423 and F to C"}
+  expansion_1_K: {table: [[93.3, 13.16e-6], [204.4, 13.55e-6], [315.6, 13.93e-6], [426.7, 14.35e-6], [537.8, 14.56e-6], [648.9, 15.10e-6], [760.0, 16.04e-6]], note: "Table 5, mean from 70 F (21 C), converted from in/in/F x 1.8"}
+  youngs_modulus_GPa: {table: [[21.1, 199.9], [93.3, 195.8], [204.4, 190.3], [315.6, 184.1], [426.7, 177.9], [537.8, 171.0], [648.9, 163.4], [760.0, 153.8], [871.1, 139.3], [982.2, 120.0], [1093.3, 98.6]], note: "Table 4, dynamic, hot-rolled flat 1800 F/1 h AC + aged; converted from ksi x 10^3"}
+  poisson: {value: 0.294, note: "Table 4 at 70 F (0.27-0.29 up to 1200 F)"}
+  solidus_degC: {value: 1260, note: "melting range 1260-1336 C (Table 2)"}
+  liquidus_degC: {value: 1336}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HRC: 42, range: [36, 43], note: "Table 18: hot-rolled plate annealed and aged per AMS 5596H, Rc 42-43; AMS minimums: Rc 36 (AMS 5596), 331 BHN (AMS 5662/5663)"}
+  yield_MPa: {value: 1058, note: "Table 20: 5/8-in. hot-rolled round, 1800 F anneal + age, 153.5 ksi at 80 F; AMS 5662 minimum 150 ksi (1034 MPa)"}
+  ultimate_MPa: {value: 1313, note: "Table 20: 190.5 ksi at 80 F; AMS 5662 minimum 185 ksi (1276 MPa)"}
+  elongation_pct: {value: 22, note: "Table 20"}
+  fracture_strain: {value: 0.39, src: est, note: "ln(1/(1-RA)) with RA = 32.5 % (Table 20)"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 1290
+  B_MPa: 895
+  n: 0.526
+  C: 0.016
+  m: 1.55
+  ref_strain_rate_1_s: 0.03
+  T_ref_degC: {value: 20, src: est, note: "not stated in Table 1 of qiu-2019; room temperature assumed"}
+  T_melt_degC: 1300
+  src: qiu-2019-in718-jc-sensitivity
+  note: "DeMange, Prakash & Pereira (2009) constants as given in Qiu et al. 2019 Table 1 (eps0 = 0.03 1/s) and Wang et al. 2018 Table 1; melting temperature 1573 K in both papers' property tables. Alternative: Zhou et al. 2022 Table 3: A 1200, B 1284, C 0.006, n 0.54, m 1.2 (Tm 2073 K as printed). Other published sets (Kobayashi et al. 2008; Uhlmann et al. 2007) were not read."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 2900
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 50, src: est, note: "Walter gives no reference speed; typical carbide speed for aged 718"}
+      src: walter-2025-technical-compendium
+      note: "Walter group S4 'heat-resistant alloys, nickel-cobalt-based, hardened' (2.4668 Inconel 718 listed as S4), p. F9; S3 (annealed) is 2800"
+    - tool_class: ceramic
+      coating: uncoated
+      kc11_N_mm2: 2900
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 250, src: est, note: "Walter gives no reference speed; typical SiAlON speed"}
+      src: walter-2025-technical-compendium
+      note: "same S4 value applied to ceramic tools (tool-class assignment is this database's; at ceramic speeds thermal softening lowers kc)"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.3, src: est, note: "assumed; no IN718 value read"}
+  indentation_coeff_N_mm3: {value: 5.9e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (~390 HB equivalent / 200)"}
+  work_hardening:
+    layer_depth_um: {value: 100, src: est, note: "zhou-2022 report that the hardened-layer depth grows with chamfer width/angle and uncut chip thickness but give no depth in the text read; 100 um assumed"}
+    hardness_increase_pct: {value: 48, src: zhou-2022-in718-work-hardening, note: "nanoindentation: 560 HV at the machined surface vs 378 HV bulk ((560-378)/378 = 48 %), orthogonal dry cutting at 100 m/min with chamfered carbide"}
+    strain_hardening_exponent: {value: 0.526, src: qiu-2019-in718-jc-sensitivity, note: "JC n"}
+
+friction:
+  - tool_class: carbide
+    coating: PVD
+    mu_sliding: {value: 0.3, src: qiu-2019-in718-jc-sensitivity, note: "tool-workpiece Coulomb coefficient used in their validated 3D FE model (PVD-coated carbide); the paper also studies its sensitivity"}
+    sticking_ratio: {value: 0.6, src: est, note: "strong adhesion of Ni alloys assumed"}
+  - tool_class: ceramic
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: segmented
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 60, src: est, note: "wang-2018 (FE validated by orthogonal tests, h = 0.1 mm, rake 0) find a continuous chip at 50 m/min and serrated chips at higher speed (next simulated speeds much higher); they note serrated chips form over a wide range of speeds. 60 m/min assumed"}
+  bue:
+    interface_temp_degC: {range: [200, 600], src: est, note: "assumed"}
+    vc_m_min: [5, 30]
+    src: est
+    note: "adhesion/BUE of aged 718 at low carbide speeds assumed; not measured in a read source"
+  breakability: {value: medium, src: est, note: "segmented but tough chips; not quantified"}
+  oxide_colours: null              # template: ferrous/titanium only
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: carbide
+    coating: PVD
+    C_m_min: 77
+    n: 0.2
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.15
+    ap_ref_mm: 1
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 45 m/min (coated S-grade carbide on aged 718, general knowledge)"
+  - tool_class: ceramic
+    coating: uncoated
+    grade: SiAlON
+    C_m_min: 499
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.15
+    ap_ref_mm: 1
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 10 min at vc = 250 m/min (SiAlON roughing, round inserts, general knowledge); notch wear at the depth-of-cut line often ends life before VB"
+  - tool_class: ceramic
+    coating: uncoated
+    grade: "Al2O3-SiC whisker"
+    C_m_min: 399
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.15
+    ap_ref_mm: 1
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 10 min at vc = 200 m/min (general knowledge)"
+tool_life_usui: null
+
+residual_stress: []                # solution-treated and aged bar/forging: no published as-supplied profile read
+
+skin:
+  type: none
+  thickness_mm: {value: 0, src: est, note: "aged bar is normally supplied turned or ground; forgings may carry scale (not modelled)"}
+  hardness_factor: {value: 1.0, src: est, note: "no skin"}
+  abrasiveness_factor: {value: 1.0, src: est, note: "no skin"}
+
+thermal_damage:
+  burn_degC: null                  # no heat-tint table for 718 read
+  white_layer_degC: null           # machining white layers in 718 are deformation-induced (nanocrystalline), not a transformation threshold
+  overtemper_degC: {value: 718, src: special-metals-2007-in718, note: "first aging step 1325 F (718 C) of the standard heat treatment; surface exposure above the aging temperature over-ages the gamma-prime/gamma-double-prime strengthening (threshold is this database's inference)"}
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "Solution treated and aged 718 (AMS 5662/5663 type). Physical and tensile data from Special Metals SMC-045 (converted to SI); flow stress DeMange et al. 2009 via Qiu et al. 2019. Kienzle constants are Walter S4 standard values. Tool life, BUE window, segmentation onset and work-hardening depth are estimates."

@@ -1,0 +1,132 @@
+# Workpiece material: aluminium 7075-O (annealed).
+# Physical and mechanical data: NASA 1972 materials handbook (O temper) and Kaiser 2006 datasheet.
+format: cnctwin-material
+version: 1
+id: al7075-o
+name: "Aluminium 7075-O"
+family: aluminium
+iso_group: N
+condition: "O: annealed (fully soft)"
+designations: {UNS: A97075, EN: "EN AW-7075", DIN: "AlZn5.5MgCu"}
+stock_forms: []                    # annealed stock: no residual-stress profile
+
+physical:
+  src: muraca-1972-al7075-handbook
+  density_kg_m3: {value: 2800}
+  specific_heat_J_kgK: {table: [[-18, 837], [93, 920], [200, 1013], [300, 1096]], digitised: true, uncertainty_pct: 5, note: "alloy curve digitised from Fig. 9.2111 (no temper stated in the figure); tabulated 0.23 cal/g C = 962 J/kgK at 100 C"}
+  conductivity_W_mK: {table: [[20, 173]], src: luo-2021-al7075-drilling, note: "Luo et al. Table 2 lists 173 W/(m C) for 'AL7075' from the DEFORM library without a temper; this value is far above the T6 (130) and T7351 (155) values and is taken here as the annealed-temper conductivity (assumption)"}
+  expansion_1_K: {table: [[38, 23.0e-6], [93, 23.8e-6], [149, 24.3e-6], [204, 24.7e-6]], digitised: true, uncertainty_pct: 3, note: "alloy curve digitised from Fig. 9.2111, mean from room temperature (assumed convention); tabulated 23.6e-6 for 20-100 C"}
+  youngs_modulus_GPa: {table: [[20, 71.7]], note: "typical E = 10.4e3 ksi, all tempers"}
+  poisson: {value: 0.33}
+  solidus_degC: {value: 477, range: [477, 532], note: "NASA melting range approx. 477-638 C; Kaiser 532-635 C"}
+  liquidus_degC: {value: 635, src: kaiser-2006-al7075-datasheet, range: [635, 638]}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 60, note: "Brinell 500 kg, O temper (section 7.3)"}
+  yield_MPa: {value: 103, note: "typical Fty 15.0 ksi, O temper"}
+  ultimate_MPa: {value: 228, note: "typical Ftu 33.0 ksi, O temper"}
+  elongation_pct: {value: 17, note: "in 2 in, O temper"}
+  fracture_strain: {value: 0.7, src: est, note: "ln(1/(1-RA)) with an assumed reduction of area of about 50 %; no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: {value: 103, src: muraca-1972-al7075-handbook, note: "A = typical O-temper yield strength"}
+  B_MPa: 235
+  n: 0.20
+  C: {value: 0.01, note: "rate constant of the 7075-T6 set (luo-2021-al7075-drilling), adopted as a proxy"}
+  m: {value: 1.1, note: "thermal exponent of the 7075-T6 set, adopted as a proxy"}
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: {value: 604, src: luo-2021-al7075-drilling, note: "melting temperature used with the borrowed m"}
+  src: est
+  note: "No published JC set for 7075-O was found. B and n fitted to the NASA typical tensile data (Fty 103, Ftu 228 MPa) with Considere's condition at an ASSUMED uniform true strain of 0.12 (total elongation 17 %): true stress at necking 256.5 MPa -> B = 234.5 MPa, n = 0.201. Quasi-static fit only."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 700
+      mc: 0.25
+      rake_ref_deg: {value: 0, src: est, note: "reference geometry not stated by ISCAR; neutral 0 deg rake assumed"}
+      vc_ref_m_min: {value: 300, src: est, note: "no reference speed in the catalogue; assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR group 21: aluminium wrought alloy, not hardenable, 60 HB nominal (matches 7075-O at 60 HB)"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 805
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 60
+      src: est
+      note: "carbide catalogue value x 1.15 assumed for HSS"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.3, src: wojciechowski-2022-min-chip-thickness, range: [0.2, 0.45], note: "no 7075 entry; chosen inside the aluminium-alloy range of Table 1"}
+  indentation_coeff_N_mm3: {value: 9.5e3, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (60/95)"}
+  work_hardening:
+    layer_depth_um: {value: 70, src: est, note: "assumed; annealed alloy strain-hardens under the tool"}
+    hardness_increase_pct: {value: 25, src: est, note: "assumed (Ftu/Fty = 2.2)"}
+    strain_hardening_exponent: {value: 0.20, src: est, note: "n of the estimated JC fit"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.6, src: est, range: [0.5, 0.7], note: "assumed a little above the 0.5-0.6 FE range used for 7075-T6 (luo-2021-al7075-drilling) because the soft temper adheres more"}
+    sticking_ratio: {value: 0.7, src: est, note: "assumed"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.35, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation: null
+  bue:
+    interface_temp_degC: {range: [100, 350], src: est, note: "assumed"}
+    vc_m_min: [10, 300]
+    src: est
+    note: "assumed from the 7075 data read for the aged tempers (BUE/BUL at 40-300 m/min: trujillo-2017-al7075-adhesion, jomaa-2014-al7075-orthogonal), extended to low speed for the soft temper"
+  breakability: {value: poor, src: est, note: "ductile annealed temper; long chips"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 1600
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge); BUE rather than flank wear usually limits life"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 200
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 110 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress: []                # annealed: as-supplied residual stresses assumed negligible; none read
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 477, src: muraca-1972-al7075-handbook, note: "start of the NASA melting range (eutectic melting); Kaiser 532 C"}
+
+ignition: null
+composite: null
+
+notes: "Annealed 7075, used for forming before solution treatment. Sourced: physical/tensile data (NASA 1972; cp and alpha digitised), conductivity of 'AL7075' from the DEFORM library via Luo et al. (temper assumed), Kienzle (ISCAR group 21). Estimated: JC set (fitted to tensile data with borrowed C and m), friction, BUE window, work hardening, K_sp, Taylor constants."

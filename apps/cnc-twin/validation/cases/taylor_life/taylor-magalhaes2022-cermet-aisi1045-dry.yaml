@@ -1,0 +1,53 @@
+# Magalhaes et al. (2022): uncoated cermet DNMG090202 in dry turning of AISI 1045 (248 HB);
+# tool life to VBB = 0.1 mm at two cutting speeds, with the measured wear curves.
+format: cnctwin-validation-case
+version: 1
+id: taylor-magalhaes2022-cermet-aisi1045-dry
+quantity: taylor_life
+reference:
+  src: magalhaes-2022-1045-dry-turning
+  location: "Sect. 2.1 and Table 2 (setup), Sect. 2.4 (criterion), Sect. 3 text (tool lives), Fig. 11 (VBB curves, digitised)"
+  digitised: true
+  uncertainty_pct: 5
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: aisi1045, note: "as supplied, 248 HB; wt% 0.48 C, 0.73 Mn, 0.25 Si, 0.016 P, 0.05 S (maker's datasheet)"}
+  stock: {diameter_mm: 30, length_mm: 55, hardness_HB: 248}
+  tool:
+    type: turning_insert
+    iso_designation: DNMG090202N-SC
+    grade: "Sumitomo T1200A"
+    tool_class: cermet
+    coating: none
+    nose_radius_mm: 0.2
+    rake_deg: 6                      # positive rake of the insert as mounted (paper: "positive (6 deg rake angle)")
+    holder: SDACR062B
+  machine: {model: "Boxford 160 VMCi CNC lathe", max_rpm: 3200, power_kW: 0.5}
+  workholding: {type: chuck_3jaw, note: "three-jaw air chuck"}
+  conditions:
+    cutting_speed_m_min: [175, 275]
+    feed_mm_rev: {value: 0.025, src: est, note: "the tool-life feed is not stated; 0.025 mm/rev is the feed of the paper's roughness-versus-wear tests run on the same inserts (Sect. 3) and the lowest feed of Table 2"}
+    ap_mm: 0.2
+    coolant: dry
+    wear_criterion_VBB_mm: 0.1      # average flank wear land width, ISO 3685
+  program: null
+reference_values:
+  - {name: tool_life, value: 35, unit: min, uncertainty: 2, x: 175, x_name: cutting_speed, x_unit: m/min, note: "Sect. 3 text and conclusions"}
+  - {name: tool_life, value: 23, unit: min, uncertainty: 2, x: 275, x_name: cutting_speed, x_unit: m/min, note: "Sect. 3 text and conclusions"}
+reference_curves:
+  - name: flank_wear_vc175
+    x_name: cutting_time
+    x_unit: min
+    y_name: VBB
+    y_unit: um
+    uncertainty: 3                   # um; the figure's error bars are about +-2 to +-5 um
+    points: [[0, 4], [2.42, 11.1], [4.99, 14.9], [10, 19.9], [19.99, 31.8], [24.96, 47.8], [35, 107.6]]
+  - name: flank_wear_vc275
+    x_name: cutting_time
+    x_unit: min
+    y_name: VBB
+    y_unit: um
+    uncertainty: 3
+    points: [[0, 4], [2.48, 14.8], [4.97, 19.7], [9.98, 33.7], [18.5, 57.8], [21.5, 87.9], [23, 102.6]]
+notes: "Cermet, not carbide: no open source with measured carbide tool-life curves in 1045/4140 was reachable in this run (see the final report). The tool lives are the times of the first wear measurement at or above VBB = 0.1 mm (the curves cross 100 um at about 33.7 and 22.7 min by linear interpolation); wear was measured every 150 mm of machined length, mean of three readings. Curve markers located by blob detection on the PMC figure image and converted with the calibrated axes (gridlines at 10 min, tick labels every 20 um). Each test was repeated twice with a new edge. The two points give a Taylor exponent n = ln(275/175) / ln(35/23) = 1.08 (computed here, not in the paper); compare a model at the same criterion and feed."

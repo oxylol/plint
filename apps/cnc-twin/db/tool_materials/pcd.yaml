@@ -1,0 +1,29 @@
+format: cnctwin-tool-material
+version: 1
+id: pcd
+class: pcd
+name: "Polycrystalline diamond, cobalt-sintered, medium grain (~10 µm; Element Six PCD grade II of US 8,590,643 as reference)"
+src: element-six-us8590643
+grain_size_um: {value: 11, range: [7, 16], src: element-six-us8590643, page: "table PCD grades I-III, grade II 11 µm"}
+binder_vol_pct: {value: 9.0, range: [7.5, 11.5], src: element-six-us8590643, page: "catalyst (Co) content 11.5 / 9.0 / 7.5 vol% for grades I / II / III"}
+density_kg_m3: {value: 4000, src: est, note: "rule of mixtures 91 vol% diamond (3.515 g/cm3) + 9 vol% Co (8.9 g/cm3)"}
+youngs_modulus_GPa: {value: 1020, range: [975, 1035], src: element-six-us8590643, page: "table, E 975 / 1020 / 1035 GPa"}
+poisson: {value: 0.08, src: est, note: "diamond ~0.07, raised slightly by Co; no value read"}
+hardness_HV: {value: 5000, range: [4000, 6000], src: est, note: "no value read for cobalt-sintered PCD; well below polycrystalline CVD diamond (85-100 GPa Vickers, balmer-2009-cvd-diamond Table 4) because of the Co binder"}
+transverse_rupture_MPa: {value: 1630, range: [1220, 1880], src: element-six-us8590643, page: "table, TRS 1880 / 1630 / 1220 MPa"}
+compressive_MPa: {value: 7000, src: est, note: "no value read"}
+fracture_toughness_MPa_sqrt_m: {value: 9.0, range: [9.0, 10.7], src: element-six-us8590643, page: "table, K1C 10.7 / 9.0 / 9.1 MPa m^0.5"}
+conductivity_W_mK:
+  table: [[20, 500], [400, 400], [700, 330]]
+  src: est
+  note: "no value read for Co-sintered PCD; CVD diamond grades 1000-2000 W/mK (balmer-2009-cvd-diamond section 4); the Co network and grain boundaries roughly halve it; fall with temperature as for diamond assumed"
+specific_heat_J_kgK:
+  table: [[20, 490], [400, 1060], [700, 1300]]
+  src: est
+  note: "rule of mixtures by mass (80 % diamond, 20 % Co); diamond cp rises from ~0.51 J/gK at RT"
+expansion_1_K: {value: 4.0e-6, range: [3.7e-6, 4.4e-6], src: element-six-us8590643, page: "table, CTE 4.4 / 4.0 / 3.7 x 1e-6 per °C"}
+max_service_temp_degC: {value: 700, src: est, note: "element-six-us9039798 defines thermally stable PCD as showing no substantial degradation above about 400-700 °C, i.e. catalyst-containing PCD degrades in that range; 700 °C used as the limit (graphitisation/Co expansion)"}
+weibull_modulus: {value: 10, src: est, note: "no value read"}
+thermal_shock_parameter: null
+usui: []
+notes: "Mechanical values from the Element Six patent table (approximate characteristics of three example grades); physical values estimated."

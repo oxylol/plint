@@ -1,0 +1,98 @@
+# Ti6Al4V orthogonal turning (rake 20 deg): cutting temperature by tool-work thermocouple (digitised).
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: tooltemp-orth-ti64-loschner2025-ntc
+quantity: tool_temperature
+reference:
+  src: loschner-2025-ti6al4v-jc-sensitivity
+  location: Fig. 2c, experiment lines (digitised; 3.77 C per px)
+  digitised: true
+  uncertainty_pct: 2
+  measured: true
+  note: digitisation uncertainty about +-2 px (+-8 C); the thermocouple calibration uncertainty is described in ref. [21]
+    of the source (not read) and is not included
+setup:
+  operation: orthogonal_turning
+  material:
+    db: ti6al4v
+    note: 'Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed)'
+  tool:
+    src: loschner-2025-ti6al4v-jc-sensitivity
+    page: Sect. 2.1
+    type: grooving_insert
+    designation: Tungaloy DGG500-0400 (orthogonal-turning carbide insert)
+    holder_designation: CTER2020-5T12
+    tool_class: carbide
+    rake_deg: {value: 20, note: orthogonal rake in the working system}
+    clearance_deg: {value: 7, note: normal clearance in the working system}
+    coating: not stated in the source
+    edge_radius_um:
+      value: 15
+      src: est
+      note: 'assumed: not stated; typical honed edge of a ground carbide grooving insert (est.)'
+    assumed_inputs: [edge_radius_um]
+  machine:
+    src: loschner-2025-ti6al4v-jc-sensitivity
+    page: Sect. 2.1
+    model: Okuma Genos L200E-M 3-axis CNC lathe
+    dynamometer: Kistler 9129AA
+    temperature: natural (tool-work) thermocouple; calibration and accuracy in Loeschner et al. (2024) Machines 12, 709
+      (ref. [21] of the source, not read)
+  conditions:
+    src: loschner-2025-ti6al4v-jc-sensitivity
+    page: Sect. 2.1
+    vc_m_min: [40, 50, 60, 70, 80, 90]
+    feed_mm_rev: [0.05, 0.1, 0.15]
+    width_of_cut_mm: {value: 3, note: ap = 3 mm (constant)}
+    coolant: dry
+    ambient_temp_degC: 20
+    note: full factorial 6 x 3, except vc 90 m/min at f 0.15 mm (catastrophic tool wear, no repeatable data, Sect. 2.3)
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+- name: T f=0.05
+  x_name: vc
+  x_unit: m/min
+  y_name: T (natural thermocouple)
+  y_unit: degC
+  points:
+  - [40, 466]
+  - [50, 501]
+  - [60, 548]
+  - [70, 572]
+  - [80, 610]
+  - [90, 645]
+  uncertainty: 8
+  note: experiment line of Fig. 2c read at the position of each feed's bar
+- name: T f=0.1
+  x_name: vc
+  x_unit: m/min
+  y_name: T (natural thermocouple)
+  y_unit: degC
+  points:
+  - [40, 559]
+  - [50, 601]
+  - [60, 642]
+  - [70, 682]
+  - [80, 727]
+  - [90, 759]
+  uncertainty: 8
+  note: experiment line of Fig. 2c read at the position of each feed's bar
+- name: T f=0.15
+  x_name: vc
+  x_unit: m/min
+  y_name: T (natural thermocouple)
+  y_unit: degC
+  points:
+  - [40, 598]
+  - [50, 653]
+  - [60, 710]
+  - [70, 761]
+  - [80, 801]
+  uncertainty: 8
+  note: experiment line of Fig. 2c read at the position of each feed's bar
+notes: 'Tool-work (natural) thermocouple: the EMF of the carbide insert / Ti6Al4V junction gives an average temperature
+  of the whole tool-chip and tool-work contact, weighted towards the hottest region. Compare with the contact-area-averaged
+  simulated interface temperature, not the peak. The source''s FE model agreed within 3-4 % (Sect. 2.3).'

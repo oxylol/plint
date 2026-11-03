@@ -1,0 +1,124 @@
+# Xue et al. (2022): SiC-whisker-reinforced alumina (Greenleaf WG300) in dry turning of aged Inconel 718
+# at 190-370 m/min: wear curves (VB, VN every 30 s) and the time at which a wear criterion ended each test.
+format: cnctwin-validation-case
+version: 1
+id: taylor-xue2022-wg300-in718-dry
+quantity: taylor_life
+reference:
+  src: xue-2022-in718-ceramic-tool-wear
+  location: "Sect. 2 and Table 3 (setup, criteria), Sect. 3.2 (inspection every 30 s, failure modes), Fig. 2a-b (VB and VN versus cutting time, digitised)"
+  digitised: true
+  uncertainty_pct: 2
+  measured: true
+  note: "Figure markers located by colour on the 741 x 642 px PMC image (axes calibrated on the 0 and 0.6 mm / 0.9 mm ticks: 2.80 um/px for VB, 4.21 um/px for VN); digitisation uncertainty about +-5 um. The measurement uncertainty of the Dino-Lite wear readings is not stated."
+setup:
+  operation: longitudinal_turning
+  material:
+    db: inconel718
+    note: "solution-treated and aged IN718 bar (source Table 2: Rm 1430 MPa, Rp0.2 1300 MPa, 40 HRC, 14.7 W/m K; Table 1: Ni 52.15, Cr 19.26, Nb 5.03, Mo 3.03, Ti 1.08, Al 0.56 wt%, Fe bal.)"
+  stock:
+    src: xue-2022-in718-ceramic-tool-wear
+    page: Sect. 2
+    form: round bar
+    diameter_mm: 140
+    length_mm: 250
+    note: "45 deg chamfer machined before each cutting entry to protect the ceramic edge"
+  tool:
+    src: xue-2022-in718-ceramic-tool-wear
+    page: Sect. 2
+    type: turning_insert
+    iso_designation: SNGN 120416T01020
+    grade: "Greenleaf WG300 (Al2O3 + SiC whiskers)"
+    tool_class: ceramic
+    coating: none
+    holder: CSRNR 2020K12
+    rake_deg: -6
+    clearance_deg: 6
+    inclination_deg: -6
+    cutting_edge_angle_deg: {value: 75, note: "kappa_r of the CSRNR holder as stated ('cutting edge angle of 75 deg')"}
+    nose_radius_mm: {value: 1.6, src: est, note: "decoded from the ISO designation (nose-radius code 16 = 1.6 mm); the coding standard was not read in this run"}
+    inscribed_circle_mm: {value: 12.7, src: est, note: "decoded from the ISO designation (size 12 of a square insert = 1/2 in IC); not stated in the source"}
+    edge_preparation: {value: "T-land 0.10 mm x 20 deg", src: est, note: "decoded from the edge code T01020 of the designation; not stated in words in the source"}
+    assumed_inputs: [nose_radius_mm, inscribed_circle_mm, edge_preparation]
+  machine:
+    src: xue-2022-in718-ceramic-tool-wear
+    page: Sect. 2
+    model: EMCO Maxxturn 65 turning centre
+    max_rpm: 5000
+  conditions:
+    src: xue-2022-in718-ceramic-tool-wear
+    page: Table 3, Sect. 2
+    cutting_speed_m_min: [190, 250, 310, 370]
+    feed_mm_rev: 0.1
+    ap_mm: 1
+    coolant: dry
+    wear_criterion_VB_mm: 0.3
+    wear_criterion_VN_mm: 0.6
+    criterion_note: "test stopped when any of VB >= 0.3 mm, VN >= 0.6 mm, severe chipping or fracture was reached (ISO 3685); wear measured every 30 s"
+  dynamics: null
+  program: null
+reference_values:
+  - {name: test_end_time, value: 2.5, unit: min, uncertainty: 0.25, x: 190, x_name: cutting_speed, x_unit: m/min, note: "150 s; ended by notch wear (VN 0.59 mm, VB only 0.15 mm); uncertainty = half the 30 s inspection interval"}
+  - {name: test_end_time, value: 2.5, unit: min, uncertainty: 0.25, x: 250, x_name: cutting_speed, x_unit: m/min, note: "150 s; ended by notch wear (VN 0.58 mm, VB 0.24 mm)"}
+  - {name: test_end_time, value: 2.0, unit: min, uncertainty: 0.25, x: 310, x_name: cutting_speed, x_unit: m/min, note: "120 s; ended by notch wear (VN 0.60 mm, VB 0.28 mm)"}
+  - {name: test_end_time, value: 1.0, unit: min, uncertainty: 0.25, x: 370, x_name: cutting_speed, x_unit: m/min, note: "60 s; ended by flank wear (VB 0.50 mm, VN 0.28 mm) with severe nose wear"}
+  - {name: time_to_VB_0.3mm, value: 0.57, unit: min, uncertainty: 0.25, x: 370, x_name: cutting_speed, x_unit: m/min, note: "computed here by linear interpolation between the readings at 30 s (VB 0.27) and 60 s (VB 0.50): 34 s; the only speed at which flank wear reached the criterion"}
+reference_curves:
+  - name: VB_vc190
+    x_name: cutting_time
+    x_unit: s
+    y_name: VB
+    y_unit: mm
+    uncertainty: 0.005
+    points: [[0, 0], [30, 0.07], [60, 0.11], [90, 0.13], [120, 0.14], [150, 0.15]]
+  - name: VB_vc250
+    x_name: cutting_time
+    x_unit: s
+    y_name: VB
+    y_unit: mm
+    uncertainty: 0.005
+    points: [[0, 0], [30, 0.10], [60, 0.13], [90, 0.17], [120, 0.20], [150, 0.24]]
+  - name: VB_vc310
+    x_name: cutting_time
+    x_unit: s
+    y_name: VB
+    y_unit: mm
+    uncertainty: 0.005
+    points: [[0, 0], [30, 0.14], [60, 0.18], [90, 0.20], [120, 0.28]]
+  - name: VB_vc370
+    x_name: cutting_time
+    x_unit: s
+    y_name: VB
+    y_unit: mm
+    uncertainty: 0.005
+    points: [[0, 0], [30, 0.27], [60, 0.50]]
+  - name: VN_vc190
+    x_name: cutting_time
+    x_unit: s
+    y_name: VN
+    y_unit: mm
+    uncertainty: 0.008
+    points: [[0, 0], [30, 0.22], [60, 0.29], [90, 0.35], [120, 0.47], [150, 0.59]]
+  - name: VN_vc250
+    x_name: cutting_time
+    x_unit: s
+    y_name: VN
+    y_unit: mm
+    uncertainty: 0.008
+    points: [[0, 0], [30, 0.25], [60, 0.31], [90, 0.36], [120, 0.44], [150, 0.58]]
+    note: "the 30 s marker is hidden behind the 310 m/min marker; 0.25 mm read at the common position"
+  - name: VN_vc310
+    x_name: cutting_time
+    x_unit: s
+    y_name: VN
+    y_unit: mm
+    uncertainty: 0.008
+    points: [[0, 0], [30, 0.25], [60, 0.27], [90, 0.29], [120, 0.60]]
+  - name: VN_vc370
+    x_name: cutting_time
+    x_unit: s
+    y_name: VN
+    y_unit: mm
+    uncertainty: 0.008
+    points: [[0, 0], [30, 0.19], [60, 0.28]]
+notes: "Ceramic, not carbide: a check of an abrasion/diffusion flank-wear model at very high speed in aged IN718. Below 370 m/min the life of WG300 is set by notching at the depth-of-cut line, which the source attributes to brittle fracture at the start and adhesion afterwards (Sect. 3.5), not by flank wear; a flank-wear Taylor model should be compared with the VB curves, not with the notch-limited test end times. One test per speed (no repeats stated). The source's preliminary 30 s tests at f 0.1, ap 1 mm (Fig. 1, not digitised) are not included."

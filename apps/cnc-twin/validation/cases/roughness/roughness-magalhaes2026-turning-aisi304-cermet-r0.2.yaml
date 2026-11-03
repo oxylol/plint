@@ -1,0 +1,40 @@
+# Magalhaes et al. (2026): Ra versus feed in dry finish turning of AISI 304 with a 0.2 mm nose
+# radius cermet insert, new edges, at 120 and 150 m/min.
+format: cnctwin-validation-case
+version: 1
+id: roughness-magalhaes2026-turning-aisi304-cermet-r0.2
+quantity: roughness
+reference:
+  src: magalhaes-2026-304-cermet-turning
+  location: "Sect. 2 (setup), Sect. 3.1 text (contact Ra, new inserts)"
+  digitised: false
+  uncertainty_pct: 5                 # 'variability between repeated measurements ... within approximately 5 %'
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: aisi304, note: "215 HB"}
+  stock: {diameter_mm: 30, length_mm: 55, hardness_HB: 215}
+  tool:
+    type: turning_insert
+    iso_designation: DNMG090202N-SC
+    grade: "Sumitomo T1200A"
+    tool_class: cermet
+    coating: none
+    nose_radius_mm: 0.2
+    rake_deg: 6
+    holder: SDACR062B
+  machine: {model: "Boxford 160 VMCi CNC lathe", max_rpm: 3200, power_kW: 0.5}
+  conditions:
+    cutting_speed_m_min: [120, 150]
+    feed_mm_rev: [0.025, 0.05]
+    ap_mm: 0.2
+    coolant: dry
+    tool_state: new                  # roughness measured on surfaces cut with new inserts
+  program: null
+reference_values:
+  - {name: Ra_vc120, value: 0.44, unit: um, uncertainty: 0.03, x: 0.025, x_name: feed, x_unit: mm/rev}
+  - {name: Ra_vc120, value: 0.64, unit: um, uncertainty: 0.04, x: 0.05, x_name: feed, x_unit: mm/rev}
+  - {name: Ra_vc150, value: 0.59, unit: um, uncertainty: 0.03, x: 0.025, x_name: feed, x_unit: mm/rev}
+  - {name: Ra_vc150, value: 0.92, unit: um, uncertainty: 0.05, x: 0.05, x_name: feed, x_unit: mm/rev}
+reference_curves: []
+notes: "Contact (stylus) Ra; the paper also reports areal Sa from white-light interferometry (lower than Ra, not stored). At these small feeds the kinematic nose-radius roughness is far below the measured values (f^2/(32 r) gives about 0.1 and 0.4 um), so the case tests the non-kinematic contributions (side flow, edge radius, ploughing, vibration) as much as the feed marks; the authors attribute the rise with speed to less stable cutting at 150 m/min."

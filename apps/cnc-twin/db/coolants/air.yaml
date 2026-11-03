@@ -1,0 +1,31 @@
+# Compressed-air blast (dry cutting with chip clearing / cooling air), shop air expanded through a
+# nozzle to ~1 atm at the tool. Gas properties at 1 atm.
+format: cnctwin-coolant
+version: 1
+id: air
+name: "Compressed air blast"
+kind: air
+src: etb-air-2026
+concentration_pct: 0
+density_kg_m3: {table: [[0, 1.276], [20, 1.205], [100, 0.946]], note: "1.276 kg/m3 is at 0 C and 1 bara; 1.205 and 0.946 kg/m3 at 20 and 100 C as listed"}
+viscosity_mPa_s: {table: [[0, 0.01722], [20, 0.0182], [100, 0.0218]], src: est, note: "0 C value read in etb-air-2026 (17.22 uPa s); 20 and 100 C by Sutherland's law (S = 110.4 K)"}
+specific_heat_J_kgK: {table: [[0, 1006]], note: "at 0 C and 1 bara (cp of air changes by < 1 % up to 100 C - assumption)"}
+conductivity_W_mK: {table: [[0, 0.02435]], note: "at 0 C and 1 bara (24.35 mW/mK)"}
+surface_tension_mN_m: null
+boiling_degC: null
+leidenfrost_degC: null
+flash_point_degC: null
+smoke_point_degC: null
+supply_pressure_bar: {value: 6, src: est, note: "shop air 6-7 bar; Haas air requirement 6.9 bar (haas-uk-vf2ss-2026)"}
+typical_flow_l_min: {value: 170, src: haas-europe-vmc-brochure-2013, note: "Haas automatic air gun 6 scfm (p. 28), free air"}
+friction_factor:
+  - {tool_class: carbide, work_family: steel, value: 1.0, src: est, note: "dry reference; oxygen access can slightly change friction, neglected"}
+  - {tool_class: carbide, work_family: aluminium, value: 1.0, src: est}
+lubricity_index: {value: 0.0, src: est}
+heat_transfer:
+  jet_htc_W_m2K: {value: 200, range: [50, 600], src: est, note: "impinging air jet from a 2-6 mm nozzle at 50-200 m/s on tool/chip surfaces"}
+drag_out_ml_per_kg_chips: {value: 0, src: est}
+evaporation_l_per_h_per_m2: {value: 0, src: est}
+mist_loss_fraction: {value: 0, src: est}
+cost_eur_per_l: {value: 2.5e-5, src: est, note: "about 0.025 EUR per m3 of free air (compressor energy ~0.12 kWh/m3 at ~0.2 EUR/kWh); per litre of free air"}
+notes: "Air blast cools by forced convection only and clears chips; no lubrication."

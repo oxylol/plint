@@ -1,0 +1,42 @@
+# Tungaloy TM chipbreaker (negative CN insert, CNMG120408-TM): the maker's "chip control range" for
+# ISO P steels, i.e. the feed/depth window in which the chipbreaker controls (breaks) the chip.
+format: cnctwin-validation-case
+version: 1
+id: chipform-tungaloy-cnmg120408-tm-steel
+quantity: chip_form
+reference:
+  src: tungaloy-2023-gc-turning-us
+  location: "p. B057 (PDF p. 65), 'Chip control range' chart for P, TM outline (digitised); p. B004 (PDF p. 12), standard cutting conditions for TM"
+  digitised: true
+  uncertainty_pct: 2
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: aisi1045, note: "the chart is for ISO group P without a named steel; B004 lists 1045 and 4140 as 'medium carbon steels, alloy steels' for the TM conditions"}
+  tool:
+    type: turning_insert
+    iso_designation: CNMG120408-TM
+    ansi_designation: "CNMG 432 TM"
+    chipbreaker: TM
+    grade: T9215
+    tool_class: carbide
+    coating: "coated grade (Tungaloy T9215)"
+    nose_radius_mm: 0.8              # RE 0.031 in
+    inscribed_circle_mm: 12.7        # IC 0.500 in
+    thickness_mm: 4.76               # S 0.187 in
+  conditions:
+    standard_feed_ipr: [0.008, 0.020]          # B004, TM with T9215 (0.20-0.51 mm/rev)
+    standard_ap_in: [0.039, 0.197]             # B004 (1.0-5.0 mm)
+    standard_cutting_speed_sfm: [492, 1312]    # B004, medium carbon / alloy steels (150-400 m/min)
+    cutting_speed_m_min: {value: 250, src: est, note: "the chart states no speed; middle of the B004 range for TM / T9215 in medium carbon steels"}
+    coolant: {value: emulsion, src: est, note: "not stated"}
+  program: null
+reference_values:
+  - {name: chip_control_min_feed, value: 0.201, unit: mm/rev, uncertainty: 0.005, note: "0.0079 ipr on the chart"}
+  - {name: chip_control_max_feed, value: 0.522, unit: mm/rev, uncertainty: 0.005, note: "0.0206 ipr"}
+  - {name: chip_control_min_ap, value: 1.016, unit: mm, uncertainty: 0.03, note: "0.0400 in"}
+  - {name: chip_control_max_ap, value: 4.600, unit: mm, uncertainty: 0.03, note: "0.1811 in, for feeds up to 0.306 mm/rev"}
+reference_curves:
+  - {name: chip_control_upper_ap, x_name: feed, x_unit: mm/rev, y_name: ap, y_unit: mm, uncertainty: 0.03, points: [[0.201, 4.600], [0.306, 4.600], [0.522, 3.353]]}
+  - {name: chip_control_lower_ap, x_name: feed, x_unit: mm/rev, y_name: ap, y_unit: mm, uncertainty: 0.03, points: [[0.201, 1.016], [0.522, 1.016]]}
+notes: "Inside the polygon (feed between the min and max feed, ap between the lower and upper curves) the maker states that the TM chipbreaker controls the chip; outside it chip control is not claimed (typically long or tangled ribbon/helical chips at low feed and depth, overloading at the top right). Tungaloy publishes neither the test material, speed nor the chip classification behind the chart, so this is a regional reference: a chip-form model should predict breaking chips (ISO 3685 Annex G classes 2.2-2.3, 3, 4.2-4.3, 5, 6) inside and long/snarled forms (1, 2.1, 4.1) well below the lower-left corner. Digitised from the vector chart rendered at 6x: axes calibrated on the dashed grid (0.008 ipr and 0.080 in spacing), outline edges located by colour (pink TM outline); the TM label box hides no edge. Inch values converted with 25.4 mm/in. The chart applies to the TM chipbreaker in this insert family; CNMG120408 is the size of the order example and the one read here."

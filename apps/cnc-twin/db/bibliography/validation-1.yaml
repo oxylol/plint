@@ -1,0 +1,181 @@
+# Sources for validation/cases/{cutting_force, drilling_thrust, drilling_torque, tool_temperature,
+# chip_temperature, shear_angle, chip_ratio}/ and validation/budgets.yaml (validation references, part 1).
+# All read on 2026-11-03: arXiv and repository PDFs text-extracted and rendered locally, open-access
+# journal papers as full text (JATS XML) through the Europe PMC REST service and their figures from PMC.
+# Values marked digitised in a case were read off a figure; the method is given in the case.
+# Some works also appear under other keys in materials-*.yaml with the pages used there; the entries
+# here carry the pages used for validation.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  klippel-2022-arxiv-orthogonal-data:
+    type: report
+    authors: "Klippel, H.; Süssmaier, S.; Kuffa, M.; Wegener, K."
+    title: "Dry cutting experiments database Ti6Al4V and Ck45"
+    venue: "arXiv preprint 2209.04197, Institute of Machine Tools and Manufacturing (IWF), ETH Zurich, 42 pp."
+    year: 2022
+    doi: "10.48550/arXiv.2209.04197"
+    url: "https://arxiv.org/pdf/2209.04197"
+    accessed: 2026-11-03
+    pages: "Sect. 2 and Tables 1-3 (material batches: Ck45 Rm 671, Rp0.2 420 MPa, A5 22.2 %; Ti6Al4V 952/869 MPa, 30 HRC); Sect. 2.6 and Table 7 (Schaublin 42L lathe, tubes D ~72 mm wall ~2 mm, Kistler 9121A5, 30 Hz low-pass, uncoated CCMW 09T304 H13A, rake 0, clearance 7, corner radius 0.397 mm, Applitec SCACL-2020X-09, entering angle 90, inclination 0); Sect. 2.6.1 (edge radii 20-50 um, mean 37.5 um, sd 4.9 um); Sect. 2.6.2 (havg = Achip/lchip); Sect. 3.1-3.5 (forces, BUE up to 50 m/min, chip-thickness scatter, friction, tempering colours 200-360 C); Tables B.14 (Ti6Al4V) and B.15 (Ck45): per test vc, f, Fc, Ff per mm width with sd, rn, havg, cut length, Tchip, wear, status"
+    note: "Same work as klippel-2022-ck45-cutting-database in materials-steels.yaml; the journal version is klippel-2024-ck45-orthogonal (IJAMT 135, 2871-2908), not used here."
+
+  ducobu-2017-ti6al4v-orthogonal-reference:
+    type: article
+    authors: "Ducobu, F.; Rivière-Lorphèvre, E.; Filippi, E."
+    title: "On the importance of the choice of the parameters of the Johnson-Cook constitutive model and their influence on the results of a Ti6Al4V orthogonal cutting model"
+    venue: "International Journal of Mechanical Sciences 122, 143-155"
+    year: 2017
+    doi: "10.1016/j.ijmecsci.2017.01.004"
+    url: "https://orbi.umons.ac.be/bitstream/20.500.12907/27254/1/Duco2017_IJMS.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 4 and Tables 2-3 (experimental reference: planing on a milling machine, Kistler 9257B, vc 30 m/min, h 40/60/100 um, rake 15, clearance 2, edge radius 20 um; RMS CF 86/113/174 N/mm, FF 40/44/50 N/mm, chip thickness 59/80/135 um; sd < 10 %); Table 4 (properties); Table 5 (twenty JC sets at h = 60 um: CF 89-192 N/mm, FF 18-50 N/mm, h' 76 to >115 um)"
+    note: "Same work as ducobu-2017-jc-ti6al4v in materials-light.yaml. The experiments were first published in Ducobu, Rivière-Lorphèvre, Filippi (2015) Int. J. Mater. Form. 8(3), 455-468 (not read). Table 5 was read from the rendered page because its text layer is jumbled; the printed delta percentages do not all follow from the printed forces, so only the forces are used."
+
+  slusarczyk-2025-ti6al4v-rake-temperature:
+    type: article
+    authors: "Ślusarczyk, Ł.; Twardowska, A."
+    title: "Method for determining contact temperature of tool rake face during orthogonal turning of Ti-6Al-4V alloy"
+    venue: "Materials 18(13), 2980"
+    year: 2025
+    doi: "10.3390/ma18132980"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12251370/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 3.2 (KNUTH Masterturn 400, Kistler 9257B/5070B at 3 kHz, FLIR SC 620 at 30 Hz with emissivity 0.48, Phantom v5.2 at 3000 fps; uncoated WC-Co flat rake, rake 0 and 10, clearance 5, inclination 0; 2 x 1 mm measuring window); Tables 1-3 (composition, plan: f 0.069/0.104, V 20-60 m/min, ap 4 mm); Table 4 (Fc, Ft, phi, tau); Table 5 (chip flow speed, average contact temperature); Sect. 4 (thermovision max error +-8 %; model vs IR 24-73 C, 17 %)"
+
+  loschner-2025-ti6al4v-jc-sensitivity:
+    type: article
+    authors: "Löschner, P.; Niesłony, P.; Kołodziej, S."
+    title: "Parameter sensitivity study of the Johnson-Cook model in FEM turning of Ti6Al4V alloy"
+    venue: "Materials 18(14), 3351"
+    year: 2025
+    doi: "10.3390/ma18143351"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12300656/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (Okuma Genos L200E-M, Kistler 9129AA, natural thermocouple, Tungaloy DGG500-0400 in CTER2020-5T12, rake 20, clearance 7, dry, vc 40-90 m/min, f 0.05/0.1/0.15 mm, ap 3 mm); Sect. 2.3 (FE vs test: Fc mostly within 8 %, below 2 % at low feed; back force up to 42 %; temperature 3-4 %; chip thickness within 14 %; no data at 90 m/min and 0.15 mm); Fig. 2a-c (experimental Fc, back force and temperature, digitised from https://pmc.ncbi.nlm.nih.gov/articles/instance/12300656/bin/materials-18-03351-g002.jpg)"
+
+  marcicano-2005-aisi304-cutting-tests:
+    type: conference
+    authors: "Marcicano, J.P.P.; de Almeida, L.O.; Machado, I.F.; Hassui, A."
+    title: "Determination of the mechanical behavior of AISI 304 austenitic stainless steel in machining processes"
+    venue: "Proceedings of COBEM 2005, 18th International Congress of Mechanical Engineering, Ouro Preto, Brazil (ABCM), paper COBEM2005-1123"
+    year: 2005
+    url: "https://abcm.org.br/app/webroot/anais/cobem/2005/PDF/COBEM2005-1123.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 3.2 (annealed AISI 304 tubes, ROMI S-30 lathe, load-cell dynamometer, TPGN 160308 uncoated M-type carbide without chip breaker, rake 5 deg, two makers, width 1 mm for A and 1.5 mm for B, t1 = mean of 7 caliper readings); Table 3 (maker A) and Table 4 (maker B): t0, t1, phi_n, Fa, Fc, Vc; Table 1 (JC A, B, n from compression)"
+    note: "Same work as marcicano-2005-304-machining in materials-steels.yaml. Table 3's phi_n column is printed one row out of step with t0/t1 (checked on the rendered page and against the strain and stress columns); its t0, t1, Fa, Fc, Vc are consistent and used, its phi_n is not."
+
+  zou-2026-304-cutting-forces:
+    type: article
+    authors: "Zou, Z.; Xin, Y.; Ma, C."
+    title: "Influence of cutting-edge micro-geometry on material separation and minimum cutting thickness in the turning of 304 stainless steel"
+    venue: "Materials 19(3), 591"
+    year: 2026
+    doi: "10.3390/ma19030591"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12898621/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 3.1 (YG8 carbide; FE tool rake 10, clearance 7, edge radius 20 um; Table 1 properties); Sect. 3.2.1-3.2.3 (C6136HK lathe, Kistler 9257B; FE mean errors 8.1 % cutting force, 14.8 % thrust; 'errors below 15 % are generally acceptable'); Table 3 (v, f, ap, main cutting force, radial thrust force)"
+    note: "Same work as zou-2026-304-min-cutting-thickness in materials-steels.yaml."
+
+  javidikia-2021-al6061-orthogonal:
+    type: article
+    authors: "Javidikia, M.; Sadeghifar, M.; Songmene, V.; Jahazi, M."
+    title: "Low and high speed orthogonal cutting of AA6061-T6 under dry and flood-coolant modes: tool wear and residual stress measurements and predictions"
+    venue: "Materials 14(15), 4293"
+    year: 2021
+    doi: "10.3390/ma14154293"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8348405/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (MAZAK NEXUS 100-II M, 150 mm cylinder grooved to 4 mm tube walls, uncoated CCGX 120408-AL H10 in SCLCR 2020 K12, edge radius 0.02 mm, rake 17.5, clearance 7, Kistler 9121, OEMETA flood 7200 mL/min); Table 1 (six conditions); Fig. 4 and Fig. 5 (cutting and thrust forces, values printed on the bars, from https://pmc.ncbi.nlm.nih.gov/articles/instance/8348405/bin/materials-14-04293-g004.jpg and -g005.jpg); Fig. 15 caption (force signals for the 4 mm width)"
+
+  jomaa-2014-al7075-cutting-table:
+    type: article
+    authors: "Jomaa, W.; Songmene, V.; Bocher, P."
+    title: "Surface finish and residual stresses induced by orthogonal dry machining of AA7075-T651"
+    venue: "Materials 7(3), 1603-1624"
+    year: 2014
+    doi: "10.3390/ma7031603"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5453293/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Experimental Procedure (discs 70/19 x 4 mm, Mazak NEXUS 410A, uncoated TNMA120408 K68 in DTFNR2525M16KC04 with back rake -5 deg, dry, Kistler 9255B); Table 2 (Ft, Fc, lc, tc, phi, beta per trial); Table 3 (DOC 2 mm, f 0.05/0.25 mm/rev, V 300/1000 m/min)"
+    note: "Same work as jomaa-2014-al7075-orthogonal in materials-light.yaml. Some derived columns of Table 2 are inconsistent with the printed forces and chip thicknesses (see the case notes)."
+
+  diazalvarez-2017-in718-orthogonal:
+    type: article
+    authors: "Díaz-Álvarez, J.; Tapetado, A.; Vázquez, C.; Miguélez, H."
+    title: "Temperature measurement and numerical prediction in machining Inconel 718"
+    venue: "Sensors 17(7), 1531"
+    year: 2017
+    doi: "10.3390/s17071531"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5539776/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (Pinacho Smart 6/165 lathe, Kistler 9257B, Inconel 718 disc 100 x 2 mm, uncoated TCMW 16T308 H13A, rake 0, clearance 7, edge radius 25 um, dry); Table 1 (depth of pass 2 mm, f 0.05/0.08/0.1, vc 30-180 m/min); Sect. 2.2 (pyrometer full-scale error 5 %); Fig. 8 (cutting and thrust force vs cutting speed, digitised from https://pmc.ncbi.nlm.nih.gov/articles/instance/5539776/bin/sensors-17-01531-g008.jpg)"
+
+  luo-2021-al7075-drilling-thrust-torque:
+    type: article
+    authors: "Luo, H.; Fu, J.; Wu, T.; Chen, N.; Li, H."
+    title: "Numerical simulation and experimental study on the drilling process of 7075-T6 aerospace aluminum alloy"
+    venue: "Materials 14(3), 553"
+    year: 2021
+    doi: "10.3390/ma14030553"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7865901/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (drill 10 mm, point angle 118, helix 30, feed 60/100/140 mm/min, 800/1000/1200 rpm); Sect. 2.2 and 3 (drill material 'WC' vs 'W6', wireless electromagnetic-coupling force/torque acquisition); Sect. 2.3 (Ucun: 80-90 % consistency between simulation and test); Sect. 4.2 (FE vs test: max error 3.25 % axial force, 4.16 % torque); Fig. 8 and Fig. 9 (experimental axial force bars and torque markers, digitised from https://pmc.ncbi.nlm.nih.gov/articles/instance/7865901/bin/materials-14-00553-g008.jpg and -g009.jpg)"
+    note: "Same work as luo-2021-al7075-drilling in materials-light.yaml."
+
+  engin-altintas-milling-preprint:
+    type: web
+    authors: "Engin, S.; Altintas, Y."
+    title: "Generalized modeling of milling mechanics and dynamics: Part I - helical end mills"
+    venue: "Undated preprint (University of British Columbia), PDF hosted by Manufacturing Automation Laboratories Inc."
+    year: null
+    url: "https://www.malinc.com/wp-content/uploads/2014/06/GeneralTool_Endmill.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 4 (more than 300 tests; chatter at large depths on the authors' machining centre); Fig. 6 (Ti6Al4V slot milling with a taper helical ball end mill D 6 mm, R 3, Rz 3, beta 4 deg, h 38, lead 105, 1 flute, rake 10, relief 10, carbide: ap 10 mm, 0.05 mm/tooth, 500 rpm; ap 20 mm, 0.01 mm/tooth); Fig. 8 (Ti6Al4V slotting with a bull-nose Kennametal KIRP125-RP3 / RPGB-325, D 5/4 in, R = Rz = h = 3/16 in, Rr 7/16 in, one insert, 217 rpm, ap 4 mm, 0.1 mm/tooth); measured force curves digitised from the vector PDF rendered at 360 dpi"
+    note: "Same document as engin-1999-general-milling in materials-light.yaml (year not printed there either; latest reference cited 1999). The journal version is Engin & Altintas, Int. J. Mach. Tools Manuf. 41 (2001), not read."
+
+  altintas-mal-review-milling-accuracy:
+    type: web
+    authors: "Altintas, Y."
+    title: "Modeling approaches and software for predicting the performance of milling operations at MAL-UBC"
+    venue: "Undated review preprint, PDF hosted by Manufacturing Automation Laboratories Inc. (JMTSReviewPaper_Altintas.pdf)"
+    year: null
+    url: "https://www.malinc.com/wp-content/uploads/2014/06/JMTSReviewPaper_Altintas.pdf"
+    accessed: 2026-11-03
+    pages: "p. 11: 'about 85% of the force predictions have less than 10% deviation from measurements, with a maximum deviation in all cases less than 20%' (orthogonal-to-oblique transformation over a variety of end-mill geometries, refs [21][54] of the review)"
+    note: "Same document as altintas-2000-mal-review in materials-light.yaml (year not printed)."
+
+  burns-2012-nist-peak-temperature:
+    type: article
+    authors: "Burns, T.J.; Mates, S.P.; Rhorer, R.L.; Whitenton, E.P.; Basak, D."
+    title: "Modelling the peak cutting temperature during high-speed machining of AISI 1045 steel"
+    venue: "Engineering Transactions 60(2), 113-124"
+    year: 2012
+    url: "https://et.ippt.pan.pl/index.php/et/article/download/119/60"
+    accessed: 2026-11-03
+    pages: "Sect. 2, Table 1 and Fig. 1 (NIST orthogonal cuts of AISI 1045 at 3.7 m/s, b 1.5 mm, h 23-48 um; peak tool-chip interface temperature measured by IR thermal microscopy with overall uncertainty +-52 C at 2 sigma); Sect. 2 and Fig. 2 (FE simulations with the Jaspers-Dautzenberg JC and ZA models underpredicted the peak interface temperature by hundreds of degrees Celsius)"
+    note: "Same work as burns-2012-1045-cutting-temperature in materials-steels.yaml. The NIST experiments are Davies et al. (2003) Mach. Sci. Technol. 7(2), 166-190 and CIRP Ann. 52(1), 77-80 (not read); the tool geometry is not given in this paper, so no validation case is built from it."
+
+  qiu-2019-in718-fe-chip-thickness:
+    type: article
+    authors: "Qiu, X.; Cheng, X.; Dong, P.; Peng, H.; Xing, Y.; Zhou, X."
+    title: "Sensitivity analysis of Johnson-Cook material constants and friction coefficient influence on finite element simulation of turning Inconel 718"
+    venue: "Materials 12(19), 3121"
+    year: 2019
+    doi: "10.3390/ma12193121"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6804042/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.2 (3D FE vs dry turning tests: simulated chip thickness 15 % below the experiment at the low condition; simulation errors mostly below 30 %, peak compressive residual stress 56 %); Tables 8-9 (simulated Fc 129-198 N and 367-540 N over +-20 % JC and friction variations)"
+    note: "Same work as qiu-2019-in718-jc-sensitivity in materials-steels.yaml; used only for the error budget."
+
+  wood-2020-in718-orthogonal-tubes:
+    type: article
+    authors: "Wood, P.; Díaz-Álvarez, A.; Díaz-Álvarez, J.; Miguélez, M.H.; Rusinek, A.; Gunputh, U.F.; Williams, G.; Bahi, S.; Sienkiewicz, J.; Płatek, P."
+    title: "Machinability of INCONEL718 alloy with a porous microstructure produced by laser melting powder bed fusion at higher energy densities"
+    venue: "Materials 13(24), 5730"
+    year: 2020
+    doi: "10.3390/ma13245730"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7765512/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (extruded IN718 tube 50 x 2 x 55 mm, composition Table 3); Sect. 2.2 (Pinacho SmartTurn 6/165, Kistler 9257B at 1000 Hz, SECO TS200 TiAl/TiAlN-coated carbide tip: tip angle 80, tip radius 0.4 mm, rake 16, relief 7, edge radius 25 um; vc 60/90/120 m/min, f 0.1 mm/rev, WoC 2 mm, dry, 2 s cuts, five tests per condition); Fig. 5 (mean Fc and Ff with range bars, digitised from https://pmc.ncbi.nlm.nih.gov/articles/instance/7765512/bin/materials-13-05730-g005.jpg); Fig. 9 (CoV of Fc below 10 %)"

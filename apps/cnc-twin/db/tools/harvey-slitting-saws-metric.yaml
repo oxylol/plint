@@ -1,0 +1,534 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: harvey-slitting-saws-metric
+maker: Harvey Tool (Harvey Performance Company)
+series: Slitting Saws - Metric, solid carbide (series SME, SMQ, SMS, SMT)
+src: harvey-2026-slitting-saws-metric
+notes: Arbor-mounted solid carbide slitting saws, 25-100 mm. Chart SF_SME gives one chip load (mm per tooth) for all diameters 20-100 mm.
+items:
+- id: harvey-sme1000
+  order_code: 'SME1000 (uncoated; AlTiN: SME1000-C3)'
+  type: slitting_saw
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 25.0
+    width_mm: 1.0
+    flutes: 20
+    helix_deg: {value: 0, src: est, note: straight saw teeth assumed}
+    pitch_deg:
+      value: [18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0, 18.0]
+      src: est
+      note: equal tooth spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed for a carbide slitting saw}
+    clearance_deg: {primary: 10, secondary: 20, src: est, note: not published; 10/20 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank: null
+    centre_cutting: {value: false, src: est, note: 'arbor-mounted saw: no centre cutting'}
+    coolant_holes: null
+    note: 'bore_mm = 8.0; side_clearance_deg = 0.5 (est: side dish not published; 0.5 deg assumed)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 5.7, src: est, note: 'rho V of the annulus D 25 / bore 8 x 1 mm x 0.9 (tooth gullets); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings share the chip load) (e.g. al6061-t6); <= 28 HRC
+    operation: [slitting]
+    vc_m_min: {start: 460.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 20 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes); 25 mm read from the 20 mm column'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx ... (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 45.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 20 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes); 25 mm read from the 20 mm column'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 38.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 29-37 HRC block, 20 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes); 25 mm read from the 20 mm column'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 38-45 HRC block, 20 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 20 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes); 25 mm read from the 20 mm column'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 27.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 20 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 60.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 20 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes); 25 mm read from the 20 mm column'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 55.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 20 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 25.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 20 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes); 25 mm read from the 20 mm column'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 15.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 20 mm column
+    note: radial 5x thickness, axial full thickness
+  price_eur: {value: 117.65, src: est, note: 'list price USD 136.80 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: D1 +0.13/-0.00 mm, thickness +/-0.0064 mm, bore +0.012/+0.002 mm (product table header); arbor mounted
+- id: harvey-smq1000
+  order_code: 'SMQ1000 (uncoated; AlTiN: SMQ1000-C3)'
+  type: slitting_saw
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 50.0
+    width_mm: 1.0
+    flutes: 40
+    helix_deg: {value: 0, src: est, note: straight saw teeth assumed}
+    pitch_deg:
+      value: [9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0]
+      src: est
+      note: equal tooth spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed for a carbide slitting saw}
+    clearance_deg: {primary: 10, secondary: 20, src: est, note: not published; 10/20 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank: null
+    centre_cutting: {value: false, src: est, note: 'arbor-mounted saw: no centre cutting'}
+    coolant_holes: null
+    note: 'bore_mm = 13.0; side_clearance_deg = 0.5 (est: side dish not published; 0.5 deg assumed)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 23.9, src: est, note: 'rho V of the annulus D 50 / bore 13 x 1 mm x 0.9 (tooth gullets); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings share the chip load) (e.g. al6061-t6); <= 28 HRC
+    operation: [slitting]
+    vc_m_min: {start: 460.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 50 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx ... (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 45.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 50 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 38.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 29-37 HRC block, 50 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 38-45 HRC block, 50 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 50 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 27.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 50 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 60.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 50 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 55.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 50 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 25.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 50 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 15.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 1.0
+    ae_max_mm: 5.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 50 mm column
+    note: radial 5x thickness, axial full thickness
+  price_eur: {value: 172.52, src: est, note: 'list price USD 200.60 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: D1 +0.13/-0.00 mm, thickness +/-0.0064 mm, bore +0.012/+0.002 mm (product table header); arbor mounted
+- id: harvey-sms2000
+  order_code: 'SMS2000 (uncoated; AlTiN: SMS2000-C3)'
+  type: slitting_saw
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 80.0
+    width_mm: 2.0
+    flutes: 72
+    helix_deg: {value: 0, src: est, note: straight saw teeth assumed}
+    pitch_deg:
+      value: [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0]
+      src: est
+      note: equal tooth spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed for a carbide slitting saw}
+    clearance_deg: {primary: 10, secondary: 20, src: est, note: not published; 10/20 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank: null
+    centre_cutting: {value: false, src: est, note: 'arbor-mounted saw: no centre cutting'}
+    coolant_holes: null
+    note: 'bore_mm = 22.0; side_clearance_deg = 0.5 (est: side dish not published; 0.5 deg assumed)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 121.3, src: est, note: 'rho V of the annulus D 80 / bore 22 x 2 mm x 0.9 (tooth gullets); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings share the chip load) (e.g. al6061-t6); <= 28 HRC
+    operation: [slitting]
+    vc_m_min: {start: 460.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 80 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx ... (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 45.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 80 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 38.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 29-37 HRC block, 80 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 38-45 HRC block, 80 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 80 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 27.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 80 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 60.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 80 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 55.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 80 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 25.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 80 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 15.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 2.0
+    ae_max_mm: 10.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 80 mm column
+    note: radial 5x thickness, axial full thickness
+  price_eur: {value: 422.78, src: est, note: 'list price USD 491.60 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: D1 +0.13/-0.00 mm, thickness +/-0.0064 mm, bore +0.012/+0.002 mm (product table header); arbor mounted
+- id: harvey-smt3000
+  order_code: 'SMT3000 (uncoated; AlTiN: SMT3000-C3)'
+  type: slitting_saw
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 100.0
+    width_mm: 3.0
+    flutes: 80
+    helix_deg: {value: 0, src: est, note: straight saw teeth assumed}
+    pitch_deg:
+      value: [4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5, 4.5]
+      src: est
+      note: equal tooth spacing assumed
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed for a carbide slitting saw}
+    clearance_deg: {primary: 10, secondary: 20, src: est, note: not published; 10/20 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck: null
+    shank: null
+    centre_cutting: {value: false, src: est, note: 'arbor-mounted saw: no centre cutting'}
+    coolant_holes: null
+    note: 'bore_mm = 22.0; side_clearance_deg = 0.5 (est: side dish not published; 0.5 deg assumed)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 292.6, src: est, note: 'rho V of the annulus D 100 / bore 22 x 3 mm x 0.9 (tooth gullets); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings share the chip load) (e.g. al6061-t6); <= 28 HRC
+    operation: [slitting]
+    vc_m_min: {start: 460.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, ALUMINUM ALLOYS - Wrought row, <= 28 HRC block, 100 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx ... (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 45.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, CARBON STEELS 1030-1095 / 4xxx row, 29-37 HRC block, 100 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 38.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 29-37 HRC block, 100 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403 (e.g. aisi304); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, STAINLESS STEELS 201...403 row, 38-45 HRC block, 100 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 30.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, 100 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 27.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, 100 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 60.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 29-37 HRC block, 100 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 55.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, TITANIUM ALLOYS row, 38-45 HRC block, 100 mm column
+    note: radial 5x thickness, axial full thickness
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [slitting]
+    vc_m_min: {start: 25.0}
+    fz_mm: {start: 0.025}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 29-37 HRC block, 100 mm column
+    note: 'speed column is SMM (m/min), chip load mmPT; depth of cut radial 5x thickness, axial full thickness; thickness/diameter < 1 %: chip load 50 % and radial depth 3x; for deeper radial cuts (8x thickness) reduce speed 10 % (chart notes)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [slitting]
+    vc_m_min: {start: 15.0}
+    fz_mm: {start: 0.023}
+    ap_max_mm: 3.0
+    ae_max_mm: 15.0
+    src: harvey-2025-sf-sme
+    page: SF_SME p. 1, HIGH TEMP ALLOYS row, 38-45 HRC block, 100 mm column
+    note: radial 5x thickness, axial full thickness
+  price_eur: {value: 519.18, src: est, note: 'list price USD 603.70 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: D1 +0.13/-0.00 mm, thickness +/-0.0064 mm, bore +0.012/+0.002 mm (product table header); arbor mounted

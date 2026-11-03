@@ -1,0 +1,5 @@
+.numba-cache
+runs-data
+**/__pycache__
+*.egg-info
+tests/ui/node_modules

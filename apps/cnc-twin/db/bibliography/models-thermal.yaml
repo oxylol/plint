@@ -1,0 +1,180 @@
+# Sources of the thermal models (cnctwin.thermal, docs/models/thermal.md) and of their
+# coefficients in db/models/thermal-*.yaml. Standard textbook equations; where a coefficient was
+# recalled rather than re-read in this session the parameter file says so in its note.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  jaeger-1942-moving-sources:
+    type: article
+    authors: "Jaeger, J.C."
+    title: "Moving sources of heat and the temperature at sliding contacts"
+    venue: "Journal and Proceedings of the Royal Society of New South Wales 76, 203-224"
+    year: 1942
+
+  carslaw-jaeger-1959-conduction:
+    type: book
+    authors: "Carslaw, H.S.; Jaeger, J.C."
+    title: "Conduction of Heat in Solids"
+    edition: "2nd"
+    publisher: "Oxford University Press"
+    year: 1959
+    pages: "ch. 2 (semi-infinite solid), 10.4-10.5 (instantaneous and continuous point and plane sources, circular disc source)"
+
+  stephenson-ali-1992-interrupted:
+    type: article
+    authors: "Stephenson, D.A.; Ali, A."
+    title: "Tool temperatures in interrupted metal cutting"
+    venue: "ASME Journal of Engineering for Industry 114(2), 127-136"
+    year: 1992
+
+  douglas-gunn-1964-adi:
+    type: article
+    authors: "Douglas, J.; Gunn, J.E."
+    title: "A general formulation of alternating direction methods. Part I. Parabolic and hyperbolic problems"
+    venue: "Numerische Mathematik 6, 428-453"
+    year: 1964
+
+  churchill-chu-1975-vertical-plate:
+    type: article
+    authors: "Churchill, S.W.; Chu, H.H.S."
+    title: "Correlating equations for laminar and turbulent free convection from a vertical plate"
+    venue: "International Journal of Heat and Mass Transfer 18(11), 1323-1329"
+    year: 1975
+
+  churchill-chu-1975-horizontal-cylinder:
+    type: article
+    authors: "Churchill, S.W.; Chu, H.H.S."
+    title: "Correlating equations for laminar and turbulent free convection from a horizontal cylinder"
+    venue: "International Journal of Heat and Mass Transfer 18(9), 1049-1053"
+    year: 1975
+
+  incropera-2007-heat-mass-transfer:
+    type: book
+    authors: "Incropera, F.P.; DeWitt, D.P.; Bergman, T.L.; Lavine, A.S."
+    title: "Fundamentals of Heat and Mass Transfer"
+    edition: "6th"
+    publisher: "John Wiley & Sons"
+    year: 2007
+    pages: "sec. 7.4 (rotating cylinder), 8.5 (Dittus-Boelter, laminar Nu = 4.36), 9.6 (free convection on horizontal plates), Table A.11 (emissivities)"
+
+  kays-bjorklund-1958-rotating-cylinder:
+    type: article
+    authors: "Kays, W.M.; Bjorklund, I.S."
+    title: "Heat transfer from a rotating cylinder with and without crossflow"
+    venue: "Transactions of the ASME 80, 70-78"
+    year: 1958
+
+  dittus-boelter-1930-tubes:
+    type: article
+    authors: "Dittus, F.W.; Boelter, L.M.K."
+    title: "Heat transfer in automobile radiators of the tubular type"
+    venue: "University of California Publications in Engineering 2, 443-461"
+    year: 1930
+
+  white-2006-viscous-fluid-flow:
+    type: book
+    authors: "White, F.M."
+    title: "Viscous Fluid Flow"
+    edition: "3rd"
+    publisher: "McGraw-Hill"
+    year: 2006
+    pages: "sec. 1-3.4, Tables 1-2 and 1-3 (Sutherland constants of air)"
+
+  palmgren-1959-bearings:
+    type: book
+    authors: "Palmgren, A."
+    title: "Ball and Roller Bearing Engineering"
+    edition: "3rd"
+    publisher: "SKF Industries / S.H. Burbank, Philadelphia"
+    year: 1959
+    pages: "ch. 6, bearing friction: load-independent moment M0 proportional to (nu n)^(2/3)"
+
+  harris-kotzalas-2007-bearings:
+    type: book
+    authors: "Harris, T.A.; Kotzalas, M.N."
+    title: "Advanced Concepts of Bearing Technology (Rolling Bearing Analysis, 5th ed.)"
+    publisher: "CRC Press, Boca Raton"
+    year: 2007
+    pages: "ch. 6 (friction in rolling bearings, Palmgren's viscous moment)"
+
+  boothroyd-1963-cutting-temperatures:
+    type: article
+    authors: "Boothroyd, G."
+    title: "Temperatures in orthogonal metal cutting"
+    venue: "Proceedings of the Institution of Mechanical Engineers 177(29), 789-810"
+    year: 1963
+
+  trent-wright-2000-metal-cutting:
+    type: book
+    authors: "Trent, E.M.; Wright, P.K."
+    title: "Metal Cutting"
+    edition: "4th"
+    publisher: "Butterworth-Heinemann"
+    year: 2000
+    pages: "ch. 5 (heat in metal cutting)"
+
+  astakhov-2006-tribology-cutting:
+    type: book
+    authors: "Astakhov, V.P."
+    title: "Tribology of Metal Cutting"
+    publisher: "Elsevier, Tribology and Interface Engineering Series 52"
+    year: 2006
+    pages: "ch. 3 (tool-chip contact length, Poletika's relation)"
+
+  komanduri-hou-2000-shear-plane:
+    type: article
+    authors: "Komanduri, R.; Hou, Z.B."
+    title: "Thermal modeling of the metal cutting process: Part I - Temperature rise distribution due to shear plane heat source"
+    venue: "International Journal of Mechanical Sciences 42(9), 1715-1752"
+    year: 2000
+
+  blok-1937-flash-temperature:
+    type: article
+    authors: "Blok, H."
+    title: "Theoretical study of temperature rise at surfaces of actual contact under oiliness lubricating conditions"
+    venue: "Proceedings of the General Discussion on Lubrication and Lubricants, IMechE London, vol. 2, 222-235"
+    year: 1937
+
+  madhusudana-2014-contact-conductance:
+    type: book
+    authors: "Madhusudana, C.V."
+    title: "Thermal Contact Conductance"
+    edition: "2nd"
+    publisher: "Springer"
+    year: 2014
+    pages: "ch. 1 and 5 (orders of magnitude of metallic contact conductance)"
+
+  bryan-1990-thermal-errors:
+    type: article
+    authors: "Bryan, J."
+    title: "International status of thermal error research (1990)"
+    venue: "CIRP Annals 39(2), 645-656"
+    year: 1990
+
+  mayr-2012-thermal-issues:
+    type: article
+    authors: "Mayr, J.; Jedrzejewski, J.; Uhlmann, E.; Donmez, M.A.; Knapp, W.; Haertig, F.; Wendt, K.; Moriwaki, T.; Shore, P.; Schmitt, R.; Brecher, C.; Wuerz, T.; Wegener, K."
+    title: "Thermal issues in machine tools"
+    venue: "CIRP Annals 61(2), 771-791"
+    year: 2012
+
+  iso-7388-1-2007-steep-taper:
+    type: standard
+    authors: "ISO"
+    title: "ISO 7388-1: Tool shanks with 7/24 taper for automatic tool changers - Part 1: Dimensions and designation of shanks of forms A, AD, AF, U, UD and UF"
+    year: 2007
+
+  iso-12164-1-2001-hsk:
+    type: standard
+    authors: "ISO"
+    title: "ISO 12164-1: Hollow taper interface with flange contact surface - Part 1: Shanks - Dimensions"
+    year: 2001
+
+  gauss-legendre-abramowitz-1964:
+    type: handbook
+    authors: "Abramowitz, M.; Stegun, I.A. (eds.)"
+    title: "Handbook of Mathematical Functions"
+    publisher: "National Bureau of Standards, Applied Mathematics Series 55"
+    year: 1964
+    pages: "25.4.29-30 (Gauss-Legendre quadrature)"

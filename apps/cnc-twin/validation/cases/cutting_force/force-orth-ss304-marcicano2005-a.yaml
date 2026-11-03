@@ -1,0 +1,91 @@
+# AISI 304 (annealed) orthogonal tube turning, TPGN uncoated carbide (maker A), width 1 mm: Fc and thrust.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-ss304-marcicano2005-a
+quantity: cutting_force
+reference:
+  src: marcicano-2005-aisi304-cutting-tests
+  location: 'Table 3 (insert of maker A, width 1 mm): Fa, Fc, Vc, t0'
+  digitised: false
+  measured: true
+  note: no measurement uncertainty is stated
+setup:
+  operation: orthogonal_turning
+  material:
+    db: aisi304
+    note: annealed AISI 304 tubes; quasi-static compression gives JC A 360 MPa, B 1244 MPa, n 0.72 (Table 1); hardness not
+      stated
+  tool:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    type: turning_insert
+    iso_code: TPGN 160308
+    grade: ISO M-type carbide, uncoated, no chip breaker
+    maker: A (not named)
+    tool_class: carbide
+    coating: none
+    rake_deg: 5
+    clearance_deg:
+      value: 6
+      src: est
+      note: 'assumed: not stated: ISO 1832 letter P = 11 deg insert clearance (code convention, standard not read) minus
+        the 5 deg positive tilt that gives the stated rake'
+    edge_radius_um:
+      value: 15
+      src: est
+      note: 'assumed: not stated; typical of a ground (G-tolerance) uncoated insert edge (est.)'
+    nose_radius_mm:
+      value: 0.8
+      src: est
+      note: 'assumed: ISO code ''08'' = 0.8 mm corner radius (code convention); outside the cut when the tube wall lies
+        on the straight edge'
+    assumed_inputs: [clearance_deg, edge_radius_um, nose_radius_mm]
+  machine:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    model: ROMI S-30 lathe
+    dynamometer: load-cell type dynamometer with PC acquisition (make not given)
+  stock:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2
+    form: machined tube (dimensions not given)
+  conditions:
+    src: marcicano-2005-aisi304-cutting-tests
+    page: Sect. 3.2, Tables 3-4
+    test_ids: [A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11]
+    h_per_test_mm: [0.097, 0.428, 0.428, 0.097, 0.06, 0.06, 0.097, 0.428, 0.205, 0.205, 0.205]
+    vc_per_test_m_min: [38, 38, 60, 60, 60, 24, 24, 24, 24, 38, 60]
+    width_of_cut_mm: 1.0
+    kinematics: 'orthogonal tube turning: feed per rev = uncut chip thickness t0, depth of cut = width'
+    coolant: {value: dry, src: est, note: 'assumed: not stated; dry orthogonal tests are implied by the analysis'}
+    assumed_inputs: [coolant]
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fc A1, value: 360, unit: N, x: 0.097, x_name: h, x_unit: mm, note: vc 38 m/min}
+- {name: Fa A1, value: 341, unit: N, x: 0.097, x_name: h, x_unit: mm, note: vc 38 m/min (thrust force)}
+- {name: Fc A2, value: 983, unit: N, x: 0.428, x_name: h, x_unit: mm, note: vc 38 m/min}
+- {name: Fa A2, value: 548, unit: N, x: 0.428, x_name: h, x_unit: mm, note: vc 38 m/min (thrust force)}
+- {name: Fc A3, value: 957, unit: N, x: 0.428, x_name: h, x_unit: mm, note: vc 60 m/min}
+- {name: Fa A3, value: 633, unit: N, x: 0.428, x_name: h, x_unit: mm, note: vc 60 m/min (thrust force)}
+- {name: Fc A4, value: 401, unit: N, x: 0.097, x_name: h, x_unit: mm, note: vc 60 m/min}
+- {name: Fa A4, value: 455, unit: N, x: 0.097, x_name: h, x_unit: mm, note: vc 60 m/min (thrust force)}
+- {name: Fc A5, value: 281, unit: N, x: 0.06, x_name: h, x_unit: mm, note: vc 60 m/min}
+- {name: Fa A5, value: 335, unit: N, x: 0.06, x_name: h, x_unit: mm, note: vc 60 m/min (thrust force)}
+- {name: Fc A6, value: 190, unit: N, x: 0.06, x_name: h, x_unit: mm, note: vc 24 m/min}
+- {name: Fa A6, value: 136, unit: N, x: 0.06, x_name: h, x_unit: mm, note: vc 24 m/min (thrust force)}
+- {name: Fc A7, value: 274, unit: N, x: 0.097, x_name: h, x_unit: mm, note: vc 24 m/min}
+- {name: Fa A7, value: 185, unit: N, x: 0.097, x_name: h, x_unit: mm, note: vc 24 m/min (thrust force)}
+- {name: Fc A8, value: 1114, unit: N, x: 0.428, x_name: h, x_unit: mm, note: vc 24 m/min}
+- {name: Fa A8, value: 755, unit: N, x: 0.428, x_name: h, x_unit: mm, note: vc 24 m/min (thrust force)}
+- {name: Fc A9, value: 612, unit: N, x: 0.205, x_name: h, x_unit: mm, note: vc 24 m/min}
+- {name: Fa A9, value: 447, unit: N, x: 0.205, x_name: h, x_unit: mm, note: vc 24 m/min (thrust force)}
+- {name: Fc A10, value: 582, unit: N, x: 0.205, x_name: h, x_unit: mm, note: vc 38 m/min}
+- {name: Fa A10, value: 466, unit: N, x: 0.205, x_name: h, x_unit: mm, note: vc 38 m/min (thrust force)}
+- {name: Fc A11, value: 549, unit: N, x: 0.205, x_name: h, x_unit: mm, note: vc 60 m/min}
+- {name: Fa A11, value: 461, unit: N, x: 0.205, x_name: h, x_unit: mm, note: vc 60 m/min (thrust force)}
+reference_curves: []
+notes: 'Total forces for a 1 mm width (depth of cut) of tool A. Width and column alignment were checked against the source''s
+  own stress column: sqrt(3) sin(phi)(Fc cos(phi) - Fa sin(phi))/(ap t0) with ap = 1 mm reproduces the printed 1165 MPa
+  for row A1. Chip thickness of these tests: chipratio-orth-ss304-marcicano2005.'

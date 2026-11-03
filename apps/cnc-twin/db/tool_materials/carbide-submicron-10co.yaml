@@ -1,0 +1,30 @@
+format: cnctwin-tool-material
+version: 1
+id: carbide-submicron-10co
+class: carbide
+name: "Submicron WC-10%Co (ISO K20-K30, solid end-mill rod grade; Hyperion H10F / Mitsubishi TF15 as reference grades)"
+src: hyperion-insert-blanks-grades
+composition: {text: "WC 89.5, binder 10.5 wt%, WC grain 0.8 µm (H10F); TF15: Co 10.0 %, grain < 0.9 µm", src: hyperion-insert-blanks-grades}
+grain_size_um: {value: 0.8, src: hyperion-insert-blanks-grades}
+binder_wt_pct: {value: 10.5, src: hyperion-insert-blanks-grades}
+density_kg_m3: {value: 14500, src: hyperion-insert-blanks-grades, page: "H10F row"}
+youngs_modulus_GPa: {value: 530, range: [530, 585], src: mitsubishi-2026-tm102g, page: "p. 8, TF15 rod (K20, 10 % Co, < 0.9 µm)", note: "530 GPa is the Mitsubishi TF15 value; the Doi fit in roebuck-2009-npl-mgpg20 eq. (44) gives 585 GPa at Vf(Co) = 0.163 (10 wt% Co), stored as the upper end of the range"}
+poisson: {value: 0.22, src: est, note: "no value read for WC-Co; 0.22 is the usual WC-Co value, bracketed by the TC0300 cermet (0.21, kyocera-2023-tc0300) and Syalon 101 (0.23)"}
+hardness_HV: {value: 1600, range: [1550, 1600], src: hyperion-insert-blanks-grades, page: "H10F 1600 HV30", note: "Mitsubishi TF15: 1550 HV (mitsubishi-2026-tm102g p. 8)"}
+transverse_rupture_MPa: {value: 4500, range: [4000, 4500], src: hyperion-insert-blanks-grades, page: "H10F TRS 4500 N/mm2", note: "Mitsubishi TF15 rod (HIP): 4.0 GPa (mitsubishi-2026-tm102g p. 8); TF15 saw-tip blanks (not HIPed): 2.5 GPa (p. 4)"}
+compressive_MPa: {value: 6300, src: hyperion-insert-blanks-grades, page: "H10F compressive strength 6300 N/mm2"}
+fracture_toughness_MPa_sqrt_m: {value: 9.7, src: mitsubishi-2026-tm102g, page: "pp. 4 and 8, TF15"}
+conductivity_W_mK:
+  table: [[20, 71], [500, 64], [1000, 57]]
+  src: est
+  note: "20 °C value 71 W/mK for TF15 (mitsubishi-2026-tm102g p. 4); vornberger-2020-carbide-hot-hardness reports about 30 % loss RT->1000 °C for high-conductivity grades; this fine-grained 10 % Co grade is assumed to lose 20 %, linear in T"
+specific_heat_J_kgK:
+  table: [[20, 205], [400, 240], [800, 270]]
+  src: est
+  note: "rule of mixtures of WC (~0.18 J/gK) and Co (~0.42 J/gK) at RT = 0.205 J/gK, inside the 150-350 J/(kg °C) range of hyperion-thermal-properties; +30 % to 800 °C assumed"
+expansion_1_K: {value: 5.5e-6, range: [5.0e-6, 6.0e-6], src: roebuck-2009-npl-mgpg20, page: "section 1, 'typically 5-6 x 10-6 K-1 for WC/Co'", note: "mid value chosen for 10 % Co"}
+max_service_temp_degC: {value: 1000, src: est, note: "softening/oxidation limit used for WC-Co in the wear and deformation checks; hot hardness curves (vornberger-2020 Figs. 4-5) were not digitised"}
+weibull_modulus: {value: 15, range: [10, 20], src: roebuck-2009-npl-mgpg20, page: "4.3.3: WC/Co plots with intermediate m (20 > m > 10) or m >= about 20", note: "15 chosen for a fine-grained grade"}
+thermal_shock_parameter: null
+usui: []
+notes: "Values mix two maker grades of the same class (Hyperion H10F, Mitsubishi TF15); each value names its own source."

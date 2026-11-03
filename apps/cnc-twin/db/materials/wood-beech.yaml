@@ -1,0 +1,201 @@
+# Workpiece material: European beech (Fagus sylvatica), clear kiln-dried timber at ~12 % moisture content.
+# L = along the grain (fibre direction), R = radial, T = tangential. Sources: db/bibliography/materials-nonmetals.yaml
+# Several mechanical values are for American beech (Fagus grandifolia, USDA Wood Handbook) and are marked so.
+# Orthotropic data and the per-direction cutting coefficients have no key in the material template: they are in
+# the top-level `extensions` block (extensions.anisotropy, extensions.cutting.wood_directions).
+format: cnctwin-material
+version: 1
+id: wood-beech
+name: "European beech (Fagus sylvatica), kiln dried, ~12 % MC"
+family: wood
+iso_group: O
+condition: "clear sawn hardwood timber, kiln dried to ~12 % moisture content (about 20 C / 65 % RH), unsteamed or steamed"
+designations: {EN_13556: "FASY", common: "beech, red beech (Rotbuche)"}
+stock_forms: []
+
+physical:
+  src: wikipedia-de-buchenholz-2024
+  density_kg_m3: {value: 720, range: [540, 910], note: "mean Rohdichte at 12-15 % MC; same range 540-910 in leitz-2017-lexicon-ed7-ch11 (from Wagenfuehr, Holzatlas 2007)"}
+  specific_heat_J_kgK: {table: [[7, 1500], [17, 1600], [27, 1700], [47, 1800], [67, 1900], [87, 2000]], src: fpl-2010-wood-handbook, note: "Table 4-8, solid wood at 12 % MC (280-360 K); practically independent of species and density. Dry wood: cp0 = 0.1031 + 0.003867 T[K] kJ/kgK (Eq. 4-16a), e.g. 1.57 at 107 C and 1.73 at 147 C - use dry values once the cutting zone has driven the water out"}
+  conductivity_W_mK: {table: [[24, 0.175], [100, 0.21]], src: fpl-2010-wood-handbook, note: "ACROSS the grain (R/T): Eq. 4-15 with Gx = 0.643 (720 kg/m3 at 12 % MC) gives 0.175 W/mK at ~24 C; +2-3 %/10 C gives ~0.21 at 100 C. de.wikipedia (citing Niemz 2007) gives 0.176. Along the grain: extensions.anisotropy"}
+  expansion_1_K: {table: [[50, 3.8e-6]], src: fpl-2010-wood-handbook, range: [3.1e-6, 4.5e-6], note: "ALONG the grain, ovendry wood, species independent (3.1-4.5e-6, midpoint used); across the grain see extensions.anisotropy. At usual moisture contents drying shrinkage on heating outweighs thermal expansion"}
+  youngs_modulus_GPa: {table: [[20, 13.1]], src: est, note: "E_L: bending MOE of American beech 11.9 GPa at 12 % MC (fpl Table 5-3a) + 10 % to remove shear deflection (fpl note to Table 5-1); European beech not read"}
+  poisson: {value: 0.42, src: est, note: "nu_LR, mean of sugar maple, red maple, yellow birch and black cherry in fpl Table 5-2 (beech not listed)"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: null
+  decomposition_degC: {value: 200, src: fpl-2010-wood-handbook, note: "onset of significant pyrolysis (hemicelluloses 200-300 C, lignin 225-450 C, cellulose depolymerisation 300-350 C); dehydration and slow strength loss already at 100-200 C (ch. 18 p. 18-8)"}
+  hardness: {janka_N: 5800, src: fpl-2010-wood-handbook, note: "side hardness of AMERICAN beech at 12 % MC (Table 5-3a); hardness parallel to the fibres (end grain) is about twice that perpendicular (leitz-2017-lexicon-ed7-ch11)"}
+  yield_MPa: {value: 57, range: [53, 62], note: "compressive strength parallel to grain (wood has no yield point), midpoint of the range; leitz/Wagenfuehr range 41-99 MPa"}
+  ultimate_MPa: {value: 135, note: "tensile strength parallel to grain"}
+  elongation_pct: null
+  fracture_strain: {value: 0.01, src: est, note: "brittle along the grain: tensile strength / E_L = 135 / 13100 ~ 1 %"}
+  moisture_content_pct: {value: 12, src: est, note: "reference state assumed for all values in this file (dry basis)"}
+  compressive_MPa: {value: 57, range: [53, 62], note: "parallel to grain, midpoint; leitz/Wagenfuehr range 41-99 MPa"}
+  flexural_MPa: {value: 114, range: [105, 123], note: "bending strength, midpoint; leitz/Wagenfuehr range 74-210 MPa"}
+
+flow_stress:
+  model: none                      # task rule for wood; current schemas.py accepts only johnson_cook or null
+  yield_MPa: {value: 57, src: wikipedia-de-buchenholz-2024, note: "compression parallel to grain"}
+  shear_yield_MPa: {value: 13.9, src: fpl-2010-wood-handbook, note: "AMERICAN beech, shear parallel to grain (Table 5-3a)"}
+  note: "Wood has no continuum flow stress: chips form by splitting ahead of the edge (Franz type I, large chip thickness along the grain), by shear and buckling (type II, small h, large rake) or by compression failure (type III, blunt edge, negative rake), and end grain by severing fibres (wood-cutting background, general knowledge). Cutting model: use the direction-dependent edge-force coefficients in extensions.cutting.wood_directions (Fc/b = Kte + Ktc h, the fracture-mechanics form of Atkins: Kte ~ toughness R, Ktc ~ shear yield stress x shear strain) interpolated by the fibre cutting angle; the Kienzle entry is the 90-0 (along grain) case only."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      process: milling
+      kc11_N_mm2: {value: 31.5, src: est, note: "Kienzle fit of the 90-0 linear model (Ktc 30 N/mm2, Kte 1.5 N/mm, extensions.cutting.wood_directions) through h = 0.1 and 1.0 mm"}
+      mc: {value: 0.155, src: est, note: "from kc(0.1 mm) = 45 and kc(1.0 mm) = 31.5 N/mm2"}
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: {value: 20, src: est, note: "typical HW router/planer rake for hardwood assumed"}
+      vc_ref_m_min: {value: 3000, src: est, note: "50 m/s, inside the Leitz hardwood window 50-80 m/s (leitz-2017-lexicon-ed7-ch11)"}
+      src: est
+      note: "Along the grain (90-0) only. No published specific cutting force for beech was read"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.3, src: est, note: "assumed; wood fibres are compressed and spring back under a rounded edge"}
+  indentation_coeff_N_mm3: {value: 1.0e3, src: est, note: "aluminium placeholder 1.5e4 N/mm3 scaled down by ~15 (perpendicular compression strength 7 MPa vs metal hardness); order of magnitude only"}
+  work_hardening:
+    src: est
+    note: "not strain hardening: a crushed/densified surface layer under a dull edge (fibres compressed, later raised by moisture); depth assumed"
+    layer_depth_um: 50
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, range: [0.3, 0.6], note: "wood on cemented carbide, dry, 12 % MC; rises with moisture; general knowledge, not read"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone: wood chips slide"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed lower than carbide"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.4, src: est, note: "as for carbide (assumed)"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+
+chip:
+  tendency: continuous             # type II at small h along grain; split (discontinuous) at large h; fragmented in end grain
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "wood chips break at the split; no chip breaker needed"}
+  oxide_colours: null
+
+tool_life:                         # wood: edge rounding/recession is the wear measure; Taylor form kept for the simulator
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 12000
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.4
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 240 min of cutting at vc = 3000 m/min (50 m/s) assumed for HW in dry beech. Leitz: wear rises in direct proportion to bulk density and with silicate inclusions; with-feed (climb) cutting gives ~30 % shorter life than up-cut (leitz-2017-lexicon-ed7-ch11)"
+  - tool_class: pcd
+    coating: uncoated
+    C_m_min: 40000
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.4
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: about 20x the HW life at equal speed assumed"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 3000
+    n: 0.3
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.4
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: HS is used for solid wood, mainly softwoods (Leitz); T = 60 min at 50 m/s assumed"
+tool_life_usui: []
+
+residual_stress: []                # drying (case hardening) stresses exist in kiln-dried timber; no profile read
+
+skin:
+  src: est
+  note: "planed/sawn timber: no skin modelled"
+  type: none
+  thickness_mm: 0
+  hardness_factor: 1.0
+  abrasiveness_factor: 1.0
+
+thermal_damage:
+  burn_degC: {value: 200, src: fpl-2010-wood-handbook, note: "onset of significant pyrolysis and of glowing when the surface reaches 200 C (ch. 18); used as the burn-mark (scorching) threshold - an assumption for short contact times. Leitz: thermal wear of drills from high rpm at low feed or dwell (leitz-2020-lexicon-ed7-ch06)"}
+  white_layer_degC: null
+  melt_smear_degC: null
+
+ignition:
+  chip_ignition_degC: {value: 350, range: [300, 400], src: fpl-2010-wood-handbook, note: "surface temperature before piloted ignition 300-400 C (average 347-377 C for woods of SG 0.33-0.69), midpoint used"}
+  dust_explosible: {value: true, src: hse-2022-wis23, note: "wood dust is flammable and can cause fire or explosion, usually starting in extraction equipment"}
+
+composite: null
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  anisotropy:                      # orthotropic constants at ~12 % MC
+    E_L_GPa: {value: 13.1, src: est, note: "see physical.youngs_modulus_GPa"}
+    E_R_GPa: {value: 1.79, src: est, note: "E_L x 0.137 = mean E_R/E_L of sugar maple, red maple, yellow birch and black cherry (fpl Table 5-1; beech not listed)"}
+    E_T_GPa: {value: 0.88, src: est, note: "E_L x 0.067 (same four species, fpl Table 5-1)"}
+    G_LR_GPa: {value: 1.52, src: est, note: "E_L x 0.116 (fpl Table 5-1, same four species)"}
+    G_LT_GPa: {value: 0.99, src: est, note: "E_L x 0.0755 (fpl Table 5-1)"}
+    G_RT_GPa: {value: 0.22, src: est, note: "E_L x 0.017 (yellow birch, the only one of the four with G_RT in fpl Table 5-1)"}
+    nu_LR: {value: 0.42, src: est, note: "mean of the four species, fpl Table 5-2"}
+    nu_LT: {value: 0.47, src: est, note: "mean of the four species, fpl Table 5-2"}
+    nu_RT: {value: 0.73, src: est, note: "mean of the four species, fpl Table 5-2"}
+    conductivity_L_W_mK: {value: 0.315, src: fpl-2010-wood-handbook, range: [0.26, 0.49], note: "1.8 x the across-grain value (reported factor 1.5-2.8, average 1.8)"}
+    conductivity_RT_W_mK: {value: 0.175, src: fpl-2010-wood-handbook, note: "R and T nearly equal (fpl); Eq. 4-15"}
+    expansion_L_1_K: {value: 3.8e-6, src: fpl-2010-wood-handbook, range: [3.1e-6, 4.5e-6], note: "ovendry wood, midpoint"}
+    expansion_R_1_K: {value: 3.23e-5, src: fpl-2010-wood-handbook, note: "Eq. 4-19a (32.4 G0 + 9.9)e-6 with ovendry specific gravity G0 = 0.69 (estimated from 720 kg/m3 at 12 % MC and 12/30 of the 17.9 % total volumetric shrinkage); ovendry wood"}
+    expansion_T_1_K: {value: 4.08e-5, src: fpl-2010-wood-handbook, note: "Eq. 4-20a (32.4 G0 + 18.4)e-6, G0 = 0.69 (estimated as above), ovendry wood"}
+    shrinkage_L_pct: {value: 0.3, src: wikipedia-de-buchenholz-2024, note: "axial Schwindmass (green to ovendry)"}
+    shrinkage_R_pct: {value: 5.8, src: wikipedia-de-buchenholz-2024, note: "radial"}
+    shrinkage_T_pct: {value: 11.8, src: wikipedia-de-buchenholz-2024, note: "tangential; beech shrinks strongly and moves with humidity"}
+    tensile_L_MPa: {value: 135, src: wikipedia-de-buchenholz-2024}
+    tensile_perp_MPa: {value: 7.0, src: fpl-2010-wood-handbook, note: "AMERICAN beech, tension perpendicular to grain at 12 % MC (Table 5-3a); controls splitting ahead of the edge (pre-splitting) in 90-0 cutting"}
+    compression_L_MPa: {value: 57, src: wikipedia-de-buchenholz-2024, range: [53, 62], note: "midpoint"}
+    compression_perp_MPa: {value: 7.0, src: fpl-2010-wood-handbook, note: "AMERICAN beech, compression perpendicular to grain (Table 5-3a, fibre stress at proportional limit)"}
+    shear_LR_MPa: {value: 13.9, src: fpl-2010-wood-handbook, range: [6.5, 19.0], note: "AMERICAN beech shear parallel to grain (Table 5-3a); the range is for European beech from leitz/Wagenfuehr"}
+  cutting:
+    wood_directions:               # Kivimaa/McKenzie notation: (angle edge-to-fibres)-(angle velocity-to-fibres)
+      - direction: "90-0"
+        description: "edge perpendicular to fibres, velocity along fibres: planing, ripping, routing along the grain"
+        Ktc_N_mm2: {value: 30, src: est, note: "Atkins-type Ktc = shear yield stress x shear strain: 15 MPa (American beech shear parallel 13.9 MPa, fpl, rounded up) x 2 (assumed)"}
+        Kte_N_mm: {value: 1.5, src: est, note: "toughness R ~ 1.5 kJ/m2 assumed for crack growth along the grain ahead of the edge (not read)"}
+      - direction: "90-90"
+        description: "edge and velocity perpendicular to fibres: cutting end grain (cross-cut sawing, facing end grain)"
+        Ktc_N_mm2: {value: 75, src: est, note: "2.5 x the 90-0 value; end-grain cutting severs fibres and needs the highest force (ordering from the general wood-cutting literature, factor assumed, not read)"}
+        Kte_N_mm: {value: 4.0, src: est, note: "assumed ~2.5 x the 90-0 value"}
+      - direction: "0-90"
+        description: "edge parallel to fibres, velocity perpendicular: veneer peeling/slicing, cutting across the grain on the face"
+        Ktc_N_mm2: {value: 15, src: est, note: "0.5 x the 90-0 value; lowest of the three main directions (ordering from the literature, factor assumed, not read); governed by tension-perpendicular strength (7.0 MPa American beech, fpl)"}
+        Kte_N_mm: {value: 0.8, src: est, note: "assumed"}
+  chip:
+    dust_mass_fraction: {value: 0.1, src: est, range: [0.05, 0.2], note: "fraction of removed mass leaving as fine dust (< ~100 um) in milling/sawing of dry hardwood; sanding is almost all dust; assumed. NTP (citing IARC 1995): most airborne dust mass is in particles > 10 um, while 61-65 % of particles by count are 1-5 um"}
+  hazards:
+    dust:
+      src: hse-2022-wis23
+      WEL_hardwood_mg_m3: {value: 3, note: "8 h TWA (UK); applies to mixtures of hardwood and softwood dust; unit mg/m3 passes through unconverted. An EU binding limit also exists (not read)"}
+      note: "hardwood dust causes asthma, dermatitis and a rare nasal cancer; fine dust is the main risk; extraction ducts need 20-25 m/s air transport velocity (BS EN 12779). NTP (ntp-2021-roc15-wood-dust): wood dust is a known human carcinogen (nasal adenocarcinoma); extracts of beech and oak dust were genotoxic in vitro; particles > 5 um deposit in the nose, 0.5-5 um reach the lower airways"
+  recommended:
+    vc_m_s: {value: [50, 80], src: leitz-2017-lexicon-ed7-ch11, note: "window, hardwoods, cutting tools > 100 mm (sawing 60-100 m/s); shank router cutters 10-40 m/s, drills 5-10 m/s"}
+    fz_along_grain_mm: {value: [0.3, 0.5], src: leitz-2020-lexicon-ed7-ch05, note: "window, multi-purpose cutterheads, solid wood along grain (climb cut)"}
+    fz_across_grain_mm: {value: [0.25, 0.35], src: leitz-2020-lexicon-ed7-ch05, note: "window, solid wood across grain (conventional cut)"}
+
+notes: "European beech at ~12 % MC. Sourced: density, shrinkage, strengths along grain, conductivity (de.wikipedia/Niemz, secondary), heat capacity, conductivity and expansion equations, pyrolysis and ignition temperatures (USDA Wood Handbook), American-beech shear/perpendicular strengths and hardness (Wood Handbook, related species), cutting speed and feed windows (Leitz), dust hazards (HSE, NTP). Estimated: all orthotropic elastic constants (ratios of other hardwoods), all cutting-force coefficients (Atkins-type with assumed toughness and shear strain), friction, dust fraction, tool life. Gaps: no measured specific cutting force for beech in any direction, no European-beech elastic constants (Hering, Keunecke & Niemz 2012 is paywalled) and no friction data were read."

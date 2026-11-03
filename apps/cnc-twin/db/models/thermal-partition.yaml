@@ -1,0 +1,26 @@
+# Fallback heat partition (cnctwin/thermal/partition.py). The partition normally comes from
+# ProcessCoefficients (cutting's mechanics pipeline); these values are used only for a tool slot
+# that cut without any published fraction table, and every such use is written to the trace.
+format: cnctwin-model-params
+version: 1
+model: thermal-partition
+description: "Literature-typical heat partition fractions used when no ProcessCoefficients table exists"
+params:
+  shear_to_chip:
+    value: 0.85
+    unit: "-"
+    range: [0.6, 0.95]
+    src: est
+    note: "fraction of shear-zone heat leaving with the chip; Boothroyd's relation gives 10-30 % into the work at the thermal numbers of carbide machining (boothroyd-1963-cutting-temperatures)"
+  rake_to_tool:
+    value: 0.15
+    unit: "-"
+    range: [0.05, 0.3]
+    src: est
+    note: "fraction of secondary-zone (rake friction) heat entering the tool; most of it is carried away by the chip (trent-wright-2000-metal-cutting ch. 5)"
+  flank_to_tool:
+    value: 0.4
+    unit: "-"
+    range: [0.2, 0.6]
+    src: est
+    note: "fraction of flank rubbing heat entering the tool; a stationary tool against a fast-moving surface takes less than half (Blok partition, blok-1937-flash-temperature)"

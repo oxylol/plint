@@ -1,0 +1,566 @@
+# Generated from catalogue data read 2026-11-03; values without src: est are as printed by the maker.
+# Estimated values (src: est) carry a note with their derivation.
+format: cnctwin-tool
+version: 1
+series_id: harvey-dovetail-60deg
+maker: Harvey Tool (Harvey Performance Company)
+series: Dovetail Cutters, 60 deg included angle, solid carbide
+src: harvey-2026-dovetail
+notes: Dovetail cutters (chart SF_16400, series 164xx-168xx and others). Inch dimensions as published.
+items:
+- id: harvey-16716
+  order_code: '16716 (uncoated; AlTiN: 16716-C3)'
+  type: dovetail
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 6.35
+    tip_angle_deg: 60.0
+    width_mm: 3.175
+    flutes: 2
+    cutting_length_mm: 3.175
+    corner_radius_mm: 0.254
+    helix_deg: {value: 0, src: est, note: not published; straight flutes assumed}
+    pitch_deg:
+      value: [180.0, 180.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck:
+      diameter_mm: 3.048
+      length_mm: {value: 3.175, src: est, note: neck length not published; taken equal to the cutting length (short neck behind the dovetail head)}
+    shank:
+      diameter_mm: 6.35
+      length_mm: {value: 47.625, src: est, note: OAL - LOC (neck length not published)}
+    overall_length_mm: 50.8
+    centre_cutting: {value: false, src: est, note: 'dovetail cutter cuts on its cone and periphery, no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'inch dimensions as published: diameter 0.25 in, width 0.125 in, cutting_length 0.125 in, corner_radius 0.01 in, neck.diameter 0.12 in, neck.length 0.125 (est) in, shank.diameter 0.25 in, shank.length 1.875 (est) in, overall_length 2 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 22.2, src: est, note: 'rho V: shank taken as a 6.35 mm cylinder over 50.8 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.035052}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, neck-diameter column 0.125 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.12 in -> nearest column 0.125 in); max radial DOC = (D - neck)/2 = 0.0650 in taken in 3 passes at full axial depth with descending stepovers [50, 30, 20] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 3; published values: vc 1000 SFM, fz 0.00138 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 51xxx, 52xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.010922}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, neck-diameter column 0.125 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.12 in -> nearest column 0.125 in); max radial DOC = (D - neck)/2 = 0.0650 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00043 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.010922}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 29-37 HRC block, neck-diameter column 0.125 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.12 in -> nearest column 0.125 in); max radial DOC = (D - neck)/2 = 0.0650 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00043 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.005588}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 38-45 HRC block, neck-diameter column 0.125 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 100 SFM, fz 0.00022 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.006858}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, neck-diameter column 0.125 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.12 in -> nearest column 0.125 in); max radial DOC = (D - neck)/2 = 0.0650 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.00027 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.003556}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, neck-diameter column 0.125 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 90 SFM, fz 0.00014 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.006858}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, neck-diameter column 0.125 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.12 in -> nearest column 0.125 in); max radial DOC = (D - neck)/2 = 0.0650 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.00027 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.003556}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, neck-diameter column 0.125 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 75 SFM, fz 0.00014 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.006858}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, neck-diameter column 0.125 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.12 in -> nearest column 0.125 in); max radial DOC = (D - neck)/2 = 0.0650 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 70 SFM, fz 0.00027 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.003556}
+    ap_max_mm: 3.175
+    ae_max_mm: 1.651
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, neck-diameter column 0.125 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 50 SFM, fz 0.00014 in, ap_max 0.125 in, ae_max 0.065 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 137.08, src: est, note: 'list price USD 159.40 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 'tip_angle_deg holds the included dovetail angle and width_mm the axial cutting length (LOC); included angle 60 deg +1/-1 deg, D1 +.000/-.002 in, LOC +.020/-.000 in (product table header); corner radius column: .010'
+- id: harvey-16724
+  order_code: '16724 (uncoated; AlTiN: 16724-C3)'
+  type: dovetail
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 9.525
+    tip_angle_deg: 60.0
+    width_mm: 4.7498
+    flutes: 3
+    cutting_length_mm: 4.7498
+    corner_radius_mm: 0.254
+    helix_deg: {value: 0, src: est, note: not published; straight flutes assumed}
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck:
+      diameter_mm: 4.4196
+      length_mm: {value: 4.7498, src: est, note: neck length not published; taken equal to the cutting length (short neck behind the dovetail head)}
+    shank:
+      diameter_mm: 9.525
+      length_mm: {value: 58.7502, src: est, note: OAL - LOC (neck length not published)}
+    overall_length_mm: 63.5
+    centre_cutting: {value: false, src: est, note: 'dovetail cutter cuts on its cone and periphery, no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'inch dimensions as published: diameter 0.375 in, width 0.187 in, cutting_length 0.187 in, corner_radius 0.01 in, neck.diameter 0.174 in, neck.length 0.187 (est) in, shank.diameter 0.375 in, shank.length 2.313 (est) in, overall_length 2.5 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 62.3, src: est, note: 'rho V: shank taken as a 9.525 mm cylinder over 63.5 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.052324}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, neck-diameter column 0.187 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.174 in -> nearest column 0.187 in); max radial DOC = (D - neck)/2 = 0.1005 in taken in 3 passes at full axial depth with descending stepovers [50, 30, 20] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 3; published values: vc 1000 SFM, fz 0.00206 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 51xxx, 52xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, neck-diameter column 0.187 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.174 in -> nearest column 0.187 in); max radial DOC = (D - neck)/2 = 0.1005 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00065 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.01651}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 29-37 HRC block, neck-diameter column 0.187 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.174 in -> nearest column 0.187 in); max radial DOC = (D - neck)/2 = 0.1005 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00065 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.008128}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 38-45 HRC block, neck-diameter column 0.187 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 100 SFM, fz 0.00032 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.01016}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, neck-diameter column 0.187 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.174 in -> nearest column 0.187 in); max radial DOC = (D - neck)/2 = 0.1005 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.0004 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.00508}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, neck-diameter column 0.187 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 90 SFM, fz 0.0002 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.01016}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, neck-diameter column 0.187 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.174 in -> nearest column 0.187 in); max radial DOC = (D - neck)/2 = 0.1005 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.0004 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.00508}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, neck-diameter column 0.187 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 75 SFM, fz 0.0002 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.01016}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, neck-diameter column 0.187 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.174 in -> nearest column 0.187 in); max radial DOC = (D - neck)/2 = 0.1005 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 70 SFM, fz 0.0004 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.00508}
+    ap_max_mm: 4.7498
+    ae_max_mm: 2.5527
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, neck-diameter column 0.187 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 50 SFM, fz 0.0002 in, ap_max 0.187 in, ae_max 0.1005 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 157.21, src: est, note: 'list price USD 182.80 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 'tip_angle_deg holds the included dovetail angle and width_mm the axial cutting length (LOC); included angle 60 deg +1/-1 deg, D1 +.000/-.002 in, LOC +.020/-.000 in (product table header); corner radius column: .010'
+- id: harvey-16732
+  order_code: '16732 (uncoated; AlTiN: 16732-C3)'
+  type: dovetail
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 12.7
+    tip_angle_deg: 60.0
+    width_mm: 6.35
+    flutes: 3
+    cutting_length_mm: 6.35
+    corner_radius_mm: 0.254
+    helix_deg: {value: 0, src: est, note: not published; straight flutes assumed}
+    pitch_deg:
+      value: [120.0, 120.0, 120.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck:
+      diameter_mm: 5.7404
+      length_mm: {value: 6.35, src: est, note: neck length not published; taken equal to the cutting length (short neck behind the dovetail head)}
+    shank:
+      diameter_mm: 12.7
+      length_mm: {value: 69.85, src: est, note: OAL - LOC (neck length not published)}
+    overall_length_mm: 76.2
+    centre_cutting: {value: false, src: est, note: 'dovetail cutter cuts on its cone and periphery, no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'inch dimensions as published: diameter 0.5 in, width 0.25 in, cutting_length 0.25 in, corner_radius 0.01 in, neck.diameter 0.226 in, neck.length 0.25 (est) in, shank.diameter 0.5 in, shank.length 2.75 (est) in, overall_length 3 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 133.0, src: est, note: 'rho V: shank taken as a 12.7 mm cylinder over 76.2 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.06985}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, neck-diameter column 0.250 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.226 in -> nearest column 0.250 in); max radial DOC = (D - neck)/2 = 0.1370 in taken in 3 passes at full axial depth with descending stepovers [50, 30, 20] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 3; published values: vc 1000 SFM, fz 0.00275 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 51xxx, 52xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.021844}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, neck-diameter column 0.250 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.226 in -> nearest column 0.250 in); max radial DOC = (D - neck)/2 = 0.1370 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00086 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.021844}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 29-37 HRC block, neck-diameter column 0.250 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.226 in -> nearest column 0.250 in); max radial DOC = (D - neck)/2 = 0.1370 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00086 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.010922}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 38-45 HRC block, neck-diameter column 0.250 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 100 SFM, fz 0.00043 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013716}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, neck-diameter column 0.250 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.226 in -> nearest column 0.250 in); max radial DOC = (D - neck)/2 = 0.1370 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.00054 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.006858}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, neck-diameter column 0.250 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 90 SFM, fz 0.00027 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.013716}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, neck-diameter column 0.250 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.226 in -> nearest column 0.250 in); max radial DOC = (D - neck)/2 = 0.1370 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.00054 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.006858}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, neck-diameter column 0.250 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 75 SFM, fz 0.00027 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.013716}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, neck-diameter column 0.250 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.226 in -> nearest column 0.250 in); max radial DOC = (D - neck)/2 = 0.1370 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 70 SFM, fz 0.00054 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.006858}
+    ap_max_mm: 6.35
+    ae_max_mm: 3.4798
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, neck-diameter column 0.250 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 50 SFM, fz 0.00027 in, ap_max 0.25 in, ae_max 0.137 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 218.44, src: est, note: 'list price USD 254.00 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 'tip_angle_deg holds the included dovetail angle and width_mm the axial cutting length (LOC); included angle 60 deg +1/-1 deg, D1 +.000/-.002 in, LOC +.020/-.000 in (product table header); corner radius column: .010'
+- id: harvey-16748
+  order_code: '16748 (uncoated; AlTiN: 16748-C3)'
+  type: dovetail
+  hand: {value: right, src: est, note: right-hand cut assumed; not stated on the product page}
+  tool_material: {class: carbide, grade: 'solid carbide, grade not published', id: carbide-submicron-10co, src: est, note: Harvey Tool publishes 'solid carbide' only; submicron 10 % Co grade assumed}
+  coating: {id: none, note: uncoated tool number chosen; the chart's chip loads are for uncoated cutters (AlTiN '-C3' versions may run 10-15 % higher chip loads per the chart notes)}
+  geometry:
+    diameter_mm: 19.05
+    tip_angle_deg: 60.0
+    width_mm: 9.525
+    flutes: 4
+    cutting_length_mm: 9.525
+    corner_radius_mm: 0.254
+    helix_deg: {value: 0, src: est, note: not published; straight flutes assumed}
+    pitch_deg:
+      value: [90.0, 90.0, 90.0, 90.0]
+      src: est
+      note: equal spacing assumed (not published)
+    rake_deg: {value: 5, src: est, note: not published; 5 deg assumed}
+    clearance_deg: {primary: 10, secondary: 18, src: est, note: not published; 10/18 deg assumed}
+    edge_radius_um: {value: 5, src: est, note: not published; 5 um assumed for a sharp uncoated carbide edge}
+    edge_prep: {type: sharp, src: est, note: not published}
+    neck:
+      diameter_mm: 8.4328
+      length_mm: {value: 9.525, src: est, note: neck length not published; taken equal to the cutting length (short neck behind the dovetail head)}
+    shank:
+      diameter_mm: 19.05
+      length_mm: {value: 66.675, src: est, note: OAL - LOC (neck length not published)}
+    overall_length_mm: 76.2
+    centre_cutting: {value: false, src: est, note: 'dovetail cutter cuts on its cone and periphery, no centre cutting (not stated explicitly)'}
+    coolant_holes: null
+    note: 'inch dimensions as published: diameter 0.75 in, width 0.375 in, cutting_length 0.375 in, corner_radius 0.01 in, neck.diameter 0.332 in, neck.length 0.375 (est) in, shank.diameter 0.75 in, shank.length 2.625 (est) in, overall_length 3 in (converted at 25.4 mm/in)'
+  max_rpm: null
+  balance_grade: null
+  mass_g: {value: 299.2, src: est, note: 'rho V: shank taken as a 19.05 mm cylinder over 76.2 mm x 0.95 (neck/head relief); rho = 14.5 g/cm3 (db/tool_materials/carbide-submicron-10co, Hyperion H10F)'}
+  cutting_data:
+  - iso_group: N
+    material_hint: wrought aluminium 1xxx-8xxx (castings 2xx/5xx/7xx/8xx share the chip loads) (e.g. al6061-t6); <= 28 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 304.8}
+    fz_mm: {start: 0.087122}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, ALUMINUM ALLOYS - Wrought (1xxx...8xxx), <= 28 HRC block, neck-diameter column 0.312 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.332 in -> nearest column 0.312 in); max radial DOC = (D - neck)/2 = 0.2090 in taken in 3 passes at full axial depth with descending stepovers [50, 30, 20] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 3; published values: vc 1000 SFM, fz 0.00343 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: carbon/alloy steel 1030-1095, 13xx, 15xx, 4xxx, 5xxx, 51xxx, 52xxx, 6xxx, 8xxx, 9xxx (e.g. aisi4140-qt30); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.027432}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, CARBON STEELS 1030-1095 / 4xxx ... row, 29-37 HRC block, neck-diameter column 0.312 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.332 in -> nearest column 0.312 in); max radial DOC = (D - neck)/2 = 0.2090 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00108 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 60.96}
+    fz_mm: {start: 0.027432}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 29-37 HRC block, neck-diameter column 0.312 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.332 in -> nearest column 0.312 in); max radial DOC = (D - neck)/2 = 0.2090 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 200 SFM, fz 0.00108 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: M
+    material_hint: stainless 201-385, 403-502 (e.g. aisi304, aisi316l); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 30.48}
+    fz_mm: {start: 0.013716}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, STAINLESS STEELS 201...385, 403... row, 38-45 HRC block, neck-diameter column 0.312 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 100 SFM, fz 0.00054 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.017018}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 29-37 HRC block, neck-diameter column 0.312 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.332 in -> nearest column 0.312 in); max radial DOC = (D - neck)/2 = 0.2090 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.00067 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: P
+    material_hint: tool steels D, H, M, T, S series (high-alloy steel, ISO P at this hardness; e.g. h13 prehardened); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 27.432}
+    fz_mm: {start: 0.008636}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TOOL STEELS D, H, M, T, S series row, 38-45 HRC block, neck-diameter column 0.312 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 90 SFM, fz 0.00034 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 45.72}
+    fz_mm: {start: 0.017018}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 29-37 HRC block, neck-diameter column 0.312 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.332 in -> nearest column 0.312 in); max radial DOC = (D - neck)/2 = 0.2090 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 150 SFM, fz 0.00067 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: titanium alloys (e.g. ti6al4v); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 22.86}
+    fz_mm: {start: 0.008636}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, TITANIUM ALLOYS row, 38-45 HRC block, neck-diameter column 0.312 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 75 SFM, fz 0.00034 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 29-37 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 21.336}
+    fz_mm: {start: 0.017018}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 29-37 HRC block, neck-diameter column 0.312 in; p. 1 Table 1 (radial passes) and Table 2
+    note: 'SFM uses the cutter diameter for rpm, the chip load is chosen by NECK diameter (0.332 in -> nearest column 0.312 in); max radial DOC = (D - neck)/2 = 0.2090 in taken in 4 passes at full axial depth with descending stepovers [46, 25, 18, 11] % of max radial DOC (Table 2); posted passes are for one side of the groove; both sides of part: reduce chip load 40 %; radial_passes = 4; published values: vc 70 SFM, fz 0.00067 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  - iso_group: S
+    material_hint: high-temperature alloys Inconel, Hastelloy, Waspaloy, Monel (e.g. inconel718); 38-45 HRC
+    operation: [dovetailing]
+    vc_m_min: {start: 15.24}
+    fz_mm: {start: 0.008636}
+    ap_max_mm: 9.525
+    ae_max_mm: 5.3086
+    src: harvey-2024-sf-16400
+    page: SF_16400 p. 2, HIGH TEMP ALLOYS row, 38-45 HRC block, neck-diameter column 0.312 in; p. 1 Tables 1 and 2
+    note: '5 radial passes with stepovers [46, 25, 16, 8, 5] % of the max radial DOC (Table 2); radial_passes = 5; published values: vc 50 SFM, fz 0.00034 in, ap_max 0.375 in, ae_max 0.209 in (converted at 0.3048 m/ft and 25.4 mm/in)'
+  price_eur: {value: 388.98, src: est, note: 'list price USD 452.30 (harveytool.com product table, uncoated, read 2026-11-03) x 0.86 EUR/USD (assumed rate, not looked up)'}
+  regrinds: {value: 0, src: est, note: assumed not reground}
+  note: 'tip_angle_deg holds the included dovetail angle and width_mm the axial cutting length (LOC); included angle 60 deg +1/-1 deg, D1 +.000/-.002 in, LOC +.020/-.000 in (product table header); corner radius column: .010'

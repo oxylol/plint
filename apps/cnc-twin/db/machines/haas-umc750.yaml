@@ -1,0 +1,308 @@
+# Haas UMC-750 5-axis universal machining centre, B (tilt) / C (rotation) trunnion fixed to the base;
+# the column moves in X, the ram/head in Y and the spindle head in Z (haas-umc-supplement-2020 F1.2;
+# haas-umc750-mld-2022 p. 4 draws the spindle travel over a stationary trunnion whose B axis is
+# parallel to Y). Frames: base origin = C-axis centre on the platter top at B = 0;
+# +x right, +y toward the column, +z up. Haas home is the + end of each linear axis.
+format: cnctwin-machine
+version: 1
+id: haas-umc750
+maker: "Haas Automation"
+model: "UMC-750"
+type: five_axis_mill
+src: haas-uk-umc750-2026
+
+controller:
+  dialect: haas
+  model: "Haas NGC (Next Generation Control)"
+  alarms: haas-ngc
+  ipo_period_ms: {value: 1.0, src: est, note: "not published; as haas-vf2ss"}
+  block_processing_ms: {value: 1.0, src: est, note: "not published"}
+  lookahead_blocks: {value: 80, src: est, note: "not published"}
+  least_input_increment_mm: {value: 0.001, src: est}
+  least_input_increment_deg: {value: 0.001, src: est}
+  max_feed_mm_min: 16500
+  rapid_mm_min: {X: 30500, Y: 30500, Z: 30500}
+  smoothing:
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: est, note: "as haas-vf2ss"}
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.010, src: est}
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025, src: est}
+  five_axis: {tcpc: "G234", dwo: "G254 / G255 cancel", mrzp_settings: [255, 256, 257], src: haas-umc-supplement-2020, page: "Sec. 3.3 (MRZP offsets), Ch. 4 (G234 TCPC), Ch. 5 (G254 DWO, cancel with G255)"}
+  corner_default: {value: blend, src: est}
+  in_position_mm: {value: 0.005, src: est}
+  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: est}
+  feed_override_range_pct: {value: [0, 200], src: est}
+  tool_life_management: {value: true, src: est}
+  probing: {value: true, src: haas-umc-flyer-2024, note: "WIPS standard on all UMCs"}
+
+axes:
+  X:
+    type: linear
+    travel_mm: [-762, 0]
+    rapid_mm_min: 30500
+    max_feed_mm_min: 16500
+    accel_m_s2: {value: 4.0, src: est, note: "not published; spindle carriage axis, 0.4 g assumed"}
+    jerk_m_s3: {value: 80, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 60, src: est}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nuts assumed"}
+    reversal_spike_um: {value: 3, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1300, fixed_end: both, src: est}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "not published"}
+    motor_force_N: 12233
+    moving_mass_kg: {value: 1300, src: est, note: "column carrying the Y ram and Z head (axis layout per haas-umc-supplement-2020 F1.2)"}
+  Y:
+    type: linear
+    travel_mm: [-508, 0]
+    rapid_mm_min: 30500
+    max_feed_mm_min: 16500
+    accel_m_s2: {value: 4.0, src: est}
+    jerk_m_s3: {value: 80, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 50, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 3, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1000, fixed_end: both, src: est}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est}
+    motor_force_N: 12233
+    moving_mass_kg: {value: 700, src: est, note: "ram with the Z head"}
+  Z:
+    type: linear
+    travel_mm: [-508, 0]
+    rapid_mm_min: 30500
+    max_feed_mm_min: 16500
+    accel_m_s2: {value: 4.0, src: est}
+    jerk_m_s3: {value: 80, src: est}
+    servo:
+      kv_1_s: {value: 40, src: est}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 70, src: est}
+    backlash_um: {value: 1, src: est}
+    reversal_spike_um: {value: 2, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 900, fixed_end: both, src: est}
+    positioning: {accuracy_um: 7, repeatability_um: 3, src: est}
+    motor_force_N: 15124
+    moving_mass_kg: {value: 400, src: est}
+    brake: {holds_on_power_loss: true, src: est}
+  B:
+    type: rotary
+    travel_deg: [-35, 120]
+    continuous: false
+    rapid_deg_s: 50
+    max_rpm: {value: 8.3, note: "50 deg/s"}
+    accel_rad_s2: {value: 6, src: est, note: "trunnion with a 300 kg load; 50 deg/s reached in ~0.15 s"}
+    jerk_rad_s3: {value: 100, src: est}
+    servo:
+      kv_1_s: {value: 30, src: est}
+      feedforward: {value: 0.9, src: est}
+      velocity_bw_Hz: {value: 30, src: est}
+    backlash_arcsec: {value: 15, src: est, note: "geared trunnion drive, typical lost motion"}
+    brake:
+      clamp_torque_Nm: 2712
+      clamp_time_s: {value: 0.3, src: est}
+      unclamped_stiffness_Nm_rad: {value: 1.0e6, src: est}
+      clamped_stiffness_Nm_rad: {value: 4.0e6, src: est}
+    positioning: {accuracy_arcsec: 15, repeatability_arcsec: 10, src: est, note: "not on the UMC-750 pages read; assumed equal to the published EC-400 rotary values (haas-ec400-web-2026)"}
+    motor_torque_Nm: 3037
+  C:
+    type: rotary
+    travel_deg: [0, 360]
+    continuous: true
+    rapid_deg_s: 50
+    max_rpm: {value: 8.3, note: "50 deg/s"}
+    accel_rad_s2: {value: 8, src: est}
+    jerk_rad_s3: {value: 150, src: est}
+    servo:
+      kv_1_s: {value: 30, src: est}
+      feedforward: {value: 0.9, src: est}
+      velocity_bw_Hz: {value: 30, src: est}
+    backlash_arcsec: {value: 15, src: est}
+    brake:
+      clamp_torque_Nm: {value: 1220, note: "the UK page prints '500 ft-lb / 1220 Nm'; 1220 Nm equals 900 ft-lb, so the metric figure is used"}
+      clamp_time_s: {value: 0.3, src: est}
+      unclamped_stiffness_Nm_rad: {value: 6.0e5, src: est}
+      clamped_stiffness_Nm_rad: {value: 2.5e6, src: est}
+    positioning: {accuracy_arcsec: 15, repeatability_arcsec: 10, src: est, note: "as B"}
+    motor_torque_Nm: 2514
+
+kinematics:
+  workpiece_chain:
+    - {link: trunnion, axis: B, axis_point_mm: [0, 0, -51], direction: [0, -1, 0], src: haas-umc750-mld-2022, note: "p. 4: B centre of rotation 2 in (51 mm) below the platter top (read from the front-view dimension; interpretation is ours). Table axis, so +B turns the cradle negatively about +y (ISO 841)."}
+    - {link: platter, axis: C, axis_point_mm: [0, 0, 0], direction: [0, 0, -1], note: "table axis, inverted sense"}
+    - {link: platter_top, fixed: {translate_mm: [0, 0, 0]}}
+  tool_chain:
+    - {link: column, axis: X, direction: [1, 0, 0], src: haas-umc-supplement-2020, note: "F1.2: X arrow on the column, Y on the ram, Z on the head"}
+    - {link: ram, axis: Y, direction: [0, 1, 0]}
+    - {link: head, axis: Z, direction: [0, 0, 1]}
+    - {link: spindle_nose, fixed: {translate_mm: [330, 254, 610]}, src: haas-umc750-mld-2022, note: "p. 4: C axis 330 mm from the X travel end (432 mm from the other end) and 254 +- 8 mm from the Y travel end; spindle nose to table 102-610 mm (haas-uk-umc750-2026). Which travel ends are home is an assumption (est)."}
+  home_mm: {X: 0, Y: 0, Z: 0, B: 0, C: 0}
+  mrzp_mm: {X: -330, Y: -254, Z: -661, src: est, note: "machine position of the rotary zero point implied by the drawing (C axis and B pivot); the real values are factory-set in Settings 255-257 (haas-umc-supplement-2020 Sec. 3.3)"}
+  tool_axis: [0, 0, 1]
+  singularities: [{axis: C, when: "B = 0", behaviour: slow_down, note: "C parallel to the tool axis"}]
+
+spindles:
+  - id: main
+    kind: milling
+    nose: CAT40
+    max_rpm: 8100
+    drive: "inline direct-drive"
+    bearing_lubrication: "air/oil injection"
+    cooling: "air"
+    max_torque_published: {value_Nm: 122, at_rpm: 2000}
+    direction_reversible: {value: true, src: est}
+    gear_ranges:
+      - rpm: [0, 8100]
+        rating: "peak = 200 % spindle load, 3 min (haas-torque-note-2026)"
+        src: haas-torque-vf40t-2016
+        digitised: true
+        uncertainty_pct: 3
+        page: "p. 1, 8100/10,000-rpm inline drive, 22.4 kW chart (standard on UMC-500/750/1000)"
+        power_kW: [[0, 0], [500, 6.5], [1000, 12.9], [1500, 19.1], [2000, 25.1], [2400, 29.8], [2600, 31.7], [2800, 33.2], [3000, 34.0], [3500, 34.4], [3800, 34.5], [4000, 34.3], [5000, 33.3], [5700, 32.9], [6000, 33.3], [6400, 33.6], [7000, 33.6], [7500, 33.3], [8000, 32.5], [8100, 32.4]]
+        torque_Nm: [[0, 125], [500, 125.2], [1000, 123.9], [1500, 122.5], [2000, 120.8], [2400, 119.3], [2600, 117.2], [2800, 114.1], [3000, 109.7], [3500, 94.7], [3800, 87.6], [4000, 82.2], [5000, 64.1], [5700, 55.5], [6000, 53.4], [6400, 50.6], [7000, 46.2], [7500, 42.6], [8000, 39.8], [8100, 39.4]]
+        additional_ratings:
+          - {rating: "S2 10 min = 150 % load", scale_of_peak: 0.75, src: haas-torque-note-2026}
+          - {rating: "S1 continuous = 100 % load", scale_of_peak: 0.50, src: haas-torque-note-2026}
+    accel_time_s: {value: 0.9, src: est, note: "as haas-ec400"}
+    decel_time_s: {value: 0.9, src: est}
+    gear_change_s: null
+    orient_time_s: {value: 0.5, src: est}
+    rotor_inertia_kgm2: {value: 0.05, src: est}
+    efficiency: {value: 0.85, src: est}
+    idle_power_W: {value: 450, src: est}
+    runout_um: {value: 2, src: est}
+    frf_modes:
+      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "40-taper motor spindle, typical 700-1200 Hz"}
+      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est}
+    thermal:
+      growth_um_at_max_rpm: {value: 30, src: est, note: "air-cooled spindle (published 'Cooling: Air'), so more growth than the liquid-cooled VF-SS head"}
+      time_constant_min: {value: 30, src: est}
+      bearing_heat_W_at_max_rpm: {value: 300, src: est}
+      thermal_comp: {value: true, src: est}
+      comp_residual_fraction: {value: 0.3, src: est}
+    optional: "12,000 rpm (UMC-750SS) and 15,000 rpm, HSK-A63 versions (haas-umc-flyer-2024)"
+
+structure:
+  modes:
+    - {fn_Hz: 50, zeta: 0.05, k_N_um: 25, direction: x, src: est, note: "spindle carriage on the moving column"}
+    - {fn_Hz: 60, zeta: 0.05, k_N_um: 30, direction: y, src: est}
+    - {fn_Hz: 120, zeta: 0.04, k_N_um: 70, direction: z, src: est}
+  table_modes:
+    - {fn_Hz: 110, zeta: 0.04, k_N_um: 60, direction: x, src: est, note: "trunnion cradle bending about the B bearings, clamped"}
+  rotary_modes:
+    - {axis: B, fn_Hz: 70, zeta: 0.05, k_Nm_rad: 4.0e6, src: est, note: "cradle torsion with a 300 kg load, clamped"}
+    - {axis: C, fn_Hz: 150, zeta: 0.05, k_Nm_rad: 2.5e6, src: est}
+
+error_map:
+  squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est}
+  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est}
+  angular_urad: {}
+  pivot_errors:
+    B: {position_um: [0, 0, 15], tilt_urad: [0, 0, 20], src: est, note: "residual after the WIPS MRZP calibration"}
+    C: {position_um: [10, 10, 0], tilt_urad: [20, 20, 0], src: est}
+
+thermal:
+  axis_drift:
+    expansion_1_K: {value: 11.5e-6, src: est}
+    heat_per_m_travel_J: {value: 60, src: est}
+    time_constant_min: {value: 40, src: est}
+  structure_sensitivity_um_per_K: {value: 4, src: est}
+  mrzp_drift: {value: "MRZP offsets can change over time; re-check with the VPS MRZP probing routine", src: haas-umc-supplement-2020, page: "Sec. 3.3.1"}
+  warmup: {cold_to_warm_min: 60, src: est}
+
+tool_changer:
+  type: side_mount
+  capacity: 30                       # 30+1 (haas-umc-flyer-2024); 50+1 / 70+1 optional
+  tool_to_tool_s: 2.8
+  chip_to_chip_s: {value: 3.6}
+  max_tool_diameter_mm: 76
+  max_tool_diameter_adjacent_empty_mm: 127
+  max_tool_length_mm: 305
+  max_tool_mass_kg: 5.4
+  pocket_pitch_mm: {value: 72, src: est}
+  arm_swing_diameter_mm: {value: 776, src: haas-umc750-mld-2022, page: "p. 6 (686 mm at the spindle CL)"}
+
+turrets: []
+pallet_changer: null
+tailstock: null
+steady_rest: null
+guide_bushing: null
+doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null}
+
+workholding_interface:
+  platter_diameter_mm: 500
+  t_slots: {count: 7, width_mm: 16, pitch_mm: 63}
+  max_load_kg: 300
+  max_combined_height_mm: {value: 585, src: haas-umc750-mld-2022, page: "p. 5: tool length + workpiece height < 23.0 in (585 mm) at B0"}
+  envelope_note: {value: "parts > 500 mm diameter or > 460 mm tall need an application review", src: haas-umc750-mld-2022, page: "p. 5"}
+
+probes:
+  spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS)", trigger_force_N: 0.50, trigger_force_z_N: 5.85, repeatability_um: 1.0, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS standard (haas-umc-flyer-2024); hardware model assumed"}
+  tool_setter: {model: "Renishaw OTS (Haas WIPS)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], src: renishaw-ots-2026}
+  tool_setter_extra: {position_mm: [-560, 200, -60], src: est, note: "fixed to the base beside the trunnion, assumed (base frame)"}
+  calibration_ball: {value: "tooling ball on a magnetic base for the centre-of-rotation (MRZP) routines", src: haas-umc-supplement-2020, page: "Sec. 3.1 (UMC WIPS basics)"}
+  laser: null
+
+coolant:
+  tank_l: {value: 284, src: haas-umc-supplement-2020, page: "T1.5: 75 gal (284 L)", note: "the UK product page lists 55 gal (208 L); the 2020 manual value is used"}
+  pumps:
+    - {id: flood, kind: flood, pressure_bar: 2.0, flow_l_min: 45, power_kW: 0.75, src: est, note: "Haas standard 1 hp pump (haas-coolant-pump-web-2026) assumed"}
+    - {id: tsc, kind: through_spindle, option: true, src: haas-tsc-web-2026, pressure_bar: {value: 21, src: haas-tsc-web-2026}, flow_l_min: {value: 11, src: est}, note: "machine is TSC-ready (haas-umc-supplement-2020 T1.6)"}
+    - {id: tsc1000, kind: through_spindle, option: true, pressure_bar: 69, flow_l_min: 26.5, src: haas-tsc-web-2026}
+  nozzles:
+    - {id: n1, kind: flood, attached_to: head, position_mm: [70, -60, 60], aim: [-0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est}
+    - {id: n2, kind: flood, attached_to: head, position_mm: [-70, -60, 60], aim: [0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est}
+    - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
+  air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: est, note: "air gun as on Haas VMCs"}
+  machine_air_l_min: {value: 113, note: "4 scfm at 100 psi"}
+  chiller: null
+  filtration_um: {value: 40, src: est}
+
+chip_conveyor: {type: auger, src: est, note: "chip augers/conveyor visible on the layout drawing; type assumed", rate_kg_h: {value: 60, src: est}}
+
+enclosure:
+  box_mm: {value: [[-800, -650, -600], [800, 650, 1150]], src: est, note: "interior around the trunnion; X/Y from the spindle travel (762 x 508) plus clearances, z from the B90 clearance views (haas-umc750-mld-2022 p. 4-5)"}
+  floor_slope_deg: {value: 35, src: est}
+
+power:
+  base_W: {value: 1000, src: est}
+  servo_standby_W: {value: 400, src: est}
+  air_consumption_l_min: 113
+  supply: {value: "195-260 VAC / 100 A or 354-488 VAC / 50 A", src: haas-umc-supplement-2020, page: "T1.5"}
+  machine_mass_kg: {value: 8165, src: haas-umc-supplement-2020, page: "T1.5"}
+
+geometry:
+  - name: trunnion_supports
+    attached_to: base
+    primitives:
+      - {box: {min_mm: [-130, 300, -420], max_mm: [130, 480, 120]}}
+      - {box: {min_mm: [-130, -480, -420], max_mm: [130, -300, 120]}}
+    collide: true
+    src: est
+    note: "pillars carrying the B axis at y = +-300..480 (B axis along y); sizes assumed from p. 4 views"
+  - name: cradle
+    attached_to: trunnion
+    primitives:
+      - {box: {min_mm: [-260, -300, -180], max_mm: [260, 300, -114]}}
+    collide: true
+    src: est
+    note: "cradle under the platter; platter top 114 mm above the cradle (4.5 in, p. 4), assumed"
+  - name: platter
+    attached_to: platter
+    primitives:
+      - {cylinder: {p0_mm: [0, 0, -114], p1_mm: [0, 0, 0], radius_mm: 250}}
+    collide: true
+    src: est
+    note: "500 mm platter (published); 114 mm height of platter + C housing read as 4.5 in on haas-umc750-mld-2022 p. 4 (interpretation)"
+  - name: spindle_head
+    attached_to: head
+    primitives:
+      - {box: {min_mm: [114, 50, 740], max_mm: [546, 750, 1400]}}
+      - {cylinder: {p0_mm: [330, 254, 610], p1_mm: [330, 254, 740], radius_mm: 85}}
+    collide: true
+    src: est
+    note: "head width 432 mm assumed as on the VF; nose housing diameter 170 mm assumed; coordinates in the head frame (= base at home)"
+
+notes: "Spec values from the Haas UK page and the 2020 UMC manual supplement; geometry from the 2022 layout drawing. B/C accuracy, accelerations, servo data, modal and thermal data are estimates. The B pivot offset (51 mm below the platter top) is read from the layout drawing and should be checked against Settings 255-257 of a real machine."

@@ -1,0 +1,53 @@
+# Tungaloy FixRTurn round inserts RCMT1204M0-6RS / -6RM in the SRDCN2525M12-6F screw-on holder,
+# read from the Tungaloy General Catalogue 2023-2024 on 2026-11-03 (B132, C078, C120, A002).
+format: cnctwin-tool
+version: 1
+series_id: tungaloy-rcmt1204-round
+maker: "Tungaloy Corporation"
+series: "FixRTurn RCMT1204M0-6RS / -6RM (T9215) in SRDCN2525M12-6F"
+src: tungaloy-2023-gc-ext-toolholder
+notes: "Insert (B132, C078): round, positive 7 deg, with hole; INSD 12, S 4.76, D1 5.16 mm; the 6RS / 6RM versions have six locating notches against rotation (FixRTurn). Pictograms B132: 6RS 0.25 mm land, 5 deg rake; 6RM 0.17 mm land, 15 deg rake. Holder SRDCN2525M12-6F (C078): H 25, B 25, LF 150, LH 24.1, HF 25, WF 18.5 mm, clamping torque 3 N m; Tungaloy describes it as 'screw-on toolholder with 45 deg approach angle' (cutting edge style D); on a round insert the effective entering angle depends on the depth of cut. Window = ap and f of the FixRTurn standard cutting conditions (C120, steels S45C, SCM415, C45, 18CrMo4). The overhang is a set-up value, estimated."
+defaults:
+  type: turning_insert
+  hand: neutral
+  tool_material: {class: carbide, grade: "T9215 CVD-coated carbide (substrate not stated)", id: carbide-p30, src: est, note: "CVD P grade mapped to the P30 substrate entry"}
+  coating: {id: al2o3-cvd, thickness_um: {value: 18, src: tungaloy-2023-gc-grade, page: "A002"}, note: "T9215 CVD (A002), mapped to the TiCN-Al2O3 multilayer entry"}
+items:
+  - id: tungaloy-rcmt1204m0-6rs-t9215-srdcn2525m12-6f
+    order_code: "RCMT1204M0-6RS T9215 + SRDCN2525M12-6F"
+    geometry:
+      insert:
+        iso_code: "RCMT1204M0-6RS"
+        shape: R
+        ic_mm: 12
+        thickness_mm: 4.76
+        nose_radius_mm: {value: 6, note: "round insert: radius = INSD / 2"}
+        clearance_deg: 7
+        wiper: false
+        chip_breaker: {name: 6RS, land_mm: {value: 0.25, src: tungaloy-2023-gc-insert, page: "B132 pictogram"}, rake_deg: {value: 5, src: tungaloy-2023-gc-insert, page: "B132 pictogram"}, window: {f_mm: [0.5, 1.0], ap_mm: [0.5, 2]}, page: "C120 FixRTurn 6RS"}
+        src: tungaloy-2023-gc-insert
+        page: "B132; C078 (INSD, S, D1)"
+      holder: {iso_code: "SRDCN2525M12-6F", approach_angle_deg: {value: 45, note: "as stated on C078; varies with ap on a round insert"}, shank_mm: [25, 25], overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable round insert, indexed in six positions (6 notches), not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "steels S45C, SCM415 (C45, 18CrMo4)", material: aisi1045, operation: [turning, profiling], vc_m_min: {min: 120, max: 350}, f_mm: {min: 0.5, max: 1.0}, ap_max_mm: 2, page: "C120 FixRTurn 6RS T9215", note: "ap 0.5-2 mm; T9225: 100-300 m/min, NS9530: 150-250 m/min at the same ap and f"}
+  - id: tungaloy-rcmt1204m0-6rm-t9215-srdcn2525m12-6f
+    order_code: "RCMT1204M0-6RM T9215 + SRDCN2525M12-6F"
+    geometry:
+      insert:
+        iso_code: "RCMT1204M0-6RM"
+        shape: R
+        ic_mm: 12
+        thickness_mm: 4.76
+        nose_radius_mm: {value: 6, note: "round insert: radius = INSD / 2"}
+        clearance_deg: 7
+        wiper: false
+        chip_breaker: {name: 6RM, land_mm: {value: 0.17, src: tungaloy-2023-gc-insert, page: "B132 pictogram"}, rake_deg: {value: 15, src: tungaloy-2023-gc-insert, page: "B132 pictogram"}, window: {f_mm: [0.5, 1.0], ap_mm: [1, 3]}, page: "C120 FixRTurn 6RM"}
+        src: tungaloy-2023-gc-insert
+        page: "B132; C078"
+      holder: {iso_code: "SRDCN2525M12-6F", approach_angle_deg: {value: 45, note: "as stated on C078; varies with ap on a round insert"}, shank_mm: [25, 25], overhang_mm: {value: 32, src: est, note: "set-up value: 1.25 x shank height H; not a catalogue value"}}
+    price_eur: null
+    regrinds: {value: 0, src: est, note: "indexable round insert, six positions, not reground"}
+    cutting_data:
+      - {iso_group: P, material_hint: "steels S45C, SCM415 (C45, 18CrMo4)", material: aisi1045, operation: [turning, profiling], vc_m_min: {min: 120, max: 350}, f_mm: {min: 0.5, max: 1.0}, ap_max_mm: 3, page: "C120 FixRTurn 6RM T9215", note: "ap 1-3 mm; T9225: 100-300 m/min, NS9530: 150-250 m/min at the same ap and f"}

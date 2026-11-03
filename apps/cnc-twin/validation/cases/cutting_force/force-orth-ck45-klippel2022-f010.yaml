@@ -1,0 +1,167 @@
+# Ck45 (AISI 1045) quasi-orthogonal tube turning, speed sweep at h = 0.1 mm: Fc and Ff per mm width.
+# Reference values are read from the source named under reference (see its location and notes).
+format: cnctwin-validation-case
+version: 1
+id: force-orth-ck45-klippel2022-f010
+quantity: cutting_force
+reference:
+  src: klippel-2022-arxiv-orthogonal-data
+  location: Table B.15 (Ck45), tests V0072, V0073, V0074, V0123, V0124, V0125, V0160, V0161, V0162, V0084, V0085, V0093,
+    V0094, V0095, V0236, V0245, V0246, V0247, V0292, V0293, V0294, V0298, V0299, V0300
+  digitised: false
+  measured: true
+  note: uncertainty of each value = standard deviation of the force signal during that test (sigma_Fc, sigma_Ff in the table),
+    not the scatter between repeats; each combination was usually run three times with a fresh edge; only tests with status
+    'ok' are used ('short', 'initially stable', 'questionable', 'saturation', 'instable' and 'error' tests are left out
+    as the source advises)
+setup:
+  operation: orthogonal_turning
+  material:
+    db: aisi1045
+    note: 'Ck45 (C45E) rolled bar, one batch for all tests: supplier tensile test Rm 671 MPa, Rp0.2 420 MPa, A5 22.2 % (Table
+      2), ferritic-pearlitic; the outer scale and decarburised zone were turned off before the tests (Sect. 2.6). The DB
+      entry is normalised AISI 1045 (+N, ~190 HB): use the batch strength above when calibrating flow stress.'
+  tool:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 13-14), Table 7, Sect. 2.6.1
+    type: turning_insert
+    iso_code: CCMW 09T304
+    grade: Sandvik Coromant H13A (uncoated WC-Co)
+    tool_class: carbide
+    coating: none
+    rake_deg: 0
+    clearance_deg: 7
+    inclination_deg: 0
+    entering_angle_deg: 90
+    nose_radius_mm: 0.397
+    ic_mm: 9.525
+    cutting_edge_length_mm: 9.272
+    edge_height_mm: 3.969
+    edge_radius_um:
+      value: 37.5
+      note: mean over all 149 inserts (sd 4.9 um, range ~20-50 um along an edge); simulate each test with its own edge_radius_per_test_um
+        (average over the ~2 mm cut width at the cut position, measured before the test by focus variation)
+    edge_radius_per_test_um: [42.3, 39.2, 39.0, 43.1, 39.0, 38.4, 42.2, 39.5, 33.6, 38.2, 43.8, 41.5, 43.4, 36.1, 38.6,
+      40.1, 37.7, 39.5, 41.8, 37.5, 37.4, 37.2, 40.2, 42.0]
+    edge_radius_sd_per_test_um: [2.4, 3.0, 3.8, 2.1, 2.9, 2.5, 3.0, 2.0, 3.0, 4.1, 2.3, 3.5, 2.0, 3.0, 2.2, 2.5, 2.6, 2.7,
+      2.1, 2.8, 2.1, 3.8, 3.4, 2.4]
+    fresh_edge_per_test: true
+  holder:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 14)
+    model: Applitec SCACL-2020X-09 (ISO 2216)
+    entering_angle_deg: 90
+    inclination_deg: 0
+  machine:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6 (p. 12)
+    model: Schaublin 42L CNC lathe
+    dynamometer: Kistler 9121A5 with 5019A charge amplifier, NI USB-6211
+    force_lowpass_Hz: 30
+    force_sampling_kHz: 1.1
+    drift_correction: idle force recorded 1 mm before the cut and subtracted
+  stock:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2 and 2.6
+    form: tube
+    outer_diameter_mm: {value: 72, note: D ~ 72 mm (approximate in the source)}
+    wall_thickness_mm: {value: 2, note: d ~ 2 mm (approximate in the source)}
+    preparation: turned inside and outside in the same clamping from 80 mm bars
+  conditions:
+    src: klippel-2022-arxiv-orthogonal-data
+    page: Sect. 2.6, Table 8, Tables A.12/A.13, Tables B.14/B.15
+    test_ids: [V0072, V0073, V0074, V0123, V0124, V0125, V0160, V0161, V0162, V0084, V0085, V0093, V0094, V0095, V0236,
+      V0245, V0246, V0247, V0292, V0293, V0294, V0298, V0299, V0300]
+    kinematics: 'quasi-orthogonal longitudinal turning of a thin-walled tube end: feed per rev = uncut chip thickness h,
+      width of cut = tube wall'
+    width_of_cut_mm:
+      value: 2
+      note: wall thickness d ~ 2 mm (approximate in the source); all forces are reported normalised to w = 1 mm
+    coolant: dry
+    cut_length_per_test_mm: [1317, 1317, 1317, 3440, 3440, 3440, 3308, 3308, 3308, 4391, 4391, 4391, 4391, 4391, 3256, 3256,
+      3256, 3256, 3260, 3260, 3260, 3260, 3260, 3260]
+    feed_mm_rev: 0.1
+    vc_per_test_m_min: [10.1, 10.1, 10.1, 30.0, 30.0, 30.0, 50.1, 50.1, 50.1, 70.1, 70.1, 150.0, 150.0, 150.0, 250.1, 349.9,
+      349.9, 349.9, 450.0, 450.0, 450.0, 500.0, 500.0, 500.0]
+  dynamics: null
+  program: null
+reference_values:
+- {name: Fc V0072, value: 325.1, unit: N/mm, uncertainty: 26.7, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0072: rn 42.3
+    +- 2.4 um, cut length 1317 mm, wear L, status ok'}
+- {name: Ff V0072, value: 185.5, unit: N/mm, uncertainty: 19.3, x: 10.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0073, value: 312.1, unit: N/mm, uncertainty: 38.8, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0073: rn 39.2
+    +- 3.0 um, cut length 1317 mm, wear L, status ok'}
+- {name: Ff V0073, value: 175.8, unit: N/mm, uncertainty: 20.0, x: 10.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0074, value: 310.3, unit: N/mm, uncertainty: 25.2, x: 10.1, x_name: vc, x_unit: m/min, note: 'V0074: rn 39.0
+    +- 3.8 um, cut length 1317 mm, wear L, status ok'}
+- {name: Ff V0074, value: 173.0, unit: N/mm, uncertainty: 15.9, x: 10.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0123, value: 262.5, unit: N/mm, uncertainty: 23.4, x: 30.0, x_name: vc, x_unit: m/min, note: 'V0123: rn 43.1
+    +- 2.1 um, cut length 3440 mm, wear L, status ok'}
+- {name: Ff V0123, value: 152.9, unit: N/mm, uncertainty: 15.5, x: 30.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0124, value: 253.2, unit: N/mm, uncertainty: 26.7, x: 30.0, x_name: vc, x_unit: m/min, note: 'V0124: rn 39.0
+    +- 2.9 um, cut length 3440 mm, wear L, status ok'}
+- {name: Ff V0124, value: 144.5, unit: N/mm, uncertainty: 16.8, x: 30.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0125, value: 258.1, unit: N/mm, uncertainty: 25.7, x: 30.0, x_name: vc, x_unit: m/min, note: 'V0125: rn 38.4
+    +- 2.5 um, cut length 3440 mm, wear L, status ok'}
+- {name: Ff V0125, value: 147.2, unit: N/mm, uncertainty: 15.7, x: 30.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0160, value: 262.1, unit: N/mm, uncertainty: 19.9, x: 50.1, x_name: vc, x_unit: m/min, note: 'V0160: rn 42.2
+    +- 3.0 um, cut length 3308 mm, wear M, status ok'}
+- {name: Ff V0160, value: 168.6, unit: N/mm, uncertainty: 18.4, x: 50.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0161, value: 261.7, unit: N/mm, uncertainty: 20.0, x: 50.1, x_name: vc, x_unit: m/min, note: 'V0161: rn 39.5
+    +- 2.0 um, cut length 3308 mm, wear M, status ok'}
+- {name: Ff V0161, value: 167.3, unit: N/mm, uncertainty: 17.0, x: 50.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0162, value: 257.4, unit: N/mm, uncertainty: 18.4, x: 50.1, x_name: vc, x_unit: m/min, note: 'V0162: rn 33.6
+    +- 3.0 um, cut length 3308 mm, wear M, status ok'}
+- {name: Ff V0162, value: 160.1, unit: N/mm, uncertainty: 14.1, x: 50.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0084, value: 379.7, unit: N/mm, uncertainty: 4.0, x: 70.1, x_name: vc, x_unit: m/min, note: 'V0084: rn 38.2
+    +- 4.1 um, cut length 4391 mm, wear M, status ok'}
+- {name: Ff V0084, value: 401.0, unit: N/mm, uncertainty: 5.7, x: 70.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0085, value: 387.3, unit: N/mm, uncertainty: 2.9, x: 70.1, x_name: vc, x_unit: m/min, note: 'V0085: rn 43.8
+    +- 2.3 um, cut length 4391 mm, wear M, status ok'}
+- {name: Ff V0085, value: 412.2, unit: N/mm, uncertainty: 2.9, x: 70.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0093, value: 344.4, unit: N/mm, uncertainty: 1.2, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0093: rn 41.5
+    +- 3.5 um, cut length 4391 mm, wear M, status ok'}
+- {name: Ff V0093, value: 334.9, unit: N/mm, uncertainty: 1.6, x: 150.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0094, value: 346.8, unit: N/mm, uncertainty: 2.3, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0094: rn 43.4
+    +- 2.0 um, cut length 4391 mm, wear M, status ok'}
+- {name: Ff V0094, value: 340.2, unit: N/mm, uncertainty: 3.8, x: 150.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0095, value: 342.9, unit: N/mm, uncertainty: 2.3, x: 150.0, x_name: vc, x_unit: m/min, note: 'V0095: rn 36.1
+    +- 3.0 um, cut length 4391 mm, wear M, status ok'}
+- {name: Ff V0095, value: 332.4, unit: N/mm, uncertainty: 3.6, x: 150.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0236, value: 304.0, unit: N/mm, uncertainty: 1.8, x: 250.1, x_name: vc, x_unit: m/min, note: 'V0236: rn 38.6
+    +- 2.2 um, cut length 3256 mm, wear M, status ok'}
+- {name: Ff V0236, value: 256.9, unit: N/mm, uncertainty: 2.8, x: 250.1, x_name: vc, x_unit: m/min}
+- {name: Fc V0245, value: 285.0, unit: N/mm, uncertainty: 2.6, x: 349.9, x_name: vc, x_unit: m/min, note: 'V0245: rn 40.1
+    +- 2.5 um, cut length 3256 mm, wear M, status ok'}
+- {name: Ff V0245, value: 216.7, unit: N/mm, uncertainty: 1.8, x: 349.9, x_name: vc, x_unit: m/min}
+- {name: Fc V0246, value: 283.0, unit: N/mm, uncertainty: 3.5, x: 349.9, x_name: vc, x_unit: m/min, note: 'V0246: rn 37.7
+    +- 2.6 um, cut length 3256 mm, wear M, status ok'}
+- {name: Ff V0246, value: 212.8, unit: N/mm, uncertainty: 5.4, x: 349.9, x_name: vc, x_unit: m/min}
+- {name: Fc V0247, value: 283.3, unit: N/mm, uncertainty: 3.1, x: 349.9, x_name: vc, x_unit: m/min, note: 'V0247: rn 39.5
+    +- 2.7 um, cut length 3256 mm, wear M, status ok'}
+- {name: Ff V0247, value: 215.1, unit: N/mm, uncertainty: 3.8, x: 349.9, x_name: vc, x_unit: m/min}
+- {name: Fc V0292, value: 265.1, unit: N/mm, uncertainty: 3.2, x: 450.0, x_name: vc, x_unit: m/min, note: 'V0292: rn 41.8
+    +- 2.1 um, cut length 3260 mm, wear M, status ok'}
+- {name: Ff V0292, value: 183.9, unit: N/mm, uncertainty: 2.9, x: 450.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0293, value: 263.6, unit: N/mm, uncertainty: 2.2, x: 450.0, x_name: vc, x_unit: m/min, note: 'V0293: rn 37.5
+    +- 2.8 um, cut length 3260 mm, wear M, status ok'}
+- {name: Ff V0293, value: 180.2, unit: N/mm, uncertainty: 1.2, x: 450.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0294, value: 261.6, unit: N/mm, uncertainty: 3.6, x: 450.0, x_name: vc, x_unit: m/min, note: 'V0294: rn 37.4
+    +- 2.1 um, cut length 3260 mm, wear M, status ok'}
+- {name: Ff V0294, value: 178.5, unit: N/mm, uncertainty: 3.8, x: 450.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0298, value: 259.6, unit: N/mm, uncertainty: 1.9, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0298: rn 37.2
+    +- 3.8 um, cut length 3260 mm, wear M, status ok'}
+- {name: Ff V0298, value: 169.5, unit: N/mm, uncertainty: 2.6, x: 500.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0299, value: 259.4, unit: N/mm, uncertainty: 2.5, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0299: rn 40.2
+    +- 3.4 um, cut length 3260 mm, wear M, status ok'}
+- {name: Ff V0299, value: 173.2, unit: N/mm, uncertainty: 3.6, x: 500.0, x_name: vc, x_unit: m/min}
+- {name: Fc V0300, value: 260.3, unit: N/mm, uncertainty: 1.5, x: 500.0, x_name: vc, x_unit: m/min, note: 'V0300: rn 42.0
+    +- 2.4 um, cut length 3260 mm, wear M, status ok'}
+- {name: Ff V0300, value: 174.6, unit: N/mm, uncertainty: 2.3, x: 500.0, x_name: vc, x_unit: m/min}
+reference_curves: []
+notes: Speed sweep vc = 10-500 m/min at h = 0.1 mm. In the listed values Fc is 310-325 N/mm at 10 m/min, 253-262 N/mm at
+  30-50 m/min (BUE regime, large signal sd), peaks at 70 m/min (380-387 N/mm, with Ff > Fc), then falls to 259-265 N/mm
+  at 450-500 m/min. The source describes the rise to medium speeds and the drop beyond (Sect. 3.1), links the friction changes
+  to BUE formation and chip segmentation (Sect. 3.4) and mentions dynamic strain ageing for the Kienzle-coefficient rise
+  near 300 m/min (Sect. 3.7). A model without BUE/DSA should not be expected to follow the part below ~70 m/min. vc = 100
+  and 200 m/min exist only as 'short' tests at this feed and are omitted.

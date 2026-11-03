@@ -1,0 +1,280 @@
+# Haas VF-2SS super-speed vertical machining centre (current NGC generation).
+# Frames: base frame origin = centre of the table top with X = Y = 0 (home); +x right, +y toward the
+# column (away from the operator), +z up. Haas home is the + end of every axis (travel is negative).
+format: cnctwin-machine
+version: 1
+id: haas-vf2ss
+maker: "Haas Automation"
+model: "VF-2SS"
+type: vertical_mill
+src: haas-uk-vf2ss-2026
+
+controller:
+  dialect: haas
+  model: "Haas NGC (Next Generation Control)"
+  alarms: haas-ngc
+  ipo_period_ms: {value: 1.0, src: est, note: "Haas does not publish the interpolation period; 1 ms is typical of current servo-drive CNCs"}
+  block_processing_ms: {value: 1.0, src: est, note: "not published; assumed 1 ms minimum per block (1000 blocks/s), so very short segments at high feed starve"}
+  lookahead_blocks: {value: 80, src: est, note: "not published for NGC; 80 blocks assumed (order of the classic Haas high-speed machining look-ahead)"}
+  least_input_increment_mm: {value: 0.001, src: est, note: "metric programming resolution of Haas mills (not read in a source this session)"}
+  least_input_increment_deg: {value: 0.001, src: est, note: "rotary resolution in G-code (not read in a source this session)"}
+  max_feed_mm_min: 21200
+  rapid_mm_min: {X: 35600, Y: 35600, Z: 35600}
+  smoothing:
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: est, note: "G187 P1/P2/P3 smoothness levels exist on Haas mills; corner tolerance values are typical settings, not published defaults"}
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.010, src: est}
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025, src: est}
+  corner_default: {value: blend, src: est, note: "G64 (blended) assumed as the power-on mode"}
+  in_position_mm: {value: 0.005, src: est, note: "assumed in-position window for exact stop (G09/G61)"}
+  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: est, note: "Haas pendant rapid-override keys (not read in a source this session)"}
+  feed_override_range_pct: {value: [0, 200], src: est}
+  tool_life_management: {value: true, src: est, note: "Haas tool life management assumed standard on NGC"}
+  probing: {value: true, src: est, note: "WIPS probing is an option on the VF-2SS"}
+
+axes:
+  X:
+    type: linear
+    travel_mm: [-762, 0]
+    rapid_mm_min: 35600
+    max_feed_mm_min: 21200
+    accel_m_s2: {value: 5.0, src: est, note: "Haas does not publish accelerations; 0.5 g is typical of ballscrew VMCs of this size and leaves >2x margin on the published thrust (8874 N) for the est. 300 kg table plus a 300 kg part"}
+    jerk_m_s3: {value: 100, src: est, note: "typical jerk limit of ballscrew VMCs (50-200 m/s3); value chosen mid-range"}
+    servo:
+      kv_1_s: {value: 40, src: est, note: "position-loop gain typical of ballscrew axes with velocity feed-forward (30-50 1/s)"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward fraction in high-speed mode"}
+      velocity_bw_Hz: {value: 80, src: est, note: "velocity-loop bandwidth typical of direct-coupled ballscrew drives (50-150 Hz)"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nuts (haas-europe-vmc-brochure-2013 p. 16); residual lost motion of 0-2 um assumed"}
+    reversal_spike_um: {value: 3, src: est, note: "ISO 230-2 reversal value B of 1-5 um is typical for semi-closed-loop ballscrew axes; 3 um assumed"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1150, fixed_end: both, src: est, note: "double-anchored screws (haas-europe-vmc-brochure-2013 p. 16); 40 mm x 16 mm lead assumed so 35.6 m/min needs 2225 rpm; length = travel + table length/2 + bearings"}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "Haas publishes no ISO 230-2 figures for the current VF line; values typical of semi-closed-loop VMCs without scales over 762 mm"}
+    motor_force_N: 8874
+    moving_mass_kg: {value: 300, src: est, note: "cast table 914 x 356 mm with ribs (~230 kg) plus ball nut, blocks and covers; workpiece (up to 680 kg) is added at run time"}
+  Y:
+    type: linear
+    travel_mm: [-406, 0]
+    rapid_mm_min: 35600
+    max_feed_mm_min: 21200
+    accel_m_s2: {value: 5.0, src: est, note: "as X; heavier stack (table + saddle) but same published thrust"}
+    jerk_m_s3: {value: 100, src: est, note: "as X"}
+    servo:
+      kv_1_s: {value: 40, src: est, note: "as X"}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 70, src: est, note: "slightly lower than X for the heavier stack"}
+    backlash_um: {value: 1, src: est, note: "as X"}
+    reversal_spike_um: {value: 3, src: est, note: "as X"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 800, fixed_end: both, src: est, note: "as X; length = travel + saddle depth"}
+    positioning: {accuracy_um: 7, repeatability_um: 4, src: est, note: "as X, shorter travel"}
+    motor_force_N: 8874
+    moving_mass_kg: {value: 650, src: est, note: "table (~300 kg) + saddle (~350 kg), scaled from the cast sizes in haas-vf2-mld-2023 p. 4-5"}
+  Z:
+    type: linear
+    travel_mm: [-508, 0]
+    rapid_mm_min: 35600
+    max_feed_mm_min: 21200
+    accel_m_s2: {value: 5.0, src: est, note: "as X; vertical axis also carries gravity (thrust 13723 N vs ~400 kg head)"}
+    jerk_m_s3: {value: 100, src: est, note: "as X"}
+    servo:
+      kv_1_s: {value: 40, src: est, note: "as X"}
+      feedforward: {value: 0.95, src: est}
+      velocity_bw_Hz: {value: 80, src: est}
+    backlash_um: {value: 1, src: est, note: "as X"}
+    reversal_spike_um: {value: 2, src: est, note: "gravity preloads the Z screw in one direction, so reversal is smaller"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 900, fixed_end: both, src: est, note: "as X"}
+    positioning: {accuracy_um: 7, repeatability_um: 3, src: est, note: "as X"}
+    motor_force_N: 13723
+    moving_mass_kg: {value: 400, src: est, note: "spindle head casting + inline 30 hp motor + cartridge spindle; head width 432 mm read from haas-vf2-mld-2023 p. 4"}
+    brake: {holds_on_power_loss: true, src: est, note: "vertical axis assumed to have a motor brake"}
+
+kinematics:
+  workpiece_chain:
+    - {link: saddle, axis: Y, direction: [0, -1, 0]}       # saddle and table move toward the operator for +Y
+    - {link: table, axis: X, direction: [-1, 0, 0]}        # table moves left for +X
+    - {link: table_top, fixed: {translate_mm: [0, 0, 0]}}  # table-top centre
+  tool_chain:
+    - {link: head, axis: Z, direction: [0, 0, 1]}
+    - {link: spindle_nose, fixed: {translate_mm: [381, 203, 610]}, src: est, note: "z 610 = max spindle nose to table (published); x/y place the spindle over the table centre at mid-travel (X -381, Y -203), assumed"}
+  home_mm: {X: 0, Y: 0, Z: 0}
+  tool_axis: [0, 0, 1]
+  singularities: null
+
+spindles:
+  - id: main
+    kind: milling
+    nose: CAT40                      # BT40 also offered ("BT or CT 40")
+    max_rpm: 12000
+    drive: "inline direct-drive"
+    bearing_lubrication: "air/oil injection"
+    cooling: "liquid cooled"
+    max_torque_published: {value_Nm: 122, at_rpm: 2000}
+    direction_reversible: {value: true, src: est}
+    gear_ranges:
+      - rpm: [0, 12000]
+        rating: "peak = 200 % spindle load, available for 3 min (haas-torque-note-2026)"
+        src: haas-torque-vf40t-2016
+        digitised: true
+        uncertainty_pct: 3
+        page: "p. 3, 12,000-rpm inline drive, 22.4 kW chart (metric)"
+        power_kW: [[0, 0], [300, 3.9], [600, 7.8], [1000, 12.9], [1500, 19.1], [2000, 25.2], [2400, 29.8], [2600, 31.7], [2800, 33.2], [3000, 34.0], [3200, 34.2], [3600, 34.5], [4000, 34.3], [4800, 33.5], [5600, 32.9], [6000, 33.4], [6400, 33.6], [7200, 33.5], [8000, 32.5], [8400, 31.9], [9600, 29.9], [10800, 27.9], [12000, 26.0]]
+        torque_Nm: [[0, 125], [600, 125], [1000, 124], [1500, 122.7], [2000, 120.8], [2400, 119.9], [2600, 117.8], [2800, 113.1], [3000, 108.7], [3200, 102.8], [3600, 91.7], [4000, 82.7], [4800, 66.6], [5600, 56.2], [6000, 53.8], [6400, 50.8], [7200, 44.7], [8000, 39.8], [8400, 38.1], [9600, 31.7], [10800, 25.8], [12000, 20.7]]
+        additional_ratings:
+          - {rating: "S2 10 min = 150 % load = 75 % of peak", scale_of_peak: 0.75, src: haas-torque-note-2026}
+          - {rating: "S1 continuous = 100 % load = 50 % of peak", scale_of_peak: 0.50, src: haas-torque-note-2026}
+        note: "Haas rates the motor '30 hp / 22.4 kW'; the chart at 200 % load peaks at ~34.5 kW, i.e. ~17 kW continuous. The 2013 Europe brochure instead says 150 % for 15 min and 200 % for 5 min (haas-europe-vmc-brochure-2013 p. 19); the newer torque chart note (3 min / 10 min) is used."
+    accel_time_s: {value: 1.3, src: est, note: "0 to 12,000 rpm: J = 0.05 kg m2 (est., rotor + shaft + CAT40 holder) integrated over the digitised peak curve gives 1.2 s; rounded up"}
+    decel_time_s: {value: 1.3, src: est, note: "regenerative braking assumed symmetric with acceleration"}
+    gear_change_s: null
+    orient_time_s: {value: 0.5, src: est, note: "M19 orientation from rest, typical"}
+    rotor_inertia_kgm2: {value: 0.05, src: est, note: "inline 30 hp motor rotor + spindle shaft + coupling; typical of 40-taper motor spindles of this power"}
+    efficiency: {value: 0.85, src: est, note: "vector drive + induction motor at rated load"}
+    idle_power_W: {value: 700, src: est, note: "bearing + windage loss at 12,000 rpm for 40-taper angular-contact bearings, air/oil lubricated"}
+    runout_um: {value: 2, src: est, note: "taper runout of a new 40-taper spindle; Haas does not publish a figure"}
+    frf_modes:
+      - {fn_Hz: 950, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "first spindle-holder bending mode at the flange; 40-taper motor spindles typically 700-1200 Hz, modal stiffness 50-150 N/um, damping 2-6 %"}
+      - {fn_Hz: 950, zeta: 0.04, k_N_um: 70, direction: y, src: est, note: "assumed symmetric"}
+      - {fn_Hz: 2100, zeta: 0.03, k_N_um: 200, direction: x, src: est, note: "second (bearing/shaft) mode, assumed"}
+      - {fn_Hz: 2100, zeta: 0.03, k_N_um: 200, direction: y, src: est}
+    thermal:
+      growth_um_at_max_rpm: {value: 25, src: est, note: "steady axial growth of a liquid-cooled 12k inline spindle head (head coolant jacket: haas-europe-vmc-brochure-2013 p. 21); 10-40 um typical"}
+      time_constant_min: {value: 25, src: est, note: "first-order spindle warm-up time constant, typical 15-40 min"}
+      bearing_heat_W_at_max_rpm: {value: 450, src: est, note: "part of the idle loss dissipated in the front bearings"}
+      thermal_comp: {value: true, src: est, note: "Haas offers spindle thermal compensation on NGC (not verified this session)"}
+      comp_residual_fraction: {value: 0.3, src: est, note: "model-based compensation typically removes ~70 % of growth"}
+    optional: "15,000 rpm inline spindle, same 22.4 kW / 122 Nm rating (haas-uk-vf2ss-2026)"
+
+structure:
+  modes:
+    - {fn_Hz: 55, zeta: 0.05, k_N_um: 25, direction: x, src: est, note: "column/head rocking mode; frame modes of C-frame VMCs typically 40-150 Hz"}
+    - {fn_Hz: 70, zeta: 0.05, k_N_um: 30, direction: y, src: est, note: "column nodding mode, assumed"}
+    - {fn_Hz: 130, zeta: 0.04, k_N_um: 80, direction: z, src: est, note: "head/column vertical, assumed"}
+  table_modes:
+    - {fn_Hz: 90, zeta: 0.05, k_N_um: 60, direction: x, src: est, note: "table on linear guides, axial mode through the ballscrew (k_screw ~ 300-400 N/um, est.) with 300 kg table"}
+  rotary_modes: []
+
+error_map:
+  squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est, note: "typical after factory ballbar alignment (every Haas is ballbar tested: haas-europe-vmc-brochure-2013 p. 16)"}
+  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est}
+  angular_urad: {}
+  pivot_errors: {}
+
+thermal:
+  axis_drift:
+    expansion_1_K: {value: 11.5e-6, src: est, note: "steel ballscrew CTE"}
+    heat_per_m_travel_J: {value: 60, src: est, note: "nut friction heat per metre of travel at rapid; chosen so that continuous rapids grow the screw ~30-60 um before compensation"}
+    time_constant_min: {value: 40, src: est}
+    electronic_comp: {value: true, src: haas-europe-vmc-brochure-2013, page: "p. 17: Electronic Thermal Compensation (ETC) models ballscrew heating"}
+  structure_sensitivity_um_per_K: {value: 3, src: est, note: "tool-to-table drift per K of ambient change for a cast-iron VMC"}
+  warmup: {cold_to_warm_min: 60, src: est}
+
+tool_changer:
+  type: side_mount
+  capacity: 30                       # 30+1 (30 pockets + 1 in the spindle)
+  tool_to_tool_s: 1.6
+  chip_to_chip_s: {value: 2.2}
+  max_tool_diameter_mm: 76
+  max_tool_diameter_adjacent_empty_mm: 127
+  max_tool_length_mm: 279
+  max_tool_mass_kg: {value: 5.4, note: "published as 12 lb / 5 kg; 12 lb = 5.4 kg"}
+  pocket_pitch_mm: {value: 61, src: est, note: "carousel outer diameter 585 mm (haas-vf2-mld-2023 p. 6) / 30 pockets"}
+  carousel_diameter_mm: {value: 585, src: haas-vf2-mld-2023, page: "p. 6"}
+  arm_swing_diameter_mm: {value: 612, src: haas-vf2-mld-2023, page: "p. 6 (double arm, tool CL arc 530 mm)"}
+
+turrets: []
+pallet_changer: null
+tailstock: null
+steady_rest: null
+guide_bushing: null
+doors: {count: {value: 2, src: est}, auto: {value: false, src: est}, open_time_s: null, opening_width_mm: {value: 939, src: haas-vf2-mld-2023, page: "p. 3"}, note: "two sliding front doors; servo auto-door is an option"}
+
+probes:
+  spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS work probe)", trigger_force_N: 0.50, trigger_force_high_N: 0.90, trigger_force_z_N: 5.85, repeatability_um: 1.0, overtravel_xy_deg: 12.5, overtravel_z_mm: 6, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS hardware assumed to be the Renishaw OMP40-2 + OTS (est.)"}
+  spindle_probe_extra: {pretravel_um: 1, stylus_ball_mm: 6, src: est, note: "pretravel/lobing not given in the data sheet; 6 mm ruby ball assumed"}
+  tool_setter: {model: "Renishaw OTS (Haas WIPS tool setter)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], overtravel_xy_mm: 3.5, overtravel_z_mm: 6, src: renishaw-ots-2026}
+  tool_setter_extra: {position_mm: [-330, 0, 0], disc_mm: 12.7, src: est, note: "mounted on the table left end, assumed (table frame); disc diameter as commonly supplied"}
+  laser: null
+
+coolant:
+  tank_l: 208
+  pumps:
+    - {id: flood, kind: flood, pressure_bar: 2.0, flow_l_min: 45, power_kW: 0.75, src: haas-coolant-pump-web-2026, note: "standard 1 hp pump: 12 gpm @ 30 psi (45 L/min @ 2 bar) @ 60 Hz"}
+    - id: tsc
+      kind: through_spindle
+      option: true
+      src: haas-tsc-web-2026
+      pressure_bar: {value: 21, src: haas-tsc-web-2026}
+      flow_l_min: {value: 11, src: est, note: "300 psi TSC flow not published; assumed"}
+      power_kW: {value: 1.1, src: est, note: "hydraulic power 21 bar x 11 L/min = 0.39 kW at ~35 % pump efficiency"}
+    - {id: tsc1000, kind: through_spindle, pressure_bar: 69, flow_l_min: 26.5, option: true, src: haas-tsc-web-2026, note: "Hydra-Cell D-12 pump; 26.5 L/min is the free-flow maximum at 60 Hz; 69 bar only with tool holes <= 1.3-1.5 mm"}
+  nozzles:
+    - {id: n1, kind: flood, attached_to: head, position_mm: [70, -60, -60], aim: [-0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est, note: "adjustable flex nozzle on the head, position assumed (head frame at spindle nose)"}
+    - {id: n2, kind: flood, attached_to: head, position_mm: [-70, -60, -60], aim: [0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est, note: "second flex nozzle, assumed"}
+    - id: pcool
+      kind: flood
+      attached_to: head
+      pump: flood
+      option: true
+      src: haas-pcool-web-2026
+      programmable: {code: "M34/M35", positions: 34, src: haas-pcool-web-2026, note: "M34 = next position away from home (nozzle lower, longer tools), M35 = toward home; 0.05 s per step"}
+      geometry: {position_mm: [90, -40, -40], step_deg: 1.5, home_aim: [-0.7, 0, -0.7], diameter_mm: 5, src: est, note: "angle per position is not published; ~50 deg sweep over 34 positions assumed"}
+    - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
+  air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: haas-europe-vmc-brochure-2013, page: "p. 28: automatic air gun 6 scfm; supply 100 psi", note: "6 scfm = 170 L/min"}
+  machine_air_l_min: {value: 113, note: "air required 4 scfm at 100 psi (113 L/min, 6.9 bar)"}
+  chiller: null
+  filtration_um: {value: 40, src: est, note: "standard tank screen/strainer; finer filtration is an option"}
+
+chip_conveyor: {type: auger, option: true, src: est, note: "chip auger option assumed", rate_kg_h: {value: 60, src: est, note: "auger capacity for steel chips, assumed"}}
+
+enclosure:
+  box_mm: {value: [[-760, -390, -420], [1490, 740, 1100]], src: est, note: "x from the table extreme positions plus wall clearances 304/271 mm (haas-vf2-mld-2023 p. 4); y: 212 mm front clearance (same page) and column face assumed; z: chip-pan floor and roof assumed"}
+  floor_slope_deg: {value: 30, src: est}
+
+power:
+  base_W: {value: 900, src: est, note: "control, cabinet cooling, lights, lube at idle"}
+  servo_standby_W: {value: 300, src: est}
+  air_consumption_l_min: {value: 113, src: haas-uk-vf2ss-2026, note: "air required 4 scfm (machine)"}
+  supply_V: {value: [354, 488], src: haas-europe-vmc-brochure-2013, page: "p. 42 (40-taper VF table, high-voltage supply)"}
+
+geometry:
+  - name: base
+    attached_to: base
+    primitives:
+      - {box: {min_mm: [-700, -420, -1000], max_mm: [1450, 1300, -330]}}
+    collide: true
+    src: est
+    note: "bed casting under the saddle; footprint scaled to the 2249 mm operating depth (haas-vf2-mld-2023 p. 1)"
+  - name: column
+    attached_to: base
+    primitives:
+      - {box: {min_mm: [131, 950, -330], max_mm: [631, 1350, 1700]}}
+    collide: true
+    src: est
+  - name: saddle
+    attached_to: saddle
+    primitives:
+      - {box: {min_mm: [51, -320, -330], max_mm: [711, 320, -90]}}
+    collide: true
+    src: est
+    note: "saddle centred on the X travel (x = 381)"
+  - name: table
+    attached_to: table
+    primitives:
+      - {box: {min_mm: [-457, -178, -90], max_mm: [457, 178, 0]}}
+    collide: true
+    src: est
+    note: "914 x 356 mm table and three 16 mm T-slots at 125 mm pitch are published (haas-uk-vf2ss-2026); the 90 mm thickness is assumed"
+  - name: spindle_head
+    attached_to: head
+    primitives:
+      - {box: {min_mm: [165, 50, 740], max_mm: [597, 750, 1400]}}
+      - {cylinder: {p0_mm: [381, 203, 610], p1_mm: [381, 203, 740], radius_mm: 85}}
+    collide: true
+    src: est
+    note: "head width 432 mm (haas-vf2-mld-2023 p. 4); nose housing diameter 170 mm assumed; coordinates in the head frame (= base at Z 0)"
+  - name: tool_changer
+    attached_to: base
+    primitives:
+      - {cylinder: {p0_mm: [-141, 760, 1150], p1_mm: [-141, 900, 1150], radius_mm: 292}}
+    collide: true
+    src: est
+    note: "SMTC carousel diameter 585 mm with its centre 522 mm from the spindle centreline (haas-vf2-mld-2023 p. 6); placement height/depth assumed"
+
+notes: "Spec values from the Haas UK spec page (current NGC machine). Haas publishes no accelerations, servo gains, ISO 230-2 accuracy or modal data; those are estimates marked src: est. Spindle curves digitised from the Haas 12k torque chart (200 % load)."

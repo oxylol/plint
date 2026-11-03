@@ -1,0 +1,14 @@
+format: cnctwin-coating
+version: 1
+id: none
+name: "Uncoated (neutral factors)"
+process: none
+src: est
+hardness_HV: null
+max_service_temp_degC: null
+conductivity_W_mK: null
+friction_vs_steel: null
+typical_thickness_um: {value: [0, 0], src: est, note: "no coating"}
+wear_rate_factor: {value: 1.0, src: est, note: "neutral by definition: the substrate wear model applies unchanged"}
+thermal_barrier_factor: {value: 1.0, src: est, note: "neutral by definition"}
+notes: "Use with any substrate; substrate properties come from db/tool_materials."

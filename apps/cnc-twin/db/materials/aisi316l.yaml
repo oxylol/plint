@@ -1,0 +1,128 @@
+# AISI 316L / X2CrNiMo17-12-2 (1.4404), solution annealed. Sources: db/bibliography/materials-steels.yaml
+format: cnctwin-material
+version: 1
+id: aisi316l
+name: "AISI 316L / 1.4404 austenitic Cr-Ni-Mo stainless steel, solution annealed"
+family: stainless
+iso_group: M
+condition: "solution annealed 1070 +- 40 C (outokumpu-steel-grades Table 13)"
+designations: {UNS: S31603, EN: "X2CrNiMo17-12-2 (1.4404)", AISI: "316L", JIS: "SUS316L"}
+stock_forms: []
+
+physical:
+  src: outokumpu-steel-grades      # Table 13 (RT and 400 C values)
+  density_kg_m3: {value: 8000}
+  specific_heat_J_kgK: {value: 500, note: "RT"}
+  conductivity_W_mK: {table: [[20, 15], [400, 20]], note: "benmeddour-2021 Table 1 (from Nasr et al. 2007): 16.2 at 100 C, 21.4 at 500 C"}
+  expansion_1_K: {table: [[100, 16.0e-6], [400, 17.5e-6]], note: "mean from 20 C"}
+  youngs_modulus_GPa: {table: [[20, 200], [400, 172]], note: "benmeddour-2021 uses 193 GPa"}
+  poisson: {value: 0.3, src: benmeddour-2021-316l-turning, note: "Table 1"}
+  solidus_degC: {value: 1385, src: benmeddour-2021-316l-turning, note: "'melting temperature' of Table 1, used as solidus"}
+  liquidus_degC: {value: 1440, src: est, note: "typical upper end of the melting range of 316L (general knowledge)"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 170, src: est, note: "typical annealed 316L (general knowledge); not read"}
+  yield_MPa: {value: 260, src: outokumpu-steel-grades, range: [220, 260], note: "Outokumpu typical (hot-rolled plate); EN minimum 220"}
+  ultimate_MPa: {value: 570, src: outokumpu-steel-grades, range: [520, 570], note: "typical; EN minimum 520"}
+  elongation_pct: {value: 55, src: outokumpu-steel-grades, note: "typical; EN minimum 45 %"}
+  fracture_strain: {value: 1.1, src: est, note: "assumed reduction of area ~67 %"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 305
+  B_MPa: 1161
+  n: 0.61
+  C: 0.01
+  m: 0.517
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: {value: 20, src: est, note: "benmeddour-2021 simulations start at 20 C; reference temperature of the original set not stated in the table read"}
+  T_melt_degC: 1385
+  src: benmeddour-2021-316l-turning
+  note: "Chandrasekaran, M'Saoubi & Chazal (2005, Mach. Sci. Technol. 9:131), from orthogonal milling and split Hopkinson bar tests, as listed in Benmeddour 2021 Table 2. Other sets in that table: Miguelez et al. 400/750/n 0.500/C 0.040/m 0.500 (eps0 1); Tounsi et al. 2002 514/514/0.508/0.042/0.533 (eps0 0.001); Benmeddour inverse fit to turning forces at 100 m/min 412/761/0.510/0.038/0.520 (eps0 1). Umbrello, M'Saoubi & Outeiro 2007 (IJMTM, pp. 462-470) compared five 316L sets and found residual stress very sensitive to the choice."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 1800
+      mc: 0.21
+      rake_ref_deg: 0
+      vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
+      src: walter-2025-technical-compendium
+      note: "Walter group M1 (1.4401, 1.4435 316L and related grades listed as M1), p. F9"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.27, src: est, note: "taken from 304 (zou-2026-304-min-cutting-thickness, 0.25-0.30)"}
+  indentation_coeff_N_mm3: {value: 2.6e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (170/200)"}
+  work_hardening:
+    layer_depth_um: {value: 100, src: est, note: "assumed similar to 304 (zou-2026 measured 100-120 um); no 316L measurement read"}
+    hardness_increase_pct: {value: 60, src: est, note: "assumed somewhat below the 304 estimate (316L has a lower austenite-to-martensite tendency)"}
+    strain_hardening_exponent: {value: 0.61, src: benmeddour-2021-316l-turning, note: "JC n of the Chandrasekaran set; outokumpu-steel-grades gives a tensile n of 0.6"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: benmeddour-2021-316l-turning, note: "Coulomb coefficient assumed in their FE model; it reproduced the measured residual stress (Sect. 2.1); not a tribometer measurement"}
+    sticking_ratio: {value: 0.6, src: est, note: "strong adhesion assumed"}
+  - tool_class: carbide
+    coating: TiAlN
+    mu_sliding: {value: 0.3, src: est, note: "assumed equal to the FE value"}
+    sticking_ratio: {value: 0.5, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation:
+    criterion: critical_speed
+    vc_onset_m_min: {value: 100, src: est, note: "assumed equal to 304 (mao-2026: serrated edges from 100 m/min in milling)"}
+  bue:
+    interface_temp_degC: {range: [200, 600], src: est, note: "assumed"}
+    vc_m_min: [5, 60]
+    src: est
+    note: "BUE/adhesion window assumed as for 304"
+  breakability: {value: poor, src: est, note: "tough, gummy chips; not quantified"}
+  oxide_colours:
+    table: [[290, "#EFE3A6", "pale yellow"], [340, "#DDBE6A", "straw yellow"], [370, "#C9A046", "dark yellow"], [390, "#9A6A3A", "brown"], [420, "#7D4A55", "purple brown"], [450, "#56306E", "dark purple"], [540, "#3E5FB8", "blue"], [600, "#253A7A", "dark blue"]]
+    src: bssa-heat-tint
+    note: "BSSA table measured on 1.4301; applied to 1.4404 (similar Cr); hex values are this database's rendering (est)"
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
+  - tool_class: carbide
+    coating: "CVD or PVD (M-grade)"
+    C_m_min: 374
+    n: 0.25
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.25
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 190 m/min (5 % below 304, consistent with the Outokumpu machining index 100 vs 105 for 4301)"
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 172
+    n: 0.22
+    a: 0.3
+    b: 0.12
+    feed_ref_mm: 0.25
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 15 min at vc = 95 m/min (general knowledge)"
+tool_life_usui: null
+
+residual_stress: []                # as-supplied bar: none read. (benmeddour-2021 measured machining-induced stress: +654 MPa at the surface, tensile layer ~0.15 mm, max -67 MPa at 0.26 mm after turning at 100 m/min, f 0.1 - a validation target, not stock data)
+
+skin:
+  type: none
+  thickness_mm: {value: 0, src: est, note: "pickled/peeled/ground stainless bar"}
+  hardness_factor: {value: 1.0, src: est, note: "no skin"}
+  abrasiveness_factor: {value: 1.0, src: est, note: "no skin"}
+
+thermal_damage:
+  burn_degC: {value: 290, src: bssa-heat-tint, note: "first heat tint on 1.4301, applied to 316L"}
+  white_layer_degC: null           # austenitic: no rehardening
+  melt_smear_degC: null
+
+ignition: null
+composite: null
+
+notes: "Annealed 316L. Physical data Outokumpu; flow stress Chandrasekaran et al. 2005 via Benmeddour 2021. Work hardening, tool life, BUE window and breakability are estimates. The low-carbon (L) grade resists sensitisation better than 304; long exposure at ~450-850 C is still best avoided (general metallurgical knowledge, not from a cited source)."

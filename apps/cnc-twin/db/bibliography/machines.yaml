@@ -1,0 +1,402 @@
+# Sources for db/machines/*.yaml and db/coolants/*.yaml.
+# Read on 2026-11-03. Where a page could not be fetched directly (HTTP 403 to automated
+# clients) and the value was read from the search-engine excerpt of that page, the entry says so.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  # ---------------------------------------------------------------- Haas Automation
+  haas-uk-vf2ss-2026:
+    type: web
+    authors: "Haas Automation Ltd (UK)"
+    title: "VF-2SS - High-Performance High-Speed VMC: specifications"
+    venue: "haas.co.uk product page"
+    year: 2026
+    url: "https://www.haas.co.uk/machines/vf-2ss/"
+    accessed: 2026-11-03
+    pages: "Specifications tables: Travels, Table, Spindle (standard/optional), Feedrates, Axis Motors (max thrust), Tool Changer, General"
+
+  haas-uk-umc750-2026:
+    type: web
+    authors: "Haas Automation Ltd (UK)"
+    title: "UMC-750: specifications"
+    venue: "haas.co.uk product page"
+    year: 2026
+    url: "https://www.haas.co.uk/machines/umc-750/"
+    accessed: 2026-11-03
+    pages: "Specifications tables: Travels, Spindle, B Axis, C Axis, Platter, Feedrates, Axis thrust, Tool Changer, General"
+
+  haas-uk-st20y-2026:
+    type: web
+    authors: "Haas Automation Ltd (UK)"
+    title: "ST-20Y - Y-axis CNC Turning Centre: specifications"
+    venue: "haas.co.uk product page"
+    year: 2026
+    url: "https://www.haas.co.uk/lathes/st-20y/"
+    accessed: 2026-11-03
+    pages: "Specifications tables: Capacities, Travels, Feedrates, Max thrust, Main Spindle, C Axis, Turret, Live Tooling, General"
+
+  haas-ec-flyer-2022:
+    type: catalogue
+    authors: "Haas Automation Inc."
+    title: "EC-400/500 Series: Built-in Twin-Pallet Horizontal Mills Designed for Improved Production (39-20032)"
+    venue: "Haas series flyer, PDF dated 2022-09"
+    year: 2022
+    url: "https://haascnc.com/content/dam/haascnc/assets/seriesflyers/21.06_ec_400_500_4-pager_39-20032.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2: EC-400/500 Series Specifications box; feature texts (stepped base, cycloidal B drive, spindle centreline 689 mm above pallet, 4-nozzle coolant ring, P-COOL not available, probe arm M104/M105)"
+
+  haas-uk-ec400-flyer-2018:
+    type: catalogue
+    authors: "Haas Automation Ltd (UK)"
+    title: "Horizontal Mill: EC-400 - The Perfect Solution for Production Machining (flyer 2018-11-MC)"
+    venue: "haas.co.uk flyer, 2018-11"
+    year: 2018
+    url: "https://www.haas.co.uk/wp-content/uploads/2019/10/Horizontal_EC400SeriesFlyer-2.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2: spindles (8100 rpm std; 10k/12k/15k inline optional), tool changers (30+1 std; 50+1, 100+1 opt.), belt chip conveyor, TSC and auxiliary filter optional, DWO/TCPC optional"
+
+  haas-ec400-web-2026:
+    type: web
+    authors: "Haas Automation Inc."
+    title: "EC-400 model page, specification table"
+    venue: "haascnc.com"
+    year: 2026
+    url: "https://www.haascnc.com/machines/horizontal-mills/40-taper/models/ec-400.html"
+    accessed: 2026-11-03
+    pages: "Pallets and B-axis rows. The page returned HTTP 403 to the fetch tool; the values were read from search-engine excerpts of this page (pallet quantity 2, 400 mm, pallet change time 15 s, 90 deg rotation 3.0 s, rapids on B 150 deg/s, indexing accuracy +-15 arcsec, repeatability 10 arcsec, brake torque 2500 ft-lbf (3390 Nm), max weight on platter 880 lb (400 kg), max pallet load with pallet pool 500 lb (227 kg))"
+
+  haas-ec400-mld-2018:
+    type: manual
+    authors: "Haas Automation Inc."
+    title: "Machine Layout Drawing EC-400, Revision 1 (installation dimensions, utilities, as shipped, axes clearances, table and tool changer)"
+    venue: "Haas machine layout drawing (5 pages), Oct 2018"
+    year: 2018
+    url: "https://www.haas.co.uk/wp-content/uploads/2019/10/EC-400_MLD_r1.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 footprint, heights, 95 gal (360 L) coolant tank; p. 4 axes clearances; p. 5 pallets, APC swing, tool changer"
+
+  haas-vf2-mld-2023:
+    type: manual
+    authors: "Haas Automation Inc."
+    title: "Machine Layout Drawing VF-2/VF-2SS/VF-2TR (installation, utilities, dimension breakdown, axes clearance, table, tool changer clearances)"
+    venue: "Haas machine layout drawing (6 pages), 1/17/2023"
+    year: 2023
+    url: "https://haascnc.com/content/dam/haascnc/pdp_feed/mld/vf-2_mld__1_2023.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 operating envelope; p. 3 door/window heights; p. 4 X/Y/Z travel and clearance; p. 5 table and T-slots; p. 6 SMTC carousel and arm"
+
+  haas-umc750-mld-2022:
+    type: manual
+    authors: "Haas Automation Inc."
+    title: "Machine Layout Drawing UMC-750/750SS (installation, breakdowns, axes clearance, B90 and work envelope, table and tool changer)"
+    venue: "Haas machine layout drawing, 10/12/2022 (file umc-750_mld__11_2022.pdf)"
+    year: 2022
+    url: "https://haascnc.com/content/dam/haascnc/pdp_feed/mld/umc-750_mld__11_2022.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 operating envelope; p. 3 breakdowns; p. 4 X/Y/Z travel and trunnion clearance (C axis 330 mm / 432 mm from X travel ends, 254 +-8 mm from Y travel end, B centre of rotation 51 mm); p. 5 work envelope; p. 6 platter and tool changer"
+
+  haas-st20y-mld-2019:
+    type: manual
+    authors: "Haas Automation Inc."
+    title: "Machine Layout Drawing ST-20Y/25Y (installation dimensions, BMT tooling layout, tailstock and sub-spindle options, Y-axis envelope, spindle nose detail)"
+    venue: "Haas machine layout drawing, Revision 1, 1 Apr 2019 (file st-20y-25y_layout_drawing_2020-11.pdf)"
+    year: 2019
+    url: "https://haascnc.com/content/dam/haascnc/pdp_feed/mld/st-20y-25y_layout_drawing_2020-11.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1, 3 footprint and spindle centre height 1000 mm; p. 4-5 BMT65 layout, turret clearance diameter 387 mm, max turret swing 889 mm, tailstock and sub-spindle options; p. 7 A2-6 spindle nose (75 mm thread, drawtube)"
+
+  haas-torque-vf40t-2016:
+    type: catalogue
+    authors: "Haas Automation Inc."
+    title: "Torque Chart binder: VF/UMC/VC Series, EC-400, GM-2 40-taper spindles (8100/10,000-rpm inline; 12,000-rpm inline; 15,000-rpm inline; 30,000-rpm belt)"
+    venue: "Haas torque charts dated 1/29/2016 (30k chart 2/22/19), PDF modified 2020-10"
+    year: 2016
+    url: "https://haascnc.com/content/dam/haascnc/productivity/spindles/torque-chart-jpg/torque-chart-machine-pdp-binder-/VF-40T%20Series%20Binder.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 lower chart (8100/10,000-rpm inline, 22.4 kW, metric), p. 3 lower chart (12,000-rpm inline, 22.4 kW, metric). 'Values shown are 200% spindle load'. Curves digitised by colour segmentation of the page image."
+
+  haas-torque-st-2016:
+    type: catalogue
+    authors: "Haas Automation Inc."
+    title: "Torque Chart: ST Series 4000-rpm Belt-Drive Spindle A2-6 (standard ST-15/15Y/20/20Y) and 5000-rpm option"
+    venue: "Haas torque charts dated 1/29/2016"
+    year: 2016
+    url: "https://www.haascnc.com/content/dam/haascnc/productivity/spindles/torque-chart-jpg/torque-chart-machine-pdp-binder-/ST-20%20Torque%20series%20binder.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 lower chart (4000 rpm, 14.9 kW, metric), 'Values shown are 200% spindle load'. Digitised by colour segmentation."
+
+  haas-torque-note-2026:
+    type: web
+    authors: "Haas Automation Inc."
+    title: "Torque Chart Note"
+    venue: "haascnc.com reference container"
+    year: 2026
+    url: "https://www.haascnc.com/reference-container/torque-chart-note.html"
+    accessed: 2026-11-03
+    pages: "Page returned HTTP 403 to the fetch tool; text read from search-engine excerpts: peak power numbers (200% spindle load) for 3 minutes, 150% load (75% of peak) for 10 minutes, 100% load (50% of peak) continuously; power numbers based on 240 V service"
+
+  haas-europe-vmc-brochure-2013:
+    type: catalogue
+    authors: "Haas Automation Europe"
+    title: "Haas Vertical Machining Centers (product line brochure)"
+    venue: "Haas Automation Europe, PDF created 2013-06"
+    year: 2013
+    url: "https://portalimages.blob.core.windows.net/products/pdfs/0n1glfif_Haas-CNC-Verticals.pdf"
+    accessed: 2026-11-03
+    pages: "printed page numbers: p. 16 (motion control: double-anchored ballscrews, preloaded ball nuts, direct-coupled servos, 100% ballbar tested), p. 17 (ETC ballscrew thermal compensation), p. 19 (vector drive 150% of continuous for 15 min, 200% for 5 min), p. 21 (spindle head coolant jacket), p. 22 (tool changer table), p. 28 (automatic air gun 6 scfm), p. 42-44 (spec tables, footnote 1: 5-minute rating)"
+
+  haas-umc-supplement-2020:
+    type: manual
+    authors: "Haas Automation Inc."
+    title: "UMC Operator's Manual Supplement (UMC-500/750/750P/1000)"
+    venue: "Haas Automation, 2020"
+    year: 2020
+    url: "https://www.haascnc.com/content/dam/haascnc/en/service/manual/supplement/english---umc-operator's-manual-supplement---2020.pdf"
+    accessed: 2026-11-03
+    pages: "Sec. 1.3 F1.2 (UMC-500/750 axis definitions: X column, Y ram, Z head, B tilt -35/+120, C); Sec. 1.6, T1.4-T1.5 (UMC-750 travels, platter, coolant 75 gal / 284 L, power, machine weight 8165 kg); Sec. 3.1 (WIPS, tooling ball); Sec. 3.3 MRZP offsets (Settings 255/256/257); Ch. 4-5 (G234 TCPC, G254 DWO)"
+
+  haas-umc-flyer-2024:
+    type: catalogue
+    authors: "Haas Automation Inc."
+    title: "UMC Universal Machining Centers: 5-Axis Machining for Everyone (24.11 4-pager)"
+    venue: "Haas series flyer, 2024-11"
+    year: 2024
+    url: "https://haascnc.com/content/dam/haascnc/assets/seriesflyers/24.11_UMC_4_Pager.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2: UMC-750 30+1 tool capacity, 8100 rpm standard / 12,000 rpm SS, WIPS standard, spindle options"
+
+  haas-st-yaxis-flyer-2021:
+    type: catalogue
+    authors: "Haas Automation Inc."
+    title: "Complete Y-Axis Turning (ST Series Y-axis turning centres, 39-20004B)"
+    venue: "Haas series flyer, 2021-07"
+    year: 2021
+    url: "https://haascnc.com/content/dam/haascnc/assets/seriesflyers/21.07_st_yaxis_4_pager_39-20004b.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2: Y travel 102 mm (+-51 mm), 4000-rpm live tooling (6000 rpm upgrade), X + Y' wedge motion, BMT65 12 stations and 24-station half-index option (15 deg); p. 3: A2-5 finishing sub-spindle 6000 rpm, not compatible with tailstock"
+
+  haas-tsc-web-2026:
+    type: web
+    authors: "Haas Automation Inc."
+    title: "Through-Spindle Coolant 300 psi (21 bar) and 1000 psi option pages; HPC-1000/TSC-1000 Operator's Manual Supplement AD0086; TSC-300/1K troubleshooting guide TG0142"
+    venue: "haascnc.com"
+    year: 2026
+    url: "https://www.haascnc.com/productivity/chip-and-coolant-management/tsc.html"
+    accessed: 2026-11-03
+    pages: "Pages returned HTTP 403 to the fetch tool; values read from search-engine excerpts: TSC 300 psi (21 bar); TSC 1000 psi (69 bar) with Hydra-Cell D-12 pump, max 7.00 gpm (26.5 L/min) at 60 Hz, >1000 psi with a 0.051 in (1.3 mm) tool opening; TSC max 15,000 rpm; a good pump reaches >= 75% of rated pressure"
+
+  haas-coolant-pump-web-2026:
+    type: web
+    authors: "Haas Automation Inc."
+    title: "Coolant tank and pump option pages (45-gal tank, single-stage and multi-stage coolant pumps, high-flow pump upgrade)"
+    venue: "haascnc.com productivity pages"
+    year: 2026
+    url: "https://www.haascnc.com/productivity/chip-and-coolant-management/45gal.html"
+    accessed: 2026-11-03
+    pages: "Pages returned HTTP 403 to the fetch tool; values read from search-engine excerpts: standard 1 hp (0.75 kW) pump 12 gpm @ 30 psi (45 L/min @ 2 bar) @ 60 Hz; single-stage 1 hp 13 gpm @ 30 psi; multi-stage 1.5 hp 16 gpm @ 70 psi"
+
+  haas-pcool-web-2026:
+    type: web
+    authors: "Haas Automation Inc."
+    title: "M34/M35 Coolant Increment/Decrement and P-COOL programmable coolant reference pages"
+    venue: "haascnc.com codes and reference pages"
+    year: 2026
+    url: "https://www.haascnc.com/service/codes-settings.type=mcode.machine=mill.value=M34.html"
+    accessed: 2026-11-03
+    pages: "Pages returned HTTP 403 to the fetch tool; read from search-engine excerpts: M34 moves the P-Cool spigot one position away from home (higher number, nozzle lower, for longer tools), M35 one position toward home; 34 programmable positions (older software 14); 0.05 s pause per move"
+
+  haas-livetool-web-2026:
+    type: web
+    authors: "Haas Automation Inc."
+    title: "4000-rpm Live Tooling with 12-Station BMT65 Turret; 6000-rpm Speed Upgrade for Live Tooling"
+    venue: "haascnc.com productivity pages"
+    year: 2026
+    url: "https://www.haascnc.com/productivity/turret/lt-6k-up.html"
+    accessed: 2026-11-03
+    pages: "Pages returned HTTP 403 to the fetch tool; read from search-engine excerpts: driven toolholders rated for continuous operation at 4500 rpm and up to 6000 rpm with a 15% duty cycle"
+
+  # ---------------------------------------------------------------- DMG MORI
+  dmgmori-dmu50-3rd-2018:
+    type: catalogue
+    authors: "DMG MORI"
+    title: "DMU 50 - CNC universal machining centre - the 3rd generation DMU (P20180277_0518_EN)"
+    venue: "DMG MORI brochure 05/2018 (distributor copy, Sumipol)"
+    year: 2018
+    url: "https://www.sumipol.com/wp-content/uploads/2020/01/pm0uk-dmu-50-3rd-pdf-data.pdf"
+    accessed: 2026-11-03
+    pages: "p. 2 (42 m/min, swivel speed 30 rpm), p. 4 (linear scales, direct-driven and cooled ball screws, cooled B/C bearings), p. 6-7 (magazine 30/60/120, spindles), p. 10 (power diagrams, floor plan 2350 x 2850 mm, height 2680/2750 mm), p. 11 (technical data table)"
+
+  dmgmori-dmu50-web-2026:
+    type: web
+    authors: "DMG MORI"
+    title: "DMU 50 3rd Generation product page"
+    venue: "en.dmgmori.com"
+    year: 2026
+    url: "https://en.dmgmori.com/products/machines/milling/5-axis-milling/dmu/dmu-50"
+    accessed: 2026-11-03
+    pages: "Work area: max workpiece diameter 630 mm, height 600 mm, weight 300 kg; magazine 30 (60/120/180)"
+
+  dmgmori-ntx1000-2013:
+    type: catalogue
+    authors: "DMG MORI SEIKI"
+    title: "NTX Series NTX1000 / NTX2000 integrated mill-turn centers (catalogue PT0UK13)"
+    venue: "DMG MORI SEIKI catalogue, data valid as of March 2013"
+    year: 2013
+    url: "https://portalimages.blob.core.windows.net/products/pdfs/5fx3rszn_pt0uk13-ntx1000-2000-pdf-data.pdf"
+    accessed: 2026-11-03
+    pages: "PDF page numbers: p. 3 (rapid rates, travels, tool spindle 12,000 rpm, clamping force 28 kN Capto C5), p. 4 (B axis DDM: 90 deg in 0.49 s, 100 rpm, 0.0001 deg), p. 5 (ATC 38 tools, tool-to-tool 1.2 s, 4.4 s incl. axis travel), p. 20 (machine specifications table, S/SZ/SZM)"
+
+  # ---------------------------------------------------------------- Star Micronics
+  star-sr20riv-web-2026:
+    type: web
+    authors: "Star Micronics Co., Ltd."
+    title: "SR-20RIV Swiss-type automatic lathe: specifications"
+    venue: "star-m.jp product page"
+    year: 2026
+    url: "https://star-m.jp/eng/products/lathe/swiss_type/sr-20r_iv.html"
+    accessed: 2026-11-03
+    pages: "Specification table: main unit, back working attachment, tool post configuration"
+
+  star-gb-sr20riv-e-web-2026:
+    type: web
+    authors: "Star Micronics GB"
+    title: "SR-20RIV Type E CNC sliding head lathe"
+    venue: "stargb.com product page"
+    year: 2026
+    url: "https://stargb.com/cnc-sliding-head-lathes/sr-20riv-type-e/"
+    accessed: 2026-11-03
+    pages: "Text: FANUC 31i-B5 control, guide bush / non-guide bush switchable, 20 mm (22.2 mm opt.) capacity, 205 mm / 50 mm strokes, built-in spindle motors"
+
+  # ---------------------------------------------------------------- Renishaw
+  renishaw-omp40-2-2025:
+    type: datasheet
+    authors: "Renishaw plc"
+    title: "OMP40-2 optical machine probe - Specification"
+    venue: "Renishaw data sheet (PDF dated 2025-10)"
+    year: 2025
+    url: "https://renishaw.com/resourcecentre/en/download/omp40-2--133835"
+    accessed: 2026-11-03
+    pages: "p. 1 specification table (repeatability 1.00 um 2 sigma at 480 mm/min with 50 mm stylus; trigger force XY 0.50/0.90 N, Z 5.85 N; overtravel +-12.5 deg, 6 mm Z), p. 2 dimensions (dia 40 mm x 50 mm)"
+
+  renishaw-ots-2026:
+    type: datasheet
+    authors: "Renishaw plc"
+    title: "OTS optical tool setter - Specification"
+    venue: "Renishaw data sheet"
+    year: 2026
+    url: "https://renishaw.com/resourcecentre/en/download/data-sheet-ots--142125"
+    accessed: 2026-11-03
+    pages: "p. 1 specification (repeatability 1.00 um 2 sigma at 480 mm/min with 35 mm stylus; trigger force 1.30-2.40 N; overtravel XY +-3.5 mm, Z 6 mm), p. 2 dimensions"
+
+  renishaw-omp400-2024:
+    type: datasheet
+    authors: "Renishaw plc"
+    title: "OMP400 optical machine probe - Specification"
+    venue: "Renishaw data sheet"
+    year: 2024
+    url: "https://renishaw.com/resourcecentre/en/download/omp400--85961"
+    accessed: 2026-11-03
+    pages: "p. 1 specification (repeatability 0.25 um 2 sigma with 50 mm stylus at 240 mm/min; trigger force XY 0.06 N, Z 2.55 N typical minimum)"
+
+  renishaw-nc4-2026:
+    type: datasheet
+    authors: "Renishaw plc"
+    title: "NC4 non-contact tool setting range - Specification"
+    venue: "Renishaw data sheet"
+    year: 2026
+    url: "https://renishaw.com/resourcecentre/en/download/nc4--111413"
+    accessed: 2026-11-03
+    pages: "p. 1 (repeatability +-1.0 um 2 sigma, class 2 laser 670 nm, air 6 bar max), p. 2 unit dimensions (F115/F145/F230/F300)"
+
+  renishaw-hpra-2004:
+    type: datasheet
+    authors: "Renishaw plc"
+    title: "HPRA high precision removable arm (H-2000-2029-06-A)"
+    venue: "Renishaw data sheet, 2004"
+    year: 2004
+    url: "https://cdn11.bigcommerce.com/s-82x61ffcq2/content/machine_tool_probes/tool_setting_turning/HPRA_data_sheet.pdf"
+    accessed: 2026-11-03
+    pages: "Specification: typical positional repeatability 5 um 2 sigma (6-15 in chuck arms) at 36 mm/min; RP3 trigger force XZ 1.5-3.5 N, Y 12 N max"
+
+  # ---------------------------------------------------------------- fluids
+  nist-webbook-water-2026:
+    type: handbook
+    authors: "Lemmon, E.W.; Bell, I.H.; Huber, M.L.; McLinden, M.O. (NIST)"
+    title: "Thermophysical Properties of Fluid Systems: water (isobaric data at 0.101325 MPa; saturation data)"
+    venue: "NIST Chemistry WebBook, NIST Standard Reference Database 69"
+    year: 2026
+    url: "https://webbook.nist.gov/cgi/fluid.cgi?ID=C7732185&Action=Load&Type=IsoBar&P=0.101325&TLow=20&THigh=100&TInc=20&TUnit=C&PUnit=MPa&DUnit=kg%2Fm3&VisUnit=Pa*s&STUnit=N%2Fm"
+    accessed: 2026-11-03
+    pages: "Isobaric table 20-100 C (density, Cp, viscosity, thermal conductivity); saturation table (surface tension 20-100 C; liquid/vapour enthalpy at 100 C)"
+
+  etb-air-2026:
+    type: web
+    authors: "The Engineering ToolBox"
+    title: "Air - Thermophysical Properties"
+    venue: "engineeringtoolbox.com"
+    year: 2026
+    url: "https://www.engineeringtoolbox.com/air-properties-d_156.html"
+    accessed: 2026-11-03
+    pages: "density 1.205 kg/m3 at 20 C and 0.946 kg/m3 at 100 C; at 0 C and 1 bara: cp 1.006 kJ/kgK, k 24.35 mW/mK, viscosity 17.22 uPa s"
+
+  etb-engine-oil-2023:
+    type: web
+    authors: "The Engineering ToolBox"
+    title: "Engine Oil - Density and Specific Heat vs. Temperatures"
+    venue: "engineeringtoolbox.com"
+    year: 2023
+    url: "https://www.engineeringtoolbox.com/engine-oil-density-specific-heat-vs-temperature-d_2227.html"
+    accessed: 2026-11-03
+    pages: "Table, unused engine oil 280-400 K: density 896-824 kg/m3, cp 1.83-2.34 kJ/kgK"
+
+  etb-liquids-k-2026:
+    type: web
+    authors: "The Engineering ToolBox"
+    title: "Liquids - Thermal Conductivities"
+    venue: "engineeringtoolbox.com"
+    year: 2026
+    url: "https://www.engineeringtoolbox.com/thermal-conductivity-liquids-d_1260.html"
+    accessed: 2026-11-03
+    pages: "Table at 300 K: engine oil unused 0.145, lubricating machine oil 0.126, transformer oil 0.13, castor oil 0.180, glycerine 0.285, fresh water 0.609 W/mK"
+
+  pso-neat-cutting-oil-2024:
+    type: datasheet
+    authors: "Pakistan State Oil"
+    title: "PSO Neat Metal Cutting Oil - Product Data Sheet"
+    venue: "PSO lubricants, PDS dated 2024-05"
+    year: 2024
+    url: "https://psopk.com/documents/lubricants-pdf/2024/PDS-PSO-NEAT-METAL-CUTTING-OIL.pdf"
+    accessed: 2026-11-03
+    pages: "Typical characteristics, ISO VG 22 column: density at 15 C 0.8885 kg/L, kinematic viscosity 22.9 cSt at 40 C and 4.42 cSt at 100 C, VI 106, flash point COC 186 C (mineral oil + calcium sulfonate + sulfurised olefin, chlorine-free)"
+
+  dguv-209-025-mql-2010:
+    type: handbook
+    authors: "Deutsche Gesetzliche Unfallversicherung (DGUV)"
+    title: "DGUV Information 209-025: Minimum quantity lubrication for machining operations"
+    venue: "DGUV, November 2010 (English edition, formerly BGI/GUV-I 718 E)"
+    year: 2010
+    url: "https://publikationen.dguv.de/widgets/pdf/download/article/806"
+    accessed: 2026-11-03
+    pages: "p. 8, 10 (5-50 ml per process hour), p. 12 (MQL definition <= 50 ml/h per tool; > 150 ml/h briefly for tools > 40 mm), p. 20-22 (synthetic esters vs fatty alcohols; Table 6 guide values: viscosity > 10 mm2/s at 40 C, flash point COC > 150 C, Noack loss at 250 C < 65 %; best viscosity 15-50 mm2/s), p. 33 (venturi aerosol 0.5-2 um), p. 37-38 (air pressure > 4 bar; 1-channel up to 200 ml/h, 2-channel > 400 ml/h)"
+
+  wikipedia-leidenfrost-2026:
+    type: web
+    authors: "Wikipedia contributors"
+    title: "Leidenfrost effect"
+    venue: "Wikipedia"
+    year: 2026
+    url: "https://en.wikipedia.org/wiki/Leidenfrost_effect"
+    accessed: 2026-11-03
+    pages: "Introduction: Leidenfrost point approx. 193 C for water; example 257 C for a saturated water-copper interface; higher surface tension usually gives a higher Leidenfrost temperature (uncited statements; cites Bernardin & Mudawar 2002 for surface dependence)"
+
+  claudin-2010-straight-oil:
+    type: article
+    authors: "Claudin, C.; Mondelin, A.; Rech, J.; Fromentin, G."
+    title: "Effects of a straight oil on friction at the tool-workmaterial interface in machining"
+    venue: "International Journal of Machine Tools and Manufacture 50(8), 681-688"
+    year: 2010
+    doi: "10.1016/j.ijmachtools.2010.04.013"
+    url: "https://sam.ensam.eu/handle/10985/7471"
+    accessed: 2026-11-03
+    pages: "Abstract only (the repository returned HTTP 403; abstract read via search-engine excerpt): AISI 4140 (290 HB) against TiN-coated carbide on an open tribometer; dry friction coefficient decreases with sliding velocity and stabilises near 0.2; with straight oil about 0.1, independent of sliding velocity; oil penetrates at contact pressures near 3 GPa"

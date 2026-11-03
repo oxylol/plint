@@ -1,0 +1,149 @@
+# Workpiece material: aluminium 6061-T6 (also representative of T651 stretched plate).
+# Physical and mechanical data: Kaiser 2006 sheet/plate datasheet and NASA 1972 materials handbook.
+format: cnctwin-material
+version: 1
+id: al6061-t6
+name: "Aluminium 6061-T6"
+family: aluminium
+iso_group: N
+condition: "T6: solution heat treated and artificially aged (values for T6/T651 sheet, plate and bar)"
+designations: {UNS: A96061, EN: "EN AW-6061", DIN: "AlMg1SiCu"}
+stock_forms: [rolled_plate]        # estimated profile only, see residual_stress
+
+physical:
+  src: kaiser-2006-al6061-datasheet
+  density_kg_m3: {value: 2700, note: "also 2.70 g/cm3 in muraca-1972-al6061-handbook"}
+  specific_heat_J_kgK: {table: [[100, 962]], src: muraca-1972-al6061-handbook, range: [896, 962], note: "0.23 cal/g C at 100 C (NASA); Kaiser lists 896 J/kgK labelled 212 F/100 C. Single point, no temperature dependence read"}
+  conductivity_W_mK: {table: [[20, 167]], note: "T6/T651 at 20 C; NASA gives 0.40 cal/cm s C = 167.4 W/mK at 25 C"}
+  expansion_1_K: {table: [[100, 23.6e-6]], note: "mean 20-100 C; NASA tabular abstract gives 23.4e-6"}
+  youngs_modulus_GPa: {table: [[20, 68.9]], src: muraca-1972-al6061-handbook, range: [68.3, 68.9], note: "typical E = 10.0e3 ksi; Kaiser 68.3 GPa"}
+  poisson: {value: 0.33, src: muraca-1972-al6061-handbook}
+  solidus_degC: {value: 582, note: "melting range 582-652 C; NASA 582-649 C"}
+  liquidus_degC: {value: 652, range: [649, 652], note: "Kaiser 652, NASA 649"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HB: 95, src: muraca-1972-al6061-handbook, note: "Brinell 500 kg / 10 mm, T6 and T651; Kaiser also 95"}
+  yield_MPa: {value: 276, note: "typical, T6/T651; NASA 40.0 ksi"}
+  ultimate_MPa: {value: 310, note: "typical, T6/T651; NASA 45.0 ksi"}
+  elongation_pct: {value: 17, note: "Kaiser: in 4D, 0.500 in specimen; NASA: 17 % in 2 in"}
+  fracture_strain: {value: 0.5, src: est, note: "true strain at fracture ln(1/(1-RA)) with an assumed reduction of area of about 40 %; no measured value read"}
+
+flow_stress:                       # sigma = (A + B eps^n)(1 + C ln(epsdot/epsdot0))(1 - T*^m)
+  model: johnson_cook
+  A_MPa: 334
+  B_MPa: 114
+  n: 0.42
+  C: 0.002
+  m: {value: 1.34, src: est, note: "Dawara et al. do not list m; 1.34 is the value usually reproduced with this Lesuer et al. set (seen only in an index snippet of a 2021 Chinese J. Mech. Eng. review table, doi 10.1186/s10033-021-00536-9, which could not be opened); not verified"}
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: {value: 20, src: est, note: "room temperature assumed; not stated in the source read"}
+  T_melt_degC: {value: 652, src: kaiser-2006-al6061-datasheet, note: "liquidus of the alloy; the melting temperature used in the original fit was not read"}
+  src: dawara-2023-impact-framework
+  note: "Lesuer, Kay & LeBlanc (LLNL 2001) constants as quoted by Dawara et al. 2023. Dawara et al. print A = 334 MPa; the same set is widely reproduced with A = 324 MPa (e.g. the 2021 CJME review table, index snippet only). The LLNL report was not read, so 334 is kept as read and the discrepancy (3 %) is flagged. This set is identified on impact/torsion data, not on machining tests."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 800
+      mc: 0.25
+      rake_ref_deg: {value: 0, src: est, note: "ISCAR's table does not state the reference geometry; a neutral (0 deg) rake is assumed, as Sandvik defines its kc1 for a 0 deg rake"}
+      vc_ref_m_min: {value: 300, src: est, note: "catalogue kc1 values carry no reference speed; a typical carbide speed for wrought aluminium is assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR material group 22: aluminium wrought alloy, hardenable (100 HB), kc1 for a 1 mm2 chip section"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 920
+      mc: 0.25
+      rake_ref_deg: 0
+      vc_ref_m_min: 60
+      src: est
+      note: "carbide catalogue value x 1.15, assumed for HSS (lower speed, larger edge radius); no published HSS value read"
+  mechanistic: []                  # no published end-milling calibration for 6061 was read
+  min_chip_thickness_ratio: {value: 0.23, src: wojciechowski-2022-min-chip-thickness, range: [0.08, 0.45], note: "6061, analytic (Malekian et al. 2009) in Table 1; aluminium alloys span 0.08 (6082, experimental, Rahman et al.) to 0.45 (2024-T6, FEM, Ozel et al.)"}
+  indentation_coeff_N_mm3: {value: 1.5e4, src: est, note: "order-of-magnitude placeholder for the process-damping indentation coefficient of a ~95 HB aluminium alloy; replace with an identified value"}
+  work_hardening:
+    layer_depth_um: {value: 30, src: est, note: "assumed for sharp-tool milling/turning of a peak-aged alloy; no measurement read"}
+    hardness_increase_pct: {value: 10, src: est, note: "assumed; peak-aged 6061 has limited strain-hardening capacity (JC n = 0.42 but B only 114 MPa)"}
+    strain_hardening_exponent: {value: 0.42, src: dawara-2023-impact-framework, note: "JC exponent n"}
+
+friction:                          # tool-chip interface, Zorev sticking-sliding
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.55, src: est, range: [0.5, 0.6], note: "same Coulomb value that luo-2021-al7075-drilling chose for 7075-T6 FE (0.5-0.6 range of Ceretti and Arrazola); an FE input, not a measurement, adopted for 6061"}
+    sticking_ratio: {value: 0.6, src: est, note: "aluminium adheres strongly to uncoated carbide (BUE/BUL); long sticking zone assumed"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed; PCD resists aluminium adhesion"}
+    sticking_ratio: {value: 0.3, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation: null               # not observed for 6061 in the sources read
+  bue:
+    interface_temp_degC: {range: [100, 300], src: est, note: "assumed; no interface temperature for 6061 BUE was read"}
+    vc_m_min: [10, 200]
+    src: est
+    note: "window assumed by analogy with 7075 (BUE/BUL in dry turning at 40-200 m/min, trujillo-2017-al7075-adhesion; still present at 300 m/min, jomaa-2014-al7075-orthogonal); BUE grows with feed"
+  breakability: {value: poor, src: est, note: "long ductile ribbon chips without a chip breaker; no quantitative source read"}
+  oxide_colours: null
+
+tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; T in min at VB_limit
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 1800
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 800 m/min (uncoated K10 carbide in wrought aluminium, general knowledge, not a cited source); n, a, b assumed typical of carbide. In practice BUE and edge chipping limit life more than flank wear"
+  - tool_class: pcd
+    coating: uncoated
+    C_m_min: 6000
+    n: 0.35
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.1
+    src: est
+    note: "placeholder: T = 15 min at vc ~ 2300 m/min; PCD life in aluminium is typically very long; not a cited value"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 220
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 120 m/min (general knowledge); n typical of HSS"
+tool_life_usui: null               # template puts `usui` under the tool_life list, which is not valid YAML; kept as a sibling key
+
+residual_stress:                   # as-supplied stock, through-thickness profile [z/thickness, sigma_MPa]
+  - form: rolled_plate
+    thickness_mm: {value: 50, src: est, note: "assumed representative plate"}
+    direction: L
+    profile: [[0.0, -20], [0.1, -5], [0.25, 15], [0.5, -10], [0.75, 15], [0.9, -5], [1.0, -20]]
+    src: est
+    note: "PLACEHOLDER for T651 (stretched 1.5-3 %) plate: low-amplitude (+-20 MPa) self-equilibrating profile assumed; no measured 6061 plate profile was read. Unstretched T6 parts (quenched bar, forgings) carry much larger quench stresses (compressive skin, tensile core) that are not represented here"
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 582, src: kaiser-2006-al6061-datasheet, note: "solidus; smearing/incipient melting of the surface. Over-ageing (loss of T6 strength) starts far lower, after time at temperature; not quantified here"}
+
+ignition: null
+composite: null
+
+notes: "Peak-aged 6061 for general machining. Measured or catalogue data: physical and tensile properties (Kaiser, NASA), JC set (Lesuer et al. via Dawara et al.), Kienzle (ISCAR catalogue), h_min/r_n (review table). Estimates: HSS Kienzle, friction, BUE window, work hardening, K_sp, all Taylor constants and the plate residual-stress profile."

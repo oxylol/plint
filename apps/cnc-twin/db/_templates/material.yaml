@@ -1,0 +1,145 @@
+# Workpiece material. One file per material and condition: db/materials/<id>.yaml
+# Every value: {value: x, src: key} or a table, or inherits the section `src`.
+format: cnctwin-material
+version: 1
+id: al6061-t6                      # lowercase, dashes; file name = id
+name: "Aluminium 6061-T6"
+family: aluminium                  # aluminium | steel | tool_steel | stainless | titanium | nickel | copper | brass | magnesium | cast_iron | polymer | wood | foam | composite
+iso_group: N                       # ISO 513: P M K N S H, or O (other: polymers, wood, foam, composites)
+condition: "T6: solution heat treated and artificially aged"
+designations: {UNS: A96061, EN: "EN AW-6061", DIN: "AlMg1SiCu"}
+stock_forms: [rolled_plate, extruded_bar, forged]     # forms this file has residual-stress data for
+
+physical:
+  src: asm-v2-1990                 # section default
+  density_kg_m3: {value: 2700}
+  specific_heat_J_kgK: {table: [[20, 896], [100, 921], [200, 963], [300, 1005]]}
+  conductivity_W_mK: {table: [[20, 167], [100, 172], [200, 177]]}
+  expansion_1_K: {table: [[20, 23.6e-6], [100, 24.3e-6], [200, 25.4e-6]]}   # mean CTE from 20 °C
+  youngs_modulus_GPa: {table: [[20, 68.9], [100, 66.2], [200, 61.8]]}
+  poisson: {value: 0.33}
+  solidus_degC: {value: 582}
+  liquidus_degC: {value: 652}
+  glass_transition_degC: null      # polymers and composite matrices only
+  decomposition_degC: null         # polymers, wood: onset of thermal decomposition / charring
+  hardness: {HB: 95}               # one of HB, HV, HRC, HRB, shore_D
+  yield_MPa: {value: 276}
+  ultimate_MPa: {value: 310}
+  elongation_pct: {value: 12}
+  fracture_strain: {value: 0.6, src: est, note: "how it was derived"}
+
+flow_stress:                       # Johnson-Cook: sigma = (A + B eps^n)(1 + C ln(epsdot/epsdot0))(1 - T*^m)
+  model: johnson_cook
+  A_MPa: 324
+  B_MPa: 114
+  n: 0.42
+  C: 0.002
+  m: 1.34
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: 20
+  T_melt_degC: 652
+  src: johnson-cook-1983           # the paper the five constants come from
+
+cutting:
+  # Kienzle: kc = kc11 (h/h_ref)^-mc (and kf = kf11 (h/h_ref)^-mf, kp = kp11 (h/h_ref)^-mp for the
+  # feed and passive forces where published), with h_ref = 1 mm, b_ref = 1 mm, per tool material class.
+  kienzle:
+    - tool_class: carbide          # hss | carbide | cermet | ceramic | cbn | pcd
+      kc11_N_mm2: 700
+      mc: 0.25
+      kf11_N_mm2: null             # feed force (null if not published: derived by the pipeline, say how)
+      mf: null
+      kp11_N_mm2: null             # passive (thrust) force
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: 6
+      calibration: {vc_m_min: [80, 200], h_mm: [0.1, 0.5], edge_radius_um: 20, coolant: dry, work_temp_degC: 20}
+      src: sandvik-tech-guide-2020
+  # Mechanistic milling coefficients (linear edge-force model), where a published calibration exists.
+  mechanistic:
+    - tool_class: carbide
+      coating: uncoated
+      helix_deg: 30
+      rake_deg: 12
+      Ktc_N_mm2: 796
+      Krc_N_mm2: 168
+      Kac_N_mm2: 222
+      Kte_N_mm: 27.7
+      Kre_N_mm: 30.8
+      Kae_N_mm: 1.8
+      src: key
+  min_chip_thickness_ratio: {value: 0.3, src: key}   # h_min / edge radius
+  indentation_coeff_N_mm3: {value: 1.5e4, src: key}  # process-damping ploughing coefficient K_sp
+  work_hardening:
+    layer_depth_um: {value: 30, src: key}             # depth of the hardened layer a cut leaves
+    hardness_increase_pct: {value: 10, src: key}      # at the surface
+    strain_hardening_exponent: {value: 0.42, src: key}
+
+friction:                          # tool-chip interface, Zorev sticking-sliding
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.5, src: key}
+    sticking_ratio: {value: 0.5, src: key}           # sticking length / contact length at reference conditions
+  - tool_class: carbide
+    coating: TiAlN
+    mu_sliding: {value: 0.4, src: key}
+
+chip:
+  tendency: continuous             # continuous | segmented | discontinuous | powder (composites, cast iron) | molten (polymers)
+  segmentation:                    # adiabatic shear onset; null if never segments
+    criterion: critical_speed      # critical_speed | thermal_instability
+    vc_onset_m_min: {value: null}
+  bue:                             # built-up edge window, null if none
+    interface_temp_degC: [150, 350]
+    vc_m_min: [5, 60]
+    src: key
+  breakability: {value: medium, src: key}            # poor | medium | good (chip breaking without a breaker)
+  oxide_colours: null              # ferrous/titanium only: [[T_degC, "#rrggbb", "straw"], ...] temper/oxide colour table
+
+tool_life:                         # extended Taylor: vc (T/T_ref)^n f^a ap^b = C, T_ref = 1 min, at the VB limit
+  - tool_class: carbide
+    coating: TiAlN
+    C_m_min: 1200
+    n: 0.3
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.1
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    T_ref_min: 1
+    src: key
+
+tool_life_usui: []                 # optional published Usui constants, see tool_material.yaml for the key units
+
+residual_stress:                   # as-supplied stock, through-thickness profile
+  - form: rolled_plate
+    thickness_mm: 50
+    direction: L                   # L (rolling), LT (long transverse), ST, hoop, radial
+    profile_MPa: [[0.0, -20], [0.1, 0], [0.5, 15], [0.9, 0], [1.0, -20]]   # [z/thickness, sigma_MPa]
+    src: key
+
+skin:                              # cast / hot-rolled / forged surface layer; type none if machined stock
+  type: none                       # none | mill_scale | cast_skin | sand_inclusions | decarburised
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}    # skin hardness / bulk hardness
+  abrasiveness_factor: {value: 1.0}  # wear-rate multiplier while cutting the skin
+
+thermal_damage:                    # surface integrity thresholds
+  burn_degC: {value: null}         # temper/burn colouring threshold of the surface
+  white_layer_degC: {value: null}  # rehardening (austenitisation) for steels
+  melt_smear_degC: {value: 582}    # smearing/melting for Al, polymers (glass transition or melt)
+
+ignition:                          # fines/chips fire risk (Mg, Ti); null otherwise
+  null
+
+composite:                         # composites only; null otherwise
+  null
+  # fibre: carbon | glass
+  # fibre_volume_fraction: 0.6
+  # layup: "quasi-isotropic [0/45/90/-45]s"
+  # delamination: {critical_thrust_N: ..., model: hocheng-dharan, G_IC_J_m2: ..., src}
+  # dust_mass_fraction: 1.0        # fraction of removed mass leaving as dust (no chips)
+  # abrasive_wear_factor: ...
+
+notes: "free text: what the values are for, limits of validity"

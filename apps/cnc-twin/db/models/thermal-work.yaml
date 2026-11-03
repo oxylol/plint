@@ -1,0 +1,57 @@
+# Workpiece and fixture thermal model (cnctwin/thermal/workpiece.py, twoscale.py;
+# docs/models/thermal.md "Workpiece"). Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: thermal-work
+description: "Fixture contact and lumped fixture, near-cut coolant zone, flash band, unload report"
+params:
+  fixture_contact_conductance_W_m2K:
+    value: 3000.0
+    unit: W_m2K
+    range: [500.0, 20000.0]
+    src: est
+    note: "part to jaws / parallels / table under clamping pressure, dry machined metal surfaces; metallic contact conductance at 1-10 MPa is 1e3-1e4 W/m2K (madhusudana-2014-contact-conductance ch. 1 and 5)"
+  fixture_default_mass_kg:
+    value: 20.0
+    unit: kg
+    src: est
+    note: "when the workholding item gives no mass_kg"
+  fixture_material:
+    value: aisi1045
+    unit: "-"
+    src: est
+    note: "vise and fixture bodies are steel or ductile iron; C45 is used as the representative (db/materials)"
+  fixture_area_factor:
+    value: 8.0
+    unit: "-"
+    range: [6.0, 15.0]
+    src: est
+    note: "fixture surface area / V^(2/3) (a cube is 6; ribs and jaws add area)"
+  fixture_footprint_factor:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "fixture-to-table contact area / V^(2/3)"
+  fixture_surface_htc_W_m2K:
+    value: 8.0
+    unit: W_m2K
+    range: [4.0, 15.0]
+    src: est
+    note: "free convection plus radiation of a near-ambient steel body in still air (free convection of gases 2-25 W/m2K: incropera-2007-heat-mass-transfer Table 1.1)"
+  default_shear_angle_rad:
+    value: 30.0
+    unit: deg
+    range: [15.0, 45.0]
+    src: est
+    note: "used for the flash band length h/tan(phi) when ProcessCoefficients carries no shear angle"
+  near_cut_radius_ratio:
+    value: 1.5
+    unit: "-"
+    range: [1.0, 3.0]
+    src: est
+    note: "radius (in tool diameters) around a contact point inside which coolant's near-cut h_work applies"
+  unload_settle_band_dK:
+    value: 1.0
+    unit: dK
+    src: est
+    note: "the report states the time for the part to come within this temperature difference of ambient after unload (measuring practice)"

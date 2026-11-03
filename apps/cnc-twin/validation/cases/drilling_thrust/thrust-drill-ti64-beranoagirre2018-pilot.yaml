@@ -1,0 +1,54 @@
+# Beranoagirre et al. (2018): Ti-6Al-4V (annealed) opened from pilot holes of 3-7 mm to 8.5 mm with a Mitsubishi
+# MPS0850S solid-carbide drill, vc 50 m/min, f 0.05 and 0.1 mm/rev, through-coolant: measured thrust Fz (Table 4).
+format: cnctwin-validation-case
+version: 1
+id: thrust-drill-ti64-beranoagirre2018-pilot
+quantity: drilling_thrust
+reference:
+  src: beranoagirre-2018-tial-ti64-drilling
+  location: "Sect. 2.2-2.3 (machine, dynamometer, plan, tool, coolant), Table 1 (Ti-6Al-4V properties), Table 2 (vc, n, f), Table 4 (measured Fz and Tc for Ti-6Al-4V, calibration tests)"
+  digitised: false
+  measured: true
+  note: "Table values read directly; how each value was extracted from the signal (steady mean) and the scatter are not stated; Sect. 4.1 notes larger dispersion when the pilot hole is close to the final diameter."
+setup:
+  operation: drilling
+  material:
+    db: ti6al4v
+    note: "Ti-6Al-4V annealed (source Table 1: Rm 1087, Rp 942 MPa, 7.8 % elongation, 8.6 W/m K)"
+  stock:
+    src: beranoagirre-2018-tial-ti64-drilling
+    page: Sect. 2.3
+    pilot_hole_diameter_mm: [3, 4, 5, 6, 7]
+    hole_depth_mm: 20
+  tool:
+    src: beranoagirre-2018-tial-ti64-drilling
+    page: Sect. 2.3, Sect. 3
+    type: twist_drill
+    designation: Mitsubishi MPS0850S-DIN-C
+    tool_class: carbide
+    diameter_mm: 8.5
+    point_angle_deg: {value: 140, note: "from the source's chip-thickness definition h = 0.5 f sin 70 deg (Sect. 3), i.e. a 70 deg half point angle"}
+    lip_count: {value: 2, note: "Z lips in the source's model; two-flute drill"}
+    helix_deg: {value: 30, src: est, note: "assumed: not stated"}
+    internal_coolant: true
+    assumed_inputs: [helix_deg]
+  machine:
+    src: beranoagirre-2018-tial-ti64-drilling
+    page: Sect. 2.2
+    model: Kondia B640 vertical milling machine (10000 rpm, 25 kW)
+    dynamometer: Kistler 9257B (Fx, Fy, Fz and Mz)
+  conditions:
+    src: beranoagirre-2018-tial-ti64-drilling
+    page: Table 2, Sect. 2.3
+    vc_m_min: 50
+    spindle_rpm: 1874
+    feed_mm_rev: [0.05, 0.1]
+    coolant: "through-tool Rhenus FU 70 W emulsion at 8.5 bar (Table 3)"
+    operation_note: "the pilot hole removes the chisel-edge and inner-lip contribution, so Fz and Tc come from the outer lip portion (D0 to 8.5 mm)"
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: Fz_f0.05, x_name: pilot hole diameter D0, x_unit: mm, y_name: Fz (thrust), y_unit: N, points: [[3, 591], [4, 460], [5, 319], [6, 242], [7, 169]]}
+  - {name: Fz_f0.10, x_name: pilot hole diameter D0, x_unit: mm, y_name: Fz (thrust), y_unit: N, points: [[3, 723], [4, 565], [5, 440], [6, 332], [7, 225]]}
+notes: "Not steel or aluminium, but a drilling data set with tables that separates the lip contribution by pilot-hole enlargement; the source fits radius- and feed-dependent thrust and torque coefficients (Eqs. 3-4, Table 8) to these data and validates at f 0.06 and 0.08 mm/rev with D0 4-6 mm (figures only, not used). The same paper gives the gamma-TiAl alloys TNB and MoCuSi at vc 15 m/min (Tables 5-7), not used (not in the DB). Paired case: torque-drill-ti64-beranoagirre2018-pilot."

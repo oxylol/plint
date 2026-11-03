@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · twin stack
+#  CNC Twin: a physical twin of the machine, controller, tool, workpiece,
+#  chips and coolant, run before a CNC program goes to the real machine.
+#  Source in apps/cnc-twin (README there). The service runs one simulation
+#  at a time with the compute here on Plint; projects and runs live in
+#  data/cnc-twin. Headless CLI: apps/cnc-twin/bin/twin.
+# ─────────────────────────────────────────────────────────────
+name: twin
+
+services:
+  cnc-twin:
+    build: ../../apps/cnc-twin
+    image: plint/cnc-twin:local
+    container_name: cnc-twin
+    restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
+    ports:
+      - "127.0.0.1:5210:5210"
+    environment:
+      TZ: ${TZ}
+      DATA_DIR: /data
+      CNCTWIN_MAX_JOBS: 1
+    volumes:
+      - ../../data/cnc-twin:/data
+    read_only: true
+    tmpfs: [/tmp]
+    # One simulation of a reference part stays under ~1.2 GB (docs/performance.md).
+    mem_limit: 1536m
+    cpus: 2
+    networks:
+      - twin
+
+networks:
+  twin:
+    name: plint-twin

@@ -1,0 +1,136 @@
+# Workpiece material: oxygen-free electronic copper Cu-OFE (C10100), annealed.
+# Physical and mechanical data: Wieland K09 datasheet; flow stress: Johnson & Cook 1983 (OFHC copper).
+format: cnctwin-material
+version: 1
+id: copper-c101
+name: "Copper C10100 (Cu-OFE, OFHC), annealed"
+family: copper
+iso_group: N
+condition: "annealed / soft (Wieland R220, ASTM O60); the JC set is for OFHC copper of Rockwell F-30 hardness"
+designations: {UNS: C10100, EN: "CW009A", ISO: "Cu-OFE", trade: "Wieland-K09"}
+stock_forms: []                    # no residual-stress profile read
+
+physical:
+  src: wieland-2021-k09-cu-ofe
+  density_kg_m3: {value: 8940}
+  specific_heat_J_kgK: {table: [[20, 385]], note: "0.385 J/(g K) at room temperature; JC 1983 lists 383 J/kgK"}
+  conductivity_W_mK: {table: [[20, 391]], note: "room temperature; electrical conductivity 58 MS/m (100 % IACS), up to 101 % IACS stated in the text"}
+  expansion_1_K: {table: [[300, 17.7e-6]], note: "mean coefficient between 0 and 300 C (single value given)"}
+  youngs_modulus_GPa: {table: [[20, 115]]}
+  poisson: {value: 0.34}
+  solidus_degC: {value: 1083, src: johnson-cook-1983, note: "melting temperature 1356 K used by Johnson & Cook for OFHC copper; pure copper melts congruently (solidus = liquidus)"}
+  liquidus_degC: {value: 1083, src: johnson-cook-1983, note: "1356 K"}
+  glass_transition_degC: null
+  decomposition_degC: null
+  hardness: {HV: 55, range: [40, 70], note: "R220 (soft), informative HV range 40-70; R240 65-95, R290 90-110, R360 >= 110"}
+  yield_MPa: {value: 90, src: johnson-cook-1983, note: "JC constant A for OFHC copper (Rockwell F-30); Wieland R220 limit Rp0.2 <= 140 MPa (R240 >= 180, R290 >= 250)"}
+  ultimate_MPa: {value: 240, range: [220, 260], note: "R220 tensile strength range"}
+  elongation_pct: {value: 33, note: "minimum A50 for R220"}
+  fracture_strain: {value: 1.5, src: est, note: "ln(1/(1-RA)) with an assumed reduction of area of about 78 % for annealed OFE copper; no measured value read"}
+
+flow_stress:
+  model: johnson_cook
+  A_MPa: 90
+  B_MPa: 292
+  n: 0.31
+  C: 0.025
+  m: 1.09
+  ref_strain_rate_1_s: 1.0
+  T_ref_degC: {value: 20, src: est, note: "room temperature assumed (the OCR copy does not state the reference temperature)"}
+  T_melt_degC: 1083
+  src: johnson-cook-1983
+  note: "Table 1, OFHC copper (Rockwell F-30, Tm 1356 K), identified from torsion, quasi-static tension and Hopkinson-bar tests; cross-checked in Arsecularatne & Zhang (assessment of constitutive equations used in machining), who show that the predicted stress-strain-rate relation at 500-5000 1/s deviates from the linear relation expected from experiments. For half-hard (R240/R290) stock raise A towards the 0.2 % proof stress."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: any
+      kc11_N_mm2: 700
+      mc: 0.27
+      rake_ref_deg: {value: 0, src: est, note: "reference geometry not stated by ISCAR; neutral 0 deg rake assumed"}
+      vc_ref_m_min: {value: 200, src: est, note: "no reference speed in the catalogue; assumed"}
+      src: iscar-materials-groups
+      note: "ISCAR group 28: electrolytic copper (100 HB nominal, i.e. a harder temper than annealed OFE)"
+    - tool_class: hss
+      coating: uncoated
+      kc11_N_mm2: 805
+      mc: 0.27
+      rake_ref_deg: 0
+      vc_ref_m_min: 50
+      src: est
+      note: "carbide catalogue value x 1.15 assumed for HSS"
+  mechanistic: []                  # no published end-milling calibration for copper was read
+  min_chip_thickness_ratio: {value: 0.25, src: wojciechowski-2022-min-chip-thickness, range: [0.17, 0.33], note: "copper, analytic micro-milling (Lai et al. 2008) in Table 1; 0.17 rn (Wu et al., text) to 0.33 (electrolytic copper, Camara et al. 2016, experimental)"}
+  indentation_coeff_N_mm3: {value: 8.0e3, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (~52 HB)"}
+  work_hardening:
+    layer_depth_um: {value: 100, src: est, note: "annealed copper strain-hardens strongly and deeply; assumed, no measurement read"}
+    hardness_increase_pct: {value: 50, src: est, note: "assumed; cold work takes Cu-OFE from HV 40-70 (R220) to HV >= 110 (R360) per wieland-2021-k09-cu-ofe"}
+    strain_hardening_exponent: {value: 0.31, src: johnson-cook-1983, note: "JC exponent n"}
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.7, src: est, range: [0.5, 0.9], note: "assumed; annealed copper gives long tool-chip contact and thick chips; no measurement read"}
+    sticking_ratio: {value: 0.7, src: est, note: "assumed"}
+  - tool_class: hss
+    coating: uncoated
+    mu_sliding: {value: 0.8, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.75, src: est, note: "assumed"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.4, src: est, note: "assumed"}
+
+chip:
+  tendency: continuous
+  segmentation: null
+  bue:
+    interface_temp_degC: {range: [100, 300], src: est, note: "assumed"}
+    vc_m_min: [5, 60]
+    src: est
+    note: "no BUE measurement for copper was read. A narrow low-speed window is assumed; pure copper tends to adhere and give very thick chips over a wide speed range rather than a stable BUE"
+  breakability: {value: poor, src: est, note: "tough continuous chips; no quantitative source read"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 680
+    n: 0.3
+    a: 0.3
+    b: 0.1
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 300 m/min (general knowledge, not a cited source); n, a, b assumed"
+  - tool_class: hss
+    coating: uncoated
+    C_m_min: 110
+    n: 0.15
+    a: 0.4
+    b: 0.15
+    feed_ref_mm: 0.2
+    ap_ref_mm: 2
+    VB_limit_mm: 0.3
+    src: est
+    note: "C set so that T = 60 min at vc = 60 m/min (general knowledge)"
+tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
+
+residual_stress: []                # annealed stock: assumed negligible; none read
+
+skin:
+  type: none
+  thickness_mm: {value: 0}
+  hardness_factor: {value: 1.0}
+  abrasiveness_factor: {value: 1.0}
+
+thermal_damage:
+  burn_degC: null
+  white_layer_degC: null
+  melt_smear_degC: {value: 1083, src: johnson-cook-1983, note: "melting point; cold-worked surface layers recrystallise/soften far below it (wieland-2021-k09-cu-ofe shows R360 softening after 300-500 C anneals)"}
+
+ignition: null
+composite: null
+
+notes: "Annealed oxygen-free copper. Sourced: physical properties and temper ranges (Wieland K09), JC set (Johnson & Cook 1983, OFHC copper), Kienzle (ISCAR electrolytic copper group), h_min/r_n range (review). Estimated: HSS Kienzle, friction, BUE window, work hardening, K_sp, Taylor constants."

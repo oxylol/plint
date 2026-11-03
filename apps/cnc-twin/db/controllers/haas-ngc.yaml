@@ -1,0 +1,461 @@
+# Haas Next Generation Control (NGC), mills and lathes: alarms, supported words, timing, macro
+# variables. Read in the NGC Mill and Lathe Operator's Manuals (96-8210 / 96-8910 Rev N, 12/2020).
+#
+# Alarms: the operator's manuals quote only a few alarm numbers (listed below, text written as the
+# manual writes it; the control's own capitalisation may differ). The full NGC alarm list is on
+# haascnc.com (service / alarm pages), which refused automated access this session: GAP.
+# trigger = simulator condition the alarm belongs to (same vocabulary in every db/controllers/*.yaml).
+# The lathe G/M-code lists differ from the mill lists and are under words.lathe.
+format: cnctwin-controller
+version: 1
+id: haas-ngc
+dialect: haas
+name: "Haas Next Generation Control (NGC), mill and lathe"
+src: haas-ngc-mill-om-2020
+
+alarms:
+  - {code: "312", text: "Program End", trigger: subprogram_not_found, cause: "a subprogram does not end with M99", page: "197"}
+  - {code: "314", text: "Subprogram Not In Memory", trigger: subprogram_not_found, cause: "G150: the pocket subprogram given by P is found neither as an internal N block nor as an external program (the manual describes the same search for M98 calls, Setting 251 giving the external location)", page: "379 (G150)"}
+  - {code: "332", text: "H and T Not Matched", trigger: tool, cause: "Setting 15 is ON and the Tnn and Hnn of a block do not match", page: "194"}
+  - {code: "370", text: "Pocket Definition Error", trigger: cycle_parameter, cause: "G150 general-purpose pocket: the subprogram geometry is not a fully closed shape, or the X-Y start point of the G150 block is not inside it", page: "211 (pocket milling note)"}
+  - {code: "467", text: "", trigger: arc_definition, cause: "scaling Settings 188-190 in effect (G51) and a G02 or G03 programmed; only G01 is allowed while scaling is active. The manual gives no alarm text.", page: "463 (Settings 188-190)"}
+  - {code: "973", text: "Fixture Clamp Incomplete", trigger: machine, cause: "fixture clamp input monitoring on (#709 or #10709 = 1, M90) and the spindle is commanded on while the clamp input is not made", page: "422 (M90/M91)"}
+  - {code: "253", text: "ELECTRONICS OVERHEAT", trigger: machine, cause: "control cabinet temperature reaches or exceeds the recommended level (clogged air filters)", page: "94"}
+  - {code: "560", text: "", trigger: overtravel, src: haas-ngc-lathe-om-2020, cause: "lathe with Y axis: X axis commanded home while the Y axis is above spindle centreline (positive Y); home Y first. The manual gives no alarm text.", page: "293"}
+  - {code: "605", text: "Invalid Tool Nose Angle", trigger: cycle_parameter, src: haas-ngc-lathe-om-2020, cause: "lathe: a G76 A value (tool angle) containing a decimal point is found during program execution", page: "442"}
+  - {code: "9109", text: "TAILSTOCK NOT IN PART HOLD POSITION", trigger: machine, src: haas-ngc-lathe-om-2020, cause: "lathe: Setting 145 Tailstock At Part for Cycle Start is ON and the tailstock is not pressing against the part when CYCLE START is pressed; the program does not start", page: "441"}
+  - {code: "9111", text: "INVALID G CODE FOR LIVE TOOL TYPE", trigger: illegal_g_code, src: haas-ngc-lathe-om-2020, cause: "lathe: Setting 368 Live Tooling Type is Axial and a radial live-tooling canned cycle is commanded, or it is Radial and an axial one is commanded", page: "459"}
+  - {code: "1000-1999", text: "<text of the comment following #3000 = n>", trigger: user_alarm, cause: "#3000 = n (n = 1-999) in a macro: alarm number 1000 + n with the next comment as its text; all motion stops and the program must be reset", page: "266"}
+
+messages:
+  src: haas-ngc-mill-om-2020
+  page: "266, 268"
+  "#3000": "#3000 = n (MESSAGE) with n 1-999 raises programmable alarm 1000 + n; the comment is placed in the alarm list; motion stops, reset required"
+  "#3006": "#3006 = n (comment) is a programmable stop like M00: the control stops, shows the comment on the lower centre of the screen and continues with the next block on CYCLE START"
+  M00: "stop program"
+  M01: "optional program stop (only with OPTION STOP on)"
+  M109: "interactive user input"
+
+timing:
+  src: haas-ngc-mill-om-2020
+  ipo_period_ms: {value: 1.0, src: est, note: "Haas does not publish the NGC interpolation period; 1 ms kept as in db/machines/haas-*.yaml"}
+  block_processing_ms: {value: 1.0, src: est, note: "not published; 1 ms per block kept as in db/machines/haas-*.yaml"}
+  lookahead_blocks: {value: 80, src: est, note: "the manual gives no look-ahead depth (HSM uses 'full look-ahead', p. 226; G103 can only limit it to 0-15 blocks); 80 kept as in db/machines/haas-*.yaml"}
+  lookahead_limit_range_blocks: {value: [0, 15], page: "370", note: "G103 Pn limits block look-ahead to n blocks (range 0-15); G103 or G103 P0 removes the limit; macro expressions are interpreted during look-ahead, G103 P1 makes them interpreted one block ahead; G103 affects cutter compensation and high-speed machining"}
+  hsm_max_contouring_feed_ipm: {value: 1200, page: "226", note: "high-speed machining option: acceleration before interpolation with full look-ahead, contouring feeds up to 1200 ipm (30.5 m/min) without distortion of the programmed path"}
+  corner_rounding_default_in: {value: 0.025, page: "456", note: "Setting 85 Maximum Corner Rounding, initial default 0.0250 inch (0.635 mm): the control keeps corner radii no bigger than this and adjusts feeds around corners in all 3 axes to meet it; 0 = exact stop in every motion block"}
+  smoothing:
+    - code: "G187 P1 / P2 / P3 Ennnn"
+      name: accuracy_control
+      page: "393, 456, 463"
+      note: "P = smoothness level P1 rough, P2 medium, P3 finish (temporarily overrides Setting 191 Default Smoothness, factory default MEDIUM); E = maximum corner rounding (temporarily overrides Setting 85). G187 Pm leaves E unchanged, G187 Ennnn leaves P unchanged, G187 alone cancels E and returns to Setting 191. Cancelled by RESET, M30, M02, end of program or EMERGENCY STOP. The tolerance belonging to each P level is not published."
+    - code: "G61 / G64 / G09"
+      name: exact_stop
+      note: "G61 exact stop mode (group 15), G64 cancels G61, G09 exact stop for one block"
+
+words:
+  src: haas-ngc-mill-om-2020
+  page: "297-302 (7.1.1 List of G-codes), 407-433 (8 M-codes)"
+  G:
+    "00": "rapid motion positioning"
+    "01": "linear interpolation motion"
+    "02": "circular interpolation motion CW"
+    "03": "circular interpolation motion CCW"
+    "04": "dwell"
+    "09": "exact stop (one block)"
+    "10": "set offsets"
+    "12": "circular pocket milling CW"
+    "13": "circular pocket milling CCW"
+    "17": "XY plane selection"
+    "18": "XZ plane selection"
+    "19": "YZ plane selection"
+    "20": "select inches"
+    "21": "select metric"
+    "28": "return to machine zero point"
+    "29": "return from reference point"
+    "31": "feed until skip (probe; records #5061-#5066)"
+    "35": "automatic tool diameter measurement"
+    "36": "automatic work offset measurement"
+    "37": "automatic tool offset measurement"
+    "40": "cutter compensation cancel"
+    "41": "2D cutter compensation left"
+    "42": "2D cutter compensation right"
+    "43": "tool length compensation + (add)"
+    "44": "tool length compensation - (subtract)"
+    "47": "text engraving"
+    "49": "G43/G44/G143 cancel"
+    "50": "cancel scaling"
+    "51": "scaling"
+    "52": "set work coordinate system (group 00 or 12)"
+    "53": "non-modal machine coordinate selection"
+    "54": "select work coordinate system #1"
+    "55": "select work coordinate system #2"
+    "56": "select work coordinate system #3"
+    "57": "select work coordinate system #4"
+    "58": "select work coordinate system #5"
+    "59": "select work coordinate system #6"
+    "60": "uni-directional positioning"
+    "61": "exact stop mode"
+    "64": "G61 cancel"
+    "65": "macro subprogram call option"
+    "68": "rotation"
+    "69": "cancel G68 rotation"
+    "70": "bolt hole circle"
+    "71": "bolt hole arc"
+    "72": "bolt holes along an angle"
+    "73": "high-speed peck drilling canned cycle"
+    "74": "reverse tap canned cycle"
+    "76": "fine boring canned cycle"
+    "77": "back bore canned cycle"
+    "80": "canned cycle cancel"
+    "81": "drill canned cycle"
+    "82": "spot drill canned cycle"
+    "83": "normal peck drilling canned cycle"
+    "84": "tapping canned cycle"
+    "85": "boring canned cycle"
+    "86": "bore and stop canned cycle"
+    "89": "bore in, dwell, bore out canned cycle"
+    "90": "absolute position command"
+    "91": "incremental position command"
+    "92": "set work coordinate systems shift value"
+    "93": "inverse time feed mode"
+    "94": "feed per minute mode"
+    "95": "feed per revolution"
+    "98": "canned cycle initial point return"
+    "99": "canned cycle R plane return"
+    "100": "cancel mirror image"
+    "101": "enable mirror image"
+    "103": "limit block buffering (look-ahead P0-P15)"
+    "107": "cylindrical mapping"
+    "110-129": "#7 to #26 coordinate systems"
+    "136": "automatic work offset center measurement"
+    "141": "3D+ cutter compensation"
+    "143": "5-axis tool length compensation +"
+    "150": "general purpose pocket milling"
+    "154": "select work coordinates P1-P99"
+    "156": "broaching canned cycle"
+    "167": "modify setting"
+    "174": "CCW non-vertical rigid tap"
+    "184": "CW non-vertical rigid tap"
+    "187": "setting the smoothness level (accuracy control)"
+    "234": "tool center point control (TCPC) (UMC)"
+    "253": "orient spindle normal to feature coordinate system"
+    "254": "dynamic work offset (DWO) (UMC)"
+    "255": "cancel dynamic work offset (DWO) (UMC)"
+    "266": "visible axes linear rapid % motion"
+    "268": "feature coordinate system on"
+    "269": "feature coordinate system off"
+  M:
+    "00": "stop program"
+    "01": "optional program stop"
+    "02": "program end"
+    "03": "spindle forward"
+    "04": "spindle reverse"
+    "05": "spindle stop (waits for the spindle to stop)"
+    "06": "tool change"
+    "07": "shower coolant on"
+    "08": "coolant on"
+    "09": "coolant off"
+    "10": "engage 4th axis brake"
+    "11": "release 4th axis brake"
+    "12": "engage 5th axis brake"
+    "13": "release 5th axis brake"
+    "16": "tool change"
+    "19": "orient spindle"
+    "21-25": "optional user M function with M-Fin"
+    "29": "set output relay with M-Fin"
+    "30": "program end and reset"
+    "31": "chip conveyor forward"
+    "33": "chip conveyor stop"
+    "34": "coolant increment"
+    "35": "coolant decrement"
+    "36": "pallet part ready"
+    "39": "rotate tool turret"
+    "41": "low gear override"
+    "42": "high gear override"
+    "46": "Qn Pmm jump to line"
+    "48": "validate that the current program is appropriate for the loaded pallet"
+    "50": "pallet change sequence"
+    "51-55": "set optional user M-codes"
+    "59": "set output relay"
+    "61-65": "clear optional user M-codes"
+    "69": "clear output relay"
+    "70": "workholding clamp"
+    "71": "workholding unclamp"
+    "73": "tool air blast (TAB) on"
+    "74": "tool air blast (TAB) off"
+    "75": "set G35 or G136 reference point"
+    "78": "alarm if skip signal found"
+    "79": "alarm if skip signal not found"
+    "80": "auto door open"
+    "81": "auto door close"
+    "82": "tool unclamp"
+    "83": "auto air gun on"
+    "84": "auto air gun off"
+    "86": "tool clamp"
+    "88": "through-spindle coolant on"
+    "89": "through-spindle coolant off"
+    "90": "fixture clamp input on"
+    "91": "fixture clamp input off"
+    "95": "sleep mode"
+    "96": "jump if no input"
+    "97": "local sub-program call"
+    "98": "sub-program call"
+    "99": "sub-program return or loop"
+    "104": "probe arm extend"
+    "105": "probe arm retract"
+    "109": "interactive user input"
+    "130": "display media"
+    "131": "cancel display media"
+    "138": "spindle speed variation on"
+    "139": "spindle speed variation off"
+    "158": "mist condenser on"
+    "159": "mist condenser off"
+    "160": "cancel active PulseJet"
+    "161": "Pnn PulseJet continuous mode"
+    "162": "Pnn PulseJet single event mode"
+    "163": "Pnn PulseJet modal mode"
+    "199": "pallet / part load or program end"
+  addresses: [A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z]
+  lathe:
+    src: haas-ngc-lathe-om-2020
+    page: "297-303 (7.1.1 List of G-codes), 391-412 (8 M-codes)"
+    G:
+      "00": "rapid motion positioning"
+      "01": "linear interpolation motion"
+      "02": "CW circular interpolation motion"
+      "03": "CCW circular interpolation motion"
+      "04": "dwell"
+      "09": "exact stop"
+      "10": "set offsets"
+      "14": "secondary spindle swap"
+      "15": "secondary spindle swap cancel"
+      "17": "XY plane"
+      "18": "XZ plane"
+      "19": "YZ plane"
+      "20": "select inches"
+      "21": "select metric"
+      "28": "return to machine zero point"
+      "29": "return from reference point"
+      "31": "skip function"
+      "32": "thread cutting"
+      "40": "tool nose compensation cancel"
+      "41": "tool nose compensation (TNC) left"
+      "42": "tool nose compensation (TNC) right"
+      "50": "spindle speed limit; set global coordinate offset (FANUC)"
+      "52": "set local coordinate system (FANUC)"
+      "53": "machine coordinate selection"
+      "54-59": "coordinate system #1-#6 (FANUC)"
+      "61": "exact stop modal"
+      "64": "exact stop cancel G61"
+      "65": "macro subprogram call option"
+      "70": "finishing cycle"
+      "71": "O.D./I.D. stock removal cycle"
+      "72": "end face stock removal cycle"
+      "73": "irregular path stock removal cycle"
+      "74": "end face grooving cycle"
+      "75": "O.D./I.D. grooving cycle"
+      "76": "threading cycle, multiple pass"
+      "80": "canned cycle cancel"
+      "81": "drill canned cycle"
+      "82": "spot drill canned cycle"
+      "83": "normal peck drilling canned cycle"
+      "84": "tapping canned cycle"
+      "85": "boring canned cycle"
+      "86": "bore and stop canned cycle"
+      "89": "bore and dwell canned cycle"
+      "90": "O.D./I.D. turning cycle"
+      "92": "threading cycle"
+      "94": "end facing cycle"
+      "95": "live tooling rigid tap (face)"
+      "96": "constant surface speed on"
+      "97": "constant surface speed off"
+      "98": "feed per minute"
+      "99": "feed per revolution"
+      "100": "disable mirror image"
+      "101": "enable mirror image"
+      "103": "limit block lookahead"
+      "105": "servo bar command"
+      "107": "cylindrical mapping"
+      "110-111": "coordinate system #7, #8"
+      "112": "XY to XC interpolation"
+      "113": "cancel G112"
+      "114-129": "coordinate system #9-#24"
+      "154": "select work coordinates P1-99"
+      "156": "broaching canned cycle"
+      "167": "modify setting"
+      "184": "reverse tapping canned cycle for left hand threads"
+      "186": "reverse live tool rigid tap (for left hand threads)"
+      "187": "accuracy control"
+      "195": "forward live tool radial tapping (diameter)"
+      "196": "reverse live tool radial tapping (diameter)"
+      "198": "disengage synchronous spindle control"
+      "199": "engage synchronous spindle control"
+      "200": "index on the fly"
+      "211": "manual tool setting"
+      "212": "auto tool setting"
+      "241": "radial drill canned cycle"
+      "242": "radial spot drill canned cycle"
+      "243": "radial normal peck drilling canned cycle"
+      "245": "radial boring canned cycle"
+      "246": "radial bore and stop canned cycle"
+      "249": "radial bore and dwell canned cycle"
+      "266": "visible axes linear rapid % motion"
+    M:
+      "00": "stop program"
+      "01": "optional program stop"
+      "02": "program end"
+      "03": "spindle on forward"
+      "04": "spindle on reverse"
+      "05": "spindle stop"
+      "08": "coolant on"
+      "09": "coolant off"
+      "10": "chuck clamp"
+      "11": "chuck unclamp"
+      "12": "auto jet air blast on (optional)"
+      "13": "auto jet air blast off (optional)"
+      "14": "main spindle brake on (optional C axis)"
+      "15": "main spindle brake off"
+      "17": "turret rotation forward"
+      "18": "turret rotation reverse"
+      "19": "orient spindle (optional)"
+      "21": "tailstock advance (optional)"
+      "22": "tailstock retract (optional)"
+      "23": "chamfer out of thread on"
+      "24": "chamfer out of thread off"
+      "30": "end of program and reset"
+      "31": "chip auger forward (optional)"
+      "33": "chip auger stop (optional)"
+      "35": "parts catcher part-off position"
+      "36": "parts catcher on (optional)"
+      "37": "parts catcher off (optional)"
+      "38": "spindle speed variation on"
+      "39": "spindle speed variation off"
+      "41": "low gear (optional)"
+      "42": "high gear (optional)"
+      "51-56": "turn on built-in M-code relay"
+      "59": "turn on output relay"
+      "61-66": "turn off built-in M-code relay"
+      "69": "turn off output relay"
+      "78": "alarm if skip signal found"
+      "79": "alarm if skip signal not found"
+      "85": "automatic door open (optional)"
+      "86": "automatic door close (optional)"
+      "88": "high pressure coolant on (optional)"
+      "89": "high pressure coolant off (optional)"
+      "90": "fixture clamp input on"
+      "91": "fixture clamp input off"
+      "95": "sleep mode"
+      "96": "jump if no signal"
+      "97": "local subprogram call"
+      "98": "subprogram call"
+      "99": "subprogram return or loop"
+      "104": "probe arm extend (optional)"
+      "105": "probe arm retract (optional)"
+      "109": "interactive user input"
+      "110": "secondary spindle chuck clamp (optional)"
+      "111": "secondary spindle chuck unclamp (optional)"
+      "119": "secondary spindle orient (optional)"
+      "121-126": "built-in M-code relays with M-Fin"
+      "129": "turn on M-code relay with M-Fin"
+      "130": "display media"
+      "131": "cancel display media"
+      "133": "live tool forward (optional)"
+      "134": "live tool reverse (optional)"
+      "135": "live tool stop (optional)"
+      "143": "secondary spindle forward (optional)"
+      "144": "secondary spindle reverse (optional)"
+      "145": "secondary spindle stop (optional)"
+      "146": "steady rest clamp (optional)"
+      "147": "steady rest unclamp (optional)"
+      "219": "live tool orient (optional)"
+
+variables:
+  src: haas-ngc-mill-om-2020
+  page: "253-263 (macro argument tables, 6.13.7 Macro Variables Table), 264-270 (system variables in depth)"
+  notes: "NGC variable numbers; legacy (Classic Haas control) numbers in 'legacy' (#100 and #10100 address the same data). access: r = marked '(read only)' in the table or described only as read; w = set to trigger an action; rw = described as settable (or local/general-purpose storage); unspecified = the manual says neither (tool offsets are assumed writable as on Fanuc-style controls, but the manual does not say so). #5021-#5026 and #5041-#5046 cannot be read while the machine is in motion; reading any work offset stops the interpretation look-ahead until that block is executed. Lathe tool offset variables differ and are listed under lathe_tool_offsets."
+  g65_arguments: {A: "#1", B: "#2", C: "#3", I: "#4", J: "#5", K: "#6", D: "#7", E: "#8", F: "#9", H: "#11", M: "#13", Q: "#17", R: "#18", S: "#19", T: "#20", U: "#21", V: "#22", W: "#23", X: "#24", Y: "#25", Z: "#26", "G L N O P": "not usable as arguments"}
+  list:
+    - {var: "#0", access: r, meaning: "not a number (read only)"}
+    - {var: "#1-#33", access: rw, meaning: "macro call arguments (local)"}
+    - {var: "#10000-#10149", legacy: "#100-#149", access: rw, meaning: "general-purpose variables saved on power off"}
+    - {var: "#10150-#10199", legacy: "#150-#199", access: rw, meaning: "probe values (if installed)"}
+    - {var: "#10200-#10499", access: rw, meaning: "general-purpose variables saved on power off"}
+    - {var: "#10500-#10549", legacy: "#500-#549", access: rw, meaning: "general-purpose variables saved on power off"}
+    - {var: "#10550-#10599", legacy: "#550-#599", access: rw, meaning: "probe calibration data (if installed)"}
+    - {var: "#10600-#10699", legacy: "#600-#699", access: rw, meaning: "general-purpose variables saved on power off"}
+    - {var: "#700-#749", access: none, meaning: "hidden variables for internal use only"}
+    - {var: "#709", access: r, meaning: "fixture clamp input (do not use for general purpose); = 1 with M90 active and spindle commanded on gives alarm 973"}
+    - {var: "#10800-#10999", legacy: "#800-#999", access: rw, meaning: "general-purpose variables saved on power off"}
+    - {var: "#11000-#11063", access: r, meaning: "64 discrete inputs"}
+    - {var: "#1064-#1068", access: unspecified, meaning: "maximum axis loads X, Y, Z, A, B"}
+    - {var: "#1080-#1087", access: r, meaning: "raw analog to digital inputs"}
+    - {var: "#1090-#1098", access: r, meaning: "filtered analog to digital inputs (#1098 spindle load with Haas vector drive)"}
+    - {var: "#1601-#1800", access: unspecified, meaning: "number of flutes on tools 1-200"}
+    - {var: "#1801-#2000", access: unspecified, meaning: "maximum recorded vibrations of tools 1-200"}
+    - {var: "#2001-#2200", access: unspecified, meaning: "tool length offsets (mill)"}
+    - {var: "#2201-#2400", access: unspecified, meaning: "tool length wear (mill)"}
+    - {var: "#2401-#2600", access: unspecified, meaning: "tool diameter/radius offsets (mill)"}
+    - {var: "#2601-#2800", access: unspecified, meaning: "tool diameter/radius wear (mill)"}
+    - {var: "#3000", access: w, meaning: "programmable alarm (alarm 1000 + n)"}
+    - {var: "#3001", access: rw, meaning: "millisecond timer (ms since power on; can be set)"}
+    - {var: "#3002", access: rw, meaning: "hour timer (can be set)"}
+    - {var: "#3003", access: rw, meaning: "single block suppression"}
+    - {var: "#3004", access: rw, meaning: "override FEED HOLD control"}
+    - {var: "#3006", access: w, meaning: "programmable stop with message"}
+    - {var: "#3011", access: unspecified, meaning: "year, month, day"}
+    - {var: "#3012", access: unspecified, meaning: "hour, minute, second"}
+    - {var: "#3020", access: r, meaning: "power on timer"}
+    - {var: "#3021-#3022", access: unspecified, meaning: "cycle start timer, feed timer"}
+    - {var: "#3023-#3025", access: r, meaning: "present part, last complete part, previous part timers"}
+    - {var: "#3026", access: r, meaning: "tool in spindle"}
+    - {var: "#3027", access: r, meaning: "spindle RPM"}
+    - {var: "#3028", access: unspecified, meaning: "number of pallets loaded on receiver"}
+    - {var: "#3030", access: rw, meaning: "single block (= 1 switches single block on; NGC needs no G103 P1 before it)"}
+    - {var: "#3032", access: unspecified, meaning: "block delete"}
+    - {var: "#3033", access: unspecified, meaning: "optional stop"}
+    - {var: "#3034", access: r, meaning: "Safe Run"}
+    - {var: "#3201-#3400", access: unspecified, meaning: "actual diameter for tools 1-200"}
+    - {var: "#3401-#3600", access: unspecified, meaning: "programmable coolant positions for tools 1-200"}
+    - {var: "#3901-#3902", access: unspecified, meaning: "M30 count 1 and 2"}
+    - {var: "#4001-#4021", access: r, meaning: "last block (modal) G-code group codes"}
+    - {var: "#4101-#4126", access: r, meaning: "last block (modal) address data, same letter mapping as the macro arguments (X1.3 sets #4124)"}
+    - {var: "#5001-#5006", access: r, meaning: "last target position (final programmed point of the last motion block) in the current work coordinates; readable while moving"}
+    - {var: "#5021-#5026", access: r, meaning: "current machine coordinate position X, Y, Z, A, B, C; not readable while the machine is in motion"}
+    - {var: "#5041-#5046", access: r, meaning: "current work coordinate position X, Y, Z, A, B, C; not readable while the machine is in motion"}
+    - {var: "#5061-#5069", access: r, meaning: "position of the last skip signal X, Y, Z, A, B, C, U, V, W in work coordinates (#5063 includes tool length compensation); readable while moving"}
+    - {var: "#5081-#5086", access: r, meaning: "current total tool length compensation in X, Y, Z, A, B, C (offset selected by H (#4008) plus wear)"}
+    - {var: "#5201-#5206", access: rw, meaning: "G52 offset values X, Y, Z, A, B, C"}
+    - {var: "#5221-#5226", access: rw, meaning: "G54 work offset X, Y, Z, A, B, C"}
+    - {var: "#5241-#5246", access: rw, meaning: "G55 work offset"}
+    - {var: "#5261-#5266", access: rw, meaning: "G56 work offset"}
+    - {var: "#5281-#5286", access: rw, meaning: "G57 work offset"}
+    - {var: "#5301-#5306", access: rw, meaning: "G58 work offset"}
+    - {var: "#5321-#5326", access: rw, meaning: "G59 work offset"}
+    - {var: "#5401-#5500", access: unspecified, meaning: "tool feed timers (seconds)"}
+    - {var: "#5501-#5600", access: unspecified, meaning: "total tool timers (seconds)"}
+    - {var: "#5601-#5699", access: unspecified, meaning: "tool life monitor limit"}
+    - {var: "#5701-#5800", access: unspecified, meaning: "tool life monitor counter"}
+    - {var: "#5801-#5900", access: unspecified, meaning: "tool load monitor maximum load sensed so far"}
+    - {var: "#5901-#6000", access: unspecified, meaning: "tool load monitor limit"}
+    - {var: "#6198", access: r, meaning: "NGC/CF flag (read-only value 1000000)"}
+    - {var: "#7001-#7386", access: rw, meaning: "G110-G129 (G154 P1-P20) additional work offsets (legacy numbers)"}
+    - {var: "#14001-#15966", access: rw, meaning: "G154 P1-P99 additional work offsets (NGC numbers)"}
+    - {var: "#8500", access: rw, meaning: "Advanced Tool Management (ATM) group ID"}
+    - {var: "#8501-#8515", access: r, meaning: "ATM: group life/usage/holes/feed time/total time, next tool number and its remaining life values"}
+    - {var: "#8550", access: rw, meaning: "individual tool ID (selects the tool read by #8551-#8564)"}
+    - {var: "#8551-#8564", access: r, meaning: "data of the selected tool: flutes, vibration, length/diameter offsets and wear, actual diameter, coolant position, timers, life and load monitor"}
+    - {var: "#20000-#29999", access: unspecified, meaning: "settings"}
+    - {var: "#30000-#39999", access: unspecified, meaning: "parameters"}
+  lathe_tool_offsets:
+    src: haas-ngc-lathe-om-2020
+    list:
+      - {var: "#2001-#2050", access: rw, meaning: "X axis tool shift offsets"}
+      - {var: "#2051-#2100", access: rw, meaning: "Y axis tool shift offsets"}
+      - {var: "#2101-#2150", access: rw, meaning: "Z axis tool shift offsets"}
+      - {var: "#2201-#2250", access: rw, meaning: "tool nose radius offsets (the manual labels this range 'Tool nose radius wear offsets', the same text as #2901-#2950)"}
+      - {var: "#2301-#2350", access: rw, meaning: "tool tip direction"}
+      - {var: "#2701-#2750", access: rw, meaning: "X axis tool wear offsets"}
+      - {var: "#2751-#2800", access: rw, meaning: "Y axis tool wear offsets"}
+      - {var: "#2801-#2850", access: rw, meaning: "Z axis tool wear offsets"}
+      - {var: "#2901-#2950", access: rw, meaning: "tool nose radius wear offsets"}

@@ -1,0 +1,29 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/models/sanity-rules.yaml and docs/models/sanity.md (program sanity checks).
+# The Haas manuals (haas-ngc-mill-om-2020, haas-ngc-lathe-om-2020) are in controllers.yaml,
+# ISO 6983-1 (iso-6983-1-2009) in models-controller.yaml.
+entries:
+  smid-2008:
+    type: book
+    authors: "Smid, P."
+    title: "CNC Programming Handbook: A Comprehensive Guide to Practical CNC Programming"
+    edition: 3
+    publisher: "Industrial Press, New York"
+    year: 2008
+    pages: "program structure and safety blocks, tool length offset (G43 after a tool change), machine zero return (G91 G28), canned cycles (R level, G98/G99), tapping (feed = pitch x rpm), circular interpolation (arc end point and radius)"
+  oberg-2016:
+    type: handbook
+    authors: "Oberg, E.; Jones, F.D.; Horton, H.L.; Ryffel, H.H."
+    title: "Machinery's Handbook"
+    edition: 30
+    publisher: "Industrial Press, New York"
+    year: 2016
+    pages: "tapping: tap drill sizes and the drilled depth of blind holes beyond the full thread"
+  iso-513-2012:
+    type: standard
+    authors: "ISO"
+    title: "ISO 513:2012 Classification and application of hard cutting materials for metal removal with defined cutting edges - Designation of the main groups and groups of application"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2012
+    pages: "main groups P, M, K, N, S, H"

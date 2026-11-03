@@ -1,0 +1,144 @@
+# Setup the sanity fixtures run against (tests/fixtures/sanity_all_mistakes.nc, sanity_clean.nc):
+# a 100 x 80 x 30 mm Al 6061-T6 plate held by two strap clamps on a 3-axis Haas-dialect mill that
+# has flood coolant and an air blast but no through-spindle coolant. Project-file layout
+# (db/_templates/project.yaml) with the machine, material, coolant fluid and tools written inline,
+# as the resolved project gives them. Program coordinates (G54): X 0..100, Y 0..80, Z -30..0 (top).
+# The clamps (outline_mm, stock frame) stand 15 mm above the plate top: Z 0..15 in G54.
+format: cnctwin-project
+version: 1
+name: "Sanity fixture: plate with pocket, holes, taps and a slot"
+seed: 7
+
+machine:
+  id: fixture-vmc
+  type: vertical_mill
+  controller: {dialect: haas, least_input_increment_mm: 0.001}
+  axes:
+    X: {type: linear, travel_mm: [-762, 0]}
+    Y: {type: linear, travel_mm: [-406, 0]}
+    Z: {type: linear, travel_mm: [-508, 0]}
+  kinematics: {home_mm: {X: 0, Y: 0, Z: 0}}
+  coolant:
+    tank_l: 208
+    pumps: [{id: flood, kind: flood, pressure_bar: 2, flow_l_min: 45, power_kW: 0.75}]
+    nozzles: [{id: n1, kind: flood, pump: flood}]
+    air_blast: {flow_l_min: 170, pressure_bar: 6.9}
+
+material: {id: al6061-t6, name: "Aluminium 6061-T6", family: aluminium, iso_group: N}
+coolant:
+  fluid: {id: emulsion-8pct, kind: emulsion}
+  concentration_pct: 8
+
+stock: {kind: block, size_mm: [100, 80, 30]}
+
+tools:
+  list:
+    - number: 1
+      tool:
+        id: fixture-em10
+        type: square_endmill
+        hand: right
+        tool_material: {class: carbide, id: carbide-submicron-10co}
+        geometry: {diameter_mm: 10, flutes: 3, corner_radius_mm: 0, cutting_length_mm: 22, flute_length_mm: 22}
+        cutting_data:
+          - {iso_group: N, vc_m_min: {min: 200, start: 400, max: 600}, fz_mm: {min: 0.02, start: 0.05, max: 0.10},
+             ap_max_mm: 15, ae_max_xD: 1.0}
+        price_eur: 85
+        regrinds: 2
+      stickout_mm: 35
+      length_offset_mm: 120.0
+      radius_offset_mm: 5.0
+      comment: "D10 3FL CARBIDE ENDMILL"
+    - number: 2
+      tool:
+        id: fixture-spot10
+        type: spot_drill
+        hand: right
+        tool_material: {class: carbide, id: carbide-submicron-10co}
+        geometry: {diameter_mm: 10, flutes: 2, point_angle_deg: 90, cutting_length_mm: 20, flute_length_mm: 20}
+        cutting_data:
+          - {iso_group: N, vc_m_min: {min: 60, start: 100, max: 150}, f_mm: {min: 0.05, start: 0.10, max: 0.25}}
+        price_eur: 40
+        regrinds: 3
+      stickout_mm: 40
+      length_offset_mm: 110.0
+      radius_offset_mm: 5.0
+      comment: "D10 SPOT DRILL 90DEG"
+    - number: 3
+      tool:
+        id: fixture-drill68
+        type: twist_drill
+        hand: right
+        tool_material: {class: carbide, id: carbide-submicron-10co}
+        geometry: {diameter_mm: 6.8, flutes: 2, point_angle_deg: 140, cutting_length_mm: 20, flute_length_mm: 20}
+        cutting_data:
+          - {iso_group: N, vc_m_min: {min: 50, start: 100, max: 150}, f_mm: {min: 0.05, start: 0.12, max: 0.20}}
+        price_eur: 60
+        regrinds: 3
+      stickout_mm: 45
+      length_offset_mm: 130.0
+      radius_offset_mm: 3.4
+      comment: "D6.8 DRILL 140DEG"
+    - number: 4
+      tool:
+        id: fixture-tap-m8
+        type: tap_cutting
+        hand: right
+        tool_material: {class: hss, id: hss-m2}
+        geometry: {diameter_mm: 8, flutes: 3, cutting_length_mm: 20, flute_length_mm: 20, chamfer_threads: 3,
+                   thread: {standard: ISO metric, pitch_mm: 1.25}}
+        cutting_data:
+          - {iso_group: N, vc_m_min: {min: 10, start: 20, max: 30}}
+        price_eur: 35
+        regrinds: 0
+      stickout_mm: 50
+      length_offset_mm: 140.0
+      radius_offset_mm: 4.0
+      comment: "M8X1.25 TAP"
+    - number: 5
+      tool:
+        id: fixture-em6
+        type: square_endmill
+        hand: right
+        tool_material: {class: carbide, id: carbide-submicron-10co}
+        geometry: {diameter_mm: 6, flutes: 2, corner_radius_mm: 0, cutting_length_mm: 12, flute_length_mm: 12}
+        cutting_data:
+          - {iso_group: N, vc_m_min: {min: 150, start: 300, max: 500}, fz_mm: {min: 0.01, start: 0.03, max: 0.06},
+             ap_max_xD: 1.5, ae_max_xD: 1.0}
+        price_eur: 45
+        regrinds: 2
+      stickout_mm: 30
+      length_offset_mm: 115.0
+      radius_offset_mm: 3.0
+      comment: "D6 ENDMILL"
+    - number: 6
+      tool:
+        id: fixture-em8
+        type: square_endmill
+        hand: right
+        tool_material: {class: carbide, id: carbide-submicron-10co}
+        geometry: {diameter_mm: 8, flutes: 2, corner_radius_mm: 0, cutting_length_mm: 16, flute_length_mm: 16}
+        cutting_data:
+          - {iso_group: N, vc_m_min: {min: 150, start: 300, max: 500}, fz_mm: {min: 0.02, start: 0.05, max: 0.08},
+             ap_max_xD: 1.5, ae_max_xD: 1.0}
+        price_eur: 55
+        regrinds: 2
+      stickout_mm: 32
+      length_offset_mm: 125.0
+      radius_offset_mm: 4.0
+      comment: "D8 ENDMILL"
+
+operations:
+  - name: OP10
+    program: sanity_all_mistakes.nc
+    setup:
+      workholding:
+        - {device: {id: fixture-strap-left, type: clamp}, outline_mm: [[-10, 30, 30], [8, 50, 45]]}
+        - {device: {id: fixture-strap-back, type: clamp}, outline_mm: [[40, 72, 30], [60, 90, 45]]}
+      stock_pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}
+      fixture_pose: {translate_mm: [-431.0, -243.2, -430.0], rotate_deg: [0, 0, 0]}
+      work_offsets_mm: {G54: [-431.0, -243.2, -400.0], G55: [-850.0, -243.2, -400.0]}
+
+production:
+  parts: 1
+  operator: {load_s: 30, unload_s: 20, door_s: 4, clean_s: 15, inspect_every: 0, inspect_s: 60}

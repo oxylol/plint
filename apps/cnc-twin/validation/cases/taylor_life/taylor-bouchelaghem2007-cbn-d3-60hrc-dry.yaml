@@ -1,0 +1,71 @@
+# Bouchelaghem et al. (2007): TiN-coated CBN (57 % CBN) SNGA 120408 T01020 in dry hard turning of AISI D3
+# at 60 HRC, f 0.08 mm/rev, ap 0.5 mm, vc 85-310 m/min: tool life to VB = 0.3 and 0.4 mm.
+format: cnctwin-validation-case
+version: 1
+id: taylor-bouchelaghem2007-cbn-d3-60hrc-dry
+quantity: taylor_life
+reference:
+  src: bouchelaghem-2007-cbn-d3-wear
+  location: "Sect. 2 (setup, criterion), Fig. 7 (tool life versus cutting speed for [VB] = 0.3 and 0.4 mm; bar heights read from the vector drawing of the PDF), Sect. 3.3 and Fig. 8 (chip volumes, used as a check)"
+  digitised: true
+  uncertainty_pct: 1
+  measured: true
+  note: "Bar tops taken from the PDF drawing commands (front face of each 3D bar, 2.981 pt per minute between the 0 and 45 min axis labels); reading error below 0.1 min. Cross-check: T = V / (vc f ap) with the chip volumes stated in the text gives 40.0 min at 85 m/min (136 cm3) and 3.0 min at 310 m/min (37.2 cm3) for VB 0.3 mm, 45.0 and 4.0 min for VB 0.4 mm (computed here), and the percentage drops quoted in Sect. 3.3 (45, 23, 36, 19, 67 %) reproduce the bars. One test per speed; no scatter stated."
+setup:
+  operation: longitudinal_turning
+  material:
+    db: d2-60hrc
+    note: "AISI D3 (not D2) hardened to 60 HRC: quenched from 940 C, tempered at 280 C. Table 1 composition: C 2, Mn 0.29, Si 0.31, P 0.011, S 0.009, Ni 0.259 and 'Cr 1.14' (probably 11.4 misprinted: D3 is a 12 % Cr steel). The DB entry (D2, 1.5 C - 12 Cr - Mo - V, 60 HRC) is the closest grade; D3 has more carbide (higher C, no Mo/V)."
+  stock:
+    src: bouchelaghem-2007-cbn-d3-wear
+    page: Sect. 2
+    form: round bar
+    diameter_mm: 80
+    length_mm: 400
+  tool:
+    src: bouchelaghem-2007-cbn-d3-wear
+    page: Sect. 2
+    type: turning_insert
+    iso_designation: SNGA 120408 T01020
+    grade: "CBN (57 % CBN), TiN-covered; maker and grade name not given"
+    tool_class: cbn
+    coating: TiN
+    holder: PSBNR 2525K12
+    entering_angle_deg: 75
+    clearance_deg: 6
+    rake_deg: -6
+    inclination_deg: -6
+    nose_radius_mm: {value: 0.8, src: est, note: "decoded from the ISO designation (nose-radius code 08 = 0.8 mm); not stated in words"}
+    edge_preparation: {value: "chamfer 0.10 mm x 20 deg", src: est, note: "decoded from the edge code T01020 of the designation"}
+    assumed_inputs: [nose_radius_mm, edge_preparation]
+  machine:
+    src: bouchelaghem-2007-cbn-d3-wear
+    page: Sect. 2
+    model: TOS TRENCIN SN40 lathe
+    power_kW: 6.6
+  conditions:
+    src: bouchelaghem-2007-cbn-d3-wear
+    page: Sect. 2, Fig. 7
+    cutting_speed_m_min: [85, 115, 150, 200, 240, 310]
+    feed_mm_rev: 0.08
+    ap_mm: 0.5
+    coolant: dry
+    wear_criterion_VB_mm: 0.3
+    criterion_note: "allowable VB 0.3 mm (ISO 3685 long-term tests); wear also followed beyond it to 0.4 mm"
+  dynamics: null
+  program: null
+reference_values:
+  - {name: tool_life_VB0.3, value: 40.0, unit: min, uncertainty: 0.5, x: 85, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.3, value: 22.0, unit: min, uncertainty: 0.5, x: 115, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.3, value: 16.9, unit: min, uncertainty: 0.5, x: 150, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.3, value: 11.0, unit: min, uncertainty: 0.5, x: 200, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.3, value: 9.0, unit: min, uncertainty: 0.5, x: 240, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.3, value: 3.0, unit: min, uncertainty: 0.5, x: 310, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.4, value: 45.0, unit: min, uncertainty: 0.5, x: 85, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.4, value: 30.0, unit: min, uncertainty: 0.5, x: 115, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.4, value: 21.2, unit: min, uncertainty: 0.5, x: 150, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.4, value: 14.7, unit: min, uncertainty: 0.5, x: 200, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.4, value: 13.0, unit: min, uncertainty: 0.5, x: 240, x_name: cutting_speed, x_unit: m/min}
+  - {name: tool_life_VB0.4, value: 4.0, unit: min, uncertainty: 0.5, x: 310, x_name: cutting_speed, x_unit: m/min}
+reference_curves: []
+notes: "Bar heights (min): VB 0.3 mm 39.97, 21.98, 16.95, 10.97, 8.96, 2.96; VB 0.4 mm 44.96, 29.97, 21.17, 14.65, 12.96, 3.96 (read here); stored rounded to 0.1 min, uncertainty 0.5 min covers the reading of the wear curves by the authors. Flank wear governs life (crater wear KT stays small, Sect. 3.1); grooves from abrasion by carbides on the flank at all speeds, diffusion and chipping at high speed (Sect. 3.2), and nose collapse near the end at 150-310 m/min. The end points 85 and 240 m/min give a Taylor exponent n = ln(240/85) / ln(40/9) = 0.70 (computed here), with a much steeper drop to 310 m/min. The VB-versus-time curves of Fig. 3 are a raster image and were not digitised."

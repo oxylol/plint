@@ -1,0 +1,43 @@
+# Calibration of the Oxley prediction to measured Kienzle / mechanistic coefficients
+# (cnctwin.mechanics.calibration, docs/models/mechanics.md, "Calibration mode").
+format: cnctwin-model-params
+version: 1
+model: mechanics-calibration
+description: "Reference conditions assumed for measured force coefficients that do not state them, and bounds of the correction"
+params:
+  default_cal_h_lo_m:
+    value: 5.0e-5
+    unit: m
+    src: est
+    note: "lower end of the uncut chip thickness range a Kienzle entry is taken to be valid for when its calibration block gives none (turning feeds 0.05-0.4 mm are typical of catalogue and orthogonal-test Kienzle fits, e.g. klippel-2022: 0.01-0.4 mm)"
+  default_cal_h_hi_m:
+    value: 4.0e-4
+    unit: m
+    src: est
+    note: "upper end of that range"
+  default_cal_edge_radius_m:
+    value: 3.0e-5
+    unit: m
+    src: est
+    note: "edge radius assumed for a calibration without edge_radius_um (honed carbide inserts 20-50 um; klippel-2022 measured 37.5 um mean on CCMW H13A)"
+  default_cal_work_temp_K:
+    value: 293.15
+    unit: K
+    src: est
+    note: "workpiece temperature of a calibration without work_temp_degC (room temperature)"
+  min_cal_scale:
+    value: 0.2
+    unit: "-"
+    src: est
+    note: "the correction factor measured / predicted is clamped to [min_cal_scale, max_cal_scale]; a factor outside means the measurement and the model disagree beyond a modelling error and the clamp is reported"
+  max_cal_scale:
+    value: 5.0
+    unit: "-"
+    src: est
+    note: "upper clamp of the correction factor"
+  cal_h_nodes:
+    value: 7
+    unit: "-"
+    range: [2, 50]
+    src: est
+    note: "numerical setting: log-spaced chip-thickness nodes over the calibration range at which measured and predicted forces are compared"

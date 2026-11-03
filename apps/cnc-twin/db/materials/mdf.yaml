@@ -1,0 +1,157 @@
+# Workpiece material: medium-density fibreboard, standard UF-bonded furniture grade, ~700-750 kg/m3, raw (uncoated).
+# Sources: db/bibliography/materials-nonmetals.yaml. Few board-specific measured values were readable; see notes.
+# Data the material template has no key for (composition, board edge forces, hazards ...) is in `extensions`.
+format: cnctwin-material
+version: 1
+id: mdf
+name: "MDF, medium-density fibreboard, UF-bonded, ~730 kg/m3 (raw board)"
+family: wood
+iso_group: O
+condition: "dry-process fibreboard (EN 316 type MDF), urea-formaldehyde bonded, sanded, uncoated, equilibrium moisture 6-8 %"
+designations: {EN_316: "MDF", EN_622_5: "MDF (general purpose, dry conditions)", emission_class: "E1 typical"}
+stock_forms: []
+
+physical:
+  src: wikipedia-en-mdf-2026
+  density_kg_m3: {value: 730, src: est, range: [600, 800], note: "nominal mean density chosen for this file (task spec 700-750 kg/m3); typical MDF 600-800 kg/m3 (wikipedia-en-mdf-2026), trade 600-1000 (wikipedia-de-mdf-2026, leitz-2017-lexicon-ed7-ch11). Faces are denser than the core (see skin)"}
+  specific_heat_J_kgK: {table: [[20, 1470]], src: est, note: "USDA Wood Handbook Eqs. 4-16a/4-17/4-18 for wood fibre at 7 % MC and 293 K (fpl-2010-wood-handbook), applied to the whole board (UF resin and wax ignored)"}
+  conductivity_W_mK: {table: [[20, 0.17]], src: est, note: "solid-wood Eq. 4-15 of fpl-2010-wood-handbook with Gx = 0.68 (730 kg/m3 at 7 % MC) applied to fibreboard; in-plane and through-thickness assumed equal"}
+  expansion_1_K: {table: [[50, 1.0e-5]], src: est, note: "in-plane, assumed between wood along (3-5e-6) and across (3-4e-5) the grain for a random in-plane fibre mat; hygroexpansion dominates in practice"}
+  youngs_modulus_GPa: {table: [[20, 3.0]], note: "typical bending MOE"}
+  poisson: {value: 0.25, src: est, note: "assumed for the in-plane random fibre mat"}
+  solidus_degC: null
+  liquidus_degC: null
+  glass_transition_degC: null
+  decomposition_degC: {value: 200, src: fpl-2010-wood-handbook, note: "onset of significant wood pyrolysis (200-300 C); UF resin degradation in the same range is assumed (not read)"}
+  hardness: {janka_N: 4500, src: est, note: "placeholder: no MDF hardness was read; set somewhat below American beech (5800 N, fpl) for a 730 kg/m3 board"}
+  yield_MPa: {value: 20, src: est, note: "in-plane tensile/compressive strength assumed ~half the MOR (no value read)"}
+  ultimate_MPa: {value: 40, note: "typical MOR (bending strength)"}
+  elongation_pct: null
+  fracture_strain: {value: 0.013, src: est, note: "MOR / MOE = 40 / 3000"}
+  moisture_content_pct: {value: 7, src: wikipedia-de-mdf-2026, range: [6, 8], note: "water content of an E1 furniture board, 6-8 % of board mass (wet basis, ~7.5 % dry basis), midpoint"}
+  flexural_MPa: {value: 40, note: "typical MOR (bending strength)"}
+
+flow_stress:
+  model: none                      # task rule for wood-based boards; current schemas.py accepts only johnson_cook or null
+  yield_MPa: {value: 20, src: est, note: "see physical.yield_MPa"}
+  note: "MDF is a porous random fibre mat bonded by resin: no flow stress. Cutting model: in-plane isotropic linear edge-force coefficients (extensions.cutting.board_edge_forces) with the through-thickness density profile (skin); the low internal bond gives edge breakout and fuzzing rather than ductile chips."
+
+cutting:
+  kienzle:
+    - tool_class: carbide
+      coating: uncoated
+      process: milling
+      kc11_N_mm2: {value: 26, src: est, note: "Kienzle fit of the linear model Ktc 25 N/mm2 + Kte 1.0 N/mm / h (extensions.cutting.board_edge_forces) through h = 0.1 and 1.0 mm"}
+      mc: {value: 0.13, src: est, note: "from kc(0.1 mm) = 35 and kc(1.0 mm) = 26 N/mm2"}
+      kf11_N_mm2: null             # feed and passive forces not published: derived by the pipeline
+      mf: null
+      kp11_N_mm2: null
+      mp: null
+      h_ref_mm: 1
+      b_ref_mm: 1
+      rake_ref_deg: {value: 15, src: est, note: "typical HW/DP panel tool rake assumed"}
+      vc_ref_m_min: {value: 3600, src: est, note: "60 m/s, inside the Leitz MDF window 60-90 m/s"}
+      src: est
+      note: "no published specific cutting force for MDF was read"
+  mechanistic: []
+  min_chip_thickness_ratio: {value: 0.3, src: est, note: "assumed"}
+  indentation_coeff_N_mm3: {value: 8.0e2, src: est, note: "beech placeholder (1.0e3) scaled by density ratio 730/720 and rounded down for the weaker bond; order of magnitude only"}
+  work_hardening:
+    src: est
+    note: "not applicable to a fibre mat"
+    layer_depth_um: 0
+    hardness_increase_pct: 0
+    strain_hardening_exponent: 0
+
+friction:
+  - tool_class: carbide
+    coating: uncoated
+    mu_sliding: {value: 0.35, src: est, note: "assumed, similar to dry wood on carbide"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+  - tool_class: pcd
+    coating: uncoated
+    mu_sliding: {value: 0.3, src: est, note: "assumed"}
+    sticking_ratio: {value: 0.0, src: est, note: "no sticking zone"}
+
+chip:
+  tendency: powder                 # fibre bundles and fine dust, no coherent chip
+  segmentation: null
+  bue: null
+  breakability: {value: good, src: est, note: "no coherent chip"}
+  oxide_colours: null
+
+tool_life:
+  - tool_class: carbide
+    coating: uncoated
+    C_m_min: 9000
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.4
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: T = 120 min of cutting at 60 m/s assumed for HW. Glue lines, resin and sand/silica contamination make wood-based panels abrasive; Leitz recommends HW, HW solid or DP for chip and fibre boards (leitz-2020-lexicon-ed7-ch05) and notes that panel materials drove the move from carbide to PCD (leitz-2017-lexicon-ed7-ch11)"
+  - tool_class: pcd
+    coating: uncoated
+    C_m_min: 50000
+    n: 0.4
+    a: 0.2
+    b: 0.1
+    feed_ref_mm: 0.4
+    ap_ref_mm: 5
+    VB_limit_mm: 0.1
+    T_ref_min: 1
+    src: est
+    note: "placeholder: PCD life in panels is commonly quoted as 50-100x HW (not read); C set for ~70x"
+tool_life_usui: []
+
+residual_stress: []
+
+skin:                              # the template has no 'press skin' type: the denser faces are modelled as a skin of type none
+  src: est
+  note: "denser face layers left by the hot press (the press skin itself is sanded off, wikipedia-de-mdf-2026); Leitz shows chipboard and MDF density profiles only as a figure without numbers. Depth and factors assumed: ~1 mm per face, face density ~1.3x the core"
+  type: none
+  thickness_mm: 1.0
+  hardness_factor: 1.3
+  abrasiveness_factor: 1.3
+
+thermal_damage:
+  burn_degC: {value: 200, src: fpl-2010-wood-handbook, note: "pyrolysis onset of wood; scorching of MDF edges under rubbing; UF resin degrades in the same range (assumed)"}
+  white_layer_degC: null
+  melt_smear_degC: null
+
+ignition:
+  chip_ignition_degC: {value: 305, src: est, range: [290, 320], note: "between the derived piloted-ignition temperatures of particleboard (794 kg/m3, 563 K) and hardboard (1026 kg/m3, 593 K) in fpl-2010-wood-handbook Table 18-2; MDF itself is not listed"}
+  dust_explosible: {value: true, src: hse-2022-wis23, note: "fine wood-based dust is flammable and explosive in extraction systems"}
+
+composite: null
+
+extensions:                        # data outside the material template (not yet in cnctwin/db/schemas.py)
+  physical:
+    composition:
+      src: wikipedia-de-mdf-2026
+      note: "E1 furniture board with UF glue; each value is the midpoint of the range given in the source; en.wikipedia gives 82 % fibre, 9 % UF, 8 % water, 1 % wax"
+      wood_fibre_pct: {value: 81.5, range: [80, 83]}
+      UF_resin_pct: {value: 9.75, range: [9, 10.5]}
+      additives_pct: {value: 1.5, range: [0.5, 2.5], note: "mainly paraffin wax"}
+      water_pct: {value: 7, range: [6, 8]}
+    internal_bond_MPa: {value: 0.6, src: est, note: "tension perpendicular to the board; typical of EN 622-5 requirements for 12-19 mm boards (standard not read)"}
+  cutting:
+    board_edge_forces:             # linear model Fc/b = Kte + Ktc h, in-plane (any direction)
+      Ktc_N_mm2: {value: 25, src: est, note: "assumed slightly below beech along the grain (30 N/mm2, est): lower density and weak inter-fibre bond"}
+      Kte_N_mm: {value: 1.0, src: est, note: "assumed; includes rubbing on glue lines"}
+  chip:
+    dust_mass_fraction: {value: 0.5, src: est, range: [0.3, 0.8], note: "fraction of removed mass leaving as fine dust (< ~100 um) in routing; much higher than for solid wood because the board is made of fine fibres; assumed. 'When MDF is cut, a large quantity of dust particulate is released into the air' (wikipedia-en-mdf-2026)"}
+  hazards:
+    dust:
+      src: hse-2022-wis23
+      WEL_hardwood_mg_m3: {value: 3, note: "UK: for mixed hardwood/softwood dust the hardwood WEL applies to all of it; MDF fibre species are unknown, so the hardwood limit is the conservative choice (assumption)"}
+      note: "HSE lists composite boards (chipboard, fibre boards) as dust sources; fine dust is the main risk (asthma, irritation; hardwood dust nasal cancer). Wood dust is a known human carcinogen (ntp-2021-roc15-wood-dust)"
+    formaldehyde: {src: wikipedia-en-mdf-2026, note: "UF-bonded MDF may release formaldehyde, classified as a human carcinogen by IARC (Monograph 88, cited there); cutting and sanding may cause eye and lung irritation; E0/E1/E2 emission classes"}
+  recommended:
+    vc_m_s: {value: [60, 90], src: leitz-2017-lexicon-ed7-ch11, note: "window, MDF, cutting tools > 100 mm (sawing 60-90 m/s); shank router cutters 10-40 m/s"}
+    fz_mm: {value: [0.3, 0.5], src: leitz-2020-lexicon-ed7-ch05, note: "window, chipboard/MDF, multi-purpose cutterheads"}
+
+notes: "Raw UF-bonded MDF, nominal 730 kg/m3. Sourced: composition, typical density, MOE and MOR (Wikipedia, secondary), pyrolysis onset and neighbouring-panel ignition temperatures (USDA Wood Handbook), cutting windows (Leitz), dust and formaldehyde hazards (HSE, NTP, Wikipedia). Estimated: chosen density, cp and k (wood equations applied to the board), CTE, Poisson, hardness, in-plane strength, internal bond, every cutting, friction, dust-fraction and tool-life value, the density profile. Gaps: no maker datasheet (EN 622-5 values, EN 13986 thermal values) and no MDF cutting-force or tool-wear measurement could be read."

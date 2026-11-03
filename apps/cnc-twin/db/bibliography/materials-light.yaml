@@ -1,0 +1,341 @@
+# Sources for db/materials/{al6061-o, al6061-t6, al7075-o, al7075-t6, al7075-t7351, copper-c101,
+# brass-c360, magnesium-az31b, magnesium-az91d, ti6al4v}.yaml
+# All read on 2026-11-03. PDFs were text-extracted locally (scanned pages viewed as images);
+# open-access journal papers were read as full text through the Europe PMC REST service (url given).
+# Where a value was read in a secondary source that quotes an original paper, the secondary source
+# is the entry and the original is named in `note` (the original was not read).
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  # ------------------------------------------------------------------ aluminium
+  kaiser-2006-al6061-datasheet:
+    type: datasheet
+    authors: "Kaiser Aluminum"
+    title: "Sheet Coil & Plate Alloy 6061 - Technical Data"
+    venue: "Kaiser Aluminum, Rev. 05/06 (copy hosted by Protolabs)"
+    year: 2006
+    url: "https://Protolabs.com/media/1021492/6061-t651-cnc.pdf"
+    accessed: 2026-11-03
+    pages: "p.1 typical mechanical properties (T451, T6/T651: UTS, YS, El/4D, HB, shear, fatigue 5e8, E); p.2 typical physical properties (density 2.70, melting range 582-652 C, specific heat 896 J/kgK labelled 212 F/100 C, CTE 23.6e-6 20-100 C, k: O 180, T451 154, T6/T651 167 W/mK, IACS)"
+
+  kaiser-2006-al7075-datasheet:
+    type: datasheet
+    authors: "Kaiser Aluminum"
+    title: "Sheet Coil & Plate Alloy 7075 - Technical Data"
+    venue: "Kaiser Aluminum, Rev. 05/06 (scanned copy hosted by Protolabs)"
+    year: 2006
+    url: "https://Protolabs.com/media/uyxfxevh/7075_t6-cnc.pdf"
+    accessed: 2026-11-03
+    pages: "p.1 typical mechanical properties (T651: 572/503 MPa, 11 %, 150 HB, shear 331; T7351: 503/434 MPa, 13 %, shear 303; E 71.0 GPa); p.2 typical physical properties (density 2.80, melting range 532-635 C, cp 960 J/kgK at 100 C, CTE 23.4e-6 20-100 C, k T651 130 / T7351 155 W/mK, 33/40 % IACS)"
+
+  muraca-1972-al6061-handbook:
+    type: handbook
+    authors: "Muraca, R.F.; Whittick, J.S."
+    title: "Materials Data Handbook: Aluminum Alloy 6061 (2nd edition)"
+    venue: "Western Applied Research & Development, Inc. for NASA George C. Marshall Space Flight Center, contract NAS8-26644"
+    year: 1972
+    url: "https://ntrs.nasa.gov/api/citations/19720022808/downloads/19720022808.pdf"
+    accessed: 2026-11-03
+    pages: "Tabular abstract p. iv (density 2.70; k O 0.43, T6 0.40 cal/cm s C at 25 C; CTE 23.4e-6 20-100 C; cp 0.23 cal/g C at 100 C; O: Ftu 18.0 ksi, Fty 8.0 ksi, e 30 %; T6: 45.0/40.0 ksi, 17 %; E 10.0e3 ksi); 3.3 melting range 582-649 C; 7.21 Poisson 0.33; 7.31 Brinell 500 kg: O 30, T4/T451 65, T6/T651 95"
+    note: "Scanned NASA report with OCR text layer; NTRS document 19720022808"
+
+  muraca-1972-al7075-handbook:
+    type: handbook
+    authors: "Muraca, R.F.; Whittick, J.S."
+    title: "Materials Data Handbook: Aluminum Alloy 7075 (2nd edition)"
+    venue: "Western Applied Research & Development, Inc. for NASA George C. Marshall Space Flight Center, contract NAS8-26644"
+    year: 1972
+    url: "https://ntrs.nasa.gov/api/citations/19720022809/downloads/19720022809.pdf"
+    accessed: 2026-11-03
+    pages: "Tabular abstract (density 2.80; k T6 0.31 cal/cm s C at 25 C; CTE 23.6e-6 20-100 C; cp 0.23 cal/g C at 100 C; O: Ftu 33.0 ksi, Fty 15.0 ksi, e 17 %; T6/T651: 83.0/73.0 ksi, 11 %; E 10.4e3 ksi); 3.3 melting range approx. 477-638 C; 7.2 Poisson 0.33; 7.3 Brinell O 60, T6 150; Fig. 9.2111 p. 107 effect of temperature on alpha, C and K (from MIL-HDBK-5)"
+    note: "Scanned NASA report with OCR text layer; Fig. 9.2111 digitised from the page image"
+
+  dawara-2023-impact-framework:
+    type: article
+    authors: "Dawara, V.; Bajantri, A.; Dhami, H.S.; Murty, S.V.S.N.; Viswanathan, K."
+    title: "Design of a low-velocity impact framework for evaluating space-grade materials"
+    venue: "arXiv:2304.05231"
+    year: 2023
+    url: "https://arxiv.org/html/2304.05231v1"
+    accessed: 2026-11-03
+    pages: "Simulation section: Johnson-Cook constants for aluminium 6061 'taken from Ref. [37]': A = 334 MPa, B = 114 MPa, n = 0.42, C = 0.002, eps0 = 1 (m not given)"
+    note: "Secondary source for Lesuer, D.R., Kay, G.J., LeBlanc, M.M., 'Modeling large-strain, high-rate deformation in metals', LLNL 2001 (not read)."
+
+  luo-2021-al7075-drilling:
+    type: article
+    authors: "Luo, H.; Fu, J.; Wu, T.; Chen, N.; Li, H."
+    title: "Numerical simulation and experimental study on the drilling process of 7075-T6 aerospace aluminum alloy"
+    venue: "Materials 14(3), 553"
+    year: 2021
+    doi: "10.3390/ma14030553"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7865901/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 3 (Johnson-Cook constants for Al 7075-T6: A 452 MPa, B 457 MPa, C 0.01, n 0.357, m 1.1, eps0 1, Tr 20 C, Tm 604 C); Table 2 (AL7075 from DEFORM library: E 71.7 GPa, rho 2810, nu 0.33, c 960, k 173); Sect. 2.5 (friction coefficient 0.55 chosen from the 0.5-0.6 range of Ceretti and Arrazola)"
+    note: "JC constants attributed by the authors to Nemat-Nasser, S.; Amini, M.; Choi, J.; Isaacs, J. (2007) J. Mech. Mater. Struct. 2, 1901-1920 (not read)."
+
+  trujillo-2017-al7075-adhesion:
+    type: article
+    authors: "Trujillo, F.J.; Sevilla, L.; Marcos, M."
+    title: "Experimental parametric model for indirect adhesion wear measurement in the dry turning of UNS A97075 (Al-Zn) alloy"
+    venue: "Materials 10(2), 152"
+    year: 2017
+    doi: "10.3390/ma10020152"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5459150/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 3 (dry turning, vc 40-200 m/min, f 0.05-0.30 mm, ap 0.5-2 mm, TiN-coated WC KCMW 11T308FN, rake 17 deg); results: BUE/BUL at all speeds, intensity governed by feed (highest at 0.2-0.3 mm), cutting speed of little influence"
+
+  jomaa-2014-al7075-orthogonal:
+    type: article
+    authors: "Jomaa, W.; Songmene, V.; Bocher, P."
+    title: "Surface finish and residual stresses induced by orthogonal dry machining of AA7075-T651"
+    venue: "Materials 7(3), 1603"
+    year: 2014
+    doi: "10.3390/ma7031603"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC5453293/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Experimental (uncoated carbide TNMA120408 K68, vc 300 and 1000 m/min, f 0.05 and 0.25 mm, dry); conclusions (BUE intensified by feed; higher speed reduces BUE on the flank and promotes BUL on the rake face); Merchant friction angles 11-45 deg"
+
+  engin-1999-general-milling:
+    type: article
+    authors: "Engin, S.; Altintas, Y."
+    title: "Generalized modeling of milling mechanics and dynamics: Part I - helical end mills"
+    venue: "ASME conference paper, preprint hosted by Manufacturing Automation Laboratories Inc. (UBC)"
+    year: 1999
+    url: "https://www.malinc.com/wp-content/uploads/2014/06/GeneralTool_Endmill.pdf"
+    accessed: 2026-11-03
+    pages: "Fig. 9 caption (average cutting coefficients for Al-7075, bull-nose cutter Kennametal KIRP125-RP3 with RPGB-325 inserts, half-immersion down milling, fz 0.05 mm: Ktc 1319.41, Krc 788.83, Kac 48.75 N/mm2, Kte 19.65, Kre 26.77, Kae 2.05 N/mm); Fig. 8 (coefficients from the orthogonal database of Budak et al. 1996)"
+    note: "Year not printed on the preprint; latest reference cited is 1999. A journal version appeared later (Int. J. Mach. Tools Manuf., 2001)."
+
+  # ------------------------------------------------------------------ cutting data (several materials)
+  altintas-2000-mal-review:
+    type: article
+    authors: "Altintas, Y."
+    title: "Modeling approaches and software for predicting the performance of milling operations at MAL-UBC"
+    venue: "Review paper, preprint hosted by Manufacturing Automation Laboratories Inc. (file JMTSReviewPaper_Altintas.pdf)"
+    year: 2000
+    url: "https://www.malinc.com/wp-content/uploads/2014/06/JMTSReviewPaper_Altintas.pdf"
+    accessed: 2026-11-03
+    pages: "Table 1, p. 10: orthogonal cutting parameters of Ti6Al4V from tube turning: tau_s = 613 MPa; beta = 19.1 + 0.29 alpha_r deg; r_c = C0 h^C1 with C0 = 1.755 - 0.028 alpha_r, C1 = 0.331 - 0.0082 alpha_r; Kte = 24 N/mm; Kfe = 43 N/mm"
+    note: "Year not printed; inferred from the work and references reviewed (to 1999-2000). The Ti6Al4V database is that of Budak, E.; Altintas, Y.; Armarego, E.J.A. (1996) J. Manuf. Sci. Eng. 118, 216-224 (not read)."
+
+  iscar-materials-groups:
+    type: catalogue
+    authors: "ISCAR Ltd."
+    title: "Materials and grades - material groups according to DIN/ISO 513 and VDI 3323"
+    venue: "ISCAR catalogue page 1112"
+    year: 2021
+    url: "https://www.iscar.com/lms/wp-content/uploads/2021/04/Materials-group.pdf"
+    accessed: 2026-11-03
+    pages: "Material groups table: kc1 = specific cutting force for 1 mm2 chip section, mc = chip thickness factor (formulas on p. 523, not read). Group 21 Al wrought not hardenable 700/0.25 (60 HB); 22 Al wrought hardenable 800/0.25 (100 HB); 26 Cu alloys >1 % Pb free cutting 700/0.27 (110 HB); 27 brass 700/0.27 (90 HB); 28 electrolytic copper 700/0.27 (100 HB); 36 Ti pure Rm 400 1700/0.23; 37 Ti alpha+beta alloys hardened Rm 1050 2110/0.22. No magnesium group."
+
+  klippel-2024-ck45-orthogonal:
+    type: article
+    authors: "Klippel, H.; Süssmaier, S.; Zhang, N.; Kuffa, M.; Wegener, K."
+    title: "Large-scale investigation of dry orthogonal cutting experiments Ti6Al4V and Ck45"
+    venue: "International Journal of Advanced Manufacturing Technology 135(5-6), 2871-2908"
+    year: 2024
+    doi: "10.1007/s00170-024-14597-2"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11528021/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Ti6Al4V: Table 2 (supplier tensile values 952/869 MPa, A 16.5 %, Z 39 %, 30 HRC; triple VAR, 750 C/90 min AC); Table 2/3 tool (Sandvik CCMW 09T304 H13A uncoated WC-6Co, rake 0, clearance 7, edge radius 20-50 um, mean 37.5 um); Table 9 (JC fit A 867, B 344, n 0.361, C 0.0145); friction section (apparent mu 0.4-0.6 at higher feeds; Albrecht mu = 0.3); chip shapes (all Ti chips continuous wavy/segmented, more pronounced with f and vc; no BUE traces); Appendix 4 Table 19 (Kienzle coefficients kc1.1, mc, kf1.1, mf at vc 11-500 m/min)"
+
+  wojciechowski-2022-min-chip-thickness:
+    type: article
+    authors: "Wojciechowski, S."
+    title: "Estimation of minimum uncut chip thickness during precision and micro-machining processes of various materials - a critical review"
+    venue: "Materials 15(1), 59"
+    year: 2022
+    doi: "10.3390/ma15010059"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC8745993/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (k = hmin/rn): aluminium, copper, brass 0.2-0.4 (Son et al. 2005); 6082-T6 0.2-0.4 (Liu et al. 2006); copper 0.25 (Lai et al. 2008); brass 360 0.3 (Kim et al. 2004); 6061 0.23 (Malekian et al. 2009); Al 2024-T6 0.29-0.45 (Ozel, FEM); electrolytic copper 0.33 (Camara et al. 2016); Al 6082 0.08 (Rahman et al. 2017). Text: copper 0.17 rn (Wu et al.); Ti-6Al-4V 25-49 % of rn dry, 15-34 % with MQL (Rezaei et al.); overall 0.08-0.63"
+
+  # ------------------------------------------------------------------ Johnson-Cook (several materials)
+  johnson-cook-1983:
+    type: article
+    authors: "Johnson, G.R.; Cook, W.H."
+    title: "A constitutive model and data for metals subjected to large strains, high strain rates and high temperatures"
+    venue: "Proceedings of the 7th International Symposium on Ballistics, The Hague, 541-547"
+    year: 1983
+    url: "https://ia800406.us.archive.org/4/items/AConstitutiveModelAndDataForMetals/A%20constitutive%20model%20and%20data%20for%20metals_text.pdf"
+    accessed: 2026-11-03
+    pages: "Model definition (eps0 = 1.0 1/s); Table 1: OFHC copper (Rockwell F-30, c 383 J/kgK, Tm 1356 K, A 90, B 292, n 0.31, C 0.025, m 1.09); cartridge brass (Tm 1189 K, A 112, B 505, n 0.42, C 0.009, m 1.68). Densities and the brass hardness are not cleanly legible in the OCR copy and were not used"
+    note: "Read as the archive.org OCR copy. The OFHC copper set was cross-checked in Arsecularatne & Zhang, 'Assessment of constitutive equations used in machining' (Advances in Engineering Plasticity and Its Applications, p. 280), which quotes A 90, B 292, C 0.025, n 0.31, m 1.09, Tm 1356 K."
+
+  ducobu-2017-jc-ti6al4v:
+    type: article
+    authors: "Ducobu, F.; Rivière-Lorphèvre, E.; Filippi, E."
+    title: "On the importance of the choice of the parameters of the Johnson-Cook constitutive model and their influence on the results of a Ti6Al4V orthogonal cutting model"
+    venue: "International Journal of Mechanical Sciences 122, 143-155"
+    year: 2017
+    doi: "10.1016/j.ijmecsci.2017.01.004"
+    url: "https://orbi.umons.ac.be/bitstream/20.500.12907/27254/1/Duco2017_IJMS.pdf"
+    accessed: 2026-11-03
+    pages: "Table 1 (20 JC sets for Ti6Al4V: set 16 Seo et al. 2005 A 997.9, B 653.1, C 0.0198, n 0.45, m 0.7, eps0 1; set 3 Lee & Lin 1998 782.7/498.4/0.028/0.28/1, eps0 1e-5; set 6 Johnson 1985 862.5/331.2/0.012/0.34/0.8; set 11 Meyer & Kleponis 2001 896/656/0.0128/0.5/0.8; set 18 Kay 2002 1098/1092/0.014/0.93/1.1); Table 2-3 (experiment: vc 30 m/min, h 40-100 um, rake 15, clearance 2, edge radius 20 um, chips continuous); Table 4 (Ti6Al4V E 113.8 GPa, rho 4430, k 7.3, alpha 8.6e-6, cp 580); Sect. 8 (Seo et al. set recommended)"
+    note: "Recommended set from Seo, S.; Min, O.; Yang, H. (2005) Int. J. Impact Eng. 31, 735-754 (not read)."
+
+  sun-2022-az31b-ballistic-uq:
+    type: article
+    authors: "Sun, X."
+    title: "Uncertainty quantification of material properties in ballistic impact of magnesium alloys"
+    venue: "Materials 15(19), 6961"
+    year: 2022
+    doi: "10.3390/ma15196961"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9573086/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 1 (AZ31B JC plasticity: A 225.171 [200.372, 249.970] MPa, B 168.346 [150.682, 186.010] MPa, n 0.242 [0.160, 0.324], C 0.013 [0.012, 0.014], m 1.550 [1.523, 1.577], 95 % confidence bounds); Table 2 (eps0 0.001 1/s, Tref 298 K, Tm 905 K; rho 1.77, E 45.0 GPa, nu 0.35 without source)"
+    note: "Plasticity constants from Hasenpouth, D. (2010) 'Tensile high strain rate behavior of AZ31B magnesium alloy sheet', MASc thesis, University of Waterloo (not read); tests on partially hardened AZ31B sheet in the rolling direction."
+
+  # ------------------------------------------------------------------ copper and brass
+  wieland-2021-k09-cu-ofe:
+    type: datasheet
+    authors: "Wieland-Werke AG"
+    title: "Wieland-K09 Cu-OFE | C10100 | CW009A (rolled products data sheet)"
+    venue: "Wieland Group, BU Rolled Products, issue 06.21"
+    year: 2021
+    url: "https://www.wieland.com/de/content/download/9898/file/K09_RP_EN.pdf"
+    accessed: 2026-11-03
+    pages: "p.1 physical properties at RT (58 MS/m, 3.9e-3/K, k 391 W/mK, rho 8.94, cp 0.385 J/gK, CTE 17.7e-6 0-300 C, E 115 GPa, nu 0.34); mechanical properties (R220: Rm 220-260, Rp0.2 <= 140, A50 >= 33, HV 40-70; R240 240-300/>=180/>=8/HV 65-95; R290 290-360/>=250/>=4/HV 90-110; R360 >=360/>=320/>=2/HV>=110); p.2 softening of R360 at 300-500 C"
+
+  jacques-allemann-2021-cuzn39pb3:
+    type: datasheet
+    authors: "Jacques Allemann SA"
+    title: "Werkstoffdatenblatt CuZn39Pb3 Draht (JAS-035)"
+    venue: "Jacques Allemann, Ausgabe 2021"
+    year: 2021
+    url: "https://www.jacques-allemann.com/media/cms/Legierungen%20/%20Tech-Sheets/JAS%20-%20Tech%20Sheet%20/%20Werkstoffe/jas-035-werkstoffdatenblatt-cw614n-cuzn39pb3-draht.pdf"
+    accessed: 2026-11-03
+    pages: "p.1 (CW614N, ASTM C38500, DIN 2.0401; Cu 57-59, Pb 2.5-3.5; very short chips; soft annealing 450-600 C, stress relief 250-350 C; Zn evaporates at 906 C); p.2 physical properties (rho 8.47, CTE 21.0e-6 20-200 C, cp 377 J/kgK, k 123 W/mK, 0.066 Ohm mm2/m, E 97 GPa; cold-drawn wire Rm 450-850)"
+
+  protolabs-2026-brass-c360:
+    type: datasheet
+    authors: "Proto Labs, Inc."
+    title: "Brass C360 - CNC material data sheet"
+    venue: "Proto Labs, 2026"
+    year: 2026
+    url: "https://www.protolabs.com/media/a0yjqykb/2026-026-cnc-material-data-sheet_brass-c360.pdf"
+    accessed: 2026-11-03
+    pages: "Properties table (UTS 56 ksi, YS 0.5 % ext. 45 ksi, El 25 %, HRB 72, liquidus 1650 F, solidus 1630 F, rho 0.307 lb/in3, 26 % IACS annealed, k 67 Btu/ft h F, CTE 11.4e-6/F 68-572 F, E 14,000 ksi, G 5,300 ksi)"
+    note: "Service-bureau sheet; the values are those usually tabulated for C36000 half-hard rod (data source not stated on the sheet)."
+
+  # ------------------------------------------------------------------ magnesium
+  guo-2020-az31b-thermography:
+    type: article
+    authors: "Guo, S.; Liu, X.; Zhang, H.; Yan, Z.; Zhang, Z.; Fang, H."
+    title: "Thermographic study of AZ31B magnesium alloy under cyclic loading: temperature evolution analysis and fatigue limit estimation"
+    venue: "Materials 13(22), 5209"
+    year: 2020
+    doi: "10.3390/ma13225209"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7698634/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (commercial extruded AZ31B sheet: rho 1770 kg/m3, c 1000 J/kgK, k 96 W/mK; extrusion direction UTS 251, YS 145 MPa, El 9 %; transverse 232/130 MPa, 12 %)"
+
+  kim-2016-mg-al-clad:
+    type: article
+    authors: "Kim, J.S.; Lee, D.H.; Jung, S.P.; Lee, K.S.; Kim, K.J.; Kim, H.S.; Lee, B.J.; Chang, Y.W.; Yuh, J.; Lee, S."
+    title: "Novel strip-cast Mg/Al clad sheets with excellent tensile and interfacial bonding properties"
+    venue: "Scientific Reports 6, 26333"
+    year: 2016
+    doi: "10.1038/srep26333"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC4888122/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Table 2 (AZ31: solidus 605 C, liquidus 630 C, k 96 W/m C, CTE 2.64e-5 /C)"
+
+  smiths-2025-az31b-datasheet:
+    type: datasheet
+    authors: "Smiths High Performance"
+    title: "AZ31B Magnesium - magnesium alloys technical datasheet"
+    venue: "Smiths High Performance, revision SHP/english/datasheets/az31b/11.02.2025"
+    year: 2025
+    url: "https://www.smithshp.com/assets/pdf/magnesium/az31b-magnesium-english.pdf"
+    accessed: 2026-11-03
+    pages: "Minimum tensile properties: AZ31B-O 0.5-1.5 mm Rp0.2 125 / Rm 220 MPa / 10 %; O 1.5-6.3 mm 105/220/10 %; O 6.3-75 mm 105/220/8 %; H24 0.5-6.3 mm 200/270/5 %"
+
+  matweb-az91d-cast:
+    type: web
+    authors: "MatWeb (Starmet and references)"
+    title: "Magnesium AZ91D-F, Cast (MatWeb datasheet MMAZ96), printout"
+    venue: "MatWeb datasheet as printed and hosted by TEKO enclosures"
+    year: 2026
+    url: "https://www.tekogehause.de/uploads/manuali/materiali/AZ91D.pdf"
+    accessed: 2026-11-03
+    pages: "Physical/mechanical/thermal properties (rho 1.81; HB 63; UTS 230; YS 150; El 3 % in 50 mm; E 44.8 GPa; nu 0.35; G 17 GPa; shear 140 MPa; fatigue 97 MPa at 5e8; CTE 26.0e-6 at 25 C and 27.2e-6 20-200 C; cp 1.047 J/g C; k 72.7 W/mK; incipient melting >= 421 C; solidus 470 C; liquidus 595 C; die casting 640-675 C)"
+    note: "Year of the printout not stated; MatWeb's own page could not be fetched (HTTP 403)."
+
+  kulisz-2022-az91d-milling:
+    type: article
+    authors: "Kulisz, M.; Zagórski, I.; Józwik, J.; Korpysa, J."
+    title: "Research, modelling and prediction of the influence of technological parameters on the selected 3D roughness parameters, as well as temperature, shape and geometry of chips in milling AZ91D alloy"
+    venue: "Materials 15(12), 4277"
+    year: 2022
+    doi: "10.3390/ma15124277"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9227892/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Methods (2-tooth HSS-Co cutter d = 20 mm, vc 754 m/min, fz 0.01-0.05 mm, ap 0.1-0.4 mm); results (snarled chips at some settings, arc loose chips at others; chip temperature around 300 C; no chip ignition)"
+
+  korpysa-2025-az91d-micromilling:
+    type: article
+    authors: "Korpysa, J."
+    title: "Analysis of the material removal process in precision milling of AZ91D magnesium alloy"
+    venue: "Micromachines 16(11), 1283"
+    year: 2025
+    doi: "10.3390/mi16111283"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12654030/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Uncoated WC end mill d 16 mm, z 2, helix 45 deg, measured edge radius 5.4 um; shearing began at fz = 0.54 um/tooth (fz/rn = 0.1), which the author says cannot be taken as the minimum uncut chip thickness"
+
+  zagorski-2024-mg-chip-temperature:
+    type: article
+    authors: "Zagórski, I.; Zgórniak, P.; Habrat, W.; Machado, J.; Legutko, S."
+    title: "Methodology of chip temperature measurement and safety machining assessment in dry rough milling of magnesium alloys using different helix angle tools"
+    venue: "Materials 17(9), 2063"
+    year: 2024
+    doi: "10.3390/ma17092063"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11084796/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Introduction (ignition points: WE43 644 C, AZ31 628 C, AZ91 600 C after Liu et al. 2012; AZ91 values Lin et al. 2008 525 C, Liu et al. 2012 600 C, Ravi Kumar et al. 2003 580-590 C; chip temperatures above approx. 500 C regarded as dangerous in machining); results (max chip temperature approx. 418 C on AZ31B, no ignition)"
+    note: "Primary sources not read: Liu, M.; Shih, D.S.; Parish, C.; Atrens, A. (2012) Corros. Sci. 54, 139-142; Lin, P.-Y. et al. (2008) Corros. Sci. 50, 2669-2675; Ravi Kumar, N.V. et al. (2003) Scr. Mater. 49, 225-230."
+
+  wang-2026-combustion-database:
+    type: article
+    authors: "Wang, P.; Ke, H.; Xue, Y."
+    title: "An integrated database of combustion properties of metallic materials"
+    venue: "Scientific Data 13, 460 (dataset 20260104Combustion_Data.xlsx, github.com/wpl2000/CombustionData; figshare doi 10.6084/m9.figshare.29966602)"
+    year: 2026
+    doi: "10.1038/s41597-026-06862-8"
+    url: "https://raw.githubusercontent.com/wpl2000/CombustionData/main/20260104Combustion_Data.xlsx"
+    accessed: 2026-11-03
+    pages: "Sheet 'Ignition temperature': pure Mg chips 10 g 625 and 662 C (ref [1] Grosse & Conway 1958); Mg-6Al chips 474 C (ref [9] Kim et al. 2011); Mg-6Al bulk 527 C (ref [7] Fassell et al. 1951); AZ91 bulk 600.8 C (ref [11]) and 549 C (ref [20]); AZ91D bulk phi 60 x 60 mm 670 C (ref [25]); AZ31 powder 521.6 C (ref [26]). No titanium entries. Article text: chip-ignition tests give markedly lower values than DTA."
+
+  # ------------------------------------------------------------------ titanium
+  ati-2012-ti64-datasheet:
+    type: datasheet
+    authors: "Allegheny Technologies Incorporated (ATI)"
+    title: "Technical Data Sheet ATI Ti-6Al-4V, Grade 5 (UNS R56400)"
+    venue: "ATI, Version 1 (1/31/2012)"
+    year: 2012
+    url: "https://www.atimaterials.com/Products/Documents/datasheets/titanium/alloyed/ati_6-4_tds_en_v1.pdf"
+    accessed: 2026-11-03
+    pages: "p.1 physical properties (melting range 2,800-3,000 F / 1,538-1,649 C; density 4.47 g/cc; beta transus 999 +-14 C), heat treatment (anneal 691-760 C), hardness (annealed HRC 30-34, STA HRC 35-39); p.2 machinability"
+
+  aubert-duval-2018-ta6v:
+    type: datasheet
+    authors: "Aubert & Duval"
+    title: "Titanium alloy TA6V-2 (Ti-6Al-4V)"
+    venue: "Aubert & Duval data sheet (PDF dated 2018-11-26)"
+    year: 2018
+    url: "https://www.aubertduval.com/wp-content/uploads/2024/12/TA6V_2_GB.pdf"
+    accessed: 2026-11-03
+    pages: "p.1 annealed tensile minima (UTS > 896, YS > 827 MPa, El 5d 10 %); p.2 physical properties (density 4.43; mean CTE 9.0e-6 20-200 C; E printed as '110 x 10-3 N/mm2' i.e. 110 GPa; torsional modulus 45000 N/mm2; k 6.7 at 20 C; resistivity 170; beta transus 1000 C); anneal 700-750 C 2-4 h AC"
+
+  upmet-2026-ti64-eli:
+    type: datasheet
+    authors: "United Performance Metals"
+    title: "Alloy Ti-6Al-4V ELI datasheet (AMS 4907 / AMS 4930 / AMS 6932)"
+    venue: "United Performance Metals, 2026"
+    year: 2026
+    url: "https://www.upmet.com/sites/default/files/products/datasheet/ti-6al-4v-eli-datasheet.pdf"
+    accessed: 2026-11-03
+    pages: "p.2 physical properties (density 4.42; beta transus 966 +-14 C; liquidus 1650-1660 C; k 6.6 W/mK at 20 C, 10.6 at 315 C mill annealed; cp 0.580 J/gK at 20 C, 0.670 at 425 C, 0.930 at 870 C; mean CTE 9.0e-6 0-100 C, 9.4e-6 20-425 C, 9.7e-6 20-650 C; E 107-122 GPa at 20 C, 95-111 at 230 C; G 41-45 GPa; nu 0.31)"
+    note: "ELI (extra-low interstitial) grade; thermophysical values used here for Grade 5 as well."
