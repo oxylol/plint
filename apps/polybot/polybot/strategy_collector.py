@@ -4,10 +4,16 @@ No forecasting. Each daily temperature event resolves on the station's routine
 METAR reports (the rule is in the market's description, the source is the
 Aviation Weather Center's API); the bot reads the same reports the same way.
 Once a city's high is set (from a lock hour, with the reading well below the
-high, or when the day is over) the winning bucket is known, yet its Yes and the
-other buckets' No still trade below $1 until the first report of the next day
-settles the event. The bot buys those at up to a maximum price and redeems them
-at $1. The research behind it: research/weather_carry.py.
+high, or when the day is over) the winning bucket is known; the bot buys its
+Yes and the other buckets' No at up to a maximum price and redeems them at $1.
+
+What the tapes say (research/weather_lock.py): by the time the reports make a
+high certain, the market is already there (the first buy after a lock is at
+99.7–99.9¢ and the books hold no asks, only bid walls at 99.9¢); the flow at
+97.5¢ or less sits in days that were still uncertain and returns about zero.
+The one band with a small positive is 95–97.5¢ after a 16:00 lock with a 2°C
+margin (+2 to +3% after the fee on a few trades a week, 0.14% wrong), which is
+what the defaults test. A paper check of a narrow claim, not a money machine.
 """
 from __future__ import annotations
 

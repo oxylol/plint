@@ -105,8 +105,8 @@ services:
       FC_TICK_SECONDS: ${FC_TICK_SECONDS:-1800}
       # Strategy 4, collector: buy what a finished day has already decided (the station's METAR reports), redeem at $1.
       CL_ENABLED: ${CL_ENABLED:-1}
-      CL_LOCK_HOUR: ${CL_LOCK_HOUR:-20}
-      CL_LOCK_MARGIN_C: ${CL_LOCK_MARGIN_C:-1}
+      CL_LOCK_HOUR: ${CL_LOCK_HOUR:-16}
+      CL_LOCK_MARGIN_C: ${CL_LOCK_MARGIN_C:-2}
       CL_MAX_GAP_MIN: ${CL_MAX_GAP_MIN:-180}
       CL_STAKE_USD: ${CL_STAKE_USD:-5}
       CL_MIN_PRICE: ${CL_MIN_PRICE:-0.70}

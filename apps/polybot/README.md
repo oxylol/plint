@@ -223,11 +223,15 @@ belongs to the local date its time stamp falls on) and names the Aviation Weathe
 Center API as the source. The bot reads the same reports (`polybot/metar.py`) the same
 way (`polybot/collector.py`). Once a city's high is set, from `CL_LOCK_HOUR` (20:00
 local) with the latest reading `CL_LOCK_MARGIN_C` below it, or once the day is over
-(lows only then), the winning bucket is known, yet its Yes and the other buckets' No
-still trade below $1 until the next day's first report settles the event (the study
-in `research/weather_carry.py`: about $1,000 a day changes hands at 98¢ or less, and
-the day's high is first reached after 20:00 on 0.4% of days). Every `CL_TICK_SECONDS`
-the bot
+(lows only then), the winning bucket is known, and its Yes and the other buckets' No
+pay $1 when the next day's first report settles the event. The tapes temper the idea
+(`research/weather_lock.py`): by the time the reports make a high certain the market
+is already there (the first buy after a lock is at 99.7–99.9¢; live books hold no
+asks, only bid walls at 99.9¢), and what trades at 97.5¢ or less sits in days that
+were still uncertain and returns about zero after the fee. The one band with a small
+positive is 95–97.5¢ after a 16:00 lock with a 2°C margin: +2 to +3% on a few trades
+a week, wrong on 0.14% of days. That is what the defaults test. Every
+`CL_TICK_SECONDS` the bot
 
 1. loads the three days of temperature events a city's clock can be on and reads each
    event's station and rule from its description (cities on another source, such as
