@@ -1,0 +1,214 @@
+# CNC Twin example: one part, two setups (OP10 top, OP20 flipped 180 deg about X) on the Haas VF-2SS
+# (README.md, EXPECTED.md). Frames as in db/_templates/project.yaml: fixture_pose and work offsets in
+# machine coordinates (table top at Z -610). The stock frame S is the OP10 blank frame throughout.
+format: cnctwin-project
+version: 1
+name: "Two setups with a flip, Al 6061-T6"
+description: "80 x 60 x 25 blank: OP10 faces the top, pocket D30, spots and drills four holes 21 deep, edge break; OP20 (flipped about X) faces the bottom to 20.00, counterbores the holes from below, edge break"
+seed: 2020
+
+machine: haas-vf2ss
+controller_overrides: {}
+
+material:
+  id: al6061-t6
+  batch:
+    kc_scale_sigma: 0.04
+    hardness_sigma_pct: 3
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 22
+  machine_state: warm
+  time_between_ops_min: 2                    # unload, clean, deburr, flip, clamp
+
+stock:
+  kind: block
+  size_mm: [80, 60, 25]                      # 6061-T651 plate 25 mm, sawn to 80 x 60
+  tolerance_mm: [0.2, 0.2, 0.1]
+  non_squareness_deg: 0.05
+  form: rolled_plate
+  mesh: null
+
+cad:
+  path: part.step                            # make_cad.py: finished part in the OP10 stock frame, z 2.5..22.5
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}
+  datums:
+    - {label: A, feature: {face: plane, normal: [0, 0, 1], near_mm: [15, 30, 22.5]}}     # OP10 top: the OP20 seating face
+    - {label: B, feature: {face: plane, normal: [-1, 0, 0], near_mm: [0, 40, 12.5]}}     # left end (x stop in both setups)
+    - {label: C, feature: {face: plane, normal: [0, -1, 0], near_mm: [50, 0, 12.5]}}     # OP10 front face
+  tolerances:
+    - {id: thickness, kind: distance, between: [{face: plane, normal: [0, 0, 1], near_mm: [15, 30, 22.5]},
+       {face: plane, normal: [0, 0, -1], near_mm: [40, 50, 2.5]}], nominal_mm: 20, plus_mm: 0.02, minus_mm: 0.02}
+    - {id: bottom-parallelism, kind: parallelism, feature: {face: plane, normal: [0, 0, -1], near_mm: [40, 50, 2.5]}, tolerance_mm: 0.02, datums: [A]}
+    - {id: top-flatness, kind: flatness, feature: {face: plane, normal: [0, 0, 1], near_mm: [15, 30, 22.5]}, tolerance_mm: 0.01}
+    - {id: pocket-depth, kind: distance, between: [{face: plane, normal: [0, 0, 1], near_mm: [15, 30, 22.5]},
+       {face: plane, normal: [0, 0, 1], near_mm: [40, 30, 16.5]}], nominal_mm: 6, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: pocket-diameter, kind: diameter, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [55, 30, 19.5], radius_mm: 15}, diameter_mm: {nominal: 30, plus: 0.05, minus: 0.05}}
+    - {id: hole-1, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [10, 10, 15], radius_mm: 3.4}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [10, 10], diameter_mm: {nominal: 6.8, plus: 0.1, minus: 0.0}}
+    - {id: hole-2, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [70, 10, 15], radius_mm: 3.4}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [70, 10], diameter_mm: {nominal: 6.8, plus: 0.1, minus: 0.0}}
+    - {id: hole-3, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [70, 50, 15], radius_mm: 3.4}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [70, 50], diameter_mm: {nominal: 6.8, plus: 0.1, minus: 0.0}}
+    - {id: hole-4, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [10, 50, 15], radius_mm: 3.4}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [10, 50], diameter_mm: {nominal: 6.8, plus: 0.1, minus: 0.0}}
+    # counterbores: made in OP20, positioned to the OP10 datums (the cross-setup features)
+    - {id: cbore-1, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [10, 10, 5], radius_mm: 5.5}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [10, 10], diameter_mm: {nominal: 11, plus: 0.1, minus: 0.0}}
+    - {id: cbore-2, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [70, 10, 5], radius_mm: 5.5}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [70, 10], diameter_mm: {nominal: 11, plus: 0.1, minus: 0.0}}
+    - {id: cbore-3, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [70, 50, 5], radius_mm: 5.5}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [70, 50], diameter_mm: {nominal: 11, plus: 0.1, minus: 0.0}}
+    - {id: cbore-4, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [10, 50, 5], radius_mm: 5.5}, tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [10, 50], diameter_mm: {nominal: 11, plus: 0.1, minus: 0.0}}
+    - {id: cbore-depth, kind: distance, between: [{face: plane, normal: [0, 0, -1], near_mm: [40, 50, 2.5]},
+       {face: plane, normal: [0, 0, -1], near_mm: [7.2, 13.9, 8.9]}], nominal_mm: 6.4, plus_mm: 0.1, minus_mm: 0.1}
+
+tools:
+  library: null
+  list:
+    - number: 1
+      tool: helical-59784-mh35al-025-32000   # D20 3FL LOC 50: facing (S10200 = 640 m/min, fz 0.183)
+      holder: haimer-40-720-32
+      stickout_mm: 40
+      length_offset_mm: 110.000
+      radius_offset_mm: 10.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 1, limit_min: 90, used_min: 30, sister_of: null}
+      initial_wear: {VB_mm: 0.02}
+      comment: "D20 3FL CARBIDE ENDMILL"
+    - number: 2
+      tool: helical-59766-mh35al-025-31000   # D10 3FL: helix + G13 circular pocket
+      holder: haimer-40-720-32
+      stickout_mm: 32
+      length_offset_mm: 102.000
+      radius_offset_mm: 5.0                  # G13 uses D02 as the tool radius
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 2, limit_min: 60, used_min: 10, sister_of: null}
+      initial_wear: {VB_mm: 0.01}
+      comment: "D10 3FL CARBIDE ENDMILL"
+    - number: 3
+      tool: osg-62910-nc-lds-10x90           # spot drill, N: 51-100 m/min, 0.22-0.36 mm/rev
+      holder: haimer-40-720-16
+      stickout_mm: 40
+      length_offset_mm: 110.000
+      radius_offset_mm: 5.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 3, limit_min: 120, used_min: 20, sister_of: null}
+      initial_wear: {VB_mm: 0.01}
+      comment: "D10 90DEG SPOT DRILL"
+    - number: 4
+      tool: osg-60568-ex-gdr-6.8             # HSS-Co drill, N: 63-100 m/min, 0.34-0.48 mm/rev
+      holder: haimer-40-720-16
+      stickout_mm: 55
+      length_offset_mm: 125.000
+      radius_offset_mm: 3.4
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 4, limit_min: 120, used_min: 15, sister_of: null}
+      initial_wear: {VB_mm: 0.01}
+      comment: "D6.8 HSS DRILL"
+    - number: 5
+      tool: harvey-871045                    # D10 90 deg flat-end chamfer cutter, carbide (tip 1.5)
+      holder: haimer-40-720-16
+      stickout_mm: 35
+      length_offset_mm: 105.000
+      radius_offset_mm: 5.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 5, limit_min: 120, used_min: 40, sister_of: null}
+      initial_wear: {VB_mm: 0.0}
+      comment: "D10 90DEG CHAMFER MILL"
+    - number: 6
+      tool: helical-59726-mh35al-020-30600   # D6 3FL LOC 12: helical counterbores
+      holder: haimer-40-720-16
+      stickout_mm: 25
+      length_offset_mm: 95.000
+      radius_offset_mm: 3.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 6, limit_min: 60, used_min: 5, sister_of: null}
+      initial_wear: {VB_mm: 0.0}
+      comment: "D6 3FL CARBIDE ENDMILL"
+
+coolant:
+  fluid: emulsion-8pct
+  concentration_pct: 8
+  tank_fill_fraction: 0.9
+
+operations:
+  - name: OP10
+    program: op10.nc
+    setup:
+      workholding:
+        - {device: lang-48120-46, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 60,
+           input_torque_Nm: 60, grip_depth_mm: 3, parallels_mm: null}
+      stock_pose: {translate_mm: [-40, -30, 0], rotate_deg: [0, 0, 0]}          # blank centred, bottom on the jaw steps
+      work_offsets_mm: {G54: [-421.0, -233.2, -487.5]}                         # blank corner, finished top (blank top - 2.5)
+      fixture_pose: {translate_mm: [-381.0, -203.2, -510.0], rotate_deg: [0, 0, 0]}   # jaw seat 100 mm above the table (est.)
+    from_previous: null
+    nozzle_positions: {}
+  - name: OP20
+    program: op20.nc
+    setup:
+      workholding:
+        - {device: lang-48120-46, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 60,
+           input_torque_Nm: 60, grip_depth_mm: 3, parallels_mm: null}
+      # the OP10 part turned 180 deg about X: S (x, y, z) -> W (x - 40, 30 - y, 22.5 - z); the OP10 top
+      # (z 22.5) lies on the jaw steps, the old y 60 face is in front, the old bottom (z 0) is on top
+      stock_pose: {translate_mm: [-40, 30, 22.5], rotate_deg: [180, 0, 0]}
+      work_offsets_mm: {G55: [-421.0, -233.2, -490.0]}                         # x 0 end, front face, finished bottom (W z 20)
+      fixture_pose: {translate_mm: [-381.0, -203.2, -510.0], rotate_deg: [0, 0, 0]}
+    from_previous: {op: OP10, flip: {axis: X, angle_deg: 180}}
+    nozzle_positions: {}
+
+production:
+  parts: 1
+  operator: {load_s: 30, unload_s: 20, door_s: 4, clean_s: 20, inspect_every: 0, inspect_s: 60}
+
+physics:
+  tick_s: 1.0e-6
+  max_deg_per_step: 0.5                      # 12 000 rpm: l0 stride 5 ticks
+  steps_per_tooth: 96
+  macro_ipo: 10
+  lag_macro: 1
+  lattice_mm: 0.075                          # the 0.3 mm edge breaks: 4 dexels across
+  refine: []
+  edge_element_mm: 0.25
+  memory_bins: 720
+  polar_theta_bins: 720
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 2.0}
+  structure: {every_n_macro: 50, max_dof: 50000}
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}
+
+recording:
+  fast: windows
+  fast_window_revs: 4
+  fast_period_s: 1.0
+  keyframe_period_s: 0.5
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: {fps: 25, speed: 10}
+  audio: true
+
+uncertainty:
+  runs: 20
+  method: lhs
+  vary: {stock_size: true, tool_offsets_um: 5, runout_um: 3, kc_scale_sigma: 0.04, clamping_force_rel: 0.1}
+
+machine_data: null

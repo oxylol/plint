@@ -1,0 +1,158 @@
+# CNC Twin example: 4140 Q&T shaft d40-class x 180 turned between chuck and live centre on the Haas ST-20Y:
+# G71 roughing, G70 finishing, relief groove, G76 thread M24x1.5-6g, part-off. README.md / EXPECTED.md.
+# Frames: the workholding frame is the spindle-nose face (machine kinematics: chuck_face link, +z toward the
+# tailstock). The stock frame S has the bar axis on z (removal.stock convention), chucked end at z = 0, free end
+# at z = 230 = program Z0. The work offset is in machine coordinates of the turret's OD tool-tip reference
+# (machine file kinematics.tool_chain od_tool_tip_ref: X diameter, home = X0 Z0; the reference tip sits on the
+# spindle centreline at X -426 and on the spindle face at Z -662).
+format: cnctwin-project
+version: 1
+name: "4140 shaft between chuck and live centre, Haas ST-20Y"
+description: "Shaft d42/35/30/M24x1.5 x 180 from 42CrMo4+QT bar d45: CNMG rough (G71), VCMT finish (G70), DGM3 relief groove, TungThread G76, AddForceCut part-off, flood"
+seed: 9140
+
+machine: haas-st20y
+controller_overrides: {}
+
+material:
+  id: aisi4140-qt30
+  batch:
+    kc_scale_sigma: 0.04
+    hardness_sigma_pct: 4                    # 270-320 HB band of +QT bar 40-100 mm
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 22
+  machine_state: warm
+  time_between_ops_min: 10
+
+stock:
+  kind: mesh
+  size_mm: null
+  tolerance_mm: [0.3, 0.5]                   # bar d45 h11-ish as rolled, length sawn +-0.5
+  non_squareness_deg: null
+  form: hot_rolled_bar                       # +QT, unpeeled: mill scale skin (db skin: 0.05 mm)
+  mesh: stock.step                           # d45 x 230 with the A3.15 centre hole at the free end (make_cad.py)
+
+cad:
+  path: part.step                            # make_cad.py; CAD frame = stock frame S
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}
+  datums:
+    - {label: A, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [14.9915, 0, 188], radius_mm: 14.9915}}   # d30 g6 bearing seat
+    - {label: B, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [17.494, 0, 130], radius_mm: 17.494}}     # d35 h7 hub seat
+  tolerances:
+    - {id: d30-g6, kind: diameter, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [14.9915, 0, 188], radius_mm: 14.9915},
+       diameter_mm: {nominal: 30.0, fit: g6}}                                  # 29.980 .. 29.993
+    - {id: d35-h7, kind: diameter, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [17.494, 0, 130], radius_mm: 17.494},
+       diameter_mm: {nominal: 35.0, fit: h7}}                                  # 34.975 .. 35.000
+    - {id: d42-collar, kind: diameter, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [21.0, 0, 70], radius_mm: 21.0},
+       diameter_mm: {nominal: 42.0, plus: 0.1, minus: 0.1}}
+    - {id: thread-m24x1.5-6g, kind: diameter, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [11.949, 0, 220], radius_mm: 11.949},
+       diameter_mm: {nominal: 24.0, fit: 6g}}                                  # major d 23.732 .. 23.968; d2 22.854 .. 22.994
+    - {id: length, kind: distance, between: [{face: plane, normal: [0, 0, 1], near_mm: [7.0, 0, 230]},
+       {face: plane, normal: [0, 0, -1], near_mm: [15.0, 0, 50]}], nominal_mm: 180.0, plus_mm: 0.1, minus_mm: 0.1}
+    - {id: shoulder-60, kind: distance, between: [{face: plane, normal: [0, 0, 1], near_mm: [7.0, 0, 230]},
+       {face: plane, normal: [0, 0, 1], near_mm: [16.0, 0, 170]}], nominal_mm: 60.0, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: shoulder-140, kind: distance, between: [{face: plane, normal: [0, 0, 1], near_mm: [7.0, 0, 230]},
+       {face: plane, normal: [0, 0, 1], near_mm: [18.8, 0, 90]}], nominal_mm: 140.0, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: d30-cylindricity, kind: cylindricity, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [14.9915, 0, 188], radius_mm: 14.9915},
+       tolerance_mm: 0.008}
+    - {id: d35-runout, kind: runout, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [17.494, 0, 130], radius_mm: 17.494},
+       tolerance_mm: 0.015, datums: [A]}
+    - {id: hub-face-runout, kind: runout, feature: {face: plane, normal: [0, 0, 1], near_mm: [18.8, 0, 90]},
+       tolerance_mm: 0.02, datums: [A, B]}
+    - {id: thread-runout, kind: runout, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [11.949, 0, 220], radius_mm: 11.949},
+       tolerance_mm: 0.05, datums: [A, B]}
+    - {id: d30-finish, kind: roughness, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [14.9915, 0, 188], radius_mm: 14.9915}, Ra_um: 0.8}
+    - {id: d35-finish, kind: roughness, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [17.494, 0, 130], radius_mm: 17.494}, Ra_um: 1.6}
+    - {id: collar-finish, kind: roughness, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [21.0, 0, 70], radius_mm: 21.0}, Ra_um: 3.2}
+
+tools:
+  library: null
+  list:                                      # BMT65 turret t1; tool geometry offsets measured by the presetter
+    - {number: 1, tool: tungaloy-cnmg120408-tm-t9225-pclnr2525m12e, holder: null, turret: t1, station: 1,
+       stickout_mm: null, length_offset_mm: null, radius_offset_mm: null, wear_offsets_mm: {length: 0.0, radius: 0.0},
+       runout_um: null, life: {group: 1, limit_min: 15, used_min: 4, sister_of: null}, initial_wear: {VB_mm: 0.05},
+       comment: "CNMG120408-TM T9225 PCLNR2525M12E - OD ROUGH R0.8"}
+    - {number: 2, tool: tungaloy-vcmt160404-ps-t9215-svjcr2525m16, holder: null, turret: t1, station: 2,
+       stickout_mm: null, length_offset_mm: null, radius_offset_mm: null, wear_offsets_mm: {length: 0.0, radius: 0.0},
+       runout_um: null, life: {group: 2, limit_min: 20, used_min: 0, sister_of: null}, initial_wear: {VB_mm: 0.0},
+       comment: "VCMT160404-PS T9215 SVJCR2525M16 - OD FINISH R0.4"}
+    - {number: 3, tool: tungaloy-dgm3-020-ah7025-cter2525-3t20, holder: null, turret: t1, station: 3,
+       stickout_mm: null, length_offset_mm: null, radius_offset_mm: null, wear_offsets_mm: {length: 0.0, radius: 0.0},
+       runout_um: null, life: {group: 3, limit_min: 30, used_min: 6, sister_of: null}, initial_wear: {VB_mm: 0.03},
+       comment: "DGM3-020 AH7025 CTER2525-3T20 - RELIEF GROOVE W3"}
+    - {number: 4, tool: tungaloy-16er15iso-ah725-cer2525m16dt, holder: null, turret: t1, station: 4,
+       stickout_mm: null, length_offset_mm: null, radius_offset_mm: null, wear_offsets_mm: {length: 0.0, radius: 0.0},
+       runout_um: null, life: {group: 4, limit_min: 20, used_min: 2, sister_of: null}, initial_wear: {VB_mm: 0.02},
+       comment: "16ER15ISO AH725 CER2525M16DT - THREAD M24X1.5"}
+    - {number: 5, tool: tungaloy-qgm3-020-ah7025-qsp26-3d, holder: null, turret: t1, station: 5,
+       stickout_mm: null, length_offset_mm: null, radius_offset_mm: null, wear_offsets_mm: {length: 0.0, radius: 0.0},
+       runout_um: null, life: {group: 5, limit_min: 30, used_min: 10, sister_of: null}, initial_wear: {VB_mm: 0.05},
+       comment: "QGM3-020 AH7025 QSP26-3D - PART OFF W3"}
+
+coolant:
+  fluid: emulsion-8pct
+  concentration_pct: 8
+  tank_fill_fraction: 0.85
+
+operations:
+  - name: OP10
+    program: shaft.nc
+    setup:
+      workholding:
+        - {device: kitagawa-b-208, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, pressure_bar: 15,
+           label: "B-208 on the A2-6 nose, body 91 long"}
+        - {device: kitagawa-sj08b1, pose: {translate_mm: [0, 0, 91], rotate_deg: [0, 0, 0]}, grip_depth_mm: 30,
+           jaws: "SJ08B1 soft jaws bored d45.00 x 30 deep (jaw front at z 129)"}
+        - {device: roehm-hm-pro-mt4-108, pose: {translate_mm: [0, 0, 329], rotate_deg: [180, 0, 0]},
+           label: "live centre in the tailstock quill, point in the centre hole at the free end"}
+      stock_pose: {translate_mm: [0, 0, 99], rotate_deg: [0, 0, 0]}          # bar end on the jaw bore bottom
+      work_offsets_mm: {G54: [-426.0, 0.0, -333.0]}                          # free end at z 329: Z 329 - 662
+      fixture_pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}
+    from_previous: null
+    nozzle_positions: {}
+
+production:
+  parts: 1
+  operator: {load_s: 40, unload_s: 15, door_s: 4, clean_s: 20, inspect_every: 0, inspect_s: 120}
+
+physics:
+  tick_s: 1.0e-6
+  max_deg_per_step: 0.5                      # CSS clamp G50 S2500: 15 000 deg/s -> dt <= 33 us (l0 25 ticks)
+  steps_per_tooth: 96                        # single-point tools: 96 steps per revolution, not binding
+  macro_ipo: 10
+  lag_macro: 1
+  lattice_mm: 0.25                           # tri-dexel copy for collisions / coolant / meshing (polar field is
+  refine: []                                 # authoritative while turning; dz <= min(f_min/8, r_nose/16) = 0.01 mm)
+  edge_element_mm: 0.1                       # nose radii 0.19-0.8 mm, finishing ap 0.3
+  memory_bins: 720
+  polar_theta_bins: 720
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 2.0}
+  structure: {every_n_macro: 50, max_dof: 50000}
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}
+
+recording:
+  fast: windows
+  fast_window_revs: 4
+  fast_period_s: 1.0
+  keyframe_period_s: 0.5
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: {fps: 25, speed: 10}
+  audio: true
+
+uncertainty:
+  runs: 20
+  method: lhs
+  vary: {stock_size: true, tool_offsets_um: 5, runout_um: 0, kc_scale_sigma: 0.04, clamping_force_rel: 0.1,
+         hardness_sigma_pct: 4}
+
+machine_data: null

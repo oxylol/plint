@@ -1,0 +1,226 @@
+# Screw-thread limits for the thread class decision of cnctwin.inspect.threads (docs/models/inspect.md "Threads"):
+# ISO 965-1 metric tolerances (grades and positions e/f/g/h, G/H, from the standard's formulas, rounded as its
+# tables are), the ISO 261 coarse pitches, the ISO 3 R40 series the tables round to, the ISO 68-1 basic profile
+# and ASME B1.1 Unified inch classes 1A-3A / 1B-3B. The formula coefficients are dimensionless numbers of the
+# formulas as the standards write them (metric: um from P and d in mm; ASME: inch from inch); the code converts
+# at the boundary.
+format: cnctwin-model-params
+version: 1
+model: inspect-threads
+description: "ISO 965-1 metric thread tolerance formulas, ISO 261 coarse pitches, ISO 3 R40 rounding, ISO 68-1 profile and ASME B1.1 Unified thread class formulas"
+params:
+  # ------------------------------------------------------------------ ISO 68-1 basic profile
+  iso_h_per_pitch:
+    value: 0.8660254037844386
+    unit: "-"
+    src: iso-68-1-1998
+    note: "fundamental triangle height H = (sqrt 3 / 2) P of the 60 deg profile"
+  iso_external_crest_truncation:
+    value: 0.125
+    unit: "-"
+    src: iso-68-1-1998
+    note: "the basic major diameter (external crest) is H/8 below the sharp V; the pitch line is at H/2, so the crest lies 3H/8 above it"
+  iso_internal_crest_truncation:
+    value: 0.25
+    unit: "-"
+    src: iso-68-1-1998
+    note: "the basic minor diameter (internal crest) is H/4 above the sharp V root; it lies H/4 below the pitch line"
+  # ------------------------------------------------------------------ ISO 965-1 tolerances
+  iso_d_ranges_m:
+    value: [0.99, 1.4, 2.8, 5.6, 11.2, 22.4, 45, 90, 180, 355, 600]
+    unit: mm
+    src: iso-965-1-2013
+    note: "basic major diameter ranges (over a, up to and including b); d in the T_d2 and length-of-engagement formulas is the geometric mean of the range limits"
+  iso_Td2_coefficient:
+    value: 90
+    unit: "-"
+    src: iso-965-1-2013
+    note: "T_d2(6) = 90 P^0.4 d^0.1 um with P and d in mm (pitch diameter tolerance of external threads, grade 6)"
+  iso_Td2_pitch_exponent:
+    value: 0.4
+    unit: "-"
+    src: iso-965-1-2013
+  iso_Td2_diameter_exponent:
+    value: 0.1
+    unit: "-"
+    src: iso-965-1-2013
+  iso_Td2_grades:
+    value: [3, 4, 5, 6, 7, 8, 9]
+    unit: "-"
+    src: iso-965-1-2013
+  iso_Td2_grade_factors:
+    value: [0.5, 0.63, 0.8, 1.0, 1.25, 1.6, 2.0]
+    unit: "-"
+    src: iso-965-1-2013
+    note: "T_d2(n) = factor(n) x T_d2(6)"
+  iso_TD2_grades:
+    value: [4, 5, 6, 7, 8]
+    unit: "-"
+    src: iso-965-1-2013
+  iso_TD2_grade_factors:
+    value: [0.85, 1.06, 1.32, 1.7, 2.12]
+    unit: "-"
+    src: iso-965-1-2013
+    note: "internal pitch diameter tolerance T_D2(n) = factor(n) x T_d2(6) (the unrounded grade-6 value)"
+  iso_Td_coefficient_a:
+    value: 180
+    unit: "-"
+    src: iso-965-1-2013
+    note: "T_d(6) = 180 P^(2/3) - 3.15 P^(-1/2) um, P in mm (major diameter tolerance of external threads)"
+  iso_Td_coefficient_b:
+    value: 3.15
+    unit: "-"
+    src: iso-965-1-2013
+  iso_Td_grades:
+    value: [4, 6, 8]
+    unit: "-"
+    src: iso-965-1-2013
+  iso_Td_grade_factors:
+    value: [0.63, 1.0, 1.6]
+    unit: "-"
+    src: iso-965-1-2013
+  iso_TD1_fine_a:
+    value: 433
+    unit: "-"
+    src: iso-965-1-2013
+    note: "T_D1(6) = 433 P - 190 P^1.22 um for P = 0.2 to 0.8 mm (minor diameter tolerance of internal threads)"
+  iso_TD1_fine_b:
+    value: 190
+    unit: "-"
+    src: iso-965-1-2013
+  iso_TD1_fine_exponent:
+    value: 1.22
+    unit: "-"
+    src: iso-965-1-2013
+  iso_TD1_fine_max_pitch_m:
+    value: 0.8
+    unit: mm
+    src: iso-965-1-2013
+    note: "the fine-pitch formula applies up to this pitch, the coarse one from 1 mm (between the two: the coarse formula)"
+  iso_TD1_coarse_coefficient:
+    value: 230
+    unit: "-"
+    src: iso-965-1-2013
+    note: "T_D1(6) = 230 P^0.7 um for P >= 1 mm"
+  iso_TD1_coarse_exponent:
+    value: 0.7
+    unit: "-"
+    src: iso-965-1-2013
+  iso_TD1_grades:
+    value: [4, 5, 6, 7, 8]
+    unit: "-"
+    src: iso-965-1-2013
+  iso_TD1_grade_factors:
+    value: [0.63, 0.8, 1.0, 1.25, 1.6]
+    unit: "-"
+    src: iso-965-1-2013
+  iso_deviation_positions:
+    value: [e, f, g, h, G, H]
+    unit: "-"
+    src: iso-965-1-2013
+    note: "tolerance positions: external e, f, g, h (es = -(a + b P)), internal G, H (EI = +(a + b P))"
+  iso_deviation_constants:
+    value: [50, 30, 15, 0, 15, 0]
+    unit: "-"
+    src: iso-965-1-2013
+    note: "the constant a in um of each position above (e: -(50 + 11P), f: -(30 + 11P), g: -(15 + 11P), h: 0, G: +(15 + 11P), H: 0)"
+  iso_deviation_pitch_coefficient:
+    value: 11
+    unit: "-"
+    src: iso-965-1-2013
+    note: "the coefficient b in um per mm of pitch (0 for h and H)"
+  iso_le_normal_min_coefficient:
+    value: 2.24
+    unit: "-"
+    src: iso-965-1-2013
+    note: "normal length of engagement N from 2.24 P d^0.2 mm (lower limit)"
+  iso_le_normal_max_coefficient:
+    value: 6.7
+    unit: "-"
+    src: iso-965-1-2013
+    note: "normal length of engagement N up to 6.7 P d^0.2 mm (upper limit): the engagement length used for the cumulative pitch deviation when none is given"
+  iso_le_diameter_exponent:
+    value: 0.2
+    unit: "-"
+    src: iso-965-1-2013
+  r40_series:
+    value: [1.00, 1.06, 1.12, 1.18, 1.25, 1.32, 1.40, 1.50, 1.60, 1.70, 1.80, 1.90, 2.00, 2.12, 2.24, 2.36, 2.50, 2.65, 2.80, 3.00, 3.15, 3.35, 3.55, 3.75, 4.00, 4.25, 4.50, 4.75, 5.00, 5.30, 5.60, 6.00, 6.30, 6.70, 7.10, 7.50, 8.00, 8.50, 9.00, 9.50]
+    unit: "-"
+    src: iso-3-1973
+    note: "R40 preferred numbers of one decade; ISO 965-1's tabulated deviations and tolerances are the formula values rounded to the nearest R40 number in um (then to a whole um, half to even) - this reproduces e.g. es(g, P 1.25) = -28, es(g, P 1.5) = -32, T_d2(6) = 118 / 132 um for M8 x 1.25 / M10 x 1.5"
+  iso_table_values:
+    value:
+      - [2.8, 5.6, 0.5, 6, 0, 75]
+      - [2.8, 5.6, 0.5, 6, 1, 100]
+      - [5.6, 11.2, 1.5, 6, 1, 180]
+      - [0.99, 600, 0.5, 6, 3, 140]
+    unit: "-"
+    src: amesweb-metric-thread-chart
+    note: "rows [d range over (mm), up to (mm), pitch (mm), grade, quantity (0 T_d2, 1 T_D2, 2 T_d, 3 T_D1), um]: the ISO 965-1 table values that differ from the formula rounded to the nearest R40 number (formula 80, 106, 170 and 132 um; M3 x 0.5 6g d2 2.655-2.580, 6H D2 2.675-2.775 and D1 2.459-2.599, M10 x 1.5 6H D2 9.026-9.206). Every other formula value checked against the M3-M16 coarse 6g / 6H limits of the chart reproduces the table"
+  iso261_coarse_diameters_m:
+    value: [1, 1.2, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 27, 30, 33, 36, 39, 42, 45, 48, 52, 56, 60, 64]
+    unit: mm
+    src: iso-261-1998
+    note: "nominal diameters of the coarse pitch series"
+  iso261_coarse_pitches_m:
+    value: [0.25, 0.25, 0.3, 0.35, 0.35, 0.4, 0.45, 0.5, 0.6, 0.7, 0.8, 1, 1.25, 1.5, 1.75, 2, 2, 2.5, 2.5, 2.5, 3, 3, 3.5, 3.5, 4, 4, 4.5, 4.5, 5, 5, 5.5, 5.5, 6]
+    unit: mm
+    src: iso-261-1998
+    note: "coarse pitch of each diameter above (M8 is 1.25, M10 is 1.5)"
+  # ------------------------------------------------------------------ ASME B1.1 Unified inch threads
+  asme_pd_diameter_coefficient:
+    value: 0.0015
+    unit: "-"
+    src: asme-b1-1-2019
+    note: "class 2A pitch diameter tolerance = 0.0015 D^(1/3) + 0.0015 LE^(1/2) + 0.015 P^(2/3) in inch (D, LE, P in inch)"
+  asme_pd_engagement_coefficient:
+    value: 0.0015
+    unit: "-"
+    src: asme-b1-1-2019
+  asme_pd_pitch_coefficient:
+    value: 0.015
+    unit: "-"
+    src: asme-b1-1-2019
+  asme_engagement_pitches:
+    value: 9
+    unit: "-"
+    src: oberg-2016
+    note: "LE = 9 P for the UNEF, 12-, 16-, 20-, 28-, 32-UN and UNS series; LE = D (the basic major diameter) for UNC, UNF and 4-, 6-, 8-UN (Machinery's Handbook, Unified screw threads, tolerances)"
+  asme_classes:
+    value: [1A, 2A, 3A, 1B, 2B, 3B]
+    unit: "-"
+    src: asme-b1-1-2019
+  asme_pd_class_factors:
+    value: [1.5, 1.0, 0.75, 1.95, 1.3, 0.975]
+    unit: "-"
+    src: asme-b1-1-2019
+    note: "pitch diameter tolerance of each class as a multiple of the class 2A tolerance"
+  asme_allowance_factors:
+    value: [0.3, 0.3, 0.0, 0.0, 0.0, 0.0]
+    unit: "-"
+    src: asme-b1-1-2019
+    note: "allowance (es) as a multiple of the class 2A pitch diameter tolerance: classes 1A and 2A 0.300, 3A and internal classes none"
+  asme_major_tolerance_coefficients:
+    value: [0.090, 0.060, 0.060]
+    unit: "-"
+    src: asme-b1-1-2019
+    note: "external major diameter tolerance = c P^(2/3) inch for classes 1A, 2A, 3A (Machinery's Handbook p. 1869 29th ed. gives the same)"
+  asme_minor_tolerance_a:
+    value: 0.25
+    unit: "-"
+    src: engineersedge-unified-thread-limits
+    note: "internal minor diameter tolerance of classes 1B and 2B = 0.25 P - 0.40 P^2 inch (sizes 1/4 in and larger); the class 3B minor diameter tolerance is not encoded (its maximum is then not checked)"
+  asme_minor_tolerance_b:
+    value: 0.4
+    unit: "-"
+    src: engineersedge-unified-thread-limits
+  asme_rounding_m:
+    value: 0.0001
+    unit: in
+    src: asme-b1-1-2019
+    note: "limits of size are stated to 0.0001 in"
+  asme_minor_rounding_m:
+    value: 0.001
+    unit: in
+    src: engineersedge-unified-thread-limits
+    note: "the internal minor diameter limits of classes 1B and 2B are rounded to 0.001 in (class 3B to 0.0001 in)"

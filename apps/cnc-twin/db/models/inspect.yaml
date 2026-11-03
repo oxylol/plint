@@ -1,0 +1,196 @@
+# Numerical settings of result-geometry inspection (cnctwin.inspect, docs/models/inspect.md). These are not
+# physical coefficients: they decide which result-surface points belong to which CAD face, how many points the
+# zone solvers see, how the virtual CMM probes and when a sliver of material counts as remaining material or a
+# gouge. Read in SI by cnctwin.db.models.params("inspect"); every inspection function also takes them as
+# arguments (cnctwin.inspect.schema.InspectSettings), these are the defaults.
+format: cnctwin-model-params
+version: 1
+model: inspect
+description: "Point assignment, sampling, fit and zone solver controls, virtual CMM probing, remaining-material / gouge thresholds and chordal-deviation sampling of cnctwin.inspect"
+params:
+  # ------------------------------------------------------------------ result points -> CAD faces
+  assign_band_m:
+    value: 0.5
+    unit: mm
+    range: [0.005, 20]
+    src: est
+    note: "a result-surface point farther than this from the CAD is not used to fit or evaluate a face (it is still in the deviation map); 0.5 mm admits every finishing error worth measuring and rejects the stock allowance of an unfinished face, which would otherwise pull a fit"
+  assign_angle_rad:
+    value: 30
+    unit: deg
+    range: [1, 89]
+    src: est
+    note: "a result point is used for a face only if its surface normal is within this angle of the CAD face normal at its closest point: removes the points of a neighbouring wall, a chamfer or a burr that lie within the band near an edge"
+  max_points_per_face:
+    value: 4000
+    unit: "-"
+    range: [50, 1000000]
+    src: est
+    note: "dense evaluations keep at most this many result points per face (deterministic stride in vertex order); the zone LPs then have 2 x 4000 rows and solve in about 50 ms; form errors are bounded by the lattice spacing anyway"
+  sections:
+    value: 8
+    unit: "-"
+    range: [2, 1000]
+    src: est
+    note: "cross sections per cylinder, cone or surface of revolution for roundness, circular runout and the derived median line (ISO 12180-2 suggests several sections over the length; 8 resolves a bend and a taper)"
+  section_min_points:
+    value: 8
+    unit: "-"
+    range: [5, 1000]
+    src: est
+    note: "a cross section with fewer points (or covering less than half a turn) gives no circle"
+  # ------------------------------------------------------------------ solvers
+  ls_iterations:
+    value: 60
+    unit: "-"
+    range: [5, 10000]
+    src: est
+    note: "Gauss-Newton / Levenberg-Marquardt iterations of the least-squares fits (they converge in 3-8 from the CAD nominal)"
+  ls_step_tolerance:
+    value: 1.0e-13
+    unit: "-"
+    range: [1.0e-16, 1.0e-6]
+    src: est
+    note: "a fit stops when the step is smaller than this times the feature size (about 1e-15 m on a 10 mm feature: the double-precision floor)"
+  lp_iterations:
+    value: 12
+    unit: "-"
+    range: [2, 1000]
+    src: carr-ferreira-1995a
+    note: "sequential linear programs of a minimum-zone / envelope fit (re-linearised at the new estimate); Carr & Ferreira report convergence in 3-6 for form errors well below the feature size"
+  lp_tolerance_m:
+    value: 1.0e-6
+    unit: um
+    range: [1.0e-9, 1.0]
+    src: est
+    note: "sequential LP stops when the zone changes by less than this (1 pm, far below any tolerance)"
+  lp_trust_m:
+    value: 1.0
+    unit: mm
+    range: [0.001, 100]
+    src: est
+    note: "largest translation (and rotation times the feature size) one linear program may move the estimate, so the small-displacement linearisation stays valid"
+  zone_polygon_sides:
+    value: 64
+    unit: "-"
+    range: [8, 4096]
+    src: est
+    note: "a circular zone (position, coaxiality, axis straightness) is linearised as a regular polygon with this many sides: the LP radius is at most 1/cos(pi/64) - 1 = 0.12 % too large; the reported value is the exact radius at the LP solution"
+  pair_angle_rad:
+    value: 1.0
+    unit: deg
+    range: [0.001, 10]
+    src: est
+    note: "two plane faces whose normals are antiparallel within this angle form a width feature (slot or tab); a pocket wall is a face whose normal is within this angle of perpendicular to the floor"
+  # ------------------------------------------------------------------ virtual CMM
+  probe_radius_m:
+    value: 1.0
+    unit: mm
+    range: [0.05, 25]
+    src: renishaw-2020-styli
+    note: "stylus ball radius: a 2 mm ruby ball, the standard stylus of touch-trigger probes"
+  probe_prehit_m:
+    value: 2.0
+    unit: mm
+    range: [0.05, 50]
+    src: est
+    note: "the probe starts this far outside the nominal surface (CMM prehit / retract distance)"
+  probe_search_m:
+    value: 2.0
+    unit: mm
+    range: [0.05, 50]
+    src: est
+    note: "the probe travels this far beyond the nominal surface before it reports no contact (material missing)"
+  probe_inset_m:
+    value: 0.5
+    unit: mm
+    range: [0.0, 50]
+    src: est
+    note: "planned probe points keep this distance plus the ball radius from the edges of the face"
+  probe_points_plane:
+    value: 9
+    unit: "-"
+    range: [3, 100000]
+    src: iso-10360-6-2001
+    note: "points per plane in a probe plan (a 3 x 3 grid where the face allows): more than the minimum of 3 so form shows"
+  probe_points_circle:
+    value: 8
+    unit: "-"
+    range: [3, 100000]
+    src: iso-10360-6-2001
+    note: "points per circle of a cylinder, cone, sphere or torus plan"
+  probe_levels:
+    value: 3
+    unit: "-"
+    range: [1, 1000]
+    src: est
+    note: "circles per cylinder or cone (3 levels resolve taper and bend)"
+  probe_trace_iterations:
+    value: 400
+    unit: "-"
+    range: [10, 100000]
+    src: hart-1996-sphere-tracing
+    note: "sphere-tracing steps of one probe move (each step advances by the free distance, so a frontal approach needs one or two)"
+  probe_trace_tolerance_m:
+    value: 1.0e-6
+    unit: mm
+    range: [1.0e-9, 1.0e-3]
+    src: est
+    note: "the ball is in contact when its free distance to the surface is below this (1 nm)"
+  # ------------------------------------------------------------------ remaining material and gouges
+  remaining_tolerance_m:
+    value: 5
+    unit: um
+    range: [0.0, 1000]
+    src: est
+    note: "material outside the CAD thinner than this along a dexel column is not remaining material (field quantisation, target rasterisation and the tessellation of the CAD lie below it)"
+  gouge_tolerance_m:
+    value: 5
+    unit: um
+    range: [0.0, 1000]
+    src: est
+    note: "CAD material missing over less than this depth along a column is not a gouge (the same floor as remaining_tolerance_m)"
+  region_min_volume_m3:
+    value: 1.0e-12
+    unit: "-"
+    range: [0.0, 1.0e-3]
+    src: est
+    note: "m3 (SI; 1e-12 m3 = 0.001 mm3, the volume unit token m3 is not a key unit): connected regions of remaining material or gouges below this volume are counted but not listed one by one"
+  column_merge_m:
+    value: 1.0e-6
+    unit: mm
+    range: [0.0, 1.0e-3]
+    src: est
+    note: "two crossings of one dexel ray with a mesh closer than this with the same sense are one crossing (a ray through a shared edge hits both triangles)"
+  # ------------------------------------------------------------------ chordal deviation of the toolpath
+  chordal_samples:
+    value: 8
+    unit: "-"
+    range: [1, 10000]
+    src: est
+    note: "interior samples of each toolpath segment before the golden-section refinement of the largest deviation"
+  chordal_iterations:
+    value: 40
+    unit: "-"
+    range: [0, 200]
+    src: kiefer-1953-golden
+    note: "golden-section steps on the bracket of the largest sample (0.618^40 = 4e-9 of the segment length)"
+  chordal_max_distance_m:
+    value: 5.0
+    unit: mm
+    range: [0.01, 1000]
+    src: est
+    note: "segments whose end points are both farther than this from the CAD (approach and retract moves) are not evaluated"
+  chordal_tolerance_m:
+    value: 10
+    unit: um
+    range: [0.0, 1000]
+    src: est
+    note: "chord error above which a segment is listed as exceeding the linearisation tolerance (a typical CAM finishing tolerance; the drawing's own profile tolerances are evaluated on the result)"
+  # ------------------------------------------------------------------ matching other domains' results
+  thread_match_rel:
+    value: 0.02
+    unit: "-"
+    range: [0.0001, 0.5]
+    src: est
+    note: "a measured thread belongs to a thread specification when its major diameter and pitch are within this fraction of the nominal"

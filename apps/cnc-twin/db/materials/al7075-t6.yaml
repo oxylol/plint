@@ -39,7 +39,7 @@ flow_stress:
   T_ref_degC: 20
   T_melt_degC: 604
   src: luo-2021-al7075-drilling
-  note: "Table 3 of Luo et al. 2021, used there for 7075-T6 drilling FE validated against measured thrust and torque; the authors attribute the constants to Nemat-Nasser et al. 2007 (JoMMS 2:1901, not read). Tm = 604 C is the value used with the set (below the 635 C liquidus). Alternatives seen but not adopted: Brar, Joshi & Harris 2009 (AIP Conf. Proc. 1195:945) determined JC constants for 7075-T6 and T651 from quasi-static and Hopkinson-bar data, but the constants could not be read (abstract only)."
+  note: "Table 3 of Luo et al. 2021, used there for 7075-T6 drilling FE validated against measured thrust and torque; the authors attribute the constants to Nemat-Nasser et al. 2007 (JoMMS 2:1901, not read). Tm = 604 C is the value used with the set (below the 635 C liquidus). Alternatives seen but not adopted: Brar, Joshi & Harris 2009 (AIP Conf. Proc. 1195:945) determined JC constants for 7075-T6 and T651 from quasi-static and Hopkinson-bar data, but the constants could not be read: the AIP paper is paywalled and the APS meeting-abstract page could not be read in full on 2026-11-03 (truncated, bot-protected), so no Brar constants are stored."
 
 cutting:
   kienzle:
@@ -142,11 +142,11 @@ tool_life_usui: null               # kept as a sibling key (template's nested `u
 
 residual_stress:
   - form: rolled_plate
-    thickness_mm: {value: 50, src: est, note: "assumed representative plate"}
+    thickness_mm: 76
     direction: L
-    profile: [[0.0, -25], [0.1, -5], [0.25, 20], [0.5, -15], [0.75, 20], [0.9, -5], [1.0, -25]]
+    profile_MPa: [[0.026, 7], [0.05, -1], [0.10, -12], [0.15, -16], [0.20, -18], [0.25, -11], [0.30, 5], [0.35, 17], [0.40, 17], [0.45, 10], [0.50, 5], [0.55, 8], [0.60, 17], [0.65, 19], [0.70, 9], [0.75, -7], [0.80, -19], [0.85, -20], [0.90, -14], [0.95, 1], [0.963, 6]]
     src: est
-    note: "PLACEHOLDER for T651 (stretched) plate: low-amplitude self-equilibrating profile assumed; no measured 7075-T651 plate profile was read. Unstretched T6 parts carry much larger quench stresses that are not represented"
+    note: "ESTIMATE for T651 (stretched) plate, no 7075-T651 profile read: the measured rolling-direction profile of 76 mm 7050-T7451 stretched plate (Prime & Hill 2002 slitting data as reproduced in seger-2024-al7050-plate-rs Fig. 2b; digitised in al7075-t7351.yaml) resampled every 0.05 z/t and rounded to 1 MPa, amplitude not scaled (both are stretched 7xxx plate; peak-aged T651 may retain somewhat higher stresses). Replaces an earlier placeholder ([[0,-25],[0.1,-5],[0.25,20],[0.5,-15],[0.75,20],[0.9,-5],[1,-25]], 50 mm) whose mid-thickness sign disagreed with the measurement. Unstretched T6 parts carry about ten times larger quench stresses (prime-2003-al-forgings-rs) that are not represented"
 
 skin:
   type: none
@@ -162,4 +162,4 @@ thermal_damage:
 ignition: null
 composite: null
 
-notes: "High-strength aerospace alloy. Sourced: physical/tensile data (NASA 1972, Kaiser 2006; cp and alpha digitised from the NASA figure), JC set used in a validated drilling FE (Luo et al. 2021), Kienzle (ISCAR), averaged mechanistic coefficients (Engin & Altintas, bull-nose insert cutter), BUE window (Trujillo 2017, Jomaa 2014), FE friction coefficient (Luo 2021). Estimated: HSS Kienzle, coated/PCD friction, work hardening, K_sp, all Taylor constants and the plate residual-stress profile."
+notes: "High-strength aerospace alloy. Sourced: physical/tensile data (NASA 1972, Kaiser 2006; cp and alpha digitised from the NASA figure), JC set used in a validated drilling FE (Luo et al. 2021), Kienzle (ISCAR), averaged mechanistic coefficients (Engin & Altintas, bull-nose insert cutter), BUE window (Trujillo 2017, Jomaa 2014), FE friction coefficient (Luo 2021). Estimated: HSS Kienzle, coated/PCD friction, work hardening, K_sp, all Taylor constants and the plate residual-stress profile (shaped on the measured stretched 7050-T7451 profile)."

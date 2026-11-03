@@ -68,6 +68,12 @@ params:
     range: [0, 10]
     src: est
     note: "passes of variance-component reweighting: after a fit each observation set's sigma is set to its RMS residual (floored at its resolution / sqrt(12)) and the fit repeated, so that sets in different units weigh by their actual scatter"
+  segment_trim_frac:
+    value: 0.1
+    unit: "-"
+    range: [0.0, 0.45]
+    src: est
+    note: "fraction of each cut segment dropped at its start and at its end before its mean power is taken (entry and exit transients, the meter's lag)"
   # ---------------------------------------------------------------- bounds of the calibrated parameters
   efficiency_bounds:
     value: [0.3, 0.99]

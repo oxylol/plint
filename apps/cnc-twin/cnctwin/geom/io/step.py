@@ -6,7 +6,7 @@ process via :func:`read_step_isolated` or ``python -m cnctwin.geom.io.step in.st
 
 1. ``STEPCAFControl_Reader`` (names, colours, GD&T) into an XCAF document; shapes arrive in the session
    length unit (``UnitsMethods.GetCasCadeLengthUnit``, mm by default) and are scaled to metres; the file's
-   own unit is reported (``StepData_StepModel.WriteLengthUnit`` of the read model, in mm).
+   own unit is reported (``STEPControl_Reader::FileUnits``: ``millimetre``, ``INCH`` ...).
 2. ``BRepTools::Clean`` then ``BRepMesh_IncrementalMesh`` (sequential, so deterministic) at the chordal
    tolerance (linear deflection) and angular tolerance given (``geom.step_chordal_tolerance_m``,
    ``geom.step_angular_tolerance_rad``). Face ids are the 0-based order of ``TopExp::MapShapes(FACE)``;
@@ -134,7 +134,9 @@ def _read_document(path: Path):
 
     app = XCAFApp_Application.GetApplication_s()
     doc = TDocStd_Document(TCollection_ExtendedString("MDTV-XCAF"))
-    app.NewDocument(TCollection_ExtendedString("MDTV-XCAF"), doc)
+    # InitDocument sets up the XCAF tools on a document Python owns; NewDocument would register a second
+    # document in the application session that a Python caller can never release
+    app.InitDocument(doc)
     reader = STEPCAFControl_Reader()
     reader.SetColorMode(True)
     reader.SetNameMode(True)
@@ -169,46 +171,68 @@ def read_step(path, chordal_tolerance_m: float | None = None, angular_tolerance_
     ang_rad = float(resolve(angular_tolerance_rad, "step_angular_tolerance_rad"))
     if chord_m <= 0.0 or ang_rad <= 0.0:
         raise ValueError("STEP tessellation tolerances must be positive")
-    _app, doc, reader = _read_document(path)
-    file_mm = float(reader.Reader().StepModel().WriteLengthUnit())
-    session_mm = float(UnitsMethods.GetCasCadeLengthUnit_s())
-    to_m = session_mm * 1e-3
-    stool = XCAFDoc_DocumentTool.ShapeTool_s(doc.Main())
-    free = Sequence_TDF_Label()
-    stool.GetFreeShapes(free)
-    roots = _seq(free)
-    if not roots:
-        raise InputError("STEP file holds no shape", str(path))
-    shapes = [stool.GetShape_s(lab) for lab in roots]
-    if len(shapes) == 1:
-        root = shapes[0]
-    else:
-        root = TopoDS_Compound()
-        builder = BRep_Builder()
-        builder.MakeCompound(root)
-        for s in shapes:
-            builder.Add(root, s)
-    BRepTools.Clean_s(root)
-    mesher = BRepMesh_IncrementalMesh(root, chord_m / to_m, False, ang_rad, False)
-    if not mesher.IsDone():
-        raise InputError("OpenCASCADE could not tessellate the shape", str(path))
-    fmap = IMap()
-    TopExp.MapShapes_s(root, TopAbs_FACE, fmap)
-    faces = [TopoDS.Face(fmap.FindKey(i)) for i in range(1, fmap.Extent() + 1)]
-    mesh = _tessellation(faces, to_m)
-    infos = [_face_info(i, f, mesh, to_m) for i, f in enumerate(faces)]
-    names = _face_names(stool, roots, faces)
-    for i, name in names.items():
-        infos[i].name = name
-    features = _features(root, fmap, infos)
-    mesh.group_names = {i: (infos[i].name or f"face{i}") for i in range(len(infos))}
-    mesh.name = path.stem
-    model = CadModel(mesh, infos, features, unit={"file_unit": unit_name(file_mm * 1e-3), "file_scale_m": file_mm * 1e-3,
-                                                  "session_unit_mm": session_mm},
-                     source=str(path), chordal_tolerance_m=chord_m, angular_tolerance_rad=ang_rad,
-                     names={str(k): v for k, v in names.items()})
-    _read_pmi(doc, stool, fmap, model, to_m)
+    app, doc, reader = _read_document(path)
+    try:
+        file_units = _file_length_units(reader)
+        session_mm = float(UnitsMethods.GetCasCadeLengthUnit_s())
+        to_m = session_mm * 1e-3
+        stool = XCAFDoc_DocumentTool.ShapeTool_s(doc.Main())
+        free = Sequence_TDF_Label()
+        stool.GetFreeShapes(free)
+        roots = _seq(free)
+        if not roots:
+            raise InputError("STEP file holds no shape", str(path))
+        shapes = [stool.GetShape_s(lab) for lab in roots]
+        if len(shapes) == 1:
+            root = shapes[0]
+        else:
+            root = TopoDS_Compound()
+            builder = BRep_Builder()
+            builder.MakeCompound(root)
+            for s in shapes:
+                builder.Add(root, s)
+        BRepTools.Clean_s(root)
+        mesher = BRepMesh_IncrementalMesh(root, chord_m / to_m, False, ang_rad, False)
+        if not mesher.IsDone():
+            raise InputError("OpenCASCADE could not tessellate the shape", str(path))
+        fmap = IMap()
+        TopExp.MapShapes_s(root, TopAbs_FACE, fmap)
+        faces = [TopoDS.Face(fmap.FindKey(i)) for i in range(1, fmap.Extent() + 1)]
+        mesh = _tessellation(faces, to_m)
+        infos = [_face_info(i, f, mesh, to_m) for i, f in enumerate(faces)]
+        names = _face_names(stool, roots, faces)
+        for i, name in names.items():
+            infos[i].name = name
+        features = _features(root, fmap, infos)
+        mesh.group_names = {i: (infos[i].name or f"face{i}") for i in range(len(infos))}
+        mesh.name = path.stem
+        first = file_units[0] if file_units else ""
+        scale = STEP_LENGTH_UNITS_M.get(first.lower())
+        model = CadModel(mesh, infos, features, unit={"file_unit": unit_name(scale) if scale else first,
+                                                      "file_scale_m": scale, "file_unit_names": file_units,
+                                                      "session_unit_mm": session_mm},
+                         source=str(path), chordal_tolerance_m=chord_m, angular_tolerance_rad=ang_rad,
+                         names={str(k): v for k, v in names.items()})
+        _read_pmi(doc, stool, fmap, model, to_m)
+    finally:
+        del reader, doc, app
     return model
+
+
+# length unit names OCCT reports for a file's shape representations -> metres
+STEP_LENGTH_UNITS_M = {"millimetre": 1e-3, "millimeter": 1e-3, "centimetre": 1e-2, "centimeter": 1e-2, "metre": 1.0,
+                       "meter": 1.0, "kilometre": 1e3, "micrometre": 1e-6, "micron": 1e-6, "nanometre": 1e-9,
+                       "inch": 0.0254, "foot": 0.3048, "feet": 0.3048, "mil": 2.54e-5, "yard": 0.9144,
+                       "mile": 1609.344}
+
+
+def _file_length_units(reader) -> list[str]:
+    """Length unit names of the file's shape representations (``STEPControl_Reader::FileUnits``)."""
+    from OCP.OCP.collections import Sequence_TCollection_AsciiString as Seq
+
+    lengths, angles, solids = Seq(), Seq(), Seq()
+    reader.Reader().FileUnits(lengths, angles, solids)
+    return [lengths.Value(i).ToCString() for i in range(1, lengths.Length() + 1)]
 
 
 def _tessellation(faces, to_m: float) -> Mesh:
@@ -748,7 +772,8 @@ def box_with_hole(size_mm=(100.0, 80.0, 30.0), hole_xy_mm=(80.0, 60.0), hole_dia
             k = int(np.argmax(np.abs(n)))
             level = float(np.dot(o, n) / n[k])
             axis = "xyz"[k]
-            names[{"x": ("xmin", "xmax"), "y": ("ymin", "ymax"), "z": ("bottom", "top")}[axis][0 if abs(level) < 1e-9 else 1]] = i - 1
+            low_side = level < 0.5 * (sx, sy, sz)[k]
+            names[{"x": ("xmin", "xmax"), "y": ("ymin", "ymax"), "z": ("bottom", "top")}[axis][0 if low_side else 1]] = i - 1
     return shape, names
 
 
@@ -777,9 +802,16 @@ def write_step_pmi(path, shape, datums=(), geometric=(), dimensions=(), unit: st
     from OCP.XCAFApp import XCAFApp_Application
     from OCP.XCAFDoc import XCAFDoc_Datum, XCAFDoc_Dimension, XCAFDoc_DocumentTool, XCAFDoc_GeomTolerance
 
+    units = {"mm": ("MM", 1.0), "m": ("M", 1000.0), "inch": ("INCH", 25.4), "in": ("INCH", 25.4), "cm": ("CM", 10.0)}
+    if unit not in units:
+        raise ValueError(f"STEP unit {unit!r} is not one of {sorted(units)}")
+    unit_text, unit_mm = units[unit]
+    # OCCT 8's writer converts the geometry to the file unit but writes PMI measures as given, with the
+    # file unit attached: lengths are divided here so the file states them in its own unit.
+    to_file = 1.0 / unit_mm
     app = XCAFApp_Application.GetApplication_s()
     doc = TDocStd_Document(TCollection_ExtendedString("MDTV-XCAF"))
-    app.NewDocument(TCollection_ExtendedString("MDTV-XCAF"), doc)
+    app.InitDocument(doc)
     st = XCAFDoc_DocumentTool.ShapeTool_s(doc.Main())
     dt = XCAFDoc_DocumentTool.DimTolTool_s(doc.Main())
     lab = st.AddShape(shape, False)
@@ -815,7 +847,7 @@ def write_step_pmi(path, shape, datums=(), geometric=(), dimensions=(), unit: st
         attr = XCAFDoc_GeomTolerance.Set_s(gl)
         obj = X.XCAFDimTolObjects_GeomToleranceObject()
         obj.SetType(getattr(X, "XCAFDimTolObjects_GeomToleranceType_" + gt_types[g["kind"]]))
-        obj.SetValue(float(g["tolerance_mm"]))
+        obj.SetValue(float(g["tolerance_mm"]) * to_file)
         if g.get("zone") == "diameter":
             obj.SetTypeOfValue(X.XCAFDimTolObjects_GeomToleranceTypeValue_Diameter)
         if g.get("material") in ("M", "L"):
@@ -831,12 +863,14 @@ def write_step_pmi(path, shape, datums=(), geometric=(), dimensions=(), unit: st
         attr = XCAFDoc_Dimension.Set_s(ml)
         obj = X.XCAFDimTolObjects_DimensionObject()
         obj.SetType(getattr(X, "XCAFDimTolObjects_DimensionType_" + dim_types[d["kind"]]))
-        obj.SetValue(float(d.get("nominal_deg", d.get("nominal_mm", 0.0))))
-        plus = d.get("plus_deg", d.get("plus_mm"))
-        minus = d.get("minus_deg", d.get("minus_mm"))
+        angular = d["kind"] == "angle"
+        scale = 1.0 if angular else to_file
+        obj.SetValue(float(d["nominal_deg"] if angular else d.get("nominal_mm", 0.0)) * scale)
+        plus = d.get("plus_deg") if angular else d.get("plus_mm")
+        minus = d.get("minus_deg") if angular else d.get("minus_mm")
         if plus is not None or minus is not None:
-            obj.SetUpperTolValue(float(plus or 0.0))
-            obj.SetLowerTolValue(float(minus or 0.0))       # OCCT takes the lower deviation as a magnitude
+            obj.SetUpperTolValue(float(plus or 0.0) * scale)
+            obj.SetLowerTolValue(float(minus or 0.0) * scale)  # OCCT takes the lower deviation as a magnitude
         if d.get("fit"):
             fit = str(d["fit"])
             letters = fit.rstrip("0123456789")
@@ -858,7 +892,7 @@ def write_step_pmi(path, shape, datums=(), geometric=(), dimensions=(), unit: st
     previous_unit = Interface_Static.CVal_s("write.step.unit")
     previous_schema = Interface_Static.CVal_s("write.step.schema")
     Interface_Static.SetCVal_s("write.step.schema", "AP242DIS")
-    Interface_Static.SetCVal_s("write.step.unit", {"mm": "MM", "m": "M", "inch": "INCH", "in": "INCH", "cm": "CM"}[unit])
+    Interface_Static.SetCVal_s("write.step.unit", unit_text)
     try:
         writer.SetDimTolMode(True)
         writer.SetNameMode(True)

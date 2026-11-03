@@ -14,8 +14,9 @@ mesh-vs-revolved-solid through the trees of :mod:`cnctwin.geom.bvh` (docs/models
   by minimising the radial clearance ``h(z) = g(z) - R(z)`` where ``g(z)`` is the distance of the
   triangle's chord at height z from the axis. ``g`` is convex (partial minimisation of the convex
   distance-to-axis over the triangle, Boyd & Vandenberghe 2004, 3.2.5) and R is linear on a segment, so
-  ``h`` is convex and a golden-section search (Kiefer 1953) finds its minimum to ``geom.clearance_z_
-  tolerance_m``. A negative clearance is a radial penetration depth.
+  ``h`` is convex and a golden-section search (Kiefer 1953) finds its minimum within
+  ``geom.clearance_tolerance_m`` (the final bracket is that tolerance over the function's Lipschitz
+  constant). A negative clearance is a radial penetration depth.
 """
 
 from __future__ import annotations
@@ -45,6 +46,9 @@ PLANE_ULPS = 32.0
 # Ericson's guard on |R_ij| against the null cross product of near-parallel box edges.
 SAT_PARALLEL_EPS = 64.0 * _EPS
 INV_PHI = (math.sqrt(5.0) - 1.0) / 2.0
+# Golden-section steps are capped (each shrinks the bracket by 0.618; 200 steps reach below one ulp of any
+# coordinate, after which the bracket stops shrinking and the search ends anyway).
+GOLDEN_MAX_ITER = 200
 
 
 # ============================================================================ triangle-triangle (Moller 1997)
@@ -615,8 +619,10 @@ def _zone_value(tri, z, za, ra, zb, rb, mode, zref):
 
 
 @njit(f8(F2, f8, f8, f8, f8, f8, i8, f8), **OPTS)
-def _segment_clearance(tri, za, ra, zb, rb, ztol, mode, zref):
-    """Minimum of the (convex) zone function over [za, zb]: golden section to ztol, end points included."""
+def _segment_clearance(tri, za, ra, zb, rb, width, mode, zref):
+    """Minimum of the (convex) zone function over [za, zb] by golden section until the bracket is narrower
+    than ``width`` (the caller sets width = tolerance / Lipschitz constant, so the value is within the
+    tolerance), or stops shrinking; the end points are evaluated too."""
     lo = za
     hi = zb
     best = min(_zone_value(tri, lo, za, ra, zb, rb, mode, zref), _zone_value(tri, hi, za, ra, zb, rb, mode, zref))
@@ -626,30 +632,46 @@ def _segment_clearance(tri, za, ra, zb, rb, ztol, mode, zref):
     x2 = lo + INV_PHI * (hi - lo)
     f1 = _zone_value(tri, x1, za, ra, zb, rb, mode, zref)
     f2 = _zone_value(tri, x2, za, ra, zb, rb, mode, zref)
-    while hi - lo > ztol:
+    for _ in range(GOLDEN_MAX_ITER):
+        if hi - lo <= width:
+            break
         if f1 <= f2:
             hi = x2
             x2 = x1
             f2 = f1
             x1 = hi - INV_PHI * (hi - lo)
+            if not (lo < x1 < x2):
+                break
             f1 = _zone_value(tri, x1, za, ra, zb, rb, mode, zref)
         else:
             lo = x1
             x1 = x2
             f1 = f2
             x2 = lo + INV_PHI * (hi - lo)
+            if not (x1 < x2 < hi):
+                break
             f2 = _zone_value(tri, x2, za, ra, zb, rb, mode, zref)
     return min(best, f1, f2)
 
 
 @njit(f8(F2, F1, F1, f8, f8), **OPTS)
-def triangle_clearance_nb(tri, pz, pr, margin, ztol):
+def triangle_clearance_nb(tri, pz, pr, margin, tol):
     """Clearance of triangle tri (in the solid's frame) to the solid of revolution of the z-monotone
     polyline (pz, pr): within the profile's z range the radial gap g(z) - R(z) (negative: radial
     penetration); within ``margin`` beyond either end the larger of the axial gap and the radial gap to
-    the end radius. +inf when the triangle lies wholly beyond the grown solid's ends."""
+    the end radius. +inf when the triangle lies wholly beyond the grown solid's ends. The zone functions are
+    Lipschitz in z with constant L = s + |R'| (+1 beyond the ends), s the largest horizontal-per-vertical
+    run of the triangle's non-horizontal edges (how fast its chord moves), so a bracket of tol / L gives the
+    minimum within ``tol``."""
     tz0 = min(tri[0, 2], tri[1, 2], tri[2, 2])
     tz1 = max(tri[0, 2], tri[1, 2], tri[2, 2])
+    run = 0.0
+    for e in range(3):
+        a = tri[e]
+        b = tri[(e + 1) % 3]
+        dz = abs(b[2] - a[2])
+        if dz > 0.0:
+            run = max(run, math.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2) / dz)
     n = pz.shape[0]
     z_first = pz[0]
     z_last = pz[n - 1]
@@ -691,20 +713,19 @@ def triangle_clearance_nb(tri, pz, pr, margin, ztol):
         hi = min(zb, tz1)
         if lo > hi:
             continue
-        if zb > za:
-            rlo = ra + (rb - ra) * (lo - za) / (zb - za)
-            rhi = ra + (rb - ra) * (hi - za) / (zb - za)
-        else:
-            rlo = ra
-            rhi = rb
-        c = _segment_clearance(tri, lo, rlo, hi, rhi, ztol, mode, zref)
+        slope = (rb - ra) / (zb - za) if zb > za else 0.0
+        rlo = ra + slope * (lo - za)
+        rhi = ra + slope * (hi - za)
+        lipschitz = run + abs(slope) + (1.0 if mode != 0 else 0.0)
+        width = tol / lipschitz if lipschitz > 0.0 else hi - lo
+        c = _segment_clearance(tri, lo, rlo, hi, rhi, width, mode, zref)
         if c < best:
             best = c
     return best
 
 
 @njit(i8(TREE, F2, F1, F1, F1, f8, f8, I1, F1, F1), **OPTS)
-def tree_revolved_overlap_nb(tree, R, t, pz, pr, margin, ztol, out_faces, out_clear, stats):
+def tree_revolved_overlap_nb(tree, R, t, pz, pr, margin, tol, out_faces, out_clear, stats):
     """Faces of the tree within ``margin`` (radially, and axially past the ends) of a solid of revolution.
     The solid's frame S (axis z) maps to the tree's frame A by p_A = R p_S + t; (pz, pr) is its z-monotone
     profile. out_clear holds each reported face's clearance (negative: penetration). stats = [min
@@ -750,7 +771,7 @@ def tree_revolved_overlap_nb(tree, R, t, pz, pr, margin, ztol, out_faces, out_cl
         if right < 0:
             for s in range(tree.node_start[node], tree.node_start[node] + tree.node_count[node]):
                 _transform_tri(tree.tri_v[s], Rt, tt, tri)
-                c = triangle_clearance_nb(tri, pz, pr, margin, ztol)
+                c = triangle_clearance_nb(tri, pz, pr, margin, tol)
                 if c <= margin:
                     face = tree.tri_face[s]
                     if count < cap:
@@ -796,7 +817,7 @@ def mesh_mesh_overlap(tree_a: MeshTree, tree_b: MeshTree, pose_A_B=None, first_o
                       max_pairs: int = 4096) -> np.ndarray:
     """``[k, 2]`` face pairs (A, B) of intersecting triangles (all of them unless ``first_only``)."""
     T = np.eye(4) if pose_A_B is None else np.asarray(pose_A_B, dtype=np.float64)
-    if not tf.is_rigid(T, 1e-9):
+    if not tf.is_rigid(T, tf.RIGID_INPUT_TOLERANCE):
         raise ValueError("mesh_mesh_overlap needs a rigid relative pose")
     R, t = contiguous(T[:3, :3]), contiguous(T[:3, 3])
     cap = max(1, int(max_pairs))
@@ -812,7 +833,7 @@ def mesh_box_overlap(tree: MeshTree, pose_A_box, half_extents, margin: float = 0
     """Face ids overlapping an oriented box (half extents about its frame's origin, the frame placed by
     pose_A_box in the tree's frame), the box grown by ``margin``."""
     T = np.asarray(pose_A_box, dtype=np.float64)
-    if not tf.is_rigid(T, 1e-9):
+    if not tf.is_rigid(T, tf.RIGID_INPUT_TOLERANCE):
         raise ValueError("mesh_box_overlap needs a rigid box pose")
     R, t = contiguous(T[:3, :3]), contiguous(T[:3, 3])
     h = contiguous(np.asarray(half_extents, dtype=np.float64).reshape(3))
@@ -825,7 +846,7 @@ def mesh_box_overlap(tree: MeshTree, pose_A_box, half_extents, margin: float = 0
         cap = n
 
 
-def mesh_revolved_overlap(tree: MeshTree, pose_A_S, z, r, margin: float = 0.0, z_tolerance: float | None = None):
+def mesh_revolved_overlap(tree: MeshTree, pose_A_S, z, r, margin: float = 0.0, tolerance: float | None = None):
     """Faces within ``margin`` of a z-monotone solid of revolution (tool/holder envelope; profile points
     (z_k, r_k) in its frame S, axis z, placed by pose_A_S): ``(faces [k], clearance [k], min_clearance,
     min_face)``. Clearance (see :func:`triangle_clearance_nb`) is the radial gap within the profile's z
@@ -839,16 +860,16 @@ def mesh_revolved_overlap(tree: MeshTree, pose_A_S, z, r, margin: float = 0.0, z
     if np.any(np.diff(zs) < 0.0) or np.any(rs < 0.0):
         raise ValueError("a revolved envelope profile must have non-decreasing z and non-negative r")
     T = np.asarray(pose_A_S, dtype=np.float64)
-    if not tf.is_rigid(T, 1e-9):
+    if not tf.is_rigid(T, tf.RIGID_INPUT_TOLERANCE):
         raise ValueError("mesh_revolved_overlap needs a rigid pose")
-    ztol = float(resolve(z_tolerance, "clearance_z_tolerance_m"))
+    tol = float(resolve(tolerance, "clearance_tolerance_m"))
     R, t = contiguous(T[:3, :3]), contiguous(T[:3, 3])
     stats = np.zeros(2)
     cap = 1024
     while True:
         faces = np.empty(cap, np.int32)
         clear = np.empty(cap)
-        n = int(tree_revolved_overlap_nb(tree, R, t, zs, rs, float(margin), ztol, faces, clear, stats))
+        n = int(tree_revolved_overlap_nb(tree, R, t, zs, rs, float(margin), tol, faces, clear, stats))
         if n <= cap:
             return faces[:n].copy(), clear[:n].copy(), float(stats[0]), int(stats[1])
         cap = n

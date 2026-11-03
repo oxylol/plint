@@ -115,10 +115,10 @@ entries:
     year: 1983
     doi: "10.1109/TBME.1983.325207"
   amanatides-woo-1987:
-    type: conference
+    type: article
     authors: "Amanatides, J.; Woo, A."
     title: "A fast voxel traversal algorithm for ray tracing"
-    venue: "Eurographics '87, 3-10"
+    venue: "Eurographics '87 Proceedings, 3-10"
     year: 1987
   kay-kajiya-1986:
     type: conference

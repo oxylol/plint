@@ -71,7 +71,10 @@ def test_lathe_g10_tool_offsets_and_variables():
     assert v[:4] == pytest.approx([20.0, -5.0, -0.02, 3.0])
 
 
-def test_lathe_cycles_route_through_the_cycle_hook():
+def test_lathe_cycles_route_through_the_cycle_hook(monkeypatch):
+    hooks.load_plugins()
+    for key in ("G71", "G90"):
+        monkeypatch.delitem(hooks.CYCLES, key, raising=False)   # the missing-provider path (providers exist now)
     assert alarm(lathe("G71 U2. R0.5\nG71 P10 Q20 U0.2 W0.1 F0.25"))["code"] == "TW0001"
     assert alarm(lathe("G90 X40. Z-20. F0.2"))["code"] == "TW0001"
 
@@ -89,7 +92,8 @@ def test_lathe_cycles_route_through_the_cycle_hook():
 
     hooks.register_cycle("G90", Box(), dialect="fanuc", replace=True)
     try:
-        r = lathe("S500 M03\nG00 X50. Z2.\nG90 X40. Z-20. F0.2\nX35.")
+        # G00 cancels the box-cycle mode before M30 (a block without a move command repeats G90, FANUC 4.1.6)
+        r = lathe("S500 M03\nG00 X50. Z2.\nG90 X40. Z-20. F0.2\nX35.\nG00 X50.")
         m = moves(r)
         assert alarm(r) is None
         assert len(Box.calls) == 2 and Box.calls[1].data["X"] == pytest.approx(0.0175)

@@ -80,6 +80,7 @@ class FanucHandler:
 
     macro_alarm_key = "macro_alarm"
     m_after_motion_only = False
+    repeat_letters = ("K", "L")         # canned-cycle repetition addresses (Haas: L only)
 
     def __init__(self, ex, dialect: Dialect):
         self.ex = ex
@@ -160,6 +161,8 @@ class FanucHandler:
     def on_reset(self) -> None:
         """RESET / program end: cancel what FANUC cancels on reset (comp, cycle, modal call, transforms)."""
         s = self.s
+        if s.cycle is not None or s.sys.get("rigid_tap"):
+            self.cycle_cancelled((s.cycle or {}).get("code") or "G84")
         for group, code in (("7", "G40"), (str(self.groups["cycle"]), "G80"), ("12", "G67")):
             if group in s.modal:
                 s.modal[group] = code
@@ -172,11 +175,18 @@ class FanucHandler:
         s.scale = None
         s.mirror = {}
         s.feature = None
+        if s.sys.get("tcp_group") == 16:          # a tilted working plane (G68.2 ...) ends with the reset
+            s.tcp = ""
+            s.sys.pop("tcp_group", None)
+        s.sys.pop("tilted", None)
         s.cycle = None
         s.cycle_initial = None
         s.sys.pop("modal_calls", None)
         s.locals = [new_locals()]
         self.ex.invalidate_transform()
+        provider = hooks.TOOL_LIFE.get("default")
+        if provider is not None and hasattr(provider, "reset"):
+            provider.reset(self.ex)
 
     # ================================================================== numbers
     def linear_increment_units(self) -> float:
@@ -309,6 +319,8 @@ class FanucHandler:
         }
         if self.T:
             snap["offset_number"] = s.offset_number
+        if s.tool_axis_letter != "Z":
+            snap["tool_axis_letter"] = s.tool_axis_letter
         if s.sys.get("3004"):
             snap["feed_hold_inhibit"] = bool(int(s.sys["3004"]) & 1)
         if s.sys.get("rigid_tap"):
@@ -334,6 +346,8 @@ class FanucHandler:
             self.statement(block.stmt)
             return
         if not block.words:
+            if self.box_cycle_mode():
+                self.nc_block(BlockWords())         # FANUC: an EOB-only block in G90/G92/G94 mode repeats the cycle
             return
         words = block.words
         if block.mid_delete_at >= 0 and s.operator.block_delete[block.mid_delete - 1]:
@@ -440,6 +454,15 @@ class FanucHandler:
 
     def nc_block(self, bw: BlockWords) -> None:
         ex, s = self.ex, self.s
+        mode = s.sys.get("data_mode")
+        if mode:
+            provider = hooks.DATA_MODES[mode]
+            if "G11" in bw.g:
+                s.sys.pop("data_mode", None)
+                provider.end(ex)
+                return
+            provider.block(ex, bw)
+            return
         for code in bw.g:
             if code in self.p.get("macro_call_codes", {}) and not self._inside_code_call(code):
                 self.code_call(code, bw)
@@ -460,6 +483,8 @@ class FanucHandler:
             modal[spec.group] = (code, spec)
         if sum(1 for _, spec in oneshots if spec.axis_words) > 1:
             raise ControllerAlarm("improper_g_code", " ".join(c for c, sp in oneshots if sp.axis_words))
+        if self.T and any(code != "G04" and not spec.cycle for code, spec in oneshots):
+            s.sys.pop("box_cycle", None)        # modal data of G90/G92/G94 cleared by a one-shot G code
         if bw.duplicates:
             self.duplicate_address(bw.duplicates)
         if len(bw.m) > self.p["max_m_codes_per_block"]:
@@ -481,7 +506,7 @@ class FanucHandler:
         for kind in ("H", "D"):
             word = bw.take(kind)
             if word is not None:
-                number = self.integer(word)
+                number = self.offset_word(kind, word)
                 if number < 0 or number > self.max_offset():
                     raise ControllerAlarm("illegal_offset_number", f"{kind}{number}")
                 if kind == "H":
@@ -542,6 +567,15 @@ class FanucHandler:
 
     def max_offset(self) -> int:
         return 64 if self.T else 999
+
+    def offset_word(self, kind: str, word: WordValue) -> int:
+        """The H or D number of a word, after tool life management (H99 / D99 select the offsets registered
+        for the tool whose life is counted)."""
+        number = self.integer(word)
+        provider = hooks.TOOL_LIFE.get("default")
+        if provider is not None and hasattr(provider, "offset_code"):
+            number = int(provider.offset_code(self.ex, kind, number))
+        return number
 
     def same_group(self, first: str, second: str) -> None:
         if self.p.get("same_group_alarm"):
@@ -631,16 +665,35 @@ class FanucHandler:
             self.cycle_mode(code, spec, bw)
         elif kind == "motion":
             if s.cycle is not None:
+                previous = s.cycle.get("code")
                 s.cycle = None
                 s.modal[str(self.groups["cycle"])] = "G80"
+                self.cycle_cancelled(previous)
             s.modal[group] = code
         elif kind == "tcp":
             self.tcp_mode(code, spec, bw)
+        elif kind == "ext":
+            self.ext_code(code, spec, bw)
         else:
             self.modal_extra(code, spec, bw)
 
     def modal_extra(self, code: str, spec: GSpec, bw: BlockWords) -> None:
         raise ControllerAlarm("unsupported_function", code)
+
+    def ext_code(self, code: str, spec: GSpec, bw: BlockWords) -> bool:
+        """A G code of kind ``ext``: executed by the provider registered under ``spec.arg``
+        (hooks.register_gcode_handler); returns True when it moved the axes."""
+        handler = hooks.GCODE_HANDLERS.get(spec.arg)
+        if handler is None:
+            raise ControllerAlarm("unsupported_function", code)
+        return bool(handler.execute(self.ex, code, spec, bw))
+
+    def cycle_cancelled(self, code: str | None) -> None:
+        """The canned-cycle mode of ``code`` ended (G80, a group 01 code, reset): the cycle provider's
+        optional ``cancel(ex, code)`` releases what the mode held (rigid tapping, ...)."""
+        provider = hooks.find(hooks.CYCLES, self.d.name, code) if code else None
+        if provider is not None and hasattr(provider, "cancel"):
+            provider.cancel(self.ex, code)
 
     def tcp_mode(self, code: str, spec: GSpec, bw: BlockWords) -> None:
         s = self.s
@@ -656,7 +709,7 @@ class FanucHandler:
         if spec.group == 8:
             word = bw.take("H")
             if word is not None:
-                number = self.integer(word)
+                number = self.offset_word("H", word)
                 if number < 0 or number > self.max_offset():
                     raise ControllerAlarm("illegal_offset_number", f"H{number}")
                 s.h_number = number
@@ -685,7 +738,7 @@ class FanucHandler:
         s = self.s
         word = bw.take("H")
         if word is not None:
-            number = self.integer(word)
+            number = self.offset_word("H", word)
             if number < 0 or number > self.max_offset():
                 raise ControllerAlarm("illegal_offset_number", f"H{number}")
             s.h_number = number
@@ -707,13 +760,26 @@ class FanucHandler:
             return
         word = bw.take("D")
         if word is not None:
-            number = self.integer(word)
+            number = self.offset_word("D", word)
             if number < 0 or number > self.max_offset():
                 raise ControllerAlarm("illegal_offset_number", f"D{number}")
             s.d_number = number
+        active = s.comp_state is not None and s.comp_kind in ("cutter", "nose") \
+            and s.modal.get("7", "G40") in ("G41", "G42")
+        if active and code == "G40":
+            self.comp_marker({"cancel": "G40"})
+        elif active and code in ("G41", "G42"):
+            self.comp_marker({"respecified": code})
         if code in ("G41", "G42"):
             ex.start_comp("nose" if self.T else "cutter")
         s.modal["7"] = code
+
+    def comp_marker(self, data: dict) -> None:
+        """Tell the active compensation filter about a group 07 command of this block (G40 or G41/G42
+        given again in offset mode) before the block's motion; the filter consumes the marker."""
+        ex = self.ex
+        marker = dict(data, seq=self.s.block_seq)
+        ex.emit(Command(Kind.MODE, ex.line_ref(), modal={"comp_marker": marker}))
 
     def scaling(self, code: str, bw: BlockWords) -> None:
         s, ex = self.s, self.ex
@@ -831,9 +897,11 @@ class FanucHandler:
         s = self.s
         group = str(spec.group)
         if spec.arg == "off":
+            previous = (s.cycle or {}).get("code") or ("G84" if s.sys.get("rigid_tap") else None)
             s.modal[group] = code
             s.cycle = None
             s.cycle_initial = None
+            self.cycle_cancelled(previous)
             return
         if self.T and spec.group in (0, 1):
             s.modal[group] = code if spec.group == 1 else s.modal.get(group, "")
@@ -894,6 +962,9 @@ class FanucHandler:
             ex.write(149, float(number))
             self.code_call("T", None)
             return
+        provider = hooks.TOOL_LIFE.get("default")
+        if provider is not None and hasattr(provider, "t_code"):      # tool life group calls (T99nn, T199 ...)
+            number = int(provider.t_code(ex, number))
         if self.T:
             self.lathe_t(number)
             return
@@ -997,6 +1068,7 @@ class FanucHandler:
             self.coolant({pid: False for pid in self.machine.pumps}, "M09")
         elif m == 29:
             s.sys["rigid_tap"] = True
+            s.sys["rigid_tap_at"] = {"pos": dict(s.pos), "s": s.spindle.s_value, "seq": s.block_seq}
             ex.emit(Command(Kind.MODE, ex.line_ref(), modal={"rigid_tap": True}))
         elif 41 <= m <= 44:
             s.spindle.gear = m - 40
@@ -1318,6 +1390,8 @@ class FanucHandler:
                 bw.take(letter)
         elif kind == "tcp":
             self.tcp_mode(code, spec, bw)
+        elif kind == "ext":
+            return self.ext_code(code, spec, bw)
         elif spec.cycle:
             self.cycle_block(code, bw, oneshot=True)
             return True
@@ -1378,6 +1452,13 @@ class FanucHandler:
                 if inc_word is not None:
                     row[i] += self.axis_counts(axis, inc_word)
             ex.resync_program_position()
+            return
+        if l == 3:
+            provider = hooks.DATA_MODES.get("G10L3")
+            if provider is None:
+                raise ControllerAlarm("unsupported_function", "G10 L3 (tool life management data)")
+            provider.begin(ex, p, bw)
+            s.sys["data_mode"] = "G10L3"
             return
         if self.T and l in (0, 1, 10, 11):
             self.g10_lathe_tool(l, p, bw)
@@ -1668,12 +1749,18 @@ class FanucHandler:
         code = s.modal.get("1", "G00")
         spec = self.d.gcodes.get(code)
         if spec is not None and spec.cycle:
-            if self.has_motion_words(bw):
+            repeat = self.box_cycle_mode() and not any(
+                (self.d.gcodes.get(g) or GSpec(1, "")).group == 0 for g in bw.g)
+            if self.has_motion_words(bw) or repeat:
                 self.cycle_block(code, bw)
                 return True
             return False
+        extra = self.motion_words(code, bw)
         arc_words = [l for l in ("I", "J", "K", "R") if bw.has(l)]
-        if not self.has_motion_words(bw) and not (code in ("G02", "G03") and arc_words):
+        if not self.has_motion_words(bw) and not (code in ("G02", "G03") and arc_words) \
+                and not extra.get("tool_vector"):
+            if extra:
+                ex.emit(Command(Kind.MODE, ex.line_ref(), modal={"motion_words": extra}))
             return False
         target = self.axis_targets(bw)
         corner = None
@@ -1685,9 +1772,9 @@ class FanucHandler:
         if corner is not None:
             self.start_corner(code)
         if code == "G00":
-            ex.move("rapid", target, ex.feed_spec(True), corner=corner)
+            ex.move("rapid", target, ex.feed_spec(True), corner=corner, modal=extra or None)
         elif code == "G01":
-            ex.move("linear", target, self.cutting_feed(bw), corner=corner)
+            ex.move("linear", target, self.cutting_feed(bw), corner=corner, modal=extra or None)
         elif code in ("G02", "G03"):
             self.arc(bw, target, -1 if code == "G02" else 1, corner)
         elif code in ("G33", "G32"):
@@ -1695,6 +1782,23 @@ class FanucHandler:
         else:
             raise ControllerAlarm("improper_g_code", code)
         return True
+
+    def motion_words(self, code: str, bw: BlockWords) -> dict:
+        """Words of a motion block that a provider takes as its own data (hooks.MOTION_WORDS: the I J K
+        vector of cutter compensation in G00/G01 blocks, the tool vector of G43.5 ...)."""
+        extra: dict = {}
+        for provider in hooks.MOTION_WORDS.values():
+            extra.update(provider.motion_words(self.ex, code, bw) or {})
+        return extra
+
+    def box_cycle_mode(self) -> bool:
+        """T series: a G90/G92/G94 box cycle is modal and its data is set (blocks without a move command
+        repeat it, FANUC 0i-F / 30i lathe manual 4.1.6)."""
+        if not self.T:
+            return False
+        code = self.s.modal.get("1", "")
+        box = self.s.sys.get("box_cycle")
+        return code in ("G90", "G92", "G94") and bool(box) and box.get("code") == code
 
     def start_corner(self, code: str) -> None:
         """,C / ,R / ,A need the next block (look-ahead): the item carries ``corner`` and goes through the
@@ -1770,8 +1874,15 @@ class FanucHandler:
             raise ControllerAlarm("feed_zero", "thread without lead F")
         q = bw.take("Q")
         start = math.radians((q.value if q.point else q.value * 0.001)) if q is not None else 0.0
-        feed = ex.feed_spec(False, override=False, feed_si=lead, mode="per_rev")
-        ex.move("linear", target, feed, modal={"thread": {"lead_m": lead, "start_angle_rad": start}})
+        # the lead is along the axis with the longer travel (taper threads, FANUC 3.1); the path advances
+        # lead * length / major travel per revolution
+        deltas = {l: ex.si(l, c - s.pos.get(l, 0)) for l, c in target.items() if ex.by_letter[l].kind == "linear"}
+        major = max(deltas, key=lambda l: abs(deltas[l])) if deltas else None
+        length = math.sqrt(sum(v * v for v in deltas.values()))
+        path_lead = lead * length / abs(deltas[major]) if major is not None and deltas[major] != 0.0 else lead
+        feed = ex.feed_spec(False, override=False, feed_si=path_lead, mode="per_rev")
+        ex.move("linear", target, feed, modal={"thread": {"lead_m": path_lead, "lead_major_m": lead,
+                                                          "major_axis": major, "start_angle_rad": start}})
 
     # ------------------------------------------------------------------ cycles
     def cycle_trigger(self, bw: BlockWords) -> bool:
@@ -1793,7 +1904,10 @@ class FanucHandler:
         for letter in ("K", "L"):
             word = bw.take(letter)
             if word is not None:
-                data[letter] = float(self.integer(word))
+                if letter in self.repeat_letters:
+                    data[letter] = float(self.integer(word))
+                else:
+                    data[letter] = self.lin(word)          # Haas: K is a length (G73/G83 minimum peck)
         if s.feed_set:
             data["F"] = s.feed_si
         if s.cycle is not None:
@@ -1847,7 +1961,7 @@ class FanucHandler:
             if word is not None:
                 data[drill] = ex.si(drill, self.axis_counts(ex.by_letter[drill], word))
                 data["absolute"] = 1.0 if absolute else 0.0
-        repeats = int(data.get("K", data.get("L", 1.0)))
+        repeats = int(next((data[l] for l in self.repeat_letters if l in data), 1.0))
         steps_words = {}
         for axis in ex.axes:
             if axis.letter == drill:
@@ -1947,6 +2061,7 @@ def fanuc_params(settings, model: str = "controller-fanuc") -> dict:
 def build_fanuc(machine, settings, controller_db, db_id: str = "") -> Dialect:
     variant = machine.variant
     gcodes = dict(T_GCODES if variant == "T" else M_GCODES)
+    gcodes.update(hooks.extra_gcodes("fanuc", variant))
     power_on = dict(T_POWER_ON if variant == "T" else M_POWER_ON)
     words = (controller_db or {}).get("words") or {}
     supported_g = word_set(words.get("G"), "G") if words else None

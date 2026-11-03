@@ -1,0 +1,58 @@
+# Wei et al. (2023): axial (Z) thermal error of the spindle of a Vcenter-55 vertical machining centre,
+# spindle idling at 2000, 4000 and 6000 rpm for at least 6 h, ISO 230-3 test, ambient band 13.2-22.7 degC
+# (batches K30, K22, K19). Measured with capacitive sensors (1 um).
+format: cnctwin-validation-case
+version: 1
+id: spindlegrowth-wei2023-vcenter55-ambient-mid
+quantity: spindle_growth
+reference:
+  src: wei-2023-vcenter55-thermal-error
+  location: "Sect. 2.1-2.3, Tables 1-3, Fig. 4 Z panel (curves K30, K22, K19, digitised)"
+  digitised: true
+  uncertainty_pct: 3                 # about +-1 um on 24-48 um curves (markers of neighbouring curves overlap); sensor accuracy 1 um
+  measured: true
+setup:
+  operation: spindle_warmup
+  machine:
+    model: "Vcenter-55 three-axis vertical machining centre"
+    maker: "not named in the paper (Vcenter-55 is a Victor Taichung model name)"
+    spindle: "not described: drive type, taper, bearing arrangement, preload, cooling and maximum speed are not stated"
+    temperature_sensors: "ten Pt100 (0.1 degC): T1-T5 front spindle bearing, T7-T8 spindle motor, T6 and T9 spindle box, T10 machine frame (ambient)"
+  conditions:
+    test_standard: "ISO 230-3:2020, five-point method (two capacitive sensors in X, two in Y, one in Z, 1 um accuracy); thermal error = displacement minus its initial value"
+    spindle_rpm_per_curve: [2000, 4000, 6000]
+    load: "spindle idling (no cutting); worktable reciprocating along X and Y at constant feed during the test"
+    table_feed_mm_min: 1500
+    duration_min: {value: 360, note: "each batch lasted at least 6 h (Sect. 2.2); the plotted curves run to 440-455 min"}
+    sample_interval_min: 5
+    machine_state_at_start: {value: "cold: the machine had cooled for 2 days before each batch", src: wei-2022-vcenter55-year-round, page: "Sect. 3.1"}
+    ambient_band_degC: [13.2, 22.7]
+    ambient_note: "initial ambient temperatures of K30, K22 and K19 are not given (Table 2 is printed truncated); the band is the paper's own condition grouping (Table 3: conditions 4, 5, 6)"
+  program: null
+reference_values:
+  - {name: Z_growth_max, value: 24.4, unit: um, uncertainty: 1.0, x: 2000, x_name: spindle_speed, x_unit: rpm, note: "K30, plateau maximum at about 220 min"}
+  - {name: Z_growth_max, value: 39.5, unit: um, uncertainty: 1.0, x: 4000, x_name: spindle_speed, x_unit: rpm, note: "K22, plateau maximum at 200-220 min"}
+  - {name: Z_growth_max, value: 47.8, unit: um, uncertainty: 1.0, x: 6000, x_name: spindle_speed, x_unit: rpm, note: "K19, plateau maximum at about 180 min"}
+reference_curves:
+  - name: Z_thermal_error_K30_2000rpm
+    x_name: time
+    x_unit: min
+    y_name: Z_thermal_error
+    y_unit: um
+    uncertainty: 1.0
+    points: [[0, 0], [30, 10.2], [35, 11.5], [40, 12.4], [50, 14.9], [60, 16.0], [70, 17.2], [80, 18.6], [90, 19.6], [100, 20.5], [120, 21.6], [140, 22.7], [160, 23.3], [180, 23.7], [200, 23.8], [220, 24.4], [240, 24.0], [270, 24.2], [300, 24.1], [330, 24.3], [360, 23.8], [390, 23.2], [420, 22.8]]
+  - name: Z_thermal_error_K22_4000rpm
+    x_name: time
+    x_unit: min
+    y_name: Z_thermal_error
+    y_unit: um
+    uncertainty: 1.0
+    points: [[0, 0], [30, 21.7], [35, 23.7], [40, 25.0], [50, 27.7], [60, 30.0], [70, 32.0], [80, 33.5], [90, 34.4], [100, 35.6], [120, 37.4], [140, 38.6], [160, 39.1], [180, 39.2], [200, 39.5], [220, 39.5], [240, 39.3], [270, 39.3], [300, 39.0], [330, 38.9], [360, 38.6], [390, 38.3], [420, 38.3], [450, 37.2]]
+  - name: Z_thermal_error_K19_6000rpm
+    x_name: time
+    x_unit: min
+    y_name: Z_thermal_error
+    y_unit: um
+    uncertainty: 1.0
+    points: [[0, 0], [30, 28.1], [35, 30.5], [40, 32.2], [50, 36.3], [60, 39.1], [70, 40.8], [80, 42.4], [90, 43.6], [100, 44.7], [120, 46.3], [140, 46.7], [160, 47.1], [180, 47.8], [200, 47.7], [220, 47.7], [240, 47.6], [270, 47.7], [300, 47.0], [330, 47.0], [360, 46.1], [390, 45.4], [420, 44.8], [450, 44.4]]
+notes: "Digitised from the colour raster of Fig. 4 (Z panel, 707 px wide): axes calibrated on the tick marks (1.16 px/min, 7.62 px/um), each colour separated by its RGB mask, the three curves of a colour separated by vertical clustering and averaged over five pixel columns around each sampled time. Points before 30 min are not given because the 5-min markers of all nine curves overlap there; the curves start at 0 by definition (ISO 230-3 relative displacement) and rise steeply over the first 30 min. The measured Z value is the relative tool-to-table displacement of the whole machine (spindle shaft growth plus headstock and column deformation), not the shaft alone, and the paper states no sign convention (values as plotted). Ambient temperature matters: within one speed the Z error is larger in cold ambient (see spindlegrowth-wei2023-vcenter55-ambient-cold and -warm for the other two bands of the same series). The paper's text names K5 and K44 as the largest and smallest curves; those labels belong to the earlier paper's numbering (wei-2022-vcenter55-year-round, same 46 batches): in this paper's Fig. 4 and Table 2 the largest curve is K3 and the smallest K46."

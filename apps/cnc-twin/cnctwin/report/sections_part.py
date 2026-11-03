@@ -17,7 +17,7 @@ from ..core.bus import CHIP_FORMS
 from ..units import ZERO_DEGC_K
 from . import fmt, plots
 from .context import Context
-from .html import Raw, Section, code, figure, join, kv, note, para, pass_badge, table, ul
+from .html import Section, figure, join, kv, note, para, pass_badge, table, ul
 from .rundir import split_column
 
 ONE_SIDED_KINDS = ("flatness", "straightness", "roundness", "circularity", "cylindricity", "profile",
@@ -123,15 +123,15 @@ def _cmm_table(ctx: Context, items: list[dict]) -> str:
         lines = item.get("lines") or ([item["line"]] if item.get("line") else [])
         op = str(item.get("op") or "")
         where = ctx.line_link(op, item.get("program") or _program_of(ctx, op), int(lines[0])) if lines else fmt.DASH
-        rows.append([item.get("id", ""), str(item.get("kind", "")) + (f" {fit}" if fit else ""),
-                     item.get("feature", fmt.DASH), datums or fmt.DASH, fmt.mm(nominal, 4), fmt.mm(lower, 4),
-                     fmt.mm(upper, 4), fmt.mm(measured, 4), fmt.signed_um(deviation), fmt.um(excess),
-                     fmt.pct(used, 0), pass_badge(passed), where])
+        kind = str(item.get("kind", "")) + (f" {fit}" if fit else "") + (f" | {datums}" if datums else "")
+        rows.append([item.get("id", ""), kind, item.get("feature", fmt.DASH), fmt.mm(nominal, 4),
+                     f"{fmt.mm(lower, 4)} … {fmt.mm(upper, 4)}", fmt.mm(measured, 4), fmt.signed_um(deviation),
+                     fmt.um(excess), fmt.pct(used, 0), pass_badge(passed), where])
         classes.append("fail" if passed is False else "")
     return "<h3>Characteristics</h3>" + table(
-        ["characteristic", "kind", "feature", "datums", "nominal (mm)", "lower (mm)", "upper (mm)", "measured (mm)",
+        ["characteristic", "kind | datums", "feature", "nominal (mm)", "limits (mm)", "measured (mm)",
          "deviation (µm)", "out of tol. (µm)", "tol. used (%)", "result", "made at"], rows,
-        numeric={4, 5, 6, 7, 8, 9, 10}, row_classes=classes,
+        numeric={3, 4, 5, 6, 7, 8}, row_classes=classes,
         caption="Two-sided sizes: nominal ± limits; GD&T zones (flatness, position ...): lower limit 0, "
                 "upper the zone. 'tol. used' is the deviation as a share of the tolerance on its side.",
         empty="inspection.json has no dimensional characteristics.")
@@ -171,7 +171,7 @@ def _surface_deviation(ctx: Context) -> str:
     deviation = attributes.get("deviation_m")
     if deviation is None:
         return ""
-    values = deviation[np.isfinite(deviation)]
+    values = deviation[np.isfinite(deviation)].astype(np.float64)
     if not len(values):
         return ""
     stats = [("vertices", fmt.integer(len(values))), ("mean", f"{fmt.signed_um(values.mean())} µm"),
@@ -248,22 +248,31 @@ def _error_budget(items: list[dict]) -> str:
         return note("inspection.json gives no error budget (contributions_m) for the characteristics.")
     sources = sorted({source for _, parts in budgets for source, _ in parts})
     values = np.zeros((len(budgets), len(sources)))
-    rows = []
+    rows, totals = [], []
     for i, (item, parts) in enumerate(budgets):
         for source, value in parts:
             values[i, sources.index(source)] += value
-        deviation = fmt.as_float(item.get("deviation_m"))
-        explained = float(values[i].sum())
-        rows.append([item.get("id", "")] + [fmt.signed_um(v) if v else fmt.DASH for v in values[i]]
-                    + [fmt.signed_um(explained), fmt.signed_um(deviation)])
-    totals = np.array([fmt.as_float(item.get("deviation_m")) or 0.0 for item, _ in budgets]) * fmt.UM_PER_M
+        total = _explained_total(item)
+        totals.append(total if total is not None else 0.0)
+        listed = "; ".join(f"{s} {fmt.signed_um(v)}" for s, v in sorted(zip(sources, values[i]), key=lambda x: -abs(x[1]))
+                           if v)
+        rows.append([item.get("id", ""), listed, fmt.signed_um(float(values[i].sum())), fmt.signed_um(total)])
     png = plots.signed_stack([item.get("id", "") for item, _ in budgets], sources, values * fmt.UM_PER_M,
-                             "µm", "Error budget: contributions to each deviation", totals)
-    return ("<h3>Error budget</h3>" + table(["characteristic"] + [f"{s} (µm)" for s in sources]
-                                            + ["sum (µm)", "deviation (µm)"], rows,
-                                            numeric=set(range(1, len(sources) + 3)))
+                             "µm", "Error budget: contributions to each deviation", np.array(totals) * fmt.UM_PER_M)
+    return ("<h3>Error budget</h3>" + table(["characteristic", "contributions, largest first (µm)", "sum (µm)",
+                                             "deviation or form error (µm)"], rows, numeric={2, 3})
             + figure(png, "error budget", "What each physical cause adds to each deviation (inspection.json "
-                                          "contributions_m); the black tick is the total deviation."))
+                                          "contributions_m); the black tick is the total deviation (the measured "
+                                          "form error for a tolerance zone)."))
+
+
+def _explained_total(item: dict) -> float | None:
+    """What the contributions explain: the deviation of a size, the measured value of a zone."""
+    deviation = fmt.as_float(item.get("deviation_m"))
+    if deviation is not None:
+        return deviation
+    nominal, _, _ = limits(item)
+    return fmt.as_float(item.get("measured_m")) if nominal is None else None
 
 
 # ----------------------------------------------------------------------------- surface and burrs
@@ -290,15 +299,15 @@ def surface_section(ctx: Context) -> Section:
         burrs = [b for b in surface.get("burrs") or [] if isinstance(b, dict)]
         burr_rows = [[b.get("edge", fmt.DASH), b.get("kind", fmt.DASH), fmt.um(b.get("height_m"), 1),
                       fmt.um(b.get("root_thickness_m"), 1), b.get("op", fmt.DASH),
-                      ctx.line_link(b.get("op", ""), b.get("program", ""), int(b.get("line") or 0))
-                      if b.get("line") else fmt.DASH,
+                      ctx.line_link(b.get("op", ""), b.get("program") or _program_of(ctx, str(b.get("op", ""))),
+                                    int(b.get("line") or 0)) if b.get("line") else fmt.DASH,
                       " ".join(fmt.mm(v, 2) for v in b.get("location_S_m") or []) or fmt.DASH] for b in burrs]
         body += "<h3>Burrs</h3>" + table(["edge", "kind", "height (µm)", "root (µm)", "op", "line",
                                           "where in S (mm)"], burr_rows, numeric={2, 3},
                                          empty="surface.json lists no burrs.")
     roughness = ctx.run.attributes.get("Ra_m")
     if roughness is not None and np.isfinite(roughness).any():
-        values = roughness[np.isfinite(roughness)]
+        values = roughness[np.isfinite(roughness)].astype(np.float64)
         body += kv([("Ra over the surface: median", f"{fmt.um(np.median(values), 2)} µm"),
                     ("Ra: 95 % quantile", f"{fmt.um(np.quantile(values, 0.95), 2)} µm"),
                     ("Ra: maximum", f"{fmt.um(values.max(), 2)} µm")])
@@ -560,8 +569,8 @@ def chatter_section(ctx: Context) -> Section:
             ap = float(point.get("ap_m", 0.0)) * fmt.MM_PER_M
             label = f"{point.get('op', '')} line {point.get('line', '')}".strip()
             points.append({"rpm": rpm, "ap_mm": ap, "stable": bool(point.get("stable")), "label": label})
-            rows.append([point.get("op", ""), ctx.line_link(point.get("op", ""), point.get("program", ""),
-                                                            int(point.get("line") or 0)),
+            op = str(point.get("op", ""))
+            rows.append([op, ctx.line_link(op, point.get("program") or _program_of(ctx, op), int(point.get("line") or 0)),
                          fmt.fixed(rpm, 0), fmt.mm(point.get("ap_m"), 2),
                          "stable" if point.get("stable") else "UNSTABLE (chatter)"])
         title = f"{name}: stability lobes" + (f", ae {fmt.mm(document.get('radial_immersion_m'), 1)} mm"
@@ -631,7 +640,7 @@ def deflection_section(ctx: Context) -> Section:
 def _deflection_share(ctx: Context) -> str:
     rows = []
     for item in [t for t in (ctx.run.inspection or {}).get("tolerances", []) if isinstance(t, dict)]:
-        deviation = fmt.as_float(item.get("deviation_m"))
+        deviation = _explained_total(item)
         for entry in item.get("contributions_m") or []:
             if not isinstance(entry, dict) or "deflection" not in str(entry.get("source", "")):
                 continue

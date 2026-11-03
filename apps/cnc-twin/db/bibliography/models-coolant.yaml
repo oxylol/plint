@@ -1,0 +1,301 @@
+# Sources of the coolant models (cnctwin.coolant, docs/models/coolant.md) and of their coefficients in
+# db/models/coolant-*.yaml. Standard textbook and journal equations; where a coefficient was recalled
+# rather than re-read in this session the parameter file says so in its note.
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  martin-1977-impinging-jets:
+    type: article
+    authors: "Martin, H."
+    title: "Heat and mass transfer between impinging gas jets and solid surfaces"
+    venue: "Advances in Heat Transfer 13, 1-60"
+    year: 1977
+    doi: "10.1016/S0065-2717(08)70221-1"
+    pages: "single round nozzle: Nu/Pr^0.42 = G(r/D, H/D) F1(Re), G = (D/r)(1 - 1.1 D/r)/(1 + 0.1 (H/D - 6) D/r), F1 = 2 Re^0.5 (1 + 0.005 Re^0.55)^0.5; 2000 <= Re <= 4e5, 2.5 <= r/D <= 7.5, 2 <= H/D <= 12"
+
+  colebrook-1939:
+    type: article
+    authors: "Colebrook, C.F."
+    title: "Turbulent flow in pipes, with particular reference to the transition region between the smooth and rough pipe laws"
+    venue: "Journal of the Institution of Civil Engineers 11(4), 133-156"
+    year: 1939
+    doi: "10.1680/ijoti.1939.13150"
+    pages: "1/sqrt(f) = -2 log10(eps/(3.7 D) + 2.51/(Re sqrt(f)))"
+
+  moody-1944:
+    type: article
+    authors: "Moody, L.F."
+    title: "Friction factors for pipe flow"
+    venue: "Transactions of the ASME 66(8), 671-684"
+    year: 1944
+    pages: "Moody chart; absolute roughness of drawn tubing 0.000005 ft (1.5 um)"
+
+  haaland-1983:
+    type: article
+    authors: "Haaland, S.E."
+    title: "Simple and explicit formulas for the friction factor in turbulent pipe flow"
+    venue: "Journal of Fluids Engineering 105(1), 89-90"
+    year: 1983
+    doi: "10.1115/1.3240948"
+    pages: "1/sqrt(f) = -1.8 log10[(eps/D/3.7)^1.11 + 6.9/Re]"
+
+  crane-tp410-2013:
+    type: handbook
+    authors: "Crane Co."
+    title: "Flow of Fluids Through Valves, Fittings, and Pipe (Technical Paper No. 410)"
+    publisher: "Crane Co., Stamford CT"
+    year: 2013
+    pages: "A-26..A-29: sudden contraction K = 0.5 (1 - beta^2), sudden enlargement K = (1 - beta^2)^2, square-edged inlet K = 0.5, pipe exit K = 1.0"
+
+  idelchik-2008-hydraulic-resistance:
+    type: handbook
+    authors: "Idelchik, I.E."
+    title: "Handbook of Hydraulic Resistance"
+    edition: "4th revised and augmented"
+    publisher: "Begell House, Redding CT"
+    year: 2008
+    pages: "ch. 3-4: resistance of contractions, nozzles and orifices; ch. 6: bends"
+
+  gulich-2014-centrifugal-pumps:
+    type: book
+    authors: "Guelich, J.F."
+    title: "Centrifugal Pumps"
+    edition: "3rd"
+    publisher: "Springer, Berlin Heidelberg"
+    year: 2014
+    pages: "ch. 4: head-capacity characteristics; shut-off head of radial pumps of low specific speed about 1.1-1.35 times the best-efficiency head"
+
+  karassik-2008-pump-handbook:
+    type: handbook
+    authors: "Karassik, I.J.; Messina, J.P.; Cooper, P.; Heald, C.C."
+    title: "Pump Handbook"
+    edition: "4th"
+    publisher: "McGraw-Hill, New York"
+    year: 2008
+    pages: "sec. 3: displacement pumps (flow nearly independent of pressure, relief-valve protection)"
+
+  anderson-2003-compressible-flow:
+    type: book
+    authors: "Anderson, J.D."
+    title: "Modern Compressible Flow with Historical Perspective"
+    edition: "3rd"
+    publisher: "McGraw-Hill, New York"
+    year: 2003
+    pages: "ch. 3 and 5: isentropic relations, choked mass flow m = p0 A sqrt(gamma/(R T0)) (2/(gamma+1))^((gamma+1)/(2(gamma-1)))"
+
+  birch-1984-underexpanded-jets:
+    type: article
+    authors: "Birch, A.D.; Brown, D.R.; Dodson, M.G.; Swaffield, F."
+    title: "The structure and concentration decay of high pressure jets of natural gas"
+    venue: "Combustion Science and Technology 36(5-6), 249-261"
+    year: 1984
+    doi: "10.1080/00102208408923739"
+    pages: "notional (pseudo) nozzle of an under-expanded jet: fully expanded velocity at ambient pressure, area from mass conservation"
+
+  grant-middleman-1966:
+    type: article
+    authors: "Grant, R.P.; Middleman, S."
+    title: "Newtonian jet stability"
+    venue: "AIChE Journal 12(4), 669-678"
+    year: 1966
+    doi: "10.1002/aic.690120411"
+    pages: "intact length: laminar L/d = 19.5 [We^0.5 (1 + 3 Oh)]^0.85; turbulent L/d = 8.51 We^0.32"
+
+  rayleigh-1878-jets:
+    type: article
+    authors: "Rayleigh, Lord (Strutt, J.W.)"
+    title: "On the instability of jets"
+    venue: "Proceedings of the London Mathematical Society s1-10(1), 4-13"
+    year: 1878
+    doi: "10.1112/plms/s1-10.1.4"
+    pages: "fastest-growing wavelength 4.51 d gives drops of 1.89 d"
+
+  lefebvre-1989-atomization:
+    type: book
+    authors: "Lefebvre, A.H."
+    title: "Atomization and Sprays"
+    publisher: "Hemisphere, New York"
+    year: 1989
+    pages: "ch. 2: jet break-up regimes and drop sizes; spray cone angles of plain-orifice atomisers"
+
+  schiller-naumann-1933:
+    type: article
+    authors: "Schiller, L.; Naumann, A."
+    title: "Ueber die grundlegenden Berechnungen bei der Schwerkraftaufbereitung"
+    venue: "Zeitschrift des Vereines Deutscher Ingenieure 77, 318-320"
+    year: 1933
+    pages: "C_D = 24/Re (1 + 0.15 Re^0.687) for Re < 1000, C_D = 0.44 above (Newton regime)"
+
+  watson-1964-radial-spread:
+    type: article
+    authors: "Watson, E.J."
+    title: "The radial spread of a liquid jet over a horizontal plane"
+    venue: "Journal of Fluid Mechanics 20(3), 481-499"
+    year: 1964
+    doi: "10.1017/S0022112064001367"
+    pages: "boundary layer reaches the free surface at r0 = 0.1833 d Re_d^(1/3); similarity region u_s = 27 c^2 Q^2 / (8 pi^4 nu (r^3 + l^3)), c = 1.402 (as quoted by Liu & Lienhard 1993)"
+
+  liu-lienhard-1993-hydraulic-jump:
+    type: article
+    authors: "Liu, X.; Lienhard V, J.H."
+    title: "The hydraulic jump in circular jet impingement and in other thin liquid films"
+    venue: "Experiments in Fluids 15(2), 108-116"
+    year: 1993
+    doi: "10.1007/BF00190950"
+    pages: "Watson's thin-film solution with the boundary-layer and similarity regions"
+
+  glauert-1956-wall-jet:
+    type: article
+    authors: "Glauert, M.B."
+    title: "The wall jet"
+    venue: "Journal of Fluid Mechanics 1(6), 625-643"
+    year: 1956
+    doi: "10.1017/S002211205600041X"
+    pages: "radial wall jet: maximum velocity decays roughly as 1/r (turbulent radial wall jet)"
+
+  rohsenow-1952:
+    type: article
+    authors: "Rohsenow, W.M."
+    title: "A method of correlating heat transfer data for surface boiling of liquids"
+    venue: "Transactions of the ASME 74, 969-976"
+    year: 1952
+    pages: "q = mu_l h_fg [g (rho_l - rho_v)/sigma]^(1/2) [c_pl dT_e/(C_sf h_fg Pr_l^n)]^3; n = 1 for water, 1.7 for other liquids; C_sf for water-stainless 0.0130 (incropera-2007-heat-mass-transfer Table 10.1)"
+
+  zuber-1959:
+    type: thesis
+    authors: "Zuber, N."
+    title: "Hydrodynamic aspects of boiling heat transfer"
+    venue: "PhD thesis, University of California Los Angeles; AEC Report AECU-4439"
+    year: 1959
+    pages: "peak heat flux q_max = C h_fg rho_v [sigma g (rho_l - rho_v)/rho_v^2]^(1/4); minimum heat flux q_min = C rho_v h_fg [sigma g (rho_l - rho_v)/(rho_l + rho_v)^2]^(1/4)"
+
+  lienhard-dhir-1973:
+    type: article
+    authors: "Lienhard, J.H.; Dhir, V.K."
+    title: "Extended hydrodynamic theory of the peak and minimum pool boiling heat fluxes"
+    venue: "NASA Contractor Report CR-2270"
+    year: 1973
+    pages: "C = 0.149 for the peak heat flux on large horizontal heaters (incropera-2007-heat-mass-transfer eq. 10.7)"
+
+  ivey-morris-1962:
+    type: article
+    authors: "Ivey, H.J.; Morris, D.J."
+    title: "On the relevance of the vapour-liquid exchange mechanism for sub-cooled boiling heat transfer at high pressure"
+    venue: "UKAEA Report AEEW-R 137, Winfrith"
+    year: 1962
+    pages: "subcooled peak heat flux q_max,sub = q_max,sat [1 + 0.1 (rho_l/rho_v)^0.75 c_pl dT_sub/h_fg]"
+
+  kutateladze-1961:
+    type: article
+    authors: "Kutateladze, S.S."
+    title: "Boiling heat transfer"
+    venue: "International Journal of Heat and Mass Transfer 4, 31-45"
+    year: 1961
+    doi: "10.1016/0017-9310(61)90058-0"
+    pages: "superposition of forced convection and nucleate boiling as a power sum"
+
+  bromley-1950:
+    type: article
+    authors: "Bromley, L.A."
+    title: "Heat transfer in stable film boiling"
+    venue: "Chemical Engineering Progress 46(5), 221-227"
+    year: 1950
+    pages: "horizontal cylinder Nu_D = 0.62 [g (rho_l - rho_v) h'_fg D^3 / (nu_v k_v dT_e)]^(1/4), h'_fg = h_fg + 0.80 c_pv dT_e; radiation h^(4/3) = h_conv^(4/3) + h_rad h^(1/3) (incropera-2007-heat-mass-transfer eqs. 10.9-10.11)"
+
+  bromley-leroy-robbers-1953:
+    type: article
+    authors: "Bromley, L.A.; LeRoy, N.R.; Robbers, J.A."
+    title: "Heat transfer in forced convection film boiling"
+    venue: "Industrial & Engineering Chemistry 45(12), 2639-2646"
+    year: 1953
+    doi: "10.1021/ie50528a027"
+    pages: "h = 2.7 [V k_v rho_v h'_fg / (D dT_e)]^(1/2) for V > 2 (g D)^(1/2)"
+
+  berenson-1961:
+    type: article
+    authors: "Berenson, P.J."
+    title: "Film-boiling heat transfer from a horizontal surface"
+    venue: "Journal of Heat Transfer 83(3), 351-358"
+    year: 1961
+    doi: "10.1115/1.3682280"
+    pages: "h = 0.425 [k_v^3 rho_v g (rho_l - rho_v) h'_fg / (mu_v dT_e L_c)]^(1/4), L_c = [sigma/(g (rho_l - rho_v))]^(1/2); minimum heat flux constant 0.09"
+
+  williams-tabor-1977:
+    type: article
+    authors: "Williams, J.A.; Tabor, D."
+    title: "The role of lubricants in machining"
+    venue: "Wear 43(3), 275-292"
+    year: 1977
+    doi: "10.1016/0043-1648(77)90125-3"
+    pages: "lubricant reaches the chip-tool interface through capillaries between asperities; access falls with cutting speed"
+
+  godlevski-1997-penetration:
+    type: article
+    authors: "Godlevski, V.A.; Volkov, A.V.; Latyshev, V.N.; Maurin, L.N."
+    title: "The kinetics of lubricant penetration action during machining"
+    venue: "Lubrication Science 9(2), 127-140"
+    year: 1997
+    doi: "10.1002/ls.3010090203"
+    pages: "capillary filling kinetics of the chip-tool interface, penetrated length decreasing with sliding speed"
+
+  washburn-1921:
+    type: article
+    authors: "Washburn, E.W."
+    title: "The dynamics of capillary flow"
+    venue: "Physical Review 17(3), 273-283"
+    year: 1921
+    doi: "10.1103/PhysRev.17.273"
+    pages: "l^2 = sigma r cos(theta) t / (2 mu)"
+
+  alduchov-eskridge-1996:
+    type: article
+    authors: "Alduchov, O.A.; Eskridge, R.E."
+    title: "Improved Magnus form approximation of saturation vapor pressure"
+    venue: "Journal of Applied Meteorology 35(4), 601-609"
+    year: 1996
+    doi: "10.1175/1520-0450(1996)035<0601:IMFAOS>2.0.CO;2"
+    pages: "e_s = 610.94 Pa exp(17.625 T/(T + 243.04)), T in degC, -40..50 degC"
+
+  lloyd-moran-1974:
+    type: article
+    authors: "Lloyd, J.R.; Moran, W.R."
+    title: "Natural convection adjacent to horizontal surface of various planforms"
+    venue: "Journal of Heat Transfer 96(4), 443-447"
+    year: 1974
+    doi: "10.1115/1.3450224"
+    pages: "upper surface of a hot plate Nu_L = 0.54 Ra_L^(1/4) (1e4..1e7), 0.15 Ra_L^(1/3) (1e7..1e11), L = A/P (incropera-2007-heat-mass-transfer eqs. 9.30-9.31)"
+
+  vogel-1979-sunflower:
+    type: article
+    authors: "Vogel, H."
+    title: "A better way to construct the sunflower head"
+    venue: "Mathematical Biosciences 44(3-4), 179-189"
+    year: 1979
+    doi: "10.1016/0025-5564(79)90080-4"
+    pages: "r_k = c sqrt(k), phi_k = k 137.508 deg: an equal-area deterministic sampling of the disc"
+
+  amanatides-woo-1987:
+    type: article
+    authors: "Amanatides, J.; Woo, A."
+    title: "A fast voxel traversal algorithm for ray tracing"
+    venue: "Eurographics '87 Proceedings, 3-10"
+    year: 1987
+    pages: "3-D digital differential analyser over a uniform grid"
+
+  bernardin-mudawar-1999:
+    type: article
+    authors: "Bernardin, J.D.; Mudawar, I."
+    title: "The Leidenfrost point: experimental study and assessment of existing models"
+    venue: "Journal of Heat Transfer 121(4), 894-903"
+    year: 1999
+    doi: "10.1115/1.2826080"
+    pages: "Leidenfrost temperature rises with pressure, roughness and impact velocity"
+
+  childs-2000-metal-machining:
+    type: book
+    authors: "Childs, T.H.C.; Maekawa, K.; Obikawa, T.; Yamane, Y."
+    title: "Metal Machining: Theory and Applications"
+    publisher: "Arnold, London"
+    year: 2000
+    pages: "ch. 2-3: chip-tool contact length of continuous chips of the order of one to a few chip thicknesses"

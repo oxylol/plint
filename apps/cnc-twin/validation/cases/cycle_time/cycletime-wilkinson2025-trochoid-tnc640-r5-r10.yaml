@@ -1,0 +1,39 @@
+# Wilkinson, Sencer & Ward (2025), case study #1: cycle time of circular trochoids (five full circles, step-over
+# R/2) interpolated by a Heidenhain TNC640 (programming station) at 3000 and 6000 mm/min, R 5 and 10 mm,
+# tolerance 10 and 100 um (CYCL DEF 32, HSC mode). Controller-kernel result, no machine axes.
+format: cnctwin-validation-case
+version: 1
+id: cycletime-wilkinson2025-trochoid-tnc640-r5-r10
+quantity: cycle_time
+reference:
+  src: wilkinson-2025-fir-trochoidal
+  location: "Case study #1: text, Fig. 1 (NC code format), Fig. 9a (R = 5 mm path, digitised), Table 1 (TNC640 interpolator parameters), Table 2 (cycle times), Listing 1 (NC header)"
+  digitised: true                    # the path geometry of Fig. 9a; times read from Table 2
+  uncertainty_pct: 1
+  measured: false                    # times come from the TNC640 NC kernel on a programming station, not from a moving machine
+setup:
+  operation: machine_motion
+  machine:
+    model: "none (Heidenhain TNC640 programming station)"
+    controller: "Heidenhain TNC640, interpolator parameters retrieved from the TNC640 archive file"
+    interpolator_tnc640_sampling_frequency_Hz: 1000
+    interpolator_tnc640_max_axis_acceleration_m_s2: 3.1
+    interpolator_tnc640_max_axis_jerk_m_s3: 157
+  conditions:
+    feed_mm_min_levels: [3000, 6000]
+    radius_mm_levels: [5, 10]
+    tcp_tolerance_um_levels: [10, 100]
+    settings_tnc640: "0 BEGIN PGM TROCHOID_R5_FR3000 MM; 1-3 CYCL DEF 32.0 TOLERANCE / 32.1 T0.1 (per test) / 32.2 HSC-MODE:1; 4 M3; 5 L X+0 Y+0 Z+0 F3000; 6-7 CYCL DEF 9 DWELL 2 s; then the main program"
+    path_r10: {value: "five circles, step-over 5 mm", src: est, note: "the R = 10 mm path of tests 3, 4, 7 and 8 is not drawn; assumed as the R = 5 mm pattern scaled by 2, which is the code example of Fig. 1 (CC X+0 Y+10, C X+0 Y+0 DR+, L X+5, ...) and gives 6.68 s at 3000 mm/min against the 6.77 s printed"}
+  program: "Five full counter-clockwise circles (Heidenhain CC centre + C ... DR+) of radius R starting and ending at their bottom points, joined by linear step-overs L of R/2 along +X: for R = 5 mm, start (0, 0), centres (0, 5), (2.5, 5), (5, 5), (7.5, 5), (10, 5), end (10, 0), path 5 x 31.42 + 4 x 2.5 = 167.1 mm (digitised from Fig. 9a: nine equally spaced crossings of the widest row at 2.5 mm pitch). For R = 10 mm the same pattern scaled (centres at Y = 10 mm, step-over 5 mm, path 334.2 mm)."
+reference_values:
+  - {name: cycle_time_tnc640, value: 3.43, unit: s, x: 1, x_name: test, x_unit: index, note: "F 3000 mm/min, R 5 mm, tolerance 10 um"}
+  - {name: cycle_time_tnc640, value: 3.43, unit: s, x: 2, x_name: test, x_unit: index, note: "F 3000, R 5, 100 um"}
+  - {name: cycle_time_tnc640, value: 6.77, unit: s, x: 3, x_name: test, x_unit: index, note: "F 3000, R 10, 10 um"}
+  - {name: cycle_time_tnc640, value: 6.77, unit: s, x: 4, x_name: test, x_unit: index, note: "F 3000, R 10, 100 um"}
+  - {name: cycle_time_tnc640, value: 3.22, unit: s, x: 5, x_name: test, x_unit: index, note: "F 6000, R 5, 10 um"}
+  - {name: cycle_time_tnc640, value: 1.94, unit: s, x: 6, x_name: test, x_unit: index, note: "F 6000, R 5, 100 um"}
+  - {name: cycle_time_tnc640, value: 4.64, unit: s, x: 7, x_name: test, x_unit: index, note: "F 6000, R 10, 10 um"}
+  - {name: cycle_time_tnc640, value: 3.68, unit: s, x: 8, x_name: test, x_unit: index, note: "F 6000, R 10, 100 um"}
+reference_curves: []
+notes: "Labelled measured: false because no axes moved: the times are those of the commercial TNC640 interpolator run on its programming station with the machine's archived parameters (a benchmark of the control's look-ahead and jerk limiting, not of a drive system). The TNC640 met the 100 um TCP tolerance and the kinematic limits in all eight tests (Table 2, Fig. 9c). At 3000 mm/min it runs at programmed feed (ideal times 3.34 and 6.68 s); at 6000 mm/min with 10 um tolerance it slows strongly (3.22 s against 1.67 s ideal for R 5 mm), with 100 um it nearly holds feed. The paper's linear-FIR and axial/path-FIR columns are model results and are not stored (axial/path-FIR: 3.44, 3.44, 6.78, 6.78, 1.99, 1.99, 3.57, 3.57 s). See cycletime-wilkinson2025-trochoid-840d-tnc640 for the case with a real machine (Hermle C52, SINUMERIK 840D sl)."

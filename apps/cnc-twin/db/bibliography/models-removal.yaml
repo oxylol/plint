@@ -1,0 +1,108 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of the removal domain (cnctwin.removal, docs/models/removal.md): dexel and tri-dexel workpiece
+# models, ray traversal, watertight rasterisation, marching cubes, root finding and interpolation.
+entries:
+  van-hook-1986:
+    type: article
+    authors: "Van Hook, T."
+    title: "Real-time shaded NC milling display"
+    venue: "ACM SIGGRAPH Computer Graphics 20(4), 15-20"
+    year: 1986
+    doi: "10.1145/15886.15887"
+    pages: "dexel (depth element) representation of the in-process workpiece"
+  benouamer-michelucci-1997:
+    type: article
+    authors: "Benouamer, M.O.; Michelucci, D."
+    title: "Bridging the gap between CSG and Brep via a triple ray representation"
+    venue: "Proceedings of the 4th ACM Symposium on Solid Modeling and Applications, 68-79"
+    year: 1997
+    doi: "10.1145/267734.267755"
+    pages: "tri-dexel (three orthogonal ray families) representation and its surface reconstruction"
+  zhang-leu-2009:
+    type: article
+    authors: "Zhang, W.; Leu, M.C."
+    title: "Surface reconstruction using dexel data from three sets of orthogonal rays"
+    venue: "ASME Journal of Computing and Information Science in Engineering 9(1), 011008"
+    year: 2009
+    doi: "10.1115/1.3086031"
+    pages: "tri-dexel surface reconstruction with exact ray crossings on lattice edges"
+  amanatides-woo-1987:
+    type: article
+    authors: "Amanatides, J.; Woo, A."
+    title: "A fast voxel traversal algorithm for ray tracing"
+    venue: "Eurographics '87, 3-10"
+    year: 1987
+    pages: "3D-DDA: incremental traversal of the cells a ray crosses"
+  pineda-1988:
+    type: article
+    authors: "Pineda, J."
+    title: "A parallel algorithm for polygon rasterization"
+    venue: "ACM SIGGRAPH Computer Graphics 22(4), 17-20"
+    year: 1988
+    doi: "10.1145/378456.378457"
+    pages: "edge functions and the tie-breaking (top-left) rule that covers every point once"
+  woop-benthin-wald-2013:
+    type: article
+    authors: "Woop, S.; Benthin, C.; Wald, I."
+    title: "Watertight ray/triangle intersection"
+    venue: "Journal of Computer Graphics Techniques 2(1), 65-82"
+    year: 2013
+    url: "https://jcgt.org/published/0002/01/05/"
+    pages: "rays through shared edges and vertices hit exactly one triangle"
+  lorensen-cline-1987:
+    type: article
+    authors: "Lorensen, W.E.; Cline, H.E."
+    title: "Marching cubes: a high resolution 3D surface construction algorithm"
+    venue: "ACM SIGGRAPH Computer Graphics 21(4), 163-169"
+    year: 1987
+    doi: "10.1145/37402.37422"
+    pages: "cell cases and vertices on cell edges"
+  nielson-hamann-1991:
+    type: article
+    authors: "Nielson, G.M.; Hamann, B."
+    title: "The asymptotic decider: resolving the ambiguity in marching cubes"
+    venue: "Proceedings of IEEE Visualization '91, 83-91"
+    year: 1991
+    doi: "10.1109/VISUAL.1991.175782"
+    pages: "holes from inconsistent ambiguous faces of the 15-case table"
+  montani-scateni-scopigno-1994:
+    type: article
+    authors: "Montani, C.; Scateni, R.; Scopigno, R."
+    title: "A modified look-up table for implicit disambiguation of marching cubes"
+    venue: "The Visual Computer 10(6), 353-355"
+    year: 1994
+    doi: "10.1007/BF01900830"
+    pages: "a fixed face rule (separate the inside corners) gives a closed surface"
+  press-2007-numerical-recipes:
+    type: book
+    authors: "Press, W.H.; Teukolsky, S.A.; Vetterling, W.T.; Flannery, B.P."
+    title: "Numerical Recipes: The Art of Scientific Computing"
+    edition: 3
+    publisher: "Cambridge University Press"
+    year: 2007
+    pages: "5.6 quadratic and cubic equations (cancellation-free roots); 9.2 secant and false position; 9.4 Newton with bracketing"
+  dowell-jarratt-1971:
+    type: article
+    authors: "Dowell, M.; Jarratt, P."
+    title: "A modified regula falsi method for computing the root of an equation"
+    venue: "BIT Numerical Mathematics 11(2), 168-174"
+    year: 1971
+    doi: "10.1007/BF01934364"
+    pages: "Illinois method: superlinear, always bracketing"
+  de-boor-1978:
+    type: book
+    authors: "de Boor, C."
+    title: "A Practical Guide to Splines"
+    publisher: "Springer, New York"
+    year: 1978
+    pages: "ch. 2: error of piecewise linear interpolation, h^2/8 max|f''|"
+  altintas-2012-removal:
+    type: book
+    authors: "Altintas, Y."
+    title: "Manufacturing Automation: Metal Cutting Mechanics, Machine Tool Vibrations, and CNC Design"
+    edition: 2
+    publisher: "Cambridge University Press"
+    year: 2012
+    doi: "10.1017/CBO9780511843723"
+    pages: "ch. 2: swept envelopes of milling tools, chip thickness, feed marks f^2/(8 r)"

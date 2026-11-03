@@ -210,6 +210,56 @@ def find(table: dict, dialect: str, key: str):
     return table.get(f"{dialect}:{key}") or table.get(key)
 
 
+# --------------------------------------------------------------------------- additive extension points
+# (added by the cycles / compensation / TCP / probing / tool-life / restart providers; docs/dialects.md
+# "Cycles and compensation"). Each is optional: without a registration the core behaves as before.
+
+GCODES: dict[str, dict] = {}            # "<dialect>:<variant>" -> {code: GSpec} merged into the dialect's G-code table
+GCODE_HANDLERS: dict[str, Any] = {}     # GSpec(kind="ext", arg=key) -> handler.execute(ex, code, spec, bw) -> moved
+MOTION_WORDS: dict[str, Any] = {}       # name -> provider.motion_words(ex, code, bw) -> dict merged into the item modal
+LIBRARIES: dict[str, Any] = {}          # name -> provider.sources(machine, dialect, settings, programs) -> [ProgramSource]
+DATA_MODES: dict[str, Any] = {}         # "G10L3" -> provider with begin(ex, p, bw), block(ex, bw), end(ex)
+
+
+def register_gcode(code: str, spec, *, variant: str, dialect: str, replace: bool = False) -> None:
+    """Add (or with ``replace`` redefine) a G code of ``dialect`` ("fanuc", "haas") and ``variant`` ("M"/"T")."""
+    table = GCODES.setdefault(f"{dialect}:{variant}", {})
+    if code in table and not replace and table[code] != spec:
+        raise ValueError(f"G code {code} is already registered for {dialect}/{variant}")
+    table[code] = spec
+
+
+def extra_gcodes(dialect: str, variant: str) -> dict:
+    """The registered G codes of one dialect and variant (the dialect builders merge them)."""
+    return dict(GCODES.get(f"{dialect}:{variant}", {}))
+
+
+def register_gcode_handler(key: str, handler, *, replace: bool = False) -> None:
+    _register(GCODE_HANDLERS, key, handler, replace)
+
+
+def register_motion_words(name: str, provider, *, replace: bool = False) -> None:
+    _register(MOTION_WORDS, name, provider, replace)
+
+
+def register_library(name: str, provider, *, replace: bool = False) -> None:
+    _register(LIBRARIES, name, provider, replace)
+
+
+def register_data_mode(key: str, provider, *, replace: bool = False) -> None:
+    _register(DATA_MODES, key, provider, replace)
+
+
+def library_sources(machine, dialect, settings, programs: list) -> list:
+    """Built-in programs every registered library provides for this machine (in registration order).
+    ``dialect`` is the built :class:`~cnctwin.controller.dialects.base.Dialect` (name, variant, params);
+    ``programs`` the project's own sources, so a library can leave out a number the project defines."""
+    out = []
+    for provider in LIBRARIES.values():
+        out.extend(provider.sources(machine, dialect, settings, list(programs) + out) or [])
+    return out
+
+
 # Plugin packages of the agents that extend the core, imported in this order when present.
 PLUGIN_PACKAGES = ("cycles", "comp", "probing", "toollife", "restart", "tcp",
                    "dialects.siemens840d", "dialects.heidenhain")

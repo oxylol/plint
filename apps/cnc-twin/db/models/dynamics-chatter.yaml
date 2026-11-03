@@ -1,0 +1,52 @@
+# Chatter criterion of cnctwin.dynamics.chatter (docs/models/dynamics.md section 4): the spectral share of the
+# relative tool-workpiece vibration at frequencies the cut does not force (Delio, Tlusty & Smith 1992: a stable cut
+# vibrates at the tooth-passing and spindle harmonics only, chatter adds a strong component at the chatter
+# frequency), amplitude floors below which a component leaves no measurable mark, the severity limit and the
+# period-doubling test. Read in SI by cnctwin.db.models.params("dynamics-chatter").
+format: cnctwin-model-params
+version: 1
+model: dynamics-chatter
+description: "Spectral chatter criterion: non-forced energy share, amplitude floors, severity limit, period-doubling test"
+params:
+  chatter_index_threshold:
+    value: 0.5
+    unit: "-"
+    range: [0.2, 0.9]
+    src: est
+    note: "non-forced / total vibration energy above which the cut chatters: the non-forced component then carries as much energy as all forced harmonics together. Delio, Tlusty & Smith 1992 (delio-1992) flag chatter when the chatter-band peak dominates the tooth-passing spectrum; the even split is assumed. Surface (physics.surface.chatter_index) uses the same 0.5 default"
+  clear_index:
+    value: 0.35
+    unit: "-"
+    range: [0.05, 0.9]
+    src: est
+    note: "hysteresis of the chatter state: a chattering cut counts as stable again once the index stays below this for the settle steps (physics.dynamics.chatter_clear_steps), so one noisy window neither starts nor ends a chatter episode; assumed"
+  min_amplitude_m:
+    value: 0.5
+    unit: um
+    range: [0.05, 5.0]
+    src: est
+    note: "absolute floor of the chatter amplitude (relative tool-workpiece vibration at the chatter frequency): below 0.5 um the marks are within the roughness of a finished surface (Ra 0.4-1.6 um for milling, ISO 1302 roughness grades N5-N7); assumed"
+  min_amplitude_per_feed:
+    value: 0.05
+    unit: "-"
+    range: [0.0, 0.5]
+    src: est
+    note: "relative floor: a non-forced component smaller than 5 % of the feed per tooth changes the chip thickness by less than 5 % and is not counted as chatter however clean its spectrum; assumed"
+  severe_amplitude_per_feed:
+    value: 1.0
+    unit: "-"
+    range: [0.2, 3.0]
+    src: tlusty-ismail-1981-nonlinearity
+    note: "a chatter amplitude of the order of the chip thickness makes the edge leave the cut (h <= 0 in part of each pass, the basic non-linearity of chatter); from there the vibration is limited only by that loss of contact, forces and tool loads multiply: such a finding has severity error (the program is not safe to run). The value 1.0 x feed per tooth is the onset of the loss of contact for a sinusoidal chip-thickness modulation"
+  flip_growth_ratio:
+    value: 1.5
+    unit: "-"
+    range: [1.05, 10.0]
+    src: est
+    note: "period doubling of an even-tooth cutter lies on spindle harmonics ((k + 1/2) tooth-passing = (2k + 1) N/2 spindle orders): those lines count as non-forced when their energy grew by this factor from the first to the second half of the analysis window (an unstable flip mode grows, the forced runout response does not); assumed"
+  flip_min_share:
+    value: 0.05
+    unit: "-"
+    range: [0.0, 0.5]
+    src: est
+    note: "the half tooth-passing lines must also carry at least 5 % of the vibration energy before the growth test can move them to the non-forced side (small lines grow and shrink with noise); assumed"

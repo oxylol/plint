@@ -1,0 +1,43 @@
+# Surface integrity of the machined layer (cnctwin.surface, docs/models/surface.md section 6). Names carry the
+# SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: surface-integrity
+description: "residual stress and hardness of the machined layer from the flank/edge contact and the surface temperature"
+params:
+  yield_onset_ratio:
+    value: 3.1
+    unit: "-"
+    src: johnson-1985-contact-mechanics
+    note: "line contact: first (subsurface) yield at p0 = 3.1 k (von Mises), k the shear yield stress"
+  shakedown_ratio:
+    value: 4.0
+    unit: "-"
+    src: merwin-johnson-1963-rolling-contact
+    note: "plastic shakedown limit of a frictionless line contact p0 = 4 k; with traction mu the limit is min(4 k, k / mu) (johnson-1985-contact-mechanics ch. 9)"
+  friction_default:
+    value: 0.4
+    unit: "-"
+    src: est
+    note: "flank / work friction coefficient when the material file gives no mu_sliding for the tool class"
+  mech_depth_ratio:
+    value: 2.0
+    unit: "-"
+    src: est
+    range: [1.0, 3.0]
+    note: "depth of the mechanically affected layer per contact half-length: first yield lies at 0.78 a (johnson-1985-contact-mechanics), the plastic zone at shakedown reaches about 2 a"
+  wh_reference_edge_radius_m:
+    value: 20
+    unit: um
+    src: est
+    note: "edge radius at which the material file's work_hardening layer depth and hardness increase are taken to apply (a typical honed edge); depth scales with the contact length"
+  white_layer_hardness_ratio:
+    value: 0.3
+    unit: "-"
+    src: est
+    note: "hardness increase of a rehardened (white) layer over the bulk for steels (untempered martensite)"
+  overtemper_softening_ratio:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "hardness loss of an over-tempered layer of a hardened steel"

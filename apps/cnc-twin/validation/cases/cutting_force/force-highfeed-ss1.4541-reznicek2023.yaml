@@ -1,0 +1,64 @@
+# Austenitic stainless 1.4541 (Ti-stabilised; 205 HB) face milled with a 20 mm SECO high-feed head carrying three
+# PVD-coated LPHT060310TR-M06 MS2050 inserts, vc 160 m/min, ae 14 mm, ap 0.5-0.7 mm, fz 0.5-0.8 mm/tooth:
+# mean of the per-interval maxima of Fx, Fy, Fz (Tables 5, 8, 9).
+format: cnctwin-validation-case
+version: 1
+id: force-highfeed-ss1.4541-reznicek2023
+quantity: cutting_force
+reference:
+  src: reznicek-2023-ss1.4541-high-feed-milling-forces
+  location: "Sect. 2 (material Tables 1-3, machine, tool, dynamometer, procedure), Table 4 (conditions), Tables 5, 8 and 9 (measured Fx, Fy, Fz at vc 160 m/min for ap 0.5, 0.6 and 0.7 mm)"
+  digitised: false
+  measured: true
+  note: "Each value is the mean of ten maxima, one from each of ten non-overlapping intervals of the force record (Sect. 2.3); each condition was run ten times. No scatter is stated. The tables have editorial errors: Table 11 repeats Table 5 under a different label, and Tables 9 and 10 are both labelled ap 0.7 mm with different numbers; only Tables 5, 8 and 9 are used here."
+setup:
+  operation: face_milling
+  material:
+    db: aisi316l
+    note: "named 1.4541 (AISI 321, Ti-stabilised) with HB 205, Rp0.2 195 MPa, Rm 593 MPa, k 15 W/m K (Tables 2-3); its Table 1 composition (C 0.04, Cr 17.5, Ni 9.5, Mo 2.10, Ti 0.35 %) contains Mo and matches 1.4571 (316Ti) rather than 1.4541, so the Mo-bearing 316L DB entry is used"
+  tool:
+    src: reznicek-2023-ss1.4541-high-feed-milling-forces
+    page: Sect. 2.2
+    type: high_feed_face_mill
+    maker: SECO
+    diameter_mm: 20
+    inserts: 3
+    insert: "LPHT060310TR-M06 MS2050 (PVD-coated; called 'cermet' in the source), width 6.4 mm, thickness 3.18 mm, two edges"
+    rake_deg: {value: 11, note: "'face angle of 11 deg' as stated"}
+    corner_radius_mm: {value: 1.0, note: "'1 mm radius of the rounding' (Sect. 3)"}
+    max_ap_mm: 0.8
+    functional_length_mm: 28
+    entering_angle_deg: {value: 15, src: est, note: "assumed: not stated; high-feed heads cut with a small entering angle, 15 deg is a judgement, not a catalogue value"}
+    assumed_inputs: [entering_angle_deg]
+  machine:
+    src: reznicek-2023-ss1.4541-high-feed-milling-forces
+    page: Sect. 2.2-2.3
+    model: DMG Mori DMU 50 five-axis milling centre (15000 rpm)
+    dynamometer: Kistler 9129AA (+-10 kN, 0.1 N resolution), DynoWare
+  conditions:
+    src: reznicek-2023-ss1.4541-high-feed-milling-forces
+    page: Table 4, Sect. 2.3
+    vc_m_min: 160
+    spindle_rpm: {value: 2546, src: est, note: "computed here from vc 160 m/min and D 20 mm"}
+    ae_mm: 14
+    ap_mm: [0.5, 0.6, 0.7]
+    fz_mm_tooth: [0.5, 0.6, 0.7, 0.8]
+    cut_length_mm: 74
+    radial_position: {value: "centred over the 14 mm wide surface", src: est, note: "assumed: not stated (grooves 5 mm thick were milled at both sides of each surface for clean entry and exit)"}
+    coolant: {value: dry, src: est, note: "assumed: no coolant is mentioned in the source"}
+    force_frame: "Fx, Fy, Fz on the workpiece (dynamometer frame); the source calls Fy the component acting tangentially to the section and Fz the axial component"
+    assumed_inputs: [spindle_rpm, radial_position, coolant]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: Fx_ap0.5, x_name: fz, x_unit: mm/tooth, y_name: Fx (mean of maxima), y_unit: N, points: [[0.5, 346.04], [0.6, 406.96], [0.7, 454.80], [0.8, 513.71]], note: "Table 5"}
+  - {name: Fy_ap0.5, x_name: fz, x_unit: mm/tooth, y_name: Fy (mean of maxima), y_unit: N, points: [[0.5, 600.09], [0.6, 690.68], [0.7, 798.73], [0.8, 885.99]], note: "Table 5"}
+  - {name: Fz_ap0.5, x_name: fz, x_unit: mm/tooth, y_name: Fz (mean of maxima), y_unit: N, points: [[0.5, 594.69], [0.6, 636.94], [0.7, 665.00], [0.8, 698.62]], note: "Table 5"}
+  - {name: Fx_ap0.6, x_name: fz, x_unit: mm/tooth, y_name: Fx (mean of maxima), y_unit: N, points: [[0.5, 408.14], [0.6, 466.07], [0.7, 526.88], [0.8, 578.75]], note: "Table 8"}
+  - {name: Fy_ap0.6, x_name: fz, x_unit: mm/tooth, y_name: Fy (mean of maxima), y_unit: N, points: [[0.5, 679.16], [0.6, 794.23], [0.7, 903.53], [0.8, 972.57]], note: "Table 8"}
+  - {name: Fz_ap0.6, x_name: fz, x_unit: mm/tooth, y_name: Fz (mean of maxima), y_unit: N, points: [[0.5, 610.45], [0.6, 645.04], [0.7, 679.30], [0.8, 684.26]], note: "Table 8"}
+  - {name: Fx_ap0.7, x_name: fz, x_unit: mm/tooth, y_name: Fx (mean of maxima), y_unit: N, points: [[0.5, 472.38], [0.6, 538.93], [0.7, 608.03], [0.8, 672.16]], note: "Table 9"}
+  - {name: Fy_ap0.7, x_name: fz, x_unit: mm/tooth, y_name: Fy (mean of maxima), y_unit: N, points: [[0.5, 790.18], [0.6, 901.59], [0.7, 1035.00], [0.8, 1132.00]], note: "Table 9"}
+  - {name: Fz_ap0.7, x_name: fz, x_unit: mm/tooth, y_name: Fz (mean of maxima), y_unit: N, points: [[0.5, 620.45], [0.6, 672.41], [0.7, 715.67], [0.8, 739.99]], note: "Table 9"}
+notes: "Low-confidence case: the entering angle of the high-feed geometry (which sets the chip thickness and the large axial share Fz) is not given, the tables contain duplications, and the grade/composition labels are inconsistent. It is kept because it is the only stainless high-feed data set read: the axial force is of the same size as the in-plane forces (Fz/Fy 0.6-1.0), the signature of a small entering angle. Use for trends and magnitudes rather than for a tight pass/fail check."

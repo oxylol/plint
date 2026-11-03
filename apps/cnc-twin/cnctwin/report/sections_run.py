@@ -7,8 +7,8 @@ from pathlib import Path
 
 from . import fmt
 from .context import CONTEXT_LINES, FULL_LISTING_MAX_LINES, SEVERITY_RANK, Context, program_key
-from .html import (Raw, Section, anchor, badge, code, details, esc, join, kv, link, note, para,
-                   severity_badge, table, tiles, ul)
+from .html import (Raw, Section, anchor, code, details, esc, join, kv, link, note, para, severity_badge, table,
+                   tiles, ul)
 
 
 # ----------------------------------------------------------------------------- verdict
@@ -96,8 +96,7 @@ def _headline_tiles(ctx: Context, errors: list, warnings: list) -> Raw:
 def findings_section(ctx: Context) -> Section:
     run = ctx.run
     program = program_section(ctx)          # first: it decides which program lines can be linked to
-    findings = sorted(run.findings, key=lambda f: (-SEVERITY_RANK.get(f.get("severity"), 0),
-                                                   float(f.get("time_s", 0.0)), int(f.get("id", 0))))
+    findings = ctx.shown_findings
     rows, classes, ids = [], [], []
     for finding in findings:
         where = ctx.line_link(finding.get("op", ""), finding.get("program", ""), int(finding.get("line") or 0),
@@ -113,10 +112,15 @@ def findings_section(ctx: Context) -> Section:
         ids.append(ctx.finding_anchor(finding.get("id")))
     counts = {s: sum(1 for f in run.findings if f.get("severity") == s) for s in ("fatal", "error", "warning", "info")}
     lead = ", ".join(f"{n} {s}" for s, n in counts.items()) if run.findings else "the run raised no finding"
-    body = table(["#", "severity", "category", "t (s)", "where", "block", "message", "quantities", "tip in W (mm)",
-                  "cause"], rows, numeric={0, 3}, row_classes=classes, row_ids=ids,
-                 caption="Worst first; a line links to the program listing, the cause column to the chain.",
-                 empty="The run raised no finding.")
+    body = _category_table(run.findings)
+    body += table(["#", "severity", "category", "t (s)", "where", "block", "message", "quantities", "tip in W (mm)",
+                   "cause"], rows, numeric={0, 3}, row_classes=classes, row_ids=ids,
+                  caption="Worst first; a line links to the program listing, the cause column to the chain.",
+                  empty="The run raised no finding.")
+    hidden = len(run.findings) - len(findings)
+    if hidden > 0:
+        body += note(f"{hidden} more findings (the least severe, latest) are counted in the table by category "
+                     f"above and listed in findings.json; this table shows the worst {len(findings)}.")
     chains = [_chain(ctx, f) for f in findings]
     children = []
     if findings:
@@ -124,6 +128,25 @@ def findings_section(ctx: Context) -> Section:
                                 lead="From each finding back to its root causes (trace.jsonl, breadth first)."))
     children.append(program)
     return Section("findings", "Findings", body, children=children, lead=lead)
+
+
+def _category_table(findings: list[dict]) -> str:
+    if not findings:
+        return ""
+    groups: dict[str, dict] = {}
+    for finding in findings:
+        record = groups.setdefault(str(finding.get("category", "")), {"fatal": 0, "error": 0, "warning": 0, "info": 0,
+                                                                      "first": finding})
+        record[finding.get("severity", "info")] = record.get(finding.get("severity", "info"), 0) + 1
+        if float(finding.get("time_s", 0.0)) < float(record["first"].get("time_s", 0.0)):
+            record["first"] = finding
+    rows = [[category, r["fatal"], r["error"], r["warning"], r["info"], fmt.seconds(r["first"].get("time_s")),
+             _where_text(r["first"])] for category, r in sorted(groups.items(),
+                                                                key=lambda kv_: (-max(SEVERITY_RANK.get(s, 0) for s in
+                                                                                      ("fatal", "error", "warning", "info")
+                                                                                      if kv_[1][s]), kv_[0]))]
+    return table(["category", "fatal", "error", "warning", "info", "first at (s)", "first where"], rows,
+                 numeric={1, 2, 3, 4, 5}, caption="Every finding, counted by category and severity.")
 
 
 def _where_text(finding: dict) -> str:
@@ -180,8 +203,8 @@ def program_section(ctx: Context) -> Section:
             cls = f"ln hit-{ctx.worst(line_hits)}" if line_hits else "ln"
             target = ctx.line_anchor(op, program, number)
             ctx.listed.add(target)
-            markers = "".join(f' <a href="#{esc(ctx.finding_anchor(f["id"]))}">◀ #{esc(f["id"])} '
-                              f'{esc(f.get("category", ""))}</a>' for f in line_hits)
+            markers = "".join(" " + ctx.finding_link(f["id"], f"\u25c0 #{f['id']} {f.get('category', '')}")
+                              for f in line_hits)
             out.append(f'<span class="{cls}" id="{esc(target)}"><span class="no">{number}</span>'
                        f'{esc(lines[number - 1])}{markers}</span>')
             previous = number

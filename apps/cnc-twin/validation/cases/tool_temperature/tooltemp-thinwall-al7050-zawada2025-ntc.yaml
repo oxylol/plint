@@ -1,0 +1,66 @@
+# 7050-T7451 thin-wall finishing with a 12 mm four-flute TiB2-coated carbide end mill (ap 48 mm, ae 0.2 mm,
+# fz 0.025 mm/tooth, vc 300-900 m/min, dry down-milling): tool-workpiece contact temperature by a calibrated
+# natural (carbide-aluminium) thermocouple, mean of ten peak values (Table A1).
+format: cnctwin-validation-case
+version: 1
+id: tooltemp-thinwall-al7050-zawada2025-ntc
+quantity: tool_temperature
+reference:
+  src: zawada-2025-al7050-thin-wall-forces
+  location: "Sect. 2 (natural thermocouple circuit, graphite brush, HBM 1-MX840A at 10 kHz, calibration stand and Eq. 1), Sect. 3.2 (definition of T), Table A1 (T for the 13 runs)"
+  digitised: false
+  uncertainty_pct: 1
+  measured: true
+  note: "T is the average of ten maximum peaks of the thermocouple signal, converted with a fourth-order calibration polynomial (R2 0.997) of a carbide-aluminium rod pair against a reference thermocouple, and averaged over the two passes (no difference between them, Sect. 3.2). uncertainty_pct is the centre-point scatter (five repeats 351-359 C, standard deviation 3.5 C, computed here); the calibration uncertainty is not quantified."
+setup:
+  operation: peripheral_milling
+  material:
+    db: al7075-t7351
+    note: "7050-T7451 plate (AMS 4050K), not in the DB; see force-thinwall-al7050-zawada2025-finish for details"
+  stock:
+    src: zawada-2025-al7050-thin-wall-forces
+    page: Sect. 2
+    form: "thin wall 48 mm high on a 2 mm base, cut from a 100 x 65 mm sample of 50 mm plate"
+    wall_thickness_mm: [1, 1.5, 2]
+  tool:
+    src: zawada-2025-al7050-thin-wall-forces
+    page: Table 5
+    type: square_endmill
+    designation: Kyocera SGS 44748
+    tool_class: carbide
+    diameter_mm: 12
+    flutes: 4
+    helix_deg: 41
+    flute_length_mm: 48
+    coating: TiB2
+    rake_deg: {value: 15, src: est, note: "assumed: not stated (typical of aluminium end mills)"}
+    assumed_inputs: [rake_deg]
+  holder:
+    src: zawada-2025-al7050-thin-wall-forces
+    page: Sect. 2
+    type: shrink_fit
+    designation: ERICKSON AHPVTTMQL1C 12090M, HSK63
+  machine:
+    src: zawada-2025-al7050-thin-wall-forces
+    page: Sect. 2
+    model: Avia VMC 800HS machining centre
+  conditions:
+    src: zawada-2025-al7050-thin-wall-forces
+    page: Table 4, Table A1
+    vc_m_min: [300, 600, 900]
+    fz_mm_tooth: 0.025
+    ap_mm: 48
+    ae_mm: 0.2
+    direction: down
+    coolant: dry
+    ambient_temp_degC: {value: 20, src: est, note: "assumed: not stated"}
+    measured_location: "tool-workpiece contact at the cutting edge (natural thermocouple; the source treats the contact as point-like)"
+    assumed_inputs: [ambient_temp_degC]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: T_t1.0, x_name: vc, x_unit: m/min, y_name: T (natural thermocouple), y_unit: degC, uncertainty: 3.5, points: [[300, 301], [600, 358], [900, 337]], note: "runs 1, 8, 4"}
+  - {name: T_t1.5, x_name: vc, x_unit: m/min, y_name: T (natural thermocouple), y_unit: degC, uncertainty: 3.5, points: [[300, 301], [600, 355.2], [900, 335]], note: "runs 2, (3, 6, 10, 12, 13: 358, 359, 356, 352, 351 C, mean), 7"}
+  - {name: T_t2.0, x_name: vc, x_unit: m/min, y_name: T (natural thermocouple), y_unit: degC, uncertainty: 3.5, points: [[300, 304], [600, 362], [900, 339]], note: "runs 9, 5, 11"}
+notes: "Aluminium, not steel: added because the same runs give forces (force-thinwall-al7050-zawada2025-finish) and the thermocouple was calibrated for this tool-workpiece pair. The temperature peaks at 600 m/min and falls at 900 m/min, like the forces; the wall thickness has almost no effect. Compare with the simulated peak contact temperature at the flank/rake contact of a very thin chip (radial engagement 0.2 mm, mean chip thickness about 3 um, computed here), averaged like the source over ten peaks."

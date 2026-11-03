@@ -1,0 +1,64 @@
+# Sources for db/models/motion.yaml and docs/models/motion.md (planner, servo, kinematics, timing).
+# Entries already in other bibliography files are cited by key there (altintas-2012-mfg-automation,
+# erkorkmaz-altintas-2001, ellis-2012-control-design, armstrong-1994-friction, palmgren-1959,
+# shoemake-1985-slerp, fanuc-30i-b-operator, siemens-840d-cycles, heidenhain-tnc640-plane,
+# heidenhain-tnc640-klartext-2023, haas-ngc-mill-om-2020, haas-ngc-lathe-om-2020).
+format: cnctwin-bibliography
+version: 1
+entries:
+  biagiotti-melchiorri-2008:
+    type: book
+    authors: "Biagiotti, L.; Melchiorri, C."
+    title: "Trajectory Planning for Automatic Machines and Robots"
+    publisher: "Springer, Berlin Heidelberg"
+    year: 2008
+    doi: "10.1007/978-3-540-85629-0"
+    pages: "s. 3.4 trajectory with double S velocity profile (seven segments, time-optimal for given V, A, J; rest-to-rest case and the conditions for A and V to be reached)"
+  erkorkmaz-altintas-2001-feed-drives:
+    type: article
+    authors: "Erkorkmaz, K.; Altintas, Y."
+    title: "High speed CNC system design. Part II: modeling and identification of feed drives"
+    venue: "International Journal of Machine Tools and Manufacture 41(10), 1487-1509"
+    year: 2001
+    doi: "10.1016/S0890-6955(01)00003-7"
+    pages: "cascaded position/velocity control of ball-screw drives, Coulomb friction and its effect at velocity reversal"
+  nordin-gutman-2002-backlash:
+    type: article
+    authors: "Nordin, M.; Gutman, P.-O."
+    title: "Controlling mechanical systems with backlash - a survey"
+    venue: "Automatica 38(10), 1633-1649"
+    year: 2002
+    doi: "10.1016/S0005-1098(02)00047-X"
+    pages: "dead-zone (backlash) model between motor and load, effect on position control"
+  murray-li-sastry-1994:
+    type: book
+    authors: "Murray, R.M.; Li, Z.; Sastry, S.S."
+    title: "A Mathematical Introduction to Robotic Manipulation"
+    publisher: "CRC Press, Boca Raton"
+    year: 1994
+    isbn: "0-8493-7981-4"
+    pages: "s. 3.2.2 Paden-Kahan subproblems 1 (rotation about one axis) and 2 (rotation about two subsequent axes)"
+  iso-230-1-2012:
+    type: standard
+    title: "ISO 230-1:2012 Test code for machine tools - Part 1: Geometric accuracy of machines operating under no-load or quasi-static conditions"
+    publisher: "ISO, Geneva"
+    year: 2012
+    pages: "error motions of linear axes (positioning, straightness, angular: pitch, yaw, roll), squareness between axes, location and orientation errors of rotary axis average lines"
+  iso-230-2-2014:
+    type: standard
+    title: "ISO 230-2:2014 Test code for machine tools - Part 2: Determination of accuracy and repeatability of positioning of numerically controlled axes"
+    publisher: "ISO, Geneva"
+    year: 2014
+    pages: "reversal value B (lost motion) of an axis, accuracy A and repeatability R"
+  iso-230-4-2005:
+    type: standard
+    title: "ISO 230-4:2005 Test code for machine tools - Part 4: Circular tests for numerically controlled machine tools"
+    publisher: "ISO, Geneva"
+    year: 2005
+    pages: "circular deviation, radial deviation and reversal spikes of contouring axes"
+  iso-841-2001:
+    type: standard
+    title: "ISO 841:2001 Industrial automation systems and integration - Numerical control of machines - Coordinate system and motion nomenclature"
+    publisher: "ISO, Geneva"
+    year: 2001
+    pages: "right-handed axes, rotary axes A, B, C about X, Y, Z, spindle rotation sense (clockwise looking from the spindle toward the workpiece), table motions with reversed sense"

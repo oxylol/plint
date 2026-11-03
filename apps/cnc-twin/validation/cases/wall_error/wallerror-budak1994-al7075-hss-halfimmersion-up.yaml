@@ -1,0 +1,48 @@
+# Budak (1994, PhD thesis; data taken from the thesis, the later Budak & Altintas journal papers were not read):
+# measured surface (form) error profile along the axial depth after half-immersion UP milling of Al7075 with a 19.05 mm 4-flute HSS end mill
+# (54.5 mm gauge length, regular chuck), axial depth 19 mm, four feeds, 478 rpm.
+format: cnctwin-validation-case
+version: 1
+id: wallerror-budak1994-al7075-hss-halfimmersion-up
+quantity: wall_error
+reference:
+  src: budak-1994-thin-wall-milling-thesis
+  location: "Sect. 5.4.1 (test description), Table 5.1 case 1 (conditions, coefficients, gauge length, clamping stiffness), Eq. 4.4-4.5 (force law), Sect. 3.3.1 and 5.2 (cantilever tool model), Fig. 5.5 (measured profiles, digitised; thesis p. 117)"
+  digitised: true
+  uncertainty_pct: 3                 # about +-3 um and +-0.3 mm on profiles of 10-240 um (scanned figure)
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: al7075-t6, note: "7075 aluminium alloy, temper not stated"}
+  tool:
+    type: square_endmill
+    tool_class: hss
+    coating: none
+    diameter_mm: 19.05
+    flutes: 4
+    helix_deg: 30
+    gauge_length_mm: 54.5            # clamped-to-tip length
+    clamping_stiffness_N_mm: 10200   # measured collet stiffness (regular chuck), modelled as a linear spring at the clamped end
+    equivalent_radius_ratio: {value: 0.8, note: "the author's deflection model uses Re = s R with s about 0.8 for the flutes (after Kops et al.); a model parameter, not measured on this tool"}
+  holder: {type: "regular (collet) chuck", note: "Table 5.1"}
+  conditions:
+    direction: up
+    radial_immersion_ratio: 0.5
+    ae_mm: 9.525
+    ap_mm: 19.05
+    spindle_rpm: 478
+    cutting_speed_m_min: 28
+    feed_mm_tooth_per_curve: [0.02, 0.06, 0.10, 0.14]
+    coolant: {value: dry, src: est, note: "not stated"}
+    measurement: "surface profile measured with a dial gauge from a reference finish surface marked beforehand by precision machining; z = 0 at the free end (tip) of the end mill"
+  dynamics:
+    model: "static: cantilever beam (E I with equivalent radius) on a collet spring, distributed helical-flute forces, 50 axial nodes; deflection normal to the wall is imprinted as surface error"
+    cutting_coefficients: {law: "Kt = KT ha^-p (tangential, MPa, ha in mm = average chip thickness per flute period, ha = st (cos phi_st - cos phi_ex) / (phi_ex - phi_st)); Kr = Fr/Ft = KR ha^-q", KT_MPa: 546, p: 0.246, KR: 0.270, q: 0.271, note: "identified for up milling (Table 5.1, case 1)"}
+  program: null
+reference_values: []
+reference_curves:
+  - {name: surface_error_st0.02, x_name: axial_position_from_tip, x_unit: mm, y_name: surface_error, y_unit: um, uncertainty: 3, points: [[2.78, 44.1], [3.8, 45.4], [4.47, 40.3], [5.1, 40.3], [5.59, 36.6], [6.09, 32.4], [6.88, 35.4], [7.65, 32.8], [8.42, 34.0], [8.92, 30.1], [10.02, 31.4], [11.24, 27.4], [12.98, 24.4], [14.01, 22.3], [15.27, 18.5], [16.35, 21.3], [17.29, 12.1], [17.69, 6.1], [18.4, 13.5], [19.04, 9.5]]}
+  - {name: surface_error_st0.06, x_name: axial_position_from_tip, x_unit: mm, y_name: surface_error, y_unit: um, uncertainty: 3, points: [[2.46, 109.6], [3.0, 105.1], [3.65, 98.3], [4.41, 99.0], [5.04, 91.9], [5.66, 86.8], [5.81, 81.7], [6.32, 77.2], [6.86, 72.1], [7.61, 62.0], [8.37, 60.0], [8.9, 56.0], [9.99, 54.9], [10.96, 50.9], [11.45, 49.0], [12.7, 44.0], [13.23, 44.0], [14.08, 41.5], [15.2, 39.1], [16.32, 36.5], [17.27, 33.0], [17.78, 31.0], [18.41, 30.9], [19.01, 27.9]]}
+  - {name: surface_error_st0.10, x_name: axial_position_from_tip, x_unit: mm, y_name: surface_error, y_unit: um, uncertainty: 3, points: [[2.33, 152.0], [2.86, 149.3], [3.74, 147.0], [4.37, 144.2], [4.98, 141.7], [5.59, 133.5], [6.23, 131.6], [6.73, 121.7], [7.53, 121.5], [8.15, 118.9], [8.86, 109.7], [9.79, 107.0], [10.81, 105.1], [11.33, 96.6], [12.59, 89.0], [13.16, 73.6], [13.94, 71.4], [15.14, 70.0], [16.03, 71.0], [16.39, 66.0], [17.15, 60.0], [17.65, 59.1], [18.3, 55.6], [18.92, 54.1]]}
+  - {name: surface_error_st0.14, x_name: axial_position_from_tip, x_unit: mm, y_name: surface_error, y_unit: um, uncertainty: 3, points: [[2.35, 235.9], [2.9, 233.4], [3.66, 212.0], [4.35, 199.7], [4.96, 194.1], [5.48, 190.5], [5.67, 183.0], [6.26, 185.4], [6.79, 174.6], [7.52, 177.4], [8.31, 174.3], [8.82, 168.4], [9.72, 160.5], [10.12, 153.8], [10.89, 149.5], [11.39, 142.9], [12.63, 136.7], [13.16, 130.6], [13.93, 130.7], [15.19, 121.7], [16.09, 116.1], [16.47, 111.1], [17.21, 106.6], [17.73, 103.8], [18.35, 98.5], [18.98, 82.9]]}
+notes: "Sign: positive = overcut (more material removed than intended): in up milling the normal force pushes the cutter into the finished wall. Error is largest at the flexible tip and falls roughly linearly towards the shank. Digitised from the scanned thesis page rendered at 6x: axes calibrated on the tick marks (8.01 px/um, 47.4 px/mm), markers isolated by morphological opening (removes the simulation curves) and assigned to the four feeds by marker position, checked against an overlay; markers hidden under the simulation curves are missing, and markers touching a curve or a neighbour (st 0.02 at z = 2.8, 6.1, 10.0, 11.2, 13.0, 16.4, 17.7 mm; st 0.10 at 5.6 and 9.8 mm) carry about +-4 um. The thesis gives the maximum difference between its model and these measurements as about 15 %; the simulation curves of the figure are model results and are not stored. Spindle speed 478 rpm; the caption gives a = 19 mm, Table 5.1 19.05 mm."

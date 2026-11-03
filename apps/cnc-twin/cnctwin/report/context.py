@@ -12,6 +12,9 @@ from .rundir import RunData, TierSummary
 # longer programs as excerpts of CONTEXT_LINES around every line with a finding.
 FULL_LISTING_MAX_LINES = 400
 CONTEXT_LINES = 3
+# The findings table lists at most this many findings, worst first (each with its chain of cause); the
+# table by category always counts all of them, and findings.json holds every one.
+FINDINGS_SHOWN = 400
 SEVERITY_RANK = {"info": 0, "warning": 1, "error": 2, "fatal": 3}
 
 
@@ -27,6 +30,21 @@ class Context:
     _tiers: dict = field(default_factory=dict)
 
     # ------------------------------------------------------------------ findings by line
+    @property
+    def ranked_findings(self) -> list[dict]:
+        """Worst first, then in time order."""
+        return sorted(self.run.findings, key=lambda f: (-SEVERITY_RANK.get(f.get("severity"), 0),
+                                                        float(f.get("time_s", 0.0)), int(f.get("id", 0))))
+
+    @property
+    def shown_findings(self) -> list[dict]:
+        return self.ranked_findings[:FINDINGS_SHOWN]
+
+    def is_shown(self, finding_id) -> bool:
+        if "_shown_ids" not in self._tiers:
+            self._tiers["_shown_ids"] = {f.get("id") for f in self.shown_findings}
+        return finding_id in self._tiers["_shown_ids"]
+
     @property
     def findings_by_line(self) -> dict[tuple[str, str, int], list[dict]]:
         out: dict[tuple[str, str, int], list[dict]] = {}
@@ -59,7 +77,10 @@ class Context:
         return anchor("F", finding_id)
 
     def finding_link(self, finding_id, text=None) -> Raw:
-        return link(f"#{self.finding_anchor(finding_id)}", text if text is not None else f"#{finding_id}")
+        label = text if text is not None else f"#{finding_id}"
+        if not self.is_shown(finding_id):
+            return Raw(esc(label))
+        return link(f"#{self.finding_anchor(finding_id)}", label)
 
     # ------------------------------------------------------------------ series
     def tier(self, name: str) -> TierSummary | None:
@@ -74,4 +95,4 @@ class Context:
         return None
 
 
-__all__ = ["Context", "FULL_LISTING_MAX_LINES", "CONTEXT_LINES", "SEVERITY_RANK", "program_key"]
+__all__ = ["Context", "FULL_LISTING_MAX_LINES", "CONTEXT_LINES", "FINDINGS_SHOWN", "SEVERITY_RANK", "program_key"]

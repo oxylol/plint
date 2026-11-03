@@ -1,0 +1,56 @@
+# Coolant supply: pump curves, pipe friction, minor losses, nozzles, through-spindle path, air and MQL
+# (cnctwin/coolant/supply.py, docs/models/coolant.md "Supply"). The machine database gives the pumps'
+# rated points and the nozzles; the line geometry inside a machine is not published, so the defaults
+# below are estimates of typical machine-tool installations. Names carry the SI unit; `unit:` is the
+# unit the value is written in (flows are SI m3/s with unit "-": cnctwin.db.keyunits has no m3/s token).
+format: cnctwin-model-params
+version: 1
+model: coolant-supply
+description: "Darcy-Weisbach network: friction factor, line geometry, loss coefficients, pump curves, orifices, air, MQL"
+params:
+  # Darcy friction factor
+  laminar_friction_constant: {value: 64.0, unit: "-", src: white-2006-viscous-fluid-flow, note: "Hagen-Poiseuille f = 64/Re"}
+  laminar_re_hi: {value: 2000.0, unit: "-", src: white-2006-viscous-fluid-flow, note: "below: laminar; between this and turbulent_re_lo f is interpolated linearly in Re between the laminar and the Colebrook value (transition, an approximation)"}
+  turbulent_re_lo: {value: 4000.0, unit: "-", src: white-2006-viscous-fluid-flow}
+  colebrook_a: {value: 2.51, unit: "-", src: colebrook-1939, note: "1/sqrt(f) = -2 log10(eps/(3.7 D) + 2.51/(Re sqrt(f)))"}
+  colebrook_b: {value: 3.7, unit: "-", src: colebrook-1939}
+  haaland_a: {value: 1.8, unit: "-", src: haaland-1983, note: "explicit start value of the Colebrook iteration"}
+  haaland_b: {value: 6.9, unit: "-", src: haaland-1983}
+  haaland_n: {value: 1.11, unit: "-", src: haaland-1983}
+  hose_roughness_m: {value: 0.0015, unit: mm, src: moody-1944, note: "drawn tubing / smooth hose (0.000005 ft)"}
+  hole_roughness_m: {value: 0.005, unit: mm, range: [0.0015, 0.02], src: est, note: "drilled or sintered coolant channels in carbide and steel tools, Ra ~1-3 um"}
+  # Minor losses (based on the velocity in the smaller passage)
+  k_contraction: {value: 0.5, unit: "-", src: crane-tp410-2013, note: "sudden contraction K = 0.5 (1 - beta^2), beta = d_small/d_large"}
+  k_inlet: {value: 0.5, unit: "-", src: crane-tp410-2013, note: "square-edged inlet from a large chamber"}
+  # Flood circuit (pump -> manifold -> flexible nozzle hose -> orifice)
+  flood_line_diameter_m: {value: 16.0, unit: mm, range: [12.0, 25.0], src: est, note: "5/8 in coolant hose of a 40-50 l/min machine-tool pump"}
+  flood_line_length_m: {value: 2.5, unit: m, range: [1.5, 4.0], src: est, note: "tank under the base to the head manifold"}
+  k_flood_line: {value: 4.0, unit: "-", range: [2.0, 8.0], src: est, note: "strainer, solenoid valve (1.5-2.5) and four bends (0.3-0.5 each) after crane-tp410-2013"}
+  flood_branch_diameter_m: {value: 6.35, unit: mm, src: est, note: "1/4 in segmented (Loc-Line type) nozzle hose"}
+  flood_branch_length_m: {value: 0.3, unit: m, range: [0.15, 0.6], src: est}
+  k_flood_branch: {value: 3.0, unit: "-", range: [1.5, 6.0], src: est, note: "manifold outlet tee and the joints of the segmented hose"}
+  nozzle_discharge_coefficient: {value: 0.9, unit: "-", range: [0.8, 0.97], src: est, note: "short converging round nozzle (idelchik-2008-hydraulic-resistance: well-rounded nozzles 0.95-0.99, short conical tips lower); no vena contracta, C_v = C_d"}
+  default_nozzle_diameter_m: {value: 3.0, unit: mm, range: [1.5, 6.0], src: est, note: "orifice of a flood nozzle whose machine entry gives no diameter_mm"}
+  static_head_m: {value: 1.2, unit: m, range: [0.5, 2.0], src: est, note: "pump in the tank under the table, nozzles 0.5-2 m above it"}
+  # Pumps
+  centrifugal_shutoff_ratio: {value: 1.25, unit: "-", range: [1.1, 1.35], src: gulich-2014-centrifugal-pumps, note: "shut-off pressure / rated pressure of a radial pump of low specific speed; p(Q) = p0 [1 - (1 - p_r/p0)(Q/Q_r)^2] through the rated point"}
+  centrifugal_shutoff_power_ratio: {value: 0.5, unit: "-", range: [0.35, 0.7], src: gulich-2014-centrifugal-pumps, note: "shaft power at zero flow / power at the rated point of a radial pump of low specific speed (power rises about linearly with flow between them)"}
+  pump_efficiency_centrifugal: {value: 0.35, unit: "-", range: [0.25, 0.5], src: est, note: "small immersion coolant pumps (the haas-vf2ss TSC note uses ~35 %)"}
+  pump_efficiency_displacement: {value: 0.6, unit: "-", range: [0.45, 0.8], src: est, note: "diaphragm / piston high-pressure coolant pumps, shaft power to hydraulic power"}
+  # Through-spindle circuit (pump -> line -> rotary union -> drawbar bore -> holder -> tool holes)
+  tsc_line_diameter_m: {value: 10.0, unit: mm, range: [6.0, 13.0], src: est, note: "3/8 in high-pressure hose"}
+  tsc_line_length_m: {value: 3.0, unit: m, range: [1.5, 5.0], src: est}
+  k_tsc_line: {value: 6.0, unit: "-", range: [3.0, 12.0], src: est, note: "fine filter, check and purge valves, bends"}
+  rotary_union_diameter_m: {value: 6.0, unit: mm, range: [4.0, 10.0], src: est, note: "bore of a rotary union for 40-taper through-spindle coolant"}
+  k_rotary_union: {value: 3.0, unit: "-", range: [1.5, 6.0], src: est, note: "seal faces and the turns inside the union, on its bore velocity"}
+  drawbar_bore_diameter_m: {value: 8.0, unit: mm, range: [5.0, 12.0], src: est, note: "coolant tube through the drawbar of a 40-taper spindle"}
+  drawbar_bore_length_m: {value: 0.45, unit: m, range: [0.3, 0.7], src: est}
+  holder_passage_diameter_m: {value: 4.0, unit: mm, range: [2.5, 8.0], src: est, note: "bore of the length-adjustment screw / coolant tube of the holder; length = gauge length"}
+  k_holder: {value: 1.5, unit: "-", range: [0.8, 3.0], src: est, note: "pull-stud passage and the chamber behind the shank"}
+  # Compressed air (air blast, MQL carrier)
+  air_nozzle_discharge_coefficient: {value: 0.85, unit: "-", range: [0.75, 0.95], src: est, note: "compressible flow through short machine-tool nozzles"}
+  mql_air_m3_s: {value: 1.667e-3, unit: "-", range: [5.0e-4, 5.0e-3], src: est, note: "SI value, m3/s of free air (100 l/min) per MQL channel at 4-6 bar (as production-consumables; dguv-209-025-mql-2010 gives > 4 bar)"}
+  mql_air_pressure_Pa: {value: 6.0, unit: bar, range: [4.0, 8.0], src: est, note: "gauge supply pressure of the MQL unit when the fluid file gives none (dguv-209-025-mql-2010: > 4 bar)"}
+  mql_dosage_m3_s: {value: 5.556e-9, unit: "-", range: [1.389e-9, 1.389e-8], src: est, note: "SI value, m3/s (20 ml/h) when the MQL fluid file gives no dosage_default_ml_h (dguv-209-025-mql-2010: 5-50 ml per process hour)"}
+  mist_air_m3_s: {value: 8.333e-4, unit: "-", range: [3.0e-4, 2.0e-3], src: est, note: "SI value, m3/s of free air (50 l/min) of a venturi mist (M07) nozzle"}
+  mist_liquid_m3_s: {value: 2.778e-7, unit: "-", range: [5.0e-8, 1.0e-6], src: est, note: "SI value, m3/s (1 l/h) of liquid atomised by a mist nozzle when the pump entry gives no flow"}

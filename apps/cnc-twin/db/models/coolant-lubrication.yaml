@@ -1,0 +1,18 @@
+# Lubrication of the tool-chip interface by the coolant (cnctwin/coolant/lubrication.py, docs/models/coolant.md
+# "Lubrication"): friction factor = 1 - reach x (1 - database factor) x capillary access, the access by
+# Washburn filling of interface capillaries during the time a chip element spends on the rake
+# (Williams & Tabor 1977; Godlevski et al. 1997), relative to the conditions the database factors refer to.
+format: cnctwin-model-params
+version: 1
+model: coolant-lubrication
+description: "Capillary penetration of the chip-tool interface, reference conditions of the database friction factors"
+params:
+  capillary_radius_m: {value: 1.0, unit: um, range: [0.2, 5.0], src: est, note: "asperity-scale capillaries of the chip-tool interface (williams-tabor-1977: lubricant enters through a network of interfacial capillaries of micrometre size)"}
+  wetting_cos: {value: 1.0, unit: "-", range: [0.5, 1.0], src: est, note: "cos(contact angle) of cutting fluids on freshly cut metal (complete wetting)"}
+  contact_length_ratio: {value: 2.0, unit: "-", range: [1.5, 3.0], src: childs-2000-metal-machining, note: "tool-chip contact length / deformed chip thickness of continuous chips (value chosen in the reported range, est)"}
+  reference_chip_speed_m_s: {value: 1.0, unit: m_s, range: [0.3, 3.0], src: est, note: "chip sliding speed the database friction factors refer to (tribometer and cutting tests at 60-200 m/min cutting speed, chip ratio ~0.3-0.5)"}
+  reference_contact_length_m: {value: 0.3, unit: mm, range: [0.1, 1.0], src: est, note: "contact length of those tests"}
+  friction_floor: {value: 0.2, unit: "-", range: [0.1, 0.4], src: est, note: "lowest friction factor (boundary lubrication ~0.1 against dry 0.5): the capillary model is not allowed to lubricate beyond it"}
+  boundary_film_m: {value: 50.0, unit: nm, range: [10.0, 200.0], src: est, note: "lubricant film thickness a renewed interface needs (supply limit of MQL)"}
+  default_chip_ratio: {value: 0.4, unit: "-", range: [0.2, 0.8], src: est, note: "h/h_c when cutting's coefficient tables give none"}
+  default_chip_thickness_m: {value: 0.05, unit: mm, range: [0.005, 0.3], src: est, note: "uncut chip thickness when the cutting record gives none"}

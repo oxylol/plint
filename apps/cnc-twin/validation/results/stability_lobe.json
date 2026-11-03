@@ -1,0 +1,362 @@
+{
+ "budget": null,
+ "calibration_dependent": null,
+ "cases": [
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-engin1999-bullnose-al7075-halfimmersion.yaml",
+   "id": "stability-engin1999-bullnose-al7075-halfimmersion",
+   "location": "Fig. 8 (cutter), Fig. 9 caption (conditions, average cutting coefficients), Table 1 (measured modal parameters), text p. 8 (test results)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "engin-1999-general-milling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.diameter_mm",
+     "note": "not given: the model depends on a/D only; any diameter with ae = a/D x D reproduces it",
+     "src": "est",
+     "value": 20
+    },
+    {
+     "input": "setup.conditions.ae_mm",
+     "note": "a/D x the assumed 20 mm diameter",
+     "src": "est",
+     "value": 1
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-insperger2004-sd-1dof-down-ad0.05.yaml",
+   "id": "stability-insperger2004-sd-1dof-down-ad0.05",
+   "location": "Sect. 4 (model and parameters), Fig. 6(d) (digitised)",
+   "material": null,
+   "measured": false,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "insperger-2004-updated-sd",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.diameter_mm",
+     "note": "not given: the model depends on a/D only; any diameter with ae = a/D x D reproduces it",
+     "src": "est",
+     "value": 20
+    },
+    {
+     "input": "setup.conditions.ae_mm",
+     "note": "a/D x the assumed 20 mm diameter",
+     "src": "est",
+     "value": 2
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-insperger2004-sd-1dof-down-ad0.1.yaml",
+   "id": "stability-insperger2004-sd-1dof-down-ad0.1",
+   "location": "Sect. 4 (model and parameters), Fig. 6(c) (digitised)",
+   "material": null,
+   "measured": false,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "insperger-2004-updated-sd",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.diameter_mm",
+     "note": "not given: the model depends on a/D only; any diameter with ae = a/D x D reproduces it",
+     "src": "est",
+     "value": 20
+    },
+    {
+     "input": "setup.conditions.ae_mm",
+     "note": "a/D x the assumed 20 mm diameter",
+     "src": "est",
+     "value": 10
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-insperger2004-sd-1dof-down-ad0.5.yaml",
+   "id": "stability-insperger2004-sd-1dof-down-ad0.5",
+   "location": "Sect. 4 (model and parameters), Fig. 6(b) (digitised)",
+   "material": null,
+   "measured": false,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "insperger-2004-updated-sd",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.diameter_mm",
+     "note": "not given: the model depends on a/D only; any diameter with ae = a/D x D reproduces it",
+     "src": "est",
+     "value": 20
+    },
+    {
+     "input": "setup.conditions.ae_mm",
+     "note": "a/D x the assumed 20 mm diameter",
+     "src": "est",
+     "value": 20
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-insperger2004-sd-1dof-down-ad1.yaml",
+   "id": "stability-insperger2004-sd-1dof-down-ad1",
+   "location": "Sect. 4 (model and parameters), Fig. 6(a) (digitised)",
+   "material": null,
+   "measured": false,
+   "operation": "slotting",
+   "quantity": "stability_lobe",
+   "src": "insperger-2004-updated-sd",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.diameter_mm",
+     "note": "not given: the model depends on a/D only; any diameter with ae = a/D x D reproduces it",
+     "src": "est",
+     "value": 20
+    },
+    {
+     "input": "setup.conditions.ae_mm",
+     "note": "a/D x the assumed 20 mm diameter",
+     "src": "est",
+     "value": 10
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-insperger2004-sd-2dof-down-ad0.5.yaml",
+   "id": "stability-insperger2004-sd-2dof-down-ad0.5",
+   "location": "Sect. 5 (model and parameters), Fig. 7(b) (digitised)",
+   "material": null,
+   "measured": false,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "insperger-2004-updated-sd",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.diameter_mm",
+     "note": "not given: the model depends on a/D only; any diameter with ae = a/D x D reproduces it",
+     "src": "est",
+     "value": 20
+    },
+    {
+     "input": "setup.conditions.ae_mm",
+     "note": "a/D x the assumed 20 mm diameter",
+     "src": "est",
+     "value": 20
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-insperger2004-sd-2dof-down-ad1.yaml",
+   "id": "stability-insperger2004-sd-2dof-down-ad1",
+   "location": "Sect. 5 (model and parameters), Fig. 7(a) (digitised)",
+   "material": null,
+   "measured": false,
+   "operation": "slotting",
+   "quantity": "stability_lobe",
+   "src": "insperger-2004-updated-sd",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.tool_class",
+     "note": "material of the end mill not stated",
+     "src": "est",
+     "value": "carbide"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-insperger2006-1flute-almgsi-down10pct.yaml",
+   "id": "stability-insperger2006-1flute-almgsi-down10pct",
+   "location": "Sect. 5 (setup, modal matrices, cutting coefficients), Fig. 7(a) (experimental markers, digitised)",
+   "material": "al6061-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "insperger-2006-chatter-sle",
+   "status": "no_harness",
+   "uncertainty_pct": 3.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "not stated in the paper; typical of a 3/4 in two-flute carbide end mill",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-mann2003-flexure-al7075-downmilling.yaml",
+   "id": "stability-mann2003-flexure-al7075-downmilling",
+   "location": "Sect. 3 (flexure, cutting coefficients, test procedure), Sect. 4 (points E, F, G, H: exact), Fig. 7 (all other test markers, digitised)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "mann-2003-up-down-milling-part2",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "not stated in the paper; typical of a 3/4 in two-flute carbide end mill",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-mann2003-flexure-al7075-upmilling.yaml",
+   "id": "stability-mann2003-flexure-al7075-upmilling",
+   "location": "Sect. 3 (flexure, cutting coefficients, test procedure), Sect. 4 (points A, B, C, D: exact), Fig. 6 (all other test markers, digitised)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "mann-2003-up-down-milling-part2",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.tool_class",
+     "note": "material of the end mill not given; the very low radial coefficient (Kr 0.07) implies a high rake angle",
+     "src": "est",
+     "value": "not stated"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-weck1993-3flute-al7075-quarter-up.yaml",
+   "id": "stability-weck1993-3flute-al7075-quarter-up",
+   "location": "Sect. 8.4.2 'Example: milling of a rigid workpiece with 2 DOF end mill' (tool, coefficients, modal parameters, test procedure; thesis p. 221), Fig. 8.10 (test markers, classified from the scanned page; p. 222)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "budak-1994-thin-wall-milling-thesis",
+   "status": "no_harness",
+   "uncertainty_pct": 0.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.tool_class",
+     "note": "material of the end mill not given; the very low radial coefficient (Kr 0.07) implies a high rake angle",
+     "src": "est",
+     "value": "not stated"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'stability_lobe'",
+   "file": "validation/cases/stability_lobe/stability-weck1993-3flute-al7075-slotting.yaml",
+   "id": "stability-weck1993-3flute-al7075-slotting",
+   "location": "Sect. 8.4.2 'Example: milling of a rigid workpiece with 2 DOF end mill' (tool, coefficients, modal parameters, test procedure; thesis p. 221), Fig. 8.10 (test markers, classified from the scanned page; p. 222)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "stability_lobe",
+   "src": "budak-1994-thin-wall-milling-thesis",
+   "status": "no_harness",
+   "uncertainty_pct": 0.0
+  }
+ ],
+ "format": "cnctwin-validation-results",
+ "harness": "",
+ "independent": null,
+ "quantity": "stability_lobe",
+ "rule": "tolerance = max(budget_pct/100 x |reference| (for temperatures: x the rise above ambient), 2 x the reference's uncertainty); a case passes when every compared value lies within its tolerance; a quantity passes when at least 80 % of its cases pass and no case misses by more than twice its tolerance",
+ "verdict": "no harness",
+ "verdict_reason": "no harness registered yet",
+ "version": 1
+}

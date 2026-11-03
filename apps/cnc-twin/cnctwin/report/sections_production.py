@@ -3,8 +3,6 @@ part, tool wear and remaining life (docs/models/production.md for the meanings o
 
 from __future__ import annotations
 
-import numpy as np
-
 from . import fmt, plots
 from .context import Context
 from .html import Raw, Section, code, figure, join, kv, note, para, table, ul
@@ -279,19 +277,20 @@ def tools_section(ctx: Context) -> Section:
         remaining_s, remaining_parts = _remaining(tool, remaining_frac, life_rates.get(number))
         vb = [v for v in (tool.get("VB_m") or []) if fmt.as_float(v) is not None]
         rows.append([f"T{number}", tool.get("tool_id", ""), tool.get("holder_id", fmt.DASH),
-                     fmt.seconds(tool.get("cut_time_s")), fmt.um(tool.get("VB_max_m")),
-                     fmt.um(tool.get("VB_limit_m")), fmt.pct(used, 2), fmt.pct(remaining_frac, 2),
-                     fmt.duration(remaining_s), fmt.num(remaining_parts, 4),
-                     "BROKEN" if tool.get("broken") else "no", fmt.degc(tool.get("max_edge_temp_K"))])
+                     fmt.seconds(tool.get("cut_time_s")),
+                     f"{fmt.um(tool.get('VB_max_m'))} / {fmt.um(tool.get('VB_limit_m'))}",
+                     f"{fmt.pct(used, 2)} / {fmt.pct(remaining_frac, 2)}", fmt.duration(remaining_s),
+                     fmt.num(remaining_parts, 4), "BROKEN" if tool.get("broken") else "no",
+                     fmt.degc(tool.get("max_edge_temp_K"))])
         if vb:
             limit = fmt.as_float(tool.get("VB_limit_m"))
             charts += figure(plots.tooth_bars([v * fmt.UM_PER_M for v in vb],
                                               None if limit is None else limit * fmt.UM_PER_M,
                                               f"T{number} flank wear VB per tooth"),
                              f"T{number} wear per tooth", f"T{number}: wear land width at the end of the run.")
-    body = table(["tool", "id", "holder", "cut (s)", "VB max (µm)", "VB limit (µm)", "life used (%)",
-                  "life left (%)", "cutting left", "parts left", "broken", "max edge (°C)"], rows,
-                 numeric={3, 4, 5, 6, 7, 9, 11})
+    body = table(["tool", "id", "holder", "cut (s)", "VB max / limit (µm)", "life used / left (%)",
+                  "cutting left", "parts left", "broken", "max edge (°C)"], rows,
+                 numeric={3, 4, 5, 7, 9})
     body += note("Life left in cutting time and parts is the remaining edge life at this run's rate of life use "
                  "(tools.json remaining_life_s when the wear model gives it); a new edge or regrind restarts it.")
     body += charts + _wear_series(ctx)

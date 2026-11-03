@@ -10,7 +10,7 @@ mechanistic form, first-order heating, linear wear), not model output; nothing h
 
 Layouts (what the API reads; docs/api.md "Run directory as read by the API"):
 
-* ``run.json``      ``{format: cnctwin-run, project, inputs, versions, numba_cache_key, threads, clock,
+* ``run.json``      ``{format: cnctwin-run, project, inputs, versions, numba_cache_key, threads, clock, gpu,
                      verdict {safe, reasons}, summary, outputs [{path, bytes, sha256}]}`` (written last)
 * ``status.json``   ``{format: cnctwin-run-status, status, progress {sim_time_s, est_total_s, wall_s,
                      eta_s}}`` (only when ``write_status``; the API job runner writes it otherwise)
@@ -40,6 +40,22 @@ Layouts (what the API reads; docs/api.md "Run directory as read by the API"):
 * ``checkpoints/ck_<tick>.npz`` + ``.json`` (the .json, written last, is the commit marker; it holds
   the byte lengths of trace.jsonl and frames.bin, the keyframe, timeline and finding counts and the
   closed series files)
+* report content (:func:`report_extras`, :func:`report_run_extras`, additive): per characteristic the
+  feature, lines, tools, datums, probed points and error budget (``contributions_m``), three more
+  characteristics, the part temperature at unload, finish and burr details, tool life limits, the
+  resolved setup in run.json's project, ``summary.conservation`` and ``estimates`` (docs/report.md "Inputs")
+* sound and pictures (additive, :func:`media_scene_extras`, docs/models/render.md and sound.md "Inputs"): each
+  scene component's ``frame`` (S, M, T) and ``pose``, ``kind``, a holder envelope, an enclosure with a door,
+  axis ``direction`` vectors, ``gravity_M``, ``stock.pose_M_S`` and a ``pose_M_S`` field in every keyframe, and
+  with ``media_channels=True`` the macro channels ``dynamics.chatter_freq_Hz``, ``dynamics.chatter_index``,
+  ``dynamics.vibration_pp_m``, ``chips.emitted_kg`` and ``chips.packing_torque_Nm`` (consistent with the chatter
+  and packing findings; off by default so the channel set the API tests count stays as it was)
+
+* the 3D view (additive, ``view3d=True``, docs/ui-3d.md "Inputs"): the pocket carved along the tool path as the
+  in-process workpiece (closed brick meshes from cnctwin.core.keyframes' writers, only changed records indexed),
+  final per-vertex attributes on it, ``work_temp_K`` and ``work_displacement_m`` 3-D grids, a head-mounted
+  second jet (nozzle ``n2``, ``attached_to: head``) with ``jet_path_M_m``, ``jet_diameter_m`` and
+  ``jet_blocked_by``; off by default, so every other test's files stay the same
 
 Every container is written with fixed metadata (zip members dated 1980-01-01, no PNG/PDF dates,
 ffmpeg ``-fflags +bitexact -flags +bitexact``), so the result set hashes identically run to run.
@@ -628,9 +644,18 @@ MACRO_CHANNELS = (
     Chan("removal.removed_volume_m3", "m3", "macro", "removal", "material removed since the start"),
 )
 ALL_CHANNELS = FAST_CHANNELS + TICK_CHANNELS + MACRO_CHANNELS
+# additive (sound and pictures, docs/models/sound.md "Inputs"), written when a run is made with
+# media_channels=True: the DynamicsFrame descriptors, the booked chip mass and the packing torque
+MEDIA_MACRO_CHANNELS = (
+    Chan("dynamics.chatter_freq_Hz", "Hz", "macro", "dynamics", "dominant chatter frequency (0 when stable)"),
+    Chan("dynamics.chatter_index", "-", "macro", "dynamics", "non-forced share of the vibration energy"),
+    Chan("dynamics.vibration_pp_m", "m", "macro", "dynamics", "peak-to-peak relative tool-work vibration in the step"),
+    Chan("chips.emitted_kg", "kg", "macro", "chips", "chip mass booked from the removed volume (cumulative)"),
+    Chan("chips.packing_torque_Nm", "N m", "macro", "chips", "packing torque of the active tool of path 0"),
+)
 
 
-def tier_columns(tier: str) -> list[str]:
+def tier_columns(tier: str, macro_channels: tuple = MACRO_CHANNELS) -> list[str]:
     columns = ["tick", "time_s"]
     if tier == "fast":
         for chan in sorted(FAST_CHANNELS, key=lambda c: c.name):
@@ -641,7 +666,7 @@ def tier_columns(tier: str) -> list[str]:
                     for s in ("min", "mean", "max")]
         columns += plain + envelope
     else:
-        for chan in sorted(MACRO_CHANNELS, key=lambda c: c.name):
+        for chan in sorted(macro_channels, key=lambda c: c.name):
             columns += chan.columns()
     return columns
 
@@ -687,11 +712,16 @@ class SyntheticRun:
     """Writes the run directory step by step (one macro step per :meth:`step`)."""
 
     def __init__(self, run_dir, seed: int = DEFAULT_SEED, *, write_status: bool = True, media: bool = True,
-                 project_path=None):
+                 project_path=None, media_channels: bool = False, view3d: bool = False):
         self.dir = Path(run_dir)
+        self.view3d = bool(view3d)
+        self._view3d_digest: dict[str, str] = {}
         self.seed = int(seed)
         self.write_status = write_status
         self.media = media
+        self.media_channels = bool(media_channels)
+        self.macro_channels = MACRO_CHANNELS + (MEDIA_MACRO_CHANNELS if self.media_channels else ())
+        self.all_channels = FAST_CHANNELS + TICK_CHANNELS + self.macro_channels
         self.project_path = Path(project_path) if project_path is not None else None
         self.schedule = make_schedule()
         rng = self._rng("setup")
@@ -988,6 +1018,8 @@ class SyntheticRun:
         self._write_timeline()
         self.last_checkpoint = {"tick": tick, "file": f"checkpoints/ck_{tick}.json"}
         self.rows = {"fast": [], "tick": [], "macro": []}
+        if self.view3d:
+            view3d_restore(self)
         if self.write_status:
             self._write_status("running")
 
@@ -1034,7 +1066,7 @@ class SyntheticRun:
     # ------------------------------------------------------------------ static files
     def _write_static(self) -> None:
         write_json(self.dir / "channels.json", {"format": "cnctwin-channels", "version": FORMAT_VERSION,
-                                                "channels": [c.to_dict() for c in sorted(ALL_CHANNELS,
+                                                "channels": [c.to_dict() for c in sorted(self.all_channels,
                                                                                           key=lambda c: c.name)]})
         scene_dir = self.dir / "scene"
         scene_dir.mkdir(parents=True, exist_ok=True)
@@ -1073,6 +1105,9 @@ class SyntheticRun:
                          "direction_M": [-0.6, -0.4, -0.69]}],
             "frames": frames_header(),
         }
+        media_scene_extras(scene, scene_dir)
+        if self.view3d:
+            view3d_scene_extras(self, scene)
         write_json(self.dir / "scene.json", scene)
 
     # ------------------------------------------------------------------ per-step writers
@@ -1139,6 +1174,8 @@ class SyntheticRun:
         for tooth in range(MAX_TEETH):
             row[f"wear.VB_m[{tooth}]"] = (VB0_M + VB_RATE_M_S * cut_s * (1.0 + 0.05 * tooth)) if tooth < N_TEETH \
                 else float("nan")
+        if self.media_channels:
+            row.update(media_macro_values(self, tick))
         self.rows["macro"].append(row)
 
     def _timeline_to(self, tick: int) -> None:
@@ -1220,7 +1257,7 @@ class SyntheticRun:
             rows = self.rows[tier]
             if not rows:
                 continue
-            columns = tier_columns(tier)
+            columns = tier_columns(tier, self.macro_channels)
             arrays = {}
             for column in columns:
                 values = [row[column] for row in rows]
@@ -1297,6 +1334,9 @@ class SyntheticRun:
         return quantised, faces.reshape(-1)
 
     def _write_keyframe(self, tick: int) -> None:
+        if self.view3d:
+            view3d_write_keyframe(self, tick)
+            return
         k = self.keyframes
         full = (k % FULL_SNAPSHOT_EVERY == 0)
         cut_now = self._machined_until(tick)
@@ -1373,6 +1413,9 @@ class SyntheticRun:
             "jet_speed_m_s": np.array([3.2][:jets], float), "jet_flow_m3_s": np.array([2.5e-4][:jets], float),
             "jet_half_angle_rad": np.array([0.12][:jets], float),
             "jet_reach_fraction": np.array([0.82][:jets], float)})
+        arrays["pose_M_S"] = media_pose_M_S()
+        if self.view3d:
+            arrays.update(view3d_field_extras(self, tick))
         write_npz(path, arrays)
 
     def _write_chips(self, path: Path, tick: int, k: int) -> None:
@@ -1409,6 +1452,9 @@ class SyntheticRun:
             self._write_status("done")
 
     def _write_attributes(self) -> None:
+        if self.view3d:
+            view3d_write_attributes(self)
+            return
         directory = self.dir / "keyframes" / "attr"
         directory.mkdir(parents=True, exist_ok=True)
         cut = self._machined_until(self.end_tick)
@@ -1432,24 +1478,28 @@ class SyntheticRun:
         cut_s = self.cut_time_s(self.end_tick)
         removed = self.removed_volume_m3(self.end_tick)
         measured = 0.002062 if self.include_error else 0.002011
-        write_json(self.dir / "inspection.json", {
+        inspection = {
             "format": "cnctwin-inspection", "version": FORMAT_VERSION, "temperature_K": AMBIENT_K,
             "tolerances": [
                 {"id": "pocket-depth", "kind": "distance", "nominal_m": 0.002, "plus_m": 5e-5, "minus_m": 5e-5,
                  "measured_m": measured, "deviation_m": measured - 0.002, "pass": abs(measured - 0.002) <= 5e-5},
                 {"id": "floor-flatness", "kind": "flatness", "tolerance_m": 2e-5, "measured_m": 8e-6, "pass": True}],
-            "summary": {"checked": 2, "failed": 1 if self.include_error else 0}})
-        write_json(self.dir / "surface.json", {
+            "summary": {"checked": 2, "failed": 1 if self.include_error else 0}}
+        surface = {
             "format": "cnctwin-surface", "version": FORMAT_VERSION,
             "features": [{"id": "floor-finish", "Ra_m": 0.92e-6, "Rz_m": 5.1e-6, "spec_Ra_m": 1.6e-6, "pass": True}],
-            "burrs": [{"edge": "pocket wall X16", "height_m": 4.0e-5}]})
+            "burrs": [{"edge": "pocket wall X16", "height_m": 4.0e-5}]}
         vb = [VB0_M + VB_RATE_M_S * cut_s * (1.0 + 0.05 * t) for t in range(N_TEETH)]
-        write_json(self.dir / "tools.json", {
+        tools = {
             "format": "cnctwin-tools", "version": FORMAT_VERSION,
             "tools": [{"slot": 0, "number": TOOL_NUMBER, "tool_id": TOOL_ID, "holder_id": HOLDER_ID,
                        "cut_time_s": cut_s, "VB_m": vb, "VB_max_m": max(vb), "life_used_fraction": cut_s / 3600.0,
                        "broken": False,
-                       "max_edge_temp_K": AMBIENT_K + EDGE_RISE_K * (1.0 - math.exp(-cut_s / EDGE_TAU_S))}]})
+                       "max_edge_temp_K": AMBIENT_K + EDGE_RISE_K * (1.0 - math.exp(-cut_s / EDGE_TAU_S))}]}
+        report_extras(self, inspection, surface, tools, cut_s)
+        write_json(self.dir / "inspection.json", inspection)
+        write_json(self.dir / "surface.json", surface)
+        write_json(self.dir / "tools.json", tools)
         from cnctwin.production import production_from_run_dir
         production = production_from_run_dir(self.dir, project=PRODUCTION_PROJECT, tick_s=TICK_S,
                                              removed_mass_kg=removed * DENSITY_KG_M3, write=False)
@@ -1552,6 +1602,7 @@ class SyntheticRun:
             "threads": {"OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",
                         "NUMBA_NUM_THREADS": "1", "PYTHONHASHSEED": "0"},
             "clock": {"tick_s": TICK_S, "ipo_ticks": IPO_TICKS, "macro_ipo": MACRO_IPO, "l0_ticks": {OP: L0_TICKS}},
+            "gpu": gpu_record(self),
             "seed": self.seed,
             "verdict": self.verdict(),
             "summary": {"cycle_time_s": self.end_tick * TICK_S, "cut_time_s": self.cut_time_s(self.end_tick),
@@ -1560,6 +1611,7 @@ class SyntheticRun:
                         "macro_steps": self.end_tick // MACRO_TICKS},
             "outputs": outputs,
         }
+        report_run_extras(self, document)
         write_json(self.dir / "run.json", document)
 
     def _write_status(self, status: str) -> None:
@@ -1569,15 +1621,557 @@ class SyntheticRun:
                                               "checkpoint": self.last_checkpoint, "error": None})
 
 
+# ----------------------------------------------------------------------------- report content (additive)
+# What the report, the comparison and the uncertainty tests read beyond the first layouts
+# (docs/report.md "Inputs"): the CMM view of each characteristic (feature, lines, tools, datums, probed
+# points, error budget), more characteristics, the part temperature at unload, finish and burr details,
+# tool life limits, the resolved project's setup in run.json, the conservation residuals and the
+# estimated database values. Every value is synthetic, deterministic from the seed, and consistent
+# with the rest of the run (the error budget sums to the deviation, flatness is the probed range).
+
+def _probe_points(rng, count: int, centre_m: float, spread_m: float, origin_S, step_S) -> list[dict]:
+    deviations = centre_m + spread_m * rng.uniform(-1.0, 1.0, size=count)
+    return [{"x_S_m": float(origin_S[0] + i * step_S[0]), "y_S_m": float(origin_S[1] + i * step_S[1]),
+             "z_S_m": float(origin_S[2] + i * step_S[2]), "deviation_m": float(d)} for i, d in enumerate(deviations)]
+
+
+def _budget(deviation_m: float, parts: list[tuple[str, int | None, float]], rest: tuple[str, int | None]) -> list[dict]:
+    """Contributions that sum to the deviation: the listed parts and the remainder booked to ``rest``."""
+    entries = [{"source": s, "tool": t, "value_m": float(v)} for s, t, v in parts]
+    entries.append({"source": rest[0], "tool": rest[1], "value_m": float(deviation_m - sum(v for _, _, v in parts))})
+    return [{k: v for k, v in e.items() if v is not None} for e in entries]
+
+
+def report_extras(run, inspection: dict, surface: dict, tools: dict, cut_s: float) -> None:
+    rng = run._rng("report-extras")
+    floor_z = WORK_ZERO_S_M[2] - AP_M
+    growth = 1.2e-5 if run.include_error else 2.0e-6
+    depth, flatness = inspection["tolerances"][0], inspection["tolerances"][1]
+    depth.update({"feature": "pocket floor to the top face", "op": OP, "program": PROGRAM, "lines": [10, 17],
+                  "tools": [TOOL_NUMBER], "datums": ["A"], "method": "5 probed points on the floor against the top face",
+                  "points": _probe_points(rng, 5, depth["deviation_m"], 1.5e-6, (0.012, 0.011, floor_z), (0.003, 0.002, 0.0)),
+                  "contributions_m": _budget(depth["deviation_m"], [("thermal_growth", TOOL_NUMBER, growth),
+                                                                    ("tool_deflection", TOOL_NUMBER, 4.0e-6),
+                                                                    ("wear", TOOL_NUMBER, 1.0e-6), ("clamping", None, 5.0e-7)],
+                                             ("length_offset", TOOL_NUMBER))})
+    flat_points = _probe_points(rng, 9, 0.0, 4.0e-6, (0.011, 0.010, floor_z), (0.002, 0.001, 0.0))
+    flat_points[0]["deviation_m"], flat_points[1]["deviation_m"] = -4.0e-6, 4.0e-6     # the range is the flatness
+    flatness.update({"feature": "pocket floor", "op": OP, "program": PROGRAM, "lines": [11, 17], "tools": [TOOL_NUMBER],
+                     "datums": [], "method": "9 probed points, minimum-zone flatness", "points": flat_points,
+                     "contributions_m": _budget(flatness["measured_m"], [("tool_deflection", TOOL_NUMBER, 5.0e-6),
+                                                                         ("runout", TOOL_NUMBER, 2.0e-6)],
+                                                ("thermal_growth", TOOL_NUMBER))})
+    width_dev = 1.2e-5 + 2.0e-6 * float(rng.uniform(-1.0, 1.0))
+    length_dev = -4.0e-6 + 2.0e-6 * float(rng.uniform(-1.0, 1.0))
+    for ident, nominal, deviation, lines, feature in (
+            ("pocket-width", 0.026, width_dev, [11, 15], "pocket walls at X0 and X16 (with the tool radius)"),
+            ("pocket-length", 0.022, length_dev, [12, 16], "pocket walls at Y0 and Y12 (with the tool radius)")):
+        inspection["tolerances"].append({
+            "id": ident, "kind": "distance", "nominal_m": nominal, "plus_m": 5e-5, "minus_m": 5e-5,
+            "measured_m": nominal + deviation, "deviation_m": deviation, "pass": abs(deviation) <= 5e-5,
+            "feature": feature, "op": OP, "program": PROGRAM, "lines": lines, "tools": [TOOL_NUMBER], "datums": ["B"],
+            "method": "2 x 3 probed points on the opposite walls",
+            "points": _probe_points(rng, 6, deviation, 1.0e-6, (0.010, 0.012, floor_z + 0.001), (0.0, 0.002, 0.0)),
+            "contributions_m": _budget(deviation, [("runout", TOOL_NUMBER, 1.0e-5), ("tool_deflection", TOOL_NUMBER, -6.0e-6)],
+                                       ("thermal_growth", TOOL_NUMBER))})
+    inspection["tolerances"].append({
+        "id": "wall-perpendicularity", "kind": "perpendicularity", "tolerance_m": 3.0e-5, "measured_m": 1.1e-5,
+        "pass": True, "feature": "pocket wall at X16", "op": OP, "program": PROGRAM, "lines": [11, 15],
+        "tools": [TOOL_NUMBER], "datums": ["A"], "method": "4 probed points along the wall height",
+        "points": _probe_points(rng, 4, 0.0, 5.5e-6, (0.026, 0.015, floor_z), (0.0, 0.0, 0.0005)),
+        "contributions_m": _budget(1.1e-5, [("tool_deflection", TOOL_NUMBER, 9.0e-6)], ("thermal_growth", TOOL_NUMBER))})
+    items = inspection["tolerances"]
+    inspection["summary"].update({"checked": len(items), "failed": sum(1 for t in items if t["pass"] is False)})
+    inspection["unload"] = [{"op": OP, "time_s": run.end_tick * TICK_S, "mean_temp_K": AMBIENT_K + 2.0 * cut_s,
+                             "max_temp_K": AMBIENT_K + 2.0 * cut_s + 4.0}]
+    surface["features"][0].update({"op": OP, "tool": TOOL_NUMBER, "lines": [11, 17], "spec_Rz_m": 6.3e-6})
+    surface["features"].append({"id": "wall-finish", "op": OP, "tool": TOOL_NUMBER, "lines": [11, 15], "Ra_m": 1.25e-6,
+                                "Rz_m": 7.4e-6, "spec_Ra_m": 3.2e-6, "pass": True})
+    surface["burrs"][0].update({"kind": "exit", "op": OP, "program": PROGRAM, "line": 15, "root_thickness_m": 6.0e-5,
+                                "location_S_m": [0.026, 0.017, 0.013]})
+    tools["tools"][0].update({"VB_limit_m": 3.0e-4, "life_limit_s": 3600.0, "remaining_life_s": 3600.0 - cut_s,
+                              "stickout_m": 0.035})
+
+
+def gpu_record(run) -> dict:
+    """run.json ``gpu`` (cnctwin.gpu.Accelerator.run_info, docs/models/gpu.md "Run record") of a run on a host
+    without a CUDA device: every kernel call on the CPU, the reason recorded (additive, cnctwin.gpu)."""
+    from cnctwin.gpu.accel import Accelerator, KernelUsage
+    from cnctwin.gpu.device import DeviceInfo
+    from cnctwin.gpu.schema import GpuSettings
+
+    reason = "the NVIDIA kernel driver is not loaded (/dev/nvidiactl is missing)"
+    accel = Accelerator(GpuSettings(mode="auto"))
+    macro_steps = run.end_tick // MACRO_TICKS
+    tooth_passes = int(round(run.cut_time_s(run.end_tick) * run.rpm / 60.0 * N_TEETH))
+    calls = {"dexel_subtract": (tooth_passes, tooth_passes * 600), "thermal_work_step": (macro_steps // 5,
+             (macro_steps // 5) * 20 * 15 * 8), "chips_advance": (macro_steps, macro_steps * 40)}
+    for name, (count, items) in calls.items():
+        accel.usage[name] = KernelUsage(cpu_calls=int(count), cpu_items=int(items), last_backend="cpu" if count else "",
+                                        last_reason=f"no usable CUDA device: {reason}" if count else "")
+    return accel.run_info(device=DeviceInfo(reason=reason))
+
+
+def report_run_extras(run, document: dict) -> None:
+    project = document["project"]
+    project["description"] = "16 x 12 mm pocket, 2 mm deep, in a 40 x 30 x 15 mm block (synthetic)"
+    project["machine"].update({"name": "Haas VF-2SS", "maker": "Haas Automation", "type": "vertical_mill",
+                               "controller": {"dialect": "haas"},
+                               "spindles": [{"id": "main", "max_rad_s": 12000.0 * 2.0 * math.pi / 60.0}],
+                               "axes": {"X": {"travel_m": [-0.762, 0.0]}, "Y": {"travel_m": [-0.406, 0.0]},
+                                        "Z": {"travel_m": [-0.508, 0.0]}}})
+    project["material"].update({"name": "Aluminium 6061-T6", "condition": "T6: solution heat treated and aged"})
+    project["stock"].update({"tolerance_m": [1e-4, 1e-4, 1e-4], "form": "rolled_plate"})
+    entry = project["tools"]["list"][0]
+    entry.update({"length_offset_m": 0.12053, "radius_offset_m": 0.005, "runout_m": 5e-6, "comment": "D10 4FL CARBIDE",
+                  "life": {"limit_s": 3600.0, "used_s": 720.0}})
+    entry["tool"].update({"type": "square_endmill", "geometry": {"diameter_m": 2 * TOOL_RADIUS_M, "flutes": N_TEETH}})
+    identity = {"translate_m": [0.0, 0.0, 0.0], "rotate_rad": [0.0, 0.0, 0.0], "order": "xyz"}
+    project["operations"][0]["setup"] = {
+        "workholding": [{"device": {"id": "lang-makro-grip-77", "type": "vise"}, "pose": dict(identity),
+                         "jaw_opening_m": 0.04, "input_torque_Nm": 60.0, "grip_depth_m": 0.005}],
+        "stock_pose": dict(identity), "work_offsets_m": {"G54": list(G54_M_M)}}
+    project["coolant"] = {"fluid": {"id": "emulsion-8pct"}, "concentration_frac": 0.08}
+    rng = run._rng("report-ledger")
+    document["summary"]["conservation"] = {
+        "mass": {"max_residual_rel": float(2e-12 * (1.0 + rng.uniform())), "final_residual_rel": float(1e-12 * rng.uniform()),
+                 "tolerance_rel": 1e-9, "ok": True},
+        "energy": {"max_residual_rel": float(3e-8 * (1.0 + rng.uniform())), "final_residual_rel": float(1e-8 * rng.uniform()),
+                   "tolerance_rel": 1e-6, "ok": True},
+        "time": {"residual_ticks": 0, "tolerance_rel": 0.0, "ok": True,
+                 "note": "sum of block times equals the cycle time in integer ticks"}}
+    document["estimates"] = [
+        {"file": "db/materials/al6061-t6.yaml", "line": 31, "path": "flow_stress.m", "value": 1.34,
+         "note": "the value usually reproduced with this Johnson-Cook set; not verified", "obj": "material:al6061-t6"},
+        {"file": "db/materials/al6061-t6.yaml", "line": 45, "path": "cutting.indentation_coeff_N_mm3", "value": 15000,
+         "note": "order of magnitude for a 95 HB aluminium alloy", "obj": "material:al6061-t6"},
+        {"file": "db/machines/haas-vf2ss.yaml", "line": 155, "path": "error_map.straightness_um_per_m", "value": 5,
+         "note": "", "obj": "machine:haas-vf2ss"}]
+
+
+# ----------------------------------------------------------------------------- sound and pictures (additive)
+# What cnctwin.sound and cnctwin.render read beyond the first layouts (docs/models/sound.md and render.md
+# "Inputs"): the frame each scene mesh is written in (S, M or T, with a pose), a holder envelope, an enclosure
+# and a door, the axis directions, the pose of S in M (scene stock and every keyframe: ``pose_M_S``), and macro
+# channels with the dynamics chatter descriptors, the booked chip mass and the packing torque. The fixture's M
+# is its machine-coordinate frame (tip_M = tip_W + G54), in which the stock does not move.
+
+MEDIA_PLACE_S_M = (0.020, 0.015, 0.416)       # puts the base, table and vise meshes (written about the origin) under the stock
+CHATTER_LEAD_TICKS = 50 * IPO_TICKS           # chatter builds up 50 ms before the finding is raised
+FORCED_VIBRATION_PP_M = 6.0e-6                # synthetic tooth-pass vibration while cutting
+CHATTER_VIBRATION_PP_M = 1.2e-5               # synthetic extra vibration while chattering
+PACKING_TORQUE_PER_FILL_NM = 0.6              # synthetic packing torque per unit flute fill after the packing event
+
+
+def media_pose_M_S() -> np.ndarray:
+    """S in the fixture's M: a fixed translation (G54 in M minus the work zero in S)."""
+    pose = np.eye(4)
+    pose[:3, 3] = np.array(G54_M_M) - np.array(WORK_ZERO_S_M)
+    return pose
+
+
+def media_scene_extras(scene: dict, scene_dir: Path) -> None:
+    place = np.eye(4)
+    place[:3, 3] = MEDIA_PLACE_S_M
+    for comp in scene["machine"]["components"]:
+        if comp["id"] == "spindle":
+            comp.update({"kind": "spindle", "frame": "T", "pose": np.eye(4).tolist()})   # written above the tool tip
+        else:
+            comp.update({"kind": "machine", "frame": "S", "pose": place.tolist()})
+    for item in scene["fixture"]:
+        item.update({"kind": "fixture", "frame": "S", "pose": place.tolist()})
+    meshes = {"holder_T1": prism_mesh(0.016, 0.035, 0.1, sides=16),
+              "enclosure": box_mesh((-0.20, -0.20, -0.09), (0.25, 0.25, 0.36)),
+              "door": box_mesh((-0.20, -0.21, -0.09), (0.25, -0.20, 0.36))}
+    for name, (vertices, faces) in meshes.items():
+        data, _ = glb_bytes([{"name": name, "positions": vertices, "indices": faces}])
+        write_bytes_atomic(scene_dir / f"{name}.glb", data)
+    scene["tools"][0]["holder_envelope"] = "scene/holder_T1.glb"
+    scene["enclosure"] = [
+        {"id": "enclosure", "kind": "enclosure", "mesh": "scene/enclosure.glb", "frame": "S", "pose": np.eye(4).tolist()},
+        {"id": "door", "kind": "door", "mesh": "scene/door.glb", "frame": "S", "pose": np.eye(4).tolist()}]
+    scene["stock"]["pose_M_S"] = media_pose_M_S().tolist()
+    directions = {"X": [1.0, 0.0, 0.0], "Y": [0.0, 1.0, 0.0], "Z": [0.0, 0.0, 1.0]}
+    for axis in scene["axes"]:
+        axis["direction"] = directions[axis["name"]]
+    scene["gravity_M"] = [0.0, 0.0, -1.0]
+
+
+def media_macro_values(run: "SyntheticRun", tick: int) -> dict:
+    """Dynamics chatter descriptors (consistent with the chatter finding), booked chip mass, packing torque."""
+    t = np.array([tick - 1], np.int64)
+    index = int(run.block_at(t)[0])
+    cutting = bool(run.cut_ae(t)[0] > 0.0)
+    chatter = next((p for p in run.plan if p.event == "finding:chatter"), None)
+    chattering = False
+    if chatter is not None:
+        block = run._block_index(chatter.line)
+        chattering = index == block and chatter.tick - CHATTER_LEAD_TICKS <= tick - 1 < int(run.schedule.tick1[block])
+    rng = run._rng("media-macro", run.macro)
+    noise = 1.0 + 0.05 * float(rng.uniform(-1.0, 1.0))
+    vibration = (FORCED_VIBRATION_PP_M + (CHATTER_VIBRATION_PP_M if chattering else 0.0)) * noise if cutting else 0.0
+    index_value = float(chatter.quantities["chatter_index"]) if (chattering and chatter is not None) else (
+        0.05 * noise if cutting else 0.0)
+    packing = 0.0
+    fill_event = next((p for p in run.plan if p.event == "flute_fill"), None)
+    if fill_event is not None and cutting:
+        block = run._block_index(fill_event.line)
+        if index == block and tick - 1 >= fill_event.tick:
+            packing = PACKING_TORQUE_PER_FILL_NM * float(fill_event.quantities["flute_fill"]) * noise
+    return {"dynamics.chatter_freq_Hz": float(run.chatter_freq_hz) if chattering else 0.0,
+            "dynamics.chatter_index": index_value, "dynamics.vibration_pp_m": vibration,
+            "chips.emitted_kg": run.removed_volume_m3(tick) * DENSITY_KG_M3, "chips.packing_torque_Nm": packing}
+
+
+# ----------------------------------------------------------------------------- 3D view additions (additive)
+# What web/js/view3d reads beyond the first layouts (docs/ui-3d.md "Inputs"), written when a run is made with
+# view3d=True (off by default: the files of every other test stay as they were): the in-process workpiece as a
+# pocket actually carved along the tool path (a height field on the removal lattice, closed per brick, written with
+# cnctwin.core.keyframes' own record and GLB writers and its rule of indexing only changed records), final
+# per-vertex attributes on that surface, a 3-D work temperature grid and a 3-D displacement grid in every
+# keyframe, the chip pile beside the stock and the wetted cells on their own pile grid, and a second, head-mounted low jet aimed at the engagement (attached_to "head") with recorded paths,
+# diameter and jet_blocked_by: the uncut stock blocks it while the tool cuts near the pocket side it comes from.
+# Synthetic shapes, not model output.
+
+VIEW3D_FIELD_CELL_M = 0.004                    # 3-D grids at 4 mm (the run's keyframe fields are coarsened to <= 8 mm)
+VIEW3D_TEMP_RISE_FRACTION = 0.35               # work temperature rise near the tool, of EDGE_RISE_K
+VIEW3D_TEMP_DECAY_M = 0.006                    # synthetic decay length of the work temperature around the tool
+VIEW3D_EXPANSION_1_K = 23.6e-6                 # Al 6061 linear expansion (order of magnitude, synthetic displacement)
+VIEW3D_JET2_OFFSET_M = (0.060, -0.040, 0.009)  # head-mounted nozzle n2: offset from its aim point in M (a low jet)
+VIEW3D_JET2_SPEED_M_S = 6.0
+VIEW3D_JET2_FLOW_M3_S = 1.5e-4
+VIEW3D_JET2_DIAMETER_M = 0.003
+VIEW3D_JET1_LENGTH_M = 0.6
+VIEW3D_PATH_POINTS = 24
+VIEW3D_GRAVITY_M_S2 = 9.80665
+VIEW3D_FLOOR_DEVIATION_M = (62e-6, 11e-6)      # pocket floor deviation with and without the tool-growth error
+VIEW3D_WALL_DEVIATION_M = -4e-6
+VIEW3D_ATTR_NOISE_M = 2e-6
+VIEW3D_PILE_ORIGIN_S_M = (-0.010, -0.020, 0.006)  # chip pile grid on the vise top beside the stock
+VIEW3D_PILE_CELLS = (35, 35)
+VIEW3D_PILE_CELL_M = 0.002
+VIEW3D_PILE_BULK_FACTOR = 4.0                  # loose chips take about four times the volume they were cut from
+VIEW3D_PILE_DECAY_M = 0.008                    # pile height falls off with the distance from the stock's side
+VIEW3D_WETTED_RADIUS_M = 0.02                  # the flood wets the pile grid within this distance of the tool
+
+
+def view3d_carve_points(run: "SyntheticRun", tick: int) -> np.ndarray:
+    """Tool-tip positions in S (1 ms apart) of the moves that remove material up to ``tick``."""
+    ticks = np.arange(0, max(int(tick), 1), IPO_TICKS, dtype=np.int64)
+    cutting = (run.cut_ae(ticks) > 0.0) | run.plunging(ticks)
+    return run.tip_S(ticks[cutting]) if cutting.any() else np.zeros((0, 3))
+
+
+def view3d_heights(run: "SyntheticRun", tick: int) -> np.ndarray:
+    """Material top z (S, m) per lattice cell [nx, ny] after the cuts up to ``tick``: a flat end mill of radius
+    TOOL_RADIUS_M leaves its tip height under every cell centre it passes within its radius."""
+    nx = int(round(STOCK_SIZE_M[0] / LATTICE_M))
+    ny = int(round(STOCK_SIZE_M[1] / LATTICE_M))
+    heights = np.full((nx, ny), STOCK_SIZE_M[2])
+    cx = (np.arange(nx) + 0.5) * LATTICE_M
+    cy = (np.arange(ny) + 0.5) * LATTICE_M
+    reach = int(math.ceil(TOOL_RADIUS_M / LATTICE_M)) + 1
+    for x, y, z in view3d_carve_points(run, tick):
+        if z >= STOCK_SIZE_M[2]:
+            continue
+        i0 = max(0, int(x / LATTICE_M) - reach)
+        i1 = min(nx, int(x / LATTICE_M) + reach + 1)
+        j0 = max(0, int(y / LATTICE_M) - reach)
+        j1 = min(ny, int(y / LATTICE_M) + reach + 1)
+        if i0 >= i1 or j0 >= j1:
+            continue
+        inside = np.hypot(cx[i0:i1, None] - x, cy[None, j0:j1] - y) <= TOOL_RADIUS_M
+        window = heights[i0:i1, j0:j1]
+        heights[i0:i1, j0:j1] = np.where(inside, np.minimum(window, z), window)
+    return heights
+
+
+def view3d_brick_mesh(heights: np.ndarray, i_brick: int, j_brick: int, k_brick: int) -> tuple[np.ndarray, np.ndarray]:
+    """Closed mesh (vertices [n, 3] in S, faces [m, 3], counter-clockwise from outside) of the material of one
+    brick: cell columns from the brick's bottom to the height field, clipped to the brick's z range."""
+    nx, ny = heights.shape
+    cells = BRICK_CELLS
+    z_lo = k_brick * cells * LATTICE_M
+    z_hi = min((k_brick + 1) * cells * LATTICE_M, STOCK_SIZE_M[2])
+    i_range = range(i_brick * cells, min((i_brick + 1) * cells, nx))
+    j_range = range(j_brick * cells, min((j_brick + 1) * cells, ny))
+    vertex_of: dict[tuple, int] = {}
+    vertices: list[tuple] = []
+    faces: list[tuple] = []
+
+    def vertex(i: int, j: int, z: float) -> int:
+        key = (i, j, int(round(z * 1e9)))
+        if key not in vertex_of:
+            vertex_of[key] = len(vertices)
+            vertices.append((i * LATTICE_M, j * LATTICE_M, z))
+        return vertex_of[key]
+
+    def quad(a, b, c, d) -> None:
+        ia, ib, ic, id_ = (vertex(*a), vertex(*b), vertex(*c), vertex(*d))
+        faces.append((ia, ib, ic))
+        faces.append((ia, ic, id_))
+
+    def top(i: int, j: int) -> float:
+        if not (i_range.start <= i < i_range.stop and j_range.start <= j < j_range.stop):
+            return -1.0
+        return min(max(float(heights[i, j]), z_lo), z_hi)
+
+    for i in i_range:
+        for j in j_range:
+            t = top(i, j)
+            if t <= z_lo + 1e-12:
+                continue
+            quad((i, j, t), (i + 1, j, t), (i + 1, j + 1, t), (i, j + 1, t))
+            quad((i, j, z_lo), (i, j + 1, z_lo), (i + 1, j + 1, z_lo), (i + 1, j, z_lo))
+            for di, dj in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                other = top(i + di, j + dj)
+                low = max(other, z_lo) if other >= 0.0 else z_lo
+                if low >= t - 1e-12:
+                    continue
+                if di == -1:
+                    quad((i, j, low), (i, j, t), (i, j + 1, t), (i, j + 1, low))
+                elif di == 1:
+                    quad((i + 1, j, low), (i + 1, j + 1, low), (i + 1, j + 1, t), (i + 1, j, t))
+                elif dj == -1:
+                    quad((i, j, low), (i + 1, j, low), (i + 1, j, t), (i, j, t))
+                else:
+                    quad((i, j + 1, low), (i, j + 1, t), (i + 1, j + 1, t), (i + 1, j + 1, low))
+    return np.array(vertices, float).reshape(-1, 3), np.array(faces, np.int64).reshape(-1, 3)
+
+
+def view3d_bricks(run: "SyntheticRun", tick: int) -> dict[str, tuple[np.ndarray, np.ndarray]]:
+    heights = view3d_heights(run, tick)
+    counts = [int(math.ceil(size / (BRICK_CELLS * LATTICE_M))) for size in STOCK_SIZE_M]
+    out = {}
+    for kz in range(counts[2]):
+        for j in range(counts[1]):
+            for i in range(counts[0]):
+                out[str(i + counts[0] * (j + counts[1] * kz))] = view3d_brick_mesh(heights, i, j, kz)
+    return out
+
+
+def view3d_write_keyframe(run: "SyntheticRun", tick: int) -> None:
+    """Keyframe k with the carved bricks, written by cnctwin.core.keyframes' record and GLB writers: a brick's
+    record is written when it changed (and every brick in a full snapshot); bricks.idx gets an entry only for a
+    record that differs from the brick's last indexed one (the KeyframeWriter rule)."""
+    from cnctwin.core.keyframes import brick_glb, brick_record
+    k = run.keyframes
+    full = (k % FULL_SNAPSHOT_EVERY == 0)
+    records, new_entries = [], []
+    for key, (vertices, faces) in view3d_bricks(run, tick).items():
+        record = brick_record(vertices, faces)
+        digest = hashlib.sha256(record).hexdigest()
+        same = run._view3d_digest.get(key) == digest
+        if same and not full:
+            continue
+        records.append((key, record))
+        if not same:
+            new_entries.append(key)
+            run._view3d_digest[key] = digest
+    directory = run.dir / "keyframes"
+    directory.mkdir(parents=True, exist_ok=True)
+    glb_name = f"kf_{k}.glb"
+    data, spans = brick_glb(records, name=f"kf_{k}")
+    write_bytes_atomic(directory / glb_name, data)
+    for key in new_entries:
+        offset, length = spans[key]
+        run.bricks_index.setdefault(key, []).append([k, glb_name, int(offset), int(length)])
+    run._write_bricks_index()
+    run._write_fields(directory / f"kf_{k}.npz", tick)
+    run._write_chips(run.dir / "chips" / f"kf_{k}.npz", tick, k)
+    entry = {"k": k, "tick": tick, "time_s": tick * TICK_S, "glb": f"keyframes/{glb_name}",
+             "fields": f"keyframes/kf_{k}.npz", "chips": f"chips/kf_{k}.npz", "full": full,
+             "bricks": [key for key, _ in records], "empty": []}
+    with open(directory / "index.jsonl", "ab") as handle:
+        handle.write((json.dumps(entry, sort_keys=True) + "\n").encode("utf-8"))
+    run.keyframes += 1
+
+
+def view3d_restore(run: "SyntheticRun") -> None:
+    """After a resume: the last indexed record of every brick (so unchanged bricks are not indexed again)."""
+    run._view3d_digest = {}
+    for key, entries in run.bricks_index.items():
+        _, name, offset, length = entries[-1]
+        with open(run.dir / "keyframes" / name, "rb") as handle:
+            handle.seek(int(offset))
+            run._view3d_digest[key] = hashlib.sha256(handle.read(int(length))).hexdigest()
+
+
+def _view3d_material(heights: np.ndarray, points_S: np.ndarray) -> np.ndarray:
+    """True where an S point lies inside the remaining material."""
+    i = np.floor(points_S[:, 0] / LATTICE_M).astype(int)
+    j = np.floor(points_S[:, 1] / LATTICE_M).astype(int)
+    inside = (i >= 0) & (j >= 0) & (i < heights.shape[0]) & (j < heights.shape[1]) & (points_S[:, 2] >= 0.0)
+    out = np.zeros(len(points_S), bool)
+    out[inside] = points_S[inside, 2] < heights[i[inside], j[inside]]
+    return out
+
+
+def view3d_field_extras(run: "SyntheticRun", tick: int) -> dict:
+    """The 3-D work temperature and displacement grids and the jets of a keyframe (replacing the jet_* arrays)."""
+    heights = view3d_heights(run, tick)
+    cell = VIEW3D_FIELD_CELL_M
+    n = [int(math.ceil(size / cell)) for size in STOCK_SIZE_M]
+    centres = [(np.arange(count) + 0.5) * cell for count in n]
+    gx, gy, gz = np.meshgrid(*centres, indexing="ij")
+    li = np.clip((gx / LATTICE_M).astype(int), 0, heights.shape[0] - 1)
+    lj = np.clip((gy / LATTICE_M).astype(int), 0, heights.shape[1] - 1)
+    material = (gz < heights[li, lj]) & (gx < STOCK_SIZE_M[0]) & (gy < STOCK_SIZE_M[1])
+    tip = run.tip_S(np.array([tick]))[0]
+    distance = np.sqrt((gx - tip[0]) ** 2 + (gy - tip[1]) ** 2 + (gz - tip[2]) ** 2)
+    rise = EDGE_RISE_K * VIEW3D_TEMP_RISE_FRACTION * (1.0 - math.exp(-run.cut_time_s(tick) / EDGE_TAU_S))
+    temp = np.where(material, AMBIENT_K + rise * np.exp(-distance / VIEW3D_TEMP_DECAY_M), np.nan)
+    fixed = np.array([STOCK_SIZE_M[0] / 2, STOCK_SIZE_M[1] / 2, 0.0])
+    strain = VIEW3D_EXPANSION_1_K * np.nan_to_num(temp - AMBIENT_K)
+    displacement = np.stack([strain * (gx - fixed[0]), strain * (gy - fixed[1]), strain * (gz - fixed[2])], axis=-1)
+    displacement[~material] = np.nan
+    arrays = view3d_pile(run, tick)
+    arrays.update({"work_temp_K": temp.astype(np.float16), "work_temp_K_origin_S_m": np.zeros(3),
+              "work_temp_K_cell_m": np.array(cell),
+              "work_displacement_m": displacement.astype(np.float32), "work_displacement_m_origin_S_m": np.zeros(3),
+              "work_displacement_m_cell_m": np.array(cell)})
+    coolant_on = run._coolant_on <= tick < run._coolant_off
+    jets = view3d_jets(run, tick, heights) if coolant_on else []
+    count = len(jets)
+    paths = np.full((count, VIEW3D_PATH_POINTS, 3), np.nan)
+    for row, jet in enumerate(jets):
+        paths[row, :len(jet["path"])] = jet["path"]
+    arrays.update({
+        "jet_nozzle_id": np.array([j["id"] for j in jets], dtype="<U8"),
+        "jet_kind": np.array([j["kind"] for j in jets], dtype="<U16"),
+        "jet_origin_M_m": np.array([j["origin"] for j in jets], float).reshape(count, 3),
+        "jet_direction_M": np.array([j["direction"] for j in jets], float).reshape(count, 3),
+        "jet_speed_m_s": np.array([j["speed"] for j in jets], float),
+        "jet_flow_m3_s": np.array([j["flow"] for j in jets], float),
+        "jet_half_angle_rad": np.array([j["half_angle"] for j in jets], float),
+        "jet_reach_fraction": np.array([j["reach"] for j in jets], float),
+        "jet_diameter_m": np.array([j["diameter"] for j in jets], float),
+        "jet_blocked_by": np.array([j["blocked_by"] for j in jets], dtype="<U32"),
+        "jet_path_M_m": paths})
+    return arrays
+
+
+def view3d_pile(run: "SyntheticRun", tick: int) -> dict:
+    """Chip pile beside the stock on the pile grid ([nx, ny], FieldGrid order) and the wetted cells on the same
+    grid (the coolant model's contract): the loose chip volume spread over a band around the stock's sides."""
+    nx, ny = VIEW3D_PILE_CELLS
+    cell = VIEW3D_PILE_CELL_M
+    origin = np.array(VIEW3D_PILE_ORIGIN_S_M)
+    cx = origin[0] + (np.arange(nx) + 0.5) * cell
+    cy = origin[1] + (np.arange(ny) + 0.5) * cell
+    gx, gy = np.meshgrid(cx, cy, indexing="ij")
+    dx = np.maximum(np.maximum(-gx, gx - STOCK_SIZE_M[0]), 0.0)
+    dy = np.maximum(np.maximum(-gy, gy - STOCK_SIZE_M[1]), 0.0)
+    outside = (dx > 0.0) | (dy > 0.0)
+    distance = np.hypot(dx, dy)
+    perimeter = 2.0 * (STOCK_SIZE_M[0] + STOCK_SIZE_M[1])
+    h0 = VIEW3D_PILE_BULK_FACTOR * run.removed_volume_m3(tick) / (perimeter * VIEW3D_PILE_DECAY_M)
+    pile = np.where(outside, h0 * np.exp(-distance / VIEW3D_PILE_DECAY_M), 0.0)
+    tip = run.tip_S(np.array([tick]))[0]
+    coolant_on = run._coolant_on <= tick < run._coolant_off
+    wetted = coolant_on & (np.hypot(gx - tip[0], gy - tip[1]) < VIEW3D_WETTED_RADIUS_M)
+    return {"pile_height_m": pile.astype(np.float32), "pile_origin_S_m": origin, "pile_cell_m": np.array(cell),
+            "wetted": wetted, "wetted_origin_S_m": origin, "wetted_cell_m": np.array(cell)}
+
+
+def _ballistic(origin: np.ndarray, direction: np.ndarray, speed: float, length: float, points: int) -> np.ndarray:
+    steps = np.linspace(0.0, length, points)
+    t = steps / speed
+    gravity = np.array([0.0, 0.0, -VIEW3D_GRAVITY_M_S2])
+    return origin[None, :] + direction[None, :] * speed * t[:, None] + 0.5 * gravity[None, :] * (t ** 2)[:, None]
+
+
+def view3d_jets(run: "SyntheticRun", tick: int, heights: np.ndarray) -> list[dict]:
+    pose_t = media_pose_M_S()[:3, 3]
+    n1_origin = np.array([0.08, 0.05, -0.25])
+    n1_dir = np.array([-0.6, -0.4, -0.69]) / np.linalg.norm([-0.6, -0.4, -0.69])
+    jets = [{"id": "n1", "kind": "flood", "origin": n1_origin.tolist(), "direction": n1_dir.tolist(), "speed": 3.2,
+             "flow": 2.5e-4, "half_angle": 0.12, "reach": 0.82, "diameter": float("nan"), "blocked_by": "",
+             "path": _ballistic(n1_origin, n1_dir, 3.2, VIEW3D_JET1_LENGTH_M, VIEW3D_PATH_POINTS)}]
+    tip_M = run.tip_M(np.array([tick]))[0]
+    zone_M = tip_M + np.array([0.0, 0.0, AP_M / 2])
+    origin = zone_M + np.array(VIEW3D_JET2_OFFSET_M)
+    aim = zone_M - origin
+    direction = aim / np.linalg.norm(aim)
+    path = _ballistic(origin, direction, VIEW3D_JET2_SPEED_M_S, float(np.linalg.norm(aim)), VIEW3D_PATH_POINTS)
+    solid = _view3d_material(heights, path - pose_t[None, :])
+    blocked = bool(solid.any())
+    if blocked:
+        path = path[: int(np.argmax(solid)) + 1]
+    jets.append({"id": "n2", "kind": "flood", "origin": origin.tolist(), "direction": direction.tolist(),
+                 "speed": VIEW3D_JET2_SPEED_M_S, "flow": VIEW3D_JET2_FLOW_M3_S, "half_angle": 0.03,
+                 "reach": 0.25 if blocked else 0.9, "diameter": VIEW3D_JET2_DIAMETER_M,
+                 "blocked_by": "workpiece 0" if blocked else "", "path": path})
+    return jets
+
+
+def view3d_scene_extras(run: "SyntheticRun", scene: dict) -> None:
+    zone_M = run.tip_M(np.array([0]))[0] + np.array([0.0, 0.0, AP_M / 2])
+    origin = zone_M + np.array(VIEW3D_JET2_OFFSET_M)
+    aim = zone_M - origin
+    scene["nozzles"].append({"id": "n2", "kind": "flood", "origin_M_m": origin.tolist(),
+                             "direction_M": (aim / np.linalg.norm(aim)).tolist(), "attached_to": "head",
+                             "diameter_m": VIEW3D_JET2_DIAMETER_M})
+
+
+def view3d_write_attributes(run: "SyntheticRun") -> None:
+    """Final per-vertex attributes of every brick's last record (vertex order of that record): deviation, Ra
+    and the generating edge's VB on the machined surfaces (pocket floor and walls: a vertex next to a carved
+    lattice cell), NaN on the stock's own surfaces."""
+    from cnctwin.core.keyframes import decode_record
+    directory = run.dir / "keyframes" / "attr"
+    directory.mkdir(parents=True, exist_ok=True)
+    floor_z = STOCK_SIZE_M[2] - AP_M
+    floor_dev = VIEW3D_FLOOR_DEVIATION_M[0] if run.include_error else VIEW3D_FLOOR_DEVIATION_M[1]
+    cut_end = run.cut_time_s(run.end_tick)
+    y0 = WORK_ZERO_S_M[1]
+    heights_at: dict[int, np.ndarray] = {}
+    for key, entries in sorted(run.bricks_index.items(), key=lambda kv: int(kv[0])):
+        k, name, offset, length = entries[-1]
+        with open(run.dir / "keyframes" / name, "rb") as handle:
+            handle.seek(int(offset))
+            vertices, _, _ = decode_record(handle.read(int(length)))
+        if k not in heights_at:
+            heights_at[k] = view3d_heights(run, int(k) * KEYFRAME_TICKS)
+        heights = heights_at[k]
+        carved = heights < STOCK_SIZE_M[2] - 1e-9
+        ix = np.rint(vertices[:, 0] / LATTICE_M).astype(int)
+        iy = np.rint(vertices[:, 1] / LATTICE_M).astype(int)
+        near = np.zeros(len(vertices), bool)
+        for di in (-1, 0):
+            for dj in (-1, 0):
+                ci = np.clip(ix + di, 0, carved.shape[0] - 1)
+                cj = np.clip(iy + dj, 0, carved.shape[1] - 1)
+                near |= carved[ci, cj] & (ix + di >= 0) & (iy + dj >= 0) & (ix + di < carved.shape[0]) & (iy + dj < carved.shape[1])
+        z = vertices[:, 2]
+        floor = near & (np.abs(z - floor_z) < 1e-6)
+        wall = near & ~floor & (z > floor_z)
+        machined = floor | wall
+        rng = run._rng("attr", int(key))
+        n = len(vertices)
+        noise = rng.normal(0.0, VIEW3D_ATTR_NOISE_M, size=n)
+        deviation = np.where(floor, floor_dev + noise, np.where(wall, VIEW3D_WALL_DEVIATION_M + noise, np.nan))
+        ra = np.where(floor, 0.9e-6 + 0.15e-6 * rng.uniform(-1, 1, size=n),
+                      np.where(wall, 1.4e-6 + 0.2e-6 * rng.uniform(-1, 1, size=n), np.nan))
+        progress = np.clip((vertices[:, 1] - y0 + TOOL_RADIUS_M) / (0.012 + 2 * TOOL_RADIUS_M), 0.0, 1.0)
+        vb = np.where(machined, VB0_M + VB_RATE_M_S * cut_end * progress, np.nan)
+        write_npz(directory / f"brick_{key}.npz", {"deviation_m": deviation.astype(np.float32),
+                                                   "Ra_m": ra.astype(np.float32),
+                                                   "generating_VB_m": vb.astype(np.float32)})
+
+
 # ----------------------------------------------------------------------------- convenience
 
 def make_synthetic_run(run_dir, seed: int = DEFAULT_SEED, *, until_s: float | None = None, media: bool = True,
-                       write_status: bool = True, project_path=None) -> dict:
+                       write_status: bool = True, project_path=None, media_channels: bool = False,
+                       view3d: bool = False) -> dict:
     """Write a whole run (or the part up to ``until_s`` of simulated time, status running).
 
-    Returns a manifest for tests: seed, end tick, the counts written and the file list.
+    Returns a manifest for tests: seed, end tick, the counts written and the file list. ``view3d`` adds the
+    3D view's extras (see "3D view additions"); off, the output is the same as without the option.
     """
-    run = SyntheticRun(run_dir, seed, write_status=write_status, media=media, project_path=project_path)
+    run = SyntheticRun(run_dir, seed, write_status=write_status, media=media, project_path=project_path,
+                       media_channels=media_channels, view3d=view3d)
     run.begin()
     run.run_all(until_s)
     files = sorted(p.relative_to(run.dir).as_posix() for p in run.dir.rglob("*") if p.is_file())
@@ -1614,8 +2208,14 @@ def main(argv=None) -> int:
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--until", type=float, default=None, help="stop after this much simulated time (s)")
     parser.add_argument("--no-media", action="store_true", help="skip video, audio, images and reports")
+    parser.add_argument("--media-channels", action="store_true",
+                        help="also write the dynamics chatter, chip mass and packing channels (sound, pictures)")
+    parser.add_argument("--view3d", action="store_true",
+                        help="the 3D view's additions: carved pocket bricks, 3-D temperature and displacement grids, "
+                             "a head-mounted jet with paths and shadows")
     args = parser.parse_args(argv)
-    manifest = make_synthetic_run(args.run_dir, args.seed, until_s=args.until, media=not args.no_media)
+    manifest = make_synthetic_run(args.run_dir, args.seed, until_s=args.until, media=not args.no_media,
+                                  media_channels=args.media_channels, view3d=args.view3d)
     print(json.dumps({k: v for k, v in manifest.items() if k != "files"}, indent=1))
     return 0
 

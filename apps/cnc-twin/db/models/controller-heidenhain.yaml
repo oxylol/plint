@@ -1,0 +1,51 @@
+# HEIDENHAIN TNC 640 control parameters the twin's Heidenhain dialects (Klartext and ISO) use when the
+# project does not set them (physics.controller). Names carry the SI unit; `unit:` is the unit written.
+# Machine parameters are set by the machine builder; values not read in a source are marked est.
+format: cnctwin-model-params
+version: 1
+model: controller-heidenhain
+description: "Default control parameters of the HEIDENHAIN TNC 640 dialects (docs/dialects.md 'Heidenhain TNC')"
+params:
+  arc_end_point_tolerance_m:
+    value: 0.016
+    unit: mm
+    range: [0.0001, 0.1]
+    src: heidenhain-tnc640-klartext-2023
+    page: "166"
+    note: "machine parameter circleDeviation (200901): maximum deviation of a circle's start and end point from the circle; beyond it error 1A0-0084 'Circle incorrectly programmed'"
+  sub_nesting_levels:
+    value: 19
+    unit: "-"
+    range: [8, 30]
+    src: est
+    note: "nesting of label subprograms, program section repeats and CALL PGM (error 160-00AA 'Excessive program nesting' beyond); 19 levels assumed as generally documented for TNC controls"
+  max_m_codes_per_block:
+    value: 4
+    unit: "-"
+    range: [1, 8]
+    src: est
+    note: "M functions in one NC block; 4 assumed"
+  boring_disengage_m:
+    value: 0.2
+    unit: mm
+    range: [0.0, 2.0]
+    src: est
+    note: "cycle 202 BORING: distance the tool is moved away from the wall in direction Q214 before retraction (0.2 mm fixed value as generally documented)"
+  chip_break_retract_m:
+    value: 0.2
+    unit: mm
+    range: [0.0, 5.0]
+    src: est
+    note: "cycles 203 / 205: retraction for chip breaking when Q256 is 0 (0.2 mm as generally documented)"
+  plunge_angle_rad:
+    value: 5.0
+    unit: deg
+    range: [0.5, 90.0]
+    src: est
+    note: "cycles 251-253 helical / reciprocating plunging take the angle from the tool table column ANGLE; the project's tools carry no ANGLE, so this angle stands for it (5 deg, typical for end mills)"
+  helix_radius_fraction:
+    value: 0.75
+    unit: "-"
+    range: [0.1, 1.0]
+    src: est
+    note: "cycles 251/252 helical plunging: helix radius (tool centre path) as a fraction of the tool radius; the TNC derives it internally, 0.75 assumed"

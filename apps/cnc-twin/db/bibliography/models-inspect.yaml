@@ -1,0 +1,220 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of result-geometry inspection (cnctwin.inspect, docs/models/inspect.md): GD&T definitions and datum
+# reference frames, minimum-zone and least-squares association, size and fits, screw-thread tolerances, the
+# virtual CMM and the solvers. ISO 286-1, ISO 1101, ISO 1, ISO 965-1, ISO 68-1, ISO 724 and Machinery's Handbook
+# are listed in other bibliography files (models-report, models-tooling, models-holding, models-surface).
+entries:
+  asme-y14-5-2018:
+    type: standard
+    authors: "ASME"
+    title: "ASME Y14.5-2018 Dimensioning and Tolerancing"
+    publisher: "The American Society of Mechanical Engineers, New York"
+    year: 2018
+    pages: "Rule #1 (envelope principle, 5.8); datum reference frames, datum feature simulators, degrees of freedom (7); form (8), orientation (9), position with MMC/LMC bonus (10), profile (11), runout (12)"
+  asme-y14-5-1-2019:
+    type: standard
+    authors: "ASME"
+    title: "ASME Y14.5.1-2019 Mathematical Definition of Dimensioning and Tolerancing Principles"
+    publisher: "The American Society of Mechanical Engineers, New York"
+    year: 2019
+    pages: "actual mating envelope, candidate datum sets, tangent-plane datum simulation, conformance to tolerance zones"
+  iso-5459-2011:
+    type: standard
+    authors: "ISO"
+    title: "ISO 5459:2011 Geometrical product specifications (GPS) - Geometrical tolerancing - Datums and datum systems"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2011
+    pages: "default association of datum features: minimax (Chebyshev) with the material constraint for planes; maximum inscribed / minimum circumscribed for cylinders; primary, secondary, tertiary orientation constraints"
+  iso-14405-1-2016:
+    type: standard
+    authors: "ISO"
+    title: "ISO 14405-1:2016 Geometrical product specifications (GPS) - Dimensional tolerancing - Part 1: Linear sizes"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2016
+    pages: "two-point size (LP, the default), least-squares (GG), maximum inscribed (GX) and minimum circumscribed (GN) association, envelope requirement (E)"
+  iso-286-2-2010:
+    type: standard
+    authors: "ISO"
+    title: "ISO 286-2:2010 Geometrical product specifications (GPS) - ISO code system for tolerances on linear sizes - Part 2: Tables of standard tolerance classes and limit deviations for holes and shafts"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2010
+    pages: "Tables 2-17: fundamental deviations of shafts a-zc by nominal size step"
+  iso-12781-1-2011:
+    type: standard
+    authors: "ISO"
+    title: "ISO 12781-1:2011 Geometrical product specifications (GPS) - Flatness - Part 1: Vocabulary and parameters of flatness"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2011
+    pages: "minimum zone (MZPL) and least-squares (LSPL) reference planes, peak-to-valley flatness deviation"
+  iso-12180-1-2011:
+    type: standard
+    authors: "ISO"
+    title: "ISO 12180-1:2011 Geometrical product specifications (GPS) - Cylindricity - Part 1: Vocabulary and parameters of cylindrical form"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2011
+    pages: "minimum zone (MZCY), least-squares (LSCY), maximum inscribed (MICY) and minimum circumscribed (MCCY) reference cylinders"
+  iso-12181-1-2011:
+    type: standard
+    authors: "ISO"
+    title: "ISO 12181-1:2011 Geometrical product specifications (GPS) - Roundness - Part 1: Vocabulary and parameters of roundness"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2011
+    pages: "minimum zone (MZCI), least-squares (LSCI), maximum inscribed (MICI) and minimum circumscribed (MCCI) reference circles"
+  iso-12780-1-2011:
+    type: standard
+    authors: "ISO"
+    title: "ISO 12780-1:2011 Geometrical product specifications (GPS) - Straightness - Part 1: Vocabulary and parameters of straightness"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2011
+    pages: "minimum zone (MZLI) and least-squares (LSLI) reference lines"
+  iso-1660-2017:
+    type: standard
+    authors: "ISO"
+    title: "ISO 1660:2017 Geometrical product specifications (GPS) - Geometrical tolerancing - Profile tolerancing"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2017
+    pages: "equal-bilateral profile zones about the theoretically exact surface; without datums the zone floats (form only)"
+  iso-10360-6-2001:
+    type: standard
+    authors: "ISO"
+    title: "ISO 10360-6:2001 Geometrical Product Specifications (GPS) - Acceptance and reverification tests for coordinate measuring machines (CMM) - Part 6: Estimation of errors in computing Gaussian associated features"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2001
+    pages: "least-squares (Gaussian) association of lines, planes, circles, spheres, cylinders, cones and tori; reference data sets and the parametrisations used"
+  iso-261-1998:
+    type: standard
+    authors: "ISO"
+    title: "ISO 261:1998 ISO general purpose metric screw threads - General plan"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1998
+    pages: "Table 1: coarse pitch series (M8 x 1.25, M10 x 1.5 ...)"
+  iso-3-1973:
+    type: standard
+    authors: "ISO"
+    title: "ISO 3:1973 Preferred numbers - Series of preferred numbers"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1973
+    pages: "R40 basic series (rounded values: 1.00, 1.06, 1.12 ... 9.50)"
+  iso-1502-1996:
+    type: standard
+    authors: "ISO"
+    title: "ISO 1502:1996 ISO general-purpose metric screw threads - Gauges and gauging"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1996
+    pages: "GO gauges check the virtual (functional) pitch diameter with pitch and flank angle compensation (f_P = 1.732 |dP|, f_alpha = 0.073 P (K1 |da1| + K2 |da2|) with K = 2 or 3); NOT GO gauges check the simple pitch diameter"
+  asme-b1-1-2019:
+    type: standard
+    authors: "ASME"
+    title: "ASME B1.1-2019 Unified Inch Screw Threads (UN, UNR, and UNJ Thread Forms)"
+    publisher: "The American Society of Mechanical Engineers, New York"
+    year: 2019
+    pages: "classes 1A, 2A, 3A, 1B, 2B, 3B; pitch diameter tolerance formula 0.0015 D^(1/3) + 0.0015 LE^(1/2) + 0.015 P^(2/3) with class multipliers, allowance 0.3 x the 2A tolerance for 1A/2A, major diameter tolerance 0.060 / 0.090 P^(2/3)"
+  engineersedge-unified-thread-limits:
+    type: web
+    authors: "Engineers Edge"
+    title: "Unified screw thread limits calculator (ASME B1.1 internal thread formulas)"
+    url: "https://engineersedge.com/calculators/screw_threads_calculator__15872.htm"
+    accessed: 2026-11-03
+    pages: "Eq. 1-4: D1min = D - 1.08253175 P, TD1 = 0.25 P - 0.4 P^2 (classes 1B, 2B); a secondary statement of the standard's formula"
+  renishaw-2020-styli:
+    type: catalogue
+    authors: "Renishaw plc"
+    title: "Styli and accessories (technical specifications H-1000-3200)"
+    publisher: "Renishaw plc, Wotton-under-Edge"
+    year: 2020
+    pages: "M2 styli with ruby balls of 1-8 mm diameter; 2 mm the common default for touch-trigger probing"
+  carr-ferreira-1995a:
+    type: article
+    authors: "Carr, K.; Ferreira, P."
+    title: "Verification of form tolerances part I: Basic issues, flatness, and straightness"
+    venue: "Precision Engineering 17(2), 131-143"
+    year: 1995
+    doi: "10.1016/0141-6359(94)00017-U"
+    pages: "minimum-zone flatness and straightness as a sequence of linear programs on the linearised zone"
+  carr-ferreira-1995b:
+    type: article
+    authors: "Carr, K.; Ferreira, P."
+    title: "Verification of form tolerances part II: Cylindricity and straightness of a median line"
+    venue: "Precision Engineering 17(2), 144-156"
+    year: 1995
+    doi: "10.1016/0141-6359(94)00018-V"
+    pages: "minimum-zone cylindricity and median-line straightness by successive linear programs"
+  chetwynd-1985:
+    type: article
+    authors: "Chetwynd, D.G."
+    title: "Applications of linear programming to engineering metrology"
+    venue: "Proceedings of the Institution of Mechanical Engineers, Part B 199(2), 93-100"
+    year: 1985
+    doi: "10.1243/PIME_PROC_1985_199_052_02"
+    pages: "minimum zone, maximum inscribed and minimum circumscribed circles by linear programming on the limacon approximation"
+  bourdet-1996-sdt:
+    type: article
+    authors: "Bourdet, P.; Mathieu, L.; Lartigue, C.; Ballu, A."
+    title: "The concept of the small displacement torsor in metrology"
+    venue: "Series on Advances in Mathematics for Applied Sciences 40 (Advanced Mathematical Tools in Metrology II), 110-122"
+    year: 1996
+    pages: "deviations linear in the six rigid-body small displacements; association of features and zones with free degrees of freedom"
+  forbes-1989-npl:
+    type: report
+    authors: "Forbes, A.B."
+    title: "Least-squares best-fit geometric elements"
+    venue: "NPL Report DITC 140/89, National Physical Laboratory, Teddington"
+    year: 1989
+    pages: "Gauss-Newton fits of lines, planes, circles, spheres, cylinders, cones and tori with their parametrisations and initial estimates"
+  shakarji-1998:
+    type: article
+    authors: "Shakarji, C.M."
+    title: "Least-squares fitting algorithms of the NIST algorithm testing system"
+    venue: "Journal of Research of the National Institute of Standards and Technology 103(6), 633-641"
+    year: 1998
+    doi: "10.6028/jres.103.043"
+    pages: "geometric least-squares fits, the cone parametrisation by a point, direction, radius at the point and apex angle"
+  kasa-1976:
+    type: article
+    authors: "Kasa, I."
+    title: "A circle fitting procedure and its error analysis"
+    venue: "IEEE Transactions on Instrumentation and Measurement IM-25(1), 8-14"
+    year: 1976
+    doi: "10.1109/TIM.1976.6312298"
+    pages: "algebraic circle fit (initial estimate of the geometric fit)"
+  welzl-1991:
+    type: conference
+    authors: "Welzl, E."
+    title: "Smallest enclosing disks (balls and ellipsoids)"
+    venue: "New Results and New Trends in Computer Science, Lecture Notes in Computer Science 555, 359-370, Springer"
+    year: 1991
+    doi: "10.1007/BFb0038202"
+    pages: "minimum enclosing circle by randomised incremental construction (run here in a fixed point order)"
+  hart-1996-sphere-tracing:
+    type: article
+    authors: "Hart, J.C."
+    title: "Sphere tracing: a geometric method for the antialiased ray tracing of implicit surfaces"
+    venue: "The Visual Computer 12(10), 527-545"
+    year: 1996
+    doi: "10.1007/s003710050084"
+    pages: "advancing a ray by the unsigned distance never crosses the surface (here: a ball of the stylus radius moving along the approach vector)"
+  huangfu-hall-2018:
+    type: article
+    authors: "Huangfu, Q.; Hall, J.A.J."
+    title: "Parallelizing the dual revised simplex method"
+    venue: "Mathematical Programming Computation 10(1), 119-142"
+    year: 2018
+    doi: "10.1007/s12532-017-0130-5"
+    pages: "HiGHS, the linear-programming solver scipy.optimize.linprog uses (run single-threaded: deterministic)"
+  galyer-shotbolt-1990:
+    type: book
+    authors: "Galyer, J.F.W.; Shotbolt, C.R."
+    title: "Metrology for Engineers"
+    edition: 5
+    publisher: "Cassell, London"
+    year: 1990
+    pages: "screw thread measurement: virtual (effective) diameter, diameter equivalents of pitch and flank angle errors"
+  amesweb-metric-thread-chart:
+    type: web
+    authors: "AMES (amesweb.info)"
+    title: "Metric thread chart: ISO 965 limits of size of coarse threads, 6g external and 6H internal"
+    url: "https://amesweb.info/Screws/metric-thread-chart.aspx"
+    accessed: 2026-11-03
+    pages: "M3 to M16 coarse: 6g major and pitch diameter, 6H minor and pitch diameter limits (the ISO 965-2 values; M10 x 1.5 6H D2 9.026-9.206 also in DIN 13 / ISO 68 gauge charts)"
+

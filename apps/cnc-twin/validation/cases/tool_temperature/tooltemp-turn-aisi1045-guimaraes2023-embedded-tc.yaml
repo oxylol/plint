@@ -1,0 +1,55 @@
+# Guimaraes et al. (2023): dry turning of AISI 1045 with uncoated WC-Co CNMG 120408-GS inserts carrying a K-type
+# thermocouple embedded in the rake face 2.9 mm from the cutting edge: maximum tool temperature over a 150 mm pass
+# for vc 40-160 m/min (f 0.246 mm/rev, ap 1 mm) and ap 2 mm at 130 m/min.
+format: cnctwin-validation-case
+version: 1
+id: tooltemp-turn-aisi1045-guimaraes2023-embedded-tc
+quantity: tool_temperature
+reference:
+  src: guimaraes-2023-aisi1045-embedded-thermocouple
+  location: "Sect. 2.1-2.4 (insert, thermocouple position, calibration, lathe, Table 2 conditions, IR camera), Sect. 3 text and Conclusions (maximum temperatures and times), Figs. 5-6 (temperature versus machining time, not digitised)"
+  digitised: false
+  uncertainty_pct: 1
+  measured: true
+  note: "Maximum values stated in the text (two decimals), three tests per experiment. The calibration (25-125 C against a PREZYS T-25N) gave a maximum error of +-1.2 C; the measured temperatures (178-340 C) lie above the calibrated range, so the extrapolation error is not quantified."
+setup:
+  operation: longitudinal_turning
+  material:
+    db: aisi1045
+    note: "AISI 1045; condition, hardness and bar diameter are not given in the source"
+  tool:
+    src: guimaraes-2023-aisi1045-embedded-thermocouple
+    page: Sect. 2.1-2.3
+    type: turning_insert
+    iso_designation: CNMG 120408-GS
+    maker: Palbit
+    tool_class: carbide
+    coating: none
+    nose_radius_mm: {value: 0.8, src: est, note: "decoded from the designation (code 08); not stated in words"}
+    holder: {value: "PCLNR 2020K12-type lever holder", src: est, note: "assumed: the holder is not named; a standard negative CNMG holder gives rake -6, clearance 6, inclination -6, entering angle 95 deg (judgement, not read)"}
+    rake_deg: {value: -6, src: est, note: "assumed with the holder above"}
+    clearance_deg: {value: 6, src: est, note: "assumed with the holder above"}
+    entering_angle_deg: {value: 95, src: est, note: "assumed with the holder above"}
+    thermocouple: "K-type, laser-welded hot junction about 250 um (0.13 mm wires), in a laser micro-groove 468 um wide and 439 um deep on the rake face, tip 2.9 mm from the cutting edge, outside the chip contact, fixed with MgO cement (Resbond 906)"
+    assumed_inputs: [nose_radius_mm, holder, rake_deg, clearance_deg, entering_angle_deg]
+  machine:
+    src: guimaraes-2023-aisi1045-embedded-thermocouple
+    page: Sect. 2.4
+    model: Gornati Leopard I lathe
+    acquisition: NI 9213 thermocouple module; FLIR E60 camera above the rake face (emissivity 0.90) as a comparison
+  conditions:
+    src: guimaraes-2023-aisi1045-embedded-thermocouple
+    page: Table 2
+    experiments: "1: vc 40, ap 1; 2: vc 70, ap 1; 3A: vc 130, ap 1; 3B: vc 130, ap 2; 4: vc 160, ap 1 (m/min, mm); all f 0.246 mm/rev"
+    feed_mm_rev: 0.246
+    pass_length_mm: 150
+    coolant: dry
+    ambient_temp_degC: {value: 25, src: est, note: "assumed: not stated (the calibration started at 25 C)"}
+    assumed_inputs: [ambient_temp_degC]
+  dynamics: null
+  program: null
+reference_values: []
+reference_curves:
+  - {name: Tmax_ap1, x_name: vc, x_unit: m/min, y_name: maximum embedded-thermocouple temperature, y_unit: degC, uncertainty: 1.2, points: [[40, 178.07], [70, 246.65], [130, 256.36], [160, 327.25]]}
+  - {name: Tmax_vc130, x_name: ap, x_unit: mm, y_name: maximum embedded-thermocouple temperature, y_unit: degC, uncertainty: 1.2, points: [[1, 256.36], [2, 340.03]]}
+notes: "Transient case: the insert heats during the 150 mm pass and cooling starts when the cut stops, so the values are the peaks of a heating curve, not steady temperatures; the source states that the maximum was reached after 86.2 s (vc 70), 40.0 s (vc 130) and 15.0 s (vc 160) of machining, and that at vc 40 the pass was too short for equilibrium, which explains the nearly equal values at 70 and 130 m/min. The pass duration needs the bar diameter, which is not given. Compare with the simulated temperature in the insert body at the thermocouple position (2.9 mm from the edge, about 0.2-0.4 mm below the rake surface, est. from the groove depth), using a transient tool-holder thermal model. The IR camera read lower values throughout (chip obstruction, emissivity) and is not used."

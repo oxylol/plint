@@ -1,0 +1,176 @@
+# CNC Twin example: production batch of 50 aluminium brackets on the Haas VF-2SS with spindle-probe
+# compensation on every part and sister tools (README.md explains why not the Swiss-type alternative).
+# Frames (db/_templates/project.yaml, docs/models/sanity.md "Setup geometry convention"): fixture_pose and the
+# work offsets are written in machine coordinates (X/Y = axis values that put the spindle over the point,
+# Z = spindle gauge line on the point; the table top is at Z -610, haas-vf2ss spindle_nose).
+format: cnctwin-project
+version: 1
+name: "Batch of 50 brackets 6061-T6, probe every part, sister tools"
+description: "L-bracket 60 x 50 x 25 from 6061-T6 flat bar: probe Z/X/Y and reset G54, D20 3FL step 30 x 17 (5 passes + wall pass), 2 x d6.8 through; T1 expires inside the batch and its sister T11 takes over"
+seed: 5050
+
+machine: haas-vf2ss
+controller_overrides: {}
+
+material:
+  id: al6061-t6
+  batch:
+    kc_scale_sigma: 0.04
+    hardness_sigma_pct: 3
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 22
+  machine_state: warm
+  time_between_ops_min: 0
+
+stock:
+  kind: block
+  size_mm: [60, 50, 25]                      # 6061-T6 extruded flat bar 50 x 25, sawn to 60
+  tolerance_mm: [0.2, 0.1, 0.1]
+  non_squareness_deg: 0.2                    # sawn ends
+  form: extruded_bar
+  mesh: null
+
+cad:
+  path: part.step                            # make_cad.py; CAD frame = stock frame (front-left-bottom corner, z up)
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}
+  datums:
+    - {label: A, feature: {face: plane, normal: [0, 0, -1], near_mm: [30, 25, 0]}}       # bottom (vise jaw seats)
+    - {label: B, feature: {face: plane, normal: [0, -1, 0], near_mm: [30, 0, 12]}}       # front face (probed)
+    - {label: C, feature: {face: plane, normal: [-1, 0, 0], near_mm: [0, 10, 12]}}       # left end face (probed)
+  tolerances:
+    - {id: upright-thickness, kind: distance, between: [{face: plane, normal: [0, -1, 0], near_mm: [30, 0, 12]},
+       {face: plane, normal: [0, 1, 0], near_mm: [30, 20, 16]}], nominal_mm: 20.0, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: foot-thickness, kind: distance, between: [{face: plane, normal: [0, 0, -1], near_mm: [30, 35, 0]},
+       {face: plane, normal: [0, 0, 1], near_mm: [30, 35, 8]}], nominal_mm: 8.0, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: upright-perpendicular-A, kind: perpendicularity, feature: {face: plane, normal: [0, 1, 0], near_mm: [30, 20, 16]},
+       tolerance_mm: 0.03, datums: [A]}
+    - {id: hole-1-position, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [15, 33.6, 4], radius_mm: 3.4},
+       tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [15, 37], diameter_mm: {nominal: 6.8, plus: 0.1, minus: 0.0}}
+    - {id: hole-2-position, kind: position, feature: {face: cylinder, axis: [0, 0, 1], near_mm: [45, 33.6, 4], radius_mm: 3.4},
+       tolerance_mm: 0.1, datums: [A, B, C], basic_mm: [45, 37], diameter_mm: {nominal: 6.8, plus: 0.1, minus: 0.0}}
+    - {id: upright-finish, kind: roughness, feature: {face: plane, normal: [0, 1, 0], near_mm: [30, 20, 16]}, Ra_um: 1.6}
+    - {id: foot-finish, kind: roughness, feature: {face: plane, normal: [0, 0, 1], near_mm: [30, 35, 8]}, Ra_um: 3.2}
+
+tools:
+  library: null
+  list:
+    - number: 1
+      tool: helical-59784-mh35al-025-32000   # D20 3FL, LOC 50, OAL 125, uncoated carbide
+      holder: haimer-40-720-32               # ER32 CAT40, gauge length 70
+      stickout_mm: 55.000                    # flutes clear of the nut, 70 of the 75 mm shank in the holder
+      length_offset_mm: 125.000
+      radius_offset_mm: 10.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 1, limit_min: 60, used_min: 57.5, sister_of: null}     # 150 s of the 60 min left
+      initial_wear: {VB_mm: 0.15}            # from the earlier batches (57.5 min of cutting)
+      comment: "D20 3FL CARBIDE ENDMILL HELICAL 59784"
+    - number: 11
+      tool: helical-59784-mh35al-025-32000
+      holder: haimer-40-720-32
+      stickout_mm: 55.024                    # set 0.024 longer in its collet: H11 differs from H01
+      length_offset_mm: 125.024
+      radius_offset_mm: 10.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 6
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 1, limit_min: 60, used_min: 0, sister_of: 1}
+      initial_wear: {VB_mm: 0.0}
+      comment: "D20 3FL CARBIDE ENDMILL HELICAL 59784"
+    - number: 2
+      tool: osg-60568-ex-gdr-6.8             # d6.8 HSS-Co drill, 130 deg point
+      holder: haimer-40-720-16               # ER16 CAT40, gauge length 70
+      stickout_mm: 88.000
+      length_offset_mm: 158.000
+      radius_offset_mm: 3.4
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 8
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 2, limit_min: 45, used_min: 12, sister_of: null}
+      initial_wear: {VB_mm: 0.05}
+      comment: "D6.8 HSS-CO DRILL OSG EX-GDR"
+    - number: 12
+      tool: osg-60568-ex-gdr-6.8
+      holder: haimer-40-720-16
+      stickout_mm: 88.010
+      length_offset_mm: 158.010
+      radius_offset_mm: 3.4
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 8
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 2, limit_min: 45, used_min: 0, sister_of: 2}
+      initial_wear: {VB_mm: 0.0}
+      comment: "D6.8 HSS-CO DRILL OSG EX-GDR"
+    # T20 is the machine's spindle probe (haas-vf2ss probes.spindle_probe, Renishaw OMP40-2). The project format
+    # has no probe tool type, so it cannot be listed here; the program sets H20 with G10 L10.
+
+coolant:
+  fluid: semi-synthetic-6pct
+  concentration_pct: 6
+  tank_fill_fraction: 0.9
+
+operations:
+  - name: OP10
+    program: bracket.nc
+    setup:
+      workholding:
+        # workholding frame H: centre of the vise jaw seat (the stock bottom), 89 mm above the table top
+        - {device: lang-45600, pose: {translate_mm: [0, 0, -89], rotate_deg: [0, 0, 0]}, label: "Quick-Point 52 grid plate on the table"}
+        - {device: lang-48085-46, pose: {translate_mm: [0, 0, -62], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 50,
+           input_torque_Nm: 60, grip_depth_mm: 3, parallels_mm: null, label: "Makro-Grip 77, jaws on y = 0 / 50"}
+      stock_pose: {translate_mm: [-30, -25, 0], rotate_deg: [0, 0, 0]}
+      # true G54 (front-left-top corner of the stock): X -411.000 Y -228.000 Z -496.000. The values below are
+      # what the setter left on the machine (+0.25 / -0.15 / +0.20); the probe moves G54 to the measured corner
+      # on every part.
+      work_offsets_mm: {G54: [-410.75, -228.15, -495.80]}
+      fixture_pose: {translate_mm: [-381.0, -203.0, -521.0], rotate_deg: [0, 0, 0]}   # plate 27 + vise 65 - grip 3
+    from_previous: null
+    nozzle_positions: {}                     # no P-Cool: flex nozzles n1/n2 set by hand
+
+production:
+  parts: 50
+  operator: {load_s: 12, unload_s: 6, door_s: 3, clean_s: 6, inspect_every: 10, inspect_s: 45}
+
+physics:
+  tick_s: 1.0e-6
+  max_deg_per_step: 0.5                      # S10186 (12 000 rpm limit with override): dt <= 6.9 us -> l0 5 ticks
+  steps_per_tooth: 96                        # 3 teeth at 10 186 rpm: 1.96 ms per tooth -> 20 us, not binding
+  macro_ipo: 10
+  lag_macro: 1
+  lattice_mm: 0.3
+  refine:
+    - {box: {min_mm: [-1.0, 18.5, 7.0], max_mm: [61.0, 21.5, 25.5]}, factor: 4}     # 0.075 <= wall pass ae 0.3 / 4
+  edge_element_mm: 0.25
+  memory_bins: 720
+  polar_theta_bins: 720
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 2.0}
+  structure: {every_n_macro: 50, max_dof: 50000}
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}
+
+recording:
+  fast: windows
+  fast_window_revs: 4
+  fast_period_s: 2.0
+  keyframe_period_s: 1.0
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: false
+  audio: false
+
+uncertainty: null
+
+machine_data: null

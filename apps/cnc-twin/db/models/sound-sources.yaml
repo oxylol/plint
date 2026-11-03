@@ -1,0 +1,333 @@
+# Sound sources of the machining sound model (cnctwin.sound, docs/models/sound.md "Sources"): spindle
+# unbalance and bearings, spindle and axis motors, coolant pump, coolant splash and air jets, chip impacts and
+# packing, chatter. Machine data in the run's resolved project (spindle power and speed, ballscrew pitch,
+# pumps) take precedence; these are the defaults and the model constants.
+format: cnctwin-model-params
+version: 1
+model: sound-sources
+description: "Spindle, bearing, motor, pump, coolant, air-jet, chip and chatter source parameters"
+params:
+  # ------------------------------------------------------------------ spindle rotor
+  spindle_power_W:
+    value: 15
+    unit: kW
+    range: [0.1, 200]
+    src: est
+    note: "spindle motor rating when the machine file has no power curve (a 40-taper vertical machining centre)"
+  spindle_max_speed_rad_s:
+    value: 10000
+    unit: rpm
+    range: [100, 100000]
+    src: est
+    note: "spindle maximum speed when the machine file gives none (the unbalance grade refers to it)"
+  spindle_rotor_mass_kg:
+    value: 12
+    unit: kg
+    range: [0.5, 500]
+    src: est
+    note: "rotating mass of a 40-taper motor spindle with tool and holder (shaft, rotor, bearings' inner rings)"
+  balance_grade_m_s:
+    value: 0.0025
+    unit: m/s
+    range: [0.0001, 0.04]
+    src: iso-21940-11-2016
+    note: "G 2.5 (e_per omega_max = 2.5 mm/s), the grade of machine-tool drives; the residual unbalance force at speed omega is m G omega^2 / omega_max"
+  # ------------------------------------------------------------------ spindle bearings (varying compliance)
+  bearing_balls:
+    value: 20
+    unit: "-"
+    range: [6, 60]
+    src: est
+    note: "balls of a 70 mm bore super-precision angular contact bearing (7014 size) of a 40-taper spindle"
+  bearing_ball_diameter_m:
+    value: 11
+    unit: mm
+    range: [2, 50]
+    src: est
+    note: "ball diameter of that bearing"
+  bearing_pitch_diameter_m:
+    value: 90
+    unit: mm
+    range: [10, 500]
+    src: est
+    note: "pitch diameter of that bearing (bore 70, outside 110 mm)"
+  bearing_contact_angle_rad:
+    value: 15
+    unit: deg
+    range: [0, 45]
+    src: est
+    note: "15 deg contact angle (C series)"
+  bearing_preload_N:
+    value: 1000
+    unit: N
+    range: [50, 20000]
+    src: est
+    note: "light-to-medium preload of a 7014 spindle bearing set"
+  bearing_compliance_variation:
+    value: 0.02
+    unit: "-"
+    range: [0, 0.2]
+    src: sunnersjo-1978
+    note: "relative stiffness variation as the balls pass the load zone; the excitation force is this times the preload at the ball passage frequency (a few percent for 20 balls; value assumed)"
+  # ------------------------------------------------------------------ electric motors (empirical level + spectrum)
+  motor_level_small_dB:
+    value: [17.0, 17.0, 15.0]
+    unit: "-"
+    src: bies-hansen-2003
+    note: "dB: L_p(1 m) = a + b log10(P / kW) + c log10(n / rpm) for motors below the break power"
+  motor_level_large_dB:
+    value: [28.0, 10.0, 15.0]
+    unit: "-"
+    src: bies-hansen-2003
+    note: "dB: the same above the break power"
+  motor_level_break_W:
+    value: 40
+    unit: kW
+    src: bies-hansen-2003
+    note: "rated power separating the two formulas"
+  motor_formula_max_speed_rad_s:
+    value: 3600
+    unit: rpm
+    src: bies-hansen-2003
+    note: "the motor formulas rest on industrial motors up to 3600 rpm; faster motors (spindles at 10 000 rpm and more) are evaluated at this speed instead of extrapolating the 15 log10(rpm) term (their tones still follow the real speed)"
+  spindle_motor_level_offset_dB:
+    value: -15
+    unit: "-"
+    range: [-40, 0]
+    src: est
+    note: "dB applied to the industrial-motor formula for a liquid-cooled spindle motor without a fan, enclosed in the head casting (the formula includes fan noise and an open motor frame)"
+  motor_level_distance_m:
+    value: 1.0
+    unit: m
+    src: arup-strutt-2026
+    note: "the formulas give the level 1 m from the motor; its sound power follows by hemispherical spreading"
+  spindle_motor_pole_pairs:
+    value: 2
+    unit: "-"
+    range: [1, 8]
+    src: est
+    note: "four-pole spindle motor: electrical frequency 2 x rotation; magnetic noise at twice that (gieras-2006)"
+  spindle_motor_ratio:
+    value: 1.0
+    unit: "-"
+    range: [0.1, 10]
+    src: est
+    note: "motor speed / spindle speed (1: inline or direct-drive motor spindle)"
+  spindle_inverter_frequency_Hz:
+    value: 8000
+    unit: Hz
+    range: [1000, 20000]
+    src: est
+    note: "PWM switching frequency of the spindle drive (4-16 kHz in spindle inverters); noise at it with sidebands +- 2 f_e (gieras-2006)"
+  motor_tonal_fraction:
+    value: 0.30
+    unit: "-"
+    range: [0, 1]
+    src: gieras-2006
+    note: "share of the motor's sound power in the magnetic tone at 2 f_e (value assumed; magnetic noise dominates inverter motors at speed)"
+  motor_pwm_fraction:
+    value: 0.15
+    unit: "-"
+    range: [0, 1]
+    src: gieras-2006
+    note: "share in the inverter switching tones f_sw +- 2 f_e (value assumed); the rest is broadband fan and windage noise"
+  motor_broadband_band_Hz:
+    value: [100, 8000]
+    unit: Hz
+    src: est
+    note: "band of the broadband motor noise (pink between the corners)"
+  axis_motor_power_W:
+    value: 4
+    unit: kW
+    range: [0.1, 100]
+    src: est
+    note: "rated power of a VMC axis servo motor (when the machine file gives none)"
+  axis_motor_pole_pairs:
+    value: 4
+    unit: "-"
+    range: [1, 16]
+    src: est
+    note: "eight-pole permanent-magnet servo motor"
+  axis_inverter_frequency_Hz:
+    value: 10000
+    unit: Hz
+    range: [1000, 20000]
+    src: est
+    note: "PWM switching frequency of the servo drives (8-16 kHz)"
+  axis_motor_level_offset_dB:
+    value: -10
+    unit: "-"
+    range: [-40, 0]
+    src: est
+    note: "dB applied to the industrial-motor formula for fanless servo motors behind way covers (the formula includes fan noise)"
+  ballscrew_lead_m:
+    value: 16
+    unit: mm
+    range: [1, 100]
+    src: est
+    note: "lead of a directly driven ballscrew when the machine file gives none (motor speed = axis speed / lead)"
+  # ------------------------------------------------------------------ coolant pump
+  pump_level_dB:
+    value: [72.0, 10.0]
+    unit: "-"
+    src: bies-hansen-2003
+    note: "dB: L_p(1 m) = a + b log10(P / kW) for 3000-3600 rpm pumps below 75 kW"
+  pump_speed_rad_s:
+    value: 2900
+    unit: rpm
+    src: est
+    note: "two-pole pump motor on 50 Hz"
+  pump_blades:
+    value: 6
+    unit: "-"
+    range: [2, 16]
+    src: est
+    note: "impeller vanes: tone at the blade passage frequency"
+  pump_tonal_fraction:
+    value: 0.3
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "share of the pump's sound power at the blade passage tone (value assumed)"
+  pump_broadband_band_Hz:
+    value: [200, 5000]
+    unit: Hz
+    src: est
+    note: "band of the broadband pump and flow noise"
+  pump_power_W:
+    value: 0.75
+    unit: kW
+    range: [0.05, 50]
+    src: est
+    note: "flood pump power when the machine file gives none"
+  # ------------------------------------------------------------------ coolant splash and air jets
+  splash_efficiency:
+    value: 1.0e-6
+    unit: "-"
+    range: [1.0e-8, 1.0e-4]
+    src: est
+    note: "acoustic power over the kinetic power 0.5 rho Q U^2 of the liquid streams that hit the part and the table; no measured value was found: chosen so a 45 l/min flood at 3 m/s radiates L_W of about 65 dB, the level of a running tap; uncertain by +-10 dB"
+  splash_bubble_radius_m:
+    value: 1.5
+    unit: mm
+    range: [0.1, 10]
+    src: minnaert-1933
+    note: "typical radius of the bubbles a splashing stream entrains; its Minnaert frequency (about 2.2 kHz) is the centre of the splash noise band"
+  splash_band_octaves:
+    value: 1.5
+    unit: "-"
+    range: [0.2, 5]
+    src: est
+    note: "half-width of the splash band in octaves around the Minnaert frequency (bubble sizes spread over a factor of about 3)"
+  liquid_density_kg_m3:
+    value: 1000
+    unit: kg/m3
+    src: est
+    note: "water-based coolant density when the fluid file gives none"
+  air_ratio_of_specific_heats:
+    value: 1.4
+    unit: "-"
+    src: est
+    note: "gamma of air (bubble stiffness in the Minnaert frequency)"
+  lighthill_efficiency:
+    value: 1.0e-4
+    unit: "-"
+    range: [3.0e-5, 3.0e-4]
+    src: lighthill-1952
+    note: "acoustic efficiency of a subsonic air jet = this x M^5 (M the jet Mach number) of its kinetic power"
+  jet_strouhal:
+    value: 0.2
+    unit: "-"
+    range: [0.05, 1]
+    src: fitzpatrick-lee-1952
+    note: "jet noise spectrum peaks at f = St U / D"
+  jet_band_octaves:
+    value: 2.0
+    unit: "-"
+    range: [0.2, 6]
+    src: est
+    note: "half-width in octaves of the broad jet-noise hump"
+  air_nozzle_diameter_m:
+    value: 2
+    unit: mm
+    range: [0.2, 20]
+    src: est
+    note: "air blast or MQL nozzle bore when the jet record gives none"
+  # ------------------------------------------------------------------ chips
+  chip_impact_fraction:
+    value: 0.5
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "share of the chips that strike the enclosure sheet in flight (the rest fall on the part, the table and the chip pan)"
+  chip_speed_ratio:
+    value: 0.5
+    unit: "-"
+    range: [0.05, 1.5]
+    src: est
+    note: "chip speed over the cutting speed at the edge (chip ratio times the cutting speed, ~0.3-0.7, plus the tool's tangential velocity) when the chip file gives no velocity"
+  chip_speed_spread:
+    value: 0.5
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "impact speeds are spread uniformly over (1 +- this) x the reference speed (chips leave at different angles and slow down in flight)"
+  chip_restitution:
+    value: 0.4
+    unit: "-"
+    range: [0, 1]
+    src: akay-1978
+    note: "coefficient of restitution of a chip hitting a steel sheet (curled, work-hardened chips deform; value assumed); the impulse is m (1 + e) v"
+  chip_youngs_modulus_Pa:
+    value: 100
+    unit: GPa
+    range: [1, 700]
+    src: est
+    note: "elastic modulus of the chip when the material file gives none (Hertz contact duration)"
+  chip_poisson:
+    value: 0.3
+    unit: "-"
+    src: est
+    note: "Poisson's ratio of the chip material when the material file gives none"
+  chip_default_mass_kg:
+    value: 2.0e-6
+    unit: kg
+    range: [1.0e-10, 1.0e-2]
+    src: est
+    note: "mass of one chip when neither the chip mass channel nor the removal rate gives it (a 0.1 x 0.5 x 5 mm steel chip)"
+  impact_subslot_s:
+    value: 1.0e-4
+    unit: s
+    range: [1.0e-6, 1.0e-2]
+    src: est
+    note: "the chip impact process is a Bernoulli draw per sub-slot of this length (rate x length < 1 up to 10 000 impacts per second)"
+  packing_band_Hz:
+    value: [300, 6000]
+    unit: Hz
+    src: est
+    note: "band of the grinding noise of chips packed in the flutes"
+  packing_fluctuation:
+    value: 0.5
+    unit: "-"
+    range: [0, 2]
+    src: est
+    note: "rms of the packing force fluctuation over its mean (chips crushed and released at random)"
+  # ------------------------------------------------------------------ chatter (vibration channels -> force)
+  chatter_default_stiffness_N_per_m:
+    value: 50
+    unit: N_um
+    range: [1, 1000]
+    src: est
+    note: "modal stiffness of the dominant tool mode when the machine file has no spindle frf_modes (40-taper spindles 50-150 N/um)"
+  chatter_default_damping:
+    value: 0.03
+    unit: "-"
+    range: [0.001, 0.3]
+    src: est
+    note: "modal damping ratio of that mode"
+  chatter_default_frequency_Hz:
+    value: 900
+    unit: Hz
+    range: [50, 10000]
+    src: est
+    note: "natural frequency of that mode"

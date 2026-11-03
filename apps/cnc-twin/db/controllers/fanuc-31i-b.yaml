@@ -10,10 +10,11 @@
 #     under one number ("Alarm numbers are common to all these alarm types"); a part program raises the
 #     PS form, so those are written PS<number>. cause = the manual's description, shortened at a sentence
 #     boundary where it ends in "[...]"; page = printed page of the manual.
-#     Only alarms a part program can cause are listed (format, G codes, arcs, compensation, cycles,
+#     Mainly alarms a part program can cause are listed (format, G codes, arcs, compensation, cycles,
 #     macros, tool life, spindle, overtravel, and the servo/spindle alarms an overload or a collision
-#     produces); the CNC list has about 1000 alarms (parameter, hardware, PMC, communication alarms are
-#     left out).
+#     produces), plus the program memory / search alarms PS0060, PS0070-PS0075 and the RS-232 overrun
+#     PS0085; the CNC list has about 1000 alarms (parameter, hardware, PMC and most communication
+#     alarms are left out).
 #   * messages, words, variables, look-ahead: OPERATOR'S MANUAL B-64724EN/01 (2019), common to lathe
 #     system and machining center system; page = printed page.
 # The B Plus is the current issue of the Series 31i-MODEL B. The NTX 1000 and SR-20RIV documents name a
@@ -47,7 +48,7 @@ alarms:
   - {code: "PS5073", text: "NO DECIMAL POINT", trigger: syntax, cause: "No decimal point has been specified for an address requiring a decimal point.", page: "704"}
   - {code: "PS5074", text: "ADDRESS DUPLICATION ERROR", trigger: duplicate_address, cause: "The same address has been specified two or more times in a single block. Alternatively, two or more G codes in the same group have been specified in a single block.", page: "704"}
   - {code: "PS0109", text: "FORMAT ERROR IN G08", trigger: syntax, cause: "A value other than 0 or 1 was specified after P in the G08 code, or no value was specified.", page: "671"}
-  - {code: "PS0020", text: "OVER TOLERANCE OF RADIUS", trigger: arc_radius_tolerance, cause: "An arc was specified for which the difference in the radius at the start and end points exceeds the value set in parameter No. 3410. Check arc center codes I, J and K in the program. The tool path when parameter No. [...]", page: "666"}
+  - {code: "PS0020", text: "OVER TOLERANCE OF RADIUS", trigger: arc_radius_tolerance, cause: "An arc was specified for which the difference in the radius at the start and end points exceeds the value set in parameter No. 3410. Check arc center codes I, J and K in the program. [...]", page: "666"}
   - {code: "PS0021", text: "ILLEGAL PLANE SELECT", trigger: plane_selection, cause: "The plane selection instructions G17 to G19 are in error. Reprogram so that same 3 basic parallel axes are not specified simultaneously. [...]", page: "666"}
   - {code: "PS0022", text: "R OR I,J,K COMMAND NOT FOUND", trigger: arc_definition, cause: "The command for circular interpolation lacks arc radius R or coordinate I, J, or K of the distance between the start point to the center of the arc.", page: "666"}
   - {code: "PS0025", text: "CIRCLE CUT IN RAPID (F0)", trigger: arc_definition, cause: "F0 (rapid traverse in inverse feed or feed specified by an F code with 1–digit number) was specified during circular interpolation (G02, G03) or involute interpolation (G02.2, G03.2).", page: "666"}
@@ -59,9 +60,9 @@ alarms:
   - {code: "PS0336", text: "TOOL COMPENSATION COMMANDED MORE TWO AXES", trigger: tool, cause: "For a tool length compensation C, an attempt was made to command the offset to other axes without canceling the offset. Or, for a tool length compensation C, multiple axes are specified in G43 or G44 block.", page: "680"}
   - {code: "PS0245", text: "T-CODE NOT ALLOWED IN THIS BLOCK", trigger: tool, cause: "One of the G codes, G50, G10, G04, G28, G28.2, G29, G30, and G30.2,G30.1,G53, which cannot be specified in the same block as a T code, was specified with a T code.", page: "677"}
   - {code: "PS0509", text: "TOOL OFFSET COMMAND IS NOT AVAILABLE", trigger: tool, cause: "- Tool offset (for the lathe system) was specified in the thread cutting block. - Tool offset was specified (lathe system) in the scaling mode, coordinate system rotation mode, or programmable mirror image mode.", page: "687"}
-  - {code: "PS0031", text: "ILLEGAL P COMMAND IN G10", trigger: data_setting, cause: "The relevant data input or option could not be found for the L No. of G10. No data setting address such as P or R was specified. An address command not concerned with data setting was specified. An address varies with the L No. [...]", page: "666"}
+  - {code: "PS0031", text: "ILLEGAL P COMMAND IN G10", trigger: data_setting, cause: "The relevant data input or option could not be found for the L No. of G10. No data setting address such as P or R was specified. An address command not concerned with data setting was specified. [...]", page: "666"}
   - {code: "PS0032", text: "ILLEGAL OFFSET VALUE IN G10", trigger: data_setting, cause: "In setting an offset amount by G10 or in writing an offset amount by system variables, the offset amount was excessive.", page: "666"}
-  - {code: "PS1144", text: "G10 FORMAT ERROR", trigger: data_setting, cause: "The G10 L No. contains no relevant data input or corresponding option. Data setting address P or R is not specified. An address not relating to the data setting is specified. Which address to specify varies according to the L No. [...]", page: "693"}
+  - {code: "PS1144", text: "G10 FORMAT ERROR", trigger: data_setting, cause: "The G10 L No. contains no relevant data input or corresponding option. Data setting address P or R is not specified. An address not relating to the data setting is specified. [...]", page: "693"}
   - {code: "PS0231", text: "ILLEGAL FORMAT IN G10 L52", trigger: data_setting, cause: "Errors occurred in the specified format at the programmable-parameter input.", page: "677"}
   - {code: "PS1301", text: "MISSING ADDRESS", trigger: data_setting, cause: "The axis No. was not specified even though the parameter is an axis–type while loading parameters or pitch error compensation data from a tape or by entry of the G10 parameter. [...]", page: "694"}
   - {code: "PS1302", text: "ILLEGAL DATA NUMBER", trigger: data_setting, cause: "A non–existent data No. was found while loading parameters or pitch error compensation data from a tape or by entry of the G10 parameter. [...]", page: "694"}
@@ -82,7 +83,7 @@ alarms:
   - {code: "PS0082", text: "G37 SPECIFIED WITH H CODE", trigger: probing, cause: "- For machining center series The tool length measurement function (G37) is specified together with an H code in the same block. Correct the program. [...]", page: "670"}
   - {code: "PS0083", text: "G37 IMPROPER AXIS COMMAND", trigger: probing, cause: "- For machining center series An error has been found in axis specification of the tool length measurement function (G37). Alternatively, a move command is specified as an incremental command. Correct the program. [...]", page: "670"}
   - {code: "PS0369", text: "G31 FORMAT ERROR", trigger: probing, cause: "- No axis is specified or tow or more axes are specified in the torque limit switch instruction (G31P98/P99). - The specified torque Q value in the torque limit switch instruction is out of range. The torque Q range is 1 to 254. [...]", page: "682"}
-  - {code: "PS0370", text: "G31P/G04Q ERROR", trigger: probing, cause: "1) The specified address P value for G31 is out of range. The address P range is 1 to 4 in a multistage skip function. 2) The specified address Q value for G04 is out of range. The address Q range is 1 to 4 in a multistage skip function. 3) [...]", page: "682"}
+  - {code: "PS0370", text: "G31P/G04Q ERROR", trigger: probing, cause: "1) The specified address P value for G31 is out of range. The address P range is 1 to 4 in a multistage skip function. 2) The specified address Q value for G04 is out of range. The address Q range is 1 to 4 in a multistage skip function. [...]", page: "682"}
   - {code: "PS5068", text: "FORMAT ERROR IN G31P90", trigger: probing, cause: "No travel axis was specified. Two or more travel axes were specified.", page: "704"}
   - {code: "PS0044", text: "G27-G30 NOT ALLOWED IN FIXED CYC", trigger: cycle_parameter, cause: "The command which relates to the reference position return is commanded in canned cycle mode. Modify the program.", page: "667"}
   - {code: "PS0045", text: "ADDRESS Q NOT FOUND (G73/G83)", trigger: cycle_parameter, cause: "In a high-speed peck drilling cycle (G73) or peck drilling cycle (G83), the amount of each-time cutting is not specified by address Q, or Q0 is specified. Modify the program.", page: "667"}
@@ -108,7 +109,7 @@ alarms:
   - {code: "PS0322", text: "FINISHING SHAPE WHICH OVER OF STARTING POINT", trigger: cycle_parameter, cause: "An invalid shape which is over the cycle starting point is specified in a shape program for a multiple repetitive canned rough-cutting cycle (G71 or G72).", page: "679"}
   - {code: "PS0323", text: "THE FIRST BLOCK OF SHAPE PROGRAM IS A COMMAND OF TYPE II", trigger: cycle_parameter, cause: "Type II is specified in the first block of the shape program specified by P in a multiple repetitive canned rough-cutting cycle (G71 or G72). Z (W) command is for G71. X (U) command is for G72.", page: "679"}
   - {code: "PS0324", text: "THE INTERRUPTION TYPE MACRO WAS DONE IN THE MULTIPLE REPETIVE CYCLES", trigger: cycle_parameter, cause: "An interruption type macro was issued during the multiple repetitive canned cycle (G70, G71, G72, or G73).", page: "679"}
-  - {code: "PS0325", text: "UNAVAILABLE COMMAND IS IN SHAPE PROGRAM", trigger: cycle_parameter, cause: "1) An usable command was issued in a shape program for a multiple repetitive cycle (G70, G71, G72, or G73). 2) [...]", page: "679"}
+  - {code: "PS0325", text: "UNAVAILABLE COMMAND IS IN SHAPE PROGRAM", trigger: cycle_parameter, cause: "1) An usable command was issued in a shape program for a multiple repetitive cycle (G70, G71, G72, or G73). [...]", page: "679"}
   - {code: "PS0326", text: "LAST BLOCK OF SHAPE PROGRAM IS A DIRECT DRAWING DIMENSIONS", trigger: cycle_parameter, cause: "In a shape program in the multiple repetitive canned cycle (G70, G71, G72, or G73), a command for direct input of drawing dimensions in the last block is terminated in the middle.", page: "680"}
   - {code: "PS0327", text: "MODAL THAT MULTIPLE REPETIVE CYCLES CANNOT BE DONE", trigger: cycle_parameter, cause: "A multiple repetitive canned cycle (G70, G71, G72, or G73) was commanded in a modal state in which a multiple repetitive canned cycle could not be commanded.", page: "680"}
   - {code: "PS0328", text: "ILLEGAL WORK POSITION IS IN THE TOOL NOSE RADIUS COMPENSATION", trigger: cycle_parameter, cause: "The specification for the blank side for a tool nose radius compensation (G41 or G42) is incorrect in a multiple repetitive canned cycle (G71 or G72).", page: "680"}
@@ -128,12 +129,12 @@ alarms:
   - {code: "PS0143", text: "COMMAND DATA OVERFLOW", trigger: transformation, cause: "An overflow occurred in the storage length of the CNC internal data. This alarm is also generated when the result of internal calculation of scaling, coordinate rotation and cylindrical interpolation overflows the data storage. [...]", page: "672"}
   - {code: "PS0300", text: "ILLEGAL COMMAND IN SCALING", trigger: transformation, cause: "An illegal G code was specified during scaling. Modify the program. For the T system, one of the following functions is specified during scaling, this alarm is generated. - Finishing cycle (G70 or G72) [...]", page: "677"}
   - {code: "PS5043", text: "TOO MANY G68 NESTING", trigger: transformation, cause: "Three-dimensional coordinate conversion has been specified three or more times. To perform another coordinate conversion, perform cancellation, then specify the coordinate conversion.", page: "703"}
-  - {code: "PS5044", text: "G68 FORMAT ERROR", trigger: transformation, cause: "Errors for three-dimensional coordinate conversion command are: (1) No I, J, or K command was issued in three-dimensional coordinate conversion command block. (without coordinate rotation option) (2) [...]", page: "703"}
+  - {code: "PS5044", text: "G68 FORMAT ERROR", trigger: transformation, cause: "Errors for three-dimensional coordinate conversion command are: (1) No I, J, or K command was issued in three-dimensional coordinate conversion command block. (without coordinate rotation option) [...]", page: "703"}
   - {code: "PS0145", text: "ILLEGAL USE OF G12.1/G13.1", trigger: transformation, cause: "The axis No. of plane selection parameter No. 5460 (linear axis) and No. 5461(axis of rotation) in the polar coordinate interpolation mode is out of range (1 to number of controlled axes).", page: "672"}
   - {code: "PS0146", text: "ILLEGAL USE OF G-CODE", trigger: transformation, cause: "The modal G code group contains an illegal G code in the polar coordinate interpolation mode or when a mode was canceled. [...]", page: "673"}
   - {code: "PS0175", text: "ILLEGAL G07.1 AXIS", trigger: transformation, cause: "An axis which cannot perform cylindrical interpolation was specified. More than one axis was specified in a G07.1 block. An attempt was made to cancel cylindrical interpolation for an axis that was not in the cylindrical interpolation mode. [...]", page: "674"}
   - {code: "PS0176", text: "ILLEGAL G-CODE USE(G07.1 MODE)", trigger: transformation, cause: "A G code was specified that cannot be specified in the cylindrical interpolation mode. This alarm also is generated when an 01 group G code was in the G00 mode or code G00 was instructed. [...]", page: "674"}
-  - {code: "PS5391", text: "CAN NOT USE G92", trigger: transformation, cause: "Workpiece coordinate system setting G92 (or G50 for the lathe system G-code system A) cannot be specified. (1) [...]", page: "711"}
+  - {code: "PS5391", text: "CAN NOT USE G92", trigger: transformation, cause: "Workpiece coordinate system setting G92 (or G50 for the lathe system G-code system A) cannot be specified. [...]", page: "711"}
   - {code: "PS0050", text: "CHF/CNR NOT ALLOWED IN THRD BLK", trigger: rounding_chamfer, cause: "Chamfering or corner R is commanded in the thread cutting block. Modify the program.", page: "667"}
   - {code: "PS0051", text: "MISSING MOVE AFTER CNR/CHF", trigger: rounding_chamfer, cause: "Improper movement or the move distance was specified in the block next to the chamfering or corner R block. Modify the program.", page: "667"}
   - {code: "PS0052", text: "CODE IS NOT G01 AFTER CHF/CNR", trigger: rounding_chamfer, cause: "The block next to the chamfering or corner R block is not G01 (or vertical line). Modify the program.", page: "667"}
@@ -153,6 +154,14 @@ alarms:
   - {code: "PS1080", text: "DUPLICATE DEVICE SUB PROGRAM CALL", trigger: macro_nesting, cause: "Another external device subprogram call was made from a subprogram after the subprogram called by the external device subprogram call.", page: "692"}
   - {code: "PS0078", text: "SEQUENCE NUMBER NOT FOUND", trigger: subprogram_not_found, cause: "The specified sequence No. was not found during sequence number search. The sequence No. specified as the jump destination in GOTO–– and M99P–– was not found.", page: "669"}
   - {code: "PS0128", text: "ILLEGAL MACRO SEQUENCE NUMBER", trigger: subprogram_not_found, cause: "The specified sequence No. could not be found for sequence number search. The sequence No. specified as the jump destination in GOTO-- and M99P-- could not be found.", page: "672"}
+  - {code: "PS0060", text: "SEQUENCE NUMBER NOT FOUND", trigger: restart, cause: "[External data input/output] The specified number could not be found for program number and sequence number searches. Although input/output of a pot number of tool data or offset input was requested, no tool number was input after power on. [...]", page: "668"}
+  - {code: "PS0071", text: "DATA NOT FOUND", trigger: program_not_found, cause: "- The address to be searched was not found. - The program with specified program number was not found in program number search. - In the program restart block number specification, the specified block number could not be found. [...]", page: "668"}
+  - {code: "PS0074", text: "ILLEGAL PROGRAM NUMBER", trigger: syntax, cause: "The program number is other than 1 to 9999. Modify the program number.", page: "669"}
+  - {code: "PS0075", text: "PROTECT", trigger: program_not_found, cause: "An attempt was made to register a program whose number was protected. In program matching, the password for the encoded program was not correct. An attempt was made to select a program being edited in the background as the main program. [...]", page: "669"}
+  - {code: "PS0070", text: "NO PROGRAM SPACE IN MEMORY", trigger: program_memory, cause: "The memory area is insufficient. Delete any unnecessary programs, then retry.", page: "668"}
+  - {code: "PS0072", text: "TOO MANY PROGRAMS", trigger: program_memory, cause: "The number of programs to be stored exceeded 63 (basic), 125 (option), 200 (option), 400 (option) or 1000 (option). Delete unnecessary programs and execute program registration again.", page: "668"}
+  - {code: "PS0073", text: "PROGRAM NUMBER ALREADY IN USE", trigger: program_memory, cause: "The commanded program number has already been used. Change the program number or delete unnecessary programs and execute program registration again.", page: "669"}
+  - {code: "PS0085", text: "OVERRUN ERROR", trigger: io, cause: "The next character was received from the I/O device connected to RS232-C interface 1 before it could read a previously received character. An overrun, parity error, or framing error occurred during the reading by RS232-C interface 1. [...]", page: "670"}
   - {code: "PS0110", text: "OVERFLOW :INTEGER", trigger: macro_error, cause: "An integer went out of range during arithmetic calculations.", page: "671"}
   - {code: "PS0111", text: "OVERFLOW :FLOATING", trigger: macro_error, cause: "A decimal point (floating point number format data) went out of range during arithmetic calculations.", page: "671"}
   - {code: "PS0112", text: "ZERO DIVIDE", trigger: macro_division_by_zero, cause: "An attempt was made to divide by zero in a custom macro.", page: "671"}
@@ -209,10 +218,10 @@ alarms:
   - {code: "PS0446", text: "ILLEGAL COMMAND IN G96.1/G96.2/G96.3/G96.4", trigger: spindle, cause: "G96.1, G96.2, G96.3, and G96.4 are specified in the block that includes other commands. Modify the program.", page: "686"}
   - {code: "PS0539", text: "MAX SP SPEED CLAMP COMMAND ERROR", trigger: spindle, cause: "Clamp of maximum spindle speed is illegal. Extended spindle name cannot be commanded for clamp of maximum spindle speed.", page: "691"}
   - {code: "PS0554", text: "S-CODE IS NOT COMMANDED", trigger: spindle, cause: "M03/M04 is commanded alone without S code.", page: "691"}
-  - {code: "PS5305", text: "ILLEGAL SPINDLE NUMBER", trigger: spindle, cause: "In a spindle select function by address P for a multiple spindle control, 1) Address P is not specified. 2) Parameter No.3781 is not specified to the spindle to be selected. 3) [...]", page: "708"}
+  - {code: "PS5305", text: "ILLEGAL SPINDLE NUMBER", trigger: spindle, cause: "In a spindle select function by address P for a multiple spindle control, 1) Address P is not specified. 2) Parameter No.3781 is not specified to the spindle to be selected. [...]", page: "708"}
   - {code: "PS5355", text: "S CODE IS NOT COMMANDED AT G96", trigger: spindle, cause: "S code is not commanded at G96. Command S code at G96 block.", page: "709"}
   - {code: "PS5557", text: "NO MAX SP SPEED CLAMP COMMAND", trigger: spindle, cause: "No command for maximum spindle speed clamping (M series: G92S_; T series: G50S_;) was not executed before the constant surface speed control command (G96S_) was started. Execute a command for maximum spindle speed clamping.", page: "716"}
-  - {code: "PS1223", text: "ILLEGAL SPINDLE SELECT", trigger: spindle, cause: "1) An attempt was made to execute an instruction that uses the spindle although the spindle to be controlled has not been set correctly. 2) [...]", page: "694"}
+  - {code: "PS1223", text: "ILLEGAL SPINDLE SELECT", trigger: spindle, cause: "1) An attempt was made to execute an instruction that uses the spindle although the spindle to be controlled has not been set correctly. [...]", page: "694"}
   - {code: "PS0200", text: "ILLEGAL S CODE COMMAND", trigger: rigid_tap, cause: "In the rigid tap, an S value was out of range or was not specified. The parameters Nos. 5241 to 5243 setting is an S value which can be specified for the rigid tap. Correct the parameters or modify the program.", page: "675"}
   - {code: "PS0201", text: "FEEDRATE NOT FOUND IN RIGID TAP", trigger: feed_zero, cause: "The command F code for a cutting feedrate is a zero. If the value of F command is much smaller than that of the S command, when a rigid tap command is specified, this alarm is generated. [...]", page: "675"}
   - {code: "PS0202", text: "POSITION LSI OVERFLOW", trigger: rigid_tap, cause: "In the rigid tap, spindle distribution value is too large. (System error)", page: "675"}
@@ -226,13 +235,13 @@ alarms:
   - {code: "PS0219", text: "COMMAND G51.2/G50.2 INDEPENDENTLY", trigger: polygon, cause: "G51.2 and 50.2 were specified in the same block for other commands. Modify the program in another block.", page: "676"}
   - {code: "PS1298", text: "ILLEGAL INCH/METRIC CONVERSION", trigger: units, cause: "An error occurred during inch/metric switching.", page: "694"}
   - {code: "PS5362", text: "CONVERT INCH/MM AT REF-POS", trigger: units, cause: "An inch/metric conversion was performed at a position other than the reference position. Perform an inch/metric conversion after returning to the reference position.", page: "710"}
-  - {code: "PS5320", text: "DIA./RAD. MODE CAN’T BE SWITCHED .", trigger: units, cause: "In any of the following states, diameter/radius specification was switched: 1) When a buffered program is being executed 2) When a movement is being made on the axis 3) [...]", page: "708"}
+  - {code: "PS5320", text: "DIA./RAD. MODE CAN’T BE SWITCHED .", trigger: units, cause: "In any of the following states, diameter/radius specification was switched: 1) When a buffered program is being executed 2) When a movement is being made on the axis 3) Diameter/radius setting switching function is specified to the axis [...]", page: "708"}
   - {code: "PS1202", text: "NO F COMMAND AT G93", trigger: feed_zero, cause: "F codes in the inverse time specification mode (G93) are not handled as modal, and must be specified in individual blocks.", page: "694"}
   - {code: "PS1537", text: "ADDRESS F UNDERFLOW (OVERRIDE)", trigger: feed_limit, cause: "The speed obtained by applying override to the F instruction is too slow.", page: "695"}
   - {code: "PS1538", text: "ADDRESS F OVERFLOW (OVERRIDE)", trigger: feed_limit, cause: "The speed obtained by applying override to the F instruction is too fast.", page: "695"}
   - {code: "PS5007", text: "TOO LARGE DISTANCE", trigger: overflow, cause: "Due to compensation, point of intersection calculation, interpolation or similar reasons, a movement distance that exceeds the maximum permissible distance was specified. Check the programmed coordinates or compensation amounts.", page: "702"}
   - {code: "PS1160", text: "COMMAND DATA OVERFLOW", trigger: overflow, cause: "An overflow occurred in the position data within the CNC. [...]", page: "693"}
-  - {code: "PS5009", text: "PARAMETER ZERO (DRY RUN)", trigger: machine, cause: "The dry run rate parameter No. 1410 or the parameter for the maximum cutting feedrate for each axis is 0. The parameter for the maximum cutting feedrate for each axis is No. [...]", page: "702"}
+  - {code: "PS5009", text: "PARAMETER ZERO (DRY RUN)", trigger: machine, cause: "The dry run rate parameter No. 1410 or the parameter for the maximum cutting feedrate for each axis is 0. [...]", page: "702"}
   - {code: "PS5011", text: "PARAMETER ZERO (CUT MAX)", trigger: machine, cause: "The setting of the parameter for the maximum cutting feedrate is 0. The parameter is No. 1432 if acceleration/deceleration before interpolation is enabled and No. 1430 otherwise. [...]", page: "702"}
   - {code: "PS5016", text: "ILLEGAL COMBINATION OF M CODES", trigger: illegal_m_code, cause: "M codes which belonged to the same group were specified in a block. Alternatively, an M code which must be specified without other M codes in the block was specified in a block with other M codes.", page: "702"}
   - {code: "PS0137", text: "M-CODE & MOVE CMD IN SAME BLK.", trigger: illegal_m_code, cause: "The spindle positioning axis and another axis are specified in the same block.", page: "672"}
@@ -248,8 +257,8 @@ alarms:
   - {code: "PS5456", text: "TOO MANY G68.2 NESTING", trigger: tilted_plane, cause: "Tilted working plane command G68.2 was specified more than once. To perform another coordinate conversion, perform cancellation, then specify the coordinate conversion.", page: "713"}
   - {code: "PS5457", text: "G68.2 FORMAT ERROR", trigger: tilted_plane, cause: "A G68.2 format error occurred.", page: "713"}
   - {code: "PS5458", text: "ILLEGAL USE OF G53.1/G53.6", trigger: tilted_plane, cause: "- G53.1 or G53.6 was specified preceding G68.2. - G53.1 or G53.6 needs to be specified solely. [...]", page: "713"}
-  - {code: "PS5462", text: "ILLEGAL COMMAND (G68.2/G69)", trigger: tilted_plane, cause: "(1) The modal setting used when G68.2 or G69 is specified is incorrect. (2) An unspecificable G code was specified in the G68.2 mode. (3) [...]", page: "715"}
-  - {code: "PS5460", text: "ILLEGAL USE OF 3-DIMENSIONAL CUTTER COMPENSATION", trigger: cutter_comp_start_end, cause: "- In the 3-dimensional cutter compensation mode (except the tool side offset function for a tool rotation type machine), a move command other than G00/G01 is specified. - With a table rotation type machine, when bit 1 (PTD) of parameter No. [...]", page: "715"}
+  - {code: "PS5462", text: "ILLEGAL COMMAND (G68.2/G69)", trigger: tilted_plane, cause: "(1) The modal setting used when G68.2 or G69 is specified is incorrect. (2) An unspecificable G code was specified in the G68.2 mode. [...]", page: "715"}
+  - {code: "PS5460", text: "ILLEGAL USE OF 3-DIMENSIONAL CUTTER COMPENSATION", trigger: cutter_comp_start_end, cause: "- In the 3-dimensional cutter compensation mode (except the tool side offset function for a tool rotation type machine), a move command other than G00/G01 is specified. [...]", page: "715"}
   - {code: "PS5461", text: "ILLEGAL USE OF G41.2/G42.2/G41.5/G42.5", trigger: cutter_comp_start_end, cause: "A move command other than G00 or G01 was performed during 3-dimensional cutter compensation in a mixed-type machine.", page: "715"}
   - {code: "OT0500", text: "+ OVERTRAVEL ( SOFT 1 )", trigger: overtravel, cause: "Exceeded the positive side stored stroke check 1.", page: "724"}
   - {code: "OT0501", text: "- OVERTRAVEL ( SOFT 1 )", trigger: overtravel, cause: "Exceeded the negative side stored stroke check 1.", page: "724"}
@@ -312,7 +321,7 @@ timing:
 words:
   src: fanuc-30ibplus-om-2019
   page: "37-41 (Table 3.2 (a) G code list in the lathe system), 286-287 (11 AUXILIARY FUNCTION), 314-316 (Tables 13.2 (b), (c))"
-  note: "lathe system, G code system A (the 31i-B T series also has systems B and C, chosen by parameter; codes that differ are given as 'B:'/'C:'). Group numbers as printed in the table (the group column is a merged cell; for G34-G39 the cell boundaries do not survive text extraction, so no group is given there). Codes for grinding, punching and other special machines are left out."
+  note: "lathe system, G code system A (the 31i-B T series also has systems B and C, chosen by parameter; codes that differ are given as 'B:'/'C:'). Group numbers as printed in the table (the group column is a merged cell; for G34-G39 the cell boundaries do not survive text extraction, so no group is given there). The keys are the complete G code set of the table except the grinding cycles (G71-G74 of group 01 on grinding machines); the dialect accepts only the G codes listed here."
   G:
     "00": "positioning (rapid traverse), group 01"
     "01": "linear interpolation (cutting feed), group 01"
@@ -320,13 +329,19 @@ words:
     "03": "circular interpolation CCW or helical interpolation CCW, group 01"
     "02.2": "involute interpolation CW, group 01"
     "03.2": "involute interpolation CCW, group 01"
+    "02.3": "exponential interpolation CW, group 01"
+    "03.3": "exponential interpolation CCW, group 01"
+    "02.4": "3-dimensional coordinate system conversion CW, group 01"
+    "03.4": "3-dimensional coordinate system conversion CCW, group 01"
     "04": "dwell, group 00"
     "04.1": "G code preventing buffering, group 00"
     "05": "AI contour control (command compatible with high precision contour control), high-speed cycle machining, high-speed binary program operation, group 00"
     "05.1": "AI contour control / Nano smoothing / Smooth interpolation / Smooth tolerance+ control / High precision program command, group 00"
+    "05.4": "HRV3, 4 on/off, group 00"
     "06.2": "NURBS interpolation, group 01"
     "07": "hypothetical axis interpolation, group 00"
     "07.1": "cylindrical interpolation (also G107), group 00"
+    "107": "cylindrical interpolation (same as G07.1)"
     "08": "AI contour control (advanced preview control compatible command), group 00"
     "09": "exact stop, group 00"
     "10": "programmable data input, group 00"
@@ -335,6 +350,8 @@ words:
     "11": "programmable data input mode cancel, group 00"
     "12.1": "polar coordinate interpolation mode (also G112), group 21"
     "13.1": "polar coordinate interpolation cancel mode (also G113), group 21"
+    "112": "polar coordinate interpolation mode (same as G12.1)"
+    "113": "polar coordinate interpolation cancel mode (same as G13.1)"
     "17": "XpYp plane selection, group 16"
     "17.1": "plane conversion function, group 16"
     "18": "ZpXp plane selection, group 16"
@@ -351,12 +368,16 @@ words:
     "29": "movement from reference position, group 00"
     "30": "2nd, 3rd and 4th reference position return, group 00"
     "30.1": "floating reference point return, group 00"
+    "30.2": "in-position check disable 2nd, 3rd, or 4th reference position return, group 00"
     "31": "skip function, group 00"
+    "31.8": "EGB-axis skip, group 00"
     "32": "threading, group 01 (B and C: G33)"
     "34": "variable lead threading"
     "35": "circular threading CW"
     "36": "circular threading CCW (bit 3 (G36) of parameter No. 3405 = 1) or automatic tool offset X axis (G36 = 0)"
     "37": "automatic tool offset Z axis (bit 3 (G36) of parameter No. 3405 = 0)"
+    "37.1": "automatic tool offset X axis (bit 3 (G36) of parameter No. 3405 = 1)"
+    "37.2": "automatic tool offset Z axis (bit 3 (G36) of parameter No. 3405 = 1)"
     "38": "tool radius/tool nose radius compensation: with vector held"
     "39": "tool radius/tool nose radius compensation: corner rounding interpolation"
     "40": "tool radius/tool nose radius compensation: cancel, group 07"
@@ -364,6 +385,13 @@ words:
     "42": "tool radius/tool nose radius compensation: right, group 07"
     "41.2": "3-dimensional cutter compensation: left (type 1), group 07"
     "42.2": "3-dimensional cutter compensation: right (type 1), group 07"
+    "41.3": "3-dimensional cutter compensation (leading edge offset), group 07"
+    "41.4": "3-dimensional cutter compensation: left (type 1) (FS16i-compatible command), group 07"
+    "41.5": "3-dimensional cutter compensation: left (type 1) (FS16i-compatible command), group 07"
+    "41.6": "3-dimensional cutter compensation: left (type 2), group 07"
+    "42.4": "3-dimensional cutter compensation: right (type 1) (FS16i-compatible command), group 07"
+    "42.5": "3-dimensional cutter compensation: right (type 1) (FS16i-compatible command), group 07"
+    "42.6": "3-dimensional cutter compensation: right (type 2), group 07"
     "40.1": "normal direction control cancel mode, group 19"
     "41.1": "normal direction control left on, group 19"
     "42.1": "normal direction control right on, group 19"
@@ -372,25 +400,34 @@ words:
     "43.4": "tool center point control (type 1) (TCT = 1), group 23"
     "43.5": "tool center point control (type 2) (TCT = 1), group 23"
     "43.7": "tool offset (also G44.7; TCT = 1), group 23"
+    "44.7": "tool offset (same as G43.7; TCT = 1), group 23"
+    "43.8": "cutting point command (type 1) (TCT = 1), group 23"
+    "43.9": "cutting point command (type 2) (TCT = 1), group 23"
     "44.1": "tool offset conversion (TCT = 1), group 23"
     "49": "tool length compensation cancel (also G49.1; TCT = 1), group 23"
+    "49.1": "tool length compensation cancel (same as G49; TCT = 1), group 23"
     "50": "coordinate system setting or max spindle speed clamp, group 00 (B and C: G92)"
     "50.3": "workpiece coordinate system preset, group 00 (B and C: G92.1)"
     "50.1": "programmable mirror image cancel, group 22"
     "51.1": "programmable mirror image, group 22"
     "50.2": "polygon turning cancel (also G250), group 20"
     "51.2": "polygon turning (also G251), group 20"
+    "250": "polygon turning cancel (same as G50.2), group 20"
+    "251": "polygon turning (same as G51.2), group 20"
     "50.4": "cancel synchronous control, group 00"
     "50.5": "cancel composite control, group 00"
     "50.6": "cancel superimposed control, group 00"
     "51.4": "start synchronous control, group 00"
     "51.5": "start composite control, group 00"
     "51.6": "start superimposed control, group 00"
+    "50.9": "auxiliary function output in moving axis, group 00"
     "52": "local coordinate system setting, group 00"
     "53": "machine coordinate system setting, group 00"
     "53.1": "tool axis direction control, group 00"
     "53.2": "selecting a machine coordinate system with feedrate, group 00"
+    "53.6": "tool center point retention type tool axis direction control, group 00"
     "54-59": "workpiece coordinate system 1-6 selection (G54 also G54.1), group 14"
+    "54.1": "workpiece coordinate system 1 selection (listed with G54) / additional workpiece coordinate systems, group 14"
     "54.4": "workpiece setting error compensation, group 26"
     "60": "single direction positioning, group 00"
     "61": "exact stop mode, group 15"
@@ -420,6 +457,10 @@ words:
     "80": "canned cycle cancel for drilling; electronic gear box synchronization cancellation, group 10"
     "81": "spot drilling (FS15-T format); electronic gear box synchronization start, group 10"
     "81.1": "chopping function / high precision oscillation function, group 00"
+    "80.4": "electronic gear box: synchronization cancellation, group 28"
+    "81.4": "electronic gear box: synchronization start, group 28"
+    "80.5": "electronic gear box 2 pair: synchronization cancellation, group 27"
+    "81.5": "electronic gear box 2 pair: synchronization start, group 27"
     "82": "counter boring (FS15-T format), group 10"
     "83": "cycle for face drilling, group 10"
     "83.1": "high-speed peck drilling cycle (FS15-T format), group 10"

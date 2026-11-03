@@ -1,0 +1,193 @@
+# Sources of the surface finish, marks, burr, surface-integrity and thread-measurement models
+# (cnctwin.surface, docs/models/surface.md) and of their coefficients in db/models/surface-*.yaml.
+# Works already in other bibliography files are cited by key: iso-4287-1997 (models-report),
+# brammertz-1961-roughness and grzesik-1996-roughness (models-wear), martellotti-1941 (models-mdata),
+# johnson-1985-contact-mechanics (models-cutting), tabor-1951-hardness (models-mechanics),
+# timoshenko-goodier-1970-elasticity (models-wear), carslaw-jaeger-1959-conduction (models-mechanics),
+# trent-wright-2000-metal-cutting (models-thermal), iso-68-1-1998 and iso-965-1-2013 (models-tooling),
+# oberg-2016 (models-sanity).
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  iso-4288-1996:
+    type: standard
+    authors: "ISO"
+    title: "ISO 4288:1996 Geometrical Product Specifications (GPS) - Surface texture: Profile method - Rules and procedures for the assessment of surface texture"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1996
+    pages: "Tables 1-3: sampling length (cut-off) from Ra, Rz (non-periodic profiles) and RSm (periodic profiles); evaluation length of 5 sampling lengths; measurement in the direction of the maximum value (perpendicular to the lay)"
+
+  iso-3274-1996:
+    type: standard
+    authors: "ISO"
+    title: "ISO 3274:1996 Geometrical Product Specifications (GPS) - Surface texture: Profile method - Nominal characteristics of contact (stylus) instruments"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1996
+    pages: "Table 1: short-wave cut-off lambda_s and the maximum sampling spacing for each cut-off lambda_c"
+
+  iso-16610-21-2011:
+    type: standard
+    authors: "ISO"
+    title: "ISO 16610-21:2011 Geometrical product specifications (GPS) - Filtration - Part 21: Linear profile filters: Gaussian filters"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2011
+    pages: "weighting function s(x) = exp(-pi (x / (alpha lambda_c))^2) / (alpha lambda_c), alpha = sqrt(ln 2 / pi) = 0.4697 (50 % transmission at the cut-off)"
+
+  iso-1302-2002:
+    type: standard
+    authors: "ISO"
+    title: "ISO 1302:2002 Geometrical Product Specifications (GPS) - Indication of surface texture in technical product documentation"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2002
+    pages: "Table 2: surface lay symbols (=, perpendicular, X, M, C, R, P)"
+
+  iso-13715-2017:
+    type: standard
+    authors: "ISO"
+    title: "ISO 13715:2017 Technical product documentation - Edges of undefined shape - Indication and dimensioning"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2017
+    pages: "edge states: burr (external edge with overhang) and its permitted size"
+
+  iso-724-1993:
+    type: standard
+    authors: "ISO"
+    title: "ISO 724:1993 ISO general-purpose metric screw threads - Basic dimensions"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1993
+    pages: "pitch diameter d2 = d - 0.6495 P (= d - 0.75 H, H = 0.866025 P)"
+
+  boothroyd-knight-2006:
+    type: book
+    authors: "Boothroyd, G.; Knight, W.A."
+    title: "Fundamentals of Machining and Machine Tools"
+    edition: "3rd"
+    publisher: "CRC Press / Taylor & Francis, Boca Raton"
+    year: 2006
+    pages: "surface roughness of turned surfaces: peak-to-valley height f^2 / (8 r) of a round-nosed tool; arithmetic mean of the parabolic profile f^2 / (18 sqrt(3) r)"
+
+  vickers-quan-1989-scallop:
+    type: article
+    authors: "Vickers, G.W.; Quan, K.W."
+    title: "Ball-mills versus end-mills for curved surface machining"
+    venue: "ASME Journal of Engineering for Industry 111(1), 22-26"
+    year: 1989
+    pages: "scallop (cusp) height between adjacent passes from the effective cutting profile of ball and flat end mills; h = R - sqrt(R^2 - s^2 / 4) for a ball"
+
+  cirstoiu-2024-turning-roughness:
+    type: article
+    authors: "Cirstoiu, A."
+    title: "Surface roughness prediction techniques in turning processes"
+    venue: "The Scientific Bulletin of Valahia University - Materials and Mechanics 20(22)"
+    year: 2024
+    url: "https://reference-global.com/2/v2/download/article/10.2478/bsmm-2024-0008.pdf"
+    accessed: 2026-11-03
+    pages: "Table 2: measured Ra, dry turning of 42MoCr11 with TNMG 220408 (r_eps 0.8 mm, kappa_r 93 deg, kappa_r' 27 deg), vc 69-173 m/min, f 0.125-0.353 mm/rev, ap 1-2.5 mm"
+
+  machado-2003-burr-turning:
+    type: article
+    authors: "Machado, A.R.; Kaminise, A.K.; da Silva, M.B.; Ariza, R.G."
+    title: "Study on burr formation in turning"
+    venue: "Proceedings of COBEM 2003, 17th International Congress of Mechanical Engineering, Sao Paulo, paper COBEM2003-0147"
+    year: 2003
+    url: "https://abcm.org.br/anais/cobem/2003/html/pdf/COB03-0147.pdf"
+    accessed: 2026-11-03
+    pages: "Fig. 7: the leaned (roll-over) exit burr height is approximately equal to the depth of cut (AISI 1045, SNMG 120408, kappa_r 45 deg, f 0.215 mm/rev, vc 185 m/min, ap 0.55-2.0 mm); Fig. 8: larger for kappa_r above 45 deg; Fig. 4: burr thickness grows with feed"
+
+  gillespie-blotter-1976-burrs:
+    type: article
+    authors: "Gillespie, L.K.; Blotter, P.T."
+    title: "The formation and properties of machining burrs"
+    venue: "ASME Journal of Engineering for Industry 98(1), 66-74"
+    year: 1976
+    pages: "burr mechanisms: lateral deformation (Poisson burr), chip roll-over (roll-over burr at the exit), tearing, cut-off; the roll-over burr is the bent end of the chip that is not sheared off"
+
+  ko-dornfeld-1991-burr:
+    type: article
+    authors: "Ko, S.L.; Dornfeld, D.A."
+    title: "A study on burr formation mechanism"
+    venue: "ASME Journal of Engineering Materials and Technology 113(1), 75-87"
+    year: 1991
+    doi: "10.1115/1.2903385"
+    pages: "burr initiation (negative deformation plane from the edge to the exit surface), development and formation in orthogonal cutting of ductile materials; size scales with the uncut chip thickness"
+
+  ko-dornfeld-1996-oblique:
+    type: article
+    authors: "Ko, S.L.; Dornfeld, D.A."
+    title: "Burr formation and fracture in oblique cutting"
+    venue: "Journal of Materials Processing Technology 62, 24-36"
+    year: 1996
+    doi: "10.1016/0924-0136(95)02125-6"
+    pages: "brittle edge breakout (negative burr) instead of roll-over when the work material fractures before it bends"
+
+  hashimura-1999-exit-angle:
+    type: article
+    authors: "Hashimura, M.; Hassamontr, J.; Dornfeld, D.A."
+    title: "Effect of in-plane exit angle and rake angles on burr height and thickness in face milling operation"
+    venue: "ASME Journal of Manufacturing Science and Engineering 121(1), 13-19"
+    year: 1999
+    doi: "10.1115/1.2830566"
+    pages: "exit order of the tool edge points decides where the burr forms; in-plane exit angle and rake angle effects on exit and side burrs"
+
+  hashimura-chang-dornfeld-1999:
+    type: article
+    authors: "Hashimura, M.; Chang, Y.P.; Dornfeld, D.A."
+    title: "Analysis of burr formation mechanism in orthogonal cutting"
+    venue: "ASME Journal of Manufacturing Science and Engineering 121(1), 1-7"
+    year: 1999
+    doi: "10.1115/1.2830569"
+    pages: "higher feed increases the burr thickness; tool edge radius shifts the pivot point"
+
+  pekelharing-1978-exit-failure:
+    type: article
+    authors: "Pekelharing, A.J."
+    title: "The exit failure in interrupted cutting"
+    venue: "Annals of the CIRP 27(1), 5-10"
+    year: 1978
+    pages: "foot formation at the tool exit: the remaining material bends about the exit edge instead of being sheared"
+
+  kim-dornfeld-2002-drilling-burr:
+    type: article
+    authors: "Kim, J.; Dornfeld, D.A."
+    title: "Development of an analytical model for drilling burr formation in ductile materials"
+    venue: "ASME Journal of Engineering Materials and Technology 124(2), 192-198"
+    year: 2002
+    doi: "10.1115/1.1429937"
+    pages: "the drilling burr forms by plastic deformation of the remaining material under the drill once the thrust force exceeds its load capacity"
+
+  min-kim-dornfeld-2001-burr-chart:
+    type: article
+    authors: "Min, S.; Kim, J.; Dornfeld, D.A."
+    title: "Development of a drilling burr control chart for low alloy steel, AISI 4118"
+    venue: "Journal of Materials Processing Technology 113, 4-9"
+    year: 2001
+    doi: "10.1016/s0924-0136(01)00589-1"
+    pages: "burr types: uniform small, uniform large and crown burrs over normalized feed and speed; crown burrs at high feed"
+
+  hopkins-prager-1953-plates:
+    type: article
+    authors: "Hopkins, H.G.; Prager, W."
+    title: "The load carrying capacities of circular plates"
+    venue: "Journal of the Mechanics and Physics of Solids 2, 1-13"
+    year: 1953
+    doi: "10.1016/0022-5096(53)90022-2"
+    pages: "limit load of a simply supported circular plate (Tresca): uniform pressure p = 6 M0 / a^2, i.e. a total load of 6 pi M0, M0 = sigma_y t^2 / 4"
+
+  hocheng-dharan-1990-delamination:
+    type: article
+    authors: "Ho-Cheng, H.; Dharan, C.K.H."
+    title: "Delamination during drilling in composite laminates"
+    venue: "ASME Journal of Engineering for Industry 112(3), 236-239"
+    year: 1990
+    doi: "10.1115/1.2899580"
+    pages: "push-out delamination at the drill exit starts when the thrust exceeds F* = pi sqrt(8 G_IC E h^3 / (3 (1 - nu^2))), h the uncut thickness under the drill"
+
+  merwin-johnson-1963-rolling-contact:
+    type: article
+    authors: "Merwin, J.E.; Johnson, K.L."
+    title: "An analysis of plastic deformation in rolling contact"
+    venue: "Proceedings of the Institution of Mechanical Engineers 177, 676-690"
+    year: 1963
+    doi: "10.1243/pime_proc_1963_177_052_02"
+    pages: "residual stresses and the shakedown limit p0 = 4 k of a line contact on an elastic-perfectly plastic half-space"

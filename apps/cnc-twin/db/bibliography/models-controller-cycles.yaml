@@ -1,0 +1,46 @@
+# Sources for db/models/controller-cycles.yaml and docs/dialects.md "Cycles and compensation" (canned
+# cycles, cutter / tool nose radius compensation, five-axis functions, probing, tool life management,
+# program restart). The FANUC manuals were read in full text (PDF text layer extracted locally) on
+# 2026-11-03 from the FANUC DVD Manual A08B-9012-J019#12 as published on the Internet Archive; page
+# numbers are the printed page numbers of each manual.
+format: cnctwin-bibliography
+version: 1
+entries:
+  fanuc-30ibplus-om-mc-2019:
+    type: manual
+    authors: "FANUC CORPORATION"
+    title: "FANUC Series 30i/31i/32i-MODEL B Plus OPERATOR'S MANUAL (For Machining Center System), B-64724EN-2/01"
+    venue: "FANUC CORPORATION, (c) 2019; PDF from the FANUC DVD Manual A08B-9012-J019#12 (2020, Version 2.0), Internet Archive item 9012-j-019-12, file PDF/B-64724EN-2_01.PDF"
+    year: 2019
+    url: "https://archive.org/download/9012-j-019-12/9012_J019_12.ISO/PDF%2FB-64724EN-2_01.PDF"
+    accessed: 2026-11-03
+    pages: "5.1 canned cycles for drilling G73-G89, G80 pp. 45-79 (operation sequence p. 45, G98/G99 and K repeats pp. 47-48, G73 p. 49, G74 p. 51, G76 p. 53, G81 p. 55, G82 p. 56, G83 p. 58, G84 p. 65, G85-G89 pp. 67-75, G80 p. 75); 5.4 rigid tapping pp. 99-114 (M29, thread lead p. 101, PS0200-PS0206, peck rigid tapping p. 108, extraction override p. 112); 5.5 optional chamfering and corner R pp. 115-118 (PS0050-PS0055); 6.4-6.6 cutter / tool nose radius compensation pp. 192-258 (start-up types A/B/C p. 210, look-ahead blocks p. 211, offset mode p. 219, cancel p. 237, interference check pp. 247-252, PS0033/PS0034/PS0041); 6.5 imaginary tool nose pp. 197-208"
+
+  fanuc-30ibplus-om-lathe-2019:
+    type: manual
+    authors: "FANUC CORPORATION"
+    title: "FANUC Series 30i/31i/32i-MODEL B Plus OPERATOR'S MANUAL (For Lathe System), B-64724EN-1/01"
+    venue: "FANUC CORPORATION, (c) 2019; PDF from the FANUC DVD Manual A08B-9012-J019#12 (2020, Version 2.0), Internet Archive item 9012-j-019-12, file PDF/B-64724EN-1_01.PDF"
+    year: 2019
+    url: "https://archive.org/download/9012-j-019-12/9012_J019_12.ISO/PDF%2FB-64724EN-1_01.PDF"
+    accessed: 2026-11-03
+    pages: "4.1 canned cycles G90/G92/G94 pp. 22-38 (thread chamfering p. 27, tool nose radius compensation p. 35, modal data and blocks without a move command p. 37); 4.2 multiple repetitive canned cycles G70-G76 pp. 39-80 (G71 types I/II pp. 40-53, G72 p. 55, G73 p. 59, G70 p. 63, G74 p. 67, G75 p. 69, G76 pp. 71-76, restrictions p. 77, conventional G71 path p. 79); 4.3 drilling cycles G83-G89 pp. 81-93; 5.2 tool nose radius compensation pp. 159-171"
+
+  fanuc-30ibplus-param-2019:
+    type: manual
+    authors: "FANUC CORPORATION"
+    title: "FANUC Series 30i/31i/32i-MODEL B Plus PARAMETER MANUAL, B-64730EN/01"
+    venue: "FANUC CORPORATION, (c) 2019; PDF from the FANUC DVD Manual A08B-9012-J019#12 (2020, Version 2.0), Internet Archive item 9012-j-019-12, file PDF/B-64730EN_01_01.PDF"
+    year: 2019
+    url: "https://archive.org/download/9012-j-019-12/9012_J019_12.ISO/PDF%2FB-64730EN_01_01.PDF"
+    accessed: 2026-11-03
+    pages: "5003 p. 261, 5008 p. 265, 5010 p. 266, 5101 p. 279, 5114/5115 p. 288, 5130/5131 p. 290, 5132-5134 p. 291, 5135-5139 p. 292, 5140-5142 p. 293, 5143 p. 294, 5148 p. 295, 5200 p. 304, 5211/5213 p. 309, 6800 p. 395, 6810 p. 402, 7300 p. 422, 7310 p. 423, 19607 p. 844, 19625 p. 847 (meanings of the parameters; the manual gives no factory defaults, so the values used are estimates)"
+
+  murray-li-sastry-1994:
+    type: book
+    authors: "Murray, R.M.; Li, Z.; Sastry, S.S."
+    title: "A Mathematical Introduction to Robotic Manipulation"
+    publisher: "CRC Press, Boca Raton"
+    year: 1994
+    isbn: "0-8493-7981-4"
+    pages: "ch. 2 (rigid motions, product of exponentials); ch. 3 inverse kinematics, Paden-Kahan subproblems 1 (rotation about one axis) and 2 (rotation about two subsequent axes)"

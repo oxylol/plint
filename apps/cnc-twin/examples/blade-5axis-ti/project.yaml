@@ -1,0 +1,141 @@
+# CNC Twin example: 5-axis simultaneous flank milling of a ruled Ti-6Al-4V blade on the Haas UMC-750 with
+# G234 TCPC (README.md, EXPECTED.md). Toolpath: make_program.py from part.step.
+# Frames (db/_templates/project.yaml, docs/models/sanity.md "Setup geometry convention"): fixture_pose and the
+# work offsets are written in machine coordinates at B0 C0 (X/Y = axis values that put the spindle over the
+# point, Z = spindle gauge line on the point). On the UMC-750 the platter top is at Z -610 and its centre
+# (the C axis) at X -330 Y -254 (machine file: spindle nose 610 above the platter, kinematics.mrzp_mm); G234
+# takes the work offset as the part zero in machine coordinates at rotary zero (docs/dialects.md).
+format: cnctwin-project
+version: 1
+name: "Ruled Ti-6Al-4V blade, 5-axis flank milling, UMC-750 G234"
+description: "Twisted, leaned ruled blade (chord 40/36, twist 8 deg, lean 6 mm, span 20 + 7 mm root band) flank-milled with a D12 R1 end mill along the rulings: two roughing passes (stock 1.0, 0.3), a finishing pass and a spring pass with a fresh tool, tool tip under G234 TCPC"
+seed: 8064
+
+machine: haas-umc750
+controller_overrides: {}
+
+material:
+  id: ti6al4v
+  batch:
+    kc_scale_sigma: 0.05
+    hardness_sigma_pct: 3
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 22
+  machine_state: warm
+  time_between_ops_min: 10
+
+stock:
+  kind: mesh
+  size_mm: null
+  tolerance_mm: null
+  non_squareness_deg: null
+  form: forged                               # near-net blade blank: fin 2.0 mm over the blade (previous 3-axis op)
+  mesh: stock.step
+
+cad:
+  path: part.step                            # make_cad.py; CAD frame = stock frame S (stacking axis z, hub section at z 0)
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}
+  datums:
+    - {label: A, feature: {face: plane, normal: [0, 0, -1], near_mm: [0, 0, -27]}}     # platform bottom (vise seat)
+    - {label: B, feature: {face: plane, normal: [0, -1, 0], near_mm: [0, -16, -17]}}   # platform front face
+    - {label: C, feature: {face: plane, normal: [-1, 0, 0], near_mm: [-30, 0, -17]}}   # platform left end
+  tolerances:
+    - {id: blade-profile, kind: profile_surface, feature: {face: freeform, near_mm: [0.125, -4.891, 10.0]},
+       tolerance_mm: 0.08, datums: [A, B, C]}
+    - {id: blade-finish, kind: roughness, feature: {face: freeform, near_mm: [0.125, -4.891, 10.0]}, Ra_um: 0.8}
+
+tools:
+  library: null
+  list:
+    - number: 1
+      tool: helical-59487-mhsv-020-41200-r100   # D12 R1 4FL, LOC 24, Aplus coated
+      holder: haimer-40-720-32               # ER32 CAT40, gauge length 70, nut d50
+      stickout_mm: 45
+      length_offset_mm: 115.000
+      radius_offset_mm: 6.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 1, limit_min: 30, used_min: 5, sister_of: null}
+      initial_wear: {VB_mm: 0.02}
+      comment: "D12 R1 4FL CARBIDE HELICAL 59487"
+    - number: 2
+      tool: helical-59487-mhsv-020-41200-r100
+      holder: haimer-40-720-32
+      stickout_mm: 45
+      length_offset_mm: 115.000
+      radius_offset_mm: 6.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 2, limit_min: 30, used_min: 0, sister_of: null}
+      initial_wear: {VB_mm: 0.0}
+      comment: "D12 R1 4FL CARBIDE HELICAL 59487"
+
+coolant:
+  fluid: emulsion-8pct
+  concentration_pct: 8
+  tank_fill_fraction: 0.9
+
+operations:
+  - name: OP10
+    program: blade.nc                        # written by make_program.py
+    setup:
+      workholding:
+        # workholding frame H: centre of the vise jaw seat (the platform bottom), 89 mm above the platter top
+        - {device: lang-45600, pose: {translate_mm: [0, 0, -89], rotate_deg: [0, 0, 0]}, label: "Quick-Point 52 grid plate on the platter"}
+        - {device: lang-48085-46, pose: {translate_mm: [0, 0, -62], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 32,
+           input_torque_Nm: 60, grip_depth_mm: 3, parallels_mm: null, label: "Makro-Grip 77, jaws on the platform faces y = -16 / 16"}
+      stock_pose: {translate_mm: [0, 0, 27], rotate_deg: [0, 0, 0]}          # S origin (stacking axis at the hub) 27 above the seat
+      work_offsets_mm: {G54: [-330.0, -254.0, -494.0]}                       # S origin: -521 + 27
+      fixture_pose: {translate_mm: [-330.0, -254.0, -521.0], rotate_deg: [0, 0, 0]}   # plate 27 + vise 65 - grip 3
+    from_previous: null
+    nozzle_positions: {}
+
+production:
+  parts: 1
+  operator: {load_s: 40, unload_s: 20, door_s: 4, clean_s: 20, inspect_every: 0, inspect_s: 300}
+
+physics:
+  tick_s: 1.0e-6
+  max_deg_per_step: 0.5                      # S1455: 8730 deg/s (x override) -> dt <= 57 us: l0 50 ticks
+  steps_per_tooth: 96                        # 4 teeth at 1455 rpm: 10.3 ms per tooth -> 107 us, not binding
+  macro_ipo: 10
+  lag_macro: 1
+  lattice_mm: 0.3
+  refine:
+    - {box: {min_mm: [-24.0, -15.0, -7.5], max_mm: [24.0, 10.0, 20.5]}, factor: 4}   # 0.075 <= finishing ae 0.3 / 4
+  edge_element_mm: 0.25
+  memory_bins: 720
+  polar_theta_bins: 720
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 1.0}  # 2-4 mm thick blade
+  structure: {every_n_macro: 50, max_dof: 50000}
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}
+
+recording:
+  fast: windows
+  fast_window_revs: 4
+  fast_period_s: 1.0
+  keyframe_period_s: 0.5
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: {fps: 25, speed: 5}
+  audio: true
+
+uncertainty:
+  runs: 20
+  method: lhs
+  vary: {stock_size: false, tool_offsets_um: 5, runout_um: 3, kc_scale_sigma: 0.05, clamping_force_rel: 0.1}
+
+machine_data: null

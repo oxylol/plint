@@ -118,8 +118,12 @@ class PathExecutor:
         count = min(int(count), len(s.buffer))
         if count <= 0:
             return
+        done = s.buffer[:count]
         del s.buffer[:count]
         s.retired += count
+        provider = hooks.TOOL_LIFE.get("default")
+        if provider is not None and hasattr(provider, "retired"):
+            provider.retired(self, done, int(tick))
         if s.blocked and len(s.buffer) < self.capacity():
             s.blocked = False
             s.interp_tick = max(s.interp_tick, int(tick))
@@ -210,6 +214,7 @@ class PathExecutor:
             self._do_call(call)
             return
         frame = s.frames[-1]
+        program_index = frame.program
         program = self.store.programs[frame.program]
         if frame.pc >= len(program.blocks):
             self._end_of_text(frame)
@@ -229,6 +234,14 @@ class PathExecutor:
         self.handler.execute(block)
         if not self._jumped and not self._hold and s.frames and len(s.frames) >= depth:
             s.frames[depth - 1].pc += 1
+        after = s.sys.get("after_block")
+        if after is not None and not self._hold and after["depth"] == depth and after["pc"] == self.block_pc \
+                and after["program"] == program_index:
+            s.sys.pop("after_block")
+            provider = hooks.RESUMERS.get(after["provider"])
+            if provider is None:
+                raise ControllerAlarm("cycle_unavailable", after["provider"])
+            provider.after_block(self, after.get("data", {}))
         if not self._hold:
             s.live_values = None
             if block.n is not None:

@@ -1,0 +1,86 @@
+# Roughness of the machined surface by kinematic profile simulation (cnctwin.surface, docs/models/surface.md
+# sections 2-3). Names carry the SI unit; `unit:` is the unit written. Profile rules follow ISO 4287/4288/3274
+# and the Gaussian filter of ISO 16610-21.
+format: cnctwin-model-params
+version: 1
+model: surface-roughness
+description: "ISO profile evaluation rules and the coefficients of the kinematic roughness model"
+params:
+  min_chip_ratio:
+    value: 0.3
+    unit: "-"
+    src: est
+    range: [0.2, 0.4]
+    note: "h_min / edge radius when the material file has no cutting.min_chip_thickness_ratio; middle of the 0.2-0.4 range used with the Brammertz term (grzesik-1996-roughness discusses it at this order)"
+  gauss_alpha:
+    value: 0.4697
+    unit: "-"
+    src: iso-16610-21-2011
+    note: "alpha = sqrt(ln 2 / pi): 50 % amplitude transmission at the cut-off"
+  sampling_lengths:
+    value: 5
+    unit: "-"
+    src: iso-4288-1996
+    note: "standard evaluation length = 5 sampling lengths (Rz is their mean)"
+  cutoff_by_rsm_m:
+    value: [[0.04, 0.08], [0.13, 0.25], [0.4, 0.8], [1.3, 2.5], [4.0, 8.0]]
+    unit: mm
+    src: iso-4288-1996
+    note: "Table 3, periodic profiles: rows [upper bound of RSm, cut-off lambda_c]; RSm above the last row keeps 8 mm"
+  cutoff_by_ra_m:
+    value: [[2.0e-5, 0.08], [1.0e-4, 0.25], [2.0e-3, 0.8], [1.0e-2, 2.5], [8.0e-2, 8.0]]
+    unit: mm
+    src: iso-4288-1996
+    note: "Table 1, non-periodic profiles: rows [upper bound of Ra, lambda_c] (Ra 0.02, 0.1, 2, 10, 80 um)"
+  stylus_table_m:
+    value: [[0.08, 0.0025, 0.0005], [0.25, 0.0025, 0.0005], [0.8, 0.0025, 0.0005], [2.5, 0.008, 0.0015], [8.0, 0.025, 0.005]]
+    unit: mm
+    src: iso-3274-1996
+    note: "Table 1: rows [lambda_c, short-wave cut-off lambda_s, largest sampling spacing]"
+  rsm_height_discrimination:
+    value: 0.1
+    unit: "-"
+    src: iso-4287-1997
+    note: "a profile element counts in RSm only if its peak and valley each exceed 10 % of Rz"
+  rsm_width_discrimination:
+    value: 0.01
+    unit: "-"
+    src: iso-4287-1997
+    note: "a profile element counts in RSm only if wider than 1 % of the sampling length"
+  recovery_ratio:
+    value: 0.0
+    unit: "-"
+    src: brammertz-1961-roughness
+    note: "0: the layer thinner than h_min stays and anything thicker is removed (Brammertz's rule behind R_t = f^2/8r + h_min/2 (1 + r h_min / f^2), validated in grzesik-1996-roughness); cutting's surface memory uses a linear share between h_min and 2 h_min for the forces (docs/models/cutting.md), which would raise the simulated peaks by up to h_min"
+  bue_overcut_ratio:
+    value: 0.5
+    unit: "-"
+    src: est
+    range: [0.2, 1.0]
+    note: "largest protrusion of a built-up edge beyond the cutting edge per unit BUE height; trent-wright-2000-metal-cutting describe the BUE as an unstable extension of the tool that overcuts; half its height is taken and drawn uniformly per tooth pass (stream surface.bue)"
+  bue_width_ratio:
+    value: 2.0
+    unit: "-"
+    src: est
+    note: "width of the BUE along the edge per unit BUE height (a lump about twice as wide as high on the micrographs of trent-wright-2000-metal-cutting)"
+  bue_fragment_probability:
+    value: 0.2
+    unit: "-"
+    src: est
+    note: "share of tooth passes with an active BUE that leave a welded fragment on the surface (BUE break-off cycles; trent-wright-2000-metal-cutting)"
+  bue_fragment_height_ratio:
+    value: 0.3
+    unit: "-"
+    src: est
+    note: "largest height of a welded BUE fragment per unit BUE height"
+  recut_chip_hardness_ratio:
+    value: 1.6
+    unit: "-"
+    src: est
+    range: [1.3, 2.0]
+    note: "hardness of a recut (work-hardened) chip over the work hardness; continuous chips are strain-hardened to roughly 1.5-2 times the bulk hardness (trent-wright-2000-metal-cutting); the dent depth is t_chip (1 - 1 / ratio)"
+  recut_dent_width_ratio:
+    value: 4.0
+    unit: "-"
+    src: est
+    note: "half-width of a recut dent per unit dent depth (a chip fragment pressed by the flank leaves a shallow, wide dent)"

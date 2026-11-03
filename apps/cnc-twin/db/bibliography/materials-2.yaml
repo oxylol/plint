@@ -1,0 +1,225 @@
+format: cnctwin-bibliography
+version: 1
+# Second research round for db/materials, db/tool_materials, db/workholding and db/holders:
+# Johnson-Cook check, Taylor tool-life fits, mechanistic milling coefficients, residual stress of
+# as-supplied plate, vise clamping force and ER clamping-nut torques. Every entry was read
+# (full text) on 2026-11-03 unless its note says otherwise.
+entries:
+  # ------------------------------------------------------------------ flow stress (Johnson-Cook)
+  lesuer-2001-llnl-jc:
+    type: article
+    authors: "Lesuer, D.R.; Kay, G.J.; LeBlanc, M.M."
+    title: "Modeling Large-Strain, High-Rate Deformation in Metals"
+    venue: "Third Biennial Tri-Laboratory Engineering Conference on Modeling and Simulation, Pleasanton, CA, 3-5 Nov 1999; Lawrence Livermore National Laboratory report UCRL-JC-134118 (OSTI 15005327)"
+    year: 2001
+    url: "https://www.osti.gov/servlets/purl/15005327"
+    accessed: 2026-11-03
+    pages: "Table 1 (p. 6): Johnson-Cook strength and damage constants for 6061-T6 (A 324 MPa, B 114 MPa, n 0.42, C 0.002, m 1.34; D1 -0.77, D2 1.45, D3 -0.47, D4 0.0, D5 1.60) and Ti-6Al-4V (862, 331, 0.34, 0.012, 0.8; D1 -0.09, D2 0.25, D3 -0.5, D4 0.014, D5 3.87); p. 6 (strain rate typically normalised to 1.0 1/s); p. 5 (6061 received as hot cross-rolled T6 plate, Ti-6Al-4V to AMS 4911; Hopkinson-bar tests at 1e3-1e4 1/s)"
+    note: "The report does not say how Table 1 was fitted or which melting/reference temperatures go with it; the Ti-6Al-4V row equals the Johnson (1985) set quoted by ducobu-2017-jc-ti6al4v."
+
+  # ------------------------------------------------------------------ residual stress of as-supplied stock
+  seger-2024-al7050-plate-rs:
+    type: article
+    authors: "Seger, M.; Mathews, R.; Marais, D.; Venter, A.M.; Halley, J.; Wang, J.; Malik, A."
+    title: "Effects of Aluminum Plate Residual Stress on Machined-Part Distortion"
+    venue: "Preprint submitted to ASME (Journal of Manufacturing Science and Engineering), OSTI 2448191 (Oak Ridge National Laboratory)"
+    year: 2024
+    url: "https://www.osti.gov/servlets/purl/2448191"
+    accessed: 2026-11-03
+    pages: "Fig. 2a (slitting residual stress sigma_x(z) in a 90.5 mm thick Kaiser Select 7050-T7451 plate, sample 4E); Fig. 2b (rolling and transverse stress in 76 mm thick 7050-T7451 plate by slitting, reproduced from Prime & Hill, Scripta Mater. 46 (2002) 77-82, ref. [16]); Fig. 9b (neutron diffraction, XY-averaged L/LT/ST stress at 14 depths, error bars about +-13 MPa); p. 2 ('stress-relieved wrought material such as Al 7050-T7451, which contains residual stress of only about +-20-30 MPa'); p. 4 (Prime & Hill: 7050-T74 not stress relieved, an order of magnitude larger stress than 7050-T7451 stretched 1.5-3 %)"
+    note: "Profiles stored in db/materials were digitised from the embedded figure images (axis-calibrated pixel tracing), see the notes at each profile."
+
+  prime-2003-al-forgings-rs:
+    type: article
+    authors: "Prime, M.B.; Newborn, M.A.; Balog, J.A."
+    title: "Quenching and Cold-Work Residual Stresses in Aluminum Hand Forgings: Contour Method Measurement and FEM Prediction"
+    venue: "Materials Science Forum 426-432, 435-440 (THERMEC 2003); Los Alamos report LA-UR-03-0585 (OSTI 976531)"
+    year: 2003
+    url: "https://www.osti.gov/servlets/purl/976531"
+    accessed: 2026-11-03
+    pages: "p. 1 (introduction: 'In plates, stress relief by stretching is quite effective in reducing the residual stresses by a factor of about 10'; cold compression of forgings does not fully relieve them); 7050-T74 and 7050-T7452 hand forgings 107 x 158 mm section"
+
+  # ------------------------------------------------------------------ mechanistic milling coefficients
+  mal-2013-cutpro-guide:
+    type: manual
+    authors: "Manufacturing Automation Laboratories Inc."
+    title: "CUTPRO: Fundamentals of Machining - Start to Finish Guide"
+    publisher: "Manufacturing Automation Laboratories Inc., Vancouver"
+    year: 2013
+    url: "https://www.malinc.com/wp-content/uploads/2014/05/CutPro_Guide.pdf"
+    accessed: 2026-11-03
+    pages: "pp. 5-7 of 83 (Fig. 2.5/2.6 and Table 2.2: orthogonal tube tests on Al 7050-T7451, V 1500 m/min, b 2.0 mm, rake 8 deg, h 0.05-0.20 mm; Ft = 1424 h + 33.046, Ff = 13.444 h + 35.669; Kte 16.52, Kfe 17.83 N/mm; average shear angle 39.79 deg, friction angle 19.25 deg, shear stress 356.46 MPa; density 0.00283 g/mm3); p. 9 (orthogonal-to-oblique example for a 30 deg oblique angle and 8 deg rake: Ktc 886.08, Kfc 144.79, Krc 329.48 MPa; edge forces 33.046 / 35.669 / 0 N); pp. 10-11 (average-coefficient slotting identification with a two-fluted cutter at 700 rpm, Fig. 2.10: Ktc 746.81, Krc 208.20, Kac 83.27 N/mm2, Kte 25.49, Kre 27.85, Kae -2.50 N/mm, fz 0.068-0.204 mm); p. 29 (the coefficients of Chapter 2 are for the AL7050 workpiece)"
+    note: "Rendered page images were read (the equations are not in the PDF text layer). The guide does not state the tool material, the end-mill diameter, helix or rake of the slotting test, nor the coolant."
+
+  mal-2015-machining-course:
+    type: manual
+    authors: "Altintas, Y. (Manufacturing Automation Laboratory, University of British Columbia)"
+    title: "MAL machining course slides (Mechanics and dynamics of machining)"
+    publisher: "Manufacturing Automation Laboratories Inc., Vancouver"
+    year: 2015
+    url: "https://www.malinc.com/wp-content/uploads/2015/06/MAL_Machining_Course.pdf"
+    accessed: 2026-11-03
+    pages: "slide p. 164 ('Stability with process damping at low speed milling', slot milling of AISI 1045 steel with a 2 teeth cutter: Ksp = 3.4e14 N/m3, wear land lw = 60 um, mu_c = 0.3, Krc 1978 MPa, Ktc 3242 MPa); slide p. 41 (average-coefficient example, 4 flutes, a = 2 mm: Ktc 667 N/mm2, Kte 31.4 N/mm, material not named)"
+    note: "Course slides dated 5/8/2015; values are as printed on the slides, the underlying paper is not cited on the slide."
+
+  # ------------------------------------------------------------------ tool life (Taylor)
+  batista-ponce-2019-ti64-adhesion:
+    type: article
+    authors: "Batista Ponce, M.; Vazquez-Martinez, J.M.; Davim, J.P.; Salguero Gomez, J."
+    title: "Analysis of Secondary Adhesion Wear Mechanism on Hard Machining of Titanium Aerospace Alloy"
+    venue: "Materials 12(12), 2015"
+    year: 2019
+    doi: "10.3390/ma12122015"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6630554/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (UNS R56400 bar, dry horizontal turning, uncoated WC-Co DCMT 11T308); Table 3 (tool-life tests at vc 50, 75, 100, 200 m/min, f 0.2 mm/rev, ap 1 mm); Eq. (2) T = 58.12e6 v^-3.58 (T in min, v in m/min, Taylor fit to the VB results 'according to ISO 3685')"
+
+  amorim-2002-1045-taylor:
+    type: thesis
+    authors: "Amorim, H.J."
+    title: "Estudo da relacao entre velocidade de corte, desgaste de ferramenta, rugosidade e forcas de usinagem em torneamento com ferramenta de metal duro"
+    venue: "MSc dissertation (Mestre em Engenharia), PROMEC, Universidade Federal do Rio Grande do Sul, Porto Alegre (supervisor A.O. Kunrath Neto)"
+    year: 2002
+    url: "https://lume.ufrgs.br/bitstream/handle/10183/3791/000343470.pdf?sequence=1&isAllowed=y"
+    accessed: 2026-11-03
+    pages: "Sect. 3.1 (ABNT 1040 and 1045 as rolled, 187-196 HB, ferrite-pearlite, Acos Finos Piratini); Sect. 3.2 and Table 3.2 (Sandvik TNMG 160404-PF GC4015 P15, alumina + TiN coated, holder MTJNR 2525M 16M1, a0 6, kr 93, lambda -6 deg, r 0.4 mm); Table 3.3 (f 0.15 mm/rev, ap 0.8 mm; vc 355/445/535 m/min for 1045, 425/475/525 for 1040); Tables 4.1-4.4 (tool lives at VBmax 0.3 mm and Taylor coefficients T = K vc^-x: 1045 K 6.57e9, x 3.31; 1040 K 5.61e15, x 5.37)"
+    note: "In Portuguese."
+
+  johansson-2016-304-colding:
+    type: article
+    authors: "Johansson, D.; Leemet, T.; Allas, J.; Madissoo, M.; Adoberg, E.; Schultheiss, F."
+    title: "Tool life in stainless steel AISI 304: applicability of Colding's tool life equation for varying tool coatings"
+    venue: "Proceedings of the Estonian Academy of Sciences 65(2), 172-176"
+    year: 2016
+    doi: "10.3176/proc.2016.2.13"
+    url: "https://kirj.ee/public/proceedings_pdf/2016/issue_2/proc-2016-2-172-176.pdf"
+    accessed: 2026-11-03
+    pages: "Table 1 (five PVD coatings at vc 250, f 0.275, ap 1.5); Table 2 (longitudinal turning with cutting fluid, cemented carbide CNMG431MJ, edge radius 20-25 um, clearance 6 deg, criterion VB = 0.30 mm or tool failure); Table 3 (seven tool-life tests of tool A: T, vc, ap, f, he); Table 5 (Colding constants K 5.955, H -2.0166, M 0.6591, N0 0.4316, L -0.1776 for tool A)"
+
+  bouchelaghem-2007-d3-cbn:
+    type: article
+    authors: "Bouchelaghem, H.; Yallese, M.A.; Amirat, A.; Belhadi, S."
+    title: "Wear behaviour of CBN tool when turning hardened AISI D3 steel"
+    venue: "Mechanika 2007 Nr. 3(65), 57-66"
+    year: 2007
+    doi: "10.5755/j02.mech.14804"
+    url: "https://mechanika.ktu.lt/index.php/Mech/article/download/14804/18895"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (AISI D3 quenched 940 C and tempered 280 C to 60 HRC; TiN-coated CBN insert, 57 % CBN, SNGA120408 T01020 in PSBNR2525K12, kr 75, alpha 6, gamma -6, lambda -6 deg; dry, f 0.08 mm/rev, ap 0.5 mm, vc 85-310 m/min, VB limit 0.3 mm, ISO 3685 long-term tests); Sect. 3.7 Eqs. (1)-(2): t = exp(11.667) v^-1.781 (R2 0.991) for VB 0.3 mm and t = exp(11.296) v^-1.657 for VB 0.4 mm"
+
+  aouici-2010-h11-cbn:
+    type: article
+    authors: "Aouici, H.; Yallese, M.A.; Fnides, B.; Mabrouki, T."
+    title: "Machinability investigation in hard turning of AISI H11 hot work steel with CBN tool"
+    venue: "Mechanika 2010 Nr. 6(86), 71-78"
+    year: 2010
+    doi: "10.5755/j02.mech.15967"
+    url: "https://mechanika.ktu.lt/index.php/Mech/article/download/15967/18659"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (AISI H11 hardened to 50 HRC, 80 mm bar, dry; Sandvik CBN7020, 57 % CBN + 35 % Ti(C,N), SNGA120408 S01020 in PSBNR25x25M12, kr 75, lambda -6, gamma -6, alpha 6 deg); Table 2 (CBN7020 physical properties: hardness 2800 daN/mm2, tenacity 4.2 MPa m^1/2, Young's modulus 570 GPa, density 4.3 g/cm3, grain size 2.5 um); Table 4 (nine tool lives at VB 0.30 mm and ap 0.15 mm for vc 120/180/240 m/min and f 0.08/0.12/0.16 mm/rev); Eq. (3) (quadratic RSM model, not used here)"
+
+  kovalcik-2010-gjl-si3n4:
+    type: article
+    authors: "Kovalcik, J.; Cuban, J."
+    title: "Long-term tool life tests of American made nitride ceramic inserts used to turn grey cast iron work-piece materials"
+    venue: "Annals of Faculty Engineering Hunedoara - International Journal of Engineering, Tome VIII (2010), Fascicule 1, 123-128"
+    year: 2010
+    url: "https://annals.fih.upt.ro/pdf-full/2010/ANNALS-2010-1-19.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 3 (grey cast iron CSN 42 2425, 263-275 HB; Sumitomo NS260 uncoated and NS260C Al2O3+TiN coated silicon nitride, CNMA 120408 in CERATIZIT PCLNR 2525 M12, alpha 5, gamma -5, lambda -5 deg, kr 95 deg; dry, ap 1 mm, f 0.2 mm/rev; VB_CONT 0.35 mm); Table 1 (tool lives); Table 2 (Taylor T = C_T vc^-m: NS260 m 1.59, C_V 2432 m/min, C_T 2.5e5; NS260C m 1.62, C_V 2924, C_T 4.0e5); Table 3 (90 % reliability interval of m: 1.11-2.07 and 1.09-2.15)"
+
+  kovalcik-2009-gjl-si3n4-fmg:
+    type: article
+    authors: "Kovalcik, J.; Cuban, J."
+    title: "Comparison of Performance of Austrian made Si3N4 - Nitride Ceramic Tools Used to Machine Grey Cast Iron Work-piece Materials"
+    venue: "MM Science Journal, October 2009, 142-145"
+    year: 2009
+    url: "https://www.mmscience.eu/journal/issues/october-2009/articles/comparison-of-performance-of-austrian-made-si3n4-nitride-ceramic-tools-used-to-machine-grey-cast-iron-work-piece-materials/download"
+    accessed: 2026-11-03
+    pages: "Table 2-3 (experimental grades FMG121C, FMG122C, FMG134C in grey cast iron 422425, 254-282 HB, dry, ap 1 mm, f 0.2 mm/rev, VB 0.5 mm; Taylor exponents m 3.07, 1.07, 2.05 and C_V 750, 29246, 1626 m/min)"
+
+  kundrak-2019-hard-turning-life:
+    type: article
+    authors: "Kundrak, J.; Palmai, Z."
+    title: "The Change of Tool Life in a Wide Range of Cutting Speeds in Hard Turning"
+    venue: "Manufacturing Technology 19(2), 254-260"
+    year: 2019
+    doi: "10.21062/ujep/279.2019/a/1213-2489/mt/19/2/254"
+    url: "http://journalmt.com/doi/10.21062/ujep/279.2019/a/1213-2489/MT/19/2/254.pdf"
+    accessed: 2026-11-03
+    pages: "Experimental verification: boring of hardened 100Cr6 (75 mm bore) with a PCBN 'Composite 10' tool, rake -5 deg, f 0.075 mm/rev, ap 0.1 mm, wear criterion W 0.4 mm; Tab. 2 tool lives T = 166, 153, 189, 222, 132, 34, 11, 7, 5 min at vc = 11, 20, 29, 40, 50, 68, 92, 105, 120 m/min"
+    note: "Hardness of the 100Cr6 is not stated in the text read."
+
+  lima-2012-inconel-tool-wear:
+    type: thesis
+    authors: "Lima, F.F."
+    title: "Estudo do desgaste de ferramentas de metal duro e ceramicas no torneamento do Inconel 751 e Inconel 718"
+    venue: "Thesis, Faculdade de Engenharia Mecanica, Universidade Federal de Uberlandia (repositorio.ufu.br handle 123456789/14749)"
+    year: 2012
+    url: "https://repositorio.ufu.br/bitstreams/d4def58e-beb7-4d7b-8ddf-740fff21a24e/download"
+    accessed: 2026-11-03
+    pages: "Sect. 3.1.2-3.2 (Kennametal KY1540 SiAlON, KY1615, KY4300 ceramics SNGN120716T; K313, KC5510 (WC-6Co, PVD TiAlN), KC5525 (WC-10Co, PVD TiAlN) carbides SNMG120412; holders CSSNR2525M12-MN7 (kr 45 deg) and CSXNR2525M12-MN4 (kr 85 deg); dry, ap 2 mm, f 0.2 mm/rev; carbide at 45 and 60 m/min, ceramics at 150 and 300 m/min; end-of-life criteria Table 3.6: VBB 0.4, VBBmax 0.6, VBC 0.6, VBN 1.0 mm); Table 4.3 (Inconel 718 hardness 32.5-33.5 HRC); Table 4.28 (carbide tool lives on Inconel 718 in seconds)"
+    note: "In Portuguese."
+
+  # ------------------------------------------------------------------ holders and workholding
+  regofix-tightening-torque:
+    type: catalogue
+    authors: "REGO-FIX AG"
+    title: "Recommended tightening torque for Hi-Q/ER clamping nuts and for micRun clamping nuts"
+    venue: "3-page REGO-FIX technical sheet (www.rego-fix.com), undated; copy hosted on the Carbide 3D community forum"
+    year: null
+    url: "https://community.carbide3d.com/uploads/short-url/A7kw8rcQydzFLj8Uuad33eFCvUF.pdf"
+    accessed: 2026-11-03
+    pages: "p. 1 table: recommended tightening torque [Nm] by collet size and clamping-diameter range for nut types ER/ERC, ERB/ERBC, ERM/ERMC, ERMX/ERMXC, ERAX/ERAXC and ER MS (ER* includes ER standard and ER-UP), with ER-GB (tapping) columns and TORCO-FIX wrench sizes"
+    note: "The usa.rego-fix.com original (rego_torque.pdf) could not be fetched (broken TLS chain); this copy carries the REGO-FIX header."
+
+  regofix-2009-er-technical-information:
+    type: catalogue
+    authors: "REGO-FIX AG"
+    title: "Technical Information - System ER (catalogue section 14)"
+    venue: "REGO-FIX catalogue, Edition 9/2009, section 14 (copy hosted by Productivity Inc.)"
+    year: 2009
+    url: "https://www.productivity.com/wp-content/uploads/2015/05/Rego-Fix-Technical-Information-Catalog-Section.pdf"
+    accessed: 2026-11-03
+    pages: "14.01 (ER collet sizes and nut threads: ER16 M22x1.5, ER32 M40x1.5 ...); 14.03 (recommended tightening torque in ft-lbs; 'The maximum torque must not be more than 25% above the recommended tightening torque. Higher tightening torque may result in the damage of the toolholder')"
+
+  regofix-2025-er-flyer:
+    type: catalogue
+    authors: "REGO-FIX AG"
+    title: "ER Promo Flyer (036200270_ER_PromoFlyer_2025 ENG 2507)"
+    venue: "REGO-FIX AG, 4-page flyer"
+    year: 2025
+    url: "https://us.rego-fix.com/system/files/docs/2026-09/ER_Flyer_ENG.pdf"
+    accessed: 2026-11-03
+    pages: "p. 4 'System comparison ER systems': runout at 3 x D with a 12 mm carbide test rod 3 um (REGO-FIX) vs 14 and 18 um, transferable torque 89 Nm vs 57 and 82 Nm (collet size and nut torque not stated); Hi-Q nuts 'up to 40 % higher clamping force'"
+
+  kurt-d688-manual:
+    type: manual
+    authors: "Kurt Manufacturing (Kurt Workholding)"
+    title: "D688 AngLock Vise Base Assembly - Operating Instructions Manual (English/Espanol)"
+    venue: "Kurt Workholding operating manual, copy hosted by Travers Tool Co. (item 61-421-170)"
+    year: null
+    url: "https://docs.travers.com/assets/pdf/61-421-170_manual.pdf"
+    accessed: 2026-11-03
+    pages: "p. 3 (AngLock: each pound of forward jaw force induces a 1/2 pound downward force; 80,000 psi ductile iron body, hardened bed and jaw plates); p. 4 table 'Manual Vise Clamping Force' (torque ft-lbs -> D688 clamping force: 10 1129, 20 2242, 30 3337, 40 4148, 50 5379, 60 6310, 70 6977, 80 7968; lbf per the 80 ft-lb / 7,968 lbs. product statement); p. 5 (no handle extensions, impact wrenches or hammers); p. 8 parts list"
+
+  ned-2012-kurt-d688:
+    type: web
+    authors: "New Equipment Digest"
+    title: "D688 Vise (product announcement, Kurt Workholding)"
+    venue: "New Equipment Digest, product directory 55101982"
+    year: 2012
+    url: "https://www.newequipment.com/product-directory/machine-tools-metalworking/product/55101982/43261-d688-vise"
+    accessed: 2026-11-03
+    pages: "8.8 inch jaw opening; up to 7,968 lbs. clamping force with 80 ft. lbs. input torque; repeatability within 0.001 inch (dated Nov. 1, 2012)"
+
+  yoder-kurt-d688-listing:
+    type: web
+    authors: "Yoder Machinery Sales (Holland, OH)"
+    title: "Kurt #D688 Angleloc machine vise, plain style, 6 x 8.8 x 1.735 inch jaw (stock no. 76196)"
+    venue: "Used-machinery listing on surplusrecord.com"
+    year: null
+    url: "https://www.surplusrecord.com/listing/kurt-d688-angleloc-machine-vise-plain-style-6-x-8-8-x-1-735-jaw-76196-426039/"
+    accessed: 2026-11-03
+    pages: "specification lines: jaw width 6 in, jaw opening 8.8 in, jaw depth 1.735 in, vise height 4.375 in, vise length 16.75 in, vise width 8.25 in"
+    note: "Dealer-measured dimensions of a used vise, not a Kurt drawing."

@@ -425,12 +425,287 @@ fsync, rename).
 
 ## Run directory
 
-(written by the owner of `cnctwin/core/rundir.py`, `recorder.py`, `keyframes.py`, `checkpoint.py`)
+(owner: `cnctwin/core/rundir.py`, `recorder.py`, `keyframes.py`, `checkpoint.py`, `ledger.py`; architecture 16)
+
+```
+runs/<run_id>/
+  run.json            written at the end (complete, no volatile fields)    rundir.run_document
+  status.json         volatile: status, progress, ETA                      the progress callback's owner (API worker, twin run)
+  findings.json       rewritten when findings change                        RunDirectory.write_findings
+  trace.jsonl         append-only, one TraceEvent per line, id = line       cnctwin.core.trace.TraceLog
+  channels.json       written at the start                                  Recorder.write_channels
+  timeline.json       rewritten (closed, final blocks)                      Timeline.write
+  series/<tier>/part-<n>.parquet, series/index.jsonl                        Recorder
+  scene.json, scene/<name>.glb                                              SceneWriter
+  frames.bin          append-only, one record per L1 tick                   FramesWriter ("frames.bin" below)
+  keyframes/..., chips/kf_<k>.npz                                           KeyframeWriter ("Keyframes" below)
+  checkpoints/ck_<tick>.npz + ck_<tick>.json                                Checkpointer
+  part_<op>.*, inspection.json, ... (operation ends, end of run)            registered with RunDirectory.register_output
+```
+
+**Run ids** (`run_id(project_hash, options, counter, slug)`): `<nnnnn>-<slug>-<h8>`, the counter as five
+digits (one above the highest numbered folder, as the API numbers its runs), the project folder's slug,
+and the first 8 hex digits of sha256(`<project hash>\n<options as canonical JSON>`) (sorted keys, no
+spaces, `resume_from` left out: a resumed run is the same run). The same project, options and counter
+always give the same id. `allocate_run_dir(runs_dir, project_hash, options, slug)` creates the folder.
+
+**run.json** (`cnctwin-run`, version 1), written once at the end (`fsync`, rename); a resume removes it:
+`run_id`, `complete`, `project` (the ResolvedProject as plain SI data, `operations[].program_sha256`
+added), `project_hash`, `project_dir`, `project_file`, `inputs` ({file: {sha256, bytes}}), `options`
+(without `resume_from`), `versions` (cnctwin, format, python, numpy, scipy, numba, llvmlite, pyarrow,
+`build`), `numba_cache_key`, `threads` (OMP/OPENBLAS/MKL/NUMBA_NUM_THREADS, PYTHONHASHSEED), `platform`
+(machine, system, CPU model), `clock` (tick_s, ipo_ticks, macro_ipo, l0 strides; whatever the loop
+passes), `seed`, `verdict` {safe, reasons[]} (`verdict(findings)`: safe when no finding is error or
+fatal; a reason reads `<category> (<severity>) at <op> line <n>: <message>`), `summary` (the loop's
+numbers; `summary.conservation` is `Ledger.summary()`), `outputs` [{path, bytes, sha256}] of every file
+except run.json, status.json, checkpoints/ and dot files. JSON in insertion order, indent 1, UTF-8;
+non-finite floats are written as null (JSON has no NaN).
+
+**status.json** (`cnctwin-run-status`): `{status, progress {sim_time_s, est_total_s, wall_s, eta_s}, op,
+phase, message, checkpoint {tick, file}, error, ...}`, status one of queued, running, cancelling, done,
+failed, cancelled; written atomically (no fsync). Everything that depends on wall time is here and
+only here. It is written by the owner of the progress callback: the API worker for jobs, `twin run`
+(cnctwin.cli.Progress) for command-line runs; the loop reports through `progress_cb` only and never
+writes it (`RunDirectory(path, own_status=False)` makes `write_status` a no-op and `prepare` keep the
+file, for a loop that holds a RunDirectory under the worker).
+
+**findings.json** (`cnctwin-findings`): `{findings: [Finding.to_dict()]}` in id order.
+
+**channels.json** (`cnctwin-channels`): `{channels: [{name, unit, tier, domain, doc, max_shape, dtype,
+storage}], fast: {mode, ring_rows, ring_s, l0_ticks_min, columns, window_revs, period_s, min_spacing_s,
+max_windows_per_second, window_min_s, window_max_s}, tick_s, ipo_ticks, macro_ipo}`.
+
+**timeline.json** (`cnctwin-timeline`): `{tick_s, blocks: [...]}`, one record per executed NC block of a
+path, `[tick0, tick1)` in base ticks: `index` (position in the run's timeline, global over paths, the
+`block_index` of `PathFrame`), `op, program, line, block, path, kind, tick0, tick1, part`, optional
+`tool, ticks {category: ticks}, n_number, call_stack, stop, pumps_on, in_cut_ticks` (and any other key
+its writer adds; the format cnctwin.production reads). Only closed records whose `final` is not false
+are written (open records have `tick1 = -1`). `Timeline.open(...) -> index`, `.open_ref(LineRef, ...)`,
+`.close(index, tick1, ticks=...)`, `.upsert(record)` (motion's own records), `.line_ref(index) ->
+BlockRef(index, op, program, line, block, path, kind, tick0, n_number, call_stack)` for
+`RunContext.finding`. Category ticks are non-negative integers; the ledger fails the run when a
+block books more category ticks than it lasts, or when a path's block durations do not sum to its span.
+
+**series/** (Parquet, zstd, no dictionary encoding, statistics on): one file per tier per checkpoint
+interval, `series/<tier>/part-<n>.parquet` (n = 0, 1, ... per tier), written row group by row group into
+`series/<tier>/.part-<n>.parquet.tmp` (a row group whenever a tier has buffered `series_buffer_max_bytes`,
+4 MiB, of rows) and renamed into place when closed at each checkpoint and at the end; a part's
+key-value metadata `cnctwin` = `{format: cnctwin-series, version, tier, part, tick_s}`. Columns: `tick`
+(int64 base ticks, not null), `time_s` (float64, `tick / 10^6`), then every channel of the tier sorted
+by name, each as `<name>` (scalar) or `<name>[i]` (C order over `max_shape`): float64/float32 as declared
+(the fast tier in mode `all`: float32), int64/int32/int8 as declared, bool as int8 0/1. Padding beyond a
+value's shape and values not given in a step are NaN (float columns) or null (integer columns). The
+tick tier ends with `<fast column>.min`, `.mean`, `.max` (float64) of every fast column over the L0 rows
+of each L1 tick `[t, t + ipo_ticks)` (finite values only; NaN where a tick had none). Rows: fast = L0
+samples (in mode `windows` only those inside windows), tick = one per L1 tick (its first base tick),
+macro = one per macro step (its end tick). `series/index.jsonl` (append-only, fsynced): one line per
+closed part `{tier, part, file, tick0, tick1, t0_s, t1_s, rows}` (`replay: true` for a replay part).
+
+Fast windows (`fast: windows`; settings in db/models/recording.yaml, project `recording:`): the ring
+(`RingBuffer`, core/abi.py) holds `ring_buffer_s` (0.5 s) of L0 rows, fewer when `ring_max_bytes` (32 MiB)
+would be exceeded, never fewer than one macro step plus one L1 tick. At each `end_step` the recorder
+reads the rows pushed in the step (all of them: rows overwritten before being read fail the run) and
+keeps the rows inside pending windows that come after the last row already written:
+
+* engagement: a row more than one L1 tick after the previous one (the broad phase found no contact for
+  a whole L1 tick) starts an engagement, or the loop calls `Recorder.engagement(tick, omega)`; window
+  `[start, start + L)`, unless another engagement window started less than `fast_min_spacing_s` (0.25 s)
+  before or the current whole second of the base clock already has `fast_max_windows_per_second` (2);
+* finding: `[t_f - L/2, t_f + L/2)` around every finding raised (not capped; rows still in the ring);
+* periodic: `[k P, k P + L)` for every `P = fast_period_s`;
+
+with `L = fast_window_revs` revolutions at the step's largest |omega|, within `[fast_window_min_s,
+fast_window_max_s]` (10 ms .. 0.25 s). Windows merge; a row is written once. A window whose start was
+overwritten in the ring before it was asked for is counted (`lost_windows`); findings raised after
+their rows left the ring (end-of-operation inspection) get their window by replay (`twin replay
+--window T0 T1`: `Recorder(..., replay=(tick0, tick1))` writes every fast row of the window, float64,
+to `series/fast/replay-<tick0>-<tick1>.parquet`, appended to the index; readers drop rows a replay
+repeats). `fast: all` writes every row (float32), `fast: none` no fast tier (the tick tier still has
+the envelopes).
+
+Reading: `iter_series(run_dir, tier, columns, tick0, tick1)` yields `(ticks, {column: float64})` chunks in
+time order (missing columns and nulls read NaN; the API's backend); `read_series(run_dir, tier, tokens,
+t0_s, t1_s, max_points)` returns the rows as recorded up to `max_points`, else M4 (first, last, minimum,
+maximum per bucket of `max_points / 4` buckets, every point a recorded sample; Jugel et al. 2014); a
+token selects a column exactly or all columns of a channel (`name`, `name[i]`, `name.min`).
+`twin export RUN [--tier tick] [--channels a,b] [--format csv|parquet] [--t0 S] [--t1 S] [--out FILE]`:
+CSV `tick,time_s,<columns>` (header quoted, NaN as empty, shortest round-trip floats) or Parquet (zstd,
+NaN as null).
+
+**scene.json** (`cnctwin-scene`): `{units: "m", ...the loop's document (machine components and links,
+chain, axes, fixture, stock with its brick layout, tool envelopes, nozzles), meshes {name:
+"scene/<name>.glb"}, frames: <frames.bin header>, bricks: <keyframe brick layout>}`; each mesh is a
+GLB written with cnctwin.geom's writer (`SceneWriter.add_mesh(name, mesh, color_rgba, extras,
+quantize)`), names are file-safe ids.
+
+**checkpoints/** (`Checkpointer`, architecture 9): `ck_<tick>.npz` is a zip of `__state__.json` (deflated)
+and the arrays `a<n>.npy` (stored), written as `.ck_<tick>.npz.tmp`, fsynced, renamed; then
+`ck_<tick>.json`, the commit marker, the same way, last. `__state__.json` = `{tree, arrays}`: the
+encoded `{state: SimState, participants: {name: state}}` (generic codec, see cnctwin/core/checkpoint.py:
+`{"$dc": "module:Class", "f": {...}}` dataclasses, `"$nt"` NamedTuples, `"$o"` objects, `"$cp"` states
+with `to_arrays`/`from_arrays` (their arrays and meta), `"$d"` dicts with non-string keys, `"$t"` tuples,
+`"$set"`, `"$dq"`, `"$e"` enums, `"$n"` NumPy scalars, `"$f"` non-finite floats by bit pattern, `"$a"`
+arrays, `"#"`/`"$r"` shared objects) and per array index `{store: "a<n>"}` or `{view: "a<n>", offset,
+shape, strides, dtype}` (a view of a stored base). The marker: `{format: cnctwin-checkpoint, version,
+tick, time_s, macro, op, op_index, op_end, npz, npz_bytes, state_sha256, arrays, project_hash, build,
+numba_cache_key, cnctwin, findings, trace {bytes, events}, cuts {participant: cut}, extra}` plus, for
+readers, `trace_bytes`, `trace_events`, `frames_bytes`, `keyframes`, `timeline_blocks`, `series`
+({tier: [closed files]}), `series_index_lines`, `series_index_bytes`. Cuts: frames `{bytes, records}`,
+keyframes `{keyframes, index_bytes}`, recorder `{series, index_bytes, index_lines}`, timeline `{blocks,
+closed}`, run directory `{outputs}`, ledger `{}`. Retention after each commit: the newest
+`checkpoints_keep_last` (2) and every checkpoint written with `op_end=True`; a marker is removed before
+its arrays. A checkpoint is refused (CheckpointError) when its project hash or build differs from the
+run's. `resume` truncates every output to the cut (frames.bin and the index files to their byte
+lengths, series parts and keyframes after the cut and temporary files removed, bricks.idx,
+timeline.json and findings.json rewritten from the restored state, late outputs not registered before
+the cut and run.json removed), reopens trace.jsonl at its cut (`Restored.trace`) and removes later
+checkpoints. Arrays come back writable, native byte order, C-contiguous (views of a shared base stay
+views; `Restored.converted_to_c` counts arrays that had another order).
+
+**Participants** (what the loop passes to `Checkpointer.write(..., participants=...)` and `resume`):
+objects with `checkpoint_cut() -> dict` (make outputs durable, return the cut), `checkpoint_state()`,
+`restore_state(state)`, `truncate_outputs(cut)`: Recorder, FramesWriter, KeyframeWriter, Timeline,
+RunDirectory, Ledger. The trace log is passed as `trace=ctx.trace`. Order of one macro step's
+infrastructure calls (architecture 5.3): domains' `absorb` and `macro_step` write fresh records into
+`bus_next`; findings rules; `Ledger.check(ctx, state, tick_end)`; `Recorder.record_tick`,
+`.record_macro`, `.end_step(tick0, tick1, omega, state.findings)`; `FramesWriter.append_motion(
+bus_next.motion)`; `Timeline.write()` and `RunDirectory.write_findings` when they changed;
+`state.swap_bus()`, clock advanced; `KeyframeWriter.write` when `due`; `Checkpointer.write` when `due`
+(the cut lies between two macro steps: a resume starts the next step at once).
+
+**Conservation** (`cnctwin/core/ledger.py`, run.json `summary.conservation`, macro channels `ledger.*`;
+architecture 12). `Ledger.check(ctx, state, tick_end)` runs every macro step after the slow domains. It
+books the step's bus records into `SimState.ledger` (fields only the ledger writes: `removed_volume_m3`,
+`removed_mass_kg`, `displaced_volume_m3`, `freed_body_mass_kg`, `shaft_work_J`, `feed_work_J`,
+`heat_shear_J`, `heat_rake_J`, `heat_flank_J`, `ploughing_J`, `modal_energy_change_J`, `damping_J`,
+`process_damping_J`, `chip_kinetic_J`, `block_time_ticks`, `cycle_time_ticks`) and checks, each term
+computed by its owner, nothing closed by difference:
+
+| balance | equation | read from | tolerance |
+|---|---|---|---|
+| mass (cumulative, kg) | `rho20 (V_removed + V_loose) = m_chips + rho20 V_displaced + m_loose` | `removal.contacts[*].removed_volume_m3, displaced_volume_m3, workpiece`; `removal.loose_bodies[*] {volume_m3, mass_kg, workpiece}` (bodies detached this step, not in `removed_volume_m3`); `m_chips` = `SimState.ledger.chips_in_flight_kg + chips_settled_kg + chips_conveyed_kg + chips_adhered_kg + chips_in_flutes_kg + dust_kg` (written by chips) valid at `chips.booked_until_tick`, the removal side taken at that step end; `rho20` = `project.material.physical.density_kg_m3` at 20 degC | `physics.tol_mass` (1e-9) relative to the larger side |
+| energy (J, per interval) | `shaft + feed work = shear + rake + flank heat + ploughing + modal energy change + damping + process damping + chip kinetic + friction + stored cold work + unbalance work` | `cutting.contacts[*]` (`shaft_work_J, feed_work_J, heat_shear_J, heat_rake_J, heat_flank_J, ploughing_J`), `dynamics` (`modal_energy_change_J`, `damping_dissipation_J`, `process_damping_J`; `basis_change_J` is not work and is not booked), `chips.kinetic_energy_J` (booked once per new `booked_until_tick`), `SimState.ledger.friction_J, stored_cold_work_J, unbalance_work_J` (cumulative, written by their owners in the step whose window they cover) | `physics.tol_energy` (1e-6) relative to the sum of the magnitudes of the interval's terms |
+| time (integer ticks) | per path: sum of block durations (open block up to now) = span (first tick0 to now, or to the last tick1 when no block is open); category ticks of a block <= its duration | `ctx.timeline` (Timeline records, or any `records` with path, tick0, tick1, ticks) | exact |
+| thermal solvers | `dU = sources - losses - removed enthalpy` per solver | `thermal.ledger_residual_rel`; `Ledger.solver(name).book(u_before_J, u_after_J, sources_J, losses_J, removed_J, time_s)` | `physics.tol_energy` |
+| heat partition (reported only) | heat generated by zone up to step n-1 = `heat_to_chip_J + heat_to_tool_J + heat_to_work_J` (thermal, step n) | cutting, `SimState.ledger` | not enforced |
+
+Alignment: the hot-loop terms cover the step that wrote them; chips books its windows up to
+`booked_until_tick` (one step behind when it reads `bus_prev`), so the energy interval ends at the
+earlier of the two and the mass check compares chips' inventories with the removal totals at that
+tick (a chips record more than `(chips.every_n_macro + lag_macro + 1)` macro steps behind is a
+LedgerError). A balance whose owners are not among the run's active domains is reported as not
+checked, never as passed. A violation adds a fatal finding (`mass_balance`, `energy_balance`,
+`time_balance`) and raises ConservationError: the run fails. Contract: every macro step gives bus_next
+fresh records (`state.bus_next = Bus()` before the hot loop, or each writer assigns new record objects);
+a non-zero cutting, removal or dynamics record still present from two steps before is refused
+(LedgerError) instead of being booked twice. Channels: `ledger.mass_in_kg`, `ledger.mass_out_kg`,
+`ledger.mass_residual_rel`, `ledger.energy_in_J`, `ledger.energy_out_J`, `ledger.energy_residual_rel`,
+`ledger.energy_residual_J`, `ledger.alignment_lag_s`, `ledger.time_residual_ticks`,
+`ledger.thermal_residual_rel`, `ledger.partition_residual_rel` (NaN when not checked). Summary: `{mass,
+energy: {max_residual_rel, final_residual_rel, tolerance_rel, checked_steps, ok, note}, mass.terms, time:
+{residual_ticks, tolerance_rel: 0, checked_steps, ok, unclassified_ticks, note}, thermal: {solvers,
+max_residual_rel, tolerance_rel}, partition: {..., enforced: false}}`. Floating-point bound of the checks
+themselves: each residual is formed from per-step sums of at most a few thousand terms, so its rounding
+error is below 1e-13 relative, four orders below the tightest tolerance (measured on the toy run of
+tests/unit/core: mass residual 4e-16, energy 0).
+
+**Settings** (db/models/recording.yaml, read with `cnctwin.db.models.params("recording")`; project
+`recording:` over db/_templates/project.yaml for `fast`, `fast_window_revs`, `fast_period_s`,
+`keyframe_period_s`):
+
+| parameter | value | source |
+|---|---|---|
+| `ring_buffer_s` | 0.5 s | architecture 10 |
+| `ring_max_bytes` | 32 MiB | est: within the 50 MB recording budget of architecture 10 |
+| `series_buffer_max_bytes` | 4 MiB per tier | est: memory bound, row groups by count |
+| `fast_window_min_s`, `fast_window_max_s` | 10 ms, 0.25 s | est: one macro step; half the ring |
+| `fast_min_spacing_s`, `fast_max_windows_per_second` | 0.25 s, 2 | est: about 5 % of L0 steps at 10 000 rpm |
+| `checkpoint_interval_s`, `checkpoints_keep_last` | 10 s, 2 | architecture 10, 16 |
+| `keyframe_full_every`, `keyframe_field_max_cell_m` | 20, 8 mm | architecture 16 |
+
+The run infrastructure draws no random numbers (no RNG streams).
 
 ## frames.bin
 
-(written by the owner of `cnctwin/core/rundir.py`)
+(owner: `cnctwin/core/rundir.py`, `FramesWriter`, `read_frames`)
+
+Packed little-endian records, one per L1 tick in rising tick order, no file header; the header is
+`scene.json["frames"]`:
+
+```
+{format: cnctwin-frames, version: 1, file: "frames.bin", record_bytes, byte_order: "little", tick_s, ipo_ticks,
+ axes: [{name, kind: linear|rotary, unit: m|rad, origin}], paths: [{path, spindle}],
+ fields: [{name, dtype, shape, offset, unit}], doc}
+```
+
+| field | dtype | shape | value |
+|---|---|---|---|
+| `tick` | `<i8` | | base tick of the L1 tick |
+| `axis` | `<f4` | [n_axes] | linear: machine value minus `axes[a].origin` (the axis value at the stock origin), m; rotary: angle wrapped to [0, 2 pi), rad |
+| `axis_rev` | `<i4` | [n_axes] | revolutions of a rotary axis (`angle = axis + 2 pi axis_rev`); 0 for linear axes |
+| `spindle_angle_rad` | `<f4` | [n_paths] | spindle angle of the path, right-handed about +z_T, wrapped to [0, 2 pi) |
+| `spindle_rev` | `<i4` | [n_paths] | its revolutions (`unwrapped = angle + 2 pi rev`) |
+| `tip_S_m` | `<f4` | [n_paths, 3] | tool tip in the stock frame S |
+| `axis_T_S` | `<f4` | [n_paths, 3] | tool axis +z_T in S (unit vector) |
+
+`record_bytes = 8 + 8 n_axes + 8 n_paths + 24 n_paths`. Wrapping: `rev = floor(angle / 2 pi)`, `wrapped =
+float32(angle - 2 pi rev)`, and a wrapped value that rounds to 2 pi in float32 is written as 0 with the
+next revolution, so `0 <= wrapped < 2 pi` holds in float32. Precision: float32 keeps 24 bits, 6e-8 m at
+0.5 m from the origin and 4.8e-7 rad near 2 pi (the reason linear axes are stored relative to the stock
+origin and angles wrapped with integer revolutions); the UI never re-implements kinematics: tip and
+tool axis come from the motion record. `FramesWriter.append_motion(MotionFrame)` takes axis values from
+`PathFrame.axis_actual` by `axis_names`, the spindle from `spindle_angle_rad` + `spindle_rev`, the tip
+from `tip_S_m` and the tool axis from `PathFrame.axis_T_S` when the record has it, else
+`R_S_M @ axis_T_M` (exact while the stock does not rotate relative to M during the step).
+`read_frames(run_dir, tick0, tick1) -> (records, {header, axis_abs, spindle_unwrapped_rad})` gives the
+absolute axis values back (origin added, rotary axes unwrapped). The file is truncated to the
+checkpoint's byte length at a resume.
 
 ## Keyframes
 
-(written by the owner of `cnctwin/core/keyframes.py`)
+(owner: `cnctwin/core/keyframes.py`, `KeyframeWriter`, `KeyframeReader`)
+
+A keyframe is written every `recording.keyframe_period_s` (0.5 s; the first at tick 0) as number k:
+
+* `keyframes/kf_<k>.glb`: glTF 2.0 binary (asset generator `cnctwin keyframes`), one node per brick written
+  in this keyframe, named `brick_<brick>` with `extras {brick}`; a brick with a surface has a mesh with
+  one triangle primitive: POSITION unsigned short VEC3 (byte stride 8, KHR_mesh_quantization required),
+  indices unsigned int, the node's `translation` = record origin and `scale` = record step (so viewers
+  dequantise); an emptied brick is a node without mesh, `extras.empty: true`. JSON with sorted keys and
+  fixed separators, chunks padded to 4 bytes: the same input gives the same bytes. Every
+  `keyframe_full_every`-th keyframe (20; k % 20 == 0) is a full snapshot with every non-empty brick;
+  the others hold the bricks that changed (`changed` = the field's dirty bricks; a dirty brick without a
+  mesh is empty now; a brick whose record is byte-identical to its last version is skipped).
+* the **brick record** (one contiguous byte range of the BIN chunk, 4-byte aligned): header `<4sIIffff` =
+  `b"BRK1"`, n_vertices (uint32), n_indices (uint32), origin_S_m (3 float32), step_m (float32); then
+  uint16 positions [n_vertices, 4] (x, y, z, 0) with `p = origin + q * step` in S, metres; then uint32
+  indices [n_indices] (triangles, counter-clockwise seen from outside, as the removal meshing gives
+  them). The step is `extent / 65535` of the brick's own vertex box (rounded up to float32, origin
+  rounded down), so every vertex is within `step / 2` of its float64 position: 0.06 um for an 8 mm
+  brick (lattice 0.25 mm), plus float32 rounding where a reader dequantises in float32.
+* `keyframes/bricks.idx` (`cnctwin-bricks-index`, rewritten atomically when a brick gets a new version):
+  `{cells: 32, lattice_m, grid, origin_S_m, record: <layout text>, bricks: {"<brick>": [[k, file, offset,
+  length], ...]}}`, entries sorted by k, file relative to keyframes/. A full snapshot adds no entry for a
+  brick whose record did not change, so the index grows with the changes only. Brick ids: the removal
+  field's brick number on workpiece 0, `w<w>.<brick>` on workpiece w.
+* `keyframes/index.jsonl` (append-only): `{k, tick, time_s, glb, fields, chips, full, bricks [written],
+  empty [emptied], ...extra}`.
+* `keyframes/kf_<k>.npz` (deterministic zip, members sorted, dated 1980-01-01, read with
+  `allow_pickle=False`): `tick` (int64, 0-d), `time_s`, the loop's fields as given (chip pile heights,
+  wetted cells, tool deflection, part pose, coolant jets `jet_*`), every float field whose name ends in
+  `_K` as float16 (0.25 K resolution at 300 K, 0.5 K at 1000 K), and for every grid (`FieldGrid(values,
+  origin_S_m, cell_m)`, cell-centred, NaN outside material) `<name>` block-averaged over the largest
+  integer factor f with `f cell <= keyframe_field_max_cell_m` (8 mm; finite values only, a block without
+  one is NaN; padded with NaN to a multiple of f), float16 for `_K` grids else float32, with
+  `<name>_origin_S_m` and `<name>_cell_m` (= f cell).
+* `chips/kf_<k>.npz`: the chips' arrays (particles in flight, pile summary) and `tick`.
+* `keyframes/attr/brick_<brick>.npz`: final per-vertex attributes of each brick's last record
+  (deviation, finish, wear), written at the end of the run (`write_attributes`).
+
+Reading: `KeyframeReader(run_dir).brick(brick, tick=None | time_s=None)` finds the brick's newest entry at
+or before the time in bricks.idx and reads its record with one `os.pread` (the API's
+`/bricks/{brick}?t=` does the same); `scene_at(t)` does it for every brick; `playback(t)` lists the
+keyframes to load from the GLB files alone (the newest full snapshot and every keyframe after it);
+`decode_record(bytes) -> (vertices, faces, header)`. At a resume every keyframe file with k at or
+after the cut's count is removed, index.jsonl is truncated to its byte length, bricks.idx is rewritten
+from the restored state and attr/ is removed.

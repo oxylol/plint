@@ -1,0 +1,47 @@
+#!/bin/bash
+# twin: the CNC Twin command line (cnctwin/cli.py). Usage: bin/twin <command> [args...]; bin/twin --help.
+#
+# Sets the environment bin/tsafe sets, so a run here gives the same bytes as a test or an API job:
+# one thread for OpenMP/OpenBLAS/MKL/Numba, PYTHONHASHSEED=0, and NUMBA_CACHE_DIR keyed by a hash of
+# every kernel source file, the numba/llvmlite versions and the CPU (Numba does not notice that a
+# cached caller's callee in another file changed, so a stale cache is never reused); docs/determinism.md.
+# Runs the CLI from the virtualenv (CNCTWIN_VENV, default ~/.venvs/cnc-twin) on this source tree, or,
+# when there is no virtualenv, from the Docker image plint/cnc-twin:local (CNCTWIN_IMAGE) with the
+# current directory mounted at the same path (paths outside it are not visible there).
+set -euo pipefail
+root="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+venv="${CNCTWIN_VENV:-$HOME/.venvs/cnc-twin}"
+image="${CNCTWIN_IMAGE:-plint/cnc-twin:local}"
+python="$venv/bin/python"
+
+export PYTHONHASHSEED=0 PYTHONDONTWRITEBYTECODE=1
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1
+export NUMBA_ENABLE_CUDASIM="${NUMBA_ENABLE_CUDASIM:-0}" NUMBA_BOUNDSCHECK="${NUMBA_BOUNDSCHECK:-0}"
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-315532800}"
+
+if [ -x "$python" ]; then
+  if [ -z "${NUMBA_CACHE_DIR:-}" ]; then
+    key=$( (cd "$root" && grep -rl --include='*.py' -e '@njit' -e '@numba' -e 'cuda.jit' cnctwin 2>/dev/null | LC_ALL=C sort | xargs -r sha256sum; \
+            "$python" -c 'import numba, llvmlite; print(numba.__version__, llvmlite.__version__)' 2>/dev/null; \
+            grep -m1 'model name' /proc/cpuinfo) | sha256sum | cut -c1-16)
+    export NUMBA_CACHE_DIR="$root/.numba-cache/$key"
+  fi
+  export PYTHONPATH="$root${PYTHONPATH:+:$PYTHONPATH}"
+  export CNCTWIN_ROOT="${CNCTWIN_ROOT:-$root}"
+  exec "$python" -m cnctwin.cli "$@"
+fi
+
+if command -v docker >/dev/null 2>&1 && docker image inspect "$image" >/dev/null 2>&1; then
+  extra=()
+  if [ -t 0 ] && [ -t 1 ]; then extra+=(-t); fi
+  if [ -n "${DATA_DIR:-}" ]; then extra+=(-e "DATA_DIR=$DATA_DIR"); fi
+  # the image carries its own pre-built kernel cache (NUMBA_CACHE_DIR=/app/.numba-cache) for its own sources
+  exec docker run --rm -i "${extra[@]}" --user "$(id -u):$(id -g)" \
+    -v "$PWD:$PWD" -w "$PWD" \
+    -e PYTHONHASHSEED=0 -e OMP_NUM_THREADS=1 -e OPENBLAS_NUM_THREADS=1 -e MKL_NUM_THREADS=1 -e NUMBA_NUM_THREADS=1 \
+    -e SOURCE_DATE_EPOCH -e NUMBA_BOUNDSCHECK -e NUMBA_ENABLE_CUDASIM \
+    "$image" python -m cnctwin.cli "$@"
+fi
+
+echo "twin: no virtualenv at $venv (set CNCTWIN_VENV) and no Docker image $image (build it from $root)" >&2
+exit 127

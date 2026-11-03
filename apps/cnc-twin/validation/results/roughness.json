@@ -1,0 +1,216 @@
+{
+ "budget": null,
+ "calibration_dependent": null,
+ "cases": [
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.tool_state",
+     "note": "not stated for the L36 runs; tool wear was studied separately (Figs. 17-21)",
+     "src": "est",
+     "value": "new"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-khellaf2026-hardturn-h11-ceramic-tin.yaml",
+   "id": "roughness-khellaf2026-hardturn-h11-ceramic-tin",
+   "location": "Sect. 'Work piece material and cutting inserts' and 'Measuring instruments', Table 1 (levels), Table 2 (L36 runs, TiN-coated insert columns: Ra, Fc)",
+   "material": "h13-50hrc",
+   "measured": true,
+   "operation": "longitudinal_turning",
+   "quantity": "roughness",
+   "src": "khellaf-2026-x38crmov5-ceramic-turning",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.tool_state",
+     "note": "not stated for the L36 runs; tool wear was studied separately (Figs. 17-21)",
+     "src": "est",
+     "value": "new"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-khellaf2026-hardturn-h11-ceramic-uncoated.yaml",
+   "id": "roughness-khellaf2026-hardturn-h11-ceramic-uncoated",
+   "location": "Sect. 'Work piece material and cutting inserts' and 'Measuring instruments', Table 1 (levels), Table 2 (L36 runs, uncoated insert columns: Ra, Fc)",
+   "material": "h13-50hrc",
+   "measured": true,
+   "operation": "longitudinal_turning",
+   "quantity": "roughness",
+   "src": "khellaf-2026-x38crmov5-ceramic-turning",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-magalhaes2026-turning-aisi304-cermet-r0.2.yaml",
+   "id": "roughness-magalhaes2026-turning-aisi304-cermet-r0.2",
+   "location": "Sect. 2 (setup), Sect. 3.1 text (contact Ra, new inserts)",
+   "material": "aisi304",
+   "measured": true,
+   "operation": "longitudinal_turning",
+   "quantity": "roughness",
+   "src": "magalhaes-2026-304-cermet-turning",
+   "status": "no_harness",
+   "uncertainty_pct": 5.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-pull-plunge.yaml",
+   "id": "roughness-matras2020-ballend-cbn-h13-pull-plunge",
+   "location": "Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'pull-oblique plunge' (average Ra, Rz)",
+   "material": "h13-50hrc",
+   "measured": true,
+   "operation": "ball_end_milling",
+   "quantity": "roughness",
+   "src": "matras-2020-h13-cbn-milling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-pull-reverse.yaml",
+   "id": "roughness-matras2020-ballend-cbn-h13-pull-reverse",
+   "location": "Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'pull-oblique revers' (average Ra, Rz)",
+   "material": "h13-50hrc",
+   "measured": true,
+   "operation": "ball_end_milling",
+   "quantity": "roughness",
+   "src": "matras-2020-h13-cbn-milling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-push-plunge.yaml",
+   "id": "roughness-matras2020-ballend-cbn-h13-push-plunge",
+   "location": "Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'push-oblique plunge' (average Ra, Rz)",
+   "material": "h13-50hrc",
+   "measured": true,
+   "operation": "ball_end_milling",
+   "quantity": "roughness",
+   "src": "matras-2020-h13-cbn-milling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-push-reverse.yaml",
+   "id": "roughness-matras2020-ballend-cbn-h13-push-reverse",
+   "location": "Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'push-oblique revers' (average Ra, Rz)",
+   "material": "h13-50hrc",
+   "measured": true,
+   "operation": "ball_end_milling",
+   "quantity": "roughness",
+   "src": "matras-2020-h13-cbn-milling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-nowakowski2024-facemill-c45-coromill490.yaml",
+   "id": "roughness-nowakowski2024-facemill-c45-coromill490",
+   "location": "Sect. 2 (cutter, inserts, probe measurement of mounting errors, machine, instruments), Sect. 3 (cutting data, FFT fundamental 31.93 Hz), Table 1 (actual load per insert from the measured mounting errors), Table 3 (2D roughness per feed per tooth)",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "face_milling",
+   "quantity": "roughness",
+   "src": "nowakowski-2024-face-milling-insert-errors",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.tool_state",
+     "note": "not stated; wear was studied in separate long runs (Fig. 20)",
+     "src": "est",
+     "value": "new"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'roughness'",
+   "file": "validation/cases/roughness/roughness-sultana2023-endmill-ti64-hss.yaml",
+   "id": "roughness-sultana2023-endmill-ti64-hss",
+   "location": "Sect. 2 and Table 4 (setup), Sect. 2 text (Surtronic 3+, 0.8 mm sampling length), Table 5 (Ra per run)",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "roughness",
+   "src": "sultana-2023-ti64-hpc-milling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  }
+ ],
+ "format": "cnctwin-validation-results",
+ "harness": "",
+ "independent": null,
+ "quantity": "roughness",
+ "rule": "tolerance = max(budget_pct/100 x |reference| (for temperatures: x the rise above ambient), 2 x the reference's uncertainty); a case passes when every compared value lies within its tolerance; a quantity passes when at least 80 % of its cases pass and no case misses by more than twice its tolerance",
+ "verdict": "no harness",
+ "verdict_reason": "no harness registered yet",
+ "version": 1
+}

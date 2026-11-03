@@ -48,10 +48,11 @@ def _fold(summary: TierSummary, columns: list[str]):
 def _lines(summary: TierSummary, name: str, columns: list[str], shown, envelope: dict | None = None):
     if len(columns) > plots.MAX_SERIES:
         if envelope:
-            stats_columns = envelope["mean"]
-            t_s, mean, _, _ = _fold(summary, stats_columns)
-            _, _, lo, _ = _fold(summary, envelope["min"])
-            _, _, _, hi = _fold(summary, envelope["max"])
+            t_s, mean, lo, hi = _fold(summary, envelope["mean"])
+            if envelope["min"] and envelope["max"]:
+                low, high = _fold(summary, envelope["min"])[2], _fold(summary, envelope["max"])[3]
+                if len(low) == len(t_s) and len(high) == len(t_s):
+                    lo, hi = low, high
         else:
             t_s, mean, lo, hi = _fold(summary, columns)
         return [plots.Line(f"all {len(columns)} columns", t_s, shown(mean), shown(lo), shown(hi))], \
@@ -84,16 +85,18 @@ def _panel(ctx: Context, channel: dict) -> tuple[plots.Panel | None, dict]:
         columns = _columns_of(summary, name)
         source = f"{tier} tier"
     stats = [summary.columns[c] for c in columns] if summary is not None else []
-    if envelope and summary is not None:
-        stats = [summary.columns[c] for c in envelope["min"] + envelope["max"]] or stats
-    magnitude = max((s.max_abs for s in stats if s.max_abs is not None), default=None)
+    low_stats, high_stats = stats, stats
+    if envelope and summary is not None:          # the range from the envelope's minima and maxima
+        low_stats = [summary.columns[c] for c in envelope["min"]] or stats
+        high_stats = [summary.columns[c] for c in envelope["max"]] or stats
+    magnitude = max((s.max_abs for s in low_stats + high_stats if s.max_abs is not None), default=None)
     shown = fmt.display_unit(unit, magnitude)
+    means = [s.mean for s in stats if s.mean is not None]
     row = {"name": name, "tier": tier, "unit": unit, "domain": channel.get("domain", ""), "doc": channel.get("doc", ""),
            "columns": len(columns), "declared": _declared_columns(channel), "display": shown.label,
-           "min": min((s.min for s in stats if s.min is not None), default=None),
-           "max": max((s.max for s in stats if s.max is not None), default=None),
-           "mean": float(np.mean([s.mean for s in stats if s.mean is not None]))
-           if any(s.mean is not None for s in stats) else None, "source": source}
+           "min": min((s.min for s in low_stats if s.min is not None), default=None),
+           "max": max((s.max for s in high_stats if s.max is not None), default=None),
+           "mean": float(np.mean(means)) if means else None, "source": source}
     if summary is None or not columns:
         return None, row
     lines, folded = _lines(summary, name, columns, shown, envelope)

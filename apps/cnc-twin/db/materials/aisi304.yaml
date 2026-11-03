@@ -94,16 +94,20 @@ chip:
 
 tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
   - tool_class: carbide
-    coating: "CVD or PVD (M-grade)"
-    C_m_min: 394
-    n: 0.25
-    a: 0.3
-    b: 0.12
+    coating: "PVD (experimental coating P185, 1.7 um)"
+    grade: "cemented carbide CNMG431MJ"
+    process: turning
+    C_m_min: 356
+    n: 0.157
+    a: 0.465
+    b: 0.248
     feed_ref_mm: 0.25
-    ap_ref_mm: 2
+    ap_ref_mm: 1.5
     VB_limit_mm: 0.3
+    T_ref_min: 1
+    vc_range_m_min: [200, 350]
     src: est
-    note: "no published Taylor fit read; C set so that T = 15 min at vc = 200 m/min (coated M-grade recommendation for austenitic stainless, general knowledge). Outokumpu machinability index (carbide): 4301 = 105 relative to 4404 = 100"
+    note: "FITTED HERE (no Taylor constants are published for these data): least squares of ln vc = ln C - n ln T - a ln(f/0.25) - b ln(ap/1.5) over the seven tool-life tests of tool A in Table 3 of johansson-2016-304-colding (longitudinal turning with cutting fluid, PVD-coated cemented carbide CNMG431MJ, edge radius 20-25 um; criterion VB 0.30 mm or tool failure; vc 200-350 m/min, f 0.15-0.30 mm, ap 1-2 mm). Fit error in vc -4.9 to +3.5 % (mean 1.8 %); 4 constants from 7 tests, so a and b are poorly determined. The authors model the same data with Colding's equation (Table 5: K 5.955, H -2.0166, M 0.6591, N0 0.4316, L -0.1776). The two commercial PVD coatings of Table 1 lasted 4.67 and 2.44 min against 9.8 min for coating A at vc 250, f 0.275, ap 1.5, i.e. C about 11 and 20 % lower. The earlier estimate (C 394, n 0.25, a 0.3, b 0.12 at f 0.25, ap 2, 'CVD or PVD M-grade': T = 15 min at 200 m/min) gives 15 min at 200 m/min where this fit gives 217 m/min. Outokumpu machinability index (carbide): 4301 = 105 relative to 4404 = 100"
   - tool_class: carbide
     coating: uncoated
     C_m_min: 181
@@ -133,4 +137,4 @@ thermal_damage:
 ignition: null
 composite: null
 
-notes: "Annealed 304. Not hardenable by heat treatment; the machining risks are work hardening of the surface layer, BUE/adhesion and heat tint. Prolonged exposure at roughly 450-850 C can sensitise 304 by chromium-carbide precipitation (general metallurgical knowledge, not from a cited source; not modelled). Tool life, BUE window and breakability are estimates."
+notes: "Annealed 304. Not hardenable by heat treatment; the machining risks are work hardening of the surface layer, BUE/adhesion and heat tint. Prolonged exposure at roughly 450-850 C can sensitise 304 by chromium-carbide precipitation (general metallurgical knowledge, not from a cited source; not modelled). Tool life (the coated-carbide Taylor constants are a fit made here to the measured tool lives of Johansson et al. 2016), BUE window and breakability are estimates."

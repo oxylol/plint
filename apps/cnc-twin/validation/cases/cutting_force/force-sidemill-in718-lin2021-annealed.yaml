@@ -1,0 +1,91 @@
+# Lin et al. (2021): peripheral milling of annealed Inconel 718 (267 HBW) with a 6 mm two-flute TiAlN-coated carbide
+# end mill (helix 35 deg, radial rake 14.9 deg, edge radius 10 um), 3000 rpm, dry: measured total average Ax, Ay, Az
+# for ae 1.2 / 1.5 mm, ap 0.4-0.6 mm, fz 0.04-0.08 mm/tooth (Tables 3-5).
+format: cnctwin-validation-case
+version: 1
+id: force-sidemill-in718-lin2021-annealed
+quantity: cutting_force
+reference:
+  src: lin-2021-in718-milling-constants
+  location: "Sect. 4.1 (material, tool, dynamometer, dry, new tool per test), Table 3 (conditions), Tables 4-5 (total average forces A per test; also the derived side-edge and bottom-edge parts As, Ab)"
+  digitised: false
+  measured: true
+  note: "Total measured average forces over the cut (the source separates side-edge and bottom-edge contributions by differencing two axial depths; only the measured totals A are used here). No scatter stated; a new tool for each test."
+setup:
+  operation: peripheral_milling
+  material:
+    db: inconel718
+    note: "VDM Inconel 718 in the annealed condition, 267 HBW, ASTM grain size 6.5 (Table 2: Ni 52.99, Cr 18.47, Fe 18.28, Nb 5.30, Mo 3.06, Ti 0.95, Al 0.55 %); much softer than the solution-treated-and-aged DB entry (42 HRC), so the flow stress must be lowered for this case"
+  tool:
+    src: lin-2021-in718-milling-constants
+    page: Sect. 4.1
+    type: square_endmill
+    designation: RTA060052T
+    tool_class: carbide
+    substrate: "micro-grain carbide, 90 % WC, 10 % Co, 0.6 um grain (HV30 1571, rupture strength 3750 N/mm2)"
+    coating: TiAlN
+    diameter_mm: 6
+    flutes: 2
+    helix_deg: 35
+    radial_rake_deg: 14.9
+    normal_rake_deg: {value: 12.29, note: "computed by the source from the helix and radial rake (Sect. 4.2)"}
+    edge_radius_um: 10
+    stickout_mm: {value: 18, src: est, note: "assumed: not stated (3 D)"}
+    assumed_inputs: [stickout_mm]
+  machine:
+    src: lin-2021-in718-milling-constants
+    page: Sect. 4.1, Fig. 5
+    dynamometer: Kistler 9272
+  conditions:
+    src: lin-2021-in718-milling-constants
+    page: Table 3
+    spindle_rpm: 3000
+    vc_m_min: 56.5
+    ae_mm: [1.2, 1.5]
+    ap_mm: [0.4, 0.5, 0.6]
+    fz_mm_tooth: [0.04, 0.06, 0.08]
+    direction: {value: down, src: est, note: "assumed: not stated for the authors' tests (the averaged chip thickness tc of Table 3 is the same for up and down milling)"}
+    coolant: dry
+    force_frame: "X, Y, Z of the dynamometer (Z axial); signs as printed"
+    assumed_inputs: [direction]
+  dynamics: null
+  program: null
+reference_values:
+  - {name: Ax_a1, value: -5.297, unit: N, note: "ae 1.2, ap 0.4, fz 0.04 (tc 0.0172 mm)"}
+  - {name: Ay_a1, value: -10.876, unit: N}
+  - {name: Az_a1, value: -6.078, unit: N}
+  - {name: Ax_a2, value: -7.355, unit: N, note: "ae 1.2, ap 0.4, fz 0.06"}
+  - {name: Ay_a2, value: -13.810, unit: N}
+  - {name: Az_a2, value: -4.378, unit: N}
+  - {name: Ax_a3, value: -9.498, unit: N, note: "ae 1.2, ap 0.4, fz 0.08"}
+  - {name: Ay_a3, value: -16.697, unit: N}
+  - {name: Az_a3, value: -4.934, unit: N}
+  - {name: Ax_b1, value: -7.020, unit: N, note: "ae 1.2, ap 0.6, fz 0.04"}
+  - {name: Ay_b1, value: -16.628, unit: N}
+  - {name: Az_b1, value: -4.740, unit: N}
+  - {name: Ax_b2, value: -10.278, unit: N, note: "ae 1.2, ap 0.6, fz 0.06"}
+  - {name: Ay_b2, value: -20.925, unit: N}
+  - {name: Az_b2, value: -2.401, unit: N}
+  - {name: Ax_b3, value: -13.542, unit: N, note: "ae 1.2, ap 0.6, fz 0.08"}
+  - {name: Ay_b3, value: -25.174, unit: N}
+  - {name: Az_b3, value: -2.399, unit: N}
+  - {name: Ax_c1, value: -6.343, unit: N, note: "ae 1.5, ap 0.4, fz 0.04 (tc 0.0191 mm)"}
+  - {name: Ay_c1, value: -13.014, unit: N}
+  - {name: Az_c1, value: -3.567, unit: N}
+  - {name: Ax_c2, value: -8.877, unit: N, note: "ae 1.5, ap 0.4, fz 0.06"}
+  - {name: Ay_c2, value: -15.856, unit: N}
+  - {name: Az_c2, value: -3.973, unit: N}
+  - {name: Ax_c3, value: -11.628, unit: N, note: "ae 1.5, ap 0.4, fz 0.08"}
+  - {name: Ay_c3, value: -19.415, unit: N}
+  - {name: Az_c3, value: -3.662, unit: N}
+  - {name: Ax_d1, value: -7.598, unit: N, note: "ae 1.5, ap 0.5, fz 0.04"}
+  - {name: Ay_d1, value: -16.040, unit: N}
+  - {name: Az_d1, value: -2.677, unit: N}
+  - {name: Ax_d2, value: -10.889, unit: N, note: "ae 1.5, ap 0.5, fz 0.06"}
+  - {name: Ay_d2, value: -19.788, unit: N}
+  - {name: Az_d2, value: -2.648, unit: N}
+  - {name: Ax_d3, value: -14.298, unit: N, note: "ae 1.5, ap 0.5, fz 0.08"}
+  - {name: Ay_d3, value: -24.249, unit: N}
+  - {name: Az_d3, value: -2.128, unit: N}
+reference_curves: []
+notes: "Small forces (mean |Ay| 11-25 N) because the engagement is light (ae 0.2-0.25 D, ap 0.4-0.6 mm); averages over the revolution, not peaks. The bottom-edge (end-face) ploughing is a large part of Az and a visible part of Ax at these small axial depths: the source's differenced bottom-edge forces are Abx -1.85 to -0.83 N (both ae) and Abz -10.0 to -8.3 N (ae 1.2 mm) per test pair, so a model without end-face contact should be compared with the side-edge values As of Tables 4-5 rather than with A. The source's prediction of the cutting constants is validated against these data in its Sect. 4.2-4.3."

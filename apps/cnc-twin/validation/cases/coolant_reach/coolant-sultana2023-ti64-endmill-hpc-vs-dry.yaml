@@ -1,0 +1,84 @@
+# Sultana & Dhar (2023): average tool-chip interface temperature (tool-work thermocouple) when end milling
+# Ti-6Al-4V with a 12 mm HSS-E-PM end mill, dry versus an external high-pressure oil jet (80 bar, 2 L/min,
+# one 2 mm nozzle 20 mm from the cutting edge) versus a rotary applicator with four 0.5 mm nozzles.
+format: cnctwin-validation-case
+version: 1
+id: coolant-sultana2023-ti64-endmill-hpc-vs-dry
+quantity: coolant_reach
+reference:
+  src: sultana-2023-ti64-hpc-milling
+  location: "Sect. 2 and Table 4 (setup, nozzle data), Sect. 2 text (thermocouple calibration), Table 5 (L27 full factorial: T per run)"
+  digitised: false
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: ti6al4v, note: "Ti-6Al-4V grade 5, bimodal alpha+beta, 37 HRC; convex-shaped block 100 x 50 x 25 mm"}
+  tool:
+    type: square_endmill
+    maker_tool: "DORMER HSS-E-PM solid end mill (finishing type)"
+    tool_class: hss
+    coating: none
+    diameter_mm: 12
+    flutes: 4
+    helix_deg: 30
+    rake_deg: 5                      # radial rake
+    clearance_deg: 15
+    flute_length_mm: 27
+    overall_length_mm: 83
+    hardness_HRC: 65
+  machine: {model: "vertical knee and column milling machine (Sunlike, China)", power_hp: 7.5}
+  coolant:
+    fluid: "VG-68 cutting oil (neat oil)"
+    hpc_pressure_bar: 80
+    hpc_flow_l_min: 2.0
+    hpc_nozzles: 1
+    hpc_nozzle_diameter_mm: 2.0
+    hpc_nozzle_type: "external, fixed"
+    hpc_nozzle_distance_mm: 20                 # from the stagnation point of the jet on the tool
+    rhpc_pressure_bar: 80
+    rhpc_flow_l_min: 2.0                       # total of the four nozzles
+    rhpc_nozzles: 4
+    rhpc_nozzle_diameter_mm: 0.5
+    rhpc_nozzle_type: "rotary applicator on the spindle (rotating with the tool), nozzles at 90 deg spacing aimed at the rake faces"
+    rhpc_nozzle_distance_mm: 20
+    jet_aim_note: "the HPC jet direction relative to the feed and the tool axis is shown only in the schematic Fig. 3; no angles are given"
+  conditions:
+    cutting_speed_m_min: [16, 24, 32]
+    spindle_rpm: {value: [424, 637, 849], src: est, note: "derived n = 1000 vc / (pi x 12 mm); the CFD model used 850 rpm for 32 m/min"}
+    feed_mm_tooth: [0.08, 0.12, 0.16]
+    ap_mm: 1.0
+    ae_mm: 6.0
+    engagement_note: "the paper states axial depth 1.0 mm and radial depth 6.0 mm, but also speaks of 'each slot'; the direction (up/down) is not stated"
+    coolant_cases: [dry, hpc, rhpc]
+    temperature_method: "tool-work thermocouple (HSS tool hot junction, workpiece cold junction), calibrated T(degC) = 6.59 + 80.13 U(mV), R2 = 0.987; average over the cut; lower than the peak tool-tip temperature (stated by the authors)"
+  program: null
+reference_values:
+  - {name: T_dry_vc16, value: 350.25, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc16, value: 480, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc16, value: 615.67, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc24, value: 384.20, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc24, value: 539, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc24, value: 646.67, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc32, value: 482.92, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc32, value: 617, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_dry_vc32, value: 686.67, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc16, value: 307.67, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc16, value: 413, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc16, value: 482.67, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc24, value: 332.26, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc24, value: 471, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc24, value: 531.33, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc32, value: 411.67, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc32, value: 518, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_hpc_vc32, value: 609, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc16, value: 296.33, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc16, value: 356, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc16, value: 472.67, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc24, value: 306, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc24, value: 392, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc24, value: 504, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc32, value: 380, unit: degC, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc32, value: 488.17, unit: degC, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: T_rhpc_vc32, value: 559.03, unit: degC, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+reference_curves: []
+notes: "Each value is one run of the 27-run full factorial (Table 5; the run order is randomised in the paper). Name = coolant case and cutting speed in m/min, x = feed per tooth. The useful comparison for coolant reach is the temperature drop against dry at the same vc and fz: 11-22 % with the single external HPC jet and 15-27 % with the rotary four-nozzle applicator (computed from the table values); the HPC drop is smallest at the highest speed and feed (609 against 687 degC at 32 m/min and 0.16 mm, 11 %). The thermocouple reads an average interface temperature of the whole cut, so the absolute values are a lower bound of the peak edge temperature. The same runs give resultant force Fc and Ra (Table 5); Ra is stored in roughness-sultana2023-endmill-ti64-hss. The CFD part of the paper (Figs. 10-13) is a model result and is not stored."

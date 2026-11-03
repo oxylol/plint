@@ -1,0 +1,34 @@
+# Budak (1994, PhD thesis), Sect. 3.3.2: measured static stiffness at the free end of two 4-flute 30 deg helix
+# end mills (25.4 mm HSS at 115 mm gauge length; 19.05 mm carbide at 55.6 mm) with their measured collet
+# stiffness: the compliance data behind the equivalent-diameter cantilever model of tool deflection.
+format: cnctwin-validation-case
+version: 1
+id: wallerror-budak1994-endmill-static-stiffness
+quantity: wall_error
+reference:
+  src: budak-1994-thin-wall-milling-thesis
+  location: "Sect. 3.3.1 (cantilever-on-spring model, Eq. 3.58), Sect. 3.3.2 (measurements and predictions, thesis pp. 53-54)"
+  digitised: false
+  measured: true
+setup:
+  operation: peripheral_milling
+  tool:
+    type: square_endmill
+    tools: "A: HSS, 4 flutes, 30 deg helix, D 25.4 mm, gauge length 115 mm; B: carbide, 4 flutes, 30 deg helix, D 19.05 mm, gauge length 55.6 mm"
+    diameter_mm_per_tool: [25.4, 19.05]
+    gauge_length_mm_per_tool: [115, 55.6]
+    flutes: 4
+    helix_deg: 30
+    tool_class_per_tool: [hss, carbide]
+    youngs_modulus_GPa_per_tool: [210, 620]     # values used by the author in the beam formula
+    collet_stiffness_N_mm_per_tool: [19600, 19800]   # measured (loading at the fixed end)
+  conditions:
+    test: "dead weights hung at the free end and at the clamped end separately, deflections at the loading points read with a dial gauge; stiffness from linear regression"
+  dynamics:
+    model: "kT = kc kb / (kc + kb), kb = 3 E I / l^3, I = pi de^4 / 64; de = 0.85 d identified for the 25.4 mm tools (Sect. 3.3.2); Re = s R with s about 0.8 suggested in general (Kops et al.)"
+  program: null
+reference_values:
+  - {name: tip_stiffness, value: 3580, unit: N/mm, x: 25.4, x_name: tool_diameter, x_unit: mm, note: "tool A (HSS, 115 mm gauge); the author's prediction with de = 0.85 d and E = 210 GPa is 3605 N/mm"}
+  - {name: tip_stiffness, value: 10180, unit: N/mm, x: 19.05, x_name: tool_diameter, x_unit: mm, note: "tool B (carbide, 55.6 mm gauge); the author's prediction with E = 620 GPa is 10450 N/mm (equivalent diameter not printed)"}
+reference_curves: []
+notes: "These are the Kops-and-Vo-type data asked for (end-mill compliance and equivalent diameter), from an open source: the free-end stiffness of a real fluted cutter in a real chuck, with the chuck (collet) stiffness measured separately so the shank-and-flute bending part can be isolated: kb = kc kT / (kc - kT) = 4400 N/mm for tool A and 21000 N/mm for tool B (derived here from the printed values, not printed in the thesis). With E 210 GPa and l 115 mm, tool A's kb corresponds to de = 0.85 d (the author's identification); tool B's kb with E 620 GPa and l 55.6 mm corresponds to de of about 0.74 d (derived here), so the equivalent-diameter ratio depends on the tool, and the collet compliance is 18 % (A) and 51 % (B) of the total. The collet stiffness of the chucks used in the cutting tests of Table 5.1 differs (10200 N/mm regular chuck, 25000 N/mm power chuck; see the other budak1994 wall_error cases)."

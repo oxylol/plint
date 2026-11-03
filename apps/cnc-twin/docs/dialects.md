@@ -685,15 +685,770 @@ as read into db/controllers/haas-ngc.yaml; Smid 2005/2008 for the FANUC-compatib
 
 ## Cycles and compensation
 
-(written by the owner of `cnctwin/controller/cycles`, `comp`, `probing`, `toollife`, `restart`, `tcp`)
+Packages `cnctwin.controller.cycles`, `comp`, `probing`, `toollife`, `restart`, `tcp` and the macro library
+`cnctwin.controller.macrolib` extend the core through its hooks (FANUC semantics; Haas where it differs).
+Everything runs inside the state machine: cycle expansions are `Step` lists in `PathState.pending`, the
+compensation filter state is JSON in `PathState.comp_state`, probing / tool life / restart state lives in
+`PathState.sys`, so a checkpoint may fall inside a cycle, a compensated contour or a probe macro. Parameters:
+`db/models/controller-cycles.yaml` (each entry names the FANUC/Haas parameter it stands for and its
+source; `est` values are the twin's assumption), overridden per project by
+`physics.controller.cycle_parameters` (keys with their unit suffix, e.g. `g73_retract_mm: 0.2`). Sources:
+`db/bibliography/models-controller-cycles.yaml` (FANUC 30i-B Plus manuals for machining centres
+`fanuc-30ibplus-om-mc-2019`, lathes `fanuc-30ibplus-om-lathe-2019`, parameters `fanuc-30ibplus-param-2019`;
+the common manual `fanuc-30ibplus-om-2019`; `murray-li-sastry-1994`). No randomness (no RNG stream); no
+bus fields are read or written (the physics talks to these functions only through `Feedback`).
+
+### Drilling cycles (G73-G89, G84.2/G84.3; T series G83-G89; Haas)
+
+Every hole is FANUC's six operations (mc p. 45): positioning, rapid to R, machining, bottom operation,
+retraction, rapid to the initial level. Along the drilling axis: R level = R (G90) or initial + R (G91,
+T series); Z level = Z (G90) or R + Z (G91); return level = initial (G98, T series, G87) or R (G99). With
+q = |Q|, d73 = parameter 5114 (`g73_retract_m`), d83 = 5115 (`g83_clearance_m`):
+
+| cycle | sequence |
+|---|---|
+| G81 / G82 | feed to Z (G82 dwell P), rapid out |
+| G73 | pecks of q, rapid retract d73 after each |
+| G83 | pecks of q, rapid to R, rapid back to d83 above the last depth (Q 0/missing: PS0045) |
+| G85 / G89 | feed in, (G89 dwell), feed out to R |
+| G86 / G88 | M05 at Z; G86 rapid out, G88 dwell + STOP (manual retract), spindle restarted |
+| G76 / G87 | dwell, M05 (5101#7), M19, shift q (5148 direction), rapid out / back boring from below |
+| G84 / G74 | floating: feed in (override off), dwell, spindle reversed, feed out |
+| rigid (M29, G84.2/G84.3, Haas) | spindle as a servo axis: lead = F (G95) or F/S (G94); LINEAR moves with `Feed(PER_REV, lead, override off)`, modal `rigid_tap`, `tap {lead_m, direction, phase}`; motion reverses the spindle on the outward move; peck tapping Q with 5213; extraction override 5211 |
+
+K/L repeat a hole at the next incremental position; Haas G73/G83 take I/J/K peck schedules, G76/G87
+Haas variants. Alarms: PS0200-PS0206 rigid tapping, PS0549 plane change in the cycle mode.
+
+### Lathe cycles (system A) and multiple repetitive cycles
+
+* G90 / G92 / G94 box cycles (lathe 4.1): modal X(U) Z(W) R; a block without a move repeats the cycle.
+  G92 thread: lead F along the major axis, start angle Q, chamfer over `thread_chamfer_leads` x L at
+  `thread_chamfer_angle_rad` (5130/5131), override off. Under tool nose compensation the four moves are
+  compensated with start-up from the start point and cancel on the return (4.1.5).
+* G32 threading: `thread {lead_m, lead_major_m, major_axis, start_angle_rad}` on the item, synchronised
+  (PER_REV, override off).
+* G96/G97 with the G50 clamp: SPINDLE commands carry `css_m_s` and `max_rad_s`.
+* G71 / G72 stock removal (lathe 4.2.1-4.2.4): the figure N(ns)..N(nf) shifted by the finishing
+  allowances (U/2 radius, W). Type I: levels of depth dd from A toward A', each level: infeed, cut to
+  the figure, 45 deg escape by e, rapid back; then the rough pass along the figure. Type II (pockets):
+  regions cut depth-first, nearest first, following entry and exit walls. G73 pattern repeat: d passes
+  from offset (di + du/2, dk + dw) down to (du/2, dw). G70 runs ns..nf as written and returns to A.
+  Errors: PS0061-PS0069, PS0322, PS0325, PS0329; levels are found on arc chords of at most 1 um sagitta.
+* G74 / G75 peck grooving: pecks dk, return e (5139), relief at the bottom, columns di.
+* G76 multiple threading (two blocks P m r a, Q dmin, R d; X Z R(i) P(k) Q(dd) F(L)): pass n at depth
+  `d_n = dd * sqrt(n)` from the crest (constant cutting area, lathe p. 71), at least dmin deeper than the
+  previous pass, until k - d; then m finishing passes at k. One-edge infeed: the start shifts along the
+  flank by `(d_n - k) tan(a/2)`. Haas G76: K D A I P1-P4 Q.
+
+### Cutter radius compensation (G41/G42/G40, FANUC type C) and tool nose radius compensation
+
+A block-stream filter (`comp.cutter.CompFilter`) holds up to N blocks (`crc_lookahead_blocks`, parameter
+19625, 3 by default; mc p. 211) and releases compensated items. Elements live in the plane's (u, v) frame
+of the program, so mirror/rotation keep the side. Offsets: a line moves by d along its left normal
+(d > 0 for G41, the D sign swaps the side); an arc's radius becomes `R - d sign(sweep)` (<= 0:
+interference). Corners at the programmed point P with the turn angle phi toward the tool:
+
+* inner (phi > 0): the intersection of both offset elements (none: PS0033);
+* outer, 90 <= alpha < 180 deg: the intersection; outer alpha < 90: two vectors, each offset path
+  extended by |d| along its tangent (`crc_outer_corner: linear`, 19607#2 CCC = 0); `circular`: an arc
+  of radius |d| about P;
+* start-up types A/B/C and cancel types A/B/C (5003 SUP/SUV, `crc_startup_type`): A ends on the normal of
+  the next block, B adds the corner vectors, C shifts a start-up block without motion; arcs in start-up
+  or cancel: PS0034; at most N - 2 blocks without motion in the plane keep the corner, otherwise the
+  vector is normal (mc p. 211); D changes take effect at the end of their block; G39 inserts a corner
+  arc; I J K in G00/G01 give the IJ type vector; G40 I J K the cancel direction.
+* interference check (5008, 19607#5): the direction check (a compensated element reversed against its
+  programmed direction by 90 deg or more) and the circular angle check (the compensated arc's angle
+  differs by 180 deg or more) on the next block; an interfering vector is erased when the remaining
+  path is still valid (vector erasure), otherwise PS0041 before the block that would overcut.
+* tool nose (lathes): the commanded point is the imaginary tip `P = C + r t(tip)`, with tip directions
+  (first, second plane axis; G18 Z, X): 1 (+1,+1), 2 (-1,+1), 3 (-1,-1), 4 (+1,-1), 5 (+1,0), 6 (0,+1),
+  7 (-1,0), 8 (0,-1), 0 and 9 the nose centre (lathe 5.2.2, as tabulated in `smid-2008-cnc-handbook` ch. 30). The cycles G70-G73,
+  G90/G94 compensate their own paths (`cycles.nose`).
+* `,C` chamfer / `,R` corner rounding (mc 5.5): points at distance c on both elements / the arc of radius
+  r tangent to both; PS0050-PS0055.
+
+Error bound: compensated points are computed in double precision and rounded to counts (q/2).
+
+### Five-axis (G43.4 / G43.5, G68.2 / G68.3 / G68.4, G53.1, G69; Haas G234 / G254 / G268)
+
+Kinematics from the machine file's chains: `Rel(q) = Wp(q)^-1 Tl(q)` (products of the link transforms);
+the linear axes for a tip p with length L along the tool axis a solve `Rel(q) (-L a) = Z_T + p` (3x3
+linear solve); the rotary values for a tool direction come from the Paden-Kahan subproblems 1 and 2 on
+the product of exponentials (murray-li-sastry-1994 ch. 3), the solution nearest the current rotary values
+within travel (TW0022 none, TW0023 outside travel). Rotary values are rounded to counts before the
+linear solve, so the tip error is at most half a linear count; the model is exact for the drawing
+values of the chains (no kinematic errors). Commands are `Space.TIP` with `tip_target_m`, `tip_axis`,
+machine `target`, `modal tip_interpolation` ("tip"; "joint" for the G43.4 start-up block and under
+G68.2) and `tcp_type` "vector" (G43.5, I J K normalised; kept until the next vector).
+G68.2: Euler Z X' Z'' (`R = Rz(I) Rx(J) Rz(K)`), P1 roll-pitch-yaw in the Q order, P2 three points
+(I J K all zero: PS5457); G68.3 by the tool axis; G68.4 composes with the active frame; G53.1 turns the
+rotary axes so the tool is normal to the plane (PS5458 without G68.2); G69 in compensation: PS5462;
+P3/P4 forms: TW0012. Haas G234 (`TableTcp` of the core) equals G43.4, G268 (rotation about X, Y, Z in the
+Q order) equals G68.2 with the same rotation, G254 keeps the tip on the work offset.
+
+### Probing and tool setting
+
+* G31 (`probing:G31`, replaces the core's): `G31 [P1-P4] IP F` is one buffer-stopping PROBE command
+  `{"skip": P, "stylus": "spindle_probe", "expect": "trigger"}` with `Feed.override_allowed = False`
+  (override, dry run and acceleration are disabled in skip moves unless 6200#7 SKF,
+  `skip_feed_override`; fanuc-30ibplus-om-2019 p. 133); PS0035 in compensation, PS0005 without an
+  axis, PS0011 without F, P outside 1-4: TW0034, P90 / P98 / P99: TW0012. #5061-#5066 are the latched
+  encoder positions of the feedback in the work frame (the end point when the signal did not come).
+* The skip number of the tool setter (`setter_skip_signal`, P2) makes the move a TOOL_SETTER command
+  `{"measure": "skip", "skip", "tool", "offset"}`. A `SetterResult` without latched positions gives the
+  contact at machine tool-axis value `z_s + L` (`setter_position_m`); outside the move, or `broken`,
+  is no signal. The last result is in `PathState.sys["setter_result"]`.
+* G37 / G36 (`SetterMeasure`): the core's measurement (window epsilon 6254, PS0080-PS0083, offset +=
+  latched error) plus: `SetterResult.length_m` sets the length geometry to `L - wear` when
+  `|L - H| <= epsilon` (otherwise PS0080, a signal outside the window); `broken` without a latch: PS0080.
+* Built-in macros (FANUC custom macro B, `macrolib/O98xx.nc`, loaded as library programs; Renishaw-like,
+  the Renishaw programs were not used): O9810 protected positioning, O9811 single surface (S work
+  offset, T length wear, H tolerance, Q overtravel), O9812 web/pocket (X or Y width, Z for a web),
+  O9814 bore/boss (D, Z for a boss; X pair first, the Y pair through the measured X centre gives the
+  diameter), O9851 tool length on the setter (G37; a zero offset is first searched on the setter
+  signal), O9853 broken-tool check (no contact at the stored length less H: BROKEN TOOL; contact
+  above the clearance plane or more than H early: OUT OF TOLERANCE). Stylus ball radius = D offset of the
+  probe's tool number (geometry + wear; <= 0: PROBE NOT CALIBRATED). Equations: measured surface =
+  skip + s r (s = direction of travel), error = measured - nominal, work offset += error, length wear
+  -= error; width = p+ - p-, centre = (p+ + p-)/2. Results #135-#140. Alarms (#3000, base
+  `probe_alarm_base` 86): 86 PATH OBSTRUCTED, 87 PROBE OPEN, 88 PROBE NOT CALIBRATED, 89 FORMAT ERROR,
+  90 OUT OF TOLERANCE, 91 BROKEN TOOL (the twin's numbering). A skip position within one count of the end
+  point counts as no trigger. `ControllerSettings.builtin_macros`: None installs the probe macros with a
+  spindle probe and the setter macros with a tool setter of known position; a program number the project
+  defines is left out.
+
+### Tool life management
+
+FANUC basic tool life management (fanuc-30ibplus-om-2019 10.5, pp. 265-282): groups from
+`physics.controller.tool_life` (`{"groups": [{"group": 1, "life_uses": 50, "tools": [10, 11, {"t": 12,
+"h": 12, "d": 32, "used_uses": 3}]}, {"group": 2, "life_min": 30, "tools": [...]}]}`; lathe tools as T codes
+`0101`) or G10 L3 / G10 L3 P1 / G10 L3 P2 ... G11 (P L Q, T H D; PS0149-PS0156). Group call `T(6810 +
+group)` (`tool_life_ignore_number` 9900: `T99nn`), Haas `T1000`-`T2999`, lathes `T(group)99` /
+`T(group)88`. Sister selection searches from the group's current tool toward the last and around; all
+expired: PS5317 (`tool_life_all_expired: alarm`) or the last tool (`last`, FANUC's own behaviour with the
+TLCH signal). Uses count at M06 (lathe: the T call) once per group per run (Haas: every change); time
+counts the LINEAR/ARC commands from their retirement ticks while a managed tool is in the spindle
+(error: when several commands retire in one call the interval is shared equally; feed hold inside a
+cutting move is counted). H99 / D99 select the registered offsets (PS0154 without a group tool).
+`Feedback.tool_life_expired` (bus `wear.expired` via the physics) marks tools expired in every group.
+
+### Program restart and the dangerous-restart analysis
+
+`restart.restart(controller, n=|line=, frequency=1, kind="P"|"Q", path=0)` (fanuc-30ibplus-om-2019 4.9,
+pp. 1206-1208): the path is interpreted from its head without output (`ex.search`), then the M/S/T state
+is restored by `restart_output` (7300 MOU/MOA: `none`, `last`, `all`) and the tool approaches the restart
+point axis by axis in `restart_axis_order` (7310) at `restart_feed_m_s` (dry-run feed) in machine
+coordinates; the program continues at the target. P: from where the tool is; Q: after a RESET from the
+reference position. PS0060 (Haas TW0036) when the block is not reached; TW0024 inside rigid tapping.
+`restart.restart_analysis(setup, path=0, lines=None)` returns `[{"line", "program", "n", "issues":
+[{"group", "value", "fresh", "severity", "first_move_line", "message"}]}]` for every tool change (or the
+given lines): each restart-relevant group (motion, plane, distance, feed mode, units, cutter / length
+compensation, cycle, return level, scaling, rotation / tilted plane, mirror, polar, CSS, work offset,
+TCP, G52 shift, macro modal call, spindle, coolant, tool) whose value when the program reaches the line
+differs from a power-on start there and that the section does not restate up to its first move (a
+lexical test) is an issue; `cnctwin.sanity.rules` reads the records (`restart_analysis=`).
+
+### Core hooks added (additive)
+
+`hooks.GCODES` / `register_gcode(code, spec, variant=, dialect=)` (G codes merged into the dialect
+tables), `GCODE_HANDLERS` (GSpec kind `ext`: `execute(ex, code, spec, bw) -> moved`), `MOTION_WORDS`
+(`motion_words(ex, code, bw) -> modal entries`), `LIBRARIES` (`sources(machine, dialect, settings,
+programs) -> [ProgramSource]`), `DATA_MODES` (`"G10L3"`: `begin/block/end`), cycle providers'
+`cancel(ex, code)`, `RESUMERS` `after_block(ex, data)` (`PathState.sys["after_block"]`), tool-life
+`t_code(ex, number)`, `offset_code(ex, kind, number)`, `retired(ex, commands, tick)`, `reset(ex)`;
+`alarms.register_alarm_codes(dialect, key_codes, texts)`; settings `cycle_parameters`, `tool_life`,
+`builtin_macros`.
+
+### Limitations
+
+`,A` angle chamfers (TW0012) and `,D`; the small-hole peck cycle and CRC interference avoidance
+(19607#5 CAV = 1); G68.2 P3/P4; Haas G35 / G36 / G136 probing cycles and M75 (TW0004 / TW0012); multi-step
+skip signal selection beyond the setter number; FANUC tool management (10.2), life count override,
+remaining-life notice and the restart M code; time counting includes feed holds; restart analysis is
+lexical; the setter is a plane on the tool axis (no diameter measurement).
 
 ## Siemens 840D sl
 
-(written by the owner of `cnctwin/controller/dialects/siemens840d`)
+`cnctwin/controller/dialects/siemens840d/` registers the dialect `siemens840d` (the machine file's
+`controller.dialect`). Modules: `syntax.py` (program reader: files -> programs -> immutable blocks with
+the control-structure index), `values.py` (expressions, R parameters, local user data, system variables,
+frame values), `handler.py` (`SiemensHandler`, the block semantics), `cycles.py` (drilling, hole
+patterns, pockets and slots, CYCLE800, CYCLE832, the step resumer `siemens840d:action`), `milling.py`
+(pocket, slot and helix toolpaths, shared with the Heidenhain dialects), `turning.py` (CYCLE95, CYCLE97,
+CYCLE93), `tables.py` (G functions and groups, keywords, alarm numbers with built-in texts, the word
+list), `kit.py` (runtime shared with the Heidenhain dialects: `NativeHandler`, alarm-text binding, the
+frame -> core-stage mapping, two-axis table kinematics, the TCP stages). Defaults are in
+`db/models/controller-siemens840d.yaml` (plus the block-time model `controller-block-time`); each can be
+set under `physics.controller`. Alarm texts come from `db/controllers/siemens-840d-sl.yaml` when it lists
+the number (`source: db:...`), otherwise from built-in copies (`source: builtin`). The variant follows
+the machine type: power-on G0 G17 G40 G500 G71 G90 G94 DIAMOF (turning machines G18 G95 DIAMON), G601
+CFC NORM G450 BRISK FFWOF COMPOF WALIMON, G60 or G64 by the machine's corner default. No random
+numbers are used and nothing is written to the bus: the dialect only produces Commands. All dialect
+state is in `PathState` (`sys`, `variables["R"]`) and checkpoints with it.
+
+### Program format
+
+* One program per file, named after the file (`PART.MPF` -> `PART`, `SUB.SPF` -> `SUB`); archive form
+  with `%_N_NAME_MPF` / `%_N_NAME_SPF` header lines; a library file may hold several `PROC NAME`
+  programs (a `PROC` line after other blocks starts the next program). `;$PATH` lines are skipped.
+* One line is one block: `[/n] [Nnnn | :nnn] [LABEL:] items [; comment]`. Labels start with two letters
+  or underscores (`MA1:`) and are unique per program (12450). Text is case-insensitive outside strings.
+  Skip levels `/0`-`/8` follow the operator's block-delete switches.
+* Items: G functions (`G1`, `CIP`, `G641`), addresses with a number or a value (`X10.5`, `S1=1000`,
+  `X=R1+2`, `X=AC(10)`, `CR=-5`), assignments (`R1=5`, `NAME=..`, `R[R2]=..`, `$P_UIFR[1]=..`),
+  keywords (`TRANS`, `STOPRE`, `TRAORI`), calls (`CYCLE81(10,0,2,-20)`, `SUB1 P3`, `SUB2(1,,R1)`,
+  `MCALL CYCLE81(..)`, `CALL "SUB"`, `MSG("..")`) and jumps (`GOTOF LABEL`). IF / ELSE / ENDIF, WHILE,
+  FOR, LOOP, REPEAT / UNTIL, REPEAT label, REPEATB, DEF, PROC and EXTERN are whole-block statements.
+* Reading never fails. A block that cannot be read carries its alarm and raises it when control reaches
+  it: 12080 syntax error with the text from the error on, 12550 unknown name, 14500 DEF / PROC after
+  the first NC instruction, 12640 / 12641 control-structure nesting / depth (`structure_nesting_levels`),
+  12450 label twice. Reaching the end of a program without M30, M2, M17 or RET is 14000.
+
+### Order of execution in a block
+
+1. The items are evaluated left to right against an overlay (an assignment is visible to the items
+   after it) and committed when the block has been read completely. A main-run variable (`$AA_IW`,
+   `$AA_IM`) stops the block buffer first; the core runs the block again with the live positions.
+2. Checks: an address twice 12000, two G functions of one group 12060, an unknown G function 12470,
+   a function the build does not model TW0012 (`tables.UNMODELLED`: splines, POLY, TRANSMIT, TRACYL,
+   CUT3D..., ORIWKS / ORIMKS / ORIAXES / ORIVECT, CASE, POS / POSA, ...).
+3. Modal G functions and keywords; F; S, LIMS, T, D, SPOS and the M functions that start something
+   (M3 M4 M7 M8; M6 before them, so `T1 M6 S1000 M3` changes the tool first); a frame instruction, the
+   pole, G4 / G74 / G75 or the motion of group 1 (with G40 / G41 / G42 and CHF= / CHR= / RND= /
+   RNDM=); the modal call (MCALL) after a path motion; subprogram and cycle calls; MSG, SETAL, WAITM,
+   STOPRE, TRAORI / TRAFOOF; the remaining M functions (M5 M9 M0 M1 M2 M30 M17); a jump.
+4. Words left unused: 12090 (an address the block cannot use), 16410 (an axis the channel does not
+   have).
+
+### Motion and arcs
+
+G0 / G1 / G2 / G3 / CIP / CT (group 1, modal), G33 thread (lead I / J / K, override off), G331 / G332
+rigid tapping, G4 F (s) / S (spindle revolutions), G74 reference point, G75 FP=n fixed point
+(`reference_points_mm`), G90 / G91 with the per-word `=AC()` / `=IC()`, `=DC() =ACP() =ACN()` on modulo
+rotary axes (a plain G90 value on a modulo axis moves directly, not the shortest way), G110 / G111 /
+G112 pole (last point, work zero, last pole) and the polar end point `AP=` (deg) / `RP=`, `TURN=` extra
+full turns of a helix.
+
+Arcs in the active plane (axes a, b; start s, end e, centre c, direction d = -1 for G2, +1 for G3):
+
+* centre `I J K`: incremental from s by default, `=AC()` absolute;
+* `CR=r`: c on the perpendicular bisector of s and e at sqrt(r^2 - (|e - s| / 2)^2) from the midpoint,
+  on the side that gives a sweep <= 180 deg for r > 0 and > 180 deg for r < 0; r more than the
+  tolerance below the half chord: 14095 (within it: the half circle); CR= with a centre or AR=: 14900;
+  a full circle needs the centre (14040);
+* `AR=a` (0 < a < 360 deg, else 14910): with the end point r = |e - s| / (2 sin(a/2)), c on the
+  bisector by d; with the centre, e is s turned by d a about c; centre and end point both: 14900;
+* `CIP` through the intermediate point `I1= J1= K1=` (G90 / G91 as the end point, or `=AC()` /
+  `=IC()`): the circumcentre of the three points, direction from their order; collinear points: 14920;
+  a circle in a plane inclined to the working plane: TW0012;
+* `CT`: tangential to the previous element (its end tangent t in this plane, lines and arcs, through
+  frame changes it is dropped): c = s + r n with n the unit normal of t toward e and
+  r = |e - s|^2 / (2 n.(e - s)); no previous element: 14045; e on the tangent: 14045.
+
+End point (all arcs): |r_e - r_s| <= max(`circle_error_const_m`, `circle_error_factor` r_s)
+(MD 21000 / 21010), else 14040. Within the tolerance the centre is moved to the nearest point of the
+perpendicular bisector of s and e, so the commanded arc is an exact circle through both points (the
+radius changes by at most the tolerance). A circle whose plane axes have different active scale factors
+would be an ellipse: TW0018 (in POCKET3 / POCKET4 / SLOT1 / SLOT2 and the turning cycles 61011).
+
+Corners: `RND=` rounding, `CHR=` chamfer leg, `CHF=` chamfer length (leg CHF / (2 cos(delta / 2)),
+delta the change of direction to the next block's start), `RNDM=` modal rounding of every following
+corner (0 ends it; may stand alone), through the core's corner provider (as FANUC ,R / ,C). Non-modal
+CHF / CHR / RND in a block without motion: 10882. Radius compensation G41 / G42 / G40 through the core's
+cutter (mill) or tool-nose (lathe) provider: selected and cancelled only in G0 / G1 blocks (10753 /
+10754), plane change while active 10757, without a cutting edge (D0) 10750; G450 / G451 are kept
+modal, the provider's corner rule applies.
+
+Block-preparation checks of the end point of every G0 / G1 / G33 / G331 / G332 block, before anything
+is emitted: software limit switches (the machine position of each axis against its travel, 10720 with
+the axis and + / -; continuous rotary axes and moves under TRAORI / CYCLE800 are exempt) and, while
+WALIMON is active (power-on), the working area of G25 / G26 with axes (the tool tip in the basic
+coordinate system: work point plus work offsets, tool offsets excluded; 10730). WALIMOF ends the check;
+G25 / G26 S are the spindle speed limits.
+
+### Frames
+
+Settable frames G500 (none), G54-G57, G505-G599 are the core's work offsets of the same names
+(`work_offsets_m`); `$P_UIFR[n]` reads and writes them as frames (translations only: a rotation, scale
+or mirror in a settable frame is TW0012). G53 / G153 / SUPA suppress the frames for one block.
+
+The programmable frame (`sys["frame"]`) has the Siemens components x_parent = T + R S M x
+(translation, rotation, scale, mirror): TRANS / ATRANS (rotary axes: an angle offset), ROT / AROT (`RPL=`
+in the active plane; `X Y Z` angles as RPY, R = R_z(c) R_y(b) R_x(a)), SCALE / ASCALE (0: 12160),
+MIRROR / AMIRROR. An absolute instruction replaces the whole frame (TRANS alone clears it); an A-form
+is chained in the frame's own coordinates (ATRANS shifted by R S M, AROT post-multiplied, ASCALE and
+AMIRROR per component). Frame variables: `CTRANS() CROT() CSCALE() CMIRROR()` and the chain operator `:`,
+`$P_PFRAME`, `$P_IFRAME`, `$P_ACTFRAME`; G58 / G59 set / add axial translations. The frame maps exactly
+onto the core's mirror -> scale -> feature stages (`kit.apply_frame`: mirror and scale about the
+program zero, then the orthonormal R and T as the feature frame), so tool offsets and arcs follow it.
+
+**CYCLE800** (swivel plane; machines with two rotary table axes, `machine.work_rotaries`): the swivel
+frame x_parent = X0 + R_sw (X1 + x) in front of the programmable frame. R_sw from `_MODE` by
+`cnctwin.geom.transform.siemens_cycle800` (docs/models/geom.md 2.1): bits 7-6 = 00 axis by axis
+(bits 1-0, 3-2, 5-4 the first, second, third axis, 01 X 10 Y 11 Z, each about the already rotated axes;
+57 = X Y Z; `_MODE` 0 only for the zero plane, the default of `CYCLE800()`), 01 solid angle
+R_z(_A) R_y(_B) R_z(_C), 10 projection angles, 11 rotary axes direct: _A and _B are the positions of
+rotary axes 1 and 2 (the base-side and part-side table axis), the table turns the part by
+R_t = R_1(_A) R_2(_B) and R_sw = R_t^T (the swivelled axes stay on the machine axes; 61153 without two
+table axes). The rotary positions that bring the new Z onto the tool axis are the closed-form solution
+of R_1(q1) R_2(q2) n = t (Paden-Kahan subproblem 2, murray-li-sastry-1994 ch. 3; two solutions, `_DIR`
+-1 / +1 picks the sign of the first rotary axis, 0 swivels the frame only; positions brought into the
+axis travel, continuous axes to the nearest turn; none reachable: 61184, a direct position outside the
+travel: 61189). `_FR` retracts first (1 and 4 Z to the top of its travel, which is the tool direction
+on a table machine, 2 also X Y to their home, 5 incremental
+`_FR_I` along Z (`_FR_I` 0: 61190); others 61183); `_ST` units digit 1 adds to the active swivel frame;
+`_TC` "0" deselects.
+Afterwards the linear axes follow the table kinematics (stage `siemens840d:CYCLE800`, Space.TIP
+commands with `tip_interpolation` "joint").
+
+**TRAORI / TRAFOOF**: tool centre point control on the table kinematics (stage `siemens840d:TRAORI`,
+Space.TIP, "tip"): the programmed point is the tool tip in the workpiece; the orientation is given by the
+rotary axes or by the tool vector `A3= B3= C3=` in the workpiece, turned into rotary positions by the
+same subproblem-2 solution (least rotary motion). Both stages are `TableTcp` from the Haas dialect.
+
+### Programming
+
+* R0-R99 (`r_parameters`), `R[expr]`; DEF INT / REAL / BOOL / CHAR / STRING[n] / AXIS / FRAME local
+  user data per program level (`sys["lud"]`), PROC with value and VAR (by reference; a constant for a
+  VAR parameter: 12320) parameters, SAVE (modal G functions and frames restored at the subprogram end),
+  EXTERN.
+* Expressions (`values.py`): degrees; ATAN2(a, b) is the angle of the vector (b, a); POT(x) = x^2; TRUNC
+  toward zero; ROUND half away from zero; DIV integer division toward zero; MOD the remainder with the
+  dividend's sign; priority NOT B_NOT, * / DIV MOD, + -, B_AND, B_XOR, B_OR, AND, XOR, OR, << (string
+  concatenation), then the comparisons (a combined condition needs brackets, as on the control). INT is
+  rounded half away from zero on assignment. Division by 0 and arguments out of range: 14051.
+* Control structures are matched at load: IF / ELSE / ENDIF, WHILE / ENDWHILE, FOR / TO / ENDFOR (the
+  end value is evaluated once at the start, `sys["for"]`), LOOP / ENDLOOP, REPEAT / UNTIL. Jumps GOTOF
+  (forward), GOTOB (backward), GOTO (forward, then backward), GOTOC (no alarm when not found) to labels, N
+  numbers or a string expression; not found 14080.
+* Program section repetition: `REPEATB label P=n` repeats one line; `REPEAT label P=n` the lines from
+  the label to the next `ENDLABEL:` before the statement, or else up to the line before the statement;
+  `REPEAT label1 label2 P=n` the lines from label1 to label2 (both included, before or after the
+  statement). The section runs n more times (P omitted: 1, P=0: none), then the block after the
+  statement follows. Sections nest (`sys["sections"]`, at most `structure_nesting_levels`) and may call
+  subprograms; a section containing its own statement is 12640, a label not found 14080.
+* Subprograms by name (parameters `SUB(1,,R1)`, repetitions `P=n` / `Pn`), `Lnnn`, `CALL "NAME"`,
+  `MCALL` (modal call after every positioning; MCALL alone ends it); ended by M17, RET, or M2 / M30 in
+  the main program; `sub_nesting_levels` program levels (14012 beyond).
+* MSG("text") (MSG() clears), SETAL(n) raises cycle alarm n (60000-69999, else 14020),
+  STOPRE (SYNC `exact_stop_check` and a buffer wait: the following blocks are prepared after the motion
+  before them has ended), WAITM(marker, channels) (SYNC `path_wait`, then `ex.wait("path_wait")` until
+  every named channel has reached the marker; a channel the machine does not have: 14020).
+
+### Tools, spindle, coolant
+
+T n preselects (MODE `tool_preselect`), M6 changes (TOOL_CHANGE), D n selects the cutting edge
+(`cutting_edge_default` D1 after M6; the twin's tools have one edge, so D2-D9: 17181; D0 no offsets).
+Milling tools: the length acts along the axis normal to the active plane (G17 Z, G18 Y, G19 X) and the
+radius for G41 / G42; turning tools: the X and Z lengths and the nose radius. Offsets act with the next
+motion. `$TC_DP1/3/4/5/6/12/15` read and write the offset rows. S is rpm, or m/min with G96 (LIMS=
+upper speed); M3 / M4 / M5 (one per block: 14760), SPOS= oriented stop, M40-M45 gears; M7 mist and M8
+flood when the machine has such pumps (else TW0005), M9 off; M0, M1 (optional stop), M2 / M30 (end,
+part count), M17 (subprogram end). More than `max_m_codes_per_block` M functions: 14770. Machine-builder
+M codes come from `physics.controller.m_codes`; other M codes: TW0005.
+
+### Technology cycles
+
+Called like subprograms with positional parameters (omitted trailing ones are 0, lengths in program
+units, angles in degrees); the parameter lists are those of the 840D sl Job Planning manual
+(siemens-840dsl-jobplan-ru-2018 ch. 20.1) and, for the cycles it lists only by name, the classic 840D
+lists (cycles.py docstring). The expansion is a list of core Steps queued after the block (through
+mirror, scale and rotation like programmed moves); spindle, stop, frame and nose-compensation actions
+inside it run in sequence through the resumer `siemens840d:action`, which also expands the MCALL cycle
+after each positioning where the tool then is. The drilling axis is the plane normal (`_DMODE` / `_AXN`
+select another); the retraction side is that of RTP relative to RFP; DPR wins over DP; DTB > 0 dwells
+seconds, < 0 spindle revolutions.
+
+* CYCLE81 drilling, CYCLE82 with dwell, CYCLE83 deep hole (FDEP / FDPR first depth, `_DAM` degression
+  (< 0 in % of the first depth), `_MDEP` minimum, VARI 0 chip breaking by `_VRT`
+  (`cycle83_chip_break_retract_m` when 0), 1 chip removal: out to the reference plane and back to the
+  last depth minus the advance clearance `_DIS1` (when 0: `cycle83_anticipation_m`, above
+  `cycle83_anticipation_limit_depth_m` depth / 50, at most `cycle83_max_anticipation_m`), FRF feed
+  factor of the first infeed, DTS / DTB / `_DTD` dwells), CYCLE84 rigid tapping (oriented start POSS,
+  SST in / SST1 out, PIT with `_PITA` units or MPIT metric coarse size, `_VARI` 1 / 2 chip breaking /
+  removal by `_DAM`, SDAC spindle after the cycle), CYCLE840 floating holder (SDR reversal, ENC 0 with
+  encoder at the pitch per revolution, 1 at F), CYCLE85 (FFR in, RFF out), CYCLE86 (oriented stop POSS, lift
+  RPA / RPO / RPAP, rapid out, SDIR on again), CYCLE87 / CYCLE88 (spindle stop and M0 at the bottom, the
+  operator retracts; then rapid out), CYCLE89 (dwell, out at F). No F: 10860; a reference plane that
+  contradicts the depth: 61101.
+* HOLES1 (row: SPCA SPCO STA1 FDIS DBH NUM, started from the end nearer the tool) and HOLES2 (circle: CPA
+  CPO RAD STA1 INDA NUM, INDA 0: 360 deg / NUM) move to every hole in the plane and run the MCALL drilling
+  cycle there (NUM 0: 61103; a modally called user subprogram: TW0012).
+* POCKET3 / POCKET4 / SLOT1 / SLOT2 (`milling.py`): contour-parallel from the inside out. For a rounded
+  rectangle of length L, width W, corner radius rc (circles and obround slots as special cases) the
+  tool-centre path at wall distance e is the rounded rectangle with half sizes L/2 - e, W/2 - e and
+  corner radius max(rc - e, 0), the exact offset of the wall; roughing passes are evenly spaced between
+  the innermost path (e = W/2) and e = r + allowance with a spacing <= `_MIDA` (when 0:
+  `pocket_stepover_fraction` of the diameter), depth layers equal and <= `_MID`, the finishing passes at
+  e = r (sides) and the bottom allowance last. Climb milling with M3 is the counter-clockwise loop (G41
+  sense), M4 swaps. Plunging vertical, helical (`_RAD1` radius, `_DP1` depth per turn, the last turn
+  closed by a full circle; missing: 61108) or oscillating at the ramp angle; `_VARI` units digit 1
+  roughing (leaving `_FAL` / `_FALD`), 2 finishing (the sides at e = r, the bottom when `_FALD` > 0);
+  tool radius too large 61105, slot geometry impossible (shorter than wide, overlapping) 61104. SLOT2
+  circumferential slots use the annular-sector family.
+* CYCLE95 / CYCLE97 / CYCLE93 (`turning.py`; lathe in G18, else 61004): CYCLE95 roughing parallel to Z
+  or X between the contour subprogram NPP (shifted by FALZ / FALX and offset by FAL) and its envelope, in
+  equal infeeds <= MID, undercuts at FF2, chip breaking DAM / DT, lift `_VRT` (`cycle95_lift_m`), and
+  finishing along the contour at FF3 with tool-nose compensation; CYCLE97 thread passes (NRC roughing
+  cuts with constant infeed or constant chip cross-section depth_k = (TDEP - FAL) sqrt(k / NRC), NID idle
+  passes, NUMT starts, IANG flank infeed); CYCLE93 grooves with flank angles, radii / chamfers, pecking
+  IDEP and finishing (tool width = twice the radius offset: the control takes it from the second cutting
+  edge, which the twin's tools do not have; wider than the groove 61602).
+* CYCLE832(_TOL, _TOLM, _OTOL): `_OFF` G64 COMPOF; `_FINISH` / `_SEMIFIN` / `_ROUGH` G642 COMPCAD SOFT
+  FFWON with the tolerance (when 0: the machine's smoothing table entry finish / medium / rough), as
+  MODE `smoothing` for the motion model.
+
+### Alarms
+
+Condition keys map to 840D sl numbers (`tables.ALARM_CODES`); texts are the database's when it lists the
+number (`source: db:siemens-840d-sl`), else the built-in copy. The text parameters are filled as the
+control shows them: `[Channel %1: ]` only on machines with more than one path; `Block %n` is the N
+number, the label or `line k`; the other `%k` are the alarm's own values (axis, sign, parameter). Twin
+codes: TW0005 M code not defined for the machine, TW0006 system variable not modelled, TW0008 WAITM
+markers inconsistent, TW0012 function not modelled, TW0018 circle under unequal scale factors.
+
+### Parameters (db/models/controller-siemens840d.yaml)
+
+| name | value | stands for | source |
+|---|---|---|---|
+| circle_error_const_m / circle_error_factor | 0.01 mm / 0.001 | MD 21000 / 21010, circle end-point tolerance max(const, factor r) | est |
+| sub_nesting_levels | 16 | program levels with the main program (14012) | est (802D sl: 8, siemens-802dsl-diag-2011 p. 101) |
+| structure_nesting_levels | 16 | IF / WHILE / FOR / LOOP / REPEAT and section repetitions per level (12641) | est (802D sl: 8, p. 96) |
+| r_parameters | 100 | MD 28050 MM_NUM_R_PARAM | est |
+| max_m_codes_per_block | 5 | M functions per block (14770) | est |
+| cutting_edge_default | 1 | MD 20270 CUTTING_EDGE_DEFAULT | est |
+| pocket_stepover_fraction | 0.8 | width of infeed when `_MIDA` = 0 | est |
+| cycle83_chip_break_retract_m | 1 mm | CYCLE83 / CYCLE84 retraction when `_VRT` = 0 | est |
+| cycle83_anticipation_m, cycle83_anticipation_limit_depth_m, cycle83_max_anticipation_m | 0.6 mm, 30 mm, 7 mm | CYCLE83 advance clearance when `_DIS1` = 0 | est |
+| cycle95_lift_m | 1 mm | turning cycles' lift-off when `_VRT` = 0 | est |
+
+### Words (`tables.WORD_LIST`)
+
+* motion: G0 G1 G2 G3 CIP CT G33 G331 G332, I J K (=AC() =IC()), I1 J1 K1, CR=, AR=, TURN=, AP= RP=
+* plane, units, distance: G17 G18 G19, G70 G71 G700 G710, G90 G91, AC() IC() DC() ACP() ACN(), DIAMON
+  DIAMOF DIAM90
+* feed and spindle: F, G93 G94 G95 G96 G97, LIMS=, S, M3 M4 M5, SPOS=, M40-M45, G25 / G26 S, CFC CFTCP
+  CFIN
+* frames: G500 G54-G57 G505-G599, G53 G153 SUPA, TRANS ATRANS ROT AROT (RPL=) SCALE ASCALE MIRROR
+  AMIRROR, G58 G59, G110 G111 G112, $P_PFRAME $P_UIFR[n] $P_IFRAME $P_ACTFRAME, CTRANS CROT CSCALE
+  CMIRROR ':', G25 / G26 with axes (working area limitation) WALIMON WALIMOF
+* path control: G60 G64 G641 ADIS= ADISPOS= G642 G643 G644 G645, G9, G601 G602 G603, SOFT BRISK DRIVE,
+  FFWON FFWOF, COMPOF COMPON COMPCURV COMPCAD COMPSURF, CYCLE832, CHF= CHR= RND= RNDM=
+* tools: T, M6, D0-D9, G40 G41 G42, G450 G451, NORM
+* other M: M0 M1 M2 M30 M17 M7 M8 M9, machine-builder M codes (`physics.controller.m_codes`)
+* programming: R0-R99, R[n], DEF INT / REAL / BOOL / CHAR / STRING[n] / AXIS / FRAME, PROC (VAR) SAVE,
+  EXTERN, subprogram calls by name with P= and parameters, CALL, MCALL, M17, RET, IF / ELSE / ENDIF,
+  WHILE / ENDWHILE, FOR / TO / ENDFOR, LOOP / ENDLOOP, REPEAT / UNTIL, REPEAT label [label] P=, REPEATB
+  label P=, ENDLABEL, GOTOF GOTOB GOTO GOTOC (labels, N numbers), MSG(), SETAL(), STOPRE, WAITM(), G4
+  F / S, G74, G75 FP=
+* functions and operators: SIN COS TAN ASIN ACOS ATAN2 SQRT POT ABS TRUNC ROUND ROUNDUP LN EXP MINVAL
+  MAXVAL BOUND NUMBER TOSTR STRLEN, + - * / DIV MOD == <> > < >= <= AND OR XOR NOT B_AND B_OR B_XOR B_NOT <<
+* system variables: $P_EP $P_F $P_S $P_TOOLNO $P_TOOL $P_TOOLP $P_GG $P_DRYRUN $P_SEARCH $P_AXN1-3
+  $P_UIFR $P_PFRAME $P_IFRAME $P_ACTFRAME $AA_IW $AA_IM $A_YEAR $A_MONTH $A_DAY $A_HOUR $A_MINUTE
+  $A_SECOND $TC_DP1 $TC_DP3-$TC_DP6 $TC_DP12 $TC_DP15 (others: TW0006)
+* cycles: CYCLE81 CYCLE82 CYCLE83 CYCLE84 CYCLE840 CYCLE85 CYCLE86 CYCLE87 CYCLE88 CYCLE89, HOLES1
+  HOLES2, POCKET3 POCKET4 SLOT1 SLOT2, CYCLE800 (axis by axis, solid angle, projection angle, rotary
+  axes direct), CYCLE832, CYCLE95 CYCLE97 CYCLE93, TRAORI TRAFOOF (rotary axes or A3= B3= C3=)
+
+### Validity and error
+
+Positions and arcs are exact to the axis quantum (the arc end-point correction moves the centre by at
+most the circle tolerance); frames, CYCLE800 and TRAORI are exact rigid transforms (subproblem 2 in
+closed form, residual ~1e-15). The cycle sequences follow the parameter tables of the job-planning
+manual; their fixed internal distances (retractions, advance clearances, stepover) are the generally
+documented defaults marked est above and can differ by machine data and cycle version. Not modelled
+(TW0012, never silent): spline and polynomial interpolation, TRANSMIT / TRACYL / TRAANG, 3-D tool
+compensation, orientation interpolation modes (ORIWKS ...), CASE, positioning axes (POS, POSA, WAITP),
+synchronized actions, settable frames with rotations, scale or mirror, CYCLE800 on head kinematics, the other standard cycles (`tables.STANDARD_CYCLES`: CYCLE60-64, CYCLE70-79,
+CYCLE90 92 94 96 98 99, CYCLE801 802 830 899 930 940 950-952, LONGHOLE; a program of that name in the
+project is called instead), tool management by name (`T="name"`: 17190), more than one cutting edge per
+tool. A program that is not there is 14011.
+
+References: SINUMERIK 840D sl Programming Manual Fundamentals (siemens-840dsl-fund-ru-2018: G
+functions, groups, modal effect) and Job Planning (siemens-840dsl-jobplan-ru-2018: cycle parameter
+lists, CYCLE800, CYCLE832); alarm texts and causes: SINUMERIK 802D sl Diagnostics Manual
+(siemens-802dsl-diag-2011, the same NCK and cycle alarms) and the 840D sl alarm list
+(siemens-840dsl-diag-zh-2022, numbers); Murray, Li and Sastry 1994 (subproblem 2); db/controllers/
+siemens-840d-sl.yaml. Tests: tests/unit/controller/test_siemens.py (motion, arcs, frames, language,
+tools, alarms), test_siemens_cycles.py (expected command streams of the cycles, CYCLE800, TRAORI,
+turning), test_siemens_checkpoint.py (resume inside a FOR loop and inside a cycle expansion
+bit-identical), test_siemens_heidenhain_same_part.py (one part in FANUC, Siemens, Klartext and ISO: the
+same toolpath).
 
 ## Heidenhain TNC (Klartext and ISO)
 
-(written by the owner of `cnctwin/controller/dialects/heidenhain`)
+`cnctwin/controller/dialects/heidenhain/` registers `heidenhain_klartext` and `heidenhain_iso` (TNC 640,
+NC software 34059x-18). Both names build the same dialect: a program file that starts with `%` is read
+as ISO, one with `BEGIN PGM` as Klartext, whatever the machine's dialect, and one handler executes both.
+Modules: `klartext.py` (Klartext reader, the shared block form `HBlock(kind, fields)`), `iso.py` (ISO
+reader), `formula.py` (Q-parameter values, formulas, string functions), `handler.py`
+(`HeidenhainHandler`), `isoexec.py` (ISO modal G codes onto the Klartext semantics), `contour.py`
+(APPR / DEP, FK), `cycles.py` (fixed cycles, PATTERN DEF, program cycles, the step resumer
+`heidenhain:action`), `plane.py` (PLANE), `tables.py` (error numbers, built-in texts, M function lists,
+the word list); the runtime (`NativeHandler`, table kinematics, the TCP stages) and the pocket toolpaths
+are shared from `siemens840d/kit.py` and `siemens840d/milling.py`. Defaults:
+`db/models/controller-heidenhain.yaml` (plus `controller-block-time`); error texts:
+`db/controllers/heidenhain-tnc640.yaml` (`source: db:...`), else built-in copies. Power-on: G17 (lathes
+G18), R0, absolute, feed per minute, no tool. No random numbers; nothing on the bus; all state is in
+`PathState` (`sys`, `variables["Q" | "QR" | "QL<level>"]`, `sys["qs"]`) and checkpoints with it.
+
+### Program format
+
+* Klartext: one program per file, `0 BEGIN PGM NAME MM|INCH` ... `n END PGM NAME MM`; every block
+  starts with its block number; a line ending in `~` continues on the next (cycle definitions with one Q
+  parameter per line, continuation lines without numbers); `;` starts a comment (also between a value
+  and `~`); `*` blocks are structure items. Words are separated by spaces: `X+10`, `IX-5` (incremental),
+  `PR` `PA` `IPR` `IPA` (polar), values may be Q parameters (`X+Q1`, `Y-QL3`). Text outside strings is
+  upper-cased.
+* ISO: `%NAME G71 *` (G70 inch) ... `N99999999 %NAME G71 *`; blocks `N<n> words *`; several G codes per
+  block; G00-G16 are modal (a block without a motion code continues the active one; a block without an
+  end point does not repeat it).
+* Reading never fails: a block that cannot be read carries its error (160-0003 block format incorrect,
+  160-00CF NC command not available, 160-000B CYCL DEF not defined ...) raised when control reaches it.
+
+### Order inside a positioning block
+
+Coordinates and values are evaluated (an undefined Q parameter as a lone coordinate drops that axis; in
+a calculation it is 160-0028), the radius compensation (RL / RR / R0 modal, R+ / R- paraxial lengthening /
+shortening by the radius), the feed (F modal, FMAX for this block, FAUTO = the TOOL CALL feed, FU per
+revolution; FZ needs the tool table's teeth: 160-00E0; none: 160-0069), the M functions that act at the
+block start (M3 M4 M8 M13 M14 M126 M127), the motion (RND / CHF of the next block as its corner), then
+the M functions at the block end (M5 M9 M0 M1 M2 M30, M99 / M89 cycle calls, M128 / M129, M140). More
+than `max_m_codes_per_block` M functions, or M3 with M4, M8 with M9, M128 with M129: 160-0122.
+
+### Paths
+
+* `L` line; `CC` pole (alone: the current position); `C` circle about CC (DR+ / DR-); `CR` circle by
+  radius (R > 0 at most 180 deg, R < 0 more; radius below the half chord beyond the tolerance 1A0-0083);
+  `CT` tangential circle (1A0-0082 without a preceding element or with the end point on the tangent);
+  `LP` / `CP` / `CTP` polar about CC (`IPA` beyond 360 deg with `IZ` is a helix: the full turns are
+  passed as turns); `RND R` rounding and `CHF` chamfer between the neighbouring elements (the core's
+  corner provider); M91 coordinates in the machine system, M92 relative to the machine's home position.
+* Arc end point: the end point must lie on the start circle within `arc_end_point_tolerance_m`
+  (0.016 mm, circleDeviation), else 1A0-0084 "Circle incorrectly programmed"; within it the centre is
+  moved onto the perpendicular bisector (exact circle). ISO: G02 / G03 about I J K (G90 absolute, G91
+  from the last position) or with R, G05 / G15 with the last programmed direction (G02 / G03 / G12 / G13
+  / C / CP set it; none yet: 1A0-000C), G06 / G16 tangential, G10-G16 polar (R radius, H angle).
+* Endless rotary axes (machine `continuous`) are shown modulo 360 deg: an absolute value moves from the
+  shown position to it (from 350 to 10: -340 deg); with M126 the shortest way (at most half a turn, +180
+  on a tie); M127 ends M126. Limited rotary axes move to the value.
+* Approach and departure (`contour.py`; the compensation itself is the core's cutter provider):
+  `APPR LT` (PH = PA - LEN t, t the start tangent of the next element), `APPR LN` (PH = PA + (LEN + r) n,
+  along the normal), `APPR CT` (arc tangent at PA, centre PA + |R| n on the tool side for R > 0, centre
+  angle CCA), `APPR LCT` (the same arc entered by the tangent from PS), the polar `APPR PLT / PLN / PCT /
+  PLCT`, and `DEP LT / LN / CT / LCT` (and polar) mirrored at the end point PE; without RL / RR 1A0-0071.
+* FK free contour (`FPOL`, `FL` / `FLT`, `FC` / `FCT`): every element is solved from the known start point
+  and tangent with its own data (end point X Y / IX IY / PR PA about FPOL, direction AN / IAN /
+  tangential, LEN, centre CCX CCY / ICCX ICCY / CCPR CCPA, R, DR). One solution is executed; several
+  (coinciding solutions count once) need the following `FSELECT n` (ordered by the end point's first,
+  then second plane coordinate). `CLSD+` marks the first element of a closed contour, `CLSD-` the last
+  (its missing end coordinates are the CLSD+ start point). Not determined or several without FSELECT:
+  TW0040; contradictory: TW0041 (the TNC's own FK error numbers were not in the error list read; a
+  database entry with kind fk_undetermined / fk_contradiction replaces them). Data relative to other
+  blocks (RX RY RAN PAR DP PDX PDY RPR RPA): TW0012.
+* Software limit switches: the end point of every L / LP / FK / ISO line in machine coordinates against
+  the axis travel (1A1-0010) before the motion is emitted (not under PLANE / TCPM).
+
+### Coordinate transformations
+
+The TNC applies them in a fixed order whatever the order they were programmed in: the tilted plane
+(PLANE) about the active datum, the datum shift (cycle 7 / ISO G54, given in the system active when it
+is defined), mirroring (8 / G28), rotation (10 / G73) and scaling (11 / G72, 26):
+
+x_machine = preset + O + R_tilt (M R(rot) S (x - c) + c)
+
+with O the datum shift turned by the tilt active at its definition, M the mirror, S the scale factors
+about the centre c (26: per axis, CCX CCY CCZ). The chain maps exactly onto the core's mirror -> scale ->
+rotation -> feature stages, using M R(theta) = R(-theta) M for an odd number of mirrored plane axes and
+M S(c) = S(Mc) M. Cycle 247 (Q339) / the ISO preset select `P<n>` of `work_offsets_m` (missing:
+280-03F1); a datum or preset table entry `#n` and ISO G53: TW0012. A circle whose plane axes have
+different scale factors (26) would be an ellipse: TW0018 (the TNC requires equal factors on the axes of
+a circle).
+
+**PLANE** (`plane.py`; machines with two rotary table axes, else 1A0-0100 / transform unavailable): the
+tilt R (columns = the tilted X', Y', Z' in the untilted frame) from SPATIAL SPA SPB SPC
+(R = R_z(SPC) R_y(SPB) R_x(SPA), fixed axes; as `geom.transform.heidenhain_plane_spatial`), PROJECTED
+PROPR PROMIN ROT (X' along the plane's trace in ZX at PROPR about +Y, the trace in YZ at PROMIN about +X
+also in the plane, Z' = their cross product, then ROT about Z'; equal to SPATIAL when one angle is 0),
+EULER (R_z(EULPR) R_x(EULNU) R_z(EULROT)), VECTOR (Z' along N, X' the base vector made normal), POINTS
+(X' = P1 -> P2, Z' = (P2 - P1) x (P3 - P1)), RELATIV (the active R turned about its own X, Y or Z), AXIAL
+(the plane the rotary axes give at those positions, R = R_table^T) and RESET. The rotary positions are
+the closed-form subproblem-2 solution (as CYCLE800): SEQ+ / SEQ- the sign of the first rotary axis of
+the chain, else the least rotary motion; unreachable 1A0-00FC. MOVE positions with compensating linear
+motion (the point DIST above the tip stays fixed on the part; TCPM interpolation), TURN moves the rotary
+axes only, STAY moves nothing (Q120-Q122 hold the angles for a later positioning block); F / FMAX for
+the positioning. Afterwards the program frame is the tilted one and the linear axes follow the table
+kinematics (stage `heidenhain:PLANE`, Space.TIP, "joint").
+
+**TCPM**: M128 / `FUNCTION TCPM` (options F TCP, AXIS POS, PATHCTRL AXIS, REFPNT TIP-TIP; F CONT, AXIS
+SPAT, PATHCTRL VECTOR and the other reference points: TW0012) keep the tool tip on the programmed path
+(stage `heidenhain:TCPM`, Space.TIP, "tip"); M129 / `FUNCTION RESET TCPM` end it; with radius
+compensation active 160-00D0.
+
+### Tools, spindle, coolant
+
+`TOOL CALL n | "name" X|Y|Z S F DL DR DR2`: n from the project's tools (name: the tool table's
+`tool_id`; unknown 160-00C5), the tool axis (its letter must be on the machine), the spindle speed, the
+feed (the current feed until a positioning block programs another one, and the FAUTO value), the length
+and radius deltas DL / DR (DR2 is kept for 3-D compensation, which is not modelled). The length acts
+along the tool axis, the radius for RL / RR; both from the next motion. `TOOL DEF n L R` sets the offsets
+(with neither: preselection, MODE `tool_preselect`); `TOOL DEF n` alone preselects. M3 / M4 / M5, M13 /
+M14 (spindle and coolant), M8 / M9; M0, M1 (optional stop), M2 / M30 (spindle and coolant off, part
+count; inside a called program 160-0160). `M140 MB d [F]` retracts d along the tool axis (the TOOL CALL
+axis, positive direction; the tool does not tilt on table kinematics) at the end of the block, at F or
+rapid; `MB MAX` to the end of the travel range; beyond it: 1A1-0010. Other M functions the TNC lists
+(M94 M97 M98 M101-M103 M107-M111 M116-M118 M120 M130 M136-M138 M141 M143-M145 M148 M149 M197): TW0012;
+unknown: 160-00C3; machine-builder M codes from `physics.controller.m_codes`.
+
+### Q parameters and program flow
+
+* Q0-Q1999 (Q100-Q199 preassigned, read only: Q108 tool radius, Q109 tool axis, Q110 spindle state,
+  Q111 coolant, Q113 unit, Q114 tool length, Q115-Q119 last touch point, Q120-Q122 PLANE angles; writing
+  them 160-0028), QL0-QL499 local to each program level (CALL PGM), QR0-QR499 remanent, QS0-QS1999
+  strings. `FN 0`-`FN 8` (assignment, + - * /, SQRT, SIN, COS, root of a sum of squares LEN), `FN 9`-`FN 12`
+  conditional jumps (EQU NE GT LT, IS DEFINED / IS UNDEFINED), `FN 13` angle (ANG, 0..360), `FN 14 ERROR=`
+  (1000-1199: the predefined errors 280-03E8 + (n - 1000), hexadecimal; other numbers 280-0064 "FN 14:
+  error code n"), `FN 16 F-PRINT` (the text to `PathState.printed`; SCREEN: also stops with the message),
+  `FN 17 SYSWRITE ID50 NR1/2/4/5` (tool length, radius, DL, DR), `FN 18 SYSREAD` (ID10 NR3, ID20
+  NR1-5/8/9, ID30, ID35, ID50, ID60, ID210 NR2-4/6, ID220 NR2, ID230 NR2/3, ID240 NR1, ID270 NR1, ID280 NR1;
+  others TW0006); `FN 15 PRINT` does not exist on the TNC 640 (160-00CF). Formulas: + - * / ^ (right
+  associative) % ( ), SIN COS TAN ASIN ACOS ATAN (degrees), SQ SQRT LN LOG EXP ABS INT (toward zero) FRAC
+  SGN NEG, PI; `SET UNDEFINED`; division by 0 and arguments out of range 160-0032.
+* Strings: `QS = "text"`, `QS = QSm`, `STRING FORMULA QSa || QSb || "text"`, `TOCHAR ( DAT+value
+  DECIMALSn )` (fixed point, DECIMALS default 3, an assumption), `SUBSTR ( SRC_QSm BEGk LENn )` (from
+  position k counted from 0; outside the string 160-0028), and in formulas `TONUMB ( SRC_QSm )`,
+  `STRLEN ( SRC_QSm )` (-1 for an undefined string), `INSTR ( SRC_QSm SEA_QSn BEGk )` (the position from
+  0, the length of QSm when not found), `STRCOMP ( SRC_QSm SEA_QSn )` (0 equal, -1 first, +1 after);
+  SYSSTR: 160-00CF; an undefined string 160-00AF.
+* `LBL n` / `LBL "name"`, `LBL 0` (end of a label subprogram); `CALL LBL n` runs the label subprogram;
+  `CALL LBL n REP m` with the label before the call repeats the section between them m more times
+  (counter in `sys["rep"]`); recursion 160-00A8, nesting beyond `sub_nesting_levels` 160-00AA, label not
+  found 160-001B, twice 160-001C. `CALL PGM name` (path and extension ignored; a different unit gives a
+  warning; recursion 160-00AB), `SEL PGM name` + `CALL SELECTED PGM`, END PGM returns. STOP / M0.
+
+### Cycles
+
+Call-active cycles take effect at `CYCL CALL`, `M99` (per block), `M89` (modal until the next CYCL DEF),
+`CYCL CALL POS X Y Z` (positioning logic: in the plane first when the tool is above the 2nd set-up
+clearance, else up first; Z adds to Q203) and `CYCL CALL PAT` (every point of the last PATTERN DEF at the
+2nd set-up clearance, its Z adding to Q203). With POS and PAT the cycle is expanded when the tool has
+reached each position. Along the tool axis every drilling cycle moves at rapid to Q203 + Q200, works,
+and returns to Q203 + Q200 or the larger 2nd set-up clearance Q203 + Q204; Q201 > 0 is 280-0435, Q201 = 0
+does nothing (in the pockets 280-0488); feeds Q206 / Q207 / Q208 / Q253 / Q254 / Q385 in mm/min.
+Spindle and stop actions run in sequence through `heidenhain:action`.
+
+* 200 DRILLING (pecks Q202, dwell Q210 at the top, Q211 at the bottom), 201 REAMING (Q208 out), 202
+  BORING (oriented stop Q336, disengaging `boring_disengage_m` toward Q214, out at Q208), 203 UNIVERSAL
+  DRILLING (decrement Q212 down to Q205, chip breaks Q213 by Q256 or `chip_break_retract_m`), 204 BACK
+  BORING (rapid to Q203 + Q200, oriented stop Q336, off centre by Q251 toward Q214 (1 -a, 2 -b, 3 +a, 4 +b;
+  0: 280-03F9), down at Q253 until the cutting edge (Q252 above the tip) is Q200 under the underside
+  Q203 - Q250, back to the centre, spindle on, up at Q254 until the edge is Q249 above the underside, dwell
+  Q255, oriented stop, off centre, out at Q253, 2nd set-up clearance, centre, spindle as before), 205
+  UNIVERSAL PECKING (advance stop distances Q258 / Q259, chip breaking Q257 / Q256, deepened start Q379 at
+  Q253), 206 TAPPING with a floating holder (spindle reversal at depth; spindle stopped 280-03E8), 207
+  RIGID TAPPING (pitch Q239, sign = hand) and 209 with chip breaking (Q257, Q256, Q336, retract speed
+  factor Q403), 208 BORE MILLING (helix of pitch Q334 to the diameter Q335, climb / up-cut Q351), 240
+  CENTERING (depth; Q343 = 1 by diameter needs the point angle: TW0012), 251 RECTANGULAR POCKET, 252
+  CIRCULAR POCKET, 253 SLOT MILLING (Q215 0 roughing and finishing, 1 roughing, 2 finishing; allowances
+  Q368 / Q369, stepover Q370 times the tool radius, plunging Q366 0 vertical, 1 helical, 2 reciprocating at
+  `plunge_angle_rad`, helix radius `helix_radius_fraction` of the tool radius; the contour-parallel paths of
+  `milling.py`, see Siemens POCKET3), CYCL DEF 12 PGM CALL and SEL CYCLE (a program called like CALL PGM;
+  its own positioning blocks do not repeat M89; POS / PAT of it: TW0012).
+* DEF-active: 7 DATUM SHIFT, 8 MIRRORING (no axis: off), 9 DWELL TIME, 10 ROTATION (ROT / IROT), 11
+  SCALING (SCL; 0: 1A0-0086), 13 ORIENTATION, 26 AXIS-SPECIFIC SCALING (with CCX CCY CCZ), 32 TOLERANCE
+  (T, HSC-MODE, TA: MODE smoothing), 247 PRESETTING.
+* `PATTERN DEF` POS (single points, IX / IY / IZ from the previous point), ROW (D spacing, NUM, ROT), PAT
+  and FRAME (DX DY NUMX NUMY ROT; ROTX / ROTY turn only the main / secondary axis: a sheared grid; FRAME
+  without the inner points), CIRC (D diameter, START, NUM over the full circle) and PITCHCIRC (STEP); Z adds
+  to the surface.
+
+### ISO mapping (`isoexec.py`)
+
+G00 / G01 line (both modal), G02 / G03 / G05 circle, G06 tangential circle, G10 / G11 polar line, G12 /
+G13 / G15 polar circle, G16 tangential polar circle, G24 / G25 chamfer / rounding R, G28 mirroring (axes
+named), G29 the last position as pole, G30 / G31 blank, G36 S spindle orientation, G38 stop, G04 F dwell,
+G40-G42, G51 T preselection, G54 datum shift, G62 T tolerance, G70 / G71, G72 F scaling, G73 H rotation,
+G79 cycle call, G90 / G91, G98 L label, `L n,m` label call, `%NAME` program call, G99 T L R tool
+definition, G200-G209 G240 G251-G253 with their Q parameters, T tool call (axis by G17 / G18 / G19), D00-D18
+with P01 P02 P03 (= FN 0-18), Q formulas. G26 / G27 (tangential approach / departure), G53 and the codes
+not listed: TW0012 or 160-0003.
+
+### Errors
+
+Condition keys map to TNC error numbers (`tables.ALARM_CODES`, heidenhain-nc-errors-2023), texts from the
+database or the built-in copies. Twin codes: TW0005 M code not defined for the machine, TW0006 system data
+not modelled, TW0012 function not modelled, TW0018 circle under unequal scale factors, TW0040 / TW0041 FK
+element not determined / contradictory.
+
+### Parameters (db/models/controller-heidenhain.yaml)
+
+| name | value | stands for | source |
+|---|---|---|---|
+| arc_end_point_tolerance_m | 0.016 mm | circleDeviation (MP 200901), circle end-point tolerance | heidenhain-tnc640-klartext-2023 p. 166 |
+| sub_nesting_levels | 19 | label subprograms, repeats and CALL PGM nesting (160-00AA) | est |
+| max_m_codes_per_block | 4 | M functions in one block | est |
+| boring_disengage_m | 0.2 mm | cycle 202 disengaging distance | est |
+| chip_break_retract_m | 0.2 mm | cycles 203 / 205 chip-breaking retraction when Q256 = 0 | est |
+| plunge_angle_rad | 5 deg | cycles 251-253 plunging angle (the tool table's ANGLE) | est |
+| helix_radius_fraction | 0.75 | cycles 251 / 252 helix radius / tool radius | est |
+
+### Words (`tables.WORD_LIST`)
+
+* program: BEGIN PGM / END PGM name MM | INCH, BLK FORM 0.1 / 0.2, * structure blocks, ; comments, ~
+  continuation
+* tools: TOOL CALL n | "name" X | Y | Z S F DL DR DR2, TOOL DEF n L R (or preselection), FAUTO
+* paths: L, CC, C (DR+ DR-), CR (R, DR), CT, RND R, CHF, LP / CP / CTP (PR PA IPR IPA, helix with IZ), R0
+  RL RR R+ R-, F FMAX FAUTO FU FZ, I-prefixed incremental coordinates, M91 M92
+* approach: APPR LT / LN / CT / LCT and the polar APPR PLT / PLN / PCT / PLCT (LEN CCA R), DEP LT / LN /
+  CT / LCT
+* FK: FPOL, FL FLT FC FCT with X Y IX IY PR PA AN IAN LEN DR R CCX CCY ICCX ICCY CCPR CCPA (determined
+  elements), CLSD+ / CLSD-, FSELECT
+* cycles: CYCL DEF 200 201 202 203 204 205 206 207 208 209 240 251 252 253 (Q parameters), 7 (datum
+  shift), 8 (mirroring), 9 (dwell), 10 (rotation), 11 (scaling), 12 (PGM CALL), 13 (orientation), 26
+  (axis-specific scaling), 32 (tolerance), 247 (presetting); SEL CYCLE; CYCL CALL, CYCL CALL POS, CYCL
+  CALL PAT, M99, M89; PATTERN DEF POS ROW PAT FRAME CIRC PITCHCIRC (ROTX ROTY shear)
+* parameters: Q0-Q1999 (Q100-Q199 read only), QL0-QL499, QR0-QR499, QS0-QS1999; FN 0 - FN 18 (FN 9-12
+  jumps, FN 14 ERROR, FN 16 F-PRINT, FN 17 SYSWRITE ID50, FN 18 SYSREAD), formulas with + - * / ^ ( ) SIN
+  COS TAN ASIN ACOS ATAN SQ SQRT LN LOG EXP ABS INT FRAC SGN NEG PI %; QS = "text" / QS / STRING FORMULA
+  || / TOCHAR / SUBSTR, TONUMB INSTR STRLEN STRCOMP
+* program flow: LBL n / "name" / LBL 0, CALL LBL n REP m, CALL PGM name, SEL PGM / CALL SELECTED PGM,
+  SEL CYCLE and CYCL DEF 12 PGM CALL (program as cycle), STOP, M0 M1 M2 M30
+* tilting: PLANE SPATIAL / PROJECTED / EULER / VECTOR / POINTS / RELATIV / AXIAL / RESET with MOVE (DIST
+  F) / TURN (F) / STAY and SEQ+ / SEQ-; M128 F, M129, FUNCTION TCPM, FUNCTION RESET TCPM
+* spindle and coolant: S, M3 M4 M5 M8 M9 M13 M14; M140 MB distance / MB MAX [F]; M126 / M127; other
+  listed M functions TW0012
+* ISO: %name G71 / G70 header, N blocks with *, G00 G01 G02 G03 G05 G06 G10-G16 (polar), G17-G19, G24 G25
+  (chamfer, round), G28 (mirror), G29 (pole), G30 G31 (blank), G36, G38 (stop), G04, G40-G42, G51, G54
+  (datum shift), G62, G72 (scaling), G73 (rotation), G79 (cycle call), G90 G91, G98 L (label), L n,m
+  (label call), G99 (tool definition), G200-G209 G240 G251-G253 (cycles), I J K (pole), T, D00-D18, M;
+  G26 / G27 and G53: TW0012
+
+### Validity and error
+
+Paths and transformations are exact (the arc end-point correction moves the centre by at most 0.016 mm;
+the subproblem-2 solution of PLANE / TCPM is closed form). The cycle sequences follow the TNC 640 cycle
+manual's descriptions; the internal distances that manual does not give numerically (disengaging and
+chip-breaking distances, plunging angle, helix radius) are the estimates above. Choices: the FK solver
+works element by element (an element the TNC determines only from later blocks is TW0040 here);
+APPR LN to an inner corner follows the core provider's start-up (FANUC type A); PLANE PROJECTED's X' is
+the ZX trace (not in the shared geometry model, which leaves PROJECTED to the controller); the shown
+position of an endless rotary axis is taken modulo 360 deg. Not modelled (TW0012, never silent): the
+other TNC 640 machining cycles (`tables.TNC640_CYCLES`: SL contour cycles 14, 20-25, 27-29, 39, 270-277,
+patterns 220 / 221, 224, 225, 232, 233, 238, 239, 241, 254, 256-258, 262-267, 285-287, 291, 292,
+1271-1282, cycle 19 (use PLANE); numbers the control does not have, such as the probing cycles of the
+other manual, are 160-000B), FK data relative to other blocks, 3-D radius compensation (LN vectors, DR2),
+M120 look-ahead, datum / preset tables, PLANE on head kinematics, FUNCTION TCPM options other than the
+defaults, ISO G26 / G27 / G53.
+
+References: TNC 640 User's Manuals Klartext (heidenhain-tnc640-klartext-2023), ISO
+(heidenhain-tnc640-iso-2023) and Machining Cycles (heidenhain-tnc640-cycles-2023), NC Error Messages
+(heidenhain-nc-errors-2023), Setup (heidenhain-tnc640-setup-2023); Murray, Li and Sastry 1994
+(subproblem 2); db/controllers/heidenhain-tnc640.yaml. Tests: tests/unit/controller/test_heidenhain.py
+(paths, Q parameters, strings, flow, APPR / DEP, FK, PLANE, TCPM, M140, M126, ISO, errors),
+test_heidenhain_cycles.py (expected command streams of the cycles, 204, PATTERN DEF, transformations),
+test_heidenhain_checkpoint.py (resume inside a CALL LBL REP section bit-identical),
+test_siemens_heidenhain_same_part.py.
 
 ## Adding a dialect
 

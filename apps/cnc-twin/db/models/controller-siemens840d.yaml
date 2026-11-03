@@ -1,0 +1,88 @@
+# SINUMERIK 840D sl control parameters the twin's Siemens dialect uses when the project does not set
+# them (physics.controller, cnctwin/controller/schema.py). Names carry the SI unit; `unit:` is the unit
+# written. Machine data of the 840D sl are set by the machine builder; the values below are the
+# Siemens delivery defaults as generally documented, marked est (the 840D sl list manual of machine data
+# could not be read this session) with the machine-data number they stand for.
+format: cnctwin-model-params
+version: 1
+model: controller-siemens840d
+description: "Default control parameters of the SINUMERIK 840D sl dialect (docs/dialects.md 'Siemens 840D sl')"
+params:
+  circle_error_const_m:
+    value: 0.01
+    unit: mm
+    range: [0.001, 0.1]
+    src: est
+    note: "MD 21000 CIRCLE_ERROR_CONST, constant part of the permissible circle end-point error (alarm 14040); 0.01 mm assumed as delivered"
+  circle_error_factor:
+    value: 0.001
+    unit: "-"
+    range: [0.0, 0.01]
+    src: est
+    note: "MD 21010 CIRCLE_ERROR_FACTOR, radius-proportional part: the tolerance is max(CONST, FACTOR x radius); 0.001 assumed as delivered"
+  sub_nesting_levels:
+    value: 16
+    unit: "-"
+    range: [8, 16]
+    src: est
+    note: "program levels including the main program (alarm 14012). The 802D sl diagnostics manual (siemens-802dsl-diag-2011 p. 101, same NCK alarm) states 8 for that control; 16 assumed for the 840D sl"
+  structure_nesting_levels:
+    value: 16
+    unit: "-"
+    range: [8, 16]
+    src: est
+    note: "nesting depth of IF/WHILE/FOR/LOOP/REPEAT per program level (alarm 12641); siemens-802dsl-diag-2011 p. 96 states 8 for the 802D sl, 16 assumed for the 840D sl"
+  r_parameters:
+    value: 100
+    unit: "-"
+    range: [100, 1000]
+    src: est
+    note: "MD 28050 MM_NUM_R_PARAM, number of R parameters per channel (R0-R99 as delivered)"
+  max_m_codes_per_block:
+    value: 5
+    unit: "-"
+    range: [1, 10]
+    src: est
+    note: "M functions per block (alarm 14770 beyond); 5 assumed; siemens-802dsl-diag-2011 p. 124 gives 10 auxiliary functions (M and H together) for alarm 14750"
+  cutting_edge_default:
+    value: 1
+    unit: "-"
+    range: [0, 9]
+    src: est
+    note: "MD 20270 CUTTING_EDGE_DEFAULT: cutting edge active after a tool change without D (1 = D1)"
+  pocket_stepover_fraction:
+    value: 0.8
+    unit: "-"
+    range: [0.1, 1.0]
+    src: est
+    note: "POCKET3/POCKET4/SLOT1/SLOT2 width of infeed when _MIDA is 0, as a fraction of the tool diameter; 80 % as generally documented for the 840D milling cycles"
+  cycle83_chip_break_retract_m:
+    value: 1.0
+    unit: mm
+    range: [0.1, 5.0]
+    src: est
+    note: "CYCLE83 / CYCLE84 retraction for chip breaking when _VRT is 0 (1 mm as generally documented)"
+  cycle83_anticipation_m:
+    value: 0.6
+    unit: mm
+    range: [0.1, 5.0]
+    src: est
+    note: "CYCLE83 chip removal: advance clearance above the last depth when _DIS1 is 0, for holes up to cycle83_anticipation_limit_depth (0.6 mm as generally documented)"
+  cycle83_anticipation_limit_depth_m:
+    value: 30.0
+    unit: mm
+    range: [1.0, 100.0]
+    src: est
+    note: "CYCLE83: above this total depth the advance clearance is depth / 50 (as generally documented)"
+  cycle83_max_anticipation_m:
+    value: 7.0
+    unit: mm
+    range: [1.0, 20.0]
+    src: est
+    note: "CYCLE83: upper limit of the automatic advance clearance (7 mm as generally documented)"
+  cycle95_lift_m:
+    value: 1.0
+    unit: mm
+    range: [0.1, 5.0]
+    src: est
+    note: "CYCLE95 / CYCLE97 / CYCLE93 lift-off from the contour when _VRT is 0 (1 mm as generally documented)"

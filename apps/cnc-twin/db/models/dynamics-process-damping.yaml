@@ -1,0 +1,21 @@
+# Flank-indentation (process damping) geometry of cnctwin.dynamics (docs/models/dynamics.md section 3): the
+# zero-clearance land under the edge and the largest interference length. The same model and values as cutting's
+# per-element force (db/models/cutting-contact.yaml pd_edge_land_per_radius, pd_max_flank_m), so the lobe diagram's
+# process damping and the time-domain force agree. Read in SI by cnctwin.db.models.params("dynamics-process-damping").
+format: cnctwin-model-params
+version: 1
+model: dynamics-process-damping
+description: "Process-damping contact land and interference length (stability lobes and the benchmark force)"
+params:
+  edge_land_per_radius:
+    value: 1.0
+    unit: "-"
+    range: [0.0, 3.0]
+    src: est
+    note: "zero-clearance contact length under a rounded edge per unit hone radius, added to the flank wear land VB: L_w = VB + 1.0 r_e (altintas-2008-process-damping use the land L_w in C = K_sp b L_w^2 / (4 V); budak-tunc-2010-process-damping add the edge contact). Same assumption and value as cutting-contact pd_edge_land_per_radius"
+  max_interference_m:
+    value: 0.5
+    unit: mm
+    range: [0.05, 3.0]
+    src: est
+    note: "largest length behind the edge over which the clearance face indents the wavy surface (primary clearance lands are 0.3-1 mm wide); bounds the indented area of the nonlinear model (ahmadi-ismail-2011-process-damping) when the path slope exceeds the clearance angle. Same value as cutting-contact pd_max_flank_m"

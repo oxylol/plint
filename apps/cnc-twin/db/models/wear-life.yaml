@@ -1,0 +1,33 @@
+# Tool-life criteria of cnctwin.wear (docs/models/wear.md section 11). Names carry the SI unit;
+# `unit:` is the unit written. The VB limit of the Taylor entry used for the calibration overrides
+# vb_limit_default_m (the calibration and the criterion must refer to the same land).
+format: cnctwin-model-params
+version: 1
+model: wear-life
+description: "ISO 3685 / ISO 8688 end-of-life criteria"
+params:
+  vb_limit_default_m:
+    value: 0.3
+    unit: mm
+    src: iso-3685-1993
+    note: "mean (uniform) flank wear land VB_B; iso-8688-2-1989 uses the same 0.3 mm for end mills"
+  vb_max_limit_m:
+    value: 0.6
+    unit: mm
+    src: iso-3685-1993
+    note: "largest local flank wear land VB_Bmax (iso-8688-2-1989: 0.5 mm localised for end mills; the turning value is kept for both)"
+  notch_limit_m:
+    value: 1.0
+    unit: mm
+    src: iso-3685-1993
+    note: "notch wear land VB_N at the depth-of-cut line"
+  kt_limit_base_m:
+    value: 0.06
+    unit: mm
+    src: iso-3685-1993
+    note: "crater depth criterion KT = 0.06 mm + 0.3 f (f feed per revolution in turning; feed per tooth in milling here)"
+  kt_limit_feed_ratio:
+    value: 0.3
+    unit: "-"
+    src: iso-3685-1993
+    note: "feed share of the crater depth criterion, see kt_limit_base_m"

@@ -1,0 +1,92 @@
+# Flank, crater, notch, abrasive and BUE wear of cnctwin.wear (docs/models/wear.md sections 2-6).
+# Names carry the SI unit; `unit:` is the unit written. Usui constants themselves come from the
+# tool material / work material files or from the Taylor calibration (wear-calibration.yaml).
+format: cnctwin-model-params
+version: 1
+model: wear-flank
+description: "Wear-land geometry, mechanical (abrasive) wear, notch, BUE and edge rounding constants"
+params:
+  min_clearance_rad:
+    value: 2.0
+    unit: deg
+    range: [0.5, 10.0]
+    src: est
+    note: "clearance used when converting the normal wear depth VN into the land width VB = VN (cot a - tan g) is clipped below at this value; zero-clearance lands (margins, wipers) have no defined VB (yen-2004-tool-wear-fem gives the land geometry)"
+  edge_rounding_ratio:
+    value: 1.0
+    unit: "-"
+    range: [0.3, 3.0]
+    src: est
+    note: "growth of the hone radius per unit edge recession VN: wear concentrates at the edge and rounds it; observations of worn carbide edges (hone radius growing by about the recession depth) put the ratio near 1, uncertain by a factor 2"
+  abrasive_coeff_ref:
+    value: 2.0e-8
+    unit: "-"
+    range: [2.0e-9, 2.0e-7]
+    src: est
+    note: "Archard coefficient K (worn volume = K x load x sliding distance / tool hardness, archard-1953-contact) of carbide sliding on the reference work material AISI 1045, to which the material files' composite abrasive_wear_factor refers; derived as K = A exp(-B/T) H from the low-temperature branch quoted for P20 carbide on plain carbon steel (A = 7.8e-15 1/Pa, B = 5302 K, carbide-p30 usui) at 600 K with H = 1450 HV, where thermally activated wear is negligible (takeyama-murata-1963-tool-wear mechanical term); uncertain by an order of magnitude"
+  flank_base_weight:
+    value: 0.5
+    unit: "-"
+    range: [0.0, 1.0]
+    src: est
+    note: "default response model only: the flank contact's base temperature is the work-surface (shear-plane) temperature plus this share of the difference to the rake-contact temperature; the edge region lies between the two heat sources; thermal's edge model resolves it in the run"
+  notch_hardness_exponent:
+    value: 2.0
+    unit: "-"
+    range: [1.0, 4.0]
+    src: est
+    note: "notch wear rate at the depth-of-cut line = flank rate x (1 + hardness increase of the work-hardened layer)^q; q = 2 makes the 48 % harder surface of IN718 notch about twice as fast as the flank, the ratio VB_N / VB commonly seen on nickel alloys and austenitic steels (trent-wright-2000-metal-cutting ch. 7 for the mechanism)"
+  doc_h_ratio:
+    value: 0.5
+    unit: "-"
+    range: [0.1, 0.9]
+    src: est
+    note: "an end of a contiguous engaged run of elements is a depth-of-cut line when its mean chip thickness is at least this share of the run's largest; at the other end the chip thickness tapers toward the machined surface"
+  bue_protection:
+    value: 0.5
+    unit: "-"
+    range: [0.0, 0.9]
+    src: est
+    note: "share of the flank and crater wear rates suppressed while a stable built-up edge at least as high as the uncut chip covers the edge; trent-wright-2000-metal-cutting describe stable BUE as protective and its break-off as the cause of attrition wear"
+  bue_pluck_fraction:
+    value: 3.0e-4
+    unit: "-"
+    range: [1.0e-5, 1.0e-2]
+    src: est
+    note: "edge recession per BUE break-off = this fraction x the tool grain size (attrition: grains plucked with the fragment at a few sites of the contact). With the break-off frequencies of the mechanics BUE model (up to about 100 per second of cutting in the window) it gives a flank-depth rate of the order of 1e-8 m/s, i.e. VB about 0.1 mm per half hour of cutting, the order of attrition wear of carbide at low speeds (trent-wright-2000-metal-cutting describe the mechanism, not a rate)"
+  default_grain_size_m:
+    value: 1.0
+    unit: um
+    range: [0.1, 10.0]
+    src: est
+    note: "tool grain size when the tool material gives none (fine-grained hardmetals and ceramics)"
+  crater_onset_m:
+    value: 1.0
+    unit: um
+    range: [0.1, 10.0]
+    src: est
+    note: "crater depth at which the crater onset is reported (trace event wear:crater_onset)"
+  generic_coating_factor:
+    value: 0.6
+    unit: "-"
+    range: [0.1, 1.0]
+    src: est
+    note: "Usui-rate factor of a coating named only in a Taylor entry's text (no database coating matches): the template's TiAlN example value"
+  generic_pvd_thickness_m:
+    value: 3.0
+    unit: um
+    range: [1.0, 8.0]
+    src: est
+    note: "thickness of such a coating when its text says PVD (or names no process): typical 2-4 um PVD layers"
+  generic_cvd_thickness_m:
+    value: 10.0
+    unit: um
+    range: [4.0, 25.0]
+    src: est
+    note: "thickness of such a coating when its text says CVD: typical 6-15 um CVD multilayers"
+  default_friction:
+    value: 0.5
+    unit: "-"
+    range: [0.1, 1.5]
+    src: est
+    note: "tool-chip friction coefficient for the force direction at entry when the material file has no friction entry for the tool class"

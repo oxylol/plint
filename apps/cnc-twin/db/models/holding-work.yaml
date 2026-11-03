@@ -1,0 +1,253 @@
+# Coefficients of the workholding models (cnctwin.holding.devices, .setup, .workhold;
+# docs/models/holding.md sections 4-7): contact friction and stiffness of jaws, clamps, plates, chucks,
+# centres and steady rests, magnetic and vacuum holding, safety factors and finding thresholds. Read in SI
+# by cnctwin.db.models.params("holding-work"). Values of the workholding item (jaw_friction,
+# jaw_stiffness_N_um, gripping force, loss model ...) always win over these defaults.
+format: cnctwin-model-params
+version: 1
+model: holding-work
+description: "Workholding contacts: friction, stiffness, holding pressures, safety factors, thresholds"
+params:
+  # ------------------------------------------------------------------ friction
+  jaw_friction:
+    value: 0.19
+    unit: "-"
+    src: carrlane-clamping-force-calc
+    note: "coefficient of Carr Lane's clamping-force example; used for vise jaws and clamps whose item gives none"
+  base_friction:
+    value: 0.19
+    unit: "-"
+    src: carrlane-clamping-force-calc
+    note: "workpiece on the fixture (parallels, plate, table) in Carr Lane's example"
+  chuck_jaw_friction:
+    value: 0.1
+    unit: "-"
+    src: kitagawa-gripforce-setting
+    note: "p. 4: mu = 0.1 between jaw and work for the gripping torque F_gD mu r_g (determine by the actual surfaces)"
+  centre_friction:
+    value: 0.1
+    unit: "-"
+    src: est
+    note: "hardened 60 deg centre in a lubricated centre hole"
+  roller_axial_friction:
+    value: 0.05
+    unit: "-"
+    src: est
+    note: "axial sliding of a steady-rest roller on the work (the roller rolls circumferentially: no friction there)"
+  contact_poisson:
+    value: 0.292
+    unit: "-"
+    src: budynas-nisbett-2015-shigley
+    note: "steel (Table A-5); sets the tangential/normal contact stiffness ratio 2 (1 - nu) / (2 - nu) of Mindlin (johnson-1985-contact-mechanics sec. 7.2)"
+  # ------------------------------------------------------------------ stiffness
+  joint_k_per_cm2_N_per_m:
+    value: 1000
+    unit: N_um
+    src: est
+    note: "normal stiffness of 1 cm2 of a milled or ground steel-steel joint at 1-10 MPa nominal pressure (1e13 N/m3 order); in series with the device stiffness"
+  vise_jaw_stiffness_N_per_m:
+    value: 200
+    unit: N_um
+    src: est
+    note: "one vise jaw (whole face) when the item gives none; db/_templates/workholding.yaml value"
+  clamp_stiffness_N_per_m:
+    value: 50
+    unit: N_um
+    src: est
+    note: "strap or toe clamp at its pad (strap bending and stud stretch)"
+  chuck_jaw_stiffness_N_per_m:
+    value: 300
+    unit: N_um
+    src: est
+    note: "radial stiffness of one power-chuck jaw (base and top jaw on the slideway) at the gripping point"
+  centre_stiffness_N_per_m:
+    value: 100
+    unit: N_um
+    src: est
+    note: "radial stiffness of a live centre in the tailstock quill"
+  locator_stiffness_N_per_m:
+    value: 100
+    unit: N_um
+    src: est
+    note: "point locator, stop pin or rest button (pin bending and its seat)"
+  # ------------------------------------------------------------------ clamping force from torque
+  nut_factor:
+    value: 0.2
+    unit: "-"
+    src: budynas-nisbett-2015-shigley
+    note: "bolt torque T = K F d, K = 0.2 when the bolt condition is not stated (eq. 8-27, Table 8-15); used for strap-clamp studs without a catalogue force"
+  vise_screw_d_m:
+    value: 22
+    unit: mm
+    src: est
+    note: "major diameter of the main screw of a 6 in machine vise; used only when the vise gives no force-torque relation"
+  vise_screw_lead_m:
+    value: 5
+    unit: mm
+    src: est
+    note: "lead of a single-start trapezoidal (Acme) vise screw of that size"
+  vise_thread_half_angle_rad:
+    value: 14.5
+    unit: deg
+    src: est
+    note: "Acme 29 deg thread, flank half-angle 14.5 deg"
+  vise_thread_friction:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "greased steel screw in a bronze or steel nut"
+  vise_collar_friction:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "thrust collar of the vise screw (plain bearing face)"
+  vise_collar_radius_m:
+    value: 15
+    unit: mm
+    src: est
+    note: "mean radius of the vise screw's thrust collar"
+  # ------------------------------------------------------------------ geometry defaults
+  parallel_width_m:
+    value: 6.35
+    unit: mm
+    src: est
+    note: "1/4 in vise parallels, one under each jaw"
+  clamp_pad_m:
+    value: 10
+    unit: mm
+    src: est
+    note: "edge length of the square contact pad of a strap or toe clamp"
+  chuck_grip_length_m:
+    value: 15
+    unit: mm
+    src: kitagawa-gripforce-setting
+    note: "gripping length L_g of the worked example; used when neither the project (grip_depth_mm) nor the chuck gives one"
+  chuck_jaw_width_m:
+    value: 26
+    unit: mm
+    src: est
+    note: "contact width of a top jaw when no soft jaw is given (Kitagawa SJ06L1A width, kitagawa-jaws-catalogue p. 107)"
+  chuck_stop_radius_ratio:
+    value: 0.8
+    unit: "-"
+    src: est
+    note: "radius of the jaw-step (axial stop) contacts as a fraction of the gripped radius"
+  collet_segments:
+    value: 3
+    unit: "-"
+    src: est
+    note: "spring collets (5C, ER) close as three segments between three slots"
+  centre_hole_radius_ratio:
+    value: 0.08
+    unit: "-"
+    src: est
+    note: "mean contact radius of the centre in the centre hole as a fraction of the part radius"
+  centre_hole_min_radius_m:
+    value: 1.5
+    unit: mm
+    src: est
+    note: "smallest centre-hole contact radius"
+  tailstock_thrust_N:
+    value: 5
+    unit: kN
+    src: est
+    note: "tailstock thrust when the machine gives none"
+  vacuum_area_utilisation:
+    value: 0.8
+    unit: "-"
+    src: est
+    note: "share of the part footprint inside the gasket when the vacuum item gives none (miteebite-46200 uses 0.8)"
+  # ------------------------------------------------------------------ magnetic holding (Maxwell stress, B^2 scaling)
+  magnetic_gap_m:
+    value: 0.3
+    unit: mm
+    src: est
+    note: "air gap at which the holding pressure falls to a quarter, p = p0 / (1 + g / g_c)^2 (gap reluctance in series with the pole circuit)"
+  magnetic_factor_steel:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "pressure scale relative to low-carbon steel, (B_s / 2.1 T)^2 (furlani-2001-magnets: p = B^2 / 2 mu_0); the chuck tables are for low-carbon steel"
+  magnetic_factor_tool_steel:
+    value: 0.73
+    unit: "-"
+    src: est
+    note: "(1.8 T / 2.1 T)^2: alloying lowers the saturation induction (bozorth-1951-ferromagnetism)"
+  magnetic_factor_cast_iron:
+    value: 0.38
+    unit: "-"
+    src: est
+    note: "(1.3 T / 2.1 T)^2: graphite and carbon lower the induction of cast irons"
+  magnetic_factor_cobalt:
+    value: 0.73
+    unit: "-"
+    src: est
+    note: "(1.79 T / 2.1 T)^2 with the cobalt saturation of bozorth-1951-ferromagnetism"
+  magnetic_factor_nickel:
+    value: 0.08
+    unit: "-"
+    src: est
+    note: "(0.61 T / 2.1 T)^2 with the nickel saturation of bozorth-1951-ferromagnetism"
+  magnetic_factor_stainless:
+    value: 0.0
+    unit: "-"
+    src: est
+    note: "austenitic grades are not ferromagnetic; the family does not say which stainless, so none is taken (conservative)"
+  # ------------------------------------------------------------------ adhesives and tabs
+  adhesive_tension_ratio:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "tensile strength / lap-shear strength of a thin cyanoacrylate bond when no peel strength is given"
+  # ------------------------------------------------------------------ chucks
+  chuck_speed_rule_loss_fraction:
+    value: 0.6667
+    unit: "-"
+    src: kitagawa-2021-b200-manual
+    note: "allowable maximum speed: the dynamic gripping force has fallen to about 1/3 of the static (section 3); the loss at the maximum speed is 2/3 of the static force (loss quadratic in speed); used for chucks without a loss model or jaw masses"
+  # ------------------------------------------------------------------ safety factors and thresholds
+  part_safety_factor:
+    value: 2.0
+    unit: "-"
+    src: carrlane-clamping-force-calc
+    note: "recommended 2:1 safety factor on the clamping force"
+  chuck_safety_factor:
+    value: 2.5
+    unit: "-"
+    src: kitagawa-gripforce-setting
+    note: "p. 5: 2.5 or more for continuous cutting (3.0 for intermittent cutting)"
+  mounting_gap_m:
+    value: 1
+    unit: mm
+    src: est
+    note: "a fixture plate this far or more below the part carries other devices (a vise on a grid plate), not the part: it gets no contact and no seating check"
+  seat_tolerance_m:
+    value: 5
+    unit: um
+    src: est
+    note: "largest gap at the primary datum that still counts as seated (feeler or tap test)"
+  mislocation_warn_m:
+    value: 0.01
+    unit: mm
+    src: est
+    note: "location error of the part reference point above which a mislocation warning is raised"
+  mislocation_error_m:
+    value: 0.05
+    unit: mm
+    src: est
+    note: "location error above which mislocation is an error when the project gives no tighter tolerance"
+  slip_report_m:
+    value: 1
+    unit: um
+    src: est
+    note: "persistent part displacement in a step above which part_slip is an error"
+  lift_report_m:
+    value: 1
+    unit: um
+    src: est
+    note: "reversible lift or tipping amplitude above which part_slip (lift-off) is an error"
+  free_volume_fraction:
+    value: 0.05
+    unit: "-"
+    src: est
+    note: "a body released by removal that holds at least this share of the workpiece volume is taken as the part coming free (part_free); smaller ones are offcuts and slugs"

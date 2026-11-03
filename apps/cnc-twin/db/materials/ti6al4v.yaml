@@ -40,7 +40,7 @@ flow_stress:
   T_ref_degC: {value: 20, src: est, note: "room temperature assumed; not stated in Ducobu et al. Table 1"}
   T_melt_degC: {value: 1660, src: upmet-2026-ti64-eli, note: "upper liquidus; the melting temperature used by Seo et al. was not read"}
   src: ducobu-2017-jc-ti6al4v
-  note: "Set 16 of Ducobu et al. 2017 Table 1 (Seo, Min & Yang 2005, SHPB up to 1273 K and 1400 1/s), which Ducobu et al. recommend after comparing 20 sets in a CEL orthogonal-cutting model against experiments (best cutting force, mid-range feed force and chip thickness). Alternatives in the same table: Lee & Lin 1998 (782.7, 498.4, n 0.28, C 0.028, m 1, eps0 1e-5), Johnson 1985 (862.5, 331.2, 0.34, 0.012, 0.8), Meyer & Kleponis 2001 (896, 656, 0.5, 0.0128, 0.8), Kay 2002 (1098, 1092, 0.93, 0.014, 1.1). klippel-2024-ck45-orthogonal fitted A 867, B 344, n 0.361, C 0.0145 to their own bar (Table 9)."
+  note: "Set 16 of Ducobu et al. 2017 Table 1 (Seo, Min & Yang 2005, SHPB up to 1273 K and 1400 1/s), which Ducobu et al. recommend after comparing 20 sets in a CEL orthogonal-cutting model against experiments (best cutting force, mid-range feed force and chip thickness). Alternatives in the same table: Lee & Lin 1998 (782.7, 498.4, n 0.28, C 0.028, m 1, eps0 1e-5), Johnson 1985 (862.5, 331.2, 0.34, 0.012, 0.8), Meyer & Kleponis 2001 (896, 656, 0.5, 0.0128, 0.8), Kay 2002 (1098, 1092, 0.93, 0.014, 1.1). klippel-2024-ck45-orthogonal fitted A 867, B 344, n 0.361, C 0.0145 to their own bar (Table 9). Cross-check: lesuer-2001-llnl-jc (Table 1) use the Johnson 1985 set (862, 331, 0.34, 0.012, 0.8) for AMS 4911 plate, with JC damage constants D1 -0.09, D2 0.25, D3 -0.5, D4 0.014, D5 3.87 (not stored: they belong to another strength set). the Lee & Lin 1998 original was not readable (paywalled); its constants above are as quoted by Ducobu et al."
 
 cutting:
   kienzle:                         # F_c = kc1.1 * b * h^(1-mc), h in mm; measured, dry orthogonal, Table 19 of Klippel et al. 2024
@@ -149,15 +149,19 @@ chip:
 tool_life:
   - tool_class: carbide
     coating: uncoated
-    C_m_min: 135
-    n: 0.3
-    a: 0.3
-    b: 0.1
+    grade: "uncoated WC-Co, DCMT 11T308"
+    process: turning
+    C_m_min: 147.5
+    n: 0.279
+    a: {value: 0.3, src: est, note: "feed exponent not identified by the source (single feed 0.2 mm/rev in the tool-life tests); the earlier estimate kept"}
+    b: {value: 0.1, src: est, note: "depth exponent not identified (single ap 1 mm); the earlier estimate kept"}
     feed_ref_mm: 0.2
-    ap_ref_mm: 2
-    VB_limit_mm: 0.3
-    src: est
-    note: "no published Taylor fit read. C set so that T = 15 min at vc = 60 m/min (uncoated K-grade carbide in annealed Ti-6Al-4V, general knowledge, not a cited source); n, a, b assumed"
+    ap_ref_mm: 1
+    VB_limit_mm: {value: 0.3, src: est, note: "the paper evaluates tool life from VB 'according to the ISO 3685 standard' without printing the limit; the ISO 3685 average flank-wear criterion of 0.3 mm is assumed"}
+    T_ref_min: 1
+    vc_range_m_min: [50, 200]
+    src: batista-ponce-2019-ti64-adhesion
+    note: "Eq. (2) T = 58.12e6 v^-3.58 (T in min, v in m/min; dry turning of UNS R56400 bar with uncoated WC-Co DCMT 11T308 at f 0.2 mm/rev, ap 1 mm, vc 50, 75, 100 and 200 m/min) rewritten as vc T^n = C: n = 1/3.58 = 0.279, C = (58.12e6)^(1/3.58) = 147.5 m/min. Life ends in adhesion-driven critical failure (29 s at 200 m/min; no significant wear after 30 min at 50 m/min). The earlier estimate (C 135, n 0.3 at f 0.2, ap 2: T = 15 min at 60 m/min) predicts 15 min at 60 m/min where this fit gives 69 m/min (at ap 1)"
   - tool_class: carbide
     coating: TiAlN
     C_m_min: 170
@@ -204,4 +208,4 @@ ignition:
 
 composite: null
 
-notes: "Annealed Ti-6Al-4V Grade 5. Sourced: physical data (UPMET ELI, Aubert & Duval, ATI), tensile data and measured Kienzle coefficients vs speed, friction, chip segmentation (Klippel et al. 2024, uncoated carbide, dry orthogonal), JC set (Seo et al. via Ducobu et al. 2017), orthogonal database and edge coefficients (Altintas review), h_min/r_n (review). Estimated: HSS Kienzle, computed Ktc/Krc/Kac, sticking ratios, coated/HSS friction, work hardening, K_sp, Taylor constants, oxide colours, burn temperature. Gaps: ignition data, published Taylor constants."
+notes: "Annealed Ti-6Al-4V Grade 5. Sourced: physical data (UPMET ELI, Aubert & Duval, ATI), tensile data and measured Kienzle coefficients vs speed, friction, chip segmentation (Klippel et al. 2024, uncoated carbide, dry orthogonal), JC set (Seo et al. via Ducobu et al. 2017), orthogonal database and edge coefficients (Altintas review), h_min/r_n (review). Taylor constants for uncoated WC-Co turning (Batista Ponce et al. 2019, Eq. 2). Estimated: HSS Kienzle, computed Ktc/Krc/Kac, sticking ratios, coated/HSS friction, work hardening, K_sp, coated-carbide and HSS Taylor constants (and the feed/depth exponents of the uncoated one), oxide colours, burn temperature. Gaps: ignition data, published Taylor constants for coated carbide."

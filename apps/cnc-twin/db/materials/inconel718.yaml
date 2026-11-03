@@ -38,7 +38,7 @@ flow_stress:
   T_ref_degC: {value: 20, src: est, note: "not stated in Table 1 of qiu-2019; room temperature assumed"}
   T_melt_degC: 1300
   src: qiu-2019-in718-jc-sensitivity
-  note: "DeMange, Prakash & Pereira (2009) constants as given in Qiu et al. 2019 Table 1 (eps0 = 0.03 1/s) and Wang et al. 2018 Table 1; melting temperature 1573 K in both papers' property tables. Alternative: Zhou et al. 2022 Table 3: A 1200, B 1284, C 0.006, n 0.54, m 1.2 (Tm 2073 K as printed). Other published sets (Kobayashi et al. 2008; Uhlmann et al. 2007) were not read."
+  note: "DeMange, Prakash & Pereira (2009) constants as given in Qiu et al. 2019 Table 1 (eps0 = 0.03 1/s) and Wang et al. 2018 Table 1; melting temperature 1573 K in both papers' property tables. Alternative: Zhou et al. 2022 Table 3: A 1200, B 1284, C 0.006, n 0.54, m 1.2 (Tm 2073 K as printed). Other published sets (Kobayashi et al. 2008; Uhlmann et al. 2007) were not read, and the DeMange et al. 2009 original (Int. J. Impact Eng.) could not be read in the second research round (paywalled), so the set rests on the two secondary sources."
 
 cutting:
   kienzle:
@@ -100,7 +100,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     ap_ref_mm: 1
     VB_limit_mm: 0.3
     src: est
-    note: "no published Taylor fit read; C set so that T = 15 min at vc = 45 m/min (coated S-grade carbide on aged 718, general knowledge)"
+    note: "no published Taylor fit read; C set so that T = 15 min at vc = 45 m/min (coated S-grade carbide on aged 718, general knowledge). Measured comparison (lima-2012-inconel-tool-wear Table 4.28, dry turning of a softer 718 at 32-34 HRC, Kennametal KC5510 PVD-TiAlN WC-6Co SNMG120412, f 0.2 mm/rev, ap 2 mm, VBB 0.4 mm): 645 s at 45 m/min and 227 s at 60 m/min with a 45 deg approach angle, i.e. a two-point n 0.28 and C 87 m/min (15 min at 41 m/min); with an 85 deg approach angle 210 and 193 s (no meaningful exponent). Not adopted: two speeds only, different hardness"
   - tool_class: ceramic
     coating: uncoated
     grade: SiAlON

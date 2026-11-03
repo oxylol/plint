@@ -1,0 +1,22 @@
+format: cnctwin-workholding
+version: 1
+series_id: kurt-anglock
+maker: "Kurt Manufacturing (Kurt Workholding)"
+series: "AngLock D-series precision machine vise (D688, 6 in jaws)"
+src: kurt-d688-manual
+items:
+  - id: kurt-d688
+    order_code: "D688"
+    type: vise
+    actuation: manual
+    jaw_width_mm: {value: 152.4, src: yoder-kurt-d688-listing, note: "6 in"}
+    jaw_height_mm: {value: 44.07, src: yoder-kurt-d688-listing, note: "jaw depth 1.735 in"}
+    max_opening_mm: {value: 223.5, src: ned-2012-kurt-d688, note: "8.8 in jaw opening; the Yoder listing gives 8.8 in as well"}
+    clamping_force_kN: {value: 35.44, at_handle_torque_Nm: 108.5, page: "p. 4", note: "7968 lbf at 80 ft-lb (the top row of the manual's 'Manual Vise Clamping Force' table; ned-2012-kurt-d688 quotes the same 'up to 7,968 lbs. clamping force with just 80 ft. lbs. input torque'). Full table, ft-lb -> lbf (Nm -> kN): 10 -> 1129 (13.56 -> 5.02), 20 -> 2242 (27.12 -> 9.97), 30 -> 3337 (40.67 -> 14.84), 40 -> 4148 (54.23 -> 18.45), 50 -> 5379 (67.79 -> 23.93), 60 -> 6310 (81.35 -> 28.07), 70 -> 6977 (94.91 -> 31.04), 80 -> 7968 (108.47 -> 35.44). Converted with 1 ft-lb = 1.35582 Nm and 1 lbf = 4.44822 N"}
+    force_per_torque_N_per_Nm: {value: 327, note: "35.44 kN / 108.5 Nm at the top of the table; the table is close to linear but degressive: 370 N/Nm at 10-20 ft-lb, 340-353 at 40-60 ft-lb, 327 at 70-80 ft-lb"}
+    jaw_friction: {value: 0.19, src: carrlane-clamping-force-calc, note: "coefficient used in Carr Lane's clamping-force worked example (workpiece on fixture, with a recommended 2:1 safety factor); not a Kurt value: smooth hardened jaw plates on a machined part, dry"}
+    jaw_stiffness_N_um: {value: null, note: "not published by Kurt; no defensible estimate found"}
+    body_mm: {value: [[-104.8, -212.7, -111.1], [104.8, 212.7, 0]], src: est, note: "bounding box of the overall dimensions in yoder-kurt-d688-listing (vise width 8.25 in = 209.55 mm, length 16.75 in = 425.45 mm, height 4.375 in = 111.1 mm) centred on the vise footprint with z = 0 at the top (height assumed measured to the jaw top); the jaw positions inside the box are not published, so only the outline is usable for collision"}
+    mass_kg: {value: null, note: "not found in the sources read"}
+    accuracy: {repeatability_um: {value: 25.4, src: ned-2012-kurt-d688, note: "'repeatability to within 0.001 inch'"}}
+notes: "AngLock design (manual p. 3): each pound of forward jaw force induces a half pound of downward force on the movable jaw, which limits jaw lift; ductile-iron body (80,000 psi), hardened bed and jaw plates, needle-bearing thrust. The manual forbids handle extensions, impact wrenches, breaker bars or hammers (p. 5), so 80 ft-lb (108.5 Nm) with the supplied handle is the top of the published table."

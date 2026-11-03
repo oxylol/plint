@@ -1,0 +1,80 @@
+# Weck, Altintas & Beer (1993) chatter tests as reproduced in Budak (1994, PhD thesis, Fig. 8.10; data taken
+# from the thesis, no journal paper was read): 30 mm 3-flute end mill with one dominant mode per direction, AlZnMgCu1.5,
+# SLOTTING (radial width b = 2R = 30 mm), 1000-4800 rpm in 200 rpm steps, depth in 0.5 mm steps.
+format: cnctwin-validation-case
+version: 1
+id: stability-weck1993-3flute-al7075-slotting
+quantity: stability_lobe
+reference:
+  src: budak-1994-thin-wall-milling-thesis
+  location: "Sect. 8.4.2 'Example: milling of a rigid workpiece with 2 DOF end mill' (tool, coefficients, modal parameters, test procedure; thesis p. 221), Fig. 8.10 (test markers, classified from the scanned page; p. 222)"
+  digitised: true
+  uncertainty_pct: 0                 # tests sit on a regular 200 rpm x 0.5 mm grid; only the symbol class is read
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: al7075-t6, note: "AlZnMgCu1.5 (EN AW-7075 type) in the source; temper not stated; the cutting coefficients below are the source's own"}
+  tool:
+    type: square_endmill
+    diameter_mm: 30
+    flutes: 3
+    helix_deg: 30
+    gauge_length_mm: 110
+    tool_class: {value: "not stated", src: est, note: "material of the end mill not given; the very low radial coefficient (Kr 0.07) implies a high rake angle"}
+  conditions:
+    direction: slot
+    radial_immersion_ratio: 1.0
+    ae_mm: 30
+    feed_mm_tooth: 0.07
+    spindle_rpm_grid: "1000-4800 in 200 rpm steps"
+    depth_grid: "0.5 mm steps (1.0-2.5 mm shown)"
+    coolant: {value: dry, src: est, note: "not stated"}
+    test_site: "Machine Tool Laboratory (WZL), RWTH Aachen"
+  dynamics:
+    model: "2 DOF tool: one dominant mode in x (feed) and one in y; cross FRFs neglected"
+    modes_x: [{natural_freq_Hz: 603, stiffness_N_mm: 5590, damping_ratio: 0.039}]
+    modes_y: [{natural_freq_Hz: 666, stiffness_N_mm: 5715, damping_ratio: 0.035}]
+    mode_note: "printed as k = 5590 N/mm, zeta 0.039, omega 3788 rad/s (603 Hz) in x and k = 5715 N/mm, zeta 0.035, omega 4161 rad/s (666 Hz) in y; modal tests on the end mill"
+    cutting_coefficients: {Kt_N_mm2: 600, Kr: 0.07, note: "measured milling force coefficients Kt = 600 MPa (tangential) and Kr = 0.07 (radial / tangential ratio)"}
+  program: null
+reference_values:
+  - {name: stable_test, value: 1.0, unit: mm, x: 1000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 1000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 1200, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 1200, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 1400, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 1400, x_name: spindle_speed, x_unit: rpm}
+  - {name: light_chatter_test, value: 1.0, unit: mm, x: 1600, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 1800, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 1800, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 2000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 2000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 2200, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 2200, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 2400, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 2400, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 2600, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 2600, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 2800, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 2800, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 3000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 3000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 3200, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 3200, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 3400, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 3400, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 3600, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 3600, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 3800, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 3800, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 4000, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 4000, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 4200, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 4200, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 4400, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 4400, x_name: spindle_speed, x_unit: rpm}
+  - {name: stable_test, value: 1.0, unit: mm, x: 4600, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.5, unit: mm, x: 4600, x_name: spindle_speed, x_unit: rpm}
+  - {name: chatter_test, value: 1.0, unit: mm, x: 4800, x_name: spindle_speed, x_unit: rpm}
+reference_curves: []
+notes: "Value = axial depth of cut, x = spindle speed. For each speed only the two bracketing tests are stored: stable_test = deepest stable cut, chatter_test or light_chatter_test = shallowest unstable cut; in this data set every depth below the deepest stable cut was stable and every depth above the shallowest unstable cut chattered, so the bracket carries the whole column. Symbols classified on the scanned thesis page rendered at 6x: open circle = stable, filled circle with a white speck = light chatter, solid = chatter (legend of Fig. 8.10); each marker located on the regular grid and judged by the white area inside a 9 px radius (open > 85 px, light chatter about 5-80 px, chatter 0), ambiguous markers checked on enlarged tiles. Light chatter and chatter differ only by a small speck in the scan, so that distinction is less certain than stable/unstable (it matters only for the label, both are unstable). The tests were first reported by Weck, Altintas and Beer, CAD assisted chatter free NC tool path generation in milling (thesis reference 162, listed as accepted for publication in the International Journal of Machine Tool Design and Research, 1993); that paper was not read here, the data are those reproduced in the thesis. Slotting is stable at 1.0 mm and unstable at 1.5 mm at every speed tested except 1600 rpm (light chatter already at 1.0 mm) and 4800 rpm (chatter at 1.0 mm); no depth below 1.0 mm was tested, so those two speeds have no stable test. The time-domain curve of Fig. 8.10 and the analytical lobes of Fig. 8.11 are model results and are not stored."

@@ -88,6 +88,7 @@ def pass_badge(passed) -> Raw:
 
 NUM = ' class="num"'
 WIDE_COLUMNS = 5      # tables with more columns keep a minimum width and scroll sideways on a phone
+XWIDE_COLUMNS = 9
 
 
 def table(headers, rows, *, numeric=(), cls: str = "", caption=None, empty: str = "nothing to show",
@@ -107,7 +108,8 @@ def table(headers, rows, *, numeric=(), cls: str = "", caption=None, empty: str 
         cells = "".join(f'<td{NUM if i in numeric else ""}>{cell(v)}</td>' for i, v in enumerate(row))
         body.append(f"<tr{attrs}>{cells}</tr>")
     cap = f"<caption>{cell(caption)}</caption>" if caption is not None else ""
-    classes = " ".join(c for c in (cls, "wide" if len(headers) > WIDE_COLUMNS else "") if c)
+    width = "xwide" if len(headers) > XWIDE_COLUMNS else "wide" if len(headers) > WIDE_COLUMNS else ""
+    classes = " ".join(c for c in (cls, width) if c)
     return Raw(f'<div class="scroll"><table class="{esc(classes)}">{cap}<thead><tr>{head}</tr></thead>'
                f'<tbody>{"".join(body)}</tbody></table></div>')
 
@@ -205,6 +207,7 @@ code{white-space:pre-wrap;word-break:break-word}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:6px 0 10px;max-width:100%}
 table{border-collapse:collapse;width:100%;font-size:13px}
 .scroll>table.wide{min-width:720px}
+.scroll>table.xwide{min-width:980px}
 caption{text-align:left;color:var(--ink2);font-size:12.5px;padding:2px 0 4px;caption-side:top}
 th,td{padding:4px 6px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
 thead th{border-bottom:1px solid var(--axis);color:var(--ink2);font-weight:600;white-space:nowrap}
@@ -265,9 +268,9 @@ th,td{padding:3px 4px}table{font-size:12px}.verdict-title{font-size:19px}.tile-v
 @bottom-right{content:"page " counter(page) " of " counter(pages);font-size:8pt;color:#52514e}}
 @media print{body{font-size:9.5pt}main{max-width:none;padding:0}
 .running{display:block;string-set:running content();height:0;overflow:hidden;font-size:0}
-.scroll{overflow:visible}table{font-size:7.8pt}.scroll>table.wide{min-width:0;font-size:6.8pt}
+.scroll{overflow:visible}table{font-size:7.8pt}.scroll>table.wide,.scroll>table.xwide{min-width:0;font-size:6.8pt}
 th,td{padding:2px 3px}thead th{white-space:normal}
-td,th{word-break:break-word}td.num,th.num{white-space:nowrap}
+td{overflow-wrap:anywhere}th{overflow-wrap:break-word}td.num,th.num{white-space:nowrap;overflow-wrap:normal}
 h2{break-after:avoid;font-size:13pt}h3,h4{break-after:avoid}
 figure,tr,.tile,.verdict{break-inside:avoid}.listing{font-size:7.5pt;overflow:visible}
 .listing .ln{white-space:pre-wrap}.toc details>summary{color:var(--ink)}a{color:var(--ink);text-decoration:none}

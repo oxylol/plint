@@ -48,6 +48,14 @@ SCHEMA = Struct({
     "g37_feed_mm_min": Qty(gt=0, nullable=True),
     "g37_approach_mm": Qty(lo=0, nullable=True),
     "g37_tolerance_mm": Qty(lo=0, nullable=True),
+    # --- additive (cycles, compensation, probing, tool life, restart, TCP: docs/dialects.md "Cycles and
+    # compensation"; defaults in db/models/controller-cycles.yaml, each named after the parameter it stands for)
+    "cycle_parameters": MapOf(Any_(), doc="cycle/compensation/tool-life/restart/TCP parameters by name with unit "
+                                          "suffix (g73_retract_mm: 0.5, crc_startup_type: B ...)"),
+    "tool_life": Any_(doc="tool life management groups: {groups: [{group, life, count: uses|time, tools: "
+                          "[{tool, h, d}]}]} (FANUC tool life management / Haas tool groups)"),
+    "builtin_macros": Flag(doc="load the built-in probe macro library (O9810-O9814, O9851-O9853); default: "
+                               "when the machine has a spindle probe or a tool setter"),
 }, meta=False)
 
 
@@ -88,6 +96,9 @@ class ControllerSettings:
     g37_feed_m_s: float | None = None
     g37_approach_m: float | None = None
     g37_tolerance_m: float | None = None
+    cycle_parameters: dict = field(default_factory=dict)     # additive: cycles/comp/probing/tool life/restart/TCP
+    tool_life: dict | None = None                            # additive: tool life management groups
+    builtin_macros: bool | None = None                       # additive: built-in probe macro library
 
 
 def _plain(value):
@@ -111,7 +122,7 @@ def settings_from(section) -> ControllerSettings:
         if key in names:
             values[key] = _plain(value)
     for key in ("m_codes", "macro_call_codes", "reference_points_m", "g60_overrun_m", "power_on",
-                "interface_inputs"):
+                "interface_inputs", "cycle_parameters"):
         if values.get(key) is None:
             values.pop(key, None)
     if "reference_points_m" in values:

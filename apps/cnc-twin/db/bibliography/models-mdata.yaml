@@ -103,8 +103,8 @@ entries:
   jcgm-100-2008:
     type: standard
     authors: "JCGM (BIPM, IEC, IFCC, ILAC, ISO, IUPAC, IUPAP, OIML)"
-    title: "JCGM 100:2008 Evaluation of measurement data - Guide to the expression of uncertainty in measurement (GUM)"
-    venue: "Bureau International des Poids et Mesures, Sevres"
+    title: "JCGM 100:2008 Evaluation of measurement data - Guide to the expression of uncertainty in measurement (GUM 1995 with minor corrections)"
+    publisher: "Joint Committee for Guides in Metrology"
     year: 2008
     pages: "4.3.7 and F.2.2.1: a reading quantised with resolution q has standard uncertainty q / sqrt(12) (rectangular distribution); 6.2-6.3 coverage, expanded uncertainty near 95 %"
   # ------------------------------------------------------------------ least squares

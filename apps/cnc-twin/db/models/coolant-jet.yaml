@@ -1,0 +1,30 @@
+# Coolant jets in the machine frame (cnctwin/coolant/jets.py and kernels.py, docs/models/coolant.md "Jets"):
+# spreading, break-up of liquid jets, drag of the jet column and of the drops, gas-jet decay, the
+# liquid film the jet makes on a surface. Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: coolant-jet
+description: "Jet spread, Grant-Middleman break-up, Rayleigh drops, Schiller-Naumann drag, round-jet decay, Watson film"
+params:
+  liquid_jet_half_angle_rad: {value: 2.0, unit: deg, range: [0.5, 4.0], src: est, note: "coherent liquid jet from a converging coolant nozzle before break-up (turbulent jet surface roughening); lefebvre-1989-atomization describes plain jets as nearly parallel"}
+  spray_half_angle_rad: {value: 6.0, unit: deg, range: [3.0, 12.0], src: est, note: "drops after break-up disperse within a cone of 5-10 deg"}
+  through_tool_half_angle_rad: {value: 3.0, unit: deg, range: [1.0, 8.0], src: est, note: "short coolant channels at the tool tip deliver slightly rougher jets than a nozzle"}
+  gas_jet_spreading_rate: {value: 0.094, unit: "-", src: pope-2000, note: "half-velocity radius r_1/2 = S x of the self-similar round jet (Table 5.1, Hussein, Capp and George 1994)"}
+  gas_jet_edge_ratio: {value: 2.0, unit: "-", range: [1.7, 2.5], src: est, note: "visible jet boundary at about twice the half-velocity radius (Gaussian profile: 6 % of the centreline velocity)"}
+  gas_jet_centreline_B: {value: 5.8, unit: "-", src: pope-2000, note: "u_c/u_0 = B d0/x; the potential core ends at x = B d0 (also the H/D up to which a coherent liquid jet counts as undecayed in the Martin correlation)"}
+  breakup_turbulent_c: {value: 8.51, unit: "-", src: grant-middleman-1966, note: "turbulent jets L/d = 8.51 We^0.32"}
+  breakup_turbulent_n: {value: 0.32, unit: "-", src: grant-middleman-1966}
+  breakup_laminar_c: {value: 19.5, unit: "-", src: grant-middleman-1966, note: "laminar jets L/d = 19.5 [We^0.5 (1 + 3 Oh)]^0.85"}
+  breakup_laminar_n: {value: 0.85, unit: "-", src: grant-middleman-1966}
+  breakup_laminar_oh: {value: 3.0, unit: "-", src: grant-middleman-1966}
+  jet_turbulent_re: {value: 2300.0, unit: "-", src: white-2006-viscous-fluid-flow, note: "nozzle Reynolds number above which the turbulent break-up correlation is used"}
+  rayleigh_drop_ratio: {value: 1.89, unit: "-", src: rayleigh-1878-jets, note: "drop diameter / jet diameter of capillary break-up; the turbulent atomisation of fast jets makes smaller drops, whose stronger drag the model then underestimates"}
+  drag_sn_a: {value: 0.15, unit: "-", src: schiller-naumann-1933, note: "C_D = 24/Re (1 + a Re^n)"}
+  drag_sn_n: {value: 0.687, unit: "-", src: schiller-naumann-1933}
+  drag_newton: {value: 0.44, unit: "-", src: schiller-naumann-1933, note: "C_D above Re = 1000"}
+  drag_re_newton: {value: 1000.0, unit: "-", src: schiller-naumann-1933}
+  column_skin_friction: {value: 0.005, unit: "-", range: [0.003, 0.008], src: est, note: "air skin friction on a coherent liquid column, turbulent flat-plate C_f at Re_x 1e4-1e6 (schlichting-gersten-2017)"}
+  watson_r0_coeff: {value: 0.1833, unit: "-", src: watson-1964-radial-spread, note: "r0 = 0.1833 d Re_d^(1/3): the viscous layer reaches the free surface (liu-lienhard-1993-hydraulic-jump)"}
+  watson_c: {value: 1.402, unit: "-", src: watson-1964-radial-spread, note: "u_s = 27 c^2 Q^2 / (8 pi^4 nu (r^3 + l^3)), l from continuity of u_s at r0"}
+  wall_jet_decay: {value: 1.0, unit: "-", range: [0.8, 1.3], src: glauert-1956-wall-jet, note: "gas radial wall jet u_max = u_imp min(1, a d/r) (1/r decay of the turbulent radial wall jet; coefficient est)"}
+  film_step_m: {value: 1.0, unit: mm, range: [0.3, 3.0], src: est, note: "a draining coolant film flows into a neighbouring cell when that cell's surface is not higher than this above the current one (film thickness of flooded parts)"}

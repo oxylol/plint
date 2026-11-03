@@ -1,0 +1,109 @@
+# ISO 286 code system for tolerances on linear sizes (cnctwin.inspect.fits286, docs/models/inspect.md "Size
+# limits"): the standard tolerance grades IT1-IT18 and the fundamental deviations of the shaft positions the
+# inspection evaluates, for nominal sizes up to 500 mm. Hole positions follow from the shafts by the general and
+# special rules of ISO 286-1:2010 5.3 (EI = -es for A-H; ES = -ei (+ delta) for K-S), so they need no table.
+# Read in SI by cnctwin.db.models.params("inspect-iso286"): every deviation list is in metres after reading.
+format: cnctwin-model-params
+version: 1
+model: inspect-iso286
+description: "ISO 286-1 standard tolerance grades IT1-IT18 and ISO 286-2 shaft fundamental deviations a-g, k, m, n, p, r, s up to 500 mm"
+src: iso-286-1-2010
+params:
+  it_steps_m:
+    value: [0, 3, 6, 10, 18, 30, 50, 80, 120, 180, 250, 315, 400, 500]
+    unit: mm
+    src: iso-286-1-2010
+    note: "main nominal size steps of Table 1: a size belongs to the step (lower, upper] (the first step is 0 to 3 mm inclusive)"
+  it_grades_m:
+    value:
+      - [0.8, 1, 1, 1.2, 1.5, 1.5, 2, 2.5, 3.5, 4.5, 6, 7, 8]
+      - [1.2, 1.5, 1.5, 2, 2.5, 2.5, 3, 4, 5, 7, 8, 9, 10]
+      - [2, 2.5, 2.5, 3, 4, 4, 5, 6, 8, 10, 12, 13, 15]
+      - [3, 4, 4, 5, 6, 7, 8, 10, 12, 14, 16, 18, 20]
+      - [4, 5, 6, 8, 9, 11, 13, 15, 18, 20, 23, 25, 27]
+      - [6, 8, 9, 11, 13, 16, 19, 22, 25, 29, 32, 36, 40]
+      - [10, 12, 15, 18, 21, 25, 30, 35, 40, 46, 52, 57, 63]
+      - [14, 18, 22, 27, 33, 39, 46, 54, 63, 72, 81, 89, 97]
+      - [25, 30, 36, 43, 52, 62, 74, 87, 100, 115, 130, 140, 155]
+      - [40, 48, 58, 70, 84, 100, 120, 140, 160, 185, 210, 230, 250]
+      - [60, 75, 90, 110, 130, 160, 190, 220, 250, 290, 320, 360, 400]
+      - [100, 120, 150, 180, 210, 250, 300, 350, 400, 460, 520, 570, 630]
+      - [140, 180, 220, 270, 330, 390, 460, 540, 630, 720, 810, 890, 970]
+      - [250, 300, 360, 430, 520, 620, 740, 870, 1000, 1150, 1300, 1400, 1550]
+      - [400, 480, 580, 700, 840, 1000, 1200, 1400, 1600, 1850, 2100, 2300, 2500]
+      - [600, 750, 900, 1100, 1300, 1600, 1900, 2200, 2500, 2900, 3200, 3600, 4000]
+      - [1000, 1200, 1500, 1800, 2100, 2500, 3000, 3500, 4000, 4600, 5200, 5700, 6300]
+      - [1400, 1800, 2200, 2700, 3300, 3900, 4600, 5400, 6300, 7200, 8100, 8900, 9700]
+    unit: um
+    src: iso-286-1-2010
+    note: "Table 1: rows IT1 ... IT18, columns the main steps of it_steps_m; IT14-IT18 are not used up to 1 mm (ISO 286-1 Table 1 footnote)"
+  deviation_steps_m:
+    value: [0, 3, 6, 10, 14, 18, 24, 30, 40, 50, 65, 80, 100, 120, 140, 160, 180, 200, 225, 250, 280, 315, 355, 400, 450, 500]
+    unit: mm
+    src: iso-286-2-2010
+    note: "intermediate nominal size steps of the fundamental deviations (Tables 2-17): a size belongs to (lower, upper]"
+  shaft_es_a_m:
+    value: [-270, -270, -280, -290, -290, -300, -300, -310, -320, -340, -360, -380, -410, -460, -520, -580, -660, -740, -820, -920, -1050, -1200, -1350, -1500, -1650]
+    unit: um
+    src: iso-286-2-2010
+    note: "upper deviation es of shaft position a per intermediate step"
+  shaft_es_b_m:
+    value: [-140, -140, -150, -150, -150, -160, -160, -170, -180, -190, -200, -220, -240, -260, -280, -310, -340, -380, -420, -480, -540, -600, -680, -760, -840]
+    unit: um
+    src: iso-286-2-2010
+    note: "upper deviation es of shaft position b"
+  shaft_es_c_m:
+    value: [-60, -70, -80, -95, -95, -110, -110, -120, -130, -140, -150, -170, -180, -200, -210, -230, -240, -260, -280, -300, -330, -360, -400, -440, -480]
+    unit: um
+    src: iso-286-2-2010
+    note: "upper deviation es of shaft position c"
+  shaft_es_d_m:
+    value: [-20, -30, -40, -50, -50, -65, -65, -80, -80, -100, -100, -120, -120, -145, -145, -145, -170, -170, -170, -190, -190, -210, -210, -230, -230]
+    unit: um
+    src: iso-286-2-2010
+    note: "upper deviation es of shaft position d (= -16 D^0.44 rounded, ISO 286-1 Table 4)"
+  shaft_es_e_m:
+    value: [-14, -20, -25, -32, -32, -40, -40, -50, -50, -60, -60, -72, -72, -85, -85, -85, -100, -100, -100, -110, -110, -125, -125, -135, -135]
+    unit: um
+    src: iso-286-2-2010
+    note: "upper deviation es of shaft position e (= -11 D^0.41 rounded)"
+  shaft_es_f_m:
+    value: [-6, -10, -13, -16, -16, -20, -20, -25, -25, -30, -30, -36, -36, -43, -43, -43, -50, -50, -50, -56, -56, -62, -62, -68, -68]
+    unit: um
+    src: iso-286-2-2010
+    note: "upper deviation es of shaft position f (= -5.5 D^0.41 rounded)"
+  shaft_es_g_m:
+    value: [-2, -4, -5, -6, -6, -7, -7, -9, -9, -10, -10, -12, -12, -14, -14, -14, -15, -15, -15, -17, -17, -18, -18, -20, -20]
+    unit: um
+    src: iso-286-2-2010
+    note: "upper deviation es of shaft position g (= -2.5 D^0.34 rounded)"
+  shaft_ei_k_m:
+    value: [0, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5]
+    unit: um
+    src: iso-286-2-2010
+    note: "lower deviation ei of shaft position k for grades IT4 to IT7 (0 for IT3 and finer and for IT8 and coarser); the hole rule for K up to IT8 uses these values"
+  shaft_ei_m_m:
+    value: [2, 4, 6, 7, 7, 8, 8, 9, 9, 11, 11, 13, 13, 15, 15, 15, 17, 17, 17, 20, 20, 21, 21, 23, 23]
+    unit: um
+    src: iso-286-2-2010
+    note: "lower deviation ei of shaft position m (= IT7 - IT6 above 3 mm)"
+  shaft_ei_n_m:
+    value: [4, 8, 10, 12, 12, 15, 15, 17, 17, 20, 20, 23, 23, 27, 27, 27, 31, 31, 31, 34, 34, 37, 37, 40, 40]
+    unit: um
+    src: iso-286-2-2010
+    note: "lower deviation ei of shaft position n"
+  shaft_ei_p_m:
+    value: [6, 12, 15, 18, 18, 22, 22, 26, 26, 32, 32, 37, 37, 43, 43, 43, 50, 50, 50, 56, 56, 62, 62, 68, 68]
+    unit: um
+    src: iso-286-2-2010
+    note: "lower deviation ei of shaft position p"
+  shaft_ei_r_m:
+    value: [10, 15, 19, 23, 23, 28, 28, 34, 34, 41, 43, 51, 54, 63, 65, 68, 77, 80, 84, 94, 98, 108, 114, 126, 132]
+    unit: um
+    src: iso-286-2-2010
+    note: "lower deviation ei of shaft position r"
+  shaft_ei_s_m:
+    value: [14, 19, 23, 28, 28, 35, 35, 43, 43, 53, 59, 71, 79, 92, 100, 108, 122, 130, 140, 158, 170, 190, 208, 232, 252]
+    unit: um
+    src: iso-286-2-2010
+    note: "lower deviation ei of shaft position s"

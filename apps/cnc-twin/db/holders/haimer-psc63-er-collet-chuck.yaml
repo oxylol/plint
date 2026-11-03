@@ -47,4 +47,4 @@ items:
     mass_kg: {value: 1.035, src: haimer-shop-cc6-021}
     clamp_length_mm: null
     price_eur: null
-notes: "Variant table also lists CC6.021.20/.25/.40 (100 mm) and CC6.022.xx (160 mm). A KM63 adaptor and a Capto C6-to-HSK adaptor were not read (gap)."
+notes: "Variant table also lists CC6.021.20/.25/.40 (100 mm) and CC6.022.xx (160 mm). A KM63 adaptor and a Capto C6-to-HSK adaptor were not read (gap). ER clamping-nut tightening torque (REGO-FIX recommendation for standard ER/ERC nuts, regofix-tightening-torque p. 1; HAIMER values not found): ER32 136 Nm for 3.0-22.0 mm collets (24 Nm for 2.0-2.5 mm), ER16 56 Nm for 5.0-10.0 mm (40 Nm for 4.0-4.5, 20 Nm for 1.5-3.5, 8 Nm for 1.0 mm); not more than 25 % above these (regofix-2009-er-technical-information). Transmissible torque not published (gap)."

@@ -148,7 +148,7 @@ def _draw_panel(ax, panel: Panel) -> None:
     if panel.note:
         ax.set_title(panel.note, loc="right", fontsize=7.0, color=INK2)
     if len([line for line in panel.lines[:MAX_SERIES] if np.isfinite(line.y).any()]) >= 2:
-        ax.legend(loc="upper left", ncols=min(4, len(panel.lines)), handlelength=1.4)
+        ax.legend(loc="upper left", bbox_to_anchor=(1.0, 1.0), handlelength=1.2, borderaxespad=0.3)
 
 
 def window_plot(t_s: np.ndarray, columns: list[tuple[str, np.ndarray]], title: str, unit: str) -> bytes | None:
@@ -164,7 +164,7 @@ def window_plot(t_s: np.ndarray, columns: list[tuple[str, np.ndarray]], title: s
         ax.set_title(title + (f" ({unit})" if unit and unit != "-" else ""))
         ax.set_xlabel("time (ms)")
         if len(columns) >= 2:
-            ax.legend(loc="upper left", ncols=min(4, len(columns)))
+            ax.legend(loc="upper left", bbox_to_anchor=(1.0, 1.0), handlelength=1.2, borderaxespad=0.3)
         return to_png(figure)
 
 
@@ -223,7 +223,7 @@ def signed_stack(rows: list[str], sources: list[str], values: np.ndarray, unit: 
         ax.set_yticks(y, rows)
         ax.grid(axis="y", visible=False)
         ax.set_title(title + (f" ({unit})" if unit else ""))
-        ax.legend(loc="lower right", ncols=min(4, len(sources) + 1))
+        figure.legend(*ax.get_legend_handles_labels(), loc="outside lower center", ncols=3)
         return to_png(figure)
 
 

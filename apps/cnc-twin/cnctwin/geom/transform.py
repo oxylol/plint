@@ -43,6 +43,9 @@ SLERP_SMALL_ANGLE_RAD = _EPS ** 0.25
 # A rotation matrix is accepted as rigid when R^T R differs from I by less than this (rounding of a
 # product of a few dozen rotations stays far below it; any scale or shear exceeds it).
 RIGID_TOLERANCE = 1e3 * _EPS
+# Poses handed in by callers (from files, single-precision buffers, long chains) are accepted as rigid up to
+# this orthonormality error: float32 storage gives ~1e-7, any real scale or shear is orders larger.
+RIGID_INPUT_TOLERANCE = 1e-6
 
 
 # ============================================================================ elementary rotations
@@ -352,7 +355,7 @@ def pose_from_dict(spec) -> np.ndarray:
 def pose_to_dict(T, order: str = "xyz") -> dict:
     """The file form ``{translate_mm, rotate_deg, order}`` of a rigid pose (inverse of pose_from_dict)."""
     M = np.asarray(T, dtype=np.float64)
-    if not is_rigid(M, 1e-9):
+    if not is_rigid(M, RIGID_INPUT_TOLERANCE):
         raise ValueError("only a rigid pose has a {translate_mm, rotate_deg, order} form")
     angles_seq = euler_angles(M[:3, :3], order, intrinsic=True)
     by_axis = [0.0, 0.0, 0.0]
@@ -577,9 +580,11 @@ def heidenhain_plane_points(p1, p2, p3) -> np.ndarray:
 
 
 def heidenhain_plane_relative(current, axis: str, angle_rad: float) -> np.ndarray:
-    """Heidenhain ``PLANE RELATIVE SP<axis>``: an incremental turn about an axis of the active tilted frame."""
+    """Heidenhain ``PLANE RELATIVE SPA|SPB|SPC``: an incremental turn about the X, Y or Z axis of the active
+    tilted frame (``axis`` is ``a``/``b``/``c`` or ``x``/``y``/``z``)."""
+    key = {"a": "x", "b": "y", "c": "z", "spa": "x", "spb": "y", "spc": "z"}.get(axis.lower(), axis.lower())
     T = np.asarray(current, dtype=np.float64)
-    return T @ pose(rot_axis(axis.lower(), angle_rad))
+    return T @ pose(rot_axis(key, angle_rad))
 
 
 # ============================================================================ Numba kernels
@@ -832,6 +837,7 @@ __all__ = ["rot_x", "rot_y", "rot_z", "rot_axis", "unit", "perpendicular", "axis
            "quat_slerp", "vec_slerp", "pose_interp", "fanuc_g68_2", "fanuc_g68_2_rpy", "fanuc_g68_2_points",
            "fanuc_g68_2_vectors", "siemens_cycle800", "projection_angles", "heidenhain_plane_spatial",
            "heidenhain_plane_euler", "heidenhain_plane_vector", "heidenhain_plane_points",
-           "heidenhain_plane_relative", "ROTATION_ORDERS", "SLERP_SMALL_ANGLE_RAD", "KERNELS",
+           "heidenhain_plane_relative", "ROTATION_ORDERS", "SLERP_SMALL_ANGLE_RAD", "RIGID_TOLERANCE",
+           "RIGID_INPUT_TOLERANCE", "KERNELS",
            "pose_apply_points_nb", "pose_apply_dirs_nb", "pose_mul_nb", "pose_inv_nb", "axis_angle_nb",
            "quat_from_matrix_nb", "matrix_from_quat_nb", "quat_slerp_nb", "vec_slerp_nb", "pose_interp_nb"]

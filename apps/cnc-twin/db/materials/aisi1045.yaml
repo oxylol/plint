@@ -38,7 +38,7 @@ flow_stress:
   T_ref_degC: 20
   T_melt_degC: 1490
   src: burns-2012-1045-cutting-temperature
-  note: "Jaspers & Dautzenberg (2002) constants as stated by Burns et al. 2012 Eq. (1.2), with Tr = 20 C and Tf = 1490 C; also used by xiu-2019-1045-grinding-fe Table 4. Burns et al. report that FE simulations with this set under-predict the peak tool-chip temperature by hundreds of C and that rapidly heated 1045 is stiffer below the eutectoid (723 C). Alternative: Murugesan & Jung 2019 (Materials 12:609) fitted A 50.1, B 176.1 for hot forming at 1223 K reference, not suitable for cutting."
+  note: "Jaspers & Dautzenberg (2002) constants as stated by Burns et al. 2012 Eq. (1.2), with Tr = 20 C and Tf = 1490 C; also used by xiu-2019-1045-grinding-fe Table 4. Burns et al. report that FE simulations with this set under-predict the peak tool-chip temperature by hundreds of C and that rapidly heated 1045 is stiffer below the eutectoid (723 C). Alternative: Murugesan & Jung 2019 (Materials 12:609) fitted A 50.1, B 176.1 for hot forming at 1223 K reference, not suitable for cutting. The Jaspers & Dautzenberg original (J. Mater. Process. Technol., 2002) could not be read in the second research round either (paywalled; no open thesis copy found), so the set is confirmed only through Burns et al. and xiu-2019-1045-grinding-fe."
 
 cutting:
   kienzle:
@@ -60,7 +60,7 @@ cutting:
       note: "Walter machining group P2 (C45 / 1.0503 per the material comparison table): standard value for a neutral cutting edge geometry, p. F9"
   mechanistic: []                  # no published linear edge-force calibration for 1045 was read
   min_chip_thickness_ratio: {value: 0.27, src: est, note: "taken from the 0.25-0.30 ratio found for 304 stainless (zou-2026-304-min-cutting-thickness); no 1045-specific value read"}
-  indentation_coeff_N_mm3: {value: 2.9e4, src: est, note: "order-of-magnitude placeholder: 3.0e4 N/mm3 assumed for a ~200 HB carbon steel and scaled by hardness (190/200); replace with an identified value"}
+  indentation_coeff_N_mm3: {value: 3.4e5, src: mal-2015-machining-course, note: "Ksp = 3.4e14 N/m3 as identified for slot milling of AISI 1045 with a two-tooth cutter in the process-damping stability example of the MAL course (slide p. 164: flank wear land lw = 60 um, mu_c = 0.3, giving Ct = 0.19 and Cr = 0.61 N/um; the slide also lists Ktc 3242 and Krc 1978 MPa for that cut, not stored as a mechanistic set because edge and axial coefficients and the tool geometry are not given). The steel's condition is not stated on the slide. Replaces a placeholder of 2.9e4 N/mm3 (3.0e4 assumed at 200 HB, scaled by hardness), an order of magnitude lower"}
   work_hardening:
     layer_depth_um: {value: 50, src: est, note: "typical of ferritic-pearlitic steels turned with sharp carbide; no measurement read"}
     hardness_increase_pct: {value: 15, src: est, note: "modest strain hardening (JC n = 0.234); no measurement read"}
@@ -94,16 +94,20 @@ chip:
 
 tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
   - tool_class: carbide
-    coating: "CVD TiCN/Al2O3"
-    C_m_min: 650
-    n: 0.25
-    a: 0.3
-    b: 0.12
-    feed_ref_mm: 0.3
-    ap_ref_mm: 2
-    VB_limit_mm: 0.3
-    src: est
-    note: "no published Taylor fit for 1045 was read. C set so that T = 15 min at vc = 330 m/min, a speed typical of current CVD P15-P25 catalogue recommendations for 150-200 HB medium-carbon steel (author's general knowledge, not a cited source); n, a, b typical of coated carbide"
+    coating: "CVD Al2O3 + TiN"
+    grade: "Sandvik GC4015 (ISO P15), TNMG 160404-PF"
+    process: turning
+    C_m_min: 925
+    n: 0.302
+    a: {value: 0.3, src: est, note: "feed exponent not identified (single feed 0.15 mm/rev); the earlier estimate kept"}
+    b: {value: 0.12, src: est, note: "depth exponent not identified (single ap 0.8 mm); the earlier estimate kept"}
+    feed_ref_mm: 0.15
+    ap_ref_mm: 0.8
+    VB_limit_mm: {value: 0.3, note: "maximum flank wear VBmax = 0.3 mm (not the average VB of ISO 3685)"}
+    T_ref_min: 1
+    vc_range_m_min: [355, 535]
+    src: amorim-2002-1045-taylor
+    note: "Table 4.4: T = K vc^-x with K = 6.57e9 and x = 3.31 (long-term external turning of as-rolled ABNT 1045, 187-196 HB ferrite-pearlite, Sandvik TNMG 160404-PF GC4015 in MTJNR 2525M 16M1, kr 93, lambda -6 deg, nose radius 0.4 mm, f 0.15 mm/rev, ap 0.8 mm, VBmax 0.3 mm; lives 25 / 8.27 / 6.93 min at 355 / 445 / 535 m/min, Table 4.3; no cutting fluid is mentioned), i.e. n = 1/x = 0.302 and C = K^(1/x) = 925 m/min (the fit gives 23.8 / 11.3 / 6.1 min at the three speeds). Three speeds only. The earlier estimate (C 650, n 0.25, a 0.3, b 0.12 at f 0.3, ap 2: 15 min at 330 m/min) corresponds to 15 min at 453 m/min at f 0.15, ap 0.8, where this fit gives 408 m/min. Same source, ABNT 1040 (Table 4.2): K 5.61e15, x 5.37 (n 0.186, C 857 m/min) at 425-525 m/min"
   - tool_class: carbide
     coating: uncoated
     C_m_min: 290
@@ -144,4 +148,4 @@ thermal_damage:
 ignition: null
 composite: null
 
-notes: "Normalised AISI 1045 for general machining. Measured cutting data (Kienzle, BUE window) come from the ETH Ck45 orthogonal-cutting database (uncoated carbide, dry). All tool-life constants, friction, work-hardening, skin and K_sp values are estimates. Burns et al. 2012 measured Ks ~ 2400 N/mm2 at h = 23-48 um and vc = 222 m/min (orthogonal), useful for validating the small-h end of the Kienzle law."
+notes: "Normalised AISI 1045 for general machining. Measured cutting data (Kienzle, BUE window) come from the ETH Ck45 orthogonal-cutting database (uncoated carbide, dry). The process-damping indentation coefficient K_sp comes from the UBC MAL course (slot milling example). The coated-carbide Taylor constants come from a published fit (Amorim 2002, GC4015); the other tool-life constants, friction, work-hardening and skin values are estimates. Burns et al. 2012 measured Ks ~ 2400 N/mm2 at h = 23-48 um and vc = 222 m/min (orthogonal), useful for validating the small-h end of the Kienzle law."

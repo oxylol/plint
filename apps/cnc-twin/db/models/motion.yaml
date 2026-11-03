@@ -1,0 +1,297 @@
+# Motion domain coefficients (cnctwin/motion, docs/models/motion.md). Names carry the SI unit of the value
+# params("motion") returns; `unit:` is the unit the value is written in. Machine-file values always win:
+# the defaults here are used only where a machine file does not give the quantity (listed per run in
+# MotionDomain.finalize()["estimated"]).
+format: cnctwin-model-params
+version: 1
+model: motion
+description: "Feed drives, spindles, look-ahead planner, corner tolerance, control behaviour and auxiliary function times"
+params:
+  # ------------------------------------------------------------------ feed drives (Altintas 2012 ch. 6)
+  default_kv_1_s:
+    value: 30
+    unit: 1/s
+    range: [10, 100]
+    src: altintas-2012-mfg-automation
+    note: "position loop gain when the machine file gives none; Altintas 2012 ch. 6 discusses 20-50 1/s for ball-screw drives, 30 1/s used"
+  default_feedforward:
+    value: 0.9
+    unit: "-"
+    range: [0.0, 1.0]
+    src: est
+    note: "velocity feed-forward fraction when the machine file gives none; high-speed contouring modes of current FANUC/Haas/Siemens controls run 0.9-1.0 (90 % assumed, so a following error remains)"
+  default_velocity_bw_Hz:
+    value: 50
+    unit: Hz
+    range: [10, 300]
+    src: est
+    note: "closed velocity-loop bandwidth when the machine file gives none; ball-screw feed drives 30-150 Hz (Erkorkmaz & Altintas 2001 part II identify about 60-100 Hz), 50 Hz assumed"
+  velocity_loop_zeta:
+    value: 0.7
+    unit: "-"
+    range: [0.3, 1.5]
+    src: ellis-2012-control-design
+    note: "damping ratio the PI velocity loop is tuned to (Ellis 2012 ch. 6: about 0.7 is the usual velocity-loop target)"
+  default_accel_m_s2:
+    value: 3.0
+    unit: m/s^2
+    range: [0.5, 30]
+    src: est
+    note: "linear axis acceleration when the machine file gives none (0.3 g, typical of ball-screw machining centres)"
+  default_jerk_m_s3:
+    value: 50
+    unit: m/s^3
+    range: [5, 1000]
+    src: est
+    note: "linear axis jerk when the machine file gives none; 50 m/s^3 is in the 20-200 m/s^3 range of jerk-limited CNC settings (Erkorkmaz & Altintas 2001 part I use 50-500)"
+  default_accel_rad_s2:
+    value: 10
+    unit: rad/s^2
+    range: [0.5, 500]
+    src: est
+    note: "rotary axis acceleration when the machine file gives none (geared trunnion / rotary table)"
+  default_jerk_rad_s3:
+    value: 200
+    unit: rad/s^3
+    range: [5, 1.0e5]
+    src: est
+    note: "rotary axis jerk when the machine file gives none"
+  default_moving_mass_kg:
+    value: 300
+    unit: kg
+    range: [5, 20000]
+    src: est
+    note: "moving mass of a linear axis when the machine file gives none (slide of a mid-size machining centre)"
+  default_rotary_inertia_kgm2:
+    value: 5
+    unit: kg m^2
+    range: [0.001, 5000]
+    src: est
+    note: "load inertia of a rotary axis when neither inertia_kgm2 nor motor_torque_Nm with accel are given"
+  force_margin:
+    value: 3.0
+    unit: "-"
+    range: [1.0, 20.0]
+    src: est
+    note: "drive force limit = margin x moving mass x axis acceleration when the machine file gives no motor_force_N (drives are sized for acceleration plus cutting load)"
+  default_backlash_m:
+    value: 2
+    unit: um
+    range: [0, 50]
+    src: est
+    note: "lost motion when the machine file gives none (preloaded ball nut, the machine template value)"
+  backlash_comp_residual_frac:
+    value: 0.1
+    unit: "-"
+    range: [0.0, 1.0]
+    src: est
+    note: "fraction of the lost motion the control's backlash compensation leaves (the compensation amount is set from one reversal measurement; lost motion varies with position, load and temperature, ISO 230-2 reversal values after compensation are typically 10-30 % of the uncompensated value; 10 % assumed)"
+  default_reversal_spike_m:
+    value: 2
+    unit: um
+    range: [0, 50]
+    src: est
+    note: "quadrant glitch height at velocity reversal (circular test, ISO 230-4) when the machine file gives none; the Coulomb friction of the drive is calibrated to it"
+  stribeck_velocity_m_s:
+    value: 1.0e-4
+    unit: m/s
+    range: [1.0e-6, 1.0e-2]
+    src: armstrong-1994-friction
+    note: "Coulomb friction is regularised as F_c tanh(v / v_s) (a smooth Karnopp-type stick model, Armstrong-Helouvry et al. 1994 s. 2); 0.1 mm/s = 6 mm/min keeps the sign change inside one servo sub-step at reversal speeds of circular tests"
+  friction_max_frac:
+    value: 0.3
+    unit: "-"
+    range: [0.01, 1.0]
+    src: est
+    note: "upper bound of the calibrated Coulomb friction as a fraction of the drive force limit (a spike that would need more friction is reproduced only up to this)"
+  ferr_limit_factor:
+    value: 2.0
+    unit: "-"
+    range: [1.1, 10.0]
+    src: est
+    note: "excess following error alarm at factor x (rapid speed / Kv) (FANUC parameter 1828 is usually set to about 1.2-1.5 x the rapid error without feed-forward; 2 assumed so feed-forward transients never trip it)"
+  default_in_position_m:
+    value: 0.01
+    unit: mm
+    range: [0.0001, 0.5]
+    src: est
+    note: "in-position band when the machine file gives none (FANUC parameter 1826, typical 0.01-0.02 mm)"
+  rotary_length_per_rad_m:
+    value: 57.29577951308232
+    unit: mm
+    range: [57.29577951308232, 57.29577951308232]
+    src: fanuc-30i-b-operator
+    note: "1 deg of a rotary axis counts as 1 mm (57.3 mm per rad) in combined linear/rotary feeds, rotary in-position bands and blend tolerances (FANUC/Haas rule: F applies to the vector of mm and deg)"
+  gravity_counterbalanced_frac:
+    value: 0.0
+    unit: "-"
+    range: [0.0, 1.0]
+    src: est
+    note: "fraction of the weight of a vertical axis carried by a counterbalance (none assumed: brake motors hold the head, as on Haas VMCs)"
+  # ------------------------------------------------------------------ look-ahead planner
+  default_contour_tolerance_m:
+    value: 0.01
+    unit: mm
+    range: [0.0005, 0.5]
+    src: est
+    note: "corner blend tolerance in continuous-path mode when neither the program nor the machine file gives one (FANUC AI contour / Haas G187 default / Siemens G64 / Heidenhain cycle 32 machine default, 0.01 mm assumed)"
+  blend_length_frac:
+    value: 0.5
+    unit: "-"
+    range: [0.1, 0.5]
+    src: est
+    note: "a corner blend uses at most this fraction of each adjacent segment (half: consecutive blends never overlap)"
+  min_corner_angle_rad:
+    value: 1.0e-6
+    unit: rad
+    range: [1.0e-9, 1.0e-3]
+    src: est
+    note: "junctions turning less than this are tangent (no blend, no corner bound); numerics"
+  default_rapid_mode_fanuc:
+    value: dogleg
+    unit: "-"
+    src: fanuc-30i-b-operator
+    note: "G00 of FANUC controls positions each axis independently (non-linear interpolation type positioning, parameter LRP = 0 by default)"
+  default_rapid_mode_haas:
+    value: dogleg
+    unit: "-"
+    src: haas-ngc-mill-om-2020
+    note: "G00 rapid: all axes move at their maximum rate and do not end together (not a straight line)"
+  default_rapid_mode_siemens840d:
+    value: linear
+    unit: "-"
+    src: est
+    note: "SINUMERIK G0 interpolates linearly by default (RTLION); assumed"
+  default_rapid_mode_heidenhain:
+    value: linear
+    unit: "-"
+    src: heidenhain-tnc640-klartext-2023
+    note: "positioning at FMAX moves in a straight line"
+  tcp_samples_per_piece:
+    value: 24
+    unit: "-"
+    range: [4, 512]
+    src: est
+    note: "inverse-kinematics samples per TCP piece used to bound the rotary axis velocities and accelerations on it (numerics)"
+  singularity_cone_rad:
+    value: 0.01
+    unit: rad
+    range: [1.0e-5, 0.2]
+    src: est
+    note: "a tool axis within this angle of a rotary axis is treated as singular (the axis about it is undetermined); 0.57 deg assumed"
+  # ------------------------------------------------------------------ spindles
+  default_spindle_bw_Hz:
+    value: 20
+    unit: Hz
+    range: [1, 500]
+    src: est
+    note: "spindle speed-loop bandwidth when position_loop.velocity_bw_Hz is not given (vector-controlled spindle drives 10-50 Hz)"
+  spindle_zeta:
+    value: 0.7
+    unit: "-"
+    range: [0.3, 1.5]
+    src: ellis-2012-control-design
+    note: "damping ratio the spindle speed loop is tuned to"
+  default_spindle_inertia_kgm2:
+    value: 0.02
+    unit: kg m^2
+    range: [1.0e-5, 100]
+    src: est
+    note: "rotor inertia when the machine file gives none (the machine template value, 40-taper motor spindle)"
+  default_position_loop_kv_1_s:
+    value: 30
+    unit: 1/s
+    range: [1, 500]
+    src: est
+    note: "spindle position-loop gain (orientation, rigid tapping) when the machine file gives none (the machine template value)"
+  spindle_arrival_frac:
+    value: 0.05
+    unit: "-"
+    range: [0.001, 0.5]
+    src: est
+    note: "a cutting feed after a spindle speed command waits until the speed is within this fraction of the command (FANUC speed arrival signal SAR checked at cutting-feed start; band assumed 5 %)"
+  default_orient_s:
+    value: 0.5
+    unit: s
+    range: [0.05, 10]
+    src: est
+    note: "spindle orientation time when the machine file gives none (the machine template value)"
+  default_gear_change_s:
+    value: 3.0
+    unit: s
+    range: [0.0, 60]
+    src: est
+    note: "mechanical gear change time when the machine file gives none"
+  css_min_radius_m:
+    value: 0.1
+    unit: mm
+    range: [0.001, 5.0]
+    src: est
+    note: "smallest radius used in the constant-surface-speed law omega = v / r (the speed clamp limits it long before; numerics)"
+  # ------------------------------------------------------------------ auxiliary functions and operator
+  m_function_s:
+    value: 0.05
+    unit: s
+    range: [0.0, 2.0]
+    src: est
+    note: "M function completion (strobe and FIN handshake through the PLC, 2-4 scans of 8-16 ms) for coolant, conveyor and similar functions"
+  tsc_pressure_delay_s:
+    value: 1.5
+    unit: s
+    range: [0.0, 10.0]
+    src: est
+    note: "through-spindle coolant: the control waits for the pressure switch before cutting continues (pump run-up and line fill, assumed)"
+  chuck_s:
+    value: 1.0
+    unit: s
+    range: [0.1, 10.0]
+    src: est
+    note: "chuck, collet, tailstock or steady clamp/unclamp (hydraulic cylinder stroke and pressure switch, assumed)"
+  default_door_s:
+    value: 3.0
+    unit: s
+    range: [0.5, 20.0]
+    src: est
+    note: "automatic door movement when the machine file gives no open_time_s"
+  default_tool_change_s:
+    value: 5.0
+    unit: s
+    range: [0.5, 60.0]
+    src: est
+    note: "tool-to-tool time when the machine file gives none"
+  default_turret_index_s:
+    value: 0.5
+    unit: s
+    range: [0.05, 10.0]
+    src: est
+    note: "turret index to the adjacent station when the machine file gives none"
+  default_pallet_change_s:
+    value: 15.0
+    unit: s
+    range: [1.0, 300.0]
+    src: est
+    note: "pallet change when the machine file gives none"
+  single_block_s:
+    value: 0.5
+    unit: s
+    range: [0.0, 60.0]
+    src: est
+    note: "operator presses CYCLE START again after a single-block stop"
+  message_stop_s:
+    value: 10.0
+    unit: s
+    range: [0.0, 600.0]
+    src: est
+    note: "operator reads a program message that stops the cycle (#3006, MSG with stop, FN 14) and restarts"
+  thread_filter_tc_s:
+    value: 0.0
+    unit: s
+    range: [0.0, 0.5]
+    src: est
+    note: "exponential acceleration filter of threading (FANUC parameter 1626); 0: the axis follows the spindle-synchronous command directly and the start lag of the thread comes from the servo"
+  probe_pretravel_m:
+    value: 1
+    unit: um
+    range: [0.0, 50.0]
+    src: est
+    note: "stylus pre-travel when the machine file gives none (the machine template value of a touch-trigger probe)"

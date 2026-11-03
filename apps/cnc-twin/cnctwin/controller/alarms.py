@@ -49,6 +49,20 @@ TWIN_ALARMS: dict[str, tuple[str, str]] = {
 }
 
 
+# Condition keys and built-in texts added by provider packages (cycles, compensation, probing, tool life,
+# restart, TCP), per dialect name: consulted after the dialect's own tables (additive; see
+# register_alarm_codes).
+EXTRA_CODES: dict[str, dict[str, str]] = {}
+EXTRA_TEXTS: dict[str, dict[str, str]] = {}
+
+
+def register_alarm_codes(dialect: str, key_codes: dict[str, str], texts: dict[str, str]) -> None:
+    """Map condition ``key -> code`` for ``dialect`` and give built-in texts for codes the dialect lacks.
+    A key the dialect already maps keeps its own code; a database entry with ``kind == key`` still wins."""
+    EXTRA_CODES.setdefault(dialect, {}).update(key_codes)
+    EXTRA_TEXTS.setdefault(dialect, {}).update(texts)
+
+
 @dataclass(frozen=True)
 class AlarmInfo:
     """A resolved alarm: what the control would display, and where the text came from."""
@@ -100,13 +114,13 @@ class AlarmTable:
         if key in self.by_kind:
             entry = self.by_kind[key]
             return AlarmInfo(key, str(entry["code"]), str(entry["text"]), self.dialect, detail, source_db)
-        code = self.key_codes.get(key)
+        code = self.key_codes.get(key) or EXTRA_CODES.get(self.dialect, {}).get(key)
         if code is None:
             code, text = TWIN_ALARMS.get(key, ("TW0000", "INTERNAL: UNKNOWN ALARM KEY " + key.upper()))
             return AlarmInfo(key, code, text, self.dialect, detail, "twin")
         if code in self.by_code:
             return AlarmInfo(key, code, str(self.by_code[code]["text"]), self.dialect, detail, source_db)
-        text = self.builtin_texts.get(code)
+        text = self.builtin_texts.get(code) or EXTRA_TEXTS.get(self.dialect, {}).get(code)
         if text is None:
             raise KeyError(f"dialect {self.dialect}: alarm code {code} (key {key}) has no text")
         return AlarmInfo(key, code, text, self.dialect, detail, "builtin")
@@ -118,7 +132,8 @@ class AlarmTable:
         return AlarmInfo("macro_alarm", code, message, self.dialect, "", "program")
 
     def has_key(self, key: str) -> bool:
-        return key in self.by_kind or key in self.key_codes or key in TWIN_ALARMS
+        return (key in self.by_kind or key in self.key_codes or key in TWIN_ALARMS
+                or key in EXTRA_CODES.get(self.dialect, {}))
 
 
 def load_controller_db(controller_id: str | None, directory: Path | None = None) -> dict | None:

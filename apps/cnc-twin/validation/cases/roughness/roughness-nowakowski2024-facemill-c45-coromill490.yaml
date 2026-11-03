@@ -1,0 +1,62 @@
+# Nowakowski et al. (2024): Ra/Rz in dry face milling of 1.0503 (C45) steel with a 50 mm Sandvik CoroMill 490
+# carrying five 490-08T308M-PL 1030 inserts (measured mounting errors), vc 300 m/min, ap 0.2 mm, fz 0.02-0.22 mm.
+format: cnctwin-validation-case
+version: 1
+id: roughness-nowakowski2024-facemill-c45-coromill490
+quantity: roughness
+reference:
+  src: nowakowski-2024-face-milling-insert-errors
+  location: "Sect. 2 (cutter, inserts, probe measurement of mounting errors, machine, instruments), Sect. 3 (cutting data, FFT fundamental 31.93 Hz), Table 1 (actual load per insert from the measured mounting errors), Table 3 (2D roughness per feed per tooth)"
+  digitised: false
+  measured: true
+setup:
+  operation: face_milling
+  material: {db: aisi1045, note: "1.0503 (C45) steel; heat-treatment state and hardness not stated"}
+  stock: {length_mm: 65, height_mm: 55.4, note: "octagonal cross-section specimens; the specimen is 15 mm longer than the cutter diameter; the width of cut is not stated"}
+  tool:
+    type: face_mill
+    maker_tool: "Sandvik Coromant CoroMill 490-050Q22-08M"
+    diameter_mm: 50
+    flutes: 5
+    entering_angle_deg: 90
+    insert: "490-08T308M-PL 1030 (right hand, 8 mm, 3.97 mm thick)"
+    corner_radius_mm: 0.8
+    tool_class: carbide
+    coating: "PVD-coated grade (Sandvik 1030)"
+    insert_mounting: "each insert measured 50 times with a Heidenhain TT 120 probe; the average axial and radial errors were used in a CAD model of the cutter (the error values themselves are not printed, their effect is given as load per insert in Table 1)"
+  machine: {model: "AVIA VMC 800 vertical milling centre (FOP AVIA, Warsaw)"}
+  conditions:
+    coolant: dry
+    cutting_speed_m_min: 300
+    spindle_rpm: {value: 1916, note: "tool-revolution frequency 31.93 Hz from the FFT of the displacement signal (Sect. 3); 300 m/min on 50 mm gives 1910 rpm"}
+    ap_mm: 0.2
+    feed_mm_tooth_levels: [0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18, 0.20, 0.22]
+    roughness_instrument: "Taylor Hobson Talysurf CCI-Lite non-contact 3D profiler, 20x, 0.8 x 0.8 mm area (1024 profiles), Gaussian filter 0.8 mm cut-off"
+    insert_load_pct_per_insert: [[0.02, 0, 100, 0, 275, 125], [0.04, 0, 150, 0, 238, 112], [0.06, 0, 158, 8, 225, 109], [0.08, 0, 168, 9, 218, 105], [0.10, 0, 170, 10, 215, 105], [0.12, 4, 171, 21, 200, 104], [0.14, 10, 164, 36, 186, 104], [0.16, 22, 156, 44, 175, 103], [0.18, 28, 150, 50, 169, 103], [0.20, 35, 145, 55, 163, 102], [0.22, 39, 141, 61, 157, 102]]
+    insert_load_note: "Table 1: [fz mm, load of inserts 1-5 in % of the nominal chip load] from the measured mounting errors; at fz up to 0.10 mm inserts 1 and 3 hardly cut, only above 0.12 mm all five inserts cut"
+  program: null
+reference_values:
+  - {name: Ra, value: 0.297, unit: um, x: 0.02, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.533, unit: um, x: 0.04, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.756, unit: um, x: 0.06, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.265, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.446, unit: um, x: 0.10, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.383, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.735, unit: um, x: 0.14, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.367, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.671, unit: um, x: 0.18, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.211, unit: um, x: 0.20, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra, value: 0.217, unit: um, x: 0.22, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 2.813, unit: um, x: 0.02, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 3.905, unit: um, x: 0.04, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 4.898, unit: um, x: 0.06, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 2.643, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 3.176, unit: um, x: 0.10, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 3.557, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 7.218, unit: um, x: 0.14, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 4.570, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 7.790, unit: um, x: 0.18, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 2.237, unit: um, x: 0.20, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Rz, value: 2.374, unit: um, x: 0.22, x_name: feed_per_tooth, x_unit: mm}
+reference_curves: []
+notes: "One measured area per feed (Table 3; Rp, Rv, Rc, Rt and Rq are also printed there). Ra does not rise monotonically with fz: with the measured axial mounting errors only three inserts (2, 4, 5) form the surface at low feed, and the effective feed per cutting edge changes as more inserts engage (all five above 0.12 mm/tooth, Table 1), so a face-milling roughness model has to include axial runout of the individual inserts to reproduce the pattern; the authors find the lowest and most stable values at 0.20-0.22 mm/tooth. The tool-workpiece relative displacement (laser interferometer, Table 2: rms 2.6-4.8 um) is also available in the paper. The individual axial and radial errors of the inserts are not printed; only their effect (load per insert) is."

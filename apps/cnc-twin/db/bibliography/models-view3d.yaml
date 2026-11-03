@@ -1,0 +1,76 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of the browser 3D view (web/js/view3d, docs/ui-3d.md, db/models/view3d.yaml): level of detail,
+# capped sections, field interpolation, the deflected tool's shape, ballistic coolant jets, hashing.
+# Used from other files: moller-trumbore-1997 and shoemake-1985-slerp (models-geom.yaml), foley-1990 and
+# porter-duff-1984 (models-render.yaml), jugel-2014-m4 (the API's series), smith-vanderwalt-2015 and the
+# colour-map sources of the shell's colormap.js.
+entries:
+  rossignac-borrel-1993:
+    type: chapter
+    authors: "Rossignac, J.; Borrel, P."
+    title: "Multi-resolution 3D approximations for rendering complex scenes"
+    venue: "Modeling in Computer Graphics (Falcidieno, B.; Kunii, T.L., eds.), Springer, Berlin, 455-465"
+    year: 1993
+    doi: "10.1007/978-3-642-78114-8_29"
+    pages: "vertex clustering: vertices in one cell of a uniform grid merge into one representative, triangles with two vertices in a cell degenerate and are removed; the displacement of a vertex is bounded by the cell diagonal"
+  mcreynolds-blythe-2005:
+    type: book
+    authors: "McReynolds, T.; Blythe, D."
+    title: "Advanced Graphics Programming Using OpenGL"
+    publisher: "Morgan Kaufmann (Elsevier), San Francisco"
+    year: 2005
+    isbn: "1-55860-659-9"
+    pages: "16.10 capping clipped geometry with the stencil buffer: back faces of the clipped solid increment, front faces decrement the stencil, the cap polygon is drawn where it is non-zero; exact for closed solids"
+  knutsson-westin-1993:
+    type: conference
+    authors: "Knutsson, H.; Westin, C.-F."
+    title: "Normalized and differential convolution: methods for interpolation and filtering of incomplete and uncertain data"
+    venue: "Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), New York, 515-523"
+    year: 1993
+    doi: "10.1109/CVPR.1993.341081"
+    pages: "Sect. 2: the filter applied to signal times certainty, divided by the filter applied to the certainty; missing samples (certainty 0) do not bias the result"
+  timoshenko-gere-1972:
+    type: book
+    authors: "Timoshenko, S.P.; Gere, J.M."
+    title: "Mechanics of Materials"
+    publisher: "Van Nostrand Reinhold, New York"
+    year: 1972
+    isbn: "0-442-28546-7"
+    pages: "deflection of a cantilever beam: end load P, w(x) = P x^2 (3L - x) / (6 E I), w(L) = P L^3 / (3 E I); uniform load q, w(x) = q x^2 (6L^2 - 4Lx + x^2) / (24 E I)"
+  cgpm-1901-standard-gravity:
+    type: standard
+    authors: "Conference Generale des Poids et Mesures (CGPM)"
+    title: "Declaration on the unit of mass and on the definition of weight; conventional value of gn (3rd CGPM, Resolution 2)"
+    venue: "Comptes Rendus de la 3e CGPM (1901), 70; restated in BIPM, The International System of Units (SI Brochure), 9th edition 2019"
+    year: 1901
+    url: "https://www.bipm.org/en/committees/cg/cgpm/3-1901/resolution-"
+    accessed: 2026-11-03
+    pages: "standard acceleration of gravity gn = 980.665 cm/s2 (9.80665 m/s2), exact by definition"
+  wellons-2018-hash:
+    type: web
+    authors: "Wellons, C."
+    title: "Prospecting for hash functions"
+    venue: "nullprogram.com"
+    year: 2018
+    url: "https://nullprogram.com/blog/2018/07/31/"
+    accessed: 2026-11-03
+    pages: "lowbias32: x ^= x >> 16; x *= 0x7feb352d; x ^= x >> 15; x *= 0x846ca68b; x ^= x >> 16 (bias 0.17 against 0.34 of murmur3's finaliser)"
+  threejs-r170:
+    type: software
+    authors: "three.js authors (mrdoob et al.)"
+    title: "three.js, a JavaScript 3D library, release r170 (npm three 0.170.0, MIT licence)"
+    venue: "https://registry.npmjs.org/three/-/three-0.170.0.tgz (sha512 FQK+LEpYc0fBD+J8g6oSEyyNzjp+Q7Ks1C568WWaoMRLW+TkNNWmenWeGgJjV105Gd+p/2ql1ZcjYvNiPZBhuQ==)"
+    year: 2024
+    url: "https://threejs.org/"
+    accessed: 2026-11-03
+    pages: "WebGLRenderer, MeshStandardMaterial, clipping planes, stencil operations, InstancedMesh, Data3DTexture; examples/jsm OrbitControls, GLTFLoader, BufferGeometryUtils (toCreasedNormals); webgl_clipping_stencil (capped sections)"
+  khronos-gltf-2-0:
+    type: standard
+    authors: "The Khronos Group"
+    title: "glTF 2.0 specification, with the KHR_mesh_quantization extension"
+    venue: "Khronos Group, Beaverton OR"
+    year: 2021
+    url: "https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html"
+    accessed: 2026-11-03
+    pages: "GLB container (12-byte header, JSON and BIN chunks, 4-byte alignment); application-specific vertex attributes start with an underscore; KHR_mesh_quantization: integer positions dequantised by the node transform"

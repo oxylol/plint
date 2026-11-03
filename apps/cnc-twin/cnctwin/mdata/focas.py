@@ -341,9 +341,11 @@ def _records_from_text(text: str, where: str) -> list[dict]:
         if not isinstance(document, list):
             raise InputError("a FOCAS JSON log is a list of records (or {records: [...]})", where)
         return document
-    lines = [line for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
-    if not lines:
+    numbered = [(n, line) for n, line in enumerate(text.splitlines(), start=1)
+                if line.strip() and not line.lstrip().startswith("#")]
+    if not numbered:
         return []
+    lines = [line for _, line in numbered]
     dialect = ";" if lines[0].count(";") > lines[0].count(",") else ","
     reader = csv.DictReader(io.StringIO("\n".join(lines)), delimiter=dialect)
     header = [h.strip().lower() for h in (reader.fieldnames or [])]
@@ -352,8 +354,10 @@ def _records_from_text(text: str, where: str) -> list[dict]:
         raise InputError(f"FOCAS CSV columns are {', '.join(COLUMNS)} (time and function required); "
                          f"unknown: {', '.join(unknown) or 'none'}", where)
     records = []
-    for row in reader:
-        records.append({k.strip().lower(): (v.strip() if isinstance(v, str) else v) for k, v in row.items() if k})
+    for (number, _), row in zip(numbered[1:], reader):
+        record = {k.strip().lower(): (v.strip() if isinstance(v, str) else v) for k, v in row.items() if k}
+        record["_line"] = number
+        records.append(record)
     return records
 
 
@@ -395,7 +399,7 @@ def read_focas(path, *, base_dir=None, mapping: dict | None = None, start_ns: in
             except InputError as error:
                 if error.path:
                     raise
-                raise InputError(str(error), str(file), number) from None
+                raise InputError(str(error), str(file), int(record.get("_line", number))) from None
             if reader.builder.count > limit:
                 raise InputError(f"more than {limit} observations (mdata-import max_observations): import a "
                                  f"time window", str(file))

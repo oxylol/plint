@@ -77,7 +77,11 @@ def num(value, digits: int = 4) -> str:
         mantissa, exponent = f"{number:.{digits - 1}e}".split("e")
         sign = MINUS if mantissa.startswith("-") else ""
         return f"{sign}{mantissa.lstrip('-')}e{int(exponent)}"
-    decimals = max(0, digits - 1 - int(math.floor(math.log10(magnitude))))
+    exponent = int(math.floor(math.log10(magnitude)))
+    decimals = max(0, digits - 1 - exponent)
+    rounded = abs(round(number, decimals))
+    if rounded >= 10.0 ** (exponent + 1):          # rounding carried into the next decade (0.99999 -> 1.000)
+        decimals = max(0, decimals - 1)
     return fixed(number, decimals)
 
 
@@ -153,7 +157,7 @@ def eur(value, decimals: int = 2) -> str:
     number = as_float(value)
     if number is None:
         return DASH
-    if number != 0.0 and abs(number) < 0.01:
+    if number != 0.0 and abs(number) < 1.0:          # cents and below: three significant figures
         return num(number, 3)
     return fixed(number, decimals)
 

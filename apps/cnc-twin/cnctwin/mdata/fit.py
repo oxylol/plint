@@ -169,6 +169,8 @@ def fit(params: list[Param], simulate: Simulate, observations: list[ObservationS
     if len({p.name for p in params}) != len(params):
         raise FitError("parameter names must be unique")
     for p in params:
+        if p.free and not p.lower < p.upper:
+            raise FitError(f"parameter {p.name}: a free parameter needs lower < upper, not [{p.lower:g}, {p.upper:g}]")
         if not p.lower <= p.value <= p.upper:
             raise FitError(f"parameter {p.name}: initial value {p.value:g} is outside its bounds "
                            f"[{p.lower:g}, {p.upper:g}]")
@@ -258,8 +260,10 @@ def fit(params: list[Param], simulate: Simulate, observations: list[ObservationS
             cost_before = cost(x0, sigma)
     values = values_of(x) if n else dict(prior_values)
     fit_pred = _evaluate(simulate, values, observations)
-    r_final = residuals(x, sigma) if n else np.zeros(m)
+    r_final = residuals(x, sigma)
     cost_after = 0.5 * float(r_final @ r_final)
+    if not n:
+        cost_before = cost_after
     dof = m - n
     s2 = float(r_final @ r_final) / dof if dof > 0 else math.nan
     variance_scale = 1.0 if settings.absolute_sigma else s2

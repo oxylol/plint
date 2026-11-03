@@ -11,7 +11,7 @@ reference:
   digitised: false
   uncertainty_pct: 2
   measured: true
-  note: "uncertainty_pct is the scatter of the five centre-point repeats (t 1.5 mm, vc 600 m/min: Fx1 281.5, 280.0, 274.1, 284.2, 285.8 N, standard deviation 4.6 N = 1.6 %, computed here); the source gives a coefficient of variation of 2.42 % for its Fx1 model."
+  note: "uncertainty_pct is the scatter of the five centre-point repeats (t 1.5 mm, vc 600 m/min: Fx1 281.5, 280.0, 274.1, 284.2, 285.8 N, standard deviation 4.5 N = 1.6 %, computed here); the source gives a coefficient of variation of 2.42 % for its Fx1 model."
 setup:
   operation: peripheral_milling
   material:
@@ -67,7 +67,7 @@ setup:
   program: null
 reference_values: []
 reference_curves:
-  - {name: Fx1_max_t1.0, x_name: vc, x_unit: m/min, y_name: "Fx1 (absolute maximum, first pass)", y_unit: N, uncertainty: 4.6, points: [[300, 124.46], [600, 269.05], [900, 210.23]], note: "runs 1, 8, 4"}
-  - {name: Fx1_max_t1.5, x_name: vc, x_unit: m/min, y_name: "Fx1 (absolute maximum, first pass)", y_unit: N, uncertainty: 4.6, points: [[300, 149.76], [600, 281.12], [900, 243.26]], note: "runs 2, (3, 6, 10, 12, 13 mean), 7"}
-  - {name: Fx1_max_t2.0, x_name: vc, x_unit: m/min, y_name: "Fx1 (absolute maximum, first pass)", y_unit: N, uncertainty: 4.6, points: [[300, 156.49], [600, 305.15], [900, 274.74]], note: "runs 9, 5, 11"}
+  - {name: Fx1_max_t1.0, x_name: vc, x_unit: m/min, y_name: "Fx1 (absolute maximum, first pass)", y_unit: N, uncertainty: 4.5, points: [[300, 124.46], [600, 269.05], [900, 210.23]], note: "runs 1, 8, 4"}
+  - {name: Fx1_max_t1.5, x_name: vc, x_unit: m/min, y_name: "Fx1 (absolute maximum, first pass)", y_unit: N, uncertainty: 4.5, points: [[300, 149.76], [600, 281.12], [900, 243.26]], note: "runs 2, (3, 6, 10, 12, 13 mean), 7"}
+  - {name: Fx1_max_t2.0, x_name: vc, x_unit: m/min, y_name: "Fx1 (absolute maximum, first pass)", y_unit: N, uncertainty: 4.5, points: [[300, 156.49], [600, 305.15], [900, 274.74]], note: "runs 9, 5, 11"}
 notes: "Peak (not mean) force normal to a compliant wall. In the first pass the opposite side still carries its 0.2 mm allowance (inferred here from the pass sequence); the second pass (Fx2 in Table A1) is less stable and is not used. Caution on the data: in eight of the thirteen runs Fx2 differs from Fx1 by exactly 10, 14, 20 or 30 N, which looks like a transcription artefact, one more reason to use Fx1 only. The non-monotonic speed effect (maximum at 600 m/min, about twice the 300 m/min value) and the chatter extremes reported in the second pass point to wall and tool dynamics, so a rigid-workpiece force model is expected to miss this case; it is a check for the coupled wall-deflection model. The source also lists natural-thermocouple cutting temperatures (301-362 C) for the same runs (Table A1), not used here."

@@ -1,0 +1,150 @@
+# Coefficients of the tool-holder-spindle model (cnctwin.structure.toolmodel; docs/models/structure.md
+# section 2): elastic constants of tool holders, the clamping-interface contact stiffness and loss factor per
+# holder type (distributed Winkler springs between the shank and the bore), material loss factors, the
+# rotation of the spindle-holder base modes (pivot length) and the clamped length when a holder gives none.
+# Read in SI by cnctwin.db.models.params("structure-tool"). Values of the tool, holder and machine files win.
+format: cnctwin-model-params
+version: 1
+model: structure-tool
+description: "Tool-holder-spindle beam model: holder steel, clamping-interface contact, damping, spindle base rotation"
+params:
+  # ------------------------------------------------------------------ holder material
+  holder_youngs_modulus_Pa:
+    value: 207
+    unit: GPa
+    src: budynas-nisbett-2015-shigley
+    note: "Table A-5, carbon steel; holders are case-hardened low-alloy steel (E within 2 %)"
+  holder_poisson:
+    value: 0.292
+    unit: "-"
+    src: budynas-nisbett-2015-shigley
+    note: "Table A-5, carbon steel"
+  holder_density_kg_m3:
+    value: 7800
+    unit: kg_m3
+    src: budynas-nisbett-2015-shigley
+    note: "Table A-5 unit weight 76.5 kN/m3 divided by standard gravity"
+  # ------------------------------------------------------------------ clamping interface (shank in the bore)
+  contact_poisson:
+    value: 0.292
+    unit: "-"
+    src: budynas-nisbett-2015-shigley
+    note: "steel; sets the tangential/normal contact stiffness ratio 2 (1 - nu) / (2 - nu) of Mindlin (johnson-1985-contact-mechanics sec. 7.2)"
+  contact_k_per_cm2_shrink_fit_N_per_m:
+    value: 1000
+    unit: N_um
+    src: est
+    note: "normal stiffness of 1 cm2 of the ground shank-bore interface under the shrink-fit pressure (order 1e13 N/m3, the stiffness of ground steel joints at high nominal pressure, as holding's joint_k_per_cm2); over a 40 mm clamp of a 10 mm shank it gives about 1.5e6 Nm/rad tilt stiffness, the order of the holder-tool connections identified in the receptance-coupling literature (erturk-ozguven-budak-2006-rcsa)"
+  contact_k_per_cm2_hydraulic_N_per_m:
+    value: 500
+    unit: N_um
+    src: est
+    note: "thin expanding sleeve on an oil chamber: half the shrink-fit stiffness assumed (the sleeve bends between its supports)"
+  contact_k_per_cm2_milling_chuck_N_per_m:
+    value: 600
+    unit: N_um
+    src: est
+    note: "roller-type milling (power) chuck, thick slotted sleeve: between hydraulic and shrink fit (assumed)"
+  contact_k_per_cm2_er_collet_N_per_m:
+    value: 150
+    unit: N_um
+    src: est
+    note: "slotted ER collet: segment bending plus the shank-collet and collet-cone joints in series; about 1/7 of the shrink fit (assumed; ER connections are the most compliant common holders)"
+  contact_k_per_cm2_side_lock_N_per_m:
+    value: 100
+    unit: N_um
+    src: est
+    note: "Weldon / side-lock: the shank is pushed against one side of a bore with clearance (line contact opposite the screw); the smeared all-round value is set low (assumed)"
+  contact_k_per_cm2_tapping_N_per_m:
+    value: 100
+    unit: N_um
+    src: est
+    note: "tapping holders: collet or quick-change adapter with axial float; as side-lock (assumed)"
+  contact_k_per_cm2_face_N_per_m:
+    value: 1000
+    unit: N_um
+    src: est
+    note: "shell-mill arbors, modular and boring-head connections: face contact plus pilot, as stiff as the shrink fit (assumed)"
+  contact_k_per_cm2_turret_N_per_m:
+    value: 500
+    unit: N_um
+    src: est
+    note: "turning shank or boring bar in a turret tool block, clamped by screws or a split bore (assumed half the shrink-fit value)"
+  contact_loss_factor_shrink_fit:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "loss factor of the interface springs (micro-slip in the fit); chosen so that the bending modes of typical tool-holder pairs carry 1-3 % damping (the interface holds 5-30 % of their strain energy), the range of measured tool-point FRFs in the receptance-coupling literature (schmitz-smith-2009-machining-dynamics); uncertain by a factor of 2"
+  contact_loss_factor_hydraulic:
+    value: 0.3
+    unit: "-"
+    src: est
+    note: "oil-filled chamber adds damping; hydraulic chucks are reported as better damped than shrink fits (assumed 2x the shrink-fit value)"
+  contact_loss_factor_milling_chuck:
+    value: 0.2
+    unit: "-"
+    src: est
+    note: "slotted sleeve with rollers (assumed, between shrink fit and hydraulic)"
+  contact_loss_factor_er_collet:
+    value: 0.2
+    unit: "-"
+    src: est
+    note: "slotted collet with two joints in series (assumed, as the milling chuck)"
+  contact_loss_factor_side_lock:
+    value: 0.2
+    unit: "-"
+    src: est
+    note: "one-sided line contact with clearance (assumed, as the collet)"
+  contact_loss_factor_tapping:
+    value: 0.25
+    unit: "-"
+    src: est
+    note: "collet / quick-change adapter with float (assumed slightly above the collet)"
+  contact_loss_factor_face:
+    value: 0.1
+    unit: "-"
+    src: est
+    note: "bolted face joint with pilot (assumed, upper end of the 0.01-0.1 range of bolted joints)"
+  contact_loss_factor_turret:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "screw-clamped tool block (assumed, as the shrink fit)"
+  # ------------------------------------------------------------------ material damping
+  tool_loss_factor:
+    value: 0.002
+    unit: "-"
+    src: est
+    note: "material loss factor of cemented carbide and tool steel; metals are 1e-4 to 1e-3, set at the upper end because the flutes and coatings add friction"
+  holder_loss_factor:
+    value: 0.002
+    unit: "-"
+    src: est
+    note: "steel holder body (as tool_loss_factor)"
+  damped_bar_loss_factor:
+    value: 0.05
+    unit: "-"
+    src: est
+    note: "tuned-mass damped boring bars (bar material 'damped'): the absorber is represented by a smeared loss factor (assumed)"
+  # ------------------------------------------------------------------ spindle-holder base
+  spindle_pivot_length_m:
+    value: 300
+    unit: mm
+    src: est
+    note: "the machine's frf_modes give translation only; each flange mode is taken as a rocking of the spindle about a point this far behind the gauge line (front-to-rear bearing span of 40-taper motor spindles 200-350 mm), so a flange translation u comes with the slope -u/a; the rotation-moment receptance is then P = N L / H as assumed by schmitz-duncan-2005-rcsa for the spindle-holder base"
+  # ------------------------------------------------------------------ clamped lengths
+  clamp_length_ratio:
+    value: 3.0
+    unit: "-"
+    src: est
+    note: "clamped length / shank diameter when the holder gives no clamp_length_mm (shrink and hydraulic chucks clamp 3-4 d)"
+  bar_clamp_length_ratio:
+    value: 4.0
+    unit: "-"
+    src: est
+    note: "boring bars: clamped length / bar diameter (catalogues ask for at least 4 d)"
+  shank_clamp_length_ratio:
+    value: 1.5
+    unit: "-"
+    src: est
+    note: "turning shanks: clamped length beyond the overhang / shank height (tool-block screw spacing, assumed)"

@@ -1,0 +1,47 @@
+# Yang et al. (2024): Z-axis thermal deformation of the spindle of a VMC850 vertical machining centre
+# idling at constant 2000 r/min and 4000 r/min for 2 h (eddy-current sensor, values in whole micrometres).
+format: cnctwin-validation-case
+version: 1
+id: spindlegrowth-yang2024-vmc850-constant-speed
+quantity: spindle_growth
+reference:
+  src: yang-2024-vmc850-thermal-error
+  location: "Sect. 3.1-3.2 (machine, sensors, test conditions), Sect. 4.1 (temperature and deformation behaviour), Fig. 11a,b (Z-axis thermal deformation, digitised)"
+  digitised: true
+  uncertainty_pct: 5                 # +-0.5 um digitisation on values quantised to 1 um; sensor accuracy not stated
+  measured: true
+setup:
+  operation: spindle_warmup
+  machine:
+    model: "VMC850 vertical machining centre"
+    maker: "Yunnan Machine Tool Factory (China)"
+    spindle: "not described: drive type, taper, bearing arrangement, cooling and maximum speed are not stated"
+    displacement_sensor: "eddy-current displacement sensor measuring the Z-axis thermal deformation of the idling spindle"
+    temperature_sensors: "infrared thermal imager (spindle box, motor, bearing, chuck/claw disc points) plus spindle speed and motor current over RS232"
+  conditions:
+    load: "no-load idling"
+    spindle_rpm_per_curve: [2000, 4000]
+    duration_min: 120
+    sample_interval_min: 1
+    ambient_note: "ambient temperature not stated; during the 4000 r/min run the workshop air conditioning started and the bearing and claw-disc temperatures first rose and then dropped back (Sect. 4.1)"
+    machine_state_at_start: {value: "cold start", src: est, note: "assumed: the paper says the machine temperature is low after switching on; the time since the previous run is not stated"}
+  program: null
+reference_values:
+  - {name: Z_growth_at_110min, value: 21, unit: um, uncertainty: 1, x: 2000, x_name: spindle_speed, x_unit: rpm, note: "plateau 20-22 um after about 70 min; the paper says thermal equilibrium after about 80 min"}
+  - {name: Z_growth_at_120min, value: 62, unit: um, uncertainty: 1, x: 4000, x_name: spindle_speed, x_unit: rpm, note: "plateau 60-63 um after about 95 min"}
+reference_curves:
+  - name: Z_thermal_deformation_2000rpm
+    x_name: time
+    x_unit: min
+    y_name: Z_thermal_deformation
+    y_unit: um
+    uncertainty: 0.5
+    points: [[2, 1], [4, 2], [6, 3], [8, 4], [10, 5], [12, 6], [14, 7], [16, 5], [18, 8], [20, 9], [22, 10], [24, 11], [26, 11], [28, 12], [30, 12], [32, 13], [34, 13], [36, 14], [38, 14], [40, 15], [42, 15], [44, 16], [46, 16], [48, 17], [50, 17], [52, 17], [54, 17], [58, 18], [60, 18], [62, 19], [64, 19], [66, 19], [68, 20], [70, 20], [72, 20], [74, 20], [76, 20], [78, 20], [80, 20], [82, 20], [84, 20], [86, 20], [88, 21], [92, 21], [96, 21], [98, 21], [100, 21], [104, 22], [106, 21], [108, 21], [110, 21]]
+  - name: Z_thermal_deformation_4000rpm
+    x_name: time
+    x_unit: min
+    y_name: Z_thermal_deformation
+    y_unit: um
+    uncertainty: 0.5
+    points: [[2, 1], [4, 1], [6, 1], [8, 1], [10, 1], [12, 1], [14, 2], [16, 2], [18, 3], [20, 4], [22, 5], [24, 7], [26, 10], [28, 10], [30, 11], [32, 13], [36, 16], [38, 18], [40, 19], [42, 20], [44, 21], [46, 21], [48, 22], [50, 25], [52, 28], [54, 31], [56, 34], [62, 42], [64, 44], [66, 46], [68, 47], [70, 49], [72, 50], [74, 52], [76, 53], [78, 54], [80, 55], [82, 55], [84, 56], [86, 57], [88, 58], [90, 58], [92, 59], [94, 59], [96, 60], [98, 60], [102, 60], [106, 61], [108, 61], [110, 61], [112, 62], [114, 62], [116, 62], [118, 62], [120, 62], [122, 63], [124, 63], [126, 62], [128, 63]]
+notes: "Digitised from the raster figure (each panel about 250 x 140 px): axes calibrated on the tick marks, marker centroids found by colour; the plotted values are whole micrometres (the data were collected every 1 min, the figure shows every second minute), so each digitised value was rounded to the nearest micrometre and the time to the nearest even minute (+-0.5 um, +-0.5 min). Gaps are markers merged with neighbours or the legend. The 16-min point of the 2000 r/min run (5 um) is a dip as plotted. The 4000 r/min curve is not a clean first-order warm-up: it stays at about 1 um for 12 min, rises, flattens at 21-22 um around 45 min and then climbs steeply to a 60-63 um plateau; the authors relate the temperature history to the workshop air conditioning switching on, so a model without that disturbance should match the end value better than the shape. The measured Z value is the spindle nose relative to the sensor fixture on the table (spindle growth plus headstock/column deformation); no sign convention is stated. The paper's ISO variable-speed and stepped-speed runs (Figs. 8, 9, 11c, 15) are not stored: the plotted speed-time diagram (Fig. 8: 1000-6000-1000 r/min in 10-min steps from 10 to 120 min) does not match the time axis or the description of Fig. 11c."

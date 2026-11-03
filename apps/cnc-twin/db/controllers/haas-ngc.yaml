@@ -3,7 +3,11 @@
 #
 # Alarms: the operator's manuals quote only a few alarm numbers (listed below, text written as the
 # manual writes it; the control's own capitalisation may differ). The full NGC alarm list is on
-# haascnc.com (service / alarm pages), which refused automated access this session: GAP.
+# haascnc.com (service / alarm pages), which refused automated access again in the second round
+# (HTML 403; only /content/dam PDFs are served): GAP. Second round (2026-11-03): the December 2025
+# operator's manuals (96-8210 / 96-8910 Rev V) add alarms 339, 2062, 4030, 9300 and 9938.001; the
+# program alarms the dialect maps (302-379, e.g. 'Invalid G Code', 'No Feed Rate Specified') are not
+# quoted in any manual read and keep their builtin texts until the alarm pages can be read.
 # trigger = simulator condition the alarm belongs to (same vocabulary in every db/controllers/*.yaml).
 # The lathe G/M-code lists differ from the mill lists and are under words.lathe.
 format: cnctwin-controller
@@ -26,6 +30,11 @@ alarms:
   - {code: "9109", text: "TAILSTOCK NOT IN PART HOLD POSITION", trigger: machine, src: haas-ngc-lathe-om-2020, cause: "lathe: Setting 145 Tailstock At Part for Cycle Start is ON and the tailstock is not pressing against the part when CYCLE START is pressed; the program does not start", page: "441"}
   - {code: "9111", text: "INVALID G CODE FOR LIVE TOOL TYPE", trigger: illegal_g_code, src: haas-ngc-lathe-om-2020, cause: "lathe: Setting 368 Live Tooling Type is Axial and a radial live-tooling canned cycle is commanded, or it is Radial and an axial one is commanded", page: "459"}
   - {code: "1000-1999", text: "<text of the comment following #3000 = n>", trigger: user_alarm, cause: "#3000 = n (n = 1-999) in a macro: alarm number 1000 + n with the next comment as its text; all motion stops and the program must be reset", page: "266"}
+  - {code: "339", text: "Multiple codes", trigger: syntax, src: haas-ngc-mill-om-2025, cause: "an M code placed before G65 on the same line: 'M14 G65 P1000 will generate Alarm 339 Multiple codes while G65 P1000 M14 will work' (same note in the lathe manual 96-8910 Rev V)", page: "311"}
+  - {code: "2062", text: "TCPC OR DWO INCOMPATIBLE CODE", trigger: tcp, src: haas-ngc-mill-om-2025, cause: "G268 or G269 (feature coordinate system) used together with G234 tool center point control without G268 being called first (note in the G234 and in the G268/G269 sections)", page: "414, 424"}
+  - {code: "4030", text: "AUTOFEED MINIMUM THRESHOLD REACHED", trigger: feed_limit, src: haas-ngc-mill-om-2025, cause: "autofeed has reduced the feedrate to the minimum percentage of Setting 266 Autofeed Minimum Override", page: "504"}
+  - {code: "9300", text: "BROKEN TOOL DETECTED", trigger: tool, src: haas-ngc-mill-om-2025, cause: "Broken Tool Detection (BTD): the tool length in the image taken when the tool returns to the carousel differs noticeably from the reference image taken when it left; the BTD page pops up with both images", page: "108, 110"}
+  - {code: "9938.001", text: "", trigger: machine, src: haas-ngc-mill-om-2025, cause: "workholding vise (M70/M71 P1-P8): the spindle is commanded while a vise is unclamped and its unclamp check is enabled (M71 Q0 or Q omitted; M71 Q1 disables the check; Setting 389 only adds a message on cycle start). The manual gives no alarm text.", page: "447"}
 
 messages:
   src: haas-ngc-mill-om-2020

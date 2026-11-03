@@ -61,6 +61,7 @@ FI_MAX_SEG = 7              # largest segment count stored on one ray
 FI_SCRATCH_OVF = 8          # a ray exceeded MAX_SEG segments in a kernel scratch (its update was refused)
 FI_PEAK_USED = 9            # most pool blocks in use at once
 FI_WORKPIECE = 10
+FI_TOPO = 11                # level-0 z rays whose segment count changed since the last connectivity pass
 N_FI = 12
 
 
@@ -245,18 +246,18 @@ class SubtractSpec(NamedTuple):
 
 # --------------------------------------------------------------------------- helical swept profiles (taps)
 class HelixSweep(NamedTuple):
-    """Tooth polygons of a tap swept along the relative helical path (no revolved body: architecture 5.4).
-
-    ``poly[j, :n[j]]`` is the closed CCW polygon of tooth (land, row) j in the tool's meridian plane (z, r),
-    at the land's cutting-sense phase ``phase[j]``; while the tool turns by dpsi (cutting sense) it advances
-    ``lead / (2 pi) * dpsi`` along -axis relative to the work. A tooth whose region is not convex is given
-    as several convex polygons with the same phase."""
+    """Tooth polygons of a tap swept along the relative helical path (never a revolved body: architecture
+    5.4). Land l owns polygons ``land_first[l] .. land_first[l + 1] - 1`` (ascending in z), each a closed
+    counter-clockwise convex polygon ``poly[j, :n[j]]`` in the tool's meridian plane (z_T, r) at the land's
+    cutting-sense phase ``land_phase[l]``. The kernel moves the tool between the two poses of a call in
+    proportion to the spindle angle, so the helix (and any feed / speed mismatch) comes from the motion."""
 
     poly: np.ndarray            # [nj, nmax, 2] f8 (z, r)
     n: np.ndarray               # [nj] i4
-    phase: np.ndarray           # [nj] f8
     zr_box: np.ndarray          # [nj, 4] f8 z_lo, z_hi, r_lo, r_hi of each polygon
-    info: np.ndarray            # [4] f8: lead_m, hand (+1: psi = +right-handed angle; -1: mirrored), 0, 0
+    land_first: np.ndarray      # [nlands + 1] i4
+    land_phase: np.ndarray      # [nlands] f8
+    info: np.ndarray            # [4] f8: hand sign h (alpha = theta + h phase), z_lo, z_hi, r_hi (all polygons)
 
 
 # --------------------------------------------------------------------------- polar field (turning)
@@ -272,31 +273,37 @@ PG_QUANTUM = 8
 N_PG = 10
 
 PI_VERSION = 0              # PolarField.info
-PI_OVERFLOW = 1             # a ray needed more than KP segments (caller re-allocates with a larger KP)
+PI_OVERFLOW = 1             # bit 1: a radial ray needed more than KPR segments, bit 2: an axial ray more than KPA
 PI_DIRTY_Z0 = 2             # z-row range changed since the last tri-dexel sync (inclusive; -1 none)
 PI_DIRTY_Z1 = 3
 PI_DIRTY_R0 = 4             # axial-column range changed since the last sync
 PI_DIRTY_R1 = 5
-PI_KP = 6                   # inline segments per ray
+PI_KP = 6                   # inline segments per radial ray (KPR)
+PI_KPA = 7                  # inline segments per axial ray (KPA; threads leave one segment per crest)
 N_PINFO = 8
+
+
+POLAR_BLOCK = 16            # rows per zmax_q block of the polar field (the per-step skip granularity)
 
 
 class PolarField(NamedTuple):
     """Rotating-workpiece field about the S z axis (architecture 5.4 "Turning"): radial rays at
     (theta_b, z_i) with segments in r (quanta from the axis) and axial rays at (theta_b, r_j) with segments
-    in z (quanta from z0), ``KP`` segments inline each (no pool: a ray needing more sets PI_OVERFLOW and is
-    left unchanged; the caller re-allocates with a larger KP and repeats the update, which is idempotent).
-    Radial ray index ``b * nz + i``, axial ``b * nr + j`` (theta-major). ``zmax_q[i // 32]`` bounds the outer
-    radius of z block i // 32 from above (refreshed at the tri-dexel sync)."""
+    in z (quanta from z0), KPR (radial) and KPA (axial) segments inline (no pool: a ray needing more sets
+    PI_OVERFLOW and is left unchanged; the caller re-allocates with a larger capacity and repeats the
+    update, which is idempotent).
+    Radial ray index ``b * nz + i``, axial ``b * nr + j`` (theta-major). ``zmax_q[b * nblk + i // POLAR_BLOCK]`` is
+    the largest outer radius of the rows of block i // POLAR_BLOCK in bin b (kept exact by every cut), so a step skips
+    every block its insert cannot reach."""
 
     geom: np.ndarray            # [N_PG] f8
     rcnt: np.ndarray            # [ntheta * nz] i1
-    rseg: np.ndarray            # [ntheta * nz, KP, 2] i4
-    rsev: np.ndarray            # [ntheta * nz, KP, 2] i4
+    rseg: np.ndarray            # [ntheta * nz, KPR, 2] i4
+    rsev: np.ndarray            # [ntheta * nz, KPR, 2] i4
     acnt: np.ndarray            # [ntheta * nr] i1
-    aseg: np.ndarray            # [ntheta * nr, KP, 2] i4
-    asev: np.ndarray            # [ntheta * nr, KP, 2] i4
-    zmax_q: np.ndarray          # [ceil(nz / 32)] i8
+    aseg: np.ndarray            # [ntheta * nr, KPA, 2] i4
+    asev: np.ndarray            # [ntheta * nr, KPA, 2] i4
+    zmax_q: np.ndarray          # [ntheta * ceil(nz / POLAR_BLOCK)] i8
     info: np.ndarray            # [N_PINFO] i8
 
 
@@ -318,7 +325,8 @@ class InsertRegion(NamedTuple):
     xb: np.ndarray              # [nb] f8
     zb: np.ndarray
     nose: np.ndarray            # [3] f8
-    box: np.ndarray             # [4] f8 z_min, z_max, x_min, x_max
+    box: np.ndarray             # [6] f8 z_min, z_max, x_min, x_max, z of the upper chain's highest vertex,
+                                #     1 when the upper chain rises to it and falls after it (unimodal) else 0
 
 
 # --------------------------------------------------------------------------- polar cut of one L0 step
@@ -333,6 +341,56 @@ PS_SZ = 6                   # z_T along +S z (+1) or -S z (-1)
 PS_SX = 7                   # x_T along -e_r (-1: external tool, into the work toward the axis) or +e_r (+1)
 PS_YOFF = 8                 # offset of the reference plane from the axis (centre height error, m)
 N_PS = 10
+
+
+MAX_IV = 512                # removal intervals a kernel collects for one ray
+MAX_PIECES = 16384          # removed pieces a subtraction records before it books them (then it books and goes on)
+
+
+class Scratch(NamedTuple):
+    """Work lists of the ray kernels (one per caller; kernels never allocate per ray)."""
+
+    lo: np.ndarray              # [MAX_SEG] i4 segments of the ray being changed
+    hi: np.ndarray
+    elo: np.ndarray
+    ehi: np.ndarray
+    nlo: np.ndarray             # [MAX_SEG] i4 the new segments
+    nhi: np.ndarray
+    nelo: np.ndarray
+    nehi: np.ndarray
+    plo: np.ndarray             # [MAX_SEG] i8 pieces removed or added
+    phi: np.ndarray
+    rlo: np.ndarray             # [MAX_IV] i8 intervals to remove / add (quanta)
+    rhi: np.ndarray
+    ivt: np.ndarray             # [MAX_IV, 2] f8 intervals along the ray in metres before quantisation
+    ivp: np.ndarray             # [MAX_IV] i4 part / piece tag of each interval
+    pcs: np.ndarray             # [MAX_PIECES, 7] i8 removed pieces (ray, level, family, iu, iv, q0, q1)
+    # small fixed work of the kernels compiled without reference counting (nbt.RAW: they allocate nothing)
+    fw: np.ndarray              # [N_FW] f8, sub-ranges FW_*
+    iv2: np.ndarray             # [16, 2] f8 short interval lists (dead-zone intervals of post_pieces)
+    tg: np.ndarray              # [16] i4 their tags
+    iw: np.ndarray              # [16] i8 small integer work
+    rows: np.ndarray            # [8, 12] f8 event rows written once per call
+
+
+# Scratch.fw sub-ranges (subtract_envelope / post_pieces)
+FW_ELO = 0                  # [3] envelope box
+FW_EHI = 3
+FW_BLO = 6                  # [3] envelope box clipped to the spec's box
+FW_BHI = 9
+FW_P = 12                   # [3] ray origin
+FW_PP = 15                  # [3] post_pieces' point
+FW_WORK = 18                # [16] root-isolation workspace of the envelope intervals
+FW_AGG = 34                 # [64] aggregates of one subtraction (k_subtract.AG_*)
+N_FW = 128
+
+
+def make_scratch() -> Scratch:
+    m, n = MAX_SEG, MAX_IV
+    return Scratch(*(np.zeros(m, np.int32) for _ in range(8)), np.zeros(m, np.int64), np.zeros(m, np.int64),
+                   np.zeros(n, np.int64), np.zeros(n, np.int64), np.zeros((n, 2)), np.zeros(n, np.int32),
+                   np.zeros((MAX_PIECES, 7), np.int64), np.zeros(N_FW), np.zeros((16, 2)), np.zeros(16, np.int32),
+                   np.zeros(16, np.int64), np.zeros((8, 12)))
 
 
 class Mesh3(NamedTuple):
@@ -414,4 +472,75 @@ def empty_insert() -> InsertRegion:
 
 
 def empty_helix() -> HelixSweep:
-    return HelixSweep(np.zeros((0, 3, 2)), np.zeros(0, np.int32), np.zeros(0), np.zeros((0, 4)), np.zeros(4))
+    return HelixSweep(np.zeros((0, 3, 2)), np.zeros(0, np.int32), np.zeros((0, 4)), np.zeros(1, np.int32),
+                      np.zeros(0), np.zeros(4))
+
+
+# --------------------------------------------------------------------------- domain bundle for the hot loop
+class ToothSlabs(NamedTuple):
+    """Slab heights and radius offsets of every tooth of a path's active tool (profile.tooth_slabs), rebuilt
+    at L2 when the effective edge changes. Tooth j uses ``z[j, :n[j] + 1]`` and ``dr[j, :n[j]]``."""
+
+    z: np.ndarray               # [nt, ns_max + 1] f8
+    dr: np.ndarray              # [nt, ns_max] f8
+    n: np.ndarray               # [nt] i4
+
+
+# RemovalInputs.iparams layout
+RI_NPATHS = 0
+RI_NWORK = 1
+RI_PATH0 = 2                    # per path p: RI_PATH0 + RI_PSTRIDE * p + RP_*
+RI_PSTRIDE = 8
+RP_WORKPIECE = 0
+RP_SLOT = 1
+RP_KIND = 2                     # TK_*
+RP_CENTRE_CUTTING = 3           # 1 centre cutting, 0 not
+RP_ROTATING = 4
+TK_NONE = 0
+TK_ENVELOPE = 1                 # rotating tool: revolved envelope per tooth pass
+TK_TURNING = 2                  # non-rotating tool on a turning spindle: polar insert cut per L0 step
+TK_HELIX = 3                    # tap: tooth profiles swept along the helical path
+# after the paths: the next surface event id of every workpiece (the loop increments it per subtraction)
+# at RI_PATH0 + RI_PSTRIDE * n_paths + w
+
+# RemovalInputs.fparams layout
+RF_GOUGE_TOL = 0
+RF_COLLISION_TOL = 1
+RF_GATE_SAMPLE = 2
+RF_GATE_TOL = 3
+RF_GATE_MARGIN = 4
+RF_SECTOR_MARGIN = 5
+RF_SWEEP_STEP = 6
+RF_PATH0 = 8                    # per path p: RF_PATH0 + RF_PSTRIDE * p + RQ_*
+RF_PSTRIDE = 4
+RQ_R_DEAD = 0
+RQ_Z_DEAD = 1
+RQ_TAN_RAMP_MAX = 2
+RQ_SLAB_H = 3
+
+
+class RemovalInputs(NamedTuple):
+    """What removal hands to the compiled loop for one macro step (frozen layout; arrays updated in place).
+
+    ``fields``/``targets``/``polars`` per workpiece; ``cut``/``whole``/``inserts``/``helix``/``slabs`` per
+    controller path (the path's active tool; placeholders of the same types when a path has no tool of that
+    kind); ``accum`` per contact (contact index = path index: one cutting contact per path); one shared
+    event buffer and scratch. The tuples are homogeneous (Numba UniTuple)."""
+
+    fields: tuple
+    targets: tuple
+    polars: tuple
+    cut: tuple
+    whole: tuple
+    inserts: tuple
+    helix: tuple
+    slabs: tuple
+    accum: tuple
+    events: object
+    scratch: Scratch
+    iparams: np.ndarray
+    fparams: np.ndarray
+
+
+def empty_slabs() -> ToothSlabs:
+    return ToothSlabs(np.zeros((1, 2)), np.zeros((1, 1)), np.zeros(1, np.int32))

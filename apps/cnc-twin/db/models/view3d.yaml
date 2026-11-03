@@ -1,0 +1,519 @@
+# Settings of the browser 3D view (web/js/view3d, docs/ui-3d.md). Mostly not physical coefficients: they
+# choose how the view looks and how much it loads (pixel ratio, level of detail, caches, cameras,
+# appearance colours, visual conventions for chips and coolant). The physical ones are marked by their
+# source: standard gravity (CGPM 1901) for liquid jets without a recorded path, and the coolant model's
+# cutting-zone sphere (equal to db/models/coolant-occlusion.yaml; a test keeps them equal).
+# Read in SI by cnctwin.db.models.params("view3d"); the browser reads web/js/view3d/params.js, written from
+# this file by tests/unit/view3d/sync_params.py (a test fails when it is stale). Colours are sRGB in [0, 1].
+format: cnctwin-model-params
+version: 1
+model: view3d
+description: "Pixel ratio, level of detail, caches, cameras, lights, appearance, chips, coolant cues, measuring, picking"
+params:
+  # ------------------------------------------------------------------ renderer and performance
+  max_pixel_ratio:
+    value: 2
+    unit: "-"
+    range: [1, 4]
+    src: est
+    note: "device pixels per CSS pixel at most (desktop): beyond 2 the extra sharpness is not seen at viewing distance and fill cost grows with its square"
+  max_pixel_ratio_touch:
+    value: 1.5
+    unit: "-"
+    range: [1, 4]
+    src: est
+    note: "the same cap on coarse-pointer devices (phones, tablets): 3x screens would cost 4x the pixels of 1.5x for a hardly visible gain"
+  max_antialias_pixel_ratio:
+    value: 1.5
+    unit: "-"
+    range: [1, 4]
+    src: foley-1990
+    note: "multisample antialiasing only up to this pixel ratio (14.10: supersampling); above it pixels are small enough that edge staircases are below one CSS pixel"
+  max_lod_cluster_px:
+    value: 1.5
+    unit: "-"
+    range: [0.5, 8]
+    src: rossignac-borrel-1993
+    note: "a coarser level of the workpiece mesh is drawn when its clustering cube projects to at most this many device pixels (desktop); vertices move by less than sqrt(3) cubes"
+  max_lod_cluster_px_touch:
+    value: 2.5
+    unit: "-"
+    range: [0.5, 8]
+    src: rossignac-borrel-1993
+    note: "the same on coarse-pointer devices, trading a pixel of shape for fewer triangles"
+  lod_cell_factors:
+    value: [4, 16]
+    unit: "-"
+    src: rossignac-borrel-1993
+    note: "clustering cubes of levels 1 and 2 in lattice cells (level 0 is the recorded mesh): 16x and 256x fewer vertices on flat faces"
+  chunk_bricks:
+    value: 4
+    unit: "-"
+    range: [1, 16]
+    src: est
+    note: "bricks per chunk edge: 64 bricks share one draw call; a brick change rebuilds its chunk only"
+  rebuild_budget_s:
+    value: 8
+    unit: ms
+    range: [1, 50]
+    src: est
+    note: "time per frame for rebuilding chunks (at least one per frame), half a 60 Hz frame"
+  brick_cache_bytes:
+    value: 100663296
+    unit: "-"
+    range: [8388608, 1073741824]
+    src: est
+    note: "bytes of brick records kept for scrubbing (desktop, 96 MiB)"
+  brick_cache_bytes_touch:
+    value: 33554432
+    unit: "-"
+    range: [4194304, 1073741824]
+    src: est
+    note: "bytes of brick records kept on coarse-pointer devices (32 MiB)"
+  max_parallel_requests:
+    value: 4
+    unit: "-"
+    range: [1, 16]
+    src: est
+    note: "requests in flight for the workpiece; browsers open six HTTP/1.1 connections per host and the shell needs the others"
+  max_bricks_per_file_read:
+    value: 6
+    unit: "-"
+    range: [0, 64]
+    src: est
+    note: "at most this many bricks of one keyframe file are read one by one (/bricks/{b}?t=) when they are under a quarter of the file; else the file is read once"
+  max_overview_frames:
+    value: 20000
+    unit: "-"
+    range: [1000, 200000]
+    src: est
+    note: "frames.bin records of the whole-run overview (the same as the shell's DRO overview)"
+  frames_chunk_records:
+    value: 4096
+    unit: "-"
+    range: [256, 65536]
+    src: est
+    note: "L1 ticks per full-resolution chunk around the time shown (the shell's chunk size)"
+  frames_chunks_kept:
+    value: 8
+    unit: "-"
+    range: [2, 64]
+    src: est
+    note: "full-resolution chunks kept"
+  keyframes_cached:
+    value: 8
+    unit: "-"
+    range: [2, 64]
+    src: est
+    note: "keyframes whose fields and chips are kept"
+  prefetch_keyframes:
+    value: 2
+    unit: "-"
+    range: [0, 8]
+    src: est
+    note: "keyframes read ahead while playing forward"
+  refresh_period_s:
+    value: 3
+    unit: s
+    range: [0.5, 60]
+    src: est
+    note: "wall time between reads of a running run's index files"
+  # ------------------------------------------------------------------ layers
+  field_sample_keyframes:
+    value: 12
+    unit: "-"
+    range: [1, 1000]
+    src: est
+    note: "keyframes sampled for a field layer's colour range: the rule of the shell's colour bar (web/js/panels/layers.js), so both show one range"
+  attribute_sample_bricks:
+    value: 24
+    unit: "-"
+    range: [1, 100000]
+    src: est
+    note: "attribute files sampled for an attribute layer's colour range (the shell's rule)"
+  min_surface_field_cos:
+    value: 0.5
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "a 2-D field (a map of the top of the material: surface temperature, pile height, wetted cells) colours faces whose normal is within 60 deg of the map's normal; walls keep the material colour"
+  layer_unlit_fraction:
+    value: 0.35
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "share of a layer colour shown unlit, so a face turned from the light still reads as its value on the colour bar"
+  # ------------------------------------------------------------------ cameras and lights
+  fov_rad:
+    value: 30
+    unit: deg
+    range: [5, 90]
+    src: est
+    note: "vertical field of view (as the follow camera of the run pictures, db/models/render.yaml follow_fov_rad)"
+  orbit_damping:
+    value: 0.15
+    unit: "-"
+    range: [0.01, 1]
+    src: est
+    note: "OrbitControls damping factor: the orbit eases out over a few frames"
+  framing_margin:
+    value: 1.15
+    unit: "-"
+    range: [1, 3]
+    src: est
+    note: "room around the bounding sphere of the setup view (as render.yaml)"
+  view_azimuth_rad:
+    value: -55
+    unit: deg
+    range: [-180, 180]
+    src: est
+    note: "setup view direction about +z_S from +x_S (front-left of a vertical mill, as render.yaml follow_azimuth_rad)"
+  view_elevation_rad:
+    value: 32
+    unit: deg
+    range: [-89, 89]
+    src: est
+    note: "setup view elevation (as render.yaml follow_elevation_rad)"
+  follow_view_height_m:
+    value: 70
+    unit: mm
+    range: [1, 5000]
+    src: est
+    note: "view height at the tool tip when following starts (as render.yaml)"
+  follow_smoothing_s:
+    value: 0.12
+    unit: s
+    range: [0, 5]
+    src: est
+    note: "time constant (wall time) of the follow camera's exponential smoothing, so a rapid does not jerk the view"
+  near_fraction:
+    value: 0.002
+    unit: "-"
+    range: [1e-5, 0.1]
+    src: est
+    note: "near plane at this fraction of the orbit distance: a 24-bit depth buffer then resolves 3e-5 of the distance (3 um at 0.1 m)"
+  far_scene_factor:
+    value: 4
+    unit: "-"
+    range: [1, 100]
+    src: est
+    note: "far plane at the orbit distance plus this many scene diameters"
+  key_light_intensity:
+    value: 2.0
+    unit: "-"
+    range: [0, 10]
+    src: est
+    note: "three.js directional light intensity of the key light, fixed to the camera"
+  fill_light_intensity:
+    value: 1.2
+    unit: "-"
+    range: [0, 10]
+    src: est
+    note: "three.js hemisphere light intensity (sky white, ground grey)"
+  key_light_azimuth_rad:
+    value: 35
+    unit: deg
+    range: [-180, 180]
+    src: est
+    note: "key light from the upper left of the view (as render.yaml)"
+  key_light_elevation_rad:
+    value: 50
+    unit: deg
+    range: [0, 90]
+    src: est
+    note: "key light elevation above the view direction (as render.yaml)"
+  crease_angle_rad:
+    value: 35
+    unit: deg
+    range: [0, 90]
+    src: est
+    note: "scene meshes: faces within this angle are shaded smoothly, sharper edges stay sharp (as render.yaml crease_angle_rad)"
+  # ------------------------------------------------------------------ appearance colours (sRGB, as db/models/render.yaml)
+  material_srgb:
+    value:
+      aluminium: [0.80, 0.81, 0.83]
+      magnesium: [0.76, 0.77, 0.78]
+      steel: [0.60, 0.61, 0.63]
+      tool_steel: [0.56, 0.57, 0.60]
+      stainless: [0.68, 0.69, 0.70]
+      cast_iron: [0.45, 0.45, 0.46]
+      titanium: [0.58, 0.57, 0.55]
+      nickel: [0.64, 0.63, 0.60]
+      copper: [0.85, 0.55, 0.40]
+      brass: [0.82, 0.70, 0.40]
+      polymer: [0.88, 0.88, 0.84]
+      composite: [0.24, 0.24, 0.26]
+      wood: [0.72, 0.56, 0.38]
+      foam: [0.93, 0.93, 0.90]
+      default: [0.75, 0.75, 0.76]
+    unit: "-"
+    src: est
+    note: "bare machined surfaces by material family (db/materials 'family'); the colours of the run pictures"
+  tool_srgb:
+    value: [0.50, 0.52, 0.56]
+    unit: "-"
+    src: est
+    note: "ground carbide grey"
+  holder_srgb:
+    value: [0.36, 0.38, 0.42]
+    unit: "-"
+    src: est
+    note: "blackened steel holder"
+  machine_srgb:
+    value: [0.56, 0.60, 0.62]
+    unit: "-"
+    src: est
+    note: "painted machine castings"
+  fixture_srgb:
+    value: [0.34, 0.38, 0.44]
+    unit: "-"
+    src: est
+    note: "vise and fixture steel"
+  cap_srgb:
+    value: [0.82, 0.32, 0.28]
+    unit: "-"
+    src: mcreynolds-blythe-2005
+    note: "section caps, flat red as in CAD section views (16.10 capping)"
+  fixture_cap_srgb:
+    value: [0.50, 0.42, 0.62]
+    unit: "-"
+    src: mcreynolds-blythe-2005
+    note: "section caps of the fixture, apart from the part's red, so the cut faces of the two bodies read as two bodies"
+  enclosure_srgb:
+    value: [0.78, 0.82, 0.86]
+    unit: "-"
+    src: est
+    note: "enclosure sheet and window tint"
+  enclosure_opacity:
+    value: 0.10
+    unit: "-"
+    range: [0, 1]
+    src: porter-duff-1984
+    note: "enclosure walls blended over the scene (as render.yaml)"
+  door_opacity:
+    value: 0.22
+    unit: "-"
+    range: [0, 1]
+    src: porter-duff-1984
+    note: "doors and windows (as render.yaml)"
+  # ------------------------------------------------------------------ tool and deflected tool
+  tool_sides:
+    value: 32
+    unit: "-"
+    range: [6, 256]
+    src: est
+    note: "facets of a tool drawn as a cylinder from its diameter and stickout (scene.tools without an envelope mesh)"
+  deflected_tool_srgb:
+    value: [0.92, 0.41, 0.20]
+    unit: "-"
+    src: est
+    note: "the deflected tool, in the second categorical hue of the shell (#eb6834) so it stands out from the grey tool"
+  deflected_tool_opacity:
+    value: 0.55
+    unit: "-"
+    range: [0.05, 1]
+    src: porter-duff-1984
+    note: "the deflected tool is blended over the tool where it really is"
+  deflection_exaggeration_default:
+    value: 1000
+    unit: "-"
+    range: [1, 1000000]
+    src: est
+    note: "the deflected tool's displacement is drawn this many times larger at first: 5 um become 5 mm, visible beside a 10 mm tool"
+  min_deflection_exaggeration:
+    value: 1
+    unit: "-"
+    range: [1, 1000000]
+    src: est
+    note: "true scale"
+  max_deflection_exaggeration:
+    value: 100000
+    unit: "-"
+    range: [1, 10000000]
+    src: est
+    note: "largest exaggeration offered (sub-micrometre deflections of stiff tools)"
+  deflection_window_s:
+    value: 1.0
+    unit: s
+    range: [0.01, 60]
+    src: est
+    note: "simulated time per request of a tool displacement channel (tick tier, one value per L1 tick)"
+  # ------------------------------------------------------------------ chips
+  chip_aspect:
+    value: [1.0, 5.0, 12.0]
+    unit: "-"
+    src: est
+    note: "thickness : width : length of a drawn chip (an arc chip of h ~ 0.1 mm, b ~ 0.5 mm, l ~ 1.2 mm; as render.yaml)"
+  chip_curl_rad:
+    value: 150
+    unit: deg
+    range: [0, 720]
+    src: est
+    note: "a drawn chip curls through this angle (an arc chip, ISO 3685 form 6)"
+  chip_default_length_m:
+    value: 1.2
+    unit: mm
+    range: [0.01, 100]
+    src: est
+    note: "length of a chip whose file gives neither its length nor a mass the density can turn into a volume (as render.yaml)"
+  min_chip_size_px:
+    value: 1.5
+    unit: "-"
+    range: [0, 10]
+    src: est
+    note: "chips are drawn at their size but never smaller than this many device pixels (as render.yaml)"
+  chip_default_srgb:
+    value: [0.78, 0.79, 0.80]
+    unit: "-"
+    src: est
+    note: "chips and piles without a recorded colour"
+  min_pile_height_m:
+    value: 0.1
+    unit: mm
+    range: [0, 10]
+    src: est
+    note: "chip pile cells lower than this are not drawn (as render.yaml)"
+  # ------------------------------------------------------------------ coolant
+  standard_gravity_m_s2:
+    value: 9.80665
+    unit: m/s2
+    src: cgpm-1901-standard-gravity
+    note: "standard acceleration of gravity (cnctwin.units.STANDARD_GRAVITY_M_S2): liquid jets without a recorded path follow the ballistic curve"
+  jet_max_length_m:
+    value: 600
+    unit: mm
+    range: [10, 5000]
+    src: est
+    note: "length drawn for a jet that hits nothing (as render.yaml)"
+  jet_samples:
+    value: 48
+    unit: "-"
+    range: [2, 512]
+    src: est
+    note: "segments of a jet's centreline (12.5 mm at the full length: a ballistic arc at 3 m/s deviates from its chords by under 0.1 mm)"
+  jet_opacity:
+    value: 0.45
+    unit: "-"
+    range: [0, 1]
+    src: porter-duff-1984
+    note: "opacity of a jet at the nozzle (as render.yaml)"
+  jet_end_opacity_fraction:
+    value: 0.5
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "a jet fades linearly to this fraction of its opacity at its end (as render.yaml)"
+  jet_sides:
+    value: 12
+    unit: "-"
+    range: [3, 64]
+    src: est
+    note: "facets of a drawn jet (as render.yaml)"
+  nozzle_radius_m:
+    value: 4
+    unit: mm
+    range: [0.5, 50]
+    src: est
+    note: "radius of a drawn nozzle body at its base (scene.nozzles give position and aim, not shape)"
+  nozzle_length_m:
+    value: 25
+    unit: mm
+    range: [1, 500]
+    src: est
+    note: "length of a drawn nozzle body"
+  zone_radius_factor:
+    value: 1.5
+    unit: "-"
+    range: [1.0, 2.5]
+    src: est
+    note: "the coolant model's cutting zone: a sphere of this many tool radii (db/models/coolant-occlusion.yaml, kept equal by a test); a jet stopped before it is shadowed"
+  min_zone_radius_m:
+    value: 1.0
+    unit: mm
+    range: [0.3, 3.0]
+    src: est
+    note: "smallest zone (db/models/coolant-occlusion.yaml)"
+  tool_zone_height_ratio:
+    value: 1.0
+    unit: "-"
+    range: [0.5, 2.0]
+    src: est
+    note: "the zone of a tool is centred this many tool radii above the tip on its axis (db/models/coolant-occlusion.yaml)"
+  max_shadow_miss_m:
+    value: 20
+    unit: mm
+    range: [1, 500]
+    src: est
+    note: "a stopped jet's continuation is drawn as its shadow when it would have passed within this distance (or four zone radii) of the zone: farther, the jet was not aimed at the cut"
+  shadow_opacity:
+    value: 0.35
+    unit: "-"
+    range: [0, 1]
+    src: porter-duff-1984
+    note: "opacity of the shadowed (blocked) part of a jet"
+  spray_drops_per_jet:
+    value: 120
+    unit: "-"
+    range: [0, 5000]
+    src: est
+    note: "drops drawn at a jet's impact point (a visual cue, not a drop-size prediction)"
+  spray_drop_size_m:
+    value: 0.8
+    unit: mm
+    range: [0.01, 10]
+    src: est
+    note: "drawn size of a drop"
+  spray_life_s:
+    value: 0.3
+    unit: s
+    range: [0.01, 10]
+    src: est
+    note: "simulated time a drop is drawn before it starts again with a new direction"
+  spray_speed_fraction:
+    value: 0.3
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "drops leave the impact at this fraction of the jet speed (splash)"
+  # ------------------------------------------------------------------ measuring, picking, poses
+  measure_srgb:
+    value: [0.38, 0.31, 0.84]
+    unit: "-"
+    src: est
+    note: "markers, lines and circles of measurements, in the shell's seventh categorical hue (#6250d6), apart from every layer map"
+  measure_marker_px:
+    value: 8
+    unit: "-"
+    range: [2, 40]
+    src: est
+    note: "diameter of a measurement marker in device pixels"
+  min_circle_sine:
+    value: 0.02
+    unit: "-"
+    range: [1e-6, 0.5]
+    src: est
+    note: "three picks for a hole diameter are refused when the smallest angle of their triangle has a smaller sine (1.1 deg): the circle would be ill-conditioned"
+  pick_tolerance_px:
+    value: 6
+    unit: "-"
+    range: [1, 40]
+    src: est
+    note: "a press that moves less than this many CSS pixels is a tap (pick); more is an orbit"
+  max_tap_s:
+    value: 0.5
+    unit: s
+    range: [0.05, 5]
+    src: est
+    note: "a press longer than this is not a tap"
+  pose_chain_tolerance_m:
+    value: 0.1
+    unit: mm
+    range: [0.001, 10]
+    src: est
+    note: "the work chain moves M objects between two keyframes only if it reproduces the second keyframe's pose of S in M this closely"
+  pose_chain_tolerance_rad:
+    value: 0.001
+    unit: rad
+    range: [1e-6, 0.1]
+    src: est
+    note: "the same for the orientation"

@@ -69,3 +69,34 @@ entries:
     url: "https://archive.org/download/TTB-16-Manual/840Dsl_828D_job_planning_progr_man_0818_ru-RU.pdf"
     accessed: 2026-11-03
     pages: "20.1 Technology cycles (external cycle programming): list of cycles pp. 741-743, CYCLE81 p. 784, CYCLE82 pp. 785-787, CYCLE83 pp. 787-790, CYCLE84 pp. 790-793, CYCLE85 p. 793, CYCLE86 pp. 794-795, CYCLE800 pp. 810-813, CYCLE832 pp. 825-828, CYCLE840 pp. 829-831 (syntax and parameter tables; parameter names are language-neutral, the meanings were translated from Russian)"
+
+  siemens-840dsl-fund-ru-2018:
+    type: manual
+    authors: "Siemens AG"
+    title: "SINUMERIK 840D sl / 828D Programming Manual Fundamentals (Russian edition, 'Rukovodstvo po programmirovaniyu. Osnovy'), 08/2018, 6FC5398-1BP40-6PA2"
+    venue: "Siemens AG; PDF (ru-RU) as published on the Internet Archive in the Danobat TTB-16 documentation package (item TTB-16-Manual)"
+    year: 2018
+    url: "https://archive.org/download/TTB-16-Manual/840Dsl_828D_fundamentals_progr_man_0818_ru-RU.pdf"
+    accessed: 2026-11-03
+    pages: "17.4 G commands, pp. 537-556: table of every G command with its G group, number in the group, explanation, and modal (m) / non-modal (p) effect (G commands are language-neutral; the explanations were translated from Russian)"
+
+  # ---------------------------------------------------------------- Haas Automation
+  haas-ngc-mill-om-2025:
+    type: manual
+    authors: "Haas Automation, Inc."
+    title: "Mill Operator's Manual, Next Generation Control - 19\" LCD, 96-8210 Revision V"
+    venue: "Haas Automation, Oxnard CA, December 2025, PDF (English, original instructions)"
+    year: 2025
+    url: "https://haascnc.com/content/dam/haascnc/en/service/manual/operator/english---mill-ngc---operator's-manual---2025.pdf"
+    accessed: 2026-11-03
+    pages: "manual (printed) page numbers: p. 108, 110 4.7 Broken Tool Detection (alarm 9300); p. 311 G65 (alarm 339); p. 414 G234 and p. 424 G268/G269 notes (alarm 2062); p. 447 M70/M71 vise table (alarm 9938.001); p. 504 Setting 266 (alarm 4030)"
+
+  haas-ngc-lathe-om-2025:
+    type: manual
+    authors: "Haas Automation, Inc."
+    title: "Lathe Operator's Manual, Next Generation Control - 19\" LCD, 96-8910 Revision V"
+    venue: "Haas Automation, Oxnard CA, December 2025, PDF (English, original instructions)"
+    year: 2025
+    url: "https://haascnc.com/content/dam/haascnc/en/service/manual/operator/english---lathe-ngc---operator's-manual---2025.pdf"
+    accessed: 2026-11-03
+    pages: "manual (printed) page numbers: p. 392 G105 bar feeder (alarm 314 when the subprogram named by P or by a comment is not found); the alarm numbers 253, 314, 339, 560, 605, 2062, 4030, 9109, 9111 are quoted in the text"

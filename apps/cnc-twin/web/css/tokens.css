@@ -1,0 +1,70 @@
+/* CNC Twin UI · design tokens
+   The Plint Soft UI palette (/opt/plint/theme/plint.css): the app reads Plint's --p-* tokens when
+   Caddy injects them and falls back to the same values standalone. Light/dark follows the device.
+   Chart colours (categorical, surfaces, grid) follow js/plot/colormap.js. */
+
+:root {
+  color-scheme: light dark;
+  --bg: var(--p-bg, #e4e9e5);
+  --ink: var(--p-ink, #22302a);
+  --ink2: var(--p-ink2, #56655d);
+  --line: var(--p-line, rgba(34, 48, 42, 0.1));
+  --hi: var(--p-hi, rgba(255, 255, 255, 0.92));
+  --lo: var(--p-lo, rgba(146, 163, 152, 0.55));
+  --edge: var(--p-edge, rgba(255, 255, 255, 0.6));
+  --track: var(--p-track, #d3dad5);
+  --accent: var(--p-accent, #3f6a53);
+  --accent-soft: var(--p-accent-soft, rgba(63, 106, 83, 0.13));
+  --on-accent: var(--p-on-accent, #f2f6f3);
+  --warn: var(--p-warn, #8a5010);
+  --warn-soft: var(--p-warn-soft, rgba(138, 80, 16, 0.12));
+  --bad: var(--p-bad, #a63d32);
+  --bad-soft: var(--p-bad-soft, rgba(166, 61, 50, 0.12));
+  --info: var(--p-info, #4a6585);
+  --info-soft: var(--p-info-soft, rgba(74, 101, 133, 0.13));
+  --font: var(--p-font, "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif);
+  --mono: var(--p-mono, "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace);
+  --raise: var(--p-raise, 9px 9px 20px var(--lo), -9px -9px 20px var(--hi));
+  --raise-sm: var(--p-raise-sm, 4px 4px 10px var(--lo), -4px -4px 10px var(--hi));
+  --press: var(--p-press, inset 6px 6px 12px var(--lo), inset -6px -6px 12px var(--hi));
+  --press-sm: var(--p-press-sm, inset 3px 3px 6px var(--lo), inset -3px -3px 6px var(--hi));
+  --r-lg: var(--p-r-lg, 26px);
+  --r: var(--p-r, 18px);
+  --r-sm: var(--p-r-sm, 12px);
+
+  /* charts: drawn on the card surface (the Soft UI has one ground colour) */
+  --chart-surface: var(--p-bg, #e4e9e5);
+  --chart-grid: rgba(34, 48, 42, 0.1);
+  --chart-axis: rgba(34, 48, 42, 0.28);
+  --chart-muted: #5f6e66;
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+  --series-5: #e87ba4; --series-6: #008300; --series-7: #6250d6; --series-8: #e34948;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--p-bg, #1e2421);
+    --ink: var(--p-ink, #dde6e0);
+    --ink2: var(--p-ink2, #9aa8a0);
+    --line: var(--p-line, rgba(221, 230, 224, 0.08));
+    --hi: var(--p-hi, rgba(255, 255, 255, 0.05));
+    --lo: var(--p-lo, rgba(0, 0, 0, 0.5));
+    --edge: var(--p-edge, rgba(255, 255, 255, 0.04));
+    --track: var(--p-track, #151a17);
+    --accent: var(--p-accent, #8ec3a4);
+    --accent-soft: var(--p-accent-soft, rgba(142, 195, 164, 0.14));
+    --on-accent: var(--p-on-accent, #13201a);
+    --warn: var(--p-warn, #e0a458);
+    --warn-soft: var(--p-warn-soft, rgba(224, 164, 88, 0.14));
+    --bad: var(--p-bad, #e5877b);
+    --bad-soft: var(--p-bad-soft, rgba(229, 135, 123, 0.14));
+    --info: var(--p-info, #93b0d6);
+    --info-soft: var(--p-info-soft, rgba(147, 176, 214, 0.14));
+    --chart-surface: var(--p-bg, #1e2421);
+    --chart-grid: rgba(221, 230, 224, 0.09);
+    --chart-axis: rgba(221, 230, 224, 0.26);
+    --chart-muted: #8f9c95;
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+    --series-5: #d55181; --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+  }
+}

@@ -1,0 +1,67 @@
+# Sultana & Dhar (2023): Ra after end milling Ti-6Al-4V with a 12 mm 4-flute HSS-E-PM end mill at
+# vc 16-32 m/min and fz 0.08-0.16 mm, dry and with two high-pressure oil supplies (same runs as
+# coolant-sultana2023-ti64-endmill-hpc-vs-dry).
+format: cnctwin-validation-case
+version: 1
+id: roughness-sultana2023-endmill-ti64-hss
+quantity: roughness
+reference:
+  src: sultana-2023-ti64-hpc-milling
+  location: "Sect. 2 and Table 4 (setup), Sect. 2 text (Surtronic 3+, 0.8 mm sampling length), Table 5 (Ra per run)"
+  digitised: false
+  measured: true
+setup:
+  operation: peripheral_milling
+  material: {db: ti6al4v, note: "Ti-6Al-4V grade 5, 37 HRC"}
+  tool:
+    type: square_endmill
+    maker_tool: "DORMER HSS-E-PM solid end mill (finishing type)"
+    tool_class: hss
+    coating: none
+    diameter_mm: 12
+    flutes: 4
+    helix_deg: 30
+    rake_deg: 5
+    clearance_deg: 15
+    tool_state: {value: new, src: est, note: "not stated; wear was studied in separate long runs (Fig. 20)"}
+  machine: {model: "vertical knee and column milling machine (Sunlike, China)", power_hp: 7.5}
+  coolant:
+    cases: "dry; HPC: VG-68 oil, 80 bar, 2.0 L/min, one external 2 mm nozzle 20 mm from the edge; RHPC: same oil, pressure and total flow through a rotary applicator with four 0.5 mm nozzles"
+  conditions:
+    cutting_speed_m_min: [16, 24, 32]
+    feed_mm_tooth: [0.08, 0.12, 0.16]
+    ap_mm: 1.0
+    ae_mm: 6.0
+    measured_surface: "not stated (the paper says Ra was measured 'for each slot'); with ap = 1 mm and ae = 6 mm the floor is cut by the end teeth and the wall by the flank teeth"
+    roughness_instrument: "Taylor Hobson Surtronic 3+ portable stylus, sampling length 0.8 mm"
+  program: null
+reference_values:
+  - {name: Ra_dry_vc16, value: 1.53, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc16, value: 1.63, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc16, value: 2.35, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc24, value: 1.47, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc24, value: 1.55, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc24, value: 2.25, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc32, value: 1.32, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc32, value: 1.32, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_dry_vc32, value: 1.61, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc16, value: 1.38, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc16, value: 1.44, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc16, value: 1.72, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc24, value: 1.34, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc24, value: 1.32, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc24, value: 1.59, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc32, value: 1.18, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc32, value: 1.24, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_hpc_vc32, value: 1.32, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc16, value: 1.24, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc16, value: 1.30, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc16, value: 1.42, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc24, value: 0.96, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc24, value: 1.22, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc24, value: 1.32, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc32, value: 0.82, unit: um, x: 0.08, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc32, value: 1.00, unit: um, x: 0.12, x_name: feed_per_tooth, x_unit: mm}
+  - {name: Ra_rhpc_vc32, value: 1.08, unit: um, x: 0.16, x_name: feed_per_tooth, x_unit: mm}
+reference_curves: []
+notes: "One measurement per run of the 27-run full factorial (Table 5); name = coolant case and cutting speed in m/min, x = feed per tooth. Measurement uncertainty and the number of traces are not given. The text of Sect. 3 quotes dry 1.81 um and HPC 1.32 um at 32 m/min and 0.08 mm/tooth, which disagrees with Table 5 (1.32 and 1.18 um, runs 21 and 11); the table values are stored. The kinematic feed-mark roughness of a sharp end mill at these feeds is far below the measured values, so the case mainly tests the non-kinematic part (built-up edge in dry cutting of Ti-6Al-4V with HSS, which the paper reports, runout, vibration and coolant lubrication). The surface that was measured (floor or wall) is not stated."

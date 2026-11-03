@@ -1,0 +1,94 @@
+{
+ "tools": {
+  "rough": {
+   "T": 1,
+   "S": 2590,
+   "F": 290,
+   "stock_mm": 0.06,
+   "scallop_target_um": 40.0,
+   "lines": 72,
+   "points": 9553,
+   "points_added_for_chord": 4156,
+   "cut_path_mm": 1551.3,
+   "link_path_mm": 133.6,
+   "plunge_path_mm": 36.0,
+   "feed_time_s": 333.7,
+   "vc_m_min": {
+    "p5": 47.9,
+    "p50": 69.7,
+    "p80": 75.0,
+    "max": 77.4
+   },
+   "contact_angle_deg": {
+    "min": 14.2,
+    "p50": 41.1,
+    "max": 54.3
+   },
+   "stepover_mm": {
+    "min": 0.809,
+    "max": 1.265
+   },
+   "scallop_um": {
+    "p50": 35.05,
+    "p95": 39.18,
+    "max": 39.97
+   },
+   "y_range_mm": [
+    -16.925,
+    16.926
+   ]
+  },
+  "finish": {
+   "T": 2,
+   "S": 3640,
+   "F": 349,
+   "stock_mm": 0.0,
+   "scallop_target_um": 4.5,
+   "lines": 206,
+   "points": 28049,
+   "points_added_for_chord": 12338,
+   "cut_path_mm": 4524.7,
+   "link_path_mm": 203.2,
+   "plunge_path_mm": 103.0,
+   "feed_time_s": 803.7,
+   "vc_m_min": {
+    "p5": 56.6,
+    "p50": 90.8,
+    "p80": 99.9,
+    "max": 104.4
+   },
+   "contact_angle_deg": {
+    "min": 13.6,
+    "p50": 41.1,
+    "max": 54.4
+   },
+   "stepover_mm": {
+    "min": 0.271,
+    "max": 0.424
+   },
+   "scallop_um": {
+    "p50": 4.04,
+    "p95": 4.45,
+    "max": 4.5
+   },
+   "y_range_mm": [
+    -16.925,
+    16.926
+   ]
+  }
+ },
+ "travel": {
+  "X": [
+   -50.4,
+   50.4
+  ],
+  "Y": [
+   -16.9,
+   16.9
+  ],
+  "Z": [
+   -468.9,
+   -453.0
+  ]
+ }
+}

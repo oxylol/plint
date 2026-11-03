@@ -1,0 +1,32 @@
+# Mode handling of cnctwin.dynamics (docs/models/dynamics.md sections 1 and 2): the share of the tip compliance
+# that makes a mode govern the L0 stride, the stride limit, and the mode-tracking tolerances of a basis change.
+# Read in SI by cnctwin.db.models.params("dynamics-modes").
+format: cnctwin-model-params
+version: 1
+model: dynamics-modes
+description: "L0-stride relevance of a mode, the stride limit, and mode tracking across a basis change"
+params:
+  stride_compliance_share:
+    value: 0.01
+    unit: "-"
+    range: [0.0, 0.2]
+    src: est
+    note: "a mode governs the L0 stride when it carries at least 1 % of the static compliance at the tool tip (the stride rule of docs/architecture.md 5.1); weaker modes are integrated exactly by the first-order hold anyway and only lose predictor-corrector accuracy"
+  stride_omega_dt:
+    value: 0.3
+    unit: "-"
+    range: [0.05, 1.0]
+    src: est
+    note: "largest 2 pi f dt of a governing mode (docs/architecture.md 5.1): the predictor-corrector keeps the numerical damping within 1 % of the exact closed-loop damping up to this value for cutting stiffness up to the modal stiffness (tests/unit/dynamics/test_predictor_corrector.py)"
+  basis_mac_threshold:
+    value: 0.999
+    unit: "-"
+    range: [0.9, 1.0]
+    src: est
+    note: "modal assurance criterion (Allemang & Brown 1982, allemang-brown-1982-mac) above which a new mode is the same mode as an old one at the active contact points: it keeps its modal coordinate through a basis change (no projection, no energy change)"
+  basis_freq_tol:
+    value: 1.0e-6
+    unit: "-"
+    range: [0.0, 0.1]
+    src: est
+    note: "relative frequency tolerance of the same identification (the degenerate-cluster tolerance of docs/architecture.md 9)"

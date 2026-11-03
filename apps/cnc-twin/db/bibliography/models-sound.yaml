@@ -1,0 +1,228 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of the machining sound model (cnctwin.sound, docs/models/sound.md): sound radiation from vibrating
+# structures, statistical energy analysis, room acoustics, enclosures, machine noise estimates, aerodynamic
+# sound, impacts, bubbles, rolling bearings, electric machines, milling forces and chatter, levels and
+# weightings, digital audio. iso-21940-11-2016 (balance quality grades) is in models-tooling.yaml.
+entries:
+  kinsler-2000:
+    type: book
+    authors: "Kinsler, L.E.; Frey, A.R.; Coppens, A.B.; Sanders, J.V."
+    title: "Fundamentals of Acoustics"
+    edition: 4
+    publisher: "Wiley, New York"
+    year: 2000
+    isbn: "978-0-471-84789-2"
+    pages: "7.2-7.5: pulsating and oscillating (dipole) spheres, radiation impedance Z = (4 pi a^2 rho c / 3) [(ka)^4 + i ka (2 + (ka)^2)] / (4 + (ka)^4) of the oscillating sphere; 5.12 reference levels"
+  pierce-2019:
+    type: book
+    authors: "Pierce, A.D."
+    title: "Acoustics: An Introduction to Its Physical Principles and Applications"
+    edition: 3
+    publisher: "Springer, Cham"
+    year: 2019
+    doi: "10.1007/978-3-030-11214-1"
+    pages: "4.4-4.5: monopole and dipole radiation; far field of a rigid sphere translating with velocity U: p = rho a^3 cos(theta) U''(t - r/c) / (2 c r)"
+  fahy-gardonio-2007:
+    type: book
+    authors: "Fahy, F.; Gardonio, P."
+    title: "Sound and Structural Vibration: Radiation, Transmission and Response"
+    edition: 2
+    publisher: "Academic Press, Oxford"
+    year: 2007
+    isbn: "978-0-12-373633-8"
+    pages: "3.4 radiation efficiency of elementary sources (sigma = (ka)^2 / (1 + (ka)^2) pulsating sphere, (ka)^4 / (4 + (ka)^4) oscillating sphere); 2.7 point mobility of an infinite plate"
+  cremer-heckl-2005:
+    type: book
+    authors: "Cremer, L.; Heckl, M.; Petersson, B.A.T."
+    title: "Structure-Borne Sound: Structural Vibrations and Sound Radiation at Audio Frequencies"
+    edition: 3
+    publisher: "Springer, Berlin"
+    year: 2005
+    isbn: "978-3-540-22696-3"
+    pages: "5.4: point mobility of an infinite thin plate Y = 1 / (8 sqrt(B m'')), real and frequency independent; the frequency average of a finite plate's drive-point mobility"
+  lyon-dejong-1995:
+    type: book
+    authors: "Lyon, R.H.; DeJong, R.G."
+    title: "Theory and Application of Statistical Energy Analysis"
+    edition: 2
+    publisher: "Butterworth-Heinemann, Boston"
+    year: 1995
+    isbn: "0-7506-9111-5"
+    pages: "power balance of a subsystem W_in = omega (eta_int + eta_rad) E; radiation loss factor eta_rad = rho c sigma / (omega m'')"
+  beranek-ver-1992:
+    type: book
+    authors: "Beranek, L.L.; Ver, I.L. (editors)"
+    title: "Noise and Vibration Control Engineering: Principles and Applications"
+    publisher: "Wiley, New York"
+    year: 1992
+    isbn: "0-471-61751-2"
+    pages: "6 sound in small enclosures and rooms (room constant R = S a / (1 - a), p^2 = rho c W (Q / (4 pi r^2) + 4 / R)); 9 sound transmission, mass law; 13 enclosures (IL ~ TL + 10 log a); 11 loss factors of materials and built-up structures (cast iron, bolted joints 0.01-0.05)"
+  bies-hansen-2003:
+    type: book
+    authors: "Bies, D.A.; Hansen, C.H."
+    title: "Engineering Noise Control: Theory and Practice"
+    edition: 3
+    publisher: "Spon Press, London"
+    year: 2003
+    isbn: "0-415-26713-7"
+    pages: "pp. 523-524 pump noise L_p(1 m) = 72 + 10 log10(kW) for 3000-3600 rpm pumps below 75 kW; pp. 553-554 electric motor noise L_p(1 m) = 17 + 17 log10(kW) + 15 log10(rpm) below 40 kW, 28 + 10 log10(kW) + 15 log10(rpm) above; 8.x field-incidence mass law TL = 20 log10(f m'') - 47 dB (5 dB below normal incidence); 7.x hemispherical directivity Q = 2 over a hard floor; overall levels quoted within about +-5 dB"
+  arup-strutt-2026:
+    type: software
+    authors: "Arup"
+    title: "Strutt acoustics help: empirical noise sources (small motors LMSmall_Motor, pumps LMPumps)"
+    year: 2026
+    url: "https://strutt.arup.com/help/Empirical/LMSmall_Motor.htm"
+    accessed: 2026-11-03
+    pages: "restates the Bies & Hansen 3rd ed. motor (pp. 553-554) and pump (pp. 523-524) formulas: overall sound pressure level at 1 m, sound power by distance correction to a hemispherical point source"
+  hopkins-stryker-1948:
+    type: article
+    authors: "Hopkins, H.F.; Stryker, N.R."
+    title: "A proposed loudness-efficiency rating for loudspeakers and the determination of system power requirements for enclosures"
+    venue: "Proceedings of the IRE 36(3), 315-335"
+    year: 1948
+    pages: "direct plus reverberant field: p^2 = rho c W (Q / (4 pi r^2) + 4 / R)"
+  lighthill-1952:
+    type: article
+    authors: "Lighthill, M.J."
+    title: "On sound generated aerodynamically I. General theory"
+    venue: "Proceedings of the Royal Society of London A 211(1107), 564-587"
+    year: 1952
+    doi: "10.1098/rspa.1952.0060"
+    pages: "acoustic power of a subsonic turbulent jet proportional to rho U^8 D^2 / c^5; acoustic efficiency of the order of 1e-4 M^5 (M the orifice Mach number)"
+  fitzpatrick-lee-1952:
+    type: report
+    authors: "Fitzpatrick, H.M.; Lee, R."
+    title: "Measurements of noise radiated by subsonic air jets"
+    institution: "David Taylor Model Basin, Washington DC (DTIC AD0650175)"
+    year: 1952
+    pages: "total radiated power of subsonic air jets close to the eighth power of the jet velocity; broad spectral peak at a Strouhal number of the order of 0.2"
+  johnson-1985:
+    type: book
+    authors: "Johnson, K.L."
+    title: "Contact Mechanics"
+    publisher: "Cambridge University Press, Cambridge"
+    year: 1985
+    doi: "10.1017/CBO9781139171731"
+    pages: "11.4 elastic impact of spheres (Hertz): duration T = 2.87 (m^2 / (R E*^2 V))^(1/5), E* = 1 / ((1 - nu1^2)/E1 + (1 - nu2^2)/E2)"
+  akay-1978:
+    type: article
+    authors: "Akay, A."
+    title: "A review of impact noise"
+    venue: "Journal of the Acoustical Society of America 64(4), 977-987"
+    year: 1978
+    doi: "10.1121/1.382080"
+    pages: "impact sound = acceleration noise of the colliding bodies plus ringing of the struck structure; the force pulse of a Hertzian contact drives the structure"
+  minnaert-1933:
+    type: article
+    authors: "Minnaert, M."
+    title: "On musical air-bubbles and the sounds of running water"
+    venue: "The London, Edinburgh and Dublin Philosophical Magazine and Journal of Science, series 7, 16(104), 235-248"
+    year: 1933
+    doi: "10.1080/14786443309462277"
+    pages: "resonance of an air bubble in a liquid: f = (1 / (2 pi a)) sqrt(3 gamma p0 / rho); the babble of running and splashing water is the ringing of entrained bubbles"
+  sunnersjo-1978:
+    type: article
+    authors: "Sunnersjo, C.S."
+    title: "Varying compliance vibrations of rolling bearings"
+    venue: "Journal of Sound and Vibration 58(3), 363-373"
+    year: 1978
+    pages: "a perfect, radially loaded bearing vibrates at the ball passage frequency (cage rotation x number of balls) because its stiffness changes as the balls roll through the load zone"
+  harris-kotzalas-2006:
+    type: book
+    authors: "Harris, T.A.; Kotzalas, M.N."
+    title: "Rolling Bearing Analysis: Essential Concepts of Bearing Technology"
+    edition: 5
+    publisher: "CRC Press, Boca Raton"
+    year: 2006
+    isbn: "978-0-8493-7183-7"
+    pages: "rolling-bearing kinematics: cage speed (1 - (D_w / d_m) cos alpha) / 2 of the inner ring speed (outer ring fixed); ball pass frequency of the outer race Z times the cage frequency"
+  randall-antoni-2011:
+    type: article
+    authors: "Randall, R.B.; Antoni, J."
+    title: "Rolling element bearing diagnostics - A tutorial"
+    venue: "Mechanical Systems and Signal Processing 25(2), 485-520"
+    year: 2011
+    doi: "10.1016/j.ymssp.2010.07.017"
+    pages: "BPFO, BPFI, FTF formulas; the rolling elements slip by 1-2 % so measured frequencies deviate from the kinematic values by that much"
+  gieras-2006:
+    type: book
+    authors: "Gieras, J.F.; Wang, C.; Lai, J.C."
+    title: "Noise of Polyphase Electric Motors"
+    publisher: "CRC Press, Boca Raton"
+    year: 2006
+    isbn: "978-0-8247-2381-3"
+    pages: "magnetic noise: radial Maxwell forces at twice the supply frequency 2 f; inverter-fed motors: current ripple and noise at the switching frequency with sidebands f_sw +- 2 f; aerodynamic (fan) noise broadband"
+  altintas-2012:
+    type: book
+    authors: "Altintas, Y."
+    title: "Manufacturing Automation: Metal Cutting Mechanics, Machine Tool Vibrations, and CNC Design"
+    edition: 2
+    publisher: "Cambridge University Press, Cambridge"
+    year: 2012
+    doi: "10.1017/CBO9780511843723"
+    pages: "2.4 milling forces periodic at the tooth passing frequency N n / 60 with harmonics set by the immersion; 3.x regenerative chatter at a frequency near a dominant mode, not a harmonic of the tooth passing"
+  delio-1992:
+    type: article
+    authors: "Delio, T.; Tlusty, J.; Smith, S."
+    title: "Use of audio signals for chatter detection and control"
+    venue: "Journal of Engineering for Industry 114(2), 146-157"
+    year: 1992
+    pages: "a microphone near the cut records the tooth passing harmonics and, when the cut chatters, a strong component at the chatter frequency; sound pressure follows the tool vibration"
+  iec-61672-1-2013:
+    type: standard
+    authors: "IEC"
+    title: "IEC 61672-1:2013 Electroacoustics - Sound level meters - Part 1: Specifications"
+    publisher: "International Electrotechnical Commission, Geneva"
+    year: 2013
+    pages: "annex E: analytic A-weighting with pole frequencies 20.598997, 107.65265, 737.86223 and 12194.217 Hz, normalised by A1000 = -2.000 dB"
+  iso-1683-2015:
+    type: standard
+    authors: "ISO"
+    title: "ISO 1683:2015 Acoustics - Preferred reference values for acoustical and vibratory levels"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2015
+    pages: "reference sound pressure 20 uPa in gases; reference sound power 1 pW"
+  iso-9613-1-1993:
+    type: standard
+    authors: "ISO"
+    title: "ISO 9613-1:1993 Acoustics - Attenuation of sound during propagation outdoors - Part 1: Calculation of the absorption of sound by the atmosphere"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 1993
+    pages: "speed of sound c = 343.2 m/s at 20 C (c = 343.2 (T / 293.15)^(1/2))"
+  iso-230-5-2000:
+    type: standard
+    authors: "ISO"
+    title: "ISO 230-5:2000 Test code for machine tools - Part 5: Determination of the noise emission"
+    publisher: "International Organization for Standardization, Geneva"
+    year: 2000
+    pages: "emission sound pressure level at the operator's position (1 m from the machine, 1.6 m above the floor) and sound power on a measurement surface 1 m from the machine"
+  iec-60908-1999:
+    type: standard
+    authors: "IEC"
+    title: "IEC 60908:1999 Audio recording - Compact disc digital audio system"
+    publisher: "International Electrotechnical Commission, Geneva"
+    year: 1999
+    pages: "44.1 kHz sampling, 16-bit linear PCM"
+  microsoft-riff-1991:
+    type: manual
+    authors: "IBM Corporation; Microsoft Corporation"
+    title: "Multimedia Programming Interface and Data Specifications 1.0 (RIFF, WAVE format, LIST INFO chunk)"
+    year: 1991
+    pages: "WAVE fmt and data chunks; LIST INFO subchunks (ICMT comment) for metadata a reader may ignore"
+  oppenheim-schafer-2010:
+    type: book
+    authors: "Oppenheim, A.V.; Schafer, R.W."
+    title: "Discrete-Time Signal Processing"
+    edition: 3
+    publisher: "Pearson, Upper Saddle River NJ"
+    year: 2010
+    isbn: "978-0-13-198842-2"
+    pages: "4.6 band-limited interpolation (windowed sinc); 7.5 FIR design by windowing (Blackman window: sidelobes below -58 dB); 8.7 block convolution by overlap-add"
+  lipshitz-1992:
+    type: article
+    authors: "Lipshitz, S.P.; Wannamaker, R.A.; Vanderkooy, J."
+    title: "Quantization and dither: a theoretical survey"
+    venue: "Journal of the Audio Engineering Society 40(5), 355-375"
+    year: 1992
+    pages: "triangular-PDF dither of 2 LSB peak-to-peak makes the first two moments of the quantisation error independent of the signal"

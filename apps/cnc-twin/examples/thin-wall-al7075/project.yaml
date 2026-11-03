@@ -1,0 +1,145 @@
+# CNC Twin example: two 1.0 mm x 25 mm free-standing walls in 7075-T6 on the Haas VF-2SS (README.md,
+# EXPECTED.md). Frames as in db/_templates/project.yaml (machine coordinates; table top at Z -610).
+format: cnctwin-project
+version: 1
+name: "Thin walls, Al 7075-T6"
+description: "Two fins 1.0 x 25 x 60 mm on a 7 mm base: constant-engagement roughing D10 in two levels, ladder finishing (5 x 5 mm, both faces per level) with a D10 at 42 mm stickout (L/D 4.2)"
+seed: 7075
+
+machine: haas-vf2ss
+controller_overrides: {}
+
+material:
+  id: al7075-t6
+  batch:
+    kc_scale_sigma: 0.04
+    hardness_sigma_pct: 3
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 22
+  machine_state: warm
+  time_between_ops_min: 10
+
+stock:
+  kind: block
+  size_mm: [90, 60, 32]                      # 7075-T651 plate 32 mm, sawn to 90 x 60
+  tolerance_mm: [0.2, 0.2, 0.1]
+  non_squareness_deg: 0.05
+  form: rolled_plate
+  mesh: null
+
+cad:
+  path: part.step                            # make_cad.py; CAD frame = stock frame
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}
+  datums:
+    - {label: A, feature: {face: plane, normal: [0, 0, -1], near_mm: [45, 30, 0]}}
+    - {label: B, feature: {face: plane, normal: [-1, 0, 0], near_mm: [0, 30, 3.5]}}
+    - {label: C, feature: {face: plane, normal: [0, -1, 0], near_mm: [45, 0, 3.5]}}
+  tolerances:
+    - {id: fin-1-thickness, kind: distance, between: [{face: plane, normal: [0, -1, 0], near_mm: [45, 19.5, 19.5]},
+       {face: plane, normal: [0, 1, 0], near_mm: [45, 20.5, 19.5]}], nominal_mm: 1.0, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: fin-2-thickness, kind: distance, between: [{face: plane, normal: [0, -1, 0], near_mm: [45, 39.5, 19.5]},
+       {face: plane, normal: [0, 1, 0], near_mm: [45, 40.5, 19.5]}], nominal_mm: 1.0, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: fin-1-front-flatness, kind: flatness, feature: {face: plane, normal: [0, -1, 0], near_mm: [45, 19.5, 19.5]}, tolerance_mm: 0.03}
+    - {id: fin-1-back-flatness, kind: flatness, feature: {face: plane, normal: [0, 1, 0], near_mm: [45, 20.5, 19.5]}, tolerance_mm: 0.03}
+    - {id: fin-2-front-flatness, kind: flatness, feature: {face: plane, normal: [0, -1, 0], near_mm: [45, 39.5, 19.5]}, tolerance_mm: 0.03}
+    - {id: fin-2-back-flatness, kind: flatness, feature: {face: plane, normal: [0, 1, 0], near_mm: [45, 40.5, 19.5]}, tolerance_mm: 0.03}
+    - {id: fin-1-perpendicularity, kind: perpendicularity, feature: {face: plane, normal: [0, -1, 0], near_mm: [45, 19.5, 19.5]}, tolerance_mm: 0.05, datums: [A]}
+    - {id: fin-1-position, kind: distance, between: [{face: plane, normal: [0, -1, 0], near_mm: [45, 0, 3.5]},
+       {face: plane, normal: [0, -1, 0], near_mm: [45, 19.5, 19.5]}], nominal_mm: 19.5, plus_mm: 0.05, minus_mm: 0.05}
+    - {id: fin-gap, kind: distance, between: [{face: plane, normal: [0, 1, 0], near_mm: [45, 20.5, 19.5]},
+       {face: plane, normal: [0, -1, 0], near_mm: [45, 39.5, 19.5]}], nominal_mm: 19.0, plus_mm: 0.05, minus_mm: 0.05}
+
+tools:
+  library: null
+  list:
+    - number: 1                              # roughing
+      tool: helical-59766-mh35al-025-31000   # D10 3FL, LOC 25
+      holder: haimer-40-720-32               # ER32 CAT40
+      stickout_mm: 35                        # nut face 10 mm above the fin tops at Z-25
+      length_offset_mm: 105.000
+      radius_offset_mm: 5.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 1, limit_min: 60, used_min: 20, sister_of: null}
+      initial_wear: {VB_mm: 0.02}
+      comment: "D10 3FL CARBIDE ENDMILL"
+    - number: 2                              # finishing, long stickout in the slim ER16 (nut 28 mm)
+      tool: helical-59766-mh35al-025-31000
+      holder: haimer-40-720-16
+      stickout_mm: 42                        # L/D 4.2
+      length_offset_mm: 112.000
+      radius_offset_mm: 0.0                  # wear compensation: the program is the tool-centre path
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 5
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 2, limit_min: 60, used_min: 2, sister_of: null}
+      initial_wear: {VB_mm: 0.0}
+      comment: "D10 3FL CARBIDE ENDMILL"
+
+coolant:
+  fluid: emulsion-8pct
+  concentration_pct: 8
+  tank_fill_fraction: 0.9
+
+operations:
+  - name: OP10
+    program: op10.nc                         # make_program.py
+    setup:
+      workholding:
+        - {device: lang-48120-46, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 60,
+           input_torque_Nm: 60, grip_depth_mm: 3, parallels_mm: null}
+      stock_pose: {translate_mm: [-45, -30, 0], rotate_deg: [0, 0, 0]}
+      work_offsets_mm: {G54: [-426.0, -233.2, -478.0]}               # stock lower-left corner, top
+      fixture_pose: {translate_mm: [-381.0, -203.2, -510.0], rotate_deg: [0, 0, 0]}   # jaw seat 100 mm above the table (est.)
+    from_previous: null
+    nozzle_positions: {}
+
+production:
+  parts: 1
+  operator: {load_s: 30, unload_s: 20, door_s: 4, clean_s: 15, inspect_every: 0, inspect_s: 60}
+
+physics:
+  tick_s: 1.0e-6
+  max_deg_per_step: 0.5                      # 12 000 rpm: l0 stride 5 ticks
+  steps_per_tooth: 96
+  macro_ipo: 10
+  lag_macro: 1
+  lattice_mm: 0.1                            # <= min(ae)/4 = 0.5/4 (wall finishing)
+  refine:                                    # the fins and their 0.5 mm stock: thickness resolved to 0.025 mm dexel spacing
+    - {box: {min_mm: [9, 18, 6], max_mm: [81, 22, 33]}, factor: 4}
+    - {box: {min_mm: [9, 38, 6], max_mm: [81, 42, 33]}, factor: 4}
+  edge_element_mm: 0.25
+  memory_bins: 720
+  polar_theta_bins: 720
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 2.0}
+  structure: {every_n_macro: 50, max_dof: 50000}   # the fins' modes change as they thin: refresh every 0.5 s
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}
+
+recording:
+  fast: windows
+  fast_window_revs: 4
+  fast_period_s: 1.0
+  keyframe_period_s: 0.5
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: {fps: 25, speed: 10}
+  audio: true
+
+uncertainty:
+  runs: 20
+  method: lhs
+  vary: {stock_size: true, tool_offsets_um: 5, runout_um: 3, kc_scale_sigma: 0.04, clamping_force_rel: 0.1}
+
+machine_data: null

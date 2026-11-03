@@ -6,14 +6,14 @@ name: "Low-content PCBN with ceramic (TiN/TiC) binder for hard turning of harden
 src: kyocera-2015-insert-grades
 composition: {text: "about 45-65 vol% cBN in a TiN/TiCN ceramic binder (typical of the hard-turning class; content not printed for KBN510)", src: est}
 grain_size_um: {value: 2, src: kyocera-2015-insert-grades, page: "p. A16, KBN510 average grain size 2 µm"}
-cbn_content_vol_pct: {value: 55, range: [45, 65], src: est, note: "class range for hard-turning PCBN; not printed by Kyocera"}
-density_kg_m3: {value: 4300, src: est, note: "rule of mixtures 55 vol% cBN (3.48 g/cm3) + 45 vol% TiN/TiC binder (~5.2 g/cm3)"}
-youngs_modulus_GPa: {value: 600, src: est, note: "between cBN (~850 GPa) and TiN (~450 GPa) at 55 % cBN"}
+cbn_content_vol_pct: {value: 55, range: [45, 65], src: est, note: "class range for hard-turning PCBN; not printed by Kyocera. The same-class Sandvik CBN7020 is given as 57 % CBN + 35 % Ti(C,N) in aouici-2010-h11-cbn (basis of the percentage not stated)"}
+density_kg_m3: {value: 4300, src: aouici-2010-h11-cbn, page: "Table 2", note: "CBN7020 (57 % CBN + 35 % Ti(C,N), same hard-turning class as KBN510): 4.3 g/cm3. The earlier rule-of-mixtures estimate (55 vol% cBN at 3.48 g/cm3 + 45 vol% TiN/TiC at ~5.2 g/cm3) gave the same 4300"}
+youngs_modulus_GPa: {value: 570, src: aouici-2010-h11-cbn, page: "Table 2", note: "CBN7020: 570 GPa (a grade of the same class as the reference KBN510, whose modulus is not printed). Replaces an estimate of 600 GPa (interpolated between cBN ~850 and TiN ~450 GPa)"}
 poisson: {value: 0.20, src: est, note: "no value read"}
 hardness_HV: {value: 2855, range: [2550, 2855], src: kyocera-2015-insert-grades, page: "p. A16, KBN510 substrate hardness 28 GPa = 2855 HV", note: "KBN525 25 GPa (2550 HV)"}
 transverse_rupture_MPa: {value: 1000, range: [1000, 1250], src: kyocera-2015-insert-grades, page: "p. A16, KBN510 1000 MPa", note: "KBN525 1250 MPa"}
 compressive_MPa: {value: 4500, src: est, note: "no value read"}
-fracture_toughness_MPa_sqrt_m: {value: 5.0, src: est, note: "no value read; low-content PCBN is less tough than high-content PCBN"}
+fracture_toughness_MPa_sqrt_m: {value: 4.2, src: aouici-2010-h11-cbn, page: "Table 2", note: "CBN7020 'tenacity' 4.2 MPa m^1/2, read as K_IC. Replaces an estimate of 5.0. The same table gives hardness 2800 daN/mm2 (about 2800 HV) and grain size 2.5 um for CBN7020, close to the Kyocera KBN510 values used above"}
 conductivity_W_mK:
   table: [[20, 45], [500, 40], [1000, 35]]
   src: est
@@ -27,4 +27,4 @@ max_service_temp_degC: {value: 1200, src: est, note: "cBN is chemically stable a
 weibull_modulus: {value: 10, src: est, note: "no value read"}
 thermal_shock_parameter: null
 usui: []
-notes: "Only grain size, hardness and transverse strength are maker values. No published Usui constants for PCBN in hardened steel were read (gap)."
+notes: "Grain size, hardness and transverse strength are Kyocera KBN510 maker values; density, Young's modulus and fracture toughness are those printed for the same-class Sandvik CBN7020 (57 % CBN + 35 % Ti(C,N)) by Aouici et al. 2010. No published Usui constants for PCBN in hardened steel were read (gap)."

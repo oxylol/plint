@@ -8,10 +8,10 @@ quantity: tool_temperature
 reference:
   src: kus-2015-4140-thermocouple-ir-turning
   location: "Table 1 (setup), sections 'Infrared Pyrometer', 'The Thermocouple' and 'Experimental Procedure' (sensor positions, averaging, repeats), Table 5 (results), Fig. 7 (thermocouple position), Fig. 10 (thermocouple readings versus cutting time, digitised)"
-  digitised: false
+  digitised: true
   uncertainty_pct: 1
   measured: true
-  note: "Table 5 values are read directly (means of three repeats, new insert for each test). Stated accuracies: pyrometer +-(0.3 % of reading + 2 C), thermocouple chain +-2.5 C or +-1 %. The pyrometer emissivity was set to 0.60 after a calibration over 0.45-0.85 at constant cutting conditions; that systematic error is not quantified. The Fig. 10 curves are digitised (about +-0.5 C)."
+  note: "Table 5 values are read directly (means of three repeats, new insert for each test). Stated accuracies: pyrometer +-(0.3 % of reading + 2 C), thermocouple chain +-2.5 C or +-1 %. The pyrometer emissivity was set to 0.60 after a calibration over 0.45-0.85 at constant cutting conditions; that systematic error is not quantified. The transient curves (names T_TC_transient_*) are digitised from Fig. 10 on 2.5x enlargements against the 10 C gridlines (about +-0.5 C); digitised: true refers to them only."
 setup:
   operation: longitudinal_turning
   material:

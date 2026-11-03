@@ -1,0 +1,174 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of the software rasteriser and the visual cue model (cnctwin.render, docs/models/render.md):
+# rasterisation, shading, shadows, compositing, colour science, colour maps, incandescence, boiling and
+# smoke thresholds, plume rise. pineda-1988 (edge functions, the top-left rule) is in models-removal.yaml.
+entries:
+  catmull-1974:
+    type: thesis
+    authors: "Catmull, E."
+    title: "A subdivision algorithm for computer display of curved surfaces"
+    institution: "University of Utah, Department of Computer Science (UTEC-CSc-74-133)"
+    year: 1974
+    pages: "the depth (z) buffer: keep, per pixel, the nearest surface drawn so far"
+  sutherland-hodgman-1974:
+    type: article
+    authors: "Sutherland, I.E.; Hodgman, G.W."
+    title: "Reentrant polygon clipping"
+    venue: "Communications of the ACM 17(1), 32-42"
+    year: 1974
+    doi: "10.1145/360767.360802"
+    pages: "clipping a polygon against one plane at a time; intersection points by linear interpolation"
+  gouraud-1971:
+    type: article
+    authors: "Gouraud, H."
+    title: "Continuous shading of curved surfaces"
+    venue: "IEEE Transactions on Computers C-20(6), 623-629"
+    year: 1971
+    doi: "10.1109/T-C.1971.223313"
+    pages: "intensity computed at the vertices and interpolated linearly across each polygon"
+  blinn-1977:
+    type: conference
+    authors: "Blinn, J.F."
+    title: "Models of light reflection for computer synthesized pictures"
+    venue: "SIGGRAPH '77, Computer Graphics 11(2), 192-198"
+    year: 1977
+    doi: "10.1145/563858.563893"
+    pages: "specular term with the half vector H = (L + V)/|L + V|: k_s (N . H)^n"
+  williams-1978:
+    type: conference
+    authors: "Williams, L."
+    title: "Casting curved shadows on curved surfaces"
+    venue: "SIGGRAPH '78, Computer Graphics 12(3), 270-274"
+    year: 1978
+    doi: "10.1145/800248.807402"
+    pages: "shadow maps: depth image from the light, a point is lit when it is not farther than the stored depth"
+  reeves-1987:
+    type: conference
+    authors: "Reeves, W.T.; Salesin, D.H.; Cook, R.L."
+    title: "Rendering antialiased shadows with depth maps"
+    venue: "SIGGRAPH '87, Computer Graphics 21(4), 283-291"
+    year: 1987
+    doi: "10.1145/37402.37435"
+    pages: "percentage-closer filtering: fraction of the depth-map samples around the point that pass the test; depth bias"
+  porter-duff-1984:
+    type: conference
+    authors: "Porter, T.; Duff, T."
+    title: "Compositing digital images"
+    venue: "SIGGRAPH '84, Computer Graphics 18(3), 253-259"
+    year: 1984
+    doi: "10.1145/800031.808606"
+    pages: "the over operator c = a_A c_A + (1 - a_A) c_B; additive (plus) compositing"
+  foley-1990:
+    type: book
+    authors: "Foley, J.D.; van Dam, A.; Feiner, S.K.; Hughes, J.F."
+    title: "Computer Graphics: Principles and Practice"
+    edition: 2
+    publisher: "Addison-Wesley, Reading MA"
+    year: 1990
+    isbn: "0-201-12110-7"
+    pages: "6.5 perspective and parallel projections, 15.4 z-buffer, 16.2 illumination models (ambient, diffuse, specular), 16.2.4 Gouraud shading, 14.10 supersampling"
+  iec-61966-2-1-1999:
+    type: standard
+    authors: "IEC"
+    title: "IEC 61966-2-1:1999 Multimedia systems and equipment - Colour measurement and management - Part 2-1: Colour management - Default RGB colour space - sRGB"
+    publisher: "International Electrotechnical Commission, Geneva"
+    year: 1999
+    pages: "XYZ (D65) to linear sRGB matrix; transfer function C' = 12.92 C (C <= 0.0031308), 1.055 C^(1/2.4) - 0.055 above"
+  cie-015-2018:
+    type: standard
+    authors: "CIE"
+    title: "CIE 015:2018 Colorimetry, 4th edition"
+    publisher: "Commission Internationale de l'Eclairage, Vienna"
+    year: 2018
+    doi: "10.25039/TR.015.2018"
+    pages: "CIE 1931 standard colorimetric observer: colour-matching functions x(l), y(l), z(l), 360-830 nm; tristimulus integrals"
+  wyman-2013-cmf:
+    type: article
+    authors: "Wyman, C.; Sloan, P.-P.; Shirley, P."
+    title: "Simple analytic approximations to the CIE XYZ color matching functions"
+    venue: "Journal of Computer Graphics Techniques 2(2), 1-11"
+    year: 2013
+    url: "https://jcgt.org/published/0002/02/01/"
+    accessed: 2026-11-03
+    pages: "equation 4 and table 1: multi-lobe piecewise Gaussian fit of the CIE 1931 observer; mean squared errors 3.1e-5, 7.1e-6, 1.6e-5 (x, y, z), below the within-observer variance of the experiments"
+  planck-1901:
+    type: article
+    authors: "Planck, M."
+    title: "Ueber das Gesetz der Energieverteilung im Normalspectrum"
+    venue: "Annalen der Physik 309(3), 553-563"
+    year: 1901
+    doi: "10.1002/andp.19013090310"
+    pages: "spectral radiance of a black body B(l, T) = 2 h c^2 / l^5 / (exp(h c / (l k T)) - 1)"
+  codata-2018:
+    type: article
+    authors: "Tiesinga, E.; Mohr, P.J.; Newell, D.B.; Taylor, B.N."
+    title: "CODATA recommended values of the fundamental physical constants: 2018"
+    venue: "Reviews of Modern Physics 93, 025010"
+    year: 2021
+    doi: "10.1103/RevModPhys.93.025010"
+    pages: "exact values since the 2019 SI: h = 6.62607015e-34 J s, c = 299 792 458 m/s, k = 1.380649e-23 J/K"
+  draper-1847:
+    type: article
+    authors: "Draper, J.W."
+    title: "On the production of light by heat"
+    venue: "The London, Edinburgh and Dublin Philosophical Magazine and Journal of Science, series 3, 30(202), 345-360"
+    year: 1847
+    pages: "all solid bodies begin to glow (dull red) at the same temperature, about 977 F (525 C, the 'Draper point', 798 K), seen in a darkened room"
+  wagner-pruss-2002:
+    type: article
+    authors: "Wagner, W.; Pruss, A."
+    title: "The IAPWS formulation 1995 for the thermodynamic properties of ordinary water substance for general and scientific use"
+    venue: "Journal of Physical and Chemical Reference Data 31(2), 387-535"
+    year: 2002
+    doi: "10.1063/1.1461829"
+    pages: "saturation temperature at 101.325 kPa: 373.124 K (99.974 C, ITS-90)"
+  morton-taylor-turner-1956:
+    type: article
+    authors: "Morton, B.R.; Taylor, G.I.; Turner, J.S."
+    title: "Turbulent gravitational convection from maintained and instantaneous sources"
+    venue: "Proceedings of the Royal Society of London A 234(1196), 1-23"
+    year: 1956
+    doi: "10.1098/rspa.1956.0011"
+    pages: "plume from a point heat source: centre-line velocity w ~ (g Q / (rho cp T))^(1/3) z^(-1/3); entrainment"
+  smith-vanderwalt-2015:
+    type: web
+    authors: "Smith, N.J.; van der Walt, S."
+    title: "A better default colormap for Matplotlib (viridis, magma, inferno, plasma)"
+    venue: "SciPy 2015; https://bids.github.io/colormap/"
+    year: 2015
+    url: "https://bids.github.io/colormap/"
+    accessed: 2026-11-03
+    pages: "perceptually uniform sequential colour maps (CAM02-UCS lightness monotonic), readable in grey scale and by viewers with colour-vision deficiency"
+  nunez-2018-cividis:
+    type: article
+    authors: "Nunez, J.R.; Anderton, C.R.; Renslow, R.S."
+    title: "Optimizing colormaps with consideration for color vision deficiency to enable accurate interpretation of scientific data"
+    venue: "PLoS ONE 13(7), e0199239"
+    year: 2018
+    doi: "10.1371/journal.pone.0199239"
+    pages: "cividis: lightness-linear map that looks the same with deuteranopia"
+  harrower-brewer-2003:
+    type: article
+    authors: "Harrower, M.; Brewer, C.A."
+    title: "ColorBrewer.org: an online tool for selecting colour schemes for maps"
+    venue: "The Cartographic Journal 40(1), 27-37"
+    year: 2003
+    doi: "10.1179/000870403235002042"
+    pages: "sequential (Blues) and diverging (RdBu) schemes; a diverging scheme centred on the critical value (zero deviation)"
+  matplotlib-3-11:
+    type: software
+    authors: "The Matplotlib development team"
+    title: "Matplotlib 3.11 colormap reference (matplotlib.colormaps)"
+    year: 2026
+    url: "https://matplotlib.org/stable/gallery/color/colormap_reference.html"
+    accessed: 2026-11-03
+    pages: "256-entry lookup tables of viridis, inferno, magma, plasma, cividis, Blues, RdBu_r used as published"
+  ffmpeg-x264-2026:
+    type: software
+    authors: "FFmpeg developers; VideoLAN x264 developers"
+    title: "FFmpeg 9 with libx264 (H.264/AVC encoder): -fflags +bitexact, -flags +bitexact, -threads 1"
+    year: 2026
+    url: "https://ffmpeg.org/ffmpeg-formats.html"
+    accessed: 2026-11-03
+    pages: "bitexact flags drop the encoder version and timestamps from the container; a single-threaded x264 encode is deterministic for the same build"

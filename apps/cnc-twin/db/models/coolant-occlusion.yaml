@@ -1,0 +1,14 @@
+# Occlusion of the coolant jets (cnctwin/coolant/occlusion.py, docs/models/coolant.md "Occlusion"): the
+# cutting zone a ray must reach, the zone of a tool without a contact, the shadowing finding thresholds.
+# Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: coolant-occlusion
+description: "Cutting-zone spheres, tool zones, finding thresholds"
+params:
+  zone_radius_factor: {value: 1.5, unit: "-", range: [1.0, 2.5], src: est, note: "zone sphere radius = factor x max(tool radius, ap/2, ae/2): rays that wet the tool within about +-90 deg of the engagement, or the work within 1.5 R of the cut centroid, count as reaching the cut (the rotating tool carries the fluid into the engagement within a quarter revolution)"}
+  zone_min_radius_m: {value: 1.0, unit: mm, range: [0.3, 3.0], src: est, note: "smallest zone (micro tools, nose radius of turning inserts)"}
+  tool_zone_height_ratio: {value: 1.0, unit: "-", range: [0.5, 2.0], src: est, note: "zone of a tool without a contact: centred this many tool radii above the tip on the axis"}
+  shadow_warning_reach: {value: 0.5, unit: "-", range: [0.2, 0.8], src: est, note: "coolant_shadowing warning when less than this fraction of the flow aimed at a cut reaches it"}
+  shadow_recover_reach: {value: 0.7, unit: "-", range: [0.3, 0.9], src: est, note: "hysteresis: a new finding needs the reach to have recovered above this first"}
+  shadow_min_flow_m3_s: {value: 1.667e-6, unit: "-", src: est, note: "SI value, m3/s (0.1 l/min): an aimed flow below this is treated as no aimed flow"}

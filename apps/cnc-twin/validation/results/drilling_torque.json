@@ -1,0 +1,212 @@
+{
+ "budget": {
+  "components": {},
+  "metric": "relative error of the simulated steady drilling torque",
+  "note": "Torque comes mostly from the lips (oblique cutting at known speed), so it is predicted better than the thrust; same evidence as drilling_thrust (luo-2021-al7075-drilling-thrust-torque). The one available torque reference is itself doubtful (see its case notes).",
+  "pct": 15.0,
+  "src": "est"
+ },
+ "calibration_dependent": null,
+ "cases": [
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "assumed: not stated; typical type-N helix",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: two-flute DIN 338 twist drill",
+     "src": "est",
+     "value": 2
+    },
+    {
+     "input": "setup.tool.point_angle_deg",
+     "note": "assumed: not stated; the usual point of DIN 338 type N drills (standard not read in this run)",
+     "src": "est",
+     "value": 118
+    },
+    {
+     "input": "setup.tool.web_thickness_mm",
+     "note": "assumed: not stated; typical jobber-drill web; the cross-sharpened point shortens the chisel edge",
+     "src": "est",
+     "value": "0.15 D"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: no coolant is mentioned in the source",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'drilling_torque'",
+   "file": "validation/cases/drilling_torque/torque-drill-42crmo4-krivokapic2020-hss.yaml",
+   "id": "torque-drill-42crmo4-krivokapic2020-hss",
+   "location": "Sect. 2 (setup, Tables 1-5), Sect. 3.1 and Table 6 (mean torque M for VB = 0, 0.02d, 0.04d)",
+   "material": "aisi4140-qt30",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_torque",
+   "src": "krivokapic-2020-42crmo4-drilling-torque",
+   "status": "no_harness",
+   "uncertainty_pct": 1.2
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: two-flute twist drill",
+     "src": "est",
+     "value": 2
+    },
+    {
+     "input": "setup.tool.point_angle_deg",
+     "note": "assumed: not stated (common point of general-purpose HSS drills)",
+     "src": "est",
+     "value": 118
+    },
+    {
+     "input": "setup.tool.web_thickness",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": "0.15 D"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: no coolant is mentioned in the source",
+     "src": "est",
+     "value": "dry"
+    },
+    {
+     "input": "setup.conditions.hole_depth_mm",
+     "note": "assumed: not stated in the text (shown only in the sample drawing, Fig. 4b, not read)",
+     "src": "est",
+     "value": 15
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'drilling_torque'",
+   "file": "validation/cases/drilling_torque/torque-drill-al2024-craciun2024-hss.yaml",
+   "id": "torque-drill-al2024-craciun2024-hss",
+   "location": "Sect. 2 (setup, Tables 1-2), Sect. 2 text (selection of the stabilised range, averaging), Table 3 (Mz per run)",
+   "material": "al7075-t7351",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_torque",
+   "src": "craciun-2024-al2024-drilling-forces",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.chisel_edge_angle_deg",
+     "note": "assumed: not stated; typical conventional point (est.)",
+     "src": "est",
+     "value": 125
+    },
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: not stated; a standard two-flute twist drill is assumed",
+     "src": "est",
+     "value": 2
+    },
+    {
+     "input": "setup.tool.web_thickness_mm",
+     "note": "assumed: not stated; ~0.15 D, typical of a standard jobber drill (est.)",
+     "src": "est",
+     "value": 1.5
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'drilling_torque'",
+   "file": "validation/cases/drilling_torque/torque-drill-al7075-luo2021.yaml",
+   "id": "torque-drill-al7075-luo2021",
+   "location": "Fig. 9a-c, 'Experimental' markers (digitised; gridlines every 0.2 or 0.5 Nm)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_torque",
+   "src": "luo-2021-al7075-drilling-thrust-torque",
+   "status": "no_harness",
+   "uncertainty_pct": 1.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: two-flute twist drill (not stated in words)",
+     "src": "est",
+     "value": 2
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'drilling_torque'",
+   "file": "validation/cases/drilling_torque/torque-drill-c45-hnatik2025-carbide.yaml",
+   "id": "torque-drill-c45-hnatik2025-carbide",
+   "location": "Sects. 2.1-2.3 (material, machine, tools, constant factors), Table 2 (factor levels), Sect. 3 and Fig. 8 a-d (torque Mc versus fn for C45, black squares with error bars; digitised), Sect. 3 text (feed-averaged Mc)",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_torque",
+   "src": "hnatik-2025-c45-drilling-torque",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": 30
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'drilling_torque'",
+   "file": "validation/cases/drilling_torque/torque-drill-ti64-beranoagirre2018-pilot.yaml",
+   "id": "torque-drill-ti64-beranoagirre2018-pilot",
+   "location": "Sect. 2.2-2.3 (machine, dynamometer, plan, tool, coolant), Table 1 (Ti-6Al-4V properties), Table 2 (vc, n, f), Table 4 (measured Fz and Tc for Ti-6Al-4V, calibration tests)",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_torque",
+   "src": "beranoagirre-2018-tial-ti64-drilling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  }
+ ],
+ "format": "cnctwin-validation-results",
+ "harness": "",
+ "independent": null,
+ "quantity": "drilling_torque",
+ "rule": "tolerance = max(budget_pct/100 x |reference| (for temperatures: x the rise above ambient), 2 x the reference's uncertainty); a case passes when every compared value lies within its tolerance; a quantity passes when at least 80 % of its cases pass and no case misses by more than twice its tolerance",
+ "verdict": "no harness",
+ "verdict_reason": "no harness registered yet",
+ "version": 1
+}

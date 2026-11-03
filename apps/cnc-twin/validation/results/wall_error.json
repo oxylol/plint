@@ -1,0 +1,157 @@
+{
+ "budget": null,
+ "calibration_dependent": null,
+ "cases": [
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.coating",
+     "note": "not stated",
+     "src": "est",
+     "value": "none"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'wall_error'",
+   "file": "validation/cases/wall_error/wallerror-budak1994-aisi1040-carbide-up-radialwidth.yaml",
+   "id": "wallerror-budak1994-aisi1040-carbide-up-radialwidth",
+   "location": "Sect. 5.3-5.4.2 (optimal-immersion method and tests), Table 5.1 case 3, Fig. 5.9 (maximum normal force) and Fig. 5.10 (maximum surface error), both digitised (thesis pp. 120-121)",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "wall_error",
+   "src": "budak-1994-thin-wall-milling-thesis",
+   "status": "no_harness",
+   "uncertainty_pct": 8.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'wall_error'",
+   "file": "validation/cases/wall_error/wallerror-budak1994-al7075-hss-halfimmersion-down.yaml",
+   "id": "wallerror-budak1994-al7075-hss-halfimmersion-down",
+   "location": "Sect. 5.4.1 (test description), Table 5.1 case 2 (conditions, coefficients, gauge length, clamping stiffness), Eq. 4.4-4.5 (force law), Fig. 5.6 (measured profiles, digitised; thesis p. 117)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "wall_error",
+   "src": "budak-1994-thin-wall-milling-thesis",
+   "status": "no_harness",
+   "uncertainty_pct": 3.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'wall_error'",
+   "file": "validation/cases/wall_error/wallerror-budak1994-al7075-hss-halfimmersion-up.yaml",
+   "id": "wallerror-budak1994-al7075-hss-halfimmersion-up",
+   "location": "Sect. 5.4.1 (test description), Table 5.1 case 1 (conditions, coefficients, gauge length, clamping stiffness), Eq. 4.4-4.5 (force law), Sect. 3.3.1 and 5.2 (cantilever tool model), Fig. 5.5 (measured profiles, digitised; thesis p. 117)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "wall_error",
+   "src": "budak-1994-thin-wall-milling-thesis",
+   "status": "no_harness",
+   "uncertainty_pct": 3.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'wall_error'",
+   "file": "validation/cases/wall_error/wallerror-budak1994-endmill-static-stiffness.yaml",
+   "id": "wallerror-budak1994-endmill-static-stiffness",
+   "location": "Sect. 3.3.1 (cantilever-on-spring model, Eq. 3.58), Sect. 3.3.2 (measurements and predictions, thesis pp. 53-54)",
+   "material": null,
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "wall_error",
+   "src": "budak-1994-thin-wall-milling-thesis",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.tool_class",
+     "note": "material of the end mill not stated",
+     "src": "est",
+     "value": "carbide"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'wall_error'",
+   "file": "validation/cases/wall_error/wallerror-insperger2006-sle-down10pct-ap0.4.yaml",
+   "id": "wallerror-insperger2006-sle-down10pct-ap0.4",
+   "location": "Sect. 4 (SLE definition, Eq. 24, Fig. 5), Sect. 5 (setup), Fig. 7(b) (crosses = experimental SLE, digitised)",
+   "material": "al6061-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "wall_error",
+   "src": "insperger-2006-chatter-sle",
+   "status": "no_harness",
+   "uncertainty_pct": 6.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.tool_class",
+     "note": "material of the end mill not stated",
+     "src": "est",
+     "value": "carbide"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'wall_error'",
+   "file": "validation/cases/wall_error/wallerror-insperger2006-sle-down10pct-ap0.8.yaml",
+   "id": "wallerror-insperger2006-sle-down10pct-ap0.8",
+   "location": "Sect. 4 (SLE definition, Eq. 24, Fig. 5), Sect. 5 (setup), Fig. 7(c) (crosses = experimental SLE, digitised)",
+   "material": "al6061-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "wall_error",
+   "src": "insperger-2006-chatter-sle",
+   "status": "no_harness",
+   "uncertainty_pct": 6.0
+  }
+ ],
+ "format": "cnctwin-validation-results",
+ "harness": "",
+ "independent": null,
+ "quantity": "wall_error",
+ "rule": "tolerance = max(budget_pct/100 x |reference| (for temperatures: x the rise above ambient), 2 x the reference's uncertainty); a case passes when every compared value lies within its tolerance; a quantity passes when at least 80 % of its cases pass and no case misses by more than twice its tolerance",
+ "verdict": "no harness",
+ "verdict_reason": "no harness registered yet",
+ "version": 1
+}

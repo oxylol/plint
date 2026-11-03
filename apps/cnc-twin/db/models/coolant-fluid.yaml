@@ -1,0 +1,38 @@
+# Fluid properties the coolant models need beyond the coolant database file (cnctwin/coolant/fluid.py,
+# docs/models/coolant.md "Fluid"): air (carrier of air blast and MQL, film-boiling radiation partner),
+# vapour of water-based fluids and of oils (film boiling), and fallbacks for fluid files that leave a
+# property out. Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: coolant-fluid
+description: "Air (Sutherland), water vapour at 1 atm, oil vapour, fallbacks for missing fluid properties"
+params:
+  air_ref_temp_K: {value: 273.15, unit: K, src: white-2006-viscous-fluid-flow, note: "Sutherland reference temperature"}
+  air_mu_ref_Pa_s: {value: 1.716e-5, unit: Pa_s, src: white-2006-viscous-fluid-flow, note: "Table 1-2; mu = mu0 (T/T0)^1.5 (T0 + S)/(T + S)"}
+  air_sutherland_mu_K: {value: 110.4, unit: K, src: white-2006-viscous-fluid-flow}
+  air_k_ref_W_mK: {value: 0.0241, unit: W_mK, src: white-2006-viscous-fluid-flow, note: "Table 1-3"}
+  air_sutherland_k_K: {value: 194.0, unit: K, src: white-2006-viscous-fluid-flow}
+  air_gas_constant_J_kgK: {value: 287.05, unit: J_kgK, src: est, note: "universal gas constant 8.314462618 J/(mol K) (CODATA 2018) / molar mass of dry air 28.9647 g/mol"}
+  air_gamma: {value: 1.4, unit: "-", src: anderson-2003-compressible-flow, note: "ratio of specific heats of air near room temperature"}
+  water_vapour_gas_constant_J_kgK: {value: 461.52, unit: J_kgK, src: est, note: "8.314462618 J/(mol K) / 18.01528 g/mol; Clausius-Clapeyron shift of the saturation temperature under jet stagnation pressure"}
+  # Water vapour (steam) at 1 atm, Incropera Table A.4: film-boiling vapour of water-based fluids
+  vapour_water_temp_K: {value: [380, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850], unit: K, src: incropera-2007-heat-mass-transfer, note: "Table A.4 water vapor at 1 atm (values recalled from the table, not re-read in this session); held constant outside"}
+  vapour_water_rho_kg_m3: {value: [0.5863, 0.5542, 0.4902, 0.4405, 0.4005, 0.3652, 0.3380, 0.3140, 0.2931, 0.2739, 0.2579], unit: kg_m3, src: incropera-2007-heat-mass-transfer}
+  vapour_water_cp_J_kgK: {value: [2060, 2014, 1980, 1985, 1997, 2026, 2056, 2085, 2119, 2152, 2186], unit: J_kgK, src: incropera-2007-heat-mass-transfer}
+  vapour_water_mu_Pa_s: {value: [1.271e-5, 1.344e-5, 1.525e-5, 1.704e-5, 1.884e-5, 2.067e-5, 2.247e-5, 2.426e-5, 2.604e-5, 2.786e-5, 2.969e-5], unit: Pa_s, src: incropera-2007-heat-mass-transfer}
+  vapour_water_k_W_mK: {value: [0.0246, 0.0261, 0.0299, 0.0339, 0.0379, 0.0422, 0.0464, 0.0505, 0.0549, 0.0592, 0.0637], unit: W_mK, src: incropera-2007-heat-mass-transfer}
+  # Oil vapour (straight oils, MQL esters): no property data were available to this session
+  oil_vapour_gas_constant_J_kgK: {value: 27.7, unit: J_kgK, src: est, note: "ideal gas of molar mass 0.30 kg/mol (C20-C22 hydrocarbons of a VG 22 base oil, and esters of similar size)"}
+  oil_vapour_cp_J_kgK: {value: 2500, unit: J_kgK, range: [2000, 3000], src: est, note: "heavy hydrocarbon vapours at 600-700 K"}
+  oil_vapour_mu_Pa_s: {value: 1.0e-5, unit: Pa_s, range: [0.7e-5, 1.4e-5], src: est, note: "heavy organic vapours at 600-700 K"}
+  oil_vapour_k_W_mK: {value: 0.030, unit: W_mK, range: [0.02, 0.045], src: est, note: "heavy organic vapours at 600-700 K"}
+  # Fallbacks when a coolant file gives no value
+  water_surface_tension_N_per_m: {value: 0.0720, unit: N_per_m, src: nist-webbook-water-2026, note: "water at 25 degC (71.99 mN/m), recalled; for kind water"}
+  oil_surface_tension_N_per_m: {value: 0.030, unit: N_per_m, range: [0.028, 0.032], src: est, note: "mineral oils and esters 28-32 mN/m at 20 degC (as the oil files of db/coolants)"}
+  water_boiling_K: {value: 373.12, unit: K, src: nist-webbook-water-2026, note: "saturation temperature at 101.325 kPa (99.97 degC)"}
+  water_latent_heat_J_kg: {value: 2256.4, unit: kJ_kg, src: nist-webbook-water-2026, note: "at 100 degC: vapour 2675.6 - liquid 419.17 kJ/kg"}
+  water_latent_heat_25C_J_kg: {value: 2441.7, unit: kJ_kg, src: nist-webbook-water-2026, note: "at 25 degC, for evaporation from the tank (recalled from the saturation table)"}
+  water_leidenfrost_K: {value: 193, unit: degC, range: [193, 257], src: wikipedia-leidenfrost-2026, note: "pure water on smooth hot metal; used when a water-based fluid file gives no leidenfrost_degC"}
+  oil_leidenfrost_above_boiling_dK: {value: 60, unit: dK, range: [30, 120], src: est, note: "as the straight-oil file: film boiling starts ~60 K above the initial boiling point when a file gives only boiling_degC"}
+  oil_boiling_K: {value: 320, unit: degC, range: [280, 400], src: est, note: "initial boiling point of a light mineral base oil, when an oil file gives none"}
+  oil_latent_heat_J_kg: {value: 250, unit: kJ_kg, range: [200, 350], src: est, note: "vaporisation enthalpy of light mineral oils and esters, order of magnitude (as the oil files)"}

@@ -1,0 +1,168 @@
+# Sources of the cutting domain (cnctwin/cutting, docs/models/cutting.md): surface memory and
+# elastic recovery, process damping, flank wear forces, nose-radius turning, forming taps, drilling,
+# tapping faults, runout, variable pitch, spindle duty. The equations used are reproduced in the model
+# doc; values in db/models/cutting-*.yaml attributed to a key are that source's own constants, the
+# others are estimates (src: est). Keys already defined elsewhere (altintas-2012-mfg-automation,
+# smithey-2001-worn-tool-forces, kienzle-1952, hill-1950-plasticity, budak-altintas-armarego-1996,
+# dogra-kapoor-devor-2002, martellotti-1941, merdol-altintas-2004, lee-altintas-1996) are cited as they are.
+format: cnctwin-bibliography
+version: 1
+entries:
+  jun-2006-microendmilling-dynamics:
+    type: article
+    authors: "Jun, M.B.G.; Liu, X.; DeVor, R.E.; Kapoor, S.G."
+    title: "Investigation of the dynamics of microend milling - Part I: Model development"
+    venue: "ASME Journal of Manufacturing Science and Engineering 128(4), 893-900"
+    year: 2006
+    note: "chip thickness model with the minimum chip thickness and elastic recovery of the ploughed layer (full recovery below h_min); the accumulated uncut thickness is seen by the next tooth"
+  vogler-2004-micro-endmilling-surface:
+    type: article
+    authors: "Vogler, M.P.; DeVor, R.E.; Kapoor, S.G."
+    title: "On the modeling and analysis of machining performance in micro-endmilling, Part I: Surface generation"
+    venue: "ASME Journal of Manufacturing Science and Engineering 126(4), 685-694"
+    year: 2004
+    note: "minimum chip thickness effect in surface generation; ploughing and shearing regimes"
+  liu-2007-microendmilling-surface:
+    type: article
+    authors: "Liu, X.; DeVor, R.E.; Kapoor, S.G."
+    title: "Model-based analysis of the surface generation in microendmilling - Part I: Model development"
+    venue: "ASME Journal of Manufacturing Science and Engineering 129(3), 453-460"
+    year: 2007
+    note: "elastic recovery of the machined surface as a function of the chip thickness relative to the minimum chip thickness"
+  wu-1989-process-damping:
+    type: article
+    authors: "Wu, D.W."
+    title: "A new approach of formulating the transfer function for dynamic cutting processes"
+    venue: "ASME Journal of Engineering for Industry 111(1), 37-47"
+    year: 1989
+    note: "ploughing force proportional to the volume of material displaced under the flank (indentation coefficient K_sp)"
+  altintas-2008-process-damping:
+    type: article
+    authors: "Altintas, Y.; Eynian, M.; Onozuka, H."
+    title: "Identification of dynamic cutting force coefficients and chatter stability with process damping"
+    venue: "CIRP Annals - Manufacturing Technology 57(1), 371-374"
+    year: 2008
+    note: "process damping from the flank (wear land) indentation: indented area and the linearised damping coefficient C = K_sp b L_w^2 / (4 V)"
+  ahmadi-ismail-2011-process-damping:
+    type: article
+    authors: "Ahmadi, K.; Ismail, F."
+    title: "Analytical stability lobes including nonlinear process damping effect on machining chatter"
+    venue: "International Journal of Machine Tools and Manufacture 51(4), 296-308"
+    year: 2011
+    note: "nonlinear indented area of the flank with clearance angle and the one-sided (into the material) interference"
+  budak-tunc-2010-process-damping:
+    type: article
+    authors: "Budak, E.; Tunc, L.T."
+    title: "Identification and modeling of process damping in turning and milling using a new approach"
+    venue: "CIRP Annals - Manufacturing Technology 59(1), 403-408"
+    year: 2010
+    note: "process damping from the contact of the flank and the edge with the wavy surface"
+  waldorf-1998-ploughing-slipline:
+    type: article
+    authors: "Waldorf, D.J.; DeVor, R.E.; Kapoor, S.G."
+    title: "A slip-line field for ploughing during orthogonal cutting"
+    venue: "ASME Journal of Manufacturing Science and Engineering 120(4), 693-699"
+    year: 1998
+    note: "ploughing (edge) forces of a rounded edge; with smithey-2001-worn-tool-forces the basis of the flank wear-land forces per unit land area"
+  colwell-1954-chip-flow:
+    type: article
+    authors: "Colwell, L.V."
+    title: "Predicting the angle of chip flow for single-point cutting tools"
+    venue: "Transactions of the ASME 76, 199-204"
+    year: 1954
+    note: "the chip flows normal to the chord joining the ends of the engaged cutting edge (nose radius tools)"
+  young-1987-nose-radius:
+    type: article
+    authors: "Young, H.T.; Mathew, P.; Oxley, P.L.B."
+    title: "Allowing for nose radius effects in predicting the chip flow direction and cutting forces in bar turning"
+    venue: "Proceedings of the Institution of Mechanical Engineers, Part C 201(3), 213-226"
+    year: 1987
+    note: "equivalent cutting edge (Colwell's chord) with the equivalent chip thickness A / L for nose-radius turning forces"
+  kaymakci-2012-unified-force-model:
+    type: article
+    authors: "Kaymakci, M.; Kilic, Z.M.; Altintas, Y."
+    title: "Unified cutting force model for turning, boring, drilling and milling operations"
+    venue: "International Journal of Machine Tools and Manufacture 54-55, 34-45"
+    year: 2012
+    note: "one discretised edge-element force model for all processes (local chip thickness and force directions per element)"
+  chowdhary-2003-thread-forming-forces:
+    type: article
+    authors: "Chowdhary, S.; DeVor, R.E.; Kapoor, S.G."
+    title: "Modeling forces including elastic recovery for internal thread forming"
+    venue: "ASME Journal of Manufacturing Science and Engineering 125(4), 681-688"
+    year: 2003
+    doi: "10.1115/1.1619178"
+    accessed: 2026-11-03
+    url: "https://experts.illinois.edu/en/publications/modeling-forces-including-elastic-recovery-for-internal-thread-fo/"
+    note: "normal and frictional forces on the entry- and back-taper lobes proportional to the lobe-workpiece contact areas; elastic recovery significantly increases thrust and torque (abstract read)"
+  chowdhary-2002-thread-forming:
+    type: article
+    authors: "Chowdhary, S.; Kapoor, S.G.; Ozdoganlar, O.B.; DeVor, R.E."
+    title: "Modeling and analysis of internal thread forming"
+    venue: "Transactions of NAMRI/SME 30 (NAMRC XXX), 1-8"
+    year: 2002
+    accessed: 2026-11-03
+    url: "https://experts.illinois.edu/en/publications/modeling-and-analysis-of-internal-thread-forming-3/"
+    note: "mechanistic thrust and torque of a forming tap from the tool-workpiece contact area (abstract read)"
+  agapiou-1994-tapping:
+    type: article
+    authors: "Agapiou, J.S."
+    title: "Evaluation of the effect of high speed machining on tapping"
+    venue: "ASME Journal of Engineering for Industry 116(4), 457-462"
+    year: 1994
+    note: "tapping torques of cutting and forming taps; forming torque rises with thread engagement (smaller pre-drilled hole, more displaced material)"
+  mezentsev-2002-tapping-faults:
+    type: article
+    authors: "Mezentsev, O.A.; DeVor, R.E.; Kapoor, S.G."
+    title: "Prediction of thread quality by detection and estimation of tapping faults"
+    venue: "ASME Journal of Manufacturing Science and Engineering 124(3), 643-650"
+    year: 2002
+    note: "tapping faults (axial misalignment, runout, tap-spindle synchronisation error) and their effect on forces and thread geometry"
+  chandrasekharan-1998-drill-forces:
+    type: article
+    authors: "Chandrasekharan, V.; Kapoor, S.G.; DeVor, R.E."
+    title: "A mechanistic model to predict the cutting force system for arbitrary drill point geometry"
+    venue: "ASME Journal of Manufacturing Science and Engineering 120(3), 563-570"
+    year: 1998
+    note: "drill lip elements as oblique cutting and the chisel edge as secondary cutting plus indentation; thrust and torque as sums over the elements"
+  kline-devor-1983-runout:
+    type: article
+    authors: "Kline, W.A.; DeVor, R.E."
+    title: "The effect of runout on cutting geometry and forces in end milling"
+    venue: "International Journal of Machine Tool Design and Research 23(2-3), 123-140"
+    year: 1983
+    note: "chip thickness with runout: each tooth cuts the surface left by the previous effective tooth; teeth inside the previous surface skip"
+  altintas-1999-variable-pitch:
+    type: article
+    authors: "Altintas, Y.; Engin, S.; Budak, E."
+    title: "Analytical stability prediction and design of variable pitch cutters"
+    venue: "ASME Journal of Manufacturing Science and Engineering 121(2), 173-178"
+    year: 1999
+    note: "regeneration with a different delay per tooth: tau_j = pitch_j / omega"
+  tlusty-ismail-1981-nonlinearity:
+    type: article
+    authors: "Tlusty, J.; Ismail, F."
+    title: "Basic non-linearity in machining chatter"
+    venue: "CIRP Annals 30(1), 299-304"
+    year: 1981
+    note: "the tool leaving the cut (h <= 0) does not cut and does not renew the surface: the memory is updated only by passages that cut"
+  iec-60034-1-2017:
+    type: standard
+    title: "IEC 60034-1:2017 Rotating electrical machines - Part 1: Rating and performance"
+    institution: "International Electrotechnical Commission"
+    year: 2017
+    note: "duty types S1 (continuous), S2 (short-time), S6 (continuous operation periodic duty) used to read spindle motor ratings"
+  johnson-1985-contact-mechanics:
+    type: book
+    authors: "Johnson, K.L."
+    title: "Contact Mechanics"
+    publisher: "Cambridge University Press"
+    year: 1985
+    note: "geometric interference of curved bodies: contact half-length sqrt(2 R_eff delta) with 1 / R_eff = 1 / R1 - 1 / R2 for a convex body in a concave seat"
+  woxen-1932-equivalent-chip:
+    type: report
+    authors: "Woxén, R."
+    title: "A theory and an equation for the life of lathe tools"
+    venue: "Ingeniörsvetenskapsakademiens Handlingar 119, Stockholm"
+    year: 1932
+    note: "equivalent chip thickness: uncut chip area divided by the engaged edge length, the single chip-thickness measure of a nose-radius tool (lumped turning forces)"

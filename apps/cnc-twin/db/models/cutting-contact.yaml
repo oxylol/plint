@@ -1,0 +1,49 @@
+# Contact models of cnctwin.cutting (docs/models/cutting.md "Surface memory", "Process damping",
+# "Forming taps"): elastic recovery of the memory update, the flank-interference (process damping)
+# geometry and the thread-forming lobe model. Read in SI by cnctwin.db.models.params("cutting-contact").
+format: cnctwin-model-params
+version: 1
+model: cutting-contact
+description: "Elastic recovery transition, process-damping flank geometry, thread-forming lobe contact"
+params:
+  recovery_transition_ratio:
+    value: 1.0
+    unit: "-"
+    range: [0.0, 4.0]
+    src: est
+    note: "width of the partial-removal band of the surface memory in units of h_min: a passage with h between h_min and (1 + ratio) h_min moves the remembered surface by (h - h_min) / (ratio h_min) of the way to the edge. Below h_min the ploughed layer recovers completely (jun-2006-microendmilling-dynamics: elastic recovery rate 100 % below the minimum chip thickness); the band [h_min, 2 h_min] is the coexistence of ploughing and shearing described by vogler-2004-micro-endmilling-surface, its width and the linear shape are assumed"
+  pd_edge_land_per_radius:
+    value: 1.0
+    unit: "-"
+    range: [0.0, 3.0]
+    src: est
+    note: "zero-clearance contact length under a rounded edge per unit hone radius, added to the flank wear land VB for the indented area of the process-damping model (altintas-2008-process-damping, budak-tunc-2010-process-damping); the material below the stagnation point is in contact over about one edge radius behind the lowest point of the hone; assumed"
+  pd_max_flank_m:
+    value: 0.5
+    unit: mm
+    range: [0.05, 3.0]
+    src: est
+    note: "largest length behind the edge over which the clearance face can indent a wavy surface (the primary clearance land of solid tools and inserts is 0.3-1 mm wide); bounds the indented area when the path slope exceeds the clearance angle; assumed"
+  forming_pressure_factor:
+    value: 5.141592653589793
+    unit: "-"
+    src: hill-1950-plasticity
+    note: "(2 + pi): mean pressure under a blunt indenter on a rigid-plastic half-space in units of the shear flow stress k (Prandtl), used for the contact pressure of a thread-forming lobe (the same constant as mechanics-contact indentation_pressure_factor)"
+  forming_strain:
+    value: 0.8
+    unit: "-"
+    range: [0.3, 2.0]
+    src: est
+    note: "representative equivalent plastic strain of the formed thread flank for the flow stress of the forming pressure (strains of 0.5-1.5 are reported across the formed profile); the flow stress is the Johnson-Cook strain term A + B eps^n at room temperature (forming is slow and the heat is spread over the flanks); assumed"
+  forming_lobe_relief_per_D:
+    value: 0.004
+    unit: "-"
+    range: [0.001, 0.02]
+    src: est
+    note: "radial relief of a forming-tap lobe (lobe tip to the polygon valley) per tap diameter when the tool item gives none; with the lobe count it sets the lobe's circumferential curvature and so the contact length sqrt(2 rho_eff h) of chowdhary-2003-thread-forming-forces; assumed"
+  forming_recovery_contact_factor:
+    value: 0.3
+    unit: "-"
+    range: [0.0, 1.0]
+    src: est
+    note: "relative lengthening of the lobe contact by the elastic recovery of the formed flank behind the lobe tip; chowdhary-2003-thread-forming-forces find that elastic recovery significantly increases thrust and torque; the value is assumed"

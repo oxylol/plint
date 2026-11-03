@@ -130,6 +130,13 @@ class RemovalContact:
     displaced_volume_m3: float = 0.0        # formed / burr / side flow: re-added, not chips
     geometry: ToolContact = field(default_factory=ToolContact)
     volume_consistency: float = 1.0         # field volume / analytic chip volume this step
+    # additive (removal, docs/models/removal.md "Bus record"): volume_consistency is that of the previous
+    # step (cutting's analytic volume is read from prev); the removed volume per ray family of level 0
+    # (x, y, z: their spread is the field's own representation uncertainty); whether the volume is the polar
+    # field's radial family (turning); the surface event ids [first, next) the step's subtractions gave out
+    removed_volume_xyz_m3: np.ndarray = field(default_factory=_vec3)
+    polar: bool = False
+    surface_ids: tuple = (0, 0)
 
 
 @dataclass
@@ -213,6 +220,24 @@ class CuttingContact:
     section_moment_peak_Nm: np.ndarray = field(default_factory=_empty)  # tool critical sections
     section_stress_peak_Pa: np.ndarray = field(default_factory=_empty)
     recut: np.ndarray = field(default_factory=_empty2(6))    # [tick, tooth, elem, mass_kg, x_M, y_M] (z in surface_events)
+    # additive (cutting, docs/models/cutting.md "Bus record"):
+    emissions: np.ndarray = field(default_factory=_empty2(20))  # chip-emission rows per tooth pass (chips.abi.EMISSION_COLUMNS)
+    displaced_volume_m3: float = 0.0        # forming taps: analytic displaced volume (removal re-adds it to the field)
+    forming_J: float = 0.0                  # forming work (included in ploughing_J)
+    process_damping_J: float = 0.0          # flank-indentation (process damping) dissipation (included in ploughing_J)
+    recut_J: float = 0.0                    # work on recut chips (impulse x edge speed + cutting energy)
+    packing_J: float = 0.0                  # work of the chip-packing torque and force (in shaft/feed work)
+    deflection_work_J: float = 0.0          # work of the cutting forces on the tool/work deflection rates (to dynamics)
+    h_max_step_m: float = 0.0               # largest uncut chip thickness of the step
+    engaged_edge_m: float = 0.0             # mean engaged edge length while in cut
+    pass_time_s: float = 0.0                # mean duration of one engagement (in-cut time / entries)
+    mean_speed_m_s: float = 0.0             # mean cutting speed of the elements in cut
+    omega_mean_rad_s: float = 0.0           # mean |spindle speed| of the step
+    spindle_available_Nm: float = 0.0       # available torque at that speed and gear (0: no curve)
+    refill_missing: int = 0                 # stale memory bins read without a field plane (replay requested)
+    table_over: int = 0                     # evaluations above the coefficient table (linear extrapolation)
+    float_u_max_m: float = 0.0              # largest axial float displacement of a floating tapping holder
+    axis_names: tuple = ()                  # names of the columns of axis_force_N
 
 
 SURFACE_EVENT_COLUMNS = (
@@ -314,6 +339,35 @@ class ChipFeedback:
 # ------------------------------------------------------------------- dynamics (writer: dynamics)
 
 @dataclass
+class DynamicsContact:
+    """Added by dynamics (additive, docs/models/dynamics.md "Bus record"): one system (the active tool of a path
+    against its workpiece) over the step."""
+
+    path: int = 0
+    tool_slot: int = -1
+    workpiece: int = 0
+    n_modes: int = 0
+    vibration_pp_m: float = 0.0             # largest peak-to-peak of the relative deflection components (T0)
+    chatter_index: float = 0.0
+    chatter_freq_Hz: float = 0.0
+    chatter_amp_m: float = 0.0
+    chatter: bool = False                   # an active chatter episode
+    chatter_onset_tick: int = -1            # base tick of the episode's onset (-1: none)
+    modal_energy_J: float = 0.0             # at the end of the step
+    modal_energy_change_J: float = 0.0      # end - start (the basis change excluded)
+    damping_dissipation_J: float = 0.0
+    cutting_work_J: float = 0.0             # work of the cutting forces on the modes (exact first-order hold)
+    cutting_work_quadrature_J: float = 0.0  # the same by impulse x predicted rate (what a force kernel books)
+    unbalance_work_J: float = 0.0           # work of the unbalance forces on the modes
+    base_work_J: float = 0.0                # work of the base excitation (axis accelerations) on the modes
+    basis_change_J: float = 0.0
+    deflection_peak_T0_m: np.ndarray = field(default_factory=_vec3)   # largest |relative deflection| per axis (T0)
+    depth_limit_m: float = float("inf")    # stability limit at the operating point (inf: none known)
+    depth_of_cut_m: float = 0.0
+    structure_version: int = -1             # structure record the modes came from (-1: fallback / machine only)
+
+
+@dataclass
 class DynamicsFrame:
     vibration_pp_m: float = 0.0             # peak-to-peak relative tool-work vibration this step
     chatter_index: float = 0.0              # non-forced / total vibration energy
@@ -322,6 +376,19 @@ class DynamicsFrame:
     damping_dissipation_J: float = 0.0      # structural damping (booked as heat to tool/holder/structure)
     process_damping_J: float = 0.0
     basis_change_J: float = 0.0             # energy difference booked when the modal basis was refreshed
+    # additive (dynamics, docs/models/dynamics.md "Bus record"): process_damping_J stays 0 because the force
+    # kernel's process-damping dissipation (Accum ACC_PROCESS_DAMPING_J) is booked once, by cutting, inside
+    # CuttingContact.ploughing_J; process_damping_total_J reports it. The external work enters the ledger as
+    # SimState.ledger.unbalance_work_J (minus the work done on the modes).
+    contacts: list = field(default_factory=list)       # DynamicsContact per system (path order)
+    chatter_amp_m: float = 0.0
+    chatter_onset_tick: int = -1
+    cutting_work_J: float = 0.0
+    cutting_work_quadrature_J: float = 0.0
+    unbalance_work_J: float = 0.0
+    base_work_J: float = 0.0
+    modal_energy_J: float = 0.0
+    process_damping_total_J: float = 0.0
 
 
 # ------------------------------------------------------------------- thermal (writer: thermal)
@@ -389,6 +456,14 @@ class Jet:
     flow_m3_s: float = 0.0
     half_angle_rad: float = 0.0
     reach_fraction: float = 0.0
+    # additive (coolant, docs/models/coolant.md "Bus record"):
+    diameter_m: float = 0.0                 # jet diameter at the exit (notional fully expanded nozzle for gas)
+    breakup_m: float = float("inf")         # intact length of a liquid jet (Grant & Middleman); inf for gas
+    path_M_m: np.ndarray = field(default_factory=_empty2(3))   # axis trajectory of the latest occlusion job (M)
+    path_q_Pa: np.ndarray = field(default_factory=_empty)       # dynamic pressure 1/2 rho v^2 at those points
+    blocked_by: str = ""                    # occluder of most of the jet's blocked flow ("" none)
+    pump_id: str = ""
+    through_tool: bool = False              # leaves the tool's coolant holes (origin on the tool, rotating)
 
 
 @dataclass
@@ -411,6 +486,26 @@ class CoolantFeedback:
     wetted_cell_m: float = 0.0
     wetted: np.ndarray = field(default_factory=lambda: np.zeros((0, 0), bool))
     flush_pressure_Pa: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))  # on the pile grid
+    # additive (coolant, docs/models/coolant.md "Bus record"):
+    wetted_axes_S: np.ndarray = field(default_factory=lambda: np.eye(3))  # columns e_u, e_v, e_w of the wetted/flush grid in S (= pile_axes_S)
+    aimed_flow_kg_s: dict[int, float] = field(default_factory=dict)       # contact -> mass flow whose unobstructed path enters the cut
+    arriving_flow_kg_s: dict[int, float] = field(default_factory=dict)    # contact -> of it, what reaches the cut
+    contact_shadows: dict[int, dict[str, float]] = field(default_factory=dict)  # contact -> occluder -> fraction of the aimed flow blocked
+    boiling_regime: dict[int, np.ndarray] = field(default_factory=dict)   # contact -> int8 [rake, flank, work]: 0 single phase, 1 nucleate, 2 transition, 3 film
+    lubricant_access: dict[int, float] = field(default_factory=dict)      # contact -> capillary access relative to the database conditions
+    tank_temp_K: float = 293.15
+    tank_volume_m3: float = 0.0
+    concentration_frac: float = 0.0
+    pump_flow_m3_s: dict[str, float] = field(default_factory=dict)        # pump id -> delivered flow (relief bypass excluded)
+    pump_pressure_Pa: dict[str, float] = field(default_factory=dict)      # pump id -> outlet gauge pressure
+    pump_power_W: dict[str, float] = field(default_factory=dict)          # pump id -> shaft power (heat into the fluid)
+    nozzle_flow_m3_s: dict[str, float] = field(default_factory=dict)      # jet id -> flow at the jet state
+    air_flow_m3_s: float = 0.0              # free-air consumption (air blast, MQL carrier, mist)
+    mql_oil_m3_s: float = 0.0
+    heat_in_J: float = 0.0                  # into the tank this step: thermal + chips + pumps
+    heat_out_J: float = 0.0                 # out of it: ambient + evaporation + chiller
+    tank_residual_J: float = 0.0            # tank energy ledger residual of the step
+    occlusion_tick: int = -1                # base tick of the geometry the applied occlusion was traced at (latency)
 
 
 # ------------------------------------------------------------------- wear (writer: wear)
@@ -428,12 +523,34 @@ class ToolWear:
     bue_height_m: np.ndarray = field(default_factory=_empty2(0))
     broken: bool = False
     life_used_fraction: float = 0.0
+    # added by wear (additive, docs/models/wear.md "Bus record"): per element [n_teeth, n_elem]
+    rake_coating_remaining_m: np.ndarray = field(default_factory=_empty2(0))   # coating left in the crater zone
+    chip_depth_m: np.ndarray = field(default_factory=_empty2(0))              # depth of the edge chip (0: none)
+    thermal_damage: np.ndarray = field(default_factory=_empty2(0))            # Miner sum of thermal-cycle fatigue
+    comb_crack_depth_m: np.ndarray = field(default_factory=_empty2(0))        # thermal (comb) crack depth (0: none)
+    # added by wear: per critical section (tooling's sections, ascending z) and per tool
+    section_fatigue_damage: np.ndarray = field(default_factory=_empty)        # Miner sum of the bending/torsion cycles
+    VB_max_m: float = 0.0                   # largest flank wear land of the tool
+    broken_tick: int = -1                   # base tick of the fracture (-1: intact)
+    broken_section_z_m: float = 0.0         # fracture section above the tip (the tool below it is lost)
+    length_loss_m: float = 0.0              # tool length lost (fracture) or the largest axial wear (tool setter)
+    expired: bool = False                   # the first end-of-life criterion was reached
+    life_cause: str = ""                    # vb | vb_max | crater | notch | dimension | finish | breakage | fatigue
+    remaining_life_s: float = float("inf")  # cutting time left to the first criterion at the recent wear rates
+    replacement_time_s: float = float("inf")  # predicted simulation time of the replacement (inf: not predicted)
+    in_cut_s: float = 0.0                   # usage counters over operations and parts
+    cutting_distance_m: float = 0.0
+    uses: int = 0
+    parts: int = 0
 
 
 @dataclass
 class WearFeedback:
     tools: dict[int, ToolWear] = field(default_factory=dict)
     expired: list[int] = field(default_factory=list)                 # tool numbers whose life ended (controller)
+    # added by wear (additive): tool numbers whose tool broke (stops cutting; the controller's broken-tool
+    # detection compares the tool setter with ToolWear.length_loss_m)
+    broken: list[int] = field(default_factory=list)
 
 
 # ------------------------------------------------------------------- structure (writer: structure)
@@ -449,6 +566,11 @@ class ToolModes:
     static_residual_m_per_N: np.ndarray = field(default_factory=_empty2(0))  # [3 n_station, 3 n_station]
     sections_z_m: np.ndarray = field(default_factory=_empty)                 # critical sections (neck, shank, flute root)
     sections_modulus_m3: np.ndarray = field(default_factory=_empty)          # bending section modulus there
+    # additive (structure, docs/models/structure.md "Bus record"): stations are tool nodes from the tip to the
+    # holder nose, then holder nodes to the gauge line (rotating tools); the tip only (non-rotating tools)
+    tip_compliance_m_per_N: np.ndarray = field(default_factory=lambda: np.zeros((3, 3)))  # static, modes + residual, T0
+    fit_error: float = 0.0              # max |modal - RCSA| / max |RCSA| of the tip receptance (x, T0)
+    version: int = 0                    # increments when the slot's modes are computed again
 
 
 @dataclass
@@ -459,6 +581,11 @@ class WorkModes:
     cell_m: float = 0.0
     shape: np.ndarray = field(default_factory=lambda: np.zeros((0, 0, 0, 0, 3)))  # [mode, nx, ny, nz, 3]
     static_compliance: np.ndarray = field(default_factory=lambda: np.zeros((0, 0, 0, 3, 3)))  # residual, per cell
+    # additive (structure): values at cell centres origin + (i + 1/2) cell; the last n_wall_modes modes are
+    # thin-wall plate modes (zero outside their wall)
+    n_wall_modes: int = 0
+    model: str = ""                     # voxel | beam ("" none)
+    version: int = 0                    # increments when the modes are replaced
 
 
 @dataclass
@@ -471,6 +598,10 @@ class Displacement:
     thermal_m: np.ndarray = field(default_factory=_grid3)
     clamp_m: np.ndarray = field(default_factory=_grid3)
     residual_m: np.ndarray = field(default_factory=_grid3)
+    # additive (structure): grids are node values at origin + (i, j, k) cell (trilinear between, as removal samples
+    # them); clamped False after unclamping (clamp_m zero, thermal and residual of the free part)
+    clamped: bool = True
+    version: int = 0                    # increments when the grids are replaced
 
 
 @dataclass
@@ -480,6 +611,11 @@ class StructureFeedback:
     displacement: dict[int, Displacement] = field(default_factory=dict)
     fixture_compliance_m_per_N: dict[int, np.ndarray] = field(default_factory=dict)  # workpiece -> 3x3
     version: int = 0
+    # additive (structure): fixture_compliance_m_per_N is at fixture_point_S_m (the W origin in S); the 6 x 6
+    # rigid-body compliance of the part on its supports about fixture_centroid_S_m gives it at any point
+    fixture_point_S_m: dict[int, np.ndarray] = field(default_factory=dict)
+    fixture_compliance_6_m_per_N: dict[int, np.ndarray] = field(default_factory=dict)
+    fixture_centroid_S_m: dict[int, np.ndarray] = field(default_factory=dict)
 
 
 # ------------------------------------------------------------------- holding (writer: holding)
@@ -491,6 +627,16 @@ class ToolHolding:
     unbalance_static_kg_m: np.ndarray = field(default_factory=_vec3)   # in the rotating tool frame T
     unbalance_z_T_m: float = 0.0
     unbalance_couple_kg_m2: np.ndarray = field(default_factory=_vec3)
+    # additive (holding, docs/models/holding.md "Bus record"): the holder's capacities and the step's checks
+    torque_capacity_Nm: float = float("inf")    # static transmissible torque of the holder (inf: positive drive)
+    axial_retention_N: float = float("inf")     # static axial retention (inf: positive)
+    holding_margin: float = float("inf")        # friction-circle capacity / peak demand of the step (inf: no load)
+    walk_per_rev_m: float = 0.0                 # pull-out per spindle revolution over the step
+    slip_friction_J: float = 0.0                # friction work of slip and walk this step (not booked in the ledger)
+    unbalance_force_N: float = 0.0              # |U| omega^2 at the step's largest speed (rotating with the tool)
+    balance_quality_m_s: float = 0.0            # worst-case G = U_worst omega / m of the assembly at that speed
+    max_rad_s: float = float("inf")             # speed limit of tool and holder (inf: none published)
+    float_bottomed: bool = False                # a floating tapping holder reached the end of its axial travel
 
 
 @dataclass
@@ -500,6 +646,21 @@ class PartHolding:
     seated: bool = True
     location_error_S_m: np.ndarray = field(default_factory=_vec3)
     supports: list[dict] = field(default_factory=list)                 # chuck/tailstock/steady/locators for structure
+    # additive (holding, docs/models/holding.md "Bus record"): pose_delta = slip_pose_delta @ location_pose_delta
+    slip_pose_delta: np.ndarray = field(default_factory=_pose)         # slip part (persistent within the setup)
+    location_pose_delta: np.ndarray = field(default_factory=_pose)     # mislocation of the setup (chips, burrs, seat)
+    margin: float = float("inf")            # capacity factor of the step's load (min over groups; inf: no load)
+    mode: str = ""                          # incipient motion when margin < 1: slip | lift ("" held)
+    slip_m: float = 0.0                     # persistent generalized slip of the step (m)
+    lift_m: float = 0.0                     # largest reversible lift-off / tipping amplitude of the step (m)
+    clamp_force_N: float = 0.0              # total clamping / gripping force (dynamic for chucks)
+    seat_gap_m: float = 0.0                 # largest gap at the primary datum after clamping
+    support_stiffness_S: np.ndarray = field(default_factory=lambda: np.zeros((6, 6)))  # about centroid_S_m, S axes
+    centroid_S_m: np.ndarray = field(default_factory=_vec3)           # reference point of support_stiffness_S
+    supports_version: int = 0               # increments when the supports are placed again (setup, slip, failure)
+    lathe: dict = field(default_factory=dict)  # turned parts: chuck / tailstock / steady conditions along S z
+    slip_friction_J: float = 0.0            # friction work of the part's slip this step (not booked in the ledger)
+    free_cause: str = ""                    # why the part is free (holding lost, released by removal ...)
 
 
 @dataclass

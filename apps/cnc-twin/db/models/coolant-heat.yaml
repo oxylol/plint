@@ -1,0 +1,38 @@
+# Heat transfer coefficients of the coolant at the cut (cnctwin/coolant/heat.py, docs/models/coolant.md
+# "Heat transfer"): Martin's impinging round-jet correlation, nucleate boiling (Rohsenow), peak and
+# subcooled peak heat flux (Zuber, Lienhard-Dhir, Ivey-Morris), film boiling (Bromley, Berenson, forced
+# Bromley-LeRoy-Robbers), the superposition with forced convection (Kutateladze). Names carry the SI unit.
+format: cnctwin-model-params
+version: 1
+model: coolant-heat
+description: "Martin 1977 round jet, boiling curve (Rohsenow, Zuber, Ivey-Morris, Bromley, Berenson), zone temperatures"
+params:
+  martin_g_a: {value: 1.1, unit: "-", src: martin-1977-impinging-jets, note: "G = (D/r)(1 - a D/r)/(1 + b (H/D - h0) D/r)"}
+  martin_g_b: {value: 0.1, unit: "-", src: martin-1977-impinging-jets}
+  martin_g_h0: {value: 6.0, unit: "-", src: martin-1977-impinging-jets}
+  martin_f_a: {value: 2.0, unit: "-", src: martin-1977-impinging-jets, note: "F1 = a Re^n1 (1 + b Re^n2)^n1"}
+  martin_f_b: {value: 0.005, unit: "-", src: martin-1977-impinging-jets}
+  martin_f_n1: {value: 0.5, unit: "-", src: martin-1977-impinging-jets}
+  martin_f_n2: {value: 0.55, unit: "-", src: martin-1977-impinging-jets}
+  martin_pr_exp: {value: 0.42, unit: "-", src: martin-1977-impinging-jets}
+  martin_re_lo: {value: 2000.0, unit: "-", src: martin-1977-impinging-jets, note: "validity range; outside the formula is extrapolated (flagged in the regime record)"}
+  martin_re_hi: {value: 4.0e5, unit: "-", src: martin-1977-impinging-jets}
+  martin_rd_lo: {value: 2.5, unit: "-", src: martin-1977-impinging-jets, note: "smaller averaging radii are evaluated at r/D = 2.5 (stagnation zone)"}
+  martin_rd_hi: {value: 7.5, unit: "-", src: martin-1977-impinging-jets, note: "larger radii extrapolate G ~ D/r (wall-jet decay)"}
+  martin_hd_lo: {value: 2.0, unit: "-", src: martin-1977-impinging-jets}
+  martin_hd_hi: {value: 12.0, unit: "-", src: martin-1977-impinging-jets, note: "gas jets further away use the momentum-equivalent nozzle D' = H/12 (Re conserved by the self-similar jet)"}
+  rohsenow_csf: {value: 0.0130, unit: "-", range: [0.006, 0.015], src: rohsenow-1952, note: "water - mechanically polished stainless steel 0.0130 (incropera-2007-heat-mass-transfer Table 10.1); used for every fluid and tool/work surface (carbide, steels) for lack of specific data"}
+  rohsenow_n_water: {value: 1.0, unit: "-", src: rohsenow-1952}
+  rohsenow_n_other: {value: 1.7, unit: "-", src: rohsenow-1952}
+  peak_flux_c: {value: 0.149, unit: "-", src: lienhard-dhir-1973, note: "Zuber form of the peak heat flux, large horizontal heaters"}
+  subcooling_a: {value: 0.1, unit: "-", src: ivey-morris-1962}
+  subcooling_n: {value: 0.75, unit: "-", src: ivey-morris-1962}
+  superposition_n: {value: 2.0, unit: "-", src: kutateladze-1961, note: "q = (q_fc^n + q_nb^n)^(1/n) in the nucleate regime"}
+  film_berenson_c: {value: 0.425, unit: "-", src: berenson-1961, note: "flat (work) surfaces"}
+  film_bromley_c: {value: 0.62, unit: "-", src: bromley-1950, note: "cylinders (tools), D = tool diameter"}
+  film_hfg_factor: {value: 0.80, unit: "-", src: bromley-1950, note: "h'_fg = h_fg + 0.80 c_pv dT_e"}
+  film_forced_c: {value: 2.7, unit: "-", src: bromley-leroy-robbers-1953, note: "forced-convection film boiling h = 2.7 [V k_v rho_v h'_fg/(D dT_e)]^(1/2), the larger of pool and forced is used"}
+  film_emissivity: {value: 0.3, unit: "-", range: [0.1, 0.6], src: est, note: "machined metal surface under a vapour film (radiation across the film)"}
+  near_zone_temp_fraction: {value: 0.5, unit: "-", range: [0.2, 0.8], src: est, note: "work surface temperature where the coolant meets the near-cut zone: preheat + f (generated-surface peak - preheat); the peak decays behind the edge within the zone"}
+  heat_zone_radius_factor: {value: 1.0, unit: "-", range: [0.5, 2.0], src: est, note: "averaging radius of the Martin correlation on the work = factor x max(tool radius, ap/2, ae/2) plus the offset of the stagnation point"}
+  far_radius_fraction: {value: 0.5, unit: "-", range: [0.25, 1.0], src: est, note: "wetted surfaces away from the cut: Martin average out to this fraction of the stock diagonal"}

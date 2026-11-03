@@ -1,38 +1,19 @@
-# coolant_reach: no case (gap)
+# coolant_reach: what is covered
 
-Wanted: published measurements of where coolant actually arrives in the cutting zone (high-speed
-imaging of jet penetration, wetted area, or cutting-zone / tool temperature with flood versus
-high-pressure or through-tool coolant), with nozzle, pressure, flow and cutting conditions stated.
+Two measured cases (sources in db/bibliography/validation-4.yaml):
 
-## What was tried (2026-11-03)
+* `coolant-sultana2023-ti64-endmill-hpc-vs-dry`: tool-chip interface temperature (tool-work
+  thermocouple) in end milling Ti-6Al-4V with a 12 mm HSS end mill, dry against one external 80 bar,
+  2 L/min oil jet (2 mm nozzle, 20 mm from the edge) and a four-nozzle rotary applicator, full
+  factorial over speed and feed (Sultana & Dhar, Heliyon 2023).
+* `coolant-struzikiewicz2023-ti64-jet-direction`: chip size, chip-form grade and cutting force in
+  finish turning Ti6Al4V ELI with one 150 bar emulsion jet (0.7 mm nozzle, 20 mm from the corner)
+  aimed from nine directions at two feeds (Struzikiewicz, Materials 2023).
 
-* The web-search budget of this workflow run was exhausted (shared limit across the parallel
-  agents) before this quantity was reached, so only direct URLs and the reference lists of open
-  papers already in hand could be used.
-* Open papers read in this run that touch coolant:
-  * Sci. Rep. 2026 on milling 304 stainless with flood, LN2 and LN2 + LCO2 cooling (PMC13083870):
-    cutting-zone temperature about 400 degC with flood against below 60 degC with LN2 + LCO2 at
-    200 m/min. It compares cryogenic media, not flood against high-pressure or through-tool
-    emulsion, the temperatures come from a contact thermometer and a wireless infrared
-    thermometer, and no nozzle geometry or flow was found in the text read: not a usable
-    coolant-reach reference.
-  * Smak et al., Materials 17 (2024) 4465 (PMC11433076), finish turning of Inconel 718 sleeves
-    with long-overhang holders at 80 bar coolant: no dry or flood comparison, no measurement of
-    the jet.
-  * Javidikia et al., Materials 14 (2021) 4293 (PMC8348405), orthogonal cutting of AA6061 dry versus flood:
-    tool wear and residual stress, not coolant penetration or temperature.
-* Papers known to contain such data (Kaminski & Alvelid 2000 water-jet assisted turning; Courbon
-  et al. 2009 HPJA turning of Inconel 718; Klocke et al. on high-pressure lubricoolant supply;
-  Oezkaya and Biermann CFD of drill coolant flow validated by high-speed imaging) are behind
-  publisher paywalls or were not reachable by a known open URL.
+Related: the chip_form cases `chipform-slodki2019-...` and `chipform-zebala2020-...` give chip forms
+with 70 bar coolant (and dry) for named Sandvik chip breakers.
 
-## Why nothing qualified
-
-None of the readable sources measures jet reach, wetted area or the temperature effect of flood
-versus high-pressure / through-tool coolant with a complete setup.
-
-## Where to look next
-
-Open-access Procedia CIRP / Procedia Manufacturing papers on high-pressure coolant turning and on
-CFD of internal tool cooling validated with high-speed cameras; Strojniski vestnik (open access)
-papers by Kramar, Krajnik and Kopac on high-pressure jet-assisted turning.
+Still missing: a flood-against-high-pressure comparison of tool or cutting-zone temperature in turning
+with the nozzle position stated, and measured jet penetration or wetted area (high-speed imaging), e.g.
+the CFD-and-imaging work on internal drill coolant (Oezkaya, Biermann) or Kramar/Krajnik/Kopac on
+high-pressure jet-assisted turning; those sources were not reachable as open full text in this run.

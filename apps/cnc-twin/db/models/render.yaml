@@ -1,0 +1,365 @@
+# Settings of the software rasteriser and the run pictures (cnctwin.render, docs/models/render.md). These are
+# not physical coefficients: they choose how pictures look (sizes, lights, appearance colours, camera
+# framing, video encoding). Read in SI by cnctwin.db.models.params("render"); every rendering function also
+# takes the value as an argument, these are the defaults. Colours are sRGB (IEC 61966-2-1) in [0, 1];
+# lighting is computed in linear RGB.
+format: cnctwin-model-params
+version: 1
+model: render
+description: "Image and video sizes, supersampling, lights, shadows, appearance colours, camera framing, colour maps"
+params:
+  # ------------------------------------------------------------------ sizes and sampling
+  image_width:
+    value: 1280
+    unit: "-"
+    range: [64, 7680]
+    src: est
+    note: "still pictures (images/*.png): 720p, readable on a phone and in the A4 report"
+  image_height:
+    value: 720
+    unit: "-"
+    range: [48, 4320]
+    src: est
+    note: "16:9 like the video"
+  image_ssaa:
+    value: 3
+    unit: "-"
+    range: [1, 4]
+    src: foley-1990
+    note: "supersampling factor per axis (14.10: box-filtered supersampling); 3 x 3 samples bring edge staircases below one grey level step of 1/9"
+  video_width:
+    value: 960
+    unit: "-"
+    range: [64, 3840]
+    src: est
+    note: "H.264 needs even sizes; 960 x 540 keeps a minute of video at 25 frames/s within a few minutes of rendering on one core"
+  video_height:
+    value: 540
+    unit: "-"
+    range: [48, 2160]
+    src: est
+    note: "16:9"
+  video_ssaa:
+    value: 2
+    unit: "-"
+    range: [1, 4]
+    src: foley-1990
+    note: "2 x 2 supersampling for video frames (motion hides the remaining aliasing)"
+  video_frame_rate_Hz:
+    value: 25
+    unit: Hz
+    range: [1, 120]
+    src: est
+    note: "PAL frame rate; the project's outputs.video.fps overrides it"
+  video_speed:
+    value: 10
+    unit: "-"
+    range: [0.001, 10000]
+    src: est
+    note: "simulated seconds per video second (the project's outputs.video.speed overrides it); 10 shows a 1-minute cycle in 6 s"
+  video_crf:
+    value: 18
+    unit: "-"
+    range: [0, 51]
+    src: ffmpeg-x264-2026
+    note: "x264 constant rate factor; 18 is visually lossless for rendered pictures"
+  video_preset:
+    value: "medium"
+    unit: "-"
+    src: ffmpeg-x264-2026
+    note: "x264 speed/compression preset (the default)"
+  # ------------------------------------------------------------------ lights and shading (camera-relative directions)
+  key_light_azimuth_rad:
+    value: 35
+    unit: deg
+    range: [-180, 180]
+    src: est
+    note: "key light from the upper left of the view: azimuth about the view's up axis from the view direction toward the viewer's left"
+  key_light_elevation_rad:
+    value: 50
+    unit: deg
+    range: [-90, 90]
+    src: est
+    note: "key light above the view direction"
+  fill_light_azimuth_rad:
+    value: -70
+    unit: deg
+    range: [-180, 180]
+    src: est
+    note: "fill light from the right, unshadowed"
+  fill_light_elevation_rad:
+    value: 10
+    unit: deg
+    range: [-90, 90]
+    src: est
+    note: "low fill so vertical walls facing away from the key light keep their shape"
+  key_light_intensity:
+    value: 0.75
+    unit: "-"
+    range: [0, 2]
+    src: est
+    note: "diffuse weight of the key light (casts shadows)"
+  fill_light_intensity:
+    value: 0.28
+    unit: "-"
+    range: [0, 2]
+    src: est
+    note: "diffuse weight of the fill light"
+  ambient_intensity:
+    value: 0.22
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "uniform ambient weight: shadowed faces stay readable"
+  specular_intensity:
+    value: 0.22
+    unit: "-"
+    range: [0, 1]
+    src: blinn-1977
+    note: "weight of the Blinn-Phong highlight of the key light (machined metal)"
+  specular_exponent:
+    value: 40
+    unit: "-"
+    range: [1, 512]
+    src: blinn-1977
+    note: "Blinn-Phong exponent n of (N . H)^n: a broad highlight like satin-machined metal"
+  crease_angle_rad:
+    value: 35
+    unit: deg
+    range: [0, 180]
+    src: est
+    note: "Gouraud shading smooths across edges whose face normals differ by less than this; sharper edges stay sharp (a tessellated cylinder with 12 or more sides is smooth, a box is not)"
+  shadow_map_size:
+    value: 1024
+    unit: "-"
+    range: [64, 8192]
+    src: williams-1978
+    note: "texels per side of the key light's depth map, fitted around the view (follow camera: two view heights across, so 0.14 mm per texel at a 70 mm view)"
+  shadow_bias:
+    value: 0.002
+    unit: "-"
+    range: [0, 0.1]
+    src: reeves-1987
+    note: "depth bias in light NDC units against self-shadowing acne (the map spans 2 units over the scene depth)"
+  shadow_pcf_radius:
+    value: 1
+    unit: "-"
+    range: [0, 4]
+    src: reeves-1987
+    note: "percentage-closer filter half-width in texels (3 x 3 samples)"
+  # ------------------------------------------------------------------ appearance colours (sRGB)
+  background_top_srgb:
+    value: [0.93, 0.94, 0.94]
+    unit: "-"
+    src: est
+    note: "light neutral grey, top of the frame"
+  background_bottom_srgb:
+    value: [0.72, 0.75, 0.76]
+    unit: "-"
+    src: est
+    note: "darker toward the bottom, so the part reads against the floor of the frame"
+  material_srgb:
+    value:
+      aluminium: [0.80, 0.81, 0.83]
+      magnesium: [0.76, 0.77, 0.78]
+      steel: [0.60, 0.61, 0.63]
+      tool_steel: [0.56, 0.57, 0.60]
+      stainless: [0.68, 0.69, 0.70]
+      cast_iron: [0.45, 0.45, 0.46]
+      titanium: [0.58, 0.57, 0.55]
+      nickel: [0.64, 0.63, 0.60]
+      copper: [0.85, 0.55, 0.40]
+      brass: [0.82, 0.70, 0.40]
+      polymer: [0.88, 0.88, 0.84]
+      composite: [0.24, 0.24, 0.26]
+      wood: [0.72, 0.56, 0.38]
+      foam: [0.93, 0.93, 0.90]
+      default: [0.75, 0.75, 0.76]
+    unit: "-"
+    src: est
+    note: "appearance colours of bare machined surfaces by material family (db/materials 'family'), not measured reflectances"
+  tool_srgb:
+    value: [0.50, 0.52, 0.56]
+    unit: "-"
+    src: est
+    note: "ground carbide grey"
+  holder_srgb:
+    value: [0.36, 0.38, 0.42]
+    unit: "-"
+    src: est
+    note: "blackened steel holder"
+  machine_srgb:
+    value: [0.56, 0.60, 0.62]
+    unit: "-"
+    src: est
+    note: "painted machine castings"
+  fixture_srgb:
+    value: [0.34, 0.38, 0.44]
+    unit: "-"
+    src: est
+    note: "vise / fixture steel"
+  cap_srgb:
+    value: [0.82, 0.32, 0.28]
+    unit: "-"
+    src: est
+    note: "section caps (material cut by a section plane), drawn flat in this colour as in CAD section views"
+  enclosure_srgb:
+    value: [0.78, 0.82, 0.86]
+    unit: "-"
+    src: est
+    note: "enclosure sheet and window tint"
+  enclosure_opacity:
+    value: 0.10
+    unit: "-"
+    range: [0, 1]
+    src: porter-duff-1984
+    note: "opacity of the enclosure walls (over operator), low enough to see the cut through two walls"
+  door_opacity:
+    value: 0.22
+    unit: "-"
+    range: [0, 1]
+    src: porter-duff-1984
+    note: "opacity of the doors and windows"
+  jet_srgb:
+    value: [0.62, 0.80, 0.97]
+    unit: "-"
+    src: est
+    note: "coolant stream tint"
+  jet_opacity:
+    value: 0.45
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "opacity of a coolant stream at its axis"
+  jet_max_length_m:
+    value: 600
+    unit: mm
+    range: [10, 5000]
+    src: est
+    note: "length drawn for a jet that hits nothing in the scene"
+  jet_end_opacity_fraction:
+    value: 0.5
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "a drawn coolant stream fades linearly to this fraction of its opacity at its end (the stream breaks up into drops)"
+  jet_sides:
+    value: 12
+    unit: "-"
+    range: [3, 64]
+    src: est
+    note: "facets of a drawn coolant cone"
+  chip_min_size_px:
+    value: 1.5
+    unit: "-"
+    range: [0, 10]
+    src: est
+    note: "chips are drawn at their physical size but never smaller than this on screen (sub-pixel chips would vanish)"
+  pile_min_height_m:
+    value: 0.1
+    unit: mm
+    range: [0, 10]
+    src: est
+    note: "chip pile cells lower than this are not drawn (a few chips scattered on a face do not form a pile)"
+  chip_default_length_m:
+    value: 1.2
+    unit: mm
+    range: [0.01, 100]
+    src: est
+    note: "length of a drawn chip when the chip file gives neither its length nor a mass that the material density can turn into a volume"
+  chip_aspect:
+    value: [1.0, 5.0, 12.0]
+    unit: "-"
+    src: est
+    note: "thickness : width : length of a drawn chip when the chip file gives only its mass (an arc chip of h ~ 0.1 mm, b ~ 0.5 mm, l ~ 1.2 mm)"
+  # ------------------------------------------------------------------ cameras
+  follow_view_height_m:
+    value: 70
+    unit: mm
+    range: [1, 5000]
+    src: est
+    note: "height of the view at the tool tip of the tool-following camera (a 10 mm tool and its neighbourhood)"
+  follow_azimuth_rad:
+    value: -55
+    unit: deg
+    range: [-180, 180]
+    src: est
+    note: "follow camera direction about +z_S from +x_S (front-left view of a vertical mill)"
+  follow_elevation_rad:
+    value: 32
+    unit: deg
+    range: [-89, 89]
+    src: est
+    note: "follow camera above the tool tip"
+  follow_fov_rad:
+    value: 30
+    unit: deg
+    range: [1, 120]
+    src: est
+    note: "vertical field of view of the perspective cameras (a moderate telephoto keeps proportions)"
+  follow_smoothing_s:
+    value: 0.25
+    unit: s
+    range: [0, 10]
+    src: est
+    note: "the follow camera's target is the tool tip averaged over this simulated time (frames.bin), so rapids do not shake the picture"
+  overview_azimuth_rad:
+    value: -50
+    unit: deg
+    range: [-180, 180]
+    src: est
+    note: "machine and setup overview direction"
+  overview_elevation_rad:
+    value: 28
+    unit: deg
+    range: [-89, 89]
+    src: est
+    note: "overview elevation"
+  framing_margin:
+    value: 1.15
+    unit: "-"
+    range: [1, 3]
+    src: est
+    note: "the fitted views leave this much room around the bounding sphere"
+  # ------------------------------------------------------------------ labels and colour bars
+  label_font_size:
+    value: 15
+    unit: "-"
+    range: [6, 96]
+    src: est
+    note: "label text height in output pixels at 720 rows (scaled with the picture height)"
+  colorbar_height_fraction:
+    value: 0.55
+    unit: "-"
+    range: [0.1, 1]
+    src: est
+    note: "colour bar length as a fraction of the picture height"
+  colorbar_width_fraction:
+    value: 0.022
+    unit: "-"
+    range: [0.005, 0.2]
+    src: est
+    note: "colour bar thickness as a fraction of the picture width"
+  finding_label_hold_s:
+    value: 2.0
+    unit: s
+    range: [0, 60]
+    src: est
+    note: "a finding is labelled in the pictures from its time for this long in video time (simulated time = this x the video speed), long enough to read two lines"
+  layer_colormaps:
+    value:
+      temperature: plasma
+      chip_pile: cividis
+      coolant_reach: Blues
+      surface_finish: viridis
+      deviation: RdBu_r
+      deflection: YlOrRd
+      wear: YlOrBr
+    unit: "-"
+    src: smith-vanderwalt-2015
+    note: "perceptually uniform sequential maps whose low end is not black, so a cold or unworn surface keeps its shape (plasma, viridis; cividis: nunez-2018-cividis), ColorBrewer sequential maps for the tool layers and a diverging map centred on zero for deviation (harrower-brewer-2003); tables from matplotlib-3-11"
+  range_percentiles:
+    value: [1, 99]
+    unit: "-"
+    src: est
+    note: "automatic colour bar limits: these percentiles of the layer's values, so one outlier does not flatten the map"

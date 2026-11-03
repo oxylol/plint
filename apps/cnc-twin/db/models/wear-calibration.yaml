@@ -1,0 +1,75 @@
+# Calibration of the Usui constants to the work material's Taylor life (cnctwin.wear.calibration,
+# docs/models/wear.md section 3). Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: wear-calibration
+description: "Taylor lives the two calibration speeds and the check speed are chosen for, solver brackets"
+params:
+  calibration_life_long_s:
+    value: 60.0
+    unit: min
+    range: [10.0, 240.0]
+    src: est
+    note: "Taylor life of the lower calibration speed when the Taylor entry gives no vc range; tool-life tests (iso-3685-1993) cover about 5 to 60 min"
+  calibration_life_short_s:
+    value: 5.0
+    unit: min
+    range: [1.0, 30.0]
+    src: est
+    note: "Taylor life of the upper calibration speed (as above)"
+  check_life_s:
+    value: 15.0
+    unit: min
+    range: [1.0, 240.0]
+    src: est
+    note: "life of the third (check) speed whose prediction residual is reported: the customary v15 reference speed"
+  min_activation_K:
+    value: 10.0
+    unit: K
+    src: est
+    note: "lower end of the bracket of the Usui activation temperature B in the root search (numerical)"
+  max_activation_K:
+    value: 1.0e5
+    unit: K
+    src: est
+    note: "upper end of the B bracket (an activation energy of 830 kJ/mol, above every wear mechanism; published Usui B are 5e3-3e4 K)"
+  max_abrasive_share:
+    value: 0.1
+    unit: "-"
+    range: [0.0, 0.5]
+    src: est
+    note: "the abrasive (Archard) term carries at most this share of the Taylor wear rate at the calibration speeds (its coefficient is scaled down when it would carry more): it stays a mechanical wear floor below the calibrated speeds (takeyama-murata-1963-tool-wear) without bending the calibrated life curve (in a synthetic test a 50 % share bent it by about 20 % at the check speed, 10 % by about 5 %; docs/models/wear.md section 3)"
+  reference_land_m:
+    value: 0.1
+    unit: mm
+    range: [0.01, 0.5]
+    src: est
+    note: "flank land at which the fallback response table (temperatures and stresses used only when the thermal or cutting record is missing) is evaluated"
+  fallback_speed_span:
+    value: 3.0
+    unit: "-"
+    range: [1.5, 10.0]
+    src: est
+    note: "the fallback response table spans the calibration speeds divided and multiplied by this factor"
+  default_feed_m:
+    value: 0.1
+    unit: mm
+    range: [0.01, 1.0]
+    src: est
+    note: "uncut chip thickness of the calibration when the Taylor entry gives no feed reference (the Taylor law then holds at any feed: a = 0)"
+  default_depth_m:
+    value: 2.0
+    unit: mm
+    range: [0.1, 20.0]
+    src: est
+    note: "engaged edge length of the calibration when the Taylor entry gives no depth reference"
+  table_speed_lo_m_s:
+    value: 10.0
+    unit: m_min
+    src: est
+    note: "lowest speed of the fallback response table of a tool without Taylor data"
+  table_speed_hi_m_s:
+    value: 600.0
+    unit: m_min
+    src: est
+    note: "highest speed of the fallback response table of a tool without Taylor data"

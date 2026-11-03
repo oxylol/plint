@@ -1,0 +1,19 @@
+# Coefficients of the balance model (cnctwin.holding.balance, docs/models/holding.md section 3): the
+# balance quality required of a tool-holder assembly and the grade assumed for a holder that publishes
+# none. Read in SI by cnctwin.db.models.params("holding-balance"). G grades are written in m/s
+# (G 2.5 = 2.5 mm/s = 0.0025 m/s); ISO 21940-11: e_per = G / Omega, U_per = m e_per.
+format: cnctwin-model-params
+version: 1
+model: holding-balance
+description: "Balance quality required of tool-holder assemblies and the grade of unrated holders"
+params:
+  required_grade_m_s:
+    value: 0.0025
+    unit: m_s
+    src: iso-21940-11-2016
+    note: "Table 1 balance quality G 2.5 for machine-tool drives; required of the assembly when neither tool nor holder publishes a grade (a published grade is required instead)"
+  default_holder_grade_m_s:
+    value: 0.0063
+    unit: m_s
+    src: est
+    note: "a holder that publishes no grade is taken as balanced to G 6.3 at its maximum speed (one class coarser than the G 2.5 of fine-balanced holders)"

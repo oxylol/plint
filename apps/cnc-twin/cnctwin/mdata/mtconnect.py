@@ -341,10 +341,10 @@ def observations_to_log(observations: list[Observation], *, mapping: dict | None
             (obs.instance, obs.time_ns, obs.data_item, obs.element, obs.text)
         unique.setdefault(key, obs)
     ordered = sorted(unique.values(), key=lambda o: (o.time_ns, o.instance, o.sequence))
+    mapper = _Mapper(ordered, mapping)           # component roles from every observation, before any window
     if start_ns is not None or end_ns is not None:
         ordered = [o for o in ordered if (start_ns is None or o.time_ns >= start_ns)
                    and (end_ns is None or o.time_ns <= end_ns)]
-    mapper = _Mapper(ordered, mapping)
     builder = LogBuilder(source)
     if ordered and not all(o.zone for o in ordered):
         builder.meta["timezone_assumed"] = "UTC"

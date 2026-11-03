@@ -1,0 +1,119 @@
+# CNC Twin example: a program with one of every program-sanity mistake, each on a known line
+# (README.md, expected_findings.yaml, EXPECTED.md). The setup itself is real: Haas VF-2SS, Al 6061-T6
+# plate in the LANG Makro-Grip, database tools. Two things in it are deliberately wrong as well,
+# because some mistakes need them: the plate sits so low that the jaw tops stand 4 mm above it,
+# and G55 holds an offset that puts the part outside the X travel. G56 is not set at all.
+format: cnctwin-project
+version: 1
+name: "Sanity mistakes: one of each"
+description: "A 100 x 80 x 20 plate job (pocket, spot, drill, tap, slot) whose program contains every program-sanity mistake once; checked by cnctwin.sanity, not meant to run"
+seed: 99
+
+machine: haas-vf2ss                          # has flood and air blast, no shower coolant (M07)
+controller_overrides: {}
+
+material:
+  id: al6061-t6
+  batch: {kc_scale_sigma: 0.04, hardness_sigma_pct: 3}
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 22
+  machine_state: warm
+  time_between_ops_min: 10
+
+stock:
+  kind: block
+  size_mm: [100, 80, 20]
+  tolerance_mm: [0.2, 0.2, 0.1]
+  non_squareness_deg: 0.05
+  form: rolled_plate
+  mesh: null
+
+cad:                                         # the part the program means to make (make_cad.py); no tolerances
+  path: part.step
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}
+  datums: []
+  tolerances: []
+
+tools:
+  library: null
+  list:
+    - {number: 1, tool: helical-59766-mh35al-025-31000, holder: haimer-40-720-32, stickout_mm: 32, length_offset_mm: 102.0,
+       radius_offset_mm: 5.0, wear_offsets_mm: {length: 0.0, radius: 0.0}, runout_um: 5, runout_phase_deg: 0, tilt_urad: 0,
+       life: {group: 1, limit_min: 60, used_min: 10, sister_of: null}, initial_wear: {VB_mm: 0.02}, comment: "D10 3FL CARBIDE ENDMILL"}
+    - {number: 2, tool: osg-62910-nc-lds-10x90, holder: haimer-40-720-16, stickout_mm: 40, length_offset_mm: 110.0,
+       radius_offset_mm: 5.0, wear_offsets_mm: {length: 0.0, radius: 0.0}, runout_um: 5, runout_phase_deg: 0, tilt_urad: 0,
+       life: {group: 2, limit_min: 120, used_min: 20, sister_of: null}, initial_wear: {VB_mm: 0.01}, comment: "D10 90DEG SPOT DRILL"}
+    - {number: 3, tool: osg-60568-ex-gdr-6.8, holder: haimer-40-720-16, stickout_mm: 55, length_offset_mm: 125.0,
+       radius_offset_mm: 3.4, wear_offsets_mm: {length: 0.0, radius: 0.0}, runout_um: 5, runout_phase_deg: 0, tilt_urad: 0,
+       life: {group: 3, limit_min: 120, used_min: 15, sister_of: null}, initial_wear: {VB_mm: 0.01}, comment: "D6.8 HSS DRILL"}
+    - {number: 4, tool: osg-8325107-a-pot-m8x1.25, holder: haimer-40-720-16, stickout_mm: 45, length_offset_mm: 115.0,
+       radius_offset_mm: 4.0, wear_offsets_mm: {length: 0.0, radius: 0.0}, runout_um: 5, runout_phase_deg: 0, tilt_urad: 0,
+       life: {group: 4, limit_min: null, used_min: 0, limit_parts: 400, sister_of: null}, initial_wear: {VB_mm: 0.0}, comment: "M8X1.25 TAP"}
+    - {number: 5, tool: helical-59726-mh35al-020-30600, holder: haimer-40-720-16, stickout_mm: 25, length_offset_mm: 95.0,
+       radius_offset_mm: 3.0, wear_offsets_mm: {length: 0.0, radius: 0.0}, runout_um: 5, runout_phase_deg: 0, tilt_urad: 0,
+       life: {group: 5, limit_min: 60, used_min: 5, sister_of: null}, initial_wear: {VB_mm: 0.0}, comment: "D6 3FL CARBIDE ENDMILL"}
+    - {number: 6, tool: helical-59744-mh35al-020-31200, holder: haimer-40-720-32, stickout_mm: 34, length_offset_mm: 104.0,
+       radius_offset_mm: 6.0, wear_offsets_mm: {length: 0.0, radius: 0.0}, runout_um: 5, runout_phase_deg: 0, tilt_urad: 0,
+       life: {group: 6, limit_min: 60, used_min: 5, sister_of: null}, initial_wear: {VB_mm: 0.0}, comment: "D12 3FL CARBIDE ENDMILL"}
+
+coolant:
+  fluid: emulsion-8pct
+  concentration_pct: 8
+  tank_fill_fraction: 0.9
+
+operations:
+  - name: OP10
+    program: op10.nc
+    setup:
+      # grip_depth_mm is the jaw-top height above the stock bottom (docs/models/sanity.md, Clamps): the
+      # 20 mm plate sits low, the jaw tops are 4 mm above it (program Z4)
+      workholding:
+        - {device: lang-48120-46, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 80,
+           input_torque_Nm: 60, grip_depth_mm: 24, parallels_mm: null}
+      stock_pose: {translate_mm: [-50, -40, 0], rotate_deg: [0, 0, 0]}
+      work_offsets_mm: {G54: [-431.0, -243.2, -490.0], G55: [-850.0, -243.2, -490.0]}    # G55 is wrong on purpose; G56 is not set
+      fixture_pose: {translate_mm: [-381.0, -203.2, -510.0], rotate_deg: [0, 0, 0]}
+    from_previous: null
+    nozzle_positions: {}
+
+production:
+  parts: 1
+  operator: {load_s: 30, unload_s: 20, door_s: 4, clean_s: 15, inspect_every: 0, inspect_s: 60}
+
+physics:
+  tick_s: 1.0e-6
+  max_deg_per_step: 0.5
+  steps_per_tooth: 96
+  macro_ipo: 10
+  lag_macro: 1
+  lattice_mm: 0.25
+  refine: []
+  edge_element_mm: 0.5
+  memory_bins: 720
+  polar_theta_bins: 720
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 2.0}
+  structure: {every_n_macro: 50, max_dof: 50000}
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}
+
+recording:
+  fast: windows
+  fast_window_revs: 4
+  fast_period_s: 1.0
+  keyframe_period_s: 0.5
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: {fps: 25, speed: 10}
+  audio: true
+
+uncertainty: null
+
+machine_data: null

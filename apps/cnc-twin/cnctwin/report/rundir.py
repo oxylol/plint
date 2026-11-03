@@ -21,7 +21,9 @@ from pathlib import Path
 import numpy as np
 
 TIERS = ("fast", "tick", "macro")
-BUCKETS = 600
+BUCKETS = 600            # plot buckets per series (about one per pixel of a report plot)
+WINDOW_SAMPLES = 4000    # samples kept around the peak of a fast window (a whole 'fast: all' part is too long)
+ATTRIBUTES = ("deviation_m", "Ra_m")      # the per-vertex attributes the report reads
 _PART = re.compile(r"^part-(\d+)\.parquet$")
 _COLUMN = re.compile(r"^(?P<name>.+?)(?P<index>(\[\d+\])*)$")
 IMAGE_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".svg": "image/svg+xml",
@@ -139,6 +141,7 @@ class TierSummary:
     rows: int = 0
     parts: int = 0
     columns: dict[str, ColumnStats] = field(default_factory=dict)
+    skipped: set = field(default_factory=set)
     b_tick_lo: np.ndarray = field(default_factory=lambda: np.full(BUCKETS, np.iinfo(np.int64).max))
     b_tick_hi: np.ndarray = field(default_factory=lambda: np.full(BUCKETS, np.iinfo(np.int64).min))
 
@@ -173,7 +176,11 @@ def _reduce_part(summary: TierSummary, ticks: np.ndarray, table, names: list[str
     np.maximum.at(summary.b_tick_hi, ids, np.maximum.reduceat(ticks, starts))
     summary.rows += len(ticks)
     for name in names:
-        values = np.asarray(table.column(name).to_numpy(zero_copy_only=False), dtype=np.float64)[order]
+        try:
+            values = np.asarray(table.column(name).to_numpy(zero_copy_only=False), dtype=np.float64)[order]
+        except (TypeError, ValueError):
+            summary.skipped.add(name)          # not a numeric column: listed by the report, not plotted
+            continue
         stats = summary.columns.setdefault(name, ColumnStats(name))
         finite = np.isfinite(values)
         stats.rows += len(values)
@@ -430,7 +437,8 @@ class RunData:
 
     @cached_property
     def attributes(self) -> dict[str, np.ndarray]:
-        """Final per-vertex attributes of every brick (keyframes/attr/brick_<b>.npz), concatenated."""
+        """The final per-vertex attributes the report uses (:data:`ATTRIBUTES`) of every brick
+        (keyframes/attr/brick_<b>.npz), concatenated in brick order, in their stored precision."""
         folder = self.path / "keyframes" / "attr"
         if not folder.is_dir():
             self.note("keyframes/attr/", "keyframes/attr/ (final surface attributes) is not in the run directory")
@@ -438,9 +446,13 @@ class RunData:
         paths = sorted(folder.glob("*.npz"), key=lambda p: (int(re.sub(r"\D", "", p.stem) or 0), p.name))
         merged: dict[str, list] = {}
         for path in paths:
-            arrays = self.npz(f"keyframes/attr/{path.name}")
-            for name, array in (arrays or {}).items():
-                merged.setdefault(name, []).append(np.asarray(array, dtype=np.float64).reshape(-1))
+            try:
+                with np.load(path, allow_pickle=False) as archive:
+                    for name in ATTRIBUTES:
+                        if name in archive.files:
+                            merged.setdefault(name, []).append(np.asarray(archive[name]).reshape(-1))
+            except (OSError, ValueError) as error:
+                self.note(f"keyframes/attr/{path.name}", f"keyframes/attr/{path.name} cannot be read ({error})")
         return {name: np.concatenate(parts) for name, parts in sorted(merged.items())}
 
     # ------------------------------------------------------------------ program
@@ -497,9 +509,14 @@ class RunData:
                 found.append({"tier": tier, "part": int(match.group(1)), "file": f"series/{tier}/{path.name}"})
         return sorted(found, key=lambda e: e["part"])
 
-    def _parquet(self, entry: dict):
+    def _parquet(self, entry: dict, columns: list[str] | None = None):
+        """One series part (only ``columns`` and the tick when given: a fast part of ``fast: all`` is large)."""
         import pyarrow.parquet as pq
         try:
+            if columns is not None:
+                present = set(pq.read_schema(self.path / entry["file"]).names)
+                wanted = ["tick"] + [c for c in columns if c in present and c != "tick"]
+                return pq.read_table(self.path / entry["file"], columns=wanted)
             return pq.read_table(self.path / entry["file"])
         except (OSError, ValueError) as error:
             self.note(entry["file"], f"{entry['file']} cannot be read ({type(error).__name__}: {error})")
@@ -541,6 +558,8 @@ class RunData:
             names = [c for c in table.column_names if c not in ("tick", "time_s")]
             _reduce_part(summary, ticks, table, names)
             summary.parts += 1
+        for name in sorted(summary.skipped):
+            self.note(f"series/{tier}:{name}", f"series column {name} is not numeric: it is not plotted")
         self.__dict__[key] = summary
         return summary
 
@@ -549,8 +568,9 @@ class RunData:
         |value| (raw samples of that channel's columns)."""
         windows: list[Window] = []
         best: dict[str, Window] = {}
+        wanted = [name for cols in channel_columns.values() for name in cols]
         for entry in self.series_parts("fast"):
-            table = self._parquet(entry)
+            table = self._parquet(entry, wanted)
             if table is None or "tick" not in table.column_names or not table.num_rows:
                 continue
             ticks = np.asarray(table.column("tick").to_numpy(zero_copy_only=False), dtype=np.int64)
@@ -569,13 +589,16 @@ class RunData:
                     present = [c for c in cols if c in columns]
                     if not present:
                         continue
-                    block = np.column_stack([columns[c][a:b] for c in present])
-                    finite = np.abs(block[np.isfinite(block)])
-                    peak = float(finite.max()) if finite.size else -1.0
+                    block = np.abs(np.column_stack([columns[c][a:b] for c in present]))
+                    block[~np.isfinite(block)] = -1.0
+                    peak = float(block.max()) if block.size else -1.0
                     if channel not in best or peak > best[channel].peak:
+                        at = a + int(np.argmax(block.max(axis=1)))
+                        lo = max(a, min(at - WINDOW_SAMPLES // 2, b - WINDOW_SAMPLES))
+                        hi = min(b, lo + WINDOW_SAMPLES)
                         best[channel] = Window(window.tick0, window.tick1, window.rows,
-                                               ticks[a:b].astype(float) * self.tick_s,
-                                               {c: columns[c][a:b].copy() for c in present}, peak)
+                                               ticks[lo:hi].astype(float) * self.tick_s,
+                                               {c: columns[c][lo:hi].copy() for c in present}, peak)
         return windows, best
 
     def per_tool(self, tier: str, columns: list[str]) -> dict:
@@ -590,7 +613,7 @@ class RunData:
         tools = np.array([-1 if blocks[i].tool is None else int(blocks[i].tool) for i in order], np.int64)
         out: dict = {}
         for entry in self.series_parts(tier):
-            table = self._parquet(entry)
+            table = self._parquet(entry, columns)
             if table is None or "tick" not in table.column_names:
                 continue
             ticks = np.asarray(table.column("tick").to_numpy(zero_copy_only=False), dtype=np.int64)

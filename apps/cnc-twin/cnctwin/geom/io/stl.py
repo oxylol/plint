@@ -46,6 +46,8 @@ def read_stl(path, unit="mm", weld: bool = True) -> Mesh:
         n = int(np.frombuffer(data[80:84], "<u4")[0])
         if len(data) < 84 + 50 * n:
             raise InputError(f"binary STL declares {n} facets but holds {(len(data) - 84) // 50}", str(path))
+        if n == 0:
+            raise InputError("STL file holds no facets", str(path))
         rec = np.frombuffer(data, _RECORD, count=n, offset=84)
         tris = rec["v"].astype(np.float64) * scale
         face_attr = {"stl_attribute": rec["attr"].astype(np.int32)} if np.any(rec["attr"]) else {}
@@ -62,6 +64,8 @@ def read_stl(path, unit="mm", weld: bool = True) -> Mesh:
         tris.append(coords.reshape(-1, 3, 3))
         groups.append(np.full(len(coords) // 3, g if len(blocks) > 1 else -1, np.int64))
     soup = np.concatenate(tris) * scale if tris else np.zeros((0, 3, 3))
+    if len(soup) == 0:
+        raise InputError("STL file holds no facets", str(path))
     group_names = {g: n for g, n in enumerate(names) if n} if len(blocks) > 1 else {}
     mesh = Mesh(soup.reshape(-1, 3), np.arange(3 * len(soup)).reshape(-1, 3), np.concatenate(groups),
                 group_names=group_names, name=(names[0] if names and names[0] else path.stem))

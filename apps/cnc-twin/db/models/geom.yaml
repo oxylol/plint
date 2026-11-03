@@ -74,12 +74,12 @@ params:
     src: est
     note: "the angular counterpart of feature_merge_distance_m for plane normals and axes"
   # ------------------------------------------------------------------ queries
-  clearance_z_tolerance_m:
+  clearance_tolerance_m:
     value: 1.0e-6
     unit: mm
     range: [1.0e-7, 1.0e-4]
     src: kiefer-1953-golden
-    note: "golden-section search interval (along the solid's axis) at which the radial clearance between a triangle and a revolved envelope is taken as found; the clearance error is below this times the profile slope plus the triangle's slope, i.e. nanometres"
+    note: "accuracy of the clearance between a triangle and a revolved envelope: the golden-section bracket is this over the clearance function's Lipschitz constant, so the minimum found is within 1 nm (far below any collision margin)"
   point_in_mesh_rays:
     value: 3
     unit: "-"

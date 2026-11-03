@@ -1,0 +1,21 @@
+# Hazard criteria of the removal domain (cnctwin.removal, docs/models/removal.md "Loose bodies"). Read in SI
+# by cnctwin.db.models.params("removal"): the name carries the SI unit, `unit:` is the unit it is written in.
+# Volumes are given as the edge of the cube of equal volume (the unit registry has no volume token in SI).
+# The numerical settings of the domain (tolerances, sampling, memory) are physics.removal (removal/schema.py).
+format: cnctwin-model-params
+version: 1
+model: removal
+description: "Classification of material that comes loose during machining"
+params:
+  slug_max_cube_edge_m:
+    value: 12.6
+    unit: mm
+    range: [8, 27]
+    src: est
+    note: "a freed body smaller than a cube of this edge (2000 mm^3) is a slug the tool, the coolant or the spindle can fling (chip_hazard); a larger one is a part that came loose (part_free). 2000 mm^3 is about 5 g of aluminium or 16 g of steel: the size of trepanning cores and contour drop-outs of small parts. Estimated: no published threshold; the range (500-20000 mm^3) covers the drop-out sizes chip conveyors are specified to pass"
+  swarf_cube_edge_m:
+    value: 1.0
+    unit: mm
+    range: [0.2, 2.2]
+    src: est
+    note: "freed bodies smaller than a cube of this edge (1 mm^3, about 2.7 mg of aluminium: chip-sized fragments of webs thinner than the lattice) are booked with the freed-body ledger term but not reported as hazards"

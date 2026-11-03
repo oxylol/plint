@@ -1,0 +1,163 @@
+# CNC Twin example: hard milling of an H13 (50 HRC) die cavity on the DMG MORI DMU 50 (HEIDENHAIN TNC 640):
+# 3+2 hard roughing and ball-nose finishing rasters in two tilted halves (README.md, EXPECTED.md). Toolpath:
+# make_program.py from part.step.
+# Frames (db/_templates/project.yaml, docs/models/sanity.md "Setup geometry convention"): fixture_pose and the
+# work offset are written in machine coordinates at B0 C0 (X/Y = axis values that put the spindle over the
+# point, Z = spindle gauge line on the point). On this machine the table top is at Z -625 (machine file:
+# spindle nose 625 mm above the table top at Z0) and X0 Y0 is the C-axis centre.
+format: cnctwin-project
+version: 1
+name: "H13 50 HRC die cavity, 3+2 ball-nose hard milling, DMU 50 / TNC 640"
+description: "Elliptic-paraboloid cavity 48 x 32 x 9.6 with R2 rim in a hardened H13 insert 100 x 80 x 40 (blank soft-machined to 0.3 mm): TEB 4-flute ball hard roughing to 0.06 mm (constant 40 um scallop) and constant-scallop (4.5 um) finishing rasters with a fresh TEB, each in two PLANE SPATIAL halves (SPB+15 / SPB-15), CYCL DEF 32 tolerance, air blast"
+seed: 1344
+
+machine: dmg-dmu50-3rd
+controller_overrides: {}
+
+material:
+  id: h13-50hrc
+  batch:
+    kc_scale_sigma: 0.05
+    hardness_sigma_pct: 4                    # 50 +- 2 HRC
+
+environment:
+  ambient_degC: 20
+  coolant_degC: 20
+  machine_state: warm
+  time_between_ops_min: 10
+
+stock:
+  kind: mesh
+  size_mm: null
+  tolerance_mm: null
+  non_squareness_deg: null
+  form: forged                               # forged and annealed block, machined soft, vacuum hardened to ~50 HRC
+  mesh: stock.step                           # make_cad.py: the cavity left 0.3 mm small (soft semi-finishing)
+
+cad:
+  path: part.step                            # make_cad.py; CAD frame = stock frame (corner origin, z up, parting face z 40)
+  units: mm
+  placement: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0], order: xyz}
+  datums:
+    - {label: A, feature: {face: plane, normal: [0, 0, -1], near_mm: [50, 40, 0]}}      # bottom (on the grid plate)
+    - {label: B, feature: {face: plane, normal: [0, -1, 0], near_mm: [50, 0, 20]}}      # front face
+    - {label: C, feature: {face: plane, normal: [-1, 0, 0], near_mm: [0, 40, 20]}}      # left face
+  tolerances:
+    - {id: cavity-profile, kind: profile_surface, feature: {face: freeform, near_mm: [50, 40, 30.4]},
+       tolerance_mm: 0.03, datums: [A, B, C]}
+    - {id: rim-profile, kind: profile_surface, feature: {face: freeform, near_mm: [74.6, 40, 39.6]},
+       tolerance_mm: 0.05, datums: [A, B, C]}
+    - {id: cavity-finish, kind: roughness, feature: {face: freeform, near_mm: [50, 40, 30.4]}, Ra_um: 1.6}
+    - {id: cavity-finish-steep, kind: roughness, feature: {face: freeform, near_mm: [50, 55.0, 37.85]}, Ra_um: 1.6}
+    - {id: cavity-scallop, kind: roughness, feature: {face: freeform, near_mm: [50, 40, 30.4]}, Rz_um: 6.3}
+    - {id: cavity-scallop-steep, kind: roughness, feature: {face: freeform, near_mm: [50, 55.0, 37.85]}, Rz_um: 6.3}
+
+tools:
+  library: null
+  list:
+    - number: 1
+      tool: tungaloy-teb100e4l-20-30c10cfh72   # TEB100E4L-20/30C10CFH72 AH710, D10 ball, 4 flutes, OAL 72: hard roughing
+      holder: &haimer_sk40_10
+        id: haimer-40-445-10-3
+        order_code: "40.445.10.3"
+        type: shrink_fit
+        maker: "HAIMER"
+        series: "Power Shrink Chuck, DIN ISO 7388-1 (SK40, formerly DIN 69871), ultra short, Cool Jet"
+        taper: SK40
+        bore_mm: 10
+        gauge_length_mm: 65                  # length A
+        nose_diameter_mm: 26.5               # D2
+        functional_length_mm: 23             # B71
+        profile_mm: [[0, 26.5], [23, 26.5], [65, 33.725]]   # D2 over B71, then the contour to A1 at the flange
+        clamp_length_mm: 42                  # nominal / max; min 32
+        runout_um: 3
+        balance_grade: "G2.5 at 25000 rpm or U < 1 gmm"
+        max_rpm: 25000
+        mass_kg: 1.2
+        coolant_through: true
+        note: "Inline: the database has SK40 Power Shrink chucks for bores 25 and 32 only. Read 2026-11-03 at https://shop.haimer.com/en/Power-Shrink-Chuck-DIN-ISO-7388-1-SK40/40.445.10.3: D1 10, A 65, D2 26.5, A1 33.725, B71 23, clamping length 42 (min 32), 1.200 kg, 25 000 min-1, G2.5 or U < 1 gmm, runout < 0.003 mm, Cool Jet. The profile between B71 and the flange is drawn as a straight cone (est.)."
+      stickout_mm: 40                        # 32 of the 42 mm shank clamped (minimum clamping length): Z travel
+      length_offset_mm: 105.000              # A 65 + 40
+      radius_offset_mm: 5.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 3
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 1, limit_min: 30, used_min: 6, sister_of: null}
+      initial_wear: {VB_mm: 0.01}
+      comment: "TEB100E4L D10 BALL 4FL AH710"
+    - number: 2
+      tool: tungaloy-teb100e4l-20-30c10cfh72   # TEB100E4L-20/30C10CFH72 AH710, D10 ball, 4 flutes, OAL 72: finishing
+      holder: *haimer_sk40_10
+      stickout_mm: 40                        # 32 of the 42 mm shank clamped (minimum clamping length): Z travel in the tilted halves
+      length_offset_mm: 105.000              # A 65 + 40
+      radius_offset_mm: 5.0
+      wear_offsets_mm: {length: 0.0, radius: 0.0}
+      runout_um: 3
+      runout_phase_deg: 0
+      tilt_urad: 0
+      life: {group: 2, limit_min: 30, used_min: 0, sister_of: null}
+      initial_wear: {VB_mm: 0.0}
+      comment: "TEB100E4L D10 BALL 4FL AH710"
+
+coolant:
+  fluid: air                                 # air blast (Tungaloy I053: air blow recommended for hard milling)
+  concentration_pct: null
+  tank_fill_fraction: 0.9
+
+operations:
+  - name: OP10
+    program: die_h13.h                       # written by make_program.py
+    setup:
+      workholding:
+        # workholding frame H: centre of the grid plate top (the insert bottom), 27 mm above the table top
+        - {device: lang-45600, pose: {translate_mm: [0, 0, -27], rotate_deg: [0, 0, 0]},
+           label: "Quick-Point 52 grid plate; the insert is pulled down by two d16 clamping studs screwed into its bottom"}
+      stock_pose: {translate_mm: [-50, -40, 0], rotate_deg: [0, 0, 0]}
+      work_offsets_mm: {PRESET 1: [0.0, 0.0, -558.0]}                    # centre of the parting face: 27 + 40 - 625
+      fixture_pose: {translate_mm: [0.0, 0.0, -598.0], rotate_deg: [0, 0, 0]}
+    from_previous: null
+    nozzle_positions: {}
+
+production:
+  parts: 1
+  operator: {load_s: 60, unload_s: 30, door_s: 4, clean_s: 30, inspect_every: 0, inspect_s: 600}
+
+physics:
+  tick_s: 1.0e-6
+  max_deg_per_step: 0.5                      # set by the highest S (finishing)
+  steps_per_tooth: 96
+  macro_ipo: 10
+  lag_macro: 1
+  lattice_mm: 0.5
+  refine:
+    - {box: {min_mm: [24.0, 22.0, 29.5], max_mm: [76.0, 58.0, 40.5]}, factor: 10}  # 0.05 <= smallest finishing stepover 0.2 / 4
+  edge_element_mm: 0.05                      # ball engagement arc ~1 mm at ap 0.1
+  memory_bins: 720
+  polar_theta_bins: 720
+  particles_per_tooth: 0.1
+  tol_mass: 1.0e-9
+  tol_energy: 1.0e-6
+  thermal: {every_n_macro: 5, cell_mm: 2.0}
+  structure: {every_n_macro: 50, max_dof: 50000}
+  coolant: {every_n_macro: 1, rays_per_jet: 64}
+  resolved: {}
+
+recording:
+  fast: windows
+  fast_window_revs: 4
+  fast_period_s: 2.0
+  keyframe_period_s: 1.0
+
+outputs:
+  report: [html, pdf]
+  images: true
+  video: {fps: 25, speed: 20}
+  audio: false
+
+uncertainty:
+  runs: 10
+  method: lhs
+  vary: {stock_size: false, tool_offsets_um: 3, runout_um: 2, kc_scale_sigma: 0.05, hardness_sigma_pct: 4}
+
+machine_data: null

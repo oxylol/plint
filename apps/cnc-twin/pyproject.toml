@@ -42,4 +42,4 @@ markers = [
   "ui: browser UI tests (Playwright)",
   "gpu: needs a CUDA device or the CUDA simulator",
 ]
-addopts = "-m 'not slow and not ui'"
+addopts = "-m 'not slow and not ui' --import-mode=importlib"

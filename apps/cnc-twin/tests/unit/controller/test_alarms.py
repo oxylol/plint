@@ -42,7 +42,11 @@ def test_builtin_text_when_the_database_lacks_the_code():
     assert a["code"] == "PS0112" and a["text"] == "ZERO DIVIDE" and a["source"] == "builtin"
 
 
-def test_unsupported_features_raise_twin_alarms():
+def test_unsupported_features_raise_twin_alarms(monkeypatch):
+    from cnctwin.controller import hooks
+    hooks.load_plugins()
+    for table, key in ((hooks.COMPENSATION, "cutter"), (hooks.CYCLES, "G81"), (hooks.TRANSFORMS, "fanuc:G43.4")):
+        monkeypatch.delitem(table, key, raising=False)      # the missing-provider path (providers exist now)
     assert alarm(run(wrap("G41 G01 X1. D1 F100.")))["code"] == "TW0002"
     assert alarm(run(wrap("G81 X1. Y1. Z-1. R1. F100.")))["code"] == "TW0001"
     assert alarm(run(wrap("G43.4 H1")))["code"] == "TW0003"

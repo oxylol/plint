@@ -185,3 +185,29 @@ def contiguous(array: np.ndarray, dtype=None) -> np.ndarray:
     if not out.flags.writeable:
         out = out.copy()
     return out
+
+
+# ---------------------------------------------------------------- fast-tier ring buffer (owner: core.recorder)
+# Added by the run infrastructure (additive; docs/architecture.md 10, docs/formats.md "Run directory").
+
+class RingBuffer(NamedTuple):
+    """The fast (L0) tier's ring buffer, filled by the compiled loop and read at L2 by the recorder.
+
+    Row ``s = head[0] % n`` takes the next sample: ``cnctwin.core.recorder.ring_begin(ring, tick)``
+    stamps the tick, fills the row with NaN and advances ``head``; the domains' kernels then write
+    their channels' columns (``Recorder.fast_columns(name)`` gives the column range). ``head`` counts
+    every row pushed since the start of the run (it never wraps), so the recorder knows which rows
+    are new and whether any were overwritten before it read them.
+    """
+
+    data: np.ndarray                # [n, n_columns] float64, NaN where a channel has no value
+    tick: np.ndarray                # [n] int64 base tick of each row (-1: never written)
+    head: np.ndarray                # [1] int64 rows pushed since the start of the run
+
+
+def ring_buffer(n_rows: int, n_columns: int) -> RingBuffer:
+    """An empty ring of ``n_rows`` samples of ``n_columns`` fast columns."""
+    if n_rows < 1 or n_columns < 0:
+        raise ValueError(f"ring buffer needs n_rows >= 1 and n_columns >= 0 (got {n_rows}, {n_columns})")
+    return RingBuffer(np.full((int(n_rows), int(n_columns)), np.nan), np.full(int(n_rows), -1, np.int64),
+                      np.zeros(1, np.int64))

@@ -257,6 +257,7 @@ class HaasVars(FanucVars):
 class HaasHandler(FanucHandler):
     m_after_motion_only = True
     gate_m_by_database = True
+    repeat_letters = ("L",)             # Haas canned cycles repeat with L; K is the G73/G83 minimum peck
 
     def init_state(self) -> None:
         super().init_state()
@@ -447,10 +448,10 @@ class HaasHandler(FanucHandler):
                 bw.addr["R"] = WordValue("R", r.value / 2.0, True, r.text, r.from_variable)
         super().g10(bw)
 
-    def arc(self, bw: BlockWords, target: dict[str, int], direction: int) -> None:
+    def arc(self, bw: BlockWords, target: dict[str, int], direction: int, corner: dict | None = None) -> None:
         if self.s.scale is not None and not self.ex.transform().scales_uniformly(self.plane()):
             raise ControllerAlarm("arc_under_scaling", "G02/G03 with per-axis scaling")
-        super().arc(bw, target, direction)
+        super().arc(bw, target, direction, corner)
 
     # M codes ------------------------------------------------------------------
     def m_extra(self, m: int, bw: BlockWords) -> None:
@@ -701,6 +702,7 @@ def build_haas(machine, settings, controller_db, db_id: str = "") -> Dialect:
     variant = machine.variant
     gcodes = dict(T_GCODES if variant == "T" else M_GCODES)
     gcodes.update(HAAS_EXTRA_T if variant == "T" else HAAS_EXTRA_M)
+    gcodes.update(hooks.extra_gcodes("haas", variant))
     power_on = dict(T_POWER_ON if variant == "T" else M_POWER_ON)
     if variant == "M":
         power_on[23] = "G255"

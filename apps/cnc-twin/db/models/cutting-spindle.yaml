@@ -1,0 +1,37 @@
+# Spindle load model of cnctwin.cutting (docs/models/cutting.md "Spindle load"): thermal duty of the
+# spindle motor against its published torque / power curves, stall by speed drop.
+format: cnctwin-model-params
+version: 1
+model: cutting-spindle
+description: "Spindle motor thermal duty and stall model"
+params:
+  motor_thermal_time_constant_s:
+    value: 30
+    unit: min
+    range: [5, 120]
+    src: est
+    note: "first-order thermal time constant of a machine-tool spindle motor (winding to housing), used to turn short-time (S2 / peak-minutes) and intermittent (S6) ratings into the continuous S1 capacity and to integrate the thermal load; spindle motor data sheets imply 15-60 min; assumed"
+  default_peak_rating_s:
+    value: 15
+    unit: min
+    range: [1, 60]
+    src: est
+    note: "duration of a curve rated 'peak' or 'short-time' without a stated time (machine catalogues mostly publish 15 or 30 min peak ratings); assumed"
+  default_s6_duty:
+    value: 0.4
+    unit: "-"
+    range: [0.1, 1.0]
+    src: est
+    note: "cyclic duration factor of an 'S6' rating without a stated percentage (S6-40 % is the common catalogue rating, iec-60034-1-2017 duty type S6); assumed"
+  stall_speed_ratio:
+    value: 0.5
+    unit: "-"
+    range: [0.1, 0.95]
+    src: est
+    note: "the spindle is reported as stalling when the speed at which the motor torque balances the cutting torque falls below this fraction of the commanded speed (the drive's speed-error alarm trips well before; controller-specific); assumed"
+  default_force_exponent:
+    value: 0.25
+    unit: "-"
+    range: [0.0, 0.6]
+    src: kienzle-1952
+    note: "chip-thickness exponent m of the cutting force F ~ h^(1 - m) used for the torque at a reduced speed (constant feed rate: h ~ 1 / speed) when the coefficient table gives no slope; 0.2-0.3 is the usual Kienzle mc of metals"

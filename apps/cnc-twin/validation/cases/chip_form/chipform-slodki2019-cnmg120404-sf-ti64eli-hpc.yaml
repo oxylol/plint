@@ -1,0 +1,55 @@
+# Słodki, Zębala & Struzikiewicz (2019): chip-form grade of a Sandvik CNMG120404-SF (H13A) insert in finish
+# turning of Ti6Al4V ELI with 70 bar emulsion through a PCLNR..HP holder, over a 4 x 4 grid of feed and depth.
+format: cnctwin-validation-case
+version: 1
+id: chipform-slodki2019-cnmg120404-sf-ti64eli-hpc
+quantity: chip_form
+reference:
+  src: slodki-2019-ti64-eli-hpc-turning
+  location: "Sect. 2 (material, insert, holder, coolant), Tables 2-3 (plan with vc per trial), Sect. 3 (grading rule), Table 9 (grade and cut cross-section per feed and depth); Table 8 holds the chip photographs"
+  digitised: false
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: ti6al4v, note: "Grade 5 ELI, hot-forged, annealed and peeled bar D 50 mm; Rm 902 MPa, 29 HRC; Al 6.10, V 4.13, Fe 0.05, O 0.10 % (Table 1)"}
+  stock: {diameter_mm: 50}
+  tool:
+    type: turning_insert
+    iso_designation: CNMG120404-SF
+    chipbreaker: SF
+    grade: "Sandvik Coromant H13A (uncoated carbide)"
+    tool_class: carbide
+    coating: none
+    nose_radius_mm: 0.4
+    holder: PCLNR2020K12HP
+    chipbreaker_backwall_deg: {value: [3.5, 27.3], note: "measured elevation angle of the rear wall of the chip groove in the cutting position, 3.5 deg at ap 0.25 mm to 27.3 deg at ap 1.0 mm; back-wall height about three times larger at ap 1.0 than at 0.5 mm (Figs. 3-4)"}
+  coolant:
+    fluid: "Blaser Blasocut 2000 universal, 10 % emulsion"
+    pressure_bar: 70
+    delivery: {value: "through the PCLNR2020K12HP high-pressure holder onto the rake face", src: est, note: "the paper names the HP holder and the pressure but not the nozzle size, flow or jet angle"}
+  conditions:
+    feed_mm_rev_levels: [0.077, 0.115, 0.153, 0.211]
+    ap_mm_levels: [0.25, 0.50, 0.75, 1.00]
+    cutting_speed_m_min_levels: [40, 80]
+    cutting_speed_rule: "Taguchi plan (Table 3): vc 40 m/min for (f 0.077 and 0.115, ap 0.25 and 0.50) and (f 0.153 and 0.211, ap 0.75 and 1.00); vc 80 m/min for the other eight cells"
+    chip_grade_rule: "+ preferred: chips up to 20 mm long; 0 acceptable: 20-100 mm; - unacceptable: over 100 mm (longitudinal chip dimension)"
+  program: null
+reference_values:
+  - {name: chip_grade_ap0.25, value: 1, unit: "", x: 0.077, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.02 mm2"}
+  - {name: chip_grade_ap0.25, value: 0, unit: "", x: 0.115, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.03 mm2"}
+  - {name: chip_grade_ap0.25, value: 1, unit: "", x: 0.153, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.04 mm2"}
+  - {name: chip_grade_ap0.25, value: -1, unit: "", x: 0.211, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.05 mm2"}
+  - {name: chip_grade_ap0.50, value: -1, unit: "", x: 0.077, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.04 mm2"}
+  - {name: chip_grade_ap0.50, value: 0, unit: "", x: 0.115, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.06 mm2"}
+  - {name: chip_grade_ap0.50, value: -1, unit: "", x: 0.153, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.08 mm2"}
+  - {name: chip_grade_ap0.50, value: 1, unit: "", x: 0.211, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.11 mm2"}
+  - {name: chip_grade_ap0.75, value: -1, unit: "", x: 0.077, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.06 mm2"}
+  - {name: chip_grade_ap0.75, value: -1, unit: "", x: 0.115, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.09 mm2"}
+  - {name: chip_grade_ap0.75, value: 1, unit: "", x: 0.153, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.11 mm2"}
+  - {name: chip_grade_ap0.75, value: 1, unit: "", x: 0.211, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.16 mm2"}
+  - {name: chip_grade_ap1.00, value: 0, unit: "", x: 0.077, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.08 mm2"}
+  - {name: chip_grade_ap1.00, value: 1, unit: "", x: 0.115, x_name: feed, x_unit: mm/rev, note: "vc 80; AD 0.12 mm2"}
+  - {name: chip_grade_ap1.00, value: 1, unit: "", x: 0.153, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.15 mm2"}
+  - {name: chip_grade_ap1.00, value: 1, unit: "", x: 0.211, x_name: feed, x_unit: mm/rev, note: "vc 40; AD 0.21 mm2"}
+reference_curves: []
+notes: "Grade coded +1 (+ preferred), 0 (acceptable), -1 (- unacceptable) from Table 9; AD = cut cross-section f x ap as printed. The pattern the authors describe: for small cross-sections (AD below about 0.06 mm2) the 70 bar jet itself cracks the thin chip, giving preferred or acceptable chips; between about 0.06 and 0.08-0.1 mm2 the chip is too strong for the jet but does not yet fill the groove, giving long chips; above about 0.08-0.1 mm2 the groove is filled and the chip is broken by hitting the tool or workpiece. Table 9 is titled 'SM chip breaker' while Sect. 2 names CNMG120404-SF inserts; the SF breaker of Sect. 2 is used here. The cutting speed differs between cells (Taguchi plan), so the grid mixes 40 and 80 m/min. Mean forces of the same 16 trials are in Table 4 of the paper (Fc 52.5-417.6 N)."

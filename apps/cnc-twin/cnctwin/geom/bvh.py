@@ -30,7 +30,6 @@ from pathlib import Path
 import numpy as np
 from numba import njit, types
 
-from . import abi
 from .abi import (FEATURE_EDGE_0, FEATURE_EDGE_1, FEATURE_EDGE_2, FEATURE_FACE, FEATURE_VERTEX_0, FEATURE_VERTEX_1,
                   FEATURE_VERTEX_2, INFO_CLOSED, INFO_DEPTH, INFO_LEAF_SIZE, INFO_NODES, INSIDE, MAX_DEPTH,
                   MeshTree, N_INFO, ON_SURFACE, OUTSIDE, STACK_SIZE, TREE_TYPE, UNDECIDED, contiguous)
@@ -954,3 +953,17 @@ __all__ = ["build_tree", "static_tree", "save_tree", "load_tree", "pseudo_normal
            "rays_first_hit_nb", "rays_count_hits_nb", "rays_fill_hits_nb", "closest_point_triangle_nb",
            "closest_point_nb", "pseudo_normal_sign_nb", "signed_distance_nb", "point_in_mesh_nb",
            "points_in_mesh_nb", "winding_numbers_nb", "GAMMA3", "BOX_FAR_SCALE"]
+
+
+_OVERLAP_NAMES = ("tri_tri_overlap", "tri_box_overlap", "box_box_overlap", "mesh_mesh_overlap", "mesh_box_overlap",
+                  "mesh_revolved_overlap")
+
+
+def __getattr__(name: str):
+    """The interference queries live in :mod:`cnctwin.geom.overlap`; they are reachable from here too (loaded
+    on first use, so importing the tree module does not compile them)."""
+    if name in _OVERLAP_NAMES:
+        from . import overlap
+
+        return getattr(overlap, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

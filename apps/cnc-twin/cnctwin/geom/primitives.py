@@ -26,7 +26,7 @@ from numba import njit, types
 
 from . import transform as tf
 from .mesh import Mesh
-from .settings import param, resolve
+from .settings import resolve
 
 F1 = types.float64[::1]
 F2 = types.float64[:, ::1]
@@ -58,11 +58,16 @@ def circle_segments(radius_m: float, chordal_tol_m: float | None = None, min_seg
     return max(nmin, n)
 
 
+# An arc that is an exact fraction of a circle (a quarter, a half) gets exactly that fraction of the circle's
+# segments: the ceiling ignores rounding of sweep / 2 pi below this many segments.
+ARC_FRACTION_SLACK = 1e-9
+
+
 def arc_segments(radius_m: float, sweep_rad: float, chordal_tol_m: float | None = None,
                  min_segments: int | None = None) -> int:
     """Pieces of an arc of ``sweep_rad`` under the same chord rule (at least one piece)."""
     full = circle_segments(radius_m, chordal_tol_m, min_segments)
-    return max(1, int(math.ceil(full * abs(sweep_rad) / (2.0 * math.pi) - 1e-9)))
+    return max(1, int(math.ceil(full * abs(sweep_rad) / (2.0 * math.pi) - ARC_FRACTION_SLACK)))
 
 
 def arc_centre(p0, p1, bulge: float) -> tuple[np.ndarray, float, float, float]:
@@ -942,4 +947,4 @@ __all__ = ["box_mesh", "oriented_box_mesh", "cylinder_mesh", "cone_mesh", "spher
            "arc_centre", "circle_segments", "arc_segments", "ray_box", "ray_sphere", "ray_cylinder", "ray_cone",
            "ray_torus", "ray_revolved", "roots2_nb", "poly_eval_nb", "poly_roots_nb", "poly_roots_ref",
            "ray_box_nb", "ray_sphere_nb", "ray_cylinder_nb", "ray_cone_nb", "ray_torus_nb", "ray_revolved_nb",
-           "BOX_GROUP_NAMES", "KERNELS", "param"]
+           "BOX_GROUP_NAMES", "KERNELS"]

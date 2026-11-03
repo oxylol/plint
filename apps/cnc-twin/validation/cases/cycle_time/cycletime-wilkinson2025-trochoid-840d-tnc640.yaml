@@ -1,0 +1,44 @@
+# Wilkinson, Sencer & Ward (2025), case study #2: cycle time of a circular trochoidal toolpath (five R = 10 mm
+# circles) on a Hermle C52 with SINUMERIK 840D sl (path in G01 segments, CYCLE832 for speed) and on a
+# Heidenhain TNC640 programming station (path in L/CC/C blocks, CYCL DEF 32 HSC mode), at 3000 and 6000 mm/min.
+format: cnctwin-validation-case
+version: 1
+id: cycletime-wilkinson2025-trochoid-840d-tnc640
+quantity: cycle_time
+reference:
+  src: wilkinson-2025-fir-trochoidal
+  location: "Case study #2: text, Fig. 11b (plan view of the path, digitised), Table 3 (interpolator limits), Table 4 (cycle times), Listings 2-3 (NC headers)"
+  digitised: true                    # the path geometry; the cycle times are read from Table 4
+  uncertainty_pct: 2                 # path length from the digitised plan view; times printed to 0.01 s
+  measured: true
+setup:
+  operation: machine_motion
+  machine:
+    model: "Hermle C52 five-axis machining centre (840D tests)"
+    controller: "Siemens SINUMERIK 840D sl; TCP position recorded at 500 Hz with a SINUMERIK Edge device"
+    second_controller: "Heidenhain TNC640 programming station (virtual NC kernel, no machine axes) for the TNC640 times"
+    interpolator_840d_sampling_ms: 2
+    interpolator_840d_max_axis_acceleration_m_s2: 3
+    interpolator_840d_max_axis_jerk_m_s3: 145
+    interpolator_tnc640_sampling_ms: 3
+    interpolator_tnc640_max_axis_acceleration_m_s2: 3
+    interpolator_tnc640_max_axis_jerk_m_s3: 50
+  conditions:
+    feed_mm_min_levels: [3000, 6000]
+    tcp_tolerance_um_per_test: [10, 100, 50, 100]
+    feed_mm_min_per_test: [3000, 3000, 6000, 6000]
+    tool: "20 mm end mill (T=\"20MM ENDMILL\" in the 840D header); no cutting reported (motion trials)"
+    settings_840d: "N1 G17 G40 G71 G94; ORIWKS ORIC; CYCLE800(); TRAORI; CYCLE832(0.05,_ORI_ROUGH,1) (listing shows the 0.05 mm test; tolerance set per test); G54 G64; dwell G4 F3 before the main program"
+    settings_tnc640: "CYCL DEF 32.0 TOLERANCE, 32.1 T0.05 (per test), 32.2 HSC-MODE:1; dwell CYCL DEF 9 (2 s) before the main program"
+  program: "Circular trochoid in the XY plane at constant Z. From (0, 0) a linear lead-in along +X to the bottom of the first circle, then five full circles of R = 10 mm with centres at Y = 10 mm and X = 14.9, 30.2, 45.6, 60.9, 76.3 mm (pitch 15.3 mm, digitised), joined by linear moves along Y = 0 between the circle bottoms, ending on Y = 0 at about X = 78.9 mm (digitised). Total path about 393 mm (5 x 62.8 mm of circles plus about 79 mm of lines). 840D: the whole path coded as G01 segments (CAM output; segment length not stated); TNC640: CC/C DR+ full circles and L moves as in Fig. 1 of the paper."
+reference_values:
+  - {name: cycle_time_840d, value: 7.82, unit: s, x: 1, x_name: test, x_unit: index, note: "F 3000 mm/min, TCP tolerance 10 um; the 840D G01 path breached the TCP tolerance (text, case study #2)"}
+  - {name: cycle_time_840d, value: 7.95, unit: s, x: 2, x_name: test, x_unit: index, note: "F 3000 mm/min, tolerance 100 um"}
+  - {name: cycle_time_840d, value: 4.62, unit: s, x: 3, x_name: test, x_unit: index, note: "F 6000 mm/min, tolerance 50 um"}
+  - {name: cycle_time_840d, value: 4.33, unit: s, x: 4, x_name: test, x_unit: index, note: "F 6000 mm/min, tolerance 100 um"}
+  - {name: cycle_time_tnc640, value: 8.58, unit: s, x: 1, x_name: test, x_unit: index, note: "F 3000, 10 um; programming station; no limit breached"}
+  - {name: cycle_time_tnc640, value: 8.43, unit: s, x: 2, x_name: test, x_unit: index, note: "F 3000, 100 um; no limit breached"}
+  - {name: cycle_time_tnc640, value: 4.89, unit: s, x: 3, x_name: test, x_unit: index, note: "F 6000, 50 um; jerk limit exceeded (text)"}
+  - {name: cycle_time_tnc640, value: 4.84, unit: s, x: 4, x_name: test, x_unit: index, note: "F 6000, 100 um; jerk limit exceeded (text)"}
+reference_curves: []
+notes: "At constant feed the path takes about 7.86 s at 3000 mm/min and 3.93 s at 6000 mm/min, so the 840D is within 1 % of the ideal time at 3000 mm/min and 10-18 % slower at 6000 mm/min, where centripetal acceleration (v^2/R = 1 m/s2) and jerk (v^3/R^2 = 10 m/s3) on the circles and the G01 segment transitions limit the feed. The authors' own hybrid FIR interpolator gave 7.90, 7.90, 4.09 and 4.09 s (Table 4); it is a model result and is not stored as a reference. Path geometry digitised from Fig. 11b (648 px wide raster): grid calibrated at 5.77 px/mm; the circles measure 20.45 mm across in grid units, so the stated R = 10 mm and the digitised pitch carry about 2 % scale uncertainty. Which cycle-time window the authors measured (first to last TCP motion, dwells excluded) is not stated; the dwells in the headers (G4 F3 on the 840D, CYCL DEF 9 on the TNC640) are before the main program. The 840D 'limits breached' cells of Table 4 do not survive in the text version; the text says the G01 trochoid breached the TCP tolerance on the 840D and the TNC640 exceeded the jerk limit only in the 6000 mm/min tests."

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#e4e9e5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1e2421" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="CNC Twin: verify CNC programs on a one-to-one simulation of the machine before they run">
+  <title>CNC Twin</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233f6a53'/%3E%3Cpath d='M9 23V9h6l3 5 3-5h2v14h-4v-7l-3 4-3-4v7z' fill='%23f2f6f3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#app">Skip to the content</a>
+  <header class="app-head">
+    <span class="pill-slot"></span>
+    <a class="brand" href="#/" aria-label="CNC Twin, projects">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M8 22V10h3.4l4.6 6.2 4.6-6.2H24v12h-3.4v-6.6L16 21.4l-4.6-6V22z"/></svg>
+      <span>CNC Twin</span>
+    </a>
+    <nav class="app-nav" aria-label="Main">
+      <a href="#/" data-section="projects">Projects</a>
+      <a href="#/runs" data-section="runs">Runs</a>
+      <a href="#/compare" data-section="compare">Compare</a>
+    </nav>
+  </header>
+  <main id="app" tabindex="-1">
+    <noscript><p>CNC Twin needs JavaScript (ES modules) to show projects and runs. The API is at /api.</p></noscript>
+  </main>
+  <footer class="app-foot" id="foot"></footer>
+</body>
+</html>

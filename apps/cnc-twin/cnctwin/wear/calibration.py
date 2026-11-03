@@ -1,0 +1,375 @@
+"""Usui constants calibrated to the work material's Taylor life (docs/models/wear.md section 3).
+
+The flank wear land grows as dVB/dt = g dVN/dt, g = cot(a) - tan(g_rake) (yen-2004-tool-wear-fem), with
+the wear-depth rate (Takeyama & Murata 1963: thermally activated + mechanical term)
+
+    dVN/dt = [f_c A sum_q w_q exp(-B / T_q) + sum_q w_q K a / H(T_q)] sigma_n V_s,
+
+f_c the coating factor while the coating covers the contact (and T_q is below its service limit).
+The life to the Taylor VB limit at constant conditions is the integral over the land,
+
+    T(A, B; v) = int_{VB0}^{VB_lim} dVB / (g dVN/dt(VB, v)),
+
+evaluated by Gauss-Legendre in VB (split where the coating wears through), with the response
+(sigma_n V_s and the flank temperatures at the quadrature points) evaluated at every node through the
+:class:`TaylorResponse` protocol, so stresses and temperatures may depend on the land. Two speeds v1,
+v2 (the entry's vc range, else the speeds of the Taylor lives in wear-calibration.yaml) give two
+equations: for each B, A follows from T(A, B; v1) = T_Taylor(v1) (closed form without the abrasive
+term, a monotone root otherwise), and B is the root of ln(T(A(B), B; v2) / T_Taylor(v2)) (Brent, fixed
+tolerances). The check speed v3 (the 15-min life) gives the reported prediction residual.
+
+:class:`MechanicsResponse` is the default response: cnctwin.mechanics (Oxley with Johnson-Cook, or the
+data-only model) for the chip and the rake contact, Smithey's flank-land stresses and Blok's partition
+(Jaeger band source on the work, stationary source on the tool) for the flank temperature. The
+integration may wire a response that runs cutting's coefficient pipeline and thermal's edge model at
+the Taylor conditions instead (then the calibration and the run use exactly the same models).
+"""
+
+from __future__ import annotations
+
+import math
+from dataclasses import dataclass, field
+from typing import Callable, Protocol, runtime_checkable
+
+import numpy as np
+from scipy import optimize
+
+from ..core.errors import InputError
+from ..units import REFERENCE_TEMP_K
+from .params import CALIBRATION, FLANK, CoatingData, TaylorEntry, get
+
+
+@dataclass(frozen=True)
+class Condition:
+    """An equivalent continuous orthogonal cut at the Taylor reference conditions."""
+
+    speed_m_s: float
+    h_m: float                     # uncut chip thickness (the Taylor feed reference)
+    depth_m: float                 # engaged edge length (the Taylor depth reference)
+    VB_m: float                    # flank wear land
+    rake_rad: float
+    clearance_rad: float
+    edge_radius_m: float
+    incl_rad: float = 0.0
+    coated: bool = True            # False: the response models the uncoated substrate (Taylor data of the substrate)
+
+
+@dataclass(frozen=True)
+class Response:
+    """Wear-relevant state of a condition: sigma_n V_s on both faces and the contact temperatures at
+    quadrature points (weights summing to 1)."""
+
+    flank_sv_Pa_m_s: float
+    flank_temp_K: np.ndarray
+    rake_sv_Pa_m_s: float
+    rake_temp_K: np.ndarray
+    weights: np.ndarray
+    flank_sigma_Pa: float = 0.0
+    rake_sigma_Pa: float = 0.0
+    chip_speed_ratio: float = 0.0
+
+
+@runtime_checkable
+class TaylorResponse(Protocol):
+    def response(self, slot: int, cond: Condition) -> Response:
+        """The response of tool slot ``slot`` at ``cond``."""
+
+
+ABRASIVE_REDUCTIONS = 6          # quarterings of the abrasive floor tried before it is removed
+
+
+class CalibrationError(InputError):
+    """The response model cannot evaluate the Taylor conditions."""
+
+
+# ------------------------------------------------------------------------------------------ default response
+class MechanicsResponse:
+    """Default TaylorResponse from cnctwin.mechanics (see the module doc)."""
+
+    def __init__(self, work, tool=None, ambient_K: float = REFERENCE_TEMP_K, friction_factor: float = 1.0,
+                 substrate=None):
+        self.work = work
+        self.tool = tool
+        self.substrate = substrate if substrate is not None else tool
+        self.ambient_K = float(ambient_K)
+        self.friction_factor = float(friction_factor)
+        self._chip: dict = {}
+        self.cache_key = ("mechanics", getattr(work, "id", ""), getattr(tool, "tool_class", ""),
+                          getattr(tool, "coating", ""), getattr(self.substrate, "coating", ""), self.ambient_K,
+                          self.friction_factor)
+
+    def _side(self, cond: Condition):
+        return self.tool if cond.coated else self.substrate
+
+    def _chip_state(self, cond: Condition) -> tuple[float, float, float, float, float]:
+        """(k_AB or flank sigma_0 marker, T_work_surface, T_rake, sigma_rake, chip speed) of the cut."""
+        from ..mechanics import contact as C
+        from ..mechanics import oxley
+        from ..mechanics.coefficients import EdgeGroup, SlowState, group_coefficients
+
+        key = (cond.speed_m_s, cond.h_m, cond.rake_rad, cond.clearance_rad, cond.edge_radius_m, cond.incl_rad,
+               cond.coated)
+        if key in self._chip:
+            return self._chip[key]
+        side = self._side(cond)
+        if self.work.jc is None:
+            gc = group_coefficients(self.work, side, EdgeGroup(cond.rake_rad, cond.incl_rad, cond.clearance_rad,
+                                                                    cond.edge_radius_m),
+                                    SlowState(cond.speed_m_s, work_temp_K=self.ambient_K,
+                                              friction_factor=self.friction_factor),
+                                    np.array([cond.h_m]), None)
+            k_ref = gc.flank_sigma0_Pa / C.pressure_factor()
+            if not k_ref > 0.0:
+                # the data-only model's softened yield vanished at its (Merchant) temperature: the land then
+                # presses on cold material, k = strength / sqrt(3) at 20 degC (same Prandtl pressure (2 + pi) k)
+                strength = self.work.yield_Pa or self.work.ultimate_Pa
+                if not strength:
+                    raise CalibrationError(f"wear: material {getattr(self.work, 'id', '')} gives no flow stress or "
+                                           "strength for the flank contact pressure")
+                k_ref = float(strength) / math.sqrt(3.0)
+            out = (k_ref, float(gc.T_shear_K[0]), float(gc.T_interface_K[0]), float(gc.interface_normal_Pa[0]),
+                   cond.speed_m_s * float(gc.chip_ratio[0]))
+        else:
+            h_min = C.min_chip_thickness(self.work, cond.edge_radius_m)
+            t1 = max(cond.h_m - h_min, 0.05 * cond.h_m)
+            res = oxley.solve(self.work, t1, cond.speed_m_s, cond.rake_rad, work_temp_K=self.ambient_K,
+                              tool=side, tool_temp_K=None, friction_factor=self.friction_factor)
+            if res.status == "invalid":
+                raise CalibrationError(f"wear: no chip-formation solution at v = {cond.speed_m_s:.3g} m/s, "
+                                       f"h = {cond.h_m:.3g} m for material {getattr(self.work, 'id', '')}")
+            out = (res.shear_flow_stress_Pa, res.T_shear_K, res.T_interface_K, res.interface_normal_Pa,
+                   res.chip_speed_m_s)
+        self._chip[key] = out
+        return out
+
+    def response(self, slot: int, cond: Condition) -> Response:
+        from ..mechanics import contact as C
+        from ..mechanics import heat as H
+        from ..mechanics.oxley import effective_mu
+
+        k_ref, t_ws, t_rake, sigma_rake, v_chip = self._chip_state(cond)
+        side = self._side(cond)
+        mu = effective_mu(self.work, side, self.friction_factor)
+        sigma0, tau0 = C.flank_reference_stresses(k_ref, mu)
+        if cond.VB_m > 0.0:
+            s_mean, t_mean = C.flank_stresses(cond.VB_m, sigma0, tau0)
+        else:
+            s_mean, t_mean = sigma0, tau0
+        land = max(cond.VB_m, cond.edge_radius_m, 1e-7)
+        speed = cond.speed_m_s
+        width = max(cond.depth_m, land)
+        weight = get(FLANK)["flank_base_weight"]
+        t_base = t_ws + weight * (t_rake - t_ws)
+        flux = t_mean * speed
+        m_w = H.work_side_resistance(land, width, speed, self.work, t_ws)
+        if side is None:
+            t_flank = t_ws + flux * m_w
+        else:
+            m_t = H.tool_side_resistance(land, t_base, side, width)
+            share = H.blok_partition_to_tool(flux, m_w, m_t, t_ws, t_base)
+            t_flank = t_base + share * flux * m_t
+        return Response(flank_sv_Pa_m_s=s_mean * speed, flank_temp_K=np.array([t_flank]),
+                        rake_sv_Pa_m_s=sigma_rake * v_chip, rake_temp_K=np.array([t_rake]), weights=np.array([1.0]),
+                        flank_sigma_Pa=s_mean, rake_sigma_Pa=sigma_rake,
+                        chip_speed_ratio=v_chip / speed if speed > 0.0 else 0.0)
+
+
+# ------------------------------------------------------------------------------------------ calibration
+@dataclass(frozen=True)
+class FlankGeometry:
+    rake_rad: float
+    clearance_rad: float
+    edge_radius_m: float
+    incl_rad: float
+    g_vb: float                     # VB / VN
+    c_coat: float                   # flank-coating depth at the edge per unit VN
+
+
+@dataclass(frozen=True)
+class Abrasion:
+    """The Archard term K a / H(T) with its hardness tables (substrate, coating)."""
+
+    coefficient: float              # K x abrasiveness
+    substrate_T_K: np.ndarray
+    substrate_Pa: np.ndarray
+    coating_T_K: np.ndarray | None = None
+    coating_Pa: np.ndarray | None = None
+
+    def rate_factor(self, temps_K: np.ndarray, weights: np.ndarray, coated: bool) -> float:
+        if self.coefficient <= 0.0:
+            return 0.0
+        if coated and self.coating_T_K is not None:
+            hardness = np.interp(temps_K, self.coating_T_K, self.coating_Pa)
+        else:
+            hardness = np.interp(temps_K, self.substrate_T_K, self.substrate_Pa)
+        return float(np.sum(weights * np.where(hardness > 0.0, self.coefficient / np.maximum(hardness, 1e-300), 0.0)))
+
+
+@dataclass
+class Calibration:
+    A_per_Pa: float
+    B_K: float
+    abrasive_scale: float           # factor applied to the abrasive coefficient (1: as given)
+    report: dict = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class _Node:
+    weight_m: float                 # Gauss weight in VB
+    coated: bool
+    sv: float                       # sigma_n V_s
+    temps: np.ndarray
+    weights: np.ndarray
+    coat_ok: np.ndarray             # quadrature points where the coating lowers the Usui rate
+    abr: float                      # abrasive rate factor (1/Pa)
+
+
+def _gauss(lo: float, hi: float, n: int) -> tuple[np.ndarray, np.ndarray]:
+    x, w = np.polynomial.legendre.leggauss(n)
+    return 0.5 * (hi - lo) * x + 0.5 * (hi + lo), 0.5 * (hi - lo) * w
+
+
+def _nodes(response: Callable[[float, float], Response], speed: float, vb0: float, vb_lim: float,
+           geometry: FlankGeometry, coating: CoatingData | None, abrasion: Abrasion, n: int) -> list[_Node]:
+    breaks = [vb0, vb_lim]
+    vb_through = None
+    if coating is not None and geometry.c_coat > 0.0:
+        vb_through = coating.thickness_m / geometry.c_coat * geometry.g_vb
+        if vb0 < vb_through < vb_lim:
+            breaks = [vb0, vb_through, vb_lim]
+    out = []
+    for lo, hi in zip(breaks[:-1], breaks[1:]):
+        xs, ws = _gauss(lo, hi, n)
+        for vb, w in zip(xs, ws):
+            coated = coating is not None and (vb_through is None or vb < vb_through)
+            r = response(speed, float(vb))
+            if not r.flank_sv_Pa_m_s > 0.0:
+                raise CalibrationError(f"wear: the response gives no flank contact stress at v = {speed:.3g} m/s, "
+                                       f"VB = {vb:.3g} m")
+            temps = np.asarray(r.flank_temp_K, dtype=float)
+            weights = np.asarray(r.weights, dtype=float)
+            coat_ok = (temps <= coating.max_service_K) if coated else np.zeros(temps.shape, bool)
+            out.append(_Node(float(w), coated, float(r.flank_sv_Pa_m_s), temps, weights, coat_ok,
+                             abrasion.rate_factor(temps, weights, coated)))
+    return out
+
+
+def _usui_factor(node: _Node, B: float, T_ref: float, coating: CoatingData | None) -> float:
+    """sum_q w_q f_c exp(-B (1/T_q - 1/T_ref)): the Usui factor scaled by exp(B / T_ref), so that large
+    activation temperatures neither underflow nor overflow (A' = A exp(-B / T_ref) carries the scale)."""
+    factor = np.where(node.coat_ok, coating.factor if coating is not None else 1.0, 1.0)
+    return float(np.sum(node.weights * factor * np.exp(-B * (1.0 / node.temps - 1.0 / T_ref))))
+
+
+def life_s(nodes: list[_Node], A_scaled: float, B: float, T_ref: float, g_vb: float, coating: CoatingData | None,
+           abrasive_scale: float = 1.0) -> float:
+    """Time to wear the land over the nodes' interval at constant conditions, with A = A_scaled exp(B/T_ref)."""
+    total = 0.0
+    for node in nodes:
+        rate = g_vb * (A_scaled * _usui_factor(node, B, T_ref, coating) + abrasive_scale * node.abr) * node.sv
+        if not rate > 0.0:
+            return math.inf
+        total += node.weight_m / rate
+    return total
+
+
+def _solve_A(nodes, B, T_ref, target, g_vb, coating, scale) -> float:
+    """Scaled A with life(A, B) = target (life decreases monotonically with A); 0 when the abrasive
+    term alone already wears the land out in less than the target."""
+    j = life_s(nodes, 1.0, B, T_ref, g_vb, coating, 0.0)
+    if not math.isfinite(j):
+        return 0.0
+    if scale == 0.0 or all(n.abr == 0.0 for n in nodes):
+        return j / target
+    if life_s(nodes, 0.0, B, T_ref, g_vb, coating, scale) <= target:
+        return 0.0
+    hi = math.log(j / target) + 1.0
+
+    def f(log_a):
+        return math.log(life_s(nodes, math.exp(log_a), B, T_ref, g_vb, coating, scale) / target)
+
+    lo = hi - 6.0
+    while f(lo) <= 0.0:
+        lo -= 6.0
+    return math.exp(optimize.brentq(f, lo, hi, xtol=1e-13, rtol=1e-15, maxiter=500))
+
+
+def calibration_speeds(entry: TaylorEntry) -> tuple[float, float, float]:
+    p = get(CALIBRATION)
+    f, ap = entry.feed_ref_m, entry.ap_ref_m
+    if entry.vc_range_m_s is not None:
+        v1, v2 = entry.vc_range_m_s
+    else:
+        v1 = entry.speed_for_life(p["calibration_life_long_s"], f, ap)
+        v2 = entry.speed_for_life(p["calibration_life_short_s"], f, ap)
+    v3 = entry.speed_for_life(p["check_life_s"], f, ap)
+    return float(v1), float(v2), float(v3)
+
+
+def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], geometry: FlankGeometry,
+              coating: CoatingData | None, abrasion: Abrasion, vb0_m: float, nodes_per_interval: int) -> Calibration:
+    """A and B such that the wear model reaches the entry's VB limit in the Taylor life at two speeds
+    (see the module doc). ``response(speed, VB)`` is the response at the Taylor reference feed and depth."""
+    p = get(CALIBRATION)
+    v1, v2, v3 = calibration_speeds(entry)
+    f, ap = entry.feed_ref_m, entry.ap_ref_m
+    t1, t2, t3 = entry.life_s(v1, f, ap), entry.life_s(v2, f, ap), entry.life_s(v3, f, ap)
+    vb_lim = entry.VB_limit_m
+    if not vb0_m < vb_lim:
+        raise InputError(f"wear: the initial flank wear {vb0_m:.3g} m is not below the Taylor VB limit {vb_lim:.3g} m")
+    n = int(nodes_per_interval)
+    nodes1 = _nodes(response, v1, vb0_m, vb_lim, geometry, coating, abrasion, n)
+    nodes2 = _nodes(response, v2, vb0_m, vb_lim, geometry, coating, abrasion, n)
+    g = geometry.g_vb
+    T_ref = float(np.sum(nodes1[0].weights * nodes1[0].temps))
+    if not T_ref > 0.0:
+        raise CalibrationError("wear: the response gives no flank temperature at the lower calibration speed")
+    scale = 1.0 if abrasion.coefficient > 0.0 else 0.0
+    share = p["max_abrasive_share"]
+    for nodes, target in ((nodes1, t1), (nodes2, t2)):
+        # abrasion alone at scale 1 wears the land in abr_life: its share of the Taylor rate is target / abr_life
+        abr_life = life_s(nodes, 0.0, 1.0, T_ref, g, coating, 1.0) if scale > 0.0 else math.inf
+        if math.isfinite(abr_life) and target / abr_life > share:
+            scale = min(scale, share * abr_life / target)
+
+    b_lo, b_hi = p["min_activation_K"], p["max_activation_K"]
+
+    def residual(B, s):
+        A = _solve_A(nodes1, B, T_ref, t1, g, coating, s)
+        if not A > 0.0:
+            return -math.inf
+        return math.log(life_s(nodes2, A, B, T_ref, g, coating, s) / t2)
+
+    # the abrasive floor is reduced (quartered, finally removed) until both Taylor lives can be met
+    bracketed = False
+    for attempt in range(ABRASIVE_REDUCTIONS + 1):
+        r_lo, r_hi = residual(b_lo, scale), residual(b_hi, scale)
+        bracketed = math.isfinite(r_lo) and math.isfinite(r_hi) and r_lo * r_hi < 0.0
+        if bracketed or scale == 0.0:
+            break
+        scale = 0.0 if attempt == ABRASIVE_REDUCTIONS - 1 else 0.25 * scale
+    if bracketed:
+        B = optimize.brentq(lambda b: residual(b, scale), b_lo, b_hi, xtol=1e-9, rtol=1e-15, maxiter=500)
+    else:
+        grid = np.exp(np.linspace(math.log(b_lo), math.log(b_hi), 61))
+        values = []
+        for b in grid:
+            r = residual(b, scale)
+            values.append(abs(r) if math.isfinite(r) else math.inf)
+        B = float(grid[int(np.argmin(values))])
+    A_scaled = _solve_A(nodes1, B, T_ref, t1, g, coating, scale)
+    nodes3 = _nodes(response, v3, vb0_m, vb_lim, geometry, coating, abrasion, n)
+    lives = [life_s(nd, A_scaled, B, T_ref, g, coating, scale) for nd in (nodes1, nodes2, nodes3)]
+    targets = [t1, t2, t3]
+    A = A_scaled * math.exp(B / T_ref)
+    report = {"speeds_m_s": [v1, v2, v3], "taylor_life_s": targets,
+              "model_life_s": [m if math.isfinite(m) else None for m in lives],
+              "residual_rel": [(m / t - 1.0) if math.isfinite(m) else None for m, t in zip(lives, targets)],
+              "bracketed": bool(bracketed), "abrasive_scale": scale, "VB0_m": vb0_m, "VB_limit_m": vb_lim,
+              "entry_index": entry.index, "entry_src": entry.src, "entry_coating": entry.coating,
+              "flank_temp_K": [float(np.sum(nd[0].weights * nd[0].temps)) for nd in (nodes1, nodes2, nodes3)]}
+    return Calibration(float(A), float(B), float(scale), report)
+
+
+__all__ = ["Condition", "Response", "TaylorResponse", "MechanicsResponse", "CalibrationError", "FlankGeometry",
+           "Abrasion", "Calibration", "calibrate", "calibration_speeds", "life_s"]

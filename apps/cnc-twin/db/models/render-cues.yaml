@@ -1,0 +1,164 @@
+# Visual cue model of the run pictures (cnctwin.render.cues, docs/models/render.md "Visual cues"): when hot
+# surfaces and chips glow, when the coolant smokes or boils, how the glow colour follows from Planck's law
+# and the CIE observer, and how the sprites that show sparks, smoke and steam move and fade. Thresholds of
+# the run's coolant come from its database item (smoke_point_degC, boiling_degC); the values here are the
+# fall-backs for a fluid that does not give them.
+format: cnctwin-model-params
+version: 1
+model: render-cues
+description: "Incandescence, boiling and smoke thresholds; blackbody colour (Planck + CIE 1931 fit + sRGB); sprite motion and lifetimes"
+params:
+  # ------------------------------------------------------------------ thresholds
+  draper_point_K:
+    value: 798
+    unit: K
+    range: [750, 850]
+    src: draper-1847
+    note: "temperature at which every solid starts to glow dull red in a dark room (525 C); chips and surfaces above it are drawn as glowing, their colour from Planck's law"
+  glow_saturation_K:
+    value: 1400
+    unit: K
+    range: [900, 3000]
+    src: est
+    note: "the drawn glow intensity rises with the logarithm of the visible luminance from the Draper point (0) to this temperature (1), a display mapping (brightness perception is about logarithmic in luminance); 1400 K is a bright orange-yellow spark"
+  water_boiling_K:
+    value: 99.974
+    unit: degC
+    range: [99, 101]
+    src: wagner-pruss-2002
+    note: "saturation temperature of water at 101.325 kPa; used for water-based fluids (emulsion, semi-synthetic, synthetic, solution) that do not give boiling_degC"
+  oil_smoke_point_K:
+    value: 165
+    unit: degC
+    range: [120, 260]
+    src: est
+    note: "visible smoke of mineral cutting oil, used for straight oils and for the concentrate of emulsions when the fluid gives no smoke_point_degC; same value and reasoning as db/coolants/straight-oil.yaml (about 20 K below a 186 C COC flash point)"
+  cue_full_scale_dK:
+    value: 60
+    unit: dK
+    range: [1, 500]
+    src: est
+    note: "smoke and steam density rise linearly from their threshold to full at this excess temperature"
+  # ------------------------------------------------------------------ blackbody colour
+  planck_constant:
+    value: 6.62607015e-34
+    unit: "-"
+    src: codata-2018
+    note: "h in J s (exact since the 2019 SI)"
+  speed_of_light_m_s:
+    value: 299792458
+    unit: m/s
+    src: codata-2018
+    note: "c, exact"
+  cmf_wavelengths_m:
+    value: [380, 780, 5]
+    unit: nm
+    src: cie-015-2018
+    note: "visible range and step of the tristimulus integrals (start, stop, step); the fit below takes wavelengths in nm"
+  cmf_fit_x:
+    value: [[0.362, 442.0, 0.0624, 0.0374], [1.056, 599.8, 0.0264, 0.0323], [-0.065, 501.1, 0.0490, 0.0382]]
+    unit: "-"
+    src: wyman-2013-cmf
+    note: "x(l) = sum a exp(-((l - b) s)^2 / 2), s = g for l < b else d (l in nm); rows [a, b, g, d] of table 1"
+  cmf_fit_y:
+    value: [[0.821, 568.8, 0.0213, 0.0247], [0.286, 530.9, 0.0613, 0.0322]]
+    unit: "-"
+    src: wyman-2013-cmf
+    note: "y(l), rows [a, b, g, d] of table 1"
+  cmf_fit_z:
+    value: [[1.217, 437.0, 0.0845, 0.0278], [0.681, 459.0, 0.0385, 0.0725]]
+    unit: "-"
+    src: wyman-2013-cmf
+    note: "z(l), rows [a, b, g, d] of table 1"
+  xyz_to_linear_srgb:
+    value: [[3.2406, -1.5372, -0.4986], [-0.9689, 1.8758, 0.0415], [0.0557, -0.2040, 1.0570]]
+    unit: "-"
+    src: iec-61966-2-1-1999
+    note: "CIE XYZ (D65) to linear sRGB"
+  # ------------------------------------------------------------------ sprites (sparks, smoke, steam)
+  spark_exposure_s:
+    value: 0.02
+    unit: s
+    range: [0.001, 0.2]
+    src: est
+    note: "a flying glowing chip is drawn as a streak of its velocity times this time (the eye and a camera integrate light over about 1/50 s)"
+  spark_radius_m:
+    value: 0.35
+    unit: mm
+    range: [0.01, 5]
+    src: est
+    note: "half-width of a drawn spark streak (the glow halo of a sub-millimetre chip)"
+  smoke_rise_m_s:
+    value: 0.25
+    unit: m/s
+    range: [0.02, 2]
+    src: morton-taylor-turner-1956
+    note: "rise speed of drawn smoke: plume centre-line velocities of watt-level heat sources a few cm above the source are 0.1-0.5 m/s (w ~ (g Q / (rho cp T))^(1/3) z^(-1/3)); value chosen inside that range"
+  steam_rise_m_s:
+    value: 0.45
+    unit: m/s
+    range: [0.02, 3]
+    src: morton-taylor-turner-1956
+    note: "steam rises faster than smoke (vapour is lighter than air and carries more heat per volume); inside the same plume range"
+  smoke_lifetime_s:
+    value: 1.2
+    unit: s
+    range: [0.05, 10]
+    src: est
+    note: "a drawn smoke puff fades over this time (dilution below visibility)"
+  steam_lifetime_s:
+    value: 0.5
+    unit: s
+    range: [0.05, 10]
+    src: est
+    note: "steam condenses into visible mist and re-evaporates within a fraction of a second"
+  smoke_radius_m:
+    value: [3, 14]
+    unit: mm
+    src: est
+    note: "drawn puff radius at birth and at the end of its life (the plume widens as it entrains air)"
+  steam_radius_m:
+    value: [2, 9]
+    unit: mm
+    src: est
+    note: "drawn steam puff radius at birth and at the end of its life"
+  smoke_opacity:
+    value: 0.35
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "opacity of a fresh puff at full density"
+  steam_opacity:
+    value: 0.45
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "opacity of a fresh steam puff at full density"
+  smoke_srgb:
+    value: [0.42, 0.42, 0.40]
+    unit: "-"
+    src: est
+    note: "oil smoke grey"
+  steam_srgb:
+    value: [0.96, 0.97, 0.98]
+    unit: "-"
+    src: est
+    note: "white condensate"
+  puffs_per_source:
+    value: 10
+    unit: "-"
+    range: [1, 200]
+    src: est
+    note: "puffs drawn per hot spot at full density (fewer below)"
+  hot_spot_cell_m:
+    value: 2
+    unit: mm
+    range: [0.01, 100]
+    src: est
+    note: "hot spots are identified by the cell of this size they lie in, so puffs stay attached to a place as the part mesh changes from keyframe to keyframe"
+  max_hot_spots:
+    value: 12
+    unit: "-"
+    range: [1, 1000]
+    src: est
+    note: "hottest grid cells, chips and edges drawn as smoke or steam sources per frame"

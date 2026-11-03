@@ -10,6 +10,14 @@ from cnctwin.controller.ir import Command, Kind, Space
 from harness import MILL, alarm, controller, mm, moves, run, wrap
 
 
+def _restore(table: dict, key: str, saved) -> None:
+    """Put back the provider a test replaced (the cycles/comp packages register real ones)."""
+    if saved is None:
+        table.pop(key, None)
+    else:
+        table[key] = saved
+
+
 class ShiftFilter:
     """A minimal look-ahead compensation: holds one item, offsets every motion by +D in Y."""
 
@@ -44,6 +52,7 @@ class ShiftFactory:
 
 
 def test_compensation_filter_hook_with_look_ahead_keeps_program_order():
+    saved = hooks.COMPENSATION.get("cutter")        # the providers of the cycles/comp packages are restored
     hooks.register_compensation("cutter", ShiftFactory(), replace=True)
     try:
         r = run(wrap("G90 G00 X0 Y0\nG41 G01 X10. Y0 D1 F100.\nM08\nX20.\nG40 X30."))
@@ -55,7 +64,7 @@ def test_compensation_filter_hook_with_look_ahead_keeps_program_order():
         assert mm(m[3], "Y") == 0.0
         assert r.controller.state.paths[0].comp_state is None
     finally:
-        del hooks.COMPENSATION["cutter"]
+        _restore(hooks.COMPENSATION, "cutter", saved)
 
 
 class FlatTransform:
@@ -68,6 +77,7 @@ class FlatTransform:
 
 
 def test_transform_hook_turns_items_into_tip_space_commands():
+    saved = hooks.TRANSFORMS.get("fanuc:G43.4")        # the providers of the cycles/comp packages are restored
     hooks.register_transform("fanuc:G43.4", FlatTransform(), replace=True)
     try:
         r = run(wrap("G43.4 H1 G00 X5. Y6. Z7.\nG49 G00 X0"))
@@ -76,7 +86,7 @@ def test_transform_hook_turns_items_into_tip_space_commands():
         assert mm(m[0], "Z") == pytest.approx(107.0)
         assert m[1].space == Space.MACHINE
     finally:
-        del hooks.TRANSFORMS["fanuc:G43.4"]
+        _restore(hooks.TRANSFORMS, "fanuc:G43.4", saved)
 
 
 class TwoHoles:
@@ -93,6 +103,7 @@ class TwoHoles:
 
 
 def test_canned_cycle_hook_receives_modal_cycle_data_and_repeats():
+    saved = hooks.CYCLES.get("G82")        # the providers of the cycles/comp packages are restored
     hooks.register_cycle("G82", TwoHoles(), replace=True)
     try:
         r = run(wrap("G90 G00 X0 Y0 Z20.\nG98 G82 X10. Y10. Z-5. R2. P500 F120.\nX20.\nG91 G99 X5. K2\nG80 G90 G00 Z50."))
@@ -107,7 +118,7 @@ def test_canned_cycle_hook_receives_modal_cycle_data_and_repeats():
         assert retracts == [20.0, 20.0, 2.0, 2.0]
         assert bottoms[0].smoothing.corner == "exact_stop"
     finally:
-        del hooks.CYCLES["G82"]
+        _restore(hooks.CYCLES, "G82", saved)
 
 
 class ProbeCycle:
@@ -122,6 +133,7 @@ class ProbeCycle:
 
 def test_probe_hook_buffer_stops_and_continues_from_data():
     from cnctwin.controller.ir import ProbeResult
+    saved = hooks.PROBES.get("G37")
     hooks.register_probe("test:probe", ProbeCycle(), replace=True)
     hooks.register_probe("G37", ProbeCycle(), replace=True)
     try:
@@ -132,8 +144,7 @@ def test_probe_hook_buffer_stops_and_continues_from_data():
         assert m[1].kind == Kind.PROBE and mm(m[2], "X") == pytest.approx(11.3)
     finally:
         del hooks.PROBES["test:probe"]
-        from cnctwin.controller import measure
-        hooks.register_probe("G37", measure.ToolMeasure(), replace=True)
+        _restore(hooks.PROBES, "G37", saved)
 
 
 def test_default_g37_measures_and_updates_the_length_offset():
@@ -157,13 +168,14 @@ def test_tool_life_hook_selects_sister_tools():
         def expired(self, ex, numbers):
             ex.s.sys["expired_seen"] = list(numbers)
 
+    saved = hooks.TOOL_LIFE.get("default")        # the providers of the cycles/comp packages are restored
     hooks.register_tool_life(Sisters(), replace=True)
     try:
         r = run(wrap("T1 M06"))
         changes = [c for c in r.commands[0] if c.kind == Kind.TOOL_CHANGE]
         assert changes[0].tool["number"] == 11
     finally:
-        del hooks.TOOL_LIFE["default"]
+        _restore(hooks.TOOL_LIFE, "default", saved)
 
 
 def test_restart_search_keeps_modal_state_without_output():
@@ -198,7 +210,11 @@ def test_chamfer_and_corner_words_route_to_the_corner_provider():
     block = parse_block("G01 X10. ,R2. F100.", 1, fanuc.build_fanuc.__globals__["LexerRules"](
         letters=frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), comma_letters=frozenset("CRA")))
     assert [w.letter for w in block.words] == ["G", "X", ",R", "F"]
-    assert alarm(run(wrap("G01 X10. ,R2. F100.\nY10.")))["code"] == "TW0002"
+    corner_provider = hooks.COMPENSATION.pop("corner", None)
+    try:
+        assert alarm(run(wrap("G01 X10. ,R2. F100.\nY10.")))["code"] == "TW0002"
+    finally:
+        _restore(hooks.COMPENSATION, "corner", corner_provider)
 
     class CornerFilter:
         seen = []
@@ -233,6 +249,7 @@ def test_chamfer_and_corner_words_route_to_the_corner_provider():
             from cnctwin.controller import serial
             return CornerFilter([serial.load(PathItem, d) for d in data["held"]])
 
+    saved = hooks.COMPENSATION.get("corner")        # the providers of the cycles/comp packages are restored
     hooks.register_compensation("corner", Corners(), replace=True)
     try:
         r = run(wrap("G01 X10. ,C1.5 F100.\nY10.\nX0"))
@@ -241,4 +258,4 @@ def test_chamfer_and_corner_words_route_to_the_corner_provider():
         assert [round(c.target["X"] * 1000, 3) for c in m] == [10.0, 10.0, 0.0]
         assert r.controller.state.paths[0].comp_state is None
     finally:
-        del hooks.COMPENSATION["corner"]
+        _restore(hooks.COMPENSATION, "corner", saved)

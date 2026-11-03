@@ -1,0 +1,19 @@
+# Coefficients of the workpiece structural models (cnctwin.structure.voxel, .thinwall, .lathe, .displacement;
+# docs/models/structure.md sections 3-6): damping of the held part. Elastic constants, density, expansion and
+# the stock's residual stress come from the material database; support stiffness from holding.
+# Read in SI by cnctwin.db.models.params("structure-work").
+format: cnctwin-model-params
+version: 1
+model: structure-work
+description: "Workpiece structure: material and support damping"
+params:
+  work_loss_factor:
+    value: 0.002
+    unit: "-"
+    src: est
+    note: "material loss factor of the workpiece (metals 1e-4 to 1e-3; set at the upper end, polymers are far higher and should be given by the material file when it carries one)"
+  support_loss_factor:
+    value: 0.1
+    unit: "-"
+    src: est
+    note: "loss factor of the support springs (jaws, clamps, locators, chuck jaws): machine-tool joint damping dominates the damping of a held part; bolted and clamped joint loss factors 0.05-0.2"

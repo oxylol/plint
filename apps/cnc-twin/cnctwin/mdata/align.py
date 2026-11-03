@@ -22,6 +22,8 @@ quartz clocks; up to ``max_scale_deviation`` for a mis-stated sampling rate).
   through its neighbours, is the offset (knapp-carter-1976). The scale comes from local offsets
   in ``xcorr_scale_windows`` windows. A secondary peak above ``xcorr_ambiguity_ratio`` of the main
   one marks the delay ambiguous (periodic passes).
+* **Program start** (no block markers, but the execution state): the first ACTIVE edge is the start of
+  the first simulated block (scale 1), corrected by half the polling interval like the markers.
 * **Given**: ``offset_s`` (and ``scale``) stated by the user.
 """
 
@@ -44,7 +46,7 @@ FORMAT = "cnctwin-overlay"
 class Alignment:
     offset_s: float = 0.0
     scale: float = 1.0
-    method: str = "none"                 # markers | xcorr | given | none
+    method: str = "none"                 # markers | program_start | xcorr | given | none
     quality: dict = field(default_factory=dict)
 
     def to_sim(self, t_meas) -> np.ndarray:
@@ -197,7 +199,16 @@ def align_markers(sim_markers: list[Marker], log: MachineLog, *, key: str | None
         t_sim, k_sim = _sim_keys(sim_markers, name)
         if len(t_meas) == 0 or len(t_sim) == 0:
             continue
-        pairs = _match(t_meas, k_meas, t_sim, k_sim, p)
+        shift = 0
+        if name == "line":
+            # controls count program lines differently (a leading % line, 0- or 1-based): try small shifts
+            candidates = []
+            for s_ in (0, -1, 1, -2, 2):
+                found = _match(t_meas, k_meas, t_sim, k_sim + s_, p)
+                candidates.append((len(found[0]) if found is not None else 0, -abs(s_), s_, found))
+            count, _, shift, pairs = max(candidates, key=lambda c: (c[0], c[1]))
+        else:
+            pairs = _match(t_meas, k_meas, t_sim, k_sim, p)
         if pairs is None or len(pairs[0]) == 0:
             continue
         i_meas, j_sim = pairs
@@ -214,11 +225,37 @@ def align_markers(sim_markers: list[Marker], log: MachineLog, *, key: str | None
         offset = fit["a"] + fit["b"] * poll / 2.0
         inl = fit["inliers"]
         return Alignment(offset, fit["b"], "markers", {
-            "key": name, "measured_markers": int(len(t_meas)), "simulated_markers": int(len(t_sim)),
+            "key": name, "line_shift": int(shift), "measured_markers": int(len(t_meas)), "simulated_markers": int(len(t_sim)),
             "matched": int(len(x)), "inliers": int(inl.sum()), "residual_sigma_s": fit["sigma"],
             "poll_interval_s": poll, "poll_correction_s": fit["b"] * poll / 2.0, "scale_fitted": bool(fit_slope),
             "span_s": span, "pairs": [[float(a), float(b)] for a, b, ok in zip(x, y, inl) if ok]})
     return None
+
+
+def program_starts(log: MachineLog) -> np.ndarray:
+    """Measured times where the execution state becomes ACTIVE (cycle start, or resume after a stop)."""
+    execution = log.channels.get("program.execution")
+    if execution is None or execution.numeric:
+        return np.zeros(0)
+    values = [str(v).upper() if v is not None else "" for v in execution.values]
+    return np.array([execution.t_s[i] for i, v in enumerate(values)
+                     if v == "ACTIVE" and (i == 0 or values[i - 1] != "ACTIVE")], dtype=np.float64)
+
+
+def align_program_start(sim_markers: list[Marker], log: MachineLog, *, poll_interval_s: float | None = None
+                        ) -> Alignment | None:
+    """Offset from the program start alone: the first ACTIVE edge of the execution state is the start of
+    the first simulated block (scale 1: the end of the cycle is not used, its time is what a calibration of
+    the block time compares)."""
+    starts = program_starts(log)
+    if len(starts) == 0 or not sim_markers:
+        return None
+    poll = _poll_interval(log, starts) if poll_interval_s is None else float(poll_interval_s)
+    start_sim = min(m.t_s for m in sim_markers)
+    offset = start_sim - float(starts[0]) + poll / 2.0
+    return Alignment(offset, 1.0, "program_start", {"measured_start_s": float(starts[0]), "simulated_start_s": start_sim,
+                                                    "starts_seen": int(len(starts)), "poll_interval_s": poll,
+                                                    "poll_correction_s": poll / 2.0})
 
 
 def _match(t_meas, k_meas, t_sim, k_sim, p) -> tuple[np.ndarray, np.ndarray] | None:
@@ -430,11 +467,13 @@ def align(sim_log: MachineLog, measured: MachineLog, sim_markers: list[Marker] |
         return Alignment(0.0, 1.0, "none", {})
     if method in ("auto", "markers") and sim_markers:
         found = align_markers(sim_markers, measured, key=key, poll_interval_s=poll_interval_s)
+        if found is None:
+            found = align_program_start(sim_markers, measured, poll_interval_s=poll_interval_s)
         if found is not None:
             return found
         if method == "markers":
             raise InputError("no measured block marker (program.line, program.sequence, program.block) matches "
-                             "a simulated block")
+                             "a simulated block, and the execution state shows no program start")
     if method in ("auto", "xcorr"):
         if sim_signal is not None and measured_signal is not None:
             if measured_signal not in measured:
@@ -607,5 +646,5 @@ def overlay(sim_log: MachineLog, measured: MachineLog, alignment: Alignment, pai
     return _plain(document)
 
 
-__all__ = ["Alignment", "align", "align_markers", "align_xcorr", "masked_ncc", "robust_line", "measured_markers",
+__all__ = ["Alignment", "align", "align_markers", "align_program_start", "program_starts", "align_xcorr", "masked_ncc", "robust_line", "measured_markers",
            "resample", "overlay", "error_metrics", "reduce_m4", "block_comparison", "measured_cycle_time", "FORMAT"]

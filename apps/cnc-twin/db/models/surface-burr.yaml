@@ -1,0 +1,80 @@
+# Exit burrs and composite exit damage (cnctwin.surface, docs/models/surface.md section 5). Names carry the SI
+# unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: surface-burr
+description: "roll-over / breakout exit burrs, drilling exit burrs, composite delamination and fibre pull-out"
+params:
+  rollover_height_ratio:
+    value: 1.0
+    unit: "-"
+    src: machado-2003-burr-turning
+    note: "roll-over (leaned) exit burr height over the extent of the cut on the exit face; equal to the depth of cut for kappa_r 45 deg in AISI 1045 over ap 0.55-2.0 mm (Fig. 7)"
+  rollover_kappa_exponent:
+    value: 1.0
+    unit: "-"
+    src: est
+    range: [0.5, 2.0]
+    note: "height factor (sin kappa / sin 45 deg)^e: machado-2003-burr-turning Fig. 8 shows the height rising above ap for kappa_r above 45 deg and falling below it at 20 deg; e = 1 gives 0.48 ap at 20 deg and 1.41 ap at 85 deg"
+  rollover_thickness_ratio:
+    value: 1.0
+    unit: "-"
+    src: est
+    range: [0.5, 2.0]
+    note: "burr root thickness over the uncut chip thickness at the exit (plus the edge-radius term): thickness grows with feed (hashimura-chang-dornfeld-1999, machado-2003-burr-turning Fig. 4)"
+  edge_radius_ratio:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "share of the hone radius added to the uncut chip thickness for the burr thickness (the ploughed layer under a blunt edge joins the burr; hashimura-chang-dornfeld-1999: the edge radius moves the pivot)"
+  exit_angle_exponent:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "height factor (cos psi)^e of the angle psi between the cutting direction and the exit-face normal: a push-out exit (psi = 0) gives the full roll-over, a tangential exit none (gillespie-blotter-1976-burrs, hashimura-1999-exit-angle)"
+  eos_top_last_factor:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "height factor when the depth-of-cut end of the edge leaves the exit face last (the chip escapes toward the top surface; hashimura-1999-exit-angle exit-order concept), 1 when the tool tip leaves last"
+  brittle_fracture_strain:
+    value: 0.05
+    unit: "-"
+    src: est
+    note: "below this fracture strain the remaining material breaks out (negative burr) instead of rolling over (ko-dornfeld-1996-oblique)"
+  ductile_reference_strain:
+    value: 0.1
+    unit: "-"
+    src: est
+    note: "true fracture strain from which the full roll-over height develops (elongation at break 10.5 % and more: structural steels such as the AISI 1045 of machado-2003-burr-turning, aluminium alloys); below it the height scales with the strain (the foot fractures part way; pekelharing-1978-exit-failure)"
+  breakout_depth_ratio:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "edge breakout depth over the roll-over height a ductile material would form"
+  drill_plate_load_factor:
+    value: 1.5
+    unit: "-"
+    src: hopkins-prager-1953-plates
+    note: "limit load F = k pi sigma t^2 of the remaining disc under the drill: simply supported, uniform load 6 pi M0 with M0 = sigma t^2 / 4 gives k = 1.5"
+  drill_burr_height_ratio:
+    value: 1.0
+    unit: "-"
+    src: est
+    range: [0.5, 2.0]
+    note: "drilling exit burr height over the thickness at which the remaining disc starts to yield (kim-dornfeld-2002-drilling-burr: the burr is the plastically deformed remaining material)"
+  drill_burr_thickness_ratio:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "drilling burr root thickness over the yield-onset thickness"
+  crown_fracture_strain:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "below this fracture strain the cap tears into petals (crown burr; min-kim-dornfeld-2001-burr-chart) instead of a uniform burr"
+  pullout_depth_ratio:
+    value: 2.0
+    unit: "-"
+    src: est
+    note: "depth of uncut / pulled-out fibres at a composite exit edge per unit hone radius (fibres bend away under a blunt edge instead of being cut)"

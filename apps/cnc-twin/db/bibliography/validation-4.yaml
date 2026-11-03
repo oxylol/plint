@@ -1,0 +1,131 @@
+# Sources for validation/cases/ (validation references, part 4: spindle thermal growth, coolant reach,
+# chip form, roughness, wall error, stability lobes, cycle time). All read on 2026-11-03: open-access
+# journal papers as full text (JATS XML) through the Europe PMC REST service, with figures from the
+# PMC open-data bucket (pmc-oa-opendata.s3.amazonaws.com, same files as the article pages) digitised
+# locally (method stated in each case); the UBC thesis as full text and PDF through the cIRcle DSpace
+# REST API (scanned figures rendered at 6x and digitised locally).
+format: cnctwin-bibliography
+version: 1
+entries:
+
+  wei-2023-vcenter55-thermal-error:
+    type: article
+    authors: "Wei, X.; Ye, H.; Zhou, J.; Pan, S.; Qian, M."
+    title: "A regularized regression thermal error modeling method for CNC machine tools under different ambient temperatures and spindle speeds"
+    venue: "Sensors 23(10), 4916"
+    year: 2023
+    doi: "10.3390/s23104916"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10224392/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (Vcenter-55 three-axis vertical machining centre; five capacitive displacement sensors, 1 um accuracy; thermal error = displacement minus initial value per ISO 230-3:2020; ten Pt100 sensors, Table 1); Sect. 2.2 (46 batches K1-K46 over one year, spindle idling at 2000/4000/6000 rpm, worktable reciprocating at constant feed, at least 6 h, data every 5 min); Table 2 (initial ambient temperature, ambient rise, spindle speed, feed 1500 mm/min; truncated in the paper); Table 3 (batches per ambient band and speed); Fig. 4 Z panel (thermal error curves of K7, K1, K3, K30, K22, K19, K46, K32, K45, digitised from https://pmc-oa-opendata.s3.amazonaws.com/PMC10224392.1/sensors-23-04916-g004.jpg)"
+
+  wei-2022-vcenter55-year-round:
+    type: article
+    authors: "Wei, X.; Ye, H.; Feng, X."
+    title: "Year-round thermal error modeling and compensation for the spindle of machine tools based on ambient temperature intervals"
+    venue: "Sensors 22(14), 5085"
+    year: 2022
+    doi: "10.3390/s22145085"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9315643/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 3.1 (same Vcenter-55 test series: five-point method of ISO 230-3:2020, two capacitive sensors each in X and Y and one in Z, 1 um accuracy; spindle idling at constant speed, table reciprocating along X and Y at 1500 mm/min; data every 5 min for more than 4 h; each batch after the machine had cooled for 2 days); Sect. 3.2 (initial ambient 4.1-32.2 C, machine temperature rise 5.9-16.8 C); Fig. 4 (Z curves of K1-K5 and K42-K46 in this paper's own batch numbering)"
+
+  yang-2024-vmc850-thermal-error:
+    type: article
+    authors: "Yang, Z.; Liu, B.; Zhang, Y.; Chen, Y.; Zhao, H.; Zhang, G.; Yi, W.; Zhang, Z."
+    title: "Intelligent sensing of thermal error of CNC machine tool spindle based on multi-source information fusion"
+    venue: "Sensors 24(11), 3614"
+    year: 2024
+    doi: "10.3390/s24113614"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11175269/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 3.1 (Yunnan Machine Tool Factory VMC850 vertical machining centre, eddy-current displacement sensor on the spindle, infrared imager for temperatures, data every 1 min, no-load runs); Sect. 3.2 (constant speed 2000 r/min for 2 h and 4000 r/min for 2 h, ISO and stepped variable-speed programmes); Sect. 4.1 (temperature behaviour, air conditioning switching on during the 4000 r/min run, thermal equilibrium after about 80 min); Fig. 11a,b (Z-axis thermal deformation, digitised from https://pmc-oa-opendata.s3.amazonaws.com/PMC11175269.1/sensors-24-03614-g011.jpg)"
+
+  sultana-2023-ti64-hpc-milling:
+    type: article
+    authors: "Sultana, M.N.; Dhar, N.R."
+    title: "Performance evaluation of high-pressure cooling by using external rotary liquid applicator in milling Ti-6Al-4V alloy"
+    venue: "Heliyon 9(7), e17671"
+    year: 2023
+    doi: "10.1016/j.heliyon.2023.e17671"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10345256/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 and Table 4 (Ti-6Al-4V grade 5, 37 HRC; vertical knee-type milling machine 7.5 hp; DORMER HSS-E-PM 4-flute 12 mm end mill, 30 deg helix, radial rake 5 deg, clearance 15 deg, 27 mm flute length, 83 mm overall; vc 16/24/32 m/min, fz 0.08/0.12/0.16 mm, ap 1.0 mm, ae 6.0 mm; VG-68 cutting oil; HPC: one external 2 mm nozzle, 80 bar, 2.0 L/min, 20 mm from the stagnation point; RHPC: rotary applicator, four 0.5 mm nozzles, same pressure and total flow); tool-work thermocouple with calibration T = 6.59 + 80.13 mV; Kistler dynamometer; Surtronic 3+ roughness, 0.8 mm sampling length; Table 5 (L27 full factorial: T, Fc, Ra per run); Table 13 (force components)"
+
+  struzikiewicz-2023-hpc-jet-direction:
+    type: article
+    authors: "Struzikiewicz, G."
+    title: "Investigation of the cutting fluid incidence angle direction in turning grade 5 ELI titanium alloy under high-pressure cooling conditions"
+    venue: "Materials 16(15), 5371"
+    year: 2023
+    doi: "10.3390/ma16155371"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10419409/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (conventional lathe with 150 MPa plunger pump; single external nozzle, angular position set by hand to +-2 deg; Sandvik CNGG120404-SGF grade 1115 in PCLNR2020K12HP; bar D 50 mm; 150 bar, 10 % Blaser Blasocut 2000 emulsion; vc 70 m/min, ap 0.5 mm; Taguchi plan over feed and jet angles alpha, beta; three repeats; Kistler 9257B with 5070B; Keyence VHX-7000 chip measurement; chip grades correct up to 5 mm, acceptable 5-20 mm, unacceptable over 20 mm); Table 1 (902 MPa, 29 HRC); Tables 3 and 5 (test plan, Fc mean/min/max and chip breaking index Cch); Table 8 (chip form grade per feed and jet angles)"
+
+  slodki-2019-ti64-eli-hpc-turning:
+    type: article
+    authors: "Słodki, B.; Zębala, W.; Struzikiewicz, G."
+    title: "Turning titanium alloy, grade 5 ELI, with the implementation of high pressure coolant"
+    venue: "Materials 12(5), 768"
+    year: 2019
+    doi: "10.3390/ma12050768"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC6427521/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (hot-forged, annealed and peeled Ti6Al4V ELI bar D 50 mm, 902 MPa, 29 HRC, Table 1 composition; Sandvik CNMG120404-SF grade H13A in PCLNR2020K12HP; 10 % Blaser Blasocut 2000 emulsion at 70 bar; Kistler 9257B with 5070B); Tables 2-4 (Taguchi plan f 0.077-0.211 mm/rev, ap 0.25-1.00 mm, vc 40/80 m/min, mean forces); Sect. 3 (chip grades: preferred up to 20 mm, acceptable 20-100 mm, unacceptable over 100 mm); Table 8 (chip photographs) and Table 9 (chip form grade and cut cross-section per feed and depth); Figs. 3-4 (chip breaker back-wall angle 3.5 deg at ap 0.25 mm to 27.3 deg at ap 1.0 mm)"
+
+  zebala-2020-ti64-chip-breakability:
+    type: article
+    authors: "Zębala, W.; Struzikiewicz, G.; Słodki, B."
+    title: "Reduction of power consumption by chip breakability control in Ti6Al4V titanium alloy turning"
+    venue: "Materials 13(11), 2642"
+    year: 2020
+    doi: "10.3390/ma13112642"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC7321554/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (Ti6Al4V, 1020 MPa, 33 HRC, Tables 1-2; Mazak Integrex 200-IV with Mazatrol Matrix; Sandvik CNMG 120408-SMC grade 1115 in C6-PCMNN-00115-12HP; vc 50 m/min, ap 1.0 and 3.0 mm, f 0.15-0.30 mm/rev, dry and 70 bar ToolWay S432 7 % coolant); Sect. 2.2 (chip classes by length: up to 25 mm good, 25-50 mm fair, over 50 mm poor; Cin = Lch/50 capped at 1); Table 4 (mean forces); Tables 8 and 9 (mean chip length Lch, Cin and power for dry and HPC)"
+
+  khellaf-2026-x38crmov5-ceramic-turning:
+    type: article
+    authors: "Khellaf, A.; Nouioua, M.; Laouissi, A.; Hammoudi, A.; Hani, M.; Chetbani, Y.; Abdullah, M.M.S.; Belaadi, A.; Ammarullah, M.I.; Ghernaout, D."
+    title: "Surface integrity and machinability analysis in dry hard turning of X38CrMoV5-1 steel using coated and uncoated ceramic tools"
+    venue: "Scientific Reports 16, 12010"
+    year: 2026
+    doi: "10.1038/s41598-026-42035-8"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13069089/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 'Work piece material and cutting inserts' (X38CrMoV5-1 bars D 76 x 400 mm, quenched 1020 C and tempered 250 C to 50 HRC; TOS Trencin SN40C lathe; TiN-coated and uncoated mixed ceramic Al2O3/TiC inserts SNGA120408T01020 in PSBNR2525K12, chi 75, alpha 6, gamma -6, lambda -6 deg; dry); 'Measuring instruments' (Mitutoyo 201 Ra, Altisurf 500, Kistler 9257B with 5011B); Table 1 (levels ap 0.10/0.30/0.50 mm, f 0.08/0.14/0.20 mm/rev, vc 100/150/200 m/min, r 0.8/1.2 mm); Table 2 (L36 plan with coded levels and measured Ra, Fc, Kc for both inserts, MRR)"
+
+  nowakowski-2024-face-milling-insert-errors:
+    type: article
+    authors: "Nowakowski, L.; Rolek, J.; Blasiak, S.; Skrzyniarz, M."
+    title: "The influence of insert mounting errors on the surface roughness of 1.0503 steel in face milling"
+    venue: "Materials 17(24), 6144"
+    year: 2024
+    doi: "10.3390/ma17246144"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11677808/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Sect. 2 (1.0503 steel; Sandvik CoroMill 490-050Q22-08M, five 490-08T308M-PL 1030 inserts, corner radius 0.8 mm, 90 deg entering angle; inserts measured 50 times each with a Heidenhain TT 120 probe; AVIA VMC 800, dry; Renishaw XL-80 relative displacement at 500 Hz; Talysurf CCI-Lite, 0.8 mm cut-off); Sect. 3 (vc 300 m/min, ap 0.2 mm, fz 0.02-0.22 mm); Table 1 (actual load per insert versus feed per tooth from the measured mounting errors); Table 3 (Rp, Rv, Rz, Rc, Rt, Ra, Rq per feed per tooth)"
+
+  wilkinson-2025-fir-trochoidal:
+    type: article
+    authors: "Wilkinson, D.; Sencer, B.; Ward, R."
+    title: "Accurate real-time trajectory generation of circular motion using FIR interpolation: a trochoidal milling case study"
+    venue: "International Journal of Advanced Manufacturing Technology 137(11-12), 5625-5647"
+    year: 2025
+    doi: "10.1007/s00170-025-15385-2"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12006282/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Fig. 1 (trochoid NC code format: CC centre, C full circle DR+, L linear step-over); Table 1 and case study #1 (Heidenhain TNC640 interpolator: 1000 Hz, 3.1 m/s2, 157 m/s3; CYCL DEF 32 tolerance with HSC mode 1); Fig. 9 (case 1 path R = 5 mm, start (0,0), end (10,0)); Table 2 (cycle times TNC640, linear-FIR, axial/path-FIR); case study #2 (Hermle C52 with Siemens SINUMERIK 840D sl, CYCLE832 for speed, path in G01 segments, TCP recorded at 500 Hz; TNC640 on the programming station); Fig. 11 (case 2 plan view: lead-in and five R = 10 mm circles); Table 3 (840D: 2 ms, 3 m/s2, 145 m/s3; TNC640: 3 ms, 3 m/s2, 50 m/s3); Table 4 (cycle times 840D, TNC640, hybrid FIR); Listings 1-3 (NC headers, figures https://pmc-oa-opendata.s3.amazonaws.com/PMC12006282.1/170_2025_15385_Figi_HTML.jpg, _Figj_, _Figk_)"
+
+  budak-1994-thin-wall-milling-thesis:
+    type: thesis
+    authors: "Budak, E."
+    title: "Mechanics and dynamics of milling thin walled structures"
+    venue: "PhD thesis, Department of Mechanical Engineering, University of British Columbia"
+    institution: "University of British Columbia"
+    year: 1994
+    doi: "10.14288/1.0088030"
+    url: "http://hdl.handle.net/2429/6988"
+    accessed: 2026-11-03
+    pages: "Sect. 3.3 (cantilever end-mill model with collet spring, equivalent radius 0.8-0.85 R; measured tip and collet stiffness of a 25.4 mm HSS and a 19.05 mm carbide end mill, thesis pp. 53-54); Sect. 5.4 and Table 5.1 (peripheral milling form-error tests: Al7075 with a 19.05 mm 4-flute HSS end mill, AISI 1040 with a 19.05 mm 4-flute carbide end mill, cutting coefficients, gauge lengths, clamping stiffness); Figs. 5.5-5.6 (measured surface profiles, thesis p. 117), Figs. 5.9-5.10 (measured maximum normal force and surface error, pp. 120-121); Sect. 8.4.2 and Fig. 8.10 (chatter tests of Weck, Altintas and Beer 1993: 30 mm 3-flute end mill, modal parameters, Kt and Kr, pp. 221-222); read through https://circle.library.ubc.ca/rest/bitstreams/303806/retrieve (text) and /rest/bitstreams/17764/retrieve (PDF, pdf pages 75, 135, 138, 141, 142, 242, 243)"

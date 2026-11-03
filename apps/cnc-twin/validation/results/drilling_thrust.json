@@ -1,0 +1,206 @@
+{
+ "budget": {
+  "components": {},
+  "metric": "relative error of the simulated steady thrust (axial) force during full-diameter drilling",
+  "note": "The thrust is dominated by the chisel edge (extrusion at near-zero speed and strongly negative rake), which cutting-force models describe less well than the lips. Luo et al. quote Ucun's 80-90 % agreement for drilling simulations, i.e. 10-20 % deviation; their own tuned FE model reached 3.25 %. 20 % keeps a margin for the poorly specified drill geometry of the available references.",
+  "pct": 20.0,
+  "src": "est"
+ },
+ "calibration_dependent": null,
+ "cases": [
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: standard two-flute twist drill",
+     "src": "est",
+     "value": 2
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: no coolant is mentioned in the source",
+     "src": "est",
+     "value": "dry"
+    },
+    {
+     "input": "setup.conditions.spindle_rpm",
+     "note": "computed here from vc 18 m/min and D 10 mm",
+     "src": "est",
+     "value": 573
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'drilling_thrust'",
+   "file": "validation/cases/drilling_thrust/thrust-drill-aisi1040-gok2013-helix.yaml",
+   "id": "thrust-drill-aisi1040-gok2013-helix",
+   "location": "Sect. 2.1-2.2 (setup, Table 2), Table 5 (measured and predicted force and torque per helix angle), Sect. 3 text (condition of Table 5)",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_thrust",
+   "src": "gok-2013-aisi1040-drilling-thrust-torque",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: two-flute twist drill",
+     "src": "est",
+     "value": 2
+    },
+    {
+     "input": "setup.tool.point_angle_deg",
+     "note": "assumed: not stated (common point of general-purpose HSS drills)",
+     "src": "est",
+     "value": 118
+    },
+    {
+     "input": "setup.tool.web_thickness",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": "0.15 D"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: no coolant is mentioned in the source",
+     "src": "est",
+     "value": "dry"
+    },
+    {
+     "input": "setup.conditions.hole_depth_mm",
+     "note": "assumed: not stated in the text (shown only in the sample drawing, Fig. 4b, not read)",
+     "src": "est",
+     "value": 15
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'drilling_thrust'",
+   "file": "validation/cases/drilling_thrust/thrust-drill-al2024-craciun2024-hss.yaml",
+   "id": "thrust-drill-al2024-craciun2024-hss",
+   "location": "Sect. 2 (setup, Tables 1-2), Sect. 2 text (selection of the stabilised range, averaging), Table 3 (Fz per run)",
+   "material": "al7075-t7351",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_thrust",
+   "src": "craciun-2024-al2024-drilling-forces",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.chisel_edge_angle_deg",
+     "note": "assumed: not stated; typical conventional point (est.)",
+     "src": "est",
+     "value": 125
+    },
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: not stated; a standard two-flute twist drill is assumed",
+     "src": "est",
+     "value": 2
+    },
+    {
+     "input": "setup.tool.web_thickness_mm",
+     "note": "assumed: not stated; ~0.15 D, typical of a standard jobber drill (est.)",
+     "src": "est",
+     "value": 1.5
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'drilling_thrust'",
+   "file": "validation/cases/drilling_thrust/thrust-drill-al7075-luo2021.yaml",
+   "id": "thrust-drill-al7075-luo2021",
+   "location": "Fig. 8a-c, 'Experimental' bars (digitised; 8.4, 10.8 and 11.9 N/px)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_thrust",
+   "src": "luo-2021-al7075-drilling-thrust-torque",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.lip_count",
+     "note": "assumed: two-flute twist drill (not stated in words)",
+     "src": "est",
+     "value": 2
+    },
+    {
+     "input": "setup.conditions.spindle_rpm",
+     "note": "computed here from vc and D; not stated",
+     "src": "est",
+     "value": "3191 (D 8, 80.21 m/min); 5960 (D 8, 149.79); 2128 (D 12, 80.21); 3973 (D 12, 149.79)"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'drilling_thrust'",
+   "file": "validation/cases/drilling_thrust/thrust-drill-c45-sklenicka2024-carbide.yaml",
+   "id": "thrust-drill-c45-sklenicka2024-carbide",
+   "location": "Sects. 3.1-3.3 (material, machine, tools), Table 4 (constant tool factors), Table 5 (factor levels), Sect. 5 verification experiment text (Ff per feed at D 8 mm, vc 80.21 m/min; feed-averaged Ff for the four D/vc settings of Fig. 13)",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_thrust",
+   "src": "sklenicka-2024-c45-drilling-feed-force",
+   "status": "no_harness",
+   "uncertainty_pct": 1.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": 30
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'drilling_thrust'",
+   "file": "validation/cases/drilling_thrust/thrust-drill-ti64-beranoagirre2018-pilot.yaml",
+   "id": "thrust-drill-ti64-beranoagirre2018-pilot",
+   "location": "Sect. 2.2-2.3 (machine, dynamometer, plan, tool, coolant), Table 1 (Ti-6Al-4V properties), Table 2 (vc, n, f), Table 4 (measured Fz and Tc for Ti-6Al-4V, calibration tests)",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "drilling",
+   "quantity": "drilling_thrust",
+   "src": "beranoagirre-2018-tial-ti64-drilling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  }
+ ],
+ "format": "cnctwin-validation-results",
+ "harness": "",
+ "independent": null,
+ "quantity": "drilling_thrust",
+ "rule": "tolerance = max(budget_pct/100 x |reference| (for temperatures: x the rise above ambient), 2 x the reference's uncertainty); a case passes when every compared value lies within its tolerance; a quantity passes when at least 80 % of its cases pass and no case misses by more than twice its tolerance",
+ "verdict": "no harness",
+ "verdict_reason": "no harness registered yet",
+ "version": 1
+}

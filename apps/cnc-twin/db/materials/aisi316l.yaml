@@ -38,7 +38,7 @@ flow_stress:
   T_ref_degC: {value: 20, src: est, note: "benmeddour-2021 simulations start at 20 C; reference temperature of the original set not stated in the table read"}
   T_melt_degC: 1385
   src: benmeddour-2021-316l-turning
-  note: "Chandrasekaran, M'Saoubi & Chazal (2005, Mach. Sci. Technol. 9:131), from orthogonal milling and split Hopkinson bar tests, as listed in Benmeddour 2021 Table 2. Other sets in that table: Miguelez et al. 400/750/n 0.500/C 0.040/m 0.500 (eps0 1); Tounsi et al. 2002 514/514/0.508/0.042/0.533 (eps0 0.001); Benmeddour inverse fit to turning forces at 100 m/min 412/761/0.510/0.038/0.520 (eps0 1). Umbrello, M'Saoubi & Outeiro 2007 (IJMTM, pp. 462-470) compared five 316L sets and found residual stress very sensitive to the choice."
+  note: "Chandrasekaran, M'Saoubi & Chazal (2005, Mach. Sci. Technol. 9:131), from orthogonal milling and split Hopkinson bar tests, as listed in Benmeddour 2021 Table 2. Other sets in that table: Miguelez et al. 400/750/n 0.500/C 0.040/m 0.500 (eps0 1); Tounsi et al. 2002 514/514/0.508/0.042/0.533 (eps0 0.001); Benmeddour inverse fit to turning forces at 100 m/min 412/761/0.510/0.038/0.520 (eps0 1). Umbrello, M'Saoubi & Outeiro 2007 (IJMTM, pp. 462-470) compared five 316L sets and found residual stress very sensitive to the choice. The Chandrasekaran et al. 2005 original could not be read in the second research round (paywalled); the constants rest on Benmeddour 2021."
 
 cutting:
   kienzle:

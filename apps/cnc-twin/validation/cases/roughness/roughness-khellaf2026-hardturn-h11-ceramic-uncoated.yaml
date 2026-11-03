@@ -1,0 +1,76 @@
+# Khellaf et al. (2026): Ra in dry hard turning of X38CrMoV5-1 (AISI H11, 50 HRC) with uncoated mixed
+# ceramic (Al2O3/TiC) SNGA inserts of nose radius 0.8 and 1.2 mm, feed 0.08-0.20 mm/rev (L36 plan).
+format: cnctwin-validation-case
+version: 1
+id: roughness-khellaf2026-hardturn-h11-ceramic-uncoated
+quantity: roughness
+reference:
+  src: khellaf-2026-x38crmov5-ceramic-turning
+  location: "Sect. 'Work piece material and cutting inserts' and 'Measuring instruments', Table 1 (levels), Table 2 (L36 runs, uncoated insert columns: Ra, Fc)"
+  digitised: false
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: h13-50hrc, note: "source material X38CrMoV5-1 (AISI H11) hardened to 50 HRC (quenched 1020 C, oil-tempered 250 C): 0.35 C, 5.26 Cr, 1.19 Mo, 0.50 V; H13 (X40CrMoV5-1) at 50 HRC is the nearest database entry"}
+  stock: {diameter_mm: 76, length_mm: 400}
+  tool:
+    type: turning_insert
+    iso_designation: SNGA120408T01020
+    tool_class: ceramic
+    grade: "mixed ceramic Al2O3/TiC"
+    coating: none
+    nose_radius_mm_levels: [0.8, 1.2]
+    edge_preparation: "T01020 chamfer (0.10 mm x 20 deg) per the designation"
+    cutting_edge_angle_deg: 75
+    clearance_deg: 6
+    rake_deg: -6
+    inclination_deg: -6
+    holder: PSBNR2525K12
+  machine: {model: "TOS Trencin SN40C lathe"}
+  conditions:
+    coolant: dry
+    feed_mm_rev_levels: [0.08, 0.14, 0.20]
+    cutting_speed_m_min_levels: [100, 150, 200]
+    ap_mm_levels: [0.10, 0.30, 0.50]
+    roughness_instrument: "Mitutoyo 201 roughness tester (as printed; Ra), ISO 4287"
+    tool_state: {value: new, src: est, note: "not stated for the L36 runs; tool wear was studied separately (Figs. 17-21)"}
+  program: null
+reference_values:
+  - {name: Ra_r0.8, value: 0.67, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 1: vc 100 m/min, ap 0.10 mm; Fc 20.41 N"}
+  - {name: Ra_r0.8, value: 0.66, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 4: vc 100 m/min, ap 0.10 mm; Fc 21.71 N"}
+  - {name: Ra_r0.8, value: 0.29, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 7: vc 100 m/min, ap 0.30 mm; Fc 58.98 N"}
+  - {name: Ra_r0.8, value: 0.31, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 15: vc 200 m/min, ap 0.30 mm; Fc 59.59 N"}
+  - {name: Ra_r0.8, value: 0.27, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 18: vc 200 m/min, ap 0.30 mm; Fc 51.07 N"}
+  - {name: Ra_r0.8, value: 0.36, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 10: vc 100 m/min, ap 0.50 mm; Fc 100.70 N"}
+  - {name: Ra_r0.8, value: 0.67, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 11: vc 150 m/min, ap 0.10 mm; Fc 33.81 N"}
+  - {name: Ra_r0.8, value: 0.63, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 2: vc 150 m/min, ap 0.30 mm; Fc 78.08 N"}
+  - {name: Ra_r0.8, value: 0.61, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 5: vc 150 m/min, ap 0.30 mm; Fc 79.24 N"}
+  - {name: Ra_r0.8, value: 0.63, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 13: vc 100 m/min, ap 0.50 mm; Fc 140.58 N"}
+  - {name: Ra_r0.8, value: 0.68, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 16: vc 100 m/min, ap 0.50 mm; Fc 133.28 N"}
+  - {name: Ra_r0.8, value: 0.58, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 8: vc 150 m/min, ap 0.50 mm; Fc 131.83 N"}
+  - {name: Ra_r0.8, value: 1.24, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 14: vc 150 m/min, ap 0.10 mm; Fc 31.31 N"}
+  - {name: Ra_r0.8, value: 1.28, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 17: vc 150 m/min, ap 0.10 mm; Fc 42.48 N"}
+  - {name: Ra_r0.8, value: 1.30, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 9: vc 200 m/min, ap 0.10 mm; Fc 30.80 N"}
+  - {name: Ra_r0.8, value: 1.10, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 12: vc 200 m/min, ap 0.30 mm; Fc 100.96 N"}
+  - {name: Ra_r0.8, value: 1.14, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 3: vc 200 m/min, ap 0.50 mm; Fc 167.87 N"}
+  - {name: Ra_r0.8, value: 1.36, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 6: vc 200 m/min, ap 0.50 mm; Fc 162.24 N"}
+  - {name: Ra_r1.2, value: 0.29, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 32: vc 150 m/min, ap 0.10 mm; Fc 24.49 N"}
+  - {name: Ra_r1.2, value: 0.26, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 24: vc 200 m/min, ap 0.10 mm; Fc 25.56 N"}
+  - {name: Ra_r1.2, value: 0.20, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 35: vc 150 m/min, ap 0.30 mm; Fc 63.12 N"}
+  - {name: Ra_r1.2, value: 0.33, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 26: vc 150 m/min, ap 0.50 mm; Fc 90.16 N"}
+  - {name: Ra_r1.2, value: 0.26, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 29: vc 150 m/min, ap 0.50 mm; Fc 91.21 N"}
+  - {name: Ra_r1.2, value: 0.30, unit: um, x: 0.08, x_name: feed, x_unit: mm/rev, note: "run 21: vc 200 m/min, ap 0.50 mm; Fc 110.31 N"}
+  - {name: Ra_r1.2, value: 0.63, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 19: vc 100 m/min, ap 0.10 mm; Fc 39.93 N"}
+  - {name: Ra_r1.2, value: 0.51, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 27: vc 200 m/min, ap 0.10 mm; Fc 39.67 N"}
+  - {name: Ra_r1.2, value: 0.54, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 30: vc 200 m/min, ap 0.10 mm; Fc 46.41 N"}
+  - {name: Ra_r1.2, value: 0.41, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 22: vc 100 m/min, ap 0.30 mm; Fc 107.19 N"}
+  - {name: Ra_r1.2, value: 0.46, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 33: vc 200 m/min, ap 0.30 mm; Fc 100.91 N"}
+  - {name: Ra_r1.2, value: 0.33, unit: um, x: 0.14, x_name: feed, x_unit: mm/rev, note: "run 36: vc 200 m/min, ap 0.50 mm; Fc 159.49 N"}
+  - {name: Ra_r1.2, value: 1.13, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 34: vc 100 m/min, ap 0.10 mm; Fc 54.17 N"}
+  - {name: Ra_r1.2, value: 0.82, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 25: vc 100 m/min, ap 0.30 mm; Fc 125.40 N"}
+  - {name: Ra_r1.2, value: 0.92, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 28: vc 100 m/min, ap 0.30 mm; Fc 126.70 N"}
+  - {name: Ra_r1.2, value: 0.79, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 20: vc 150 m/min, ap 0.30 mm; Fc 115.89 N"}
+  - {name: Ra_r1.2, value: 0.66, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 31: vc 100 m/min, ap 0.50 mm; Fc 190.75 N"}
+  - {name: Ra_r1.2, value: 0.52, unit: um, x: 0.20, x_name: feed, x_unit: mm/rev, note: "run 23: vc 150 m/min, ap 0.50 mm; Fc 133.39 N"}
+reference_curves: []
+notes: "Name = nose radius in mm, x = feed; each value is one run of the L36 plan (runs 1/4, 2/5, 3/6 and the other repeated level combinations are replicate runs). In Table 2 the column headers 'f (mm/rev)' and 'Vc (m/min)' are interchanged: the levels stored here make the printed MRR = vc f ap and Kc = Fc / (f ap) agree for all 36 runs, and they put Ra in line with the feed-mark law (f^2/(32 r) gives 0.25, 0.77, 1.56 um at r 0.8 mm), while the header order would contradict both. The paper says feed explains most of the Ra variance (88.7 % coated, 67.0 % uncoated). Ra range of the uncoated insert: 0.20-1.36 um. The insert designation printed (SNGA120408T01020) is the r = 0.8 mm size; the 1.2 mm insert (SNGA120412 in the same family) is not named. Measurement repeat count and uncertainty are not given."

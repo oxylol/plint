@@ -1,0 +1,105 @@
+# Sources of the dynamics domain (cnctwin/dynamics, docs/models/dynamics.md): exact discretisation and its
+# energy integrals, stability lobes (zero-order, multi-frequency, variable pitch, turning, mode coupling, process
+# damping), semi-discretisation, chatter detection, base excitation and residual flexibility, mode tracking.
+# Keys already defined elsewhere are cited as they are: altintas-1999-variable-pitch, altintas-2008-process-damping,
+# wu-1989-process-damping, ahmadi-ismail-2011-process-damping, budak-tunc-2010-process-damping,
+# tlusty-ismail-1981-nonlinearity (models-cutting.yaml); insperger-2004-updated-sd, insperger-2006-chatter-sle
+# (validation-2.yaml); delio-1992 (models-sound.yaml); altintas-2012-mfg-automation,
+# schmitz-smith-2009-machining-dynamics, iso-21940-11-2016 (models-tooling.yaml); murray-li-sastry-1994
+# (models-motion.yaml).
+format: cnctwin-bibliography
+version: 1
+entries:
+  altintas-budak-1995-zoa:
+    type: article
+    authors: "Altintas, Y.; Budak, E."
+    title: "Analytical prediction of stability lobes in milling"
+    venue: "CIRP Annals 44(1), 357-362"
+    year: 1995
+    doi: "10.1016/S0007-8506(07)62342-7"
+    pages: "Eqs. 1-23: dynamic chip thickness, time-averaged directional factors [A0], eigenvalue Lambda of [A0][G], a_lim = -2 pi Lambda_R (1 + kappa^2) / (N K_t), epsilon = pi - 2 psi, spindle speeds of the lobes"
+  budak-altintas-1998-multifrequency:
+    type: article
+    authors: "Budak, E.; Altintas, Y."
+    title: "Analytical prediction of chatter stability in milling - Part I: General formulation"
+    venue: "ASME Journal of Dynamic Systems, Measurement, and Control 120(1), 22-30"
+    year: 1998
+    doi: "10.1115/1.2801317"
+    pages: "Fourier expansion of the directional factors, multi-frequency (Hill) eigenvalue problem with the tooth-passing harmonics"
+  insperger-stepan-2002-sd:
+    type: article
+    authors: "Insperger, T.; Stepan, G."
+    title: "Semi-discretization method for delayed systems"
+    venue: "International Journal for Numerical Methods in Engineering 55(5), 503-518"
+    year: 2002
+    doi: "10.1002/nme.505"
+    pages: "piecewise-constant coefficients, discretised delayed term, exact solution per interval, monodromy matrix and its spectral radius"
+  tlusty-polacek-1963-stability:
+    type: conference
+    authors: "Tlusty, J.; Polacek, M."
+    title: "The stability of machine tools against self-excited vibrations in machining"
+    venue: "Proceedings of the ASME International Research in Production Engineering Conference, Pittsburgh, 465-474"
+    year: 1963
+    pages: "regenerative chatter limit b_lim = -1 / (2 K_f Re[G]_min) of an oriented single-degree system; mode coupling of two orthogonal modes"
+  tobias-1965-machine-tool-vibration:
+    type: book
+    authors: "Tobias, S.A."
+    title: "Machine-Tool Vibration"
+    publisher: "Blackie, London"
+    year: 1965
+    pages: "chs. 5-6: regenerative and mode-coupling (non-regenerative) instability of the cutting process"
+  van-loan-1978-integrals:
+    type: article
+    authors: "Van Loan, C.F."
+    title: "Computing integrals involving the matrix exponential"
+    venue: "IEEE Transactions on Automatic Control 23(3), 395-404"
+    year: 1978
+    doi: "10.1109/TAC.1978.1101743"
+    pages: "Theorem 1: block-triangular exponential of [[-A^T, Q], [0, A]] gives int_0^h e^(A^T t) Q e^(A t) dt"
+  franklin-1998-digital-control:
+    type: book
+    authors: "Franklin, G.F.; Powell, J.D.; Workman, M.L."
+    title: "Digital Control of Dynamic Systems"
+    edition: 3
+    publisher: "Addison-Wesley, Menlo Park"
+    year: 1998
+    pages: "sect. 6.3.2: triangle (first-order) hold equivalent from the augmented matrix exponential"
+  allemang-brown-1982-mac:
+    type: conference
+    authors: "Allemang, R.J.; Brown, D.L."
+    title: "A correlation coefficient for modal vector analysis"
+    venue: "Proceedings of the 1st International Modal Analysis Conference (IMAC), Orlando, 110-116"
+    year: 1982
+    pages: "modal assurance criterion MAC = |a^T b|^2 / ((a^T a)(b^T b))"
+  craig-kurdila-2006-structural-dynamics:
+    type: book
+    authors: "Craig, R.R.; Kurdila, A.J."
+    title: "Fundamentals of Structural Dynamics"
+    edition: 2
+    publisher: "Wiley, Hoboken"
+    year: 2006
+    pages: "mode-displacement and mode-acceleration (residual flexibility) methods; base excitation of mass-normalised modes by -m a; rotating unbalance forcing and the steady-state receptance"
+  smith-tlusty-1991-milling-simulation:
+    type: article
+    authors: "Smith, S.; Tlusty, J."
+    title: "An overview of modeling and simulation of the milling process"
+    venue: "ASME Journal of Engineering for Industry 113(2), 169-175"
+    year: 1991
+    doi: "10.1115/1.2899674"
+    pages: "time-domain regenerative milling simulation; chip thickness from the current and previous tooth paths; the edge leaving the cut"
+  schmitz-2002-once-per-rev:
+    type: article
+    authors: "Schmitz, T.L.; Medicus, K.; Dutterer, B."
+    title: "Exploring once-per-revolution audio signal variance as a chatter indicator"
+    venue: "Machining Science and Technology 6(2), 215-233"
+    year: 2002
+    doi: "10.1081/MST-120005957"
+    pages: "a stable cut is periodic with the revolution (synchronous samples repeat); chatter is asynchronous"
+  bayly-2003-stability-interrupted:
+    type: article
+    authors: "Bayly, P.V.; Halley, J.E.; Mann, B.P.; Davies, M.A."
+    title: "Stability of interrupted cutting by temporal finite element analysis"
+    venue: "ASME Journal of Manufacturing Science and Engineering 125(2), 220-225"
+    year: 2003
+    doi: "10.1115/1.1556860"
+    pages: "period-doubling (flip) and Hopf lobes of low-immersion milling; the zero-order solution misses the flip lobes"

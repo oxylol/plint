@@ -100,7 +100,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     ap_ref_mm: 0.2
     VB_limit_mm: 0.2
     src: est
-    note: "no published Taylor fit read (Kundrak et al. 2020, Teh. Vjesn. 27:166, fitted CBN tool life on 100Cr6 at 60 HRC but was not accessible). C set so that T = 15 min at vc = 150 m/min (low-CBN finishing, general knowledge)"
+    note: "no published Taylor fit read (Kundrak et al. 2020, Teh. Vjesn. 27:166, fitted CBN tool life on 100Cr6 at 60 HRC but was not accessible). C set so that T = 15 min at vc = 150 m/min (low-CBN finishing, general knowledge). Measured comparison (kundrak-2019-hard-turning-life, boring hardened 100Cr6 of unstated hardness with a PCBN Composite 10 tool, rake -5 deg, f 0.075, ap 0.1 mm, wear criterion W 0.4 mm): T = 132, 34, 11, 7, 5 min at 50, 68, 92, 105, 120 m/min above the tool-life maximum at about 40 m/min; a Taylor fit made here to those five points gives n 0.27, C 178 m/min (15 min at 87 m/min), i.e. much shorter lives than this estimate; not adopted because the tool, the boring set-up and the hardness differ from usual low-CBN finish turning"
   - tool_class: ceramic
     coating: uncoated
     grade: "mixed Al2O3-TiC"

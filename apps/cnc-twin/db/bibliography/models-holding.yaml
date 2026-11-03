@@ -1,0 +1,63 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of the holding models (cnctwin.holding, docs/models/holding.md): tool-holder clamping
+# (power screws, wedges, interference fits), workholding contact mechanics (elastic contacts with
+# Coulomb friction, locating error), jaw-chuck speed limits, magnetic holding and the machine-element
+# data the models use. Catalogue sources already listed in holding.yaml, materials-2.yaml,
+# models-tooling.yaml, models-cutting.yaml (kitagawa-*, carrlane-*, regofix-*, iso-21940-11-2016,
+# altintas-2012-mfg-automation, johnson-1985-contact-mechanics) are cited by key from there.
+entries:
+  budynas-nisbett-2015-shigley:
+    type: book
+    authors: "Budynas, R.G.; Nisbett, J.K."
+    title: "Shigley's Mechanical Engineering Design"
+    edition: 10
+    publisher: "McGraw-Hill Education, New York"
+    year: 2015
+    pages: "eq. (3-56) interference-fit pressure of a shaft in a hub (Lame); eqs. (8-1)-(8-6) power-screw torque with collar friction, sec(alpha) for threads of flank half-angle alpha; eq. (8-27) and Table 8-15 bolt torque T = K F_i d, K = 0.2 when the condition is not stated; sec. 5-5 distortion-energy shear strength S_sy = 0.577 S_y; Table A-5 carbon steel E = 207 GPa, nu = 0.292, alpha = 11.7e-6 1/K"
+  iso-68-1-1998:
+    type: standard
+    title: "ISO 68-1:1998 ISO general purpose screw threads - Basic profile - Part 1: Metric screw threads"
+    institution: "International Organization for Standardization"
+    year: 1998
+    pages: "basic profile: 60 deg flank angle, fundamental triangle height H = (sqrt(3)/2) P, pitch diameter d2 = d - 2 (3/8) H"
+  iso-15488-2003:
+    type: standard
+    title: "ISO 15488:2003 Collets with 8 degree setting angle for tool shanks - Collets, nuts and fitting dimensions"
+    institution: "International Organization for Standardization"
+    year: 2003
+    pages: "title and scope: the 8 deg setting (half) angle of the collet cone (ER system, formerly DIN 6499)"
+  vdi-3106-2004:
+    type: standard
+    title: "VDI 3106:2004 Ermittlung der zulaessigen Drehzahl von Drehfuttern (Backenfutter) - Determination of permissible speed of lathe chucks (jaw chucks)"
+    institution: "Verein Deutscher Ingenieure"
+    year: 2004
+    pages: "centrifugal force of the jaws F_c = sum(m_B r_s) omega^2 (base and top jaw masses at their centre-of-gravity radius); dynamic gripping force = static gripping force minus F_c for external gripping"
+  li-melkote-1999-elastic-contact:
+    type: article
+    authors: "Li, B.; Melkote, S.N."
+    title: "An elastic contact model for the prediction of workpiece-fixture contact forces in clamping"
+    venue: "Journal of Manufacturing Science and Engineering 121(3), 485-493"
+    year: 1999
+    pages: "rigid workpiece on elastic locator and clamp contacts with Coulomb friction; contact forces from the minimum of the complementary energy; clamping and machining load cases"
+  asada-by-1985-fixturing:
+    type: article
+    authors: "Asada, H.; By, A.B."
+    title: "Kinematic analysis of workpart fixturing for flexible assembly with automatically reconfigurable fixtures"
+    venue: "IEEE Journal of Robotics and Automation RA-1(2), 86-94"
+    year: 1985
+    pages: "locating error: the workpart displacement from the locator displacements through the locator Jacobian (normals and positions), deterministic locating"
+  furlani-2001-magnets:
+    type: book
+    authors: "Furlani, E.P."
+    title: "Permanent Magnet and Electromechanical Devices: Materials, Analysis, and Applications"
+    publisher: "Academic Press, San Diego"
+    year: 2001
+    pages: "Maxwell stress on a ferromagnetic surface: holding pressure p = B^2 / (2 mu_0) for the gap flux density B"
+  bozorth-1951-ferromagnetism:
+    type: book
+    authors: "Bozorth, R.M."
+    title: "Ferromagnetism"
+    publisher: "D. Van Nostrand, New York"
+    year: 1951
+    pages: "saturation induction at room temperature: iron 21.5 kG (2.15 T), cobalt 17.9 kG, nickel 6.1 kG; carbon and alloying lower the saturation of steels"

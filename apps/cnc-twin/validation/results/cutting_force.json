@@ -1,0 +1,791 @@
+{
+ "budget": {
+  "components": {
+   "main_force_pct": 15.0,
+   "milling_peak_force_pct": 20.0,
+   "thrust_force_pct": 30.0
+  },
+  "metric": "relative error of the simulated steady mean force component (turning, orthogonal cutting) or of the peak / extreme value of a force component (milling) against the reference value",
+  "note": "main_force_pct: Cutting (tangential, power) component. Measured repeats agree to 1-5 % and the stated measurement scatter is below 10 %, so the references are not the limit. Calibrated models reach 8 % (Loeschner 2025, Zou 2026) and mechanistic milling models 10 % for 85 % of cases with no case above 20 % (Altintas review); literature JC sets alone scatter from -21 % to +70 % (Ducobu 2017). 15 % is therefore achievable with good material data and still discriminates a wrong flow-stress or friction model. | milling_peak_force_pct: Peak or extreme values of Fx, Fy, Fz in milling: the reference is digitised from force-time curves (3-4 % added uncertainty), runout and dynamics add to the cutting-mechanics error; the review's 'maximum deviation in all cases less than 20 %' for mechanistic milling models is taken as the bound. | thrust_force_pct: Feed / thrust / back component in the orthogonal plane. It depends on edge radius, flank contact and friction much more than the main force: calibrated FE models miss it by 14.8 % on average (Zou 2026) and up to 42 % (Loeschner 2025); twenty JC sets give -59 % to +14 % (Ducobu 2017).",
+  "pct": null,
+  "src": "est"
+ },
+ "calibration_dependent": null,
+ "cases": [
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.edge_radius_um",
+     "note": "assumed, not derived from a source: the edge was scanned for the FE model but no radius is given; 30 um is a judgement for a honed PVD-coated milling insert",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.conditions.radial_position",
+     "note": "assumed: the source says only 'milling was carried out concurrently' (down milling) with ae 20 mm; the position of the cutter axis relative to the workpiece edges is not stated",
+     "src": "est",
+     "value": "partial immersion from the exit side: the insert exits the cut tangentially, engagement arc about 87 deg"
+    },
+    {
+     "input": "setup.conditions.spindle_rpm",
+     "note": "computed here from vc 230 m/min and D 42 mm (n = 1000 vc / (pi D)); not stated",
+     "src": "est",
+     "value": 1743
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-facemill-42crmo4-plodzien2023-toroidal.yaml",
+   "id": "force-facemill-42crmo4-plodzien2023-toroidal",
+   "location": "Sect. 2.2 (setup), Table 2 (plan), Table 3 'Real' columns (measured forces)",
+   "material": "aisi4140-annealed",
+   "measured": true,
+   "operation": "face_milling",
+   "quantity": "cutting_force",
+   "src": "plodzien-2023-42crmo4-toroidal-face-milling",
+   "status": "no_harness",
+   "uncertainty_pct": 3.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.entering_angle_deg",
+     "note": "assumed: not stated; high-feed heads cut with a small entering angle, 15 deg is a judgement, not a catalogue value",
+     "src": "est",
+     "value": 15
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: no coolant is mentioned in the source",
+     "src": "est",
+     "value": "dry"
+    },
+    {
+     "input": "setup.conditions.radial_position",
+     "note": "assumed: not stated (grooves 5 mm thick were milled at both sides of each surface for clean entry and exit)",
+     "src": "est",
+     "value": "centred over the 14 mm wide surface"
+    },
+    {
+     "input": "setup.conditions.spindle_rpm",
+     "note": "computed here from vc 160 m/min and D 20 mm",
+     "src": "est",
+     "value": 2546
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-highfeed-ss1.4541-reznicek2023.yaml",
+   "id": "force-highfeed-ss1.4541-reznicek2023",
+   "location": "Sect. 2 (material Tables 1-3, machine, tool, dynamometer, procedure), Table 4 (conditions), Tables 5, 8 and 9 (measured Fx, Fy, Fz at vc 160 m/min for ap 0.5, 0.6 and 0.7 mm)",
+   "material": "aisi316l",
+   "measured": true,
+   "operation": "face_milling",
+   "quantity": "cutting_force",
+   "src": "reznicek-2023-ss1.4541-high-feed-milling-forces",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.corner_radius_mm",
+     "note": "decoded from the insert code (12 = 1.2 mm corner radius per the usual AOMT coding); not stated in words",
+     "src": "est",
+     "value": 1.2
+    },
+    {
+     "input": "setup.tool.rake_deg",
+     "note": "assumed: not stated (positive AOMT milling insert)",
+     "src": "est",
+     "value": 10
+    },
+    {
+     "input": "setup.conditions.direction",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": "down"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-mill-aisi1045-villarrazo2023-mql.yaml",
+   "id": "force-mill-aisi1045-villarrazo2023-mql",
+   "location": "Sect. 2 (setup, Table 2 cutting parameters, Eqs. 1-2 RMS definition), Table 3 (RMS cutting forces at 630, 5040, 6300 and 7245 mm of cut length)",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "cutting_force",
+   "src": "villarrazo-2023-aisi1045-cryomql-milling",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.nose_radius_mm",
+     "note": "assumed: ISO code '08' = 0.8 mm corner radius (code convention); outside the cut on a 4 mm tube wall",
+     "src": "est",
+     "value": 0.8
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-al6061-javidikia2021-feed.yaml",
+   "id": "force-orth-al6061-javidikia2021-feed",
+   "location": "Fig. 4 (feed series at 950 m/min) and Fig. 5 (speed series at 0.16 mm): values printed on the bars",
+   "material": "al6061-t6",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "javidikia-2021-al6061-orthogonal",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.nose_radius_mm",
+     "note": "assumed: ISO code '08' = 0.8 mm corner radius (code convention); outside the cut on a 4 mm tube wall",
+     "src": "est",
+     "value": 0.8
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-al6061-javidikia2021-speed.yaml",
+   "id": "force-orth-al6061-javidikia2021-speed",
+   "location": "Fig. 4 (feed series at 950 m/min) and Fig. 5 (speed series at 0.16 mm): values printed on the bars",
+   "material": "al6061-t6",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "javidikia-2021-al6061-orthogonal",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.clearance_deg",
+     "note": "assumed: not stated: a TNMA insert has 0 deg own clearance, tilted 5 deg negative in the holder",
+     "src": "est",
+     "value": 5
+    },
+    {
+     "input": "setup.tool.edge_radius_um",
+     "note": "assumed: not stated; TNMA inserts are edge-honed (typically 25-50 um, est.)",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.tool.nose_radius_mm",
+     "note": "assumed: ISO code '08' = 0.8 mm corner radius (code convention)",
+     "src": "est",
+     "value": 0.8
+    },
+    {
+     "input": "setup.conditions.width_of_cut_mm",
+     "note": "assumed: not stated which dimension is the width; the disc thickness (4 mm) is assumed",
+     "src": "est",
+     "value": 4
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-al7075-jomaa2014.yaml",
+   "id": "force-orth-al7075-jomaa2014",
+   "location": "Table 2 (experimental results of the orthogonal machining), Table 3 (conditions)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "jomaa-2014-al7075-cutting-table",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ck45-klippel2022-f010.yaml",
+   "id": "force-orth-ck45-klippel2022-f010",
+   "location": "Table B.15 (Ck45), tests V0072, V0073, V0074, V0123, V0124, V0125, V0160, V0161, V0162, V0084, V0085, V0093, V0094, V0095, V0236, V0245, V0246, V0247, V0292, V0293, V0294, V0298, V0299, V0300",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "klippel-2022-arxiv-orthogonal-data",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ck45-klippel2022-vc150.yaml",
+   "id": "force-orth-ck45-klippel2022-vc150",
+   "location": "Table B.15 (Ck45), tests V0091, V0092, V0148, V0149, V0150, V0151, V0152, V0093, V0094, V0095, V0154, V0155, V0156, V0096, V0097, V0098, V0172, V0173, V0174, V0100, V0101",
+   "material": "aisi1045",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "klippel-2022-arxiv-orthogonal-data",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.nose_radius_mm",
+     "note": "assumed: ISO code '08' = 0.8 mm corner radius (code convention); outside the cut on a 2 mm disc",
+     "src": "est",
+     "value": 0.8
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-in718-diazalvarez2017.yaml",
+   "id": "force-orth-in718-diazalvarez2017",
+   "location": "Fig. 8a (cutting force) and Fig. 8b (thrust force) vs cutting speed, markers digitised from the 737 x 231 px figure (5.6 N/px in a, 4.0 N/px in b)",
+   "material": "inconel718",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "diazalvarez-2017-in718-orthogonal",
+   "status": "no_harness",
+   "uncertainty_pct": 3.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-in718-wood2020.yaml",
+   "id": "force-orth-in718-wood2020",
+   "location": "Fig. 5, bars of the 'Extruded' tube (mean of five tests, error bars = range), digitised from the 773 x 370 px figure (2.9 N/px)",
+   "material": "inconel718",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "wood-2020-in718-orthogonal-tubes",
+   "status": "no_harness",
+   "uncertainty_pct": 1.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.clearance_deg",
+     "note": "assumed: not stated: ISO 1832 letter P = 11 deg insert clearance (code convention, standard not read) minus the 5 deg positive tilt that gives the stated rake",
+     "src": "est",
+     "value": 6
+    },
+    {
+     "input": "setup.tool.edge_radius_um",
+     "note": "assumed: not stated; typical of a ground (G-tolerance) uncoated insert edge (est.)",
+     "src": "est",
+     "value": 15
+    },
+    {
+     "input": "setup.tool.nose_radius_mm",
+     "note": "assumed: ISO code '08' = 0.8 mm corner radius (code convention); outside the cut when the tube wall lies on the straight edge",
+     "src": "est",
+     "value": 0.8
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated; dry orthogonal tests are implied by the analysis",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ss304-marcicano2005-a.yaml",
+   "id": "force-orth-ss304-marcicano2005-a",
+   "location": "Table 3 (insert of maker A, width 1 mm): Fa, Fc, Vc, t0",
+   "material": "aisi304",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "marcicano-2005-aisi304-cutting-tests",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.clearance_deg",
+     "note": "assumed: not stated: ISO 1832 letter P = 11 deg insert clearance (code convention, standard not read) minus the 5 deg positive tilt that gives the stated rake",
+     "src": "est",
+     "value": 6
+    },
+    {
+     "input": "setup.tool.edge_radius_um",
+     "note": "assumed: not stated; typical of a ground (G-tolerance) uncoated insert edge (est.)",
+     "src": "est",
+     "value": 15
+    },
+    {
+     "input": "setup.tool.nose_radius_mm",
+     "note": "assumed: ISO code '08' = 0.8 mm corner radius (code convention); outside the cut when the tube wall lies on the straight edge",
+     "src": "est",
+     "value": 0.8
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated; dry orthogonal tests are implied by the analysis",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ss304-marcicano2005-b.yaml",
+   "id": "force-orth-ss304-marcicano2005-b",
+   "location": "Table 4 (insert of maker B, width 1.5 mm): Fa, Fc, Vc, t0",
+   "material": "aisi304",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "marcicano-2005-aisi304-cutting-tests",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.coating",
+     "note": "assumed: not stated; YG8 is normally used uncoated",
+     "src": "est",
+     "value": "none"
+    },
+    {
+     "input": "setup.stock.form",
+     "note": "assumed: not described; an orthogonal cut on a lathe with ap = width implies a tube or disc end",
+     "src": "est",
+     "value": "tube end"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ss304-zou2026.yaml",
+   "id": "force-orth-ss304-zou2026",
+   "location": "Table 3 (orthogonal cutting experimental conditions and results)",
+   "material": "aisi304",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "zou-2026-304-cutting-forces",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.coating",
+     "note": "assumed: not stated; the FE model of the same paper uses uncoated tungsten carbide",
+     "src": "est",
+     "value": "none"
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated in this paper",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ti64-ducobu2017.yaml",
+   "id": "force-orth-ti64-ducobu2017",
+   "location": "Table 3 (experimental reference: average RMS forces per mm width and average chip thickness for h = 40, 60, 100 um)",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "ducobu-2017-ti6al4v-orthogonal-reference",
+   "status": "no_harness",
+   "uncertainty_pct": 10.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ti64-klippel2022-f010.yaml",
+   "id": "force-orth-ti64-klippel2022-f010",
+   "location": "Table B.14 (Ti6Al4V), tests V0308, V0309, V0319, V0326, V0327, V0328, V0344, V0345, V0346, V0316, V0317, V0318, V0438, V0439, V0440, V0411, V0412, V0413, V0447, V0448, V0449, V0335, V0336, V0337, V0353, V0354, V0355, V0455, V0456, V0457",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "klippel-2022-arxiv-orthogonal-data",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ti64-klippel2022-vc70.yaml",
+   "id": "force-orth-ti64-klippel2022-vc70",
+   "location": "Table B.14 (Ti6Al4V), tests V0402, V0403, V0404, V0383, V0385, V0405, V0406, V0407, V0411, V0412, V0413, V0386, V0387, V0388, V0408, V0409, V0410, V0389, V0390, V0391",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "klippel-2022-arxiv-orthogonal-data",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.edge_radius_um",
+     "note": "assumed: not stated; typical honed edge of a ground carbide grooving insert (est.)",
+     "src": "est",
+     "value": 15
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ti64-loschner2025.yaml",
+   "id": "force-orth-ti64-loschner2025",
+   "location": "Fig. 2a (main cutting force) and Fig. 2b (back force), experiment lines (digitised from the 784 x 649 px figure)",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "loschner-2025-ti6al4v-jc-sensitivity",
+   "status": "no_harness",
+   "uncertainty_pct": 3.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.edge_radius_um",
+     "note": "assumed: not stated; typical of a ground uncoated WC-Co edge (est.)",
+     "src": "est",
+     "value": 10
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated; the side-view thermography of the cutting zone implies no coolant",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-orth-ti64-slusarczyk2025.yaml",
+   "id": "force-orth-ti64-slusarczyk2025",
+   "location": "Table 4 (average of three tests in the stable cutting phase), test plan Table 3",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "orthogonal_turning",
+   "quantity": "cutting_force",
+   "src": "slusarczyk-2025-ti6al4v-rake-temperature",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.first_clearance_deg",
+     "note": "assumed: only the second clearance (25 deg) is stated",
+     "src": "est",
+     "value": 12
+    },
+    {
+     "input": "setup.tool.stickout_mm",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": 50
+    },
+    {
+     "input": "setup.conditions.direction",
+     "note": "assumed: not stated in the text (Fig. 3 is a perspective sketch)",
+     "src": "est",
+     "value": "down"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-sidemill-al7075-zylka2023-edge-microgeometry.yaml",
+   "id": "force-sidemill-al7075-zylka2023-edge-microgeometry",
+   "location": "Sect. 2.1 and Table 1 (tools, measured R and MAR), Sect. 2.2 (force parameters, filtering), Fig. 9 (MeanF and MeanUpF versus R for three margin ranges at fz 0.1 mm/tooth, ae 0.7 mm; digitised)",
+   "material": "al7075-t6",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "cutting_force",
+   "src": "zylka-2023-al7075-edge-microgeometry-forces",
+   "status": "no_harness",
+   "uncertainty_pct": 1.5
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.stickout_mm",
+     "note": "assumed: not stated (3 D)",
+     "src": "est",
+     "value": 18
+    },
+    {
+     "input": "setup.conditions.direction",
+     "note": "assumed: not stated for the authors' tests (the averaged chip thickness tc of Table 3 is the same for up and down milling)",
+     "src": "est",
+     "value": "down"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-sidemill-in718-lin2021-annealed.yaml",
+   "id": "force-sidemill-in718-lin2021-annealed",
+   "location": "Sect. 4.1 (material, tool, dynamometer, dry, new tool per test), Table 3 (conditions), Tables 4-5 (total average forces A per test; also the derived side-edge and bottom-edge parts As, Ab)",
+   "material": "inconel718",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "cutting_force",
+   "src": "lin-2021-in718-milling-constants",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.edge_radius_um",
+     "note": "assumed, not derived from a source: sharp ground HSS edge",
+     "src": "est",
+     "value": 10
+    },
+    {
+     "input": "setup.tool.stickout_mm",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: no coolant is mentioned in the source",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-sidemill-ss304-wang2025-hss.yaml",
+   "id": "force-sidemill-ss304-wang2025-hss",
+   "location": "Sect. 3 (setup), Table 1 (tool), Table 5 (tests), Fig. 9 a-f (experimental average forces, values printed on the bars)",
+   "material": "aisi304",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "cutting_force",
+   "src": "wang-2025-304-milling-force-wear",
+   "status": "no_harness",
+   "uncertainty_pct": 1.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.flutes",
+     "note": "not stated; computed here from Table 1: feed speed / (fz x n) = 80 / (0.02 x 1000) = 4",
+     "src": "est",
+     "value": 4
+    },
+    {
+     "input": "setup.tool.helix_deg",
+     "note": "assumed: not stated",
+     "src": "est",
+     "value": 30
+    },
+    {
+     "input": "setup.tool.rake_deg",
+     "note": "assumed: not stated (radial rake of a ground ball-nose mill)",
+     "src": "est",
+     "value": 0
+    },
+    {
+     "input": "setup.tool.stickout_mm",
+     "note": "assumed: not stated (4 D)",
+     "src": "est",
+     "value": 32
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: no coolant is mentioned in the source",
+     "src": "est",
+     "value": "dry"
+    },
+    {
+     "input": "setup.conditions.tool_axis",
+     "note": "assumed: plain 3-axis slotting with the ball end; not stated",
+     "src": "est",
+     "value": "vertical, no tilt"
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-slot-in718-zheng2023-ballend.yaml",
+   "id": "force-slot-in718-zheng2023-ballend",
+   "location": "Sect. 2.2 and Table 1 (coefficient-identification slot tests, measured average forces); Sect. 5.1-5.2 (machine, dynamometer, averaging)",
+   "material": "inconel718",
+   "measured": true,
+   "operation": "ball_end_milling",
+   "quantity": "cutting_force",
+   "src": "zheng-2023-in718-ball-end-milling-forces",
+   "status": "no_harness",
+   "uncertainty_pct": null
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.tool.rake_deg",
+     "note": "assumed: not stated; a P-type (11 deg clearance) round insert is assumed in a neutral pocket (est.). The source takes the cutting coefficients from orthogonal tests",
+     "src": "est",
+     "value": 0
+    },
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated; dry assumed, as usual for force-model validation cuts (est.)",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-slot-ti64-engin-bullnose.yaml",
+   "id": "force-slot-ti64-engin-bullnose",
+   "location": "Fig. 8 'Cutting forces' (217 rpm, ap 4 mm, 0.1 mm/tooth, one insert), 'Experimental' thin curves; digitised from the vector PDF at 360 dpi (13.8, 15.1 and 4.6 N/px)",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "slotting",
+   "quantity": "cutting_force",
+   "src": "engin-altintas-milling-preprint",
+   "status": "no_harness",
+   "uncertainty_pct": 4.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.conditions.coolant",
+     "note": "assumed: not stated; dry assumed, as usual for force-model validation cuts (est.)",
+     "src": "est",
+     "value": "dry"
+    }
+   ],
+   "dependencies": [],
+   "digitised": true,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-slot-ti64-engin-taperball.yaml",
+   "id": "force-slot-ti64-engin-taperball",
+   "location": "Fig. 6, upper plot (ap 10 mm, 0.05 mm/tooth, 500 rpm), thin 'Measured' curves; digitised from the vector PDF rendered at 360 dpi (3.7 N/px)",
+   "material": "ti6al4v",
+   "measured": true,
+   "operation": "slotting",
+   "quantity": "cutting_force",
+   "src": "engin-altintas-milling-preprint",
+   "status": "no_harness",
+   "uncertainty_pct": 3.0
+  },
+  {
+   "calibration_dependent": false,
+   "case_assumed_inputs": [
+    {
+     "input": "setup.stock.wall_length_mm",
+     "note": "assumed equal to the sample length; not stated explicitly",
+     "src": "est",
+     "value": 100
+    },
+    {
+     "input": "setup.tool.rake_deg",
+     "note": "assumed: not stated (typical of aluminium end mills)",
+     "src": "est",
+     "value": 15
+    },
+    {
+     "input": "setup.conditions.spindle_rpm",
+     "note": "computed here from vc and D 12 mm; not stated",
+     "src": "est",
+     "value": [
+      7958,
+      15915,
+      23873
+     ]
+    }
+   ],
+   "dependencies": [],
+   "digitised": false,
+   "error": "no harness registered for 'cutting_force'",
+   "file": "validation/cases/cutting_force/force-thinwall-al7050-zawada2025-finish.yaml",
+   "id": "force-thinwall-al7050-zawada2025-finish",
+   "location": "Sect. 2 (setup, Tables 3-5), Sect. 3 (definition of Fx1: absolute maximum of Fx in the first pass, temporary chatter extremes omitted), Table A1 (13 runs of the face-centred central composite design)",
+   "material": "al7075-t7351",
+   "measured": true,
+   "operation": "peripheral_milling",
+   "quantity": "cutting_force",
+   "src": "zawada-2025-al7050-thin-wall-forces",
+   "status": "no_harness",
+   "uncertainty_pct": 2.0
+  }
+ ],
+ "format": "cnctwin-validation-results",
+ "harness": "",
+ "independent": null,
+ "quantity": "cutting_force",
+ "rule": "tolerance = max(budget_pct/100 x |reference| (for temperatures: x the rise above ambient), 2 x the reference's uncertainty); a case passes when every compared value lies within its tolerance; a quantity passes when at least 80 % of its cases pass and no case misses by more than twice its tolerance",
+ "verdict": "no harness",
+ "verdict_reason": "no harness registered yet",
+ "version": 1
+}

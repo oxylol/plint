@@ -1,0 +1,84 @@
+# Struzikiewicz (2023): finish turning of Ti6Al4V ELI with a Sandvik CNGG120404-SGF insert and one external
+# 150 bar emulsion jet (0.7 mm nozzle, 20 mm from the corner) aimed from nine directions (alpha x beta) at two
+# feeds: measured chip size / breaking index, chip-form grade and cutting force.
+format: cnctwin-validation-case
+version: 1
+id: coolant-struzikiewicz2023-ti64-jet-direction
+quantity: coolant_reach
+reference:
+  src: struzikiewicz-2023-hpc-jet-direction
+  location: "Sect. 2 (setup), Fig. 1b (nozzle geometry: 0.7 mm bore, 20 mm distance, alpha/beta definition), Table 1 (material), Tables 3 and 5 (plan, Fc and Cch per test), Table 8 (chip-form grade)"
+  digitised: false
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: ti6al4v, note: "Grade 5 ELI (extra-low interstitials) bar D 50 mm: Rm 902 MPa, Rp0.2 815 MPa, A 13 %, Z 49 %, 29 HRC (Table 1)"}
+  stock: {diameter_mm: 50}
+  tool:
+    type: turning_insert
+    iso_designation: CNGG120404-SGF
+    chipbreaker: SGF
+    grade: "Sandvik Coromant 1115"
+    tool_class: carbide
+    coating: "PVD-coated grade (Sandvik 1115)"
+    nose_radius_mm: 0.4
+    rake_land_deg: 15                # Fig. 1c, SGF profile
+    holder: PCLNR2020K12HP
+  machine: {model: "conventional lathe with a high-pressure plunger pump (150 MPa capacity)"}
+  coolant:
+    fluid: "Blaser Blasocut 2000 universal, 10 % emulsion"
+    pressure_bar: 150
+    nozzles: 1
+    nozzle_diameter_mm: 0.7
+    nozzle_distance_mm: 20           # from the insert corner along the jet axis (Fig. 1b)
+    nozzle_setting_tolerance_deg: 2
+    alpha_deg_levels: [30, 60, 90]   # jet elevation above the rake face; 90 deg = normal to the rake face (Fig. 1b)
+    beta_deg_levels: [0, 30, 60]     # jet direction in the rake plane, measured from the reference line of Fig. 1b
+    flow_l_min: {value: 2.7, src: est, note: "not stated; orifice estimate Q = Cd A sqrt(2 p / rho) with Cd 0.7, A of a 0.7 mm bore, p 150 bar, rho 1000 kg/m3"}
+    aim: "jet onto the rake face, i.e. onto the outer (free) side of the forming chip"
+  conditions:
+    cutting_speed_m_min: 70
+    ap_mm: 0.5
+    feed_mm_rev: [0.08, 0.13]
+    repeats: 3
+    chip_grade_rule: "+ correct: chips up to 5 mm long; 0 acceptable: 5-20 mm; - unacceptable: over 20 mm (Sect. 2); Cch = 0.01 x (mean chip length + spiral diameter) or (width + height) in mm, capped at 1"
+  program: null
+reference_values:
+  - {name: Cch_f0.08_alpha30, value: 0.03, unit: "", x: 0, x_name: beta, x_unit: deg, note: "test 1, range 0.03-0.04; grade +; Fc 64.7 N"}
+  - {name: Cch_f0.08_alpha30, value: 0.67, unit: "", x: 30, x_name: beta, x_unit: deg, note: "test 2, 0.55-0.82; grade -; Fc 64.3 N"}
+  - {name: Cch_f0.08_alpha30, value: 0.29, unit: "", x: 60, x_name: beta, x_unit: deg, note: "test 3, 0.25-0.34; grade -; Fc 67.3 N"}
+  - {name: Cch_f0.08_alpha60, value: 0.23, unit: "", x: 0, x_name: beta, x_unit: deg, note: "test 4, 0.19-0.27; grade -; Fc 66.0 N"}
+  - {name: Cch_f0.08_alpha60, value: 0.03, unit: "", x: 30, x_name: beta, x_unit: deg, note: "test 5, 0.02-0.03; grade +; Fc 66.7 N"}
+  - {name: Cch_f0.08_alpha60, value: 0.17, unit: "", x: 60, x_name: beta, x_unit: deg, note: "test 6, 0.15-0.19; grade 0; Fc 71.3 N"}
+  - {name: Cch_f0.08_alpha90, value: 0.46, unit: "", x: 0, x_name: beta, x_unit: deg, note: "test 7, 0.42-0.51; grade -; Fc 73.0 N"}
+  - {name: Cch_f0.08_alpha90, value: 0.66, unit: "", x: 30, x_name: beta, x_unit: deg, note: "test 8, 0.58-0.76; grade -; Fc 82.3 N"}
+  - {name: Cch_f0.08_alpha90, value: 0.16, unit: "", x: 60, x_name: beta, x_unit: deg, note: "test 9, 0.11-0.22; grade 0; Fc 72.3 N (the tables print f = 0.13 for test 9 although its coded level is 1 = 0.08 mm/rev; force and Table 8 place it at 0.08)"}
+  - {name: Cch_f0.13_alpha30, value: 0.02, unit: "", x: 0, x_name: beta, x_unit: deg, note: "test 10, 0.02-0.02; grade +; Fc 101.7 N"}
+  - {name: Cch_f0.13_alpha30, value: 0.31, unit: "", x: 30, x_name: beta, x_unit: deg, note: "test 11, 0.26-0.37; grade -; Fc 111.3 N"}
+  - {name: Cch_f0.13_alpha30, value: 0.02, unit: "", x: 60, x_name: beta, x_unit: deg, note: "test 12, 0.02-0.03; grade +; Fc 109.7 N"}
+  - {name: Cch_f0.13_alpha60, value: 0.12, unit: "", x: 0, x_name: beta, x_unit: deg, note: "test 13, 0.09-0.14; grade 0; Fc 108.0 N"}
+  - {name: Cch_f0.13_alpha60, value: 0.01, unit: "", x: 30, x_name: beta, x_unit: deg, note: "test 14, 0.01-0.01; grade +; Fc 114.7 N"}
+  - {name: Cch_f0.13_alpha60, value: 0.32, unit: "", x: 60, x_name: beta, x_unit: deg, note: "test 15, 0.29-0.36; grade -; Fc 116.7 N"}
+  - {name: Cch_f0.13_alpha90, value: 0.94, unit: "", x: 0, x_name: beta, x_unit: deg, note: "test 16, 0.84-1.03; grade -; Fc 108.0 N"}
+  - {name: Cch_f0.13_alpha90, value: 0.26, unit: "", x: 30, x_name: beta, x_unit: deg, note: "test 17, 0.22-0.30; grade -; Fc 123.3 N"}
+  - {name: Cch_f0.13_alpha90, value: 0.29, unit: "", x: 60, x_name: beta, x_unit: deg, note: "test 18, 0.23-0.36; grade -; Fc 115.7 N"}
+  - {name: Fc_mean_f0.08, value: 64.7, unit: N, x: 1, x_name: test, x_unit: index, note: "alpha 30, beta 0; min 55, max 70"}
+  - {name: Fc_mean_f0.08, value: 64.3, unit: N, x: 2, x_name: test, x_unit: index, note: "alpha 30, beta 30; 58-72"}
+  - {name: Fc_mean_f0.08, value: 67.3, unit: N, x: 3, x_name: test, x_unit: index, note: "alpha 30, beta 60; 61-74"}
+  - {name: Fc_mean_f0.08, value: 66.0, unit: N, x: 4, x_name: test, x_unit: index, note: "alpha 60, beta 0; 59-74"}
+  - {name: Fc_mean_f0.08, value: 66.7, unit: N, x: 5, x_name: test, x_unit: index, note: "alpha 60, beta 30; 60-73"}
+  - {name: Fc_mean_f0.08, value: 71.3, unit: N, x: 6, x_name: test, x_unit: index, note: "alpha 60, beta 60; 64-79"}
+  - {name: Fc_mean_f0.08, value: 73.0, unit: N, x: 7, x_name: test, x_unit: index, note: "alpha 90, beta 0; 68-80"}
+  - {name: Fc_mean_f0.08, value: 82.3, unit: N, x: 8, x_name: test, x_unit: index, note: "alpha 90, beta 30; 74-90"}
+  - {name: Fc_mean_f0.08, value: 72.3, unit: N, x: 9, x_name: test, x_unit: index, note: "alpha 90, beta 60; 65-79"}
+  - {name: Fc_mean_f0.13, value: 101.7, unit: N, x: 10, x_name: test, x_unit: index, note: "alpha 30, beta 0; 83-121"}
+  - {name: Fc_mean_f0.13, value: 111.3, unit: N, x: 11, x_name: test, x_unit: index, note: "alpha 30, beta 30; 103-119"}
+  - {name: Fc_mean_f0.13, value: 109.7, unit: N, x: 12, x_name: test, x_unit: index, note: "alpha 30, beta 60; 100-119"}
+  - {name: Fc_mean_f0.13, value: 108.0, unit: N, x: 13, x_name: test, x_unit: index, note: "alpha 60, beta 0; 100-118"}
+  - {name: Fc_mean_f0.13, value: 114.7, unit: N, x: 14, x_name: test, x_unit: index, note: "alpha 60, beta 30; 103-127"}
+  - {name: Fc_mean_f0.13, value: 116.7, unit: N, x: 15, x_name: test, x_unit: index, note: "alpha 60, beta 60; 108-125"}
+  - {name: Fc_mean_f0.13, value: 108.0, unit: N, x: 16, x_name: test, x_unit: index, note: "alpha 90, beta 0; 101-114"}
+  - {name: Fc_mean_f0.13, value: 123.3, unit: N, x: 17, x_name: test, x_unit: index, note: "alpha 90, beta 30; 113-133"}
+  - {name: Fc_mean_f0.13, value: 115.7, unit: N, x: 18, x_name: test, x_unit: index, note: "alpha 90, beta 60; 108-123"}
+reference_curves: []
+notes: "Cch is the paper's chip breaking index (Table 5, mean of three repeats, min-max in each note), from the measured chip dimensions (Keyence VHX-7000); 0.01 per millimetre, so 0.29 means about 29 mm of chip length plus spiral diameter (or width plus height for arc chips). The grade in each note is Table 8 (+ correct up to 5 mm, 0 acceptable 5-20 mm, - unacceptable over 20 mm); grades and Cch agree for all 18 tests. Only long spiral and short arc chips occurred. What this case tests is whether a coolant model predicts that the jet direction, not just the pressure, decides whether the chip is broken: at 0.08 mm/rev only (alpha 30, beta 0) and (60, 30) gave short chips, at 0.13 mm/rev (30, 0), (30, 60) and (60, 30); a jet normal to the rake face (alpha 90) never broke the chip. The angle of incidence had no significant effect on the cutting force (ANOVA, Table 6), which rises about 77 % from 0.08 to 0.13 mm/rev. The exact reference line of beta is only drawn in Fig. 1b. The 2D FEM chip simulations of the paper (Fig. 7) are model results and are not stored."

@@ -1,23 +1,424 @@
 # SIEMENS SINUMERIK 840D sl (SINUMERIK Operate): alarms, supported words, timing, system variables.
 #
-# STATUS: NOTHING IN THIS FILE WAS READ IN A SOURCE THIS SESSION. The SINUMERIK manuals
-# (Diagnostics Manual / alarms, Programming Manual Fundamentals and Job Planning, Lists System
-# Variables, Cycles) are only offered through support.industry.siemens.com, which refused automated
-# access (HTTP 403 to plain clients, JavaScript-only pages to the fetch tool), and web search was
-# exhausted. Therefore:
-#   * alarms: empty. Only read alarms may be listed; fill from the SINUMERIK 840D sl/828D
-#     Diagnostics Manual (NCK alarms 10000-27999 such as the 10xxx/12xxx/14xxx program alarms,
-#     cycle alarms 61000-62999) in a later pass.
-#   * words, timing, variables: src est from general knowledge of SINUMERIK programming; verify.
+# STATUS (second research round, 2026-11-03):
+#   * alarms: the English 840D sl Diagnostics Manual is only offered through support.industry.siemens.com,
+#     which refuses automated access; its Chinese edition (01/2022, CNC software 4.95 SP1) is on the open
+#     Siemens download server. The numbers and English texts below were read in the SINUMERIK 802D sl
+#     Diagnostics Manual 03/2011 (siemens-802dsl-diag-2011; page = printed page there), whose NCK and
+#     cycle alarms come from the same solution-line NCK/cycle software, and every number listed was
+#     confirmed to exist in the 840D sl 01/2022 alarm list (siemens-840dsl-diag-zh-2022); eight 802D sl
+#     alarms missing from the 840D sl list were left out (10600, 10607, 10765, 10800, 14198, 15910,
+#     22060, 22260). The English 840D sl wording itself was not read, so the alarms inherit src est from
+#     the file. Spot checks against the Chinese edition show that the wording drifts in some alarms:
+#     12550 (840D sl: 'name %3 unknown or not defined'), 22270 (840D sl: 'thread cutting: maximum
+#     velocity %4 of axis %3 exceeded'), and cycle alarms there carry an optional prefix
+#     '%[[Channel %1: ] Block %2: %]'. Texts are as printed, with the run-time parameters %1, %2 ...
+#     ('[Channel %1: ]' is shown only on multi-channel controls). Spaces that the PDF text layer split
+#     inside words were restored from a second text layer. cause = the manual's 'Definitions' text,
+#     shortened at a sentence boundary ('[...]'). Only alarms a part program can cause are listed
+#     (10xxx channel, 12xxx syntax, 14xxx program run, 15xxx-18xxx, the 2xxxx main-run alarms of
+#     thread cutting, tapping, spindle and probing, the 25xxx axis monitoring alarms, 61xxx cycle
+#     alarms and 62xxx cycle messages); ShopMill/ShopTurn step-program alarms (612xx) are left out.
+#   * words.cycles and words.cycle_parameters: read in the SINUMERIK 840D sl/828D Programming Manual
+#     Job Planning 08/2018, Russian edition (siemens-840dsl-jobplan-ru-2018), chapter 20.1 external
+#     programming of technology cycles; parameter names and order are language-neutral, the meanings
+#     were translated from Russian.
+#   * the rest (other words, timing, variables) is still src est from general knowledge of SINUMERIK
+#     programming; verify against the Programming Manuals Fundamentals / Job Planning and Lists
+#     System Variables.
 format: cnctwin-controller
 version: 1
 id: siemens-840d-sl
 dialect: siemens840d
 name: "SIEMENS SINUMERIK 840D sl (SINUMERIK Operate)"
 src: est
-note: "no SINUMERIK manual could be read this session (Siemens support portal blocks automated access; web search budget exhausted); every entry is an estimate from general SINUMERIK knowledge and must be verified against the 840D sl Diagnostics Manual, Programming Manuals Fundamentals / Job Planning, Lists System Variables and the cycles manuals"
+note: "entries without their own src are estimates from general SINUMERIK knowledge and must be verified against the 840D sl manuals. The alarms (code, text, cause, page) are taken unchanged from the SINUMERIK 802D sl Diagnostics Manual 03/2011 (siemens-802dsl-diag-2011; page = printed page of that manual); each number was confirmed in the 840D sl / SINAMICS S120 Alarms Diagnostics Manual 01/2022 (Chinese edition, siemens-840dsl-diag-zh-2022). They are estimates only in that the English 840D sl wording was not read and may differ in detail (known: 12550, 22270, cycle-alarm prefixes)"
 
-alarms: []
+alarms:
+  - {code: "10203", text: "[Channel %1: ] NC start without reference point (action=%2<ALNX>)", trigger: reference_return, cause: "NC start has been activated in the MDI or AUTOMATIC mode and at least one axis that needs to be referenced has not reached its reference point.", page: "43"}
+  - {code: "10601", text: "[Channel %1: ] Block %2 zero velocity at block end point during thread cutting", trigger: thread, cause: "This alarm occurs only when several blocks with G33 follow in succession. The block end velocity in the specified block is zero, although a further thread cutting block follows. [...]", page: "44"}
+  - {code: "10604", text: "[Channel %1: ] Block %2 thread pitch increase too high", trigger: thread, cause: "The thread pitch increase is causing an axis overload. A spindle override of 100% is assumed during verification.", page: "44"}
+  - {code: "10605", text: "[Channel %1: ] Block %2 thread pitch decrease too high", trigger: thread, cause: "The thread pitch decrease is causing an axis standstill in the thread block.", page: "45"}
+  - {code: "10620", text: "[Channel %1: ] Block %3 axis %2 at software limit switch %4", trigger: overtravel, cause: "During the traversing motion, the system detected that the software limit switch would be traversed in the direction indicated. [...]", page: "46"}
+  - {code: "10621", text: "[Channel %1: ] Axis %2 rests on software limit switch %3%4", trigger: overtravel, cause: "The specified axis is already positioned at the displayed software end delimiter.", page: "46"}
+  - {code: "10630", text: "[Channel %1: ] Block %2 axis %3 at working area limit %4", trigger: overtravel, cause: "The specified axis violates the working area limitation. This is recognized only in the main run either because the minimum axis values could not be measured before the transformation or because there is a motion overlay.", page: "46"}
+  - {code: "10631", text: "[Channel %1: ] Axis %2 rests at working area limit %3%4", trigger: overtravel, cause: "The specified axis reaches the working area limitation in JOG mode.", page: "47"}
+  - {code: "10720", text: "[Channel %1: ] Block %3 axis %2 software limit switch %4", trigger: overtravel, cause: "The path programmed for the axis violates the currently valid software limit switch. The alarm is activated when preparing the part program block. [...]", page: "51"}
+  - {code: "10721", text: "[Channel %1: ] Block %3 axis %2 software limit switch %4", trigger: overtravel, cause: "The motion planned for the axis violates the currently valid software limit switch. The alarm is activated during the preprocessing of approach or rest blocks for REPOS. [...]", page: "51"}
+  - {code: "10730", text: "[Channel %1: ] Block %3 axis %2 working area limitation %4", trigger: overtravel, cause: "This alarm is generated if it is determined during block preparation that the programmed path of the axis violates the working area limitation. [...]", page: "52"}
+  - {code: "10731", text: "[Channel %1: ] Block %3 axis %2 working area limitation %4", trigger: overtravel, cause: "The motion planned for the axis violates the currently active working area limit. The alarm is activated during the preparation of approach or rest blocks for REPOS. [...]", page: "52"}
+  - {code: "10740", text: "[Channel %1: ] Block %2 too many empty blocks in WAB programming", trigger: approach_retract, cause: "It is not allowed to program more blocks than specified by MD20202 $MC_WAB_MAXNUM_DUMMY_BLOCKS between the WAB block and the block determining the approach and retraction tangent.", page: "52"}
+  - {code: "10741", text: "[Channel %1: ] Block %2 direction reversal with WAB infeed motion", trigger: approach_retract, cause: "A safety distance which has been programmed is located perpendicular to the machining plane and not between the start and end point of the WAB contour.", page: "53"}
+  - {code: "10742", text: "[Channel %1: ] Block %2 WAB distance invalid or not programmed", trigger: approach_retract, cause: "Possible causes: In a WAB block, the parameter DISR has not been specified or its value is less than or equal to 0. [...]", page: "53"}
+  - {code: "10743", text: "[Channel %1: ] Block %2 WAB programmed several times", trigger: approach_retract, cause: "An attempt has been made to activate a WAB motion before a previously activated WAB motion was terminated.", page: "53"}
+  - {code: "10744", text: "[Channel %1: ] Block %2 no valid WAB direction defined", trigger: approach_retract, cause: "The tangent direction for smooth approach or retraction is not defined. Possible causes: In the program, no block with travel information follows the approach block. [...]", page: "54"}
+  - {code: "10745", text: "[Channel %1: ] Block %2 WAB end position not clear", trigger: approach_retract, cause: "In the WAB block and in the following block, the position has been programmed perpendicular to the machining direction. In the WAB block, no position has been indicated in the machining plane.", page: "54"}
+  - {code: "10747", text: "[Channel %1: ] Block %2 retraction direction not defined for WAB", trigger: approach_retract, cause: "In a WAB retraction block with quarter circle or semi-circle (G248 or G348), the end point in the machining plane was not programmed, and either G143 or G140 without tool radius compensation is active.", page: "55"}
+  - {code: "10748", text: "[Channel %1: ] Block %2 illegal retract plane with WAB", trigger: approach_retract, cause: "By means of DISRP a position of the retraction plane has been programmed which is not situated between the safety distance (DISCL) and the starting point (during approach) and/or end point (during retraction) of the WAB movement.", page: "55"}
+  - {code: "10750", text: "[Channel %1: ] Block %2 tool radius compensation activated without tool number", trigger: cutter_comp_start_end, cause: "A tool T... must be selected so that the control can make allowance for the associated compensation values. [...]", page: "55"}
+  - {code: "10751", text: "[Channel %1: ] Block %2 danger of collision due to tool radius compensation", trigger: cutter_comp_interference, cause: "The \"Bottleneck detection\" (calculation of intersection for the following compensated traversing blocks) has not been able to calculate a point of intersection for the reviewed number of traversing blocks. [...]", page: "56"}
+  - {code: "10752", text: "[Channel %1: ] Block %2 overflow of local block buffer with tool radius compensation", trigger: cutter_comp_no_solution, cause: "The cutter radius compensation must buffer a variable number of intermediate blocks in order to enable calculation of the equidistant tool path for each NC block. The size of the buffer cannot be determined by simple means. [...]", page: "56"}
+  - {code: "10753", text: "[Channel %1: ] Block %2 selection of the tool radius compensation only possible in linear block", trigger: cutter_comp_start_end, cause: "Selection of tool radius compensation with G41/G42 may only be performed in blocks where the G function G00 (rapid traverse) or G01 (feed) is active. [...]", page: "56"}
+  - {code: "10754", text: "[Channel %1: ] Block %2 deselection of the tool radius compensation only possible in linear block", trigger: cutter_comp_start_end, cause: "Deselection of tool radius compensation with G40 can only be performed in blocks where the G function G00 (rapid traverse) or G01 (feed) is active. In the block with G40, at least one axis in the plane G17 to G19 must be written. [...]", page: "57"}
+  - {code: "10755", text: "[Channel %1: ] Block %2 selection of the tool radius compensation via KONT not possible at the current starting point", trigger: cutter_comp_start_end, cause: "When activating the cutter radius compensation with KONT the starting point of the approach block is within the compensation circle and therefore already violates the contour. [...]", page: "57"}
+  - {code: "10756", text: "[Channel %1: ] Block %2 deselection of the tool radius compensation via KONT not possible at the programmed end point", trigger: cutter_comp_start_end, cause: "On deselection of the cutter radius compensation, the programmed end point is within the compensation circle. If this point were in fact to be approached without compensation, there would be a contour violation. [...]", page: "58"}
+  - {code: "10757", text: "[Channel %1: ] Block %2 changing the compensation plane while tool radius compensation is active not possible", trigger: cutter_comp_start_end, cause: "In order to change the compensation plane (G17, G18 or G19) it is first necessary to deselect the cutter radius compensation with G40.", page: "58"}
+  - {code: "10758", text: "[Channel %1: ] Block %2 curvature radius with variable compensation value too small", trigger: cutter_comp_interference, cause: "The current cutter radius compensation (the cutter used) is too large for the programmed path radius. [...]", page: "58"}
+  - {code: "10760", text: "[Channel %1: ] Block %2 helical axis is not parallel to tool orientation", trigger: cutter_comp_no_solution, cause: "With active tool radius compensation a helix is only permissible if the helix axis is parallel to the tool, i.e. the circle plane and the compensation plane must be identical.", page: "59"}
+  - {code: "10761", text: "[Channel %1: ] Block %2 tool radius compensation for ellipse with more than one revolution not possible", trigger: cutter_comp_no_solution, cause: "When machining the inside of an ellipse, in parts of the ellipse the curvature radii are greater than or smaller than the cutter radius compensation. [...]", page: "59"}
+  - {code: "10762", text: "[Channel %1: ] Block %2 too many empty blocks between two traversing blocks with active tool radius compensation", trigger: cutter_comp_no_solution, cause: "The maximum permissible number of empty blocks is limited by a machine data.", page: "59"}
+  - {code: "10763", text: "[Channel %1: ] Block %2 path component of the block in the compensation plane becomes zero", trigger: cutter_comp_no_solution, cause: "Due to collision monitoring with active tool radius compensation, the path component of the block in the compensation plane becomes zero. [...]", page: "60"}
+  - {code: "10764", text: "[Channel %1: ] Block %2 discontinuous path with active tool radius compensation", trigger: cutter_comp_no_solution, cause: "This alarm occurs when, with active tool radius compensation, the starting point used for calculating the compensation is not identical to the end point of the preceding block. [...]", page: "60"}
+  - {code: "10776", text: "[Channel %1: ] Block%2 axis %3 must be geometry axis if tool radius compensation is active", trigger: cutter_comp_start_end, cause: "This alarm occurs when an axis that is required for tool radius compensation is not a geometry axis. [...]", page: "61"}
+  - {code: "10777", text: "[Channel %1: ] Block %2 tool radius compensation: too many blocks with suppression of compensation", trigger: cutter_comp_no_solution, cause: "The maximum permissible number of blocks with active compensation suppression with tool radius compensation is limited by MD20252 $MC_CUTCOM_MAXNUM_SUPPR_BLOCKS.", page: "61"}
+  - {code: "10778", text: "[Channel %1: ] Block %2 preprocessing stop with active tool radius compensation", trigger: cutter_comp_no_solution, cause: "If a preprocessing stop is detected with active tool radius compensation (either programmed by the user or generated internally) and the SD42480 $SC_STOP_CUTCOM_STOPRE is set, then this warning is issued because in this situation [...]", page: "61"}
+  - {code: "10780", text: "[Channel %1: ] Block %2 impermissible change of a turning or grinding tool with active tool radius compensation", trigger: cutter_comp_start_end, cause: "A tool change on which the edge offset (difference between edge center and edge reference point) changes, is only permissible in straight and polynomial blocks. [...]", page: "62"}
+  - {code: "10790", text: "[Channel %1: ] Block %2 plane change during linear programming with angles", trigger: contour_definition, cause: "The active plane was changed between the first and second subblock when programming two straight lines with angle parameters.", page: "62"}
+  - {code: "10791", text: "[Channel %1: ] Block %2 invalid angle during linear programming", trigger: contour_definition, cause: "No intermediate point was found when programming a contour consisting of two straight lines and an angle specification.", page: "63"}
+  - {code: "10792", text: "[Channel %1: ] Block %2 illegal interpolation type during linear programming with angles", trigger: contour_definition, cause: "Only spline or linear interpolation is permitted for programming two straight lines with angle specification. Circular or polynomial interpolation is not allowed.", page: "63"}
+  - {code: "10793", text: "[Channel %1: ] Block %2 second block missing during linear programming with angles", trigger: contour_definition, cause: "The second block is missing during programming of two straight lines with angle specification. [...]", page: "63"}
+  - {code: "10794", text: "[Channel %1: ] Block %2 angle specification missing in 2nd block during linear interpolation with angles", trigger: contour_definition, cause: "The angle is missing from the second block during programming of two straight lines with angle specification. [...]", page: "64"}
+  - {code: "10795", text: "[Channel %1: ] Block %2 end point specification during angle programming contradictory", trigger: contour_definition, cause: "During programming of a straight line, both positions of the active plane and an angle were specified (the position of the end point is over-specified), or the position of the programmed coordinate cannot be reached with the [...]", page: "64"}
+  - {code: "10810", text: "[Channel %1: ] Block %2 master spindle not defined", trigger: spindle, cause: "The function \"Revolutional feedrate\" (with G95 or G96), or \"Rigid tapping\" (with G331/G332) has been programmed, although no master spindle is defined from which the speed could be derived. [...]", page: "65"}
+  - {code: "10820", text: "[Channel %1: ] Rotary axis/spindle %2 not defined", trigger: illegal_axis, cause: "Revolutional feed has been programmed for contouring and synchronous axes or for an axis/spindle. However, the rotary axis/spindle from which the feed is to be deduced is not available.", page: "65"}
+  - {code: "10860", text: "[Channel %1: ] Block %2 feedrate not programmed", trigger: feed_zero, cause: "Cause: A traversing velocity has not been programmed for the displayed traversing block. [...]", page: "65"}
+  - {code: "10861", text: "[Channel %1: ] Block %3 velocity of positioning axis %2 is zero", trigger: feed_zero, cause: "No axis velocity has been programmed and the positioning velocity set in the machine data is zero.", page: "66"}
+  - {code: "10862", text: "[Channel %1: ] Block %2 master spindle also used as path axis", trigger: spindle, cause: "A contour has been programmed that also includes the master spindle as contouring axis. However, the velocity of the contour is derived from the rotational speed of the master spindle (e.g. G95).", page: "66"}
+  - {code: "10870", text: "[Channel %1: ] Block %2 facing axis for constant velocity not defined", trigger: spindle, cause: "Constant cutting speed was selected although no transverse axis was applied as reference axis for constant cutting speed or assigned through SCC[AX]. [...]", page: "67"}
+  - {code: "10880", text: "[Channel %1: ] Block %2 too many empty blocks between two traversing blocks when inserting chamfers or radii", trigger: rounding_chamfer, cause: "Between 2 blocks containing contour elements and which are to be joined with a chamfer or a radius (CHF, RND), more blocks without contour information have been programmed than provided for in the MD20200 [...]", page: "67"}
+  - {code: "10881", text: "[Channel %1: ] Block %2 overflow of local block buffer in the case of chamfers or radii", trigger: rounding_chamfer, cause: "Between 2 blocks containing the contour elements and to be joined with a chamfer or a radius (CHF, RND), so many dummy blocks have been programmed without contour information that the internal buffer is too small.", page: "67"}
+  - {code: "10882", text: "[Channel %1: ] Block %2 activation of chamfers or radii (non-modal) without traversing movement in the block", trigger: rounding_chamfer, cause: "No chamfer or radius has been inserted between 2 linear or circle contours (edge breaking) because: There is no straight line or circle contour in the plane There is a movement outside the plane A plane change has taken place The [...]", page: "68"}
+  - {code: "10883", text: "[Channel %1: ] Block %2 chamfer or fillet has to be reduced", trigger: rounding_chamfer, cause: "This alarm is output, if at least one of the relevant blocks when inserting chamfers or radii is so short, that the contour element to be inserted must be reduced against its originally programmed value. [...]", page: "68"}
+  - {code: "10900", text: "[Channel %1: ] Block %2 no S value programmed for constant cutting speed", trigger: spindle, cause: "If G96 is active, the constant cutting speed under address S is missing.", page: "68"}
+  - {code: "10911", text: "[Channel %1: ] Block %2 transformation prohibits to traverse the pole", trigger: transformation, cause: "The given curve passes through the pole of the transformation.", page: "69"}
+  - {code: "10914", text: "[Channel %1: ] Block %2: movement not possible while transformation active.", trigger: transformation, cause: "The machine kinematics does not allow the specified motion. Transformation-dependent error causes can be in: TRANSMIT: A (circular) area exists around the pole, where positioning is not possible. [...]", page: "70"}
+  - {code: "10930", text: "[Channel %1: ] Block %2 interpolation type not allowed in stock removal contour", trigger: cycle_parameter, cause: "The following types of interpolation are allowed in the contour program for stock removal: G00, G01, G02, G03, CIP, CT", page: "70"}
+  - {code: "10931", text: "[Channel %1: ] Block %2 incorrect stock removal contour", trigger: cycle_parameter, cause: "The following errors occurred in the subroutine for the contour during stock removal: - Full circle - Overlapping contour elements - Wrong start position", page: "70"}
+  - {code: "10932", text: "[Channel %1: ] Block %2 preparation of contour has been restarted", trigger: cycle_parameter, cause: "The first contour preparation/contour decoding run must be terminated with EXECUTE.", page: "71"}
+  - {code: "10933", text: "[Channel %1: ] Block %2 contour programm does not contain enough contour blocks", trigger: cycle_parameter, cause: "The contour program contains: - Less than 3 contour blocks with CONTPRON - No contour blocks with CONTDCON", page: "71"}
+  - {code: "10934", text: "[Channel %1: ] Block %2 array for contour segmentation is set too small", trigger: cycle_parameter, cause: "During contour segmentation (activated with the keyword CONTPRON), the field for the contour table has been detected as too small. [...]", page: "71"}
+  - {code: "12000", text: "[Channel %1: ] Block %2 address %3 programmed repeatedly", trigger: duplicate_address, cause: "Most addresses (address types) may only be programmed once in an NC block, so that the block information remains unambiguous (e.g. X... T... F... etc. - exception: G and M functions).", page: "72"}
+  - {code: "12010", text: "[Channel %1: ] Block %2 address %3 address type programmed too often", trigger: duplicate_address, cause: "The number of times each address type may occur in a NC block is defined internally (for instance, all axes together form one address type to which a block limit also applies).", page: "72"}
+  - {code: "12020", text: "[Channel %1: ] Block %2 illegal address modification", trigger: syntax, cause: "Valid address types are 'IC', 'AC', 'DC', 'CIC', 'CAC', 'ACN', 'ACP', 'CACN', 'CACP'. Not each of these address modifications can be used for each address type. [...]", page: "73"}
+  - {code: "12040", text: "[Channel %1: ] Block %2 expression %3 is not of data type 'AXIS'", trigger: macro_error, cause: "Some keywords require that the data in their parameters be written in variables of the type \"AXIS\". [...]", page: "73"}
+  - {code: "12050", text: "[Channel %1: ] Block %2 DIN address %3 not configured", trigger: syntax, cause: "The name of the DIN address (e.g. X, U, X1) is not defined in the control. In addition to the fixed DIN addresses, the control also has variable addresses. Refer to \"Variable addresses\" in the Programming Guide. [...]", page: "74"}
+  - {code: "12060", text: "[Channel %1: ] Block %2 same G group programmed repeatedly", trigger: illegal_g_code, cause: "The G functions that can be used in the part program are divided into groups that are syntax defining or non-syntax defining. Only one G function may be programmed from each G group. [...]", page: "74"}
+  - {code: "12070", text: "[Channel %1: ] Block %2 too many syntax-defining G functions", trigger: illegal_g_code, cause: "Syntax defining G functions determine the structure of the part program block and the addresses contained in it. Only one syntax defining G function may be programmed in each NC block. [...]", page: "74"}
+  - {code: "12080", text: "[Channel %1: ] Block %2 syntax error in text %3", trigger: syntax, cause: "At the text position shown, the grammar in the block is incorrect. The precise reason for this error cannot be specified in more detail because there are too many possibilities. [...]", page: "75"}
+  - {code: "12090", text: "[Channel %1: ] Block %2 unexpected parameter %3", trigger: syntax, cause: "The programmed function has been predefined; no parameters are allowed in its call. The first unexpected parameter is displayed. [...]", page: "75"}
+  - {code: "12100", text: "[Channel %1: ] Block %2 number of passes %3 not permissible", trigger: macro_error, cause: "The subroutines called with MCALL are modal, i.e. after each block with positional information a routine run is automatically performed once. For this reason, programming of the number of passes under address P is not allowed. [...]", page: "75"}
+  - {code: "12110", text: "[Channel %1: ] Block %2 block syntax cannot be interpreted", trigger: syntax, cause: "The addresses programmed in the block are not permissible together with the valid syntax defining G function, e.g. G1 I10 X20 Y30 F1000. An interpolation parameter must not be programmed in the linear block.", page: "76"}
+  - {code: "12120", text: "[Channel %1: ] Block %2 G function not separately programmed", trigger: illegal_g_code, cause: "The G function programmed in this block must be alone in the block. No general addresses or synchronous actions may occur in the same block. [...]", page: "76"}
+  - {code: "12140", text: "[Channel %1: ] Block %2 functionality %3 not implemented", trigger: illegal_function, cause: "In the full configuration of the control functions are possible that are not yet implemented in the current version.", page: "76"}
+  - {code: "12150", text: "[Channel %1: ] Block %2 operation %3 not compatible with data type", trigger: macro_error, cause: "The data types are not compatible with the required operation (within an arithmetic expression or in a value assignment). [...]", page: "77"}
+  - {code: "12160", text: "[Channel %1: ] Block %2 Value %3 lies beyond the value range", trigger: macro_error, cause: "The programmed constant or the variable lies beyond the value range that has previously been established by the definition of the data type. [...]", page: "77"}
+  - {code: "12170", text: "[Channel %1: ] Block %2 name %3 defined several times", trigger: macro_error, cause: "The symbol shown in the error message has already been defined in the active part program. [...]", page: "78"}
+  - {code: "12180", text: "[Channel %1: ] Block %2 illegal chaining of operators %3", trigger: macro_error, cause: "Operator chaining means the writing in sequence of binary and unary operators without using any form of parentheses. Example: N10 ERG = VARA - (- VARB) ; correct notation N10 ERG = VARA - - VARB ; error!", page: "78"}
+  - {code: "12190", text: "[Channel %1: ] Block %2 variable of type ARRAY has too many dimensions", trigger: macro_error, cause: "Array with variables of type STRING may be no more than 1-dimensional, and with all other variables no more than 2-dimensional.", page: "78"}
+  - {code: "12200", text: "[Channel %1: ] Block %2 symbol %3 cannot be created", trigger: macro_error, cause: "The symbol to be created with the DEF instruction cannot be created because: - it has already been defined (e.g. as variable or function) - the internal memory location is no longer sufficient (e.g. with large arrays)", page: "79"}
+  - {code: "12210", text: "[Channel %1: ] Block %2 string %3 too long", trigger: macro_error, cause: "- In the definition of a variable of type STRING, it has been attempted to initialize more than 100 characters. - In an allocation, it has been found that the string does not fit in the given variable.", page: "79"}
+  - {code: "12260", text: "[Channel %1: ] Block %2 too many initialization values specified %3", trigger: macro_error, cause: "In the initialization of an array (array definition and value assignments to individual array elements) there are more initialization values than array elements. Example: N10 DEF INT OTTO[2,3]=(..., ..., {more than 6 values})", page: "80"}
+  - {code: "12261", text: "[Channel %1: ] Block %2 initialization of %3 not allowed", trigger: macro_error, cause: "Frame type variables cannot be initialized in the definition. Example: DEF FRAME LOCFRAME = CTRANS(X,200) Equally, no default values can be programmed for axes in the program run during field initialization via SET. [...]", page: "80"}
+  - {code: "12270", text: "[Channel %1: ] Block %2 macro identifier %3 already defined", trigger: macro_error, cause: "The name of the macro to be selected by the instruction DEFINE is already defined in the control as: Macro name Keyword Variable Configured identifier.", page: "81"}
+  - {code: "12280", text: "[Channel %1: ] Block %2 maximum macro length %3 exceeded", trigger: macro_error, cause: "The string of instructions on the right side of the macro is limited to 256 characters. [...]", page: "81"}
+  - {code: "12290", text: "[Channel %1: ] Block %2 arithmetic variable %3 not defined", trigger: macro_undefined_variable, cause: "Only the R parameters are predefined as arithmetic variables. All other arithmetic variables must be defined with the DEF instruction before being used. The number of arithmetic parameters is defined via machine data. [...]", page: "81"}
+  - {code: "12300", text: "[Channel %1: ] Block %2 call-by-reference parameter missing on subroutine call %3", trigger: macro_error, cause: "In the subroutine definition, a formal REF parameter (call-by-reference parameter) has been specified with no actual parameter assigned to it. [...]", page: "82"}
+  - {code: "12310", text: "[Channel %1: ] Block %2 axis parameter missing on procedure call %3", trigger: macro_error, cause: "When calling the subroutine, an AXIS parameter is missing which, according to the EXTERN declaration, should be present. [...]", page: "82"}
+  - {code: "12320", text: "[Channel %1: ] Block %2 parameter %3 is no variable", trigger: macro_error, cause: "A constant or the result of a mathematical expression has been assigned to a REF parameter instead of a variable at the time of the subroutine call, even though only variable identifiers are allowed. [...]", page: "83"}
+  - {code: "12330", text: "[Channel %1: ] Block %2 type of parameter %3 incorrect", trigger: macro_error, cause: "When calling a procedure (a subroutine) it is found that the type of the actual parameter cannot be converted into the type of the formal parameter. [...]", page: "83"}
+  - {code: "12340", text: "[Channel %1: ] Block %2 number of parameters too high %3", trigger: macro_error, cause: "When calling a function or a procedure (predefined or user-defined) more parameters were transferred than defined. Predefined functions and procedures: The number of parameters has been set permanently in the NCK. [...]", page: "84"}
+  - {code: "12350", text: "[Channel %1: ] Block %2 parameter %3 no longer possible", trigger: macro_error, cause: "An attempt has been made to transfer actual parameters although axis parameters located before them have not been assigned. [...]", page: "84"}
+  - {code: "12360", text: "[Channel %1: ] Block %2 dimension of parameter %3 incorrect", trigger: macro_error, cause: "The following possibilities of error must be checked: - The current parameter is an array, but the formal parameter is a variable - The current parameter is a variable, but the formal parameter is an array -", page: "84"}
+  - {code: "12370", text: "[Channel %1: ] Block %2 range of values %3 not permissible", trigger: macro_error, cause: "A variable has been initialized with a value range outside an initialization block. The definition of program-global variables is allowed only in special initialization blocks. [...]", page: "85"}
+  - {code: "12380", text: "[Channel %1: ] Block %2 maximum memory capacity reached", trigger: macro_error, cause: "The data definitions in this block cannot be processed because the maximum available memory for creating the data has been filled, or because the data block cannot accommodate any further data. [...]", page: "85"}
+  - {code: "12390", text: "[Channel %1: ] Block %2 initialization value %3 cannot be converted", trigger: macro_error, cause: "During initialization, a value has been assigned to a variable that does not correspond to the type of the variable, nor can it be converted to the data type of the variable. [...]", page: "86"}
+  - {code: "12400", text: "[Channel %1: ] Block %2 field %3 element does not exist", trigger: macro_error, cause: "The following causes are possible: - Impermissible index list; an axis index is missing - Array index does not match the definition of the variables - An attempt was made to access a variable at array initialization via SET or [...]", page: "86"}
+  - {code: "12410", text: "[Channel %1: ] Block %2 incorrect index type for %3", trigger: macro_error, cause: "In assigning a value to an element of an array variable, the array index was specified in a way that is not allowed. [...]", page: "87"}
+  - {code: "12420", text: "[Channel %1: ] Block %2 identifier %3 too long", trigger: macro_error, cause: "-", page: "87"}
+  - {code: "12430", text: "[Channel %1: ] Block %2 specified index is invalid", trigger: macro_error, cause: "In specifying an array index (in the array definition) an index was used that is outside the permissible range.", page: "87"}
+  - {code: "12440", text: "[Channel %1: ] Block %2 maximum number of formal arguments exceeded", trigger: macro_error, cause: "In the definition of a procedure (a subroutine) or in an EXTERN instruction, more than 127 formal parameters have been specified. Example: PROC ABC (FORMPARA1, FORMPARA2, ... ... [...]", page: "87"}
+  - {code: "12450", text: "[Channel %1: ] Block %2 label defined twice", trigger: syntax, cause: "The label of this block already exists. If the NC program is compiled off-line, the entire program is compiled block for block. [...]", page: "88"}
+  - {code: "12460", text: "[Channel %1: ] Block %2 maximum number of symbols exceeded with %3", trigger: macro_error, cause: "The max. number of variable definitions (GUD, LUD), macro definitions, cycle programs and/or cycle parameters (PROC instruction) that the controller's data management system is able to handle has been exceeded. [...]", page: "88"}
+  - {code: "12470", text: "[Channel %1: ] Block %2 G function %3 is unknown", trigger: illegal_g_code, cause: "With indirectly programmed G functions, an invalid or non-allowed group number has been programmed. Allowed group number = 1. and 5 max. number of G groups. In the displayed block, a non-defined G function has been programmed. [...]", page: "89"}
+  - {code: "12475", text: "[Channel %1: ] Block %2 invalid G function number %3 programmed", trigger: illegal_g_code, cause: "A non-allowed G function number (parameter 3) has been programmed for a G group with indirect G code programming. [...]", page: "89"}
+  - {code: "12480", text: "[Channel %1: ] Block %2 subroutine %3 already defined", trigger: macro_error, cause: "The name used in the PROC or EXTERN instruction has already been defined in another call description (e.g. for cycles). Example: EXTERN CYCLE85 (VAR TYP1, VAR TYP2, ...)", page: "89"}
+  - {code: "12500", text: "[Channel %1: ] Block %2 in this module %3 is not possible", trigger: illegal_function, cause: "The displayed keyword may not be used in this type of block and at this location (all files in the NCK are designated as blocks). [...]", page: "90"}
+  - {code: "12530", text: "[Channel %1: ] Block %2 invalid index for %3", trigger: macro_error, cause: "In macro definitions, an attempt was made to define a G function with more than 3 decades or an M function with more than 2 decades as identifier of the macro. [...]", page: "91"}
+  - {code: "12540", text: "[Channel %1: ] Block %2 Block is too long or too complex", trigger: syntax, cause: "The maximum internal block length after translator processing must not exceed 256 characters. After editing, for example, several macros in the block or a multiple nesting, this limit can be exceeded.", page: "92"}
+  - {code: "12550", text: "[Channel %1: ] Block %2 name %3 not defined or option/function not activated", trigger: macro_undefined_variable, cause: "The identifier displayed has not been defined before being used. - _N_SMAC_DEF _N_MMAC_DEF _N_UMAC_DEF _N_SGUD_DEF _N_MGUD_DEF _N_UGUD_DEF Variable: DEF statement is missing Program: PROC declaration is missing", page: "92"}
+  - {code: "12553", text: "[Channel %1: ] Block %2 name %3 option/function is not active", trigger: illegal_function, cause: "The option (if MD10711 $MN_NC_LANGUAGE_CONFIGURATION = 1) or the NC function (if MD10711 $MN_NC_LANGUAGE_CONFIGURATION = 3) related to this language command is not active. But the name of the language command is known. [...]", page: "93"}
+  - {code: "12555", text: "[Channel %1: ] Block %2 function not available (identification %3)", trigger: illegal_function, cause: "The identifier has not been defined for this system.", page: "93"}
+  - {code: "12556", text: "[Channel %1: ] Block %2 name %3 Name is already known", trigger: macro_error, cause: "The name of the symbol to be created is part of the NC language scope and therefore already known. Although the NC function is not active, this name can no longer be used for GUDs, macros and PROC definitions.", page: "94"}
+  - {code: "12560", text: "[Channel %1: ] Block %2 programmed value %3 exceeds allowed limits", trigger: macro_error, cause: "In a value assignment, the permissible value range of the data type has been exceeded.", page: "94"}
+  - {code: "12630", text: "[Channel %1: ] Block %2 skip ID/label in control structure not allowed", trigger: macro_error, cause: "Blocks with control structures (FOR, ENDIF, etc.) cannot be concealed and must not contain any labels.", page: "96"}
+  - {code: "12640", text: "[Channel %1: ] Block %2 invalid nesting of control structures", trigger: macro_nesting, cause: "Error in program run: Opened control structures (IF-ELSE-ENDIF, LOOP-ENDLOOP etc.) are not terminated or there is no beginning of loop for the programmed end of loop. Example: LOOP ENDIF ENDLOOP", page: "96"}
+  - {code: "12641", text: "[Channel %1: ] Block %2 maximum nesting depth of control structures exceeded", trigger: macro_nesting, cause: "Max. nesting depth control structures (IF-ELSE-ENDIF, LOOP-ENDLOOP etc.) exceeded. At the present time, the max. nesting depth is 8.", page: "96"}
+  - {code: "12700", text: "[Channel %1: ] Block %2 contour definition programming not allowed as modal sub- programis active", trigger: contour_definition, cause: "In the external language mode, a block is programmed with contour definition and a modal cycle is active at the same time. Because of unclear address assignment (e.g. [...]", page: "97"}
+  - {code: "12701", text: "[Channel %1: ] Block %2 illegal interpolation type for contour definition active", trigger: contour_definition, cause: "In one contour definition block, G01 is not active as interpolation function. In one contour definition block, the linear interpolation always has to be selected with G01. G00, G02, G03, G33 etc. are not permitted.", page: "97"}
+  - {code: "12710", text: "[Channel %1: ] Block %2 illegal language element in external language mode", trigger: syntax, cause: "The programmed language element is not allowed or unknown in external language mode. [...]", page: "97"}
+  - {code: "12720", text: "[Channel %1: ] Block %2 program number for macro call (G65/G66) missing", trigger: macro_error, cause: "During macro call with G65/G66 no program number was defined. The program number must be programmed with address \"P\".", page: "98"}
+  - {code: "12722", text: "[Channel %1: ] Block %2 multiple ISO_2/3 macro or cycle calls in the block", trigger: macro_error, cause: "A mixture of cycle and macro calls are programmed in a block, e.g. cycle calls with G81 - G89 together with an M macro in the block or a G65/G66 macro call together with M macros in the block. [...]", page: "98"}
+  - {code: "12724", text: "[Channel %1: ] Block %2 no radius programmed for cylinder interpolation activation/ deactivation", trigger: transformation, cause: "When programming G07.1 (cylinder interpolation TRACYL), no cylinder radius has been programmed. Selection of the cylinder interpolation (TRACYL) with G07.1 C <cylinder radius> deselect with G07.1 C0. [...]", page: "98"}
+  - {code: "12726", text: "[Channel %1: ] Block %2 illegal plane selection with parallel axes", trigger: plane_selection, cause: "In a block with plane selection (G17 _ G19), a basic axis of the coordinate system must not be programmed together with the parallel axis assigned to it.", page: "98"}
+  - {code: "12730", text: "[Channel %1: ] Block %2 no valid transformation machine data parameterized", trigger: transformation, cause: "The machine data MD24100 $MC_TRAFO_TYPE_1, MD24110 $MC_TRAFO_AXES_IN_1[1], MD24210 $MC_TRAFO_AXES_IN_2[1] are incorrectly set for G07.1, G12.1.", page: "99"}
+  - {code: "12740", text: "[Channel %1: ] Block %2 modal macro call %3 not possible", trigger: macro_error, cause: "When calling a modal macro no other modal macro, modal cycle or modal subroutine may be active.", page: "99"}
+  - {code: "14000", text: "[Channel %1: ] Block %2 illegal end of file", trigger: syntax, cause: "Alarm 14000 is output in the following situations: - Parts program was not terminated with M30, M02 or M17. - Executing from external: Download was aborted (e.g. because HMI was switched off).", page: "99"}
+  - {code: "14001", text: "[Channel %1: ] Block %2 illegal end of block", trigger: syntax, cause: "After system-internal data manipulation (e.g. when reloading from an external source) a part file can end without having LF as the last character.", page: "100"}
+  - {code: "14009", text: "[Channel %1: ] Block %2 illegal program path %3", trigger: program_not_found, cause: "The part program command CALLPATH was called with a parameter (program path) referring to a directory which does not exist in the file system of the NCK.", page: "100"}
+  - {code: "14010", text: "[Channel %1: ] Block %2 invalid default parameter in subroutine call", trigger: macro_error, cause: "In a subroutine call with parameter transfer, parameters have been omitted that cannot be replaced by default parameters (call-by-reference parameters or parameters of type AXIS. [...]", page: "100"}
+  - {code: "14011", text: "[Channel %1: ] Block %2 program %3 not existing or will be edited", trigger: program_not_found, cause: "A subroutine call was aborted because the called subroutine could not be opened. [...]", page: "101"}
+  - {code: "14012", text: "[Channel %1: ] Block %2 maximum subroutine level exceeded", trigger: macro_nesting, cause: "The maximum nesting depth of 8 program levels has been exceeded. Subroutines can be called from the main program, and these in turn may have a nesting depth of 7. In interrupt routines the maximum number of levels is 4!", page: "101"}
+  - {code: "14013", text: "[Channel %1: ] Block %2 number of subroutine passes invalid", trigger: macro_error, cause: "In a subroutine call the programmed number of passes P is zero or negative.", page: "102"}
+  - {code: "14014", text: "[Channel %1: ] Selected program %3 not available or will be edited", trigger: program_not_found, cause: "The selected parts program is not in the NCK memory or the access authorization for the program selection is from a higher level than the current control status. [...]", page: "102"}
+  - {code: "14015", text: "[Channel %1: ] Block %2 program %3 is not enabled", trigger: program_not_found, cause: "The execution right currently set in the control (e.g. key switch position 0) is inadequate to execute part program %3.", page: "102"}
+  - {code: "14016", text: "[Channel %1: ] Block %2 error when calling the subroutine via M/T function", trigger: program_not_found, cause: "The following conflict was detected in a subprogram call per M or T function: In the block referenced by parameter %2: - An M or T function replacement has already been activated - A modal subprogram call is active - A subprogram [...]", page: "102"}
+  - {code: "14017", text: "[Channel %1: ] Block %2 syntax error when calling the subroutine via M function", trigger: syntax, cause: "When calling M code subroutine with parameter transfer, an illegal syntax was detected: - Address extension not programmed as a constant. - M function value not programmed as a constant. [...]", page: "103"}
+  - {code: "14020", text: "[Channel %1: ] Block %2 wrong value or wrong number of parameters on function or procedure call", trigger: macro_error, cause: "- An illegal parameter value was specified in a function or procedure call. - An illegal number of actual parameters was programmed in a function or procedure call.", page: "103"}
+  - {code: "14021", text: "[Channel %1: ] Block %2 wrong value or wrong number of parameters on function or procedure call", trigger: macro_error, cause: "- An illegal parameter value was specified in a function or procedure call. - An illegal number of actual parameters was programmed in a function or procedure call.", page: "104"}
+  - {code: "14040", text: "[Channel %1: ] Block %2 error in end point of circle", trigger: arc_radius_tolerance, cause: "In circular interpolation, either the circle radii for the initial point and the end point are further apart, or the circle center points are further apart, than specified in the machine data. 1. [...]", page: "104"}
+  - {code: "14045", text: "[Channel %1: ] Block %2 error in tangential circle programming", trigger: arc_definition, cause: "The alarm may have the following causes: The tangent direction is not defined for tangent circle, e.g. because no other travel block has been programmed before the current block. [...]", page: "105"}
+  - {code: "14048", text: "[Channel %1: ] Block %2 wrong number of revolutions in circle programming", trigger: arc_definition, cause: "In the circle programming, a negative number of full revolutions has been specified.", page: "105"}
+  - {code: "14050", text: "[Channel %1: ] Block %2 nesting depth for arithmetic operations exceeded", trigger: macro_error, cause: "For calculating arithmetic expressions in NC blocks, an operand stack with a fixed set size is used. With very complex expressions, this stack can overflow. This may also occur with extensive expressions in synchronized actions.", page: "105"}
+  - {code: "14051", text: "[Channel %1: ] Block %2 arithmetic error in part program", trigger: macro_division_by_zero, cause: "- In calculating an arithmetic expression, an overflow has occurred (e.g. division by zero) - In a data type, the representable value range has been exceeded", page: "105"}
+  - {code: "14060", text: "[Channel %1: ] Block %2 invalid skip level with differential block skip", trigger: syntax, cause: "With \"Differential block skip\", a skip level greater than 7 has been specified. [...]", page: "106"}
+  - {code: "14070", text: "[Channel %1: ] Block %2 memory for variables not sufficient for subroutine call", trigger: macro_error, cause: "A called subroutine cannot be processed (opened), either because the internal data memory to be created for general purposes is not large enough, or because the available memory for the local program variables is too small. [...]", page: "106"}
+  - {code: "14080", text: "[Channel %1: ] Block %2 jump destination %3 not found", trigger: subprogram_not_found, cause: "In conditional and unconditional jumps, the jump destination within the program must be a block with a label (symbolic name instead of block number). [...]", page: "106"}
+  - {code: "14082", text: "[Channel %1: ] Block %2 label %3 program section not found", trigger: subprogram_not_found, cause: "The start point for repetition of the program part with CALL <program name> BLOCK <start label> TO <end label> has not been found or the same program part repetition has been called recursively.", page: "107"}
+  - {code: "14085", text: "[Channel %1: ] Block %2 instruction not allowed", trigger: illegal_function, cause: "The instruction 'TML()' may only be used in the subprogram, which replaces the T command.", page: "107"}
+  - {code: "14088", text: "[Channel %1: ] Block %2 axis %3 doubtful position", trigger: illegal_axis, cause: "An axis position larger than 3.40e+38 increments has been programmed. This alarm can be suppressed with bit11 in MD11410 $MN_SUPPRESS_ALARM_MASK.", page: "107"}
+  - {code: "14091", text: "[Channel %1: ] Block %2 illegal function, index %3", trigger: illegal_function, cause: "A function was programmed or triggered which is not allowed in the current program context. [...]", page: "108"}
+  - {code: "14092", text: "[Channel %1: ] Block %2 axis %3 is wrong axis type", trigger: illegal_axis, cause: "One of the following programming errors has occurred: 1. The keyword WAITP(x) \"Wait with block change until the specified positioning axis has reached its end point\" has been used for an axis that is not a positioning axis. 2. [...]", page: "108"}
+  - {code: "14095", text: "[Channel %1: ] Block %2 radius for circle programming too small", trigger: arc_definition, cause: "The radius entered for radius programming is too small, i.e. the programmed radius is smaller than half of the distance between start and end point.", page: "109"}
+  - {code: "14096", text: "[Channel %1: ] Block %2 illegal type conversion", trigger: macro_error, cause: "During the program run, a variable value assignment or an arithmetic operation has caused data to be processed in such a way that they have to be converted to another type. This would lead to the value range being exceeded. [...]", page: "109"}
+  - {code: "14097", text: "[Channel %1: ] Block %2 string cannot be converted to AXIS type", trigger: macro_error, cause: "The called function AXNAME - conversion of the transferred parameters of the STRING type to an axis name (return value) of the AXIS type - has not found this axis identifier in the machine data.", page: "110"}
+  - {code: "14098", text: "[Channel %1: ] Block %2 conversion error: no valid number found", trigger: macro_error, cause: "The string is not a valid INT or REAL number.", page: "110"}
+  - {code: "14099", text: "[Channel %1: ] Block %2 result in string concatenation too long", trigger: macro_error, cause: "The result of string chaining returns a string which is greater than the maximum string length laid down by the system.", page: "110"}
+  - {code: "14130", text: "[Channel %1: ] Block %2 too many initialization values given", trigger: macro_error, cause: "On assigning an array by means of SET, more initialization values than existing array elements have been specified in the program run.", page: "111"}
+  - {code: "14160", text: "[Channel %1: ] Block %2 tool length selection without geometry axis specification", trigger: tool, cause: "If variant C (tool length acts on the programmed axis) is activated by machine data MD20380 $MC_TOOL_CORR_MODE_G43G44 for tool length compensation with H word and G43/G44 in ISO_2 mode, at least one geometry axis must be [...]", page: "111"}
+  - {code: "14165", text: "[Channel %1: ] Block %2 selected ISO H/D number %3 does not match tool %4", trigger: tool, cause: "When an H or D number is programmed in ISO_2 or ISO_3 mode, it must be available in the active tool. The active tool may also be the last tool loaded on the master spindle or master toolholder. [...]", page: "111"}
+  - {code: "14170", text: "[Channel %1: ] Block %2 illegal interpolation type with tool length compensation", trigger: tool, cause: "If tool compensation (G43/G44) is activated in language mode ISO_M, the linear type of interpolation must be active.", page: "112"}
+  - {code: "14180", text: "[Channel %1: ] Block %2 H number %3 is not defined", trigger: tool, cause: "The specified H number is not assigned to a tool (ISO_M).", page: "112"}
+  - {code: "14185", text: "[Channel %1: ] Block %2 D number %3 is not defined", trigger: tool, cause: "The specified D number is not assigned to a tool (language mode ISO_M).", page: "112"}
+  - {code: "14197", text: "[Channel %1: ] Block %2 D number and H number programmed simultaneously", trigger: tool, cause: "A D word and H word have been programmed simultaneously.", page: "112"}
+  - {code: "14199", text: "[Channel %1: ] Block %2 illegal plane change for tool with diameter component", trigger: tool, cause: "If a tool has a wear or length component which is evaluated as a diameter for the facing axis (bit 0 and/or bit 1 in MD20360 $MC_TOOL_PARAMETER_DEF_MASK is set) and bit 2 of this MD is also set, this tool may only be used in the [...]", page: "113"}
+  - {code: "14200", text: "[Channel %1: ] Block %2 negative polar radius", trigger: polar, cause: "In the endpoint specification of a traversing block with G00, G01, G02 or G03 in polar coordinates, the polar radius entered for the keyword RP=... is negative. [...]", page: "113"}
+  - {code: "14210", text: "[Channel %1: ] Block %2 polar angle too large", trigger: polar, cause: "In specifying the endpoints in a traversing block with G00, G01, G02 or G03 in polar coordinates, the value range of the polar angle programmed under the keyword AP=... has been exceeded. [...]", page: "114"}
+  - {code: "14250", text: "[Channel %1: ] Block %2 negative pole radius", trigger: polar, cause: "In redefining the pole with G110, G111 or G112 in polar coordinates, the pole radius specified under keyword RP=... is negative. Only positive absolute values are permitted. [...]", page: "114"}
+  - {code: "14260", text: "[Channel %1: ] Block %2 pole angle too large", trigger: polar, cause: "In redefining the pole with G110, G111 or G112 in polar coordinates, the value range of the pole angle specified under keyword AP=... has been exceeded. [...]", page: "114"}
+  - {code: "14270", text: "[Channel %1: ] Block %2 pole programmed incorrectly", trigger: polar, cause: "When defining the pole, an axis was programmed that does not belong to the selected processing level. Programming in polar coordinates always refers to the plane activated with G17 to G19. [...]", page: "115"}
+  - {code: "14280", text: "[Channel %1: ] Block %2 polar coordinates programmed incorrectly", trigger: polar, cause: "The end point of the displayed block has been programmed both in the polar coordinate system (with AP=..., RP=...) and in the Cartesian coordinate system (axis addresses X, Y,...).", page: "115"}
+  - {code: "14400", text: "[Channel %1: ] Block %2 tool radius compensation active at transformation switchover", trigger: transformation, cause: "A change of transformation is not allowed when tool radius compensation is active.", page: "116"}
+  - {code: "14401", text: "[Channel %1: ] Block %2 transformation not available", trigger: transformation, cause: "The required transformation is not available.", page: "117"}
+  - {code: "14404", text: "[Channel %1: ] Block %2 illegal parameterization of transformation", trigger: transformation, cause: "Error has occurred when selecting transformation. [...]", page: "117"}
+  - {code: "14411", text: "[Channel %1: ] Block %2 tool radius compensation active at geometry axis changeover", trigger: transformation, cause: "It is not permissible to change the assignment of geometry axes to channel axes when tool radius compensation is active.", page: "118"}
+  - {code: "14412", text: "[Channel %1: ] Block %2 transformation active at geometry axis changeover", trigger: transformation, cause: "It is not permissible to change the assignment of geometry axes to channel axes when transformation is active.", page: "118"}
+  - {code: "14500", text: "[Channel %1: ] Block %2 illegal DEF or PROC instruction in the part program", trigger: syntax, cause: "NC part programs with high-level language elements are divided into a preceding definition part followed by a program part. [...]", page: "119"}
+  - {code: "14510", text: "[Channel %1: ] Block %2 PROC instruction missing on subroutine call", trigger: syntax, cause: "In subroutine calls with parameter transfer (\"call-by-value\" or \"call-by-reference\") the called subroutine must begin with a PROC statement.", page: "120"}
+  - {code: "14520", text: "[Channel %1: ] Block %2 illegal PROC instruction in data definition section", trigger: syntax, cause: "The PROC statement may only be programmed at the beginning of the subroutine.", page: "120"}
+  - {code: "14530", text: "[Channel %1: ] Block %2 EXTERN and PROC instruction do not correspond", trigger: syntax, cause: "Subroutines with parameter transfer must be known before they are called in the program. If the subroutines are always available (fixed cycles) the control establishes the call interfaces at the time of system power-up. [...]", page: "120"}
+  - {code: "14750", text: "[Channel %1: ] Block %2 too many auxiliary functions programmed", trigger: illegal_m_code, cause: "More than 10 auxiliary functions have been programmed in an NC block.", page: "124"}
+  - {code: "14760", text: "[Channel %1: ] Block %2 auxiliary function of a group programmed repeatedly", trigger: illegal_m_code, cause: "The M and H functions can be divided up as required over machine data in groups in any variation. Auxiliary functions are thus put into groups that mutually preclude several individual functions of one group. [...]", page: "124"}
+  - {code: "14770", text: "[Channel %1: ] Block %2 auxiliary function programmed incorrectly", trigger: illegal_m_code, cause: "The permissible number of programmed auxiliary functions per NC block has been exceeded or more than one auxiliary function of the same auxiliary function group has been programmed (M and S function). [...]", page: "125"}
+  - {code: "14780", text: "[Channel %1: ] Block %2 unreleased option used (identification %3)", trigger: illegal_function, cause: "A non-released option has been used in the block. [...]", page: "125"}
+  - {code: "14782", text: "[Channel %1: ] Block %2 non-active function used (identification %3)", trigger: illegal_function, cause: "A non-active function is used in the block Brief description of the identification 1 Transformation 2 H number of the tool", page: "126"}
+  - {code: "14800", text: "[Channel %1: ] Block %2 programmed path speed less or equal to zero", trigger: feed_zero, cause: "Zero or a negative F or FZ value has been programmed in conjunction with the G functions G93, G94, G95 or G96. [...]", page: "127"}
+  - {code: "14810", text: "[Channel %1: ] Block %2 negative axis speed programmed for positioning axis %3", trigger: feed_zero, cause: "A negative feed (FA value) has been programmed for the displayed axis presently operating as a positioning axis. [...]", page: "127"}
+  - {code: "14811", text: "[Channel %1: ] Block %2 incorrect value range for acceleration of axis/spindle %3", trigger: feed_limit, cause: "A value outside of the permissible input range of the programmed acceleration has been used. Values of between 1 and 200 % are possible.", page: "128"}
+  - {code: "14815", text: "[Channel %1: ] Block %2 negative thread pitch change programmed", trigger: thread, cause: "A negative thread pitch change has been programmed.", page: "128"}
+  - {code: "14820", text: "[Channel %1: ] Block %2 negative value for maximum spindle speed programmed with constant cutting speed", trigger: spindle, cause: "For the function \"Constant cutting speed G96\" a maximum spindle speed can be programmed with the keyword LIMS=.... The values are in the range 0.1 - 999 999.9 [rev/min].", page: "128"}
+  - {code: "14840", text: "[Channel %1: ] Block %2 incorrect value range for constant cutting speed", trigger: spindle, cause: "The programmed cutting speed is not within the input range Input range metric: 0.01 to 9 999.99 [m/min] Input range inch: 0.1 to 99 999.99 [inch/min]", page: "129"}
+  - {code: "14900", text: "[Channel %1: ] Block %2 center point and end point programmed simultaneously", trigger: arc_definition, cause: "When programming a circle by means of the opening angle, the circle center point was programmed together with the circle end point. This is too much information for the circle. Only one of the two points is allowed.", page: "129"}
+  - {code: "14910", text: "[Channel %1: ] Block %2 invalid angle of aperture for programmed circle", trigger: arc_definition, cause: "When programming a circle by means of the opening angle, a negative opening angle or an opening angle greater than or equal to 360 degrees has been programmed.", page: "129"}
+  - {code: "14920", text: "[Channel %1: ] Block %2 intermediate point of circle incorrect", trigger: arc_definition, cause: "When programming a circle by means of an intermediate point (CIP) all 3 points (initial, end and intermediate points) are on a straight line and the intermediate point (programmed by means of interpolation parameters I, J, K) is [...]", page: "130"}
+  - {code: "15380", text: "[Channel %1: ] Block %2 illegal incremental programming in axis %3", trigger: syntax, cause: "The first axis programming after \"search to block end point\" is performed incrementally. [...]", page: "135"}
+  - {code: "15420", text: "[Channel %1: ] Block %2 instruction in current mode not allowed", trigger: illegal_function, cause: "The alarm is output in the following situation: The interpreter has detected an illegal instruction (e.g. a motion command) while processing an INI file or a definition file (macro or GUD). [...]", page: "136"}
+  - {code: "15800", text: "[Channel %1: ] Block %2 wrong starting conditions for CONTPRON/CONTDCON", trigger: cycle_parameter, cause: "There is an error in the start conditions for CONTPRON/CONDCON: - G40 not active - SPLINE or POLY active - Unknown machining type programmed - Transferred machining direction not defined - Definition of LUDs in incorrect [...]", page: "137"}
+  - {code: "15810", text: "[Channel %1: ] Block %2 wrong array dimension for CONTPRON/CONTDCON", trigger: cycle_parameter, cause: "The number of columns for the array created for CONTPRON/CONTDCON does not conform to the current programming guide.", page: "137"}
+  - {code: "15900", text: "[Channel %1: ] Block %2 touch probe not allowed", trigger: probing, cause: "Measure with deletion of distance-to-go In the part program, an illegal probe has been programmed with the command MEAS (measure with deletion of distance-to-go). [...]", page: "138"}
+  - {code: "15950", text: "[Channel %1: ] Block %2 no traverse motion programmed", trigger: probing, cause: "Measure with deletion of distance-to-go In the part program, no axis or a traversing path of zero has been programmed with the command MEAS (measure with deletion of distance-to-go).", page: "138"}
+  - {code: "15960", text: "[Channel %1: ] Block %2 no traverse motion programmed", trigger: probing, cause: "Measure without deletion of distance-to-go In the part program, no axis or a traversing path of zero has been programmed with the command MEAW (measure without deletion of distance-to-go).", page: "139"}
+  - {code: "16100", text: "[Channel %1: ] Block %2 spindle %3 not available in the channel", trigger: spindle, cause: "Incorrect programming: This channel does not recognize the spindle number. The alarm can occur together with a dwell or a spindle function.", page: "139"}
+  - {code: "16105", text: "[Channel %1: ] Block %2 spindle %3 cannot be assigned", trigger: spindle, cause: "Mistake in programming: The programmed spindle is not assigned a real spindle by the spindle number converter. The alarm can be issued after improper use of SD42800 $SC_SPIND_ASSIGN_TAB[].", page: "140"}
+  - {code: "16111", text: "[Channel %1: ] Block %2 spindle %3 No speed programmed", trigger: spindle, cause: "Programming of a speed is expected.", page: "140"}
+  - {code: "16200", text: "[Channel %1: ] Block %2 spline and polynominal interpolation not available", trigger: illegal_function, cause: "The spline and polynomial interpolation are options that are not contained in the basic version of the control.", page: "140"}
+  - {code: "16410", text: "[Channel %1: ] Block %2 axis %3 is not a geometry axis", trigger: illegal_axis, cause: "A geometry axis has been programmed that cannot be imaged on any machine axis in the current transformation (possibly there is no transformation active at the moment). [...]", page: "141"}
+  - {code: "16420", text: "[Channel %1: ] Block %2 axis %3 programmed repeatedly", trigger: duplicate_address, cause: "It is not allowed to program an axis more than once.", page: "141"}
+  - {code: "16430", text: "[Channel %1: ] Block %2 geometry axis %3 cannot traverse as positioning axis in rotated coordinate system", trigger: transformation, cause: "In the rotated coordinate system, traversing of a geometry axis as positioning axis (i.e. along its axis vector in the rotated coordinate system) would mean traversing of several machine axes. [...]", page: "141"}
+  - {code: "16440", text: "[Channel %1: ] Block %2 rotation programmed for non-existent geometry axis", trigger: transformation, cause: "A rotation of a geometry axis which does not exist was programmed.", page: "142"}
+  - {code: "16500", text: "[Channel %1: ] Block %2 chamfer or rounding negative", trigger: rounding_chamfer, cause: "A negative chamfer or rounding has been programmed under the keywords CHF= ..., RND=... or RNDM=...", page: "142"}
+  - {code: "16510", text: "[Channel %1: ] Block %2 no facing axis for diameter programming available", trigger: units, cause: "Diameter programming has been activated although no transverse axis with diameter programming has been applied. [...]", page: "142"}
+  - {code: "16700", text: "[Channel %1: ] Block %2 axis %3 invalid feed type", trigger: thread, cause: "In a thread cutting function, the feed has been programmed in a unit that is impermissible. G33 (thread with constant lead) and the feed have not been programmed with G94 or G95. [...]", page: "142"}
+  - {code: "16715", text: "[Channel %1: ] Block %2 axis %3 spindle not in standstill", trigger: spindle, cause: "In the applied function (G74, reference point approach), the spindle must be stationary.", page: "143"}
+  - {code: "16720", text: "[Channel %1: ] Block %2 axis %3 thread pitch is zero", trigger: thread, cause: "No pitch was programmed in a thread block with G33 (thread with constant pitch) or G331 (rigid tapping).", page: "143"}
+  - {code: "16730", text: "[Channel %1: ] Block %2 axis %3 wrong parameter", trigger: thread, cause: "In G33 (tapping with constant pitch) the pitch parameter was not assigned to the axis that determines the velocity. [...]", page: "143"}
+  - {code: "16740", text: "[Channel %1: ] Block %2 no geometry axis programmed", trigger: thread, cause: "No geometry axis was programmed for tapping (G33) or for rigid tapping (G331, G332). The geometry axis is, however, essential if an interpolation parameter has been specified. [...]", page: "144"}
+  - {code: "16750", text: "[Channel %1: ] Block %2 axis %3 SPCON not programmed", trigger: spindle, cause: "For the programmed function (rotary axis, positioning axis), the spindle must be in position control mode.", page: "144"}
+  - {code: "16751", text: "[Channel %1: ] Block %2 spindle/axis %3 SPCOF not executable", trigger: spindle, cause: "For the programmed function, the spindle must be in the open-loop control mode. In the positioning or axis mode, the position control must not be deselected.", page: "144"}
+  - {code: "16760", text: "[Channel %1: ] Block %2 axis %3 S value missing", trigger: spindle, cause: "No spindle speed has been given for rigid tapping (G331 or G332).", page: "145"}
+  - {code: "16762", text: "[Channel %1: ] Block %2 spindle %3 thread function is active", trigger: spindle, cause: "Incorrect programming: the spindle function can currently not be executed. This alarm occurs when the spindle (master spindle) is linked with the axes by an interpolation function.", page: "145"}
+  - {code: "16763", text: "[Channel %1: ] Block %2 axis %3 programmed speed is illegal (zero or negative)", trigger: spindle, cause: "A spindle speed (S value) was programmed with the value zero or with a negative value.", page: "145"}
+  - {code: "16800", text: "[Channel %1: ] Block %2 traverse instruction DC/CDC for axis %3 not allowed", trigger: illegal_axis, cause: "The keyword DC (Direct Coordinate) can only be used for rotary axes. This causes approach of the programmed absolute position along the shortest path. Example: N100 C=DC(315)", page: "148"}
+  - {code: "16810", text: "[Channel %1: ] Block %2 traverse instruction ACP for axis %3 not allowed", trigger: illegal_axis, cause: "The keyword ACP (Absolute Coordinate Positive) is only allowed for \"modulo axes\". It causes approach of the programmed absolute position in the specified direction.", page: "148"}
+  - {code: "16820", text: "[Channel %1: ] Block %2 traverse instruction ACN for axis %3 not allowed", trigger: illegal_axis, cause: "The keyword ACN (Absolute Coordinate Negative) is only allowed for \"modulo axes\". It causes approach of the programmed absolute position in the specified direction.", page: "148"}
+  - {code: "16830", text: "[Channel %1: ] Block %2 incorrect position programmed for axis/spindle %3", trigger: illegal_axis, cause: "A position beyond the range of 0 - 359.999 has been programmed for a modulo axis.", page: "149"}
+  - {code: "17020", text: "[Channel %1: ] Block %2 illegal array index 1", trigger: macro_error, cause: "General: A read or write access has been programmed to an array variable with an invalid 1st array index. The valid array indices must lie within the defined array size and the absolute limits (0 - 32,766). [...]", page: "161"}
+  - {code: "17030", text: "[Channel %1: ] Block %2 illegal array index 2", trigger: macro_error, cause: "General: A read or write access has been programmed to an array variable with an invalid 2nd array index. The valid array indices must lie within the defined array size and the absolute limits (0 - 32,766). [...]", page: "161"}
+  - {code: "17040", text: "[Channel %1: ] Block %2 illegal axis index", trigger: macro_error, cause: "A read or write access has been programmed to an axial variable in which the axis name cannot be unambiguously imaged on a machine axis. [...]", page: "162"}
+  - {code: "17050", text: "[Channel %1: ] Block %2 illegal value", trigger: macro_error, cause: "A value has been programmed that exceeds the value range or the limit value of a variable or a machine data. Example: - in a string variable (e.g. [...]", page: "162"}
+  - {code: "17070", text: "[Channel %1: ] Block %2 data is write-protected", trigger: macro_error, cause: "An attempt was made to write into a write-protected variable (e.g. a system variable).", page: "163"}
+  - {code: "17080", text: "[Channel %1: ] Block %2 %3 value below lower limit", trigger: macro_error, cause: "An attempt was made to write into a machine data with a value smaller than the defined lower limit.", page: "163"}
+  - {code: "17090", text: "[Channel %1: ] Block %2 %3 value exceeds upper limit", trigger: macro_error, cause: "An attempt was made to write into a machine data with a value greater than the defined upper limit.", page: "163"}
+  - {code: "17095", text: "[Channel %1: ] Block %2 invalid value", trigger: macro_error, cause: "An attempt was made to write an invalid value, e.g. zero, into a machine data.", page: "163"}
+  - {code: "17160", text: "[Channel %1: ] Block %2 no tool selected", trigger: tool, cause: "An attempt has been made to access the current tool offset data via the system variables: $P_AD [n]: Contents of the parameter (n: 1 - 25) $P_TOOL: Active D number (tool edge number) $P_TOOLL [n]: Active tool length (n: 1- 3) [...]", page: "165"}
+  - {code: "17180", text: "[Channel %1: ] Block %2 illegal D number", trigger: tool, cause: "In the displayed block, access is made to a D number that is not defined and therefore is not available.", page: "166"}
+  - {code: "17181", text: "[Channel %1: ] Block %2 T no.= %3, D no.= %4 not existing", trigger: tool, cause: "A programmed D number was not recognized by the NC. By default, the D number refers to the specified T number. If the flat D number function is active, T= 1 is output.", page: "167"}
+  - {code: "17190", text: "[Channel %1: ] Block %2 illegal T number %3", trigger: tool, cause: "In the displayed block, access is made to a tool that is not defined and therefore not available. The tool has been named by its T number, its name or its name and duplo number.", page: "168"}
+  - {code: "17191", text: "[Channel %1: ] Block %2 T= %3 not existing, program %4", trigger: tool, cause: "A tool identifier which the NCK does not recognize was programmed.", page: "168"}
+  - {code: "17194", text: "[Channel %1: ] Block %2 no suitable tool found", trigger: tool, cause: "- An attempt was made to access a tool which has not been defined. - The specified tool does not permit access. - A tool with the desired properties is not available.", page: "168"}
+  - {code: "17500", text: "[Channel %1: ] Block %2 axis %3 is not an indexing axis", trigger: illegal_axis, cause: "An indexing axis position has been programmed for an axis with the keywords CIC, CAC or CDC that has not been defined as indexing axis in the machine data.", page: "170"}
+  - {code: "17600", text: "[Channel %1: ] Block %2 preset on transformed axis %3 not possible", trigger: transformation, cause: "The programmed PRESET axis is involved in the current transformation. This means that setting the actual value memory (PRESET) is not possible for this axis. [...]", page: "170"}
+  - {code: "17610", text: "[Channel %1: ] Block %2 axis %3 involved in the transformation, action cannot be carried out", trigger: transformation, cause: "The axis is involved in the active transformation. It can therefore not execute the demanded action, traversing as positioning axis, enable for axis exchange.", page: "170"}
+  - {code: "17620", text: "[Channel %1: ] Block %2 approaching fixed point for transformed axis %3 not possible", trigger: transformation, cause: "In the displayed block, an axis is programmed for the fixed point approach (G75) that is involved in the active transformation. Fixed point approach is not performed with this axis!", page: "171"}
+  - {code: "17630", text: "[Channel %1: ] Block %2 referencing for transformed axis %3 not possible", trigger: transformation, cause: "In the displayed block, an axis is programmed for reference point approach (G74) that is involved in the active transformation. Reference point approach is not performed with this axis!", page: "171"}
+  - {code: "17640", text: "[Channel %1: ] Block %2 spindle operation for transformed axis %3 not possible", trigger: transformation, cause: "The axis programmed for the spindle operation is involved in the current transformation as geometry axis. This is not allowed.", page: "171"}
+  - {code: "17650", text: "[Channel %1: ] Block %2 machine axis %3 not programmable", trigger: illegal_axis, cause: "The machine axis cannot be used in an active transformation. You may be able to program the function in a different coordinate system. [...]", page: "172"}
+  - {code: "17900", text: "[Channel %1: ] Block %2 axis %3 is no machine axis", trigger: illegal_axis, cause: "At this point, the block context calls for a machine axis. [...]", page: "172"}
+  - {code: "18300", text: "[Channel %1: ] Block %2 frame: fine shift not possible", trigger: transformation, cause: "Allocation of a fine shift to settable frames or the basic frame is not possible since MD18600 $MN_MM_FRAME_FINE_TRANS is not equal to 1.", page: "174"}
+  - {code: "18310", text: "[Channel %1: ] Block %2 frame: illegal rotation", trigger: transformation, cause: "Rotations are not possible with NCU global frames.", page: "174"}
+  - {code: "18311", text: "[Channel %1: ] Block %2 frame: illegal instruction", trigger: transformation, cause: "An attempt was made to read or write a frame which does not exist.", page: "175"}
+  - {code: "18313", text: "[Channel %1: ] Block %2 frame: illegal switchover of geometry axes", trigger: transformation, cause: "It is not allowed to change the geometry axis assignment because the current frame contains rotations.", page: "175"}
+  - {code: "18314", text: "[Channel %1: ] Block %2 frame: type conflict", trigger: transformation, cause: "It is not possible to chain global frames and channel-specific frames. The alarm occurs if a global frame is programmed with a channel axis name and no machine axis on this NCU is assigned to the channel axis. [...]", page: "175"}
+  - {code: "20057", text: "[Channel %1: ] Block %2 revolutional feedrate for axis/spindle %3 is <= zero", trigger: feed_zero, cause: "Revolutional feed has been programmed for an axis/spindle, but the velocity was not programmed or the programmed value is smaller than or equal to zero.", page: "182"}
+  - {code: "21614", text: "[Channel %1: ] Axis %2 hardware limit switch %3", trigger: overtravel, cause: "The signal V380x 1000.1 und .0 (Hardware limit switch plus/minus) has been set at the NC/PLC interface.", page: "188"}
+  - {code: "21700", text: "[Channel %1: ] Block %3 axis %2 touch probe already deflected, edge polarity not possible", trigger: probing, cause: "The probe programmed under the keyword MEAS or MEAW is already deflected and has switched. For a further measuring operation, the probe signal must first be canceled (quiescent state of the probe). [...]", page: "190"}
+  - {code: "21701", text: "[Channel %1: ] Block %3 axis %2 measurement not possible", trigger: probing, cause: "Measurement level 2 (MEASA, MEAWA, MEAC). There is an error in the programmed measurement task. [...]", page: "190"}
+  - {code: "21702", text: "[Channel %1: ] Block %3 axis %2 measurement aborted", trigger: probing, cause: "The measurement block has ended (the programmed end position of the axis has been reached) but the activated touch probe has not yet responded. [...]", page: "191"}
+  - {code: "21703", text: "[Channel %1: ] Block %3 axis %2 touch probe not deflected, illegal edge polarity", trigger: probing, cause: "The selected probe is not (!) deflected and therefore cannot record any measured value from the deflected to the nondeflected state. [...]", page: "191"}
+  - {code: "22000", text: "[Channel %1: ] Block %3 spindle %2 gear stage change not possible", trigger: spindle, cause: "A gear stage change for the spindle will not be possible, if: - thread cutting (G33, G34, G35) is active - the spindle is active as master or slave spindle in a coupling - the spindle is being positioned", page: "193"}
+  - {code: "22010", text: "[Channel %1: ] Block %3 spindle %2 actual gear stage differs from requested gear stage", trigger: spindle, cause: "The requested gear stage change has been concluded. The actual gear stage reported by the PLC as being engaged is not the same as the required gear stage called for by the NC. [...]", page: "193"}
+  - {code: "22011", text: "[Channel %1: ] Block %3 spindle %2 change to programmed gear stage not possible", trigger: spindle, cause: "With the 'DryRun', 'ProgramTest' and 'SearchRunByProgTest' functions deselected, it is not possible in the Repos module to carry out a gear stage change to a previously programmed gear stage. [...]", page: "193"}
+  - {code: "22040", text: "[Channel %1: ] Block %3 spindle %2 is not referenced with zero marker", trigger: spindle, cause: "The current position is not referenced with the measuring system position although reference is made to it.", page: "194"}
+  - {code: "22050", text: "[Channel %1: ] Block %3 spindle %2 no transition from speed control mode to position control mode", trigger: spindle, cause: "- An oriented spindle stop (SPOS/SPOSA) has been programmed or the position control of the spindle was switched on with SPCON but no spindle encoder has been defined. - When switching on the position control, the spindle speed is [...]", page: "195"}
+  - {code: "22051", text: "[Channel %1: ] Block %3 spindle %2 reference mark not found", trigger: spindle, cause: "When referencing, the spindle turned through a greater distance than given in the axis-specific MD34060 $MA_REFP_MAX_MARKER_DIST, without receiving a reference mark signal. [...]", page: "195"}
+  - {code: "22052", text: "[Channel %1: ] Block %3 spindle %2 no standstill on block change", trigger: spindle, cause: "The displayed spindle has been programmed as spindle or as axis even though a positioning operation is still running from the previous block (with SPOSA ... spindle positioning beyond block limits). [...]", page: "195"}
+  - {code: "22055", text: "[Channel %1: ] Block %3 spindle %2 configured positioning speed is too high", trigger: spindle, cause: "The current position is not referenced with the measuring system position although reference is made to it.", page: "196"}
+  - {code: "22100", text: "[Channel %1: ] Block %3 spindle %2 chuck speed exceeded", trigger: spindle, cause: "The actual spindle speed is higher than the maximum speed configured in MD35100 $MA_SPIND_VELO_LIMIT plus a tolerance of 10 percent (fixed setting). [...]", page: "197"}
+  - {code: "22200", text: "[Channel %1: ] Spindle %2 axis stopped during tapping", trigger: rigid_tap, cause: "When tapping with compensating chuck (G63) the drilling axis was stopped via the NC/PLC interface and the spindle continues to rotate. The thread and possibly also the tap were damaged as a result.", page: "198"}
+  - {code: "22250", text: "[Channel %1: ] Spindle %2 axis stopped during thread cutting", trigger: thread, cause: "The thread cutting axis has been stopped while a thread block was active. The stop can be caused by VDI signals that cause the feed to be interrupted.", page: "198"}
+  - {code: "22270", text: "[Channel %1: ] Block %2 maximum tapping speed reached", trigger: rigid_tap, cause: "The following additional parameters are output in order to ascertain the problem: 1. 'Position' (without a preceding axis identifier): The maximum feed of the thread axis is reached at the displayed axis position. [...]", page: "198"}
+  - {code: "22275", text: "[Channel %1: ] Block %2 zero velocity of thread axis at position %3 reached", trigger: thread, cause: "An axis standstill was reached at the specified position during thread cutting with G35 due to the linear decrease in the thread pitch. [...]", page: "199"}
+  - {code: "22280", text: "[Channel %1: ] In block %2: Prog. acceleration path too short %3, %4 required", trigger: thread, cause: "In order to stay within the programmed acceleration path, the acceleration caused an overload on the thread axis. [...]", page: "199"}
+  - {code: "25040", text: "Axis %1 standstill monitoring", trigger: servo, cause: "The NC monitors to ensure that the position is held at zero speed. Monitoring is started after a time that can be set for a specific axis in the MD36040 $MA_STANDSTILL_DELAY_TIME after interpolation has ended. [...]", page: "203"}
+  - {code: "25050", text: "Axis %1 contour monitoring", trigger: servo, cause: "The NCK calculates for each interpolation point (setpoint) of an axis the actual value that should result based on an internal model. [...]", page: "203"}
+  - {code: "25060", text: "Axis %1 speed setpoint limitation", trigger: servo, cause: "The speed setpoint has exceeded its upper limit for a longer period than allowed. The maximum speed setpoint is limited to a certain percentage by the axis-specific MD36210 $MA_CTRLOUT_LIMIT. [...]", page: "204"}
+  - {code: "25080", text: "Axis %1 positioning monitoring", trigger: servo, cause: "For blocks in which \"exact stop\" is effective, the axis must have reached the exact stop window after the positioning time given in the axis-specific MD36020 $MA_POSITIONING_TIME. [...]", page: "205"}
+  - {code: "61000", text: "[Channel %1: ] Block %2: No tool offset active", trigger: tool, cause: "Alarm triggered by following cycles: LONGHOLE, SLOT1, SLOT2, POCKET1 through POCKET4, CYCLE71, CYCLE72, CYCLE90, CYCLE93 through CYCLE96.", page: "219"}
+  - {code: "61001", text: "[Channel %1: ] Block %2: Thread pitch incorrectly defined", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE84, CYCLE840, CYCLE96, CYCLE97.", page: "219"}
+  - {code: "61002", text: "[Channel %1: ] Block %2: Type of machining incorrectly defined", trigger: cycle_parameter, cause: "The value of the VARI parameter for the machining has been incorrectly specified. Alarm triggered by following cycles: SLOT1, SLOT2, POCKET1 to POCKET4, CYCLE71, CYCLE72, CYCLE76, CYCLE77, CYCLE93, CYCLE95, CYCLE97, CYCLE98.", page: "219"}
+  - {code: "61003", text: "[Channel %1: ] Block %2: No feed programmed in cycle", trigger: cycle_parameter, cause: "The parameter for the feed has been incorrectly specified. Alarm triggered by following cycles: CYCLE71, CYCLE72.", page: "219"}
+  - {code: "61004", text: "[Channel %1: ] Block %2: Incorrect configuration of geometry axes", trigger: cycle_parameter, cause: "The geometry-axes sequence is wrong. CYCLE328", page: "220"}
+  - {code: "61005", text: "[Channel %1: ] Block %2: 3rd geometry axis not available", trigger: cycle_parameter, cause: "With an application on the lathe with no Y-axis in the G18 plane. Alarm triggered by following cycle: CYCLE86.", page: "220"}
+  - {code: "61006", text: "[Channel %1: ] Block %2: Tool radius too large", trigger: tool, cause: "The tool radius is too large for machining. Alarm triggered by following cycles: CYCLE930, CYCLE951, E_CP_CE, E_CP_CO, E_CP_DR, E_PO_CIR, E_PO_REC, F_CP_CE, F_CP_CO, F_CP_DR, F_PO_CIR, F_PO_REC.", page: "220"}
+  - {code: "61007", text: "[Channel %1: ] Block %2: Tool radius too small", trigger: tool, cause: "The tool radius is too small for machining. Alarm triggered by following cycles: CYCLE92, E_CP_CO, E_SL_CIR, F_CP_CO, F_PARTOF, F_SL_CIR.", page: "220"}
+  - {code: "61008", text: "[Channel %1: ] Block %2: No tool active", trigger: tool, cause: "Alarm triggered by following cycles:", page: "221"}
+  - {code: "61009", text: "[Channel %1: ] Block %2: Active tool number = 0", trigger: tool, cause: "No tool (T) has been programmed before the cycle call. Alarm triggered by following cycles: CYCLE71, CYCLE72.", page: "221"}
+  - {code: "61010", text: "[Channel %1: ] Block %2: Finishing allowance too large", trigger: cycle_parameter, cause: "The finishing allowance for the base is greater than the total depth. Alarm triggered by following cycle: CYCLE72.", page: "221"}
+  - {code: "61011", text: "[Channel %1: ] Block %2: Scaling not permissible", trigger: cycle_parameter, cause: "A scale factor is active which is illegal for this cycle. Alarm triggered by following cycles: CYCLE71, CYCLE72.", page: "221"}
+  - {code: "61012", text: "[Channel %1: ] Block %2: Different scaling in planes", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE76, CYCLE77.", page: "222"}
+  - {code: "61014", text: "[Channel %1: ] Block %2: Return plane exceeded", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE72.", page: "222"}
+  - {code: "61015", text: "[Channel %1: ] Block %2: Contour is not defined", trigger: cycle_parameter, page: "222"}
+  - {code: "61017", text: "[Channel %1: ] Block %2: function %4 not present in NCK", trigger: illegal_function, page: "223"}
+  - {code: "61018", text: "[Channel %1: ] Block %2: function %4 not executable with NCK", trigger: illegal_function, page: "223"}
+  - {code: "61019", text: "[Channel %1: ] Block %2: Parameter %4 incorrectly defined", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE60, CYCLE83.", page: "223"}
+  - {code: "61020", text: "[Channel %1: ] Block %2: Machining not possible with active TRANSMIT/TRACYL", trigger: transformation, page: "224"}
+  - {code: "61021", text: "[Channel %1: ] Block %2: Parameter %4 value too high", trigger: cycle_parameter, page: "224"}
+  - {code: "61022", text: "[Channel %1: ] Block %2: Parameter %4 value too low", trigger: cycle_parameter, page: "224"}
+  - {code: "61023", text: "[Channel %1: ] Block %2: Parameter %4 value must be unequal to zero", trigger: cycle_parameter, page: "224"}
+  - {code: "61024", text: "[Channel %1: ] Block %2: Parameter %4 check value", trigger: cycle_parameter, page: "225"}
+  - {code: "61025", text: "[Channel %1: ] Block %2: Check tool carrier position", trigger: tilted_plane, page: "225"}
+  - {code: "61026", text: "[Channel %1: ] Block %2: Cycle cannot be executed with NC function %4.", trigger: illegal_function, page: "225"}
+  - {code: "61101", text: "[Channel %1: ] Block %2: Reference plane incorrectly defined", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE71, CYCLE72, CYCLE81 to CYCLE90, CYCLE840, SLOT1, SLOT2, POCKET1 to POCKET4, LONGHOLE.", page: "226"}
+  - {code: "61102", text: "[Channel %1: ] Block %2: No spindle direction programmed", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE86, CYCLE87, CYCLE88, CYCLE840, POCKET3, POCKET4.", page: "226"}
+  - {code: "61103", text: "[Channel %1: ] Block %2: Number of holes is zero", trigger: cycle_parameter, cause: "No value for the number of holes has been programmed. Alarm triggered by following cycles: HOLES1, HOLES2.", page: "226"}
+  - {code: "61104", text: "[Channel %1: ] Block %2: Contour violation of slots", trigger: cycle_parameter, cause: "Incorrect parameterization of the milling pattern in the parameters which define the position of the slots/elongated holes on the circle and their form. Alarm triggered by following cycles: SLOT1, SLOT2, LONGHOLE.", page: "226"}
+  - {code: "61105", text: "[Channel %1: ] Block %2: Milling cutter radius too large", trigger: tool, cause: "The diameter of the cutter used is too large for the form to be machined. Alarm triggered by following cycles: SLOT1, SLOT2, POCKET1 to POCKET4, LONGHOLE, CYCLE90.", page: "227"}
+  - {code: "61106", text: "[Channel %1: ] Block %2: Number of or distance between circular elements", trigger: cycle_parameter, cause: "Incorrect parameterization of NUM or INDA. The layout of the circle elements within a full circle is not possible. Alarm triggered by following cycles: HOLES2, LONGHOLE, SLOT1, SLOT2.", page: "227"}
+  - {code: "61107", text: "[Channel %1: ] Block %2: First drilling depth incorrectly defined", trigger: cycle_parameter, cause: "First drilling depth is in the opposite direction to the total drilling depth. Alarm triggered by following cycle: CYCLE83.", page: "227"}
+  - {code: "61108", text: "[Channel %1: ] Block %2: Values for parameters _RAD1 and _DP1 not permissible", trigger: cycle_parameter, cause: "The parameters _RAD1 and _DP for defining the path for the depth infeed have been incorrectly specified. Alarm triggered by following cycles: POCKET3, POCKET4.", page: "227"}
+  - {code: "61109", text: "[Channel %1: ] Block %2: Parameter _CDIR incorrectly defined", trigger: cycle_parameter, cause: "The value of the parameter for the cutting direction _CDIR has been incorrectly defined. Alarm triggered by following cycles: POCKET3, POCKET4.", page: "228"}
+  - {code: "61110", text: "[Channel %1: ] Block %2: Finishing allowance at bottom > depth infeed", trigger: cycle_parameter, cause: "The finishing allowance at the base has been specified greater than the maximum depth infeed. Alarm triggered by following cycles: POCKET3, POCKET4.", page: "228"}
+  - {code: "61111", text: "[Channel %1: ] Block %2: Infeed width > Tool diameter", trigger: cycle_parameter, cause: "The programmed infeed width is greater than the diameter of the active tool. Alarm triggered by following cycles: CYCLE71, POCKET3, POCKET4.", page: "228"}
+  - {code: "61112", text: "[Channel %1: ] Block %2: Tool radius negative", trigger: tool, cause: "The radius of the active tool is negative. This is illegal. Alarm triggered by following cycles: CYCLE72, CYCLE76, CYCLE77, CYCLE90.", page: "228"}
+  - {code: "61113", text: "[Channel %1: ] Block %2: Parameter _CRAD too large for corner radius", trigger: cycle_parameter, cause: "The parameter for the corner radius _CRAD has been specified too large. Alarm triggered by following cycle: POCKET3.", page: "229"}
+  - {code: "61114", text: "[Channel %1: ] Block %2: Machining direction G41/G42 incorrectly defined", trigger: cycle_parameter, cause: "The machining direction of the cutter radius compensation G41/G42 has been incorrectly selected. Alarm triggered by following cycle: CYCLE72.", page: "229"}
+  - {code: "61115", text: "[Channel %1: ] Block %2: Approach or retract mode(straight / circle / plane / space) incorrectly defined", trigger: cycle_parameter, cause: "The approach or retract mode to/from the contour has been incorrectly defined. Alarm triggered by following cycle: CYCLE72.", page: "229"}
+  - {code: "61116", text: "[Channel %1: ] Block %2: Approach or retract path = 0", trigger: cycle_parameter, cause: "The approach or retract path has been specified with zero. Alarm triggered by following cycle: CYCLE72.", page: "229"}
+  - {code: "61117", text: "[Channel %1: ] Block %2: Active tool radius <= 0", trigger: tool, cause: "The radius of the acive tool is negative or zero. Alarm triggered by following cycles: CYCLE71, POCKET3, POCKET4.", page: "230"}
+  - {code: "61118", text: "[Channel %1: ] Block %2: Length or width = 0", trigger: cycle_parameter, cause: "The length or width of the milling area is illegal. Alarm triggered by following cycle: CYCLE71.", page: "230"}
+  - {code: "61119", text: "[Channel %1: ] Block %2: Nominal or core diameter programmed incorrectly", trigger: cycle_parameter, cause: "The nominal or core diameter was incorrectly programmed. Alarm triggered by following cycles: CYCLE70, E_MI_TR, F_MI_TR.", page: "230"}
+  - {code: "61120", text: "[Channel %1: ] Block %2: Thread type inside / outside not defined", trigger: cycle_parameter, cause: "The thread type (internal/external) was not defined. Alarm triggered by following cycles: CYCLE70.", page: "230"}
+  - {code: "61121", text: "[Channel %1: ] Block %2: Number of teeth per cutting edge is missing", trigger: cycle_parameter, cause: "No value was entered for the number of teeth per cutting edge. Alarm triggered by following cycles: CYCLE70.", page: "231"}
+  - {code: "61122", text: "[Channel %1: ] Block %2: Safety distance incorrectly defined in plane", trigger: cycle_parameter, cause: "The safety clearance is negative or zero. This is not allowed.", page: "231"}
+  - {code: "61124", text: "[Channel %1: ] Block %2: Infeed width is not programmed", trigger: cycle_parameter, cause: "Alarm triggered by following cycle: CYCLE71.", page: "231"}
+  - {code: "61125", text: "[Channel %1: ] Block %2: Technology selection in parameter _TECHNO incorrectly defined", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE84, CYCLE840.", page: "232"}
+  - {code: "61126", text: "[Channel %1: ] Block %2: Thread length too short", trigger: cycle_parameter, cause: "Alarm triggered by following cycle: CYCLE840.", page: "232"}
+  - {code: "61127", text: "[Channel %1: ] Block %2: Wrong definition of tapping axis transformation ratio (machine data)", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE84, CYCLE840.", page: "232"}
+  - {code: "61128", text: "[Channel %1: ] Block %2: Insertion angle = 0 for insertion with oscillation or helix", trigger: cycle_parameter, cause: "Alarm triggered by following cycle: SLOT1.", page: "233"}
+  - {code: "61129", text: "[Channel %1: ] Block %2: perpendic. approach and retraction during contour milling only allowed with G40", trigger: cycle_parameter, cause: "Alarm triggered by following cycle: CYCLE72.", page: "233"}
+  - {code: "61150", text: "[Channel %1: ] Block %2: Tool cannot be aligned --> error code: %4", trigger: tilted_plane, cause: "Alarm triggered by following cycle: CYCLE800.", page: "236"}
+  - {code: "61151", text: "[Channel %1: ] Block %2: Orientation of tool not possible --> error code: %4", trigger: tilted_plane, cause: "Alarm triggered by following cycle: CYCLE800.", page: "236"}
+  - {code: "61152", text: "[Channel %1: ] Block %2: B axis kinematics (turning technology) either not or incorrectly set up in Start-up of swivel cycle --> error code: %4", trigger: tilted_plane, cause: "Alarm triggered by following cycle: CYCLE800.", page: "236"}
+  - {code: "61153", text: "[Channel %1: ] Block %2: No 'Rotary axes direct' swivel mode possible --> error code: %4", trigger: tilted_plane, cause: "Alarm triggered by following cycle: CYCLE800.", page: "236"}
+  - {code: "61154", text: "[Channel %1: ] Block %2: Final depth wrongly programmed", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE899", page: "237"}
+  - {code: "61155", text: "[Channel %1: ] Block %2: Unit for plane infeed wrongly programmed", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE899", page: "237"}
+  - {code: "61156", text: "[Channel %1: ] Block %2: Depth calculation wrongly programmed", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE899", page: "237"}
+  - {code: "61157", text: "[Channel %1: ] Block %2: Reference point wrongly programmed", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE899", page: "237"}
+  - {code: "61158", text: "[Channel %1: ] Block %2: Machining plane wrongly programmed", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE899", page: "237"}
+  - {code: "61159", text: "[Channel %1: ] Block %2: Machining plane on cycle call differs from the one in the position pattern", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE899", page: "237"}
+  - {code: "61160", text: "[Channel %1: ] Block %2: Residual material remains stationary, reduce plane infeed", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE899", page: "238"}
+  - {code: "61161", text: "[Channel %1: ] Block %2: Centering diameter or tool parameter (diameter, tip angle) are incorrect", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE81", page: "238"}
+  - {code: "61162", text: "[Channel %1: ] Block %2: Tool parameter diameter or tip angle incorrect", trigger: cycle_parameter, cause: "The alarm is triggered by the following cycle: CYCLE81", page: "238"}
+  - {code: "61175", text: "[Channel %1: ] Block %2: angle of aperture _DF programmed too small", trigger: cycle_parameter, cause: "The angle of aperture of the text in the engraving cycle is too small. This means that the text for engraving does not fit in the specified angle.", page: "238"}
+  - {code: "61176", text: "[Channel %1: ] Block %2: text length _DF programmed too small", trigger: cycle_parameter, cause: "The text length in the engraving cycle is too short. This means that the text for engraving is longer than the specified text length.", page: "238"}
+  - {code: "61177", text: "[Channel %1: ] Block %2: polar text length > 360 degrees", trigger: cycle_parameter, cause: "In the engraving cycle, the polar text length must not exceed 360 degrees.", page: "239"}
+  - {code: "61178", text: "[Channel %1: ] Block %2: code page not present", trigger: cycle_parameter, cause: "The specified code page is not supported by the cycle.", page: "239"}
+  - {code: "61179", text: "[Channel %1: ] Block %2: character does not exist, no.: %4", trigger: cycle_parameter, cause: "The character entered in the text for engraving cannot be milled.", page: "239"}
+  - {code: "61180", text: "[Channel %1: ] Block %2: no name assigned to swivel data block, although MD $MN_MM_NUM_TOOL_CARRIER > 1", trigger: tilted_plane, cause: "Although there are several swivel data blocks, no unique names have been assigned. Alarm triggered by following cycles: CYCLE800.", page: "240"}
+  - {code: "61181", text: "[Channel %1: ] Block %2: Insufficient NCK software version (TOOLCARRIER functionality missing)", trigger: tilted_plane, cause: "Swivelling is not possible with the current NCK software version. Alarm triggered by following cycles: CYCLE800.", page: "240"}
+  - {code: "61182", text: "[Channel %1: ] Block %2: Name of swivel data record unknown", trigger: tilted_plane, cause: "the specified name of the swivel data block is unknown. Alarm triggered by following cycles: CYCLE800.", page: "240"}
+  - {code: "61183", text: "[Channel %1: ] Block %2: Clearance mode _FR outside of value range 0..2.", trigger: tilted_plane, cause: "The retraction mode value lies outside of the valid range. Alarm triggered by following cycles: CYCLE800.", page: "240"}
+  - {code: "61184", text: "[Channel %1: ] Block %2: No solution possible with current input angle values", trigger: tilted_plane, cause: "The surface defined via the input angle cannot be processed with the machine. Alarm triggered by following cycles: CYCLE800.", page: "240"}
+  - {code: "61185", text: "[Channel %1: ] Block %2: no or wrong (min > max) angle areas of rotary axes agreed", trigger: tilted_plane, cause: "The rotary axis angle range is invalild. Alarm triggered by following cycles: CYCLE800.", page: "240"}
+  - {code: "61186", text: "[Channel %1: ] Block %2: Invalid rotary axis vectors --> Start-up check swivel cycle CYCLE800", trigger: tilted_plane, cause: "No or incorrect entry for rotary axis vector V1 or V2. Alarm triggered by following cycles: CYCLE800.", page: "241"}
+  - {code: "61188", text: "[Channel %1: ] Block %2: No axis name agreed for 1st rotary axis -> Start-up check CYCLE800", trigger: tilted_plane, cause: "No axis name was specified for the 1st rotary axis. Alarm triggered by following cycles: CYCLE800.", page: "241"}
+  - {code: "61189", text: "[Channel %1: ] Block %2: invalid rotary axis positions", trigger: tilted_plane, cause: "Alarm triggered by following cycles: CYCLE800.", page: "241"}
+  - {code: "61190", text: "[Channel %1: ] Block %2: unable to retract in tool direction --> error code: %4", trigger: tilted_plane, cause: "The alarm is triggered by the following cycles: CYCLE800.", page: "242"}
+  - {code: "61191", text: "[Channel %1: ] Block %2: 5 axis transformation not set up", trigger: tilted_plane, cause: "The alarm is triggerd by the following cycles: CYCLE832.", page: "242"}
+  - {code: "61192", text: "[Channel %1: ] Block %2: second 5 axis transformation not set up", trigger: tilted_plane, cause: "The alarm is triggerd by the following cycles: CYCLE832.", page: "242"}
+  - {code: "61196", text: "[Channel %1: ] Block %2: no swiveling in JOG --> 5 axis transformation and TCARR simultaneously activated", trigger: tilted_plane, cause: "5-axis transformation and TOOLCARRIER activated at the same time. Alarm triggered by following cycles: CYCLE800.", page: "243"}
+  - {code: "61197", text: "[Channel %1: ] Block %2: no swiveling in JOG --> active WO G%4 and basic frames contain rotations", trigger: tilted_plane, cause: "Alarm triggered by following cycles: CYCLE800.", page: "243"}
+  - {code: "61198", text: "[Channel %1: ] Block %2: no swiveling in JOG --> several active basic frames(G500) contain rotations", trigger: tilted_plane, cause: "Alarm triggered by following cycles: CYCLE800.", page: "243"}
+  - {code: "61199", text: "[Channel %1: ] Block %2: approach of tool and swivel data record change (TOOLCARRIER) not allowed", trigger: tilted_plane, cause: "Alarm triggered by following cycles: CYCLE800.", page: "244"}
+  - {code: "61601", text: "[Channel %1: ] Block %2: Finished part diameter too small", trigger: cycle_parameter, cause: "The programmed radius of the machined part is too small. Alarm triggered by following cycles: CYCLE94, CYCLE96.", page: "296"}
+  - {code: "61602", text: "[Channel %1: ] Block %2: Tool width incorrectly defined", trigger: cycle_parameter, cause: "Plunge cutter is larger than the programmed groove width. Alarm triggered by following cycle: CYCLE93.", page: "296"}
+  - {code: "61603", text: "[Channel %1: ] Block %2: Recess type incorrectly defined", trigger: cycle_parameter, cause: "Radii/chamfers at the groove base do not match the groove width. Face groove on a contour element running parallel to the longitudinal axis is not possible. Alarm triggered by following cycle: CYCLE93.", page: "296"}
+  - {code: "61604", text: "[Channel %1: ] Block %2: Active tool violates programmed contour", trigger: cycle_parameter, cause: "Contour violation in the relief cut elements due to the tool clearance angle of the tool used. Alarm triggered by following cycle: CYCLE95.", page: "297"}
+  - {code: "61605", text: "[Channel %1: ] Block %2: Contour incorrectly programmed", trigger: cycle_parameter, cause: "Illegal relief cut element detected. Alarm triggered by following cycles: CYCLE76, CYCLE77, CYCLE95.", page: "297"}
+  - {code: "61606", text: "[Channel %1: ] Block %2: Error during contour preparation", trigger: cycle_parameter, cause: "An error has been found on conditioning the contour. This alarm is always related to one of NCK alarms 10930...10934, 15800 or 15810. Alarm triggered by following cycle: CYCLE95.", page: "297"}
+  - {code: "61607", text: "[Channel %1: ] Block %2: Starting point incorrectly programmed", trigger: cycle_parameter, cause: "The starting point reached before the cycle call does not lie outside the rectangle described by the contour subroutine. Alarm triggered by following cycle: CYCLE95.", page: "297"}
+  - {code: "61608", text: "[Channel %1: ] Block %2: Incorrect tool point direction programmed", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE94, CYCLE96.", page: "297"}
+  - {code: "61609", text: "[Channel %1: ] Block %2: Shape incorrectly defined", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE94, CYCLE96, LONGHOLE, POCKET3, SLOT1.", page: "298"}
+  - {code: "61610", text: "[Channel %1: ] Block %2: No infeed depth programmed", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE76, CYCLE77, CYCLE96.", page: "298"}
+  - {code: "61611", text: "[Channel %1: ] Block %2: No point of intersection found", trigger: cycle_parameter, cause: "No intersection could be calculated with the contour. Alarm triggered by following cycle: CYCLE95.", page: "298"}
+  - {code: "61612", text: "[Channel %1: ] Block %2: Thread finishing not possible", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE97, CYCLE98.", page: "298"}
+  - {code: "61613", text: "[Channel %1: ] Block %2: Undercut position incorrectly defined", trigger: cycle_parameter, cause: "Alarm triggered by following cycles: CYCLE94, CYCLE96.", page: "299"}
+  - {code: "62100", text: "[Channel %1: ] Block %2: No drilling cycle active", trigger: cycle_parameter, cause: "No modal drilling cycle has been called before the drilling pattern cycle call. Alarm triggered by following cycles: HOLES1, HOLES2.", page: "316"}
+  - {code: "62103", text: "[Channel %1: ] Block %2: No finishing allowance programmed", trigger: cycle_parameter, cause: "No finishing allowance is programmed, although it is necessary for this machining.", page: "316"}
+  - {code: "62104", text: "[Channel %1: ] Block %2: Drilling cycle incorrectly defined", trigger: cycle_parameter, page: "316"}
+  - {code: "62105", text: "[Channel %1: ] Block %2: Number of columns or lines equals zero", trigger: cycle_parameter, cause: "Alarm triggered by following cycle: CYCLE801.", page: "317"}
+  - {code: "62180", text: "[Channel %1: ] Block %2: Set rotary axes %4 [deg]", trigger: tilted_plane, cause: "Alarm triggered by following cycle: CYCLE800. Note on 62180 and 62181: Sample display of the swivel angle to be set for a manual rotary axis in CYCLE800: 62181 \"Set rotary axis B: 32.5 [grd]\"", page: "317"}
+  - {code: "62181", text: "[Channel %1: ] Block %2: Set rotary axis %4 [deg]", trigger: tilted_plane, cause: "Alarm triggered by following cycle: CYCLE800. Note on 62180 and 62181: Sample display of the swivel angle to be set for a manual rotary axis in CYCLE800: 62181 \"Set rotary axis B: 32.5 [grd]\"", page: "318"}
+  - {code: "62200", text: "[Channel %1: ] Block %2: Start spindle", trigger: cycle_parameter, cause: "Stop prior to thread machining, as the spindle is in stop position. Alarm triggered by following cycles: ASUP, E_TR_CON, F_TR_CON.", page: "319"}
 
 messages:
   src: est
@@ -40,80 +441,86 @@ timing:
     - code: "G64 / G641 ADIS= / G642 / G643 / G644 / G645"
       name: continuous_path
       note: "G64 continuous path with speed reduction by overload factor; G641 smoothing with a programmable rounding distance ADIS (ADISPOS for rapid); G642 smoothing within the axial tolerances (machine data / CTOL, OTOL, ATOL); G643 block-internal smoothing; G644 smoothing with maximum dynamics; G645 smoothing of corners and tangential transitions within tolerance. Estimate."
-    - code: "CYCLE832(_TOL, _TOLM, ...) / COMPCAD / COMPCURV / COMPSURF / COMPOF"
+    - code: "CYCLE832(S_TOL, S_TOLM, S_OTOL) / COMPCAD / COMPCURV / COMPSURF / COMPOF"
       name: high_speed_settings
-      note: "CYCLE832 high-speed settings: _TOL = contour tolerance, technology _FINISH / _SEMIFIN / _ROUGH / _OFF; switches G642 (or G645), the compressor (COMPCAD / COMPSURF), feed forward (FFWON) and jerk limitation (SOFT) and sets the tolerance (CTOL/OTOL); _OFF resets to the defaults. COMPCAD compresses short linear blocks into polynomials within the compressor tolerance. Estimate."
+      note: "call format, S_TOL contour tolerance and the S_TOLM technology codes (_OFF, _FINISH, _SEMIFIN, _ROUGH, _ORI_...) read in the Job Planning manual 08/2018 (see words.cycle_parameters.CYCLE832, siemens-840dsl-jobplan-ru-2018 pp. 825-827). Estimate (not read): which functions the cycle switches, i.e. G642 (or G645), the compressor (COMPCAD / COMPSURF), feed forward (FFWON), jerk limitation (SOFT) and the tolerances CTOL/OTOL; COMPCAD compresses short linear blocks into polynomials within the compressor tolerance."
 
 words:
   src: est
-  note: "SINUMERIK 840D sl G functions, cycles, frames and program-control statements from general knowledge; verify"
+  note: "frames, path keywords and program-control statements from general SINUMERIK knowledge; verify. words.G: G command, group and modality read in table 17.4 'G commands' of the Programming Manual Fundamentals 08/2018 (siemens-840dsl-fund-ru-2018, meanings translated from Russian); words.cycles and cycle_parameters: Programming Manual Job Planning 08/2018 (siemens-840dsl-jobplan-ru-2018)"
   G:
-    "0": "rapid traverse (also G00)"
-    "1": "linear interpolation with feed"
-    "2": "circular interpolation clockwise (end point + I/J/K centre, CR= radius, AR= angle)"
-    "3": "circular interpolation counterclockwise"
-    "4": "dwell (F seconds or S spindle revolutions, own block)"
-    "9": "exact stop, non-modal"
-    "17": "working plane X/Y, infeed Z"
-    "18": "working plane Z/X, infeed Y"
-    "19": "working plane Y/Z, infeed X"
-    "25": "lower spindle speed limit (S) or lower working-area limit (axes)"
-    "26": "upper spindle speed limit (S) or upper working-area limit (axes)"
-    "33": "thread cutting with constant lead"
-    "331": "rigid tapping"
-    "332": "rigid tapping, retraction"
-    "40": "tool radius compensation off"
-    "41": "tool radius compensation left of contour"
-    "42": "tool radius compensation right of contour"
-    "450": "TRC outer corners: transition circle"
-    "451": "TRC outer corners: intersection"
-    "500": "deactivate settable work offset (G54...)"
-    "53": "suppress settable and programmable frames, non-modal"
-    "153": "as G53 including basic frames, non-modal"
-    "54": "1st settable work offset"
-    "55": "2nd settable work offset"
-    "56": "3rd settable work offset"
-    "57": "4th settable work offset"
-    "505-599": "5th to 99th settable work offset"
-    "60": "exact stop, modal"
-    "601": "block change at exact stop fine"
-    "602": "block change at exact stop coarse"
-    "603": "block change at end of interpolation"
-    "64": "continuous-path mode"
-    "641": "continuous-path mode with smoothing by distance ADIS"
-    "642": "continuous-path mode with smoothing within axial tolerances"
-    "643": "block-internal smoothing"
-    "644": "smoothing with maximum dynamics"
-    "645": "smoothing of corners and tangential block transitions within tolerance"
-    "70": "inch dimensions for geometric data"
-    "71": "metric dimensions for geometric data"
-    "700": "inch dimensions including feeds"
-    "710": "metric dimensions including feeds"
-    "74": "reference point approach"
-    "75": "fixed point approach"
-    "90": "absolute dimensions"
-    "91": "incremental dimensions"
-    "93": "inverse-time feed"
-    "94": "feed in mm/min (inch/min)"
-    "95": "feed in mm/rev (inch/rev)"
-    "96": "constant cutting rate on"
-    "97": "constant cutting rate off"
-    "110": "pole relative to the last programmed position"
-    "111": "pole relative to the workpiece zero"
-    "112": "pole relative to the last valid pole"
+    src: siemens-840dsl-fund-ru-2018
+    note: "G command, explanation (translated) and group number / modality as printed in table 17.4; group 15 also holds G93-G97 feed types, group 8 the settable zero offsets"
+    "0": {value: "rapid traverse motion, group 1, modal", page: "537"}
+    "1": {value: "linear interpolation, group 1, modal", page: "537"}
+    "2": {value: "circular interpolation clockwise, group 1, modal", page: "537"}
+    "3": {value: "circular interpolation counterclockwise, group 1, modal", page: "537"}
+    "4": {value: "dwell time, preset by time, group 2, non-modal", page: "538"}
+    "9": {value: "exact stop, group 11, non-modal", page: "541"}
+    "17": {value: "plane selection 1st - 2nd geometry axis, group 6, modal", page: "539"}
+    "18": {value: "plane selection 3rd - 1st geometry axis, group 6, modal", page: "539"}
+    "19": {value: "plane selection 2nd - 3rd geometry axis, group 6, modal", page: "539"}
+    "25": {value: "minimum working area limitation / spindle speed limitation, group 3, non-modal", page: "538"}
+    "26": {value: "maximum working area limitation / spindle speed limitation, group 3, non-modal", page: "539"}
+    "33": {value: "thread cutting with constant pitch, group 1, modal", page: "537"}
+    "331": {value: "tapping, group 1, modal", page: "537"}
+    "332": {value: "retraction (tapping), group 1, modal", page: "537"}
+    "40": {value: "no tool radius compensation, group 7, modal", page: "540"}
+    "41": {value: "tool radius compensation left of the contour, group 7, modal", page: "540"}
+    "42": {value: "tool radius compensation right of the contour, group 7, modal", page: "540"}
+    "450": {value: "transition circle (the tool goes round workpiece corners on a circular path), group 18, modal", page: "543"}
+    "451": {value: "intersection of the equidistant paths (the tool cuts free in the workpiece corner), group 18, modal", page: "543"}
+    "500": {value: "deactivation of the settable zero offset (G54 ... G57, G505 ... G599), group 8, modal", page: "540"}
+    "53": {value: "suppression of the current frames: programmable frame including the system frame for TOROT and TOFRAME, and the active settable frame (G54 ... G57, G505 ... G599), group 9, non-modal", page: "540"}
+    "153": {value: "as G53, and also suppression of all channel-specific and/or NCU-global basic frames, group 9, non-modal", page: "540"}
+    "54": {value: "1st settable zero offset, group 8, modal", page: "540"}
+    "55": {value: "2nd settable zero offset, group 8, modal", page: "540"}
+    "56": {value: "3rd settable zero offset, group 8, modal", page: "540"}
+    "57": {value: "4th settable zero offset, group 8, modal", page: "540"}
+    "505-599": {value: "5th to 99th settable zero offset (G505 ... G599), group 8, modal", page: "540"}
+    "60": {value: "exact stop, group 10, modal", page: "541"}
+    "601": {value: "block change at exact stop fine, group 12, modal", page: "541"}
+    "602": {value: "block change at exact stop coarse, group 12, modal", page: "541"}
+    "603": {value: "block change at IPO block end, group 12, modal", page: "541"}
+    "64": {value: "continuous-path mode, group 10, modal", page: "541"}
+    "641": {value: "continuous-path mode with smoothing by a path criterion (= programmable rounding distance), group 10, modal", page: "541"}
+    "642": {value: "continuous-path mode with smoothing within defined tolerances, group 10, modal", page: "541"}
+    "643": {value: "continuous-path mode with smoothing within defined tolerances (block-internal), group 10, modal", page: "541"}
+    "644": {value: "continuous-path mode with smoothing with the maximum possible dynamics, group 10, modal", page: "541"}
+    "645": {value: "continuous-path mode with smoothing of corners and of tangential block transitions within defined tolerances, group 10, modal", page: "541"}
+    "70": {value: "inch input system (lengths), group 13, modal", page: "541"}
+    "71": {value: "metric input system, mm (lengths), group 13, modal", page: "541"}
+    "700": {value: "inch input system: inch, inch/min (lengths + velocities + system variables), group 13, modal", page: "541"}
+    "710": {value: "metric input system: mm, mm/min (lengths + velocities + system variables), group 13, modal", page: "541"}
+    "74": {value: "reference point approach with synchronization, group 2, non-modal", page: "538"}
+    "75": {value: "fixed point approach, group 2, non-modal", page: "538"}
+    "90": {value: "absolute dimensions, group 14, modal", page: "542"}
+    "91": {value: "incremental dimensions, group 14, modal", page: "542"}
+    "93": {value: "inverse-time feed 1/min, group 15, modal", page: "542"}
+    "94": {value: "linear feed in mm/min, inch/min, group 15, modal", page: "542"}
+    "95": {value: "revolutional feed in mm/rev, inch/rev, group 15, modal", page: "542"}
+    "96": {value: "revolutional feed (as G95) and constant cutting speed, group 15, modal", page: "542"}
+    "97": {value: "revolutional feed and constant spindle speed (constant cutting speed off), group 15, modal", page: "542"}
+    "110": {value: "pole programming relative to the last programmed setpoint position, group 3, non-modal", page: "539"}
+    "111": {value: "pole programming relative to the zero point of the current workpiece coordinate system, group 3, non-modal", page: "539"}
+    "112": {value: "pole programming relative to the last valid pole, group 3, non-modal", page: "539"}
   path_and_programming:
-    CIP: "circular interpolation through an intermediate point (I1= J1= K1=)"
-    CT: "circle with tangential transition"
+    CIP: {value: "circular interpolation through an intermediate point, group 1, modal", src: siemens-840dsl-fund-ru-2018, page: "537"}
+    "CIP I1= J1= K1=": "intermediate point of CIP (general knowledge)"
+    CT: {value: "circle with tangential transition, group 1, modal", src: siemens-840dsl-fund-ru-2018, page: "537"}
+    "G2/G3 CR= AR=": "arc programmed by radius CR= or by aperture angle AR= instead of the centre I/J/K (general knowledge)"
+    "G4 F / S": "dwell time in seconds (F) or in spindle revolutions (S), in its own block (general knowledge)"
     AC: "absolute dimension for one coordinate, X=AC(..)"
     IC: "incremental dimension for one coordinate, X=IC(..)"
     "DC / ACP / ACN": "rotary axis absolute: shortest path / positive / negative direction"
     "CHF / CHR": "chamfer (length along chamfer / leg length)"
     "RND / RNDM": "rounding / modal rounding"
     "AP / RP": "polar angle / polar radius"
-    "DIAMON / DIAMOF": "diameter / radius programming (turning)"
+    "DIAMON / DIAMOF": {value: "channel-specific diameter programming on (independent of G90/G91) / off (radius programming), group 29, modal", src: siemens-840dsl-fund-ru-2018, page: "546"}
     SPOS: "spindle positioning"
-    "BRISK / SOFT": "acceleration without / with jerk limitation"
-    "FFWON / FFWOF": "feed forward on / off"
+    "BRISK / SOFT / DRIVE": {value: "path acceleration step-shaped (no jerk limitation) / with jerk limitation / velocity-dependent, group 21, modal", src: siemens-840dsl-fund-ru-2018, page: "544"}
+    "FFWON / FFWOF": {value: "feedforward on / off, group 24, modal", src: siemens-840dsl-fund-ru-2018, page: "545"}
+    "COMPOF / COMPCURV / COMPCAD / COMPSURF": {value: "NC block compressor off / compressor function COMPCURV, COMPCAD, COMPSURF on, group 30, modal", src: siemens-840dsl-fund-ru-2018, page: "546"}
     "CTOL / OTOL / ATOL": "contour / orientation / axis tolerance for compressor and smoothing"
     STOPRE: "preprocessing (look-ahead) stop"
   frames:
@@ -131,29 +538,89 @@ words:
     TRANSMIT: "face-end (polar) transformation, turning machines"
     TRACYL: "cylinder surface transformation"
   cycles:
-    CYCLE81: "drilling, centering"
-    CYCLE82: "drilling, counterboring (dwell at depth)"
-    CYCLE83: "deep-hole drilling (chip breaking / chip removal)"
-    CYCLE84: "rigid tapping"
-    CYCLE840: "tapping with compensating chuck"
-    CYCLE85: "boring 1 (reaming: feed in, feed out)"
-    CYCLE86: "boring 2 (oriented spindle stop, lift-off, rapid out)"
-    CYCLE87: "boring 3 (spindle stop and program stop at depth)"
-    CYCLE88: "boring 4 (dwell, spindle stop and program stop at depth)"
-    CYCLE89: "boring 5 (dwell, feed out)"
-    HOLES1: "row of holes"
-    HOLES2: "circle of holes"
-    POCKET3: "rectangular pocket"
-    POCKET4: "circular pocket"
-    SLOT1: "longitudinal slots on a circle"
-    SLOT2: "circumferential slots"
-    LONGHOLE: "elongated holes on a circle"
-    CYCLE71: "face milling"
-    CYCLE72: "contour milling (path milling)"
-    CYCLE800: "swivel plane / align tool (tilted working plane with swivel data record)"
-    CYCLE832: "high-speed settings (tolerance and technology)"
-    CYCLE95: "stock removal along a contour (turning)"
-    CYCLE97: "thread cutting (turning)"
+    CYCLE81: {value: "drilling, centering", src: siemens-840dsl-jobplan-ru-2018, page: "784"}
+    CYCLE82: {value: "drilling, counterboring (dwell at depth)", src: siemens-840dsl-jobplan-ru-2018, page: "785"}
+    CYCLE83: {value: "deep-hole drilling (chip breaking / chip removal)", src: siemens-840dsl-jobplan-ru-2018, page: "787"}
+    CYCLE830: {value: "deep-hole drilling 2", src: siemens-840dsl-jobplan-ru-2018, page: "818"}
+    CYCLE84: {value: "tapping without compensating chuck (rigid tapping)", src: siemens-840dsl-jobplan-ru-2018, page: "790"}
+    CYCLE840: {value: "tapping with compensating chuck", src: siemens-840dsl-jobplan-ru-2018, page: "829"}
+    CYCLE85: {value: "reaming (feed in with FFR, feed out with RFF)", src: siemens-840dsl-jobplan-ru-2018, page: "793"}
+    CYCLE86: {value: "boring (oriented spindle stop at POSS, lift-off RPA/RPO/RPAP, retract)", src: siemens-840dsl-jobplan-ru-2018, page: "794"}
+    CYCLE87: "boring 3 (spindle stop and program stop at depth): older 840D cycle, not in the 840D sl 08/2018 list of externally programmable technology cycles (Job Planning 20.1.2, p. 742); kept as an estimate"
+    CYCLE88: "boring 4 (dwell, spindle stop and program stop at depth): older 840D cycle, not in the 840D sl 08/2018 technology cycle list (p. 742); kept as an estimate"
+    CYCLE89: "boring 5 (dwell, feed out): older 840D cycle, not in the 840D sl 08/2018 technology cycle list (p. 742); kept as an estimate"
+    CYCLE78: {value: "drill thread milling", src: siemens-840dsl-jobplan-ru-2018, page: "778"}
+    HOLES1: {value: "row of holes", src: siemens-840dsl-jobplan-ru-2018, page: "744"}
+    HOLES2: {value: "circle of holes", src: siemens-840dsl-jobplan-ru-2018, page: "745"}
+    CYCLE801: {value: "grid or frame of positions", src: siemens-840dsl-jobplan-ru-2018, page: "814"}
+    CYCLE802: {value: "arbitrary positions", src: siemens-840dsl-jobplan-ru-2018, page: "815"}
+    POCKET3: {value: "rectangular pocket milling", src: siemens-840dsl-jobplan-ru-2018, page: "747"}
+    POCKET4: {value: "circular pocket milling", src: siemens-840dsl-jobplan-ru-2018, page: "749"}
+    SLOT1: {value: "longitudinal slot (slots on a circle)", src: siemens-840dsl-jobplan-ru-2018, page: "752", note: "the Russian edition names SLOT1 and LONGHOLE both 'longitudinal slot'; 'on a circle' kept from the earlier estimate"}
+    SLOT2: {value: "circumferential slot", src: siemens-840dsl-jobplan-ru-2018, page: "755"}
+    LONGHOLE: {value: "elongated hole (longitudinal slot)", src: siemens-840dsl-jobplan-ru-2018, page: "757"}
+    CYCLE60: {value: "engraving cycle", src: siemens-840dsl-jobplan-ru-2018, page: "759"}
+    CYCLE61: {value: "face milling", src: siemens-840dsl-jobplan-ru-2018, page: "762"}
+    CYCLE62: {value: "contour call", src: siemens-840dsl-jobplan-ru-2018, page: "764"}
+    CYCLE63: {value: "contour pocket milling", src: siemens-840dsl-jobplan-ru-2018, page: "765"}
+    CYCLE64: {value: "contour pocket pre-drilling", src: siemens-840dsl-jobplan-ru-2018, page: "767"}
+    CYCLE70: {value: "thread milling", src: siemens-840dsl-jobplan-ru-2018, page: "769"}
+    CYCLE71: "face milling: older 840D cycle, not in the 840D sl 08/2018 technology cycle list (face milling there is CYCLE61, p. 762); kept as an estimate"
+    CYCLE72: {value: "path milling (contour milling)", src: siemens-840dsl-jobplan-ru-2018, page: "770"}
+    CYCLE76: {value: "rectangular spigot milling", src: siemens-840dsl-jobplan-ru-2018, page: "774"}
+    CYCLE77: {value: "circular spigot milling", src: siemens-840dsl-jobplan-ru-2018, page: "776"}
+    CYCLE79: {value: "multi-edge", src: siemens-840dsl-jobplan-ru-2018, page: "782"}
+    CYCLE899: {value: "open slot milling", src: siemens-840dsl-jobplan-ru-2018, page: "831"}
+    CYCLE800: {value: "swiveling (tilted working plane / align tool with a swivel data record)", src: siemens-840dsl-jobplan-ru-2018, page: "810"}
+    CYCLE832: {value: "High Speed Settings (tolerance and technology)", src: siemens-840dsl-jobplan-ru-2018, page: "825"}
+    CYCLE92: {value: "cut-off (turning)", src: siemens-840dsl-jobplan-ru-2018, page: "796"}
+    CYCLE95: {value: "stock removal along a contour (turning)", src: siemens-840dsl-jobplan-ru-2018, page: "797"}
+    CYCLE97: "thread cutting (turning): older 840D cycle, not in the 840D sl 08/2018 technology cycle list (thread turning there is CYCLE99, p. 803); kept as an estimate"
+    CYCLE98: {value: "thread chain (turning)", src: siemens-840dsl-jobplan-ru-2018, page: "799"}
+    CYCLE99: {value: "thread turning", src: siemens-840dsl-jobplan-ru-2018, page: "803"}
+    CYCLE930: {value: "groove (turning)", src: siemens-840dsl-jobplan-ru-2018, page: "834"}
+    CYCLE940: {value: "undercut / groove form (turning)", src: siemens-840dsl-jobplan-ru-2018, page: "837"}
+    CYCLE951: {value: "stock removal (turning)", src: siemens-840dsl-jobplan-ru-2018, page: "840"}
+    CYCLE952: {value: "contour grooving (turning)", src: siemens-840dsl-jobplan-ru-2018, page: "843"}
+  cycle_parameters:
+    src: siemens-840dsl-jobplan-ru-2018
+    note: "call syntax as printed in chapter 20.1 (parameter names and order are language-neutral); the meanings are translated from the Russian edition and shortened. Mode parameters are decimal-digit coded: the 1st digit is the units digit."
+    CYCLE81:
+      value: "CYCLE81(RTP, RFP, SDIS, DP, DPR, DTB, _GMODE, _DMODE, _AMODE)"
+      page: "784"
+      note: "RTP retraction plane (abs.); RFP reference point (abs.); SDIS safety distance (added to the reference point, unsigned); DP drilling depth (abs.) or centering diameter (abs.), see _GMODE; DPR drilling depth (incr.); DTB dwell time at final drilling depth, see _AMODE; _GMODE 2nd digit centering by depth (0, compatibility) or by diameter (1); _DMODE 1st digit machining plane: 0 = plane active before the call (compatibility), 1 = G17, 2 = G18, 3 = G19 (active only in the cycle); _AMODE 1st digit drilling depth: 0 = from DP/DPR (compatibility), 1 = incremental, 2 = absolute; 2nd digit dwell DT: 0 = from the sign of DTB (> 0 seconds, < 0 revolutions), 1 = seconds, 2 = revolutions"
+    CYCLE82:
+      value: "CYCLE82(RTP, RFP, SDIS, DP, DPR, DTB, _GMODE, _DMODE, _AMODE, _VARI, S_ZA, S_FA, S_ZD, S_FD)"
+      page: "785-787"
+      note: "RTP...DTB as CYCLE81 (DP, DPR drilling depth); _GMODE 2nd digit depth to the drill tip (0) or to the shank (1); _DMODE as CYCLE81 (5th digit technology scaling in the cycle masks); _AMODE as CYCLE81 plus 3rd digit ZA incr./abs., 4th digit entry feed FA in % of the drilling feed / F per min / F per rev, 5th digit ZD incr./abs., 6th digit remaining feed FD in % / per min / per rev; _VARI 4th digit through drilling no (0) / yes (1), 5th digit entry drilling no (0) / yes (1); S_ZA entry drilling depth (incr. from the reference point or abs.); S_FA entry drilling feed (value or %); S_ZD remaining drilling depth (incr. from the final depth or abs.); S_FD remaining drilling feed (value or %)"
+    CYCLE83:
+      value: "CYCLE83(RTP, RFP, SDIS, DP, DPR, FDEP, FDPR, _DAM, DTB, DTS, FRF, VARI, _AXN, _MDEP, _VRT, _DTD, _DIS1, _GMODE, _DMODE, _AMODE)"
+      page: "787-790"
+      note: "RTP, RFP, SDIS as CYCLE81; DP / DPR final drilling depth (abs. / incr.); FDEP / FDPR 1st drilling depth (abs. / incr.); _DAM degression amount or percentage for each further infeed; DTB dwell at drilling depth; DTS dwell at the start point (chip removal only); FRF percentage feed for the first infeed; VARI 1st digit 0 = chip breaking, 1 = chip removal; _AXN tool axis 0 = 3rd, 1 = 1st, 2 = 2nd geometry axis (> 2 = 3rd); _MDEP minimum depth infeed (only with percentage degression); _VRT retraction amount after each infeed (chip breaking); _DTD dwell at final drilling depth; _DIS1 advance clearance (chip removal only); _GMODE, _DMODE, _AMODE mode words as in the other drilling cycles"
+    CYCLE84:
+      value: "CYCLE84(RTP, RFP, SDIS, DP, DPR, DTB, SDAC, MPIT, PIT, POSS, SST, SST1, _AXN, _PITA, _TECHNO, _VARI, _DAM, _VRT, _PITM, _PTAB, _PTABA, _GMODE, _DMODE, _AMODE)"
+      page: "790-793"
+      note: "DP / DPR drilling depth = final depth (abs. / incr.); DTB dwell at drilling depth in seconds; SDAC direction of rotation after the cycle; MPIT thread size for ISO metric only (pitch derived from it); PIT thread pitch as a value, unit see _PITA; POSS spindle position for oriented spindle stop; SST spindle speed for tapping; SST1 spindle speed for retraction; _AXN drilling axis (0 = 3rd, 1 = 1st, 2 = 2nd geometry axis); _PITA pitch unit 1 = mm (PIT), 2 = TPI, 3 = inch (PIT), 4 = MODUL (PIT); _TECHNO 1st digit exact stop (0 as before, 1 G601, 2 G602, 3 G603), 2nd digit feedforward (0 as before, 1 FFWON, 2 FFWOF), 3rd digit acceleration (0 as before, 1 SOFT, 2 BRISK, 3 DRIVE), 4th digit spindle mode after MCALL; _VARI 1st digit 0 = one pass, 1 = chip breaking, 2 = chip removal (deep-hole tapping); _DAM maximum depth infeed (chip removal / chip breaking only); _VRT retraction amount after each infeed (chip breaking only); _PITM string marker for the pitch input; _PTAB thread table ('', 'ISO', 'BSW', 'BSP', 'UNC'); _PTABA selection in the thread table (e.g. 'M 10')"
+    CYCLE85:
+      value: "CYCLE85(RTP, RFP, SDIS, DP, DPR, DTB, FFR, RFF, _GMODE, _DMODE, _AMODE)"
+      page: "793"
+      note: "RTP...DTB as CYCLE81; FFR feed; RFF retraction feed; _GMODE reserved; _DMODE machining plane as CYCLE81; _AMODE drilling depth and dwell units as CYCLE81"
+    CYCLE86:
+      value: "CYCLE86(RTP, RFP, SDIS, DP, DPR, DTB, SDIR, RPA, RPO, RPAP, POSS, _GMODE, _DMODE, _AMODE)"
+      page: "794-795"
+      note: "RTP...DTB as CYCLE81; SDIR direction of rotation 3 = M3, 4 = M4; RPA / RPO / RPAP retraction amount in X / Y / Z; POSS spindle position for the oriented spindle stop before retraction; _GMODE 0 = lift-off (compatibility), 1 = no lift-off; _DMODE, _AMODE as CYCLE81"
+    CYCLE840:
+      value: "CYCLE840(RTP, RFP, SDIS, DP, DPR, DTB, SDR, SDAC, ENC, MPIT, PIT, _AXN, _PITA, _TECHNO, _PITM, _PTAB, _PTABA, _GMODE, _DMODE, _AMODE)"
+      page: "829-831"
+      note: "DTB dwell at drilling depth / at the safety distance; SDR direction of rotation for retraction; SDAC direction of rotation after the cycle; ENC tapping with spindle encoder (G33) or without encoder; MPIT, PIT, _AXN, _PITA, _TECHNO, _PITM, _PTAB, _PTABA as CYCLE84"
+    CYCLE800:
+      value: "CYCLE800(_FR, _TC, _ST, _MODE, _X0, _Y0, _Z0, _A, _B, _C, _X1, _Y1, _Z1, _DIR, _FR_I, _DMODE)"
+      page: "810-813"
+      note: "_FR retraction mode: 0 = none, 1 = machine axis Z, 2 = machine axis Z then XY, 3 = reserved, 4 = maximum in tool direction, 5 = incremental in tool direction; _TC name of the swivel data record (STRING[32]; '' if only one record, '0' deselects the swivel data record and deletes the swivel frame); _ST state: 1st digit 0 = new swivel plane, 1 = additive to the active one; 2nd digit tool tip tracking (TRAORI) no/yes; 3rd digit align tool (0 no, 1 align, 2 align turning tool, 3 align milling tool with B-axis turning kinematics); 5th digit swivel yes (0) / no with direction minus (1) / plus (2); 6th digit direction selection optimisation; _MODE swivel mode, bit coded: bits 7-6 00 axis by axis (_A, _B, _C), 01 solid angle (_A, _B), 10 projection angle (_A, _B, _C), 11 rotary axes direct (_A, _B); bits 5-0 axis order of the 1st/2nd/3rd rotation (01 X, 10 Y, 11 Z); _X0, _Y0, _Z0 reference point before rotation; _A, _B, _C 1st, 2nd, 3rd rotation per _MODE; _X1, _Y1, _Z1 zero point after rotation; _DIR -1 = position to the smaller value of rotary axis 1 or 2 (default), +1 = larger value, 0 = no rotary axis motion (frame only); _FR_I incremental retraction in tool direction; _DMODE display mode"
+    CYCLE832:
+      value: "CYCLE832(S_TOL, S_TOLM, S_OTOL)"
+      page: "825-827"
+      note: "S_TOL contour tolerance (= axis tolerance of the geometry axes); S_TOLM machining mode: 1st digit 0 = deselection, 1 = finishing, 2 = semi-finishing, 3 = roughing; 2nd digit 0 = compatibility / no orientation tolerance, 1 = orientation tolerance in S_OTOL; 7th digit 0 = compatibility (best available mould-making function: Advanced Surface, or Top Surface with smoothing when the Top Surface option is active), 1 = Top Surface without smoothing, 2 = Top Surface with smoothing; plain-text values (names of G group 59): _OFF 0, _FINISH 1, _SEMIFIN 2, _ROUGH 3, _ORI_FINISH 11, _ORI_SEMIFIN 12, _ORI_ROUGH 13, _TOP_SURFACE_SMOOTH_OFF 1000000, _TOP_SURFACE_SMOOTH_ON 2000000 (e.g. CYCLE832(0.1, _TOP_SURFACE_SMOOTH_OFF+_ORI_FINISH, 1)); S_OTOL orientation tolerance or CYCLE832 version identifier, must be programmed (S_OTOL = 1 on 3-axis machines without tool orientation); CYCLE832() is also allowed for deselection"
   control_structures:
     "IF / ELSE / ENDIF": "conditional block"
     "LOOP / ENDLOOP": "endless loop"

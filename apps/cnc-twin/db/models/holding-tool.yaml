@@ -1,0 +1,216 @@
+# Coefficients of the tool-holder clamping models (cnctwin.holding.toolhold, docs/models/holding.md
+# section 2): the ER collet chain (nut thread, nut-collet collar, 8 deg collet cone, shank friction),
+# interference fits (Lame) of shrink-fit and milling chucks, hydraulic chucks without a catalogue torque,
+# side-lock set screws, and the thresholds of the tool_pullout finding. Read in SI by
+# cnctwin.db.models.params("holding-tool"): the name carries the SI unit, `unit:` is the unit written.
+# Catalogue values of the holder item (clamping_torque_Nm, axial_retention_N, bore, clamp length) always
+# win over these defaults; every default used is listed in the run's holding results.
+format: cnctwin-model-params
+version: 1
+model: holding-tool
+description: "Tool-holder clamping: ER collet chain, interference fits, side-lock screws, slip thresholds"
+params:
+  # ------------------------------------------------------------------ ER collets (REGO-FIX, ISO 15488)
+  er_sizes:
+    value: [8, 11, 16, 20, 25, 32, 40, 50]
+    unit: "-"
+    src: regofix-2009-er-technical-information
+    note: "ER collet sizes; the er_* lists below are in this order (14.01, 14.02)"
+  er_max_bore_m:
+    value: [5, 7, 10, 13, 16, 20, 30, 34]
+    unit: mm
+    src: regofix-2009-er-technical-information
+    note: "14.01 collet cavity table, upper end of the clamping range (ER 8 0.5-5 ... ER 50 4-34); a holder without collet_size gets the smallest size whose range covers its largest bore"
+  er_thread_d_m:
+    value: [10, 14, 22, 25, 32, 40, 50, 64]
+    unit: mm
+    src: regofix-2009-er-technical-information
+    note: "14.01 standard nut threads M14x0.75, M22x1.5, M25x1.5, M32x1.5, M40x1.5, M50x1.5, M64x2; ER 8 has only the mini nut M10x0.75"
+  er_thread_pitch_m:
+    value: [0.75, 0.75, 1.5, 1.5, 1.5, 1.5, 1.5, 2.0]
+    unit: mm
+    src: regofix-2009-er-technical-information
+    note: "14.01 nut thread pitch, same order"
+  er_front_d_m:
+    value: [8.5, 11.5, 17.0, 21.0, 26.0, 33.0, 41.0, 52.0]
+    unit: mm
+    src: regofix-2009-er-technical-information
+    note: "14.02 dimensions of ER collets: front diameter D1"
+  er_length_m:
+    value: [13.6, 18.0, 27.5, 31.5, 34.0, 40.0, 46.0, 60.0]
+    unit: mm
+    src: regofix-2009-er-technical-information
+    note: "14.02 dimensions of ER collets: overall length L (the longest possible shank engagement)"
+  er_torque_size:
+    value: [8, 11, 11, 16, 16, 16, 16, 20, 20, 20, 25, 25, 25, 25, 32, 32, 32, 40, 40, 50]
+    unit: "-"
+    src: regofix-2009-er-technical-information
+    note: "collet size of each row of the recommended nut torque table (er_torque_d_lo_m, er_torque_d_hi_m, er_torque_Nm)"
+  er_torque_d_lo_m:
+    value: [1.0, 1.0, 3.0, 1.0, 1.5, 4.0, 5.0, 1.0, 1.5, 7.0, 1.0, 4.0, 5.0, 8.0, 2.0, 3.0, 8.0, 3.0, 9.0, 6.0]
+    unit: mm
+    src: regofix-2009-er-technical-information
+    note: "14.03 lower end of the clamping-diameter row (ER 8 row from 14.04)"
+  er_torque_d_hi_m:
+    value: [5.0, 2.5, 7.0, 1.0, 3.5, 4.5, 10.0, 1.0, 6.5, 13.0, 3.5, 4.5, 7.5, 16.0, 2.5, 7.5, 20.0, 8.5, 26.0, 34.0]
+    unit: mm
+    src: regofix-2009-er-technical-information
+    note: "14.03 upper end of the clamping-diameter row; a diameter between two rows takes the nearer row"
+  er_torque_Nm:
+    value: [4, 6, 20, 6, 15, 30, 40, 12, 25, 60, 20, 40, 60, 80, 20, 100, 100, 130, 130, 180]
+    unit: ft_lbf
+    src: regofix-2009-er-technical-information
+    note: "14.03 recommended tightening torque of Hi-Q nuts, ER (not ER-GB) column, ft-lbs as printed; ER 8 from the 14.04 mini-nut table. The maximum must not exceed it by more than 25 % (14.03)"
+  er_cone_half_angle_rad:
+    value: 8
+    unit: deg
+    src: iso-15488-2003
+    note: "8 deg setting angle of the collet cone"
+  thread_flank_half_angle_rad:
+    value: 30
+    unit: deg
+    src: iso-68-1-1998
+    note: "60 deg basic profile of ISO metric threads; enters the power-screw torque as sec(alpha) (budynas-nisbett-2015-shigley eq. (8-5))"
+  pitch_diameter_ratio:
+    value: 0.649519
+    unit: "-"
+    src: iso-68-1-1998
+    note: "basic profile: pitch diameter d2 = d - 2 (3/8) H with H = (sqrt(3)/2) P, i.e. d - 0.649519 P"
+  er_thread_friction:
+    value: 0.12
+    unit: "-"
+    range: [0.10, 0.16]
+    src: est
+    note: "oiled steel nut thread on the holder; middle of the 0.10-0.16 range usual for lightly oiled steel threads"
+  er_collar_friction:
+    value: 0.12
+    unit: "-"
+    range: [0.05, 0.16]
+    src: est
+    note: "nut (or its slide-coated ring) on the collet front bevel; ball-bearing nuts are far lower (REGO-FIX Hi-QB), which is why nut type matters (regofix-2025-er-flyer: Hi-Q nuts up to 40 % more clamping force)"
+  er_collar_radius_ratio:
+    value: 0.45
+    unit: "-"
+    src: est
+    note: "mean radius of the nut-collet contact as a fraction of the collet front diameter D1: the contact is the front bevel just inside D1"
+  er_cone_friction:
+    value: 0.10
+    unit: "-"
+    range: [0.08, 0.15]
+    src: est
+    note: "collet cone in the hardened holder taper, clean and lightly oiled"
+  shank_friction:
+    value: 0.15
+    unit: "-"
+    range: [0.10, 0.20]
+    src: est
+    note: "dry, degreased tool shank in a collet bore, shrink-fit or hydraulic bore (steel or carbide on hardened steel). With it the ER chain gives 105 Nm for a 12 mm shank in ER 25 at the recommended nut torque, against 89 Nm transferable torque measured by REGO-FIX on a 12 mm carbide rod (regofix-2025-er-flyer p. 4; collet size and nut torque not stated)"
+  kinetic_to_static_friction:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "the databases give one coefficient per pair; kinetic = static is used in the slip and walk integration (a lower kinetic coefficient would increase the slip increments)"
+  # ------------------------------------------------------------------ interference fits and hydraulic bores
+  holder_E_Pa:
+    value: 207
+    unit: GPa
+    src: budynas-nisbett-2015-shigley
+    note: "Table A-5 carbon steel (tool-holder body)"
+  holder_poisson:
+    value: 0.292
+    unit: "-"
+    src: budynas-nisbett-2015-shigley
+    note: "Table A-5 carbon steel"
+  holder_expansion_1_K:
+    value: 11.7e-6
+    unit: 1_K
+    src: budynas-nisbett-2015-shigley
+    note: "Table A-5 carbon steel"
+  carbide_E_Pa:
+    value: 580
+    unit: GPa
+    range: [530, 630]
+    src: est
+    note: "WC-Co shank when the tool material gives no modulus (db/tool_materials/carbide-submicron-10co.yaml stores 530-585 GPa)"
+  carbide_poisson:
+    value: 0.22
+    unit: "-"
+    src: est
+    note: "WC-Co, as stored in db/tool_materials/carbide-submicron-10co.yaml"
+  carbide_expansion_1_K:
+    value: 5.5e-6
+    unit: 1_K
+    src: est
+    note: "WC-Co 5-6e-6 1/K (db/tool_materials/carbide-submicron-10co.yaml)"
+  hss_E_Pa:
+    value: 215
+    unit: GPa
+    src: est
+    note: "M2 high-speed steel, hardened (210-220 GPa)"
+  hss_poisson:
+    value: 0.29
+    unit: "-"
+    src: est
+    note: "steel value for a hardened HSS shank"
+  hss_expansion_1_K:
+    value: 11.0e-6
+    unit: 1_K
+    src: est
+    note: "hardened M2 near room temperature"
+  shrink_interference_ratio:
+    value: 1.3e-3
+    unit: "-"
+    src: est
+    note: "diametral interference / bore of a shrink-fit chuck without a catalogue torque; chosen so that the Lame pressure on a 12 mm carbide shank (580 GPa) in a steel nose of 2 d over a clamped length of 3 d with shank_friction gives 147 Nm, the 150 Nm minimum torque of schunk-web-celsio-208123 within 2 %"
+  milling_chuck_interference_ratio:
+    value: 1.3e-3
+    unit: "-"
+    src: est
+    note: "roller-lock milling chucks contract the nose elastically onto the shank like a shrink fit; no gripping-torque chart was read (bigdaishowa-web-hmc), the shrink-fit ratio is used"
+  hydraulic_pressure_Pa:
+    value: 70
+    unit: MPa
+    src: est
+    note: "contact pressure of a hydraulic expansion chuck without a catalogue torque, back-calculated from schunk-web-tendo-ec-206404 (110 Nm minimum torque, 12 mm, clamped length 46 mm) with shank_friction"
+  clamp_length_ratio:
+    value: 3.0
+    unit: "-"
+    src: est
+    note: "engaged shank length / bore when the holder gives no clamp_length_mm (shrink and hydraulic bores are 3-4 d deep)"
+  nose_ratio:
+    value: 2.0
+    unit: "-"
+    src: est
+    note: "outer diameter of the clamping section / bore when the holder gives no nose diameter (thick-wall Lame pressure)"
+  # ------------------------------------------------------------------ side-lock (Weldon) holders
+  side_lock_screw_ratio:
+    value: 0.8
+    unit: "-"
+    src: est
+    note: "set-screw diameter / shank diameter of side-lock holders (an M16 screw on a 20 mm shank)"
+  side_lock_preload_stress_Pa:
+    value: 227
+    unit: MPa
+    src: carrlane-strap-clamp-force
+    note: "Carr Lane's basis for torqued studs: about 33 % of a 100 000 psi (690 MPa) yield strength; taken for the set screw"
+  side_lock_stress_area_ratio:
+    value: 0.76
+    unit: "-"
+    src: est
+    note: "tensile stress area / (pi d^2 / 4) of ISO coarse threads: M10 58.0, M12 84.3, M16 157, M20 245 mm2 give 0.74-0.78"
+  side_lock_walk_limit_m:
+    value: 0.2
+    unit: mm
+    src: est
+    note: "axial play of a side-lock shank before the set screw bears on the end of the flat (positive stop)"
+  # ------------------------------------------------------------------ finding thresholds
+  pullout_error_m:
+    value: 0.02
+    unit: mm
+    src: est
+    note: "tool pull-out (depth error) above which tool_pullout is an error when the project gives no tighter tolerance; any walk below it is a warning"
+  slip_error_rad:
+    value: 0.01
+    unit: rad
+    src: est
+    note: "rotation of the tool in its holder above which tool_pullout (torque slip) is an error; the slip runs away once the cutting torque exceeds the friction capacity"

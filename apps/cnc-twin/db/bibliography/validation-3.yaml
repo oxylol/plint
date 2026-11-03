@@ -194,3 +194,36 @@ entries:
     url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10095608/fullTextXML"
     accessed: 2026-11-03
     pages: "Sect. 2 (Ibarmia ZV25; AISI 1045 at 220 HB, Table 1; 16 mm two-insert cutter with internal coolant, Mitsubishi AOMT123612PEER-M MP6120 TiAlCrN inserts, 20 deg incidence, 90 deg position angle; Kistler '9955A' table dynamometer and OROS OR35 at 12800 samples/s; MQL canola oil 100 mL/h, CryoMQL with CO2 at 10 bar; three repeats); Table 2 (vc 340/380/400 m/min at 6000/6700/7000 rpm, fz 0.15 mm, ap 3 mm, ae 9 mm, pass 315 mm); Eqs. 1-2 (RMS definitions); Table 3 (RMS cutting forces)"
+
+  reznicek-2023-ss1.4541-high-feed-milling-forces:
+    type: article
+    authors: "Reznicek, M.; Horava, C.; Ovsik, M.; Tashiro, S."
+    title: "Percentage ratios of cutting forces during high-feed face milling"
+    venue: "Materials 16(1), 384"
+    year: 2023
+    doi: "10.3390/ma16010384"
+    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC9821856/fullTextXML"
+    accessed: 2026-11-03
+    pages: "Tables 1-3 (1.4541 composition, physical and mechanical properties: 205 HB, Rp0.2 195, Rm 593 MPa); Sect. 2.2 (DMG Mori DMU 50; SECO 20 mm high-feed head with three LPHT060310TR-M06 MS2050 inserts, face angle 11 deg, max ap 0.8 mm); Sect. 2.3 (Kistler 9129AA; surfaces 14 mm wide, 74 mm long; ten repeats; mean of ten interval maxima); Table 4 (vc 160, ae 14, ap 0.5-0.8, fz 0.5-0.8); Tables 5, 8-13 (measured Fx, Fy, Fz and percentage shares); Sect. 3 (1 mm corner rounding)"
+
+  lin-2021-in718-milling-constants:
+    type: article
+    authors: "Lin, C.-J.; Lui, Y.-T.; Lin, Y.-F.; Wang, H.-B.; Liang, S.Y.; Wang, J.-J.J."
+    title: "Prediction of shearing and ploughing constants in milling of Inconel 718"
+    venue: "Journal of Manufacturing and Materials Processing 5(1), 8"
+    year: 2021
+    doi: "10.3390/jmmp5010008"
+    url: "https://mdpi-res.com/d_attachment/jmmp/jmmp-05-00008/article_deploy/jmmp-05-00008.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 4.1 (VDM Inconel 718 annealed, 267 HBW, ASTM 6.5, Table 2 composition; Kistler 9272; RTA060052T two-flute TiAlN carbide end mill D 6 mm, helix 35, radial rake 14.9 deg, edge radius 0.01 mm; new tool per test; dry); Table 3 (3000 rpm, vc 56.5 m/min, ae 1.2/1.5 mm, ap 0.4-0.6 mm, fz 0.04-0.08 mm, mean chip thickness tc); Tables 4-5 (measured total average forces A and derived side-edge and bottom-edge forces); Sect. 4.4 (comparison with Moufki et al.)"
+
+  guimaraes-2023-aisi1045-embedded-thermocouple:
+    type: article
+    authors: "Guimarães, B.; Rosas, J.; Fernandes, C.M.; Figueiredo, D.; Lopes, H.; Paiva, O.C.; Silva, F.S.; Miranda, G."
+    title: "Real-time cutting temperature measurement in turning of AISI 1045 steel through an embedded thermocouple - a comparative study with infrared thermography"
+    venue: "Journal of Manufacturing and Materials Processing 7(1), 50"
+    year: 2023
+    doi: "10.3390/jmmp7010050"
+    url: "https://mdpi-res.com/d_attachment/jmmp/jmmp-07-00050/article_deploy/jmmp-07-00050.pdf"
+    accessed: 2026-11-03
+    pages: "Sect. 2.1 (uncoated WC-Co CNMG 120408-GS, Palbit; thermocouple tip 2.9 mm from the cutting edge in the rake face); Sect. 2.2 (laser micro-groove, Table 1); Sect. 2.3 (laser-welded K-type, 0.13 mm wires, MgO cement, calibration 25-125 C); Sect. 2.4 and Table 2 (Gornati Leopard I, dry, 150 mm passes, three tests, NI 9213; vc 40/70/130/160 m/min, f 0.246 mm/rev, ap 1 and 2 mm; FLIR E60 at emissivity 0.90); Sect. 3 (groove 468 x 439 um, junction 250 um, calibration error +-1.2 C; maximum temperatures 178.07, 246.65, 256.36, 327.25 and 340.03 C; times to maximum 86.2, 40.0, 15.0 s)"

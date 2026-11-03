@@ -90,16 +90,20 @@ chip:
 
 tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
   - tool_class: cbn
-    coating: uncoated
-    C_m_min: 355
-    n: 0.4
-    a: 0.3
-    b: 0.1
-    feed_ref_mm: 0.1
-    ap_ref_mm: 0.2
-    VB_limit_mm: 0.2
-    src: est
-    note: "no published Taylor fit read; C set so that T = 15 min at vc = 120 m/min (CBN finishing of ~60 HRC ledeburitic steel, general knowledge; the hard primary carbides make D2 more abrasive than 52100)"
+    coating: TiN
+    grade: "57 % CBN, SNGA120408 T01020"
+    process: turning
+    C_m_min: 700
+    n: 0.561
+    a: {value: 0.3, src: est, note: "feed exponent not identified (single feed 0.08 mm/rev); the earlier estimate kept"}
+    b: {value: 0.1, src: est, note: "depth exponent not identified (single ap 0.5 mm); the earlier estimate kept"}
+    feed_ref_mm: 0.08
+    ap_ref_mm: 0.5
+    VB_limit_mm: 0.3
+    T_ref_min: 1
+    vc_range_m_min: [85, 310]
+    src: bouchelaghem-2007-d3-cbn
+    note: "SURROGATE: AISI D3 (high-carbon high-chromium ledeburitic cold-work steel, quenched and tempered to 60 HRC), not D2. Eq. (1) t = exp(11.667) v^-1.781 (R2 0.991; dry, TiN-coated 57 % CBN SNGA120408 T01020, kr 75, rake -6, f 0.08 mm/rev, ap 0.5 mm, vc 85-310 m/min, VB 0.3 mm) rewritten as vc T^n = C: n = 1/1.781 = 0.561, C = exp(11.667/1.781) = 700 m/min. For VB 0.4 mm (Eq. 2): n 0.603, C 913 m/min. The paper's Table 1 prints 1.14 % Cr for the steel (D3 is a ~12 % Cr grade; presumably a misprint). The earlier estimate (C 355, n 0.4 at f 0.1, ap 0.2, VB 0.2: T = 15 min at 120 m/min) is below this fit (15 min at 153 m/min, VB 0.3)"
   - tool_class: ceramic
     coating: uncoated
     grade: "mixed Al2O3-TiC"
@@ -131,4 +135,4 @@ thermal_damage:
 ignition: null
 composite: null
 
-notes: "D2 at ~60 HRC. Physical data from BÖHLER K110 (20 C values plus thermal expansion). Flow stress from an SHPB-based SKD11 set of uncertain quality (see flow_stress.note). Kienzle values are Walter H3 standard values. Tool life, Ac1, tempering temperature and work hardening are estimates."
+notes: "D2 at ~60 HRC. Physical data from BÖHLER K110 (20 C values plus thermal expansion). Flow stress from an SHPB-based SKD11 set of uncertain quality (see flow_stress.note). Kienzle values are Walter H3 standard values. CBN tool life comes from a published Taylor fit on AISI D3 at 60 HRC (surrogate, Bouchelaghem et al. 2007); ceramic tool life, Ac1, tempering temperature and work hardening are estimates."

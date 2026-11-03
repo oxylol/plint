@@ -74,7 +74,9 @@ class Controller:
             db = load_controller_db(db_id)
         self.dialect = build_dialect(dialect_name, self.machine, setup.settings, db, db_id if db else "")
         parse = self.dialect.parser or build_store
-        self.store, self.load_problems = parse(setup.programs, self.dialect.lexer)
+        sources = list(setup.programs) + hooks.library_sources(self.machine, self.dialect, setup.settings,
+                                                               list(setup.programs))
+        self.store, self.load_problems = parse(sources, self.dialect.lexer)
         params = dict(self.dialect.params)
         tick_s = float(setup.tick_s)
         params["horizon_ticks"] = max(1, int(math.ceil(params["horizon_s"] / tick_s)))

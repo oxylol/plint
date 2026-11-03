@@ -14,7 +14,7 @@ from pathlib import Path
 
 from . import fmt
 from .context import Context
-from .html import Raw, Section, code, document, esc, figure, kv, note, para, table, ul
+from .html import Raw, Section, code, document, esc, figure, kv, note, table, ul
 from .projectview import get, pose, ref_id, si, unwrap
 from .rundir import RunData
 from .sections_refs import toolpath_figure
@@ -82,7 +82,7 @@ def _stock(ctx: Context) -> Section:
     if stock.get("mesh"):
         pairs.append(("stock mesh", str(stock["mesh"])))
     material = project.get("material") or {}
-    material_obj = material.get("id") if isinstance(material, dict) and "id" in material else material
+    material_obj = material["id"] if isinstance(material, dict) and isinstance(material.get("id"), dict) else material
     pairs.append(("material", ref_id(material_obj)))
     if isinstance(material_obj, dict):
         for key in ("name", "condition"):

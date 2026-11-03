@@ -90,16 +90,20 @@ chip:
 
 tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a * (ap/ap_ref)^b = C; C = vc*T^n at feed_ref and ap_ref
   - tool_class: cbn
-    coating: uncoated
-    C_m_min: 532
-    n: 0.4
-    a: 0.3
-    b: 0.1
-    feed_ref_mm: 0.1
-    ap_ref_mm: 0.2
-    VB_limit_mm: 0.2
+    coating: uncoated              # the source names CBN7020 and gives no coating
+    grade: "CBN7020 (57 % CBN + 35 % Ti(C,N)), SNGA120408 S01020"
+    process: turning
+    C_m_min: 1307
+    n: 0.565
+    a: 0.161
+    b: {value: 0.1, src: est, note: "depth exponent not identified (single ap 0.15 mm); the earlier estimate kept"}
+    feed_ref_mm: 0.12
+    ap_ref_mm: 0.15
+    VB_limit_mm: 0.3
+    T_ref_min: 1
+    vc_range_m_min: [120, 240]
     src: est
-    note: "no published Taylor fit read; C set so that T = 15 min at vc = 180 m/min (typical low-CBN finishing speed for ~50 HRC steel, general knowledge); n typical of CBN in hard turning"
+    note: "SURROGATE (AISI H11 at 50 HRC, not H13) FITTED HERE: least squares of ln vc = ln C - n ln T - a ln(f/0.12) over the nine tool lives of Table 4 of aouici-2010-h11-cbn (dry longitudinal turning, Sandvik CBN7020 SNGA120408 S01020 in PSBNR25x25M12, kr 75, rake -6 deg, ap 0.15 mm, VB 0.30 mm; vc 120/180/240 m/min x f 0.08/0.12/0.16 mm/rev; T 18.3-76 min). Fit error in vc -5.7 to +6.2 % (mean 2.9 %); the authors fit a quadratic response surface instead (Eq. 3). H11 (0.35 C, 5.3 Cr, 1.2 Mo, 0.5 V) differs from H13 mainly in vanadium (about 1 %), which makes H13 somewhat more abrasive. The earlier estimate (C 532, n 0.4, a 0.3 at f 0.1, ap 0.2, VB 0.2: T = 15 min at 180 m/min) is far below this fit (15 min at about 283 m/min for f 0.12, an extrapolation beyond the 240 m/min tested)"
   - tool_class: ceramic
     coating: uncoated
     grade: "mixed Al2O3-TiC"
@@ -142,4 +146,4 @@ thermal_damage:
 ignition: null
 composite: null
 
-notes: "H13 at ~50 HRC for hard milling/turning. Physical data from BÖHLER W302 (hardened and tempered); flow stress is the hardness-based set at 50 HRC quoted by Matras & Zebala 2020. Kienzle values are Walter H1 standard values. Tool life, segmentation onset, Ac1, tempering temperature and work hardening are estimates."
+notes: "H13 at ~50 HRC for hard milling/turning. Physical data from BÖHLER W302 (hardened and tempered); flow stress is the hardness-based set at 50 HRC quoted by Matras & Zebala 2020. Kienzle values are Walter H1 standard values. Tool life (the CBN Taylor constants are a fit made here to measured H11 tool lives, Aouici et al. 2010), segmentation onset, Ac1, tempering temperature and work hardening are estimates."

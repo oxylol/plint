@@ -1,0 +1,47 @@
+format: cnctwin-bibliography
+version: 1
+# Sources for db/models/recording.yaml and the run infrastructure (cnctwin/core: recorder, ledger,
+# checkpoint, rundir, keyframes; docs/formats.md "Run directory", docs/determinism.md).
+entries:
+  cnctwin-architecture-2026:
+    type: manual
+    authors: "CNC Twin project"
+    title: "CNC Twin architecture (contract v2): recording (section 10), run directory (section 16), determinism (section 9)"
+    venue: "docs/architecture.md of this repository"
+    year: 2026
+    accessed: 2026-11-03
+    pages: "10: fast ring buffer of 0.5 s, series parts per checkpoint interval of at most 10 s; 16: full keyframe snapshot every 20 keyframes, coarse thermal fields at <= 8 mm, keep the last two checkpoints"
+  ieee-754-2019:
+    type: standard
+    authors: "IEEE"
+    title: "IEEE 754-2019 Standard for Floating-Point Arithmetic"
+    publisher: "IEEE Computer Society, New York"
+    year: 2019
+    doi: "10.1109/IEEESTD.2019.8766229"
+    pages: "binary16 (11-bit significand), binary32 (24-bit significand), binary64 (53-bit significand); round to nearest, ties to even: relative error of a rounded value at most 2^-p"
+  khronos-gltf-2-0-2021:
+    type: standard
+    authors: "The Khronos Group"
+    title: "glTF 2.0 Specification, and the KHR_mesh_quantization extension"
+    publisher: "The Khronos Group Inc."
+    year: 2021
+    url: "https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html"
+    accessed: 2026-11-03
+    pages: "GLB container (12-byte header, JSON and BIN chunks, 4-byte alignment); accessor min/max required for POSITION; KHR_mesh_quantization allows unsigned short positions dequantised by the node transform"
+  jugel-2014-m4:
+    type: article
+    authors: "Jugel, U.; Jerzak, Z.; Hackenbroich, G.; Markl, V."
+    title: "M4: A Visualization-Oriented Time Series Data Aggregation"
+    venue: "Proceedings of the VLDB Endowment 7(10), 797-808"
+    year: 2014
+    doi: "10.14778/2732951.2732953"
+    pages: "first, last, minimum and maximum per pixel column reproduce the line rendering of the full series"
+  apache-parquet-2-2024:
+    type: standard
+    authors: "The Apache Software Foundation"
+    title: "Apache Parquet file format, version 2"
+    publisher: "The Apache Software Foundation"
+    year: 2024
+    url: "https://parquet.apache.org/docs/file-format/"
+    accessed: 2026-11-03
+    pages: "row groups, column chunks, column statistics (min/max), definition levels for nulls, footer written at close"

@@ -1,0 +1,279 @@
+# Acoustic model of the machining sound (cnctwin.sound, docs/models/sound.md): audio format and level
+# calibration, listener and room, the enclosure between the cut and the operator, the structures that turn
+# forces at the tool into radiated sound (statistical energy analysis with infinite-plate input mobility and
+# sphere radiation efficiency), A-weighting and the signal processing. Read in SI by
+# cnctwin.db.models.params("sound"). Areas are written in m2 with unit "-" (m2 is not a key unit token).
+format: cnctwin-model-params
+version: 1
+model: sound
+description: "Audio format and calibration, listener, room, enclosure transmission, structural radiators, A-weighting, DSP settings"
+params:
+  # ------------------------------------------------------------------ audio format and calibration
+  sample_rate_Hz:
+    value: 44100
+    unit: Hz
+    src: iec-60908-1999
+    note: "CD audio rate; the audible band up to 20 kHz is below the 22.05 kHz Nyquist frequency"
+  full_scale_Pa:
+    value: 20
+    unit: Pa
+    range: [0.1, 1000]
+    src: est
+    note: "sound pressure at digital full scale (sample value 32767): a full-scale sine is 14.1 Pa rms = 117.0 dB SPL; machining at the operator position (70-100 dB) stays 17-47 dB below full scale and well above the 16-bit noise floor (about 21 dB SPL)"
+  reference_pressure_Pa:
+    value: 2.0e-5
+    unit: Pa
+    src: iso-1683-2015
+    note: "reference sound pressure of levels in dB"
+  speed_of_sound_m_s:
+    value: 343.2
+    unit: m/s
+    range: [330, 360]
+    src: iso-9613-1-1993
+    note: "dry air at 20 C (the density is cnctwin.units.AIR_DENSITY_20C_KG_M3)"
+  dither:
+    value: true
+    unit: "-"
+    src: lipshitz-1992
+    note: "triangular-PDF dither of 2 LSB peak-to-peak before rounding to 16 bits (counter-based, deterministic)"
+  # ------------------------------------------------------------------ listener and room
+  listener:
+    value: "operator"
+    unit: "-"
+    src: iso-230-5-2000
+    note: "default microphone: 'operator' (outside the closed doors, in front of the machine) or 'inside' (in the enclosure near the cut)"
+  operator_distance_m:
+    value: 1.0
+    unit: m
+    range: [0.1, 10]
+    src: iso-230-5-2000
+    note: "operator position 1 m in front of the machine"
+  cut_zone_depth_m:
+    value: 0.5
+    unit: m
+    range: [0, 3]
+    src: est
+    note: "distance from the door plane to the cutting zone of a vertical machining centre (half the table depth plus clearance); a source in the cutting zone is operator_distance + this from the operator"
+  motor_distance_m:
+    value: 1.8
+    unit: m
+    range: [0.2, 10]
+    src: est
+    note: "operator to the spindle motor on top of the head (outside the enclosure)"
+  pump_distance_m:
+    value: 2.0
+    unit: m
+    range: [0.2, 10]
+    src: est
+    note: "operator to the coolant tank pump behind or beside the machine"
+  inside_distance_m:
+    value: 0.5
+    unit: m
+    range: [0.05, 3]
+    src: est
+    note: "the 'inside' listener: a microphone this far from the cut, inside the closed enclosure"
+  directivity:
+    value: 2
+    unit: "-"
+    range: [1, 8]
+    src: bies-hansen-2003
+    note: "directivity factor Q of sources above a reflecting floor (hemispherical radiation)"
+  room_volume_m3:
+    value: 400
+    unit: "-"
+    range: [20, 100000]
+    src: est
+    note: "m3: machine shop bay around the machine (10 x 10 x 4 m)"
+  room_surface_m2:
+    value: 340
+    unit: "-"
+    range: [10, 50000]
+    src: est
+    note: "m2: walls, floor and roof of that bay"
+  room_absorption:
+    value: 0.12
+    unit: "-"
+    range: [0.01, 0.9]
+    src: beranek-ver-1992
+    note: "mean absorption coefficient of an industrial hall with hard walls and some machines (0.05-0.2); room constant R = S a / (1 - a)"
+  # ------------------------------------------------------------------ enclosure
+  enclosure_absorption:
+    value: 0.06
+    unit: "-"
+    range: [0.01, 0.9]
+    src: beranek-ver-1992
+    note: "mean absorption coefficient inside a sheet-steel machine enclosure (painted steel 0.02-0.05, coolant and chips add a little)"
+  enclosure_area_m2:
+    value: 14
+    unit: "-"
+    range: [0.5, 500]
+    src: est
+    note: "m2: inner surface used when the machine file has no enclosure box (a 2 x 1.5 x 1.5 m VMC enclosure)"
+  sheet_thickness_m:
+    value: 1.5
+    unit: mm
+    range: [0.5, 10]
+    src: est
+    note: "enclosure and door sheet steel"
+  sheet_density_kg_m3:
+    value: 7850
+    unit: kg/m3
+    src: est
+    note: "carbon steel sheet"
+  sheet_youngs_modulus_Pa:
+    value: 210
+    unit: GPa
+    src: est
+    note: "carbon steel"
+  sheet_poisson:
+    value: 0.3
+    unit: "-"
+    src: est
+    note: "carbon steel"
+  sheet_loss_factor:
+    value: 0.01
+    unit: "-"
+    range: [0.001, 0.2]
+    src: beranek-ver-1992
+    note: "painted steel sheet with bolted and folded edges (bare steel 1e-4, built-up sheet structures 0.005-0.02)"
+  window_area_fraction:
+    value: 0.12
+    unit: "-"
+    range: [0, 0.8]
+    src: est
+    note: "share of the enclosure surface that is door window (polycarbonate)"
+  window_thickness_m:
+    value: 6
+    unit: mm
+    range: [1, 30]
+    src: est
+    note: "polycarbonate safety window"
+  window_density_kg_m3:
+    value: 1200
+    unit: kg/m3
+    src: est
+    note: "polycarbonate"
+  leak_area_fraction:
+    value: 0.002
+    unit: "-"
+    range: [0, 0.1]
+    src: beranek-ver-1992
+    note: "open area of the door gaps, way-cover slots and chip conveyor opening over the enclosure surface (transmission coefficient 1): it limits the insertion loss to about 27 dB at high frequencies"
+  mass_law_field_correction_dB:
+    value: 5
+    unit: "-"
+    range: [0, 10]
+    src: bies-hansen-2003
+    note: "dB: field-incidence transmission loss is about 5 dB below the normal-incidence mass law below the coincidence frequency"
+  # ------------------------------------------------------------------ structure-borne radiators (forces at the tool)
+  work_plate_thickness_m:
+    value: 60
+    unit: mm
+    range: [5, 300]
+    src: est
+    note: "the work side (table, vise, part) as one plate: the ribbed cast table top of a VMC; the cutting reaction enters it through the vise"
+  work_plate_density_kg_m3:
+    value: 7200
+    unit: kg/m3
+    src: est
+    note: "grey cast iron"
+  work_plate_youngs_modulus_Pa:
+    value: 110
+    unit: GPa
+    src: est
+    note: "grey cast iron EN-GJL-250 (100-120 GPa)"
+  work_plate_poisson:
+    value: 0.26
+    unit: "-"
+    src: est
+    note: "grey cast iron"
+  work_loss_factor:
+    value: 0.02
+    unit: "-"
+    range: [0.001, 0.2]
+    src: beranek-ver-1992
+    note: "cast iron with bolted joints and guideways (cast iron 0.001-0.03, joints add 0.01-0.05)"
+  work_radiating_area_m2:
+    value: 1.4
+    unit: "-"
+    range: [0.01, 50]
+    src: est
+    note: "m2: table top and sides, vise, part and chip-pan walls that vibrate with the table"
+  tool_plate_thickness_m:
+    value: 30
+    unit: mm
+    range: [5, 300]
+    src: est
+    note: "the tool side (spindle head casting) as one plate: head walls"
+  tool_loss_factor:
+    value: 0.02
+    unit: "-"
+    range: [0.001, 0.2]
+    src: beranek-ver-1992
+    note: "as the work side"
+  tool_radiating_area_m2:
+    value: 1.0
+    unit: "-"
+    range: [0.01, 50]
+    src: est
+    note: "m2: spindle head and the column face above the cut"
+  tool_radiator_radius_m:
+    value: 25
+    unit: mm
+    range: [2, 200]
+    src: est
+    note: "radius of the sphere equivalent to the tool, holder and spindle nose when they radiate their own vibration (a compact dipole)"
+  # ------------------------------------------------------------------ A-weighting
+  a_weighting_poles_Hz:
+    value: [20.598997, 107.65265, 737.86223, 12194.217]
+    unit: Hz
+    src: iec-61672-1-2013
+    note: "f1 .. f4 of the analytic A-weighting (annex E)"
+  a_weighting_offset_dB:
+    value: 2.0
+    unit: "-"
+    src: iec-61672-1-2013
+    note: "dB added so that the weighting is 0 dB at 1 kHz (A1000 = -2.000 dB)"
+  # ------------------------------------------------------------------ signal processing
+  block_samples:
+    value: 16384
+    unit: "-"
+    range: [1024, 1048576]
+    src: oppenheim-schafer-2010
+    note: "overlap-add block on a fixed grid of absolute sample indices, so a window rendered alone equals the same samples of the whole run"
+  fir_taps:
+    value: 4097
+    unit: "-"
+    range: [65, 16385]
+    src: oppenheim-schafer-2010
+    note: "odd length of the linear-phase (zero-phase, centred) FIR filters designed by frequency sampling with a Blackman window: 10.8 Hz resolution at 44.1 kHz, so the 100 Hz low end of the response is shaped"
+  resample_half_width:
+    value: 48
+    unit: "-"
+    range: [4, 512]
+    src: oppenheim-schafer-2010
+    note: "source samples on each side of the windowed-sinc (Blackman) interpolation of the fast-tier signals onto the audio grid"
+  resample_cutoff_Hz:
+    value: 20000
+    unit: Hz
+    range: [1000, 22050]
+    src: oppenheim-schafer-2010
+    note: "band limit of the interpolated fast-tier signals (anti-aliasing for the 44.1 kHz grid)"
+  fast_crossfade_s:
+    value: 0.002
+    unit: s
+    range: [0, 0.1]
+    src: est
+    note: "raised-cosine crossfade between a fast-tier window and the envelope synthesis around it (no clicks)"
+  envelope_smoothing_s:
+    value: 0.005
+    unit: s
+    range: [0, 0.1]
+    src: est
+    note: "centred moving average of the tick-tier force envelopes: the per-tick min/mean/max of a tooth-passing force beat with the 1 kHz tick rate (an alias at |f_tick - f_tp|) that the synthesis would otherwise play; immersion and feed change over tens of milliseconds"
+  shape_bins:
+    value: 64
+    unit: "-"
+    range: [8, 1024]
+    src: est
+    note: "tooth-period phase bins of the synchronously averaged force waveform taken from the fast-tier windows"

@@ -1,0 +1,352 @@
+# Parameters of the canned cycles, cutter / tool nose radius compensation, five-axis functions, probing,
+# tool life management and program restart (cnctwin/controller/cycles, comp, tcp, probing, toollife,
+# restart; docs/dialects.md "Cycles and compensation"). Each stands for the FANUC (or Haas) parameter or
+# setting named in its note; the meaning is from the manuals cited, the value is the machine builder's
+# choice and therefore an estimate unless a source fixes it. A project overrides any of them under
+# physics.controller.cycle_parameters (same names, unit suffix as written, e.g. g73_retract_mm: 0.2).
+format: cnctwin-model-params
+version: 1
+model: controller-cycles
+description: "Default parameters of the FANUC 0i-F / Haas NGC cycle, compensation, probing, tool life and restart functions"
+params:
+  # ------------------------------------------------------------------ drilling cycles (M series, T series face/side)
+  g73_retract_m:
+    value: 0.5
+    unit: mm
+    range: [0.01, 10]
+    src: est
+    note: "FANUC parameter 5114 (return value d of the high-speed peck drilling cycle G73; T series G83 with 5101#2 RTR = 0), fanuc-30ibplus-param-2019 p. 288; machine-builder setting, 0.5 mm assumed"
+  g83_clearance_m:
+    value: 0.5
+    unit: mm
+    range: [0.01, 10]
+    src: est
+    note: "FANUC parameter 5115 (clearance d of the peck drilling cycle G83: rapid down to d above the previous depth), fanuc-30ibplus-param-2019 p. 288; 0.5 mm assumed"
+  g76_shift_direction:
+    value: "+X"
+    unit: "-"
+    src: est
+    note: "FANUC parameter 5148 (axis and sign of the tool shift after orientation in G76/G87 for the drilling axis Z), fanuc-30ibplus-param-2019 p. 295; depends on how the boring bar is set in the spindle; +X assumed"
+  g76_m05_before_orient:
+    value: true
+    unit: "-"
+    src: est
+    note: "FANUC parameter 5101#7 M5B = 0: M05 is output before the oriented spindle stop of G76/G87 (fanuc-30ibplus-param-2019 p. 280); bit value 0 assumed"
+  orient_angle_rad:
+    value: 0
+    unit: deg
+    range: [0, 360]
+    src: est
+    note: "spindle orientation angle used by G76/G87 (FANUC parameter 4077, the M19 stop position of the spindle amplifier); 0 deg assumed"
+  rigid_tap_by_g84:
+    value: false
+    unit: "-"
+    src: est
+    note: "FANUC parameter 5200#0 G84 = 0: rigid tapping only after M29 (fanuc-30ibplus-param-2019 p. 304); with true G84/G74 are always rigid"
+  peck_tap_high_speed:
+    value: true
+    unit: "-"
+    src: est
+    note: "FANUC parameter 5200#5 PCP = 0: peck rigid tapping is the high-speed type (retract by d each peck), true; false = return to R each peck (fanuc-30ibplus-om-mc-2019 p. 108)"
+  peck_tap_return_m:
+    value: 1.0
+    unit: mm
+    range: [0.01, 20]
+    src: est
+    note: "FANUC parameter 5213 (return / cutting start distance d of peck rigid tapping), fanuc-30ibplus-param-2019 p. 309; 1 mm assumed"
+  rigid_extraction_override:
+    value: 1.0
+    unit: "-"
+    range: [0.0, 2.0]
+    src: est
+    note: "FANUC parameters 5200#4 DOV and 5211: override of the rigid tapping extraction (1.0 = DOV = 0, no extraction override), fanuc-30ibplus-om-mc-2019 p. 112"
+  haas_g73_retract_m:
+    value: 0.254
+    unit: mm
+    range: [0.01, 10]
+    src: est
+    note: "Haas Setting 22 (Can Cycle Delta Z: retraction of G73 and clearance of G83); 0.010 in assumed (not read in a manual this session)"
+  haas_g83_retract_above_r_m:
+    value: 0.0
+    unit: mm
+    range: [0, 50]
+    src: est
+    note: "Haas Setting 52 (G83 retract above R plane); 0 assumed"
+  haas_g76_shift_direction:
+    value: "+X"
+    unit: "-"
+    src: est
+    note: "Haas Setting 27 (G76/G77 shift direction for Q); X+ assumed"
+  lathe_g83_high_speed:
+    value: true
+    unit: "-"
+    src: est
+    note: "FANUC parameter 5101#2 RTR = 0: T series G83/G87 with Q are high-speed peck cycles (retract by 5114), fanuc-30ibplus-param-2019 p. 280"
+
+  # ------------------------------------------------------------------ lathe multiple repetitive cycles and threading
+  g71_depth_m:
+    value: 1.0
+    unit: mm
+    range: [0.01, 20]
+    src: est
+    note: "FANUC parameter 5132 (depth of cut delta d of G71/G72, radius), fanuc-30ibplus-param-2019 p. 291; used when the first G71/G72 block gives no U/W; 1 mm assumed"
+  g71_escape_m:
+    value: 0.5
+    unit: mm
+    range: [0.0, 10]
+    src: est
+    note: "FANUC parameter 5133 (escape e of G71/G72, radius), fanuc-30ibplus-param-2019 p. 291; 0.5 mm assumed"
+  g71_clearance_m:
+    value: 0.5
+    unit: mm
+    range: [0.0, 10]
+    src: est
+    note: "FANUC parameter 5134 (clearance g before the cutting feed start in G71/G72 type II pockets), fanuc-30ibplus-param-2019 p. 291; 0.5 mm assumed"
+  g73_escape_x_m:
+    value: 1.0
+    unit: mm
+    range: [-50, 50]
+    src: est
+    note: "FANUC parameter 5135 (escape delta i of G73 along X, radius), fanuc-30ibplus-param-2019 p. 292; 1 mm assumed"
+  g73_escape_z_m:
+    value: 1.0
+    unit: mm
+    range: [-50, 50]
+    src: est
+    note: "FANUC parameter 5136 (escape delta k of G73 along Z), fanuc-30ibplus-param-2019 p. 292; 1 mm assumed"
+  g73_divisions:
+    value: 3
+    unit: "-"
+    range: [1, 999]
+    src: est
+    note: "FANUC parameter 5137 (number of divisions d of G73), fanuc-30ibplus-param-2019 p. 292; 3 assumed"
+  g74_return_m:
+    value: 0.5
+    unit: mm
+    range: [0.0, 10]
+    src: est
+    note: "FANUC parameter 5139 (return e of G74/G75), fanuc-30ibplus-param-2019 p. 292; 0.5 mm assumed"
+  g76_min_depth_m:
+    value: 0.05
+    unit: mm
+    range: [0.0, 5]
+    src: est
+    note: "FANUC parameter 5140 (minimum depth of cut delta d min of G76, radius), fanuc-30ibplus-param-2019 p. 293; 0.05 mm assumed"
+  g76_finish_m:
+    value: 0.05
+    unit: mm
+    range: [0.0, 5]
+    src: est
+    note: "FANUC parameter 5141 (finishing allowance d of G76, radius), fanuc-30ibplus-param-2019 p. 293; 0.05 mm assumed"
+  g76_finish_passes:
+    value: 1
+    unit: "-"
+    range: [1, 99]
+    src: est
+    note: "FANUC parameter 5142 (repetitions m of the final finishing pass of G76; 0 is read as 1), fanuc-30ibplus-param-2019 p. 293; 1 assumed"
+  g76_tool_angle_rad:
+    value: 60
+    unit: deg
+    range: [0, 80]
+    src: est
+    note: "FANUC parameter 5143 (tool nose angle a of G76: 0, 29, 30, 55, 60 or 80 deg), fanuc-30ibplus-param-2019 p. 294; 60 deg assumed"
+  thread_chamfer_leads:
+    value: 1.0
+    unit: "-"
+    range: [0.0, 12.7]
+    src: est
+    note: "FANUC parameter 5130 (thread chamfering amount r of G92/G76 in leads, 0.1 L units), fanuc-30ibplus-param-2019 p. 290; 1.0 L assumed"
+  thread_chamfer_angle_rad:
+    value: 45
+    unit: deg
+    range: [1, 89]
+    src: est
+    note: "FANUC parameter 5131 (thread chamfering angle of G92/G76; 0 means 45 deg), fanuc-30ibplus-param-2019 p. 290; 45 deg assumed"
+  mrc_finish_pass:
+    value: true
+    unit: "-"
+    src: est
+    note: "FANUC parameters 5105#1 RF1 / #2 RF2 = 0: G71/G72 end with a rough cutting pass along the target figure (fanuc-30ibplus-om-lathe-2019 p. 44)"
+
+  # ------------------------------------------------------------------ cutter / tool nose radius compensation
+  crc_lookahead_blocks:
+    value: 3
+    unit: "-"
+    range: [3, 8]
+    src: fanuc-30ibplus-om-mc-2019
+    page: "211"
+    note: "FANUC parameter 19625 (blocks read in compensation mode, 3-8; 'usually three blocks'), fanuc-30ibplus-param-2019 p. 847"
+  crc_startup_type:
+    value: "A"
+    unit: "-"
+    src: est
+    note: "FANUC parameter 5003 SUV/SUP (start-up and cancel type A, B or C), fanuc-30ibplus-param-2019 p. 261; type A (SUV = SUP = 0) assumed"
+  crc_outer_corner:
+    value: "linear"
+    unit: "-"
+    src: est
+    note: "FANUC parameter 19607#2 CCC = 0: outer corners connected by linear extension (1 = circular), fanuc-30ibplus-param-2019 p. 844"
+  crc_interference_check:
+    value: true
+    unit: "-"
+    src: est
+    note: "FANUC parameter 5008#3 CNV = 0, #1 CNC = 0: interference check with direction and circular angle checks, alarm PS0041 (19607#5 CAV = 0), fanuc-30ibplus-param-2019 pp. 265, 844"
+  crc_vector_limit_m:
+    value: 0.0
+    unit: mm
+    range: [0, 1]
+    src: est
+    note: "FANUC parameter 5010 (corner movements whose vectors differ by less than this per axis are not performed), fanuc-30ibplus-param-2019 p. 266; 0 assumed"
+
+  # ------------------------------------------------------------------ tool life management
+  tool_life_ignore_number:
+    value: 9900
+    unit: "-"
+    src: est
+    note: "FANUC parameter 6810 (tool life management ignore number: a T code above it selects group T - 6810), fanuc-30ibplus-param-2019 p. 402; 9900 assumed, so T99nn calls group nn"
+  tool_life_count_default:
+    value: "uses"
+    unit: "-"
+    src: est
+    note: "FANUC parameter 6800#2 LTM = 0: life counted in uses unless the group says time (G10 L3 Q2 or the project's group data), fanuc-30ibplus-param-2019 p. 395, fanuc-30ibplus-om-2019 p. 271"
+  tool_life_all_expired:
+    value: "alarm"
+    unit: "-"
+    src: est
+    note: "what a group call does when every tool of the group has expired: alarm (PS5317 ALL TOOL LIFE IS OVER, the tool management function's alarm, fanuc-30ibplus-om-2019 p. 244) or last (FANUC basic tool life management selects the last tool and outputs the tool change signal TLCH, fanuc-30ibplus-om-2019 10.5.4 note 1, p. 281); the twin stops so a run is not judged safe with an expired tool"
+  tool_life_max_groups:
+    value: 128
+    unit: "-"
+    range: [8, 1024]
+    src: est
+    note: "FANUC parameter 6813 (maximum number of tool life management groups of the path, a multiple of 8; 256 in the whole CNC, 1024 with the option), fanuc-30ibplus-om-2019 p. 266; 128 assumed; a larger group number is PS0150"
+  tool_life_max_tools:
+    value: 32
+    unit: "-"
+    range: [1, 256]
+    src: est
+    note: "maximum tools per group (FANUC parameter 6800#0-#1 GS1/GS2 split the data file into groups x tools, fanuc-30ibplus-om-2019 p. 267); 32 assumed; more is PS0152"
+  tool_life_offset_code:
+    value: 99
+    unit: "-"
+    src: fanuc-30ibplus-om-2019
+    note: "H/D code that selects the offset registered for the tool whose life is counted (H99 / D99, other codes by parameters 13265/13266), p. 274-275; on lathes (turret type) T(group)99 selects a group and T(group)88 cancels the offset, p. 276"
+  haas_tool_group_first:
+    value: 1000
+    unit: "-"
+    src: est
+    note: "Haas Advanced Tool Management: tool group numbers 1000-2999 are called with T (not read in a manual this session)"
+  haas_tool_group_last:
+    value: 2999
+    unit: "-"
+    src: est
+    note: "Haas Advanced Tool Management: last tool group number (not read in a manual this session)"
+
+  # ------------------------------------------------------------------ program restart
+  restart_output:
+    value: "last"
+    unit: "-"
+    src: est
+    note: "FANUC parameters 7300#7 MOU / #6 MOA: none, last (the last M S T codes, MOU = 1) or all (every M code met during the search, MOA = 1), fanuc-30ibplus-param-2019 p. 422; last assumed (the operator restores the state)"
+  restart_axis_order:
+    value: "XYZ"
+    unit: "-"
+    src: est
+    note: "FANUC parameter 7310 (order of the axes moving to the restart point at dry-run feed), fanuc-30ibplus-param-2019 p. 423; X, Y, then Z assumed (the tool is retracted above the part); remaining axes follow in path order"
+  restart_feed_m_s:
+    value: 5000
+    unit: mm_min
+    range: [1, 50000]
+    src: est
+    note: "dry-run feedrate of the movement to the restart point (FANUC parameter 1410); 5000 mm/min assumed"
+
+  # ------------------------------------------------------------------ five-axis functions
+  tilted_vertical_axis:
+    value: 0
+    unit: "-"
+    range: [0, 3]
+    src: est
+    note: "FANUC parameter 12321 (vertical axis direction for G68.3: 1 +X, 2 +Y, 3 +Z, 0 = the reference tool axis), fanuc-30ibplus-om-2019 (22.6.1.7); 0 assumed"
+  tilted_parallel_rad:
+    value: 0.001
+    unit: deg
+    range: [0, 1]
+    src: est
+    note: "FANUC parameter 12322 (angle below which the tool axis counts as parallel to the vertical axis in G68.3); 0.001 deg assumed"
+
+  # ------------------------------------------------------------------ probing and tool setting (built-in macros, setter cycles)
+  probe_fast_feed_m_s:
+    value: 2000
+    unit: mm_min
+    range: [10, 10000]
+    src: est
+    note: "protected positioning feed of the built-in probe macros (O9810); 2000 mm/min assumed (Renishaw Inspection Plus macros use a machine-set fast feed)"
+  probe_measure_feed_m_s:
+    value: 500
+    unit: mm_min
+    range: [1, 5000]
+    src: est
+    note: "measuring feed of the built-in probe macros (O9811-O9814); 500 mm/min assumed"
+  probe_search_m:
+    value: 10
+    unit: mm
+    range: [0.5, 100]
+    src: est
+    note: "overtravel past the nominal surface before a measuring move reports PROBE OPEN; 10 mm assumed"
+  probe_backoff_m:
+    value: 1
+    unit: mm
+    range: [0.1, 20]
+    src: est
+    note: "back-off distance after a probe touch in the built-in macros; 1 mm assumed"
+  probe_clearance_m:
+    value: 5
+    unit: mm
+    range: [0.5, 100]
+    src: est
+    note: "radial clearance of the bore/boss and web/pocket macros when no R is given; 5 mm assumed"
+  setter_feed_m_s:
+    value: 100
+    unit: mm_min
+    range: [1, 2000]
+    src: est
+    note: "measuring feed of the tool-setter macros O9851-O9853; 100 mm/min assumed (FANUC G37 uses parameter 6241)"
+  setter_search_m:
+    value: 10
+    unit: mm
+    range: [0.5, 100]
+    src: est
+    note: "overtravel past the expected setter contact before a tool-setter macro reports no contact; 10 mm assumed"
+  broken_tool_tolerance_m:
+    value: 0.2
+    unit: mm
+    range: [0.001, 5]
+    src: est
+    note: "default length tolerance of the broken-tool check (O9853 and TOOL_SETTER measure: broken) when the program gives none; 0.2 mm assumed"
+  probe_alarm_base:
+    value: 86
+    unit: "-"
+    src: est
+    note: "first #3000 number of the built-in probe macros: 86 PATH OBSTRUCTED, 87 PROBE OPEN, 88 PROBE NOT CALIBRATED, 89 FORMAT ERROR, 90 OUT OF TOLERANCE, 91 BROKEN TOOL (the twin's Renishaw-like set; Renishaw's own numbering was not read)"
+  setter_skip_signal:
+    value: 2
+    unit: "-"
+    range: [1, 4]
+    src: est
+    note: "multi-step skip number (G31 P1-P4, FANUC parameters 6202-6205 select the signals of each, fanuc-30ibplus-om-2019 pp. 134-135) wired to the tool setter: a G31 with this P is a TOOL_SETTER move, every other G31 is a spindle-probe move; P2 assumed (the spindle probe on the standard SKIP signal)"
+  setter_clearance_m:
+    value: 5
+    unit: mm
+    range: [0.5, 100]
+    src: est
+    note: "height above the expected setter contact to which the broken-tool check O9853 feeds on the setter signal before the check move; 5 mm assumed"
+  setter_position_m:
+    value: machine
+    unit: "-"
+    src: est
+    note: "machine coordinates (G53) of the tool setter for the setter macros O9851/O9853: X Y of the stylus centre and the Z at which a zero-length tool (gauge line) reaches the trigger plane; 'machine' takes probes.tool_setter.position_mm of the machine definition (assumes its base frame is the G53 frame of the gauge line); a project sets [x, y, z] as setter_position_mm"
+  skip_feed_override:
+    value: false
+    unit: "-"
+    src: fanuc-30ibplus-om-2019
+    note: "FANUC parameter 6200#7 SKF: 0 = feedrate override, dry run and automatic acceleration/deceleration are disabled in G31 moves (manual p. 133, 'CAUTION'); the twin marks G31 moves override_allowed = false unless set"

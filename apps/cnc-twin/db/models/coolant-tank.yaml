@@ -1,0 +1,29 @@
+# The coolant tank (cnctwin/coolant/tank.py, docs/models/coolant.md "Tank"): free convection and radiation
+# of the walls and the free surface, evaporation (Dalton scaling of the fluid file's rate with the
+# vapour-pressure deficit, Magnus formula), chiller. Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: coolant-tank
+description: "Tank geometry, Churchill-Chu and Lloyd-Moran free convection, radiation, Magnus evaporation, chiller band"
+params:
+  tank_depth_m: {value: 0.35, unit: m, range: [0.1, 1.0], src: est, note: "liquid depth of machine-tool tanks under the base (as production-consumables); free surface = volume / depth, walls = perimeter of a square plan x depth"}
+  default_fill_fraction: {value: 0.9, unit: "-", range: [0.5, 1.0], src: est, note: "tank filling when the project gives no coolant.tank_fill_fraction"}
+  cc_vertical_a: {value: 0.825, unit: "-", src: churchill-chu-1975-vertical-plate, note: "Nu_L = {a + b Ra^(1/6)/[1 + (c/Pr)^(9/16)]^(8/27)}^2"}
+  cc_vertical_b: {value: 0.387, unit: "-", src: churchill-chu-1975-vertical-plate}
+  cc_vertical_pr: {value: 0.492, unit: "-", src: churchill-chu-1975-vertical-plate}
+  plate_up_low_c: {value: 0.54, unit: "-", src: lloyd-moran-1974, note: "hot surface facing up, 1e4 <= Ra_L <= 1e7"}
+  plate_up_low_n: {value: 0.25, unit: "-", src: lloyd-moran-1974}
+  plate_up_high_c: {value: 0.15, unit: "-", src: lloyd-moran-1974, note: "1e7 <= Ra_L <= 1e11"}
+  plate_up_high_n: {value: 0.3333333333333333, unit: "-", src: lloyd-moran-1974}
+  plate_up_ra_switch: {value: 1.0e7, unit: "-", src: lloyd-moran-1974}
+  plate_down_c: {value: 0.27, unit: "-", src: incropera-2007-heat-mass-transfer, note: "cold surface facing up (tank colder than the shop), Nu_L = 0.27 Ra_L^(1/4), 1e5 <= Ra_L <= 1e10 (eq. 9.32)"}
+  plate_down_n: {value: 0.25, unit: "-", src: incropera-2007-heat-mass-transfer}
+  min_rayleigh: {value: 1.0e4, unit: "-", src: lloyd-moran-1974, note: "below the lower range limit Ra is clamped to it (the tank is then within 1-2 K of the shop)"}
+  wall_emissivity: {value: 0.9, unit: "-", range: [0.8, 0.95], src: est, note: "painted steel tank walls and a liquid free surface (radiation to the shop at ambient temperature)"}
+  evaporation_ref_temp_K: {value: 30.0, unit: degC, range: [25.0, 35.0], src: est, note: "tank temperature the fluid files' evaporation_l_per_h_per_m2 refers to (their notes: 25-35 degC tank in shop air)"}
+  evaporation_ref_ambient_K: {value: 20.0, unit: degC, src: est, note: "shop air temperature of that reference"}
+  relative_humidity: {value: 0.5, unit: "-", range: [0.2, 0.8], src: est, note: "shop air relative humidity (reference and run)"}
+  magnus_c1_Pa: {value: 610.94, unit: Pa, src: alduchov-eskridge-1996}
+  magnus_c2: {value: 17.625, unit: "-", src: alduchov-eskridge-1996}
+  magnus_c3_dK: {value: 243.04, unit: dK, src: alduchov-eskridge-1996, note: "e_s = c1 exp(c2 T/(T + c3)), T in degC"}
+  chiller_band_dK: {value: 2.0, unit: dK, range: [0.5, 5.0], src: est, note: "proportional band of a tank chiller: full capacity this far above the set point"}

@@ -1,0 +1,53 @@
+# Zębala, Struzikiewicz & Słodki (2020): mean chip length of a Sandvik CNMG 120408-SMC (1115) insert turning
+# Ti6Al4V at 50 m/min, ap 1 and 3 mm, f 0.15-0.30 mm/rev, dry and with 70 bar coolant, on a Mazak Integrex.
+format: cnctwin-validation-case
+version: 1
+id: chipform-zebala2020-cnmg120408-smc-ti64-dry-hpc
+quantity: chip_form
+reference:
+  src: zebala-2020-ti64-chip-breakability
+  location: "Sect. 2 (machine, insert, holder, coolant, cutting data), Sect. 2.2 (chip length classes and Cin), Tables 8 and 9 (mean chip length Lch and Cin, dry and 70 bar)"
+  digitised: false
+  measured: true
+setup:
+  operation: longitudinal_turning
+  material: {db: ti6al4v, note: "Ti6Al4V: Rm 1020 MPa, A5 14 %, 33 HRC (Table 1)"}
+  tool:
+    type: turning_insert
+    iso_designation: CNMG120408-SMC
+    chipbreaker: SMC
+    grade: "Sandvik Coromant 1115"
+    tool_class: carbide
+    coating: "PVD-coated grade (Sandvik 1115)"
+    nose_radius_mm: 0.8
+    holder: "C6-PCMNN-00115-12HP (Coromant Capto C6, high-pressure coolant holder)"
+  machine: {model: "Mazak Integrex 200-IV", controller: "Mazatrol Matrix"}
+  coolant:
+    fluid: "ToolWay S432 (Statoil), 7 %"
+    pressure_bar_cases: [0, 70]      # 0 = dry
+    delivery: {value: "through the HP holder nozzles onto the rake face", src: est, note: "the paper gives the holder type and the pressure, not the nozzle size, flow or angle"}
+  conditions:
+    cutting_speed_m_min: 50
+    ap_mm_levels: [1.0, 3.0]
+    feed_mm_rev_levels: [0.15, 0.20, 0.25, 0.30]
+    chip_class_rule: "Lch up to 25 mm: short, correct (good); 25-50 mm: fair, acceptable; over 50 mm: long, unfavourable (poor); Cin = Lch / 50 capped at 1"
+  program: null
+reference_values:
+  - {name: Lch_dry_ap1, value: 37.5, unit: mm, x: 0.15, x_name: feed, x_unit: mm/rev, note: "Cin 0.75 (fair)"}
+  - {name: Lch_dry_ap1, value: 63.8, unit: mm, x: 0.20, x_name: feed, x_unit: mm/rev, note: "Cin 1.00 (poor)"}
+  - {name: Lch_dry_ap1, value: 22.0, unit: mm, x: 0.25, x_name: feed, x_unit: mm/rev, note: "Cin 0.44 (good)"}
+  - {name: Lch_dry_ap1, value: 14.0, unit: mm, x: 0.30, x_name: feed, x_unit: mm/rev, note: "Cin 0.28 (good)"}
+  - {name: Lch_dry_ap3, value: 22.3, unit: mm, x: 0.15, x_name: feed, x_unit: mm/rev, note: "Cin 0.45"}
+  - {name: Lch_dry_ap3, value: 33.5, unit: mm, x: 0.20, x_name: feed, x_unit: mm/rev, note: "Cin 0.67"}
+  - {name: Lch_dry_ap3, value: 13.0, unit: mm, x: 0.25, x_name: feed, x_unit: mm/rev, note: "Cin 0.26"}
+  - {name: Lch_dry_ap3, value: 11.0, unit: mm, x: 0.30, x_name: feed, x_unit: mm/rev, note: "Cin 0.22"}
+  - {name: Lch_hpc70_ap1, value: 2.5, unit: mm, x: 0.15, x_name: feed, x_unit: mm/rev, note: "Cin 0.05"}
+  - {name: Lch_hpc70_ap1, value: 2.9, unit: mm, x: 0.20, x_name: feed, x_unit: mm/rev, note: "Cin 0.06"}
+  - {name: Lch_hpc70_ap1, value: 3.3, unit: mm, x: 0.25, x_name: feed, x_unit: mm/rev, note: "Cin 0.07"}
+  - {name: Lch_hpc70_ap1, value: 3.8, unit: mm, x: 0.30, x_name: feed, x_unit: mm/rev, note: "Cin 0.08"}
+  - {name: Lch_hpc70_ap3, value: 6.0, unit: mm, x: 0.15, x_name: feed, x_unit: mm/rev, note: "Cin 0.12"}
+  - {name: Lch_hpc70_ap3, value: 7.1, unit: mm, x: 0.20, x_name: feed, x_unit: mm/rev, note: "Cin 0.14"}
+  - {name: Lch_hpc70_ap3, value: 9.0, unit: mm, x: 0.25, x_name: feed, x_unit: mm/rev, note: "Cin 0.18"}
+  - {name: Lch_hpc70_ap3, value: 12.0, unit: mm, x: 0.30, x_name: feed, x_unit: mm/rev, note: "Cin 0.24"}
+reference_curves: []
+notes: "Mean chip lengths as printed in Tables 8 (dry) and 9 (70 bar); the number of chips averaged is not stated. With 70 bar all chips were short and broken; dry, the chip changed from long to short as feed and depth increased (better filling of the SMC groove), with a fair/poor window at 0.15-0.20 mm/rev and ap 1 mm. The tables also list a cutting power Pc for each cell that is higher with HPC than dry; it is not stored here (the force test plan of Table 3 mixes pressure and depth in a Taguchi array, so the per-cell power may come from a fitted model). The Ra results of the paper (Fig. 7) are only plotted."

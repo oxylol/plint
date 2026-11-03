@@ -1,0 +1,141 @@
+format: cnctwin-bibliography
+version: 1
+# Sources of the structural models (cnctwin.structure, docs/models/structure.md): Timoshenko beam elements,
+# receptance coupling of tool, holder and spindle, the voxel finite elements of the workpiece, plate solutions,
+# residual-stress layer removal, eigen solvers and multigrid. Entries already listed elsewhere are cited by key
+# from there: schmitz-smith-2009-machining-dynamics, kops-vo-1990, young-budynas-2012-roark (models-tooling.yaml),
+# budynas-nisbett-2015-shigley (models-holding.yaml), johnson-1985-contact-mechanics (models-cutting.yaml).
+entries:
+  erturk-ozguven-budak-2006-rcsa:
+    type: article
+    authors: "Erturk, A.; Ozguven, H.N.; Budak, E."
+    title: "Analytical modeling of spindle-tool dynamics on machine tools using Timoshenko beam model and receptance coupling for the prediction of tool point FRF"
+    venue: "International Journal of Machine Tools and Manufacture 46(15), 1901-1912"
+    year: 2006
+    doi: "10.1016/j.ijmachtools.2006.01.032"
+    pages: "spindle, holder and tool as Timoshenko beams; rigid and elastic (translational and rotational spring) coupling of the receptance matrices [H L; N P] at the joints"
+  schmitz-duncan-2005-rcsa:
+    type: article
+    authors: "Schmitz, T.L.; Duncan, G.S."
+    title: "Three-component receptance coupling substructure analysis for tool point dynamics prediction"
+    venue: "Journal of Manufacturing Science and Engineering 127(4), 781-790"
+    year: 2005
+    doi: "10.1115/1.2039102"
+    pages: "tool, holder and spindle-holder base; base receptances from a standard holder; rotational receptances of the base from the translational ones (P = N H^-1 L)"
+  cowper-1966-shear:
+    type: article
+    authors: "Cowper, G.R."
+    title: "The shear coefficient in Timoshenko's beam theory"
+    venue: "Journal of Applied Mechanics 33(2), 335-340"
+    year: 1966
+    doi: "10.1115/1.3625046"
+    pages: "Table 1: solid circle k = 6(1+nu)/(7+6nu); hollow circle k = 6(1+nu)(1+m^2)^2/((7+6nu)(1+m^2)^2+(20+12nu)m^2); rectangle k = 10(1+nu)/(12+11nu)"
+  przemieniecki-1968-matrix:
+    type: book
+    authors: "Przemieniecki, J.S."
+    title: "Theory of Matrix Structural Analysis"
+    publisher: "McGraw-Hill, New York (Dover reprint 1985)"
+    year: 1968
+    pages: "ch. 5: beam element stiffness with shear deformation (Phi = 12 E I / (k G A L^2)); ch. 11: consistent mass matrices with shear deformation and rotary inertia"
+  taylor-beresford-wilson-1976:
+    type: article
+    authors: "Taylor, R.L.; Beresford, P.J.; Wilson, E.L."
+    title: "A non-conforming element for stress analysis"
+    venue: "International Journal for Numerical Methods in Engineering 10(6), 1211-1219"
+    year: 1976
+    doi: "10.1002/nme.1620100602"
+    pages: "eight-node hexahedron with incompatible bubble modes (1 - xi^2) condensed at element level; derivatives at the element centre so the patch test passes; exact pure bending of rectangular elements"
+  timoshenko-woinowsky-1959-plates:
+    type: book
+    authors: "Timoshenko, S.; Woinowsky-Krieger, S."
+    title: "Theory of Plates and Shells"
+    edition: 2
+    publisher: "McGraw-Hill, New York"
+    year: 1959
+    pages: "Table 35: clamped square plate under uniform load, w_max = 0.00126 q a^4 / D; ch. 1: cylindrical bending"
+  leissa-1969-plates:
+    type: report
+    authors: "Leissa, A.W."
+    title: "Vibration of Plates"
+    institution: "NASA SP-160, Washington DC"
+    year: 1969
+    pages: "ch. 4: rectangular plates; cantilever (C-F-F-F) square plate omega a^2 sqrt(rho h / D) = 3.492, 8.525, 21.43 (nu = 0.3); Ritz method with beam characteristic functions"
+  warburton-1954-plates:
+    type: article
+    authors: "Warburton, G.B."
+    title: "The vibration of rectangular plates"
+    venue: "Proceedings of the Institution of Mechanical Engineers 168(1), 371-384"
+    year: 1954
+    doi: "10.1243/PIME_PROC_1954_168_040_02"
+    pages: "Rayleigh method with products of beam characteristic functions for any combination of clamped, simply supported and free edges"
+  blevins-1979-formulas:
+    type: book
+    authors: "Blevins, R.D."
+    title: "Formulas for Natural Frequency and Mode Shape"
+    publisher: "Van Nostrand Reinhold, New York"
+    year: 1979
+    pages: "Table 8-1: beam characteristic functions and roots (clamped-free 1.87510, 4.69409, 7.85476; clamped-clamped and free-free 4.73004, 7.85320, 10.9956); Euler-Bernoulli cantilever frequencies"
+  treuting-read-1951:
+    type: article
+    authors: "Treuting, R.G.; Read, W.T."
+    title: "A mechanical determination of biaxial residual stress in sheet materials"
+    venue: "Journal of Applied Physics 22(2), 130-134"
+    year: 1951
+    doi: "10.1063/1.1699913"
+    pages: "layer removal: the curvature of the remaining plate follows from the moment of the removed layers' stress about the new mid-plane (plate bending with Poisson coupling)"
+  boley-weiner-1960-thermal:
+    type: book
+    authors: "Boley, B.A.; Weiner, J.H."
+    title: "Theory of Thermal Stresses"
+    publisher: "Wiley, New York"
+    year: 1960
+    pages: "ch. 9: thermal stresses and deflections of beams: free thermal strain resultants N_T = E alpha int T dA, M_T = E alpha int T y dA"
+  lehoucq-sorensen-yang-1998-arpack:
+    type: book
+    authors: "Lehoucq, R.B.; Sorensen, D.C.; Yang, C."
+    title: "ARPACK Users' Guide: Solution of Large-Scale Eigenvalue Problems with Implicitly Restarted Arnoldi Methods"
+    publisher: "SIAM, Philadelphia"
+    year: 1998
+    doi: "10.1137/1.9780898719628"
+    pages: "shift-invert mode 3 for the generalized symmetric problem K x = lambda M x; the starting vector fixes the Krylov sequence"
+  briggs-henson-mccormick-2000-multigrid:
+    type: book
+    authors: "Briggs, W.L.; Henson, V.E.; McCormick, S.F."
+    title: "A Multigrid Tutorial"
+    edition: 2
+    publisher: "SIAM, Philadelphia"
+    year: 2000
+    doi: "10.1137/1.9780898719505"
+    pages: "V-cycle, linear interpolation and Galerkin coarse operators A_c = P^T A P"
+  adams-2003-polynomial-smoothing:
+    type: article
+    authors: "Adams, M.; Brezina, M.; Hu, J.; Tuminaro, R."
+    title: "Parallel multigrid smoothing: polynomial versus Gauss-Seidel"
+    venue: "Journal of Computational Physics 188(2), 593-610"
+    year: 2003
+    doi: "10.1016/S0021-9991(03)00194-3"
+    pages: "Chebyshev smoothing of D^-1 A on [lambda_max / 30, 1.1 lambda_max]"
+  johnson-kienholz-1982-mse:
+    type: article
+    authors: "Johnson, C.D.; Kienholz, D.A."
+    title: "Finite element prediction of damping in structures with constrained viscoelastic layers"
+    venue: "AIAA Journal 20(9), 1284-1290"
+    year: 1982
+    doi: "10.2514/3.51190"
+    pages: "modal strain energy method: eta_k = sum_j eta_j U_jk / U_k from the undamped mode shapes"
+  craig-kurdila-2006-structural-dynamics:
+    type: book
+    authors: "Craig, R.R.; Kurdila, A.J."
+    title: "Fundamentals of Structural Dynamics"
+    edition: 2
+    publisher: "Wiley, Hoboken"
+    year: 2006
+    pages: "Rayleigh-Ritz on a reduced basis; mode-displacement and mode-acceleration (static residual flexibility) methods; component mode synthesis"
+  genta-2005-rotating:
+    type: book
+    authors: "Genta, G."
+    title: "Dynamics of Rotating Systems"
+    publisher: "Springer, New York"
+    year: 2005
+    doi: "10.1007/0-387-28687-X"
+    pages: "ch. 4 / 6: rotors with an anisotropic cross-section: in the inertial frame the mean stiffness (k1 + k2)/2 plus a deviatoric part varying at twice the spin speed"
