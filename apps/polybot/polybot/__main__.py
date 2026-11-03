@@ -1,4 +1,4 @@
-"""Entry point: `python -m polybot [run|once|check|reset <setup>|ledger [base]|collector]`."""
+"""Entry point: `python -m polybot [run|once|check|reset <setup>|ledger [base]|collector|afternoon]`."""
 from __future__ import annotations
 
 import json
@@ -26,6 +26,14 @@ def print_collector(cl: dict) -> None:
         print(head + f"  → {r.get('winner') or ''} {r.get('decision', '')}")
         for tk in r.get("tokens", []) or []:
             print(f"      {tk['outcome']:3s} {tk['bucket']:18s} {tk['price'] if tk['price'] is not None else '?':>6}  {tk.get('decision', '')}")
+
+
+def print_afternoon(af: dict) -> None:
+    print(f"\nafternoon: Yes on the running high's bucket at {af.get('hour')}:00 local, {af.get('min_price')}–{af.get('max_price')} · {af.get('today', 0)} cities today")
+    for r in af.get("rows", [])[:40]:
+        print(f"  {r['city']:14s} {r['day']} {r.get('station', ''):4s} {r.get('local_time', ''):9s} "
+              f"{('high so far ' + str(r['value_c']) + '°C → ' + str(r.get('bucket'))) if r.get('value_c') is not None else '':34s} "
+              f"{('ask ' + format(r['ask'], '.2f')) if r.get('ask') is not None else '':9s} → {r.get('decision', '')}")
 
 
 def main(argv: list[str]) -> int:
@@ -59,11 +67,17 @@ def main(argv: list[str]) -> int:
         for g in ud.get("games", [])[:12]:
             print(f"  {g['minutes']:+5d} min  {g['sport']:6s} {g['title'][:50]} · {g['outcome']} at {g['price']:.2f}  → {g['decision']}")
         print_collector(status.get("collector", {}))
+        print_afternoon(status.get("afternoon", {}))
         return 0
     if cmd == "collector":   # scan the finished days without buying (reads the markets and the station reports)
         runner.collector.trade = False
         runner.collector.run(utcnow())
         print_collector(runner.collector.status())
+        return 0
+    if cmd == "afternoon":   # scan the cities in their afternoon without buying
+        runner.afternoon.trade = False
+        runner.afternoon.run(utcnow())
+        print_afternoon(runner.afternoon.status())
         return 0
     if cmd == "reset":
         name = argv[2] if len(argv) > 2 else ""
@@ -81,7 +95,7 @@ def main(argv: list[str]) -> int:
         print(report(rows, finals_from_markets(rows, runner.core.market), base=argv[2] if len(argv) > 2 else "day4"))
         return 0
     if cmd != "run":
-        print("usage: python -m polybot [run|once|check|reset <setup>|ledger [base]|collector]", file=sys.stderr)
+        print("usage: python -m polybot [run|once|check|reset <setup>|ledger [base]|collector|afternoon]", file=sys.stderr)
         return 2
 
     web.serve(cfg.port, store, cfg.mode)

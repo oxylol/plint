@@ -182,6 +182,17 @@ class Config:
     cl_max_per_tick: int
     cl_lowest: bool              # also the lows (only once the day is over)
     cl_skip_cities: str          # comma-separated; Hong Kong resolves on the Observatory, not on METAR
+    # Afternoon strategy: Yes on the bucket the running high is in at a local hour, at the real ask
+    af_enabled: bool
+    af_tick_seconds: int
+    af_hour: int                 # local hour to act in (hour:00 to hour:59)
+    af_min_price: Decimal
+    af_max_price: Decimal
+    af_stake_usd: Decimal
+    af_daily_budget_usd: Decimal
+    af_max_open: int
+    af_max_per_tick: int
+    af_skip_cities: str
     # Plumbing
     data_dir: str
     port: int
@@ -271,6 +282,16 @@ class Config:
             cl_max_per_tick=_int("CL_MAX_PER_TICK", 10),
             cl_lowest=_bool("CL_LOWEST", True),
             cl_skip_cities=_str("CL_SKIP_CITIES", "Hong Kong"),
+            af_enabled=_bool("AF_ENABLED", True),
+            af_tick_seconds=_int("AF_TICK_SECONDS", 300),
+            af_hour=_int("AF_HOUR", 15),
+            af_min_price=_dec("AF_MIN_PRICE", "0.20"),
+            af_max_price=_dec("AF_MAX_PRICE", "0.90"),
+            af_stake_usd=_dec("AF_STAKE_USD", "5"),
+            af_daily_budget_usd=_dec("AF_DAILY_BUDGET_USD", "100"),
+            af_max_open=_int("AF_MAX_OPEN", 60),
+            af_max_per_tick=_int("AF_MAX_PER_TICK", 10),
+            af_skip_cities=_str("AF_SKIP_CITIES", "Hong Kong"),
             data_dir=_str("DATA_DIR", "/data"),
             port=_int("PORT", 8000),
             ntfy_url=_str("NTFY_URL", ""),
@@ -300,6 +321,8 @@ class Config:
             raise ValueError("FC_TICK_SECONDS ≥ 300, FC_AGG max|median|mean, FC_STAKE_USD ≥ 1")
         if self.cl_tick_seconds < 120 or not (0 <= self.cl_lock_hour <= 23) or not (0 < self.cl_min_price < self.cl_max_price < 1) or self.cl_stake_usd < 1:
             raise ValueError("CL_TICK_SECONDS ≥ 120, CL_LOCK_HOUR 0–23, 0 < CL_MIN_PRICE < CL_MAX_PRICE < 1, CL_STAKE_USD ≥ 1")
+        if self.af_tick_seconds < 60 or not (0 <= self.af_hour <= 23) or not (0 < self.af_min_price < self.af_max_price < 1) or self.af_stake_usd < 1:
+            raise ValueError("AF_TICK_SECONDS ≥ 60, AF_HOUR 0–23, 0 < AF_MIN_PRICE < AF_MAX_PRICE < 1, AF_STAKE_USD ≥ 1")
         if self.ud_tick_seconds < 10:
             raise ValueError("UD_TICK_SECONDS must be at least 10")
         if not (0 < self.ud_min_price < self.ud_max_price < 1):

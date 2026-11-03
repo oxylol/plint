@@ -108,6 +108,11 @@ def winning_bucket(buckets: list[Bucket], tenths: int, unit: str) -> Bucket | No
     return None
 
 
+def in_window(local: datetime, hour: int) -> int:
+    """-1 before the hour, 0 during it (hour:00 to hour:59), +1 after."""
+    return -1 if local.hour < hour else 0 if local.hour == hour else 1
+
+
 def payers(buckets: list[Bucket], winner: Bucket) -> list[tuple[Bucket, str]]:
     """Every token worth $1 once `winner` is settled: its Yes and each other bucket's No."""
     return [(winner, "Yes")] + [(b, "No") for b in buckets if b is not winner]

@@ -248,6 +248,23 @@ a week, wrong on 0.14% of days. That is what the defaults test. Every
 `python -m polybot collector` scans the finished days without buying and prints what
 it sees.
 
+## Strategy 5 · Afternoon
+
+Filip's idea: it is usually hottest in the middle of the day, so by mid-afternoon the
+day's high is probably in. The study (`research/weather_hasmax.py`) says the high is
+first reached by 14:00 on half the days, by 16:00 on 84%, and that the market sells
+the running high's bucket a few points too cheap in the early afternoon (real asks at
+15:00: paid 27→held 29, 42→45, 58→61, 73→76). A model of the state adds nothing beyond
+the price, so the rule is the plain one: at `AF_HOUR` (15:00) local the bot fixes the
+bucket the day's running high falls in (the station's routine reports, read the way
+the markets' rule reads them, shared with the collector) and buys its Yes for
+`AF_STAKE_USD` when the real ask is between `AF_MIN_PRICE` and `AF_MAX_PRICE`, within
+that hour, once per city and day, held to resolution. In the study that made +5.6% a
+trade (90% CI +1.7 to +9.4) over 1,358 trades; buying No instead lost 22%. Hong Kong
+is skipped (`AF_SKIP_CITIES`): it resolves on the Observatory, not the airport.
+
+`python -m polybot afternoon` scans the cities in their window without buying.
+
 ## Comparing them
 
 The page's **Strategies** table lists every setup: paper (or live) P&L,
@@ -344,12 +361,13 @@ Change a value, then `plint restart poly`.
 - `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
 - `polybot/weather.py` + `strategy_forecast.py` — temperature markets, stations, Open-Meteo forecasts (pure parts tested) and the forecast strategy
 - `polybot/metar.py` + `collector.py` + `strategy_collector.py` — the station reports read by the markets' rule, when a day's value is final (tested), and the collector strategy
+- `polybot/strategy_afternoon.py` — the afternoon strategy (Yes on the running high's bucket at 15:00 local)
 - `polybot/runner.py` — runs both on their own clocks, writes the page's JSON
 - `polybot/store.py` — `data/polybot/state.json`, `trades.jsonl`, `status.json`
 - `static/index.html` — the page (Plint Soft UI tokens)
 
 Commands: `docker exec polybot python -m polybot once` runs one cycle of every
-strategy and prints their reasoning; `… check` shows the account state; `… collector` scans the finished temperature days without buying.
+strategy and prints their reasoning; `… check` shows the account state; `… collector` scans the finished temperature days without buying; `… afternoon` scans the cities in their afternoon window.
 `… ledger [base]` settles the ledger (`data/polybot/ledger.jsonl`: every signal that passed a consensus setup's rules, at
 the real price of a $5 buy, bought or not) and compares setups per signal against `base` (default `day4`), paired by day.
 Tests: `docker run --rm -v $PWD:/app -w /app python:3.12-slim sh -c "pip install -q -r requirements.txt && python -m unittest discover -s tests"`.

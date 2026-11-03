@@ -3,7 +3,8 @@
 #  Polybot: Polymarket strategies side by side. "Consensus" buys what the
 #  leaderboard's top traders agree on; "underdog" buys the cheaper side of a
 #  game at kickoff; "forecast" bets No on a temperature; "collector" buys what
-#  a finished day has already decided. Source in apps/polybot
+#  a finished day has already decided; "afternoon" buys the running high's
+#  bucket at 15:00 local. Source in apps/polybot
 #  (README there). Paper mode until
 #  POLY_PRIVATE_KEY + POLY_WALLET are in .env and POLY_LIVE=1. Its book
 #  lives in data/polybot; it pushes trades to the phone through ntfy.
@@ -117,6 +118,17 @@ services:
       CL_LOWEST: ${CL_LOWEST:-1}
       CL_SKIP_CITIES: ${CL_SKIP_CITIES:-Hong Kong}
       CL_TICK_SECONDS: ${CL_TICK_SECONDS:-600}
+      # Strategy 5, afternoon: Yes on the bucket the running high is in at 15:00 local, at the real ask (20–90¢).
+      AF_ENABLED: ${AF_ENABLED:-1}
+      AF_HOUR: ${AF_HOUR:-15}
+      AF_MIN_PRICE: ${AF_MIN_PRICE:-0.20}
+      AF_MAX_PRICE: ${AF_MAX_PRICE:-0.90}
+      AF_STAKE_USD: ${AF_STAKE_USD:-5}
+      AF_DAILY_BUDGET_USD: ${AF_DAILY_BUDGET_USD:-100}
+      AF_MAX_OPEN: ${AF_MAX_OPEN:-60}
+      AF_MAX_PER_TICK: ${AF_MAX_PER_TICK:-10}
+      AF_SKIP_CITIES: ${AF_SKIP_CITIES:-Hong Kong}
+      AF_TICK_SECONDS: ${AF_TICK_SECONDS:-300}
     volumes:
       - ../../data/polybot:/data
     read_only: true

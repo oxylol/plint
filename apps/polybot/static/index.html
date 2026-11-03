@@ -129,6 +129,7 @@
 <section><h2>Positions <small id="poscount"></small></h2><div id="positions"></div></section>
 <section><h2>Forecast · tomorrow's temperatures <small id="fcnote"></small></h2><div id="forecast"></div></section>
 <section><h2>Collector · known winners after the day <small id="clnote"></small></h2><div id="collector"></div></section>
+<section><h2>Afternoon · the running high at 15:00 <small id="afnote"></small></h2><div id="afternoon"></div></section>
 <section><h2>Underdog · games around kickoff <small id="udnote"></small></h2><div id="games"></div></section>
 <section><h2>Consensus · where the leaders agree <small id="sigcount"></small></h2><div class="picker" id="picker"></div><div class="list" id="signals"><div class="empty">Loading…</div></div><button type="button" class="more" id="more" hidden></button></section>
 <section><h2>Trades</h2><div id="trades"></div></section>
@@ -155,7 +156,7 @@
   function link(s) { return s.event_slug ? "https://polymarket.com/event/" + encodeURIComponent(s.event_slug) : s.slug ? "https://polymarket.com/market/" + encodeURIComponent(s.slug) : "https://polymarket.com/"; }
   function tone(n) { return n > 0 ? "up" : n < 0 ? "down" : ""; }
   var LABELS = {};
-  function stag(name) { var l = LABELS[name] || name; return '<span class="chip sm ' + (name === "underdog" || name === "forecast" || name === "collector" ? "info" : "") + '">' + esc(String(l).replace(/^Consensus · /, "")) + "</span>"; }
+  function stag(name) { var l = LABELS[name] || name; return '<span class="chip sm ' + (name === "underdog" || name === "forecast" || name === "collector" || name === "afternoon" ? "info" : "") + '">' + esc(String(l).replace(/^Consensus · /, "")) + "</span>"; }
 
   var last = null, showAll = false, SHOW = 8, picked = localStorage.getItem("polybot-variant") || "consensus";
   function render(d) {
@@ -213,6 +214,15 @@
         '<td class="r num">' + (r.value_c != null ? r.value_c + "°C<br><span class=\"muted\">" + esc(r.value_at || "") + (r.latest != null ? " · now " + r.latest : "") + "</span>" : "–") + "</td>" +
         '<td class="r num">' + (r.winner ? esc(r.winner) : r.locked ? "?" : '<span class="muted">' + esc(r.status || "") + "</span>") + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">No city is in its evening yet' + (cl.waiting ? ": " + cl.waiting + " events waiting for their day to end." : ".") + '</div>';
+
+    var af = d.afternoon || {}, ar = af.rows || [];
+    $("afnote").textContent = af.enabled === false ? "off" : af.today ? "Yes on the bucket the high is in at " + af.hour + ":00 local, " + cents(af.min_price) + "–" + cents(af.max_price) + " · " + af.today + " cities today" : "";
+    $("afternoon").innerHTML = af.enabled === false ? '<div class="empty">Switched off (<code>AF_ENABLED=0</code>).</div>' : ar.length ? '<table><tr><th>City</th><th class="r">High so far</th><th class="r">Bucket</th><th class="r">Yes</th></tr>' + ar.map(function (r) {
+      var good = /bought|holding/.test(r.decision || "");
+      return '<tr><td>' + esc(r.city) + ' <span class="muted">' + esc(r.day ? r.day.slice(5) : "") + (r.station ? " · " + esc(r.station) : "") + (r.local_time ? " · " + esc(r.local_time) : "") + "</span>" + (r.decision ? '<br><span class="' + (good ? "up" : "muted") + '" style="font-size:12px;font-weight:700">→ ' + esc(r.decision) + "</span>" : "") + "</td>" +
+        '<td class="r num">' + (r.value_c != null ? r.value_c + "°C" + (r.reports ? '<br><span class="muted">' + r.reports + " reports</span>" : "") : "–") + "</td>" +
+        '<td class="r num">' + (r.bucket ? esc(r.bucket) : "–") + '</td><td class="r num">' + (r.ask != null ? cents(r.ask) : "–") + "</td></tr>";
+    }).join("") + "</table>" : '<div class="empty">No city has reached its afternoon window yet today.</div>';
 
     $("udnote").textContent = ud.enabled === false ? "off" : games.length ? "buys " + cfg.ud_buy_before_min + " min before kickoff · " + cents(cfg.ud_min_price) + "–" + cents(cfg.ud_max_price) : "";
     $("games").innerHTML = ud.enabled === false ? '<div class="empty">Switched off (<code>UD_ENABLED=0</code>).</div>' : games.length ? '<table><tr><th>Kickoff</th><th>Game</th><th class="r">Dog</th></tr>' + games.map(function (g) {
@@ -345,6 +355,14 @@
       "<div><span>Daily budget</span><b>" + money(cfg.cl_daily_budget_usd) + " · " + money((byName.collector || {}).spent_24h) + " used</b></div>" +
       "<div><span>Skips</span><b>" + esc(cfg.cl_skip_cities || "nobody") + " · a city for 30 d after a loss</b></div>" +
       "<div><span>Checks every</span><b>" + Math.round(cfg.cl_tick_seconds / 60) + " min</b></div>" +
+      "</div><h3>Afternoon</h3>" + '<div class="kv">' +
+      "<div><span>Enabled</span><b>" + (cfg.af_enabled ? "yes" : "no") + "</b></div>" +
+      "<div><span>Buys</span><b>Yes on the running high's bucket at " + cfg.af_hour + ":00 local</b></div>" +
+      "<div><span>Yes price band</span><b>" + cents(cfg.af_min_price) + " – " + cents(cfg.af_max_price) + "</b></div>" +
+      "<div><span>Stake</span><b>" + money(cfg.af_stake_usd) + " a city, once a day</b></div>" +
+      "<div><span>Daily budget</span><b>" + money(cfg.af_daily_budget_usd) + " · " + money((byName.afternoon || {}).spent_24h) + " used</b></div>" +
+      "<div><span>Skips</span><b>" + esc(cfg.af_skip_cities || "nobody") + "</b></div>" +
+      "<div><span>Checks every</span><b>" + Math.round(cfg.af_tick_seconds / 60) + " min</b></div>" +
       (a.wallet_type ? "<div><span>Wallet</span><b>" + esc(cfg.wallet) + " · " + esc(a.wallet_type) + "</b></div>" : "") +
       (a.balance != null ? "<div><span>pUSD</span><b>" + money(a.balance) + "</b></div>" : "") +
       "</div>";

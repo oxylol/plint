@@ -99,3 +99,13 @@ def DaySummaryEmpty():
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AfternoonTests(unittest.TestCase):
+    def test_window(self):
+        from polybot.collector import in_window
+        at = lambda h, m: datetime(2026, 11, 4, h, m, tzinfo=PARIS)  # noqa: E731
+        self.assertEqual(in_window(at(14, 59), 15), -1)
+        self.assertEqual(in_window(at(15, 0), 15), 0)
+        self.assertEqual(in_window(at(15, 59), 15), 0)
+        self.assertEqual(in_window(at(16, 0), 15), 1)

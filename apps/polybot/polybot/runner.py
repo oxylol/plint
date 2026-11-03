@@ -11,6 +11,7 @@ from .core import Core
 from .notify import Notifier
 from .pack import CrediblePack
 from .store import Store, iso
+from .strategy_afternoon import AfternoonStrategy
 from .strategy_collector import CollectorStrategy
 from .strategy_consensus import ConsensusParams, ConsensusStrategy, LeaderFeed
 from .strategy_forecast import ForecastStrategy
@@ -42,7 +43,8 @@ class Runner:
         self.underdog = UnderdogStrategy(self.core)
         self.forecast = ForecastStrategy(self.core)
         self.collector = CollectorStrategy(self.core)
-        self.strategies = [*self.consensus, self.underdog, self.forecast, self.collector]
+        self.afternoon = AfternoonStrategy(self.core, self.collector)
+        self.strategies = [*self.consensus, self.underdog, self.forecast, self.collector, self.afternoon]
         self.last_run: dict[str, datetime] = {}
         self._consensus_status: dict[str, dict] = {}
 
@@ -56,6 +58,8 @@ class Runner:
             return self.cfg.fc_enabled
         if strategy.name == "collector":
             return self.cfg.cl_enabled
+        if strategy.name == "afternoon":
+            return self.cfg.af_enabled
         return True
 
     def due(self, strategy, now: datetime) -> bool:
@@ -98,6 +102,8 @@ class Runner:
                 self.core.mark(self.store.open_positions("forecast"))
             if "collector" in ran:
                 self.core.mark(self.store.open_positions("collector"))
+            if "afternoon" in ran:
+                self.core.mark(self.store.open_positions("afternoon"))
             if consensus_ran:
                 self.core.mark([p for s in consensus_ran for p in self.store.open_positions(s.name)])
                 if self.core.mode == "live":
@@ -131,6 +137,7 @@ class Runner:
         labels["underdog"] = "Underdog"
         labels["forecast"] = self.forecast.label
         labels["collector"] = self.collector.label
+        labels["afternoon"] = self.afternoon.label
         strategies = []
         for s in self.strategies:
             strategies.append({**self.store.totals(now, s.name), "name": s.name, "label": s.label if hasattr(s, "label") else "Underdog",
@@ -148,6 +155,7 @@ class Runner:
             "underdog": self.underdog.status(now),
             "forecast": self.forecast.status(),
             "collector": self.collector.status(),
+            "afternoon": self.afternoon.status(),
             "positions": positions,
             "trades": self.store.recent_trades(40),
             "totals": self.store.totals(now),
