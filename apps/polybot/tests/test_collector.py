@@ -109,3 +109,16 @@ class AfternoonTests(unittest.TestCase):
         self.assertEqual(in_window(at(15, 0), 15), 0)
         self.assertEqual(in_window(at(15, 59), 15), 0)
         self.assertEqual(in_window(at(16, 0), 15), 1)
+
+    def test_city_hour(self):
+        from polybot.collector import city_hour, daily_max_hours
+        self.assertEqual(city_hour([12.0, 13.5, 14.2, 15.8, 16.0], 0.6), 15)      # the 3rd of 5 → 14.2 → 15
+        self.assertEqual(city_hour([12.0, 13.5, 14.2, 15.8, 16.0], 0.9), 16)
+        self.assertEqual(city_hour([9.0, 9.5], 0.5), 11)                           # clamped
+        self.assertEqual(city_hour([20.0, 21.0], 0.5), 19)
+        with self.assertRaises(ValueError):
+            city_hour([], 0.6)
+        reports = [rep(f"{h:02d}:00", t, day="2026-11-02") for h, t in zip(range(0, 24), [80] * 10 + [120, 150, 160, 162, 162, 150] + [120] * 8)]
+        reports += [rep("12:00", 200, day="2026-11-03")]                            # today: incomplete, excluded
+        hist = daily_max_hours(reports, PARIS, before=date(2026, 11, 3))
+        self.assertEqual([(d.isoformat(), h) for d, h in hist], [("2026-11-02", 14.0)])   # 13:00 UTC = 14:00 Paris

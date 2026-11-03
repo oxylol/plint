@@ -29,7 +29,7 @@ def print_collector(cl: dict) -> None:
 
 
 def print_afternoon(af: dict) -> None:
-    print(f"\nafternoon: Yes on the running high's bucket at {af.get('hour')}:00 local, {af.get('min_price')}–{af.get('max_price')} · {af.get('today', 0)} cities today")
+    print(f"\nafternoon: Yes on the running high's bucket at each city's hour (the {af.get('quantile')} point of its high-time history; fallback {af.get('hour')}:00), {af.get('min_price')}–{af.get('max_price')} · {af.get('today', 0)} cities today · hours from {af.get('hours')}")
     for r in af.get("rows", [])[:40]:
         print(f"  {r['city']:14s} {r['day']} {r.get('station', ''):4s} {r.get('local_time', ''):9s} "
               f"{('high so far ' + str(r['value_c']) + '°C → ' + str(r.get('bucket'))) if r.get('value_c') is not None else '':34s} "

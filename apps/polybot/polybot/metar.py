@@ -83,3 +83,33 @@ def fetch_reports(icaos: list[str], hours: int = 30, timeout: int = 25) -> dict[
         if prev is None or rec[0] >= prev[0]:
             out[icao][at] = rec
     return {i: sorted((r for _, r in v.values()), key=lambda r: r.at) for i, v in out.items()}
+
+
+IEM = "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py"
+
+
+def fetch_history(icao: str, days: int = 45, timeout: int = 60) -> list[Report]:
+    """The station's reports for the last `days` from the IEM ASOS archive (routine and special, temperature in °F),
+    for the afternoon strategy's record of when each city's high lands. Not the resolution source: just climatology."""
+    from datetime import timedelta
+    end = datetime.now(timezone.utc) + timedelta(days=1)
+    start = end - timedelta(days=days + 1)
+    url = IEM + "?" + urllib.parse.urlencode({"station": icao, "data": "tmpf", "year1": start.year, "month1": start.month, "day1": start.day,
+                                              "year2": end.year, "month2": end.month, "day2": end.day, "tz": "Etc/UTC", "format": "onlycomma",
+                                              "latlon": "no", "missing": "M", "trace": "T", "direct": "no"}) + "&report_type=3&report_type=4"
+    req = urllib.request.Request(url, headers={"User-Agent": "plint-polybot/1"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        text = r.read().decode("utf-8", "replace")
+    out = []
+    for line in text.splitlines()[1:]:
+        parts = line.split(",")
+        if len(parts) < 3 or parts[2] in ("M", "", "T"):
+            continue
+        try:
+            at = datetime.strptime(parts[1], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
+            f = float(parts[2])
+        except ValueError:
+            continue
+        out.append(Report(at, int(round((f - 32) * 50 / 9)), ""))
+    out.sort(key=lambda r: r.at)
+    return out

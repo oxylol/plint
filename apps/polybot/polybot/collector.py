@@ -4,6 +4,7 @@ Pure functions over the station's reports (polybot/metar.py), tested without the
 """
 from __future__ import annotations
 
+import math
 import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -106,6 +107,32 @@ def winning_bucket(buckets: list[Bucket], tenths: int, unit: str) -> Bucket | No
         if b.contains(v):
             return b
     return None
+
+
+def daily_max_hours(reports: list[Report], tz, before: date, min_reports: int = 12) -> list[tuple[date, float]]:
+    """For each complete day before `before` (station clock): the hour, as a decimal, when the day's high was first reached."""
+    by_day: dict[date, list[tuple[datetime, int]]] = {}
+    for r in reports:
+        lt = r.local(tz)
+        if lt.date() < before:
+            by_day.setdefault(lt.date(), []).append((lt, r.tenths))
+    out = []
+    for d, rs in sorted(by_day.items()):
+        if len(rs) < min_reports:
+            continue
+        hi = max(t for _, t in rs)
+        first = next(lt for lt, t in rs if t == hi)
+        out.append((d, first.hour + first.minute / 60))
+    return out
+
+
+def city_hour(max_hours: list[float], q: float, lo: int = 11, hi: int = 19) -> int:
+    """The whole hour by which the high had been reached on a share q of the days, clamped to lo–hi."""
+    if not max_hours:
+        raise ValueError("no history")
+    xs = sorted(max_hours)
+    k = max(0, min(len(xs) - 1, int(math.ceil(q * len(xs))) - 1))
+    return min(max(int(math.ceil(xs[k])), lo), hi)
 
 
 def in_window(local: datetime, hour: int) -> int:

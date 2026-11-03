@@ -4,7 +4,7 @@
 #  leaderboard's top traders agree on; "underdog" buys the cheaper side of a
 #  game at kickoff; "forecast" bets No on a temperature; "collector" buys what
 #  a finished day has already decided; "afternoon" buys the running high's
-#  bucket at 15:00 local. Source in apps/polybot
+#  bucket at each city's own hour. Source in apps/polybot
 #  (README there). Paper mode until
 #  POLY_PRIVATE_KEY + POLY_WALLET are in .env and POLY_LIVE=1. Its book
 #  lives in data/polybot; it pushes trades to the phone through ntfy.
@@ -118,8 +118,12 @@ services:
       CL_LOWEST: ${CL_LOWEST:-1}
       CL_SKIP_CITIES: ${CL_SKIP_CITIES:-Hong Kong}
       CL_TICK_SECONDS: ${CL_TICK_SECONDS:-600}
-      # Strategy 5, afternoon: Yes on the bucket the running high is in at 15:00 local, at the real ask (20–90¢).
+      # Strategy 5, afternoon: Yes on the bucket the running high is in at each city's own hour (the point of its
+      # high-time distribution, from the station's last weeks), at the real ask (20–90¢).
       AF_ENABLED: ${AF_ENABLED:-1}
+      AF_QUANTILE: ${AF_QUANTILE:-0.6}
+      AF_HISTORY_DAYS: ${AF_HISTORY_DAYS:-45}
+      AF_MIN_HISTORY: ${AF_MIN_HISTORY:-15}
       AF_HOUR: ${AF_HOUR:-15}
       AF_MIN_PRICE: ${AF_MIN_PRICE:-0.20}
       AF_MAX_PRICE: ${AF_MAX_PRICE:-0.90}

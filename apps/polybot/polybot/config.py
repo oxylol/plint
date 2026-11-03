@@ -185,7 +185,10 @@ class Config:
     # Afternoon strategy: Yes on the bucket the running high is in at a local hour, at the real ask
     af_enabled: bool
     af_tick_seconds: int
-    af_hour: int                 # local hour to act in (hour:00 to hour:59)
+    af_hour: int                 # the hour when a city has no history and no shipped entry
+    af_quantile: float           # a city's hour: the point of its high-time distribution (0.6 = reached on 60% of days)
+    af_history_days: int         # days of the station's archive behind that
+    af_min_history: int          # fewer complete days than this: use the shipped table
     af_min_price: Decimal
     af_max_price: Decimal
     af_stake_usd: Decimal
@@ -285,6 +288,9 @@ class Config:
             af_enabled=_bool("AF_ENABLED", True),
             af_tick_seconds=_int("AF_TICK_SECONDS", 300),
             af_hour=_int("AF_HOUR", 15),
+            af_quantile=float(_str("AF_QUANTILE", "0.6")),
+            af_history_days=_int("AF_HISTORY_DAYS", 45),
+            af_min_history=_int("AF_MIN_HISTORY", 15),
             af_min_price=_dec("AF_MIN_PRICE", "0.20"),
             af_max_price=_dec("AF_MAX_PRICE", "0.90"),
             af_stake_usd=_dec("AF_STAKE_USD", "5"),
@@ -323,6 +329,8 @@ class Config:
             raise ValueError("CL_TICK_SECONDS ≥ 120, CL_LOCK_HOUR 0–23, 0 < CL_MIN_PRICE < CL_MAX_PRICE < 1, CL_STAKE_USD ≥ 1")
         if self.af_tick_seconds < 60 or not (0 <= self.af_hour <= 23) or not (0 < self.af_min_price < self.af_max_price < 1) or self.af_stake_usd < 1:
             raise ValueError("AF_TICK_SECONDS ≥ 60, AF_HOUR 0–23, 0 < AF_MIN_PRICE < AF_MAX_PRICE < 1, AF_STAKE_USD ≥ 1")
+        if not (0.3 <= self.af_quantile <= 0.95) or self.af_history_days < 7 or self.af_min_history < 5:
+            raise ValueError("AF_QUANTILE 0.3–0.95, AF_HISTORY_DAYS ≥ 7, AF_MIN_HISTORY ≥ 5")
         if self.ud_tick_seconds < 10:
             raise ValueError("UD_TICK_SECONDS must be at least 10")
         if not (0 < self.ud_min_price < self.ud_max_price < 1):

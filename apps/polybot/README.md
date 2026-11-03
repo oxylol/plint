@@ -255,13 +255,20 @@ day's high is probably in. The study (`research/weather_hasmax.py`) says the hig
 first reached by 14:00 on half the days, by 16:00 on 84%, and that the market sells
 the running high's bucket a few points too cheap in the early afternoon (real asks at
 15:00: paid 27→held 29, 42→45, 58→61, 73→76). A model of the state adds nothing beyond
-the price, so the rule is the plain one: at `AF_HOUR` (15:00) local the bot fixes the
-bucket the day's running high falls in (the station's routine reports, read the way
-the markets' rule reads them, shared with the collector) and buys its Yes for
+the price, so the rule is the plain one: at the city's hour the bot fixes the bucket
+the day's running high falls in (the station's routine reports, read the way the
+markets' rule reads them, shared with the collector) and buys its Yes for
 `AF_STAKE_USD` when the real ask is between `AF_MIN_PRICE` and `AF_MAX_PRICE`, within
-that hour, once per city and day, held to resolution. In the study that made +5.6% a
-trade (90% CI +1.7 to +9.4) over 1,358 trades; buying No instead lost 22%. Hong Kong
-is skipped (`AF_SKIP_CITIES`): it resolves on the Observatory, not the airport.
+that hour, once per city and day, held to resolution. Every city has its own hour
+(Filip's point; `research/weather_hour.py`): the high lands at 11:30 in Taipei and
+17:00 in Madrid, and timing each city at the hour by which its own high had landed on
+60% of its earlier days made +10.4% a trade (90% CI +7.3 to +13.4, 1,790 trades)
+against +5.6% for 15:00 everywhere; buying No instead lost 22%. The hour is the
+`AF_QUANTILE` point of when the high was first reached over the station's last
+`AF_HISTORY_DAYS` days (IEM archive, a few stations a tick, each refreshed daily),
+`polybot/afternoon_hours.json` (from the study) until `AF_MIN_HISTORY` complete days
+are in, and `AF_HOUR` when neither exists. Hong Kong is skipped (`AF_SKIP_CITIES`): it
+resolves on the Observatory, not the airport.
 
 `python -m polybot afternoon` scans the cities in their window without buying.
 
