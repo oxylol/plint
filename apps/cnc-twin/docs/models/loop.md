@@ -376,52 +376,50 @@ first cut of each program: the whole loop costs 7-60 CPU s per simulated second 
 example, the first choice, would have taken the box most of a day), one pytest process per case under
 `bin/tsafe` with `TSAFE_MEM=1800M`; it asserts that the run
 completes and conserves, and records each EXPECTED.md item it can read as passed, failed or not reached
-(tests/regression/expected.py; `<basetemp>/regression/<case>.json`). Results on the live tree (section 13), by
-case:
+(tests/regression/expected.py; `<basetemp>/regression/<case>.json`). Results of 2026-11-09 11:39 on a frozen copy
+of the working tree of 09:44 (every agent's files then, the loop-fix changes of section 15 included; the Numba
+cache compiled cold by `twin warmup --only mill` in 12.8 min, its mill run 41.0 s, safe), by case:
 
-| case | wall s | sim s | run | verdict | findings | EXPECTED passed | failed | not reached | conservation | error |
-|---|---|---|---|---|---|---|---|---|---|---|
-| batch-50 | 511 | 4.94 | stopped by alarm at 4.94 s | not safe | error 1, info 2, warning 2 (sanity 3, alarm 1, remaining_material 1) | no spindle overload finding | - | T1 roughing power | ok |  |
-| batch-50 (no-probe) | 367 | 4.22 | stopped by the error at 4.22 s | - | error 2, fatal 1, info 1, warning 5 (sanity 2, chatter 1, thermal_damage 1, coolant_shadowing 1) | no spindle overload finding | - | T1 roughing power | {} | ConservationError: energy balance violated at t=4.220000 s: expected 46.7058515, got 46.7061528 (relative tolerance 1e-06) |
-| blade-5axis-ti | 666 | 8.00 | first 8.0 s of 113 s (dry run) | safe | info 2, warning 1 (sanity 2, remaining_material 1) | no spindle overload finding; machine travel inside the UMC-750 limits: no overtravel finding; no pass through B = 0 (no C singularity finding) | - | - | ok |  |
-| die-h13-ballnose | 891 | 8.00 | first 8.0 s of 1155 s (dry run) | not safe | error 4, info 3, warning 1 (part_slip 3, sanity 1, program_error 1, part_free 1) | no spindle overload finding; travel inside the limits (Z margin 6 mm): no overtravel finding | - | T1 roughing cutting power; T1 mean tangential force | ok |  |
-| drill-tap-plate-1045 | 310 | 2.51 | stopped by the error at 2.51 s | - | info 2 (sanity 2) | no spindle overload finding | - | drilling torque, D6.8; drilling thrust, D6.8 | {} | ValueError: cannot convert float NaN to integer |
-| pocket-islands-al6061 | 698 | 6.11 | stopped by alarm at 6.11 s | not safe | error 1, info 1, warning 3 (sanity 3, alarm 1, remaining_material 1) | no spindle overload finding | N10 probe Z set: G31 triggers without alarm (1) | peak spindle cutting power in the trochoid loops | ok |  |
-| pocket-islands-al6061 (no-probe) | 393 | 4.50 | stopped by the error at 4.50 s | - | fatal 1, info 1, warning 5 (sanity 4, chatter 1, coolant_shadowing 1, energy_balance 1) | no spindle overload finding; N10 probe Z set: G31 triggers without alarm | - | peak spindle cutting power in the trochoid loops | {} | ConservationError: energy balance violated at t=4.500000 s: expected 0.0923155028, got 0.0923164222 (relative tolerance 1e-06) |
-| sanity-mistakes | 163 | 0.01 | stopped by alarm at 0.01 s | not safe | error 14, warning 11 (sanity 23, alarm 1, remaining_material 1) | the 23 sanity findings of expected_findings.yaml; the controller stops with alarm 320 at line 16 | - | - | ok |  |
-| thin-wall-al7075 | 432 | 4.46 | stopped by the error at 4.46 s | - | error 3, fatal 1, info 1, warning 4 (tool_pullout 2, sanity 1, chatter 1, coolant_shadowing 1) | no spindle overload finding | - | peel cutting power (T1) | {} | ConservationError: energy balance violated at t=4.460000 s: expected 17.6317711, got 17.6313611 (relative tolerance 1e-06) |
-| ti-slot-throughtool | 10 | 0.00 | stopped by the error at 0.00 s | - |  | - | - | - | {} | AttributeError: 'str' object has no attribute 'get' |
-| two-setup-flip | 353 | 3.82 | stopped by the error at 3.82 s | - | error 2, fatal 1, info 1, warning 3 (sanity 1, chatter 1, coolant_shadowing 1, tool_end_of_life 1) | no spindle overload finding | - | OP20 runs on the OP10 part turned about X | {} | ConservationError: energy balance violated at t=3.820000 s: expected 9.11978149, got 9.11993034 (relative tolerance 1e-06) |
+| case | wall s | sim s | run | verdict | findings | EXPECTED passed | failed | not reached | conservation |
+|---|---|---|---|---|---|---|---|---|---|
+| sanity-mistakes | 122 | 0.01 | stopped by its alarm 320 at line 16 | not safe (the program's mistakes) | error 14, warning 11 (sanity 23, alarm 1, remaining_material 1) | the 23 sanity findings; alarm 320 at line 16 | - | - | ok |
+| ti-slot-throughtool | 358 | 7.98 | killed by the 1.8 GB cap at the first contact (exit 137, no record) | - | info 2, warning 2 (thermal_damage 887 degC, tool_end_of_life) at 7.97-7.98 s | - | - | - | - |
+| drill-tap-plate-1045 | 768 | 8.00 | budget | not safe (the D6.8's entry blows up at 4.99 s: tool_breakage, thermal_damage) | error 2, warning 5, info 2 | no spindle overload | drilling torque 0.86 N m (2.6-4.6); thrust 12.3 kN (0.8-1.4) | - | ok |
+| two-setup-flip | 344 | 3.81 | stopped by the energy balance at the first cut (1.01e-6) | - | fatal 1, error 1 (gouge 6 um), warning 2 | no spindle overload | - | OP20 on the turned part | stopped |
+| thin-wall-al7075 | 393 | 4.46 | stopped by the energy balance at the first cut (1.66e-5) | - | fatal 1, warning 4 (chip_recutting 3.9 %, tool_end_of_life) | no spindle overload | - | peel power | stopped |
+| pocket-islands-al6061 | 692 | 8.00 | budget (N10's probing, the T1 change, before the helix) | safe | info 1, warning 3 | no spindle overload; **N10 probe Z: G31 triggers without alarm** | - | trochoid power | ok |
+| pocket-islands-al6061 (no-probe) | 399 | 4.50 | stopped by the energy balance at the helix entry (5.4e-6) | - | fatal 1, warning 6 (part_slip margin, chip_recutting) | no spindle overload; the probe item (trivially) | - | trochoid power | stopped |
+| batch-50 | 619 | 8.00 | budget (N10's probing, before the first cut) | safe | info 2, warning 2 | no spindle overload | - | T1 roughing power | ok |
+| batch-50 (no-probe) | 368 | 4.22 | stopped by the energy balance at the first cut (1.67e-6) | - | fatal 1, error 2 (gouge 6 um, melt smear 589 degC), warning 4 | no spindle overload | - | T1 roughing power | stopped |
+| lathe-shaft-4140 | 517 | 8.00 | budget (before the first cut; 7 work set-ups, 55 in 2.4 s before) | safe | info 1, warning 1 | no spindle overload | - | roughing shaft power | ok |
+| die-h13-ballnose | 889 | 8.00 | budget | not safe (the unclamped insert slips and comes free, section 15) | error 4, warning 1, info 3 | no spindle overload; no overtravel | - | T1 power, T1 force | ok |
+| blade-5axis-ti | 598 | 8.00 | budget | safe | info 2, warning 1 | no spindle overload; no overtravel; no pass through B = 0 | - | - | ok |
 
-lathe-shaft-4140: stopped by hand after 28 min of wall time at 2.4 s simulated, before its first contact (budget
-4 s). In those 2.4 s structure set the work model up 55 times and dynamics rebuilt its modes 53 times (trace
-`structure:work_setup`, `dynamics:basis_change`): the rotating bar in the chuck is set up again every few macro
-steps, each an FE solve of the bar and a new modal basis. Warmup's lathe pass blows up at its first contact
-(section 15).
+Compared with the regression before this task's fixes (same budgets): 7 of 12 cases now run to their budget or
+their program's own alarm conserving (before 5), the probing examples probe (pocket-islands' EXPECTED probe
+item passes; before alarm 379 at the first G31 on both), drill-tap passes the coefficient pipeline's NaN (cutting's
+owner's fix) and ti-slot its set-up (thermal's and production's machine models), lathe-shaft-4140 runs 8 s in
+8.6 min of wall time (before stopped by hand after 28 min at 2.4 s). EXPECTED items over the 11 recorded cases: 17
+passed, 2 failed (drill-tap's torque and thrust at the blown-up entry), 9 not reached (beyond the budget or a run
+that stopped at its first cut).
 
-Where the runs end (11 of 12 cases recorded):
+Where the runs end:
 
-* **Stopped by the program's alarm, conserving** (3): examples/sanity-mistakes at line 16 after 7 ms (both
-  EXPECTED items pass: the 23 sanity findings exactly, alarm 320 at line 16), examples/pocket-islands-al6061 and
-  examples/batch-50 at their probe (alarm 379, M79 after a G31 that did not trigger: the probe's EXPECTED item
-  fails, the hot loop has no stylus model).
-* **The budget ran, conserving** (2): examples/blade-5axis-ti (8 of 113 s, safe, its three EXPECTED items pass:
-  no spindle overload, no overtravel on the UMC-750, no pass through B = 0) and examples/die-h13-ballnose (8 of
-  1155 s; the part slips three times in its holding and comes free before the first cut; its two "no finding"
-  items pass, the power and force items are not reached).
-* **A model error at the first cut or the set-up** (6): an energy imbalance of 3e-6 to 1.2e-5 at the entry of the
-  first cut (examples/thin-wall-al7075 after its holder turns 792 deg and the tool pulls out, two-setup-flip after
-  its part slips 38 mm in the vise, the no-probe variants of pocket-islands and batch-50; the terms are in each
-  record's fatal finding, the residual is about 0.1 % of the modes' work); thermal's NaN flank temperatures into
-  cutting's coefficient pipeline (drill-tap-plate-1045 at its first tool, 2.5 s); thermal's machine model at the
-  set-up of the EC-400 (ti-slot-throughtool: an axis entry of the machine file is a string, `axis.get`).
+* **Budget or the program's alarm, conserving** (7): sanity-mistakes (its alarm), pocket-islands and batch-50
+  (their probing done, no cut yet), lathe-shaft-4140 (no cut yet), blade-5axis-ti, die-h13-ballnose (its insert
+  slips before the first cut: no clamping of the zero-point plate, section 15) and drill-tap-plate-1045, whose
+  D6.8 blows up at its entry at 4.99 s (lateral vibration 38 um within 0.1 ms of the first contact, then forces of
+  10-30 kN: tool_breakage, white layer, edge chipping; the run conserves through it; bisection in section 15).
+* **The energy balance at the first cut's entry** (4): thin-wall-al7075, two-setup-flip and the no-probe variants
+  of pocket-islands and batch-50, with residuals of 1.0e-6 to 1.7e-5 of the interval's terms; each interval holds
+  the recut and packing loads (`friction_J` 0.02-1.05 J): cutting's recut impulse and the recut / packing work on
+  the deflection rates missing from `e_def` (section 15, items 1 and 2 of "Cuts went unstable at entry";
+  the pocket run balances with the recut frozen).
+* **Memory** (1): ti-slot-throughtool was killed by the 1.8 GB cap at its first contact (7.98 s), with T1 chipped
+  and "worn out" in its first 4 ms (wear's edge chipping at 829 N) and an 887 degC surface; not analysed further.
 
-No case reaches a second operation or part within its budget, so the regression does not show the transfers and
-carry-overs (tests/integration/test_loop_flip.py and test_loop_batch.py do, section 12). EXPECTED items over the
-11 recorded cases: 15 passed, 1 failed (pocket-islands' probe: alarm 379), 10 not reached (beyond the budget, or
-a band the run missed because it stopped at the cut's entry: thin-wall's peel power was 1.76 kW against 2-4 kW,
-batch-50's roughing power 4.6 kW against 9-15 kW, pocket-islands' trochoid power 13 W, each when its run
-stopped). The no-probe variant's "probe triggers without alarm" passes trivially: its probing section is cut.
+No case reaches a second operation or part within its budget; tests/integration/test_loop_flip.py and
+test_loop_batch.py run those transitions on small variants (section 12).
 
 ## 15. Open problems
 

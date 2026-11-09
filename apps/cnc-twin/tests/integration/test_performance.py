@@ -10,10 +10,9 @@ macro steps of motion, cutting, removal and dynamics, for
   cutting's coefficient pipeline every macro step, dynamics' default grids), rigid.
 
 Against the architecture's budget (section 20: hot loop <= 0.45 s/s) and the whole-run target (<= 1 CPU s per
-simulated s including L2). Both are missed: removal's tooth pass (engaged intervals and the envelope subtraction,
-once per tooth per revolution) alone costs about 33 us per L0 step (4-7 s/s), more than the rest of the loop
-together (docs/performance.md "Where the time goes"); the assertions are expected failures that turn into errors
-once they pass (strict). The regression bounds hold the measured costs within about 2 x (one core of the
+simulated s including L2). Both are missed: the loop costs 2.4-2.8 s/s in cut (removal's tooth pass 7-8 us per L0
+step, cut_step 2-7 us, docs/performance.md "Where the time goes") and the whole pocket run 1.4 s/s; the assertions
+are expected failures that turn into errors once they pass (strict). The regression bounds hold the measured costs within about 2 x (one core of the
 i5-4690, shared box, bin/tsafe nice 10: timings vary by +-30 % with the load)."""
 
 import time
@@ -105,8 +104,8 @@ def pocket_run(tmp_path_factory):
 
 def test_slot_cost_regression(slot_cost):
     assert slot_cost["in_cut_sim_s"] >= 0.3
-    assert slot_cost["us_per_l0"] < 90.0                 # 49-59 us measured (2026-11-09, load 3-6; 80 us before)
-    assert slot_cost["macro_s_per_s"] < 11.0             # 6.2-7.4 s/s measured (10.0 before)
+    assert slot_cost["us_per_l0"] < 90.0                 # 21 us measured (2026-11-09; 49-59 us before section 10)
+    assert slot_cost["macro_s_per_s"] < 11.0             # 2.6 s/s measured (6.2-7.4 before)
     # the wrapper (kernel_inputs, absorb) and the L2 domains stay a small share of a cutting step
     assert slot_cost["hot_s_per_s"] < 1.25 * slot_cost["macro_s_per_s"]
 
@@ -120,28 +119,27 @@ def test_slot_dynamics_cost_regression(slot_dynamics_cost, slot_cost):
 
 def test_pocket_cost_regression(pocket_cost):
     assert pocket_cost["in_cut_sim_s"] >= 0.29
-    assert pocket_cost["us_per_l0"] < 80.0               # 39-45 us measured (71 us before)
+    assert pocket_cost["us_per_l0"] < 80.0               # 12 us measured (39-45 us before section 10)
 
 
 def test_pocket_run_regression(pocket_run):
     assert pocket_run["finished"]
-    assert pocket_run["run_s_per_s"] < 7.5               # 3.9-4.7 s/s measured: whole run (6.5 s, 0.8 s in cut)
-    # L2 1.9-2.2 s/s measured, of which removal's connectivity check (find_bodies every few macro steps on the
-    # pocket's 0.075 mm field: 67 ms per call) is 1.7-1.9 s/s and cutting's coefficient pipeline 0.16 s/s
-    # (docs/performance.md)
+    assert pocket_run["run_s_per_s"] < 7.5               # 1.4 s/s measured: whole run (6.5 s, 0.8 s in cut)
+    # L2 0.17 s/s measured: cutting's coefficient pipeline 0.14 s/s, removal's incremental connectivity check
+    # 0.02 s/s (1.7-1.9 s/s before docs/performance.md section 10)
     assert pocket_run["run_l2_s_per_s"] < 3.5
 
 
-@pytest.mark.xfail(strict=True, reason="0.45 s/s hot-loop budget not met: 7.6-9.0 s/s for the slot and 9.7-11.2 "
-                                       "s/s for the pocket's helical entry (driver step in cut, 2026-11-09), of which "
-                                       "removal's tooth pass is 33-37 us per L0 step = 4-7.5 s/s (docs/performance.md)")
+@pytest.mark.xfail(strict=True, reason="0.45 s/s hot-loop budget not met: 3.4 s/s for the slot and 4.4 s/s for the "
+                                       "pocket's helical entry (driver step in cut, 2026-11-09; run_macro 2.6 / 2.4 s/s, "
+                                       "removal's tooth pass 8.3 / 7.3 us per L0 step: docs/performance.md)")
 def test_budget(slot_cost, pocket_cost):
     assert slot_cost["step_s_per_s"] <= BUDGET_S_PER_S
     assert pocket_cost["step_s_per_s"] <= BUDGET_S_PER_S
 
 
-@pytest.mark.xfail(strict=True, reason="whole pocket helical-entry run including L2 at 3.9-4.7 s/s (2026-11-09), "
-                                       "above the 1 s/s target: removal's tooth pass in cut and its connectivity check "
-                                       "at L2 (docs/performance.md)")
+@pytest.mark.xfail(strict=True, reason="whole pocket helical-entry run including L2 at 1.4 s/s (2026-11-09), above "
+                                       "the 1 s/s target: the hot loop 0.8 s/s, the driver step around it 0.5 s/s "
+                                       "(docs/performance.md)")
 def test_whole_run_target(pocket_run):
     assert pocket_run["run_s_per_s"] <= WHOLE_RUN_TARGET_S_PER_S

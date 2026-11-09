@@ -450,8 +450,8 @@ over the runs on this shared box, load average 4 to 8):
 
 | what | measured | target |
 |---|---|---|
-| engaged intervals, 40 stations (20 peripheral over ap 10 mm, 20 end-edge), D10 side milling, 3629 samples | 184 - 197 us per call | 120 us |
-| one tooth-pass subtraction, D10 end mill, ae 1 mm, ap 10 mm, f_z 50 um, 0.25 mm lattice (641 rays changed) | 100 - 110 us | 200 us |
+| engaged intervals, 40 stations (20 peripheral over ap 10 mm, 20 end-edge), D10 side milling, 3629 samples | 162 - 167 us per call (200 with the former kernels in the same hour; 184 - 197 noted before) | 120 us |
+| one tooth-pass subtraction, D10 end mill, ae 1 mm, ap 10 mm, f_z 50 um, 0.25 mm lattice (641 rays changed) | 90 - 93 us (108 with the former kernels in the same hour; 100 - 110 noted before) | 200 us |
 | polar L0 step (one 0.5 deg bin), CNMG-like insert, ap 2 mm, f 0.2 mm/rev, dz 25 um (about 20 radial + 16 axial rays changed, 36 block bounds) | 3.1 - 3.9 us | 2 us |
 | memory, 300 x 200 x 100 mm block at 0.25 mm (1 769 612 rays) | 129.7 MB (+ 28 MB for a one-segment target), built in 2.6 - 3.2 s | 300 MB |
 
@@ -468,6 +468,10 @@ Other kernels (compiled callers unless noted):
 | `collide_envelope` | tool cutting, shank clear | 0.29 us |
 | `collide_envelope` | shank 3 mm into material | 314 us |
 | `sweep_contact` | 8 x 32 stylus samples (from Python) | 3.4 ms |
+| `tooth_pass` in the hot loop | the slot (D10 4FL, lattice 0.1 mm) / the pocket's helical entry (D10 3FL, 0.075 mm): gating + subtraction | 1.51 / 2.45 ms per pass (0.78 + 0.73 / 0.46 + 1.98; 5.37 / 10.83 ms before 2026-11-09): 8.3 / 7.3 us per L0 step |
+| `engaged_intervals` | the slot's 119 stations before a tooth pass (49 sampled, 7700 samples: 4700 air above their columns, 2600 classified, 85 boundaries refined) | 0.7 - 0.8 ms (2.6 ms before) |
+| `local_connected` | the pocket's field after one macro step (27 - 32 k of its 1.4 M z columns) | 0.7 - 1.0 ms |
+| `find_bodies` | the pocket's field (100 x 80 x 30 mm at 0.075 mm) | 67 - 69 ms |
 | `label_z` | 300 x 200 x 100 mm at 0.25 mm | 31 ms |
 | `excess_material` | 300 x 200 x 100 mm at 0.25 mm | 9.2 ms |
 | `mesh.mesh_bricks` | 18 surface bricks (about 0.3 ms per brick) | 5.7 ms |
@@ -485,10 +489,16 @@ How the hot kernels reach these costs (and why the gating and polar targets are 
   otherwise pay an atomic incref / decref per array argument and call (measured: envelope intervals of
   one ray 274 ns with, 30 ns without; subtraction 510 -> 108 us; gating 2957 -> 192 us). Numba refuses an
   allocation in such a function, so the property is checked at compile time.
-* Gating: about 3600 samples per call; samples in empty bricks or beyond the lattice cost about 10 ns,
-  classified samples 60 to 190 ns (four rays per family, all three families near boundaries). Reaching
-  120 us needs fewer classifications per sample (a per-station cache of the axis family's rays) or a
-  coarser default sample spacing (`gate_sample_cells`, with the undetected depth of section 5).
+* Gating: about 3600 samples per call; samples in empty bricks or beyond the lattice cost about 15 ns, a sample
+  of a horizontal circle shown to be air above its z columns about 15 ns, classified samples about 50 ns (the
+  axis family decides, or is valid with zero spread) to 120 ns (near a boundary: the other families followed
+  while they can still be chosen); a refined boundary about 2 us (the Illinois iterations, each a sine, a cosine
+  and an interpolation). Reaching 120 us needs fewer classifications (a cache across the stations of one circle)
+  or a coarser default sample spacing (`gate_sample_cells`, with the undetected depth of section 5).
+* Subtraction in the hot loop (docs/performance.md section 10): per ray only the slabs that can reach its
+  material, the columns already cut to the envelope's bottom outside the per-axis box or left without a write,
+  one-segment trims in place, the booking batched and per brick; what remains is one quadratic (or the cylinder
+  test) per changed ray and its write and booking: ~4400 rays per pass in the slot, ~15 000 in the pocket.
 * Polar: about 26 000 instructions per step for the rays the insert actually changes (radial rows at the
   nose and leading edge, axial rays across ap), the block bounds behind the nose and the axial rays'
   chain evaluation; the per-step overhead is 0.06 us and air steps 0.15 us.

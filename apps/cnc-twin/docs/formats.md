@@ -869,3 +869,259 @@ dtypes}`) in that order. Parquet: zstd, no dictionary encoding, statistics, non-
 version: 1, table}`. CSV: UTF-8, one header row, `\n`, floats as their shortest round-trip text, NaN as an empty
 cell. `manifest.json` (`cnctwin-dataset`, version 1): `cnctwin, formats, runs, blocks, files, sources [{run_dir,
 run_id, sweep, point, cache_key, build}], skipped [{source, point, reason}], builds, notes`.
+
+## Format index
+
+Every file the simulator reads or writes, with its format name, version and migration rule. "Header" means
+the file carries `format` and `version` (Parquet parts and dataset tables carry them in their key-value
+metadata); files marked *no header* are identified by their name and place. The rules are in
+[Migration rules](#migration-rules) below.
+
+| file | format | version | written / read by | migration rule | documented in |
+|---|---|---|---|---|---|
+| `db/<kind>/**/*.yaml` | `cnctwin-material`, `-tool`, `-tool-material`, `-coating`, `-holder`, `-machine`, `-coolant`, `-workholding`, `-controller`, `-model-params`, `-bibliography` | 1 | authors / `cnctwin.db` | database | "Databases" |
+| `validation/cases/<quantity>/<id>.yaml` | `cnctwin-validation-case` | 1 | authors / `cnctwin.db`, `cnctwin.validation` | database | "Databases", "Validation files" |
+| `validation/budgets.yaml` | `cnctwin-validation-budgets` | 1 | authors / `cnctwin.validation.budgets` | read as written | "Validation files" |
+| `validation/results/<quantity>.json` | `cnctwin-validation-results` | 1 | `twin validate` / `cnctwin.docs_tools` | regenerated | "Validation files" |
+| `project.yaml` | `cnctwin-project` | 1 (0 migrated) | authors, `twin new`, sweeps, uncertainty, calibration / `cnctwin.project` | project | "Project file" |
+| tool library `*.csv`, ISO 13399 `*.p21`/`.stp`/`.step` | CSV, ISO 10303-21 | - | authors / `cnctwin.project` | read as written | "Tool libraries" |
+| NC programs (`.nc`, `.mpf`, `.spf`, `.h`, `.i` ...) | the control's language | - | authors / `cnctwin.controller` | read as written | docs/dialects.md |
+| CAD, stock mesh (`.step`/`.stp` AP242 with PMI, `.stl`, `.3mf`, `.obj`) | standard | - | authors / `cnctwin.geom` | read as written | docs/models/geom.md |
+| CAD import hand-off `<name>.json` + `<name>.npz` | `cnctwin-cad-model` | 1 | `cnctwin.geom.cad.CadModel.save` / `.load` | regenerated | "Inputs and caches" |
+| sweep spec `*.yaml` | `cnctwin-sweep` | 1 | authors / `cnctwin.sweep.spec` | exact version | "Sweep" |
+| `run.json` | `cnctwin-run` | 1 | the loop / API, report, UI, cache, dataset | run directory | "Run directory" |
+| `status.json` | `cnctwin-run-status` | 1 | `twin run`, the API manager and worker / API, UI | run directory | "Run directory" |
+| `findings.json` | `cnctwin-findings` | 1 | the loop / everyone | run directory | "Run directory", "Results of a run" |
+| `trace.jsonl` | *no header* (one TraceEvent per line) | - | the loop / API, `twin explain` | run directory | "Results of a run" |
+| `channels.json` | `cnctwin-channels` | 1 | the recorder / API, UI, report | run directory | "Run directory" |
+| `timeline.json` | `cnctwin-timeline` | 1 | the loop / production, report, UI, dataset | run directory | "Run directory" |
+| `series/<tier>/part-<n>.parquet`, `replay-*.parquet` | `cnctwin-series` (Parquet metadata `cnctwin`) | 1 | the recorder / API, export, dataset | run directory | "Run directory" |
+| `series/index.jsonl` | *no header* | - | the recorder | run directory | "Run directory" |
+| `scene.json`, `scene/*.glb` | `cnctwin-scene`, glTF 2.0 | 1 | the loop / UI, render | run directory | "Run directory" |
+| `frames.bin` (header in `scene.json["frames"]`) | `cnctwin-frames` | 1 | the loop / UI, render, calibration | run directory | "frames.bin" |
+| `keyframes/kf_<k>.glb`, `kf_<k>.npz`, `chips/kf_<k>.npz`, `keyframes/attr/*.npz` | glTF 2.0 with `BRK1` records, NumPy npz | - | the loop / UI, render, report | run directory | "Keyframes" |
+| `keyframes/bricks.idx` | `cnctwin-bricks-index` | 1 | the loop / UI, API | run directory | "Keyframes" |
+| `keyframes/index.jsonl` | *no header* | - | the loop / API, UI | run directory | "Keyframes" |
+| `checkpoints/ck_<tick>.json` + `.npz` | `cnctwin-checkpoint` | 1 | the loop / resume, replay | checkpoint | "Run directory" |
+| `inspection.json` | `cnctwin-inspection` | 1 | inspect / report, UI, dataset, uncertainty | run directory | docs/models/inspect.md 16 |
+| `surface.json` | `cnctwin-surface` | 1 | surface / report, UI, dataset | run directory | docs/models/surface.md 11 |
+| `tools.json` | *no header* (`{tools, estimated}`) | - | wear / report, UI, dataset, production | run directory | "Results of a run" |
+| `production.json` | `cnctwin-production` | 1 | production / report, UI, dataset | run directory | docs/models/production.md 9 |
+| `sld/T<n>.json` | `cnctwin-sld` | 1 | dynamics / report, UI | run directory | docs/models/dynamics.md 5.4 |
+| `part_<op>.glb`, `.stl`, `.3mf`, `part_<op>_unload.stl` | glTF 2.0, STL, 3MF | - | inspect / UI, next operation | run directory | docs/models/inspect.md |
+| `render.json`, `images/*.png`, `video.mp4` | `cnctwin-render`, PNG, MP4 | 1 | render / report, UI | run directory | docs/models/render.md, docs/outputs.md |
+| `audio.wav`, `audio.json` | WAV, `cnctwin-audio` | 1 | sound / report, UI | run directory | docs/models/sound.md |
+| `report.html`, `report.pdf`, `setup_sheet.html`, `setup_sheet.pdf` | HTML, PDF | - | report / people | regenerated | docs/report.md |
+| `uncertainty.json`, `uncertainty/study.json`, `uncertainty/uncertainty.html` (attached study) | `cnctwin-uncertainty-summary`, `cnctwin-uncertainty` | 1 | uncertainty / report, UI | regenerated | "Uncertainty study files" |
+| `check.json` (`twin check --out`) | `cnctwin-check` | 1 | `twin check` / API, UI | regenerated | "Studies around runs" |
+| `compare.json`, `compare.html` | `cnctwin-compare` | 1 | `twin compare` / API, UI | regenerated | docs/report.md 8 |
+| bench `spec.json`, `result.json`, `log.txt` | `cnctwin-bench` (result) | 1 | `twin bench` | regenerated | "Studies around runs" |
+| `DATA_DIR/cache/index.jsonl` | `cnctwin-cache-index` (first line) | 1 | `cnctwin.cache` | cache index | "Run cache" |
+| cache key components (`twin cache key --json`) | `cnctwin-cache-key` | 1 | `cnctwin.cache` | regenerated | "Studies around runs" |
+| sweep folder: `sweep.json`, `plan.json`, `points/p<n>/result.json`, `status.json`, `summary.json` | `cnctwin-sweep-run`, `-sweep-plan`, `-sweep-point`, `-sweep-status`, `-sweep-summary` | 1 | `cnctwin.sweep` | sweep folder | "Sweep" |
+| sweep point process: `job.json`; `progress.json`, `outcome.json`, `.generated-<name>.json` | `cnctwin-sweep-job`; *no header* | 1 | `cnctwin.sweep` | sweep folder | "Sweep point files" |
+| dataset `runs.*`, `blocks.*`, `schema.json`, `manifest.json` | `cnctwin-dataset-table`, `cnctwin-dataset-schema`, `cnctwin-dataset` | 1 | `twin dataset` / training code | regenerated | "Dataset" |
+| uncertainty study folder: `plan.json`, `variants/v<n>/project.yaml`, `variants/v<n>/result.json`, `study.json` | `cnctwin-uncertainty-plan`, `cnctwin-project`, *no header*, `cnctwin-uncertainty` | 1 | `cnctwin.uncertainty` | study folder | "Uncertainty study files" |
+| machine data: MTConnect streams, OPC UA servers and exports, FOCAS logs, CSV | MTConnect XML, `cnctwin-opcua-history`, `cnctwin-focas-log`, CSV | 1 | machines, collectors / `cnctwin.mdata` | read as written | "Machine data and calibration" |
+| `machine_log.json` + `machine_log.parquet` | `cnctwin-machine-log` | 1 | `cnctwin.mdata` | regenerated | "Machine data and calibration" |
+| `alignment.json` | *no header* | - | calibrate | regenerated | "Machine data and calibration" |
+| `calibration.yaml` (the overlay) | `cnctwin-calibration` | 1 | calibrate / `cnctwin.mdata.overlay` | calibration overlay | "Machine data and calibration" |
+| `calibration.json`, `overlay.json` | `cnctwin-calibration-result`, `cnctwin-calibration-overlay` | 1 | calibrate / UI, report | regenerated | "Machine data and calibration" |
+| `project.calibrated.yaml` | `cnctwin-project` | 1 | calibrate / the loop | project | "Machine data and calibration" |
+| `DATA_DIR/jobs/<id>/job.json`, `worker.json` | `cnctwin-job`, `cnctwin-worker` | 1 | the API manager and worker | job files | "API data folder" |
+| `DATA_DIR/jobs/<id>/result.json`, `cancel`, `log.txt`, `out/` | *no header* | - | the API worker | job files | "API data folder" |
+| `docs/approximations.md`, `docs/doc-gaps.md` | Markdown | - | `python -m cnctwin.docs_tools` / report, people | regenerated | cnctwin/docs_tools.py |
+
+Formats returned by functions but not written to a file: `cnctwin-outputs` (the summary
+`cnctwin.core.outputs.finalize_outputs` returns; the files are recorded in run.json `generators` and
+`outputs`) and `cnctwin-overlay` (the measured-against-simulated document `cnctwin.mdata.align.overlay`
+returns; the calibrate job writes `overlay.json` as `cnctwin-calibration-overlay` instead).
+
+## Migration rules
+
+What each loader does with a file whose version is not the current one. The current version of every format
+in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSION`,
+`cnctwin.project.CURRENT_VERSION`).
+
+| rule | applies to | what happens |
+|---|---|---|
+| database | every `db/` file and validation case | `version` must be 1: 0, a newer number or a missing one is a `migration` problem ("version ... is not supported (current 1)") and the file is not loaded. Older **key forms** are renamed at load by the migration table ("Migration table" above), independently of the version; each rename is listed by `twin db check --migrations`; a value that cannot be migrated mechanically goes to `notes` with a warning |
+| project | `project.yaml`, `project.calibrated.yaml`, sweep and uncertainty variants | version 0 (no `version`: the flat layout) is migrated forward by `cnctwin.project.migrate` (line numbers kept); a version newer than this build is refused (InputError). Database references inside follow the database rule |
+| exact version | sweep spec | `version` must be 1 (a missing `version` reads as 1); any other number is an InputError |
+| calibration overlay | `calibration.yaml` | a version newer than 1 is refused (InputError "newer than this build reads"); a missing version reads as current |
+| checkpoint | `checkpoints/ck_<tick>.json` + `.npz` | a version newer than 1 is refused (CheckpointError); so is a checkpoint whose `project_hash` or `build` differs from the run's: a continuation under other inputs or other code could not be bit-identical, so the run starts again instead |
+| run directory | every file of a run directory except checkpoints | not migrated: a run directory is the result of the build named in run.json `versions.build`. Readers (API, UI, report, dataset) accept the version 1 layouts and the older list forms docs/api.md "Run directory as read by the API" names, ignore keys they do not know and report a missing file as not recorded; the run cache never reuses a run of another build (its key holds the build), so a run of an older build is simulated again rather than converted |
+| cache index | `DATA_DIR/cache/index.jsonl` | the first line names the format and version; readers replay `put`, `hit` and `drop` lines and skip every other line (a torn or unknown line too); no version check (version 1 is the only one); `twin cache compact` rewrites it in the current form |
+| sweep folder, study folder | sweep folders, uncertainty study folders | not migrated: a point or sample is reused only when its key (sweep: the run cache key; study: the variant project's sha256 in `result.json`) matches, so files of another build or another spec are recomputed, never converted |
+| job files | `DATA_DIR/jobs/<id>/` | read back by a restarted server; unknown keys are ignored (`Job.from_record` keeps the declared fields); no version check |
+| regenerated | results, studies, dataset files, generated docs | outputs of a command: never read back for migration; run the command again with the current build |
+| read as written | inputs in foreign or free formats | no version; parsed by their own grammar (NC programs by the dialect, CSV by its header, ISO 10303-21 by `parse_p21`, MTConnect by its schema version) |
+
+## Validation files
+
+(owner: `cnctwin/validation`; guide: docs/validation.md)
+
+* **Cases** `validation/cases/<quantity>/<id>.yaml` (`cnctwin-validation-case`, version 1, template
+  `db/_templates/validation_case.yaml`): loaded and checked with the databases (`twin db check` checks them
+  too; `--validation DIR` names another case root). `reference {src, location, digitised, uncertainty_pct,
+  measured}`, `setup` (free-form; unstated inputs `{value, assumed: true, note}`), `reference_values [{name,
+  value, unit, uncertainty}]`, `reference_curves [{name, x_name, x_unit, y_name, y_unit, points}]`, `notes`.
+  `GAP.md` files in a case folder are notes for authors, not cases.
+* **Budgets** `validation/budgets.yaml` (`cnctwin-validation-budgets`, version 1): `budgets: {<quantity>:
+  {metric, budget_pct: {value, src, note} | components: {<name>: {value, src, note}}, evidence: [{src, page,
+  kind, statement, ...}]}}`; the budget rule is in the header comment and `cnctwin.validation.budgets` holds its
+  two numbers as constants (a test checks the header still states them). Read as written.
+* **Results** `validation/results/<quantity>.json` (`cnctwin-validation-results`, version 1), written by
+  `twin validate` (all cases, or `--quantity`): `quantity`, `harness`, `budget {pct, components, metric,
+  note, src}`, `rule`, `verdict`, `verdict_reason`, `independent` and `calibration_dependent` statistics
+  (`cases`, `passing`, `compared`, `values`, `no_prediction`, `median_abs_rel`, `p90_abs_rel`, `class_matches`,
+  `class_values`, `within_uncertainty`, `worst_case`, `worst_miss_ratio`), and `cases [...]` (per case: id,
+  file, src, location, measured, digitised, `model_chain`, settings, assumed inputs, provenance, values and
+  curves with their errors). JSON with sorted keys, floats to 6 significant digits, no time stamps.
+  docs/approximations.md reads the `independent` statistics.
+
+## Machine data and calibration
+
+(owner: `cnctwin/mdata`; guide: docs/models/calibration.md)
+
+* **Machine data spec** (the project's `machine_data` section, the API's `machine_data`, `twin calibrate --data`):
+  `{kind: mtconnect | opcua | focas | csv | log, path | paths, mapping: {<channel>: "<source> [unit]"}, start,
+  end}` (the project schema accepts the first four kinds).
+* **Inputs**: MTConnect Streams documents or an agent URL; an OPC UA server (`opc.tcp://`) or its offline export
+  (`cnctwin-opcua-history`, version 1: `{server, nodes: [{channel, node_id, unit, values: [[time, value,
+  status]]}]}`, or a long CSV `node_id, time, value, status`); FANUC FOCAS collector logs (CSV, JSON Lines, a
+  bare list, or `cnctwin-focas-log` version 1 `{records: [...]}`); a generic CSV with a column mapping. Times
+  are ISO 8601 (no zone: UTC, recorded in the log's meta) or numeric with the unit the mapping gives.
+* **`machine_log.json`** (`cnctwin-machine-log`, version 1: `source`, `epoch`, channels with canonical names and
+  SI units, events, meta) with **`machine_log.parquet`** (long table `channel, t_s, value, text`, zstd); the same
+  log gives the same bytes. `MachineLog.load` checks the format name.
+* **`alignment.json`** (*no header*): the alignment the calibration used (`offset_s`, `scale`, `method`,
+  quality), `Alignment.to_dict()`.
+* **`calibration.yaml`** (`cnctwin-calibration`, version 1, the overlay): `name`, `machine`, `material`, `inputs`
+  (machine data source, run id and run.json sha256, project sha256), `alignment`, `set` (target path -> `{value,
+  parameter, ci}`, the value in the unit of the path's last key), `parameters` (prior, value, interval, flags,
+  written or why not), `fit`, optional `notes`. Target paths: `machine.<key>[<selector>]...`, `material...`,
+  `tools[<T number>[@<path>]].<key>`, `models.<model>.<parameter SI name>`, `factors.<name>[<key>]`; a selector is
+  an index, `key=value[,key=value]` (creates the item when none matches) or a bare id. Applied values become
+  `{value, src: est, note: "calibrated (<name>) ..."}`.
+* **`calibration.json`** (`cnctwin-calibration-result`, version 1): every target with its parameters, intervals,
+  correlations, confounded pairs and metrics before and after; **`overlay.json`** (`cnctwin-calibration-overlay`,
+  version 1): `time_base: simulation`, the alignment and the measured, simulated and calibrated series of every
+  observation set (M4-reduced) with error metrics.
+* **`project.calibrated.yaml`** (`cnctwin-project`, version 1): the project with the overlay applied through
+  inline `extends` objects and absolute paths, so it runs with the ordinary loader. `project.yaml` itself has no
+  key that includes an overlay in this build.
+
+## Uncertainty study files
+
+(owner: `cnctwin/uncertainty`; guide: docs/models/uncertainty.md)
+
+* Study folder: **`plan.json`** (`cnctwin-uncertainty-plan`, version 1: settings, factors with their
+  distributions, every sample's draws and values, the variant files), **`variants/v<nnnn>/project.yaml`**
+  (`cnctwin-project`), `variants/v<nnnn>/run/` (a run directory), **`variants/v<nnnn>/result.json`** (*no header*:
+  `{project_sha256, result}`, read back to resume), **`study.json`** (`cnctwin-uncertainty`, version 1; fields in
+  docs/models/uncertainty.md section 10; sorted keys, no NaN, variant paths relative to the folder) and
+  `uncertainty.html`.
+* Attached to a run (`--run`, the API): `RUN_DIR/uncertainty/study.json`, `RUN_DIR/uncertainty/uncertainty.html` and
+  `RUN_DIR/uncertainty.json` (`cnctwin-uncertainty-summary`, version 1: `study` and `page` (the two paths),
+  `project {name, sha256}`, `settings`, `factors`, `options_only`, `results` (samples ok and failed, verdict,
+  dimensions without their samples, the top of each sensitivity ranking ...)), read by the report's Uncertainty
+  section and the UI.
+
+## Results of a run
+
+(owners: the domains named; the run directory layout is above)
+
+* **`trace.jsonl`**: one JSON object per line, `{id, time_s, tick, domain, event, quantities, parents, line}`
+  (`cnctwin.core.trace.TraceEvent`); `id` equals the line number (from 0); `parents` are earlier ids; a finding's
+  `cause_chain` lists ids from the finding back to its root causes. Truncated to the checkpoint's byte length
+  at a resume.
+* **Findings** (`findings.json`): `{findings: [{id, category, severity, message, time_s, tick, domain, op, program,
+  line, block, pos_W_m, pos_M_m, quantities, cause_chain}]}`; categories in `cnctwin/core/findings.py`, severities
+  info, warning, error, fatal; the verdict is safe when none is error or fatal.
+* **`tools.json`** (*no header*, written by the wear domain's `finalize`): `{tools: [{slot, number, tool_id,
+  holder_id, tool_material, coating, VB_m (per tooth), VB_max_m, VB_limit_m, KT_max_m, notch_max_m,
+  edge_radius_max_m, coating_min_m, chipped_elements, chip_events, coating_spalls, bue_breakoffs,
+  thermal_damage_max, comb_crack_depth_max_m, section_fatigue, broken, broken_tick, broken_cause,
+  broken_section, expired, life_cause, expired_tick, life_used_fraction, remaining_life_s, replacement_time_s,
+  remaining_cause, cut_time_s, in_cut_total_s, cutting_distance_m, cut_path_m, uses, parts, max_edge_temp_K,
+  max_section_stress_Pa, above_service_temperature_s, max_failure_probability, Ra_m, dimensional_drift_m,
+  criteria {values, limits}, wear_offsets_m, law, per_part [...], life_used_part_fraction}], estimated: [...]}`.
+* **`inspection.json`**, **`surface.json`**, **`production.json`**, **`sld/T<n>.json`**: their model docs (index
+  above); without a CAD the loop writes an `inspection.json` with empty lists and a note.
+* **Derived outputs** (docs/outputs.md): `render.json` (`cnctwin-render`: what each picture and the video show),
+  `audio.json` (`cnctwin-audio`: file, sample rate, samples, duration, bits, calibration (full scale in Pa),
+  listener, levels), the report and setup sheet (HTML and PDF with
+  fixed metadata), each registered in run.json `outputs` with its sha256 and the generator's status in
+  `generators`.
+
+## Studies around runs
+
+* **`check.json`** (`cnctwin-check`, version 1; in `twin check --out`, default `<project>/.twin-check/`): `project`,
+  `project_file`, `ok`, `errors`, `warnings`, `operations [{op, dry_run_cycle_time_s, planner_cycle_time_s,
+  feed_time_s, commands, strides, lattice, sanity, estimated_cpu_s, estimated_cpu_s_per_s, fast_all_bytes,
+  stopped}]`, `resolved` (the `physics.resolved` block), `written` (whether `--write` stored it), `cycle_time_s`,
+  `planner_cycle_time_s`, `estimated_cpu_s`, `parts`, `fast_columns`, `summary`, `exit_code`.
+* **`compare.json`** (`cnctwin-compare`, version 1) with `compare.html`: docs/report.md section 8.
+* **Benchmarks** (`twin bench`, in `--work` or a temporary folder per run): `spec.json` (the request), `result.json`
+  (`cnctwin-bench`, version 1: `example, project, engine, status, error, simulated_s, wall_s, cpu_s,
+  cpu_per_sim, peak_rss_bytes, max_sim_s, levels` ...) and
+  `log.txt`; the summary goes into docs/performance.md unless `--no-doc`.
+* **Cache key** (`twin cache key --json`): the components whose canonical JSON (sorted keys, no spaces) is hashed
+  to the key: `{format: cnctwin-cache-key, version: 1, project_hash, databases, physics, options, runner, build,
+  libraries, platform, environment}`.
+
+## Sweep point files
+
+A point run in its own process (`isolation: process`) leaves in `points/p<nnnnn>/`: `job.json`
+(`cnctwin-sweep-job`, version 1: `index, project, options, runner, cache_root, cache_max_bytes,
+cache_max_age_s, runs_dir, no_cache, verify, key, watch_stdin, memory_mode, memory_bytes`), `progress.json` (*no header*:
+`sim_time_s, est_total_s, op, phase, wall_s`, at most every 0.5 s), `outcome.json` (*no header*: `{status,
+outcome, error}`) and `log.txt`; a generator parameter leaves `.generated-<name>.json` (`request_sha256` and the
+generator's output). The scratch files are removed when the point is done; `result.json` (`cnctwin-sweep-point`)
+stays.
+
+## API data folder
+
+(owner: `cnctwin/api`; guide: docs/api.md)
+
+```
+DATA_DIR/.api.lock              flock: one server per DATA_DIR
+DATA_DIR/projects/<id>/         uploaded projects (project.yaml at the top)
+DATA_DIR/runs/<run_id>/         run directories; run ids <nnnnn>-<project id> (the CLI adds the 8-digit hash)
+DATA_DIR/jobs/<job_id>/         job.json (cnctwin-job), worker.json (cnctwin-worker), cancel (empty marker),
+                                log.txt, result.json (the entry point's return value, no header), out/
+DATA_DIR/sweeps/<name>/         sweep folders of twin sweep (the API's sweeps are job output folders)
+DATA_DIR/cache/                 the run cache (index.jsonl, runs/, locks/)
+DATA_DIR/tmp/                   uploads and exports in progress
+```
+
+`job.json`: `{id, seq, kind, pool, entry, request, state, run_id, project_id, key, created_s, started_s,
+finished_s, pid, pgid, worker_pid, returncode, error, progress, cancel_requested_s, term_sent_s, kill_sent_s,
+memory_mode, memory_bytes, attempt, prior_wall_s, has_result}`; `worker.json`: `{pid, state, final, progress,
+error, result, wall_s}`, written before the worker's last status.json. A simulation job's run directory gets
+`status.json` (`cnctwin-run-status`) from the manager while queued and from the worker while it runs.
+
+## Inputs and caches
+
+* **CAD import hand-off**: the STEP import runs in its own process and returns a `CadModel` as
+  `<name>.npz` (vertices, faces, face groups) and `<name>.json` (`cnctwin-cad-model`, version 1: faces with their
+  analytic surfaces in SI, features, PMI in the project file's own form); `CadModel.load` checks the format name.
+  Regenerated from the STEP file.
+* **Numba cache** (`.numba-cache/<key>/`, `NUMBA_CACHE_DIR`): Numba's own files, in a folder keyed by the kernel
+  sources, the numba/llvmlite versions and the CPU (docs/determinism.md); never migrated, a new key compiles
+  again.
+
+## Scratch, lock and reference files
+
+Files that are not results: none is read back for migration.
+
+* In a run directory: `.outputs.lock` (held while the derived outputs are made) and `.outputs-hashes.json` (the
+  hash cache that spares re-reading unchanged series and frames); dot files are left out of the result set and of
+  run.json `outputs`. `estimates.json` is an older form of run.json's `estimates` the report still reads when
+  run.json has none.
+* Temporary work folders: each output generator's `settings.json` and `result.json` (the subprocess's request and
+  answer, cnctwin.core.outputs), a sweep generator's `request.json` and `response.json` in its scratch copy of
+  the project folder.
+* `docs/openapi.json`: the OpenAPI document of the HTTP API (format OpenAPI 3, from the app by
+  `python -m cnctwin.api.openapi`; a test fails when it is stale), served at `/api/openapi.json`.

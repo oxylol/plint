@@ -14,11 +14,14 @@ the helical entry of its D10 3FL roughing end mill, 12000 rpm, lattice 0.075 mm,
 stated, and the slot with the VF-2SS machine's modes (4 tool / machine modes and 4 workpiece modes, 119 stations).
 
 **Status.** Met: cut_step <= 3 us per L0 step for the pocket's helical entry (2.8 us); L1 (0.03 s/s); the
-end-of-operation stability analysis and the quantised, cached coefficient pipeline (L2). Missed: cut_step for the
-slot (8.3 us, from 16.9); dynamics <= 1 us per L0 step for 8 modes (3.5 us in the slot's loop, from 7.6; 1.8 us in
-dynamics' harness with the same shape); the 0.45 s/s hot-loop budget (6-9 s/s in cut, from 10-15) and the 1 s/s
-whole-run target (3.9-4.7 s/s, from 6.6): removal's tooth pass alone is 4-7.5 s/s in cut and its connectivity
-check 1.7-1.9 s/s at L2 (section 9).
+end-of-operation stability analysis and the quantised, cached coefficient pipeline (L2); removal's tooth pass
+<= 8 us per L0 step for the pocket (7.3 us, from 32.5), removal's connectivity check <= 0.1 s/s (0.02 s/s in the
+whole pocket run, from 1.7-1.9) and motion's FK <= 1.5 us per L0 step (two calls of 0.49 us, from 1.8 us each)
+(section 10). Missed: cut_step for the slot (8.3 us, from 16.9); dynamics <= 1 us per L0 step for 8 modes (3.5 us
+in the slot's loop, from 7.6; 1.8 us in dynamics' harness with the same shape); removal's tooth pass for the slot
+(8.3 us per L0 step, from 29.4; plus 2.1 us of engaged-interval refreshes without a pass, from 4.1); the 0.45 s/s
+hot-loop budget (2.6-2.8 s/s in cut for the slot, 2.5 s/s for the pocket, from 6-9) and the 1 s/s whole-run target
+(1.43 s/s, from 4.41; section 9).
 
 ## 1. Where the time goes (per L0 step in cut)
 
@@ -26,27 +29,34 @@ Instrumented copy of `run_macro` (time-stamp counter around each section of `con
 part of the package); removal's tooth pass split into its gating (`engaged_intervals`, contact geometry, sector
 box) and the envelope subtraction.
 
-| section | slot before | slot now | pocket before | pocket now | owner |
-|---|---|---|---|---|---|
-| removal tooth passes (`do_pass` -> `tooth_pass`) | 31.7 | 33.5 | 34.7 | 37.3 | removal |
-| slab generation instants and pass test (`tooth_events` without the passes) | 13.8 | 0.2 | 12.2 | 0.1 | hot loop |
-| engaged-interval refresh without a pass (`regate`) | 2.3 | 5.2 (2.4 at a load of 3) | 0.0 | 0.0 | removal (call: hot loop) |
-| `cut_step` | 16.9 | 8.3 | 8.5 | 2.8 | cutting |
-| pose: Hermite angles, axis interpolation, FK x 2, StepPose | 11.3 | 4.4 | 9.8 | 4.5 | motion FK, hot loop |
-| refill planes (`refill_planes` + removal's `surface_plane`) | 9.5 | 4.4 | 4.1 | 0.9 | hot loop, removal |
-| `clear_planes`, headroom, ring, scalars | 0.8 | 0.07 | 0.7 | 0.04 | hot loop |
-| **run_macro per L0 step** (instrumented) | **87.5** | **57.0** | **70.7** | **45.1** | |
-| run_macro per L0 step (plain build: test_performance, harness) | 53-80 | 49-59 | 61-71 | 39-45 | |
+| section | slot before | slot now | slot after removal / FK | pocket before | pocket now | pocket after removal / FK | owner |
+|---|---|---|---|---|---|---|---|
+| removal tooth passes (`do_pass` -> `tooth_pass`) | 31.7 | 33.5 | 8.3 | 34.7 | 37.3 | 7.3 | removal |
+| slab generation instants and pass test (`tooth_events` without the passes) | 13.8 | 0.2 | 0.1 | 12.2 | 0.1 | 0.1 | hot loop |
+| engaged-interval refresh without a pass (`regate`) | 2.3 | 5.2 (2.4 at a load of 3) | 2.1 | 0.0 | 0.0 | 0.0 | removal (call: hot loop) |
+| `cut_step` | 16.9 | 8.3 | 6.7 | 8.5 | 2.8 | 2.3 | cutting |
+| pose: Hermite angles, axis interpolation, FK x 2, StepPose | 11.3 | 4.4 | 1.4 | 9.8 | 4.5 | 1.4 | motion FK, hot loop |
+| refill planes (`refill_planes` + removal's `surface_plane`) | 9.5 | 4.4 | 3.1 | 4.1 | 0.9 | 0.7 | hot loop, removal |
+| `clear_planes`, headroom, ring, scalars | 0.8 | 0.07 | 0.04 | 0.7 | 0.04 | 0.04 | hot loop |
+| **run_macro per L0 step** (instrumented) | **87.5** | **57.0** | **22.6** | **70.7** | **45.1** | **12.4** | |
+| run_macro per L0 step (plain build: test_performance, harness) | 53-80 | 49-59 | 21.0 | 61-71 | 39-45 | 12.2 | |
 
 Microseconds. "Before" is the state of 2026-11-04 measured with the same instrumentation on 2026-11-09 at a load of
 about 3 (the documented 53 us / 61 us were taken on a quieter box); "now" is the final code at a load of 5-6 (an
 earlier run of the same rigid code at a load of 3: 50.5 us slot, 42.5 us pocket, removal's passes 32.6 / 33.9 us).
 Removal's tooth pass costs 6.1 ms per pass in the slot (gating 2.0 ms, subtraction 4.1 ms; 5.5 passes per 1000
-steps) and 12.4 ms in the pocket (gating 2.1 ms, subtraction 10.4 ms; 3.0 per 1000 steps, lattice 0.075 mm): **it
-is now three fifths to four fifths of the loop and alone 4.2 s/s (slot) and 7.5 s/s (pocket)**, 9-17 times the
-whole budget. The architecture's claim that cut_step and the modal kernels were 94 % of the loop held for cutting's
+steps) and 12.4 ms in the pocket (gating 2.1 ms, subtraction 10.4 ms; 3.0 per 1000 steps, lattice 0.075 mm): it
+was then three fifths to four fifths of the loop and alone 4.2 s/s (slot) and 7.5 s/s (pocket), 9-17 times the
+whole budget (after section 10: 1.0 and 1.5 s/s). The architecture's claim that cut_step and the modal kernels were 94 % of the loop held for cutting's
 own benchmark, not for the integrated loop: there the composition (reference counting, argument copies, the slab
 loop) and removal's passes dominated.
+
+"After removal / FK" (section 10) is the code of 2026-11-09 10:07 at a load of 2.3, with the day's changes of the
+other domains (cut_step 6.8 / 2.6 us just before this work); the same harness on the code just before it (09:20, a
+load of 3.3) gave run_macro 49.1 / 40.6 us, removal's passes 29.4 / 32.5 us (5.37 / 10.83 ms per pass: gating 1.51,
+subtraction 3.85 / 9.32 ms), regate 4.1 us, pose 4.1 / 4.2 us, refill 3.8 / 0.8 us. Removal's tooth pass now costs
+1.51 ms per pass in the slot (gating 0.78, subtraction 0.73) and 2.45 ms in the pocket (gating 0.46, subtraction
+1.98): 8.3 and 7.3 us per L0 step, the loop's largest section in the pocket, second to cut_step in the slot.
 
 ## 2. Per kernel
 
@@ -61,7 +71,10 @@ loop) and removal's passes dominated.
 | `tooth_events` (no pass) | slot | 13.8 us | 0.2 us | tooth windows, counts kept with the slab states |
 | `refill_planes` + `clear_planes` | slot, 4.4 planes per step | 10.3 us | 4.4 us | lean arguments, RAW |
 | `set_step_pose` | per step | ~2 us | ~0.1 us | no allocation, StepPose only |
-| removal `tooth_pass` | slot / pocket | 5.9 / 11.3 ms per pass | unchanged (6.1 / 12.4 ms at a load of 5-6) | removal's kernel (open problem) |
+| removal `tooth_pass` | slot / pocket, in the loop | 5.37 / 10.83 ms per pass (gating 1.51 / 1.51, subtraction 3.85 / 9.32) | 1.51 / 2.45 ms (gating 0.78 / 0.46, subtraction 0.73 / 1.98) | section 10; results bit-identical |
+| removal `engaged_intervals` | slot / pocket, before each replayed pass (section 10) | 2.56 / 1.88 ms | 0.71 / 0.34 ms | section 10; identical intervals |
+| motion `fk_poses` | VF-2SS chain (3 + 2 links, error transforms) | 1.80 us | 0.49 us | one RAW function, no calls; bit-identical |
+| removal connectivity per macro step | pocket's 0.075 mm field (1.4 M z columns) | 67-69 ms (`find_bodies`) | 0.7-1.0 ms (`local_connected`, 27-32 k columns) | section 10 |
 | mechanics `continuation_reference` | per node of a map row without an admissible solution | 18-22 ms | 11-12 ms | the row's own solved nodes skip their t1 trials |
 | mechanics `build_process_map` (lazy) | 108-node map (adiabatic) | 0.95 s eager | 0.09 s + refinement of the rows read | `lazy=True` |
 
@@ -69,11 +82,11 @@ loop) and removal's passes dominated.
 
 | level | what is in it | slot | pocket | budget |
 |---|---|---|---|---|
-| L0, in cut | `run_macro`'s L0 steps (plain build) | 49-59 us per step = 6.2-7.4 s/s | 39-45 us per step = 7.8-9.0 s/s | 0.45 s/s (with L1) |
+| L0, in cut | `run_macro`'s L0 steps (plain build) | 21 us per step = 2.6 s/s (49-59 us = 6.2-7.4 s/s before section 10) | 12.2 us per step = 2.4 s/s (39-45 us = 7.8-9.0 s/s) | 0.45 s/s (with L1) |
 | L1, per 1 ms tick | `motion_tick` 20 us, broad phase (removal's `l1_contact`, `collide_envelope`) 10 us, tick loads 3 us | 33 us = 0.033 s/s | 34 us = 0.034 s/s | 0.1 s/s |
 | L1, out of contact | the same plus dynamics' `modal_free` (exact free propagation) with the modes | +5-11 us per tick | | |
 | hot-loop wrapper, per 10 ms macro step | `_build` (every domain's `kernel_inputs`, contacts, padding), `_absorb` | 2.3 ms = 0.23 s/s | 2.9 ms = 0.29 s/s | |
-| L2, per 10 ms macro step | the domains' macro steps (whole runs, section 4) | 2.3 ms = 0.23 s/s | 20 ms = 2.0 s/s (removal 1.9, cutting 0.16) | 0.25 s/s |
+| L2, per 10 ms macro step | the domains' macro steps (whole runs, section 4) | 1.0 ms = 0.10 s/s (removal 0.02, cutting 0.08; 2.3 ms before section 10) | 1.7 ms = 0.17 s/s (removal 0.03, cutting 0.14; 20 ms = 2.0 s/s before) | 0.25 s/s |
 | recording | not exercised by these runs (no recorder) | | | 0.05 s/s |
 
 The wrapper's padding contacts and the rigid contacts' dynamics placeholders are made once per shape (they were
@@ -84,13 +97,17 @@ step buffers per the kernel_inputs / absorb contract) and the contacts' geometry
 
 | run | simulated (in cut) | CPU | s/s | hot loop (run_macro + wrapper) | L2 by domain | before |
 |---|---|---|---|---|---|---|
-| pocket helical entry, two turns, default L2 settings, rigid | 6.54 s (0.86 s) | 28.8 s | 4.41 (test_performance: 3.88-4.68) | 11.8 s (9.4 + 1.9) | 13.4 s: removal 12.3, cutting 1.0 | 6.6 s/s (42.7 s: hot 18.9, L2 21.0) |
-| slot, rigid | 5.24 s (0.78 s) | 9.4 s | 1.80 | 7.8 s (6.4 + 1.2) | 1.2 s: removal 0.8, cutting 0.4 | 2.5-2.8 s/s |
+| pocket helical entry, two turns, default L2 settings, rigid | 6.54 s (0.86 s) | 9.3 s | 1.43 | 5.1 s (3.1 + 1.7) | 1.1 s: removal 0.18, cutting 0.91 | 4.41 s/s (28.8 s: hot 11.8, L2 13.4, removal 12.3) before section 10; 6.6 s/s (42.7 s) before that |
+| slot, rigid | 5.24 s (0.78 s) | 5.05 s | 0.96 | 4.2 s (2.8 + 1.1) | 0.50 s: removal 0.10, cutting 0.40 | 1.80 s/s (9.4 s) before section 10; 2.5-2.8 s/s before that |
 | slot with the machine's modes, fast-L2 test settings | 5.24 s (0.77 s) | 14.6 s | 2.78 | 8.1 s (6.3 + 1.6) | 6.1 s: dynamics 5.0, removal 0.7, cutting 0.4 | dynamics' L2 alone ~19 s (profiled) |
 
-The pocket run's L2 is removal's connectivity check: `release_loose` -> `find_bodies` (a labelling of the whole
-0.075 mm field) every few macro steps, 162 calls of 67 ms = 10.8 s. Without it the run would be ~2.5 s/s, of which
-removal's tooth passes in cut are ~1 s/s of the run.
+The pocket run's L2 was removal's connectivity check: `release_loose` -> `find_bodies` (a labelling of the whole
+0.075 mm field) at every macro step once a column had changed its segment count (the counter was never reset while
+the material stayed one body), 162 calls of 67 ms = 10.8 s. The incremental check (section 10) makes 19 checks in
+the run, 18 of them on the changed region alone: 0.15 s = 0.023 s/s (the slot run: 78 checks, 77 local, 0.015
+s/s). What remains of the whole pocket run: the hot loop 5.1 s (0.77 s/s; run_macro 3.1 s, the wrapper's build and
+absorb 1.7 s), cutting's coefficient pipeline 0.9 s, the rest of the driver step (motion, the controller, the
+publishers, ledger and checks) 3.2 s.
 
 ## 5. L2
 
@@ -203,16 +220,19 @@ inlined helpers trade it against the loop's cost. The cold cache is paid once pe
 
 ## 9. Open problems
 
-* **Removal's tooth pass** (6 ms per pass at lattice 0.1 mm, 12 ms at 0.075 mm: about 33-37 us per L0 step,
-  4-7.5 s/s) keeps the loop 9-17 times above the 0.45 s/s budget and the whole pocket run above 1 s/s. Its cost
-  scales with the rays of the engaged sector box (1 / lattice^2 per area, the full stock height of the box), the
-  subtraction two thirds of it in the slot and five sixths in the pocket. Not in this task's ownership
-  (cnctwin/removal).
-* **Removal's connectivity check at L2** (`release_loose` -> `find_bodies`, 67 ms per call on the pocket's field,
-  every few macro steps): 1.7-1.9 s/s of the whole pocket run, more than all other L2 work together. An
-  incremental check (only the cells the step's sweep touched) would remove it. Not in this task's ownership.
-* **Motion's FK** (`fk_poses`, two per L0 step: mid and end frames, ~2 us each with the error transforms of every
-  link) is most of the 4.4 us pose section.
+* **Removal's tooth pass** (1.5 ms per pass at lattice 0.1 mm, 2.4 ms at 0.075 mm: 8.3 / 7.3 us per L0 step, about
+  1 s/s in cut; section 10) is still the largest section of the pocket's loop. In the slot: the gating (0.78 ms)
+  classifies about 2600 samples near the boundary in full (the front half of the peripheral stations, within a
+  feed per tooth of the previous cut: ~400 cycles each) and refines ~85 boundaries (~6500 cycles each, the Illinois
+  iterations with their sine and cosine); the subtraction (0.73 ms) books 4400 changed rays (the ray against its
+  one slab: a quadratic's square root and divisions, ~170 cycles; the write and the brick booking). In the pocket
+  the subtraction (1.98 ms) books 15 000 z columns lowered by 2.2 um per pass (the ramp's floor: every column
+  under the end edges). Exact further steps: fewer gatings (the hot loop's refresh without a pass, 2.1 us per
+  step in the slot), a classification that shares more between the stations of one circle.
+* **Removal's connectivity check at L2**: incremental since section 10 (0.02 s/s). A through cut whose two sides
+  join only outside the changed region falls back to the whole field (67 ms on the pocket's field) at every macro
+  step with a changed segment count until the body separates.
+* **Motion's FK**: 0.49 us per call since section 10 (the pose section 1.4 us per step).
 * **cut_step for the slot**: ~300 ns per engaged element (~1200 instructions at IPC ~1.3, register spills of the
   ~50 live frame and station constants, L2 misses on the memory bins); the 3 us target is met for the pocket's
   helical entry, not for the slot's 27 engaged elements (8.3 us).
@@ -227,3 +247,48 @@ inlined helpers trade it against the loop's cost. The cold cache is paid once pe
   the modes, twice the whole L2 budget.
 * **Compile time**: about 12 CPU minutes and 1.44 GB with an empty cache (section 8), paid again after any edit
   of a kernel file.
+
+## 10. Removal and FK (second pass, 2026-11-09)
+
+Removal's tooth pass, its connectivity check at L2 and motion's FK, with exact results throughout: every field
+array, accumulator, event and engaged interval of 200 tooth passes of the slot and 120 of the pocket's helical
+entry bit-identical (a replay harness: the captured in-cut states continued by synthetic passes along their
+paths), `tests/unit/gpu` parity of the GPU dexel path, and the whole slot and pocket (two-turn helical entry)
+driver runs bit-identical before and after (the wrench of every tick, the removed volumes, the final field,
+the findings). Each step measured with the replay harness (process CPU and the time-stamp counter, ms per pass,
+slot / pocket; gating alone on a copy of the engaged intervals before each pass; a load of 2-4: +-15 %):
+
+| change | tooth pass | of it gating |
+|---|---|---|
+| before | 7.81 / 11.54 | 2.56 / 1.88 |
+| subtraction: only the slabs that can reach the ray's material (the slab window: the slab axis points' spread and the ray's material extent in the scratch, `_env_ray` reads them); no division for rays along the axis; quick reject without the square root; a ray whose quantised intervals meet no material left without load / store; one-segment trims written in place; pieces booked in batches of 512, one brick directly, brick indices without integer division, sums in registers. Gating: a valid zero-spread family decides at once, the other families followed only while they can still be chosen (validity first; the smallest-spread choice among invalid families in full only when none is valid), the lattice coordinates of a sample computed once for the empty-brick test and the three families, circles beyond the lattice skipped | 1.90 / 2.82 | 0.97 / 0.69 |
+| per-axis envelope box (the slab points' extent along each axis, not their 3-D spread: the columns cut to the floor under the tool fall outside it), the cylinder test on rays along an axis-aligned tool axis | 1.72 / 2.86 | 0.90 / 0.57 |
+| gating: a sample of a horizontal circle whose four z columns end at or below it (all far, or all at one height within SPREAD_CELLS) is air without classifying (the end-edge stations above the floor, the air behind the cut) | 1.55 / 2.47 | 0.74 / 0.33 |
+| a piece strictly inside the last piece's brick booked into it directly | 1.49 / 2.32 | 0.71 / 0.34 |
+
+In the loop (the instrumented harness of section 1): 5.37 -> 1.51 ms per pass in the slot, 10.83 -> 2.45 ms in the
+pocket; per L0 step 29.4 -> 8.3 us and 32.5 -> 7.3 us; the refresh without a pass (`regate`, the same gating) 4.1 ->
+2.1 us per step in the slot. The replay's passes run back to back (warm caches); in the loop they are 180 (slot)
+and 330 (pocket) L0 steps apart.
+
+**Connectivity** (docs/models/removal.md section 9): while the material is one body and only subtractions changed
+it, each check labels the column rectangle of the bricks changed since the last one and a ring of one column around
+it (`k_connect.local_connected`): one component reaching the ring proves the material still one body; otherwise
+the whole field is labelled, so a body separates at exactly the macro step it would with the full labelling
+(`test_06`: a trepanned core at the step that closes the ring through the stock, a part on two tabs at the step
+that cuts the second, a blind groove never). The change marks and the segment-count counter restart from zero
+after every check (the counter was never reset while the material stayed one body: the full labelling ran at
+every macro step after the first split column). Pocket's field: 0.7-1.0 ms per local check (27-32 k columns of the
+1.4 M), 67-69 ms per full labelling. Whole runs: pocket 19 checks (18 local) 0.15 s = 0.023 s/s (162 full labellings
+= 10.8 s before), slot 78 checks (77 local) 0.076 s = 0.015 s/s.
+
+**FK** (`fk_poses`): the chain product written out in one function compiled without reference counting (the
+helpers it called per link, each with a copy of the chain's array descriptors and a reference count per array,
+cost more than the arithmetic): 1.80 -> 0.49 us per call on the VF-2SS chain, the same operations in the same
+order (bit-identical poses, 635 pose sets: the captured chains and 300 random chains with rotary links, error
+polynomials, thermal strain and work-spindle links). The pose section of an L0 step: 4.1 -> 1.4 us.
+
+**Refill planes**: removal's `k_sd.level_at`, `dexel_sd` and `gradient` (every stale memory bin's plane) compiled
+without reference counting, `gradient` without its work arrays: the refill section 3.8 -> 3.1 us per step in the
+slot, 0.8 -> 0.7 us in the pocket.
+
