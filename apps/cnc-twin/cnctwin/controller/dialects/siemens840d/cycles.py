@@ -782,13 +782,16 @@ def cycle832(h, values) -> list:
     if level == 0:
         s.modal["exact"] = "G64"
         s.modal["compressor"] = "COMPOF"
-        s.smoothing.update({"corner": "blend", "tolerance_m": 0.0, "mode_code": ""})
+        s.smoothing.update({"corner": "blend", "tolerance_m": 0.0, "mode_code": "", "tolerance_kind": "deviation"})
+        s.sys["contour_tol_m"] = 0.0
     else:
         if tol <= 0.0:
             table = {entry["name"]: entry["tolerance_m"] for entry in h.machine.smoothing}
             tol = float(table.get({1: "finish", 2: "medium", 3: "rough"}[level], 0.0))
         s.modal.update({"exact": "G642", "compressor": "COMPCAD", "accel": "SOFT", "feedforward": "FFWON"})
-        s.smoothing.update({"corner": "blend", "tolerance_m": tol, "mode_code": code})
+        # S_TOL is the contour tolerance (db/controllers/siemens-840d-sl.yaml): the deviation from the contour
+        s.smoothing.update({"corner": "blend", "tolerance_m": tol, "mode_code": code, "tolerance_kind": "deviation"})
+        s.sys["contour_tol_m"] = tol
     ex.emit(Command(Kind.MODE, ex.line_ref(), smoothing=ex.smoothing_spec(),
                     modal={"cycle832": {"tolerance_m": s.smoothing["tolerance_m"], "mode": names[level]},
                            "accel": s.modal.get("accel"), "feedforward": s.modal.get("feedforward"),

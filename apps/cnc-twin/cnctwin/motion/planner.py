@@ -33,9 +33,10 @@ from ..controller.ir import Command, FeedMode, Kind, Space
 from .abi import (FK_M_W as FK_M_W_INDEX, GEO_ARC, GEO_LINE, SP_END, SP_HOLD_WAIT, SP_IDLE, SP_PER_REV, SP_THREAD, SP_TIME, SPM_CAXIS,
                   SPM_POSITION, SPM_SPEED, SYNC_ALARM, SYNC_IN_POSITION, SYNC_PATH_WAIT, SYNC_PROBE_TRIGGER, SYNC_QUEUE_EMPTY,
                   SYNC_SEGMENT_END, WAIT_INPOS, WAIT_PATH)
-from .geometry import (PK_BLEND, PK_JOINT, PK_TIP, Piece, TipPath, apply_limits, arc_piece, blend_pieces, blend_radius,
-                       corner_angle, corner_speed, curvature_step_speed, jump_speed, line_piece, scale_vector, tip_piece,
-                       tolerance_speed, trim_line_end, trim_line_start)
+from .geometry import (PK_BLEND, PK_JOINT, PK_TIP, TOL_DEVIATION, TOL_RADIUS, Piece, TipPath, apply_limits, arc_piece,
+                       blend_pieces, blend_radius, corner_angle, corner_radius_needed, corner_speed,
+                       curvature_step_speed, jump_speed, line_piece, scale_vector, tip_piece, tolerance_speed,
+                       trim_line_end, trim_line_start)
 from .kernels import brake_distance, plan_ticks
 from .ledger import (CAT_AUX, CAT_COOLANT, CAT_DWELL, CAT_FEED, CAT_HOLD, CAT_INPOS, CAT_PROBE, CAT_RAPID,
                      CAT_SPINDLE, CAT_STARVE, CAT_STOP, CAT_TOOL, CAT_WAIT)
@@ -429,6 +430,14 @@ class PathPlanner:
             return float(sm.tolerance_m)
         return float(self.model.p["default_contour_tolerance_m"])
 
+    def _tolerance_kind(self, cmd: Command) -> str:
+        """What the tolerance in force bounds at a corner (geometry module doc): the control's own kind when its
+        mode sets a tolerance, else the default contour tolerance's (a deviation)."""
+        sm = cmd.smoothing
+        if sm is not None and sm.tolerance_m > 0.0:
+            return str(getattr(sm, "tolerance_kind", TOL_DEVIATION) or TOL_DEVIATION)
+        return TOL_DEVIATION
+
     def _tolerance_limit(self, pc: Piece, tol: float) -> None:
         """Tolerance-driven speed bound of a curved feed piece (geometry.tolerance_speed): the chord between the
         interpolation points of one IPO period, and the tolerance band of the control's axis setpoint filter when the
@@ -645,9 +654,10 @@ class PathPlanner:
             first.ustart = curvature_step_speed(last, first, model, self.nc_axes, filter_s)
             return
         tol = self._tolerance(prev.cmd)
+        kind = self._tolerance_kind(prev.cmd)
         done = cur.s if (cur.piece == last_index and cur.phase == PH_MOTION) else 0.0
         frac = model.p["blend_length_frac"]
-        blend = blend_pieces(last, first, tol, model, self.nc_axes, done, frac)
+        blend = blend_pieces(last, first, tol, model, self.nc_axes, done, frac, kind)
         if blend is not None:
             new_len, h1, h2, cut = blend
             trim_line_end(last, new_len, model)
@@ -666,7 +676,8 @@ class PathPlanner:
             return
         L1 = last.length
         L2 = first.length
-        R, _ = blend_radius(tol, theta, frac * min(max(L1 - done, 0.0), L2))
+        r_needed = corner_radius_needed(last, first, model, self.nc_axes) if kind == TOL_RADIUS else math.inf
+        R, _ = blend_radius(tol, theta, frac * min(max(L1 - done, 0.0), L2), kind, r_needed)
         # not blended: the commanded velocity of each axis steps at the corner; it may change by at most what
         # the axis' acceleration achieves in one interpolation period, and the tolerance band bounds the speed
         first.ustart = min(corner_speed(R, last, first, model, self.nc_axes),

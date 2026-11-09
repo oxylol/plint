@@ -28,6 +28,13 @@ l = R tan(theta/2) (at most half of each adjacent piece, the radius shrinking ac
 deviation from the corner stays <= eps); the arc's centripetal limits give the corner speed. Lines
 are blended geometrically; at corners of arcs or TCP pieces the corner speed of the same arc bounds
 the node and the commanded path keeps its corner.
+
+What the tolerance bounds depends on the control (``Smoothing.tolerance_kind``): the deviation from the
+corner (``deviation``: Heidenhain cycle 32 T, SINUMERIK CYCLE832 / G642 contour tolerance, FANUC smoothing,
+the default contour tolerance), the radius of the rounded corner (``radius``: Haas Setting 85 / G187 E,
+"keeps the radii of corners no bigger than" the value, the control adjusting the feed at corners to meet
+it; the corner is rounded only as far as the axes need at the feed, ``radius_needed``, up to that radius)
+or the rounding distance along each block from the corner (``distance``: SINUMERIK G641 ADIS).
 """
 
 from __future__ import annotations
@@ -430,19 +437,38 @@ def corner_angle(prev: Piece, nxt: Piece) -> float:
     return math.acos(c)
 
 
-def blend_radius(tol: float, theta: float, l_avail: float) -> tuple[float, float]:
-    """(R, l): the arc tangent to both segments with deviation <= tol from the corner and tangent length
-    l <= l_avail."""
+TOL_DEVIATION = "deviation"     # the tolerance bounds the path's distance from the programmed corner
+TOL_RADIUS = "radius"           # ... the radius of the rounded corner (Haas Setting 85 / G187 E)
+TOL_DISTANCE = "distance"       # ... the rounding distance along each block from the corner (SINUMERIK G641 ADIS)
+
+
+def blend_radius(tol: float, theta: float, l_avail: float, kind: str = TOL_DEVIATION,
+                 r_needed: float = math.inf) -> tuple[float, float]:
+    """(R, l): the arc tangent to both segments within the tolerance (module doc: a deviation <= tol from the corner,
+    a radius <= min(tol, r_needed), or a tangent length <= tol) and with tangent length l <= l_avail."""
     half = 0.5 * theta
     one_minus = 1.0 - math.cos(half)
     if one_minus <= 0.0:
         return math.inf, 0.0
-    R = tol * math.cos(half) / one_minus
-    l = R * math.tan(half)
+    t = math.tan(half)
+    if kind == TOL_RADIUS:
+        R = min(float(tol), float(r_needed))
+    elif kind == TOL_DISTANCE:
+        R = float(tol) / t if t > 0.0 else math.inf
+    else:
+        R = tol * math.cos(half) / one_minus
+    l = R * t
     if l > l_avail:
         l = l_avail
-        R = l / math.tan(half) if math.tan(half) > 0 else 0.0
+        R = l / t if t > 0 else 0.0
     return R, l
+
+
+def corner_deviation(R: float, theta: float) -> float:
+    """Distance between the programmed corner and the arc of radius R tangent to both segments."""
+    half = 0.5 * theta
+    c = math.cos(half)
+    return R * (1.0 - c) / c if c > 0.0 else math.inf
 
 
 def end_derivatives(piece: Piece, model) -> tuple[np.ndarray, np.ndarray]:
@@ -487,33 +513,59 @@ def jump_speed(prev: Piece, nxt: Piece, model, axes: list[int], dt: float) -> fl
     return v
 
 
+def _corner_axis_shares(prev: Piece, nxt: Piece, model, axes: list[int]):
+    """(axis, curvature share rho) of every real axis taking part in the turn from prev to nxt (the per-axis
+    amplitude of the arc's normal direction in the corner's plane, real units per scaled unit)."""
+    sc = scale_vector(model)
+    u1 = prev.t1
+    u2 = nxt.t0
+    e1 = _unit_or_zero(u2 - u1)
+    e2 = _unit_or_zero(u1 + u2)
+    out = []
+    for a in axes:
+        ax = model.axes[a]
+        if ax.synthetic:
+            continue
+        rho = math.hypot(e1[a], e2[a]) / sc[a]
+        if rho >= 1e-15:
+            out.append((ax, rho))
+    return out
+
+
 def corner_speed(R: float, prev: Piece, nxt: Piece, model, axes: list[int]) -> float:
     """Speed through an arc of radius R (scaled joint space) joining prev and nxt (module doc)."""
     if R <= 0.0:
         return 0.0
     if not math.isfinite(R):
         return math.inf
-    sc = scale_vector(model)
-    # plane of the corner (unit vectors in the scaled space), per-axis amplitude of the normal direction
-    u1 = prev.t1
-    u2 = nxt.t0
-    e1 = _unit_or_zero(u2 - u1)
-    e2 = _unit_or_zero(u1 + u2)
     v = math.inf
-    for a in axes:
-        ax = model.axes[a]
-        if ax.synthetic:
-            continue
-        rho = math.hypot(e1[a], e2[a]) / sc[a]
-        if rho < 1e-15:
-            continue
+    for ax, rho in _corner_axis_shares(prev, nxt, model, axes):
         v = min(v, math.sqrt(ax.accel * R / rho), (ax.jerk * R * R / rho) ** (1.0 / 3.0))
     return v
 
 
+def radius_needed(v: float, prev: Piece, nxt: Piece, model, axes: list[int]) -> float:
+    """The smallest arc radius on which the corner between prev and nxt can be passed at path speed v within every
+    axis' acceleration and jerk (the inverse of :func:`corner_speed`: R >= rho v^2 / A and R >= sqrt(rho v^3 / J))."""
+    if not math.isfinite(v):
+        return math.inf
+    R = 0.0
+    for ax, rho in _corner_axis_shares(prev, nxt, model, axes):
+        R = max(R, rho * v * v / ax.accel, math.sqrt(rho * v ** 3 / ax.jerk))
+    return R
+
+
+def corner_radius_needed(prev: Piece, nxt: Piece, model, axes: list[int]) -> float:
+    """The radius a ``radius``-type control (module doc) rounds the corner with when the axes allow the speed the
+    path arrives with: radius_needed at the lower of the two pieces' speed limits (feed with override, axis
+    limits). The control slows the corner down when that radius exceeds its tolerance (corner_speed of the
+    tolerance radius)."""
+    return radius_needed(min(prev.vmax, nxt.vmax), prev, nxt, model, axes)
+
+
 def blend_pieces(prev: Piece, nxt: Piece, tol: float, model, axes: list[int], prev_done: float,
-                 frac: float) -> tuple[float, Piece, Piece, float] | None:
-    """Arc blend of two joint lines in the scaled joint space.
+                 frac: float, kind: str = TOL_DEVIATION) -> tuple[float, Piece, Piece, float] | None:
+    """Arc blend of two joint lines in the scaled joint space (``kind``: what tol bounds, module doc).
 
     Returns (new length of prev, first half (item of prev), second half (item of nxt), length to cut
     from the start of nxt), or None when the corner cannot be blended (not two lines, no room)."""
@@ -529,7 +581,8 @@ def blend_pieces(prev: Piece, nxt: Piece, tol: float, model, axes: list[int], pr
                                                                                                          1e-3):
         return None           # the programmed-feed metric differs from the scaled metric (Siemens/Heidenhain rotary)
     avail1 = max(0.0, frac * L1 - 0.0) if prev_done <= 0.0 else max(0.0, min(frac * L1, L1 - prev_done))
-    R, l = blend_radius(tol, theta, min(avail1, frac * L2))
+    r_needed = corner_radius_needed(prev, nxt, model, axes) if kind == TOL_RADIUS else math.inf
+    R, l = blend_radius(tol, theta, min(avail1, frac * L2), kind, r_needed)
     if l <= 1e-12 or not math.isfinite(R):
         return None
     n_axes = len(model.axes)

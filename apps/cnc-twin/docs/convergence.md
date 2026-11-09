@@ -210,7 +210,8 @@ lattice_mm <= ae / 4 = 0.075 mm here (or a refine box): the template's 0.25 mm i
 sum (architecture 5.4, 10); its reference is the volume the tool's envelope sweeps along the path the tool actually
 took (the side wall: the y family, which crosses that wall and is exact on every ray; the corner: the envelope swept
 along the 1 ms tool positions, `swept_wall_volume`, because the control rounds the corner by up to 0.45 mm and the
-machine's errors offset the walls by 3-5 um).
+machine's errors offset the walls by 3-5 um; measured on the commanded and actual tip paths, the tree of these
+tables passed the corner at 0.635 / 0.646 mm, since the fix of section 9 item 11 at 0.181 / 0.193 mm).
 
 ### 2.1 Side-milling finish
 
@@ -502,7 +503,8 @@ accepted by the schema but computed as lag 1 (cnctwin/core/loop.py; docs/models/
 ledger's alignment window is the only thing it changes. Case: a side step 0.5 mm wide and 1 mm deep along the 150 mm
 front face of a 150 x 20 x 15 mm block of Al 6061-T6 in the pocket example's vise, D10 4-flute at 10 000 rpm, f_z
 0.04 mm, flood coolant, from x = -8 to 110 mm: 4.4 s in cut, 9.9 s simulated with the tool change and the approach.
-Structure's work model is capped at 3000 DOF (its 50 000 DOF default cost about 1 s per macro step on this stock);
+Structure's work model is capped at 3000 DOF (its 50 000 DOF default cost about 1 s per macro step on this stock;
+0.72 s measured, 0.09 s since 2026-11-09 with the set-up and 0.02 s amortised: docs/performance.md 11);
 dynamics' lobe diagrams run on coarse grids (they feed nothing here). The quantities are taken when the tool tip
 passes x = 100 mm (about 3.6 s into the cut), the forces over x = 20-100 mm, the energy balance residual over the
 run. The 10-20 s cut the study asked for was run too: two passes of 166 mm, 11 s in cut. Its tool's flank wear and
@@ -571,7 +573,8 @@ outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cu
 **Lag: the two settings are the same computation.** lag_macro 1 and 2 give bit-identical runs (the digest of every
 observed step value agrees), as the loop documents. **Macro step: not converged, and not convergent in the present
 coupling.** 2 ms (the finest level) was killed by bin/tsafe's 1.8 GB cap about 26 s into the run, before the cut, in
-both copies (the 10 ms run completes under the same cap); 50 ms loses its tool at the entry (VB 20 -> 752 um 0.15 s
+both copies (the 10 ms run completes under the same cap; the cause, chips' occupancy grid sized by a tool change's
+tip jump, is fixed: section 9 item 10); 50 ms loses its tool at the entry (VB 20 -> 752 um 0.15 s
 after it, 1.19 mm at 0.65 s, then no cut). Among 5, 10 and 20 ms the tool body temperature (3.5-3.8 K) and the
 workpiece's bulk temperature (0.81-0.95 K) agree within 10-18 %, but the rake temperature cutting's coefficients
 read differs from the first second of the cut on (85, 55 and 37 K at 4.8 s; the histories: it alternates from step
@@ -787,9 +790,20 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    within 0.15 % of the swept volume); booking the removed volume from the family most normal to each removed piece,
    or reporting the spread of the three (`removed_volume_xyz_m3`) as the volume's uncertainty in the ledger, would
    make the mass balance exact for the material, not only for the field.
+   fixed (twin check's side, 2026-11-09; the ledger's booking is removal's and open): the rule did not fire for the
+   very pass of section 2.1. sanity's 0.5 mm height map gave the 12 mm block a 12.5 mm extent (a phantom row from
+   round-off of 0.012 / cell, and partial cells counted as material) and the 0.3 mm pass an ae of 1.0 mm, exactly
+   4 x 0.25 mm; refine boxes counted without checking that they cover the pass. `twin check` now re-runs the
+   estimate on a map of lattice / 4 (sanity's map: material only where a cell centre is inside the stock) and warns
+   once per finishing pass with its lines, ae, the lattice in force, the one the rule asks for, the refine factor and
+   the error bound lattice / (2 ae) (docs/models/loop.md 9; tests/integration/test_check_rules.py).
 5. **`memory_bins` finer than one bin per L0 step changes the result** (cutting): 2880 bins at 0.48 deg per step
    move the mean force by +1.5 % and the chip volume by +2.5 % against 1440 bins (section 4.2). The memory should be
    refined only with the stride (memory_bins <= 360 / angle per step); `twin check` could warn above it.
+   fixed (2026-11-09): `twin check` gives every rotating tool's stride entry the spindle angle of an L0 step at the
+   stride the run takes at the programmed speed (`angle_per_step_deg`) and the most bins it allows
+   (`memory_bins_max`), and warns when `physics.memory_bins` exceeds it (the default 720 at 0.48 deg allows 750;
+   2880 is warned; docs/models/loop.md 9, tests/integration/test_check_rules.py).
 6. **The polar field's volume overflows int64** (removal, `k_polar.polar_q2_sum`): the sum of q_hi^2 - q_lo^2 over
    the radial rays exceeds 2^63 for a d45 x 40 mm bar at 720 bins and rows of 6.25 um or less; the volume difference
    the ledgers take is right only while the wrap does not fall between two checks, and at 3.125 um rows the driver's
@@ -811,10 +825,32 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    0.3 s).
 10. **`macro_ipo` 2 exceeds bin/tsafe's 1.8 GB cap** about 26 s into the run, before the cut (both copies), where
     the 10 ms run of the same project completes under it: something held per macro step grows with their number.
+    fixed (2026-11-09, motion and chips): nothing grew per step. RSS per macro step on an air-cut variant of the case
+    (2 ms) stayed at 920-950 MB for 800 steps and then rose past the cap within one call of chips' `fill_occupancy`
+    at the tool change: the tip moved to the new tool's point between two ticks (102 mm in 1 ms), motion booked that
+    as the tick's feed velocity (102 m/s), and chips sized its frozen occupancy grid by the travel at it over the lag
+    (+-0.41 m at 2 ms: 416 x 416 x 467 voxels, 1.9 GB). It reads the last tick of a step only: at 2 ms the jump fell
+    on it, at 10 ms it did not (it would have spanned +-2 m). Motion now gives that tick the velocity of the tick
+    before (the axes stand at a tool change), and chips bounds the sweep by the machine's top tool speed
+    (`scene.tool_speed_max`, 1.03 m/s for the VF-2SS). After the fix: 2500 steps at 2 ms through the tool change,
+    RSS 944-983 MB, trend -13.5 kB per step (docs/models/loop.md 15; tests/integration/test_loop_memory.py,
+    tests/unit/motion/test_timing.py `test_a_tool_change_is_no_feed_motion`, tests/unit/chips/test_recut.py).
 11. **The control rounds an internal corner by up to 0.45 mm** at 1600 mm/min (the pocket corner of section 2.2, a
     sharp programmed turn): the volume the tool removes is 7.6 % less than the programmed path's. This is the
     control model (look-ahead and corner blending), not an error, but it makes the programmed path a wrong reference
     for removal.
+    fixed (2026-11-09, motion and the Haas and SINUMERIK dialects): measured on that corner (motion alone), the
+    commanded path passed it at 0.635 mm (a 1.533 mm blend radius) and the tool at 0.646 mm. The tolerance in force is
+    the VF-2SS's Setting 85, 0.0250 in = 0.635 mm (db/machines/haas-vf2ss.yaml `smoothing`, haas-ngc-mill-om-2020 p.
+    456), which Haas documents as the largest corner radius ("the control keeps the radii of corners no bigger than"
+    it and adjusts the feed at corners to meet it), while motion took every control's tolerance as the deviation
+    from the corner: 2.4 x the documented radius at a square corner, at any feed. Haas's Setting 85 and G187 E are
+    now a radius: the corner is rounded as far as the axes need at the feed (here R 0.436 mm: commanded deviation
+    0.181 mm, tool 0.193 mm, no slow-down), up to the setting, the corner slowing where the feed needs more;
+    SINUMERIK's G641 ADIS likewise became the rounding distance it is. Heidenhain cycle 32 T, CYCLE832 S_TOL / G642
+    and FANUC's smoothing tolerance are deviations by their documentation and stay so (docs/models/motion.md 2.2).
+    The swept-volume reference of section 2.2 (the path the tool took) is unaffected; the tables above were measured
+    before this change.
 
 ## 10. Reproducing
 

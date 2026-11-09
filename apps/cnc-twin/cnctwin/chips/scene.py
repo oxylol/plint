@@ -155,6 +155,38 @@ def spindle_kinds(machine) -> dict[str, str]:
     return out
 
 
+def tool_speed_max(machine) -> float:
+    """The fastest a tool can move relative to the work (m/s): every linear axis at its rapid rate at once (dog-leg
+    rapids) plus every rotary axis at its top speed turning a point at the far end of the linear work envelope
+    (the diagonal of the linear travels); inf when the machine file gives no linear rapid rate. Bounds the sweep a
+    tool can make over the occupancy grid's lag whatever velocity a record carries."""
+    axes = getattr(machine, "axes", None) if machine is not None else None
+    if axes is None:
+        return math.inf
+    linear2, spans2, rotary = 0.0, 0.0, []
+    for name in list(axes):
+        axis = axes[name]
+        if not hasattr(axis, "get") and not hasattr(axis, "type"):
+            continue                    # the axes block's own src / note entries
+        kind = str(getattr(axis, "type", "linear") or "linear")
+        if kind == "linear":
+            rapid = getattr(axis, "rapid_m_s", None)
+            if rapid is None:
+                return math.inf
+            linear2 += float(rapid) ** 2
+            travel = getattr(axis, "travel_m", None)
+            if travel is not None and len(travel) == 2:
+                spans2 += (float(travel[1]) - float(travel[0])) ** 2
+        else:
+            rate = getattr(axis, "max_rad_s", None)
+            if rate is None:
+                return math.inf
+            rotary.append(float(rate))
+    if linear2 <= 0.0:
+        return math.inf
+    return math.sqrt(linear2) + sum(rotary) * math.sqrt(spans2)
+
+
 # ------------------------------------------------------------------ pile grid
 
 def pile_axes(up_S: np.ndarray) -> tuple[int, int, np.ndarray]:

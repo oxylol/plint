@@ -840,6 +840,13 @@ class SiemensHandler(NativeHandler):
                 if adispos is not None:
                     s.sys["adispos_m"] = self.length_si(V._number(adispos[1], "ADISPOS"))
                 tolerance = float(s.sys.get("adis_m", 0.0))
+                # G641 smooths by a distance criterion: ADIS is the rounding clearance along the blocks from the
+                # transition, not a deviation (db/controllers/siemens-840d-sl.yaml; docs/models/motion.md 2.2)
+                s.smoothing["tolerance_kind"] = "distance"
+            elif s.smoothing.get("tolerance_kind") == "distance":
+                # leaving G641: the contour tolerance of CYCLE832 (or the control default) is in force again
+                s.smoothing["tolerance_m"] = float(s.sys.get("contour_tol_m", 0.0))
+                s.smoothing["tolerance_kind"] = "deviation"
             s.smoothing["tolerance_m"] = tolerance if arg == "blend_adis" else s.smoothing.get("tolerance_m", 0.0)
             ex.emit(Command(Kind.MODE, ex.line_ref(), smoothing=ex.smoothing_spec(), modal={"exact": code}))
         elif kind == "comp":

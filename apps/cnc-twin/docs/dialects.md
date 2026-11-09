@@ -591,7 +591,11 @@ codes (mill lists, or its `lathe` lists) and gives the alarm texts it has (312, 
   machines give Setting 85 for every level), and G187 Pn leaves an active E alone; G187 E leaves P alone.
   G187 alone cancels E and returns to the defaults: Setting 191 (medium) and Setting 85, the machine file's
   "G187 P2" entry (on a mill without a smoothing table the controller database's 0.0250 in factory
-  default), never 0. The same defaults hold at power-on and after RESET, M30 and M02.
+  default), never 0. The same defaults hold at power-on and after RESET, M30 and M02. Setting 85 and E are the
+  largest radius of a rounded corner ("the control keeps the radii of corners no bigger than" the value, p. 456):
+  the Smoothing's `tolerance_kind` is `radius` and motion rounds a corner only as far as the axes need at the feed,
+  up to that radius, slowing the corner where the feed needs more (docs/models/motion.md 2.2; until 2026-11-09 the
+  value was taken as the deviation from the corner: a 1.53 mm radius at a square corner for the 0.635 mm default).
 * #3000 = n: alarm 1000 + n (n 1-999) with the comment as its text.
 * M97 Pn Lr: local subprogram from block Nn of the same program (337 when Nn is missing); M98 P with
   5-digit program numbers; M99 P n.
@@ -1198,7 +1202,11 @@ markers inconsistent, TW0012 function not modelled, TW0018 circle under unequal 
   AMIRROR, G58 G59, G110 G111 G112, $P_PFRAME $P_UIFR[n] $P_IFRAME $P_ACTFRAME, CTRANS CROT CSCALE
   CMIRROR ':', G25 / G26 with axes (working area limitation) WALIMON WALIMOF
 * path control: G60 G64 G641 ADIS= ADISPOS= G642 G643 G644 G645, G9, G601 G602 G603, SOFT BRISK DRIVE,
-  FFWON FFWOF, COMPOF COMPON COMPCURV COMPCAD COMPSURF, CYCLE832, CHF= CHR= RND= RNDM=
+  FFWON FFWOF, COMPOF COMPON COMPCURV COMPCAD COMPSURF, CYCLE832, CHF= CHR= RND= RNDM=. G641 smooths by a distance
+  criterion: ADIS is the rounding distance along the blocks from the transition (Smoothing `tolerance_kind`
+  `distance`; until 2026-11-09 taken as a deviation, a rounding 2.4 x ADIS long at a square corner); CYCLE832's
+  S_TOL and G642 bound the deviation from the contour; leaving G641 restores CYCLE832's contour tolerance
+  (docs/models/motion.md 2.2)
 * tools: T, M6, D0-D9, G40 G41 G42, G450 G451, NORM
 * other M: M0 M1 M2 M30 M17 M7 M8 M9, machine-builder M codes (`physics.controller.m_codes`)
 * programming: R0-R99, R[n], DEF INT / REAL / BOOL / CHAR / STRING[n] / AXIS / FRAME, PROC (VAR) SAVE,

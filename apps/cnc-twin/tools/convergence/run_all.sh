@@ -5,7 +5,7 @@
 #   tools/convergence/run_all.sh [--root DIR] [--fresh] [study ...]
 #
 # Without study names every study runs (about one CPU hour on the i5-4690, half of it the whole-loop studies; the
-# 2 ms macro step runs out of the 1.8 GB cap and ends the macro study's process after its other levels are saved).
+# 2 ms macro step ran out of the 1.8 GB cap until the fix of docs/convergence.md section 9 item 10).
 # --root DIR runs a frozen copy of the tree (cnctwin/, db/, examples/) with its own Numba cache (tools/convergence/
 # env.py); compile it first with: bin/tsafe python tools/convergence/warm.py --root DIR. --fresh recomputes levels
 # already in tools/convergence/results/. Deterministic: the same tree gives the same results, curves and tables.

@@ -75,7 +75,7 @@ def command_to_dict(cmd: Command) -> dict:
     if cmd.smoothing is not None:
         s = cmd.smoothing
         d["smoothing"] = {"corner": s.corner, "tolerance_m": jf(s.tolerance_m), "mode_code": s.mode_code,
-                          "lookahead": bool(s.lookahead)}
+                          "lookahead": bool(s.lookahead), "tolerance_kind": str(s.tolerance_kind)}
     return d
 
 
@@ -94,7 +94,8 @@ def command_from_dict(d: dict) -> Command:
     smoothing = None
     if d.get("smoothing") is not None:
         s = d["smoothing"]
-        smoothing = Smoothing(s["corner"], uf(s["tolerance_m"]), s["mode_code"], bool(s["lookahead"]))
+        smoothing = Smoothing(s["corner"], uf(s["tolerance_m"]), s["mode_code"], bool(s["lookahead"]),
+                              str(s.get("tolerance_kind", "deviation")))
     return Command(Kind(d["kind"]), ref, Space(d["space"]), uf(d["target"]),
                    tuple(uf(d["tip_target_m"])) if d.get("tip_target_m") is not None else None,
                    tuple(uf(d["tip_axis"])) if d.get("tip_axis") is not None else None, arc, feed, smoothing,

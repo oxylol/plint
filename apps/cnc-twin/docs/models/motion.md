@@ -140,6 +140,32 @@ tolerance (the machine's smoothing table entry of the code), SINUMERIK CYCLE832 
 `default_contour_tolerance_m` (0.01 mm). Exact stop (G09/G61, `smoothing.corner == "exact_stop"`)
 stops at the end of the block and waits for in-position.
 
+**What the tolerance bounds** (`Smoothing.tolerance_kind`, set by the dialect; 2026-11-09):
+
+| control, setting | kind | blend at a corner of turn theta | source of the definition |
+|---|---|---|---|
+| Heidenhain cycle 32 T (G62) | deviation | `R = T cos(theta/2) / (1 - cos(theta/2))`: the arc passes the corner at distance T | db/controllers/heidenhain-tnc640.yaml (T: the permitted contour deviation) |
+| SINUMERIK CYCLE832 S_TOL, G642 | deviation | as above with S_TOL (the contour tolerance) | db/controllers/siemens-840d-sl.yaml (S_TOL contour tolerance, siemens-840dsl-jobplan-ru-2018 pp. 825-827) |
+| SINUMERIK G641 ADIS | distance | tangent length `l = ADIS` (the rounding starts ADIS before the transition and ends ADIS after it), `R = ADIS / tan(theta/2)` | db/controllers/siemens-840d-sl.yaml (G641: smoothing with a programmable rounding distance ADIS) |
+| FANUC G05.1 Q1 (AI contour control) | deviation | as above with the machine file's entry (est: the manual gives AICC no geometric tolerance, db/controllers/fanuc-31i-b.yaml) | machine file, est |
+| Haas Setting 85, G187 E | radius | `R = min(E, R_needed(v))`: the corner is rounded only as far as the axes need at the feed, `R_needed = max_i(rho_i v^2 / A_i, sqrt(rho_i v^3 / J_i))` (the inverse of the arc's corner speed), up to the setting; where the feed needs more, the radius stays at the setting and the corner slows to that arc's speed | haas-ngc-mill-om-2020 p. 456: "the control keeps the radii of corners no bigger than" Setting 85 and "adjusts feeds around corners in all 3 axes to meet the tolerance value ... it might round the corner to a radius up to the tolerance value" (db/controllers/haas-ngc.yaml `corner_rounding_default_in`); factory default 0.0250 in = 0.635 mm (db/machines/haas-vf2ss.yaml `smoothing`) |
+
+Heidenhain's M120 LA is the look-ahead of the radius-compensated contour (up to 99 blocks against undercuts,
+db/controllers/heidenhain-tnc640.yaml `radius_comp_lookahead_blocks`), not a corner tolerance; the dialect does not
+run it (TW0012, docs/dialects.md). The planner's own look-ahead window is `controller.lookahead_blocks` (2.3).
+
+Until 2026-11-09 every tolerance was taken as a deviation: Haas's 0.635 mm became a 1.53 mm blend radius at a
+square corner (2.4 x the documented radius limit) at any feed, and SINUMERIK's ADIS a rounding that started 2.4 x
+ADIS before the transition. Measured on the convergence study's pocket corner (docs/convergence.md 2.2: D10, a 90 deg
+internal corner at F1600 on the VF-2SS, Setting 85 = 0.635 mm; controller, planner and drives without cutting): before, the
+commanded path passed the corner at 0.635 mm (blend radius 1.533 mm) and the actual tool path at 0.646 mm (the drives'
+contour error and the error map add 11 um), beyond the tolerance itself; now the axes need R = 0.436 mm at that
+feed (the jerk limit, sqrt(v^3 / J) with J = 100 m/s3), within the setting: commanded deviation 0.181 mm, actual
+0.193 mm, no slow-down. At F500: R 0.076 mm, deviation 0.032 mm. At F6000 the radius stops at 0.635 mm (deviation
+0.263 mm, actual 0.295 mm) and the corner slows from 100 to 33.8 mm/s. The tolerance bounds the control's commanded
+path; the drives' contour error (machine file's velocity feed-forward 0.95, est) and the ISO 230 error map come on
+top of it, as on the machine (12-31 um at these corners).
+
 The commanded profile never passes a block's target: the generator clamps the path position to the
 piece (and the window end), dog-leg rapids follow their analytic double-S to the target, and blends cut
 corners inward, so a target on a stroke limit is reached exactly
@@ -374,6 +400,9 @@ limits), `data_starvation` (from the generator's starvation flag, before acceler
 | arc feed clamp | v <= min(sqrt(A R), (J R^2)^(1/3)) (1e-6), radius 1e-9 m | `test_arc_feed_is_clamped_by_centripetal_acceleration_and_jerk` |
 | data starvation, 0.05 mm blocks | feed = 0.05 mm per block time within 0.2 % | `test_data_starvation_on_short_segments_limits_feed_to_block_rate` |
 | corner deviation | commanded <= eps (1e-9 relative); blend apex at eps (1e-6) | `test_corner_blend_deviation_within_tolerance` |
+| Haas corner radius | blend radius `R_needed(v)` (1e-9) inside Setting 85 with no slow-down; at the setting (1e-12) and the corner speed of that arc (0.5 %) when the feed needs more | `test_haas_corner_rounding_is_a_radius_rounded_as_far_as_the_feed_needs` |
+| SINUMERIK ADIS | tangent length ADIS (1e-9), deviation ADIS (sqrt 2 - 1) at a square corner (1e-6) | `test_siemens_adis_is_the_rounding_distance_along_the_blocks` |
+| feed velocity at a tool change | no tick above the axes' rapid vector (the tip's jump to the new tool is no motion), macro steps of 1, 2 and 10 ticks | `test_a_tool_change_is_no_feed_motion` |
 | chord error at the IPO period | arc speed at 2 sqrt(2 R e - e^2) / T (generator ramp J dt^2/8, 0.5 %); every chord within e (1e-3) | `test_chord_error_at_the_ipo_period_limits_a_small_arc_with_a_tight_tolerance` |
 | setpoint filter band | arc speed at sqrt(24 R e) / T_f (0.5 %) | `test_setpoint_filter_band_slows_arcs_to_keep_the_radius_error_in_the_tolerance` |
 | curvature step | S-turn junction at sqrt(A R / 2) (+ J dt^2/8) | `test_curvature_reversal_between_tangent_arcs_bounds_the_junction_speed` |
@@ -420,7 +449,11 @@ Written (`bus_next.motion`, a `MotionFrame` per macro step, one `PathFrame` per 
 block_index (into the timeline), tip_S_m, tip_M_m, axis_T_M, axis_names, axis_actual, axis_cmd,
 following_error, spindle_angle_rad (wrapped), spindle_rev, spindle_omega_rad_s, feed_vel_M_m_s,
 rapid, tool_slot, spindle_id, workpiece, pose_M_T, pose_S_T, pose_W0_T, coolant_pumps,
-nozzle_settings, events, axis_inertial_force_N. **Added** fields (instance attributes, additive):
+nozzle_settings, events, axis_inertial_force_N. `feed_vel_M_m_s` is the tip's velocity relative to the work
+(differenced tip positions in W0); at the tick where a tool change moves the tip to the new tool's point (motion
+swaps the tool offset in its chain at the first tick of the next plan call: `step.tip_swap`) that tick takes the
+velocity of the tick before (2026-11-09: the jump, the tool length difference in one tick, went to the bus as up to
+102 m/s, and chips sized its occupancy grid by it: docs/models/chips.md). **Added** fields (instance attributes, additive):
 `axis_force_N` (drive force per axis per tick), `spindle_torque_Nm`, `work_angle_rad` (work spindle
 angle per tick), `tip_W0_m` (tip in the non-rotating workpiece frame), `phase` (planner phase at the
 end of the step).

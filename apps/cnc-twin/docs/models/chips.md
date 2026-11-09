@@ -242,10 +242,19 @@ Per particle, sub-steps until the window end:
 ## 6. Occupancy grid (`fill_occupancy`)
 
 Voxels of S aligned with the pile cells inside the union of the active tools' reach (tool and
-holder envelope + `R + |v_feed| lag + cell`, lag = `slow_lag_steps` macro steps): every pile
+holder envelope + `R + min(|v_feed|, v_max) lag + cell`, lag = `slow_lag_steps` macro steps): every pile
 column spread uniformly over its height, plus flying particles slower than `cell / lag` (fast ones
 will be elsewhere when the hot loop reads the grid). Size = mass-weighted volume-equivalent chip
 diameter, thickness = mass-weighted chip thickness. Empty when no chips are within reach.
+
+`v_max` (`scene.tool_speed_max`) is the fastest the machine can move a tool relative to the work: every linear axis
+at its rapid rate at once plus every rotary axis at its top speed turning a point at the far end of the linear work
+envelope (VF-2SS: 1.03 m/s); infinite when the machine file gives no rapid rates. The sweep over the lag cannot be
+larger whatever velocity a record carries. Until 2026-11-09 motion booked a tool change's jump of the tip to the new
+tool's point as one tick's feed velocity (102 m/s for the convergence case's D10, docs/models/motion.md 10); when that
+tick was the last of a macro step, the one this reach reads, the grid spanned +-0.41 m at 2 ms macro steps (8e7
+voxels, 1.9 GB: docs/convergence.md 9 item 10) and +-2 m at 10 ms. Motion no longer books the jump; the bound keeps
+the grid the size of a tool's real sweep (a few thousand 2 mm voxels for a D10).
 
 ## 7. Findings (thresholds: chips-hazards)
 

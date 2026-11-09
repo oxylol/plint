@@ -66,6 +66,7 @@ class ChipsDomain:
         self.ignition_chip_K, self.ignition_fines_K = params.ignition_K(material)
         machine = getattr(project, "machine", None) if project is not None else None
         self.machine = machine
+        self.tool_speed_max = scene.tool_speed_max(machine)
         self.gravity = scene.gravity_M(machine)
         self.spindles = scene.spindle_kinds(machine)
         self.conveyor_rate_kg_s, self.conveyor_kind = scene.conveyor_rate(machine)
@@ -889,18 +890,20 @@ class ChipsDomain:
     def _occupancy(self, cs, frames, macro_s: float) -> None:
         """The frozen chip-occupancy grid for the next hot loop: the voxels of S (aligned with the pile cells)
         that the tools can sweep before the next grid is published (tool envelope plus the travel at the
-        current feed over the lag), holding the pile columns and the slow flying particles there."""
+        current feed over the lag, the feed no faster than the machine can move the tool), holding the pile
+        columns and the slow flying particles there."""
         H = cs.pile
         cell = float(H.cell_m[0])
         P = cs.particles
         lag_s = self.settings.slow_lag_steps * max(macro_s, 1e-12)
         v_slow = cell / lag_s
+        v_max = float(getattr(self, "tool_speed_max", math.inf))
         los, his = [], []
         for ps in frames.paths:
             tool = self.tools.tool(ps.tool_slot) if ps.tool_slot >= 0 else None
             if tool is None:
                 continue
-            reach = tool.radius_m + float(np.linalg.norm(ps.feed_M[-1])) * lag_s + cell
+            reach = tool.radius_m + min(float(np.linalg.norm(ps.feed_M[-1])), v_max) * lag_s + cell
             axis_S = frames.R_M_S.T @ ps.axis_M[-1]
             tip = ps.tip_S[-1]
             end = tip + axis_S * (tool.flute_length_m + tool.holder_length_m)

@@ -119,6 +119,72 @@ def test_corner_blend_deviation_within_tolerance(tol_mm, angle_deg):
     assert d_act <= tol + (1 - 0.9) * (3000 / 60e3) / 40.0 + 1e-6
 
 
+def _square_corner(feed, tol_mm, kind):
+    """Two 20 mm feed blocks with a 90 deg corner at (-80, -100) mm; returns (result, domain, blend pieces)."""
+    s = Script()
+    s.rapid(X=-100, Y=-100, Z=-100)
+    s.line(feed, tol_mm=tol_mm, tol_kind=kind, X=-80, Y=-100, Z=-100)
+    s.line(feed, tol_mm=tol_mm, tol_kind=kind, X=-80, Y=-80, Z=-100)
+    s.stop()
+    res, dom, state, ctrl = run(MILL, s)
+    pl = dom.planners[0]
+    blends = [pl.piece(j) for j in range(pl.n_pieces()) if pl.piece(j).blend]
+    return res, dom, blends
+
+
+def _closest_to_corner(dom, blends, corner):
+    pts = []
+    for pc in blends:
+        out = np.zeros((401, len(dom.model.axes)))
+        pc.eval(np.linspace(0.0, pc.length, 401), np.arange(len(dom.model.axes), dtype=np.int32), out)
+        pts.append(out[:, :2])
+    return float(np.min(np.linalg.norm(np.vstack(pts) - corner, axis=1)))
+
+
+def test_haas_corner_rounding_is_a_radius_rounded_as_far_as_the_feed_needs():
+    """Haas Setting 85 / G187 E (tolerance kind "radius"): the corner radius stays within the setting and the corner
+    is rounded only as far as the axes need at the feed (haas-ngc-mill-om-2020 p. 456: "keeps the radii of corners no
+    bigger than" the setting, "might round the corner to a radius up to the tolerance value")."""
+    A, J = 5.0, 200.0                                 # the MILL fixture's axes
+    corner = np.array([-0.08, -0.1])
+    tol = 0.635e-3
+    # F1000: the axes need R = max(v^2 / A, sqrt(v^3 / J)) = 0.152 mm, inside the setting: the feed is kept
+    v = 1000 / 60e3
+    R_need = max(v * v / A, math.sqrt(v ** 3 / J))
+    res, dom, blends = _square_corner(1000, 0.635, "radius")
+    assert len(blends) == 2
+    assert all(pc.par[0] == pytest.approx(R_need, rel=1e-9) for pc in blends)
+    assert _closest_to_corner(dom, blends, corner) == pytest.approx(R_need * (math.sqrt(2.0) - 1.0), rel=1e-6)
+    sp, cmd, blk = _speeds(res.frames, [1, 2])
+    near = np.hypot(cmd[:, 0] - corner[0], cmd[:, 1] - corner[1]) < 1e-3
+    assert sp[near[np.isin(blk, [1, 2])]].min() >= v * (1 - 1e-3)      # no slow-down at the corner
+    # F3000: the axes would need 0.79 mm: the radius stops at the setting and the corner slows to its arc speed
+    v = 3000 / 60e3
+    assert max(v * v / A, math.sqrt(v ** 3 / J)) > tol
+    res, dom, blends = _square_corner(3000, 0.635, "radius")
+    assert all(pc.par[0] == pytest.approx(tol, rel=1e-12) for pc in blends)
+    assert _closest_to_corner(dom, blends, corner) == pytest.approx(tol * (math.sqrt(2.0) - 1.0), rel=1e-6)
+    v_corner = min(math.sqrt(A * tol), (J * tol * tol) ** (1.0 / 3.0))
+    assert v_corner < v
+    sp, cmd, blk = _speeds(res.frames, [1, 2])
+    near = np.hypot(cmd[:, 0] - corner[0], cmd[:, 1] - corner[1]) < 0.5e-3
+    assert sp[near[np.isin(blk, [1, 2])]].max() <= v_corner * (1 + 5e-3)
+
+
+def test_siemens_adis_is_the_rounding_distance_along_the_blocks():
+    """SINUMERIK G641 ADIS (tolerance kind "distance"): the rounding starts ADIS before the transition and ends ADIS
+    after it (db/controllers/siemens-840d-sl.yaml: smoothing with a programmable rounding distance)."""
+    corner = np.array([-0.08, -0.1])
+    adis = 0.5e-3
+    res, dom, blends = _square_corner(3000, 0.5, "distance")
+    assert len(blends) == 2
+    # 90 deg: tangent length l = R tan(45 deg) = ADIS, so R = ADIS and the deviation R (sqrt 2 - 1)
+    assert all(pc.par[0] == pytest.approx(adis, rel=1e-12) for pc in blends)
+    start = blends[0].q0[:2]
+    assert float(np.linalg.norm(start - corner)) == pytest.approx(adis, rel=1e-9)
+    assert _closest_to_corner(dom, blends, corner) == pytest.approx(adis * (math.sqrt(2.0) - 1.0), rel=1e-6)
+
+
 def test_exact_stop_waits_for_in_position():
     s = Script()
     s.rapid(X=-100, Y=-100, Z=-100)

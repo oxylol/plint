@@ -110,6 +110,45 @@ def digest(inputs: WorkInputs) -> str:
     return h.hexdigest()[:24]
 
 
+def model_key(inputs: WorkInputs, active: np.ndarray) -> str:
+    """Identity of everything a voxel solution's stiffness, mass and boundary conditions depend on: the cells in
+    the model, the grid, the material's elastic constants and density, the clamped state and every support array
+    (held, locating and locked springs, clamping preloads). Two jobs with the same key solve the same eigenproblem
+    and the same clamping and residual-stress systems; only their temperatures can differ."""
+    h = hashlib.sha256()
+    h.update(inputs.kind.encode())
+    h.update(b"1" if inputs.clamped else b"0")
+    g = inputs.grid
+    h.update(np.asarray(list(g.origin_S_m) + [g.cell_m], dtype=float).tobytes())
+    h.update(np.asarray(g.shape, dtype=np.int64).tobytes())
+    mat = inputs.material
+    h.update(np.asarray([mat.E_Pa, mat.nu, mat.rho_kg_m3], dtype=float).tobytes())
+    h.update(np.packbits(np.ascontiguousarray(active, dtype=bool)).tobytes())
+    sup = inputs.supports
+    for arr in (sup.points, sup.k_held, sup.k_locate, sup.k_locked, sup.preload_N):
+        h.update(np.ascontiguousarray(arr, dtype=float).tobytes())
+    h.update(repr(inputs.lathe.to_dict()).encode())
+    return h.hexdigest()[:24]
+
+
+@dataclass
+class WorkCache:
+    """Runtime objects of one workpiece's latest voxel model, kept between jobs and never checkpointed: the
+    assembled model and its held system (with the multigrid hierarchy), keyed by :func:`model_key`. A job whose
+    model is unchanged reuses them; any other job builds them anew (a resumed run rebuilds them from the same
+    inputs, so the results do not depend on the cache)."""
+
+    key: str = ""
+    model: object = None
+    held: tuple | None = None           # (System, spring matrix or None, fixed DOFs or None)
+
+    def take(self, key: str):
+        return (self.model, self.held) if (key and key == self.key) else (None, None)
+
+    def keep(self, key: str, model, held) -> None:
+        self.key, self.model, self.held = key, model, held
+
+
 def fill_nodes(field: np.ndarray, ok: np.ndarray, passes: int = 3) -> np.ndarray:
     """Lattice values outside the model filled by the mean of model neighbours (3 x 3 x 3), repeatedly: a
     trilinear sample near the surface then sees the surface's own displacement."""
@@ -146,7 +185,9 @@ def _cell_values(lattice: np.ndarray, ok: np.ndarray) -> np.ndarray:
 
 
 # ------------------------------------------------------------------------------- voxel parts
-def _model(inputs: WorkInputs, prev: WorkSolution | None):
+def _active_cells(inputs: WorkInputs):
+    """(cells in the model, material fractions, cells dropped): fraction above fill_threshold, face-connected to
+    the cells holding support points (or the largest component)."""
     st = inputs.settings
     g = inputs.grid
     fill = np.clip(np.asarray(inputs.geometry.fill_fraction(inputs.workpiece, g.origin, g.cell_m, g.shape), dtype=float),
@@ -160,8 +201,13 @@ def _model(inputs: WorkInputs, prev: WorkSolution | None):
         seeds[tuple(idx.T)] = True
         seeds = _dilate(seeds)
     active, dropped = VX.keep_connected(active, seeds)
+    return active, fill, dropped
+
+
+def _model(inputs: WorkInputs, prev: WorkSolution | None):
+    active, fill, dropped = _active_cells(inputs)
     mat = inputs.material
-    return VX.VoxelModel(g, active, mat.E_Pa, mat.nu, mat.rho_kg_m3), fill, dropped
+    return VX.VoxelModel(inputs.grid, active, mat.E_Pa, mat.nu, mat.rho_kg_m3), fill, dropped
 
 
 def _dilate(mask: np.ndarray, radius: int = 2) -> np.ndarray:
@@ -313,40 +359,77 @@ def _publish_displacement(grid: VX.VoxelGrid, ok: np.ndarray, thermal, clamp, re
     return d
 
 
-def compute_voxel(inputs: WorkInputs, prev: WorkSolution | None, reference: np.ndarray | None) -> WorkSolution:
+def _reusable(prev: WorkSolution | None, key: str) -> bool:
+    """Whether the latest solution solved the same model (model_key): its eigenpairs, clamping and residual-stress
+    displacements are then this job's too, exactly (the same matrices and loads)."""
+    return (prev is not None and prev.kind == "voxel" and prev.stats.get("model_key") == key
+            and prev.vectors.shape[0] > 0)
+
+
+def compute_voxel(inputs: WorkInputs, prev: WorkSolution | None, reference: np.ndarray | None,
+                  cache: WorkCache | None = None) -> WorkSolution:
+    """One voxel job (module doc). When the model is the latest solution's (``model_key``: the same cells,
+    supports, clamped state and material) the modes, the clamping and the residual-stress displacements are that
+    solution's and only the thermal displacement is solved (temperatures are the only input that changed); the
+    held system comes from ``cache`` when it holds that model (docs/models/structure.md 3.5)."""
     stats: dict = {}
-    model, fill, dropped = _model(inputs, prev)
+    active, fill, dropped = _active_cells(inputs)
+    key = model_key(inputs, active)
+    model, held = cache.take(key) if cache is not None else (None, None)
+    if model is None:
+        mat = inputs.material
+        model = VX.VoxelModel(inputs.grid, active, mat.E_Pa, mat.nu, mat.rho_kg_m3)
     stats.update({"dof": model.n_dof, "cells": int(len(model.cells)), "dropped_cells": dropped,
-                  "cell_m": float(inputs.grid.cell_m)})
+                  "cell_m": float(inputs.grid.cell_m), "model_key": key})
     dig = digest(inputs)
-    system, Ks, fixed = _held_system(model, inputs)
+    if held is None:
+        held = _held_system(model, inputs)
+    system, Ks, fixed = held
+    if cache is not None:
+        cache.keep(key, model, held)
     stats["solver"] = system.solver.kind
-    lam, V = _modes(model, system, inputs, prev, dig, stats)
+    iterations0 = int(system.solver.iterations)
+    reuse = _reusable(prev, key)
+    if reuse:
+        lam = np.asarray(prev.lam, float).copy()
+        V = np.stack([model.from_lattice(prev.vectors[k]) for k in range(prev.vectors.shape[0])], axis=1)
+        stats["solve"] = "reuse"
+    else:
+        lam, V = _modes(model, system, inputs, prev, dig, stats)
     modes, walls = _voxel_modes_on_grid(model, lam, V, Ks, inputs, fill)
     stats["walls"] = [w.to_dict() for w in walls]
     T = DS.cell_temperatures(inputs.grid, model.cells, *(inputs.thermal if inputs.thermal is not None else
                                                          (np.zeros(3), 0.0, None)))
     strain = DS.thermal_strain(inputs.material, T)
     u_th = system.solve(model.thermal_load(strain)) if np.any(strain != 0.0) else np.zeros(model.n_dof)
-    u_cl = _clamp_displacement(model, inputs)
-    sigma = _residual_stress(model, inputs)
-    if np.any(sigma != 0.0):
-        u = system.solve(model.initial_stress_load(sigma))
-        if reference is not None:
-            u = u - model.from_lattice(reference)
-            if fixed is not None:
-                # free state: the reference's own 3-2-1 support differs; restore the current one (rigid motion)
-                R = model.rigid_modes()
-                u = u - R @ np.linalg.solve(R[fixed], u[fixed])
-        u_rs = model.to_lattice(u)
+    if reuse:
+        # the same model and supports: the clamping and residual-stress solves would repeat the latest solution's
+        # (published lattices: re-filling them below gives the same values)
+        clamp_lattice = prev.displacement.clamp_m
+        u_rs = prev.displacement.residual_m
     else:
-        u_rs = np.zeros(inputs.grid.node_shape + (3,))
-    stats["cg_iterations"] = int(system.solver.iterations)
+        clamp_lattice = model.to_lattice(_clamp_displacement(model, inputs))
+        sigma = _residual_stress(model, inputs)
+        if np.any(sigma != 0.0):
+            u = system.solve(model.initial_stress_load(sigma))
+            if reference is not None:
+                u = u - model.from_lattice(reference)
+                if fixed is not None:
+                    # free state: the reference's own 3-2-1 support differs; restore the current one (rigid motion)
+                    R = model.rigid_modes()
+                    u = u - R @ np.linalg.solve(R[fixed], u[fixed])
+            u_rs = model.to_lattice(u)
+        else:
+            u_rs = np.zeros(inputs.grid.node_shape + (3,))
+    stats["cg_iterations"] = int(system.solver.iterations) - iterations0
     stats["max_T_K"] = float(np.max(T)) if len(T) else 0.0
-    disp = _publish_displacement(inputs.grid, model.node_ok, model.to_lattice(u_th), model.to_lattice(u_cl), u_rs,
+    disp = _publish_displacement(inputs.grid, model.node_ok, model.to_lattice(u_th), clamp_lattice, u_rs,
                                  inputs.clamped)
-    vectors = np.stack([model.to_lattice(V[:, k]) for k in range(V.shape[1])]) if V.shape[1] else \
-        np.zeros((0,) + inputs.grid.node_shape + (3,))
+    if reuse:
+        vectors = prev.vectors
+    else:
+        vectors = np.stack([model.to_lattice(V[:, k]) for k in range(V.shape[1])]) if V.shape[1] else \
+            np.zeros((0,) + inputs.grid.node_shape + (3,))
     return WorkSolution("voxel", np.asarray(lam, float), vectors, model.active.copy(), modes, disp, dig, stats)
 
 
@@ -416,13 +499,14 @@ def compute_beam(inputs: WorkInputs, prev: WorkSolution | None) -> WorkSolution:
                         digest(inputs), stats)
 
 
-def compute(inputs: WorkInputs, prev: WorkSolution | None, reference: np.ndarray | None) -> WorkSolution:
+def compute(inputs: WorkInputs, prev: WorkSolution | None, reference: np.ndarray | None,
+            cache: WorkCache | None = None) -> WorkSolution:
     if inputs.kind == "beam":
         return compute_beam(inputs, prev)
     if inputs.kind != "voxel":
         raise InputError(f"structure: unknown workpiece model {inputs.kind!r}")
-    return compute_voxel(inputs, prev, reference)
+    return compute_voxel(inputs, prev, reference, cache)
 
 
-__all__ = ["WorkInputs", "WorkSolution", "compute", "compute_voxel", "compute_beam", "digest", "fill_nodes",
-           "residual_reference"]
+__all__ = ["WorkInputs", "WorkSolution", "WorkCache", "compute", "compute_voxel", "compute_beam", "digest",
+           "model_key", "fill_nodes", "residual_reference"]

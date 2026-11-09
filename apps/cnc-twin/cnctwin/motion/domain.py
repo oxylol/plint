@@ -350,7 +350,11 @@ class MotionDomain:
             self._disturbances(bus)
             self.out = empty_out(n, len(self.model.axes), self.P, max(1, len(self.model.spindles)))
         tick0 = int(ms.meta["tick0"])
-        self.chain_now = self._chain_for_step()          # the tools in the spindles now (planning and FK)
+        swaps: list = []
+        self.chain_now = self._chain_for_step(swaps)     # the tools in the spindles now (planning and FK)
+        for p in swaps:
+            # the tool tip of path p is the new tool's from tick k_from on (the feed velocity skips the jump)
+            ms.step.setdefault("tip_swap", {})[str(p)] = k_from
         setp = self.setp
         env = self.env
         env.sp_actual = ms.spindle
@@ -435,11 +439,13 @@ class MotionDomain:
                 setp.css_axis[s] = info[0]
                 setp.css_centre[s] = info[1]
 
-    def _chain_for_step(self):
+    def _chain_for_step(self, swaps: list | None = None):
         chain = self.chain
         for p in range(self.P):
             slot = self.planners[p].st.tool_slot
             if slot != self.tool_slot[p]:
+                if swaps is not None:
+                    swaps.append(p)
                 self.tool_slot[p] = slot
                 tip = self._tip_N(slot)
                 for ch in (chain, self.chain_nominal):
@@ -902,7 +908,21 @@ class MotionDomain:
             if int(ms.meta["macro"]) > 0 and "tip_W0_last" in ms.meta and str(p) in ms.meta["tip_W0_last"]:
                 prev[0] = np.asarray(ms.meta["tip_W0_last"][str(p)], float)
             feed = ((w0 - prev) / self.dt) @ R_M_W0.T
+            swap = ms.step.get("tip_swap", {}).get(str(p))
+            if swap is not None:
+                # a tool change moved the tip to the new tool's point between two ticks: that jump (its length
+                # difference, 102 mm in one 1 ms tick = 102 m/s for the convergence case's D10) is no motion of
+                # the tool, which stands at the tool-change position; the tick takes the feed velocity of the tick
+                # before (velocity changes by at most A dt per tick). Before 2026-11-09 the jump went to the bus
+                # and chips sized its occupancy grid by it (2 ms macro steps: 8e7 voxels, beyond 1.8 GB)
+                k_s = int(swap)
+                if 0 < k_s < n:
+                    feed[k_s] = feed[k_s - 1]
+                elif k_s == 0:
+                    last = ms.meta.get("feed_last", {}).get(str(p))
+                    feed[0] = np.asarray(last, float) if last is not None else 0.0
             ms.meta.setdefault("tip_W0_last", {})[str(p)] = w0[-1].tolist()
+            ms.meta.setdefault("feed_last", {})[str(p)] = feed[-1].tolist()
             rot = self._tool_angle(p, out, s)
             pose_M_T = poses[FK_M_T0] @ _rz(rot)
             pose_S_T = poses[FK_S_T0] @ _rz(rot)

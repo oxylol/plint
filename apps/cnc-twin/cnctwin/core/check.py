@@ -9,8 +9,14 @@
   <= 0.3 for the modes carrying >= 1 % of the tip compliance; max |omega| = programmed speed x the machine's
   largest spindle override, the CSS clamp for G96). ``options.write`` stores them in ``physics.resolved``
   (cnctwin.project.write_resolved_physics), which a run uses;
-* the lattice rule (``lattice_mm <= min(ae) / 4`` on every cutting move, or a refine box covering the moves that
-  break it) from sanity's engagement estimate;
+* the surface-memory rule: ``physics.memory_bins`` not finer than one bin per L0 step at the stride the run takes
+  (``memory_bins <= 360 deg / angle per step``; finer bins add an error, docs/convergence.md 4.2): a warning per
+  tool that breaks it;
+* the lattice rule (``lattice_mm <= ae / 4`` on every cutting move, or a refine box covering the moves that break
+  it, at ``lattice_mm / factor``) from sanity's engagement estimate re-run on a height map of a quarter of the
+  lattice (the 0.5 mm map of sanity's rules misses or widens finishing passes thinner than a cell): a warning per
+  finishing pass that breaks it (docs/convergence.md 2: the ledger's removed volume of such a layer errs by up to
+  lattice / (2 ae));
 * the estimated CPU seconds per simulated second (cost model in db/models/loop.yaml from element, mode, step and
   tick counts) and the disk ``fast: all`` would take;
 * sanity's findings of the operation.
@@ -28,6 +34,9 @@ import numpy as np
 from .errors import InputError, TwinError
 
 FORMAT = "cnctwin-check"
+ZMAP_MIN_CELL_M = 5.0e-5      # sanity-rules zmap_cell_m range: the finest height map the lattice rule asks for
+LATTICE_AE_RATIO = 4.0         # architecture 5.4: lattice_mm <= ae / 4
+MAX_PASS_WARNINGS = 20         # finishing passes named one by one per operation (the rest counted)
 
 
 # =============================================================================== strides
@@ -66,6 +75,42 @@ def stride(ctx, omega_max_rad_s: float, n_teeth: int, f_max_Hz: float) -> tuple[
     if min(bounds.values()) >= ctx.ipo_ticks * ctx.tick_s or dt >= ctx.ipo_ticks * ctx.tick_s:
         rule = "ipo"
     return l0, rule
+
+
+def memory_bins_limit(omega_rad_s: float, l0_ticks: int, tick_s: float) -> tuple[float, int | None]:
+    """(spindle angle per L0 step in degrees, the most surface-memory bins per revolution not finer than one step:
+    floor(360 / angle)). An element's chip is evaluated once per L0 step, at the centroid of the angle it sweeps, so
+    a memory bin narrower than that angle is written from the step's first-order motion and finer bins move the
+    result away from the converged one (docs/convergence.md 4.2: 2880 bins at 0.48 deg per step, +1.5 % mean force,
+    +2.5 % chip volume). None: no limit (a spindle at rest)."""
+    angle = math.degrees(abs(float(omega_rad_s)) * int(l0_ticks) * float(tick_s))
+    if angle <= 0.0:
+        return 0.0, None
+    return angle, int(math.floor(360.0 / angle + 1e-9))
+
+
+def _resolved_l0(project, op_name: str, tool: int, path: int) -> int | None:
+    """The L0 stride physics.resolved already stores for the tool on that path of the operation (the run uses it)."""
+    resolved = getattr(project.physics, "resolved", None)
+    ops = getattr(resolved, "operations", None) if resolved is not None else None
+    entries = ops.get(op_name) if (ops and hasattr(ops, "get")) else None
+    for entry in entries or []:
+        if int(getattr(entry, "tool", -1)) == int(tool) and int(getattr(entry, "path", 1) or 1) == int(path):
+            value = getattr(entry, "l0_ticks", None)
+            return int(value) if value else None
+    return None
+
+
+def memory_bins_warning(op_name: str, entry: dict, memory_bins: int) -> str | None:
+    """The warning for a stride entry whose surface memory is finer than one bin per L0 step, else None."""
+    limit = entry.get("memory_bins_max")
+    if limit is None or int(memory_bins) <= int(limit):
+        return None
+    return (f"{op_name}: T{entry['tool']}: physics.memory_bins {int(memory_bins)} is finer than one bin per L0 step "
+            f"({entry['angle_per_step_deg']:.3f} deg per step at {entry['rpm']:.0f} rpm, stride {entry['l0_run_ticks']} "
+            f"base ticks): at most {limit} bins; finer bins add an error to the chip thickness and the forces "
+            f"(docs/convergence.md 4.2): refine the stride with the bins (max_deg_per_step <= 360 / memory_bins) or "
+            f"use at most {limit} bins")
 
 
 def _machine_max_omega(machine) -> float:
@@ -222,25 +267,153 @@ def _context(project_path):
                       tick_s=tick_s, ipo_ticks=ipo_ticks, macro_ipo=int(project.physics.macro_ipo))
 
 
+def fine_engagement(report, lattice_m: float):
+    """(engagement, height-map cell): sanity's engagement estimate re-run on a map of a quarter of the lattice. The
+    estimate's ap and ae are within about one cell (cnctwin/sanity/geometry.py); on sanity's own 0.5 mm map a
+    finishing pass thinner than a cell is found only where a cell centre happens to lie in it and its ae comes out a
+    cell wide, so the lattice rule (ae against 4 x lattice) needs cells of lattice / 4 (the map grows its cell above
+    zmap_max_cells, as sanity's does). The report's own estimate when its map is already that fine."""
+    from dataclasses import replace
+
+    from ..sanity.geometry import estimate
+    ctx = report.context
+    coarse = float(ctx.p("zmap_cell_m"))
+    cell = max(min(coarse, lattice_m / LATTICE_AE_RATIO), ZMAP_MIN_CELL_M)
+    if cell >= coarse or report.program is None:
+        return report.engagement, coarse
+    return estimate(report.program, replace(ctx, params={**ctx.params, "zmap_cell_m": cell})), cell
+
+
+def _refine_boxes_M(project, op_index: int) -> list[tuple[np.ndarray, np.ndarray, int]]:
+    """physics.refine boxes (stock frame S, removal's levels: spacing lattice / factor) as (lo, hi, factor) boxes in
+    machine coordinates of the operation's setup (sanity's frame before the work offset)."""
+    from ..removal.schema import settings as removal_settings
+    from ..sanity.context import Box, _setup_transform, transform_box
+    from ..sanity.si import get, si_view
+    boxes = []
+    raw = removal_settings(project.physics).refine
+    if not raw:
+        return boxes
+    setup = si_view(get(get(si_view(project), "operations", op_index), "setup"))
+    T = _setup_transform(setup)
+    for lo, hi, factor in raw:
+        box = transform_box(T, Box(tuple(lo), tuple(hi), "refine"))
+        boxes.append((np.asarray(box.lo, float), np.asarray(box.hi, float), int(factor)))
+    return boxes
+
+
+def _move_region(program, sctx, index: int, ap: float):
+    """(lo, hi) in machine coordinates of the material a cutting move engages: its tool disc swept from the start
+    to the end point, from the tip up to the engaged depth; None when the tool or the work offset is unknown."""
+    from ..sanity.context import normalise_offset
+    command = program.commands[index]
+    modal = command.modal or {}
+    tool = sctx.tools.get(modal.get("tool"))
+    offset = sctx.work_offsets_m.get(normalise_offset(str(modal.get("work_offset", "G54"))))
+    if tool is None or tool.diameter_m is None or offset is None:
+        return None
+    radius = 0.5 * float(tool.diameter_m)
+    a = np.asarray(program.tip_start_W_m[index], float) + np.asarray(offset, float)
+    b = np.asarray(program.tip_end_W_m[index], float) + np.asarray(offset, float)
+    if not (np.all(np.isfinite(a)) and np.all(np.isfinite(b))):
+        return None
+    lo = np.minimum(a, b) - np.array([radius, radius, 0.0])
+    hi = np.maximum(a, b) + np.array([radius, radius, max(float(ap), 0.0)])
+    return lo, hi
+
+
+def effective_lattice(lattice_m: float, region, boxes) -> float:
+    """The lattice a move cuts on: lattice / factor of the finest refine box that contains its whole region (the
+    base lattice when none does, or when the region is unknown)."""
+    best = float(lattice_m)
+    if region is None:
+        return best
+    lo, hi = region
+    for blo, bhi, factor in boxes:
+        if np.all(lo >= blo - 1e-12) and np.all(hi <= bhi + 1e-12):
+            best = min(best, float(lattice_m) / max(int(factor), 1))
+    return best
+
+
+def finishing_passes(program, sctx, engagement, lattice_m: float, boxes, cell_m: float = 0.0) -> list[dict]:
+    """Cutting moves whose radial engagement is below 4 x the lattice they cut on, grouped into passes (consecutive
+    breaking moves of one tool): lines, the smallest ae, the lattice in force, the lattice the rule asks for and the
+    first-order bound of the ledger's removed-volume error of the layer, lattice / (2 ae) (docs/convergence.md 2).
+    sanity's ae is the engaged cells' width plus one cell (``cell_m``), within one cell of the true width: the rule
+    is decided on it, the recommendation (required lattice, refine factor, error bound) on its lower bound
+    ``ae_min_m`` = ae - one cell, so it is never too coarse."""
+    ae = np.asarray(engagement.ae_m, float)
+    cut = np.asarray(engagement.cut, bool)
+    ap = np.asarray(engagement.ap_m, float)
+    passes: list[dict] = []
+    current = None
+    for i in range(min(len(program.commands), ae.size)):
+        if not (cut[i] and np.isfinite(ae[i]) and ae[i] > 0.0):
+            continue
+        region = _move_region(program, sctx, i, ap[i] if np.isfinite(ap[i]) else 0.0)
+        lat = effective_lattice(lattice_m, region, boxes)
+        if ae[i] >= LATTICE_AE_RATIO * lat:
+            current = None
+            continue
+        command = program.commands[i]
+        tool = (command.modal or {}).get("tool")
+        line = int(getattr(command.ref, "line", 0) or 0)
+        if current is not None and current["tool"] == tool and current["last_index"] == i - 1:
+            current["line_last"] = line
+            current["ae_m"] = min(current["ae_m"], float(ae[i]))
+            current["lattice_m"] = max(current["lattice_m"], lat)
+            current["moves"] += 1
+            current["last_index"] = i
+        else:
+            current = {"tool": tool, "program": str(getattr(command.ref, "program", "") or ""), "line_first": line,
+                       "line_last": line, "ae_m": float(ae[i]), "lattice_m": lat, "moves": 1, "last_index": i}
+            passes.append(current)
+    for p in passes:
+        p.pop("last_index", None)
+        p["ae_min_m"] = max(p["ae_m"] - float(cell_m), min(float(cell_m), p["ae_m"])) if cell_m > 0.0 else p["ae_m"]
+        p["required_m"] = p["ae_min_m"] / LATTICE_AE_RATIO
+        p["refine_factor"] = int(math.ceil(lattice_m / p["required_m"] - 1e-9))
+        p["volume_error_bound"] = p["lattice_m"] / (2.0 * p["ae_min_m"])
+    return passes
+
+
+def pass_warning(op_name: str, p: dict) -> str:
+    lines = f"line {p['line_first']}" if p["line_first"] == p["line_last"] else \
+        f"lines {p['line_first']}-{p['line_last']}"
+    ae = f"ae {p['ae_m'] * 1e3:.3f} mm" if p.get("ae_min_m", p["ae_m"]) >= p["ae_m"] else \
+        f"ae {p['ae_min_m'] * 1e3:.3f}-{p['ae_m'] * 1e3:.3f} mm"
+    return (f"{op_name} {lines}: a pass of T{p['tool']} with thin radial engagement ({ae}: a finishing pass, a "
+            f"trochoid's crescent) runs on a {p['lattice_m'] * 1e3:.4f} mm lattice, above ae / 4 = "
+            f"{p['required_m'] * 1e3:.4f} mm: the ledger's "
+            f"removed volume of the layer errs by up to lattice / (2 ae) = {100.0 * p['volume_error_bound']:.0f} %, and "
+            f"the engaged arc and the peak force do not converge (docs/convergence.md 2); refine physics.lattice_mm to "
+            f"{p['required_m'] * 1e3:.4f} mm or cover these lines with a refine box (physics.refine, factor "
+            f">= {p['refine_factor']})")
+
+
 def _lattice(ctx, op_index: int, report) -> dict:
+    """The lattice rule of the operation (architecture 5.4, module doc): every finishing pass that breaks it (one
+    warning each), on the fine engagement estimate, with refine boxes counted where they cover the whole pass."""
     lattice = float(getattr(ctx.project.physics, "lattice_m", 0.0) or 0.0)
-    refine = list(getattr(ctx.project.physics, "refine", None) or [])
-    eng = getattr(report, "engagement", None)
+    boxes = _refine_boxes_M(ctx.project, op_index)
+    eng, cell = fine_engagement(report, lattice) if lattice > 0.0 else (getattr(report, "engagement", None), None)
     ae = np.asarray(getattr(eng, "ae_m", np.zeros(0)), float) if eng is not None else np.zeros(0)
     cut = np.asarray(getattr(eng, "cut", np.zeros(0)), bool) if eng is not None else np.zeros(0, bool)
     valid = ae[cut & np.isfinite(ae) & (ae > 0.0)] if ae.size and cut.size == ae.size else np.zeros(0)
-    if valid.size == 0:
-        return {"lattice_m": lattice, "min_ae_m": None, "ok": True, "refine": len(refine),
-                "note": "no cutting move with an evaluated radial engagement"}
+    if valid.size == 0 or lattice <= 0.0:
+        return {"lattice_m": lattice, "min_ae_m": None, "ok": True, "refine": len(boxes), "zmap_cell_m": cell,
+                "passes": [], "note": "no cutting move with an evaluated radial engagement"}
     min_ae = float(np.min(valid))
-    breaking = int(np.count_nonzero(valid < 4.0 * lattice))
-    finest = min([float(getattr(r, "lattice_m", lattice) or lattice) for r in refine] + [lattice])
-    ok = breaking == 0 or (refine and finest <= min_ae / 4.0)
-    return {"lattice_m": lattice, "min_ae_m": min_ae, "required_m": min_ae / 4.0, "moves_breaking": breaking,
-            "refine": len(refine), "finest_refine_m": finest if refine else None, "ok": bool(ok),
-            "note": "lattice_mm <= min(ae) / 4 on every cutting move (architecture 5.4)" if ok else
-            f"{breaking} cutting moves have ae below 4 x lattice: refine the lattice to {min_ae / 4.0 * 1e3:.4f} mm or "
-            f"add a refine box over the finishing passes"}
+    passes = finishing_passes(report.program, report.context, eng, lattice, boxes, float(cell or 0.0))
+    finest = min([lattice / f for _, _, f in boxes] + [lattice])
+    ok = not passes
+    breaking = int(sum(p["moves"] for p in passes))
+    return {"lattice_m": lattice, "min_ae_m": min_ae, "required_m": min_ae / LATTICE_AE_RATIO,
+            "moves_breaking": breaking, "refine": len(boxes), "finest_refine_m": finest if boxes else None,
+            "ok": bool(ok), "zmap_cell_m": cell, "passes": passes,
+            "note": "lattice_mm <= ae / 4 on every cutting move, or a refine box over it (architecture 5.4)" if ok else
+            f"{len(passes)} passes ({breaking} cutting moves) have ae below 4 x their lattice: refine the lattice to "
+            f"{min_ae / LATTICE_AE_RATIO * 1e3:.4f} mm or add refine boxes over those passes"}
 
 
 def check_project(request: dict, out_dir, progress_cb=None) -> dict:
@@ -267,6 +440,7 @@ def check_project(request: dict, out_dir, progress_cb=None) -> dict:
     from ..dynamics import params as DP
     share = float(DP.p(DP.MODES, "stride_compliance_share"))
     override = _override_max(project.machine)
+    bins = int(getattr(project.physics, "memory_bins", None) or 720)
     fast = _fast_columns(state)
     errors, warnings = [], []
     operations, resolved = [], {"ipo_ticks": int(ctx.ipo_ticks), "macro_ipo": int(ctx.macro_ipo), "operations": {}}
@@ -318,11 +492,24 @@ def check_project(request: dict, out_dir, progress_cb=None) -> dict:
                 float(p["cost_l0_mode_s"]) * n_modes
             cpu_per_s = per_step / (l0 * ctx.tick_s)
             cost_in_cut = max(cost_in_cut, cpu_per_s)
-            entries.append({"tool": seg["tool"], "path": seg["path"], "l0_ticks": int(l0),
-                            "max_rpm": omega * 60.0 / (2.0 * math.pi), "f_max_Hz": f_max, "teeth": teeth,
-                            "rule": rule, "css": bool(seg["css"]), "elements": elements, "modes": n_modes,
-                            "cpu_s_per_s_in_cut": cpu_per_s,
-                            "fast_all_bytes_per_s": _fast_bytes(fast, l0, ctx.tick_s)})
+            entry = {"tool": seg["tool"], "path": seg["path"], "l0_ticks": int(l0),
+                     "max_rpm": omega * 60.0 / (2.0 * math.pi), "f_max_Hz": f_max, "teeth": teeth,
+                     "rule": rule, "css": bool(seg["css"]), "elements": elements, "modes": n_modes,
+                     "cpu_s_per_s_in_cut": cpu_per_s,
+                     "fast_all_bytes_per_s": _fast_bytes(fast, l0, ctx.tick_s)}
+            if rotating:
+                # the surface memory against the stride the run takes at the programmed speed: physics.resolved's
+                # when the project stores one, else the stride rule at that speed (dynamics re-derives it from the
+                # actual spindle speed every macro step)
+                l0_run = _resolved_l0(project, name, seg["tool"], seg["path"]) or \
+                    stride(ctx, seg["max_rad_s"], teeth, f_max)[0]
+                angle, bins_max = memory_bins_limit(seg["max_rad_s"], l0_run, ctx.tick_s)
+                entry.update({"l0_run_ticks": int(l0_run), "angle_per_step_deg": angle, "memory_bins_max": bins_max,
+                              "rpm": seg["max_rad_s"] * 60.0 / (2.0 * math.pi)})
+                note = memory_bins_warning(name, entry, bins)
+                if note is not None:
+                    warnings.append(note)
+            entries.append(entry)
         resolved["operations"][name] = [_resolved_entry(e) for e in entries]
         progress(phase="check", op=name, message=f"{name}: sanity")
         try:
@@ -337,7 +524,11 @@ def check_project(request: dict, out_dir, progress_cb=None) -> dict:
             if f["severity"] in ("error", "fatal"):
                 errors.append(f"{name} line {f['line']}: {f['message']}")
         if lattice.get("ok") is False:
-            warnings.append(f"{name}: {lattice['note']}")
+            passes = lattice.get("passes") or []
+            warnings.extend(pass_warning(name, p) for p in passes[:MAX_PASS_WARNINGS])
+            if len(passes) > MAX_PASS_WARNINGS:
+                warnings.append(f"{name}: {len(passes) - MAX_PASS_WARNINGS} more passes break the lattice rule "
+                                f"({lattice['note']})")
         cycle = float(planned["cycle_time_s"]) if planned else float(dry["cycle_time_s"])
         feed_s = min(float(dry["feed_time_s"]), cycle)
         steps = cycle / ctx.macro_s
@@ -401,4 +592,6 @@ def _fast_bytes(n_columns: int, l0_ticks: int, tick_s: float) -> float:
     return float(Recorder.fast_all_bytes_per_second(int(n_columns), int(l0_ticks), float(tick_s)))
 
 
-__all__ = ["check_project", "stride", "ring_l0_ticks", "dry_run_operation", "planner_cycle_time", "tool_f_max_Hz"]
+__all__ = ["check_project", "stride", "ring_l0_ticks", "dry_run_operation", "planner_cycle_time", "tool_f_max_Hz",
+           "memory_bins_limit", "memory_bins_warning", "fine_engagement", "effective_lattice", "finishing_passes",
+           "pass_warning"]

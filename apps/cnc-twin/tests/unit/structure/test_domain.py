@@ -121,6 +121,56 @@ def test_fixed_latency_skip_and_new_setup():
     assert ws.history[-1]["why"] == "setup" and len(ws.history) == n + 1 and not ws.pending
 
 
+def test_an_unchanged_model_reuses_its_modes_and_solves_only_the_temperatures():
+    """A refresh whose model is the latest solution's (the same cells, supports, clamped state: model_key) keeps its
+    eigenpairs, clamping and residual-stress displacements and solves the thermal displacement alone, with the held
+    system kept between jobs: the same modes bit for bit, the thermal grid of a full computation of the same inputs
+    bit for bit. Material that removes cells makes the next refresh a Ritz solve again."""
+    from cnctwin.structure import work as WK
+    dom, ctx, state, geo = make()
+    fx.run(dom, ctx, state, bus(), 5)                         # macro 0: setup; macros 1-4: nothing due
+    ws = state.structure.works[0]
+    setup = ws.solution
+    warm = fx.thermal_grid([0, 0, 0], list(SIZE), 0.002, lambda c: 293.15 + 5.0 + 400.0 * c[..., 0])
+    b = fx.bus_with(fx.vise_supports(SIZE), version=1, thermal=warm, slot=0)
+    b.holding.tools[0] = ToolHolding(pullout_m=0.0)
+    fx.run(dom, ctx, state, b, 1)                             # macro 5: the temperatures changed: a job
+    job = ws.latest
+    assert job.stats["solve"] == "reuse" and job.stats["model_key"] == setup.stats["model_key"]
+    assert np.array_equal(job.lam, setup.lam) and np.array_equal(job.modes.shape, setup.modes.shape)
+    assert np.array_equal(job.modes.static_compliance, setup.modes.static_compliance)
+    assert np.array_equal(job.displacement.clamp_m, setup.displacement.clamp_m)
+    assert np.array_equal(job.displacement.residual_m, setup.displacement.residual_m)
+    assert not np.array_equal(job.displacement.thermal_m, setup.displacement.thermal_m)
+    full = WK.compute(dom._inputs(ctx, state.structure, ws, b), None, ws.reference)
+    assert full.stats["solve"] == "full"
+    assert np.array_equal(job.displacement.thermal_m, full.displacement.thermal_m)
+    assert np.array_equal(job.displacement.total_m, full.displacement.total_m)
+    assert np.allclose(job.modes.freq_Hz, full.modes.freq_Hz, rtol=1e-9, atol=0.0)
+    # a pocket removes cells: the model changed, the next refresh is a Ritz solve on the latest modes
+    geo.remove_box([0.01, 0.008, 0.006], [0.03, 0.022, 0.013])
+    fx.run(dom, ctx, state, b, 5)
+    assert ws.latest.stats["solve"] == "ritz" and ws.latest.stats["model_key"] != setup.stats["model_key"]
+
+
+def test_the_first_step_waits_for_holdings_record_of_the_part():
+    """At the run's first macro step holding has not yet published the part's supports (bus_prev is the initial
+    bus): the setup waits one step instead of solving the free part and the clamped part one step apart."""
+    dom, ctx, state, geo = make()
+    empty = fx.bus_with(None, slot=0)
+    empty.holding.tools[0] = ToolHolding(pullout_m=0.0)
+    rec = fx.run(dom, ctx, state, empty, 1)                   # macro 0: no record of part 0 yet
+    ws = state.structure.works[0]
+    assert ws.solution is None and 0 not in rec.work_modes and ws.counters["setup_waited"] == 1
+    fx.run(dom, ctx, state, bus(), 1)                         # macro 1: holding's supports: the setup, clamped
+    assert ws.solution is not None and ws.clamped and ws.history[-1]["why"] == "setup" and len(ws.history) == 1
+    # without a record later on (no holding at all) the part is still set up, free on a 3-2-1 support
+    dom2, ctx2, state2, _ = make()
+    state2.clock.macro = 1
+    fx.run(dom2, ctx2, state2, empty, 1)
+    assert state2.structure.works[0].solution is not None and not state2.structure.works[0].clamped
+
+
 def test_tool_refresh_on_pullout():
     dom, ctx, state, geo = make()
     fx.run(dom, ctx, state, bus(), 1)

@@ -741,7 +741,7 @@ class PathExecutor:
         if exact or self.s.sys.get("g09"):
             corner = "exact_stop"
         return Smoothing(corner, float(sm.get("tolerance_m", 0.0)), str(sm.get("mode_code", "")),
-                         bool(sm.get("lookahead", True)))
+                         bool(sm.get("lookahead", True)), str(sm.get("tolerance_kind", "deviation")))
 
     def snapshot(self) -> dict:
         """Modal snapshot for the commands of the current step (a pure function of the state; cached for

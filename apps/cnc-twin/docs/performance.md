@@ -292,3 +292,53 @@ polynomials, thermal strain and work-spindle links). The pose section of an L0 s
 without reference counting, `gradient` without its work arrays: the refill section 3.8 -> 3.1 us per step in the
 slot, 0.8 -> 0.7 us in the pocket.
 
+## 11. Structure's workpiece model at 50 000 DOF (2026-11-09)
+
+The work model's default (`physics.structure.max_dof` 50 000) cost about 1 s per macro step on a side-step or pocket
+stock (docs/convergence.md 5 capped it at 3000 DOF). Measured on the convergence study's macro-step case (a side
+step 0.5 x 1 mm along the 150 x 20 x 15 mm Al block in the vise, every domain on, 7 s simulated: 700 macro steps,
+1.5 s of them in cut; 46 662 DOF on 1.5 mm cells; process CPU through bin/tsafe on the shared box, a load of 2-3),
+with every part of a job timed (a `/tmp` harness: each job's inputs pickled with the material fractions frozen and
+replayed through the old and the new code):
+
+| part of the cost | before | after |
+|---|---|---|
+| structure's macro steps, total (700 steps) | 503 s = 0.719 s per step | 63.9 s = 0.091 s per step |
+| set-up at the run's first step (full eigen solve, 20 modes: ARPACK shift-invert, about 50 multigrid-CG solves of 14 iterations) | 57.0 s, unclamped (holding had not published yet) | waits one step |
+| set-up, clamped | 61.5 s | 47.9 s (the same solve; load) |
+| refresh job, 13 of them (every 50 steps: the temperatures changed, no cell removed) | 27-31 s: Ritz 24-27 s (two block solves of 20 columns in chunks of 6), clamping system and solve 1.1-1.3 s, a multigrid set-up 0.4 s, thermal solve 0.8 s | 0.86-1.1 s: the thermal solve on the kept system, the published grids |
+| idle macro step (fixture compliance, channel values) | 1.6 ms | 1.5 ms |
+| release at the operation's end (full eigen solve of the part on a 3-2-1 support; in end_operation, not in the steps above) | 45.7 s | 57.5 s (the same solve) |
+| whole run | 679.5 s | 239.4 s |
+
+Amortised over an operation (set-up and release once), a refresh every 50 steps costs 0.56 s per macro step before
+and 0.022 s after (x 25). What changed (docs/models/structure.md 3.4-3.5): an unchanged model (the same cells,
+supports, clamped state and material: `model_key`) is not solved again (its eigenpairs, clamping and
+residual-stress displacements are the latest solution's; the held system with its multigrid hierarchy stays in a
+runtime cache), the first step waits for holding's record of the part, and block solves run all 20 Ritz columns in
+one block. Exactness, replaying the 13 refresh jobs: displacement grids (thermal, clamping, residual, total) and the
+clamp loads at the supports bit-identical, frequencies within 7e-12, MAC 1, residual compliance within 5e-12 of
+the former refresh (which re-polished the same eigenpairs).
+
+**When material removal flips cells** (a pocket's roughing: at about 2.5 mm cells a D10 removing 250 mm3 per 0.5 s
+flips 15-30 cells per refresh) the model changes and the refresh is a Ritz solve. Measured by removing a trench of
+5 / 30 / 300 cells along the front top edge of the same 46 600-DOF model, against a full eigen solve of the changed
+model:
+
+| cells removed | refresh before | after | full eigen solve | published frequencies vs full | residual compliance vs full |
+|---|---|---|---|---|---|
+| 5 | - | 21.4 s | 61.4 s | 3e-10 | 1.4 % |
+| 30 | 27.9 s | 19.9 s | 57.6 s | 6e-8 (MAC 1 - 1.4e-8) | 1.7 % |
+| 300 | 50.2 s | 39.2 s | 54.5 s | 2e-13 | 4.4 % |
+
+The gain is the block width (one block of 20 columns: 7.7 s per block solve against 11.1 s, bit-identical
+solutions) and the Ritz start on the previous modes' own Ritz pairs (a change that hardly moves the modes is
+accepted after one block solve; none of these three was). The residual compliance differs from the full solve by the
+former refresh's own amount (residual modes accepted at 10 x `ritz_tol`), the displacement grids not at all. Each
+Ritz iteration is one block solve (about 7.7 s here: 20 columns of 14 CG iterations). Open: a start that passes the
+first check (the previous modes plus their static corrections from a direct solve on a patch of a few cells around
+the removed ones: the residual of the old modes in the new model is the removed cells' element forces, local and
+for the stiffness part self-equilibrated; the one global block solve then checks it), which would halve a changed
+refresh; a looser inner tolerance for the Ritz basis (1e-8 instead of 1e-10: 15 % less, the residual estimate
+changes by 4e-16); and the set-up and release eigen solves (45-60 s each at 47 000 DOF, once per operation).
+

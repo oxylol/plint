@@ -57,19 +57,29 @@ class Engagement:
 
 
 class HeightMap:
+    """Material top per cell of the stock box. A cell holds material when its centre lies inside the box (the
+    estimate samples cell centres): the last row of a box that is not a whole number of cells holds material only
+    where its centre is inside, and a size that is a whole number of cells up to round-off (0.012 / 6.25e-5 =
+    192.0000000000002) gets no extra row. Before 2026-11-09 both counted as material: a 12 mm wide block read 12.5 mm
+    on the 0.5 mm map, and a finishing pass 0.3 mm into its wall an ae of 1.0 mm."""
+
     def __init__(self, box: Box, cell_m: float, max_cells: int):
         size_x = box.hi[0] - box.lo[0]
         size_y = box.hi[1] - box.lo[1]
         cell = float(cell_m)
-        while math.ceil(size_x / cell) * math.ceil(size_y / cell) > max_cells:
+        while _cells(size_x, cell) * _cells(size_y, cell) > max_cells:
             cell *= 1.25
         self.cell = cell
         self.x0, self.y0 = float(box.lo[0]), float(box.lo[1])
-        self.nx = max(1, int(math.ceil(size_x / cell)))
-        self.ny = max(1, int(math.ceil(size_y / cell)))
+        self.nx = _cells(size_x, cell)
+        self.ny = _cells(size_y, cell)
         self.top = float(box.hi[2])
         self.bottom = float(box.lo[2])
         self.heights = np.full((self.nx, self.ny), self.top)
+        outside_x = self.x0 + (np.arange(self.nx) + 0.5) * cell > float(box.hi[0])
+        outside_y = self.y0 + (np.arange(self.ny) + 0.5) * cell > float(box.hi[1])
+        self.heights[outside_x, :] = self.bottom
+        self.heights[:, outside_y] = self.bottom
 
     def index(self, x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         return (np.floor((x - self.x0) / self.cell).astype(np.int64),
@@ -77,6 +87,11 @@ class HeightMap:
 
     def centre(self, i: np.ndarray, j: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         return self.x0 + (i + 0.5) * self.cell, self.y0 + (j + 0.5) * self.cell
+
+
+def _cells(size: float, cell: float) -> int:
+    """Cells covering a length, a whole number of cells up to round-off counting as whole."""
+    return max(1, int(math.ceil(size / cell - 1e-9)))
 
 
 @dataclass

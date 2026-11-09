@@ -572,7 +572,8 @@ LOOP_AE, LOOP_AP = 0.5, 1.0
 LOOP_PASSES = [(-5.0 + LOOP_AE, -8.0, 110.0)]
 LOOP_EVAL_X_MM = 100.0             # quantities at the moment the tip passes x = 100 mm on the (last) pass
 LOOP_FORCE_X_MM = (20.0, 100.0)    # forces: mean over the pass between these tip positions
-# structure's work model at 3000 DOF (its 50 000 DOF default costs ~1 s per macro step on this stock)
+# structure's work model at 3000 DOF, as in the stored results (its 50 000 DOF default cost ~1 s per macro step on
+# this stock until 2026-11-09, 0.09 s since: docs/performance.md 11)
 LOOP_CASE = {"structure": {"max_dof": 3000}}
 
 
@@ -746,7 +747,7 @@ STUDIES["macro"] = Study(
     "macro", "Macro step (every domain on)", "physics.macro_ipo", "macro step (ms)",
     [_macro_level(m) for m in (5, 10, 20, 50, 2)], "macro10",
     ["tool_rise_K", "edge_rise_K", "rake_rise_K", "VB_growth_um", "F_mean_N", "bulk_rise_K", "expansion_um"],
-    loop_case, note=LOOP_NOTE, test_labels=["macro10", "macro5"])     # 2 ms ran out of the 1.8 GB cap
+    loop_case, note=LOOP_NOTE, test_labels=["macro10", "macro5"])  # 2 ms: over 1.8 GB until convergence.md 9.10
 
 STUDIES["lag"] = Study(
     "lag", "Coupling lag (every domain on)", "physics.lag_macro", "lag (macro steps)",

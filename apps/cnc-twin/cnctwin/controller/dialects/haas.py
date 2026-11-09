@@ -414,6 +414,7 @@ class HaasHandler(FanucHandler):
         ex, s = self.ex, self.s
         p = bw.take("P")
         e = bw.take("E")
+        s.smoothing["tolerance_kind"] = "radius"
         if p is None and e is None:
             self.default_smoothing()
         if p is not None:
@@ -459,9 +460,13 @@ class HaasHandler(FanucHandler):
         return float(value) * units.INCH_M if value is not None else 0.0
 
     def default_smoothing(self) -> None:
-        """Power-on, RESET, M30 and G187 alone: Setting 191 (medium) and the Setting 85 corner rounding, no E."""
+        """Power-on, RESET, M30 and G187 alone: Setting 191 (medium) and the Setting 85 corner rounding, no E.
+        Setting 85 and G187 E are the largest radius of a rounded corner: "the control keeps the radii of corners
+        no bigger than" the value and adjusts the feeds around corners to meet it (haas-ngc-mill-om-2020 p. 456;
+        motion's planner: tolerance kind "radius", docs/models/motion.md 2.2)."""
         s = self.s
-        s.smoothing.update({"level": 2, "mode_code": "", "tolerance_m": self.setting85_m(), "e_active": False})
+        s.smoothing.update({"level": 2, "mode_code": "", "tolerance_m": self.setting85_m(), "e_active": False,
+                            "tolerance_kind": "radius"})
 
     def select_wcs(self, code: str, spec: GSpec, bw: BlockWords) -> None:
         if code == "G154":

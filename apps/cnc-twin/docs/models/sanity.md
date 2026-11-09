@@ -205,7 +205,10 @@ against it).
 ## 5. Engagement estimate (`cnctwin.sanity.geometry`)
 
 Mills (tool axis +z of the program frame): the stock box of each work offset is a height map
-(cell `zmap_cell_m`, grown until at most `zmap_max_cells` cells), carved by every move with the
+(cell `zmap_cell_m`, grown until at most `zmap_max_cells` cells; a cell holds material when its
+centre lies inside the box, and a size that is a whole number of cells up to round-off gets no extra
+row: until 2026-11-09 a 12 mm block read 12.5 mm on the 0.5 mm map, from 0.012 / 0.0005 =
+24.000000000000004), carved by every move with the
 tool's lower envelope `z_tip + lift(r)`: flat end mill `lift = 0`; torus/ball with corner radius
 `rc` `lift = rc - sqrt(rc^2 - (r - (R - rc))^2)` beyond `R - rc`; drills `lift = r / tan(point/2)`.
 

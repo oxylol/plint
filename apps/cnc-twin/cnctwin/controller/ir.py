@@ -82,6 +82,10 @@ class Smoothing:
     tolerance_m: float = 0.0        # contour tolerance band of the active high-speed mode (0 = control default)
     mode_code: str = ""             # "G187 P2", "G05.1 Q1", "CYCLE832 _ROUGH", "CYCL DEF 32" ...
     lookahead: bool = True
+    # what tolerance_m bounds at a corner (additive, docs/models/motion.md 2.2): "deviation" from the programmed
+    # corner (Heidenhain cycle 32 T, SINUMERIK CYCLE832 / G642, FANUC smoothing), "radius" of the rounded corner
+    # (Haas Setting 85 / G187 E), "distance" of the rounding along each block (SINUMERIK G641 ADIS)
+    tolerance_kind: str = "deviation"
 
 
 @dataclass

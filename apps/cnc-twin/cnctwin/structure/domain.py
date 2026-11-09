@@ -9,10 +9,12 @@ fixture compliance.
 * Tools: computed at init, again at once when a slot's pull-out changes by ``pullout_refresh``, when it breaks
   (length lost) or when a non-rotating tool's block orientation changes (a few ms each).
 * Workpieces: at a new setup (holding's supports_version, the operation, clamped or released) the model is built
-  and solved at once (full eigen solve); every ``every_n_macro`` steps a refresh job starts (Ritz on the latest
-  modes, displacement grids) and its result is applied exactly ``REFRESH_LATENCY_MACRO`` (50) steps later
-  (architecture 5.1); a job whose inputs did not change since the previous one is skipped. At the end of an
-  operation the released state (no clamp loads, minimal 3-2-1 support) is computed at once.
+  and solved at once (full eigen solve; at the run's first step it waits for holding's first record of the part);
+  every ``every_n_macro`` steps a refresh job starts (Ritz on the latest modes, displacement grids; the latest
+  modes, clamping and residual-stress displacements as they are when the model is unchanged, only the thermal
+  displacement solved) and its result is applied exactly ``REFRESH_LATENCY_MACRO`` (50) steps later (architecture
+  5.1); a job whose inputs did not change since the previous one is skipped. At the end of an operation the
+  released state (no clamp loads, minimal 3-2-1 support) is computed at once.
 
 Geometry comes through :class:`cnctwin.structure.protocols.WorkGeometry` (removal's FieldGeometry); without it the
 uncut stock of the project is used (recorded in the notes). Tool geometry from ``state.tooling`` (tooling's init
@@ -370,7 +372,9 @@ class StructureDomain:
                 ws.reference = WK.residual_reference(inputs)
                 ws.reference_digest = dig
             reference = ws.reference
-        sol = WK.compute(inputs, prev_sol, reference)
+        caches = self._rt.setdefault("work_cache", {})
+        cache = caches.setdefault(ws.workpiece, WK.WorkCache())
+        sol = WK.compute(inputs, prev_sol, reference, cache)
         ws.modes_version += 1
         ws.disp_version += 1
         sol.modes.version = ws.modes_version
@@ -397,6 +401,12 @@ class StructureDomain:
         # published for every later part, which no model was set up for)
         if ws.counters.get("released_op") == op and int(ws.counters.get("released_part", part)) == part \
                 and ws.solution is not None:
+            return
+        if ws.solution is None and sv < 0 and macro == 0:
+            # the run's first step: holding publishes its first record of the part (supports, clamped) at the end of
+            # it. The part is clamped before the run starts; set up now it would be solved free on a 3-2-1 support
+            # (a full eigen solve: about 1 min at 47 000 DOF) and set up again, clamped, one step later
+            ws.counters["setup_waited"] = int(ws.counters.get("setup_waited", 0)) + 1
             return
         new_setup = ws.solution is None or sv != ws.supports_version or op != ws.op_index or held != ws.clamped \
             or part != ws.part_index

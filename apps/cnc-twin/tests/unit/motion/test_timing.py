@@ -12,6 +12,35 @@ def _rec(dom, kind):
     return [r for r in dom.timeline.records if r.kind == kind]
 
 
+@pytest.mark.parametrize("macro_ipo", [1, 2, 10])
+def test_a_tool_change_is_no_feed_motion(macro_ipo):
+    """The tip moves to the new tool's point at a tool change (its length: 0.1 m from the empty spindle, 0.05 m
+    between the tools here): no tick's feed velocity carries that jump, whichever tick of a macro step it falls on
+    (docs/convergence.md 9 item 10: 102 m/s in one tick sized chips' occupancy grid beyond 1.8 GB)."""
+    import numpy as np
+    from cnctwin.motion.domain import MotionDomain
+    import mfix
+    s = Script()
+    s.tool_change(1, slot=0)
+    s.spindle(6000)
+    s.rapid(X=-100, Y=-100, Z=-150)
+    s.line(1000, X=-100, Y=-90, Z=-150)
+    s.tool_change(2, slot=1)
+    s.rapid(X=-120, Y=-100, Z=-150)
+    s.stop()
+    dom = MotionDomain(mfix.copy.deepcopy(MILL), tool_lengths={0: 0.1, 1: 0.15}, rotating={0: True, 1: True},
+                       tool_numbers={(1, 0): 0, (2, 0): 1}, tick_s=mfix.TICK_S, ipo_ticks=mfix.IPO,
+                       macro_ipo=macro_ipo)
+    res, dom, state, ctrl = run(MILL, s, dom=dom)
+    feed = stack(res.frames, "feed_vel_M_m_s")
+    rapid_vector = np.sqrt(3.0) * 30000 / 60e3          # every axis at its rapid rate
+    assert np.max(np.linalg.norm(feed, axis=1)) <= rapid_vector * (1 + 1e-9)
+    assert len(_rec(dom, "tool_change")) == 2
+    # the tip did move to the new tools' points (the jump is in the positions, not in the velocity)
+    tip = stack(res.frames, "tip_M_m")
+    assert np.max(np.abs(np.diff(tip[:, 2]))) > 0.04
+
+
 def test_tool_change_with_spindle_running_and_z_move_home():
     s = Script()
     s.tool_change(1, slot=0)

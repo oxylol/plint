@@ -120,6 +120,39 @@ def test_ritz_refresh_matches_a_full_solve():
     assert np.all(mac > 1 - 1e-5)
 
 
+def test_ritz_accepts_a_guess_the_change_hardly_moved_after_one_block_solve():
+    """The first residual check is on the guess's own Rayleigh-Ritz pairs: converged modes of the same model pass it
+    with one block solve (the check needs K^-1 r), by the same energy-norm criterion as later iterations."""
+    grid = VX.VoxelGrid((0.0, 0.0, 0.0), 1e-3, (14, 10, 6))
+    model = VX.VoxelModel(grid, np.ones(grid.shape, bool), E, NU, RHO)
+    pts = model.node_xyz()[model.node_ijk[:, 2] == 0]
+    k = np.tile(np.eye(3) * 5e7, (len(pts), 1, 1))
+    system = VX.System(model, model.spring_data(pts, k), None, settings({}))
+    lam, V = system.eigen(8, 1e-12)
+    calls = []
+    solve = system.solve
+    system.solve = lambda f: (calls.append(1), solve(f))[1]
+    lam_r, V_r, res, ok = system.ritz(V, lam, 8, 2e-3, 6)
+    assert ok and res <= 1e-6 and len(calls) == 1
+    assert np.allclose(lam_r, lam, rtol=1e-10)
+
+
+def test_block_solves_do_not_depend_on_the_block_width():
+    """Every column of a block CG solve is its own recurrence: one block of 20 columns gives bit-identical solutions
+    to blocks of at most 6 (voxel.BLOCK)."""
+    grid = VX.VoxelGrid((0.0, 0.0, 0.0), 1e-3, (24, 16, 10))
+    model = VX.VoxelModel(grid, np.ones(grid.shape, bool), E, NU, RHO)
+    pts = model.node_xyz()[model.node_ijk[:, 2] == 0]
+    k = np.tile(np.eye(3) * 5e7, (len(pts), 1, 1))
+    st = settings({"direct_max_dof": 100})                 # the multigrid path
+    system = VX.System(model, model.spring_data(pts, k), None, st)
+    assert system.solver.kind == "multigrid"
+    F = np.random.default_rng(3).standard_normal((model.n_dof, 20))
+    wide = system.solve(F)
+    narrow = np.hstack([system.solve(F[:, a:a + 6]) for a in range(0, 20, 6)])
+    assert np.array_equal(wide, narrow)
+
+
 def test_springs_and_mass_give_the_bounce_frequency():
     """A stiff block on four soft vertical springs: f = sqrt(4 k / m) / 2 pi."""
     grid = VX.VoxelGrid((0.0, 0.0, 0.0), 2e-3, (5, 5, 3))

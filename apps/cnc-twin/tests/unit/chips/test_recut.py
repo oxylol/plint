@@ -65,6 +65,35 @@ def test_occupancy_grid_holds_the_settled_chips():
     assert state.bus_prev.chips.occupancy_mass_kg.size == 0
 
 
+def test_the_occupancy_grid_is_bounded_by_what_the_machine_can_sweep():
+    """A record's feed velocity faster than the machine can move the tool (a tool change's tip jump booked as one
+    tick's velocity was 102 m/s, docs/convergence.md 9 item 10) does not widen the frozen grid: the sweep over the
+    lag is at most the machine's top tool speed (scene.tool_speed_max)."""
+    dom, ctx, state = _setup()
+    dom.tool_speed_max = 1.0                                  # m/s, a VMC's three rapids together
+    state.bus_prev.motion = fx.motion(0, tip_M=[0.05, 0.04, 0.020], omega=-1047.0, feed=(0.0, 0.0, 10.0))
+    dom.macro_step(ctx, state, state.bus_prev, state.bus_next)
+    rec = state.bus_next.chips
+    assert rec.occupancy_mass_kg.size > 0                     # the chips under the tool are in it
+    cell = float(rec.occupancy_cell_m)
+    tool = dom.tools.tool(0)
+    lag = dom.settings.slow_lag_steps * ctx.macro_s
+    reach = tool.radius_m + dom.tool_speed_max * lag + cell
+    extent = 2.0 * reach + tool.flute_length_m + tool.holder_length_m + 2.0 * cell
+    assert all(n * cell <= extent + 1e-12 for n in rec.occupancy_mass_kg.shape)
+
+
+def test_tool_speed_max_of_the_machine_files():
+    from cnctwin.chips.scene import tool_speed_max
+    from cnctwin.db import Database
+    db = Database.load()
+    vf2 = db.get("machine", "haas-vf2ss")                   # three 35.6 m/min rapids
+    assert math.isclose(tool_speed_max(vf2), math.sqrt(3.0) * 35.6 / 60.0, rel_tol=1e-12)
+    umc = db.get("machine", "haas-umc750")                  # plus B and C turning the far end of the envelope
+    assert tool_speed_max(umc) > math.sqrt(3.0) * float(umc.axes["X"].rapid_m_s)
+    assert math.isinf(tool_speed_max(None))
+
+
 def test_recut_rows_remove_chips_and_re_emit_fragments():
     dom, ctx, state = _setup()
     cs = state.chips

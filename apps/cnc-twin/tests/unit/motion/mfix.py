@@ -167,12 +167,12 @@ class Script:
         return self._add(Command(Kind.RAPID, ref(), Space.MACHINE, _si(target), feed=Feed(FeedMode.RAPID, 0.0)))
 
     def line(self, feed_mm_min: float, tol_mm: float = 0.0, exact: bool = False, per_rev_mm: float | None = None,
-             modal=None, **target):
+             modal=None, tol_kind: str = "deviation", **target):
         if per_rev_mm is not None:
             feed = Feed(FeedMode.PER_REV, per_rev_mm * 1e-3)
         else:
             feed = Feed(FeedMode.PER_MIN, feed_mm_min * 1e-3 / 60.0)
-        sm = Smoothing("exact_stop" if exact else "blend", tol_mm * 1e-3)
+        sm = Smoothing("exact_stop" if exact else "blend", tol_mm * 1e-3, tolerance_kind=tol_kind)
         return self._add(Command(Kind.LINEAR, ref(), Space.MACHINE, _si(target), feed=feed, smoothing=sm,
                                  modal=dict(modal or {})))
 

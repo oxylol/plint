@@ -207,21 +207,53 @@ operators `P^T A P`, Chebyshev smoothing of `D^-1 A` of degree `gmg_degree` (3) 
 lambda_max]` with lambda_max from 20 power iterations, dense Cholesky on the coarsest level <= `gmg_coarse_dof`).
 A 50 000-DOF factorisation would fill to 9e7 entries (1.1 GB, measured): the iterative path keeps the domain near
 its budget. Relative residual `pcg_rtol` (1e-10); a solve that does not reach 1e-6 raises. Block right-hand sides
-run as independent CG recurrences in chunks of 6 columns.
+run as independent CG recurrences in chunks of 20 columns (`voxel.BLOCK`: every Ritz column in one block). Each
+column is its own recurrence, so the solution does not depend on the chunk width (bit-identical to the former
+chunks of 6, test `test_block_solves_do_not_depend_on_the_block_width`); one chunk of 20 costs 7.7 s against 11.1 s
+for four chunks at 47 000 DOF (fewer recurrence steps, wider sparse products), for about 55 MB more block vectors.
 
 ### 3.5 Modes and refresh
 
 Full solve: ARPACK shift-invert at sigma = 0 (`eigsh`, mode 3), `v0 = ones/sqrt(n)` (zero at fixed DOFs),
 `ncv = max(2k+1, k+16)`, `tol = eig_tol` (1e-8), the inverse by the solver above; k = `work_modes` (8) +
-`work_residual_modes` (12). Refresh: Rayleigh-Ritz on the previous modes (mapped through the node lattice) plus
-their static residual vectors `Z = K^-1 (K phi - lambda M phi)`, then on `[V, Z, Z_prev]` (block Krylov), up to
-`RITZ_ITERATIONS` (4) steps until the energy-norm residual
+`work_residual_modes` (12). Refresh: Rayleigh-Ritz on the previous modes (mapped through the node lattice) in the
+current model, then on those plus their static residual vectors `Z = K^-1 (K phi - lambda M phi)`, then on
+`[V, Z, Z_prev]` (block Krylov), up to `RITZ_ITERATIONS` (4) steps until the energy-norm residual
 
     eps_k = sqrt( r_k^T K^-1 r_k / lambda_k ),   r_k = K phi_k - lambda_k M phi_k
 
-is below `ritz_tol` (2e-3) for the published modes (10 x for the residual modes); else a full solve. The
-eigenvalue error is about eps^2 (test: 1e-5 relative, MAC > 1 - 1e-5 after a pocket). The force-norm residual is not
-used: the unbalanced surface tractions where cells were removed dominate it while the modes are already accurate.
+is below `ritz_tol` (2e-3) for the published modes (10 x for the residual modes); else a full solve. The first check
+is on the previous modes' own Ritz pairs in the current model (one block solve: the check needs `K^-1 r`), so a
+change that hardly moved the modes is accepted then; before 2026-11-09 the raw previous pairs went into the first
+Krylov step and the first check came after the second block solve. The eigenvalue error is about eps^2 (test: 1e-5
+relative, MAC > 1 - 1e-5 after a pocket). The force-norm residual is not used: the unbalanced surface tractions where
+cells were removed dominate it while the modes are already accurate. Measured against a full solve of the same
+changed model (the side-step stock at 46 600 DOF, a trench of 5 / 30 / 300 cells removed along the front top
+edge): published frequencies within 3e-10 / 6e-8 / 2e-13, MAC above 1 - 1.4e-8, total displacement identical; the
+residual compliance within 1.4 / 1.7 / 4.4 % (the residual modes are accepted at 10 x the tolerance: their
+eigenvalues within 1.2e-4 / 1.7e-4 / 2.4e-3), the same as the former refresh gave.
+
+**An unchanged model is not solved again** (2026-11-09). Every solution carries `model_key` (`work.model_key`: the
+cells in the model, the grid, the material's E, nu and rho, the clamped state and every support array: held,
+locating and locked springs and the clamping preloads). A refresh whose key is the latest solution's solves the
+same eigenproblem and the same clamping and residual-stress systems: it keeps that solution's eigenpairs (the
+published grids are rebuilt from them with the current fractions, which the thin-wall detection reads) and its
+clamping and residual-stress displacements, and solves only the thermal displacement, the one input that changed
+(`stats.solve` = `reuse`). The assembled model and its held system (with the multigrid hierarchy) stay in a runtime
+cache per workpiece (`work.WorkCache`, never checkpointed; a resumed run rebuilds them from the same inputs, so the
+results do not depend on it). Before, every refresh whose temperatures had changed (every 50 steps once the part
+warms) ran a Ritz refresh, a clamping solve and two multigrid set-ups on the same matrices. Against the former
+refresh, replaying the 13 refresh jobs of a 7 s side-step run at 46 662 DOF: thermal, clamping, residual and total
+displacement grids and the clamp loads at the supports bit-identical, frequencies within 7e-12, MAC 1, residual
+compliance within 5e-12 (the former Ritz step re-polished the same eigenpairs at round-off); 1.2-1.3 s per job
+against 27-31 s. A cut that removes no whole cell (a 0.5 x 1 mm side step on 1.5 mm cells, finishing passes)
+leaves the model unchanged for the whole operation.
+
+**The first step waits for holding** (2026-11-09). At the run's first macro step bus_prev is the initial bus: holding
+publishes its first record of the part (supports, clamped) at the end of that step. The setup waits for it (counter
+`setup_waited`) instead of solving the part free on a 3-2-1 support and again, clamped, one step later (two full
+eigen solves at the start of every run: 57 + 62 s at 46 662 DOF). Without any holding record after the first step
+the part is set up free, as before.
 
 ### 3.6 Published modes and compliance
 
@@ -429,7 +461,8 @@ the sum of the modal tip compliances plus the residual equals the static tip com
   (no plasticity, no machining-induced layer stresses: those are surface's).
 * Long turned parts: axisymmetric mean section stiffness; jaw crushing not modelled; tailstock axially free.
 * Refresh jobs are computed when they start and applied 50 macro steps later (deterministic); a new setup, the
-  first step and the end of an operation are solved at once. A new `supports_version` of the same operation and
+  first step with holding's record of the part (the run's second step: section 3.5) and the end of an operation
+  are solved at once. A new `supports_version` of the same operation and
   clamped state is a new setup only when the re-placed supports changed materially (`supports_unchanged`:
   the same contacts, each point within `support_change_rel` (2 %) of a cell, every contact stiffness and clamping
   force and the lathe conditions within 2 % of the largest); holding re-places the supports at every rebuild (a
@@ -448,6 +481,13 @@ full eigen solve of 20 modes 60 s, a Ritz refresh 2-5 block solves (12-30 s); me
 peak 220 MB during block solves (budget 200 MB). Jobs run every `every_n_macro` (0.5 s simulated by default) and
 are skipped when geometry, temperatures and supports did not change.
 
+Since 2026-11-09 (docs/performance.md 11, the convergence study's side-step stock at 46 662 DOF): a refresh whose
+model is unchanged 0.86-1.1 s (was 27-31 s), a Ritz refresh after removal flipped cells 20 s for 30 cells and 39 s
+for 300 (was 28 and 50 s; a block solve of the 20 Ritz columns 7.7 s, was 11.1 s), the set-up 48-62 s once per
+operation (no longer twice at the run's start), structure's macro steps 0.091 s each over a 7 s run with its
+set-up (was 0.72 s), 0.022 s amortised (was 0.56 s). The kept model and system (`work.WorkCache`) hold about
+150 MB at that size between jobs; a block of 20 columns adds about 55 MB during block solves.
+
 ## 13. Integration
 
 * `StructureDomain(geometry=removal_domain.geometry(state), tools=None)`: wire removal's FieldGeometry (fill,
@@ -462,7 +502,9 @@ are skipped when geometry, temperatures and supports did not change.
   (`Displacement.clamped` False after `end_operation`).
 * Wear / report: `toolmodel.static_deflection`, `section_stresses`, `tip_frf`.
 * A job can be run in a worker between its start and its application (inputs frozen at the start); the domain
-  currently computes it synchronously at the start.
+  currently computes it synchronously at the start. `work.compute(inputs, prev, reference, cache=None)`: the
+  optional `cache` (`work.WorkCache`, one per workpiece in the domain's runtime) keeps the latest model and its
+  held system between jobs; results are the same with or without it.
 
 ## References
 
