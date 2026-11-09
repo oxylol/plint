@@ -52,7 +52,7 @@ from ...tooling.abi import PART_EDGE, PART_SHANK
 from ..cases import from_si, to_si
 from ..registry import CLASS, COMPARED, HarnessOutput, Prediction, discussion, harness, no_prediction
 from . import common as H
-from .chipform import _Chips
+from .chipform import HOLDER_INCL_DEG, HOLDER_RAKE_DEG, _Chips
 from .contact import ContactModel
 
 MILLING_FLUIDS = {"VG-68": "straight-oil", "emulsion": "emulsion-8pct"}
@@ -197,8 +197,25 @@ def _form(chips: _Chips, f_m: float, ap_m: float, v_m_s: float, friction: float,
     return CF.chip_form(chips.work, chips.tool, cond, state)
 
 
+def _stated_rake(case, chips: _Chips, col) -> None:
+    """The working rake from the case's rake land when the insert is not in the database: the land of the insert's
+    chip-breaker profile tilted by the negative holder (the chip-form helper's -6 deg holder rake alone treats the
+    insert's top as flat and ignores the stated land)."""
+    land = case.leaf("tool", "rake_land_deg")
+    if chips.tool.chip_breaker is not None or land is None or not isinstance(land.value, (int, float)):
+        return
+    rake_deg = float(land.value) + HOLDER_RAKE_DEG
+    chips.rake = rake_deg * H.DEG
+    col.assumptions[:] = [a for a in col.assumptions if a.input != "rake and inclination"]
+    col.assume("rake", f"{rake_deg:+g} deg working", f"the case's {float(land.value):g} deg rake land of the insert "
+               f"profile on a negative holder tilted {HOLDER_RAKE_DEG:g} deg (the holder's tilt not stated: negative ISO "
+               "holder)", "case")
+    col.assume("inclination", f"{HOLDER_INCL_DEG:g} deg", "not stated: a negative ISO holder for a negative insert", "est")
+
+
 def _turning_jet(case, db, col) -> HarnessOutput:
     chips = _Chips(db, case, col, coolant=True)
+    _stated_rake(case, chips, col)
     work = chips.work
     vc = case.si("conditions", "cutting_speed_m_min")
     ap = case.si("conditions", "ap_mm")
@@ -298,10 +315,11 @@ def _turning_test(chips: _Chips, scene, jet, props, fluid, f, ap, vc, alpha, bet
     origin = distance * toward_nozzle
     direction = -toward_nozzle
     reach, arrival, shadows = _arrive(scene, jet, origin, direction, np.zeros(3), radius, props, chips.amb)
-    lub = L.friction(fluid, props, reach, chips.tool.tool_class, chips.work.family, vc, None, None, 1e-3,
-                     fluid.is_mql, 0.0)
     h = f * math.sin(chips.kappa)
     width = ap / math.sin(chips.kappa)
+    # the contact's own uncut thickness, as the coolant domain passes it (the capillary access depends on v_c h)
+    lub = L.friction(fluid, props, reach, chips.tool.tool_class, chips.work.family, vc, h, None, width,
+                     fluid.is_mql, 0.0)
 
     def model(factor):
         key = round(factor, 9)
@@ -403,7 +421,8 @@ def _milling_temperature(case, db, col) -> HarnessOutput:
         if jet is None:
             factor = 1.0
         else:
-            factor = L.friction(fluid, props, reach, tool.tool_class, work.family, vc, None, None, 1e-3, fluid.is_mql,
+            # the mean uncut thickness of the engagement, as the coolant domain passes the contact's mean h
+            factor = L.friction(fluid, props, reach, tool.tool_class, work.family, vc, h_m, None, width, fluid.is_mql,
                                 0.0).factor
         key = round(factor, 9)
         if key not in models:
@@ -533,8 +552,11 @@ def _discuss(q) -> dict:
         out[r.id] = "; ".join(parts) + (". The jet reaches the cut in the case's scene; its lubrication, the cooling of "
                                         "the tool body and the hydraulic wedge are in the prediction. The remaining "
                                         "miss sits in the dry level of the mechanics (contact temperature, cutting "
-                                        "force) and, for the chip grades, in the jet's push on the chip's back and the "
-                                        "chip-breaker geometry, which are not modelled.")
+                                        "force), in the flank heat of the coefficient pipeline (Blok's share of the "
+                                        "land friction applied to the whole edge power: a jet-cooled tool body gets a "
+                                        "hotter flank, which cancels the jet's cooling of the contact mean) and, for "
+                                        "the chip grades, in the jet's push on the chip's back and the chip-breaker "
+                                        "geometry, which are not modelled.")
     out["summary"] = (H.budget_summary(q) + "The coolant now acts through the reach traced in each case's scene, the "
                       "lubrication friction factor, the convective cooling of the tool faces at the engagement and the "
                       "hydraulic wedge of a jet that runs under the chip; the dry levels of the mechanics set most of "

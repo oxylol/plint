@@ -710,7 +710,7 @@ class SurfaceDomain:
         if any(r.get("cross_patch") == p for r in sst.results):
             return
         rough, marks, info = FC.cross_profile(sst.store, p, rt["tools"].outline, sst.settings, rt["rules"],
-                                              rt["silhouettes"])
+                                              rt["silhouettes"], recovery=float(rt["rough"]["recovery_ratio"]))
         for m in marks:
             m["patch"] = p
             m["location_S_m"] = [float(v) for v in sst.store.centroid(p)]

@@ -143,7 +143,8 @@ thermal:
     expansion_1_K: 11.5e-6
     heat_per_m_travel_J: {value: 50, src: est}
     time_constant_min: {value: 40, src: est}
-  structure_sensitivity_um_per_K: {value: 3, src: est}   # tool-to-table drift per K of ambient change
+  structure_sensitivity_um_per_K: {value: 3, src: est}   # tool-to-table drift per K of ambient change: the whole
+                                   # loop, spindle head included (thermal adds the spindle model's own share back)
   warmup: {cold_to_warm_min: 60, src: est}
 
 tool_changer:

@@ -1,12 +1,13 @@
 """Harness for roughness: cnctwin.surface's kinematic profile model with the case's feeds and tools.
 
 The profile is the lower envelope of the generating edge placed at each pass (cnctwin.surface.kernels.
-envelope_profile: the passes in time order, each removing material only where the layer it meets reaches the
-minimum chip thickness h_min = ratio x edge radius, Brammertz 1961; a thinner layer is ploughed, pressed to the
-pass and moved by side flow into the free space under the pass, or left in place where there is none;
-docs/models/surface.md 2), evaluated by cnctwin.surface.roughness (ISO 4287 parameters with the ISO 4288 cut-off
-chosen from the feed spacing, Gaussian filter of ISO 16610-21). The generating edge in the profile plane, per
-process, with the tool moving along +u (major edge leading, minor edge trailing over the generated surface):
+envelope_profile: the passes in time order, each removing material only where the layer it meets reaches the minimum
+chip thickness h_min = ratio x edge radius, Brammertz 1961; a thinner layer is ploughed, pressed to the pass and
+moved by side flow into the free space under the pass, or left in place where there is none; docs/models/surface.md
+2), evaluated by cnctwin.surface.roughness (ISO 4287 parameters with the instrument's stated cut-off, else the ISO
+4288 cut-off chosen from the feed spacing, Gaussian filter of ISO 16610-21). The generating edge in the profile
+plane, per process, with the tool moving along +u (major edge leading, minor edge trailing over the generated
+surface):
 
 * **turning**: the insert's nose radius with the major and minor edges (entering angle kappa_r, minor angle
   kappa_r' from the insert's corner angle: kappa_r' = 180 deg - corner - kappa_r), one pass per revolution at
@@ -15,12 +16,20 @@ process, with the tool moving along +u (major edge leading, minor edge trailing 
   at its dish angle trailing, one pass per tooth at the feed per tooth (ideal cutter: equal teeth, no runout);
 * **ball-end milling**: the scallop (cross-feed) profile of the ball (radius R, any lead or tilt: the ball's
   silhouette stays a circle of radius R) at the step-over, and the feed-mark profile (the swept sphere, radius
-  R) at the feed per tooth; the roughest direction is reported (ISO 4288: perpendicular to the lay).
+  R) at the feed per tooth, both with the minimum chip thickness (the layer a tooth meets near the ball's lowest
+  point is measured along the sphere normal, whatever the direction of the cutting velocity, so the step-over
+  plays the role of the feed across it) and both with the ball's meridian up to the depth of cut (the template
+  window of the surface model, not a narrower template, bounds each pass); the roughest direction is reported
+  (ISO 4288: perpendicular to the lay).
 
-The h_min ratio is the material file's (surface's material props), the edge radius the case's or the tooling
-default of the edge kind; the recovery ratio is the surface model's (db/models/surface-roughness.yaml). Built-up
-edge, vibration, runout and side flow are not in the kinematic profile: they are named in the report where the
-measured roughness lies far above it.
+The h_min ratio is the material file's (surface's material props), the edge radius the case's, else the default
+the tooling model gives a tool of that kind without a stated edge preparation (tooling.common.edge_prep: an
+indexable insert the insert hone, a T-land its corner rounding, a coated solid tool the light hone, an uncoated
+solid tool the ground (sharp) edge); the recovery ratio is the surface model's (db/models/surface-roughness.yaml).
+A cut-off or sampling length the case states for its instrument is used in the ISO evaluation (else ISO 4288's
+choice from the feed spacing). Built-up edge, vibration and runout are in no case record as values the profile
+could take (Nowakowski gives the load per insert, from which the axial and radial insert offsets cannot be
+separated): they are named in the report where the measured roughness lies far above the profile.
 """
 
 from __future__ import annotations
@@ -81,16 +90,25 @@ def circle_template(R_m: float, half_width_m: float, du: float) -> np.ndarray:
     return np.stack([u, R_m - np.sqrt(np.clip(R_m * R_m - u * u, 0.0, None))], axis=1)
 
 
-def profile_roughness(template: np.ndarray, spacing_m: float, h_min_m: float, recovery: float, rules: IsoRules):
+def ball_template(R_m: float, depth_m: float, du: float) -> np.ndarray:
+    """The ball's meridian (radius R) on both sides of its lowest point up to the depth of cut (the part of the
+    edge that can meet material; the whole half circle when the depth reaches R)."""
+    d = min(max(depth_m, 0.0), R_m)
+    return circle_template(R_m, math.sqrt(max(2.0 * R_m * d - d * d, 0.0)), du)
+
+
+def profile_roughness(template: np.ndarray, spacing_m: float, h_min_m: float, recovery: float, rules: IsoRules,
+                      cutoff_m: float | None = None):
     """(Roughness, kinematic Pt) of the envelope of ``template`` repeated every ``spacing`` (passes in order of
-    increasing position, i.e. the tool moving along +u), through the surface model's envelope kernel."""
+    increasing position, i.e. the tool moving along +u), through the surface model's envelope kernel; ``cutoff_m``
+    is the instrument's stated cut-off (None: ISO 4288's choice)."""
     du = rules.spacing_for(spacing_m)
     # window: the feed spacings of the surface model and the distance over which the generating edge rises by the
     # thickest layer the minimum chip thickness can leave (so that layer stays inside the passes that remove it)
     rise = (1.0 + recovery) * h_min_m
     near = np.abs(template[template[:, 1] <= 1.5 * rise, 0]) if rise > 0.0 else np.zeros(0)
     half = max(WINDOW_SPACINGS * spacing_m, 20.0 * du, 1.5 * float(np.max(near)) if len(near) else 0.0)
-    cutoff = rules.cutoff_for_rsm(spacing_m)
+    cutoff = cutoff_m if cutoff_m else rules.cutoff_for_rsm(spacing_m)
     n = max(PASSES, int(math.ceil((4.0 * half + 7.0 * cutoff) / spacing_m)) + 10)
     n = min(n, int(1.5e6 * du / spacing_m))
     P = SA.new_passes(n)
@@ -116,7 +134,7 @@ def profile_roughness(template: np.ndarray, spacing_m: float, h_min_m: float, re
     seg = seg[np.isfinite(seg)]
     if len(seg) < 32:
         return None, None
-    rough = evaluate(seg.copy(), du, rules, hint_rsm_m=spacing_m)
+    rough = evaluate(seg.copy(), du, rules, cutoff_m=cutoff_m or None, hint_rsm_m=spacing_m)
     kin = primary_params(seg.copy(), du, rules)
     return rough, kin
 
@@ -138,7 +156,33 @@ def _min_chip(db, case, col) -> float:
 
 
 def _edge_radius(case, col, kind: str) -> float:
+    """The case's edge radius, else the tooling model's default for the tool: ``kind`` "solid" follows
+    tooling.common.edge_prep for solid tools without a stated edge preparation (the light hone when coated, the
+    ground edge when uncoated); "insert" and "chamfer" are the indexable defaults."""
+    if kind == "solid" and H.coating_id(case, col) == "none":
+        kind = "sharp"
+        if case.leaf("tool", "edge_radius_um", "edge_radius_mm", "hone_um") is None:
+            col.note("Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) "
+                     "edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.")
     return H.edge_radius_m(case, None, col, kind)
+
+
+CUTOFF_TEXT = (re.compile(r"([0-9]*\.?[0-9]+)\s*mm\s*cut-?\s*off", re.I),
+               re.compile(r"cut-?\s*off\s*(?:of\s*)?([0-9]*\.?[0-9]+)\s*mm", re.I),
+               re.compile(r"sampling\s+length\s*(?:of\s*)?([0-9]*\.?[0-9]+)\s*mm", re.I))
+
+
+def _stated_cutoff(case, col) -> float | None:
+    """The cut-off lambda_c (= sampling length, ISO 4287) the case states for its roughness instrument, in m."""
+    text = H._text(case.section("conditions").get("roughness_instrument"))
+    for pattern in CUTOFF_TEXT:
+        m = pattern.search(text)
+        if m:
+            value = float(m.group(1)) * 1e-3
+            col.note(f"Profiles evaluated with the instrument's stated cut-off {value * 1e3:g} mm (case: "
+                     f"conditions.roughness_instrument), not ISO 4288's choice from the feed spacing.")
+            return value
+    return None
 
 
 def _iso_angles(case, col) -> tuple[float, float]:
@@ -186,6 +230,7 @@ def _turning(case, db, col, rules, ratio, recovery) -> list:
     r_e = _edge_radius(case, col, "chamfer" if "T0" in H._text(case.section("tool").get("iso_designation")) else
                        "insert")
     h_min = ratio * r_e
+    cutoff = _stated_cutoff(case, col)
     noses = case.value("tool", "nose_radius_mm_levels")
     nose_default = case.value("tool", "nose_radius_mm")
     ap_default = case.value("conditions", "ap_mm")
@@ -199,7 +244,7 @@ def _turning(case, db, col, rules, ratio, recovery) -> list:
         ap = (ap if ap is not None else float(ap_default)) * 1e-3
         du = rules.spacing_for(f)
         tpl = corner_template(nose, kr, kr2, ap, du)
-        rough, kin = profile_roughness(tpl, f, h_min, recovery, rules)
+        rough, kin = profile_roughness(tpl, f, h_min, recovery, rules, cutoff)
         out.append(_predict(rough, kin, name, str(v.get("unit") or "um"),
                             f"turning: r {nose * 1e3:g} mm, f {f * 1e3:g} mm/rev, kappa_r {kr / DEG:g}, kappa_r' "
                             f"{kr2 / DEG:g} deg, h_min {h_min * 1e6:.1f} um",
@@ -213,21 +258,23 @@ def _ball(case, db, col, rules, ratio, recovery) -> list:
     rpm = float(case.value("conditions", "spindle_rpm"))
     r_e = _edge_radius(case, col, "solid")
     h_min = ratio * r_e
+    ap = case.si("conditions", "ap_mm")
+    cutoff = _stated_cutoff(case, col)
     ae_runs = case.value("conditions", "run_ae_mm")
     feed_runs = case.value("conditions", "run_feed_mm_min")
     col.note("Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at "
-             "the feed per tooth (radius R both); the rougher is compared. Lead and tilt angles do not change either "
-             "kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the "
-             "contact, which the kinematic model does not use.")
+             "the feed per tooth (the ball's meridian of radius R up to the depth of cut in both), each with the "
+             "minimum chip thickness (the layer a tooth meets near the ball's lowest point is the distance between the "
+             "spheres along their normal, whatever the direction of the cutting velocity); the rougher is compared. "
+             "Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius "
+             "R), only the cutting speed at the contact, which the kinematic model does not use.")
     out = []
     for v in case.reference_values:
         run = int(v["x"]) - 1
         ae = float(ae_runs[run]) * 1e-3
         fz = float(feed_runs[run]) * 1e-3 / 60.0 / (rpm / 60.0 * flutes)
-        cross = profile_roughness(circle_template(R, min(R, 3.0 * ae + 2e-5), rules.spacing_for(ae)), ae, 0.0,
-                                  recovery, rules)
-        feed = profile_roughness(circle_template(R, min(R, 3.0 * fz + 2e-5), rules.spacing_for(fz)), fz, h_min,
-                                 recovery, rules)
+        cross = profile_roughness(ball_template(R, ap, rules.spacing_for(ae)), ae, h_min, recovery, rules, cutoff)
+        feed = profile_roughness(ball_template(R, ap, rules.spacing_for(fz)), fz, h_min, recovery, rules, cutoff)
         best = cross if (cross[0] is not None and (feed[0] is None or cross[0].Ra_m >= feed[0].Ra_m)) else feed
         which = "scallops (cross-feed)" if best is cross else "feed marks"
         out.append(_predict(best[0], best[1], str(v["name"]), str(v.get("unit") or "um"),
@@ -249,8 +296,14 @@ def _floor(case, db, col, rules, ratio, recovery) -> list:
         col.assume("minor edge angle", f"{dish / DEG:.2f} deg", "the tooling model's minor-edge dish of milling "
                    "inserts (no wiper stated)", "db/models/tooling.yaml")
         r_e = _edge_radius(case, col, "insert")
-        col.note("Ideal cutter: every insert at the same axial and radial position. The case's insert loads (Table 1 "
-                 "of the source) show axial runout of the individual inserts, whose offsets are not given.")
+        col.note("Ideal cutter: every insert at the same axial and radial position. The insert loads of the case "
+                 "(Table 1 of the source) come from measured axial and radial insert offsets that are not printed. "
+                 "Inverted through the chip cross-section of the corner (r 0.8 mm > ap 0.2 mm), offset sets that "
+                 "reproduce the table equally well (2.2-2.4 % load rms) give the lowest insert a lead of 0 to 9 um "
+                 "over the next one, and radial-only or axial-only sets fit within 4.6 % (an axial offset moves the "
+                 "shallow corner arc like a radial one): the axial runout that decides the floor is not determined "
+                 "by the record. The insert's wiper edge is not stated either: with a parallel land longer than the "
+                 "feed per revolution the lowest insert alone would generate a flat floor.")
     else:
         dish = float(params("tooling")["end_dish_rad"])
         col.assume("end-edge dish", f"{dish / DEG:.2f} deg", "the tooling model's end-tooth dish (no corner radius "
@@ -259,20 +312,23 @@ def _floor(case, db, col, rules, ratio, recovery) -> list:
         col.assume("measured surface", "the slot floor", "the case: not stated ('Ra was measured for each slot'); the "
                    "wall's peripheral feed marks are listed with each value", "case")
     h_min = ratio * r_e
+    cutoff = _stated_cutoff(case, col)
     r = float(corner) * 1e-3 if isinstance(corner, (int, float)) else 0.0
     kr_rad = float(kr) * DEG if isinstance(kr, (int, float)) else 0.5 * math.pi
     ap = case.si("conditions", "ap_mm")
+    ae = case.si("conditions", "ae_mm")
     R = 0.5 * case.si("tool", "diameter_mm")
     out = []
     for v in case.reference_values:
         fz = to_si(float(v["x"]), str(v.get("x_unit") or "mm"))
         du = rules.spacing_for(fz)
         tpl = corner_template(r, kr_rad, dish, min(ap, 1e-3), du)
-        rough, kin = profile_roughness(tpl, fz, h_min, recovery, rules)
+        rough, kin = profile_roughness(tpl, fz, h_min, recovery, rules, cutoff)
         extra = {}
         if kind != "face_mill":
-            wall = profile_roughness(circle_template(R, min(R, 3.0 * fz + 2e-5), rules.spacing_for(fz)), fz, h_min,
-                                     recovery, rules)
+            # the wall's peripheral feed marks: the circle the periphery sweeps, engaged over the radial depth
+            wall = profile_roughness(ball_template(R, ae if ae else R, rules.spacing_for(fz)), fz, h_min, recovery,
+                                     rules, cutoff)
             extra["wall_Ra_um"] = wall[0].Ra_m * 1e6 if wall[0] else None
         out.append(_predict(rough, kin, str(v["name"]), str(v.get("unit") or "um"),
                             f"floor: corner r {r * 1e3:g} mm, fz {fz * 1e3:g} mm, minor angle {dish / DEG:.2f} deg, "
@@ -283,8 +339,8 @@ def _floor(case, db, col, rules, ratio, recovery) -> list:
 @harness("roughness", models=("cnctwin.surface.kernels", "cnctwin.surface.roughness"),
          description="cnctwin.surface's kinematic profile: the lower envelope of the case's generating edge (insert "
                      "nose and edges, cutter corner and end edge, ball) at the case's feed or step-over, with the "
-                     "minimum chip thickness rule (Brammertz), evaluated to ISO 4287 / 4288 (Gaussian filter, cut-off "
-                     "from the feed spacing).")
+                     "minimum chip thickness rule (Brammertz), evaluated to ISO 4287 / 4288 (Gaussian filter, the "
+                     "instrument's stated cut-off, else ISO 4288's from the feed spacing).")
 def roughness(case, db) -> HarnessOutput:
     col = H.Collector()
     rules = IsoRules()
@@ -321,18 +377,24 @@ def _discuss(q) -> dict:
         if mean < -0.3:
             text += ("; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout "
                      "and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model "
-                     "(the case states none of them)")
+                     "(the case states none of them as a value)")
         elif mean > 0.3:
             text += ("; the profile is dominated by the minimum chip thickness h_min = ratio x edge radius (below "
-                     "f = sqrt(2 r h_min) the surface forms where the per-pass chip reaches h_min: R_t = h_min); the "
-                     "edge radius used is the tooling default listed above, not a stated value")
+                     "f = sqrt(2 r h_min) the surface forms where the accumulated layer reaches h_min: R_t = h_min; "
+                     "above it Brammertz's R_t); the edge radius used is the tooling default listed above, not a "
+                     "stated value")
         out[r.id] = text + "."
     out["summary"] = (H.budget_summary(q) + "Where the feed marks dominate (turning at larger feeds) the kinematic "
-                      "profile with the minimum chip thickness follows the measurements; at small feeds the minimum-"
-                      "chip-thickness sawtooth (R_t = h_min) sets the simulated value, so it follows the edge radius, "
-                      "which most cases do not state; built-up edge, runout and vibration are in no case record "
-                      "(Nowakowski gives the insert loads, not the offsets behind them).")
+                      "profile with the minimum chip thickness follows the measurements. At small feeds and "
+                      "step-overs the minimum-chip-thickness term sets the simulated value (R_t = h_min below "
+                      "f = sqrt(2 r h_min), Brammertz's R_t above), so it follows the edge radius, which no case "
+                      "states: with the tooling default of the tool kind the ball-end cases (uncoated CBN, ground "
+                      "edge 3 um) follow the measured Ra within about a third, while the 35 um insert hone puts "
+                      "Magalhaes' r 0.2 mm cermet turning at R_t = h_min = 9.4 um (the measured Ra is about a fifth "
+                      "of the simulated one). Built-up edge, runout and vibration are in no case record as values "
+                      "(Nowakowski gives the insert loads, from which the axial offsets that decide the floor cannot "
+                      "be separated from the radial ones).")
     return out
 
 
-__all__ = ["roughness", "profile_roughness", "corner_template", "circle_template"]
+__all__ = ["roughness", "profile_roughness", "corner_template", "circle_template", "ball_template"]

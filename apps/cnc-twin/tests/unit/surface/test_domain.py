@@ -96,6 +96,19 @@ def test_checkpoint_round_trip_continues_bit_identically():
     assert json.dumps(dom2.finalize(ctx, state2), sort_keys=True) == reference
 
 
+def test_store_reads_a_checkpoint_written_before_the_pass_hmin_column():
+    from cnctwin.surface.store import QF, QF_NAMES, Store
+    st = Store()
+    q = st.new_pass(0, 0, 0, 100, 1, 0)
+    st.qf[q, QF["count"]] = 3.0
+    st.qf[q, QF["hmin_sum"]] = 9e-6
+    arrays, meta = st.to_arrays()
+    arrays["store.qf"] = arrays["store.qf"][:, :QF["hmin_sum"]]          # the layout before the column existed
+    old = Store.from_arrays(arrays, meta)
+    assert old.qf.shape == (1, len(QF_NAMES))
+    assert old.qf[0, QF["count"]] == 3.0 and old.qf[0, QF["hmin_sum"]] == 0.0
+
+
 def test_identical_runs_give_identical_documents():
     edge, outline, elems = _floor_tool()
     docs = []

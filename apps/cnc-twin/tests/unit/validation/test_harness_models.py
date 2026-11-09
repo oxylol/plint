@@ -78,6 +78,61 @@ def test_kinematic_turning_profile_gives_the_nose_radius_roughness():
     assert rough.Ra_m == pytest.approx(f * f / (18.0 * math.sqrt(3.0) * r), rel=0.05)
 
 
+def _rough_case(tool: dict, conditions: dict | None = None):
+    from cnctwin.validation.cases import Case
+    return Case(id="t", quantity="roughness", file="", raw={"setup": {"tool": tool, "conditions": conditions or {}}})
+
+
+def test_roughness_edge_default_follows_the_tooling_rule():
+    """Without a stated edge radius: uncoated solid tools take tooling's ground (sharp) edge, coated ones the light
+    hone, inserts the insert hone (tooling.common.edge_prep); a stated radius wins."""
+    from cnctwin.db.models import params
+    from cnctwin.validation.harnesses.common import Collector
+    p = params("tooling")
+    col = Collector()
+    assert RH._edge_radius(_rough_case({"type": "ball_endmill", "tool_class": "cbn"}), col, "solid") == \
+        pytest.approx(float(p["sharp_edge_radius_m"]))
+    assert RH._edge_radius(_rough_case({"type": "square_endmill", "coating": "none"}), col, "solid") == \
+        pytest.approx(float(p["sharp_edge_radius_m"]))
+    assert RH._edge_radius(_rough_case({"type": "square_endmill", "coating": "TiAlN"}), col, "solid") == \
+        pytest.approx(float(p["hone_edge_radius_m"]))
+    assert RH._edge_radius(_rough_case({"type": "square_endmill", "coating": "none", "edge_radius_um": 12}), col,
+                           "solid") == pytest.approx(12e-6)
+    assert RH._edge_radius(_rough_case({"type": "turning_insert", "coating": "none"}), col, "insert") == \
+        pytest.approx(float(p["insert_edge_radius_m"]))
+
+
+def test_roughness_reads_the_instruments_stated_cutoff():
+    from cnctwin.validation.harnesses.common import Collector
+    col = Collector()
+    for text, cutoff in (("Talysurf CCI-Lite, Gaussian filter 0.8 mm cut-off", 0.8e-3),
+                         ("Surtronic 3+ portable stylus, sampling length 0.8 mm", 0.8e-3),
+                         ("stylus, cut-off of 2.5 mm", 2.5e-3), ("Mitutoyo 201 roughness tester, ISO 4287", None)):
+        got = RH._stated_cutoff(_rough_case({}, {"roughness_instrument": text}), col)
+        assert got == (None if cutoff is None else pytest.approx(cutoff)), text
+
+
+def test_ball_profile_is_bounded_by_the_window_and_carries_the_minimum_chip_term():
+    """The ball's meridian up to the depth of cut and a wider one give the same feed-mark profile (the surface
+    model's window bounds each pass; the former 3 fz + 20 um template was narrower than that window and changed
+    it); below sqrt(2 R h_min) the profile carries R_t = h_min, and the scallops across the step-over carry
+    Brammertz's term like a turned profile at the feed ae."""
+    from cnctwin.surface.roughness import IsoRules
+    rules = IsoRules()
+    R, fz, h_min = 1e-3, 0.0356e-3, 5e-6
+    du = rules.spacing_for(fz)
+    deep = RH.profile_roughness(RH.ball_template(R, 0.1e-3, du), fz, h_min, 0.0, rules)
+    deeper = RH.profile_roughness(RH.ball_template(R, 0.3e-3, du), fz, h_min, 0.0, rules)
+    narrow = RH.profile_roughness(RH.circle_template(R, 3.0 * fz + 2e-5, du), fz, h_min, 0.0, rules)
+    assert deep[1].Rt_m == pytest.approx(deeper[1].Rt_m, rel=0.02)
+    assert narrow[1].Rt_m < 0.85 * deep[1].Rt_m
+    assert deep[1].Rt_m == pytest.approx(h_min, rel=0.1)
+    ae, h_small = 0.1e-3, 0.75e-6
+    cross = RH.profile_roughness(RH.ball_template(R, 0.1e-3, rules.spacing_for(ae)), ae, h_small, 0.0, rules)
+    brammertz = ae * ae / (8.0 * R) + 0.5 * h_small * (1.0 + R * h_small / (ae * ae))
+    assert cross[1].Rt_m == pytest.approx(brammertz, rel=0.03)
+
+
 def test_reference_name_and_dimension_parsers():
     assert CF._token_value("Fc f=0.05", ("f", "h")) == pytest.approx(0.05)
     assert CF._token_value("Fc dry vc361", ("vc",)) == pytest.approx(361.0)

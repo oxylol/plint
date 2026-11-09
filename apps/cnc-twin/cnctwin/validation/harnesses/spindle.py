@@ -11,7 +11,9 @@ listed as an assumption. No cooling jacket is assumed (none is stated). The meas
 tool-to-table loop: the spindle's growth toward the table minus the drift of the machine structure
 (``structure_model``: the cast-iron frame, relaxing to the ambient and heated by the head through its
 mounting; warmer, it lifts the head), with the structure sensitivity of the database's vertical machining
-centre (``haas-vf2ss``). The ambient is the case's per-batch initial value (else the middle of its band),
+centre (``haas-vf2ss``), linked to the spindle as the thermal domain links them (``link_structure``: the file's
+sensitivity is the whole loop's, the head included, so the network's own uniform growth per K is added back on
+the structure body and the head is counted once). The ambient is the case's per-batch initial value (else the middle of its band),
 rising linearly over the batch by the stated rise where the case gives one. Control compensation is off
 (ISO 230-3 tests measure the uncompensated error).
 
@@ -76,9 +78,10 @@ def _machine(db, col) -> dict:
 
 def _models(machine: dict, ambient_K: float):
     st = thermal_settings({})
-    spindle = TM.spindle_models(machine, ambient_K, "cold", float(st.energy_tol), 0.0)["main"]
+    spindles = TM.spindle_models(machine, ambient_K, "cold", float(st.energy_tol), 0.0)
     structure = TM.structure_model(machine, ambient_K, "cold")
-    return spindle, structure, float(st.energy_tol)
+    TM.link_structure(structure, spindles)          # as the thermal domain links them: the head counted once
+    return spindles["main"], structure, float(st.energy_tol)
 
 
 def _assumptions(spindle, structure, col) -> None:
@@ -103,7 +106,9 @@ def _assumptions(spindle, structure, col) -> None:
                f"{d['g_struct_W_K']:.0f} W/K to the column",
                "not stated: the model's 40-taper defaults", "db/models/thermal-machine.yaml")
     col.assume("spindle cooling", "none", "not stated: no cooling jacket", "est")
-    col.assume("machine structure", f"{structure.sensitivity_m_per_K * 1e6:g} um/K, "
+    col.assume("machine structure", f"{structure.sensitivity_m_per_K * 1e6:g} um/K for the whole loop, "
+               f"{(structure.sensitivity_m_per_K + structure.spindle_share_m_per_K) * 1e6:.1f} um/K on the structure "
+               f"body (the spindle network's own {structure.spindle_share_m_per_K * 1e6:.1f} um/K added back), "
                f"{structure.body.cap_J_K / 1e6:.2f} MJ/K, time constant "
                f"{structure.body.cap_J_K / structure.body.g_W_K / 3600.0:.1f} h",
                f"not stated: the structure sensitivity of the database VMC {REFERENCE_VMC}, the model's default "
@@ -202,7 +207,8 @@ def spindle_growth(case, db) -> HarnessOutput:
                 f"{d['bearings'][0]['bore_m'] * 1e3:.0f}/{d['bearings'][0]['outer_m'] * 1e3:.0f} mm",
                 "lubrication": d["bearings"][0]["lubrication"], "nose_length_mm": d["nose_length_m"] * 1e3,
                 "housing_length_mm": d["housing_length_m"] * 1e3, "housing_mass_kg": d["housing_mass_kg"],
-                "structure_sensitivity_um_per_K": structure.sensitivity_m_per_K * 1e6, "step_s": STEP_S}
+                "structure_sensitivity_um_per_K": structure.sensitivity_m_per_K * 1e6,
+                "spindle_share_um_per_K": structure.spindle_share_m_per_K * 1e6, "step_s": STEP_S}
     return HarnessOutput(values, curves, ["cnctwin.thermal.spindle (network: bearings, motor, shaft, housing)",
                                           "cnctwin.thermal.machine.structure_model (column drift)"],
                          settings, col.assumptions, col.provenance, col.notes, None)

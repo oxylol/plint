@@ -43,7 +43,8 @@ PI_NAMES = ("workpiece", "brick", "op", "slot", "block_first", "block_last", "cl
 PF = {n: i for i, n in enumerate(PF_NAMES)}
 PI = {n: i for i, n in enumerate(PI_NAMES)}
 
-QF_NAMES = ("csx", "csy", "csz", "dsx", "dsy", "dsz", "ax", "ay", "az", "w_min", "w_sum", "un_sum", "count")
+QF_NAMES = ("csx", "csy", "csz", "dsx", "dsy", "dsz", "ax", "ay", "az", "w_min", "w_sum", "un_sum", "count",
+            "hmin_sum")
 QI_NAMES = ("patch", "slot", "cls", "tick0", "tick1", "block_first", "block_last", "op", "closed", "lines")
 QF = {n: i for i, n in enumerate(QF_NAMES)}
 QI = {n: i for i, n in enumerate(QI_NAMES)}
@@ -163,7 +164,10 @@ class Store:
         st.pf = np.ascontiguousarray(arrays[f"{prefix}pf"], dtype=float).copy()
         st.pi = np.ascontiguousarray(arrays[f"{prefix}pi"], dtype=np.int64).copy()
         st.n_patch = st.pf.shape[0]
-        st.qf = np.ascontiguousarray(arrays[f"{prefix}qf"], dtype=float).copy()
+        qf = np.ascontiguousarray(arrays[f"{prefix}qf"], dtype=float)
+        if qf.ndim == 2 and qf.shape[1] < len(QF_NAMES):           # a checkpoint written before a column was added
+            qf = np.concatenate([qf, np.zeros((qf.shape[0], len(QF_NAMES) - qf.shape[1]))], axis=1)
+        st.qf = qf.copy()
         st.qi = np.ascontiguousarray(arrays[f"{prefix}qi"], dtype=np.int64).copy()
         st.n_pass = st.qf.shape[0]
         for i in range(st.n_patch):

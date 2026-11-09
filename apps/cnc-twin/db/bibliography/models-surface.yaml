@@ -195,6 +195,16 @@ entries:
     pages: "Brammertz-type models assume that the uncut material of the Spanzipfel springs back elastically, which does not hold for plastically deforming metals; following Lambert (1961) the material left by the minimum-chip-thickness effect is not confined to the Spanzipfel but deforms plastically as it moves under the tool and side-flows; Brammertz's formula over-predicts at low kinematic roughness"
     note: "Abstract and the summaries of the paper's introduction read (2026-11-09); the full text was not accessible. Cited for the mechanism (plastic flow and side flow of the uncut layer) behind the side-flow rule of cnctwin.surface.kernels.envelope_profile, not for numbers"
 
+  kim-mayor-ni-2004-micromilling-chip:
+    type: article
+    authors: "Kim, C.-J.; Mayor, J.R.; Ni, J."
+    title: "A static model of chip formation in microscale milling"
+    venue: "ASME Journal of Manufacturing Science and Engineering 126(4), 710-718"
+    year: 2004
+    doi: "10.1115/1.1813475"
+    pages: "when the feed per tooth is comparable with the edge radius the chip forms intermittently: the uncut material left below the minimum chip thickness stays and is removed by a later tooth once the accumulated thickness exceeds it"
+    note: "Abstract and citing summaries read (2026-11-09), not the full text. Cited for the accumulation of the uncut layer across passes that cnctwin.surface.kernels.envelope_profile keeps (docs/models/surface.md 2), not for numbers"
+
   challen-oxley-1979-wave-model:
     type: article
     authors: "Challen, J.M.; Oxley, P.L.B."

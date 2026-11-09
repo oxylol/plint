@@ -130,6 +130,23 @@ def test_ball_nose_scallop_height_matches_the_geometry():
     assert rough["direction"] == "cross"             # the scallops dominate the feed marks: lay along the feed
 
 
+def test_step_over_profile_carries_the_minimum_chip_thickness():
+    """Across the tracks the step-over plays the feed: a pass meets the layer the neighbouring track left, and with an
+    edge radius the scallop peaks follow Brammertz's R_t = s^2 / 8 R + (h_min / 2)(1 + R h_min / s^2) instead of the
+    kinematic scallop (h_min = 0.3 x 10 um in the test material)."""
+    edge, outline, elems = _ball_tool()
+    step, edge_r = 0.5e-3, 10e-6
+    passes = [(k * step, 0.0, 0.0) for k in range(6)]
+    _, _, state = fx.run_floor(edge, outline, elems, fz=FZ, passes=passes, teeth_passes=60, edge_r=edge_r)
+    results = [r for r in state.surface.results if "cross_patch" in r]
+    assert results, "no step-over profile was evaluated"
+    h_min = 0.3 * edge_r
+    brammertz = step * step / (8.0 * R) + 0.5 * h_min * (1.0 + R * h_min / (step * step))
+    cross = state.surface.store.pf[results[0]["cross_patch"]]
+    assert cross[PF["c_rt_max"]] == pytest.approx(brammertz, rel=0.04)
+    assert cross[PF["c_rt_max"]] > 1.15 * (R - math.sqrt(R * R - step * step / 4.0))
+
+
 @pytest.mark.parametrize("kind,lead", [("ball", 20.0), ("torus", 30.0)])
 def test_effective_cutting_profile_of_inclined_cutters(kind, lead):
     """The step-over profile of a cutter whose axis leans by the lead angle toward the feed is its silhouette

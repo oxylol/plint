@@ -82,6 +82,7 @@ class ThermalDomain:
         if mat_table is None:
             th.estimated.append("workpiece material: none in the project, aisi1045 used for any grid")
         th.spindles = M.spindle_models(machine, ambient, start, st.energy_tol, time_s, structure.body.T_K)
+        M.link_structure(structure, th.spindles)        # the head's share of the loop is the spindle model's
         th.axes = M.axis_models(machine, ambient, start, st.energy_tol, time_s)
         for sid, model in sorted(th.spindles.items()):
             th.estimated.extend(f"spindle {sid}: {e}" for e in model.estimated)
@@ -264,7 +265,8 @@ class ThermalDomain:
             "tools": tools, "workpieces": works, "unload": list(th.unload),
             "spindles": {sid: self._spindle_report(th, sid, m) for sid, m in sorted(th.spindles.items())},
             "axes": {a: {"temp_K": m.body.T_K, "strain": m.strain()} for a, m in sorted(th.axes.items())},
-            "structure": {"temp_K": th.structure.body.T_K, "drift_m": th.structure.drift_m()},
+            "structure": {"temp_K": th.structure.body.T_K, "drift_m": th.structure.drift_m(),
+                          "spindle_share_m_per_K": th.structure.spindle_share_m_per_K},
             "damage": {"counts": dict(sorted(th.damage.counts.items())), "max_K": dict(sorted(th.damage.max_K.items()))},
             "energy_J": {k: v for k, v in sorted(th.totals.items())},
             "ledgers": ledgers, "estimated": list(th.estimated),

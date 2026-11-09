@@ -107,7 +107,8 @@ class Gatherer:
         out.patches = list(dict.fromkeys(int(p) for p in patch))
         self._patch_sums(store, inp, patch, X, N, tick, mot, cls)
         lift = self._lowest_point_lift(inp, X, N, tooth, elem, mot) if (mot and rotating) else np.zeros(len(X))
-        passes = self._passes(store, inp, patch, X, N, tick, mot, cls, u_n, lift)
+        hmin = self.mat.min_chip_ratio * np.maximum(rows[:, 10], 0.0)
+        passes = self._passes(store, inp, patch, X, N, tick, mot, cls, u_n, lift, hmin)
         last = int(np.argmax(tick))
         out.arrays = (tick.copy(), X.copy(), N.copy(), u_n.copy(), patch.copy())
         out.last_event = {"X": X[last].tolist(), "n": N[last].tolist(), "u_n": float(u_n[last]),
@@ -223,10 +224,11 @@ class Gatherer:
         lowest = np.array([float(np.min(pts[:, 1] * c - pts[:, 0] * s_)) for c, s_ in zip(keys, sb)])
         return r_e * np.einsum("ij,ij->i", r_hat, N) + z_e * cosb - lowest[inverse.reshape(-1)]
 
-    def _passes(self, store, inp, patch, X, N, tick, mot, cls, u_n, lift) -> np.ndarray:
+    def _passes(self, store, inp, patch, X, N, tick, mot, cls, u_n, lift, hmin=None) -> np.ndarray:
         """The pass of every event (per patch and tool: a gap longer than the hold opens a new one) and the pass
-        sums: lowest generated height (corrected to the tool's lowest point), mean height, deflection, tool tip,
-        feed direction, tool axis, ticks and blocks."""
+        sums: lowest generated height (corrected to the tool's lowest point), mean height, deflection, minimum chip
+        thickness of the generating elements (for the step-over profile), tool tip, feed direction, tool axis,
+        ticks and blocks."""
         out = np.full(len(X), -1, np.int64)
         omega = mot["omega"] if mot else np.zeros(len(X))
         blocks = mot["block"] if mot else np.full(len(X), -1, np.int64)
@@ -273,6 +275,8 @@ class Gatherer:
         np.add.at(qf[:, QF["w_sum"]], qe, w)
         np.add.at(qf[:, QF["un_sum"]], qe, u_n)
         np.add.at(qf[:, QF["count"]], qe, 1.0)
+        if hmin is not None:
+            np.add.at(qf[:, QF["hmin_sum"]], qe, hmin)
         if mot:
             for c in range(3):
                 np.add.at(qf[:, QF["csx"] + c], qe, mot["tip"][:, c])

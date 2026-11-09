@@ -177,6 +177,8 @@ def test_domain_passes_the_head_heat_to_the_structure():
     assert net.totals["bearing_J"] > 0.0
     report = dom.finalize(ctx, state)
     assert report["spindles"]["main"]["model"] == "network"
+    share = th.spindles["main"].uniform_growth_m_per_K()
+    assert report["structure"]["spindle_share_m_per_K"] == pytest.approx(share, rel=1e-12) and share > 0.0
     assert set(report["spindles"]["main"]["node_temps_K"]) == set(net.names)
     for name, ledger in dom._solver_ledgers(th):
         assert ledger.worst_rel < 1e-10, name
@@ -218,3 +220,37 @@ def test_domain_cadence_and_resume_with_pending_spindle_steps():
     report = dom.finalize(ctx, state)                                           # flushes what is pending
     assert "main" not in state.thermal.spindle_pending
     assert report["spindles"]["main"]["energy_J"]["bearing_J"] > 0.0
+
+
+def test_uniform_growth_per_K_is_the_whole_spindle_one_kelvin_up():
+    net, _ = network()
+    net.set_temperature(293.15 + 1.0)
+    assert net.uniform_growth_m_per_K() == pytest.approx(net.growth_m(), rel=1e-12)
+    machine = {"spindles": [NETWORK_SPINDLE]}
+    model = M.spindle_models(machine, 293.15, "cold", 1e-9, 0.0)["main"]
+    assert model.uniform_growth_m_per_K() == pytest.approx(net.uniform_growth_m_per_K(), rel=1e-12)
+
+
+def test_structure_counts_the_spindle_head_once_under_uniform_warming():
+    """The machine file's structure sensitivity is the whole loop's drift per K (the head included): with the
+    spindle linked, a uniform warming of spindle and structure drifts by exactly that sensitivity."""
+    machine = {"spindles": [NETWORK_SPINDLE], "thermal": {"structure_sensitivity_um_per_K": 3.0}}
+    spindles = M.spindle_models(machine, 293.15, "cold", 1e-9, 0.0)
+    structure = M.structure_model(machine, 293.15, "cold")
+    M.link_structure(structure, spindles)
+    share = spindles["main"].uniform_growth_m_per_K()
+    assert structure.spindle_share_m_per_K == pytest.approx(share, rel=1e-12) and share > 4e-6
+    for dT, rel in ((1.0, 1e-9), (3.0, 1e-3)):           # exact at 1 K; the mean-CTE tables bend it slightly beyond
+        spindles["main"].network.set_temperature(293.15 + dT)
+        structure.body.set_temperature(293.15 + dT)
+        lift = structure.drift_m() - (spindles["main"].growth_abs_m() - spindles["main"].growth0_m)
+        assert lift == pytest.approx(3e-6 * dT, rel=rel)
+    copy_ = M.StructureThermal.from_dict(json.loads(json.dumps(structure.to_dict())))
+    assert copy_.drift_m() == structure.drift_m()
+    old = structure.to_dict()
+    del old["spindle_share_m_per_K"]                    # a checkpoint written before the share existed
+    assert M.StructureThermal.from_dict(old).spindle_share_m_per_K == 0.0
+    lathe = {"spindles": [dict(NETWORK_SPINDLE, kind="turning")], "thermal": {"structure_sensitivity_um_per_K": 4.0}}
+    turning = M.structure_model(lathe, 293.15, "cold")
+    M.link_structure(turning, M.spindle_models(lathe, 293.15, "cold", 1e-9, 0.0))
+    assert turning.spindle_share_m_per_K == 0.0          # a turning spindle grows across the radial loop

@@ -431,6 +431,13 @@ class SpindleNetwork:
         e_house = props.thermal_strain(_mat(self.housing_material), self.housing_T_K, self.T_ref_K)
         return e_shaft * self.nose_length_m + e_house * self.housing_length_m
 
+    def uniform_growth_m_per_K(self) -> float:
+        """Growth toward the work of the whole spindle 1 K above its reference temperature (shaft and housing
+        alike): the share of the machine's loop this network carries."""
+        t = self.T_ref_K + 1.0
+        return props.thermal_strain(_mat(self.shaft_material), t, self.T_ref_K) * self.nose_length_m + \
+            props.thermal_strain(_mat(self.housing_material), t, self.T_ref_K) * self.housing_length_m
+
     def growth_parts_m(self) -> dict:
         e_shaft = props.thermal_strain(_mat(self.shaft_material), self.T_K, self.T_ref_K)
         e_house = props.thermal_strain(_mat(self.housing_material), self.housing_T_K, self.T_ref_K)

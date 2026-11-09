@@ -105,6 +105,20 @@ side of the nose: R_t = h_min, a regular sawtooth of period f (Brammertz's formu
 would grow as r h_min^2 / 2 f^2). `recovery_ratio` (0 by default) blends linearly between h_min and
 (1 + ratio) h_min like cutting's surface memory (with 1 the peaks rise by up to h_min).
 
+*Why the uncut layer accumulates* (checked 2026-11-09 against the reading that the uncut layer is a per-pass
+quantity). Brammertz derives his R_t for the steady state in which every pass's chip tail lies on the surface the
+previous pass cut; that holds for f >= sqrt(2 r h_min), and there the kernel, a pass-by-pass construction that
+compares each pass only with the previous pass's arc, and the formula agree within 1 % (r 0.8-1 mm, h_min 2-5 um,
+f = 1-2.5 sqrt(2 r h_min); at r 0.2 mm and f up to 0.15 mm, f / r 0.77, the kernel lies up to 3 % above the
+pass-by-pass construction and up to 4 % above the parabolic formula). Below it the readings differ: the
+pass-by-pass construction leaves a much smoother profile (Pt 1.8 um against 9.6 um at r 0.2 mm, h_min 9.4 um, f
+0.031 mm), but only because it drops material that no pass removed: its surface lies up to 7 um (mean 2 um) below
+the layer that every pass met thinner than h_min. The material is still there, so a later pass meets it as part
+of a thicker layer (the accumulation that micro-milling shows as chips formed only every few teeth, Kim, Mayor &
+Ni 2004, kim-mayor-ni-2004-micromilling-chip); the kernel keeps the volume, and with or without side flow the
+low-feed profile carries R_t = h_min. The low-feed results therefore follow h_min, i.e. the edge radius, which is
+the input to state (docs/validation.md section 10).
+
 **Wear** rounds the outline: per element radial wear (r - VB_r, the edge recedes from the material) and axial
 wear (z + VB_a) from the bus are interpolated along the outline's arc length between the generating tooth's
 element midpoints; the element itself is placed with its worn position. Uniform wear leaves the profile shape
@@ -133,6 +147,12 @@ onto the cross plane (`kernels.silhouette`; Vickers & Quan 1989). This gives bal
 h = R - sqrt(R^2 - s^2 / 4) (test, 3 %), and for inclined cutters the effective profile: a ball stays a circle
 of radius R, a torus (corner r on radius R0) has the effective radius r + R0 / sin(lead) at its lowest point
 (the corner-centre circle projects to an ellipse of curvature radius R0 / sin(lead), offset by r; test 1 %).
+The tracks carry their passes' minimum chip thickness (the mean h_min of each pass's events, store column
+`hmin_sum`, with the feed lines' `recovery_ratio`): near the tool's lowest point the layer a pass meets from the
+neighbouring track is the distance between the two swept surfaces along their normal, whatever the direction of
+the cutting velocity, so the step-over plays the role of the feed and the scallop peaks carry Brammertz's term
+(test: 4 % against s^2 / 8 R + (h_min / 2)(1 + R h_min / s^2), s 0.5 mm, R 5 mm, h_min 3 um). Until 2026-11-09
+the step-over profile used h_min = 0 (kinematic scallops only).
 
 **Lay.** Feed lines measure across the tooth marks (lay = n x d); cross profiles across the scallops (lay = d).
 The reported finish is the roughest direction (ISO 4288: perpendicular to the lay); `multidirectional` when
@@ -248,7 +268,7 @@ is one uninterrupted generation of a patch by one tool (a gap longer than `pass_
 a new one). At most `lines_per_pass` **lines** per patch and pass collect pass rows; a line is evaluated and
 restarted at `line_rows` (`floor_line_rows`) rows, and evaluated when no event arrived for max(pass_gap, 4
 revolutions, 4 of its own intervals). Memory: open lines x rows x 31 floats (1024 x 31 x 8 B = 0.25 MB per line;
-a few open at a time) plus 71 numbers per patch and 23 per pass: the reference part (300 x 200 x 100 mm, about
+a few open at a time) plus 71 numbers per patch and 24 per pass: the reference part (300 x 200 x 100 mm, about
 5000 machined patches and a few passes each) stays below 10 MB; burr edges (`max_burr_edges`), marks (`max_marks`) and thread points
 (`thread_points`, counter-based thinning, stream `surface.thread_thinning`) are capped and the excess counted.
 
@@ -331,6 +351,8 @@ mark_height_m` (NaN where no machined patch matches the vertex normal and plane)
 | wall feed marks, runout marks | 2 % vs fz^2 / 8 R_eff, (N fz)^2 / 8 R_eff; RSm = N fz within 5 % | tests |
 | floor marks, leading-side floors | 2-3 % vs an independent envelope of the outline | tests |
 | ball-nose scallop | 3 % vs R - sqrt(R^2 - s^2/4) | test |
+| step-over profile with the minimum chip thickness | 4 % vs Brammertz's R_t at the step-over | test, s 0.5 mm, R 5 mm, h_min 3 um |
+| per-pass reading of Brammertz vs the kernel | within 1 % for f >= sqrt(2 r h_min) (r 0.8-1 mm; up to 3 % at r 0.2 mm, f / r up to 0.77); below it the per-pass reading removes uncut material | check, r 0.2-1 mm, h_min 2-9.4 um |
 | inclined ball / torus profile | 0.05 um vs the sphere; 1 % vs r + R0 / sin(lead) | tests |
 | ISO filter | 50 % transmission at lambda_c within 0.3 % | test |
 | 3-wire pitch diameter | 0.05 um vs ISO 724 on ideal profiles; 2 um with 4000 thinned points | tests |
@@ -357,7 +379,18 @@ stated yield stress (composites: delamination and pull-out only).
   burrs rising above the pass (outside the pass's envelope) are not represented. At feeds below
   sqrt(2 r h_min) the profile carries the h_min sawtooth (R_t = h_min): the measured low-feed roughness then
   follows h_min, i.e. the edge radius and min_chip_thickness_ratio, which most cases do not state (Magalhaes 2026,
-  r 0.2 mm, f 0.025-0.05 mm with the 35 um default insert hone: Ra 2.3 um simulated, 0.44-0.92 um measured).
+  r 0.2 mm, f 0.025-0.05 mm with the 35 um default insert hone: Ra 2.3 um simulated, 0.44-0.92 um measured; the
+  ball-end cases of Matras 2020 with the ground-edge default of an uncoated CBN tool, h_min 0.75 um, follow the
+  measured Ra within about a third).
+* The side-flow rule has no bound on the distance the ploughed volume travels. Along a long flat edge at zero
+  minor angle (a parallel land or wiper flat, which no validation case uses) the layer under the land cannot
+  escape, accumulates and is moved as a whole into the free space under the clearance face at the end of the land:
+  a probe with a 1.2 mm land at 15 deg secondary clearance (r 0.8 mm, f 0.1 mm, h_min 9.4 um) left ridges of
+  about 50 um there. A bound (material already pressed by a pass at the same level is not displaced again, in the
+  sense of elastic shakedown; lateral flow only near the end of a ploughed run) is needed before wiper edges are
+  simulated; nearly flat edges (0.5-1 deg, the tests) are not affected. The kernel's pass window is centred on the
+  first lowest point of the polyline, which for an exactly flat bottom is one end of the flat (with h_min > 0 the
+  window covers the whole flat).
 * BUE overcut, fragment and recut-dent coefficients are estimates (db/models/surface-roughness.yaml): the BUE
   and recut contributions to Rt are indications within a factor of 2.
 * Servo marks are converted for linear axes named X, Y, Z (ISO 841); reversals of rotary axes and of axes with
@@ -424,6 +457,8 @@ white_layer_hardness_ratio 0.3, overtemper_softening_ratio 0.15 (est).
   ISO 724:1993; ISO 965-1:2013.
 * Johnson, K.L. (1985) Contact Mechanics, Cambridge. Merwin, J.E.; Johnson, K.L. (1963) Proc. IMechE 177, 676-690.
 * Kim, J.; Dornfeld, D.A. (2002) ASME J. Eng. Mater. Technol. 124(2), 192-198.
+* Kim, C.-J.; Mayor, J.R.; Ni, J. (2004) ASME J. Manuf. Sci. Eng. 126(4), 710-718 (intermittent chip formation
+  below the minimum chip thickness: the uncut layer accumulates until a later tooth removes it).
 * Ko, S.L.; Dornfeld, D.A. (1991) ASME J. Eng. Mater. Technol. 113(1), 75-87; (1996) J. Mater. Process. Technol.
   62, 24-36.
 * Machado, A.R.; Kaminise, A.K.; da Silva, M.B.; Ariza, R.G. (2003) Study on burr formation in turning, COBEM 2003.

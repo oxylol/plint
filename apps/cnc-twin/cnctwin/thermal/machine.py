@@ -16,8 +16,9 @@ Each is a first-order lumped body integrated exactly over a step (constant input
 * axes: nut and bearing heat per metre of travel heats the screw (C from its steel volume, G = C /
   tau); the error at axis position s is alpha (T - T0) (s - s_fixed) along the axis (zero with linear
   scales; times the residual with electronic compensation).
-* structure: relaxes to ambient with an hours-scale time constant; drift = sensitivity x
-  (T - T0) along the tool axis (away from the work when warmer).
+* structure: relaxes to ambient with an hours-scale time constant; drift = (sensitivity + the loop spindle's
+  uniform growth per K) x (T - T0) along the tool axis (away from the work when warmer): the machine file's
+  sensitivity is the whole loop's, the spindle head included, which the spindle model carries itself.
 
 Growths and drifts are relative to the state at the start of the run (spindle) or of the
 operation (axes, structure), when the tool lengths and work offsets were set.
@@ -141,6 +142,13 @@ class SpindleThermal:
             return self.network.growth_m()
         ref = self.T_env_K if self.T_ref_K is None else self.T_ref_K
         return self.alpha_1_K * self.length_m * (self.body.T_K - ref)
+
+    def uniform_growth_m_per_K(self) -> float:
+        """Growth toward the work per K of a uniform temperature change of the whole spindle from its reference
+        state: the part of the machine's tool-to-work loop this model carries (see :func:`link_structure`)."""
+        if self.network is not None:
+            return self.network.uniform_growth_m_per_K()
+        return self.alpha_1_K * self.length_m
 
     def growth_rel_m(self) -> float:
         """Growth since the start of the run left after the control's compensation."""
@@ -431,22 +439,30 @@ def axis_models(machine: dict, ambient_K: float, start, tol: float, time_s: floa
 
 @dataclass
 class StructureThermal:
+    """The machine structure (bed, column, table) as one lumped body. ``sensitivity_m_per_K`` is the machine
+    file's ``structure_sensitivity_um_per_K``: the tool-to-work drift of the whole loop per K of a uniform
+    temperature change, away from the work when warmer, the spindle head included. The spindle model expands
+    with its own temperatures, so the structure carries that sensitivity plus the spindle's own uniform growth
+    per K (``spindle_share_m_per_K``, set by :func:`link_structure`): with the head at the structure's
+    temperature the two add up to the file's sensitivity instead of counting the head twice."""
+
     sensitivity_m_per_K: float
     body: LumpedBody
     T0_K: float
     estimated: list = field(default_factory=list)
+    spindle_share_m_per_K: float = 0.0
 
     def drift_m(self) -> float:
-        return self.sensitivity_m_per_K * (self.body.T_K - self.T0_K)
+        return (self.sensitivity_m_per_K + self.spindle_share_m_per_K) * (self.body.T_K - self.T0_K)
 
     def to_dict(self) -> dict:
         return {"sensitivity_m_per_K": self.sensitivity_m_per_K, "T0_K": self.T0_K, "estimated": self.estimated,
-                "body": self.body.to_dict()}
+                "body": self.body.to_dict(), "spindle_share_m_per_K": self.spindle_share_m_per_K}
 
     @classmethod
     def from_dict(cls, values: dict) -> "StructureThermal":
         return cls(float(values["sensitivity_m_per_K"]), LumpedBody.from_dict(values["body"]), float(values["T0_K"]),
-                   list(values["estimated"]))
+                   list(values["estimated"]), float(values.get("spindle_share_m_per_K", 0.0)))
 
 
 def structure_model(machine: dict, ambient_K: float, start) -> StructureThermal:
@@ -469,3 +485,21 @@ def structure_model(machine: dict, ambient_K: float, start) -> StructureThermal:
     body.ledger.u_J = body.energy()
     body.ledger.u0_J = body.ledger.u_J
     return StructureThermal(sens, body, body.T_K, estimated)
+
+
+def loop_spindle(spindles: dict) -> str | None:
+    """Id of the spindle whose growth lies in the structure drift's direction (both along the tool axis): the
+    first milling spindle (the tool spindle of a machining centre, the milling head of a turn-mill). None for a
+    lathe without one: a turning spindle grows along the work axis, across the radial loop of its structure
+    sensitivity, so nothing is shared."""
+    for sid, model in spindles.items():
+        if model.kind == "milling":
+            return sid
+    return None
+
+
+def link_structure(structure: StructureThermal, spindles: dict) -> None:
+    """Give the structure the uniform growth per K of the spindle that shares its loop (:class:`StructureThermal`),
+    so a uniform warming of the machine drifts by the machine file's sensitivity (the head counted once)."""
+    sid = loop_spindle(spindles)
+    structure.spindle_share_m_per_K = float(spindles[sid].uniform_growth_m_per_K()) if sid is not None else 0.0

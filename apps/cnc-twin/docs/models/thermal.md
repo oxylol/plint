@@ -457,8 +457,17 @@ micro-kelvin changes keep their precision; `expm1` for the decay):
   as `axis_drift[axis]` (6-vector at the end-of-step position) and as strain + fixed-end position
   for per-tick use. T0 resets at each operation start (new work offsets).
 * **Structure**: relaxes to ambient with `structure_time_constant` (4 h est.); drift =
-  `structure_sensitivity_um_per_K x (T - T0)` along `+axis_T_M` (warmer column lifts the head);
-  T0 = start of the operation.
+  `(structure_sensitivity_um_per_K + s_sp) x (T - T0)` along `+axis_T_M` (warmer column lifts the head);
+  T0 = start of the operation. The file's sensitivity is the tool-to-work drift of the whole loop per K of a
+  uniform temperature change, the spindle head included (the shipped files' notes: "the loop from the pallet
+  through the base and column to the spindle nose"); the spindle model expands with its own temperatures, so
+  the structure body carries the sensitivity plus the uniform growth per K of the spindle in its loop
+  (`s_sp = d growth / dT` of the network, eps_s L_n + eps_h L_h at 1 K, or alpha L_eff of the lumped body;
+  `machine.link_structure`): a uniform warming of head and structure then drifts by the file's sensitivity.
+  Until 2026-11-09 the head's share was counted twice (once in the spindle growth, once in the sensitivity):
+  for a 40-taper network (s_sp 4.7 um/K) a structure warmed 1 K by the head and the ambient put 4.7 um too much
+  toward the work. The loop spindle is the machine's first milling spindle; lathes without one share nothing
+  (a turning spindle grows along the work axis, across the radial loop of the sensitivity).
 * **Start state** (`environment.machine_state`): `cold` = ambient; `warm` = after the warm-up time
   `warmup.cold_to_warm_min` at `warmup_speed_fraction` of max speed (axes at
   `warmup_axis_speed_m_s`); a mapping gives spindle/axes/structure temperatures directly.

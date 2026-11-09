@@ -68,3 +68,23 @@ def test_collector_keeps_unique_assumptions_and_sources():
     col.used("flow stress", "paper", "note")
     assert len(col.assumptions) == 1 and col.assumptions[0].value == "3.5e-05"
     assert len(col.provenance) == 1
+
+
+def test_coolant_turning_reads_the_stated_rake_land():
+    """Struzikiewicz states the SGF profile's 15 deg rake land: on the negative holder's -6 deg tilt the working
+    rake is +9 deg (the chip-form helper's holder rake alone would treat the insert top as flat)."""
+    from types import SimpleNamespace
+
+    from cnctwin.validation.harnesses import coolant as CO
+
+    case = load_cases(Database.load(), ["coolant_reach"], ["coolant-struzikiewicz2023-ti64-jet-direction"])[0]
+    col = H.Collector()
+    col.assume("rake and inclination", "-6 / -6 deg", "not stated: a negative ISO holder for a negative insert", "est")
+    chips = SimpleNamespace(tool=SimpleNamespace(chip_breaker=None), rake=math.radians(-6.0))
+    CO._stated_rake(case, chips, col)
+    assert math.degrees(chips.rake) == pytest.approx(9.0)
+    inputs = {a.input: a.value for a in col.assumptions}
+    assert "rake and inclination" not in inputs and inputs["rake"] == "+9 deg working" and inputs["inclination"] == "-6 deg"
+    listed = SimpleNamespace(tool=SimpleNamespace(chip_breaker=object()), rake=0.1)      # a database insert: kept
+    CO._stated_rake(case, listed, H.Collector())
+    assert listed.rake == 0.1

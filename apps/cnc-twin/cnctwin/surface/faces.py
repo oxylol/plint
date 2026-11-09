@@ -8,8 +8,8 @@
   (patches within one brick of the point).
 * :func:`cross_profile` - the step-over profile of a patch: the passes' tracks (tool-tip position across the
   feed) and generated heights with the tool's silhouette seen along the feed (the effective cutting profile;
-  Vickers & Quan 1989), the lower envelope evaluated like a feed line; plus the witness marks between
-  overlapping passes.
+  Vickers & Quan 1989), the lower envelope with the passes' minimum chip thickness (the step-over acts as the
+  feed across the tracks) evaluated like a feed line; plus the witness marks between overlapping passes.
 * :func:`group_faces` - the remaining patches clustered into faces (normal, plane, brick adjacency).
 * :func:`patch_roughness` - a patch's reported finish: the direction with the larger Ra (ISO 4288: measure
   across the lay), its Rz and Rt; :func:`judge` - ISO 4288 acceptance (the 16 % rule, or every value for a
@@ -237,8 +237,9 @@ def silhouette(outline_pts: np.ndarray, a: np.ndarray, tc: np.ndarray, nn: np.nd
 
 
 def cross_profile(store: Store, patch: int, outline_of, settings, rules: IsoRules, cache: dict,
-                  keep_profile: bool = False):
-    """(Roughness or None, witness marks, info) of a patch's step-over profile (see the module doc)."""
+                  keep_profile: bool = False, recovery: float = 0.0):
+    """(Roughness or None, witness marks, info) of a patch's step-over profile (see the module doc); ``recovery``
+    is the partial-removal band of the minimum chip thickness (surface-roughness recovery_ratio, as the feed lines)."""
     qs = [int(q) for q in store.passes_of(patch)
           if store.qf[q, QF["count"]] >= 3 and int(store.qi[q, QI["cls"]]) in (0, 1)]
     if len(qs) < 2:
@@ -268,7 +269,8 @@ def cross_profile(store: Store, patch: int, outline_of, settings, rules: IsoRule
         count = store.qf[q, QF["count"]]
         tip = store.qf[q, QF["csx"]:QF["csz"] + 1] / count
         rows.append({"q": q, "U": float((tip - o) @ tc), "H": float(store.qf[q, QF["w_min"]]),
-                     "u_n": float(store.qf[q, QF["un_sum"]] / count), "tick1": int(store.qi[q, QI["tick1"]]),
+                     "u_n": float(store.qf[q, QF["un_sum"]] / count),
+                     "hmin": float(store.qf[q, QF["hmin_sum"]] / count), "tick1": int(store.qi[q, QI["tick1"]]),
                      "block": int(store.qi[q, QI["block_last"]]), "slot": int(store.qi[q, QI["slot"]]),
                      "axis": store.qf[q, QF["ax"]:QF["az"] + 1].copy()})
     du = rules.stylus_for(rules.by_ra[2][1])[1]
@@ -292,6 +294,7 @@ def cross_profile(store: Store, patch: int, outline_of, settings, rules: IsoRule
         P.tpl[k] = t_index
         P.s[k] = row["U"]
         P.w[k] = row["H"] - gmin
+        P.hmin[k] = row["hmin"]          # the layer a pass meets from the neighbouring track (step-over as the feed)
         P.half[k] = np.inf
     T = A.new_templates(tpls)
     U = np.array([r["U"] for r in rows])
@@ -300,7 +303,7 @@ def cross_profile(store: Store, patch: int, outline_of, settings, rules: IsoRule
     count = int(math.ceil((hi - lo) / du)) + 1
     cap = int(np.max(np.diff(T.off)))
     G = A.new_grid(lo, du, count, cap)
-    K.envelope_profile(P, T, G, 2, 0.0)
+    K.envelope_profile(P, T, G, 2, float(recovery))
     i0 = int(math.ceil((float(np.min(U)) - lo) / du))
     i1 = int(math.floor((float(np.max(U)) - lo) / du))
     seg = G.z[i0:i1 + 1]
