@@ -1,0 +1,55 @@
+ledger 2026-11-01 → 2026-11-08 (8 days): 1642 signals logged, 925 resolved, 441 distinct outcomes
+
+## 1. Standings (every logged signal at its real $5 ask, held to resolution, after fee)
+setup       logged resolved  /day per signal            90% CI |       vs day4 $/day [90% CI] |       vs edge $/day [90% CI]
+learned         36       25   4.5     +19.9% [  -1.4%,  +35.1%] |    +2.05 [-11.13, +13.95] 7d |    +2.77 [ -6.04, +10.21] 8d
+day4model       16       14   2.0      +8.6% [ -41.2%, +174.5%] |    -1.82 [ -5.95,  +2.50] 6d |    +1.97 [-14.12, +18.07] 6d
+day4            30       23   3.8      +5.7% [ -44.5%,  +85.3%] |                              |    +0.99 [-13.86, +17.78] 7d
+edge           157      110  19.6      +0.5% [ -12.0%,  +15.5%] |    -0.99 [-17.78, +13.86] 7d |                             
+credible       345      147  43.1      -0.1% [ -19.6%,  +10.7%] |    +1.15 [ -9.01, +12.58] 5d |    -2.53 [-22.21, +23.65] 5d
+smart          330      159  41.2      -0.1% [ -13.9%,   +5.4%] |    +1.47 [ -8.51, +10.82] 4d |    +0.63 [-15.31, +25.64] 4d
+weather5       107       97  13.4      -3.4% [ -14.3%,   +7.1%] |    -0.19 [ -8.33,  +7.64] 6d |    -3.81 [-17.25,  +9.38] 7d
+weather10      107       97  13.4      -3.6% [ -14.5%,   +6.9%] |    -0.34 [ -8.51,  +7.58] 6d |    -3.94 [-17.34,  +9.29] 7d
+week4          183       78  22.9      -7.8% [ -21.2%,  +16.3%] |    -3.87 [-11.33,  +4.11] 7d |    -4.13 [-16.01,  +8.64] 8d
+day4pre         16        9   2.0     -11.4% [ -45.9%,  +33.2%] |    +2.28 [ -5.09, +10.70] 5d |    -1.38 [-16.90, +13.26] 5d
+day4x           20       15   2.5     -15.6% [ -70.0%,  +80.2%] |    -2.95 [ -6.38,  +0.46] 6d |    +3.13 [-10.21, +17.17] 6d
+month4         173       93  21.6     -27.2% [ -43.2%,  -11.8%] |   -17.16 [-28.68,  -5.13] 7d |   -16.16 [-30.44,  -0.54] 8d
+day              8        6   1.0     -41.3% [ -76.5%,  +36.7%] |    +2.89 [ -1.33,  +7.11] 3d |    +2.98 [ -9.68, +15.64] 3d
+month           47       22   5.9     -46.2% [ -88.5%,  -28.6%] |    -3.97 [-15.01,  +6.99] 6d |    -9.67 [-18.28,  -1.05] 6d
+consensus       67       30   8.4     -48.3% [ -61.9%,  -32.1%] |   -21.72 [-33.61,  -9.83] 3d |   -12.98 [-25.95,  -0.00] 3d
+setups beating day4 with the paired 90% CI above zero: none
+
+## 2. Checks: 157 resolved ledger signals were bought; 157 matched to a paper buy (paid − logged: median +0.00¢, max |gap| 0.00¢); 156 settled in the book, outcome agrees on 156
+
+## 3. Nested filters on day4's own signals (matched by outcome)
+  day4x      kept  15 of day4's resolved signals at  -15.6%; dropped   8 at  +45.5% [  -3.1%, +131.3%]; 0 signals day4 did not log
+  day4pre    kept   9 of day4's resolved signals at  -11.4%; dropped  14 at  +16.7% [ -66.0%, +160.0%]; 0 signals day4 did not log
+  day4model  kept  14 of day4's resolved signals at   +8.6%; dropped   9 at   +1.1% [ -68.1%,  +74.7%]; 0 signals day4 did not log
+
+## 4. Pooled: 441 distinct resolved outcomes (first signal across all setups)
+  in play  before / not a game     416    -6.0% [ -15.5%,   +0.7%]
+  in play  in play                  25   +26.8% [ -24.2%,  +78.3%]
+  price    50–70¢                  169    +6.7% [  +1.3%,  +11.7%]
+  price    ≥70¢                    123    +3.9% [  -0.4%,   +6.3%]
+  price    30–50¢                  112   -18.8% [ -41.3%,   -0.3%]
+  price    <30¢                     37   -36.0% [ -83.3%,  +25.8%]
+  kind     politics                144    -5.7% [ -30.5%,   +5.1%]
+  kind     sports                  132    -9.5% [ -24.3%,   +7.7%]
+  kind     weather                 112    -2.1% [ -10.7%,   +8.0%]
+  kind     culture                  28    -2.4% [ -35.8%,  +13.4%]
+  kind     other                    19    +6.6% [ -26.4%,  +39.8%]
+
+## 5. Signals needed for a 90% CI of ±10 / ±5 points per signal (from each setup's spread of returns)
+  learned     sd 1.02: ±10 pts ≈   283 signals (    63 days at 4.5/day) · ±5 pts ≈  1130 (   251 days)
+  day4model   sd 1.61: ±10 pts ≈   702 signals (   351 days at 2.0/day) · ±5 pts ≈  2808 (  1404 days)
+  day4        sd 1.58: ±10 pts ≈   678 signals (   181 days at 3.8/day) · ±5 pts ≈  2709 (   722 days)
+  edge        sd 1.04: ±10 pts ≈   295 signals (    15 days at 19.6/day) · ±5 pts ≈  1177 (    60 days)
+  credible    sd 1.00: ±10 pts ≈   269 signals (     6 days at 43.1/day) · ±5 pts ≈  1073 (    25 days)
+  smart       sd 0.94: ±10 pts ≈   242 signals (     6 days at 41.2/day) · ±5 pts ≈   967 (    23 days)
+  weather5    sd 0.83: ±10 pts ≈   186 signals (    14 days at 13.4/day) · ±5 pts ≈   741 (    55 days)
+  weather10   sd 0.83: ±10 pts ≈   185 signals (    14 days at 13.4/day) · ±5 pts ≈   738 (    55 days)
+  week4       sd 1.15: ±10 pts ≈   359 signals (    16 days at 22.9/day) · ±5 pts ≈  1433 (    63 days)
+  day4x       sd 1.73: ±10 pts ≈   807 signals (   323 days at 2.5/day) · ±5 pts ≈  3225 (  1290 days)
+  month4      sd 0.86: ±10 pts ≈   199 signals (     9 days at 21.6/day) · ±5 pts ≈   796 (    37 days)
+  month       sd 0.82: ±10 pts ≈   181 signals (    31 days at 5.9/day) · ±5 pts ≈   723 (   123 days)
+  consensus   sd 0.74: ±10 pts ≈   150 signals (    18 days at 8.4/day) · ±5 pts ≈   600 (    72 days)

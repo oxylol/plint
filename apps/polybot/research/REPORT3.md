@@ -313,6 +313,46 @@ the best asks plus fees. No complete set costs under $1. The cheapest are $1.008
 were release-date events with only some of their dates listed. There is nothing riskless to collect at the top of
 the book.
 
+### The live ledger, first week (Nov 1 → 8, `ledger_week.py`)
+
+Every signal that passed a setup's rules, at the real price of a $5 buy at that moment, bought or not, held to
+resolution after fee: 1,642 signals, 925 resolved, 441 distinct outcomes. **Check:** on the 157 resolved signals the
+setups also bought, the logged price equals the paper fill on all 157, and the outcome agrees on 156 of 156.
+
+| setup | logged | a day | per signal [90% CI] | vs day4, $/day at $5 [90% CI] |
+|---|---|---|---|---|
+| learned | 36 | 4.5 | +19.9% [−1.4, +35.1] (25 resolved) | +2.05 [−11.1, +14.0] |
+| day4model | 16 | 2.0 | +8.6% [−41, +175] (14) | −1.82 [−6.0, +2.5] |
+| **day4** | 30 | 3.8 | +5.7% [−45, +85] (23) | — |
+| edge | 157 | 19.6 | +0.5% [−12.0, +15.5] (110) | −0.99 [−17.8, +13.9] |
+| credible / smart | 345 / 330 | 43 / 41 | −0.1% / −0.1% | +1.15 / +1.47, CIs ±10 |
+| weather5 / weather10 | 107 / 107 | 13.4 | −3.4% / −3.6% | about 0 |
+| week4 | 183 | 22.9 | −7.8% [−21.2, +16.3] | −3.87 [−11.3, +4.1] |
+| day4pre / day4x | 16 / 20 | 2.0 / 2.5 | −11.4% / −15.6% | +2.28 / −2.95, CIs span 0 |
+| month4 | 173 | 21.6 | **−27.2% [−43.2, −11.8]** | −17.2 [−28.7, −5.1] |
+| month / consensus | 47 / 67 | 5.9 / 8.4 | **−46.2% / −48.3%**, CIs below 0 | −4.0 / −21.7 |
+
+- **No setup beats day4 with the paired 90% CI above zero.** learned leads per signal, but it is the best of 15
+  setups on 25 signals (chance alone often gives one that looks this good), and its paper book is −3.6% on 30 trades.
+- **Three setups lose for sure at real prices:** month4, month and consensus (week board, 5 agree). In the paper
+  books, the underdog strategy is **−19.2% a trade [−24.6, −13.9] on 120 trades**, the one clearly significant live result.
+- **The nested filters cut winners this week.** On day4's own 23 resolved signals, day4x dropped 8 (30–50¢) that made
+  +45.5% [−3, +131]; day4pre dropped 14 (in play) at +16.7%; day4model dropped 9 at +1.1% and kept 14 at +8.6%.
+  None of it is significant.
+- **A pooled pattern that does not survive.** Across all setups, outcomes bought at 50–70¢ made +6.7% [+1.3, +11.7]
+  this week and 30–50¢ lost 18.8% [−41, −0.3]. On the hindsight-free panel (22,463 pool outcomes, Sep 15 → Oct 31),
+  50–70¢ is −4.6% [−5.9, −3.3] in both periods. The week was luck. The one robust band is a negative one: copy buys
+  under 30¢ lose about 20% for pool traders (−19.5% [−25.9, −13.1]) and random wallets (−21.7%) alike, in both
+  periods, and −36% in this week's pool (37 outcomes).
+- **day4's paper book** (real fills, Oct 28 → Nov 8): +33.0% a trade [−1.9, +74.9] on 52 trades over 10 days, with two
+  days (Nov 4, Nov 8) carrying it. Not yet significant. Its 4 "leaders sold" exits lost 26% where holding would have
+  made +18% (too few to judge).
+- **The sample still needed is the real obstacle.** Live day4 logs only 3.8 signals a day (the replay's fixed 29-wallet
+  group gave about 29). Per-signal returns spread about ±1.6, so a 90% CI of ±10 points needs about 680 signals:
+  **about 6 months for day4, and about 2 years for ±5 points.** edge, week4, month4, credible and smart reach ±10 points
+  in 1–3 weeks. A day4 verdict will come faster from a setup that follows a fixed group of active sports traders
+  (the replay's group, now without hindsight from here on) than from the day board.
+
 ## Why this is the best way to build this model
 
 The evidence does not support "this model makes money". It supports a narrower claim: of everything tried, this is
