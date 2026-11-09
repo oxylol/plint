@@ -21,3 +21,27 @@ def test_rlimit_and_none_run_the_plain_command():
     for mode in ("rlimit", "none"):
         command, env = capped_command(["-c", "pass"], mode, 8 * 2 ** 20, env={"A": "1"})
         assert command[1:] == ["-c", "pass"] and env == {"A": "1"}
+
+
+def test_blas_under_an_rlimit_cap_works_and_running_out_fails_fast():
+    """Under RLIMIT_DATA, OpenBLAS retries a work buffer it cannot map forever (without warm_blas this subprocess
+    spins until the timeout); warm_blas maps the buffer before the cap, so BLAS keeps working under the cap and an
+    allocation beyond it is a MemoryError at once."""
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+    code = ("from cnctwin.core.outputs import warm_blas, cap_memory\n"
+            "warm_blas()\n"
+            "import numpy as np\n"
+            "small = np.ones((256, 256))\n"
+            "data = next(int(l.split()[1]) * 1024 for l in open('/proc/self/status') if l.startswith('VmData:'))\n"
+            "cap_memory(data + 4 * 2 ** 20)\n"
+            "print('product', float((small @ small)[0, 0]))\n"
+            "try:\n"
+            "    np.ones((4096, 4096))\n"
+            "except MemoryError:\n"
+            "    print('MemoryError')\n")
+    env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parents[3]), OPENBLAS_NUM_THREADS="1")
+    done = subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, timeout=30)
+    assert done.stdout.split() == ["product", "256.0", "MemoryError"], done.stderr

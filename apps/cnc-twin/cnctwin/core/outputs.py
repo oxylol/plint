@@ -1108,10 +1108,34 @@ def usage() -> dict:
             "peak_vm_bytes": _status_bytes("VmPeak"), "data_bytes": _status_bytes("VmData")}
 
 
+def warm_blas() -> None:
+    """Let OpenBLAS allocate its work buffer before an rlimit cap is set. Under RLIMIT_DATA a buffer it cannot map
+    makes it retry the mapping forever (a generator capped at 16 MiB spun at full CPU for half an hour instead of
+    failing); a buffer mapped beforehand is reused by every later call (one thread)."""
+    try:
+        import numpy as np
+        square = np.ones((256, 256))
+        float((square @ square)[0, 0])
+    except Exception:
+        pass
+
+
+def _traceback_text() -> str:
+    """The current exception's traceback, or "" when formatting it runs out of memory itself."""
+    try:
+        return traceback.format_exc()
+    except MemoryError:
+        return ""
+
+
 def generator_main(name: str, run_dir: str, settings_path: str, result_path: str, mode: str, cap: int) -> int:
-    """The generator subprocess: cap the memory (rlimit mode) before anything large is imported, lower the
-    priority, run the generator, write its result (or its error) as JSON."""
+    """The generator subprocess: cap the memory (rlimit mode) before anything large is imported (only NumPy, whose
+    BLAS buffer :func:`warm_blas` maps first), lower the priority, run the generator, write its result (or its
+    error) as JSON."""
+    import resource  # noqa: F401 (usage() reads it, also after a MemoryError)
+    from .rundir import write_json_atomic       # before the cap: the error record must still be writable
     if mode == "rlimit":
+        warm_blas()
         cap_memory(int(cap))
     settings = json.loads(Path(settings_path).read_text(encoding="utf-8"))
     record: dict
@@ -1128,12 +1152,11 @@ def generator_main(name: str, run_dir: str, settings_path: str, result_path: str
             f"the memory cap of {int(cap) / 2 ** 20:.0f} MiB"
         record = {"ok": False, "error": {"type": "MemoryError", "message": f"out of memory ({limit}; "
                                                                          "outputs.memory_bytes raises it)",
-                                         "traceback": traceback.format_exc()}}
+                                         "traceback": _traceback_text()}}
     except BaseException as error:          # the parent records any failure of the generator
         record = {"ok": False, "error": {"type": type(error).__name__, "message": str(error),
-                                         "traceback": traceback.format_exc()}}
+                                         "traceback": _traceback_text()}}
     record["usage"] = usage()
-    from .rundir import write_json_atomic
     write_json_atomic(result_path, record)
     return 0 if record["ok"] else 1
 
