@@ -45,6 +45,9 @@ from .toolfield import ToolField, unroll_elements
 TURNING_TYPES = ("turning_insert", "grooving_insert", "parting_insert", "threading_insert", "boring_bar",
                  "form_tool")
 
+RISE_NAMES = ("rake", "peak", "flank", "amp", "rake_entry", "flank_entry")     # ToolThermal.rise
+DEV_NAMES = ("rake", "peak", "flank", "rake_entry", "flank_entry")             # ToolThermal.dev
+
 NODE_TOOL_EXPOSED = 0
 NODE_TOOL_INSIDE = 1
 NODE_HOLDER = 2
@@ -439,7 +442,8 @@ class ToolThermal:
         self.emissivity_holder = cv.emissivity("tool_steel")
         self.to_spindle_J = 0.0            # heat into the spindle nose / turret in the last step
         self.to_coolant_J = 0.0
-        self.rise = None                   # last local edge rise (rake, peak, flank [nt, ne, nq], amp [nt, ne])
+        self.rise = None                   # last local edge rise (rake, peak, flank [nt, ne, nq], amp, rake and
+        #                                    flank at the entry into the cut [nt, ne])
         self.edge_calls = 0
         self.field: ToolField | None = None   # 3-D cutting-region field (enable_field), solved with the ladder
         self.field_requested = False
@@ -449,7 +453,8 @@ class ToolThermal:
         self.field_every_n = 1             # field solved on every n-th step
         self.field_pend = None             # element heat accumulated since the last solve (_field_pending)
         self.field_means = None            # [3, nE] rake, flank, edge temperatures of the field's elements
-        self.dev = None                    # last periodic deviation of the field's elements (rake, peak, flank)
+        self.dev = None                    # last periodic deviation of the field's elements (rake, peak, flank,
+        #                                    rake and flank at the entry into the cut)
 
     # ------------------------------------------------------------------ body
     def set_environment(self, env: ToolEnvironment) -> None:
@@ -933,9 +938,10 @@ class ToolThermal:
                 K.edge_temperatures(inp, edge_response(), glx, glw, dev)
                 inp.mode[:] = modes
                 out.amp[:] = np.where(carried, dev.amp, out.amp)
-                self.dev = (dev.rake_q, dev.peak_q, dev.flank_q)
+                self.dev = (dev.rake_q, dev.peak_q, dev.flank_q, dev.rake_entry, dev.flank_entry)
             base = t_body[:, :, None]
-            self.rise = (out.rake_q - base, out.peak_q - base, out.flank_q - base, out.amp.copy())
+            self.rise = (out.rake_q - base, out.peak_q - base, out.flank_q - base, out.amp.copy(),
+                         out.rake_entry - t_body, out.flank_entry - t_body)
         else:
             # between evaluations: the last local rise on the current body temperature, for the elements
             # still in cut (others: body temperature)
@@ -944,20 +950,30 @@ class ToolThermal:
             out.peak_q[:] = base + np.where(cutting, self.rise[1], 0.0)
             out.flank_q[:] = base + np.where(cutting, self.rise[2], 0.0)
             out.amp[:] = np.where(cutting[:, :, 0], self.rise[3], 0.0)
+            out.rake_entry[:] = t_body + np.where(cutting[:, :, 0], self.rise[4], 0.0)
+            out.flank_entry[:] = t_body + np.where(cutting[:, :, 0], self.rise[5], 0.0)
         if field is not None:
             rake_m, flank_m, edge_m = self._field_means(field, edges, heat, vb_m, t_body)
             carried = field.elements.in_field[:, :, None]
-            dev_r, dev_p, dev_f = (np.where(cutting, d, 0.0) for d in self.dev)
+            dev_r, dev_p, dev_f = (np.where(cutting, d, 0.0) for d in self.dev[:3])
+            ent_r, ent_f = (np.where(cutting[:, :, 0], d, 0.0) for d in self.dev[3:])
             out.rake_q[:] = np.where(carried, rake_m[:, :, None] + dev_r, out.rake_q)
             out.flank_q[:] = np.where(carried, flank_m[:, :, None] + dev_f, out.flank_q)
             out.peak_q[:] = np.where(carried, edge_m[:, :, None] + dev_p, out.peak_q)
+            out.rake_entry[:] = np.where(carried[:, :, 0], rake_m + ent_r, out.rake_entry)
+            out.flank_entry[:] = np.where(carried[:, :, 0], flank_m + ent_f, out.flank_entry)
         valid = np.asarray(edges.elem_valid) != 0
         strain = strain_from(self.mat_tool, t_body, self.temp_ref_K)
         result.edge_temp_q_K = out.rake_q
         result.flank_temp_q_K = out.flank_q
         result.edge_peak_q_K = out.peak_q
         result.edge_cycle_amp_K = out.amp
-        result.rake_temp_mean_K = np.einsum("ijq,q->ij", out.rake_q, weights)
+        # the coefficient pipeline's tool temperature: the rake contact when the edge enters the cut (mechanics'
+        # stationary-source partition adds the rise of the engagement's own heat inside ProcessCoefficients,
+        # architecture 5.3); the in-cut mean is published as rake_contact_mean_K
+        result.rake_temp_mean_K = out.rake_entry.copy()
+        result.flank_entry_K = out.flank_entry.copy()
+        result.rake_contact_mean_K = np.einsum("ijq,q->ij", out.rake_q, weights)
         result.body_temp_at_elem_K = t_body
         result.radial_growth_m = np.where(valid, np.asarray(edges.elem_r_m, dtype=float) * strain, 0.0) \
             if not self.layout.turning else np.zeros(shape)
@@ -1034,10 +1050,10 @@ class ToolThermal:
         arrays[f"{prefix}edge.n_cyc"] = self.edge.n_cyc.copy()
         arrays[f"{prefix}edge.t_eng"] = self.edge.t_eng.copy()
         if self.rise is not None:
-            for i, name in enumerate(("rake", "peak", "flank", "amp")):
+            for i, name in enumerate(RISE_NAMES):
                 arrays[f"{prefix}rise.{name}"] = self.rise[i].copy()
         if self.dev is not None:
-            for i, name in enumerate(("rake", "peak", "flank")):
+            for i, name in enumerate(DEV_NAMES):
                 arrays[f"{prefix}dev.{name}"] = self.dev[i].copy()
         if self.field_pend is not None:
             arrays[f"{prefix}field_pend"] = self.field_pend.copy()
@@ -1086,10 +1102,10 @@ class ToolThermal:
         obj.to_spindle_J = 0.0
         obj.to_coolant_J = 0.0
         obj.edge_calls = int(meta["edge_calls"])
-        obj.rise = tuple(np.array(arrays[f"{prefix}rise.{name}"]) for name in ("rake", "peak", "flank", "amp")) \
-            if meta["has_rise"] else None
-        obj.dev = tuple(np.array(arrays[f"{prefix}dev.{name}"]) for name in ("rake", "peak", "flank")) \
-            if meta.get("has_dev") else None
+        obj.rise = tuple(np.array(arrays[f"{prefix}rise.{name}"]) for name in RISE_NAMES) \
+            if meta["has_rise"] and all(f"{prefix}rise.{name}" in arrays for name in RISE_NAMES) else None
+        obj.dev = tuple(np.array(arrays[f"{prefix}dev.{name}"]) for name in DEV_NAMES) \
+            if meta.get("has_dev") and all(f"{prefix}dev.{name}" in arrays for name in DEV_NAMES) else None
         obj.field = ToolField.from_arrays(arrays, meta["field"], f"{prefix}field.") if meta.get("field") else None
         obj.field_requested = bool(meta.get("field_requested", False))
         obj.field_settings = dict(meta.get("field_settings") or {})

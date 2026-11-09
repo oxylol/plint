@@ -156,6 +156,7 @@ class Run:
         self.booked: list = []
         self.part_mass: dict = {}
         self.part_mass_start = 0.0
+        self.part_start_tick = 0           # base tick the current part's first operation started (SurfaceBurrs)
         self.findings_written = -1
         self.est_total_s = None
         self.truncated = None
@@ -409,6 +410,7 @@ class Run:
         self.v0 = _volumes(state.removal)
         if op_index == 0:
             self.part_mass_start = float(state.ledger.removed_mass_kg)
+            self.part_start_tick = int(state.clock.tick)
         self.trace("loop:operation_start", {"op_index": float(op_index), "part": float(part)})
         if part == 0 and self.options.get("sanity", True) is not False:
             self._sanity(op_index)
@@ -785,7 +787,8 @@ class Run:
                 "ops_started": self.ops_started,
                 "tl_base": self.tl_base, "tl_first": self.tl_first, "v0": [list(v) for v in self.v0],
                 "booked": list(self.booked), "part_mass": {str(k): v for k, v in self.part_mass.items()},
-                "part_mass_start": self.part_mass_start, "est_total_s": self.est_total_s,
+                "part_mass_start": self.part_mass_start, "part_start_tick": self.part_start_tick,
+                "est_total_s": self.est_total_s,
                 "monitor": self.monitor.state(), "identity": dict(self.identity),
                 "runs": list(self.feeder.runs) if self.feeder is not None else [],
                 "ended": list(self.feeder.ended) if self.feeder is not None else [],
@@ -842,6 +845,7 @@ class Run:
         self.booked = [float(v) for v in saved["booked"]]
         self.part_mass = {int(k): float(v) for k, v in saved["part_mass"].items()}
         self.part_mass_start = float(saved["part_mass_start"])
+        self.part_start_tick = int(saved.get("part_start_tick", 0))
         self.est_total_s = saved["est_total_s"]
         self.monitor.restore(saved["monitor"])
         self.identity = dict(saved["identity"])

@@ -107,3 +107,31 @@ def test_tool_ladder_and_lumped_bodies_close():
     for dt in (1e-3, 0.01, 10.0, 3600.0):
         body.step(dt, 80.0, 295.0, 0.4, 1e-12, 0.0)
     assert body.ledger.worst_rel < 1e-13
+
+
+def test_a_turning_tools_shear_heat_goes_to_its_engaged_elements():
+    """A non-rotating tool's elem_r_m is its x_T coordinate (<= 0, docs/models/tooling.md 2.2), not a speed: the
+    shear-zone heat is spread in proportion to h db (the work's surface speed is the same along the edge). Before,
+    the radius weights of a turning insert were all <= 0, the shares fell back to an even split over every valid
+    element and the idle elements' shear heat (their fraction to the chip read at h = 0) went into the work: 75 % of
+    a steel turning pass's heat in the work instead of about 15 %."""
+    edges = F.edge_model(nt=1, ne=12)
+    edges = edges._replace(elem_r_m=-np.abs(np.asarray(edges.elem_r_m, float)))       # turning: x_T <= 0
+    shape = (1, 12)
+    in_cut = np.zeros(shape)
+    in_cut[0, 2:6] = 1e-2                                     # four engaged elements, the rest idle
+    h = np.zeros(shape)
+    h[0, 2:6] = 1e-4
+    cut = CuttingContact(contact=0, tool_slot=0, heat_shear_J=10.0, heat_rake_J=0.0, heat_flank_J=0.0,
+                         ploughing_J=0.0, in_cut_time_s=in_cut, int_h_dt=in_cut * h, rake_sliding_m=in_cut,
+                         flank_sliding_m=in_cut, int_sigma_v_rake=in_cut * 1e9, int_sigma_v_flank=in_cut * 2e8,
+                         entries=np.ones(shape, np.int32))
+    coeff = F.coefficients(sc=0.9)
+    coeff.frac_shear_to_chip[:, 0] = 0.0                     # nothing to the chip at the thinnest chip of the grid
+    table = FractionTable.from_coefficients(coeff)
+    heat = split_contact(cut, 0, table, edges, None, rotating=False)
+    # equal h db: the four engaged elements share the heat equally, 90 % of it leaves with the chip
+    assert heat.chip_J == pytest.approx(9.0, rel=1e-12)
+    assert heat.work_J == pytest.approx(1.0, rel=1e-12)
+    assert np.all(heat.work_elem_J[0, :2] == 0.0) and np.all(heat.work_elem_J[0, 6:] == 0.0)
+    # (the old radius weights: an even split over the twelve elements, chip 3 J, work 7 J)

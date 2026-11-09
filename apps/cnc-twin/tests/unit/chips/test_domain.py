@@ -200,7 +200,10 @@ def test_composite_dust_and_magnesium_ignition():
 
 
 def test_chips_on_the_next_setups_locating_face_and_on_the_probe():
+    """With production.operator.clean_s 0 (no cleaning before loading) the chips on the face the next setup
+    locates on stay there and mislocate it; the default operator blows them off (next test)."""
     dom, ctx, state = _domain()
+    dom.operator_cleans = False
     H = state.chips.pile
     for iu in range(20, 40):
         for iv in range(20, 30):
@@ -216,6 +219,26 @@ def test_chips_on_the_next_setups_locating_face_and_on_the_probe():
     assert debris["S+z"] > 0.0 and debris["S-z"] == 0.0
     assert _of(state, Category.MISLOCATION)
     assert state.chips.pile.mass_kg.sum() == 0.0 and state.chips.pan[PAN_MASS] > 0       # cleaned into the pan
+    assert math.isclose(sum(state.chips.mass_terms().values()), state.chips.emitted[0], rel_tol=1e-12)
+
+
+def test_the_operator_cleans_the_locating_faces_before_loading():
+    """production.operator.clean_s > 0 (the template's 15 s: blow chips off fixture and locators before loading):
+    the chips on the next setup's locating faces go to the pan with the rest, no debris is left under the
+    locators and no mislocation is raised (cnctwin.chips.domain._locator_debris)."""
+    dom, ctx, state = _domain()
+    assert dom.operator_cleans
+    H = state.chips.pile
+    for iu in range(20, 40):
+        for iv in range(20, 30):
+            kernels.deposit(H, dom.model, iu, iv, 1e-6, 0.0, 1.2e-3, 1.5e-4, 2e-3, 3e-3, 62)
+    state.chips.emitted[0] += 200e-6
+    _run(dom, ctx, state, 2, [0.09, 0.07, 0.2])
+    dom.end_operation(ctx, state)
+    debris = state.bus_prev.chips.locator_debris_m
+    assert debris and all(v == 0.0 for v in debris.values())
+    assert not _of(state, Category.MISLOCATION)
+    assert state.chips.pile.mass_kg.sum() == 0.0 and state.chips.pan[PAN_MASS] > 0
     assert math.isclose(sum(state.chips.mass_terms().values()), state.chips.emitted[0], rel_tol=1e-12)
 
 

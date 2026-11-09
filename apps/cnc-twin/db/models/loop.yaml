@@ -39,6 +39,25 @@ params:
     range: [0, 1.0]
     src: est
     note: "smallest energy scale an interval's relative residual is taken against (the run's ledger, cnctwin.core.loop_wiring.RunLedger): out of the cut the only terms can be the modes' free vibration after a spindle start or an axis move, a few picojoules of damping against the same modal energy change, whose integrator round-off alone is 1e-6 of them (the lathe warmup: 6.7e-18 J residual on 3.0e-12 J terms, relative 1.1e-6). With 1 uJ the absolute floor of the check is 1e-12 J, below 1e-9 of the shaft work of any macro step in contact"
+  # ------------------------------------------------------------------ G31 probing (cnctwin.core.hot_probe)
+  probe_stem_diameter_ratio:
+    value: 0.75
+    unit: "-"
+    range: [0.1, 1.0]
+    src: est
+    note: "stylus stem diameter / ball diameter of the probe's stylus (the machine files give the ball and the stylus length, not the stem): Renishaw M4 styli with a 6 mm ruby ball have a 4.5 mm stem (0.75), M2 styli with a 2 mm ball 1.5 mm. The stem only matters when a G31 move brings it, not the ball, against material first"
+  probe_ball_diameter_m:
+    value: 0.006
+    unit: m
+    range: [0.0003, 0.05]
+    src: est
+    note: "ball diameter of a probe stylus when the machine's probe definition gives none: 6 mm, the common ruby ball of spindle work probes (Renishaw OMP40-2 / Haas WIPS kits)"
+  probe_stylus_length_m:
+    value: 0.05
+    unit: m
+    range: [0.005, 0.5]
+    src: est
+    note: "stylus length above the ball's centre when the machine's probe definition gives none: 50 mm, the standard stylus of spindle work probes"
   # ------------------------------------------------------------------ fast ring
   ring_f_max_Hz:
     value: 20000

@@ -230,18 +230,58 @@ The per-case causes are in docs/validation-report.md ("Failures and likely cause
   measured / model are formed at the entry's reference geometry and applied unchanged at the tool's own. The
   computed Ti6Al4V MAL entry (rake 10 deg, helix 30 deg, Krc 263 MPa) gives a radial factor of about 3.5, which
   at the rake-0 round inserts of the Engin cases makes the in-plane peaks 2-4 times the measured ones.
+  *Addressed 2026-11-09*: the calibration now fits the material response at the reference conditions (a flow-stress
+  factor on every force, a friction-angle shift for a measured force ratio, edge factors for measured edge
+  coefficients; mechanics.md 7.3) and the model carries it to the tool's geometry; the reference is an ordinary
+  cutting edge (a chisel row had been calibrated against its own indentation model). Engin bull-nose median error
+  283 -> 81 % (peaks +155 % axial, +67-81 % in plane), taper ball 102 -> 51 %. The round-insert cutters' end edges
+  also stopped cutting: the harness's `_insert_only` flipped the valid flags without rebuilding the station lists
+  the kernel visits (wiring fix); Plodzien median 118 -> 19 % (14 of 27 values inside the budget).
 * **Flank wear land in milling** (Smithey et al. plastic land, `cutting` flank forces): with VB 0.11-0.21 mm the
   simulated mean normal force of the Wang 2025 side cut rises about tenfold, the measured one by a third to two
   thirds: a fully plastic land over the whole engaged arc does not describe a thin milling chip.
+  *Addressed 2026-11-09 (partly)*: two implementation errors were found. The land's plastic and elastic regions
+  were swapped against Waldorf (1999) / Smithey et al. (2000, 2001): below the critical land VB* the land is in
+  elastic contact (mean sigma_0 / 3), beyond it a plastic region of width VB - VB* grows ahead of the elastic one;
+  and process damping indented the land with the steady feed slope (cutting kernels: only the vibration's normal
+  velocity makes the wave, the steady contact is the land force itself). Wang normal force at VB 0.11-0.12 mm
+  +541 / +1048 % -> +193 / +499 %, at VB 0.20-0.21 mm +633 / +794 % -> +551 / +707 %. What remains is the stress
+  level sigma_0 = (2 + pi) k of the edge's ploughing pressure: the measured increments (about 0.25 N per um of land
+  in the normal direction, and a feed force that grows with VB, which needs tau / sigma near 0.5-1 on the land
+  rather than 0.2) point to land stresses of about k in this milling case; no independent source fixes sigma_0.
 * **Edge (ploughing) force**: thrust and feed forces are high where the chip is thin against the edge radius
   (orthogonal thrust +35 to +100 %, the axial force of ball-end slotting at small feed), as docs/models/mechanics.md
   4 states for the (2 + pi) k contact.
+  *Checked 2026-11-09*: the edge force direction (thrust along -n, friction of the material flowing under the edge
+  toward the work) is right; the double count was the process-damping indentation of the steady feed slope on the
+  same edge land (removed, see the wear-land item), and with mechanistic data the ploughing branch below h_min was
+  scaled with the shearing factor minus the edge factor (now the edge factor). The flow stress of the contact models
+  is no longer the Johnson-Cook extrapolation to the strains of degenerate fallback states (capped at Nakayama's
+  saturation strain). The thin-chip thrust itself is unchanged (Zheng ball-end Fz about +3300 % at fz 0.02,
+  orthogonal thrust within a few percent of before): it follows the flat-punch pressure (2 + pi) k on the whole arc below the stagnation
+  point and the edge radii the harnesses assume (20 um for the unstated solid tools, 35 um for inserts); Waldorf's
+  slip-line ploughing stresses (about 2-2.6 k) suggest about half, but no source independent of the cases was read
+  that fixes the value, so it is reported, not changed.
 * **Drilling**: the full-drill thrust is 70-120 % high in three independent cases (Gok 1045 HSS, Craciun Al,
   Sklenicka C45 carbide: the chisel and slow-centre indentation dominate it), the outer-lip thrust of Ti6Al4V with
   pilot holes about 90 % low (tooling's default sharp drill edge, the emulsion friction factor), the full-drill
   thrust and torque of 7075 about half (a calibration-dependent case); torques range from a median 11 % (Craciun)
   to -36 % (Krivokapic, HSS at 3-8 m/min, where Oxley falls back to Merchant at most map nodes and the map build
   costs about 4 minutes per drill in `mechanics.oxley.continuation_reference`).
+  *Addressed 2026-11-09 (thrust)*: three errors made the high thrusts. The process-damping term indented the land
+  with the steady feed slope, which near the axis (feed comparable to the cutting speed) put 1.7 kN on a 0.1 mm
+  chisel element of Sklenicka's thinned point at f = 0.26 mm/rev (thrust 4.8 kN against 1.15 kN measured); the chisel
+  face carried Prandtl's flat-punch pressure, which belongs to a face normal to the motion (the -54 deg face pushing
+  material ahead of it carries Hill, Lee & Tupper's wedge pressure 2.8 k instead of 5.1 k); and the contact flow
+  stress came from the fallback's strain of 4-5 at the chisel's rake. Independent median 90 -> 44 %: Gok +74-83 % ->
+  +19-31 % (the database 1045 is about 1.4 times stronger than the tested 1040), Sklenicka -34 to +29 % (was up to
+  +313 %), Craciun D8 within 10 %, D6 and D10 +40 to +67 % (was +70 to +125 %; the web is unstated, the chisel about
+  half the thrust). Torques are unchanged (median 25 %); Krivokapic -28 to -52 % (all lips of the 3-5 mm drills run
+  below v_min and use the indentation rows; with shear rows the torque is not higher, so the speed criterion is not
+  the cause). The Ti6Al4V pilot-hole case stays at -90 % thrust / -84 % torque: the emulsion friction factor (0.81)
+  and the default 3 um edge move it by tens of percent only; its torque extrapolates to 1-2.6 N m at no lip
+  engagement (the pilot equal to the drill), a margin and chip-evacuation torque the steady cut does not contain. The
+  calibration-dependent 7075 case (Luo) moved from -36..-65 % to -46..-72 % thrust.
 * **Kinematic roughness with the minimum chip thickness** (`surface.kernels.envelope_profile`, Brammertz): where
   f^2 < r h_min (small feeds, the nearly flat minor edge of a face-mill insert, the ball's feed marks) the uncut
   layers accumulate to about h_min before a pass removes them; with the estimated edge radii this makes the

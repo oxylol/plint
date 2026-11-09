@@ -15,13 +15,14 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from numba import njit
+from numba import njit, types
 
 from . import abi as A
 from . import k_core as C
-from .k_envelope import _aabb, _dead_cyl, _env_ray, _event, node_range
+from .k_envelope import (ENV_CX, ENV_CY, ENV_CZ, ENV_HINV, ENV_KEY, ENV_MAGIC, ENV_NS, ENV_SPREAD, ENV_THI,
+                         ENV_TLO, ENV_Z0, ENV_Z1, _aabb, _dead_cyl, _env_ray, _event, node_range)
 from .k_ray import iv_subtract, target_overlap
-from .nbt import ACCUM_T, EVENTS_T, F1, FIELD_T, I2, PROFILE_T, RAW, SCRATCH_T, SPEC_T, TARGET_T, i8, void
+from .nbt import ACCUM_T, EVENTS_T, F1, FIELD_T, I2, INLINE, PROFILE_T, RAW, SCRATCH_T, SPEC_T, TARGET_T, f8, i8, void
 
 Q = A.QUANTUM_M
 
@@ -46,6 +47,17 @@ AG_RR_MAX = 21
 AG_GF = 24          # largest target overlap along a ray, per family (3)
 AG_GP = 27          # its middle point, per family (3 x 3)
 N_AG = 40
+PCS_BATCH = 512     # pieces booked per post_pieces call
+
+
+@njit(types.UniTuple(f8, 3)(i8, f8, f8, f8), **INLINE)
+def _point(fam, pf, pu, pv):
+    """(x, y, z) of the point at pf along family fam's axis and (pu, pv) across it."""
+    if fam == 0:
+        return pf, pu, pv
+    if fam == 1:
+        return pu, pf, pv
+    return pu, pv, pf
 
 
 @njit(void(FIELD_T, TARGET_T, SPEC_T, F1, ACCUM_T, I2, i8, F1, SCRATCH_T), **RAW)
@@ -87,11 +99,35 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
     c0z = spec.slab_c[0, 2]
     zmin = max(pinfo[A.PI_ZMIN], spec.slab_z[0])
     zmax = min(pinfo[A.PI_ZMAX], spec.slab_z[ns])
-    one_lo = sc.iw[0:1]
-    one_hi = sc.iw[1:2]
     div = sc.iv2
     dtag = sc.tg
-    p = sc.fw[A.FW_PP:A.FW_PP + 3]
+    blvl = -1
+    bq = np.int64(1)
+    binv = 1.0
+    # the brick of the last piece booked into one brick: a piece of the same level and family whose column lies
+    # strictly inside the same brick column and whose ends lie strictly inside its brick along the ray is booked
+    # into it directly (book_piece would find that one brick)
+    m_lvl = -1
+    m_fam = -1
+    m_qu = -1
+    m_qv = -1
+    m_lo = np.int64(0)
+    m_hi = np.int64(0)
+    m_idx = np.int64(0)
+    # running values in registers (written back below; every sum takes its terms in the same order)
+    zr_min = agg[AG_ZR_MIN]
+    zr_max = agg[AG_ZR_MAX]
+    rr_max = agg[AG_RR_MAX]
+    s_cx = afv[A.FA_CX]
+    s_cy = afv[A.FA_CY]
+    s_cz = afv[A.FA_CZ]
+    s_w = afv[A.FA_W]
+    s_nx = afv[A.FA_NX]
+    s_ny = afv[A.FA_NY]
+    s_nz = afv[A.FA_NZ]
+    w0 = w[0]
+    w1 = w[1]
+    w2 = w[2]
     for k in range(npc):
         ray = pcs[k, 0]
         lvl = pcs[k, 1]
@@ -100,16 +136,40 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
         iv = pcs[k, 4]
         p0 = pcs[k, 5]
         p1 = pcs[k, 6]
-        one_lo[0] = p0
-        one_hi[0] = p1
-        C.account(lv_cell_q, lv_bdims, lv_brick0, bmat, bdirty, bconn, bver, lvl, fam, iu, iv, one_lo, one_hi, 1, -1)
+        if p1 > p0:
+            if lvl != blvl:
+                blvl = lvl
+                bq = C.BR * lv_cell_q[lvl]
+                binv = 1.0 / bq
+            qu = np.int64(np.uint64(iu) // np.uint64(C.BR))
+            qv = np.int64(np.uint64(iv) // np.uint64(C.BR))
+            if (lvl == m_lvl and fam == m_fam and qu == m_qu and qv == m_qv and p0 > m_lo and p1 < m_hi
+                    and (iu - qu * C.BR != 0 or iu == 0) and (iv - qv * C.BR != 0 or iv == 0)):
+                bmat[m_idx, fam] -= p1 - p0
+                bdirty[m_idx] = 1
+                bconn[m_idx] = 1
+                bver[m_idx] += 1
+            else:
+                idx = C.book_piece(lv_bdims, lv_brick0, bmat, bdirty, bconn, bver, lvl, fam, iu, iv, p0, p1, -1, bq,
+                                   binv)
+                m_lvl = -1
+                if idx >= 0:
+                    # the piece went into one brick: remember it (its range along the ray, strictly inside)
+                    wb = C.floordiv(p0, bq, binv)
+                    m_lvl = lvl
+                    m_fam = fam
+                    m_qu = qu
+                    m_qv = qv
+                    m_lo = wb * bq
+                    m_hi = (wb + 1) * bq
+                    m_idx = idx
         u = 1 if fam == 0 else 0
         v = 2 if fam < 2 else 1
         a = lv_cell_m[lvl]
         a2 = a * a
         of = lv_origin[lvl, fam]
-        p[u] = lv_origin[lvl, u] + iu * a
-        p[v] = lv_origin[lvl, v] + iv * a
+        pu = lv_origin[lvl, u] + iu * a
+        pv = lv_origin[lvl, v] + iv * a
         lm = (p1 - p0) * Q
         if check:
             ov, first = target_overlap(tstart, tseg, ray, p0, p1)
@@ -118,10 +178,10 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
                 agg[AG_G_VOL] += ovm * a2 / 3.0
                 if ovm > gtol and ovm > agg[AG_GF + fam]:
                     agg[AG_GF + fam] = ovm
-                    p[fam] = of + 0.5 * (p0 + p1) * Q
-                    agg[AG_GP + 3 * fam] = p[0]
-                    agg[AG_GP + 3 * fam + 1] = p[1]
-                    agg[AG_GP + 3 * fam + 2] = p[2]
+                    x, y, z = _point(fam, of + 0.5 * (p0 + p1) * Q, pu, pv)
+                    agg[AG_GP + 3 * fam] = x
+                    agg[AG_GP + 3 * fam + 1] = y
+                    agg[AG_GP + 3 * fam + 2] = z
                     agg[AG_G_LVL] = lvl
                 if ovm > gtol:
                     for kk in range(first, tstart[ray + 1]):
@@ -137,16 +197,15 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
                             tm = (th - tl) * Q
                             if tm > agg[AG_B_DEPTH]:
                                 agg[AG_B_DEPTH] = tm
-                                p[fam] = of + 0.5 * (tl + th) * Q
-                                agg[AG_B_X] = p[0]
-                                agg[AG_B_X + 1] = p[1]
-                                agg[AG_B_X + 2] = p[2]
+                                x, y, z = _point(fam, of + 0.5 * (tl + th) * Q, pu, pv)
+                                agg[AG_B_X] = x
+                                agg[AG_B_X + 1] = y
+                                agg[AG_B_X + 2] = z
                                 agg[AG_B_LVL] = lvl
                                 agg[AG_B_FAM] = fam
         if dead_ok:
-            p[fam] = of
-            nd = _dead_cyl(p[0], p[1], p[2], fam, w, c0x, c0y, c0z, r_dead, zmin, zmin + z_dead, p0 * Q, p1 * Q,
-                           div, dtag)
+            x, y, z = _point(fam, of, pu, pv)
+            nd = _dead_cyl(x, y, z, fam, w, c0x, c0y, c0z, r_dead, zmin, zmin + z_dead, p0 * Q, p1 * Q, div, dtag)
             for kk in range(nd):
                 x0 = div[kk, 0] if div[kk, 0] > p0 * Q else p0 * Q
                 x1 = div[kk, 1] if div[kk, 1] < p1 * Q else p1 * Q
@@ -154,49 +213,62 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
                     agg[AG_D_LEN] += (x1 - x0) * a2 / 3.0
         for e in range(2):
             qq = p0 if e == 0 else p1
-            p[fam] = of + qq * Q
-            dx = p[0] - c0x
-            dy = p[1] - c0y
-            dz = p[2] - c0z
-            zr = dx * w[0] + dy * w[1] + dz * w[2]
-            if zr < agg[AG_ZR_MIN]:
-                agg[AG_ZR_MIN] = zr
-            if zr > agg[AG_ZR_MAX]:
-                agg[AG_ZR_MAX] = zr
-            ex = dx - zr * w[0]
-            ey = dy - zr * w[1]
-            ez = dz - zr * w[2]
-            rr = math.sqrt(ex * ex + ey * ey + ez * ez)
-            if rr > agg[AG_RR_MAX]:
-                agg[AG_RR_MAX] = rr
+            x, y, z = _point(fam, of + qq * Q, pu, pv)
+            dx = x - c0x
+            dy = y - c0y
+            dz = z - c0z
+            zr = dx * w0 + dy * w1 + dz * w2
+            if zr < zr_min:
+                zr_min = zr
+            if zr > zr_max:
+                zr_max = zr
+            ex = dx - zr * w0
+            ey = dy - zr * w1
+            ez = dz - zr * w2
+            # the square root only when the point can be farther than the largest distance so far
+            r2 = ex * ex + ey * ey + ez * ez
+            if r2 > rr_max * rr_max * (1.0 - 1e-12):
+                rr = math.sqrt(r2)
+                if rr > rr_max:
+                    rr_max = rr
         if lvl == 0 and fam == 2:
             vol = lm * a2
-            p[fam] = of + 0.5 * (p0 + p1) * Q
-            afv[A.FA_CX] += vol * p[0]
-            afv[A.FA_CY] += vol * p[1]
-            afv[A.FA_CZ] += vol * p[2]
-            afv[A.FA_W] += vol
-            dx = p[0] - c0x
-            dy = p[1] - c0y
-            dz = p[2] - c0z
-            zr = dx * w[0] + dy * w[1] + dz * w[2]
+            x, y, z = _point(fam, of + 0.5 * (p0 + p1) * Q, pu, pv)
+            s_cx += vol * x
+            s_cy += vol * y
+            s_cz += vol * z
+            s_w += vol
+            dx = x - c0x
+            dy = y - c0y
+            dz = z - c0z
+            zr = dx * w0 + dy * w1 + dz * w2
             if zr < zmin:
                 zr = zmin
             if zr > zmax:
                 zr = zmax
-            nx = c0x + zr * w[0] - p[0]
-            ny = c0y + zr * w[1] - p[1]
-            nz = c0z + zr * w[2] - p[2]
+            nx = c0x + zr * w0 - x
+            ny = c0y + zr * w1 - y
+            nz = c0z + zr * w2 - z
             nn_ = math.sqrt(nx * nx + ny * ny + nz * nz)
             if nn_ > 0.0:
-                afv[A.FA_NX] += vol * nx / nn_
-                afv[A.FA_NY] += vol * ny / nn_
-                afv[A.FA_NZ] += vol * nz / nn_
+                s_nx += vol * nx / nn_
+                s_ny += vol * ny / nn_
+                s_nz += vol * nz / nn_
             if rapid:
                 agg[AG_R_VOL] += vol
-                agg[AG_R_X] += vol * p[0]
-                agg[AG_R_X + 1] += vol * p[1]
-                agg[AG_R_X + 2] += vol * p[2]
+                agg[AG_R_X] += vol * x
+                agg[AG_R_X + 1] += vol * y
+                agg[AG_R_X + 2] += vol * z
+    agg[AG_ZR_MIN] = zr_min
+    agg[AG_ZR_MAX] = zr_max
+    agg[AG_RR_MAX] = rr_max
+    afv[A.FA_CX] = s_cx
+    afv[A.FA_CY] = s_cy
+    afv[A.FA_CZ] = s_cz
+    afv[A.FA_W] = s_w
+    afv[A.FA_NX] = s_nx
+    afv[A.FA_NY] = s_ny
+    afv[A.FA_NZ] = s_nz
 
 
 @njit(i8(FIELD_T, PROFILE_T, SPEC_T, TARGET_T, ACCUM_T, EVENTS_T, SCRATCH_T), **RAW)
@@ -284,9 +356,35 @@ def subtract_envelope(f, prof, spec, tgt, acc, ev, sc):
     any_removed = False
     overflowed = False
     p = fw[A.FW_P:A.FW_P + 3]
-    work = fw[A.FW_WORK:A.FW_WORK + 16]
+    # slab bounds for _env_ray (work[16:]): the spread of the slab axis points, when the slab heights ascend
+    env = fw[A.FW_ENV:A.FW_ENV + A.N_ENV]
+    env[ENV_KEY] = 0.0
+    mono = True
+    spread = 0.0
+    for k in range(ns):
+        if slab_z[k + 1] < slab_z[k]:
+            mono = False
+        dx = slab_c[k, 0] - c0x
+        dy = slab_c[k, 1] - c0y
+        dz = slab_c[k, 2] - c0z
+        d = math.sqrt(dx * dx + dy * dy + dz * dz)
+        if d > spread:
+            spread = d
+    if mono:
+        env[ENV_NS] = ns
+        env[ENV_CX] = c0x
+        env[ENV_CY] = c0y
+        env[ENV_CZ] = c0z
+        env[ENV_SPREAD] = spread * (math.sqrt(w[0] * w[0] + w[1] * w[1] + w[2] * w[2]) + 1e-12)
+        env[ENV_Z0] = slab_z[0]
+        env[ENV_Z1] = slab_z[ns]
+        env[ENV_HINV] = ns / (slab_z[ns] - slab_z[0]) if slab_z[ns] > slab_z[0] else 0.0
+        env[ENV_KEY] = ENV_MAGIC
+    work = fw[A.FW_WORK:A.FW_ENV + A.N_ENV]
+    cap_seg = s_lo.shape[0]
     npc_all = 0
-    cap_p = pcs.shape[0]
+    # pieces are booked in batches small enough to stay in the cache (the order, and so every sum, is the same)
+    cap_p = min(pcs.shape[0], PCS_BATCH)
     nl = info[A.FI_NLEVELS]
     for lvl in range(nl):
         if mask >= 0 and (mask >> lvl) & 1 == 0:
@@ -328,6 +426,14 @@ def subtract_envelope(f, prof, spec, tgt, acc, ev, sc):
                 dx1 = w[0]
                 dx2 = 0.0
             ndx = math.sqrt(dx0 * dx0 + dx1 * dx1 + dx2 * dx2)
+            # quick-reject bounds: certainly outside above rq_hi, certainly inside below rq_lo (only the rays in
+            # between take the original test, so the decision is the original one)
+            rq_hi = Rq * (1.0 + 1e-12)
+            rq_lo = Rq * (1.0 - 1e-12)
+            rq2_hi = rq_hi * rq_hi
+            rq2_lo = rq_lo * rq_lo
+            nq_hi = rq_hi * ndx * (1.0 + 1e-12)
+            nq_lo = rq_lo * ndx * (1.0 - 1e-12)
             r0 = lv_ray0[lvl, fam]
             for iu in range(iu0, iu1 + 1):
                 for iv in range(iv0, iv1 + 1):
@@ -341,18 +447,26 @@ def subtract_envelope(f, prof, spec, tgt, acc, ev, sc):
                     ry = p[1] - c0y
                     rz = p[2] - c0z
                     if ndx > 1e-12:
-                        dist = abs(rx * dx0 + ry * dx1 + rz * dx2) / ndx
+                        num = abs(rx * dx0 + ry * dx1 + rz * dx2)
+                        if num > nq_hi:
+                            continue
+                        if num > nq_lo and num / ndx > Rq:
+                            continue
                     else:
                         zz = rx * w[0] + ry * w[1] + rz * w[2]
                         px = rx - zz * w[0]
                         py = ry - zz * w[1]
                         pz = rz - zz * w[2]
-                        dist = math.sqrt(px * px + py * py + pz * pz)
-                    if dist > Rq:
-                        continue
-                    mat, touched = C.overlap(cnt, seg, link, pseg, pnext, ray, q_lo, q_hi)
+                        d2 = px * px + py * py + pz * pz
+                        if d2 > rq2_hi:
+                            continue
+                        if d2 > rq2_lo and math.sqrt(d2) > Rq:
+                            continue
+                    mat, m_lo, m_hi = C.extent(cnt, seg, link, pseg, pnext, ray, q_lo, q_hi)
                     if mat == 0:
                         continue
+                    env[ENV_TLO] = m_lo * Q
+                    env[ENV_THI] = m_hi * Q
                     niv = _env_ray(pz0, pz1, pkind, pc0, pc1, pc2, pc3, ppart, p[0], p[1], p[2], fam, w, slab_c,
                                    slab_z, slab_dr, t_lo, t_hi, ivt, ivp, 1, work)
                     if niv <= 0:
@@ -376,6 +490,61 @@ def subtract_envelope(f, prof, spec, tgt, acc, ev, sc):
                             m += 1
                     if m == 0:
                         continue
+                    # no material in the removal intervals: nothing to subtract (iv_subtract would remove 0; a ray
+                    # with more segments than the scratch holds takes the full path for its overflow flags)
+                    if cnt[ray] <= cap_seg:
+                        hit = False
+                        for i in range(m):
+                            mt, tt = C.overlap(cnt, seg, link, pseg, pnext, ray, s_rlo[i], s_rhi[i])
+                            if mt > 0:
+                                hit = True
+                                break
+                        if not hit:
+                            continue
+                    # one inline segment trimmed at one end by one interval (the common case): written in place, as
+                    # load / iv_subtract / store would (the new end carries the event id; the other inline slots and
+                    # the count stay; no pool block involved)
+                    if m == 1 and cnt[ray] == 1 and link[ray] < 0:
+                        sa = np.int64(seg[ray, 0, 0])
+                        sb = np.int64(seg[ray, 0, 1])
+                        ra = s_rlo[0]
+                        rb = s_rhi[0]
+                        trim = 0
+                        if sa < ra and ra < sb and sb <= rb:
+                            trim = 1
+                            seg[ray, 0, 1] = ra
+                            sev[ray, 0, 1] = ev_id
+                            p0 = ra
+                            p1 = sb
+                        elif ra <= sa and sa < rb and rb < sb:
+                            trim = 1
+                            seg[ray, 0, 0] = rb
+                            sev[ray, 0, 0] = ev_id
+                            p0 = sa
+                            p1 = rb
+                        if trim == 1:
+                            for kk in range(1, C.K):
+                                seg[ray, kk, 0] = 0
+                                seg[ray, kk, 1] = 0
+                                sev[ray, kk, 0] = 0
+                                sev[ray, kk, 1] = 0
+                            if info[A.FI_MAX_SEG] < 1:
+                                info[A.FI_MAX_SEG] = 1
+                            any_removed = True
+                            removed_q[lvl, fam] += p1 - p0
+                            aiv[A.IA_RAYS_CHANGED] += 1
+                            if npc_all + 1 > cap_p:
+                                post_pieces(f, tgt, spec, prof.info, acc, pcs, npc_all, agg, sc)
+                                npc_all = 0
+                            pcs[npc_all, 0] = ray
+                            pcs[npc_all, 1] = lvl
+                            pcs[npc_all, 2] = fam
+                            pcs[npc_all, 3] = iu
+                            pcs[npc_all, 4] = iv
+                            pcs[npc_all, 5] = p0
+                            pcs[npc_all, 6] = p1
+                            npc_all += 1
+                            continue
                     n = C.load(cnt, seg, sev, link, pseg, psev, pnext, ray, s_lo, s_hi, s_elo, s_ehi)
                     if n < 0:
                         info[A.FI_SCRATCH_OVF] = 1
@@ -498,3 +667,4 @@ def subtract_envelope(f, prof, spec, tgt, acc, ev, sc):
 
 
 KERNELS = (post_pieces, subtract_envelope)
+INLINED = (_point,)

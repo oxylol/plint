@@ -287,7 +287,10 @@ class DynamicsDomain:
         tip_M = np.asarray(frame.pose_M_T, float)[:3, 3]
         tip_S = np.asarray(frame.pose_S_T, float)[:3, 3]
         contact = self._contact(bus, p, slot)
-        point_S = np.asarray(contact.geometry.point_S_m, float) if contact is not None else tip_S.copy()
+        # the contact point: removal's centroid of the engaged region for a rotating tool; a turning tool cuts at
+        # its nose (removal's turning contacts carry no centroid: point_S_m is zero, docs/models/loop.md 15)
+        point_S = np.asarray(contact.geometry.point_S_m, float) if (contact is not None and rotating) else \
+            tip_S.copy()
         station_M = tip_M[None, :] + (R_M_T0 @ np.stack([np.zeros(nst), np.zeros(nst), station_z]).reshape(3, nst)).T
         names = list(frame.axis_names)
         values = {n: float(v) for n, v in zip(names, np.asarray(frame.axis_actual)[-1])} \
@@ -488,7 +491,7 @@ class DynamicsDomain:
             return None
         g = contact.geometry
         speed = float(np.mean(np.abs(frame.spindle_omega_rad_s)))
-        if speed <= 0.0 or float(g.ap_m) <= 0.0:
+        if speed <= 0.0:
             return None
         omega_signed = float(np.mean(frame.spindle_omega_rad_s))
         spin = 1.0 if omega_signed > 0.0 else -1.0
@@ -499,12 +502,23 @@ class DynamicsDomain:
                 cut_rec = c
         nt, ne = np.asarray(edge.elem_r_m).shape
         in_cut = np.asarray(cut_rec.in_cut_time_s, float) if cut_rec is not None else np.zeros((0, 0))
+        ap = float(g.ap_m)
         if in_cut.shape == (nt, ne) and np.any(in_cut > 0.0):
             engaged = in_cut > 0.0
-        else:
+            if ap <= 0.0 and not rotating:
+                # removal's turning contacts carry no depth (docs/models/loop.md 15): the engaged chip width; the
+                # linearised cut's stiffness (the relaxation of the step's predictor-corrector) does not depend on
+                # it, only the reported depth of cut does
+                valid = np.asarray(edge.elem_valid) != 0
+                ap = float(np.sum(np.asarray(edge.elem_db_m, float)[engaged & valid]))
+        elif ap > 0.0:
             d = R_S_T0.T @ (np.asarray(g.point_S_m, float) - tip_S)
             z = np.asarray(edge.elem_z_m, float)
-            engaged = np.abs(z - d[2]) <= 0.5 * float(g.ap_m) + 1e-12
+            engaged = np.abs(z - d[2]) <= 0.5 * ap + 1e-12
+        else:
+            return None
+        if ap <= 0.0:
+            return None
         if rotating:
             lo, hi = _arc_from_geometry(R_S_T0, tip_S, g.point_S_m, g.engaged_angle_rad)
             fz = math.hypot(v_T0[0], v_T0[1]) * TWO_PI / (max(n_teeth, 1) * speed)
@@ -526,7 +540,7 @@ class DynamicsDomain:
             h_mean = float(np.asarray(coeffs.h_grid_m)[0]) if len(np.asarray(coeffs.h_grid_m)) else 1e-6
         wear = bus.wear.tools.get(slot)
         VB = np.asarray(_get(wear, "VB_m", np.zeros((0, 0))), float) if wear is not None else None
-        cut = cut_model(edge, frames, coeffs, engaged=engaged, ap_m=float(g.ap_m), h_mean_m=h_mean, arc=(lo, hi),
+        cut = cut_model(edge, frames, coeffs, engaged=engaged, ap_m=ap, h_mean_m=h_mean, arc=(lo, hi),
                         rotating=rotating, spin=spin, K_sp_scale=np.asarray(coeffs.K_sp_N_per_m3, float),
                         land_per_radius=P.p(P.PROCESS_DAMPING, "edge_land_per_radius"), VB_m=VB,
                         work_radius_m=work_r)
@@ -534,7 +548,7 @@ class DynamicsDomain:
         sig = (slot, bool(rotating), round(float(hi - lo) / (TWO_PI * tol)),
                round(math.log(max(h_mean, 1e-12)) / tol), int(getattr(coeffs, "version", 0)),
                int(getattr(bus.structure, "version", 0)), int(np.count_nonzero(engaged)))
-        return OperatingPoint(p, slot, int(tick), speed, float(g.ap_m), float(g.ae_m), lo, hi, fz, h_mean,
+        return OperatingPoint(p, slot, int(tick), speed, ap, float(g.ae_m), lo, hi, fz, h_mean,
                               max(n_teeth, 1), rotating, spin, sig, cut)
 
     # ------------------------------------------------------------------ absorb
@@ -589,11 +603,16 @@ class DynamicsDomain:
             rec.work_force_S = sys.ds.work_force_S.copy()
             rec.node_tick = int(sys.ds.node_tick[0])
             rec.flags = sys.ds.flags.copy()
-            # vibration samples into the chatter window
+            # vibration samples into the chatter window: only while the tool cuts (chatter is the cut's self-excited
+            # vibration; samples of a step without cutting - the broad phase near the stock, the machine's frame
+            # still ringing from a rapid - end the window's run instead of feeding it)
             n = int(sys.ds.samp_n[0])
             win = ds.windows.setdefault(p, ChatterWindow())
             keep = st.chatter_window_max_s
-            win.append(sys.ds.samp_tick[:n], sys.ds.samp_u[:n], sys.ds.samp_w[:n], keep, ctx.tick_s)
+            if self._cutting(bus_next, rec.slot):
+                win.append(sys.ds.samp_tick[:n], sys.ds.samp_u[:n], sys.ds.samp_w[:n], keep, ctx.tick_s)
+            elif len(win.tick):
+                win.clear()
             if int(sys.ds.samp_n[1]):
                 ds.meta["samples_dropped"] = ds.meta.get("samples_dropped", 0) + int(sys.ds.samp_n[1])
             umin = sc[DA_UMIN_X:DA_UMIN_X + 3]
@@ -637,6 +656,15 @@ class DynamicsDomain:
             led.unbalance_work_J -= ext_total
         bus_next.dynamics = frame
         self.last_channels = self.channel_values(ctx, state)
+
+    @staticmethod
+    def _cutting(bus: Bus, slot: int) -> bool:
+        """Whether the tool in ``slot`` was in cut during the step (cutting's record of the step, absorbed before
+        dynamics': any element in cut)."""
+        for c in getattr(bus.cutting, "contacts", []) or []:
+            if int(c.tool_slot) == int(slot) and float(getattr(c, "in_cut_s", 0.0) or 0.0) > 0.0:
+                return True
+        return False
 
     @staticmethod
     def _process_damping_total(outputs) -> float:
@@ -693,6 +721,11 @@ class DynamicsDomain:
         fz = op.feed_per_tooth_m if op is not None else 0.0
         res = analyse(win.tick[start:], win.u[start:], ctx.tick_s, f_lo, f_hi, rec.n_teeth if rec.rotating else 1, fz,
                       self.chatter)
+        if res.chatter and self._decaying(rec, res):
+            # a free vibration dying out at its structure's own damping (an entry shock, a mode excited before the
+            # cut) is not the self-excited vibration of an unstable cut
+            res.chatter = False
+            res.onset_tick = -1
         c.chatter_index = float(res.index)
         c.chatter_freq_Hz = float(res.freq_Hz)
         c.chatter_amp_m = float(res.amp_m)
@@ -713,6 +746,17 @@ class DynamicsDomain:
         c.chatter = bool(ep["active"])
         c.chatter_onset_tick = int(ep["onset_tick"]) if ep["active"] else -1
         return res
+
+    @staticmethod
+    def _decaying(rec: SystemRecord, res) -> bool:
+        """The non-forced vibration decays at least at half the structural rate zeta omega of the mode nearest its
+        frequency (its envelope's fitted growth rate): a transient. Chatter grows, or holds a limit cycle, because
+        the cut feeds it energy at least at that rate."""
+        if not rec.modes or res.freq_Hz <= 0.0:
+            return False
+        w_c = TWO_PI * float(res.freq_Hz)
+        mode = min(rec.modes, key=lambda m: abs(m.omega_rad_s - w_c))
+        return float(res.growth_per_s) < -0.5 * float(mode.zeta) * float(mode.omega_rad_s)
 
     def _chatter_finding(self, ctx, state, p, rec, res, fz: float) -> None:
         ds = state.dynamics

@@ -40,6 +40,8 @@ class Workpiece:
     initial_volume_m3: float = 0.0
     target_volume_m3: float = 0.0
     notes: list = field(default_factory=list)
+    one_body: bool = False                                  # one component at the last connectivity check, removals
+                                                            #   only since (the incremental check applies)
 
 
 @dataclass
@@ -106,7 +108,8 @@ class RemovalState:
                 "removed_q": [[str(int(v)) for v in row] for row in wp.removed_q], "polar_q2": str(int(wp.polar_q2)),
                 "next_sev": int(wp.next_sev), "polar_turned_rad": float(wp.polar_turned_rad),
                 "peak_blocks_step": int(wp.peak_blocks_step), "initial_volume_m3": float(wp.initial_volume_m3),
-                "target_volume_m3": float(wp.target_volume_m3), "notes": list(wp.notes)})
+                "target_volume_m3": float(wp.target_volume_m3), "notes": list(wp.notes),
+                "one_body": bool(wp.one_body)})
         for c, acc in enumerate(self.accum):
             for name in A.RemovalAccum._fields:
                 arrays[f"c{c}.acc.{name}"] = np.array(getattr(acc, name))
@@ -150,7 +153,8 @@ class RemovalState:
                 removed_q=[[int(v) for v in row] for row in wm["removed_q"]], polar_q2=int(wm["polar_q2"]),
                 next_sev=int(wm["next_sev"]), polar_turned_rad=float(wm["polar_turned_rad"]),
                 peak_blocks_step=int(wm["peak_blocks_step"]), initial_volume_m3=float(wm["initial_volume_m3"]),
-                target_volume_m3=float(wm["target_volume_m3"]), notes=list(wm["notes"])))
+                target_volume_m3=float(wm["target_volume_m3"]), notes=list(wm["notes"]),
+                one_body=bool(wm.get("one_body", False))))
         c = 0
         while f"c{c}.acc.removed_q" in arrays:
             st.accum.append(A.RemovalAccum(*(np.ascontiguousarray(np.array(arrays[f"c{c}.acc.{name}"]))

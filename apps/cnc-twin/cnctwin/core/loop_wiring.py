@@ -117,7 +117,8 @@ class LiveBricks:
 
 class SurfaceBurrs:
     """holding's BurrSource: the largest surviving burr surface reports on each locating patch of a setup (its
-    exit face matched to the patch's outward normal)."""
+    exit face matched to the patch's outward normal), of the part in the machine: the burrs formed since its first
+    operation started (``Run.part_start_tick``; a batch's next blank carries none of the last part's burrs)."""
 
     wired = True
 
@@ -129,10 +130,12 @@ class SurfaceBurrs:
         if surface is None or getattr(self.run.state, "surface", None) is None:
             return {}
         view = surface.view(self.run.state)
+        since = int(getattr(self.run, "part_start_tick", 0) or 0)
         out = {}
         for pid, centre, normal, half in patches:
             radius = float(max(np.max(np.asarray(half, float)), 1e-3))
-            height = float(view.burr_height_at(0, np.asarray(centre, float), np.asarray(normal, float), radius))
+            height = float(view.burr_height_at(0, np.asarray(centre, float), np.asarray(normal, float), radius,
+                                               since_tick=since))
             if height > 0.0:
                 out[pid] = height
         return out
@@ -200,6 +203,17 @@ def _unload_record(state, op_index: int, workpiece: int) -> dict:
     return dict(rows[-1]) if rows else {}
 
 
+def holding_slip_terms(holding) -> tuple[float, float]:
+    """(the loads' work on the slip motions, the change of their kinetic + potential energy) of a step's holding
+    record: tools in their holders and parts in their workholding (holding's ratchets: in = dissipation + change,
+    the dissipation booked by holding as ledger friction)."""
+    slip_in = slip_mech = 0.0
+    for rec in list((getattr(holding, "tools", {}) or {}).values()) + list((getattr(holding, "parts", {}) or {}).values()):
+        slip_in += float(getattr(rec, "slip_in_J", 0.0) or 0.0)
+        slip_mech += float(getattr(rec, "slip_mech_change_J", 0.0) or 0.0)
+    return slip_in, slip_mech
+
+
 def run_ledger(ctx, domains):
     """The run's conservation ledger (:class:`RunLedger`: the core Ledger with the two energy terms below)."""
     from ..db.models import params
@@ -229,13 +243,15 @@ class RunLedger(Ledger):
     damping against the same modal energy change), whose integrator round-off alone is 1e-6 of them.
     """
 
-    OUT = ENERGY_OUT + ("modal_quadrature_J",)
+    IN = ENERGY_IN + ("holding_slip_in_J",)
+    OUT = ENERGY_OUT + ("modal_quadrature_J", "holding_slip_mech_J")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.kinetic_in_balance = False
         self.kinetic_reported_J = 0.0
         self.quadrature_J = 0.0
+        self.slip_in_J = 0.0
         self.energy_scale_floor_J = 0.0
 
     def book(self, state, tick_end: int) -> dict:
@@ -244,6 +260,10 @@ class RunLedger(Ledger):
         delta["modal_quadrature_J"] = float(getattr(dyn, "cutting_work_quadrature_J", 0.0) or 0.0) - \
             float(getattr(dyn, "cutting_work_J", 0.0) or 0.0)
         self.quadrature_J += delta["modal_quadrature_J"]
+        slip_in, slip_mech = holding_slip_terms(state.bus_next.holding)
+        delta["holding_slip_in_J"] = slip_in
+        delta["holding_slip_mech_J"] = slip_mech
+        self.slip_in_J += slip_in
         return delta
 
     def _check_energy(self, ctx, state, tick_end: int, values: dict) -> None:
@@ -267,7 +287,7 @@ class RunLedger(Ledger):
             values.update({"ledger.energy_in_J": self.energy_in_cum, "ledger.energy_out_J": self.energy_out_cum,
                            "ledger.energy_residual_rel": 0.0, "ledger.energy_residual_J": 0.0})
             return
-        totals = {name: 0.0 for name in ENERGY_IN + self.OUT}
+        totals = {name: 0.0 for name in self.IN + self.OUT}
         for step in interval:
             for name, value in step.delta.items():
                 if name != "chip_kinetic_J" and name in totals:
@@ -277,7 +297,7 @@ class RunLedger(Ledger):
         else:
             self.kinetic_reported_J += self.ke_pending
         self.ke_pending = 0.0
-        energy_in = sum(totals[n] for n in ENERGY_IN)
+        energy_in = sum(totals[n] for n in self.IN)
         energy_out = sum(totals[n] for n in self.OUT)
         scale = max(sum(abs(v) for v in totals.values()), self.energy_scale_floor_J)
         rel = abs(energy_in - energy_out) / scale if scale > 0.0 else 0.0
@@ -312,27 +332,34 @@ class RunLedger(Ledger):
             # no interval was checked (a run that stops in its first steps, before chips books a window): with no
             # energy booked at all there is nothing to balance; with energy booked the balance stays unproven
             booked = sum(abs(float(v)) for st in self.steps for name, v in st.delta.items()
-                         if name in ENERGY_IN + self.OUT)
+                         if name in self.IN + self.OUT)
             if booked <= self.energy_scale_floor_J * self.tol_energy:
                 out["energy"].update({"ok": True, "max_residual_rel": 0.0, "final_residual_rel": 0.0,
                                       "note": "no energy booked in the run (no cut): nothing to balance"})
         out["energy"]["chip_kinetic_reported_J"] = None if self.kinetic_in_balance else self.kinetic_reported_J
         out["energy"]["modal_quadrature_J"] = self.quadrature_J
+        out["energy"]["holding_slip_in_J"] = self.slip_in_J
         out["energy"]["terms_added"] = ["modal_quadrature_J (out: cutting's quadrature of the work on the deflection "
-                                        "rates minus dynamics' exact modal work)"] + \
+                                        "rates minus dynamics' exact modal work)",
+                                        "holding_slip_in_J (in: the loads' work on the slip of tools in their holders "
+                                        "and of parts in their workholding) and holding_slip_mech_J (out: the change "
+                                        "of the slip motions' kinetic and potential energy); their dissipation is in "
+                                        "the friction term"] + \
             ([] if self.kinetic_in_balance else ["chips' kinetic energy reported, not balanced (cutting's force model "
                                                  "has no momentum flux)"])
         return out
 
     def checkpoint_state(self) -> dict:
         out = super().checkpoint_state()
-        out.update({"kinetic_reported_J": self.kinetic_reported_J, "quadrature_J": self.quadrature_J})
+        out.update({"kinetic_reported_J": self.kinetic_reported_J, "quadrature_J": self.quadrature_J,
+                    "slip_in_J": self.slip_in_J})
         return out
 
     def restore_state(self, state) -> None:
         super().restore_state(state)
         self.kinetic_reported_J = float(state.get("kinetic_reported_J", 0.0))
         self.quadrature_J = float(state.get("quadrature_J", 0.0))
+        self.slip_in_J = float(state.get("slip_in_J", 0.0))
 
 
 KineticReportedLedger = RunLedger          # the name earlier wiring used

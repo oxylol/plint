@@ -1720,6 +1720,10 @@ class PathPlanner:
         pc.stop_end = True
         it.inpos = True
         it.pieces = [x for x in it.pieces if x <= j]
+        if self.items and self.items[-1] is it:
+            # nothing is queued past a skip move until its feedback (BUFFER_STOPPING): the next move starts where
+            # the axes come to rest, not at the block's programmed end point (the command used to jump there)
+            self.tail_q = np.asarray(pc.q1, dtype=float).copy()
 
     def _commit_stretch(self, tp: TickPlan, k_stop: int, out, code: int) -> list:
         info = tp.stretch

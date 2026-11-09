@@ -212,7 +212,8 @@ largest and mean height, root thickness, exit order, exit-angle cosine, last tic
 end (and at finalize) a burr whose exit face is no longer material (point just behind the face outside the
 field) was machined away (`removed`); a surviving burr higher than `burr_limit` (the drawing's ISO 13715 edge
 allowance) raises a `burr` warning at its program line. `SurfaceView.burr_height_at` answers the burr under a
-later locator or clamp (holding).
+later locator or clamp (holding); `since_tick` restricts it to the burrs formed since then (the loop passes the
+start of the part in the machine: the burrs of a batch's earlier parts left with them).
 
 ## 6. Surface integrity (integrity.py)
 
@@ -236,8 +237,13 @@ generation.
 
 ## 7. Store and bounded memory (store.py, gather.py)
 
-A **patch** is one facet of one brick (32^3 lattice cells, removal's level-0 numbering) of one workpiece:
-normal within `face_angle` and plane within `plane_tol` of the facet (at most `max_facets` per brick). A **pass**
+A **patch** is one facet of one brick (32^3 lattice cells, removal's level-0 numbering) of one workpiece in one
+operation: normal within `face_angle` and plane within `plane_tol` of the facet (at most `max_facets` per brick
+and operation). Events join only the patches their operation opened (the domain's running operation count, one
+per operation of every part): the next part of a batch is a new blank in the same place and the next setup has
+another stock frame, so neither may join the patches before it. (Until 2026-11-09 they did: a batch's second part
+joined the first part's patches, its step-over profiles compared the two parts' tracks as overlapping passes and
+reported witness marks of 2-143 um on every second part; tests/unit/surface/test_domain.py.) A **pass**
 is one uninterrupted generation of a patch by one tool (a gap longer than `pass_gap` and four revolutions opens
 a new one). At most `lines_per_pass` **lines** per patch and pass collect pass rows; a line is evaluated and
 restarted at `line_rows` (`floor_line_rows`) rows, and evaluated when no event arrived for max(pass_gap, 4

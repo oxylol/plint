@@ -47,6 +47,14 @@ class StepLoads:
     dt_tick_s: float = 1e-3
     cutting: bool = False                  # any cutting load in the step
     corners_H: np.ndarray | None = None    # [8, 3] corners of the part's bounding box (slip extents)
+    # the cutting load's tooth-period pulse: |mean force| / |peak force| of each tick (1: steady or no cut), and
+    # the speed the cut can push the part at its contact (m/s per tick: twice the tool's feed speed relative to a
+    # table-mounted part - a part retreating faster than the tool advances plus its chip thinning per tooth loses
+    # the cut -, the cutting speed at the contact of a part turning in a chuck - it cannot be turned backwards);
+    # the contact point relative to O (None: no cut, no limit)
+    cut_fraction: np.ndarray | None = None
+    v_limit_m_s: np.ndarray | None = None
+    contact_H: np.ndarray | None = None
 
     @property
     def n_ticks(self) -> int:
@@ -62,6 +70,9 @@ class GroupResult:
     dq_m: float = 0.0
     q_max_m: float = 0.0
     work_J: float = 0.0
+    in_J: float = 0.0                      # work the cutting and inertia loads did on the part's motion (ledger in)
+    loss_J: float = 0.0                    # dissipated: friction work, inelastic landings (ledger out)
+    mech_change_J: float = 0.0             # change of the motion's kinetic + potential energy (ledger out)
     moving_s: float = 0.0
     twist: np.ndarray = field(default_factory=lambda: np.zeros(6))
     failing_ticks: int = 0
@@ -144,6 +155,24 @@ def covered_ticks(loads: StepLoads, l_c: float, k_star: int) -> np.ndarray:
     return (nv == 0.0) | ((nv <= nb) & (dots >= COVER_COS * nv * nb))
 
 
+def _settle(group: Group, res: GroupResult, ratchet_state: np.ndarray) -> None:
+    """A part held this step comes to rest: the motion's kinetic energy is dissipated in its contacts (and a lift
+    that has not landed yet lands: its potential energy too), booked like the ratchet's own losses."""
+    v = float(ratchet_state[1])
+    if v != 0.0:
+        ke = 0.5 * float(group.body.mass_kg) * v * v
+        res.loss_J += ke
+        res.mech_change_J -= ke
+    ratchet_state[1] = 0.0
+    if res.mode == A.MODE_SEPARATION:
+        q = float(ratchet_state[0])
+        if q > 0.0 and ratchet_state.shape[0] > 2:
+            pe = float(ratchet_state[2]) * q          # the restoring force of the last lift (state[2])
+            res.loss_J += pe
+            res.mech_change_J -= pe
+        ratchet_state[0] = 0.0
+
+
 def evaluate_group(group: Group, loads: StepLoads, settings, ratchet_state: np.ndarray) -> GroupResult:
     """One macro step of a contact group (module doc). ``ratchet_state`` [q, v] is updated in place."""
     res = GroupResult()
@@ -168,9 +197,7 @@ def evaluate_group(group: Group, loads: StepLoads, settings, ratchet_state: np.n
     n = group.n
     if scaled(loads.peak[k_star], l_c) <= 1e-12 * max(scaled(w0, l_c), 1.0):
         res.margin = settings.margin_cap
-        ratchet_state[1] = 0.0
-        if res.mode == A.MODE_SEPARATION:
-            ratchet_state[0] = 0.0
+        _settle(group, res, ratchet_state)
         status, _, f, st = solve(group, w0 + loads.mean[-1])
         if status == A.STATUS_HELD:
             res.forces_H, res.states = f, st
@@ -220,20 +247,36 @@ def evaluate_group(group: Group, loads: StepLoads, settings, ratchet_state: np.n
         res.mech = m_hat
         q_cap = float(m_hat @ (w0 + lam * wv))
         wave = A.empty_wave(n_ticks, 1)
+        # the speed of the part's contact point per unit generalized speed (twist m_hat about O)
+        u_c = float(np.linalg.norm(m_hat[:3] + np.cross(m_hat[3:], loads.contact_H))) \
+            if loads.contact_H is not None else 0.0
         for k in range(n_ticks):
             wave.mean[k, 0] = float(m_hat @ (w0 + loads.mean[k]))
             wave.amp[k, 0] = float(m_hat @ (loads.peak[k] - loads.mean[k]))
             wave.phase0_rad[k] = loads.phase0_rad[k]
             wave.rate_rad_s[k] = loads.rate_rad_s[k]
+            if loads.cut_fraction is not None:
+                wave.alpha_rad[k, 0] = A.pulse_alpha(float(loads.cut_fraction[k]))
+            if res.mode == A.MODE_FRICTION and loads.v_limit_m_s is not None and u_c > 0.0:
+                wave.v_max[k, 0] = float(loads.v_limit_m_s[k]) / u_c
+        q0, v0 = float(ratchet_state[0]), float(ratchet_state[1])
         out = np.zeros(A.N_RP)
         K.ratchet_part(wave, float(loads.dt_tick_s), q_cap, float(group.body.mass_kg), int(res.mode),
-                       int(settings.sub_steps_per_tooth), int(settings.max_sub_steps), ratchet_state, out)
+                       int(settings.sub_steps_per_tooth), int(settings.max_sub_steps), ratchet_state[:2], out)
+        if ratchet_state.shape[0] > 2:
+            ratchet_state[2] = q_cap
         res.q_cap_N = q_cap
         res.demand_peak_N = float(max(wave.mean[k, 0] + abs(wave.amp[k, 0]) for k in range(n_ticks)))
         res.dq_m = float(out[A.RP_DQ])
         res.q_max_m = float(out[A.RP_Q_MAX])
         res.work_J = float(out[A.RP_WORK_J])
         res.moving_s = float(out[A.RP_MOVING_S])
+        mass = float(group.body.mass_kg)
+        res.in_J = float(out[A.RP_IN_J])
+        res.loss_J = float(out[A.RP_LOSS_J])
+        res.mech_change_J = 0.5 * mass * (float(ratchet_state[1]) ** 2 - v0 * v0)
+        if res.mode == A.MODE_SEPARATION:
+            res.mech_change_J += q_cap * (float(ratchet_state[0]) - q0)
         res.held = False
         corners = loads.corners_H if loads.corners_H is not None else group.body.centroid_H[None, :]
         if res.mode == A.MODE_FRICTION:
@@ -242,9 +285,7 @@ def evaluate_group(group: Group, loads: StepLoads, settings, ratchet_state: np.n
         else:
             res.lift_extent_m = twist_extent(m_hat * res.q_max_m, group, corners)
     else:
-        ratchet_state[1] = 0.0
-        if res.mode == A.MODE_SEPARATION:
-            ratchet_state[0] = 0.0
+        _settle(group, res, ratchet_state)
     if np.any(group.contacts.kind == A.KIND_BONDED):
         status, _, fb, _ = solve(group, w0 + loads.peak[k_star])
         if status == A.STATUS_HELD:

@@ -169,3 +169,50 @@ def test_brick_attributes_are_written_and_merged(tmp_path):
         assert np.all(np.isfinite(ra[:4])) and np.all(np.isnan(ra[4:]))
         assert ra[0] == pytest.approx(state.surface.values["last_Ra_m"], rel=0.5)
     assert parse_brick_key("w2.17") == (2, 17) and parse_brick_key("5") == (0, 5)
+
+
+def test_a_batchs_next_part_opens_its_own_patches():
+    """The same wall finished on two blanks one after the other (a batch: the next part's OP10 in the same place,
+    the domain's operation count one further): the second part's events open their own patches, so each part's
+    step-over profile holds its own passes. Before, the second part joined the first part's patches and the two
+    parts' tracks were compared as overlapping passes (witness marks on every second part of a batch)."""
+    from cnctwin.surface.store import PI, QI
+    edge, outline = fx.endmill(R, 4)
+    omega = -2.0 * math.pi * 10000.0 / 60.0
+    ev, v = fx.side_wall(R, 4, 0.05e-3, omega, 200, [12], edge, edge_r=0.0)
+    ctx = fx.context(fx.project())
+    state = fx.sim_state()
+    dom = SurfaceDomain(tools=fx.tool_info({0: (edge, outline)}))
+    dom.init(ctx, state)
+    step = 10 * fx.IPO
+    offset = 0
+    for part in range(2):
+        rows_all = ev.copy()
+        rows_all[:, 0] += offset
+        for t0, rows in fx.chunks(rows_all, step):
+            tk = fx.step_ticks(t0, step)
+            tt = (tk - 1000 - offset) * fx.TICK_S
+            tip = np.stack([v * tt, 0 * tt, 0 * tt], axis=1)
+            fr = fx.frame(tk, tip, omega)
+            b = fx.bus([fr], [fx.contact(rows)], removal=[fx.removal_contact(ap=10e-3)])
+            dom.macro_step(ctx, state, b, fx.bus([fr], []))
+        dom.end_operation(ctx, state)
+        offset += 2_000_000                       # the next blank two seconds later
+    store = state.surface.store
+    ops = store.pi[:store.n_patch, PI["op"]]
+    assert set(ops.tolist()) == {0, 1}
+    assert int(np.sum(ops == 0)) == int(np.sum(ops == 1))          # the same faces, once per part
+    for q in range(store.n_pass):
+        assert int(store.pi[int(store.qi[q, QI["patch"]]), PI["op"]]) == int(store.qi[q, QI["op"]])
+    # each part's patches hold only its own rows: the second part's finish equals the first part's (identical cuts)
+    first = [p for p in range(store.n_patch) if int(ops[p]) == 0]
+    second = [p for p in range(store.n_patch) if int(ops[p]) == 1]
+    for p0, p1 in zip(first, second):
+        a, b = fx.patch_values(state, p0), fx.patch_values(state, p1)
+        assert set(a) == set(b)
+        for key in a:
+            if isinstance(a[key], (int, float)):
+                assert b[key] == pytest.approx(a[key], rel=1e-9, abs=1e-12)
+            else:
+                assert b[key] == a[key]
+    assert not [m for m in state.surface.marks if m.get("kind") == "witness"]

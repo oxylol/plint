@@ -108,6 +108,8 @@ CS_FREE_TICKS = 10          # dynamics free ticks
 CS_OVERFLOW_TOOTH = 11      # tooth whose pass hit a pool overflow (-1 none): repeated at resume
 CS_GATINGS = 12             # engaged-interval refreshes (passes and timer)
 CS_FORCED = 13              # passes forced by the staleness fallback (a slab missed its generation angle)
+CS_OVERFLOW_REMOVAL = 14    # 1: the last L0 step's polar cut (turning) or helix subtraction hit an overflow and is
+#                             repeated alone at the resume (the step's forces and dynamics are not repeated)
 N_CS = 16
 
 # HotContact.teeth columns: per tooth, derived from ContactState.gamma / slab_done whenever those change (not
@@ -123,6 +125,8 @@ N_TW = 4
 CSF_BETA = 0                # turning: unwrapped angle of the tool's reference plane in S at the last step end
 CSF_THETA_PREV = 1          # unwrapped tool spindle angle at the end of the last step
 CSF_GATE_ANGLE = 2          # spindle angle turned since the last engaged-interval refresh (rad)
+CSF_PENDING_ANGLE = 3       # the pending removal's angle (CS_OVERFLOW_REMOVAL): turning the deflected tip's angle,
+#                             helix the tool spindle angle at the step start
 N_CSF = 4
 
 # ------------------------------------------------------------------------------- HotGlobal.ipar

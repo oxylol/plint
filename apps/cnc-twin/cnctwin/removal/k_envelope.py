@@ -35,6 +35,21 @@ from .nbt import (ACCUM_T, EVENTS_T, F1, F2, FIELD_T, I1, I4_1, INLINE, OPTS, PR
 Q = A.QUANTUM_M
 ROOT_TOL_M = 1.0e-11
 MERGE_TOL_M = 1.0e-12
+# slab bounds a subtraction leaves for _env_ray in work[16:16 + A.N_ENV] (scratch fw[FW_ENV:]; set per call)
+ENV_KEY = 0                 # ENV_MAGIC when valid (the root isolation never writes work[16:])
+ENV_NS = 1                  # slab count, slab 0's axis point and the slab heights' ends the bounds belong to
+ENV_CX = 2
+ENV_CY = 3
+ENV_CZ = 4
+ENV_SPREAD = 5              # largest |c_k - c_0| |w| of the slab axis points
+ENV_Z0 = 6
+ENV_Z1 = 7
+ENV_HINV = 8                # slabs per metre of the slab heights' range (the window search's first guess)
+ENV_TLO = 9                 # the ray's material in the call's range, [t_lo_m, t_hi_m] (metres from the ray origin):
+ENV_THI = 10                #   intervals that cannot reach it change nothing, their slabs need not be evaluated
+ENV_MAGIC = -7.25e299
+ENV_EPS = 1.0e-10           # m: slab culling margin (the rounding of the heights is ~1e-18 m)
+AABB_EPS = 1.0e-12          # m: margin of the envelope box (the rounding of its end points is ~1e-17 m)
 
 
 # --------------------------------------------------------------------------- 1-D inequalities
@@ -320,12 +335,22 @@ def _piece(kind, c0, c1, c2, c3, tag, A0, A1, A2, z0p, s, dr, za, zb, ta, tb, ou
     with a single call site (keeps the inlined code small)."""
     if n < 0:
         return n
+    # a ray along the axis (s = +-1: 3-axis tools and the axis family) needs no division (x / 1 = x and
+    # x / -1 = -x exactly)
     if s > 0.0:
-        t0 = (za - z0p) / s
-        t1 = (zb - z0p) / s
+        if s == 1.0:
+            t0 = za - z0p
+            t1 = zb - z0p
+        else:
+            t0 = (za - z0p) / s
+            t1 = (zb - z0p) / s
     elif s < 0.0:
-        t0 = (zb - z0p) / s
-        t1 = (za - z0p) / s
+        if s == -1.0:
+            t0 = -(zb - z0p)
+            t1 = -(za - z0p)
+        else:
+            t0 = (zb - z0p) / s
+            t1 = (za - z0p) / s
     else:
         if z0p < za or z0p > zb:
             return n
@@ -477,11 +502,60 @@ def merge_intervals(out, tags, n):
          F2, I4_1, i8, F1), **INLINE)
 def _env_ray(pz0, pz1, pkind, pc0, pc1, pc2, pc3, ppart, ox, oy, oz, fam, w, slab_c, slab_z, slab_dr, t_lo, t_hi,
              out, tags, merge, work):
+    """Intervals (metres from the ray origin, within [t_lo, t_hi]) of the ray o + t e_fam inside the slabbed
+    envelope, in slab and piece order, merged when ``merge``. Only the slabs that can matter are evaluated:
+    when the caller left the slab bounds in ``work[16:16 + N_ENV]`` (subtract_envelope: the spread of the slab
+    axis points, keyed by the slab arrays, and the ray's material extent), a search over the ascending slab
+    heights finds the slabs the ray reaches where it has material (within a quantum); every slab is then
+    skipped when the ray's height along the axis over [t_lo, t_hi] misses it by more than ENV_EPS (no piece of
+    it could give an interval). The intervals are those of the full evaluation, less (with the extent) those
+    that cannot reach the ray's material: the subtraction removes the same."""
     n = 0
     s = w[fam]
     ns = slab_dr.shape[0]
     m = pz0.shape[0]
-    for k in range(ns):
+    k0 = 0
+    k1 = ns
+    e = 16
+    if (ns > 0 and work.shape[0] >= e + A.N_ENV and work[e + ENV_KEY] == ENV_MAGIC and work[e + ENV_NS] == ns
+            and work[e + ENV_CX] == slab_c[0, 0] and work[e + ENV_CY] == slab_c[0, 1]
+            and work[e + ENV_CZ] == slab_c[0, 2] and work[e + ENV_Z0] == slab_z[0] and work[e + ENV_Z1] == slab_z[ns]):
+        # height of the ray along the axis over the part of [t_lo, t_hi] that can matter (the material extent
+        # the caller gave, widened by a quantum and the margin), in slab 0's frame; slab k's frame differs by
+        # (c_0 - c_k) . w, at most the spread of the axis points
+        mrg = work[e + ENV_SPREAD] + ENV_EPS
+        tq0 = work[e + ENV_TLO] - Q - ENV_EPS
+        tq1 = work[e + ENV_THI] + Q + ENV_EPS
+        if tq0 < t_lo:
+            tq0 = t_lo
+        if tq1 > t_hi:
+            tq1 = t_hi
+        if tq1 < tq0:
+            return 0
+        zr = (ox - slab_c[0, 0]) * w[0] + (oy - slab_c[0, 1]) * w[1] + (oz - slab_c[0, 2]) * w[2]
+        za_ = zr + s * tq0
+        zb_ = zr + s * tq1
+        zlo = (za_ if za_ < zb_ else zb_) - mrg
+        zhi = (zb_ if za_ < zb_ else za_) + mrg
+        # first slab whose top reaches zlo, then the first whose bottom is above zhi (ascending heights; a guess
+        # from the mean slab height, then a walk: exact for any heights)
+        hinv = work[e + ENV_HINV]
+        g = (zlo - slab_z[0]) * hinv
+        k0 = int(g) if (g > 0.0 and g < ns - 1) else (ns - 1 if g >= ns - 1 else 0)
+        while k0 > 0 and slab_z[k0] >= zlo:
+            k0 -= 1
+        while k0 < ns and slab_z[k0 + 1] < zlo:
+            k0 += 1
+        g = (zhi - slab_z[0]) * hinv + 1.0
+        k1 = int(g) if (g > k0 and g < ns) else (ns if g >= ns else k0)
+        while k1 > k0 and slab_z[k1 - 1] > zhi:
+            k1 -= 1
+        while k1 < ns and slab_z[k1] <= zhi:
+            k1 += 1
+    # a ray along the tool axis (the axis exactly along the family: z0p = +-0, A1 = +-0, A2 = 0): a cylinder piece's
+    # quadratic is the test A0 <= R0^2 on the slab's tau range (_piece / quad_leq's own branch for these values)
+    axial = (s == 1.0 or s == -1.0) and w[(fam + 1) % 3] == 0.0 and w[(fam + 2) % 3] == 0.0
+    for k in range(k0, k1):
         zs0 = slab_z[k]
         zs1 = slab_z[k + 1]
         if zs1 <= zs0:
@@ -499,11 +573,20 @@ def _env_ray(pz0, pz1, pkind, pc0, pc1, pc2, pc3, ppart, ox, oy, oz, fam, w, sla
             ts = -qz
             qz = 0.0
         z0p = qx * w[0] + qy * w[1] + qz * w[2]
+        ta = t_lo - ts
+        tb = t_hi - ts
+        # the ray's height over [ta, tb] misses the slab: no piece of it gives an interval
+        if s == 0.0:
+            if z0p < zs0 - ENV_EPS or z0p > zs1 + ENV_EPS:
+                continue
+        else:
+            zq0 = z0p + s * ta
+            zq1 = z0p + s * tb
+            if (zq1 if zq0 < zq1 else zq0) < zs0 - ENV_EPS or (zq0 if zq0 < zq1 else zq1) > zs1 + ENV_EPS:
+                continue
         A0 = qx * qx + qy * qy + qz * qz - z0p * z0p
         A1 = -2.0 * z0p * s
         A2 = 1.0 - s * s
-        ta = t_lo - ts
-        tb = t_hi - ts
         start = n
         for p in range(m):
             if pz1[p] <= zs0 or pz0[p] >= zs1:
@@ -512,8 +595,26 @@ def _env_ray(pz0, pz1, pkind, pc0, pc1, pc2, pc3, ppart, ox, oy, oz, fam, w, sla
             zb = zs1 if zs1 < pz1[p] else pz1[p]
             if zb <= za:
                 continue
-            n = _piece(pkind[p], pc0[p], pc1[p], pc2[p], pc3[p], ppart[p], A0, A1, A2, z0p, s, slab_dr[k], za, zb,
-                       ta, tb, out, tags, n, work)
+            if axial and pkind[p] == A.PK_LINE and pc1[p] == 0.0:
+                if s > 0.0:
+                    t0 = za - z0p
+                    t1 = zb - z0p
+                else:
+                    t0 = -(zb - z0p)
+                    t1 = -(za - z0p)
+                if t0 < ta:
+                    t0 = ta
+                if t1 > tb:
+                    t1 = tb
+                if t1 <= t0:
+                    continue
+                R0 = pc0[p] + slab_dr[k] + pc1[p] * z0p
+                if R0 < 0.0 or not (A0 - R0 * R0 <= 0.0):
+                    continue
+                n = _push(out, tags, n, t0, t1, ppart[p])
+            else:
+                n = _piece(pkind[p], pc0[p], pc1[p], pc2[p], pc3[p], ppart[p], A0, A1, A2, z0p, s, slab_dr[k], za,
+                           zb, ta, tb, out, tags, n, work)
             if n < 0:
                 return -1
         for i in range(start, n):
@@ -572,12 +673,21 @@ def _aabb(w, slab_dr, slab_c, slab_z, unused, zmin_p, zmax_p, rmax_p, slack, lo,
         if d > spread:
             spread = d
     R = rmax_p + drmax + slack
+    # per axis: the extent of the slab axis points along it (not their 3-D spread), the axial range and the radius
+    # projected on it, widened by a margin far above the rounding of the envelope's own end points
     for i in range(3):
-        pa = slab_c[0, i] + zmin * w[i]
-        pb = slab_c[0, i] + zmax * w[i]
+        cmin = slab_c[0, i]
+        cmax = slab_c[0, i]
+        for k in range(1, ns):
+            if slab_c[k, i] < cmin:
+                cmin = slab_c[k, i]
+            if slab_c[k, i] > cmax:
+                cmax = slab_c[k, i]
+        za = zmin * w[i]
+        zb = zmax * w[i]
         e = R * math.sqrt(max(0.0, 1.0 - w[i] * w[i]))
-        lo[i] = min(pa, pb) - e - spread
-        hi[i] = max(pa, pb) + e + spread
+        lo[i] = cmin + min(za, zb) - e - AABB_EPS
+        hi[i] = cmax + max(za, zb) + e + AABB_EPS
     return R + spread
 
 

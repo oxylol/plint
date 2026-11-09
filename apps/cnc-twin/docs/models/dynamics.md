@@ -71,7 +71,11 @@ Per step:
    point, section 5.1; identity without one); `x_(n+1) = x* + G1 df`, `f_cut,(n+1) = f*_cut + df`
    (`modal_correct`).
 
-With an exact `K_c` the scheme reproduces the implicit first-order hold; the stiffness is not delayed.
+With an exact `K_c` the scheme reproduces the implicit first-order hold; the stiffness is not delayed. The
+extrapolation assumes a force that is smooth from node to node: a force component that switches on and off with
+the predicted state (cutting's process damping as it is evaluated today, a one-sided function of the predicted
+normal velocity; docs/models/loop.md 15) is overshot by `2 f_n - f_n-1` and the pair can lock into a
+step-to-step relay; the relaxation, a linearisation, does not cover it.
 **Numerical damping** of the closed loop `F = -K_c u` against the exact damping ratio
 `zeta / sqrt(1 + K_c / k)` (tests/unit/dynamics/test_predictor_corrector.py, the real kernels):
 
@@ -136,8 +140,13 @@ end the free tick drops the cutting force to zero at the node (the last step's h
 ## 4. Chatter detection (L2)
 
 Samples: the relative deflection at the reference station at every L0 node in contact (`DynState.samp_*`, with
-the spindle speed), kept per path over the last `chatter_window_max_s`. Each macro step the last contiguous run
-covering `chatter_window_revs` revolutions (at least `chatter_min_revs`) is analysed (`chatter.analyse`):
+the spindle speed), kept per path over the last `chatter_window_max_s`, from the steps in which the path's tool
+cut (cutting's record of the step: an element in cut); a step without cutting clears the window (2026-11-09:
+the broad phase runs L0 steps near the stock before the first chip, and the machine's frame and table modes
+(55-130 Hz on the VF-2SS), excited by the base excitation of the rapids and the plunge, rang there with a few
+um: the tiny project, examples/thin-wall-al7075 and two-setup-flip reported that free vibration as
+"regenerative chatter" at 65-91 Hz at their entry). Each macro step the last contiguous run covering
+`chatter_window_revs` revolutions (at least `chatter_min_revs`) is analysed (`chatter.analyse`):
 
 * detrend (mean and slope per component), Hann window, periodogram summed over components;
 * **forced lines**: every spindle order k f_s (tooth-passing harmonics included: a stable cut with runout, pitch
@@ -148,9 +157,12 @@ covering `chatter_window_revs` revolutions (at least `chatter_min_revs`) is anal
 * **period doubling** of an even-tooth cutter lies on spindle orders ((2k + 1) N/2): those lines move to the
   non-forced side when their energy grew by `flip_growth_ratio` (1.5) between the window halves and carries at
   least `flip_min_share` (5 %) of the second half's energy (odd N: the half lines are not spindle orders);
-* chatter when `CI >= 0.5` and `A >= max(0.5 um, 0.05 f_z)`; **onset** = first sample where the Hilbert envelope of
-  the band around the chatter frequency reaches that floor; the episode ends after `chatter_clear_steps` steps
-  below `CI = 0.35`.
+* chatter when `CI >= 0.5` and `A >= max(0.5 um, 0.05 f_z)`, unless the band's envelope decays at least at half
+  the structural rate `zeta omega` of the mode nearest the chatter frequency (its fitted growth rate): a free
+  vibration dying out (an entry shock, a mode excited before the cut) is a transient, chatter grows or holds a
+  limit cycle because the cut feeds it at least that much energy; **onset** = first sample where the Hilbert
+  envelope of the band around the chatter frequency reaches that floor; the episode ends after
+  `chatter_clear_steps` steps below `CI = 0.35`.
 
 Finding (category `chatter`, at the onset tick, once per episode, at most `max_findings` per tool and operation):
 severity **error** when `A >= 1.0 f_z` (the edge leaves the cut, Tlusty & Ismail 1981), else warning; quantities
@@ -219,7 +231,9 @@ process damping: with the feed (f_z = 0.1 mm) the flank is loaded during each pa
 ### 5.4 Operating points and sld/<tool>.json
 
 At every macro step with a contact and the slot's ProcessCoefficients (from `bus_prev`): engaged elements
-(cutting's per-element in-cut time, else the stations within a_p around the centroid height), the engaged arc
+(cutting's per-element in-cut time, else the stations within a_p around the centroid height; a turning contact,
+whose removal record carries no depth and no centroid (docs/models/loop.md 15), takes cutting's engaged elements,
+the sum of their chip widths as the depth, and the tool tip as its contact point and reference), the engaged arc
 (removal's engaged angle around the centroid direction, T0), feed per tooth from motion's feed velocity, the mean
 chip thickness over the arc; the limit at the operating speed (ZOA / variable pitch / multi-frequency, process
 damping when K_sp > 0); refreshed when the engagement signature (arc, thickness, coefficient and structure

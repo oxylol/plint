@@ -3,6 +3,9 @@
 :func:`find_bodies` labels the level-0 column graph (k_connect); :func:`release_loose` keeps the held
 material (components meeting a held region: the workholding's contact boxes in S; without any, the largest
 component) and removes every other component from the field, returning what came loose.
+:func:`release_loose_incremental` is the check of every macro step: when the material was one component at the
+last check and only removals happened since, the columns around the bricks those removals changed decide
+(k_connect.local_connected); the whole field is labelled only when they cannot prove that it is still one.
 """
 
 from __future__ import annotations
@@ -93,3 +96,23 @@ def release_loose(field: A.DexelField, held_boxes=()):
     removed = int(remove_loose(field, first, parent, total, loose, 0.0, 0.0, 0.0, A.SEV_NONE, A.make_scratch()))
     field.info[A.FI_TOPO] = 0
     return released, [b for b in bodies if b.held], removed
+
+
+def release_loose_incremental(field: A.DexelField, held_boxes=(), one_body: bool = False):
+    """The connectivity check after removals: (released bodies, held bodies, removed level-0 z length, one_body after,
+    local). ``one_body``: the material was one component at the last check and only subtractions changed it since
+    (the caller's bookkeeping); then the changed region alone is labelled, and when it proves the material is still
+    one component nothing is released (local = True). Otherwise :func:`release_loose`. Either way the change marks
+    (``bconn``) and the topology counter (``FI_TOPO``) start again from zero."""
+    from .k_connect import local_connected
+
+    if one_body:
+        box = np.zeros(6, np.int64)
+        if int(local_connected(field, box)) != 0:
+            field.bconn[:] = 0
+            field.info[A.FI_TOPO] = 0
+            return [], [], 0, True, True
+    released, held, removed = release_loose(field, held_boxes)
+    field.bconn[:] = 0
+    field.info[A.FI_TOPO] = 0
+    return released, held, removed, len(held) == 1, False

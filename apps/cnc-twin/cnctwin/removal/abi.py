@@ -381,7 +381,10 @@ FW_BHI = 9
 FW_P = 12                   # [3] ray origin
 FW_PP = 15                  # [3] post_pieces' point
 FW_WORK = 18                # [16] root-isolation workspace of the envelope intervals
-FW_AGG = 34                 # [64] aggregates of one subtraction (k_subtract.AG_*)
+FW_ENV = 34                 # [N_ENV] slab bounds of the current subtraction and the ray's material extent
+                            #   (k_envelope ENV_*): right after the workspace, read as work[16:16 + N_ENV]
+N_ENV = 11
+FW_AGG = 45                 # [64] aggregates of one subtraction (k_subtract.AG_*)
 N_FW = 128
 
 

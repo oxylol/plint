@@ -98,3 +98,10 @@ def test_edge_heat_outputs_and_ledger():
     assert tool.ledger.worst_rel < 1e-12
     # temperature rises through the heating phase
     assert np.all(np.diff(out.edge_peak_q_K[0, 0]) > 0.0)
+    # the coefficient pipeline's tool temperature is the rake contact at the entry into the cut (mechanics adds the
+    # engagement's own rise): above the body temperature, below every in-cut rake temperature; the in-cut mean is
+    # published separately, the flank's entry likewise below its in-cut values (docs/models/thermal.md 2.2)
+    assert np.all(out.rake_temp_mean_K > out.body_temp_at_elem_K)
+    assert np.all(out.rake_temp_mean_K[:, :, None] < out.edge_temp_q_K)
+    assert np.allclose(out.rake_contact_mean_K, np.einsum("ijq,q->ij", out.edge_temp_q_K, out.q_weights))
+    assert np.all(out.flank_entry_K[:, :, None] < out.flank_temp_q_K)

@@ -96,7 +96,7 @@ class PartHoldState:
     free_tick: int = -1
     seated: bool = True
     seat_gap_m: float = 0.0
-    ratchet: dict = field(default_factory=dict)       # group name -> [q, v]
+    ratchet: dict = field(default_factory=dict)       # group name -> [q, v, restoring force of the last lift]
     bond_failed: dict = field(default_factory=dict)   # patch id -> bool mask
     vacuum_lost: list = field(default_factory=list)   # device ids
     debris: dict = field(default_factory=dict)        # patch id -> height the setup was built with
@@ -116,6 +116,7 @@ class PartHoldState:
     max_lift_m: float = 0.0
     counters: dict = field(default_factory=dict)
     flags: dict = field(default_factory=dict)
+    tip_prev: np.ndarray | None = None                # tool tip in S at the last tick (the cut's feed speed)
 
     def to_arrays(self, prefix: str) -> tuple[dict, dict]:
         arrays = {f"{prefix}slip_pose": np.array(self.slip_pose, dtype=float),
@@ -126,6 +127,8 @@ class PartHoldState:
                   f"{prefix}build_gravity": np.array(self.build_gravity, dtype=float)}
         for name, value in sorted(self.ratchet.items()):
             arrays[f"{prefix}ratchet.{name}"] = np.array(value, dtype=float)
+        if self.tip_prev is not None:
+            arrays[f"{prefix}tip_prev"] = np.array(self.tip_prev, dtype=float)
         bonds = sorted(self.bond_failed)
         for i, pid in enumerate(bonds):
             arrays[f"{prefix}bond.{i}"] = np.array(self.bond_failed[pid], dtype=bool)
@@ -168,6 +171,7 @@ class PartHoldState:
         obj.min_margin = float(_json_load(meta["min_margin"]))
         obj.max_slip_m = float(meta["max_slip_m"])
         obj.max_lift_m = float(meta["max_lift_m"])
+        obj.tip_prev = arr("tip_prev") if f"{prefix}tip_prev" in arrays else None
         obj.counters = dict(_json_load(meta["counters"]))
         obj.flags = dict(_json_load(meta["flags"]))
         return obj

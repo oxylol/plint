@@ -205,3 +205,25 @@ def test_mesh_stock_mass_properties_and_contact_shape():
     np.testing.assert_allclose(J, J_ref, rtol=1e-10, atol=1e-18)
     assert mesh_shape([-0.0225, -0.0225, 0.0], [0.0225, 0.0225, 0.23]).kind == "cylinder"
     assert mesh_shape([0.0, 0.0, 0.0], [0.1, 0.06, 0.03]).kind == "box"
+
+
+def test_a_chuck_setup_is_rebuilt_for_a_material_grip_change_not_every_run_up_step():
+    """The centrifugal jaw loss moves the gripping force with omega^2: the setup is clamped again when the change
+    since the build exceeds speed_rebuild_rel of the static force (not when omega^2 itself changed by 2 %: a spindle
+    running up from rest then rebuilt at every step)."""
+    from types import SimpleNamespace
+
+    from cnctwin.holding.domain import HoldingDomain
+    dom = HoldingDomain()
+    dom._rt = {"speed_rel": 0.02}
+    device = {"static_force_N": 30000.0, "loss_N": 0.0, "loss_ref_N": 10000.0, "loss_ref_rad_s": 400.0}
+    setup = SimpleNamespace(rotating=True, omega_built=0.0, devices=[device])
+    for omega, rebuild in ((5.0, False), (30.0, False), (90.0, False), (100.0, True), (146.6, True)):
+        dom._work_speed = lambda prev, w, o=omega: o
+        # loss(omega) = 10 kN (omega / 400)^2: 2 % of 30 kN (600 N) is reached at omega = 98 rad/s
+        assert dom._chuck_speed_changed(setup, None, SimpleNamespace(workpiece=0)) == rebuild, omega
+    setup.omega_built = 146.6
+    dom._work_speed = lambda prev, w: 147.0
+    assert not dom._chuck_speed_changed(setup, None, SimpleNamespace(workpiece=0))
+    setup.rotating = False
+    assert not dom._chuck_speed_changed(setup, None, SimpleNamespace(workpiece=0))

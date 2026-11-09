@@ -34,6 +34,7 @@ from .nbt import (ACCUM_T, B1, ENGAGED_T, F1, F2, FIELD_T, I1, I2, I4_1, I4_3, I
 
 TWO_PI = 2.0 * math.pi
 MAX_SAMPLES = 4096
+Q = A.QUANTUM_M
 
 
 @njit(b1(I2, I1, I2, F1, F2, i8, f8, f8, f8, f8, f8, f8), **INLINE)
@@ -92,6 +93,75 @@ def _empty_near(bmat, lv_brick0, lv_bdims, lv_dims, lv_cell_m, lv_origin, lvl, x
     return True
 
 
+@njit(b1(I2, I1, I2, I2, i8, i8, i8, i8), **INLINE)
+def _empty_near_pre(bmat, lv_brick0, lv_bdims, lv_dims, lvl, ix, iy, iz):
+    """_empty_near from the point's cell (ix, iy, iz) = floor((p - origin) / a), as _empty_near computes it."""
+    if (ix < 0 or iy < 0 or iz < 0 or ix >= lv_dims[lvl, 0] - 1 or iy >= lv_dims[lvl, 1] - 1
+            or iz >= lv_dims[lvl, 2] - 1):
+        return True
+    nbx = lv_bdims[lvl, 0]
+    nby = lv_bdims[lvl, 1]
+    nbz = lv_bdims[lvl, 2]
+    bx0 = min(max(ix, 0) // A.BRICK, nbx - 1)
+    bx1 = min(max(ix + 1, 0) // A.BRICK, nbx - 1)
+    by0 = min(max(iy, 0) // A.BRICK, nby - 1)
+    by1 = min(max(iy + 1, 0) // A.BRICK, nby - 1)
+    bz0 = min(max(iz, 0) // A.BRICK, nbz - 1)
+    bz1 = min(max(iz + 1, 0) // A.BRICK, nbz - 1)
+    for bx in range(bx0, bx1 + 1):
+        for by in range(by0, by1 + 1):
+            for bz in range(bz0, bz1 + 1):
+                idx = C.bindex(lv_brick0, lv_bdims, lvl, bx, by, bz)
+                if bmat[idx, 0] > 0 or bmat[idx, 1] > 0 or bmat[idx, 2] > 0:
+                    return False
+    return True
+
+
+@njit(b1(I2, I2, I4_1, I4_3, i8, f8, f8, f8, f8, f8), **INLINE)
+def _above_columns(lv_dims, lv_ray0, cnt, seg, lvl, fx, fy, q, far_q, far_m):
+    """A sample of a horizontal circle of a tool along z is air above its four z columns: each has one segment
+    ending at or below the sample (q, quanta), and either every end is farther than SPREAD_CELLS cells (the z family
+    decides alone: unanimous, far) or all four ends are equal and within it (the z family is valid with zero
+    spread: no family can be chosen before it, and its D <= 0). Then classify answers air, whatever the bricks say;
+    False: not shown (the caller classifies). fx, fy: the sample's cells across the family, as sd computes them."""
+    nu = lv_dims[lvl, 0]
+    nv = lv_dims[lvl, 1]
+    iu = int(math.floor(fx))
+    iv = int(math.floor(fy))
+    if iu < 0:
+        iu = 0
+    if iu > nu - 2:
+        iu = nu - 2
+    if iv < 0:
+        iv = 0
+    if iv > nv - 2:
+        iv = nv - 2
+    r0 = lv_ray0[lvl, 2]
+    dmin = 1e300
+    h0 = np.int64(0)
+    same = True
+    near = True
+    for c in range(4):
+        ray = np.uint64(r0 + (iu + (c & 1)) * nv + iv + (c >> 1))
+        if cnt[ray] != 1:
+            return False
+        hi = np.int64(seg[ray, 0, 1])
+        if q < hi:
+            return False
+        d = q - hi
+        if d < dmin:
+            dmin = d
+        if d > far_q:
+            near = False
+        if c == 0:
+            h0 = hi
+        elif hi != h0:
+            same = False
+    if dmin * Q > far_m:
+        return True
+    return near and same
+
+
 @njit(b1(FIELD_T, i8, f8, f8, f8, f8, f8, f8), **OPTS)
 def box_has_material(f, lvl, x0, y0, z0, x1, y1, z1):
     return _box_material(f.bmat, f.lv_brick0, f.lv_bdims, f.lv_cell_m, f.lv_origin_m, lvl, x0, y0, z0, x1, y1, z1)
@@ -107,18 +177,37 @@ def _refine(lv_cell_m, lv_origin, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, p
     best_s = 1e300
     ga = 0.0
     gb = 0.0
+    # the bracket's middle and ends (the same points for every family): lattice coordinates as sd computes them
+    a = lv_cell_m[lvl]
+    for q in range(3):
+        phi = 0.5 * (pa + pb) if q == 0 else (pa if q == 1 else pb)
+        cq = math.cos(phi)
+        sq = math.sin(phi)
+        x = c[0] + r * (cq * x0[0] + sq * y0[0])
+        y = c[1] + r * (cq * x0[1] + sq * y0[1])
+        z = c[2] + r * (cq * x0[2] + sq * y0[2])
+        p[6 * q] = (x - lv_origin[lvl, 0]) / a
+        p[6 * q + 1] = (y - lv_origin[lvl, 1]) / a
+        p[6 * q + 2] = (z - lv_origin[lvl, 2]) / a
+        p[6 * q + 3] = (x - lv_origin[lvl, 0]) / Q
+        p[6 * q + 4] = (y - lv_origin[lvl, 1]) / Q
+        p[6 * q + 5] = (z - lv_origin[lvl, 2]) / Q
     for fam in range(3):
         sp = 0.0
         va = 0.0
         vb = 0.0
         ok = True
         for q in range(3):
-            phi = 0.5 * (pa + pb) if q == 0 else (pa if q == 1 else pb)
-            cq = math.cos(phi)
-            sq = math.sin(phi)
-            v = C.sd(lv_cell_m, lv_origin, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam,
-                     c[0] + r * (cq * x0[0] + sq * y0[0]), c[1] + r * (cq * x0[1] + sq * y0[1]),
-                     c[2] + r * (cq * x0[2] + sq * y0[2]), work)
+            b = 6 * q
+            if fam == 0:
+                v = C.sd_pre(lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam, p[b + 1], p[b + 2],
+                             p[b + 3], work)
+            elif fam == 1:
+                v = C.sd_pre(lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam, p[b], p[b + 2],
+                             p[b + 4], work)
+            else:
+                v = C.sd_pre(lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam, p[b], p[b + 1],
+                             p[b + 5], work)
             if q == 0:
                 if work[1] != 1.0:
                     ok = False
@@ -264,18 +353,46 @@ def _engaged(f, tip, x0, y0, w, st_z, st_r, active, out, tick, params, stats, wo
         cp = 1.0
         sp = 0.0
         n_in = 0
+        # every sample's lattice coordinates once (the empty-brick test and the families share them); a horizontal
+        # circle (x0, y0 without z: c_z + r (cp * 0 + sp * 0) is c_z) has one height for all samples
+        ox = lv_origin[lvl, 0]
+        oy = lv_origin[lvl, 1]
+        oz = lv_origin[lvl, 2]
+        flat = x0[2] == 0.0 and y0[2] == 0.0
+        fz_c = (c[2] - oz) / a
+        qz_c = (c[2] - oz) / Q
+        iz_c = int(math.floor(fz_c))
+        if flat and (iz_c < 0 or iz_c >= lv_dims[lvl, 2] - 1):
+            # every sample beyond the outermost nodes in z: air (_empty_near)
+            stats[0] += n
+            continue
+        above = flat and fam0 == 2
+        far_q = C.SPREAD_CELLS * lv_cell_q[lvl]
+        far_m = C.SPREAD_CELLS * lv_cell_m[lvl]
         for i in range(n):
             if i % 64 == 0:
                 cp = math.cos(i * dphi)
                 sp = math.sin(i * dphi)
             px = c[0] + r * (cp * x0[0] + sp * y0[0])
             py = c[1] + r * (cp * x0[1] + sp * y0[1])
-            pz = c[2] + r * (cp * x0[2] + sp * y0[2])
-            if _empty_near(bmat, lv_brick0, lv_bdims, lv_dims, lv_cell_m, lv_origin, lvl, px, py, pz):
+            fx = (px - ox) / a
+            fy = (py - oy) / a
+            if flat:
+                pz = c[2]
+                fz = fz_c
+                iz = iz_c
+            else:
+                pz = c[2] + r * (cp * x0[2] + sp * y0[2])
+                fz = (pz - oz) / a
+                iz = int(math.floor(fz))
+            if above and _above_columns(lv_dims, lv_ray0, cnt, seg, lvl, fx, fy, qz_c, far_q, far_m):
+                ins = False
+            elif _empty_near_pre(bmat, lv_brick0, lv_bdims, lv_dims, lvl, int(math.floor(fx)), int(math.floor(fy)), iz):
                 ins = False
             else:
-                ins, d, fm = C.classify(lv_cell_m, lv_origin, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg,
-                                        pnext, lvl, px, py, pz, fam0, work)
+                ins, d, fm = C.classify_pre(lv_cell_m, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl,
+                                            fx, fy, fz, (px - ox) / Q, (py - oy) / Q,
+                                            qz_c if flat else (pz - oz) / Q, fam0, work)
             states[i] = 1 if ins else 0
             if ins:
                 n_in += 1
@@ -367,7 +484,7 @@ def engaged_intervals(f, tip, x0, y0, w, st_z, st_r, active, out, tick, params, 
     radial gate margin (m)]. stats += [samples, refinement evaluations, interval overflows, stations].
     The work arrays are made here once per call; the station loop (_engaged) runs without reference counting."""
     nmax = out.lo_rad.shape[1]
-    _engaged(f, tip, x0, y0, w, st_z, st_r, active, out, tick, params, stats, np.empty(4), np.empty(3), np.empty(3),
+    _engaged(f, tip, x0, y0, w, st_z, st_r, active, out, tick, params, stats, np.empty(4), np.empty(18), np.empty(3),
              np.empty(MAX_SAMPLES + 1, np.int8), np.empty(max(nmax, 1)), np.empty(max(nmax, 1)),
              np.empty(MAX_SAMPLES + 1), np.empty(MAX_SAMPLES + 1, np.int8))
 
@@ -495,4 +612,4 @@ def sector_box(eng, tip, x0, y0, w, st_z, r_env, z_lo, z_hi, margin, box_lo, box
 
 
 KERNELS = (box_has_material, _refine, _engaged, engaged_intervals, contact_geometry, sector_box)
-INLINED = (_box_material, _empty_near, _sin_range_max)
+INLINED = (_box_material, _empty_near, _empty_near_pre, _above_columns, _sin_range_max)

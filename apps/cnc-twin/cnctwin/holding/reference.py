@@ -9,8 +9,8 @@ import numpy as np
 
 from .abi import (CFG_K_REG, CFG_L_C, CFG_LAM_MAX, CFG_LAM_TOL, CFG_MAX_DISP, CFG_MAX_ITER, CFG_MAX_ROT, CFG_N_INC,
                   CFG_TOL, CFG_UTIL_EPS, KIND_BONDED, KIND_OFF,
-                  MODE_FRICTION, MODE_SEPARATION, RP_DQ, RP_MOVING_S, RP_Q_MAX, RP_WORK_J, RT_DX1, RT_DX2, RT_MOVING_S,
-                  RT_PEAK_RATIO, RT_WORK_J, ST_BONDED, ST_OFF, ST_OPEN, ST_SLIP, ST_STICK, STATUS_HELD, STATUS_MOVES,
+                  MODE_FRICTION, MODE_SEPARATION, RP_DQ, RP_IN_J, RP_LOSS_J, RP_MOVING_S, RP_Q_MAX, RP_WORK_J, RT_DX1,
+                  RT_DX2, RT_IN_J, RT_MOVING_S, RT_PEAK_RATIO, RT_WORK_J, ST_BONDED, ST_OFF, ST_OPEN, ST_SLIP, ST_STICK, STATUS_HELD, STATUS_MOVES,
                   STATUS_NOT_CONVERGED)
 
 LINE_SEARCH_STEPS = 10
@@ -250,43 +250,107 @@ def sub_steps_ref(rate, dt, per_tooth, max_sub) -> int:
     return int(min(max(math.ceil(per_tooth * rate * dt / (2.0 * math.pi)), 4), max_sub))
 
 
+def pulse_integral_ref(phi, alpha) -> float:
+    """kernels.pulse_integral by the closed form of each period piece (plain Python)."""
+    c = math.cos(alpha)
+    full = 2.0 * (math.sin(alpha) - alpha * c)
+    k = math.floor((phi + math.pi) / (2.0 * math.pi))
+    x = phi - 2.0 * math.pi * k
+    part = 0.0 if x < -alpha else (math.sin(x) + math.sin(alpha) - (x + alpha) * c if x <= alpha else full)
+    return k * full + part
+
+
+def shape_mean_ref(phi_a, phi_b, alpha, mean, amp) -> float:
+    """kernels.shape_mean (plain Python; its closed form is checked against quadrature in the tests)."""
+    a = min(max(alpha, 1e-9), math.pi)
+    c = math.cos(a)
+    ms = (math.sin(a) - a * c) / (math.pi * (1.0 - c))
+    d = phi_b - phi_a
+    if abs(d) > 1e-12:
+        s_bar = (pulse_integral_ref(phi_b, a) - pulse_integral_ref(phi_a, a)) / (d * (1.0 - c))
+    else:
+        cu = math.cos(phi_a)
+        s_bar = (cu - c) / (1.0 - c) if cu > c else 0.0
+    return mean + amp * (s_bar - ms) / (1.0 - ms)
+
+
 def ratchet_part_ref(wave, dt_tick, q_cap, mass, mode, per_tooth, max_sub, state):
     """(state, out) - kernels.ratchet_part."""
     q, v = float(state[0]), float(state[1])
     q0 = q
     q_max = q
-    work = moving = 0.0
+    work = moving = w_in = loss = 0.0
     for k in range(wave.mean.shape[0]):
         amp, mean, rate = wave.amp[k, 0], wave.mean[k, 0], wave.rate_rad_s[k]
+        alpha, vmax = wave.alpha_rad[k, 0], wave.v_max[k, 0]
         n_sub = sub_steps_ref(rate if amp != 0.0 else 0.0, dt_tick, per_tooth, max_sub)
         h = dt_tick / n_sub
         for j in range(n_sub):
-            a = (mean + amp * math.cos(wave.phase0_rad[k] + rate * (j + 0.5) * h) - q_cap) / mass
+            pa = wave.phase0_rad[k] + rate * j * h
+            demand = shape_mean_ref(pa, pa + rate * h, alpha, mean, amp) if amp != 0.0 else mean
+            a = (demand - q_cap) / mass
             q_old = q
             if mode == MODE_FRICTION:
                 if v <= 0.0:
                     v = 0.0
                     if a > 0.0:
-                        q, v, moving = q + 0.5 * a * h * h, a * h, moving + h
+                        t1 = h if a * h <= vmax else vmax / a
+                        dq1 = 0.5 * a * t1 * t1
+                        dq2 = vmax * (h - t1) if t1 < h else 0.0
+                        q, v, moving = q + dq1 + dq2, a * t1, moving + h
+                        w_in += demand * dq1 + q_cap * dq2
                 elif v + a * h <= 0.0:
                     t = -v / a
-                    q, v, moving = q + v * t + 0.5 * a * t * t, 0.0, moving + t
+                    dq = v * t + 0.5 * a * t * t
+                    q, v, moving = q + dq, 0.0, moving + t
+                    w_in += demand * dq
+                elif v + a * h > vmax:
+                    if v < vmax:
+                        t1 = (vmax - v) / a
+                        dq1 = v * t1 + 0.5 * a * t1 * t1
+                        dq2 = vmax * (h - t1)
+                        q += dq1 + dq2
+                        w_in += demand * dq1 + q_cap * dq2
+                    else:
+                        dq = 0.5 * (v + vmax) * h
+                        rr = demand - q_cap - mass * (vmax - v) / h
+                        q += dq
+                        w_in += (demand - rr) * dq
+                    v, moving = vmax, moving + h
                 else:
-                    q, v, moving = q + v * h + 0.5 * a * h * h, v + a * h, moving + h
+                    dq = v * h + 0.5 * a * h * h
+                    q, v, moving = q + dq, v + a * h, moving + h
+                    w_in += demand * dq
                 work += q_cap * (q - q_old)
+                loss += q_cap * (q - q_old)
             else:
                 if q <= 0.0 and v <= 0.0:
                     q, v = 0.0, 0.0
                     if a > 0.0:
                         q, v, moving = 0.5 * a * h * h, a * h, moving + h
+                        w_in += demand * q
                 else:
                     q_new, v_new = q + v * h + 0.5 * a * h * h, v + a * h
                     moving += h
-                    q, v = (0.0, 0.0) if q_new <= 0.0 else (q_new, v_new)
+                    if q_new <= 0.0:
+                        if a != 0.0:
+                            disc = math.sqrt(max(v * v - 2.0 * a * q, 0.0))
+                            roots = [t for t in ((-v - disc) / a, (-v + disc) / a) if 0.0 <= t <= h]
+                            t_l = min(roots) if roots else h
+                        else:
+                            t_l = -q / v if v < 0.0 else h
+                        v_l = v + a * t_l
+                        w_in += demand * (-q)
+                        loss += 0.5 * mass * v_l * v_l
+                        q, v = 0.0, 0.0
+                    else:
+                        w_in += demand * (q_new - q)
+                        q, v = q_new, v_new
                 work += q_cap * abs(q - q_old)
             q_max = max(q_max, q)
-    out = np.zeros(4)
+    out = np.zeros(6)
     out[RP_DQ], out[RP_Q_MAX], out[RP_WORK_J], out[RP_MOVING_S] = q - q0, q_max, work, moving
+    out[RP_IN_J], out[RP_LOSS_J] = w_in, loss
     return np.array([q, v]), out
 
 
@@ -319,14 +383,19 @@ def ratchet_tool_ref(wave, dt_tick, c_s, c_k, m1, m2, stop, x2_limit, per_tooth,
     v = np.array(state[2:], dtype=float)
     x0 = x.copy()
     m = np.array([m1, m2])
-    work = moving = peak = 0.0
+    work = moving = peak = w_in = 0.0
     for k in range(wave.mean.shape[0]):
         rate = wave.rate_rad_s[k]
         has_amp = wave.amp[k, 0] != 0.0 or wave.amp[k, 1] != 0.0
         n_sub = sub_steps_ref(rate if has_amp else 0.0, dt_tick, per_tooth, max_sub)
         h = dt_tick / n_sub
+        vmax1 = wave.v_max[k, 0]
         for j in range(n_sub):
-            d = np.array(wave.mean[k] + wave.amp[k] * math.cos(wave.phase0_rad[k] + rate * (j + 0.5) * h), float)
+            d = np.array(wave.mean[k], float)
+            if has_amp:
+                pa = wave.phase0_rad[k] + rate * j * h
+                d = np.array([shape_mean_ref(pa, pa + rate * h, wave.alpha_rad[k, c], wave.mean[k, c], wave.amp[k, c])
+                              for c in range(2)])
             if stop == 1 and x[1] <= 0.0 and v[1] <= 0.0 and d[1] < 0.0:
                 d[1] = 0.0
             if x[1] >= x2_limit and v[1] >= 0.0 and d[1] > 0.0:
@@ -345,27 +414,46 @@ def ratchet_tool_ref(wave, dt_tick, c_s, c_k, m1, m2, stop, x2_limit, per_tooth,
                     t_s = min(speed / -along, h) if along < 0.0 else h
                     s = v * t_s + 0.5 * a * t_s * t_s
                     x = x + s
-                    work += c_k * float(np.hypot(s[0], s[1]))
+                    r = v + a * t_s
+                    w_in += float(d @ s)
+                    work += c_k * float(e @ s) + 0.5 * float(m @ (r * r))
                     moving += t_s
                 v = np.zeros(2)
             else:
                 v_new = p / (m + implicit_slip_ref(p, m, h * c_k))
+                e = v_new / float(np.hypot(v_new[0], v_new[1]))
+                r1 = 0.0
+                if v_new[0] > vmax1:
+                    r1 = m[0] * (v_new[0] - vmax1) / h
+                    v_new[0] = vmax1
                 s = 0.5 * (v + v_new) * h
                 x = x + s
                 v = v_new
-                work += c_k * float(np.hypot(s[0], s[1]))
+                w_in += (d[0] - r1) * s[0] + d[1] * s[1]
+                work += c_k * float(e @ s)
                 moving += h
             if stop == 1 and x[1] < 0.0:
+                dlt = -x[1]
                 x[1] = 0.0
-                v[1] = max(v[1], 0.0)
+                w_in += d[1] * dlt
+                work += d[1] * dlt
+                if v[1] < 0.0:
+                    work += 0.5 * m2 * v[1] * v[1]
+                    v[1] = 0.0
             if x[1] > x2_limit:
+                dlt = x2_limit - x[1]
                 x[1] = x2_limit
-                v[1] = min(v[1], 0.0)
-    out = np.zeros(5)
+                w_in += d[1] * dlt
+                work += d[1] * dlt
+                if v[1] > 0.0:
+                    work += 0.5 * m2 * v[1] * v[1]
+                    v[1] = 0.0
+    out = np.zeros(6)
     out[RT_DX1], out[RT_DX2] = x - x0
-    out[RT_WORK_J], out[RT_MOVING_S], out[RT_PEAK_RATIO] = work, moving, peak
+    out[RT_WORK_J], out[RT_MOVING_S], out[RT_PEAK_RATIO], out[RT_IN_J] = work, moving, peak, w_in
     return np.concatenate([x, v]), out
 
 
 __all__ = ["skew", "solve6_ref", "scaled_norm_ref", "contact_eval_ref", "newton_path_ref", "solve_equilibrium_ref", "mechanism_ref",
-           "capacity_ref", "sub_steps_ref", "ratchet_part_ref", "implicit_slip_ref", "ratchet_tool_ref"]
+           "capacity_ref", "sub_steps_ref", "pulse_integral_ref", "shape_mean_ref", "ratchet_part_ref",
+           "implicit_slip_ref", "ratchet_tool_ref"]

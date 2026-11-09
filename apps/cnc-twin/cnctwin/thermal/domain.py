@@ -131,7 +131,9 @@ class ThermalDomain:
             table = in_force.get(slot) or next_tables.get(slot)
             edges = self.edges.edge_model(slot) if (self.edges is not None and slot >= 0) else None
             vb = self._vb(prev, slot)
-            heat = split_contact(cut, workpiece, table, edges, vb)
+            tool = th.tools.get(slot)
+            heat = split_contact(cut, workpiece, table, edges, vb,
+                                 rotating=not bool(tool is not None and tool.layout.turning))
             if heat.fallback:
                 self._note(ctx, th, f"partition_fallback:{slot}", "thermal:partition_fallback",
                            {"tool_slot": slot, "generated_J": heat.generated_J}, state.clock.tick)
@@ -398,10 +400,12 @@ class ThermalDomain:
                 th.last_axis_m[name] = float(column[-1])
             ticks = np.asarray(frame.tick)
             blocks = np.asarray(frame.block_index)
+            tips = np.asarray(frame.tip_S_m, dtype=float)
             out.append({"path": frame.path, "slot": int(frame.tool_slot), "spindle": frame.spindle_id,
                         "workpiece": int(frame.workpiece), "omega": omega,
                         "omega_mean": float(omega.mean()) if omega.size else 0.0, "r_ms": r_ms, "axis_t": axis_t,
                         "feed": feed, "travel": travel, "positions": positions,
+                        "tip_S": tips[-1].copy() if tips.ndim == 2 and tips.shape[0] else None,
                         "tick": int(ticks[-1]) if ticks.size else int(prev.motion.tick),
                         "block": int(blocks[-1]) if blocks.size else 0})
         return out
@@ -769,8 +773,14 @@ class ThermalDomain:
             t_pass = t_cut
         if phi <= 0.0:
             phi = pw["default_shear_angle_rad"]
+        point = np.asarray(geo.point_S_m, dtype=float)
         if turning:
-            r_c = float(math.hypot(geo.point_S_m[0], geo.point_S_m[1]))
+            # the generated surface of a turned part is where the tool's nose is: its radius sets the cutting speed
+            # and the ring the feed source covers (removal's turning contacts carry no centroid of the removed
+            # ring: their point_S_m is zero, docs/models/loop.md 15)
+            if path is not None and path.get("tip_S") is not None:
+                point = np.asarray(path["tip_S"], dtype=float)
+            r_c = float(math.hypot(point[0], point[1]))
             v_cut = omega * r_c
             half = 0.5 * max(band_width, geo.ap_m, 1e-6)
             width = 2.0 * math.pi * max(r_c, 1e-6)
@@ -783,7 +793,7 @@ class ThermalDomain:
         flank = vb_mean + edge_r
         band = flank + h_mean / math.tan(phi)
         flux = heat.work_J / (band * max(band_width, 1e-6) * t_cut) if band > 0.0 and t_cut > 0.0 else 0.0
-        return ContactSource(point_S_m=np.asarray(geo.point_S_m, dtype=float), feed_dir_S=np.asarray(direction),
+        return ContactSource(point_S_m=point, feed_dir_S=np.asarray(direction),
                              power_W=heat.work_J / dt, feed_speed_m_s=speed, feed_half_length_m=half, width_m=width,
                              window_s=window_s, flash_flux_W_m2=flux, flash_half_length_m=0.5 * band,
                              flash_speed_m_s=v_cut, flash_duration_s=max(t_pass, 1e-9))

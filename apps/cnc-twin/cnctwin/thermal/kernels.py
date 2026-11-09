@@ -1089,6 +1089,12 @@ def edge_temperatures(inp, resp, glx, glw, out):
     amplitude at the edge, per element: body temperature + wedge * local rise (periodic
     superposition on the quarter space minus the far field the 1-D body already holds).
 
+    ``rake_entry`` / ``flank_entry``: the contact means when the edge enters the cut (the end of the
+    cooling interval of an interrupted element: what is left of the earlier engagements; a continuous
+    element's own steady rise is excluded, so its entry value is the body temperature): the background
+    temperature of the stationary-source heat partition (cnctwin.mechanics), which adds the rise of the
+    engagement's own heat itself.
+
     With ``scal[2] = EDGE_OUT_DEVIATION`` the outputs are instead the periodic deviation from the
     cycle mean, wedge * (theta(tau) - <theta>), <theta> = q W(N T) / T with W(t) the integral of the
     unit response over [t - t_h, t] (the exact cycle mean of the superposition): the 3-D field of the
@@ -1102,8 +1108,10 @@ def edge_temperatures(inp, resp, glx, glw, out):
             tb = inp.T_body[j, e]
             mode = inp.mode[j, e]
             out.amp[j, e] = 0.0
+            base = 0.0 if deviation else tb
+            out.rake_entry[j, e] = base
+            out.flank_entry[j, e] = base
             if mode == EDGE_NONE or (deviation and mode == EDGE_CONTINUOUS):
-                base = 0.0 if deviation else tb
                 for q in range(nq):
                     out.rake_q[j, e, q] = base
                     out.peak_q[j, e, q] = base
@@ -1176,6 +1184,19 @@ def edge_temperatures(inp, resp, glx, glw, out):
                         hot = edge_now
                     else:
                         out.amp[j, e] = wedge * (hot - edge_now)
+                        # the end of the cooling interval: the contact means when the edge enters again
+                        if deviation:
+                            ent_r = qr * (rc - mean_rc)
+                            ent_f = qf * (fc - mean_fc)
+                            out.rake_entry[j, e] = wedge * (qr * (rm - mean_rm) + s_rf * ent_f)
+                            out.flank_entry[j, e] = wedge * (qf * (fm - mean_fm) + s_fr * ent_r)
+                        else:
+                            ent_r = qr * rc - far_r
+                            ent_f = qf * fc - far_f
+                            rake_in = qr * rm - far_r + s_rf * ent_f
+                            flank_in = qf * fm - far_f + s_fr * ent_r
+                            out.rake_entry[j, e] = tb + wedge * (rake_in if rake_in > 0.0 else 0.0)
+                            out.flank_entry[j, e] = tb + wedge * (flank_in if flank_in > 0.0 else 0.0)
                     continue
                 if deviation:
                     edge_r = qr * (rc - mean_rc)

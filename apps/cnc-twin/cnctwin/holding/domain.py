@@ -278,7 +278,7 @@ class HoldingDomain:
         frame = _frame_for_slot(prev, ts.slot)
         if frame is None or not np.size(frame.spindle_omega_rad_s):
             ts.omega_prev = math.nan
-            ts.ratchet[2:] = 0.0
+            self._stop_tool_slip(state, ts, clamp, rec)
             return rec
         omega = np.asarray(frame.spindle_omega_rad_s, dtype=float)
         ticks = np.asarray(frame.tick, dtype=np.int64)
@@ -331,6 +331,20 @@ class HoldingDomain:
         rec.slip_rad = ts.slip_rad
         return rec
 
+    @staticmethod
+    def _stop_tool_slip(state, ts, clamp, rec) -> None:
+        """The tool's slip ends without a spindle record (tool change, spindle gone): what is left of its kinetic
+        energy is dissipated at the interface (booked as friction, architecture 12)."""
+        r = clamp.radius_m if clamp.radius_m > 0.0 else 0.0
+        m1 = clamp.tool_I_axial_kgm2 / (r * r) if r > 0.0 else 0.0
+        ke = 0.5 * (m1 * float(ts.ratchet[2]) ** 2 + float(clamp.tool_mass_kg) * float(ts.ratchet[3]) ** 2)
+        ts.ratchet[2:] = 0.0
+        if ke > 0.0:
+            rec.slip_loss_J += ke
+            rec.slip_mech_change_J -= ke
+            rec.slip_friction_J += ke
+            state.ledger.friction_J += ke
+
     def _tool_slip(self, ctx, state, hs, ts, clamp, contacts, frame, omega, ticks, prev, rec, parents) -> None:
         dt = ctx.ipo_s
         n = min(len(omega), *(np.asarray(cc.wrench_tool_T0_mean).shape[0] for cc in contacts))
@@ -370,6 +384,15 @@ class HoldingDomain:
         wave.amp[:, 0], wave.amp[:, 1] = d1_p - d1_m, d2_p - d2_m
         wave.phase0_rad[:] = teeth * sgn * theta
         wave.rate_rad_s[:] = teeth * np.abs(om)
+        # the cutting torque is the teeth's pulse train (it resists the tool's turning, it never drives it): its
+        # tooth-period shape from each tick's mean / peak (abi.pulse_alpha; the axial pull in phase with it); the
+        # tool stalls at the spindle speed (the torque cannot turn it backwards against the work)
+        cut_m = -sgn * mean[:, 5]
+        cut_p = -sgn * peak[:, 5]
+        for k in range(n):
+            frac = cut_m[k] / cut_p[k] if cut_p[k] > 0.0 and cut_m[k] >= 0.0 else 1.0
+            wave.alpha_rad[k, :] = A.pulse_alpha(frac)
+        wave.v_max[:, 0] = np.abs(om) * r
         # static check: the demand over the tooth harmonic never leaves the friction circle and the tool is at
         # rest in its holder -> no slip this step (the ratchet is not needed)
         reach = np.maximum(np.hypot(d1_m + wave.amp[:, 0], d2_m + wave.amp[:, 1]),
@@ -385,26 +408,37 @@ class HoldingDomain:
             return
         out = np.zeros(A.N_RT)
         from . import kernels as K
-        K.ratchet_tool(wave, float(dt), float(cap), float(cap * clamp.kinetic_ratio), float(J / (r * r)),
-                       float(clamp.tool_mass_kg), 1 if clamp.back_stop else 0,
+        m1, m2 = float(J / (r * r)), float(clamp.tool_mass_kg)
+        ke0 = 0.5 * (m1 * float(ts.ratchet[2]) ** 2 + m2 * float(ts.ratchet[3]) ** 2)
+        K.ratchet_tool(wave, float(dt), float(cap), float(cap * clamp.kinetic_ratio), m1, m2,
+                       1 if clamp.back_stop else 0,
                        float(clamp.walk_limit_m) if math.isfinite(clamp.walk_limit_m) else 1e9,
                        int(hs.settings.sub_steps_per_tooth), int(hs.settings.max_sub_steps), ts.ratchet, out)
         dslip = float(out[A.RT_DX1]) / r
         dpull = float(out[A.RT_DX2])
+        loss = float(out[A.RT_WORK_J])
         engaged = clamp.clamp_length_m if clamp.clamp_length_m > 0.0 else math.inf
         if ts.ratchet[1] >= engaged:
-            # the shank has walked out of its bore: the tool leaves the holder
+            # the shank has walked out of its bore: the tool leaves the holder (its axial motion ends there)
             dpull -= float(ts.ratchet[1]) - engaged
             ts.ratchet[1] = engaged
+            loss += 0.5 * m2 * float(ts.ratchet[3]) ** 2
             ts.ratchet[3] = 0.0
             ts.flags["out"] = True
+        ke1 = 0.5 * (m1 * float(ts.ratchet[2]) ** 2 + m2 * float(ts.ratchet[3]) ** 2)
+        # the slip's energy into the run's ledger: the dissipation as friction (architecture 12), the loads' work
+        # on the slip and the change of its kinetic energy as the run ledger's pair of holding terms
+        rec.slip_in_J += float(out[A.RT_IN_J])
+        rec.slip_mech_change_J += ke1 - ke0
+        rec.slip_loss_J += loss
+        state.ledger.friction_J += loss
         ts.slip_rad += dslip
         ts.pullout_m = float(ts.ratchet[1])
         revs = float(np.sum(np.abs(om)) * dt / (2.0 * math.pi))
         walk = dpull / revs if revs > 0.0 else 0.0
         rec.walk_per_rev_m = walk
         ts.max_pullout_rate_m_per_rev = max(ts.max_pullout_rate_m_per_rev, walk)
-        rec.slip_friction_J = float(out[A.RT_WORK_J])
+        rec.slip_friction_J = loss
         ts.friction_J += rec.slip_friction_J
         margin = 1.0 / float(out[A.RT_PEAK_RATIO]) if out[A.RT_PEAK_RATIO] > 0.0 else math.inf
         rec.holding_margin = margin
@@ -483,7 +517,7 @@ class HoldingDomain:
             ps.supports_version += 1
         self._rt["setups"][ps.workpiece] = setup
         for g in setup.groups:
-            ps.ratchet.setdefault(g.name, np.zeros(2))
+            ps.ratchet.setdefault(g.name, np.zeros(3))
         return setup
 
     def _debris(self, ctx, state, hs, ps, op_index, prev) -> dict:
@@ -564,7 +598,7 @@ class HoldingDomain:
         support_rows = []
         for group in setup.groups:
             loads = self._loads(ctx, setup, group, ps, prev)
-            res = WH.evaluate_group(group, loads, hs.settings, ps.ratchet.setdefault(group.name, np.zeros(2)))
+            res = WH.evaluate_group(group, loads, hs.settings, ps.ratchet.setdefault(group.name, np.zeros(3)))
             results[group.name] = (group, res, loads)
             if res.bond_failed:
                 for i in res.bond_failed:
@@ -607,13 +641,23 @@ class HoldingDomain:
             return
 
     def _chuck_speed_changed(self, setup, prev, ps) -> bool:
-        """The centrifugal jaw loss (omega^2) moved by more than speed_rebuild_rel since the build."""
+        """The centrifugal jaw loss changed the gripping force by more than speed_rebuild_rel of a chuck's static
+        force since the build (the loss grows with omega^2: the change between the build speed and now from the
+        loss at the device's reference speed). A spindle running up rebuilds the setup only when the grip moved
+        that much, not at every step of the run-up (each rebuild sets structure's work model up again)."""
         if not setup.rotating:
             return False
         omega = self._work_speed(prev, ps.workpiece)
         built = float(getattr(setup, "omega_built", 0.0))
-        scale = max(omega * omega, built * built)
-        return scale > 0.0 and abs(omega * omega - built * built) > self._rt["speed_rel"] * scale
+        rel = self._rt["speed_rel"]
+        for d in getattr(setup, "devices", []) or []:
+            static = float(d.get("static_force_N", 0.0) or 0.0)
+            ref, w_ref = float(d.get("loss_ref_N", 0.0) or 0.0), float(d.get("loss_ref_rad_s", 0.0) or 0.0)
+            if static <= 0.0 or ref <= 0.0 or w_ref <= 0.0:
+                continue
+            if ref * abs(omega * omega - built * built) / (w_ref * w_ref) > rel * static:
+                return True
+        return False
 
     def _tabs_changed(self, setup, ps) -> bool:
         tabs = self._rt["tabs"]
@@ -674,6 +718,11 @@ class HoldingDomain:
             mean += _wrench_to_H(wm[:n], T_H_W, O)
             peak += _wrench_to_H(wp[:n], T_H_W, O)
             cutting = cutting or bool(np.any(wm != 0.0))
+        # the cut's tooth-period pulse (|mean force| / |peak force| per tick) before the inertia is added
+        f_mean = np.linalg.norm(mean[:, :3], axis=1)
+        f_peak = np.linalg.norm(peak[:, :3], axis=1)
+        cut_fraction = np.where(f_peak > 0.0, np.minimum(f_mean / np.where(f_peak > 0.0, f_peak, 1.0), 1.0), 1.0)
+        v_limit, contact_H = self._cut_speed_limit(ctx, setup, ps, prev, frame, ccs, n, T_H_W, O)
         # gravity now (orientation and mass) against the clamped state
         volume, g_now = self._step_cache(ctx, setup, ps, prev)
         m_now = group.body.mass_kg * (volume / setup.volume_built) if setup.volume_built > 0.0 else group.body.mass_kg
@@ -695,7 +744,65 @@ class HoldingDomain:
             rate = teeth * np.abs(om)
         T_H_S = T_H_W @ SU.stock_pose(SU.operation(ctx.project, setup.op_index))
         corners = setup.shape.corners_S() @ T_H_S[:3, :3].T + T_H_S[:3, 3]
-        return WH.StepLoads(mean, peak, gravity_delta, phase0, rate, dt, cutting, corners)
+        return WH.StepLoads(mean, peak, gravity_delta, phase0, rate, dt, cutting, corners, cut_fraction, v_limit,
+                            contact_H)
+
+    def _cut_speed_limit(self, ctx, setup, ps, prev, frame, ccs, n, T_H_W, O):
+        """(speed per tick the cut can push the part at its contact, contact point relative to O in H) - the
+        slip's physical bound (workhold.StepLoads): a table-mounted part cannot outrun the tool (twice its feed
+        speed relative to the part: the feed itself plus the chip thinning per tooth), a part turning in a chuck
+        cannot be turned backwards by the cutting torque (the cutting speed at the contact). (None, None) without
+        a cut or a motion record."""
+        if frame is None:
+            return None, None
+        key = (int(prev.motion.tick), ps.workpiece)
+        cache = self._rt.setdefault("speed_cache", {})
+        if cache.get("key") == key:
+            return cache["value"]
+        speeds = self._tip_speeds(ctx, ps, frame, n)
+        value = self._cut_speed_limit_now(ctx, setup, ps, prev, frame, n, T_H_W, O, speeds) if ccs else (None, None)
+        cache.clear()
+        cache.update({"key": key, "value": value})
+        return value
+
+    @staticmethod
+    def _tip_speeds(ctx, ps, frame, n):
+        """The tool tip's speed relative to the part per tick (S; from the last tick of the previous step), kept up
+        to date every step (None without a tip record)."""
+        tip = np.asarray(frame.tip_S_m, dtype=float)
+        if tip.ndim != 2 or tip.shape[0] < n or n <= 0:
+            return None
+        prev_tip = ps.tip_prev if getattr(ps, "tip_prev", None) is not None else tip[0]
+        steps = np.diff(np.vstack([np.asarray(prev_tip, dtype=float)[None, :], tip[:n]]), axis=0)
+        ps.tip_prev = tip[n - 1].copy()
+        return np.linalg.norm(steps, axis=1) / ctx.ipo_s
+
+    def _cut_speed_limit_now(self, ctx, setup, ps, prev, frame, n, T_H_W, O, speeds):
+        point_S = None
+        for rc in getattr(prev.removal, "contacts", []) or []:
+            if int(rc.workpiece) == ps.workpiece and bool(rc.geometry.in_cut):
+                point_S = np.asarray(rc.geometry.point_S_m, dtype=float)
+                break
+        if point_S is None:
+            return None, None
+        if setup.rotating:
+            # a turned part is cut at the tool's nose (removal's turning contacts carry no centroid of the removed
+            # ring: their point_S_m is zero, docs/models/loop.md 15)
+            tips = np.asarray(frame.tip_S_m, dtype=float)
+            if tips.ndim == 2 and tips.shape[0]:
+                point_S = tips[-1]
+        op = SU.operation(ctx.project, setup.op_index)
+        T_H_S = T_H_W @ SU.stock_pose(op)
+        contact_H = T_H_S[:3, :3] @ point_S + T_H_S[:3, 3] - O
+        if setup.rotating:
+            om = np.abs(np.asarray(frame.spindle_omega_rad_s, dtype=float))
+            if om.size < n:
+                return None, None
+            r_c = float(math.hypot(point_S[0], point_S[1]))
+            return om[:n] * r_c, contact_H
+        if speeds is None:
+            return None, None
+        return 2.0 * speeds, contact_H
 
     def _step_cache(self, ctx, setup, ps, prev):
         """(part volume now, gravity in H now), computed once per macro step and workpiece."""
@@ -749,7 +856,13 @@ class HoldingDomain:
 
     def _outcome(self, ctx, state, hs, ps, setup, results, prev, tick_end) -> dict:
         """Pose update, free checks and findings of the step; returns the record's extra values."""
-        extra = {"margin": math.inf, "mode": "", "slip_m": 0.0, "lift_m": 0.0, "friction_J": 0.0}
+        extra = {"margin": math.inf, "mode": "", "slip_m": 0.0, "lift_m": 0.0, "friction_J": 0.0, "in_J": 0.0,
+                 "loss_J": 0.0, "mech_J": 0.0}
+        for _, res, _ in results.values():
+            extra["in_J"] += res.in_J
+            extra["loss_J"] += res.loss_J
+            extra["mech_J"] += res.mech_change_J
+        state.ledger.friction_J += extra["loss_J"]
         parent = hs.trace_notes.get(f"setup:{ps.workpiece}")
         parents = [parent] if parent is not None else []
         rebuild = False
@@ -1011,7 +1124,9 @@ class HoldingDomain:
             rec.mode = str(extra["mode"])
             rec.slip_m = float(extra["slip_m"])
             rec.lift_m = float(extra["lift_m"])
-            rec.slip_friction_J = float(extra["friction_J"])
+            rec.slip_friction_J = float(extra["loss_J"])
+            rec.slip_in_J = float(extra["in_J"])
+            rec.slip_mech_change_J = float(extra["mech_J"])
             ps.friction_J += rec.slip_friction_J
         if ps.free:
             rec.supports = []

@@ -62,6 +62,43 @@ def _plain(value):
     return getattr(value, "value", value)
 
 
+
+def supports_unchanged(a: VX.Supports, b: VX.Supports, lathe_a: LA.LatheSupports, lathe_b: LA.LatheSupports,
+                       rel: float, cell_m: float) -> bool:
+    """Whether two placements of holding's supports give the same work model within ``rel``: the same contacts,
+    each point within rel x cell, every stiffness and clamping force within rel of the largest; a lathe's chuck,
+    tailstock and steady rests with their forces and stiffnesses within rel."""
+    if len(a) != len(b):
+        return False
+    if len(a):
+        if cell_m > 0.0 and float(np.max(np.abs(a.points - b.points))) > rel * cell_m:
+            return False
+        for x, y in ((a.k_held, b.k_held), (a.k_locate, b.k_locate), (a.k_locked, b.k_locked),
+                     (a.preload_N, b.preload_N)):
+            scale = max(float(np.max(np.abs(x))), float(np.max(np.abs(y))))
+            if scale > 0.0 and float(np.max(np.abs(x - y))) > rel * scale:
+                return False
+
+    def close(u, v) -> bool:
+        if (u is None) != (v is None):
+            return False
+        if u is None:
+            return True
+        if isinstance(u, dict) and isinstance(v, dict):
+            if set(u) != set(v):
+                return False
+            return all(close(u[k], v[k]) for k in u)
+        if isinstance(u, (list, tuple)) and isinstance(v, (list, tuple)):
+            return len(u) == len(v) and all(close(p, q) for p, q in zip(u, v))
+        if isinstance(u, bool) or isinstance(v, bool) or isinstance(u, str) or isinstance(v, str):
+            return u == v
+        try:
+            fu, fv = float(u), float(v)
+        except (TypeError, ValueError):
+            return u == v
+        return abs(fu - fv) <= rel * max(abs(fu), abs(fv)) or fu == fv
+    return close(lathe_a.to_dict(), lathe_b.to_dict())
+
 class StructureDomain:
     """Tool-holder-spindle modes, workpiece modes, displacement grids and fixture compliance."""
 
@@ -163,6 +200,7 @@ class StructureDomain:
             ws.clamped = False
             ws.pending = []
             ws.counters["released_op"] = op
+            ws.counters["released_part"] = int(state.clock.part_index)
             inputs = self._inputs(ctx, st, ws, state.bus_prev)
             sol = self._compute(ctx, state, st, ws, inputs, None, "release")
             ws.solution = ws.latest = sol
@@ -353,15 +391,32 @@ class StructureDomain:
     def _work_step(self, ctx, state, st, ws: WorkStructState, prev, macro: int) -> None:
         sup, held, sv, lathe = self._supports(prev, ws.workpiece)
         op = int(state.clock.op_index)
-        if ws.counters.get("released_op") == op and ws.solution is not None:
+        part = int(state.clock.part_index)
+        # the released part stays published until the next operation or the next part of a batch starts (a
+        # one-operation batch runs every part as operation 0: before, the first part's released state stayed
+        # published for every later part, which no model was set up for)
+        if ws.counters.get("released_op") == op and int(ws.counters.get("released_part", part)) == part \
+                and ws.solution is not None:
             return
-        new_setup = ws.solution is None or sv != ws.supports_version or op != ws.op_index or held != ws.clamped
+        new_setup = ws.solution is None or sv != ws.supports_version or op != ws.op_index or held != ws.clamped \
+            or part != ws.part_index
+        if new_setup and ws.solution is not None and op == ws.op_index and part == ws.part_index \
+                and held == ws.clamped and held:
+            # holding placed the supports again: a new setup only when they changed materially
+            supports = VX.supports_from_holding(sup)
+            lathe_new = LA.LatheSupports.from_holding(lathe)
+            if supports_unchanged(ws.supports, supports, ws.lathe, lathe_new, st.settings.support_change_rel,
+                                  float(ws.grid.cell_m) if ws.grid is not None else 0.0):
+                ws.supports_version = sv
+                ws.counters["supports_kept"] = int(ws.counters.get("supports_kept", 0)) + 1
+                new_setup = False
         if new_setup:
             ws.supports = VX.supports_from_holding(sup) if held else VX.Supports.empty()
             ws.lathe = LA.LatheSupports.from_holding(lathe)
             ws.clamped = held
             ws.supports_version = sv
             ws.op_index = op
+            ws.part_index = part
             ws.kind = self._kind(st, ws, ws.lathe)
             ws.pending = []
             inputs = self._inputs(ctx, st, ws, prev)

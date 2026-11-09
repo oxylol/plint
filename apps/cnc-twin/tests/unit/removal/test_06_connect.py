@@ -75,3 +75,91 @@ def test_held_region_keeps_the_held_body_even_when_smaller():
 def test_one_signature_each():
     for kernel in KC.KERNELS:
         assert len(kernel.signatures) == 1, kernel.__name__
+
+
+def _cut_path(f, pts, z_bottom, width, height=20e-3):
+    """Subtract a small cutter (diameter ``width``, ``height`` tall from z_bottom) at every point of pts."""
+    prof = P.profile_from_points([0.0, height], [0.5 * width, 0.5 * width])
+    acc = A.new_accum(F.n_levels(f))
+    sc = A.make_scratch()
+    tgt = A.empty_target(int(f.info[A.FI_NRAYS]))
+    ev = event_buffer(16, A.EVENT_WIDTH)
+    for x, y in pts:
+        spec = A.subtract_spec([0, 0, 1], [[x, y, z_bottom]], [0.0, height], [0.0], [-1] * 3, [1] * 3)
+        assert KS.subtract_envelope(f, prof, spec, tgt, acc, ev, sc) == 0
+        yield
+
+
+def _incremental_vs_full(f, steps, held):
+    """Run the incremental check (the domain's per-macro-step rule: only when a z column changed its segment count)
+    and, on a copy, the full labelling after every step; returns the step and volumes of every release of each."""
+    g = F.copy_field(f)
+    one_body = False
+    inc, full, local, checks = [], [], 0, 0
+    for k, _ in enumerate(steps(f, g)):
+        if f.info[A.FI_TOPO] > 0:
+            rel, _h, _r, one_body, was_local = CN.release_loose_incremental(f, held, one_body)
+            checks += 1
+            local += was_local
+            if rel:
+                inc.append((k, sorted(round(b.volume_m3 * 1e12) for b in rel)))
+        rel_g, _h, _r = CN.release_loose(g, held)
+        if rel_g:
+            full.append((k, sorted(round(b.volume_m3 * 1e12) for b in rel_g)))
+    return inc, full, local, checks
+
+
+def test_incremental_check_separates_exactly_at_the_through_cut_and_the_last_tab():
+    """The per-macro-step check labels only the columns around the changed bricks while the material is one body:
+    a trepanned core comes loose at exactly the step that closes the ring through the stock, a part held by two
+    tabs at exactly the step that cuts through the last one, a blind groove frees nothing; the released bodies are
+    those of the full labelling. The local check decides when the changed region shows one body reaching its
+    ring (every step of the groove); a through cut whose two sides join only outside it falls back to the whole
+    field."""
+    held = [((-1.0, -1.0, -1.0), (1e-3, 1.0, 1.0))]           # the vise jaw at the block's left face
+    width = 1.0e-3
+
+    def ring(z_bottom, height=20e-3):
+        n = int(math.ceil(2 * math.pi * 4e-3 / (0.2 * LAT)))
+        pts = [(20e-3 + 4e-3 * math.cos(2 * math.pi * k / n), 20e-3 + 4e-3 * math.sin(2 * math.pi * k / n))
+               for k in range(n + 1)]
+
+        def steps(f, g):
+            for _ in zip(_cut_path(f, pts, z_bottom, width, height), _cut_path(g, pts, z_bottom, width, height)):
+                yield
+        return steps, n
+
+    # through ring: the core separates when the ring closes (and only then)
+    f = S.block_field([40e-3, 40e-3, 4e-3], LAT)
+    steps, n = ring(-0.5e-3)
+    inc, full, local, checks = _incremental_vs_full(f, steps, held)
+    assert len(full) == 1 and inc == full
+    assert full[0][0] > 0.9 * n                                # the ring's last steps cut the core free
+    assert 0 < local < checks
+    # a groove from 1 to 3 mm (columns split in two) on the same ring: nothing comes loose
+    f = S.block_field([40e-3, 40e-3, 4e-3], LAT)
+    steps, n = ring(1.0e-3, 2.0e-3)
+    inc, full, local, checks = _incremental_vs_full(f, steps, held)
+    assert inc == full == [] and checks > 100 and local == checks - 1   # the first check labels everything
+    # a 12 x 12 mm square cut through around (20, 20) leaving tabs in the middle of its left and right sides,
+    # then the tabs cut one after the other: the part separates with the second tab
+    f = S.block_field([40e-3, 40e-3, 4e-3], LAT)
+    lo, hi, tab = 14e-3, 26e-3, 2e-3
+    d = 0.2 * LAT
+    side = lambda a, b: [a + (b - a) * t for t in np.linspace(0.0, 1.0, int(math.ceil(abs(b - a) / d)) + 1)]  # noqa
+    contour = ([(x, lo) for x in side(lo, hi)] + [(hi, y) for y in side(lo, 20e-3 - tab)]
+               + [(hi, y) for y in side(20e-3 + tab, hi)] + [(x, hi) for x in side(hi, lo)]
+               + [(lo, y) for y in side(hi, 20e-3 + tab)] + [(lo, y) for y in side(20e-3 - tab, lo)])
+    tab_r = [(hi, y) for y in side(20e-3 - tab, 20e-3 + tab)]
+    tab_l = [(lo, y) for y in side(20e-3 - tab, 20e-3 + tab)]
+    pts = contour + tab_r + tab_l
+
+    def steps(f, g):
+        for _ in zip(_cut_path(f, pts, -0.5e-3, width), _cut_path(g, pts, -0.5e-3, width)):
+            yield
+    inc, full, local, checks = _incremental_vs_full(f, steps, held)
+    assert len(full) == 1 and inc == full
+    assert full[0][0] >= len(contour) + len(tab_r)            # not before the last tab is reached
+    vol = full[0][1][0] * 1e-12
+    assert vol == pytest.approx((hi - lo - width) ** 2 * 4e-3, rel=0.05)
+    assert 0 < local < checks

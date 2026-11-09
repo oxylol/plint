@@ -107,9 +107,34 @@ the tool in spindle acceleration) and `D2 = -F_z` (pull-out positive). When the 
 (static check with the tooth harmonic's extremes) the 2-DOF ratchet integrates the tool as a rigid body on
 the interface, `m1 = J / r^2`, `m2 = m_tool`, implicit Coulomb friction (`v = (M + lambda I)^-1 p`,
 `lambda |v| = h c_k`, exact stick test `|p| <= h c`), back stop at the set length, walk limit (side-lock),
-the tool leaving the holder at its clamped length (fatal). A torque above the capacity runs the slip away (the
-cutting force does not relax in the model) and lets a small axial force walk the tool out: the physical
-mechanism of pull-out under torsional overload.
+the tool leaving the holder at its clamped length (fatal). A torque above the capacity slips the tool and lets a
+small axial force walk it out (the friction circle: the physical mechanism of pull-out under torsional
+overload).
+
+**The demand's tooth-period shape and the stall (2026-11-09).** The cutting torque is the teeth's pulse train
+and it only resists the tool's turning against the work. Within the tick its shape is the pulse of
+`abi.Wave`: `D(t) = D_mean + (D_peak - D_mean) g(N theta; alpha)` with `g = (s - <s>)/(1 - <s>)`,
+`s(u) = max(0, cos u - cos alpha)/(1 - cos alpha)`; alpha follows the tick's mean / peak of the torque
+(`abi.pulse_alpha`: `<s> = mean / peak`): the first tooth harmonic (alpha = pi, `g = cos`) for mean / peak of
+1/2 or more, a narrower pulse below (a short engagement, a shock), mean and peak as recorded either way; the
+axial pull has the torque's shape. Every sub-step applies the demand's exact mean over it (`shape_mean`: its
+impulse), so a shock of a few microseconds is not stretched over half the tooth period: before, a 169 N m peak
+sample of a 1 N m mean (examples/thin-wall-al7075, a chip recut, section 13) was integrated as a cosine above
+the 88 N m capacity for a third of every tooth period of the whole step, and the ER collet turned 792 deg. The
+slip speed is bounded by the stall: the cutting torque cannot turn the tool backwards against the work, so the
+circumferential slip speed stays at most `|omega| r` (`wave.v_max`; the demand above it is not transmitted, a
+reaction of the stalled cut). An overload therefore stalls the tool at most at the spindle speed (a slip of at
+most `|omega| dt` per step) instead of accelerating its small inertia without bound.
+
+**Energy.** The ratchet returns the work the demand did on the slip (`RT_IN_J`), the dissipation (`RT_WORK_J`:
+the friction impulse along the new velocity, what a sticking contact takes of the remaining speed, the stops'
+losses) and the kinetic energy follows from the state; `in = dissipation + change of (m1 v1^2 + m2 v2^2)/2`
+holds to round-off for the discrete scheme (test). The dissipation is booked into `SimState.ledger.friction_J`
+(architecture 12: slip friction) and the bus record carries `slip_in_J`, `slip_loss_J`, `slip_mech_change_J`:
+the run's ledger books the loads' work on the slip as an in term and the kinetic change as an out term
+(docs/models/loop.md 6). The hot loop's own shaft work and heat by zone still assume the tool turning with the
+spindle (it applies `slip_rad` as a phase only): the slip's friction heat is booked beside the cut's, not taken
+out of it.
 
 Findings (`tool_pullout`): walk below the depth limit (min of `pullout_error_m` 0.02 mm and the project's
 tightest tolerance) warning, above it error, the depth error (`depth_error_m` = `pullout_m`) in the quantities;
@@ -193,7 +218,12 @@ the pose origin pushing along +x, `support` / `rest` along +z.
   ID gripping: `jaws` text `id`), loss by the item's model (`quadratic_in_speed`, `measured` curve, or VDI 3106
   `c sum m r omega^2` with jaw masses or mass moment), else the Kitagawa speed rule (2/3 of static at the
   maximum speed); axial stop at the jaw steps unless `jaws` says `no_stop`/`bar`; the setup is clamped again
-  when omega^2 changes by more than 2 %; zero gripping force: the part is free; device speed limits: overspeed.
+  when the centrifugal loss has moved the gripping force by more than `speed_rebuild_rel` (2 %) of a chuck's
+  static force since the build (the loss at the device's maximum speed, `loss_ref_N`, scaled by omega^2): before
+  2026-11-09 the rule was 2 % of omega^2 itself, so a spindle running up from rest rebuilt the setup at every
+  step of the run-up (examples/lathe-shaft-4140: 55 setups in 2.4 s, each a new work model in structure and a new
+  modal basis in dynamics) for grip changes of a fraction of a percent; zero gripping force: the part is free;
+  device speed limits: overspeed.
 * **Collets** (lathe): three segments over most of the circumference, gripping force from the item (or max
   input force x pull-back ratio), range check; centrifugal loss of the segments not modelled (light, closed by
   the collet closer).
@@ -236,10 +266,21 @@ doubling and bisection (`capacity_tol` 1e-3 below a margin of 2, 10 % above), th
 within 1.8 deg of the worst load's direction and not larger with 5 % reserve. Below 1: the mechanism m (tangent
 with the critical contacts released: utilisation >= 1 - eps slip, normal force <= eps of the largest open;
 regularised at 1e-8 of the stiffest contact) normalised to `m^T M m = mass`, `Q_cap = m^T (w0 + lambda w_peak)`,
-demand `Q(t) = m^T (w0 + w_mean) + m^T (w_peak - w_mean) cos(N theta)`; the 1-DOF ratchet integrates the motion:
-*friction mode* (a slipping contact: slip, rotation in the jaws or chuck, pull-out from a chuck) leaves a
-persistent displacement - the pose delta, contacts placed again on the moved part after 50 um; *separation mode*
-(lift-off, tipping against gravity and clamps) comes back to the seat unless the clamps lose the part.
+demand `Q(t) = m^T (w0 + w_mean) + m^T (w_peak - w_mean) g(N theta; alpha)` (the tooth-period pulse of section 2,
+alpha from the tick's `|F_mean| / |F_peak|` of the cut; the exact mean per sub-step); the 1-DOF ratchet
+integrates the motion: *friction mode* (a slipping contact: slip, rotation in the jaws or chuck, pull-out from a
+chuck) leaves a persistent displacement - the pose delta, contacts placed again on the moved part after 50 um;
+*separation mode* (lift-off, tipping against gravity and clamps) comes back to the seat (inelastic landing at
+its exact instant) unless the clamps lose the part. In friction mode the slip is no faster than the cut can push
+the part (`StepLoads.v_limit_m_s` at the cut's contact point, `wave.v_max = v_limit / |m_v + m_w x r_c|`): twice
+the tool's feed speed relative to a table-mounted part (a part retreating faster than the tool advances plus the
+chip thinning of one feed per tooth per tooth period loses the cut and the load with it), the cutting speed at
+the contact of a part turning in a chuck (the cutting torque cannot turn it backwards); the demand above that is
+not transmitted. A sustained overload then pushes the part along with the tool instead of accelerating it
+freely (examples/two-setup-flip moved its blank 38 mm in one step before). The energies (`RP_IN_J`,
+`RP_LOSS_J`, the kinetic and lift potential energy) are booked as for the tool (`PartHolding.slip_in_J`,
+`slip_friction_J`, `slip_mech_change_J`); a part held again after moving dissipates what is left of its speed
+(and lands from a lift).
 
 Free (`part_free` error, cause chain): every contact failed (tabs released), the moved part out of its devices,
 a lift beyond the clamps' engagement, the vacuum lost with nothing else clamping, the gripping force zero at
@@ -303,9 +344,10 @@ grade.
 
 ## 11. Assumptions and limitations (consequences)
 
-* Gross slip is integrated with the step's cutting forces held fixed (no feedback of the slip on the cut within
-  the step): slip and walk magnitudes above the capacity are upper bounds; the onset (margin 1) is the reliable
-  prediction. Micro-slip ratcheting below gross capacity (fretting walk of um per revolution at 70-100 % load)
+* Gross slip is integrated with the step's cutting loads (their tick means and peaks, the tooth-period pulse of
+  section 2) held fixed within the step, bounded by the slip speeds a cut can drive (the stall of a tool, a part
+  pushed along by the tool): the cut's change by the slip within the step is not resolved, so slip and walk
+  magnitudes above the capacity are upper bounds; the onset (margin 1) is the reliable prediction. Micro-slip ratcheting below gross capacity (fretting walk of um per revolution at 70-100 % load)
   is not modelled: such walks are not predicted.
 * Holonomic friction from the clamped state for every load sample (history only through gross slip and failed
   bonds): partial-slip hysteresis between ticks is not carried.

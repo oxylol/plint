@@ -22,7 +22,7 @@ BUDGET_S = {
     "drill-tap-plate-1045": 8.0,
     "thin-wall-al7075": 8.0,
     "two-setup-flip": 8.0,
-    "lathe-shaft-4140": 4.0,          # its loop runs at about 0.2 simulated s per wall minute (polar field)
+    "lathe-shaft-4140": 8.0,
     "batch-50": 8.0,
     "die-h13-ballnose": 8.0,
     "blade-5axis-ti": 8.0,
@@ -31,9 +31,9 @@ BUDGET_S = {
 }
 
 
-# variants run in addition to the example as written: the spindle probe's G31 is not modelled in the hot loop yet
-# (docs/models/hotloop.md "Open problems: Probe"), so programs that probe stop at the first probing alarm; their
-# variant removes the probing section and sets the work offset to the value the probing would have found
+# variants run in addition to the example as written: the probing section removed and the work offset set to the
+# value the probing finds (until 2026-11-09 the hot loop had no stylus model and programs that probe stopped at their
+# first probing alarm; the variants now compare the probed and the hand-set runs)
 def _without_probe(project_dir: Path, program: str, start: str, end_marker: str, offset: list, parts=None) -> None:
     import yaml
     text = (project_dir / program).read_text().splitlines()

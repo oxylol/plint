@@ -41,3 +41,15 @@ params:
     range: [2, 50]
     src: est
     note: "numerical setting: log-spaced chip-thickness nodes over the calibration range at which measured and predicted forces are compared"
+  max_cal_friction_shift_rad:
+    value: 0.6
+    unit: rad
+    range: [0.0, 1.0]
+    src: est
+    note: "largest shift of the mean rake-face friction angle a calibration applies to meet a measured thrust / cutting force ratio (34 deg); a ratio the model cannot meet within it means measurement and model disagree beyond the friction correction, and the clamp is reported"
+  cal_shift_bisections:
+    value: 40
+    unit: "-"
+    range: [10, 60]
+    src: est
+    note: "numerical setting: bisection steps of the friction-angle shift (2^-40 of the bracket)"

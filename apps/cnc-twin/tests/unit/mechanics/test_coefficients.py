@@ -92,11 +92,13 @@ def test_flank_wear_and_heat(steel, carbide, steel_map):
     fresh = CF.group_coefficients(steel, carbide, group, CF.SlowState(2.5, 600.0), H_GRID, steel_map)
     worn = CF.group_coefficients(steel, carbide, group, CF.SlowState(2.5, 600.0, VB_m=2e-4), H_GRID, steel_map)
     assert worn.flank_sigma_mean_Pa > 0.0 and fresh.flank_sigma_mean_Pa == 0.0
-    assert worn.flank_sigma_mean_Pa < worn.flank_sigma0_Pa       # beyond VB* the land stress decays
+    assert worn.flank_sigma_mean_Pa < worn.flank_sigma0_Pa       # the elastic part of the land decays
     assert np.all((worn.frac_flank_to_tool >= 0) & (worn.frac_flank_to_tool <= 1))
     vb = np.array([[0.0, 1e-4], [2e-4, 3e-4]])
     flank = CF.flank_coefficients([worn], np.zeros((2, 2), np.int32), vb)
-    assert flank[0, 0] == 0.0 and flank[0, 1] == pytest.approx(worn.flank_sigma0_Pa)
+    # Waldorf 1999 / Smithey et al.: elastic up to VB* (mean sigma_0 / 3), plastic region VB - VB* beyond
+    assert flank[0, 0] == 0.0 and flank[0, 1] == pytest.approx(worn.flank_sigma0_Pa / 3.0)
+    assert flank[1, 1] == pytest.approx(worn.flank_sigma0_Pa * (2e-4 + 1e-4 / 3.0) / 3e-4)
 
 
 def test_chisel_and_margin_groups(steel, carbide, steel_map):
@@ -198,3 +200,86 @@ def test_power_fractions_sum_to_one(steel, carbide, steel_map):
     shear_share = gc.power_frac_shear[k] / (gc.power_frac_shear[k] + gc.power_frac_rake[k])
     assert shear_share == pytest.approx(row[abi.OX_P_SHEAR], rel=1e-9)
     assert np.all(gc.power_frac_edge[H_GRID <= gc.h_min_m] == 1.0)
+
+
+# ---------------------------------------------------------------------------------- calibration transfer (2026-11-09)
+MECHANISTIC = {"tool_class": "carbide", "coating": "uncoated", "process": "milling",
+               "helix_deg": 30, "rake_deg": 10, "Ktc_N_mm2": 1549, "Krc_N_mm2": 263, "Kac_N_mm2": 535,
+               "Kte_N_mm": 24, "Kre_N_mm": 43, "Kae_N_mm": 0, "src": "fixture-mechanistic"}
+
+
+def _mechanistic_steel():
+    from conftest import STEEL_1045, work_from
+    return work_from(STEEL_1045, cutting__mechanistic=[dict(MECHANISTIC)], cutting__kienzle=[])
+
+
+def _fit(h, f):
+    A = np.vstack([h, np.ones_like(h)]).T
+    return np.linalg.lstsq(A, f, rcond=None)[0]
+
+
+def test_mechanistic_calibration_reproduces_its_reference_and_transfers_a_friction_angle(carbide):
+    work = _mechanistic_steel()
+    ref = CF.EdgeGroup(rake_rad=math.radians(10), incl_rad=math.radians(30), edge_radius_m=3e-5)
+    cal = CF.build_calibration(work, carbide, ref, "milling")
+    assert cal.kind == "mechanistic" and cal.edge_scale is not None
+    shift = float(cal.friction_shift_rad[0, 0])
+    assert np.all(cal.friction_shift_rad == shift) and 0.0 < abs(shift) < 0.6
+    h = cal.h_nodes_m
+    state = CF.SlowState(1.0, 293.15)
+    pmap = CF.build_process_map(work, carbide, ref.rake_rad, speed_grid_m_s=np.array([1.0]),
+                                t1_grid_m=np.geomspace(5e-7, 1e-3, 14), tool_temp_grid_K=np.array([293.15]))
+    f = CF.group_coefficients(work, carbide, ref, state, h, pmap, calibration=cal).forces_per_width(h)
+    kt, kr = _fit(h, f[0])[0], _fit(h, f[1])[0]
+    # at the entry's own geometry the measured coefficients come back (the map here is coarser: 5 %)
+    assert kt == pytest.approx(1549e6, rel=0.05) and kr == pytest.approx(263e6, rel=0.08)
+    # at another rake the measurement is carried as a friction angle: the radial / tangential ratio follows the
+    # model's own rake dependence with the shifted angle instead of a component factor formed at rake 10 deg
+    zero = CF.EdgeGroup(rake_rad=0.0, incl_rad=0.0, edge_radius_m=3e-5)
+    pmap0 = CF.build_process_map(work, carbide, 0.0, speed_grid_m_s=np.array([1.0]),
+                                 t1_grid_m=np.geomspace(5e-7, 1e-3, 14), tool_temp_grid_K=np.array([293.15]))
+    raw0 = CF.group_coefficients(work, carbide, zero, state, h, pmap0)
+    cal0 = CF.group_coefficients(work, carbide, zero, state, h, pmap0, calibration=cal)
+    k = int(np.argmin(np.abs(h - 2e-4)))
+    lam = float(raw0.friction_angle_rad[k])
+    phi = float(raw0.shear_angle_rad[k])
+    want = math.tan(min(lam + shift, 0.5 * math.pi - phi - CF.SHIFT_MARGIN_RAD))
+    shear = cal0.forces_per_width(h)[:, k] - np.array([cal0.Kte_N_per_m, cal0.Kre_N_per_m, cal0.Kae_N_per_m])
+    # (the map interpolates F_c, F_t and lambda separately: their ratio and tan(lambda) agree to about 1 %)
+    assert shear[1] / shear[0] == pytest.approx(want, rel=0.02)
+    raw_ratio = (raw0.forces_per_width(h)[1, k] - raw0.Kre_N_per_m) / (raw0.forces_per_width(h)[0, k] - raw0.Kte_N_per_m)
+    assert shear[1] / shear[0] > raw_ratio if shift > 0.0 else shear[1] / shear[0] < raw_ratio
+
+
+def test_calibration_reference_is_a_cutting_edge(steel, carbide):
+    """A chisel row is calibrated with the material response of the cutting test (the reference test cut a chip),
+    not against its own indentation model at the test's rake."""
+    lip = CF.build_calibration(steel, carbide, CF.EdgeGroup(rake_rad=math.radians(-55), edge_radius_m=3e-5), "drilling")
+    chisel = CF.build_calibration(steel, carbide, CF.EdgeGroup(rake_rad=math.radians(-55), edge_radius_m=3e-5,
+                                                               kind=EDGE_CHISEL), "drilling")
+    assert lip.kind == chisel.kind == "kienzle"
+    assert np.array_equal(lip.scale, chisel.scale) and np.array_equal(lip.friction_shift_rad, chisel.friction_shift_rad)
+    assert np.all((chisel.scale > 0.5) & (chisel.scale < 2.0))
+
+
+def test_edge_flow_stress_saturates_at_large_fallback_strains(steel, carbide):
+    """The contact models' flow stress uses the Johnson-Cook stress with the strain held at Nakayama's saturation
+    strain: a chisel's fallback state (shear angle of a few degrees, strains of 3-5) no longer hardens it."""
+    from cnctwin.mechanics import params as P
+    cap = P.number(P.CONTACT, "edge_strain_cap")
+    pmap = CF.build_process_map(steel, carbide, math.radians(-54), speed_grid_m_s=np.array([0.1]),
+                                t1_grid_m=np.geomspace(5e-7, 1e-3, 10), tool_temp_grid_K=np.array([293.15]))
+    state = CF.SlowState(0.1, 293.15)
+    row = CF.lookup(pmap, 1e-5, 0.1, 293.15)[0]
+    assert row[abi.OX_EPS_AB] > 2.0 * cap
+    k = CF._reference_shear_flow_stress(steel, pmap, 1e-5, state)
+    jc = steel.jc
+    hard = lambda e: jc[abi.MAT_A_PA] + jc[abi.MAT_B_PA] * e ** jc[abi.MAT_N]
+    assert k == pytest.approx(row[abi.OX_K_AB] * hard(cap) / hard(row[abi.OX_EPS_AB]), rel=1e-12)
+    assert k < row[abi.OX_K_AB]
+    # a regular chip state is untouched
+    pmap0 = CF.build_process_map(steel, carbide, 0.0, speed_grid_m_s=np.array([3.0]),
+                                 t1_grid_m=np.geomspace(5e-7, 1e-3, 10), tool_temp_grid_K=np.array([293.15]))
+    row0 = CF.lookup(pmap0, 1e-4, 3.0, 293.15)[0]
+    if row0[abi.OX_EPS_AB] <= cap:
+        assert CF._reference_shear_flow_stress(steel, pmap0, 1e-4, CF.SlowState(3.0, 293.15)) == row0[abi.OX_K_AB]

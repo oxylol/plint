@@ -136,6 +136,8 @@ def axis_models(machine, *, payload_kg: dict[str, float] | None = None, params=N
     models = []
     for name in axes:
         axis = get(axes, name)
+        if not hasattr(axis, "get") and not hasattr(axis, "keys"):
+            continue        # the axes block's own entries (src, note): not an axis (haas-ec400: axes.src)
         if text(get(axis, "type"), "linear") != "linear":
             continue
         mass = num(get(axis, "moving_mass_kg"))

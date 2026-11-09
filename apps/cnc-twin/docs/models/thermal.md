@@ -39,7 +39,12 @@ and chip thickness the fractions `f_sc` (shear -> chip), `f_rt` (rake -> tool), 
 * **Ploughing** (rubbing below h_min, edge forces) happens at the edge-flank contact and takes the
   flank fraction.
 * **Element shares** of a zone (`Q*_e`) follow the per-element integrals of the step: shear ~
-  `int_h_dt * db * r` (removed volume x speed), rake ~ `int_sigma_v_rake * h zeta^n * db` (normal
+  `int_h_dt * db * r` (removed volume x speed; r the element's radius from the tool axis for a rotating tool,
+  1 for a turning tool, whose cutting speed is the work's surface speed along the whole edge to within ap / r and
+  whose `elem_r_m` is its x_T coordinate, <= 0: until 2026-11-09 those negative weights sent the shear heat to an
+  even split over every valid element and the idle elements' share, at the table's thinnest chip, into the work:
+  75 % of warmup's turning pass heat went into the bar, now 19 %, with 75 % in the chip and 5 % in the insert),
+  rake ~ `int_sigma_v_rake * h zeta^n * db` (normal
   stress x sliding over the contact area `l_c db`, uniform friction coefficient along the edge),
   flank and ploughing ~ `int_sigma_v_flank * l_f * db`. If an integral is zero everywhere the next
   proxy is used (sliding distances, then in-cut time x db x r, then equal shares of valid
@@ -141,8 +146,29 @@ uniformly heated disc of the same area, `(sqrt(R^2 + z^2) - z) / R` averaged ove
 Outputs per element at the nq Gauss points of the heating interval (`q_weights` sum to 1, so wear
 integrates nonlinear rates as `sum_q w_q rate(T_q)`): `edge_temp_q_K` (mean over the rake
 contact), `flank_temp_q_K` (mean over the flank contact), `edge_peak_q_K` (the cutting-edge line,
-both sources), `rake_temp_mean_K` (weighted mean, for the coefficient pipeline), and
-`edge_cycle_amp_K` = edge-line temperature at the end of heating minus at the end of cooling.
+both sources), `edge_cycle_amp_K` = edge-line temperature at the end of heating minus at the end of cooling,
+and the **entry temperatures** `rake_temp_mean_K` / `flank_entry_K`: the rake and flank contact means at the end
+of the cooling interval, when the edge enters the cut again (what is left of the earlier engagements on the body
+temperature; a continuous element's own steady rise excluded: its entry value is the body temperature),
+`rake_contact_mean_K` the in-cut mean (the q-weighted `edge_temp_q_K`).
+
+**The coefficient pipeline's tool temperature (2026-11-09).** cnctwin.mechanics evaluates the rake heat
+partition inside ProcessCoefficients with the tool rake temperature T_tool as the background of its
+stationary-source tool side: `T_w + dT_SZ + psi R dT_M = T_tool + (1 - R) q M_t` (docs/models/mechanics.md):
+the rise the engagement's own heat makes in the tool, `(1 - R) q M_t` with the transient cap of one contact
+time, is mechanics', solved with the forces as one consistent state (architecture 5.3: the fast
+thermo-mechanical coupling inside ProcessCoefficients). `rake_temp_mean_K` was the in-cut mean of the
+quadrature temperatures, which already holds that rise from the previous step's heat: the partition counted it
+twice, and through the one-step stagger the loop closed explicitly with a gain near -1 (a hotter tool -> a larger
+chip share R -> less heat into the tool -> a colder tool next step): the tiny project's rake temperature
+alternated by 20-37 K from one macro step to the next (loop.coupling_lag, cutting's own oscillation check). The
+entry temperature is the background the partition expects; it changes with the accumulated heat (the residual of
+earlier cycles, the body), a fraction of the in-cut rise, so the staggered loop gain falls well below the
+alternation limit. `flank_entry_K` is the flank's equivalent for mechanics' flank partition (cutting's row
+state reads `flank_temp_q_K` today: docs/models/loop.md 15); wear and coolant read the in-cut temperatures
+(`flank_temp_q_K`, `rake_contact_mean_K`). With the cutting-region field the entry values of its elements are
+the field's cycle-mean strip temperatures plus the edge kernel's deviation at the entry (`EDGE_OUT_DEVIATION`:
+`rake_entry` / `flank_entry` of the kernel).
 `edge_every_n_macro` (default 2): between evaluations the last local rise is kept on top of the
 current body temperature for elements still in cut (the field is quasi-steady on the scale of a
 macro step; the counters N and t_eng advance every step).
@@ -407,6 +433,9 @@ temperature (tempering kinetics) is not modelled: a threshold crossing is report
 
 ## 4. Machine
 
+Axes: every mapping of the machine file's `axes` block is an axis (the block's own `src` / `note` entries are not:
+haas-ec400's `axes.src` crashed the set-up of examples/ti-slot-throughtool before 2026-11-09).
+
 First-order bodies integrated exactly over each step (excess temperature over 20 C as state, so
 micro-kelvin changes keep their precision; `expm1` for the decay):
 
@@ -534,7 +563,8 @@ axis_actual/axis_names, feed_vel_M_m_s, axis_T_M, pose_M_T, pose_S_T, tick, bloc
 
 Written: `nxt.thermal` (a fresh ThermalFeedback each step): `tools[slot]` (ToolHeat: edge/flank
 temperatures at q points, q_weights, cycle amplitude, rake mean, body and holder temperature,
-radial/length/holder growth; **added** `edge_peak_q_K`, `body_temp_at_elem_K`; the edge temperatures of
+radial/length/holder growth; **added** `edge_peak_q_K`, `body_temp_at_elem_K`, `flank_entry_K`,
+`rake_contact_mean_K` (2.2: `rake_temp_mean_K` is the rake contact's entry temperature); the edge temperatures of
 the elements a cutting-region field carries come from it, 2.4), `spindle_temp_K`,
 `spindle_growth_M_m`, `axis_drift`, `work_temp_origin_S_m`, `work_temp_cell_m`, `work_temp_K` (a
 new array at every finite-volume step, NaN outside material, never modified afterwards),

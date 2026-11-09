@@ -11,9 +11,9 @@
 * **Indentation / extrusion** (chisel edges, normal rake below ``min_shear_rake_rad``, speeds
   below ``min_shear_speed_m_s``): depth h with the rake face in contact and the material above
   the stagnation height flowing up the face.
-* **Flank wear land** (Smithey, Kapoor & DeVor 2001): stresses sigma_0 = (2 + pi) k and
-  tau_0 = min(mu sigma_0, k) up to the critical land VB*, decaying as ((VB - x)/(VB - VB*))^2
-  beyond it.
+* **Flank wear land** (Waldorf 1999; Smithey, Kapoor & DeVor 2000, 2001): stresses sigma_0 = (2 + pi) k
+  and tau_0 = min(mu sigma_0, k) at the edge; elastic contact (quadratic decay to the land end) below the
+  critical land VB*, a plastic region of width VB - VB* ahead of an elastic one of width VB* beyond it.
 * **Shear-angle relations** of the fallback: Merchant (1945) and Lee & Shaffer (1951).
 """
 
@@ -71,15 +71,59 @@ def ploughing_forces(h_m: float, edge_radius_m: float, h_min_m: float, rake_rad:
     return out
 
 
+def wedge_pressure_factor(rake_rad: float) -> float:
+    """Face pressure / k of a face pushing material ahead of it at normal rake ``rake_rad`` (Hill, Lee & Tupper 1947;
+    Hill 1950): the smooth-wedge slip-line field with the displaced material rising along the face, face pressure
+    2 k (1 + psi) with cos(2 theta - psi) = cos(psi) / (1 + sin(psi)) for the face inclined at theta = 90 deg + rake to
+    the direction of motion. A face normal to the motion (rake >= 0, theta = 90 deg) is Prandtl's flat punch,
+    (2 + pi) k; a chisel edge's -55 deg face (theta 35 deg) carries about 2.8 k."""
+    if rake_rad >= 0.0:
+        return pressure_factor()
+    theta = 0.5 * math.pi + max(float(rake_rad), -0.5 * math.pi + 1e-6)
+
+    def gap(psi):
+        return math.cos(2.0 * theta - psi) - math.cos(psi) / (1.0 + math.sin(psi))
+
+    lo, hi = 0.0, theta
+    for _ in range(60):
+        mid = 0.5 * (lo + hi)
+        if gap(mid) > 0.0:
+            hi = mid
+        else:
+            lo = mid
+    return min(2.0 * (1.0 + 0.5 * (lo + hi)), pressure_factor())
+
+
 def indentation_forces(h_m: float, edge_radius_m: float, h_min_m: float, rake_rad: float, incl_rad: float,
                        k_ref_Pa: float, mu: float) -> np.ndarray:
     """Indentation / extrusion forces per unit edge length (chisel edges, very negative rakes,
     speeds below v_min): contact up to depth h including the rake face; material above the
-    stagnation height h_min flows up the face."""
+    stagnation height h_min flows up the face. The rounded edge carries the edge pressure (2 + pi) k, the
+    rake face the pressure of a face pushing the material ahead of it at its inclination
+    (:func:`wedge_pressure_factor`; the flat punch for rake >= 0)."""
     p, tau = contact_stresses(k_ref_Pa, mu)
     out = np.zeros(abi.N_PL)
     K.edge_contact_forces(float(h_m), float(edge_radius_m), float(h_min_m), float(rake_rad), float(incl_rad), p, tau,
                           out)
+    p_face = wedge_pressure_factor(rake_rad) * k_ref_Pa
+    if p_face >= p:
+        return out
+    r = max(float(edge_radius_m), 0.0)
+    y_r = r * (1.0 - math.cos(0.5 * math.pi + float(rake_rad)))      # height of the rake-face tangency
+    if not h_m > y_r:
+        return out
+    # the forces are linear in (pressure, friction stress) for a given contact: replace the face's share
+    tau_face = min(mu * p_face, k_ref_Pa) if mu > 0.0 else k_ref_Pa
+    whole_p = np.zeros(abi.N_PL)
+    arc_p = np.zeros(abi.N_PL)
+    K.edge_contact_forces(float(h_m), r, float(h_min_m), float(rake_rad), float(incl_rad), p, tau, whole_p)
+    K.edge_contact_forces(y_r, r, float(h_min_m), float(rake_rad), float(incl_rad), p, tau, arc_p)
+    whole_f = np.zeros(abi.N_PL)
+    arc_f = np.zeros(abi.N_PL)
+    K.edge_contact_forces(float(h_m), r, float(h_min_m), float(rake_rad), float(incl_rad), p_face, tau_face, whole_f)
+    K.edge_contact_forces(y_r, r, float(h_min_m), float(rake_rad), float(incl_rad), p_face, tau_face, arc_f)
+    for q in (abi.PL_FT, abi.PL_FR, abi.PL_FA):
+        out[q] = arc_p[q] + (whole_f[q] - arc_f[q])
     return out
 
 
@@ -121,14 +165,16 @@ def ploughing_shape(edge_radius_m: float, h_min_m: float, rake_rad: float, incl_
 
 
 def flank_stresses(VB_m, sigma0_Pa: float, tau0_Pa: float, VB_star_m: float | None = None):
-    """Mean normal and shear stress over a flank wear land of length VB (Smithey et al. 2001):
-    plastic (sigma_0, tau_0) up to VB*, then decaying with the square of the distance to the end
-    of the land, whose mean is one third. Works element-wise on arrays."""
+    """Mean normal and shear stress over a flank wear land of length VB (Waldorf 1999; Smithey, Kapoor & DeVor
+    2000, 2001): below the critical land VB* the land is in elastic contact, the stresses falling with the square
+    of the distance from sigma_0, tau_0 at the edge to zero at the land end (mean one third); plastic flow starts
+    at VB*, and beyond it a plastic region of width VB - VB* at sigma_0, tau_0 precedes an elastic region of the
+    fixed width VB*. Works element-wise on arrays."""
     vb_star = P.number(P.CONTACT, "flank_plastic_land_m") if VB_star_m is None else float(VB_star_m)
     vb = np.asarray(VB_m, dtype=float)
     safe = np.where(vb > 0.0, vb, 1.0)
-    plastic = np.minimum(vb, vb_star)
-    elastic = np.maximum(vb - vb_star, 0.0)
+    plastic = np.maximum(vb - vb_star, 0.0)
+    elastic = np.minimum(vb, vb_star)
     factor = np.where(vb > 0.0, (plastic + elastic / 3.0) / safe, 0.0)
     sigma = sigma0_Pa * factor
     tau = tau0_Pa * factor
@@ -170,6 +216,7 @@ def min_shear_speed() -> float:
 
 
 __all__ = ["min_chip_thickness", "contact_stresses", "edge_forces", "ploughing_forces", "indentation_forces",
+           "wedge_pressure_factor",
            "interference_area", "indentation_coefficient", "ploughing_shape", "flank_stresses",
            "flank_reference_stresses", "shear_angle_merchant", "shear_angle_lee_shaffer", "merchant_forces",
            "uses_indentation", "min_shear_speed", "pressure_factor"]

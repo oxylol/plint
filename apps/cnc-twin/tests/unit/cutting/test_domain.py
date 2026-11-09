@@ -81,3 +81,17 @@ def test_macro_step_publishes_coefficients_and_checkpoint_round_trip(run):
         if tc.table is not None:
             assert np.array_equal(back.tools[slot].table.coef, tc.table.coef)
     assert set(back.contacts) == set(state.cutting.contacts)
+
+
+def test_stale_ticks_of_a_barely_turning_spindle_stay_in_int64():
+    """One revolution plus one tooth period in base ticks; a spindle barely turning (the last steps of a run-down)
+    takes the stopped spindle's bound instead of a tick count beyond int64 (it stopped a batch run)."""
+    from types import SimpleNamespace
+    ctx = SimpleNamespace(tick_s=1e-6)
+    assert CuttingDomain._stale_ticks(ctx, 0.0, 4) == 1 << 60
+    assert CuttingDomain._stale_ticks(ctx, 1e-30, 4) == 1 << 60
+    assert CuttingDomain._stale_ticks(ctx, 5e-324, 4) == 1 << 60
+    w = 2.0 * math.pi * 100.0
+    assert abs(CuttingDomain._stale_ticks(ctx, w, 4) - 12500) <= 1
+    istep = np.zeros(4, np.int64)
+    istep[0] = CuttingDomain._stale_ticks(ctx, 1e-15, 2)      # assignable to the kernel's int64 step array

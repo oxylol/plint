@@ -801,6 +801,10 @@ def build_chuck(bc: BuildCtx, j: int, entry, item, T_H_D, label: str) -> DeviceO
         return out
     static = chuck_static_force(entry, item, out.notes)
     loss = 0.0 if collet else chuck_loss(item, bc.omega_rad_s, static, n_jaws, out.notes)
+    # the loss at the device's maximum speed (or 1000 rad/s): the scale of its speed dependence (the domain
+    # rebuilds the setup when the gripping force moved by speed_rebuild_rel of the static force since the build)
+    w_ref = P.num(item, "max_rad_s") or 1000.0
+    loss_ref = 0.0 if collet else chuck_loss(item, w_ref, static, n_jaws, [])
     dynamic = static + loss if inside else static - loss
     dynamic = max(dynamic, 0.0)
     mu = _jaw_friction(soft, "chuck_jaw_friction") if soft is not None and P.num(soft, "jaw_friction") is not None \
@@ -828,7 +832,8 @@ def build_chuck(bc: BuildCtx, j: int, entry, item, T_H_D, label: str) -> DeviceO
                                            locating=True))
     elif stop:
         out.notes.append(f"{ident}: the part reaches behind the chuck face: no axial stop at the jaw steps")
-    out.info.update({"static_force_N": static, "loss_N": loss, "gripping_force_N": dynamic, "jaws": n_jaws,
+    out.info.update({"static_force_N": static, "loss_N": loss, "loss_ref_N": loss_ref, "loss_ref_rad_s": w_ref,
+                     "gripping_force_N": dynamic, "jaws": n_jaws,
                      "grip_length_m": z_end - z_start, "grip_radius_m": radius, "inside": inside, "friction": mu,
                      "axis_H": (_to_H(T_H_D, [axis_p])[0], _dir_H(T_H_D, u)), "max_rad_s": P.num(item, "max_rad_s"),
                      "jaw_stiffness_N_per_m": k_jaw, "z_face_D": 0.0})

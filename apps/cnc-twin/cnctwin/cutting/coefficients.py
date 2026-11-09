@@ -30,7 +30,7 @@ from typing import Protocol
 
 import numpy as np
 
-from ..core.abi import EDGE_CHISEL, EDGE_MARGIN, CoeffTable
+from ..core.abi import EDGE_CHISEL, EDGE_MARGIN, EDGE_PERIPHERAL, CoeffTable
 from ..core.bus import ProcessCoefficients
 from ..units import REFERENCE_TEMP_K
 from .abi import (COL_EA, COL_ER, COL_ET, COL_FA, COL_FR, COL_FT, COL_PR, COL_PS, COL_RC, COL_SIG_RAKE, COL_TCHIP,
@@ -374,11 +374,21 @@ class MechanicsModel:
         return pmap
 
     def calibration(self, key, group):
-        cal = self._cal.get(key)
+        """The material's calibration for this pairing and process (cnctwin.mechanics.build_calibration). It depends
+        on the group only through the rake an entry without a stated reference rake takes, so it is cached by that."""
+        from ..mechanics.coefficients import select_entries, stated_rake
+        from ..mechanics.contact import uses_indentation
+        rake = float(group.rake_rad)
+        _, entries = select_entries(self.work, self.tool, self.process)
+        if all(stated_rake(e) is not None for e in entries):
+            ckey = None
+        else:
+            ckey = round(rake, 6) if not uses_indentation(EDGE_PERIPHERAL, rake) else 0.0
+        cal = self._cal.get(ckey)
         if cal is None:
             M = self._mech()
             cal = M.build_calibration(self.work, self.tool, group, self.process)
-            self._cal[key] = cal
+            self._cal[ckey] = cal
         return cal
 
     def rows(self, key: tuple, geom: RowGeometry, state: RowState, h_grid_m: np.ndarray,
@@ -397,7 +407,8 @@ class MechanicsModel:
         if provisional:
             pmap = pmap._replace(refine=None) if pmap is not None and pmap.refine is not None else pmap
             bue = bue._replace(refine=None) if bue is not None and bue.refine is not None else bue
-        cal = None if (geom.forming or geom.low_speed) else self.calibration(key, group)
+        # the calibration is a material response (flow stress, interface friction): every row but the forming lobes
+        cal = None if geom.forming else self.calibration(key, group)
         g = M.group_coefficients(self.work, self.tool, group, mstate, h_grid_m, pmap, bue_map=bue, calibration=cal)
         base = Rows.from_group(g, geom.edge_radius_m)
         if not geom.forming:
@@ -687,12 +698,14 @@ def coeff_table(pc: ProcessCoefficients) -> CoeffTable:
 
 
 def flank_stress(rows: Rows, VB_m: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Mean wear-land normal and shear stress (Smithey, Kapoor & DeVor 2001): plastic up to VB*, then
-    decaying with the square of the distance to the land end (mean one third)."""
+    """Mean wear-land normal and shear stress (Waldorf 1999; Smithey, Kapoor & DeVor 2000, 2001; as
+    cnctwin.mechanics.contact.flank_stresses): elastic contact below the critical land VB* (stresses falling with the
+    square of the distance from the edge values to zero at the land end, mean one third); beyond it a plastic region
+    of width VB - VB* at the edge values ahead of an elastic region of the fixed width VB*."""
     vb = np.asarray(VB_m, float)
     star = rows.flank_land_star_m if rows.flank_land_star_m > 0.0 else 1e-4
-    plastic = np.minimum(vb, star)
-    elastic = np.maximum(vb - star, 0.0)
+    plastic = np.maximum(vb - star, 0.0)
+    elastic = np.minimum(vb, star)
     with np.errstate(divide="ignore", invalid="ignore"):
         factor = np.where(vb > 0.0, (plastic + elastic / 3.0) / np.where(vb > 0.0, vb, 1.0), 0.0)
     return rows.flank_sigma0_Pa * factor, rows.flank_tau0_Pa * factor

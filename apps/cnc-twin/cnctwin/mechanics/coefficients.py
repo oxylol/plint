@@ -47,6 +47,7 @@ REGIME_PLOUGHING = 4
 REGIME_DATA = 5
 
 _SCALED = np.array(abi.SCALES_WITH_T1, dtype=np.int64)
+SHIFT_MARGIN_RAD = 0.05          # keeps a calibrated friction angle off the poles of the oblique force relations
 _DISCRETE = np.array(abi.DISCRETE_SLOTS, dtype=np.int64)
 
 
@@ -319,53 +320,65 @@ def lookup(pmap: abi.ProcessMap, t1_m, speed_m_s: float, tool_temp_K: float | No
 # ============================================================================ calibration
 @dataclass(frozen=True)
 class Calibration:
-    """Measured / predicted force factors of a pairing (see :func:`build_calibration`).
+    """Material response of a pairing fitted to its measured Kienzle or mechanistic data (see
+    :func:`build_calibration`) and applied through the model at any geometry.
 
-    ``scale[j, e, k]`` multiplies the model's total force component j (t, r, a) at the
-    calibration chip thickness ``h_nodes_m[k]`` and the reference speed ``speeds_m_s[e]``
-    (Kienzle); ``edge_scale[j, e]`` multiplies the edge part (mechanistic data: the shearing
-    part takes ``scale[j, e, 0]``). Outside the measured h and speed ranges the end factors
-    are held, so Oxley's prediction carries the dependence on speed, temperature, rake and wear
-    away from the calibration conditions."""
+    ``scale[e, k]`` is the flow-stress factor at the calibration chip thickness ``h_nodes_m[k]`` and the reference
+    speed ``speeds_m_s[e]``: measured / model cutting (tangential) force at the entry's reference geometry. It
+    multiplies every force of the model (shearing, edge, ploughing, indentation), so the model's own dependence on
+    rake, inclination, edge radius, speed, temperature and wear carries the measurement to other conditions.
+    ``friction_shift_rad[e, k]`` is added to the model's mean rake-face friction angle before the oblique
+    transformation: a measured thrust / cutting force ratio becomes an interface property (the friction angle), so
+    the thrust follows the target's rake through the force relations instead of a component factor formed at the
+    reference rake. ``edge_scale[j, e]`` (mechanistic data only: measured / model edge coefficient of component
+    j = t, r, a) replaces the flow-stress factor on the edge and ploughing forces; ``None`` for Kienzle data, whose
+    forces are totals. Outside the measured h and speed ranges the end values are held."""
 
     kind: str                            # kienzle | mechanistic | none
     speeds_m_s: np.ndarray               # [n_entry] ascending
     h_nodes_m: np.ndarray                # [n_h]
-    scale: np.ndarray                    # [3, n_entry, n_h]
-    edge_scale: np.ndarray               # [3, n_entry]
+    scale: np.ndarray                    # [n_entry, n_h]
+    friction_shift_rad: np.ndarray       # [n_entry, n_h]
+    edge_scale: np.ndarray | None = None  # [3, n_entry]
     clamped: bool = False
     sources: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
 
-    def factors(self, h_m: np.ndarray, speed_m_s: float) -> tuple[np.ndarray, np.ndarray]:
-        """(scale [3, n_h_query], edge scale [3]) at the query thicknesses and speed."""
-        h = np.atleast_1d(np.asarray(h_m, dtype=float))
+    def _weights(self, speed_m_s: float) -> list[tuple[int, float]]:
         n_e = self.speeds_m_s.shape[0]
         if n_e == 1:
-            weights = [(0, 1.0)]
-        else:
-            ls = math.log(max(speed_m_s, 1e-12))
-            grid = np.log(self.speeds_m_s)
-            if ls <= grid[0]:
-                weights = [(0, 1.0)]
-            elif ls >= grid[-1]:
-                weights = [(n_e - 1, 1.0)]
-            else:
-                e = int(np.searchsorted(grid, ls) - 1)
-                w = (ls - grid[e]) / (grid[e + 1] - grid[e])
-                weights = [(e, 1.0 - w), (e + 1, w)]
+            return [(0, 1.0)]
+        ls = math.log(max(speed_m_s, 1e-12))
+        grid = np.log(self.speeds_m_s)
+        if ls <= grid[0]:
+            return [(0, 1.0)]
+        if ls >= grid[-1]:
+            return [(n_e - 1, 1.0)]
+        e = int(np.searchsorted(grid, ls) - 1)
+        w = (ls - grid[e]) / (grid[e + 1] - grid[e])
+        return [(e, 1.0 - w), (e + 1, w)]
+
+    def factors(self, h_m, speed_m_s: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """(flow-stress factor [n], friction-angle shift [n] (rad), edge factor [3, n]) at the query thicknesses
+        and speed (linear in log h and log V between the calibration nodes, held outside)."""
+        h = np.atleast_1d(np.asarray(h_m, dtype=float))
         lh = np.log(np.maximum(h, 1e-300))
         nodes = np.log(self.h_nodes_m)
-        out = np.zeros((3, h.shape[0]))
-        edge = np.zeros(3)
-        for e, w in weights:
-            for j in range(3):
-                out[j] += w * np.interp(lh, nodes, self.scale[j, e])
-                edge[j] += w * self.edge_scale[j, e]
-        return out, edge
+        scale = np.zeros(h.shape[0])
+        shift = np.zeros(h.shape[0])
+        edge = np.zeros((3, h.shape[0]))
+        for e, w in self._weights(speed_m_s):
+            s_e = np.interp(lh, nodes, self.scale[e])
+            scale += w * s_e
+            shift += w * np.interp(lh, nodes, self.friction_shift_rad[e])
+            if self.edge_scale is None:
+                edge += w * s_e[None, :]
+            else:
+                edge += w * self.edge_scale[:, e][:, None]
+        return scale, shift, edge
 
 
-NO_CALIBRATION = Calibration("none", np.array([1.0]), np.array([1e-4]), np.ones((3, 1, 1)), np.ones((3, 1)))
+NO_CALIBRATION = Calibration("none", np.array([1.0]), np.array([1e-4]), np.ones((1, 1)), np.zeros((1, 1)))
 
 
 def _entry_score(entry, tool: ToolSide | None, process: str) -> int:
@@ -425,16 +438,68 @@ def _ref_h_range(entry) -> tuple[float, float]:
     return float(cp["default_cal_h_lo_m"]), float(cp["default_cal_h_hi_m"])
 
 
-def _model_totals(work, tool, group: EdgeGroup, state: SlowState, h_nodes: np.ndarray) -> np.ndarray:
-    """Uncalibrated total forces per unit width [3, n] (t, r, a) at h_nodes for one condition."""
-    pmap = build_process_map(work, tool, group.rake_rad, speed_grid_m_s=np.array([state.speed_m_s]),
-                             work_temp_K=state.work_temp_K, friction_factor=state.friction_factor,
-                             t1_grid_m=_calibration_t1_grid(h_nodes, work, group),
-                             tool_temp_grid_K=None if state.tool_temp_K is None else np.array([state.tool_temp_K]),
-                             adiabatic_tool=state.tool_temp_K is None)
-    gc = group_coefficients(work, tool, group, state, h_nodes, pmap)
-    return np.vstack([gc.Kt_Pa * h_nodes + gc.Kte_N_per_m, gc.Kr_Pa * h_nodes + gc.Kre_N_per_m,
-                      gc.Ka_Pa * h_nodes + gc.Kae_N_per_m])
+def stated_rake(entry) -> float | None:
+    """Normal rake of an entry's test as the data state it (calibration block, else reference rake), or None."""
+    cal = entry.calibration
+    rake = cal.rake_rad if cal.rake_rad is not None else (
+        entry.rake_ref_rad if isinstance(entry, KienzleEntry) else entry.rake_rad)
+    return None if rake is None else float(rake)
+
+
+def _ref_rake(entry, group: EdgeGroup) -> float:
+    """Normal rake of an entry's test: the stated one, else the group's own rake when that is a chip-forming rake (a
+    chisel's or other indentation rake falls back to 0, the neutral geometry of catalogue data: the reference test
+    cut a chip)."""
+    rake = stated_rake(entry)
+    if rake is not None:
+        return rake
+    return float(group.rake_rad) if not C.uses_indentation(EDGE_PERIPHERAL, group.rake_rad) else 0.0
+
+
+class _Reference:
+    """The model at a calibration entry's reference conditions: its force parts at the calibration nodes, from
+    which the total forces for any friction-angle shift follow (the reference test cut with an ordinary
+    chip-forming edge, so the group is a peripheral edge whatever the calibrated group is)."""
+
+    def __init__(self, work, tool, group: EdgeGroup, state: SlowState, h_nodes: np.ndarray):
+        self.h = contiguous(np.asarray(h_nodes, dtype=float), np.float64)
+        pmap = build_process_map(work, tool, group.rake_rad, speed_grid_m_s=np.array([state.speed_m_s]),
+                                 work_temp_K=state.work_temp_K, friction_factor=state.friction_factor,
+                                 t1_grid_m=_calibration_t1_grid(h_nodes, work, group),
+                                 tool_temp_grid_K=None if state.tool_temp_K is None else np.array([state.tool_temp_K]),
+                                 adiabatic_tool=state.tool_temp_K is None)
+        mu = effective_mu(work, tool, state.friction_factor)
+        h_min = C.min_chip_thickness(work, group.edge_radius_m)
+        k_ref = _reference_shear_flow_stress(work, pmap, h_min, state)
+        self.parts = _force_parts(work, group, state, self.h, pmap, None, mu, h_min, k_ref)
+        self.incl = group.incl_rad
+
+    def totals(self, shift_rad) -> np.ndarray:
+        """[3, n] model forces per unit width (t, r, a) with the friction angle shifted by ``shift_rad`` (scalar or
+        per node), uncalibrated otherwise."""
+        shift = np.broadcast_to(np.asarray(shift_rad, dtype=float), self.h.shape)
+        f_sh, ke, _ = _assembled_parts(self.parts, self.incl, shift)
+        return f_sh + ke[:, None]
+
+
+def _solve_shift(ratio_fn, target: float, bound: float) -> tuple[float, bool]:
+    """The friction-angle shift d in [-bound, bound] with ratio_fn(d) = target (bisection; the thrust / cutting
+    force ratio grows with the friction angle). Returns (d, clamped)."""
+    lo, hi = -bound, bound
+    r_lo, r_hi = ratio_fn(lo), ratio_fn(hi)
+    if not (math.isfinite(r_lo) and math.isfinite(r_hi)) or r_hi <= r_lo:
+        return 0.0, True
+    if target <= r_lo:
+        return lo, True
+    if target >= r_hi:
+        return hi, True
+    for _ in range(int(P.number(P.CALIBRATION, "cal_shift_bisections"))):
+        mid = 0.5 * (lo + hi)
+        if ratio_fn(mid) < target:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi), False
 
 
 def _calibration_t1_grid(h_nodes, work, group):
@@ -449,12 +514,19 @@ def _calibration_t1_grid(h_nodes, work, group):
 
 def build_calibration(work: WorkMaterial, tool: ToolSide | None, group: EdgeGroup, process: str = "turning", *,
                       tool_temp_ref_K: float | None = None) -> Calibration:
-    """Calibration of the Oxley prediction to the material's measured Kienzle or mechanistic data
-    for this tool class / coating / process (see :class:`Calibration`).
+    """Material response of the pairing (tool class / coating / process) fitted to the material's measured Kienzle
+    or mechanistic data (see :class:`Calibration`).
 
-    Reference conditions come from each entry's ``calibration`` block, else from its stated
-    reference speed and rake, else the group's own rake, the model default edge radius and
-    room temperature; the reference tool is taken at the workpiece temperature (short tests)."""
+    For each entry the model is run at the entry's reference conditions (its ``calibration`` block, else its stated
+    reference speed and rake (helix for mechanistic data), else the group's chip-forming rake, the default
+    calibration edge radius and room temperature; the tool at the workpiece temperature, a short test) with an
+    ordinary chip-forming edge. Kienzle data: a measured feed force (kf11) fixes the friction-angle shift per
+    calibration node (the model's feed / cutting ratio meets the measured one), then the flow-stress factor is the
+    measured / model cutting force; without one the shift is 0. Mechanistic data: the model's forces are fitted by
+    F = Kc h + Ke over the calibration range (as the measured coefficients were identified); the shift makes the
+    model's Krc / Ktc the measured one, the flow-stress factor is Ktc measured / model, and the edge factors are the
+    measured / model edge coefficients (the axial edge force takes the tangential factor). Factors are clamped to
+    [min_cal_scale, max_cal_scale], shifts to +-max_cal_friction_shift_rad; a clamp is reported."""
     if work.jc is None:
         return NO_CALIBRATION
     kind, entries = select_entries(work, tool, process)
@@ -463,64 +535,79 @@ def build_calibration(work: WorkMaterial, tool: ToolSide | None, group: EdgeGrou
     cp = P.get(P.CALIBRATION)
     lo_clamp = float(cp["min_cal_scale"])
     hi_clamp = float(cp["max_cal_scale"])
+    bound = float(cp["max_cal_friction_shift_rad"])
     n_nodes = int(cp["cal_h_nodes"])
     rows = []
+    clamped = False
     for entry in entries:
         cal = entry.calibration
-        rake = cal.rake_rad if cal.rake_rad is not None else (
-            entry.rake_ref_rad if isinstance(entry, KienzleEntry) else entry.rake_rad)
-        if rake is None:
-            rake = group.rake_rad
+        rake = _ref_rake(entry, group)
         radius = cal.edge_radius_m if cal.edge_radius_m is not None else float(cp["default_cal_edge_radius_m"])
         work_temp = cal.work_temp_K if cal.work_temp_K is not None else float(cp["default_cal_work_temp_K"])
         incl = (entry.helix_rad or 0.0) if isinstance(entry, MechanisticEntry) else 0.0
         speed = _ref_speed(entry)
         h_lo, h_hi = _ref_h_range(entry)
         nodes = np.exp(np.linspace(math.log(h_lo), math.log(h_hi), n_nodes))
-        ref_group = replace(group, rake_rad=float(rake), incl_rad=float(incl), edge_radius_m=float(radius))
+        ref_group = EdgeGroup(rake_rad=float(rake), incl_rad=float(incl), clearance_rad=group.clearance_rad,
+                              edge_radius_m=float(radius), kind=EDGE_PERIPHERAL)
         state = SlowState(speed_m_s=float(speed if speed is not None else 1.0),
                           tool_temp_K=None if tool is None else (tool_temp_ref_K or work_temp), work_temp_K=work_temp,
                           friction_factor=1.0)
-        model = _model_totals(work, tool, ref_group, state, nodes)
+        ref = _Reference(work, tool, ref_group, state, nodes)
+        edge = None
         if isinstance(entry, KienzleEntry):
-            meas = np.zeros_like(model)
-            meas[0] = entry.cutting_force_per_width(nodes)
-            feed = entry.feed_force_per_width(nodes)
-            passive = entry.passive_force_per_width(nodes)
-            ratio_t = meas[0] / model[0]
-            meas[1] = feed if feed is not None else model[1] * ratio_t
-            meas[2] = passive if passive is not None else model[2] * ratio_t
+            fc = entry.cutting_force_per_width(nodes)
+            ff = entry.feed_force_per_width(nodes)
+            shift = np.zeros(n_nodes)
+            if ff is not None:
+                for k in range(n_nodes):
+                    def ratio(d, k=k):
+                        f = ref.totals(np.full(n_nodes, d))
+                        return f[1, k] / f[0, k] if f[0, k] > 0.0 else math.nan
+                    shift[k], c = _solve_shift(ratio, ff[k] / fc[k], bound)
+                    clamped = clamped or c
+            model_t = ref.totals(shift)[0]
             with np.errstate(divide="ignore", invalid="ignore"):
-                scale = np.where(np.abs(model) > 0.0, meas / model, 1.0)
-            edge = scale[:, 0]
+                scale = np.where(model_t > 0.0, fc / model_t, 1.0)
         else:
-            # fit the model's totals by F = Kc h + Ke over the calibration range, compare per part
             A = np.vstack([nodes, np.ones_like(nodes)]).T
-            scale = np.ones((3, n_nodes))
-            edge = np.ones(3)
-            measured = ((entry.Ktc_Pa, entry.Kte_N_per_m), (entry.Krc_Pa, entry.Kre_N_per_m),
-                        (entry.Kac_Pa, entry.Kae_N_per_m))
-            for j in range(3):
-                kc_m, ke_m = np.linalg.lstsq(A, model[j], rcond=None)[0]
-                kc_meas, ke_meas = measured[j]
-                s_c = kc_meas / kc_m if abs(kc_m) > 0.0 else 1.0
-                s_e = ke_meas / ke_m if abs(ke_m) > 1e-9 * abs(kc_m) * h_hi else s_c
-                if not (lo_clamp <= s_e <= hi_clamp):
-                    s_e = s_c
-                scale[j, :] = s_c
-                edge[j] = s_e
-        rows.append((float(speed) if speed is not None else math.nan, nodes, scale, edge, entry.src))
-    clamped = any(np.any((r[2] < lo_clamp) | (r[2] > hi_clamp)) for r in rows)
+
+            def fit(d):
+                f = ref.totals(np.full(n_nodes, d))
+                return np.array([np.linalg.lstsq(A, f[j], rcond=None)[0] for j in range(3)])     # [3, (Kc, Ke)]
+
+            d = 0.0
+            if entry.Ktc_Pa > 0.0:
+                def ratio(x):
+                    kc = fit(x)
+                    return kc[1, 0] / kc[0, 0] if kc[0, 0] > 0.0 else math.nan
+                d, c = _solve_shift(ratio, entry.Krc_Pa / entry.Ktc_Pa, bound)
+                clamped = clamped or c
+            coeff = fit(d)
+            s_c = entry.Ktc_Pa / coeff[0, 0] if coeff[0, 0] > 0.0 else 1.0
+            scale = np.full(n_nodes, s_c)
+            shift = np.full(n_nodes, d)
+            edge = np.full(3, s_c)
+            for j, ke_meas in ((0, entry.Kte_N_per_m), (1, entry.Kre_N_per_m)):
+                ke_m = coeff[j, 1]
+                if abs(ke_m) > 1e-9 * abs(coeff[0, 0]) * h_hi and ke_m > 0.0:
+                    s_e = ke_meas / ke_m
+                    if lo_clamp <= s_e <= hi_clamp:
+                        edge[j] = s_e
+            edge[2] = edge[0]
+        clamped = clamped or bool(np.any((scale < lo_clamp) | (scale > hi_clamp)))
+        rows.append((float(speed) if speed is not None else math.nan, nodes, np.clip(scale, lo_clamp, hi_clamp),
+                     shift, None if edge is None else np.clip(edge, lo_clamp, hi_clamp), entry.src))
     known = [r for r in rows if np.isfinite(r[0])]
     rows = sorted(known, key=lambda r: r[0]) if known else rows[:1]
     lo = min(r[1][0] for r in rows)
     hi = max(r[1][-1] for r in rows)
     nodes = np.exp(np.linspace(math.log(lo), math.log(hi), n_nodes))
-    scale = np.stack([np.clip(np.vstack([np.interp(np.log(nodes), np.log(r[1]), r[2][j]) for j in range(3)]),
-                              lo_clamp, hi_clamp) for r in rows], axis=1)
-    edge = np.clip(np.stack([r[3] for r in rows], axis=1), lo_clamp, hi_clamp)
+    scale = np.stack([np.interp(np.log(nodes), np.log(r[1]), r[2]) for r in rows])
+    shift = np.stack([np.interp(np.log(nodes), np.log(r[1]), r[3]) for r in rows])
+    edge = None if rows[0][4] is None else np.stack([r[4] for r in rows], axis=1)
     speeds = np.array([r[0] if np.isfinite(r[0]) else 1.0 for r in rows])
-    return Calibration(kind, speeds, nodes, scale, edge, clamped, tuple(r[4] for r in rows))
+    return Calibration(kind, speeds, nodes, scale, shift, edge, clamped, tuple(r[5] for r in rows))
 
 
 # ============================================================================ group coefficients
@@ -651,68 +738,35 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
         return _data_only(work, tool, group, state, h, mu, h_min, notes)
     if pmap is None:
         raise ValueError("a process map is required for a material with a flow-stress law")
-    ref = lookup(pmap, max(h_min, pmap.t1_grid_m[0]), state.speed_m_s, state.tool_temp_K)[0]
-    k_ref = ref[abi.OX_K_AB] if ref[abi.OX_K_AB] > 0.0 else _first_positive(pmap, abi.OX_K_AB)
+    k_ref = _reference_shear_flow_stress(work, pmap, h_min, state)
     if group.kind == EDGE_MARGIN:
         return _rubbing_group(work, tool, group, state, h, mu, h_min, k_ref, notes)
-    indentation_group = C.uses_indentation(group.kind, group.rake_rad)
-    t1 = np.maximum(h - (0.0 if indentation_group else h_min), 0.0)
-    rows = lookup(pmap, t1, state.speed_m_s, state.tool_temp_K)
-    rake_rows = np.full(n, float(pmap.context[abi.CTX_RAKE_RAD]))
-    if bue_map is not None and state.bue_height_m > 0.0:
-        rows_b = lookup(bue_map, t1, state.speed_m_s, state.tool_temp_K)
-        ratio = P.number(P.CONTACT, "bue_full_height_ratio")
-        w = np.clip(state.bue_height_m / (ratio * np.maximum(h, 1e-300)), 0.0, 1.0)
-        for q in range(abi.N_OUT):
-            if q in abi.DISCRETE_SLOTS:
-                rows[:, q] = np.where(w > 0.5, rows_b[:, q], rows[:, q])
-            else:
-                rows[:, q] = (1.0 - w) * rows[:, q] + w * rows_b[:, q]
-        rake_rows = (1.0 - w) * rake_rows + w * float(bue_map.context[abi.CTX_RAKE_RAD])
-        notes.append(f"BUE height {state.bue_height_m * 1e6:.1f} um: rake blended toward the BUE rake")
-    status = rows[:, abi.OX_STATUS]
-    shearing = (t1 > 0.0) & ((status == abi.STATUS_OXLEY) | (status == abi.STATUS_MERCHANT))
-    f_sh = _oblique_shearing_forces(rows, t1, shearing, rake_rows, group.incl_rad)
-    regime = np.where(shearing, np.where(status == abi.STATUS_OXLEY, REGIME_OXLEY, REGIME_MERCHANT),
-                      REGIME_NONE).astype(np.int32)
-    if indentation_group or np.any((t1 > 0.0) & ~shearing):
-        for k in range(n):
-            if indentation_group or (t1[k] > 0.0 and not shearing[k]):
-                f = C.indentation_forces(h[k], group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_ref, mu)
-                f_sh[:, k] = (f[abi.PL_FT], f[abi.PL_FR], f[abi.PL_FA])
-                regime[k] = REGIME_INDENTATION
-        if indentation_group:
-            notes.append("indentation/extrusion group (chisel edge or normal rake below the shear limit)")
-    if indentation_group or h_min <= 0.0 or group.edge_radius_m <= 0.0:
-        edge = np.zeros(abi.N_PL)
-    else:
-        edge = C.edge_forces(group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_ref, mu)
-    ke = np.array([edge[abi.PL_FT], edge[abi.PL_FR], edge[abi.PL_FA]])
-    below = h <= h_min
-    if np.any(below) and not indentation_group:
-        for k in np.nonzero(below)[0]:
-            f = C.ploughing_forces(h[k], group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_ref, mu)
-            f_sh[:, k] = (f[abi.PL_FT] - ke[0], f[abi.PL_FR] - ke[1], f[abi.PL_FA] - ke[2])
-            regime[k] = REGIME_PLOUGHING
-    total = f_sh + ke[:, None]
-    edge_part = np.broadcast_to(ke[:, None], total.shape).copy()
-    edge_part[:, h <= h_min] = total[:, h <= h_min]
+    parts = _force_parts(work, group, state, h, pmap, bue_map, mu, h_min, k_ref)
+    rows, t1, shearing, regime, edge = parts.rows, parts.t1, parts.shearing, parts.regime, parts.edge
+    if parts.bue_note:
+        notes.append(parts.bue_note)
+    if parts.indentation_group:
+        notes.append("indentation/extrusion group (chisel edge or normal rake below the shear limit)")
     cal_name = "none"
     clamped = False
     if calibration is not None and calibration.kind != "none":
-        scale, edge_scale = calibration.factors(h, state.speed_m_s)
-        if calibration.kind == "kienzle":
-            total = total * scale
-            edge_part = edge_part * scale
-            ke_cal = ke * scale[:, int(np.argmax(h > h_min))] if np.any(h > h_min) else ke * scale[:, -1]
-        else:
-            total = f_sh * scale + (ke * edge_scale)[:, None]
-            edge_part = np.where(h > h_min, (ke * edge_scale)[:, None], total)
-            ke_cal = ke * edge_scale
-        ke = ke_cal
+        scale, shift, edge_scale = calibration.factors(h, state.speed_m_s)
+        f_sh, ke, below = _assembled_parts(parts, group.incl_rad, shift)
+        above = ~below
+        total = np.where(above[None, :], scale[None, :] * f_sh + edge_scale * ke[:, None],
+                         edge_scale * (f_sh + ke[:, None]))
+        edge_part = np.where(above[None, :], edge_scale * ke[:, None], total)
+        edge_part[:, h <= h_min] = total[:, h <= h_min]
+        first = int(np.argmax(above)) if np.any(above) else n - 1
+        ke = edge_scale[:, first] * ke
         cal_name = calibration.kind
         clamped = calibration.clamped
         notes.append(f"calibrated to {calibration.kind} data ({', '.join(calibration.sources)})")
+    else:
+        f_sh, ke, _ = _assembled_parts(parts, group.incl_rad, None)
+        total = f_sh + ke[:, None]
+        edge_part = np.broadcast_to(ke[:, None], total.shape).copy()
+        edge_part[:, h <= h_min] = total[:, h <= h_min]
     with np.errstate(divide="ignore", invalid="ignore"):
         kt = np.where(h > 0.0, (total[0] - ke[0]) / h, 0.0)
         kr = np.where(h > 0.0, (total[1] - ke[1]) / h, 0.0)
@@ -728,6 +782,10 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
     t_int = np.where(shearing, rows[:, abi.OX_T_INT], state.work_temp_K)
     t_chip = np.where(shearing, rows[:, abi.OX_T_CHIP], state.work_temp_K)
     sigma0, tau0 = C.flank_reference_stresses(k_ref, mu)
+    if cal_name != "none":
+        # the land carries the ploughing stresses of the edge (Waldorf 1999): the edge factors of the calibration
+        sigma0 *= float(edge_scale[1, first])
+        tau0 *= float(edge_scale[0, first])
     s_mean, t_mean = C.flank_stresses(state.VB_m, sigma0, tau0)
     land = state.VB_m if state.VB_m > 0.0 else edge[abi.PL_CONTACT]
     tau_land = t_mean if state.VB_m > 0.0 else C.contact_stresses(k_ref, mu)[1]
@@ -762,18 +820,124 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
         calibration_clamped=clamped, notes=notes)
 
 
+def _reference_shear_flow_stress(work: WorkMaterial, pmap: abi.ProcessMap, h_min_m: float, state: SlowState) -> float:
+    """Shear flow stress of the material at the edge (the edge, ploughing, indentation and wear-land pressures):
+    the Johnson-Cook stress of the primary-zone state at t1 = h_min, with the strain limited to the saturation strain
+    of chip material (Nakayama 1962: the strength of chips does not rise further above a shear strain of about 2).
+    Where the map holds no chip-forming solution at that thickness (very negative rakes: a chisel edge, where the
+    fallback's shear angle of a few degrees means strains of 3-5), the Johnson-Cook extrapolation would otherwise
+    set the contact pressure of the indentation and edge models."""
+    ref = lookup(pmap, max(h_min_m, pmap.t1_grid_m[0]), state.speed_m_s, state.tool_temp_K)[0]
+    k_ab = ref[abi.OX_K_AB] if ref[abi.OX_K_AB] > 0.0 else _first_positive(pmap, abi.OX_K_AB)
+    jc = work.jc
+    eps = float(ref[abi.OX_EPS_AB])
+    cap = P.number(P.CONTACT, "edge_strain_cap")
+    if jc is None or not ref[abi.OX_K_AB] > 0.0 or not eps > cap:
+        return float(k_ab)
+    a, b, n = float(jc[abi.MAT_A_PA]), float(jc[abi.MAT_B_PA]), float(jc[abi.MAT_N])
+    return float(k_ab * (a + b * cap ** n) / (a + b * eps ** n))
+
+
+@dataclass
+class _Parts:
+    """Force parts of a group at its h nodes before calibration (see group_coefficients)."""
+
+    rows: np.ndarray
+    t1: np.ndarray
+    shearing: np.ndarray
+    rake_rows: np.ndarray
+    regime: np.ndarray
+    indent: np.ndarray                   # [3, n] indentation forces where indent_mask
+    indent_mask: np.ndarray
+    edge: np.ndarray                     # abi.PL_* vector at h_min
+    below: np.ndarray                    # ploughing nodes (h <= h_min, not an indentation group)
+    plough: np.ndarray                   # [3, n] ploughing forces at the below nodes
+    indentation_group: bool
+    bue_note: str = ""
+
+
+def _force_parts(work, group: EdgeGroup, state: SlowState, h: np.ndarray, pmap, bue_map, mu: float, h_min: float,
+                 k_ref: float) -> _Parts:
+    """Map rows at t1 = h - h_min (BUE-blended), the indentation, edge and ploughing forces of a group."""
+    n = h.shape[0]
+    indentation_group = C.uses_indentation(group.kind, group.rake_rad)
+    t1 = np.maximum(h - (0.0 if indentation_group else h_min), 0.0)
+    rows = lookup(pmap, t1, state.speed_m_s, state.tool_temp_K)
+    rake_rows = np.full(n, float(pmap.context[abi.CTX_RAKE_RAD]))
+    note = ""
+    if bue_map is not None and state.bue_height_m > 0.0:
+        rows_b = lookup(bue_map, t1, state.speed_m_s, state.tool_temp_K)
+        ratio = P.number(P.CONTACT, "bue_full_height_ratio")
+        w = np.clip(state.bue_height_m / (ratio * np.maximum(h, 1e-300)), 0.0, 1.0)
+        for q in range(abi.N_OUT):
+            if q in abi.DISCRETE_SLOTS:
+                rows[:, q] = np.where(w > 0.5, rows_b[:, q], rows[:, q])
+            else:
+                rows[:, q] = (1.0 - w) * rows[:, q] + w * rows_b[:, q]
+        rake_rows = (1.0 - w) * rake_rows + w * float(bue_map.context[abi.CTX_RAKE_RAD])
+        note = f"BUE height {state.bue_height_m * 1e6:.1f} um: rake blended toward the BUE rake"
+    status = rows[:, abi.OX_STATUS]
+    shearing = (t1 > 0.0) & ((status == abi.STATUS_OXLEY) | (status == abi.STATUS_MERCHANT))
+    regime = np.where(shearing, np.where(status == abi.STATUS_OXLEY, REGIME_OXLEY, REGIME_MERCHANT),
+                      REGIME_NONE).astype(np.int32)
+    indent = np.zeros((3, n))
+    indent_mask = np.zeros(n, bool)
+    if indentation_group or np.any((t1 > 0.0) & ~shearing):
+        for k in range(n):
+            if indentation_group or (t1[k] > 0.0 and not shearing[k]):
+                f = C.indentation_forces(h[k], group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_ref, mu)
+                indent[:, k] = (f[abi.PL_FT], f[abi.PL_FR], f[abi.PL_FA])
+                indent_mask[k] = True
+                regime[k] = REGIME_INDENTATION
+    if indentation_group or h_min <= 0.0 or group.edge_radius_m <= 0.0:
+        edge = np.zeros(abi.N_PL)
+    else:
+        edge = C.edge_forces(group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_ref, mu)
+    below = (h <= h_min) & (not indentation_group)
+    plough = np.zeros((3, n))
+    for k in np.nonzero(below)[0]:
+        f = C.ploughing_forces(h[k], group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_ref, mu)
+        plough[:, k] = (f[abi.PL_FT], f[abi.PL_FR], f[abi.PL_FA])
+        regime[k] = REGIME_PLOUGHING
+    return _Parts(rows, t1, shearing, rake_rows, regime, indent, indent_mask, edge, below, plough, indentation_group,
+                  note)
+
+
+def _assembled_parts(parts: _Parts, incl_rad: float, shift_rad) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """(shearing part f_sh [3, n], edge force ke [3], ploughing mask) with the model total f_sh + ke at every node:
+    shearing forces (friction angle shifted by ``shift_rad`` when given) or indentation forces above h_min, the
+    ploughing force minus ke below it."""
+    f_sh = _oblique_shearing_forces(parts.rows, parts.t1, parts.shearing, parts.rake_rows, incl_rad, shift_rad)
+    m = parts.indent_mask
+    f_sh[:, m] = parts.indent[:, m]
+    ke = np.array([parts.edge[abi.PL_FT], parts.edge[abi.PL_FR], parts.edge[abi.PL_FA]])
+    b = parts.below
+    f_sh[:, b] = parts.plough[:, b] - ke[:, None]
+    return f_sh, ke, b
+
+
 def _oblique_shearing_forces(rows: np.ndarray, t1: np.ndarray, shearing: np.ndarray, rake_rows: np.ndarray,
-                             incl_rad: float) -> np.ndarray:
+                             incl_rad: float, shift_rad=None) -> np.ndarray:
     """Shearing forces per unit width [3, n] in the (t, r, a) frame: the interpolated orthogonal
     forces of the map times the ratio of the oblique to the orthogonal Budak-Altintas-Armarego
-    coefficients at the row's (tau_s, phi, lambda, rake), so that i = 0 reproduces the map exactly."""
+    coefficients at the row's (tau_s, phi, lambda, rake), so that i = 0 reproduces the map exactly.
+    ``shift_rad`` (calibration, per node) is added to the friction angle of the oblique coefficients (the map's
+    orthogonal forces normalise them at the unshifted angle); the result stays within the force relations'
+    validity (phi + lambda - alpha below 90 deg, lambda - alpha above -90 deg)."""
     tau = np.where(shearing, rows[:, abi.OX_K_AB], 1.0)
     phi = np.where(shearing, rows[:, abi.OX_PHI], 0.5)
     lam = np.where(shearing, rows[:, abi.OX_LAMBDA], 0.5)
     out = np.zeros((3, t1.shape[0]))
     for k in np.nonzero(shearing)[0]:
         kt0, kr0, _ = O.cutting_coefficients(tau[k], phi[k], lam[k], float(rake_rows[k]), 0.0)
-        kti, kri, kai = O.cutting_coefficients(tau[k], phi[k], lam[k], float(rake_rows[k]), incl_rad)
+        lam_k = lam[k]
+        if shift_rad is not None:
+            d = float(np.asarray(shift_rad)[k])
+            if d != 0.0:
+                rk = float(rake_rows[k])
+                lam_k = min(max(lam[k] + d, rk - 0.5 * math.pi + SHIFT_MARGIN_RAD),
+                            0.5 * math.pi - phi[k] + rk - SHIFT_MARGIN_RAD)
+        kti, kri, kai = O.cutting_coefficients(tau[k], phi[k], lam_k, float(rake_rows[k]), incl_rad)
         fc = rows[k, abi.OX_FC]
         ft = rows[k, abi.OX_FT]
         s_t = fc / (float(kt0) * t1[k]) if float(kt0) != 0.0 else 1.0

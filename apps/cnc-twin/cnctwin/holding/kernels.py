@@ -11,10 +11,18 @@ reference in :mod:`cnctwin.holding.reference` that the tests compare against.
   bracket and bisection on "held"), the contact state there and the incipient motion (mechanism).
 * :func:`mechanism` - direction of the incipient motion with the critical contacts released.
 * :func:`ratchet_part` - stick-slip (or lift-off) of the part along its mechanism under the tick-wise mean
-  and tooth-harmonic of the demand (1 DOF, rigid body, Coulomb resistance or constant restoring force).
+  and tooth-period pulse of the demand (1 DOF, rigid body, Coulomb resistance or constant restoring force; the
+  slip no faster than the cut can push the part).
 * :func:`ratchet_tool` - slip and axial walk of a tool in a friction holder (2 DOF: circumferential and
   axial sliding at the shank, isotropic Coulomb friction circle with an implicit friction impulse, back stop
-  and walk limit).
+  and walk limit; the tool stalls at the spindle speed, the cutting torque cannot turn it backwards).
+* :func:`pulse_integral`, :func:`shape_mean` - the demand's tooth-period shape (abi.Wave) and its exact mean over
+  a sub-step (the kernels apply every sub-step's impulse exactly).
+
+Energy of a ratchet (out RP_IN_J / RT_IN_J, RP_LOSS_J / RT_WORK_J): the work the demand does on the motion equals
+the dissipation plus the change of the kinetic (and, lifting, potential) energy of the moving body exactly for
+the discrete scheme (constant acceleration within a sub-step for the part; the implicit friction impulse along
+the new velocity and trapezoidal positions for the tool): the run's ledger books both sides.
 
 Rules (architecture 5.5): explicit signatures, cache, nogil, error_model numpy, no fastmath, no parallel.
 """
@@ -28,8 +36,9 @@ from numba import njit, typeof, types
 
 from .abi import (CFG_K_REG, CFG_L_C, CFG_LAM_MAX, CFG_LAM_TOL, CFG_MAX_DISP, CFG_MAX_ITER, CFG_MAX_ROT, CFG_N_INC,
                   CFG_TOL, CFG_UTIL_EPS, INFO_ITER, INFO_RESIDUAL, INFO_SCALE_N, INFO_STATUS, KIND_BONDED, KIND_OFF,
-                  MODE_FRICTION, MODE_SEPARATION, RP_DQ, RP_MOVING_S, RP_Q_MAX, RP_WORK_J, RT_DX1, RT_DX2, RT_MOVING_S,
-                  RT_PEAK_RATIO, RT_WORK_J, ST_BONDED, ST_OFF, ST_OPEN, ST_SLIP, ST_STICK, STATUS_HELD, STATUS_MOVES,
+                  MODE_FRICTION, MODE_SEPARATION, RP_DQ, RP_IN_J, RP_LOSS_J, RP_MOVING_S, RP_Q_MAX, RP_WORK_J, RT_DX1,
+                  RT_DX2, RT_IN_J, RT_MOVING_S, RT_PEAK_RATIO, RT_WORK_J, ST_BONDED, ST_OFF, ST_OPEN, ST_SLIP, ST_STICK,
+                  STATUS_HELD, STATUS_MOVES,
                   STATUS_NOT_CONVERGED, Contacts, Wave, empty_contacts, empty_wave)
 
 F1 = types.float64[::1]
@@ -515,51 +524,125 @@ def sub_steps(rate_rad_s, dt_s, per_tooth, max_sub):
     return n
 
 
+@njit(F8(F8, F8), cache=True, nogil=True, error_model="numpy")
+def pulse_integral(phi, alpha):
+    """Integral of max(0, cos u - cos alpha) over u in [-pi, phi] (any real phi: the periodic continuation),
+    alpha in (0, pi]."""
+    c = math.cos(alpha)
+    full = 2.0 * (math.sin(alpha) - alpha * c)
+    k = math.floor((phi + math.pi) / (2.0 * math.pi))
+    x = phi - 2.0 * math.pi * k
+    if x < -alpha:
+        part = 0.0
+    elif x <= alpha:
+        part = math.sin(x) + math.sin(alpha) - (x + alpha) * c
+    else:
+        part = full
+    return k * full + part
+
+
+@njit(F8(F8, F8, F8, F8, F8), cache=True, nogil=True, error_model="numpy")
+def shape_mean(phi_a, phi_b, alpha, mean, amp):
+    """Mean of mean + amp g(u; alpha) over u in [phi_a, phi_b] (abi.Wave: g = (s - <s>) / (1 - <s>), s the pulse
+    of half-width alpha; alpha = pi gives g = cos u); the value at phi_a for an empty interval."""
+    a = alpha
+    if a > math.pi:
+        a = math.pi
+    if a < 1e-9:
+        a = 1e-9
+    c = math.cos(a)
+    one_c = 1.0 - c
+    ms = (math.sin(a) - a * c) / (math.pi * one_c)
+    d = phi_b - phi_a
+    if abs(d) > 1e-12:
+        s_bar = (pulse_integral(phi_b, a) - pulse_integral(phi_a, a)) / (d * one_c)
+    else:
+        cu = math.cos(phi_a)
+        s_bar = (cu - c) / one_c if cu > c else 0.0
+    return mean + amp * (s_bar - ms) / (1.0 - ms)
+
+
 @njit(types.void(WAVE_T, F8, F8, F8, I4, I8, I8, F1, F1), cache=True, nogil=True, error_model="numpy")
 def ratchet_part(wave, dt_tick, q_cap, mass, mode, per_tooth, max_sub, state, out):
-    """Generalized motion q of the part along its mechanism (mass ``mass``) under the demand
-    Q(t) = mean + amp cos(phase) of every tick against the resistance q_cap.
+    """Generalized motion q of the part along its mechanism (mass ``mass``) under the demand of the wave (abi.Wave,
+    component 0; its mean over each sub-step) against the resistance q_cap.
 
     MODE_FRICTION: Coulomb resistance, motion only forward (q grows), sticks when the velocity returns to
-    zero with Q <= q_cap. MODE_SEPARATION: constant restoring force q_cap and a seat at q = 0 (inelastic
-    landing): lift-off and tipping that come back. Constant acceleration within a sub-step (demand at the
-    sub-step midpoint), exact stop instants. state = [q, v] (persistent), out = RP_* of this call."""
+    zero with Q <= q_cap; the speed stays at most wave.v_max (the cut cannot push the part faster: the demand
+    above q_cap is then not transmitted). MODE_SEPARATION: constant restoring force q_cap and a seat at q = 0
+    (inelastic landing at its exact instant): lift-off and tipping that come back. Constant acceleration within a
+    sub-step, exact stop and landing instants. state = [q, v] (persistent), out = RP_* of this call: RP_IN_J the
+    demand's (transmitted) work, RP_LOSS_J friction work or landing losses; RP_IN_J = RP_LOSS_J + the change of
+    m v^2 / 2 (+ q_cap q when lifting) exactly."""
     q = state[0]
     v = state[1]
     q_start = q
     q_max = q
     work = 0.0
     moving = 0.0
+    w_in = 0.0
+    loss = 0.0
     n_ticks = wave.mean.shape[0]
     for k in range(n_ticks):
         rate = wave.rate_rad_s[k]
         amp = wave.amp[k, 0]
         mean = wave.mean[k, 0]
+        alpha = wave.alpha_rad[k, 0]
+        vmax = wave.v_max[k, 0]
         n_sub = sub_steps(rate if amp != 0.0 else 0.0, dt_tick, per_tooth, max_sub)
         h = dt_tick / n_sub
         for j in range(n_sub):
-            demand = mean + amp * math.cos(wave.phase0_rad[k] + rate * (j + 0.5) * h)
+            demand = mean
+            if amp != 0.0:
+                pa = wave.phase0_rad[k] + rate * j * h
+                demand = shape_mean(pa, pa + rate * h, alpha, mean, amp)
             a = (demand - q_cap) / mass
             q_old = q
             if mode == MODE_FRICTION:
                 if v <= 0.0:
                     v = 0.0
                     if a > 0.0:
-                        q += 0.5 * a * h * h
-                        v = a * h
+                        t1 = h if a * h <= vmax else vmax / a
+                        dq1 = 0.5 * a * t1 * t1
+                        dq2 = vmax * (h - t1) if t1 < h else 0.0
+                        q += dq1 + dq2
+                        v = a * t1
+                        w_in += demand * dq1 + q_cap * dq2
                         moving += h
                 else:
                     v_new = v + a * h
                     if v_new <= 0.0:
                         t_stop = -v / a
-                        q += v * t_stop + 0.5 * a * t_stop * t_stop
+                        dq = v * t_stop + 0.5 * a * t_stop * t_stop
+                        q += dq
                         v = 0.0
                         moving += t_stop
+                        w_in += demand * dq
+                    elif v_new > vmax:
+                        if v < vmax:
+                            # accelerates to the largest speed the demand can drive, then keeps it
+                            t1 = (vmax - v) / a
+                            dq1 = v * t1 + 0.5 * a * t1 * t1
+                            dq2 = vmax * (h - t1)
+                            q += dq1 + dq2
+                            w_in += demand * dq1 + q_cap * dq2
+                        else:
+                            # at or above that speed (it fell: the tool slowed): the constraint brings the part to
+                            # it within the sub-step, its reaction rr is the demand not transmitted
+                            dq = 0.5 * (v + vmax) * h
+                            rr = demand - q_cap - mass * (vmax - v) / h
+                            q += dq
+                            w_in += (demand - rr) * dq
+                        v = vmax
+                        moving += h
                     else:
-                        q += v * h + 0.5 * a * h * h
+                        dq = v * h + 0.5 * a * h * h
+                        q += dq
                         v = v_new
                         moving += h
+                        w_in += demand * dq
                 work += q_cap * (q - q_old)
+                loss += q_cap * (q - q_old)
             else:
                 if q <= 0.0 and v <= 0.0:
                     q = 0.0
@@ -568,14 +651,31 @@ def ratchet_part(wave, dt_tick, q_cap, mass, mode, per_tooth, max_sub, state, ou
                         q = 0.5 * a * h * h
                         v = a * h
                         moving += h
+                        w_in += demand * q
                 else:
                     q_new = q + v * h + 0.5 * a * h * h
                     v_new = v + a * h
                     moving += h
                     if q_new <= 0.0:
+                        # lands within the sub-step: the first root of q + v t + a t^2 / 2 = 0
+                        if a != 0.0:
+                            disc = math.sqrt(max(v * v - 2.0 * a * q, 0.0))
+                            t1 = (-v - disc) / a
+                            t2 = (-v + disc) / a
+                            t_l = h
+                            if 0.0 <= t1 <= h:
+                                t_l = t1
+                            if 0.0 <= t2 <= h and t2 < t_l:
+                                t_l = t2
+                        else:
+                            t_l = -q / v if v < 0.0 else h
+                        v_l = v + a * t_l
+                        w_in += demand * (-q)
+                        loss += 0.5 * mass * v_l * v_l
                         q = 0.0
                         v = 0.0
                     else:
+                        w_in += demand * (q_new - q)
                         q = q_new
                         v = v_new
                 work += q_cap * abs(q - q_old)
@@ -587,6 +687,8 @@ def ratchet_part(wave, dt_tick, q_cap, mass, mode, per_tooth, max_sub, state, ou
     out[RP_Q_MAX] = q_max
     out[RP_WORK_J] = work
     out[RP_MOVING_S] = moving
+    out[RP_IN_J] = w_in
+    out[RP_LOSS_J] = loss
 
 
 @njit(F8(F8, F8, F8, F8, F8), cache=True, nogil=True, error_model="numpy")
@@ -632,16 +734,20 @@ def implicit_slip(p1, p2, m1, m2, impulse):
 def ratchet_tool(wave, dt_tick, c_s, c_k, m1, m2, stop, x2_limit, per_tooth, max_sub, state, out):
     """Slip of a tool in a friction holder: x1 circumferential sliding at the shank radius (> 0: the tool lags
     the spindle), x2 axial walk out of the holder (> 0: the tool gets longer), equivalent masses m1 = J / r^2
-    and m2 = m. The demand D = (torque / r, axial pull) of every tick is mean + amp cos(phase); isotropic
-    Coulomb friction with static capacity c_s and kinetic c_k (a circle in (D1, D2)).
+    and m2 = m. The demand D = (torque / r, axial pull) of every tick is the wave's (abi.Wave; its mean over each
+    sub-step); isotropic Coulomb friction with static capacity c_s and kinetic c_k (a circle in (D1, D2)).
 
     Each sub-step is implicit in the friction (backward Euler on the momentum p = M v + h D): the tool sticks
     when |p| <= h c (static when it was at rest, kinetic when it was sliding), else it slides with the friction
     impulse h c_k along its new velocity, v = (M + lambda I)^-1 p (:func:`implicit_slip`); positions by the
-    trapezoidal rule (exact for a constant force), the stopping instant of a slide
-    that sticks by the deceleration along its velocity. ``stop`` = 1: a back stop at x2 = 0 takes inward axial
-    demand; x2_limit: a positive stop on the walk (side-lock flats). state = [x1, x2, v1, v2] (persistent),
-    out = RT_* of this call."""
+    trapezoidal rule (exact for a constant force), the stopping instant of a slide that sticks by the
+    deceleration along its velocity (what is left of the velocity then is dissipated by the sticking contact).
+    The slip speed v1 stays at most wave.v_max[:, 0] (the spindle speed at the shank radius): the cutting torque
+    resists the tool's turning against the work and cannot turn it backwards, so a tool it overloads stalls (its
+    excess demand is then not transmitted). ``stop`` = 1: a back stop at x2 = 0 takes inward axial demand;
+    x2_limit: a positive stop on the walk (side-lock flats). state = [x1, x2, v1, v2] (persistent), out = RT_* of
+    this call: RT_IN_J the demand's transmitted work, RT_WORK_J the dissipation; RT_IN_J = RT_WORK_J + the
+    change of (m1 v1^2 + m2 v2^2) / 2 exactly (the stops' reactions excepted)."""
     x1 = state[0]
     x2 = state[1]
     v1 = state[2]
@@ -651,16 +757,22 @@ def ratchet_tool(wave, dt_tick, c_s, c_k, m1, m2, stop, x2_limit, per_tooth, max
     work = 0.0
     moving = 0.0
     peak = 0.0
+    w_in = 0.0
     n_ticks = wave.mean.shape[0]
     for k in range(n_ticks):
         rate = wave.rate_rad_s[k]
         has_amp = wave.amp[k, 0] != 0.0 or wave.amp[k, 1] != 0.0
         n_sub = sub_steps(rate if has_amp else 0.0, dt_tick, per_tooth, max_sub)
         h = dt_tick / n_sub
+        vmax1 = wave.v_max[k, 0]
         for j in range(n_sub):
-            c = math.cos(wave.phase0_rad[k] + rate * (j + 0.5) * h)
-            d1 = wave.mean[k, 0] + wave.amp[k, 0] * c
-            d2 = wave.mean[k, 1] + wave.amp[k, 1] * c
+            d1 = wave.mean[k, 0]
+            d2 = wave.mean[k, 1]
+            if has_amp:
+                pa = wave.phase0_rad[k] + rate * j * h
+                pb = pa + rate * h
+                d1 = shape_mean(pa, pb, wave.alpha_rad[k, 0], wave.mean[k, 0], wave.amp[k, 0])
+                d2 = shape_mean(pa, pb, wave.alpha_rad[k, 1], wave.mean[k, 1], wave.amp[k, 1])
             if stop == 1 and x2 <= 0.0 and v2 <= 0.0 and d2 < 0.0:
                 d2 = 0.0
             if x2 >= x2_limit and v2 >= 0.0 and d2 > 0.0:
@@ -687,7 +799,10 @@ def ratchet_tool(wave, dt_tick, c_s, c_k, m1, m2, stop, x2_limit, per_tooth, max
                     s2 = v2 * t_s + 0.5 * a2 * t_s * t_s
                     x1 += s1
                     x2 += s2
-                    work += c_k * math.sqrt(s1 * s1 + s2 * s2)
+                    r1 = v1 + a1 * t_s
+                    r2 = v2 + a2 * t_s
+                    w_in += d1 * s1 + d2 * s2
+                    work += c_k * (e1 * s1 + e2 * s2) + 0.5 * (m1 * r1 * r1 + m2 * r2 * r2)
                     moving += t_s
                 v1 = 0.0
                 v2 = 0.0
@@ -695,21 +810,40 @@ def ratchet_tool(wave, dt_tick, c_s, c_k, m1, m2, stop, x2_limit, per_tooth, max
                 lam = implicit_slip(p1, p2, m1, m2, h * c_k)
                 n1 = p1 / (m1 + lam)
                 n2 = p2 / (m2 + lam)
+                vn = math.sqrt(n1 * n1 + n2 * n2)
+                e1 = n1 / vn
+                e2 = n2 / vn
+                r1 = 0.0
+                if n1 > vmax1:
+                    # stalled: the excess of the demand is not transmitted (reaction r1 per unit time)
+                    r1 = m1 * (n1 - vmax1) / h
+                    n1 = vmax1
                 s1 = 0.5 * (v1 + n1) * h
                 s2 = 0.5 * (v2 + n2) * h
                 x1 += s1
                 x2 += s2
                 v1 = n1
                 v2 = n2
-                work += c_k * math.sqrt(s1 * s1 + s2 * s2)
+                w_in += (d1 - r1) * s1 + d2 * s2
+                work += c_k * (e1 * s1 + e2 * s2)
                 moving += h
+            # the stops: a position correction dlt counts the demand's work over it on both sides (it does not
+            # happen), the speed a stop takes is dissipated in it
             if stop == 1 and x2 < 0.0:
+                dlt = -x2
                 x2 = 0.0
+                w_in += d2 * dlt
+                work += d2 * dlt
                 if v2 < 0.0:
+                    work += 0.5 * m2 * v2 * v2
                     v2 = 0.0
             if x2 > x2_limit:
+                dlt = x2_limit - x2
                 x2 = x2_limit
+                w_in += d2 * dlt
+                work += d2 * dlt
                 if v2 > 0.0:
+                    work += 0.5 * m2 * v2 * v2
                     v2 = 0.0
     state[0] = x1
     state[1] = x2
@@ -720,10 +854,11 @@ def ratchet_tool(wave, dt_tick, c_s, c_k, m1, m2, stop, x2_limit, per_tooth, max
     out[RT_WORK_J] = work
     out[RT_MOVING_S] = moving
     out[RT_PEAK_RATIO] = peak
+    out[RT_IN_J] = w_in
 
 
 KERNELS = (solve6, scaled_norm, contact_eval, newton_path, solve_equilibrium, mechanism, capacity, sub_steps,
-           ratchet_part, implicit_slip, ratchet_tool)
+           pulse_integral, shape_mean, ratchet_part, implicit_slip, ratchet_tool)
 
 __all__ = ["solve6", "scaled_norm", "contact_eval", "newton_path", "solve_equilibrium", "mechanism", "capacity", "sub_steps",
-           "ratchet_part", "implicit_slip", "ratchet_tool", "KERNELS", "CONTACTS_T", "WAVE_T", "example_contacts", "example_wave"]
+           "pulse_integral", "shape_mean", "ratchet_part", "implicit_slip", "ratchet_tool", "KERNELS", "CONTACTS_T", "WAVE_T", "example_contacts", "example_wave"]

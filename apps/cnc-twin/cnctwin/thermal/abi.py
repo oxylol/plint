@@ -180,6 +180,12 @@ class EdgeOutput(NamedTuple):
     peak_q: np.ndarray         # [nt, ne, nq] cutting-edge temperature (K)
     flank_q: np.ndarray        # [nt, ne, nq] mean flank-contact temperature (K)
     amp: np.ndarray            # [nt, ne] cycle amplitude at the cutting edge (K)
+    # the contact means when the edge enters the cut (K; deviation mode: their deviation from the cycle mean):
+    # what is left of the earlier engagements' heat on the body temperature, without the rise the engagement's own
+    # heat makes while it lasts (continuous contact: the body temperature) - the background temperature of the
+    # stationary-source partition that cnctwin.mechanics evaluates inside ProcessCoefficients
+    rake_entry: np.ndarray     # [nt, ne]
+    flank_entry: np.ndarray    # [nt, ne]
 
 
 # EdgeInput.scal[2]: what edge_temperatures returns
@@ -308,7 +314,7 @@ def field_mesh_sample() -> FieldMesh:
 
 
 def new_edge_output(shape: tuple[int, int], nq: int) -> EdgeOutput:
-    return EdgeOutput(f64(shape + (nq,)), f64(shape + (nq,)), f64(shape + (nq,)), f64(shape))
+    return EdgeOutput(f64(shape + (nq,)), f64(shape + (nq,)), f64(shape + (nq,)), f64(shape), f64(shape), f64(shape))
 
 
 def sample_types():

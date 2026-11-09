@@ -38,6 +38,8 @@ from .abi import (ALARM_FOLLOWING_ERROR, ALARM_OVERTRAVEL_NEG, ALARM_OVERTRAVEL_
                   empty_spindle_state)
 
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
+# no reference counting in fk_poses (it allocates nothing: every array is an argument; removal.nbt RAW)
+RAW = dict(OPTS, _nrt=False)
 
 CHAIN_T = typeof(empty_chain())
 SERVO_T = typeof(empty_servo())
@@ -241,25 +243,211 @@ def chain_pose(chain, p, c, q, zero_link, out, work):
         mul4(work[3], work[0], out)
 
 
-@njit(types.void(CHAIN_T, i8, F1, F3, F3), **OPTS)
+@njit(types.void(CHAIN_T, i8, F1, F3, F3), **RAW)
 def fk_poses(chain, p, q, out, work):
-    """FK of path p: out[FK_*] (4x4 poses). work: scratch [>= 6, 4, 4]."""
-    chain_pose(chain, p, 1, q, -1, out[FK_M_N], work)
-    mul4(out[FK_M_N], chain.pose_N_T0[p], out[FK_M_T0])
-    chain_pose(chain, p, 0, q, -1, out[FK_M_F], work)
-    mul4(out[FK_M_F], chain.pose_F_W[p], out[FK_M_W])
+    """FK of path p: out[FK_*] (4x4 poses). work: scratch [>= 6, 4, 4].
+
+    The poses of chain_pose / link_motion / mul4 / inv4, bit for bit (the same operations in the same order,
+    written out in this one function): it runs twice per L0 step in the hot loop, where each call of a helper
+    (an array descriptor copy and a reference count per array argument) cost more than its arithmetic; compiled
+    without reference counting (it allocates nothing)."""
+    lnk = work[0]
+    rot = work[1]
+    tmp = work[2]
+    prv = work[3]
     zl = chain.work_spindle_link[p]
-    if zl >= 0:
-        chain_pose(chain, p, 0, q, zl, work[4], work)
-        mul4(work[4], chain.pose_F_W[p], out[FK_M_W0])
-    else:
-        copy4(out[FK_M_W], out[FK_M_W0])
+    for sel in range(3):
+        if sel == 2 and zl < 0:
+            break
+        c = 1 if sel == 0 else 0
+        zero_link = -1 if sel < 2 else zl
+        dst = out[FK_M_N] if sel == 0 else (out[FK_M_F] if sel == 1 else work[4])
+        # ------------------------------------------------ chain_pose: dst = product of the link transforms
+        for a in range(4):
+            for b in range(4):
+                dst[a, b] = 1.0 if a == b else 0.0
+        for i in range(chain.n_links[p, c]):
+            # ------------------------------------------ link_motion into lnk (rot, tmp scratch)
+            kind = chain.kind[p, c, i]
+            for a in range(4):
+                for b in range(4):
+                    lnk[a, b] = 1.0 if a == b else 0.0
+            qv = 0.0
+            if kind == LINK_LINEAR or kind == LINK_ROTARY:
+                ax = chain.axis[p, c, i]
+                if ax >= 0 and i != zero_link:
+                    qv = q[ax]
+                d = chain.direction[p, c, i]
+                if kind == LINK_LINEAR:
+                    lnk[0, 3] = d[0] * qv
+                    lnk[1, 3] = d[1] * qv
+                    lnk[2, 3] = d[2] * qv
+                else:
+                    cq = math.cos(qv)
+                    sq = math.sin(qv)
+                    t = 1.0 - cq
+                    x = d[0]
+                    y = d[1]
+                    z = d[2]
+                    rot[0, 0] = cq + x * x * t
+                    rot[0, 1] = x * y * t - z * sq
+                    rot[0, 2] = x * z * t + y * sq
+                    rot[1, 0] = y * x * t + z * sq
+                    rot[1, 1] = cq + y * y * t
+                    rot[1, 2] = y * z * t - x * sq
+                    rot[2, 0] = z * x * t - y * sq
+                    rot[2, 1] = z * y * t + x * sq
+                    rot[2, 2] = cq + z * z * t
+                    pt = chain.point[p, c, i]
+                    for r in range(3):
+                        for k in range(3):
+                            lnk[r, k] = rot[r, k]
+                        lnk[r, 3] = pt[r] - (rot[r, 0] * pt[0] + rot[r, 1] * pt[1] + rot[r, 2] * pt[2])
+            e0 = chain.err_const[p, c, i, 0]
+            e1 = chain.err_const[p, c, i, 1]
+            e2 = chain.err_const[p, c, i, 2]
+            e3 = chain.err_const[p, c, i, 3]
+            e4 = chain.err_const[p, c, i, 4]
+            e5 = chain.err_const[p, c, i, 5]
+            if kind == LINK_LINEAR or kind == LINK_ROTARY:
+                xi = (qv - chain.err_lo[p, c, i]) / chain.err_span[p, c, i]
+                if xi < 0.0:
+                    xi = 0.0
+                elif xi > 1.0:
+                    xi = 1.0
+                poly = chain.err_poly[p, c, i]
+                e0 += poly[0, 0] + xi * (poly[0, 1] + xi * poly[0, 2])
+                e1 += poly[1, 0] + xi * (poly[1, 1] + xi * poly[1, 2])
+                e2 += poly[2, 0] + xi * (poly[2, 1] + xi * poly[2, 2])
+                e3 += poly[3, 0] + xi * (poly[3, 1] + xi * poly[3, 2])
+                e4 += poly[4, 0] + xi * (poly[4, 1] + xi * poly[4, 2])
+                e5 += poly[5, 0] + xi * (poly[5, 1] + xi * poly[5, 2])
+                if kind == LINK_LINEAR:
+                    grow = chain.strain[p, c, i] * (qv - chain.strain_ref[p, c, i])
+                    d = chain.direction[p, c, i]
+                    e0 += d[0] * grow
+                    e1 += d[1] * grow
+                    e2 += d[2] * grow
+            if e0 != 0.0 or e1 != 0.0 or e2 != 0.0 or e3 != 0.0 or e4 != 0.0 or e5 != 0.0:
+                for a in range(4):
+                    for b in range(4):
+                        tmp[a, b] = 1.0 if a == b else 0.0
+                angle = math.sqrt(e3 * e3 + e4 * e4 + e5 * e5)
+                if angle < 1e-300:
+                    for a in range(3):
+                        for b in range(3):
+                            tmp[a, b] = 1.0 if a == b else 0.0
+                else:
+                    cq = math.cos(angle)
+                    sq = math.sin(angle)
+                    t = 1.0 - cq
+                    x = e3 / angle
+                    y = e4 / angle
+                    z = e5 / angle
+                    tmp[0, 0] = cq + x * x * t
+                    tmp[0, 1] = x * y * t - z * sq
+                    tmp[0, 2] = x * z * t + y * sq
+                    tmp[1, 0] = y * x * t + z * sq
+                    tmp[1, 1] = cq + y * y * t
+                    tmp[1, 2] = y * z * t - x * sq
+                    tmp[2, 0] = z * x * t - y * sq
+                    tmp[2, 1] = z * y * t + x * sq
+                    tmp[2, 2] = cq + z * z * t
+                tmp[0, 3] = e0
+                tmp[1, 3] = e1
+                tmp[2, 3] = e2
+                # lnk = lnk @ tmp (copy4 to rot, mul4)
+                for a in range(4):
+                    for b in range(4):
+                        rot[a, b] = lnk[a, b]
+                for a in range(3):
+                    for b in range(4):
+                        lnk[a, b] = (rot[a, 0] * tmp[0, b] + rot[a, 1] * tmp[1, b] + rot[a, 2] * tmp[2, b]
+                                     + (rot[a, 3] if b == 3 else 0.0))
+                lnk[3, 0] = 0.0
+                lnk[3, 1] = 0.0
+                lnk[3, 2] = 0.0
+                lnk[3, 3] = 1.0
+            # lnk = lnk @ fixed
+            fx = chain.fixed[p, c, i]
+            for a in range(4):
+                for b in range(4):
+                    rot[a, b] = lnk[a, b]
+            for a in range(3):
+                for b in range(4):
+                    lnk[a, b] = (rot[a, 0] * fx[0, b] + rot[a, 1] * fx[1, b] + rot[a, 2] * fx[2, b]
+                                 + (rot[a, 3] if b == 3 else 0.0))
+            lnk[3, 0] = 0.0
+            lnk[3, 1] = 0.0
+            lnk[3, 2] = 0.0
+            lnk[3, 3] = 1.0
+            # ------------------------------------------ dst = dst @ lnk (copy4 to prv, mul4)
+            for a in range(4):
+                for b in range(4):
+                    prv[a, b] = dst[a, b]
+            for a in range(3):
+                for b in range(4):
+                    dst[a, b] = (prv[a, 0] * lnk[0, b] + prv[a, 1] * lnk[1, b] + prv[a, 2] * lnk[2, b]
+                                 + (prv[a, 3] if b == 3 else 0.0))
+            dst[3, 0] = 0.0
+            dst[3, 1] = 0.0
+            dst[3, 2] = 0.0
+            dst[3, 3] = 1.0
+        # ------------------------------------------------ the chain's end frame times its pose
+        if sel == 0:
+            m = chain.pose_N_T0[p]
+            res = out[FK_M_T0]
+        elif sel == 1:
+            m = chain.pose_F_W[p]
+            res = out[FK_M_W]
+        else:
+            m = chain.pose_F_W[p]
+            res = out[FK_M_W0]
+        for a in range(3):
+            for b in range(4):
+                res[a, b] = dst[a, 0] * m[0, b] + dst[a, 1] * m[1, b] + dst[a, 2] * m[2, b] + (dst[a, 3] if b == 3 else 0.0)
+        res[3, 0] = 0.0
+        res[3, 1] = 0.0
+        res[3, 2] = 0.0
+        res[3, 3] = 1.0
+    mw = out[FK_M_W]
+    mw0 = out[FK_M_W0]
+    if zl < 0:
+        for a in range(4):
+            for b in range(4):
+                mw0[a, b] = mw[a, b]
     # S_T0 = (M_W W_S)^-1 M_T0
-    mul4(out[FK_M_W], chain.pose_W_S[p], work[4])
-    inv4(work[4], work[5])
-    mul4(work[5], out[FK_M_T0], out[FK_S_T0])
-    inv4(out[FK_M_W0], work[5])
-    mul4(work[5], out[FK_M_T0], out[FK_W0_T0])
+    ws = chain.pose_W_S[p]
+    w4 = work[4]
+    w5 = work[5]
+    mt = out[FK_M_T0]
+    for a in range(3):
+        for b in range(4):
+            w4[a, b] = mw[a, 0] * ws[0, b] + mw[a, 1] * ws[1, b] + mw[a, 2] * ws[2, b] + (mw[a, 3] if b == 3 else 0.0)
+    w4[3, 0] = 0.0
+    w4[3, 1] = 0.0
+    w4[3, 2] = 0.0
+    w4[3, 3] = 1.0
+    for g in range(2):
+        src = w4 if g == 0 else mw0
+        dst = out[FK_S_T0] if g == 0 else out[FK_W0_T0]
+        # w5 = inverse of the rigid pose src
+        for a in range(3):
+            for b in range(3):
+                w5[a, b] = src[b, a]
+        for a in range(3):
+            w5[a, 3] = -(src[0, a] * src[0, 3] + src[1, a] * src[1, 3] + src[2, a] * src[2, 3])
+        w5[3, 0] = 0.0
+        w5[3, 1] = 0.0
+        w5[3, 2] = 0.0
+        w5[3, 3] = 1.0
+        for a in range(3):
+            for b in range(4):
+                dst[a, b] = w5[a, 0] * mt[0, b] + w5[a, 1] * mt[1, b] + w5[a, 2] * mt[2, b] + (w5[a, 3] if b == 3 else 0.0)
+        dst[3, 0] = 0.0
+        dst[3, 1] = 0.0
+        dst[3, 2] = 0.0
+        dst[3, 3] = 1.0
 
 
 @njit(types.void(CHAIN_T, i8, F1, F3, F3, F1), **OPTS)

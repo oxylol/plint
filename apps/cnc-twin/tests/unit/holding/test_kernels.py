@@ -322,3 +322,131 @@ def test_sub_steps_rules():
     assert K.sub_steps(2 * math.pi * 1000.0, 1e-3, 32, 2048) == 32
     assert K.sub_steps(2 * math.pi * 1e6, 1e-3, 32, 2048) == 2048
     assert REF.sub_steps_ref(2 * math.pi * 1000.0, 1e-3, 32, 2048) == 32
+
+
+# --------------------------------------------------------------------------- tooth-period pulse, speed bounds, energy
+def test_pulse_shape_mean_matches_quadrature_and_pulse_alpha_inverts_the_fraction():
+    """shape_mean (the exact mean of mean + amp g over a sub-step, abi.Wave) against adaptive quadrature of the
+    pulse; g has zero mean over a tooth period and its maximum 1; alpha = pi is the first harmonic (cos)."""
+    from scipy import integrate
+
+    def g(u, alpha):
+        c = math.cos(alpha)
+        s = max(0.0, math.cos(u) - c) / (1.0 - c)
+        ms = A.pulse_mean_fraction(alpha)
+        return (s - ms) / (1.0 - ms)
+    for alpha in (0.05, 0.4, 1.3, 2.7, math.pi):
+        for a, b in ((-0.3, 0.2), (1.0, 4.5), (-7.0, -6.1), (0.0, 2 * math.pi)):
+            ref = integrate.quad(lambda u: 2.0 + 3.0 * g(u, alpha), a, b, points=[-alpha, alpha], limit=400)[0] / (b - a)
+            assert K.shape_mean(a, b, alpha, 2.0, 3.0) == pytest.approx(ref, rel=1e-9, abs=1e-12)
+            assert REF.shape_mean_ref(a, b, alpha, 2.0, 3.0) == pytest.approx(K.shape_mean(a, b, alpha, 2.0, 3.0),
+                                                                             rel=1e-14, abs=1e-14)
+        assert K.shape_mean(0.0, 2 * math.pi, alpha, 0.0, 1.0) == pytest.approx(0.0, abs=1e-12)
+        assert K.shape_mean(0.0, 0.0, alpha, 0.0, 1.0) == pytest.approx(1.0, rel=1e-12)
+    assert K.shape_mean(0.3, 0.7, math.pi, 0.0, 1.0) == pytest.approx((math.sin(0.7) - math.sin(0.3)) / 0.4, rel=1e-12)
+    for f in (0.001, 0.05, 0.2, 0.45):
+        assert A.pulse_mean_fraction(A.pulse_alpha(f)) == pytest.approx(f, rel=1e-9)
+    assert A.pulse_alpha(0.7) == pytest.approx(math.pi)
+
+
+def _energy_closes(out_in, loss, ke0, ke1, pe=0.0):
+    scale = abs(out_in) + abs(loss) + abs(ke0) + abs(ke1) + abs(pe)
+    assert abs(out_in - (loss + ke1 - ke0 + pe)) <= 1e-12 * max(scale, 1e-300)
+
+
+def test_ratchets_close_their_energy_and_match_the_references_with_pulses_and_limits():
+    """The demand's transmitted work = dissipation + change of kinetic (and lift potential) energy, to round-off,
+    for pulse-shaped demands with speed limits; kernels and references agree."""
+    rng = np.random.default_rng(11)
+    for trial in range(6):
+        n = 8
+        wave = _wave(0.0, 0.0, rate=4 * 1047.2, n=n, dims=2)
+        wave.mean[:, 0] = rng.uniform(5e3, 2e4, n)
+        wave.mean[:, 1] = rng.uniform(-5e3, 1.5e4, n)
+        wave.amp[:, 0] = rng.uniform(0.0, 3e4, n)
+        wave.amp[:, 1] = rng.uniform(0.0, 2e4, n)
+        wave.alpha_rad[:, :] = rng.uniform(0.05, math.pi, (n, 1))
+        wave.v_max[:, 0] = rng.uniform(0.5, 6.0, n)
+        for stop, limit in ((1, 1e9), (1, 3e-5), (0, 1e9)):
+            state = np.zeros(4)
+            out = np.zeros(A.N_RT)
+            K.ratchet_tool(wave, 1e-3, 17000.0, 13600.0, 0.025, 0.05, stop, limit, 32, 2048, state, out)
+            ref_state, ref_out = REF.ratchet_tool_ref(wave, 1e-3, 17000.0, 13600.0, 0.025, 0.05, stop, limit, 32,
+                                                      2048, np.zeros(4))
+            np.testing.assert_allclose(state, ref_state, rtol=1e-11, atol=1e-15)
+            np.testing.assert_allclose(out, ref_out, rtol=1e-11, atol=1e-15)
+            ke1 = 0.5 * (0.025 * state[2] ** 2 + 0.05 * state[3] ** 2)
+            _energy_closes(out[A.RT_IN_J], out[A.RT_WORK_J], 0.0, ke1)
+            assert np.all(state[2] <= wave.v_max[-1, 0] + 1e-12)
+        for mode in (A.MODE_FRICTION, A.MODE_SEPARATION):
+            w1 = _wave(0.0, 0.0, rate=4 * 1047.2, n=n)
+            w1.mean[:, 0] = rng.uniform(40.0, 140.0, n)
+            w1.amp[:, 0] = rng.uniform(0.0, 120.0, n)
+            w1.alpha_rad[:, 0] = rng.uniform(0.05, math.pi, n)
+            w1.v_max[:, 0] = rng.uniform(1e-3, 0.05, n)
+            state = np.zeros(2)
+            out = np.zeros(A.N_RP)
+            K.ratchet_part(w1, 1e-3, 100.0, 1.5, mode, 32, 2048, state, out)
+            ref_state, ref_out = REF.ratchet_part_ref(w1, 1e-3, 100.0, 1.5, mode, 32, 2048, np.zeros(2))
+            np.testing.assert_allclose(state, ref_state, rtol=1e-11, atol=1e-18)
+            np.testing.assert_allclose(out, ref_out, rtol=1e-11, atol=1e-18)
+            pe = 100.0 * state[0] if mode == A.MODE_SEPARATION else 0.0
+            _energy_closes(out[A.RP_IN_J], out[A.RP_LOSS_J], 0.0, 0.5 * 1.5 * state[1] ** 2, pe)
+
+
+def test_overloaded_tool_stalls_instead_of_turning_backwards():
+    """A torque of twice the holder's capacity for a whole tick: free acceleration of the small tool inertia would
+    turn it ever faster backwards (m1 = J / r^2 = 0.025 kg: (34 - 13.6) kN / 0.025 kg over 1 ms is 816 m/s at the
+    shank); the cutting torque only resists the turning, so the slip speed stops at the spindle speed at the shank
+    (the tool stalls): the slip of the tick is at most |omega| r T."""
+    omega, r, T = 1047.2, 0.005, 1e-3
+    wave = _wave(0.0, 0.0, rate=4 * omega, n=1, dims=2)
+    wave.mean[0, 0] = 34000.0
+    unbounded = np.zeros(4)
+    out_u = np.zeros(A.N_RT)
+    K.ratchet_tool(wave, T, 17000.0, 13600.0, 0.025, 0.05, 1, 1e9, 32, 2048, unbounded, out_u)
+    wave.v_max[0, 0] = omega * r
+    state = np.zeros(4)
+    out = np.zeros(A.N_RT)
+    K.ratchet_tool(wave, T, 17000.0, 13600.0, 0.025, 0.05, 1, 1e9, 32, 2048, state, out)
+    assert state[2] == pytest.approx(omega * r, rel=1e-12)
+    assert out[A.RT_DX1] <= omega * r * T * (1.0 + 1e-12)
+    assert out_u[A.RT_DX1] > 50.0 * out[A.RT_DX1]
+    # the excess is not transmitted: the work taken from the cut is the dissipation plus the slip's kinetic energy
+    _energy_closes(out[A.RT_IN_J], out[A.RT_WORK_J], 0.0, 0.5 * 0.025 * state[2] ** 2)
+    assert out[A.RT_IN_J] < 34000.0 * out[A.RT_DX1]
+
+
+def test_a_narrow_load_pulse_slips_far_less_than_a_harmonic_of_the_same_peak():
+    """Mean 2 kN, peak 30 kN against a 15 kN capacity: as the first tooth harmonic (alpha = pi) the demand stays
+    above the capacity for a third of every tooth period; as the pulse its mean / peak calls for (a shock, 7 % of
+    the peak) it exceeds it only briefly, and the part ratchets a small fraction of the harmonic's slip."""
+    harmonic = _wave(2000.0, 28000.0, rate=4 * 1047.2, n=4)
+    pulse = _wave(2000.0, 28000.0, rate=4 * 1047.2, n=4)
+    pulse.alpha_rad[:, 0] = A.pulse_alpha(2000.0 / 30000.0)
+    slips = []
+    for w in (harmonic, pulse):
+        state = np.zeros(2)
+        out = np.zeros(A.N_RP)
+        K.ratchet_part(w, 1e-3, 15000.0, 0.8, A.MODE_FRICTION, 256, 1 << 16, state, out)
+        slips.append(out[A.RP_DQ])
+    assert slips[0] > 0.0 and slips[1] < 0.25 * slips[0]
+
+
+def test_part_pushed_by_a_sustained_overload_moves_no_faster_than_the_cut_can_follow():
+    """A mean load above the friction capacity (the old model accelerated the part freely: (130 - 100) N / 1.5 kg
+    = 20 m/s2 for 10 ms, 1 mm): with the cut's speed limit the part is pushed at most at that speed."""
+    w = _wave(130.0, 0.0, n=10)
+    free = np.zeros(2)
+    out_f = np.zeros(A.N_RP)
+    K.ratchet_part(w, 1e-3, 100.0, 1.5, A.MODE_FRICTION, 32, 2048, free, out_f)
+    assert out_f[A.RP_DQ] == pytest.approx(0.5 * 20.0 * 0.01 ** 2, rel=1e-9)
+    w.v_max[:, 0] = 0.02
+    state = np.zeros(2)
+    out = np.zeros(A.N_RP)
+    K.ratchet_part(w, 1e-3, 100.0, 1.5, A.MODE_FRICTION, 32, 2048, state, out)
+    assert state[1] == pytest.approx(0.02)
+    assert out[A.RP_DQ] <= 0.02 * 0.01 + 1e-15
+    t1 = 0.02 / 20.0
+    assert out[A.RP_DQ] == pytest.approx(0.5 * 20.0 * t1 * t1 + 0.02 * (0.01 - t1), rel=1e-9)
+    _energy_closes(out[A.RP_IN_J], out[A.RP_LOSS_J], 0.0, 0.5 * 1.5 * 0.02 ** 2)

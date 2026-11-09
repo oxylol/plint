@@ -647,13 +647,16 @@ class RemovalDomain:
 
     # ------------------------------------------------------------------ macro helpers
     def _loose(self, ctx, state, rs, w, frame, tick, force=False) -> None:
-        from .connect import release_loose
+        from .connect import release_loose_incremental
         from ..db.models import params
 
         wp = rs.workpieces[w]
         if not force and wp.field.info[A.FI_TOPO] <= 0:
             return
-        released, held, removed_q = release_loose(wp.field, wp.held_boxes)
+        # the operation's end labels the whole field (force); every macro step checks the changed region only while
+        # the material is known to be one component (connect.release_loose_incremental)
+        released, held, removed_q, wp.one_body, _local = release_loose_incremental(
+            wp.field, wp.held_boxes, wp.one_body and not force)
         if not released:
             return
         pr = params("removal")
@@ -691,6 +694,7 @@ class RemovalDomain:
             zhi = zlo + float(pf.geom[A.PG_NZ]) * float(pf.geom[A.PG_DZ])
         ev = event_buffer(16, A.EVENT_WIDTH)
         tick = int(state.clock.tick)
+        wp.one_body = False             # the rebuild may add material: the next connectivity check labels everything
         while True:
             status = rebuild_tridexel(wp.field, pf, 0, zlo, zhi, wp.target, rs.settings.gouge_tolerance_m, ev, tick,
                                       wp.next_sev, rs.scratch)
@@ -757,6 +761,7 @@ class RemovalDomain:
             if wp.polar is not None:
                 wp.polar = TR.polar_transfer(wp.polar, R, length)
             wp.field = new
+            wp.one_body = False
             wp.removed_q = [[0, 0, 0]] + [[0, 0, 0] for _ in range(FD.n_levels(new) - 1)]
             wp.held_boxes = self._held_from_setup(ctx.project, int(getattr(state.clock, "op_index", 0)) + 1)
             wp.target = self._target_after(ctx, new, T, wp)

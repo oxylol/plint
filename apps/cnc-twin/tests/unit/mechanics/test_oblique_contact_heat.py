@@ -117,15 +117,23 @@ def test_chisel_indentation_pushes_and_cuts():
 
 
 def test_flank_stresses():
+    # Waldorf 1999 / Smithey et al.: elastic land below VB* (quadratic decay from the edge values to the land end)
     s, t = C.flank_stresses(5e-5, 2.5e9, 5e8, 1e-4)
-    assert (s, t) == (2.5e9, 5e8)
+    x = np.linspace(0.0, 5e-5, 100001)
+    assert s == pytest.approx(np.trapezoid(2.5e9 * ((5e-5 - x) / 5e-5) ** 2, x) / 5e-5, rel=1e-6)
+    assert (s, t) == (pytest.approx(2.5e9 / 3), pytest.approx(5e8 / 3))
+    # beyond VB* a plastic region of width VB - VB* ahead of the elastic region of the fixed width VB*
     s, t = C.flank_stresses(3e-4, 2.5e9, 5e8, 1e-4)
-    assert s == pytest.approx(2.5e9 * (1e-4 + 2e-4 / 3) / 3e-4)
-    x = np.linspace(1e-4, 3e-4, 100001)
-    numeric = (1e-4 * 2.5e9 + np.trapezoid(2.5e9 * ((3e-4 - x) / 2e-4) ** 2, x)) / 3e-4
+    assert s == pytest.approx(2.5e9 * (2e-4 + 1e-4 / 3) / 3e-4)
+    x = np.linspace(2e-4, 3e-4, 100001)
+    numeric = (2e-4 * 2.5e9 + np.trapezoid(2.5e9 * ((3e-4 - x) / 1e-4) ** 2, x)) / 3e-4
     assert s == pytest.approx(numeric, rel=1e-6)
     arr_s, _ = C.flank_stresses(np.array([0.0, 5e-5, 3e-4]), 2.5e9, 5e8, 1e-4)
-    assert arr_s[0] == 0.0 and arr_s[1] == 2.5e9
+    assert arr_s[0] == 0.0 and arr_s[1] == pytest.approx(2.5e9 / 3)
+    # the land force sigma VB grows continuously and faster once plastic flow has started
+    vb = np.linspace(1e-6, 4e-4, 400)
+    force = C.flank_stresses(vb, 2.5e9, 5e8, 1e-4)[0] * vb
+    assert np.all(np.diff(force) > 0.0)
 
 
 def test_shear_angle_relations():
@@ -202,3 +210,37 @@ def test_tool_resistance_transient_cap(carbide):
     k = float(np.interp(600.0, carbide.k_T_K, carbide.k_W_mK))
     c = float(np.interp(600.0, carbide.cp_T_K, carbide.cp_J_kgK))
     assert short == pytest.approx(4 / 3 * math.sqrt(k / (carbide.rho_kg_m3 * c) * 1e-5 / math.pi) / k, rel=1e-12)
+
+
+def test_wedge_face_pressure():
+    """Hill, Lee & Tupper (1947): a face pushing material ahead of it at rake alpha < 0 carries 2 k (1 + psi) with
+    cos(2 theta - psi) = cos(psi) / (1 + sin(psi)), theta = 90 deg + alpha; the flat punch at alpha >= 0."""
+    assert C.wedge_pressure_factor(0.0) == pytest.approx(2.0 + math.pi)
+    assert C.wedge_pressure_factor(0.3) == pytest.approx(2.0 + math.pi)
+    rakes = np.radians(np.linspace(-85.0, -1.0, 60))
+    values = np.array([C.wedge_pressure_factor(float(a)) for a in rakes])
+    assert np.all(np.diff(values) > 0.0) and values[0] > 2.0 and values[-1] < 2.0 + math.pi
+    for rake in (-30.0, -54.0, -65.0):
+        f = C.wedge_pressure_factor(math.radians(rake))
+        theta = math.radians(90.0 + rake)
+        psi = 0.5 * f - 1.0
+        assert math.cos(2.0 * theta - psi) == pytest.approx(math.cos(psi) / (1.0 + math.sin(psi)), abs=1e-9)
+    assert C.wedge_pressure_factor(math.radians(-54.0)) == pytest.approx(2.81, abs=0.01)
+
+
+def test_indentation_face_carries_the_wedge_pressure():
+    k, mu, r, hm = 4e8, 0.5, 3e-6, 1e-6
+    rake = math.radians(-54.0)
+    f = C.indentation_forces(5e-5, r, hm, rake, 0.0, k, mu)
+    # the same contact at the flat-punch pressure everywhere (the former model) is larger by about the pressure ratio
+    p, tau = C.contact_stresses(k, mu)
+    flat = np.zeros(abi.N_PL)
+    from cnctwin.mechanics import kernels as K
+    K.edge_contact_forces(5e-5, r, hm, rake, 0.0, p, tau, flat)
+    ratio = C.wedge_pressure_factor(rake) / C.pressure_factor()
+    assert f[abi.PL_FR] < flat[abi.PL_FR]
+    assert f[abi.PL_FR] / flat[abi.PL_FR] == pytest.approx(ratio, rel=0.15)
+    # a positive rake keeps the flat punch
+    g = C.indentation_forces(5e-5, r, hm, math.radians(10.0), 0.0, k, mu)
+    K.edge_contact_forces(5e-5, r, hm, math.radians(10.0), 0.0, p, tau, flat)
+    assert np.allclose(g[:3], flat[:3])

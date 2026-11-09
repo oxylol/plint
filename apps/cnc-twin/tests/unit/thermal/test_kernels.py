@@ -206,6 +206,60 @@ def test_edge_kernel_matches_brute_force_superposition():
         assert out.amp[0, e] == pytest.approx(amp, rel=3e-3, abs=1e-9)
 
 
+def test_edge_kernel_entry_temperatures_are_the_background_of_the_partition():
+    """rake_entry / flank_entry (the coefficient pipeline's tool temperatures): the contact means at the end of the
+    cooling interval of an interrupted element (brute-force superposition), the body temperature of a continuous
+    one (its own steady rise is mechanics' stationary-source partition, not the background), and below every
+    in-cut temperature of the same element (the engagement's own rise is excluded)."""
+    resp = edge_response()
+    xi, _ = heating_phase_nodes(3)
+    shape = (1, 3)
+    inp = new_edge_input(shape, 3)
+    inp.xi[:] = xi
+    inp.scal[:] = [4, 3]
+    inp.mode[:] = [[EDGE_INTERRUPTED, EDGE_CONTINUOUS, 0]]
+    inp.q_r[:] = 3e7
+    inp.a_r[:] = 1.5e-4
+    inp.q_f[:] = 1e7
+    inp.a_f[:] = 4e-5
+    inp.b[:] = 2.5e-4
+    inp.t_h[:] = 1e-3
+    inp.period[:] = 6e-3
+    inp.n_cyc[:] = 40
+    inp.t_eng[:] = 0.02
+    inp.k[:] = 70.0
+    inp.alpha[:] = 2.3e-5
+    inp.wedge[:] = 1.2
+    inp.r_far[:] = 4e-3
+    inp.T_body[:] = 320.0
+    out = new_edge_output(shape, 3)
+    glx, glw = gauss_legendre(3)
+    K.edge_temperatures(inp, resp, glx, glw, out)
+    for e in range(3):
+        rake_in, flank_in = R.edge_entry_ref(int(inp.mode[0, e]), 3e7, 1.5e-4, 1e7, 4e-5, 2.5e-4, 1e-3, 6e-3, 40, 0.02,
+                                             70.0, 2.3e-5, 1.2, 4e-3, 320.0)
+        assert out.rake_entry[0, e] - 320 == pytest.approx(rake_in - 320, rel=3e-3, abs=1e-6)
+        assert out.flank_entry[0, e] - 320 == pytest.approx(flank_in - 320, rel=3e-3, abs=1e-6)
+    assert 320.0 < out.rake_entry[0, 0] < out.rake_q[0, 0].min()
+    assert out.flank_entry[0, 0] < out.flank_q[0, 0].min()
+    assert out.rake_entry[0, 1] == 320.0 and out.flank_entry[0, 1] == 320.0
+    assert out.rake_entry[0, 2] == 320.0
+    # deviation mode (the 3-D field holds the cycle mean): the entry's deviation, negative (the coldest phase)
+    inp = new_edge_input((1, 1), 3, 1)
+    inp.xi[:] = xi
+    inp.scal[0], inp.scal[1] = 4, 3
+    for name, value in (("mode", EDGE_INTERRUPTED), ("q_r", 3e7), ("a_r", 1.5e-4), ("q_f", 1e7), ("a_f", 4e-5),
+                        ("b", 2.5e-4), ("t_h", 1e-3), ("period", 6e-3), ("n_cyc", 40), ("k", 40.0), ("alpha", 1.2e-5),
+                        ("wedge", 1.2), ("r_far", 1e-3), ("T_body", 400.0)):
+        getattr(inp, name)[:] = value
+    dev = new_edge_output((1, 1), 3)
+    K.edge_temperatures(inp, resp, glx, glw, dev)
+    rake_in, flank_in = R.edge_deviation_entry_ref(3e7, 1.5e-4, 1e7, 4e-5, 2.5e-4, 1e-3, 6e-3, 40, 40.0, 1.2e-5, 1.2)
+    assert dev.rake_entry[0, 0] == pytest.approx(rake_in, rel=2e-3, abs=0.02)
+    assert dev.flank_entry[0, 0] == pytest.approx(flank_in, rel=2e-3, abs=0.02)
+    assert dev.rake_entry[0, 0] < 0.0 and dev.flank_entry[0, 0] < 0.0
+
+
 @pytest.mark.parametrize("v,x,t,w", [(0.0, 0.0, 0.01, 1e-3), (2.0, -5e-4, 0.05, 2e-3), (50.0, -2e-4, 0.01, 0.0),
                                      (0.02, 3e-3, 0.5, 4e-3)])
 def test_moving_source_matches_quadrature(v, x, t, w):

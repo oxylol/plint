@@ -113,9 +113,37 @@ of removed z-family quanta (the X and Y family sums are kept too). Tool axes in 
 use the same algebra.
 
 **Passes.** The hot pass walks the rays of the box (rejects: no segments; distance to the axis beyond
-R_max + max dr + slab spread; no material in the box range) and computes, quantises and subtracts;
-`post_pieces` books the pieces into the bricks (`bmat`, `bdirty`, `bconn`, `bver`), checks the target and
-the dead zone and accumulates the contact sums; events are written once per call.
+R_max + max dr + slab spread, decided without the square root except within 1e-12 of the bound; no material in
+the box range) and computes, quantises and subtracts; `post_pieces` books the pieces into the bricks (`bmat`,
+`bdirty`, `bconn`, `bver`), checks the target and the dead zone and accumulates the contact sums; events are
+written once per call. What each ray costs is limited to what can change it:
+
+* **slabs**: only the slabs that can reach the ray's material are evaluated. The call leaves the spread of the
+  slab axis points (|c_k - c_0|, so a slab's frame differs from slab 0's by at most that along the axis) and
+  the ray's material extent in the box range in the scratch (`FW_ENV`, read by `_env_ray` as `work[16:]`);
+  the ray's height along the axis over that extent (widened by a quantum and the spread) gives the slab
+  window by a search over the ascending slab heights (a guess from the mean height, then a walk), and a slab
+  is skipped when the ray's height over the box range misses it by more than 1e-10 m. Intervals that cannot
+  reach the ray's material change nothing, so the subtraction is that of all slabs (a full circle of 33-41
+  slabs per tooth collapses to one or two per ray);
+* **rays already clear**: a ray whose quantised intervals meet no material (the columns under the tool that
+  the previous teeth cut down to the floor) is left without loading or writing it;
+* **trims**: a ray of one inline segment that loses one end is written in place (the new end with the
+  pass's surface event id, as load / subtract / store would write it);
+* **booking**: pieces are booked in batches of 512 (they stay in the cache; the order of every sum is the
+  same); a piece within one brick updates it directly (the next piece strictly inside the same brick reuses
+  its index), and the brick indices come from a multiplication by the reciprocal with exact integer
+  corrections instead of integer divisions; the contact sums run in registers;
+* **box**: the envelope box takes, per axis, the extent of the slab axis points along it (their 3-D spread
+  only for the quick-reject radius), so the columns under the tool whose material ends at the envelope's
+  bottom fall outside it (the box contains the envelope; margin 1e-12 m);
+* **axis rays**: on a ray along an axis-aligned tool axis a cylinder piece is the test A0 <= R0^2 on the
+  slab's range (the branch of the quadratic that these coefficients take).
+
+Every field array, accumulator and event is bit-identical to the evaluation of every slab on every ray of the
+box (200 tooth passes of the slot and 120 of the pocket's helical entry, `tests/unit/gpu` parity of the GPU
+path, which compiles this kernel with its own interval lookup and needs `_env_ray` called with the box range
+for every candidate ray: the window is inside `_env_ray`, not in its arguments).
 
 **Events** (aggregated, one row per kind and call, `EV_*`, columns `EC_*`):
 * rapid into material (`SI_RAPID`: any removal during a rapid; volume and centroid);
@@ -174,6 +202,19 @@ sin phi y0)` (T0), once per tooth period:
    boundary that lies in the bracket, to `gate_tolerance_m` along the arc; bisection of the
    classification when no family brackets;
 4. intervals `[lo, hi]`, `lo in [0, 2 pi)`, `hi <= lo + 2 pi`; more than the capacity merge the smallest gap.
+
+Cost: a sample's lattice coordinates are computed once for the empty-brick test and the three families'
+interpolations (a horizontal circle, x0 and y0 without a z component, has one height for all its samples;
+such a circle beyond the outermost nodes is air without sampling). A sample of a horizontal circle of a tool
+along z whose four z columns each hold one segment ending at or below it, all farther than SPREAD_CELLS cells
+or all at the same height within that, is air without further work (the z family decides alone, or is valid
+with zero spread and D <= 0: what classify answers; the end-edge stations above a floor, the air behind the
+cut). Otherwise, after the family most aligned with the
+axis, the others are followed only while they can still change the choice: a valid family with zero endpoint
+spread decides at once (the choice is strict), a family stops at its first ray that shows it is invalid or
+cannot beat the best spread, and the smallest-spread choice among invalid families is evaluated in full only
+when none is valid. The refinement evaluates the families at the bracket's middle and ends from coordinates
+computed once. The intervals are those of the full classification, bit for bit.
 
 Error: planar walls and floors exact to the tolerance and the quantum (verified for walls at 0/15/30/45
 deg to the lattice, slots, plunges, ramps, a ball nose on an inclined plane: test_04); curved walls `a^2
@@ -237,9 +278,24 @@ workholding contact boxes of the setup; without any, the largest component is he
 centroid and box measured on the same columns, then removed from every ray of every level. A body below
 `slug_max_cube_edge_m^3` (12.6 mm: 2000 mm^3) is a `chip_hazard`, a larger one `part_free`; below
 `swarf_cube_edge_m^3` (1 mm^3) it is booked but not reported (db/models/removal.yaml, estimated). All
-are published in `loose_bodies` (the core Ledger books them as `freed_body_mass_kg`). The pass runs only
+are published in `loose_bodies` (the core Ledger books them as `freed_body_mass_kg`). The check runs only
 when a level-0 z ray changed its segment count (`FI_TOPO`): shortening columns cannot separate the graph.
 Error: webs thinner than a cell may join or separate one cell early or late.
+
+**Incremental check** (`connect.release_loose_incremental`, `k_connect.local_connected`, every macro step).
+While the material is known to be one component (`Workpiece.one_body`: the last check found one body, or one
+held body was left after a release) and only subtractions changed it since (each marks the bricks it changed
+in `bconn`), only the changed region is labelled: the rectangle R of node columns of the brick columns with
+a mark (a brick's nodes and the next boundary node, which a change there marks too) and a ring of one column
+around it, unchanged. When that labelling is one component and it reaches the ring, the material is still one
+body: a path from any column outside into R crosses the ring, and every column outside joins the ring's
+component as it did before. Otherwise (the cut's two sides join only outside the region, the region holds no
+ring material, or more than one component) the whole field is labelled as above, so a body separates at
+exactly the macro step it would with the full labelling: verified for a trepanned core (the step that closes
+the ring through the stock), a part on two tabs (the step that cuts through the second) and a blind groove
+(no release, every step decided locally; `test_06`). After every check the marks and `FI_TOPO` start from
+zero; a polar sync or a transfer (which may add material) and the operation's end label the whole field.
+`one_body` is kept in the checkpoint (meta `one_body`, default false: the first check labels everything).
 
 ## 10. Meshing (`mctable.py`, `k_mesh.py`, `mesh.py`)
 
@@ -422,7 +478,9 @@ How the hot kernels reach these costs (and why the gating and polar targets are 
 
 * `RAW` kernels (`subtract_envelope`, `post_pieces`, `_engaged`, `_refine`, `contact_geometry`,
   `sector_box`, `tooth_pass`, `polar_cut`, `_polar_rows`, `_polar_axial`, `polar_radius(i)`,
-  `polar_to_ray`, `collide_envelope`) are compiled with Numba's reference counting off (`_nrt=False`):
+  `polar_to_ray`, `collide_envelope`, and `k_sd.{level_at, dexel_sd, gradient}`, which the hot loop's refill
+  planes call for every stale memory bin: `gradient` without its work arrays, the six D values from
+  `k_core.sd_d`) are compiled with Numba's reference counting off (`_nrt=False`):
   they allocate nothing (work arrays come from `Scratch` or a thin wrapper), and every inlined helper would
   otherwise pay an atomic incref / decref per array argument and call (measured: envelope intervals of
   one ray 274 ns with, 30 ns without; subtraction 510 -> 108 us; gating 2957 -> 192 us). Numba refuses an
@@ -444,8 +502,9 @@ only; each kernel has a plain-Python reference in `reference.py` or an analytic 
 test. `inline` helpers are inlined at the Numba IR level (one call site each where compile time matters);
 `call` kernels are separate functions; `raw` kernels run without reference counting (section 16).
 
-Inlined helpers: `k_core.{rindex, bindex, nearest, inside, overlap, blocks_for, load, _alloc, _free, store,
-mark, account, level_at, sd, classify}`, `k_ray.{iv_subtract, iv_union, target_overlap}`,
+Inlined helpers: `k_core.{rindex, bindex, nearest, inside, overlap, extent, blocks_for, load, _alloc, _free,
+store, floordiv, mark, account, book_piece, level_at, sd_pre, sd, sd_d, sd_beats, classify_pre, classify}`,
+`k_gate.{_empty_near_pre, _above_columns}`, `k_subtract._point`, `k_ray.{iv_subtract, iv_union, target_overlap}`,
 `k_envelope.{quad_leq, _p4, _dp4, _torus_g, _push, _piece, merge_intervals, _env_ray, _event, _aabb,
 node_range}`, `k_gate.{_box_material, _empty_near, _sin_range_max}`, `k_query.{_occ, _extreme}`,
 `k_mesh._crossing`, `k_polar.{_chain, _chain_w, _x_range, _z_range, _z_range_w, _cut_inline, _xhi_max,
@@ -496,11 +555,11 @@ outputs in the docstrings):
 | `k_collide.mesh_field_overlap` | call | `i8(FIELD_T, F2, types.int32[:, ::1], F1, F1, f8, F1, SCRATCH_T)` | A closed triangle mesh (vertices in S) against the material of level 0, over the rays inside the box (the mesh box clipped to the field). |
 | `k_collide.pose_lerp` | call | `void(F2, F1, F1, F2, F1, f8, F2)` | out (3 x 4) = the rigid pose a fraction lam from (R0, t0) to (R1, t1): translation linear, rotation along the geodesic R0 exp(lam log(R0^T R1)) ... |
 | `k_collide.swept_mesh_field` | call | `f8(FIELD_T, F2, types.int32[:, ::1], F2, F1, F2, F1, f8, f8, F1, SCRATCH_T)` | A mesh (vertices in its own frame) moving from pose (R0, t0) to (R1, t1) in S: sub-sampled so no vertex moves more than ``step`` between samples ... |
-| `k_sd.level_at` | call | `i8(FIELD_T, f8, f8, f8)` | Finest level whose authoritative box contains the point (0 otherwise). |
-| `k_sd.dexel_sd` | call | `f8(FIELD_T, i8, i8, f8, f8, f8, F1)` | D_f at (x, y, z) in metres (positive inside). |
+| `k_sd.level_at` | raw | `i8(FIELD_T, f8, f8, f8)` | Finest level whose authoritative box contains the point (0 otherwise). |
+| `k_sd.dexel_sd` | raw | `f8(FIELD_T, i8, i8, f8, f8, f8, F1)` | D_f at (x, y, z) in metres (positive inside). |
 | `k_sd.classify` | call | `types.Tuple((b1, f8, i8))(FIELD_T, i8, f8, f8, f8, i8, F1)` | (inside, D of the chosen family (m), chosen family) at a point (k_core.classify). |
 | `k_sd.point_inside` | call | `b1(FIELD_T, f8, f8, f8)` | Is the point inside material (finest level containing it; |
-| `k_sd.gradient` | call | `types.void(FIELD_T, f8, f8, f8, i8, f8, F1)` | Central-difference gradient of D_fam (unit vector, pointing into the material). |
+| `k_sd.gradient` | raw | `types.void(FIELD_T, f8, f8, f8, i8, f8, F1)` | Central-difference gradient of D_fam (unit vector, pointing into the material). |
 | `k_gate.box_has_material` | call | `b1(FIELD_T, i8, f8, f8, f8, f8, f8, f8)` | Any brick of the level meeting the box (grown by one cell) holds material. |
 | `k_gate._refine` | raw | `f8(F1, F2, I2, I1, I2, I4_1, I4_3, I4_1, I4_3, I4_1, i8, F1, F1, F1, f8, f8, f8, b1, f8, f8, F1, F1, F1)` | Angle in [pa, pb] where the material state changes (``a_inside``: the state at pa). |
 | `k_gate._engaged` | raw | `void(FIELD_T, F1, F1, F1, F1, F1, F1, B1, ENGAGED_T, i8, F1, F1, F1, F1, F1, B1, F1, F1, F1, B1)` | engaged_intervals with its work arrays (states, bd_phi, bd_in: MAX_SAMPLES + 1; |
@@ -525,6 +584,7 @@ outputs in the docstrings):
 | `k_connect.label_z` | call | `i8(FIELD_T, I1, I4_1)` | Union-find over the level-0 z segments. |
 | `k_connect.component_stats` | call | `i8(FIELD_T, I1, I4_1, i8, F2)` | Per root segment id r: out[r] = [volume (m^3), sum x V, sum y V, sum z V, x_lo, y_lo, z_lo, x_hi, y_hi, z_hi] (columns of a^2 x length, level 0). |
 | `k_connect.components_in_box` | call | `void(FIELD_T, I1, I4_1, i8, F1, F1, types.int8[::1])` | flags[root] = 1 for every component with a level-0 z column (node inside the box's x-y range) whose segment overlaps the box's z range (the held ... |
+| `k_connect.local_connected` | call | `i8(FIELD_T, I1)` | Incremental connectivity: 1 when the labelling of the changed bricks' column rectangle and a ring of one column is one component reaching the ring (the material is still one body), 0 not proven (label the whole field), -1 no change marked; box = [i0, i1, j0, j1, columns, segments]. |
 | `k_connect.remove_loose` | call | `i8(FIELD_T, I1, I4_1, i8, types.int8[::1], f8, f8, f8, i8, SCRATCH_T)` | Remove the segments of loose components (``loose[root] = 1``) from every ray of every level: z rays of level 0 by their labels; |
 | `k_mesh.ray_crossing` | call | `types.UniTuple(i8, 3)(FIELD_T, i8, i8, i8, i8)` | (endpoint in [q0, q1], its surface event id, found) of the kind an edge needs (see _crossing). |
 | `k_mesh.displace` | call | `void(F1, f8, F4, f8, f8, f8, F1)` | out = (x, y, z) + d(x, y, z), trilinear in the grid (clamped at its border); |
@@ -553,6 +613,10 @@ outputs in the docstrings):
 * `core/bus.py` `RemovalContact` (written by removal only): `removed_volume_xyz_m3: np.ndarray` (x, y, z
   family volumes of the step), `polar: bool` (the volume is the polar radial family's), `surface_ids:
   tuple` (first and last surface event id of the step); commented in place. No existing field changed.
+* `Scratch.fw` sub-ranges: `FW_ENV` (`N_ENV` = 11: the slab bounds and the ray's material extent that
+  `subtract_envelope` leaves for `_env_ray`, right after the root-isolation workspace `FW_WORK`); `FW_AGG` moved
+  from 34 to 45 (`N_FW` unchanged). `Workpiece.one_body` (the incremental connectivity check; checkpoint meta
+  `one_body`, default false for older checkpoints).
 * Removal's own layouts (`removal/abi.py`, not shared before this domain): `Scratch` gained `fw`, `iv2`,
   `tg`, `iw`, `rows` (fixed work of the RAW kernels; `FW_*` sub-ranges), `InsertRegion.box` has 6 entries
   (upper-chain peak and unimodal flag), `POLAR_BLOCK = 16` sets the `zmax_q` blocks. cnctwin.gpu's dexel

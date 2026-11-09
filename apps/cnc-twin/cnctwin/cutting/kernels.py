@@ -1621,8 +1621,16 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             ffr = pk[kk, PK_FLANK + 1]
             fpd = 0.0
             kpd = pk[kk, PK_PD]
-            if vn > 0.0 and Vc > 0.0 and kpd > 0.0:
-                fpd = kpd * flank_interference_area(vn / Vc, pk[kk, PK_PD + 1], pk[kk, PK_PD + 2], pd_max)
+            if Vc > 0.0 and kpd > 0.0:
+                # process damping: the land indents the wave the vibration leaves on the surface the edge generates,
+                # so only the vibration's normal velocity (tool deflection rates minus the work's vibration) sets the
+                # slope; the steady path (feed) is the surface the edge itself generates, which its land follows
+                vdx = cd * (vuTx - vWx) + sd * (vuTy - vWy) + (wry * pzr - vrTz * py)
+                vdy = cd * (vuTy - vWy) - sd * (vuTx - vWx) + (vrTz * px - wrx * pzr)
+                vdz = vuTz - vWz + (wrx * py - wry * px)
+                vnd = vdx * nx + vdy * ny + vdz * nz
+                if vnd > 0.0:
+                    fpd = kpd * flank_interference_area(vnd / Vc, pk[kk, PK_PD + 1], pk[kk, PK_PD + 2], pd_max)
             mu_pd = pk[kk, PK_PD + 3]
             ft = ft0 + fft + mu_pd * fpd
             fr = fr0 + ffr + fpd
@@ -2323,8 +2331,12 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
             fft = tool.flank_N[e, 0]
             ffr = tool.flank_N[e, 1]
             fpd = 0.0
-            if vn > 0.0 and Vc > 0.0 and tool.pd[e, 0] > 0.0:
-                fpd = tool.pd[e, 0] * flank_interference_area(vn / Vc, tool.pd[e, 1], tool.pd[e, 2], pd_max)
+            if Vc > 0.0 and tool.pd[e, 0] > 0.0:
+                # process damping from the vibration's normal velocity only (see cut_step)
+                vnd = (vuTx - vWx + (vrTy * pzr - vrTz * py)) * nx + (vuTy - vWy + (vrTz * px - vrTx * pzr)) * ny + \
+                    (vuTz - vWz + (vrTx * py - vrTy * px)) * nz
+                if vnd > 0.0:
+                    fpd = tool.pd[e, 0] * flank_interference_area(vnd / Vc, tool.pd[e, 1], tool.pd[e, 2], pd_max)
             mu_pd = tool.pd[e, 3]
             if colwell and A_tot > 0.0:
                 wgt = h * db / A_tot

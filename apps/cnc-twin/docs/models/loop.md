@@ -50,7 +50,7 @@ CAD. Every adapter reads `run.state` at call time, so a restored state is follow
 | surface | WorkpieceQuery, BrickGrid, ToolInfo | `LiveField`, `LiveBricks` (removal's level-0 brick numbering of the field as it is now: a transfer moves the lattice), surface's GeometryToolInfo |
 | thermal | ToolEdges | `LiveEdges` (tooling's effective edges) |
 | wear | ToolInfo, ToolTolerances | wear's GeometryToolInfo, ProjectTolerances |
-| holding | BurrSource | `SurfaceBurrs`: surface's surviving burrs on each locating patch |
+| holding | BurrSource | `SurfaceBurrs`: surface's surviving burrs on each locating patch, formed since the part in the machine started its first operation (`Run.part_start_tick`: a batch's next blank carries none of the last part's burrs; before 2026-11-09 they mislocated every next blank) |
 | inspect | ResultSource, SurfaceResults | `LoopResults` (removal's mesh of the field = X, structure's grids as cut and released, thermal's unload temperatures), surface's document |
 | chips | hot-loop emission rows | cutting's pass rows (`CuttingContact.emissions`: `PASS_COLUMNS` = chips' `EMISSION_COLUMNS`) in chips' EventBuffer |
 
@@ -165,12 +165,19 @@ timeline per part, frames.bin, tools.json with its per-part rows, the removed ma
     `loop.chip_kinetic_in_balance: 0` (db/models/loop.yaml) it is reported (`ledger.chip_kinetic_reported_J`,
     run.json `summary.conservation.energy.chip_kinetic_reported_J`) and kept out of the balance; 1 restores the
     architecture's out term once cutting's torque carries the chip momentum force.
+  * the slip of tools in their holders and of parts in their workholding (2026-11-09): holding's ratchets return
+    the work their loads did on the slip, the dissipation and the change of the slip motions' kinetic (and lift
+    potential) energy, with `in = dissipation + change` exact for the discrete scheme (docs/models/holding.md
+    2, 5). Holding books the dissipation into `SimState.ledger.friction_J` (architecture 12: slip friction); the
+    run's ledger books `holding_slip_in_J` (in: `slip_in_J` of every tool and part record) and
+    `holding_slip_mech_J` (out: `slip_mech_change_J`), `summary.conservation.energy.holding_slip_in_J`. Before,
+    the slip friction was reported only and the loads' work on a slipping part or tool appeared nowhere.
 * **Friction**: cutting computes the work its chip recut impulses and packing loads take from the tool
   (`CuttingContact.recut_J`, `packing_J`, terms of its own energy identity). Cutting's `_ledger` books them into
   `SimState.ledger.friction_J` itself since 2026-11-09; earlier builds wrote no ledger field for them. The loop
   books them only when the friction term did not change over the hot loop (`Run._book_friction`): both together
   counted them twice, 0.4 % of examples/two-setup-flip's facing entry (0.02 J of 5.3 J, a fatal energy finding).
-  Holding's slip friction stays reported only (holding's documented choice).
+  Holding books its slip dissipation after the hot loop (the slow domains), outside that comparison.
 * **Exact volume**: per workpiece and operation the removal records sum to the field's own volume change
   (integer quanta, 1e-9): a fatal `mass_balance` finding otherwise.
 * **Cutting's energy identity** (shaft + feed = heat by zone + ploughing + recut + packing + work on the
@@ -269,6 +276,13 @@ predicted stability limit (0.044 mm at 10 000 rpm) and the simulated chatter gro
   handed to the control as `Feedback.tool_life_expired`; `finished` ends an operation whose paths stopped in
   alarm without waiting for motion's queue (section 4).
 
+* `production/energy.py` `axis_models` (2026-11-09): the machine file's `axes` block holds its own `src` (haas-ec400);
+  the axis loop took it for an axis ("axis src: the machine file gives no moving_mass_kg") and every run of
+  examples/ti-slot-throughtool failed at its end (production.json). Non-mapping entries are skipped, as in thermal's
+  `axis_models` (the same crash at that example's set-up).
+* `core/bus.py` (additive): `ToolHeat.flank_entry_K`, `ToolHeat.rake_contact_mean_K` (thermal; `rake_temp_mean_K` is
+  the rake contact's entry temperature now, docs/models/thermal.md 2.2), `ToolHolding.slip_in_J`, `slip_loss_J`,
+  `slip_mech_change_J`, `PartHolding.slip_in_J`, `slip_mech_change_J` (holding's slip energy, section 6).
 * Adapters for interface mismatches found in integration, kept in the loop (no change in the owners' files):
   chips reads `ToolInfo.hole_making`, a property of chips' own ToolInfo that tooling's ToolInfoView lacks
   (`LiveCatalog` hands chips its own record built from the view); cutting's `channels.macro_values` reads
@@ -287,10 +301,25 @@ predicted stability limit (0.044 mm at 10 000 rpm) and the simulated chatter gro
 | `test_loop_flip.py` | (xfail on model errors, section 15) examples/two-setup-flip with one side step per operation: OP20 cuts the OP10 part turned 180 deg about X (one removal transfer, the OP10 step ends up at the bottom of OP20's S), both steps' volumes against each operation's recorded path, timeline and ledgers over both operations, operation-end checkpoints, part files per operation |
 | `test_loop_batch.py` | (xfail on model errors, section 15) three parts of the tiny project: fresh blanks, the same removed mass, tools.json per-part rows with rising cut time, VB and life used, production.json with three parts, thermal unload records per part, the time balance over the parts |
 | `test_loop_check.py` | `check_project`: strides by the 5.1 rules, cycle times, estimates; `--write` stores physics.resolved and a run uses those strides (and `max_sim_s` truncates it); a project with errors is not written |
-| `test_loop_parts.py` | the loop's pieces without a simulation: the coupling monitor, the ring restamping, the peak view, the run ledger's kinetic-energy report, quadrature term, energy scale floor and the summary of a run without energy, friction booked once, the adapters' change tracking through a checkpoint |
+| `test_loop_probe.py` | G31 through the whole loop: the tiny project's block with the pocket example's spindle probe; a skip move from 10 mm above the top to 5 mm below stops at the top (the program checks #5063 and raises #3000 otherwise: the run must end without an alarm), the gauge line comes to rest within the braking distance (25 um) below 125 mm above the top and the retract goes straight up |
+| `test_loop_parts.py` | the loop's pieces without a simulation: the coupling monitor, the ring restamping, the peak view, the run ledger's kinetic-energy report, quadrature term, holding's slip energy pair, energy scale floor and the summary of a run without energy, friction booked once, the adapters' change tracking through a checkpoint |
 | `test_outputs_studies.py` | the simulate entry resolves to this loop; replay windows and comparisons through cnctwin.core.outputs |
 
 `tests/regression/test_examples.py` (marked slow, `bin/test --all regression`): one test per example (section 14).
+
+Unit tests of the fixes of section 15 in the domains' own suites (2026-11-09): tests/unit/core/test_hot_probe.py
+(the stylus profile, probe entries of a raw and of a resolved project, the probe-only contact, removal's sweep
+finding a block's top), tests/unit/motion/test_features.py `test_the_move_after_a_skip_starts_where_the_axes_stopped`,
+tests/unit/holding/test_kernels.py (the tooth-period pulse and its exact sub-step mean, stall and part-speed
+bounds, the discrete energy identities of slip and separation) and test_domain.py (the chuck rebuild rule),
+tests/unit/thermal/test_kernels.py and test_tool.py (the entry temperatures), test_conservation.py
+`test_a_turning_tools_shear_heat_goes_to_its_engaged_elements`, tests/unit/structure/test_domain.py (supports placed
+again keep the model, `test_the_next_part_of_a_batch_gets_its_own_setup`), tests/unit/surface/test_domain.py
+`test_a_batchs_next_part_opens_its_own_patches`, tests/unit/chips/test_domain.py (no debris under locators the
+operator cleans), tests/unit/dynamics/test_chatter_detection.py (free ringing is no chatter) and test_domain.py
+`test_a_turning_contact_takes_its_operating_point_from_cuttings_engaged_elements`,
+tests/integration/test_turning_split.py (a polar overflow repeats only the refused removal: the pass with one inline
+segment per ray reproduces the pass with sixteen).
 
 ## 13. Measurements
 
@@ -400,14 +429,25 @@ stopped). The no-probe variant's "probe triggers without alarm" passes trivially
   contact, the slow domains 20 s per second in contact (199 ms per macro step) and 4 s per second out of it
   (41 ms per step; dynamics 25 ms of it on average): a real program of minutes takes hours. The regression tests
   run a representative first part of the long examples (section 14).
-* **Probe.** The hot loop's G31 sweep needs a stylus profile no domain builds (docs/models/hotloop.md "Open
-  problems"): programs that probe (examples/pocket-islands-al6061 N10, examples/batch-50 on every part) stop at
-  the first probing alarm (the probe macro's or M79), and the run stops there (section 4). The regression runs
-  them as written and as variants without the probing section (the work offset set to what the probe would have
-  measured).
-* **A turned part is set up again and again** (structure, holding, dynamics): in examples/lathe-shaft-4140 the
-  bar's work model is set up 55 times in 2.4 s with as many new modal bases (section 14): the lathe's loop runs
-  at 0.02-0.4 simulated s per wall minute.
+* **Probe** (fixed 2026-11-09). The hot loop builds a probe-only contact for a path whose spindle holds a probe
+  (core/hot_probe.py, docs/models/hotloop.md 9a): removal's `sweep_contact` latches G31 moves and the controller
+  gets the encoder position. Before, no domain built the stylus profile and every probing program stopped at its
+  first probing alarm (pocket-islands N10, batch-50 on every part). Two further causes surfaced on the way: the
+  resolved project lists its probes in `tools.probes` (the loader moves the `kind: probe` entries out of
+  `tools.list`), which hot_probe now reads with each entry's own resolved stylus; and motion's planner planned the
+  move after a skip from the G31 block's programmed end point (`Planner._skip_stop` braked the axes but left
+  `tail_q`, the queue's end, at the programmed end): the command jumped 5 mm past the touch and the stylus
+  followed it 3 mm into the part before the retract came back. `_skip_stop` now sets the queue's end to where the
+  axes come to rest (one line in cnctwin/motion/planner.py, test in tests/unit/motion/test_features.py; nothing
+  is queued past a skip move, which stops the block buffer). tests/integration/test_loop_probe.py: the G31 stops at
+  the block's top (#5063 within 0.05 mm, the gauge line never more than the 25 um braking distance below the
+  touch). The regression keeps the no-probe variants.
+* **A turned part was set up again and again** (fixed 2026-11-09): holding rebuilt a chuck's setup whenever
+  omega^2 changed by 2 % (a spindle run-up from rest: dozens of rebuilds for grip changes of a fraction of a
+  percent) and structure set its work model up at every new `supports_version` (55 FE solves and modal bases in
+  2.4 s of examples/lathe-shaft-4140). Holding now rebuilds when the centrifugal loss moved the grip by 2 % of the
+  static force, structure keeps its model when the re-placed supports are within `support_change_rel` (2 %)
+  (docs/models/holding.md 4, docs/models/structure.md).
 * **Memory at an operation's end.** inspect's part meshes come from the field's mesh at its lattice
   (`LoopResults.result_part`: removal's `mesh_level`, then inspect's displacement grids per vertex and the STL,
   GLB and 3MF files): about 9.5 M triangles for examples/pocket-islands-al6061 (0.075 mm on 100 x 80 x 30 mm).
@@ -433,65 +473,170 @@ stopped). The no-probe variant's "probe triggers without alarm" passes trivially
 * **lag_macro 2** is computed as lag 1 (nothing runs concurrently).
 * **Numba cache.** The cache directory is keyed by every kernel source: a change in any kernel file costs the
   next run a cold compile of every kernel (12-14 minutes on this box under load).
-* **Found in integration, for the domains' owners** (each reproduced with the tiny project, a variant of it, or
-  an example of the regression; the loop works around none of them):
-  * *Cuts go unstable at entry in the whole loop* (dynamics, structure, cutting, holding): the time-domain
-    chatter detector reports a low frequency at the first contact (65 Hz on the tiny project's side step and
-    slot, 67 Hz on examples/thin-wall-al7075, 85 Hz on examples/two-setup-flip's facing), then the forces run
-    away: 16 800 N m spindle torque on the tiny slot, 169 N m on thin-wall's D10 (its holder turns 792 deg and
-    pulls out 0.23 mm), the flip's part slips 38 mm in the vise, the lathe's tool breaks. The energy balance then
-    fails by 1e-5 to 1e-3 (the slip and pull-out work is in no ledger term) or a NaN stops a domain. The hot
-    loop's own tests (test_slot, test_chatter, test_turning: dynamics with its own tool and spindle modes, no
-    structure, holding or thermal) are stable on the same tree, so the coupling with the slow domains' modes and
-    loads is the suspect.
-  * *Full-slot blow-up* (dynamics, cutting, structure): warmup's first program, a 14 mm full slot 1.5 mm deep
-    with the D10 (32 mm stickout) at 10 000 rpm in Al 6061, is about 30 times the stability limit dynamics
-    predicts (0.044 mm). The chatter (detected at 65 Hz at entry) grows without the saturation a tool leaving
-    the cut gives: within 0.1 s spindle torque 52 N m, then 16 800 N m, tool breakage, holder
-    pull-out, part free, a surface temperature of 4.6e7 degC, tool heat 5.8e5 J in one step, and thermal's tool
-    solver ledger fails (relative 2e-8). The tests and warmup cut a side step instead (0.5 mm x 1 mm, stable
-    enough to finish). Structure's tool modes for that tool look odd too: the 5339 Hz pair has a larger tip
-    modal compliance (1.4e-7 m/N) than the 697 Hz fundamental pair (3.6e-8 m/N).
-  * *Cutting's analytic chip volume* is 11 % below the volume the tool path sweeps on the side step (ae/D 0.05,
-    ap 1 mm): 5.43 mm3 against 6.05-6.11 mm3. Removal's field agrees with the swept volume of the recorded path
-    to 0.02 % (its rays sampled on the same lattice), so removal's pass check ("field volume and analytic chip
-    volume differ by 12.5 %, allowed 4.6 %") reports cutting's shortfall.
-  * *Rapid into material at zero depth* (removal): a G00 retract straight up from the end of a side cut raises
-    the error `rapid_into_material` with "0.000 mm deep, 0.000 mm^3" (any removal during a rapid counts, here
-    the servo lag of the feed axis catching up while Z already rises). Real programs retract like that; the
-    tests lead out sideways first.
-  * *Slivers* (removal): the side step leaves 4-quantum (40 nm) pieces of material floating in rays it cut (ray
-    segments like (972732, 972736) at z 9.602 mm above a floor at 8.993 mm); `surface_height` then reports the
-    sliver's top as the surface.
-  * *Staggered thermo-mechanical coupling* (cutting, thermal): the tool's rake temperature alternates by 20-37 K
-    from one macro step to the next while cutting; the loop's monitor and cutting's own check both report it.
-  * *Turning blows up in the whole loop* (cutting, dynamics, structure, thermal; the live tree; the hot loop's own
-    tests/integration/test_turning.py, without the slow domains, passes there):
-    warmup's OD pass on the d30 4140 bar (CNMG, 1400 rpm, ap 1.5 mm, f 0.25 mm/rev, and also ap 0.5 mm, f 0.15)
-    gives a surface temperature of 1700-3600 degC at the first contact, then within 50 ms axis drive forces of
-    20-200 kN, tool breakage (bending 20 GPa at the shank), part slip of 66 m, part free, and dynamics stops the
-    run ("path 0 was stepped by 0 base ticks"; or a NaN conversion). `twin warmup` reports the lathe run as
-    stopped (the kernels it reached are cached) and exits 1.
-  * *Thermal's tool field after a tool change* (thermal): in a batch of the tiny project the cutting-region field
-    of T1, built in part 1's cut, diverges to NaN in its first solve after part 2's T1 M06 (the same tool;
-    "tool.0 field solve, residual nan after 5000 iterations"), with finite inputs (the smallest cell capacity is
-    2.8e-10 J/K: 2 um rings); the same in the flip test at OP20's T2 M06 (T2 cut in OP10).
-  * *NaN states across part and operation transitions* (thermal, structure, cutting, dynamics): with the tool
-    field off the batch and the flip stop further on: in the tree of 03:39 thermal's flank temperatures of T1
-    (`flank_temp_q_K`) are NaN for elements in cut at the second part's first coefficient update (cutting's
-    `quantised_state`: "cannot convert float NaN to integer"; with or without the tool field), in the git-HEAD
-    tree structure's work modes of the re-seated part carry NaN rows into dynamics' `build_system` (the part,
-    mislocated by the chips below, is not seated). `test_loop_batch.py` and `test_loop_flip.py` mark a model
-    error (TwinError, ValueError) as an expected failure (`xfail`, not strict) until these are fixed; a wrong
-    loop result still fails them.
-  * *Residual spindle speed* (motion; cutting and thermal read it): after M05 the spindle's speed loop leaves
-    5.8e-12 rad/s, never exactly 0. cutting's `_stale_ticks` turns a positive speed into one revolution in base
-    ticks, 1e22 for that speed: an `OverflowError` into int64 (seen when a new operation's motion carried the
-    spindle state; the loop now starts spindles at rest there, but a tool near the material while a spindle
-    coasts down would meet it too).
-  * *Chips under the next blank's locators* (chips, holding): in the batch every next part is mislocated by the
-    chips the last part left on the vise ("chips or burrs under a locating face put the part 0.211 mm off its
-    nominal location", an error): the verdict of every batch is unsafe.
+* **Found in integration** (each reproduced with the tiny project, a variant of it, or an example; 2026-11-09:
+  the root causes, what this task fixed in its domains, and what it hands to the owners of cnctwin/cutting,
+  cnctwin/removal, cnctwin/mechanics, cnctwin/tooling, cnctwin/motion and cnctwin/wear, which it did not edit but
+  for the one-line skip fix in motion's planner above):
+  * *Cuts went unstable at entry* - three causes, bisected by freezing each slow feedback in turn on the tiny
+    project's full slot (structure modes -> machine and spindle modes only, holding -> none, thermal -> ambient,
+    chips' recut grid and packing -> none, coolant -> dry): only freezing the chips' **recut** removed the
+    blow-up (the slot then cut its 14 mm at 110 N mean, 140 N peak, 530 W, stable).
+    1. **Cutting's recut impulse (for cutting's owner)** - `cnctwin/cutting/kernels.py` `recut_scan` (from
+       `finish_step`): every chip voxel of chips' frozen occupancy grid (2 mm pile cells) whose centre is inside
+       the tool's envelope gives its whole remaining mass m to one strike per tooth period, with the impulse
+       `J = m V + E_cut / V`, `E_cut = u(h_chip) m / rho` (the specific cutting energy of the voxel's whole chip
+       volume), applied to the tool within the one L0 step of the scan (5 us at 10 000 rpm). The tiny slot at
+       4.12 s: one voxel of 1.2 mg, 0.43 J, 0.09 N s: 17 kN over the step, 8.9 MN in the next after the tool's
+       response (tool broken, holder pulled out, part free); examples/thin-wall-al7075 at 4.444 s: 169 N m on the
+       D10 (the ER collet turned 792 deg in the old holding model); examples/two-setup-flip at 3.81 s: a 17.3 kN /
+       914 N m peak on the part (it slipped 38 mm in the old holding model). The physics: a tooth meeting a loose
+       chip knocks it away (impulse m V: momentum, no cutting energy) or, trapped against a wall, shears through
+       its section while the edge crosses it; the force is bounded by the chip section's shear strength (about
+       tau_s x width x thickness: ~100 N for a 40 um x 1.5 mm Al chip) and lasts the crossing time (size / V),
+       the energy is that force over the path, not u times the voxel's volume; and a tooth meets only the chips in
+       its swept volume of the step, not a 2 mm voxel's whole mass. Fix: spread each strike over the crossing
+       time with the section-bounded force, take the swept fraction of the voxel's mass.
+    2. **The recut and packing loads' work on the deflection rates (for cutting's owner)** - the same
+       `finish_step` adds the recut impulse `rj` and the packing force to the step's impulse on the tool after
+       `e_def` (CA_DEFLECTION_J: the element forces' work on the station deflection rates) was accumulated:
+       dynamics' modes receive and integrate them (its quadrature `cutting_work_quadrature_J` includes their work
+       on the deflection rate), `CuttingContact.deflection_work_J` does not, so the run's energy balance misses it:
+       the entry residuals of the regression (pocket-islands no-probe 9.2e-7 J of 0.092 J at 4.5 s, its friction
+       term (recut + packing) 0.046 J; thin-wall 4.1e-4 J of 17.6 J; the flip 1.5e-4 J of 9.1 J). With the recut
+       frozen the same pocket run passes 4.5 s balanced. Fix: add their work on the deflection rate of the struck
+       station (the same predicted rate the element forces use) to e_def.
+    3. **Holding turned the spikes into run-away displacements (fixed, holding)**: the tooth harmonic stretched a
+       microsecond shock over a third of every tooth period of the step, and above the friction capacity the
+       slip accelerated the small tool inertia or the part freely (792 deg, 38 mm per step). Now the demand's
+       tooth-period pulse follows each tick's mean / peak, every sub-step takes its exact impulse, the tool stalls
+       at the spindle speed and a part moves no faster than the cut can push it, and the slip's energy is in the
+       ledger (docs/models/holding.md 2, 5; section 6). The flip's spike now slips the part 2.8 um.
+    4. **The "low-frequency chatter" was the machine frame ringing (fixed, dynamics)**: the 55-130 Hz frame and
+       table modes of the VF-2SS, excited by the base excitation of rapids and plunges, rang with 1-3 um while the
+       broad phase ran L0 steps near the stock before the first chip; the detector analysed those samples and
+       called the free vibration "regenerative chatter" at 65-91 Hz. The window now takes only steps that cut,
+       and a vibration decaying at its structure's damping is a transient (docs/models/dynamics.md 4).
+    The hot loop's own tests were stable because they cut no slot with chips: OperationDriver runs no chips
+    domain, its occupancy grid is empty.
+  * *Structure's 5339 Hz pair* is the D10's own bending mode on its collet, not an anomaly: hand check in
+    docs/models/structure.md 10 (rigid-clamp cantilever 13 N/um at 7.2 kHz; with the collet 7.2 N/um at 5.3 kHz,
+    modal mass 6.4 g; the 697 Hz pair is the spindle flange mode with holder and tool). Work modes of the tiny
+    project's 30 x 20 x 10 mm block in the vise: 34-71 kHz with modal compliances of 1e-9 m/N (a stubby Al block:
+    Euler-Bernoulli 58 kHz for its 10 mm bending, Timoshenko about 30 % lower), the machine's frame modes
+    m = k / omega^2 = 120-210 kg with 1/k at the tip: units and normalisation consistent.
+  * *Staggered thermo-mechanical coupling* (fixed at its source, thermal): the rake temperature cutting's
+    coefficient pipeline reads was the in-cut mean, which already holds the rise of the step's own heat that
+    mechanics' partition adds again (docs/models/thermal.md 2.2): the explicit stagger had a loop gain near -1
+    and alternated by 20-37 K. thermal now publishes the temperature at the entry into the cut (the background
+    of mechanics' stationary-source partition): the tiny project's alternation fell to about 2 K. What remains
+    is a limit cycle of cutting's quantised slow state (for cutting's owner): `cnctwin/cutting/coefficients.py`
+    `quantised_state` snaps the tool temperature to `tol_temp_dK` (10 K) by rounding, so a temperature at a cell
+    boundary flips the row between two cells from one step to the next (the loop's monitor still flags 2.4 K /
+    1.9 K changes, ratio 1.2, at the tiny project's entry); a hysteresis of the snapping (keep the cell while the
+    value stays within 0.75 cell of its centre) removes it. Also for cutting's owner: `_row_state` reads
+    `flank_temp_q_K` (the in-cut flank temperature, which wear needs) for mechanics' flank partition, the same
+    double count on the flank; thermal publishes `flank_entry_K` for it.
+  * *NaN flank temperature in the coefficient pipeline (for cutting's owner)* - not thermal's:
+    `cnctwin/cutting/domain.py` `CuttingDomain._row_state` computes
+    `flank_T = float(np.mean((q @ w)[members] / w.sum()))` without the `members.any()` guard `member_mean` has:
+    for a row none of whose elements is a member (examples/drill-tap-plate-1045's D6.8 drill at 2.58 s, row 0 of
+    slot 0: members (2, 33) all false) it is the mean of an empty array, NaN, and `quantised_state`'s `_snap`
+    raises "cannot convert float NaN to integer"; thermal's `flank_temp_q_K` there is finite (2 x 33 x 3, no NaN).
+    Fix: `flank_T = None` for an empty row, as for the tool temperature (done by cutting's owner on 2026-11-09:
+    `_row_state` now returns None for a row without members and for a non-finite mean).
+  * *Cutting's analytic chip volume* (for cutting's owner) is 11 % below the volume the tool path sweeps on the
+    side step (ae/D 0.05, ap 1 mm): 5.43 mm3 against 6.05-6.11 mm3. Removal's field agrees with the swept volume
+    of the recorded path to 0.02 % (its rays sampled on the same lattice), so removal's pass check ("field volume
+    and analytic chip volume differ by 12.5 %, allowed 4.6 %") reports cutting's shortfall.
+  * *Rapid into material at zero depth* (for removal's owner): a G00 retract straight up from the end of a side
+    cut raises the error `rapid_into_material` with "0.000 mm deep, 0.000 mm^3" (any removal during a rapid
+    counts, here the servo lag of the feed axis catching up while Z already rises). Real programs retract like
+    that; the tests lead out sideways first.
+  * *Slivers* (for removal's owner): the side step leaves 4-quantum (40 nm) pieces of material floating in rays it
+    cut (ray segments like (972732, 972736) at z 9.602 mm above a floor at 8.993 mm); `surface_height` then
+    reports the sliver's top as the surface.
+  * *Residual spindle speed* (for motion's owner; cutting and thermal read it): after M05 the spindle's speed loop
+    leaves 5.8e-12 rad/s, never exactly 0. cutting's `_stale_ticks` turns a positive speed into one revolution in
+    base ticks, 1e22 for that speed: an `OverflowError` into int64 (seen when a new operation's motion carried the
+    spindle state; the loop starts spindles at rest there, but a tool near the material while a spindle coasts
+    down would meet it too). cutting's owner bounded `_stale_ticks` like a stopped spindle on 2026-11-09; the
+    residual speed itself is still motion's.
+  * *Chips and burrs under the next blank's locators* (fixed, chips and the loop): every next part of a batch was
+    mislocated ("chips or burrs under a locating face put the part 0.211 mm off its nominal location", an error:
+    every batch unsafe). Two causes: chips measured the chips on the next setup's locating faces as if nobody
+    cleaned them, while the operator blows fixture and locators clean before loading (production.operator
+    clean_s, now modelled: docs/models/chips.md 4); and the loop's `SurfaceBurrs` handed holding the burrs of the
+    batch's previous part, which left the machine with it (now only the burrs since the part in the machine
+    started, section 2). With the mislocation gone the re-seated part's NaN work-mode rows of the git-HEAD tree
+    (structure's model of a part not seated on its datum) no longer arise in the batch; structure was not changed
+    for them.
+  * *A batch's later parts* (fixed, structure and surface): a one-operation batch runs every part as operation 0.
+    Structure's released check keyed on the operation only, so once the first part was unclamped its released
+    state (no clamp loads, minimal support) stayed published for every later part, for which no model was ever set
+    up (and with the supports placed as before, the kept-model rule of the lathe fix would have kept the machined
+    first part's modes for the fresh blank): the work model is now set up per part (`WorkStructState.part_index`,
+    docs/models/structure.md, tests/unit/structure/test_domain.py). Surface matched a later part's events to the
+    first part's face patches (same workpiece index, brick and plane), compared the two parts' tracks as overlapping
+    passes and reported witness marks of 2-143 um (finish_out_of_spec warnings) on every second part of the tiny
+    batch: patches now belong to the operation that opened them (docs/models/surface.md 7).
+  * *Turning in the full loop.* Warmup's lathe pass (d30 4140 bar, CNMG 120408, ap 1.5 mm, f 0.25 mm/rev,
+    1400 rpm) first churned set-ups (above) and then stopped or exploded at its first contact for three loop
+    causes, fixed: a polar overflow split repeated the whole L0 step (dynamics stepped by 0 base ticks, the step's
+    work booked twice: only its removal is repeated now, docs/models/hotloop.md 6); thermal placed the turning heat
+    source at removal's contact point, which turning contacts leave at zero (the spindle axis at the chuck face:
+    3627 degC), now at the tool tip; dynamics found no operating point for turning (removal gives no depth) and ran
+    without its relaxation estimate, now from cutting's engaged elements (docs/models/dynamics.md 5.4). The pass
+    then cuts stably for one revolution and more, but the hot loop's force alternates from one L0 step to the next
+    from the first revolution on (Fz 739 / 857 N, Fx -74 / -158 N at 5 us steps, displacements smooth), and at
+    2.707 s, 1.3 revolutions in, the alternation grows within 0.5 ms (the high steps 865 N -> 1.9 kN -> 30 kN ->
+    115 kN) until the tool breaks and the part comes free. **Root cause (for cutting's owner)**: process damping.
+    `cnctwin/cutting/kernels.py` `turn_step` (and `cut_step` likewise) adds per element
+    `fpd = pd[e,0] * flank_interference_area(vnd / Vc, land, tan_clear, pd_max_flank)` with `vnd` the normal
+    velocity of the step's predicted vibration state. The model linearises the surface the edge left behind as a
+    straight line of slope vnd / Vc under the whole flank (indentation depth slope x x up to 0.5 mm behind the
+    edge), which holds for waves much longer than that contact length (here frequencies well below
+    Vc / 0.5 mm = 4 kHz). The hot loop's L0 steps carry the response of the work's lightly damped bending modes
+    (32-48 kHz, zeta 0.1-0.16 %, 40-110 g at the contact, docs/models/structure.md) and of the predictor's
+    extrapolated force: a step's normal velocity of about 0.2 m/s at nanometre amplitude gives a slope above the
+    clearance (about 6 deg for the CNMG in its holder) and the whole 0.5 mm flank "indents" (about 10 N per
+    element) although the real interference is bounded by twice the vibration amplitude (tests/integration/
+    test_turning.py, whose OperationDriver runs dynamics without structure's work modes, turns the same kind of
+    pass stably with process damping on); the force is one-sided (vnd > 0 only), so it switches
+    on and off from step to step, the predictor's linear extrapolation of that switching force overshoots the
+    predicted velocity, and the pair is a self-sustained relay that diverges once the cut has grown. Bisected: the
+    same run with K_sp = 0 (process damping off, harness only) cuts stably to 2.75 s (Fm 1139 N tangential,
+    811 N feed, 30 um peak-to-peak vibration, no step-to-step alternation), with it it explodes at 2.707 s
+    (deterministic: lathe3 and lathe_pd identical). The relaxation of dynamics' corrector already uses the
+    operating point's cutting stiffness (2.6e6 N/m: K_m G1 ~ 2e-4, negligible) and could take the linear process
+    damping of the same model, but no linearisation covers a force that switches between nothing and the
+    0.5 mm flank. Fix: evaluate the interference from the surface the edge actually generated - the element's
+    normal displacement over the last pd_max_flank / Vc (a ring of u_n per element: delta(x) = u_n(t) -
+    u_n(t - x / Vc) less the clearance), or equivalently low-pass the slope with the contact time L / Vc - so that
+    vibration much shorter than the flank gives no indentation while chatter keeps its process damping.
+  * *Heat of a turning pass in the work* (fixed, thermal): thermal spread the shear-zone heat over the edge
+    elements with weights h db r, r = `elem_r_m`, which tooling defines for non-rotating tools as the x_T
+    coordinate (<= 0); every weight was clipped to zero, the share fell back to an even split over all 254
+    elements of the CNMG and the idle elements' share went into the work (their chip fraction read at h = 0): 75 %
+    of warmup's turning pass (2.3 kW) went into the bar, 20 % into the chip. The work's surface speed is the
+    same along a turning edge, the weight is now h db: 75 % chip, 5 % insert, 19 % bar at 2.72 s (docs/models/
+    thermal.md 2, tests/unit/thermal/test_conservation.py). The surface temperature thermal reports for that pass
+    is still 981 degC (white layer at 740 degC) with a fresh insert: its flank and ploughing heat (350 W, 15 % of
+    the power) enters through a flank contact one hone radius wide; that estimate is not validated.
+  * *Removal's turning contacts carry no point and no depth (for removal's owner)*: `RemovalContact.geometry`
+    of a TK_TURNING contact has `point_S_m` zero and `ap_m` 0 (`polar_cut` books the removed volume but not the
+    engaged centroid FA_CX..FA_CZ / FA_W nor the depth range FA_ZREL_MIN / FA_ZREL_MAX that the helix and field
+    cuts accumulate). Every consumer of the contact point read the S origin (thermal's source, dynamics' reference
+    station and operating point, above). Thermal and dynamics now take the tool tip and cutting's engaged
+    elements; fix in removal: accumulate the turning step's centroid and z range in polar_cut as the other cuts do.
+* **A zero-point plate does not clamp** (holding's devices and the workholding database, open): examples/
+  die-h13-ballnose holds its insert on a Lang Quick-Point 52 grid plate, "pulled down by two d16 clamping studs"
+  (the entry's label). db/workholding/lang-quick-point-52.yaml types the plate `fixture_plate` with its size, grid
+  and mass and no clamping data, and holding's `build_fixture_plate` gives a plate only its base contacts with
+  friction: the insert stands on the plate by its weight alone, and the rapids' accelerations slide it
+  (part_slip three times, part_free, before the first cut). The fix needs the system's pull-down force per stud
+  (Lang's catalogue) in the database and a device that turns the studs into clamp contacts pulling the part onto
+  the plate; not done here (no sourced clamping force at hand), so that example's EXPECTED power and force items
+  stay out of reach.
 * **Corner rounding and test references.** The controller's look-ahead rounds program corners within the
   machine's tolerance (the VF-2SS: about 0.7 mm at the side step's 90 degree corner at F1600). The tests take
   the removed-volume reference from the path recorded in frames.bin, not from the program.

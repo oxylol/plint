@@ -85,6 +85,7 @@ class WorkStructState:
     kind: str = ""
     clamped: bool = False
     op_index: int = -1
+    part_index: int = -1                                  # the batch's part the setup belongs to
     supports_version: int = -1
     supports: Supports = field(default_factory=Supports.empty)
     lathe: LatheSupports = field(default_factory=LatheSupports)
@@ -110,7 +111,7 @@ class WorkStructState:
         arrays[prefix + "stock_hi"] = self.stock_hi
         meta = {"workpiece": self.workpiece, "grid": self.grid.to_dict() if self.grid is not None else None,
                 "kind": self.kind, "clamped": self.clamped, "op_index": self.op_index,
-                "supports_version": self.supports_version, "lathe": json_safe(self.lathe.to_dict()),
+                "part_index": self.part_index, "supports_version": self.supports_version, "lathe": json_safe(self.lathe.to_dict()),
                 "reference_digest": self.reference_digest, "modes_version": self.modes_version,
                 "disp_version": self.disp_version, "counters": json_safe(self.counters),
                 "history": json_safe(self.history), "unload": json_safe(self.unload),
@@ -146,6 +147,7 @@ class WorkStructState:
         ws.kind = str(meta["kind"])
         ws.clamped = bool(meta["clamped"])
         ws.op_index = int(meta["op_index"])
+        ws.part_index = int(meta.get("part_index", -1))
         ws.supports_version = int(meta["supports_version"])
         ws.supports = Supports.from_arrays(a, prefix + "sup.")
         ws.stock_fill = np.array(a[prefix + "stock_fill"], dtype=float)

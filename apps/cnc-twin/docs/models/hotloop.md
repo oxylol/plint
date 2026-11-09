@@ -54,7 +54,9 @@ Per L1 tick k (from motion's `k_from`):
 1. resume handling (a split returned inside this tick: jump to the contact and L0 step of `GI_RESUME_*`);
    motion's `replan_before`; save q0, spindle angles and speeds; `motion_tick` (setpoint, servo with the
    previous tick's axis loads, spindle loops with the previous torque, FK, out.tip_S);
-2. G31 probe sweep (`sweep_contact`) when a probe profile is set (`CI_PROBE`; see open problems);
+2. G31 probe sweep (`sweep_contact`) of every probe-only contact (`CI_PROBE`, section 9a) while its path runs a
+   G31 move (`setpoint.probe`): the first contact of the stylus with the field sets `out.probe_hit` and returns
+   `SYNC_PROBE_TRIGGER` at that tick (motion latches the encoder position plus the pre-travel);
 3. per active contact the broad phase: removal's `l1_contact` and `collide_envelope` (rotating tools), the
    polar field's exact block maxima (`polar_max_radius`) for turning;
 4. in contact: at the start of an engagement the engaged intervals (`engaged_intervals`), the displacement
@@ -129,10 +131,18 @@ recut, passes, refills; removal's events) has room for the rows one step may wri
 passes 2 nt + 4, refills 2 n_el + 4, removal 8 nt + 8; buffers hold at least 4 x the largest). If not, it
 returns `HOT_SPLIT` / `SPLIT_DRAIN` with the resume point; the wrapper moves the rows into its own lists
 (`_drain`) and calls again: the loop continues at that L0 step. A removal pool overflow in a pass
-(`SPLIT_POOL`) or a polar inline-segment overflow (`SPLIT_POLAR`) returns too: the wrapper grows the field
-(`prepare_replay`), and the refused pass (`CS_OVERFLOW_TOOTH`) or polar cut is repeated at the resume (both
-idempotent). No row is lost and nothing is rolled back, so the results do not depend on buffer capacities
-(test f runs with small buffers).
+(`SPLIT_POOL`), in a helix subtraction (`SPLIT_POOL`) or a polar inline-segment overflow (`SPLIT_POLAR`) returns
+too: the wrapper grows the field (`prepare_replay`), and only the refused removal is repeated at the resume, the
+step itself is not: the pass (`CS_OVERFLOW_TOOTH`), the polar cut or the helix subtraction (`CS_OVERFLOW_REMOVAL`
+with `CSF_PENDING_ANGLE`: `pending_removal` at the start of the resumed `contact_steps`, with the step's frames
+`WK_A0` / `WK_A1`, its polar step and its angles, all untouched since; the turning view window after it,
+`polar_window`), then the loop continues at the next L0 step. Before 2026-11-09 a polar or helix overflow
+resumed at the same L0 step and repeated all of it: the step's forces, work integrals and axis loads were booked
+twice and dynamics was stepped by 0 base ticks (the TwinError that stopped warmup's lathe pass and
+examples/lathe-shaft-4140 at their first contact). No row is lost and nothing is rolled back, so the results do
+not depend on buffer capacities (test f runs with small buffers; tests/integration/test_turning_split.py runs an OD
+pass with one inline segment per polar ray, which overflows on the feed marks' scallops, against the same pass
+with 16).
 
 ## 7. Turning
 
@@ -191,6 +201,25 @@ removal's event buffer swapped in for `removal.absorb`, `dynamics.absorb` with t
 empty frame for rigid runs). `StepReport` carries chunks, splits, syncs, strides and CPU times (`cpu_s`,
 `cpu_macro_s`, `cpu_build_s`, `cpu_absorb_s`, `l0_steps`). `to_arrays` / `from_arrays`: contact states, base
 inputs, polar views, tool mounts, the carried loads, tips and counters.
+
+## 9a. Probe (`hot_probe.py`)
+
+A path whose spindle holds a probe (the planner's tool number names a `kind: probe` entry of the project's tool
+list, which names one of the machine's `probes`; the resolved project the loop runs keeps these entries in
+`tools.probes`, each with its probe resolved against the machine, a raw project in `tools.list`) gets a
+probe-only contact after the cutting contacts:
+`CI_ACTIVE` 0 (no cutting, removal or dynamics loop touches it), `CI_PROBE` 1, `CI_PATH`, `CI_WORK` (the path's
+workpiece) and the stylus as removal's `Profile`: the ruby ball (`stylus_ball_mm` of the entry's resolved probe,
+else of `<probe>` or `<probe>_extra`), its upper half down to the stem, the stem (`probe_stem_diameter_ratio` x the ball,
+db/models/loop.yaml: the machine files give no stem) to `stylus_length_mm` above the ball's centre. The probe's
+tool control point is the bottom of the ball (its length offset, the calibrated electrical trigger point, runs to
+it); motion's tip of a path is its tool slot's length below the gauge line and a probe has no slot (it is not in
+the tool table: the tip is the gauge line), so the profile is placed `length offset - motion's tip length` below
+the tip (negative z). The contact is a copy of the padding contact with its own `ipar`, `work` scratch and
+`probe_out`; it is built at every step start while the probe is in the spindle (the kernel sweeps only on G31
+ticks). The sweep is removal's `sweep_contact` (the stylus' leading half sampled, cast along the tick's move
+against the interpolated field boundary, refined): the trigger is the first contact with the material, the
+trigger force and the stylus' deflection before it are motion's pre-travel (`_probe_feedback`).
 
 ## 10. Driver (`drive.py`)
 
@@ -302,8 +331,12 @@ time; docs/performance.md has the per-kernel, per-level, whole-run and memory ta
   turns the work against it (cutting's unit test uses the work turning clockwise seen from the tailstock).
   One of tooling's turning hand sign, the machine's C direction or the example's program is off; the
   turning test uses M04.
-* **Probe.** The G31 sweep runs only with a stylus profile (`CI_PROBE`), which no domain builds yet: the
-  pocket example's N10 probing cannot run; the driver tests use a variant without it.
+* **Probe.** The G31 sweep runs with the probe-only contacts of section 9a (2026-11-09; before, no stylus
+  profile was built and every probing program stopped at its probe alarm). Only spindle probes on a path's
+  tool spindle are built; a tool setter keeps motion's own trigger rule.
+* **Turning force alternation** (2026-11-09, docs/models/loop.md 15): with cutting's process damping on, a
+  turning contact's L0 force alternates from step to step (the one-sided flank indentation switching with the
+  predicted normal velocity) and diverges once the cut has grown; with K_sp = 0 the same pass is smooth and stable.
 * **Peak force** of the slot is 9 % above the stand-alone kernel with a beat every 120 ms (not explained:
   the variable pitch against the 0.5 deg stride and the refill planes are suspects).
 * **Field resolution** (section 8): within a cell of a stock edge the field, not the feed, sets the chip.

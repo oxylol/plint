@@ -395,6 +395,8 @@ def axis_models(machine: dict, ambient_K: float, start, tol: float, time_s: floa
     out = {}
     for name in sorted((machine.get("axes") or {}).keys()):
         axis = machine["axes"][name]
+        if not isinstance(axis, dict):
+            continue        # the axes block's own entries (src, note): not an axis (haas-ec400: axes.src)
         if str(plain(axis.get("type")) or "linear") != "linear":
             continue
         travel = plain(axis.get("travel_mm"))

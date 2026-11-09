@@ -21,7 +21,13 @@ params:
     unit: m
     range: [1.0e-6, 1.0e-3]
     src: est
-    note: "critical wear-land length VB* of the Smithey et al. (2001) flank model: the land stresses are plastic (constant) up to VB*, beyond it they decay as ((VB - x)/(VB - VB*))^2; 0.1 mm assumed (their fitted values were not read)"
+    note: "critical wear-land length VB* of the worn-tool model of Waldorf (1999) and Smithey et al. (2000, 2001): plastic flow on the land starts at VB*. Below it the land is in elastic contact (stresses falling as ((VB - x)/VB)^2 from the edge values sigma_0, tau_0); beyond it a plastic region of width VB - VB* (constant stresses) precedes an elastic region of the fixed width VB* (stresses falling as ((VB - x)/VB*)^2). The structure is from the sources' abstracts and secondary descriptions (the plastic region grows linearly from VB*, the elastic width stays constant); 0.1 mm assumed (their fitted values were not read)"
+  edge_strain_cap:
+    value: 1.1547
+    unit: "-"
+    range: [0.5, 3.0]
+    src: nakayama-1962-chip-breaker
+    note: "equivalent strain (shear strain 2 / sqrt 3) above which the flow stress of the edge, ploughing, indentation and wear-land pressures stops rising: Nakayama (1962, Fig. 25) measured that the strength of steel chips saturates at shear strains above about 2. The reference stress is the Johnson-Cook stress of the primary-zone state at t1 = h_min (its rate and temperature) at min(strain, this cap): the laws are fitted below strains of about 1, and where the map holds no chip-forming solution (very negative rakes, the chisel edge) the fallback's shear angle of a few degrees means strains of 3-5. Other families than steel: assumed"
   min_shear_speed_m_s:
     value: 0.05
     unit: m/s

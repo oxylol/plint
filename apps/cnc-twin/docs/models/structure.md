@@ -382,6 +382,20 @@ residual-stress profiles from the material database; tool substrate E, nu, rho f
 | lathe beam | L/D > 3 | frequency within the Timoshenko bound, section I 0.2 % | `test_lathe` (rigid chuck cantilever, clamped-pinned) |
 | determinism | same build and hardware | bit-identical | `test_determinism`, checkpoint test |
 
+**Hand check of a D10 in an ER32 collet (the tiny project's T1, 2026-11-09).** The loop's report (docs/models/
+loop.md 15) found the 5339 Hz pair odd because its tip modal compliance (1.37e-7 m/N) exceeds the 697 Hz pair's
+(3.6e-8 m/N). It is the tool's own first bending mode on its collet, not an artefact: the fluted section (I =
+1.56e-10 m^4, d_eq 7.5 mm, E 600 GPa) 25 mm long plus 7 mm of shank as a rigid-clamped stepped cantilever has a
+tip compliance of L1^3 / 3EI1 + (L^3 - L1^3) / 3EI2 = 5.55e-8 + 1.94e-8 = 7.5e-8 m/N (13 N/um) and a first
+frequency of 7.2 kHz (uniform fluted beam, 1.875^2 / 2 pi sqrt(EI / rho A L^4), rho A = 0.54 kg/m): the collet's
+contact springs lower the frequency to 5.3 kHz, the stiffness to 7.2 N/um ((5.34/7.18)^2 x 13 N/um = 7.4 N/um),
+and the modal mass m = k / omega^2 = 6.4 g matches 0.24 times the tool's 20 g overhang. The 697 Hz pair is the
+spindle flange mode (950 Hz, 70 N/um in the machine file, a modal mass of 1.96 kg) carrying holder and tool;
+1654 Hz the second spindle mode. A slender tool in a collet is softer than the spindle at its tip, so its own
+mode carries most of the tip compliance (static 1.97e-7 m/N, 5.1 N/um), as measured tool-point FRFs of such tools
+show. Mass normalisation: each mode's sum over stations of phi^T M phi = 1 (the eigen solve's normalisation),
+the sum of the modal tip compliances plus the residual equals the static tip compliance to round-off.
+
 ## 11. Assumptions and limitations (consequences)
 
 * Tools: the mean bending stiffness of anisotropic (2-flute) sections in T0; the 2-Omega parametric part is not
@@ -415,7 +429,15 @@ residual-stress profiles from the material database; tool substrate E, nu, rho f
   (no plasticity, no machining-induced layer stresses: those are surface's).
 * Long turned parts: axisymmetric mean section stiffness; jaw crushing not modelled; tailstock axially free.
 * Refresh jobs are computed when they start and applied 50 macro steps later (deterministic); a new setup, the
-  first step and the end of an operation are solved at once.
+  first step and the end of an operation are solved at once. A new `supports_version` of the same operation and
+  clamped state is a new setup only when the re-placed supports changed materially (`supports_unchanged`:
+  the same contacts, each point within `support_change_rel` (2 %) of a cell, every contact stiffness and clamping
+  force and the lathe conditions within 2 % of the largest); holding re-places the supports at every rebuild (a
+  chuck's grip during a spindle run-up, slip of a few um), and each setup is a full eigen solve and a new modal
+  basis in dynamics (examples/lathe-shaft-4140: 55 setups in 2.4 s before 2026-11-09). A setup belongs to its
+  part of a batch (`WorkStructState.part_index`): the next part is set up anew when its blank is placed, and the
+  released state of an unclamped part stays published only until then (a one-operation batch runs every part
+  as operation 0; until 2026-11-09 the first part's released state stayed published for all later parts).
 
 ## 12. Cost (this box, one core, after JIT)
 

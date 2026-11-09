@@ -66,7 +66,8 @@ from .hot_abi import (BUF_DEPOSIT, BUF_PASS, BUF_RECUT, BUF_REFILL, BUF_REMOVAL,
                       CNT_POLAR_CUTS, CNT_PROBE_SWEEPS, CNT_REFILLS, CNT_SPLITS, CNT_TICKS, CONTACT_T, CONTACTS_T,
                       CS_ENGAGED_TICK, CS_FIRST, CS_FREE_TICKS, CS_IN_CONTACT, CS_L0_STEPS, CS_LAST_RAPID,
                       CS_OVERFLOW_TOOTH, CS_PASSES, CS_PB_PENDING, CS_REFILL_MISS, CS_REFILLS, CS_SUBTRACT_CALLS,
-                      CS_FORCED, CS_GATINGS, CSF_BETA, CSF_GATE_ANGLE, CSF_THETA_PREV, GF_PROBE_TOL, GF_TICK_S, GI_HAS_DISP, GI_IPO_TICKS, GI_N_CONTACTS,
+                      CS_FORCED, CS_GATINGS, CS_OVERFLOW_REMOVAL, CSF_BETA, CSF_GATE_ANGLE, CSF_PENDING_ANGLE,
+                      CSF_THETA_PREV, GF_PROBE_TOL, GF_TICK_S, GI_HAS_DISP, GI_IPO_TICKS, GI_N_CONTACTS,
                       GI_PROBE_AROUND, GI_PROBE_RINGS, GI_RESUME, GI_RESUME_C, GI_RESUME_K, GI_RESUME_S,
                       GI_ROWS_DEPOSIT, GI_ROWS_PASS, GI_ROWS_RECUT, GI_ROWS_REFILL, GI_ROWS_REMOVAL,
                       GI_ROWS_SHOCK, GI_ROWS_SURFACE, GI_TICK0, GLOBAL_T, HOT_SPLIT, MAX_CONTACTS, MOTION_T,
@@ -414,6 +415,120 @@ def tooth_events(rm, ct, g, tick, rapid, n_teeth, th0, th1):
 
 
 # =============================================================================== L0 steps of one contact
+@njit(void(REMOVAL_T, CONTACT_T, i8, i8, f8), **dict(RAW, inline="always"))
+def polar_window(rm, ct, p, w_, tip_ang):
+    """Turning: after the step's polar cut, the bins the tool's plane passed join the view window and the bins the
+    lagging angle has left are refreshed in cutting's PolarView (docs/models/hotloop.md 7)."""
+    pf = rm.polars[w_]
+    ins = rm.inserts[p]
+    ps = ct.polar_step
+    sz = ct.fpar[CF_POLAR_SZ]
+    sx = ct.fpar[CF_POLAR_SX]
+    polar = ct.cut.polar
+    cst = ct.cst
+    dth = pf.geom[RA.PG_DTHETA]
+    a_lo = min(ps[RA.PS_TH0], ps[RA.PS_TH1])
+    a_hi = max(ps[RA.PS_TH0], ps[RA.PS_TH1])
+    kf = int(math.floor(a_lo / dth - 0.5)) + 1
+    kl = int(math.floor(a_hi / dth - 0.5))
+    z0f = pf.geom[RA.PG_Z0]
+    dzf = pf.geom[RA.PG_DZ]
+    z_a = min(ps[RA.PS_Z0], ps[RA.PS_Z1]) + min(sz * ins.box[0], sz * ins.box[1])
+    z_b = max(ps[RA.PS_Z0], ps[RA.PS_Z1]) + max(sz * ins.box[0], sz * ins.box[1])
+    i_lo = int(math.floor((z_a - z0f) / dzf)) - 1
+    i_hi = int(math.floor((z_b - z0f) / dzf)) + 1
+    pw = cst.polar_win
+    # a bin's view keeps the previous revolution while any element can still read it: cutting interpolates
+    # between the two bin centres around an element's angle, so bin b is refreshed once the angle that
+    # lags (the reference plane or the deflected tip: a tangential deflection or a centre-height offset
+    # puts the edge off the plane) has passed the centre of the next bin in the direction of motion
+    inc = ps[RA.PS_TH1] >= ps[RA.PS_TH0]
+    a_tip = _unwrap_near(tip_ang, ps[RA.PS_TH1])
+    a_lag = min(ps[RA.PS_TH1], a_tip) if inc else max(ps[RA.PS_TH1], a_tip)
+    b_st = int(math.floor(a_lag / dth - 0.5))           # lower bin of the lagging angle's stencil
+    if kl >= kf:
+        if pw[0] == -1 or pw[4] < 0:
+            pw[0] = kf
+            pw[1] = kl
+            pw[2] = i_lo
+            pw[3] = i_hi
+            pw[4] = 1
+        else:
+            pw[0] = min(pw[0], kf)
+            pw[1] = max(pw[1], kl)
+            pw[2] = min(pw[2], i_lo)
+            pw[3] = max(pw[3], i_hi)
+    if pw[0] != -1 and pw[4] >= 0:
+        if inc:
+            if b_st > pw[0]:
+                hi_b = min(pw[1], b_st - 1)
+                polar_view_update(pf, polar, pw[0], hi_b, pw[2], pw[3], sx)
+                if hi_b >= pw[1]:
+                    pw[0] = -1
+                    pw[4] = -1
+                else:
+                    pw[0] = hi_b + 1
+        elif b_st + 1 < pw[1]:
+            lo_b = max(pw[0], b_st + 2)
+            polar_view_update(pf, polar, lo_b, pw[1], pw[2], pw[3], sx)
+            if lo_b <= pw[0]:
+                pw[0] = -1
+                pw[4] = -1
+            else:
+                pw[1] = lo_b - 1
+
+
+@njit(i8(REMOVAL_T, CONTACT_T, GLOBAL_T, i8, i8, i8, i8), **RAW)
+def pending_removal(rm, ct, g, k, c, s0, code):
+    """The removal of the last L0 step refused by an overflow (CS_OVERFLOW_REMOVAL: a polar cut's inline segments,
+    a helix subtraction's pool), now that the wrapper has grown the field: repeated alone with that step's frames
+    (the work frames WK_A0 / WK_A1 and the polar step are untouched since), the step's forces, dynamics and
+    accumulators are not repeated. Returns -1 when done, s0 after another overflow (split again)."""
+    cst = ct.cst
+    if cst.ival[CS_OVERFLOW_REMOVAL] == 0:
+        return -1
+    ip = ct.ipar
+    p = ip[CI_PATH]
+    w_ = ip[CI_WORK]
+    kind = ip[CI_KIND]
+    npaths = rm.iparams[RA.RI_NPATHS]
+    sev_at = RA.RI_PATH0 + RA.RI_PSTRIDE * npaths + w_
+    wk = ct.work
+    if kind == RA.TK_TURNING:
+        status = polar_cut(rm.polars[w_], rm.inserts[p], ct.polar_step, rm.iparams[sev_at], rm.accum[p])
+        g.count[CNT_POLAR_CUTS] += 1
+        if status != 0:
+            _split(g, k, c, s0, SPLIT_POLAR, w_, code)
+            return s0
+        rm.iparams[sev_at] += 1
+        polar_window(rm, ct, p, w_, cst.fval[CSF_PENDING_ANGLE])
+    elif kind == RA.TK_HELIX:
+        tip_a = wk[WK_A0 + FR_TIP:WK_A0 + FR_TIP + 3]
+        tip_b = wk[WK_A1 + FR_TIP:WK_A1 + FR_TIP + 3]
+        wax = wk[WK_W0:WK_W0 + 3]
+        x0 = wk[WK_X0:WK_X0 + 3]
+        y0 = wk[WK_Y0:WK_Y0 + 3]
+        for r in range(3):
+            x0[r] = wk[WK_A1 + FR_R + 3 * r]
+            y0[r] = wk[WK_A1 + FR_R + 3 * r + 1]
+            wax[r] = wk[WK_A1 + FR_R + 3 * r + 2]
+        lo = ct.spec.box_lo
+        hi = ct.spec.box_hi
+        for r in range(3):
+            lo[r] = -1e300
+            hi[r] = 1e300
+        status = helix_subtract(rm.fields[w_], rm.helix[p], tip_a, tip_b, wax, x0, y0, cst.fval[CSF_PENDING_ANGLE],
+                                cst.fval[CSF_THETA_PREV], lo, hi, rm.iparams[sev_at], ct.cut.istep[CA.SI_TICK_END],
+                                p, rm.targets[w_], rm.accum[p], rm.events, rm.scratch)
+        g.count[CNT_HELIX_CALLS] += 1
+        if status != 0:
+            _split(g, k, c, s0, SPLIT_POOL, w_, code)
+            return s0
+        rm.iparams[sev_at] += 1
+    cst.ival[CS_OVERFLOW_REMOVAL] = 0
+    return -1
+
+
 @njit(i8(MOTION_T, REMOVAL_T, CONTACT_T, RING_T, GLOBAL_T, i8, i8, i8, i8), **RAW)
 def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
     """L0 steps s0 .. n - 1 of tick k for contact c (in contact). Returns -1 when the tick is done, or the step
@@ -469,6 +584,9 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
             cst.slab_done[j, kk] = 0
         cst.last_pass[j] = istep[CA.SI_TICK_END]
         update_gamma(ct, 1.0 if step[CA.ST_OMEGA_RAD_S] > 0.0 else -1.0)
+    # repeat of a polar cut / helix subtraction refused by an overflow (alone: not the whole step)
+    if pending_removal(rm, ct, g, k, c, s0, code) >= 0:
+        return s0
     # the per-tooth slab windows of tooth_events (derived scratch: rebuilt once per call)
     if rotating and kind == RA.TK_ENVELOPE:
         sig0 = 1.0
@@ -696,8 +814,11 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
                                     tick_end, p, tgt, rm.accum[p], rm.events, rm.scratch)
             g.count[CNT_HELIX_CALLS] += 1
             if status != 0:
-                _split(g, k, c, s, SPLIT_POOL, w_, code)
-                return s
+                # the step is done but for its subtraction: repeated alone at the resume (pending_removal)
+                cst.ival[CS_OVERFLOW_REMOVAL] = 1
+                cst.fval[CSF_PENDING_ANGLE] = th_t0
+                _split(g, k, c, s + 1, SPLIT_POOL, w_, code)
+                return s + 1
             rm.iparams[sev_at] += 1
         elif kind == RA.TK_TURNING and ip[CI_WORK] >= 0:
             pf = rm.polars[w_]
@@ -756,60 +877,14 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
             status = polar_cut(pf, ins, ps, rm.iparams[sev_at], rm.accum[p])
             g.count[CNT_POLAR_CUTS] += 1
             if status != 0:
-                _split(g, k, c, s, SPLIT_POLAR, w_, code)
-                return s
+                # the step is done but for its polar cut: repeated alone at the resume (pending_removal; before,
+                # the whole step was repeated: its forces and work booked twice, dynamics stepped by 0 ticks)
+                cst.ival[CS_OVERFLOW_REMOVAL] = 1
+                cst.fval[CSF_PENDING_ANGLE] = tip_ang
+                _split(g, k, c, s + 1, SPLIT_POLAR, w_, code)
+                return s + 1
             rm.iparams[sev_at] += 1
-            # the bins the tool's plane passed: their view is refreshed once the tool has left them
-            dth = pf.geom[RA.PG_DTHETA]
-            a_lo = min(ps[RA.PS_TH0], ps[RA.PS_TH1])
-            a_hi = max(ps[RA.PS_TH0], ps[RA.PS_TH1])
-            kf = int(math.floor(a_lo / dth - 0.5)) + 1
-            kl = int(math.floor(a_hi / dth - 0.5))
-            z0f = pf.geom[RA.PG_Z0]
-            dzf = pf.geom[RA.PG_DZ]
-            z_a = min(ps[RA.PS_Z0], ps[RA.PS_Z1]) + min(sz * ins.box[0], sz * ins.box[1])
-            z_b = max(ps[RA.PS_Z0], ps[RA.PS_Z1]) + max(sz * ins.box[0], sz * ins.box[1])
-            i_lo = int(math.floor((z_a - z0f) / dzf)) - 1
-            i_hi = int(math.floor((z_b - z0f) / dzf)) + 1
-            pw = cst.polar_win
-            # a bin's view keeps the previous revolution while any element can still read it: cutting interpolates
-            # between the two bin centres around an element's angle, so bin b is refreshed once the angle that
-            # lags (the reference plane or the deflected tip: a tangential deflection or a centre-height offset
-            # puts the edge off the plane) has passed the centre of the next bin in the direction of motion
-            inc = ps[RA.PS_TH1] >= ps[RA.PS_TH0]
-            a_tip = _unwrap_near(tip_ang, ps[RA.PS_TH1])
-            a_lag = min(ps[RA.PS_TH1], a_tip) if inc else max(ps[RA.PS_TH1], a_tip)
-            b_st = int(math.floor(a_lag / dth - 0.5))           # lower bin of the lagging angle's stencil
-            if kl >= kf:
-                if pw[0] == -1 or pw[4] < 0:
-                    pw[0] = kf
-                    pw[1] = kl
-                    pw[2] = i_lo
-                    pw[3] = i_hi
-                    pw[4] = 1
-                else:
-                    pw[0] = min(pw[0], kf)
-                    pw[1] = max(pw[1], kl)
-                    pw[2] = min(pw[2], i_lo)
-                    pw[3] = max(pw[3], i_hi)
-            if pw[0] != -1 and pw[4] >= 0:
-                if inc:
-                    if b_st > pw[0]:
-                        hi_b = min(pw[1], b_st - 1)
-                        polar_view_update(pf, polar, pw[0], hi_b, pw[2], pw[3], sx)
-                        if hi_b >= pw[1]:
-                            pw[0] = -1
-                            pw[4] = -1
-                        else:
-                            pw[0] = hi_b + 1
-                elif b_st + 1 < pw[1]:
-                    lo_b = max(pw[0], b_st + 2)
-                    polar_view_update(pf, polar, lo_b, pw[1], pw[2], pw[3], sx)
-                    if lo_b <= pw[0]:
-                        pw[0] = -1
-                        pw[4] = -1
-                    else:
-                        pw[1] = lo_b - 1
+            polar_window(rm, ct, p, w_, tip_ang)
         # next step starts where this one ended
         for r in range(24):
             wk[WK_A0 + r] = wk[WK_A1 + r]
@@ -1161,6 +1236,8 @@ class HotLoop:
         self._geo_cache: dict = {}
         self._placeholders: dict = {}     # padding contacts and rigid-dynamics placeholders (read by no kernel)
         self._phys = getattr(ctx.project, "physics", None) if ctx.project is not None else None
+        from .hot_probe import ProbeContacts
+        self.probes = ProbeContacts(ctx.project)    # G31: the stylus of a probe in a path's spindle
 
     # ------------------------------------------------------------------ settings
     def _physics(self, name, default):
@@ -1339,8 +1416,19 @@ class HotLoop:
                 continue
             contacts.append(self._contact(mi, ri, ti, di, cin, p, l0[p]))
             paths.append(p)
-        n_c = len(contacts)
         n_axes = int(mi.servo.kv.shape[0])
+        # probe-only contacts after the cutting ones (core.hot_probe): the paths whose spindle holds a probe
+        for p in range(P):
+            if p in paths or len(contacts) >= H.MAX_CONTACTS or p >= len(md.planners):
+                continue
+            st = md.planners[p].st
+            slot = int(st.tool_slot)
+            found = self.probes.find(st.tool_number, float(md.tool_lengths.get(slot, 0.0)) if slot >= 0 else 0.0)
+            if found is None:
+                continue
+            w = int(frames[p].workpiece) if p < len(frames) else 0
+            contacts.append(self.probes.contact(self._padding(n_axes), H, p, w, found))
+        n_c = len(contacts)
         while len(contacts) < H.MAX_CONTACTS:
             contacts.append(self._padding(n_axes))
         g = self.g

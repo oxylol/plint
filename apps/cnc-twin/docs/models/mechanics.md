@@ -216,24 +216,49 @@ friction tau_e = min(mu p, k), material flowing down under the edge:
     F_re = p r sin w_s - tau_e cos i h_min
     F_ae = p h_min sin i + tau_e r sin i cos i (sin w_s - w_s)
 
-(verified against an independent quadrature of the pressure and friction integrals). k is k_AB of
-the map at t1 = h_min. Above the stagnation height (indentation/extrusion) the friction reverses.
+(verified against an independent quadrature of the pressure and friction integrals). **k** (the
+reference shear flow stress of every contact model: edge, ploughing, indentation, wear land, K_sp) is the
+Johnson-Cook stress of the map's primary-zone state at t1 = h_min (its strain rate and temperature) with the
+strain limited to `edge_strain_cap` = 2 / sqrt(3) (`_reference_shear_flow_stress`): Nakayama (1962, Fig. 25)
+measured that the strength of chip material does not rise further above a shear strain of about 2. Where the map
+holds a regular chip state at h_min (strains 0.5-1.2) nothing changes; where it holds none (the very negative
+rakes of a chisel edge or of the inner drill lips, whose fallback shear angle of 4-6 deg means strains of 3-5)
+the Johnson-Cook extrapolation set the contact pressures before: k of a chisel row was 15-35 % higher (1045:
+883 instead of about 750 MPa) and up to 2.6 times for the strongly hardening Al 2024 set.
+Above the stagnation height (indentation/extrusion) the friction reverses.
 **Ploughing** (h < h_min): the same contact at depth h; its interference area
 A(h) = (h - r) r sin w_h + r^2 (w_h/2 + sin(2 w_h)/4) defines the hot loop's indentation
 coefficient **K_sp = F_re / A(h_min)** (continuous at h_min), unless the database gives an
 identified value (src not `est`), which is then used. `ploughing_shape` gives F(h)/F(h_min).
 **Indentation / extrusion** (chisel edges `EDGE_CHISEL`, normal rakes below -45 deg, speeds below
 v_min = 0.05 m/s): contact to depth h including the rake face, material above h_min flowing up the
-face; no shear-plane solution.
-**Flank wear land** (Smithey, Kapoor & DeVor 2001): sigma_0 = (2 + pi) k, tau_0 = min(mu sigma_0, k)
-plastic up to VB* = 0.1 mm (est), then ((VB - x)/(VB - VB*))^2: mean = sigma_0 (VB* + (VB - VB*)/3)/VB.
+face; no shear-plane solution. The rounded edge carries (2 + pi) k; the rake face carries the pressure of a
+face pushing the material ahead of it at its inclination (`wedge_pressure_factor`; Hill, Lee & Tupper 1947,
+Hill 1950): the smooth-wedge slip-line field with the displaced material rising along the face gives
+2 k (1 + psi), cos(2 theta - psi) = cos(psi) / (1 + sin(psi)), theta = 90 deg + rake the face's inclination to
+the motion. A face normal to the motion (rake >= 0) is Prandtl's flat punch (2 + pi) k as before; the -54 deg
+chisel face carries 2.81 k, the -65 deg face of a thinned point 2.46 k. The flat-punch pressure on the whole
+chisel face (it presumed a face normal to the motion) made the chisel 1.8 times the wedge value.
+**Flank wear land** (Waldorf 1999; Smithey, Kapoor & DeVor 2000, 2001): the land carries the ploughing
+stresses of the edge, sigma_0 = (2 + pi) k, tau_0 = min(mu sigma_0, k) at its edge end. Below the critical land
+VB* (`flank_plastic_land_m`, 0.1 mm est) the land is in elastic contact: the stresses fall with the square of
+the distance to the land end, mean one third. Plastic flow starts at VB*; beyond it a plastic region of width
+VB - VB* (sigma_0, tau_0) precedes an elastic region of the fixed width VB*: mean
+sigma_0 (VB - VB* + VB*/3)/VB. The former implementation had the two regions swapped (plastic up to VB*,
+elastic beyond), which made short lands fully plastic: a 0.11 mm land carried 0.94 sigma_0 instead of
+0.39 sigma_0.
 **Rubbing elements** (`EDGE_MARGIN`): no table forces; h_min = top of the h grid so the hot loop
 always uses K_sp; heat partitioned as flank heat.
 
 Error: the edge model is an upper-bound-type estimate. Against the ETH Ck45 data (r_e 33-44 um)
 it over-predicts the thrust near h_min (h = 10-20 um: model 80-95 N/mm, measured 25-55 N/mm) and the
 uncalibrated total thrust at 0.1-0.4 mm is 13-54 % low (section 9): the edge share is uncertain by
-about a factor 2. Measured feed-force data (kf11) correct it through the calibration.
+about a factor 2. Measured feed-force data (kf11) correct it through the calibration. The flat-punch
+pressure (2 + pi) k on the whole arc below the stagnation point is the remaining main uncertainty of thin chips:
+Waldorf's slip-line field for ploughing (Waldorf, DeVor & Kapoor 1998) gives edge stresses of about 2-2.6 k, and
+measured worn-tool milling forces (validation: Wang 2025, 304 with an HSS end mill) imply wear-land stresses of
+about k, both about half or less of the Prandtl value; no source independent of the validation cases fixes the
+value, so it is kept (docs/validation-report.md, cutting_force).
 
 ## 5. Oblique cutting (`oblique.py`)
 
@@ -331,18 +356,40 @@ pairing (tool class; coating match; process; measured sources ranked above `est`
 for milling when they score as well, else Kienzle; all entries of the best score, i.e. several
 reference speeds). For each entry the reference conditions come from its `calibration` block,
 else its `vc_ref`/`rake_ref` (Kienzle) or `rake`/`helix`/`fz` range (mechanistic), else the
-group's rake, r_e = 30 um, 20 degC, dry; the tool at the work temperature (short tests). The
-model's total forces at those conditions are computed with the same pipeline, and
+group's rake (when it is a chip-forming rake; else 0), r_e = 30 um, 20 degC, dry; the tool at the work temperature
+(short tests). The model is run at those conditions **with an ordinary chip-forming edge** (`EDGE_PERIPHERAL`:
+the reference test cut a chip, whatever group is being calibrated: a chisel row was calibrated against its own
+indentation model at the cutting test's rake before, a meaningless factor of 0.5-0.8 on the chisel thrust).
 
-* Kienzle: S_j(h) = measured / model on 7 log nodes over the calibration h range (cutting force
-  from kc11, feed force from kf11 or the model's ratio, passive from kp11 or the model's ratio);
-* mechanistic: the model's totals are fitted by F = Kc h + Ke over the range; S_c = Kc_meas/Kc,
-  S_e = Ke_meas/Ke (S_e = S_c when the model edge force is negligible or S_e leaves the bounds).
+What is calibrated is the **material response**, then carried to any geometry through the model:
 
-Prediction: F(h; c) = S(h, V) F_model(h; c), S interpolated in log V between reference speeds and
-held outside the measured h and speed ranges; factors are clamped to [0.2, 5] and the clamp is
-reported. **No double counting**: the measured coefficients contain the softening, friction and
-edge effects of their own test; the model only supplies the ratio F_model(c)/F_model(c_ref).
+* a **flow-stress factor** S(h, V) = measured / model cutting (tangential) force, which multiplies every force
+  of the model (shearing, edge, ploughing, indentation; the wear-land stresses take the edge factor);
+* a **friction-angle shift** dlambda(h, V) added to the model's mean rake-face friction angle before the oblique
+  transformation (`_oblique_shearing_forces`, at the row's own tau_s and phi, clamped inside the force relations),
+  chosen so that the model meets a measured thrust / cutting force ratio at the reference: the thrust follows the
+  target's rake and inclination through the force relations;
+* for mechanistic data, **edge factors** Ke measured / model (t, r; the axial edge force takes the tangential
+  one) on the edge and ploughing forces.
+
+Kienzle data: with a feed-force law (kf11, mf) the shift is solved per calibration node (7 log nodes over the h
+range, bisection within +-`max_cal_friction_shift_rad`), then S = Fc measured / model; without one (every metal
+entry of the database) the shift is 0 and S alone applies (unchanged from before). Mechanistic data: the model's
+total forces are fitted by F = Kc h + Ke over the range (as the measured coefficients were identified); the
+shift makes the model's Krc / Ktc the measured one, S = Ktc measured / model, edge factors Ke measured / model.
+Factors are interpolated in log V between reference speeds and held outside the measured h and speed ranges;
+clamped to [0.2, 5] (shifts to +-0.6 rad) and the clamp is reported. The calibration depends on the group only
+through the reference rake an entry without a stated one takes: it is cached per pairing (`MechanicsModel`), and
+it applies to every row but forming lobes (low-speed indentation rows included).
+
+Why not component factors: the former calibration formed measured / model factors per force component at the
+entry's reference geometry and applied them unchanged elsewhere. The Ti6Al4V mechanistic entry (rake 10 deg,
+helix 30 deg, Krc 263 MPa from Altintas' orthogonal database) met a model radial coefficient 3.5 times lower
+(the model's friction angle there is about 15 deg, the database's 22 deg); at the rake-0 round inserts of the
+Engin cases, where the model's own thrust ratio is already 0.86, the factor 3.5 made the radial force 2.8 times
+the cutting force. As a friction-angle shift (+7.4 deg) the same measurement gives a thrust ratio of about 1.1
+there. **No double counting**: the measured coefficients contain the softening, friction and edge effects of their
+own test; the model supplies the dependence on everything else.
 
 ### 7.4 Data-only model (no flow-stress law)
 Forces from the best Kienzle/mechanistic entry at t1 = h - h_min; shear angle from Merchant with
@@ -521,6 +568,14 @@ tie-breaks are fixed.
   the Jaspers & Dautzenberg set's linear thermal softening (m = 1) is the likely cause (Burns et al.
   2012 report rapidly heated 1045 stiffer than this law below the eutectoid).
 * Sharp-tool Oxley + additive edge model: thrust uncertain by about a factor 2 near h_min.
+* Negative rakes without an admissible solution (inner drill lips at -30 to 0 deg, at drilling speeds): the
+  fallback's shear angle falls to 5-11 deg (the continuation's C_M = 2 phi + lambda - alpha drops from about 80 deg
+  at +14 deg rake to 59 deg at -24 deg), so the force per unit width at -24 deg is 3-4 times that at +2 deg (Al 2024:
+  F_c / t1 8.3 against 1.9 GPa); experiments at -20 to -30 deg rake show shear angles of about 10-20 deg (Merchant's
+  45 deg - (lambda - alpha) / 2 gives 20 deg there). Part of the drills' lip thrust; not changed here (Oxley's
+  fallback, section 3).
+* Flank wear land: the stress level sigma_0 = (2 + pi) k is the edge's flat-punch pressure; worn-tool milling
+  (validation, Wang 2025) implies about k and a land shear / normal stress ratio of 0.5-1 (0.2 here).
 * Armarego's equivalence for oblique cutting uses the full cutting speed for the thermal state
   (normal-speed effect below cos i on R_T: < 15 % in R_T for i < 30 deg).
 * Tool-side partition: steady quarter-infinite source capped by the 1-D transient; the tool rake
@@ -547,5 +602,5 @@ read); Johnson & Cook 1983; Klippel et al. 2022 (ETH database); Komanduri & Hou 
 & Jain 2009; Lee & Shaffer 1951; Loewen & Shaw 1954; Merchant 1945; Nakayama 1962 (read: criterion,
 contact length, limiting chip thicknesses of five steels); Ning & Liang 2019; Oxley 1989 (equations
 as reproduced by Lalwani 2009 and the ExtOxley code); Pantale et al. 2022 (article and software);
-Recht 1964; Shaw, Ber & Mamin 1960; Smithey, Kapoor & DeVor 2001; Stabler 1951; Tabor 1951; Wagner
+Recht 1964; Shaw, Ber & Mamin 1960; Smithey, Kapoor & DeVor 2000, 2001; Stabler 1951; Tabor 1951; Waldorf 1999; Wagner
 1933; Zorev 1963; ISO 3685:1993. Full entries: `db/bibliography/models-mechanics.yaml`.

@@ -252,15 +252,19 @@ class CuttingDomain:
             arr = np.asarray(values, float) if values is not None else np.zeros(0)
             if arr.shape != members.shape or not members.any():
                 return None
-            return float(np.mean(arr[members]))
+            value = float(np.mean(arr[members]))
+            return value if math.isfinite(value) else None
 
         tool_T = member_mean(getattr(thermal, "rake_temp_mean_K", None)) if thermal is not None else None
         flank_T = None
         if thermal is not None:
             q = np.asarray(getattr(thermal, "flank_temp_q_K", np.zeros((0, 0, 0))), float)
             w = np.asarray(getattr(thermal, "q_weights", np.zeros(0)), float)
-            if q.ndim == 3 and q.shape[:2] == members.shape and w.size == q.shape[2] and w.sum() > 0:
-                flank_T = float(np.mean((q @ w)[members] / w.sum()))
+            if q.ndim == 3 and q.shape[:2] == members.shape and w.size == q.shape[2] and w.sum() > 0 and members.any():
+                # a row without members in this step (e.g. a low-speed variant no element runs at) has no flank
+                # temperature of its own: None (the rake temperature then stands in), never a NaN mean
+                value = float(np.mean((q @ w)[members] / w.sum()))
+                flank_T = value if math.isfinite(value) else None
         work_T = REFERENCE_TEMP_K
         pre = getattr(prev.thermal, "contact_preheat_K", {}) or {}
         wpre = getattr(prev.thermal, "work_preheat_K", {}) or {}
@@ -558,7 +562,10 @@ class CuttingDomain:
         if omega <= 0.0:
             return 1 << 60
         rev = TWO_PI / omega
-        return int(math.ceil((rev + rev / max(n_teeth, 1)) / ctx.tick_s))
+        ticks = (rev + rev / max(n_teeth, 1)) / ctx.tick_s
+        # a spindle barely turning (a run-down's last steps) has no stale bins within any run: the same bound as a
+        # stopped spindle (the tick count would overflow the kernel's int64)
+        return int(math.ceil(ticks)) if ticks < float(1 << 60) else 1 << 60
 
     @staticmethod
     def _occupancy(bus) -> A.CutOccupancy:

@@ -37,6 +37,27 @@ def test_probe_skip_latches_where_the_stylus_touches_and_brakes():
     assert state.motion.planners[0].item(1).triggered
 
 
+def test_the_move_after_a_skip_starts_where_the_axes_stopped():
+    """G31 then a rapid back up: the rapid is planned from the braked stop, not from the probe block's programmed
+    end point (the command used to jump to that end point, 5 mm past the touch, and the servo followed it down
+    before the rapid came back: in the full loop the stylus went 3 mm into the part after the trigger)."""
+    s = Script()
+    s.rapid(X=-100, Y=-100, Z=-150)
+    s.probe(300, X=-100, Y=-100, Z=-160)
+    s.rapid(X=-100, Y=-100, Z=-120)
+    s.stop()
+    plane_M = 0.6 - 0.155
+    res, dom, state, ctrl = run(MILL, s, probe=lambda p, k, inputs: inputs.out.tip_M[k, p, 2] <= plane_M)
+    assert ctrl.done()
+    (tick, fb), = ctrl.feedbacks[0]
+    assert fb.probe.triggered
+    cmd = stack(res.frames, "axis_cmd")[:, 2]
+    act = stack(res.frames, "axis_actual")[:, 2]
+    # neither the command nor the axis goes further than the brake distance past the touch (-155 mm)
+    assert cmd.min() > -0.1552 and act.min() > -0.1552
+    assert act[-1] == pytest.approx(-0.120, abs=dom.model.in_position)
+
+
 def test_probe_without_contact_reports_no_trigger_at_the_end():
     res, dom, state, ctrl = run(MILL, _probe_program(), probe=lambda p, k, inputs: False)
     (tick, fb), = ctrl.feedbacks[0]

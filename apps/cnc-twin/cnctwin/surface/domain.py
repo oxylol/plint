@@ -1024,14 +1024,18 @@ class SurfaceView:
     def __init__(self, state_getter):
         self._state = state_getter
 
-    def burr_height_at(self, workpiece: int, point_S_m, normal=None, radius_m: float = 1.0e-3) -> float:
+    def burr_height_at(self, workpiece: int, point_S_m, normal=None, radius_m: float = 1.0e-3,
+                       since_tick: int | None = None) -> float:
         """Highest surviving burr within radius of the point whose exit face matches the normal (within 45 deg
-        when given): the overhang a locator or clamp on that face sits on."""
+        when given): the overhang a locator or clamp on that face sits on. ``since_tick``: only burrs formed at or
+        after that base tick (the part in the machine: a batch's earlier parts have been unloaded with theirs)."""
         sst: SurfaceState = self._state()
         p = np.asarray(point_S_m, dtype=float)
         best = 0.0
         for i in range(sst.burrs.n):
             if sst.burrs.bi[i, BI["removed"]] or int(sst.burrs.bi[i, BI["workpiece"]]) != int(workpiece):
+                continue
+            if since_tick is not None and int(sst.burrs.bi[i, BI["first_tick"]]) < int(since_tick):
                 continue
             if np.linalg.norm(sst.burrs.location(i) - p) > radius_m:
                 continue

@@ -420,6 +420,28 @@ def edge_element_ref(mode, qr, ar, qf, af, b, th, period, ncyc, t_eng, k, alpha,
     return np.array(rake), np.array(peak), np.array(flank), amp
 
 
+def edge_entry_ref(mode, qr, ar, qf, af, b, th, period, ncyc, t_eng, k, alpha, wedge, rfar, tb):
+    """Reference of the edge kernel's entry outputs (rake_entry, flank_entry) of one element: the contact means
+    at the end of the cooling interval of an interrupted element (brute-force superposition), the body temperature
+    for a continuous or idle one (its own steady rise is the partition's, not the background's)."""
+    if mode != EDGE_INTERRUPTED:
+        return tb, tb
+    duty = th / period
+    t_total = ncyc * period
+    far_scale = duty * erfc(rfar / (2 * math.sqrt(alpha * t_total))) / (math.pi * k * rfar)
+    far_r = qr * ar * 2 * b * far_scale
+    far_f = qf * af * 2 * b * far_scale
+    s_rf = disc_depth_factor_ref(ar, math.sqrt(4 * af * b / math.pi))
+    s_fr = disc_depth_factor_ref(af, math.sqrt(4 * ar * b / math.pi))
+    rc, rm = periodic_ref(period, th, period, ncyc, ar, b, k, alpha, 0), periodic_ref(period, th, period, ncyc, ar, b,
+                                                                                   k, alpha, 1)
+    fc, fm = periodic_ref(period, th, period, ncyc, af, b, k, alpha, 0), periodic_ref(period, th, period, ncyc, af, b,
+                                                                                   k, alpha, 1)
+    er = qr * rc - far_r
+    ef = qf * fc - far_f
+    return tb + wedge * max(qr * rm - far_r + s_rf * ef, 0.0), tb + wedge * max(qf * fm - far_f + s_fr * er, 0.0)
+
+
 # ------------------------------------------------------------------ moving source
 def moving_rect_ref(q, l, w, v, k, alpha, t, x, y, z):
     """Reference of kernels.moving_rect_rise by adaptive quadrature in tau (w <= 0: infinite width)."""
@@ -550,3 +572,24 @@ def edge_deviation_ref(qr, ar, qf, af, b, th, period, ncyc, k, alpha, wedge, xi)
         flank.append(wedge * (qf * (theta(tau, af, 1) - m_fm) + s_fr * er))
         peak.append(wedge * (er + ef))
     return np.array(rake), np.array(peak), np.array(flank)
+
+
+def edge_deviation_entry_ref(qr, ar, qf, af, b, th, period, ncyc, k, alpha, wedge):
+    """Reference of the deviation mode's entry outputs of an interrupted element: the contact means at the end of
+    the cooling interval minus their cycle means."""
+    s_rf = disc_depth_factor_ref(ar, math.sqrt(4 * af * b / math.pi))
+    s_fr = disc_depth_factor_ref(af, math.sqrt(4 * ar * b / math.pi))
+
+    def theta(tau, a, which):
+        return periodic_ref(tau, th, period, ncyc, a, b, k, alpha, which)
+
+    def mean(a, which):
+        pts = [th] if 0.0 < th < period else None
+        value, _ = integrate.quad(lambda s: theta(s, a, which), 0.0, period, points=pts, limit=200, epsrel=1e-9)
+        return value / period
+
+    m_rc, m_rm, m_fc, m_fm = mean(ar, 0), mean(ar, 1), mean(af, 0), mean(af, 1)
+    er = qr * (theta(period, ar, 0) - m_rc)
+    ef = qf * (theta(period, af, 0) - m_fc)
+    return (wedge * (qr * (theta(period, ar, 1) - m_rm) + s_rf * ef),
+            wedge * (qf * (theta(period, af, 1) - m_fm) + s_fr * er))

@@ -140,16 +140,21 @@ class Gatherer:
 
     # ------------------------------------------------------------------ patches
     def _patches(self, store, inp, X, N, tick, mot, cls) -> np.ndarray:
-        """Face patch of every event: per brick, the first facet (creation order) whose normal and plane match;
-        events matching none open a facet from the first of them, and the rest are matched again."""
+        """Face patch of every event: per brick, the first facet (creation order) of the running operation whose
+        normal and plane match; events matching none open a facet from the first of them, and the rest are
+        matched again. A patch belongs to the operation that opened it: the next part of a batch (a new blank in
+        the same place) and the next setup (another stock frame) open their own patches (docs/models/surface.md
+        3; before, a batch's second part joined the first part's patches and its step-over profiles compared
+        the two parts' passes as overlapping passes: witness marks up to 143 um deep)."""
         wp = int(inp.workpiece)
+        op = int(inp.op)
         bricks = np.asarray(self.bricks.brick_of(wp, X), dtype=np.int64)
         patch = np.full(len(X), -1, np.int64)
         _, first = np.unique(bricks, return_index=True)
         for b in bricks[np.sort(first)]:
             todo = np.nonzero(bricks == b)[0]
             while len(todo):
-                facets = store.facets.get((wp, int(b)), [])
+                facets = [q for q in store.facets.get((wp, int(b)), []) if int(store.pi[q, PI["op"]]) == op]
                 hit = np.full(len(todo), -1, np.int64)
                 for p in facets:
                     n_p = store.normal(p)

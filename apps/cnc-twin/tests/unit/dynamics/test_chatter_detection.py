@@ -110,3 +110,30 @@ def test_last_contiguous_run():
     t = np.concatenate([np.arange(100) * 10, 5000 + np.arange(50) * 10]).astype(np.int64)
     s = last_run(t, 1.5)
     assert s.start == 100 and s.stop == 150
+
+
+def test_a_decaying_free_vibration_is_not_chatter_and_samples_without_cutting_are_not_analysed():
+    """The domain's two physical gates (docs/models/dynamics.md 4): a non-forced component dying out at the
+    structure's own damping (a frame mode ringing after a rapid, an entry shock) is a transient; and only the
+    steps in which the tool cut feed the window."""
+    from types import SimpleNamespace
+
+    from cnctwin.core.bus import Bus, CuttingContact
+    from cnctwin.dynamics.domain import DynamicsDomain
+    from cnctwin.dynamics.modal import Mode
+    f_c, zeta, f_s = 65.0, 0.05, 100.0       # 6000 rpm: 65 Hz lies in the analysed band (> f_s / 2), off the lines
+    w = TWO_PI * f_c
+    ticks, u = _signal(f_s, 4, 25, chatter=(f_c, 3e-6, -zeta * w))             # free decay at the mode's rate
+    r = analyse(ticks, u, TICK_S, f_s, f_s, 4, 1e-5, SET)
+    rec = SimpleNamespace(modes=[Mode(2, w, zeta, "frame", "frame 1"), Mode(0, TWO_PI * 700.0, 0.03, "spindle", "t")])
+    assert abs(r.freq_Hz / f_c - 1.0) < 0.02 and r.growth_per_s < -0.5 * zeta * w
+    assert DynamicsDomain._decaying(rec, r)
+    ticks, u = _signal(f_s, 4, 25, chatter=(f_c, 3e-6, +5.0))                  # sustained / growing: chatter
+    r2 = analyse(ticks, u, TICK_S, f_s, f_s, 4, 1e-5, SET)
+    assert abs(r2.freq_Hz / f_c - 1.0) < 0.02 and not DynamicsDomain._decaying(rec, r2)
+    bus = Bus()
+    assert not DynamicsDomain._cutting(bus, 0)
+    bus.cutting.contacts.append(CuttingContact(tool_slot=0, in_cut_s=0.0))
+    assert not DynamicsDomain._cutting(bus, 0)
+    bus.cutting.contacts.append(CuttingContact(tool_slot=0, in_cut_s=1e-4))
+    assert DynamicsDomain._cutting(bus, 0) and not DynamicsDomain._cutting(bus, 1)

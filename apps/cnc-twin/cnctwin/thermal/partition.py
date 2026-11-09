@@ -120,8 +120,12 @@ def _shares(energy: float, candidates: list[np.ndarray], valid: np.ndarray) -> n
 
 
 def split_contact(cut, removal_workpiece: int, table: FractionTable | None, edges: EdgeModel | None,
-                  vb_m: np.ndarray | None) -> ContactHeat:
-    """Partition one CuttingContact's zone heat (bus record of the step)."""
+                  vb_m: np.ndarray | None, rotating: bool = True) -> ContactHeat:
+    """Partition one CuttingContact's zone heat (bus record of the step). The zone heat is spread over the
+    elements in proportion to h db V (V the cutting speed at the element): a rotating tool's V grows with the
+    element's radius from the tool axis (``elem_r_m``); a non-rotating tool's V is the work's surface speed, the
+    same along its edge up to the depth of cut over the turned radius (``elem_r_m`` is then the x_T coordinate,
+    <= 0, not a speed: docs/models/tooling.md 2.2), so its weight is 1."""
     out = ContactHeat(int(cut.contact), int(cut.tool_slot), int(removal_workpiece))
     q_shear = float(cut.heat_shear_J)
     q_rake = float(cut.heat_rake_J)
@@ -133,7 +137,7 @@ def split_contact(cut, removal_workpiece: int, table: FractionTable | None, edge
     if edges is not None and n_elem and tuple(np.asarray(edges.elem_r_m).shape) == in_cut.shape:
         valid = (np.asarray(edges.elem_valid) != 0)
         db = np.asarray(edges.elem_db_m, dtype=float)
-        radius = np.asarray(edges.elem_r_m, dtype=float)
+        radius = np.asarray(edges.elem_r_m, dtype=float) if rotating else np.ones(in_cut.shape)
         group = np.asarray(edges.elem_group)
         edge_radius = np.asarray(edges.elem_edge_radius_m, dtype=float)
     else:

@@ -312,4 +312,150 @@ def remove_loose(f, first, parent, total, loose, x_unused, y_unused, z_unused, e
     return removed_z
 
 
-KERNELS = (_find, _segs, label_z, component_stats, components_in_box, remove_loose)
+@njit(i8(FIELD_T, I1), **OPTS)
+def local_connected(f, box):
+    """Incremental connectivity of the level-0 column graph after removals. Precondition (the caller's): at the last
+    check the material was one component, and since then material was only removed, each change marked in bconn.
+    Every changed z column lies in the rectangle R of node columns of the brick columns with a bconn mark (a brick's
+    nodes and the next boundary node, which a change marks too); the columns of R and a ring of one column around
+    it (unchanged) are labelled. When that labelling has one component and it reaches the ring, the material is
+    still one component: every path from a column outside into R crosses the ring, and every column outside R
+    joins the ring's component as it did before (its path into R enters through the ring). Returns 1 (still one
+    component), 0 (not proven: label the whole field), -1 (no change marked). box = [i0, i1, j0, j1] of R and the
+    columns and segments labelled (box[4], box[5])."""
+    cnt = f.cnt
+    seg = f.seg
+    link = f.link
+    pseg = f.pseg
+    pnext = f.pnext
+    bconn = f.bconn
+    nx = f.lv_dims[0, 0]
+    ny = f.lv_dims[0, 1]
+    r0 = f.lv_ray0[0, 2]
+    nbx = f.lv_bdims[0, 0]
+    nby = f.lv_bdims[0, 1]
+    nbz = f.lv_bdims[0, 2]
+    b0 = f.lv_brick0[0]
+    BR = A.BRICK
+    bx0 = nbx
+    bx1 = -1
+    by0 = nby
+    by1 = -1
+    for bx in range(nbx):
+        for by in range(nby):
+            base = b0 + (bx * nby + by) * nbz
+            for bz in range(nbz):
+                if bconn[base + bz] != 0:
+                    if bx < bx0:
+                        bx0 = bx
+                    if bx > bx1:
+                        bx1 = bx
+                    if by < by0:
+                        by0 = by
+                    if by > by1:
+                        by1 = by
+                    break
+    if bx1 < 0:
+        return -1
+    # R (changed columns) and I = R and its ring of one column, clipped to the lattice
+    ri0 = BR * bx0
+    ri1 = min(BR * bx1 + BR, nx - 1)
+    rj0 = BR * by0
+    rj1 = min(BR * by1 + BR, ny - 1)
+    ia = max(ri0 - 1, 0)
+    ib = min(ri1 + 1, nx - 1)
+    ja = max(rj0 - 1, 0)
+    jb = min(rj1 + 1, ny - 1)
+    box[0] = ri0
+    box[1] = ri1
+    box[2] = rj0
+    box[3] = rj1
+    ni = ib - ia + 1
+    nj = jb - ja + 1
+    first = np.empty(ni * nj + 1, np.int64)
+    total = 0
+    for i in range(ni):
+        for j in range(nj):
+            first[i * nj + j] = total
+            total += cnt[r0 + (ia + i) * ny + ja + j]
+    first[ni * nj] = total
+    box[4] = ni * nj
+    box[5] = total
+    if total == 0:
+        return 0
+    parent = np.empty(total, np.int32)
+    for k in range(total):
+        parent[k] = k
+    lo_a = np.empty(A.MAX_SEG, np.int64)
+    hi_a = np.empty(A.MAX_SEG, np.int64)
+    lo_b = np.empty(A.MAX_SEG, np.int64)
+    hi_b = np.empty(A.MAX_SEG, np.int64)
+    unions = 0
+    for i in range(ni):
+        for j in range(nj):
+            ca = i * nj + j
+            na = first[ca + 1] - first[ca]
+            if na == 0:
+                continue
+            ra = r0 + (ia + i) * ny + ja + j
+            # one inline segment (the common case) is read in place
+            lo1 = np.int64(seg[ra, 0, 0])
+            hi1 = np.int64(seg[ra, 0, 1])
+            if na > 1:
+                _segs(cnt, seg, link, pseg, pnext, ra, lo_a, hi_a)
+            for nb_dir in range(2):
+                ii = i + 1 if nb_dir == 0 else i
+                jj = j if nb_dir == 0 else j + 1
+                if ii >= ni or jj >= nj:
+                    continue
+                cb = ii * nj + jj
+                nb = first[cb + 1] - first[cb]
+                if nb == 0:
+                    continue
+                rb = r0 + (ia + ii) * ny + ja + jj
+                if na == 1 and nb == 1:
+                    if lo1 < np.int64(seg[rb, 0, 1]) and np.int64(seg[rb, 0, 0]) < hi1:
+                        x = _find(parent, first[ca])
+                        y = _find(parent, first[cb])
+                        if x != y:
+                            unions += 1
+                            if x < y:
+                                parent[y] = x
+                            else:
+                                parent[x] = y
+                    continue
+                if na == 1:
+                    lo_a[0] = lo1
+                    hi_a[0] = hi1
+                _segs(cnt, seg, link, pseg, pnext, rb, lo_b, hi_b)
+                ka = 0
+                kb = 0
+                while ka < na and kb < nb:
+                    if lo_a[ka] < hi_b[kb] and lo_b[kb] < hi_a[ka]:
+                        x = _find(parent, first[ca] + ka)
+                        y = _find(parent, first[cb] + kb)
+                        if x != y:
+                            unions += 1
+                            if x < y:
+                                parent[y] = x
+                            else:
+                                parent[x] = y
+                    if hi_a[ka] < hi_b[kb]:
+                        ka += 1
+                    else:
+                        kb += 1
+    # one component (every successful union joins two), and it reaches the ring
+    if total - unions != 1:
+        return 0
+    for i in range(ni):
+        gi = ia + i
+        for j in range(nj):
+            gj = ja + j
+            if ri0 <= gi <= ri1 and rj0 <= gj <= rj1:
+                continue
+            if first[i * nj + j + 1] > first[i * nj + j]:
+                return 1
+    return 0
+
+
+KERNELS = (_find, _segs, label_z, component_stats, components_in_box, remove_loose, local_connected)

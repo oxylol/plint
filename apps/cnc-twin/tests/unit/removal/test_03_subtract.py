@@ -268,3 +268,71 @@ def test_profile_from_tooling_envelope_max_radius():
 def test_one_signature_each():
     for kernel in KE.KERNELS + KS.KERNELS:
         assert len(kernel.signatures) == 1, kernel.__name__
+
+
+def _quantised(out, n, lq):
+    """The removal intervals subtract_envelope makes of n envelope intervals (quantised, clipped, merged)."""
+    res = []
+    for i in range(n):
+        qa = max(int(math.floor(out[i, 0] / Q + 0.5)), 0)
+        qb = min(int(math.floor(out[i, 1] / Q + 0.5)), lq)
+        if qb <= qa:
+            continue
+        if res and qa <= res[-1][1]:
+            res[-1][1] = max(res[-1][1], qb)
+        else:
+            res.append([qa, qb])
+    return res
+
+
+def _within(ivs, lo, hi):
+    """Intervals intersected with [lo, hi) (what they remove from material confined to it)."""
+    return [(max(a, lo), min(b, hi)) for a, b in ivs if min(b, hi) > max(a, lo)]
+
+
+@pytest.mark.parametrize("name", sorted(PROFILES))
+def test_slab_window_removes_what_every_slab_removes(name):
+    """With the slab bounds and a material extent in the work array (as subtract_envelope gives them), _env_ray
+    evaluates only the slabs that can reach the material: the quantised intervals within the material are those
+    of every slab (random tooth slabs with offset axis points and radius offsets, axes along a family and oblique,
+    every family, material extents anywhere along the ray)."""
+    from cnctwin.removal.k_collide import env_ray
+
+    prof = PROFILES[name]
+    rng = np.random.default_rng(11)
+    lq = 4_000_000                                      # quanta: a 40 mm ray
+    n_hit = 0
+    for trial in range(240):
+        w = [(0.0, 0.0, 1.0), (0.0, 0.0, -1.0), (1.0, 0.0, 0.0), (0.3, -0.2, 0.93)][trial % 4]
+        w = np.asarray(w, float) / np.linalg.norm(w)
+        ns = int(rng.integers(1, 30))
+        z = np.sort(np.concatenate([[0.0, 12e-3], rng.uniform(0.0, 12e-3, ns - 1)]))
+        base = np.array([20e-3, 20e-3, 20e-3]) - 6e-3 * w
+        c = base + rng.normal(scale=2e-6, size=(ns, 3)) * (trial % 3)
+        dr = rng.normal(scale=3e-6, size=ns)
+        fam = int(rng.integers(0, 3))
+        o = base + rng.uniform(-3.5e-3, 3.5e-3, 3)
+        o[fam] = 0.0
+        out = np.zeros((A.MAX_IV, 2))
+        tags = np.zeros(A.MAX_IV, np.int32)
+        args = (prof.z0_m, prof.z1_m, prof.kind, prof.c0, prof.c1, prof.c2, prof.c3, prof.part, o[0], o[1], o[2], fam, w,
+                np.ascontiguousarray(c), z, dr, 1e-3, 39e-3, out, tags, 1)
+        full = _quantised(out, env_ray(*args, np.zeros(16)), lq)
+        for _ in range(4):
+            m_lo, m_hi = sorted(int(v) for v in rng.integers(100_000, 3_900_000, 2))
+            work = np.zeros(16 + A.N_ENV)
+            e = work[16:]
+            spread = max(float(np.linalg.norm(c[k] - c[0])) for k in range(ns))
+            e[KE.ENV_NS] = ns
+            e[KE.ENV_CX:KE.ENV_CZ + 1] = c[0]
+            e[KE.ENV_SPREAD] = spread * (1.0 + 1e-12)
+            e[KE.ENV_Z0] = z[0]
+            e[KE.ENV_Z1] = z[ns]
+            e[KE.ENV_HINV] = ns / (z[ns] - z[0])
+            e[KE.ENV_TLO] = m_lo * Q
+            e[KE.ENV_THI] = m_hi * Q
+            e[KE.ENV_KEY] = KE.ENV_MAGIC
+            got = _quantised(out, env_ray(*args, work), lq)
+            assert _within(got, m_lo, m_hi) == _within(full, m_lo, m_hi)
+            n_hit += bool(_within(full, m_lo, m_hi))
+    assert n_hit > 100

@@ -73,14 +73,25 @@ verification), `drive.py` (a stand-alone driver of the kernels over prescribed m
   smooth curve: second order (Kienzle h^0.74 with n_hi = 384: < 0.2 % above 20 um, tested). Above
   h_hi the last segment extrapolates and `table_over` counts it. `h_write` per row: h_min for
   cutting rows, +inf for rubbing rows (margins), 0 for forming lobes.
-* **Flank wear land** (Smithey et al. 2001): wear-land forces sigma(VB) VB dS (normal) and
-  tau(VB) VB dS (tangential) while in contact (`flank_stress`), stresses from the row.
+* **Flank wear land** (Waldorf 1999; Smithey, Kapoor & DeVor 2000, 2001): wear-land forces sigma(VB) VB dS
+  (normal) and tau(VB) VB dS (tangential) while in contact (`flank_stress`), stresses from the row: the edge's
+  ploughing stresses sigma_0, tau_0 at the land's edge end, elastic contact (quadratic decay to the land end,
+  mean one third) below the critical land VB*, a plastic region of width VB - VB* ahead of an elastic one of width
+  VB* beyond it (mechanics.md 4; the regions were swapped before, which made short lands fully plastic).
 * **Process damping** (Wu 1989; Altintas, Eynian & Onozuka 2008; Ahmadi & Ismail 2011): the flank
-  indents the wavy surface it has just generated when the path slope s = v_n / V exceeds zero over a
+  indents the wavy surface it has just generated when the slope of the wave, s = v_n,vib / V, exceeds zero over a
   zero-clearance land L = VB + c_e r_e (`pd_edge_land_per_radius` c_e) followed by the clearance face
   tan(gamma): indented area A(s) = s x*^2 / 2 - tan(gamma) (x* - L)^2 / 2 with
   x* = min(L tan(gamma) / (tan(gamma) - s), `pd_max_flank_m`); force K_sp dS A (normal) plus friction.
   A sharp edge without a land (VB = 0, r_e = 0) does not indent; the dissipation scales ~ L^2.
+  **Only the vibration makes the wave**: v_n,vib is the normal component of the tool's deflection rates (station
+  translation and rotation) minus the work's vibration velocity, not of the whole relative velocity. The steady
+  path (feed) is the surface the edge itself generates, which its land follows (a worn land wears to it); its
+  steady contact is the edge and wear-land force above. With the whole normal velocity the feed slope of every
+  steady cut indented the land: twice the same contact, and near a drill's axis, where the feed is comparable to
+  the cutting speed (s up to 0.8 at r = 0.05 mm, f = 0.26 mm/rev), a chisel element of 0.1 mm carried 1.7 kN
+  (Sklenicka's thinned 8 mm drill at f = 0.26 mm/rev: thrust 4.8 kN against 1.15 kN measured; Wang's worn end mill:
+  +134 N of normal force).
 * **Forming lobes** (Chowdhary et al. 2002, 2003; Hill 1950; Johnson 1985): contact pressure
   p = (2 + pi) k, k = sigma / sqrt(3) (sigma: Johnson-Cook strain term at `forming_strain`), contact
   length l(h) = (1 + c_er) sqrt(2 rho_eff h), rho_eff = 2 r^2 / (e N^2) (lobe relief
@@ -250,6 +261,9 @@ refill requests (after computing their planes); outputs go to `bus_next.cutting.
 `macro_step`: coefficient rebuilds and `ProcessCoefficients`, spindle load and findings.
 `end_operation`: every memory bin becomes stale. `finalize`: per-tool summary. State checkpoint:
 `CuttingState.to_arrays` / `from_arrays` (bit-identical continuation, tested).
+A row's slow state takes thermal's tool temperatures and wear's VB / BUE as means over the row's member elements;
+a row without members in the step (a low-speed variant no element runs at) or a non-finite mean leaves the value
+unset (None: the model's default), never a NaN (it stopped the drill-tap example's run in the rebuild grid).
 
 ### Bus fields read (from `bus_prev`)
 
@@ -303,8 +317,10 @@ buffer overflow are bit-identical.
 * Tap helix rows need at least two lands; first-land elements whose discretisation differs from the
   last land's by dz see |n_z| dz of the bore wall (0.1 x rise, tested).
 * Floating holder: quasi-static (no inertia), linear spring, travel limit.
-* Process damping: flank indentation of the surface the same edge generated; plastic indentation
-  coefficient K_sp from the row.
+* Process damping: flank indentation of the wave the vibration leaves on the surface the same edge generated
+  (the vibration's normal velocity only); plastic indentation coefficient K_sp from the row.
+* Indentation rows (chisel edges, normal rakes below -45 deg, elements below v_min): the rake face carries the
+  wedge-indentation pressure of its inclination (mechanics.md 4), the rounded edge the flat-punch pressure.
 
 ## 11. Limitations
 
@@ -318,8 +334,9 @@ buffer overflow are bit-identical.
 
 ## 12. References
 
-Altintas 2012 (`altintas-2012-mfg-automation`); Kienzle 1952 (`kienzle-1952`); Smithey et al. 2001
-(`smithey-2001-worn-tool-forces`); Waldorf 1998 (`waldorf-1998-ploughing-slipline`); Jun et al. 2006
+Altintas 2012 (`altintas-2012-mfg-automation`); Kienzle 1952 (`kienzle-1952`); Smithey et al. 2000, 2001
+(`smithey-2000-worn-tool-3d`, `smithey-2001-worn-tool-forces`); Waldorf 1999 (`waldorf-1999-worn-tool-ploughing`);
+Waldorf 1998 (`waldorf-1998-ploughing-slipline`); Hill, Lee & Tupper 1947 (`hill-lee-tupper-1947-wedge`); Jun et al. 2006
 (`jun-2006-microendmilling-dynamics`); Vogler et al. 2004 (`vogler-2004-micro-endmilling-surface`);
 Liu et al. 2007 (`liu-2007-microendmilling-surface`); Wu 1989 (`wu-1989-process-damping`); Altintas,
 Eynian & Onozuka 2008 (`altintas-2008-process-damping`); Ahmadi & Ismail 2011

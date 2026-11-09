@@ -79,3 +79,25 @@ def test_process_damping_dissipates_and_scales_with_the_wear_land():
     assert out[0.0] == 0.0
     assert 0.0 < out[0.1e-3] < out[0.2e-3]
     assert out[0.2e-3] / out[0.1e-3] == pytest.approx(4.0, rel=0.25)
+
+
+def test_process_damping_needs_vibration_not_the_steady_feed():
+    """Only the vibration makes the wave the land indents: in a steady cut (no deflection, no work vibration) the
+    feed slope v_f . n / V of the path the edge itself generates gives no process-damping force, also with a worn
+    land and a large slope (feed per tooth 0.4 mm); the land's steady contact is the wear-land force."""
+    R, ap, c = 5e-3, 2e-3, 0.4e-3
+    tool = AN.cylinder_mill(R, 2, ap, 2, clear_rad=math.radians(7))
+    nt, ne = tool.edge.elem_r_m.shape
+    coeffs = {"default": dict(ALTINTAS, K_sp=3e13, sigma0=1.5e9, tau0=0.6e9, h_min_m=0.0)}
+    ct, table, _ = linear_layout(tool, coeffs, OMEGA, VB=np.full((nt, ne), 0.2e-3))
+    assert np.all(ct.pd[:, 0] > 0.0) and np.all(ct.pd[:, 1] > 0.0)
+    drv = Driver(ct, table, nt, ne, memory_bins=NB)
+    vf = c * 2 * abs(OMEGA) / (2 * math.pi)
+    tip = lambda t: np.array([vf * t, 0.0, 0.0])
+    lo, hi = straight_immersion(0.0, math.pi)
+    drv.set_interval(lo, hi)
+    drv.prefill_memory(tip, 0.0, OMEGA)
+    drv.run_rotating(2 * NB, OMEGA, DT, tip, record=False)
+    assert drv.acc.scalars[A.ACC_SHAFT_WORK_J] > 0.0
+    assert drv.acc.scalars[A.ACC_PROCESS_DAMPING_J] == 0.0
+    assert drv.acc.scalars[A.ACC_HEAT_FLANK_J] > 0.0              # the land's own contact

@@ -109,9 +109,15 @@ def test_fixed_latency_skip_and_new_setup():
     rec = fx.run(dom, ctx, state, b, 1)                      # macro 55: applied
     assert ws.solution.modes.version > v0 and rec.work_modes[0].version == ws.solution.modes.version
     assert ws.counters.get("skipped", 0) >= 1                # unchanged inputs (geometry, temperatures, supports)
-    # holding places the supports again: solved at once
+    # holding places the same supports again (a new supports_version): the model is kept (support_change_rel)
     n = len(ws.history)
     fx.run(dom, ctx, state, bus(version=2), 1)
+    assert len(ws.history) == n and ws.counters.get("supports_kept", 0) == 1 and ws.supports_version == 2
+    # placed again with a materially different support (stiffer contacts): a new setup, solved at once
+    b3 = bus(version=3)
+    for sup in b3.holding.parts[0].supports:
+        sup["stiffness_N_per_m"] = np.asarray(sup["stiffness_N_per_m"], float) * 1.5
+    fx.run(dom, ctx, state, b3, 1)
     assert ws.history[-1]["why"] == "setup" and len(ws.history) == n + 1 and not ws.pending
 
 
@@ -205,3 +211,52 @@ def test_residual_stress_release_through_the_domain():
     d = rec.displacement[0]
     assert not d.clamped and np.max(np.abs(d.residual_m)) > 1e-8
     assert state.structure.works[0].unload[0]["residual_max_m"] > 1e-8
+
+
+def test_supports_placed_again_without_a_material_change_keep_the_work_model():
+    """holding places the supports again (supports_version) at every rebuild: structure sets its work model up
+    again only for a material change (structure settings support_change_rel; a chuck's grip during a spindle
+    run-up moved by less than that, examples/lathe-shaft-4140 set the model up 55 times in 2.4 s)."""
+    import numpy as np
+
+    from cnctwin.structure import lathe as LA
+    from cnctwin.structure import voxel as VX
+    from cnctwin.structure.domain import supports_unchanged
+    rng = np.random.default_rng(3)
+    n = 6
+    k = np.einsum("n,ij->nij", rng.uniform(1e8, 1e9, n), np.eye(3))
+    a = VX.Supports(rng.uniform(0.0, 0.03, (n, 3)), k, 0.5 * k, 0.1 * k, rng.uniform(100.0, 900.0, (n, 3)))
+    b = VX.Supports(a.points + 1e-7, a.k_held * 1.005, a.k_locate.copy(), a.k_locked.copy(), a.preload_N * 1.01)
+    lathe_a = LA.LatheSupports({"gripping_force_N": 20000.0, "jaws": 3, "type": "chuck"}, None, [])
+    lathe_b = LA.LatheSupports({"gripping_force_N": 19900.0, "jaws": 3, "type": "chuck"}, None, [])
+    assert supports_unchanged(a, b, lathe_a, lathe_b, 0.02, 1e-3)
+    c = VX.Supports(a.points, a.k_held * 1.05, a.k_locate, a.k_locked, a.preload_N)
+    assert not supports_unchanged(a, c, lathe_a, lathe_a, 0.02, 1e-3)
+    d = VX.Supports(a.points + 1e-4, a.k_held, a.k_locate, a.k_locked, a.preload_N)
+    assert not supports_unchanged(a, d, lathe_a, lathe_a, 0.02, 1e-3)
+    lathe_c = LA.LatheSupports({"gripping_force_N": 15000.0, "jaws": 3, "type": "chuck"}, None, [])
+    assert not supports_unchanged(a, a, lathe_a, lathe_c, 0.02, 1e-3)
+    assert not supports_unchanged(a, VX.Supports.empty(), lathe_a, lathe_a, 0.02, 1e-3)
+
+
+def test_the_next_part_of_a_batch_gets_its_own_setup():
+    """A one-operation batch runs every part as operation 0. After the first part is unclamped (released state
+    published), the next part clamped in the same supports gets a new setup at once. Before, the first part's
+    released state stayed published for every later part (the released check keyed on the operation only), and with
+    the supports placed as before the kept-model rule would have kept the machined first part's modes."""
+    dom, ctx, state, geo = make()
+    b = bus()
+    fx.run(dom, ctx, state, b, 1)                            # part 0: setup
+    ws = state.structure.works[0]
+    geo.remove_box([0.01, 0.008, 0.008], [0.03, 0.022, 0.013])      # part 0 machined
+    dom.end_operation(ctx, state)                            # unclamped: the released state
+    assert ws.history[-1]["why"] == "release"
+    rec = fx.run(dom, ctx, state, b, 1)
+    assert not rec.displacement[0].clamped
+    # the next part: the loop counts the part on; holding places the same supports again
+    state.clock.part_index = 1
+    n = len(ws.history)
+    rec = fx.run(dom, ctx, state, bus(version=2), 1)
+    assert len(ws.history) == n + 1 and ws.history[-1]["why"] == "setup" and ws.part_index == 1
+    assert rec.displacement[0].clamped
+    assert ws.counters.get("supports_kept", 0) == 0

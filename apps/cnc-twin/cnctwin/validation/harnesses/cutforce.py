@@ -424,12 +424,25 @@ class MillSim:
 
 def _insert_only(lay: CSIM.Layout) -> CSIM.Layout:
     """Round-insert cutters built as toroidal end mills: the end-edge elements (inside the insert's lowest
-    point, the cutter body) are made invalid so only the insert's arc cuts."""
+    point, the cutter body) are made invalid so only the insert's arc cuts. The kernel visits the elements of
+    the tool's station lists (``st_ptr`` / ``st_elem``, built from the valid flags), so the lists and the packed
+    element rows are rebuilt from the new flags (flipping ``valid`` alone left the end edges cutting)."""
     from dataclasses import replace
+    from ...cutting.abi import with_packed
     kind = np.asarray(lay.geo.edge.elem_kind)
-    valid = lay.tool.valid.copy()
+    tool = lay.tool
+    valid = tool.valid.copy()
     valid[np.asarray(kind).reshape(-1) == EDGE_END] = 0
-    return replace(lay, tool=lay.tool._replace(valid=valid))
+    station = np.asarray(tool.station, np.int64)
+    tooth = np.asarray(tool.tooth, np.int64)
+    order = [int(e) for e in np.lexsort((tooth, station)) if valid[e] != 0]
+    nst = int(tool.st_z_m.shape[0])
+    st_ptr = np.zeros(nst + 1, np.int64)
+    for e in order:
+        st_ptr[station[e] + 1] += 1
+    st_ptr = np.ascontiguousarray(np.cumsum(st_ptr), dtype=np.int32)
+    st_elem = np.ascontiguousarray(order if order else [0], dtype=np.int32)
+    return replace(lay, tool=with_packed(tool._replace(valid=valid, st_ptr=st_ptr, st_elem=st_elem)))
 
 
 def milling(case, db) -> HarnessOutput:

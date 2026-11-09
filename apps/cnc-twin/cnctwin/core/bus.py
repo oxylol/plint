@@ -410,6 +410,11 @@ class ToolHeat:
     # added by thermal (docs/models/thermal.md):
     edge_peak_q_K: np.ndarray = field(default_factory=lambda: np.zeros((0, 0, 0)))  # cutting-edge line (max) at the q points
     body_temp_at_elem_K: np.ndarray = field(default_factory=_empty2(0))  # [n_teeth, n_elem] 1-D body temperature there
+    # added by thermal (docs/models/thermal.md "Bus record"): rake_temp_mean_K is the rake contact when the edge
+    # enters the cut (the background of mechanics' stationary-source partition, which adds the engagement's own
+    # rise inside ProcessCoefficients); flank_entry_K the same on the flank; rake_contact_mean_K the in-cut mean
+    flank_entry_K: np.ndarray = field(default_factory=_empty2(0))        # [n_teeth, n_elem]
+    rake_contact_mean_K: np.ndarray = field(default_factory=_empty2(0))  # [n_teeth, n_elem]
 
 
 @dataclass
@@ -632,11 +637,17 @@ class ToolHolding:
     axial_retention_N: float = float("inf")     # static axial retention (inf: positive)
     holding_margin: float = float("inf")        # friction-circle capacity / peak demand of the step (inf: no load)
     walk_per_rev_m: float = 0.0                 # pull-out per spindle revolution over the step
-    slip_friction_J: float = 0.0                # friction work of slip and walk this step (not booked in the ledger)
+    slip_friction_J: float = 0.0                # friction work of slip and walk this step (booked as ledger friction)
     unbalance_force_N: float = 0.0              # |U| omega^2 at the step's largest speed (rotating with the tool)
     balance_quality_m_s: float = 0.0            # worst-case G = U_worst omega / m of the assembly at that speed
     max_rad_s: float = float("inf")             # speed limit of tool and holder (inf: none published)
     float_bottomed: bool = False                # a floating tapping holder reached the end of its axial travel
+    # additive (holding, docs/models/holding.md "Bus record"): the slip's energy this step - the loads' work on the
+    # slip, its dissipation (= slip_friction_J, booked as friction) and the change of its kinetic energy:
+    # slip_in_J = slip_loss_J + slip_mech_change_J (the run's ledger books the pair, docs/models/loop.md 6)
+    slip_in_J: float = 0.0
+    slip_loss_J: float = 0.0
+    slip_mech_change_J: float = 0.0
 
 
 @dataclass
@@ -659,8 +670,12 @@ class PartHolding:
     centroid_S_m: np.ndarray = field(default_factory=_vec3)           # reference point of support_stiffness_S
     supports_version: int = 0               # increments when the supports are placed again (setup, slip, failure)
     lathe: dict = field(default_factory=dict)  # turned parts: chuck / tailstock / steady conditions along S z
-    slip_friction_J: float = 0.0            # friction work of the part's slip this step (not booked in the ledger)
+    slip_friction_J: float = 0.0            # dissipation of the part's motion this step (booked as ledger friction)
     free_cause: str = ""                    # why the part is free (holding lost, released by removal ...)
+    # additive (holding): the loads' work on the part's motion and the change of its kinetic + potential energy
+    # (slip_in_J = slip_friction_J + slip_mech_change_J; the run's ledger books the pair, docs/models/loop.md 6)
+    slip_in_J: float = 0.0
+    slip_mech_change_J: float = 0.0
 
 
 @dataclass

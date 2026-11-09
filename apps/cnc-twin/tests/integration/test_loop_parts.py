@@ -99,6 +99,31 @@ def test_the_quadrature_difference_is_its_own_term():
     assert ledger.summary()["energy"]["modal_quadrature_J"] == pytest.approx(1e-6)
 
 
+def test_holding_slip_energy_is_booked_as_a_pair():
+    """A tool slipping in its holder and a part slipping in its vise (holding's ratchets): the loads' work on the
+    slip is an in term, its dissipation is ledger friction (written by holding) and the change of the slip's
+    kinetic energy an out term; without the in term the 0.4 J of dissipation would fail the balance."""
+    from cnctwin.core.bus import PartHolding, ToolHolding
+    ledger = _ledger()
+    state = SimState()
+    state.bus_next = Bus()
+    contact = CuttingContact()
+    contact.shaft_work_J, contact.heat_shear_J = 10.0, 10.0
+    state.bus_next.cutting.contacts.append(contact)
+    state.bus_next.chips.booked_until_tick = 10000
+    tool = ToolHolding(slip_in_J=0.31, slip_loss_J=0.30, slip_mech_change_J=0.01, slip_friction_J=0.30)
+    part = PartHolding(slip_in_J=0.1, slip_friction_J=0.12, slip_mech_change_J=-0.02)
+    state.bus_next.holding.tools[0] = tool
+    state.bus_next.holding.parts[0] = part
+    state.ledger.friction_J += tool.slip_loss_J + part.slip_friction_J          # what holding books itself
+    values = ledger.check(None, state, 10000)
+    assert values["ledger.energy_residual_rel"] < 1e-12
+    assert ledger.summary()["energy"]["holding_slip_in_J"] == pytest.approx(0.41)
+    copy = _ledger()
+    copy.restore_state(ledger.checkpoint_state())
+    assert copy.slip_in_J == pytest.approx(0.41)
+
+
 def test_the_field_change_tracking_survives_a_checkpoint():
     field = LiveField(types.SimpleNamespace(state=None), "loop")
     field._seen = {("thermal", 0): np.array([1, 2, 3]), ("chips", 1): np.array([4])}

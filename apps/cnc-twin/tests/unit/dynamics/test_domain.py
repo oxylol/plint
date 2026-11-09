@@ -281,3 +281,35 @@ def test_operating_point_lobes_and_sld_file(tmp_path):
     assert doc["radial_immersion_m"] == pytest.approx(R)
     if not pts[0]["stable"]:
         assert any(f.category == Category.CHATTER for f in state.findings)
+
+
+def test_a_turning_contact_takes_its_operating_point_from_cuttings_engaged_elements():
+    """Removal's turning contacts carry no depth and no contact point (point_S_m zero, ap_m 0; docs/models/loop.md
+    15). The operating point of a non-rotating tool takes cutting's engaged elements (in-cut time > 0), the sum of
+    their chip widths as the depth, and the system's contact point is the tool tip. Before, a turning contact had no
+    operating point (the corrector ran without its relaxation estimate) and the reference was the S origin."""
+    from cnctwin.core.bus import CuttingContact
+    dom, ctx, state = _run()
+    edge, frames = _edge(nt=1)
+    state.tooling = SimpleNamespace(tools=[SimpleNamespace(rotating=False, edge=edge, frames=frames)],
+                                    effective=[edge], frames=[frames])
+    h = np.geomspace(1e-6, 1e-3, 8)
+    coeffs = ProcessCoefficients(tool_slot=0, h_grid_m=h, Kt_Pa=np.full((1, 8), 2e9), Kr_Pa=np.full((1, 8), 8e8),
+                                 Ka_Pa=np.zeros((1, 8)), Kte_N_per_m=np.zeros(1), Kre_N_per_m=np.zeros(1),
+                                 Kae_N_per_m=np.zeros(1), h_min_m=np.zeros(1), K_sp_N_per_m3=np.zeros(1), version=1)
+    contact = RemovalContact(contact=0, tool_slot=0, workpiece=0, path=0,
+                             geometry=ToolContact(in_cut=True, point_S_m=np.zeros(3), point_M_m=np.zeros(3),
+                                                  ae_m=0.0, ap_m=0.0, engaged_angle_rad=0.0))
+    bus = _bus(0, holding=False, contact=contact, coeffs=coeffs, feed=(0.0, 0.0, -0.005))
+    in_cut = np.zeros((1, 3))
+    in_cut[0, :2] = 0.01                                      # two of the three elements in the cut
+    bus.cutting.contacts = [CuttingContact(contact=0, tool_slot=0, in_cut_s=0.01, in_cut_time_s=in_cut)]
+    bus.motion.tick = 0
+    dom.kernel_inputs(ctx, state, bus)
+    op = dom._op[0]
+    assert op is not None and op.cut is not None and not op.rotating
+    assert op.ap_m == pytest.approx(2 * 0.004)                # the two engaged elements' chip widths
+    sysrec = state.dynamics.systems[0]
+    tip_S = np.asarray(bus.motion.paths[0].pose_S_T, float)[:3, 3]
+    assert sysrec.ref_station == int(np.argmin(np.asarray(edge.station_z_m)))    # the tip's station
+    assert np.allclose(tip_S, 0.0)

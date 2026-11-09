@@ -87,6 +87,7 @@ class ChipsDomain:
         if self.locators is None:
             self.locators = StockFaces(lo, hi)
             self.fallbacks.append("locators: the six stock faces (no next-setup locators wired)")
+        self.operator_cleans = self._operator_cleans(project)
         slots = [s.slot for s in getattr(state.tools, "slots", ())]
         n_slots = max(slots) + 1 if slots else 1
         axis, sign, axes = scene.pile_axes(-self.gravity)
@@ -1023,8 +1024,8 @@ class ChipsDomain:
         """Per cell the fraction of its pile column inside [w_lo, w_hi]."""
         cell = float(H.cell_m[0])
         base = H.base_m[cells_u, cells_v]
-        top = base + H.bulk_m3[cells_u, cells_v] / cell ** 2
-        h = top - base
+        h = H.bulk_m3[cells_u, cells_v] / cell ** 2          # the column's height (a column without a base: -inf)
+        top = base + h
         ov = np.clip(np.minimum(top, w_hi) - np.maximum(base, w_lo), 0.0, None)
         with np.errstate(invalid="ignore", divide="ignore"):
             return np.where(h > 0, ov / np.where(h > 0, h, 1.0), 0.0)
@@ -1079,8 +1080,22 @@ class ChipsDomain:
             return 0.0
         return float(self._temperature(float(np.max(H.enthalpy_J[sel] / H.mass_kg[sel]))))
 
+    @staticmethod
+    def _operator_cleans(project) -> bool:
+        """Whether the operator cleans fixture and locating faces before loading (production.operator.clean_s,
+        cnctwin.production.operator: blow chips off fixture and locators; 0 s: no cleaning)."""
+        if project is None:
+            return True
+        from ..production.operator import OperatorModel
+        try:
+            return OperatorModel.from_project(project, getattr(project, "machine", None)).clean_s > 0.0
+        except (TypeError, ValueError, KeyError, AttributeError):
+            return True
+
     def _locator_debris(self, ctx, state, cs, tick) -> dict:
-        """Chip (and burr) height on every patch the next setup clamps or locates on."""
+        """Chip (and burr) height on every patch the next setup clamps or locates on. The operator cleans the
+        fixture and the locating faces before loading (production.operator.clean_s > 0): the chips there go to the
+        pan and only burrs (on the part, not blown off) remain under the locators; with clean_s 0 the chips stay."""
         H = cs.pile
         cell = float(H.cell_m[0])
         hz = self.params.hazards
@@ -1092,7 +1107,7 @@ class ChipsDomain:
             normal = np.asarray(normal, dtype=float)
             centre = np.asarray(centre, dtype=float)
             height = 0.0
-            if float(np.dot(normal, e_w)) > 0.99:
+            if float(np.dot(normal, e_w)) > 0.99 and not self.operator_cleans:
                 g = (centre - H.origin_G_m) @ H.axes_S
                 axis = int(np.argmax(np.abs(normal)))
                 others = [k for k in range(3) if k != axis]

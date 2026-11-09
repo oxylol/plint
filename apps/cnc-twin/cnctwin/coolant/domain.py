@@ -678,7 +678,10 @@ class CoolantDomain:
             mask = np.asarray(cut.in_cut_time_s) > 0.0
         rake = body = None
         if tool is not None:
-            arr = np.asarray(tool.rake_temp_mean_K)
+            # the rake face during contact (thermal's in-cut mean; rake_temp_mean_K is the temperature at the entry)
+            arr = np.asarray(getattr(tool, "rake_contact_mean_K", np.zeros((0, 0))))
+            if not arr.size:
+                arr = np.asarray(tool.rake_temp_mean_K)
             if arr.size and mask is not None and arr.shape == mask.shape and mask.any():
                 rake = float(np.mean(arr[mask]))
             elif arr.size:

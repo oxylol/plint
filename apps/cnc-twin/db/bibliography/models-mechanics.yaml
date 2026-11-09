@@ -177,7 +177,15 @@ entries:
     title: "The Mathematical Theory of Plasticity"
     venue: "Clarendon Press, Oxford"
     year: 1950
-    note: "Prandtl flat-punch solution: mean indentation pressure (2 + pi) k on a rigid-perfectly plastic half-space."
+    note: "Prandtl flat-punch solution: mean indentation pressure (2 + pi) k on a rigid-perfectly plastic half-space; wedge indentation (after Hill, Lee & Tupper 1947): face pressure 2 k (1 + psi) for a smooth wedge of semi-angle theta, cos(2 theta - psi) = cos(psi) / (1 + sin(psi)), the flat punch at theta = 90 deg."
+
+  hill-lee-tupper-1947-wedge:
+    type: article
+    authors: "Hill, R.; Lee, E.H.; Tupper, S.J."
+    title: "The theory of wedge indentation of ductile materials"
+    venue: "Proceedings of the Royal Society of London A 188(1013), 273-289"
+    year: 1947
+    note: "Slip-line field of a smooth wedge indenting a rigid-perfectly plastic half-space with the displaced material rising as a lip: face pressure 2 k (1 + psi), psi from the volume condition. Not read (equations as reproduced in hill-1950-plasticity)."
 
   tabor-1951-hardness:
     type: book
@@ -200,7 +208,25 @@ entries:
     title: "A new mechanistic model for predicting worn tool cutting forces"
     venue: "Machining Science and Technology 5(1), 23-42"
     year: 2001
-    note: "Flank wear land stresses: constant (plastic) up to a critical wear land length, then decaying with the square of the distance to the land end."
+    note: "Flank wear land stresses after Waldorf (1999): elastic contact (stresses falling with the square of the distance to the land end) below a critical wear land VB*, a plastic flow region growing from VB* beyond it. Not read (abstract and secondary descriptions)."
+
+  smithey-2000-worn-tool-3d:
+    type: article
+    authors: "Smithey, D.W.; Kapoor, S.G.; DeVor, R.E."
+    title: "A worn tool force model for three-dimensional cutting operations"
+    venue: "International Journal of Machine Tools and Manufacture 40(13), 1929-1950"
+    year: 2000
+    doi: "10.1016/S0890-6955(00)00017-1"
+    note: "Extends Waldorf's orthogonal worn-tool model to 3-D: the plastic flow region of the land grows linearly (piecewise, independent of the cutting conditions) with the wear land width; a contact model gives the flank stresses. Not read (abstract)."
+
+  waldorf-1999-worn-tool-ploughing:
+    type: article
+    authors: "Waldorf, D.J."
+    title: "Worn tool forces based on ploughing stresses"
+    venue: "Transactions of NAMRI/SME 27, 165-170"
+    year: 1999
+    url: "https://digitalcommons.calpoly.edu/ime_fac/53"
+    note: "The ploughing stresses of the edge applied to the flank wear land with elastic contact and plastic flow: plastic flow starts at a critical wear land VB*. Not read (abstract and secondary descriptions)."
 
   nakayama-1962-chip-breaker:
     type: article

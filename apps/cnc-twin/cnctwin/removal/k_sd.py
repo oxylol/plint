@@ -23,19 +23,21 @@ from numba import njit, types
 
 from . import abi as A
 from . import k_core as C
-from .nbt import F1, FIELD_T, OPTS, b1, f8, i8
+from .nbt import F1, FIELD_T, OPTS, RAW, b1, f8, i8
 
 Q = A.QUANTUM_M
 SPREAD_CELLS = C.SPREAD_CELLS
 
 
-@njit(i8(FIELD_T, f8, f8, f8), **OPTS)
+# level_at, dexel_sd and gradient serve the hot loop's refill planes (core.hot_kernels.surface_plane, every stale
+# memory bin of a step): compiled without reference counting (they allocate nothing)
+@njit(i8(FIELD_T, f8, f8, f8), **RAW)
 def level_at(f, x, y, z):
     """Finest level whose authoritative box contains the point (0 otherwise)."""
     return C.level_at(f.lv_box_lo_m, f.lv_box_hi_m, f.lv_cell_m, f.info[A.FI_NLEVELS], x, y, z)
 
 
-@njit(f8(FIELD_T, i8, i8, f8, f8, f8, F1), **OPTS)
+@njit(f8(FIELD_T, i8, i8, f8, f8, f8, F1), **RAW)
 def dexel_sd(f, lvl, fam, x, y, z, out):
     """D_f at (x, y, z) in metres (positive inside). ``out`` = [spread (m), valid (1/0), unanimous inside
     (1), unanimous outside (-1) or mixed (0), smallest |psi| (m)]."""
@@ -61,10 +63,10 @@ def point_inside(f, x, y, z):
     return ins
 
 
-@njit(types.void(FIELD_T, f8, f8, f8, i8, f8, F1), **OPTS)
+@njit(types.void(FIELD_T, f8, f8, f8, i8, f8, F1), **RAW)
 def gradient(f, x, y, z, fam, h, out):
-    """Central-difference gradient of D_fam (unit vector, pointing into the material)."""
-    work = np.empty(4)
+    """Central-difference gradient of D_fam (unit vector, pointing into the material). Allocation-free (the six
+    D values from k_core.sd_d, the sums in registers in the same order), reference counting off."""
     lv_cell_m = f.lv_cell_m
     lv_origin = f.lv_origin_m
     lv_dims = f.lv_dims
@@ -76,18 +78,23 @@ def gradient(f, x, y, z, fam, h, out):
     pseg = f.pseg
     pnext = f.pnext
     lvl = C.level_at(f.lv_box_lo_m, f.lv_box_hi_m, lv_cell_m, f.info[A.FI_NLEVELS], x, y, z)
-    g = np.zeros(3)
+    gx = 0.0
+    gy = 0.0
+    gz = 0.0
     for k in range(6):
         axis = k // 2
         sign = 1.0 if k % 2 == 0 else -1.0
         px = x + (sign * h if axis == 0 else 0.0)
         py = y + (sign * h if axis == 1 else 0.0)
         pz = z + (sign * h if axis == 2 else 0.0)
-        g[axis] += sign * C.sd(lv_cell_m, lv_origin, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl,
-                               fam, px, py, pz, work)
-    gx = g[0]
-    gy = g[1]
-    gz = g[2]
+        v = sign * C.sd_d(lv_cell_m, lv_origin, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam,
+                          px, py, pz)
+        if axis == 0:
+            gx += v
+        elif axis == 1:
+            gy += v
+        else:
+            gz += v
     n = math.sqrt(gx * gx + gy * gy + gz * gz)
     if n > 0.0:
         out[0] = gx / n

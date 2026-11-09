@@ -58,6 +58,11 @@ FIELDS: dict[str, tuple] = {
     "soft_support_ratio": ("soft_support_ratio", "number", 1.0e-3, 1.0e-9, 0.1,
                            "force-controlled supports fix the rigid-body motions the locators leave free with this "
                            "fraction of their stiffness (clamping solve)"),
+    "support_change_rel": ("support_change_rel", "number", 0.02, 0.0, 1.0,
+                           "holding's supports placed again (supports_version) set the work model up again only when "
+                           "a contact's stiffness or clamping force changed by more than this fraction of the "
+                           "largest, a contact point moved by more than this fraction of the model's cell, or the "
+                           "contact set changed (a chuck's grip during a spindle run-up does not)"),
 }
 
 
@@ -89,6 +94,7 @@ class StructureSettings:
     lathe_slenderness: float = 3.0
     lathe_radial_cells: int = 12
     soft_support_ratio: float = 1.0e-3
+    support_change_rel: float = 0.02
 
     def to_dict(self) -> dict:
         return asdict(self)

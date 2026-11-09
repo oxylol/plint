@@ -217,8 +217,10 @@ def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A
             res.h[e] = h
             res.in_cut[e] = frac
             # velocity relative to the material (S)
+            v_vib = R @ (vu + np.cross(vr, pr_T0)) - v_work
             v_e = (v_tip - v_work) + np.cross(omega * ez_S + w_frame, R @ p_T0) + R @ (vu + np.cross(vr, pr_T0))
             vn = float(v_e @ n_S)
+            vn_vib = float(v_vib @ n_S)
             c_S = G @ np.asarray(tool.c_T[e], float)
             Vc = float(v_e @ c_S)
             slope = h - float(st.h_last_m[e]) if int(st.tick_last[e]) == tick0 else 0.0
@@ -281,8 +283,9 @@ def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A
             fa0 = col[A.COL_FA] * db + col[A.COL_EA] * dS
             fft, ffr = float(tool.flank_N[e, 0]), float(tool.flank_N[e, 1])
             fpd = 0.0
-            if vn > 0.0 and Vc > 0.0 and tool.pd[e, 0] > 0.0:
-                slope_p = vn / Vc
+            if vn_vib > 0.0 and Vc > 0.0 and tool.pd[e, 0] > 0.0:
+                # process damping: the slope of the wave the vibration leaves (not the steady feed path)
+                slope_p = vn_vib / Vc
                 L = min(float(tool.pd[e, 1]), pd_max)
                 tg = float(tool.pd[e, 2])
                 xs_ = pd_max if slope_p >= tg else min(L * tg / (tg - slope_p), pd_max)

@@ -204,10 +204,14 @@ Per particle, sub-steps until the window end:
 * **Chip pan and conveyor**: lumped mass/enthalpy/bulk; cooled through `bulk / pan_layer_m` toward
   the coolant (flood running) or air; removed at `machine.chip_conveyor.rate_kg_h` (none: 0).
 * **End of operation**: the last window is booked, attached chips and flying chips are laid down,
-  flutes empty into the pan, the chip height on every patch the next setup clamps or locates on is
+  flutes empty into the pan, the debris on every patch the next setup clamps or locates on is
   measured (`LocatorFaces`; default: the six stock faces, only up-facing faces hold settled chips;
-  burr events of removal on the patch count too), then part and fixture are cleaned into the pan
-  (`production.operator.clean_s`).
+  burr events of removal on the patch count too), then part and fixture are cleaned into the pan.
+  The operator cleans fixture and locating faces before loading (`production.operator.clean_s` > 0, the
+  template's 15 s: blow chips off fixture and locators, cnctwin.production.operator): the settled chips on
+  those faces then leave no debris and only burrs (on the part, not blown off) count; with `clean_s: 0` the chips
+  stay and mislocate the next setup (2026-11-09: before, the chips were always measured as left there, and with
+  the burrs of a batch's previous part every next blank was mislocated and every batch unsafe).
 
 ## 5. Flute fill and packing (`flutes.py`)
 
@@ -311,7 +315,7 @@ Numerical settings (`physics.chips`, `schema.py`): `pile_cell_mm` 2, `pile_margi
   neighbours.
 * Pan chips: one lumped store; walls are washed down when flood coolant runs.
 * Cleaning between operations: all resting chips go to the pan after the locator debris is
-  measured.
+  measured; the operator's cleaning before loading removes the chips on the locating faces (above).
 
 ## 10. Validity range and error bounds
 

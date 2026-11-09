@@ -60,14 +60,17 @@ RP_DQ = 0               # net generalized displacement of the step (m)
 RP_Q_MAX = 1            # largest displacement reached (m)
 RP_WORK_J = 2           # work of the resistance over the motion (J)
 RP_MOVING_S = 3         # time spent moving (s)
-N_RP = 4
+RP_IN_J = 4             # work the demand did on the motion (the part of it the motion could take: see v_max)
+RP_LOSS_J = 5           # energy dissipated: friction work (friction mode), inelastic landings (separation mode)
+N_RP = 6
 
 RT_DX1 = 0              # circumferential slip at the shank radius (m): slip angle = dx1 / r
 RT_DX2 = 1              # axial walk out of the holder (m)
-RT_WORK_J = 2           # friction work at the interface (J)
+RT_WORK_J = 2           # friction work at the interface (J): the dissipation of the slip
 RT_MOVING_S = 3         # time spent slipping (s)
 RT_PEAK_RATIO = 4       # largest |demand| / static capacity seen
-N_RT = 5
+RT_IN_J = 5             # work the demand did on the slip (the part of it the slip could take: see v_max)
+N_RT = 6
 
 
 class Contacts(NamedTuple):
@@ -87,13 +90,21 @@ class Contacts(NamedTuple):
 
 
 class Wave(NamedTuple):
-    """Per L1 tick of one macro step: mean and first tooth-harmonic amplitude of a demand (d components),
-    and the tooth phase that times the harmonic: demand(t) = mean + amp cos(phase0 + rate (t - t_tick))."""
+    """Per L1 tick of one macro step: the demand of each of d components over the tooth period,
+    demand(t) = mean + amp g(phase0 + rate (t - t_tick); alpha), with the zero-mean tooth-period shape
+    g = (s - <s>) / (1 - <s>) of the pulse s(u) = max(0, cos u - cos alpha) / (1 - cos alpha): alpha = pi is the
+    first tooth harmonic (g = cos u), a smaller alpha a pulse train narrower than it (an engagement shorter than
+    half the tooth period, a shock): mean and peak (mean + amp) as given either way. The kernels integrate the
+    demand's mean over every sub-step (its impulse exactly). v_max: the largest speed of each component the
+    demand can drive (the load comes from a cut that cannot push the slipping body faster than its own relative
+    motion: a tool stalls in its holder at the spindle speed, a part cannot outrun the tool); 1e300 none."""
 
     mean: np.ndarray            # [n_ticks, d]
     amp: np.ndarray             # [n_ticks, d] (>= 0 means the peak sample lies above the mean)
     phase0_rad: np.ndarray      # [n_ticks] tooth phase at the start of the tick
     rate_rad_s: np.ndarray      # [n_ticks] tooth phase rate (teeth x |omega|; 0: steady demand)
+    alpha_rad: np.ndarray       # [n_ticks, d] pulse half-width in (0, pi] (pi: the first tooth harmonic)
+    v_max: np.ndarray           # [n_ticks, d] largest speed the demand can drive (m/s; 1e300: none)
 
 
 def empty_contacts(n: int = 0) -> Contacts:
@@ -102,8 +113,38 @@ def empty_contacts(n: int = 0) -> Contacts:
                     np.zeros((n, 2)))
 
 
+NO_SPEED_LIMIT = 1e300
+
+
 def empty_wave(n_ticks: int, dims: int) -> Wave:
-    return Wave(np.zeros((n_ticks, dims)), np.zeros((n_ticks, dims)), np.zeros(n_ticks), np.zeros(n_ticks))
+    return Wave(np.zeros((n_ticks, dims)), np.zeros((n_ticks, dims)), np.zeros(n_ticks), np.zeros(n_ticks),
+                np.full((n_ticks, dims), np.pi), np.full((n_ticks, dims), NO_SPEED_LIMIT))
+
+
+def pulse_mean_fraction(alpha_rad: float) -> float:
+    """<s> of the pulse s(u) = max(0, cos u - cos alpha) / (1 - cos alpha) over a period: 1/2 at alpha = pi."""
+    a = min(max(float(alpha_rad), 1e-9), np.pi)
+    c = np.cos(a)
+    return float((np.sin(a) - a * c) / (np.pi * (1.0 - c)))
+
+
+def pulse_alpha(fraction: float) -> float:
+    """The pulse half-width alpha in (0, pi] whose mean fraction <s> is ``fraction`` (mean / peak of a demand
+    that does not change sign): pi for a fraction of 1/2 or more (the first tooth harmonic), narrower below
+    (bisection; <s> grows monotonically with alpha)."""
+    f = float(fraction)
+    if not f < 0.5:
+        return float(np.pi)
+    if f <= 0.0:
+        return 1e-6
+    lo, hi = 1e-6, float(np.pi)
+    for _ in range(80):
+        mid = 0.5 * (lo + hi)
+        if pulse_mean_fraction(mid) < f:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
 
 
 def contiguous_contacts(cs: Contacts) -> Contacts:
