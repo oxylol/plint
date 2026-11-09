@@ -177,6 +177,17 @@ def kernel_input(sw, rt: Runtime, g: Gathered, heat, ambient_K: float, dt: float
     inp.entries[:] = e["entries"]
     if rt.skin_active and rt.skin is not None and pose_S_T is not None:
         inp.skin_frac[:] = np.clip(rt.skin.skin_fraction(sw.slot, rt.edge, sw.rotating, pose_S_T, in_cut), 0.0, 1.0)
+    # the tool's contact faces cannot be hotter than the interface they draw their heat from, and the interface no
+    # hotter than the work material's melting (solidus): beyond it there is no solid contact to wear the tool. A
+    # thermal estimate above it (a blown-up entry gave 3296 degC) would extrapolate Usui's Arrhenius law far outside
+    # its data (VB of 146 m in a few milliseconds)
+    cap = sw.props.get("interface_max_K")
+    if cap is not None and float(cap) > 0.0:
+        hot = float(np.max(flank_q)) > float(cap) or float(np.max(rake_q)) > float(cap)
+        if hot:
+            notes.append("interface_above_melting")
+        flank_q = np.minimum(flank_q, float(cap))
+        rake_q = np.minimum(rake_q, float(cap))
     inp.flank_T[:] = flank_q
     inp.rake_T[:] = rake_q
     inp.w_q[:] = weights

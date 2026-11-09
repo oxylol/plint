@@ -146,7 +146,13 @@ path, which compiles this kernel with its own interval lookup and needs `_env_ra
 for every candidate ray: the window is inside `_env_ray`, not in its arguments).
 
 **Events** (aggregated, one row per kind and call, `EV_*`, columns `EC_*`):
-* rapid into material (`SI_RAPID`: any removal during a rapid; volume and centroid);
+* rapid into material (`SI_RAPID`: any removal during a rapid; volume, centroid and depth: the smallest over the
+  families of the per-family largest removed piece, the family most normal to the face moved into, as the gouge
+  depth). **Rapids**: the domain reports `rapid_into_material` (error) only for a depth beyond
+  `collision_tolerance_m` (10 um, the overlap that makes a non-cutting part a collision); a shallower contact is
+  traced (`removal:rapid_contact`). A G00 retract straight up from the end of a cut removes microns or nothing
+  (the servo lag of the feed axis catching up while Z already rises), and was reported as a crash "0.000 mm deep,
+  0.000 mm^3" before 2026-11-09 (the row's depth was not written; any removal counted);
 * gouge: removed target material deeper than `gouge_tolerance_m` along a ray (depth = the smallest over
   the families of the per-family largest overlap: the family most normal to the gouged face);
 * breakthrough: a target segment left without any material on its ray;
@@ -159,6 +165,15 @@ Collisions of non-cutting parts are a separate kernel (section 8).
 **Contact sums** (`FA_*`): centroid and outward normal of the removed z-family volume (normal from the
 removed point toward the tool axis at its height), extent of removed material along the axis from the tip
 (ap) and largest distance from the axis.
+
+**Slivers** (`iv_subtract`, `A.SLIVER_Q` = 100 quanta = 1 um): a piece of a segment that a subtraction leaves,
+touching its removal and shorter than 1 um, is removed with it (joined to the adjacent removed piece; segments no
+removal touches are kept however short; the one-segment fast path of `subtract_envelope` takes the general path
+for such a remainder). The slabs of an envelope follow the tip's axial position: a column inside the lower slab's
+circle at one pass and inside the upper slab's at the next, the tip 40 nm higher in between, kept a 4-quantum
+piece floating above the floor (the side step's 9.602 mm over a floor at 8.993 mm), which `surface_height` then
+took for the surface (test `test_a_slab_boundary_that_moved_between_passes_leaves_no_sliver`). The polar field
+keeps its thin rings (material of the next revolution's chip, section 11).
 
 Error: endpoints to the quantum (5 nm); envelope geometry exact (quadratics) or < 1e-9 m (torus). The
 dexel representation: a ray carries material only along its line, so the volume of a pass is the integer
@@ -189,7 +204,17 @@ interpolation, de Boor 1978 ch. 2), at most `a^2 kappa / 4` for the most normal 
 The most normal family has the smallest endpoint spread; it is valid when all four rays have an endpoint
 within `SPREAD_CELLS` cells. `classify`: the family most aligned with the tool axis decides alone when its
 four rays agree and are farther than `SPREAD_CELLS` from an endpoint, else the valid family with the
-smallest spread.
+smallest spread; when none is valid, the valid **partial** family with the smallest spread (`sd_partial`: the
+family's rays that hold material, weights renormalised, the empty rays weighing less than half: a ray beyond a
+face across the family holds no material and carries no boundary along it, and the point nearer to the material
+rays lies on the material side of that face), else the family with the smallest spread. Within one cell of a
+convex edge of the material (two faces) the rays beyond each face are empty, every family was invalid, and the
+fallback classified the material there as air: in the tiny project's side step (ae 0.5 mm, ap 1 mm, lattice
+0.25 mm) the station 0.09 mm below the block's top lay within a cell of the top and of the cut front and had no
+engaged interval, so cutting's analytic chip volume was 17 % below the field's (5.05 against 6.11 mm^3; 0.828).
+With the partial families it is 6.26 mm^3 (1.026: the top elements count their whole strip; docs/models/
+cutting.md 4), and the steady per-step chip 0.1367 mm^3 against 0.1333 for feed x ae x ap (test
+`test_a_station_within_a_cell_of_the_top_edge_of_a_side_step_is_engaged`; 2026-11-09).
 
 **Engaged intervals** (architecture 5.4, `abi.EngagedIntervals`): per station circle `c + r (cos phi x0 +
 sin phi y0)` (T0), once per tooth period:
@@ -309,14 +334,45 @@ bricks marked dirty; an optional displacement grid (trilinear) moves vertices to
 unload geometry). Polar fields are meshed through their exact tri-dexel rebuild. Error: vertices exact on
 edges; faces are chords (a^2 kappa / 8 on curved surfaces); sharp edges chamfered within one cell.
 
+**Planar patches** (2026-11-09, `mesh_level(..., planar=True)`, `planar_patches`): brick by brick as it is meshed,
+every connected set of coplanar triangles that has a vertex strictly inside the brick, all of whose triangles lie
+in its plane, and whose boundary is one convex loop becomes the fan of its boundary edges about the loop's
+centroid (a new vertex on the plane to round-off, a negative id, the surface event most of the replaced vertices
+had). The vertices on the brick's faces, on edges between planes and of every non-flat neighbourhood stay, so the
+bricks weld exactly as before and the surface is the same surface (same volume to 1e-12; test_07): a flat 32 x 32
+patch of 2048 triangles becomes 128, curved walls keep theirs. The loop meshes the end-of-operation part this way
+when its surface bricks could hold more than 3 M triangles (`planar_wanted`): examples/pocket-islands-al6061 at
+0.075 mm (about 9.5 M triangles, its part files and inspection outgrew the 1.8 GB cap at its end) and the other
+fine lattices (drill-tap 0.1 mm, thin-wall's refined fins, two-setup-flip 0.075 mm). Keyframes and displaced
+meshes keep the full triangulation.
+
 ## 11. Polar field: turning (`polar.py`, `k_polar.py`)
 
 The workpiece turns about S z; S rotates with it. Bin b covers `theta in [b dth, (b + 1) dth)`
 (`n_theta >= physics.polar_theta_bins`, default 720), row i covers `[z0 + i dz, z0 + (i + 1) dz)` with
 `dz <= min(f_min / 8, r_nose / 16)` (`f_min = polar_min_feed_m_per_rev`), coarsened to fit `polar_max_bytes`
-with a warning finding. The radial ray of (b, i) at the bin and row centres holds r segments; the axial ray
+with a warning finding. The budget is reckoned with `polar.SIZING_KP` (2) inline segments per ray, not with the
+configured initial capacity `polar_kp`, which is grown on demand: before 2026-11-09 polar_kp 16 coarsened a d45
+bar's rows from 6.25 um to 75 um, so the same pass differed with the capacity from its first contact (1.1 % of the
+removed volume; tests/integration/test_turning_split.py now reproduces the pass without overflow to round-off). The radial ray of (b, i) at the bin and row centres holds r segments; the axial ray
 of (b, j) at radius `(j + 1/2) dr` (`dr = max(dz, a/2)` unless `polar_axial_spacing_m`) holds z segments
 (faces, shoulders, grooves).
+
+**Stocks** (2026-11-09): a cylinder or tube stock on a lathe (`machine.type` lathe, mill_turn, swiss) is
+`polar_tube`; a **mesh stock** on a lathe (the lathe-shaft example's d45 bar with its A3.15 centre hole is a STEP
+mesh) is `polar_from_mesh`, over the mesh's z range and largest radius. Before, only cylinder and tube stocks got a
+polar field, and the lathe-shaft example cut air through its whole G71 (the tool inside the bar, 0 mm3 removed).
+`polar_from_mesh` takes the exact crossings of every radial ray (bin centre angle, row centre z) and every axial
+ray with the triangles: each line through the axis carries bins b and b + n/2 (n even), so the axis needs no
+special case; a ray through a shared edge or vertex counts once by the tri-dexel rasteriser's tie rule
+(`k_stock._canon_edge`, `_covers`), and the hits become material by its winding sweep, so the polar rows and the
+tri-dexel stock of the same mesh describe one solid; rows hold the mesh at their own z (a shoulder or a centre hole
+where the mesh has it, not on the nearest lattice plane as `polar_from_field` samples for mill-turn). Pure numpy,
+once per stock (the d45 x 230 bar: 4.5 M radial and 130 k axial rays in 3-4 s). Verified against tessellated tubes
+and bars at every ray (vertices on bin centres included: the tie rule) and a stepped bar (test_08).
+**Volume**: `volume_m3` sums `q_hi^2 - q_lo^2` as an exact integer (`q2_sum`); `k_polar.polar_q2_sum` accumulates
+in int64, which wraps past 9.2e18: the lathe-shaft bar (720 bins, 36 um rows) sums to 2.3e19 and read 20 % of its
+volume.
 
 **Cut per L0 step** (`polar_cut`): every bin whose centre angle the tool's reference plane passes in the
 step (rotating-frame angle th0 -> th1) is cut with the insert region at the tool position interpolated to
@@ -331,6 +387,16 @@ Verified against the reference row by row over successive steps (external, inter
 consistent to 1e-12, radius behind the tool within the scallop `f^2 / (8 r_nose)`, threads leave the helix
 (test_08).
 
+**Contact sums of a turning step** (2026-11-09; before, a turning contact had `point_S_m` 0 and `ap_m` 0 and every
+consumer read the S origin): per removed radial piece [x0, x1) of bin b and row i, `FA_W` += its volume,
+`FA_CX` += the volume times its centroid radius (the sum of `x1^3 - x0^3` from `_cut_inline`), `FA_CZ` += volume x
+z_i, `FA_NX` += volume x (-sx) (the generated surface's outward normal: outward for an external tool),
+`FA_ZREL_*` the z extent relative to the tip along the tool's z, `FA_RREL_MAX` the radial distance from the tip,
+`FA_DEPTH_*` the extent across the step's feed in the r-z plane (radial in longitudinal turning, axial in facing),
+`FA_POLAR_TH` the tool's angle of the last removal. The work turns under the tool during a macro step, so the
+domain places the centroid at its mean radius and z at that angle (`point_S_m`), the normal radially there, and
+takes `ap_m` = the depth across the feed (test `test_a_turning_contact_carries_its_point_and_depth`).
+
 **Chip area per element**: `polar_radius(theta, z)` (nearest bin and row: error the radius change over half
 a bin and half a row).
 
@@ -339,6 +405,13 @@ a bin and half a row).
 (`rebuild_tridexel`): z rays read the radial rays row by row with state changes placed at the axial rays'
 exact endpoints; x / y rays cross the bins of their row (only those within the field's radius) with the
 exact chord of every radial segment. Verified pointwise (> 10^4 samples, test_08) and by volume (1 %).
+Only the annulus the inserts reached is rebuilt (2026-11-09): `polar_cut` records the insert's radial extent of
+every step that removed material (`PI_TOUCH_Q0/Q1` since the last sync, `PI_OPTOUCH_Q0/Q1` since the field was
+made), and the sync replaces the z rays of those radii and the spans of the x / y rays inside the annulus; the rest
+keeps the stock's exact rays. Rebuilding the whole disc replaced the lathe-shaft bar's centre hole (an unturned
+feature) by its polar sampling at every revolution: x rays nearly tangent to the cone turn a row's 10 um of radius
+into 0.1-0.3 mm along the ray, and the difference was booked as removed part material (gouge errors of 7-292 um
+during the G71's first pass; test `test_the_sync_rebuilds_only_the_annulus_the_insert_reached`).
 The polar field is authoritative for the removed volume while turning (`RemovalContact.polar = True`).
 
 ## 12. Integration with the hot loop
@@ -620,6 +693,9 @@ outputs in the docstrings):
 
 ## 18. Additive changes to shared records and layouts
 
+* `RemovalAccum.fvals` (removal's own, 2026-11-09): `FA_POLAR_TH`, `FA_DEPTH_MIN`, `FA_DEPTH_MAX` in the three free
+  slots (33-35, `N_FA` unchanged); `_cut_inline` also returns the removed q^3 sum and range; `_polar_rows` takes
+  the contact's fvals, the bin width and the feed normal; `k_subtract.AG_R_D` (3 slots of the free 36-38).
 * `core/bus.py` `RemovalContact` (written by removal only): `removed_volume_xyz_m3: np.ndarray` (x, y, z
   family volumes of the step), `polar: bool` (the volume is the polar radial family's), `surface_ids:
   tuple` (first and last surface event id of the step); commented in place. No existing field changed.

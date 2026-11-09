@@ -96,3 +96,36 @@ def test_ray_crossing_matches_reference():
 def test_one_signature_each():
     for kernel in KM.KERNELS:
         assert len(kernel.signatures) == 1, kernel.__name__
+
+
+def test_planar_patches_keep_the_surface_in_fewer_triangles():
+    """mesh_level(planar=True): the flat patches of every brick become fans about their centroid; the mesh stays
+    closed and welds across bricks without a crack, it encloses the same volume, every vertex lies on the full mesh's
+    surface (the planes of the faces it replaces), the curved walls of the cuts keep their triangles, and the block's
+    flat faces shrink by an order of magnitude."""
+    f = S.block_field([20e-3, 18e-3, 9e-3], LAT)
+    _cut(f, [8e-3, 8e-3, 5e-3], 3.1e-3, ev=17)
+    _cut(f, [14e-3, 5e-3, 3e-3], 1.7e-3, ev=18)
+    full = M.mesh_level(f)
+    flat = M.mesh_level(f, planar=True)
+    assert M.open_edges(flat) == 0 and M.open_edges(full) == 0
+    assert len(np.unique(flat.edge_id)) == len(flat.edge_id)
+    assert M.mesh_volume(flat) == pytest.approx(M.mesh_volume(full), rel=1e-12)
+    assert len(flat.faces) < 0.5 * len(full.faces)          # 0.37 here (3 x 3 x 2 bricks); 32 x 32 patches: 1/16
+    # the new vertices lie on the block's faces or on the floors of the cuts (z of a floor: a crossing plane)
+    new = flat.edge_id < 0
+    assert new.any()
+    v = flat.vertices[new]
+    lo, hi = np.zeros(3), np.array([20e-3, 18e-3, 9e-3])
+    on_box = np.any((np.abs(v - lo) < 1e-12) | (np.abs(v - hi) < 1e-12), axis=1)
+    floors = np.unique(np.round(full.vertices[:, 2], 12))
+    on_floor = np.isin(np.round(v[:, 2], 12), floors)
+    assert np.all(on_box | on_floor)
+    # every lattice vertex of the planar mesh is a vertex of the full mesh (same ids, same positions)
+    old = flat.edge_id >= 0
+    idx = np.searchsorted(full.edge_id, flat.edge_id[old])
+    assert np.array_equal(full.edge_id[idx], flat.edge_id[old])
+    assert np.array_equal(full.vertices[idx], flat.vertices[old])
+    assert {17, 18, A.SEV_STOCK} <= set(np.unique(flat.sev).tolist())
+    # a coarse field is not worth it; a fine one is
+    assert not M.planar_wanted(f) and M.planar_wanted(f, budget=1000)

@@ -108,6 +108,7 @@ class WearDomain:
                               settings=st, seed=ws.seed, estimated=ws.estimated)
             sw.props["dimensional_share"] = st.dimensional_share
             sw.props["ambient_K"] = ambient
+            sw.props["interface_max_K"] = self._interface_max_K(work_mech)
             ws.slots[slot.slot] = sw
             law = sw.info["law"]
             quantities = {"slot": slot.slot, "A_per_Pa": float(sw.law.fl_A[0]), "B_K": float(sw.law.fl_B[0]),
@@ -243,6 +244,22 @@ class WearDomain:
         return float(value) if value is not None else REFERENCE_TEMP_K
 
     @staticmethod
+    def _interface_max_K(work_mech) -> float | None:
+        """The highest tool-work interface temperature: the work material's solidus (else liquidus, else its flow
+        law's melting temperature); None without one (data-only materials keep thermal's temperatures)."""
+        if work_mech is None:
+            return None
+        for value in (getattr(work_mech, "solidus_K", None), getattr(work_mech, "liquidus_K", None)):
+            if value is not None and float(value) > 0.0:
+                return float(value)
+        jc = getattr(work_mech, "jc", None)
+        if jc is not None:
+            from ..mechanics.abi import MAT_TMELT_K
+            if float(jc[MAT_TMELT_K]) > 0.0:
+                return float(jc[MAT_TMELT_K])
+        return None
+
+    @staticmethod
     def _work_mech(material, ws):
         try:
             return WorkMaterial.from_db(P.as_map(material))
@@ -291,9 +308,16 @@ class WearDomain:
             stock = P.as_map(stock) if stock is not None else None
             kind = P.text(stock, "kind", "") if stock is not None else ""
             size = P.plain(P.field_of(stock, "size_m")) if stock is not None else None
+            envelope = _mesh_stock_envelope(project, stock) if kind == "mesh" else None
             if kind in ("block", "cylinder", "tube") and size is not None:
                 skin = StockShell(kind, [float(P.plain(v)) for v in size], work.skin_thickness_m,
                                   ws.settings.skin_samples)
+            elif envelope is not None:
+                # a bar or plate given as a mesh (the lathe-shaft example's d45 bar with its centre hole): its
+                # as-rolled skin is on the envelope (outer diameter and ends, or the block's faces)
+                skin = StockShell(envelope[0], envelope[1], work.skin_thickness_m, ws.settings.skin_samples)
+                ws.estimated.append(f"stock skin ({work.skin_type}) of the mesh stock on its {envelope[0]} envelope "
+                                    f"({', '.join(f'{v * 1e3:.2f}' for v in envelope[1])} mm)")
             else:
                 skin_active = False
                 self._note_once(ctx, ws, "skin", "wear:skin_not_evaluated", {"skin_thickness_m": work.skin_thickness_m},
@@ -424,6 +448,10 @@ class WearDomain:
             elif note == "finish_unreachable":
                 self._note_once(ctx, ws, f"finish:{sw.slot}", "wear:finish_spec_not_reachable_by_feed",
                                 {"slot": sw.slot}, tick, [])
+            elif note == "interface_above_melting":
+                self._note_once(ctx, ws, f"melt:{sw.slot}", "wear:edge_temperature_above_work_melting",
+                                {"slot": sw.slot, "interface_max_K": float(sw.props.get("interface_max_K") or 0.0)},
+                                tick, [])
 
     def _events(self, ctx, ws, sw, inp, out, chips, g, broke, tick) -> None:
         valid = sw.geo.valid != 0
@@ -693,6 +721,32 @@ def _fmt(name: str, value: float) -> str:
     if name in ("finish", "fatigue", "breakage"):
         return f"{value:.3g}"
     return f"{value * 1e3:.3f} mm"
+
+
+def _mesh_stock_envelope(project, stock):
+    """(kind, size) of StockShell for a mesh stock: on a lathe a cylinder about S z from z = 0 (diameter = twice the
+    mesh's largest radius, length = its top), elsewhere a block from the S origin (its bounding box) when the mesh
+    starts at the origin as stock frames do; None when the mesh cannot be read or does not fit either."""
+    path = P.field_of(stock, "mesh") if stock is not None else None
+    if not path:
+        return None
+    try:
+        from ..removal.stock import read_mesh_file
+        V, _ = read_mesh_file(str(P.plain(path)), unit="mm")
+    except Exception:  # noqa: BLE001 - no skin model without the mesh; the caller notes it
+        return None
+    V = np.asarray(V, dtype=float)
+    if V.size == 0:
+        return None
+    lo, hi = V.min(axis=0), V.max(axis=0)
+    tol = 1e-6
+    machine = P.field_of(project, "machine")
+    mtype = P.text(machine, "type", "") if machine is not None else ""
+    if mtype in ("lathe", "mill_turn", "swiss") and abs(lo[2]) <= tol and hi[2] > 0.0:
+        return "cylinder", [2.0 * float(np.hypot(V[:, 0], V[:, 1]).max()), float(hi[2])]
+    if np.all(np.abs(lo) <= tol) and np.all(hi > 0.0):
+        return "block", [float(v) for v in hi]
+    return None
 
 
 __all__ = ["WearDomain"]

@@ -128,6 +128,8 @@ PK_INCL = 41            # incl_rad
 PK_CHIP = 42            # chip_T (3)
 PK_EDGE_R = 45          # edge_radius_m
 PK_VB = 46              # VB_m
+PK_CURV = 47            # signed curvature of the edge in its chip-section plane (1/m, edge_curvature): turning's chip
+#                         strip of an element, h deep along -n, is db (1 - h curv / 2) wide (a nose radius r: 1 / r)
 N_PK = 48
 # CutTool.pki columns (int64)
 PKI_ROW = 0             # row
@@ -177,9 +179,10 @@ RA_FZ = 2
 RA_MX = 3               # its moment about the tool tip (T0)
 RA_MY = 4
 RA_MZ = 5
-RA_T = 6                # time it still acts (s; <= 0: free row)
+RA_T = 6                # time it ends (s, absolute; a row ends there whether the tool still cuts or not)
 RA_Z = 7                # z_T of the struck point (the station that takes the load)
-N_RA = 8
+RA_T0 = 8               # time it starts (s, absolute); a free row has RA_T <= RA_T0
+N_RA = 10
 
 # ------------------------------------------------------------------------------- per-element accumulators (CutState.elem_acc)
 # the first N_ELEM_ACC columns are the core.abi ELEM_* slots in the same order (copied to Accum.elem at absorb)
@@ -577,6 +580,7 @@ def pack_elements(tool) -> tuple[np.ndarray, np.ndarray]:
     pk[:, PK_CHIP:PK_CHIP + 3] = tool.chip_T
     pk[:, PK_EDGE_R] = tool.edge_radius_m
     pk[:, PK_VB] = tool.VB_m
+    pk[:, PK_CURV] = edge_curvature(tool)
     pki[:, PKI_ROW] = tool.row
     pki[:, PKI_TOOTH] = tool.tooth
     pki[:, PKI_STATION] = station
@@ -588,6 +592,62 @@ def pack_elements(tool) -> tuple[np.ndarray, np.ndarray]:
     pki[:, PKI_AXIAL] = (np.abs(N[:, 2]) > 0.7).astype(np.int64)
     order = np.asarray(tool.st_elem, np.int64)
     return np.ascontiguousarray(pk[order]), np.ascontiguousarray(pki[order])
+
+
+def edge_curvature(tool) -> np.ndarray:
+    """[n] signed curvature (1/m) of the cutting edge at each element in the plane of its chip section: the meridian
+    plane (r_xy, z) of a rotating tool (the helix's twist about the axis is no curvature of the chip section), the
+    rake plane of a non-rotating one. Positive where the outward normals n_T spread along the edge, so the chip,
+    which lies behind the edge (on -n_T), narrows with depth: a nose or corner radius r gives 1 / r, a straight
+    edge 0. turn_step measures the chip thickness h along -n into the polar field, so an element's chip is the
+    strip between its neighbours' normals, db (1 - h curv / 2) wide at mid-depth (an annular sector: exact for
+    h <= r); h db overstated the chip of a turning nose by h / 2r, 19 % at f 0.3 mm/rev on r 0.8 mm (+5 % on a
+    G71 pass). cut_step does not use it: its h is the projection on n of the surface's shift between passes at the
+    element's own station, and h db tiles the chip exactly (strips along the shift). Central difference over the
+    neighbouring elements of the same tooth (one-sided at an edge's end or next to an invalid or distant element;
+    0 for an isolated one)."""
+    n = int(tool.p_T_m.shape[0])
+    curv = np.zeros(n)
+    if n < 2:
+        return curv
+    P = np.asarray(tool.p_T_m, float)
+    N = np.asarray(tool.n_T, float)
+    if float(tool.scal[TC_ROTATING]) > 0.5:
+        r = np.hypot(P[:, 0], P[:, 1])
+        safe = np.where(r > 0.0, r, 1.0)
+        n_r = np.where(r > 0.0, (N[:, 0] * P[:, 0] + N[:, 1] * P[:, 1]) / safe, np.hypot(N[:, 0], N[:, 1]))
+        P2 = np.column_stack([r, P[:, 2]])
+        N2 = np.column_stack([n_r, N[:, 2]])
+    else:
+        P2, N2 = P, N
+    norm = np.linalg.norm(N2, axis=1)
+    N2 = N2 / np.where(norm > 0.0, norm, 1.0)[:, None]
+    n_elem = int(round(float(tool.scal[TC_N_ELEM]))) if len(tool.scal) > TC_N_ELEM else 0
+    if n_elem <= 0:
+        n_elem = n
+    tooth = np.arange(n) // n_elem
+    valid = np.asarray(tool.valid) != 0
+    dS = np.asarray(tool.dS_m, float)
+
+    def neighbour(k):
+        j = np.arange(n) + k
+        ok = (j >= 0) & (j < n)
+        jj = np.clip(j, 0, n - 1)
+        ok &= (tooth[jj] == tooth) & valid[jj] & valid
+        gap = np.linalg.norm(P[jj] - P, axis=1)
+        ok &= gap <= 2.0 * np.maximum(dS, dS[jj]) + 1e-12
+        return jj, ok
+
+    jp, okp = neighbour(1)
+    jm, okm = neighbour(-1)
+    a = np.where(okm, jm, np.arange(n))
+    b = np.where(okp, jp, np.arange(n))
+    dp = P2[b] - P2[a]
+    dn = N2[b] - N2[a]
+    d2 = np.einsum("ij,ij->i", dp, dp)
+    use = (okp | okm) & (d2 > 0.0)
+    curv[use] = np.einsum("ij,ij->i", dn[use], dp[use]) / d2[use]
+    return curv
 
 
 def with_packed(tool):
@@ -728,7 +788,7 @@ COEFF_T = numba.typeof(CoeffTable(_f(2), _f(1, 2, 3), _f(1, 3), _f(1, 2, 3), _f(
 __all__ = [name for name in dir() if name.isupper() or name in (
     "CutTool", "CutTable", "Refill", "StepPose", "Deflection", "CutOccupancy", "CutPacking", "AxisMap", "PolarView",
     "CutState", "CutAccum", "StepOut", "CutEvents", "empty_tool", "empty_table", "empty_memory", "empty_intervals",
-    "memory_rows", "row_station", "pack_elements", "with_packed",
+    "memory_rows", "row_station", "pack_elements", "with_packed", "edge_curvature",
     "empty_refill", "identity_pose", "empty_deflection", "empty_occupancy", "empty_packing", "empty_axes",
     "empty_polar", "empty_state", "empty_accum", "empty_out", "core_accum", "empty_events", "is_kernel_layout",
     "Accum", "EventBuffer", "SurfaceMemory", "EngagedIntervals", "CoeffTable")]

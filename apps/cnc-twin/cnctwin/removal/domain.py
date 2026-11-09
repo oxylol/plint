@@ -406,6 +406,7 @@ class RemovalDomain:
         kind = str(_get(stock, "kind", "block"))
         size = [float(v) for v in (_get(stock, "size_m") or [])]
         refine = st.refine
+        mesh = None
         if kind == "block":
             if len(size) != 3:
                 raise InputError("removal: a block stock needs size_mm [x, y, z]")
@@ -422,6 +423,7 @@ class RemovalDomain:
                 raise InputError("removal: a mesh stock needs stock.mesh")
             V, Fc = SK.read_mesh_file(path, unit="mm")
             fld, _ = SK.mesh_field(V, Fc, st.lattice_m, refine, margin_nodes=st.margin_nodes)
+            mesh = (V, Fc)
         else:
             raise InputError(f"removal: unknown stock kind {kind!r}")
         rho = density_20C(_get(project, "material"))
@@ -439,22 +441,31 @@ class RemovalDomain:
                        initial_volume_m3=FD.volume_m3(fld, 0, 2), target_volume_m3=target_volume)
         wp.held_boxes = list(self._held) if self._held is not None else self._held_from_setup(project, 0)
         machine_type = str(_get(_get(project, "machine"), "type", ""))
-        if machine_type in LATHES and kind in ("cylinder", "tube"):
-            wp.polar, note = self._make_polar(ctx, project, st, fld, kind, size)
+        if machine_type in LATHES and kind in ("cylinder", "tube", "mesh"):
+            # a lathe turns the polar field (the tri-dexel copy is rebuilt from it): a mesh stock (a bar with a
+            # centre hole, a forging) needs one as much as an analytic cylinder, or the turning passes cut air
+            wp.polar, note = self._make_polar(ctx, project, st, fld, kind, size, mesh)
             if note:
                 wp.notes.append("polar: " + note)
         return wp
 
-    def _make_polar(self, ctx, project, st, fld, kind, size):
-        if kind == "cylinder":
-            od, idia, length = size[0], 0.0, size[1]
-        else:
-            od, idia, length = size[0], size[1], size[2]
+    def _make_polar(self, ctx, project, st, fld, kind, size, mesh=None):
         r_nose = self._min_nose_radius(project)
-        n_th, dz, nz, dr, nr, note = PO.resolution(length, st.polar_theta_bins, st.polar_min_feed_m_per_rev, r_nose,
-                                                   0.5 * od, st.polar_kp, st.polar_max_bytes,
+        if kind == "mesh":
+            V = np.asarray(mesh[0], dtype=float)
+            r_out = float(np.hypot(V[:, 0], V[:, 1]).max())
+            z_s0, z_s1 = float(V[:, 2].min()), float(V[:, 2].max())
+        elif kind == "cylinder":
+            r_out, r_in, z_s0, z_s1 = 0.5 * size[0], 0.0, 0.0, size[1]
+        else:
+            r_out, r_in, z_s0, z_s1 = 0.5 * size[0], 0.5 * size[1], 0.0, size[2]
+        n_th, dz, nz, dr, nr, note = PO.resolution(z_s1 - z_s0, st.polar_theta_bins, st.polar_min_feed_m_per_rev,
+                                                   r_nose, r_out, PO.SIZING_KP, st.polar_max_bytes,
                                                    st.polar_axial_spacing_m or None, st.lattice_m)
-        pf = PO.polar_tube(0.5 * od, 0.5 * idia, 0.0, length, n_th, dz, dr, kp=st.polar_kp)
+        if kind == "mesh":
+            pf = PO.polar_from_mesh(mesh[0], mesh[1], n_th, dz, dr, z_s0, z_s1, r_out, kp=st.polar_kp)
+        else:
+            pf = PO.polar_tube(r_out, r_in, z_s0, z_s1, n_th, dz, dr, kp=st.polar_kp)
         return pf, note
 
     @staticmethod
@@ -526,7 +537,17 @@ class RemovalDomain:
         g = ToolContact()
         g.in_cut = bool(iv[A.IA_IN_CUT_CALLS] > 0 or iv[A.IA_POLAR_Q2] > 0)
         W = float(fv[A.FA_W])
-        if W > 0.0:
+        turning = int(iv[A.IA_POLAR_Q2]) > 0
+        if W > 0.0 and turning:
+            # polar_cut's moments are cylindrical (the work turned under the tool during the step): the centroid at
+            # its mean radius and z, at the tool's angle of the last removal; the generated surface's outward normal
+            # radial (outward for an external tool, inward for a boring bar)
+            th = float(fv[A.FA_POLAR_TH])
+            r_c = float(fv[A.FA_CX]) / W
+            g.point_S_m = np.array([r_c * math.cos(th), r_c * math.sin(th), float(fv[A.FA_CZ]) / W])
+            sign = 1.0 if float(fv[A.FA_NX]) >= 0.0 else -1.0
+            normal_S = sign * np.array([math.cos(th), math.sin(th), 0.0])
+        elif W > 0.0:
             g.point_S_m = np.array([fv[A.FA_CX], fv[A.FA_CY], fv[A.FA_CZ]]) / W
             nvec = np.array([fv[A.FA_NX], fv[A.FA_NY], fv[A.FA_NZ]])
             nn = float(np.linalg.norm(nvec))
@@ -541,6 +562,10 @@ class RemovalDomain:
         g.normal_M = R @ normal_S
         g.ae_m = float(fv[A.FA_AE_MAX])
         zmin, zmax = float(fv[A.FA_ZREL_MIN]), float(fv[A.FA_ZREL_MAX])
+        if turning:
+            # the depth of cut of a turning step: the removed material's extent across the feed (radial in
+            # longitudinal turning, axial in facing; docs/models/removal.md "Polar field")
+            zmin, zmax = float(fv[A.FA_DEPTH_MIN]), float(fv[A.FA_DEPTH_MAX])
         g.ap_m = zmax - zmin if math.isfinite(zmin) and math.isfinite(zmax) and zmax > zmin else 0.0
         if g.ae_m == 0.0 and g.in_cut:
             g.ae_m = float(fv[A.FA_RREL_MAX])
@@ -624,6 +649,13 @@ class RemovalDomain:
                                         "y1_S_m": float(x1[1]), "z1_S_m": float(x1[2])})
 
     def _finding_for(self, ctx, state, rs, kind, contact, ev) -> None:
+        if kind == A.EV_RAPID_INTO_MATERIAL and ev["depth_m"] <= rs.settings.collision_tolerance_m:
+            # a rapid whose envelope only grazes the material (the servo lag of a feed axis catching up while a G00
+            # retract already lifts the tool: microns or nothing) is no crash; a rapid into material deeper than the
+            # collision tolerance is (docs/models/removal.md "Rapids")
+            ctx.trace.record(ev["tick"] * ctx.tick_s, ev["tick"], DOMAIN, "removal:rapid_contact",
+                             {"contact": float(contact), "depth_m": ev["depth_m"], "volume_m3": ev["volume_m3"]}, [])
+            return
         if kind not in _FINDING:
             ctx.trace.record(ev["tick"] * ctx.tick_s, ev["tick"], DOMAIN, f"removal:{ev['kind']}",
                              {"contact": float(contact)}, [])
@@ -684,25 +716,30 @@ class RemovalDomain:
         rs = state.removal
         wp = rs.workpieces[w]
         pf = wp.polar
+        r_max = float(pf.geom[A.PG_NR]) * float(pf.geom[A.PG_DR])
         if dirty_only:
             rng = PO.dirty_z_range(pf)
             if rng is None:
                 return
             zlo, zhi = rng
+            radii = PO.touched_radii(pf)
         else:
             zlo = float(pf.geom[A.PG_Z0])
             zhi = zlo + float(pf.geom[A.PG_NZ]) * float(pf.geom[A.PG_DZ])
+            radii = PO.touched_radii(pf, since_made=True)
+        # only the annulus the inserts reached changes (polar_cut records it): the rest keeps the stock's exact rays
+        r_lo, r_hi = radii if radii is not None else (0.0, r_max)
         ev = event_buffer(16, A.EVENT_WIDTH)
         tick = int(state.clock.tick)
         wp.one_body = False             # the rebuild may add material: the next connectivity check labels everything
         while True:
-            status = rebuild_tridexel(wp.field, pf, 0, zlo, zhi, wp.target, rs.settings.gouge_tolerance_m, ev, tick,
-                                      wp.next_sev, rs.scratch)
+            status = rebuild_tridexel(wp.field, pf, 0, zlo, zhi, r_lo, r_hi, wp.target, rs.settings.gouge_tolerance_m,
+                                      ev, tick, wp.next_sev, rs.scratch)
             if status == 0:
                 break
             wp.field = FD.grow_pool(wp.field, max(int(wp.field.info[A.FI_N_BLOCKS]), 1024))
         for lvl in range(1, FD.n_levels(wp.field)):
-            rebuild_tridexel(wp.field, pf, lvl, zlo, zhi, A.empty_target(int(wp.field.info[A.FI_NRAYS])),
+            rebuild_tridexel(wp.field, pf, lvl, zlo, zhi, r_lo, r_hi, A.empty_target(int(wp.field.info[A.FI_NRAYS])),
                              rs.settings.gouge_tolerance_m, ev, tick, wp.next_sev, rs.scratch)
         PO.clear_dirty(pf)
         refresh_zmax(pf, 0)

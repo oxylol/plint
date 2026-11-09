@@ -75,10 +75,13 @@ class Basquin:
     src: str
 
     def cycles(self, amplitude_Pa: float) -> float:
-        """Cycles to failure at a (fully reversed, SWT-equivalent) amplitude."""
+        """Cycles to failure at a (fully reversed, SWT-equivalent) amplitude. Basquin's curve ends at one reversal
+        (N_f = 1/2) at sigma_f': a load at or above it fails in its first reversal (the static fracture the section
+        criterion reports), so its damage is that of one reversal, not the curve extrapolated beyond its end (a
+        blown-up entry gave a Miner sum of 1.7e24)."""
         if amplitude_Pa <= 0.0:
             return math.inf
-        return 0.5 * (amplitude_Pa / self.sigma_f_Pa) ** (1.0 / self.b)
+        return 0.5 * (min(amplitude_Pa, self.sigma_f_Pa) / self.sigma_f_Pa) ** (1.0 / self.b)
 
 
 def basquin(tool_class: str, trs_Pa: float, youngs_Pa: float) -> Basquin:

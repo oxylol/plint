@@ -154,11 +154,31 @@ def test_events_become_findings_once_per_episode():
         inputs = dom.kernel_inputs(ctx, state, state.bus_prev)
         from cnctwin.removal.k_envelope import push_event
 
-        push_event(inputs.events, A.EV_RAPID_INTO_MATERIAL, 100 + step, 0, 1e-3, 2e-3, 3e-3, 0.0, 1e-9, -1, 5, 0, 2)
+        push_event(inputs.events, A.EV_RAPID_INTO_MATERIAL, 100 + step, 0, 1e-3, 2e-3, 3e-3, 0.5e-3, 1e-9, -1, 5, 0,
+                   2)
         dom.absorb(ctx, state, None, state.bus_next)
         assert state.bus_next.removal.events[0]["kind"] == "rapid_into_material"
     found = [f for f in state.findings if f.category == Category.RAPID_INTO_MATERIAL]
     assert len(found) == 1
+
+
+def test_a_rapid_that_only_grazes_the_material_is_no_crash():
+    """A rapid whose envelope enters the material by no more than the collision tolerance (a G00 retract lifting the
+    tool while a feed axis's servo lag catches up: microns, or 0.000 mm as the finding read before) is traced, not
+    reported as rapid_into_material (an error)."""
+    ctx = _ctx()
+    state = SimState()
+    dom = RemovalDomain(tool_shapes={0: _shape()}, n_paths=1)
+    dom.init(ctx, state)
+    state.bus_prev.motion.paths = [PathFrame(tool_slot=0, workpiece=0)]
+    for k, depth in enumerate((0.0, 3e-6)):
+        inputs = dom.kernel_inputs(ctx, state, state.bus_prev)
+        from cnctwin.removal.k_envelope import push_event
+
+        push_event(inputs.events, A.EV_RAPID_INTO_MATERIAL, 100 + 2000 * k, 0, 1e-3, 2e-3, 3e-3, depth, 1e-12, -1, 5,
+                   0, 2)
+        dom.absorb(ctx, state, None, state.bus_next)
+    assert not [f for f in state.findings if f.category == Category.RAPID_INTO_MATERIAL]
 
 
 def test_views_follow_the_protocols():
@@ -222,3 +242,31 @@ def test_polar_overflow_is_replayed_with_grown_inline_segments():
     acc = A.new_accum(1)
     assert KP.polar_cut(wp.polar, reg, ps, 4, acc) == 0 and acc.ivals[A.IA_POLAR_Q2] > 0
     assert any("polar inline segments" in n for n in wp.notes)
+
+
+def test_a_lathe_turns_a_mesh_stock_through_its_polar_field(tmp_path):
+    """A mesh stock on a lathe (the lathe-shaft example's bar with its centre hole is a STEP mesh) gets a polar
+    field like a cylinder stock does; without one every turning pass cut air."""
+    n, r, L = 48, 4e-3, 10e-3
+    ang = 2 * math.pi * np.arange(n) / n
+    V = np.vstack([np.column_stack([r * np.cos(ang), r * np.sin(ang), np.full(n, z)]) for z in (0.0, L)]
+                  + [np.array([[0.0, 0.0, 0.0], [0.0, 0.0, L]])])
+    o0, o1 = np.arange(n), n + np.arange(n)
+    nx = lambda a: (a - a[0] + 1) % n + a[0]
+    Fc = np.vstack([np.column_stack([o0, nx(o0), nx(o1)]), np.column_stack([o0, nx(o1), o1]),
+                    np.column_stack([np.full(n, 2 * n + 1), o1, nx(o1)]), np.column_stack([np.full(n, 2 * n), nx(o0), o0])])
+    path = tmp_path / "bar.obj"
+    path.write_text("".join(f"v {x * 1e3:.9f} {y * 1e3:.9f} {z * 1e3:.9f}\n" for x, y, z in V)
+                    + "".join(f"f {a + 1} {b + 1} {c + 1}\n" for a, b, c in Fc))
+    ctx = _ctx()
+    ctx.project.stock = SimpleNamespace(kind="mesh", size_m=None, mesh=str(path))
+    ctx.project.machine = SimpleNamespace(type="lathe")
+    state = SimState()
+    RemovalDomain(tool_shapes={0: _shape()}, n_paths=1).init(ctx, state)
+    wp = state.removal.workpieces[0]
+    assert wp.polar is not None
+    from cnctwin.removal import polar as PO
+    vol_mesh = 0.5 * n * r * r * math.sin(2 * math.pi / n) * L
+    assert PO.volume_m3(wp.polar) == pytest.approx(vol_mesh, rel=2e-3)
+    assert float(wp.polar.geom[A.PG_Z0]) == 0.0
+    assert int(wp.polar.geom[A.PG_NZ]) * float(wp.polar.geom[A.PG_DZ]) >= L

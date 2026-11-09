@@ -38,25 +38,43 @@ def ray_index(f, lvl, fam, iu, iv) -> int:
     return int(f.lv_ray0[lvl, fam] + iu * f.lv_dims[lvl, v] + iv)
 
 
-def iv_subtract_ref(segs, removals, ev):
-    """Segments [(lo, hi, elo, ehi)] minus sorted intervals [(a, b)]: (new segments, pieces, removed)."""
+def iv_subtract_ref(segs, removals, ev, sliver=A.SLIVER_Q):
+    """Segments [(lo, hi, elo, ehi)] minus sorted intervals [(a, b)]: (new segments, pieces, removed). A remaining
+    piece of a segment that touches a removal and is shorter than ``sliver`` (the tri-dexel subtraction's
+    A.SLIVER_Q; 0 for the polar field, whose thin rings are material) is removed with it (the pieces of one segment
+    that touch are merged)."""
     out, pieces, removed = [], [], 0
     for lo, hi, elo, ehi in segs:
+        rest, cut = [], []
         cur, ce = lo, elo
         for a, b in removals:
             if b <= cur or a >= hi or b <= a:
                 continue
             if a > cur:
-                out.append((cur, a, ce, ev))
-            p0, p1 = max(a, cur), min(b, hi)
-            pieces.append((p0, p1))
-            removed += p1 - p0
+                rest.append([cur, a, ce, ev, True])
+            cut.append([max(a, cur), min(b, hi)])
             if b >= hi:
                 cur = hi
                 break
             cur, ce = b, ev
         if cur < hi:
-            out.append((cur, hi, ce, ehi))
+            rest.append([cur, hi, ce, ehi, bool(cut)])
+        keep = []
+        for r in rest:
+            if r[4] and r[1] - r[0] < sliver:
+                cut.append([r[0], r[1]])
+            else:
+                keep.append(tuple(r[:4]))
+        cut.sort()
+        merged = []
+        for c in cut:
+            if merged and merged[-1][1] == c[0]:
+                merged[-1][1] = c[1]
+            else:
+                merged.append(list(c))
+        out.extend(keep)
+        pieces.extend((int(c[0]), int(c[1])) for c in merged)
+        removed += sum(c[1] - c[0] for c in merged)
     return out, pieces, removed
 
 
@@ -256,15 +274,55 @@ def dexel_sd_ref(f, lvl, fam, p):
     return D * Q, spread * Q, valid
 
 
-def classify_ref(f, lvl, p):
+def dexel_sd_partial_ref(f, lvl, fam, p):
+    """The family's signed distance over its rays that hold material (weights renormalised), their spread, and
+    validity: at least one such ray, all within reach, the empty rays weighing less than half."""
+    u, v = A.TRANS_U[fam], A.TRANS_V[fam]
+    a = float(f.lv_cell_m[lvl])
+    o = f.lv_origin_m[lvl]
+    fu, fv = (p[u] - o[u]) / a, (p[v] - o[v]) / a
+    iu = min(max(int(math.floor(fu)), 0), int(f.lv_dims[lvl, u]) - 2)
+    iv = min(max(int(math.floor(fv)), 0), int(f.lv_dims[lvl, v]) - 2)
+    al, be = min(max(fu - iu, 0.0), 1.0), min(max(fv - iv, 0.0), 1.0)
+    q = (p[fam] - o[fam]) / Q
+    far = 2.5 * float(f.lv_cell_q[lvl])
+    D, wsum, ends, valid = 0.0, 0.0, [], True
+    for du in (0, 1):
+        for dv in (0, 1):
+            ins, e, has = ray_nearest_ref(f, ray_index(f, lvl, fam, iu + du, iv + dv), q)
+            if not has:
+                continue
+            wgt = (al if du else 1 - al) * (be if dv else 1 - be)
+            d = abs(q - e)
+            ends.append(e)
+            valid = valid and d <= far
+            D += wgt * (d if ins else -d)
+            wsum += wgt
+    spread = (max(ends) - min(ends)) if ends else far
+    valid = valid and bool(ends) and wsum > 0.5 and spread <= far
+    return (D / wsum * Q if wsum > 0.0 else -far * Q), spread * Q, valid
+
+
+def classify_ref(f, lvl, p, fam0=2):
+    """Inside the material: the valid family with the smallest spread; none valid (near a convex edge): the valid
+    partial family with the smallest spread; else the family with the smallest spread. Families in the kernel's
+    order (fam0 first; a tie keeps the earlier one)."""
+    order = [fam0, (fam0 + 1) % 3, (fam0 + 2) % 3]
     best = None
-    for fam in range(3):
+    for fam in order:
         d, sp, ok = dexel_sd_ref(f, lvl, fam, p)
         if ok and (best is None or sp < best[1]):
             best = (d, sp)
     if best is None:
-        ds = [dexel_sd_ref(f, lvl, fam, p) for fam in range(3)]
-        best = min(ds, key=lambda t: t[1])[:2]
+        for fam in order:
+            d, sp, ok = dexel_sd_partial_ref(f, lvl, fam, p)
+            if ok and (best is None or sp < best[1]):
+                best = (d, sp)
+    if best is None:
+        for fam in order:
+            d, sp, ok = dexel_sd_ref(f, lvl, fam, p)
+            if best is None or sp < best[1]:
+                best = (d, sp)
     return best[0] > 0.0
 
 
@@ -384,7 +442,7 @@ def excess_material_ref(f, tgt, tol):
                      for k in range(int(tgt.start[ray]), int(tgt.start[ray + 1]))]
             ray_ex = False
             for lo, hi, _, _ in ray_segments(f, ray):
-                rest, _, _ = iv_subtract_ref([(lo, hi, 0, 0)], tsegs, 0)
+                rest, _, _ = iv_subtract_ref([(lo, hi, 0, 0)], tsegs, 0, 0)
                 for x0, x1, _, _ in rest:
                     ex = (x1 - x0) * Q
                     vol += ex * a * a
@@ -473,7 +531,7 @@ def polar_cut_ref(pf, ins, ps):
             ra, rb = math.hypot(ra, yo), math.hypot(rb, yo)
             qa, qb = math.floor(ra / Q + 0.5), math.floor(rb / Q + 0.5)
             segs = out.get((b, i), polar_radial(pf, b, i))
-            new, pieces, _ = iv_subtract_ref([(lo_, hi_, 0, 0) for lo_, hi_ in segs], [(qa, qb)], 0)
+            new, pieces, _ = iv_subtract_ref([(lo_, hi_, 0, 0) for lo_, hi_ in segs], [(qa, qb)], 0, 0)
             q2 += sum(p1 * p1 - p0 * p0 for p0, p1 in pieces)
             out[(b, i)] = [(x, y) for x, y, _, _ in new]
         k += 1

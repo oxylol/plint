@@ -57,9 +57,14 @@ def ray_store(f, ray, lo, hi, elo, ehi, n):
 @njit(types.UniTuple(i8, 3)(i8, I4_1, I4_1, I4_1, I4_1, i8, I1, I1, i8, I4_1, I4_1, I4_1, I4_1, I1, I1), **INLINE)
 def iv_subtract(n, lo, hi, elo, ehi, m, rlo, rhi, ev, nlo, nhi, nelo, nehi, plo, phi):
     """Segments minus sorted, disjoint removal intervals ``[rlo, rhi)``: (new count, removed pieces,
-    removed length); new endpoints carry ``ev``. Count -1: a scratch list was too small."""
+    removed length); new endpoints carry ``ev``. Count -1: a scratch list was too small.
+
+    A piece of a segment the removal leaves that touches a removal interval and is shorter than A.SLIVER_Q goes
+    with it (a slab-discretisation leftover between two passes; docs/models/removal.md "Slivers"): it joins the
+    adjacent removed piece. Segments no interval touches are copied unchanged, however short."""
     cap = nlo.shape[0]
     pcap = plo.shape[0]
+    sliver = np.int64(A.SLIVER_Q)
     nn = 0
     npc = 0
     removed = 0
@@ -72,6 +77,7 @@ def iv_subtract(n, lo, hi, elo, ehi, m, rlo, rhi, ev, nlo, nhi, nelo, nehi, plo,
         cur = a
         ce = elo[i]
         jj = j
+        cut = False
         while jj < m and rlo[jj] < b:
             ra = rlo[jj]
             rb = rhi[jj]
@@ -79,14 +85,27 @@ def iv_subtract(n, lo, hi, elo, ehi, m, rlo, rhi, ev, nlo, nhi, nelo, nehi, plo,
                 jj += 1
                 continue
             if ra > cur:
-                if nn >= cap:
-                    return np.int64(-1), np.int64(npc), np.int64(removed)
-                nlo[nn] = cur
-                nhi[nn] = ra
-                nelo[nn] = ce
-                nehi[nn] = ev
-                nn += 1
-                p0 = ra
+                if ra - cur < sliver:
+                    # a sliver below this removal: removed with it (joined to the last piece when they touch)
+                    if cut and npc > 0 and phi[npc - 1] == cur:
+                        p0 = plo[npc - 1]
+                        npc -= 1
+                        removed -= phi[npc] - plo[npc]
+                    else:
+                        p0 = cur
+                else:
+                    if nn >= cap:
+                        return np.int64(-1), np.int64(npc), np.int64(removed)
+                    nlo[nn] = cur
+                    nhi[nn] = ra
+                    nelo[nn] = ce
+                    nehi[nn] = ev
+                    nn += 1
+                    p0 = ra
+            elif cut and npc > 0 and phi[npc - 1] == cur:
+                p0 = plo[npc - 1]
+                npc -= 1
+                removed -= phi[npc] - plo[npc]
             else:
                 p0 = cur
             p1 = rb if rb < b else b
@@ -96,6 +115,7 @@ def iv_subtract(n, lo, hi, elo, ehi, m, rlo, rhi, ev, nlo, nhi, nelo, nehi, plo,
             phi[npc] = p1
             npc += 1
             removed += p1 - p0
+            cut = True
             if rb >= b:
                 cur = b
                 break
@@ -103,13 +123,18 @@ def iv_subtract(n, lo, hi, elo, ehi, m, rlo, rhi, ev, nlo, nhi, nelo, nehi, plo,
             ce = ev
             jj += 1
         if cur < b:
-            if nn >= cap:
-                return np.int64(-1), np.int64(npc), np.int64(removed)
-            nlo[nn] = cur
-            nhi[nn] = b
-            nelo[nn] = ce
-            nehi[nn] = ehi[i]
-            nn += 1
+            if cut and b - cur < sliver and npc > 0 and phi[npc - 1] == cur:
+                # a sliver above the last removal: removed with it
+                removed += b - cur
+                phi[npc - 1] = b
+            else:
+                if nn >= cap:
+                    return np.int64(-1), np.int64(npc), np.int64(removed)
+                nlo[nn] = cur
+                nhi[nn] = b
+                nelo[nn] = ce
+                nehi[nn] = ehi[i]
+                nn += 1
     return np.int64(nn), np.int64(npc), np.int64(removed)
 
 

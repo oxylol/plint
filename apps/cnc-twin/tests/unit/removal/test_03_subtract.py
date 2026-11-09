@@ -336,3 +336,83 @@ def test_slab_window_removes_what_every_slab_removes(name):
             assert _within(got, m_lo, m_hi) == _within(full, m_lo, m_hi)
             n_hit += bool(_within(full, m_lo, m_hi))
     assert n_hit > 100
+
+
+def test_slivers_touching_a_removal_go_with_it():
+    """A piece of material a subtraction leaves on a ray, touching its removal and shorter than A.SLIVER_Q (1 um),
+    is removed with it (iv_subtract and its reference); pieces no removal touches stay, however short; longer
+    remainders stay."""
+    from cnctwin.removal import k_ray as KR
+    cases = [([(0, 600), (700, 1000)], [(704, 1000)], [(0, 600)], [(700, 1000)]),        # 4-quantum sliver above
+             ([(0, 1000)], [(100, 400), (450, 600)], [(0, 100), (600, 1000)], [(100, 600)]),  # a gap of 50 quanta
+             ([(0, 50), (200, 1000)], [(300, 400)], [(0, 50), (200, 300), (400, 1000)], [(300, 400)]),
+             ([(0, 1000)], [(100, 400), (700, 800)], [(0, 100), (400, 700), (800, 1000)], [(100, 400), (700, 800)]),
+             ([(0, 1000)], [(0, 940)], [], [(0, 1000)]),                                   # 60 quanta left on top
+             ([(10, 1000)], [(0, 40), (95, 1000)], [], [(10, 1000)])]                       # a sliver between them
+    for segs, rem, keep, pieces in cases:
+        n = len(segs)
+        lo = np.array([s[0] for s in segs] + [0] * 8, np.int32)
+        hi = np.array([s[1] for s in segs] + [0] * 8, np.int32)
+        elo = np.arange(n + 8, dtype=np.int32)
+        ehi = np.arange(n + 8, dtype=np.int32) + 100
+        rlo = np.array([r[0] for r in rem], np.int64)
+        rhi = np.array([r[1] for r in rem], np.int64)
+        nlo, nhi, nelo, nehi = (np.zeros(16, np.int32) for _ in range(4))
+        plo, phi = np.zeros(16, np.int64), np.zeros(16, np.int64)
+        nn, npc, removed = KR.iv_subtract(n, lo, hi, elo, ehi, len(rem), rlo, rhi, 99, nlo, nhi, nelo, nehi, plo, phi)
+        assert [(int(nlo[k]), int(nhi[k])) for k in range(nn)] == keep, (segs, rem)
+        assert [(int(plo[k]), int(phi[k])) for k in range(npc)] == pieces, (segs, rem)
+        assert removed == sum(b - a for a, b in pieces)
+        ref, ref_pieces, ref_removed = R.iv_subtract_ref([(a, b, 0, 0) for a, b in segs], rem, 99)
+        assert [(a, b) for a, b, _, _ in ref] == keep and ref_pieces == pieces and ref_removed == removed
+
+
+def test_a_slab_boundary_that_moved_between_passes_leaves_no_sliver():
+    """The side step's leftover (docs/models/loop.md 15): a column inside the lower slab's circle at one pass and
+    inside the upper slab's at the next, whose tip rose by 40 nm in between, kept a 4-quantum piece floating above
+    the floor (surface_height then reported it as the surface). Now the second pass removes it, and the booked
+    removal is the field's change exactly."""
+    f = S.block_field([10e-3, 10e-3, 4e-3], 0.25e-3)
+    prof = P.profile_from_points([0.0, 10e-3], [2e-3, 2e-3])
+    # the z ray nearest (3.0, 5.0) mm
+    a = float(f.lv_cell_m[0])
+    o = np.asarray(f.lv_origin_m[0], float)
+    iu = int(round((3.0e-3 - o[0]) / a))
+    iv = int(round((5.0e-3 - o[1]) / a))
+    xc, yc = o[0] + iu * a, o[1] + iv * a
+    ray = R.ray_index(f, 0, 2, iu, iv)
+    z_before = F.family_lengths(f)[2]
+    # pass 1: tip at z 2 mm, the lower slab (2-3 mm) round (xc + 1.9, yc), the upper one (3 mm up) round (xc + 2.2, yc)
+    st1, acc1, _ = _run(f, prof, _spec([0, 0, 1], [[xc + 1.9e-3, yc, 2e-3], [xc + 2.2e-3, yc, 2e-3]],
+                                        [0.0, 1e-3, 10e-3], [0.0, 0.0]))
+    segs1 = [(lo, hi) for lo, hi, _, _ in R.ray_segments(f, ray)]
+    assert len(segs1) == 2                                   # [bottom, 2 mm) and [3 mm, top): the upper slab missed it
+    # pass 2: the tip 40 nm higher, the slabs' axis points swapped (the column inside the upper slab's circle)
+    z2 = 2e-3 + 40e-9
+    st2, acc2, _ = _run(f, prof, _spec([0, 0, 1], [[xc + 2.2e-3, yc, z2], [xc + 1.9e-3, yc, z2]],
+                                        [0.0, 1e-3, 10e-3], [0.0, 0.0]))
+    segs2 = [(lo, hi) for lo, hi, _, _ in R.ray_segments(f, ray)]
+    assert len(segs2) == 1 and segs2[0] == segs1[0]          # the 4-quantum piece at 3 mm went with the cut
+    removed = int(acc1.removed_q[0, 2] + acc2.removed_q[0, 2])
+    assert removed == z_before - F.family_lengths(f)[2]
+    assert st1 == 0 and st2 == 0
+
+
+def test_a_rapid_reports_how_deep_it_went_into_the_material():
+    """A rapid's event carries the depth of its intrusion: the family whose largest removed piece is smallest (the
+    one most normal to the face, as the gouge depth): 1 mm for a plunge 1 mm into the block top, 3 um for a side
+    that grazes a face by 3 um (the servo lag of a G00 retract: no crash, the domain only traces it)."""
+    f = S.block_field([10e-3, 10e-3, 4e-3], 0.25e-3)
+    prof = P.profile_from_points([0.0, 10e-3], [2e-3, 2e-3])
+    st, acc, ev = _run(f, prof, _spec([0, 0, 1], [[5e-3, 5e-3, 3e-3]], [0.0, 10e-3], [0.0], rapid=True))
+    assert int(ev.rec[0, A.EC_KIND]) == A.EV_RAPID_INTO_MATERIAL
+    assert ev.rec[0, A.EC_DEPTH] == pytest.approx(1e-3, abs=2 * Q)
+    f = S.block_field([10e-3, 10e-3, 4e-3], 0.25e-3)
+    a = float(f.lv_cell_m[0])
+    o = np.asarray(f.lv_origin_m[0], float)
+    y0 = o[1] + round((5e-3 - o[1]) / a) * a                  # the tool's centre line on an x ray
+    st, acc, ev = _run(f, prof, _spec([0, 0, 1], [[-2e-3 + 3e-6, y0, 1e-3]], [0.0, 10e-3], [0.0], rapid=True))
+    kinds = [int(ev.rec[k, A.EC_KIND]) for k in range(int(ev.n[0]))]
+    assert A.EV_RAPID_INTO_MATERIAL in kinds
+    row = ev.rec[kinds.index(A.EV_RAPID_INTO_MATERIAL)]
+    assert 0.0 < row[A.EC_DEPTH] <= 3e-6 + 2 * Q

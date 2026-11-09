@@ -66,7 +66,17 @@ thermally activated and a mechanical term; Archard 1953):
           + n_breakoff d_pluck
 
 * VN is the wear depth normal to the machined surface (the flat land moves into the tool, so the
-  land-average Usui rate is dVN/dt: Yen et al. 2004); `int sigma_n V_s dt` is cutting's flank integral.
+  land-average Usui rate is dVN/dt: Yen et al. 2004); `int sigma_n V_s dt` is cutting's flank integral, the
+  land's normal stress (the row's: at most the Prandtl pressure (2 + pi) k of the work's flow stress at the
+  contact) times the sliding distance the face actually travels (|V| dt: an edge a vibration drives backwards
+  still slides on the work; before 2026-11-09 a negative V took wear away).
+* **The contact state bounds the temperature** (2026-11-09): the tool's contact faces cannot be hotter than the
+  interface they draw their heat from, and the interface no hotter than the work material's melting (its solidus,
+  else liquidus, else its flow law's melting temperature; `props["interface_max_K"]`): beyond it there is no solid
+  contact to wear the tool. Thermal's quadrature temperatures above it are taken at it for the flank and the
+  crater laws (trace `wear:edge_temperature_above_work_melting`, once). A blown-up entry's 3296 degC estimate had
+  extrapolated Usui's Arrhenius factor by 1e11: VB_max 146 m (notch 22.6 m) in thin-wall-al7075's first
+  milliseconds. Test `test_an_edge_hotter_than_the_work_melts_wears_at_the_melting_temperature`.
 * **Quadrature**: the rate is evaluated at each in-cut quadrature temperature T_q and weighted by
   w_q, never at the mean temperature (Jensen: the hot part of the interval dominates; test
   `test_quadrature_is_not_the_rate_of_the_mean_temperature`: at 900/1000/1100 K with weights 1/4, 1/2,
@@ -293,8 +303,9 @@ order-of-magnitude estimates; the rates are seeded and reproducible.
 
 Per element with entries in the step: fully reversed surface stress amplitude
 sigma_a = alpha E dT / (2 (1 - nu)) (constrained surface, Kingery 1955; dT = thermal's cycle range,
-alpha and E at the element's body temperature), damage dD = n_entries / N_f, N_f = 0.5 (sigma_a /
-sigma_f')^(1/b) on the **thermal-cycle curve**: hardmetal-type classes sigma_f' = TRS and b from
+alpha and E at the element's body temperature), damage dD = n_entries / N_f, N_f = 0.5 (min(sigma_a, sigma_f') /
+sigma_f')^(1/b) (the curve ends at one reversal: an amplitude beyond sigma_f' cracks the edge in its first cycle,
+no more) on the **thermal-cycle curve**: hardmetal-type classes sigma_f' = TRS and b from
 0.25 TRS at 5000 cycles (`thermal_fatigue_ratio`, `thermal_fatigue_cycles`, est: a 500 K range on WC-Co
 cracks after about 5000 entries, the order seen in interrupted cutting with coolant; isothermal bend
 fatigue, 0.7 TRS at 1e7 cycles, would never crack the edge); HSS its isothermal Basquin curve. At D >= 1
@@ -317,7 +328,9 @@ section's effective volume, bending V = pi d^2/4 arm k(m)/(m + 1), k(m) = Gamma(
 (2 sqrt(pi) Gamma(m/2 + 2)), torsion V = pi d^2/4 arm 2/(m + 2) (when 2 tau > sigma_b); threshold the
 median (`physics.wear.strength: median`) or a per-instance draw (`sample`, stream `wear.strength`).
 Fatigue: Basquin (1910) with SWT's equivalent amplitude (rotating bending: sigma; pulsating 0 -> sigma
-per tooth entry: sigma / sqrt 2; Smith, Watson & Topper 1970), Miner's sum (1945); cycles = sum over
+per tooth entry: sigma / sqrt 2; Smith, Watson & Topper 1970), Miner's sum (1945); the curve ends at one
+reversal at sigma_f' (a larger amplitude is the static fracture the strength criterion reports: its damage is one
+reversal's, N_f = 1/2, not the curve extrapolated: drill-tap's D6.8 summed 1.7e24 after its blown-up entry); cycles = sum over
 teeth of the entries (interrupted), else revolutions in cut (rotating tools); hardmetal-type classes
 sigma_f' = TRS, b = ln 0.7 / ln 2e7 = -0.0212 (Nakajima et al. 2006), HSS the modified universal slopes
 (Muralidharan & Manson 1988, sigma_u = TRS). A section fails at sigma_eq >= strength (cause bending,

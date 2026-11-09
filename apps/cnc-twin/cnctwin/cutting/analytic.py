@@ -384,7 +384,60 @@ def straight_turning_tool(kappa_r_rad, edge_len_m, n, hand=-1.0, rake_rad=0.1, c
     return IdealTool(edge, frames, groups, _Props(0.0, 1), type="turning_insert", rotating=False)
 
 
+def nose_turning_tool(kappa_r_rad, r_eps_m, major_len_m, ds_m, kappa_minor_rad=math.radians(5.0), minor_len_m=None,
+                      hand=-1.0, rake_rad=0.1, clear_rad=0.1) -> IdealTool:
+    """Sharp turning insert with a nose radius (straight_turning_tool's frame: x_T into the work, z_T along the work
+    axis into the tool, feeding along -z_T): the major edge at the entering angle kappa_r ahead of the nose, the
+    nose arc of radius r_eps whose lowest point is the tip (x_T = 0, z_T = 0), the minor edge at kappa_r' behind;
+    elements of about ds along the edge, outward normals n (the nose's (cos psi, 0, sin psi) for psi from -kappa_r
+    to kappa_r'). The profile nose_profile_depth describes."""
+    minor_len_m = 2.0 * ds_m * 8 if minor_len_m is None else minor_len_m
+    c = np.array([-r_eps_m, 0.0, 0.0])
+    pts, nrm, lens = [], [], []
+    n_maj = max(1, int(math.ceil(major_len_m / ds_m)))
+    d_maj = np.array([-math.sin(kappa_r_rad), 0.0, -math.cos(kappa_r_rad)])
+    t_maj = c + r_eps_m * np.array([math.cos(kappa_r_rad), 0.0, -math.sin(kappa_r_rad)])
+    for k in range(n_maj - 1, -1, -1):
+        pts.append(t_maj + (k + 0.5) * major_len_m / n_maj * d_maj)
+        nrm.append([math.cos(kappa_r_rad), 0.0, -math.sin(kappa_r_rad)])
+        lens.append(major_len_m / n_maj)
+    span = kappa_r_rad + kappa_minor_rad
+    n_arc = max(1, int(math.ceil(span * r_eps_m / ds_m)))
+    for k in range(n_arc):
+        psi = -kappa_r_rad + (k + 0.5) * span / n_arc
+        pts.append(c + r_eps_m * np.array([math.cos(psi), 0.0, math.sin(psi)]))
+        nrm.append([math.cos(psi), 0.0, math.sin(psi)])
+        lens.append(span * r_eps_m / n_arc)
+    n_min = max(1, int(math.ceil(minor_len_m / ds_m)))
+    d_min = np.array([-math.sin(kappa_minor_rad), 0.0, math.cos(kappa_minor_rad)])
+    t_min = c + r_eps_m * np.array([math.cos(kappa_minor_rad), 0.0, math.sin(kappa_minor_rad)])
+    for k in range(n_min):
+        pts.append(t_min + (k + 0.5) * minor_len_m / n_min * d_min)
+        nrm.append([math.cos(kappa_minor_rad), 0.0, math.sin(kappa_minor_rad)])
+        lens.append(minor_len_m / n_min)
+    P = np.array(pts)
+    N = np.array(nrm, float)
+    L = np.array(lens)
+    n = len(P)
+    shape = (1, n)
+    # the edge's tangent (major end to minor end) and the entering angle of each element's normal
+    T = np.column_stack([N[:, 2], np.zeros(n), -N[:, 0]])
+    kappa = np.arctan2(N[:, 0], -N[:, 2])
+    cut = np.array([0.0, hand, 0.0])
+    f2 = lambda v: np.ascontiguousarray(np.broadcast_to(np.asarray(v, float), shape).copy())
+    i2 = lambda v: np.ascontiguousarray(np.broadcast_to(np.asarray(v), shape).astype(np.int32).copy())
+    from ..core.abi import EDGE_INSERT
+    edge = EdgeModel(np.zeros(1), f2(P[None, :, 2]), f2(P[None, :, 0]), f2(0.0), f2(L[None, :]), f2(L[None, :]),
+                     f2(kappa[None, :]), f2(rake_rad), f2(0.0), f2(clear_rad), f2(0.0), i2(EDGE_INSERT), i2(0),
+                     i2(np.arange(n)[None, :]), np.ones(shape, np.int8), np.zeros(3), np.zeros(2), P[:, 2].copy(),
+                     P[:, 0].copy(), np.array([hand]))
+    f3 = lambda v: np.ascontiguousarray(np.asarray(v, float).reshape(shape + (3,)).copy())
+    frames = _Frames(f3(T), f3(N), f3(np.broadcast_to(cut, (n, 3))), f3(np.broadcast_to(-cut, (n, 3))))
+    groups = _groups([EDGE_INSERT], [rake_rad], [0.0], [clear_rad], [0.0])
+    return IdealTool(edge, frames, groups, _Props(0.0, 1), type="turning_insert", rotating=False)
+
+
 __all__ = ["milling_average_forces", "milling_forces_at", "runout_chip_thickness", "drilling_lip_chisel",
            "kienzle_turning", "nose_profile_depth", "nose_chip_area", "colwell_angle", "equivalent_chip_thickness",
            "IdealTool",
-           "cylinder_mill", "end_face_mill", "two_lip_drill", "straight_turning_tool"]
+           "cylinder_mill", "end_face_mill", "two_lip_drill", "straight_turning_tool", "nose_turning_tool"]

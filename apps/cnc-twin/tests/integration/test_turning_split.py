@@ -4,8 +4,10 @@ rays at the height of the nose-radius scallops cross material and air in turn. R
 the step (PI_OVERFLOW), the wrapper grows the field and the hot loop repeats only that step's removal
 (`pending_removal`) at the resume. Before 2026-11-09 the whole L0 step was repeated: its forces and work were
 booked twice and dynamics was stepped by 0 base ticks (a TwinError that stopped warmup's lathe pass). The pass with
-polar_kp 1 must reproduce the pass that never overflows (polar_kp 16): the same removed volume, the same cutting
-energy, the same forces and modal response, to round-off."""
+polar_kp 1 must reproduce the pass that never overflows (polar_kp 4): the same removed volume, the same cutting
+energy, the same forces and modal response, to round-off. Until 2026-11-09 it did not: the polar rows were sized for
+the memory budget with the configured capacity, so polar_kp 16 coarsened them (6.25 -> 75 um) and the passes
+differed from the first contact (removal.polar.SIZING_KP now)."""
 
 from __future__ import annotations
 
@@ -35,7 +37,7 @@ def _run(tmp, kp: int):
 @pytest.fixture(scope="module")
 def runs(tmp_path_factory):
     tmp = tmp_path_factory.mktemp("turn-split")
-    return _run(tmp / "kp1", 1), _run(tmp / "kp16", 16)
+    return _run(tmp / "kp1", 1), _run(tmp / "kp4", 4)
 
 
 def test_the_overflowing_pass_splits_and_finishes(runs):
@@ -48,9 +50,6 @@ def test_the_overflowing_pass_splits_and_finishes(runs):
     assert res.removed_volume_m3 == pytest.approx(res.field_volume_change_m3, rel=1e-12)
 
 
-@pytest.mark.xfail(strict=False, reason="open (docs/models/loop.md 15, 'Polar capacity changes the pass'): the pass "
-                                       "with polar_kp 1 removes 1.1 % less than with 16; the forces differ from the "
-                                       "first contact step, one step before the first polar split")
 def test_the_split_pass_reproduces_the_pass_without_overflow(runs):
     (d1, r1, s1), (d2, r2, s2) = runs
     assert s2 == 0

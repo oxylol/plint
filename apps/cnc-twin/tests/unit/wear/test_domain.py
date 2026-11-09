@@ -246,3 +246,59 @@ def test_a_slot_without_cutting_edges_keeps_counters_only():
     assert any("no cutting-edge elements" in e for e in state.wear.estimated)
     record = fx.run(dom, ctx, state, edge, 2)
     assert np.all(record.tools[0].VB_m == 0.0) and record.tools[0].life_used_fraction == 0.0
+
+
+def test_an_edge_hotter_than_the_work_melts_wears_at_the_melting_temperature():
+    """The tool's contact faces cannot be hotter than the interface, and the interface no hotter than the work's
+    melting (solidus; here the flow law's 1460 degC): a thermal estimate of 3296 degC (a blown-up entry) wears the
+    edge exactly as an edge at the melting temperature, instead of extrapolating Usui's Arrhenius law (VB of 146 m
+    in milliseconds before 2026-11-09); the trace says so once."""
+    out = []
+    for flank_K in (1460.0 + 273.15, 3296.0 + 273.15):
+        dom, ctx, state, edge = _setup()
+        assert state.wear.slots[0].props["interface_max_K"] == pytest.approx(1460.0 + 273.15)
+        heat = fx.heat(edge, flank_K=flank_K, rake_K=flank_K, spread=0.0, weights=(1.0,))
+        fx.run(dom, ctx, state, edge, 2, heat_rec=heat, duty=1.0, entries=0)
+        out.append(state.wear.slots[0].elem.vn.copy())
+        hot = flank_K > 1800.0
+        assert any(e.event == "wear:edge_temperature_above_work_melting" for e in ctx.trace._memory) == hot
+    np.testing.assert_array_equal(out[0], out[1])
+    assert np.all(out[1] < 1e-3)
+
+
+def test_a_load_beyond_the_fatigue_curve_fails_in_one_reversal_not_more():
+    """Basquin's curve ends at one reversal at sigma_f': a larger amplitude counts as that reversal (N_f = 1/2: the
+    static fracture is the section criterion's), not as the curve extrapolated (a drill's Miner sum of 1.7e24)."""
+    from cnctwin.wear import fracture as FR
+    b = FR.basquin("carbide", 4.0e9, 5.8e11)
+    assert b.cycles(4.0e9) == pytest.approx(0.5)
+    assert b.cycles(530e9) == pytest.approx(0.5)
+    assert b.cycles(2.0e9) > 1e6
+
+
+def test_a_mesh_stock_on_a_lathe_has_its_skin_on_the_cylindrical_envelope(tmp_path):
+    """The lathe-shaft example's bar is a STEP mesh (d45 x 230 with a centre hole): its as-rolled skin is modelled
+    on the envelope cylinder (twice the largest radius, z from 0 to the top); a mesh at the S origin on a mill on
+    its bounding block; a mesh elsewhere has no skin model (the caller notes it)."""
+    from types import SimpleNamespace
+    from cnctwin.wear.domain import _mesh_stock_envelope
+    n, r, L = 32, 22.5, 230.0
+    ang = 2 * math.pi * np.arange(n) / n
+    V = np.vstack([np.column_stack([r * np.cos(ang), r * np.sin(ang), np.full(n, z)]) for z in (0.0, L)]
+                  + [np.array([[0.0, 0.0, 0.0], [0.0, 0.0, L]])])
+    o0, o1 = np.arange(n), n + np.arange(n)
+    nx = lambda a: (a - a[0] + 1) % n + a[0]
+    Fc = np.vstack([np.column_stack([o0, nx(o0), nx(o1)]), np.column_stack([o0, nx(o1), o1]),
+                    np.column_stack([np.full(n, 2 * n + 1), o1, nx(o1)]), np.column_stack([np.full(n, 2 * n), nx(o0), o0])])
+    path = tmp_path / "bar.obj"
+    path.write_text("".join(f"v {x:.9f} {y:.9f} {z:.9f}\n" for x, y, z in V)
+                    + "".join(f"f {a + 1} {b + 1} {c + 1}\n" for a, b, c in Fc))
+    stock = SimpleNamespace(kind="mesh", mesh=str(path))
+    kind, size = _mesh_stock_envelope(SimpleNamespace(machine=SimpleNamespace(type="lathe")), stock)
+    assert kind == "cylinder" and size == pytest.approx([2 * r * 1e-3, L * 1e-3], rel=1e-9)
+    shell = StockShell(kind, size, 0.05e-3)
+    inside, depth = shell._depth(np.array([[0.0, 22.48e-3, 0.1], [0.0, 10e-3, 0.1]]))
+    assert inside.all() and depth[0] == pytest.approx(0.02e-3, abs=1e-9) and depth[1] > 0.05e-3
+    # off the axis on a mill: not at the S origin, no skin model
+    assert _mesh_stock_envelope(SimpleNamespace(machine=SimpleNamespace(type="vertical_mill")), stock) is None
+    assert _mesh_stock_envelope(SimpleNamespace(machine=None), SimpleNamespace(kind="mesh", mesh=str(tmp_path / "x.obj"))) is None

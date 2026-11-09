@@ -172,8 +172,10 @@ timeline per part, frames.bin, tools.json with its per-part rows, the removed ma
     run's ledger books `holding_slip_in_J` (in: `slip_in_J` of every tool and part record) and
     `holding_slip_mech_J` (out: `slip_mech_change_J`), `summary.conservation.energy.holding_slip_in_J`. Before,
     the slip friction was reported only and the loads' work on a slipping part or tool appeared nowhere.
-* **Friction**: cutting computes the work its chip recut impulses and packing loads take from the tool
-  (`CuttingContact.recut_J`, `packing_J`, terms of its own energy identity). Cutting's `_ledger` books them into
+* **Friction**: cutting computes the work its chip recut loads and packing loads dissipate in the chips
+  (`CuttingContact.recut_J`, `packing_J`, terms of its own energy identity: their rigid-body work less their work
+  on the deflection rates, which is in `deflection_work_J` with the element forces' since 2026-11-09, so it equals
+  dynamics' quadrature of the modal work). Cutting's `_ledger` books them into
   `SimState.ledger.friction_J` itself since 2026-11-09; earlier builds wrote no ledger field for them. The loop
   books them only when the friction term did not change over the hot loop (`Run._book_friction`): both together
   counted them twice, 0.4 % of examples/two-setup-flip's facing entry (0.02 J of 5.3 J, a fatal energy finding).
@@ -233,8 +235,25 @@ the recorder in replay mode writes only `series/fast/replay-<tick0>-<tick1>.parq
 alarms, the tools and spindle speeds of the feed moves) and the planner's cycle time (motion's MotionRunner); the
 L0 stride of every tool by architecture 5.1 at the programmed speed times the machine's largest spindle override
 (the CSS clamp for G96), with f_max the highest frequency among structure's tool modes and the machine's frame and
-table modes carrying >= 1 % of the tip compliance (`stride_compliance_share`); the lattice rule from sanity's
-engagement estimate; the estimated CPU seconds per simulated second (cost model in db/models/loop.yaml: per L0
+table modes carrying >= 1 % of the tip compliance (`stride_compliance_share`); the surface-memory rule (2026-11-09):
+for every rotating tool the spindle angle of an L0 step at the stride the run takes at the programmed speed
+(physics.resolved's when the project stores one, else the stride rule at that speed; entries `angle_per_step_deg`,
+`memory_bins_max`, `l0_run_ticks`) and a warning when `physics.memory_bins` exceeds 360 deg / that angle (finer bins
+than one per step add an error: docs/convergence.md 4.2, 2880 bins at 0.48 deg per step moved the mean force by
++1.5 %); the lattice rule (2026-11-09: one warning per pass with thin radial engagement, a finishing pass or a
+trochoid's crescents; at most 20 named, the rest counted) from sanity's engagement estimate re-run on a height map
+of lattice / 4 (`check.fine_engagement`; on sanity's own 0.5 mm map a pass thinner than a cell was found only where a
+cell centre fell into it, its ae came out a cell wider, and a block whose size was a whole number of cells up to
+round-off got a phantom row of material: the 0.3 mm finish of docs/convergence.md 2.1 read 1.0 mm = 4 x 0.25 mm and
+was not warned. examples/pocket-islands-al6061's trochoid arcs, ae 0.17-0.22 mm on its 0.075 mm lattice, now are;
+the finer map costs 12 s of that example's 22 s check): every cutting move with ae below 4 x the
+lattice it cuts on (lattice / factor inside a refine box that contains the move's whole swept region; the former
+rule read a `lattice_m` that refine entries do not have, and never checked coverage), grouped into passes
+(consecutive moves of one tool) with their lines, the smallest ae, the lattice in force, the one the rule asks for,
+the refine factor that meets it and the ledger's removed-volume error bound lattice / (2 ae) (`lattice.passes`; the
+estimate is within one cell of the true ae, so the rule is decided on it and the recommendation rests on its lower
+bound `ae_min_m`, never too coarse);
+the estimated CPU seconds per simulated second (cost model in db/models/loop.yaml: per L0
 step a fixed part, per engaged element, per mode; per L1 tick; per macro step in and out of the cut; in-cut time =
 the dry run's feed-move time, an upper bound) and the disk `fast: all` would take; sanity's findings. `--write`
 (no errors only) stores `physics.resolved` with `project.write_resolved_physics` (each segment: tool, path,
@@ -301,6 +320,8 @@ predicted stability limit (0.044 mm at 10 000 rpm) and the simulated chatter gro
 | `test_loop_flip.py` | examples/two-setup-flip with one side step per operation: OP20 cuts the OP10 part turned 180 deg about X (one removal transfer, the OP10 step ends up at the bottom of OP20's S), both steps' volumes against each operation's recorded path, timeline and ledgers over both operations, operation-end checkpoints, part files per operation |
 | `test_loop_batch.py` | three parts of the tiny project: fresh blanks, the same removed mass, every ledger over the three parts, tools.json per-part rows (each part's own cutting time, equal for equal parts, adding up to the tool's; VB and life used never decreasing: the tool comes in used), production.json with three parts and each part's share of the tool life, thermal unload records per part, the time balance over the parts |
 | `test_loop_check.py` | `check_project`: strides by the 5.1 rules, cycle times, estimates; `--write` stores physics.resolved and a run uses those strides (and `max_sim_s` truncates it); a project with errors is not written |
+| `test_loop_memory.py` | memory per macro step (2026-11-09): the tiny project with one tick per macro step (every tool change on a step's last tick) through its tool change: no tick's feed velocity above the machine's tool speed, chips' occupancy grid the size of a tool's sweep, no step adding 64 MB and the 450 steps after the tool change within 16 MB (slope <= 20 kB per step) |
+| `test_check_rules.py` (tests/integration) | `twin check` on a side finishing pass (ae 0.3 mm): a warning naming the pass at lattice 0.25 mm, none at 0.0625 mm or with a refine box (factor 4) over it, a memory-bins warning for 2880 bins (0.48 deg per step) and none for 720 |
 | `test_loop_probe.py` | G31 through the whole loop: the tiny project's block with the pocket example's spindle probe; a skip move from 10 mm above the top to 5 mm below stops at the top (the program checks #5063 and raises #3000 otherwise: the run must end without an alarm), the gauge line comes to rest within the braking distance (25 um) below 125 mm above the top and the retract goes straight up |
 | `test_loop_parts.py` | the loop's pieces without a simulation: the coupling monitor, the ring restamping, the peak view, the run ledger's kinetic-energy report, quadrature term, holding's slip energy pair, energy scale floor and the summary of a run without energy, friction booked once, the adapters' change tracking through a checkpoint |
 | `test_outputs_studies.py` | the simulate entry resolves to this loop; replay windows and comparisons through cnctwin.core.outputs |
@@ -379,6 +400,20 @@ process and was killed by the 1.8 GB cap in the mill run that followed (hence on
 second, with the cache filled, took 2 min 56 s (mill run 51.6 s; the lathe run stops, section 15). 2026-11-09:
 `twin warmup --only mill` on the frozen tree of section 14, cold cache, one process per module: 12 min 46 s, its
 mill run 41.0 s (safe).
+
+**Longer runs, 2026-11-09 evening** (frozen copy of the working tree with this task's fixes, `run_project` with
+every domain on and outputs off, one at a time under `bin/tsafe` with `TSAFE_MEM=1800M`, warm cache;
+/tmp/cfix/scripts/longrun.py, the regression's record):
+
+| run | wall s | CPU s | simulated | end | verdict | findings / EXPECTED |
+|---|---|---|---|---|---|---|
+| lathe-shaft-4140, M04 (the mirror of the real M03 set-up, section 15) | 1323 | 1308 | 5.6 s (2.4 s of the G71's first pass) | budget | not safe: gouges (the polar sync's sampling of the centre hole, fixed after this run, section 15), white layer 834 degC (thermal's open estimate) | roughing spindle power 6.41 kW (5.4-6.8): passed, the first time the example's power item is reached; no spindle overload: passed; 5049 mm3 removed; mass, energy and time balanced |
+| drill-tap-plate-1045 | 512 | ~510 | 5.33 s | general protection fault in the hot loop | - | the D6.8 cuts its first hole steadily from 4.99 s; a recut strike of flute chips kicks it into growing vibration (section 15) |
+| thin-wall-al7075 | 715 | ~700 | 5.9 s (1.5 s into its first cut) | killed by the 1.8 GB cap (anon RSS 1.83 GB) | - | not measured further (section 15) |
+| pocket-islands-al6061 | 964 | 954 | 12.0 s | budget (probing, the T1 change; no cut yet) | safe | the N10 probing item passes; structure took 818 of the 954 s (section 15) |
+
+At these costs (240 CPU s per simulated second in the lathe's cut, structure's refresh alone 60-70 s/s) an
+operation of 150-265 s takes 10-17 hours of CPU per example: no example was run through a whole operation.
 
 ## 14. Regression
 
@@ -468,12 +503,13 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   2.4 s of examples/lathe-shaft-4140). Holding now rebuilds when the centrifugal loss moved the grip by 2 % of the
   static force, structure keeps its model when the re-placed supports are within `support_change_rel` (2 %)
   (docs/models/holding.md 4, docs/models/structure.md).
-* **Memory at an operation's end.** inspect's part meshes come from the field's mesh at its lattice
-  (`LoopResults.result_part`: removal's `mesh_level`, then inspect's displacement grids per vertex and the STL,
-  GLB and 3MF files): about 9.5 M triangles for examples/pocket-islands-al6061 (0.075 mm on 100 x 80 x 30 mm).
-  That end killed its first regression runs at the 1.8 GB cap (exit 137) when its probe alarm ended the
-  operation; unfinished operations are not inspected now (section 1), but a finished operation of a
-  fine-lattice example still needs more than 1.8 GB there.
+* **Memory at an operation's end** (fixed 2026-11-09: a part whose surface bricks could hold more than 3 M
+  triangles is meshed with its flat patches as fans, the same surface; docs/models/removal.md 10). inspect's part
+  meshes come from the field's mesh at its lattice (`LoopResults.result_part`: removal's `mesh_level`, then
+  inspect's displacement grids per vertex and the STL, GLB and 3MF files): about 9.5 M triangles for
+  examples/pocket-islands-al6061 (0.075 mm on 100 x 80 x 30 mm). That end killed its first regression runs at the
+  1.8 GB cap (exit 137) when its probe alarm ended the operation; unfinished operations are not inspected (section
+  1), and a finished operation of a fine-lattice example needed more than 1.8 GB there.
 * **Memory at the end of a run** (fixed, dynamics): examples/ti-slot-throughtool ran its set-up, ICS coolant start
   and approach to its budget (the first contact at 7.97 s) and was killed by the 1.8 GB cap; the harness run of
   drill-tap with process damping off the same at 5.03 s. Both ended right after their first operating point: the
@@ -509,7 +545,8 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
     project's full slot (structure modes -> machine and spindle modes only, holding -> none, thermal -> ambient,
     chips' recut grid and packing -> none, coolant -> dry): only freezing the chips' **recut** removed the
     blow-up (the slot then cut its 14 mm at 110 N mean, 140 N peak, 530 W, stable).
-    1. **Cutting's recut impulse (for cutting's owner)** - `cnctwin/cutting/kernels.py` `recut_scan` (from
+    1. **Cutting's recut impulse (fixed 2026-11-09: docs/models/cutting.md "Recutting": the swept share of a
+       voxel's chips, cut like material at the chips' section over the crossing time)** - `cnctwin/cutting/kernels.py` `recut_scan` (from
        `finish_step`): every chip voxel of chips' frozen occupancy grid (2 mm pile cells) whose centre is inside
        the tool's envelope gives its whole remaining mass m to one strike per tooth period, with the impulse
        `J = m V + E_cut / V`, `E_cut = u(h_chip) m / rho` (the specific cutting energy of the voxel's whole chip
@@ -524,7 +561,8 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
        the energy is that force over the path, not u times the voxel's volume; and a tooth meets only the chips in
        its swept volume of the step, not a 2 mm voxel's whole mass. Fix: spread each strike over the crossing
        time with the section-bounded force, take the swept fraction of the voxel's mass.
-    2. **The recut and packing loads' work on the deflection rates (for cutting's owner)** - the same
+    2. **The recut and packing loads' work on the deflection rates (fixed 2026-11-09: both act at an engaged
+       station, their work on the deflection rates is in e_def, equal to dynamics' quadrature)** - the same
        `finish_step` adds the recut impulse `rj` and the packing force to the step's impulse on the tool after
        `e_def` (CA_DEFLECTION_J: the element forces' work on the station deflection rates) was accumulated:
        dynamics' modes receive and integrate them (its quadrature `cutting_work_quadrature_J` includes their work
@@ -557,7 +595,8 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
     mechanics' partition adds again (docs/models/thermal.md 2.2): the explicit stagger had a loop gain near -1
     and alternated by 20-37 K. thermal now publishes the temperature at the entry into the cut (the background
     of mechanics' stationary-source partition): the tiny project's alternation fell to about 2 K. What remains
-    is a limit cycle of cutting's quantised slow state (for cutting's owner): `cnctwin/cutting/coefficients.py`
+    is a limit cycle of cutting's quantised slow state (fixed 2026-11-09: hysteresis of 0.75 cell, and the flank
+    partition reads `flank_entry_K`; docs/models/cutting.md 1, 2): `cnctwin/cutting/coefficients.py`
     `quantised_state` snaps the tool temperature to `tol_temp_dK` (10 K) by rounding, so a temperature at a cell
     boundary flips the row between two cells from one step to the next (the loop's monitor still flags 2.4 K /
     1.9 K changes, ratio 1.2, at the tiny project's entry); a hysteresis of the snapping (keep the cell while the
@@ -572,15 +611,20 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
     raises "cannot convert float NaN to integer"; thermal's `flank_temp_q_K` there is finite (2 x 33 x 3, no NaN).
     Fix: `flank_T = None` for an empty row, as for the tool temperature (done by cutting's owner on 2026-11-09:
     `_row_state` now returns None for a row without members and for a non-finite mean).
-  * *Cutting's analytic chip volume* (for cutting's owner) is 11 % below the volume the tool path sweeps on the
+  * *Cutting's analytic chip volume* (fixed 2026-11-09, two causes: removal's classification turned the top cell of
+    a cut along the stock's top edge into air, so its station had no engaged interval (-17 %); cutting counted a
+    ploughed layer below h_min again at the pass that removed it (+3.7 %); now 1.026 of the field on the side step,
+    docs/models/removal.md 5, cutting.md 4) was 11 % below the volume the tool path sweeps on the
     side step (ae/D 0.05, ap 1 mm): 5.43 mm3 against 6.05-6.11 mm3. Removal's field agrees with the swept volume
     of the recorded path to 0.02 % (its rays sampled on the same lattice), so removal's pass check ("field volume
     and analytic chip volume differ by 12.5 %, allowed 4.6 %") reports cutting's shortfall.
-  * *Rapid into material at zero depth* (for removal's owner): a G00 retract straight up from the end of a side
+  * *Rapid into material at zero depth* (fixed 2026-11-09: the event carries the intrusion's depth, a crash is a
+    depth beyond the collision tolerance; docs/models/removal.md "Rapids"): a G00 retract straight up from the end of a side
     cut raises the error `rapid_into_material` with "0.000 mm deep, 0.000 mm^3" (any removal during a rapid
     counts, here the servo lag of the feed axis catching up while Z already rises). Real programs retract like
     that; the tests lead out sideways first.
-  * *Slivers* (for removal's owner): the side step leaves 4-quantum (40 nm) pieces of material floating in rays it
+  * *Slivers* (fixed 2026-11-09: a remainder under 1 um touching a removal goes with it; docs/models/removal.md
+    "Slivers"): the side step leaves 4-quantum (40 nm) pieces of material floating in rays it
     cut (ray segments like (972732, 972736) at z 9.602 mm above a floor at 8.993 mm); `surface_height` then
     reports the sliver's top as the surface.
   * *Residual spindle speed* (for motion's owner; cutting and thermal read it): after M05 the spindle's speed loop
@@ -617,7 +661,8 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
     then cuts stably for one revolution and more, but the hot loop's force alternates from one L0 step to the next
     from the first revolution on (Fz 739 / 857 N, Fx -74 / -158 N at 5 us steps, displacements smooth), and at
     2.707 s, 1.3 revolutions in, the alternation grows within 0.5 ms (the high steps 865 N -> 1.9 kN -> 30 kN ->
-    115 kN) until the tool breaks and the part comes free. **Root cause (for cutting's owner)**: process damping.
+    115 kN) until the tool breaks and the part comes free. **Root cause (fixed 2026-11-09: process damping from
+  each element's wave memory of the surface it generated, docs/models/cutting.md "Process damping")**: process damping.
     `cnctwin/cutting/kernels.py` `turn_step` (and `cut_step` likewise) adds per element
     `fpd = pd[e,0] * flank_interference_area(vnd / Vc, land, tan_clear, pd_max_flank)` with `vnd` the normal
     velocity of the step's predicted vibration state. The model linearises the surface the edge left behind as a
@@ -656,13 +701,16 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
     thermal.md 2, tests/unit/thermal/test_conservation.py). The surface temperature thermal reports for that pass
     is still 981 degC (white layer at 740 degC) with a fresh insert: its flank and ploughing heat (350 W, 15 % of
     the power) enters through a flank contact one hone radius wide; that estimate is not validated.
-  * *Removal's turning contacts carry no point and no depth (for removal's owner)*: `RemovalContact.geometry`
+  * *Removal's turning contacts carry no point and no depth* (fixed 2026-11-09: polar_cut accumulates them;
+    docs/models/removal.md 11): `RemovalContact.geometry`
     of a TK_TURNING contact has `point_S_m` zero and `ap_m` 0 (`polar_cut` books the removed volume but not the
     engaged centroid FA_CX..FA_CZ / FA_W nor the depth range FA_ZREL_MIN / FA_ZREL_MAX that the helix and field
     cuts accumulate). Every consumer of the contact point read the S origin (thermal's source, dynamics' reference
     station and operating point, above). Thermal and dynamics now take the tool tip and cutting's engaged
     elements; fix in removal: accumulate the turning step's centroid and z range in polar_cut as the other cuts do.
-* **Polar capacity changes the pass** (open; for removal's owner and the hot loop): tests/integration/
+* **Polar capacity changes the pass** (fixed 2026-11-09: the cause was the polar rows' memory budget, reckoned with
+  the configured polar_kp: kp 16 coarsened the d45 bar's rows from 6.25 um to 75 um; the budget now uses a fixed
+  capacity and the split pass equals the pass without overflow to round-off, test_turning_split): tests/integration/
   test_turning_split.py turns the same OD pass (d45 bar, ap 1.5 mm, f 0.25 mm/rev, 1400 rpm) with one and with
   sixteen inline segments per polar ray (`physics.removal.polar_kp`). With one, the hot loop splits once on a polar
   overflow at the first revolution's feed marks and resumes with only the refused removal (the fix of this task:
@@ -673,13 +721,51 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   a few steps and about 8 % lower at full engagement. Not isolated: a part of removal's polar cut or of the field's
   growth that depends on `PI_KP` before an overflow is reported, or the hot loop's view of the refused step. The
   exactness test is marked xfail with this note.
+* **The lathe-shaft example cut air** (fixed 2026-11-09, removal): its stock is a STEP mesh (the d45 x 230 bar with
+  the A3.15 centre hole at the free end) and removal built a polar field only for cylinder and tube stocks: the G71
+  ran its passes with the tool 2 mm inside the bar and removed nothing (air_cutting, 11 s). A mesh stock on a lathe
+  now gets `polar.polar_from_mesh` (exact ray-triangle crossings, the tri-dexel tie rule; docs/models/removal.md
+  11). Two more causes surfaced with the first chips: the polar volume summed `q^2` in int64 and wrapped (the bar
+  read 20 % of its volume; `polar.q2_sum` is exact now), and cutting's chip of the pass was 1.06 x the polar field's
+  removal (22.25 against 20.97 mm3 per macro step): `h db` on the CNMG's 0.8 mm nose overstates the strip behind a
+  curved edge by h / 2 r_eps (the strips now narrow, `abi.edge_curvature`), and `polar_depth`'s linear root sat near
+  the outside sample where the depth ray enters the previous revolution's air gap (now a sign bisection; both
+  docs/models/cutting.md "Turning family"). With the bar cutting, removal's polar -> tri-dexel sync rebuilt the whole
+  disc of the dirty rows at every revolution and booked its polar sampling of the unturned centre hole as removed
+  part material (gouge errors of 7-292 um at r 2-3 mm): the sync now rebuilds only the annulus the insert reached
+  (docs/models/removal.md 11). And the example's M03 turns the bar against the CNMG's rake face in this model
+  (hotloop.md "Lathe spindle direction": tooling's right-hand turning tool sits upright at +X, where a Haas ST's
+  turret holds it inverted); the runs of section 13 use M04, the mirror image of the real set-up.
+* **Recut strikes of flute chips kick a drill into a growing vibration** (open, cutting and chips; found 2026-11-09
+  in examples/drill-tap-plate-1045, whose run then died with a general protection fault at 5.33 s). The D6.8 cuts
+  its first hole steadily from 4.99 s (213 N, 4.6 um station deflection, 0.01 m/s), until a recut strike of 0.39 mg
+  at 5.136 s: the voxel's chips inside the drill's envelope cylinder (cutting's `recut_scan`), cut by the lip
+  across the whole 2 mm voxel (h 60 um x 2.2 mm: 431 N) at the speed of the struck centroid (r near the axis, 0.17
+  m/s, so the load lasts milliseconds). The drill then vibrates with growing amplitude (about 6 kHz, 130 rad/s
+  rotation rate and 0.4 mm within 4 ms; logged step by step with every kernel in Python from a checkpoint),
+  decays, is kicked again, and at 5.33 s an element reads a chip of 649 km: `int((h - h_min) inv_dhi)` overflows
+  and the table index is out of bounds (pure-Python resume: OverflowError at cutting/kernels.py cut_step's segment
+  index). The chips the strike takes are in the frozen occupancy grid inside the drill's envelope, i.e. mostly in
+  its flutes, which turn with the tool and are never met by a lip; the recut model takes every chip of the
+  envelope cylinder. To be settled between cutting (which chips a tooth can meet: the swept layer in front of the
+  edges, not the flute volume) and chips (flute chips are carried, not frozen); and cut_step should refuse a chip
+  thickness beyond the tool's reach (a finding, not a silent wrap of the index).
+* **Structure's refresh dominates every run's cost** (open, structure; measured 2026-11-09 with the loop's own CPU
+  split): pocket-islands' first 12 s (probing, no cut) took 954 CPU s, 818 s of it in structure; the lathe-shaft
+  example's first 5.6 s (2.5 s of it in the G71 cut) 1308 s: structure 445, dynamics 220, cutting 200, recording
+  119, hot loop 93. Structure re-solves its work model (a Ritz solve of 49 824 DOF, about 31 s) every 50 macro steps
+  although nothing changed (identical first frequency every time): its input key hashes the thermal field's bytes
+  exactly, and micro-kelvin changes make every refresh a new job. With it a whole operation of these examples
+  costs about 10 hours of CPU (240 s per simulated second in the lathe's cut).
 * **Surface temperatures of fresh edges** (open, thermal): thermal's surface temperature (the feed-band rise plus
   Jaeger's flash rise of the work's heat over the flank contact) reports 887 degC at ti-slot's entry with 22 W of
   work heat (flash rise 797 K), 981 degC in warmup's turning pass, 589-700 degC (melt smear of 6061) in batch-50's
   roughing entry. With VB 0 the flank contact is `flank_contact_edge_factor` x the hone radius wide (tens of um),
   which concentrates the flank and ploughing heat; the estimate has not been compared with measured machined-
   surface temperatures and its damage findings (burn, white layer, melt smear) are not trusted until it is.
-* **Wear from the entry spikes (for wear's owner)**: the regression's runs that stop at their first cut's entry
+* **Wear from the entry spikes** (fixed 2026-11-09: the spikes are gone at their source in cutting; wear's own
+  bounds: the edge no hotter than the work's melting, Basquin's curve ending at one reversal, the sliding distance
+  travelled; docs/models/wear.md 2, 8, 9): the regression's runs that stop at their first cut's entry
   report wear that a few milliseconds cannot give: examples/thin-wall-al7075 at 4.43 s `VB_max_m` 146 (metres;
   notch 22.6 m, "dimensional drift 6334.931 mm"), ti-slot's T1 "worn out" after 4 ms (edge chipping at 829 N),
   drill-tap's D6.8 with a fatigue damage of 1.7e24 after its blown-up entry. The loads are the spikes of the entry
@@ -696,8 +782,16 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   the plate; not done here (no sourced clamping force at hand), so that example's EXPECTED power and force items
   stay out of reach.
 * **Corner rounding and test references.** The controller's look-ahead rounds program corners within the
-  machine's tolerance (the VF-2SS: about 0.7 mm at the side step's 90 degree corner at F1600). The tests take
-  the removed-volume reference from the path recorded in frames.bin, not from the program.
+  machine's tolerance. Since 2026-11-09 Haas's Setting 85 is the corner radius it documents (docs/models/motion.md
+  2.2): at the VF-2SS's 90 degree corner at F1600 the radius the axes need, 0.436 mm (deviation 0.18 mm, actual
+  path 0.19 mm), where it was a 1.53 mm blend passing the corner at 0.635 mm (actual 0.646 mm). The tests take the
+  removed-volume reference from the path recorded in frames.bin, not from the program.
+* **Memory per macro step** (fixed 2026-11-09, motion and chips): with 2 ms macro steps a run exceeded the 1.8 GB cap
+  at its tool change (docs/convergence.md 9 item 10): motion booked the tip's jump to the new tool as one tick's
+  feed velocity (102 m/s) and chips sized its occupancy grid by the travel at it over the lag (8e7 voxels). Measured
+  after the fix on the convergence case's air-cut variant at 2 ms: 2500 macro steps through the tool change, RSS
+  944-983 MB, trend -13.5 kB per step after it (allocator noise), the largest step +36 MB at the tool change itself
+  (the new tool's tables). tests/integration/test_loop_memory.py.
 * **`run_project` ignores `options.operator` (for the loop's owner; 2026-11-09).** The loop's `run_project` does
   not read the operator overrides. `twin run` and the API's default `simulate` entry now send a run whose options
   carry them through `cnctwin.sweep.runner.run_project`, which applies them and refuses overrides the machine or the

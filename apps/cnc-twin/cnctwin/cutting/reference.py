@@ -350,6 +350,12 @@ def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A
             ps = col[A.COL_PS]
             pr = col[A.COL_PR]
             dV = h * db * float(tool.r_xy_m[e]) * abs(dal) * frac
+            if not tool.forming[e]:
+                # the share of the chip the surface memory takes (elastic-recovery rule)
+                if h < h_write:
+                    dV = 0.0
+                elif h_write > 0.0 and ratio > 0.0 and h < (1.0 + ratio) * h_write:
+                    dV *= (h - h_write) / (ratio * h_write)
             if tool.forming[e]:
                 res.ploughing_J += p_tab * dtw
                 res.displaced_m3 += dV
@@ -363,10 +369,10 @@ def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A
             rc = col[A.COL_RC]
             ea = res.elem_acc
             ea[e, A.ELEM_IN_CUT_S] += dtw
-            ea[e, A.ELEM_RAKE_SLIDING_M] += rc * Vc * dtw
-            ea[e, A.ELEM_FLANK_SLIDING_M] += Vc * dtw
-            ea[e, A.ELEM_INT_SIGMA_V_RAKE] += col[A.COL_SIG_RAKE] * rc * Vc * dtw
-            ea[e, A.ELEM_INT_SIGMA_V_FLANK] += float(tool.sig_flank_Pa[e]) * Vc * dtw
+            ea[e, A.ELEM_RAKE_SLIDING_M] += rc * abs(Vc) * dtw
+            ea[e, A.ELEM_FLANK_SLIDING_M] += abs(Vc) * dtw
+            ea[e, A.ELEM_INT_SIGMA_V_RAKE] += col[A.COL_SIG_RAKE] * rc * abs(Vc) * dtw
+            ea[e, A.ELEM_INT_SIGMA_V_FLANK] += float(tool.sig_flank_Pa[e]) * abs(Vc) * dtw
             ea[e, A.ELEM_INT_H_DT] += h * dtw
             ea[e, A.ELEM_H_MAX] = max(ea[e, A.ELEM_H_MAX], h)
             if not was_in:

@@ -291,3 +291,40 @@ def test_contact_geometry_and_sector_box():
 def test_one_signature_each():
     for kernel in KG.KERNELS:
         assert len(kernel.signatures) == 1, kernel.__name__
+
+
+def test_a_station_within_a_cell_of_the_top_edge_of_a_side_step_is_engaged():
+    """A side step along the block's front face (0.5 mm wide, 1 mm deep, f_z 53 um, lattice 0.25 mm): the station
+    0.09 mm below the block's top lies within one cell of the top and of the cut front, where the rays above the top
+    hold no material and the z columns are cut and uncut in turn: every dexel family was invalid and the fallback
+    classified the crescent of material there as air, so the station had no engaged interval (the top cell of the
+    side step: 17 % of its chip in the tiny project). Classification now takes the family's rays that hold material
+    (docs/models/removal.md 5): the station sees the step's arc like the stations below it, and points just outside
+    the block's edge stay air."""
+    from cnctwin.removal import k_sd as KSD
+    from cnctwin.removal import k_subtract as KS
+    f = S.block_field([30e-3, 20e-3, 10e-3], LAT)
+    work = np.zeros(4)
+    for (y, z, inside) in ((0.05e-3, 9.97e-3, True), (0.144e-3, 10.04e-3, False), (-0.05e-3, 9.89e-3, False),
+                           (-0.02e-3, 10.02e-3, False)):
+        ins, d, fam = KSD.classify(f, 0, 12.3e-3, y, z, 2, work)
+        assert bool(ins) == inside, (y, z, d, fam)
+        assert R.classify_ref(f, 0, np.array([12.3e-3, y, z])) == inside
+    r, yc, tip_z, fz = 5e-3, -4.5e-3, 9.0e-3, 53e-6
+    prof = P.profile_from_points([0.0, 20e-3], [r, r])
+    x_now = 12.0e-3
+    for x in np.append(np.arange(0.0, x_now - fz, 0.25e-3), x_now - fz):
+        spec = A.subtract_spec(W, [[x, yc, tip_z]], [0.0, 20e-3], [0.0], [-1.0] * 3, [1.0] * 3)
+        KS.subtract_envelope(f, prof, spec, A.empty_target(int(f.info[A.FI_NRAYS])), A.new_accum(1),
+                             event_buffer(64, A.EVENT_WIDTH), A.make_scratch())
+    tip = np.array([x_now, yc, tip_z])
+    st_z = np.array([0.3e-3, 0.7e-3, 0.91e-3])
+    eng, _ = _gate(f, tip, st_z, [r, r, r])
+    # the crescent: in front of the face (y >= 0) and outside the last circle (f_z behind)
+    face = math.asin(-yc / r)                                     # 64.2 deg
+    front = math.acos(-fz / (2 * r))                              # 90.3 deg
+    for k in range(3):
+        got = _intervals(eng, k)
+        assert len(got) == 1, (k, got)
+        assert _ang_err(got[0][0], face) < math.radians(0.5), (k, math.degrees(got[0][0]))
+        assert _ang_err(got[0][1], front) < math.radians(3.0), (k, math.degrees(got[0][1]))

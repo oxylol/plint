@@ -548,6 +548,71 @@ def sd_pre(lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam, f
     return D * Q
 
 
+@njit(f8(I2, I1, I2, I4_1, I4_3, I4_1, I4_3, I4_1, i8, i8, f8, f8, f8, F1), **INLINE)
+def sd_partial(lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam, fu, fv, q, out):
+    """sd_pre over the family's rays that hold material only (bilinear weights renormalised over them): a ray
+    without material carries no boundary along the family (it lies beyond a face across it). out = [spread over
+    those rays (m), valid]: valid when at least one ray holds material, every one is within SPREAD_CELLS of the
+    point and their spread is, and the empty rays weigh less than half (the point is nearer to the material rays,
+    so the face across the family lies beyond it: the nearest-ray estimate of that face)."""
+    v = 2 if fam < 2 else 1
+    u = 1 if fam == 0 else 0
+    nu = lv_dims[lvl, u]
+    nv = lv_dims[lvl, v]
+    iu = int(math.floor(fu))
+    iv = int(math.floor(fv))
+    if iu < 0:
+        iu = 0
+    if iu > nu - 2:
+        iu = nu - 2
+    if iv < 0:
+        iv = 0
+    if iv > nv - 2:
+        iv = nv - 2
+    al = fu - iu
+    be = fv - iv
+    if al < 0.0:
+        al = 0.0
+    if al > 1.0:
+        al = 1.0
+    if be < 0.0:
+        be = 0.0
+    if be > 1.0:
+        be = 1.0
+    far = SPREAD_CELLS * lv_cell_q[lvl]
+    emin = 1e300
+    emax = -1e300
+    valid = 1
+    w_mat = 0.0
+    D = 0.0
+    r0 = lv_ray0[lvl, fam]
+    for c in range(4):
+        du = c & 1
+        dv = c >> 1
+        ray = r0 + (iu + du) * nv + iv + dv
+        ins, e, has = nearest(cnt, seg, link, pseg, pnext, ray, q)
+        if has == 0:
+            continue
+        wgt = (al if du == 1 else 1.0 - al) * (be if dv == 1 else 1.0 - be)
+        d = abs(q - e)
+        if d > far:
+            valid = 0
+        if e < emin:
+            emin = e
+        if e > emax:
+            emax = e
+        w_mat += wgt
+        D += wgt * (d if ins == 1 else -d)
+    if w_mat <= 0.5 or emax < emin:
+        valid = 0
+    spread = (emax - emin) if emax >= emin else far
+    if spread > far:
+        valid = 0
+    out[0] = spread * Q
+    out[1] = valid
+    return D / w_mat * Q if w_mat > 0.0 else -far * Q
+
+
 @njit(f8(F1, F2, I2, I1, I2, I4_1, I4_3, I4_1, I4_3, I4_1, i8, i8, f8, f8, f8, F1), **INLINE)
 def sd(lv_cell_m, lv_origin_m, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam, x, y, z, out):
     """D_fam at (x, y, z) (m, positive inside); out = [spread (m), valid, unanimous (+1 in, -1 out, 0),
@@ -747,6 +812,36 @@ def classify_pre(lv_cell_m, lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, p
             return best_d > 0.0, best_d, best_f
     if best_f >= 0:
         return best_d > 0.0, best_d, best_f
+    # no family valid: near a convex edge of the material (within a cell of two faces) the rays beyond a face hold no
+    # material and made every family invalid; a family's rays that do hold material still give the boundary along
+    # it exactly. The partial family (sd_partial: those rays only, the point nearer to them than to the empty ones)
+    # with the smallest spread decides; without one the smallest spread of the full families (the earlier rule,
+    # which classified the material along the top edge of a side step's cut as air: the top cell of every station
+    # there had no engaged interval, 17 % of the side step's chip; docs/models/removal.md 5)
+    part_f = -1
+    part_s = 1e300
+    part_d = 0.0
+    for idx in range(3):
+        fam = fam0 if idx == 0 else ((fam0 + idx) % 3)
+        if fam == 0:
+            fu = fy
+            fv = fz
+            q = qx
+        elif fam == 1:
+            fu = fx
+            fv = fz
+            q = qy
+        else:
+            fu = fx
+            fv = fy
+            q = qz
+        d = sd_partial(lv_dims, lv_cell_q, lv_ray0, cnt, seg, link, pseg, pnext, lvl, fam, fu, fv, q, work)
+        if work[1] == 1.0 and work[0] < part_s:
+            part_f = fam
+            part_s = work[0]
+            part_d = d
+    if part_f >= 0:
+        return part_d > 0.0, part_d, part_f
     for idx in range(1, 3):
         fam = (fam0 + idx) % 3
         if fam == 0:

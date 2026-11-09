@@ -166,3 +166,33 @@ def test_plunge_end_edge_load_and_helical_ramp():
         assert W[:, 2].mean() == pytest.approx(thrust, rel=2e-3)          # pushes the tool toward the spindle
         assert W[:, 5].mean() == pytest.approx(torque, rel=2e-3)          # resists the clockwise rotation
         assert np.allclose(np.array(rec.h)[-1], h_t, rtol=2e-3)
+
+
+def test_the_analytic_chip_volume_of_a_side_step_is_the_swept_volume():
+    """A side step (ae/D 0.05, up and down milling) with a minimum chip thickness: the analytic chip volume is the
+    material the passes remove (the share of each chip the surface memory takes under the elastic-recovery rule), so
+    it equals the volume the path sweeps; counting every h > 0 counted the ploughed layer again at the pass that
+    finally removed it (+3.7 % here)."""
+    import math as _m
+    from cnctwin.cutting import abi as _A
+    from cnctwin.cutting import analytic as _AN
+    from cnctwin.cutting.drive import Driver as _Driver, straight_immersion as _imm
+    from tests.unit.cutting.cutfix import ALTINTAS as _ALT, linear_layout as _layout
+    R, ap, fz, omega, dt = 5e-3, 1e-3, 0.053e-3, -1047.2, 5e-6
+    tool = _AN.cylinder_mill(R, 3, ap, 4, helix_rad=_m.radians(35))
+    nt, ne = tool.edge.elem_r_m.shape
+    ct, table, _ = _layout(tool, {"default": dict(_ALT, h_min_m=3e-6)}, omega)
+    phi = _m.acos(1 - 2 * 0.05)
+    nrev = int(round(2 * _m.pi / abs(omega) / dt))
+    for lo_hi in (_imm(_m.pi - phi, _m.pi), _imm(0.0, phi)):
+        drv = _Driver(ct, table, nt, ne, rho_kg_m3=2700.0)
+        vf = fz * nt * abs(omega) / (2 * _m.pi)
+        tip = lambda t: np.array([vf * t, 0.0, 0.0])
+        drv.set_interval(*lo_hi)
+        drv.prefill_memory(tip, 0.0, omega)
+        drv.run_rotating(nrev, omega, dt, tip, record=False)
+        v0 = float(drv.acc.scalars[_A.ACC_CHIP_VOLUME_M3])
+        drv.run_rotating(3 * nrev, omega, dt, tip, t0_s=nrev * dt, record=False)
+        vol = float(drv.acc.scalars[_A.ACC_CHIP_VOLUME_M3]) - v0
+        exact = vf * 3 * nrev * dt * 0.05 * 2 * R * ap
+        assert vol == pytest.approx(exact, rel=5e-3)

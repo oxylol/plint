@@ -21,7 +21,10 @@ verification), `drive.py` (a stand-alone driver of the kernels over prescribed m
   (thermal, wear, coolant, motion), snaps each table row's slow state to the rebuild grid
   (`coefficients.quantised_state`: speed and friction factor on log grids of `tol_speed_rel` /
   `tol_friction_rel`, temperatures, VB, BUE height and edge radius on uniform grids of their tolerances in
-  `physics.cutting`, engaged edge length and engagement time on 5 % log grids), recomputes a row only when its
+  `physics.cutting`, engaged edge length and engagement time on 5 % log grids) with hysteresis (a value keeps its
+  row's last cell while it stays within 0.75 cell of that cell's centre: plain rounding switched a value lying at a
+  cell boundary between two cells from one macro step to the next, a limit cycle with the slow feedback's one-step
+  stagger), recomputes a row only when its
   grid cell changed - at the snapped state, so equal cells give equal rows (`CuttingDomain._rows` caches them by
   cell and the model's map context) - calls the coefficient model (`MechanicsModel` on `cnctwin.mechanics`, its
   process maps built lazily, or any `CoefficientModel`), linearises the rows into the kernel's `CutTable` and
@@ -61,7 +64,10 @@ verification), `drive.py` (a stand-alone driver of the kernels over prescribed m
   `cnctwin.mechanics`, with speed, rake, rake temperature (`bus_prev.thermal` tools'
   `rake_temp_mean_K`, `flank_temp_q_K`), workpiece preheat (`contact_preheat_K`, `work_preheat_K`),
   wear (edge radius, VB, BUE height from `bus_prev.wear`), coolant friction factor), or
-  `LinearModel` (Altintas' linear edge-force model or Kienzle, for verification).
+  `LinearModel` (Altintas' linear edge-force model or Kienzle, for verification). The flank partition takes
+  thermal's `flank_entry_K` (the flank at the entry into the cut, the background of mechanics' stationary-source
+  partition; the in-cut `flank_temp_q_K`, which wear needs, already holds the step's own rise: reading it counted
+  it twice), the rake partition `rake_temp_mean_K` (the rake contact's entry temperature).
 * **Kienzle form** (Kienzle 1952): F_c = kc11 h_ref (h / h_ref)^(1 - mc) b, feed / passive forces by
   ratios; `LinearModel` with `kc11` builds it. Linear form (Altintas 2012 ch. 2): F = Kc h b + Ke dS.
 * **Below h_min** (Waldorf 1998; Jun 2006): no shear-plane force, the edge force ramps linearly from
@@ -78,20 +84,41 @@ verification), `drive.py` (a stand-alone driver of the kernels over prescribed m
   ploughing stresses sigma_0, tau_0 at the land's edge end, elastic contact (quadratic decay to the land end,
   mean one third) below the critical land VB*, a plastic region of width VB - VB* ahead of an elastic one of width
   VB* beyond it (mechanics.md 4; the regions were swapped before, which made short lands fully plastic).
-* **Process damping** (Wu 1989; Altintas, Eynian & Onozuka 2008; Ahmadi & Ismail 2011): the flank
-  indents the wavy surface it has just generated when the slope of the wave, s = v_n,vib / V, exceeds zero over a
-  zero-clearance land L = VB + c_e r_e (`pd_edge_land_per_radius` c_e) followed by the clearance face
-  tan(gamma): indented area A(s) = s x*^2 / 2 - tan(gamma) (x* - L)^2 / 2 with
-  x* = min(L tan(gamma) / (tan(gamma) - s), `pd_max_flank_m`); force K_sp dS A (normal) plus friction.
-  A sharp edge without a land (VB = 0, r_e = 0) does not indent; the dissipation scales ~ L^2.
-  **Only the vibration makes the wave**: v_n,vib is the normal component of the tool's deflection rates (station
-  translation and rotation) minus the work's vibration velocity, not of the whole relative velocity. The steady
-  path (feed) is the surface the edge itself generates, which its land follows (a worn land wears to it); its
-  steady contact is the edge and wear-land force above. With the whole normal velocity the feed slope of every
-  steady cut indented the land: twice the same contact, and near a drill's axis, where the feed is comparable to
-  the cutting speed (s up to 0.8 at r = 0.05 mm, f = 0.26 mm/rev), a chisel element of 0.1 mm carried 1.7 kN
-  (Sklenicka's thinned 8 mm drill at f = 0.26 mm/rev: thrust 4.8 kN against 1.15 kN measured; Wang's worn end mill:
-  +134 N of normal force).
+* **Process damping** (Wu 1989; Altintas, Eynian & Onozuka 2008; Budak & Tunc 2010; Ahmadi & Ismail 2011): the
+  flank indents the surface the same edge has just generated behind it. The flank is a zero-clearance land
+  L = VB + c_e r_e (`pd_edge_land_per_radius` c_e) followed by the clearance face receding max(0, x - L) tan(gamma)
+  at the distance x behind the edge; the surface there was left where the edge was when it passed, x / V ago, so it
+  stands delta(x) = (u(t) - u(t - x / V)) . n - max(0, x - L) tan(gamma) above the flank, u the element's relative
+  vibration displacement (tool deflection at the element minus the work's) and n its normal. Indented area
+  A = integral of max(0, delta) over [0, x_max] (Budak & Tunc's indentation volume per edge length), force K_sp dS A
+  (normal) plus its friction. Each element keeps the surface it generated as a **wave memory** (`CutState.pd_ring`,
+  `pd_aux`): u (T0, three components, so a rotating tool's static deflection gives no false wave) sampled every
+  `pd_max_flank_m` / 15 of its travel along the material since it entered the cut, 16 samples spanning the flank;
+  the profile is linear between the samples, the last evaluation and the current point, and its positive part is
+  integrated exactly (`kernels.wave_area`, `wave_push`; `reference.wave_area_ref`). The memory restarts at every
+  entry (the surface behind an entering edge was not generated by it) and ends where the surface was generated by
+  the previous tooth: x_max = min(`pd_max_flank_m`, 2 pi r / teeth) for rotating tools, min(`pd_max_flank_m`,
+  2 pi r) on the turned work. A wave much longer than the flank is the straight line of slope v_n / V, and the area
+  is the linearised model's s x*^2 / 2 - tan(gamma) (x* - L)^2 / 2, x* = min(L tan(gamma) / (tan(gamma) - s),
+  `pd_max_flank_m`) (`flank_interference_area`, tested to 1e-9); a vibration much shorter than the flank indents it
+  by at most its own amplitude over the land and the few microns behind it before the clearance rises above it.
+  A sharp edge without a land (VB = 0, r_e = 0) indents only for a slope beyond the clearance; the dissipation of a
+  long wave scales ~ L^2. The force depends on the current displacement against the remembered surface (a contact
+  stiffness K_sp dS times the contact length), not on the predicted velocity: it is evaluated at the predicted
+  state the chip thickness uses, consistent with the surface memory, which also holds the predicted positions.
+  Before 2026-11-09 the force was the linearised model at the instantaneous predicted normal velocity: an L0 step's
+  velocity of nanometres of vibration of the work's 32-48 kHz modes (wavelength 60-100 um at 3 m/s) or of the
+  predictor's step-to-step alternation read as a slope over the whole 0.5 mm flank, near a drill's centre (V -> 0)
+  as a slope above the clearance for any vibration; the one-sided force switched on and off from step to step and
+  the predictor's extrapolation made it a period-2 relay that diverged (warmup's turning pass at 2.707 s,
+  drill-tap's D6.8 entry; docs/models/loop.md 15).
+  **Only the vibration makes the wave**: u is the tool's deflection (station translation and rotation) minus the
+  work's, not the whole relative motion. The steady path (feed) is the surface the edge itself generates, which
+  its land follows (a worn land wears to it); its steady contact is the edge and wear-land force above. With the
+  whole normal velocity the feed slope of every steady cut indented the land: twice the same contact, and near a
+  drill's axis, where the feed is comparable to the cutting speed (s up to 0.8 at r = 0.05 mm, f = 0.26 mm/rev), a
+  chisel element of 0.1 mm carried 1.7 kN (Sklenicka's thinned 8 mm drill at f = 0.26 mm/rev: thrust 4.8 kN against
+  1.15 kN measured; Wang's worn end mill: +134 N of normal force).
 * **Forming lobes** (Chowdhary et al. 2002, 2003; Hill 1950; Johnson 1985): contact pressure
   p = (2 + pi) k, k = sigma / sqrt(3) (sigma: Johnson-Cook strain term at `forming_strain`), contact
   length l(h) = (1 + c_er) sqrt(2 rho_eff h), rho_eff = 2 r^2 / (e N^2) (lobe relief
@@ -176,7 +203,10 @@ rotation, from `deflection_from_modal`), floating-holder axial float. Per elemen
    rotated to T0 and S; moments about the station and the tip.
 4. **Energy** (exact identity, tested to 1e-12): shaft + feed work = heat in the shear plane, at the
    rake, at the flank, ploughing (edge, wear land, forming, process damping) + work on the deflection
-   rates (+ recut + packing). Heat by zone with the row's partitions; work-heat deposits in S.
+   rates (+ recut + packing). Heat by zone with the row's partitions; work-heat deposits in S. The work on the
+   deflection rates (`CA_DEFLECTION_J`) holds every load the modes receive: the element forces, the recut loads and
+   the packing load at their stations, and the total force on the work's vibration velocity; it equals dynamics'
+   quadrature of the modal work exactly (test `test_chip_loads_close_the_energy_identity_and_agree_with_the_modal_work`).
 5. **Accumulators**: per element integrals (`CutState.elem_acc`: in-cut time, h dt, force, energy),
    per tooth pass rows (chips' `EMISSION_COLUMNS`: rho x analytic chip volume, separation point and
    velocity, chip temperature, mean h, width, length, speed, rake, inclination, edge kind, group),
@@ -185,6 +215,38 @@ rotation, from `deflection_from_modal`), floating-holder axial float. Per elemen
    angle for |n_z| > 0.7), section moments and stresses at the critical sections, recut impulses
    against the frozen chip occupancy, packing loads, axis forces (axis map from the machine) and the
    spindle torque per tick.
+
+### Recutting and chip packing (loads of the chips on the tool)
+
+* **Recut strikes** (`recut_scan`, once per tooth period: in a tooth period the teeth together sweep every angle of
+  the envelope once). Chips' frozen occupancy grid (pile cells, 2 mm) holds each voxel's chip mass spread over its
+  volume, with the chips' mass-weighted thickness and volume-equivalent size. The teeth meet the share of a voxel's
+  chips inside the cutting envelope (sub-cell centres, 3 x 3 x 3, inside the envelope cylinder), less what was
+  struck from the voxel in the macro step (`taken_kg`). They cut them like material: uncut thickness h_r = the
+  chips' thickness, width b_r = their width sqrt(V_chip / h_r) (a platelet of the volume-equivalent size) up to the
+  edge length in the voxel, times the chips side by side along the edge (packing: solid fraction x edge length /
+  chip width, at least one); the force F = f(h_r) b_r n from the table row `TC_RECUT_ROW` (tangential and thrust
+  per unit width at h_r, edge forces included) acts at the struck part's centroid (at least 0.1 of the cutting
+  radius from the axis), opposite to the cutting direction there plus the thrust away from the chips, for the
+  crossing time V_struck / (h_r b_r n V) (the struck volume cut at that section at the edge speed V): impulse
+  F V_struck / (A V), energy f_t(h_r) V_struck / h_r (the table's specific energy times the volume). The loads
+  are kept per contact with their absolute start and end times (`CutState.recut_act`, 16 rows; a new load joins
+  the one that ends last with its remaining impulse kept when every row still acts) and each L0 step applies the
+  part of their time inside it: a load whose time passes while the tool is out of contact (cut_step is not called)
+  has ended, it is not carried to the next engagement. Before 2026-11-09 a voxel's whole mass took
+  J = m V + u m / (rho V) within one L0 step: 17 kN, then MN after the tool's response, at the tiny slot's, the
+  thin wall's and the flip's first cuts (docs/models/loop.md 15). Test `test_a_recut_strike_is_cut_like_material_over_its_crossing_time`
+  (a 2 mg voxel of 40 um chips: two thirds struck, 117 N for 1.7 ms instead of kilonewtons in 5 us).
+* **Packing** (chips' flute packing load: a torque opposing the rotation and a force in T0) at the middle of the
+  engaged edge.
+* Both act at a station dynamics takes loads at (the engaged range of the step, as the hot loop's `DynSystem.act`;
+  with no engaged station the work modes still take them through the total force): the station loads, the
+  critical-section impulses and the total wrench carry them; their work on the deflection rates of their station and
+  on the work's vibration velocity is part of `CA_DEFLECTION_J`, and the rest of their rigid-body work (spindle and
+  feed) is dissipated in the chips (`CA_RECUT_J`, `CA_PACKING_J`: the run ledger's friction). Before, they reached
+  the work modes through the total force but neither the tool modes nor `CA_DEFLECTION_J`: the run's energy balance
+  missed their work on the vibration (the four examples that stopped at their first cut on residuals of 1e-6 to
+  2e-5).
 
 ### Processes (all through the same element model)
 
@@ -210,6 +272,21 @@ rotation, from `deflection_from_modal`), floating-holder axial float. Per elemen
   normal to Colwell's chord (Colwell 1954; Young et al. 1987). Threading: per pass by the infeed (the
   polar field carries the previous pass). **Polar view requirement**: the bin under the tool must
   still hold the previous revolution; removal updates a bin after the tool has left it.
+  **Chip section of a curved edge** (2026-11-09): h is measured along -n, so an element's chip is the strip
+  between its neighbours' normals, `db (1 - h curv / 2)` wide at mid-depth (`abi.edge_curvature`, packed as
+  `PK_CURV`: 1 / r_eps on a nose arc, 0 on straight edges; an annular sector, exact for h <= r_eps); the shearing
+  terms, Colwell's area A and the chip volume use that section, the edge terms the edge length, the chip width of
+  the chip model (`TS_STEP_B`) the engaged edge. The strip turns about the spindle axis at its centroid, h / 2
+  along -n (Pappus). `h db` alone overstated the chip by h / 2 r_eps on the nose (19 % at f 0.3 mm/rev on
+  r_eps 0.8 mm) and by 5-6 % on the lathe-shaft example's G71 pass (cutting's chip volume 1.06 x the polar field's
+  removal); a nose insert's chip of a revolution now matches the exact region between the profile and its shift by
+  f to 0.04 % (tests/unit/cutting/test_turning.py). `cut_step` keeps `h db` and the edge radius: its h is the
+  projection on n of the surface's shift between passes at the element's own station, so `h db` tiles the chip
+  exactly (strips along the shift, Cavalieri) and `r_xy` is the exact Pappus radius (a slot's chip volume is
+  2 R ap v_f t; the narrowing and the centroid radius took 0.4 % off it). **Depth ray**: `polar_depth` marches in
+  half rows and bisects the bracketing half row on the sign (12 halvings); `polar_inside` is a radial distance that
+  jumps where the ray enters an air gap or the next row's surface, and the linear root of the two samples sat near
+  the outside one (+1-2 % on the G71 chip).
 
 ## 5. Kernels, signatures and measured cost
 
@@ -270,7 +347,7 @@ unset (None: the model's default), never a NaN (it stopped the drill-tap example
 | record | fields |
 |---|---|
 | motion.paths[] | tool_slot, workpiece, spindle_omega_rad_s, spindle_angle_rad, pose_S_T, tip (S, M), events |
-| thermal | tools[slot].rake_temp_mean_K, flank_temp_q_K, q_weights; contact_preheat_K, work_preheat_K |
+| thermal | tools[slot].rake_temp_mean_K, flank_entry_K (flank_temp_q_K, q_weights for a record without it); contact_preheat_K, work_preheat_K |
 | wear | tools[slot].VB_m, bue_height_m, edge radius (via tooling's effective edge) |
 | coolant | friction_factor |
 | chips | occupancy_origin_S_m, occupancy_cell_m, occupancy_mass_kg, occupancy_size_m, occupancy_thickness_m; packing loads |
@@ -317,8 +394,14 @@ buffer overflow are bit-identical.
 * Tap helix rows need at least two lands; first-land elements whose discretisation differs from the
   last land's by dz see |n_z| dz of the bore wall (0.1 x rise, tested).
 * Floating holder: quasi-static (no inertia), linear spring, travel limit.
-* Process damping: flank indentation of the wave the vibration leaves on the surface the same edge generated
-  (the vibration's normal velocity only); plastic indentation coefficient K_sp from the row.
+* Process damping: flank indentation of the wave the vibration leaves on the surface the same edge generated (the
+  vibration's displacement only), from the element's wave memory at a spacing of pd_max_flank / 15 (waves shorter
+  than two spacings, about 70 um, are under-resolved: their indentation is bounded by their amplitude either way);
+  plastic indentation coefficient K_sp from the row (linear in the indented area: no hardness bound of the
+  indentation pressure); the flank's clearance face is straight (the circle's curvature behind a rotating edge,
+  x^2 / 2 r, is not subtracted).
+* Recutting: every struck chip is cut (trapped against the work), none knocked away freely; the voxel's chips are
+  spread uniformly over it (2 mm cells).
 * Indentation rows (chisel edges, normal rakes below -45 deg, elements below v_min): the rake face carries the
   wedge-indentation pressure of its inclination (mechanics.md 4), the rounded edge the flat-punch pressure.
 

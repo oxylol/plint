@@ -46,6 +46,7 @@ AG_ZR_MAX = 20
 AG_RR_MAX = 21
 AG_GF = 24          # largest target overlap along a ray, per family (3)
 AG_GP = 27          # its middle point, per family (3 x 3)
+AG_R_D = 36         # largest piece removed during a rapid along a ray, per family (3)
 N_AG = 40
 PCS_BATCH = 512     # pieces booked per post_pieces call
 
@@ -171,6 +172,8 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
         pu = lv_origin[lvl, u] + iu * a
         pv = lv_origin[lvl, v] + iv * a
         lm = (p1 - p0) * Q
+        if rapid and lm > agg[AG_R_D + fam]:
+            agg[AG_R_D + fam] = lm
         if check:
             ov, first = target_overlap(tstart, tseg, ray, p0, p1)
             if ov > 0:
@@ -510,13 +513,14 @@ def subtract_envelope(f, prof, spec, tgt, acc, ev, sc):
                         ra = s_rlo[0]
                         rb = s_rhi[0]
                         trim = 0
-                        if sa < ra and ra < sb and sb <= rb:
+                        # (a remainder shorter than a sliver takes the general path: iv_subtract removes it too)
+                        if sa < ra and ra < sb and sb <= rb and ra - sa >= A.SLIVER_Q:
                             trim = 1
                             seg[ray, 0, 1] = ra
                             sev[ray, 0, 1] = ev_id
                             p0 = ra
                             p1 = sb
-                        elif ra <= sa and sa < rb and rb < sb:
+                        elif ra <= sa and sa < rb and rb < sb and sb - rb >= A.SLIVER_Q:
                             trim = 1
                             seg[ray, 0, 0] = rb
                             sev[ray, 0, 0] = ev_id
@@ -650,10 +654,17 @@ def subtract_envelope(f, prof, spec, tgt, acc, ev, sc):
         nrow += 1
     if rapid and any_removed:
         rv = agg[AG_R_VOL]
+        # depth: the family whose largest removed piece is smallest (the one most normal to the face the rapid
+        # moved into, as the gouge depth); the domain reports a crash only beyond the collision tolerance
+        rdepth = 0.0
+        for fam in range(3):
+            if agg[AG_R_D + fam] > 0.0 and (rdepth == 0.0 or agg[AG_R_D + fam] < rdepth):
+                rdepth = agg[AG_R_D + fam]
         rows[nrow, 0] = A.EV_RAPID_INTO_MATERIAL
         rows[nrow, 1] = agg[AG_R_X] / rv if rv > 0.0 else c0x
         rows[nrow, 2] = agg[AG_R_X + 1] / rv if rv > 0.0 else c0y
         rows[nrow, 3] = agg[AG_R_X + 2] / rv if rv > 0.0 else c0z
+        rows[nrow, 4] = rdepth
         rows[nrow, 5] = rv
         rows[nrow, 6] = -1
         rows[nrow, 8] = 2

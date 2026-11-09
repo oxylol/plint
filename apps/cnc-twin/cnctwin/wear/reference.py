@@ -127,7 +127,7 @@ def advance_elements_ref(geo, inp, law, st) -> dict:
             d_D = 0.0
             cycles = inp.entries[j, k]
             if cycles > 0.0 and inp.cycle_dT[j, k] > 0.0 and s[A.LS_FAT_SIGMA_PA] > 0.0 and s[A.LS_FAT_B] < 0.0:
-                amp = inp.therm_coef[j, k] * inp.cycle_dT[j, k]
+                amp = min(inp.therm_coef[j, k] * inp.cycle_dT[j, k], s[A.LS_FAT_SIGMA_PA])
                 if amp > 0.0:
                     d_D = cycles / (0.5 * (amp / s[A.LS_FAT_SIGMA_PA]) ** (1.0 / s[A.LS_FAT_B]))
             st.vn[j, k] += d_vn

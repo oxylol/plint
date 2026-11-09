@@ -212,3 +212,25 @@ def test_layouts_are_kernel_layouts(setup):
     g, ct, table = setup
     for layout in (ct, table, A.empty_state(4, 2, 2), A.empty_events(4), A.identity_pose(), A.empty_occupancy()):
         assert A.is_kernel_layout(layout)
+
+
+def test_polar_depth_ends_on_the_gap_of_the_next_row():
+    """A depth ray entering the air gap of the next row ends on that row's boundary (the nearest-row gap of
+    polar_inside), not on the linear root of a radial distance that jumps there (which sat near the outside
+    sample: +dz / 4 on average on a turning chip)."""
+    nth, nz, dz = 8, 60, 36e-6
+    polar = A.empty_polar(nth, nz)
+    polar.geom[:] = [2 * math.pi / nth, 0.0, dz, 0.0]
+    polar.r_out_m[:] = 0.0225
+    polar.r_in_m[:] = 0.0
+    ig = 30
+    polar.gap_lo_m[:, ig:] = 0.020
+    polar.gap_hi_m[:, ig:] = 0.022
+    for frac in (0.1, 0.3, 0.55, 0.8):
+        z = (ig - 5 - frac) * dz
+        h, capped = K.polar_depth(polar, 0.4, 0.0215, z, 0.0, 1.0, 5e-3)
+        assert capped == 0.0 and h == pytest.approx(ig * dz - z, abs=dz / 2 ** 12)
+        # an oblique ray: the boundary where the nearest row turns to the gap
+        ur, uz = 0.1, math.sqrt(1 - 0.01)
+        h2, _ = K.polar_depth(polar, 0.4, 0.0211, z, ur, uz, 5e-3)
+        assert h2 == pytest.approx((ig * dz - z) / uz, abs=dz / 2 ** 12)

@@ -144,16 +144,17 @@ def insert_z_range(ins, xt):
 
 
 # --------------------------------------------------------------------------- inline ray algebra
-@njit(types.UniTuple(i8, 2)(types.int32[:, :, ::1], types.int32[:, :, ::1], types.int8[::1], i8, i8, i8, i8, i8),
-      **INLINE)
+@njit(types.Tuple((i8, i8, f8, i8, i8))(types.int32[:, :, ::1], types.int32[:, :, ::1], types.int8[::1], i8, i8, i8,
+                                         i8, i8), **INLINE)
 def _cut_inline(seg, sev, cnt, ray, qa, qb, ev, kp):
     """Remove [qa, qb) from an inline ray (at most kp segments) in place. Returns (removed sum of q^2
-    differences (radial use), status): 0 changed, 1 nothing removed, -1 overflow (unchanged)."""
+    differences (radial use), status: 0 changed, 1 nothing removed, -1 overflow (unchanged), the removed sum of q^3
+    differences (float: the radial centroid's moment), the first and last removed quantum)."""
     n = np.int64(cnt[ray])
     if n == 0 or qb <= qa:
-        return np.int64(0), np.int64(1)
+        return np.int64(0), np.int64(1), 0.0, np.int64(0), np.int64(0)
     if qa >= np.int64(seg[ray, n - 1, 1]) or qb <= np.int64(seg[ray, 0, 0]):
-        return np.int64(0), np.int64(1)
+        return np.int64(0), np.int64(1), 0.0, np.int64(0), np.int64(0)
     f0 = 0
     while f0 < n and np.int64(seg[ray, f0, 1]) <= qa:
         f0 += 1
@@ -161,7 +162,7 @@ def _cut_inline(seg, sev, cnt, ray, qa, qb, ev, kp):
     while l0 >= 0 and np.int64(seg[ray, l0, 0]) >= qb:
         l0 -= 1
     if l0 < f0:
-        return np.int64(0), np.int64(1)
+        return np.int64(0), np.int64(1), 0.0, np.int64(0), np.int64(0)
     a_f = np.int64(seg[ray, f0, 0])
     e_af = np.int64(sev[ray, f0, 0])
     b_l = np.int64(seg[ray, l0, 1])
@@ -170,14 +171,20 @@ def _cut_inline(seg, sev, cnt, ray, qa, qb, ev, kp):
     keep_hi = 1 if b_l > qb else 0
     m = n - (l0 - f0 + 1) + keep_lo + keep_hi
     if m > kp:
-        return np.int64(0), np.int64(-1)
+        return np.int64(0), np.int64(-1), 0.0, np.int64(0), np.int64(0)
     q2 = np.int64(0)
+    q3 = 0.0
+    x_lo = a_f if a_f > qa else qa
+    x_hi = b_l if b_l < qb else qb
     for k in range(f0, l0 + 1):
         a = np.int64(seg[ray, k, 0])
         b = np.int64(seg[ray, k, 1])
         x0 = a if a > qa else qa
         x1 = b if b < qb else qb
         q2 += x1 * x1 - x0 * x0
+        fx0 = float(x0)
+        fx1 = float(x1)
+        q3 += fx1 * fx1 * fx1 - fx0 * fx0 * fx0
     # the segments after the cut move to their new place (from the end when they move up)
     src = l0 + 1
     dst = f0 + keep_lo + keep_hi
@@ -208,7 +215,7 @@ def _cut_inline(seg, sev, cnt, ray, qa, qb, ev, kp):
             seg[ray, k, e] = 0
             sev[ray, k, e] = 0
     cnt[ray] = m
-    return q2, np.int64(0)
+    return q2, np.int64(0), q3, x_lo, x_hi
 
 
 @njit(f8(F1, F1, F1, F1, f8, f8), **INLINE)
@@ -301,12 +308,17 @@ def _rad(rho, yo):
 
 
 @njit(types.UniTuple(i8, 4)(types.int32[:, :, ::1], types.int32[:, :, ::1], types.int8[::1], I1, F1, F1, F1, F1, F1, i8,
-                             i8, i8, i8, i8, f8, f8, f8, f8, f8, f8, f8, i8, i8, i8), **RAW)
+                             i8, i8, i8, i8, f8, f8, f8, f8, f8, f8, f8, i8, i8, i8, F1, f8, f8, f8), **RAW)
 def _polar_rows(rseg, rsev, rcnt, zmax, zu, xu, zl, xl, nose, b, nz, blk, ra0, ra1, z0f, dz, zt, sz, rt, sx, yo,
-                top_blk, ev, kp):
+                top_blk, ev, kp, fv, dth, dnr, dnz):
     """The radial rays of rows ra0..ra1 of bin b under the insert (one block of polar_cut; compiled apart
     so the hot loop keeps its values in registers). Returns (removed q^2 sum, overflow (1/0), first and
-    last row changed (-1: none)); zmax_q of the block is rescanned when its highest row was cut."""
+    last row changed (-1: none)); zmax_q of the block is rescanned when its highest row was cut.
+
+    The turning contact's geometry goes into ``fv`` (the contact's RemovalAccum.fvals, abi FA_*): removed volume,
+    its radius and z moments, the radial sign of the generated surface's outward normal, the extent along the tool
+    axis and from it relative to the tip, and across the feed ((dnr, dnz): the unit normal of the step's feed in
+    the r-z plane)."""
     rho_n = nose[0]
     rho_x = nose[1]
     rho_r = nose[2]
@@ -384,7 +396,7 @@ def _polar_rows(rseg, rsev, rcnt, zmax, zu, xu, zl, xl, nose, b, nz, blk, ra0, r
                 rho_a = 0.0
             qa = _q_of(_rad(rho_a, yo))
             old_top = np.int64(rseg[ray, n_old - 1, 1])
-        q2, st = _cut_inline(rseg, rsev, rcnt, ray, qa, qb, ev, kp)
+        q2, st, q3, x_lo, x_hi = _cut_inline(rseg, rsev, rcnt, ray, qa, qb, ev, kp)
         if st < 0:
             status = 1
             continue
@@ -395,6 +407,28 @@ def _polar_rows(rseg, rsev, rcnt, zmax, zu, xu, zl, xl, nose, b, nz, blk, ra0, r
             if d0 < 0:
                 d0 = i
             d1 = i
+            # the contact's geometry: volume, its radius and z moments, extents relative to the tip
+            zi = z0f + (i + 0.5) * dz
+            vol = 0.5 * float(q2) * Q * Q * dth * dz
+            fv[A.FA_W] += vol
+            fv[A.FA_CX] += q3 * (Q * Q * Q / 3.0) * dth * dz
+            fv[A.FA_CZ] += vol * zi
+            fv[A.FA_NX] += -sx * vol
+            zr = (zi - zt) * sz
+            if zr < fv[A.FA_ZREL_MIN]:
+                fv[A.FA_ZREL_MIN] = zr
+            if zr > fv[A.FA_ZREL_MAX]:
+                fv[A.FA_ZREL_MAX] = zr
+            for e in range(2):
+                rr = (x_lo if e == 0 else x_hi) * Q
+                dr_ = abs(rr - rt)
+                if dr_ > fv[A.FA_RREL_MAX]:
+                    fv[A.FA_RREL_MAX] = dr_
+                dd = (rr - rt) * dnr + (zi - zt) * dnz
+                if dd < fv[A.FA_DEPTH_MIN]:
+                    fv[A.FA_DEPTH_MIN] = dd
+                if dd > fv[A.FA_DEPTH_MAX]:
+                    fv[A.FA_DEPTH_MAX] = dd
     if rescan:
         _rescan(rcnt, rseg, zmax, nz, b, blk)
     return q2_total, np.int64(status), np.int64(d0), np.int64(d1)
@@ -431,7 +465,7 @@ def _polar_axial(aseg, asev, acnt, xa, za, xb, zb, nose, b, nr, j0, j1, dr, yo, 
             ga, gb = gb, ga
         qa = _q_of(ga - z0f)
         qb = _q_of(gb - z0f)
-        q2, st = _cut_inline(aseg, asev, acnt, ray, qa, qb, ev, kpa)
+        q2, st, _q3, _xl, _xh = _cut_inline(aseg, asev, acnt, ray, qa, qb, ev, kpa)
         if st < 0:
             status = 1
             continue
@@ -499,6 +533,18 @@ def polar_cut(pf, ins, ps, ev, acc):
     sz = ps[A.PS_SZ]
     sx = ps[A.PS_SX]
     yo = ps[A.PS_YOFF]
+    # the depth of cut is the removed material's extent across the feed: the unit normal of the step's feed in the
+    # r-z plane (radial when the tool does not move)
+    fr_ = ps[A.PS_R1] - ps[A.PS_R0]
+    fz_ = ps[A.PS_Z1] - ps[A.PS_Z0]
+    fl_ = math.sqrt(fr_ * fr_ + fz_ * fz_)
+    if fl_ > 1e-15:
+        dnr = -fz_ / fl_
+        dnz = fr_ / fl_
+    else:
+        dnr = 1.0
+        dnz = 0.0
+    afv = acc.fvals
     status = 0
     zt_min = box[0]
     zt_max = box[1]
@@ -510,6 +556,9 @@ def polar_cut(pf, ins, ps, ev, acc):
     dirty_z1 = pinfo[A.PI_DIRTY_Z1]
     dirty_r0 = pinfo[A.PI_DIRTY_R0]
     dirty_r1 = pinfo[A.PI_DIRTY_R1]
+    touched = False
+    t_lo = 1e300
+    t_hi = -1.0
     kx = 0
     for kk in range(kfirst, klast + 1):
         cb = (kk + 0.5) * dth
@@ -564,12 +613,13 @@ def polar_cut(pf, ins, ps, ev, acc):
                 if r_min >= top_blk * Q or _q_of(r_min) >= top_blk:
                     continue
             q2, st, d0, d1 = _polar_rows(rseg, rsev, rcnt, zmax, zu, xu, zl, xl, nose, b, nz, blk, ra0, ra1, z0f, dz,
-                                         zt, sz, rt, sx, yo, top_blk, ev, kp)
+                                         zt, sz, rt, sx, yo, top_blk, ev, kp, afv, dth, dnr, dnz)
             if st != 0:
                 status = 1
                 pinfo[A.PI_OVERFLOW] |= 1
             q2_total += q2
             if d0 >= 0:
+                touched = True
                 if dirty_z0 < 0 or d0 < dirty_z0:
                     dirty_z0 = d0
                 if d1 > dirty_z1:
@@ -585,6 +635,10 @@ def polar_cut(pf, ins, ps, ev, acc):
             rho_lo = 0.0
         r_lo = _rad(rho_lo, yo)
         r_hi = _rad(rho_hi, yo)
+        if r_lo < t_lo:
+            t_lo = r_lo
+        if r_hi > t_hi:
+            t_hi = r_hi
         j0 = int(math.ceil(r_lo / dr - 0.5))
         j1 = int(math.floor(r_hi / dr - 0.5))
         if j0 < 0:
@@ -600,10 +654,22 @@ def polar_cut(pf, ins, ps, ev, acc):
                 status = 1
                 pinfo[A.PI_OVERFLOW] |= 2
             if d0 >= 0:
+                touched = True
                 if dirty_r0 < 0 or d0 < dirty_r0:
                     dirty_r0 = d0
                 if d1 > dirty_r1:
                     dirty_r1 = d1
+    if touched and t_hi >= 0.0:
+        # the radii the step can have changed: the insert's radial extent (the sync rebuilds only those)
+        q_lo = np.int64(math.floor(t_lo / Q))
+        q_hi = np.int64(math.ceil(t_hi / Q))
+        if q_lo < 0:
+            q_lo = 0
+        for k0, k1 in ((A.PI_TOUCH_Q0, A.PI_TOUCH_Q1), (A.PI_OPTOUCH_Q0, A.PI_OPTOUCH_Q1)):
+            if pinfo[k0] < 0 or q_lo < pinfo[k0]:
+                pinfo[k0] = q_lo
+            if q_hi > pinfo[k1]:
+                pinfo[k1] = q_hi
     pinfo[A.PI_DIRTY_Z0] = dirty_z0
     pinfo[A.PI_DIRTY_Z1] = dirty_z1
     pinfo[A.PI_DIRTY_R0] = dirty_r0
@@ -612,6 +678,7 @@ def polar_cut(pf, ins, ps, ev, acc):
     if q2_total > 0:
         pinfo[A.PI_VERSION] += 1
         aiv[A.IA_IN_CUT_CALLS] += 1
+        afv[A.FA_POLAR_TH] = th1
     return status
 
 
@@ -952,16 +1019,142 @@ def bin_trig(nth, dth):
     return out
 
 
-@njit(i8(FIELD_T, POLAR_T, i8, f8, f8, TARGET_T, f8, EVENTS_T, i8, i8, SCRATCH_T), **OPTS)
-def rebuild_tridexel(f, pf, lvl, zlo, zhi, tgt, gtol, ev, tick, sev_id, sc):
-    """Replace the material of every ray of level ``lvl`` inside the polar region (r <= the polar field's
-    largest radius, z in [zlo, zhi]) by the polar field's (exact: per bin and row). Material the rebuild
-    removes that the target holds is a gouge (one aggregated event). Returns 0, 1 on pool overflow (the
-    rays already done stay done: call again after growing the pool)."""
+@njit(i8(FIELD_T, POLAR_T, i8, i8, i8, i8, F1, f8, f8, TARGET_T, f8, i8, SCRATCH_T, I1, I1, I1, I1, F1, F1, I1, I1,
+          F2, F1), **OPTS)
+def _rebuild_span(f, pf, lvl, fam, iu, iv, p, t_lo, t_hi, tgt, gtol, sev_id, sc, out_lo, out_hi, out_el, out_eh, w_lo,
+                  w_hi, w_el, w_eh, trig, gacc):
+    """One span [t_lo, t_hi) (metres from the ray's start p) of ray (fam, iu, iv) becomes the polar field's: the old
+    material outside it stays. Material it removes that the target holds adds to gacc [depth, x, y, z, volume] (the
+    deepest point). Returns 0, 1 on pool overflow, 2 when a scratch list was full (the ray is left)."""
+    a = f.lv_cell_m[lvl]
+    o = f.lv_origin_m[lvl]
+    check = tgt.info[0] == 1
+    u = 1 if fam == 0 else 0
+    v = 2 if fam < 2 else 1
+    m = polar_to_ray(pf, p[0], p[1], p[2], fam, t_lo, t_hi, out_lo, out_hi, out_el, out_eh, A.MAX_SEG,
+                     w_lo, w_hi, w_el, w_eh, trig)
+    if m < 0:
+        f.info[A.FI_SCRATCH_OVF] = 1
+        return 2
+    ray = ray_index(f, lvl, fam, iu, iv)
+    n = ray_load(f, ray, sc.lo, sc.hi, sc.elo, sc.ehi)
+    if n < 0:
+        f.info[A.FI_SCRATCH_OVF] = 1
+        return 2
+    qa = np.int64(np.floor(t_lo / Q + 0.5))
+    qb = np.int64(np.floor(t_hi / Q + 0.5))
+    # new list: old outside [qa, qb) + polar inside
+    k = 0
+    for s in range(n):
+        lo = np.int64(sc.lo[s])
+        hi = np.int64(sc.hi[s])
+        if lo < qa:
+            e = hi if hi < qa else qa
+            sc.nlo[k] = lo
+            sc.nhi[k] = e
+            sc.nelo[k] = sc.elo[s]
+            sc.nehi[k] = sc.ehi[s] if hi <= qa else sev_id
+            k += 1
+    for s in range(m):
+        if k > 0 and out_lo[s] <= sc.nhi[k - 1]:
+            if out_hi[s] > sc.nhi[k - 1]:
+                sc.nhi[k - 1] = out_hi[s]
+                sc.nehi[k - 1] = out_eh[s]
+        else:
+            sc.nlo[k] = out_lo[s]
+            sc.nhi[k] = out_hi[s]
+            sc.nelo[k] = out_el[s]
+            sc.nehi[k] = out_eh[s]
+            k += 1
+    for s in range(n):
+        lo = np.int64(sc.lo[s])
+        hi = np.int64(sc.hi[s])
+        if hi > qb:
+            st = lo if lo > qb else qb
+            if k > 0 and st <= sc.nhi[k - 1]:
+                sc.nhi[k - 1] = hi
+                sc.nehi[k - 1] = sc.ehi[s]
+            else:
+                sc.nlo[k] = st
+                sc.nhi[k] = hi
+                sc.nelo[k] = sc.elo[s] if lo >= qb else sev_id
+                sc.nehi[k] = sc.ehi[s]
+                k += 1
+    # identical? skip
+    same = k == n
+    if same:
+        for s in range(n):
+            if sc.nlo[s] != sc.lo[s] or sc.nhi[s] != sc.hi[s]:
+                same = False
+                break
+    if same:
+        return 0
+    # removed material (old minus new) against the target
+    if check:
+        for s in range(n):
+            lo = np.int64(sc.lo[s])
+            hi = np.int64(sc.hi[s])
+            cur = lo
+            for q in range(k):
+                nlo_ = np.int64(sc.nlo[q])
+                nhi_ = np.int64(sc.nhi[q])
+                if nhi_ <= cur:
+                    continue
+                if nlo_ >= hi:
+                    break
+                if nlo_ > cur:
+                    ov, first = target_overlap(tgt.start, tgt.seg, ray, cur, nlo_)
+                    if ov * Q > gtol:
+                        gacc[4] += ov * Q * a * a / 3.0
+                        if ov * Q > gacc[0]:
+                            gacc[0] = ov * Q
+                            gacc[1 + fam] = o[fam] + 0.5 * (cur + nlo_) * Q
+                            gacc[1 + u] = p[u]
+                            gacc[1 + v] = p[v]
+                cur = nhi_ if nhi_ > cur else cur
+            if cur < hi:
+                ov, first = target_overlap(tgt.start, tgt.seg, ray, cur, hi)
+                if ov * Q > gtol:
+                    gacc[4] += ov * Q * a * a / 3.0
+                    if ov * Q > gacc[0]:
+                        gacc[0] = ov * Q
+                        gacc[1 + fam] = o[fam] + 0.5 * (cur + hi) * Q
+                        gacc[1 + u] = p[u]
+                        gacc[1 + v] = p[v]
+    if ray_store(f, ray, sc.nlo, sc.nhi, sc.nelo, sc.nehi, k) < 0:
+        return 1
+    for s in range(n):
+        sc.plo[s] = sc.lo[s]
+        sc.phi[s] = sc.hi[s]
+    brick_account(f, lvl, fam, iu, iv, sc.plo, sc.phi, n, -1)
+    for s in range(k):
+        sc.plo[s] = sc.nlo[s]
+        sc.phi[s] = sc.nhi[s]
+    brick_account(f, lvl, fam, iu, iv, sc.plo, sc.phi, k, 1)
+    f.info[A.FI_VERSION] += 1
+    return 0
+
+
+@njit(i8(FIELD_T, POLAR_T, i8, f8, f8, f8, f8, TARGET_T, f8, EVENTS_T, i8, i8, SCRATCH_T), **OPTS)
+def rebuild_tridexel(f, pf, lvl, zlo, zhi, r_lo, r_hi, tgt, gtol, ev, tick, sev_id, sc):
+    """Replace the material of every ray of level ``lvl`` inside the polar region's annulus r_lo <= r <= r_hi
+    (r_hi at most the polar field's largest radius), z in [zlo, zhi], by the polar field's (exact: per bin and row):
+    z rays whose radius is in the annulus, the spans of x and y rays inside it. The cuts change only the radii their
+    insert reaches (polar_cut records them, PI_TOUCH_* / PI_OPTOUCH_*): rebuilding the whole disc replaced the stock's
+    exact rays near unturned features (the lathe-shaft bar's centre hole) by their polar sampling and booked the
+    difference as removed part material (gouge errors of 7-292 um at every revolution's sync). Material the rebuild
+    removes that the target holds is a gouge (one aggregated event). Returns 0, 1 on pool overflow (the rays already
+    done stay done: call again after growing the pool)."""
     g = pf.geom
     a = f.lv_cell_m[lvl]
     o = f.lv_origin_m[lvl]
     rmax = g[A.PG_NR] * g[A.PG_DR]
+    if r_hi > rmax:
+        r_hi = rmax
+    if r_lo < 0.0:
+        r_lo = 0.0
+    if r_hi <= r_lo:
+        return 0
     status = 0
     out_lo = np.empty(A.MAX_SEG, np.int64)
     out_hi = np.empty(A.MAX_SEG, np.int64)
@@ -971,14 +1164,9 @@ def rebuild_tridexel(f, pf, lvl, zlo, zhi, tgt, gtol, ev, tick, sev_id, sc):
     w_hi = np.empty(8192)
     w_el = np.empty(8192, np.int64)
     w_eh = np.empty(8192, np.int64)
-    check = tgt.info[0] == 1
     p = np.empty(3)
     trig = bin_trig(np.int64(g[A.PG_NTHETA]), g[A.PG_DTHETA])
-    g_depth = 0.0
-    g_x = 0.0
-    g_y = 0.0
-    g_z = 0.0
-    g_vol = 0.0
+    gacc = np.zeros(5)
     for fam in range(3):
         u = 1 if fam == 0 else 0
         v = 2 if fam < 2 else 1
@@ -989,140 +1177,59 @@ def rebuild_tridexel(f, pf, lvl, zlo, zhi, tgt, gtol, ev, tick, sev_id, sc):
                 p[u] = o[u] + iu * a
                 p[v] = o[v] + iv * a
                 if fam == 2:
-                    if p[0] * p[0] + p[1] * p[1] > rmax * rmax:
+                    rr = p[0] * p[0] + p[1] * p[1]
+                    if rr > r_hi * r_hi or rr < r_lo * r_lo:
                         continue
-                    t_lo = zlo - o[2]
-                    t_hi = zhi - o[2]
+                    n_span = 1
+                    s0a = zlo - o[2]
+                    s1a = zhi - o[2]
+                    s0b = 0.0
+                    s1b = 0.0
                 else:
                     if p[2] < zlo or p[2] > zhi:
                         continue
                     across = p[1] if fam == 0 else p[0]
-                    if abs(across) >= rmax:
+                    if abs(across) >= r_hi:
                         continue
-                    h = math.sqrt(rmax * rmax - across * across)
-                    t_lo = -h - o[fam]
-                    t_hi = h - o[fam]
-                if t_lo < 0.0:
-                    t_lo = 0.0
-                if t_hi > lq * Q:
-                    t_hi = lq * Q
-                if t_hi <= t_lo:
-                    continue
-                m = polar_to_ray(pf, p[0], p[1], p[2], fam, t_lo, t_hi, out_lo, out_hi, out_el, out_eh, A.MAX_SEG,
-                                 w_lo, w_hi, w_el, w_eh, trig)
-                if m < 0:
-                    f.info[A.FI_SCRATCH_OVF] = 1
-                    continue
-                ray = ray_index(f, lvl, fam, iu, iv)
-                n = ray_load(f, ray, sc.lo, sc.hi, sc.elo, sc.ehi)
-                if n < 0:
-                    f.info[A.FI_SCRATCH_OVF] = 1
-                    continue
-                qa = np.int64(np.floor(t_lo / Q + 0.5))
-                qb = np.int64(np.floor(t_hi / Q + 0.5))
-                # new list: old outside [qa, qb) + polar inside
-                k = 0
-                for s in range(n):
-                    lo = np.int64(sc.lo[s])
-                    hi = np.int64(sc.hi[s])
-                    if lo < qa:
-                        e = hi if hi < qa else qa
-                        sc.nlo[k] = lo
-                        sc.nhi[k] = e
-                        sc.nelo[k] = sc.elo[s]
-                        sc.nehi[k] = sc.ehi[s] if hi <= qa else sev_id
-                        k += 1
-                for s in range(m):
-                    if k > 0 and out_lo[s] <= sc.nhi[k - 1]:
-                        if out_hi[s] > sc.nhi[k - 1]:
-                            sc.nhi[k - 1] = out_hi[s]
-                            sc.nehi[k - 1] = out_eh[s]
+                    h1 = math.sqrt(r_hi * r_hi - across * across)
+                    if r_lo > abs(across):
+                        # the annulus cuts the line twice: the spans on either side of the inner circle
+                        h0 = math.sqrt(r_lo * r_lo - across * across)
+                        n_span = 2
+                        s0a = -h1 - o[fam]
+                        s1a = -h0 - o[fam]
+                        s0b = h0 - o[fam]
+                        s1b = h1 - o[fam]
                     else:
-                        sc.nlo[k] = out_lo[s]
-                        sc.nhi[k] = out_hi[s]
-                        sc.nelo[k] = out_el[s]
-                        sc.nehi[k] = out_eh[s]
-                        k += 1
-                for s in range(n):
-                    lo = np.int64(sc.lo[s])
-                    hi = np.int64(sc.hi[s])
-                    if hi > qb:
-                        st = lo if lo > qb else qb
-                        if k > 0 and st <= sc.nhi[k - 1]:
-                            sc.nhi[k - 1] = hi
-                            sc.nehi[k - 1] = sc.ehi[s]
-                        else:
-                            sc.nlo[k] = st
-                            sc.nhi[k] = hi
-                            sc.nelo[k] = sc.elo[s] if lo >= qb else sev_id
-                            sc.nehi[k] = sc.ehi[s]
-                            k += 1
-                # identical? skip
-                same = k == n
-                if same:
-                    for s in range(n):
-                        if sc.nlo[s] != sc.lo[s] or sc.nhi[s] != sc.hi[s]:
-                            same = False
-                            break
-                if same:
-                    continue
-                # removed material (old minus new) against the target
-                if check:
-                    for s in range(n):
-                        lo = np.int64(sc.lo[s])
-                        hi = np.int64(sc.hi[s])
-                        cur = lo
-                        for q in range(k):
-                            nlo_ = np.int64(sc.nlo[q])
-                            nhi_ = np.int64(sc.nhi[q])
-                            if nhi_ <= cur:
-                                continue
-                            if nlo_ >= hi:
-                                break
-                            if nlo_ > cur:
-                                ov, first = target_overlap(tgt.start, tgt.seg, ray, cur, nlo_)
-                                if ov * Q > gtol:
-                                    g_vol += ov * Q * a * a / 3.0
-                                    if ov * Q > g_depth:
-                                        g_depth = ov * Q
-                                        p[fam] = o[fam] + 0.5 * (cur + nlo_) * Q
-                                        g_x = p[0]
-                                        g_y = p[1]
-                                        g_z = p[2]
-                            cur = nhi_ if nhi_ > cur else cur
-                        if cur < hi:
-                            ov, first = target_overlap(tgt.start, tgt.seg, ray, cur, hi)
-                            if ov * Q > gtol:
-                                g_vol += ov * Q * a * a / 3.0
-                                if ov * Q > g_depth:
-                                    g_depth = ov * Q
-                                    p[fam] = o[fam] + 0.5 * (cur + hi) * Q
-                                    g_x = p[0]
-                                    g_y = p[1]
-                                    g_z = p[2]
-                if ray_store(f, ray, sc.nlo, sc.nhi, sc.nelo, sc.nehi, k) < 0:
-                    status = 1
-                    continue
-                for s in range(n):
-                    sc.plo[s] = sc.lo[s]
-                    sc.phi[s] = sc.hi[s]
-                brick_account(f, lvl, fam, iu, iv, sc.plo, sc.phi, n, -1)
-                for s in range(k):
-                    sc.plo[s] = sc.nlo[s]
-                    sc.phi[s] = sc.nhi[s]
-                brick_account(f, lvl, fam, iu, iv, sc.plo, sc.phi, k, 1)
-                f.info[A.FI_VERSION] += 1
-    if g_depth > 0.0:
+                        n_span = 1
+                        s0a = -h1 - o[fam]
+                        s1a = h1 - o[fam]
+                        s0b = 0.0
+                        s1b = 0.0
+                for k_span in range(n_span):
+                    t_lo = s0a if k_span == 0 else s0b
+                    t_hi = s1a if k_span == 0 else s1b
+                    if t_lo < 0.0:
+                        t_lo = 0.0
+                    if t_hi > lq * Q:
+                        t_hi = lq * Q
+                    if t_hi <= t_lo:
+                        continue
+                    st = _rebuild_span(f, pf, lvl, fam, iu, iv, p, t_lo, t_hi, tgt, gtol, sev_id, sc, out_lo, out_hi,
+                                       out_el, out_eh, w_lo, w_hi, w_el, w_eh, trig, gacc)
+                    if st == 1:
+                        status = 1
+    if gacc[0] > 0.0:
         i = ev.n[0]
         if i < ev.rec.shape[0]:
             ev.rec[i, A.EC_KIND] = A.EV_GOUGE
             ev.rec[i, A.EC_TICK] = tick
             ev.rec[i, A.EC_CONTACT] = -1
-            ev.rec[i, A.EC_X] = g_x
-            ev.rec[i, A.EC_Y] = g_y
-            ev.rec[i, A.EC_Z] = g_z
-            ev.rec[i, A.EC_DEPTH] = g_depth
-            ev.rec[i, A.EC_VOLUME] = g_vol
+            ev.rec[i, A.EC_X] = gacc[1]
+            ev.rec[i, A.EC_Y] = gacc[2]
+            ev.rec[i, A.EC_Z] = gacc[3]
+            ev.rec[i, A.EC_DEPTH] = gacc[0]
+            ev.rec[i, A.EC_VOLUME] = gacc[4]
             ev.rec[i, A.EC_PART] = -1
             ev.rec[i, A.EC_SEV_ID] = sev_id
             ev.rec[i, A.EC_LEVEL] = lvl

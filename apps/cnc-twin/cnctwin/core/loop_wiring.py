@@ -173,11 +173,18 @@ class LoopResults:
         if not 0 <= int(workpiece) < len(rs.workpieces):
             return None
         wp = rs.workpieces[int(workpiece)]
-        mesh = RM.to_geom_mesh(RM.mesh_level(wp.field), name=f"part_w{workpiece}")
+        # a fine lattice's part (examples/pocket-islands-al6061 at 0.075 mm: 9.5 M triangles) outgrew the 1.8 GB cap
+        # with its part files and inspection: its flat patches are meshed as fans, the same surface in far fewer
+        # triangles (removal.mesh.planar_patches)
+        planar = RM.planar_wanted(wp.field)
+        mesh = RM.to_geom_mesh(RM.mesh_level(wp.field, planar=planar), name=f"part_w{workpiece}")
         if mesh.n_faces == 0:
             return None
         grids = dict(self.as_cut.get(int(workpiece), {}))
         notes = []
+        if planar:
+            notes.append(f"the part's flat patches are meshed as fans ({mesh.n_faces} triangles; the surface is the "
+                         "field's, removal.mesh.planar_patches)")
         st = getattr(state, "structure", None)
         ws = (getattr(st, "works", {}) or {}).get(int(workpiece)) if st is not None else None
         d = ws.solution.displacement if (ws is not None and ws.solution is not None) else None

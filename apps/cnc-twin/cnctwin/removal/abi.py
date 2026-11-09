@@ -167,7 +167,19 @@ FA_AIR_Z1 = 18
 FA_M_FROM_S = 19            # 12 values: rotation (row-major 3x3) + translation of M_from_S at the last removal
 FA_ENGAGED_LEN = 31         # largest engaged edge length at one gating (m)
 FA_DEAD_V = 32              # volume removed by a non-cutting centre while plunging (m^3)
+# turning contacts (polar_cut, additive): FA_W is the removed radial-family volume, FA_CX its sum of volume x radius
+# and FA_CZ of volume x z (cylindrical: the work turns under the tool during the macro step, so the centroid is
+# placed at the tool's angle FA_POLAR_TH of the last removal), FA_NX the sum of volume x the outward normal's radial
+# sign, FA_ZREL_* / FA_RREL_MAX relative to the tool tip, FA_DEPTH_* the removed material's extent across the feed
+FA_POLAR_TH = 33            # the tool's reference-plane angle in S (rotating) at the last polar removal (unwrapped)
+FA_DEPTH_MIN = 34           # removed material across the feed direction from the tool tip (m): min / max
+FA_DEPTH_MAX = 35
 N_FA = 36
+
+# a piece of material a subtraction leaves on a ray, touching its removal and shorter than this (quanta, 1 um), is
+# removed with it: a leftover of the envelope's slab discretisation between two passes (the slabs follow the tip's
+# axial motion), not material a tool can leave
+SLIVER_Q = 100
 
 
 class RemovalAccum(NamedTuple):
@@ -280,7 +292,11 @@ PI_DIRTY_R0 = 4             # axial-column range changed since the last sync
 PI_DIRTY_R1 = 5
 PI_KP = 6                   # inline segments per radial ray (KPR)
 PI_KPA = 7                  # inline segments per axial ray (KPA; threads leave one segment per crest)
-N_PINFO = 8
+PI_TOUCH_Q0 = 8             # radius range (quanta from the axis, inclusive) of the cuts since the last tri-dexel
+PI_TOUCH_Q1 = 9             #   sync: the insert's radial extent of every step that removed material (-1 none)
+PI_OPTOUCH_Q0 = 10          # the same since the polar field was made (the sync at the operation's end)
+PI_OPTOUCH_Q1 = 11
+N_PINFO = 12
 
 
 POLAR_BLOCK = 16            # rows per zmax_q block of the polar field (the per-step skip granularity)
@@ -427,6 +443,8 @@ def reset_accum(acc: RemovalAccum) -> None:
     acc.fvals[...] = 0.0
     acc.fvals[FA_ZREL_MIN] = np.inf
     acc.fvals[FA_ZREL_MAX] = -np.inf
+    acc.fvals[FA_DEPTH_MIN] = np.inf
+    acc.fvals[FA_DEPTH_MAX] = -np.inf
     acc.fvals[FA_M_FROM_S:FA_M_FROM_S + 9] = np.eye(3).ravel()
 
 

@@ -56,9 +56,9 @@ from .abi import (ACCUM_T, AXES_T, CA_AXIAL_K, CA_DEFLECTION_J, CA_DISPLACED_M3,
                   TS_RAKEV, TS_RV, TS_S_NX, TS_S_NY, TS_S_NZ, TS_S_PX, TS_S_PY, TS_S_PZ, TS_S_VX, TS_S_VY, TS_S_VZ,
                   TS_STEP_B, TS_STEP_DV, TS_STEP_E, TS_TV, TS_UX, TS_UY, TS_UZ, TS_VOL, TS_VV, TS_WORK_J, TS_AVAIL,
                   PK_ALPHA0, PK_ARM, PK_C, PK_CHIP, PK_DB, PK_DIR, PK_DS, PK_EDGE_R, PK_FLANK, PK_INCL, PK_N,
-                  PK_NPXY, PK_P, PK_PD, PK_RAKE, PK_RXY, PK_SIG_FLANK, PK_VB, PKI_AXIAL, PKI_ELEM, PKI_FORMING,
+                  PK_NPXY, PK_P, PK_PD, PK_RAKE, PK_RXY, PK_SIG_FLANK, PK_VB, PK_CURV, PKI_AXIAL, PKI_ELEM, PKI_FORMING,
                   PKI_KIND, PKI_READ, PKI_ROW, PKI_TOOTH, PKI_WRITE, PD_RING_N, PDA_COUNT, PDA_UX, PDA_UY, PDA_UZ,
-                  PDA_X, RA_FX, RA_FY, RA_FZ, RA_MX, RA_MY, RA_MZ, RA_T, RA_Z)
+                  PDA_X, RA_FX, RA_FY, RA_FZ, RA_MX, RA_MY, RA_MZ, RA_T, RA_T0, RA_Z)
 
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
 # kernels that allocate nothing are compiled with Numba's reference counting off for that function: every array
@@ -790,20 +790,21 @@ RECUT_SUB = 3           # sub-cells per voxel edge for the part of a chip voxel 
 RECUT_R_MIN = 0.1       # struck point at least this share of the cutting radius from the axis (the teeth meet it)
 
 
-@njit(types.void(F2, f8, f8, f8, f8, f8, f8, f8, f8), **INL)
-def recut_load(act, fx, fy, fz, mx, my, mz, t_s, z_t):
-    """A new recut load (force and moment about the tip on the tool, T0, acting t_s) into the first free row of
-    st.recut_act; when every row is taken it joins the row that acts longest with its impulse kept: the merged load
-    acts max(t, t_s) with (F t + F_new t_s) / max(t, t_s)."""
+@njit(types.void(F2, f8, f8, f8, f8, f8, f8, f8, f8, f8), **INL)
+def recut_load(act, fx, fy, fz, mx, my, mz, t0, t1, z_t):
+    """A new recut load (force and moment about the tip on the tool, T0, acting from t0 to t1, absolute s) into a free
+    row of st.recut_act (a row that has ended by t0); when every row is still acting it joins the row that ends last
+    with its remaining impulse kept: the merged load acts from t0 to max(t1, t_end) with (F_old (t_end - t0) +
+    F_new (t1 - t0)) / (max(t1, t_end) - t0)."""
     n = act.shape[0]
     free = -1
-    longest = 0
+    last = 0
     for q in range(n):
-        if act[q, RA_T] <= 0.0:
+        if act[q, RA_T] <= t0:
             free = q
             break
-        if act[q, RA_T] > act[longest, RA_T]:
-            longest = q
+        if act[q, RA_T] > act[last, RA_T]:
+            last = q
     if free >= 0:
         act[free, RA_FX] = fx
         act[free, RA_FY] = fy
@@ -811,22 +812,25 @@ def recut_load(act, fx, fy, fz, mx, my, mz, t_s, z_t):
         act[free, RA_MX] = mx
         act[free, RA_MY] = my
         act[free, RA_MZ] = mz
-        act[free, RA_T] = t_s
+        act[free, RA_T0] = t0
+        act[free, RA_T] = t1
         act[free, RA_Z] = z_t
         return
-    q = longest
-    t_old = act[q, RA_T]
-    t_new = t_old if t_old > t_s else t_s
-    a = t_old / t_new
-    b = t_s / t_new
+    q = last
+    s_old = act[q, RA_T] - (t0 if t0 > act[q, RA_T0] else act[q, RA_T0])
+    t_end = act[q, RA_T] if act[q, RA_T] > t1 else t1
+    span = t_end - t0
+    a = s_old / span
+    b = (t1 - t0) / span
     act[q, RA_FX] = a * act[q, RA_FX] + b * fx
     act[q, RA_FY] = a * act[q, RA_FY] + b * fy
     act[q, RA_FZ] = a * act[q, RA_FZ] + b * fz
     act[q, RA_MX] = a * act[q, RA_MX] + b * mx
     act[q, RA_MY] = a * act[q, RA_MY] + b * my
     act[q, RA_MZ] = a * act[q, RA_MZ] + b * mz
-    act[q, RA_T] = t_new
-    act[q, RA_Z] = a * act[q, RA_Z] + b * z_t
+    act[q, RA_Z] = (a * act[q, RA_Z] + b * z_t) / (a + b)
+    act[q, RA_T0] = t0
+    act[q, RA_T] = t_end
 
 
 @njit(types.void(TOOL_T, TABLE_T, OCCUPANCY_T, POSE_T, F1, I1, CACCUM_T, ACCUM_T, EVENTS_T, STATE_T, f8), **OPTS)
@@ -893,6 +897,7 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
     k0 = max(0, int(np.floor((loz - o[2]) / cell)))
     k1 = min(nzg - 1, int(np.floor((hiz - o[2]) / cell)))
     tick = float(istep[SI_TICK_END])
+    t_now = istep[SI_TICK_END] * step[ST_TICK_S] - step[ST_DT_S]      # the step's start: the loads act from here
     RM = pose.R_M_S
     tM = pose.t_M_S_m
     nt = tool.tooth_a0_rad.shape[0]
@@ -990,7 +995,7 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
                 fy = -Ft * cdy - Fr * ury
                 px = rc * urx
                 py = rc * ury
-                recut_load(st.recut_act, fx, fy, 0.0, -cz * fy, cz * fx, px * fy - py * fx, t_cross, cz)
+                recut_load(st.recut_act, fx, fy, 0.0, -cz * fy, cz * fx, px * fy - py * fx, t_now, t_now + t_cross, cz)
                 cacc.scalars[CA_RECUT_KG] += m_s
                 acc.scalars[ACC_RECUT_MASS_KG] += m_s
                 # the tooth that strikes it: the next one to reach its angle in the cutting sense
@@ -1864,6 +1869,9 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 if sg >= nseg:
                     sg = nseg - 1
                     cacc.scalars[CA_TABLE_OVER] += 1.0
+            # h is the projection on n of the surface's shift between passes at the element's own station (the memory),
+            # so h db tiles the chip exactly (strips along the shift, Cavalieri) and the edge's curvature does not
+            # narrow it (turn_step measures h along n instead: abi.edge_curvature)
             db = pk[kk, PK_DB]
             dS = pk[kk, PK_DS]
             ft0 = (coef[row, sg, 0, COL_FT] + coef[row, sg, 1, COL_FT] * h) * db + \
@@ -1952,6 +1960,16 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             forming = pki[kk, PKI_FORMING] != 0
             r_xy = pk[kk, PK_RXY]
             dV = h * db * r_xy * abs_dal * frac
+            if not forming:
+                # the chip is the material the pass removes: the share the surface memory takes (the elastic-recovery
+                # rule: none below h_write, ploughed and recovering; the full chip above (1 + ratio) h_write).
+                # Counting every h > 0 counted a ploughed layer again at the pass that finally removed it (+3.7 %
+                # on a side step of ae/D 0.05 with h_min 3 um)
+                hw = t_hwrite[row]
+                if h < hw:
+                    dV = 0.0
+                elif hw > 0.0 and ratio > 0.0 and h < (1.0 + ratio) * hw:
+                    dV *= (h - hw) / (ratio * hw)
             if forming:
                 e_plough += et
                 e_forming += et
@@ -1966,11 +1984,14 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             edge_len += dS * frac * dt
             v_int += Vc * dtw
             ea[e, ELEM_IN_CUT_S] += dtw
-            ea[e, ELEM_RAKE_SLIDING_M] += rc * Vc * dtw
-            ea[e, ELEM_FLANK_SLIDING_M] += Vc * dtw
+            # wear's integrals: the sliding distance the faces actually travel (|V|: an edge driven backwards by a
+            # vibration still slides on the work)
+            sl = abs(Vc) * dtw
+            ea[e, ELEM_RAKE_SLIDING_M] += rc * sl
+            ea[e, ELEM_FLANK_SLIDING_M] += sl
             ea[e, ELEM_INT_SIGMA_V_RAKE] += (coef[row, sg, 0, COL_SIG_RAKE] + coef[row, sg, 1, COL_SIG_RAKE] * h) \
-                * rc * Vc * dtw
-            ea[e, ELEM_INT_SIGMA_V_FLANK] += pk[kk, PK_SIG_FLANK] * Vc * dtw
+                * rc * sl
+            ea[e, ELEM_INT_SIGMA_V_FLANK] += pk[kk, PK_SIG_FLANK] * sl
             ea[e, ELEM_INT_H_DT] += h * dtw
             if h > ea[e, ELEM_H_MAX]:
                 ea[e, ELEM_H_MAX] = h
@@ -2159,9 +2180,10 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     packing_on = tp != 0.0 or pkx != 0.0 or pky != 0.0 or pkz != 0.0
     ra = st.recut_act
     n_ra = ra.shape[0]
+    t_end_step = t_start + dt
     any_load = packing_on
     for q in range(n_ra):
-        if ra[q, RA_T] > 0.0:
+        if ra[q, RA_T] > t_start and ra[q, RA_T] > ra[q, RA_T0]:
             any_load = True
             break
     if any_load:
@@ -2179,10 +2201,13 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
         vtz = pose.v_tip_S_m_s[2]
         for q in range(n_ra + 1):
             if q < n_ra:
-                tl = ra[q, RA_T]
-                if tl <= 0.0:
+                # the part of the load's time inside this step (a load whose time passed while the tool was out of
+                # contact has ended: it is not carried to the next engagement)
+                a0 = ra[q, RA_T0] if ra[q, RA_T0] > t_start else t_start
+                a1 = ra[q, RA_T] if ra[q, RA_T] < t_end_step else t_end_step
+                if a1 <= a0:
                     continue
-                te = dt if tl > dt else tl
+                te = a1 - a0
                 jx = ra[q, RA_FX] * te
                 jy = ra[q, RA_FY] * te
                 jz = ra[q, RA_FZ] * te
@@ -2190,8 +2215,6 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 my = ra[q, RA_MY] * te
                 mz = ra[q, RA_MZ] * te
                 z_l = ra[q, RA_Z]
-                if commit:
-                    ra[q, RA_T] = tl - dt
             else:
                 if not packing_on:
                     continue
@@ -2306,6 +2329,9 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
 
 
 # =============================================================================== turning (polar field)
+POLAR_BISECT = 12       # sign bisections of polar_depth's bracketing half-cell (dz / 2 / 4096)
+
+
 @njit(f8(POLAR_T, f8, f8, f8), **OPTS)
 def polar_inside(polar, theta, r, z):
     """Signed radial distance into the material at (theta, r, z) of the rotating S (> 0 inside):
@@ -2372,8 +2398,10 @@ def polar_inside(polar, theta, r, z):
 @njit(types.UniTuple(f8, 2)(POLAR_T, f8, f8, f8, f8, f8, f8), **OPTS)
 def polar_depth(polar, theta, r, z, ur, uz, cap):
     """Distance along the ray (r, z) + s (ur, uz) from a point inside the material to the boundary
-    (the chip thickness when (ur, uz) = -n): march in half-cells of the z spacing, linear root between
-    the last inside and the first outside sample. Returns (h, 1 if the ray reached cap)."""
+    (the chip thickness when (ur, uz) = -n): march in half-cells of the z spacing, then bisect the bracketing
+    half-cell on the sign (POLAR_BISECT halvings). polar_inside is a radial distance that jumps where the ray
+    enters an air gap or the next row's surface, so the linear root of the two samples sat near the outside one
+    (+2 % on the chip of a G71 pass at 36 um rows). Returns (h, 1 if the ray reached cap)."""
     g0 = polar_inside(polar, theta, r, z)
     if g0 <= 0.0:
         return 0.0, 0.0
@@ -2388,7 +2416,13 @@ def polar_depth(polar, theta, r, z, ur, uz, cap):
             s1 = cap
         g1 = polar_inside(polar, theta, r + s1 * ur, z + s1 * uz)
         if g1 <= 0.0:
-            return s0 + (s1 - s0) * g0 / (g0 - g1), 0.0
+            for _ in range(POLAR_BISECT):
+                sm = 0.5 * (s0 + s1)
+                if polar_inside(polar, theta, r + sm * ur, z + sm * uz) > 0.0:
+                    s0 = sm
+                else:
+                    s1 = sm
+            return 0.5 * (s0 + s1), 0.0
         s0 = s1
         g0 = g1
     return cap, 1.0
@@ -2561,7 +2595,11 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
             lp[e, 8] = g10 * ux + g11 * uy + g12 * uz - defl.u_work_S_m[1]
             lp[e, 9] = g20 * ux + g21 * uy + g22 * uz - defl.u_work_S_m[2]
             if h > 0.0:
-                Ae = h * tool.db_m[e]
+                # the chip section of the element: the strip behind its curved edge (abi.edge_curvature)
+                hk = h * tool.pk[kk, PK_CURV]
+                if hk > 1.0:
+                    hk = 1.0
+                Ae = h * tool.db_m[e] * (1.0 - 0.5 * hk)
                 A_tot += Ae
                 L_tot += tool.db_m[e]
                 if first < 0 or e < first:
@@ -2693,7 +2731,11 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
                 if sg >= nseg:
                     sg = nseg - 1
                     cacc.scalars[CA_TABLE_OVER] += 1.0
-            db = tool.db_m[e]
+            db0 = tool.db_m[e]
+            hk = h * tool.pk[kk, PK_CURV]
+            if hk > 1.0:
+                hk = 1.0
+            db = db0 * (1.0 - 0.5 * hk)
             dS = tool.dS_m[e]
             fft = tool.flank_N[e, 0]
             ffr = tool.flank_N[e, 1]
@@ -2778,7 +2820,14 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
             rc = coef[row, sg, 0, COL_RC] + coef[row, sg, 1, COL_RC] * h
             et = p_tab * dt
             r_e = math.sqrt(lp[e, 0] * lp[e, 0] + lp[e, 1] * lp[e, 1])
-            dV = h * db * r_e * abs_dal
+            # Pappus: the chip strip turns about the spindle axis at its centroid, h / 2 along the depth ray -n
+            r_c = r_e
+            if r_e > 0.0:
+                n_r = (lp[e, 4] * lp[e, 0] + lp[e, 5] * lp[e, 1]) / r_e
+                nn = math.sqrt(n_r * n_r + lp[e, 6] * lp[e, 6])
+                if nn > 1e-12:
+                    r_c = r_e - 0.5 * h * n_r / nn
+            dV = h * db * r_c * abs_dal
             e_shear += et * ps
             e_rake += et * pr
             e_plough += et * (1.0 - ps - pr)
@@ -2789,11 +2838,12 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
             v_int += Vc * dt
             ea = st.elem_acc
             ea[e, ELEM_IN_CUT_S] += dt
-            ea[e, ELEM_RAKE_SLIDING_M] += rc * Vc * dt
-            ea[e, ELEM_FLANK_SLIDING_M] += Vc * dt
+            sl = abs(Vc) * dt
+            ea[e, ELEM_RAKE_SLIDING_M] += rc * sl
+            ea[e, ELEM_FLANK_SLIDING_M] += sl
             ea[e, ELEM_INT_SIGMA_V_RAKE] += (coef[row, sg, 0, COL_SIG_RAKE] + coef[row, sg, 1, COL_SIG_RAKE] * h) \
-                * rc * Vc * dt
-            ea[e, ELEM_INT_SIGMA_V_FLANK] += tool.sig_flank_Pa[e] * Vc * dt
+                * rc * sl
+            ea[e, ELEM_INT_SIGMA_V_FLANK] += tool.sig_flank_Pa[e] * sl
             ea[e, ELEM_INT_H_DT] += h * dt
             if h > ea[e, ELEM_H_MAX]:
                 ea[e, ELEM_H_MAX] = h
@@ -2827,7 +2877,7 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
             ts[j, TS_FX] += Fx
             ts[j, TS_FY] += Fy
             ts[j, TS_FZ] += Fz
-            ts[j, TS_STEP_B] += db
+            ts[j, TS_STEP_B] += db0
             tch = coef[row, sg, 0, COL_TCHIP] + coef[row, sg, 1, COL_TCHIP] * h
             ws = coef[row, sg, 0, COL_WS] + coef[row, sg, 1, COL_WS] * h
             wf = coef[row, sg, 0, COL_WF] + coef[row, sg, 1, COL_WF] * h

@@ -230,6 +230,10 @@ def advance_elements(geo, inp, law, st, out):
             if n_cyc > 0.0 and inp.cycle_dT[j, k] > 0.0 and s[LS_FAT_SIGMA_PA] > 0.0 and s[LS_FAT_B] < 0.0:
                 amp = inp.therm_coef[j, k] * inp.cycle_dT[j, k]
                 if amp > 0.0:
+                    # the curve ends at one reversal (sigma_f'): an amplitude beyond it cracks in its first cycle,
+                    # no more (fracture.Basquin.cycles)
+                    if amp > s[LS_FAT_SIGMA_PA]:
+                        amp = s[LS_FAT_SIGMA_PA]
                     n_fail = 0.5 * (amp / s[LS_FAT_SIGMA_PA]) ** (1.0 / s[LS_FAT_B])
                     d_D = n_cyc / n_fail
             # state

@@ -95,3 +95,53 @@ def test_stale_ticks_of_a_barely_turning_spindle_stay_in_int64():
     assert abs(CuttingDomain._stale_ticks(ctx, w, 4) - 12500) <= 1
     istep = np.zeros(4, np.int64)
     istep[0] = CuttingDomain._stale_ticks(ctx, 1e-15, 2)      # assignable to the kernel's int64 step array
+
+
+def test_the_quantised_slow_state_keeps_its_cell_near_a_boundary():
+    """Hysteresis of the rebuild grid (docs/models/cutting.md 1): a value keeps the row's last cell while it stays
+    within 0.75 cell of that cell's centre, and is snapped afresh beyond. Plain rounding switched a temperature lying
+    at a cell boundary (rounding 395.1 -> 400, 394.9 -> 390 with 10 K cells) between two cells from one macro step to
+    the next: with the slow feedback's one-step stagger a limit cycle (the coupling-lag monitor flagged it)."""
+    from cnctwin.cutting.coefficients import RowState, Tolerances, quantised_state
+    tol = Tolerances(temp_K=10.0, speed_rel=0.02, VB_m=2e-6)
+    s0 = quantised_state(RowState(speed_m_s=5.0, tool_temp_K=395.1, flank_temp_K=394.9, VB_m=3.1e-6), tol)
+    assert s0.tool_temp_K == 400.0 and s0.flank_temp_K == 390.0
+    seq = [394.9, 395.1, 394.8, 395.3, 393.0]
+    prev = s0
+    cells = []
+    for T in seq:
+        prev = quantised_state(RowState(speed_m_s=5.0, tool_temp_K=T, flank_temp_K=T, VB_m=3.1e-6), tol, prev)
+        cells.append((prev.tool_temp_K, prev.flank_temp_K))
+    assert all(c == (400.0, 390.0) for c in cells)                 # within 0.75 cell: no switching at 395
+    far = quantised_state(RowState(speed_m_s=5.0, tool_temp_K=392.4, flank_temp_K=398.0, VB_m=3.1e-6), tol, prev)
+    assert far.tool_temp_K == 390.0 and far.flank_temp_K == 400.0  # beyond 0.75 cell: snapped afresh
+    # log grids (speed) likewise
+    v = quantised_state(RowState(speed_m_s=5.0), tol)
+    near = quantised_state(RowState(speed_m_s=v.speed_m_s * 1.014), tol, v)
+    assert near.speed_m_s == v.speed_m_s
+    beyond = quantised_state(RowState(speed_m_s=v.speed_m_s * 1.016), tol, v)
+    assert beyond.speed_m_s != v.speed_m_s
+
+
+def test_the_flank_partition_reads_the_entry_temperature(run):
+    """mechanics' flank partition takes thermal's flank temperature at the entry into the cut (flank_entry_K, the
+    background of its stationary-source partition), not the in-cut flank temperature (which already holds the step's
+    own rise: it was counted twice)."""
+    from cnctwin.core.bus import ToolHeat
+    dom, ctx, state = run
+    dom.update_tool(ctx, state, 0, Bus(), force=True)
+    tc = state.cutting.tools[0]
+    edge = state.tooling.effective[0]
+    shape = np.asarray(edge.elem_r_m).shape
+    heat = ToolHeat(flank_temp_q_K=np.full(shape + (1,), 900.0), q_weights=np.ones(1),
+                    rake_temp_mean_K=np.full(shape, 500.0))
+    heat.flank_entry_K = np.full(shape, 450.0)
+    prev = _bus(0)
+    prev.thermal.tools = {0: heat}
+    members = (np.asarray(edge.elem_valid) != 0) & (np.asarray(tc.elem_row) == 0)
+    geom = tc.rows_geom[0]
+    rs = dom._row_state(ctx, state, 0, 0, geom, prev, 1047.0, 0.0, members, True)
+    assert rs.flank_temp_K == pytest.approx(450.0) and rs.tool_temp_K == pytest.approx(500.0)
+    heat.flank_entry_K = np.zeros((0, 0))                          # a record without it: the in-cut mean
+    rs = dom._row_state(ctx, state, 0, 0, geom, prev, 1047.0, 0.0, members, True)
+    assert rs.flank_temp_K == pytest.approx(900.0)

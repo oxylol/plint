@@ -334,9 +334,11 @@ time; docs/performance.md has the per-kernel, per-level, whole-run and memory ta
 * **Probe.** The G31 sweep runs with the probe-only contacts of section 9a (2026-11-09; before, no stylus
   profile was built and every probing program stopped at its probe alarm). Only spindle probes on a path's
   tool spindle are built; a tool setter keeps motion's own trigger rule.
-* **Turning force alternation** (2026-11-09, docs/models/loop.md 15): with cutting's process damping on, a
-  turning contact's L0 force alternates from step to step (the one-sided flank indentation switching with the
-  predicted normal velocity) and diverges once the cut has grown; with K_sp = 0 the same pass is smooth and stable.
+* **Turning force alternation** (fixed 2026-11-09, docs/models/loop.md 15): with cutting's process damping on, a
+  turning contact's L0 force alternated from step to step (the linearised flank indentation switching with the
+  predicted normal velocity) and diverged once the cut had grown. Process damping now comes from each element's
+  wave memory of the surface it generated (docs/models/cutting.md "Process damping"): nanometres of vibration
+  indent the flank by nanometres, and the force is a function of the displacement, not of the predicted velocity.
 * **Peak force** of the slot is 9 % above the stand-alone kernel with a beat every 120 ms (not explained:
   the variable pitch against the 0.5 deg stride and the refill planes are suspects).
 * **Field resolution** (section 8): within a cell of a stock edge the field, not the feed, sets the chip.
@@ -344,5 +346,6 @@ time; docs/performance.md has the per-kernel, per-level, whole-run and memory ta
   is 54 % of the field's (removal's mass-balance warning, 85 % over the pass); the slot agrees to 2 %. Likely
   cause (not verified): the end edges' axial chip of the ramp (~2 um per tooth) is below cutting's minimum
   chip thickness, booked as ploughing, while removal removes the layer geometrically.
-* **Zero-depth rapid.** Removal flags `rapid_into_material` (error) with 0.000 mm depth and volume when the
+* **Zero-depth rapid** (fixed 2026-11-09: the rapid's event carries its depth, a crash is a depth beyond the
+  collision tolerance; docs/models/removal.md "Rapids"). Removal flagged `rapid_into_material` (error) with 0.000 mm depth and volume when the
   pocket variant retracts with G00 from the helix floor; the rule needs a tolerance.
