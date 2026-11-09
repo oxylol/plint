@@ -355,7 +355,10 @@ def criteria(sw, out: A.ElemOut, rt: Runtime, tolerances, feed_m: float, notes: 
     limits["notch"] = float(lim["notch"])
     finishing = (sw.finishes != 0) & valid
     applies = tolerances is not None and tolerances.applies(sw.slot, bool(finishing.any()))
-    recession = st.vn + st.vn_notch + st.chip_d
+    # recession of the edge normal to the machined surface (kernels.flank_recession: a chip of depth d along the
+    # faces lowers the edge's lowest point by d sin(a) only)
+    chip_drop = st.chip_d * np.sin(np.maximum(geo.clear, float(sw.law.scal[A.LS_MIN_CLEAR])))
+    recession = np.maximum(st.vn, chip_drop) + st.vn_notch
     if applies and finishing.any():
         allowed = tolerances.surface_tolerance_m(sw.slot)
         values["dimension"] = float(np.max(recession[finishing]))
@@ -363,7 +366,7 @@ def criteria(sw, out: A.ElemOut, rt: Runtime, tolerances, feed_m: float, notes: 
         ra_spec, rt_spec = tolerances.finish_spec(sw.slot)
         radius = float(sw.props["finish_radius_m"]) or float(sw.props["tool_radius_m"])
         edge_r = float(np.max(out.edge_r[finishing]))
-        chip = float(np.max(st.chip_d[finishing]))
+        chip = float(np.max(chip_drop[finishing]))
         ra, rt_ = L.roughness_m(feed_m, radius, rt.h_min_ratio * edge_r, chip)
         ra0, rt0 = L.roughness_m(feed_m, radius, rt.h_min_ratio * float(np.min(geo.r_e0[finishing])), 0.0)
         extra.update(Ra_m=ra, Rt_m=rt_)

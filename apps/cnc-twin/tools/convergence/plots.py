@@ -51,6 +51,9 @@ LABELS = {
     "tool_rise_K": ("tool body rise", "K"), "edge_rise_K": ("edge peak rise", "K"), "rake_rise_K": ("rake rise", "K"),
     "VB_growth_um": ("VB growth", "um"), "bulk_rise_K": ("workpiece bulk rise", "K"),
     "bulk_max_rise_K": ("workpiece hottest cell rise", "K"), "surface_rise_K": ("contact surface rise", "K"),
+    "preheat_rise_K": ("preheat rise (material entering the cut)", "K"),
+    "rake_rise_mean_K": ("rake rise, 0.5 s mean", "K"), "edge_rise_mean_K": ("edge peak rise, 0.5 s mean", "K"),
+    "preheat_rise_mean_K": ("preheat rise, 0.5 s mean", "K"),
     "expansion_um": ("thermal expansion at the contact", "um"),
 }
 

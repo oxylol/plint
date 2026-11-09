@@ -28,6 +28,7 @@ LS_FAT_B = 9            # its exponent b (< 0)
 LS_CRACK_A0_M = 10      # initial flaw depth (from K_IC and the characteristic strength)
 LS_CRACK_GROWTH = 11    # Miner damage scale of comb-crack growth beyond initiation
 LS_DOC_RATIO = 12       # depth-of-cut end: h at the end >= ratio x the run's largest h
+LS_MIN_CLEAR = 13       # clearance of the land geometry is clipped below at this value (rad; g_vb's clip)
 N_LS = 16
 
 # ------------------------------------------------------------------------------- ElemIn.scal
@@ -59,6 +60,7 @@ CL_BETA_MIN = 11        # wedge-angle guards
 CL_BETA_MAX = 12
 CL_NTHETA = 13          # nodes of the angular effective-volume integral
 CL_ROUNDING = 14        # hone-radius growth per unit recession (as LS_ROUNDING)
+CL_FATIGUE_B = 15       # Basquin exponent b (< 0) of the tool material: the edge's strength after N load cycles
 N_CL = 16
 
 # ------------------------------------------------------------------------------- chip_trials output columns
@@ -69,6 +71,7 @@ CO_P_COAT = 3           # coating spallation probability
 CO_SPALLED = 4          # 1: the coating spalled at this row
 CO_DEPTH_M = 5          # chip depth (when chipped)
 CO_VEFF_M3 = 6          # effective stressed volume
+CO_HAZARD = 7           # the element's cumulative hazard after this row (fatigue sum and cracks)
 N_CO = 8
 
 # ------------------------------------------------------------------------------- shock rows (core.bus CuttingContact.shocks)
@@ -146,7 +149,7 @@ class ElemState(NamedTuple):
     vn: np.ndarray              # [nt, ne] flank wear depth normal to the machined surface (m)
     vn_notch: np.ndarray        # [nt, ne] extra recession at the depth-of-cut line (m)
     kt: np.ndarray              # [nt, ne] crater depth (m)
-    chip_d: np.ndarray          # [nt, ne] depth of the edge chip (m)
+    chip_d: np.ndarray          # [nt, ne] depth of the edge chip, along the faces from the edge (m)
     coat_f: np.ndarray          # [nt, ne] coating left on the flank at the edge (m)
     coat_r: np.ndarray          # [nt, ne] coating left in the crater zone (m)
     D_th: np.ndarray            # [nt, ne] thermal-fatigue damage (Miner)
@@ -154,11 +157,12 @@ class ElemState(NamedTuple):
     cut_s: np.ndarray           # [nt, ne] accumulated time in cut (s)
     bue_m: np.ndarray           # [nt, ne] BUE height (m)
     used: np.ndarray            # [nt, ne] int8: the element has cut
-    chipped: np.ndarray         # [nt, ne] int8
+    chipped: np.ndarray         # [nt, ne] int8 chips of the edge so far (its generation; nonzero: chipped)
     doc_hit: np.ndarray         # [nt, ne] int8: the element has been at the depth-of-cut line
-    n_chip: np.ndarray          # [nt, ne] int64 draw counters (stream wear.chipping)
+    n_chip: np.ndarray          # [nt, ne] int64 load cycles (entry/exit shock rows) of the edge
     n_coat: np.ndarray          # [nt, ne] int64 (stream wear.coating)
     n_bue: np.ndarray           # [nt, ne] int64 (stream wear.bue_breakoff)
+    edge_fat: np.ndarray        # [nt, ne] Miner sum of the edge's load cycles: sum (sigma_n / sigma_0)^(-1/b)
 
 
 class ElemOut(NamedTuple):
@@ -200,7 +204,7 @@ def new_law(nbf: int = 1, nbr: int = 1, nh: int = 1, nhc: int = 1) -> Law:
 
 def new_state(nt: int, ne: int) -> ElemState:
     return ElemState(*(_f(nt, ne) for _ in range(10)), *(np.zeros((nt, ne), np.int8) for _ in range(3)),
-                     *(np.zeros((nt, ne), np.int64) for _ in range(3)))
+                     *(np.zeros((nt, ne), np.int64) for _ in range(3)), _f(nt, ne))
 
 
 def new_output(nt: int, ne: int) -> ElemOut:

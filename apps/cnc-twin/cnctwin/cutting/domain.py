@@ -248,11 +248,28 @@ class CuttingDomain:
         if speed <= 0.0:
             speed = omega * max(geom.radius_m, 1e-3) if omega > 0.0 else 1.0
 
-        def member_mean(values):
+        # the row's slow state is that of the members that cut: weighted by the in-cut time of the last step at their
+        # position along the edge, summed over the teeth (a helical edge's row spans the whole flute while a pass
+        # engages a few elements of it; the idle members' temperatures and wear are not those of the contact the row
+        # describes). Summed over the teeth, so the weights do not follow how many passes of each tooth a step held.
+        # No member in cut: the plain mean.
+        cut_w = np.zeros(members.shape)
+        for c in getattr(prev.cutting, "contacts", []) or []:
+            ic = np.asarray(getattr(c, "in_cut_time_s", np.zeros((0, 0))), float)
+            if int(c.tool_slot) == slot and ic.shape == members.shape:
+                cut_w += ic
+        if cut_w.ndim == 2:
+            cut_w = np.broadcast_to(cut_w.sum(axis=0, keepdims=True), members.shape)
+
+        def member_mean(values, weighted=True):
             arr = np.asarray(values, float) if values is not None else np.zeros(0)
             if arr.shape != members.shape or not members.any():
                 return None
-            value = float(np.mean(arr[members]))
+            w = np.where(members & np.isfinite(arr), cut_w, 0.0) if weighted else np.zeros(members.shape)
+            if w.sum() > 0.0:
+                value = float(np.sum(w * np.where(w > 0.0, arr, 0.0)) / w.sum())
+            else:
+                value = float(np.mean(arr[members]))
             return value if math.isfinite(value) else None
 
         tool_T = member_mean(getattr(thermal, "rake_temp_mean_K", None)) if thermal is not None else None
@@ -293,11 +310,18 @@ class CuttingDomain:
         bue = member_mean(getattr(wear, "bue_height_m", None)) if wear is not None else None
         width = None
         ctime = None
+        arcs = {int(r.contact): float(getattr(r.geometry, "engaged_angle_rad", 0.0) or 0.0)
+                for r in (getattr(prev.removal, "contacts", []) or [])}
         for c in getattr(prev.cutting, "contacts", []) or []:
             if int(c.tool_slot) == slot and getattr(c, "engaged_edge_m", 0.0) > 0.0:
                 width = float(c.engaged_edge_m)
                 if getattr(c, "pass_time_s", 0.0) > 0.0:
                     ctime = float(c.pass_time_s)
+                    # a rotating tool's element is in contact for the engaged arc at the spindle speed; the step's
+                    # in-cut time over its entries follows the passes that cross the step's ends
+                    arc = arcs.get(int(c.contact), 0.0)
+                    if rotating and omega > 0.0 and arc > 0.0:
+                        ctime = min(arc, 2.0 * math.pi) / omega
         return RowState(speed_m_s=float(speed), tool_temp_K=tool_T, flank_temp_K=flank_T, work_temp_K=work_T,
                         friction_factor=friction, VB_m=vb or 0.0, bue_m=bue or 0.0, contact_width_m=width,
                         contact_time_s=ctime)

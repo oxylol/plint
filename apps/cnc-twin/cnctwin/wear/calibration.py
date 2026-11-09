@@ -10,7 +10,8 @@ The life to the Taylor VB limit at constant conditions is the integral over the 
 
     T(A, B; v) = int_{VB0}^{VB_lim} dVB / (g dVN/dt(VB, v)),
 
-evaluated by Gauss-Legendre in VB (split where the coating wears through), with the response
+evaluated by composite Gauss-Legendre in VB (split where the integrand has a kink: the coating wearing through,
+the hone radius, the plastic land's VB*; intervals no longer than 1 / ``calib_pieces`` of the land), with the response
 (sigma_n V_s and the flank temperatures at the quadrature points) evaluated at every node through the
 :class:`TaylorResponse` protocol, so stresses and temperatures may depend on the land. Two speeds v1,
 v2 (the entry's vc range, else the speeds of the Taylor lives in wear-calibration.yaml) give two
@@ -185,7 +186,17 @@ class MechanicsResponse:
         is fixed with the chip's flow stress at that temperature; T stays below the melting temperature of the
         flow-stress law. The pressure sigma_0 is not softened: the hot layer at the land (Peclet depth
         sqrt(kappa VB / V), about ten microns) is thin against the plastic zone that carries it (of the order
-        of VB). Bisection, fixed steps (deterministic)."""
+        of VB). Bisection, fixed steps (deterministic).
+
+        Blok's partition of the land's friction heat is taken in [0, 1] (mechanics.heat.blok_partition_to_tool): a
+        small land, whose friction rises the work's surface less than the tool's base exceeds it, sits at the
+        tool's base temperature (the rake-heated edge). Solving Blok's equality with the fraction unbounded (the
+        tool face also giving heat to the colder work) was examined on 2026-11-09 and not adopted: the work
+        surface entering the land is taken at the shear-plane temperature T_AB, without the heat of the edge's
+        ploughing (the tertiary zone), so the unbounded flank of a small land follows T_AB, which hardly changes
+        with speed; every Taylor calibration then gave activation temperatures of 50-100 kK (published Usui sets:
+        5-30 kK) with check residuals of 6-34 %, and carbide in 6061 a law (B 43 kK, A 4e20 / Pa) that thermal's
+        present flank temperature drives to kilometres of wear in one step (docs/models/wear.md 3, 17)."""
         from ..mechanics import heat as H
 
         theta_ref = self._thermal_factor(t_ref_K)
@@ -292,14 +303,39 @@ def _gauss(lo: float, hi: float, n: int) -> tuple[np.ndarray, np.ndarray]:
     return 0.5 * (hi - lo) * x + 0.5 * (hi + lo), 0.5 * (hi - lo) * w
 
 
-def _nodes(response: Callable[[float, float], Response], speed: float, vb0: float, vb_lim: float,
-           geometry: FlankGeometry, coating: CoatingData | None, abrasion: Abrasion, n: int) -> list[_Node]:
-    breaks = [vb0, vb_lim]
+def land_breaks(vb0: float, vb_lim: float, geometry: FlankGeometry, coating: CoatingData | None,
+                pieces: int = 1) -> tuple[list[float], float | None]:
+    """(interval ends, coating breakthrough land) of the life integral over [vb0, vb_lim]: split where the integrand
+    has a kink (the coating wearing through; the land reaching the hone radius, below which the heated contact is
+    the rounded edge's; the land reaching the critical length VB* of the plastic land of mechanics' worn-tool
+    contact, beyond which its mean stresses grow from a third of sigma_0, tau_0) and into intervals no longer than
+    (vb_lim - vb0) / pieces. The wear rate varies by orders of magnitude over the land (Usui's Arrhenius factor of
+    a flank that heats as the land grows): one Gauss rule over a kinked land had put Zhao's Ti6Al4V life to VB 0.3
+    mm 10 % short of its own integral (148 against 164 s)."""
+    from ..mechanics import params as MP
+
+    points = {float(vb0), float(vb_lim)}
     vb_through = None
     if coating is not None and geometry.c_coat > 0.0:
         vb_through = coating.thickness_m / geometry.c_coat * geometry.g_vb
-        if vb0 < vb_through < vb_lim:
-            breaks = [vb0, vb_through, vb_lim]
+        points.add(vb_through)
+    for p in (geometry.edge_radius_m, MP.number(MP.CONTACT, "flank_plastic_land_m")):
+        points.add(float(p))
+    ends = sorted(p for p in points if vb0 <= p <= vb_lim)
+    longest = (vb_lim - vb0) / max(int(pieces), 1)
+    out = [ends[0]]
+    for lo, hi in zip(ends[:-1], ends[1:]):
+        if hi - lo <= 1e-15:
+            continue
+        k = max(1, math.ceil((hi - lo) / longest - 1e-9))
+        out.extend(lo + (hi - lo) * (i + 1) / k for i in range(k))
+    return out, vb_through
+
+
+def _nodes(response: Callable[[float, float], Response], speed: float, vb0: float, vb_lim: float,
+           geometry: FlankGeometry, coating: CoatingData | None, abrasion: Abrasion, n: int,
+           pieces: int = 1) -> list[_Node]:
+    breaks, vb_through = land_breaks(vb0, vb_lim, geometry, coating, pieces)
     out = []
     for lo, hi in zip(breaks[:-1], breaks[1:]):
         xs, ws = _gauss(lo, hi, n)
@@ -370,7 +406,8 @@ def calibration_speeds(entry: TaylorEntry) -> tuple[float, float, float]:
 
 
 def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], geometry: FlankGeometry,
-              coating: CoatingData | None, abrasion: Abrasion, vb0_m: float, nodes_per_interval: int) -> Calibration:
+              coating: CoatingData | None, abrasion: Abrasion, vb0_m: float, nodes_per_interval: int,
+              pieces: int = 1) -> Calibration:
     """A and B such that the wear model reaches the entry's VB limit in the Taylor life at two speeds
     (see the module doc): in ``entry.contact_life_s`` of edge contact, so that a milling cutting-time
     life is reached in cutting time at the reference engagement. ``response(speed, VB)`` is the
@@ -385,8 +422,8 @@ def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], 
     if not vb0_m < vb_lim:
         raise InputError(f"wear: the initial flank wear {vb0_m:.3g} m is not below the Taylor VB limit {vb_lim:.3g} m")
     n = int(nodes_per_interval)
-    nodes1 = _nodes(response, v1, vb0_m, vb_lim, geometry, coating, abrasion, n)
-    nodes2 = _nodes(response, v2, vb0_m, vb_lim, geometry, coating, abrasion, n)
+    nodes1 = _nodes(response, v1, vb0_m, vb_lim, geometry, coating, abrasion, n, pieces)
+    nodes2 = _nodes(response, v2, vb0_m, vb_lim, geometry, coating, abrasion, n, pieces)
     g = geometry.g_vb
     T_ref = float(np.sum(nodes1[0].weights * nodes1[0].temps))
     if not T_ref > 0.0:
@@ -425,7 +462,7 @@ def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], 
             values.append(abs(r) if math.isfinite(r) else math.inf)
         B = float(grid[int(np.argmin(values))])
     A_scaled = _solve_A(nodes1, B, T_ref, t1, g, coating, scale)
-    nodes3 = _nodes(response, v3, vb0_m, vb_lim, geometry, coating, abrasion, n)
+    nodes3 = _nodes(response, v3, vb0_m, vb_lim, geometry, coating, abrasion, n, pieces)
     lives = [life_s(nd, A_scaled, B, T_ref, g, coating, scale) for nd in (nodes1, nodes2, nodes3)]
     targets = [t1, t2, t3]
     A = A_scaled * math.exp(B / T_ref)
@@ -461,7 +498,7 @@ class Anchor:
 
 def anchor_published(entry: TaylorEntry, response: Callable[[float, float], Response], geometry: FlankGeometry,
                      coating: CoatingData | None, abrasion: Abrasion, vb0_m: float, nodes_per_interval: int,
-                     A: np.ndarray, B: np.ndarray, lo: np.ndarray) -> Anchor:
+                     A: np.ndarray, B: np.ndarray, lo: np.ndarray, pieces: int = 1) -> Anchor:
     """Factor s on the A of a published Usui set so that, with this response's flank temperatures, the set reaches
     the Taylor entry's VB limit in its contact life at the entry's check speed (the 15-min speed v15, at the
     entry's feed and depth references). B and the branch ranges stay as published.
@@ -492,7 +529,7 @@ def anchor_published(entry: TaylorEntry, response: Callable[[float, float], Resp
             total += node.weight_m / rate
         return total
 
-    nodes = {v: _nodes(response, v, vb0_m, vb_lim, geometry, coating, abrasion, n) for v in (v1, v2, v3)}
+    nodes = {v: _nodes(response, v, vb0_m, vb_lim, geometry, coating, abrasion, n, pieces) for v in (v1, v2, v3)}
     target = entry.contact_life_s(v3, f, ap)
     if life(nodes[v3], 0.0) <= target:
         raise CalibrationError("wear: the abrasive term alone wears the land out before the Taylor life at v15; the "
@@ -523,4 +560,5 @@ def anchor_published(entry: TaylorEntry, response: Callable[[float, float], Resp
 
 
 __all__ = ["Condition", "Response", "TaylorResponse", "MechanicsResponse", "CalibrationError", "FlankGeometry",
-           "Abrasion", "Calibration", "calibrate", "calibration_speeds", "life_s", "Anchor", "anchor_published"]
+           "Abrasion", "Calibration", "calibrate", "calibration_speeds", "life_s", "Anchor", "anchor_published",
+           "land_breaks"]

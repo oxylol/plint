@@ -657,6 +657,9 @@ class GroupCoefficients:
     calibration: str = "none"
     calibration_clamped: bool = False
     notes: list = field(default_factory=list)
+    # flank contact length per h node: wear land + the edge arc below the stagnation point (contact.stagnation_arc_length
+    # at min(h, h_min)), the length frac_flank_to_tool was computed for and thermal deposits the tool's part over
+    flank_contact_m: np.ndarray = field(default_factory=lambda: np.zeros(0))
 
     def forces_per_width(self, h_m) -> np.ndarray:
         """[3, n] total forces per unit width at h (table form, h-interpolation linear in log h)."""
@@ -684,18 +687,51 @@ def _defaults(h: np.ndarray, work_temp_K: float) -> dict:
                 plough_shape_r=np.ones(2))
 
 
-def _flank_partition(work, tool, state: SlowState, land_m: float, tau_land_Pa: float, work_surface_K) -> np.ndarray:
-    """Share of flank / edge-rubbing heat entering the tool at each work-surface temperature."""
-    surface = np.atleast_1d(np.asarray(work_surface_K, dtype=float))
-    out = np.zeros(surface.shape[0])
+def _flank_partition(work, tool, group: EdgeGroup, state: SlowState, h: np.ndarray, h_min: float, k_ref: float,
+                     mu: float, edge_t_scale, tau_land_Pa: float, work_surface_K, *, indentation=False,
+                     rubbing: bool = False) -> tuple[np.ndarray, np.ndarray]:
+    """(share of the flank contact's heat entering the tool, flank contact length) at each h node.
+
+    The heat the hot loop books as flank (wear land) and ploughing (edge) heat - thermal splits both with this share
+    and deposits the tool's part over the contact length (docs/models/thermal.md 1) - is, per unit edge length: the
+    friction on the wear land (tau_land VB V) and on the edge arc below the stagnation point (the friction part of
+    the edge force, contact.contact_power_parts), and the plastic work of the material pressed under the edge (its
+    pressure part). The share follows from equal mean temperatures of tool and work over the contact VB + arc
+    (heat.flank_heat_to_tool: Blok 1937), the plastic work being a heat source inside the work, uniform to the depth
+    of the ploughed zone (ploughing_zone_depth_ratio x arc). ``edge_t_scale``: the calibration's factor on the
+    tangential edge force per node (1 without calibration); ``indentation`` (bool or per node): the node's forces are
+    the indentation contact (the rake face in contact, depth h)."""
+    h = np.atleast_1d(np.asarray(h, dtype=float))
+    n = h.shape[0]
+    surface = np.broadcast_to(np.atleast_1d(np.asarray(work_surface_K, dtype=float)), (n,))
+    scale = np.broadcast_to(np.atleast_1d(np.asarray(edge_t_scale, dtype=float)), (n,))
+    indent = np.broadcast_to(np.atleast_1d(np.asarray(indentation, dtype=bool)), (n,))
+    frac = np.zeros(n)
+    length = np.zeros(n)
     flank_temp = state.tool_flank_temp_K if state.tool_flank_temp_K is not None else state.tool_temp_K
-    if land_m <= 0.0 or tool is None or flank_temp is None:
-        return out
-    width = state.contact_width_m or P.number(P.CONTACT, "default_contact_aspect") * land_m
-    for k in range(surface.shape[0]):
-        out[k] = H.flank_partition_to_tool(work, tool, land_m, width, state.speed_m_s, tau_land_Pa * state.speed_m_s,
-                                           float(surface[k]), float(flank_temp), state.contact_time_s)
-    return out
+    vb = max(float(state.VB_m), 0.0)
+    v = float(state.speed_m_s)
+    depth_ratio = P.number(P.CONTACT, "ploughing_zone_depth_ratio")
+    cache: dict = {}
+    for k in range(n):
+        depth = h_min if (rubbing or h[k] >= h_min) and not indent[k] else float(h[k])
+        key = (depth, bool(indent[k]), float(scale[k]), float(surface[k]))
+        if key in cache:
+            frac[k], length[k] = cache[key]
+            continue
+        f_p, f_tau, arc = C.contact_power_parts(depth, group.edge_radius_m, h_min, group.rake_rad, group.incl_rad,
+                                                k_ref, mu, indentation=bool(indent[k]))
+        l_f = vb + arc
+        share = 0.0
+        if l_f > 0.0 and tool is not None and flank_temp is not None and v > 0.0:
+            q_fr = v * (float(scale[k]) * f_tau + tau_land_Pa * vb) / l_f
+            q_d = v * float(scale[k]) * max(f_p, 0.0) / l_f
+            width = state.contact_width_m or P.number(P.CONTACT, "default_contact_aspect") * l_f
+            share, _ = H.flank_heat_to_tool(work, tool, l_f, width, v, q_fr, q_d, depth_ratio * arc,
+                                            float(surface[k]), float(flank_temp), state.contact_time_s)
+        frac[k], length[k] = share, l_f
+        cache[key] = (share, l_f)
+    return frac, length
 
 
 def _rubbing_group(work, tool, group, state, h, mu, h_min, k_ref, notes) -> GroupCoefficients:
@@ -707,18 +743,17 @@ def _rubbing_group(work, tool, group, state, h, mu, h_min, k_ref, notes) -> Grou
     sigma0, tau0 = C.flank_reference_stresses(k_ref, mu)
     s_mean, t_mean = C.flank_stresses(state.VB_m, sigma0, tau0)
     x, st, sr = C.ploughing_shape(group.edge_radius_m, depth, group.rake_rad, group.incl_rad, k_ref, mu)
-    land = state.VB_m if state.VB_m > 0.0 else edge[abi.PL_CONTACT]
-    tau_land = t_mean if state.VB_m > 0.0 else C.contact_stresses(k_ref, mu)[1]
     notes.append("rubbing-only group: forces from the indentation model (K_sp) in the hot loop")
     kw = _defaults(h, state.work_temp_K)
-    kw.update(frac_flank_to_tool=_flank_partition(work, tool, state, land, tau_land,
-                                                  np.full(h.shape[0], state.work_temp_K)),
-              regime=np.full(h.shape[0], REGIME_PLOUGHING, np.int32), plough_x=x, plough_shape_t=st,
-              plough_shape_r=sr)
+    flank_tool, flank_len = _flank_partition(work, tool, group, state, h, depth, k_ref, mu, 1.0, t_mean,
+                                             np.full(h.shape[0], state.work_temp_K), rubbing=True)
+    kw.update(frac_flank_to_tool=flank_tool, regime=np.full(h.shape[0], REGIME_PLOUGHING, np.int32), plough_x=x,
+              plough_shape_t=st, plough_shape_r=sr)
     return GroupCoefficients(**kw, h_min_m=float(h[-1]), K_sp_N_per_m3=float(k_sp), K_sp_source=src,
                              v_min_m_s=C.min_shear_speed(), mu_eff=float(mu), flank_sigma0_Pa=float(sigma0),
                              flank_tau0_Pa=float(tau0), flank_land_star_m=P.number(P.CONTACT, "flank_plastic_land_m"),
-                             flank_sigma_mean_Pa=float(s_mean), flank_tau_mean_Pa=float(t_mean), notes=notes)
+                             flank_sigma_mean_Pa=float(s_mean), flank_tau_mean_Pa=float(t_mean), notes=notes,
+                             flank_contact_m=flank_len)
 
 
 def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGroup, state: SlowState, h_grid_m,
@@ -787,9 +822,11 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
         sigma0 *= float(edge_scale[1, first])
         tau0 *= float(edge_scale[0, first])
     s_mean, t_mean = C.flank_stresses(state.VB_m, sigma0, tau0)
-    land = state.VB_m if state.VB_m > 0.0 else edge[abi.PL_CONTACT]
-    tau_land = t_mean if state.VB_m > 0.0 else C.contact_stresses(k_ref, mu)[1]
-    flank_tool = _flank_partition(work, tool, state, land, tau_land, t_shear)
+    edge_t = np.ones(n)
+    if cal_name != "none":
+        edge_t = np.where(h <= h_min, edge_scale[0], float(edge_scale[0, first]))
+    flank_tool, flank_len = _flank_partition(work, tool, group, state, h, h_min, k_ref, mu, edge_t, t_mean, t_shear,
+                                             indentation=parts.indent_mask | parts.indentation_group)
     k_sp, k_src = C.indentation_coefficient(work, ke[1] if ke[1] > 0 else edge[abi.PL_FR], max(h_min, 1e-12),
                                             group.edge_radius_m, group.rake_rad)
     if h_min > 0.0 and group.edge_radius_m > 0.0:
@@ -817,7 +854,7 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
         v_min_m_s=C.min_shear_speed(), mu_eff=float(mu), flank_sigma0_Pa=float(sigma0), flank_tau0_Pa=float(tau0),
         flank_land_star_m=P.number(P.CONTACT, "flank_plastic_land_m"), flank_sigma_mean_Pa=float(s_mean),
         flank_tau_mean_Pa=float(t_mean), plough_x=px, plough_shape_t=pst, plough_shape_r=psr, calibration=cal_name,
-        calibration_clamped=clamped, notes=notes)
+        calibration_clamped=clamped, notes=notes, flank_contact_m=flank_len)
 
 
 def _reference_shear_flow_stress(work: WorkMaterial, pmap: abi.ProcessMap, h_min_m: float, state: SlowState) -> float:

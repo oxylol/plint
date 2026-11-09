@@ -210,3 +210,78 @@ def test_default_mechanics_response_calibrates_a_steel():
     assert abs(cal.report["residual_rel"][0]) < 1e-9 and abs(cal.report["residual_rel"][1]) < 1e-9
     assert abs(cal.report["residual_rel"][2]) < 0.10      # documented bound for the default response
     assert 2e3 < cal.B_K < 1e5
+
+
+def test_the_life_integral_is_split_at_the_lands_kinks():
+    """The rate varies by orders of magnitude over the land and has kinks (the plastic land's VB*: the mean land
+    stress grows from a third of sigma_0 beyond it; the hone radius; the coating breakthrough). The composite rule
+    (split there and into calib_pieces intervals) gives the converged integral; one rule over a kinked land does not."""
+    from cnctwin.mechanics import params as MP
+
+    star = MP.number(MP.CONTACT, "flank_plastic_land_m")
+
+    class Kinked:
+        """Mean land stress as the worn-tool contact (a third of sigma_0 up to VB*, then rising), a flank that heats
+        with the land."""
+
+        cache_key = ("kinked", 1)
+
+        def response(self, slot, cond):
+            vb = cond.VB_m
+            factor = 1.0 / 3.0 if vb <= star else (vb - star + star / 3.0) / vb
+            temp = 900.0 + 2.0e6 * max(vb - star, 0.0)
+            sigma = 3.0e9 * factor
+            return CAL.Response(sigma * cond.speed_m_s, np.array([temp]), 0.0, np.array([temp]), np.array([1.0]),
+                                sigma, 0.0, 0.0)
+
+    model = Kinked()
+    vb_lim = 3.0 * star
+    A_, B_ = 1e-6, 2.0e4
+
+    def life(pieces, nodes=6):
+        ns = CAL._nodes(_response(model), 2.5, 0.0, vb_lim, GEO, None, NO_ABRASION, nodes, pieces)
+        return CAL.life_s(ns, A_ * math.exp(-B_ / 900.0), B_, 900.0, GEO.g_vb, None)
+
+    breaks, _ = CAL.land_breaks(0.0, vb_lim, GEO, None, 8)
+    assert star in breaks and GEO.edge_radius_m in breaks and max(np.diff(breaks)) <= vb_lim / 8 + 1e-15
+    converged = life(64, 8)
+    assert life(8) == pytest.approx(converged, rel=1e-6)
+    # without the split at VB* (a single 6-point rule over [0, 3 VB*]) the integral is off by more than 1 %
+    xs, ws = CAL._gauss(0.0, vb_lim, 6)
+    single = sum(w / (GEO.g_vb * A_ * math.exp(-B_ / model.response(0, CAL.Condition(2.5, 3e-4, 2e-3, x, 0.14, 0.17,
+                                                                                      8e-6)).flank_temp_K[0])
+                      * model.response(0, CAL.Condition(2.5, 3e-4, 2e-3, x, 0.14, 0.17, 8e-6)).flank_sv_Pa_m_s)
+                 for x, w in zip(xs, ws))
+    assert abs(single / converged - 1.0) > 0.01
+
+
+def test_the_calibrated_activation_follows_the_responses_temperature_slope():
+    """With a land-independent response whose flank temperature rises as T0 + s ln v, the Taylor calibration's B is
+    (1/n - 1) ln(v2/v1) / (1/T1 - 1/T2): the law's sensitivity to temperature is whatever reproduces the speed
+    exponent with the response's slope (docs/models/wear.md 3, coupling to the run's flank temperature)."""
+
+    class Sloped:
+        cache_key = ("sloped", 1)
+
+        def __init__(self, slope_K):
+            self.slope = slope_K
+
+        def temp(self, v):
+            return 900.0 + self.slope * math.log(v / 3.0)
+
+        def response(self, slot, cond):
+            t = np.array([self.temp(cond.speed_m_s)])
+            return CAL.Response(1.0e9 * cond.speed_m_s, t, 0.0, t, np.array([1.0]), 1.0e9, 0.0, 0.0)
+
+    entry = _entry()
+    v1, v2, _ = CAL.calibration_speeds(entry)
+    found = {}
+    for slope in (120.0, 40.0):
+        model = Sloped(slope)
+        cal = CAL.calibrate(entry, _response(model), GEO, None, NO_ABRASION, 0.0, 6, 8)
+        t1, t2 = model.temp(v1), model.temp(v2)
+        expected = (1.0 / entry.n - 1.0) * math.log(v2 / v1) / (1.0 / t1 - 1.0 / t2)
+        assert cal.B_K == pytest.approx(expected, rel=1e-6)
+        found[slope] = cal.B_K
+    # a response three times flatter in speed gives about three times the activation temperature
+    assert found[40.0] > 2.5 * found[120.0]

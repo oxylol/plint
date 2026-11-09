@@ -23,8 +23,16 @@ FIELDS: dict[str, tuple[str, str, float, float, float, str]] = {
     "edge_quadrature": ("edge_quadrature", "count", 3, 1, 16,
                         "Gauss points over the in-cut interval for the edge temperatures (ToolHeat.q_weights)"),
     "edge_every_n_macro": ("edge_every_n_macro", "count", 2, 1, 1000,
-                           "edge field re-evaluated every n macro steps (in between: last local rise on the current "
-                           "body temperature)"),
+                           "edge field re-evaluated every n macro steps when edge_interval_ms is 0 (in between: last "
+                           "local rise on the current body temperature)"),
+    "edge_interval_s": ("edge_interval_ms", "time", 0.02, 0.0, 10.0,
+                        "edge field re-evaluated at every multiple of this run time (the first macro step ending at or "
+                        "after it; in between: last local rise on the current body temperature), so the evaluations "
+                        "do not move with the macro step; 0: every edge_every_n_macro macro steps"),
+    "edge_window_periods": ("edge_window_periods", "number", 4.0, 1.0, 1000.0,
+                            "time constant of an edge element's running sums (tool heat, in-cut time, passes) in pass "
+                            "periods: the periodic edge solution's flux, heating time and period come from them, not "
+                            "from one macro step's counts"),
     "sa_direct_cycles": ("sa_direct_cycles", "count", 4, 2, 512,
                          "cycles summed term by term in the periodic edge solution (the rest as an integral)"),
     "window_points": ("window_points", "count", 3, 2, 32, "Gauss points of the tail windows of the edge solution"),
@@ -52,7 +60,11 @@ FIELDS: dict[str, tuple[str, str, float, float, float, str]] = {
                         "largest cell of the cutting-region mesh along the edge"),
     "tool_field_every_n_macro": ("tool_field_every_n_macro", "count", 10, 1, 1000,
                                  "tool ladders with a cutting-region field solved every n macro steps (heat "
-                                 "accumulated exactly in between)"),
+                                 "accumulated exactly in between) when tool_field_interval_ms is 0"),
+    "tool_field_interval_s": ("tool_field_interval_ms", "time", 0.1, 0.0, 100.0,
+                              "tool ladders with a cutting-region field solved at every multiple of this run time (the "
+                              "first macro step ending at or after it; heat accumulated exactly in between), so the "
+                              "solves do not move with the macro step; 0: every tool_field_every_n_macro macro steps"),
     "tool_field_length_m": ("tool_field_length_mm", "length", 0.012, 1.0e-3, 0.2,
                             "length of a rotating tool's field along its edge from the first element"),
     "tool_field_tol": ("tool_field_tol", "number", 1.0e-12, 1.0e-15, 1.0e-6,
@@ -72,6 +84,8 @@ class ThermalSettings:
     tool_cell_m: float = 1.0e-3
     edge_quadrature: int = 3
     edge_every_n_macro: int = 2
+    edge_interval_s: float = 0.02
+    edge_window_periods: float = 4.0
     sa_direct_cycles: int = 4
     window_points: int = 3
     jaeger_points: int = 24
@@ -86,6 +100,7 @@ class ThermalSettings:
     tool_field_sector_deg: float = 15.0
     tool_field_dy_m: float = 0.5e-3
     tool_field_every_n_macro: int = 10
+    tool_field_interval_s: float = 0.1
     tool_field_length_m: float = 0.012
     tool_field_tol: float = 1.0e-12
     tool_field_max_iter: int = 5000
@@ -107,6 +122,8 @@ def _lookup(section, name: str, file_key: str, kind: str):
             continue
         number = float(value)
         if key == file_key and file_key.endswith("_mm") and kind == "length":
+            number *= 1e-3
+        if key == file_key and file_key.endswith("_ms") and kind == "time":
             number *= 1e-3
         return number
     return None

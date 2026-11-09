@@ -127,6 +127,63 @@ def indentation_forces(h_m: float, edge_radius_m: float, h_min_m: float, rake_ra
     return out
 
 
+def stagnation_arc_length(edge_radius_m, depth_m, rake_rad=0.0):
+    """Contact length (per unit edge length, in the normal plane) of the material pressed under a rounded edge from
+    its lowest point up to the depth ``depth_m`` (min(h, h_min): the arc below the stagnation point, continued along
+    the rake face beyond its tangency at height r (1 + sin rake)): the PL_CONTACT of kernels.edge_contact_forces at
+    depth = stagnation height, in closed form. Works element-wise (the thermal domain uses it per edge element, so the
+    flank heat is deposited over the contact the partition was computed for)."""
+    r = np.maximum(np.asarray(edge_radius_m, dtype=float), 0.0)
+    d = np.maximum(np.asarray(depth_m, dtype=float), 0.0)
+    rake = np.asarray(rake_rad, dtype=float)
+    y_r = r * (1.0 + np.sin(rake))                       # height of the rake-face tangency above the lowest point
+    safe_r = np.where(r > 0.0, r, 1.0)
+    arc = r * np.arccos(np.clip(1.0 - d / safe_r, -1.0, 1.0))
+    face = r * (0.5 * math.pi + rake) + (d - y_r) / np.cos(rake)
+    out = np.where(d > 0.0, np.where(d < y_r, arc, face), 0.0)
+    return float(out) if np.ndim(out) == 0 else out
+
+
+def contact_power_parts(h_m: float, edge_radius_m: float, h_min_m: float, rake_rad: float, incl_rad: float,
+                        k_ref_Pa: float, mu: float, *, indentation: bool = False) -> tuple[float, float, float]:
+    """(pressure part, friction part, contact length) of the tangential force per unit edge length of the material
+    pressed under the edge at uncut thickness h: the edge contact at depth h_min (h >= h_min), the ploughing contact
+    at depth h (h < h_min), or the indentation contact including the rake face (``indentation``).
+
+    The forces are linear in the contact pressure p and the friction stress tau, so F_t = F_t(p, 0) + F_t(0, tau).
+    Times the cutting speed V the two parts are where the power goes: the friction part is the friction dissipated
+    at the tool-work contact (the material slides along the arc at V cos w in the normal plane and V sin i along the
+    edge; the friction stress's power over the arc is exactly its share of F_t times V), the pressure part is the work
+    of the pressure on the material pressed under the edge, plastic work inside the work material (the slip-line field
+    of the ploughed layer, Waldorf, DeVor & Kapoor 1998; in a rigid-plastic field the work is dissipated in the
+    deforming material, Hill 1950)."""
+    p, tau = contact_stresses(k_ref_Pa, mu)
+    r = max(float(edge_radius_m), 0.0)
+    depth = float(h_m) if indentation else min(float(h_m), float(h_min_m))
+    if not depth > 0.0:
+        return 0.0, 0.0, 0.0
+    parts = []
+    for pp, tt in ((p, 0.0), (0.0, tau)):
+        out = np.zeros(abi.N_PL)
+        K.edge_contact_forces(depth, r, float(h_min_m), float(rake_rad), float(incl_rad), pp, tt, out)
+        parts.append(out)
+    length = float(parts[0][abi.PL_CONTACT])
+    p_face = wedge_pressure_factor(rake_rad) * k_ref_Pa
+    y_r = r * (1.0 - math.cos(0.5 * math.pi + float(rake_rad)))
+    if indentation and p_face < p and depth > y_r:
+        # indentation_forces: the rake face carries the wedge pressure instead of the edge pressure (linear in each)
+        tau_face = min(mu * p_face, k_ref_Pa) if mu > 0.0 else k_ref_Pa
+        for i, (pp, tt, pf, tf) in enumerate(((p, 0.0, p_face, 0.0), (0.0, tau, 0.0, tau_face))):
+            arc_p = np.zeros(abi.N_PL)
+            whole_f = np.zeros(abi.N_PL)
+            arc_f = np.zeros(abi.N_PL)
+            K.edge_contact_forces(y_r, r, float(h_min_m), float(rake_rad), float(incl_rad), pp, tt, arc_p)
+            K.edge_contact_forces(depth, r, float(h_min_m), float(rake_rad), float(incl_rad), pf, tf, whole_f)
+            K.edge_contact_forces(y_r, r, float(h_min_m), float(rake_rad), float(incl_rad), pf, tf, arc_f)
+            parts[i][abi.PL_FT] = arc_p[abi.PL_FT] + whole_f[abi.PL_FT] - arc_f[abi.PL_FT]
+    return float(parts[0][abi.PL_FT]), float(parts[1][abi.PL_FT]), length
+
+
 def interference_area(h_m: float, edge_radius_m: float, rake_rad: float = 0.0) -> float:
     """Cross-section area (m2 per m of edge) between the uncut surface at depth h and the edge."""
     out = np.zeros(abi.N_PL)
@@ -216,7 +273,7 @@ def min_shear_speed() -> float:
 
 
 __all__ = ["min_chip_thickness", "contact_stresses", "edge_forces", "ploughing_forces", "indentation_forces",
-           "wedge_pressure_factor",
+           "wedge_pressure_factor", "stagnation_arc_length", "contact_power_parts",
            "interference_area", "indentation_coefficient", "ploughing_shape", "flank_stresses",
            "flank_reference_stresses", "shear_angle_merchant", "shear_angle_lee_shaffer", "merchant_forces",
            "uses_indentation", "min_shear_speed", "pressure_factor"]

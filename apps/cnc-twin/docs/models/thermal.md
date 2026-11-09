@@ -37,7 +37,16 @@ and chip thickness the fractions `f_sc` (shear -> chip), `f_rt` (rake -> tool), 
     work = sum_e Qs_e (1 - f_sc) + (Qf_e + Qp_e)(1 - f_ft)
 
 * **Ploughing** (rubbing below h_min, edge forces) happens at the edge-flank contact and takes the
-  flank fraction.
+  flank fraction. `f_ft` is the share of the flank contact's whole heat that enters the tool: the friction on the
+  wear land and on the edge arc below the stagnation point and the plastic work of the material pressed under the
+  edge, from Blok's equal mean temperatures with the plastic work as a heat source inside the work
+  (docs/models/mechanics.md 6). Thermal deposits the tool's part over the contact the share was computed for, per
+  element `l_f = VB + r arccos(1 - d / r)` with `d = min(h, h_min of the element's group)` (the arc below the
+  stagnation point, `mechanics.contact.stagnation_arc_length`, continued along the rake face beyond its tangency;
+  `ContactHeat.flank_length_m`). Until 2026-11-09 mechanics computed the share for the land friction alone and
+  thermal applied it to the whole edge power over `VB + 1.0 r_e`: the flank contact came out about twice Blok's
+  value and rose when the tool was cooled (the friction share grows as the tool cools). Without a table the
+  literature fallback keeps `VB + flank_contact_edge_factor r_e`.
 * **Element shares** of a zone (`Q*_e`) follow the per-element integrals of the step: shear ~
   `int_h_dt * db * r` (removed volume x speed; r the element's radius from the tool axis for a rotating tool,
   1 for a turning tool, whose cutting speed is the work's surface speed along the whole edge to within ap / r and
@@ -123,18 +132,38 @@ Tables of `log10 Phi` on 24 points/decade in Fo (1e-8..1e8) and 32/decade in m (
 `Phi_m,inf(1) = 0.9464`.
 
 Contact sizes: `l_c = h * zeta^n` (Poletika, n = 1.5; zeta = 1 / chip_ratio or the compression
-ratio, clipped to `max_contact_ratio`, at least the edge radius), `l_f = VB + edge_radius`
-(VB from wear). Fluxes while in cut: `q_r = Q_rake,tool / (l_c db t_in)`, `q_f = Q_flank,tool / (l_f db t_in)`.
+ratio, clipped to `max_contact_ratio`, at least the edge radius), `l_f` the flank contact of the partition
+(section 1: the wear land plus the edge arc below the stagnation point; `VB + flank_contact_edge_factor r_e`
+without a table).
 
-Interrupted elements (entries >= 1, in-cut time < step): heating `t_h = t_in / n_entries` every
-period `T = dt / n_entries`; with `N` cycles since the element entered continuous engagement the
-rise at phase `tau` of the current cycle is the superposition
+**Heat history in run time (2026-11-09).** An element's periodic heating is reconstructed from its own history, not
+from the counts of one macro step. It is engaged from its first pass until it misses one (no in-cut time for longer
+than one period after the step that held its last pass); while engaged it keeps running sums of its steps - tool
+heat (rake, flank), in-cut time, passes, heat-weighted contact sizes - that forget with the time constant
+`edge_window_periods` (4) periods in run time. From them: the fluxes while in cut `q_r = sum Q_rake,tool / (l_c db
+sum t_in)` and `q_f` likewise, the heating time per pass `t_h = sum t_in / sum passes` (for a rotating tool over the
+teeth at the element's position along the edge, which pass the same arc: a pass across a step boundary has its entry
+in one step and part of its in-cut time in the next, and the teeth's boundary passes fall in different steps), the
+period `T = 2 pi / |omega|` for a rotating tool (each element passes the cut once per revolution) and the mean time
+between passes otherwise, and `N` = passes since the engagement began. Interrupted: at least two passes; continuous: one entry, in cut since.
+The rise at phase `tau` of the current cycle is the superposition
 
     theta(tau) = q sum_{n=0}^{N-1} [F(tau + nT) - F(tau + nT - t_h)]
 
 the first `sa_direct_cycles` (4) term by term, the rest by the midpoint integral
 `(W(t_hi) - W(t_lo)) / T` with `W(t) = int_{t-t_h}^t F` (Gauss-Legendre, `window_points`).
-Continuous elements (turning, slotting): `theta = q F(t_eng)`. From the semi-infinite field the
+Continuous elements (turning, slotting): `theta = q F(t_eng)`, t_eng the contact time. Until 2026-11-09 the inputs
+were the step's: `T = dt / n_entries`, `t_h = t_in / n_entries`, and an element whose step held no pass restarted
+its cycle count and published its body temperature (or, with the field, the cycle mean) as its entry temperature:
+with a 10 000 rpm end mill (a 6 ms revolution) the period came out 5 ms at 5 ms steps, 5 or 10 ms at 10 ms and 5 or
+6.7 ms at 20 ms, about one 5 ms step in six held no pass of an element, and the rake temperature at the entry
+alternated from step to step (+-50 K at 5 ms; docs/convergence.md 5 and 9 item 8). A step without a pass now leaves
+the element's engagement and its inputs unchanged (test `test_edge_history.py`: the entry and in-cut rises at 5, 10
+and 20 ms agree within 2 %, with and without the cutting-region field). On that test's interrupted cut (a 6 ms
+revolution, 0.43 ms passes) the entry rise at 5, 10 and 20 ms steps is 1.09, 1.09, 1.09 K with every tooth alike
+(the former reconstruction: 1.04, 1.45, 1.45 K, the teeth 0 to 1.45 K, alternating by 1.1 K from step to step at
+5 ms), with the cutting-region field 5.24, 5.25, 5.24 K (formerly, with its cadence of 10 macro steps, 7.3, 8.2,
+7.6 K, the teeth -2.4 to 8.2 K, alternating by 7 K at 5 ms). From the semi-infinite field the
 part that the 1-D body already holds is removed: the far field of the point source at the edge of
 a quarter space `P / (pi k r)` at the body radius `r_far = max(far_field_radius_ratio * r_e,
 2 max(l_c, l_f, db))`, times the duty and `erfc(r_far / 2 sqrt(alpha t))`. The real wedge angle
@@ -165,13 +194,24 @@ alternated by 20-37 K from one macro step to the next (loop.coupling_lag, cuttin
 entry temperature is the background the partition expects; it changes with the accumulated heat (the residual of
 earlier cycles, the body), a fraction of the in-cut rise, so the staggered loop gain falls well below the
 alternation limit. `flank_entry_K` is the flank's equivalent for mechanics' flank partition (cutting's row
-state reads `flank_temp_q_K` today: docs/models/loop.md 15); wear and coolant read the in-cut temperatures
-(`flank_temp_q_K`, `rake_contact_mean_K`). With the cutting-region field the entry values of its elements are
+state reads it, and `flank_temp_q_K` only from a record without it: docs/models/loop.md 15); wear and coolant read
+the in-cut temperatures (`flank_temp_q_K`, `rake_contact_mean_K`). A coefficient row stands for a whole edge group
+(the peripheral edge of a helical end mill: the whole flute) while a pass engages a few of its elements: since
+2026-11-09 cutting's row state takes the members' temperatures (and VB and BUE height) weighted by the in-cut time of
+the step at their position along the edge, summed over the teeth (cnctwin/cutting/domain.py `_row_state`; the plain
+mean over the members when none cut; summed over the teeth so that the weights do not follow how many passes of each
+tooth a step held). The plain mean was dominated by the idle members: in a 1 mm deep side step about 2 of 44
+elements per tooth cut, so the rows saw the body temperature and a twentieth of the contact's rise. The contact time
+of one engagement that mechanics' transient cap reads is, for a rotating tool, removal's engaged arc over the
+spindle speed (the step's in-cut time over its entries moved by up to a third at 5 ms steps with the passes that
+cross the step's ends). With the cutting-region field the entry values of its elements are
 the field's cycle-mean strip temperatures plus the edge kernel's deviation at the entry (`EDGE_OUT_DEVIATION`:
 `rake_entry` / `flank_entry` of the kernel).
-`edge_every_n_macro` (default 2): between evaluations the last local rise is kept on top of the
-current body temperature for elements still in cut (the field is quasi-steady on the scale of a
-macro step; the counters N and t_eng advance every step).
+`edge_interval_ms` (default 20): the edge field is evaluated at the first macro step ending at or after every
+multiple of it in run time (the same instants whatever the macro step); between evaluations the last local rise is
+kept on top of the current body temperature for the engaged elements (the field is quasi-steady on the scale of a
+macro step; the running sums and N advance every step). `edge_interval_ms: 0` restores the former cadence of every
+`edge_every_n_macro` (2) macro steps.
 
 ### 2.3 Validity and error
 
@@ -179,7 +219,9 @@ macro step; the counters N and t_eng advance every step).
 * Local field established within `l^2 / alpha` (1-4 ms for carbide at l = 0.1-0.3 mm): the
   quasi-periodic field is accurate after the first macro step of an engagement; for HSS and large
   contacts (l^2/alpha up to ~40 ms) the first steps of an engagement are overestimated. An element
-  out of cut for one macro step restarts its cycle count (cooling over l^2/alpha assumed complete).
+  that misses a pass (no in-cut time for more than one period) restarts its cycle count and running sums
+  (cooling over l^2/alpha assumed complete); the running sums lag a change of the cut by about
+  `edge_window_periods` periods (24 ms at 10 000 rpm).
 * Convection at the edge itself is neglected (`h sqrt(alpha T)/k < 0.05` for h < 1e4 W/m2K);
   coolant acts on the body.
 * Table interpolation error < 2e-4 relative (test against adaptive quadrature); superposition tail
@@ -264,10 +306,15 @@ by banded Cholesky every step; the start is the previous increment when it beats
 first and needed ~3.5x the iterations on the graded mesh. Fixed operation order: deterministic; the
 previous increment is checkpointed with the state.
 
-**Cadence.** In a run the field and the ladder are solved every `tool_field_every_n_macro` (10) macro
-steps over the accumulated time; the heat of the steps in between is accumulated per element exactly
+**Cadence.** In a run the field and the ladder are solved at the first macro step ending at or after every multiple
+of `tool_field_interval_ms` (100 ms) in run time, over the accumulated time (`tool_field_interval_ms: 0`: every
+`tool_field_every_n_macro` (10) macro steps, the former cadence, which put the solves 50, 100 or 200 ms apart at 5,
+10 or 20 ms steps); the heat of the steps in between is accumulated per element exactly
 (energy and heat-weighted contact sizes) and mapped once per solve; idle steps, operation ends and
-`finalize` solve what is pending. The near-edge field is quasi-steady on this scale (l^2 / alpha = 1-10 ms)
+`finalize` solve what is pending. The teeth's split of the representative tooth's rise uses their running sums'
+heat per unit in-cut time (the teeth at one position along the edge pass the same arc; a step shorter than a
+revolution holds the passes of some teeth only, and a pass across a step boundary has its entry in one step and part
+of its heat in the next, so neither the step's heat nor the heat per entry is a steady split). The near-edge field is quasi-steady on this scale (l^2 / alpha = 1-10 ms)
 and the insert body's time constant is ~1 s; a new engagement reaches the edge temperatures within one
 interval.
 
@@ -406,8 +453,28 @@ Backward Euler, ledger `fixture.<w>`; its table loss is given to the structure b
   `L_s = VB + r_edge + h / tan(phi)` (flank contact plus shear-plane footprint; phi from the
   coefficient tables or 30 deg), width b (engaged edge length), moving at the cutting speed for
   the passage duration; its energy is part of theta_feed, so its cell mean is not subtracted.
-* Preheat (material entering the cut) = `T_FV` one feed half length plus one cell ahead + the
-  feed source's rise at its leading edge.
+* **Preheat** (material entering the cut, what cutting's coefficients read as the work temperature; 2026-11-09):
+  the temperature at the leading edge of the feed source from two scales that each converge,
+
+      T_pre = T_FV(x_D) + theta_pend(x_D) - theta_eng(x_D) + theta_eng(lead)
+
+  `theta_eng`: the feed source on since the contact's engagement began, carrying the contact's work-bound heat rate
+  averaged over `edge_window_periods` revolutions (a step holds a whole number of passes only on average: 3 or 4 of a
+  4-flute tool at 10 000 rpm in a 5 ms step; its half length and width are heat-weighted running means of removal's
+  contact geometry, which moves with the passes a step held, and where removal gives a step no contact point (a zero
+  point) the tool tip plus the last offset of the point from it stands in), `theta_pend`: the same over the heat not yet
+  in the finite volumes (since their last step); `x_D` lies one tool diameter (insert inscribed circle for turning)
+  beyond the leading edge along the feed, in the material the tool reaches next, where the grid resolves the field:
+  `T_FV(x_D)` is interpolated between cell centres with trilinear weights times the material fractions
+  (`WorkThermal.temperature_at`; the point moves back toward the leading edge cell by cell while it is outside the
+  material). The source's own near field, which no cell can hold, is taken off there and put back analytically at
+  the leading edge. The former definition, `T_FV` of the cell one feed half length plus one cell ahead plus the
+  source's rise over the window since the last finite-volume step, sat inside that near field: its cell value
+  doubled with each halving of the cell (docs/convergence.md 6) and its window moved with the cadence. Test
+  `test_preheat.py`: a 15 W band at 20 mm/s on aluminium, 14.08-14.10 K at cells of 4, 2, 1 and 0.5 mm (the
+  former cell ahead 1.5, 3.6, 4.6, 6.2 K). Error: the band is the half-space solution (at a convex edge of the part,
+  a side step at the top of a wall, the near field is up to twice that); grid-independent once the cell is below
+  about a third of the tool diameter.
 
 Validity: half-space approximation of the part near the contact (error grows when sqrt(alpha t)
 of the window approaches the distance to other free surfaces: < 1 mm for steel at 50 ms, 1.9 mm
@@ -589,18 +656,20 @@ holder heat, losses to air, structure, jacket).
 ## 7. Settings (`physics.thermal`, `schema.py`)
 
 `every_n_macro` 5, `cell_mm` 2, `tool_cell_mm` 1, `edge_quadrature` 3, `edge_every_n_macro` 2,
+`edge_interval_ms` 20 (0: every `edge_every_n_macro` steps), `edge_window_periods` 4,
 `sa_direct_cycles` 4, `window_points` 3, `jaeger_points` 24, `min_fraction` 1e-9,
 `deposit_search_cells` 3, `cooldown_steps` 24, `idle_tool_steps` 8, `energy_tol` 1e-9; cutting-region
 field (2.4): `tool_field` 1, `tool_field_ring_mm` 0.002, `tool_field_growth` 1.4, `tool_field_sector_deg`
-15, `tool_field_dy_mm` 0.5, `tool_field_length_mm` 12, `tool_field_every_n_macro` 10, `tool_field_tol`
-1e-12, `tool_field_max_iter` 5000; `spindle_every_n_macro` 10 (spindle networks, 4.1).
+15, `tool_field_dy_mm` 0.5, `tool_field_length_mm` 12, `tool_field_every_n_macro` 10, `tool_field_interval_ms` 100
+(0: every `tool_field_every_n_macro` steps), `tool_field_tol` 1e-12, `tool_field_max_iter` 5000;
+`spindle_every_n_macro` 10 (spindle networks, 4.1).
 
 ## 8. Cost (measured, one core of the i5-4690, bin/tsafe)
 
 | part | cost |
 |---|---|
 | workpiece finite-volume step | 150-225 ns per material cell (5.5 ms for 26k cells; 14 ms for 63k; 74 ms for 490k) |
-| edge kernel | 9 us per in-cut element and evaluation (every `edge_every_n_macro` steps) |
+| edge kernel | 9 us per in-cut element and evaluation (every `edge_interval_ms` of run time); the elements' running sums cost a few array operations per step |
 | domain macro step, one cutting tool (40 in-cut elements), small part | 1.9 ms (Python plumbing dominates) |
 | cutting-region field, 12.7 x 4.76 mm insert (4.1k cells) | 5.5 / 8.6 / 10 / 12.6 ms per solve at 10 / 50 / 100 / 250 ms steps (10-32 iterations) |
 | cutting-region field, D10 4-flute end mill (1.1k cells) | domain macro step 1.70 -> 2.05 ms (mean, solve every 10 steps) |
@@ -609,7 +678,7 @@ field (2.4): `tool_field` 1, `tool_field_ring_mm` 0.002, `tool_field_growth` 1.4
 
 Per simulated second at 10 ms macro steps: tool, machine and contact work ~0.19 s, plus the
 finite volumes `cells x 190 ns / (every_n_macro x 10 ms)`, plus the cutting-region field: ~0.1 s per
-turning tool, ~0.035 s per solid tool in cut (at `tool_field_every_n_macro` 10; set 0 in
+turning tool, ~0.035 s per solid tool in cut (at `tool_field_interval_ms` 100; set 0 in
 `tool_field` to drop it). For the reference part (300 x 200 x
 100 mm, ~490k material cells at 2 mm) choose `cell_mm: 4` (63k cells: 0.28 s/s at every 5) or
 `every_n_macro: 20` (0.37 s/s at 2 mm): the two-scale contact temperature covers the sub-cell

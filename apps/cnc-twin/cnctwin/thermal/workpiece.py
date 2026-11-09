@@ -351,6 +351,34 @@ class WorkThermal:
     def cell_temp(self, cell) -> float:
         return float(self.grid.T[cell]) if cell is not None else float("nan")
 
+    def temperature_at(self, point_S: np.ndarray) -> float:
+        """Temperature at a point from the cell-centre values around it: trilinear weights times the material
+        fraction of each of the eight cells (empty cells and cells outside the grid take no weight); NaN when none of
+        them holds material. A point value that converges as the cell shrinks (a cell's own value is its mean over
+        the cell)."""
+        g = self.grid
+        cell = float(g.geom[3])
+        u = (np.asarray(point_S, dtype=float) - g.geom[:3]) / cell - 0.5
+        i0 = np.floor(u).astype(int)
+        frac = u - i0
+        fmin = self.settings.min_fraction
+        num = 0.0
+        den = 0.0
+        for dx in (0, 1):
+            for dy in (0, 1):
+                for dz in (0, 1):
+                    idx = (int(i0[0] + dx), int(i0[1] + dy), int(i0[2] + dz))
+                    if not all(0 <= idx[a] < self.shape[a] for a in range(3)):
+                        continue
+                    fill = float(g.f[idx])
+                    if fill <= fmin or not np.isfinite(g.T[idx]):
+                        continue
+                    w = (frac[0] if dx else 1.0 - frac[0]) * (frac[1] if dy else 1.0 - frac[1]) * \
+                        (frac[2] if dz else 1.0 - frac[2]) * fill
+                    num += w * float(g.T[idx])
+                    den += w
+        return num / den if den > 0.0 else float("nan")
+
     def bulk(self) -> tuple[float, float]:
         """(mass-weighted mean, max) temperature of the material (K)."""
         out = np.zeros(4)
@@ -364,7 +392,8 @@ class WorkThermal:
     # ------------------------------------------------------------------ two-scale local temperature
     def contact_surface(self, src: "ContactSource", fv_step_now: bool) -> ContactSurface:
         """T_local = T_FV(cell) + [theta_feed - <theta_feed>_cell] + theta_flash at the trailing edge of
-        the contact on the generated surface; preheat at its leading edge (docs/models/thermal.md)."""
+        the contact on the generated surface; preheat at its leading edge (:meth:`_preheat`, docs/models/thermal.md
+        3.3)."""
         settings = self.settings
         glx, glw = gauss_legendre(settings.jaeger_points)
         cell = self.cell_of(src.point_S_m)
@@ -376,14 +405,12 @@ class WorkThermal:
         cp = float(K.prop_interp(mat.T_K, mat.cp_J_kgK, t_bg))
         alpha = k / (mat.rho_kg_m3[0] * cp)
         feed = 0.0
-        lead = 0.0
         if src.power_W > 0.0 and src.feed_half_length_m > 0.0 and src.width_m > 0.0 and src.window_s > 0.0:
             q = src.power_W / (4.0 * src.feed_half_length_m * 0.5 * src.width_m)
             l = src.feed_half_length_m
             w = 0.5 * src.width_m
             feed = max(float(K.moving_rect_rise(q, l, w, src.feed_speed_m_s, k, alpha, src.window_s, x * l, 0.0, 0.0,
                                                 glx, glw)) for x in BAND_SAMPLES)
-            lead = float(K.moving_rect_rise(q, l, w, src.feed_speed_m_s, k, alpha, src.window_s, l, 0.0, 0.0, glx, glw))
         flash = 0.0
         if src.flash_flux_W_m2 > 0.0 and src.flash_half_length_m > 0.0 and src.flash_speed_m_s > 0.0:
             lf = src.flash_half_length_m
@@ -395,13 +422,54 @@ class WorkThermal:
             cap = mat.rho_kg_m3[0] * self.grid.geom[3] ** 3 * float(self.grid.f[cell]) * cp
             cell_mean = src.energy_in_cell_J(self.grid.geom[3]) / cap if cap > 0.0 else 0.0
             cell_mean = min(cell_mean, feed)
-        ahead_cell = self.cell_of(src.point_S_m + src.feed_dir_S * (src.feed_half_length_m + self.grid.geom[3]))
-        t_ahead = self.cell_temp(ahead_cell)
-        if not np.isfinite(t_ahead):
-            t_ahead = t_bg
-        preheat = t_ahead + lead - (cell_mean if ahead_cell == cell else 0.0)
+        preheat = self._preheat(src, t_bg, k, alpha, glx, glw)
         surface = t_bg + feed - cell_mean + flash
         return ContactSurface(surface, preheat, t_bg, feed, flash, cell_mean, np.asarray(src.point_S_m, dtype=float))
+
+    def _preheat(self, src: "ContactSource", t_bg: float, k: float, alpha: float, glx, glw) -> float:
+        """Temperature of the material entering the cut, at the leading edge of the contact's feed source
+        (docs/models/thermal.md 3.3), from two scales that each converge:
+
+            T_pre = T_FV(x_D) + theta_pend(x_D) - theta_eng(x_D) + theta_eng(lead)
+
+        theta_eng: the contact's work-bound heat as the moving band of the two-scale model (Jaeger 1942), on since the
+        engagement began; theta_pend: the same band over the heat not yet in the finite volumes (since their last
+        step). x_D lies ``ahead_m`` (the tool's diameter or insert size) beyond the leading edge along the feed, in
+        the material the tool reaches next: there the grid resolves the field (a point value interpolated between
+        cell centres, :meth:`temperature_at`), and the band's own near field, which no cell can hold, is taken off
+        and put back analytically at the leading edge. The cell one feed half length plus one cell ahead (the former
+        definition) sat inside that near field, so its value doubled with every halving of the cell."""
+        lead = 0.0
+        ahead = max(src.ahead_m, 0.0)
+        t_eng = max(src.engaged_s, src.window_s, 0.0)
+        l = src.band_half_length_m if src.band_half_length_m > 0.0 else src.feed_half_length_m
+        w = 0.5 * (src.band_width_m if src.band_width_m > 0.0 else src.width_m)
+        power = src.band_power_W if src.band_power_W > 0.0 else src.power_W
+        point = np.asarray(src.band_point_S_m if src.band_point_S_m is not None else src.point_S_m, dtype=float)
+        q = power / (4.0 * l * w) if power > 0.0 and l > 0.0 and w > 0.0 else 0.0
+        direction = np.asarray(src.feed_dir_S, dtype=float)
+        norm = float(np.linalg.norm(direction))
+        direction = direction / norm if norm > 0.0 else np.array([1.0, 0.0, 0.0])
+        cell = float(self.grid.geom[3])
+        # the background point: x_D, else back toward the leading edge cell by cell until it holds material
+        t_far = float("nan")
+        dist = l + ahead
+        while dist >= l - 1e-15:
+            t_far = self.temperature_at(point + direction * dist)
+            if np.isfinite(t_far):
+                break
+            dist -= cell
+        if not np.isfinite(t_far):
+            t_far = t_bg
+            dist = l
+        if q > 0.0 and t_eng > 0.0:
+            v = src.feed_speed_m_s
+            lead = float(K.moving_rect_rise(q, l, w, v, k, alpha, t_eng, l, 0.0, 0.0, glx, glw))
+            far_eng = float(K.moving_rect_rise(q, l, w, v, k, alpha, t_eng, dist, 0.0, 0.0, glx, glw))
+            far_pend = float(K.moving_rect_rise(q, l, w, v, k, alpha, src.pending_s, dist, 0.0, 0.0, glx, glw)) \
+                if src.pending_s > 0.0 else 0.0
+            lead += far_pend - far_eng
+        return t_far + lead
 
     # ------------------------------------------------------------------ checkpoint
     def to_arrays(self, prefix: str) -> tuple[dict, dict]:
@@ -495,6 +563,13 @@ class ContactSource:
     flash_half_length_m: float     # half of (shear-plane footprint + flank contact)
     flash_speed_m_s: float         # cutting speed
     flash_duration_s: float        # duration of one passage
+    engaged_s: float = 0.0         # time since the contact's engagement began (the preheat's band)
+    band_power_W: float = 0.0      # the preheat band's heat rate (a running mean over revolutions; 0: power_W)
+    band_half_length_m: float = 0.0    # its half length along the feed (running mean; 0: feed_half_length_m)
+    band_width_m: float = 0.0          # its width (running mean; 0: width_m)
+    band_point_S_m: np.ndarray | None = None    # its contact point where removal gave none (None: point_S_m)
+    pending_s: float = 0.0         # time since the heat was last put into the finite volumes (0 at their step)
+    ahead_m: float = 0.0           # distance beyond the leading edge where the preheat's background is read
 
     def energy_in_cell_J(self, cell_m: float) -> float:
         """Energy of the feed source deposited inside the contact's cell during the window: the part of

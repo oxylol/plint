@@ -45,6 +45,7 @@ class ThermalState:
     published: dict = field(default_factory=dict)       # workpiece -> published temperature grid
     macro_since_fv: int = 0
     engaged_s: dict = field(default_factory=dict)       # contact -> continuous engagement (s)
+    band_power: dict = field(default_factory=dict)      # contact -> running sums of the preheat band (domain._band)
     last_axis_m: dict = field(default_factory=dict)     # axis -> last actual position (SI)
     unload: list = field(default_factory=list)          # operation ends: {op, workpiece, mean_K, max_K, time_s}
     totals: dict = field(default_factory=dict)          # cumulative J by destination
@@ -74,6 +75,7 @@ class ThermalState:
                       "structure": self.structure.to_dict(), "time_s": self.time_s,
                       "macro_since_fv": self.macro_since_fv,
                       "engaged_s": [[int(k), _f(v)] for k, v in sorted(self.engaged_s.items())],
+                      "band_power": [[int(k)] + [_f(x) for x in v] for k, v in sorted(self.band_power.items())],
                       "last_axis_m": [[str(k), _f(v)] for k, v in sorted(self.last_axis_m.items())],
                       "unload": list(self.unload), "totals": {k: _f(v) for k, v in sorted(self.totals.items())},
                       "maxima": {k: _f(v) for k, v in sorted(self.maxima.items())},
@@ -98,6 +100,7 @@ class ThermalState:
         for slot, table in sorted(self.fractions.items()):
             for name in _FRACTION_ARRAYS:
                 arrays[f"frac.{slot}.{name}"] = np.array(getattr(table, name))
+            arrays[f"frac.{slot}.h_min_m"] = np.array(table.h_min_m)
             meta["fractions"].append([int(slot), int(table.version)])
         for w, grid in sorted(self.published.items()):
             arrays[f"pub.{w}"] = np.array(grid)
@@ -113,6 +116,7 @@ class ThermalState:
                   structure=StructureThermal.from_dict(meta["structure"]), time_s=float(meta["time_s"]))
         obj.macro_since_fv = int(meta["macro_since_fv"])
         obj.engaged_s = {int(k): float(v) for k, v in meta["engaged_s"]}
+        obj.band_power = {int(row[0]): [float(x) for x in row[1:]] for row in meta.get("band_power", [])}
         obj.last_axis_m = {str(k): float(v) for k, v in meta["last_axis_m"]}
         obj.unload = list(meta["unload"])
         obj.totals = {k: float(v) for k, v in meta["totals"].items()}
@@ -130,7 +134,8 @@ class ThermalState:
             obj.works[w] = WorkThermal.from_arrays(arrays, m, f"work.{w}.", None, settings)
         for slot, version in meta["fractions"]:
             values = [np.ascontiguousarray(arrays[f"frac.{slot}.{name}"]).copy() for name in _FRACTION_ARRAYS]
-            obj.fractions[int(slot)] = FractionTable(*values, version=int(version))
+            h_min = np.array(arrays[f"frac.{slot}.h_min_m"]) if f"frac.{slot}.h_min_m" in arrays else np.zeros(0)
+            obj.fractions[int(slot)] = FractionTable(*values, version=int(version), h_min_m=h_min)
         for w in meta["published"]:
             obj.published[int(w)] = np.array(arrays[f"pub.{w}"])
         obj.spindles = {d["sid"]: SpindleThermal.from_dict(d) for d in meta["spindles"]}

@@ -27,6 +27,9 @@ FIELDS: dict[str, tuple] = {
                            "peak stress exceeds this"),
     "calib_nodes": ("calib_nodes", "count", 6, 2, 64,
                     "Gauss-Legendre nodes per flank-land interval of the calibration's life integral"),
+    "calib_pieces": ("calib_pieces", "count", 8, 1, 256,
+                     "the calibration's life integral splits the flank land into intervals no longer than 1 / this of "
+                     "it (besides its kinks: coating breakthrough, hone radius, plastic land)"),
     "rate_window_s": ("rate_window_s", "time", 10.0, 1e-3, 1e6,
                       "time constant (cutting time) of the moving average of the wear rates behind the remaining-"
                       "life prediction"),
@@ -50,6 +53,7 @@ class WearSettings:
     strength: str = "median"
     breakage_risk_warn: float = 0.01
     calib_nodes: int = 6
+    calib_pieces: int = 8
     rate_window_s: float = 10.0
     chip_theta_nodes: int = 64
     skin_samples: int = 64

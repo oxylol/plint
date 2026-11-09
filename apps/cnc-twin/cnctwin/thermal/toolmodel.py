@@ -8,9 +8,11 @@ tools: insert and holder bar, seat contact, the clamped part of the bar to the t
 (backward Euler), banded, exactly conservative (kernels.ladder_step).
 
 Edge: temperature at the cutting edge, over the rake contact (l_c = h zeta^n) and over the flank
-contact (VB + edge radius) per element = body temperature at the element + the local field of
-the periodic heating per revolution (Stephenson & Ali 1992; kernels.edge_temperatures), at
-Gauss points of the in-cut interval (ToolHeat.q_weights) and the cycle amplitude.
+contact (the partition's: wear land + the edge arc below the stagnation point) per element = body temperature at the
+element + the local field of the periodic heating per revolution (Stephenson & Ali 1992; kernels.edge_temperatures),
+at Gauss points of the in-cut interval (ToolHeat.q_weights) and the cycle amplitude. The periodic heating (flux, pass
+time, period, cycles) comes from each element's heat history in run time (running sums of its passes, the period of a
+rotating tool's revolution), so it does not depend on the macro step.
 
 Cutting region (optional, :meth:`ToolThermal.enable_field`): a 3-D finite-volume field of the
 insert or of the tooth tip (toolfield.py), solved with the ladder as one system; the elements it
@@ -416,10 +418,28 @@ class ToolEnvironment:
     channel_h_W_m2K: float = 0.0           # through-tool channel wall
 
 
+# EdgeState.acc rows: running sums of an element's steps (exponential forgetting in run time, edge_window_periods)
+ACC_RAKE_J, ACC_FLANK_J, ACC_IN_CUT_S, ACC_ENTRIES, ACC_RAKE_LC, ACC_FLANK_LF, ACC_TIME_S = range(7)
+N_ACC = 7
+
+
 @dataclass
 class EdgeState:
-    n_cyc: np.ndarray                      # [nt, ne] cycles since entering continuous engagement
-    t_eng: np.ndarray                      # [nt, ne] continuous engagement time (s)
+    n_cyc: np.ndarray                      # [nt, ne] passes (entries) since the element's engagement began
+    t_eng: np.ndarray                      # [nt, ne] contact time of a continuous engagement (s)
+    last_in_s: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))   # [nt, ne] run time at the end of the
+    #                                        last step with in-cut time (-inf: never)
+    acc: np.ndarray = field(default_factory=lambda: np.zeros((N_ACC, 0, 0)))  # [N_ACC, nt, ne] running sums
+
+    def ensure(self, shape) -> None:
+        """Arrays of the EdgeModel's shape (a new or changed edge model starts every element afresh)."""
+        if self.n_cyc.shape != tuple(shape):
+            self.n_cyc = np.zeros(shape)
+            self.t_eng = np.zeros(shape)
+        if self.last_in_s.shape != tuple(shape):
+            self.last_in_s = np.full(shape, -np.inf)
+        if self.acc.shape != (N_ACC,) + tuple(shape):
+            self.acc = np.zeros((N_ACC,) + tuple(shape))
 
 
 class ToolThermal:
@@ -445,12 +465,15 @@ class ToolThermal:
         self.rise = None                   # last local edge rise (rake, peak, flank [nt, ne, nq], amp, rake and
         #                                    flank at the entry into the cut [nt, ne])
         self.edge_calls = 0
+        self.edge_next_s = 0.0             # run time of the next edge evaluation (physics.thermal.edge_interval_ms)
         self.field: ToolField | None = None   # 3-D cutting-region field (enable_field), solved with the ladder
         self.field_requested = False
         self.field_settings: dict = {}
         self.field_pending_dt = 0.0        # time accumulated since the last field solve
         self.field_pending_steps = 0
-        self.field_every_n = 1             # field solved on every n-th step
+        self.field_every_n = 1             # field solved on every n-th step (field_interval_s = 0)
+        self.field_interval_s = 0.0        # field solved at every multiple of this run time (> 0)
+        self.field_next_s = 0.0            # run time of the next solve (field_interval_s > 0)
         self.field_pend = None             # element heat accumulated since the last solve (_field_pending)
         self.field_means = None            # [3, nE] rake, flank, edge temperatures of the field's elements
         self.dev = None                    # last periodic deviation of the field's elements (rake, peak, flank,
@@ -558,8 +581,10 @@ class ToolThermal:
             self.ladder.src[idx] += energy_J / chosen.size
 
     def contact_sizes(self, edges: EdgeModel, heat, vb_m) -> tuple[np.ndarray, np.ndarray]:
-        """Rake contact length l_c = h zeta^n (at least the edge radius) and flank contact width
-        l_f = VB + factor x edge radius per element (docs/models/thermal.md 2.2)."""
+        """Rake contact length l_c = h zeta^n (at least the edge radius) and flank contact width per element: the
+        partition's flank contact (ContactHeat.flank_length_m: the wear land plus the edge arc below the stagnation
+        point, the contact the flank share was computed for), else VB + factor x edge radius (docs/models/thermal.md
+        2.2)."""
         p = _p()
         edge_r = np.asarray(edges.elem_edge_radius_m, dtype=float)
         shape = edge_r.shape
@@ -569,7 +594,11 @@ class ToolThermal:
             np.full(shape, p["default_compression_ratio"])
         contact_factor = np.minimum(np.maximum(zeta, 1.0) ** p["poletika_exponent"], p["max_contact_ratio"])
         l_c = np.maximum(h_mean * contact_factor, np.maximum(edge_r, 1e-6))
-        l_f = np.maximum(vb + p["flank_contact_edge_factor"] * edge_r, 1e-6)
+        flank = getattr(heat, "flank_length_m", None) if heat is not None else None
+        if flank is not None and np.shape(flank) == shape and np.any(np.asarray(flank) > 0.0):
+            l_f = np.maximum(np.asarray(flank, dtype=float), 1e-6)
+        else:
+            l_f = np.maximum(vb + p["flank_contact_edge_factor"] * edge_r, 1e-6)
         return l_c, l_f
 
     def deposit_elements(self, edges: EdgeModel, heat, vb_m=None) -> float:
@@ -629,9 +658,17 @@ class ToolThermal:
         if self.field is not None:
             self.field_pending_dt += float(dt_s)
             self.field_pending_steps += 1
-            if not force and self.field_pending_steps < self.field_every_n:
+            interval = self.field_interval_s
+            if interval > 0.0:
+                # at every multiple of the interval in run time: the same instants whatever the macro step
+                due = self.time_s + dt_s >= self.field_next_s - 1e-9 * interval
+            else:
+                due = self.field_pending_steps >= self.field_every_n
+            if not force and not due:
                 self.time_s += dt_s
                 return {"source_J": 0.0, "air_J": 0.0, "coolant_J": 0.0, "spindle_J": 0.0, "du_J": 0.0}
+            if interval > 0.0:
+                self.field_next_s = (math.floor((self.time_s + dt_s) / interval + 1e-9) + 1.0) * interval
             span = self.field_pending_dt
             self.field_pending_dt = 0.0
             self.field_pending_steps = 0
@@ -706,7 +743,8 @@ class ToolThermal:
         return ThermalSettings(**self.field_settings) if self.field_settings else ThermalSettings()
 
     def enable_field(self, settings=None, edges: EdgeModel | None = None, *, wedge_angle_rad: float | None = None,
-                     edge_radius_m: float | None = None, contact_edges_m=(), every_n_steps: int = 1) -> bool:
+                     edge_radius_m: float | None = None, contact_edges_m=(), every_n_steps: int = 1,
+                     interval_s: float = 0.0) -> bool:
         """Solve the 3-D cutting-region field (docs/models/thermal.md 2.4) with the ladder from now on.
 
         With an EdgeModel the field follows its edge (wedge angle, edge radius, the elements along the
@@ -714,8 +752,10 @@ class ToolThermal:
         or the tip (solid tools), fed by :meth:`deposit_contact` (``contact_edges_m``: positions along the
         edge where contacts start or end, kept as cell boundaries); without either it is built by the
         first deposit_contact that gives the wedge angle. ``every_n_steps``: field and ladder are solved on
-        every n-th call of :meth:`step` over the accumulated time (the domain's macro cadence). Returns
-        whether the field exists now."""
+        every n-th call of :meth:`step` over the accumulated time; ``interval_s`` > 0 instead: at the first call
+        ending at or after every multiple of it in run time (the domain's cadence, physics.thermal.
+        tool_field_interval_ms: the same solve instants whatever the macro step). Returns whether the field exists
+        now."""
         from .schema import ThermalSettings
         if self.field is not None:
             return True
@@ -723,6 +763,9 @@ class ToolThermal:
         self.field_requested = True
         self.field_settings = dict(st.__dict__)
         self.field_every_n = max(1, int(every_n_steps))
+        self.field_interval_s = max(float(interval_s), 0.0)
+        if self.field_interval_s > 0.0:
+            self.field_next_s = (math.floor(self.time_s / self.field_interval_s + 1e-9) + 1.0) * self.field_interval_s
         if edges is None and wedge_angle_rad is None:
             return False
         self._build_field(st, edges, wedge_angle_rad, edge_radius_m, contact_edges_m)
@@ -880,8 +923,13 @@ class ToolThermal:
         return float(np.sum(m * self.ladder.T[nodes]) / np.sum(m))
 
     def edge_heat(self, edges: EdgeModel | None, heat, in_cut_s: np.ndarray | None, entries: np.ndarray | None,
-                  vb_m: np.ndarray | None, dt_s: float, settings) -> ToolHeat:
-        """ToolHeat of the step: edge temperatures at the quadrature points, growths, temperatures."""
+                  vb_m: np.ndarray | None, dt_s: float, settings, omega_rad_s: float | None = None) -> ToolHeat:
+        """ToolHeat of the step: edge temperatures at the quadrature points, growths, temperatures.
+
+        Call after :meth:`step` of the same step (the tool's clock is then at the step's end). ``omega_rad_s``: the
+        spindle speed of the step (|omega|); a rotating tool's element passes the cut once per revolution, so the
+        period of its heating is 2 pi / |omega| (docs/models/thermal.md 2.2). Without it (turning tools, callers
+        without a spindle speed) the period is the element's mean time between passes."""
         xi, weights = heating_phase_nodes(settings.edge_quadrature)
         tool_len, holder_len = self.growths()
         body_mean = self.mean_temp(self.layout.stick_nodes if self.layout.stick_nodes.size else self.layout.tool_nodes)
@@ -893,8 +941,7 @@ class ToolThermal:
             return result
         z = np.asarray(edges.elem_z_m, dtype=float)
         shape = z.shape
-        if self.edge.n_cyc.shape != shape:
-            self.edge = EdgeState(np.zeros(shape), np.zeros(shape))
+        self.edge.ensure(shape)
         t_body = self.body_temp_at(z)
         inp = new_edge_input(shape, xi.size, EDGE_OUT_TEMPERATURE)
         inp.xi[:] = xi
@@ -909,17 +956,24 @@ class ToolThermal:
         if heat is not None and in_cut_s is not None and np.shape(in_cut_s) == shape:
             self._fill_edge_input(inp, edges, heat, np.asarray(in_cut_s, dtype=float),
                                   np.asarray(entries, dtype=float) if entries is not None and np.shape(entries) == shape
-                                  else np.zeros(shape), vb_m, dt_s)
+                                  else np.zeros(shape), vb_m, dt_s, omega_rad_s, settings)
         else:
-            self.edge.n_cyc[:] = 0.0
-            self.edge.t_eng[:] = 0.0
+            self._fill_edge_input(inp, edges, None, np.zeros(shape), np.zeros(shape), vb_m, dt_s, omega_rad_s,
+                                  settings)
         out = new_edge_output(shape, xi.size)
         field = self.field if (self.field is not None and self.field.elements is not None
                                and self.field.elements.in_field.shape == shape) else None
+        interval = float(getattr(settings, "edge_interval_s", 0.0) or 0.0)
+        if interval > 0.0:
+            # at every multiple of the interval in run time: the same instants whatever the macro step
+            due = self.time_s >= self.edge_next_s - 1e-9 * interval
+        else:
+            due = self.edge_calls % max(1, settings.edge_every_n_macro) == 0
         fresh = (self.rise is None or self.rise[0].shape != out.rake_q.shape
-                 or (field is not None and (self.dev is None or self.dev[0].shape != out.rake_q.shape))
-                 or self.edge_calls % max(1, settings.edge_every_n_macro) == 0)
+                 or (field is not None and (self.dev is None or self.dev[0].shape != out.rake_q.shape)) or due)
         self.edge_calls += 1
+        if fresh and interval > 0.0:
+            self.edge_next_s = (math.floor(self.time_s / interval + 1e-9) + 1.0) * interval
         cutting = (inp.mode != EDGE_NONE)[:, :, None]
         if fresh:
             glx, glw = gauss_legendre(settings.window_points)
@@ -987,9 +1041,21 @@ class ToolThermal:
         representative's times its heat ratio (linear superposition per element)."""
         el = field.elements
         shape = np.shape(edges.elem_z_m)
-        has_heat = heat is not None and np.shape(heat.tool_rake_elem_J) == shape
-        q = (np.asarray(heat.tool_rake_elem_J, dtype=float) + np.asarray(heat.tool_flank_elem_J, dtype=float)) \
-            if has_heat else np.zeros(shape)
+        if self.edge.acc.shape == (N_ACC,) + tuple(shape):
+            # the teeth's heat rates from their running sums: heat per unit in-cut time (the teeth at one position
+            # along the edge pass the same arc once per revolution, they differ in their chips). A step shorter than a
+            # revolution holds the passes of some teeth only, the running sums weight a tooth that just passed more than
+            # one that passed earlier, and a pass across a step boundary has its entry in one step and part of its heat
+            # in the next: the step's heat, the sums or the heat per entry would make the split follow the step.
+            acc = self.edge.acc
+            heat_sum = acc[ACC_RAKE_J] + acc[ACC_FLANK_J]
+            t_in = acc[ACC_IN_CUT_S]
+            with np.errstate(divide="ignore", invalid="ignore"):
+                q = np.where(t_in > 0.0, heat_sum / np.where(t_in > 0.0, t_in, 1.0), 0.0)
+        elif heat is not None and np.shape(heat.tool_rake_elem_J) == shape:
+            q = np.asarray(heat.tool_rake_elem_J, dtype=float) + np.asarray(heat.tool_flank_elem_J, dtype=float)
+        else:
+            q = np.zeros(shape)
         if self.field_means is None or self.field_means.shape[1] != el.elem.size:
             l_c, l_f = self.contact_sizes(edges, heat, vb_m)
             self.field_means = np.stack(field.strip_means(l_c[0, el.elem], l_f[0, el.elem], el.lo, el.hi, el.side))
@@ -1005,37 +1071,104 @@ class ToolThermal:
             target[:, el.elem] = base + ratio * (rep[None, :] - base) if shape[0] > 1 else rep[None, :]
         return out[0], out[1], out[2]
 
-    def _fill_edge_input(self, inp, edges, heat, in_cut, entries, vb_m, dt_s) -> None:
+    def _fill_edge_input(self, inp, edges, heat, in_cut, entries, vb_m, dt_s, omega_rad_s=None,
+                         settings=None) -> None:
+        """Periodic-heating inputs of the edge kernel per element, from the element's heat history in run time
+        (docs/models/thermal.md 2.2), not from one macro step's counts.
+
+        An element is engaged from its first pass until it misses one: no in-cut time for longer than one period
+        after the step that held its last pass. While engaged it keeps running sums of its steps (tool heat, in-cut
+        time, passes, heat-weighted contact sizes) that forget with the time constant edge_window_periods x period:
+        the flux while in cut is sum(heat) / (contact x sum(in-cut time)), the heating time per pass sum(in-cut time)
+        / sum(passes), the period 2 pi / |omega| for a rotating tool (one pass per revolution), else the mean time
+        between passes. A macro step without a pass of the element (a step shorter than the revolution) leaves its
+        engagement and these values as they are, so the temperatures it publishes do not alternate with the step.
+        Interrupted: at least two passes since the engagement began; continuous: one entry, in cut since (its
+        contact time advances with its in-cut time)."""
         p = _p()
         shape = in_cut.shape
+        st = self.edge
+        st.ensure(shape)
         valid = np.asarray(edges.elem_valid) != 0
         db = np.maximum(np.asarray(edges.elem_db_m, dtype=float), 1e-6)
         rake = np.asarray(edges.elem_rake_rad, dtype=float)
         clear = np.asarray(edges.elem_clear_rad, dtype=float)
         radius = np.asarray(edges.elem_r_m, dtype=float)
-        q_rake = heat.tool_rake_elem_J if heat.tool_rake_elem_J.shape == shape else np.zeros(shape)
-        q_flank = heat.tool_flank_elem_J if heat.tool_flank_elem_J.shape == shape else np.zeros(shape)
+        if heat is not None:
+            q_rake = heat.tool_rake_elem_J if heat.tool_rake_elem_J.shape == shape else np.zeros(shape)
+            q_flank = heat.tool_flank_elem_J if heat.tool_flank_elem_J.shape == shape else np.zeros(shape)
+        else:
+            q_rake = np.zeros(shape)
+            q_flank = np.zeros(shape)
         l_c, l_f = self.contact_sizes(edges, heat, vb_m)
         wedge = np.clip(0.5 * math.pi - rake - clear, p["min_wedge_angle_rad"], p["max_wedge_angle_rad"])
-        active = valid & (in_cut > 0.0) & ((q_rake > 0.0) | (q_flank > 0.0))
-        t_in = np.where(active, in_cut, 1.0)
-        interrupted = active & (entries >= 1.0) & (in_cut < dt_s * (1.0 - 1e-6))
+        now = self.time_s
+        dt = max(float(dt_s), 0.0)
+        omega = abs(float(omega_rad_s)) if omega_rad_s is not None else 0.0
+        rotating = omega > 0.0 and not self.layout.turning
+        acc = st.acc
+        # the period of an element's passes: a revolution of a rotating tool, else the mean time between its passes
+        with np.errstate(divide="ignore", invalid="ignore"):
+            mean_gap = np.where(acc[ACC_ENTRIES] > 0.0, acc[ACC_TIME_S] / np.where(acc[ACC_ENTRIES] > 0.0,
+                                                                                  acc[ACC_ENTRIES], 1.0), dt)
+        period_prev = np.full(shape, 2.0 * math.pi / omega) if rotating else np.maximum(mean_gap, dt)
+        cut_now = valid & (in_cut > 0.0) & ((q_rake > 0.0) | (q_flank > 0.0))
+        # still engaged: no pass missed since the step that held the last one
+        kept = valid & np.isfinite(st.last_in_s) & ((now - st.last_in_s) <= period_prev + dt + 1e-12)
+        engaged = cut_now | kept
+        fresh = cut_now & ~kept
+        window_periods = float(getattr(settings, "edge_window_periods", 4.0) or 4.0) if settings is not None else 4.0
+        tau = window_periods * period_prev
+        decay = np.where(tau > 0.0, np.exp(-dt / np.where(tau > 0.0, tau, 1.0)), 0.0)
+        decay = np.where(fresh | ~engaged, 0.0, decay)          # a new engagement starts its sums afresh
+        acc *= decay[None, :, :]
+        acc[ACC_RAKE_J] += np.where(engaged, q_rake, 0.0)
+        acc[ACC_FLANK_J] += np.where(engaged, q_flank, 0.0)
+        acc[ACC_IN_CUT_S] += np.where(engaged, in_cut, 0.0)
+        acc[ACC_ENTRIES] += np.where(engaged, entries, 0.0)
+        acc[ACC_RAKE_LC] += np.where(engaged, q_rake * l_c, 0.0)
+        acc[ACC_FLANK_LF] += np.where(engaged, q_flank * l_f, 0.0)
+        acc[ACC_TIME_S] += np.where(engaged, dt, 0.0)
+        st.last_in_s[:] = np.where(cut_now, now, np.where(engaged, st.last_in_s, -np.inf))
+        st.n_cyc[:] = np.where(engaged, np.where(fresh, 0.0, st.n_cyc) + entries, 0.0)
+        st.t_eng[:] = np.where(engaged, np.where(fresh, 0.0, st.t_eng) + in_cut, 0.0)
+        heat_r = acc[ACC_RAKE_J]
+        heat_f = acc[ACC_FLANK_J]
+        t_in = acc[ACC_IN_CUT_S]
+        active = engaged & (t_in > 0.0) & ((heat_r > 0.0) | (heat_f > 0.0))
+        safe_t = np.where(active, t_in, 1.0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            lc_w = np.where(heat_r > 0.0, acc[ACC_RAKE_LC] / np.where(heat_r > 0.0, heat_r, 1.0), l_c)
+            lf_w = np.where(heat_f > 0.0, acc[ACC_FLANK_LF] / np.where(heat_f > 0.0, heat_f, 1.0), l_f)
+            mean_gap = np.where(acc[ACC_ENTRIES] > 0.0, acc[ACC_TIME_S] / np.where(acc[ACC_ENTRIES] > 0.0,
+                                                                                  acc[ACC_ENTRIES], 1.0), dt)
+            t_pass = np.where(acc[ACC_ENTRIES] > 0.0, t_in / np.where(acc[ACC_ENTRIES] > 0.0, acc[ACC_ENTRIES], 1.0),
+                              t_in)
+            if rotating and shape[0] > 1:
+                # the teeth at one position along the edge pass the same arc: their pass time from all their passes
+                # (a pass across a step boundary has its entry in one step and part of its in-cut time in the next;
+                # the teeth's boundary passes fall in different steps)
+                cols_in = np.where(engaged, t_in, 0.0).sum(axis=0, keepdims=True)
+                cols_n = np.where(engaged, acc[ACC_ENTRIES], 0.0).sum(axis=0, keepdims=True)
+                t_cols = np.where(cols_n > 0.0, cols_in / np.where(cols_n > 0.0, cols_n, 1.0), 0.0)
+                t_pass = np.where((acc[ACC_ENTRIES] > 0.0) & (cols_n > 0.0), np.broadcast_to(t_cols, shape), t_pass)
+        period = np.full(shape, 2.0 * math.pi / omega) if rotating else np.maximum(mean_gap, 1e-12)
+        lc_w = np.maximum(lc_w, 1e-9)
+        lf_w = np.maximum(lf_w, 1e-9)
+        interrupted = active & (st.n_cyc >= 2.0) & (t_pass < period * (1.0 - 1e-6))
         continuous = active & ~interrupted
         inp.mode[:] = np.where(interrupted, EDGE_INTERRUPTED, np.where(continuous, EDGE_CONTINUOUS, EDGE_NONE))
-        inp.a_r[:] = l_c
-        inp.a_f[:] = l_f
+        inp.a_r[:] = lc_w
+        inp.a_f[:] = lf_w
         inp.b[:] = 0.5 * db
-        inp.q_r[:] = np.where(active, q_rake / (l_c * db * t_in), 0.0)
-        inp.q_f[:] = np.where(active, q_flank / (l_f * db * t_in), 0.0)
+        inp.q_r[:] = np.where(active, heat_r / (lc_w * db * safe_t), 0.0)
+        inp.q_f[:] = np.where(active, heat_f / (lf_w * db * safe_t), 0.0)
         inp.wedge[:] = 0.5 * math.pi / wedge
-        inp.r_far[:] = np.maximum(p["far_field_radius_ratio"] * radius, 2.0 * np.maximum(np.maximum(l_c, l_f), db))
-        n_ent = np.where(entries >= 1.0, entries, 1.0)
-        inp.period[:] = np.where(interrupted, dt_s / n_ent, 0.0)
-        inp.t_h[:] = np.where(interrupted, in_cut / n_ent, 0.0)
-        self.edge.n_cyc[:] = np.where(interrupted, self.edge.n_cyc + entries, 0.0)
-        self.edge.t_eng[:] = np.where(continuous, self.edge.t_eng + in_cut, 0.0)
-        inp.n_cyc[:] = self.edge.n_cyc
-        inp.t_eng[:] = self.edge.t_eng
+        inp.r_far[:] = np.maximum(p["far_field_radius_ratio"] * radius, 2.0 * np.maximum(np.maximum(lc_w, lf_w), db))
+        inp.period[:] = np.where(interrupted, period, 0.0)
+        inp.t_h[:] = np.where(interrupted, np.minimum(t_pass, period), 0.0)
+        inp.n_cyc[:] = np.where(interrupted, st.n_cyc, 0.0)
+        inp.t_eng[:] = np.where(continuous, np.maximum(st.t_eng, np.where(active, t_pass, 0.0)), 0.0)
 
     # ------------------------------------------------------------------ checkpoint
     def to_arrays(self, prefix: str) -> tuple[dict, dict]:
@@ -1049,6 +1182,8 @@ class ToolThermal:
             arrays[f"{prefix}mat_holder.{name}"] = np.array(getattr(self.mat_holder, name))
         arrays[f"{prefix}edge.n_cyc"] = self.edge.n_cyc.copy()
         arrays[f"{prefix}edge.t_eng"] = self.edge.t_eng.copy()
+        arrays[f"{prefix}edge.last_in_s"] = self.edge.last_in_s.copy()
+        arrays[f"{prefix}edge.acc"] = self.edge.acc.copy()
         if self.rise is not None:
             for i, name in enumerate(RISE_NAMES):
                 arrays[f"{prefix}rise.{name}"] = self.rise[i].copy()
@@ -1067,7 +1202,8 @@ class ToolThermal:
                 "edge_calls": self.edge_calls, "has_rise": self.rise is not None, "has_dev": self.dev is not None,
                 "field": field_meta, "field_requested": self.field_requested,
                 "field_settings": dict(self.field_settings), "field_pending_dt": self.field_pending_dt,
-                "field_every_n": self.field_every_n,
+                "field_every_n": self.field_every_n, "field_interval_s": self.field_interval_s,
+                "field_next_s": self.field_next_s, "edge_next_s": self.edge_next_s,
                 "field_pending_steps": self.field_pending_steps,
                 "time_s": self.time_s, "ledger": self.ledger.to_dict(),
                 "end_node": self.layout.end_node, "end_conductance_W_K": self.layout.end_conductance_W_K,
@@ -1092,6 +1228,11 @@ class ToolThermal:
         obj.mat_holder = MatTable(*(np.ascontiguousarray(arrays[f"{prefix}mat_holder.{name}"]).copy()
                                     for name in MatTable._fields))
         obj.edge = EdgeState(arrays[f"{prefix}edge.n_cyc"].copy(), arrays[f"{prefix}edge.t_eng"].copy())
+        if f"{prefix}edge.last_in_s" in arrays:
+            obj.edge.last_in_s = np.array(arrays[f"{prefix}edge.last_in_s"])
+        if f"{prefix}edge.acc" in arrays:
+            obj.edge.acc = np.array(arrays[f"{prefix}edge.acc"])
+        obj.edge.ensure(obj.edge.n_cyc.shape)
         obj.temp_ref_K = float(meta["temp_ref_K"])
         obj.time_s = float(meta["time_s"])
         obj.ledger = SolverLedger.from_dict(meta["ledger"])
@@ -1102,6 +1243,7 @@ class ToolThermal:
         obj.to_spindle_J = 0.0
         obj.to_coolant_J = 0.0
         obj.edge_calls = int(meta["edge_calls"])
+        obj.edge_next_s = float(meta.get("edge_next_s", 0.0))
         obj.rise = tuple(np.array(arrays[f"{prefix}rise.{name}"]) for name in RISE_NAMES) \
             if meta["has_rise"] and all(f"{prefix}rise.{name}" in arrays for name in RISE_NAMES) else None
         obj.dev = tuple(np.array(arrays[f"{prefix}dev.{name}"]) for name in DEV_NAMES) \
@@ -1112,6 +1254,8 @@ class ToolThermal:
         obj.field_pending_dt = float(meta.get("field_pending_dt", 0.0))
         obj.field_pending_steps = int(meta.get("field_pending_steps", 0))
         obj.field_every_n = int(meta.get("field_every_n", 1))
+        obj.field_interval_s = float(meta.get("field_interval_s", 0.0))
+        obj.field_next_s = float(meta.get("field_next_s", 0.0))
         obj.field_pend = np.array(arrays[f"{prefix}field_pend"]) if f"{prefix}field_pend" in arrays else None
         obj.field_means = np.array(arrays[f"{prefix}field_means"]) if f"{prefix}field_means" in arrays else None
         return obj

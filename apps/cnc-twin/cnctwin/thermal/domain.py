@@ -338,7 +338,7 @@ class ThermalDomain:
         if edges is None and self.edges is not None:
             edges = self.edges.edge_model(tool.slot)
         if edges is not None:
-            tool.enable_field(st, edges, every_n_steps=st.tool_field_every_n_macro)
+            tool.enable_field(st, edges, every_n_steps=st.tool_field_every_n_macro, interval_s=st.tool_field_interval_s)
 
     def _flush_fields(self, th: ThermalState, step: dict) -> float:
         """Solve every tool field over the time it accumulated (end of an operation, end of the run);
@@ -521,9 +521,10 @@ class ThermalDomain:
             cut, rem, heat, edges, vb = items[0] if items else (None, None, None, None, None)
             if edges is None and self.edges is not None:
                 edges = self.edges.edge_model(slot)
+            omega = float(path["omega_mean"]) if path is not None and not tool.layout.turning else None
             heat_out = tool.edge_heat(edges, heat, cut.in_cut_time_s if cut is not None else None,
                                       cut.entries if cut is not None else None, vb if vb is not None else self._vb(prev, slot),
-                                      dt, st)
+                                      dt, st, omega_rad_s=omega)
             feedback.tools[slot] = heat_out
             self._tool_maxima(th, slot, heat_out)
         for slot, tool in sorted(th.tools.items()):
@@ -707,6 +708,7 @@ class ThermalDomain:
 
     def _surfaces(self, ctx, state, th, contacts, paths, coolant, window_s, fv_now, dt, feedback) -> None:
         engaged = {}
+        band = {}
         for cut, rem, heat, edges, vb in contacts:
             if rem is None or heat.work_J <= 0.0:
                 continue
@@ -716,6 +718,15 @@ class ThermalDomain:
                 continue
             path = self._path_of(paths, slot=int(cut.tool_slot), workpiece=rem.workpiece, index=rem.path)
             source = self._source(th, cut, rem, heat, edges, vb, path, min(window_s, engaged[cut.contact]), dt)
+            source.engaged_s = engaged[cut.contact]
+            source.pending_s = 0.0 if fv_now else min(window_s, engaged[cut.contact])
+            # the preheat's band carries the contact's work-bound heat rate averaged over edge_window_periods
+            # revolutions: a step holds a whole number of passes only on average (at 5 ms steps of a 4-flute tool at
+            # 10 000 rpm 3 or 4 passes), so the step's own rate would make the band follow the step
+            omega = float(path["omega_mean"]) if path is not None else 0.0
+            tau = th.settings.edge_window_periods * 2.0 * math.pi / omega if omega > 0.0 else 0.0
+            decay = math.exp(-dt / tau) if tau > 0.0 else 0.0
+            band[cut.contact] = self._band(th, cut.contact, source, path, heat.work_J, dt, decay)
             surface = work.contact_surface(source, fv_now)
             feedback.contact_surface_temp_K[cut.contact] = surface.surface_K
             feedback.contact_preheat_K[cut.contact] = surface.preheat_K
@@ -735,6 +746,31 @@ class ThermalDomain:
                 th.damage.check(ctx, state, th.op_index, w, path["block"] if path is not None else 0, tick,
                                 path["path"] if path is not None else 0, surface.surface_K, quantities, [parent])
         th.engaged_s = engaged
+        th.band_power = band
+
+    @staticmethod
+    def _band(th, contact: int, source: ContactSource, path, work_J: float, dt: float, decay: float) -> list:
+        """Running sums of the preheat band of a contact - [J, s, J x half length, J x width, offset of the contact
+        point from the tool tip (3)] - and the band they give, set on ``source``: the heat rate, half length and width
+        averaged over edge_window_periods revolutions, the contact point the tool tip plus its last offset where
+        removal gives none (a zero point) in the step. Removal's contact geometry of one step moves with the passes it
+        held (the engaged depth by up to a quarter in the macro-step case at 5 ms steps)."""
+        old = th.band_power.get(contact) if contact in th.engaged_s else None
+        old = list(old) + [0.0] * (7 - len(old)) if old is not None else [0.0] * 7
+        sums = [old[0] * decay + work_J, old[1] * decay + dt, old[2] * decay + work_J * source.feed_half_length_m,
+                old[3] * decay + work_J * source.width_m]
+        point = np.asarray(source.point_S_m, dtype=float)
+        tip = np.asarray(path["tip_S"], dtype=float) if path is not None and path.get("tip_S") is not None else None
+        offset = np.asarray(old[4:7], dtype=float)
+        if tip is not None and np.any(point != 0.0):
+            offset = point - tip
+        elif tip is not None:
+            source.band_point_S_m = tip + offset
+        source.band_power_W = sums[0] / sums[1]
+        if sums[0] > 0.0:
+            source.band_half_length_m = sums[2] / sums[0]
+            source.band_width_m = sums[3] / sums[0]
+        return sums + [float(offset[0]), float(offset[1]), float(offset[2])]
 
     def _source(self, th, cut, rem, heat, edges, vb, path, window_s, dt) -> ContactSource:
         pw = work_params()
@@ -795,10 +831,12 @@ class ThermalDomain:
         flank = vb_mean + edge_r
         band = flank + h_mean / math.tan(phi)
         flux = heat.work_J / (band * max(band_width, 1e-6) * t_cut) if band > 0.0 and t_cut > 0.0 else 0.0
+        # the preheat's background is read one tool size beyond the leading edge (diameter / insert size)
+        ahead = (tool.spec.insert_ic_m if turning else tool.spec.diameter_m) if tool is not None else 2.0 * half
         return ContactSource(point_S_m=point, feed_dir_S=np.asarray(direction),
                              power_W=heat.work_J / dt, feed_speed_m_s=speed, feed_half_length_m=half, width_m=width,
                              window_s=window_s, flash_flux_W_m2=flux, flash_half_length_m=0.5 * band,
-                             flash_speed_m_s=v_cut, flash_duration_s=max(t_pass, 1e-9))
+                             flash_speed_m_s=v_cut, flash_duration_s=max(t_pass, 1e-9), ahead_m=float(ahead))
 
     # ------------------------------------------------------------------ helpers: results
     @staticmethod

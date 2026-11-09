@@ -39,6 +39,12 @@ def clear_cache() -> None:
     _CALIBRATIONS.clear()
 
 
+def _pieces(settings) -> int:
+    """physics.wear.calib_pieces (settings objects without it: the schema default)."""
+    from .schema import WearSettings
+    return int(getattr(settings, "calib_pieces", WearSettings.calib_pieces))
+
+
 # ------------------------------------------------------------------------------------------ geometry
 def element_geometry(edge: EdgeModel, edge_radius_m: float | None) -> A.ElemGeo:
     fl = P.get(P.FLANK)
@@ -113,7 +119,7 @@ def _taylor_condition(entry: P.TaylorEntry, fg: CAL.FlankGeometry, speed: float,
 
 
 def taylor_check(taylor: P.TaylorEntry, response, slot: int, fg: CAL.FlankGeometry, abrasion: CAL.Abrasion,
-                 vb0_m: float, nodes: int) -> dict:
+                 vb0_m: float, nodes: int, pieces: int = 1) -> dict:
     """Edge contact lives the abrasive-only law predicts at the calibration and check speeds against the
     Taylor lives converted to contact time (reported, not fitted)."""
     out = {"speeds_m_s": [], "taylor_life_s": [], "contact_life_s": [], "model_life_s": [], "residual_rel": [],
@@ -121,7 +127,7 @@ def taylor_check(taylor: P.TaylorEntry, response, slot: int, fg: CAL.FlankGeomet
     for speed in CAL.calibration_speeds(taylor):
         target = taylor.contact_life_s(speed, taylor.feed_ref_m, taylor.ap_ref_m)
         f = lambda v, vb: response.response(slot, _taylor_condition(taylor, fg, v, vb, False))
-        ns = CAL._nodes(f, speed, vb0_m, taylor.VB_limit_m, fg, None, abrasion, nodes)
+        ns = CAL._nodes(f, speed, vb0_m, taylor.VB_limit_m, fg, None, abrasion, nodes, pieces)
         life = CAL.life_s(ns, 0.0, 1.0, 1.0, fg.g_vb, None, 1.0)
         out["speeds_m_s"].append(speed)
         out["taylor_life_s"].append(taylor.life_s(speed, taylor.feed_ref_m, taylor.ap_ref_m))
@@ -143,7 +149,7 @@ def _anchored(ref: P.TaylorEntry, relation: str, fA: np.ndarray, fB: np.ndarray,
     key = ("anchor", work.id, tool_mat.id, tuple(report["flank"]["src"]), tuple(fA),
            tuple(fB), tuple(flo), ref, relation, round(fg.rake_rad, 9), round(fg.clearance_rad, 9),
            round(fg.edge_radius_m, 12), round(fg.incl_rad, 9), round(vb0_m, 12), int(settings.calib_nodes),
-           getattr(response, "cache_key", id(response)), abrasive,
+           _pieces(settings), getattr(response, "cache_key", id(response)), abrasive,
            None if phase is None else (phase.id, phase.factor, phase.thickness_m))
     try:
         anchor = _CALIBRATIONS.get(key)
@@ -151,7 +157,7 @@ def _anchored(ref: P.TaylorEntry, relation: str, fA: np.ndarray, fB: np.ndarray,
             coated = relation == "same"
             anchor = CAL.anchor_published(ref, lambda v, vb: response.response(
                 slot, _taylor_condition(ref, fg, v, vb, coated)), fg, phase, abrasion, vb0_m, settings.calib_nodes,
-                fA, fB, flo)
+                fA, fB, flo, _pieces(settings))
             _CALIBRATIONS[key] = anchor
     except (InputError, ValueError, LookupError, ZeroDivisionError) as error:
         estimated.append(f"tool slot {slot}: published Usui set used as published, not anchored to {work.id} "
@@ -202,7 +208,8 @@ def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coati
             if response is not None:
                 try:
                     report["flank"]["taylor_check"] = taylor_check(
-                        taylor, response, slot, fg, CAL.Abrasion(abrasive, hs[0], hs[1]), vb0_m, settings.calib_nodes)
+                        taylor, response, slot, fg, CAL.Abrasion(abrasive, hs[0], hs[1]), vb0_m, settings.calib_nodes,
+                        _pieces(settings))
                 except (InputError, ValueError, LookupError, ZeroDivisionError) as error:
                     report["flank"]["taylor_check"] = {"error": str(error)}
             estimated.append(f"tool slot {slot}: {work.id} has no flow-stress law: abrasive (Archard) wear with "
@@ -215,15 +222,15 @@ def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coati
                                                               else (None, None)))
             key = (work.id, tool_mat.id, coating_id, taylor, relation, round(fg.rake_rad, 9),
                    round(fg.clearance_rad, 9), round(fg.edge_radius_m, 12), round(fg.incl_rad, 9), round(vb0_m, 12),
-                   int(settings.calib_nodes), getattr(response, "cache_key", id(response)), abrasive,
-                   None if phase is None else (phase.id, phase.factor, phase.thickness_m))
+                   int(settings.calib_nodes), _pieces(settings), getattr(response, "cache_key", id(response)),
+                   abrasive, None if phase is None else (phase.id, phase.factor, phase.thickness_m))
             try:
                 cal = _CALIBRATIONS.get(key)
                 if cal is None:
                     coated = relation == "same"
                     cal = CAL.calibrate(taylor, lambda v, vb: response.response(
                         slot, _taylor_condition(taylor, fg, v, vb, coated)), fg, phase, abrasion, vb0_m,
-                        settings.calib_nodes)
+                        settings.calib_nodes, _pieces(settings))
                     _CALIBRATIONS[key] = cal
                 fA, fB, flo = np.array([cal.A_per_Pa]), np.array([cal.B_K]), np.array([-math.inf])
                 abr_scale = cal.abrasive_scale
@@ -282,6 +289,7 @@ def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coati
     s[A.LS_PLUCK_M] = grain * fl["bue_pluck_fraction"]
     s[A.LS_SKIN_FACTOR] = work.skin_factor
     s[A.LS_DOC_RATIO] = fl["doc_h_ratio"]
+    s[A.LS_MIN_CLEAR] = fl["min_clearance_rad"]
     s[A.LS_CRACK_GROWTH] = P.get(P.FRACTURE)["crack_growth_damage"]
     report["abrasive_coeff"] = float(s[A.LS_ABR])
     report["abrasive_scale"] = float(abr_scale)
@@ -341,8 +349,12 @@ def chip_law(tool_mat: P.ToolMaterialData, mu: float, settings, estimated: list,
     c[A.CL_BETA_MAX] = fr["max_wedge_angle_rad"]
     c[A.CL_NTHETA] = float(settings.chip_theta_nodes)
     c[A.CL_ROUNDING] = fl["edge_rounding_ratio"]
+    # the edge's strength under repeated entries follows the tool material's Basquin curve (the b of the section
+    # fatigue: hardmetal-type classes Nakajima et al. 2006, HSS the universal slopes)
+    bq = FR.basquin(tool_mat.tool_class, tool_mat.trs_Pa or 1.0, float(tool_mat.youngs(REFERENCE_TEMP_K)))
+    c[A.CL_FATIGUE_B] = bq.b
     return chip, {"weibull_m": m, "sigma0_Pa": sigma0 if math.isfinite(sigma0) else None,
-                  "vref_m3": float(c[A.CL_VREF_M3]), "mu": mu}
+                  "vref_m3": float(c[A.CL_VREF_M3]), "mu": mu, "edge_fatigue_b": bq.b, "edge_fatigue_src": bq.src}
 
 
 # ------------------------------------------------------------------------------------------ sections

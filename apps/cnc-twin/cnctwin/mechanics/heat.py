@@ -9,7 +9,10 @@ F_te V. Partitions:
   source, Oxley's dT_M) and the tool (stationary source on a quarter-infinite tool, Loewen &
   Shaw), solved inside the Oxley interface state (:func:`kernels.interface_state`);
 * flank and edge: Blok's principle with Jaeger's moving band source on the work and the
-  stationary source on the tool flank.
+  stationary source on the tool flank, over the flank contact (wear land + edge arc), for the
+  contact's friction heat and the plastic work of the edge pressure, the latter a source inside the
+  work that reaches the interface in proportion to :func:`layer_source_factor`
+  (:func:`flank_heat_to_tool`).
 """
 
 from __future__ import annotations
@@ -48,6 +51,53 @@ def band_mean_factor(peclet: float) -> float:
 def stationary_rect_factor(aspect: float) -> float:
     """Mean rise of a uniformly heated a x b rectangle on a half-space in units of q a / k (b = aspect a)."""
     return float(K.rect_area_factor(float(aspect)))
+
+
+@functools.lru_cache(maxsize=4096)
+def layer_band_mean_factor(peclet: float, depth: float) -> float:
+    """Mean surface temperature rise over a band of half-width l moving at L = V l / (2 kappa) over a half-space with
+    an adiabatic surface when its heat is generated uniformly in the layer 0 < z < delta beneath the band (Delta =
+    V delta / (2 kappa) = ``depth``), in units of q l / k (q the heat per unit band area): the moving line source and its
+    image (Carslaw & Jaeger 1959 10.7; Jaeger 1942) integrated over the layer,
+    (1 / (2 pi L^2 Delta)) int_0^Delta dzeta int_0^{2L} (2L - u) (e^{-u} + e^{u}) K0(sqrt(u^2 + zeta^2)) du;
+    -> band_mean_factor(L) as Delta -> 0."""
+    L = float(peclet)
+    D = float(depth)
+    if L <= 0.0:
+        return math.inf
+    if D <= 0.0:
+        return band_mean_factor(L)
+
+    def inner(zeta):
+        def f(u):
+            r = math.hypot(u, zeta)
+            if r <= 0.0:
+                return 0.0
+            return (2.0 * L - u) * special.k0e(r) * (math.exp(u - r) + math.exp(-u - r))
+        split = min(max(zeta, 1e-12), 2.0 * L)
+        total = integrate.quad(f, 0.0, split, limit=200)[0]
+        if 2.0 * L > split:
+            total += integrate.quad(f, split, 2.0 * L, limit=200)[0]
+        return total
+
+    outer = integrate.quad(inner, 0.0, D, limit=200)[0]
+    return outer / (2.0 * math.pi * L * L * D)
+
+
+def layer_source_factor(peclet: float, depth_ratio: float) -> float:
+    """g = surface rise of heat generated uniformly to the depth depth_ratio x (2 l) under a band of length 2 l moving
+    at Peclet number L, over the rise of the same heat at the surface (:func:`layer_band_mean_factor` /
+    :func:`band_mean_factor`): 1 for a thin layer or a slow band (the heat reaches the surface during the passage),
+    falling toward 0 when the band passes faster than the heat diffuses up from the layer. Evaluated at the Peclet
+    number rounded to 4 significant digits (cached)."""
+    L = float(f"{max(float(peclet), 1e-12):.4g}")
+    ratio = float(f"{max(float(depth_ratio), 0.0):.4g}")
+    if ratio <= 0.0:
+        return 1.0
+    band = band_mean_factor(L)
+    if not math.isfinite(band) or band <= 0.0:
+        return 1.0
+    return min(max(layer_band_mean_factor(L, 2.0 * L * ratio) / band, 0.0), 1.0)
 
 
 def moving_strip_factor(peclet: float, aspect: float) -> float:
@@ -106,6 +156,41 @@ def flank_partition_to_tool(work: WorkMaterial, tool: ToolSide | None, land_m: f
     return blok_partition_to_tool(flux_W_m2, mw, mt, work_surface_K, tool_flank_K)
 
 
+def flank_heat_to_tool(work: WorkMaterial, tool: ToolSide | None, length_m: float, width_m: float, speed_m_s: float,
+                       friction_flux_W_m2: float, deformation_flux_W_m2: float, deformation_depth_m: float,
+                       work_surface_K: float, tool_flank_K: float | None,
+                       contact_time_s: float | None = None) -> tuple[float, dict]:
+    """Share of the flank contact's heat (the friction on the edge arc and the wear land, plus the plastic work of the
+    material pressed under the edge) that enters the tool, from equal mean temperatures of the two sides of the
+    contact (Blok 1937), with the plastic work as a heat source inside the work:
+
+        T_ws + M_w (q_f - H_t) + g M_w q_d = T_t + M_t H_t   ->   H_t = (T_ws - T_t + M_w (q_f + g q_d)) / (M_w + M_t)
+
+    q_f: friction flux at the interface, q_d: plastic work per unit contact area generated uniformly to the depth
+    ``deformation_depth_m`` in the work (layer_source_factor g: the surface rise it makes, relative to the same heat
+    at the surface, Jaeger's moving band with the layer integrated), M_w the work side (moving band over the contact
+    length, capped by the stationary rectangle), M_t the tool side (quarter-infinite, transient cap, coating). Returns
+    (H_t / (q_f + q_d) clamped to [0, 1], details). An adiabatic tool (no tool data or temperature) takes none."""
+    q_f = max(float(friction_flux_W_m2), 0.0)
+    q_d = max(float(deformation_flux_W_m2), 0.0)
+    total = q_f + q_d
+    info = {"M_w": 0.0, "M_t": 0.0, "g": 1.0, "H_t": 0.0, "T_contact_K": float("nan")}
+    if tool is None or tool_flank_K is None or length_m <= 0.0 or speed_m_s <= 0.0 or total <= 0.0:
+        return 0.0, info
+    mw = work_side_resistance(length_m, width_m, speed_m_s, work, work_surface_K)
+    mt = tool_side_resistance(length_m, tool_flank_K, tool, width_m, contact_time_s)
+    g = 1.0
+    if q_d > 0.0 and deformation_depth_m > 0.0:
+        peclet = speed_m_s * 0.5 * length_m / (2.0 * work.diffusivity(work_surface_K))
+        g = layer_source_factor(peclet, deformation_depth_m / length_m)
+    if mw + mt <= 0.0:
+        return 0.5, info
+    h_t = (work_surface_K - tool_flank_K + mw * (q_f + g * q_d)) / (mw + mt)
+    frac = min(max(h_t / total, 0.0), 1.0)
+    info.update(M_w=mw, M_t=mt, g=g, H_t=frac * total, T_contact_K=tool_flank_K + mt * frac * total)
+    return frac, info
+
+
 def zone_powers(result_vector: np.ndarray, speed_m_s: float) -> tuple[float, float]:
     """(primary shear, rake friction) power per unit width (W/m) of an Oxley output vector."""
     shear = float(result_vector[abi.OX_FS] * result_vector[abi.OX_VS])
@@ -119,6 +204,6 @@ def chip_temperature_rise(power_to_chip_W_per_m: float, work: WorkMaterial, t1_m
     return power_to_chip_W_per_m / (work.rho_kg_m3 * speed_m_s * t1_m * work.cp(temp_K))
 
 
-__all__ = ["band_mean_factor", "stationary_rect_factor", "moving_strip_factor", "work_side_resistance",
-           "tool_side_resistance", "blok_partition_to_tool", "flank_partition_to_tool", "zone_powers",
-           "chip_temperature_rise"]
+__all__ = ["band_mean_factor", "layer_band_mean_factor", "layer_source_factor", "stationary_rect_factor",
+           "moving_strip_factor", "work_side_resistance", "tool_side_resistance", "blok_partition_to_tool",
+           "flank_partition_to_tool", "flank_heat_to_tool", "zone_powers", "chip_temperature_rise"]

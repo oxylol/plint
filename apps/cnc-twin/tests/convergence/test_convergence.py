@@ -46,19 +46,21 @@ OUTSIDE: dict[str, dict[str, str]] = {
                                        "chip_volume_analytic_mm3")},
     "bins_stride": {"F_peak_N": _PEAK, "vib_pp_um": "+7 % at 720 bins and 0.5 deg; 1440 bins with 0.25 deg",
                     "chip_tooth_spread": "0.206 against 0.239; 1440 bins with 0.25 deg"},
-    "macro": {q: "the rake temperature cutting reads depends on the macro step and the tool's wear and temperature "
-                 "run away at a time the macro step sets (docs/convergence.md 5, 9)"
-              for q in ("tool_rise_K", "edge_rise_K", "rake_rise_K", "VB_growth_um", "F_mean_N", "bulk_rise_K",
-                        "expansion_um")},
-    "thermal_cell": {"expansion_um": "inside on the copy of 14:28 (-0.36 to -0.48 um); the working tree of 16:00 gives "
-                                     "-0.16 um at 0.5 mm (docs/convergence.md 6)",
-                     "bulk_max_rise_K": "the hottest cell of a field under a moving source: grows as the cell shrinks",
-                     "bulk_rise_K": "5 % from 0.5 mm, whose tool has run away (docs/convergence.md 6)",
-                     "surface_rise_K": "the 0.5 mm level's tool has run away (docs/convergence.md 6)",
-                     "tool_rise_K": "at 1 and 0.5 mm cells the tool's wear and temperature run away by 6 s"},
-    "thermal_every": {"bulk_max_rise_K": "the hottest cell: 15 % between every 5 and every macro step",
-                      "bulk_rise_K": "2.3 % from the Richardson value",
-                      "surface_rise_K": "7 % from the every-step level"},
+    "macro": {"VB_growth_um": "the land grows by 0.05-0.8 um over the 3.6 s since the flank heat follows Blok's "
+                              "partition (docs/convergence.md 9 item 9): the relative comparison is of the wear "
+                              "model's floor",
+              "bulk_rise_K": "thermal's finite volumes run every 5 macro steps (25-250 ms): 3 % between 5 and 10 ms",
+              "rake_rise_K": "the value at one instant scatters by +-1-2 K from step to step at every level; its 0.5 s "
+                             "mean (rake_rise_mean_K) is inside (docs/convergence.md 5)",
+              "preheat_rise_K": "the value at one instant scatters by about 1 %; its 0.5 s mean is inside",
+              "edge_rise_mean_K": "364, 371, 380 K at 5, 10, 20 ms over the last 0.5 s (the 20 ms run's hottest element); "
+                                  "within 1 % over 5.0-7.5 s"},
+    "thermal_cell": {"bulk_max_rise_K": "the hottest cell of a field under a moving source: grows as the cell shrinks",
+                     "bulk_rise_K": "1.9 % from the Richardson value of 2, 1 and 0.5 mm at the default (docs/convergence.md 6)",
+                     "surface_rise_K": "the two-scale contact surface rise oscillates by +-2 % between cells"},
+    "thermal_every": {"bulk_max_rise_K": "the hottest cell: 20 % between every 5 and every macro step",
+                      "bulk_rise_K": "3.3 % from the every-step level",
+                      "surface_rise_K": "6.8 % from the every-step level"},
 }
 
 _DOCS: dict[str, dict] = {}

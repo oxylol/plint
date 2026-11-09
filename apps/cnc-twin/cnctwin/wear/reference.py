@@ -33,6 +33,10 @@ def worn_edge_radius_ref(r_e0, vn, vn_notch, chip_d, chipped, rounding) -> float
     return max(radius, 0.5 * chip_d) if chipped else radius
 
 
+def flank_recession_ref(vn, chip_d, clear, min_clear) -> float:
+    return max(vn, chip_d * math.sin(max(clear, min_clear)))
+
+
 def wedge_tension_ref(force_per_m, contact_m, beta, rake, clear, mu):
     if force_per_m <= 0.0 or contact_m <= 0.0 or beta <= 0.0:
         return 0.0, 0.0, 0.0
@@ -168,8 +172,9 @@ def element_outputs_ref(geo, law, st) -> dict:
             if not geo.valid[j, k]:
                 out["edge_r"][j, k] = geo.r_e0[j, k]
                 continue
-            total = st.vn[j, k] + st.vn_notch[j, k] + st.chip_d[j, k]
-            out["VB"][j, k] = (st.vn[j, k] + st.chip_d[j, k]) * geo.g_vb[j, k]
+            flank = flank_recession_ref(st.vn[j, k], st.chip_d[j, k], geo.clear[j, k], law.scal[A.LS_MIN_CLEAR])
+            total = flank + st.vn_notch[j, k]
+            out["VB"][j, k] = flank * geo.g_vb[j, k]
             out["VB_N"][j, k] = total * geo.g_vb[j, k] if st.doc_hit[j, k] else 0.0
             out["radial"][j, k] = total * geo.sin_k[j, k]
             out["axial"][j, k] = total * geo.cos_k[j, k]
@@ -201,21 +206,32 @@ def chip_trials_ref(geo, st, chip, ikeys, rows, b_eng) -> np.ndarray:
         sigma, c_x, c_y = wedge_tension_ref(per_m, contact, beta, geo.rake[j, k], geo.clear[j, k], c[A.CL_MU])
         key = slot * A.KEY_SLOT + j * A.KEY_TOOTH + k
         out[i, A.CO_SIGMA_PA] = sigma
+        st.n_chip[j, k] += 1
         p = 0.0
+        hazard = 0.0
+        b_fat = c[A.CL_FATIGUE_B]
+        p_fat = -1.0 / b_fat if b_fat < 0.0 else 0.0
         if sigma > 0.0:
             v_eff = width * contact ** 2 * wedge_volume_factor_ref(c_x, c_y, beta, m, int(c[A.CL_NTHETA])) / (m - 2.0)
             out[i, A.CO_VEFF_M3] = v_eff
-            hazard = v_eff / c[A.CL_VREF_M3] * (sigma / c[A.CL_SIGMA0_PA]) ** m
+            ratio = (v_eff / c[A.CL_VREF_M3]) ** (1.0 / m) * sigma / c[A.CL_SIGMA0_PA]
+            crack = 0.0
             if c[A.CL_KIC] > 0.0 and st.crack_m[j, k] > 0.0:
-                hazard += (sigma * c[A.CL_Y] * math.sqrt(math.pi * st.crack_m[j, k]) / c[A.CL_KIC]) ** m
-            p = -math.expm1(-hazard)
+                crack = (sigma * c[A.CL_Y] * math.sqrt(math.pi * st.crack_m[j, k]) / c[A.CL_KIC]) ** m
+            p = -math.expm1(-(ratio ** m + crack))
+            if p_fat > 0.0:
+                st.edge_fat[j, k] += ratio ** p_fat
+                hazard = st.edge_fat[j, k] ** (m / p_fat) + crack
+            else:
+                hazard = ratio ** m + crack
         out[i, A.CO_P] = p
-        u = hash_uniform(seed, sid_chip, key, int(st.n_chip[j, k]), 0)
-        st.n_chip[j, k] += 1
-        if u < p:
+        out[i, A.CO_HAZARD] = hazard
+        u = hash_uniform(seed, sid_chip, key, int(st.chipped[j, k]), 0)
+        if hazard > 0.0 and hazard >= -math.log1p(-u):
             depth = c[A.CL_CHIP_RATIO] * contact
             st.chip_d[j, k] = max(st.chip_d[j, k], depth)
-            st.chipped[j, k] = 1
+            st.chipped[j, k] = min(int(st.chipped[j, k]) + 1, 127)
+            st.edge_fat[j, k] = 0.0
             st.coat_f[j, k] = 0.0
             st.coat_r[j, k] = 0.0
             out[i, A.CO_CHIPPED] = 1.0

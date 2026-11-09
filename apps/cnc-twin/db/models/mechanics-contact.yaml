@@ -16,6 +16,12 @@ params:
     unit: "-"
     src: hill-1950-plasticity
     note: "(2 + pi): Prandtl's mean pressure of a flat punch on a rigid-perfectly plastic half-space in units of the shear flow stress k; used for the material pressed under the rounded edge (below the stagnation point) and under the flank wear land"
+  ploughing_zone_depth_ratio:
+    value: 0.7071067811865476
+    unit: "-"
+    range: [0.1, 2.0]
+    src: hill-1950-plasticity
+    note: "depth of the plastic zone of the material pressed under the rounded edge over the contact length below the stagnation point: Prandtl's flat-punch field reaches a sqrt(2) below a contact of width 2a (the centred fans of radius a sqrt(2) at the punch corners), 1 / sqrt(2) of the contact length; the slip-line field of ploughing (Waldorf, DeVor & Kapoor 1998) is of the same extent. The plastic work of the edge pressure is taken as generated uniformly over that depth in the work (assumed), which sets how much of it reaches the tool-work interface during the passage (cnctwin.mechanics.heat.flank_heat_to_tool)"
   flank_plastic_land_m:
     value: 1.0e-4
     unit: m

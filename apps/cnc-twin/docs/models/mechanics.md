@@ -287,12 +287,39 @@ F_te V, flank tau_f VB V. Partitions:
 
 * primary zone: beta to the work, 1 - beta to the chip (`frac_shear_to_chip` = 1 - beta);
 * rake: R to the chip, 1 - R to the tool (`frac_rake_to_tool` = 1 - R), section 2;
-* flank and edge (`frac_flank_to_tool`): Blok's equal mean temperatures,
-  f = (T_ws - T_tf + q M_w)/(q (M_w + M_t)), with the work moving under the land (Jaeger 1942 band
-  source, mean factor (1/(2 pi L^2)) int_0^{2L} e^u K0(u)(1 + e^{-2u})(2L - u) du, L = V l/(2 kappa),
-  l the half-length; -> 0.752/sqrt(L) at large L; capped at low L by the stationary rectangle 2 A),
-  the tool flank stationary (quarter-infinite, transient cap) and T_ws = T_AB (the machined surface
-  leaves the bottom of the shear zone at about the shear-plane temperature, an upper bound).
+* flank contact (`frac_flank_to_tool`, `GroupCoefficients.flank_contact_m`; 2026-11-09): the share of the heat
+  the hot loop books as flank (wear land) and ploughing (edge) heat that enters the tool, and the contact it is
+  computed for, on which thermal deposits it: l_f = VB + the edge arc below the stagnation point
+  (`contact.stagnation_arc_length` at min(h, h_min), the PL_CONTACT of the edge model). Per unit edge length that
+  heat is the friction on the land (tau_land VB V) and on the arc, and the work of the edge pressure on the
+  material pressed under the edge. The edge force is linear in the pressure and the friction stress, F_t =
+  F_t(p, 0) + F_t(0, tau) (`contact.contact_power_parts`); times V the friction part, tau r (sin w_s cos^2 i + w_s
+  sin^2 i) V, is the friction dissipated at the contact (the material slides along the arc at V cos w in the normal
+  plane and V sin i along the edge), the pressure part, p h_min cos i V, is plastic work inside the work: the
+  slip-line field of the ploughed layer (Waldorf, DeVor & Kapoor 1998), in which a rigid-plastic field dissipates
+  its work (Hill 1950). It is taken as generated uniformly to the depth delta = `ploughing_zone_depth_ratio` x arc
+  (1/sqrt 2: Prandtl's field reaches a sqrt 2 below a contact of width 2a; the uniformity is assumed). Equal mean
+  temperatures of the two sides (Blok 1937) with the plastic work as a source in the work:
+
+      T_ws + M_w (q_f - H_t) + g M_w q_d = T_t + M_t H_t,   f = H_t / (q_f + q_d) in [0, 1]
+
+  q_f, q_d the friction and plastic-work fluxes over l_f; M_w the work moving under the contact (Jaeger 1942 band
+  source, mean factor (1/(2 pi L^2)) int_0^{2L} e^u K0(u)(1 + e^{-2u})(2L - u) du, L = V l/(2 kappa), l the
+  half-length; -> 0.752/sqrt(L) at large L; capped at low L by the stationary rectangle 2 A); M_t the tool flank
+  stationary (quarter-infinite, transient cap); g = `heat.layer_source_factor`(L, delta / l_f): the mean surface
+  rise of heat generated uniformly to the depth delta under the moving band over that of the same heat at the
+  surface, (1/(2 pi L^2 Delta)) int_0^Delta dzeta int_0^{2L} (2L - u)(e^{-u} + e^u) K0(sqrt(u^2 + zeta^2)) du / B(L),
+  Delta = V delta/(2 kappa) (the moving line source and its image, Carslaw & Jaeger 1959 10.7): 1 for a thin layer
+  or a slow contact, toward 0 when the contact passes before the heat diffuses up (within 1 % of the 1-D buried layer
+  at L = 30-100, test); for the unworn edge (delta = l_f / sqrt 2) 0.87 at L = 0.01, 0.49 at L = 1, 0.15 at L = 10. T_ws = T_AB (the machined surface
+  leaves the bottom of the shear zone at about the shear-plane temperature, an upper bound). With the share computed
+  for the heat it is applied to and over the contact it is deposited on, the tool side of the contact T_t + M_t H_t
+  moves with the tool temperature by M_w / (M_w + M_t) in [0, 1] (0 or 1 where f is clamped): cooling the tool never
+  raises its contact temperature (tests). **Until 2026-11-09** the share was Blok's for the land friction alone
+  (tau_land V over VB, or tau_e V over the arc at VB = 0) while thermal applied it to the whole edge power Kte V and
+  deposited it over VB + 1.0 r_e: on AISI 1045 with a 20 um hone at 2 m/s and h 80 um the tool side of the flank
+  contact came out 1152 degC with the body at 20 degC and fell to 554 degC as the body warmed to 524 degC (the share
+  of the friction flux grows as the tool cools); now 621 -> 707 degC.
 
 `GroupCoefficients.power_frac_shear/rake/edge` split the tangential force power of a row into the
 three zones (they sum to 1): edge share F_te/F_t (calibrated), the rest split by F_S V_s/(F_C V).
@@ -338,8 +365,9 @@ Rows: `Kt_Pa, Kr_Pa, Ka_Pa`, `Kte/Kre/Kae_N_per_m`, `shear_angle_rad`, `chip_rat
 `power_frac_shear/rake/edge`, `T_shear_K` (T_AB), `T_interface_K`, `T_chip_K`, `contact_length_m`,
 `sticking_fraction`, `interface_shear_Pa`, `interface_normal_Pa`, `shear_strain`,
 `shear_strain_rate_1_s`, `regime` (0 none, 1 Oxley, 2 Merchant, 3 indentation, 4 ploughing,
-5 data-only), scalars `h_min_m`, `K_sp_N_per_m3` (+ source), `v_min_m_s`, `mu_eff`, flank
-`flank_sigma0/tau0_Pa`, `flank_land_star_m`, means at the group's VB, and the ploughing shape.
+5 data-only), `flank_contact_m` (the flank contact `frac_flank_to_tool` is computed for, section 6), scalars `h_min_m`,
+`K_sp_N_per_m3` (+ source), `v_min_m_s`, `mu_eff`, flank `flank_sigma0/tau0_Pa`, `flank_land_star_m`, means at the
+group's VB, and the ploughing shape.
 **BUE**: with `bue_height_m` > 0 and a map at the BUE rake (`bue_rake_rad` = 25 deg, est) the rows
 blend toward it in proportion min(1, H/(bue_full_height_ratio h)): the chip flows over the built-up
 edge as over a tool face of larger effective rake (the effective-rake mechanism, Hutton & Yu 1990:
@@ -581,7 +609,10 @@ tie-breaks are fixed.
 * Tool-side partition: steady quarter-infinite source capped by the 1-D transient; the tool rake
   temperature passed in must exclude the sub-grid flash of the current contact (else the flash is
   counted twice; bounded by the flash rise times the fraction thermal resolves).
-* T_ws = T_AB for the flank partition (upper bound; flank tool share therefore a lower bound).
+* T_ws = T_AB for the flank partition (upper bound; flank tool share therefore a lower bound). The plastic work of
+  the edge pressure is taken as uniform over the depth of Prandtl's field (1/sqrt 2 of the edge contact): with that
+  depth halved or doubled the layer factor g of an unworn edge moves from 0.49 to 0.68 or 0.29 at L = 1 and from 0.87
+  to 0.92 or 0.79 at L = 0.01 (at low Peclet numbers the plastic work reaches the contact like the friction heat).
 * Chip breaking: the rupture strains are Nakayama's for carbon and 18-8 steels; other families take
   carbon steel's fraction of the bulk fracture strain (factor 3 uncertain); the natural up-curl
   radius (15 l_c) is an estimate, and without the insert's groove geometry in the database the

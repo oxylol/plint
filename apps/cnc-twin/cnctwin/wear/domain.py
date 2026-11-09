@@ -496,6 +496,7 @@ class WearDomain:
                                   "wear:edge_chipped" if chipped else "wear:coating_spalled",
                                   {"slot": sw.slot, "tooth": float(row[A.SH_TOOTH]), "elem": float(row[A.SH_ELEM]),
                                    "probability": float(chips[i, A.CO_P] if chipped else chips[i, A.CO_P_COAT]),
+                                   "edge_hazard": float(chips[i, A.CO_HAZARD]),
                                    "wedge_stress_Pa": float(chips[i, A.CO_SIGMA_PA]),
                                    "force_N": float(row[A.SH_FORCE]), "kind": float(row[A.SH_KIND]),
                                    "chip_depth_m": float(chips[i, A.CO_DEPTH_M])}, parents)

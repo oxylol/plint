@@ -12,11 +12,11 @@ error_model="numpy"``, no fastmath, no parallel) and has a plain-Python twin in
 * :func:`element_outputs` - the bus arrays (VB, notch land, radial/axial wear, worn hone radius) from
   the state.
 * :func:`chip_trials` - per entry/exit shock row: Flamant wedge stress at the end of the contact,
-  Weibull chipping probability with its effective stressed volume (plus the comb-crack term), a
-  counter-based hash draw (stream ``wear.chipping``), and the coating spallation trial (stream
-  ``wear.coating``).
-* helpers: :func:`usui_rate`, :func:`table_at`, :func:`worn_edge_radius`, :func:`wedge_tension`,
-  :func:`wedge_volume_factor`.
+  the Weibull hazard with its effective stressed volume, accumulated over the edge's load cycles along the
+  Basquin curve (plus the comb-crack term), against the edge's own strength quantile (one hash draw per edge
+  and generation, stream ``wear.chipping``), and the coating spallation trial (stream ``wear.coating``).
+* helpers: :func:`usui_rate`, :func:`table_at`, :func:`worn_edge_radius`, :func:`flank_recession`,
+  :func:`wedge_tension`, :func:`wedge_volume_factor`.
 """
 
 from __future__ import annotations
@@ -28,11 +28,13 @@ from numba import njit, types
 
 from ..core.rng import hash_uniform
 from . import abi
-from .abi import (CL_BETA_MAX, CL_BETA_MIN, CL_CHIP_RATIO, CL_COAT_M, CL_COAT_SIGMA0_PA, CL_EXIT_FACTOR, CL_KIC,
-                  CL_LC_RATIO, CL_M, CL_MU, CL_NTHETA, CL_ROUNDING, CL_SIGMA0_PA, CL_VREF_M3, CL_Y, CO_CHIPPED,
-                  CO_DEPTH_M, CO_P, CO_P_COAT, CO_SIGMA_PA, CO_SPALLED, CO_VEFF_M3, IS_DT_S, KEY_SLOT, KEY_TOOTH,
+from .abi import (CL_BETA_MAX, CL_BETA_MIN, CL_CHIP_RATIO, CL_COAT_M, CL_COAT_SIGMA0_PA, CL_EXIT_FACTOR,
+                  CL_FATIGUE_B, CL_KIC, CL_LC_RATIO, CL_M, CL_MU, CL_NTHETA, CL_ROUNDING, CL_SIGMA0_PA, CL_VREF_M3,
+                  CL_Y, CO_CHIPPED, CO_DEPTH_M, CO_HAZARD, CO_P, CO_P_COAT, CO_SIGMA_PA, CO_SPALLED, CO_VEFF_M3,
+                  IS_DT_S, KEY_SLOT, KEY_TOOTH,
                   LS_ABR, LS_BUE_PROTECT, LS_COAT_FACTOR, LS_COAT_TMAX_K, LS_CRACK_A0_M, LS_CRACK_GROWTH,
-                  LS_DOC_RATIO, LS_FAT_B, LS_FAT_SIGMA_PA, LS_NOTCH_EXCESS, LS_PLUCK_M, LS_ROUNDING, LS_SKIN_FACTOR,
+                  LS_DOC_RATIO, LS_FAT_B, LS_FAT_SIGMA_PA, LS_MIN_CLEAR, LS_NOTCH_EXCESS, LS_PLUCK_M, LS_ROUNDING,
+                  LS_SKIN_FACTOR,
                   OS_COAT_THROUGH, OS_CRACK_INIT, OS_MAX_D, OS_MAX_RATE_M_S, OS_RAKE_THROUGH, OS_SUM_DVN, SH_ELEM,
                   SH_FORCE, SH_H, SH_KIND, SH_TOOTH, SHOCK_ENTRY)
 
@@ -281,13 +283,27 @@ def advance_elements(geo, inp, law, st, out):
             out.scal[OS_SUM_DVN] += d_vn
 
 
+@njit(f8(f8, f8, f8, f8), **OPTS)
+def flank_recession(vn, chip_d, clear, min_clear):
+    """Recession of the edge's lowest point normal to the machined surface: the flank wear depth, or that of an
+    edge chip when deeper. A fragment bounded by the tension at r = chip depth on the rake face (Flamant: the
+    stress is radial, so the fracture runs along the arc r = d about the edge) leaves its lowest point on the
+    flank face at d sin(a) above the old edge (a: the land geometry's clearance, clipped like g_vb); the flat
+    wear land at depth VN is unchanged by a chip that ends inside it (the chip shortens the land at the edge)."""
+    a = clear if clear > min_clear else min_clear
+    depth = chip_d * math.sin(a)
+    return vn if vn > depth else depth
+
+
 @njit(types.void(GEO_T, LAW_T, ST_T, OUT_T), **OPTS)
 def element_outputs(geo, law, st, out):
-    """VB = (VN + chip) (cot a - tan g); notch land where the element has been at the depth-of-cut line;
-    radial and axial wear = total recession x (sin kappa, cos kappa); worn hone radius."""
+    """VB = R (cot a - tan g), R = max(VN, chip depth x sin a) the recession of the edge's lowest point
+    (flank_recession); notch land where the element has been at the depth-of-cut line; radial and axial wear =
+    total recession (R + notch excess) x (sin kappa, cos kappa); worn hone radius."""
     nt = geo.valid.shape[0]
     ne = geo.valid.shape[1]
     rounding = law.scal[LS_ROUNDING]
+    min_clear = law.scal[LS_MIN_CLEAR]
     for j in range(nt):
         for k in range(ne):
             if geo.valid[j, k] == 0:
@@ -298,8 +314,9 @@ def element_outputs(geo, law, st, out):
                 out.edge_r[j, k] = geo.r_e0[j, k]
                 continue
             g = geo.g_vb[j, k]
-            total = st.vn[j, k] + st.vn_notch[j, k] + st.chip_d[j, k]
-            out.VB[j, k] = (st.vn[j, k] + st.chip_d[j, k]) * g
+            flank = flank_recession(st.vn[j, k], st.chip_d[j, k], geo.clear[j, k], min_clear)
+            total = flank + st.vn_notch[j, k]
+            out.VB[j, k] = flank * g
             out.VB_N[j, k] = total * g if st.doc_hit[j, k] != 0 else 0.0
             out.radial[j, k] = total * geo.sin_k[j, k]
             out.axial[j, k] = total * geo.cos_k[j, k]
@@ -311,13 +328,21 @@ def element_outputs(geo, law, st, out):
 
 @njit(types.void(GEO_T, ST_T, CHIP_T, I1, F2, F1, F2), **OPTS)
 def chip_trials(geo, st, chip, ikeys, rows, b_eng, out):
-    """Weibull chipping and coating-spallation trials of the shock rows (sorted by tick, tooth, elem).
+    """Weibull chipping of the edge and coating-spallation trials of the shock rows (sorted by tick, tooth, elem).
 
     ikeys = [seed, stream key of wear.chipping, stream key of wear.coating, tool slot]. Per row: entry
     contact l_c = max(ratio h, hone radius), force per unit width F / b (b: the tooth's engaged chip
-    width in the step), Flamant tension at r = l_c, effective volume b l_c^2 I_theta / (m - 2),
-    P = 1 - exp(-(V_eff / V_ref)(sigma / sigma_0)^m - (sigma / sigma_crack)^m) with
-    sigma_crack = K_IC / (Y sqrt(pi a)) for a comb crack of depth a. One draw per row and element counter."""
+    width in the step), Flamant tension at r = l_c, effective volume b l_c^2 I_theta / (m - 2), the
+    size-normalised stress sigma_n = sigma (V_eff / V_ref)^(1/m).
+
+    The edge's strength is a property of the edge, not of the load cycle (Weibull's weakest link: an edge that
+    survived a load survives the same load again; a new draw per entry made every edge chip in the end at any
+    stress): one quantile u per edge and generation (counter = chips so far), and the edge chips at the cycle
+    whose cumulative hazard H reaches -ln(1 - u). Load cycles degrade the strength along the tool material's
+    Basquin curve (strength life equal rank, Miner): S = sum_i (sigma_n,i / sigma_0)^p, p = -1/b, and
+    H = S^(m/p) + (sigma / sigma_crack)^m, sigma_crack = K_IC / (Y sqrt(pi a)) for a comb crack of depth a; one
+    cycle gives the static hazard (sigma_n / sigma_0)^m. A chip makes a new edge: the next generation's quantile
+    and an empty fatigue sum. ``CO_P`` is the static probability of the row's load, ``CO_HAZARD`` H."""
     c = chip.scal
     seed = ikeys[0]
     sid_chip = ikeys[1]
@@ -326,6 +351,8 @@ def chip_trials(geo, st, chip, ikeys, rows, b_eng, out):
     nt = geo.valid.shape[0]
     ne = geo.valid.shape[1]
     m = c[CL_M]
+    b_fat = c[CL_FATIGUE_B]
+    p_fat = -1.0 / b_fat if b_fat < 0.0 else 0.0
     n_theta = np.int64(c[CL_NTHETA])
     for i in range(rows.shape[0]):
         for col in range(out.shape[1]):
@@ -360,23 +387,34 @@ def chip_trials(geo, st, chip, ikeys, rows, b_eng, out):
         sigma, c_x, c_y = wedge_tension(per_m, contact, beta, geo.rake[j, k], geo.clear[j, k], c[CL_MU])
         key = slot * KEY_SLOT + j * KEY_TOOTH + k
         out[i, CO_SIGMA_PA] = sigma
+        st.n_chip[j, k] += 1
         p_chip = 0.0
+        hazard = 0.0
         if sigma > 0.0:
             v_eff = width * contact * contact * wedge_volume_factor(c_x, c_y, beta, m, n_theta) / (m - 2.0)
             out[i, CO_VEFF_M3] = v_eff
-            hazard = v_eff / c[CL_VREF_M3] * (sigma / c[CL_SIGMA0_PA]) ** m
+            ratio = (v_eff / c[CL_VREF_M3]) ** (1.0 / m) * sigma / c[CL_SIGMA0_PA]
+            static = ratio ** m
+            crack = 0.0
             if c[CL_KIC] > 0.0 and st.crack_m[j, k] > 0.0:
                 sigma_crack = c[CL_KIC] / (c[CL_Y] * math.sqrt(math.pi * st.crack_m[j, k]))
-                hazard += (sigma / sigma_crack) ** m
-            p_chip = -math.expm1(-hazard)
+                crack = (sigma / sigma_crack) ** m
+            p_chip = -math.expm1(-(static + crack))
+            if p_fat > 0.0:
+                st.edge_fat[j, k] += ratio ** p_fat
+                hazard = st.edge_fat[j, k] ** (m / p_fat) + crack
+            else:
+                hazard = static + crack
         out[i, CO_P] = p_chip
-        draw = hash_uniform(seed, sid_chip, key, st.n_chip[j, k], 0)
-        st.n_chip[j, k] += 1
-        if draw < p_chip:
+        out[i, CO_HAZARD] = hazard
+        strength = hash_uniform(seed, sid_chip, key, np.int64(st.chipped[j, k]), 0)
+        if hazard > 0.0 and hazard >= -math.log1p(-strength):
             depth = c[CL_CHIP_RATIO] * contact
             if depth > st.chip_d[j, k]:
                 st.chip_d[j, k] = depth
-            st.chipped[j, k] = 1
+            if st.chipped[j, k] < 127:
+                st.chipped[j, k] += 1
+            st.edge_fat[j, k] = 0.0
             st.coat_f[j, k] = 0.0
             st.coat_r[j, k] = 0.0
             out[i, CO_CHIPPED] = 1.0
@@ -394,5 +432,5 @@ def chip_trials(geo, st, chip, ikeys, rows, b_eng, out):
                 out[i, CO_SPALLED] = 1.0
 
 
-__all__ = ["usui_rate", "table_at", "worn_edge_radius", "wedge_tension", "wedge_volume_factor", "advance_elements",
-           "element_outputs", "chip_trials"]
+__all__ = ["usui_rate", "table_at", "worn_edge_radius", "flank_recession", "wedge_tension", "wedge_volume_factor",
+           "advance_elements", "element_outputs", "chip_trials"]

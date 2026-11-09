@@ -62,7 +62,9 @@ TOL = {
     "tool_rise_K": (0.015, True, 1e-4), "edge_rise_K": (0.015, True, 1e-4), "rake_rise_K": (0.015, True, 1e-4),
     "VB_growth_um": (0.05, True, 1e-4),         # taylor_life / VB(t) 50 %
     "bulk_rise_K": (0.015, True, 1e-4), "bulk_max_rise_K": (0.015, True, 1e-4),
-    "surface_rise_K": (0.015, True, 1e-4),
+    "surface_rise_K": (0.015, True, 1e-4), "preheat_rise_K": (0.015, True, 1e-4),
+    "rake_rise_mean_K": (0.015, True, 1e-4), "edge_rise_mean_K": (0.015, True, 1e-4),
+    "preheat_rise_mean_K": (0.015, True, 1e-4),
     "expansion_um": (0.1, False, 0.002),        # 0.1 um: a hundredth of a +-10 um tolerance (the expansion is small)
 }
 
@@ -572,6 +574,10 @@ LOOP_AE, LOOP_AP = 0.5, 1.0
 LOOP_PASSES = [(-5.0 + LOOP_AE, -8.0, 110.0)]
 LOOP_EVAL_X_MM = 100.0             # quantities at the moment the tip passes x = 100 mm on the (last) pass
 LOOP_FORCE_X_MM = (20.0, 100.0)    # forces: mean over the pass between these tip positions
+# the coupling temperatures also as time means over this span before the evaluation moment (5 solves of the tool
+# field, 25 edge evaluations, about 80 revolutions): their step-to-step scatter (the passes' heat, the solve instants)
+# is a few per cent, which a value at one instant compares as much as the step's effect
+LOOP_MEAN_S = 0.5
 # structure's work model at 3000 DOF, as in the stored results (its 50 000 DOF default cost ~1 s per macro step on
 # this stock until 2026-11-09, 0.09 s since: docs/performance.md 11)
 LOOP_CASE = {"structure": {"max_dof": 3000}}
@@ -611,6 +617,7 @@ def loop_case(study, level: Level, db):
             r["bulk_K"] = float((th.work_bulk_mean_K or {}).get(0, math.nan))
             r["bulk_max_K"] = float((th.work_bulk_max_K or {}).get(0, math.nan))
             r["surface_K"] = float((th.contact_surface_temp_K or {}).get(0, math.nan))
+            r["preheat_K"] = float((th.contact_preheat_K or {}).get(0, math.nan))
         for slot, tw in (getattr(b.wear, "tools", {}) or {}).items():
             r["VB_m"] = float(tw.VB_max_m)
         cc = b.cutting.contacts
@@ -643,7 +650,7 @@ def loop_case(study, level: Level, db):
         if (work / "run" / "run.json").exists() else {}
     q["energy_worst_rel"] = led["worst"]
     keys = ("t", "x", "y", "in_cut", "body_K", "edge_K", "rake_K", "VB_m", "bulk_K", "bulk_max_K", "surface_K",
-            "expansion_um", "energy_rel")
+            "preheat_K", "expansion_um", "energy_rel")
     series = {k: [r.get(k) for r in rows[::5]] for k in keys}
     cut = [r for r in rows if r.get("in_cut", 0.0) > 0.0 and r.get("energy_rel") is not None]
     det.update({"complete": bool(result.get("complete")), "verdict": result.get("verdict"),
@@ -719,6 +726,16 @@ def loop_quantities(rows):
     q["bulk_rise_K"] = at("bulk_K") - T0
     q["bulk_max_rise_K"] = at("bulk_max_K") - T0
     q["surface_rise_K"] = at("surface_K") - T0
+    q["preheat_rise_K"] = at("preheat_K") - T0
+
+    def mean_before(key):
+        vals = [r.get(key) for r in rows if t_eval - LOOP_MEAN_S < r["t"] <= t_eval]
+        vals = [v for v in vals if v is not None and math.isfinite(v)]
+        return float(np.mean(vals)) if vals else math.nan
+
+    q["rake_rise_mean_K"] = mean_before("rake_K") - T0
+    q["edge_rise_mean_K"] = mean_before("edge_K") - T0
+    q["preheat_rise_mean_K"] = mean_before("preheat_K") - T0
     q["expansion_um"] = at("expansion_um")
     F = []
     for r in rows:
@@ -746,8 +763,9 @@ def _macro_level(m):
 STUDIES["macro"] = Study(
     "macro", "Macro step (every domain on)", "physics.macro_ipo", "macro step (ms)",
     [_macro_level(m) for m in (5, 10, 20, 50, 2)], "macro10",
-    ["tool_rise_K", "edge_rise_K", "rake_rise_K", "VB_growth_um", "F_mean_N", "bulk_rise_K", "expansion_um"],
-    loop_case, note=LOOP_NOTE, test_labels=["macro10", "macro5"])  # 2 ms: over 1.8 GB until convergence.md 9.10
+    ["tool_rise_K", "edge_rise_K", "rake_rise_K", "VB_growth_um", "F_mean_N", "bulk_rise_K", "preheat_rise_K",
+     "expansion_um", "rake_rise_mean_K", "edge_rise_mean_K", "preheat_rise_mean_K"], loop_case, note=LOOP_NOTE,
+    test_labels=["macro10", "macro5"])  # 2 ms: over 1.8 GB until convergence.md 9.10
 
 STUDIES["lag"] = Study(
     "lag", "Coupling lag (every domain on)", "physics.lag_macro", "lag (macro steps)",
@@ -758,13 +776,15 @@ STUDIES["lag"] = Study(
 STUDIES["thermal_cell"] = Study(
     "thermal_cell", "Workpiece thermal grid: cell size", "physics.thermal.cell_mm", "cell (mm)",
     [Level(f"cell{c:g}", c, {"thermal": {"cell_mm": c}}) for c in (8.0, 4.0, 2.0, 1.0, 0.5)], "cell2",
-    ["bulk_rise_K", "bulk_max_rise_K", "surface_rise_K", "expansion_um", "tool_rise_K"], loop_case,
+    ["bulk_rise_K", "bulk_max_rise_K", "surface_rise_K", "preheat_rise_K", "expansion_um", "tool_rise_K",
+     "VB_growth_um", "preheat_rise_mean_K", "rake_rise_mean_K"], loop_case,
     note="the macro-step case (" + LOOP_NOTE + ") at the default macro step")
 
 STUDIES["thermal_every"] = Study(
     "thermal_every", "Workpiece thermal grid: cadence", "physics.thermal.every_n_macro", "FV step (ms)",
     [Level(f"every{n}", 10.0 * n, {"thermal": {"every_n_macro": n}}) for n in (20, 10, 5, 2, 1)], "every5",
-    ["bulk_rise_K", "bulk_max_rise_K", "surface_rise_K", "expansion_um", "tool_rise_K"], loop_case,
+    ["bulk_rise_K", "bulk_max_rise_K", "surface_rise_K", "expansion_um", "tool_rise_K", "preheat_rise_K",
+     "preheat_rise_mean_K"], loop_case,
     note="the macro-step case (" + LOOP_NOTE + ") at the default macro step (10 ms): the finite-volume step "
          "is every_n_macro x 10 ms")
 

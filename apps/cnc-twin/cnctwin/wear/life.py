@@ -13,8 +13,8 @@ End of life is the first of (ISO 3685 / ISO 8688 and the part's own specificatio
 * ``breakage``  the tool broke.
 
 Finish (Brammertz 1961 as revised by Grzesik 1996): R_t = f^2 / (8 r) + (h_min / 2)(1 + r h_min / f^2),
-h_min = minimum chip thickness ratio x the worn hone radius, plus the depth of a chip on a finishing
-element; Ra = R_t 8 / (18 sqrt 3) (the exact ratio of a parabolic feed-mark profile). f is the feed per
+h_min = minimum chip thickness ratio x the worn hone radius, plus the drop of the edge's lowest point by a chip on
+a finishing element (its depth x sin of the clearance, kernels.flank_recession); Ra = R_t 8 / (18 sqrt 3) (the exact ratio of a parabolic feed-mark profile). f is the feed per
 revolution (turning) or per tooth (milling: Martellotti 1941, the radius being the corner radius, or
 the tool radius for peripheral finishing), r the radius of the finishing edge.
 

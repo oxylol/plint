@@ -84,7 +84,13 @@ class SlotWear:
     @classmethod
     def from_arrays(cls, arrays: dict, meta: dict, prefix: str) -> "SlotWear":
         def load(group, layout):
-            return layout(*(np.ascontiguousarray(arrays[f"{prefix}{group}.{name}"]).copy() for name in layout._fields))
+            def array(name):
+                key = f"{prefix}{group}.{name}"
+                if key not in arrays and group == "elem":
+                    # an element array added after the checkpoint was written (edge_fat, 2026-11-09): it starts empty
+                    return np.zeros_like(np.ascontiguousarray(arrays[f"{prefix}elem.vn"]), dtype=np.float64)
+                return np.ascontiguousarray(arrays[key]).copy()
+            return layout(*(array(name) for name in layout._fields))
 
         life = dict(meta["life"])
         for key in ("remaining_s", "replacement_s"):

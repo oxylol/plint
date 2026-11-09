@@ -1,6 +1,8 @@
-"""Weibull chipping per entry shock with counter-based draws: frequencies match the probability, draws are
-reproducible and seed-dependent, the size effect and the stress exponent are Weibull's, comb cracks raise
-the probability, coatings spall."""
+"""Weibull chipping of the edge at entry/exit shocks: each edge has its own strength quantile (one draw per edge
+and generation), so the share of edges that chip at a first load is the Weibull probability, an edge that survived
+a load does not chip again at that load unless its strength degrades along the Basquin curve (Miner sum of the
+load cycles); draws are reproducible and seed-dependent, the size effect and the stress exponent are Weibull's,
+comb cracks raise the hazard, a chip makes a new edge, coatings spall."""
 
 from __future__ import annotations
 
@@ -50,13 +52,14 @@ def _law(m=15.0, trs=2.2e9, kic=1e7):
     return chip
 
 
-def _trials(force, n=4000, width=1e-3, seed=5, crack=0.0, coat=0.0, h=1e-4, law=None):
-    """One entry row per element (n identical elements): independent trials at one probability."""
+def _trials(force, n=4000, width=1e-3, seed=5, crack=0.0, coat=0.0, h=1e-4, law=None, st=None):
+    """One entry row per element (n identical elements, each with its own strength): one load of each edge."""
     geo = _geo(n)
-    st = A.new_state(1, n)
-    st.crack_m[:] = crack
-    st.coat_f[:] = coat
-    st.coat_r[:] = coat
+    if st is None:
+        st = A.new_state(1, n)
+        st.crack_m[:] = crack
+        st.coat_f[:] = coat
+        st.coat_r[:] = coat
     rows = np.zeros((n, A.SHOCK_WIDTH))
     rows[:, A.SH_TICK] = np.arange(n)
     rows[:, A.SH_ELEM] = np.arange(n)
@@ -138,6 +141,52 @@ def test_coatings_spall_with_their_own_probability():
     assert abs(spalled[survived].mean() - p_coat[0]) < 4.0 * sigma + 1e-12
     assert np.all(st.coat_f[0][spalled] == 0.0) and np.all(st.coat_f[0][survived & ~spalled] == 3e-6)
     assert np.all(st.coat_f[0][~survived] == 0.0)          # a chip takes the coating with it
+
+
+def test_an_edge_that_survived_a_load_survives_it_again_without_fatigue():
+    """Weibull's weakest link: the strength is the edge's (its flaw population), not the load cycle's. A second
+    identical load chips no further edge when the strength does not degrade (b = 0); a new draw per entry had made
+    every edge chip in the end at any stress (1 - (1 - P)^N)."""
+    force = _force_for(0.2)
+    first, st = _trials(force)
+    second, st = _trials(force, st=st)
+    assert np.mean(first[:, A.CO_CHIPPED]) == pytest.approx(0.2, abs=4.0 * math.sqrt(0.16 / 4000))
+    assert not np.any((second[:, A.CO_CHIPPED] > 0) & (first[:, A.CO_CHIPPED] == 0))
+    assert np.all(st.n_chip == 2)
+
+
+def test_load_cycles_degrade_the_edge_along_the_basquin_curve():
+    """Equal rank (strength life): after N identical cycles the hazard is N^(m/p) times the static one (Miner's sum
+    of (sigma_n / sigma_0)^p, p = -1/b), so the edges that chip by the N-th cycle are 1 - exp(-N^(m/p) H_1)."""
+    m = 15.0
+    b = math.log(0.7) / math.log(2e7)
+    law = _law(m=m)
+    law.scal[A.CL_FATIGUE_B] = b
+    force = _force_for(0.01, law=law)
+    st = None
+    for cycle in range(1, 6):
+        out, st = _trials(force, law=law, st=st)
+    alive = st.chipped[0] == 0
+    p1 = out[np.flatnonzero(alive)[0], A.CO_P]            # the static probability of the load on an intact edge
+    h1 = -math.log1p(-p1)
+    assert np.allclose(out[alive, A.CO_HAZARD], 5.0 ** (m * -b) * h1, rtol=1e-9, atol=0.0)
+    expected = -math.expm1(-(5.0 ** (m * -b)) * h1)
+    chipped = float(np.mean(st.chipped[0] != 0))
+    assert abs(chipped - expected) < 4.0 * math.sqrt(expected * (1 - expected) / st.chipped.size)
+    assert expected > 1.3 * p1                                            # fatigue: more edges by the 5th cycle
+
+
+def test_a_chip_makes_a_new_edge():
+    """A chip takes the fatigue sum with it and the edge draws the next generation's strength."""
+    force = _force_for(0.5)
+    out, st = _trials(force, n=400)
+    hit = st.chipped[0] != 0
+    assert hit.any() and np.all(st.edge_fat[0][hit] == 0.0) and np.all(st.chipped[0][hit] == 1)
+    again, st2 = _trials(force, n=400, st=st)
+    # the new edges chip again at the static probability of the load (their own new quantiles)
+    renewed = again[hit, A.CO_CHIPPED]
+    p = again[0, A.CO_P]
+    assert abs(float(np.mean(renewed)) - p) < 4.0 * math.sqrt(p * (1 - p) / hit.sum())
 
 
 def test_reference_strength_of_the_trs_test_piece():

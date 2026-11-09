@@ -23,10 +23,10 @@ the verdicts below.
 | Surface-memory bins with the stride (1-DOF, runout, regeneration) | `physics.memory_bins with physics.max_deg_per_step = 360 / memory_bins` | bins720 | 5 / 8 | peak force 10.9 % (2 %) | outside for some quantities |
 | Surface-memory bins alone, stride fixed (1-DOF) | `physics.memory_bins` | bins720 | 2 / 8 | tooth-to-tooth chip spread 0.083 (0.01) | outside for some quantities |
 | Surface-memory bins: chatter onset depth (1-DOF) | `physics.memory_bins` | bins720 | 1 / 1 | chatter onset depth (5 N/um) 0 % (2.5 %) | inside the converged range |
-| Macro step (every domain on) | `physics.macro_ipo` | macro10 | 0 / 7 | VB growth 90 % (5 %) | outside for some quantities |
+| Macro step (every domain on) | `physics.macro_ipo` | macro10 | 6 / 11 | VB growth 123 % (5 %) | outside for some quantities |
 | Coupling lag (every domain on) | `physics.lag_macro` | lag1 | 6 / 6 | mean force magnitude 0 % (1.5 %) | inside the converged range |
-| Workpiece thermal grid: cell size | `physics.thermal.cell_mm` | cell2 | 1 / 5 | workpiece hottest cell rise 308 % (1.5 %) | outside for some quantities |
-| Workpiece thermal grid: cadence | `physics.thermal.every_n_macro` | every5 | 2 / 5 | workpiece hottest cell rise 15.1 % (1.5 %) | outside for some quantities |
+| Workpiece thermal grid: cell size | `physics.thermal.cell_mm` | cell2 | 6 / 9 | workpiece hottest cell rise 64.1 % (1.5 %) | outside for some quantities |
+| Workpiece thermal grid: cadence | `physics.thermal.every_n_macro` | every5 | 4 / 7 | workpiece hottest cell rise 20.4 % (1.5 %) | outside for some quantities |
 | Turning: polar theta bins | `physics.polar_theta_bins` | th720 | 6 / 6 | mean Fx (T0) 0.00241 % (1.5 %) | inside the converged range |
 | Turning: polar row height (axial resolution) | `physics.removal.polar_min_feed_mm_rev (dz = f_min / 8)` | fmin0.05 | 6 / 6 | Rt of the turned surface 1.92 % (3 %) | inside the converged range |
 <!-- convergence:summary:end -->
@@ -36,7 +36,11 @@ the verdicts below.
 the surface-memory bins refined with the stride, and the chatter onset depth; every turning quantity against the
 polar theta bins and the row height; the wall positions (exact) and the corner's peak force against the lattice; the
 ball nose's forces against the edge element size (at this depth, by alignment); the thermal expansion at the contact
-against the workpiece grid's cell and cadence; `lag_macro` (2 is computed as 1: identical runs).
+against the workpiece grid's cell and cadence; `lag_macro` (2 is computed as 1: identical runs); since the fixes of
+section 9 items 8 and 9, the coupled tool against the macro step (tool body, edge peak at the comparison moment, the
+0.5 s means of the rake temperature cutting reads and of the preheat, the mean force at the tolerance) and against
+the workpiece grid's cell and cadence (the tool's state the same to six digits at every level, the preheat within
+0.5 %).
 
 **Outside:** (1) peak forces against the stride, 5-11 % low at 0.5 deg because a peak is a step mean (within 2 %
 from 0.125 deg, 2.2-2.5 times the CPU in cut); (2) the forces of a flat end mill against the edge element size, -4.8 %
@@ -45,11 +49,13 @@ length every size agrees to 0.05 %: a model fix, not a smaller default); (3) aga
 removed volume of a thin finishing layer (-18 % at 0.25 mm, still +2 % at 0.03125 mm: first order, not cured by
 refinement), the steady peak force (+34 % at 0.25 mm), the engaged arc (oscillating +-1.3 %), the corner's mean
 force (-1.8 %); (4) against the memory bins, the peak force, vibration and tooth-to-tooth chip spread, which need
-the finer stride; (5) the whole loop against the macro step: the rake temperature cutting reads depends on the
-step's length and the tool's wear and temperature run away at a moment the step decides, so nothing converges (2 ms
-ran out of memory); (6) the workpiece grid's bulk and hottest-cell temperatures, and the tool, whose runaway a 1 mm
-grid or a 2-step cadence brings forward. Section 8 lists the defaults the studies support and their cost; section 9
-the causes found, for their owners.
+the finer stride; (5) against the macro step, the values at one instant of the rake temperature and the preheat
+(a step-to-step scatter of 1-2 % at every level), the workpiece's bulk rise and the edge peak's 0.5 s mean (2-6 %),
+and VB growth, now below 1 um; before the fixes of section 9 items 8 and 9 the rake temperature cutting reads
+depended on the step's length and the tool's wear and temperature ran away at a moment the step decided, so nothing
+converged; (6) the workpiece grid's bulk, hottest-cell and contact-surface temperatures against the cell and the
+cadence (before those fixes also the tool, whose runaway a 1 mm grid or a 2-step cadence brought forward). Section 8
+lists the defaults the studies support and their cost; section 9 the causes found, for their owners.
 
 ## Method
 
@@ -104,8 +110,10 @@ the cut.
 5a63ec23a55df3c2, `tools/convergence/env.py --root`) with its own Numba cache; the working tree changed under other
 work while the studies ran. An earlier copy (12:38) gave the same hot-loop results to the digits shown (cutting's
 analytic chip volume 1-1.5 % different, from the cutting changes in between) but destroyed the tool at the first
-entry of every whole-loop run (section 5). Rerunning `tools/convergence/run_all.sh` regenerates every number for the
-tree it is run on.
+entry of every whole-loop run (section 5). The macro-step, cell and cadence studies were measured again on
+2026-11-09 evening in the `coupling` worktree with the fixes of section 9 items 8 and 9 (thermal, mechanics, and
+cutting's reading of thermal; the tables of sections 5 and 6 and the summary rows are those runs; the lag table is
+the earlier one). Rerunning `tools/convergence/run_all.sh` regenerates every number for the tree it is run on.
 
 ## 1. L0 stride (`physics.max_deg_per_step`, `physics.steps_per_tooth`)
 
@@ -510,7 +518,8 @@ passes x = 100 mm (about 3.6 s into the cut), the forces over x = 20-100 mm, the
 run. The 10-20 s cut the study asked for was run too: two passes of 166 mm, 11 s in cut. Its tool's flank wear and
 temperature run away together after about 4.5 s of cutting (VB 20 -> 106 um at 8 s, 592 um at 9 s, 1.2 mm at 14 s;
 rake temperature rise 76 -> 241 -> 320 K; then no cut), at the default macro step: a runaway does not converge in
-the coupling interval, so the comparison stops at 3.6 s, before it. In the copy of 12:38 every whole-loop run lost
+the coupling interval, so the comparison stops at 3.6 s, before it (before the fixes of section 9 items 8 and 9;
+the two-pass cut was not rerun after them). In the copy of 12:38 every whole-loop run lost
 its tool at the first entry instead (VB 20 -> 1190 um within 0.3 s, then no cut), which the later copy no longer
 does.
 
@@ -523,22 +532,27 @@ Case: a side step 0.5 mm wide and 1 mm deep along the front face of a 150 x 20 x
 110 mm (4.4 s in cut), D10 4FL, 10 000 rpm, f_z 0.04 mm, flood coolant, every domain on; structure at 3000 DOF;
 quantities when the tip passes x = 100 mm, forces over x = 20-100 mm.
 
-| level | macro step (ms) | mean force magnitude (N) | VB growth (um) | workpiece bulk rise (K) | edge peak rise (K) | thermal expansion at the contact (um) | rake rise (K) | tool body rise (K) | CPU s | in cut |
-|---|---|---|---|---|---|---|---|---|---|---|
-| macro50 | 50.00 | 3.018 | 1169 | 0.3611 | 71.34 | 0.001384 | 11.70 | 1.065 | 38.8 | - |
-| macro20 | 20.00 | 18.18 | 43.74 | 0.8400 | 546.7 | -0.1368 | 60.77 | 3.703 | 70.2 | - |
-| macro10 (default) | 10.00 | 19.99 | 85.43 | 0.9536 | 657.4 | -0.3966 | 52.28 | 3.778 | 122 | - |
-| macro5 | 5.000 | 17.10 | 365.0 | 0.8054 | 756.1 | -0.2559 | 69.03 | 3.470 | 245 | - |
+| level | macro step (ms) | mean force magnitude (N) | VB growth (um) | workpiece bulk rise (K) | edge peak rise (K) | edge peak rise, 0.5 s mean (K) | thermal expansion at the contact (um) | preheat rise (material entering the cut) (K) | preheat rise, 0.5 s mean (K) | rake rise (K) | rake rise, 0.5 s mean (K) | tool body rise (K) | CPU s | in cut |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| macro50 | 50.00 | 11.03 | 0.8062 | 1.006 | 376.8 | 374.8 | 8.949e-04 | 18.35 | 18.41 | 31.77 | 32.85 | 2.248 | 60.4 | - |
+| macro20 | 20.00 | 12.85 | 0.4620 | 0.8557 | 381.6 | 380.2 | -0.1051 | 18.05 | 17.99 | 30.71 | 31.24 | 2.261 | 101 | - |
+| macro10 (default) | 10.00 | 13.07 | 0.09601 | 0.8059 | 378.4 | 370.7 | -0.3184 | 18.07 | 17.93 | 30.54 | 32.03 | 2.205 | 185 | - |
+| macro5 | 5.000 | 13.18 | 0.04660 | 0.8308 | 374.5 | 363.9 | -0.3039 | 17.74 | 18.16 | 31.22 | 32.10 | 2.194 | 296 | - |
+| macro2 | 2.000 | - | - | - | - | - | - | - | - | - | - | - | 600 | - |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| mean force magnitude | 17.10 N | finest (oscillating) | (0.674) | 16.9 % | 1.5 % | outside: no measured level converged |
-| VB growth | 414.0 um | Richardson (3 finest) | 2.75 | 90 % | 5 % | outside: no measured level converged |
-| workpiece bulk rise | 0.8054 K | finest (oscillating) | (0.383) | 18.4 % | 1.5 % | outside: no measured level converged |
-| edge peak rise | 756.1 K | finest level | (0.166) | 13.1 % | 1.5 % | outside: no measured level converged |
-| thermal expansion at the contact | -0.2559 um | finest (oscillating) | (0.885) | 0.141 um | 0.1 um | outside: no measured level converged |
-| rake rise | 69.03 K | finest (oscillating) | (0.981) | 24.3 % | 1.5 % | outside: no measured level converged |
-| tool body rise | 3.470 K | finest (oscillating) | (2.03) | 8.89 % | 1.5 % | outside: no measured level converged |
+| mean force magnitude | 13.27 N | Richardson (3 finest) | 1.08 | 1.49 % | 1.5 % | inside |
+| VB growth | 0.03888 um | Richardson (3 finest) | 2.89 | 123 % | 5 % | outside: no measured level converged |
+| workpiece bulk rise | 0.8308 K | finest (oscillating) | (1.00) | 2.99 % | 1.5 % | outside: no measured level converged |
+| edge peak rise | 374.5 K | finest level | (0.291) | 1.05 % | 1.5 % | inside (reference uncertain) |
+| edge peak rise, 0.5 s mean | 347.9 K | Richardson (3 finest) | 0.503 | 6.27 % | 1.5 % | outside: no measured level converged |
+| thermal expansion at the contact | -0.3039 um | finest (oscillating) | (3.89) | 0.0144 um | 0.1 um | inside (reference uncertain) |
+| preheat rise (material entering the cut) | 17.74 K | finest (oscillating) | (3.81) | 1.88 % | 1.5 % | outside: no measured level converged |
+| preheat rise, 0.5 s mean | 18.16 K | finest (oscillating) | (1.81) | 1.27 % | 1.5 % | inside |
+| rake rise | 31.22 K | finest (oscillating) | (2.01) | 2.16 % | 1.5 % | outside: no measured level converged |
+| rake rise, 0.5 s mean | 32.11 K | Richardson (3 finest) | 3.59 | 0.224 % | 1.5 % | inside |
+| tool body rise | 2.192 K | Richardson (3 finest) | 2.46 | 0.569 % | 1.5 % | inside |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
@@ -571,20 +585,38 @@ outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cu
 <!-- convergence:lag:end -->
 
 **Lag: the two settings are the same computation.** lag_macro 1 and 2 give bit-identical runs (the digest of every
-observed step value agrees), as the loop documents. **Macro step: not converged, and not convergent in the present
-coupling.** 2 ms (the finest level) was killed by bin/tsafe's 1.8 GB cap about 26 s into the run, before the cut, in
-both copies (the 10 ms run completes under the same cap; the cause, chips' occupancy grid sized by a tool change's
-tip jump, is fixed: section 9 item 10); 50 ms loses its tool at the entry (VB 20 -> 752 um 0.15 s
-after it, 1.19 mm at 0.65 s, then no cut). Among 5, 10 and 20 ms the tool body temperature (3.5-3.8 K) and the
-workpiece's bulk temperature (0.81-0.95 K) agree within 10-18 %, but the rake temperature cutting's coefficients
-read differs from the first second of the cut on (85, 55 and 37 K at 4.8 s; the histories: it alternates from step
-to step, by +-50 K at 5 ms), and the flank wear, which follows it, takes different paths: VB 365 um at 5 ms (two
-chipping jumps), 85 um at 10 ms, 44 um at 20 ms at the comparison moment. The forces follow the wear (17.1, 20.0,
-18.2 N). A quantity that is frozen over a macro step and recomputed from that step's heat (the rake contact's entry
-temperature, thermal section 2.2) is not independent of the step's length; with the wear model's temperature
-dependence the coupled tool state is unstable, so the step decides when it runs away. The energy balance closes at
-every level (worst interval 3e-12 of its terms). No macro step can be recommended from this case; the coupling needs
-the fixes of section 9 first.
+observed step value agrees), as the loop documents (the lag table was measured before the fixes of section 9 items 8
+and 9; the two levels are the same run by construction). **Macro step, before those fixes (the copy of 14:28): not
+converged, and not convergent in the present coupling.** The rake temperature cutting's coefficients read differed
+from the first second of the cut on (85, 55 and 37 K at 4.8 s; it alternated from step to step, by +-50 K at 5 ms),
+the flank wear followed it (VB 365, 85 and 44 um at 5, 10 and 20 ms at the comparison moment; 50 ms lost its tool at
+the entry, VB 20 -> 752 um within 0.15 s), and the forces the wear (17.1, 20.0, 18.2 N); 2 ms ran out of bin/tsafe's
+1.8 GB (section 9 item 10, fixed since).
+
+**Macro step after the fixes of section 9 items 8 and 9 (re-measured 2026-11-09 in the `coupling` worktree; the table
+above).** No level loses its tool, and the tool state no longer depends on the step: tool body rise 2.19-2.26 K,
+edge peak rise 374-382 K, VB growth below 1 um at every level (0.05, 0.10, 0.46, 0.81 um at 5, 10, 20, 50 ms: the
+flank now gets Blok's share of its contact heat, and the land barely wears in 3.6 s). The rake temperature cutting
+reads is 31.2, 30.5, 30.7, 31.8 K at the comparison moment; from step to step it scatters by +-1-2 K at every level
+(the teeth's heat from pass to pass, the cutting-region field's solves every 100 ms), so the default's value at that
+instant is 2.2 % from the 5 ms one, outside the 1.5 % tolerance, while its mean over the last 0.5 s (32.10, 32.03,
+31.24, 32.85 K) is 0.2 % from the Richardson value: inside. The preheat behaves alike (17.7-18.4 K; the instant 1.9 %,
+the 0.5 s mean 1.3 %, inside). The mean force is at the tolerance (13.18, 13.07, 12.85, 11.03 N; 1.49 % from the
+Richardson value). Outside: VB growth (a quantity near zero now, whose relative comparison is the wear model's floor),
+the workpiece's bulk rise (0.83, 0.81, 0.86, 1.01 K: thermal's finite volumes run every 5 macro steps, 25-250 ms) and
+the edge peak's 0.5 s mean (364, 371, 380 K at 5, 10, 20 ms, Richardson 348 K, 6 %: over 5.0-7.5 s the three agree
+within 1 %, in the last half second the 20 ms run's hottest element ran hotter). The expansion at the contact is
+inside at 10 ms (0.014 um from 5 ms) but structure's refresh is counted in macro steps (every 50, latency 50), so at
+20 and 50 ms it lags: -0.11 and 0.00 um. The energy balance closes at every level (worst interval 3e-12 of its
+terms). CPU: 296, 185, 101, 61 s at 5, 10, 20, 50 ms. **2 ms** (600 s, within the memory cap since section 9 item 10)
+is left out of the analysis: its edge chipped at 7.90 s (one Weibull chipping trial of the wear model, VB +56 um;
+no other level chipped), 0.19 s before the comparison moment, so its values there describe another edge (kept in the
+results file as `details.quantities_excluded`: tool body 2.20 K, rake 32.7 K and its 0.5 s mean 32.5 K, edge peak
+361 K, preheat 17.1 K, mean force 13.28 N). Before the event its tool body and rake temperature follow the 5 ms run
+(rake over 6.0-6.5 s 29.1 against 29.1 K), but its preheat runs 3-8 % below it (16.8-17.2 against 17.7-18.3 K over
+5.0-6.5 s); not explained (candidates: the step's work-heat share, the partition tables being read at each element's
+in-cut chip thickness of the step, which at 2 ms is more often that of part of a pass; removal's engaged arc and depth
+of the step).
 
 ## 6. Workpiece thermal grid (`physics.thermal.cell_mm`, `physics.thermal.every_n_macro`)
 
@@ -598,21 +630,25 @@ Case: the macro-step case (a side step 0.5 mm wide and 1 mm deep along the front
 structure at 3000 DOF; quantities when the tip passes x = 100 mm, forces over x = 20-100 mm) at the default macro
 step.
 
-| level | cell (mm) | workpiece hottest cell rise (K) | workpiece bulk rise (K) | thermal expansion at the contact (um) | contact surface rise (K) | tool body rise (K) | CPU s | in cut |
-|---|---|---|---|---|---|---|---|---|
-| cell8 | 8.000 | 3.642 | 0.8224 | -0.3586 | 174.0 | 3.771 | 139 | - |
-| cell4 | 4.000 | 9.470 | 0.9438 | -0.3842 | 185.1 | 3.782 | 137 | - |
-| cell2 (default) | 2.000 | 18.82 | 0.9536 | -0.3966 | 187.6 | 3.778 | 130 | - |
-| cell1 | 1.000 | 37.22 | 1.069 | -0.4756 | 186.4 | 7.212 | 170 | - |
-| cell0.5 | 0.5000 | 4.616 | 0.9043 | -0.4468 | 140.7 | 6.878 | 154 | - |
+| level | cell (mm) | VB growth (um) | workpiece hottest cell rise (K) | workpiece bulk rise (K) | thermal expansion at the contact (um) | preheat rise (material entering the cut) (K) | preheat rise, 0.5 s mean (K) | rake rise, 0.5 s mean (K) | contact surface rise (K) | tool body rise (K) | CPU s | in cut |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| cell8 | 8.000 | 0.09601 | 2.838 | 0.6902 | -0.2948 | 18.13 | 17.94 | 32.03 | 244.4 | 2.205 | 167 | - |
+| cell4 | 4.000 | 0.09601 | 6.822 | 0.7945 | -0.3085 | 18.13 | 17.99 | 32.03 | 247.8 | 2.205 | 167 | - |
+| cell2 (default) | 2.000 | 0.09601 | 13.68 | 0.8059 | -0.3184 | 18.07 | 17.93 | 32.03 | 255.3 | 2.205 | 185 | - |
+| cell1 | 1.000 | 0.09601 | 19.95 | 0.8033 | -0.3094 | 18.07 | 17.92 | 32.03 | 261.5 | 2.205 | 166 | - |
+| cell0.5 | 0.5000 | 0.09601 | 23.63 | 0.7994 | -0.3068 | 18.05 | 17.91 | 32.03 | 260.2 | 2.205 | 185 | - |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| workpiece hottest cell rise | 4.616 K | finest (oscillating) | (0.825) | 308 % | 1.5 % | outside: no measured level converged |
-| workpiece bulk rise | 0.9043 K | finest (oscillating) | (0.511) | 5.44 % | 1.5 % | outside: no measured level converged |
-| thermal expansion at the contact | -0.4468 um | finest (oscillating) | (1.45) | 0.0502 um | 0.1 um | inside |
-| contact surface rise | 140.7 K | finest level | (5.24) | 33.4 % | 1.5 % | outside: no measured level converged |
-| tool body rise | 6.878 K | finest (oscillating) | (3.36) | 45.1 % | 1.5 % | outside: no measured level converged |
+| VB growth | 0.09601 um | all levels agree | - | 3.95e-07 % | 5 % | inside |
+| workpiece hottest cell rise | 28.83 K | Richardson (3 finest) | 0.771 | 64.1 % | 1.5 % | outside: no measured level converged |
+| workpiece bulk rise | 0.7907 K | Richardson (3 finest) | 0.528 | 1.9 % | 1.5 % | outside: use 0.5 |
+| thermal expansion at the contact | -0.3057 um | Richardson (3 finest) | 1.78 | 0.0127 um | 0.1 um | inside |
+| preheat rise (material entering the cut) | 18.04 K | Richardson (3 finest) | 0.683 | 0.212 % | 1.5 % | inside |
+| preheat rise, 0.5 s mean | 17.90 K | Richardson (3 finest) | 1.91 | 0.115 % | 1.5 % | inside |
+| rake rise, 0.5 s mean | 32.03 K | all levels agree | - | 3.35e-08 % | 1.5 % | inside |
+| contact surface rise | 260.2 K | finest (oscillating) | (2.18) | 1.88 % | 1.5 % | outside: use 1 |
+| tool body rise | 2.205 K | all levels agree | - | 2.77e-07 % | 1.5 % | inside |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
@@ -628,43 +664,51 @@ Case: the macro-step case (a side step 0.5 mm wide and 1 mm deep along the front
 structure at 3000 DOF; quantities when the tip passes x = 100 mm, forces over x = 20-100 mm) at the default macro
 step (10 ms): the finite-volume step is every_n_macro x 10 ms.
 
-| level | FV step (ms) | workpiece hottest cell rise (K) | workpiece bulk rise (K) | thermal expansion at the contact (um) | contact surface rise (K) | tool body rise (K) | CPU s | in cut |
-|---|---|---|---|---|---|---|---|---|
-| every20 | 200.0 | 10.80 | 1.014 | -0.3214 | 184.7 | 3.779 | 146 | - |
-| every10 | 100.0 | 14.88 | 0.9412 | -0.3917 | 190.2 | 3.778 | 137 | - |
-| every5 (default) | 50.00 | 18.82 | 0.9536 | -0.3966 | 187.6 | 3.778 | 133 | - |
-| every2 | 20.00 | 16.77 | 0.9343 | -0.4091 | 192.2 | 3.857 | 141 | - |
-| every1 | 10.00 | 22.16 | 0.9327 | -0.4021 | 175.2 | 3.780 | 136 | - |
+| level | FV step (ms) | workpiece hottest cell rise (K) | workpiece bulk rise (K) | thermal expansion at the contact (um) | preheat rise (material entering the cut) (K) | preheat rise, 0.5 s mean (K) | contact surface rise (K) | tool body rise (K) | CPU s | in cut |
+|---|---|---|---|---|---|---|---|---|---|---|
+| every20 | 200.0 | 8.408 | 0.7389 | -0.2626 | 18.11 | 17.95 | 248.0 | 2.205 | 179 | - |
+| every10 | 100.0 | 11.21 | 0.7475 | -0.3167 | 18.02 | 17.91 | 249.8 | 2.205 | 164 | - |
+| every5 (default) | 50.00 | 13.68 | 0.8059 | -0.3184 | 18.07 | 17.93 | 255.3 | 2.205 | 185 | - |
+| every2 | 20.00 | 17.27 | 0.8217 | -0.3196 | 18.07 | 17.90 | 253.6 | 2.205 | 164 | - |
+| every1 | 10.00 | 17.19 | 0.8333 | -0.3197 | 18.07 | 17.89 | 239.0 | 2.205 | 173 | - |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| workpiece hottest cell rise | 22.16 K | finest (oscillating) | (1.90) | 15.1 % | 1.5 % | outside: no measured level converged |
-| workpiece bulk rise | 0.9323 K | Richardson (3 finest) | 2.57 | 2.28 % | 1.5 % | outside: use 20 |
-| thermal expansion at the contact | -0.4021 um | finest (oscillating) | (0.686) | 0.00542 um | 0.1 um | inside |
-| contact surface rise | 175.2 K | finest (oscillating) | (2.65) | 7.08 % | 1.5 % | outside: no measured level converged |
-| tool body rise | 3.780 K | finest (oscillating) | (0.0224) | 0.037 % | 1.5 % | inside (reference uncertain) |
+| workpiece hottest cell rise | 17.19 K | finest (oscillating) | (4.18) | 20.4 % | 1.5 % | outside: use 20 |
+| workpiece bulk rise | 0.8333 K | finest level | (0.0406) | 3.29 % | 1.5 % | outside: use 20 |
+| thermal expansion at the contact | -0.3197 um | finest level | (2.73) | 0.00134 um | 0.1 um | inside |
+| preheat rise (material entering the cut) | 18.07 K | finest (oscillating) | (0.176) | 0.00256 % | 1.5 % | inside |
+| preheat rise, 0.5 s mean | 17.89 K | Richardson (3 finest) | 2.13 | 0.179 % | 1.5 % | inside |
+| contact surface rise | 239.0 K | finest level | (4.63) | 6.8 % | 1.5 % | outside: no measured level converged |
+| tool body rise | 2.205 K | all levels agree | - | 2.16e-07 % | 1.5 % | inside |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
 <!-- convergence:thermal_every:end -->
 
-Same case, 10 ms macro step. **Cell size.** The thermal expansion at the contact (structure's thermal displacement
-there, along the machined surface's normal: -0.36 to -0.48 um, the face moving into the part as the block's top
-warms) is inside its 0.1 um tolerance at every level of the copy; on the working tree of 16:00 (the tests) the 0.5
-mm level gives -0.16 um, so it is recorded as not converged. The workpiece's bulk temperature rise (0.82-1.07 K)
-does not converge monotonically (+-12 %), the hottest cell (3.6, 9.5, 18.8, 37 K from 8 to 1 mm) doubles with every
-halving: it is the largest cell mean under a moving source a fraction of a millimetre wide, a quantity of the grid
-rather than of the physics (the two-scale contact temperature is the physical one: 174-188 K at 8 to 1 mm). The tool
-is the problem: at 1 mm and 0.5 mm cells its wear and temperature run away about two seconds earlier than at 8 to 2
-mm (VB 963 and 1468 um at the comparison moment against 85-94 um; the tool body twice as warm), so the default 2 mm
-is not inside a converged range for the coupled tool state: a finer workpiece grid makes the material entering the
-cut warmer (the preheat is taken from the cell one feed half length plus one cell ahead, thermal section 3.3), which
-the coefficient rows pick up once it crosses their temperature tolerance. **Cadence.** From every 20 to every macro
-step the tool body temperature (3.78 K) is inside at every level and the expansion within 0.08 um; the bulk rise is
-2.3 % from its Richardson value (order 2.6) and the hottest cell and the surface temperature move by 7-15 %; at
-every 2 steps the tool's wear starts to run away by the comparison moment (VB 195 um), at every step it does not:
-the cadence acts on the tool through the same preheat. The defaults are inside for the expansion (cadence; the cell
-study's only on the copy) and the tool body temperature (cadence), outside for the rest.
+Same case, 10 ms macro step, re-measured 2026-11-09 after the fixes of section 9 items 8 and 9 (the tables above;
+the earlier runs below for the record). **Cell size.** The tool's state is the same at every cell from 8 to 0.5 mm to
+six digits (tool body rise 2.2045 K, edge peak 378.43 K, rake 30.544 K, VB growth 0.0960 um, mean force 13.0716 N):
+the preheat the coefficient rows read is now the material entering the cut at the leading edge of the contact's
+moving source, the grid's value one tool diameter ahead plus the source's near field analytically (thermal section
+3.3), 18.13, 18.13, 18.07, 18.07, 18.05 K from 8 to 0.5 mm (the default 0.2 % from the Richardson value, inside; its
+0.5 s mean 0.1 %), and it moves by less than the rows' 5 K quantum. The workpiece's bulk rise converges from 4 mm
+(0.690, 0.795, 0.806, 0.803, 0.799 K; the default 1.9 % from the Richardson value of the three finest, outside the
+1.5 %); the hottest cell (2.8, 6.8, 13.7, 20.0, 23.6 K) is a quantity of the grid, the largest cell mean under a
+moving source a fraction of a millimetre wide; the two-scale contact surface rise oscillates by +-2 % (244-262 K);
+the thermal expansion at the contact is inside at every level (-0.29 to -0.32 um). **Cadence.** From every 20 to
+every macro step the tool's state is again the same to six digits and the preheat within 0.5 % (its 0.5 s mean
+within 0.3 %); the expansion is inside; the bulk rise (0.739, 0.747, 0.806, 0.822, 0.833 K) and the contact surface
+(239-255 K) still move with the finite-volume step (3.3 % and 6.8 % from the every-step level at the default). The
+defaults are inside for everything the coupled tool reads; the workpiece's own bulk, hottest-cell and surface values
+remain outside.
+
+Before the fixes (the copy of 14:28): the hottest cell doubled with every halving (3.6, 9.5, 18.8, 37 K from 8 to
+1 mm), the bulk rise moved by +-12 %, and at 1 mm and 0.5 mm cells the tool's wear and temperature ran away about two
+seconds earlier than at 8 to 2 mm (VB 963 and 1468 um at the comparison moment against 85-94 um, the tool body twice as
+warm), because the preheat was the cell one feed half length plus one cell ahead, inside the moving source's near
+field, which the rows picked up once it crossed their temperature tolerance; at every 2 steps the cadence started the
+runaway through the same preheat (VB 195 um).
 
 ## 7. Turning: polar field (`physics.polar_theta_bins`, `physics.removal.polar_min_feed_mm_rev`)
 
@@ -760,10 +804,10 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
 | `memory_bins` | 720 | 720 with 0.5 deg; never finer than 360 / angle per step | the averages are inside with the stride; finer bins alone add an error | - |
 | `polar_theta_bins` | 720 | 720 (360 suffices for steady passes) | converged at 180 for an OD pass | x0.8 at 360 |
 | `polar_min_feed_mm_rev` (rows) | 0.05 (6.25 um) | 0.05 | forces 0.2 % and Rt 1.9 % from the Richardson value | - |
-| `macro_ipo` | 10 | no recommendation until the coupling is step-independent (section 9, 8-9) | at the same moment the rake temperature cutting reads is +55 % at 5 ms and -33 % at 20 ms against 10 ms; 2 ms exceeds 1.8 GB | 5 ms: x2.0 CPU, 20 ms: x0.58 |
+| `macro_ipo` | 10 | 10 (20 for the tool and the coupling alone) | since the fixes of section 9 items 8-9 the tool state and the 0.5 s means of the coupling temperatures agree within 0.2-1.5 % from 5 to 20 ms; the workpiece's bulk (finite volumes every 5 steps) and structure's refresh (every 50) move with the step | 5 ms: x1.6 CPU, 20 ms: x0.55 |
 | `lag_macro` | 1 | 1 (2 is the same computation) | bit-identical | - |
-| `thermal.cell_mm` | 2 | 2 for the expansion; no value for the bulk or the coupled tool state until the preheat is grid-independent | the expansion is inside at every level of the copy (not on the working tree at 0.5 mm); the bulk mean moves by +-12 % between levels and the tool runs away earlier at 1 mm and below | 1 mm: x1.3 CPU |
-| `thermal.every_n_macro` | 5 | 5 | the tool body temperature and the expansion are inside from every 20 steps; the bulk mean is 2.3 % off | - |
+| `thermal.cell_mm` | 2 | 2 (4 for the coupled tool and the bulk mean) | since the preheat fix the tool's state is the same at every cell and the preheat within 0.5 %; the expansion is inside; the bulk mean converges from 4 mm (1.9 % from the Richardson value at 2 mm); hottest cell and surface stay grid-dependent | 1 and 0.5 mm: about the default's CPU (165-185 s) |
+| `thermal.every_n_macro` | 5 | 5 | the tool's state and the preheat do not depend on it (every 20 to every step); the expansion is inside; the bulk mean is 3.3 % and the contact surface 6.8 % from the every-step level | - |
 
 ## 9. Found on the way (for the owners)
 
@@ -816,6 +860,26 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    20 ms at the same moment of the same cut, and it alternates from step to step (+-50 K at 5 ms); the coefficient
    rows, the wear rates and the heat partition follow it (section 5). A coupling quantity computed from one step's
    heat and frozen for the next should not change with the step's length.
+   fixed (2026-11-09, thermal; where cutting reads it): four inputs of the thermal -> cutting coupling were functions
+   of the step. (1) The edge model rebuilt each element's periodic heating from the step's counts: the period as the
+   step over its passes (5 ms at 5 ms steps, 5 or 10 ms at 10 ms, 5 or 6.7 ms at 20 ms, for a 6 ms revolution), and an
+   element whose step held no pass (one 5 ms step in six) restarted and published its body temperature, with the
+   cutting-region field its cycle mean, as its entry temperature: the alternation. Each element now keeps running
+   sums of its passes in run time (heat, in-cut time, passes; `edge_window_periods` 4 revolutions), its period is the
+   revolution and a step without a pass leaves it engaged (thermal.md 2.2). (2) The cutting-region field was solved
+   every 10 macro steps (50, 100, 200 ms) and split between the teeth by the step's heat; it is now solved at fixed
+   run times (`tool_field_interval_ms` 100) and split by the teeth's heat per in-cut time, and the edge is evaluated
+   at fixed run times too (`edge_interval_ms` 20). (3) The rows read the plain mean over an edge group's members,
+   dominated by the idle part of the flute (2 of 44 elements per tooth cut in this case); they read the members that
+   cut, weighted by in-cut time summed over the teeth, and a rotating tool's contact time as the engaged arc over the
+   spindle speed (cnctwin/cutting/domain.py `_row_state`). (4) The preheat's band carried the step's heat rate; it
+   carries the rate averaged over the same revolutions (thermal.md 3.3). Unit test `tests/unit/thermal/
+   test_edge_history.py` (a 6 ms revolution, 0.43 ms passes): entry rise 1.09, 1.09, 1.09 K at 5, 10, 20 ms (was
+   1.04, 1.45, 1.45 K, the teeth 0-1.45 K), with the field 5.24, 5.25, 5.24 K (was 7.3, 8.2, 7.6 K, the teeth -2.4 to
+   8.2 K). The macro-step study after the fix (section 5): the rake rise cutting reads 31.2, 30.5, 30.7, 31.8 K at 5,
+   10, 20, 50 ms at the comparison moment (+-2 % step-to-step scatter at every level) and 32.10, 32.03, 31.24, 32.85 K
+   as its 0.5 s mean (the default 0.2 % from the Richardson value); tool body 2.19-2.26 K, edge peak 374-382 K; no
+   level loses its tool (50 ms did at the entry).
 9. **The tool's wear and temperature run away in aluminium within seconds** (wear, thermal): the D10 side step (0.5
    x 1 mm at 10 000 rpm, flood) wears its flank from 20 to 106 um in 3.6 s of cutting and then runs away (592 um
    after 4.6 s, 1.2 mm at 14 s simulated, then no cut); VB rises in jumps (edge chipping), far faster than the tool
@@ -823,6 +887,54 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    start the runaway earlier through the preheat (section 6), the macro step through the rake temperature (section
    5). The copy of 12:38 lost the tool at the first entry of every whole-loop run instead (VB 20 -> 1190 um within
    0.3 s).
+   fixed (2026-11-09, wear; the flank temperature wear receives is thermal's and open): the runaway had one driver
+   and two amplifiers. **Driver**: thermal's flank contact temperature, 673 K median over the engaged elements
+   (590-730 K, up to 843 K; its quadrature maxima 935 K median, up to 1420 K, which wear takes at the alloy's 855 K
+   solidus since the snapshot's contact-state bound), against 416 K median (338-438 K) that the wear law's own flank
+   model (the calibration response: Blok's equal temperature of the land with its friction softened at the land's
+   temperature) gives at the same elements (314 m/min, h_max 17 um, VB 20 um); the rake contact 664 against 461 K
+   (Oxley's interface). The law of carbide in 6061 is calibrated on that model at the estimated Taylor entry's speeds
+   (flank 569-598 K between v60 and v5): B = 21.6 kK, so the life halves per +5.6 K and the cutting time to VB 0.3 mm
+   is 187 h at the model's flank, 81 h at +100 K, 32 min at +200 K, 17 s at +300 K and 0.5 s at +400 K
+   (docs/models/wear.md 3, "Coupling to the run's flank temperature"); thermal's +250 K on the means and +436 K at
+   the capped maxima wear the tool out in seconds; thermal's local rise halved (about 484 K, dT 65 K) would give some
+   120 h. The flank temperature input must come within about 150 K of the law's model (thermal's fix of its flank
+   heat, owner thermal/mechanics; or a response that is the run's pipeline) before a wear law calibrated this way
+   gives physical lives here. **Whole loop after the fixes** (five such side steps, each 0.5 mm deeper, x -8 to 160
+   mm: 29.1 s of cutting, 40.6 s simulated, every domain on; the wear domain given its own model's contact
+   temperatures in place of thermal's, the substitution made in the test script, not in the code): VB 20.000 ->
+   20.011 um (0.4 nm per second of cutting, the abrasive floor), crater 0.4 nm, no chip (the entry and exit loads'
+   static chipping probability 3e-10 median, 4e-6 at most), thermal damage 3e-4. The same side step with thermal's
+   own temperatures (one pass, 4.3 s of cutting): VB 20 -> 53 um after 0.5 s of cutting, 87 um after 1 s, 306 um
+   after 2 s and 405 um after 3 s, crater 13 um, four elements chipped late by the exit loads of the worn edge
+   (9.6-9.9 GPa wedge stress); thermal's flank 581 K median on the means of the engaged elements, at the 855 K
+   solidus at its maxima. The snapshot before these fixes, run the same way: 60, 115, 384 and 395 um after 0.5, 1, 2
+   and 3 s (a chip of 18 um at 2 s put 98 um on the land), five elements chipped, chips up to 51 um deep (the
+   convergence copy of 14:28, before the solidus bound and later cutting changes: 46, 60, 72 and 95 um). **Amplifier
+   1**: every chip added its depth times g = cot a - tan g (5.5 for this end mill) to VB, as if the depth were a
+   recession normal to the machined surface; the fragment's lowest point lies d sin a above the old edge (Flamant:
+   the fracture runs along the arc r = d), so a chip adds about d to a fresh land and nothing to a worn land it ends
+   inside (`kernels.flank_recession`). **Amplifier 2**: each entry and exit row drew a new chipping trial, so that an
+   edge loaded 167 times a second chipped in the end at any stress (1 - (1 - P)^N); the edge now has its own Weibull
+   strength (one quantile per edge and chip generation) that its load cycles degrade along the tool material's
+   Basquin curve (Miner, equal rank). Also fixed in wear's calibration: a life integral that one Gauss rule evaluated
+   across the land's kinks (5-10 % on a Ti6Al4V life). Examined and not adopted: Blok's partition of the response
+   without its clamp at f >= 0 (the small land's flank then sits at the shear-plane temperature, the work surface
+   carrying no ploughing heat): B 43 kK for this law, and with thermal's temperatures kilometres of VB in the first
+   step of the case (docs/models/wear.md 3).
+   fixed (2026-11-09, the heat behind it; mechanics and thermal, the wear model is wear's): (1) the flank partition
+   applied Blok's share of the land friction to the whole edge power over a different contact length, which put about
+   twice Blok's contact temperature on the flank and raised it as the tool cooled (mechanics.md 6; validation.md 10,
+   Coolant): the share is now computed for the contact's friction and the edge's plastic work over the contact the
+   heat is deposited on. (2) The preheat was the cell one feed half length plus one cell ahead, inside the moving
+   source's near field, so it doubled with each halving of the cell: it is now the grid's value one tool diameter
+   ahead plus the source's near field put back analytically at the leading edge (thermal.md 3.3; unit test
+   `tests/unit/thermal/test_preheat.py`: 14.08-14.10 K at cells of 4 to 0.5 mm where the cell ahead gave 1.5-6.2 K).
+   (3) Item 8. On the macro-step case at 10 ms: VB growth 85 -> 0.10 um at the comparison moment, tool body rise
+   3.78 -> 2.20 K, edge peak rise 657 -> 378 K, rake rise 52 -> 31 K, mean force 20.0 -> 13.1 N; at every macro step
+   from 5 to 50 ms and every workpiece cell from 8 to 0.5 mm VB grows by less than 1 um over the 3.6 s, and the tool
+   state does not depend on the cell at all (sections 5, 6); the 2 ms run lost 56 um of land in one Weibull chipping
+   event at 7.90 s (wear's stochastic chipping trial, one realisation). The two-pass 11 s cut was not rerun.
 10. **`macro_ipo` 2 exceeds bin/tsafe's 1.8 GB cap** about 26 s into the run, before the cut (both copies), where
     the 10 ms run of the same project completes under it: something held per macro step grows with their number.
     fixed (2026-11-09, motion and chips): nothing grew per step. RSS per macro step on an air-cut variant of the case

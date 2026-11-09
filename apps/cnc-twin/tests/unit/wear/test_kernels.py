@@ -14,8 +14,8 @@ from cnctwin.wear import reference as R
 
 
 def test_every_kernel_has_one_signature():
-    names = ("usui_rate", "table_at", "worn_edge_radius", "wedge_tension", "wedge_volume_factor", "advance_elements",
-             "element_outputs", "chip_trials")
+    names = ("usui_rate", "table_at", "worn_edge_radius", "flank_recession", "wedge_tension", "wedge_volume_factor",
+             "advance_elements", "element_outputs", "chip_trials")
     for name in names:
         assert len(getattr(K, name).signatures) == 1, name
     found = [n for n in dir(K) if hasattr(getattr(K, n), "signatures") and getattr(K, n).py_func.__module__ == K.__name__]
@@ -131,6 +131,37 @@ def test_element_outputs_match_reference():
     ref = R.element_outputs_ref(geo, law, st)
     for name in ("VB", "VB_N", "radial", "axial", "edge_r"):
         np.testing.assert_allclose(getattr(out, name), ref[name], rtol=1e-13, atol=0.0, err_msg=name)
+
+
+def test_a_chip_lowers_the_edge_by_its_depth_times_the_clearance_sine():
+    """A fragment bounded by the tension at r = d on the rake face (the Flamant stress is radial: the crack runs along
+    the arc r = d about the edge) leaves the edge's lowest point d sin(a) above the old one on the flank face: a fresh
+    edge's land is VB = d sin(a) (cot a - tan g), not d (cot a - tan g); a chip that ends inside a worn land leaves
+    the land and the recession unchanged."""
+    geo = A.new_geo(1, 3)
+    geo.valid[:] = 1
+    geo.rake[:] = math.radians(8.0)
+    geo.clear[:] = math.radians(10.0)
+    g = 1.0 / math.tan(geo.clear[0, 0]) - math.tan(geo.rake[0, 0])
+    geo.g_vb[:] = g
+    geo.sin_k[:] = 1.0
+    geo.r_e0[:] = 8e-6
+    law = A.new_law()
+    law.scal[A.LS_MIN_CLEAR] = math.radians(2.0)
+    law.scal[A.LS_ROUNDING] = 1.0
+    st = A.new_state(1, 3)
+    st.chip_d[0] = [20e-6, 20e-6, 0.0]
+    st.chipped[0] = [1, 1, 0]
+    st.vn[0] = [0.0, 10e-6, 10e-6]
+    out = A.new_output(1, 3)
+    K.element_outputs(geo, law, st, out)
+    drop = 20e-6 * math.sin(math.radians(10.0))
+    assert out.VB[0, 0] == pytest.approx(drop * g, rel=1e-12)                 # fresh edge: 19 um, not 110 um
+    assert out.radial[0, 0] == pytest.approx(drop, rel=1e-12)
+    assert out.VB[0, 1] == pytest.approx(10e-6 * g, rel=1e-12) == out.VB[0, 2]   # inside the worn land
+    assert out.radial[0, 1] == pytest.approx(10e-6, rel=1e-12)
+    assert out.edge_r[0, 0] == pytest.approx(10e-6)                            # blunted: half the chip depth
+    assert K.flank_recession(0.0, 20e-6, 0.0, math.radians(2.0)) == pytest.approx(20e-6 * math.sin(math.radians(2.0)))
 
 
 def test_helpers_match_reference():

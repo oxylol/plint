@@ -203,7 +203,7 @@ tolerance, within or not, note) and every curve with its RMS/max error.
 | shear_angle | as chip_ratio; phi from the simulated ratio of the kind the source used (h / t2 or V_chip / V) with tan phi = r cos a / (1 - r sin a) | as chip_ratio |
 | chip_temperature | Oxley's mean chip temperature, oxide exposure during contact and air cooling (`mechanics.colour`), the colour-equivalent temperature capped at the table's top | chip cooling in still air (convection + radiation) |
 | tool_temperature | contact through the coefficient pipeline coupled to thermal's insert ladder with its 3-D cutting-region field (the rake and flank heat deposited as contact patches, `ToolThermal.deposit_contact`); natural thermocouple = rake + flank contact mean; IR window/spot and embedded thermocouple = the field's temperature at the location (`ToolThermal.temperature_at`) | cutting time (5 s when not stated), sensor positions from the case text, insert/bar geometry defaults |
-| taylor_life | the wear law as the wear domain builds it (published Usui, its A anchored to the pairing's database Taylor entry when there is one; else calibrated to that entry; the flank land softened at its own temperature), integrated from a fresh edge to the VB/VN criterion; VB(t) curves | the Taylor entry used, coolant as a friction factor |
+| taylor_life | the wear law as the wear domain builds it (published Usui, its A anchored to the pairing's database Taylor entry when there is one; else calibrated to that entry; the flank land softened at its own temperature), integrated from a fresh edge to the VB/VN criterion (composite Gauss-Legendre split at the land's kinks); VB(t) curves (a time past the model's runaway reports the top of the integration as a lower bound); per value the flank temperatures fed to the law (fresh land, half the criterion, the criterion) and the flank rise that halves the life | the Taylor entry used, coolant as a friction factor at the cut's own speed, chip thickness and width (with the MQL dose the case states; a chilled spray as its fluid at the spray's temperature) |
 | spindle_growth | thermal's spindle network (`cnctwin.thermal.spindle`: Palmgren-Harris bearing friction with the lubricant viscosity at the bearing temperature, motor losses, shaft / bearing sets / housing, growth from their temperatures and lengths) at the case's speeds from a cold start, minus the lift of the machine structure (`structure_model`, heated by the ambient and the head, linked to the network as the thermal domain links them: the file's whole-loop sensitivity plus the network's own uniform growth per K, so the head is counted once) = the measured tool-to-table loop; the ambient per batch, rising linearly by the stated rise | the whole spindle construction (none described in the papers): the model's 40-taper defaults, no cooling; the structure sensitivity of the database VMC |
 | coolant_reach | the case's jet (bore, distance, pressure, flow, direction) traced through a minimal occlusion scene of the case (insert, holder, bar; rotating cutter, block) to the cut; then the lubrication friction factor at that reach and the cut's own uncut chip thickness (as the coolant domain passes the contact's mean h), the jet's convective cooling of the tool faces (`cnctwin.coolant.engagement.face_h`) in thermal's tool ladder over the pass (milling: contact temperature at the body temperature, pass-averaged), and the hydraulic wedge (`engagement.contact_length_ratio`) on the rake friction force and the chip's natural curl (turning) | fluid mapped to the closest database fluid, the jet's reference line (beta) and the milling jet's aim, the cut length and stickout |
 | chip_form | Oxley chip state + `mechanics.chipform` per tested feed/depth (or a feed-depth grid for a chip-control window), mapped to the case's classes | chip-breaker geometry when the insert is not in the database |
@@ -392,6 +392,21 @@ The per-case causes are in docs/validation-report.md ("Failures and likely cause
   contact mean comes out above dry (711 against 694 degC). That definition is the mechanics' and thermal's partition
   (not the coolant's); the measured chip breaking by the jet's push on the chip's back (about 7 N of jet momentum
   against a chip that bends plastically at about 3e-3 N m) needs an input in `mechanics.chipform`.
+  *Addressed 2026-11-09 (the flank partition; mechanics.md 6, thermal.md 1)*: the share is now computed for the heat
+  it is applied to and over the contact it is deposited on. The flank contact is the wear land plus the edge arc below
+  the stagnation point (`contact.stagnation_arc_length`, in mechanics, thermal's partition and `contact.py` alike); its
+  heat is the friction on the land and the arc (the friction part of the edge force) plus the plastic work of the
+  edge pressure (its pressure part, plastic work inside the work: the slip-line field of the ploughed layer, Waldorf,
+  DeVor & Kapoor 1998, Hill 1950), which reaches the interface in proportion to the moving buried-layer factor g
+  (the line source and its image integrated over the depth of Prandtl's field, Carslaw & Jaeger 1959; 1 for a slow
+  contact, -> 0 for a fast one); Blok's equal mean temperatures then give the tool's share. Tests: the share equals
+  Blok's closed form; the tool side of the contact never rises when the tool is cooled at the same load (AISI 1045,
+  20 um hone, 2 m/s: 1152 -> 554 degC while the body warmed 20 -> 524 degC before, 621 -> 707 degC now). On this tree
+  (the solid HSS end mill now has tooling's 3 um ground edge, so Blok's share was clamped at 1 for a cool body and the
+  2x came mostly from the length) Sultana's flank contact falls from 541 to 415 degC dry at 16 m/min and 0.08 mm,
+  from 474 to 351 degC under the rotary jets at 24 m/min; the contact means move by 1-6 K (the 3 um flank contact
+  against a 150 um rake contact): case median 12.7 -> 12.5 %, worst 4.57 -> 4.47 tolerances, 17 of 27 values inside
+  (unchanged); the quantity's median, p90 and classes unchanged (25.8 %, 52.9 %, 10/18).
 * **Tool temperature** (fourth round): the harness reads thermal's 3-D cutting-region field (the rake and flank heat
   deposited as contact patches, `ToolThermal.deposit_contact`; points by `ToolThermal.temperature_at`) instead of the
   1-D insert body plus the analytic local field cut at r_far. On the same code the old composition gave median 63 %,
@@ -402,6 +417,44 @@ The per-case causes are in docs/validation-report.md ("Failures and likely cause
   tool field (400-525 degC on the rake 1 mm from the edge but 57-83 degC 1.4 mm away inside the carbide, with 17-20 W
   into the insert); the spot beside the chip probably sees the chip. The levels follow the pipeline's tool heat
   (partition, contact length, the flank heat discussed under Coolant), not the field.
+  *After the flank partition fix (2026-11-09, see Coolant)*: the tool heat of the turning cases falls by 10-25 %
+  (Guimaraes 36-49 -> 30-39 W, flank contact 894-1180 -> 622-765 degC; Kus 16 -> 12 W). Case medians: Loeschner's
+  natural thermocouple 32.9 -> 27.5 %, Slusarczyk's IR window 30.0 -> 17.2 % (4 -> 10 of 20 inside), Guimaraes's
+  junction 19.4 -> 5.8 % (1 -> 4 of 6), Kus 248 -> 159 % (worst 26.4 -> 18.1 tolerances; its IR spot moves further
+  below: 153 -> 119 degC against 410), Zawada's thin-wall Al7050 peak 30.1 -> 41.3 % (its contact mean is weighted by
+  the 3 um edge's flank contact, which falls from 300-490 to 187-311 degC; the rake contact, 161-243 degC against
+  measured peaks of 300-360 degC, was already low). Over all 108 values: median 53.7 -> 62.9 % (the 56 Kus values
+  dominate the pooled median), p90 291 -> 191 %, worst 26.4 -> 18.1 tolerances, 0 of 5 cases inside (unchanged).
 * **Cutting force**: the best independent agreement is the high-feed face mill (Reznicek, in-plane peaks within
   6 %, axial -40 to -58 %), the IN718 tube (Wood, 14 %) and Ti6Al4V turning (Slusarczyk, median 19 %); the
   round-insert face mill (Plodzien, small ap) and the Ti6Al4V slot cases are high by factors 2-4.
+* **Tool life** (taylor_life; wear, 2026-11-09). Re-run first on the working tree (the stored results of 2026-11-04
+  predate the softened land and the interface bound): independent median 95.5 %, p90 456 %, 1 of 5 cases within the
+  budget (Magalhaes' cermet in 1045, the abrasive floor alone), 2 values without prediction. Found and fixed: (1) the
+  life integral (calibration, anchoring and this harness) took one Gauss rule over a land whose rate varies by orders
+  of magnitude and has a kink at VB*: Zhao's lives to VB 0.2 and 0.3 mm were off by -4 and +5 % (with Blok's
+  partition unbounded the life to 0.3 mm came out shorter than to 0.2 mm, 148 against 163 s, converged 164 s), and
+  the calibrations carried it; it is now composite and split at the kinks
+  (`calibration.land_breaks`, `physics.wear.calib_pieces`); (2) harness wiring: the coolant friction factor was
+  evaluated at a fixed 2.5 m/s, the 50 um default chip and 1 mm width, with the database's MQL dose (20 ml/h) where
+  Zhao states 200 ml/h; now at each condition's speed, feed and depth and the stated dose; (3) the two values
+  without prediction were Zhao's "cryogenic spray jet", which the source describes as its own water-soluble coolant
+  LN6889 at 0 degC atomised by 6-8 bar air: the flood fluid at 0 degC, now predicted (+87/+115 %: the response has
+  the friction but not the jet's cooling); (4) VB(t) points past the model's runaway had no prediction; they report
+  the top of the integration as a lower bound. After: independent median 95.8 % (all values and curve points), p90
+  383 %, values alone 240 % (was 278 %), no value without prediction, worst miss 45.9 tolerances (was inf), 1 of 5
+  cases within the budget; calibration-dependent 2/2 within (median 9.6 %). Examined and not adopted: Blok's
+  partition of the response solved without the clamp at f >= 0 (wear.md 3): Zhao 11 of 16 values within (every VB
+  0.3 mm life -36..+16 %, the anchored set's A x 0.95 instead of x 0.15) and the IN718 ceramics' B 45-50 kK, but
+  every Taylor calibration of the database's entries B 50-100 kK and carbide in 6061 a law that thermal's present
+  flank temperature drives to kilometres of wear in one step; the response's work surface carries no ploughing heat
+  (wear.md 17), without which the unbounded flank of a small land sits at the shear-plane temperature. What remains:
+  Zhao +87..+583 % (the anchored published Ti6Al4V set with the clamped flank, 745-772 degC at the fresh land: A x
+  0.15; the first 0.1 mm takes 265-463 s against 40-68 s: the break-in of a fresh edge is missing); Xue IN718
+  ceramics +103..+2296 %, the lives following the database's estimated Taylor entries (10 min at 250 and 200 m/min,
+  n 0.3; Xue measured 1.0 and about 1.5 min, and n about 0.66 for SX9), with B at the end of its bracket (the fresh
+  land's flank changes by 14-19 K over the speeds); cermets in 1045 and 304: no Usui constants and no Taylor entry
+  for cermets in the database, the abrasive floor alone (+23/+25 %, +287/+462 %, unchanged). The flank temperatures
+  this harness feeds the law are listed per value (fresh land, half the criterion, the criterion, and the flank rise
+  that halves the life: 11-13 K for the IN718 ceramics, 46-59 K for Ti6Al4V, 51-86 K for the PCBN cases); they are
+  the response's Blok values, the value the run's thermal model is being brought to.

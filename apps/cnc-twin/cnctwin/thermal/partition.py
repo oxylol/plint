@@ -26,6 +26,7 @@ import numpy as np
 
 from ..core.abi import EdgeModel
 from ..db.models import params
+from ..mechanics.contact import stagnation_arc_length
 
 
 @functools.lru_cache(maxsize=1)
@@ -50,6 +51,7 @@ class FractionTable:
     chip_ratio: np.ndarray           # [n_group, n_h] (may be empty)
     shear_angle_rad: np.ndarray      # [n_group, n_h] (may be empty)
     version: int = 0
+    h_min_m: np.ndarray = field(default_factory=lambda: np.zeros(0))   # [n_group] minimum chip thickness
 
     @classmethod
     def from_coefficients(cls, coeff) -> "FractionTable | None":
@@ -62,9 +64,22 @@ class FractionTable:
             return None
         ratio = np.asarray(coeff.chip_ratio, dtype=float)
         phi = np.asarray(coeff.shear_angle_rad, dtype=float)
+        h_min = np.asarray(getattr(coeff, "h_min_m", np.zeros(0)), dtype=float).reshape(-1)
         return cls(h.copy(), tabs[0].copy(), tabs[1].copy(), tabs[2].copy(),
                    ratio.copy() if ratio.shape == tabs[0].shape else np.zeros((0, 0)),
-                   phi.copy() if phi.shape == tabs[0].shape else np.zeros((0, 0)), int(coeff.version))
+                   phi.copy() if phi.shape == tabs[0].shape else np.zeros((0, 0)), int(coeff.version),
+                   h_min.copy() if h_min.shape == (tabs[0].shape[0],) else np.zeros(0))
+
+    def flank_length(self, group: np.ndarray, h: np.ndarray, edge_radius: np.ndarray, rake: np.ndarray,
+                     vb: np.ndarray) -> np.ndarray | None:
+        """Flank contact length per element: the wear land plus the edge arc below the stagnation point at
+        min(h, h_min of the element's group) (mechanics.contact.stagnation_arc_length), the contact the table's
+        flank share was computed for (mechanics.coefficients._flank_partition). None without h_min."""
+        if self.h_min_m.size == 0:
+            return None
+        groups = np.clip(np.asarray(group, dtype=np.int64), 0, self.h_min_m.shape[0] - 1)
+        depth = np.minimum(np.maximum(h, 0.0), self.h_min_m[groups])
+        return vb + stagnation_arc_length(edge_radius, depth, rake)
 
     def weights(self, group: np.ndarray, h: np.ndarray):
         """(group index, lower node, weight) of each element on the log-h grid (clamped), reused for
@@ -104,6 +119,7 @@ class ContactHeat:
     compression: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))
     shear_angle_rad: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))
     fallback: bool = False
+    flank_length_m: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))   # contact of the flank heat
 
 
 def _shares(energy: float, candidates: list[np.ndarray], valid: np.ndarray) -> np.ndarray:
@@ -140,6 +156,7 @@ def split_contact(cut, removal_workpiece: int, table: FractionTable | None, edge
         radius = np.asarray(edges.elem_r_m, dtype=float) if rotating else np.ones(in_cut.shape)
         group = np.asarray(edges.elem_group)
         edge_radius = np.asarray(edges.elem_edge_radius_m, dtype=float)
+        rake = np.asarray(edges.elem_rake_rad, dtype=float)
     else:
         shape = in_cut.shape if n_elem else (1, 1)
         valid = np.ones(shape, dtype=bool)
@@ -147,6 +164,7 @@ def split_contact(cut, removal_workpiece: int, table: FractionTable | None, edge
         radius = np.ones(shape)
         group = np.zeros(shape, dtype=np.int32)
         edge_radius = np.zeros(shape)
+        rake = np.zeros(shape)
         if not n_elem:
             in_cut = np.zeros(shape)
     shape = valid.shape
@@ -176,7 +194,11 @@ def split_contact(cut, removal_workpiece: int, table: FractionTable | None, edge
     zeta = np.where(ratio < 1.0, 1.0 / ratio, ratio)      # chip ratio h/h_c or compression h_c/h
     contact_factor = np.minimum(zeta ** p["poletika_exponent"], p["max_contact_ratio"])
     vb = np.zeros(shape) if vb_m is None or np.asarray(vb_m).shape != shape else np.asarray(vb_m, dtype=float)
-    flank_width = vb + p["flank_contact_edge_factor"] * edge_radius
+    # the flank contact of the table's share; elements without an edge arc (not in cut, a sharp edge, forming rows
+    # without a minimum chip thickness) keep the literature contact VB + factor x edge radius
+    fallback_width = vb + p["flank_contact_edge_factor"] * edge_radius
+    flank_width = table.flank_length(group, h_mean, edge_radius, rake, vb) if table is not None else None
+    flank_width = fallback_width if flank_width is None else np.where(flank_width > vb, flank_width, fallback_width)
     rake_sig = _per_elem(cut.int_sigma_v_rake, shape)
     flank_sig = _per_elem(cut.int_sigma_v_flank, shape)
     rake_slide = _per_elem(cut.rake_sliding_m, shape)
@@ -197,6 +219,7 @@ def split_contact(cut, removal_workpiece: int, table: FractionTable | None, edge
     out.h_mean_m = h_mean
     out.compression = zeta
     out.shear_angle_rad = phi
+    out.flank_length_m = flank_width
     return out
 
 

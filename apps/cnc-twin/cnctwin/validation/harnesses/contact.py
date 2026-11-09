@@ -5,7 +5,9 @@ the case's material, tool, rake and friction, on the case's own speeds and uncut
 map is exact at the tested conditions), and evaluates ``group_coefficients`` for one edge group at a
 chip thickness, speed and tool temperature. The heat of the contact is split as thermal's partition
 does (thermal/partition.py): tangential power P = F_t V, rake heat to the tool P x power_frac_rake x
-frac_rake_to_tool, edge/flank heat to the tool P x power_frac_edge x frac_flank_to_tool.
+frac_rake_to_tool, edge and wear-land heat to the tool (P x power_frac_edge + tau_land VB b V) x
+frac_flank_to_tool, deposited over the flank contact the share was computed for (wear land + the edge arc below
+the stagnation point, GroupCoefficients.flank_contact_m), as thermal deposits it.
 """
 
 from __future__ import annotations
@@ -41,7 +43,7 @@ class ContactState:
     chip_W: float
     h_min_m: float
     edge_radius_m: float
-    flank_contact_m: float            # VB + factor x edge radius (thermal's flank contact length)
+    flank_contact_m: float            # wear land + edge arc below the stagnation point (thermal's flank contact)
     shear_angle_rad: float
 
     @property
@@ -99,10 +101,19 @@ class ContactModel:
         p_rake = float(gc.power_frac_rake[0])
         p_edge = float(gc.power_frac_edge[0])
         p_shear = float(gc.power_frac_shear[0])
+        # the wear land's friction (the run's flank force, tau_mean VB per unit edge length) is flank heat too
+        land = float(gc.flank_tau_mean_Pa) * float(VB_m) * width_m * speed_m_s if VB_m > 0.0 else 0.0
         rake_tool = power * p_rake * float(gc.frac_rake_to_tool[0])
-        flank_tool = power * p_edge * float(gc.frac_flank_to_tool[0])
+        # thermal's partition: the flank share applies to the flank (land) and ploughing (edge) heat together and the
+        # tool's part is deposited over the contact the share was computed for (mechanics: wear land + edge arc)
+        flank_tool = (power * p_edge + land) * float(gc.frac_flank_to_tool[0])
         chip = power * (p_shear * float(gc.frac_shear_to_chip[0]) + p_rake * (1.0 - float(gc.frac_rake_to_tool[0])))
-        l_f = float(VB_m) + float(params("thermal-tool")["flank_contact_edge_factor"]) * self.edge_radius
+        if gc.flank_contact_m.size:
+            l_f = float(gc.flank_contact_m[0])
+        else:
+            l_f = float(VB_m) + float(params("thermal-tool")["flank_contact_edge_factor"]) * self.edge_radius
+        power += land
+        ft += land / (width_m * speed_m_s) if width_m * speed_m_s > 0.0 else 0.0
         t_flank = float(tool_temp_K)
         if flank_tool > 0.0 and l_f > 0.0 and self.tool is not None:
             q_f = flank_tool / (l_f * width_m)

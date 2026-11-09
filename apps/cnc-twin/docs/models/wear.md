@@ -95,10 +95,18 @@ thermally activated and a mechanical term; Archard 1953):
   skin").
 * **BUE** (section 6): m_bue = 1 - p min(1, H_bue / h), p = `bue_protection` (0.5, est); each break-off
   plucks d_pluck = grain size x `bue_pluck_fraction` (3e-4, est).
-* **Land and recession**: VB = (VN + d_chip)(cot a' - tan g), a' = max(clearance, 2 deg)
-  (yen-2004-tool-wear-fem land geometry; a zero-clearance land has no VB); total recession
-  R = VN + VN_notch + d_chip; radial wear R sin(kappa), axial wear R cos(kappa) (tooling's signs: radial
-  > 0 recedes the edge from the material, axial > 0 along +z_T).
+* **Land and recession**: VB = R_f (cot a' - tan g), a' = max(clearance, 2 deg) (yen-2004-tool-wear-fem land
+  geometry; a zero-clearance land has no VB), R_f = max(VN, d_chip sin a') the recession of the edge's lowest point
+  normal to the machined surface (`kernels.flank_recession`); total recession R = R_f + VN_notch; radial wear
+  R sin(kappa), axial wear R cos(kappa) (tooling's signs: radial > 0 recedes the edge from the material, axial > 0
+  along +z_T). An edge chip of depth d is bounded by the tension at r = d on the rake face behind the contact
+  (section 7); the Flamant stress is radial, so the fracture runs along the arc r = d about the edge and leaves the
+  lowest point of the new edge on the flank face d sin a' above the old edge: a fresh edge's land after a chip is
+  d sin a' (cot a' - tan g), about d, and a chip that ends inside a worn land (d sin a' < VN) shortens the land at
+  the edge without changing VB or the recession. (Until 2026-11-09 the chip depth was added to VN as if it were a
+  recession normal to the machined surface: VB = (VN + d)(cot a' - tan g) put g = 5.5 times the chip depth on the
+  land of the convergence study's D10 end mill at every chip, and each chip, with the land, the next contact length
+  and chip larger: convergence.md 9, item 9.)
 * **Edge rounding**: r_e = r_e0 + `edge_rounding_ratio` (1, est) (VN + VN_notch); a chipped edge at least
   half the chip depth.
 
@@ -124,10 +132,16 @@ at its VB limit:
 2. Speeds: the entry's `vc_range` ends, else the speeds of Taylor lives 60 min and 5 min
    (`calibration_life_long_s`, `calibration_life_short_s`; ISO 3685 test practice), at the entry's feed
    and depth references; check speed: the 15-min life (v15).
-3. The life integral T(A, B; v) = int_{VB0}^{VB_lim} dVB / (g dVN/dt) by Gauss-Legendre
-   (`physics.wear.calib_nodes`, 6 per interval), split where the coating wears through, with the
-   response (`TaylorResponse.response(slot, Condition)`: sigma_n V_s and the flank temperatures at
-   quadrature points, at the node's land VB) evaluated at every node. The integral is **edge contact
+3. The life integral T(A, B; v) = int_{VB0}^{VB_lim} dVB / (g dVN/dt) by composite Gauss-Legendre
+   (`physics.wear.calib_nodes`, 6 per interval), split at the integrand's kinks (the coating wearing through, the
+   land reaching the hone radius and the plastic land's VB*, `calibration.land_breaks`) and into intervals no longer
+   than 1 / `physics.wear.calib_pieces` (8) of the land, with the response (`TaylorResponse.response(slot,
+   Condition)`: sigma_n V_s and the flank temperatures at quadrature points, at the node's land VB) evaluated at
+   every node. The rate varies by orders of magnitude over the land (the flank heats as the land grows; beyond VB*
+   the plastic land's stresses grow): one rule over the whole land had missed the integral by 5-10 % (Zhao's Ti6Al4V
+   life to VB 0.3 mm 363 against 347 s, to 0.2 mm 328 against 340 s; 148 against 164 s with Blok's partition
+   unbounded; to 0.1 mm, without the kink, exact), and the calibrated and anchored constants carried that error
+   (fixed 2026-11-09; test `test_the_life_integral_is_split_at_the_lands_kinks`). The integral is **edge contact
    time**; its targets are the Taylor lives converted to contact time (life basis, below).
 4. For each B, A follows from T(v1) = eta_ref T_Taylor(v1) (closed form; a monotone root with the abrasive
    term); B is the root of ln(T(v2) / (eta_ref T_Taylor(v2))) in [10 K, 1e5 K] (Brent, fixed tolerances). The Usui
@@ -180,18 +194,30 @@ the law (without it the response gave 1830-2200 degC flanks for IN718 with ceram
 alloy's melting range, and 1475-1600 degC for Ti6Al4V at 150 m/min; now 900-1060 and 960-990 degC). The pressure
 sigma_0 is not softened (the hot layer, sqrt(kappa VB / V) of about ten microns, is thin against the plastic
 zone under the land). `Condition.coated` False models the uncoated substrate.
+Blok's partition of the land's friction heat is taken in [0, 1]: a small land, whose friction raises the work's
+surface less than the tool's base exceeds it, sits at the tool's base temperature (the rake-heated edge; 646-894
+degC for Ti6Al4V with carbide at 50-200 m/min, f 0.1-0.2 mm, for every land below VB*). Solving Blok's equality
+T = T_ws + (1 - f) q M_w = T_b + f q M_t with f unbounded (the tool face also giving heat to the colder work) was
+examined on 2026-11-09 and not adopted: the work surface entering the land is at T_AB here, without the heat of
+the edge's ploughing (the tertiary zone, section 17), so the unbounded flank of a small land follows T_AB, which
+hardly changes with speed (1045 / P30: 651-666 K between v60 and v5 against 897-949 K); every Taylor calibration
+then gave B of 50-100 kK (published Usui sets: 5-30 kK) with check residuals of 6-34 %, carbide in 6061 a law
+(B 43 kK, A 4e20 / Pa) that thermal's flank temperature of 2026-11-09 drove to kilometres of wear in the first
+step of the convergence case, while the anchored Ti6Al4V set needed A x 0.95 instead of x 0.15 and Zhao's VB 0.3
+mm lives came within -36..+16 % (+161..+234 % with the clamp; docs/validation.md 10). The unbounded partition
+belongs with a work surface that carries the ploughing heat.
 
-**Published sets and the pairing's Taylor life** (`calibration.anchor_published`). A published Usui set holds
-for the temperatures its source fitted it with (often an FE model): a systematic difference dT of another
-temperature model changes its rate by about exp(B dT / T^2). When the work material has a Taylor entry for the
-pairing (selected as in step 1), the published set keeps its B and branch ranges and its A (all branches by one
-factor) is scaled so that the response reaches the entry's VB limit in the entry's contact life at the 15-min
-speed v15 (with the coating phase as in the calibration); the residuals at the entry's two calibration speeds are
-reported (`law.flank.anchor`), the entry's VB limit becomes the tool's limit, and the original A is kept in the
-report. Without a Taylor entry the set is used as published. Example: Zhang 2025 (carbide-k20-6co on Ti6Al4V,
-B 15 909 K) anchored to Batista-Ponce 2019 (ti6al4v tool_life[0], f 0.2 mm, ap 1 mm, 15 min at 69 m/min):
-A x 0.041; residuals -20 % at 50 m/min and +150 % at 200 m/min (the source's adhesion-driven failure makes the
-Taylor exponent steeper than the published B with this response's temperatures).
+**Published sets and the pairing's Taylor life** (`calibration.anchor_published`). A published Usui set holds for
+the temperatures its source fitted it with (often an FE model): a systematic difference dT of another temperature
+model changes its rate by about exp(B dT / T^2). When the work material has a Taylor entry for the pairing (selected
+as in step 1), the published set keeps its B and branch ranges and its A (all branches by one factor) is scaled so
+that the response reaches the entry's VB limit in the entry's contact life at the 15-min speed v15 (with the coating
+phase as in the calibration); the residuals at the entry's two calibration speeds are reported (`law.flank.anchor`),
+the entry's VB limit becomes the tool's limit, and the original A is kept in the report. Without a Taylor entry the
+set is used as published. Example: Zhang 2025 (carbide-k20-6co on Ti6Al4V, B 15 909 K) anchored to Batista-Ponce
+2019 (ti6al4v tool_life[0], f 0.2 mm, ap 1 mm, 15 min at 69 m/min): A x 0.149 (0.145 with one Gauss rule over the
+land); residuals -23 % at 50 m/min and +225 % at 200 m/min (the source's adhesion-driven failure makes the Taylor
+exponent steeper than the published B with this response's temperatures).
 
 A calibration whose B reaches the end of its bracket (the response's flank temperature changes too little
 between the two speeds for the entry's speed exponent, e.g. IN718 with ceramics, whose flank runs near the
@@ -203,35 +229,60 @@ not match the run's thermal temperatures; these wear by the abrasive term with t
 abrasiveness factor, and their Taylor data are reported as a check (`law.flank.taylor_check`), not fitted.
 
 **Measured** (database materials of 2026-11-09, default response, carbide uncoated entries, rake 0.1,
-clearance 0.12, hone 20 um, abrasive floor included): residual at both calibration speeds < 1e-9; at the
-15-min check speed:
+clearance 0.12, hone 20 um, abrasive floor included, composite life integral): residual at both calibration speeds
+< 1e-9; at the 15-min check speed:
 
 | material / tool material | B (K) | flank T at v1..v2 (K) | check residual |
 |---|---|---|---|
-| aisi1045 / carbide-p30 | 30 664 | 897-949 | +4.3 % |
-| aisi4140-qt30 / carbide-p30 | 28 217 | 908-962 | +1.3 % |
-| aisi304 / carbide-k20-6co | 30 087 | 890-939 | +1.4 % |
-| ti6al4v / carbide-k20-6co | 27 755 | 1062-1205 | -3.0 % |
-| inconel718 / carbide-k20-6co | 66 079 | 1030-1065 | +0.5 % |
-| al6061-t6 / carbide-k20-6co | 19 217 | 575-603 | +5.3 % |
-| grey-cast-iron-gjl250 / carbide-k20-6co | 21 913 | 715-763 | +1.4 % |
-| aisi1045 / hss-m2 | 50 227 | 774-802 | +2.8 % |
+| aisi1045 / carbide-p30 | 32 849 | 897-949 | -0.6 % |
+| aisi4140-qt30 / carbide-p30 | 32 800 | 908-962 | -0.1 % |
+| aisi304 / carbide-k20-6co | 34 092 | 890-939 | +0.2 % |
+| ti6al4v / carbide-k20-6co | 32 292 | 1062-1205 | -10.0 % |
+| inconel718 / carbide-k20-6co | 67 474 | 1030-1065 | +0.4 % |
+| al6061-t6 / carbide-k20-6co | 22 835 | 575-603 | +1.2 % |
+| grey-cast-iron-gjl250 / carbide-k20-6co | 22 276 | 715-763 | -0.2 % |
+| aisi1045 / hss-m2 | 50 385 | 774-802 | +3.1 % |
 
-(Recomputed 2026-11-09 with the softened land; the uncoated entries of the tool class picked by step 1; the
-flank temperatures are those at the first Gauss node, a land of about the hone radius, which the softening hardly
-changes; it lowers the hot end of the land and so raises B, most for IN718, whose flank approaches the
-melt-limited temperature. Before: B 24 843, 26 863, 47 526, 16 518, 25 877, 18 700, 13 034, 30 628 K.)
+(Recomputed 2026-11-09 with the composite life integral; the uncoated entries of the tool class picked by step 1;
+the flank temperatures are those at the first Gauss node, a land of a few microns. Before, with one Gauss rule over
+the land: B 30 664, 28 217, 30 087, 27 755, 66 079, 19 217, 21 913, 50 227 K, check residuals +0.5 to +5.3 %;
+the Ti6Al4V check moved to -10 % because the integral now resolves the land's kink at VB*.)
 
 **Error bound**: within the calibrated
-window (5-60 min) the wear model reproduces the Taylor life within 6 % (the curvature of B / T(ln v)
-against Taylor's straight line; synthetic response test bound 5 %, kernel integration to the VB limit
-within 0.5 % of the integral, test `test_the_kernel_reaches_the_vb_limit_in_the_taylor_life`). This is
+window (5-60 min) the wear model reproduces the Taylor life within 10 % (the curvature of B / T(ln v)
+against Taylor's straight line, the table above; synthetic response test bound 5 %, kernel integration to the VB
+limit within 0.5 % of the integral, test `test_the_kernel_reaches_the_vb_limit_in_the_taylor_life`). This is
 relative to the Taylor fit, whose own scatter is +-20-30 % and whose database entries are mostly
 estimates. Outside the window the extrapolation follows the Arrhenius law; at 3 x the speed span the
 curvature term grows to about 20 %. The calibrated constants hold only for the model temperatures they
 were fitted with: when the run's thermal model gives systematically different flank temperatures than
 the response, the life shifts by exp(B dT / T^2) (dT = 20 K at 950 K and B = 25 000 K: x 1.7) -
 wire a response that runs cutting's coefficient pipeline and thermal's edge model (integration note).
+
+**Coupling to the run's flank temperature (2026-11-09).** With the calibration B = (1/n - 1) T^2 / (dT/d ln v) the
+law's sensitivity to temperature, B / T^2 = (1/n - 1) / (dT/d ln v), is that which reproduces the Taylor speed
+exponent with the response's own temperature-speed slope: where the response's flank barely heats with speed the
+law is steep in temperature, and a flank temperature the run takes from another model acts like a large change of
+speed (test `test_the_calibrated_activation_follows_the_responses_temperature_slope`). Carbide (AlTiN, worn through
+at the convergence study's initial VB 20 um) in Al 6061-T6, the D10 end mill of docs/convergence.md 5: the
+response's flank rises 569 -> 598 K between the estimated Taylor entry's v60 = 527 and v5 = 1111 m/min, B = 21 574
+K (A = 0.054 / Pa), and the life halves per +5.6 K at 419 K. At the convergence case (314 m/min, h_max 17 um,
+contact share 0.072, flood friction factor 0.9) the response gives 419 K at VB 20 um; the cutting time to grow the
+land to 0.3 mm with an offset dT on that flank temperature (the law as WearDomain builds it, the response at the
+case's conditions, the composite life integral):
+
+| dT (K) | 0 | 50 | 100 | 150 | 200 | 300 | 400 |
+|---|---|---|---|---|---|---|---|
+| cutting time to VB 0.3 mm | 187 h (the abrasive floor) | 139 h | 81 h | 9.7 h | 32 min | 17 s | 0.5 s |
+
+Thermal's flank contact temperature in that cut is 673 K median over the engaged elements (590-730 K; quadrature
+maxima 935 K median, taken at the work's 855 K solidus, section 2), dT about 255 K on the means and up to 436 K at
+the maxima: the tool lasts seconds to minutes instead of days. A flank temperature within about 150 K of the
+response's keeps the life at hours (thermal's local flank rise halved, the diagnosis of its owner that it is about
+twice Blok's value, gives about 484 K, dT 65 K: some 120 h): with the response's own contact temperatures in place of
+thermal's (a test-script substitution) the whole loop of five such side steps (29 s of cutting) keeps VB at 20 um to
+within nanometres (docs/convergence.md 9, item 9). The law is self-consistent only with the response's temperatures
+(or a response that is the run's own pipeline).
 
 ## 4. Crater (Takeyama-Murata / Arrhenius)
 
@@ -246,7 +297,12 @@ diffusion onset explicit. Onset: the crater depth reaching `crater_onset_m` (1 u
 `wear:crater_onset` (test `test_crater_rate_follows_the_arrhenius_onset`: the rate rises by more than
 1000 x from 700 K to 1300 K; the two-branch jump at 1150 K equals the ratio of the branches).
 Error: without crater data, the crater carries the flank calibration's uncertainty plus the rake/flank
-temperature difference of the models (a factor 2-3 in depth).
+temperature difference of the models (a factor 2-3 in depth where B is a published one). A law calibrated to Taylor
+data holds on the response's flank temperature scale only: on the rake, hotter by T_int - T_flank, its B turns that
+difference into exp(B dT / T^2) (carbide in 6061 at the convergence case: 481 against 419 K and B = 21.6 kK, 800
+times the flank's Usui rate, still a crater life of months of cutting there; thermal's rake contact of 2026-11-09,
+660 K median and up to the 855 K solidus, makes the crater a life criterion within seconds): order-of-magnitude at
+best, and only as good as the rake temperature it is given.
 
 ## 5. Notch at the depth-of-cut line
 
@@ -286,16 +342,28 @@ Per shock row (sorted by tick, tooth, element), at the row's element:
   - (sigma/sigma_crack)^m), sigma_0 = TRS / Gamma(1 + 1/m) at the effective volume of the TRS test piece
   V_ref = L b d / (2 (m + 1)^2) (ASTM C1683; ISO 3327 type B as commonly described, est),
   sigma_crack = K_IC / (Y sqrt(pi a)) for a comb crack of depth a (Y = 1.1215, Tada et al. 2000);
-* draw u = hash_uniform(seed, stream_key("wear.chipping"), slot 2^32 + tooth 2^16 + elem, counter, 0),
-  counter per element; chipped when u < P: chip depth = `chip_size_ratio` (1) x l_c, the element's
-  coating is gone;
+* **the edge's strength** is a property of the edge, not of the load cycle: one quantile per edge and
+  generation, u = hash_uniform(seed, stream_key("wear.chipping"), slot 2^32 + tooth 2^16 + elem, chips so far, 0)
+  (Weibull's weakest link: the flaw population that survived a load survives the same load again; until
+  2026-11-09 every shock row drew anew, so that an edge loaded 167 times a second at any stress chipped in the
+  end, P_N = 1 - (1 - P)^N);
+* **fatigue of the edge**: the load cycles (entry and exit rows) degrade the strength along the tool material's
+  Basquin curve with equal ranks of strength and life (the b of section 9: hardmetal-type classes ln 0.7 / ln 2e7 =
+  -0.0212, Nakajima et al. 2006; HSS the universal slopes), Miner's sum S = sum_i (sigma_n,i / sigma_0)^p with p =
+  -1/b and the size-normalised stress sigma_n = sigma (V_eff / V_ref)^(1/m); the cumulative hazard H = S^(m/p) +
+  (sigma / sigma_crack)^m (one cycle: the static Weibull hazard; N equal cycles: N^(m/p) times it);
+* chipped at the row where H >= -ln(1 - u): chip depth = `chip_size_ratio` (1) x l_c, the element's coating is
+  gone, the edge is new (the next generation's quantile, an empty fatigue sum); `CO_P` reports the static
+  probability of the row's load, `CO_HAZARD` the edge's H;
 * otherwise, with coating on the element: spallation P_c = 1 - exp(-(p / sigma_c)^m_c), p = F'/l_c,
   sigma_c = 4 GPa, m_c = 6 (est; Bouzakis et al. 2012 for impact fatigue of coatings), stream
   `wear.coating`.
 
-Tests: frequencies within 4 sigma of P over 4000 hash-seeded trials, reproducible per seed, size effect
-(2 x width at the same force per width: 2 x hazard), stress exponent (1.2 x force: 1.2^m x hazard),
-comb cracks add exactly their term. Error: the point-load wedge solution at r = l_c is uncertain by
+Tests: the share of 4000 hash-seeded edges that chip at a first load is P within 4 sigma, reproducible per seed,
+size effect (2 x width at the same force per width: 2 x hazard), stress exponent (1.2 x force: 1.2^m x hazard),
+comb cracks add exactly their term, an edge that survived a load survives it again without fatigue, after N equal
+cycles the edges chipped are 1 - exp(-N^(m/p) H_1), a chip renews the edge (test_chipping.py). Error: the
+point-load wedge solution at r = l_c is uncertain by
 about 30 % in stress (distributed load, edge radius), i.e. 1.3^m in hazard: chipping probabilities are
 order-of-magnitude estimates; the rates are seeded and reproducible.
 
@@ -391,16 +459,17 @@ previous record object, never mutated), `expired` (tool numbers whose life ended
 
 ## 12. Determinism and RNG streams
 
-No stateful RNG. Streams: `wear.chipping` (key slot 2^32 + tooth 2^16 + element, counter per element),
+No stateful RNG. Streams: `wear.chipping` (key slot 2^32 + tooth 2^16 + element, counter = the edge's chips so far:
+one strength per edge and generation),
 `wear.coating` (same key, own counter), `wear.bue_breakoff` (mechanics' BUE kernel, own counter),
 `wear.strength` (init only: slot, section, 0). Shock rows are sorted (tick, tooth, element); BUE
 candidates in flat element order; the calibration uses fixed Gauss nodes, fixed brackets and Brent
 tolerances. Checkpoint: `WearState.to_arrays()` / `from_arrays()` hold every array and counter (test:
-bit-identical continuation).
+bit-identical continuation; a checkpoint written before the edge's fatigue sum existed loads with an empty one).
 
 ## 13. Settings (`physics.wear`, schema.py)
 
-`strength` median | sample, `breakage_risk_warn` 0.01, `calib_nodes` 6, `rate_window_s` 10 s,
+`strength` median | sample, `breakage_risk_warn` 0.01, `calib_nodes` 6, `calib_pieces` 8, `rate_window_s` 10 s,
 `chip_theta_nodes` 64, `skin_samples` 64, `max_chip_events` 20 (trace events per tool and operation; the
 counts are complete), `fallback_speeds` 7, `dimensional_share` 1.0, `every_n_macro` 1 (fixed: wear
 integrates every step's record).
@@ -431,7 +500,7 @@ each (test), each compared with its twin in `reference.py` (1e-12 relative):
 | `advance_elements` | `(GEO_T, IN_T, LAW_T, STATE_T, OUT_T)` | 59 us for 176 elements, nq = 3 |
 | `element_outputs` | `(GEO_T, LAW_T, STATE_T, OUT_T)` | 10 us for 176 elements |
 | `chip_trials` | `(GEO_T, STATE_T, CHIPLAW_T, i8[:], f8[:, :], f8[:], f8[:, :])` | about 3 us per row |
-| `usui_rate`, `table_at`, `worn_edge_radius`, `wedge_tension`, `wedge_volume_factor` | helpers | < 1 us |
+| `usui_rate`, `table_at`, `worn_edge_radius`, `flank_recession`, `wedge_tension`, `wedge_volume_factor` | helpers | < 1 us |
 
 Per macro step (10 ms): one cutting tool of 4 x 44 elements with 12 shocks and two sections 0.72 ms
 (0.07 s per simulated second: kernels 0.13 ms, Python bookkeeping the rest); an idle tool 0.04 ms;
@@ -471,7 +540,15 @@ init 0.07-0.15 s per tool including the calibration with the default response.
   engaged; with gaps between the teeth (few teeth, light radial engagement) it is shorter than the
   feed time in the material that Taylor and ISO 8688 count (life is unaffected: wear follows contact).
 * The calibrated law is consistent with the run only when the response and the run use the same
-  temperature model (section 3, factor exp(B dT / T^2)).
+  temperature model (section 3, factor exp(B dT / T^2); B / T^2 = (1/n - 1) / (dT/d ln v): for carbide in 6061 the
+  life halves per +5.6 K of flank temperature, and thermal's flank of 2026-11-09, about 250 K above the response's,
+  shortens the convergence study's end mill's life from days to minutes: section 3, "Coupling to the run's flank
+  temperature").
+* The response's work surface entering the flank land is at the shear-plane temperature T_AB: the heat of the
+  edge's ploughing (tertiary zone) is in neither the land's base nor its friction. Blok's partition is therefore
+  kept in [0, 1] (a small land at the rake-heated tool base, section 3); the fresh land wears slowly against
+  measurements (Zhao's first 0.1 mm in hundreds of seconds against 40-68 s): the break-in of a fresh edge is
+  missing. Error: a factor 3-7 on the time to the first 0.1 mm.
 * Chipping, spallation, thermal-crack and fatigue constants are estimates (marked `est`), notch and
   edge rounding too; their outcomes are order-of-magnitude.
 * Vibration (chatter) loads are not separate fatigue cycles: they enter only through cutting's peak

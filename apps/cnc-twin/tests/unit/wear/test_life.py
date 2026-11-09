@@ -123,6 +123,19 @@ def test_checkpoint_resume_continues_bit_identically():
     assert a.tools[0].remaining_life_s == b.tools[0].remaining_life_s
 
 
+def test_a_checkpoint_without_the_edge_fatigue_sum_resumes_with_an_empty_one():
+    """Checkpoints written before the edge's fatigue sum existed (ElemState.edge_fat, 2026-11-09) still load: the sum
+    starts empty, every other array as stored."""
+    dom, ctx, state, edge = _setup(macro_ipo=10)
+    fx.run(dom, ctx, state, edge, 2)
+    arrays, meta = state.wear.to_arrays()
+    old = {k: np.array(v) for k, v in arrays.items() if not k.endswith("elem.edge_fat")}
+    back = WearState.from_arrays(old, meta)
+    sw, sw0 = back.slots[0], state.wear.slots[0]
+    assert np.all(sw.elem.edge_fat == 0.0) and sw.elem.edge_fat.shape == sw0.elem.vn.shape
+    np.testing.assert_array_equal(sw.elem.vn, sw0.elem.vn)
+
+
 def test_empty_steps_give_zero_rates_and_no_nan():
     dom, ctx, state, edge = _setup(macro_ipo=10)
     for i in range(3):
