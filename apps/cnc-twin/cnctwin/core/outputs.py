@@ -567,12 +567,14 @@ def capped_command(module_args: list[str], mode: str, cap_bytes: int, unit: str 
     """``python <module_args>`` in the deterministic environment (:func:`generator_environment`), under a memory
     cap like bin/tsafe: mode ``systemd`` a scope ``sudo -n systemd-run --scope -p MemoryMax=<cap> -p
     MemorySwapMax=<swap>`` (the command then carries the environment: returns (command, None)); ``rlimit`` and
-    ``none`` the plain command (the subprocess caps itself in rlimit mode) and the environment for Popen."""
+    ``none`` the plain command (the subprocess caps itself in rlimit mode) and the environment for Popen.
+    The swap allowance is never more than the cap: a scope allowed more swap than memory pages its whole
+    working set in and out instead of failing (an 8 MiB cap with 256 MiB of swap ran for minutes at full CPU)."""
     env = generator_environment() if env is None else env
     python = [sys.executable, *module_args]
     if mode != "systemd":
         return python, env
-    swap = int(_params()["memory_swap_max_bytes"])
+    swap = min(int(_params()["memory_swap_max_bytes"]), int(cap_bytes))
     command = [] if os.geteuid() == 0 else ["sudo", "-n"]
     command += ["systemd-run", "--scope", "-q", "-p", f"MemoryMax={int(cap_bytes)}", "-p", f"MemorySwapMax={swap}"]
     if unit:

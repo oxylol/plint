@@ -38,7 +38,7 @@ params:
     unit: "-"
     range: [0, 17179869184]
     src: est
-    note: "256 MiB of swap per generator scope, as bin/tsafe and the API job manager allow: a generator that outgrows its cap fails instead of pushing the box into swap"
+    note: "256 MiB of swap per generator scope, as bin/tsafe and the API job manager allow, and never more than the scope's memory cap: a generator that outgrows its cap fails instead of pushing the box into swap (with more swap than cap a small scope pages its whole working set instead of failing)"
   rlimit_data_factor:
     value: 2
     unit: "-"

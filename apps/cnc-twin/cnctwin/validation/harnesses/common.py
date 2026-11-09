@@ -206,7 +206,9 @@ EDGE_DEFAULTS = {"insert": "insert_edge_radius_m", "solid": "hone_edge_radius_m"
 
 def edge_radius_m(case: Case, row: TestRow | None, col: Collector, tool_kind: str = "insert") -> float:
     """Cutting-edge radius of a test: per-test list, else the tool's stated value, else the default the
-    tooling model itself uses for that kind of tool (db/models/tooling.yaml)."""
+    tooling model itself uses for that kind of tool (db/models/tooling.yaml). ``tool_kind`` "solid" follows
+    tooling.common.edge_prep for a solid tool without a stated edge preparation: the light hone when coated,
+    the ground (sharp) edge when uncoated."""
     if row is not None:
         value = row.si("edge_radius_per_test_um", "edge_radius_um")
         if isinstance(value, (int, float)):
@@ -214,6 +216,10 @@ def edge_radius_m(case: Case, row: TestRow | None, col: Collector, tool_kind: st
     leaf = case.leaf("tool", "edge_radius_um", "edge_radius_mm", "hone_um")
     if leaf is not None and isinstance(leaf.value, (int, float)):
         return float(leaf.si())
+    if tool_kind == "solid" and coating_id(case, col) == "none":
+        tool_kind = "sharp"
+        col.note("Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge "
+                 "in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.")
     from ...db.models import params
     name = EDGE_DEFAULTS[tool_kind]
     value = float(params("tooling")[name])

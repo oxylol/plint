@@ -100,6 +100,9 @@ def test_roughness_edge_default_follows_the_tooling_rule():
                            "solid") == pytest.approx(12e-6)
     assert RH._edge_radius(_rough_case({"type": "turning_insert", "coating": "none"}), col, "insert") == \
         pytest.approx(float(p["insert_edge_radius_m"]))
+    from cnctwin.validation.harnesses import common as H     # the force, wall and coolant harnesses share the rule
+    assert H.edge_radius_m(_rough_case({"type": "square_endmill", "coating": "none"}), None, col, "solid") == \
+        pytest.approx(float(p["sharp_edge_radius_m"]))
 
 
 def test_roughness_reads_the_instruments_stated_cutoff():

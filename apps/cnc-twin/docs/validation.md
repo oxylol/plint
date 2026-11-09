@@ -300,7 +300,8 @@ The per-case causes are in docs/validation-report.md ("Failures and likely cause
   material that no pass cut (its surface lies up to 7 um below the layer every pass met thinner than h_min), so
   the kernel keeps the accumulating layer (docs/models/surface.md 2, Kim, Mayor & Ni 2004). (2) Harness errors
   fixed: the edge radius of solid tools was always tooling's light hone (20 um) although tooling gives an uncoated
-  solid tool without stated preparation its ground edge (3 um; Matras' CBN ball, Sultana's HSS end mill); the
+  solid tool without stated preparation its ground edge (3 um; Matras' CBN ball, Sultana's HSS end mill; the rule
+  now lives in the shared `common.edge_radius_m`, so the force, wall-error and coolant harnesses use it too); the
   ball's feed-mark template was cut at 3 fz + 20 um, narrower than the surface model's own window, which made the
   feed marks depend on that cut (Pt 0.68 against 2.3 um at fz 0.013 mm, h_min 5 um); the scallops across the
   step-over had no minimum chip thickness, although near the ball's lowest point the layer a pass meets from the

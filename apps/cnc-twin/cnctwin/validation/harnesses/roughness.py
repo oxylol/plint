@@ -156,14 +156,8 @@ def _min_chip(db, case, col) -> float:
 
 
 def _edge_radius(case, col, kind: str) -> float:
-    """The case's edge radius, else the tooling model's default for the tool: ``kind`` "solid" follows
-    tooling.common.edge_prep for solid tools without a stated edge preparation (the light hone when coated, the
-    ground edge when uncoated); "insert" and "chamfer" are the indexable defaults."""
-    if kind == "solid" and H.coating_id(case, col) == "none":
-        kind = "sharp"
-        if case.leaf("tool", "edge_radius_um", "edge_radius_mm", "hone_um") is None:
-            col.note("Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) "
-                     "edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.")
+    """The case's edge radius, else the tooling model's default for the tool (common.edge_radius_m: "solid" follows
+    tooling.common.edge_prep, "insert" and "chamfer" are the indexable defaults)."""
     return H.edge_radius_m(case, None, col, kind)
 
 
