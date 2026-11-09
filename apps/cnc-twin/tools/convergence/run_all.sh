@@ -4,7 +4,8 @@
 #
 #   tools/convergence/run_all.sh [--root DIR] [--fresh] [study ...]
 #
-# Without study names every study runs (about 3-4 CPU hours on the i5-4690; the whole-loop studies are most of it).
+# Without study names every study runs (about one CPU hour on the i5-4690, half of it the whole-loop studies; the
+# 2 ms macro step runs out of the 1.8 GB cap and ends the macro study's process after its other levels are saved).
 # --root DIR runs a frozen copy of the tree (cnctwin/, db/, examples/) with its own Numba cache (tools/convergence/
 # env.py); compile it first with: bin/tsafe python tools/convergence/warm.py --root DIR. --fresh recomputes levels
 # already in tools/convergence/results/. Deterministic: the same tree gives the same results, curves and tables.
@@ -22,8 +23,8 @@ while [ $# -gt 0 ]; do
   esac
 done
 if [ ${#studies[@]} -eq 0 ]; then
-  studies=(stride_slot stride_side lattice_side lattice_corner element_flat element_ball bins_runout bins_chatter
-           turn_theta turn_dz macro lag thermal_cell thermal_every)
+  studies=(stride_slot stride_side lattice_side lattice_corner element_flat element_ball bins_stride bins_runout
+           bins_chatter turn_theta turn_dz lag thermal_cell thermal_every macro)
 fi
 failed=()
 for s in "${studies[@]}"; do

@@ -46,6 +46,7 @@ TOL = {
     "Fx_N": (0.015, True, 1e-4), "Fy_N": (0.015, True, 1e-4), "Fz_N": (0.015, True, 1e-4),
     "torque_Nm": (0.015, True, 1e-4),           # torque 15 %
     "F_peak_N": (0.02, True, 1e-4),             # milling peak force 20 %
+    "F_peak_corner_N": (0.02, True, 1e-4),
     "chip_volume_field_mm3": (0.01, True, 1e-5),     # half the 2 % volume-consistency band
     "chip_volume_analytic_mm3": (0.01, True, 1e-5),
     "removed_mm3": (0.01, True, 1e-6),
@@ -62,7 +63,7 @@ TOL = {
     "VB_growth_um": (0.05, True, 1e-4),         # taylor_life / VB(t) 50 %
     "bulk_rise_K": (0.015, True, 1e-4), "bulk_max_rise_K": (0.015, True, 1e-4),
     "surface_rise_K": (0.015, True, 1e-4),
-    "expansion_um": (0.025, True, 1e-4),        # wall_error 25 %
+    "expansion_um": (0.1, False, 0.002),        # 0.1 um: a hundredth of a +-10 um tolerance (the expansion is small)
 }
 
 
@@ -144,6 +145,37 @@ def corner_area(R: float, d_bottom: float, d_right: float, xc: float, yc: float,
     return (max(d_bottom, 0.0) * xc + _cap(R, d_bottom) + max(d_right, 0.0) * (ye - yc) + 2.0 * _cap(R, d_right))
 
 
+def swept_wall_volume(path_xy_mm, shape, ap_mm: float, y_wall_mm: float, x_wall_mm: float,
+                      pixel_mm: float = 0.002, band_mm: float = 0.6) -> float:
+    """Volume (m3) the envelope of every tooth (radius R(z) + the largest tooth offset, envelope_radius) removes when
+    its axis follows the polyline ``path_xy_mm`` (S, mm) through the walls below y_wall and right of x_wall of the
+    corner stock: per distinct radius the wall bands are sampled on a pixel_mm grid and a pixel is removed when its
+    distance to the path (resampled every 5 um) is within the radius; integrated over the depth from the tip."""
+    from scipy.spatial import cKDTree
+    P = np.asarray(path_xy_mm, float)
+    seg = np.diff(P, axis=0)
+    length = np.hypot(seg[:, 0], seg[:, 1])
+    pts = [P[:1]]
+    for i in range(len(seg)):
+        n = max(int(math.ceil(length[i] / 0.005)), 1)
+        t = (np.arange(1, n + 1) / n)[:, None]
+        pts.append(P[i] + t * seg[i])
+    tree = cKDTree(np.concatenate(pts, axis=0))
+    xb = np.arange(0.0, x_wall_mm + band_mm, pixel_mm) + 0.5 * pixel_mm
+    yb = np.arange(y_wall_mm - band_mm, y_wall_mm, pixel_mm) + 0.5 * pixel_mm
+    xr = np.arange(x_wall_mm, x_wall_mm + band_mm, pixel_mm) + 0.5 * pixel_mm
+    yr = np.arange(y_wall_mm, P[:, 1].max() + 6.0, pixel_mm) + 0.5 * pixel_mm
+    g1 = np.stack(np.meshgrid(xb, yb, indexing="ij"), axis=-1).reshape(-1, 2)
+    g2 = np.stack(np.meshgrid(xr, yr, indexing="ij"), axis=-1).reshape(-1, 2)
+    g2 = g2[g2[:, 1] >= y_wall_mm]
+    d = np.concatenate([tree.query(g1)[0], tree.query(g2)[0]])
+    d.sort()
+    zs = np.linspace(0.0, ap_mm, 501)
+    radii = np.array([1e3 * envelope_radius(shape, z * 1e-3) for z in zs])
+    areas = np.searchsorted(d, radii, side="right") * pixel_mm * pixel_mm
+    return float(np.trapezoid(areas, zs)) * 1e-9
+
+
 # ------------------------------------------------------------------------------------------------ cases
 @dataclass
 class Level:
@@ -216,6 +248,18 @@ def mill_case(study, level: Level, db, *, kind: str, dynamics: bool, lattice_mm:
         details["removed_y_mm3"] = details["removed_xyz_mm3"][1]
     details["cost"] = run.cost()
     details["steps_cut"] = sum(1 for s in run.steps if s["in_cut_s"] > 0)
+    tool = drv.state.cutting.tools[0].tool if drv.state.cutting.tools else None
+    if tool is not None:
+        # the cutting edge's stations around the depth of cut: an element is engaged whole or not at all, so the
+        # engaged edge ends at a station boundary, not at the stock's top
+        from cnctwin.cutting.memory import station_geometry
+        r_st, z_st, _, _ = station_geometry(tool)
+        zs = np.sort(np.asarray(z_st, float)[np.asarray(r_st) > 0.3 * float(np.max(r_st))]) * 1e3
+        below = zs[zs < ap_mm]
+        above = zs[zs >= ap_mm]
+        details["stations_around_ap_mm"] = [float(below[-1]) if below.size else None,
+                                            float(above[0]) if above.size else None]
+        details["stations_below_ap"] = int(below.size)
     if kind == "chatter":
         steady = [s for s in run.steps if s["in_cut_s"] > 0.0 and s["tip_lo"][0] * 1e3 > window[0]
                   and s["tip_hi"][0] * 1e3 < window[1]]
@@ -273,26 +317,20 @@ def corner_case(study, level: Level, db, *, ap_mm: float = 5.0, ae_mm: float = 0
         q["wall_bottom_dev_um"] = float(1e6 * (np.mean(sb) - nb))
     if sr.size:
         q["wall_right_dev_um"] = float(1e6 * (np.mean(sr) - nr))
-    # the analytic removed volume along the path the tool actually took: each straight segment at its measured mean
-    # offset from the programmed line (the machine's geometric and servo errors), the turn at their crossing
-    on_a = (tip[:, 0] >= 2.0) & (tip[:, 0] <= xc - 2.0) & (np.abs(tip[:, 1] - yc) < 0.05)
-    on_b = (tip[:, 1] >= yc + 2.0) & (tip[:, 1] <= ye - 1.0) & (np.abs(tip[:, 0] - xc) < 0.05)
-    dy = float(np.mean(tip[on_a, 1]) - yc) if on_a.any() else 0.0
-    dx = float(np.mean(tip[on_b, 0]) - xc) if on_b.any() else 0.0
+    # the exact removed volume: the tool's envelope swept along the path it actually took (the tick positions: the
+    # control rounds the corner by up to ~0.45 mm and the machine's errors offset the lines by a few um), intersected
+    # with the stock's walls (swept_wall_volume); the programmed sharp-cornered path for comparison
+    cut = (tip[:, 2] < (top * 1e3 - ap_mm + 0.05)) & (tip[:, 0] > -6.0)
+    Vp = swept_wall_volume(tip[cut, :2], shape, ap_mm, y0, x1)
     zs = np.linspace(0.0, ap_mm * 1e-3, 2001)
-
-    def volume(off_x_mm: float, off_y_mm: float) -> float:
-        xt, yt = (xc + off_x_mm) * 1e-3, (yc + off_y_mm) * 1e-3
-        A = []
-        for z in zs:
-            R = envelope_radius(shape, z)
-            A.append(corner_area(R, R - (yt - y0 * 1e-3), R - (x1 * 1e-3 - xt), xt, yt, ye * 1e-3))
-        return float(np.trapezoid(np.asarray(A), zs))
-    V = volume(0.0, 0.0)
-    Vp = volume(dx, dy)
+    A = []
+    for z in zs:
+        R = envelope_radius(shape, z)
+        A.append(corner_area(R, R - (yc - y0) * 1e-3, R - (x1 - xc) * 1e-3, xc * 1e-3, yc * 1e-3, ye * 1e-3))
+    V = float(np.trapezoid(np.asarray(A), zs))
     v1 = M.field_volume_m3(field_)
     q["removed_mm3"] = 1e9 * run.result.removed_volume_m3
-    details = {"removed_analytic_mm3": 1e9 * V, "removed_path_mm3": 1e9 * Vp, "path_offset_um": [1e3 * dx, 1e3 * dy],
+    details = {"removed_analytic_mm3": 1e9 * V, "removed_path_mm3": 1e9 * Vp,
                "removed_xyz_mm3": [1e9 * (b - c) for b, c in zip(v0, v1)],
                "finished": bool(run.result.finished), "cost": run.cost(),
                "wall_bottom_n": int(sb.size), "wall_right_n": int(sr.size)}
@@ -384,7 +422,8 @@ def stride_levels(rigid: bool):
         [(2.0, 48), (1.0, 96), (0.5, 96), (0.25, 96), (0.125, 96), (0.0625, 96)]
     out = []
     for deg, spt in rules:
-        out.append(Level(label=f"deg{deg:g}-spt{spt}", h=deg, physics={"max_deg_per_step": deg, "steps_per_tooth": spt}))
+        out.append(Level(label=f"deg{deg:g}-spt{spt}", h=deg,
+                         physics={"max_deg_per_step": deg, "steps_per_tooth": spt}))
     return out
 
 
@@ -401,6 +440,7 @@ class Study:
     note: str = ""
     h_from_cost: bool = False       # replace h by the stride actually used (degrees per L0 step)
     exact: dict = field(default_factory=dict)   # quantity -> exact value, or the details key holding it
+    test_labels: list | None = None  # the levels tests/convergence runs (default: the shipped default and every finer)
 
 
 def _stride_h(det_cost):
@@ -418,7 +458,8 @@ STUDIES = {
         note="D10 4FL (MHSV), Al 6061-T6, 10 000 rpm, f_z 0.04 mm, full slot ap 3.0 mm, lattice 0.25 mm (default), "
              "rigid tool and work", h_from_cost=True),
     "stride_side": Study(
-        "stride_side", "L0 stride: side-milling finish (VF-2SS modes)", "physics.max_deg_per_step, physics.steps_per_tooth",
+        "stride_side", "L0 stride: side-milling finish (VF-2SS modes)",
+        "physics.max_deg_per_step, physics.steps_per_tooth",
         "spindle angle per L0 step (deg)", stride_levels(False), "deg0.5-spt96",
         ["F_mean_N", "Fy_N", "F_peak_N", "torque_Nm", "chip_volume_analytic_mm3", "chip_volume_field_mm3",
          "wall_dev_um", "vib_pp_um"],
@@ -446,14 +487,16 @@ STUDIES = {
         "element_flat", "Edge element size: D10 flat end mill, slot (rigid)", "physics.edge_element_mm",
         "edge element length (mm)",
         [Level(f"el{e:g}", e, {"edge_element_mm": e}) for e in (1.0, 0.5, 0.25, 0.125, 0.0625)], "el0.5",
-        ["F_mean_N", "Fx_N", "Fy_N", "Fz_N", "F_peak_N", "torque_Nm", "chip_volume_analytic_mm3", "chip_volume_field_mm3"],
+        ["F_mean_N", "Fx_N", "Fy_N", "Fz_N", "F_peak_N", "torque_Nm", "chip_volume_analytic_mm3",
+         "chip_volume_field_mm3"],
         lambda st, lv, db: mill_case(st, lv, db, kind="slot", dynamics=False, ap_mm=3.0, lattice_mm=0.0625),
         note="D10 4FL (MHSV), Al 6061-T6, 10 000 rpm, f_z 0.04 mm, full slot ap 3.0 mm, lattice 0.0625 mm, rigid"),
     "element_ball": Study(
         "element_ball", "Edge element size: D10 ball nose, slot (rigid)", "physics.edge_element_mm",
         "edge element length (mm)",
         [Level(f"el{e:g}", e, {"edge_element_mm": e}) for e in (1.0, 0.5, 0.25, 0.125, 0.0625)], "el0.5",
-        ["F_mean_N", "Fx_N", "Fy_N", "Fz_N", "F_peak_N", "torque_Nm", "chip_volume_analytic_mm3", "chip_volume_field_mm3"],
+        ["F_mean_N", "Fx_N", "Fy_N", "Fz_N", "F_peak_N", "torque_Nm", "chip_volume_analytic_mm3",
+         "chip_volume_field_mm3"],
         lambda st, lv, db: mill_case(st, lv, db, kind="slot", dynamics=False, ap_mm=2.0, lattice_mm=0.0625,
                                      tool=C.BALL_D10),
         note="D10 4FL ball nose (Tungaloy TEB100E4L), Al 6061-T6, 10 000 rpm, f_z 0.04 mm, slot ap 2.0 mm (the ball "
@@ -467,13 +510,24 @@ def _bins_runout(st, lv, db):
 
 
 STUDIES["bins_runout"] = Study(
-    "bins_runout", "Surface-memory bins: runout and regeneration (1-DOF)", "physics.memory_bins",
+    "bins_runout", "Surface-memory bins alone, stride fixed (1-DOF)", "physics.memory_bins",
     "angle per memory bin (deg)",
     [Level(f"bins{b}", 360.0 / b, {"memory_bins": b}) for b in (90, 180, 360, 720, 1440, 2880)], "bins720",
     ["F_mean_N", "Fx_N", "Fy_N", "F_peak_N", "torque_Nm", "chip_volume_analytic_mm3", "chip_tooth_spread", "vib_pp_um"],
     _bins_runout,
     note="D10 4FL, Al 6061-T6, 10 000 rpm, f_z 0.04 mm, full slot ap 0.6 mm, runout 5 um TIR, the VF-2SS with one "
          "spindle mode in x (900 Hz, zeta 0.02, 5 N/um; stable: forced vibration imprinted on the surface)")
+
+
+STUDIES["bins_stride"] = Study(
+    "bins_stride", "Surface-memory bins with the stride (1-DOF, runout, regeneration)",
+    "physics.memory_bins with physics.max_deg_per_step = 360 / memory_bins", "angle per memory bin (deg)",
+    [Level(f"bins{b}", 360.0 / b, {"memory_bins": b, "max_deg_per_step": 360.0 / b, "steps_per_tooth": 24})
+     for b in (180, 360, 720, 1440, 2880)], "bins720",
+    ["F_mean_N", "Fx_N", "Fy_N", "F_peak_N", "torque_Nm", "chip_volume_analytic_mm3", "chip_tooth_spread", "vib_pp_um"],
+    _bins_runout,
+    note="the case of bins_runout with the L0 stride refined with the bins (at most one memory bin per L0 step: "
+         "max_deg_per_step = 360 / memory_bins; steps_per_tooth 24 so that the angle rule binds)")
 
 
 def _bins_onset(st, lv, db):
@@ -505,23 +559,28 @@ STUDIES["turn_dz"] = Study(
     ["F_mean_N", "Fx_N", "Fy_N", "Fz_N", "Ra_um", "Rt_um"], lambda st, lv, db: turn_case(st, lv, db),
     note="OD pass, 4140 d45, CNMG120408 / PCLNR, 1400 rpm, f 0.25 mm/rev, ap 1.5 mm, rigid, 720 theta bins; "
          "dz = min(f_min / 8, r_nose / 16) with f_min = polar_min_feed_mm_rev (the default 0.05 mm gives 6.25 um), "
-         "polar_max_mb 400 (no coarsening)")
+         "polar_max_mb 400 (no coarsening)", test_labels=["fmin0.2", "fmin0.1", "fmin0.05"])
 
 
 # ------------------------------------------------------------------------------------------------ whole loop
 LOOP_SIZE = (150.0, 20.0, 15.0)
 LOOP_AE, LOOP_AP = 0.5, 1.0
-LOOP_PASSES = [(-5.0 + LOOP_AE, -8.0, 158.0), (-5.0 + 2 * LOOP_AE, -8.0, 158.0)]
-LOOP_EVAL_X_MM = 140.0             # quantities at the moment the tip passes x = 140 mm on the second pass
-LOOP_FORCE_X_MM = (20.0, 140.0)    # forces: mean over the second pass between these tip positions
+# one side step of 118 mm (about 4.4 s in cut, 9 s simulated). Two passes of 166 mm (11 s in cut, the 10-20 s cut the
+# study asked for) ran too: the tool's flank wear and temperature run away together after about 4.5 s of cutting (VB
+# 106 um at 8 s, 592 um at 9 s, 1.2 mm at 14 s, then no cut), so the comparison stops before that point
+# (docs/convergence.md 5)
+LOOP_PASSES = [(-5.0 + LOOP_AE, -8.0, 110.0)]
+LOOP_EVAL_X_MM = 100.0             # quantities at the moment the tip passes x = 100 mm on the (last) pass
+LOOP_FORCE_X_MM = (20.0, 100.0)    # forces: mean over the pass between these tip positions
+# structure's work model at 3000 DOF (its 50 000 DOF default costs ~1 s per macro step on this stock)
 LOOP_CASE = {"structure": {"max_dof": 3000}}
 
 
 def loop_case(study, level: Level, db):
-    """Two side steps (0.5 mm wide, 1 mm deep) along the 150 mm front face of a 150 x 20 x 15 mm Al 6061-T6 block
-    in the vise of the pocket example, D10 4FL at 10 000 rpm, f_z 0.04 mm, flood coolant (M08), the second pass 0.5
-    mm further in after an air return: about 11 s in cut, every domain on (run_project's loop). Structure's work model
-    at 3000 DOF (its 50 000 DOF default costs ~1 s per macro step on this stock); dynamics' L2 on coarse grids."""
+    """A side step 0.5 mm wide and 1 mm deep along the front face of a 150 x 20 x 15 mm Al 6061-T6 block in the vise
+    of the pocket example, from x = -8 to 110 mm (about 4.4 s in cut), D10 4FL at 10 000 rpm, f_z 0.04 mm, flood
+    coolant (M08), every domain on (run_project's loop); structure's work model at 3000 DOF, dynamics' L2 on coarse
+    grids."""
     phys = level_physics(level, **LOOP_CASE)
     work = WORK / study / level.label
     if work.exists():
@@ -571,6 +630,7 @@ def loop_case(study, level: Level, db):
         lw = getattr(run.ledger, "worst", None)
         if lw is not None:
             led["worst"] = float(lw.get("energy", 0.0))
+            r["energy_rel"] = float((getattr(run.ledger, "final", {}) or {}).get("energy", 0.0))
         rows.append(r)
 
     t0 = time.process_time()
@@ -581,10 +641,16 @@ def loop_case(study, level: Level, db):
     cons = json.loads((work / "run" / "run.json").read_text())["summary"].get("conservation", {}) \
         if (work / "run" / "run.json").exists() else {}
     q["energy_worst_rel"] = led["worst"]
+    keys = ("t", "x", "y", "in_cut", "body_K", "edge_K", "rake_K", "VB_m", "bulk_K", "bulk_max_K", "surface_K",
+            "expansion_um", "energy_rel")
+    series = {k: [r.get(k) for r in rows[::5]] for k in keys}
+    cut = [r for r in rows if r.get("in_cut", 0.0) > 0.0 and r.get("energy_rel") is not None]
     det.update({"complete": bool(result.get("complete")), "verdict": result.get("verdict"),
                 "sim_time_s": summary.get("sim_time_s"), "conservation": cons, "cpu_s": result.get("cpu_s"),
-                "digest": _rows_digest(rows)})
-    cost = {"cpu_total_s": cpu, "sim_s": summary.get("sim_time_s"),
+                "digest": _rows_digest(rows), "series": series,
+                "energy_rel_above_1e-6": int(sum(1 for r in rows if (r.get("energy_rel") or 0.0) > 1e-6)),
+                "findings": summary.get("findings")})
+    cost = {"cpu_total_s": cpu, "sim_s": summary.get("sim_time_s"), "cpu_phases_s": result.get("cpu_phases_s"),
             "cpu_hot_s": (result.get("cpu_s") or {}).get("hot_s"), "cpu_l2_s": (result.get("cpu_s") or {}).get("l2_s"),
             "l2_by_domain_s": (result.get("cpu_s") or {}).get("l2_by_domain_s")}
     return q, cost, det
@@ -620,12 +686,13 @@ def _rows_digest(rows) -> str:
 def loop_quantities(rows):
     """Quantities of the loop case at a common moment (the tip at LOOP_EVAL_X_MM on the second pass, interpolated
     linearly in time between macro steps) and over a common window (the second pass between LOOP_FORCE_X_MM)."""
-    y2 = LOOP_PASSES[1][0]
+    y2 = LOOP_PASSES[-1][0]
     t_eval = None
     prev = None
     for r in rows:
-        on2 = abs(r["y"] - y2) < 0.05
-        if on2 and r["x"] >= LOOP_EVAL_X_MM and prev is not None and abs(prev["y"] - y2) < 0.05:
+        on2 = abs(r["y"] - y2) < 0.05 and r.get("in_cut", 0.0) > 0.0
+        if on2 and r["x"] >= LOOP_EVAL_X_MM and prev is not None and abs(prev["y"] - y2) < 0.05 and \
+                prev.get("in_cut", 0.0) > 0.0:
             # the tick inside this step where the tip passes the evaluation x
             xs = np.asarray(r["xs"])
             k = int(np.argmax(xs >= LOOP_EVAL_X_MM))
@@ -654,7 +721,7 @@ def loop_quantities(rows):
     q["expansion_um"] = at("expansion_um")
     F = []
     for r in rows:
-        if abs(r["y"] - y2) < 0.05 and r.get("F"):
+        if abs(r["y"] - y2) < 0.05 and r.get("F") and r.get("in_cut", 0.0) > 0.0:
             for x, f in zip(r["xs"], r["F"]):
                 if LOOP_FORCE_X_MM[0] <= x <= LOOP_FORCE_X_MM[1]:
                     F.append(f)
@@ -666,33 +733,39 @@ def loop_quantities(rows):
     return q, det
 
 
+LOOP_NOTE = ("a side step 0.5 mm wide and 1 mm deep along the front face of a 150 x 20 x 15 mm Al 6061-T6 block, "
+             "x = -8 to 110 mm (4.4 s in cut), D10 4FL, 10 000 rpm, f_z 0.04 mm, flood coolant, every domain on; "
+             "structure at 3000 DOF; quantities when the tip passes x = 100 mm, forces over x = 20-100 mm")
+
+
 def _macro_level(m):
     return Level(f"macro{m}", float(m), {"macro_ipo": m})
 
 
 STUDIES["macro"] = Study(
     "macro", "Macro step (every domain on)", "physics.macro_ipo", "macro step (ms)",
-    [_macro_level(m) for m in (2, 5, 10, 20, 50)], "macro10",
+    [_macro_level(m) for m in (5, 10, 20, 50, 2)], "macro10",
     ["tool_rise_K", "edge_rise_K", "rake_rise_K", "VB_growth_um", "F_mean_N", "bulk_rise_K", "expansion_um"],
-    loop_case, note=loop_case.__doc__.split("\n\n")[0].replace("\n", " ").replace("    ", " "))
+    loop_case, note=LOOP_NOTE, test_labels=["macro10", "macro5"])     # 2 ms ran out of the 1.8 GB cap
 
 STUDIES["lag"] = Study(
     "lag", "Coupling lag (every domain on)", "physics.lag_macro", "lag (macro steps)",
     [Level("lag1", 1.0, {"lag_macro": 1}), Level("lag2", 2.0, {"lag_macro": 2})], "lag1",
     ["tool_rise_K", "edge_rise_K", "VB_growth_um", "F_mean_N", "bulk_rise_K", "expansion_um"], loop_case,
-    note="the macro-step case at the default macro step")
+    note="the macro-step case (" + LOOP_NOTE + ") at the default macro step", test_labels=["lag1", "lag2"])
 
 STUDIES["thermal_cell"] = Study(
     "thermal_cell", "Workpiece thermal grid: cell size", "physics.thermal.cell_mm", "cell (mm)",
     [Level(f"cell{c:g}", c, {"thermal": {"cell_mm": c}}) for c in (8.0, 4.0, 2.0, 1.0, 0.5)], "cell2",
     ["bulk_rise_K", "bulk_max_rise_K", "surface_rise_K", "expansion_um", "tool_rise_K"], loop_case,
-    note="the macro-step case at the default macro step")
+    note="the macro-step case (" + LOOP_NOTE + ") at the default macro step")
 
 STUDIES["thermal_every"] = Study(
     "thermal_every", "Workpiece thermal grid: cadence", "physics.thermal.every_n_macro", "FV step (ms)",
     [Level(f"every{n}", 10.0 * n, {"thermal": {"every_n_macro": n}}) for n in (20, 10, 5, 2, 1)], "every5",
     ["bulk_rise_K", "bulk_max_rise_K", "surface_rise_K", "expansion_um", "tool_rise_K"], loop_case,
-    note="the macro-step case at the default macro step (10 ms): the finite-volume step is every_n_macro x 10 ms")
+    note="the macro-step case (" + LOOP_NOTE + ") at the default macro step (10 ms): the finite-volume step "
+         "is every_n_macro x 10 ms")
 
 
 # ------------------------------------------------------------------------------------------------ driver
@@ -797,7 +870,7 @@ def evaluate(name: str, labels=None) -> dict:
     study = STUDIES[name]
     default = next(lv for lv in study.levels if lv.label == study.default_label)
     if labels is None:
-        labels = [lv.label for lv in study.levels if lv.h <= default.h + 1e-12]
+        labels = study.test_labels or [lv.label for lv in study.levels if lv.h <= default.h + 1e-12]
     db = Database.load()
     levels = []
     for level in study.levels:
@@ -825,7 +898,9 @@ def main(argv) -> int:
         for name in [a for a in argv if not a.startswith("-")]:
             doc = load(name)
             if doc:
-                doc["analysis"] = analyse_study(STUDIES[name], doc)
+                st = STUDIES[name]
+                doc.update(title=st.title, setting=st.setting, h_name=st.h_name, note=st.note)
+                doc["analysis"] = analyse_study(st, doc)
                 save(name, doc)
                 print(f"{name}: analysis of {len(doc['levels'])} levels")
         return 0

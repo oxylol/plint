@@ -264,21 +264,21 @@
  "levels": [
   {
    "cost": {
-    "cpu_in_cut_s": 2.699651087999989,
-    "cpu_total_s": 21.947560177,
+    "cpu_in_cut_s": 2.630392712000024,
+    "cpu_total_s": 21.057385085,
     "in_cut_sim_s": 0.9012499999999971,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 26.766524922,
+   "cpu_level_s": 25.739947061,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 2.699651087999989,
-     "cpu_total_s": 21.947560177,
+     "cpu_in_cut_s": 2.630392712000024,
+     "cpu_total_s": 21.057385085,
      "in_cut_sim_s": 0.9012499999999971,
      "l0_steps": 35900.0,
      "strides": [
@@ -291,7 +291,7 @@
     "notes": [],
     "nz": 1600,
     "r_mean_mm": 21.003184381111108,
-    "removed_total_mm3": 998.6893068003136
+    "removed_total_mm3": 998.6893064077212
    },
    "error": null,
    "h": 2.0,
@@ -315,21 +315,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 3.0559918959999735,
-    "cpu_total_s": 22.681313752999998,
+    "cpu_in_cut_s": 3.243874993000034,
+    "cpu_total_s": 22.875219875000003,
     "in_cut_sim_s": 0.9012499999999971,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 22.958564672999998,
+   "cpu_level_s": 23.148421696999996,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 3.0559918959999735,
-     "cpu_total_s": 22.681313752999998,
+     "cpu_in_cut_s": 3.243874993000034,
+     "cpu_total_s": 22.875219875000003,
      "in_cut_sim_s": 0.9012499999999971,
      "l0_steps": 35900.0,
      "strides": [
@@ -342,7 +342,7 @@
     "notes": [],
     "nz": 1600,
     "r_mean_mm": 21.003184339999997,
-    "removed_total_mm3": 998.689812546097
+    "removed_total_mm3": 998.6898122523883
    },
    "error": null,
    "h": 1.0,
@@ -366,21 +366,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 3.7838835769999832,
-    "cpu_total_s": 23.915141999999996,
+    "cpu_in_cut_s": 3.848610996000062,
+    "cpu_total_s": 24.074866512999996,
     "in_cut_sim_s": 0.9012499999999971,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 24.346335341,
+   "cpu_level_s": 24.518149207999997,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 3.7838835769999832,
-     "cpu_total_s": 23.915141999999996,
+     "cpu_in_cut_s": 3.848610996000062,
+     "cpu_total_s": 24.074866512999996,
      "in_cut_sim_s": 0.9012499999999971,
      "l0_steps": 35900.0,
      "strides": [
@@ -393,7 +393,7 @@
     "notes": [],
     "nz": 1600,
     "r_mean_mm": 21.003184333611117,
-    "removed_total_mm3": 998.6898159559378
+    "removed_total_mm3": 998.6898157109115
    },
    "error": null,
    "h": 0.5,
@@ -417,21 +417,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 6.062675706000007,
-    "cpu_total_s": 27.709974371,
+    "cpu_in_cut_s": 6.278273556000016,
+    "cpu_total_s": 28.21262308099999,
     "in_cut_sim_s": 0.9012499999999971,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 28.188153528,
+   "cpu_level_s": 28.635525318000006,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 6.062675706000007,
-     "cpu_total_s": 27.709974371,
+     "cpu_in_cut_s": 6.278273556000016,
+     "cpu_total_s": 28.21262308099999,
      "in_cut_sim_s": 0.9012499999999971,
      "l0_steps": 35900.0,
      "strides": [
@@ -444,7 +444,7 @@
     "notes": [],
     "nz": 1600,
     "r_mean_mm": 21.00318432215278,
-    "removed_total_mm3": 998.6898344705372
+    "removed_total_mm3": 998.6898343235617
    },
    "error": null,
    "h": 0.25,
@@ -468,21 +468,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 12.750063744999963,
-    "cpu_total_s": 36.41713958099999,
+    "cpu_in_cut_s": 14.386737277999856,
+    "cpu_total_s": 38.85570854399998,
     "in_cut_sim_s": 0.9012499999999971,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 37.328640281999995,
+   "cpu_level_s": 39.54997925100001,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 12.750063744999963,
-     "cpu_total_s": 36.41713958099999,
+     "cpu_in_cut_s": 14.386737277999856,
+     "cpu_total_s": 38.85570854399998,
      "in_cut_sim_s": 0.9012499999999971,
      "l0_steps": 35900.0,
      "strides": [
@@ -495,7 +495,7 @@
     "notes": [],
     "nz": 1600,
     "r_mean_mm": 21.003184317847225,
-    "removed_total_mm3": 998.6898314571612
+    "removed_total_mm3": 998.6898312857755
    },
    "error": null,
    "h": 0.125,
@@ -519,7 +519,7 @@
   }
  ],
  "note": "OD pass, 4140 d45, CNMG120408 / PCLNR, 1400 rpm, f 0.25 mm/rev, ap 1.5 mm, rigid; rows 25 um (polar_min_feed_mm_rev 0.2), polar_max_mb 400 (no coarsening)",
- "root": "/tmp/cconv/tree-20261109-1238",
+ "root": "/tmp/cconv/tree-20261109-1428",
  "setting": "physics.polar_theta_bins",
  "study": "turn_theta",
  "title": "Turning: polar theta bins"

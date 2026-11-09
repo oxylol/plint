@@ -269,6 +269,19 @@ def run_loop(project_path, run_dir, *, options=None, observe=None):
 
     opts = {"outputs": False, "sanity": False}
     opts.update(options or {})
-    run = Observed(project_path, run_dir, opts)
+    phases = {}
+    last = {"phase": "setup", "t": time.process_time()}
+
+    def progress(fields):
+        phase = fields.get("phase")
+        if phase and phase != last["phase"]:
+            now = time.process_time()
+            phases[last["phase"]] = phases.get(last["phase"], 0.0) + now - last["t"]
+            last.update(phase=phase, t=now)
+
+    run = Observed(project_path, run_dir, opts, progress)
     result = run.execute()
+    now = time.process_time()
+    phases[last["phase"]] = phases.get(last["phase"], 0.0) + now - last["t"]
+    result["cpu_phases_s"] = phases
     return result, run

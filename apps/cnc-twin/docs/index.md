@@ -67,7 +67,4 @@ page lists every document, grouped by what you want to do.
 | [validation-report.md](validation-report.md) | the latest results per quantity and per case (written by `twin validate`) |
 | [determinism.md](determinism.md) | what is bit-identical, how it is kept, tolerances across platforms |
 | [performance.md](performance.md) | where the time and memory go, per kernel, per level, per run |
-
-## Not written yet
-
-* `docs/convergence.md` (named in architecture.md section 5.3 for the comparison of `lag_macro` 1 and 2).
+| [convergence.md](convergence.md) | results against time step and resolution (stride, lattice, edge elements, memory bins, macro step, coupling lag, thermal cells, turning rows): curves, observed orders, which shipped settings are converged and what refining costs |

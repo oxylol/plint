@@ -237,21 +237,21 @@
  "levels": [
   {
    "cost": {
-    "cpu_in_cut_s": 3.4366506940000114,
-    "cpu_total_s": 23.087895664999998,
+    "cpu_in_cut_s": 3.3249342690000034,
+    "cpu_total_s": 22.315771628,
     "in_cut_sim_s": 0.9012499999999971,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 27.605024367,
+   "cpu_level_s": 26.924642028999997,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 3.4366506940000114,
-     "cpu_total_s": 23.087895664999998,
+     "cpu_in_cut_s": 3.3249342690000034,
+     "cpu_total_s": 22.315771628,
      "in_cut_sim_s": 0.9012499999999971,
      "l0_steps": 35900.0,
      "strides": [
@@ -287,21 +287,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 3.8033712590000093,
-    "cpu_total_s": 23.770210072999998,
+    "cpu_in_cut_s": 3.6972605239999723,
+    "cpu_total_s": 23.402792180000002,
     "in_cut_sim_s": 0.9012499999999971,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 24.057099821,
+   "cpu_level_s": 23.685419147,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 3.8033712590000093,
-     "cpu_total_s": 23.770210072999998,
+     "cpu_in_cut_s": 3.6972605239999723,
+     "cpu_total_s": 23.402792180000002,
      "in_cut_sim_s": 0.9012499999999971,
      "l0_steps": 35900.0,
      "strides": [
@@ -314,7 +314,7 @@
     "notes": [],
     "nz": 1600,
     "r_mean_mm": 21.003184333611117,
-    "removed_total_mm3": 998.6898159559378
+    "removed_total_mm3": 998.6898157109115
    },
    "error": null,
    "h": 25.0,
@@ -337,21 +337,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 4.405741016000022,
-    "cpu_total_s": 26.042785124999995,
+    "cpu_in_cut_s": 4.521883483999943,
+    "cpu_total_s": 25.658007540999996,
     "in_cut_sim_s": 0.902999999999997,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 26.531268629000003,
+   "cpu_level_s": 26.092278821999997,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 4.405741016000022,
-     "cpu_total_s": 26.042785124999995,
+     "cpu_in_cut_s": 4.521883483999943,
+     "cpu_total_s": 25.658007540999996,
      "in_cut_sim_s": 0.902999999999997,
      "l0_steps": 35900.0,
      "strides": [
@@ -364,7 +364,7 @@
     "notes": [],
     "nz": 3200,
     "r_mean_mm": 21.003180269027773,
-    "removed_total_mm3": 998.6287964801725
+    "removed_total_mm3": 998.6287961615737
    },
    "error": null,
    "h": 12.5,
@@ -387,21 +387,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 5.913163301999958,
-    "cpu_total_s": 29.741184856999993,
+    "cpu_in_cut_s": 6.111810255000037,
+    "cpu_total_s": 29.910927251000004,
     "in_cut_sim_s": 0.902999999999997,
     "l0_steps": 35900.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 30.343309692000005,
+   "cpu_level_s": 30.480106214000003,
    "details": {
     "Ra_ideal_um": 2.518241053456181,
     "Rt_ideal_um": 9.825968536044641,
     "cost": {
-     "cpu_in_cut_s": 5.913163301999958,
-     "cpu_total_s": 29.741184856999993,
+     "cpu_in_cut_s": 6.111810255000037,
+     "cpu_total_s": 29.910927251000004,
      "in_cut_sim_s": 0.902999999999997,
      "l0_steps": 35900.0,
      "strides": [
@@ -414,7 +414,7 @@
     "notes": [],
     "nz": 6400,
     "r_mean_mm": 21.00317690760416,
-    "removed_total_mm3": 998.5969362326481
+    "removed_total_mm3": 998.5969359998609
    },
    "error": null,
    "h": 6.25,
@@ -437,7 +437,7 @@
   },
   {
    "cost": {},
-   "cpu_level_s": 26.811439197,
+   "cpu_level_s": 26.76906356500001,
    "details": {},
    "error": "AssertionError: workpiece 0: removed volume 8.470526310494712e-07 m3 booked, field changed by -2.4265548156951225e-05 m3",
    "h": 3.125,
@@ -452,7 +452,7 @@
   }
  ],
  "note": "OD pass, 4140 d45, CNMG120408 / PCLNR, 1400 rpm, f 0.25 mm/rev, ap 1.5 mm, rigid, 720 theta bins; dz = min(f_min / 8, r_nose / 16) with f_min = polar_min_feed_mm_rev (the default 0.05 mm gives 6.25 um), polar_max_mb 400 (no coarsening)",
- "root": "/tmp/cconv/tree-20261109-1238",
+ "root": "/tmp/cconv/tree-20261109-1428",
  "setting": "physics.removal.polar_min_feed_mm_rev (dz = f_min / 8)",
  "study": "turn_dz",
  "title": "Turning: polar row height (axial resolution)"

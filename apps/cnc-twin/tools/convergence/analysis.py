@@ -116,9 +116,3 @@ def analyse(levels_h, values, *, default_h, tol, relative: bool = True, noise: f
     out["within_tol_h"] = [hs[i] for i in ok]
     out["conclusive"] = bool(unc <= tol)
     return out
-
-
-def fmt_pct(x, digits: int = 2) -> str:
-    if x is None or not math.isfinite(x):
-        return "-"
-    return f"{100.0 * x:.{digits}f} %"

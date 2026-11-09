@@ -36,11 +36,12 @@ SERIES = "#2a78d6"
 DEFAULT = "#eb6834"
 
 LABELS = {
-    "F_mean_N": ("mean force |F|", "N"), "Fx_N": ("mean Fx (T0)", "N"), "Fy_N": ("mean Fy (T0)", "N"),
-    "Fz_N": ("mean Fz (T0)", "N"), "F_peak_N": ("peak force", "N"), "F_peak_corner_N": ("peak force in the corner", "N"),
-    "torque_Nm": ("mean torque", "N m"), "chip_volume_analytic_mm3": ("chip volume per tooth (analytic)", "mm3"),
-    "chip_volume_field_mm3": ("chip volume per tooth (field)", "mm3"),
-    "removed_err_pct": ("removed volume - exact", "%"), "removed_mm3": ("removed volume", "mm3"),
+    "F_mean_N": ("mean force magnitude", "N"), "Fx_N": ("mean Fx (T0)", "N"), "Fy_N": ("mean Fy (T0)", "N"),
+    "Fz_N": ("mean Fz (T0)", "N"), "F_peak_N": ("peak force", "N"),
+    "F_peak_corner_N": ("peak force in the corner", "N"),
+    "torque_Nm": ("mean torque", "N m"), "chip_volume_analytic_mm3": ("chip per tooth (analytic)", "mm3"),
+    "chip_volume_field_mm3": ("chip per tooth (field)", "mm3"),
+    "removed_mm3": ("removed volume", "mm3"),
     "engaged_deg": ("engaged arc", "deg"), "engaged_max_deg": ("largest engaged arc", "deg"),
     "wall_dev_um": ("wall position - nominal", "um"), "wall_lo_dev_um": ("slot wall (-y) - nominal", "um"),
     "wall_hi_dev_um": ("slot wall (+y) - nominal", "um"), "wall_bottom_dev_um": ("bottom wall - nominal", "um"),
@@ -108,10 +109,11 @@ def plot_study(doc: dict, path: Path) -> Path:
         ax.set_ylabel(unit)
         status = a.get("status", "")
         order = a.get("order")
-        note = {"richardson": f"Richardson, p = {order:.2f}" if order else "Richardson", "flat": "flat (all levels agree)",
-                "oscillating": "oscillating: finest level", "finest": "reference: finest level"}.get(status, status)
-        ax.text(0.98, 0.04, note, transform=ax.transAxes, ha="right", va="bottom", fontsize=7, color=MUTED)
-        ax.margins(x=0.08, y=0.25)
+        how = {"richardson": f"Richardson p {order:.2f}" if order else "Richardson", "flat": "flat",
+               "oscillating": "oscillating", "finest": "finest", "exact": "exact"}.get(status, status)
+        band = f"\u00b1{100 * tol:g} %" if a["relative"] else f"\u00b1{tol:g} {unit}"
+        ax.set_title(f"{how} \u00b7 {band}", loc="right", fontsize=6.8, color=MUTED)
+        ax.margins(x=0.08, y=0.3)
     # cost panel
     ax = axes[(n - 1) // cols][(n - 1) % cols]
     pts = [(lv["h"], (lv.get("cost") or {}).get("cpu_total_s")) for lv in levels]
@@ -129,6 +131,8 @@ def plot_study(doc: dict, path: Path) -> Path:
         ax.xaxis.set_major_locator(LogLocator(base=2.0))
         ax.xaxis.set_minor_formatter(NullFormatter())
         ax.xaxis.set_major_formatter(FuncFormatter(_fmt_h))
+        ax.yaxis.set_major_locator(LogLocator(base=10.0, subs=(1.0, 2.0, 5.0)))
+        ax.yaxis.set_minor_formatter(NullFormatter())
         ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _p: f"{v:g}"))
         ax.set_title("CPU time of the run", loc="left")
         ax.set_ylabel("s")
@@ -147,6 +151,46 @@ def plot_study(doc: dict, path: Path) -> Path:
     return path
 
 
+CATEGORICAL = ("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4")     # reference order; validated (light)
+HISTORY = (("rake_K", "rake temperature rise (K)", 293.15, 1.0), ("VB_m", "flank wear VB (um)", 0.0, 1e6),
+           ("body_K", "tool body rise (K)", 293.15, 1.0), ("bulk_K", "workpiece bulk rise (K)", 293.15, 1.0))
+
+
+def plot_history(doc: dict, path: Path) -> Path | None:
+    """Time histories of the whole-loop levels (details.series): one line per level, the evaluation moment marked."""
+    levels = sorted([lv for lv in doc.get("levels", []) if (lv.get("details") or {}).get("series")],
+                    key=lambda lv: float(lv["h"]))
+    if len(levels) < 3:
+        return None
+    _style()
+    fig, axes = plt.subplots(1, len(HISTORY), figsize=(3.3 * len(HISTORY), 2.7), squeeze=False)
+    t_eval = None
+    for k, (key, title, offset, scale) in enumerate(HISTORY):
+        ax = axes[0][k]
+        for i, lv in enumerate(levels[:len(CATEGORICAL)]):
+            ser = lv["details"]["series"]
+            pts = [(t, (v - offset) * scale) for t, v, c in zip(ser["t"], ser.get(key, []), ser["in_cut"])
+                   if v is not None and t is not None and math.isfinite(v) and t >= 3.5]
+            if not pts:
+                continue
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], color=CATEGORICAL[i], lw=2 if lv["label"] !=
+                    doc.get("default_label") else 2.6, label=lv["label"])
+            t_eval = t_eval or (lv.get("details") or {}).get("t_eval_s")
+        if t_eval:
+            ax.axvline(t_eval, color=MUTED, lw=1.0)
+        ax.set_title(title, loc="left")
+        ax.set_xlabel("simulated time (s)")
+        ax.margins(x=0.02)
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    fig.legend(handles, labels, frameon=False, fontsize=8, loc="lower center", ncol=len(labels), labelcolor=INK2)
+    fig.suptitle(doc.get("title", "") + ": time histories (vertical line: the comparison moment)", x=0.01, ha="left",
+                 color=INK, fontsize=10.5)
+    fig.tight_layout(rect=(0, 0.08, 1, 0.93))
+    fig.savefig(path, format="svg", metadata={"Date": None, "Creator": "cnctwin tools/convergence/plots.py"})
+    plt.close(fig)
+    return path
+
+
 def main(argv) -> int:
     names = argv or sorted(p.stem for p in RESULTS.glob("*.json"))
     for name in names:
@@ -160,6 +204,9 @@ def main(argv) -> int:
             continue
         out = plot_study(doc, OUT / f"{name}.svg")
         print(out)
+        hist = plot_history(doc, OUT / f"{name}_history.svg")
+        if hist is not None:
+            print(hist)
     return 0
 
 

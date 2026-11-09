@@ -14,6 +14,7 @@ import json
 import math
 import re
 import sys
+import textwrap
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -24,7 +25,8 @@ sys.path.insert(0, str(HERE))
 from plots import LABELS  # noqa: E402
 
 ORDER = ["stride_slot", "stride_side", "lattice_side", "lattice_corner", "element_flat", "element_ball",
-         "bins_runout", "bins_chatter", "macro", "lag", "thermal_cell", "thermal_every", "turn_theta", "turn_dz"]
+         "bins_stride", "bins_runout", "bins_chatter", "macro", "lag", "thermal_cell", "thermal_every", "turn_theta",
+         "turn_dz"]
 
 
 def _num(v, digits: int = 4) -> str:
@@ -42,16 +44,16 @@ def _num(v, digits: int = 4) -> str:
     return f"{v:.{max(digits - 1 - int(math.floor(math.log10(a))), 0)}f}"
 
 
-def _err(a: dict, e) -> str:
+def _err(a: dict, e, unit: str = "") -> str:
     if e is None:
         return "-"
     if a["relative"]:
         return f"{100.0 * e:.3g} %"
-    return f"{e:.3g}"
+    return f"{e:.3g} {unit}".strip()
 
 
-def _tol(a: dict) -> str:
-    return f"{100.0 * a['tol']:.3g} %" if a["relative"] else f"{a['tol']:g}"
+def _tol(a: dict, unit: str = "") -> str:
+    return f"{100.0 * a['tol']:.3g} %" if a["relative"] else f"{a['tol']:g} {unit}".strip()
 
 
 def _unit(q: str) -> str:
@@ -68,15 +70,17 @@ def verdict(a: dict) -> str:
     if a["default_inside"]:
         return "inside" + ("" if a.get("conclusive", True) else " (reference uncertain)")
     h = a.get("coarsest_within_tol_h")
-    return "outside" + (f": use {h:g}" if h is not None else ": no level within")
+    if h is None or (a.get("status") in ("finest", "oscillating") and h == min(a["h"])):
+        return "outside: no measured level converged"
+    return f"outside: use {h:g}"
 
 
 def study_block(doc: dict) -> str:
     levels = [lv for lv in doc.get("levels", [])]
     analysis = doc.get("analysis", {})
     qs = list(analysis)
-    lines = [f"Case: {doc.get('note', '')}.", ""]
-    head = ["level", doc.get("h_name", "h")] + [f"{_label(q)} ({_unit(q)})" for q in qs] + ["CPU s"]
+    lines = textwrap.wrap(f"Case: {doc.get('note', '')}.", 116) + [""]
+    head = ["level", doc.get("h_name", "h")] + [f"{_label(q)} ({_unit(q)})" for q in qs] + ["CPU s", "in cut"]
     lines.append("| " + " | ".join(head) + " |")
     lines.append("|" + "---|" * len(head))
     for lv in sorted(levels, key=lambda v: -float(v["h"])):
@@ -85,7 +89,9 @@ def study_block(doc: dict) -> str:
         for q in qs:
             row.append(_num(lv.get("quantities", {}).get(q)))
         cost = (lv.get("cost") or {}).get("cpu_total_s")
+        cut = (lv.get("cost") or {}).get("cpu_in_cut_s")
         row.append(_num(cost, 3) if cost else ("failed: " + lv["error"][:80] if lv.get("error") else "-"))
+        row.append(_num(cut, 3) if cut else "-")
         lines.append("| " + " | ".join(row) + " |")
     lines.append("")
     lines.append("| quantity | reference | how | observed order | default error | tolerance | default |")
@@ -95,9 +101,13 @@ def study_block(doc: dict) -> str:
         how = {"richardson": "Richardson (3 finest)", "flat": "all levels agree", "oscillating": "finest (oscillating)",
                "finest": "finest level"}.get(a.get("status"), a.get("status", "-"))
         order = a.get("order")
-        lines.append(f"| {_label(q)} | {_num(a.get('reference'))} {_unit(q)} | {how} | "
-                     f"{_num(order, 3) if order is not None else '-'} | {_err(a, a.get('default_error'))} | {_tol(a)} | "
-                     f"{verdict(a)} |")
+        o = "-" if order is None else (_num(order, 3) if a.get("status") == "richardson" else f"({_num(order, 3)})")
+        lines.append(f"| {_label(q)} | {_num(a.get('reference'))} {_unit(q)} | {how} | {o} | "
+                     f"{_err(a, a.get('default_error'), _unit(q))} | {_tol(a, _unit(q))} | {verdict(a)} |")
+    lines.append("")
+    lines += textwrap.wrap("Observed orders in parentheses are those of the three finest levels where they are not used "
+                           "(not monotone, or outside 0.5-4). \"in cut\": CPU seconds of the macro steps with the tool in "
+                           "the cut.", 116)
     return "\n".join(lines)
 
 

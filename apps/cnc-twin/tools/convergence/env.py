@@ -30,8 +30,14 @@ def pop_option(argv: list[str], name: str) -> str | None:
     return None
 
 
+_CHOSEN: list[Path] = []
+
+
 def setup(argv: list[str] | None = None) -> Path:
-    """Put the chosen tree first on sys.path (and its own Numba cache in the environment). Returns the root."""
+    """Put the chosen tree first on sys.path (and its own Numba cache in the environment). Returns the root. Idempotent:
+    a later call (a module that imports study.py after its script chose a tree) keeps the first choice."""
+    if _CHOSEN:
+        return _CHOSEN[0]
     argv = sys.argv if argv is None else argv
     root = pop_option(argv, "--root")
     cache = pop_option(argv, "--cache")
@@ -46,4 +52,5 @@ def setup(argv: list[str] | None = None) -> Path:
             sys.path.remove(p)
     sys.path.insert(0, str(HERE))
     sys.path.insert(0, str(root_path))
+    _CHOSEN.append(root_path)
     return root_path

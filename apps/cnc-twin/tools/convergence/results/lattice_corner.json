@@ -68,7 +68,7 @@
    "relative": true,
    "sign": -1,
    "status": "oscillating",
-   "tol": 0.01,
+   "tol": 0.02,
    "values": [
     140.95918164653597,
     141.7772266586701,
@@ -125,16 +125,16 @@
   "removed_mm3": {
    "coarsest_within_tol_h": null,
    "conclusive": true,
-   "default_error": 0.23007736167905707,
+   "default_error": 0.1633727746372354,
    "default_h": 0.25,
    "default_inside": false,
    "default_value": 40.369173125000025,
    "errors": [
-    0.06133057325455727,
-    0.057306199915735115,
-    0.23156946600636052,
-    0.23007736167905707,
-    0.43241424187717364
+    0.019993904509061498,
+    0.024366941659424088,
+    0.1649941519564243,
+    0.1633727746372354,
+    0.5565158018541793
    ],
    "h": [
     0.03125,
@@ -144,7 +144,7 @@
     0.5
    ],
    "order": 5.43636052833952,
-   "reference": 52.43276546983685,
+   "reference": 48.25228238000001,
    "reference_uncertainty": 0.0,
    "relative": true,
    "richardson": null,
@@ -252,19 +252,19 @@
  "levels": [
   {
    "cost": {
-    "cpu_in_cut_s": 2.600125134999992,
-    "cpu_total_s": 4.61911697,
+    "cpu_in_cut_s": 2.7716670869999938,
+    "cpu_total_s": 4.767500646999999,
     "in_cut_sim_s": 0.7417520000000114,
     "l0_steps": 196500.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 9.321399995,
+   "cpu_level_s": 14.143377659,
    "details": {
     "cost": {
-     "cpu_in_cut_s": 2.600125134999992,
-     "cpu_total_s": 4.61911697,
+     "cpu_in_cut_s": 2.7716670869999938,
+     "cpu_total_s": 4.767500646999999,
      "in_cut_sim_s": 0.7417520000000114,
      "l0_steps": 196500.0,
      "strides": [
@@ -272,12 +272,8 @@
      ]
     },
     "finished": true,
-    "path_offset_um": [
-     -4.751595112875151,
-     -3.204420943113462
-    ],
-    "removed_analytic_mm3": 52.22123243977629,
-    "removed_path_mm3": 52.43274685575034,
+    "removed_analytic_mm3": 52.22123243977641,
+    "removed_path_mm3": 48.25249234,
     "removed_xyz_mm3": [
      71.3705900000001,
      52.45887249999997,
@@ -305,19 +301,19 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 2.6398897949999984,
-    "cpu_total_s": 4.642756982000002,
+    "cpu_in_cut_s": 2.798784868999995,
+    "cpu_total_s": 4.772512378999998,
     "in_cut_sim_s": 0.7322640000000112,
     "l0_steps": 190875.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 4.959716167000002,
+   "cpu_level_s": 9.934389607,
    "details": {
     "cost": {
-     "cpu_in_cut_s": 2.6398897949999984,
-     "cpu_total_s": 4.642756982000002,
+     "cpu_in_cut_s": 2.798784868999995,
+     "cpu_total_s": 4.772512378999998,
      "in_cut_sim_s": 0.7322640000000112,
      "l0_steps": 190875.0,
      "strides": [
@@ -325,12 +321,8 @@
      ]
     },
     "finished": true,
-    "path_offset_um": [
-     -4.751439394457435,
-     -3.2044209432111614
-    ],
-    "removed_analytic_mm3": 52.22123243977629,
-    "removed_path_mm3": 52.43275425852484,
+    "removed_analytic_mm3": 52.22123243977641,
+    "removed_path_mm3": 48.25229287999999,
     "removed_xyz_mm3": [
      41.468234999999595,
      47.11084562499956,
@@ -358,19 +350,19 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 2.816947480000014,
-    "cpu_total_s": 4.911226468999999,
+    "cpu_in_cut_s": 3.0238642399999947,
+    "cpu_total_s": 5.087937284999999,
     "in_cut_sim_s": 0.7349360000000112,
     "l0_steps": 186375.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 5.350916791000003,
+   "cpu_level_s": 10.290318123999999,
    "details": {
     "cost": {
-     "cpu_in_cut_s": 2.816947480000014,
-     "cpu_total_s": 4.911226468999999,
+     "cpu_in_cut_s": 3.0238642399999947,
+     "cpu_total_s": 5.087937284999999,
      "in_cut_sim_s": 0.7349360000000112,
      "l0_steps": 186375.0,
      "strides": [
@@ -378,12 +370,8 @@
      ]
     },
     "finished": true,
-    "path_offset_um": [
-     -4.751083493314212,
-     -3.2044209432449122
-    ],
-    "removed_analytic_mm3": 52.22123243977629,
-    "removed_path_mm3": 52.43277117786059,
+    "removed_analytic_mm3": 52.22123243977641,
+    "removed_path_mm3": 48.25230926000001,
     "removed_xyz_mm3": [
      41.426320781249736,
      47.0423410937495,
@@ -411,19 +399,19 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 3.625700413000004,
-    "cpu_total_s": 6.173153052,
+    "cpu_in_cut_s": 3.640580969000034,
+    "cpu_total_s": 6.135849185000005,
     "in_cut_sim_s": 0.7325920000000112,
     "l0_steps": 183875.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 7.106557248999998,
+   "cpu_level_s": 11.848305222999997,
    "details": {
     "cost": {
-     "cpu_in_cut_s": 3.625700413000004,
-     "cpu_total_s": 6.173153052,
+     "cpu_in_cut_s": 3.640580969000034,
+     "cpu_total_s": 6.135849185000005,
      "in_cut_sim_s": 0.7325920000000112,
      "l0_steps": 183875.0,
      "strides": [
@@ -431,12 +419,8 @@
      ]
     },
     "finished": true,
-    "path_offset_um": [
-     -4.75123503927577,
-     -3.2044209432449122
-    ],
-    "removed_analytic_mm3": 52.22123243977629,
-    "removed_path_mm3": 52.43276397345425,
+    "removed_analytic_mm3": 52.22123243977641,
+    "removed_path_mm3": 48.25227258,
     "removed_xyz_mm3": [
      49.02360234374941,
      48.55852480468696,
@@ -464,19 +448,19 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 5.222030081999996,
-    "cpu_total_s": 9.004428865000001,
+    "cpu_in_cut_s": 5.091515085999951,
+    "cpu_total_s": 8.73490701,
     "in_cut_sim_s": 0.7364960000000114,
     "l0_steps": 182750.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 12.017715703000004,
+   "cpu_level_s": 16.505566828,
    "details": {
     "cost": {
-     "cpu_in_cut_s": 5.222030081999996,
-     "cpu_total_s": 9.004428865000001,
+     "cpu_in_cut_s": 5.091515085999951,
+     "cpu_total_s": 8.73490701,
      "in_cut_sim_s": 0.7364960000000114,
      "l0_steps": 182750.0,
      "strides": [
@@ -484,15 +468,11 @@
      ]
     },
     "finished": true,
-    "path_offset_um": [
-     -4.751203562594952,
-     -3.204420943243136
-    ],
-    "removed_analytic_mm3": 52.22123243977629,
-    "removed_path_mm3": 52.43276546983685,
+    "removed_analytic_mm3": 52.22123243977641,
+    "removed_path_mm3": 48.25228238000001,
     "removed_xyz_mm3": [
      49.008845234374526,
-     48.3237520605474,
+     48.323756279297484,
      49.21703390625045
     ],
     "wall_bottom_n": 72036,
@@ -517,7 +497,7 @@
   }
  ],
  "note": "meshed stock with a channel (walls at y = 5 and x = 30 mm), D10 4FL climb finishing 0.3 mm into both walls through the internal corner, ap 5 mm, 10 000 rpm, f_z 0.04 mm, rigid",
- "root": "/tmp/cconv/tree-20261109-1238",
+ "root": "/tmp/cconv/tree-20261109-1428",
  "setting": "physics.lattice_mm",
  "study": "lattice_corner",
  "title": "Dexel lattice: pocket corner (rigid)"

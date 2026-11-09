@@ -202,18 +202,18 @@
   "chip_volume_analytic_mm3": {
    "coarsest_within_tol_h": 3.0,
    "conclusive": true,
-   "default_error": 0.0017082126793009902,
+   "default_error": 0.0017590456510337728,
    "default_h": 0.48,
    "default_inside": true,
-   "default_value": 1.146385511601121,
+   "default_value": 1.1446866099111808,
    "errors": [
-    0.00011426698973851458,
-    0.00032206014187637224,
-    0.000907722652209213,
-    0.0017082126793009902,
-    0.0020211284904189573,
-    0.0026720804472380993,
-    0.0014147608147091419
+    0.00012690949236173935,
+    0.00034175473288077803,
+    0.0009203117534621598,
+    0.0017590456510337728,
+    0.0021047434440771558,
+    0.0027759077768395534,
+    0.0018305499692254981
    ],
    "h": [
     0.06,
@@ -224,21 +224,21 @@
     1.5,
     3.0
    ],
-   "order": 1.4949214362795342,
-   "reference": 1.1483469082271025,
-   "reference_uncertainty": 0.0001428337371732148,
+   "order": 1.4291613360332787,
+   "reference": 1.1467034576843187,
+   "reference_uncertainty": 0.0001586368654521296,
    "relative": true,
    "sign": 1,
    "status": "richardson",
    "tol": 0.01,
    "values": [
-    1.148215705074913,
-    1.1479771137142214,
-    1.1473046468219836,
-    1.146385511601121,
-    1.146026216752429,
-    1.1452787834923601,
-    1.1467224576407289
+    1.146557948597099,
+    1.1463116160788636,
+    1.1456482669281993,
+    1.1446866099111808,
+    1.1442902473587544,
+    1.1435207185582108,
+    1.144604626066799
    ],
    "within_tol_h": [
     0.06,
@@ -460,20 +460,20 @@
  "levels": [
   {
    "cost": {
-    "cpu_in_cut_s": 1.6035733380000021,
-    "cpu_total_s": 3.638716294999999,
+    "cpu_in_cut_s": 1.645153993999994,
+    "cpu_total_s": 3.5975299209999996,
     "in_cut_sim_s": 0.9008499999999972,
     "l0_steps": 20140.0,
     "strides": [
      50
     ]
    },
-   "cpu_level_s": 8.307079669,
+   "cpu_level_s": 8.511288171,
    "details": {
-    "analytic_total_mm3": 599.8140902906111,
+    "analytic_total_mm3": 597.7622513097856,
     "cost": {
-     "cpu_in_cut_s": 1.6035733380000021,
-     "cpu_total_s": 3.638716294999999,
+     "cpu_in_cut_s": 1.645153993999994,
+     "cpu_total_s": 3.5975299209999996,
      "in_cut_sim_s": 0.9008499999999972,
      "l0_steps": 20140.0,
      "strides": [
@@ -483,6 +483,11 @@
     "finished": true,
     "removed_total_mm3": 630.1898631250001,
     "slot_width_mm": 10.004476022727276,
+    "stations_around_ap_mm": [
+     2.6530612244897958,
+     3.0612244897959173
+    ],
+    "stations_below_ap": 15,
     "steps_cut": 93
    },
    "error": null,
@@ -499,7 +504,7 @@
     "Fy_N": 152.47464919293103,
     "Fz_N": -48.9113445709441,
     "chip_tooth_spread": 0.21514195526925095,
-    "chip_volume_analytic_mm3": 1.1467224576407289,
+    "chip_volume_analytic_mm3": 1.144604626066799,
     "chip_volume_field_mm3": 1.2077900705677784,
     "chip_volume_xyz_mm3": [
      1.2036160481464626,
@@ -507,7 +512,7 @@
      1.2077900705677784
     ],
     "engaged_deg": 183.31316330531087,
-    "h_mean_um": 32.12558627844644,
+    "h_mean_um": 32.17157633108371,
     "revolutions": 90.66666676614557,
     "steady_s": 0.53,
     "steady_steps": 53,
@@ -519,20 +524,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 1.7290373899999931,
-    "cpu_total_s": 3.792346308999999,
+    "cpu_in_cut_s": 1.8809016270000019,
+    "cpu_total_s": 3.8372373680000003,
     "in_cut_sim_s": 0.8994500000000022,
     "l0_steps": 40280.0,
     "strides": [
      25
     ]
    },
-   "cpu_level_s": 3.9638508239999997,
+   "cpu_level_s": 4.009347501999999,
    "details": {
-    "analytic_total_mm3": 599.1619894003823,
+    "analytic_total_mm3": 597.3055643322882,
     "cost": {
-     "cpu_in_cut_s": 1.7290373899999931,
-     "cpu_total_s": 3.792346308999999,
+     "cpu_in_cut_s": 1.8809016270000019,
+     "cpu_total_s": 3.8372373680000003,
      "in_cut_sim_s": 0.8994500000000022,
      "l0_steps": 40280.0,
      "strides": [
@@ -542,6 +547,11 @@
     "finished": true,
     "removed_total_mm3": 630.1897631249999,
     "slot_width_mm": 10.004476022727276,
+    "stations_around_ap_mm": [
+     2.6530612244897958,
+     3.0612244897959173
+    ],
+    "stations_below_ap": 15,
     "steps_cut": 93
    },
    "error": null,
@@ -558,7 +568,7 @@
     "Fy_N": 152.56346230638655,
     "Fz_N": -49.06631907339759,
     "chip_tooth_spread": 0.214871454765903,
-    "chip_volume_analytic_mm3": 1.1452787834923601,
+    "chip_volume_analytic_mm3": 1.1435207185582108,
     "chip_volume_field_mm3": 1.206779002761636,
     "chip_volume_xyz_mm3": [
      1.201812973257008,
@@ -566,7 +576,7 @@
      1.206779002761636
     ],
     "engaged_deg": 183.31163322611596,
-    "h_mean_um": 32.15222375216631,
+    "h_mean_um": 32.19060098243052,
     "revolutions": 90.66666660037315,
     "steady_s": 0.53,
     "steady_steps": 53,
@@ -578,20 +588,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 2.082501565000001,
-    "cpu_total_s": 4.082925454999998,
+    "cpu_in_cut_s": 2.3919376640000074,
+    "cpu_total_s": 4.329053805999999,
     "in_cut_sim_s": 0.8952299999999792,
     "l0_steps": 100700.0,
     "strides": [
      10
     ]
    },
-   "cpu_level_s": 4.252495499999998,
+   "cpu_level_s": 4.507158284999999,
    "details": {
-    "analytic_total_mm3": 599.3587178992497,
+    "analytic_total_mm3": 597.5902252210637,
     "cost": {
-     "cpu_in_cut_s": 2.082501565000001,
-     "cpu_total_s": 4.082925454999998,
+     "cpu_in_cut_s": 2.3919376640000074,
+     "cpu_total_s": 4.329053805999999,
      "in_cut_sim_s": 0.8952299999999792,
      "l0_steps": 100700.0,
      "strides": [
@@ -601,6 +611,11 @@
     "finished": true,
     "removed_total_mm3": 630.1897381249997,
     "slot_width_mm": 10.00447606818182,
+    "stations_around_ap_mm": [
+     2.6530612244897958,
+     3.0612244897959173
+    ],
+    "stations_below_ap": 15,
     "steps_cut": 93
    },
    "error": null,
@@ -617,7 +632,7 @@
     "Fy_N": 152.67341982943725,
     "Fz_N": -49.04671497445297,
     "chip_tooth_spread": 0.21432454214783386,
-    "chip_volume_analytic_mm3": 1.146026216752429,
+    "chip_volume_analytic_mm3": 1.1442902473587544,
     "chip_volume_field_mm3": 1.2031702082556304,
     "chip_volume_xyz_mm3": [
      1.1994421298117002,
@@ -625,7 +640,7 @@
      1.2031702082556304
     ],
     "engaged_deg": 183.26097794956718,
-    "h_mean_um": 32.162826956719506,
+    "h_mean_um": 32.20071627832777,
     "revolutions": 90.66666645421732,
     "steady_s": 0.53,
     "steady_steps": 53,
@@ -637,20 +652,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 2.527096981000007,
-    "cpu_total_s": 4.596109721000001,
+    "cpu_in_cut_s": 2.7769644489999976,
+    "cpu_total_s": 4.750852232,
     "in_cut_sim_s": 0.8952799999999975,
     "l0_steps": 125875.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 4.770485708999999,
+   "cpu_level_s": 5.034916398,
    "details": {
-    "analytic_total_mm3": 599.5875580699135,
+    "analytic_total_mm3": 597.8336720504758,
     "cost": {
-     "cpu_in_cut_s": 2.527096981000007,
-     "cpu_total_s": 4.596109721000001,
+     "cpu_in_cut_s": 2.7769644489999976,
+     "cpu_total_s": 4.750852232,
      "in_cut_sim_s": 0.8952799999999975,
      "l0_steps": 125875.0,
      "strides": [
@@ -660,6 +675,11 @@
     "finished": true,
     "removed_total_mm3": 630.1897881249998,
     "slot_width_mm": 10.004476045454549,
+    "stations_around_ap_mm": [
+     2.6530612244897958,
+     3.0612244897959173
+    ],
+    "stations_below_ap": 15,
     "steps_cut": 94
    },
    "error": null,
@@ -676,7 +696,7 @@
     "Fy_N": 152.7230459620217,
     "Fz_N": -48.99623293290873,
     "chip_tooth_spread": 0.2144011105856272,
-    "chip_volume_analytic_mm3": 1.146385511601121,
+    "chip_volume_analytic_mm3": 1.1446866099111808,
     "chip_volume_field_mm3": 1.2081551745372086,
     "chip_volume_xyz_mm3": [
      1.202721282995911,
@@ -684,7 +704,7 @@
      1.2081551745372083
     ],
     "engaged_deg": 182.70786547784786,
-    "h_mean_um": 32.171019897804435,
+    "h_mean_um": 32.20811193442645,
     "revolutions": 90.66666638569512,
     "steady_s": 0.53,
     "steady_steps": 53,
@@ -696,20 +716,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 3.482495420000017,
-    "cpu_total_s": 5.471420955999999,
+    "cpu_in_cut_s": 4.141786627999995,
+    "cpu_total_s": 6.161519782999999,
     "in_cut_sim_s": 0.8950240000000003,
     "l0_steps": 251750.0,
     "strides": [
      4
     ]
    },
-   "cpu_level_s": 5.648667164999999,
+   "cpu_level_s": 6.353168350000001,
    "details": {
-    "analytic_total_mm3": 600.1116724911253,
+    "analytic_total_mm3": 598.375760554913,
     "cost": {
-     "cpu_in_cut_s": 3.482495420000017,
-     "cpu_total_s": 5.471420955999999,
+     "cpu_in_cut_s": 4.141786627999995,
+     "cpu_total_s": 6.161519782999999,
      "in_cut_sim_s": 0.8950240000000003,
      "l0_steps": 251750.0,
      "strides": [
@@ -719,6 +739,11 @@
     "finished": true,
     "removed_total_mm3": 630.1897131249997,
     "slot_width_mm": 10.004475909090909,
+    "stations_around_ap_mm": [
+     2.6530612244897958,
+     3.0612244897959173
+    ],
+    "stations_below_ap": 15,
     "steps_cut": 94
    },
    "error": null,
@@ -735,7 +760,7 @@
     "Fy_N": 152.82646934390348,
     "Fz_N": -48.87453038665375,
     "chip_tooth_spread": 0.21429203606725528,
-    "chip_volume_analytic_mm3": 1.1473046468219836,
+    "chip_volume_analytic_mm3": 1.1456482669281993,
     "chip_volume_field_mm3": 1.2067109820024018,
     "chip_volume_xyz_mm3": [
      1.2007289961198016,
@@ -743,7 +768,7 @@
      1.2067109820024018
     ],
     "engaged_deg": 182.7596003839072,
-    "h_mean_um": 32.16581345441018,
+    "h_mean_um": 32.20201740745495,
     "revolutions": 90.66666657356161,
     "steady_s": 0.53,
     "steady_steps": 53,
@@ -755,20 +780,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 5.477497627000041,
-    "cpu_total_s": 7.662196586,
+    "cpu_in_cut_s": 6.862844588000044,
+    "cpu_total_s": 8.833722143,
     "in_cut_sim_s": 0.8950000000000584,
     "l0_steps": 503500.0,
     "strides": [
      2
     ]
    },
-   "cpu_level_s": 7.840402818000001,
+   "cpu_level_s": 9.003926250000003,
    "details": {
-    "analytic_total_mm3": 600.4766878834932,
+    "analytic_total_mm3": 598.739500852975,
     "cost": {
-     "cpu_in_cut_s": 5.477497627000041,
-     "cpu_total_s": 7.662196586,
+     "cpu_in_cut_s": 6.862844588000044,
+     "cpu_total_s": 8.833722143,
      "in_cut_sim_s": 0.8950000000000584,
      "l0_steps": 503500.0,
      "strides": [
@@ -778,6 +803,11 @@
     "finished": true,
     "removed_total_mm3": 630.189738125,
     "slot_width_mm": 10.004475772727275,
+    "stations_around_ap_mm": [
+     2.6530612244897958,
+     3.0612244897959173
+    ],
+    "stations_below_ap": 15,
     "steps_cut": 94
    },
    "error": null,
@@ -794,7 +824,7 @@
     "Fy_N": 152.90323822737136,
     "Fz_N": -48.80356113229674,
     "chip_tooth_spread": 0.21419900431442232,
-    "chip_volume_analytic_mm3": 1.1479771137142214,
+    "chip_volume_analytic_mm3": 1.1463116160788636,
     "chip_volume_field_mm3": 1.2047425541064196,
     "chip_volume_xyz_mm3": [
      1.1993011608047768,
@@ -802,7 +832,7 @@
      1.20474255410642
     ],
     "engaged_deg": 183.25282584319186,
-    "h_mean_um": 32.1780887404363,
+    "h_mean_um": 32.214368809909814,
     "revolutions": 90.66666662345855,
     "steady_s": 0.53,
     "steady_steps": 53,
@@ -814,20 +844,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 9.334214901999992,
-    "cpu_total_s": 11.468884533,
+    "cpu_in_cut_s": 12.276097912000054,
+    "cpu_total_s": 14.546896709999999,
     "in_cut_sim_s": 0.898460999999933,
     "l0_steps": 1007000.0,
     "strides": [
      1
     ]
    },
-   "cpu_level_s": 11.637951029,
+   "cpu_level_s": 14.722793482,
    "details": {
-    "analytic_total_mm3": 600.813499196477,
+    "analytic_total_mm3": 599.0109886633406,
     "cost": {
-     "cpu_in_cut_s": 9.334214901999992,
-     "cpu_total_s": 11.468884533,
+     "cpu_in_cut_s": 12.276097912000054,
+     "cpu_total_s": 14.546896709999999,
      "in_cut_sim_s": 0.898460999999933,
      "l0_steps": 1007000.0,
      "strides": [
@@ -837,6 +867,11 @@
     "finished": true,
     "removed_total_mm3": 630.189713125,
     "slot_width_mm": 10.004475727272732,
+    "stations_around_ap_mm": [
+     2.6530612244897958,
+     3.0612244897959173
+    ],
+    "stations_below_ap": 15,
     "steps_cut": 94
    },
    "error": null,
@@ -853,7 +888,7 @@
     "Fy_N": 152.92470776543902,
     "Fz_N": -48.79118731515796,
     "chip_tooth_spread": 0.2143073220186611,
-    "chip_volume_analytic_mm3": 1.148215705074913,
+    "chip_volume_analytic_mm3": 1.146557948597099,
     "chip_volume_field_mm3": 1.206490073673793,
     "chip_volume_xyz_mm3": [
      1.2008091491123116,
@@ -861,7 +896,7 @@
      1.2064900736737931
     ],
     "engaged_deg": 183.063501469035,
-    "h_mean_um": 32.186111198890735,
+    "h_mean_um": 32.22230013537567,
     "revolutions": 90.66666648768856,
     "steady_s": 0.53,
     "steady_steps": 53,
@@ -873,7 +908,7 @@
   }
  ],
  "note": "D10 4FL (MHSV), Al 6061-T6, 10 000 rpm, f_z 0.04 mm, full slot ap 3.0 mm, lattice 0.25 mm (default), rigid tool and work",
- "root": "/tmp/cconv/tree-20261109-1238",
+ "root": "/tmp/cconv/tree-20261109-1428",
  "setting": "physics.max_deg_per_step, physics.steps_per_tooth",
  "study": "stride_slot",
  "title": "L0 stride: D10 slot (rigid)"

@@ -1,0 +1,684 @@
+{
+ "analysis": {
+  "F_mean_N": {
+   "coarsest_within_tol_h": 2.0,
+   "conclusive": true,
+   "default_error": 0.009059071464633835,
+   "default_h": 0.5,
+   "default_inside": true,
+   "default_value": 26.935546586715454,
+   "errors": [
+    0.00016357905623928695,
+    0.0012173226197642003,
+    0.009059071464633835,
+    0.00847848138507779,
+    0.003668848462772277
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 2.8956516171052917,
+   "reference": 27.181747708392297,
+   "reference_uncertainty": 0.00020447382029920407,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.015,
+   "values": [
+    27.1773020709684,
+    27.148664163837143,
+    26.935546586715454,
+    26.951325458686956,
+    27.082038305466927
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  "F_peak_N": {
+   "coarsest_within_tol_h": 0.25,
+   "conclusive": false,
+   "default_error": 0.10878849708235697,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 104.07748922127774,
+   "errors": [
+    0.0,
+    0.000360713532678412,
+    0.10878849708235697,
+    0.02787603618746504,
+    0.23863513827214652
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 8.24123243233578,
+   "reference": 116.78203084290257,
+   "reference_uncertainty": 0.10878849708235697,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.02,
+   "values": [
+    116.78203084290257,
+    116.82415570180127,
+    104.07748922127774,
+    113.52661072508016,
+    88.91373476500443
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25
+   ]
+  },
+  "Fx_N": {
+   "coarsest_within_tol_h": 2.0,
+   "conclusive": true,
+   "default_error": 0.010379559711925158,
+   "default_h": 0.5,
+   "default_inside": true,
+   "default_value": -13.029638163328686,
+   "errors": [
+    0.0,
+    0.0006685803225265579,
+    0.010379559711925158,
+    0.012374380988273528,
+    0.005732456111161676
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 4.046558806090661,
+   "reference": -13.16629854526429,
+   "reference_uncertainty": 0.010379559711925158,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.015,
+   "values": [
+    -13.16629854526429,
+    -13.175101273392164,
+    -13.029638163328686,
+    -13.003373750859838,
+    -13.09082331670711
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  "Fy_N": {
+   "coarsest_within_tol_h": 2.0,
+   "conclusive": true,
+   "default_error": 0.00929978681130248,
+   "default_h": 0.5,
+   "default_inside": true,
+   "default_value": 22.94098149327166,
+   "errors": [
+    0.0006405437938485852,
+    0.002440680381798235,
+    0.00929978681130248,
+    0.006721911627597216,
+    0.00035285866842639735
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 1.929914264190766,
+   "reference": 23.15619128428121,
+   "reference_uncertainty": 0.0008006797423107442,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.015,
+   "values": [
+    23.141368224483852,
+    23.099710600847743,
+    22.94098149327166,
+    23.000637052134543,
+    23.148025651903954
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  "chip_tooth_spread": {
+   "coarsest_within_tol_h": 0.25,
+   "conclusive": false,
+   "default_error": 0.03331991713314006,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 0.20603901133285568,
+   "errors": [
+    0.0,
+    0.0013883266179390008,
+    0.03331991713314006,
+    0.013317103872247965,
+    0.005100847054952284
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 4.523565493836222,
+   "reference": 0.23935892846599574,
+   "reference_uncertainty": 0.03331991713314006,
+   "relative": false,
+   "sign": 1,
+   "status": "finest",
+   "tol": 0.01,
+   "values": [
+    0.23935892846599574,
+    0.23797060184805674,
+    0.20603901133285568,
+    0.2526760323382437,
+    0.23425808141104346
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25,
+    2.0
+   ]
+  },
+  "chip_volume_analytic_mm3": {
+   "coarsest_within_tol_h": 2.0,
+   "conclusive": true,
+   "default_error": 0.009411683224963458,
+   "default_h": 0.5,
+   "default_inside": true,
+   "default_value": 0.174114859302678,
+   "errors": [
+    0.005088075014920557,
+    0.007690086328818136,
+    0.009411683224963458,
+    0.00525032877318032,
+    0.0029819522057001387
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 0.5958798531177733,
+   "reference": 0.17576068912653264,
+   "reference_uncertainty": 0.006360093768650687,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.01,
+   "values": [
+    0.1748709327030106,
+    0.17441591655764555,
+    0.174114859302678,
+    0.17484255923696915,
+    0.17628214589001923
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  "torque_Nm": {
+   "coarsest_within_tol_h": 2.0,
+   "conclusive": true,
+   "default_error": 0.007247863198423236,
+   "default_h": 0.5,
+   "default_inside": true,
+   "default_value": 0.14740969517439365,
+   "errors": [
+    0.0009592860278979405,
+    0.002636811312620483,
+    0.007247863198423236,
+    0.0034811517352242175,
+    0.005332106454580836
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 1.4587613879469343,
+   "reference": 0.14848486174710257,
+   "reference_uncertainty": 0.0011991075348725387,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.015,
+   "values": [
+    0.14834255880310013,
+    0.1480937104099075,
+    0.14740969517439365,
+    0.14796845879111756,
+    0.14927584006238562
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  "vib_pp_um": {
+   "coarsest_within_tol_h": 0.25,
+   "conclusive": false,
+   "default_error": 0.07317643932966328,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 10.312549668204428,
+   "errors": [
+    0.0,
+    0.014319558954249434,
+    0.07317643932966328,
+    0.08141382462570375,
+    0.47774016961274857
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ],
+   "order": 2.611229977424883,
+   "reference": 9.609370174624726,
+   "reference_uncertainty": 0.07317643932966328,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.025,
+   "values": [
+    9.609370174624726,
+    9.47176823189598,
+    10.312549668204428,
+    10.391705752785091,
+    14.200152311721629
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25
+   ]
+  }
+ },
+ "default_label": "bins720",
+ "h_name": "angle per memory bin (deg)",
+ "levels": [
+  {
+   "cost": {
+    "cpu_in_cut_s": 4.558198191999995,
+    "cpu_total_s": 6.609853631,
+    "in_cut_sim_s": 0.9434500000000019,
+    "l0_steps": 44440.0,
+    "strides": [
+     25
+    ]
+   },
+   "cpu_level_s": 11.077868279,
+   "details": {
+    "analytic_total_mm3": 105.98032732885785,
+    "chatter_index": 0.8767353772973057,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 4.558198191999995,
+     "cpu_total_s": 6.609853631,
+     "in_cut_sim_s": 0.9434500000000019,
+     "l0_steps": 44440.0,
+     "strides": [
+      25
+     ]
+    },
+    "depth_limit_mm": 2.0864219064679883,
+    "finished": true,
+    "removed_total_mm3": 145.42586124999994,
+    "stations_around_ap_mm": [
+     0.2040816326530612,
+     0.6122448979591836
+    ],
+    "stations_below_ap": 9,
+    "steps_cut": 102,
+    "vib_pp_um_late": 13.523315577986041
+   },
+   "error": null,
+   "h": 2.0,
+   "label": "bins180",
+   "physics": {
+    "max_deg_per_step": 2.0,
+    "memory_bins": 180,
+    "steps_per_tooth": 24
+   },
+   "quantities": {
+    "F_mean_N": 27.082038305466927,
+    "F_peak_N": 88.91373476500443,
+    "Fx_N": -13.09082331670711,
+    "Fy_N": 23.148025651903954,
+    "Fz_N": -5.122114025315314,
+    "chip_tooth_spread": 0.23425808141104346,
+    "chip_volume_analytic_mm3": 0.17628214589001923,
+    "chip_volume_field_mm3": 0.24282031345078034,
+    "chip_volume_xyz_mm3": [
+     0.20007238768815958,
+     0.20025922102222454,
+     0.24282031345078056
+    ],
+    "engaged_deg": 186.40413233701827,
+    "h_mean_um": 39.435093797000306,
+    "revolutions": 106.16666665818776,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.14927584006238562,
+    "vib_pp_um": 14.200152311721629
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 6.599706926000012,
+    "cpu_total_s": 8.689890847000001,
+    "in_cut_sim_s": 0.9403699999999787,
+    "l0_steps": 111100.0,
+    "strides": [
+     10
+    ]
+   },
+   "cpu_level_s": 8.877565509,
+   "details": {
+    "analytic_total_mm3": 105.05562270390807,
+    "chatter_index": 0.7996215891835919,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 6.599706926000012,
+     "cpu_total_s": 8.689890847000001,
+     "in_cut_sim_s": 0.9403699999999787,
+     "l0_steps": 111100.0,
+     "strides": [
+      10
+     ]
+    },
+    "depth_limit_mm": 2.089652661426762,
+    "finished": true,
+    "removed_total_mm3": 145.42621562499994,
+    "stations_around_ap_mm": [
+     0.2040816326530612,
+     0.6122448979591836
+    ],
+    "stations_below_ap": 9,
+    "steps_cut": 102,
+    "vib_pp_um_late": 9.421523420772495
+   },
+   "error": null,
+   "h": 1.0,
+   "label": "bins360",
+   "physics": {
+    "max_deg_per_step": 1.0,
+    "memory_bins": 360,
+    "steps_per_tooth": 24
+   },
+   "quantities": {
+    "F_mean_N": 26.951325458686956,
+    "F_peak_N": 113.52661072508016,
+    "Fx_N": -13.003373750859838,
+    "Fy_N": 23.000637052134543,
+    "Fz_N": -5.315722930278863,
+    "chip_tooth_spread": 0.2526760323382437,
+    "chip_volume_analytic_mm3": 0.17484255923696915,
+    "chip_volume_field_mm3": 0.24300163386346296,
+    "chip_volume_xyz_mm3": [
+     0.2001031487559093,
+     0.2002885297082406,
+     0.24300163386346316
+    ],
+    "engaged_deg": 186.53474627591186,
+    "h_mean_um": 40.04766147527567,
+    "revolutions": 106.16666677798844,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.14796845879111756,
+    "vib_pp_um": 10.391705752785091
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 6.748619570999999,
+    "cpu_total_s": 8.716416016,
+    "in_cut_sim_s": 0.9408079999999988,
+    "l0_steps": 138875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 8.988914723,
+   "details": {
+    "analytic_total_mm3": 104.59930333672919,
+    "chatter_index": 0.8580131090400174,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 6.748619570999999,
+     "cpu_total_s": 8.716416016,
+     "in_cut_sim_s": 0.9408079999999988,
+     "l0_steps": 138875.0,
+     "strides": [
+      8
+     ]
+    },
+    "depth_limit_mm": 2.089583551560378,
+    "finished": true,
+    "removed_total_mm3": 145.42609062499994,
+    "stations_around_ap_mm": [
+     0.2040816326530612,
+     0.6122448979591836
+    ],
+    "stations_below_ap": 9,
+    "steps_cut": 102,
+    "vib_pp_um_late": 10.739335484107581
+   },
+   "error": null,
+   "h": 0.5,
+   "label": "bins720",
+   "physics": {
+    "max_deg_per_step": 0.5,
+    "memory_bins": 720,
+    "steps_per_tooth": 24
+   },
+   "quantities": {
+    "F_mean_N": 26.935546586715454,
+    "F_peak_N": 104.07748922127774,
+    "Fx_N": -13.029638163328686,
+    "Fy_N": 22.94098149327166,
+    "Fz_N": -5.428035315214373,
+    "chip_tooth_spread": 0.20603901133285568,
+    "chip_volume_analytic_mm3": 0.174114859302678,
+    "chip_volume_field_mm3": 0.2430916709850349,
+    "chip_volume_xyz_mm3": [
+     0.20012255940368454,
+     0.20030956535595332,
+     0.24309167098503512
+    ],
+    "engaged_deg": 187.09531784079618,
+    "h_mean_um": 39.950015473385015,
+    "revolutions": 106.16666701539964,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.14740969517439365,
+    "vib_pp_um": 10.312549668204428
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 11.768119679999963,
+    "cpu_total_s": 13.830385852,
+    "in_cut_sim_s": 0.9431879999999991,
+    "l0_steps": 277750.0,
+    "strides": [
+     4
+    ]
+   },
+   "cpu_level_s": 14.011437175999998,
+   "details": {
+    "analytic_total_mm3": 104.74112530952216,
+    "chatter_index": 0.8323792777951153,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 11.768119679999963,
+     "cpu_total_s": 13.830385852,
+     "in_cut_sim_s": 0.9431879999999991,
+     "l0_steps": 277750.0,
+     "strides": [
+      4
+     ]
+    },
+    "depth_limit_mm": 2.092045204106695,
+    "finished": true,
+    "removed_total_mm3": 145.42614062499993,
+    "stations_around_ap_mm": [
+     0.2040816326530612,
+     0.6122448979591836
+    ],
+    "stations_below_ap": 9,
+    "steps_cut": 102,
+    "vib_pp_um_late": 9.514829519446865
+   },
+   "error": null,
+   "h": 0.25,
+   "label": "bins1440",
+   "physics": {
+    "max_deg_per_step": 0.25,
+    "memory_bins": 1440,
+    "steps_per_tooth": 24
+   },
+   "quantities": {
+    "F_mean_N": 27.148664163837143,
+    "F_peak_N": 116.82415570180127,
+    "Fx_N": -13.175101273392164,
+    "Fy_N": 23.099710600847743,
+    "Fz_N": -5.4653492545085935,
+    "chip_tooth_spread": 0.23797060184805674,
+    "chip_volume_analytic_mm3": 0.17441591655764555,
+    "chip_volume_field_mm3": 0.24300145504196136,
+    "chip_volume_xyz_mm3": [
+     0.20012062771662692,
+     0.20033024081159317,
+     0.24300145504196163
+    ],
+    "engaged_deg": 187.50053604213016,
+    "h_mean_um": 38.698441418741595,
+    "revolutions": 106.16666693136024,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.1480937104099075,
+    "vib_pp_um": 9.47176823189598
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 27.09203209500003,
+    "cpu_total_s": 29.206611756,
+    "in_cut_sim_s": 0.9428040000000596,
+    "l0_steps": 555500.0,
+    "strides": [
+     2
+    ]
+   },
+   "cpu_level_s": 29.386202358,
+   "details": {
+    "analytic_total_mm3": 104.85176378508353,
+    "chatter_index": 0.8073179987658754,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 27.09203209500003,
+     "cpu_total_s": 29.206611756,
+     "in_cut_sim_s": 0.9428040000000596,
+     "l0_steps": 555500.0,
+     "strides": [
+      2
+     ]
+    },
+    "depth_limit_mm": 2.0917832713576843,
+    "finished": true,
+    "removed_total_mm3": 145.42614062499993,
+    "stations_around_ap_mm": [
+     0.2040816326530612,
+     0.6122448979591836
+    ],
+    "stations_below_ap": 9,
+    "steps_cut": 102,
+    "vib_pp_um_late": 9.738034158298705
+   },
+   "error": null,
+   "h": 0.125,
+   "label": "bins2880",
+   "physics": {
+    "max_deg_per_step": 0.125,
+    "memory_bins": 2880,
+    "steps_per_tooth": 24
+   },
+   "quantities": {
+    "F_mean_N": 27.1773020709684,
+    "F_peak_N": 116.78203084290257,
+    "Fx_N": -13.16629854526429,
+    "Fy_N": 23.141368224483852,
+    "Fz_N": -5.452651389231104,
+    "chip_tooth_spread": 0.23935892846599574,
+    "chip_volume_analytic_mm3": 0.1748709327030106,
+    "chip_volume_field_mm3": 0.24300145614982094,
+    "chip_volume_xyz_mm3": [
+     0.20012147684327844,
+     0.20033645005826545,
+     0.24300145614982122
+    ],
+    "engaged_deg": 187.53540713035764,
+    "h_mean_um": 38.81684266397302,
+    "revolutions": 106.1666664129623,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.14834255880310013,
+    "vib_pp_um": 9.609370174624726
+   }
+  }
+ ],
+ "note": "the case of bins_runout with the L0 stride refined with the bins (at most one memory bin per L0 step: max_deg_per_step = 360 / memory_bins; steps_per_tooth 24 so that the angle rule binds)",
+ "root": "/tmp/cconv/tree-20261109-1428",
+ "setting": "physics.memory_bins with physics.max_deg_per_step = 360 / memory_bins",
+ "study": "bins_stride",
+ "title": "Surface-memory bins with the stride (1-DOF, runout, regeneration)"
+}

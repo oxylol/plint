@@ -84,16 +84,16 @@
   "chip_volume_analytic_mm3": {
    "coarsest_within_tol_h": 0.125,
    "conclusive": true,
-   "default_error": 0.014822561844232819,
+   "default_error": 0.01652562798496424,
    "default_h": 0.25,
    "default_inside": false,
-   "default_value": 0.0605429212803334,
+   "default_value": 0.058936274632568064,
    "errors": [
     0.0,
-    0.0005292964708778778,
-    0.006134408988726513,
-    0.014822561844232819,
-    0.05202567207720633
+    0.00024290566392545242,
+    0.006361976190607894,
+    0.01652562798496424,
+    0.05660259101425236
    ],
    "h": [
     0.03125,
@@ -102,19 +102,19 @@
     0.25,
     0.5
    ],
-   "order": 3.6541766941479144,
-   "reference": 0.061453824392962715,
-   "reference_uncertainty": 0.006134408988726513,
+   "order": 4.765064719997329,
+   "reference": 0.05992659931932321,
+   "reference_uncertainty": 0.006361976190607894,
    "relative": true,
    "sign": -1,
    "status": "oscillating",
    "tol": 0.01,
    "values": [
-    0.061453824392962715,
-    0.06148635168533586,
-    0.061076841500214904,
-    0.0605429212803334,
-    0.058256647877204214
+    0.05992659931932321,
+    0.059941155829717666,
+    0.05954534772126958,
+    0.058936274632568064,
+    0.056534598527176586
    ],
    "within_tol_h": [
     0.03125,
@@ -249,20 +249,20 @@
  "levels": [
   {
    "cost": {
-    "cpu_in_cut_s": 2.090005389000007,
-    "cpu_total_s": 4.28269321,
+    "cpu_in_cut_s": 2.1648099779999974,
+    "cpu_total_s": 4.3278075970000005,
     "in_cut_sim_s": 0.582960000000009,
     "l0_steps": 193500.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 8.87837779,
+   "cpu_level_s": 9.015700136000001,
    "details": {
-    "analytic_total_mm3": 36.192743320614355,
+    "analytic_total_mm3": 35.140295218490046,
     "cost": {
-     "cpu_in_cut_s": 2.090005389000007,
-     "cpu_total_s": 4.28269321,
+     "cpu_in_cut_s": 2.1648099779999974,
+     "cpu_total_s": 4.3278075970000005,
      "in_cut_sim_s": 0.582960000000009,
      "l0_steps": 193500.0,
      "strides": [
@@ -278,6 +278,11 @@
      62.587825000000244
     ],
     "removed_y_mm3": 38.22511999999997,
+    "stations_around_ap_mm": [
+     4.693877551020406,
+     5.102040816326528
+    ],
+    "stations_below_ap": 20,
     "steps_cut": 101,
     "wall_dev_um": -3.3380060213434453,
     "wall_max_mm": 11.694849999999999,
@@ -298,7 +303,7 @@
     "Fy_N": 15.15021091525251,
     "Fz_N": -3.649749071577924,
     "chip_tooth_spread": 0.7989093252548511,
-    "chip_volume_analytic_mm3": 0.058256647877204214,
+    "chip_volume_analytic_mm3": 0.056534598527176586,
     "chip_volume_field_mm3": 0.10118864377619506,
     "chip_volume_xyz_mm3": [
      0.10001140303245647,
@@ -306,7 +311,7 @@
      0.10118864377619509
     ],
     "engaged_deg": 26.347312861614505,
-    "h_mean_um": 10.290902452892151,
+    "h_mean_um": 10.534371440956624,
     "removed_mm3": 62.58782500000002,
     "revolutions": 136.33333311118818,
     "steady_s": 0.81,
@@ -318,20 +323,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 2.0596111629999942,
-    "cpu_total_s": 4.375786628,
+    "cpu_in_cut_s": 2.1538611870000075,
+    "cpu_total_s": 4.39238132,
     "in_cut_sim_s": 0.5925040000000092,
     "l0_steps": 187875.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 4.656412058999999,
+   "cpu_level_s": 4.674611661000002,
    "details": {
-    "analytic_total_mm3": 37.76100353302019,
+    "analytic_total_mm3": 36.76845278831583,
     "cost": {
-     "cpu_in_cut_s": 2.0596111629999942,
-     "cpu_total_s": 4.375786628,
+     "cpu_in_cut_s": 2.1538611870000075,
+     "cpu_total_s": 4.39238132,
      "in_cut_sim_s": 0.5925040000000092,
      "l0_steps": 187875.0,
      "strides": [
@@ -347,6 +352,11 @@
      31.293912500000122
     ],
     "removed_y_mm3": 38.22340874999993,
+    "stations_around_ap_mm": [
+     4.693877551020406,
+     5.102040816326528
+    ],
+    "stations_below_ap": 20,
     "steps_cut": 101,
     "wall_dev_um": -3.319341805653117,
     "wall_max_mm": 11.69487,
@@ -367,7 +377,7 @@
     "Fy_N": 15.558158956177603,
     "Fz_N": -3.7440436563874524,
     "chip_tooth_spread": 0.7818621318884689,
-    "chip_volume_analytic_mm3": 0.0605429212803334,
+    "chip_volume_analytic_mm3": 0.058936274632568064,
     "chip_volume_field_mm3": 0.049838462931114415,
     "chip_volume_xyz_mm3": [
      0.05000010529212224,
@@ -375,7 +385,7 @@
      0.04983846293111441
     ],
     "engaged_deg": 21.70151798000338,
-    "h_mean_um": 10.977094191078109,
+    "h_mean_um": 11.21281409043254,
     "removed_mm3": 31.2939125,
     "revolutions": 136.33333328764837,
     "steady_s": 0.81,
@@ -387,20 +397,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 2.2610854590000002,
-    "cpu_total_s": 4.658452457999999,
+    "cpu_in_cut_s": 2.281641184999984,
+    "cpu_total_s": 4.812976371999998,
     "in_cut_sim_s": 0.5944880000000092,
     "l0_steps": 183250.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 4.9945664549999975,
+   "cpu_level_s": 5.154772801,
    "details": {
-    "analytic_total_mm3": 38.153658238049594,
+    "analytic_total_mm3": 37.19938897206932,
     "cost": {
-     "cpu_in_cut_s": 2.2610854590000002,
-     "cpu_total_s": 4.658452457999999,
+     "cpu_in_cut_s": 2.281641184999984,
+     "cpu_total_s": 4.812976371999998,
      "in_cut_sim_s": 0.5944880000000092,
      "l0_steps": 183250.0,
      "strides": [
@@ -416,6 +426,11 @@
      31.293912500000122
     ],
     "removed_y_mm3": 38.22338468750025,
+    "stations_around_ap_mm": [
+     4.693877551020406,
+     5.102040816326528
+    ],
+    "stations_below_ap": 20,
     "steps_cut": 101,
     "wall_dev_um": -3.3231076649389846,
     "wall_max_mm": 11.694899999999999,
@@ -436,7 +451,7 @@
     "Fy_N": 15.754234930409426,
     "Fz_N": -3.7864813320946076,
     "chip_tooth_spread": 0.8096102120496699,
-    "chip_volume_analytic_mm3": 0.061076841500214904,
+    "chip_volume_analytic_mm3": 0.05954534772126958,
     "chip_volume_field_mm3": 0.050128221063029096,
     "chip_volume_xyz_mm3": [
      0.04999998929220031,
@@ -444,7 +459,7 @@
      0.050128221063029096
     ],
     "engaged_deg": 21.215080513547257,
-    "h_mean_um": 10.09370474433221,
+    "h_mean_um": 10.294943775511447,
     "removed_mm3": 31.293912499999994,
     "revolutions": 136.33333337880796,
     "steady_s": 0.81,
@@ -456,20 +471,20 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 2.445431062999994,
-    "cpu_total_s": 4.7492945330000005,
+    "cpu_in_cut_s": 2.5322233940000203,
+    "cpu_total_s": 5.068738825999997,
     "in_cut_sim_s": 0.5994400000000094,
     "l0_steps": 181750.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 5.320024317999998,
+   "cpu_level_s": 5.639608330999998,
    "details": {
-    "analytic_total_mm3": 38.43484278816621,
+    "analytic_total_mm3": 37.4707981331106,
     "cost": {
-     "cpu_in_cut_s": 2.445431062999994,
-     "cpu_total_s": 4.7492945330000005,
+     "cpu_in_cut_s": 2.5322233940000203,
+     "cpu_total_s": 5.068738825999997,
      "in_cut_sim_s": 0.5994400000000094,
      "l0_steps": 181750.0,
      "strides": [
@@ -485,6 +500,11 @@
      39.117390195312616
     ],
     "removed_y_mm3": 38.220675507812395,
+    "stations_around_ap_mm": [
+     4.693877551020406,
+     5.102040816326528
+    ],
+    "stations_below_ap": 20,
     "steps_cut": 101,
     "wall_dev_um": -3.303502885527998,
     "wall_max_mm": 11.69495,
@@ -505,7 +525,7 @@
     "Fy_N": 15.85248607822389,
     "Fz_N": -3.8091984891202895,
     "chip_tooth_spread": 0.8053822225968987,
-    "chip_volume_analytic_mm3": 0.06148635168533586,
+    "chip_volume_analytic_mm3": 0.059941155829717666,
     "chip_volume_field_mm3": 0.06258114199721977,
     "chip_volume_xyz_mm3": [
      0.062499987700347634,
@@ -513,7 +533,7 @@
      0.06258114199721977
     ],
     "engaged_deg": 21.686576342413783,
-    "h_mean_um": 10.079140240709938,
+    "h_mean_um": 10.280832474185665,
     "removed_mm3": 39.117390195312495,
     "revolutions": 136.33333335499083,
     "steady_s": 0.81,
@@ -525,21 +545,21 @@
   },
   {
    "cost": {
-    "cpu_in_cut_s": 3.2791493610000018,
-    "cpu_total_s": 6.262346473000001,
-    "in_cut_sim_s": 0.5948400000000093,
+    "cpu_in_cut_s": 3.3216668739999697,
+    "cpu_total_s": 6.253832225,
+    "in_cut_sim_s": 0.5948720000000093,
     "l0_steps": 180625.0,
     "strides": [
      8
     ]
    },
-   "cpu_level_s": 7.8082517350000025,
+   "cpu_level_s": 7.734485652999997,
    "details": {
-    "analytic_total_mm3": 38.425447818399434,
+    "analytic_total_mm3": 37.471078862061525,
     "cost": {
-     "cpu_in_cut_s": 3.2791493610000018,
-     "cpu_total_s": 6.262346473000001,
-     "in_cut_sim_s": 0.5948400000000093,
+     "cpu_in_cut_s": 3.3216668739999697,
+     "cpu_total_s": 6.253832225,
+     "in_cut_sim_s": 0.5948720000000093,
      "l0_steps": 180625.0,
      "strides": [
       8
@@ -554,6 +574,11 @@
      39.117421875000026
     ],
     "removed_y_mm3": 38.223747314453114,
+    "stations_around_ap_mm": [
+     4.693877551020406,
+     5.102040816326528
+    ],
+    "stations_below_ap": 20,
     "steps_cut": 101,
     "wall_dev_um": -3.320251998537721,
     "wall_max_mm": 11.694895,
@@ -574,7 +599,7 @@
     "Fy_N": 15.824095456032497,
     "Fz_N": -3.8044715945708685,
     "chip_tooth_spread": 0.804677176408792,
-    "chip_volume_analytic_mm3": 0.061453824392962715,
+    "chip_volume_analytic_mm3": 0.05992659931932321,
     "chip_volume_field_mm3": 0.06258364342311555,
     "chip_volume_xyz_mm3": [
      0.0624999692152229,
@@ -582,7 +607,7 @@
      0.06258364342311554
     ],
     "engaged_deg": 21.15681240583194,
-    "h_mean_um": 10.068524392742312,
+    "h_mean_um": 10.267512036890462,
     "removed_mm3": 39.11742187499999,
     "revolutions": 136.33333336780717,
     "steady_s": 0.81,
@@ -594,7 +619,7 @@
   }
  ],
  "note": "D10 4FL, Al 6061-T6, 10 000 rpm, f_z 0.04 mm, climb, ae 0.3 mm, ap 5 mm, rigid; the template default 0.25 mm is above the twin check limit ae / 4 = 0.075 mm for this pass",
- "root": "/tmp/cconv/tree-20261109-1238",
+ "root": "/tmp/cconv/tree-20261109-1428",
  "setting": "physics.lattice_mm",
  "study": "lattice_side",
  "title": "Dexel lattice: side-milling finish (rigid)"
