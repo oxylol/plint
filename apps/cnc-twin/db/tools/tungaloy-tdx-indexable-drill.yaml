@@ -12,7 +12,7 @@ defaults:
   type: indexable_drill
   hand: right
   tool_material: {class: carbide, grade: "AH6030 PVD-coated carbide (substrate not stated)", id: carbide-submicron-10co, src: est, note: "PVD grade M25-M35 / S15-S30 (A002); substrate mapped to the fine-grain 10 % Co entry"}
-  coating: {id: tialn, src: est, note: "AH6030: (Ti,Al)N (A002); thickness not read"}
+  coating: {id: tialn, src: est, note: "AH6030: (Ti,Al)N (A002); thickness not read", thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
 items:
   - id: tungaloy-tdx200f25-3-xpmt06x308r-dj-ah6030
     order_code: "TDX200F25-3 + 2 x XPMT06X308R-DJ AH6030"

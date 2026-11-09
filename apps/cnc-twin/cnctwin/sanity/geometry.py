@@ -31,7 +31,10 @@ CHUNK_ELEMENTS = 2_000_000  # bound on samples x stencil cells evaluated at once
 
 @dataclass
 class Engagement:
-    """Per command: whether it cuts and how (NaN/False where not evaluated)."""
+    """Per command: whether it cuts and how (NaN/False where not evaluated). ``ap_m`` is the depth of the
+    material the tool engages (from the highest engaged material down to the tip, or to the stock bottom when
+    the tip is below it: a through cut); ``reach_m`` how far below that material top the tip reaches (the
+    length of tool that must enter the cut, through or not)."""
 
     evaluated: np.ndarray
     cut: np.ndarray
@@ -41,6 +44,11 @@ class Engagement:
     in_footprint: np.ndarray         # the tool disc overlaps the stock footprint during the move
     material_top_m: np.ndarray       # material top at the start point (centre cell), before the move
     reasons: dict[int, str] = field(default_factory=dict)   # command -> why it was not evaluated
+    reach_m: np.ndarray | None = None
+
+    def __post_init__(self):
+        if self.reach_m is None:
+            self.reach_m = np.full(len(self.cut), np.nan)
 
     @classmethod
     def empty(cls, n: int) -> "Engagement":
@@ -139,8 +147,14 @@ def estimate(program, ctx: SanityContext) -> Engagement:
             continue
         tool_number = modal.get("tool")
         tool = ctx.tools.get(tool_number) if tool_number is not None else None
+        if tool is not None and tool.is_probe and command.kind != Kind.RAPID:
+            continue                    # a probe touches the part (skip moves stop at contact): it never cuts
         if tool is None or tool.diameter_m is None:
             result.reasons[index] = "tool geometry unknown"
+            continue
+        axis = command.tip_axis
+        if axis is not None and float(axis[2]) < math.cos(float(ctx.p("max_tool_tilt_rad"))):
+            result.reasons[index] = "tool axis tilted (five-axis move): the 3-axis engagement model does not apply"
             continue
         if tool_number not in stencils:
             stencils[tool_number] = tool_stencil(tool, height_map.cell)
@@ -164,6 +178,7 @@ class _Accumulator:
     def __init__(self):
         self.cut = False
         self.ap = -np.inf
+        self.reach = -np.inf
         self.ae = 0.0
         self.gap = np.inf
         self.in_footprint = False
@@ -177,7 +192,13 @@ class _Accumulator:
         result.cut[index] = self.cut
         if self.cut:
             result.ap_m[index] = self.ap
+            result.reach_m[index] = self.reach
             result.ae_m[index] = self.ae
+
+
+def _material(heights: np.ndarray, bottom: float) -> np.ndarray:
+    """Cells that still hold material (a through cut carves a cell below the stock bottom: none left)."""
+    return heights > bottom + EPS_CUT_M
 
 
 def _evaluate_move(height_map: HeightMap, tool: ToolFacts, stencil: Stencil, command, start: np.ndarray,
@@ -193,9 +214,14 @@ def _evaluate_move(height_map: HeightMap, tool: ToolFacts, stencil: Stencil, com
             all(math.isfinite(c) for c in arc.centre[:2]):
         points = _chords(arc, start, end, height_map.cell)
         previous = start
+        cells: list[np.ndarray] = []
         for point in points:
-            _segment(height_map, tool, stencil.radius, previous, point, start[2], rapid, acc)
+            _segment(height_map, tool, stencil.radius, previous, point, start[2], rapid, acc, cells)
             previous = point
+        if acc.cut and cells:
+            radial = _arc_ae(arc, np.concatenate(cells), stencil.radius, height_map.cell)
+            if radial is not None:
+                acc.ae = radial
     elif math.hypot(end[0] - start[0], end[1] - start[1]) < 1e-12:
         low = end if end[2] <= start[2] else start
         if end[2] < start[2] or rapid:
@@ -225,10 +251,30 @@ def _chords(arc, start: np.ndarray, end: np.ndarray, cell: float) -> list[np.nda
     return points
 
 
+def _arc_ae(arc, cells: np.ndarray, radius: float, cell: float) -> float | None:
+    """Radial depth of cut of an arc move in XY whose engagement is a crescent on one side of the path,
+    measured from the arc's centre: outward (all engaged material beyond the centre path, a pocket wall or a
+    hole) the tool's edge reaches rho + R and the material starts at the nearest engaged cell; inward (a
+    boss inside the path) the edge reaches rho - R and the material ends at the farthest. Cell centres lie
+    within half a cell of the material boundary. None when the engaged material lies on both sides of the
+    path (the tool's whole face cuts, a floor clean-up turn): the swept-width estimate stands."""
+    rho = 0.5 * (arc.radius_start_m + arc.radius_end_m)
+    distance = np.hypot(cells[:, 0] - arc.centre[0], cells[:, 1] - arc.centre[1])
+    half = 0.5 * cell
+    if float(distance.min()) >= rho - half:
+        ae = (rho + radius) - float(distance.min()) + half
+    elif float(distance.max()) <= rho + half:
+        ae = float(distance.max()) - (rho - radius) + half
+    else:
+        return None
+    return min(max(ae, cell), 2.0 * radius)
+
+
 def _segment(height_map: HeightMap, tool: ToolFacts, radius: float, a: np.ndarray, b: np.ndarray, z: float,
-             rapid: bool, acc: _Accumulator) -> None:
+             rapid: bool, acc: _Accumulator, cells: list | None = None) -> None:
     """The tool swept from ``a`` to ``b`` at height ``z``: its lower envelope at a cell is the tool
-    profile at the cell's distance from the segment (exact for a straight move at constant Z)."""
+    profile at the cell's distance from the segment (exact for a straight move at constant Z).
+    ``cells`` collects the centres (x, y) of the engaged cells (arc moves measure ae from them)."""
     cell = height_map.cell
     ax, ay = float(a[0]), float(a[1])
     bx, by = float(b[0]), float(b[1])
@@ -261,15 +307,21 @@ def _segment(height_map: HeightMap, tool: ToolFacts, radius: float, a: np.ndarra
     distance = distance[inside]
     acc.in_footprint = True
     envelope = z + envelope_lift(tool, distance)
+    material = _material(heights, height_map.bottom)
     if rapid:
-        acc.gap = min(acc.gap, float(np.min(envelope - heights)))
+        if material.any():
+            acc.gap = min(acc.gap, float(np.min(envelope[material] - heights[material])))
     else:
-        engaged = heights - envelope > EPS_CUT_M
+        engaged = (heights - envelope > EPS_CUT_M) & material
         if engaged.any():
             acc.cut = True
-            acc.ap = max(acc.ap, float(np.max(heights[engaged])) - z)
+            top = float(np.max(heights[engaged]))
+            acc.ap = max(acc.ap, top - max(z, height_map.bottom))
+            acc.reach = max(acc.reach, top - z)
             rx_cells = np.broadcast_to(rx, inside.shape)[inside][engaged]
             ry_cells = np.broadcast_to(ry, inside.shape)[inside][engaged]
+            if cells is not None:
+                cells.append(np.column_stack([rx_cells + ax, ry_cells + ay]))
             if length2 > 0.0:
                 across = (-rx_cells * dy + ry_cells * dx) / math.sqrt(length2)
                 width = float(np.ptp(across))
@@ -311,7 +363,7 @@ def _evaluate(height_map: HeightMap, stencil: Stencil, start: np.ndarray, points
     moving = norm > 1e-12
     direction[moving] = delta[moving] / norm[moving, None]
     chunk = max(1, CHUNK_ELEMENTS // max(len(stencil.di), 1))
-    ap_max, ae_max, gap_min = -np.inf, 0.0, np.inf
+    ap_max, reach_max, ae_max, gap_min = -np.inf, -np.inf, 0.0, np.inf
     cut = False
     in_footprint = False
     carve_rows, carve_cols, carve_z = [], [], []
@@ -328,6 +380,7 @@ def _evaluate(height_map: HeightMap, stencil: Stencil, start: np.ndarray, points
         heights = height_map.heights[rows_c, cols_c]
         tip_z = points[begin:stop, 2][:, None]
         envelope = tip_z + stencil.lift[None, :]
+        valid = valid & _material(heights, height_map.bottom)
         excess = np.where(valid, heights - envelope, -np.inf)
         if rapid:
             gap_min = min(gap_min, float(np.min(np.where(valid, envelope - heights, np.inf))))
@@ -339,8 +392,10 @@ def _evaluate(height_map: HeightMap, stencil: Stencil, start: np.ndarray, points
             engaged = (excess > EPS_CUT_M) & front
             if engaged.any():
                 cut = True
-                ap = np.where(engaged, heights - tip_z, -np.inf).max(axis=1)
+                ap = np.where(engaged, heights - np.maximum(tip_z, height_map.bottom), -np.inf).max(axis=1)
                 ap_max = max(ap_max, float(ap.max()))
+                reach = np.where(engaged, heights - tip_z, -np.inf).max(axis=1)
+                reach_max = max(reach_max, float(reach.max()))
                 across = -stencil.dx[None, :] * dirs[:, 1:2] + stencil.dy[None, :] * dirs[:, :1]
                 width = _extent(np.where(engaged, across, np.nan))
                 plunge_width = np.maximum(_extent(np.where(engaged, stencil.dx[None, :] + 0 * across, np.nan)),
@@ -363,6 +418,7 @@ def _evaluate(height_map: HeightMap, stencil: Stencil, start: np.ndarray, points
     result.cut[index] = cut
     if cut:
         result.ap_m[index] = ap_max
+        result.reach_m[index] = reach_max
         result.ae_m[index] = ae_max
 
 
@@ -398,4 +454,5 @@ def _lathe(program, ctx: SanityContext, result: Engagement) -> Engagement:
         else:
             result.cut[index] = inside
             result.ap_m[index] = max(radius - closest, 0.0) if inside else math.nan
+            result.reach_m[index] = result.ap_m[index]
     return result

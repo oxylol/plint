@@ -94,6 +94,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.3
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "no published Taylor fit read; C set so that T = 15 min at vc = 300 m/min (typical CVD P-grade recommendation for annealed low-alloy steel, general knowledge)"
   - tool_class: carbide
@@ -105,6 +106,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.3
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 145 m/min (general knowledge)"
 tool_life_usui: null

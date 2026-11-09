@@ -20,6 +20,7 @@ const SUITE = process.env.SUITE || 'all';
 const RICH = '00002-v3d-rich';
 const DEFAULT = '00001-v3d-default';
 const PARTIAL = '00003-v3d-partial';
+const SPIN = '00004-v3d-spin-chain';
 const results = [];
 const problems = [];
 const started = Date.now();
@@ -402,6 +403,35 @@ if (SUITE === 'all' || SUITE === 'runs') {
   const later = await debug(page);
   ok('running run: refreshing the index files keeps the view going', later.ipw.ready && later.notes.length === 0, later.notes.join(' | '));
   await shot(page, 'partial-0');
+  await context.close();
+}
+
+// ===================================================================== a spinning stock and a component on the work chain
+if (SUITE === 'all' || SUITE === 'runs') {
+  const { page, error, context } = await open(SPIN, { t: 1.0 });
+  ok('spin + chain run: createView3D resolves', !error, error || '');
+  await settle(page, 300);
+  const states = [];
+  for (const t of [1.0, 1.3]) {
+    await page.evaluate((t) => window.view3d.setTime(t), t);
+    await page.waitForFunction(() => { const d = window.view3d.debug(); return d.updated && d.sample && d.sample.exact; }, null, { timeout: 15000 }).catch(() => {});
+    states.push(await debug(page));
+  }
+  const angle = (d) => Math.atan2(d.root[1], d.root[0]);
+  const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+  ok('spin: the view frame turns by the work spindle angle (W0)', states.every((d) => Math.abs(wrap(angle(d) - d.sample.spindle)) < 1e-5),
+    states.map((d) => `${angle(d).toFixed(6)} vs ${wrap(d.sample.spindle).toFixed(6)}`).join('; '));
+  const saddle = states.map((d) => d.components.find((c) => c.id === 'saddle'));
+  ok('chain: a component linked to an axis is placed by the work chain', saddle.every((c) => c && c.frame === 'link' && c.visible), JSON.stringify(saddle));
+  const frames = await page.evaluate(async (run) => {
+    const one = async (t) => (await (await fetch(`/api/runs/${run}/frames?t0=${t}&t1=${t}&format=json`)).json()).fields.axis[0];
+    return [await one(1.0), await one(1.3)];
+  }, SPIN);
+  const dx = frames[1][0] - frames[0][0];
+  ok('chain: with the stock on the chain end, the saddle moves by minus the X travel in S', saddle[0] && saddle[1] && Math.abs((saddle[1].position[0] - saddle[0].position[0]) + dx) < 1e-6 && Math.abs(saddle[1].position[1] - saddle[0].position[1]) < 1e-9,
+    `${saddle[0] && saddle[0].position[0]} -> ${saddle[1] && saddle[1].position[0]}, X travel ${dx}`);
+  ok('spin + chain run: no notes', states[1].notes.length === 0, states[1].notes.join(' | '));
+  await shot(page, 'spin-0');
   await context.close();
 }
 

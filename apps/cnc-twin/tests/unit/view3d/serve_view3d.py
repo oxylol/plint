@@ -6,12 +6,14 @@ synthetic runs (tests/fixtures/make_synthetic_run.py), serving a copy of web/ wi
 
 Runs written (RUNS): the default synthetic run (seed 2), the same run with the 3D view's additions
 (seed 4, view3d=True: carved pocket bricks, a 3-D temperature grid, jets with paths and a head-mounted
-blocked jet, a tool displacement channel), and a run stopped at 1.2 s (status running).
+blocked jet, a tool displacement channel), a run stopped at 1.2 s (status running), and a copy of the rich
+run with a spinning stock and a component placed by the work chain (SPIN_RUN).
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -24,6 +26,11 @@ for entry in (str(ROOT), str(ROOT / "tests" / "fixtures")):
 
 RUNS = {"00001-v3d-default": {"seed": 2}, "00002-v3d-rich": {"seed": 4, "view3d": True},
         "00003-v3d-partial": {"seed": 5, "view3d": True, "until_s": 1.2}}
+# a copy of the rich run whose scene.json takes the placement paths the synthetic scene does not: a spinning
+# stock (stock.spin: the view frame becomes W0) and a component placed by the work chain (link Y, no frame)
+# with the stock in the chain-end frame (stock.pose_F_S)
+SPIN_RUN = "00004-v3d-spin-chain"
+SPIN = {"path": 0, "axis_S": [0.0, 0.0, 1.0], "point_S_m": [0.02, 0.015, 0.0]}
 
 
 def build(data: Path) -> dict:
@@ -40,6 +47,15 @@ def build(data: Path) -> dict:
         if spec.get("until_s") is not None:
             kwargs["until_s"] = spec["until_s"]
         out[run_id] = synthetic.make_synthetic_run(data / "runs" / run_id, seed=spec["seed"], **kwargs)
+    source = data / "runs" / "00002-v3d-rich"
+    target = data / "runs" / SPIN_RUN
+    shutil.copytree(source, target)
+    scene = json.loads((target / "scene.json").read_text(encoding="utf-8"))
+    scene["stock"]["spin"] = SPIN
+    scene["stock"]["pose_F_S"] = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+    scene["machine"]["components"].append({"id": "saddle", "mesh": "scene/table.glb", "link": "Y", "kind": "machine"})
+    (target / "scene.json").write_text(json.dumps(scene, indent=1) + "\n", encoding="utf-8")
+    out[SPIN_RUN] = {"copied_from": "00002-v3d-rich"}
     return out
 
 

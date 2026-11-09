@@ -20,12 +20,12 @@ supply_pressure_bar: {value: 6, src: est, note: "shop air 6-7 bar; Haas air requ
 typical_flow_l_min: {value: 170, src: haas-europe-vmc-brochure-2013, note: "Haas automatic air gun 6 scfm (p. 28), free air"}
 friction_factor:
   - {tool_class: carbide, work_family: steel, value: 1.0, src: est, note: "dry reference; oxygen access can slightly change friction, neglected"}
-  - {tool_class: carbide, work_family: aluminium, value: 1.0, src: est}
-lubricity_index: {value: 0.0, src: est}
+  - {tool_class: carbide, work_family: aluminium, value: 1.0, src: est, note: "dry reference: air does not lubricate the tool-chip contact, so the factor is 1 by the definition of the dry reference (as steel)"}
+lubricity_index: {value: 0.0, src: est, note: "the zero of the scale (no lubricant; straight oil = 1)"}
 heat_transfer:
   jet_htc_W_m2K: {value: 200, range: [50, 600], src: est, note: "impinging air jet from a 2-6 mm nozzle at 50-200 m/s on tool/chip surfaces"}
-drag_out_ml_per_kg_chips: {value: 0, src: est}
-evaporation_l_per_h_per_m2: {value: 0, src: est}
-mist_loss_fraction: {value: 0, src: est}
+drag_out_ml_per_kg_chips: {value: 0, src: est, note: "a gas: no liquid is carried out on the chips"}
+evaporation_l_per_h_per_m2: {value: 0, src: est, note: "no liquid sump"}
+mist_loss_fraction: {value: 0, src: est, note: "no liquid to atomise"}
 cost_eur_per_l: {value: 2.5e-5, src: est, note: "about 0.025 EUR per m3 of free air (compressor energy ~0.12 kWh/m3 at ~0.2 EUR/kWh); per litre of free air"}
 notes: "Air blast cools by forced convection only and clears chips; no lubrication."

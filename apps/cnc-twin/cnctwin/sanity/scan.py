@@ -16,16 +16,28 @@ Block-delete (``/``) blocks are executed (block delete switch off).
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field, fields, replace
 
 import numpy as np
 
 from ..controller.ir import ArcSpec, Command, Feed, FeedMode, Kind, LineRef, Space
 from ..units import FOOT_M, INCH_M
+from .assist import controller_point
 from .context import SanityContext, normalise_offset
-from .program import Line, code_text, lex
+from .program import Line, Word, code_text, lex
 
 SUPPORTED_DIALECTS = ("fanuc", "haas")
+# tool centre point control, dynamic work offsets and tilted planes: their moves come from the controller
+TRANSFORM_ON = ("G43.4", "G43.5", "G234", "G254", "G68.2")
+TRANSFORM_GROUP8 = ("G43.4", "G43.5", "G234")          # cancelled by G49 / G43 / G44 (length group 08)
+TRANSFORM_OFF = {"G255": "G254", "G69": "G68.2"}
+BOLT_PATTERNS = ("G70", "G71", "G72")                  # Haas mill bolt hole patterns of the active canned cycle
+# Haas device and check M codes the scan passes (no effect on its geometry): brakes, gears, vise and fixture
+# clamps, sleep, bellows, mist condenser, M16 tool change; M78/M79 skip-signal checks; lathes M14/M15 spindle
+# brake, M21/M22 tailstock, M23/M24 thread chamfer, M36/M37 parts catcher, M146/M147 steady rest
+HAAS_DEVICE_M = ("M10", "M11", "M12", "M13", "M41", "M42", "M70", "M71", "M90", "M91", "M95", "M104", "M105", "M138",
+                 "M139", "M158", "M159", "M16", "M78", "M79", "M14", "M15", "M21", "M22", "M23", "M24", "M36", "M37",
+                 "M146", "M147")
 NAN3 = (math.nan, math.nan, math.nan)
 TWO_PI = 2.0 * math.pi
 RPM_TO_RAD_S = TWO_PI / 60.0
@@ -185,16 +197,23 @@ class _Frame:
     return_to: tuple[str, int] | None = None
     repeat_left: int = 0
     start_index: int = 0
+    stop_after: int | None = None       # G70: the shape blocks ns..nf, then back to the caller
+    on_exit: tuple | None = None        # ("rapid", position, ref) emitted when the frame ends
 
 
 class Scanner:
     """One static execution of a program (see the module docstring)."""
 
     def __init__(self, text: str, name: str, ctx: SanityContext, *, machine_kind: str | None = None,
-                 subprograms: dict[str, str] | None = None):
+                 subprograms: dict[str, str] | None = None, assist=None):
         self.ctx = ctx
         self.name = name or "program"
         self.dialect = ctx.dialect
+        self.assist = assist if assist is not None and getattr(assist, "available", False) else None
+        self._visits: dict[tuple[str, int], int] = {}
+        self.execution = None           # the controller's execution of the line being read (cnctwin.sanity.assist)
+        self.transform_mode: str | None = None   # TCP / DWO / tilted plane code whose moves come from the controller
+        self._transform_noted = False
         self.texts: dict[str, list[Line]] = {self.name: lex(text)}
         for key, body in (subprograms or {}).items():
             self.texts[str(key)] = lex(body)
@@ -238,6 +257,12 @@ class Scanner:
                 break
             frame = frames[-1]
             lines = self.texts[frame.program]
+            if frame.stop_after is not None and frame.index > frame.stop_after:
+                frames.pop()
+                if frame.on_exit is not None:
+                    _, position, exit_ref = frame.on_exit
+                    self._move_to(Kind.RAPID, exit_ref, np.asarray(position, dtype=float))
+                continue
             if frame.index >= len(lines):
                 if not self._end_of_file(frames):
                     break
@@ -271,14 +296,21 @@ class Scanner:
                     continue
                 location = self.labels.get(target)
                 if location is None:
-                    self.note(line.number, "call", f"subprogram {target} is not available to the scan: its blocks "
-                                                   "are not checked", frame.program)
+                    if not self._substitute(self.line_ref, line.number, frame.program):
+                        self.note(line.number, "call", f"subprogram {target} is not available to the scan: its "
+                                                       "blocks are not checked", frame.program)
                     continue
                 program, index = location
                 if count <= 0:
                     continue
                 frames.append(_Frame(program, index, (frame.program, frame.index), count - 1, index))
                 self.state.call_depth = len(frames) - 1
+            elif kind == "jump":
+                frame.index = int(payload)
+            elif kind == "shape":
+                start, stop, back = payload
+                frames.append(_Frame(frame.program, start, (frame.program, frame.index), 0, start, stop_after=stop,
+                                     on_exit=("rapid", back, self.line_ref)))
             elif kind == "return":
                 if len(frames) == 1:
                     self.result.end_code = "M99"
@@ -321,13 +353,27 @@ class Scanner:
 
     # ------------------------------------------------------------------ one block
     def block(self, line: Line, program: str, depth: int):
+        self.execution = None
+        if self.assist is not None:
+            key = (program, line.number)
+            visit = self._visits.get(key, 0)
+            self._visits[key] = visit + 1
+            self.execution = self.assist.execution(program, line.number, visit)
+            if self.execution is not None and any(w.value is None for w in line.words):
+                line = evaluated_line(line, self.execution.words)
         if line.macro:
             if any(w.value is None for w in line.words) or not line.words:
                 kind = "flow" if not line.words else "macro"
                 if kind == "flow" and not self._flow_noted:
                     self._flow_noted = True
-                    self.note(line.number, "flow", "macro statements (variables, IF/GOTO/WHILE) are not evaluated: "
-                                                   "the scan reads the program as written, top to bottom", program)
+                    if self.assist is not None:
+                        self.note(line.number, "flow", "macro statements (variables, IF/GOTO/WHILE) run in the "
+                                                       "controller's dry run, which gives the scan its address values; "
+                                                       "the scan reads the program as written, top to bottom, and keeps "
+                                                       "the setup's work offsets and tool data", program)
+                    else:
+                        self.note(line.number, "flow", "macro statements (variables, IF/GOTO/WHILE) are not evaluated: "
+                                                       "the scan reads the program as written, top to bottom", program)
                 elif kind == "macro":
                     self.note(line.number, "macro", "address with a macro expression: its value is unknown to the "
                                                     "scan", program)
@@ -377,6 +423,7 @@ class Scanner:
         number = line.number
         one_shot = None
         motion_code = None
+        assisted = None                 # a code whose motion this line takes from the controller
         for code in g_codes:
             if code in ("G0", "G1", "G2", "G3"):
                 motion_code = code
@@ -398,9 +445,17 @@ class Scanner:
                     state.radius_offset = int(d.value) if d is not None and d.value is not None else None
             elif code in ("G43", "G44"):
                 h = self.raw.get("H")
-                self._set_length(code, int(h.value) if h is not None and h.value is not None else None, number)
+                self._set_length(code, int(round(h.value)) if h is not None and h.value is not None else None, number)
+                if self.transform_mode in TRANSFORM_GROUP8:
+                    self.transform_mode = None
             elif code == "G49":
                 self._set_length(None, None, number)
+                if self.transform_mode in TRANSFORM_GROUP8:
+                    self.transform_mode = None
+            elif code in TRANSFORM_ON and self._can_substitute():
+                self.transform_mode = code
+            elif code in TRANSFORM_OFF and self.transform_mode == TRANSFORM_OFF[code]:
+                self.transform_mode = None
             elif code in WORK_OFFSETS or code in HAAS_EXTRA_OFFSETS:
                 self._set_work_offset(code, number)
             elif code in ("G54.1", "G154"):
@@ -418,8 +473,14 @@ class Scanner:
                 self.note(number, "unevaluated", f"{code} ({UNEVALUATED_G[code]}) is not evaluated: positions after "
                                                  "it may be wrong", program)
             elif self.dialect == "haas" and code in HAAS_PATTERN_G:
-                self.note(number, "unevaluated", f"{code} ({HAAS_PATTERN_G[code]}) is not expanded by the scan", program)
+                if self._can_substitute():
+                    assisted = code
+                else:
+                    self.note(number, "unevaluated", f"{code} ({HAAS_PATTERN_G[code]}) is not expanded by the scan",
+                              program)
                 motion_code = motion_code or "skip"
+            elif self._can_substitute():
+                assisted = code         # a code the scan does not interpret: its motion as the controller ran it
             else:
                 self.note(number, "unknown_code", f"{code} is not interpreted by the scan", program)
         if "F" in words and words["F"] is not None:
@@ -440,6 +501,10 @@ class Scanner:
             result = self._one_shot(one_shot, ref, words, number, program)
             if result is not None:
                 return result
+        elif assisted is not None and self._substitute(ref, number, program,
+                                                       pattern=assisted if assisted in BOLT_PATTERNS else None):
+            if motion_code in ("G0", "G1", "G2", "G3"):
+                state.motion = motion_code
         elif motion_code == "G80":
             self._cancel_cycle()
             if any(k in words for k in "XYZ"):
@@ -453,10 +518,18 @@ class Scanner:
                     self._cancel_cycle()
             if motion_code in CYCLES_MILL:
                 self._start_cycle(motion_code, words, number)
+            moves = any(k in words for k in "XYZ") or (state.motion in ("G2", "G3") and any(k in words for k in "IJKR"))
             if state.cycle is not None and (motion_code in CYCLES_MILL or any(k in words for k in "XY")
                                             or ("Z" in words and motion_code is None) or "R" in words):
                 self._cycle_holes(ref, words, number, program)
-            elif any(k in words for k in "XYZ") or (state.motion in ("G2", "G3") and any(k in words for k in "IJKR")):
+            elif moves and self.transform_mode is not None and self._substitute(ref, number, program):
+                pass                    # tip and axis under TCP / DWO / a tilted plane: as the controller ran it
+            elif moves:
+                if self.transform_mode is not None and not self._transform_noted:
+                    self._transform_noted = True
+                    self.note(number, "unevaluated", f"{self.transform_mode} ({UNEVALUATED_G[self.transform_mode]}) "
+                                                     "moves the controller did not run are not evaluated: positions "
+                                                     "may be wrong", program)
                 if state.motion in ("G2", "G3"):
                     self._arc(ref, words, state.motion)
                 else:
@@ -533,8 +606,7 @@ class Scanner:
             self.emit(Kind.DOOR, ref)
         elif dialect == "haas" and code == "M50":
             self.emit(Kind.PALLET, ref)
-        elif dialect == "haas" and code in ("M10", "M11", "M12", "M13", "M41", "M42", "M70", "M71", "M90", "M91",
-                                            "M95", "M104", "M105", "M138", "M139", "M158", "M159", "M16"):
+        elif dialect == "haas" and code in HAAS_DEVICE_M:
             if code == "M16":
                 self._tool_change(ref, number, program)
             else:
@@ -623,7 +695,8 @@ class Scanner:
             self.note(number, "unevaluated", "G92 shifts the coordinate system from the current position; positions "
                                              "after it rely on where the tool stood", program)
         elif code == "G31":
-            self._linear(ref, words, rapid=False, kind=Kind.PROBE)
+            if not self._substitute(ref, number, program):      # the controller's skip ends where it latched
+                self._linear(ref, words, rapid=False, kind=Kind.PROBE)
         elif code == "G37":
             h = self.raw.get("H")
             register = int(h.value) if h is not None and h.value is not None else state.tool
@@ -632,7 +705,8 @@ class Scanner:
             self.emit(Kind.TOOL_SETTER, ref, setter={"measure": "length", "tool": state.tool})
         elif code == "G65":
             self.result.macro_calls.append((len(self.result.commands), number))
-            self.note(number, "call", "G65 macro call is not evaluated (arguments are macro variables)", program)
+            if not self._substitute(ref, number, program):
+                self.note(number, "call", "G65 macro call is not evaluated (arguments are macro variables)", program)
         elif code == "G29":
             self.note(number, "unevaluated", "G29 return from the reference point is not evaluated", program)
         return None
@@ -937,6 +1011,7 @@ class Scanner:
             incremental["Y"] = words["V"]
         motion_code = None
         one_shot = None
+        assisted = None
         for code in g_codes:
             if code in ("G0", "G1", "G2", "G3", "G32"):
                 motion_code = code
@@ -964,8 +1039,10 @@ class Scanner:
                 one_shot = code
             elif code in LATHE_CYCLE_G:
                 motion_code = "lathe_cycle:" + code
-            elif code in ("G20", "G21", "G9", "G61", "G64", "G187", "G103"):
-                continue
+            elif code in ("G20", "G21", "G9", "G61", "G64", "G187", "G103", "G80"):
+                continue                # G80: the scan keeps no drilling-cycle state on lathes
+            elif self._can_substitute():
+                assisted = code         # e.g. the Haas lathe drilling cycles: their motion as the controller ran it
             else:
                 self.note(number, "unknown_code", f"{code} is not interpreted by the scan", program)
         if "F" in words and self.raw["F"].value is not None:
@@ -988,11 +1065,29 @@ class Scanner:
             self._lathe_reference(ref, words, incremental, number, program)
         elif motion_code is not None and motion_code.startswith("lathe_cycle:"):
             code = motion_code.split(":", 1)[1]
-            self.note(number, "unevaluated", f"{code} ({LATHE_CYCLE_G[code]}) passes are not expanded by the scan; "
-                                             "it is checked as one feed move to its end point", program)
-            target = self._lathe_target(lathe_words, incremental)
-            if any(not math.isnan(v) for v in target) and any(k in words for k in "XZUW"):
-                self._move_to(Kind.LINEAR, ref, target)
+            flow = self._shape_flow(code, program)
+            if code == "G70" and flow is not None:
+                for code_m in post:
+                    result = self._m_code(code_m, ref, number, program)
+                    if result is not None:
+                        return result
+                return flow                     # G70 runs the shape blocks themselves, then returns
+            runs = any(k in words for k in "XZUW") or flow is not None
+            if not self._substitute(ref, number, program) and runs:
+                self.note(number, "unevaluated", f"{code} ({LATHE_CYCLE_G[code]}) passes are not expanded by the "
+                                                 "scan; it is checked as one feed move to its end point", program)
+                target = self._lathe_target(lathe_words, incremental)
+                if any(not math.isnan(v) for v in target) and any(k in words for k in "XZUW"):
+                    self._move_to(Kind.LINEAR, ref, target)
+            if flow is not None:
+                for code_m in post:
+                    result = self._m_code(code_m, ref, number, program)
+                    if result is not None:
+                        return result
+                return flow                     # G71-G73 continue after the shape's last block
+        elif assisted is not None and self._substitute(ref, number, program):
+            if motion_code is not None:
+                state.motion = "G1" if motion_code == "G32" else motion_code
         else:
             if motion_code is not None:
                 state.motion = "G1" if motion_code == "G32" else motion_code
@@ -1064,6 +1159,120 @@ class Scanner:
             home["XYZ".index(axis)] = math.nan
         self._move_to(Kind.RAPID, ref, home)
 
+    # ------------------------------------------------------------------ the controller's motion (assist)
+    def _can_substitute(self) -> bool:
+        return self.execution is not None and bool(self.execution.commands)
+
+    def _substitute(self, ref, number: int, program: str, *, pattern: str | None = None) -> bool:
+        """Emit the motion of this execution of the line as the controller ran it (cnctwin.sanity.assist):
+        tool-tip positions in program coordinates of the active work offset, the controller's machine
+        targets and tool axis; a skip move ends where the probe latched. ``pattern``: a bolt hole pattern
+        of the active canned cycle (Haas G70-G72), whose holes are recorded as the scan's own are."""
+        if not self._can_substitute():
+            return False
+        first = len(self.result.commands)
+        for command in self.execution.commands:
+            target = command.target
+            latched = (command.probe or {}).get("latched_m") if command.kind == Kind.PROBE else None
+            if command.space == Space.TIP and command.tip_target_m is not None and latched is None:
+                end = controller_point(self.assist, command, command.tip_target_m, self.shift)
+            else:
+                end = controller_point(self.assist, command, dict(target, **(latched or {})), self.shift)
+            arc = None
+            if command.kind == Kind.ARC and command.arc is not None:
+                centre = controller_point(self.assist, command, command.arc.centre, self.shift)
+                centre[np.isnan(centre)] = 0.0
+                arc = replace(command.arc, centre=tuple(float(v) for v in centre))
+            index = self.emit(command.kind, ref, target_W=end, arc=arc, feed=command.feed, setter=command.setter)
+            emitted = self.result.commands[index]
+            emitted.target = dict(target, **(latched or {}))
+            if command.tip_axis is not None:
+                emitted.tip_axis = tuple(float(v) for v in command.tip_axis)
+            emitted.modal = dict(emitted.modal, source="controller")
+            if command.probe is not None:
+                emitted.probe = dict(command.probe)
+            self.pos = np.asarray(end, dtype=float).copy()
+        if pattern is not None:
+            self._pattern_holes(first, number, program, pattern)
+        return True
+
+    def _pattern_holes(self, first: int, number: int, program: str, pattern: str) -> None:
+        """Holes of a bolt hole pattern: the controller's moves grouped by position in the plane; each group
+        is one hole (positioning, rapid to R, feed(s) down, retract), recorded with its cycle phases."""
+        state = self.state
+        commands = self.result.commands
+        groups: list[list[int]] = []
+        previous_xy = None
+        for i in range(first, len(commands)):
+            if commands[i].kind not in (Kind.RAPID, Kind.LINEAR, Kind.ARC):
+                continue
+            xy = (round(float(self._ends[i][0]), 9), round(float(self._ends[i][1]), 9))
+            if previous_xy is None or xy != previous_xy:
+                groups.append([])
+            groups[-1].append(i)
+            previous_xy = xy
+        initial = state.cycle_initial_z
+        for group in groups:
+            feeds = [i for i in group if commands[i].kind == Kind.LINEAR and self._ends[i][2] < self._starts[i][2] - 1e-12]
+            if not feeds:
+                continue
+            deepest = min(feeds, key=lambda i: self._ends[i][2])
+            bottom = float(self._ends[deepest][2])
+            r_level = float(self._starts[feeds[0]][2])
+            retract = float(self._ends[group[-1]][2])
+            start = float(self._starts[group[0]][2]) if initial is None else float(initial)
+            info = {"code": state.cycle or pattern, "r_W_m": r_level, "z_W_m": bottom, "initial_W_m": start,
+                    "retract_W_m": retract, "retract_mode": state.cycle_retract, "pattern": pattern}
+            for i in group:
+                moved_xy = math.hypot(self._ends[i][0] - self._starts[i][0], self._ends[i][1] - self._starts[i][1]) > 1e-9
+                if moved_xy:
+                    phase = "position"
+                elif i in feeds:
+                    phase = "feed"
+                elif i == group[-1]:
+                    phase = "retract"
+                elif commands[i].kind == Kind.RAPID and self._ends[i][2] < self._starts[i][2] and i < feeds[0]:
+                    phase = "to_r"
+                else:
+                    phase = "peck"
+                commands[i].modal = dict(commands[i].modal, cycle_info=dict(info, phase=phase))
+            x, y = float(self._ends[deepest][0]), float(self._ends[deepest][1])
+            self.result.holes.append(Hole(deepest, number, program, state.tool, state.cycle or pattern, x, y, bottom,
+                                          r_level, start, retract, state.work_offset, state.section))
+
+    def _shape_flow(self, code: str, program: str):
+        """The control's flow at a lathe multiple repetitive cycle with P and Q: G71/G72/G73 continue after the
+        shape's last block N(nf) (``("jump", index)``); G70 runs the shape blocks N(ns)..N(nf) and returns to the
+        start point (``("shape", (i_ns, i_nf, start))``). None without P and Q."""
+        if code not in ("G70", "G71", "G72", "G73"):
+            return None
+        p, q = self.raw.get("P"), self.raw.get("Q")
+        if p is None or q is None or p.value is None or q.value is None:
+            return None
+        i_ns = self._n_index(program, int(round(p.value)), self._current_index(program))
+        i_nf = self._n_index(program, int(round(q.value)), i_ns if i_ns is not None else 0)
+        if i_ns is None or i_nf is None or i_nf < i_ns:
+            return None
+        if code == "G70":
+            return ("shape", (i_ns, i_nf, self.pos.copy()))
+        return ("jump", i_nf + 1)
+
+    def _current_index(self, program: str) -> int:
+        lines = self.texts[program]
+        for index, line in enumerate(lines):
+            if line.number == self.line_ref.line:
+                return index
+        return 0
+
+    def _n_index(self, program: str, n: int, start: int) -> int | None:
+        """Index of the line with sequence number N n: the first at or after ``start``, else from the top
+        (the control searches forward, then from the beginning)."""
+        lines = self.texts[program]
+        for index in list(range(start, len(lines))) + list(range(0, start)):
+            if lines[index].n_number == n:
+                return index
+        return None
+
     # ------------------------------------------------------------------ emission
     def emit(self, kind: Kind, ref: LineRef, *, target_W=None, arc=None, feed=None, spindle=None, coolant=None,
              tool=None, dwell_s=0.0, stop="", cycle=None, setter=None, modal_change=False) -> int:
@@ -1107,6 +1316,18 @@ class Scanner:
         return target
 
 
+def evaluated_line(line: Line, words: dict[str, float]) -> Line:
+    """``line`` with the values of its macro-expression addresses taken from the controller's evaluation of
+    the same execution (``words``: letter -> value in program units, as the executor read it)."""
+    filled = []
+    for word in line.words:
+        if word.value is None and word.letter in words:
+            filled.append(Word(word.letter, float(words[word.letter]), word.text, True))
+        else:
+            filled.append(word)
+    return replace(line, words=tuple(filled))
+
+
 def _decide_kind(ctx: SanityContext, lines: list[Line]) -> str:
     if ctx.machine_kind == "mill_turn":
         has_m6 = any("M6" in line.codes("M") for line in lines)
@@ -1115,9 +1336,10 @@ def _decide_kind(ctx: SanityContext, lines: list[Line]) -> str:
 
 
 def scan(text: str, name: str, ctx: SanityContext, *, machine_kind: str | None = None,
-         subprograms: dict[str, str] | None = None) -> ScanResult:
-    """Run the static modal scan of one program (Fanuc or Haas dialect)."""
-    return Scanner(text, name, ctx, machine_kind=machine_kind, subprograms=subprograms).run()
+         subprograms: dict[str, str] | None = None, assist=None) -> ScanResult:
+    """Run the static modal scan of one program (Fanuc or Haas dialect); ``assist`` (cnctwin.sanity.assist)
+    gives what the controller's dry run evaluated for the lines the scan cannot."""
+    return Scanner(text, name, ctx, machine_kind=machine_kind, subprograms=subprograms, assist=assist).run()
 
 
 def code_of(letter: str, value: float | None) -> str:

@@ -34,8 +34,8 @@ from .abi import (FK_M_W as FK_M_W_INDEX, GEO_ARC, GEO_LINE, SP_END, SP_HOLD_WAI
                   SPM_POSITION, SPM_SPEED, SYNC_ALARM, SYNC_IN_POSITION, SYNC_PATH_WAIT, SYNC_PROBE_TRIGGER, SYNC_QUEUE_EMPTY,
                   SYNC_SEGMENT_END, WAIT_INPOS, WAIT_PATH)
 from .geometry import (PK_BLEND, PK_JOINT, PK_TIP, Piece, TipPath, apply_limits, arc_piece, blend_pieces, blend_radius,
-                       corner_angle, corner_speed, jump_speed, line_piece, scale_vector, tip_piece, trim_line_end,
-                       trim_line_start)
+                       corner_angle, corner_speed, curvature_step_speed, jump_speed, line_piece, scale_vector, tip_piece,
+                       tolerance_speed, trim_line_end, trim_line_start)
 from .kernels import brake_distance, plan_ticks
 from .ledger import (CAT_AUX, CAT_COOLANT, CAT_DWELL, CAT_FEED, CAT_HOLD, CAT_INPOS, CAT_PROBE, CAT_RAPID,
                      CAT_SPINDLE, CAT_STARVE, CAT_STOP, CAT_TOOL, CAT_WAIT)
@@ -193,6 +193,11 @@ class TickPlan:
     lim: np.ndarray                   # generator limit flag per tick (2: held back by unprepared blocks)
     snaps: list                       # PlanState after each tick
     events: list = field(default_factory=list)          # (boundary index, kind, data)
+    # number of events emitted when the snapshot of each tick was taken (-1: no snapshot): a sync at k_stop commits
+    # exactly the events emitted while ticks up to k_stop were planned. The boundary alone cannot tell them apart:
+    # an item that ends at the end of tick k and one that starts (and, without motion, ends) at the start of tick
+    # k + 1 both carry boundary k + 1, and only the first belongs to the snapshot of tick k.
+    ev_mark: np.ndarray | None = None
     spindle: list = field(default_factory=list)         # (k, spindle index, SpindleCmd) changes
     stretch: dict | None = None                         # synchronous stretch of this path
     setter_cfg: tuple | None = None                     # (point, normal, radius, extra)
@@ -424,6 +429,15 @@ class PathPlanner:
             return float(sm.tolerance_m)
         return float(self.model.p["default_contour_tolerance_m"])
 
+    def _tolerance_limit(self, pc: Piece, tol: float) -> None:
+        """Tolerance-driven speed bound of a curved feed piece (geometry.tolerance_speed): the chord between the
+        interpolation points of one IPO period, and the tolerance band of the control's axis setpoint filter when the
+        machine has one, keep the commanded path within the contour tolerance in force."""
+        v = tolerance_speed(pc, tol, self.env.ipo_s, self.model.setpoint_filter_s)
+        if v < pc.limit_v:
+            pc.limit_v = v
+            pc.vmax = min(pc.vmax, v)
+
     def _programmed_speed(self, cmd: Command, length: float, feed_kind: str) -> float:
         """Programmed path speed of a feed move (m/s of the path metric, without override); per-revolution
         feeds at the spindle command known now (refreshed when the move starts)."""
@@ -492,6 +506,7 @@ class PathPlanner:
             else:
                 v = self._programmed_speed(cmd, pc.length, feed_kind)
                 apply_limits(pc, model, self.nc_axes, v if v > 0.0 else 1e-9)
+                self._tolerance_limit(pc, self._tolerance(cmd))
                 pc.ideal_v = pc.feed_v
                 feed = cmd.feed
                 if feed_kind in ("per_rev", "thread") or (feed_kind == "tap" and feed is not None
@@ -624,8 +639,10 @@ class PathPlanner:
             last.stop_end = True
             return
         theta = corner_angle(last, first)
+        filter_s = model.setpoint_filter_s
         if theta <= model.p["min_corner_angle_rad"]:
-            first.ustart = math.inf
+            # tangent: no corner, but the curvature may change (a line meeting an arc, two arcs)
+            first.ustart = curvature_step_speed(last, first, model, self.nc_axes, filter_s)
             return
         tol = self._tolerance(prev.cmd)
         done = cur.s if (cur.piece == last_index and cur.phase == PH_MOTION) else 0.0
@@ -635,6 +652,8 @@ class PathPlanner:
             new_len, h1, h2, cut = blend
             trim_line_end(last, new_len, model)
             trim_line_start(first, cut, model)
+            for half in (h1, h2):
+                self._tolerance_limit(half, tol)
             h1.ustart = h1.limit_v
             h2.ustart = h2.limit_v
             first.ustart = h2.limit_v
@@ -651,7 +670,8 @@ class PathPlanner:
         # not blended: the commanded velocity of each axis steps at the corner; it may change by at most what
         # the axis' acceleration achieves in one interpolation period, and the tolerance band bounds the speed
         first.ustart = min(corner_speed(R, last, first, model, self.nc_axes),
-                           jump_speed(last, first, model, self.nc_axes, self.env.ipo_s))
+                           jump_speed(last, first, model, self.nc_axes, self.env.ipo_s),
+                           curvature_step_speed(last, first, model, self.nc_axes, filter_s))
 
     # ================================================================== helpers on a plan state
     def cut_spindle(self, w: PlanState) -> str | None:
@@ -691,7 +711,7 @@ class PathPlanner:
         self.plan_tick = tick0 + k_from * env.ipo_ticks
         tp = TickPlan(k_from, n, np.full(n, SP_IDLE, np.int8), np.zeros(n, np.int8), np.zeros(n, np.int8),
                       np.zeros(n, np.int8), np.zeros(n, np.int8), np.zeros(n, np.int8), np.full(n, -1, np.int32),
-                      [CAT_WAIT] * n, np.zeros(n, np.int8), [None] * n)
+                      [CAT_WAIT] * n, np.zeros(n, np.int8), [None] * n, ev_mark=np.full(n, -1, np.int64))
         self.tp = tp
         self.rows = env.setp_cmd
         w = self.st.copy()
@@ -757,13 +777,18 @@ class PathPlanner:
         if it is not None and w.rt.get(it.index, {}).pop("resume_motion", False):
             cur.phase = PH_MOTION
 
+    def _snap(self, tp: TickPlan, k: int, w: PlanState) -> None:
+        """The plan state after tick k, and how many events had been emitted by then (commit scope)."""
+        tp.snaps[k] = w.copy()
+        tp.ev_mark[k] = len(tp.events)
+
     def _hold(self, tp: TickPlan, k: int, w: PlanState, mode: int, owner: int, cat: str) -> None:
         tp.mode[k] = mode
         tp.owner[k] = owner
         tp.cat[k] = cat
         for a in self.axes:
             self.rows[k, a] = w.cur.q[a]
-        tp.snaps[k] = w.copy()
+        self._snap(tp, k, w)
 
     # ------------------------------------------------------------------ starting items
     def _start(self, it: Item, w: PlanState, boundary: int, k: int) -> None:
@@ -790,7 +815,8 @@ class PathPlanner:
             locked = self.panel is not None and self.panel.machine_lock
             if it.pieces and not it.needs_rebuild and not locked:
                 q0 = self.piece(it.pieces[0]).q0
-                if float(np.max(np.abs(q0[self.nc_axes] - cur.q[self.nc_axes]))) > 1e-9:
+                axes = self._geometry_axes(it)
+                if axes and float(np.max(np.abs(q0[axes] - cur.q[axes]))) > 1e-9:
                     it.needs_rebuild = True
                 if self.piece(it.pieces[0]).kind == PK_TIP and it.built_slot != w.tool_slot:
                     it.needs_rebuild = True          # TCP geometry depends on the tool in the spindle
@@ -809,6 +835,18 @@ class PathPlanner:
             self._enter_motion(it, w, k)
             return
         self._start_nonmotion(it, w, boundary, k)
+
+    def _spindle_c_axes(self, it: Item) -> list[int]:
+        """Path axes that are a spindle's C axis the item does not move: outside C-axis mode they turn with the
+        spindle (the commanded value is the spindle angle), so they are not part of the item's geometry."""
+        model = self.model
+        return [a for a in self.nc_axes if model.axes[a].spindle is not None
+                and model.spindle_index.get(model.axes[a].spindle) not in it.c_spindles]
+
+    def _geometry_axes(self, it: Item) -> list[int]:
+        """Path axes an item's pieces are built over and must start from (spindle C axes it moves included)."""
+        skip = set(self._spindle_c_axes(it))
+        return [a for a in self.nc_axes if a not in skip]
 
     def _begin_c_engage(self, it: Item, w: PlanState, boundary: int, k: int) -> None:
         """C-axis mode for the spindles the item turns as C axes: each stops under speed control (deceleration
@@ -1198,7 +1236,7 @@ class PathPlanner:
             consumed += 1
             if boundary_end == cur.t_end:
                 self._end_timed(it, w, k + 1)
-            tp.snaps[k] = w.copy()
+            self._snap(tp, k, w)
             k += 1
             if cur.phase != PH_TIMED:
                 break
@@ -1386,7 +1424,7 @@ class PathPlanner:
             cur.a = float(oa[t])
             if t == count - 1 and status in (1, 2) and not synchronous:
                 self._run_finished(w, last, k + 1)
-            tp.snaps[k] = w.copy()
+            self._snap(tp, k, w)
         if synchronous:
             # the rest of the step stays in the stretch: the loop ends it at the actual end
             for k in range(i + count, n):
@@ -1395,7 +1433,7 @@ class PathPlanner:
                 tp.cat[k] = CAT_FEED
                 for a in self.axes:
                     self.rows[k, a] = cur.q[a]
-                tp.snaps[k] = w.copy()
+                self._snap(tp, k, w)
             cur.in_stretch = True
             return n - i
         if count == 0 and status in (1, 2):
@@ -1531,7 +1569,7 @@ class PathPlanner:
             tp.cat[k] = CAT_FEED
             for a in self.axes:
                 self.rows[k, a] = cur.q[a]
-            tp.snaps[k] = w.copy()
+            self._snap(tp, k, w)
         return n - i
 
     def _rebuild(self, it: Item, w: PlanState, q_to: np.ndarray | None = None) -> None:
@@ -1549,6 +1587,8 @@ class PathPlanner:
         tail = last if (last is not None and last.kind == PK_BLEND and last.blend == 1 and len(old) >= 2) else None
         if tail is not None:
             q1 = tail.q0.copy()
+            for a in self._spindle_c_axes(it):
+                q1[a] = q0[a]                 # a spindle's C axis outside C-axis mode turns with the spindle
         elif q_to is not None:
             q1 = np.asarray(q_to, dtype=float).copy()
         else:
@@ -1617,7 +1657,11 @@ class PathPlanner:
         if snap is None:
             snap = tp.final
         self.st = snap.copy()
-        events = [e for e in tp.events if (e[0] <= k_stop if e[1] == "start" else e[0] <= k_stop + 1)]
+        mark = int(tp.ev_mark[k_stop]) if (tp.ev_mark is not None and tp.snaps[k_stop] is not None) else -1
+        if mark >= 0:
+            events = list(tp.events[:mark])
+        else:
+            events = [e for e in tp.events if (e[0] <= k_stop if e[1] == "start" else e[0] <= k_stop + 1)]
         cur = self.st.cur
         if tp.stretch is not None and k_stop >= tp.stretch["i"] and cur.in_stretch:
             events.extend(self._commit_stretch(tp, k_stop, out, code))

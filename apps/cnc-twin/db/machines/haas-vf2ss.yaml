@@ -21,13 +21,13 @@ controller:
   max_feed_mm_min: 21200
   rapid_mm_min: {X: 35600, Y: 35600, Z: 35600}
   smoothing:
-    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: est, note: "G187 P1/P2/P3 smoothness levels exist on Haas mills; corner tolerance values are typical settings, not published defaults"}
-    - {code: "G187 P2", name: medium, tolerance_mm: 0.010, src: est}
-    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025, src: est}
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393 (G187), p. 456 (Setting 85)", note: "the P level sets the smoothness (Setting 191), not the corner tolerance: without an E word the maximum corner rounding is Setting 85, factory default 0.0250 in = 0.635 mm, for every level (re-derived from the manual; the earlier 0.025/0.010/0.0025 mm were the template example values)"}
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393, 456", note: "as P1"}
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393, 456", note: "as P1"}
   corner_default: {value: blend, src: est, note: "G64 (blended) assumed as the power-on mode"}
   in_position_mm: {value: 0.005, src: est, note: "assumed in-position window for exact stop (G09/G61)"}
-  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: est, note: "Haas pendant rapid-override keys (not read in a source this session)"}
-  feed_override_range_pct: {value: [0, 200], src: est}
+  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: haas-ngc-mill-om-2020, page: "p. 48, Table 2.16: [5% RAPID] / [25% RAPID] / [50% RAPID] / [100% RAPID] limit the rapids to the value on the key"}
+  feed_override_range_pct: {value: [0, 200], src: est, note: "the manual gives the override keys (-10 %, 100 %, +10 % and the jog handle in 1 % steps, haas-ngc-mill-om-2020 p. 48 Table 2.16) but no limits; 0-200 % assumed, the span of ten +10 % presses"}
   tool_life_management: {value: true, src: est, note: "Haas tool life management assumed standard on NGC"}
   probing: {value: true, src: est, note: "WIPS probing is an option on the VF-2SS"}
 
@@ -58,7 +58,7 @@ axes:
     jerk_m_s3: {value: 100, src: est, note: "as X"}
     servo:
       kv_1_s: {value: 40, src: est, note: "as X"}
-      feedforward: {value: 0.95, src: est}
+      feedforward: {value: 0.95, src: est, note: "as X: velocity feed-forward 0.95 leaves 5 % of the constant-feed following error v/kv (0.44 mm at 21.2 m/min with kv 40 1/s); 1.0 would remove it but overshoots at reversals"}
       velocity_bw_Hz: {value: 70, src: est, note: "slightly lower than X for the heavier stack"}
     backlash_um: {value: 1, src: est, note: "as X"}
     reversal_spike_um: {value: 3, src: est, note: "as X"}
@@ -75,8 +75,8 @@ axes:
     jerk_m_s3: {value: 100, src: est, note: "as X"}
     servo:
       kv_1_s: {value: 40, src: est, note: "as X"}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 80, src: est}
+      feedforward: {value: 0.95, src: est, note: "as X (velocity feed-forward 0.95: 5 % of v/kv remains)"}
+      velocity_bw_Hz: {value: 80, src: est, note: "as X: 80 Hz is 12 x the position-loop crossover kv/2 pi = 6.4 Hz (cascade rule >= 5-10) and within the 50-150 Hz of direct-coupled ballscrew drives; the Z head (400 kg est) is lighter than the Y stack (650 kg)"}
     backlash_um: {value: 1, src: est, note: "as X"}
     reversal_spike_um: {value: 2, src: est, note: "gravity preloads the Z screw in one direction, so reversal is smaller"}
     ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 900, fixed_end: both, src: est, note: "as X"}
@@ -132,7 +132,7 @@ spindles:
       - {fn_Hz: 950, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "first spindle-holder bending mode at the flange; 40-taper motor spindles typically 700-1200 Hz, modal stiffness 50-150 N/um, damping 2-6 %"}
       - {fn_Hz: 950, zeta: 0.04, k_N_um: 70, direction: y, src: est, note: "assumed symmetric"}
       - {fn_Hz: 2100, zeta: 0.03, k_N_um: 200, direction: x, src: est, note: "second (bearing/shaft) mode, assumed"}
-      - {fn_Hz: 2100, zeta: 0.03, k_N_um: 200, direction: y, src: est}
+      - {fn_Hz: 2100, zeta: 0.03, k_N_um: 200, direction: y, src: est, note: "the x mode repeated in y: axisymmetric shaft and bearings"}
     thermal:
       growth_um_at_max_rpm: {value: 25, src: est, note: "steady axial growth of a liquid-cooled 12k inline spindle head (head coolant jacket: haas-europe-vmc-brochure-2013 p. 21); 10-40 um typical"}
       time_constant_min: {value: 25, src: est, note: "first-order spindle warm-up time constant, typical 15-40 min"}
@@ -152,7 +152,7 @@ structure:
 
 error_map:
   squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est, note: "typical after factory ballbar alignment (every Haas is ballbar tested: haas-europe-vmc-brochure-2013 p. 16)"}
-  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est}
+  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est, note: "linear-guide straightness after factory alignment: 6 um per metre of travel assumed for each axis (about 5 um over the 762 mm X travel), the order the ISO 230-1 straightness tests of aligned ground guideways show (iso-230-1-2012 defines the test, no limit for this machine is published)"}
   angular_urad: {}
   pivot_errors: {}
 
@@ -160,10 +160,10 @@ thermal:
   axis_drift:
     expansion_1_K: {value: 11.5e-6, src: est, note: "steel ballscrew CTE"}
     heat_per_m_travel_J: {value: 60, src: est, note: "nut friction heat per metre of travel at rapid; chosen so that continuous rapids grow the screw ~30-60 um before compensation"}
-    time_constant_min: {value: 40, src: est}
+    time_constant_min: {value: 40, src: est, note: "first-order time constant of the screw temperature, tau = rho c d / (4 h) for the 40 mm steel screw: rho c = 7850 x 460 J/m3K (db/materials/aisi1045.yaml), h = 15 W/m2K (natural convection about 5 W/m2K plus rotation-driven convection, about 60 W/m2K at 2000 rpm after kays-bjorklund-1958-rotating-cylinder, for a screw that turns about a sixth of the time) = 7850 x 460 x 0.040 / 60 = 2400 s = 40 min"}
     electronic_comp: {value: true, src: haas-europe-vmc-brochure-2013, page: "p. 17: Electronic Thermal Compensation (ETC) models ballscrew heating"}
   structure_sensitivity_um_per_K: {value: 3, src: est, note: "tool-to-table drift per K of ambient change for a cast-iron VMC"}
-  warmup: {cold_to_warm_min: 60, src: est}
+  warmup: {cold_to_warm_min: 60, src: est, note: "1.5 x the 40 min axis-drift time constant: 1 - exp(-1.5) = 78 % of the steady drift is reached; the 25 min spindle time constant is shorter, so the axes set the warm-up"}
 
 tool_changer:
   type: side_mount
@@ -183,7 +183,7 @@ pallet_changer: null
 tailstock: null
 steady_rest: null
 guide_bushing: null
-doors: {count: {value: 2, src: est}, auto: {value: false, src: est}, open_time_s: null, opening_width_mm: {value: 939, src: haas-vf2-mld-2023, page: "p. 3"}, note: "two sliding front doors; servo auto-door is an option"}
+doors: {count: {value: 2, src: est, note: "the two sliding front doors of the enclosure (doors note; opening width 939 mm on haas-vf2-mld-2023 p. 3)"}, auto: {value: false, src: est}, open_time_s: null, opening_width_mm: {value: 939, src: haas-vf2-mld-2023, page: "p. 3"}, note: "two sliding front doors; servo auto-door is an option"}
 
 probes:
   spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS work probe)", trigger_force_N: 0.50, trigger_force_high_N: 0.90, trigger_force_z_N: 5.85, repeatability_um: 1.0, overtravel_xy_deg: 12.5, overtravel_z_mm: 6, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS hardware assumed to be the Renishaw OMP40-2 + OTS (est.)"}
@@ -225,11 +225,11 @@ chip_conveyor: {type: auger, option: true, src: est, note: "chip auger option as
 
 enclosure:
   box_mm: {value: [[-760, -390, -420], [1490, 740, 1100]], src: est, note: "x from the table extreme positions plus wall clearances 304/271 mm (haas-vf2-mld-2023 p. 4); y: 212 mm front clearance (same page) and column face assumed; z: chip-pan floor and roof assumed"}
-  floor_slope_deg: {value: 30, src: est}
+  floor_slope_deg: {value: 30, src: est, note: "chip-pan walls steeper than the sliding angle of wet steel chips on oily steel sheet (friction coefficient about 0.5: atan 0.5 = 27 deg), so chips slide to the auger trough; 30 deg assumed"}
 
 power:
   base_W: {value: 900, src: est, note: "control, cabinet cooling, lights, lube at idle"}
-  servo_standby_W: {value: 300, src: est}
+  servo_standby_W: {value: 300, src: est, note: "three axis drives enabled at standstill: electronics and fans about 50 W each (150 W), the Z motor holding the 400 kg head (3.9 kN through the 16 mm lead at 90 % efficiency: 11 Nm, about 80 W copper loss in a 4 kW servo) and the spindle drive DC bus about 70 W: 300 W (assumed breakdown)"}
   air_consumption_l_min: {value: 113, src: haas-uk-vf2ss-2026, note: "air required 4 scfm (machine)"}
   supply_V: {value: [354, 488], src: haas-europe-vmc-brochure-2013, page: "p. 42 (40-taper VF table, high-voltage supply)"}
 
@@ -247,6 +247,7 @@ geometry:
       - {box: {min_mm: [131, 950, -330], max_mm: [631, 1350, 1700]}}
     collide: true
     src: est
+    note: "column assumed as a 500 x 400 mm box centred on the spindle x (381 mm) behind the head (front face at y 950, behind the head box that ends at y 750 plus 200 mm for the Z ways), from the bed top (z -330) to 1700 mm, above the 1400 mm head top; collision only"
   - name: saddle
     attached_to: saddle
     primitives:

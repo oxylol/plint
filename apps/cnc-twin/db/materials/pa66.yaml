@@ -108,6 +108,7 @@ tool_life:
     ap_ref_mm: 2
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: unfilled PA66 is not abrasive; T = 60 min at vc ~ 580 m/min assumed (general knowledge, not read). Edges are replaced when rounding causes burrs and melting"
   - tool_class: hss
@@ -120,6 +121,7 @@ tool_life:
     ap_ref_mm: 2
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 60 min at vc ~ 240 m/min assumed"
 tool_life_usui: []

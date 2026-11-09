@@ -79,6 +79,10 @@ class PathExecutor:
         self._snapshot_seq = -1
         self._transform = None
         self.step_ref: LineRef | None = None
+        # Optional analysis log (not state, never checkpointed): when a list, the handler appends one record
+        # per executed block {seq, depth, program, line, words} with the block's evaluated address values
+        # (macro expressions resolved) in program units. Program checks (cnctwin.sanity) read it.
+        self.block_log: list | None = None
         self.handler = self.dialect.make_handler(self)
 
     # ================================================================== lock-step interface
@@ -756,6 +760,9 @@ class PathExecutor:
         new_pos.update(target)
         end_w = self.work_from_program(new_pos)
         offset = self.offset_counts()
+        if probe is not None and kind in ("probe", "setter"):
+            # additive payload key: the machine position the skip move starts from (an ideal probe needs it)
+            probe = dict(probe, start_m={a.name: s.mach.get(a.letter, 0) * a.quantum for a in self.axes})
         item = PathItem(kind, start_w, end_w, plane=self.handler.plane(), feed=feed,
                         smoothing=self.smoothing_spec(exact), offset=offset, comp=s.modal.get("7", "G40"),
                         comp_radius_m=self.handler.comp_radius(), transform=s.tcp, ref=self.line_ref(),

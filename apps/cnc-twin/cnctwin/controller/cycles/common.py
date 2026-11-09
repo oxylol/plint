@@ -176,6 +176,9 @@ FANUC_CYCLE_ALARMS = {
 }
 HAAS_CYCLE_ALARMS = {key: ("TW0030", "CANNED CYCLE DATA ERROR") for key in FANUC_CYCLE_ALARMS}
 HAAS_CYCLE_ALARMS["thread_nose_angle"] = ("605", "Invalid Tool Nose Angle")
+# G70/G71/G72 bolt hole patterns (cycles.patterns): the manual names no alarm numbers for these conditions
+HAAS_CYCLE_ALARMS["pattern_format"] = ("TW0030", "CANNED CYCLE DATA ERROR")
+HAAS_CYCLE_ALARMS["pattern_without_cycle"] = ("TW0037", "BOLT HOLE PATTERN WITHOUT AN ACTIVE CANNED CYCLE")
 
 __all__ = ["drop_null_moves", "params", "word", "lin", "integer", "plane_axes", "feed_of", "spindle_payload", "register_alarms",
            "signed_axis", "program_delta", "FANUC_CYCLE_ALARMS", "HAAS_CYCLE_ALARMS"]

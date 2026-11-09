@@ -1,17 +1,26 @@
 # Error budgets of the simulator against the measured validation references (validation/cases/).
-# Part 1 covers the quantities of the cases written so far: cutting_force, torque, drilling_thrust,
-# drilling_torque, tool_temperature, chip_temperature, shear_angle, chip_ratio. Other quantities
-# (taylor_life, stability_lobe, roughness, ...) get their entries when their cases exist.
+# Part 1 (first research round) covers cutting_force, torque, drilling_thrust, drilling_torque,
+# tool_temperature, chip_temperature, shear_angle and chip_ratio. Part 2 (second harness round, before any
+# of its harnesses was run) adds taylor_life, spindle_growth, coolant_reach, chip_form, cycle_time,
+# roughness, stability_lobe and wall_error. For taylor_life, spindle_growth, coolant_reach, chip_form and
+# cycle_time a first run of their harnesses had already been seen (docs/validation-report.md of the first
+# round) when these budgets were set; each of those entries says so and is justified only by the scatter
+# of the experiments, the published model-versus-experiment comparisons and error propagation quoted in
+# its evidence, never by the simulator's own results.
 #
 # How a budget is applied (per reference value or curve point):
 #   tolerance = max(budget_pct / 100 * |reference|, 2 * uncertainty of that reference value)
 #   for temperatures the percentage applies to the rise above ambient (T - T_ambient), not to T.
 # A case passes when every compared value lies within its tolerance; a quantity passes when at least
 # 80 % of its cases pass and no case misses by more than twice its tolerance.
+# A classification (chip form class, chip grade) is within tolerance only when the class matches (the
+# percentage does not apply to it); a one-sided reference (a lower or upper bound, e.g. a stable test
+# bounds the stability limit from below) counts only the part of the error on the wrong side.
 #
 # The budget numbers themselves are judgements (src: est); the evidence they rest on is sourced.
 # The CIRP 'Assessment of Machining Models' benchmark (Ivester et al. 2000) and its successor could
-# not be read in this session (no reachable full text), so no number from them is used.
+# not be read in this session (no reachable full text), so no number from them is used. Numbers marked
+# 'computed here' are computed from the values the case files quote from their sources.
 format: cnctwin-validation-budgets
 version: 1
 budgets:
@@ -182,3 +191,178 @@ budgets:
       src: est
       note: "The shear angles of the references are computed from measured chip thickness or chip flow speed, so they inherit the chip-ratio uncertainty: for rake 0, d(phi)/phi = (dr/r) * r / ((1 + r^2) atan r), i.e. 0.8-0.95 times the chip-ratio error for r = 0.3-0.7. The chip_ratio budget is carried over."
     evidence: []
+
+  # ---------------------------------------------------------------------------------------- part 2
+  taylor_life:
+    metric: "relative error of the simulated tool life to the stated wear criterion (VB, VN), or of the simulated flank wear at a stated cutting time (VB(t) curve points)"
+    budget_pct:
+      value: 50
+      src: est
+      note: "Set after a first run of the taylor_life harness had been seen (first-round report); justified only by the evidence below. Tool life amplifies every error of the wear-rate driver: with Taylor's law T ~ vc^(-1/n) a relative error e of the effective speed (or of the temperature-equivalent wear rate) changes the life by (1 + e)^(-1/n) - 1, i.e. -16/+22 % for e = +-10 % at the exponent n = 0.53 of the Aouici data and -32/+52 % at n = 0.25, before any scatter of the tests themselves. The lives are read off wear curves measured at intervals (case uncertainties 5 %), sources disagree with themselves by 10-17 % (Magalhaes 2026), and most series are single tests per speed. 50 % of the life is the narrowest bound that a wear model inside the temperature budget (15 % of the rise) can be expected to meet; it still rejects order-of-magnitude misses."
+    evidence:
+      - src: aouici-2010-cbn-h11-hard-turning
+        page: "Table 4 (case taylor-aouici2010-cbn7020-h11-50hrc-dry)"
+        kind: error_propagation
+        statement: "At f 0.08 mm/rev the three lives give a Taylor exponent n = ln(240/120) / ln(76/20.5) = 0.53 (computed in the case file); speed contributes 91.6 % of the life variance (the source's ANOVA)."
+        taylor_n: {value: 0.53, src: est, note: "computed in the case file from Table 4"}
+      - src: magalhaes-2026-304-cermet-turning
+        page: "abstract vs Sect. 3.2 (case taylor-magalhaes2026-cermet-aisi304-dry)"
+        kind: experiment_repeatability
+        statement: "The abstract gives 15 and 9 min, the results section and conclusions about 18 and 10 min for the same two tests: the source itself is uncertain by 10-17 % (computed here)."
+        spread_pct: {value: [10, 17], src: est, note: "computed here: 15/18 - 1 and 9/10 - 1"}
+      - src: magalhaes-2022-1045-dry-turning
+        page: "Sect. 2.4, Sect. 3 (case taylor-magalhaes2022-cermet-aisi1045-dry)"
+        kind: measurement_uncertainty
+        statement: "Tool life = time of the first wear measurement at or above VBB 0.1 mm, wear measured every 150 mm of cut (mean of three readings); each test repeated twice; the two points give n = 1.08 (computed in the case file)."
+      - src: bouchelaghem-2007-cbn-d3-wear
+        page: "Fig. 7, Sect. 3.3 (case taylor-bouchelaghem2007-cbn-d3-60hrc-dry)"
+        kind: experiment_repeatability
+        statement: "One test per speed, no scatter stated; between 240 and 310 m/min the life drops from 9 to 3 min (nose collapse), much steeper than the Taylor line of the other speeds (n = 0.70, computed in the case file)."
+
+  spindle_growth:
+    metric: "relative error of the simulated thermal Z displacement of the tool relative to the table at the measured times (curve points) and of its plateau value, from a cold start at the case's speed"
+    budget_pct:
+      value: 30
+      src: est
+      note: "Set after a first run of the spindle_growth harness had been seen (first-round report); justified only by the evidence below. One machine running the same speed program reaches plateau Z errors that differ by up to +-33 % of their mean when only the workshop ambient changes (Wei 2023: 17.7-34.8 um at 2000 rpm, 35.0-49.5 um at 4000 rpm, 46.1-58.2 um at 6000 rpm, computed here from the case values), and an air-conditioning event changes a run from 21 to 60 um (Yang 2024). The measured Z is the whole tool-to-table loop (shaft growth plus headstock and column), which a spindle-body model only partly contains. A thermal model with the machine's own heat sources and conductances can hold the plateau to about the ambient-band spread; 30 % is that bound and still separates a calibrated model from defaults that miss by a factor of several."
+    evidence:
+      - src: wei-2023-vcenter55-thermal-error
+        page: "Table 2, Fig. 4 Z panel (cases spindlegrowth-wei2023-vcenter55-ambient-cold, -mid, -warm)"
+        kind: experiment_repeatability
+        statement: "Same spindle program, three ambient bands (initial ambient 3.7-32.2 degC): plateau Z errors 34.8 / 24.4 / 17.7 um at 2000 rpm, 49.5 / 39.5 / 35.0 um at 4000 rpm and 58.2 / 47.8 / 46.1 um at 6000 rpm (case values), i.e. +-33, +-17 and +-12 % about the band means (computed here)."
+        spread_pct: {value: [12, 33], src: est, note: "computed here: (max - min) / (max + min)"}
+      - src: yang-2024-vmc850-thermal-error
+        page: "Sect. 4.1, Fig. 11a,b (case spindlegrowth-yang2024-vmc850-constant-speed)"
+        kind: experiment_repeatability
+        statement: "At 4000 r/min the Z deformation flattens at 21-22 um near 45 min and then climbs to a 60-63 um plateau; the authors relate it to the workshop air conditioning switching on; plotted values are whole micrometres (+-0.5 um)."
+      - src: bryan-1990-thermal-errors
+        page: "CIRP keynote (status of thermal error research)"
+        kind: background
+        statement: "Thermal errors depend on the machine's own heat sources, heat paths and environment, which is why thermal models are identified per machine (the reason no default spindle model can be expected inside this budget)."
+
+  coolant_reach:
+    metric: "relative error of the coolant-dependent quantity (tool-work interface temperature rise above ambient, cutting force) under the case's coolant; chip grades are classifications (class match)"
+    budget_pct:
+      value: 15
+      src: est
+      note: "Set after a first run of the coolant_reach harness had been seen (first-round report); justified only by the evidence below. The references are the same kinds of measurement as tool_temperature (tool-work thermocouple) and the main cutting force, so their budget (15 % of the rise, 15 % of the force) is carried over. The coolant effect itself is of that size (temperature drops of 11-27 % against dry in Sultana 2023), so this budget is only just discriminating: a model that ignored the coolant could pass where the effect is small, which the report states per case."
+    evidence:
+      - src: sultana-2023-ti64-hpc-milling
+        page: "Table 5 (case coolant-sultana2023-ti64-endmill-hpc-vs-dry)"
+        kind: experiment_repeatability
+        statement: "Temperature drop against dry at the same vc and fz: 11-22 % with the single external HPC jet and 15-27 % with the rotary four-nozzle applicator (computed in the case file); one run per condition."
+      - src: struzikiewicz-2023-hpc-jet-direction
+        page: "Tables 5, 6 and 8 (case coolant-struzikiewicz2023-ti64-jet-direction)"
+        kind: experiment_repeatability
+        statement: "Cch is the mean of three repeats (min-max given per test); the jet angle had no significant effect on the cutting force (ANOVA), which rises about 77 % from 0.08 to 0.13 mm/rev."
+
+  chip_form:
+    metric: "chip form class or chip grade (match / mismatch, the percentage does not apply); relative error of chip-control window boundaries (feed, depth of cut) and of chip dimensions"
+    budget_pct:
+      value: 25
+      src: est
+      note: "Set after a first run of the chip_form harness had been seen (first-round report); justified only by the evidence below. Classes either match or not. The boundaries of a chip-breaking window are themselves only known as regions: Slodki 2019 places the change from jet-broken to long chips 'between about 0.06 and 0.08-0.1 mm2' of cross-section (+-25 % about the middle, computed here), and a maker's chart (Tungaloy) is a region drawn without test material, speed or classification. 25 % of a boundary value is that width."
+    evidence:
+      - src: slodki-2019-ti64-eli-hpc-turning
+        page: "Sect. 3, Table 9 (case chipform-slodki2019-cnmg120404-sf-ti64eli-hpc)"
+        kind: experiment_repeatability
+        statement: "Below about 0.06 mm2 the 70 bar jet cracks the chip; between about 0.06 and 0.08-0.1 mm2 long chips; above about 0.08-0.1 mm2 the groove is filled and the chip breaks: the transition is a band of +-25 % (computed here), and the grid mixes 40 and 80 m/min (Taguchi plan)."
+      - src: jawahir-1993-chip-control
+        page: "CIRP keynote (chip control)"
+        kind: background
+        statement: "Chip forms are classified in broad classes (ISO 3685 Annex G) and chip breakability depends on breaker geometry, feed, depth and speed together; the classes, not a continuous measure, are what predictive chip-control models are judged on."
+      - src: iso-3685-1993
+        page: "Annex G"
+        kind: definition
+        statement: "Chip form classes 1 ribbon to 8 needle with sub-classes: the classification is the measurement."
+
+  cycle_time:
+    metric: "relative error of the simulated cycle time of the stated path, feed and controller limits"
+    budget_pct:
+      value: 5
+      src: est
+      note: "Set after a first run of the cycle_time harness had been seen (first-round report); justified only by the evidence below. The controls are deterministic and the stated uncertainties are 1-2 %. The source's own interpolator models reproduce the controls within 3 % in 8 of 12 comparisons (all where the control holds or nearly holds the programmed feed) and miss by 5.5-38 % only where the control's tolerance-driven smoothing or jerk limit sets the feed (computed here). A model of the control's feed planning should therefore be inside 5 %, which still fails a planner that ignores the tolerance."
+    evidence:
+      - src: wilkinson-2025-fir-trochoidal
+        page: "Table 2 and case study #1 (case cycletime-wilkinson2025-trochoid-tnc640-r5-r10)"
+        kind: model_comparison
+        statement: "Axial/path-FIR model 3.44, 3.44, 6.78, 6.78, 1.99, 1.99, 3.57, 3.57 s against the TNC640's 3.43, 3.43, 6.77, 6.77, 3.22, 1.94, 4.64, 3.68 s: -3.0 to +2.6 % except -38 % (R 5, 6000 mm/min, 10 um) and -23 % (R 10, 6000 mm/min, 10 um), computed here."
+        deviation_pct: {value: [-38, 2.6], src: est, note: "computed here from the case values and the model column quoted in the case notes"}
+      - src: wilkinson-2025-fir-trochoidal
+        page: "Table 4 and case study #2 (case cycletime-wilkinson2025-trochoid-840d-tnc640)"
+        kind: model_comparison
+        statement: "Hybrid FIR interpolator 7.90, 7.90, 4.09, 4.09 s against the SINUMERIK 840D's 7.82, 7.95, 4.62, 4.33 s: +1.0, -0.6, -11.5 and -5.5 % (computed here)."
+      - src: wilkinson-2025-fir-trochoidal
+        page: "case files (reference.uncertainty_pct)"
+        kind: measurement_uncertainty
+        statement: "Stated reference uncertainty 1 % (programming-station times) and 2 % (machine times, path digitised to about 2 % scale)."
+
+  roughness:
+    metric: "relative error of the simulated ISO 4287 roughness parameter (Ra, Rz) of the generated profile, evaluated with ISO 4288 cut-offs, against the measured value"
+    budget_pct:
+      value: 30
+      src: est
+      note: "Replicate runs of one L36 plan differ by a median 5-8 % and up to 24-32 % (Khellaf 2026, computed here from the replicate pairs), the stated uncertainty of new-insert stylus Ra is 5-8 % (Magalhaes 2026), and ISO 4288 accepts a surface when up to 16 % of the readings exceed the limit, i.e. single readings scatter by about one standard deviation. At the small feeds of several cases the kinematic (feed-mark) part is a fraction of the measured value (Magalhaes 2026, Sultana 2023), so the minimum-chip-thickness, ploughing and vibration contributions decide the result. 30 % is about twice the replicate scatter and the band in which a kinematic model with the minimum chip thickness (Brammertz 1961, Grzesik 1996) can be expected to stay; larger misses mean a missing mechanism."
+    evidence:
+      - src: khellaf-2026-x38crmov5-ceramic-turning
+        page: "Table 2 (cases roughness-khellaf2026-hardturn-h11-ceramic-tin and -uncoated)"
+        kind: experiment_repeatability
+        statement: "Nine replicate pairs per insert: spread (max - min) / mean median 5.3 % (TiN) and 7.6 % (uncoated), maximum 32 % and 24 % (computed here from the case values)."
+        spread_pct: {value: [5.3, 32], src: est, note: "computed here"}
+      - src: magalhaes-2026-304-cermet-turning
+        page: "Sect. 3.1 (case roughness-magalhaes2026-turning-aisi304-cermet-r0.2)"
+        kind: measurement_uncertainty
+        statement: "Contact Ra 0.44-0.92 um with uncertainties 0.03-0.05 um (5-8 %); the kinematic nose-radius roughness f^2/(32 r) is about 0.1 and 0.4 um, far below the measured values."
+      - src: iso-4288-1996
+        page: "Sect. 5.2 (16 % rule)"
+        kind: measurement_uncertainty
+        statement: "A surface is accepted when not more than 16 % of the measured values of the parameter exceed the upper limit."
+      - src: brammertz-1961-roughness
+        page: "minimum chip thickness term"
+        kind: model_comparison
+        statement: "The kinematic peak-to-valley f^2 / (8 r) is raised by the layer the edge cannot cut, (h_min / 2)(1 + r h_min / f^2); at small feeds this term dominates the theoretical roughness."
+
+  stability_lobe:
+    metric: "relative error of the simulated stability limit (limiting axial depth) at the spindle speed of the reference: benchmark curves point by point; a stable test bounds the limit from below and a chatter test from above (only the error on the wrong side counts); border tests and chatter frequencies two-sided"
+    budget_pct:
+      value: 25
+      src: est
+      note: "The limit at a lobe minimum is a_lim = 1 / (2 Kt mu |Re G|min) with |Re G|min about 1 / (2 zeta k) for one dominant mode (Tlusty, Altintas & Budak 1995), so its relative error is the root sum of the errors of the cutting coefficient (cutting_force budget 15 %), the modal stiffness (tool-point compliance uncertain by about 15 %, docs/models/structure.md) and the damping ratio (impact-test damping uncertain by tens of per cent): about 25 %. The experiments resolve the border only to their depth step: 0.5 mm steps at 1-6.5 mm (Weck 1993: 8-50 %), 0.2 mm steps at 0.2-1 mm (Insperger 2006). On lobe flanks a 1 % shift in speed changes the limit by tens of per cent, which this budget covers only near the minima; the benchmark charts carry 0.05 mm (2 % of their depth scale) and the 50 rpm grid blunting of the source."
+    evidence:
+      - src: insperger-2004-updated-sd
+        page: "Figs. 6(b), 7(b) (cases stability-insperger2004-*)"
+        kind: measurement_uncertainty
+        statement: "Digitised boundary uncertainty 0.05 mm (2 % of the 5 mm / 2.5 mm depth scale); the source's 400 x 200 grid blunts lobe tips narrower than about 50 rpm."
+      - src: budak-1994-thin-wall-milling-thesis
+        page: "Sect. 8.4.2, Fig. 8.10 (cases stability-weck1993-*)"
+        kind: experiment_repeatability
+        statement: "Tests on a 200 rpm by 0.5 mm grid: the border is bracketed by the deepest stable and the shallowest unstable cut of each speed, i.e. resolved to 0.5 mm at limits of 1.0-6.5 mm."
+      - src: altintas-budak-1995-zoa
+        page: "analytical lobes"
+        kind: error_propagation
+        statement: "a_lim = -1 / (2 Kt N/(2 pi) Re(Lambda)) with Lambda the eigenvalue of the oriented FRF: the limit is inversely proportional to the cutting coefficient and to the real part of the FRF, so its relative error adds those of Kt, stiffness and damping."
+      - src: mann-2003-up-down-milling-part2
+        page: "Sect. 3-4 (cases stability-mann2003-*)"
+        kind: experiment_repeatability
+        statement: "Stable and unstable markers alternate within about 0.2-0.3 mm in depth and 50-100 rpm in speed near the boundary; the authors mark border tests separately."
+
+  wall_error:
+    metric: "relative error of the simulated surface error of a milled wall (deflection imprinted on the surface, Budak) or of the surface location error (Insperger), at the measured axial position or spindle speed; and of the maximum normal force where the case gives it"
+    budget_pct:
+      value: 25
+      src: est
+      note: "The wall error is the cutting force times the tool compliance: with the force inside its budget (15-20 %) and an end-mill compliance from a model known to about 15 % when the chuck stiffness is measured, the root sum is about 20-25 %. Budak's own model with identified coefficients and measured stiffness differs from his measurements by up to about 15 %, his static stiffness predictions by 0.7-2.7 %, but the equivalent flute diameter he needs differs between tools (0.85 d and about 0.74 d), which alone changes the bending stiffness by a factor 1.7 (computed here, (0.85/0.74)^4). The measured profiles carry 2-4 um of digitisation and dial-gauge reading; Insperger's SLE is estimated from tool deflection measured 65 mm above the tip (stated uncertainty 6 %)."
+    evidence:
+      - src: budak-1994-thin-wall-milling-thesis
+        page: "Sect. 5.4.1, Figs. 5.5-5.6 (cases wallerror-budak1994-al7075-hss-*)"
+        kind: model_comparison
+        statement: "The thesis gives the maximum difference between its model (identified Kt, Kr; measured clamping stiffness) and the measured surface errors as about 15 %."
+        max_deviation_pct: 15
+      - src: budak-1994-thin-wall-milling-thesis
+        page: "Sect. 3.3.2 (case wallerror-budak1994-endmill-static-stiffness)"
+        kind: model_comparison
+        statement: "Predicted tip stiffness 3605 vs measured 3580 N/mm (tool A, de = 0.85 d identified) and 10450 vs 10180 N/mm (tool B); the equivalent diameter of tool B corresponds to about 0.74 d (derived in the case file)."
+      - src: insperger-2006-chatter-sle
+        page: "Sect. 4-5, Fig. 7(b,c) (cases wallerror-insperger2006-*)"
+        kind: measurement_uncertainty
+        statement: "Experimental SLE computed from tool deflections measured by laser sensors on the spindle housing 65 mm above the tip and scaled to the tip ('a good estimate of the real SLE'); digitisation uncertainty about +-0.015 mm where crosses touch the theoretical curve."

@@ -16,7 +16,7 @@ from .abi import (N_PRM, NO_REF, P_BETA_HA, P_BETA_HB, P_BETA_LA, P_BETA_LB, P_B
                   P_C0_MIN, P_C0_N, P_C0_RES_MAX, P_CONTACT_ASPECT, P_DELTA_ITER, P_DELTA_MAX, P_DELTA_MIN,
                   P_DELTA_N, P_DTM_A, P_DTM_B, P_DTM_C, P_ETA, P_ITER_MAX, P_MERCHANT_C0, P_MERCHANT_DELTA, P_MU,
                   P_MU_FALLBACK, P_PHI_FLOOR, P_PHI_MAX, P_PHI_MIN, P_PHI_N, P_PSI, P_RATE_MIN, P_REF_C0, P_REF_CM,
-                  P_REF_DELTA, P_REF_LAMBDA, P_TOL_C0, P_TOL_PHI, P_TOL_T, P_TSTAR_MAX)
+                  P_REF_DELTA, P_REF_LAMBDA, P_STICK_FACTOR, P_TOL_C0, P_TOL_PHI, P_TOL_T, P_TSTAR_MAX)
 
 OXLEY = "mechanics-oxley"
 CONTACT = "mechanics-contact"
@@ -76,15 +76,19 @@ def _oxley_base() -> tuple:
     prm[P_REF_CM] = 0.0
     prm[P_REF_C0] = 0.0
     prm[P_REF_DELTA] = 0.0
+    prm[P_STICK_FACTOR] = 1.0
     return tuple(float(v) for v in prm)
 
 
-def oxley_vector(mu_limit: float, mu_fallback: float) -> np.ndarray:
+def oxley_vector(mu_limit: float, mu_fallback: float, stick_factor: float = 1.0) -> np.ndarray:
     """Kernel parameter vector with the interface Coulomb limit ``mu_limit`` (<= 0: Oxley's
-    sticking condition only) and the fallback friction coefficient ``mu_fallback``."""
+    sticking condition only), the fallback friction coefficient ``mu_fallback`` and the factor
+    on the chip's shear flow stress in Oxley's interface condition (1: dry sticking contact;
+    the coolant's friction factor f < 1 for a lubricated interface)."""
     prm = np.array(_oxley_base(), dtype=np.float64)
     prm[P_MU] = float(mu_limit)
     prm[P_MU_FALLBACK] = float(mu_fallback)
+    prm[P_STICK_FACTOR] = float(stick_factor)
     return prm
 
 

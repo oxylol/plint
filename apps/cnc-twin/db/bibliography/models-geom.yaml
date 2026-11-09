@@ -120,6 +120,7 @@ entries:
     title: "A fast voxel traversal algorithm for ray tracing"
     venue: "Eurographics '87 Proceedings, 3-10"
     year: 1987
+    pages: "3-D digital differential analyser (3D-DDA) over a uniform grid: incremental traversal of the cells a ray crosses"
   kay-kajiya-1986:
     type: conference
     authors: "Kay, T.L.; Kajiya, J.T."

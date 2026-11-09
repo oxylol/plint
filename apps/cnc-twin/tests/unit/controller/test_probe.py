@@ -116,7 +116,11 @@ def test_renishaw_like_alarms_obstructed_open_calibration_format():
 def test_g31_p_numbers_skip_variables_and_alarms():
     r = probe_run("G31 P3 X10. F100.\n#120 = #5061", Box(hi=(G54[0] + 0.004, 1, 1)))
     cmd = [c for c in moves(r) if c.kind == Kind.PROBE][0]
-    assert alarm(r) is None and cmd.probe == {"skip": 3, "stylus": "spindle_probe", "expect": "trigger"}
+    payload = dict(cmd.probe)
+    start = payload.pop("start_m")                       # additive: where the skip move starts (machine)
+    latched = payload.pop("latched_m")                   # added by the dry run: where the probe triggered
+    assert alarm(r) is None and payload == {"skip": 3, "stylus": "spindle_probe", "expect": "trigger"}
+    assert set(start) == {"X", "Y", "Z"} and start["X"] < latched["X"] < cmd.target["X"]
     assert var(r, 120) == pytest.approx(4.0)
     assert alarm(probe_run("G31 P5 X10. F100.", Box()))["code"] == "TW0034"
     assert alarm(probe_run("G31 P99 X10. F100.", Box()))["code"] == "TW0012"

@@ -11,7 +11,7 @@ from cnctwin.core.abi import ACC_DAMPING_J, ACC_PROCESS_DAMPING_J, ACC_UNBALANCE
 from cnctwin.dynamics import kernels as K
 from cnctwin.dynamics import reference as R
 from cnctwin.dynamics.abi import (AxisBase, KIND_MACHINE, MI_HAS_TOOL_RES, MI_RELAX, core_accum, is_kernel_layout)
-from cnctwin.dynamics.drive import bench_run
+from cnctwin.dynamics.drive import bench_run, cost_contact, cost_free
 
 from tests.unit.dynamics.dynfix import assert_close_tuple, clone, system, tool_mode, work_grid, cantilever_mode
 
@@ -207,5 +207,5 @@ def test_deflection_at_point_and_tick_record():
 
 
 def test_one_signature_each():
-    for kernel in K.KERNELS + (bench_run,):
+    for kernel in K.KERNELS + (bench_run, cost_contact, cost_free):
         assert len(kernel.signatures) == 1, kernel.__name__

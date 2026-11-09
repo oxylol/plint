@@ -109,6 +109,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     ap_ref_mm: 2
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: unfilled POM is not abrasive and flank wear is slow; C set so that T = 60 min at vc = 700 m/min (general knowledge, not read). In practice the edge is replaced when rounding starts to cause heating, burrs and melt smear, hence the small VB_limit"
   - tool_class: hss
@@ -121,6 +122,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     ap_ref_mm: 2
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 60 min at vc ~ 270 m/min assumed"
 tool_life_usui: []

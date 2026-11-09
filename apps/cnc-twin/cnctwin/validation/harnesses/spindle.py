@@ -155,7 +155,7 @@ def _discuss(q) -> dict:
                          "(20 um at the assumed 12 000 rpm, 25 min) against a measured whole-machine loop; the "
                          "heat scales as (n/n_max)^(5/3), so at 2000-6000 rpm the model's growth is a small "
                          "fraction of its default maximum.")
-    out["summary"] = ("No budget is defined for spindle_growth. None of the papers describes the spindle (drive, "
+    out["summary"] = (H.budget_summary(q) + "None of the papers describes the spindle (drive, "
                       "bearings, cooling, maximum speed), so every spindle parameter is a model default: the result "
                       "measures how far the defaults are from these two machines, not the model's physics. A case "
                       "with a named spindle and its data would test the model (GAP.md).")

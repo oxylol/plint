@@ -5,8 +5,9 @@ Per compared value (a reference value or one point of a reference curve):
 * scalars: relative error e = (simulated - reference) / |reference|;
 * temperatures (a reference in a temperature unit): the same relative to the rise above ambient,
   e = (T_sim - T_ref) / (T_ref - T_ambient) (the budget rule of validation/budgets.yaml);
-* bounds: a reference whose note says "lower bound" ("upper bound") is a one-sided limit: a simulated
-  value on the allowed side has e = 0, otherwise e as above;
+* bounds: a reference whose note says "lower bound" ("upper bound"), or whose prediction says so
+  (``Prediction.bound``: a stable test bounds the simulated stability limit from below), is a one-sided
+  limit: a simulated value on the allowed side has e = 0, otherwise e as above;
 * classes (chip forms, grades, stability points): e = 0 when the simulated class equals the
   reference class, 1 otherwise.
 
@@ -97,7 +98,8 @@ def compare_one(*, where: str, index: int, point: int | None, name: str, referen
     temperature = is_temperature_unit(unit) if pred.kind != CLASS else False
     comp = Comparison(where=where, index=index, point=point, name=name, x=x, x_name=x_name or "", x_unit=x_unit or "",
                       reference=reference, unit=unit or "", simulated=pred.value, status=pred.status, kind=pred.kind,
-                      bound=bound_of(ref_note), temperature=temperature, component=pred.component, note=pred.note,
+                      bound=pred.bound if pred.bound is not None else bound_of(ref_note), temperature=temperature,
+                      component=pred.component, note=pred.note,
                       reference_note=ref_note or "", extra=dict(pred.extra))
     if budget is not None:
         comp.budget_pct = budget.pct_for(pred.component)

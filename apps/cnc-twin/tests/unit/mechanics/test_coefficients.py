@@ -30,11 +30,15 @@ def test_map_nodes_equal_direct_solutions(steel, carbide, steel_map):
 
 
 def test_map_interpolation_error_between_nodes(steel, carbide, steel_map):
-    t1 = math.sqrt(steel_map.t1_grid_m[6] * steel_map.t1_grid_m[7])
-    row = CF.lookup(steel_map, t1, math.sqrt(1.5 * 3.0), 550.0)[0]
-    direct = oxley.solve(steel, t1, math.sqrt(1.5 * 3.0), 0.0, tool=carbide, tool_temp_K=550.0)
-    assert row[abi.OX_FC] == pytest.approx(direct.cutting_force_N_per_m, rel=0.03)
-    assert row[abi.OX_T_INT] == pytest.approx(direct.T_interface_K, rel=0.03)
+    """Midway between nodes of this coarse map (t1 factor 2.3, speed factor 2, tool 293/800 K):
+    within 4 % next to the edge of the admissible Oxley region (nodes 6-7, where the shear angle
+    changes fastest with t1) and within 2 % away from it (nodes 7-8)."""
+    for (a, b), tol in (((6, 7), 0.04), ((7, 8), 0.02)):
+        t1 = math.sqrt(steel_map.t1_grid_m[a] * steel_map.t1_grid_m[b])
+        row = CF.lookup(steel_map, t1, math.sqrt(1.5 * 3.0), 550.0)[0]
+        direct = oxley.solve(steel, t1, math.sqrt(1.5 * 3.0), 0.0, tool=carbide, tool_temp_K=550.0)
+        assert row[abi.OX_FC] == pytest.approx(direct.cutting_force_N_per_m, rel=tol)
+        assert row[abi.OX_T_INT] == pytest.approx(direct.T_interface_K, rel=tol)
 
 
 def test_map_failed_nodes_use_fallback(steel):
@@ -172,6 +176,13 @@ def test_map_matches(steel_map):
                           temp_tol_K=5.0, mu_rel_tol=0.01)
     assert not CF.map_matches(steel_map, 0.1, 293.15, float(steel_map.context[abi.CTX_MU]), rake_tol_rad=1e-3,
                               temp_tol_K=5.0, mu_rel_tol=0.01)
+    # the context holds the effective friction coefficient and the interface mode (Oxley's condition here)
+    assert steel_map.context[abi.CTX_MU] == pytest.approx(0.5) and steel_map.context[abi.CTX_COULOMB] == 0.0
+    assert CF.map_matches(steel_map, 0.0, 293.15, 0.5, rake_tol_rad=1e-3, temp_tol_K=5.0, mu_rel_tol=0.01,
+                          coulomb_limit=False)
+    assert not CF.map_matches(steel_map, 0.0, 293.15, 0.5, rake_tol_rad=1e-3, temp_tol_K=5.0, mu_rel_tol=0.01,
+                              coulomb_limit=True)
+    assert not CF.map_matches(steel_map, 0.0, 293.15, 0.3, rake_tol_rad=1e-3, temp_tol_K=5.0, mu_rel_tol=0.01)
 
 
 def test_power_fractions_sum_to_one(steel, carbide, steel_map):

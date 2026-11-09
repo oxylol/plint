@@ -11,7 +11,7 @@ defaults:
   type: thread_mill
   hand: right
   tool_material: {class: carbide, grade: "carbide (grade not stated)", id: carbide-submicron-10co, src: est, note: "OSG states only 'carbide'; mapped to the submicron 10 % Co rod grade"}
-  coating: {id: tialn, src: est, note: "EgiAs (OSG proprietary); chemistry and thickness not stated, mapped to TiAlN"}
+  coating: {id: tialn, src: est, note: "EgiAs (OSG proprietary); chemistry and thickness not stated, mapped to TiAlN", thickness_um: {value: 2.5, src: est, note: "OSG Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
 items:
   - id: osg-8331001-at-1-m6x1
     order_code: "AT-1 M6 x 1 (EDP 8331001)"

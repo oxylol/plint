@@ -58,10 +58,23 @@ def test_breaker_window(steel, coated_carbide, steel_state):
 
 
 def test_nakayama_breaking_criterion(steel):
+    # carbon steel: the chip keeps Nakayama's measured fraction of the bulk true fracture strain
     eps_b = CH.chip_fracture_strain(steel)
-    assert eps_b == pytest.approx(0.1 * 0.6)
-    brittle = work_from(STEEL_1045, chip__breakability="good")
-    assert CH.chip_fracture_strain(brittle) == pytest.approx(0.5 * eps_b)
+    assert eps_b == pytest.approx(0.055 * 0.6)
+    # Nakayama 1962 Fig. 13, S45C: a 0.30 mm chip breaks on the R_c = 4.1 mm flow circle, t2 / (2 R_c)
+    assert 0.30e-3 / (2.0 * 4.1e-3) == pytest.approx(eps_b, rel=0.15)
+    free_cutting = work_from(STEEL_1045, chip__breakability="good")
+    assert CH.chip_fracture_strain(free_cutting) == pytest.approx(0.5 * eps_b)
+    # the 'poor' rating does not change a steel class Nakayama measured (carbon content made no difference)
+    assert CH.chip_fracture_strain(work_from(STEEL_1045, chip__breakability="poor")) == pytest.approx(eps_b)
+    # austenitic stainless: its own measured fraction (less ductile chips despite the more ductile bulk)
+    stainless = work_from(STEEL_1045, family="stainless", physical__fracture_strain=1.1)
+    assert CH.chip_fracture_strain(stainless) == pytest.approx(0.020 * 1.1)
+    # families Nakayama did not test: carbon steel's fraction, scaled by the database rating
+    titanium = work_from(STEEL_1045, family="titanium", physical__fracture_strain=0.49, chip__breakability="poor")
+    assert CH.chip_fracture_strain(titanium) == pytest.approx(0.055 * 0.49 * 2.0)
+    # a measured chip breaking strain in the material file is used as it is
+    assert CH.chip_fracture_strain(work_from(STEEL_1045, chip__breaking_strain=0.02)) == pytest.approx(0.02)
 
 
 def test_classification_table():

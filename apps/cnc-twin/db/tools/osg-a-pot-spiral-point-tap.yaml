@@ -11,7 +11,7 @@ defaults:
   type: tap_cutting
   hand: right
   tool_material: {class: hss, grade: "CPM powder-metallurgy HSS", id: hss-m42, src: est, note: "OSG prints 'CPM'; powder HSS is cobalt-alloyed, mapped to the cobalt HSS entry (M42 reference)"}
-  coating: {id: ticn, src: est, note: "OSG 'V coating'; chemistry and thickness not stated in the catalogue, mapped to TiCN"}
+  coating: {id: ticn, src: est, note: "OSG 'V coating'; chemistry and thickness not stated in the catalogue, mapped to TiCN", thickness_um: {value: 3.0, src: est, note: "OSG Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/ticn.yaml (2-4 um, ionbond-coating-portfolio (Ionbond 10 TiCN)), the value the wear model takes for a coated tool without its own"}}
 items:
   - id: osg-8325097-a-pot-m6x1
     order_code: "A-POT STD OH3 M6x1 (EDP 8325097)"

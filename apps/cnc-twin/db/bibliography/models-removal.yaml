@@ -2,6 +2,7 @@ format: cnctwin-bibliography
 version: 1
 # Sources of the removal domain (cnctwin.removal, docs/models/removal.md): dexel and tri-dexel workpiece
 # models, ray traversal, watertight rasterisation, marching cubes, root finding and interpolation.
+# amanatides-woo-1987 (3-D DDA grid traversal) is in models-geom.yaml.
 entries:
   van-hook-1986:
     type: article
@@ -27,13 +28,6 @@ entries:
     year: 2009
     doi: "10.1115/1.3086031"
     pages: "tri-dexel surface reconstruction with exact ray crossings on lattice edges"
-  amanatides-woo-1987:
-    type: article
-    authors: "Amanatides, J.; Woo, A."
-    title: "A fast voxel traversal algorithm for ray tracing"
-    venue: "Eurographics '87, 3-10"
-    year: 1987
-    pages: "3D-DDA: incremental traversal of the cells a ray crosses"
   pineda-1988:
     type: article
     authors: "Pineda, J."

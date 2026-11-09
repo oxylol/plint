@@ -1,6 +1,7 @@
 # CNC Twin example: one part, two setups (OP10 top, OP20 flipped 180 deg about X) on the Haas VF-2SS
 # (README.md, EXPECTED.md). Frames as in db/_templates/project.yaml: fixture_pose and work offsets in
-# machine coordinates (table top at Z -610). The stock frame S is the OP10 blank frame throughout.
+# machine coordinates (table top at Z -610). The stock frame S is the OP10 blank frame; OP20's is the turned
+# blank's (from_previous flip, docs/formats.md "Project file"), the CAD stays in the OP10 frame.
 format: cnctwin-project
 version: 1
 name: "Two setups with a flip, Al 6061-T6"
@@ -163,9 +164,12 @@ operations:
       workholding:
         - {device: lang-48120-46, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 60,
            input_torque_Nm: 60, grip_depth_mm: 3, parallels_mm: null}
-      # the OP10 part turned 180 deg about X: S (x, y, z) -> W (x - 40, 30 - y, 22.5 - z); the OP10 top
-      # (z 22.5) lies on the jaw steps, the old y 60 face is in front, the old bottom (z 0) is on top
-      stock_pose: {translate_mm: [-40, 30, 22.5], rotate_deg: [180, 0, 0]}
+      # from_previous turns the OP10 part 180 deg about X and re-bases the turned blank box at the S origin
+      # (docs/formats.md "Project file"): OP20's S is (x, 60 - y, 25 - z) of the OP10 blank frame. stock_pose
+      # is only the extra placement of that S: x - 40 centres it in the vise, y - 30 likewise, z - 2.5 puts the
+      # OP10 top (now at S z 2.5) on the jaw steps. In the OP10 frame: W = (x - 40, 30 - y, 22.5 - z); the
+      # old y 60 face is in front, the old bottom (z 0) is on top.
+      stock_pose: {translate_mm: [-40, -30, -2.5], rotate_deg: [0, 0, 0]}
       work_offsets_mm: {G55: [-421.0, -233.2, -490.0]}                         # x 0 end, front face, finished bottom (W z 20)
       fixture_pose: {translate_mm: [-381.0, -203.2, -510.0], rotate_deg: [0, 0, 0]}
     from_previous: {op: OP10, flip: {axis: X, angle_deg: 180}}

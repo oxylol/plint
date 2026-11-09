@@ -50,7 +50,7 @@ entries:
     doi: "10.1007/s00170-024-14597-2"
     url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11528021/fullTextXML"
     accessed: 2026-11-03
-    pages: "Section 'Chip shapes', Table 12 and Fig. 28 (BUE traces up to vc = 50 m/min at f = 0.02-0.1 mm; at 150 m/min only at f = 0.02 mm; none at 450 m/min; segmentation towards higher vc and f)"
+    pages: "Ti6Al4V: Table 2 (supplier tensile values 952/869 MPa, A 16.5 %, Z 39 %, 30 HRC; triple VAR, 750 C/90 min AC); Table 2/3 tool (Sandvik CCMW 09T304 H13A uncoated WC-6Co, rake 0, clearance 7, edge radius 20-50 um, mean 37.5 um); Table 9 (JC fit A 867, B 344, n 0.361, C 0.0145); friction section (apparent mu 0.4-0.6 at higher feeds; Albrecht mu = 0.3); chip shapes (all Ti chips continuous wavy/segmented, more pronounced with f and vc; no BUE traces); Appendix 4 Table 19 (Kienzle coefficients kc1.1, mc, kf1.1, mf at vc 11-500 m/min). Ck45: section 'Chip shapes', Table 12 and Fig. 28 (BUE traces up to vc = 50 m/min at f = 0.02-0.1 mm; at 150 m/min only at f = 0.02 mm; none at 450 m/min; segmentation towards higher vc and f)"
 
   saarstahl-2016-c45:
     type: datasheet
@@ -113,8 +113,8 @@ entries:
     year: 1983
     url: "https://ia800406.us.archive.org/4/items/AConstitutiveModelAndDataForMetals/A%20constitutive%20model%20and%20data%20for%20metals_text.pdf"
     accessed: 2026-11-03
-    pages: "Model definition (eps0 = 1.0 1/s); Table 1 (4340 steel, Rockwell C-30: rho 7830, c 477, Tm 1793 K, A 792, n 0.26, C 0.014, m 1.03; S-7 tool steel C-50: A 1539, B 477, n 0.18, C 0.012, m 1.00, Tm 1763 K)"
-    note: "Read as the archive.org OCR copy; B for 4340 is illegible in that copy and was read in bertarelli-2016-beam-damage Table 2."
+    pages: "Model definition (eps0 = 1.0 1/s); Table 1: 4340 steel (Rockwell C-30: rho 7830, c 477, Tm 1793 K, A 792, n 0.26, C 0.014, m 1.03), S-7 tool steel (C-50: A 1539, B 477, n 0.18, C 0.012, m 1.00, Tm 1763 K), OFHC copper (Rockwell F-30, c 383 J/kgK, Tm 1356 K, A 90, B 292, n 0.31, C 0.025, m 1.09), cartridge brass (Tm 1189 K, A 112, B 505, n 0.42, C 0.009, m 1.68). Densities and the brass hardness are not cleanly legible in the OCR copy and were not used"
+    note: "Read as the archive.org OCR copy; B for 4340 is illegible in that copy and was read in bertarelli-2016-beam-damage Table 2. The OFHC copper set was cross-checked in Arsecularatne & Zhang, 'Assessment of constitutive equations used in machining' (Advances in Engineering Plasticity and Its Applications, p. 280), which quotes A 90, B 292, C 0.025, n 0.31, m 1.09, Tm 1356 K."
 
   bertarelli-2016-beam-damage:
     type: article

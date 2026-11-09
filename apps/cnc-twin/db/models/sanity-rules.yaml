@@ -106,6 +106,12 @@ params:
     range: [0.005, 0.1]
     src: est
     note: "thickness of a vise jaw plate outside the part when the device file gives none (machine-vise jaws are typically 20-30 mm)"
+  max_tool_tilt_rad:
+    value: 0.1
+    unit: deg
+    range: [0.0, 5.0]
+    src: est
+    note: "largest tilt of the tool axis from +z of the program frame at which the 3-axis height-map engagement is still evaluated (a five-axis move tilted further is reported as not estimated); 0.1 deg shifts a D20 tool's lower edge by 0.02 mm, below the map's 0.5 mm cell"
   coolant_need_by_iso_group:
     value: {P: recommended, M: required, K: optional, N: required, S: required, H: optional, O: optional}
     unit: "-"

@@ -347,7 +347,7 @@ def _discuss(q) -> dict:
             text += (f"; VB(t) curves: mean signed error {sum(curves) / len(curves) * 100:+.0f} % (the model's land "
                      "grows slowly while it is small: the flank temperature rises with the land)")
         out[r.id] = text + "."
-    out["summary"] = ("No budget is defined for taylor_life. Where the wear law is calibrated to a database Taylor "
+    out["summary"] = (H.budget_summary(q) + "Where the wear law is calibrated to a database Taylor "
                       "entry, the prediction can be no better than that entry for the case's tool and material (most "
                       "entries are estimates); where the same paper supplied the entry the case is "
                       "calibration-dependent and shows only that the integration reproduces its own fit. Ceramic, "

@@ -83,8 +83,12 @@ def _float(value, default=0.0):
 
 
 def density_20C(material) -> float:
-    """Density at 20 degC (kg/m^3) of a material object (number, sourced value or temperature table)."""
+    """Density at 20 degC (kg/m^3) of a material object (number, sourced value or temperature table).
+    Database materials keep it under ``physical`` (db/materials/*.yaml); the top-level key serves fixtures.
+    (Integration fix, additive: core.hotloop / docs/models/hotloop.md "Changes in domain packages".)"""
     rho = _get(material, "density_kg_m3")
+    if rho is None:
+        rho = _get(_get(material, "physical"), "density_kg_m3")
     if rho is None:
         raise InputError("removal: the material has no density_kg_m3 (mass of removed material)")
     if callable(rho) and not isinstance(rho, (int, float)):
@@ -478,10 +482,10 @@ class RemovalDomain:
         boxes = []
         for item in _get(setup, "workholding", []) or []:
             device = _get(item, "device")
-            body = _get(device, "body_m")
+            from .collision import device_body_box
+            body = device_body_box(_get(device, "body_m"))
             if body is None:
                 continue
-            body = np.asarray([[float(v) for v in row] for row in body], dtype=float)
             pose = _get(item, "pose")
             T = pose.matrix() if hasattr(pose, "matrix") else np.eye(4)
             corners = np.array([[x, y, z] for x in body[:, 0] for y in body[:, 1] for z in body[:, 2]])

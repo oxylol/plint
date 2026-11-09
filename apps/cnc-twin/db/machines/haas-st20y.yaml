@@ -19,16 +19,16 @@ controller:
   ipo_period_ms: {value: 1.0, src: est, note: "not published"}
   block_processing_ms: {value: 1.0, src: est, note: "not published"}
   lookahead_blocks: {value: 80, src: est, note: "not published"}
-  least_input_increment_mm: {value: 0.001, src: est}
-  least_input_increment_deg: {value: 0.001, src: est}
+  least_input_increment_mm: {value: 0.001, src: haas-ngc-lathe-om-2020, page: "p. 425, Setting 9 Dimensioning: in MM mode the programmed units are millimetres to 0.001 mm"}
+  least_input_increment_deg: {value: 0.001, src: est, note: "C words to three decimals, 0.001 deg, assumed: the same three-place resolution as the metric linear words (Setting 9, haas-ngc-lathe-om-2020 p. 425); not stated for the C axis"}
   max_feed_mm_min: {value: 12000, src: est, note: "max cutting feed not published; X/Y rapid (12 m/min) used as the limit"}
   rapid_mm_min: {X: 12000, Y: 12000, Z: 24000}
   diameter_programming_X: {value: true, src: est}
   smoothing: []
   corner_default: {value: blend, src: est}
-  in_position_mm: {value: 0.005, src: est}
-  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: est}
-  feed_override_range_pct: {value: [0, 200], src: est}
+  in_position_mm: {value: 0.005, src: est, note: "exact-stop window 5 um, as the Haas mills (haas-vf2ss): below the 5 um X positioning accuracy (est) on the radius, i.e. 10 um on the diameter; not published"}
+  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: haas-ngc-lathe-om-2020, page: "p. 42, Table T2.14: [5% RAPID] / [25% RAPID] / [50% RAPID] / [100% RAPID] limit the rapids to the value on the key"}
+  feed_override_range_pct: {value: [0, 200], src: est, note: "override keys -10 %, 100 %, +10 % and handle steps of 1 % (haas-ngc-lathe-om-2020 p. 42 Table T2.14), limits not given; 0-200 % assumed as for the Haas mills"}
   tool_life_management: {value: true, src: est}
   probing: {value: true, src: est, note: "automatic tool presetter option"}
 
@@ -37,16 +37,16 @@ axes:
     type: linear
     travel_mm: [-213, 0]
     rapid_mm_min: 12000
-    max_feed_mm_min: {value: 12000, src: est}
+    max_feed_mm_min: {value: 12000, src: est, note: "max cutting feed not published: the 12 m/min X rapid taken as the limit (as the controller max_feed_mm_min note)"}
     accel_m_s2: {value: 4.0, src: est, note: "not published; cross slide + turret"}
-    jerk_m_s3: {value: 80, src: est}
+    jerk_m_s3: {value: 80, src: est, note: "80 m/s3 ramps to the 4 m/s2 acceleration in a/j = 50 ms, longer than one period of the 70 Hz turret/carriage rocking mode (14 ms; biagiotti-melchiorri-2008: ramp time >= one natural period)"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 60, src: est}
+      kv_1_s: {value: 40, src: est, note: "position-loop gain as the Haas mills (haas-vf2ss): kv/2 pi = 6.4 Hz, 9 x below the 60 Hz velocity loop"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95 as on the Haas mills (haas-vf2ss): 5 % of the constant-feed following error v/kv remains"}
+      velocity_bw_Hz: {value: 60, src: est, note: "60 Hz for the 350 kg cross slide + turret: below the 70 Hz rocking mode it must not excite, 9 x the position-loop crossover"}
     backlash_um: {value: 1, src: est, note: "preloaded ballscrews assumed as on Haas mills"}
-    reversal_spike_um: {value: 2, src: est}
-    ballscrew: {diameter_mm: 32, pitch_mm: 10, length_mm: 550, fixed_end: both, src: est}
+    reversal_spike_um: {value: 2, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis (ISO 230-2 reversal value B 1-5 um); 2 um on the short, light X slide"}
+    ballscrew: {diameter_mm: 32, pitch_mm: 10, length_mm: 550, fixed_end: both, src: est, note: "32 mm x 10 mm lead: the 12 m/min rapid needs 1200 rpm; length = 213 mm radial travel + nut + bearing ends with the slide length, assumed"}
     positioning: {accuracy_um: 5, repeatability_um: 2.5, src: est, note: "radial; not published"}
     motor_force_N: 18238
     moving_mass_kg: {value: 350, src: est, note: "cross slide + Y' wedge + BMT65 turret with 12 tools"}
@@ -54,35 +54,35 @@ axes:
     type: linear
     travel_mm: [-50.8, 50.8]
     rapid_mm_min: 12000
-    max_feed_mm_min: {value: 12000, src: est}
+    max_feed_mm_min: {value: 12000, src: est, note: "not published: the 12 m/min Y rapid taken as the limit, as X"}
     accel_m_s2: {value: 3.0, src: est, note: "interpolated from X and the inclined Y' slide; effective limit assumed lower"}
-    jerk_m_s3: {value: 60, src: est}
+    jerk_m_s3: {value: 60, src: est, note: "60 m/s3: the 3 m/s2 acceleration is reached in 50 ms, as X"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 50, src: est}
-    backlash_um: {value: 1.5, src: est}
-    reversal_spike_um: {value: 3, src: est}
-    ballscrew: {diameter_mm: 32, pitch_mm: 10, length_mm: 300, fixed_end: both, src: est}
+      kv_1_s: {value: 40, src: est, note: "as X: kv/2 pi = 6.4 Hz, 8 x below the 50 Hz velocity loop"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95 as on the Haas mills (haas-vf2ss): 5 % of the constant-feed following error v/kv remains"}
+      velocity_bw_Hz: {value: 50, src: est, note: "50 Hz, below X: Y is the interpolation of the X slide and the inclined Y' wedge slide (haas-st-yaxis-flyer-2021 p. 2), so both loops act and the slower one sets the bandwidth"}
+    backlash_um: {value: 1.5, src: est, note: "two preloaded screws (X and Y') contribute: 1.5 um, 1.5 x the 1 um of a single axis"}
+    reversal_spike_um: {value: 3, src: est, note: "two slides reverse together: 3 um, above the 2 um of X alone"}
+    ballscrew: {diameter_mm: 32, pitch_mm: 10, length_mm: 300, fixed_end: both, src: est, note: "as X: 32 mm x 10 mm lead; length = the 102 mm Y' stroke + nut + bearing ends"}
     positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "combined X/Y' motion"}
     motor_force_N: 10231
-    moving_mass_kg: {value: 250, src: est}
+    moving_mass_kg: {value: 250, src: est, note: "Y' wedge slide with the BMT65 turret and 12 tools (the X mass 350 kg minus the cross slide, about 100 kg), assumed"}
     implementation: {value: "Y = X slide + inclined Y' slide (wedge), interpolated by the control", src: haas-st-yaxis-flyer-2021, page: "p. 2"}
   Z:
     type: linear
     travel_mm: [-572, 0]
     rapid_mm_min: 24000
-    max_feed_mm_min: {value: 24000, src: est}
-    accel_m_s2: {value: 4.0, src: est}
-    jerk_m_s3: {value: 80, src: est}
+    max_feed_mm_min: {value: 24000, src: est, note: "not published: the 24 m/min Z rapid taken as the limit"}
+    accel_m_s2: {value: 4.0, src: est, note: "0.4 g as X: the published 22.7 kN thrust drives the 600 kg carriage at up to 38 m/s2, so the value is a smoothness choice, as on the other Haas axes"}
+    jerk_m_s3: {value: 80, src: est, note: "as X: 50 ms ramp to 4 m/s2"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 50, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 3, src: est}
-    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 900, fixed_end: both, src: est}
-    positioning: {accuracy_um: 6, repeatability_um: 3, src: est}
+      kv_1_s: {value: 40, src: est, note: "as X: kv/2 pi = 6.4 Hz, 8 x below the 50 Hz velocity loop"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95 as on the Haas mills (haas-vf2ss): 5 % of the constant-feed following error v/kv remains"}
+      velocity_bw_Hz: {value: 50, src: est, note: "50 Hz for the 600 kg carriage: below the 90 Hz carriage z mode, 8 x the position-loop crossover"}
+    backlash_um: {value: 1, src: est, note: "preloaded double ball nut: residual lost motion 0-2 um, 1 um"}
+    reversal_spike_um: {value: 3, src: est, note: "friction step at reversal, 3 um (ISO 230-2 reversal value B of 1-5 um)"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 900, fixed_end: both, src: est, note: "40 mm x 16 mm lead as the Haas mills: the 24 m/min rapid needs 1500 rpm; length = 572 mm travel + nut + bearing ends"}
+    positioning: {accuracy_um: 6, repeatability_um: 3, src: est, note: "ISO 230-2 accuracy and repeatability typical of semi-closed-loop ballscrew axes without scales over 0.6 m (Haas publishes none); slightly better than the 8 um of the 0.76 m mill axes"}
     motor_force_N: 22686
     moving_mass_kg: {value: 600, src: est, note: "carriage + cross slide + turret"}
   C:
@@ -90,20 +90,20 @@ axes:
     travel_deg: [0, 360]
     continuous: true
     max_rpm: {value: 60, src: est, note: "C-axis contouring speed not published"}
-    accel_rad_s2: {value: 20, src: est}
-    jerk_rad_s3: {value: 400, src: est}
+    accel_rad_s2: {value: 20, src: est, note: "20 rad/s2 reaches the 60 rpm (6.3 rad/s) contouring speed in 0.31 s; with J = 0.2 kg m2 (spindle and chuck, est) it needs 4 Nm, far below what the 3.7 kW C drive gives, so the value is a smoothness choice (assumed)"}
+    jerk_rad_s3: {value: 400, src: est, note: "the 20 rad/s2 acceleration is reached in a/j = 50 ms, longer than one period of the 40 Hz unclamped C mode (25 ms)"}
     servo:
-      kv_1_s: {value: 30, src: est}
-      feedforward: {value: 0.9, src: est}
-      velocity_bw_Hz: {value: 30, src: est}
+      kv_1_s: {value: 30, src: est, note: "position-loop gain of a belt-coupled spindle C axis: 30 1/s, below the linear axes for the soft belt (40 Hz mode)"}
+      feedforward: {value: 0.9, src: est, note: "0.9: the belt winds up under the spindle inertia, so full feed-forward overshoots"}
+      velocity_bw_Hz: {value: 30, src: est, note: "30 Hz: below the 40 Hz unclamped C mode it must not excite"}
     backlash_arcsec: {value: 20, src: est, note: "belt-driven spindle used as C axis"}
     brake:
       clamp_force_N: 4448
       brake_diameter_mm: 366
       clamp_torque_Nm: {value: 814, src: est, note: "derived: published clamp force 4448 N x brake radius 183 mm"}
-      clamp_time_s: {value: 0.3, src: est}
-      unclamped_stiffness_Nm_rad: {value: 2.0e5, src: est}
-      clamped_stiffness_Nm_rad: {value: 1.0e6, src: est}
+      clamp_time_s: {value: 0.3, src: est, note: "hydraulic disc-brake clamp or release, 0.3 s assumed (valve and pressure build-up)"}
+      unclamped_stiffness_Nm_rad: {value: 1.3e4, src: est, note: "RE-DERIVED (was 2.0e5, which with the 0.2 kg m2 spindle and chuck would put the unclamped mode at 160 Hz, not at the 40 Hz of rotary_modes): k = J (2 pi f)^2 = 0.2 x (2 pi x 40)^2 = 1.26e4 Nm/rad; a poly-V belt drive gives the same order, 2 EA r^2 / L = 2 x 1.6e5 N x (0.1 m)^2 / 0.4 m = 8e3 Nm/rad (8-rib belt, EA about 2e4 N per rib, 100 mm spindle pulley, 0.4 m span: assumed)"}
+      clamped_stiffness_Nm_rad: {value: 1.0e6, src: est, note: "clamped: the 366 mm brake disc held at r = 183 mm with a tangential pad/disc stiffness of about 3e7 N/m (assumed): 3e7 x 0.183^2 = 1.0e6 Nm/rad, about 80 x the belt-held stiffness (mode about 360 Hz with J = 0.2 kg m2)"}
     positioning: {accuracy_arcsec: 36, note: "published positioning +-0.01 deg (36 arcsec)"}
     positioning_repeatability_arcsec: {value: 18, src: est, note: "assumed half the positioning tolerance"}
     drive_rating_kW: {value: 3.7, note: "published 'C Axis: Max Rating 5 hp (3.7 kW)'"}
@@ -149,20 +149,20 @@ spindles:
           - {rating: "S2 10 min = 150 % load", scale_of_peak: 0.75, src: haas-torque-note-2026}
           - {rating: "S1 continuous = 100 % load", scale_of_peak: 0.50, src: haas-torque-note-2026}
     accel_time_s: {value: 1.5, src: est, note: "0-4000 rpm with J = 0.2 kg m2 (rotor + spindle + 8.3 in hydraulic chuck, est.) on the peak curve gives ~1.3 s"}
-    decel_time_s: {value: 1.5, src: est}
+    decel_time_s: {value: 1.5, src: est, note: "regenerative braking at the same peak torque as the acceleration: symmetric 1.5 s"}
     gear_change_s: null
-    orient_time_s: {value: 0.6, src: est}
+    orient_time_s: {value: 0.6, src: est, note: "M19 from rest: one turn at the peak torque 233 Nm / 0.2 kg m2 = 1165 rad/s2 takes 2 sqrt(2 pi / 1165) = 0.15 s, plus 0.45 s for the belt-coupled position loop to settle (assumed)"}
     rotor_inertia_kgm2: {value: 0.2, src: est, note: "includes the standard chuck"}
     efficiency: {value: 0.82, src: est, note: "belt drive + induction motor"}
-    idle_power_W: {value: 600, src: est}
+    idle_power_W: {value: 600, src: est, note: "no-load loss at 4000 rpm: bearing friction 400 W (thermal note) + belt, pulley and motor windage/iron loss about 200 W (assumed) = 600 W"}
     runout_um: {value: 3, src: est, note: "spindle nose; chuck runout is in the workholding file"}
     frf_modes: []
     thermal:
       growth_um_at_max_rpm: {value: 25, src: est, note: "axial growth of the headstock toward +z at 4000 rpm"}
-      time_constant_min: {value: 40, src: est}
-      bearing_heat_W_at_max_rpm: {value: 400, src: est}
+      time_constant_min: {value: 40, src: est, note: "tau = C / G: spindle and headstock housing near the bearings, about 150 kg x 460 J/kgK = 69 kJ/K, over the conductance to air and bed G = 400 W / 14 K = 29 W/K (bearing heat at 4000 rpm, a 14 K steady rise, both est) = 2400 s = 40 min"}
+      bearing_heat_W_at_max_rpm: {value: 400, src: est, note: "Palmgren speed term M0 = 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for the two front bearings of the A2-6 spindle (89 mm bore: dm about 140 mm), grease (base oil nu = 20 mm2/s, f0 = 1), n = 4000 rpm: 2 x 0.51 Nm = 1.0 Nm x 419 rad/s = 430 W, i.e. 400 W"}
       thermal_comp: {value: true, src: est}
-      comp_residual_fraction: {value: 0.3, src: est}
+      comp_residual_fraction: {value: 0.3, src: est, note: "as the Haas mills: the model-based growth compensation leaves 30 % (assumed)"}
     spindle_nose_detail: {value: "A2-6, drawtube thread 75 x 2.0 mm, drawtube ID 65 mm, counterbore 90.4 mm", src: haas-st20y-mld-2019, page: "p. 7 (machines built after May 2019)"}
     optional: "5000 rpm A2-6 22.4 kW spindle (haas-torque-st-2016 p. 2)"
   - id: live
@@ -178,16 +178,16 @@ spindles:
         note: "no live-tool torque chart read. Motor assumed to be the 3.7 kW (5 hp) drive listed under 'C Axis' on haas-uk-st20y-2026; constant torque 25 Nm to 1400 rpm assumed"
         power_kW: [[0, 0], [1400, 3.7], [4000, 3.7]]
         torque_Nm: [[0, 25], [1400, 25], [4000, 8.8]]
-    accel_time_s: {value: 0.4, src: est}
-    decel_time_s: {value: 0.4, src: est}
-    orient_time_s: {value: 0.3, src: est}
-    rotor_inertia_kgm2: {value: 0.003, src: est}
-    efficiency: {value: 0.8, src: est}
-    idle_power_W: {value: 150, src: est}
+    accel_time_s: {value: 0.4, src: est, note: "set by the drive ramp, not the torque: the est. 25 Nm / 3.7 kW curve brings J = 0.003 kg m2 to 4000 rpm in 0.07 s; driven BMT holders are ramped more gently to spare their gears, 0.4 s assumed"}
+    decel_time_s: {value: 0.4, src: est, note: "symmetric with the acceleration ramp, 0.4 s"}
+    orient_time_s: {value: 0.3, src: est, note: "orientation of the live spindle: at most one turn at the ramp rate plus the position settle, 0.3 s assumed"}
+    rotor_inertia_kgm2: {value: 0.003, src: est, note: "motor rotor of a 3.7 kW servo (about 0.002 kg m2) plus the turret drive gears, the driven holder and the collet (about 0.001 kg m2), assumed"}
+    efficiency: {value: 0.8, src: est, note: "servo motor about 0.9 x two gear meshes of the turret drive and the driven holder about 0.95 each: 0.81, i.e. 0.8"}
+    idle_power_W: {value: 150, src: est, note: "gear and bearing drag of the turret drive train and the driven holder at 4000 rpm: 4 % of the 3.7 kW rating, assumed"}
     runout_um: {value: 10, src: est, note: "BMT65 driven holder + collet"}
     frf_modes:
       - {fn_Hz: 650, zeta: 0.04, k_N_um: 15, direction: x, src: est, note: "driven holder on a BMT turret; low stiffness typical of live tools"}
-      - {fn_Hz: 650, zeta: 0.04, k_N_um: 15, direction: y, src: est}
+      - {fn_Hz: 650, zeta: 0.04, k_N_um: 15, direction: y, src: est, note: "the x mode repeated in y: axisymmetric driven holder"}
   - id: sub
     kind: sub
     option: true
@@ -198,32 +198,38 @@ spindles:
     bore_mm: {value: 33, src: haas-st-yaxis-flyer-2021, note: "non-through"}
     face_to_face_mm: {value: 985, src: haas-st20y-mld-2019, page: "p. 5: spindle face to spindle face 985 mm, chuck face to chuck face approx. 823 mm"}
     note: {value: "finishing sub-spindle option; not compatible with the tailstock", src: haas-st-yaxis-flyer-2021}
-    gear_ranges: []
+    gear_ranges:
+      - rpm: [0, 6000]
+        rating: "est. continuous"
+        src: est
+        note: "no sub-spindle rating was found (haas-st-yaxis-flyer-2021 p. 3 gives 6000 rpm, A2-5, 135 mm chuck and 33 mm bore; haas-uk-st20y-2026 has no sub-spindle rows). Rated like the machine's published secondary drive, the 3.7 kW (5 hp) C-axis / live-tool motor of haas-uk-st20y-2026, with the live spindle's assumed curve shape: constant 25 Nm to 1400 rpm (25 Nm x 146.6 rad/s = 3.7 kW), then constant 3.7 kW to 6000 rpm (5.9 Nm)"
+        power_kW: [[0, 0], [1400, 3.7], [6000, 3.7]]
+        torque_Nm: [[0, 25], [1400, 25], [6000, 5.9]]
 
 structure:
   modes:
     - {fn_Hz: 70, zeta: 0.05, k_N_um: 40, direction: x, src: est, note: "turret/carriage rocking on the inclined bed"}
-    - {fn_Hz: 90, zeta: 0.05, k_N_um: 50, direction: z, src: est}
+    - {fn_Hz: 90, zeta: 0.05, k_N_um: 50, direction: z, src: est, note: "carriage pitch on the slant bed along z, assumed stiffer than the 70 Hz x rocking mode: 90 Hz, 50 N/um"}
   table_modes: []
   rotary_modes:
-    - {axis: C, fn_Hz: 40, zeta: 0.05, k_Nm_rad: 2.0e5, src: est, note: "belt-driven spindle unclamped in C"}
+    - {axis: C, fn_Hz: 40, zeta: 0.05, k_Nm_rad: 1.3e4, src: est, note: "belt-driven spindle unclamped in C; k RE-DERIVED from J (2 pi f)^2 with J = 0.2 kg m2 (was 2.0e5, see axes.C.brake.unclamped_stiffness_Nm_rad)"}
   turret_modes:
     - {fn_Hz: 300, zeta: 0.04, k_N_um: 40, direction: x, src: est, note: "BMT65 static holder at the tool tip"}
 
 error_map:
-  squareness_urad: {XZ: 15, YZ: 20, XY: 20, src: est}
-  straightness_um_per_m: {X: 6, Z: 6, Y: 8, src: est}
+  squareness_urad: {XZ: 15, YZ: 20, XY: 20, src: est, note: "X-Z 15 urad as the axis pairs of the Haas mills (15 um/m after factory alignment); the pairs with the interpolated Y (X + inclined Y' slide) 20 urad, since two slides contribute"}
+  straightness_um_per_m: {X: 6, Z: 6, Y: 8, src: est, note: "6 um per metre for the X and Z guideways as on the mills; 8 um/m for the combined X + Y' motion"}
   angular_urad: {}
   pivot_errors: {}
   y_axis_centre_height_um: {value: 10, src: est, note: "residual tool-centre-height error after calibration"}
 
 thermal:
   axis_drift:
-    expansion_1_K: {value: 11.5e-6, src: est}
-    heat_per_m_travel_J: {value: 60, src: est}
-    time_constant_min: {value: 40, src: est}
-  structure_sensitivity_um_per_K: {value: 4, src: est}
-  warmup: {cold_to_warm_min: 45, src: est}
+    expansion_1_K: {value: 11.5e-6, src: est, note: "mean CTE 20-100 degC of the ballscrew steel (100Cr6 11.5e-6 1/K, DEW column in db/materials/aisi52100-62hrc.yaml)"}
+    heat_per_m_travel_J: {value: 60, src: est, note: "nut drag torque x angle per metre: 0.1 Nm (light preload of a 32 mm double nut) x 2 pi / 0.010 m = 63 J per metre for X/Y; 0.15 Nm x 2 pi / 0.016 m = 59 J/m for the 40 mm Z screw: 60 J/m"}
+    time_constant_min: {value: 40, src: est, note: "tau = rho c d / (4 h) with h = 15 W/m2K (as haas-vf2ss): 40 min for the 40 mm Z screw (7850 x 460 x 0.040 / 60), 32 min for the 32 mm X/Y screws; the 40 min of the longest axis kept for all"}
+  structure_sensitivity_um_per_K: {value: 4, src: est, note: "cast-iron CTE 10.5e-6 1/K (db/materials/grey-cast-iron-gjl250.yaml) x the about 0.38 m loop from the spindle centre line through the headstock, slant bed and carriage to the turret = 4 um/K"}
+  warmup: {cold_to_warm_min: 45, src: est, note: "between 1.5 x the 32 min time constant of the X screws (which set the diameter) and the 40 min spindle: 45 min"}
 
 tool_changer:
   type: turret
@@ -258,10 +264,10 @@ tailstock:
 steady_rest:
   option: {value: true, src: est, note: "availability on the ST-20Y not confirmed"}
   grip_range_mm: {value: [12, 152], src: est, note: "generic hydraulic self-centring steady rest for an 8 in chuck lathe; Haas option details not found"}
-  rollers: {value: 3, src: est}
-  roller_stiffness_N_um: {value: 50, src: est}
+  rollers: {value: 3, src: est, note: "three rollers, as the self-centring hydraulic steady rests of the same 12-152 mm grip range (kitagawa-2013-steady-rests, FRU series)"}
+  roller_stiffness_N_um: {value: 50, src: est, note: "not published: roller bearing plus arm compliance about 50 N/um, as the estimate for the Kitagawa FRU of the same grip range (db/workholding/kitagawa-fru-steady-rest.yaml)"}
 guide_bushing: null
-doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null}
+doors: {count: {value: 1, src: est, note: "one sliding front door (haas-st20y-mld-2019 p. 1 front view), assumed"}, auto: {value: false, src: est}, open_time_s: null}
 
 probes:
   spindle_probe: null
@@ -272,23 +278,23 @@ coolant:
   tank_l: 208
   pumps:
     - {id: flood, kind: flood, pressure_bar: 2.0, flow_l_min: 45, power_kW: 0.75, src: est, note: "Haas 1 hp coolant pump (haas-coolant-pump-web-2026) assumed for the lathe"}
-    - {id: hpc, kind: high_pressure, option: true, src: est, pressure_bar: {value: 69, src: est, note: "Haas 1000 psi high-pressure coolant option assumed available for the ST-20Y"}, flow_l_min: {value: 26.5, src: est}}
+    - {id: hpc, kind: high_pressure, option: true, src: est, pressure_bar: {value: 69, src: est, note: "Haas 1000 psi high-pressure coolant option assumed available for the ST-20Y"}, flow_l_min: {value: 26.5, src: est, note: "the Haas 1000 psi (69 bar) pump of the mills' TSC option, 26.5 L/min free flow at 60 Hz (haas-tsc-web-2026), assumed for the lathe high-pressure option"}}
   nozzles:
     - {id: turret_ring, kind: flood, attached_to: turret, position_mm: [-200, 0, -30], aim: [-0.8, 0, -0.6], diameter_mm: 5, pump: flood, src: est, note: "coolant delivered through the BMT station to the active tool; geometry assumed"}
   air_blast: null
   machine_air_l_min: {value: 113, note: "4 scfm at 100 psi"}
   chiller: null
-  filtration_um: {value: 50, src: est}
+  filtration_um: {value: 50, src: est, note: "finest particle the plain flood circuit is assumed to hold back: 50 um (no TSC filter on the standard lathe circuit)"}
 
-chip_conveyor: {type: hinged_belt, option: true, src: est, note: "conveyor drawn on haas-st20y-mld-2019 p. 1/3 (70 in removal space); type assumed", rate_kg_h: {value: 80, src: est}}
+chip_conveyor: {type: hinged_belt, option: true, src: est, note: "conveyor drawn on haas-st20y-mld-2019 p. 1/3 (70 in removal space); type assumed", rate_kg_h: {value: 80, src: est, note: "the chip mass rate of continuous steel turning at the S1 spindle power: 7.5 kW (50 % of the 14.9 kW peak) / 2.5 J/mm3 = 3.0 cm3/s = 85 kg/h; 80 kg/h assumed"}}
 
 enclosure:
   box_mm: {value: [[-450, -450, -250], [500, 500, 900]], src: est, note: "interior around the spindle, turret swing (889 mm) and 572 mm Z travel; base frame"}
-  floor_slope_deg: {value: 45, src: est}
+  floor_slope_deg: {value: 45, src: est, note: "slant-bed lathe: chips fall down the 45 deg bed cover to the conveyor; the cover angle assumed equal to the slant"}
 
 power:
-  base_W: {value: 900, src: est}
-  servo_standby_W: {value: 300, src: est}
+  base_W: {value: 900, src: est, note: "idle base load as haas-vf2ss: control, cabinet cooling, way lube and lights about 700 W plus the hydraulic unit (chuck, tailstock, C brake) idling about 200 W, assumed"}
+  servo_standby_W: {value: 300, src: est, note: "four drives enabled at standstill (X, Y, Z, C): electronics and fans about 50 W each (200 W) plus the turret and live-tool drives about 100 W: 300 W (assumed breakdown)"}
   air_consumption_l_min: 113
   footprint_mm: {value: [3999, 2602, 1998], src: haas-st20y-mld-2019, page: "p. 1 operating width x depth x height"}
 
@@ -299,6 +305,7 @@ geometry:
       - {box: {min_mm: [-300, -300, -600], max_mm: [300, 300, -40]}}
     collide: true
     src: est
+    note: "headstock behind the spindle face assumed as a 600 x 600 mm box from z -600 to -40 (the A2-6 nose and chuck adaptor in front of it); the centre height 1000 mm above the floor is on haas-st20y-mld-2019 p. 3"
   - name: chuck
     attached_to: spindle
     primitives:
@@ -319,6 +326,7 @@ geometry:
       - {box: {min_mm: [250, -350, 700], max_mm: [700, 350, 1000]}}
     collide: true
     src: est
+    note: "carriage and cross-slide body behind the turret: x 250-700 mm (outside the 213 mm X travel of the OD tool tip), y +-350 mm, z 700-1000 mm (beyond the 662 mm turret face position), assumed"
   - name: tailstock
     attached_to: base
     primitives:

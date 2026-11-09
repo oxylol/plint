@@ -11,6 +11,11 @@ Edge: temperature at the cutting edge, over the rake contact (l_c = h zeta^n) an
 contact (VB + edge radius) per element = body temperature at the element + the local field of
 the periodic heating per revolution (Stephenson & Ali 1992; kernels.edge_temperatures), at
 Gauss points of the in-cut interval (ToolHeat.q_weights) and the cycle amplitude.
+
+Cutting region (optional, :meth:`ToolThermal.enable_field`): a 3-D finite-volume field of the
+insert or of the tooth tip (toolfield.py), solved with the ladder as one system; the elements it
+carries take their edge temperatures from it (cycle mean) plus the periodic deviation of the edge
+kernel, and :meth:`ToolThermal.temperature_at` gives the tool temperature at any point.
 """
 
 from __future__ import annotations
@@ -25,15 +30,17 @@ import numpy as np
 
 from ..core.abi import EdgeModel
 from ..core.bus import ToolHeat
-from ..core.errors import InputError
+from ..core.errors import ConservationError, InputError
 from ..db.models import params
 from . import convection as cv
 from . import kernels as K
 from . import props
-from .abi import (EDGE_CONTINUOUS, EDGE_INTERRUPTED, EDGE_NONE, LD_AIR, LD_COOL, LD_DU, LD_SP, LD_SRC, LD_U0,
-                  LD_U1, N_LD, Ladder, MatTable, f64, new_edge_input, new_edge_output)
+from .abi import (EDGE_CONTINUOUS, EDGE_INTERRUPTED, EDGE_NONE, EDGE_OUT_DEVIATION, EDGE_OUT_TEMPERATURE, FD_AIR,
+                  FD_COOL, FD_DU, FD_ITER, FD_RES, FD_SP, FD_SRC, FD_U0, FD_U1, FS_TOL, LD_AIR, LD_COOL, LD_DU, LD_SP,
+                  LD_SRC, LD_U0, LD_U1, N_LD, Ladder, MatTable, f64, new_edge_input, new_edge_output)
 from .ledger import SolverLedger
 from .response import edge_response, gauss_legendre, heating_phase_nodes
+from .toolfield import ToolField, unroll_elements
 
 TURNING_TYPES = ("turning_insert", "grooving_insert", "parting_insert", "threading_insert", "boring_bar",
                  "form_tool")
@@ -85,6 +92,7 @@ class ToolSpec:
     neck_length_m: float = 0.0
     fluted_area_m2: float = 0.0
     fluted_perimeter_m: float = 0.0
+    core_diameter_m: float = 0.0           # web / core of the fluted section (0: not given)
     coolant_holes: int = 0
     coolant_hole_diameter_m: float = 0.0
     stickout_m: float = 0.035
@@ -152,6 +160,7 @@ def tool_spec(entry, tool_item=None, holder_item=None) -> ToolSpec:
     spec.overall_length_m = overall
     if spec.stickout_m <= 0.0 or spec.stickout_m > overall:
         spec.stickout_m = max(overall - clamp, 0.5 * overall)
+    spec.core_diameter_m = _num(_get(geo, "core_diameter_m"), 0.0) or 0.0
     gullet = _num(_get(geo, "gullet_area_m2"), None)
     full = math.pi * d * d / 4.0
     if gullet is not None and gullet > 0.0:
@@ -432,6 +441,15 @@ class ToolThermal:
         self.to_coolant_J = 0.0
         self.rise = None                   # last local edge rise (rake, peak, flank [nt, ne, nq], amp [nt, ne])
         self.edge_calls = 0
+        self.field: ToolField | None = None   # 3-D cutting-region field (enable_field), solved with the ladder
+        self.field_requested = False
+        self.field_settings: dict = {}
+        self.field_pending_dt = 0.0        # time accumulated since the last field solve
+        self.field_pending_steps = 0
+        self.field_every_n = 1             # field solved on every n-th step
+        self.field_pend = None             # element heat accumulated since the last solve (_field_pending)
+        self.field_means = None            # [3, nE] rake, flank, edge temperatures of the field's elements
+        self.dev = None                    # last periodic deviation of the field's elements (rake, peak, flank)
 
     # ------------------------------------------------------------------ body
     def set_environment(self, env: ToolEnvironment) -> None:
@@ -466,7 +484,15 @@ class ToolThermal:
         lad.scal[2] = env.T_end_K
 
     def deposit(self, z_m: np.ndarray, energy_J: np.ndarray) -> float:
-        """Add element heats at positions z (from the tip) to the tool nodes (linear weights)."""
+        """Add element heats at positions z (from the tip) to the tool nodes (linear weights); with the
+        cutting-region field, into the field at the edge where it covers z (no contact geometry: half
+        on each face over the innermost rings) and into the ladder elsewhere."""
+        if self.field is not None:
+            return self._deposit_field_at(np.ravel(np.asarray(z_m, dtype=float)), np.ravel(np.asarray(energy_J,
+                                                                                                    dtype=float)))
+        return self._deposit_ladder(z_m, energy_J)
+
+    def _deposit_ladder(self, z_m, energy_J) -> float:
         lad = self.ladder
         nodes = self.layout.tool_nodes
         z = np.ravel(np.asarray(z_m, dtype=float))
@@ -482,17 +508,145 @@ class ToolThermal:
         np.add.at(lad.src, nodes[i + 1], q * t)
         return float(q.sum())
 
+    def _deposit_field_at(self, z: np.ndarray, q: np.ndarray) -> float:
+        """Heat without contact geometry into the field: at the edge, half rake / half flank over the
+        innermost rings, at the slab of each z (turning: the corner slab); a rotating tool's heat
+        beyond the field's height range goes to the ladder."""
+        f = self.field
+        if q.size == 0:
+            return 0.0
+        strip = float(f.section.r_edges[min(3, f.section.r_edges.size - 1)])
+        ye = f.y_edges
+        if self.layout.turning:
+            inside = np.ones(q.size, dtype=bool)
+            y = np.full(q.size, 0.5 * (ye[0] + ye[1]))
+        else:
+            zf = f.frames.get("z_mid")
+            yf = f.frames.get("y_mid")
+            if zf is None or zf.size == 0:
+                inside = z <= ye[-1]
+                y = np.clip(z, ye[0], ye[-1])
+            else:
+                order = np.argsort(zf, kind="stable")
+                inside = (z >= zf.min() - 1e-12) & (z <= zf.max() + 1e-12)
+                y = np.interp(z, zf[order], yf[order])
+        total = 0.0
+        if np.any(inside):
+            slab = np.clip(np.searchsorted(ye, y[inside], side="right") - 1, 0, ye.size - 2)
+            e = q[inside]
+            total += f.deposit_strips(0.5 * e, 0.5 * e, np.full(e.size, strip), np.full(e.size, strip), ye[slab],
+                                      ye[slab + 1], np.zeros(e.size, dtype=np.int64))
+        if np.any(~inside):
+            total += self._deposit_ladder(z[~inside], q[~inside])
+        return total
+
     def deposit_uniform(self, length_m: float, energy_J: float) -> None:
         """Spread heat over the tool nodes within ``length_m`` of the tip (no element geometry)."""
         nodes = self.layout.tool_nodes
         zs = self.layout.z_m[nodes]
         chosen = nodes[zs <= max(length_m, zs[0])]
+        if self.field is not None:
+            z = self.layout.z_m[chosen]
+            self._deposit_field_at(np.asarray(z, dtype=float), np.full(chosen.size, energy_J / chosen.size))
+            return
         for idx in chosen:
             self.ladder.src[idx] += energy_J / chosen.size
 
-    def step(self, dt_s: float, env: ToolEnvironment, energy_tol: float) -> dict:
-        """Advance the ladder by dt with the heat in ``ladder.src``; books the ledger."""
+    def contact_sizes(self, edges: EdgeModel, heat, vb_m) -> tuple[np.ndarray, np.ndarray]:
+        """Rake contact length l_c = h zeta^n (at least the edge radius) and flank contact width
+        l_f = VB + factor x edge radius per element (docs/models/thermal.md 2.2)."""
+        p = _p()
+        edge_r = np.asarray(edges.elem_edge_radius_m, dtype=float)
+        shape = edge_r.shape
+        vb = np.asarray(vb_m, dtype=float) if vb_m is not None and np.shape(vb_m) == shape else np.zeros(shape)
+        h_mean = heat.h_mean_m if heat is not None and np.shape(heat.h_mean_m) == shape else np.zeros(shape)
+        zeta = heat.compression if heat is not None and np.shape(heat.compression) == shape else \
+            np.full(shape, p["default_compression_ratio"])
+        contact_factor = np.minimum(np.maximum(zeta, 1.0) ** p["poletika_exponent"], p["max_contact_ratio"])
+        l_c = np.maximum(h_mean * contact_factor, np.maximum(edge_r, 1e-6))
+        l_f = np.maximum(vb + p["flank_contact_edge_factor"] * edge_r, 1e-6)
+        return l_c, l_f
+
+    def deposit_elements(self, edges: EdgeModel, heat, vb_m=None) -> float:
+        """Per-element tool heat of a contact (partition.ContactHeat: tool_rake_elem_J,
+        tool_flank_elem_J) into the cutting-region field - the elements it carries, as uniform fluxes
+        over their rake and flank contacts (the teeth of a rotating tool together, contact sizes
+        heat-weighted over the teeth) - and into the ladder at their height (the others)."""
+        q_r = np.asarray(heat.tool_rake_elem_J, dtype=float)
+        q_f = np.asarray(heat.tool_flank_elem_J, dtype=float)
+        if self.field is None or q_r.shape != np.shape(edges.elem_z_m):
+            return self.deposit(edges.elem_z_m, q_r + q_f)
+        el = self.field.elements
+        if el is None or el.in_field.shape != q_r.shape:
+            return self._deposit_field_at(np.ravel(np.asarray(edges.elem_z_m, dtype=float)), np.ravel(q_r + q_f))
+        l_c, l_f = self.contact_sizes(edges, heat, vb_m)
+        inf = el.in_field
+        qr = np.where(inf, q_r, 0.0)[:, el.elem]
+        qf = np.where(inf, q_f, 0.0)[:, el.elem]
+        # accumulated until the field is solved (one mapping onto the faces per solve, with the heat-weighted
+        # contact sizes of the interval: the mean flux over the mean contact)
+        pend = self._field_pending(el.elem.size)
+        pend[0] += qr.sum(axis=0)
+        pend[1] += qf.sum(axis=0)
+        pend[2] += (qr * l_c[:, el.elem]).sum(axis=0)
+        pend[3] += (qf * l_f[:, el.elem]).sum(axis=0)
+        pend[4] = np.minimum(l_c[0, el.elem], l_f[0, el.elem])
+        total = float(qr.sum() + qf.sum())
+        rest = ~inf & ((q_r != 0.0) | (q_f != 0.0))
+        if np.any(rest):
+            z = np.asarray(edges.elem_z_m, dtype=float)[rest]
+            q = (q_r + q_f)[rest]
+            total += self._deposit_field_at(z, q) if self.layout.turning else self._deposit_ladder(z, q)
+        return total
+
+    def deposit_contact(self, rake_J: float, flank_J: float, rake_length_m: float, flank_length_m: float,
+                        width_m: float, start_m: float = 0.0, *, wedge_angle_rad: float | None = None,
+                        edge_radius_m: float | None = None) -> float:
+        """Heat of one contact patch into the cutting-region field: the rake heat as a uniform flux over
+        [0, rake_length] from the edge x [start, start + width] along the edge, the flank heat over
+        [0, flank_length] down the flank face (J; for a rotating tool all teeth together). A field that
+        was requested without geometry is built on the first call that gives the wedge angle."""
+        if self.field is None and self.field_requested and wedge_angle_rad is not None:
+            self._build_field(self._settings(), None, float(wedge_angle_rad), edge_radius_m,
+                              (start_m, start_m + width_m))
+        if self.field is None:
+            raise InputError("thermal: deposit_contact needs the cutting-region field (ToolThermal.enable_field)")
+        return self.field.deposit_strips([rake_J], [flank_J], [rake_length_m], [flank_length_m], [start_m],
+                                         [start_m + width_m], [0])
+
+    def step(self, dt_s: float, env: ToolEnvironment, energy_tol: float, force: bool = False) -> dict:
+        """Advance the ladder (and the cutting-region field) by dt with the heat deposited; books the ledger.
+
+        With the field, field and ladder are solved together every ``every_n_steps`` (enable_field) calls
+        over the accumulated time (the heat deposited in between waits in the field's sources; the
+        returned losses are those of the solve, zero on the calls in between); ``force`` solves now."""
         self.set_environment(env)
+        if self.field is not None:
+            self.field_pending_dt += float(dt_s)
+            self.field_pending_steps += 1
+            if not force and self.field_pending_steps < self.field_every_n:
+                self.time_s += dt_s
+                return {"source_J": 0.0, "air_J": 0.0, "coolant_J": 0.0, "spindle_J": 0.0, "du_J": 0.0}
+            span = self.field_pending_dt
+            self.field_pending_dt = 0.0
+            self.field_pending_steps = 0
+            sizes = self._place_element_heat()
+            self.field.set_environment(env, self.emissivity_tool)
+            out = self.field.step(self.ladder, self.mat_tool, self.mat_holder, span)
+            tol = float(self.field.sys.scal[FS_TOL])
+            if not np.all(np.isfinite(out[:FD_RES + 1])) or out[FD_RES] > max(1e3 * tol, 1e-8):
+                raise ConservationError(f"thermal energy (tool.{self.slot} field solve, residual {out[FD_RES]:.3g} "
+                                        f"after {out[FD_ITER]:.0f} iterations)", float(out[FD_SRC]),
+                                        float(out[FD_U1] - out[FD_U0]), tol, self.time_s + dt_s)
+            self._update_field_means(sizes)
+            self.time_s += dt_s
+            losses = out[FD_AIR] + out[FD_COOL] + out[FD_SP]
+            self.ledger.book(out[FD_U0], out[FD_U1], out[FD_SRC], losses, 0.0, energy_tol, self.time_s)
+            self.ladder.src[:] = 0.0
+            self.to_spindle_J = float(out[FD_SP])
+            self.to_coolant_J = float(out[FD_COOL])
+            return {"source_J": float(out[FD_SRC]), "air_J": float(out[FD_AIR]), "coolant_J": float(out[FD_COOL]),
+                    "spindle_J": float(out[FD_SP]), "du_J": float(out[FD_DU])}
         out = np.zeros(N_LD)
         K.ladder_step(self.ladder, self.mat_tool, self.mat_holder, float(dt_s), out)
         self.time_s += dt_s
@@ -504,6 +658,172 @@ class ToolThermal:
         return {"source_J": float(out[LD_SRC]), "air_J": float(out[LD_AIR]), "coolant_J": float(out[LD_COOL]),
                 "spindle_J": float(out[LD_SP]), "du_J": float(out[LD_DU])}
 
+    # ------------------------------------------------------------------ cutting-region field
+    def _field_pending(self, n: int) -> np.ndarray:
+        """[5, nE] heat accumulated per field element since the last solve: rake J, flank J, sum of rake J x
+        l_c, sum of flank J x l_f, and the last contact sizes (for elements without heat)."""
+        if self.field_pend is None or self.field_pend.shape[1] != n:
+            self.field_pend = np.zeros((5, n))
+        return self.field_pend
+
+    def _place_element_heat(self) -> tuple[np.ndarray, np.ndarray] | None:
+        """Map the accumulated element heat onto the field's faces; returns the contact sizes used."""
+        el = self.field.elements
+        if el is None or el.elem.size == 0:
+            return None
+        pend = self._field_pending(el.elem.size)
+        floor = pend[4] if np.any(pend[4] > 0.0) else np.full(el.elem.size, float(self.field.section.r_edges[1]))
+        lc = np.where(pend[0] > 0.0, pend[2] / np.where(pend[0] > 0.0, pend[0], 1.0), np.maximum(floor, 1e-9))
+        lf = np.where(pend[1] > 0.0, pend[3] / np.where(pend[1] > 0.0, pend[1], 1.0), np.maximum(floor, 1e-9))
+        if np.any(pend[0] != 0.0) or np.any(pend[1] != 0.0):
+            self.field.deposit_strips(pend[0], pend[1], lc, lf, el.lo, el.hi, el.side)
+        pend[:4] = 0.0
+        return lc, lf
+
+    def _update_field_means(self, sizes) -> None:
+        """Cycle-mean rake, flank and edge temperatures of the field's elements after a solve."""
+        el = self.field.elements
+        if sizes is None or el is None:
+            self.field_means = None
+            return
+        lc, lf = sizes
+        self.field_means = np.stack(self.field.strip_means(lc, lf, el.lo, el.hi, el.side))
+
+    def flush_field(self, env: ToolEnvironment, energy_tol: float) -> dict:
+        """Solve the field now over the time accumulated since its last solve (no-op without one)."""
+        if self.field is None or self.field_pending_steps == 0:
+            return {"source_J": 0.0, "air_J": 0.0, "coolant_J": 0.0, "spindle_J": 0.0, "du_J": 0.0}
+        self.field_pending_steps -= 1          # the forced call below counts itself again
+        return self.step(0.0, env, energy_tol, force=True)
+
+    def _settings(self):
+        from .schema import ThermalSettings
+        return ThermalSettings(**self.field_settings) if self.field_settings else ThermalSettings()
+
+    def enable_field(self, settings=None, edges: EdgeModel | None = None, *, wedge_angle_rad: float | None = None,
+                     edge_radius_m: float | None = None, contact_edges_m=(), every_n_steps: int = 1) -> bool:
+        """Solve the 3-D cutting-region field (docs/models/thermal.md 2.4) with the ladder from now on.
+
+        With an EdgeModel the field follows its edge (wedge angle, edge radius, the elements along the
+        unrolled edge); without one it is a straight edge of ``wedge_angle_rad`` from the corner (inserts)
+        or the tip (solid tools), fed by :meth:`deposit_contact` (``contact_edges_m``: positions along the
+        edge where contacts start or end, kept as cell boundaries); without either it is built by the
+        first deposit_contact that gives the wedge angle. ``every_n_steps``: field and ladder are solved on
+        every n-th call of :meth:`step` over the accumulated time (the domain's macro cadence). Returns
+        whether the field exists now."""
+        from .schema import ThermalSettings
+        if self.field is not None:
+            return True
+        st = settings if settings is not None else ThermalSettings()
+        self.field_requested = True
+        self.field_settings = dict(st.__dict__)
+        self.field_every_n = max(1, int(every_n_steps))
+        if edges is None and wedge_angle_rad is None:
+            return False
+        self._build_field(st, edges, wedge_angle_rad, edge_radius_m, contact_edges_m)
+        return self.field is not None
+
+    def _build_field(self, st, edges: EdgeModel | None, wedge_angle_rad: float | None,
+                     edge_radius_m: float | None, contact_edges_m=()) -> None:
+        p = _p()
+        lay = self.layout
+        spec = self.spec
+        turning = lay.turning
+        lo_w, hi_w = float(p["min_wedge_angle_rad"]), float(p["max_wedge_angle_rad"])
+        elements = None
+        elem_z = None
+        frames: dict = {}
+        if edges is not None:
+            length = spec.insert_ic_m if turning else st.tool_field_length_m
+            elements = unroll_elements(edges, turning, length)
+            if elements.elem.size == 0:
+                return
+            e = elements.elem
+            wedge = 0.5 * math.pi - np.asarray(edges.elem_rake_rad, dtype=float)[0, e] \
+                - np.asarray(edges.elem_clear_rad, dtype=float)[0, e]
+            beta = float(np.median(np.clip(wedge, lo_w, hi_w)))
+            radius = float(np.min(np.asarray(edges.elem_edge_radius_m, dtype=float)[0, e])) \
+                if edge_radius_m is None else float(edge_radius_m)
+            elem_z = np.asarray(edges.elem_z_m, dtype=float)
+            mult = 1.0 if turning else float(np.shape(edges.elem_valid)[0])
+            frames = edge_frames(edges, elements, turning)
+            field_length = length if turning else min(length, float(elements.hi.max()))
+        else:
+            beta = float(min(max(float(wedge_angle_rad), lo_w), hi_w))
+            radius = float(edge_radius_m) if edge_radius_m else 0.0
+            mult = 1.0 if turning else float(max(spec.flutes, 1))
+            field_length = spec.insert_ic_m if turning else st.tool_field_length_m
+        ring1 = st.tool_field_ring_m if radius <= 0.0 else min(st.tool_field_ring_m, 0.25 * radius)
+        if turning:
+            ic = spec.insert_ic_m
+            seat = {"node": int(lay.holder_nodes[0]), "conductance_W_m2K": float(p["shank_contact_conductance_W_m2K"]),
+                    "contact_area_m2": float(p["insert_seat_area_ratio"]) * ic * ic,
+                    "bar_height_m": float(spec.bar_h_m)}
+            kind, back, thick, root, ref_d = "insert", ic, spec.insert_thickness_m, 0.0, ic
+        else:
+            d = spec.diameter_m
+            if spec.core_diameter_m > 0.0:
+                root = 0.5 * (d - spec.core_diameter_m)
+            else:
+                root = 0.5 * d * (1.0 - math.sqrt(min(max(spec.fluted_area_m2 / (math.pi * d * d / 4.0), 0.0), 1.0)))
+            root = max(root, 8.0 * ring1)
+            kind, back, thick, seat, ref_d = "tooth", 0.0, 0.0, None, d
+        self.field = ToolField.build(kind=kind, beta=beta, ring1_m=ring1, growth=st.tool_field_growth,
+                                     sector_rad=math.radians(st.tool_field_sector_deg), dy_max_m=st.tool_field_dy_m,
+                                     length_m=field_length, section_back_m=back, thickness_m=thick, root_radius_m=root,
+                                     mult=mult, mat_tool=self.mat_tool, mat_holder=self.mat_holder, ladder=self.ladder,
+                                     layout=lay, elements=elements, elem_z_m=elem_z, seat=seat, ref_diameter_m=ref_d,
+                                     tol=st.tool_field_tol, max_iter=st.tool_field_max_iter, frames=frames,
+                                     contact_edges_m=contact_edges_m)
+        u = self.energy_J()
+        self.ledger.u_J = u
+        if self.ledger.steps == 0:
+            self.ledger.u0_J = u
+
+    def energy_J(self) -> float:
+        """Internal energy of the tool's solver (J rel. 20 degC): the ladder, or the field and the
+        ladder nodes it does not replace."""
+        if self.field is None:
+            return float(K.ladder_energy(self.ladder))
+        lad = self.ladder
+        act = self.field.sys.active != 0
+        return math.fsum((self.field.mesh.m * self.field.sys.h).tolist() + (lad.m[act] * lad.h[act]).tolist())
+
+    def temperature_at(self, points_E, outside: str = "nan") -> np.ndarray:
+        """Tool temperatures (K) at points (x, y, z) of the cutting region's edge frame E: x along the
+        rake face from the edge into the tool, y along the edge from the field's start (inserts: the
+        corner), z the rake face's outward normal (the tool at z < 0); outside the field's solid NaN, or
+        with ``outside="nearest"`` the temperature at the nearest point of the solid."""
+        if self.field is None:
+            raise InputError("thermal: temperature_at needs the cutting-region field (ToolThermal.enable_field)")
+        return self.field.temperature_at(points_E, outside)
+
+    def contact_temperatures(self, rake_length_m: float, flank_length_m: float, width_m: float,
+                             start_m: float = 0.0) -> tuple[float, float, float]:
+        """(rake contact mean, flank contact mean, cutting-edge line) face temperatures (K) of the field over
+        a contact patch [0, rake_length] x [start, start + width] on the rake face and [0, flank_length]
+        down the flank (the cycle mean of the last solve)."""
+        if self.field is None:
+            raise InputError("thermal: contact_temperatures needs the cutting-region field (ToolThermal.enable_field)")
+        rake, flank, edge = self.field.strip_means([rake_length_m], [flank_length_m], [start_m],
+                                                   [start_m + width_m], [0])
+        return float(rake[0]), float(flank[0]), float(edge[0])
+
+    def temperature_at_T(self, points_T) -> np.ndarray:
+        """Tool temperatures (K) at points of the tool frame T (rotating tools at spindle angle 0).
+
+        Inside the field: its 3-D temperature, the point taken into the edge frame of the nearest field
+        element (the representative tooth's field for every tooth); elsewhere the ladder's body
+        temperature at the point's height z_T (turning tools: the insert's first node)."""
+        pts = np.atleast_2d(np.asarray(points_T, dtype=float))
+        body = self.body_temp_at(pts[:, 2]) if not self.layout.turning else \
+            np.full(pts.shape[0], float(self.ladder.T[self.layout.tool_nodes[0]]))
+        if self.field is None or "pos" not in self.field.frames:
+            return np.asarray(body, dtype=float)
+        pe = points_to_edge_frame(self.field.frames, pts)
+        inside = self.field.temperature_at(pe)
+        return np.where(np.isfinite(inside), inside, body)
+
     def advance_idle(self, until_s: float, env: ToolEnvironment, steps: int, energy_tol: float) -> dict:
         """Bring an idle tool up to ``until_s`` in ``steps`` implicit steps (no heat input)."""
         span = until_s - self.time_s
@@ -511,7 +831,7 @@ class ToolThermal:
         if span <= 0.0:
             return totals
         for _ in range(max(1, steps)):
-            result = self.step(span / max(1, steps), env, energy_tol)
+            result = self.step(span / max(1, steps), env, energy_tol, force=True)
             for key in totals:
                 totals[key] += result[key]
         self.time_s = float(until_s)
@@ -571,7 +891,7 @@ class ToolThermal:
         if self.edge.n_cyc.shape != shape:
             self.edge = EdgeState(np.zeros(shape), np.zeros(shape))
         t_body = self.body_temp_at(z)
-        inp = new_edge_input(shape, xi.size)
+        inp = new_edge_input(shape, xi.size, EDGE_OUT_TEMPERATURE)
         inp.xi[:] = xi
         inp.scal[0] = settings.sa_direct_cycles
         inp.scal[1] = settings.window_points
@@ -589,23 +909,48 @@ class ToolThermal:
             self.edge.n_cyc[:] = 0.0
             self.edge.t_eng[:] = 0.0
         out = new_edge_output(shape, xi.size)
+        field = self.field if (self.field is not None and self.field.elements is not None
+                               and self.field.elements.in_field.shape == shape) else None
         fresh = (self.rise is None or self.rise[0].shape != out.rake_q.shape
+                 or (field is not None and (self.dev is None or self.dev[0].shape != out.rake_q.shape))
                  or self.edge_calls % max(1, settings.edge_every_n_macro) == 0)
         self.edge_calls += 1
+        cutting = (inp.mode != EDGE_NONE)[:, :, None]
         if fresh:
             glx, glw = gauss_legendre(settings.window_points)
-            K.edge_temperatures(inp, edge_response(), glx, glw, out)
+            if field is None:
+                K.edge_temperatures(inp, edge_response(), glx, glw, out)
+            else:
+                # elements the field carries: it holds their cycle mean, the edge kernel gives the periodic
+                # deviation around it; the others: body temperature + local rise as without the field
+                carried = field.elements.in_field
+                modes = inp.mode.copy()
+                inp.mode[:] = np.where(carried, EDGE_NONE, modes)
+                K.edge_temperatures(inp, edge_response(), glx, glw, out)
+                inp.mode[:] = np.where(carried, modes, EDGE_NONE)
+                inp.scal[2] = EDGE_OUT_DEVIATION
+                dev = new_edge_output(shape, xi.size)
+                K.edge_temperatures(inp, edge_response(), glx, glw, dev)
+                inp.mode[:] = modes
+                out.amp[:] = np.where(carried, dev.amp, out.amp)
+                self.dev = (dev.rake_q, dev.peak_q, dev.flank_q)
             base = t_body[:, :, None]
             self.rise = (out.rake_q - base, out.peak_q - base, out.flank_q - base, out.amp.copy())
         else:
             # between evaluations: the last local rise on the current body temperature, for the elements
             # still in cut (others: body temperature)
-            cutting = (inp.mode != EDGE_NONE)[:, :, None]
             base = t_body[:, :, None]
             out.rake_q[:] = base + np.where(cutting, self.rise[0], 0.0)
             out.peak_q[:] = base + np.where(cutting, self.rise[1], 0.0)
             out.flank_q[:] = base + np.where(cutting, self.rise[2], 0.0)
             out.amp[:] = np.where(cutting[:, :, 0], self.rise[3], 0.0)
+        if field is not None:
+            rake_m, flank_m, edge_m = self._field_means(field, edges, heat, vb_m, t_body)
+            carried = field.elements.in_field[:, :, None]
+            dev_r, dev_p, dev_f = (np.where(cutting, d, 0.0) for d in self.dev)
+            out.rake_q[:] = np.where(carried, rake_m[:, :, None] + dev_r, out.rake_q)
+            out.flank_q[:] = np.where(carried, flank_m[:, :, None] + dev_f, out.flank_q)
+            out.peak_q[:] = np.where(carried, edge_m[:, :, None] + dev_p, out.peak_q)
         valid = np.asarray(edges.elem_valid) != 0
         strain = strain_from(self.mat_tool, t_body, self.temp_ref_K)
         result.edge_temp_q_K = out.rake_q
@@ -619,23 +964,42 @@ class ToolThermal:
         self.last_heat = result
         return result
 
+    def _field_means(self, field: ToolField, edges: EdgeModel, heat, vb_m, t_body: np.ndarray):
+        """[nt, ne] rake-contact mean, flank-contact mean and edge-line temperature of the field's
+        elements (the field's cycle-mean face temperatures over their contact strips). A rotating
+        tool's representative tooth carries the teeth's mean heat; tooth j's rise above the core is the
+        representative's times its heat ratio (linear superposition per element)."""
+        el = field.elements
+        shape = np.shape(edges.elem_z_m)
+        has_heat = heat is not None and np.shape(heat.tool_rake_elem_J) == shape
+        q = (np.asarray(heat.tool_rake_elem_J, dtype=float) + np.asarray(heat.tool_flank_elem_J, dtype=float)) \
+            if has_heat else np.zeros(shape)
+        if self.field_means is None or self.field_means.shape[1] != el.elem.size:
+            l_c, l_f = self.contact_sizes(edges, heat, vb_m)
+            self.field_means = np.stack(field.strip_means(l_c[0, el.elem], l_f[0, el.elem], el.lo, el.hi, el.side))
+        rake, flank, edge = self.field_means
+        out = [np.full(shape, np.nan) for _ in range(3)]
+        qe = np.where(el.in_field[:, el.elem], q[:, el.elem], 0.0)
+        n_on = np.maximum(el.in_field[:, el.elem].sum(axis=0), 1)
+        mean_q = qe.sum(axis=0) / n_on
+        ratio = np.where(mean_q[None, :] > 0.0, qe / np.where(mean_q > 0.0, mean_q, 1.0)[None, :], 1.0) \
+            if shape[0] > 1 else np.ones_like(qe)
+        base = t_body[:, el.elem]
+        for target, rep in zip(out, (rake, flank, edge)):
+            target[:, el.elem] = base + ratio * (rep[None, :] - base) if shape[0] > 1 else rep[None, :]
+        return out[0], out[1], out[2]
+
     def _fill_edge_input(self, inp, edges, heat, in_cut, entries, vb_m, dt_s) -> None:
         p = _p()
         shape = in_cut.shape
         valid = np.asarray(edges.elem_valid) != 0
         db = np.maximum(np.asarray(edges.elem_db_m, dtype=float), 1e-6)
-        edge_r = np.asarray(edges.elem_edge_radius_m, dtype=float)
         rake = np.asarray(edges.elem_rake_rad, dtype=float)
         clear = np.asarray(edges.elem_clear_rad, dtype=float)
         radius = np.asarray(edges.elem_r_m, dtype=float)
-        vb = np.asarray(vb_m, dtype=float) if vb_m is not None and np.shape(vb_m) == shape else np.zeros(shape)
-        h_mean = heat.h_mean_m if heat.h_mean_m.shape == shape else np.zeros(shape)
-        zeta = heat.compression if heat.compression.shape == shape else np.full(shape, p["default_compression_ratio"])
         q_rake = heat.tool_rake_elem_J if heat.tool_rake_elem_J.shape == shape else np.zeros(shape)
         q_flank = heat.tool_flank_elem_J if heat.tool_flank_elem_J.shape == shape else np.zeros(shape)
-        contact_factor = np.minimum(np.maximum(zeta, 1.0) ** p["poletika_exponent"], p["max_contact_ratio"])
-        l_c = np.maximum(h_mean * contact_factor, np.maximum(edge_r, 1e-6))
-        l_f = np.maximum(vb + p["flank_contact_edge_factor"] * edge_r, 1e-6)
+        l_c, l_f = self.contact_sizes(edges, heat, vb_m)
         wedge = np.clip(0.5 * math.pi - rake - clear, p["min_wedge_angle_rad"], p["max_wedge_angle_rad"])
         active = valid & (in_cut > 0.0) & ((q_rake > 0.0) | (q_flank > 0.0))
         t_in = np.where(active, in_cut, 1.0)
@@ -672,8 +1036,23 @@ class ToolThermal:
         if self.rise is not None:
             for i, name in enumerate(("rake", "peak", "flank", "amp")):
                 arrays[f"{prefix}rise.{name}"] = self.rise[i].copy()
+        if self.dev is not None:
+            for i, name in enumerate(("rake", "peak", "flank")):
+                arrays[f"{prefix}dev.{name}"] = self.dev[i].copy()
+        if self.field_pend is not None:
+            arrays[f"{prefix}field_pend"] = self.field_pend.copy()
+        if self.field_means is not None:
+            arrays[f"{prefix}field_means"] = self.field_means.copy()
+        field_meta = None
+        if self.field is not None:
+            fa, field_meta = self.field.to_arrays(f"{prefix}field.")
+            arrays.update(fa)
         meta = {"slot": self.slot, "spec": dict(self.spec.__dict__), "temp_ref_K": self.temp_ref_K,
-                "edge_calls": self.edge_calls, "has_rise": self.rise is not None,
+                "edge_calls": self.edge_calls, "has_rise": self.rise is not None, "has_dev": self.dev is not None,
+                "field": field_meta, "field_requested": self.field_requested,
+                "field_settings": dict(self.field_settings), "field_pending_dt": self.field_pending_dt,
+                "field_every_n": self.field_every_n,
+                "field_pending_steps": self.field_pending_steps,
                 "time_s": self.time_s, "ledger": self.ledger.to_dict(),
                 "end_node": self.layout.end_node, "end_conductance_W_K": self.layout.end_conductance_W_K,
                 "turning": self.layout.turning, "emissivity_tool": self.emissivity_tool,
@@ -709,4 +1088,88 @@ class ToolThermal:
         obj.edge_calls = int(meta["edge_calls"])
         obj.rise = tuple(np.array(arrays[f"{prefix}rise.{name}"]) for name in ("rake", "peak", "flank", "amp")) \
             if meta["has_rise"] else None
+        obj.dev = tuple(np.array(arrays[f"{prefix}dev.{name}"]) for name in ("rake", "peak", "flank")) \
+            if meta.get("has_dev") else None
+        obj.field = ToolField.from_arrays(arrays, meta["field"], f"{prefix}field.") if meta.get("field") else None
+        obj.field_requested = bool(meta.get("field_requested", False))
+        obj.field_settings = dict(meta.get("field_settings") or {})
+        obj.field_pending_dt = float(meta.get("field_pending_dt", 0.0))
+        obj.field_pending_steps = int(meta.get("field_pending_steps", 0))
+        obj.field_every_n = int(meta.get("field_every_n", 1))
+        obj.field_pend = np.array(arrays[f"{prefix}field_pend"]) if f"{prefix}field_pend" in arrays else None
+        obj.field_means = np.array(arrays[f"{prefix}field_means"]) if f"{prefix}field_means" in arrays else None
         return obj
+
+
+def edge_frames(edges: EdgeModel, elements, turning: bool) -> dict:
+    """Unit vectors in T (spindle angle 0) of the field's elements on every tooth, for mapping points
+    of the tool frame into the field's edge frame E (docs/models/thermal.md 2.4):
+
+    * pos: element midpoint; tan: edge tangent along the field axis (differences of the midpoints);
+    * x: rake direction into the tool, cos g (-n) - sin g m; z: rake outward normal, cos g m - sin g n
+      (n, m: the chip-thickness normal sin(kappa) e_r - cos(kappa) e_z and the cutting direction,
+      made orthonormal in the plane normal to the edge; g the normal rake; docs/models/tooling.md 2);
+    * y_mid, z_mid: the element's position along the field axis and its height z_T (tooth 0)."""
+    h = float(edges.hand_sign[0])
+    el = elements
+    e = el.elem
+    alpha = h * (np.asarray(edges.tooth_phase_rad, dtype=float)[:, None] + np.asarray(edges.elem_lag_rad,
+                                                                                         dtype=float)[:, e])
+    r = np.asarray(edges.elem_r_m, dtype=float)[:, e]
+    zz = np.asarray(edges.elem_z_m, dtype=float)[:, e]
+    if turning:
+        pos = np.stack([r, np.zeros_like(r), zz], axis=-1)
+        e_r = np.broadcast_to(np.array([1.0, 0.0, 0.0]), pos.shape)
+        cut = np.broadcast_to(np.array([0.0, h, 0.0]), pos.shape)
+    else:
+        pos = np.stack([r * np.cos(alpha), r * np.sin(alpha), zz], axis=-1)
+        e_r = np.stack([np.cos(alpha), np.sin(alpha), np.zeros_like(alpha)], axis=-1)
+        cut = h * np.stack([-np.sin(alpha), np.cos(alpha), np.zeros_like(alpha)], axis=-1)
+    kappa = np.asarray(edges.elem_kappa_rad, dtype=float)[:, e]
+    normal = np.sin(kappa)[..., None] * e_r - np.cos(kappa)[..., None] * np.array([0.0, 0.0, 1.0])
+    tan = np.zeros_like(pos)
+    for s in (0, 1):
+        idx = np.flatnonzero(el.side == s)
+        if idx.size == 0:
+            continue
+        p = pos[:, idx]
+        if idx.size == 1:
+            t = np.cos(kappa[:, idx])[..., None] * e_r[:, idx] + np.sin(kappa[:, idx])[..., None] * \
+                np.array([0.0, 0.0, 1.0])
+        else:
+            t = np.gradient(p, axis=1)
+        tan[:, idx] = t
+    tan /= np.maximum(np.linalg.norm(tan, axis=-1, keepdims=True), 1e-300)
+    m = cut - np.sum(cut * tan, axis=-1, keepdims=True) * tan
+    m /= np.maximum(np.linalg.norm(m, axis=-1, keepdims=True), 1e-300)
+    n = normal - np.sum(normal * tan, axis=-1, keepdims=True) * tan - np.sum(normal * m, axis=-1, keepdims=True) * m
+    n /= np.maximum(np.linalg.norm(n, axis=-1, keepdims=True), 1e-300)
+    g = np.asarray(edges.elem_rake_rad, dtype=float)[:, e][..., None]
+    x_dir = np.cos(g) * (-n) - np.sin(g) * m
+    z_dir = np.cos(g) * m - np.sin(g) * n
+    return {"pos": np.ascontiguousarray(pos), "tan": np.ascontiguousarray(tan), "x": np.ascontiguousarray(x_dir),
+            "z": np.ascontiguousarray(z_dir), "side": np.asarray(el.side, dtype=np.int64).copy(),
+            "y_mid": 0.5 * (el.lo + el.hi), "z_mid": np.asarray(edges.elem_z_m, dtype=float)[0, e].copy(),
+            "valid": (np.asarray(edges.elem_valid)[:, e] != 0).astype(np.int8)}
+
+
+def points_to_edge_frame(frames: dict, points_T: np.ndarray) -> np.ndarray:
+    """Points of T (spindle angle 0) in the field's edge frame E through the frame of the nearest
+    field element (any tooth); minor-edge elements (side 1) lie along x on the prism's end face."""
+    pts = np.atleast_2d(np.asarray(points_T, dtype=float))
+    pos = frames["pos"]
+    valid = frames["valid"] != 0
+    flat = pos.reshape(-1, 3)
+    ok = valid.reshape(-1)
+    d2 = np.sum((pts[:, None, :] - flat[None, :, :]) ** 2, axis=-1)
+    d2[:, ~ok] = np.inf
+    best = np.argmin(d2, axis=1)
+    nE = pos.shape[1]
+    j, i = best // nE, best % nE
+    rel = pts - pos[j, i]
+    xd = np.sum(rel * frames["x"][j, i], axis=-1)
+    zd = np.sum(rel * frames["z"][j, i], axis=-1)
+    td = np.sum(rel * frames["tan"][j, i], axis=-1)
+    side = frames["side"][i]
+    along = frames["y_mid"][i] + td
+    return np.stack([np.where(side == 1, along, xd), np.where(side == 1, xd, along), zd], axis=-1)

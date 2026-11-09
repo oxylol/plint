@@ -23,6 +23,13 @@ params:
     range: [1.0, 240.0]
     src: est
     note: "life of the third (check) speed whose prediction residual is reported: the customary v15 reference speed"
+  milling_reference_arc_rad:
+    value: 36.87
+    unit: deg
+    range: [1.0, 180.0]
+    src: iso-8688-2-1989
+    page: "clause 6.1, Table 3, conditions I and II"
+    note: "engaged arc of the reference cut of a milling Taylor entry that counts cutting time but states no engaged_arc_ref_deg: the standard end-milling tool-life test with the periphery used predominantly, radial depth ar = 2.5 mm with the D = 25 mm reference end mill (ae/D = 0.1), whose edge is in the material arccos(1 - 2 ae/D) = arccos(0.8) = 36.87 deg of each revolution (contact fraction 0.102 of the cutting time); the calibration converts the entry's cutting-time life to edge contact time with it (docs/models/wear.md section 3)"
   min_activation_K:
     value: 10.0
     unit: K

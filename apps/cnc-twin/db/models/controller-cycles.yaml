@@ -77,6 +77,11 @@ params:
     unit: "-"
     src: est
     note: "Haas Setting 27 (G76/G77 shift direction for Q); X+ assumed"
+  haas_g72_first_hole_at_start:
+    value: true
+    unit: "-"
+    src: est
+    note: "Haas G72 bolt holes along an angle (haas-ngc-mill-om-2020 p. 349: I distance between holes, J angle of the line, L number of holes, 'operates similarly to G70'): the manual does not say where the first hole lies; true = at the tool's position when G72 is read (holes at 0, I, 2I ...), false = one spacing from it (I, 2I ...). true assumed"
   lathe_g83_high_speed:
     value: true
     unit: "-"

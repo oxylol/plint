@@ -17,6 +17,8 @@ new controller events (alarms, warnings, notes) into findings and updates the ch
 
 from __future__ import annotations
 
+import re
+
 import numpy as np
 
 from ..core.findings import Category, Severity
@@ -59,6 +61,38 @@ def split_paths(text: str, n_paths: int) -> list[str]:
     return ["\n".join(sections.get(p, [])) for p in range(n_paths)]
 
 
+_NUMBERED_OFFSET = re.compile(r"^(?:G54\.1\s*P|G154\s*P|PRESET\s*|P)(\d+)$")
+_HAAS_EXTRA_OFFSET = re.compile(r"^G1(\d\d)$")
+
+
+def offset_key(name: str) -> str:
+    """The control's key of a work offset as the project names it (setup.work_offsets_mm): G54-G59 as
+    written; the numbered systems G54.1 Pn (FANUC), G154 Pn and G110-G129 (Haas, G110 = P1) and the
+    HEIDENHAIN preset table row (PRESET n) are the executor's ``Pn``."""
+    text = " ".join(str(name).upper().split())
+    match = _NUMBERED_OFFSET.match(text)
+    if match is not None:
+        return f"P{int(match.group(1))}"
+    match = _HAAS_EXTRA_OFFSET.match(text)
+    if match is not None and 10 <= int(match.group(1)) <= 29:
+        return f"P{int(match.group(1)) - 9}"
+    return text
+
+
+CARTESIAN = ("X", "Y", "Z")
+
+
+def offset_row(values: list[float], letters: list[str]) -> list[float]:
+    """A work offset the project writes as a list (``setup.work_offsets_mm``): the machine coordinates of the
+    work zero as X, Y, Z, then the path's other axes in the control's order (docs/formats.md), on every machine
+    type (sanity reads the same [x, y, z]). Returned in the control's axis order ``letters``, the order the
+    executor reads a list in: the same on mills (X Y Z first), X Z Y C on lathes. A value for an axis the path
+    does not have is dropped."""
+    order = list(CARTESIAN) + [l for l in letters if l not in CARTESIAN]
+    given = {letter: float(v) for letter, v in zip(order, values)}
+    return [given.get(letter, 0.0) for letter in letters]
+
+
 def setup_from_project(ctx, state, op_index: int = 0) -> ControllerSetup:
     """ControllerSetup of operation ``op_index`` from the resolved project (architecture 18)."""
     project = ctx.project
@@ -70,7 +104,8 @@ def setup_from_project(ctx, state, op_index: int = 0) -> ControllerSetup:
     name = str(_get(operation, "program", "program.nc"))
     from .machine import build_machine
 
-    n_paths = len(build_machine(machine, settings).paths)
+    model = build_machine(machine, settings)
+    n_paths = len(model.paths)
     texts = _get(operation, "program_texts") or split_paths(text, n_paths)
     sources = [ProgramSource(name, str(t), path=p) for p, t in enumerate(texts)]
     for item in _get(project, "program_library", []) or []:
@@ -78,24 +113,115 @@ def setup_from_project(ctx, state, op_index: int = 0) -> ControllerSetup:
     setup_section = _get(operation, "setup")
     offsets = {}
     raw_offsets = _get(setup_section, "work_offsets_m") or {}
+    letters = [a.letter for a in model.paths[0]] if model.paths else []
     for key in raw_offsets:
         value = raw_offsets[key]
-        offsets[str(key)] = [float(_plain(v)) for v in value] if isinstance(value, (list, tuple)) else \
-            {k: float(_plain(v)) for k, v in dict(value).items()}
+        offsets[offset_key(str(key))] = offset_row([float(_plain(v)) for v in value], letters) \
+            if isinstance(value, (list, tuple)) else {k: float(_plain(v)) for k, v in dict(value).items()}
     nozzles = {int(k): int(_plain(v)) for k, v in dict(_get(operation, "nozzle_positions", {}) or {}).items()}
-    tools = []
-    for entry in _get(_get(project, "tools"), "list", []) or []:
-        number = int(_plain(_get(entry, "number")))
-        wear = _get(entry, "wear_offsets_m") or {}
-        tools.append(ToolOffsetInit(
-            number=number, length_m=float(_plain(_get(entry, "length_offset_m", 0.0))),
-            radius_m=float(_plain(_get(entry, "radius_offset_m", 0.0))),
-            length_wear_m=float(_plain(_get(wear, "length", 0.0))), radius_wear_m=float(_plain(_get(wear, "radius", 0.0))),
-            x_m=float(_plain(_get(entry, "x_offset_m", 0.0))), z_m=float(_plain(_get(entry, "z_offset_m", 0.0))),
-            nose_radius_m=float(_plain(_get(entry, "nose_radius_m", 0.0))), tip=int(_plain(_get(entry, "tip", 0))),
-            nozzle_position=nozzles.get(number), path=int(_plain(_get(entry, "path", 0)))))
+    tools = [tool_offsets(entry, nozzles, probe=str(_plain(_get(entry, "kind", ""))) == "probe")
+             for entry in _get(_get(project, "tools"), "list", []) or []]          # (a raw project keeps its probes here)
+    tools += [tool_offsets(entry, nozzles, probe=True) for entry in _get(_get(project, "tools"), "probes", []) or []]
     return ControllerSetup(machine, sources, settings, work_offsets_m=[offsets] + [{}] * (n_paths - 1), tools=tools,
                            tool_table=getattr(state, "tools", None), tick_s=float(ctx.tick_s))
+
+
+def tool_offsets(entry, nozzles: dict | None = None, *, probe: bool = False) -> ToolOffsetInit:
+    """The offsets one ``tools.list`` (or ``tools.probes``) entry sets on the control (SI view of the project:
+    length/radius geometry and wear; lathe X (as set, a diameter on a diameter-programmed lathe), Z, nose
+    radius, tip number and X/Z wear; the file's 1-based path number). A probe's radius register defaults to
+    the nominal stylus radius (half the ball) when the entry gives none."""
+    number = int(_plain(_get(entry, "number")))
+    wear = _get(entry, "wear_offsets_m") or {}
+    radius = _get(entry, "radius_offset_m")
+    name = None
+    if probe:
+        definition = _get(entry, "probe")
+        if isinstance(_plain(definition), str):             # a raw entry naming the machine's probe
+            name, ball = str(_plain(definition)), None
+        else:
+            name = str(_get(definition, "name") or _get(definition, "extends") or "inline")
+            ball = _get(definition, "stylus_ball_m")
+        if radius is None:
+            radius = 0.5 * float(_plain(ball)) if ball is not None else 0.0
+    path = _get(entry, "path")
+    return ToolOffsetInit(
+        number=number, length_m=float(_plain(_get(entry, "length_offset_m", 0.0))),
+        radius_m=float(_plain(radius if radius is not None else 0.0)),
+        length_wear_m=float(_plain(_get(wear, "length", 0.0))), radius_wear_m=float(_plain(_get(wear, "radius", 0.0))),
+        x_m=float(_plain(_get(entry, "x_offset_m", 0.0))), z_m=float(_plain(_get(entry, "z_offset_m", 0.0))),
+        nose_radius_m=float(_plain(_get(entry, "nose_radius_m", 0.0))), tip=int(_plain(_get(entry, "tip", 0))),
+        x_wear_m=float(_plain(_get(wear, "x", 0.0))), z_wear_m=float(_plain(_get(wear, "z", 0.0))),
+        nozzle_position=(nozzles or {}).get(number), path=int(_plain(path)) - 1 if path is not None else 0,
+        probe=name)
+
+
+def _pose4(operation, resolved: str, written: str) -> np.ndarray:
+    """An operation's 4x4 pose: the resolver's matrix, else the setup's pose as written (SI view)."""
+    matrix = _get(operation, resolved)
+    if matrix is not None:
+        return np.asarray(matrix, dtype=float)
+    pose = _get(_get(operation, "setup"), written)
+    if pose is None:
+        return np.eye(4)
+    if hasattr(pose, "matrix") and callable(pose.matrix):
+        return np.asarray(pose.matrix(), dtype=float)
+    from ..db.simap import pose_matrix
+
+    translate = [float(_plain(v)) for v in (_get(pose, "translate_m") or [0.0, 0.0, 0.0])]
+    rotate = [float(_plain(v)) for v in (_get(pose, "rotate_rad") or [0.0, 0.0, 0.0])]
+    return np.asarray(pose_matrix(translate, rotate, str(_plain(_get(pose, "order", "xyz")))), dtype=float)
+
+
+def _stock_box(stock):
+    """The stock box in its frame S from the stock definition (a project without the resolver's
+    ``stock_box_S_m``): a block from the origin, a cylinder or tube about +z from z = 0; else None."""
+    size = _get(stock, "size_m")
+    kind = str(_plain(_get(stock, "kind", "block")))
+    values = [float(_plain(v)) for v in size] if isinstance(size, (list, tuple)) else None
+    if kind == "block" and values is not None and len(values) == 3:
+        return [[0.0, 0.0, 0.0], values]
+    if kind in ("cylinder", "tube") and values is not None and len(values) >= 2:
+        r = 0.5 * values[0]
+        return [[-r, -r, 0.0], [r, r, values[-1]]]
+    return None
+
+
+def stock_probe(project, op_index: int = 0):
+    """An ideal spindle probe (:class:`cnctwin.controller.dryrun.BoxProbe`) against the stock of operation
+    ``op_index`` as set up, for dry runs of programs that probe the part: the stock box placed by
+    ``fixture_pose * stock_pose`` (the table frame is the machine frame: 3-axis mills, and five-axis tables
+    at rotary zero), the stylus ball of each probe T number of ``tools.probes`` (else the machine's spindle
+    probe). None for lathes, an unknown stock box or no stylus size."""
+    from .dryrun import BoxProbe
+
+    machine = _get(project, "machine")
+    if str(_plain(_get(machine, "type", ""))) in ("lathe", "mill_turn", "swiss"):
+        return None
+    operation = _get(project, "operations")[op_index]
+    box = _get(operation, "stock_box_S_m") or _stock_box(_get(project, "stock"))
+    if box is None:
+        return None
+    pose = _pose4(operation, "fixture_pose_F_H", "fixture_pose") @ _pose4(operation, "stock_pose_W_S", "stock_pose")
+    lo, hi = (np.asarray([float(_plain(v)) for v in corner]) for corner in box)
+    corners = np.array([[x, y, z] for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])])
+    moved = corners @ pose[:3, :3].T + pose[:3, 3]
+    radii = {}
+    tools = _get(project, "tools")
+    entries = list(_get(tools, "probes", []) or []) + [e for e in (_get(tools, "list", []) or [])
+                                                        if str(_plain(_get(e, "kind", ""))) == "probe"]
+    for entry in entries:
+        definition = _get(entry, "probe")
+        ball = _get(definition, "stylus_ball_m") if not isinstance(_plain(definition), str) else None
+        if ball is not None:
+            radii[int(_plain(_get(entry, "number")))] = 0.5 * float(_plain(ball))
+    machine_ball = _get(_get(_get(machine, "probes"), "spindle_probe"), "stylus_ball_m")
+    default = 0.5 * float(_plain(machine_ball)) if machine_ball is not None else (min(radii.values()) if radii else None)
+    if default is None:
+        return None
+    axis = _get(_get(machine, "kinematics"), "tool_axis") or (0.0, 0.0, 1.0)
+    return BoxProbe([(tuple(moved.min(axis=0)), tuple(moved.max(axis=0)))], default, radii_by_tool=radii,
+                    tool_axis=tuple(float(_plain(v)) for v in axis))
 
 
 class ControllerDomain:

@@ -168,6 +168,26 @@ class CylinderGeometry:
         return out
 
 
+class FillSnapshot:
+    """Material fractions of one grid captured once (the as-supplied stock at the start of the run): answers
+    ``fill_fraction`` for exactly that grid (the residual-stress reference of any stock kind, meshes included)."""
+
+    def __init__(self, grid, fill: np.ndarray, lo, hi):
+        self.grid = grid
+        self.fill = np.asarray(fill, dtype=float)
+        self.lo = np.asarray(lo, dtype=float)
+        self.hi = np.asarray(hi, dtype=float)
+
+    def stock_bounds_S(self, workpiece: int):
+        return self.lo.copy(), self.hi.copy()
+
+    def fill_fraction(self, workpiece, origin_S_m, cell_m, shape):
+        if tuple(int(v) for v in shape) != tuple(self.fill.shape) or abs(float(cell_m) - self.grid.cell_m) > 1e-15 \
+                or np.any(np.abs(np.asarray(origin_S_m, dtype=float) - self.grid.origin) > 1e-15):
+            raise InputError("structure: the stock snapshot answers only for its own grid")
+        return self.fill.copy()
+
+
 def _plain(v):
     return getattr(v, "value", v)
 
@@ -194,4 +214,4 @@ def stock_geometry(stock, workpiece: int = 0):
     raise InputError(f"structure: stock kind {kind!r} needs removal's geometry query")
 
 
-__all__ = ["WorkGeometry", "BoxGeometry", "CylinderGeometry", "stock_geometry"]
+__all__ = ["WorkGeometry", "BoxGeometry", "CylinderGeometry", "FillSnapshot", "stock_geometry"]

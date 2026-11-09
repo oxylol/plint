@@ -83,8 +83,9 @@ class SkipMove:
         setter = word is not None and signal == int(round(float(p["setter_skip_signal"]))) \
             and ex.machine.tool_setter is not None
         if not setter:
+            stylus = ex.handler.probe_name(s.tool) if hasattr(ex.handler, "probe_name") else None
             ex.run_step(Step("probe", goal, override=override,
-                             probe={"skip": signal, "stylus": "spindle_probe", "expect": "trigger"}))
+                             probe={"skip": signal, "stylus": stylus or "spindle_probe", "expect": "trigger"}))
             return True
         payload = {"measure": "skip", "skip": signal, "tool": int(s.tool), "offset": int(s.h_number)}
         ex.run_step(Step("setter", goal, override=override, provider=HANDLER_KEY,

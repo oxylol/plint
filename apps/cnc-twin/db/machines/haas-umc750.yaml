@@ -18,19 +18,19 @@ controller:
   ipo_period_ms: {value: 1.0, src: est, note: "not published; as haas-vf2ss"}
   block_processing_ms: {value: 1.0, src: est, note: "not published"}
   lookahead_blocks: {value: 80, src: est, note: "not published"}
-  least_input_increment_mm: {value: 0.001, src: est}
-  least_input_increment_deg: {value: 0.001, src: est}
+  least_input_increment_mm: {value: 0.001, src: haas-ngc-mill-om-2020, page: "p. 444, Setting 9 Dimensioning: in MM mode the programmed units are millimetres to 0.001 mm"}
+  least_input_increment_deg: {value: 0.001, src: est, note: "rotary words to three decimals, 0.001 deg, assumed: the same three-place resolution as the metric linear words (Setting 9, haas-ngc-mill-om-2020 p. 444); not stated for rotary axes"}
   max_feed_mm_min: 16500
   rapid_mm_min: {X: 30500, Y: 30500, Z: 30500}
   smoothing:
-    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: est, note: "as haas-vf2ss"}
-    - {code: "G187 P2", name: medium, tolerance_mm: 0.010, src: est}
-    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025, src: est}
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393 (G187), p. 456 (Setting 85)", note: "the P level sets the smoothness (Setting 191), not the corner tolerance: without an E word the maximum corner rounding is Setting 85, factory default 0.0250 in = 0.635 mm, for every level (re-derived from the manual; the earlier 0.025/0.010/0.0025 mm were the template example values)"}
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393, 456", note: "as P1"}
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393, 456", note: "as P1"}
   five_axis: {tcpc: "G234", dwo: "G254 / G255 cancel", mrzp_settings: [255, 256, 257], src: haas-umc-supplement-2020, page: "Sec. 3.3 (MRZP offsets), Ch. 4 (G234 TCPC), Ch. 5 (G254 DWO, cancel with G255)"}
   corner_default: {value: blend, src: est}
-  in_position_mm: {value: 0.005, src: est}
-  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: est}
-  feed_override_range_pct: {value: [0, 200], src: est}
+  in_position_mm: {value: 0.005, src: est, note: "exact-stop (G09/G61) window: 5 um, below the 8 um positioning accuracy (est); not published (as haas-vf2ss)"}
+  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: haas-ngc-mill-om-2020, page: "p. 48, Table 2.16 (rapid override keys)"}
+  feed_override_range_pct: {value: [0, 200], src: est, note: "override keys -10 %, 100 %, +10 % and handle steps of 1 % (haas-ngc-mill-om-2020 p. 48 Table 2.16), limits not given; 0-200 % assumed as on haas-vf2ss"}
   tool_life_management: {value: true, src: est}
   probing: {value: true, src: haas-umc-flyer-2024, note: "WIPS standard on all UMCs"}
 
@@ -41,14 +41,14 @@ axes:
     rapid_mm_min: 30500
     max_feed_mm_min: 16500
     accel_m_s2: {value: 4.0, src: est, note: "not published; spindle carriage axis, 0.4 g assumed"}
-    jerk_m_s3: {value: 80, src: est}
+    jerk_m_s3: {value: 80, src: est, note: "80 m/s3 ramps to the 4 m/s2 acceleration in a/j = 50 ms, longer than one period of the lowest frame mode (50 Hz: 20 ms) of the 1300 kg moving column (biagiotti-melchiorri-2008: ramp time >= one natural period)"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 60, src: est}
+      kv_1_s: {value: 40, src: est, note: "position-loop gain as haas-vf2ss: kv/2 pi = 6.4 Hz, 9 x below the 60 Hz velocity loop (cascade rule >= 5-10)"}
+      feedforward: {value: 0.95, src: est, note: "as haas-vf2ss (velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains)"}
+      velocity_bw_Hz: {value: 60, src: est, note: "60 Hz for the 1300 kg moving column (VMC table axes 80 Hz): above the 50 Hz carriage mode it must damp, 9 x the position-loop crossover"}
     backlash_um: {value: 1, src: est, note: "preloaded ball nuts assumed"}
-    reversal_spike_um: {value: 3, src: est}
-    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1300, fixed_end: both, src: est}
+    reversal_spike_um: {value: 3, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis, ISO 230-2 reversal value B 1-5 um; 3 um as haas-vf2ss"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1300, fixed_end: both, src: est, note: "40 mm x 16 mm lead as haas-vf2ss (30.5 m/min rapid needs 1906 rpm); length = 762 mm travel + nut + bearing ends"}
     positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "not published"}
     motor_force_N: 12233
     moving_mass_kg: {value: 1300, src: est, note: "column carrying the Y ram and Z head (axis layout per haas-umc-supplement-2020 F1.2)"}
@@ -57,16 +57,16 @@ axes:
     travel_mm: [-508, 0]
     rapid_mm_min: 30500
     max_feed_mm_min: 16500
-    accel_m_s2: {value: 4.0, src: est}
-    jerk_m_s3: {value: 80, src: est}
+    accel_m_s2: {value: 4.0, src: est, note: "0.4 g as X: the published 12.2 kN thrust drives the 700 kg ram at up to 17 m/s2, the acceleration is set by the column-carried ram's dynamics rather than the thrust"}
+    jerk_m_s3: {value: 80, src: est, note: "as X: 50 ms ramp to 4 m/s2, longer than one period of the 60 Hz y frame mode"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 50, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 3, src: est}
-    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1000, fixed_end: both, src: est}
-    positioning: {accuracy_um: 8, repeatability_um: 4, src: est}
+      kv_1_s: {value: 40, src: est, note: "as X: kv/2 pi = 6.4 Hz, 8 x below the 50 Hz velocity loop"}
+      feedforward: {value: 0.95, src: est, note: "as haas-vf2ss (velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains)"}
+      velocity_bw_Hz: {value: 50, src: est, note: "50 Hz: below the 60 Hz y frame mode of the ram on the moving column, 8 x the position-loop crossover"}
+    backlash_um: {value: 1, src: est, note: "as X: preloaded double ball nut, residual lost motion 0-2 um; 1 um"}
+    reversal_spike_um: {value: 3, src: est, note: "as X: 3 um friction step at reversal"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1000, fixed_end: both, src: est, note: "as X: 40 mm x 16 mm lead; length = 508 mm travel + nut + bearing ends"}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "as X: semi-closed-loop ballscrew axis without linear scales (Haas publishes none)"}
     motor_force_N: 12233
     moving_mass_kg: {value: 700, src: est, note: "ram with the Z head"}
   Z:
@@ -74,18 +74,18 @@ axes:
     travel_mm: [-508, 0]
     rapid_mm_min: 30500
     max_feed_mm_min: 16500
-    accel_m_s2: {value: 4.0, src: est}
-    jerk_m_s3: {value: 80, src: est}
+    accel_m_s2: {value: 4.0, src: est, note: "0.4 g as X; the 15.1 kN thrust on the 400 kg head (plus gravity, 3.9 kN) leaves a wide margin"}
+    jerk_m_s3: {value: 80, src: est, note: "as X: 50 ms ramp to 4 m/s2"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 70, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 2, src: est}
-    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 900, fixed_end: both, src: est}
-    positioning: {accuracy_um: 7, repeatability_um: 3, src: est}
+      kv_1_s: {value: 40, src: est, note: "as X: kv/2 pi = 6.4 Hz, 11 x below the 70 Hz velocity loop"}
+      feedforward: {value: 0.95, src: est, note: "as haas-vf2ss (velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains)"}
+      velocity_bw_Hz: {value: 70, src: est, note: "70 Hz for the light Z head (400 kg), between the Y ram (50 Hz) and a VMC table axis (80 Hz)"}
+    backlash_um: {value: 1, src: est, note: "as X: preloaded double ball nut, 1 um"}
+    reversal_spike_um: {value: 2, src: est, note: "gravity preloads the vertical screw in one direction, so the reversal step is smaller: 2 um (as haas-vf2ss Z)"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 900, fixed_end: both, src: est, note: "as X: 40 mm x 16 mm lead; length = 508 mm travel + nut + bearing ends"}
+    positioning: {accuracy_um: 7, repeatability_um: 3, src: est, note: "as haas-vf2ss Z (same 508 mm vertical axis): 7 um accuracy, 3 um repeatability, not published"}
     motor_force_N: 15124
-    moving_mass_kg: {value: 400, src: est}
+    moving_mass_kg: {value: 400, src: est, note: "spindle head casting with the inline 22.4 kW motor and the 40-taper cartridge, as the VF-2SS head (400 kg est from the 432 mm head width on haas-vf2-mld-2023 p. 4); the UMC uses the same 8100 rpm inline head family"}
     brake: {holds_on_power_loss: true, src: est}
   B:
     type: rotary
@@ -94,17 +94,17 @@ axes:
     rapid_deg_s: 50
     max_rpm: {value: 8.3, note: "50 deg/s"}
     accel_rad_s2: {value: 6, src: est, note: "trunnion with a 300 kg load; 50 deg/s reached in ~0.15 s"}
-    jerk_rad_s3: {value: 100, src: est}
+    jerk_rad_s3: {value: 100, src: est, note: "the 6 rad/s2 acceleration is reached in a/j = 60 ms, longer than one period of the 70 Hz cradle torsion mode (14 ms)"}
     servo:
-      kv_1_s: {value: 30, src: est}
-      feedforward: {value: 0.9, src: est}
-      velocity_bw_Hz: {value: 30, src: est}
+      kv_1_s: {value: 30, src: est, note: "position-loop gain of the geared trunnion: 30 1/s (kv/2 pi = 4.8 Hz, 6 x below its 30 Hz velocity loop), lower than the linear axes for the gear train's lower stiffness and the cradle inertia"}
+      feedforward: {value: 0.9, src: est, note: "0.9, below the linear axes' 0.95: the gear train winds up under the cradle inertia, so full feed-forward overshoots"}
+      velocity_bw_Hz: {value: 30, src: est, note: "30 Hz: below half the 70 Hz cradle torsion mode it must not excite"}
     backlash_arcsec: {value: 15, src: est, note: "geared trunnion drive, typical lost motion"}
     brake:
       clamp_torque_Nm: 2712
-      clamp_time_s: {value: 0.3, src: est}
-      unclamped_stiffness_Nm_rad: {value: 1.0e6, src: est}
-      clamped_stiffness_Nm_rad: {value: 4.0e6, src: est}
+      clamp_time_s: {value: 0.3, src: est, note: "brake clamp or release of the trunnion: 0.3 s assumed (pneumatic/hydraulic brake valve and pressure build-up)"}
+      unclamped_stiffness_Nm_rad: {value: 1.0e6, src: est, note: "torsional stiffness of the geared drive at the cradle, 1.0e6 Nm/rad assumed: a quarter of the clamped value (the brake typically stiffens a geared rotary 3-5 x)"}
+      clamped_stiffness_Nm_rad: {value: 4.0e6, src: est, note: "clamped cradle: k = J (2 pi f)^2 with the 70 Hz cradle torsion mode (est) and J = 20 kg m2 (cradle plus a 300 kg load at 0.18 m radius of gyration, assumed): 20 x 440^2 = 3.9e6, i.e. 4.0e6 Nm/rad"}
     positioning: {accuracy_arcsec: 15, repeatability_arcsec: 10, src: est, note: "not on the UMC-750 pages read; assumed equal to the published EC-400 rotary values (haas-ec400-web-2026)"}
     motor_torque_Nm: 3037
   C:
@@ -113,18 +113,18 @@ axes:
     continuous: true
     rapid_deg_s: 50
     max_rpm: {value: 8.3, note: "50 deg/s"}
-    accel_rad_s2: {value: 8, src: est}
-    jerk_rad_s3: {value: 150, src: est}
+    accel_rad_s2: {value: 8, src: est, note: "8 rad/s2: the 50 deg/s (0.87 rad/s) rapid is reached in 0.11 s; the published 2514 Nm drive torque would accelerate a 300 kg, 500 mm load (J about 9 kg m2) much faster, so the limit is the servo tuning, assumed"}
+    jerk_rad_s3: {value: 150, src: est, note: "the 8 rad/s2 acceleration is reached in a/j = 53 ms, longer than one period of the 150 Hz platter mode"}
     servo:
-      kv_1_s: {value: 30, src: est}
-      feedforward: {value: 0.9, src: est}
-      velocity_bw_Hz: {value: 30, src: est}
-    backlash_arcsec: {value: 15, src: est}
+      kv_1_s: {value: 30, src: est, note: "as B: 30 1/s for a geared rotary table"}
+      feedforward: {value: 0.9, src: est, note: "as B: 0.9 for a geared rotary table"}
+      velocity_bw_Hz: {value: 30, src: est, note: "as B: 30 Hz, a fifth of the 150 Hz platter torsion mode"}
+    backlash_arcsec: {value: 15, src: est, note: "as B: geared rotary drive, 15 arcsec lost motion assumed (above the 10 arcsec repeatability assumed for the clamped axis)"}
     brake:
       clamp_torque_Nm: {value: 1220, note: "the UK page prints '500 ft-lb / 1220 Nm'; 1220 Nm equals 900 ft-lb, so the metric figure is used"}
-      clamp_time_s: {value: 0.3, src: est}
-      unclamped_stiffness_Nm_rad: {value: 6.0e5, src: est}
-      clamped_stiffness_Nm_rad: {value: 2.5e6, src: est}
+      clamp_time_s: {value: 0.3, src: est, note: "as B: 0.3 s brake clamp or release"}
+      unclamped_stiffness_Nm_rad: {value: 6.0e5, src: est, note: "a quarter of the clamped stiffness, as for B"}
+      clamped_stiffness_Nm_rad: {value: 2.5e6, src: est, note: "k = J (2 pi f)^2 with the 150 Hz platter mode (est) and J = 2.8 kg m2 (500 mm platter and C rotor, assumed): 2.8 x 942^2 = 2.5e6 Nm/rad"}
     positioning: {accuracy_arcsec: 15, repeatability_arcsec: 10, src: est, note: "as B"}
     motor_torque_Nm: 2514
 
@@ -166,51 +166,51 @@ spindles:
           - {rating: "S2 10 min = 150 % load", scale_of_peak: 0.75, src: haas-torque-note-2026}
           - {rating: "S1 continuous = 100 % load", scale_of_peak: 0.50, src: haas-torque-note-2026}
     accel_time_s: {value: 0.9, src: est, note: "as haas-ec400"}
-    decel_time_s: {value: 0.9, src: est}
+    decel_time_s: {value: 0.9, src: est, note: "regenerative braking at the same peak torque as the acceleration: symmetric 0.9 s (as haas-ec400)"}
     gear_change_s: null
-    orient_time_s: {value: 0.5, src: est}
-    rotor_inertia_kgm2: {value: 0.05, src: est}
-    efficiency: {value: 0.85, src: est}
-    idle_power_W: {value: 450, src: est}
-    runout_um: {value: 2, src: est}
+    orient_time_s: {value: 0.5, src: est, note: "M19 from rest: one turn at 125 Nm / 0.05 kg m2 = 2500 rad/s2 takes 0.10 s, plus 0.4 s of position settle (assumed); as haas-ec400"}
+    rotor_inertia_kgm2: {value: 0.05, src: est, note: "as haas-vf2ss (same 40-taper inline 22.4 kW head family): rotor + shaft + coupling + CAT40 holder 0.05 kg m2"}
+    efficiency: {value: 0.85, src: est, note: "vector drive x induction motor: about 0.93 x 0.97 = 0.90 at rated load (iec-60034-30-1-2014 IE3 22 kW class), 0.85 assumed for part load (as haas-vf2ss)"}
+    idle_power_W: {value: 450, src: est, note: "no-load spindle loss at max speed: the 300 W bearing friction (Palmgren, thermal note) plus windage and the motor's iron loss about 150 W (assumed) = 450 W, as haas-ec400 (same 8100 rpm head)"}
+    runout_um: {value: 2, src: est, note: "new 40-taper spindle nose, 2 um assumed as on haas-vf2ss (not published)"}
     frf_modes:
       - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "40-taper motor spindle, typical 700-1200 Hz"}
-      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est}
+      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est, note: "the x mode repeated in y: axisymmetric shaft and bearings"}
     thermal:
       growth_um_at_max_rpm: {value: 30, src: est, note: "air-cooled spindle (published 'Cooling: Air'), so more growth than the liquid-cooled VF-SS head"}
-      time_constant_min: {value: 30, src: est}
-      bearing_heat_W_at_max_rpm: {value: 300, src: est}
+      time_constant_min: {value: 30, src: est, note: "tau = C / G: spindle cartridge and nose housing about 100 kg x 460 J/kgK = 46 kJ/K over G = 300 W / 12 K = 25 W/K for this air-cooled head (a 12 K steady rise at the 300 W bearing heat, est) = 1840 s, about 30 min"}
+      bearing_heat_W_at_max_rpm: {value: 300, src: est, note: "as haas-ec400 (same 8100 rpm head): Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 for three 85 mm angular-contact bearings, oil-air f0 = 1, nu = 10 mm2/s: 0.35 Nm x 848 rad/s = 290 W (palmgren-1959-bearings)"}
       thermal_comp: {value: true, src: est}
-      comp_residual_fraction: {value: 0.3, src: est}
+      comp_residual_fraction: {value: 0.3, src: est, note: "as haas-vf2ss: the model-based growth compensation leaves 30 % (assumed)"}
     optional: "12,000 rpm (UMC-750SS) and 15,000 rpm, HSK-A63 versions (haas-umc-flyer-2024)"
 
 structure:
   modes:
     - {fn_Hz: 50, zeta: 0.05, k_N_um: 25, direction: x, src: est, note: "spindle carriage on the moving column"}
-    - {fn_Hz: 60, zeta: 0.05, k_N_um: 30, direction: y, src: est}
-    - {fn_Hz: 120, zeta: 0.04, k_N_um: 70, direction: z, src: est}
+    - {fn_Hz: 60, zeta: 0.05, k_N_um: 30, direction: y, src: est, note: "ram nodding on the moving column, assumed slightly stiffer than the 50 Hz x carriage mode: 60 Hz, 30 N/um"}
+    - {fn_Hz: 120, zeta: 0.04, k_N_um: 70, direction: z, src: est, note: "vertical head mode as on haas-ec400 (140 Hz) and haas-vf2ss (130 Hz): 120 Hz, 70 N/um for the ram-mounted head"}
   table_modes:
     - {fn_Hz: 110, zeta: 0.04, k_N_um: 60, direction: x, src: est, note: "trunnion cradle bending about the B bearings, clamped"}
   rotary_modes:
     - {axis: B, fn_Hz: 70, zeta: 0.05, k_Nm_rad: 4.0e6, src: est, note: "cradle torsion with a 300 kg load, clamped"}
-    - {axis: C, fn_Hz: 150, zeta: 0.05, k_Nm_rad: 2.5e6, src: est}
+    - {axis: C, fn_Hz: 150, zeta: 0.05, k_Nm_rad: 2.5e6, src: est, note: "C platter torsion on its clamped bearing: 150 Hz with the clamped stiffness 2.5e6 Nm/rad (see the C brake note)"}
 
 error_map:
-  squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est}
-  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est}
+  squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est, note: "15 urad (15 um/m) per axis pair after factory alignment, as haas-vf2ss"}
+  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est, note: "guideway straightness after alignment, 6 um per metre of travel, as haas-vf2ss"}
   angular_urad: {}
   pivot_errors:
     B: {position_um: [0, 0, 15], tilt_urad: [0, 0, 20], src: est, note: "residual after the WIPS MRZP calibration"}
-    C: {position_um: [10, 10, 0], tilt_urad: [20, 20, 0], src: est}
+    C: {position_um: [10, 10, 0], tilt_urad: [20, 20, 0], src: est, note: "as B: residual C-axis centre location (10 um in x and y) and tilt to Z (20 urad) after the WIPS MRZP calibration (haas-umc-supplement-2020 sec. 3.3), assumed"}
 
 thermal:
   axis_drift:
-    expansion_1_K: {value: 11.5e-6, src: est}
-    heat_per_m_travel_J: {value: 60, src: est}
-    time_constant_min: {value: 40, src: est}
-  structure_sensitivity_um_per_K: {value: 4, src: est}
+    expansion_1_K: {value: 11.5e-6, src: est, note: "mean CTE 20-100 degC of the ballscrew steel (100Cr6 11.5e-6 1/K, DEW column in db/materials/aisi52100-62hrc.yaml)"}
+    heat_per_m_travel_J: {value: 60, src: est, note: "nut drag torque 0.15 Nm (light preload of a 40 mm double nut, assumed) x 2 pi / 0.016 m = 59 J per metre, as haas-vf2ss"}
+    time_constant_min: {value: 40, src: est, note: "tau = rho c d / (4 h) = 7850 x 460 x 0.040 / (4 x 15 W/m2K) = 2400 s = 40 min for the 40 mm screws (as haas-vf2ss)"}
+  structure_sensitivity_um_per_K: {value: 4, src: est, note: "cast-iron CTE 10.5e-6 1/K (db/materials/grey-cast-iron-gjl250.yaml) x the about 0.4 m loop from the platter through the trunnion, base and column to the nose = 4.2 um/K"}
   mrzp_drift: {value: "MRZP offsets can change over time; re-check with the VPS MRZP probing routine", src: haas-umc-supplement-2020, page: "Sec. 3.3.1"}
-  warmup: {cold_to_warm_min: 60, src: est}
+  warmup: {cold_to_warm_min: 60, src: est, note: "1.5 x the 40 min axis-drift time constant (78 % of the steady drift)"}
 
 tool_changer:
   type: side_mount
@@ -221,7 +221,7 @@ tool_changer:
   max_tool_diameter_adjacent_empty_mm: 127
   max_tool_length_mm: 305
   max_tool_mass_kg: 5.4
-  pocket_pitch_mm: {value: 72, src: est}
+  pocket_pitch_mm: {value: 72, src: est, note: "as haas-ec400 (same 40-taper side-mount changer, arm swing 686 mm at the spindle CL): 72 mm assumed"}
   arm_swing_diameter_mm: {value: 776, src: haas-umc750-mld-2022, page: "p. 6 (686 mm at the spindle CL)"}
 
 turrets: []
@@ -229,7 +229,7 @@ pallet_changer: null
 tailstock: null
 steady_rest: null
 guide_bushing: null
-doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null}
+doors: {count: {value: 1, src: est, note: "one front operator door (haas-umc750-mld-2022 views), assumed"}, auto: {value: false, src: est}, open_time_s: null}
 
 workholding_interface:
   platter_diameter_mm: 500
@@ -249,26 +249,26 @@ coolant:
   tank_l: {value: 284, src: haas-umc-supplement-2020, page: "T1.5: 75 gal (284 L)", note: "the UK product page lists 55 gal (208 L); the 2020 manual value is used"}
   pumps:
     - {id: flood, kind: flood, pressure_bar: 2.0, flow_l_min: 45, power_kW: 0.75, src: est, note: "Haas standard 1 hp pump (haas-coolant-pump-web-2026) assumed"}
-    - {id: tsc, kind: through_spindle, option: true, src: haas-tsc-web-2026, pressure_bar: {value: 21, src: haas-tsc-web-2026}, flow_l_min: {value: 11, src: est}, note: "machine is TSC-ready (haas-umc-supplement-2020 T1.6)"}
+    - {id: tsc, kind: through_spindle, option: true, src: haas-tsc-web-2026, pressure_bar: {value: 21, src: haas-tsc-web-2026}, flow_l_min: {value: 11, src: est, note: "TSC flow not published: 11 L/min as haas-vf2ss (same 21 bar TSC option)"}, note: "machine is TSC-ready (haas-umc-supplement-2020 T1.6)"}
     - {id: tsc1000, kind: through_spindle, option: true, pressure_bar: 69, flow_l_min: 26.5, src: haas-tsc-web-2026}
   nozzles:
-    - {id: n1, kind: flood, attached_to: head, position_mm: [70, -60, 60], aim: [-0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est}
-    - {id: n2, kind: flood, attached_to: head, position_mm: [-70, -60, 60], aim: [0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est}
+    - {id: n1, kind: flood, attached_to: head, position_mm: [70, -60, 60], aim: [-0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est, note: "as haas-vf2ss n1: adjustable flex nozzle on the head (position and aim assumed, head frame at the spindle nose)"}
+    - {id: n2, kind: flood, attached_to: head, position_mm: [-70, -60, 60], aim: [0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est, note: "as haas-vf2ss n2: second flex nozzle, mirrored"}
     - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
   air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: est, note: "air gun as on Haas VMCs"}
   machine_air_l_min: {value: 113, note: "4 scfm at 100 psi"}
   chiller: null
-  filtration_um: {value: 40, src: est}
+  filtration_um: {value: 40, src: est, note: "40 um as haas-vf2ss (standard flood circuit; the TSC option carries its own filter)"}
 
-chip_conveyor: {type: auger, src: est, note: "chip augers/conveyor visible on the layout drawing; type assumed", rate_kg_h: {value: 60, src: est}}
+chip_conveyor: {type: auger, src: est, note: "chip augers/conveyor visible on the layout drawing; type assumed", rate_kg_h: {value: 60, src: est, note: "auger capacity: 60 kg/h, a third of the 190 kg/h of continuous steel roughing at the S1 spindle power (17 kW / 2.5 J/mm3), since 5-axis parts are mostly profiled at lower removal rates (assumed)"}}
 
 enclosure:
   box_mm: {value: [[-800, -650, -600], [800, 650, 1150]], src: est, note: "interior around the trunnion; X/Y from the spindle travel (762 x 508) plus clearances, z from the B90 clearance views (haas-umc750-mld-2022 p. 4-5)"}
-  floor_slope_deg: {value: 35, src: est}
+  floor_slope_deg: {value: 35, src: est, note: "chip-pan walls steeper than the 27 deg sliding angle of wet steel chips on oily sheet (mu about 0.5): 35 deg assumed"}
 
 power:
-  base_W: {value: 1000, src: est}
-  servo_standby_W: {value: 400, src: est}
+  base_W: {value: 1000, src: est, note: "idle electrical base load: control and pendant about 300 W, cabinet cooling about 400 W, lubrication, lights and the trunnion brake hydraulics about 300 W = 1000 W (assumed breakdown)"}
+  servo_standby_W: {value: 400, src: est, note: "five axis drives enabled at standstill: electronics and fans about 50 W each (250 W), the Z motor holding the 400 kg head (about 80 W copper loss) and the B brake valve about 70 W: 400 W (assumed breakdown)"}
   air_consumption_l_min: 113
   supply: {value: "195-260 VAC / 100 A or 354-488 VAC / 50 A", src: haas-umc-supplement-2020, page: "T1.5"}
   machine_mass_kg: {value: 8165, src: haas-umc-supplement-2020, page: "T1.5"}

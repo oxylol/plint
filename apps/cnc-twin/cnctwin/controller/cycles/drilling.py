@@ -121,7 +121,13 @@ class DrillCycle:
     def _levels(self, ex, call, lathe: bool, d: str) -> dict:
         data = call.data
         initial = float(call.initial_level if call.initial_level is not None else call.current.get(d, 0.0))
-        if lathe:
+        if lathe and self.haas:
+            # Haas lathes: R is the position of the R plane (haas-ngc-lathe-om-2020 G81-G89; the radial cycles
+            # G241-G249 give it as a diameter); without R the cycle starts from the starting plane
+            axis = ex.by_letter.get(d)
+            r_level = float(data["R"]) / (2.0 if axis is not None and axis.diameter else 1.0) if "R" in data \
+                else initial
+        elif lathe:
             r_level = initial + float(data.get("R", 0.0))
         else:
             r_abs = (call.absolute if "R" in call.words else bool(data.get("R_absolute", 1.0 if call.absolute else 0.0)))
@@ -134,7 +140,7 @@ class DrillCycle:
             z_level = float(data[d]) if z_abs else r_level + float(data[d])
         else:
             z_level = 0.0 if (call.absolute or lathe) else r_level
-        back_to_initial = call.return_to_initial or lathe or self._effective_code(call.code, lathe) == "G87"
+        back_to_initial = call.return_to_initial or lathe or self._effective_code(call.code, lathe) in ("G87", "G77")
         return {"initial": initial, "r": r_level, "z": z_level,
                 "return": initial if back_to_initial else r_level,
                 "sign": -1.0 if z_level < r_level else 1.0,
@@ -145,6 +151,9 @@ class DrillCycle:
         return [Step("rapid", target)] if target else []
 
     def _effective_code(self, code: str, lathe: bool) -> str:
+        if lathe and self.haas:
+            # Haas lathes run the mill sequences: face cycles along Z, radial cycles G241-G249 along X
+            return HAAS_RADIAL.get(code, code)
         if lathe:
             return {"G83": "G83T", "G87": "G83T", "G84": "G84", "G88": "G84", "G85": "G85T", "G89": "G89T"}.get(code, code)
         return code
@@ -200,14 +209,32 @@ class DrillCycle:
         return [_rapid(d, lv["r"]), _feed(d, lv["z"], f, mode, exact=True), *dwell, _m([5]), resume]
 
     # ------------------------------------------------------------------ peck drilling
+    def _haas_choice(self, ex, call, key: str, own: tuple[str, ...], other: str) -> bool:
+        """Haas: True when the cycle's ``own`` words (I J K pecks, I J shift) apply rather than ``other`` (Q).
+        The cycle data are modal until G80 (haas-ngc-mill-om-2020 canned cycles), so a later hole of the same
+        cycle keeps the choice of the block that gave either; the choice is kept with the modal data."""
+        if any(letter in call.words for letter in own):
+            choice = True
+        elif other in call.words:
+            choice = False
+        elif key in call.data:
+            choice = bool(call.data[key])
+        else:
+            choice = own[0] in call.data and other not in call.data
+        cycle = ex.s.cycle
+        if cycle is not None:
+            cycle.setdefault("data", {})[key] = 1.0 if choice else 0.0
+        return choice
+
     def _pecks(self, ex, call, lv) -> list[float]:
-        """Depth levels of a peck cycle (the last is Z); Haas I/J/K when I is given."""
+        """Depth levels of a peck cycle (the last is Z); Haas I/J/K (modal cycle data) when I is given."""
         start, end, sign = lv["r"], lv["z"], lv["sign"]
         total = abs(end - start)
-        first = common.lin(ex, call, "I") if self.haas and common.word(call, "I") is not None else None
+        first = float(call.data["I"]) if self.haas and self._haas_choice(ex, call, "haas_peck_ijk", ("I",), "Q") \
+            and "I" in call.data else None
         if first is not None:
-            reduce = abs(common.lin(ex, call, "J", 0.0) or 0.0)
-            minimum = abs(common.lin(ex, call, "K", 0.0) or 0.0)
+            reduce = abs(float(call.data.get("J", 0.0)))
+            minimum = abs(float(call.data.get("K", 0.0)))
             depths, done, step = [], 0.0, abs(first)
             if step <= 0.0:
                 raise ControllerAlarm("cycle_q_missing", f"{call.code}: I must be positive")
@@ -270,9 +297,9 @@ class DrillCycle:
         """Program-frame position after the oriented-spindle shift (parameter 5148 / Haas Setting 27 or I, J)."""
         p = common.params(ex)
         work = {}
-        if self.haas and common.word(call, "Q") is None and (common.word(call, "I") is not None
-                                                             or common.word(call, "J") is not None):
-            work = {"X": common.lin(ex, call, "I", 0.0) or 0.0, "Y": common.lin(ex, call, "J", 0.0) or 0.0}
+        if self.haas and self._haas_choice(ex, call, "haas_shift_ij", ("I", "J"), "Q") and \
+                ("I" in call.data or "J" in call.data):
+            work = {"X": float(call.data.get("I", 0.0)), "Y": float(call.data.get("J", 0.0))}
         else:
             axis, sign = common.signed_axis(p["haas_g76_shift_direction"] if self.haas else p["g76_shift_direction"])
             if axis == d:
@@ -307,12 +334,28 @@ class DrillCycle:
         steps.extend(self._restart_spindle(ex))
         return steps
 
+    def _g77(self, ex, call, d, lv) -> list[Step]:
+        """Haas G77 back bore (haas-ngc-mill-om-2020 p. 353-355): "works similar to G76 except that before
+        beginning to bore the hole, it moves the tool to clear the hole, moves down into the hole, and bores
+        to the specified depth"; R lies past the bottom of the part, the return is always to the initial
+        level. The sequence is FANUC's G87 back boring with the Haas shift (Q along Setting 27, else I/J).
+        Spindle: the last commanded direction, M03 when the program has commanded none, no spin after M05."""
+        return self._back_bore(ex, call, d, lv, self._haas_restart(ex))
+
+    def _haas_restart(self, ex) -> list[Step]:
+        direction = ex.s.spindle.direction
+        if direction != 0:
+            return [_m([3 if direction < 0 else 4])]
+        return [] if ex.s.sys.get("spindle_commanded") else [_m([3])]
+
     def _g87(self, ex, call, d, lv) -> list[Step]:
         if self.haas:
             return self._g88(ex, call, d, lv)
+        return self._back_bore(ex, call, d, lv, self._restart_spindle(ex) or [_m([3])])
+
+    def _back_bore(self, ex, call, d, lv, restart: list[Step]) -> list[Step]:
         f, mode = common.feed_of(ex, call), call.feed_mode
         q = lv["q"]
-        restart = self._restart_spindle(ex) or [_m([3])]
         shifted = self._shift(ex, call, d, q, back=False)
         home = self._shift(ex, call, d, q, back=True)
         steps = list(self._orient(ex))
@@ -341,6 +384,11 @@ class DrillCycle:
     _g84_2 = _g84
 
     def _g84_3(self, ex, call, d, lv) -> list[Step]:
+        return self._tap(ex, call, d, lv, 1)
+
+    def _g184(self, ex, call, d, lv) -> list[Step]:
+        """Haas lathe G184 reverse tapping for left-hand threads (haas-ngc-lathe-om-2020 p. 371): rigid, the
+        control turns the spindle counter-clockwise itself."""
         return self._tap(ex, call, d, lv, 1)
 
     def _rigid(self, ex, call) -> bool:
@@ -463,5 +511,12 @@ register_resumer("cycles:manual_retract", ManualRetract(), replace=True)
 MILL_CODES = ("G73", "G74", "G76", "G81", "G82", "G83", "G84", "G85", "G86", "G87", "G88", "G89")
 FS15_CODES = ("G84.2", "G84.3")
 LATHE_CODES = ("G83", "G84", "G85", "G87", "G88", "G89")
+# Haas NGC (haas-ngc-mill-om-2020, haas-ngc-lathe-om-2020): mill G77 back bore; lathe face cycles along Z
+# (R absolute) and the radial cycles along X (R and X in diameter), each the mill sequence of its partner
+HAAS_MILL_CODES = ("G77",)
+HAAS_LATHE_FACE = ("G81", "G82", "G83", "G84", "G85", "G86", "G89", "G184")
+HAAS_RADIAL = {"G241": "G81", "G242": "G82", "G243": "G83", "G245": "G85", "G246": "G86", "G249": "G89"}
+HAAS_LATHE_CODES = HAAS_LATHE_FACE + tuple(HAAS_RADIAL)
 
-__all__ = ["DrillCycle", "ManualRetract", "MILL_CODES", "FS15_CODES", "LATHE_CODES", "TAP_CODES"]
+__all__ = ["DrillCycle", "ManualRetract", "MILL_CODES", "FS15_CODES", "LATHE_CODES", "TAP_CODES", "HAAS_MILL_CODES",
+           "HAAS_LATHE_FACE", "HAAS_RADIAL", "HAAS_LATHE_CODES"]

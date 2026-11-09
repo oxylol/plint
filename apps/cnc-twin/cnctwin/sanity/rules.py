@@ -277,9 +277,11 @@ def rule_tool_comment(check: Check) -> None:
             _compare_comment(check, nearest, number, i)
 
 
-def _differences(a: ToolComment, b: ToolComment, tolerance: float) -> list[str]:
+def _differences(a: ToolComment, b: ToolComment, tolerance: float, probe: bool = False) -> list[str]:
     problems = []
-    if a.diameter_m is not None and b.diameter_m is not None and abs(a.diameter_m - b.diameter_m) > tolerance:
+    bare = probe and (a.diameter_bare or b.diameter_bare)
+    if a.diameter_m is not None and b.diameter_m is not None and not bare and \
+            abs(a.diameter_m - b.diameter_m) > tolerance:
         problems.append(f"diameter {_mm(a.diameter_m)} vs {_mm(b.diameter_m)}")
     if a.kind and b.kind and not (set(COMMENT_KINDS[a.kind]) & set(COMMENT_KINDS[b.kind])):
         problems.append(f"kind {a.kind} vs {b.kind}")
@@ -297,6 +299,8 @@ def _compare_comment(check: Check, comment: ToolComment, number: int, command: i
     if tool is not None and tool.resolved:
         tolerance = float(ctx.p("diameter_match_tolerance_m"))
         measured = comment.thread_major_m if tool.is_tap and comment.thread_major_m else comment.diameter_m
+        if tool.is_probe and comment.diameter_bare:
+            measured = None             # a probe's comment numbers are model numbers (OMP40-2); its ball is "6 MM"
         if measured is not None and tool.diameter_m is not None and abs(measured - tool.diameter_m) > tolerance:
             problems.append(f"comment diameter {_mm(measured)}, tool table {_mm(tool.diameter_m)}")
         if comment.kind is not None and tool.type is not None and tool.type not in COMMENT_KINDS[comment.kind]:
@@ -306,7 +310,7 @@ def _compare_comment(check: Check, comment: ToolComment, number: int, command: i
             problems.append(f"comment pitch {_mm(comment.thread_pitch_m)}, tool {_mm(tool.thread_pitch_m)}")
         if not problems and tool.comment:
             stated = parse_tool_comment(tool.comment, 0, 1e-3)
-            differences = _differences(stated, comment, tolerance)
+            differences = _differences(stated, comment, tolerance, probe=tool.is_probe)
             if differences:
                 problems.append(f"the project's tool comment is '{tool.comment}' ({'; '.join(differences)})")
     if problems:
@@ -548,12 +552,17 @@ def rule_flute_length(check: Check) -> None:
         tool = check.tool(i)
         if tool is None:
             continue
-        depth = check.eng.ap_m[i]
-        if not math.isfinite(depth):
+        reach = check.eng.reach_m[i]
+        engaged = check.eng.ap_m[i]
+        if not math.isfinite(reach):
             continue
         section = check.section(i)
-        for kind, limit in (("flutes", tool.usable_length_m), ("stickout", tool.stickout_m)):
-            if limit is None or depth <= limit + 1e-9:
+        # the flutes must reach from the tip to the top of the material (the shank behind them is as wide as
+        # the cut), except on a tap, whose neck passes the tapped hole: there only the material the thread
+        # engages counts, which ends at the stock bottom for a through hole; the holder never enters the cut
+        for kind, limit, depth in (("flutes", tool.usable_length_m, engaged if tool.is_tap else reach),
+                                   ("stickout", tool.stickout_m, reach)):
+            if limit is None or not math.isfinite(depth) or depth <= limit + 1e-9:
                 continue
             key = (section, kind)
             if key not in worst or depth > worst[key][0]:
@@ -879,10 +888,14 @@ def rule_travel(check: Check) -> None:
         tip = check.tip(i)
         if not np.all(np.isfinite(tip)):
             continue
-        length = _active_register_length(check, modal)
-        machine = {"X": tip[0] + offset[0], "Y": tip[1] + offset[1]}
-        if length is not None:
-            machine["Z"] = tip[2] + offset[2] + length
+        if modal.get("source") == "controller":
+            # the controller's own machine targets (its inverse kinematics under TCP / tilted planes)
+            machine = {axis: float(v) for axis, v in check.commands[i].target.items() if axis in ("X", "Y", "Z")}
+        else:
+            length = _active_register_length(check, modal)
+            machine = {"X": tip[0] + offset[0], "Y": tip[1] + offset[1]}
+            if length is not None:
+                machine["Z"] = tip[2] + offset[2] + length
         for axis, value in machine.items():
             travel = ctx.travel_m.get(axis)
             if travel is None:

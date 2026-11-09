@@ -40,6 +40,24 @@ from .abi import CHAIN_TOOL, CHAIN_WORK, LINK_FIXED, LINK_LINEAR, LINK_ROTARY, C
 LATHE_TYPES = ("lathe", "mill_turn", "swiss")
 TOOL_SPINDLE_KINDS = ("milling", "live_tool")
 WORK_SPINDLE_KINDS = ("turning", "sub")
+# Keys a sourced database mapping may carry beside its entries (docs/formats.md "Sources and estimates"): they
+# describe the mapping, they are not axes (the controller's machine model skips the same keys, docs/dialects.md).
+SOURCE_KEYS = frozenset(("src", "note", "notes", "page", "pages", "est", "estimated", "accessed", "digitised",
+                         "uncertainty_pct"))
+
+
+def axis_names(axes) -> list[str]:
+    """Names of the axes of a machine's ``axes`` mapping in file order: the entries that are axis definitions
+    (mappings), without the source keys a sourced mapping carries beside them (``src``, ``note``, ``page`` ...)."""
+    if axes is None:
+        return []
+    names = []
+    for name in axes.keys():
+        if str(name) in SOURCE_KEYS:
+            continue
+        if isinstance(axes[name], Mapping):
+            names.append(str(name))
+    return names
 
 
 def plain(value):
@@ -241,6 +259,10 @@ class MachineModel:
             self.in_position = self.p["default_in_position_m"]
             self.estimated.append("controller.in_position_mm")
         self.corner_default = str(plain(_get(ctrl, "corner_default", "blend")))
+        # length of the control's axis setpoint filter (moving average after interpolation: FANUC parameter 1769
+        # in AI contour mode, the TNC nominal-position / HSC filter, SINUMERIK MD32410 axial jerk filter); 0 = the
+        # control limits jerk before interpolation only, which leaves the contour unfiltered
+        self.setpoint_filter_s = num(_get(ctrl, "setpoint_filter_s"), 0.0) or 0.0
         self.smoothing = [{"code": str(plain(e.code)), "name": str(plain(e.name) or ""),
                            "tolerance_m": num(e.tolerance_m, 0.0)} for e in (_get(ctrl, "smoothing") or [])]
         self.rapid_override_steps = [float(plain(v)) for v in (plain(_get(ctrl, "rapid_override_steps_frac")) or [])]
@@ -312,7 +334,7 @@ class MachineModel:
 
     # ------------------------------------------------------------------ paths
     def _read_paths(self, override) -> None:
-        names = list((self.raw.axes or {}).keys())
+        names = axis_names(self.raw.axes)
         ctrl = self.raw.controller
         two_path = bool(plain(_get(ctrl, "two_path", False))) or self.type == "swiss"
         if override:

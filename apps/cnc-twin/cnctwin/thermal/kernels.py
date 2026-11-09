@@ -10,6 +10,10 @@
   space with mirrored rectangular contacts (``edge_temperatures``).
 * Two-scale workpiece surface: finite rectangle source moving over a half space (Jaeger 1942)
   for a finite time (``moving_rect_rise``).
+* Cutting region of the tool: 3-D finite volumes of the wedge at the edge solved together with the
+  ladder, backward Euler, conjugate gradients with a block symmetric Gauss-Seidel preconditioner
+  (exact banded solves of the slabs and of the ladder; ``field_step``); the edge kernel's deviation
+  mode gives the periodic part around the cycle mean.
 
 Every kernel has an explicit signature (one compiled specialisation), ``cache=True``,
 ``nogil=True``, ``error_model="numpy"``; plain-Python references are in
@@ -33,24 +37,31 @@ L_SRC, L_AIR, L_COOL, L_RAD, L_CONTACT, L_DU, L_U0, L_U1 = 0, 1, 2, 3, 4, 5, 6, 
 L_AREA, L_TSURF, L_TMAX, L_MASS, L_TMEAN, L_LOST = 8, 9, 10, 11, 12, 13
 LD_SRC, LD_AIR, LD_COOL, LD_SP, LD_DU, LD_U0, LD_U1 = 0, 1, 2, 3, 4, 5, 6
 EDGE_NONE, EDGE_INTERRUPTED, EDGE_CONTINUOUS = 0, 1, 2
+EDGE_OUT_TEMPERATURE, EDGE_OUT_DEVIATION = 0, 1
+FS_TOL, FS_MAX_ITER = 0, 1
+FD_SRC, FD_AIR, FD_COOL, FD_SP, FD_DU, FD_U0, FD_U1, FD_ITER, FD_RES, FD_COUPLE = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 FULL_CELL = 1.0 - 1e-12          # fractions above count as full cells (no orientation weighting)
 
 for _name in ("B_T_AIR", "B_T_FLUID", "B_H_WET", "B_ALL_WET", "B_EPS", "B_T_RAD", "B_H_CONTACT", "B_T_FIX",
               "B_FMIN", "B_COOLANT_ON", "B_SIGMA", "L_SRC", "L_AIR", "L_COOL", "L_RAD", "L_CONTACT", "L_DU",
               "L_U0", "L_U1", "L_AREA", "L_TSURF", "L_TMAX", "L_MASS", "L_TMEAN", "L_LOST", "LD_SRC", "LD_AIR",
               "LD_COOL", "LD_SP", "LD_DU", "LD_U0", "LD_U1", "EDGE_NONE", "EDGE_INTERRUPTED",
-              "EDGE_CONTINUOUS"):
+              "EDGE_CONTINUOUS", "EDGE_OUT_TEMPERATURE", "EDGE_OUT_DEVIATION", "FS_TOL", "FS_MAX_ITER", "FD_SRC",
+              "FD_AIR", "FD_COOL", "FD_SP", "FD_DU", "FD_U0", "FD_U1", "FD_ITER", "FD_RES", "FD_COUPLE"):
     if getattr(_abi, _name) != globals()[_name]:
         raise ImportError(f"cnctwin.thermal.kernels: {_name} differs from cnctwin.thermal.abi")
-if _abi.N_L <= L_LOST or _abi.N_BSCAL <= B_SIGMA or _abi.N_LD <= LD_U1:
+if _abi.N_L <= L_LOST or _abi.N_BSCAL <= B_SIGMA or _abi.N_LD <= LD_U1 or _abi.N_FD <= FD_COUPLE \
+        or _abi.N_FS <= FS_MAX_ITER:
     raise ImportError("cnctwin.thermal.kernels: ledger/scalar arrays of cnctwin.thermal.abi are too short")
 
 MAT_T, GRID_T, SCR_T, BND_T, LAD_T, RESP_T, EIN_T, EOUT_T = (typeof(x) for x in _abi.sample_types())
+FMESH_T, FSYS_T = (typeof(x) for x in _abi.field_sample_types())
 
 f8 = types.float64
 i8 = types.int64
 b1 = types.boolean
 F1 = types.float64[::1]
+I1 = types.int32[::1]
 F2 = types.float64[:, ::1]
 F3 = types.float64[:, :, ::1]
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
@@ -1076,20 +1087,27 @@ def disc_depth_factor(depth, radius):
 def edge_temperatures(inp, resp, glx, glw, out):
     """Edge, rake-mean and flank-mean temperatures at the in-cut quadrature points and the cycle
     amplitude at the edge, per element: body temperature + wedge * local rise (periodic
-    superposition on the quarter space minus the far field the 1-D body already holds)."""
+    superposition on the quarter space minus the far field the 1-D body already holds).
+
+    With ``scal[2] = EDGE_OUT_DEVIATION`` the outputs are instead the periodic deviation from the
+    cycle mean, wedge * (theta(tau) - <theta>), <theta> = q W(N T) / T with W(t) the integral of the
+    unit response over [t - t_h, t] (the exact cycle mean of the superposition): the 3-D field of the
+    cutting region holds the mean, this adds the oscillation. Continuous elements then deviate by 0."""
     nt, ne = inp.mode.shape
     nq = inp.xi.shape[0]
     ndirect = int(inp.scal[0])
+    deviation = inp.scal.shape[0] > 2 and int(inp.scal[2]) == EDGE_OUT_DEVIATION
     for j in range(nt):
         for e in range(ne):
             tb = inp.T_body[j, e]
             mode = inp.mode[j, e]
             out.amp[j, e] = 0.0
-            if mode == EDGE_NONE:
+            if mode == EDGE_NONE or (deviation and mode == EDGE_CONTINUOUS):
+                base = 0.0 if deviation else tb
                 for q in range(nq):
-                    out.rake_q[j, e, q] = tb
-                    out.peak_q[j, e, q] = tb
-                    out.flank_q[j, e, q] = tb
+                    out.rake_q[j, e, q] = base
+                    out.peak_q[j, e, q] = base
+                    out.flank_q[j, e, q] = base
                 continue
             k = inp.k[j, e]
             alpha = inp.alpha[j, e]
@@ -1119,6 +1137,20 @@ def edge_temperatures(inp, resp, glx, glw, out):
             far_scale = duty * math.erfc(rfar / (2.0 * math.sqrt(alpha * t_total))) / (math.pi * k * rfar)
             far_r = qr * ar * 2.0 * b * far_scale
             far_f = qf * af * 2.0 * b * far_scale
+            mean_rc = 0.0
+            mean_rm = 0.0
+            mean_fc = 0.0
+            mean_fm = 0.0
+            if deviation:
+                # cycle means of the periodic solution replace the far-field subtraction
+                far_r = 0.0
+                far_f = 0.0
+                wc, wm_ = window_pair(resp, t_total, th, ar, k, alpha, imr, wmr, glx, glw)
+                mean_rc = wc / period
+                mean_rm = wm_ / period
+                wc, wm_ = window_pair(resp, t_total, th, af, k, alpha, imf, wmf, glx, glw)
+                mean_fc = wc / period
+                mean_fm = wm_ / period
             s_rf = disc_depth_factor(ar, math.sqrt(4.0 * af * b / math.pi))
             s_fr = disc_depth_factor(af, math.sqrt(4.0 * ar * b / math.pi))
             hot = 0.0
@@ -1144,6 +1176,13 @@ def edge_temperatures(inp, resp, glx, glw, out):
                         hot = edge_now
                     else:
                         out.amp[j, e] = wedge * (hot - edge_now)
+                    continue
+                if deviation:
+                    edge_r = qr * (rc - mean_rc)
+                    edge_f = qf * (fc - mean_fc)
+                    out.rake_q[j, e, qq] = wedge * (qr * (rm - mean_rm) + s_rf * edge_f)
+                    out.flank_q[j, e, qq] = wedge * (qf * (fm - mean_fm) + s_fr * edge_r)
+                    out.peak_q[j, e, qq] = wedge * (edge_r + edge_f)
                     continue
                 edge_r = qr * rc - far_r
                 edge_f = qf * fc - far_f
@@ -1227,3 +1266,353 @@ def moving_rect_rise(q, l, w, v, k, alpha, t, x, y, z, glx, glw):
             acc += glw[g] * jac * xf * yf * zf / (sq_pa * math.sqrt(tau))
         total += acc
     return q * alpha / k * total
+
+
+# ================================================================== cutting-region field (3-D)
+@njit(types.void(I1, I1, F1, F1, F1, F1), **INLINE)
+def csr_sym_matvec(row_ptr, col, val, dia, x, y):
+    """y = (D + L + L^T) x, L the strictly lower CSR matrix (row_ptr, col, val), D = diag(dia)."""
+    n = dia.shape[0]
+    for i in range(n):
+        y[i] = dia[i] * x[i]
+    for i in range(n):
+        xi = x[i]
+        acc = 0.0
+        for idx in range(row_ptr[i], row_ptr[i + 1]):
+            j = col[idx]
+            v = val[idx]
+            acc += v * x[j]
+            y[j] += v * xi
+        y[i] += acc
+
+
+@njit(types.void(FMESH_T, FSYS_T), **INLINE)
+def block_factor(fm, fs):
+    """Banded Cholesky of every diagonal block (band[i, d] = A[i, i - d] on entry, L on exit; the
+    blocks are contiguous index ranges fm.blk_ptr, banded within band.shape[1] - 1)."""
+    band = fs.band
+    bw = band.shape[1] - 1
+    for blk in range(fm.blk_ptr.shape[0] - 1):
+        s0 = fm.blk_ptr[blk]
+        s1 = fm.blk_ptr[blk + 1]
+        for i in range(s0, s1):
+            for d in range(bw, -1, -1):
+                j = i - d
+                if j < s0:
+                    continue
+                acc = band[i, d]
+                lo = i - bw
+                if lo < s0:
+                    lo = s0
+                for p in range(lo, j):
+                    acc -= band[i, i - p] * band[j, j - p]
+                if d == 0:
+                    band[i, 0] = math.sqrt(acc) if acc > 0.0 else math.sqrt(fs.dia[i])
+                else:
+                    band[i, d] = acc / band[j, 0]
+
+
+@njit(types.void(F2, i8, i8, F1), **INLINE)
+def band_solve(band, s0, s1, x):
+    """x[s0:s1] = (L L^T)^-1 x[s0:s1] with the banded factor of one block."""
+    bw = band.shape[1] - 1
+    for i in range(s0, s1):
+        acc = x[i]
+        for d in range(1, bw + 1):
+            if i - d >= s0:
+                acc -= band[i, d] * x[i - d]
+        x[i] = acc / band[i, 0]
+    for i in range(s1 - 1, s0 - 1, -1):
+        acc = x[i]
+        for d in range(1, bw + 1):
+            if i + d < s1:
+                acc -= band[i + d, d] * x[i + d]
+        x[i] = acc / band[i, 0]
+
+
+@njit(types.void(FMESH_T, FSYS_T, F1, F1), **INLINE)
+def block_sgs(fm, fs, r, z):
+    """z = M^-1 r for the block symmetric Gauss-Seidel preconditioner M = (D + L) D^-1 (D + L^T), D the
+    exactly factored diagonal blocks (symmetric positive definite: valid for conjugate gradients)."""
+    row_ptr = fm.row_ptr
+    col = fm.col
+    val = fs.val
+    w = fs.acc
+    nb = fm.blk_ptr.shape[0] - 1
+    for blk in range(nb):
+        s0 = fm.blk_ptr[blk]
+        s1 = fm.blk_ptr[blk + 1]
+        for i in range(s0, s1):
+            acc = r[i]
+            for idx in range(row_ptr[i], row_ptr[i + 1]):
+                j = col[idx]
+                if j < s0:
+                    acc -= val[idx] * z[j]
+            z[i] = acc
+        band_solve(fs.band, s0, s1, z)
+    for i in range(w.shape[0]):
+        w[i] = 0.0
+    for blk in range(nb - 1, -1, -1):
+        s0 = fm.blk_ptr[blk]
+        s1 = fm.blk_ptr[blk + 1]
+        band_solve(fs.band, s0, s1, w)
+        for i in range(s0, s1):
+            z[i] -= w[i]
+        for i in range(s0, s1):
+            zi = z[i]
+            for idx in range(row_ptr[i], row_ptr[i + 1]):
+                j = col[idx]
+                if j < s0:
+                    w[j] += val[idx] * zi
+
+
+@njit(f8(F1, F1), **INLINE)
+def dot(a, b):
+    acc = 0.0
+    for i in range(a.shape[0]):
+        acc += a[i] * b[i]
+    return acc
+
+
+@njit(types.UniTuple(f8, 2)(FMESH_T, FSYS_T, f8, i8), **OPTS)
+def field_pcg(fm, fs, tol, max_iter):
+    """Solve (D + L + L^T) x = b (fs.dia, fs.val, fs.b) by conjugate gradients with the block symmetric
+    Gauss-Seidel preconditioner until |b - A x| <= tol |b| (the residual is recomputed from x at the end,
+    and the iteration restarted from x when the recursive residual drifted). The start is the x on
+    entry (the previous step's increment) when its residual is below |b|, else 0. Returns (iterations,
+    relative residual). Fixed operation order: deterministic (x is part of the field's state)."""
+    x = fs.x
+    r = fs.r
+    z = fs.z
+    p = fs.p
+    q = fs.q
+    b = fs.b
+    n = b.shape[0]
+    bn = math.sqrt(dot(b, b))
+    if bn == 0.0:
+        for i in range(n):
+            x[i] = 0.0
+        return 0.0, 0.0
+    band = fs.band
+    bw = band.shape[1] - 1
+    for blk in range(fm.blk_ptr.shape[0] - 1):
+        s0 = fm.blk_ptr[blk]
+        for i in range(s0, fm.blk_ptr[blk + 1]):
+            for d in range(bw + 1):
+                band[i, d] = 0.0
+            band[i, 0] = fs.dia[i]
+            for idx in range(fm.row_ptr[i], fm.row_ptr[i + 1]):
+                j = fm.col[idx]
+                if j >= s0:
+                    band[i, i - j] = fs.val[idx]
+    block_factor(fm, fs)
+    # warm start from the previous increment (on entry in x; zero after a reset) when it is the better guess
+    csr_sym_matvec(fm.row_ptr, fm.col, fs.val, fs.dia, x, q)
+    for i in range(n):
+        r[i] = b[i] - q[i]
+    if dot(r, r) >= bn * bn:
+        for i in range(n):
+            x[i] = 0.0
+            r[i] = b[i]
+    it = 0
+    rel = 1.0
+    for _restart in range(4):
+        block_sgs(fm, fs, r, z)
+        rz = dot(r, z)
+        for i in range(n):
+            p[i] = z[i]
+        while it < max_iter:
+            csr_sym_matvec(fm.row_ptr, fm.col, fs.val, fs.dia, p, q)
+            pq = dot(p, q)
+            if pq <= 0.0:
+                break
+            alpha = rz / pq
+            for i in range(n):
+                x[i] += alpha * p[i]
+                r[i] -= alpha * q[i]
+            it += 1
+            if math.sqrt(dot(r, r)) <= tol * bn:
+                break
+            block_sgs(fm, fs, r, z)
+            rz_new = dot(r, z)
+            beta = rz_new / rz
+            rz = rz_new
+            for i in range(n):
+                p[i] = z[i] + beta * p[i]
+        csr_sym_matvec(fm.row_ptr, fm.col, fs.val, fs.dia, x, q)
+        for i in range(n):
+            r[i] = b[i] - q[i]
+        rel = math.sqrt(dot(r, r)) / bn
+        if rel <= 4.0 * tol or it >= max_iter:
+            break
+    return float(it), rel
+
+
+@njit(types.void(FMESH_T, FSYS_T, LAD_T, MAT_T, MAT_T, f8, F1), **OPTS)
+def field_step(fm, fs, lad, mat_tool, mat_holder, dt, out):
+    """One backward-Euler step of the cutting-region field and the tool ladder as one system.
+
+    Unknowns: the temperature change of every field cell and of every ladder node with
+    ``fs.active`` (ladder nodes that are views of the field keep an identity row). Couplings:
+    internal faces A / (d_a / k_a + d_b / k_b), exposed faces to air and coolant
+    A_w / (d / k + 1 / h) each, coupled faces to their ladder node A / (d / k + r_c + l_k / k_node),
+    the ladder's own links and its air, coolant and spindle/turret conductances (as ladder_step);
+    properties at the start of the step. The symmetric M-matrix is solved by preconditioned conjugate
+    gradients (field_pcg, block symmetric Gauss-Seidel) to the relative residual ``fs.scal[FS_TOL]``.
+
+    Identity: sum C dT = sources - dt sum_c g_c (T + dT - T_c) - sum(b - A dT) (the last term is the
+    solver's residual, booked by the ledger with the rest). out: FD_* terms."""
+    n = fs.T.shape[0]
+    nn = lad.m.shape[0]
+    t_air = lad.scal[0]
+    t_cool = lad.scal[1]
+    t_sp = lad.scal[2]
+    cap = fs.cap
+    kk = fs.kk
+    dia = fs.dia
+    val = fs.val
+    b = fs.b
+    x = fs.x
+    for q in range(out.shape[0]):
+        out[q] = 0.0
+    for idx in range(val.shape[0]):
+        val[idx] = 0.0
+    u_s = 0.0
+    u_c = 0.0
+    e_s = 0.0
+    e_c = 0.0
+    tg = mat_tool.T_K
+    for i in range(n):
+        ti = fs.T[i]
+        cap[i] = fm.m[i] * prop_interp(tg, mat_tool.cp_J_kgK, ti)
+        kk[i] = prop_interp(tg, mat_tool.k_W_mK, ti)
+        dia[i] = cap[i]
+        b[i] = fs.src[i]
+        u_s, u_c = neumaier(u_s, u_c, fm.m[i] * fs.h[i])
+        e_s, e_c = neumaier(e_s, e_c, fs.src[i])
+    for p in range(nn):
+        g_i = n + p
+        if fs.active[p] == 0:
+            cap[g_i] = 1.0
+            kk[g_i] = 1.0
+            dia[g_i] = 1.0
+            b[g_i] = 0.0
+            continue
+        mat = mat_tool if lad.mat[p] == 0 else mat_holder
+        tp = lad.T[p]
+        cap[g_i] = lad.m[p] * prop_interp(mat.T_K, mat.cp_J_kgK, tp)
+        kk[g_i] = prop_interp(mat.T_K, mat.k_W_mK, tp)
+        dia[g_i] = cap[g_i] + dt * (lad.g_air[p] + lad.g_cool[p] + lad.g_sp[p])
+        b[g_i] = lad.src[p] + dt * (lad.g_air[p] * (t_air - tp) + lad.g_cool[p] * (t_cool - tp)
+                                    + lad.g_sp[p] * (t_sp - tp))
+        u_s, u_c = neumaier(u_s, u_c, lad.m[p] * lad.h[p])
+        e_s, e_c = neumaier(e_s, e_c, lad.src[p])
+    for li in range(fm.link_a.shape[0]):
+        a = fm.link_a[li]
+        c = fm.link_b[li]
+        g = fm.link_area[li] / (fm.link_da[li] / kk[a] + fm.link_db[li] / kk[c])
+        dia[a] += dt * g
+        dia[c] += dt * g
+        val[fm.link_slot[li]] -= dt * g
+        flow = dt * g * (fs.T[c] - fs.T[a])
+        b[a] += flow
+        b[c] -= flow
+    nf = fm.face_cell.shape[0]
+    for f in range(nf):
+        c = fm.face_cell[f]
+        node = fm.face_node[f]
+        if node >= 0:
+            if fs.active[node] == 0:
+                continue
+            g_i = n + node
+            g = fm.face_area[f] / (fm.face_d[f] / kk[c] + fm.face_rc[f] + fm.face_lk[f] / kk[g_i])
+            dia[c] += dt * g
+            dia[g_i] += dt * g
+            val[fm.face_slot[f]] -= dt * g
+            flow = dt * g * (lad.T[node] - fs.T[c])
+            b[c] += flow
+            b[g_i] -= flow
+            continue
+        ga = 0.0
+        if fs.fa_w[f] > 0.0 and fs.fa_h[f] > 0.0:
+            ga = fs.fa_w[f] / (fm.face_d[f] / kk[c] + 1.0 / fs.fa_h[f])
+        gc = 0.0
+        if fs.fc_w[f] > 0.0 and fs.fc_h[f] > 0.0:
+            gc = fs.fc_w[f] / (fm.face_d[f] / kk[c] + 1.0 / fs.fc_h[f])
+        dia[c] += dt * (ga + gc)
+        b[c] += dt * (ga * (t_air - fs.T[c]) + gc * (t_cool - fs.T[c]))
+    for li in range(lad.link_a.shape[0]):
+        slot = fm.lad_slot[li]
+        if slot < 0:
+            continue
+        a = lad.link_a[li]
+        c = lad.link_b[li]
+        if a > c:
+            a, c = c, a
+        if lad.link_kind[li] == 0:
+            g = 1.0 / (lad.dz[a] / (2.0 * kk[n + a] * lad.area[a]) + lad.dz[c] / (2.0 * kk[n + c] * lad.area[c]))
+        else:
+            g = lad.link_g[li]
+        dia[n + a] += dt * g
+        dia[n + c] += dt * g
+        val[slot] -= dt * g
+        flow = dt * g * (lad.T[c] - lad.T[a])
+        b[n + a] += flow
+        b[n + c] -= flow
+    iters, rel = field_pcg(fm, fs, fs.scal[FS_TOL], int(fs.scal[FS_MAX_ITER]))
+    # losses with the temperatures at the end of the step (T + dT), before the state is updated
+    la = 0.0
+    lco = 0.0
+    lsp = 0.0
+    lcp = 0.0
+    for f in range(nf):
+        c = fm.face_cell[f]
+        tc = fs.T[c] + x[c]
+        node = fm.face_node[f]
+        if node >= 0:
+            if fs.active[node] == 0:
+                continue
+            g_i = n + node
+            g = fm.face_area[f] / (fm.face_d[f] / kk[c] + fm.face_rc[f] + fm.face_lk[f] / kk[g_i])
+            lcp += dt * g * (tc - (lad.T[node] + x[g_i]))
+            continue
+        if fs.fa_w[f] > 0.0 and fs.fa_h[f] > 0.0:
+            la += dt * fs.fa_w[f] / (fm.face_d[f] / kk[c] + 1.0 / fs.fa_h[f]) * (tc - t_air)
+        if fs.fc_w[f] > 0.0 and fs.fc_h[f] > 0.0:
+            lco += dt * fs.fc_w[f] / (fm.face_d[f] / kk[c] + 1.0 / fs.fc_h[f]) * (tc - t_cool)
+    for p in range(nn):
+        if fs.active[p] == 0:
+            continue
+        tn = lad.T[p] + x[n + p]
+        la += dt * lad.g_air[p] * (tn - t_air)
+        lco += dt * lad.g_cool[p] * (tn - t_cool)
+        lsp += dt * lad.g_sp[p] * (tn - t_sp)
+    du_s = 0.0
+    du_c = 0.0
+    v_s = 0.0
+    v_c = 0.0
+    for i in range(n):
+        de = cap[i] * x[i]
+        du_s, du_c = neumaier(du_s, du_c, de)
+        fs.h[i] = fs.h[i] + de / fm.m[i]
+        fs.T[i] = temperature(mat_tool, fs.h[i])
+        v_s, v_c = neumaier(v_s, v_c, fm.m[i] * fs.h[i])
+    for p in range(nn):
+        if fs.active[p] == 0:
+            continue
+        de = cap[n + p] * x[n + p]
+        du_s, du_c = neumaier(du_s, du_c, de)
+        lad.h[p] = lad.h[p] + de / lad.m[p]
+        mat = mat_tool if lad.mat[p] == 0 else mat_holder
+        lad.T[p] = temperature(mat, lad.h[p])
+        v_s, v_c = neumaier(v_s, v_c, lad.m[p] * lad.h[p])
+    out[FD_SRC] = e_s + e_c
+    out[FD_AIR] = la
+    out[FD_COOL] = lco
+    out[FD_SP] = lsp
+    out[FD_DU] = du_s + du_c
+    out[FD_U0] = u_s + u_c
+    out[FD_U1] = v_s + v_c
+    out[FD_ITER] = iters
+    out[FD_RES] = rel
+    out[FD_COUPLE] = lcp

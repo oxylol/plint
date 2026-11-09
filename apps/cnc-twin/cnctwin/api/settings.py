@@ -22,7 +22,9 @@ MiB = 1024 * 1024
 GiB = 1024 * MiB
 
 # Job kinds: which pool they run in and the callable the worker calls ("module:attr" or
-# "/path/file.py:attr"). Overridable with CNCTWIN_ENTRY_<KIND>.
+# "/path/file.py:attr"). Overridable with CNCTWIN_ENTRY_<KIND>. "outputs" is not a job kind: it is what the
+# worker of a simulation calls after a successful run (the report, pictures, video and sound,
+# cnctwin.core.outputs.finalize_outputs(run_dir, options, progress_cb)); CNCTWIN_ENTRY_OUTPUTS=none turns it off.
 JOB_POOLS = {"simulate": "heavy", "uncertainty": "heavy", "calibrate": "heavy", "check": "light", "compare": "light"}
 DEFAULT_ENTRIES = {
     "simulate": "cnctwin.core.loop:run_project",
@@ -30,7 +32,9 @@ DEFAULT_ENTRIES = {
     "compare": "cnctwin.report.compare:compare_runs",
     "uncertainty": "cnctwin.uncertainty:run_study",
     "calibrate": "cnctwin.mdata.calibrate:calibrate",
+    "outputs": "cnctwin.core.outputs:finalize_outputs",
 }
+NO_ENTRY = ("", "none", "off")      # an entry set to one of these is switched off
 MEMORY_MODES = ("auto", "systemd", "rlimit", "none")
 # A fixed timestamp for every job (reports, PDF, video): 1980-01-01, the earliest a zip can hold.
 DEFAULT_SOURCE_DATE_EPOCH = "315532800"

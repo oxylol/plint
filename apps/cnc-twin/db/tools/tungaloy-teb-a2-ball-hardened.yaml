@@ -13,7 +13,7 @@ items:
   type: ball_endmill
   hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
   tool_material: {class: carbide, grade: AH750 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
-  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling, thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/altin.yaml (1-4 um, est in db/coatings/altin.yaml after the 0.5-5 um of BALINIT PVD coatings, balzers-2010-hq040 p. 20), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 6
     flutes: 2
@@ -158,7 +158,7 @@ items:
   type: ball_endmill
   hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
   tool_material: {class: carbide, grade: AH750 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
-  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling, thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/altin.yaml (1-4 um, est in db/coatings/altin.yaml after the 0.5-5 um of BALINIT PVD coatings, balzers-2010-hq040 p. 20), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 8
     flutes: 2
@@ -303,7 +303,7 @@ items:
   type: ball_endmill
   hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
   tool_material: {class: carbide, grade: AH750 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
-  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling, thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/altin.yaml (1-4 um, est in db/coatings/altin.yaml after the 0.5-5 um of BALINIT PVD coatings, balzers-2010-hq040 p. 20), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 10
     flutes: 2
@@ -448,7 +448,7 @@ items:
   type: ball_endmill
   hand: {value: right, src: est, note: right-hand cut assumed (not stated)}
   tool_material: {class: carbide, grade: AH750 (coated ultra-fine carbide), id: carbide-submicron-10co, src: est, note: 'Tungaloy: AH750/AH710 ''excellent for machining hard steel up to 70 HRC; small grain size improves edge strength'' (catalogue p. I007), ball nose ''ultra-fine grain carbide'' (p. I054); submicron 10 % Co grade assumed'}
-  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling}
+  coating: {id: altin, src: est, note: AH750/AH710 coating chemistry not stated in the catalogue (only AH725 is stated as TiAlN); mapped to altin as typical of PVD grades for hard milling, thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/altin.yaml (1-4 um, est in db/coatings/altin.yaml after the 0.5-5 um of BALINIT PVD coatings, balzers-2010-hq040 p. 20), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 12
     flutes: 2

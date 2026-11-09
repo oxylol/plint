@@ -442,3 +442,111 @@ def moving_rect_ref(q, l, w, v, k, alpha, t, x, y, z):
                                   epsabs=0.0, epsrel=1e-10)
         total += value
     return q * alpha / k * total
+
+
+# ------------------------------------------------------------------ cutting-region field
+def field_step_ref(fm, fs, lad, mat_tool, mat_holder, dt):
+    """Dense backward-Euler reference of kernels.field_step (direct solve of the same couplings).
+
+    Returns (dT of the cells, dT of the ladder nodes, terms) without changing the inputs."""
+    n = fs.T.size
+    nn = lad.m.size
+    big = n + nn
+    t_air, t_cool, t_sp = float(lad.scal[0]), float(lad.scal[1]), float(lad.scal[2])
+    temp = np.concatenate([fs.T, lad.T])
+    cap = np.zeros(big)
+    kk = np.ones(big)
+    for i in range(n):
+        cap[i] = fm.m[i] * np.interp(fs.T[i], mat_tool.T_K, mat_tool.cp_J_kgK)
+        kk[i] = np.interp(fs.T[i], mat_tool.T_K, mat_tool.k_W_mK)
+    active = np.asarray(fs.active) != 0
+    for p in range(nn):
+        if active[p]:
+            mat = mat_tool if lad.mat[p] == 0 else mat_holder
+            cap[n + p] = lad.m[p] * np.interp(lad.T[p], mat.T_K, mat.cp_J_kgK)
+            kk[n + p] = np.interp(lad.T[p], mat.T_K, mat.k_W_mK)
+        else:
+            cap[n + p] = 1.0
+    a_mat = np.diag(cap.copy())
+    rhs = np.zeros(big)
+    rhs[:n] = fs.src
+    sinks = []                  # (row, conductance, reference temperature, kind)
+
+    def couple(i, j, g):
+        a_mat[i, i] += dt * g
+        a_mat[j, j] += dt * g
+        a_mat[i, j] -= dt * g
+        a_mat[j, i] -= dt * g
+        rhs[i] += dt * g * (temp[j] - temp[i])
+        rhs[j] += dt * g * (temp[i] - temp[j])
+
+    for a, c, area, da, db in zip(fm.link_a, fm.link_b, fm.link_area, fm.link_da, fm.link_db):
+        couple(int(a), int(c), area / (da / kk[a] + db / kk[c]))
+    couples = []
+    for f in range(fm.face_cell.size):
+        c = int(fm.face_cell[f])
+        node = int(fm.face_node[f])
+        if node >= 0:
+            if not active[node]:
+                continue
+            g = fm.face_area[f] / (fm.face_d[f] / kk[c] + fm.face_rc[f] + fm.face_lk[f] / kk[n + node])
+            couple(c, n + node, g)
+            couples.append((c, n + node, g))
+            continue
+        if fs.fa_w[f] > 0 and fs.fa_h[f] > 0:
+            sinks.append((c, fs.fa_w[f] / (fm.face_d[f] / kk[c] + 1.0 / fs.fa_h[f]), t_air, "air"))
+        if fs.fc_w[f] > 0 and fs.fc_h[f] > 0:
+            sinks.append((c, fs.fc_w[f] / (fm.face_d[f] / kk[c] + 1.0 / fs.fc_h[f]), t_cool, "cool"))
+    for p in range(nn):
+        if not active[p]:
+            continue
+        rhs[n + p] += lad.src[p]
+        for g, ref, kind in ((lad.g_air[p], t_air, "air"), (lad.g_cool[p], t_cool, "cool"), (lad.g_sp[p], t_sp, "sp")):
+            if g > 0:
+                sinks.append((n + p, g, ref, kind))
+    for row, g, ref, _ in sinks:
+        a_mat[row, row] += dt * g
+        rhs[row] += dt * g * (ref - temp[row])
+    for a, c, kind, g_fixed in zip(lad.link_a, lad.link_b, lad.link_kind, lad.link_g):
+        a, c = int(a), int(c)
+        if not (active[a] and active[c]):
+            continue
+        if kind == 0:
+            g = 1.0 / (lad.dz[a] / (2 * kk[n + a] * lad.area[a]) + lad.dz[c] / (2 * kk[n + c] * lad.area[c]))
+        else:
+            g = g_fixed
+        couple(n + a, n + c, g)
+    delta = np.linalg.solve(a_mat, rhs)
+    new = temp + delta
+    terms = {kind: float(sum(dt * g * (new[row] - ref) for row, g, ref, k in sinks if k == kind))
+             for kind in ("air", "cool", "sp")}
+    terms["couple"] = float(sum(dt * g * (new[i] - new[j]) for i, j, g in couples))
+    terms["du"] = float(np.sum(cap[:n] * delta[:n]) + np.sum(cap[n:][active] * delta[n:][active]))
+    terms["src"] = float(np.sum(fs.src) + np.sum(np.asarray(lad.src)[active]))
+    return delta[:n], delta[n:], terms
+
+
+def edge_deviation_ref(qr, ar, qf, af, b, th, period, ncyc, k, alpha, wedge, xi):
+    """Reference of the edge kernel's deviation mode for an interrupted element: the brute-force
+    superposition at the phases minus its cycle mean, the mean by adaptive quadrature over the period."""
+    s_rf = disc_depth_factor_ref(ar, math.sqrt(4 * af * b / math.pi))
+    s_fr = disc_depth_factor_ref(af, math.sqrt(4 * ar * b / math.pi))
+
+    def theta(tau, a, which):
+        return periodic_ref(tau, th, period, ncyc, a, b, k, alpha, which)
+
+    def mean(a, which):
+        pts = [th] if 0.0 < th < period else None
+        value, _ = integrate.quad(lambda s: theta(s, a, which), 0.0, period, points=pts, limit=200, epsrel=1e-9)
+        return value / period
+
+    m_rc, m_rm, m_fc, m_fm = mean(ar, 0), mean(ar, 1), mean(af, 0), mean(af, 1)
+    rake, peak, flank = [], [], []
+    for x in xi:
+        tau = x * th
+        er = qr * (theta(tau, ar, 0) - m_rc)
+        ef = qf * (theta(tau, af, 0) - m_fc)
+        rake.append(wedge * (qr * (theta(tau, ar, 1) - m_rm) + s_rf * ef))
+        flank.append(wedge * (qf * (theta(tau, af, 1) - m_fm) + s_fr * er))
+        peak.append(wedge * (er + ef))
+    return np.array(rake), np.array(peak), np.array(flank)

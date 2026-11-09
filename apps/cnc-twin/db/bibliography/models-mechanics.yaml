@@ -208,7 +208,11 @@ entries:
     title: "A study on chip-breaker"
     venue: "Bulletin of JSME 5(17), 142-150"
     year: 1962
-    note: "Chip breaking criterion: bending strain (t/2)(1/R_u - 1/R_L) against the fracture strain of the chip; geometric curl radius at a step breaker."
+    doi: "10.1299/jsme1958.5.142"
+    url: "https://www.jstage.jst.go.jp/article/jsme1958/5/17/5_17_142/_article"
+    accessed: 2026-11-03
+    pages: "Eq. (1): a chip of curl radius R_0 breaks when (t_2/2)(1/R_0 - 1/R_L) reaches the rupture strain of the chip material, R_L >> R_0 (Sect. 2.2.6); Eq. (2): chip flow circle of a parallel breaker R_c = b cot(theta/2); Eq. (3): tool-chip contact length m = k_m t_1 sin(phi + beta - alpha)/(sin phi cos beta), k_m about 2.0; Figs. 4-13: limiting chip thickness of S15C, S45C, S55C (one line), SCM3 and SUS7 against R_c (0.025-0.3 mm/rev, 50-280 m/min, S-2 carbide, 0-0-7-7-8-0-0.5 mm); BUE below about 75 m/min in S45C; chip tensile strength about twice the uncut material's, saturated for chip shear strains above 2 (Fig. 25)"
+    note: "read (full text, J-STAGE scan) on 2026-11-03. Chip breaking criterion and the measured limiting conditions used for the chip rupture strains of db/models/mechanics-chip.yaml; no relation for the natural curl on a flat rake face is given."
 
   jawahir-1993-chip-control:
     type: article
@@ -242,3 +246,20 @@ entries:
     venue: "Zeitschrift für Physikalische Chemie 21B, 25-41"
     year: 1933
     note: "Parabolic growth law of diffusion-controlled oxide films, x^2 = k_p t with Arrhenius k_p."
+
+  hutton-yu-1990-bue-acoustic-emission:
+    type: article
+    authors: "Hutton, D.V.; Yu, Q."
+    title: "On the effects of a built-up edge on acoustic emission in metal cutting"
+    venue: "Journal of Engineering for Industry (ASME)"
+    year: 1990
+    doi: "10.1115/1.2899565"
+    note: "Abstract as quoted by a literature search (2026-11-03; the paper was not read): under BUE-forming conditions the BUE increases the effective rake angle and with it the shear angle of the primary zone. Qualitative support of the effective-rake BUE model; no value is taken from it."
+
+  hastings-1980-machining-theory:
+    type: article
+    authors: "Hastings, W.F.; Mathew, P.; Oxley, P.L.B."
+    title: "A machining theory for predicting chip geometry, cutting forces etc. from work material properties and cutting conditions"
+    venue: "Proceedings of the Royal Society of London A 371, 569-587"
+    year: 1980
+    note: "Oxley's predictive theory with temperature- and strain-rate-dependent flow stress; the interface temperature and strain rate decide where a built-up edge forms (abstract as summarised by a literature search, 2026-11-03; the paper was not read)."

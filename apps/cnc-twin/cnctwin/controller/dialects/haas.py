@@ -17,6 +17,7 @@ import math
 
 import numpy as np
 
+from ... import units
 from .. import hooks
 from ..alarms import AlarmTable, ControllerAlarm
 from ..expr import round_half_away
@@ -56,7 +57,10 @@ HAAS_EXTRA_T = {
     "G105": GSpec(0, "unsupported"), "G107": GSpec(0, "tcp", "haas:G107"),
     "G112": GSpec(21, "tcp", "haas:G112"), "G113": GSpec(21, "tcp", "off"),
     "G154": GSpec(14, "wcs", "P"), "G156": GSpec(0, "cycle", "G156", cycle=True),
-    "G184": GSpec(0, "cycle", "G184", cycle=True), "G186": GSpec(0, "cycle", "G186", cycle=True),
+    "G184": GSpec(10, "cycle", "G184", cycle=True), "G186": GSpec(0, "cycle", "G186", cycle=True),
+    # face drilling cycles of the Haas lathe besides FANUC T's G83-G89 (haas-ngc-lathe-om-2020 G81-G89)
+    "G81": GSpec(10, "cycle", "G81", cycle=True), "G82": GSpec(10, "cycle", "G82", cycle=True),
+    "G86": GSpec(10, "cycle", "G86", cycle=True),
     "G187": GSpec(0, "smoothing"), "G195": GSpec(0, "cycle", "G195", cycle=True),
     "G196": GSpec(0, "cycle", "G196", cycle=True), "G198": GSpec(0, "unsupported"),
     "G199": GSpec(0, "unsupported"), "G200": GSpec(0, "unsupported"),
@@ -101,6 +105,11 @@ ALARM_TEXTS = {
     "376": "No Cutter Comp In Skip", "378": "Skip Signal Found", "379": "Skip Signal Not Found",
     "467": "Arc Not Allowed With Scaling Settings", "369": "Tool Too Big",
 }
+
+# Haas lathe cycles whose D word is cycle data (HaasHandler.cycle_data_letters)
+HAAS_LATHE_D_CYCLES = ("G71", "G72", "G73", "G74", "G75", "G76")
+# Haas lathe radial drilling cycles (drill along X); the face cycles drill along Z
+HAAS_RADIAL = ("G241", "G242", "G243", "G245", "G246", "G249")
 
 HAAS_M_MILL = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 19, 30, 31, 33, 34, 35, 36, 41, 42, 50, 51, 52, 53,
                54, 55, 59, 61, 62, 63, 64, 65, 69, 70, 71, 73, 74, 78, 79, 80, 81, 82, 83, 84, 86, 88, 89, 97, 98, 99,
@@ -266,6 +275,7 @@ class HaasHandler(FanucHandler):
         if not self.T:
             s.modal["23"] = "G255"
             s.modal["31"] = "G269"
+            self.default_smoothing()
         s.sys["pcool"] = {str(k): int(v) for k, v in self.ex.ctx.nozzle_positions.items()}
 
     def on_reset(self) -> None:
@@ -276,6 +286,7 @@ class HaasHandler(FanucHandler):
             s.modal["31"] = "G269"
             if s.tcp in ("haas:G254", "haas:G234"):
                 s.tcp = ""
+            self.default_smoothing()          # G187 is cancelled by RESET, M30, M02 (p. 393)
         s.lookahead_limit = 0
 
     # numbers ------------------------------------------------------------------
@@ -304,6 +315,20 @@ class HaasHandler(FanucHandler):
 
     def m_table(self) -> set[int]:
         return set(HAAS_M_LATHE if self.T else HAAS_M_MILL)
+
+    def drilling_axis(self, code: str) -> str:
+        """Haas lathes: the face cycles (G81-G89, G184) drill along Z, the radial cycles G241-G249 along X."""
+        if self.T:
+            return "X" if code in HAAS_RADIAL else "Z"
+        return super().drilling_axis(code)
+
+    def cycle_data_letters(self, oneshots: list) -> set[str]:
+        """Haas lathes: D in a G71/G72 block is the depth of cut, in G73 the number of passes, in G74/G75
+        the tool clearance, in G76 the first pass depth (haas-ngc-lathe-om-2020, G71-G76); a lathe takes
+        its offsets from the T word, so D is never an offset number there."""
+        if self.T and any(code in HAAS_LATHE_D_CYCLES for code, _ in oneshots):
+            return {"D"}
+        return set()
 
     def m_data_letters(self, m: int) -> set[str]:
         if m in (97,):
@@ -383,26 +408,60 @@ class HaasHandler(FanucHandler):
         raise ControllerAlarm("unsupported_function", code)
 
     def g187(self, bw: BlockWords) -> None:
+        """G187 Pn Ennnn (haas-ngc-mill-om-2020 p. 393, Settings 85 and 191 p. 456, 463): P sets the smoothness
+        level and leaves an active E alone, E sets the maximum corner rounding and leaves P alone, G187 alone
+        cancels E and returns to the defaults: Setting 191 (medium) and the corner rounding of Setting 85."""
         ex, s = self.ex, self.s
         p = bw.take("P")
         e = bw.take("E")
         if p is None and e is None:
-            s.smoothing.update({"level": 2, "mode_code": "", "tolerance_m": 0.0})
+            self.default_smoothing()
         if p is not None:
             level = self.integer(p)
             if level not in (1, 2, 3):
                 raise ControllerAlarm("invalid_p", f"G187 P{level}")
             s.smoothing["level"] = level
             s.smoothing["mode_code"] = f"G187 P{level}"
-            if e is None:
-                table = {entry["code"]: entry["tolerance_m"] for entry in self.machine.smoothing}
-                s.smoothing["tolerance_m"] = float(table.get(f"G187 P{level}", s.smoothing.get("tolerance_m", 0.0)))
+            if e is None and not s.smoothing.get("e_active"):
+                s.smoothing["tolerance_m"] = self.level_rounding_m(level)
         if e is not None:
             s.smoothing["tolerance_m"] = self.lin(e)
+            s.smoothing["e_active"] = True
             if p is None:
                 s.smoothing["mode_code"] = (s.smoothing.get("mode_code") or "G187") + " E"
         ex.emit(Command(Kind.MODE, ex.line_ref(), smoothing=ex.smoothing_spec(),
                         modal={"smoothing_level": s.smoothing.get("level", 2)}))
+
+    def level_rounding_m(self, level: int) -> float:
+        """Maximum corner rounding without an E word at smoothness level P<level>: the machine file's smoothing
+        entry for "G187 P<level>" (Setting 85 of that machine: the P level sets the smoothness, not the corner
+        tolerance), else Setting 85 as the machine file gives it for the default level."""
+        table = {entry["code"]: float(entry["tolerance_m"]) for entry in self.machine.smoothing}
+        value = table.get(f"G187 P{level}")
+        return float(value) if value is not None else self.setting85_m()
+
+    def setting85_m(self) -> float:
+        """Setting 85 Maximum Corner Rounding as the machine file gives it: the smoothing entry of the default
+        smoothness level (Setting 191, factory default MEDIUM = "G187 P2"), else the first G187 entry; without a
+        smoothing table on a mill the controller database's Setting 85 factory default (0.0250 in, mill manual
+        p. 456); 0 when neither gives one (the motion planner's default contour tolerance then applies)."""
+        table = [(entry["code"], float(entry["tolerance_m"])) for entry in self.machine.smoothing]
+        for code, value in table:
+            if code == "G187 P2":
+                return value
+        for code, value in table:
+            if code.startswith("G187"):
+                return value
+        if self.T:
+            return 0.0
+        default = ((self.d.db or {}).get("timing") or {}).get("corner_rounding_default_in")
+        value = default.get("value") if isinstance(default, dict) else default
+        return float(value) * units.INCH_M if value is not None else 0.0
+
+    def default_smoothing(self) -> None:
+        """Power-on, RESET, M30 and G187 alone: Setting 191 (medium) and the Setting 85 corner rounding, no E."""
+        s = self.s
+        s.smoothing.update({"level": 2, "mode_code": "", "tolerance_m": self.setting85_m(), "e_active": False})
 
     def select_wcs(self, code: str, spec: GSpec, bw: BlockWords) -> None:
         if code == "G154":
@@ -451,6 +510,8 @@ class HaasHandler(FanucHandler):
     def arc(self, bw: BlockWords, target: dict[str, int], direction: int, corner: dict | None = None) -> None:
         if self.s.scale is not None and not self.ex.transform().scales_uniformly(self.plane()):
             raise ControllerAlarm("arc_under_scaling", "G02/G03 with per-axis scaling")
+        if corner:
+            raise ControllerAlarm("chamfer_not_g01", ",C/,R on a G02/G03 block (Haas: between two G01 blocks)")
         super().arc(bw, target, direction, corner)
 
     # M codes ------------------------------------------------------------------
@@ -663,6 +724,8 @@ class TableTcp:
         modal = dict(item.modal)
         modal["tip_interpolation"] = "tip" if self.mode == "tcpc" else "joint"
         modal["work_origin_M0_m"] = [float(v) for v in work_origin]
+        modal["tip_start_m"] = [float(item.start[ex.letters.index(l)]) if (l in ex.letters and len(item.start)
+                                == len(ex.letters)) else 0.0 for l in "XYZ"]
         cmd = Command(kind, item.ref, Space.TIP, target, tuple(float(v) for v in tip),
                       tuple(float(v) for v in axis_w), arc, item.feed, item.smoothing, modal=modal)
         if item.kind == "probe":
@@ -712,11 +775,12 @@ def build_haas(machine, settings, controller_db, db_id: str = "") -> Dialect:
     supported_g = word_set(table.get("G"), "G") if table else None
     supported_m = word_set(table.get("M"), "M") if table else None
     alarms = AlarmTable("haas", ALARM_CODES, ALARM_TEXTS, controller_db, db_id)
+    # ,C chamfer and ,R corner rounding between two G01 blocks (haas-ngc-mill-om-2020 p. 309-310)
     lexer = LexerRules(letters=frozenset(LETTERS), max_digits=dict(MAX_DIGITS), block_delete_switches=1,
-                       max_o_digits=5)
+                       max_o_digits=5, comma_letters=frozenset("CR"))
     params = fanuc_params(settings, "controller-haas")
     return Dialect("haas", variant, lexer, gcodes, power_on, alarms, HaasVars(variant), HaasHandler, params,
-                   controller_db, db_id, supported_g, supported_m, frozenset(LETTERS))
+                   controller_db, db_id, supported_g, supported_m, frozenset(LETTERS | {",C", ",R"}))
 
 
 register_dialect("haas", build_haas)

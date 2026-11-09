@@ -113,16 +113,18 @@ def _taylor_condition(entry: P.TaylorEntry, fg: CAL.FlankGeometry, speed: float,
 
 def taylor_check(taylor: P.TaylorEntry, response, slot: int, fg: CAL.FlankGeometry, abrasion: CAL.Abrasion,
                  vb0_m: float, nodes: int) -> dict:
-    """Lives the abrasive-only law predicts at the calibration and check speeds against the Taylor
-    lives (reported, not fitted)."""
-    out = {"speeds_m_s": [], "taylor_life_s": [], "model_life_s": [], "residual_rel": []}
+    """Edge contact lives the abrasive-only law predicts at the calibration and check speeds against the
+    Taylor lives converted to contact time (reported, not fitted)."""
+    out = {"speeds_m_s": [], "taylor_life_s": [], "contact_life_s": [], "model_life_s": [], "residual_rel": [],
+           "life_basis": taylor.life_basis, "contact_fraction": taylor.contact_fraction}
     for speed in CAL.calibration_speeds(taylor):
-        target = taylor.life_s(speed, taylor.feed_ref_m, taylor.ap_ref_m)
+        target = taylor.contact_life_s(speed, taylor.feed_ref_m, taylor.ap_ref_m)
         f = lambda v, vb: response.response(slot, _taylor_condition(taylor, fg, v, vb, False))
         ns = CAL._nodes(f, speed, vb0_m, taylor.VB_limit_m, fg, None, abrasion, nodes)
         life = CAL.life_s(ns, 0.0, 1.0, 1.0, fg.g_vb, None, 1.0)
         out["speeds_m_s"].append(speed)
-        out["taylor_life_s"].append(target)
+        out["taylor_life_s"].append(taylor.life_s(speed, taylor.feed_ref_m, taylor.ap_ref_m))
+        out["contact_life_s"].append(target)
         out["model_life_s"].append(life if math.isfinite(life) else None)
         out["residual_rel"].append(life / target - 1.0 if math.isfinite(life) else None)
     return out
@@ -172,7 +174,7 @@ def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coati
                 P.generic_coating(taylor.coating, coating, tool_mat) if relation == "other" else None)
             abrasion = CAL.Abrasion(abrasive, hs[0], hs[1], *(phase.hardness_table() if phase is not None
                                                               else (None, None)))
-            key = (work.id, tool_mat.id, coating_id, taylor.index, relation, round(fg.rake_rad, 9),
+            key = (work.id, tool_mat.id, coating_id, taylor, relation, round(fg.rake_rad, 9),
                    round(fg.clearance_rad, 9), round(fg.edge_radius_m, 12), round(fg.incl_rad, 9), round(vb0_m, 12),
                    int(settings.calib_nodes), getattr(response, "cache_key", id(response)), abrasive,
                    None if phase is None else (phase.id, phase.factor, phase.thickness_m))
@@ -192,6 +194,11 @@ def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coati
                 if relation == "other":
                     estimated.append(f"tool slot {slot}: Taylor entry for coating {taylor.coating!r} calibrated with a "
                                      f"generic coating (factor {phase.factor:g}, {phase.thickness_m * 1e6:.1f} um)")
+                if taylor.engagement == "default":
+                    estimated.append(f"tool slot {slot}: milling Taylor entry {taylor.index} of {work.id} states no "
+                                     f"reference engagement: its cutting-time life is read at the ISO 8688-2 "
+                                     f"reference arc ({math.degrees(2.0 * math.pi * taylor.contact_fraction):.1f} deg, "
+                                     f"contact fraction {taylor.contact_fraction:.3f})")
             except (InputError, ValueError, LookupError, ZeroDivisionError) as error:
                 estimated.append(f"tool slot {slot}: Taylor calibration impossible ({error}); abrasive wear only")
                 report["flank"] = {"source": "abrasive_only", "reason": str(error)}

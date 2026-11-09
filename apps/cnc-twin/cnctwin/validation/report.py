@@ -156,6 +156,23 @@ def _summary_row(q: QuantityResult) -> str:
             f"{_frac(s.within_uncertainty, s.uncertainty_known)} | {budget} | {VERDICT_TEXT[q.verdict]} |")
 
 
+PLAIN_VERDICT = {PASS: "pass", FAIL: "fail", NO_BUDGET: "not judged (no budget)",
+                 NO_CASES: "not judged (no independent case)", NO_HARNESS: "no harness"}
+
+
+def _plain_row(q: QuantityResult) -> str:
+    s = q.independent
+    dep = q.dependent.cases if q.dependent else 0
+    if s is None:
+        return f"| {q.quantity} | {len(q.cases)} | - | - | - | - | {PLAIN_VERDICT[q.verdict]} |"
+    within = f"{s.passing}/{s.cases_with_values}" if s.passing is not None else "-"
+    median = pct(s.median_abs_rel)
+    if s.class_values and s.class_values == s.values:
+        median = f"{s.class_matches}/{s.class_values} classes match"
+    return (f"| {q.quantity} | {len(q.cases)} | {s.cases} | {dep} | {within} | {median} | "
+            f"{PLAIN_VERDICT[q.verdict]} |")
+
+
 def _stats_table(q: QuantityResult) -> list[str]:
     lines = ["| group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / "
              "curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |",
@@ -279,9 +296,17 @@ def markdown(results: list[QuantityResult], discussions: dict | None = None, int
              "reference also built a database value the model used are **calibration-dependent** and are "
              "reported separately; verdicts use the independent cases only.", "",
              "## Summary", "",
-             "| quantity | cases | independent | calibration-dependent | independent cases within budget | "
-             "median abs. error | p90 abs. error | class matches | values within uncertainty | budget | verdict |",
-             "|---|---|---|---|---|---|---|---|---|---|---|"]
+             "Plain summary (verdicts use the independent cases only; 'within budget' counts independent cases whose "
+             "every value lies inside its tolerance; the median is the median absolute relative error over the "
+             "independent cases' compared values):", "",
+             "| quantity | cases | independent | calibration-dependent | within budget | median error | verdict |",
+             "|---|---|---|---|---|---|---|"]
+    for q in results:
+        lines.append(_plain_row(q))
+    lines += ["", "Detailed statistics:", "",
+              "| quantity | cases | independent | calibration-dependent | independent cases within budget | "
+              "median abs. error | p90 abs. error | class matches | values within uncertainty | budget | verdict |",
+              "|---|---|---|---|---|---|---|---|---|---|---|"]
     for q in results:
         lines.append(_summary_row(q))
     lines.append("")

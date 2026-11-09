@@ -21,11 +21,13 @@ controller:
   least_input_increment_deg: 0.001
   max_feed_mm_min: 21200
   rapid_mm_min: {X: 35560, Y: 35560, Z: 35560}
-  smoothing:                         # high-speed / smoothing modes and their tolerance bands
-    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: key}
-    - {code: "G187 P2", name: medium, tolerance_mm: 0.010}
-    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025}
+  smoothing:                         # high-speed / smoothing modes and the corner/contour tolerance each applies
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.635, src: key}   # Haas: without E the max corner rounding is
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.635}             # Setting 85 (default 0.025 in) at every P level;
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.635}             # the P level sets the smoothness only
   corner_default: blend              # blend (G64) | exact_stop (G61)
+  # setpoint_filter_ms: {value: 0, src: est, note: ""}   # optional: moving-average axis setpoint filter after
+  #                                    interpolation (FANUC 1769, TNC HSC filter, MD32410); 0 / absent = none
   in_position_mm: {value: 0.005, src: est, note: ""}
   rapid_override_steps_pct: [5, 25, 50, 100]
   feed_override_range_pct: [0, 200]

@@ -251,3 +251,50 @@ def test_rebuilt_pieces_stay_in_path_order():
     for it in pl.items:
         if it.pieces:
             assert it.pieces == list(range(it.pieces[0], it.pieces[-1] + 1))
+
+
+@pytest.mark.parametrize("dialect", ["fanuc", "siemens840d"])
+def test_commanded_profile_never_passes_the_block_target(dialect):
+    """Moves that end exactly at a travel end (Z 0, X -800 mm, Y 0) and moves that turn back: no commanded value
+    passes its block's target, even by rounding, so a target on the stroke limit never raises overtravel. Dog-leg
+    rapids (FANUC), linear rapids (Siemens), short moves that reach neither speed nor acceleration, exact stops and a
+    blended zig-zag whose corners touch Z 0."""
+    m = copy.deepcopy(MILL)
+    m["controller"]["dialect"] = dialect
+    s = Script()
+    s.rapid(X=-100, Y=-100, Z=-50)
+    s.rapid(X=-100, Y=-100, Z=0)                 # to the Z travel end
+    s.rapid(X=-100, Y=-100, Z=-0.004)            # 4 um: neither V nor A reached
+    s.rapid(X=-100, Y=-100, Z=0)
+    s.rapid(X=-800, Y=0, Z=-0.02)                # X to its lower travel end, Y to its upper one
+    s.line(3000, exact=True, X=-790, Y=0, Z=0)
+    s.line(5000, exact=True, X=-790, Y=-0.001, Z=0)
+    for k in range(6):                           # zig-zag touching Z 0 at every other corner
+        s.line(8000, tol_mm=0.05, X=-780 + 10 * k, Y=-20, Z=0 if k % 2 else -5)
+    s.line(8000, exact=True, X=-700, Y=0, Z=0)
+    s.stop()
+    res, dom, state, ctrl = run(m, s)
+    assert ctrl.done() and not [f for f in state.findings if f.category.value == "overtravel"]
+    cmd = stack(res.frames, "axis_cmd")[:, :3]
+    blk = stack(res.frames, "block_index")
+    assert cmd[:, 2].max() <= 0.0 and cmd[:, 1].max() <= 0.0 and cmd[:, 0].min() >= -0.8
+    # per block: every axis stays between where the block started and its target (blends cut corners inward)
+    starts = {}
+    q = cmd[0].copy()
+    for k in range(len(blk)):
+        starts.setdefault(int(blk[k]), q.copy())
+        q = cmd[k]
+    rec = {r.index: r for r in dom.timeline.records}
+    for index, start in starts.items():
+        r = rec[index]
+        if r.kind not in ("rapid", "linear"):
+            continue
+        it = dom.planners[0].item(index)
+        target = np.array([it.cmd.target.get(a, start[i]) for i, a in enumerate("XYZ")])
+        lo = np.minimum(start, target)
+        hi = np.maximum(start, target)
+        values = cmd[blk == index]
+        blended = bool(it.cmd.smoothing is not None and it.cmd.smoothing.tolerance_m > 0)
+        slack = 0.05e-3 if blended else 0.0
+        assert np.all(values <= hi + slack) and np.all(values >= lo - slack), index
+        assert np.all(values[:, 2] <= 0.0)

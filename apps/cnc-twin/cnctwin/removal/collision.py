@@ -20,6 +20,28 @@ from . import abi as A
 from .profile import profile_polyline
 
 
+def device_body_box(body) -> np.ndarray | None:
+    """Corners [[lo], [hi]] (device frame, m) of a workholding body: the template's outline ``body_mm: [[x0, y0,
+    z0], [x1, y1, z1]]``, or the catalogue form of a round body (chucks: ``body_mm: {outer_diameter, length}``, a
+    cylinder on the device's +z from its face, here its bounding box). None when the body gives neither.
+    Additive (hot-loop integration, docs/models/hotloop.md "Changes in domain packages"): the chuck form made
+    the lathe projects fail at init (a mapping read as corner rows)."""
+    if body is None:
+        return None
+    od = getattr(body, "outer_diameter", None) if not isinstance(body, dict) else body.get("outer_diameter")
+    if od is not None:
+        length = getattr(body, "length", None) if not isinstance(body, dict) else body.get("length")
+        if length is None:
+            return None
+        r = 0.5 * float(od)
+        return np.array([[-r, -r, 0.0], [r, r, float(length)]])
+    try:
+        rows = np.asarray([[float(v) for v in row] for row in body], dtype=float)
+    except (TypeError, ValueError):
+        return None
+    return rows if rows.shape == (2, 3) else None
+
+
 def fixture_meshes(project, op_index: int = 0) -> list[tuple[str, np.ndarray, np.ndarray]]:
     """(name, vertices S, faces) of every workholding device body of a setup."""
     from ..geom.primitives import box_mesh
@@ -33,10 +55,9 @@ def fixture_meshes(project, op_index: int = 0) -> list[tuple[str, np.ndarray, np
     out = []
     for k, item in enumerate(getattr(setup, "workholding", []) or []):
         device = getattr(item, "device", None)
-        body = getattr(device, "body_m", None) if device is not None else None
+        body = device_body_box(getattr(device, "body_m", None) if device is not None else None)
         if body is None:
             continue
-        body = np.asarray([[float(v) for v in row] for row in body], dtype=float)
         pose = getattr(item, "pose", None)
         T = S_from_W @ (pose.matrix() if hasattr(pose, "matrix") else np.eye(4))
         m = box_mesh(body[0], body[1], name=f"fixture{k}")

@@ -30,7 +30,11 @@ from .state import ControllerState, Frame, PathState, new_locals
 
 @dataclass
 class ToolOffsetInit:
-    """Offsets of one tool as set on the machine (SI). Mill: length/radius; lathe: X/Z/nose radius."""
+    """Offsets of one tool as set on the machine (SI). Mill: length/radius; lathe: X/Z/nose radius.
+
+    ``probe`` (additive): the T number calls a spindle probe, not a cutting tool: the name of the machine's
+    probe (``probes.spindle_probe`` -> ``"spindle_probe"``) or ``"inline"``; its length offset reaches the
+    stylus ball's bottom, its radius offset is the effective stylus radius the probing macros read."""
 
     number: int
     length_m: float = 0.0
@@ -45,6 +49,7 @@ class ToolOffsetInit:
     z_wear_m: float = 0.0
     nozzle_position: int | None = None
     path: int = 0
+    probe: str | None = None
 
 
 @dataclass

@@ -1,6 +1,7 @@
 # Sources of the coolant models (cnctwin.coolant, docs/models/coolant.md) and of their coefficients in
 # db/models/coolant-*.yaml. Standard textbook and journal equations; where a coefficient was recalled
 # rather than re-read in this session the parameter file says so in its note.
+# amanatides-woo-1987 (3-D DDA grid traversal, used for jet occlusion) is in models-geom.yaml.
 format: cnctwin-bibliography
 version: 1
 entries:
@@ -274,14 +275,6 @@ entries:
     year: 1979
     doi: "10.1016/0025-5564(79)90080-4"
     pages: "r_k = c sqrt(k), phi_k = k 137.508 deg: an equal-area deterministic sampling of the disc"
-
-  amanatides-woo-1987:
-    type: article
-    authors: "Amanatides, J.; Woo, A."
-    title: "A fast voxel traversal algorithm for ray tracing"
-    venue: "Eurographics '87 Proceedings, 3-10"
-    year: 1987
-    pages: "3-D digital differential analyser over a uniform grid"
 
   bernardin-mudawar-1999:
     type: article

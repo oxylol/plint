@@ -244,6 +244,7 @@ class WorkMaterial:
     dust_mass_fraction: float
     soft_flow_temp_K: float | None = None      # data-only mode: the flow stress falls linearly to 0 here
     notes: dict = field(default_factory=dict)
+    chip_breaking_strain: float | None = None  # measured bending strain at which the formed chip breaks (chip.breaking_strain)
 
     @property
     def is_metal(self) -> bool:
@@ -332,6 +333,7 @@ class WorkMaterial:
             bue=_bue(chip.get("bue")),
             breakability=text(chip.get("breakability"), "medium"),
             oxide_table=oxide, dust_mass_fraction=float(dust), soft_flow_temp_K=soft,
+            chip_breaking_strain=num(chip.get("breaking_strain")) if isinstance(chip, Mapping) else None,
         )
 
 

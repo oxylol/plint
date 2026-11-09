@@ -99,9 +99,15 @@ class WorkStructState:
     history: list = field(default_factory=list)
     unload: list = field(default_factory=list)
     fixture: dict = field(default_factory=dict)          # C3, C6, centroid, point (arrays)
+    stock_fill: np.ndarray = field(default_factory=lambda: np.zeros((0, 0, 0)))   # as-supplied fractions
+    stock_lo: np.ndarray = field(default_factory=lambda: np.zeros(3))
+    stock_hi: np.ndarray = field(default_factory=lambda: np.zeros(3))
 
     def to_arrays(self, prefix: str) -> tuple[dict, dict]:
         arrays = dict(self.supports.to_arrays(prefix + "sup."))
+        arrays[prefix + "stock_fill"] = self.stock_fill
+        arrays[prefix + "stock_lo"] = self.stock_lo
+        arrays[prefix + "stock_hi"] = self.stock_hi
         meta = {"workpiece": self.workpiece, "grid": self.grid.to_dict() if self.grid is not None else None,
                 "kind": self.kind, "clamped": self.clamped, "op_index": self.op_index,
                 "supports_version": self.supports_version, "lathe": json_safe(self.lathe.to_dict()),
@@ -142,6 +148,9 @@ class WorkStructState:
         ws.op_index = int(meta["op_index"])
         ws.supports_version = int(meta["supports_version"])
         ws.supports = Supports.from_arrays(a, prefix + "sup.")
+        ws.stock_fill = np.array(a[prefix + "stock_fill"], dtype=float)
+        ws.stock_lo = np.array(a[prefix + "stock_lo"], dtype=float)
+        ws.stock_hi = np.array(a[prefix + "stock_hi"], dtype=float)
         lathe = meta["lathe"] or {}
         ws.lathe = LatheSupports(lathe.get("chuck"), lathe.get("tailstock"), list(lathe.get("steady") or []))
         ws.reference_digest = str(meta["reference_digest"])

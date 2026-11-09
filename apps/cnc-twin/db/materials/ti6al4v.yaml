@@ -160,6 +160,7 @@ tool_life:
     VB_limit_mm: {value: 0.3, src: est, note: "the paper evaluates tool life from VB 'according to the ISO 3685 standard' without printing the limit; the ISO 3685 average flank-wear criterion of 0.3 mm is assumed"}
     T_ref_min: 1
     vc_range_m_min: [50, 200]
+    life_basis: contact_time
     src: batista-ponce-2019-ti64-adhesion
     note: "Eq. (2) T = 58.12e6 v^-3.58 (T in min, v in m/min; dry turning of UNS R56400 bar with uncoated WC-Co DCMT 11T308 at f 0.2 mm/rev, ap 1 mm, vc 50, 75, 100 and 200 m/min) rewritten as vc T^n = C: n = 1/3.58 = 0.279, C = (58.12e6)^(1/3.58) = 147.5 m/min. Life ends in adhesion-driven critical failure (29 s at 200 m/min; no significant wear after 30 min at 50 m/min). The earlier estimate (C 135, n 0.3 at f 0.2, ap 2: T = 15 min at 60 m/min) predicts 15 min at 60 m/min where this fit gives 69 m/min (at ap 1)"
   - tool_class: carbide
@@ -171,6 +172,7 @@ tool_life:
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 75 m/min (general knowledge); coatings help less in titanium than in steel"
   - tool_class: hss
@@ -182,6 +184,7 @@ tool_life:
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 12 m/min (general knowledge)"
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)

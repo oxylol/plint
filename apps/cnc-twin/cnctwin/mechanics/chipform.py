@@ -167,15 +167,30 @@ def flute_curl_radius(tool: ToolSide | None) -> float | None:
     return None
 
 
+CHIP_RUPTURE_FAMILIES = {"steel": "chip_rupture_ratio_steel", "tool_steel": "chip_rupture_ratio_steel",
+                         "stainless": "chip_rupture_ratio_stainless"}
+
+
 def chip_fracture_strain(work: WorkMaterial) -> float:
-    """Bending strain the formed chip withstands: a fraction of the bulk fracture strain,
-    scaled by the material's breakability rating."""
+    """Bending strain at which the formed chip breaks (epsilon of Nakayama's criterion).
+
+    A measured value of the material (``chip.breaking_strain``) is used as it is. Otherwise the
+    chip keeps a fraction of the material's bulk (tensile, true) fracture strain: the fraction
+    Nakayama (1962) measured for carbon steels (Fig. 13 with Eq. (1); the carbon content made no
+    difference) and for 18-8 stainless steel (its chips are less ductile than carbon-steel chips
+    although the bulk is more ductile), carbon steel's fraction for the other families (not
+    measured there; the breakability rating of the database then scales it). Free-cutting
+    grades (rating 'good') are outside the steels Nakayama tested and keep the rating's factor."""
+    if work.chip_breaking_strain is not None and work.chip_breaking_strain > 0.0:
+        return float(work.chip_breaking_strain)
     p = P.get(P.CHIP)
     bulk = work.fracture_strain if work.fracture_strain is not None else 0.0
-    strain = max(float(p["break_strain_ratio"]) * bulk, float(p["min_break_strain"]))
+    measured = work.family in CHIP_RUPTURE_FAMILIES
+    ratio = float(p[CHIP_RUPTURE_FAMILIES.get(work.family, "chip_rupture_ratio_steel")])
+    strain = max(ratio * bulk, float(p["min_break_strain"]))
     if work.breakability == "good":
         strain *= float(p["breakability_factor_good"])
-    elif work.breakability == "poor":
+    elif work.breakability == "poor" and not measured:
         strain *= float(p["breakability_factor_poor"])
     return strain
 

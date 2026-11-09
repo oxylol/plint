@@ -723,6 +723,8 @@ class CompFilter:
         nentry = queue[nxt]
         if nentry["item"]["kind"] not in ("linear", "arc") or (nentry["item"].get("modal") or {}).get("thread"):
             raise ControllerAlarm("chamfer_not_g01", ",C/,R followed by a block that is not G01/G02/G03")
+        if ex.dialect.name == "haas" and nentry["item"]["kind"] != "linear":
+            raise ControllerAlarm("chamfer_not_g01", ",C/,R must be followed by a G01 block (Haas)")
         if nentry["item"].get("plane") != item.get("plane"):
             raise ControllerAlarm("chamfer_missing_move", ",C/,R followed by a block in another plane")
         seg_b = self._seg(ex, nentry, f)

@@ -397,11 +397,18 @@ class AxisMap(NamedTuple):
 class PolarView(NamedTuple):
     """Radius view of removal's polar field (turning): material at (theta, z) between r_in and r_out
     (rotating S, bins theta_b = (b + 0.5) dtheta, z_i = z0 + (i + 0.5) dz). Kept current by removal's
-    polar update for the bins it changes (docs/models/cutting.md "Turning")."""
+    polar update for the bins it changes (docs/models/cutting.md "Turning").
+
+    ``gap_lo_m`` / ``gap_hi_m`` (additive, hot-loop integration, docs/models/hotloop.md "Turning"): an air
+    gap inside [r_in, r_out] of the cell (nearest bin and row; none where gap_hi <= gap_lo). A radial ray of
+    the polar field holds two segments behind a major edge that leans back (kappa_r > 90 deg): the previous
+    revolution leaves a thin ring above its cut, the next chip."""
 
     r_out_m: np.ndarray         # [nth, nz]
     r_in_m: np.ndarray          # [nth, nz]
     geom: np.ndarray            # [4]: dtheta, z0, dz, unused
+    gap_lo_m: np.ndarray        # [nth, nz] air gap inside the cell's interval (none: gap_hi <= gap_lo)
+    gap_hi_m: np.ndarray        # [nth, nz]
 
 
 class CutState(NamedTuple):
@@ -531,7 +538,8 @@ def empty_axes(n_axes: int = 0) -> AxisMap:
 
 
 def empty_polar(nth: int = 1, nz: int = 1) -> PolarView:
-    return PolarView(_f(nth, nz), _f(nth, nz), np.array([2.0 * np.pi / max(nth, 1), 0.0, 1.0, 0.0]))
+    return PolarView(_f(nth, nz), _f(nth, nz), np.array([2.0 * np.pi / max(nth, 1), 0.0, 1.0, 0.0]), _f(nth, nz),
+                     _f(nth, nz))
 
 
 def empty_state(n: int = 1, nt: int = 1, nst: int = 1) -> CutState:

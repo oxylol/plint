@@ -364,12 +364,24 @@ class JobManager:
             (job_dir / "out").mkdir()
             job.request.setdefault("out_dir", str(job_dir / "out"))
             job.request.setdefault("status_interval_s", self.s.status_interval_s)
+            self._entries_for(kind, job.request)
             self._jobs[job.id] = job
             self._persist(job)
             if kind == "simulate":
                 write_run_status(Path(job.request["run_dir"]), "queued", job)
             self._wake.notify_all()
             return job
+
+    def _entries_for(self, kind: str, request: dict) -> None:
+        """The other entry points a job calls: a simulation its outputs (report, pictures, video, sound) after a
+        successful run; uncertainty studies and calibrations the server's simulation (each variant, each loop
+        evaluation) and a study the outputs that show it on the run's report."""
+        if kind == "simulate":
+            request.setdefault("outputs_entry", self.s.entries.get("outputs"))
+        elif kind in ("uncertainty", "calibrate"):
+            request.setdefault("simulate_entry", self.s.entries.get("simulate"))
+            if kind == "uncertainty":
+                request.setdefault("outputs_entry", self.s.entries.get("outputs"))
 
     def get(self, job_id: str) -> Job | None:
         with self._wake:

@@ -215,9 +215,13 @@ def _envelope_radius(geo, z: float) -> float:
     return float(envelope_radius(geo.envelope, np.array([z]), chain=0)[0])
 
 
-def _lateral_contact(d_m: float, k_n: float, k_t: float) -> tuple[float, float, float]:
-    """(lateral per length, axial per length, torsional per length) of a shank of diameter d in its bore."""
-    return 0.5 * math.pi * d_m * (k_n + k_t), math.pi * d_m * k_t, math.pi * d_m * (0.5 * d_m) ** 2 * k_t
+def _lateral_contact(d_m: float, k_n: float, k_t: float) -> tuple[float, float, float, float]:
+    """(lateral, axial, torsional, bending-rotation stiffness) per length of a shank of diameter d gripped all
+    round with normal / tangential contact stiffness k_n / k_t per area: lateral (pi d / 2)(k_n + k_t) (the
+    normal and tangential components of a rigid translation), axial pi d k_t, torsional pi d (d/2)^2 k_t,
+    rotation pi (d/2)^3 k_t (a section rotating by theta moves its surface axially by r cos(phi) theta)."""
+    r = 0.5 * d_m
+    return 0.5 * math.pi * d_m * (k_n + k_t), math.pi * d_m * k_t, math.pi * d_m * r * r * k_t, math.pi * r ** 3 * k_t
 
 
 def _tool_section(geo, zm: float, mat: Elastic, z_flute: float, z_neck: float | None) -> B.Section:
@@ -328,14 +332,15 @@ def build_rotating(geo, machine, settings, *, pullout_m: float = 0.0, length_los
     else:
         # no holder: the block is a rigid body (all block nodes slaved to the base master below)
         notes.append("no holder: the shank is clamped in a rigid block on the spindle")
-    k_lat, k_ax, k_tor = _lateral_contact(d_shank, k_n, k_t)
+    k_lat, k_ax, k_tor, k_rot = _lateral_contact(d_shank, k_n, k_t)
     for i in range(nt - 1):
         a, b = zt[i], zt[i + 1]
         if a < z_nose - 1e-12 or b > z_clamp + 1e-12:
             continue
         ja = int(np.argmin(np.abs(zh - a)))
         jb = int(np.argmin(np.abs(zh - b)))
-        asm.add_coupling(i, i + 1, nt + ja, nt + jb, B.foundation(b - a, k_lat, k_ax, k_tor), stiffness_into=K_int)
+        asm.add_coupling(i, i + 1, nt + ja, nt + jb, B.foundation(b - a, k_lat, k_ax, k_tor, k_rot_N=k_rot),
+                         stiffness_into=K_int)
     base = spindle_base_modes(machine, spindle_id, P.p(P.TOOL, "spindle_pivot_length_m")) if machine is not None \
         else []
     if not base:
@@ -397,8 +402,8 @@ def build_static(geo, machine, settings, *, R_M_T0: np.ndarray | None = None, db
         L_c = P.p(P.TOOL, "bar_clamp_length_ratio") * float(bar_d)
         k_n = P.contact_stiffness_N_per_m3("turret_vdi")
         k_t = P.mindlin_ratio(P.p(P.TOOL, "contact_poisson")) * k_n
-        k_x, k_ax, k_tor = _lateral_contact(float(bar_d), k_n, k_t)
-        k_y = k_x
+        k_x, k_ax, k_tor, k_about_y = _lateral_contact(float(bar_d), k_n, k_t)
+        k_y, k_about_x = k_x, k_about_y
     elif hb and len(hb) == 2:
         h, b = float(hb[0]), float(hb[1])
         # x_b is along z_T (width b), y_b along y_T (height h, the cutting direction) for external holders
@@ -407,11 +412,14 @@ def build_static(geo, machine, settings, *, R_M_T0: np.ndarray | None = None, db
         L_c = P.p(P.TOOL, "shank_clamp_length_ratio") * hy
         k_n = P.contact_stiffness_N_per_m3("turret_vdi")
         k_t = P.mindlin_ratio(P.p(P.TOOL, "contact_poisson")) * k_n
-        # lateral along x: the two faces normal to x in compression, the two others in shear (per length)
+        # lateral along x: the two faces normal to x in compression, the two others in shear (per length);
+        # rotation about y (ry): the surface moves axially by x theta, resisted by k_t over the perimeter
         k_x = 2.0 * (hy * k_n + bx * k_t)
         k_y = 2.0 * (bx * k_n + hy * k_t)
         k_ax = 2.0 * (bx + hy) * k_t
         k_tor = 2.0 * (bx + hy) * k_t * (0.25 * (bx * bx + hy * hy))
+        k_about_y = k_t * (hy * bx * bx / 2.0 + bx ** 3 / 6.0)
+        k_about_x = k_t * (bx * hy * hy / 2.0 + hy ** 3 / 6.0)
     else:
         raise InputError(f"tool slot {geo.slot}: a non-rotating tool needs its bar diameter or shank size")
     if not overhang:
@@ -429,7 +437,8 @@ def build_static(geo, machine, settings, *, R_M_T0: np.ndarray | None = None, db
     block = {node: nb + k for k, node in enumerate(clamp_nodes)}
     for i in range(nb - 1):
         if i in block and (i + 1) in block:
-            Kf = B.foundation(z[i + 1] - z[i], k_x, k_ax, k_tor, k_lat_y_N_per_m2=k_y)
+            Kf = B.foundation(z[i + 1] - z[i], k_x, k_ax, k_tor, k_lat_y_N_per_m2=k_y, k_rot_N=k_about_y,
+                              k_rot_y_N=k_about_x)
             asm.add_coupling(i, i + 1, block[i], block[i + 1], Kf, R=R, stiffness_into=K_int)
     R_MT = np.eye(3) if R_M_T0 is None else np.asarray(R_M_T0, dtype=float)
     base = turret_base_modes(machine, R_MT) if machine is not None else []
@@ -535,17 +544,24 @@ def solve_modes(sys: ToolSystem, settings) -> ToolResult:
 
 def fit_error(sys: ToolSystem, lam: np.ndarray, zeta: np.ndarray, phi_t: np.ndarray, residual: np.ndarray,
               tip: int) -> float:
-    """Largest |G_modal - G_RCSA| / max |G_RCSA| of the tip receptance along T0 x, at the static point and at
-    the modes carrying at least 1 % of the static tip compliance; G_RCSA couples the free tool-holder FE to the
-    base receptances (rcsa.couple_fe_to_modal_base) with the hysteretic parts as complex stiffness."""
+    """Error of the modal model against the RCSA receptance G of the tip along T0 x, relative to max |G|: the
+    largest difference of |G| at omega_k and of |G| and Re G at omega_k (1 -+ zeta_k) of every mode carrying at
+    least 1 % of the static tip compliance (the half-power band; the extremes of Re G, which set the stability
+    lobes, lie at its ends), and of |G| at the quasi-static point (5 % of the first mode; there the hysteretic
+    parts add a phase the viscous modal model does not carry). G_RCSA couples the free tool-holder FE to
+    the base receptances (rcsa.couple_fe_to_modal_base) with the hysteretic parts as complex stiffness."""
     col = 3 * tip
     contrib = phi_t[:, col] ** 2 / lam
     total = float(np.sum(contrib) + residual[col, col])
-    if total <= 0.0:
+    if total <= 0.0 or len(lam) == 0:
         return 0.0
-    # the quasi-static point at 5 % of the first mode (a free-free substructure has no static receptance)
-    picks = [QUASI_STATIC * float(math.sqrt(lam[0]))] + [float(math.sqrt(lam[k])) for k in range(len(lam))
-                                                         if contrib[k] >= 0.01 * total]
+    picks = [(QUASI_STATIC * float(math.sqrt(lam[0])), True)]
+    for k in range(len(lam)):
+        if contrib[k] >= 0.01 * total:
+            w = float(math.sqrt(lam[k]))
+            # at omega_k itself Re G crosses zero steeply: a 1e-4 shift of the damped peak (non-proportional
+            # damping) would dominate, so only |G| is compared there
+            picks.extend([(w * (1.0 - zeta[k]), False), (w, True), (w * (1.0 + zeta[k]), False)])
     node = int(sys.station_nodes[tip])
     dofs_local = np.arange(6 * node, 6 * node + 3)
     e_local = sys.R_T0_b[0, :]
@@ -553,10 +569,8 @@ def fit_error(sys: ToolSystem, lam: np.ndarray, zeta: np.ndarray, phi_t: np.ndar
     z_b = np.array([b.zeta for b in sys.base])
     Psi = np.stack([b.psi for b in sys.base], axis=1) if sys.base else np.zeros((6, 0))
     hyst = [(eta, Kp) for _n, eta, Kp in sys.parts_full]
-    worst = 0.0
-    peak = 0.0
     pairs = []
-    for w in picks:
+    for w, magnitude_only in picks:
         if len(sys.base_dofs):
             H = rcsa.couple_fe_to_modal_base(sys.K_full, sys.M_full, w, dofs_local, sys.base_dofs, w_b, z_b, Psi,
                                              hyst)
@@ -570,10 +584,14 @@ def fit_error(sys: ToolSystem, lam: np.ndarray, zeta: np.ndarray, phi_t: np.ndar
             g_exact = complex(f_red @ x)
         den = lam - w * w + 2j * zeta * np.sqrt(lam) * w
         g_modal = complex(np.sum(phi_t[:, col] ** 2 / den) + residual[col, col])
-        pairs.append((g_exact, g_modal))
-        peak = max(peak, abs(g_exact))
-    for g_exact, g_modal in pairs:
-        worst = max(worst, abs(g_modal - g_exact))
+        pairs.append((magnitude_only, g_exact, g_modal))
+    peak = max(abs(g) for _q, g, _m in pairs)
+    worst = 0.0
+    for magnitude_only, g_exact, g_modal in pairs:
+        err = abs(abs(g_modal) - abs(g_exact))
+        if not magnitude_only:
+            err = max(err, abs(g_modal.real - g_exact.real))
+        worst = max(worst, err)
     return worst / peak if peak > 0.0 else 0.0
 
 

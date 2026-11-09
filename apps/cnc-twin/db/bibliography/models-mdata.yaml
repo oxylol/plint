@@ -4,6 +4,7 @@ version: 1
 # of measured and simulated time series, calibration by bounded least squares). Works already in
 # other bibliography files are cited by their key there (altintas-2012-mfg-automation, palmgren-1959,
 # harris-kotzalas-2007-bearings, bryan-1990-thermal-errors, mayr-2012-thermal-issues).
+# jcgm-100-2008 (GUM) is in models-uncertainty.yaml.
 entries:
   # ------------------------------------------------------------------ data sources
   ansi-mtc1-4-2018:
@@ -100,13 +101,6 @@ entries:
     year: 1981
     doi: "10.1002/0471725250"
     pages: "Huber's psi with k = 1.345 (95 % efficiency at the normal model); MAD scale, MAD / 0.6745 consistent for the normal standard deviation"
-  jcgm-100-2008:
-    type: standard
-    authors: "JCGM (BIPM, IEC, IFCC, ILAC, ISO, IUPAC, IUPAP, OIML)"
-    title: "JCGM 100:2008 Evaluation of measurement data - Guide to the expression of uncertainty in measurement (GUM 1995 with minor corrections)"
-    publisher: "Joint Committee for Guides in Metrology"
-    year: 2008
-    pages: "4.3.7 and F.2.2.1: a reading quantised with resolution q has standard uncertainty q / sqrt(12) (rectangular distribution); 6.2-6.3 coverage, expanded uncertainty near 95 %"
   # ------------------------------------------------------------------ least squares
   branch-coleman-li-1999:
     type: article

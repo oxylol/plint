@@ -76,6 +76,40 @@ def estimates_section(ctx: Context) -> Section:
 
 # ----------------------------------------------------------------------------- pictures
 
+def _json_file(path: Path):
+    try:
+        import json
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return document if isinstance(document, dict) else None
+
+
+def _render_manifest(run) -> dict:
+    """render.json (cnctwin.render, written with the pictures): caption and time of each picture, the video."""
+    return _json_file(run.path / "render.json") or {}
+
+
+def _media_lines(run, manifest: dict) -> str:
+    """One line each on the video and the sound of the run (files beside the report, not embedded)."""
+    body = ""
+    video = manifest.get("video") if isinstance(manifest.get("video"), dict) else None
+    if video and (run.path / "video.mp4").is_file():
+        body += para(f"Video: video.mp4, {video.get('frames')} frames at {fmt.num(video.get('fps'))} frames/s, "
+                     f"{fmt.num(video.get('speed'))} simulated seconds per video second, from "
+                     f"{fmt.num(video.get('t0_s'))} s to {fmt.num(video.get('t1_s'))} s of the run, the camera "
+                     "following the tool (cnctwin.render).")
+    audio = _json_file(run.path / "audio.json")
+    if audio and (run.path / "audio.wav").is_file():
+        levels = audio.get("levels") or {}
+        listener = (audio.get("listener") or {}).get("kind", "operator")
+        body += para(f"Sound: audio.wav, {fmt.num(audio.get('duration_s'))} s at {fmt.num(audio.get('sample_rate_Hz'))}"
+                     f" Hz, heard by the {listener}: Leq {fmt.num(levels.get('Leq_dB'))} dB, LAeq "
+                     f"{fmt.num(levels.get('LAeq_dB'))} dB(A) (cnctwin.sound; levels are estimates within about "
+                     "10 dB, frequencies and timing are those of the run).")
+    return body
+
+
 def pictures_section(ctx: Context) -> Section:
     run = ctx.run
     body = ""
@@ -83,10 +117,20 @@ def pictures_section(ctx: Context) -> Section:
     if drawn:
         body += drawn
     images = run.images
-    for rel, data, mime in images:
-        body += figure(data, Path(rel).stem.replace("_", " "), f"{rel} (cnctwin.render)", mime=mime)
+    manifest = _render_manifest(run)
+    described = {str(e.get("file")): e for e in manifest.get("images") or [] if isinstance(e, dict)}
+    order = {name: i for i, name in enumerate(described)}
+    for rel, data, mime in sorted(images, key=lambda item: (order.get(item[0], len(order)), item[0])):
+        entry = described.get(rel)
+        if entry is not None and entry.get("caption"):
+            when = f", t = {fmt.num(entry.get('time_s'))} s" if entry.get("time_s") is not None else ""
+            caption = f"{entry['caption']} ({rel}{when}, cnctwin.render)"
+        else:
+            caption = f"{rel} (cnctwin.render)"
+        body += figure(data, Path(rel).stem.replace("_", " "), caption, mime=mime)
     if not images:
         body += note("images/ holds no rendered pictures: only the drawings made from the run's data are shown.")
+    body += _media_lines(run, manifest)
     return Section("pictures", "Pictures", body)
 
 

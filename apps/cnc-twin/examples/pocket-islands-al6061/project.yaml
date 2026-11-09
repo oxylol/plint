@@ -83,8 +83,10 @@ tools:
       life: {group: 2, limit_min: 60, used_min: 3, sister_of: null}
       initial_wear: {VB_mm: 0.0}
       comment: "D12 3FL CARBIDE ENDMILL"
-    # T20 is the machine's spindle probe (haas-vf2ss probes.spindle_probe, Renishaw OMP40-2). The project
-    # format has no probe tool type, so it cannot be listed here; the program sets H20 with G10 L10.
+    # T20 is the machine's spindle probe (haas-vf2ss probes.spindle_probe, Renishaw OMP40-2, 6 mm ball):
+    # H20 to the ball's bottom (the program also sets it with G10 L10), D20 the calibrated effective radius
+    - {number: 20, kind: probe, probe: spindle_probe, length_offset_mm: 125.000, radius_offset_mm: 2.999,
+       comment: "RENISHAW OMP40-2 SPINDLE PROBE"}
 
 coolant:
   fluid: emulsion-8pct

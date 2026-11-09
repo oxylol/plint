@@ -275,6 +275,15 @@ def kinematics(ex) -> Kinematics:
 
 # ====================================================================== final stage (TIP commands)
 
+def tip_start(ex, item) -> list[float]:
+    """The tool tip at the start of a TCP move, in the work frame of ``tip_target_m`` (the item's work-frame
+    start: under tool centre point control the program addresses X Y Z are the tip). Additive modal key
+    ``tip_start_m``: the length of the tip path is ``|tip_target_m - tip_start_m|`` for a line, the arc's for
+    an arc (the feed F is the tip's speed along that path)."""
+    return [float(item.start[ex.letters.index(l)]) if (l in ex.letters and len(item.start) == len(ex.letters))
+            else 0.0 for l in "XYZ"]
+
+
 class KinematicStage:
     """Final stage of G43.4 ("rotary"), G43.5 ("vector") and G68.2 ("tilt")."""
 
@@ -348,6 +357,7 @@ class KinematicStage:
         if self.mode == "vector":
             modal["tcp_type"] = "vector"
         modal["work_origin_M0_m"] = [float(v) for v in z_t]
+        modal["tip_start_m"] = tip_start(ex, item)
         cmd = Command(kind, item.ref, Space.TIP, target, tuple(float(v) for v in tip_w),
                       tuple(float(v) for v in axis_w), arc, item.feed, item.smoothing, modal=modal)
         if item.kind == "probe":

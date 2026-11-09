@@ -234,7 +234,7 @@ def _discuss(q) -> dict:
                      "controlled; the model's unbroken chips fall in these classes at every grid point, so the "
                      "predicted window is the whole grid.")
         out[r.id] = text
-    out["summary"] = ("No budget is defined for chip_form. The chip-form model's breaking criterion and curl radii are "
+    out["summary"] = (H.budget_summary(q) + "The chip-form model's breaking criterion and curl radii are "
                       "estimates (mechanics.md 13) and the case inserts' breaker geometries (land, groove width and "
                       "depth) are mostly not in the database, so the comparison tests the defaults.")
     return out

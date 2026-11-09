@@ -120,14 +120,20 @@ A machine-side alarm (`Feedback.alarm = {code, text}`) stops the path with that 
 * `smoothing.corner`: `exact_stop` (G61, G09, cycle steps that ask for it) | `blend` | `tapping` (G63);
   `tolerance_m` and `mode_code` from G187 / G05.1 / G08 and the machine's smoothing table.
 * `modal` snapshot: `plane, units, distance, feed_mode, work_offset, work_offset_m (per axis), tool,
-  h, d, length_offset_m, radius_offset_m, comp, motion, cycle, css, exact_stop` (+ `offset_number` on
-  lathes, `feed_hold_inhibit` with #3004, `rigid_tap` after M29, `thread` for G32/G33,
-  `reference_point`, `machine_coordinates`, `tool_preselect` ...).
+  h, d, length_offset_m, radius_offset_m, comp, motion, cycle, css, exact_stop` (+ `offset_number` and
+  `program_offset_m` on lathes: work + tool offsets per path axis, program = machine - it, X as a
+  radius, the radius constant surface speed is computed at; `feed_hold_inhibit` with #3004, `rigid_tap`
+  after M29, `thread` for G32/G33, `reference_point`, `machine_coordinates`, `tool_preselect` ...).
+  TCP commands (Haas G234/G254, FANUC G43.4/G43.5/G68.2) add `tip_start_m`, the tip at the start of the
+  move in the frame of `tip_target_m` (the tip path's length is the distance to `tip_target_m`).
 * `spindle`: `{id, omega_rad_s (M03 < 0), css_m_s, max_rad_s, gear, orient_rad, direction, css_axis}`;
   `coolant`: `{pumps: {id: on}, nozzles: {id: position}, air, code}` (the full state after the change);
   `tool`: `{number, pocket|station, slot (core ToolTable, -1 unknown), length_offset, radius_offset,
-  offset (lathe), turret}`; devices (`PALLET`, `DOOR`, `CONVEYOR`, `CHUCK`, brakes, outputs as `MODE`):
-  `modal["device"] = {kind, action, code, ...}`.
+  offset (lathe), turret, probe}` (`probe`: the T number calls a spindle probe of the project's tool
+  list, named after the machine probe it is; it is not a tool-table slot); `probe` (PROBE commands):
+  `{skip, stylus (the active probe's name, else spindle_probe), expect, start_m}` with `start_m` the
+  machine position the skip move starts from (an ideal probe needs it); devices (`PALLET`, `DOOR`,
+  `CONVEYOR`, `CHUCK`, brakes, outputs as `MODE`): `modal["device"] = {kind, action, code, ...}`.
 * `ready_tick`, `path`, `block_seq` (commands of one NC block share it), `sync` (above).
 
 ### Block-time model (data starvation)
@@ -305,16 +311,41 @@ output per path.
 ### Dry run
 
 `dry_run(controller)` executes the commands on an ideal machine (constant speed, no acceleration,
-no following error; rapids per axis at the rapid rate, the slowest axis decides; per-revolution
-feed with the commanded spindle speed; tool change = machine `tool_change_s`) and answers buffer
-stops itself (probe/setter callbacks). Its cycle time is a lower bound of the real one; a feed per
-revolution with the spindle stopped ends it with a stall message (the real axes would not move).
+no following error; rapids per axis at the rapid rate, the slowest axis decides; tool change =
+machine `tool_change_s`) and answers buffer stops itself (probe/setter callbacks). Feeds follow the
+control's semantics: per minute over the combined machine axes (rotary degrees count as
+millimetres), except under tool centre point control with tip interpolation (Haas G234, FANUC
+G43.4/G43.5), where F is the tip's speed along the tip path (`tip_start_m` -> `tip_target_m`, the
+arc's length for an arc; a block that only turns the tool about its tip moves the rotary axes at F
+read as degrees per minute); per revolution with the commanded speed, or under constant surface
+speed with n = min(v / (2 pi r), n_max) at the program radius of the CSS axis integrated exactly along
+the move (lines in closed form, arcs over 1 degree chords); inverse time as 1 / F. A probe that
+triggers ends its skip move at the latch (the move's time is cut there; the PROBE payload gets
+`latched_m`). `dryrun.BoxProbe(boxes, radius_m, ...)` is an ideal ball-stylus probe against axis-aligned
+boxes in machine coordinates (the ball's bottom at the applied length offset, contact found to 0.1 um
+by bisection); `domain.stock_probe(project, op_index)` builds one against the stock as set up (3-axis
+convention: the table frame is the machine frame), with the stylus ball of each probe T number.
+`PathExecutor.block_log` (a list, off by default, not state) records every executed block
+`{seq, depth, program, line, words}` with its evaluated address values: program checks
+(cnctwin.sanity) read what the executor evaluated from it. The cycle time is a lower bound of the
+real one; a feed per revolution with the spindle stopped ends it with a stall message (the real axes
+would not move).
 
 ### Limitations
 
 * Canned cycles, cutter compensation, TCP/tilted planes beyond Haas G234/G254/G268, probing cycles
-  beyond G31/G37 and tool life management belong to the providers of the next agents; until they
-  exist the core raises TW0001-TW0004 instead of guessing.
+  beyond G31/G37 and tool life management are providers (section "Cycles and compensation"); a code
+  without one raises TW0001-TW0004 instead of guessing.
+* The machine model reads the axis definitions of the machine's `axes` mapping and skips the source
+  keys a sourced mapping carries beside them (`src`, `note`, `notes`, `page`, ...); motion's machine model
+  does the same.
+* A work offset the project writes as a list (`setup.work_offsets_mm`) is the work zero's machine
+  coordinates X, Y, Z, then the path's other axes, on every machine type; `setup_from_project`
+  (`domain.offset_row`) puts it in the executor's axis order (X, Z, Y, C on lathes). Lists handed to
+  `ControllerSetup` directly are in the executor's order.
+* Tool numbers: a `kind: probe` entry of the project's tool list is a probe T number (no "not in the
+  tool list" warning; tool changes carry `tool.probe`); the setup takes the lathe geometry offsets
+  (X as set, Z, nose radius, tip, X/Z wear) and each entry's 1-based `path`.
 * Single block and operator switches act at the next block the interpreter processes (up to the
   look-ahead depth later than on the control when switched during a run).
 * The block-time parameters and the arc tolerances are estimates (above); FANUC alarm texts are
@@ -555,8 +586,12 @@ codes (mill lists, or its `lathe` lists) and gives the alarm texts it has (312, 
   (Setting 33 = FANUC) and is also the offset entry #5201-#5206 / G10 L2 P0; G10 L20 P1-P99.
 * G10 L10/L11/L12/L13: length geometry / length wear / diameter-radius geometry / wear
   (`offsets_diameter: true` = Setting 40 diameter; default radius).
-* G187 P1/P2/P3 [E]: smoothness level (machine smoothing table tolerance for "G187 Pn") and maximum
-  corner rounding E; G187 alone returns to the default (Setting 191, medium; E cancelled).
+* G187 P1/P2/P3 [E]: smoothness level and maximum corner rounding E (haas-ngc-mill-om-2020 p. 393). Without
+  an E the corner rounding is Setting 85 (p. 456): the machine smoothing table's entry for "G187 Pn" (the db
+  machines give Setting 85 for every level), and G187 Pn leaves an active E alone; G187 E leaves P alone.
+  G187 alone cancels E and returns to the defaults: Setting 191 (medium) and Setting 85, the machine file's
+  "G187 P2" entry (on a mill without a smoothing table the controller database's 0.0250 in factory
+  default), never 0. The same defaults hold at power-on and after RESET, M30 and M02.
 * #3000 = n: alarm 1000 + n (n 1-999) with the comment as its text.
 * M97 Pn Lr: local subprogram from block Nn of the same program (337 when Nn is missing); M98 P with
   5-digit program numbers; M99 P n.
@@ -572,6 +607,15 @@ codes (mill lists, or its `lathe` lists) and gives the alarm texts it has (312, 
   M95/M96/M46/M48 (inputs) are not modelled (TW0011/TW0007/TW0012). M199 with a pallet changer is a
   pallet change, otherwise program end.
 * G41 in a G150 block is the pocket's finishing side, not modal compensation.
+* `,C` chamfer and `,R` corner rounding between two G01 blocks (haas-ngc-mill-om-2020 p. 309-310);
+  on a G02/G03 block, or followed by one: TW0031.
+* Lathes: D in a G71/G72 block is the depth of cut (radius), in G73 the number of passes, in G74/G75 the
+  tool clearance, in G76 the first pass depth (haas-ngc-lathe-om-2020): cycle data, never an offset
+  number (offsets come from the T word). The face drilling cycles G81 G82 G83 G84 G85 G86 G89 and
+  G184 (reverse tapping, the control turns the spindle CCW itself) drill along Z, the radial cycles
+  G241 G242 G243 G245 G246 G249 along X; R is the position of the R plane (a diameter for the radial
+  ones), without R the cycle starts at the starting plane, to which it returns.
+* Mill G77 back bore and the G70/G71/G72 bolt hole patterns (see "Drilling cycles").
 
 ### Variables (NGC numbering)
 
@@ -717,7 +761,30 @@ q = |Q|, d73 = parameter 5114 (`g73_retract_m`), d83 = 5115 (`g83_clearance_m`):
 | rigid (M29, G84.2/G84.3, Haas) | spindle as a servo axis: lead = F (G95) or F/S (G94); LINEAR moves with `Feed(PER_REV, lead, override off)`, modal `rigid_tap`, `tap {lead_m, direction, phase}`; motion reverses the spindle on the outward move; peck tapping Q with 5213; extraction override 5211 |
 
 K/L repeat a hole at the next incremental position; Haas G73/G83 take I/J/K peck schedules, G76/G87
-Haas variants. Alarms: PS0200-PS0206 rigid tapping, PS0549 plane change in the cycle mode.
+Haas variants. The Haas cycle data are modal until G80 (haas-ngc-mill-om-2020 canned cycles): the I/J/K
+peck schedule (or Q) and the G76/G77 shift by Q (Setting 27) or I/J stay with the cycle for the next
+holes; the block that gives one of them chooses. Alarms: PS0200-PS0206 rigid tapping, PS0549 plane
+change in the cycle mode.
+
+Haas NGC additions:
+
+* **G77 back bore** (mill, haas-ngc-mill-om-2020 p. 353-355): FANUC's G87 sequence with the Haas shift:
+  M05 + M19 and shift at the initial level, rapid down to R (past the bottom of the part), shift back,
+  spindle on, feed up to Z, M19 and shift, rapid to the initial level (always: the control assumes
+  G98), shift back, spindle on. The spindle runs in the last commanded direction, M03 when the program
+  has commanded none, not at all after M05 (the manual's "no-spin" cycle).
+* **G70 / G71 / G72 bolt hole patterns** (mill, p. 348-349; `cycles.patterns.BoltPattern`): the active
+  canned cycle (G73, G74, G76, G77, G81-G89, with its modal data and G98/G99 return) at every
+  position of the pattern, in the active plane, about the tool's position: G70 I radius, J start angle
+  (degrees CCW from 3 o'clock), L holes evenly on the circle; G71 I, J, K angular spacing, L; G72 I
+  spacing, J angle of the line, L holes. The first G72 hole lies at the tool's position
+  (`haas_g72_first_hole_at_start`, an assumption: the manual does not say). No active cycle: TW0037;
+  I or L missing, L < 1 or axis words in the block: TW0030.
+* **Lathe** face cycles G81 G82 G83 G84 G85 G86 G89 (mill sequences along Z) and G184 (rigid, CCW),
+  radial cycles G241 G242 G243 G245 G246 G249 (the G81 G82 G83 G85 G86 G89 sequences along X); R is
+  absolute (a diameter on X), the return is the starting plane. Live-tooling taps (G95, G186, G195,
+  G196), broaching (G156) and the mill G153/G174/G184 non-vertical and five-axis cycles have no provider
+  (TW0001).
 
 ### Lathe cycles (system A) and multiple repetitive cycles
 
@@ -995,12 +1062,10 @@ table axes). The rotary positions that bring the new Z onto the tool axis are th
 of R_1(q1) R_2(q2) n = t (Paden-Kahan subproblem 2, murray-li-sastry-1994 ch. 3; two solutions, `_DIR`
 -1 / +1 picks the sign of the first rotary axis, 0 swivels the frame only; positions brought into the
 axis travel, continuous axes to the nearest turn; none reachable: 61184, a direct position outside the
-travel: 61189). `_FR` retracts first (1 and 4 Z to the top of its travel, which is the tool direction
-on a table machine, 2 also X Y to their home, 5 incremental
-`_FR_I` along Z (`_FR_I` 0: 61190); others 61183); `_ST` units digit 1 adds to the active swivel frame;
-`_TC` "0" deselects.
-Afterwards the linear axes follow the table kinematics (stage `siemens840d:CYCLE800`, Space.TIP
-commands with `tip_interpolation` "joint").
+travel: 61189). `_FR` retracts first (1 and 4: Z to the top of its travel, which is the tool direction
+on a table machine; 2: also X Y to their home; 5: `_FR_I` along Z, 0 is 61190; others 61183); `_ST` units
+digit 1 adds to the active swivel frame; `_TC` "0" deselects. Afterwards the linear axes follow the table
+kinematics (stage `siemens840d:CYCLE800`, Space.TIP commands with `tip_interpolation` "joint").
 
 **TRAORI / TRAFOOF**: tool centre point control on the table kinematics (stage `siemens840d:TRAORI`,
 Space.TIP, "tip"): the programmed point is the tool tip in the workpiece; the orientation is given by the
@@ -1068,10 +1133,10 @@ seconds, < 0 spindle revolutions.
   factor of the first infeed, DTS / DTB / `_DTD` dwells), CYCLE84 rigid tapping (oriented start POSS,
   SST in / SST1 out, PIT with `_PITA` units or MPIT metric coarse size, `_VARI` 1 / 2 chip breaking /
   removal by `_DAM`, SDAC spindle after the cycle), CYCLE840 floating holder (SDR reversal, ENC 0 with
-  encoder at the pitch per revolution, 1 at F), CYCLE85 (FFR in, RFF out), CYCLE86 (oriented stop POSS, lift
-  RPA / RPO / RPAP, rapid out, SDIR on again), CYCLE87 / CYCLE88 (spindle stop and M0 at the bottom, the
-  operator retracts; then rapid out), CYCLE89 (dwell, out at F). No F: 10860; a reference plane that
-  contradicts the depth: 61101.
+  encoder at the pitch per revolution, 1 at F), CYCLE85 (FFR in, RFF out), CYCLE86 (oriented stop
+  POSS, lift RPA / RPO / RPAP, rapid out, SDIR on again), CYCLE87 / CYCLE88 (spindle stop and M0 at the
+  bottom, the operator retracts; then rapid out), CYCLE89 (dwell, out at F). No F: 10860; a reference
+  plane that contradicts the depth: 61101.
 * HOLES1 (row: SPCA SPCO STA1 FDIS DBH NUM, started from the end nearer the tool) and HOLES2 (circle: CPA
   CPO RAD STA1 INDA NUM, INDA 0: 360 deg / NUM) move to every hole in the plane and run the MCALL drilling
   cycle there (NUM 0: 61103; a modally called user subprogram: TW0012).
@@ -1080,13 +1145,12 @@ seconds, < 0 spindle revolutions.
   tool-centre path at wall distance e is the rounded rectangle with half sizes L/2 - e, W/2 - e and
   corner radius max(rc - e, 0), the exact offset of the wall; roughing passes are evenly spaced between
   the innermost path (e = W/2) and e = r + allowance with a spacing <= `_MIDA` (when 0:
-  `pocket_stepover_fraction` of the diameter), depth layers equal and <= `_MID`, the finishing passes at
-  e = r (sides) and the bottom allowance last. Climb milling with M3 is the counter-clockwise loop (G41
-  sense), M4 swaps. Plunging vertical, helical (`_RAD1` radius, `_DP1` depth per turn, the last turn
-  closed by a full circle; missing: 61108) or oscillating at the ramp angle; `_VARI` units digit 1
-  roughing (leaving `_FAL` / `_FALD`), 2 finishing (the sides at e = r, the bottom when `_FALD` > 0);
-  tool radius too large 61105, slot geometry impossible (shorter than wide, overlapping) 61104. SLOT2
-  circumferential slots use the annular-sector family.
+  `pocket_stepover_fraction` of the diameter), depth layers equal and <= `_MID`; `_VARI` units digit 1
+  roughs (leaving `_FAL` / `_FALD`), 2 finishes (the sides at e = r, the bottom when `_FALD` > 0). Climb
+  milling with M3 is the counter-clockwise loop (G41 sense), M4 swaps. Plunging vertical, helical
+  (`_RAD1` radius, `_DP1` depth per turn, the last turn closed by a full circle; missing: 61108) or
+  oscillating at the ramp angle; tool radius too large 61105, slot geometry impossible (shorter than
+  wide, overlapping) 61104. SLOT2 circumferential slots use the annular-sector family.
 * CYCLE95 / CYCLE97 / CYCLE93 (`turning.py`; lathe in G18, else 61004): CYCLE95 roughing parallel to Z
   or X between the contour subprogram NPP (shifted by FALZ / FALX and offset by FAL) and its envelope, in
   equal infeeds <= MID, undercuts at FF2, chip breaking DAM / DT, lift `_VRT` (`cycle95_lift_m`), and
@@ -1143,7 +1207,8 @@ markers inconsistent, TW0012 function not modelled, TW0018 circle under unequal 
   label P=, ENDLABEL, GOTOF GOTOB GOTO GOTOC (labels, N numbers), MSG(), SETAL(), STOPRE, WAITM(), G4
   F / S, G74, G75 FP=
 * functions and operators: SIN COS TAN ASIN ACOS ATAN2 SQRT POT ABS TRUNC ROUND ROUNDUP LN EXP MINVAL
-  MAXVAL BOUND NUMBER TOSTR STRLEN, + - * / DIV MOD == <> > < >= <= AND OR XOR NOT B_AND B_OR B_XOR B_NOT <<
+  MAXVAL BOUND NUMBER TOSTR STRLEN, + - * / DIV MOD == <> > < >= <= AND OR XOR NOT B_AND B_OR B_XOR
+  B_NOT <<
 * system variables: $P_EP $P_F $P_S $P_TOOLNO $P_TOOL $P_TOOLP $P_GG $P_DRYRUN $P_SEARCH $P_AXN1-3
   $P_UIFR $P_PFRAME $P_IFRAME $P_ACTFRAME $AA_IW $AA_IM $A_YEAR $A_MONTH $A_DAY $A_HOUR $A_MINUTE
   $A_SECOND $TC_DP1 $TC_DP3-$TC_DP6 $TC_DP12 $TC_DP15 (others: TW0006)
@@ -1160,10 +1225,11 @@ manual; their fixed internal distances (retractions, advance clearances, stepove
 documented defaults marked est above and can differ by machine data and cycle version. Not modelled
 (TW0012, never silent): spline and polynomial interpolation, TRANSMIT / TRACYL / TRAANG, 3-D tool
 compensation, orientation interpolation modes (ORIWKS ...), CASE, positioning axes (POS, POSA, WAITP),
-synchronized actions, settable frames with rotations, scale or mirror, CYCLE800 on head kinematics, the other standard cycles (`tables.STANDARD_CYCLES`: CYCLE60-64, CYCLE70-79,
-CYCLE90 92 94 96 98 99, CYCLE801 802 830 899 930 940 950-952, LONGHOLE; a program of that name in the
-project is called instead), tool management by name (`T="name"`: 17190), more than one cutting edge per
-tool. A program that is not there is 14011.
+synchronized actions, settable frames with rotations, scale or mirror, CYCLE800 on head kinematics,
+the other standard cycles (`tables.STANDARD_CYCLES`: CYCLE60-64, CYCLE70-79, CYCLE90 92 94 96 98 99,
+CYCLE801 802 830 899 930 940 950-952, LONGHOLE; a program of that name in the project is called
+instead), tool management by name (`T="name"`: 17190), more than one cutting edge per tool. A program
+that is not there is 14011.
 
 References: SINUMERIK 840D sl Programming Manual Fundamentals (siemens-840dsl-fund-ru-2018: G
 functions, groups, modal effect) and Job Planning (siemens-840dsl-jobplan-ru-2018: cycle parameter
@@ -1224,7 +1290,11 @@ than `max_m_codes_per_block` M functions, or M3 with M4, M8 with M9, M128 with M
   `CT` tangential circle (1A0-0082 without a preceding element or with the end point on the tangent);
   `LP` / `CP` / `CTP` polar about CC (`IPA` beyond 360 deg with `IZ` is a helix: the full turns are
   passed as turns); `RND R` rounding and `CHF` chamfer between the neighbouring elements (the core's
-  corner provider); M91 coordinates in the machine system, M92 relative to the machine's home position.
+  corner provider); M91 coordinates in the machine system, M92 relative to the machine's home position:
+  the machine axes go there and "the tool length is not compensated" in the block (TNC 640 Klartext
+  manual, M91/M92), so `L Z-10 R0 FMAX M91` puts the spindle 10 mm below the machine datum whatever the
+  tool; the called tool's length stays active, and the next block programmed in the workpiece system
+  starts from its tip.
 * Arc end point: the end point must lie on the start circle within `arc_end_point_tolerance_m`
   (0.016 mm, circleDeviation), else 1A0-0084 "Circle incorrectly programmed"; within it the centre is
   moved onto the perpendicular bisector (exact circle). ISO: G02 / G03 about I J K (G90 absolute, G91
@@ -1278,8 +1348,11 @@ the closed-form subproblem-2 solution (as CYCLE800): SEQ+ / SEQ- the sign of the
 the chain, else the least rotary motion; unreachable 1A0-00FC. MOVE positions with compensating linear
 motion (the point DIST above the tip stays fixed on the part; TCPM interpolation), TURN moves the rotary
 axes only, STAY moves nothing (Q120-Q122 hold the angles for a later positioning block); F / FMAX for
-the positioning. Afterwards the program frame is the tilted one and the linear axes follow the table
-kinematics (stage `heidenhain:PLANE`, Space.TIP, "joint").
+the positioning. With MOVE and TURN, MB (move back: `MB MAX`, `MB 50`, `MB+50`, `MB 0`) first retracts the
+tool along the current tool axis, by the incremental length or to the end of the traverse range, at the
+positioning feed (TNC 640 Klartext manual, PLANE automatic positioning; the M140 MB retraction: beyond the
+range 1A1-0010); MB with STAY, or without a length, is 160-0003. Afterwards the program frame is the
+tilted one and the linear axes follow the table kinematics (stage `heidenhain:PLANE`, Space.TIP, "joint").
 
 **TCPM**: M128 / `FUNCTION TCPM` (options F TCP, AXIS POS, PATHCTRL AXIS, REFPNT TIP-TIP; F CONT, AXIS
 SPAT, PATHCTRL VECTOR and the other reference points: TW0012) keep the tool tip on the programmed path
@@ -1415,7 +1488,8 @@ element not determined / contradictory.
 * program flow: LBL n / "name" / LBL 0, CALL LBL n REP m, CALL PGM name, SEL PGM / CALL SELECTED PGM,
   SEL CYCLE and CYCL DEF 12 PGM CALL (program as cycle), STOP, M0 M1 M2 M30
 * tilting: PLANE SPATIAL / PROJECTED / EULER / VECTOR / POINTS / RELATIV / AXIAL / RESET with MOVE (DIST
-  F) / TURN (F) / STAY and SEQ+ / SEQ-; M128 F, M129, FUNCTION TCPM, FUNCTION RESET TCPM
+  F) / TURN (F) / STAY, MB (MAX / length, with MOVE and TURN) and SEQ+ / SEQ-; M128 F, M129, FUNCTION TCPM,
+  FUNCTION RESET TCPM
 * spindle and coolant: S, M3 M4 M5 M8 M9 M13 M14; M140 MB distance / MB MAX [F]; M126 / M127; other
   listed M functions TW0012
 * ISO: %name G71 / G70 header, N blocks with *, G00 G01 G02 G03 G05 G06 G10-G16 (polar), G17-G19, G24 G25

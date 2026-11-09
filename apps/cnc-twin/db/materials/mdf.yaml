@@ -91,6 +91,7 @@ tool_life:
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 120 min of cutting at 60 m/s assumed for HW. Glue lines, resin and sand/silica contamination make wood-based panels abrasive; Leitz recommends HW, HW solid or DP for chip and fibre boards (leitz-2020-lexicon-ed7-ch05) and notes that panel materials drove the move from carbide to PCD (leitz-2017-lexicon-ed7-ch11)"
   - tool_class: pcd
@@ -103,6 +104,7 @@ tool_life:
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: PCD life in panels is commonly quoted as 50-100x HW (not read); C set for ~70x"
 tool_life_usui: []

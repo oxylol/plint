@@ -14,18 +14,18 @@ controller:
   dialect: fanuc
   model: {value: "FANUC 31i-B5", src: star-gb-sr20riv-e-web-2026, note: "stated for the SR-20RIV Type E; assumed for Type A/B"}
   alarms: fanuc-31i-b
-  ipo_period_ms: {value: 1.0, src: est}
-  block_processing_ms: {value: 1.0, src: est}
-  lookahead_blocks: {value: 200, src: est}
-  least_input_increment_mm: {value: 0.001, src: est}
-  least_input_increment_deg: {value: 0.001, src: est}
+  ipo_period_ms: {value: 1.0, src: est, note: "not published: 1 ms assumed, as for the other FANUC machines (db/controllers/fanuc-31i-b.yaml gives no IPO period either)"}
+  block_processing_ms: {value: 1.0, src: est, note: "not published (the FANUC catalogue only says the High-Speed Processing option shortens it, db/controllers/fanuc-31i-b.yaml): 1 ms assumed"}
+  lookahead_blocks: {value: 200, src: fanuc-30ibplus-om-2019, page: "665", note: "Table 20.1 (a): AI contour control II reads 200 blocks ahead (db/controllers/fanuc-31i-b.yaml); AI contour control II assumed fitted on the 31i-B5"}
+  least_input_increment_mm: {value: 0.001, src: est, note: "FANUC increment system IS-B, the standard one: 0.001 mm (assumed fitted)"}
+  least_input_increment_deg: {value: 0.001, src: est, note: "FANUC increment system IS-B: 0.001 deg for the C axes (assumed)"}
   max_feed_mm_min: {value: 35000, src: est, note: "rapid used as the limit"}
   rapid_mm_min: {X1: 35000, Y1: 35000, Z1: 35000, X2: 35000, Z2: 35000, Y2: 15000}
   smoothing: []
   corner_default: {value: blend, src: est}
-  in_position_mm: {value: 0.005, src: est}
-  rapid_override_steps_pct: {value: [0, 25, 50, 100], src: est}
-  feed_override_range_pct: {value: [0, 150], src: est}
+  in_position_mm: {value: 0.005, src: est, note: "exact-stop window 5 um, above the 3-4 um positioning accuracy (est) of the small Swiss-type slides; the FANUC in-position width is a builder parameter (not published)"}
+  rapid_override_steps_pct: {value: [0, 25, 50, 100], src: est, note: "FANUC-style rapid override steps F0 (a parameter-set low speed, written 0), 25, 50 and 100 % assumed"}
+  feed_override_range_pct: {value: [0, 150], src: est, note: "feed override 0-150 % assumed for the Star operator panel (not read this session)"}
   tool_life_management: {value: true, src: est}
   probing: {value: false, src: est}
   two_path: {value: true, src: est, note: "main side (path 1) and back working (path 2) run as separate channels synchronised with wait codes"}
@@ -37,138 +37,138 @@ axes:
     travel_mm: [0, 205]
     travel_non_guide_bush_mm: {value: 50, note: "non-guide-bush mode: bar diameter x 2.5, max. 50 mm"}
     rapid_mm_min: 35000
-    max_feed_mm_min: {value: 35000, src: est}
+    max_feed_mm_min: {value: 35000, src: est, note: "max cutting feed not published: the 35 m/min Z1 rapid taken as the limit"}
     accel_m_s2: {value: 8.0, src: est, note: "light headstock slide; not published"}
-    jerk_m_s3: {value: 200, src: est}
+    jerk_m_s3: {value: 200, src: est, note: "200 m/s3 ramps to the 8 m/s2 acceleration in a/j = 40 ms, longer than one period of the 120 Hz tool-post mode (8 ms; biagiotti-melchiorri-2008)"}
     servo:
-      kv_1_s: {value: 50, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 100, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 2, src: est}
-    ballscrew: {diameter_mm: 25, pitch_mm: 10, length_mm: 400, fixed_end: motor, src: est}
-    positioning: {accuracy_um: 4, repeatability_um: 2, src: est}
-    motor_force_N: {value: 4000, src: est}
+      kv_1_s: {value: 50, src: est, note: "position-loop gain 50 1/s (kv/2 pi = 8.0 Hz), 13 x below the 100 Hz velocity loop (cascade rule >= 5-10); light, short slides take higher gains than the large mills (40 1/s)"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains; 1.0 overshoots at reversals"}
+      velocity_bw_Hz: {value: 100, src: est, note: "100 Hz for the 120 kg headstock (bar) slide: 13 x the position-loop crossover, below the 120 Hz tool-post mode"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nut: residual lost motion 0-2 um, 1 um"}
+    reversal_spike_um: {value: 2, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis (ISO 230-2 reversal value B 1-5 um): small, short slides 1.5-2 um"}
+    ballscrew: {diameter_mm: 25, pitch_mm: 10, length_mm: 400, fixed_end: motor, src: est, note: "25 mm x 10 mm lead: the 35 m/min rapid needs 3500 rpm; length = the 205 mm stroke + nut + bearing ends (assumed)"}
+    positioning: {accuracy_um: 4, repeatability_um: 2, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
+    motor_force_N: {value: 4000, src: est, note: "a small feed servo (about 7.1 Nm through the 10 mm lead at 90 %) gives 4 kN: 33 m/s2 on the 120 kg slide, well above the 8 m/s2 used (assumed motor size)"}
     moving_mass_kg: {value: 120, src: est, note: "headstock with built-in motor and bar"}
   X1:
     type: linear
     travel_mm: {value: [-5, 150], src: est, note: "gang slide travel not on the spec page; assumed"}
     rapid_mm_min: 35000
-    max_feed_mm_min: {value: 35000, src: est}
-    accel_m_s2: {value: 8.0, src: est}
-    jerk_m_s3: {value: 200, src: est}
+    max_feed_mm_min: {value: 35000, src: est, note: "max cutting feed not published: the 35 m/min X1 rapid taken as the limit"}
+    accel_m_s2: {value: 8.0, src: est, note: "8 m/s2: the 3 kN (est) on 80 kg would allow 38 m/s2; Swiss-type slides are light and are run at 0.4-0.8 g (assumed)"}
+    jerk_m_s3: {value: 200, src: est, note: "200 m/s3 ramps to the 8 m/s2 acceleration in a/j = 40 ms, longer than one period of the 120 Hz tool-post mode (8 ms; biagiotti-melchiorri-2008)"}
     servo:
-      kv_1_s: {value: 50, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 100, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 1.5, src: est}
-    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 300, fixed_end: motor, src: est}
-    positioning: {accuracy_um: 3, repeatability_um: 1.5, src: est}
-    motor_force_N: {value: 3000, src: est}
-    moving_mass_kg: {value: 80, src: est}
+      kv_1_s: {value: 50, src: est, note: "position-loop gain 50 1/s (kv/2 pi = 8.0 Hz), 13 x below the 100 Hz velocity loop (cascade rule >= 5-10); light, short slides take higher gains than the large mills (40 1/s)"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains; 1.0 overshoots at reversals"}
+      velocity_bw_Hz: {value: 100, src: est, note: "100 Hz for the 80 kg gang tool slide: 13 x the position-loop crossover, below the 120 Hz tool-post mode"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nut: residual lost motion 0-2 um, 1 um"}
+    reversal_spike_um: {value: 1.5, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis (ISO 230-2 reversal value B 1-5 um): small, short slides 1.5-2 um"}
+    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 300, fixed_end: motor, src: est, note: "20 mm x 10 mm lead: the 35 m/min rapid needs 3500 rpm; length = the 155 mm stroke + nut + bearing ends (assumed)"}
+    positioning: {accuracy_um: 3, repeatability_um: 1.5, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
+    motor_force_N: {value: 3000, src: est, note: "a small feed servo (about 5.3 Nm through the 10 mm lead at 90 %) gives 3 kN: 38 m/s2 on the 80 kg slide, well above the 8 m/s2 used (assumed motor size)"}
+    moving_mass_kg: {value: 80, src: est, note: "gang tool slide with its tools and, for X2/Z2, the sub-spindle unit: 80 kg assumed"}
   Y1:
     type: linear
     description: "gang tool selection / Y milling"
     travel_mm: {value: [-200, 200], src: est, note: "assumed"}
     rapid_mm_min: 35000
-    max_feed_mm_min: {value: 35000, src: est}
-    accel_m_s2: {value: 8.0, src: est}
-    jerk_m_s3: {value: 200, src: est}
+    max_feed_mm_min: {value: 35000, src: est, note: "max cutting feed not published: the 35 m/min Y1 rapid taken as the limit"}
+    accel_m_s2: {value: 8.0, src: est, note: "8 m/s2: the 3 kN (est) on 100 kg would allow 30 m/s2; Swiss-type slides are light and are run at 0.4-0.8 g (assumed)"}
+    jerk_m_s3: {value: 200, src: est, note: "200 m/s3 ramps to the 8 m/s2 acceleration in a/j = 40 ms, longer than one period of the 120 Hz tool-post mode (8 ms; biagiotti-melchiorri-2008)"}
     servo:
-      kv_1_s: {value: 50, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 100, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 1.5, src: est}
-    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 550, fixed_end: motor, src: est}
-    positioning: {accuracy_um: 3, repeatability_um: 1.5, src: est}
-    motor_force_N: {value: 3000, src: est}
-    moving_mass_kg: {value: 100, src: est}
+      kv_1_s: {value: 50, src: est, note: "position-loop gain 50 1/s (kv/2 pi = 8.0 Hz), 13 x below the 100 Hz velocity loop (cascade rule >= 5-10); light, short slides take higher gains than the large mills (40 1/s)"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains; 1.0 overshoots at reversals"}
+      velocity_bw_Hz: {value: 100, src: est, note: "100 Hz for the 100 kg gang tool selection slide: 13 x the position-loop crossover, below the 120 Hz tool-post mode"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nut: residual lost motion 0-2 um, 1 um"}
+    reversal_spike_um: {value: 1.5, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis (ISO 230-2 reversal value B 1-5 um): small, short slides 1.5-2 um"}
+    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 550, fixed_end: motor, src: est, note: "20 mm x 10 mm lead: the 35 m/min rapid needs 3500 rpm; length = the 400 mm stroke + nut + bearing ends (assumed)"}
+    positioning: {accuracy_um: 3, repeatability_um: 1.5, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
+    motor_force_N: {value: 3000, src: est, note: "a small feed servo (about 5.3 Nm through the 10 mm lead at 90 %) gives 3 kN: 30 m/s2 on the 100 kg slide, well above the 8 m/s2 used (assumed motor size)"}
+    moving_mass_kg: {value: 100, src: est, note: "gang tool selection slide with its tools and, for X2/Z2, the sub-spindle unit: 100 kg assumed"}
   X2:
     type: linear
-    travel_mm: {value: [-5, 150], src: est}
+    travel_mm: {value: [-5, 150], src: est, note: "cross stroke of the back-working spindle not on the spec page: as X1 (-5..150 mm), assumed"}
     rapid_mm_min: 35000
-    max_feed_mm_min: {value: 35000, src: est}
-    accel_m_s2: {value: 6.0, src: est}
-    jerk_m_s3: {value: 150, src: est}
+    max_feed_mm_min: {value: 35000, src: est, note: "max cutting feed not published: the 35 m/min X2 rapid taken as the limit"}
+    accel_m_s2: {value: 6.0, src: est, note: "6 m/s2: the 3 kN (est) on 120 kg would allow 25 m/s2; Swiss-type slides are light and are run at 0.4-0.8 g (assumed)"}
+    jerk_m_s3: {value: 150, src: est, note: "150 m/s3 ramps to the 6 m/s2 acceleration in a/j = 40 ms, longer than one period of the 120 Hz tool-post mode (8 ms; biagiotti-melchiorri-2008)"}
     servo:
-      kv_1_s: {value: 45, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 80, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 2, src: est}
-    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 300, fixed_end: motor, src: est}
-    positioning: {accuracy_um: 4, repeatability_um: 2, src: est}
-    motor_force_N: {value: 3000, src: est}
-    moving_mass_kg: {value: 120, src: est}
+      kv_1_s: {value: 45, src: est, note: "position-loop gain 45 1/s (kv/2 pi = 7.2 Hz), 11 x below the 80 Hz velocity loop (cascade rule >= 5-10); light, short slides take higher gains than the large mills (40 1/s)"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains; 1.0 overshoots at reversals"}
+      velocity_bw_Hz: {value: 80, src: est, note: "80 Hz for the 120 kg back-working (sub-spindle) cross slide: 11 x the position-loop crossover, below the 120 Hz tool-post mode"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nut: residual lost motion 0-2 um, 1 um"}
+    reversal_spike_um: {value: 2, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis (ISO 230-2 reversal value B 1-5 um): small, short slides 1.5-2 um"}
+    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 300, fixed_end: motor, src: est, note: "20 mm x 10 mm lead: the 35 m/min rapid needs 3500 rpm; length = the 155 mm stroke + nut + bearing ends (assumed)"}
+    positioning: {accuracy_um: 4, repeatability_um: 2, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
+    motor_force_N: {value: 3000, src: est, note: "a small feed servo (about 5.3 Nm through the 10 mm lead at 90 %) gives 3 kN: 25 m/s2 on the 120 kg slide, well above the 6 m/s2 used (assumed motor size)"}
+    moving_mass_kg: {value: 120, src: est, note: "back-working (sub-spindle) cross slide with its tools and, for X2/Z2, the sub-spindle unit: 120 kg assumed"}
   Z2:
     type: linear
-    travel_mm: {value: [0, 300], src: est}
+    travel_mm: {value: [0, 300], src: est, note: "z stroke of the back-working spindle not on the spec page: 300 mm assumed, enough to reach the 205 mm headstock stroke plus the 80 mm front ejection length"}
     rapid_mm_min: 35000
-    max_feed_mm_min: {value: 35000, src: est}
-    accel_m_s2: {value: 6.0, src: est}
-    jerk_m_s3: {value: 150, src: est}
+    max_feed_mm_min: {value: 35000, src: est, note: "max cutting feed not published: the 35 m/min Z2 rapid taken as the limit"}
+    accel_m_s2: {value: 6.0, src: est, note: "6 m/s2: the 3 kN (est) on 120 kg would allow 25 m/s2; Swiss-type slides are light and are run at 0.4-0.8 g (assumed)"}
+    jerk_m_s3: {value: 150, src: est, note: "150 m/s3 ramps to the 6 m/s2 acceleration in a/j = 40 ms, longer than one period of the 120 Hz tool-post mode (8 ms; biagiotti-melchiorri-2008)"}
     servo:
-      kv_1_s: {value: 45, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 80, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 2, src: est}
-    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 450, fixed_end: motor, src: est}
-    positioning: {accuracy_um: 4, repeatability_um: 2, src: est}
-    motor_force_N: {value: 3000, src: est}
-    moving_mass_kg: {value: 120, src: est}
+      kv_1_s: {value: 45, src: est, note: "position-loop gain 45 1/s (kv/2 pi = 7.2 Hz), 11 x below the 80 Hz velocity loop (cascade rule >= 5-10); light, short slides take higher gains than the large mills (40 1/s)"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains; 1.0 overshoots at reversals"}
+      velocity_bw_Hz: {value: 80, src: est, note: "80 Hz for the 120 kg back-working (sub-spindle) z slide: 11 x the position-loop crossover, below the 120 Hz tool-post mode"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nut: residual lost motion 0-2 um, 1 um"}
+    reversal_spike_um: {value: 2, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis (ISO 230-2 reversal value B 1-5 um): small, short slides 1.5-2 um"}
+    ballscrew: {diameter_mm: 20, pitch_mm: 10, length_mm: 450, fixed_end: motor, src: est, note: "20 mm x 10 mm lead: the 35 m/min rapid needs 3500 rpm; length = the 300 mm stroke + nut + bearing ends (assumed)"}
+    positioning: {accuracy_um: 4, repeatability_um: 2, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
+    motor_force_N: {value: 3000, src: est, note: "a small feed servo (about 5.3 Nm through the 10 mm lead at 90 %) gives 3 kN: 25 m/s2 on the 120 kg slide, well above the 6 m/s2 used (assumed motor size)"}
+    moving_mass_kg: {value: 120, src: est, note: "back-working (sub-spindle) z slide with its tools and, for X2/Z2, the sub-spindle unit: 120 kg assumed"}
   Y2:
     type: linear
     description: "back tool post Y"
     travel_mm: {value: [-60, 60], src: est, note: "axis exists (15 m/min rapid published); stroke assumed"}
     rapid_mm_min: 15000
-    max_feed_mm_min: {value: 15000, src: est}
-    accel_m_s2: {value: 4.0, src: est}
-    jerk_m_s3: {value: 100, src: est}
+    max_feed_mm_min: {value: 15000, src: est, note: "max cutting feed not published: the 15 m/min Y2 rapid taken as the limit"}
+    accel_m_s2: {value: 4.0, src: est, note: "4 m/s2: the 2 kN (est) on 50 kg would allow 40 m/s2; Swiss-type slides are light and are run at 0.4-0.8 g (assumed)"}
+    jerk_m_s3: {value: 100, src: est, note: "100 m/s3 ramps to the 4 m/s2 acceleration in a/j = 40 ms, longer than one period of the 120 Hz tool-post mode (8 ms; biagiotti-melchiorri-2008)"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 60, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 2, src: est}
-    ballscrew: {diameter_mm: 16, pitch_mm: 5, length_mm: 250, fixed_end: motor, src: est}
-    positioning: {accuracy_um: 4, repeatability_um: 2, src: est}
-    motor_force_N: {value: 2000, src: est}
-    moving_mass_kg: {value: 50, src: est}
+      kv_1_s: {value: 40, src: est, note: "position-loop gain 40 1/s (kv/2 pi = 6.4 Hz), 9 x below the 60 Hz velocity loop (cascade rule >= 5-10); light, short slides take higher gains than the large mills (40 1/s)"}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains; 1.0 overshoots at reversals"}
+      velocity_bw_Hz: {value: 60, src: est, note: "60 Hz for the 50 kg back tool post Y slide: 9 x the position-loop crossover, below the 120 Hz tool-post mode"}
+    backlash_um: {value: 1, src: est, note: "preloaded ball nut: residual lost motion 0-2 um, 1 um"}
+    reversal_spike_um: {value: 2, src: est, note: "friction step at reversal of a semi-closed-loop ballscrew axis (ISO 230-2 reversal value B 1-5 um): small, short slides 1.5-2 um"}
+    ballscrew: {diameter_mm: 16, pitch_mm: 5, length_mm: 250, fixed_end: motor, src: est, note: "16 mm x 5 mm lead: the 15 m/min rapid needs 3000 rpm; length = the 120 mm stroke + nut + bearing ends (assumed)"}
+    positioning: {accuracy_um: 4, repeatability_um: 2, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
+    motor_force_N: {value: 2000, src: est, note: "a small feed servo (about 1.8 Nm through the 5 mm lead at 90 %) gives 2 kN: 40 m/s2 on the 50 kg slide, well above the 4 m/s2 used (assumed motor size)"}
+    moving_mass_kg: {value: 50, src: est, note: "back tool post Y slide with its tools and, for X2/Z2, the sub-spindle unit: 50 kg assumed"}
   C1:
     type: rotary
     travel_deg: [0, 360]
     continuous: true
     indexing: "C-axis control"
-    max_rpm: {value: 100, src: est}
-    accel_rad_s2: {value: 100, src: est}
-    jerk_rad_s3: {value: 2000, src: est}
+    max_rpm: {value: 100, src: est, note: "C-axis contouring speed not published: 100 rpm assumed (C rapid of small built-in spindles)"}
+    accel_rad_s2: {value: 100, src: est, note: "100 rad/s2 reaches 100 rpm (10.5 rad/s) in 0.1 s; the 23.6 Nm motor would accelerate the 0.004 kg m2 spindle at 5900 rad/s2, so the value is the C-mode tuning (assumed)"}
+    jerk_rad_s3: {value: 2000, src: est, note: "the 100 rad/s2 is reached in a/j = 50 ms"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.9, src: est}
-      velocity_bw_Hz: {value: 50, src: est}
+      kv_1_s: {value: 40, src: est, note: "C mode of the built-in spindle: 40 1/s (kv/2 pi = 6.4 Hz), 8 x below its 50 Hz velocity loop"}
+      feedforward: {value: 0.9, src: est, note: "0.9 for the spindle in C mode: the collet and bar inertia vary, less feed-forward than on the feed axes"}
+      velocity_bw_Hz: {value: 50, src: est, note: "50 Hz velocity loop of the small spindle in C mode (assumed)"}
     backlash_arcsec: {value: 0, src: est, note: "built-in spindle motor (star-gb-sr20riv-e-web-2026)"}
-    brake: {clamp_torque_Nm: {value: 60, src: est}, clamp_time_s: {value: 0.1, src: est}}
-    positioning: {accuracy_arcsec: 30, repeatability_arcsec: 15, src: est}
+    brake: {clamp_torque_Nm: {value: 60, src: est, note: "about 2.5 x the 23.6 Nm motor torque, so milling loads on the clamped spindle never drive it: 60 Nm assumed"}, clamp_time_s: {value: 0.1, src: est, note: "spindle clamp of a small Swiss-type headstock: 0.1 s assumed"}}
+    positioning: {accuracy_arcsec: 30, repeatability_arcsec: 15, src: est, note: "C indexing on the spindle encoder: 30 arcsec accuracy, 15 arcsec repeatability assumed"}
     motor_torque_Nm: {value: 23.6, src: est, note: "3.7 kW at the assumed 1500 rpm base speed"}
   C2:
     type: rotary
     travel_deg: [0, 360]
     continuous: true
     indexing: "C-axis control"
-    max_rpm: {value: 100, src: est}
-    accel_rad_s2: {value: 100, src: est}
-    jerk_rad_s3: {value: 2000, src: est}
+    max_rpm: {value: 100, src: est, note: "as C1: 100 rpm"}
+    accel_rad_s2: {value: 100, src: est, note: "as C1: 100 rad/s2 (same motor rating and spindle size)"}
+    jerk_rad_s3: {value: 2000, src: est, note: "as C1: 50 ms ramp"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.9, src: est}
-      velocity_bw_Hz: {value: 50, src: est}
-    backlash_arcsec: {value: 0, src: est}
-    brake: {clamp_torque_Nm: {value: 60, src: est}, clamp_time_s: {value: 0.1, src: est}}
-    positioning: {accuracy_arcsec: 30, repeatability_arcsec: 15, src: est}
-    motor_torque_Nm: {value: 23.6, src: est}
+      kv_1_s: {value: 40, src: est, note: "as C1: 40 1/s"}
+      feedforward: {value: 0.9, src: est, note: "as C1: 0.9"}
+      velocity_bw_Hz: {value: 50, src: est, note: "as C1: 50 Hz"}
+    backlash_arcsec: {value: 0, src: est, note: "built-in spindle motor, no gears: 0, as C1"}
+    brake: {clamp_torque_Nm: {value: 60, src: est, note: "as C1: 60 Nm"}, clamp_time_s: {value: 0.1, src: est, note: "as C1: 0.1 s"}}
+    positioning: {accuracy_arcsec: 30, repeatability_arcsec: 15, src: est, note: "as C1: 30 arcsec, 15 arcsec"}
+    motor_torque_Nm: {value: 23.6, src: est, note: "as C1: 3.7 kW at the assumed 1500 rpm base speed = 23.6 Nm (same published motor rating)"}
 
 kinematics:
   workpiece_chain:
@@ -205,24 +205,24 @@ spindles:
         power_kW: [[0, 0], [1500, 3.7], [10000, 3.7]]
         torque_Nm: [[0, 23.6], [1500, 23.6], [10000, 3.5]]
         additional_ratings:
-          - {rating: "S1 continuous", src: est, power_kW: [[0, 0], [1500, 2.2], [10000, 2.2]], torque_Nm: [[0, 14.0], [1500, 14.0], [10000, 2.1]]}
+          - {rating: "S1 continuous", src: est, note: "the published 2.2 kW continuous rating with the same assumed 1500 rpm base speed: 14.0 Nm, then constant power", power_kW: [[0, 0], [1500, 2.2], [10000, 2.2]], torque_Nm: [[0, 14.0], [1500, 14.0], [10000, 2.1]]}
     motor_kW: {cont: 2.2, s2_10min_25ed: 3.7}
     direction_reversible: {value: true, src: est}
     accel_time_s: {value: 0.5, src: est, note: "small built-in spindle, J ~ 0.004 kg m2"}
-    decel_time_s: {value: 0.5, src: est}
+    decel_time_s: {value: 0.5, src: est, note: "regenerative braking at the same torque as the acceleration: symmetric 0.5 s"}
     gear_change_s: null
-    orient_time_s: {value: 0.2, src: est}
-    rotor_inertia_kgm2: {value: 0.004, src: est}
-    efficiency: {value: 0.85, src: est}
-    idle_power_W: {value: 150, src: est}
-    runout_um: {value: 2, src: est}
+    orient_time_s: {value: 0.2, src: est, note: "M19 from rest: one turn at 23.6 Nm / 0.004 kg m2 = 5900 rad/s2 takes 0.07 s, plus 0.13 s settle (assumed)"}
+    rotor_inertia_kgm2: {value: 0.004, src: est, note: "built-in rotor and spindle of a 20 mm bar headstock (about 0.003 kg m2) plus the collet and bar (about 0.001 kg m2), assumed; with it 0-10 000 rpm takes 0.04 s at 23.6 Nm to 1500 rpm and 0.004 x (1047^2 - 157^2) / 7400 = 0.58 s to 10 000 rpm (accel_time_s 0.5 s)"}
+    efficiency: {value: 0.85, src: est, note: "small built-in spindle motor and drive at rated load: about 0.88 x 0.97, 0.85 (assumed)"}
+    idle_power_W: {value: 150, src: est, note: "no-load loss at 10 000 rpm: bearing friction 120 W (thermal note) plus windage about 30 W = 150 W"}
+    runout_um: {value: 2, src: est, note: "collet spindle of a new Swiss-type lathe: 2 um assumed (not published)"}
     frf_modes: []
     thermal:
-      growth_um_at_max_rpm: {value: 8, src: est}
-      time_constant_min: {value: 20, src: est}
-      bearing_heat_W_at_max_rpm: {value: 120, src: est}
+      growth_um_at_max_rpm: {value: 8, src: est, note: "axial growth alpha L dT = 11.5e-6 1/K x 0.15 m (bearing span of the small headstock, assumed) x 4.6 K (steady rise at the 120 W bearing heat, assumed) = 8 um"}
+      time_constant_min: {value: 20, src: est, note: "tau = C / G for the small headstock: about 25 kg x 460 J/kgK = 11.5 kJ/K over G = 120 W / 12 K = 10 W/K (est) = 1150 s, about 20 min"}
+      bearing_heat_W_at_max_rpm: {value: 120, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for two 55 mm pitch-diameter bearings, oil-air f0 = 1, nu = 10 mm2/s, n = 10 000 rpm: (1e5)^(2/3) = 2154, 2 x 0.036 Nm = 0.072 Nm x 1047 rad/s = 75 W; 120 W with the collet-closer seals and the guide-bush drive (assumed)"}
       thermal_comp: {value: true, src: est}
-      comp_residual_fraction: {value: 0.3, src: est}
+      comp_residual_fraction: {value: 0.3, src: est, note: "the thermal compensation leaves 30 % of the growth (as the other machines, assumed)"}
   - id: sub
     kind: sub
     nose: {value: "collet", src: est}
@@ -237,13 +237,13 @@ spindles:
         torque_Nm: [[0, 23.6], [1500, 23.6], [10000, 3.5]]
     motor_kW: {cont: 2.2, s2_10min_25ed: 3.7}
     direction_reversible: {value: true, src: est}
-    accel_time_s: {value: 0.5, src: est}
-    decel_time_s: {value: 0.5, src: est}
-    orient_time_s: {value: 0.2, src: est}
-    rotor_inertia_kgm2: {value: 0.004, src: est}
-    efficiency: {value: 0.85, src: est}
-    idle_power_W: {value: 150, src: est}
-    runout_um: {value: 2, src: est}
+    accel_time_s: {value: 0.5, src: est, note: "as the main spindle (same published motor rating, same assumed inertia): 0.5 s"}
+    decel_time_s: {value: 0.5, src: est, note: "as the main spindle: 0.5 s"}
+    orient_time_s: {value: 0.2, src: est, note: "as the main spindle: 0.2 s"}
+    rotor_inertia_kgm2: {value: 0.004, src: est, note: "as the main spindle: 0.004 kg m2"}
+    efficiency: {value: 0.85, src: est, note: "as the main spindle: 0.85"}
+    idle_power_W: {value: 150, src: est, note: "as the main spindle: 150 W"}
+    runout_um: {value: 2, src: est, note: "as the main spindle: 2 um"}
     frf_modes: []
     front_ejection_length_mm: 80
     max_work_projection_mm: 30
@@ -259,13 +259,13 @@ spindles:
         note: "2.2 kW driven-tool motor published; constant torque to an assumed 2000 rpm"
         power_kW: [[0, 0], [2000, 2.2], [8000, 2.2]]
         torque_Nm: [[0, 10.5], [2000, 10.5], [8000, 2.6]]
-    accel_time_s: {value: 0.3, src: est}
-    decel_time_s: {value: 0.3, src: est}
-    orient_time_s: {value: 0.2, src: est}
-    rotor_inertia_kgm2: {value: 0.001, src: est}
-    efficiency: {value: 0.8, src: est}
-    idle_power_W: {value: 80, src: est}
-    runout_um: {value: 8, src: est}
+    accel_time_s: {value: 0.3, src: est, note: "driven-tool motor 2.2 kW / 10.5 Nm on J = 0.001 kg m2: 0.02 s to 2000 rpm and 0.001 x (838^2 - 209^2) / 4400 = 0.15 s to 8000 rpm; 0.3 s with the drive ramp (assumed)"}
+    decel_time_s: {value: 0.3, src: est, note: "symmetric with the acceleration: 0.3 s"}
+    orient_time_s: {value: 0.2, src: est, note: "orientation of the driven-tool motor: one turn plus the settle, 0.2 s assumed"}
+    rotor_inertia_kgm2: {value: 0.001, src: est, note: "rotor of a 2.2 kW servo (about 0.0006 kg m2) plus the gang drive gears and an ER16 unit (about 0.0004 kg m2), assumed"}
+    efficiency: {value: 0.8, src: est, note: "servo motor about 0.9 x two gear meshes of the driven unit about 0.95 each: 0.81, i.e. 0.8"}
+    idle_power_W: {value: 80, src: est, note: "gear and bearing drag of the driven units at 8000 rpm: about 4 % of the 2.2 kW rating, 80 W (assumed)"}
+    runout_um: {value: 8, src: est, note: "ER16 driven unit with collet on a gang slide: 8 um TIR assumed (ER collet chucks: about 5 um, plus the unit's bearings)"}
     frf_modes:
       - {fn_Hz: 900, zeta: 0.04, k_N_um: 8, direction: x, src: est, note: "small gang-mounted driven unit"}
     max_drilling_mm: 10
@@ -278,24 +278,24 @@ structure:
   rotary_modes: []
 
 error_map:
-  squareness_urad: {XZ: 15, YZ: 15, XY: 15, src: est}
-  straightness_um_per_m: {X1: 5, Y1: 5, Z1: 5, src: est}
+  squareness_urad: {XZ: 15, YZ: 15, XY: 15, src: est, note: "15 urad (15 um/m) per axis pair after alignment, as the other machines (assumed)"}
+  straightness_um_per_m: {X1: 5, Y1: 5, Z1: 5, src: est, note: "5 um per metre of travel for the short, ground slides (assumed)"}
   angular_urad: {}
   pivot_errors: {}
 
 thermal:
   axis_drift:
-    expansion_1_K: {value: 11.5e-6, src: est}
-    heat_per_m_travel_J: {value: 40, src: est}
-    time_constant_min: {value: 30, src: est}
-  structure_sensitivity_um_per_K: {value: 2, src: est}
-  warmup: {cold_to_warm_min: 40, src: est}
+    expansion_1_K: {value: 11.5e-6, src: est, note: "mean CTE 20-100 degC of the ballscrew steel (100Cr6 11.5e-6 1/K, DEW column in db/materials/aisi52100-62hrc.yaml)"}
+    heat_per_m_travel_J: {value: 40, src: est, note: "nut drag torque 0.06 Nm (light preload of a 20 mm nut, assumed) x 2 pi / 0.010 m = 38 J per metre of travel, i.e. 40 J/m"}
+    time_constant_min: {value: 30, src: est, note: "tau = rho c d / (4 h) = 7850 x 460 x 0.025 / (4 x 15 W/m2K) = 1500 s = 25 min for the 25 mm Z1 screw (20 mm screws: 20 min); 30 min with the nut and bearing housings, assumed"}
+  structure_sensitivity_um_per_K: {value: 2, src: est, note: "cast-iron CTE 10.5e-6 1/K (db/materials/grey-cast-iron-gjl250.yaml) x the short loop of about 0.2 m from the guide bush through the base to the gang tool tips = 2.1 um/K"}
+  warmup: {cold_to_warm_min: 40, src: est, note: "40 min: 2 x the 20 min spindle time constant (86 %) and 1.3 x the 30 min screw constant"}
 
 tool_changer:
   type: none
   capacity: 0
   tool_to_tool_s: {value: 0.3, src: est, note: "gang tool change = Y1/X1 move between adjacent tools"}
-  chip_to_chip_s: {value: 0.4, src: est}
+  chip_to_chip_s: {value: 0.4, src: est, note: "gang tool change = retract, Y1 move of one tool pitch (16 mm) and approach at 35 m/min plus settle: 0.4 s assumed (tool-to-tool 0.3 s)"}
   max_tool_diameter_mm: null
   max_tool_diameter_adjacent_empty_mm: null
   max_tool_length_mm: null
@@ -325,7 +325,7 @@ guide_bushing:
   position_mm: 0
   switchable_to_non_guide_bush: {value: true, src: star-gb-sr20riv-e-web-2026}
   max_bar_diameter_mm: 20
-doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null}
+doors: {count: {value: 1, src: est, note: "one front door, assumed"}, auto: {value: false, src: est}, open_time_s: null}
 
 probes:
   spindle_probe: null
@@ -335,25 +335,25 @@ probes:
 coolant:
   tank_l: {value: 180, src: est, note: "not published; Swiss-type machines usually run neat cutting oil"}
   pumps:
-    - {id: flood, kind: flood, pressure_bar: 4, flow_l_min: 30, power_kW: 0.4, src: est}
-    - {id: hp, kind: high_pressure, option: true, pressure_bar: 70, flow_l_min: 12, power_kW: 2.2, src: est}
+    - {id: flood, kind: flood, pressure_bar: 4, flow_l_min: 30, power_kW: 0.4, src: est, note: "low-pressure flood pump for neat oil: 4 bar, 30 L/min, 0.4 kW assumed (hydraulic 0.2 kW at 50 % efficiency)"}
+    - {id: hp, kind: high_pressure, option: true, pressure_bar: 70, flow_l_min: 12, power_kW: 2.2, src: est, note: "high-pressure option for deep drilling: 70 bar, 12 L/min (hydraulic 1.4 kW) at about 65 % efficiency = 2.2 kW, assumed"}
   nozzles:
-    - {id: gang, kind: flood, attached_to: gang_x, position_mm: [20, 0, 20], aim: [-0.7, 0, -0.7], diameter_mm: 3, pump: flood, src: est}
-    - {id: back, kind: flood, attached_to: sub_z, position_mm: [20, 0, 40], aim: [-0.7, 0, -0.7], diameter_mm: 3, pump: flood, src: est}
+    - {id: gang, kind: flood, attached_to: gang_x, position_mm: [20, 0, 20], aim: [-0.7, 0, -0.7], diameter_mm: 3, pump: flood, src: est, note: "flood nozzle on the gang slide aimed at the cut in front of the guide bush (position and aim assumed)"}
+    - {id: back, kind: flood, attached_to: sub_z, position_mm: [20, 0, 40], aim: [-0.7, 0, -0.7], diameter_mm: 3, pump: flood, src: est, note: "flood nozzle on the back-working slide aimed at the sub-spindle tools (position and aim assumed)"}
   air_blast: null
   chiller: {value: "oil cooler", src: est}
-  filtration_um: {value: 25, src: est}
+  filtration_um: {value: 25, src: est, note: "neat-oil machine with a fine filter for the small tools and the guide bush: 25 um assumed"}
 
-chip_conveyor: {type: none, src: est, note: "chip box; conveyor optional", rate_kg_h: {value: 15, src: est}}
+chip_conveyor: {type: none, src: est, note: "chip box; conveyor optional", rate_kg_h: {value: 15, src: est, note: "chip box capacity in steel at the 2.2 kW continuous spindle rating: 2200 W / 2.5 J/mm3 = 0.9 cm3/s = 25 kg/h at full load; 15 kg/h average (light cuts on 20 mm bar, assumed)"}}
 
 enclosure:
   box_mm: {value: [[-250, -300, -100], [250, 300, 450]], src: est, note: "machining zone in front of the guide bush"}
-  floor_slope_deg: {value: 45, src: est}
+  floor_slope_deg: {value: 45, src: est, note: "the chip-pan walls drain oil and chips to the chip box: 45 deg assumed"}
 
 power:
-  base_W: {value: 600, src: est}
-  servo_standby_W: {value: 200, src: est}
-  air_consumption_l_min: {value: 100, src: est}
+  base_W: {value: 600, src: est, note: "idle base load of a 4.7 kVA machine: control about 250 W, oil cooler and lube about 250 W, lights and fans about 100 W = 600 W (assumed)"}
+  servo_standby_W: {value: 200, src: est, note: "eight small drives enabled at standstill (Z1, X1, Y1, X2, Z2, Y2, C1/C2 spindles) at about 25 W each: 200 W (assumed)"}
+  air_consumption_l_min: {value: 100, src: est, note: "collet and parts-ejector pneumatics and sealing air: 100 L/min assumed"}
   supply_kVA: 4.7
   dimensions_mm: [2334, 1200, 1695]
   machine_mass_kg: 2600
@@ -366,6 +366,7 @@ geometry:
       - {box: {min_mm: [-200, -200, -260], max_mm: [200, 200, -150]}}
     collide: true
     src: est
+    note: "guide-bush housing: a 120 mm cylinder in front of a 400 x 400 mm headstock face, assumed"
   - name: gang_tool_post
     attached_to: gang_x
     primitives:
@@ -379,5 +380,6 @@ geometry:
       - {cylinder: {p0_mm: [0, 0, 20], p1_mm: [0, 0, 220], radius_mm: 55}}
     collide: true
     src: est
+    note: "sub-spindle head: 110 mm diameter, 200 mm long behind the collet face, assumed"
 
 notes: "Main-unit specification from Star's SR-20RIV page; controller and guide-bush switchability from Star GB (Type E). Axis strokes other than the 205 mm headstock stroke, all accelerations, torques (only motor kW published), coolant system and geometry are estimates."

@@ -15,7 +15,9 @@ The plane's rotation R (columns = the tilted X', Y', Z' in the untilted work fra
 
 Positioning: MOVE (rotary axes with compensating linear motion, the point DIST above the tool tip fixed
 relative to the workpiece: TCPM interpolation), TURN (rotary axes only, linear axes stay), STAY (no
-motion; Q120-Q122 hold the axis angles for a later positioning block). SEQ+ / SEQ- choose the solution
+motion; Q120-Q122 hold the axis angles for a later positioning block). With MOVE and TURN, MB (move back)
+first retracts the tool along the current tool axis: MB MAX to the end of the traverse range, MB d by d
+(incremental, MB 0 none), at the positioning feed (the M140 MB retraction). SEQ+ / SEQ- choose the solution
 with the first rotary axis of the workpiece chain positive / negative; without SEQ the one with the
 least rotary motion. The tilt turns about the active datum; afterwards the program frame is the tilted
 one (core stage ``feature``) and the linear axes follow the table kinematics (stage heidenhain:PLANE).
@@ -130,6 +132,18 @@ def execute(h, f) -> None:
     else:
         normal = new @ np.array([0.0, 0.0, 1.0])
         solution = h.choose_table_solution(normal, master_sign=int(f.get("seq") or 0))
+    position = f.get("position") or "STAY"
+    feed_word = f.get("feed")
+    rapid = feed_word is None or feed_word[0] == "FMAX"
+    feed = ex.feed_spec(True) if rapid else ex.feed_spec(False, feed_si=h.number(feed_word[1]) * h.feed_unit_m() / 60.0,
+                                                           mode="per_min")
+    if f.get("mb") is not None and position in ("MOVE", "TURN"):
+        # MB (move back): before the rotary axes tilt, the tool retracts along the current tool axis by the
+        # incremental length, or with MB MAX to just below the end of the traverse range, at the positioning feed
+        # (TNC 640 Klartext manual, PLANE "Automatic positioning", retraction MB); on table kinematics the tool
+        # axis stays the machine axis of the TOOL CALL, so this is the M140 MB retraction, in the frame active
+        # before this PLANE
+        h.retract_tool_axis({"m140": f["mb"], **({} if rapid else {"m140_feed": feed_word[1]})})
     angles = {}
     for axis in ex.axes:
         if axis.name in solution:
@@ -143,11 +157,6 @@ def execute(h, f) -> None:
     else:
         s.sys.pop("plane", None)
     s.tcp = "heidenhain:PLANE" if (active or s.tcp == "heidenhain:PLANE") else s.tcp
-    position = f.get("position") or "STAY"
-    feed_word = f.get("feed")
-    rapid = feed_word is None or feed_word[0] == "FMAX"
-    feed = ex.feed_spec(True) if rapid else ex.feed_spec(False, feed_si=h.number(feed_word[1]) * h.feed_unit_m() / 60.0,
-                                                           mode="per_min")
     if position == "MOVE":
         h.update_transform()
         dist = h.length_si(h.number(f["dist"])) if f.get("dist") is not None else 0.0

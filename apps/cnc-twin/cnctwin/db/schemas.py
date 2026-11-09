@@ -296,14 +296,43 @@ CHIP = Struct({
     "oxide_colours": OxideRows(),
 }, required=("tendency",))
 
+# What a Taylor life T counts (docs/formats.md "Kind notes", docs/models/wear.md section 3):
+# cutting_time - the time the tool feeds in the material (ISO 3685, ISO 8688 and makers' catalogues);
+#                an edge of an interrupted cut (milling) is in contact for only its engaged arc of it;
+# contact_time - the time the edge is in contact with the material (= cutting time of a continuous cut).
+LIFE_BASES = ("cutting_time", "contact_time")
+# Processes whose edge stays in the cut while the tool feeds: there cutting time = contact time, and an
+# entry without life_basis counts contact time; every other process (and none) counts cutting time.
+CONTINUOUS_PROCESSES = ("turning", "boring", "grooving", "threading", "orthogonal")
+
+
+def default_life_basis(process) -> str:
+    """The life basis of a Taylor entry that does not state one (by its process)."""
+    return "contact_time" if process in CONTINUOUS_PROCESSES else "cutting_time"
+
+
+def _taylor_rules(m, p, u, ctx):
+    if has(m, "a"):
+        _require(m, ("feed_ref_mm",), p, ctx, "a is given")
+    if has(m, "b"):
+        _require(m, ("ap_ref_mm",), p, ctx, "b is given")
+    basis = unwrap(get(m, "life_basis")) or default_life_basis(unwrap(get(m, "process")))
+    if basis == "contact_time" and has(m, "engaged_arc_ref_deg"):
+        ctx.warn(p + ("engaged_arc_ref_deg",), "a contact-time life needs no reference engagement: "
+                                               "engaged_arc_ref_deg is not used", "rule")
+
+
 TOOL_LIFE = Seq(Struct({
     "tool_class": Text(TOOL_CLASSES), "coating": Text(), "grade": Text(), "process": Text(PROCESSES),
     "C_m_min": Qty(gt=0, hi=1e3), "n": Qty(gt=0, hi=2), "a": Qty(lo=-1, hi=3), "b": Qty(lo=-1, hi=3),
     "T_ref_min": Qty(gt=0, hi=1e5), "feed_ref_mm": length(0.1), "ap_ref_mm": length(1.0),
     "VB_limit_mm": length(0.01), "vc_range_m_min": Qty(shape="range", lo=0, hi=SPEED_MAX),
-}, required=("tool_class", "C_m_min", "n", "T_ref_min", "VB_limit_mm"),
-    checks=(lambda m, p, u, c: _require(m, ("feed_ref_mm",), p, c, "a is given") if has(m, "a") else None,
-            lambda m, p, u, c: _require(m, ("ap_ref_mm",), p, c, "b is given") if has(m, "b") else None),
+    "life_basis": Text(LIFE_BASES, doc="what T counts: cutting_time (the tool feeding in the material) or "
+                                       "contact_time (the edge in contact); default by process"),
+    "engaged_arc_ref_deg": Qty(gt=0.0, hi=TWO_PI, doc="arc of the revolution the edge is in the material in "
+                                                      "the reference cut of a milling cutting-time life "
+                                                      "(side milling arccos(1 - 2 ae/D), slot 180 deg)"),
+}, required=("tool_class", "C_m_min", "n", "T_ref_min", "VB_limit_mm"), checks=(_taylor_rules,),
     hints={"usui": "Usui constants go in the material's top-level tool_life_usui list"}), nullable=True)
 
 
@@ -1156,6 +1185,8 @@ MACHINE_CONTROLLER = Struct({
     "smoothing": Seq(Struct({"code": Text(), "name": Text(), "tolerance_mm": length(0.01, positive=False)},
                             required=("code", "tolerance_mm"))),
     "corner_default": Text(("blend", "exact_stop")), "in_position_mm": length(0.01),
+    # axis setpoint filter after interpolation (moving average; motion's tolerance band on curves), 0 = none
+    "setpoint_filter_ms": Qty(lo=0, hi=0.5),
     "rapid_override_steps_pct": Qty(shape="list", lo=0, hi=2.0, ordered=True),
     "feed_override_range_pct": Qty(shape="range", lo=0, hi=5.0),
     "spindle_override_range_pct": Qty(shape="range", lo=0, hi=5.0),
@@ -1265,9 +1296,34 @@ MACHINE = Struct({
     checks=(_machine_rules,), hints=EXTENDS_HINTS)
 
 # ----------------------------------------------------------------------------- validation cases
-MEASURE = ByType(number=Qty(lo=-1e30, hi=1e30, dimensionless=True), text=Text(), boolean=Flag(), seq=Any_(),
-                 mapping=Struct({"value": Any_(), "assumed": Flag(), "src": Text(), "page": Text(), "unit": Text()}),
-                 expected="a value or {value, assumed: true, note}")
+ASSUMED = {"assumed": Flag(sourced=False)}
+
+
+class Measure(ByType):
+    """A setup input of a validation case: a plain value, a sourced one ``{value, src, page, note}``, or
+    one the source does not state, ``{value, assumed: true, note}`` (db/_templates/validation_case.yaml);
+    an assumed input without a note saying how it was chosen is a warning."""
+
+    def check(self, value, path, unit, ctx):
+        super().check(value, path, unit, ctx)
+        if isinstance(value, Mapping) and value.get("assumed") is True and not _has_note(value):
+            ctx.warn(path, "an assumed input needs a note saying how the value was chosen", "source")
+
+
+def _has_note(mapping: Mapping) -> bool:
+    for key in ("note", "notes"):
+        text = mapping.get(key)
+        if isinstance(text, str) and text.strip():
+            return True
+        if isinstance(text, list) and any(isinstance(t, str) and t.strip() for t in text):
+            return True
+    return False
+
+
+MEASURE = Measure(number=Qty(lo=-1e30, hi=1e30, dimensionless=True, extras=ASSUMED), text=Text(extras=ASSUMED),
+                  boolean=Flag(extras=ASSUMED), seq=Any_(),
+                  mapping=Struct({"value": Any_(), "assumed": Flag(), "src": Text(), "page": Text(), "unit": Text()}),
+                  expected="a value or {value, assumed: true, note}")
 VALIDATION_CASE = Struct({
     **header("validation_case"), "quantity": Text(VALIDATION_QUANTITIES),
     "reference": Struct({"src": Ref("bibliography"), "location": Text(), "digitised": Flag(),
@@ -1367,4 +1423,4 @@ def partial_schema(kind: str) -> Struct:
 __all__ = ["SCHEMAS", "FORMATS", "KIND_OF_FORMAT", "CURRENT_VERSION", "FOLDERS", "KIND_OF_FOLDER", "SINGLE_KINDS",
            "SERIES_KINDS", "ITEM_KINDS", "USUI_RATE_UNITS", "inline_schema", "partial_schema", "chain_links",
            "TOOL_TYPES", "HOLDER_TYPES", "WORKHOLDING_TYPES", "MACHINE_TYPES", "DIALECTS", "TOOL_CLASSES", "FAMILIES",
-           "POSE", "TYPE_GEOMETRY"]
+           "POSE", "TYPE_GEOMETRY", "LIFE_BASES", "CONTINUOUS_PROCESSES", "default_life_basis"]

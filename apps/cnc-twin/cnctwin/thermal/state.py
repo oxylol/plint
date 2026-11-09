@@ -56,6 +56,15 @@ class ThermalState:
     fixture_mass_kg: float = 0.0
     trace_notes: dict = field(default_factory=dict)     # what was already written to the trace once
 
+    def tool_temperature_at(self, slot: int, points_T) -> np.ndarray:
+        """Tool temperatures (K) at points [n, 3] of the tool frame T of a slot (rotating tools at spindle
+        angle 0): the 3-D cutting-region field where it exists (docs/models/thermal.md 2.4), else the
+        tool ladder's body temperature at the point (no local field)."""
+        tool = self.tools.get(int(slot))
+        if tool is None:
+            raise KeyError(f"thermal: no tool in slot {slot}")
+        return tool.temperature_at_T(points_T)
+
     # ------------------------------------------------------------------ checkpoint
     def to_arrays(self) -> tuple[dict, dict]:
         arrays: dict = {}

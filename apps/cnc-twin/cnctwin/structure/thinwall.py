@@ -9,7 +9,8 @@ A voxel grid cannot represent a wall thinner than about two cells: its cells are
   least two cells in each in-plane direction); its thickness is removal's ``wall_thickness`` at the wall's
   central cell when the geometry offers it, else the median T;
 * **plate**: a Kirchhoff rectangle over the wall's in-plane extent (free edges refined by the fractional fill
-  of their cells), each edge clamped where the wall meets thick material, free where it ends in air, simply
+  of their cells, clamped edges by the fill of the transition cells: f = h + (1 - h) T / cell for a solid part h
+  and the wall above it), each edge clamped where the wall meets thick material, free where it ends in air, simply
   supported where it meets another thin wall; Rayleigh-Ritz with Bhat's characteristic orthogonal polynomials
   (start function x^p (1 - x)^q satisfying the edge conditions, Gram-Schmidt on [0, 1]; Bhat 1985, Warburton
   1954, Leissa 1969); modes mass-normalised (rho t int w^2 dA = 1) and the static point compliance from the
@@ -290,6 +291,15 @@ def _build_wall(axis, cells, thick, fill, active, maps, origin, cell_m, settings
             kind = _edge_kind(fill, active, maps, axis, boundary, thr)
             kinds.append(kind)
             face = origin[ax] + (lo[ax] if side == 0 else hi[ax] + 1) * cell_m
+            if kind == "C":
+                # the transition cell holds the solid (floor) part h and the wall above it: its fraction
+                # f = h + (1 - h) T / cell gives h; the wall reaches (1 - h) cell into it
+                inside = np.all((boundary >= 0) & (boundary < np.array(fill.shape)[None, :]), axis=1)
+                if np.any(inside):
+                    fb = float(np.mean(fill[tuple(boundary[inside].T)]))
+                    t_frac = min(T / cell_m, 0.999)
+                    h = float(np.clip((fb - t_frac) / (1.0 - t_frac), 0.0, 1.0))
+                    face += (-(1.0 - h) if side == 0 else (1.0 - h)) * cell_m
             if kind == "F":
                 edge_cells = cells[cells[:, ax] == (lo[ax] if side == 0 else hi[ax])]
                 frac = float(np.clip(np.mean(fill[tuple(edge_cells.T)] * cell_m / np.maximum(

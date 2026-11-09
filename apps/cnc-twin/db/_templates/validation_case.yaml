@@ -20,7 +20,9 @@ setup:
                                      # oblique_turning | longitudinal_turning | drilling | tapping | boring | grooving | threading |
                                      # machine_motion | spindle_warmup | coolant_jet
   material: {db: al7075-t6}          # or inline {name, properties...} when the source's material differs from the DB
-  tool: {diameter_mm: 19.05, flutes: 4, helix_deg: 30, rake_deg: 12, clearance_deg: 6, tool_class: carbide, coating: none}
+  tool: {diameter_mm: 19.05, flutes: 4, helix_deg: 30, rake_deg: 12, clearance_deg: 6, tool_class: carbide, coating: none,
+         edge_radius_um: {value: 10, assumed: true, note: "not stated: hone of a new ground carbide end mill"}}
+                                     # an input the source does not state: {value, assumed: true, note: how it was chosen}
   conditions: {spindle_rpm: 1000, feed_mm_tooth: 0.05, ae_mm: 4.76, ap_mm: 5.08, direction: down, coolant: dry}
   dynamics: null                     # modal parameters if the case needs them
   program: null                      # for cycle-time cases: the NC program text or file name

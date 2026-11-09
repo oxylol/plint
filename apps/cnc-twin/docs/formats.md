@@ -159,7 +159,13 @@ is used); `pages`, `note` and `accessed` are merged (`a | b`).
   (polymers: `tensile_strength_MPa` table, `compressive_yield_MPa`, `T_soft_degC`) or `none`
   (no constitutive model: optional `yield_MPa`, `compressive_flow_MPa`, `shear_yield_MPa`,
   `T_soft_degC`, `T_melt_degC`). Kienzle entries carry `h_ref_mm` and `b_ref_mm`, Taylor entries
-  `T_ref_min`. Usui constants (`tool_life_usui[]`, tool material `usui[]`) give exactly one of
+  `T_ref_min` and `life_basis`: what T counts, `cutting_time` (the tool feeding in the material: ISO 3685,
+  ISO 8688 and catalogue lives; the default for milling, drilling, tapping, `any` and entries without
+  a process) or `contact_time` (the edge in contact; the default for turning, boring, grooving,
+  threading and orthogonal cuts, where it equals the cutting time). A milling cutting-time entry may
+  give `engaged_arc_ref_deg`, the arc of each revolution the edge is in the material in its reference
+  cut (side milling arccos(1 - 2 ae/D), slot 180); without it the ISO 8688-2 end-milling test arc
+  (ae/D = 0.1, 36.87 deg) applies (docs/models/wear.md section 3). Usui constants (`tool_life_usui[]`, tool material `usui[]`) give exactly one of
   `A_per_MPa` / `A_per_Pa` with `rate_unit` one of `"mm/min with sigma_n in MPa, V_s in m/min"`
   (A_SI = 1e-9 A), `"mm/s with sigma_n in MPa, V_s in mm/s"` (1e-6 A), `"m/s with sigma_n in Pa,
   V_s in m/s"` (A); the SI view's `A_per_Pa` is always in SI rates.
@@ -176,7 +182,9 @@ is used); `pages`, `note` and `accessed` are merged (`a | b`).
   is an error. `range` (written unit) must contain the value. Values are cached per process
   (`cnctwin.db.models.clear_cache()` for tests).
 * **validation case**: the `reference.src` must be a bibliography key; the setup is free-form
-  data (values not stated by the source are `{value: .., assumed: true}`).
+  data. A setup input the source does not state is `{value: .., assumed: true, note: "how it was
+  chosen"}` (a missing note is a warning); `{value: .., src: est, note: ..}` and a section's
+  `assumed_inputs: [keys]` list mark assumed inputs too (cnctwin.validation.cases).
 
 ### Migration table (older key forms, applied at load time)
 
@@ -245,14 +253,15 @@ the source they were written with. A value that cannot be migrated mechanically 
 | `text-in-number` | any | `any numeric field` | text -> notes (+ warning) | cannot be migrated mechanically |
 | `note-text` | any | `any note/notes` | {value: t, src: s} -> "t (src s)" | a note is text; its source is named in the text |
 
-State of the research files at the time of writing (2026-11-03; `twin db check` shows the current
-one): every file under `db/` and `validation/cases/` loads with no error. Warnings that need the
-authors: `dmg-dmu50-3rd.yaml` and `dmg-dmu50-3rd-siemens.yaml` `workholding_interface.clamping_area_mm`
-is the text "diameter 630 x 500" (not migrated, not used); `dmg-ntx1000` and `star-sr20riv` name the
-controller `fanuc-31i-b`, which has no file; `haas-st20y` spindle `sub` has no gear ranges; four
-bibliography keys are described differently by two files (`iso-6983-1-2009`,
-`jaeger-1942-moving-sources`, `carslaw-jaeger-1959-conduction`, `blok-1937-flash-temperature`);
-about 690 `src: est` declarations have no note (errors with `--strict`).
+State of the databases (2026-11-03, after the cleanup; `twin db check` shows the current one): every
+file under `db/` and `validation/cases/` loads with no error and no warning, also with `--strict`
+(test `tests/unit/db/test_real_db.py::test_every_folder_is_clean_in_strict_mode`): every `src: est`
+has a note saying how its value was derived (where a derivation could not be reconstructed the value
+was re-derived from physics or a cited source and the note says `RE-DERIVED`), each bibliography key is
+defined once (a file that cites a key defined elsewhere says where in its header), the DMU 50
+`clamping_area_mm` is `[630, 500]` (diameter, width across the flats), the haas-st20y sub spindle has
+an estimated gear range, and every coated catalogue tool states its coating thickness. The machines
+that name the controller `fanuc-31i-b` resolve to db/controllers/fanuc-31i-b.yaml.
 
 ## Project file
 
@@ -285,14 +294,51 @@ and wrong units are errors, `note`/`notes` free). Required: `format`, `version`,
   near_mm}`).
 * `tools`: `library` (a CSV tool list or an ISO 13399 file/directory, below) and `list` of
   `{number, tool, holder, path, spindle, turret, station, stickout_mm, length_offset_mm,
-  radius_offset_mm, wear_offsets_mm: {length, radius}, runout_um, runout_phase_deg, tilt_urad,
-  life: {group, limit_min, used_min, limit_parts, sister_of}, initial_wear: {VB_mm, KT_um,
-  edge_radius_um}, comment}`; a tool number is unique per controller path.
+  radius_offset_mm, x_offset_mm, z_offset_mm, nose_radius_mm, tip, wear_offsets_mm: {length, radius,
+  x, z}, runout_um, runout_phase_deg, tilt_urad, life: {group, limit_min, used_min, limit_parts,
+  sister_of}, initial_wear: {VB_mm, KT_um, edge_radius_um}, comment}`; a tool number is unique per
+  controller path. Lathe geometry offsets are written as set on the control's offset page:
+  `x_offset_mm` (a diameter on a diameter-programmed lathe), `z_offset_mm`, `nose_radius_mm`, `tip`
+  (imaginary tip number 0-9) and the wear `x`, `z`, `radius`.
+  **Probes**: an entry with `kind: probe` is a spindle probe the program calls by its T number:
+  `{number, kind: probe, probe, path, spindle, length_offset_mm, radius_offset_mm, wear_offsets_mm,
+  comment}`, where `probe` names a probe of the machine's `probes` section (`spindle_probe`) or is
+  an inline probe `{extends: <machine probe>, model, stylus_ball_mm, stylus_length_mm,
+  stylus_diameter_mm, body: {diameter_mm, length_mm}, pretravel_um, repeatability_um,
+  trigger_force_N, overtravel_z_mm}` (merged over the machine's probe; the stylus ball is required,
+  from either). `length_offset_mm` reaches the ball's bottom (null: the program sets it),
+  `radius_offset_mm` is the effective stylus radius the probing macros read (default: half the
+  ball). A probe is not a cutting tool: it is not in the tool table (resolution below).
 * `coolant` (`fluid`, `concentration_pct`, `tank_fill_fraction`); `operations[]` (`name` unique,
   `program` or `programs: {<path>: file}`, `setup: {workholding[], stock_pose, work_offsets_mm,
   fixture_pose}`, `from_previous: {op, flip, transfer}` naming an earlier operation,
   `nozzle_positions: {<T>: <position>}` for listed tools); `production`, `recording`, `outputs`,
   `uncertainty`, `machine_data`.
+* `setup.work_offsets_mm`: `{<code>: [x, y, z, ...]}`, the work zero's machine coordinates as set on the
+  machine, in the order X, Y, Z, then the path's other axes in the control's order, on every machine type
+  (lathes included: `[x, 0, z]`); the controller and sanity read the same values.
+* `setup.workholding[]`: `{device, pose, jaw_opening_mm, input_torque_Nm, grip_depth_mm,
+  parallels_mm, pressure_bar, outline_mm, seat_height_mm, jaws, label}`. The device's frame D is its
+  `pose` in the workholding frame; a vise's D has its origin on the seat (the parallels' top, else the
+  vise bed: where the part's bottom rests), x along the jaw width, y the clamping direction, and
+  `grip_depth_mm` is the jaw top above the seat. For devices whose database item gives no body:
+  `outline_mm: [[x0, y0, z0], [x1, y1, z1]]` is the device's box in D (a strap clamp, a fixture),
+  `seat_height_mm` the height of a vise's seat above its mounting face (the vise body below the
+  seat).
+* **`from_previous` and `stock_pose`** (one convention for every consumer): `from_previous` carries
+  the part of the named earlier operation, as it left it, into this one. `flip: {axis, angle_deg}`
+  turns it about that axis of the previous operation's stock frame S, `transfer: sub_spindle` half a
+  turn about S y (gripped from the other end); `main_spindle`, `pallet`, `manual` (and no
+  `from_previous`) keep its orientation. The turned stock box is placed by the stock conventions
+  (a block's box starts at the S origin; a cylinder or tube whose axis stays on z keeps the axis on
+  S z with z from 0): that is this operation's stock frame S, the frame the removal field carries
+  the material in. `stock_pose` is then **only the extra placement**: it places this S in the
+  workholding frame exactly as it would place a fresh blank, and must not repeat the turn. The
+  resolver refuses a `stock_pose` whose rotation repeats or undoes the turn (the part would be
+  turned twice, or not at all) and names the placement that was probably meant. Example
+  (examples/two-setup-flip): an 80 x 60 x 25 blank, OP20 `flip: {axis: X, angle_deg: 180}`: OP20's
+  S is (x, 60 - y, 25 - z) of the OP10 frame; `stock_pose: {translate_mm: [-40, -30, -2.5]}` centres
+  it in the vise with the OP10 top (S z 2.5 after 2.5 mm were faced off) on the jaw steps.
 * `physics`: `tick_s` (fixed at 1e-6 s), `max_deg_per_step` (SI view `max_rad_per_step`),
   `steps_per_tooth`, `macro_ipo`, `lag_macro` (1 or 2), `lattice_mm`, `refine[]`, `edge_element_mm`,
   `memory_bins`, `polar_theta_bins`, `particles_per_tooth`, `tol_mass`, `tol_energy`; one section
@@ -322,7 +368,19 @@ project's `batch` and `db_id`), `project.tools.list[i].tool` / `.holder`, `proje
 (4x4); `cad.cad_pose_S_C`. File paths in the view are absolute (`.raw` as written).
 `project.stock_pose_W_S` is the first operation's (findings use it). Frames: the workpiece frame
 W coincides with the workholding frame at setup (`part_pose` is the identity until a part slips),
-so `stock_pose_W_S` is the setup's `stock_pose` (S to W) and `fixture_pose_F_H` its `fixture_pose`.
+so `stock_pose_W_S` is the setup's `stock_pose` (this operation's S to W) and `fixture_pose_F_H`
+its `fixture_pose`. Per operation the resolver also gives the stock frame of `from_previous`
+(above): `transfer_S_Sprev` (4x4, this S from the previous operation's S; the identity without a
+turn), `pose_S_S0` (from the first operation's S, the frame `cad.placement` is written in: the CAD
+in this S is `pose_S_S0 * cad_pose_S_C`), `stock_pose_W_S0 = stock_pose_W_S * pose_S_S0` (a point of
+the first operation's stock frame in this W) and `stock_box_S_m` (`[[lo], [hi]]`, the stock box in
+this S; a mesh stock's bounds are read only when a turn needs them).
+
+`project.tools.list` holds the cutting tools only, in file order: its index is the tool-table slot
+every domain uses. The `kind: probe` entries are `project.tools.probes` (each with `list_index`, its
+place in the file's list, and `probe`: the machine's probe merged with the inline keys, in SI, with
+`name` the machine probe it extends or null); the controller knows their T numbers (a tool change to
+a probe carries `tool.probe`, a skip move `probe.stylus`).
 
 A used holder must give `gauge_length_mm`, `nose_diameter_mm` and `profile_mm`; when the database
 item has them as `null` (not published) the project is refused with the inline form to add them

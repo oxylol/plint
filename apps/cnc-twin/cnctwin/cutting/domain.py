@@ -149,7 +149,6 @@ class CuttingDomain:
         self.work = None
         self.replay_requested = False
         self._inputs: CuttingInputs | None = None
-        self._last_paths: dict = {}
 
     # ================================================================== interface
     def channels(self):
@@ -425,7 +424,7 @@ class CuttingDomain:
         for p, frame in enumerate(paths):
             slot = int(frame.tool_slot)
             if slot < 0 or slot not in cs.tools:
-                self._last_paths[p] = -1
+                cs.last_paths[p] = -1
                 continue
             tc = cs.tools[slot]
             if tc.table is None or tc.tool is None:
@@ -442,9 +441,9 @@ class CuttingDomain:
                                 refill=A.empty_refill(n_rows, st_.memory_bins), kstate=A.empty_state(nt * ne, nt, nst),
                                 capacity=st_.event_capacity)
                 cs.contacts[key] = cc
-            if self._last_paths.get(p) != slot:
+            if cs.last_paths.get(p) != slot:
                 cc.stale_before = tick_now          # tool change: the memory is refilled from the field
-                self._last_paths[p] = slot
+                cs.last_paths[p] = slot
             omega = float(np.mean(np.abs(frame.spindle_omega_rad_s))) if len(frame.spindle_omega_rad_s) else \
                 tc.omega_plan_rad_s
             stale = self._stale_ticks(ctx, omega, nt)
@@ -739,7 +738,7 @@ class CuttingDomain:
             ks.tooth[:, A.TS_PASS_ON] = 0.0
             ks.tooth[:, A.TS_LOADING] = 0.0
             ks.misc[A.MS_FLOAT_U] = 0.0
-        self._last_paths = {}
+        cs.last_paths = {}
 
     def finalize(self, ctx, state) -> dict:
         cs = state.cutting

@@ -542,7 +542,6 @@ class View3D {
       this.chips.colour(null);
       this.chips.colourPile(null, 0, 1, this.chips.meanColour());
       this.overlay.legend(null);
-      this.toolColours = null;
       return;
     }
     const display = DISPLAY[layer];
@@ -578,7 +577,10 @@ class View3D {
     this.chips.colourPile(layer === 'chips' ? table : null, lo, hi, this.chips.meanColour());
     if (kind === 'attribute') {
       this._fieldGrid = null;
-      this.ipw.setAttributes((key, brick) => this._attributeValues(key, brick), `${layer}:${this.attributes.size}`);
+      // one provider for the view's life and the layer as key: chunks are rebuilt when the layer changes, and
+      // per brick (setBrick) as its attribute file arrives, never all of them at every keyframe
+      if (!this._attributeProvider) this._attributeProvider = (key, brick) => this._attributeValues(key, brick);
+      this.ipw.setAttributes(this._attributeProvider, layer);
       this.shading.attribute(layer, lo, hi);
       this._needAttributes();
     } else {
@@ -694,7 +696,6 @@ class View3D {
 
   /** Bring everything to time this.t. Returns true while something still moves or loads. */
   _update(dt) {
-    const p = this.params;
     let busy = false;
     this.updatedT = this.t;
     const sample = this.frames ? this.frames.sample(this.t) : null;
@@ -721,7 +722,6 @@ class View3D {
       const r = new THREE.Matrix4().makeRotationAxis(axis, this.sample.spindle[path] || 0);
       this.root.matrix.makeTranslation(point.x, point.y, point.z).multiply(r).multiply(new THREE.Matrix4().makeTranslation(-point.x, -point.y, -point.z));
       this.root.matrixWorldNeedsUpdate = true;
-      busy = true;
     }
     this.root.updateMatrixWorld(true);
     this.shading.uniforms.uSFromWorld.value.copy(this.root.matrixWorld).invert();
@@ -1067,7 +1067,8 @@ class View3D {
       chips: this.chips.chips ? this.chips.chips.length : 0, pile: !!this.chips.pile, jets: this.coolant.summary(),
       tools: this.tools.paths.map((s) => ({ visible: s.group.visible, shown: !!(s.toolMesh && s.toolMesh.visible), tool: s.current ? s.current.number : null, ghost: !!(s.ghost && s.ghost.visible), deflection: s.deflection })),
       chipsShown: !!(this.chips.mesh && this.chips.mesh.visible), coolantShown: this.coolant.jetGroup.visible,
-      components: this.sceneModel.components.map((c) => ({ id: c.id, frame: c.frame, visible: c.mesh.visible })),
+      components: this.sceneModel.components.map((c) => ({ id: c.id, frame: c.frame, visible: c.mesh.visible, position: [c.mesh.matrix.elements[12], c.mesh.matrix.elements[13], c.mesh.matrix.elements[14]] })),
+      root: Array.from(this.root.matrix.elements),
       poseSM: this.poseSM ? this.poseSM.toArray() : null, notes: [...this.notes],
       renderer: { calls: this.renderer.info.render.calls, triangles: this.renderer.info.render.triangles, pixelRatio: this.renderer.getPixelRatio() },
       frames: this.stats.frames, exaggeration: this.tools.exaggeration,

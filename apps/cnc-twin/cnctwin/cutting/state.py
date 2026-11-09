@@ -70,6 +70,10 @@ class CuttingState:
     model_meta: dict = field(default_factory=dict)
     notes: list = field(default_factory=list)
     stale_before: int = -(1 << 60)                      # global cut (operation start)
+    # path -> tool slot seen by the last kernel_inputs (a tool change makes the contact's memory stale). Kept in the
+    # state, not on the domain object, so a resumed run continues bit-identically (added by core.hotloop's
+    # integration, docs/models/hotloop.md "Changes in domain packages").
+    last_paths: dict = field(default_factory=dict)
 
     # ------------------------------------------------------------------ checkpoint
     def to_arrays(self) -> tuple[dict, dict]:
@@ -79,7 +83,8 @@ class CuttingState:
                       "totals": {k: float(v) for k, v in sorted(self.totals.items())},
                       "peaks": {k: float(v) for k, v in sorted(self.peaks.items())},
                       "raised": [[k, int(v)] for k, v in sorted(self.raised.items())],
-                      "model_meta": self.model_meta, "notes": list(self.notes), "stale_before": int(self.stale_before)}
+                      "model_meta": self.model_meta, "notes": list(self.notes), "stale_before": int(self.stale_before),
+                  "last_paths": [[int(k), int(v)] for k, v in sorted(self.last_paths.items())]}
         for slot, tc in sorted(self.tools.items()):
             p = f"t{slot}."
             arrays[p + "elem_row"] = np.array(tc.elem_row)
@@ -128,6 +133,7 @@ class CuttingState:
         obj.model_meta = dict(meta["model_meta"])
         obj.notes = list(meta["notes"])
         obj.stale_before = int(meta["stale_before"])
+        obj.last_paths = {int(k): int(v) for k, v in meta.get("last_paths", [])}
         for tm in meta["tools"]:
             slot = int(tm["slot"])
             p = f"t{slot}."

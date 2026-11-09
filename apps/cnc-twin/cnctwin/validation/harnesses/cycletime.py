@@ -252,7 +252,7 @@ def _discuss(q) -> dict:
                          "jerk-limited profile with tolerance-band corner blends; the controls' own smoothing "
                          "filters (CYCLE832/COMPCAD, cycle 32 HSC) slow the feed on the circle transitions and "
                          "short segments more than the bounds alone (motion.md 9).")
-    out["summary"] = ("No budget is defined for cycle_time. The program is the case's path in ISO syntax; the "
+    out["summary"] = (H.budget_summary(q) + "The program is the case's path in ISO syntax; the "
                       "differences between the controls are carried only by their stated interpolation period, "
                       "acceleration and jerk limits.")
     return out

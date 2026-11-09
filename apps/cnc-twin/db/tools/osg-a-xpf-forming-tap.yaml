@@ -11,7 +11,7 @@ defaults:
   type: tap_forming
   hand: right
   tool_material: {class: hss, grade: "CPM powder-metallurgy HSS", id: hss-m42, src: est, note: "OSG prints 'CPM'; mapped to the cobalt HSS entry (M42 reference)"}
-  coating: {id: ticn, src: est, note: "OSG 'VI coating'; chemistry and thickness not stated, mapped to TiCN"}
+  coating: {id: ticn, src: est, note: "OSG 'VI coating'; chemistry and thickness not stated, mapped to TiCN", thickness_um: {value: 3.0, src: est, note: "OSG Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/ticn.yaml (2-4 um, ionbond-coating-portfolio (Ionbond 10 TiCN)), the value the wear model takes for a coated tool without its own"}}
 items:
   - id: osg-8327849-a-xpf-m6x1
     order_code: "A-XPF STD RH7 4P M6x1 (EDP 8327849)"

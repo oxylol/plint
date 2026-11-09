@@ -1,0 +1,58 @@
+# Settings of the benchmark (twin bench: cnctwin.bench, docs/performance.md): the performance budget of the
+# architecture and how a benchmark run is capped. Not physical coefficients. Read in SI by
+# cnctwin.db.models.params("bench"); the command line overrides the caps and limits.
+format: cnctwin-model-params
+version: 1
+model: bench
+description: "Performance budget per level (CPU seconds per simulated second) and the caps of a benchmark run"
+params:
+  # ------------------------------------------------------------------ the budget (architecture 20)
+  budget_hot_loop_cpu_per_sim:
+    value: 0.45
+    unit: "-"
+    src: cnctwin-architecture-2026
+    note: "architecture 20: the hot loop (L0: element forces, dynamics, removal, surface memory, while in contact) may cost 0.45 CPU seconds per simulated second on one core of this box for the reference pocket (D10 4-flute at 10 000 rpm)"
+  budget_l1_cpu_per_sim:
+    value: 0.1
+    unit: "-"
+    src: cnctwin-architecture-2026
+    note: "architecture 20: L1 (controller, servo, kinematics, travel and collision checks, broad phase, per-tick recording)"
+  budget_l2_cpu_per_sim:
+    value: 0.25
+    unit: "-"
+    src: cnctwin-architecture-2026
+    note: "architecture 20: L2 (the slow domains' macro steps, findings rules, ledgers)"
+  budget_recording_cpu_per_sim:
+    value: 0.05
+    unit: "-"
+    src: cnctwin-architecture-2026
+    note: "architecture 20: recording (series, frames.bin, keyframes, checkpoints, trace, timeline)"
+  perf_limit_cpu_per_sim:
+    value: 0.9
+    unit: "-"
+    src: cnctwin-architecture-2026
+    note: "architecture 20: tests/perf fails above 0.9 CPU seconds per simulated second for the whole loop"
+  simulation_memory_budget_bytes:
+    value: 1200000000
+    unit: "-"
+    src: cnctwin-architecture-2026
+    note: "architecture 10: the simulation process stays at or below 1.2 GB for the reference part 300 x 200 x 100 mm"
+  # ------------------------------------------------------------------ a benchmark run
+  run_memory_max_bytes:
+    value: 2147483648
+    unit: "-"
+    range: [268435456, 17179869184]
+    src: est
+    note: "2 GiB per benchmarked example: the 1.2 GB simulation budget plus the JIT and database loading at the start (the hot-loop driver reached 1.5 GB resident while setting up the pocket-islands example on 2026-11-04)"
+  run_timeout_s:
+    value: 21600
+    unit: s
+    range: [10, 604800]
+    src: est
+    note: "6 hours of wall time per example: while the loop is far above its budget (docs/models/hotloop.md) a whole example can take hours; --max-sim-s bounds the simulated time instead"
+  poll_interval_s:
+    value: 1.0
+    unit: s
+    range: [0.05, 60]
+    src: est
+    note: "the benchmark parent checks its child (time limit) this often"

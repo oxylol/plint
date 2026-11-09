@@ -61,6 +61,16 @@ tools:
       life: {group: 1, limit_min: 60, used_min: 12, sister_of: null}
       initial_wear: {VB_mm: 0.02}
       comment: "D10 4FL CARBIDE"     # what the program's tool comment should say (sanity check)
+    # lathes: the geometry offsets as set on the offset page (X in diameter on a diameter-programmed lathe):
+    #   x_offset_mm, z_offset_mm, nose_radius_mm, tip (imaginary tip 0-9), wear_offsets_mm: {x, z, radius}
+    # a spindle probe the program calls by its T number (not a cutting tool: it is not in the tool table):
+    - number: 20
+      kind: probe
+      probe: spindle_probe           # the machine's probes.spindle_probe, or inline: {extends: spindle_probe,
+                                     #   stylus_ball_mm: 6, stylus_length_mm: 50, body: {diameter_mm: 40, length_mm: 50}}
+      length_offset_mm: 125.0        # H: gauge line to the stylus ball's bottom (null = set by the program)
+      radius_offset_mm: 2.999        # D: effective stylus radius (default: half the ball)
+      comment: "SPINDLE PROBE"
 
 coolant:
   fluid: emulsion-8pct               # db id
@@ -74,10 +84,15 @@ operations:
       workholding:
         - {device: kurt-d688, pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}, jaw_opening_mm: 100,
            input_torque_Nm: 80, grip_depth_mm: 8, parallels_mm: 10}
+        # grip_depth_mm: jaw top above the seat (the parallels' top, else the vise bed: where the part rests)
+        # devices whose database item has no body: outline_mm [[x0, y0, z0], [x1, y1, z1]] (a box in the
+        # device's frame, placed by pose) and, for vises, seat_height_mm (seat above the mounting face)
       stock_pose: {translate_mm: [0, 0, 0], rotate_deg: [0, 0, 0]}      # stock frame in the workholding frame
-      work_offsets_mm: {G54: [-381.0, -203.2, -406.4]}   # machine coordinates of the work zero, as set on the machine
+      work_offsets_mm: {G54: [-381.0, -203.2, -406.4]}   # machine coordinates of the work zero, as set on the machine: X, Y, Z (then the other axes), lathes too
       fixture_pose: {translate_mm: [-381.0, -203.2, -460.0], rotate_deg: [0, 0, 0]}   # workholding frame in the table frame
     from_previous: null              # {op: OP10, flip: {axis: X, angle_deg: 180}} | {op: OP10, transfer: sub_spindle}
+                                     # the turn re-bases the stock frame (turned box from the origin); stock_pose is
+                                     # then only the extra placement and must not repeat the turn
     nozzle_positions: {1: 12}        # programmable coolant nozzle position per tool number
 
 production:

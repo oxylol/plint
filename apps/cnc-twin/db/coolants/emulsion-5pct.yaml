@@ -6,6 +6,7 @@ id: emulsion-5pct
 name: "Conventional mineral-oil emulsion, 5 % concentrate in water"
 kind: emulsion
 src: est
+note: "water (nist-webbook-water-2026) corrected for 5 % concentrate: every property below gives its own mixing rule and assumptions; the concentration is the fluid's definition"
 concentration_pct: 5
 density_kg_m3: {table: [[20, 994.3], [40, 988.0], [60, 978.8], [80, 967.3]], src: est, note: "volume mixing of water (nist-webbook-water-2026: 998.21/992.22/983.20/971.79 kg/m3 at 20/40/60/80 C) with 5 % concentrate of 920 kg/m3 at 20 C (beta 7e-4 1/K), concentrate density assumed"}
 viscosity_mPa_s: {table: [[20, 1.123], [40, 0.732], [60, 0.523], [80, 0.397]], src: est, note: "water viscosity (NIST: 1.0016/0.65273/0.46604/0.35405 mPa s) x (1 + 2.43 phi), Taylor's dilute-droplet relation for oil/water viscosity ratio ~20; Newtonian at low shear"}
@@ -20,7 +21,7 @@ smoke_point_degC: null
 friction_factor:
   - {tool_class: carbide, work_family: steel, value: 0.85, range: [0.75, 0.95], src: est, note: "water-based fluids lubricate mainly at low sliding speeds; at cutting speeds the dry-like contact dominates the rake face (assumed)"}
   - {tool_class: carbide, work_family: aluminium, value: 0.7, src: est, note: "reduced adhesion/BUE with emulsions, assumed"}
-  - {tool_class: carbide, work_family: titanium, value: 0.9, src: est}
+  - {tool_class: carbide, work_family: titanium, value: 0.9, src: est, note: "titanium: interface temperatures above about 900 C vaporise the water phase before it reaches the contact, so friction stays close to dry: 0.9 (assumed, between steel 0.85 and dry 1)"}
   - {tool_class: hss, work_family: steel, value: 0.75, src: est, note: "low speeds let the fluid reach the interface, assumed"}
 lubricity_index: {value: 0.45, src: est, note: "between water (0) and straight oil (1)"}
 heat_transfer:

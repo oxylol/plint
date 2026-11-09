@@ -1,0 +1,134 @@
+# Settings of the post-run outputs pipeline (cnctwin.core.outputs, docs/outputs.md): memory caps, time
+# limits and priority of the generator subprocesses (report, images, video, audio), and the findings
+# pictures. These are not physical coefficients: they bound what the generators may use on a shared box
+# and choose what the findings pictures show. Read in SI by cnctwin.db.models.params("outputs"); the
+# options of finalize_outputs override each of them.
+format: cnctwin-model-params
+version: 1
+model: outputs
+description: "Generator memory caps, time limits, priority and polling; findings pictures"
+params:
+  # ------------------------------------------------------------------ memory caps per generator (bytes)
+  images_memory_max_bytes:
+    value: 1610612736
+    unit: "-"
+    range: [268435456, 17179869184]
+    src: est
+    note: "1.5 GiB: the standard pictures of the synthetic run peak at 650 MB (1280 x 720 at 3 x 3 supersampling: 160 MB of colour and depth buffers per picture, plus the scene); a real in-process workpiece adds its brick meshes. The same cap as an API heavy job (docs/api.md)"
+  video_memory_max_bytes:
+    value: 1610612736
+    unit: "-"
+    range: [268435456, 17179869184]
+    src: est
+    note: "1.5 GiB: a 960 x 540 frame at 2 x 2 supersampling needs 41 MB of buffers; the synthetic run's video peaks at 360 MB; the cap leaves room for large workpiece meshes, which every frame holds"
+  audio_memory_max_bytes:
+    value: 805306368
+    unit: "-"
+    range: [134217728, 17179869184]
+    src: est
+    note: "768 MiB: the sound synthesis streams blocks (about 15 MB, docs/models/sound.md 5) on top of the run-directory readers; the synthetic run peaks at 280 MB"
+  report_memory_max_bytes:
+    value: 1073741824
+    unit: "-"
+    range: [268435456, 17179869184]
+    src: est
+    note: "1 GiB: docs/report.md gives about 360 MB for the synthetic run with both PDFs (WeasyPrint lays out the whole document in memory); series are reduced to 600 buckets, so a long run stays near that"
+  memory_swap_max_bytes:
+    value: 268435456
+    unit: "-"
+    range: [0, 17179869184]
+    src: est
+    note: "256 MiB of swap per generator scope, as bin/tsafe and the API job manager allow: a generator that outgrows its cap fails instead of pushing the box into swap"
+  rlimit_data_factor:
+    value: 2
+    unit: "-"
+    range: [1, 16]
+    src: est
+    note: "without systemd the cap is RLIMIT_DATA, which counts reserved private mappings, not resident memory: the pictures of the synthetic run reserve between 1.5 and 2 GiB for 560 MB resident (NumPy and the rasteriser allocate zeroed buffers whose pages are not all touched; measured: 1.5 GiB fails, 2 GiB passes), so in rlimit mode the limit is this factor times the memory cap. The systemd cap counts resident memory and is used as it is"
+  # ------------------------------------------------------------------ time limits and supervision
+  timeout_base_s:
+    value: 1800
+    unit: s
+    range: [10, 86400]
+    src: est
+    note: "every generator may take this long plus timeout_wall_per_sim wall seconds per simulated second: the synthetic run (2.3 s simulated) takes 35 s for the pictures, 18 s for the report with both PDFs, 7 s for its video at speed 10, 1.4 s for its sound on this box"
+  timeout_wall_per_sim:
+    value: 30
+    unit: "-"
+    range: [0, 10000]
+    src: est
+    note: "wall seconds allowed per simulated second: a video at speed 10 and 25 frames/s renders 2.5 frames per simulated second at up to 0.8 s each (docs/models/render.md 5), the sound costs 0.3 s per simulated second; 30 is more than ten times the slower of the two"
+  poll_interval_s:
+    value: 0.5
+    unit: s
+    range: [0.01, 10]
+    src: est
+    note: "while a generator runs the progress callback is called this often (a cancel request raises there and stops the generator); also the step of the timeout check"
+  kill_grace_s:
+    value: 10
+    unit: s
+    range: [0, 600]
+    src: est
+    note: "after SIGTERM (timeout or cancel) the generator gets this long to exit before SIGKILL; the API's kill grace (docs/api.md)"
+  generator_nice:
+    value: 10
+    unit: "-"
+    range: [0, 19]
+    src: est
+    note: "generators run at nice 10 at least, as bin/tsafe and API jobs: the home server's other services keep priority"
+  log_tail_bytes:
+    value: 2000
+    unit: "-"
+    range: [200, 1000000]
+    src: est
+    note: "how much of a failed generator's output (its last bytes) is kept as the failure reason in the result of finalize_outputs; run.json keeps only the exception line"
+  source_date_epoch_s:
+    value: 315532800
+    unit: s
+    src: est
+    note: "SOURCE_DATE_EPOCH of every generator: 1980-01-01, the earliest date a zip can hold and the value the API passes to every job (docs/api.md), so containers carry no wall time"
+  # ------------------------------------------------------------------ findings pictures
+  finding_markers_max:
+    value: 12
+    unit: "-"
+    range: [1, 200]
+    src: est
+    note: "findings.png marks the worst findings with a position (severity, then time), at most this many, each numbered and listed under the title; more numbers would overlap on a 720-row picture"
+  finding_pictures_max:
+    value: 4
+    unit: "-"
+    range: [0, 100]
+    src: est
+    note: "a picture at the time of each of the worst findings (finding_<id>.png, the camera following the tool), at most this many: about 3 s each at the image size"
+  finding_picture_min_severity:
+    value: "warning"
+    unit: "-"
+    src: est
+    note: "findings below this severity (info) get no picture of their own; they are still marked on findings.png"
+  finding_marker_radius_frac:
+    value: 0.012
+    unit: "-"
+    range: [0.001, 0.2]
+    src: est
+    note: "marker radius as a fraction of the diagonal of the box the picture shows (part and marked points): a few pixels on a 1280 x 720 picture of the whole part"
+  finding_legend_rows:
+    value: 8
+    unit: "-"
+    range: [0, 50]
+    src: est
+    note: "lines of the legend under the title of findings.png (number, severity, category, operation and line, time); the numbers on the part beyond these are still drawn"
+  finding_error_srgb:
+    value: [0.70, 0.08, 0.05]
+    unit: "-"
+    src: est
+    note: "marker and legend colour of error and fatal findings (sRGB in [0, 1]): the red the run pictures label such findings with (cnctwin.render.compose), always beside the severity written out"
+  finding_warning_srgb:
+    value: [0.55, 0.30, 0.0]
+    unit: "-"
+    src: est
+    note: "marker and legend colour of warnings: the amber of the run pictures' notice labels"
+  finding_info_srgb:
+    value: [0.10, 0.32, 0.62]
+    unit: "-"
+    src: est
+    note: "marker and legend colour of info findings: a dark blue that keeps 4.5:1 contrast against the white label halo"

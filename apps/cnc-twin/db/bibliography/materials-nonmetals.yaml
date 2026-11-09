@@ -5,25 +5,16 @@
 # primary source they cite is named in `note` (the primary was not read unless it has its own entry).
 # Paywalled machining papers (Elsevier, Springer, ASME) could not be opened in this session; values
 # that would normally come from them are estimates in the material files and are listed there as gaps.
+# walter-2025-technical-compendium is in materials-steels.yaml.
 format: cnctwin-bibliography
 version: 1
 entries:
 
   # ------------------------------------------------------------------ cutting-force catalogue
-  # Entry copied verbatim from materials-steels.yaml (the loader requires identical duplicates).
-  # Used here for p. F9 rows 'thermoplasts and thermosetting plastics, without abrasive fillers'
-  # 150 N/mm2, mc 0.2 (O1, O2) and 'fibre-reinforced plastics' 300 N/mm2, mc 0.3 (O3, O4, O5), and
+  # walter-2025-technical-compendium (defined in materials-steels.yaml) is cited here for p. F9 rows
+  # 'thermoplasts and thermosetting plastics, without abrasive fillers' 150 N/mm2, mc 0.2 (O1, O2) and 'fibre-reinforced plastics' 300 N/mm2, mc 0.3 (O3, O4, O5), and
   # pp. F30-F31 (O1 = PMMA/acrylic, PC, UHMW, PA, acetal (Delrin, Celcon), PTFE, nylon; O2 = epoxy,
   # Bakelite, Pertinax, Resitex).
-  walter-2025-technical-compendium:
-    type: catalogue
-    authors: "Walter AG"
-    title: "Technical Compendium - General, Edition 2025"
-    venue: "Walter AG, Tuebingen"
-    year: 2025
-    url: "https://cdn2.walter-tools.com/files/a5ea48ae-5fa6-0161-3cb3-0ac22248a0fb/3ee25a79-8681-4b3e-bf39-9e7f3ca0d193/technical-compendium-general-2025-en.pdf"
-    accessed: 2026-11-03
-    pages: "p. F9 'Cutting forces of Walter machining groups' (kc1.1, mc; standard values for a neutral cutting edge geometry); pp. F10-F31 material comparison table (Walter machining group per material: 1.0503 P2, 1.7225 P7/P9, 1.2344 P11/H1, 1.3505 P7/H2, 1.4301 M1, 1.4404/1.4435 M1, 2.4668 S4, 0.6025 EN-GJL-250 K3)"
 
   # ------------------------------------------------------------------ POM-C
   ensinger-2023-tecaform-ah-datasheet:

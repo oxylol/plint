@@ -123,6 +123,7 @@ tool_life:                         # wear is abrasive edge rounding by the fibre
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 10 min at vc = 100 m/min assumed for uncoated K-grade carbide; the practical end of life is set by edge rounding causing delamination, fibre pull-out and uncut fibres, not by VB alone. No CFRP tool-life fit could be read"
   - tool_class: carbide
@@ -135,6 +136,7 @@ tool_life:                         # wear is abrasive edge rounding by the fibre
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 30 min at 200 m/min assumed; coating delamination ends life abruptly"
   - tool_class: pcd
@@ -147,6 +149,7 @@ tool_life:                         # wear is abrasive edge rounding by the fibre
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 60 min at 300 m/min assumed. Leitz recommends DP for very abrasive materials including fibre reinforced plastics (leitz-2017-lexicon-ed7-ch11)"
 tool_life_usui: []

@@ -21,6 +21,7 @@ from ..controller.ir import Command, Kind, Space
 from ..core.errors import InputError
 from ..core.findings import Category, Finding, FindingList, Severity
 from ..core.trace import TraceLog
+from .assist import Assist, controller_assist
 from .context import Box, CuttingData, SanityContext, ToolFacts, normalise_offset
 from .geometry import Engagement, estimate
 from .program import Line, Program, ToolComment, lex, parse_tool_comment
@@ -43,6 +44,7 @@ class SanityReport:
     engagement: Engagement
     trace: TraceLog
     context: SanityContext = None
+    assist: Assist | None = None        # the controller's dry run the scan consulted (note: why there is none)
 
     def add_to(self, findings: FindingList) -> list[Finding]:
         """Append the findings to a run's list (ids follow the list's numbering)."""
@@ -59,12 +61,12 @@ class SanityReport:
 
 
 def build_program(text: str, name: str, ctx: SanityContext, *, commands: list[Command] | None = None,
-                  subprograms: dict[str, str] | None = None) -> Program:
+                  subprograms: dict[str, str] | None = None, assist: Assist | None = None) -> Program:
     """The program view: lines, commands (controller's or the own scan's) and tool-tip positions."""
     lines = lex(text)
     own: ScanResult | None = None
     if ctx.dialect in SUPPORTED_DIALECTS:
-        own = scan(text, name, ctx, subprograms=subprograms)
+        own = scan(text, name, ctx, subprograms=subprograms, assist=assist if commands is None else None)
     if commands is None:
         if own is None:
             return Program(name, ctx.dialect, _kind(ctx), text, lines, [], np.zeros((0, 3)), np.zeros((0, 3)),
@@ -82,22 +84,29 @@ def build_program(text: str, name: str, ctx: SanityContext, *, commands: list[Co
 
 def check_program(text: str, name: str, ctx: SanityContext, *, commands: list[Command] | None = None,
                   subprograms: dict[str, str] | None = None, restart_analysis=None, trace: TraceLog | None = None,
-                  timeline=None, tick_s: float = 1e-6) -> SanityReport:
+                  timeline=None, tick_s: float = 1e-6, assist: Assist | None = None) -> SanityReport:
     """Run every rule on one program; ``restart_analysis`` is the controller's restart analysis
-    (records with ``line``, ``program``, ``issues: [{group, message, severity}]``) when available."""
-    program = build_program(text, name, ctx, commands=commands, subprograms=subprograms)
+    (records with ``line``, ``program``, ``issues: [{group, message, severity}]``) when available;
+    ``assist`` the controller's dry run of the program (cnctwin.sanity.assist) for what the scan cannot
+    evaluate."""
+    program = build_program(text, name, ctx, commands=commands, subprograms=subprograms, assist=assist)
     engagement = estimate(program, ctx)
     issues = run_rules(program, ctx, engagement, restart_analysis=restart_analysis)
     findings, trace = to_findings(issues, ctx, program, trace=trace, timeline=timeline, tick_s=tick_s)
-    return SanityReport(issues, findings, program, engagement, trace, ctx)
+    report = SanityReport(issues, findings, program, engagement, trace, ctx)
+    report.assist = assist
+    return report
 
 
 def check_operation(project, op_index: int = 0, *, program_text: str | None = None,
                     commands: list[Command] | None = None, subprograms: dict[str, str] | None = None,
                     restart_analysis=None, trace: TraceLog | None = None, timeline=None, project_dir=None,
-                    stock_box_M: Box | None = None, clamps_M: list[Box] | None = None) -> SanityReport:
+                    stock_box_M: Box | None = None, clamps_M: list[Box] | None = None,
+                    use_controller: bool = True) -> SanityReport:
     """Checks of operation ``op_index`` of a resolved project (the program text from
-    ``operations[i].program_text``, else read from ``project_dir/operations[i].program``)."""
+    ``operations[i].program_text``, else read from ``project_dir/operations[i].program``). With
+    ``use_controller`` (and no ``commands``) the controller's dry run of the operation evaluates what the
+    static scan cannot (cnctwin.sanity.assist)."""
     ctx = SanityContext.from_project(project, op_index, stock_box_M=stock_box_M, clamps_M=clamps_M)
     operation = si_view(get(si_view(project), "operations", op_index))
     name = text(get(operation, "program"), f"op{op_index}")
@@ -113,8 +122,12 @@ def check_operation(project, op_index: int = 0, *, program_text: str | None = No
         except OSError as error:
             raise InputError(f"cannot read program: {error.strerror}", str(path)) from None
     tick_s = float(get(si_view(project), "physics", "tick_s", default=1e-6) or 1e-6)
+    assist = None
+    if use_controller and commands is None and ctx.dialect in SUPPORTED_DIALECTS:
+        assist = controller_assist(project, op_index, program_text=program_text)
     return check_program(program_text, name, ctx, commands=commands, subprograms=subprograms,
-                         restart_analysis=restart_analysis, trace=trace, timeline=timeline, tick_s=tick_s)
+                         restart_analysis=restart_analysis, trace=trace, timeline=timeline, tick_s=tick_s,
+                         assist=assist)
 
 
 def to_findings(issues: list[Issue], ctx: SanityContext, program: Program | None = None, *,

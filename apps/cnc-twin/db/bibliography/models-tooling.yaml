@@ -102,7 +102,7 @@ entries:
     title: "ISO 68-1:1998 ISO general purpose screw threads - Basic profile - Part 1: Metric screw threads"
     institution: "International Organization for Standardization"
     year: 1998
-    pages: "basic profile: H = 0.866025 P, flat P/8 at the major diameter, P/4 at the minor diameter"
+    pages: "basic profile: 60 deg flank angle, fundamental triangle height H = (sqrt(3)/2) P = 0.866025 P, flat P/8 at the major diameter, P/4 at the minor diameter, pitch diameter d2 = d - 2 (3/8) H"
   iso-965-1-2013:
     type: standard
     title: "ISO 965-1:2013 ISO general purpose metric screw threads - Tolerances - Part 1: Principles and basic data"

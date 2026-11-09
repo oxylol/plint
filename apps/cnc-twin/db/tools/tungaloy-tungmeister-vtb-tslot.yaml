@@ -13,7 +13,7 @@ items:
   type: tslot
   hand: {value: right, src: est, note: right-hand assumed (R in the designation is the corner radius code; hand not stated)}
   tool_material: {class: carbide, grade: GH730 (coated carbide head), id: carbide-submicron-10co, src: est, note: 'GH730 is marked as the available grade for VTB heads (GH130 is marked ''to be discontinued'', p. I094); its substrate is not described; submicron carbide assumed'}
-  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed}
+  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed, thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 19.5
     width_mm: 5
@@ -141,7 +141,7 @@ items:
   type: tslot
   hand: {value: right, src: est, note: right-hand assumed (R in the designation is the corner radius code; hand not stated)}
   tool_material: {class: carbide, grade: GH730 (coated carbide head), id: carbide-submicron-10co, src: est, note: 'GH730 is marked as the available grade for VTB heads (GH130 is marked ''to be discontinued'', p. I094); its substrate is not described; submicron carbide assumed'}
-  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed}
+  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed, thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 22.5
     width_mm: 6
@@ -269,7 +269,7 @@ items:
   type: tslot
   hand: {value: right, src: est, note: right-hand assumed (R in the designation is the corner radius code; hand not stated)}
   tool_material: {class: carbide, grade: GH730 (coated carbide head), id: carbide-submicron-10co, src: est, note: 'GH730 is marked as the available grade for VTB heads (GH130 is marked ''to be discontinued'', p. I094); its substrate is not described; submicron carbide assumed'}
-  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed}
+  coating: {id: tialn, src: est, note: GH730 coating not described in the catalogue; PVD TiAlN assumed, thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 25
     width_mm: 8

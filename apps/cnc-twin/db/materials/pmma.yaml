@@ -121,6 +121,7 @@ tool_life:
     ap_ref_mm: 2
     VB_limit_mm: 0.05
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 60 min at vc ~ 580 m/min assumed. Maker: carbide tools have the longest life, but pigments in densely coloured grades may reduce tool life very noticeably; blunt tools cause burrs, chipping and stress (polyvantis-2024-machining-plexiglas sect. 1.7), hence the small VB limit"
   - tool_class: hss
@@ -133,6 +134,7 @@ tool_life:
     ap_ref_mm: 2
     VB_limit_mm: 0.05
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 60 min at vc ~ 220 m/min assumed"
 tool_life_usui: []

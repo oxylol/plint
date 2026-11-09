@@ -20,6 +20,11 @@ def real_db():
     return Database.load(ROOT, validation_root=VALIDATION)
 
 
+@pytest.fixture(scope="module")
+def strict_db():
+    return Database.load(ROOT, validation_root=VALIDATION, strict=True, raise_on_error=False)
+
+
 @pytest.mark.parametrize("folder", sorted(set(S.FOLDERS.values())) + ["validation"])
 def test_every_file_of_a_folder_is_valid(real_db, folder):
     directory = VALIDATION if folder == "validation" else ROOT / folder
@@ -29,6 +34,19 @@ def test_every_file_of_a_folder_is_valid(real_db, folder):
     names = {str(p.relative_to(ROOT.parent)) for p in files}
     errors = [str(p) for p in real_db.validate_all() if p.is_error and p.file in names]
     assert errors == [], "\n".join(errors)
+
+
+@pytest.mark.parametrize("folder", sorted(set(S.FOLDERS.values())) + ["validation"])
+def test_every_folder_is_clean_in_strict_mode(strict_db, folder):
+    """`twin db check --strict`: no error and no warning in any folder (every estimate says how it was
+    derived, every bibliography key names one work described one way, no value waits for migration)."""
+    directory = VALIDATION if folder == "validation" else ROOT / folder
+    files = _files(directory)
+    if not files:
+        pytest.skip(f"{directory} has no files yet")
+    names = {str(p.relative_to(ROOT.parent)) for p in files}
+    problems = [str(p) for p in strict_db.validate_all() if p.file in names]
+    assert problems == [], "\n".join(problems)
 
 
 def test_every_object_builds(real_db):

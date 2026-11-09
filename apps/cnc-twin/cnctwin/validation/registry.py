@@ -43,6 +43,9 @@ class Prediction:
     reference_class: str | None = None  # class of the reference (kind class): the harness maps the reference
     component: str | None = None        # budget component (budgets with components, e.g. cutting_force)
     uncertainty: float | None = None    # replaces the reference uncertainty (reference unit), e.g. propagated
+    bound: str | None = None            # 'lower' / 'upper': the reference is a one-sided bound of the simulated
+                                        # quantity (a stable test bounds a stability limit from below), else the
+                                        # reference note decides ('lower bound' / 'upper bound')
     extra: dict = field(default_factory=dict)   # further simulated outputs shown in the report
 
     def __post_init__(self):
@@ -50,6 +53,8 @@ class Prediction:
             raise ValueError(f"unknown prediction status {self.status!r}")
         if self.status == COMPARED and self.value is None:
             raise ValueError("a compared prediction needs a value")
+        if self.bound not in (None, "lower", "upper", "none"):
+            raise ValueError(f"unknown bound {self.bound!r} (lower, upper, none)")
 
 
 def no_prediction(note: str, **kw) -> Prediction:
@@ -101,7 +106,8 @@ class Harness:
 
 HARNESSES: dict[str, Harness] = {}
 DISCUSSIONS: dict[str, Callable] = {}      # quantity -> function(QuantityResult) -> {"summary": text, case_id: text}
-HARNESS_MODULES = ("orthogonal", "temperature", "taylor", "spindle", "coolant", "chipform", "cycletime")
+HARNESS_MODULES = ("orthogonal", "temperature", "taylor", "spindle", "coolant", "chipform", "cycletime",
+                   "cutforce", "drilling", "roughness", "stability", "wallerror")
 _LOADED = False
 
 

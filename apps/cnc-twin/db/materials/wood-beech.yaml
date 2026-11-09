@@ -99,6 +99,7 @@ tool_life:                         # wood: edge rounding/recession is the wear m
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 240 min of cutting at vc = 3000 m/min (50 m/s) assumed for HW in dry beech. Leitz: wear rises in direct proportion to bulk density and with silicate inclusions; with-feed (climb) cutting gives ~30 % shorter life than up-cut (leitz-2017-lexicon-ed7-ch11)"
   - tool_class: pcd
@@ -111,6 +112,7 @@ tool_life:                         # wood: edge rounding/recession is the wear m
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: about 20x the HW life at equal speed assumed"
   - tool_class: hss
@@ -123,6 +125,7 @@ tool_life:                         # wood: edge rounding/recession is the wear m
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: HS is used for solid wood, mainly softwoods (Leitz); T = 60 min at 50 m/s assumed"
 tool_life_usui: []

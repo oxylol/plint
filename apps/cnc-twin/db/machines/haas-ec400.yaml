@@ -22,13 +22,13 @@ controller:
   max_feed_mm_min: 21200
   rapid_mm_min: {X: 35600, Y: 35600, Z: 35600}
   smoothing:
-    - {code: "G187 P1", name: rough, tolerance_mm: 0.025, src: est, note: "as haas-vf2ss"}
-    - {code: "G187 P2", name: medium, tolerance_mm: 0.010, src: est}
-    - {code: "G187 P3", name: finish, tolerance_mm: 0.0025, src: est}
+    - {code: "G187 P1", name: rough, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393 (G187), p. 456 (Setting 85)", note: "the P level sets the smoothness (Setting 191), not the corner tolerance: without an E word the maximum corner rounding is Setting 85, factory default 0.0250 in = 0.635 mm, for every level (re-derived from the manual; the earlier 0.025/0.010/0.0025 mm were the template example values)"}
+    - {code: "G187 P2", name: medium, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393, 456", note: "as P1"}
+    - {code: "G187 P3", name: finish, tolerance_mm: 0.635, src: haas-ngc-mill-om-2020, page: "p. 393, 456", note: "as P1"}
   corner_default: {value: blend, src: est}
-  in_position_mm: {value: 0.005, src: est}
-  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: est}
-  feed_override_range_pct: {value: [0, 200], src: est}
+  in_position_mm: {value: 0.005, src: est, note: "exact-stop (G09/G61) window: 5 um, below the 8 um positioning accuracy (est) so a stop lies within the accuracy budget, and 5 counts of a 1 um feedback resolution; not published by Haas (as haas-vf2ss)"}
+  rapid_override_steps_pct: {value: [5, 25, 50, 100], src: haas-ngc-mill-om-2020, page: "p. 48, Table 2.16 (rapid override keys 5/25/50/100 %; the NGC pendant is common to Haas mills)"}
+  feed_override_range_pct: {value: [0, 200], src: est, note: "override keys -10 %, 100 %, +10 % and handle steps of 1 % (haas-ngc-mill-om-2020 p. 48 Table 2.16), limits not given; 0-200 % assumed as on haas-vf2ss"}
   tool_life_management: {value: true, src: est}
   probing: {value: true, src: haas-ec-flyer-2022, note: "automatic tool-probe arm, M104 raise / M105 retract"}
   tcpc_dwo: {value: option, src: haas-uk-ec400-flyer-2018, note: "DWO/TCPC listed as optional control features"}
@@ -43,10 +43,10 @@ axes:
     jerk_m_s3: {value: 100, src: est, note: "typical 50-200 m/s3"}
     servo:
       kv_1_s: {value: 40, src: est, note: "as haas-vf2ss"}
-      feedforward: {value: 0.95, src: est}
+      feedforward: {value: 0.95, src: est, note: "velocity feed-forward fraction as haas-vf2ss: 0.95 leaves 5 % of the constant-feed following error v/kv (0.44 mm at 21.2 m/min with kv 40 1/s); 1.0 removes it but overshoots at reversals"}
       velocity_bw_Hz: {value: 60, src: est, note: "column axis (heavier moving mass than a VMC table)"}
     backlash_um: {value: 1, src: est, note: "preloaded ball nuts assumed, as on Haas VMCs"}
-    reversal_spike_um: {value: 3, src: est}
+    reversal_spike_um: {value: 3, src: est, note: "reversal (quadrant) spike of a semi-closed-loop ballscrew axis: friction step at velocity reversal seen as the ISO 230-2 reversal value B, 1-5 um; 3 um assumed as on haas-vf2ss"}
     ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1100, fixed_end: both, src: est, note: "as haas-vf2ss"}
     positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "not published"}
     motor_force_N: {value: 11300, src: est, note: "not in the sources read; scaled from the Haas 40-taper VF thrust table (11343 N X/Y) in haas-europe-vmc-brochure-2013 p. 42"}
@@ -57,15 +57,15 @@ axes:
     rapid_mm_min: 35600
     max_feed_mm_min: 21200
     accel_m_s2: {value: 5.0, src: est, note: "vertical axis, carries gravity"}
-    jerk_m_s3: {value: 100, src: est}
+    jerk_m_s3: {value: 100, src: est, note: "as X: 100 m/s3 ramps to 5 m/s2 in a/j = 50 ms, longer than one period of the lowest frame mode (60 Hz: 17 ms), so a rapid start does not ring the structure (biagiotti-melchiorri-2008: ramp time >= one natural period)"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 70, src: est}
-    backlash_um: {value: 1, src: est}
+      kv_1_s: {value: 40, src: est, note: "position-loop gain as X and haas-vf2ss: kv/2 pi = 6.4 Hz, a factor 11 below the 70 Hz velocity loop (cascade rule >= 5-10), inside the 30-50 1/s of ballscrew axes tuned with feed-forward"}
+      feedforward: {value: 0.95, src: est, note: "as X (velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains, 0.44 mm at 21.2 m/min)"}
+      velocity_bw_Hz: {value: 70, src: est, note: "velocity loop of the vertical head axis: between the X column axis (60 Hz, 900 kg) and a VMC table (80 Hz); 70 Hz for the 450 kg head, 11 x the position-loop crossover"}
+    backlash_um: {value: 1, src: est, note: "as X: preloaded double ball nut, residual lost motion 0-2 um; 1 um assumed"}
     reversal_spike_um: {value: 2, src: est, note: "gravity preloads the screw"}
-    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1000, fixed_end: both, src: est}
-    positioning: {accuracy_um: 8, repeatability_um: 4, src: est}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1000, fixed_end: both, src: est, note: "as X: 40 mm x 16 mm lead (35.6 m/min rapid needs 2225 rpm); length = 635 mm travel + nut + bearing ends"}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "as X: ISO 230-2 accuracy and repeatability typical of semi-closed-loop ballscrew axes without linear scales over 0.5-0.7 m (Haas publishes none)"}
     motor_force_N: {value: 18700, src: est, note: "scaled from the Haas VF Z-axis thrust (18683 N) for a vertical head axis"}
     moving_mass_kg: {value: 450, src: est, note: "spindle head with inline motor"}
     brake: {holds_on_power_loss: true, src: est}
@@ -74,16 +74,16 @@ axes:
     travel_mm: [-559, 0]
     rapid_mm_min: 35600
     max_feed_mm_min: 21200
-    accel_m_s2: {value: 5.0, src: est}
-    jerk_m_s3: {value: 100, src: est}
+    accel_m_s2: {value: 5.0, src: est, note: "0.5 g as X: the 11.3 kN thrust (est) drives the 1500 kg column assembly at up to 7.5 m/s2, so 5 m/s2 keeps a 1/3 margin for friction and cutting load"}
+    jerk_m_s3: {value: 100, src: est, note: "as Y: 50 ms ramp to 5 m/s2, longer than one period of the 60-75 Hz column modes"}
     servo:
-      kv_1_s: {value: 40, src: est}
-      feedforward: {value: 0.95, src: est}
-      velocity_bw_Hz: {value: 60, src: est}
-    backlash_um: {value: 1, src: est}
-    reversal_spike_um: {value: 3, src: est}
-    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1100, fixed_end: both, src: est}
-    positioning: {accuracy_um: 8, repeatability_um: 4, src: est}
+      kv_1_s: {value: 40, src: est, note: "as Y: kv/2 pi = 6.4 Hz, 9 x below the 60 Hz velocity loop"}
+      feedforward: {value: 0.95, src: est, note: "as X (velocity feed-forward 0.95: 5 % of the constant-feed following error v/kv remains, 0.44 mm at 21.2 m/min)"}
+      velocity_bw_Hz: {value: 60, src: est, note: "as X: the heaviest moving assembly (1500 kg column), 60 Hz below the 75 Hz column pitch mode"}
+    backlash_um: {value: 1, src: est, note: "as X: preloaded double ball nut, 1 um residual lost motion"}
+    reversal_spike_um: {value: 3, src: est, note: "as X: friction step at reversal, 3 um (ISO 230-2 reversal value B of 1-5 um)"}
+    ballscrew: {diameter_mm: 40, pitch_mm: 16, length_mm: 1100, fixed_end: both, src: est, note: "as X: 40 mm x 16 mm lead; length = 559 mm travel + nut + bearing ends"}
+    positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "as X (semi-closed-loop ballscrew axis without scales, not published)"}
     motor_force_N: {value: 11300, src: est, note: "as X"}
     moving_mass_kg: {value: 1500, src: est, note: "Z moves the column assembly toward the pallet (assumed layout)"}
   B:
@@ -94,16 +94,16 @@ axes:
     max_rpm: {value: 25, src: haas-ec400-web-2026, note: "150 deg/s = 25 rpm"}
     rotation_90deg_s: {value: 3.0, src: haas-ec400-web-2026, note: "published 90 deg rotation time (full 4th); includes unclamp/clamp, which are not stated separately"}
     accel_rad_s2: {value: 10, src: est, note: "chosen so that 90 deg takes ~0.75 s of motion, leaving ~2.2 s of the published 3.0 s for unclamp + clamp + settle"}
-    jerk_rad_s3: {value: 200, src: est}
+    jerk_rad_s3: {value: 200, src: est, note: "the 10 rad/s2 acceleration is reached in a/j = 50 ms, longer than one period of the 120 Hz clamped-pallet torsion mode, as for the linear axes"}
     drive: {value: "cycloidal reducer", src: haas-ec-flyer-2022, note: "shock-load capacity 5x the rated gearbox torque"}
     servo:
-      kv_1_s: {value: 30, src: est}
-      feedforward: {value: 0.9, src: est}
-      velocity_bw_Hz: {value: 40, src: est}
+      kv_1_s: {value: 30, src: est, note: "position-loop gain of the reducer-driven rotary: 30 1/s (kv/2 pi = 4.8 Hz, 8 x below its 40 Hz velocity loop), lower than the linear axes for the cycloidal drive's lower stiffness and larger load inertia"}
+      feedforward: {value: 0.9, src: est, note: "velocity feed-forward 0.9, below the linear axes' 0.95: the reducer's elastic wind-up under the pallet inertia makes full feed-forward overshoot"}
+      velocity_bw_Hz: {value: 40, src: est, note: "40 Hz: a third of the 120 Hz clamped-pallet torsional mode; the unclamped reducer is softer (1.5e6 Nm/rad est)"}
     backlash_arcsec: {value: 10, src: est, note: "cycloidal drives have low lost motion; 10 arcsec assumed, within the published 10 arcsec repeatability"}
     brake:
       clamp_torque_Nm: {value: 3390, src: haas-ec400-web-2026, note: "brake torque 2500 ft-lbf"}
-      clamp_time_s: {value: 0.5, src: est}
+      clamp_time_s: {value: 0.5, src: est, note: "hydraulic brake clamp or release, 0.5 s assumed: part of the 3.0 s published 90 deg index time after the 0.75 s of motion (accel note), leaving about 1.2 s of unclamp + clamp + settle"}
       unclamped_stiffness_Nm_rad: {value: 1.5e6, src: est, note: "cycloidal reducer torsional stiffness at the table, assumed"}
       clamped_stiffness_Nm_rad: {value: 6.0e6, src: est, note: "hydraulic/brake clamping typically 3-5x the drive stiffness"}
     positioning: {accuracy_arcsec: 15, repeatability_arcsec: 10, src: haas-ec400-web-2026, note: "published as indexing accuracy +-15 arc-sec, repeatability 10 arc-sec"}
@@ -145,47 +145,47 @@ spindles:
           - {rating: "S2 10 min = 150 % load", scale_of_peak: 0.75, src: haas-torque-note-2026}
           - {rating: "S1 continuous = 100 % load", scale_of_peak: 0.50, src: haas-torque-note-2026}
     accel_time_s: {value: 0.9, src: est, note: "0 to 8100 rpm with J = 0.05 kg m2 over the digitised peak curve"}
-    decel_time_s: {value: 0.9, src: est}
+    decel_time_s: {value: 0.9, src: est, note: "regenerative braking at the same peak torque as the acceleration: symmetric 0.9 s from 8100 rpm"}
     gear_change_s: null
-    orient_time_s: {value: 0.5, src: est}
+    orient_time_s: {value: 0.5, src: est, note: "M19 from rest: at most one turn at the peak-torque acceleration 125 Nm / 0.05 kg m2 = 2500 rad/s2 takes 2 sqrt(2 pi / 2500) = 0.10 s; 0.4 s more for the position loop to settle on the orientation angle (assumed)"}
     rotor_inertia_kgm2: {value: 0.05, src: est, note: "as haas-vf2ss"}
-    efficiency: {value: 0.85, src: est}
+    efficiency: {value: 0.85, src: est, note: "vector drive x induction motor at rated load: an IE3 22 kW 4-pole motor is about 93 % efficient (iec-60034-30-1-2014 class limits), the drive about 97 %: 0.90; 0.85 assumed for the spindle motor's part-load operation (as haas-vf2ss)"}
     idle_power_W: {value: 450, src: est, note: "40-taper bearings at 8100 rpm"}
-    runout_um: {value: 2, src: est}
+    runout_um: {value: 2, src: est, note: "taper runout of a new 40-taper spindle nose, 2 um assumed as on haas-vf2ss (Haas publishes none)"}
     frf_modes:
       - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "40-taper motor-spindle flange mode, typical 700-1200 Hz"}
-      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est}
+      - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est, note: "the x mode repeated in y: axisymmetric shaft and bearings"}
     thermal:
       growth_um_at_max_rpm: {value: 20, src: est, note: "8100 rpm inline spindle; growth along +z (spindle axis horizontal)"}
-      time_constant_min: {value: 25, src: est}
-      bearing_heat_W_at_max_rpm: {value: 300, src: est}
+      time_constant_min: {value: 25, src: est, note: "tau = C / G: heat capacity of the spindle cartridge and nose housing, about 100 kg x 460 J/kgK = 46 kJ/K, over the conductance to the cooled head, G = 300 W / 10 K = 30 W/K (bearing heat at 8100 rpm at a 10 K steady rise, both est) = 1530 s, about 25 min"}
+      bearing_heat_W_at_max_rpm: {value: 300, src: est, note: "Palmgren speed term M0 = 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for three angular-contact bearings of 85 mm pitch diameter, oil-air (f0 = 1), nu = 10 mm2/s, n = 8100 rpm: 3 x 0.115 Nm = 0.35 Nm, x 848 rad/s = 290 W, rounded to 300 W"}
       thermal_comp: {value: true, src: est}
-      comp_residual_fraction: {value: 0.3, src: est}
+      comp_residual_fraction: {value: 0.3, src: est, note: "as haas-vf2ss: the model-based spindle growth compensation leaves 30 % of the growth (assumed)"}
     optional: "10,000 / 12,000 / 15,000 rpm inline spindles; HSK-A63 available (haas-ec-flyer-2022)"
 
 structure:
   modes:
     - {fn_Hz: 60, zeta: 0.05, k_N_um: 40, direction: x, src: est, note: "column side-sway on the stepped X base; HMC frame modes typically 40-150 Hz"}
     - {fn_Hz: 75, zeta: 0.05, k_N_um: 45, direction: z, src: est, note: "column pitch"}
-    - {fn_Hz: 140, zeta: 0.04, k_N_um: 80, direction: y, src: est}
+    - {fn_Hz: 140, zeta: 0.04, k_N_um: 80, direction: y, src: est, note: "vertical head-on-column mode: stiffer and higher than the x/z column modes (60/75 Hz); 140 Hz and 80 N/um assumed, as the head/column vertical mode of haas-vf2ss (130 Hz, 80 N/um)"}
   table_modes:
     - {fn_Hz: 150, zeta: 0.05, k_N_um: 100, direction: x, src: est, note: "pallet on clamped rotary (hydraulic pallet clamping: haas-ec-flyer-2022)"}
   rotary_modes:
     - {axis: B, fn_Hz: 120, zeta: 0.04, k_Nm_rad: 6.0e6, src: est, note: "torsional mode of the clamped pallet with a 200 kg fixture"}
 
 error_map:
-  squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est}
-  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est}
+  squareness_urad: {XY: 15, XZ: 15, YZ: 15, src: est, note: "as haas-vf2ss: 15 urad (15 um/m) per axis pair after factory ballbar alignment (haas-europe-vmc-brochure-2013 p. 16: every Haas is ballbar tested)"}
+  straightness_um_per_m: {X: 6, Y: 6, Z: 6, src: est, note: "guideway straightness after alignment: 6 um per metre of travel assumed for each axis (as haas-vf2ss)"}
   angular_urad: {}
   pivot_errors: {B: {position_um: [10, 0, 10], tilt_urad: [20, 0, 20], src: est, note: "B-axis centre location and squareness to Y after calibration"}}
 
 thermal:
   axis_drift:
-    expansion_1_K: {value: 11.5e-6, src: est}
-    heat_per_m_travel_J: {value: 60, src: est}
-    time_constant_min: {value: 40, src: est}
-  structure_sensitivity_um_per_K: {value: 4, src: est}
-  warmup: {cold_to_warm_min: 60, src: est}
+    expansion_1_K: {value: 11.5e-6, src: est, note: "mean CTE 20-100 degC of the ballscrew steel (100Cr6: 11.5e-6 1/K, DEW soft-annealed column quoted in db/materials/aisi52100-62hrc.yaml; C45: 11.56e-6 in db/materials/aisi1045.yaml)"}
+    heat_per_m_travel_J: {value: 60, src: est, note: "nut drag torque x angle per metre: 0.15 Nm (light preload of a 40 mm double nut, assumed) x 2 pi / 0.016 m = 59 J per metre of travel, as haas-vf2ss"}
+    time_constant_min: {value: 40, src: est, note: "as haas-vf2ss (same 40 mm screws): tau = rho c d / (4 h) = 7850 x 460 x 0.040 / (4 x 15 W/m2K) = 2400 s = 40 min"}
+  structure_sensitivity_um_per_K: {value: 4, src: est, note: "tool-to-pallet drift per K of ambient: cast-iron CTE 10.5e-6 1/K (db/materials/grey-cast-iron-gjl250.yaml) x the about 0.4 m thermal loop from the pallet through the base and column to the spindle nose = 4.2 um/K"}
+  warmup: {cold_to_warm_min: 60, src: est, note: "1.5 x the 40 min axis-drift time constant (78 % of the steady drift)"}
 
 tool_changer:
   type: side_mount
@@ -213,7 +213,7 @@ pallet_changer:
 tailstock: null
 steady_rest: null
 guide_bushing: null
-doors: {count: {value: 1, src: est}, auto: {value: false, src: est}, open_time_s: null, side_door_width_mm: {value: 685, src: haas-ec400-mld-2018, page: "p. 1"}}
+doors: {count: {value: 1, src: est, note: "one operator door at the pallet-changer station (the side door, 685 mm, is a service door, haas-ec400-mld-2018 p. 1)"}, auto: {value: false, src: est}, open_time_s: null, side_door_width_mm: {value: 685, src: haas-ec400-mld-2018, page: "p. 1"}}
 
 probes:
   spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS)", trigger_force_N: 0.50, trigger_force_z_N: 5.85, repeatability_um: 1.0, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS hardware assumed (est.)"}
@@ -229,17 +229,17 @@ coolant:
     - {id: tsc1000, kind: through_spindle, option: true, pressure_bar: 69, flow_l_min: 26.5, src: haas-tsc-web-2026}
   nozzles:
     - {id: ring1, kind: flood, attached_to: head, position_mm: [45, 0, 60], aim: [-0.55, 0, -0.84], diameter_mm: 4, pump: flood, src: est, note: "4-nozzle coolant ring around the spindle nose (haas-ec-flyer-2022); nozzle positions/aims assumed (head frame, z along the spindle axis)"}
-    - {id: ring2, kind: flood, attached_to: head, position_mm: [0, 45, 60], aim: [0, -0.55, -0.84], diameter_mm: 4, pump: flood, src: est}
+    - {id: ring2, kind: flood, attached_to: head, position_mm: [0, 45, 60], aim: [0, -0.55, -0.84], diameter_mm: 4, pump: flood, src: est, note: "as ring1 (4-nozzle ring around the nose), rotated 90 deg about the spindle axis"}
     - {id: ring3, kind: flood, attached_to: head, position_mm: [-45, 0, 60], aim: [0.45, 0, -0.89], diameter_mm: 4, pump: flood, src: est, note: "aimed for longer tools"}
-    - {id: ring4, kind: flood, attached_to: head, position_mm: [0, -45, 60], aim: [0, 0.45, -0.89], diameter_mm: 4, pump: flood, src: est}
+    - {id: ring4, kind: flood, attached_to: head, position_mm: [0, -45, 60], aim: [0, 0.45, -0.89], diameter_mm: 4, pump: flood, src: est, note: "as ring3 (aimed for longer tools), rotated 90 deg about the spindle axis"}
     - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
   pcool: {value: "not available on EC-400/500", src: haas-ec-flyer-2022}
   air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: est, note: "air gun as on Haas VMCs (6 scfm), assumed"}
   machine_air_l_min: {value: 255, note: "air required 9 scfm @ 100 psi (255 L/min @ 6.9 bar)"}
   chiller: null
-  filtration_um: {value: 40, src: est}
+  filtration_um: {value: 40, src: est, note: "finest particle the standard flood circuit is assumed to hold back: 40 um (as haas-vf2ss); the TSC option carries its own filter"}
 
-chip_conveyor: {type: belt, position: "centre, under the spindle", src: haas-ec-flyer-2022, rate_kg_h: {value: 120, src: est}, discharge_height_mm: {value: 1041, src: haas-ec400-mld-2018, page: "p. 1"}}
+chip_conveyor: {type: belt, position: "centre, under the spindle", src: haas-ec-flyer-2022, rate_kg_h: {value: 120, src: est, note: "about the chip mass rate of continuous steel roughing at the S1 spindle power: 17 kW (50 % of the 34.5 kW peak) / 2.5 J/mm3 specific cutting energy = 6.8 cm3/s = 190 kg/h; the belt is sized for 120 kg/h average (roughing duty about 60 %, assumed)"}, discharge_height_mm: {value: 1041, src: haas-ec400-mld-2018, page: "p. 1"}}
 
 enclosure:
   box_mm: {value: [[-1000, -700, -800], [1000, 1400, 1300]], src: est, note: "work zone between the pallet changer wall and the column; base frame (y up); assumed from the 4524 x 3436 mm footprint and the APC swing (haas-ec400-mld-2018 p. 1, 5)"}
@@ -247,7 +247,7 @@ enclosure:
 
 power:
   base_W: {value: 1500, src: est, note: "control, cabinet cooler, hydraulics for pallet clamping, lights"}
-  servo_standby_W: {value: 400, src: est}
+  servo_standby_W: {value: 400, src: est, note: "four axis drives enabled at standstill (X, Y, Z, B): electronics and fans about 50 W each (200 W), the Y motor holding the 450 kg head (4.4 kN through the 16 mm lead: 12 Nm, about 90 W copper loss), the spindle drive DC bus and hydraulic valve coils about 110 W: 400 W (assumed breakdown)"}
   air_consumption_l_min: 255
 
 geometry:
@@ -278,6 +278,7 @@ geometry:
       - {box: {min_mm: [-100, -500, 1050], max_mm: [700, 1500, 1700]}}
     collide: true
     src: est
+    note: "column assumed as an 800 x 650 mm box (x -100..700, z 1050..1700 in the base frame) behind the spindle head, rising from below the pallet (y -500) to 1500 mm, above the 688 mm spindle CL at Y home plus the head; collision only"
   - name: spindle_head
     attached_to: head
     primitives:

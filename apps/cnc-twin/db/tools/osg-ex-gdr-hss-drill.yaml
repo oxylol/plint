@@ -11,7 +11,7 @@ defaults:
   type: twist_drill
   hand: right
   tool_material: {class: hss, grade: "HSS-Co (grade not stated)", id: hss-m42, src: est, note: "OSG prints 'HSS-Co'; mapped to the cobalt HSS entry (M42 reference)"}
-  coating: {id: tin, note: "TiN coated (product name 'TiN Coated Drill Regular Length'); thickness not published"}
+  coating: {id: tin, note: "TiN coated (product name 'TiN Coated Drill Regular Length'); thickness not published", thickness_um: {value: 2.5, src: est, note: "OSG Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tin.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
 items:
   - id: osg-60568-ex-gdr-6.8
     order_code: "EX-GDR 6.8 (EDP 60568)"

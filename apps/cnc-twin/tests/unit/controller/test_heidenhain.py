@@ -105,8 +105,20 @@ L Z+5 R0 FMAX M91"""))
     linear = [c for c in res.commands[0] if c.kind == Kind.LINEAR]
     assert round(linear[0].feed.value * 60000, 6) == 250.0
     assert linear[1].feed.mode.value == "per_rev" and linear[1].feed.value == pytest.approx(1e-4)
-    assert path(res)[-1][3] == 105.0
+    # M91: the machine axes go to the coordinates; the tool length (100 mm) is not compensated in the block
+    assert path(res)[-1][3] == 5.0
     assert run(pgm(TOOL + "\nL X+10 FZ0.05")).alarms[0]["code"] == "160-00E0"
+
+
+def test_m91_keeps_the_called_tools_tip_for_the_next_block():
+    # right after TOOL CALL, an M91 retract: the spindle at machine Z-10, the next workpiece block starts from the tip
+    res = run(pgm("TOOL CALL 1 Z S1000 F300\nL Z-10 R0 FMAX M91\nL X+20 Y+5 R0 FMAX\nL Z+2 R0 FMAX"),
+              offsets={"G54": [0.0, 0.0, -0.3]})
+    assert res.alarms[0] is None
+    moves = path(res)
+    assert moves[0] == ("rapid", 0.0, 0.0, -10.0)
+    assert moves[1] == ("rapid", 20.0, 5.0, -10.0)              # X/Y only: the spindle stays at Z-10
+    assert moves[2] == ("rapid", 20.0, 5.0, -300.0 + 2.0 + 100.0)   # tip 2 mm above the datum: + tool length
 
 
 def test_m140_retracts_along_the_tool_axis():
@@ -388,6 +400,35 @@ L X+0 Y+0 Z+10 FMAX"""), UMC, tools=FIVE)
     assert res.alarms[0] is None
     last = [c for c in res.commands[0] if c.kind == Kind.RAPID][-1]
     assert last.space == Space.MACHINE and math.degrees(last.target["B"]) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_plane_mb_retracts_along_the_tool_axis_before_tilting():
+    # TURN MB+50 F2000: Z up by 50 mm at F2000, then B turns; PLANE RESET TURN MB MAX FMAX: Z to the end of the
+    # traverse range (machine(): linear travels [-2000, 2000] mm), then B back to 0
+    res = run(pgm("""TOOL CALL 1 Z S1000
+L X+0 Y+0 Z+50 R0 FMAX M3
+PLANE SPATIAL SPA+0 SPB+30 SPC+0 TURN MB+50 F2000 SEQ+
+PLANE RESET TURN MB MAX FMAX
+L X+0 Y+0 Z+10 FMAX"""), UMC, tools=FIVE)
+    assert res.alarms[0] is None
+    machine = [c for c in res.commands[0] if c.kind in MOTION and c.space == Space.MACHINE]
+    start_z = machine[0].target["Z"]
+    up, tilt, top, untilt = machine[1:5]
+    assert up.kind == Kind.LINEAR and up.target["Z"] == pytest.approx(start_z + 0.050)
+    assert up.feed.value * 60000.0 == pytest.approx(2000.0)
+    assert math.degrees(up.target["B"]) == pytest.approx(0.0, abs=1e-9)          # before the tilt
+    assert math.degrees(tilt.target["B"]) == pytest.approx(30.0) and tilt.target["Z"] == pytest.approx(up.target["Z"])
+    assert top.kind == Kind.RAPID and top.target["Z"] == pytest.approx(2.0)
+    assert math.degrees(top.target["B"]) == pytest.approx(30.0)
+    assert math.degrees(untilt.target["B"]) == pytest.approx(0.0, abs=1e-9) and untilt.target["Z"] == pytest.approx(2.0)
+    # MB beyond the traverse range: limit switch error, as M140 MB
+    over = "TOOL CALL 1 Z S1000\nL Z+50 R0 FMAX M3\nPLANE SPATIAL SPA+0 SPB+30 SPC+0 TURN MB 5000 FMAX"
+    assert run(pgm(over), UMC, tools=FIVE).alarms[0]["code"] == "1A1-0010"
+    # MB with STAY positions nothing, MB needs a length: block format incorrect
+    for bad in ("STAY MB MAX", "TURN MB FMAX", "TURN MB"):
+        code = run(pgm(f"TOOL CALL 1 Z S1000\nL Z+50 R0 FMAX M3\nPLANE SPATIAL SPA+0 SPB+30 SPC+0 {bad}"), UMC,
+                   tools=FIVE).alarms[0]["code"]
+        assert code == "160-0003", bad
 
 
 def test_m128_keeps_the_tool_tip_and_m129_ends_it():

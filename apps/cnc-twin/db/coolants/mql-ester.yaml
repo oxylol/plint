@@ -12,11 +12,11 @@ kinematic_viscosity_mm2_s: {table: [[40, 30]], src: est, range: [15, 50], note: 
 viscosity_mPa_s: {table: [[20, 65.1], [40, 27.1], [60, 13.8], [80, 8.0], [100, 5.2]], src: est, note: "30 mm2/s at 40 C with an assumed 6.0 mm2/s at 100 C (VI ~150, typical of esters), Walther (ASTM D341) interpolation, x density"}
 specific_heat_J_kgK: {table: [[20, 1950], [60, 2100], [100, 2250]], src: est, note: "esters ~1.9-2.3 kJ/kgK, similar to mineral oils (cf. etb-engine-oil-2023)"}
 conductivity_W_mK: {table: [[27, 0.16]], src: est, note: "between mineral oils (0.13-0.145) and castor oil (0.180) at 300 K (etb-liquids-k-2026)"}
-surface_tension_mN_m: {value: 31, src: est}
+surface_tension_mN_m: {value: 31, src: est, note: "synthetic esters, like mineral oils, have 28-34 mN/m at 20 C; 31 mN/m assumed (straight-oil.yaml: 30)"}
 boiling_degC: {value: 350, range: [300, 420], src: est, note: "synthetic esters have a high boiling point despite low viscosity (DGUV p. 20)"}
 leidenfrost_degC: {value: 400, range: [340, 480], src: est, note: "above the boiling range; as straight-oil"}
 flash_point_degC: {value: 220, range: [150, 280], src: est, note: "DGUV guide value: flash point COC > 150 C (Table 6); esters have higher flash points than fatty alcohols at equal viscosity (Table 5); 220 C assumed for a 30 mm2/s ester"}
-smoke_point_degC: {value: 190, src: est}
+smoke_point_degC: {value: 190, src: est, note: "visible smoking starts some 20-30 K below the COC flash point (as straight-oil.yaml): 220 - 30 = 190 C"}
 noack_loss_pct_max: {value: 65, note: "guide value: evaporation loss at 250 C (Noack, DIN 51581-1) < 65 % (Table 6)"}
 dosage_ml_h: {range: [5, 50], note: "typical MQL dosage 5-50 ml per process hour (p. 8, 10); MQL defined as <= 50 ml/h per tool, > 150 ml/h briefly for tools > 40 mm (p. 12)"}
 dosage_default_ml_h: {value: 20, src: est, note: "default inside the DGUV range"}
@@ -26,9 +26,9 @@ system_capacity_ml_h: {one_channel_max: 200, two_channel_min_max: 400, note: "1-
 friction_factor:
   - {tool_class: carbide, work_family: steel, value: 0.75, range: [0.5, 0.95], src: est, note: "tribometer and cutting studies report roughly 20-70 % lower friction than dry depending on access to the contact; 0.75 assumed for continuous cutting"}
   - {tool_class: carbide, work_family: aluminium, value: 0.5, range: [0.2, 0.8], src: est, note: "MQL strongly suppresses aluminium adhesion; drilling/milling of Al is the classic MQL application (DGUV p. 8) - value assumed"}
-  - {tool_class: carbide, work_family: cast_iron, value: 0.8, src: est}
-  - {tool_class: carbide, work_family: titanium, value: 0.85, src: est}
-  - {tool_class: hss, work_family: steel, value: 0.7, src: est}
+  - {tool_class: carbide, work_family: cast_iron, value: 0.8, src: est, note: "cast iron: graphite already lubricates the dry contact, so MQL gains less than on steel: 0.8 (assumed, above steel 0.75)"}
+  - {tool_class: carbide, work_family: titanium, value: 0.85, src: est, note: "titanium: high interface temperatures (above about 900 C) break down the thin ester film, little gain over dry: 0.85 (assumed)"}
+  - {tool_class: hss, work_family: steel, value: 0.7, src: est, note: "HSS at low cutting speeds: the film reaches the boundary-lubricated contact more easily than at carbide speeds: 0.7 (assumed, below carbide 0.75)"}
 lubricity_index: {value: 0.8, src: est, note: "esters give high lubricity (DGUV Table 5: lubricating effect high vs fatty alcohols low) but only a thin film reaches the contact"}
 heat_transfer:
   latent_heat_kJ_kg: {value: 250, src: est, note: "order of magnitude for esters"}
@@ -36,5 +36,5 @@ heat_transfer:
 drag_out_ml_per_kg_chips: {value: 0.5, src: est, note: "nearly dry chips and workpieces (p. 8, 10); film residue only"}
 evaporation_l_per_h_per_m2: {value: 0.0, src: est, note: "no sump"}
 mist_loss_fraction: {value: 0.2, range: [0.05, 0.4], src: est, note: "share of the dosed oil leaving as aerosol/vapour to the extraction instead of staying on chips/part; assumed"}
-cost_eur_per_l: {value: 15, src: est}
+cost_eur_per_l: {value: 15, src: est, note: "specialty ester MQL oil: about 4 x the 3.5 EUR/L of a neat mineral cutting oil (straight-oil.yaml), 15 EUR/L assumed (no price list read)"}
 notes: "Total-loss lubricant: consumption = dosage x cutting time. No property data sheet was read; physical properties are estimates within the DGUV selection limits."

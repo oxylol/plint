@@ -13,7 +13,7 @@ items:
   type: face_mill
   hand: right
   tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
-  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn', thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 50
     flutes: 5
@@ -95,7 +95,7 @@ items:
   type: face_mill
   hand: right
   tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
-  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn', thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 63
     flutes: 6
@@ -177,7 +177,7 @@ items:
   type: face_mill
   hand: right
   tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
-  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn', thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 80
     flutes: 8
@@ -259,7 +259,7 @@ items:
   type: face_mill
   hand: right
   tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
-  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn', thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 100
     flutes: 8
@@ -341,7 +341,7 @@ items:
   type: face_mill
   hand: right
   tool_material: {class: carbide, grade: AH3225 (PVD coated carbide), id: carbide-p30, src: est, note: 'Tungaloy states only ''carbide substrate, high resistance to fracture'' for AH3225 (506-G p. 4, 423-G p. 4); P30-type substrate assumed'}
-  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn'}
+  coating: {id: tialn, src: est, note: 'AH3225: ''nano multi-layer coating technology'' PVD (506-G p. 4); chemistry not stated, mapped to tialn', thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/tialn.yaml (1-4 um, balzers-2010-hq040 p. 21), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 125
     flutes: 10
@@ -423,7 +423,7 @@ items:
   type: face_mill
   hand: right
   tool_material: {class: carbide, grade: AH8015 (PVD coated carbide), id: carbide-k20-6co, src: est, note: 'AH8015: ''dedicated carbide substrate with excellent wear resistance'' for cast iron, HRSA and hardened steel (506-G p. 4); K20-type substrate assumed'}
-  coating: {id: altin, src: est, note: 'AH8015: ''PVD grade featuring high aluminum-content multilayered coating'' (506-G p. 4); mapped to altin (Al-rich)'}
+  coating: {id: altin, src: est, note: 'AH8015: ''PVD grade featuring high aluminum-content multilayered coating'' (506-G p. 4); mapped to altin (Al-rich)', thickness_um: {value: 2.5, src: est, note: "Tungaloy Corporation publishes no coating thickness: the mean of the typical thickness of db/coatings/altin.yaml (1-4 um, est in db/coatings/altin.yaml after the 0.5-5 um of BALINIT PVD coatings, balzers-2010-hq040 p. 20), the value the wear model takes for a coated tool without its own"}}
   geometry:
     diameter_mm: 80
     flutes: 8

@@ -41,7 +41,7 @@ with their statistics): `bin/tsafe python -m pytest -m slow tests/validation`.
 | `provenance.py` | which bibliography keys are one work; calibration dependence |
 | `runner.py` | runs cases, aggregates per quantity, verdicts |
 | `report.py` | markdown and JSON |
-| `harnesses/` | `orthogonal` (chip_ratio, shear_angle), `temperature` (chip_temperature, tool_temperature), `taylor` (taylor_life), `spindle` (spindle_growth), `coolant` (coolant_reach), `chipform` (chip_form), `cycletime` (cycle_time); helpers `common`, `contact`, `toolheat`, `assumptions` |
+| `harnesses/` | `orthogonal` (chip_ratio, shear_angle), `temperature` (chip_temperature, tool_temperature), `taylor` (taylor_life), `spindle` (spindle_growth), `coolant` (coolant_reach), `chipform` (chip_form), `cycletime` (cycle_time), `cutforce` (cutting_force, torque), `drilling` (drilling_thrust, drilling_torque), `roughness` (roughness), `stability` (stability_lobe), `wallerror` (wall_error); helpers `common`, `contact`, `toolheat`, `cutsim` (prescribed cuts through the cutting kernels and coefficient pipeline), `assumptions` |
 
 ## 3. Cases
 
@@ -95,8 +95,12 @@ Contract:
   `no_prediction` (the model gives none where the experiment measured one: counts as a miss) or
   `not_compared` (outside what this harness validates, with the reason: a duplicate of a counted value
   in another unit, a point the case itself excludes; listed, not counted).
-* `kind="class"` with `reference_class` for classifications (chip forms, grades, stability points:
-  error 0 on a match, 1 otherwise). `component` names the budget component when the quantity's budget
+* `kind="class"` with `reference_class` for classifications (chip forms, grades: error 0 on a match, 1
+  otherwise). `bound="lower"` / `"upper"` makes a reference one-sided for this prediction when the case note
+  does not say so: the reference bounds the simulated quantity from below (above), and only the error on the
+  wrong side counts. The stability harness uses it for test points: a stable test at depth a says the limit is
+  at least a, a chatter test that it is below a, so the simulated limit is compared with the tested depth as a
+  bound and the percentage budget applies to the limit (a border test stays two-sided). `component` names the budget component when the quantity's budget
   has components (`cutting_force`: `main_force_pct`, `thrust_force_pct`, `milling_peak_force_pct`).
   `uncertainty` replaces the reference's uncertainty when the harness propagates it (a derived chip
   ratio from its measured thickness).
@@ -121,7 +125,11 @@ Rules (the integrity rules of the suite):
 Helpers: `common` (work material and tool side from a case, tool-material and coating mapping, edge
 radius / rake / clearance / speed / thickness readers, `Collector`), `contact.ContactModel` (the
 coefficient pipeline on the case's own speeds and thicknesses, heat split as thermal's partition),
-`toolheat` (thermal's insert ladder and the local edge field at a point).
+`toolheat` (thermal's insert ladder and the local edge field at a point), `cutsim` (the cutting domain's
+coefficient pipeline (`MechanicsModel`, with the calibration provenance recorded) and its force kernels over a
+prescribed cut: `mill` (steady straight milling with analytic engaged intervals), `drill` (steady
+full-diameter drilling), `tube_turning` (orthogonal tube turning on a polar field); tools from inline items
+through `tooling.build_tool`).
 
 ## 5. Metrics (`metrics.py`)
 
@@ -138,20 +146,28 @@ uncertainty, cases within budget, the largest miss in tolerances.
 
 ## 6. Budgets (`budgets.py`)
 
-`validation/budgets.yaml` defines budgets for cutting_force (three components), torque,
-drilling_thrust, drilling_torque, tool_temperature, chip_temperature, chip_ratio and shear_angle. Its
-header states the rule, applied exactly:
+`validation/budgets.yaml` defines budgets for every quantity: part 1 for cutting_force (three
+components), torque, drilling_thrust, drilling_torque, tool_temperature, chip_temperature, chip_ratio and
+shear_angle; part 2 for taylor_life (50 %), spindle_growth (30 %), coolant_reach (15 %), chip_form (25 % for
+window boundaries, classes must match), cycle_time (5 %), roughness (30 %), stability_lobe (25 % of the limit)
+and wall_error (25 %). Each entry's note and evidence give the justification (scatter of the experiments in the
+cases, the sources' own model comparisons, error propagation); for taylor_life, spindle_growth, coolant_reach,
+chip_form and cycle_time the file says that a first run of their harnesses had been seen when the budget was set
+and that the justification does not use those results. Its header states the rule, applied exactly:
 
 * tolerance of a value = max(budget_pct / 100 x |reference|, 2 x uncertainty of that value), the
   percentage of the rise above ambient for temperatures;
 * a case passes when every compared value is within its tolerance (a value without a prediction is not);
 * a quantity passes when at least 80 % of its (independent) cases pass and no case misses by more than
-  twice its tolerance.
+  twice its tolerance;
+* a classification is within tolerance only on a match; a one-sided reference counts only the error on
+  the wrong side.
 
 The two numbers of the quantity rule are written only in the header comment; `budgets.py` holds them as
-constants and a unit test checks the header still states them. Quantities the file has no budget for
-(taylor_life, spindle_growth, coolant_reach, chip_form, cycle_time, ...) are reported with their errors
-and "not judged"; the suite adds no budget of its own.
+constants and a unit test checks the header still states them. A quantity the file has no budget for is
+reported with its errors and "not judged"; the suite adds no budget of its own. The cutting_force milling
+values (means, peaks, extremes, RMS of milling force components) use the `milling_peak_force_pct` component;
+the orthogonal and turning values `main_force_pct` (Fc) and `thrust_force_pct` (feed, thrust, back force).
 
 ## 7. Calibration dependence (`provenance.py`)
 
@@ -169,7 +185,7 @@ separately and never enter a verdict.
 
 ## 8. Reports
 
-`docs/validation-report.md`: a summary table (cases, independent and calibration-dependent counts,
+`docs/validation-report.md`: a plain summary table first (quantity, cases, independent and calibration-dependent counts, independent cases within budget, median error, verdict), then the detailed summary table (cases, independent and calibration-dependent counts,
 independent cases within budget, median and p90 error, values within uncertainty, budget, verdict) and a
 plain list of passing, failing, unjudged and harness-less quantities; per quantity the budget, the
 verdict with its reason, the harness, the statistics and the "failures and likely causes"; per case the
@@ -191,7 +207,59 @@ tolerance, within or not, note) and every curve with its RMS/max error.
 | coolant_reach | the coolant's lubrication friction factor (reach 1) in the contact temperature of a milling engagement, or in the chip form and cutting force of a turning cut | fluid mapped to the closest database fluid |
 | chip_form | Oxley chip state + `mechanics.chipform` per tested feed/depth (or a feed-depth grid for a chip-control window), mapped to the case's classes | chip-breaker geometry when the insert is not in the database |
 | cycle_time | the case's path in ISO syntax through `cnctwin.controller` + `cnctwin.motion` (MotionRunner, no cutting) with the stated IPO, acceleration, jerk, feed and tolerance | drive data and look-ahead from the database machine of the same control family, G01 polygon of the CAM path |
+| cutting_force | the cutting domain's force model at the case's engagement: rows of `cutting.coefficients.MechanicsModel` (Oxley / Johnson-Cook, calibrated to the material's measured Kienzle or mechanistic data of the pairing where the database has them, else the mechanics alone), linearised to the kernel table; orthogonal and tube turning through `turn_step` (straight edge at kappa_r 90 deg across the width, polar field; the closed form (K h + Ke) b listed as a check); milling through `cut_step` (tooling-built cutter, steady straight path, analytic engaged intervals of the straight cut, prefilled memory), each reference statistic (mean, peak, extreme, RMS, mean FXY) from the simulated force on the tool in Altintas' frame; per-case readers (`cutforce.MILLING`) state frames, statistics and which values are fresh-tool references | tool and work at ambient, rake / edge radius / entering angle where the source is silent (tooling defaults or `assumptions.py`), runout 0, source frames whose orientation is not defined compared as magnitudes |
+| torque | the process torque of the same milling simulation | as cutting_force |
+| drilling_thrust, drilling_torque | the case's twist drill built by tooling (lips with the helicoid rake of the helix, chisel from the web or the stated chisel length, margins), rows for the process drilling (indentation at the chisel and the slow centre), steady full-diameter `cut_step` (all stations engaged over the full circle, a pilot hole removes the inner ones); mean thrust and torque over a revolution | web, chisel angle, helix, point angle and edge radius where not stated (tooling defaults), the coolant as a friction factor |
+| roughness | `cnctwin.surface.kernels.envelope_profile` (lower envelope with the minimum chip thickness, Brammertz) of the generating edge (insert nose and edges with kappa_r and kappa_r' from the ISO designations, cutter corner and end-edge dish, ball scallops and feed marks) at the case's feed or step-over, evaluated by `surface.roughness.evaluate` (ISO 4287 / 4288 / 16610-21) | edge radius (tooling default of the edge kind), the measured surface where not stated, ideal cutters (no runout) |
+| stability_lobe | `dynamics.sld.limit_at_speed` (ZOA) and `dynamics.semidisc.limit_at_speed` (SD, the domain's m and points per mode period; the source's m = 40 for its own benchmark) of the linearised cut (straight teeth, or the tooling-built helical cutter through `dynamics.operating.cut_model`) with the case's modes and linear coefficients; limit = min(ZOA, SD); tests compared one-sided; `dynamics.drive.run_benchmark` (time domain) at each test listed | process damping (none stated), helix where est.; SD skipped above 120 intervals per tooth period (long delays, ZOA accurate) |
+| wall_error | Budak: the cutting simulation's station forces at the surface-generating instants through a cantilever of the stated gauge length with tooling's fluted section and the stated collet stiffness (overcut positive), the maximum normal force, the static tip stiffness k = kc kb / (kc + kb); Insperger: the steady forced vibration of the case's modes through `dynamics.drive.run_benchmark`, SLE at the generating instants (material left positive) | rake and clearance of the end mills (`assumptions.py`), straight teeth in the SLE run |
 
-The remaining quantities (cutting_force, drilling_thrust, drilling_torque, roughness, stability_lobe,
-wall_error, torque) get their harnesses from the removal/cutting/dynamics/structure/surface work; add a
-module to `harnesses/`, list it in `registry.HARNESS_MODULES` and follow section 4.
+Inputs of the experiment's own characterisation (modal parameters, the linear cutting coefficients of the
+stability and SLE cases) are case inputs like the geometry; database values (flow stress, friction, Kienzle and
+mechanistic entries, tool-material moduli) are recorded with `Collector.used` and decide calibration dependence.
+
+Known gaps the harnesses report instead of hiding: tooling has no cylindrical margin on end mills (the Zylka
+MAR 40-110 um curves are listed, not counted), no taper on ball end mills (Engin taper ball as a cylinder flank),
+no individual insert offsets (Nowakowski: ideal cutter), and complex-residue FRFs get ZOA only.
+
+## 10. What the second round of harnesses found (for the domain owners)
+
+The per-case causes are in docs/validation-report.md ("Failures and likely causes"); the patterns behind them:
+
+* **Mechanistic calibration across geometries** (`mechanics.coefficients.build_calibration`): the factors
+  measured / model are formed at the entry's reference geometry and applied unchanged at the tool's own. The
+  computed Ti6Al4V MAL entry (rake 10 deg, helix 30 deg, Krc 263 MPa) gives a radial factor of about 3.5, which
+  at the rake-0 round inserts of the Engin cases makes the in-plane peaks 2-4 times the measured ones.
+* **Flank wear land in milling** (Smithey et al. plastic land, `cutting` flank forces): with VB 0.11-0.21 mm the
+  simulated mean normal force of the Wang 2025 side cut rises about tenfold, the measured one by a third to two
+  thirds: a fully plastic land over the whole engaged arc does not describe a thin milling chip.
+* **Edge (ploughing) force**: thrust and feed forces are high where the chip is thin against the edge radius
+  (orthogonal thrust +35 to +100 %, the axial force of ball-end slotting at small feed), as docs/models/mechanics.md
+  4 states for the (2 + pi) k contact.
+* **Drilling**: the full-drill thrust is 70-120 % high in three independent cases (Gok 1045 HSS, Craciun Al,
+  Sklenicka C45 carbide: the chisel and slow-centre indentation dominate it), the outer-lip thrust of Ti6Al4V with
+  pilot holes about 90 % low (tooling's default sharp drill edge, the emulsion friction factor), the full-drill
+  thrust and torque of 7075 about half (a calibration-dependent case); torques range from a median 11 % (Craciun)
+  to -36 % (Krivokapic, HSS at 3-8 m/min, where Oxley falls back to Merchant at most map nodes and the map build
+  costs about 4 minutes per drill in `mechanics.oxley.continuation_reference`).
+* **Kinematic roughness with the minimum chip thickness** (`surface.kernels.envelope_profile`, Brammertz): where
+  f^2 < r h_min (small feeds, the nearly flat minor edge of a face-mill insert, the ball's feed marks) the uncut
+  layers accumulate to about h_min before a pass removes them; with the estimated edge radii this makes the
+  profile an h_min sawtooth well above the measured roughness. Where the feed marks dominate (hard turning at
+  0.14-0.2 mm/rev) the profile is within about 10-30 %.
+* **Stability**: the deepest trough of every analytical benchmark is reproduced within its digitisation
+  uncertainty (the limits run 3-12 % below the charts in the troughs, SD alone 3-10 %), and 153 of 211 measured
+  tests lie on the right side of the simulated limit (Engin 2/2, Insperger 2006 56/69, Mann 27/31 and 26/31, Weck
+  20/40 and 22/38); the misses sit on steep flanks and in the flip-lobe speed ranges, and in Weck's slotting
+  tests the simulated limit (0.78-0.96 mm) is below the stable 1.0 mm cuts.
+* **Wall error**: in Budak's up-milling 7075 case the profile near the tool tip is within about 20 % (49 of 94
+  points inside the budget) and falls off faster toward the shank than measured (a rotational clamp compliance
+  would add the linear part); the down-milling case is about 1.7 times and the AISI 1040 case 2-5 times the
+  measured error, following the simulated normal force (444 against 166 N maximum in the 1040 case): there the
+  thin-chip normal force of the force model, not the deflection model, sets the miss. The static tip stiffness of
+  the cantilever-on-collet model with tooling's fluted section is within 18 % of both measured tools. The
+  surface location error of Insperger's low-immersion cut has the measured peaks at the resonant speeds, but
+  between them the simulated steady SLE is positive where the measured one is negative.
+* **Cutting force**: the best independent agreement is the high-feed face mill (Reznicek, in-plane peaks within
+  6 %, axial -40 to -58 %), the IN718 tube (Wood, 14 %) and Ti6Al4V turning (Slusarczyk, median 19 %); the
+  round-insert face mill (Plodzien, small ap) and the Ti6Al4V slot cases are high by factors 2-4.

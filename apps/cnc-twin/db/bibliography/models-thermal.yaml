@@ -1,25 +1,11 @@
 # Sources of the thermal models (cnctwin.thermal, docs/models/thermal.md) and of their
 # coefficients in db/models/thermal-*.yaml. Standard textbook equations; where a coefficient was
 # recalled rather than re-read in this session the parameter file says so in its note.
+# jaeger-1942-moving-sources, carslaw-jaeger-1959-conduction and blok-1937-flash-temperature are in
+# models-mechanics.yaml.
 format: cnctwin-bibliography
 version: 1
 entries:
-
-  jaeger-1942-moving-sources:
-    type: article
-    authors: "Jaeger, J.C."
-    title: "Moving sources of heat and the temperature at sliding contacts"
-    venue: "Journal and Proceedings of the Royal Society of New South Wales 76, 203-224"
-    year: 1942
-
-  carslaw-jaeger-1959-conduction:
-    type: book
-    authors: "Carslaw, H.S.; Jaeger, J.C."
-    title: "Conduction of Heat in Solids"
-    edition: "2nd"
-    publisher: "Oxford University Press"
-    year: 1959
-    pages: "ch. 2 (semi-infinite solid), 10.4-10.5 (instantaneous and continuous point and plane sources, circular disc source)"
 
   stephenson-ali-1992-interrupted:
     type: article
@@ -128,13 +114,6 @@ entries:
     title: "Thermal modeling of the metal cutting process: Part I - Temperature rise distribution due to shear plane heat source"
     venue: "International Journal of Mechanical Sciences 42(9), 1715-1752"
     year: 2000
-
-  blok-1937-flash-temperature:
-    type: article
-    authors: "Blok, H."
-    title: "Theoretical study of temperature rise at surfaces of actual contact under oiliness lubricating conditions"
-    venue: "Proceedings of the General Discussion on Lubrication and Lubricants, IMechE London, vol. 2, 222-235"
-    year: 1937
 
   madhusudana-2014-contact-conductance:
     type: book

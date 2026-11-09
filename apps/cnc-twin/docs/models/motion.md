@@ -12,7 +12,7 @@ the hot loop the setpoints and the drive states, and `motion_tick` runs inside i
 |---|---|
 | `abi.py` | kernel layouts (NamedTuples of arrays): `Chain`, `Servo`/`ServoState`, `Spindle`/`SpindleState`, `Setpoint`, `LoopState`, `MotionOut`, `MotionInputs`; sync, alarm and mode codes |
 | `kernels.py` | Numba kernels (one explicit signature each): `motion_tick`, `run_motion`, `replan_before`, FK/IK, drive and spindle steps, geometry, look-ahead generator; `reference.py` their plain-Python twins |
-| `machine.py` | `MachineModel`: axes and drives, paths, chains, spindles, error map from a machine file |
+| `machine.py` | `MachineModel`: axes and drives, paths, chains, spindles, error map from a machine file (the axis entries of `axes`; the source keys beside them, `src` `note` `notes` `page` ..., are skipped) |
 | `ik.py` | `PathKinematics`: FK, closed-form + numeric IK, singularities, tilted-plane solutions |
 | `geometry.py` | path pieces (joint lines/arcs, TCP tip pieces, corner blends) and their limits |
 | `scurve.py` | analytic 7-segment double-S profiles (Biagiotti & Melchiorri 2008) |
@@ -52,15 +52,21 @@ rotary quantities (combined feeds, rotary in-position bands, blend tolerances), 
   simulated time.
 * **Commit by snapshot**: every planned tick stores a copy of the plan state; a sync at k_stop
   restores the snapshot of k_stop, so only the ticks actually executed change persistent state.
-  Events (block start/done, ideal times, spindle and coolant changes, feedback) carry their tick
-  and are committed with it.
+  Events (block start/done, ideal times, spindle and coolant changes, feedback) carry their boundary
+  and are committed with the snapshot of the tick that emitted them (`TickPlan.ev_mark`): an item that
+  ends at the end of tick k and one that starts (and, without motion, ends) at the start of tick k + 1
+  share boundary k + 1, and only the first belongs to the snapshot of tick k. A live read that starts
+  inside a step therefore answers the controller once (a duplicate answered the next buffer stop).
 
 ## 2. Planner
 
 ### 2.1 Pieces and limits (`geometry.py`)
 
 Motion commands become pieces when they are accepted; a piece has one geometry and one set of
-limits.
+limits. A spindle's C axis outside C-axis mode turns with the spindle (its command is the spindle
+angle), so it is not part of the geometry of items that do not program it: an item is rebuilt from the
+commanded position only when its other axes moved (a blended item rebuilt up to its blend keeps the
+spindle angle on C).
 
 * **Joint pieces**: lines `q = q0 + dq u` and arcs (circular, helical, spiral within the control's
   radius tolerance) `q = c + r(u)(cos(phi u) e1 + sin(phi u) e2) + w u`, evaluated by the compiled
@@ -87,6 +93,23 @@ limits.
   plan call. Per-revolution pieces keep their feed per revolution and move at `f x |omega_c| / 2 pi`
   with omega_c the cutting spindle's commanded speed at plan time (CSS evaluated at the current
   radius).
+* **Tolerance-driven limits** of curved feed pieces (programmed arcs, corner blends, TCP arcs; radius
+  R of the path, a helix `r (1 + (c/r)^2)` with c its lead per radian), with e the contour tolerance in
+  force (2.2):
+
+      chord at the IPO period T:   v <= 2 sqrt(2 R e - e^2) / T  (~ sqrt(8 R e) / T, e capped at R)
+      axis setpoint filter T_f:    v <= sqrt(24 R e) / T_f
+
+  The control hands the drives one point per interpolation period and the path between two points is
+  their chord, which lies `R - sqrt(R^2 - (v T / 2)^2)` inside the curve (Suh et al. 2008; Yeh & Hsu 2002);
+  the twin's commanded points stay on the curve, so this bound is what keeps the chords in the band. A
+  control that filters its axis setpoints after interpolation (a moving average of length T_f: FANUC
+  linear acc/dec after interpolation, parameter 1769 in AI contour mode; the TNC nominal-position / HSC
+  filter; SINUMERIK MD32410 axial jerk filter) pulls a circle in by `v^2 T_f^2 / (24 R)` (FANUC 30i-B
+  operator's manual, radius error with acceleration/deceleration after interpolation; Biagiotti &
+  Melchiorri 2012) and slows until that stays within e. T_f is the machine file's
+  `controller.setpoint_filter_ms` (default 0: jerk limited before interpolation only, as FANUC AI contour
+  control, Haas HSM and SINUMERIK SOFT document; no control publishes a filter time, see 14).
 
 ### 2.2 Corners
 
@@ -98,11 +121,29 @@ eps is blended by a circular arc in the scaled joint space (1 deg = 1 mm):
 with the tangent length l at most `blend_length_frac` (half) of each adjacent piece (the radius
 shrinks accordingly so the deviation from the corner stays <= eps). The blend's centripetal limits
 give the corner speed `v <= min_i( sqrt(A_i R / rho_i), (J_i R^2 / rho_i)^(1/3) )`, rho_i the
-axis share of the curvature. Corners of arcs and TCP pieces keep their corner; the node speed is
-bounded by the same arc bound and by the per-axis velocity jump `v <= A_i dt / |delta(dq_i/ds)|`.
-Tolerance: the program's (G187, G64 + tolerance, CYCLE832, cycle 32), else
+axis share of the curvature, and the blend arcs carry the tolerance-driven limits of 2.1. Corners of
+arcs and TCP pieces keep their corner; the node speed is bounded by the same arc bound and by the
+per-axis velocity jump `v <= A_i dt / |delta(dq_i/ds)|`.
+
+**Curvature steps**: where tangent pieces meet with different curvature (a line and an arc, two arcs,
+an S-turn) each axis' acceleration steps by `v^2 |delta(d2q_i/ds2)|`. The node speed keeps the step within
+the axis acceleration, `v <= min_i sqrt(A_i / |delta(d2q_i/ds2)|)` (the same allowance as the velocity
+step of one interpolation period at a corner); with a setpoint filter the step is spread over T_f at a jerk
+within J_i only up to `J_i T_f`, so `min(A_i, J_i T_f)` then. A line meeting an arc is no slower than the
+arc itself; an S-turn of radius R is bounded by `sqrt(A R / 2)`.
+
+**Tolerance in force** (e above and the blend tolerance eps), each control's own high-speed mode, from
+the program and the machine file: Heidenhain cycle 32 T (ISO G62), FANUC G05.1 Q1 / G08 / smooth
+tolerance (the machine's smoothing table entry of the code), SINUMERIK CYCLE832 S_TOL (G642 + COMPCAD;
+`_TOL` 0: the machine's entry of the technology), Haas G187 E, else Setting 85 Maximum Corner Rounding
+(the machine file's G187 entry; also at power-on, after G187 alone, RESET and M30). Without one,
 `default_contour_tolerance_m` (0.01 mm). Exact stop (G09/G61, `smoothing.corner == "exact_stop"`)
 stops at the end of the block and waits for in-position.
+
+The commanded profile never passes a block's target: the generator clamps the path position to the
+piece (and the window end), dog-leg rapids follow their analytic double-S to the target, and blends cut
+corners inward, so a target on a stroke limit is reached exactly
+(`test_commanded_profile_never_passes_the_block_target`).
 
 ### 2.3 Look-ahead generator (`plan_ticks`)
 
@@ -333,6 +374,10 @@ limits), `data_starvation` (from the generator's starvation flag, before acceler
 | arc feed clamp | v <= min(sqrt(A R), (J R^2)^(1/3)) (1e-6), radius 1e-9 m | `test_arc_feed_is_clamped_by_centripetal_acceleration_and_jerk` |
 | data starvation, 0.05 mm blocks | feed = 0.05 mm per block time within 0.2 % | `test_data_starvation_on_short_segments_limits_feed_to_block_rate` |
 | corner deviation | commanded <= eps (1e-9 relative); blend apex at eps (1e-6) | `test_corner_blend_deviation_within_tolerance` |
+| chord error at the IPO period | arc speed at 2 sqrt(2 R e - e^2) / T (generator ramp J dt^2/8, 0.5 %); every chord within e (1e-3) | `test_chord_error_at_the_ipo_period_limits_a_small_arc_with_a_tight_tolerance` |
+| setpoint filter band | arc speed at sqrt(24 R e) / T_f (0.5 %) | `test_setpoint_filter_band_slows_arcs_to_keep_the_radius_error_in_the_tolerance` |
+| curvature step | S-turn junction at sqrt(A R / 2) (+ J dt^2/8) | `test_curvature_reversal_between_tangent_arcs_bounds_the_junction_speed` |
+| block targets | no commanded value passes its block's target or a travel end on it (0 m) | `test_commanded_profile_never_passes_the_block_target` |
 | circle radius reduction | within 3 % of the closed form; 15 % of v^2/(2 R Kv^2) without feed-forward | `test_circle_radius_reduction_matches_closed_form` |
 | steady following error | v (1 - k_ff)/Kv within 1e-6 | `test_steady_following_error_is_v_one_minus_ff_over_kv` |
 | backlash at reversal | lost motion b r within 2-4 nm | `test_backlash_lost_motion_is_the_compensation_residual` |
@@ -448,13 +493,26 @@ path), and returns at the first non-zero sync code with `inputs.result = (code, 
 * One rigid-body mode per axis; no structural dynamics, cross-coupling between axes, motor current
   loop, encoder quantisation or thermal effects on the drive parameters.
 * Proprietary smoothing of controls (FANUC nano smoothing, SINUMERIK COMPCAD, Heidenhain ADP) is
-  represented by the tolerance-band blend and the jerk-limited profile only.
+  represented by the tolerance-band blend, the tolerance-driven limits and the jerk-limited profile only.
+* The setpoint-filter band needs the filter time from the machine file (`controller.setpoint_filter_ms`);
+  no machine file in db/ gives one, because no control publishes it. The TNC 640 documents a feed
+  reduction on arcs that keeps its HSC filter within cycle 32 T (heidenhain-tnc640-cycles-2023, cycle 32),
+  which this band reproduces once the filter time is known. Taking it as the jerk-equivalent filter
+  A/J (Biagiotti & Melchiorri 2012) fits one published TNC 640 parameter set and contradicts the other
+  (validation/cases/cycle_time: the A 3.1 / J 157 set's 10 um tests go from -46 % and -27 % to -6 % and
+  -8 %, the A 3 / J 50 set's 10 and 50 um tests from -7 % and -17 % to +63 % and +33 %), so it is not a
+  default.
+* Curvature steps are bounded by the axis acceleration only: the controls' jerk control at such
+  junctions (FANUC AI contour control II jerk control, SINUMERIK MD32432 PATH_TRANS_JERK_LIM) has no
+  published default and is not applied.
 * The operator model times M00/M01; if production also books operator time for the same stops, the
   integration must count it once.
 
 ## 15. References
 
-Biagiotti & Melchiorri 2008 (double-S, braking distance); Altintas 2012 (feed drives, contouring);
+Biagiotti & Melchiorri 2008 (double-S, braking distance); Biagiotti & Melchiorri 2012 (FIR filters,
+jerk limitation as moving averages); Suh, Kang, Chung & Stroud 2008 and Yeh & Hsu 2002 (chord error of
+sampled-data interpolation); Altintas 2012 (feed drives, contouring);
 Erkorkmaz & Altintas 2001 (feed drive identification); Ellis 2012 (loop tuning); Nordin & Gutman
 2002 (backlash); Armstrong-Helouvry, Dupont & Canudas de Wit 1994 (friction); Palmgren 1959 (bearing
 drag); Murray, Li & Sastry 1994 (product of exponentials, Paden-Kahan subproblems); Shoemake 1985

@@ -65,7 +65,7 @@ entries:
     title: "JCGM 100:2008 Evaluation of measurement data - Guide to the expression of uncertainty in measurement (GUM 1995 with minor corrections)"
     publisher: "Joint Committee for Guides in Metrology"
     year: 2008
-    pages: "4.3.7: a quantity known only to lie between bounds is given a rectangular distribution; 6.2: expanded uncertainty and its coverage probability (about 95 % with k = 2)"
+    pages: "4.3.7: a quantity known only to lie between bounds is given a rectangular distribution; 4.3.7 and F.2.2.1: a reading quantised with resolution q has standard uncertainty q / sqrt(12); 6.2-6.3: expanded uncertainty and its coverage probability (about 95 % with k = 2)"
   jcgm-101-2008:
     type: standard
     authors: "JCGM (BIPM, IEC, IFCC, ILAC, ISO, IUPAC, IUPAP, OIML)"

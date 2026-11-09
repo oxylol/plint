@@ -4,6 +4,7 @@
 # open-access journal papers were read as full text through the Europe PMC REST service (url given).
 # Where a value was read in a secondary source that quotes an original paper, the secondary source
 # is the entry and the original is named in `note` (the original was not read).
+# johnson-cook-1983 and klippel-2024-ck45-orthogonal are in materials-steels.yaml.
 format: cnctwin-bibliography
 version: 1
 entries:
@@ -129,17 +130,6 @@ entries:
     accessed: 2026-11-03
     pages: "Material groups table: kc1 = specific cutting force for 1 mm2 chip section, mc = chip thickness factor (formulas on p. 523, not read). Group 21 Al wrought not hardenable 700/0.25 (60 HB); 22 Al wrought hardenable 800/0.25 (100 HB); 26 Cu alloys >1 % Pb free cutting 700/0.27 (110 HB); 27 brass 700/0.27 (90 HB); 28 electrolytic copper 700/0.27 (100 HB); 36 Ti pure Rm 400 1700/0.23; 37 Ti alpha+beta alloys hardened Rm 1050 2110/0.22. No magnesium group."
 
-  klippel-2024-ck45-orthogonal:
-    type: article
-    authors: "Klippel, H.; Süssmaier, S.; Zhang, N.; Kuffa, M.; Wegener, K."
-    title: "Large-scale investigation of dry orthogonal cutting experiments Ti6Al4V and Ck45"
-    venue: "International Journal of Advanced Manufacturing Technology 135(5-6), 2871-2908"
-    year: 2024
-    doi: "10.1007/s00170-024-14597-2"
-    url: "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11528021/fullTextXML"
-    accessed: 2026-11-03
-    pages: "Ti6Al4V: Table 2 (supplier tensile values 952/869 MPa, A 16.5 %, Z 39 %, 30 HRC; triple VAR, 750 C/90 min AC); Table 2/3 tool (Sandvik CCMW 09T304 H13A uncoated WC-6Co, rake 0, clearance 7, edge radius 20-50 um, mean 37.5 um); Table 9 (JC fit A 867, B 344, n 0.361, C 0.0145); friction section (apparent mu 0.4-0.6 at higher feeds; Albrecht mu = 0.3); chip shapes (all Ti chips continuous wavy/segmented, more pronounced with f and vc; no BUE traces); Appendix 4 Table 19 (Kienzle coefficients kc1.1, mc, kf1.1, mf at vc 11-500 m/min)"
-
   wojciechowski-2022-min-chip-thickness:
     type: article
     authors: "Wojciechowski, S."
@@ -152,16 +142,6 @@ entries:
     pages: "Table 1 (k = hmin/rn): aluminium, copper, brass 0.2-0.4 (Son et al. 2005); 6082-T6 0.2-0.4 (Liu et al. 2006); copper 0.25 (Lai et al. 2008); brass 360 0.3 (Kim et al. 2004); 6061 0.23 (Malekian et al. 2009); Al 2024-T6 0.29-0.45 (Ozel, FEM); electrolytic copper 0.33 (Camara et al. 2016); Al 6082 0.08 (Rahman et al. 2017). Text: copper 0.17 rn (Wu et al.); Ti-6Al-4V 25-49 % of rn dry, 15-34 % with MQL (Rezaei et al.); overall 0.08-0.63"
 
   # ------------------------------------------------------------------ Johnson-Cook (several materials)
-  johnson-cook-1983:
-    type: article
-    authors: "Johnson, G.R.; Cook, W.H."
-    title: "A constitutive model and data for metals subjected to large strains, high strain rates and high temperatures"
-    venue: "Proceedings of the 7th International Symposium on Ballistics, The Hague, 541-547"
-    year: 1983
-    url: "https://ia800406.us.archive.org/4/items/AConstitutiveModelAndDataForMetals/A%20constitutive%20model%20and%20data%20for%20metals_text.pdf"
-    accessed: 2026-11-03
-    pages: "Model definition (eps0 = 1.0 1/s); Table 1: OFHC copper (Rockwell F-30, c 383 J/kgK, Tm 1356 K, A 90, B 292, n 0.31, C 0.025, m 1.09); cartridge brass (Tm 1189 K, A 112, B 505, n 0.42, C 0.009, m 1.68). Densities and the brass hardness are not cleanly legible in the OCR copy and were not used"
-    note: "Read as the archive.org OCR copy. The OFHC copper set was cross-checked in Arsecularatne & Zhang, 'Assessment of constitutive equations used in machining' (Advances in Engineering Plasticity and Its Applications, p. 280), which quotes A 90, B 292, C 0.025, n 0.31, m 1.09, Tm 1356 K."
 
   ducobu-2017-jc-ti6al4v:
     type: article

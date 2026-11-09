@@ -94,6 +94,7 @@ tool_life:
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 500 m/min (general knowledge, not a cited source)"
   - tool_class: hss
@@ -105,6 +106,7 @@ tool_life:
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 100 m/min (general knowledge)"
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)

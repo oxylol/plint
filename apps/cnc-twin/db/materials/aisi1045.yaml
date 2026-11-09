@@ -106,6 +106,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     VB_limit_mm: {value: 0.3, note: "maximum flank wear VBmax = 0.3 mm (not the average VB of ISO 3685)"}
     T_ref_min: 1
     vc_range_m_min: [355, 535]
+    life_basis: contact_time
     src: amorim-2002-1045-taylor
     note: "Table 4.4: T = K vc^-x with K = 6.57e9 and x = 3.31 (long-term external turning of as-rolled ABNT 1045, 187-196 HB ferrite-pearlite, Sandvik TNMG 160404-PF GC4015 in MTJNR 2525M 16M1, kr 93, lambda -6 deg, nose radius 0.4 mm, f 0.15 mm/rev, ap 0.8 mm, VBmax 0.3 mm; lives 25 / 8.27 / 6.93 min at 355 / 445 / 535 m/min, Table 4.3; no cutting fluid is mentioned), i.e. n = 1/x = 0.302 and C = K^(1/x) = 925 m/min (the fit gives 23.8 / 11.3 / 6.1 min at the three speeds). Three speeds only. The earlier estimate (C 650, n 0.25, a 0.3, b 0.12 at f 0.3, ap 2: 15 min at 330 m/min) corresponds to 15 min at 453 m/min at f 0.15, ap 0.8, where this fit gives 408 m/min. Same source, ABNT 1040 (Table 4.2): K 5.61e15, x 5.37 (n 0.186, C 857 m/min) at 425-525 m/min"
   - tool_class: carbide
@@ -117,6 +118,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.3
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 160 m/min (uncoated P20, general knowledge); n typical of uncoated carbide"
   - tool_class: hss
@@ -128,6 +130,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.3
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 30 m/min (HSS turning of ~190 HB steel, general knowledge); n = 0.125 typical of HSS"
 tool_life_usui: null               # template puts `usui` under the tool_life list, which is not valid YAML; kept as a sibling key

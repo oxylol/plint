@@ -63,10 +63,10 @@ params:
     src: pantale-2022-extoxley-software
     note: "exponent of (R_T t2/l_c) in the dT_M fit"
   min_phi_rad:
-    value: 0.017453292519943295
+    value: 0.08726646259971647
     unit: rad
-    src: est
-    note: "1 deg: lower end of the shear-angle search (ExtOxley uses 5 deg); widened so negative-rake and low-speed solutions are found instead of failing"
+    src: pantale-2022-extoxley-software
+    note: "5 deg: lower end of the shear-angle search of the published extended-Oxley code (phi 5-45 deg). An earlier widening to 1 deg let Oxley's condition (no Coulomb limit) find degenerate roots at 1-2 deg at low speed (chip 30-50 times thicker than the cut, F_C five times the normal solution, interface near 1100 C) where the condition has no physical root; below 5 deg the chip ratio is under 0.09, no continuous chip"
   max_phi_rad:
     value: 1.0471975511965976
     unit: rad
@@ -153,6 +153,36 @@ params:
     unit: "-"
     src: est
     note: "strain-rate ratio below which the Johnson-Cook rate term is held at 1 (rates below the reference rate do not soften the material), as in common JC implementations"
+  fallback_t1_ratio:
+    value: 1.72
+    unit: "-"
+    range: [1.05, 10.0]
+    src: est
+    note: "numerical setting: when one condition has no Oxley solution, the fallback is continued from the nearest converged solution; thinner and thicker cuts at the same speed are tried first in steps of this factor (the t1 spacing of a default process map, map_t1_n over 0.2 um - 2 mm)"
+  fallback_t1_steps:
+    value: 3
+    unit: "-"
+    range: [0, 20]
+    src: est
+    note: "numerical setting: number of t1 steps tried each way (factor 1.72^3 = 5.1)"
+  fallback_speed_ratio:
+    value: 1.55
+    unit: "-"
+    range: [1.05, 10.0]
+    src: est
+    note: "numerical setting: speed step of the continuation search after the t1 steps (the speed spacing of a default process map: span 3 over 6 nodes, 9^(1/5))"
+  fallback_speed_steps:
+    value: 6
+    unit: "-"
+    range: [0, 30]
+    src: est
+    note: "numerical setting: number of speed steps tried each way, lower first (factor 1.55^6 = 14)"
+  fallback_bisection_steps:
+    value: 8
+    unit: "-"
+    range: [0, 40]
+    src: est
+    note: "numerical setting: bisections in log t1 (or log V) between the last inadmissible and the first admissible condition, locating the edge of the admissible region the fallback is continued from (1.72^(1/256): 0.2 % in t1), so the fallback does not depend on step sizes or map grids"
   map_t1_lo_m:
     value: 2.0e-7
     unit: m

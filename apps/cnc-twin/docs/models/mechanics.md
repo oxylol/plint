@@ -87,26 +87,68 @@ cutting); the coating adds its film resistance (thickness from the tool, else th
 typical thickness). R is clamped to [0, 1] and solved together with T_c (fixed point inside
 the interface evaluation), so the force solution and the partition are one consistent state.
 
-**Interface condition with the friction data** (Coulomb-Tresca limit; Shaw, Ber & Mamin 1960):
+**Interface condition: Oxley's own** (Oxley 1989; Hastings, Mathew & Oxley 1980; Adibi-Sedeh,
+Madhavan & Bahr 2003; Lalwani et al. 2009). The shear angle is the one for which the mean interface
+shear stress from the force balance equals the chip material's shear flow stress at the interface
+temperature and strain rate (the chip seizes on the rake face):
 
-    g1 = tau_int - min(k_chip, mu sigma_N),   mu = mu_sliding(database, tool class/coating) x coolant friction factor
+    g1 = tau_int - f k_chip(eps_int, epsdot_int, T_int),   f = CoolantFeedback.friction_factor (1 dry)
 
-mu -> infinity (or `coulomb_limit=False`) is Oxley's sticking condition. Regime 1 (sticking) when
-k_chip governs, 2 (sliding) when mu sigma_N does.
+The friction angle lambda (and the apparent coefficient F/N = tan lambda) is an **output**. With a
+lubricant at the interface (f < 1, the coolant domain's capillary-access factor) the interface
+carries f times the chip's shear flow stress: the constant-friction-factor (Tresca) form of the
+same condition, regime 3 `lubricated`; f = 1 is Oxley's condition exactly, regime 1 `sticking`.
+Why this is the default (`oxley.interface_coulomb(None)` is False for every caller): in continuous
+chip formation the normal stress near the edge is several times the chip's shear flow stress
+(Zorev's peak (a + 1) sigma_N), the real contact area equals the apparent one and the chip seizes
+(Shaw, Ber & Mamin 1960: the interface shear is limited by the shear flow stress of the softer
+body); Oxley's mean interface stress is that seized shear. The database `mu_sliding` values are
+local Coulomb coefficients (FE inputs, tribometer or Albrecht estimates): capping the *mean*
+interface stress at mu sigma_N with them (the former default) let the database coefficient fix the
+shear angle (lambda = atan mu), so the predicted chip ratio barely moved with speed and feed. They
+are used where the contact slides: the edge arc below the stagnation point, the flank wear land,
+the Zorev split below and the plain-Merchant fallback.
+
+**Documented alternative, on request only**: `coulomb_limit=True` (solve, solve_reference,
+build_process_map) caps the interface at the Coulomb-Tresca limit (Shaw, Ber & Mamin 1960),
+
+    g1 = tau_int - min(k_chip, mu sigma_N),   mu = mu_sliding(database, tool class/coating) x f
+
+regime 2 `sliding` where mu sigma_N governs; for a caller whose mu is a measured *mean* interface
+coefficient of the condition (a low-adhesion coating on which the chip slides over the whole
+contact, a lubricated test with measured friction). No harness or domain of this repository asks
+for it.
 
 **Conditions solved**: (1) g1 = 0 (phi), (2) sigma_N' = sigma_N (C0), (3) delta minimising F_C.
 Condition (2) involves only the shear plane, so C0(phi) is solved once per phi node.
 
-**Algorithm** (`kernels.oxley_point`): (i) phi on 40 nodes in [1, 60] deg; at each node C0 by a
+**Algorithm** (`kernels.oxley_point`): (i) phi on 40 nodes in [5, 60] deg (the lower end is the
+published extended-Oxley search range, Pantale 2022 code: phi 5-45 deg); at each node C0 by a
 9-node scan of [2, 10] and Brent (several roots: smallest F_C; no root: the C0 minimising
 |sigma_N' - sigma_N| by golden section, accepted if the mismatch is < 25 % of k_AB, as the ExtOxley
 grid search does; weakly hardening materials make (2) insensitive to C0). (ii) delta on 12
 log-spaced nodes in [0.005, 0.2] and 16 golden-section steps around the best node; for each delta
 the phi root of g1 by Brent on the linear blend of the bracketing node states (smallest F_C, larger
 phi on a tie). (iii) polish: exact Brent root in phi with exact C0(phi) at the optimal delta.
-In the sliding regime F_C does not depend on delta; the smallest delta (surface heat source, the
-Jaeger limit) is kept by the tie-break. All grids and tie-breaks are fixed: results depend only on
-the inputs. Cost: 2-5 ms per condition (section 10).
+**Admissibility**: a solution whose force-minimising delta lies at the top of the published range
+(within 0.1 % of 0.2, `kernels.DELTA_EDGE`) is rejected: the secondary zone would be thicker than
+the theory's thin-zone assumption allows (the flow zone grows into the chip), and these are the
+degenerate roots of low speeds and small t1 (phi 5-8 deg, a chip ten or more times thicker than
+the cut, F_C two to three times the regular branch; at phi 1-2 deg with the former 1 deg search
+bound). The lower end of the range (0.005, the surface heat source of high R_T) stays admissible.
+In the sliding alternative F_C does not depend on delta; the smallest delta is kept by the
+tie-break. All grids and tie-breaks are fixed: results depend only on the inputs. Cost: 2-5 ms per
+condition (section 10).
+
+Where no admissible solution exists. With Johnson-Cook laws the condition fails at low cutting
+speeds and small t1: the interface strain (eps_int = 5-30 with delta = 0.05-0.2) hardens the cold
+interface layer beyond what the shear-plane force system can load (k_chip > tau_int at every phi;
+AISI 1045 below about 100 m/min at h = 0.1 mm, AISI 304 below 40-60 m/min at h <= 0.2 mm, section 13).
+Nakayama (1962, Fig. 25) measured that the strength of steel chips saturates at shear strains above
+2 (about twice the uncut material's), so the Johnson-Cook extrapolation to these interface strains
+is one cause. This coincides with the speeds at which steels form a built-up edge (Ck45 BUE window
+10-50 m/min of the material database; Nakayama 1962 observed BUE on S45C at 50-75 m/min). The
+single-condition solver and the maps then use the fallback of section 3.
 
 **Zorev split** (Zorev 1963; `oxley.zorev_split`): sigma(x) = sigma_max (1 - x/l_c)^a with
 sigma_max = (a + 1) sigma_N, tau = tau_p on the sticking length s l_c and mu sigma(x) beyond,
@@ -118,22 +160,43 @@ for most pairings) is not used by the force or split model.
 
 ## 3. Fallback when Oxley's conditions have no solution
 
-Cases: very small t1 (beta outside its range, C0 condition unsolvable), large negative rakes
-(theta or lambda leave (0, pi/2)), very high temperatures. **Modified Merchant**
-(`kernels.merchant_point`): 2 phi + lambda - alpha = C_M with lambda and C_M = 2 phi + lambda - alpha
-of the nearest converged Oxley node of the same map (same speed and tool temperature first, then
-the whole grid; C0 and delta from that node), else Merchant's C_M = pi/2 with lambda = atan(mu).
-The shear flow stress, temperatures and contact come from the same shear-plane and interface models.
+Cases: no admissible root of the interface condition (low speed and small t1, section 2), very
+small t1 (beta outside its range, C0 condition unsolvable), large negative rakes (theta or lambda
+leave (0, pi/2)), very high temperatures. **Modified Merchant** (`kernels.merchant_point`):
+2 phi + lambda - alpha = C_M with lambda, C_M = 2 phi + lambda - alpha, C0 and delta of a reference
+Oxley state; the shear flow stress, temperatures and contact come from the same shear-plane and
+interface models.
+
+**Reference: the edge of the admissible region** (`oxley.continuation_reference`): from the failing
+condition, thinner and thicker cuts at the same speed are tried (factor 1.72, up to 3 steps each
+way, thinner first), then lower and higher speeds at the same thickness (factor 1.55, up to 6 steps);
+between the first admissible trial and the inadmissible one before it the edge is located by 8
+bisections in log t1 (or log V) (`fallback_*` in mechanics-oxley). The reference is the Oxley state
+at that edge, so the fallback is the theory's state at the limit of its validity carried to the
+failing condition (seizure persists; the friction angle stays an output of the theory, the
+database coefficient does not enter). Process maps (`coefficients.build_process_map`) refine the
+kernel's nearest-node fallback the same way: in a row of t1 nodes, a block of failing nodes is
+continued from the bisected edge between it and its nearer admissible node; a row without an
+admissible node uses the point continuation of each node. A map node and `oxley.solve` therefore
+give the same fallback (within 1 %, tested), whatever the grid; with the earlier nearest-node rule a
+single-speed calibration map and a cutting map continued the same condition from different nodes
+(shear angle 19.3 against 13.1 deg for Ti6Al4V at 20 m/min) and a calibration factor did not
+transfer (+25 % at its own reference point). Only when no trial of the ladder is admissible does
+the kernel's plain Merchant (C_M = pi/2, lambda = atan of the database mu) remain.
+`OrthogonalResult.fallback_reference` names the reference.
+
 Lee & Shaffer (phi = pi/4 - lambda + alpha) is provided (`contact.shear_angle_lee_shaffer`) but not
 used: it gives phi <= 0 for lambda - alpha >= 45 deg, exactly the negative-rake cases that need a
 fallback, and Oxley's own relation has a slope d phi/d(lambda - alpha) of about -0.67, closer to
 Merchant's -1/2 than to Lee-Shaffer's -1.
 
-Error (measured on 54 neighbour pairs, AISI 1045, rakes -6 to +11 deg, 1-6 m/s, 20-400 um, one map
-node away in t1 or speed): F_C within 9.1 % (rms 4.5 %), F_T within 13.5 % of F_C (rms 6 %),
-T_int within 12.7 %. Without a converged neighbour (plain Merchant with lambda = atan mu): F_C
--14 %/+24 %, F_T -9 %/+40 % of F_C. A fallback shear angle below 2 deg (`min_merchant_phi_rad`)
-marks the condition as indentation.
+Error of the modified Merchant relation itself (measured on 54 neighbour pairs, AISI 1045, rakes -6
+to +11 deg, 1-6 m/s, 20-400 um, one map node away in t1 or speed, former Coulomb-limited model):
+F_C within 9.1 % (rms 4.5 %), F_T within 13.5 % of F_C (rms 6 %), T_int within 12.7 %. Below the edge
+the fallback is an extrapolation: the edge state has the thickest admissible secondary zone and the
+smallest shear angle of its neighbourhood, so at low speed it gives thick chips (Ck45 at 10-70
+m/min, h = 0.1 mm: chip ratio 0.19-0.21 against 0.24-0.68 measured, section 9). A fallback shear
+angle below 2 deg (`min_merchant_phi_rad`) marks the condition as indentation.
 
 ## 4. Edge, ploughing, indentation and flank wear land (`contact.py`)
 
@@ -222,8 +285,13 @@ solves section 2-3 on a grid (default 18 log-spaced t1 from 0.2 um to 2 mm, 6 sp
 context (work material, tool, normal rake, workpiece temperature, mu). `lookup` interpolates
 trilinearly in (log t1, log V, T_tool) (`kernels.map_lookup`); forces and lengths are
 interpolated divided by t1 (linear in t1 below the first node), flags take the nearest node.
-`map_matches` tests a map against a new context (cutting's rebuild policy). Interpolation error:
-< 3 % for forces and temperatures midway between nodes (tested).
+`map_matches` tests a map against a new context (cutting's rebuild policy); the context stores the
+effective friction coefficient (database mu x friction factor, which identifies the friction state
+in both interface modes) and the interface mode (`CTX_COULOMB`). Nodes without an admissible Oxley
+solution are continued from the bisected edge of the admissible region (section 3), so a node does
+not depend on the grid. Interpolation error midway between nodes (tested on a coarse grid, t1
+factor 2.3): within 2 % for forces and temperatures in the admissible region, within 4 % next to
+its edge, where the shear angle changes fastest with t1.
 
 ### 7.2 Group coefficients
 `group_coefficients(work, tool, EdgeGroup, SlowState, h_grid, pmap, bue_map=None, calibration=None)`
@@ -242,7 +310,14 @@ Rows: `Kt_Pa, Kr_Pa, Ka_Pa`, `Kte/Kre/Kae_N_per_m`, `shear_angle_rad`, `chip_rat
 5 data-only), scalars `h_min_m`, `K_sp_N_per_m3` (+ source), `v_min_m_s`, `mu_eff`, flank
 `flank_sigma0/tau0_Pa`, `flank_land_star_m`, means at the group's VB, and the ploughing shape.
 **BUE**: with `bue_height_m` > 0 and a map at the BUE rake (`bue_rake_rad` = 25 deg, est) the rows
-blend toward it in proportion min(1, H/h).
+blend toward it in proportion min(1, H/(bue_full_height_ratio h)): the chip flows over the built-up
+edge as over a tool face of larger effective rake (the effective-rake mechanism, Hutton & Yu 1990:
+the BUE raises the effective rake and with it the shear angle), on work material, so Oxley's seized
+interface holds exactly there. The single-condition solver offers the same model
+(`oxley.solve(..., bue=True)` inside the material's database BUE window, or `bue_height_m=H`;
+`oxley.bue_effective_rake`); it is off by default because the window is database data a caller must
+account for (for Ck45 it comes from the ETH tests, the source of the Ck45 validation cases). The
+fully developed BUE rake is an estimate: no measured BUE geometry could be read.
 
 ### 7.3 Calibration mode
 `build_calibration(work, tool, group, process)` selects the material's measured data for the
@@ -281,14 +356,30 @@ for continuous cutting, feed and depth for the breaker window, engaged nose radi
 `ChipState` (from a coefficient row or an orthogonal result).
 
 * **Geometry**: t2 = h / r_c, width b cos eta_c / cos i, piece length = uncut length x V_c/V.
-* **Curl**: natural R_n = 15 l_c (est); groove breaker R = (W^2 + 4 d^2)/(8 d) when the contact
+* **Curl**: natural R_n = 15 l_c (est: no relation for the natural up-curl on a flat rake face
+  could be read; Nakayama 1962 treats only the curl a breaker imposes and Nakayama 1972 and Jawahir
+  & van Luttervelt 1993 were not accessible); groove breaker R = (W^2 + 4 d^2)/(8 d) when the contact
   reaches the groove, else the back wall R = ((W_land + W - l_c)^2 + d^2)/(2 d) (Nakayama 1962;
   Jawahir & van Luttervelt 1993), only inside or above the insert's window (below it the breaker
   fails: natural curl, stringy chips); milling/drilling flutes R_f = sqrt(gullet area / pi);
   the tightest wins, never below t2.
-* **Breaking** (Nakayama): bending strain t2/(2R) >= eps_B, eps_B = 0.1 x bulk fracture strain
-  (min 0.005) x 0.5 (good breakability) / 1 / 2 (poor). Broken chips end after 0.75 turns (up-curl)
-  or 3 turns (side curl); milling chips are separate pieces.
+* **Breaking** (Nakayama 1962, read): a chip of curl radius R breaks when its outer-fibre strain
+  (t2/2)(1/R - 1/R_L) reaches the rupture strain eps_B of the chip material; R_L >> R (Nakayama's
+  Sect. 2.2.6: tripling the shank height changed nothing), so t2/(2R) >= eps_B. eps_B is the
+  material's measured chip breaking strain (`chip.breaking_strain`) when the file gives one,
+  otherwise eps_B = r x bulk true fracture strain (min 0.005) with r from Nakayama's limiting
+  conditions (Fig. 13; t2_lim/(2 R_c) with R_0 ~ R_c, Sect. 2.3): carbon steels S15C, S45C and S55C
+  fall on one line, rupture strain 0.028-0.040 (mean 0.033) whatever the carbon content, so
+  r = 0.033/0.60 = 0.055 with the 1045 true fracture strain of the material database; 18-8
+  stainless SUS7: 0.019-0.028 (mean 0.022), r = 0.022/1.1 = 0.020 (its chips are less ductile
+  than carbon-steel chips although the bulk is more ductile); Cr-Mo steel SCM3 0.036-0.047 (within
+  the steel ratio's scatter for a 4140 with 0.8). Steel, tool steel: the steel ratio; stainless:
+  its own; other families (not measured): the steel ratio, an assumption, times the database
+  breakability factor 2 ('poor', est); 'good' (free-cutting grades, outside the tested steels) x 0.5
+  (est) for every family. The relation is not a constant fraction across steel classes (factor 2.7
+  between carbon and stainless steel), so eps_B of untested families is uncertain by about a factor 3.
+  Broken chips end after 0.75 turns (up-curl) or 3 turns (side curl) (est); milling chips are
+  separate pieces.
 * **ISO 3685 class** (`classify`, codes in `core.bus.CHIP_FORMS`): ribbon when R >= 500 t2; arc
   (61 connected, 62 loose) below one turn; flat/conical spiral (31/32) without side curl
   (|eta_c| < 5 deg); with side curl washer-type helical (4x, pitch 2 pi R tan eta_c <= chip width)
@@ -323,20 +414,40 @@ for continuous cutting, feed and depth for the breaker window, engaged nose radi
 |---|---|---|---|
 | code-to-code, extended Oxley | AISI 1045, a = -7 deg, 200/300 m/min, 0.15/0.3 mm (Ning & Liang 2019 Table 2, Lalwani 2009 predictions) | F_C within 1 %, T_int within 2 % for 3 cases; 9-10 % for 300 m/min/0.3 mm (other delta optimum) | 3 % / 12 % |
 | kernel vs SciPy reference solver | three conditions | F_C 0.3 %, phi 0.3 %, T 0.3 % | 0.3-1 % |
-| Oxley's conditions at the solution | residuals | < 1e-6 relative; F_C V = F_S V_s + F V_c to 1e-12 | |
-| ETH Ck45 orthogonal (Klippel et al. 2022, 15 conditions, 30-500 m/min, 0.04-0.4 mm, r_e 39 um) | uncalibrated | F_C -31 % to -6 % (mean abs 20 %); F_f -54 % to +9 %; chip thickness within 47 % | F_C -35/+15 %, F_f -60/+25 %, t2 50 % |
-| same, calibrated to the 100 m/min Kienzle fit (with kf11 809, mf 0.65) | | F_C -12 % to +27 % | 30 % |
-| ETH Ti6Al4V (Klippel et al. 2022, 7 conditions, 20-150 m/min) | uncalibrated (Seo JC) | F_C +12 to +24 %, F_f +5 to +22 % | 30 % |
-| same, calibrated to five measured Kienzle speeds | | F_C within 4 %, F_f within 10 % | 12 % / 15 % |
+| Oxley's conditions at the solution | residuals | < 1e-6 relative; tau_int = k_chip to 1e-6; F_C V = F_S V_s + F V_c to 1e-12 | |
+| friction is an output | database mu 0.5 -> 0.2 | rake-face solution unchanged (Coulomb alternative: lambda = atan 0.2) | exact |
+| fallback grid independence | map node against oxley.solve, two grids | phi and F_C within 1 % | 1 % |
+| ETH Ck45 orthogonal (Klippel et al. 2022, 15 conditions, 30-500 m/min, 0.04-0.4 mm, r_e 39 um), uncalibrated | 12 Oxley-regime points | F_C -20 to -7 % (mean abs 16 %); F_f -32 to -13 %; chip thickness -20 to +43 % | -25/+10 %, -40/+20 %, 50 % |
+| same | 3 fallback points (30 m/min in the BUE window; 100 m/min 0.06 mm; 200 m/min 0.04 mm) | F_C -2 to +52 %, F_f 0 to +160 %, chip thickness +9 to +209 % (30 m/min) | wide, documented |
+| same, calibrated to the 100 m/min Kienzle fit (with kf11 809, mf 0.65) | | Oxley points F_C -9 % to +9 %; fallback points +6 to +25 %, 30 m/min +79 % | 15 % / 80 % |
+| ETH Ti6Al4V (Klippel et al. 2022, 7 conditions, 20-150 m/min) | uncalibrated (Seo JC) | F_C +32 to +95 %, F_f +34 to +201 %, chip thickness +46 to +215 % | 0/+50 % (Oxley points), 0/+100 % (fallback) |
+| same, calibrated to five measured Kienzle speeds | | F_C -5 to +9 %, F_f -10 to +21 % | 12 % / 25 % |
 
-Why the tolerances: the uncalibrated error combines the JC-set uncertainty (other published 1045
-sets change predicted forces and temperatures by 10-20 %, Ning & Liang 2019 Table 5), the estimated
-h_min ratio and edge pressure, and the known thrust deficit of shear-plane models with honed edges;
-the calibrated Ck45 error is bounded by the Kienzle fit's own deviation from the points (up to 25 %
-at small h) and Oxley's weaker speed dependence of the thrust (calibrated F_f is +40 to +80 % at
-250-500 m/min when calibrated at 100 m/min only: give several reference speeds where available).
-Oxley's book tables and the CIRP/NIST AMM benchmark (Ivester et al. 2000) could not be read; the
-ETH database is open, recent and the source of the material files' Kienzle data.
+Former Coulomb-limited model on the same ETH data (for comparison): Ck45 F_C -31 to -6 %, F_f -54 to
++9 %; Ti6Al4V F_C +12 to +24 %, F_f +5 to +22 %. The Ti6Al4V agreement came from mu = 0.3, an
+Albrecht estimate from the same ETH tests: with Oxley's seized interface a continuous-chip theory
+over-predicts the segmented Ti6Al4V chip (thicker chip, higher forces); the theory does not describe
+segmented chips (section 13).
+
+Validation suite (`twin validate`, docs/validation-report.md; harnesses unchanged, independent cases;
+before = Coulomb-limited interface with the database mu, after = this model), 2026-11-03:
+
+| quantity | before: median / p90 abs. error, cases in budget | after | what moved |
+|---|---|---|---|
+| chip_ratio (Ck45 x 2, AISI 304) | 19.6 % / 77.4 %, 0/3 | 26.4 % / 49.1 %, 0/3 | Ck45 150-500 m/min and the 150 m/min feed series improved (e.g. 0.02 mm +206 -> +43 %, 0.06 mm +81 -> +3 %, 0.1 mm +53/+67 -> +15/+27 %); Ck45 10-70 m/min (no admissible solution; BUE window 10-50 m/min) -21 to -73 % (was -30 to +100 %); AISI 304 at 13-60 m/min mostly fallback: -54 to +22 % (was -19 to +96 %, a constant 0.43-0.46 set by mu = 0.6) |
+| shear_angle (AISI 304 B, Ti6Al4V) | 21.7 % / 45.4 %, 0/2 | 35.1 % / 48.1 %, 0/2 | 304 B (13-67 m/min, fallback) -19 to -52 % (was -18 to +46 %); Ti6Al4V -14 to -54 % (was +11 to +47 %): segmented chips |
+| chip_temperature (Ck45 temper colours) | 17.4 % / 63.8 %, worst 3.48 tolerances | 20.2 % / 44.4 %, worst 2.43 tolerances | 10-30 m/min -48/-20 % (was -70/-50 %), 50-70 m/min +20 to +36 % (was -11 to -25 %), 150 m/min +4 % (was -11 %), 250-500 m/min unchanged (already sticking) |
+| tool_temperature (uses the coefficient pipeline) | 52.8 % / 86.8 %, 1/5 | 65.3 % / 120.6 %, 0/5 | Ti6Al4V natural thermocouple (Loeschner 2025) 6.6 -> 30.9 % (the seized interface heats the Ti6Al4V contact more than the former mu = 0.3 limit), AISI 4140 IR/TC 76.8 -> 96.2 %, Ti6Al4V IR window 45.1 -> 32.7 %, AISI 1045 embedded TC 4.9 -> 3.6 % |
+| coolant_reach (friction factor in Oxley's condition) | 38.6 % / 85.4 %, 10/18 classes | 64.5 % / 105.5 %, 10/18 | Ti6Al4V jet-direction case 38.8 -> 79.3 % |
+| chip_form (Ti6Al4V, breaker inserts not in the database) | 6/32 classes | 5/32 | chips now break (bend 0.026-0.030 against eps_B 0.027 instead of 0.032 against 0.049) but the natural curl radius (4-20 mm) leaves pieces of 80-375 mm: the inserts' SF/SMC grooves decide the measured grades |
+
+Why the tolerances of the tests: the uncalibrated error combines the JC-set uncertainty (other
+published 1045 sets change predicted forces and temperatures by 10-20 %, Ning & Liang 2019 Table 5),
+the estimated h_min ratio and edge pressure, and the known thrust deficit of shear-plane models with
+honed edges; the calibrated Ck45 error is bounded by the Kienzle fit's own deviation from the points
+(up to 25 % at small h). Oxley's book tables and the CIRP/NIST AMM benchmark (Ivester et al. 2000)
+could not be read; the ETH database is open, recent and the source of the material files' Kienzle
+data.
 
 ## 10. Kernels, signatures and measured cost
 
@@ -348,8 +459,8 @@ lookups with SciPy/NumPy, and assert `len(signatures) == 1`. Slots in `mechanics
 
 | kernel | signature | cost |
 |---|---|---|
-| `oxley_point` | `(case f8[4], mat f8[9], cp_T, cp_v, k_T, k_v, tool f8[5], kt_T, kt_v, ct_T, ct_v, prm f8[38], out f8[40])` | 1.9 ms (adiabatic) - 4.8 ms (with partition) |
-| `oxley_map` | `(t1 f8[nh], v f8[nv], Tt f8[nT], alpha, Tw, mat..., prm, values f8[nT,nv,nh,40])` | 3.2 ms per node (432-node map: 1.4 s) |
+| `oxley_point` | `(case f8[4], mat f8[9], cp_T, cp_v, k_T, k_v, tool f8[5], kt_T, kt_v, ct_T, ct_v, prm f8[39], out f8[40])` | 1.9 ms (adiabatic) - 4.8 ms (with partition) |
+| `oxley_map` | `(t1 f8[nh], v f8[nv], Tt f8[nT], alpha, Tw, mat..., prm, values f8[nT,nv,nh,40])` | 3.2 ms per node; `build_process_map` with the edge refinement of its fallback nodes: 1.7-1.9 s for the default 432-node map (AISI 1045 at 30 and 150 m/min: 308 and 235 fallback nodes; 1.4 s before the refinement) |
 | `merchant_point` | as `oxley_point` | 8 us |
 | `map_lookup` | `(t1, v, Tt, values, scaled i8[:], discrete i8[:], t1_query f8[n], speed, ttool, out f8[n,40])` | 16 us for 24 rows |
 | `interp_log_h` | `(h_grid, row, h) -> f8`, linear in log h | 0.46 us from Python (about 20 ns inside a kernel) |
@@ -359,7 +470,10 @@ lookups with SciPy/NumPy, and assert `len(signatures) == 1`. Slots in `mechanics
 | `bue_step` | `(H f8[n], window f8[n], uncut f8[n], dt, prm f8[5], seed, stream, key i8[n], counter i8[n], broke i8[n])` | 21 ns per element |
 | `jc_flow_stress`, `jc_hardening_index`, `beta_partition`, `rect_area_factor`, `tool_resistance`, `interp1`, `brent_init`, `brent_step`, `shear_zone_rise`, `solve_shear_plane_temp`, `shear_plane_state`, `solve_strain_rate_constant`, `interface_state`, `phi_root_on_grid`, `blend_state`, `fill_output` | see `kernels.py` | internal to the solver |
 
-Python entry points: `group_coefficients` (24 h nodes) 1.1 ms, `build_calibration` 27 ms,
+Python entry points: `oxley.solve` 3.9 ms with an admissible solution, 37 ms with the edge
+continuation of the fallback (ladder + 8 bisections), `group_coefficients` (24 h nodes) 1.1 ms,
+`build_calibration` 61 ms (27 ms before the fallback refinement; timings of 2026-11-03 with the box
+at a load of about 3.5 on 4 cores),
 `chip_form` 45 us (300 us with the cooling colour). Compilation on a cold cache: about 12 s (eager,
 at import). Nothing here runs at L0: the hot loop reads the `ProcessCoefficients` rows.
 
@@ -384,8 +498,22 @@ tie-breaks are fixed.
 
 ## 13. Assumptions and limitations (with error estimates)
 
-* Continuous-chip shear-plane theory; segmented chips (Ti, hardened steels, high speeds) are
-  flagged but their cyclic forces are not modelled (mean forces: Ti within 25 % uncalibrated).
+* Continuous-chip shear-plane theory with Oxley's seized interface; segmented chips (Ti, hardened
+  steels, high speeds) are flagged but not modelled: for Ti6Al4V the theory gives chips 1.5-3 times
+  thicker and forces 30-95 % higher than measured uncalibrated (calibrated to measured Kienzle data:
+  within 10 % in F_C).
+* Validity region of Oxley's condition with Johnson-Cook laws: no admissible solution at low speeds
+  and small t1 (validation conditions: AISI 1045 below about 100 m/min at h = 0.1 mm and below
+  h = 0.05 mm at 100-200 m/min; AISI 304 below 40-60 m/min at h <= 0.2 mm and below about 30 m/min at
+  0.43 mm; Ti6Al4V below 50 m/min at h = 0.1 mm and at h <= 0.08 mm up to 70 m/min). There the fallback (section 3)
+  carries the edge state of the theory: thick chips (chip ratio 0.19-0.30 against 0.24-0.68 measured
+  for Ck45 and 304) and forces up to +50 %; for steels this region is largely the BUE region.
+* BUE: a BUE-free solution unless the caller supplies a BUE height or asks for the database window
+  (`bue`); the effective rake of a fully developed BUE (25 deg) is an estimate; inside the AISI 304
+  window it over-thins the chips of small feeds (chip ratio +60 to +140 % at h = 0.06-0.1 mm).
+* Interface temperatures at high speed (AISI 1045, 250-500 m/min) make the chip 25-38 % too thin;
+  the Jaspers & Dautzenberg set's linear thermal softening (m = 1) is the likely cause (Burns et al.
+  2012 report rapidly heated 1045 stiffer than this law below the eutectoid).
 * Sharp-tool Oxley + additive edge model: thrust uncertain by about a factor 2 near h_min.
 * Armarego's equivalence for oblique cutting uses the full cutting speed for the thermal state
   (normal-speed effect below cos i on R_T: < 15 % in R_T for i < 30 deg).
@@ -393,18 +521,25 @@ tie-breaks are fixed.
   temperature passed in must exclude the sub-grid flash of the current contact (else the flash is
   counted twice; bounded by the flash rise times the fraction thermal resolves).
 * T_ws = T_AB for the flank partition (upper bound; flank tool share therefore a lower bound).
+* Chip breaking: the rupture strains are Nakayama's for carbon and 18-8 steels; other families take
+  carbon steel's fraction of the bulk fracture strain (factor 3 uncertain); the natural up-curl
+  radius (15 l_c) is an estimate, and without the insert's groove geometry in the database the
+  chip-form classes of breaker inserts are not predicted (5 of 32 Ti6Al4V grades match).
 * Estimated parameters (all `src: est` in db/models/mechanics-*.yaml): Zorev exponent, VB*,
-  v_min, min shear rake, BUE rake and dynamics, natural curl ratio, chip fracture-strain ratio,
-  form thresholds, oxide activation energies and reference time, numerical grids.
+  v_min, min shear rake, BUE rake and dynamics, natural curl ratio, breakability factors, turns to
+  break, form thresholds, oxide activation energies and reference time, numerical grids and the
+  fallback continuation steps.
 * Data-only materials: forces as good as the catalogue Kienzle values (typically +-20-30 %);
   temperatures from Merchant geometry (about +-30 %).
 
 ## 14. References
 
-Albrecht 1960; Armarego & Whitfield 1985; Blok 1937; Boothroyd 1963; Budak, Altintas & Armarego
-1996; Carslaw & Jaeger 1959; Hill 1950; Jaeger 1942; Jawahir & van Luttervelt 1993; Johnson & Cook
-1983; Klippel et al. 2022 (ETH database); Komanduri & Hou 2001; Lalwani, Mehta & Jain 2009; Lee &
-Shaffer 1951; Loewen & Shaw 1954; Merchant 1945; Nakayama 1962; Ning & Liang 2019; Oxley 1989;
-Pantale et al. 2022 (article and software); Recht 1964; Shaw, Ber & Mamin 1960; Smithey, Kapoor &
-DeVor 2001; Stabler 1951; Tabor 1951; Wagner 1933; Zorev 1963; ISO 3685:1993. Full entries:
-`db/bibliography/models-mechanics.yaml`.
+Adibi-Sedeh, Madhavan & Bahr 2003; Albrecht 1960; Armarego & Whitfield 1985; Blok 1937; Boothroyd
+1963; Budak, Altintas & Armarego 1996; Carslaw & Jaeger 1959; Hastings, Mathew & Oxley 1980 (not
+read); Hill 1950; Hutton & Yu 1990 (abstract); Jaeger 1942; Jawahir & van Luttervelt 1993 (not
+read); Johnson & Cook 1983; Klippel et al. 2022 (ETH database); Komanduri & Hou 2001; Lalwani, Mehta
+& Jain 2009; Lee & Shaffer 1951; Loewen & Shaw 1954; Merchant 1945; Nakayama 1962 (read: criterion,
+contact length, limiting chip thicknesses of five steels); Ning & Liang 2019; Oxley 1989 (equations
+as reproduced by Lalwani 2009 and the ExtOxley code); Pantale et al. 2022 (article and software);
+Recht 1964; Shaw, Ber & Mamin 1960; Smithey, Kapoor & DeVor 2001; Stabler 1951; Tabor 1951; Wagner
+1933; Zorev 1963; ISO 3685:1993. Full entries: `db/bibliography/models-mechanics.yaml`.

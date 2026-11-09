@@ -90,6 +90,7 @@ class InsertThermal:
         self.mat_tool = props.tool_material_table_by_id(setup.tool_material_id)
         self.mat_holder = props.material_table_by_id(str(p["holder_material"]))
         self.model = ToolThermal(0, spec, self.mat_tool, self.mat_holder, float(st.tool_cell_m), ambient_K, 0.0)
+        self.model.enable_field(st)        # thermal's 3-D cutting-region field, built at the first contact
         self.env = ToolEnvironment(in_spindle=False, omega_rad_s=0.0, T_air_K=ambient_K, T_end_K=ambient_K)
         self.time_s = 0.0
         self.heat_J = 0.0
@@ -106,8 +107,13 @@ class InsertThermal:
         nodes = self._insert_nodes()
         return float(np.interp(distance_m, self.model.layout.z_m[nodes], self.model.ladder.T[nodes]))
 
-    def step(self, dt_s: float, heat_W: float) -> None:
-        self.model.deposit(np.array([0.0]), np.array([heat_W * dt_s]))
+    def step(self, dt_s: float, heat_W: float, st: ContactState | None = None, wedge: float | None = None) -> None:
+        if st is None:
+            self.model.deposit(np.array([0.0]), np.array([heat_W * dt_s]))
+        else:
+            self.model.deposit_contact(st.rake_to_tool_W * dt_s, st.flank_to_tool_W * dt_s,
+                                       max(st.contact_length_m, st.edge_radius_m), st.flank_contact_m, st.width_m,
+                                       wedge_angle_rad=0.5 * math.pi / wedge, edge_radius_m=st.edge_radius_m)
         self.model.step(dt_s, self.env, self.energy_tol)
         self.time_s += dt_s
         self.heat_J += heat_W * dt_s
@@ -167,11 +173,8 @@ def local_rise(st: ContactState, x_m: float, y_m: float, z_m: float, *, k: float
 
 def temperature_at_point(insert: InsertThermal, st: ContactState, x_m: float, y_m: float, z_m: float, *,
                          time_s: float, wedge: float, side_adiabatic: bool = False) -> float:
-    distance = math.sqrt(x_m * x_m + z_m * z_m)
-    body = insert.temperature_at(distance)
-    k, alpha = insert.k_alpha(body)
-    return body + local_rise(st, x_m, y_m, z_m, k=k, alpha=alpha, time_s=time_s, wedge=wedge,
-                             side_adiabatic=side_adiabatic)
+    y = 0.0 if side_adiabatic else 0.5 * st.width_m + y_m        # field frame: the contact on [0, width]
+    return float(insert.model.temperature_at(np.array([[x_m, y, -z_m]]), outside="nearest")[0])
 
 
 def window_mean(insert: InsertThermal, st: ContactState, xs: tuple[float, float], zs: tuple[float, float],

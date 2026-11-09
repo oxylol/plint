@@ -181,7 +181,7 @@ def _discuss(q) -> dict:
         out[r.id] = "; ".join(parts) + (". The model's coolant effect is the friction factor; the jet's cooling and "
                                         "chip-breaking actions and its direction (beyond reach) do not change the "
                                         "predicted quantity.")
-    out["summary"] = ("No budget is defined for coolant_reach. In these set-ups the coolant model reaches the "
+    out["summary"] = (H.budget_summary(q) + "In these set-ups the coolant model reaches the "
                       "mechanics only through the lubrication friction factor, so measured effects of jet direction, "
                       "convective cooling during the engagement and jet-assisted chip breaking are not reproduced.")
     return out

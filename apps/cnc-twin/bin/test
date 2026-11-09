@@ -1,0 +1,38 @@
+#!/bin/bash
+# The test command: every test package runs in its own pytest process (test helpers such as
+# fixtures.py and conftest.py are imported as siblings, so packages must not share a process),
+# all through bin/tsafe. Usage:
+#   bin/test                 unit + integration tests (fast)
+#   bin/test --all           also regression projects, the validation suite and convergence (slow)
+#   bin/test --ui            also the browser UI tests (needs docker)
+#   bin/test unit/thermal    one package (any path under tests/)
+set -uo pipefail
+root=/opt/plint/apps/cnc-twin
+cd "$root"
+marks="not slow and not ui"
+targets=()
+for arg in "$@"; do
+  case "$arg" in
+    --all) marks="not ui" ;;
+    --ui) marks="" ;;
+    *) targets+=("tests/${arg#tests/}") ;;
+  esac
+done
+if [ ${#targets[@]} -eq 0 ]; then
+  for d in tests/unit/*/ tests/integration/ tests/regression/ tests/validation/ tests/convergence/ tests/perf/ tests/ui/; do
+    [ -d "$d" ] && ls "$d"/test_*.py >/dev/null 2>&1 && targets+=("${d%/}")
+  done
+fi
+failed=()
+total_pass=0; total_fail=0
+for t in "${targets[@]}"; do
+  out=$(TSAFE_MEM="${TSAFE_MEM:-1500M}" bin/tsafe python -m pytest -q -p no:cacheprovider ${marks:+-m "$marks"} "$t" 2>&1 | tail -n 3)
+  line=$(echo "$out" | grep -E "passed|failed|error|no tests ran" | tail -n 1)
+  p=$(echo "$line" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' || echo 0)
+  f=0; for n in $(echo "$line" | grep -oE '[0-9]+ (failed|errors?)' | grep -oE '[0-9]+'); do f=$((f + n)); done
+  total_pass=$((total_pass + ${p:-0})); total_fail=$((total_fail + ${f:-0}))
+  printf '%-34s %s\n' "$t" "${line:-$out}"
+  if [ "${f:-0}" != "0" ] || echo "$out" | grep -qE "^ERROR|errors? during collection"; then failed+=("$t"); fi
+done
+echo "total: $total_pass passed, $total_fail failed/errors"
+if [ ${#failed[@]} -gt 0 ]; then echo "FAILED: ${failed[*]}"; exit 1; fi

@@ -37,7 +37,7 @@ from . import work as WK
 from .abi import StructureInputs
 from .channels import MAX_PARTS, MAX_SLOTS, channels as structure_channels
 from .materials import work_material
-from .protocols import CylinderGeometry, stock_geometry
+from .protocols import FillSnapshot, stock_geometry
 from .schema import REFRESH_LATENCY_MACRO, settings as read_settings
 from .state import StructureState, ToolStructState, WorkStructState
 
@@ -116,6 +116,11 @@ class StructureDomain:
             ws = WorkStructState(w)
             lo, hi = self._geometry().stock_bounds_S(w)
             ws.grid = VX.choose_grid(lo, hi, st.settings.max_dof, st.settings.min_cell_m)
+            # the as-supplied stock (residual-stress reference): its material fractions before any cut
+            g = ws.grid
+            ws.stock_fill = np.clip(np.asarray(self._geometry().fill_fraction(w, g.origin, g.cell_m, g.shape),
+                                               dtype=float), 0.0, 1.0)
+            ws.stock_lo, ws.stock_hi = np.asarray(lo, float).copy(), np.asarray(hi, float).copy()
             st.works[w] = ws
         state.structure = st
 
@@ -208,8 +213,8 @@ class StructureDomain:
                 if note not in st.notes:
                     st.notes.append(note)
             self._rt["geometry"] = geometry
-            self._rt["stock"] = stock_geometry(_get(project, "stock")) if _get(project, "stock") is not None \
-                else geometry
+            kind = str(_plain(_get(_get(project, "stock"), "kind", "")) or "")
+            self._rt["cylinder"] = kind in ("cylinder", "tube")
             self._rt["material"] = work_material(_get(project, "material"))
             self._rt["machine"] = _get(project, "machine")
             self._rt["datum"] = FX.datum_point_S(_get(project, "stock_pose_W_S"))
@@ -287,10 +292,8 @@ class StructureDomain:
         return sup, held, int(getattr(part, "supports_version", 0)), dict(getattr(part, "lathe", {}) or {})
 
     def _kind(self, st: StructureState, ws: WorkStructState, lathe: LA.LatheSupports) -> str:
-        geometry = self._geometry()
-        lo, hi = geometry.stock_bounds_S(ws.workpiece)
-        cylinder = isinstance(self._rt["stock"], CylinderGeometry)
-        if cylinder and lathe.chuck is not None:
+        lo, hi = ws.stock_lo, ws.stock_hi
+        if self._rt["cylinder"] and lathe.chuck is not None:
             L, D = LA.free_length(lo, hi, lathe)
             if D > 0.0 and L / D > st.settings.lathe_slenderness:
                 return "beam"
@@ -298,16 +301,17 @@ class StructureDomain:
 
     def _inputs(self, ctx, st, ws: WorkStructState, prev) -> WK.WorkInputs:
         geometry = self._geometry()
-        lo, hi = self._rt["stock"].stock_bounds_S(ws.workpiece)
+        lo, hi = ws.stock_lo, ws.stock_hi
         thermal = None
         th = prev.thermal if prev is not None else None
         T = th.work_temp_K.get(ws.workpiece) if th is not None else None
         if T is not None and np.size(T):
             thermal = (np.asarray(th.work_temp_origin_S_m[ws.workpiece], dtype=float),
                        float(th.work_temp_cell_m[ws.workpiece]), np.asarray(T, dtype=float))
-        return WK.WorkInputs(ws.workpiece, ws.grid, self._rt["material"], st.settings, geometry, self._rt["stock"],
-                             st.form, np.asarray(lo, float), np.asarray(hi, float), ws.kind or "voxel", ws.supports,
-                             ws.lathe, ws.clamped, thermal, isinstance(self._rt["stock"], CylinderGeometry))
+        return WK.WorkInputs(ws.workpiece, ws.grid, self._rt["material"], st.settings, geometry,
+                             FillSnapshot(ws.grid, ws.stock_fill, lo, hi), st.form, np.asarray(lo, float),
+                             np.asarray(hi, float), ws.kind or "voxel", ws.supports, ws.lathe, ws.clamped, thermal,
+                             bool(self._rt["cylinder"]))
 
     def _input_key(self, inputs: WK.WorkInputs) -> str:
         """Identity of a job's inputs: material fractions, temperatures and boundary conditions."""

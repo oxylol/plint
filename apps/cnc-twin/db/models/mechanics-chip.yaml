@@ -16,12 +16,18 @@ params:
     unit: "-"
     src: est
     note: "curl radius / chip thickness above which the chip is classed as a straight ribbon (ISO 3685 class 1)"
-  break_strain_ratio:
-    value: 0.1
+  chip_rupture_ratio_steel:
+    value: 0.055
     unit: "-"
-    range: [0.01, 1.0]
-    src: est
-    note: "fracture strain of the formed chip in bending / bulk fracture strain of the material (the chip has used most of its ductility in the shear zones); Nakayama's measured chip fracture strains of a few percent for steels motivate the value"
+    range: [0.04, 0.07]
+    src: nakayama-1962-chip-breaker
+    note: "rupture strain of the formed chip in bending / bulk true fracture strain, carbon steels. Nakayama Fig. 13 (S15C, S45C and S55C fall on one line: the carbon content does not change the chip's ductility): limiting chip thickness 0.23, 0.30, 0.41, 0.46 and 0.50 mm at chip-flow-circle radii 2.9, 4.1, 6.5, 7.7 and 8.9 mm; with his Eq. (1), R_L >> R_0 (Sect. 2.2.6) and R_0 ~ R_c (Sect. 2.3) the rupture strain t2/(2 R_c) is 0.028-0.040, mean 0.033 (Cr-Mo steel SCM3: 0.036-0.047). Divided by the true fracture strain 0.60 the material database holds for AISI 1045 (= S45C): 0.055. Used for carbon, low-alloy and tool steels and, as an assumption, for families Nakayama did not test"
+  chip_rupture_ratio_stainless:
+    value: 0.020
+    unit: "-"
+    range: [0.015, 0.03]
+    src: nakayama-1962-chip-breaker
+    note: "the same ratio for austenitic stainless steel: Nakayama Fig. 13, 18-8 stainless SUS7 (AISI 304 type): limiting chip thickness 0.165, 0.165, 0.245 and 0.31 mm at R_c 2.9, 4.1, 6.5 and 7.7 mm, rupture strain 0.019-0.028, mean 0.022, divided by the true fracture strain 1.1 of AISI 304 in the material database. The chips of 18-8 steel are less ductile than carbon-steel chips although the bulk is more ductile: the ratio is not a constant of all steels"
   min_break_strain:
     value: 0.005
     unit: "-"

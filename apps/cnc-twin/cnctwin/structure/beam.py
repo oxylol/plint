@@ -150,11 +150,12 @@ def element(L: float, sec: Section) -> tuple[np.ndarray, np.ndarray]:
 
 
 def foundation(L: float, k_lat_N_per_m2: float, k_ax_N_per_m2: float, k_tor_N: float,
-               k_lat_y_N_per_m2: float | None = None) -> np.ndarray:
+               k_lat_y_N_per_m2: float | None = None, k_rot_N: float = 0.0, k_rot_y_N: float | None = None) -> np.ndarray:
     """12 x 12 stiffness of a distributed elastic (Winkler) foundation over one element, acting on the element's
     DOFs (or on relative DOFs between two coincident beams): lateral stiffness per length k_lat (along x; along y
-    ``k_lat_y``, default the same) with the cubic (Hermite) displacement interpolation, axial and torsional per
-    length with linear interpolation."""
+    ``k_lat_y``, default the same) with the cubic (Hermite) displacement interpolation; axial, torsional and
+    bending-rotation stiffness per length (``k_rot`` against ry, ``k_rot_y`` against rx: the axial tangential
+    contact of a gripped surface resisting the rotation of its section) with linear interpolation."""
     K = np.zeros((12, 12))
     base = L / 420.0 * np.array([[156.0, 22.0 * L, 54.0, -13.0 * L],
                                  [22.0 * L, 4.0 * L * L, 13.0 * L, -3.0 * L * L],
@@ -170,6 +171,11 @@ def foundation(L: float, k_lat_N_per_m2: float, k_ax_N_per_m2: float, k_tor_N: f
     it = np.array([RZ, DOF + RZ])
     K[np.ix_(ia, ia)] += k_ax_N_per_m2 * lin
     K[np.ix_(it, it)] += k_tor_N * lin
+    kry = k_rot_N if k_rot_y_N is None else k_rot_y_N
+    iry = np.array([RY, DOF + RY])
+    irx = np.array([RX, DOF + RX])
+    K[np.ix_(iry, iry)] += k_rot_N * lin
+    K[np.ix_(irx, irx)] += kry * lin
     return K
 
 

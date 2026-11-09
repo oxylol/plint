@@ -27,7 +27,7 @@ params:
   flood_line_length_m: {value: 2.5, unit: m, range: [1.5, 4.0], src: est, note: "tank under the base to the head manifold"}
   k_flood_line: {value: 4.0, unit: "-", range: [2.0, 8.0], src: est, note: "strainer, solenoid valve (1.5-2.5) and four bends (0.3-0.5 each) after crane-tp410-2013"}
   flood_branch_diameter_m: {value: 6.35, unit: mm, src: est, note: "1/4 in segmented (Loc-Line type) nozzle hose"}
-  flood_branch_length_m: {value: 0.3, unit: m, range: [0.15, 0.6], src: est}
+  flood_branch_length_m: {value: 0.3, unit: m, range: [0.15, 0.6], src: est, note: "segmented nozzle hose from the head manifold to the tip: a 12 in (0.3 m) kit length assumed (0.15-0.6 m on machines)"}
   k_flood_branch: {value: 3.0, unit: "-", range: [1.5, 6.0], src: est, note: "manifold outlet tee and the joints of the segmented hose"}
   nozzle_discharge_coefficient: {value: 0.9, unit: "-", range: [0.8, 0.97], src: est, note: "short converging round nozzle (idelchik-2008-hydraulic-resistance: well-rounded nozzles 0.95-0.99, short conical tips lower); no vena contracta, C_v = C_d"}
   default_nozzle_diameter_m: {value: 3.0, unit: mm, range: [1.5, 6.0], src: est, note: "orifice of a flood nozzle whose machine entry gives no diameter_mm"}
@@ -39,12 +39,12 @@ params:
   pump_efficiency_displacement: {value: 0.6, unit: "-", range: [0.45, 0.8], src: est, note: "diaphragm / piston high-pressure coolant pumps, shaft power to hydraulic power"}
   # Through-spindle circuit (pump -> line -> rotary union -> drawbar bore -> holder -> tool holes)
   tsc_line_diameter_m: {value: 10.0, unit: mm, range: [6.0, 13.0], src: est, note: "3/8 in high-pressure hose"}
-  tsc_line_length_m: {value: 3.0, unit: m, range: [1.5, 5.0], src: est}
+  tsc_line_length_m: {value: 3.0, unit: m, range: [1.5, 5.0], src: est, note: "TSC pump beside the tank to the rotary union on top of the spindle head: about 2 m up the column plus 1 m along the base, assumed"}
   k_tsc_line: {value: 6.0, unit: "-", range: [3.0, 12.0], src: est, note: "fine filter, check and purge valves, bends"}
   rotary_union_diameter_m: {value: 6.0, unit: mm, range: [4.0, 10.0], src: est, note: "bore of a rotary union for 40-taper through-spindle coolant"}
   k_rotary_union: {value: 3.0, unit: "-", range: [1.5, 6.0], src: est, note: "seal faces and the turns inside the union, on its bore velocity"}
   drawbar_bore_diameter_m: {value: 8.0, unit: mm, range: [5.0, 12.0], src: est, note: "coolant tube through the drawbar of a 40-taper spindle"}
-  drawbar_bore_length_m: {value: 0.45, unit: m, range: [0.3, 0.7], src: est}
+  drawbar_bore_length_m: {value: 0.45, unit: m, range: [0.3, 0.7], src: est, note: "the coolant tube runs the length of the spindle shaft from the rotary union to the pull stud: about 0.45 m in a 40-taper spindle (0.3-0.7 m), assumed"}
   holder_passage_diameter_m: {value: 4.0, unit: mm, range: [2.5, 8.0], src: est, note: "bore of the length-adjustment screw / coolant tube of the holder; length = gauge length"}
   k_holder: {value: 1.5, unit: "-", range: [0.8, 3.0], src: est, note: "pull-stud passage and the chamber behind the shank"}
   # Compressed air (air blast, MQL carrier)

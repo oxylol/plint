@@ -18,6 +18,15 @@ equations: for each B, A follows from T(A, B; v1) = T_Taylor(v1) (closed form wi
 term, a monotone root otherwise), and B is the root of ln(T(A(B), B; v2) / T_Taylor(v2)) (Brent, fixed
 tolerances). The check speed v3 (the 15-min life) gives the reported prediction residual.
 
+The life integral is edge **contact** time (the run advances each element by its own in-cut time), so
+the targets are T_Taylor x the entry's contact fraction (``TaylorEntry.contact_life_s``): 1 for a
+contact-time life and for a continuous cut (turning, boring, drilling, tapping: cutting time is contact
+time); phi_ref / 2 pi for a milling life counted in cutting time, phi_ref the arc of the revolution the
+edge is in the material in the entry's reference cut (``engaged_arc_ref_deg``, else the ISO 8688-2
+reference end-milling cut, ``milling_reference_arc_rad``). An element engaged phi_e / 2 pi of each
+revolution then reaches the VB limit after T_Taylor phi_ref / phi_e of cutting time: the Taylor life
+itself at the reference engagement.
+
 :class:`MechanicsResponse` is the default response: cnctwin.mechanics (Oxley with Johnson-Cook, or the
 data-only model) for the chip and the rake contact, Smithey's flank-land stresses and Blok's partition
 (Jaeger band source on the work, stationary source on the tool) for the flank temperature. The
@@ -309,11 +318,15 @@ def calibration_speeds(entry: TaylorEntry) -> tuple[float, float, float]:
 def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], geometry: FlankGeometry,
               coating: CoatingData | None, abrasion: Abrasion, vb0_m: float, nodes_per_interval: int) -> Calibration:
     """A and B such that the wear model reaches the entry's VB limit in the Taylor life at two speeds
-    (see the module doc). ``response(speed, VB)`` is the response at the Taylor reference feed and depth."""
+    (see the module doc): in ``entry.contact_life_s`` of edge contact, so that a milling cutting-time
+    life is reached in cutting time at the reference engagement. ``response(speed, VB)`` is the
+    response at the Taylor reference feed and depth."""
     p = get(CALIBRATION)
     v1, v2, v3 = calibration_speeds(entry)
     f, ap = entry.feed_ref_m, entry.ap_ref_m
-    t1, t2, t3 = entry.life_s(v1, f, ap), entry.life_s(v2, f, ap), entry.life_s(v3, f, ap)
+    # the wear law integrates edge contact time: the targets are the Taylor lives on the entry's basis
+    # times the share of them the edge is in contact in the reference cut (1, or engaged arc / 2 pi)
+    t1, t2, t3 = (entry.contact_life_s(v, f, ap) for v in (v1, v2, v3))
     vb_lim = entry.VB_limit_m
     if not vb0_m < vb_lim:
         raise InputError(f"wear: the initial flank wear {vb0_m:.3g} m is not below the Taylor VB limit {vb_lim:.3g} m")
@@ -362,7 +375,10 @@ def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], 
     lives = [life_s(nd, A_scaled, B, T_ref, g, coating, scale) for nd in (nodes1, nodes2, nodes3)]
     targets = [t1, t2, t3]
     A = A_scaled * math.exp(B / T_ref)
-    report = {"speeds_m_s": [v1, v2, v3], "taylor_life_s": targets,
+    report = {"speeds_m_s": [v1, v2, v3],
+              "taylor_life_s": [entry.life_s(v, f, ap) for v in (v1, v2, v3)],
+              "life_basis": entry.life_basis, "contact_fraction": entry.contact_fraction,
+              "engagement": entry.engagement, "contact_life_s": targets,
               "model_life_s": [m if math.isfinite(m) else None for m in lives],
               "residual_rel": [(m / t - 1.0) if math.isfinite(m) else None for m, t in zip(lives, targets)],
               "bracketed": bool(bracketed), "abrasive_scale": scale, "VB0_m": vb0_m, "VB_limit_m": vb_lim,

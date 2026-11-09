@@ -49,6 +49,7 @@ export function jetsFromArrays(arrays) {
   const reach = columns(arrays, 'reach_fraction', n, 1);
   const diameters = columns(arrays, 'diameter_m', n, 1);
   const blocked = columns(arrays, 'blocked_by', n, 1);
+  const breakups = columns(arrays, 'breakup_m', n, 1);
   const pathArr = arrays.jet_path_M_m;
   const out = [];
   for (let i = 0; i < n; i++) {
@@ -60,6 +61,7 @@ export function jetsFromArrays(arrays) {
       speed: speeds ? Number(speeds[i]) : null, flow: flows ? Number(flows[i]) : null,
       halfAngle: halves ? Number(halves[i]) : 0, reach: reach ? Number(reach[i]) : null,
       diameter: diameters ? Number(diameters[i]) : null, blockedBy: blocked ? String(blocked[i] || '') : '', path: null,
+      breakup: breakups && Number(breakups[i]) > 0 ? Number(breakups[i]) : null,
     };
     if (jet.direction.lengthSq() > 0) jet.direction.normalize();
     if (pathArr && pathArr.shape.length === 3 && pathArr.shape[0] === n && pathArr.shape[2] === 3) {
@@ -117,7 +119,7 @@ function tube(points, radiusAt, alphaAt, colour, sides) {
     previousNormal = normal.clone();
     binormal.crossVectors(tangent, normal);
     const r = radiusAt(lengths[i], lengths[i] / total);
-    const alpha = alphaAt(lengths[i] / total);
+    const alpha = alphaAt(lengths[i] / total, lengths[i]);
     for (let k = 0; k < sides; k++) {
       const a = (2 * Math.PI * k) / sides;
       const off = normal.clone().multiplyScalar(Math.cos(a) * r).addScaledVector(binormal, Math.sin(a) * r);
@@ -241,7 +243,9 @@ export class CoolantView {
       const r0 = jet.diameter && jet.diameter > 0 ? jet.diameter / 2 : jet.flow && jet.flow > 0 ? Math.sqrt(jet.flow / (Math.PI * speed)) : p.nozzle_radius_m * 0.5;
       const widen = Math.tan(Math.max(0, jet.halfAngle || 0));
       const radiusAt = (s) => r0 + s * widen;
-      const alphaAt = (f) => p.jet_opacity * (1 - (1 - p.jet_end_opacity_fraction) * f);
+      // the coherent stream fades toward its end; beyond its break-up length (jet_breakup_m) it is spray
+      const alphaAt = (f, along) => (jet.breakup !== null && along > jet.breakup ? p.jet_opacity * p.jet_end_opacity_fraction
+        : p.jet_opacity * (1 - (1 - p.jet_end_opacity_fraction) * f));
       const geometry = tube(points, radiusAt, alphaAt, jetColour, p.jet_sides);
       const mesh = new THREE.Mesh(geometry, this.material);
       mesh.name = `jet ${jet.id}`;

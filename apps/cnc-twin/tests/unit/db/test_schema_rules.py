@@ -239,3 +239,43 @@ def test_sourced_values_in_the_si_view():
     assert isinstance(force, Sourced) and float(force) == 28500 and force.src == "s1"
     assert force.at_handle_torque_Nm == 108 and force.range == pytest.approx([25000, 30000])
     assert force * 2 == 57000 and force > 1000 and round(force) == 28500
+
+
+# ------------------------------------------------------------------ Taylor life basis, assumed validation inputs
+TAYLOR = {"tool_class": "carbide", "coating": "TiAlN", "C_m_min": 300, "n": 0.25, "T_ref_min": 1, "VB_limit_mm": 0.3}
+
+
+def test_taylor_entries_state_their_life_basis():
+    assert messages(S.TOOL_LIFE, [dict(TAYLOR, life_basis="cutting_time", process="milling",
+                                       engaged_arc_ref_deg=36.87)]) == []
+    assert messages(S.TOOL_LIFE, [dict(TAYLOR, life_basis="contact_time", process="turning")]) == []
+    assert any("not one of: cutting_time, contact_time" in m
+               for m in messages(S.TOOL_LIFE, [dict(TAYLOR, life_basis="spindle_time")]))
+    assert any("above the sane maximum" in m
+               for m in messages(S.TOOL_LIFE, [dict(TAYLOR, process="milling", engaged_arc_ref_deg=400)]))
+    found = run(S.TOOL_LIFE, [dict(TAYLOR, life_basis="contact_time", engaged_arc_ref_deg=90)]).problems
+    assert [p.severity for p in found] == ["warning"] and "not used" in found[0].message
+    # the default by process: continuous cuts count contact time, everything else cutting time
+    assert [S.default_life_basis(p) for p in ("turning", "boring", "milling", "drilling", None)] == \
+        ["contact_time", "contact_time", "cutting_time", "cutting_time", "cutting_time"]
+    built = run(S.TOOL_LIFE, [dict(TAYLOR, process="milling", engaged_arc_ref_deg=90)])
+    assert built.problems == []
+    view = S.TOOL_LIFE.build([dict(TAYLOR, process="milling", engaged_arc_ref_deg=90)], None, None, "tool_life")
+    assert view[0].engaged_arc_ref_rad == pytest.approx(math.pi / 2)
+
+
+def test_validation_inputs_may_be_marked_assumed():
+    tool = S.MapOf(S.MEASURE)
+    plain = {"diameter_mm": 10, "edge_radius_um": {"value": 20, "assumed": True, "note": "typical hone"},
+             "coating": {"value": "TiAlN", "assumed": True, "note": "grade colour"},
+             "coolant": {"value": False, "assumed": True, "note": "dry assumed"},
+             "rake_deg": {"value": 6, "src": "est", "note": "assumed: ISO code"},
+             "flutes": {"value": [4], "assumed": True, "note": "listed"}}
+    assert messages(tool, plain) == []
+    found = run(tool, {"edge_radius_um": {"value": 20, "assumed": True}}).problems
+    assert [p.severity for p in found] == ["warning"] and "assumed input needs a note" in found[0].message
+    assert any("must be true or false" in m or "expected true or false" in m
+               for m in messages(tool, {"edge_radius_um": {"value": 20, "assumed": "yes", "note": "x"}}))
+    view = tool.build({"edge_radius_um": {"value": 20, "assumed": True, "note": "typical hone"}}, None, None, "tool")
+    leaf = view["edge_radius_um"]                     # validation setups stay as written (cnctwin.validation)
+    assert float(leaf) == 20 and leaf.assumed is True and leaf.note == "typical hone"

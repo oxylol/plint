@@ -104,6 +104,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     VB_limit_mm: 0.35
     T_ref_min: 1
     vc_range_m_min: [288, 438]
+    life_basis: contact_time
     src: kovalcik-2010-gjl-si3n4
     note: "Table 2: T = C_T vc^-m with m = 1.59 and C_V = 2432 m/min (dry longitudinal turning of CSN 42 2425 grey cast iron, 263-275 HB, ap 1 mm, f 0.2 mm/rev, VB 0.35 mm; lives 29.3 / 22.7 / 15.1 min at 289 / 351 / 438 m/min, Table 1), i.e. n = 1/m = 0.629 and C = C_V. 90 % interval of m 1.11-2.07 (n 0.48-0.90), from three speeds only. CSN 42 2425 is the Czech grade with 250 MPa minimum tensile strength, taken here as EN-GJL-250 (this database's mapping); 263-275 HB is at the hard end for the grade. For comparison, three experimental Austrian Si3N4 grades on the same iron (kovalcik-2009-gjl-si3n4-fmg, VB 0.5 mm, 250-420 m/min) gave m 1.07-3.07 and C_V 750-29246 m/min. The earlier estimate (C 2711, n 0.5 at f 0.3, ap 2, VB 0.3: T = 15 min at 700 m/min) gives far longer lives than measured here (this fit: 15 min at 443 m/min)"
   - tool_class: ceramic
@@ -119,6 +120,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     VB_limit_mm: 0.35
     T_ref_min: 1
     vc_range_m_min: [354, 544]
+    life_basis: contact_time
     src: kovalcik-2010-gjl-si3n4
     note: "Table 2: m = 1.62, C_V = 2924 m/min for the Al2O3 + TiN coated NS260C (lives 30.5 / 20.9 / 15.3 min at 355 / 442 / 544 m/min, same iron and conditions as the uncoated entry); n = 1/m = 0.617. C_T = 4.0e5 printed with m gives C_T^(1/m) = 2863, 2 % below the printed C_V, which is used. 90 % interval of m 1.09-2.15"
   - tool_class: carbide
@@ -130,6 +132,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.3
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 350 m/min (K-grade CVD carbide, general knowledge)"
   - tool_class: cbn
@@ -141,6 +144,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.3
     ap_ref_mm: 1
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "high-CBN on pearlitic grey iron: C set so that T = 15 min at vc = 900 m/min (general knowledge); wu-2025 turned brake discs with PCBN at 416-625 m/min (tool life given only as a comparison chart)"
 tool_life_usui: null

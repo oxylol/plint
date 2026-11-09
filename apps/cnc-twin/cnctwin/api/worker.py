@@ -5,7 +5,10 @@ lowers its priority (nice 10), starts a new process group (so a cancel reaches e
 starts), resolves the entry point and calls it:
 
 * ``simulate``: ``run_project(project_path, run_dir, options, progress_cb)`` (cnctwin.core.loop);
-  ``options["resume_from"]`` is the checkpoint marker ``.json`` when the run is resumed.
+  ``options["resume_from"]`` is the checkpoint marker ``.json`` when the run is resumed. After it returns with
+  run.json written, the request's ``outputs_entry`` (cnctwin.core.outputs.finalize_outputs(run_dir, options,
+  progress_cb)) makes the report, setup sheet, pictures, video and sound; its summary is the result's
+  ``outputs``.
 * every other kind: ``entry(request, out_dir, progress_cb) -> dict`` (the request carries the
   paths and options of that kind; the returned dict is saved as the job's ``result.json``).
 
@@ -99,6 +102,7 @@ class Worker:
                 if self.request.get("resume_from"):
                     options["resume_from"] = self.request["resume_from"]
                 result = function(Path(self.request["project_path"]), self.run_dir, options, self.progress_cb)
+                result = self._outputs(options, result)
             else:
                 out_dir = Path(self.request["out_dir"])
                 out_dir.mkdir(parents=True, exist_ok=True)
@@ -119,6 +123,25 @@ class Worker:
             return self._finish("failed", {"type": type(error).__name__, "message": str(error) or "interrupted",
                                            "traceback": traceback.format_exc(limit=30)})
         return self._finish("done", None, result)
+
+    def _outputs(self, options: dict, result):
+        """After a successful run: the derived outputs (report, setup sheet, pictures, video, sound) through the
+        request's ``outputs_entry`` (cnctwin.core.outputs.finalize_outputs(run_dir, options, progress_cb)), while
+        status.json still says running (phase ``outputs: <generator>``). A generator that fails is recorded in
+        run.json by finalize_outputs; finalize_outputs failing as a whole leaves the run done and says why in the
+        job's result. A cancel request (Cancelled) passes on."""
+        from .entry import resolve
+        from .settings import NO_ENTRY
+        spec = self.request.get("outputs_entry")
+        if spec is None or str(spec).strip().lower() in NO_ENTRY or not (self.run_dir / "run.json").is_file():
+            return result
+        merged = dict(result) if isinstance(result, dict) else {"run": result}
+        try:
+            merged["outputs"] = resolve(str(spec))(self.run_dir, options, self.progress_cb)
+        except Exception as error:
+            merged["outputs_error"] = {"type": type(error).__name__, "message": str(error),
+                                       "traceback": traceback.format_exc(limit=30)}
+        return merged
 
     def progress_cb(self, progress: dict | None = None, **fields) -> None:
         if self.cancel.is_set():

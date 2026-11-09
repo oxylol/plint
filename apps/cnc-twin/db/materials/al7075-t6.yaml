@@ -114,6 +114,7 @@ tool_life:
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge, not a cited source); adhesion and edge chipping often limit life before flank wear"
   - tool_class: pcd
@@ -125,6 +126,7 @@ tool_life:
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 15 min at vc ~ 2100 m/min; not a cited value"
   - tool_class: hss
@@ -136,6 +138,7 @@ tool_life:
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 100 m/min (general knowledge)"
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)

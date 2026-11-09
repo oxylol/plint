@@ -1,10 +1,11 @@
+import copy
 import math
 
 import pytest
 
 from cnctwin.controller import ToolOffsetInit
 from cnctwin.controller.ir import Kind, Space
-from harness import HAAS_MILL, UMC, alarm, mm, moves, run, wrap, xyz
+from harness import HAAS_DB, HAAS_MILL, UMC, alarm, mm, moves, run, wrap, xyz
 
 TOOLS = [ToolOffsetInit(1, length_m=0.1, radius_m=0.005), ToolOffsetInit(2, length_m=0.1, radius_m=0.003)]
 
@@ -62,10 +63,32 @@ def test_g187_smoothing_levels_and_g103_lookahead():
     m = moves(r)
     assert m[0].smoothing.tolerance_m == pytest.approx(25e-6) and m[0].smoothing.mode_code == "G187 P1"
     assert m[1].smoothing.tolerance_m == pytest.approx(50e-6) and m[1].smoothing.mode_code == "G187 P3"
-    assert m[2].smoothing.tolerance_m == 0.0
+    # G187 alone cancels E and returns to the defaults: Setting 191 (medium) and the Setting 85 corner rounding,
+    # the machine file's G187 P2 entry (here 0.010 mm), not 0
+    assert m[2].smoothing.tolerance_m == pytest.approx(10e-6) and m[2].smoothing.mode_code == ""
     assert r.controller.executors[0].capacity() == 2
     modes = [c for c in r.commands[0] if c.kind == Kind.MODE and c.smoothing is not None]
     assert len(modes) == 3
+
+
+def test_g187_defaults_to_setting_85_and_p_leaves_an_active_e():
+    # power-on: no G187 yet, the corner rounding is Setting 85 (the machine file's default level)
+    m = moves(haas("G01 X1. F100.\nG187 E0.02\nX2.\nG187 P3\nX3.\nG187\nG187 P1\nX4."))
+    assert m[0].smoothing.tolerance_m == pytest.approx(10e-6)
+    assert m[1].smoothing.tolerance_m == pytest.approx(20e-6) and m[1].smoothing.mode_code == "G187 E"
+    assert m[2].smoothing.tolerance_m == pytest.approx(20e-6)          # G187 P3 leaves the E of the block before
+    assert m[3].smoothing.tolerance_m == pytest.approx(25e-6)          # after G187 alone, P1 takes its own rounding
+    # a machine file without G187 entries: Setting 85's factory default from the controller database, 0.0250 in
+    bare = copy.deepcopy(HAAS_MILL)
+    bare["controller"]["smoothing"] = []
+    db = dict(HAAS_DB, timing={"corner_rounding_default_in": {"value": 0.025, "page": "456"}})
+    r = run(wrap("G01 X1. F100.\nG187 E0.01\nX2.\nG187\nX3."), bare, tools=TOOLS, db=db)
+    m = moves(r)
+    assert [c.smoothing.tolerance_m for c in m] == pytest.approx([0.635e-3, 0.01e-3, 0.635e-3])     # E in mm (G21)
+    # RESET / M30 cancel G187 as well: the next part starts from the defaults
+    ctl = r.controller
+    path = ctl.state.paths[0]
+    assert path.smoothing["tolerance_m"] == pytest.approx(0.635e-3) and not path.smoothing["e_active"]
 
 
 def test_g110_and_g154_work_offsets():

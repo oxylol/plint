@@ -28,6 +28,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -46,7 +47,7 @@ from ..db.sources import check_sources
 from ..db.yamlio import Locations, load_file
 from . import toollib
 from .migrate import migrate_with_locations, version_of
-from .schema import FORMAT, PROJECT, TICK_S, TOOL_ENTRY, is_path_ref
+from .schema import FORMAT, PROJECT, RESOLVED_PROBE, TICK_S, TOOL_ENTRY, is_path_ref
 
 PROJECT_FILE = "project.yaml"
 DS_TEMPLATE = Path(DEFAULT_ROOT) / "_templates" / "project.yaml"
@@ -219,6 +220,7 @@ class _Resolver:
         self._holder_checks()
         raise_for(self.problems, f"project {project.path}")
         view = self._view()
+        raise_for(self.problems, f"project {project.path}")
         resolved = ResolvedProject.from_entries(self.data, view._data, None)
         resolved.path = project.path
         resolved.db = self.db
@@ -475,8 +477,201 @@ class _Resolver:
             fixture_pose = setup["fixture_pose"] if isinstance(setup, SIMap) and "fixture_pose" in setup else None
             op._data["stock_pose_W_S"] = stock_pose.matrix() if isinstance(stock_pose, PoseMap) else np.eye(4)
             op._data["fixture_pose_F_H"] = fixture_pose.matrix() if isinstance(fixture_pose, PoseMap) else np.eye(4)
+        self._stock_frames(view)
+        self._probes(view)
         _set_in(view, ("physics",), physics_with_defaults(self.data.get("physics")))
         return view
+
+    # -------------------------------------------------------------- stock frames of the operations
+    def _stock_frames(self, view) -> None:
+        """Each operation's stock frame S (docs/formats.md "Project file", from_previous): the first
+        operation's S is the stock's own; an operation with ``from_previous`` turns the previous operation's
+        part (``flip`` about an S axis, ``transfer: sub_spindle`` half a turn about S y) and re-bases the turned
+        stock box by the stock conventions (cnctwin.removal.transfer, the frame the material is carried in);
+        without ``from_previous`` the part stays in the previous operation's S. ``stock_pose`` places that S
+        in the workholding frame (the extra placement: it must not repeat the turn)."""
+        ops = view["operations"]
+        stock = view["stock"] if "stock" in view else None
+        kind = str(stock["kind"]) if isinstance(stock, SIMap) and "kind" in stock else "block"
+        needs_box = any(transfer_rotation(raw.get("from_previous")) is not None
+                        for raw in self.data.get("operations") or [] if isinstance(raw, Mapping))
+        box = stock_box_S(stock, self.project.dir, read_mesh=needs_box, problems=self, path=("stock",))
+        frames: dict[str, tuple[np.ndarray, tuple | None]] = {}
+        pose, current = np.eye(4), box
+        for i, op in enumerate(ops):
+            raw_op = self.data["operations"][i]
+            previous = raw_op.get("from_previous") if isinstance(raw_op, Mapping) else None
+            transfer = np.eye(4)
+            if isinstance(previous, Mapping) and previous.get("op") in frames:
+                pose, current = frames[previous["op"]]
+                rotation = transfer_rotation(previous)
+                if rotation is not None and current is not None:
+                    lo, hi, t = turned_box(current[0], current[1], rotation, kind)
+                    transfer[:3, :3] = rotation
+                    transfer[:3, 3] = t
+                    current = (lo, hi)
+                    self._check_turn(op, raw_op, i, rotation, transfer)
+                elif rotation is not None:
+                    transfer = None
+            pose = transfer @ pose if transfer is not None else None
+            op._data["transfer_S_Sprev"] = transfer
+            op._data["pose_S_S0"] = pose
+            op._data["stock_box_S_m"] = [list(map(float, current[0])), list(map(float, current[1]))] \
+                if current is not None else None
+            op._data["stock_pose_W_S0"] = op["stock_pose_W_S"] @ pose if pose is not None else None
+            frames[str(op["name"])] = (pose if pose is not None else np.eye(4), current)
+            if pose is None:
+                pose = np.eye(4)
+
+    def _check_turn(self, op, raw_op, index: int, rotation: np.ndarray, transfer: np.ndarray) -> None:
+        """A stock_pose whose rotation repeats or undoes the turn of from_previous is refused: the part
+        would be turned twice, or not at all (the turn is already in this operation's stock frame)."""
+        written = np.asarray(op["stock_pose_W_S"], dtype=float)
+        r_sp = written[:3, :3]
+        if np.allclose(rotation, np.eye(3), atol=1e-9):
+            return
+        repeats = np.allclose(r_sp, rotation, atol=1e-9)
+        undoes = np.allclose(r_sp, rotation.T, atol=1e-9)
+        if not (repeats or undoes):
+            return
+        meant = written @ np.linalg.inv(transfer)
+        translate = [round(float(v) * 1e3, 6) + 0.0 for v in meant[:3, 3]]
+        rotate = [round(math.degrees(a), 6) + 0.0 for a in euler_xyz(meant[:3, :3])]
+        what = raw_op.get("from_previous") or {}
+        turn = (f"flip {what['flip'].get('axis')} {what['flip'].get('angle_deg')} deg" if isinstance(what.get("flip"),
+                Mapping) else f"transfer {what.get('transfer')}")
+        self.error(("operations", index, "setup", "stock_pose"),
+                   f"stock_pose {'repeats' if repeats else 'undoes'} the from_previous turn ({turn}): with "
+                   f"from_previous the turn is already in this operation's stock frame and stock_pose is only the "
+                   f"extra placement; if the written pose was the complete one, write stock_pose: "
+                   f"{{translate_mm: {translate}, rotate_deg: {rotate}}}", "rule")
+
+    # -------------------------------------------------------------- probes in tools.list
+    def _probes(self, view) -> None:
+        """``tools.list`` entries with ``kind: probe`` become ``tools.probes`` (the probe definition resolved
+        against the machine's ``probes`` section); ``tools.list`` keeps the cutting tools, whose index is
+        the tool-table slot every domain uses."""
+        tools = view["tools"] if "tools" in view else None
+        if not isinstance(tools, SIMap):
+            return
+        entries = list(tools["list"] or []) if "list" in tools else []
+        raw_entries = (self.data.get("tools") or {}).get("list") or []
+        machine = self.raws.get(("machine",)) or {}
+        machine_probes = machine.get("probes") if isinstance(machine, Mapping) else None
+        cutting, probes = [], []
+        for i, entry in enumerate(entries):
+            raw = raw_entries[i] if i < len(raw_entries) else {}
+            if not (isinstance(raw, Mapping) and raw.get("kind") == "probe"):
+                cutting.append(entry)
+                continue
+            where = ("tools", "list", i, "probe")
+            spec = raw.get("probe")
+            name = spec if isinstance(spec, str) else (spec.get("extends") if isinstance(spec, Mapping) else None)
+            inline = {k: v for k, v in spec.items() if k != "extends"} if isinstance(spec, Mapping) else {}
+            base = {}
+            if name is not None:
+                found = machine_probes.get(name) if isinstance(machine_probes, Mapping) else None
+                if not isinstance(found, Mapping):
+                    known = sorted(k for k, v in (machine_probes or {}).items() if isinstance(v, Mapping))
+                    self.error(where, f"the machine has no probe {name!r} (probes: {', '.join(known) or 'none'})")
+                    continue
+                base = {k: v for k, v in found.items() if k in RESOLVED_PROBE.fields or k in ("src", "note", "notes")}
+            merged = deep_merge(base, inline)
+            if merged.get("stylus_ball_mm") is None:
+                self.error(where, f"probe T{raw.get('number')} needs the stylus ball: the machine's {name!r} does not "
+                                  f"give stylus_ball_mm, write probe: {{extends: {name}, stylus_ball_mm: ...}}"
+                           if name else f"probe T{raw.get('number')} needs stylus_ball_mm", "required")
+                continue
+            ctx = Ctx(self.locations, obj="project", file=str(self.project.path))
+            RESOLVED_PROBE.check(merged, where, None, ctx)
+            self.problems.extend(ctx.problems)
+            if errors_only(ctx.problems):
+                continue
+            built = RESOLVED_PROBE.build(merged, None, "project" if not base else None, "probe")
+            built._data["name"] = name
+            entry._data["probe"] = built
+            entry._data["list_index"] = i
+            probes.append(entry)
+        tools._data["list"] = cutting
+        tools._data["probes"] = probes
+
+
+AXES = {"X": 0, "Y": 1, "Z": 2}
+
+
+def _rotation(axis: int, angle_rad: float) -> np.ndarray:
+    c, s = math.cos(angle_rad), math.sin(angle_rad)
+    rotation = np.eye(3)
+    i, j = [(1, 2), (2, 0), (0, 1)][axis]
+    rotation[i, i], rotation[i, j], rotation[j, i], rotation[j, j] = c, -s, s, c
+    return rotation
+
+
+def transfer_rotation(from_previous) -> np.ndarray | None:
+    """3x3 turn of the part by ``from_previous`` (None: the part keeps its orientation), as
+    cnctwin.removal.transfer turns the material: ``flip {axis, angle_deg}`` about that S axis, ``transfer:
+    sub_spindle`` half a turn about S y; ``main_spindle``, ``pallet``, ``manual`` keep the orientation."""
+    if not isinstance(from_previous, Mapping):
+        return None
+    flip = from_previous.get("flip")
+    if isinstance(flip, Mapping) and flip.get("axis") in AXES and flip.get("angle_deg") is not None:
+        angle = flip["angle_deg"]
+        angle = angle.get("value") if isinstance(angle, Mapping) else angle
+        return _rotation(AXES[flip["axis"]], math.radians(float(angle)))
+    if from_previous.get("transfer") == "sub_spindle":
+        return _rotation(1, math.pi)
+    return None
+
+
+def turned_box(lo, hi, rotation: np.ndarray, kind: str):
+    """(lo, hi, t) of the stock box turned by ``rotation`` and placed by the stock conventions,
+    x_new = R x + t: a block's box starts at the S origin; a cylinder or tube whose axis stays on z keeps it
+    on S z with z from 0 (cnctwin.removal.transfer.new_box, the frame the material is carried in)."""
+    corners = np.array([[x, y, z] for x in (lo[0], hi[0]) for y in (lo[1], hi[1]) for z in (lo[2], hi[2])])
+    turned = corners @ rotation.T
+    keeps_axis = abs(abs(rotation[2, 2]) - 1.0) < 1e-9 and abs(rotation[0, 2]) < 1e-9 and abs(rotation[1, 2]) < 1e-9
+    if kind in ("cylinder", "tube") and keeps_axis:
+        t = np.array([0.0, 0.0, -turned[:, 2].min()])
+    else:
+        t = -turned.min(axis=0)
+    moved = turned + t
+    return moved.min(axis=0), moved.max(axis=0), t
+
+
+def stock_box_S(stock, project_dir: Path, *, read_mesh: bool = False, problems=None, path=("stock",)):
+    """(lo, hi) of the stock box in its own frame S (SI): a block from the S origin, a cylinder or tube
+    about +z from z = 0; a mesh stock its bounds (read only when ``read_mesh``). None when unknown."""
+    if not isinstance(stock, SIMap):
+        return None
+    kind = str(stock["kind"]) if "kind" in stock else "block"
+    size = stock["size_m"] if "size_m" in stock else None
+    values = [float(v) for v in size] if isinstance(size, (list, tuple)) else None
+    if kind == "block" and values is not None and len(values) == 3:
+        return (np.zeros(3), np.array(values))
+    if kind in ("cylinder", "tube") and values is not None and len(values) >= 2:
+        r = 0.5 * values[0]
+        return (np.array([-r, -r, 0.0]), np.array([r, r, values[-1]]))
+    mesh_file = stock["mesh"] if "mesh" in stock else None
+    if kind == "mesh" and read_mesh and mesh_file:
+        try:
+            from ..geom.io import read_mesh as read
+            mesh = read(Path(str(mesh_file)), unit="mm")
+            vertices = np.asarray(mesh.vertices, dtype=float)
+            return (vertices.min(axis=0), vertices.max(axis=0))
+        except Exception as error:      # noqa: BLE001  (any reader failure is reported as a problem)
+            if problems is not None:
+                problems.error(path + ("mesh",), f"the stock mesh could not be read to place the turned stock of "
+                                                 f"from_previous: {error}", "path")
+    return None
+
+
+def euler_xyz(rotation: np.ndarray) -> tuple[float, float, float]:
+    """(a, b, c) rad with R = Rx(a) Ry(b) Rz(c) (the project's pose order xyz, cnctwin.db.simap.pose_matrix)."""
+    r = np.asarray(rotation, dtype=float)
+    b = math.asin(max(-1.0, min(1.0, r[0, 2])))
+    if abs(abs(r[0, 2]) - 1.0) < 1e-12:
+        return (math.atan2(r[2, 1], r[1, 1]), b, 0.0)
+    return (math.atan2(-r[1, 2], r[2, 2]), b, math.atan2(-r[0, 1], r[0, 0]))
 
 
 def physics_defaults() -> dict:
@@ -566,5 +761,6 @@ class DSModels:
         return {f"db/models/{p.name}": _sha256(p) for p in sorted(folder.glob("*.yaml"))}
 
 
-__all__ = ["load_project", "resolve", "ResolvedProject", "ProjectFile", "project_hash", "project_path",
+__all__ = ["load_project", "resolve", "ResolvedProject", "ProjectFile", "project_hash", "project_path", "transfer_rotation",
+           "turned_box", "stock_box_S", "euler_xyz",
            "PROJECT_FILE", "HOLDER_NEEDS"]

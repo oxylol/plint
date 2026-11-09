@@ -319,6 +319,9 @@ class FanucHandler:
         }
         if self.T:
             snap["offset_number"] = s.offset_number
+            # work + tool offsets per axis (path order): program = machine - program_offset_m (X as radius);
+            # the constant surface speed is computed at the program X (the tip's radius about the spindle)
+            snap["program_offset_m"] = [c * a.quantum for c, a in zip(ex.offset_counts(), ex.axes)]
         if s.tool_axis_letter != "Z":
             snap["tool_axis_letter"] = s.tool_axis_letter
         if s.sys.get("3004"):
@@ -342,6 +345,7 @@ class FanucHandler:
             return
         if block.lowercase:
             self.lowercase(block)
+        record = self.log_block(block)
         if block.stmt is not None:
             self.statement(block.stmt)
             return
@@ -353,8 +357,25 @@ class FanucHandler:
         if block.mid_delete_at >= 0 and s.operator.block_delete[block.mid_delete - 1]:
             words = words[:block.mid_delete_at]
         bw = self.evaluate(words)
+        if record is not None:
+            record["words"] = {letter: float(w.value) for letter, w in bw.addr.items()}
         self.nc_block(bw)
         s.sys.pop("g09", None)
+
+    def log_block(self, block) -> dict | None:
+        """The executor's analysis log entry of this block (when the log is on): its execution counter,
+        call depth and program line; ``words`` are added once evaluated."""
+        log = self.ex.block_log
+        if log is None:
+            return None
+        ref = self.ex.line_ref()
+        seq = int(self.s.block_seq)
+        if log and log[-1]["seq"] == seq and log[-1]["line"] == int(block.line) and log[-1]["program"] == ref.program:
+            return log[-1]                  # the same block again after a live read (buffer stop)
+        record = {"seq": seq, "depth": len(self.s.frames), "program": ref.program, "line": int(block.line),
+                  "words": {}}
+        log.append(record)
+        return record
 
     def lowercase(self, block) -> None:
         self.ex.note("warning", "lower-case address letters read as upper case")
@@ -503,7 +524,10 @@ class FanucHandler:
         self.f_word(bw)
         self.s_word(bw)
         self.t_word(bw)
+        cycle_letters = self.cycle_data_letters(oneshots)
         for kind in ("H", "D"):
+            if kind in cycle_letters:
+                continue                        # the cycle reads the word as its data (oneshot_cycle_data)
             word = bw.take(kind)
             if word is not None:
                 number = self.offset_word(kind, word)
@@ -563,6 +587,12 @@ class FanucHandler:
         return letters
 
     def m_data_letters(self, m: int) -> set[str]:
+        return set()
+
+    def cycle_data_letters(self, oneshots: list) -> set[str]:
+        """Offset addresses (H, D) that a one-shot cycle of the block takes as its own data instead of an
+        offset number. FANUC: none (the T series cycles use U/W/R/P/Q/F, the M series cycles take D as the
+        offset number)."""
         return set()
 
     def max_offset(self) -> int:
@@ -1001,7 +1031,16 @@ class FanucHandler:
             self.ex.note("warning", f"T{number} called after its tool life expired (no tool life management)")
         return number
 
+    def probe_name(self, number: int | None) -> str | None:
+        """The probe a T number calls (a ``kind: probe`` entry of the project's tool list), else None."""
+        for tool in self.ex.ctx.tools:
+            if int(tool.number) == number and getattr(tool, "probe", None):
+                return str(tool.probe)
+        return None
+
     def tool_slot(self, number: int) -> int:
+        if self.probe_name(number) is not None:
+            return -1                       # a probe: not a cutting tool of the tool table, but a listed T number
         table = self.ex.ctx.tool_table
         if table is None:
             return -1
@@ -1053,9 +1092,11 @@ class FanucHandler:
             return
         if m in (3, 4):
             s.spindle.direction = -1 if m == 3 else 1
+            s.sys["spindle_commanded"] = True
             self.emit_spindle()
         elif m == 5:
             s.spindle.direction = 0
+            s.sys["spindle_commanded"] = True
             self.emit_spindle()
         elif m == 19:
             self.orient(bw)
@@ -1219,9 +1260,12 @@ class FanucHandler:
         number = self.tool_life_select(number)
         ex.flush_comp("tool change")
         slot = self.tool_slot(number)
-        ex.emit(Command(Kind.TOOL_CHANGE, ex.line_ref(),
-                        tool={"number": number, "pocket": number, "slot": slot, "length_offset": s.h_number,
-                              "radius_offset": s.d_number}, modal=dict(ex.snapshot())))
+        payload = {"number": number, "pocket": number, "slot": slot, "length_offset": s.h_number,
+                   "radius_offset": s.d_number}
+        probe = self.probe_name(number)
+        if probe is not None:
+            payload["probe"] = probe        # additive: the spindle now carries this probe
+        ex.emit(Command(Kind.TOOL_CHANGE, ex.line_ref(), tool=payload, modal=dict(ex.snapshot())))
         s.tool = number
         s.preselect = None
         self.after_tool_change(number)
@@ -1636,7 +1680,7 @@ class FanucHandler:
             raise ControllerAlarm("no_data_after_address", "G31 without axis words")
         if not s.feed_set or s.feed_si <= 0.0:
             raise ControllerAlarm("feed_zero", "G31 without F")
-        probe = {"skip": signal, "stylus": "spindle_probe", "expect": "trigger"}
+        probe = {"skip": signal, "stylus": self.probe_name(s.tool) or "spindle_probe", "expect": "trigger"}
         step = Step("probe", {l: ex.si(l, c) for l, c in target.items()}, probe=probe)
         ex.run_step(step)
 

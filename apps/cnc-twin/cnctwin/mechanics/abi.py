@@ -72,7 +72,8 @@ P_REF_CM = 34           # Merchant constant 2 phi + lambda - alpha of that solut
 P_REF_C0 = 35
 P_REF_DELTA = 36
 P_MU_FALLBACK = 37      # friction coefficient of the fallback when no converged neighbour exists
-N_PRM = 38
+P_STICK_FACTOR = 38     # interface shear / chip shear flow stress in Oxley's condition (1: dry sticking; coolant factor f < 1)
+N_PRM = 39
 NO_REF = -10.0
 
 # ------------------------------------------------------------------ output vector (out)
@@ -125,6 +126,7 @@ STATUS_INDENTATION = 3.0
 
 REGIME_STICKING = 1.0   # interface shear = chip shear flow stress (Oxley)
 REGIME_SLIDING = 2.0    # interface shear = mu x normal stress (Coulomb-Tresca limit active)
+REGIME_LUBRICATED = 3.0  # interface shear = f x chip shear flow stress, f < 1 (lubricant at the interface)
 
 # Output slots that scale with the uncut chip thickness: the map interpolates them divided by t1.
 SCALES_WITH_T1 = (OX_FC, OX_FT, OX_F, OX_N, OX_FS, OX_T2, OX_LC)
@@ -161,7 +163,8 @@ CTX_MU = 2
 CTX_ADIABATIC = 3
 CTX_CONTACT_WIDTH_M = 4
 CTX_CONTACT_TIME_S = 5
-N_CTX = 6
+CTX_COULOMB = 6         # 1: the map uses the Coulomb-Tresca limit of the interface stress, 0: Oxley's condition
+N_CTX = 7
 
 
 def empty_out() -> np.ndarray:

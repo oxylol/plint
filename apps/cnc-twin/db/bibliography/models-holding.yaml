@@ -6,6 +6,7 @@ version: 1
 # data the models use. Catalogue sources already listed in holding.yaml, materials-2.yaml,
 # models-tooling.yaml, models-cutting.yaml (kitagawa-*, carrlane-*, regofix-*, iso-21940-11-2016,
 # altintas-2012-mfg-automation, johnson-1985-contact-mechanics) are cited by key from there.
+# iso-68-1-1998 (metric thread basic profile) is in models-tooling.yaml.
 entries:
   budynas-nisbett-2015-shigley:
     type: book
@@ -15,12 +16,6 @@ entries:
     publisher: "McGraw-Hill Education, New York"
     year: 2015
     pages: "eq. (3-56) interference-fit pressure of a shaft in a hub (Lame); eqs. (8-1)-(8-6) power-screw torque with collar friction, sec(alpha) for threads of flank half-angle alpha; eq. (8-27) and Table 8-15 bolt torque T = K F_i d, K = 0.2 when the condition is not stated; sec. 5-5 distortion-energy shear strength S_sy = 0.577 S_y; Table A-5 carbon steel E = 207 GPa, nu = 0.292, alpha = 11.7e-6 1/K"
-  iso-68-1-1998:
-    type: standard
-    title: "ISO 68-1:1998 ISO general purpose screw threads - Basic profile - Part 1: Metric screw threads"
-    institution: "International Organization for Standardization"
-    year: 1998
-    pages: "basic profile: 60 deg flank angle, fundamental triangle height H = (sqrt(3)/2) P, pitch diameter d2 = d - 2 (3/8) H"
   iso-15488-2003:
     type: standard
     title: "ISO 15488:2003 Collets with 8 degree setting angle for tool shanks - Collets, nuts and fitting dimensions"

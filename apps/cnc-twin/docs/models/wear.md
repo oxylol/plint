@@ -46,7 +46,8 @@ nominal EdgeModel (core/abi.py), the shape of every per-element array on the bus
   hardness - hot-hardness table when given -, TRS, K_IC, Weibull modulus, grain size, CTE,
   conductivity, specific heat, max service temperature, `usui` list), the coating (wear-rate factor,
   thickness from the tool item else the mean of `typical_thickness_um`, hardness, max service
-  temperature), the work material (family, `tool_life` Taylor entries with `T_ref`, `tool_life_usui`,
+  temperature), the work material (family, `tool_life` Taylor entries with `T_ref`, `life_basis` and
+  `engaged_arc_ref_deg` (section 3), `tool_life_usui`,
   `skin`, `composite.abrasive_wear_factor`, `cutting.work_hardening`, friction, BUE window via
   `cnctwin.mechanics.WorkMaterial`). **Project**: `tools.list[i]` (`initial_wear.VB_mm`,
   `initial_wear.edge_radius_um`, `life.used_min`, `life.limit_min`), `cad.tolerances`, `stock`,
@@ -113,14 +114,44 @@ at its VB limit:
 3. The life integral T(A, B; v) = int_{VB0}^{VB_lim} dVB / (g dVN/dt) by Gauss-Legendre
    (`physics.wear.calib_nodes`, 6 per interval), split where the coating wears through, with the
    response (`TaylorResponse.response(slot, Condition)`: sigma_n V_s and the flank temperatures at
-   quadrature points, at the node's land VB) evaluated at every node.
-4. For each B, A follows from T(v1) = T_Taylor(v1) (closed form; a monotone root with the abrasive
-   term); B is the root of ln(T(v2) / T_Taylor(v2)) in [10 K, 1e5 K] (Brent, fixed tolerances). The Usui
+   quadrature points, at the node's land VB) evaluated at every node. The integral is **edge contact
+   time**; its targets are the Taylor lives converted to contact time (life basis, below).
+4. For each B, A follows from T(v1) = eta_ref T_Taylor(v1) (closed form; a monotone root with the abrasive
+   term); B is the root of ln(T(v2) / (eta_ref T_Taylor(v2))) in [10 K, 1e5 K] (Brent, fixed tolerances). The Usui
    factor is evaluated as exp(-B (1/T - 1/T_ref)) with A' = A exp(-B/T_ref) so large B neither
    underflows nor overflows.
 5. The abrasive term carries at most `max_abrasive_share` (10 %) of the Taylor rate at the calibration
    speeds (scaled down otherwise); if both lives still cannot be met it is quartered (up to six times)
    and finally removed. Cached in-process by every input that determines the result, stored in the state.
+
+**Life basis** (`tool_life[].life_basis`, `engaged_arc_ref_deg`; `params.life_basis_of`). The run advances
+each element by its own in-cut (contact) time (`in_cut_time_s`, section 1), so the law is a contact-time
+law, while a Taylor life T counts one of:
+
+| `life_basis` | T counts | default for |
+|---|---|---|
+| `cutting_time` | the time the tool feeds in the material (ISO 3685 and ISO 8688 tool life, makers' catalogue lives) | `milling`, `drilling`, `tapping`, `any` and entries without a process (catalogue data) |
+| `contact_time` | the time the edge is in contact with the material | `turning`, `boring`, `grooving`, `threading`, `orthogonal` (continuous cuts: equal to the cutting time) |
+
+The calibration targets eta_ref T_Taylor, eta_ref the contact fraction of the entry's reference cut:
+1 for a contact-time life and for continuous cuts (turning, boring, grooving, threading, drilling lips,
+tapping flanks: the edge stays in the cut while the tool feeds; an entry without a process is read as a
+continuous reference cut); phi_ref / 2 pi for a milling life counted in cutting time, phi_ref the arc of
+each revolution the edge is in the material in the reference cut: `engaged_arc_ref_deg` (side milling
+arccos(1 - 2 ae/D), centred face milling 2 arcsin(ae/D), slot 180 deg), else the ISO 8688-2 reference
+end-milling test (Table 3, conditions I/II: ae = 2.5 mm with the D = 25 mm cutter, ae/D = 0.1,
+phi_ref = arccos(0.8) = 36.87 deg, eta_ref = 0.102; `milling_reference_arc_rad` in wear-calibration.yaml;
+listed in `estimated`). In the run an element engaged phi_e / 2 pi of each revolution (cutting's per-element
+in-cut time over the tool's cutting time) wears in contact only, so it reaches the VB limit after
+T_Taylor phi_ref / phi_e of cutting time: **at the reference engagement a milling tool reaches the Taylor
+life in cutting time**, at a lighter engagement it lives longer (and thermal's lower interrupted-cut
+temperatures lengthen it further), at a heavier one shorter. Tests (`test_life_basis.py`, whole-domain
+runs with the response's temperatures): a milling cut with a 90 deg reference arc (each element in
+contact 1/4 of the cutting time) reaches VB_lim at T(vc) of cutting time within +0.3 % at both
+calibration speeds (400 macro steps per life: the step lag of the land-dependent temperature) and +2.6 %
+at the 15-min check speed; the same cut with the elements in contact all the time in 1/4 of it; a turning
+cut (contact basis) +0.3 % and +4.3 % (the abrasive floor carries a larger share of the slower contact-time
+law). Documented bound: the calibration error below (6 %).
 
 **Default response** (`MechanicsResponse`, cnctwin.mechanics): Oxley with Johnson-Cook at t1 = h - h_min
 (adiabatic tool) for the shear-plane temperature T_AB, the rake-contact temperature T_int, sigma_N and
@@ -383,9 +414,17 @@ init 0.07-0.15 s per tool including the calibration with the default response.
 
 * Constant conditions within a macro step (temperatures, stresses): increments per step are nm, the
   coating breakthrough within a step is not split (error below one step's increment).
-* Taylor calibration in an equivalent continuous orthogonal cut at the Taylor feed and depth
-  (h = f): milling Taylor data (fz, interrupted) are treated alike (error: the duty-cycle temperature
-  difference, absorbed by A, partly by B).
+* Taylor calibration in an equivalent continuous orthogonal cut at the Taylor feed and depth (h = f,
+  for milling data fz): the time basis of milling lives is converted (life basis, section 3), the
+  temperature and chip-thickness history of the interrupted cut is not (the response is the steady cut
+  at h = fz: error the duty-cycle temperature difference, absorbed by A, partly by B, and exact only
+  when the response is the run's own pipeline). A milling entry without `engaged_arc_ref_deg` is read at
+  the ISO 8688-2 reference arc (ae/D = 0.1): data measured at another engagement shift the life in
+  cutting time by phi_true / phi_ref (slotting data read this way: x 0.2 in cutting-time life).
+* The tool's life counters (`in_cut_s`, `cut_time_s`) add cutting's tool-level in-cut time (the time
+  any element is in the material), which equals the cutting time while at least one tooth is always
+  engaged; with gaps between the teeth (few teeth, light radial engagement) it is shorter than the
+  feed time in the material that Taylor and ISO 8688 count (life is unaffected: wear follows contact).
 * The calibrated law is consistent with the run only when the response and the run use the same
   temperature model (section 3, factor exp(B dT / T^2)).
 * Chipping, spallation, thermal-crack and fatigue constants are estimates (marked `est`), notch and

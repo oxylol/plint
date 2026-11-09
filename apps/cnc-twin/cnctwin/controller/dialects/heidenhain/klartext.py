@@ -501,8 +501,23 @@ def _plane(words: list[str]) -> HBlock:
     if variant not in ("SPATIAL", "PROJECTED", "EULER", "VECTOR", "POINTS", "RELATIV", "RELATIVE", "AXIAL", "RESET"):
         raise ParseProblem("syntax", f"PLANE {variant}")
     f: dict = {"variant": "RELATIV" if variant == "RELATIVE" else variant, "values": {}, "position": None,
-               "seq": 0, "feed": None, "dist": None}
-    for word in words[1:]:
+               "seq": 0, "feed": None, "dist": None, "mb": None}
+    rest = list(words[1:])
+    k = 0
+    while k < len(rest):
+        word = rest[k]
+        k += 1
+        if word.startswith("MB"):
+            # MB (move back): retraction along the tool axis before the tilt, MB MAX to the end of the traverse
+            # range, MB <length> incremental (MB 0: none); written "MB MAX", "MB 50" or "MB+50"
+            value = word[2:]
+            if not value and k < len(rest):
+                value = rest[k]
+                k += 1
+            if not value or (value != "MAX" and re.match(rf"^{VALUE}$", value) is None):
+                raise ParseProblem("syntax", f"PLANE MB {value}".rstrip())
+            f["mb"] = ["MAX"] if value == "MAX" else ["MB", value_node(value)]
+            continue
         if word in ("MOVE", "TURN", "STAY"):
             f["position"] = word
             continue
@@ -527,6 +542,8 @@ def _plane(words: list[str]) -> HBlock:
             f["values"][match.group(1) + key] = value_node(match.group(3))
     if f["position"] is None and variant != "RESET":
         raise ParseProblem("syntax", "PLANE needs MOVE, TURN or STAY")
+    if f["mb"] is not None and f["position"] not in ("MOVE", "TURN"):
+        raise ParseProblem("syntax", "PLANE MB needs MOVE or TURN (STAY positions nothing)")
     return HBlock("plane", f)
 
 

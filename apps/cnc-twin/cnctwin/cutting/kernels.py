@@ -1822,7 +1822,8 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
 @njit(f8(POLAR_T, f8, f8, f8), **OPTS)
 def polar_inside(polar, theta, r, z):
     """Signed radial distance into the material at (theta, r, z) of the rotating S (> 0 inside):
-    min(r_out - r, r - r_in), bilinear in (theta, z) between the bin centres; outside the z range
+    min(r_out - r, r - r_in), bilinear in (theta, z) between the bin centres, less the air gap of the
+    nearest cell (gap_lo < r < gap_hi: minus the distance to the gap's nearer side); outside the z range
     of the view there is no material."""
     nth = polar.r_out_m.shape[0]
     nz = polar.r_out_m.shape[1]
@@ -1862,6 +1863,22 @@ def polar_inside(polar, theta, r, z):
         g = g2
     if ro <= ri:
         return -1.0
+    # air gap of the nearest cell (two segments on the field's ray; additive, docs/models/hotloop.md)
+    bn = int(np.floor(ft + 0.5)) % nth
+    if bn < 0:
+        bn += nth
+    iz = int(np.floor(fz + 0.5))
+    if iz > nz - 1:
+        iz = nz - 1
+    gl = polar.gap_lo_m[bn, iz]
+    gh = polar.gap_hi_m[bn, iz]
+    if gh > gl:
+        d = r - gl
+        d2 = gh - r
+        if d2 < d:
+            d = d2
+        if d > 0.0 and -d < g:
+            g = -d
     return g
 
 

@@ -403,7 +403,7 @@ def _simulate(model: ContactModel, setup, target: _Target, horizon_s: float, amb
     while t < horizon_s - 1e-12:
         step = min(dt, horizon_s - t)
         st = model.state(target.h_m, target.vc_m_s, insert.tip_temperature(), target.width_m)
-        insert.step(step, st.tool_W)
+        insert.step(step, st.tool_W, st, wedge)
         t += step
         st_after = model.state(target.h_m, target.vc_m_s, insert.tip_temperature(), target.width_m)
         snaps.append((t, st_after, _readings(insert, st_after, target, t, wedge)))

@@ -10,6 +10,7 @@ coefficient pipeline reads (architecture 5.3).
 |---|---|
 | `partition.py` | single-owner split of the zone heat into chip, tool elements, workpiece |
 | `toolmodel.py` | tool + holder ladder (1-D finite volumes), per-element edge field, growths |
+| `toolfield.py` | 3-D field of the cutting region (insert, or the tooth tip of a solid tool), solved with the ladder |
 | `workpiece.py` | cut-cell finite volumes on the stock lattice, fixture body, two-scale contact temperature |
 | `machine.py` | spindle, ballscrew axes, structure (first-order bodies, exact integration) |
 | `damage.py` | burn / over-temper / white layer / melt thresholds -> `thermal_damage` findings |
@@ -164,6 +165,123 @@ macro step; the counters N and t_eng advance every step).
   number h r / k < 0.01 for the convective boundary; the contact zone gradient is the local field).
 * Overall tool temperature uncertainty is dominated by the partition fractions and contact length
   (each +-30 %): expect +-20-30 % on the local rise.
+* Where the 3-D cutting-region field is active (2.4) it replaces the far-field composition: the
+  elements it carries take its temperatures, and the 1-D body no longer stands in for the first
+  millimetres of the tool.
+
+### 2.4 Cutting region: 3-D field (`toolfield.py`, `kernels.field_step`)
+
+Beyond about 2 max(l_c, l_f, db) the composition of 2.2 leaves only the 1-D body, a mean over the whole
+section, so the first millimetres of an insert (where IR windows, spots and embedded thermocouples
+measure) read close to the body temperature. The field resolves them: transient 3-D conduction in the
+tool's cutting region, driven by the rake and flank fluxes over their contact areas, convecting on its
+exposed faces, solved as one implicit system with the ladder. `physics.thermal.tool_field` (1) builds it
+for every tool whose EdgeModel the domain receives; `ToolThermal.enable_field` builds it directly.
+
+**Frame and mesh.** Edge frame E: x along the rake face normal to the edge into the tool, y along the
+edge (unrolled: cumulative chip width of the elements), z the rake face's outward normal (tool at
+z < 0). Cross-section: a polar grid about the edge line, rings r_k = r_1 g^(k-1) (`tool_field_ring_mm`
+2 um, at most a quarter of the smallest edge radius; `tool_field_growth` 1.4), equal sectors over the
+wedge angle beta = pi/2 - rake - clearance (median over the field's elements; sectors at most
+`tool_field_sector_deg` 15 deg), so the rake face is theta = 0 and the flank face theta = -beta
+exactly, the contact scale (um) and the body scale (mm) are both resolved and cells near the edge are
+isotropic. Slabs along y: the element boundaries (closer than `tool_field_dy_mm` / 2 merged, intervals
+longer than `tool_field_dy_mm` 0.5 mm split; contact ends given to `enable_field` are kept), so a
+contact ends on a cell boundary.
+
+* **Insert**: the section edge - rake back (x = ic) - bottom back - flank bottom (depth = insert
+  thickness, flank inclined at beta), over y in [0, ic] from the corner (the prism of the ladder's insert
+  volume ic^2 s); cut cells only where the polygon clips the far rings (exact areas of the clipped
+  sectors, 32-point arcs). The corner is the prism's end face y = 0 (a 90 deg corner; the nose and
+  major edge are unrolled along y from the nose end at the minor edge, the minor edge lies along x on the
+  end face). The bottom is the seat: per unit bottom area 1 / [A_bottom / (h_c A_seat) + H_bar / 3 k_bar]
+  to the bar's first ladder node, h_c = `shank_contact_conductance_W_m2K`, A_seat =
+  `insert_seat_area_ratio` ic^2 (thermal-tool.yaml) and H_bar / 3k the bar's internal resistance from its
+  top face to its section mean (quasi-steady profile of a slab heated through one face, Carslaw & Jaeger
+  1959 ch. III: T_s - T_mean = q H / 3k). Back and end faces convect. The ladder's insert nodes become
+  **views**: mass and mass-weighted enthalpy of the cells by radial overlap with each node's distance
+  range from the edge (they hold exactly the field's mass and energy, so `body_temp_at`, `growths`,
+  `mean_temp` and the checkpoint keep their meaning).
+* **Tooth** (solid rotating tools): the open wedge of one tooth to the flute depth R_w = (D - D_core)/2
+  (`core_diameter_mm` of the tool item, else D/2 (1 - sqrt(A_fluted / (pi D^2/4)))), along the first
+  `tool_field_length_mm` (12 mm) of the edge from the first element. Its outer arc couples to the ladder
+  node at the slab's height through the quasi-steady parabolic profile of the fluted section (cylinder
+  with a uniform surface flux, Carslaw & Jaeger 1959 ch. VII: T_s - T_mean = q R / 4k), 8 pi k per unit
+  length shared by the teeth (per unit root area of the representative tooth n_t R_w beta / (8 pi k)).
+  One representative tooth carries the sum of the teeth's heat with every capacity and conductance
+  times n_t (the system stays symmetric); tooth j's rise above the core at element e is the
+  representative's times Q_je / mean_j Q_je (linear superposition). The wedges' section, mass and wetted
+  perimeter are taken out of the ladder nodes they lie in (each keeps at least a fifth); the prism's two
+  ends are cuts through the tooth (adiabatic); elements beyond the field use the ladder and 2.2.
+
+**Equations.** Per cell, backward Euler in delta form with the properties at the start of the step:
+
+    (C_i + dt sum_j G_ij + dt sum_c G_ic) dT_i - dt sum_j G_ij dT_j = Q_i + dt sum_j G_ij (T_j - T_i) + dt sum_c G_ic (T_c - T_i)
+
+internal faces G = A / (d_a / k_a + d_b / k_b) (two-point flux, d the centroid's distance from the face;
+consistent on the polar grid, whose neighbour lines are normal to the faces), exposed faces
+G = A_w / (d / k + 1 / h) per medium (air: the ladder's correlation for that tool at the face
+temperature plus linearised radiation; coolant: h of the bus over the reach fraction; faces under a
+contact do not convect), coupled faces G = A / (d / k + r_c + l_k / k_node). The ladder's nodes, links
+and end/air/coolant conductances are the same unknowns and terms as in `ladder_step`. Sources: each
+element's rake heat as a uniform flux over [0, l_c] x its y-range on the rake face and its flank heat over
+[0, l_f] on the flank face (l_c, l_f of 2.2), mapped onto the faces by overlap and renormalised (every
+joule placed). Identity: sum C dT = sum Q - dt sum_c G_c (T + dT - T_c) - sum(b - A dT); the last term is
+the solver's residual (|b - A dT| <= `tool_field_tol` |b|, 1e-12), booked by the tool's ledger with the
+rest (measured residuals 1e-16 .. 4e-13).
+
+**Solver.** The symmetric M-matrix is solved by conjugate gradients (Hestenes & Stiefel 1952) with a
+block symmetric Gauss-Seidel preconditioner (Saad 2003, ch. 10): the diagonal blocks are the slabs (banded
+within the sector count by the ring-major numbering) and the ladder (bandwidth 2), each factored exactly
+by banded Cholesky every step; the start is the previous increment when it beats zero. IC(0) was tried
+first and needed ~3.5x the iterations on the graded mesh. Fixed operation order: deterministic; the
+previous increment is checkpointed with the state.
+
+**Cadence.** In a run the field and the ladder are solved every `tool_field_every_n_macro` (10) macro
+steps over the accumulated time; the heat of the steps in between is accumulated per element exactly
+(energy and heat-weighted contact sizes) and mapped once per solve; idle steps, operation ends and
+`finalize` solve what is pending. The near-edge field is quasi-steady on this scale (l^2 / alpha = 1-10 ms)
+and the insert body's time constant is ~1 s; a new engagement reaches the edge temperatures within one
+interval.
+
+**Edge temperatures** of the elements the field carries: the field's cycle-mean face temperatures over
+the element's rake strip (`edge_temp_q_K` base), flank strip (`flank_temp_q_K`) and the innermost ring
+(`edge_peak_q_K`; T_face = T_cell + (q_in - q_out) d / k), plus the **periodic deviation** of the edge kernel
+(`EdgeInput.scal[2] = EDGE_OUT_DEVIATION`): wedge (theta(tau) - <theta>) with the exact cycle mean
+<theta> = q W(N T) / T, W(t) the integral of the unit response over [t - t_h, t]; zero for continuous
+cutting. The cycle amplitude is the kernel's, as before; `body_temp_at_elem_K` stays the ladder's (the
+core, or the insert's first view).
+
+**API.** `ThermalState.tool_temperature_at(slot, points_T)` (and `ThermalDomain.tool_temperature_at(state,
+slot, points_T)`): temperatures at points of the tool frame T (rotating tools at spindle angle 0; the
+point is taken into the edge frame of the nearest field element: x = (p - p_e) . (cos g (-n) - sin g m),
+z = (p - p_e) . (cos g m - sin g n), y = y_e + (p - p_e) . t with n, m, t the chip-thickness normal,
+cutting direction and edge tangent made orthonormal, g the normal rake), the ladder's body temperature
+outside the field. `ToolThermal.temperature_at(points_E, outside="nan" | "nearest")` in E,
+`contact_temperatures(l_c, l_f, width, start)` the field's contact means, `deposit_contact(rake_J, flank_J,
+l_c, l_f, width, start, wedge_angle_rad=, edge_radius_m=)` one contact patch (for a library user
+without an EdgeModel; builds a requested field), `deposit_elements(edges, heat, vb)` the domain's path,
+`flush_field`.
+
+**Validity and error** (tests/unit/thermal/test_toolfield.py, default mesh):
+
+* Exact solutions (method of images for wedges beta = pi/n, Carslaw & Jaeger 1959 ch. X, evaluated with
+  `moving_rect_rise` at v = 0; rectangle flux adjacent to the edge, constant properties, 0.05 s and
+  2 s): beta = 180, 90, 60, 45 deg within 4.5 % of the rise at the edge, on the rake face in and beyond
+  the contact, 1-2 mm inside the wedge and beside the contact; the contact mean within 8 % (+4 %
+  typical): a lateral-resolution bias at the contact's two ends (0.5 mm slabs against l_c = 0.2 mm),
+  2.5 % at growth 1.25 / 10 deg / 0.25 mm, where every point is within 2 %. Half-space rectangle
+  centred on the edge (both faces heated) against (q a / k) Phi(Fo, m): centre 3 %, mean 8 %.
+* Kernel against a dense direct solve of the same couplings: increments 1e-9, every energy term 1e-10.
+* Geometry: the corner is 90 deg (the insert's included angle is not represented), the edge is
+  unrolled straight (nose curvature not represented), one wedge angle per field, the chip-breaker
+  groove beyond the wedge and the insert's contact with its pocket walls are not represented; the
+  tooth's flute depth is a geometric estimate where the tool item gives no core diameter.
+* Interrupted cutting: the field holds the cycle mean (solve interval >> tooth period); the periodic part
+  is the semi-infinite kernel's (penetration sqrt(alpha T) << tool size), its tail approximation
+  (error < 3e-3 relative) shifts the cycle mean slightly.
+* First order in time (backward Euler) and in the lagged properties; 4 % of the rise at the diffusion
+  front after 5 steps (0.05 s at 10 ms).
 
 ## 3. Workpiece
 
@@ -328,7 +446,8 @@ sensitivity is a machine-file estimate.
 
 ## 5. Ledgers (architecture 12)
 
-Solvers: `tool.<slot>`, `work.<w>`, `fixture.<w>`, `spindle.<id>`, `axis.<name>`, `structure`.
+Solvers: `tool.<slot>` (the ladder, or the cutting-region field and the ladder nodes it does not
+replace), `work.<w>`, `fixture.<w>`, `spindle.<id>`, `axis.<name>`, `structure`.
 Each step: `dU = sources - losses - removed`, U from the stored enthalpies / excess temperatures,
 the losses from the face/link conductances the scheme used; a relative residual above
 `physics.thermal.energy_tol` (1e-9, relative to |U0| + |U1| + |terms|) raises ConservationError.
@@ -352,7 +471,8 @@ axis_actual/axis_names, feed_vel_M_m_s, axis_T_M, pose_M_T, pose_S_T, tick, bloc
 
 Written: `nxt.thermal` (a fresh ThermalFeedback each step): `tools[slot]` (ToolHeat: edge/flank
 temperatures at q points, q_weights, cycle amplitude, rake mean, body and holder temperature,
-radial/length/holder growth; **added** `edge_peak_q_K`, `body_temp_at_elem_K`), `spindle_temp_K`,
+radial/length/holder growth; **added** `edge_peak_q_K`, `body_temp_at_elem_K`; the edge temperatures of
+the elements a cutting-region field carries come from it, 2.4), `spindle_temp_K`,
 `spindle_growth_M_m`, `axis_drift`, `work_temp_origin_S_m`, `work_temp_cell_m`, `work_temp_K` (a
 new array at every finite-volume step, NaN outside material, never modified afterwards),
 `work_surface_temp_K`, `work_preheat_K` (max over the workpiece's contacts), `work_bulk_mean_K`,
@@ -366,7 +486,10 @@ new array at every finite-volume step, NaN outside material, never modified afte
 
 `every_n_macro` 5, `cell_mm` 2, `tool_cell_mm` 1, `edge_quadrature` 3, `edge_every_n_macro` 2,
 `sa_direct_cycles` 4, `window_points` 3, `jaeger_points` 24, `min_fraction` 1e-9,
-`deposit_search_cells` 3, `cooldown_steps` 24, `idle_tool_steps` 8, `energy_tol` 1e-9.
+`deposit_search_cells` 3, `cooldown_steps` 24, `idle_tool_steps` 8, `energy_tol` 1e-9; cutting-region
+field (2.4): `tool_field` 1, `tool_field_ring_mm` 0.002, `tool_field_growth` 1.4, `tool_field_sector_deg`
+15, `tool_field_dy_mm` 0.5, `tool_field_length_mm` 12, `tool_field_every_n_macro` 10, `tool_field_tol`
+1e-12, `tool_field_max_iter` 5000.
 
 ## 8. Cost (measured, one core of the i5-4690, bin/tsafe)
 
@@ -375,22 +498,30 @@ new array at every finite-volume step, NaN outside material, never modified afte
 | workpiece finite-volume step | 150-225 ns per material cell (5.5 ms for 26k cells; 14 ms for 63k; 74 ms for 490k) |
 | edge kernel | 9 us per in-cut element and evaluation (every `edge_every_n_macro` steps) |
 | domain macro step, one cutting tool (40 in-cut elements), small part | 1.9 ms (Python plumbing dominates) |
+| cutting-region field, 12.7 x 4.76 mm insert (4.1k cells) | 5.5 / 8.6 / 10 / 12.6 ms per solve at 10 / 50 / 100 / 250 ms steps (10-32 iterations) |
+| cutting-region field, D10 4-flute end mill (1.1k cells) | domain macro step 1.70 -> 2.05 ms (mean, solve every 10 steps) |
 | response tables | 0.6 s once per process |
 | kernel compilation (cold cache) | ~25 s once per cache key |
 
 Per simulated second at 10 ms macro steps: tool, machine and contact work ~0.19 s, plus the
-finite volumes `cells x 190 ns / (every_n_macro x 10 ms)`. For the reference part (300 x 200 x
+finite volumes `cells x 190 ns / (every_n_macro x 10 ms)`, plus the cutting-region field: ~0.1 s per
+turning tool, ~0.035 s per solid tool in cut (at `tool_field_every_n_macro` 10; set 0 in
+`tool_field` to drop it). For the reference part (300 x 200 x
 100 mm, ~490k material cells at 2 mm) choose `cell_mm: 4` (63k cells: 0.28 s/s at every 5) or
 `every_n_macro: 20` (0.37 s/s at 2 mm): the two-scale contact temperature covers the sub-cell
 and sub-step scales, so a coarser field changes the bulk only.
 
 ## 9. References
 
-Jaeger 1942 (moving sources); Carslaw & Jaeger 1959 (conduction, disc and rectangle sources);
+Jaeger 1942 (moving sources); Carslaw & Jaeger 1959 (conduction, disc and rectangle sources; quasi-steady
+slab and cylinder under a constant flux, ch. III and VII; sources and images, ch. X); Hestenes & Stiefel
+1952 (conjugate gradients, J. Res. NBS 49(6) 409-436); Saad 2003 (Iterative Methods for Sparse Linear
+Systems, 2nd ed., SIAM: block preconditioners);
 Stephenson & Ali 1992 (interrupted cutting); Blok 1937 (flash temperature, partition);
 Boothroyd 1963; Trent & Wright 2000; Astakhov 2006 (Poletika contact length); Komanduri & Hou
 2000; Douglas & Gunn 1964 (ADI, rejected); Churchill & Chu 1975a,b; Incropera et al. 2007;
 Kays & Bjorklund 1958; Dittus & Boelter 1930; White 2006 (Sutherland); Palmgren 1959,
 Harris & Kotzalas 2007 (bearing friction); Madhusudana 2014 (contact conductance); Bryan 1990,
 Mayr et al. 2012 (machine thermal errors); ISO 7388-1, ISO 12164-1 (tapers); Abramowitz & Stegun
-1964 (Gauss-Legendre). Full entries: `db/bibliography/models-thermal.yaml`.
+1964 (Gauss-Legendre). Full entries: `db/bibliography/models-thermal.yaml` (Hestenes & Stiefel 1952 and
+Saad 2003 are not in it yet).

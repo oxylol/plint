@@ -86,6 +86,7 @@ tool_life:
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: mineral fillers make filled PU boards mildly abrasive; T = 120 min at ~560 m/min assumed (not read). Leitz lists HW solid serrated routers for 'PU hard foams' (leitz-2020-lexicon-ed7-ch05)"
 tool_life_usui: []

@@ -85,6 +85,7 @@ tool_life:
     ap_ref_mm: 10
     VB_limit_mm: 0.2
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: wear in EPS is negligible; effectively infinite tool life"
 tool_life_usui: []

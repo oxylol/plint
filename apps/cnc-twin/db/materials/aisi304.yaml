@@ -106,6 +106,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     VB_limit_mm: 0.3
     T_ref_min: 1
     vc_range_m_min: [200, 350]
+    life_basis: contact_time
     src: est
     note: "FITTED HERE (no Taylor constants are published for these data): least squares of ln vc = ln C - n ln T - a ln(f/0.25) - b ln(ap/1.5) over the seven tool-life tests of tool A in Table 3 of johansson-2016-304-colding (longitudinal turning with cutting fluid, PVD-coated cemented carbide CNMG431MJ, edge radius 20-25 um; criterion VB 0.30 mm or tool failure; vc 200-350 m/min, f 0.15-0.30 mm, ap 1-2 mm). Fit error in vc -4.9 to +3.5 % (mean 1.8 %); 4 constants from 7 tests, so a and b are poorly determined. The authors model the same data with Colding's equation (Table 5: K 5.955, H -2.0166, M 0.6591, N0 0.4316, L -0.1776). The two commercial PVD coatings of Table 1 lasted 4.67 and 2.44 min against 9.8 min for coating A at vc 250, f 0.275, ap 1.5, i.e. C about 11 and 20 % lower. The earlier estimate (C 394, n 0.25, a 0.3, b 0.12 at f 0.25, ap 2, 'CVD or PVD M-grade': T = 15 min at 200 m/min) gives 15 min at 200 m/min where this fit gives 217 m/min. Outokumpu machinability index (carbide): 4301 = 105 relative to 4404 = 100"
   - tool_class: carbide
@@ -117,6 +118,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.25
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 100 m/min (general knowledge)"
 tool_life_usui: null

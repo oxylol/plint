@@ -7,6 +7,7 @@ id: semi-synthetic-6pct
 name: "Semi-synthetic micro-emulsion, 6 % concentrate in water"
 kind: semi_synthetic
 src: est
+note: "water (nist-webbook-water-2026) corrected for 6 % concentrate: every property below gives its own mixing rule and assumptions; the concentration is the fluid's definition"
 concentration_pct: 6
 density_kg_m3: {table: [[20, 998.3], [40, 992.0], [60, 982.8], [80, 971.3]], src: est, note: "volume mixing of water (nist-webbook-water-2026) with 6 % concentrate of 1000 kg/m3 at 20 C (water-containing concentrate, assumed)"}
 viscosity_mPa_s: {table: [[20, 1.122], [40, 0.731], [60, 0.522], [80, 0.397]], src: est, note: "water viscosity (NIST) x (1 + 2.0 phi) for fine droplets/micelles, assumed"}
@@ -20,15 +21,15 @@ flash_point_degC: null
 smoke_point_degC: null
 friction_factor:
   - {tool_class: carbide, work_family: steel, value: 0.85, range: [0.75, 0.95], src: est, note: "similar to conventional emulsions with EP/boundary additives, assumed"}
-  - {tool_class: carbide, work_family: aluminium, value: 0.7, src: est}
-  - {tool_class: carbide, work_family: titanium, value: 0.9, src: est}
-  - {tool_class: hss, work_family: steel, value: 0.75, src: est}
-lubricity_index: {value: 0.45, src: est}
+  - {tool_class: carbide, work_family: aluminium, value: 0.7, src: est, note: "aluminium: reduced adhesion and BUE as with conventional emulsions (emulsion-5pct 0.7), assumed equal"}
+  - {tool_class: carbide, work_family: titanium, value: 0.9, src: est, note: "titanium: the water phase vaporises before the hot contact, close to dry: 0.9, as emulsion-5pct"}
+  - {tool_class: hss, work_family: steel, value: 0.75, src: est, note: "HSS at low speeds: the fluid reaches the interface, 0.75 as emulsion-5pct"}
+lubricity_index: {value: 0.45, src: est, note: "about the 5 % emulsion's 0.45: less oil but more emulsifier and boundary additives, assumed equal"}
 heat_transfer:
   latent_heat_kJ_kg: {value: 2256, src: nist-webbook-water-2026, note: "water at 100 C"}
   flood_htc_W_m2K: {value: 6500, range: [2000, 20000], src: est, note: "slightly better wetting than conventional emulsions"}
 drag_out_ml_per_kg_chips: {value: 35, range: [20, 70], src: est, note: "as emulsion-5pct; lower viscosity film"}
-evaporation_l_per_h_per_m2: {value: 0.3, range: [0.1, 0.6], src: est}
-mist_loss_fraction: {value: 2.0e-6, src: est}
+evaporation_l_per_h_per_m2: {value: 0.3, range: [0.1, 0.6], src: est, note: "water evaporation from a 25-35 C tank surface in shop air, 0.3 L/(h m2), as the emulsions (the water phase dominates)"}
+mist_loss_fraction: {value: 2.0e-6, src: est, note: "aerosol fraction of the pumped volume, as straight-oil.yaml and the emulsions (2e-6)"}
 cost_eur_per_l: {value: 6.0, src: est, note: "concentrate price"}
 notes: "Derived estimates on NIST water data."

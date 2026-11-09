@@ -38,6 +38,27 @@ FIELDS: dict[str, tuple[str, str, float, float, float, str]] = {
                         "implicit steps when an idle tool (magazine) is brought up to date"),
     "energy_tol": ("energy_tol", "number", 1.0e-9, 1.0e-15, 1.0e-3,
                    "relative tolerance of each solver's energy ledger (a violation fails the run)"),
+    "tool_field": ("tool_field", "count", 1, 0, 1,
+                   "3-D field of the tool's cutting region solved with the ladder (1), or the ladder and the analytic "
+                   "edge field only (0)"),
+    "tool_field_ring_m": ("tool_field_ring_mm", "length", 2.0e-6, 1.0e-7, 1.0e-4,
+                          "outer radius of the innermost ring of the cutting-region mesh (at most a quarter of the "
+                          "smallest edge radius)"),
+    "tool_field_growth": ("tool_field_growth", "number", 1.4, 1.05, 3.0,
+                          "ratio of successive ring radii of the cutting-region mesh"),
+    "tool_field_sector_deg": ("tool_field_sector_deg", "number", 15.0, 2.0, 45.0,
+                              "largest sector of the cutting-region mesh over the wedge angle"),
+    "tool_field_dy_m": ("tool_field_dy_mm", "length", 0.5e-3, 2.0e-5, 0.01,
+                        "largest cell of the cutting-region mesh along the edge"),
+    "tool_field_every_n_macro": ("tool_field_every_n_macro", "count", 10, 1, 1000,
+                                 "tool ladders with a cutting-region field solved every n macro steps (heat "
+                                 "accumulated exactly in between)"),
+    "tool_field_length_m": ("tool_field_length_mm", "length", 0.012, 1.0e-3, 0.2,
+                            "length of a rotating tool's field along its edge from the first element"),
+    "tool_field_tol": ("tool_field_tol", "number", 1.0e-12, 1.0e-15, 1.0e-6,
+                       "relative residual of the cutting-region field's conjugate-gradient solve"),
+    "tool_field_max_iter": ("tool_field_max_iter", "count", 5000, 10, 100000,
+                            "iteration limit of the cutting-region field's solve"),
 }
 
 
@@ -56,6 +77,15 @@ class ThermalSettings:
     cooldown_steps: int = 24
     idle_tool_steps: int = 8
     energy_tol: float = 1.0e-9
+    tool_field: int = 1
+    tool_field_ring_m: float = 2.0e-6
+    tool_field_growth: float = 1.4
+    tool_field_sector_deg: float = 15.0
+    tool_field_dy_m: float = 0.5e-3
+    tool_field_every_n_macro: int = 10
+    tool_field_length_m: float = 0.012
+    tool_field_tol: float = 1.0e-12
+    tool_field_max_iter: int = 5000
 
 
 def _lookup(section, name: str, file_key: str, kind: str):

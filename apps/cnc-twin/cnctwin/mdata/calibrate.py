@@ -207,10 +207,11 @@ def _restart(params: list[Param], values: dict) -> list[Param]:
 
 
 def run_target(problem: Problem, ctx: Context, simulator: str, *, out_dir: Path, project_path: Path | None,
-               report) -> dict:
-    """Fit one problem; returns {problem, fit (surrogate), loop_fit (when the loop refined it), result}."""
+               report, runner=None) -> dict:
+    """Fit one problem; returns {problem, fit (surrogate), loop_fit (when the loop refined it), result}.
+    ``runner``: the ``run_project`` of the loop simulator (default :func:`loop_entry`)."""
     kind = simulator
-    entry = loop_entry() if kind in ("auto", "loop") else None
+    entry = (runner if runner is not None else loop_entry()) if kind in ("auto", "loop") else None
     if kind == "loop" and entry is None:
         raise InputError("simulator loop: cnctwin.core.loop is not in this build")
     usable = problem.target in LOOP_TARGETS and problem.loop and project_path is not None and ctx.run is not None
@@ -291,9 +292,27 @@ def _overlay_series(outcome: dict) -> list[dict]:
 
 # ----------------------------------------------------------------------------- the job
 
-def calibrate(request: dict, out_dir, progress_cb=None) -> dict:
+def _runner(request: dict, options: dict, simulator: str):
+    """The loop simulator's ``run_project``: ``options.runner`` or the job's ``simulate_entry`` (the server's
+    simulation) when named, else None (then :func:`loop_entry`). A named runner that is not in the build is an
+    error for ``simulator: loop`` and leaves ``auto`` with the surrogate."""
+    spec = options.get("runner") or request.get("simulate_entry")
+    if not spec:
+        return None
+    from ..core.outputs import EntryMissing, resolve_entry
+    try:
+        return resolve_entry(spec)
+    except EntryMissing as error:
+        if simulator == "loop":
+            raise InputError(f"simulator loop: {error}") from None
+        return None
+
+
+def calibrate(request: dict, out_dir, progress_cb=None, *, runner=None) -> dict:
     """The ``calibrate`` job (docs/api.md "Entry points"): request ``{project_id, project_path, project_dir,
-    run_id, run_dir, machine_data, options}``; returns the summary that becomes result.json."""
+    run_id, run_dir, machine_data, options}`` (the job manager adds ``simulate_entry``); returns the summary that
+    becomes result.json. ``runner``: the ``run_project`` the loop simulator re-runs (default: ``options.runner``,
+    the request's ``simulate_entry``, else cnctwin.core.loop when it is in the build)."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     report = _progress(progress_cb)
@@ -310,6 +329,8 @@ def calibrate(request: dict, out_dir, progress_cb=None) -> dict:
     if simulator not in ("auto", "surrogate", "loop"):
         raise InputError(f"options.simulator {simulator!r}: use auto, surrogate or loop")
     project_path = Path(request["project_path"]) if request.get("project_path") else None
+    if runner is None and simulator in ("auto", "loop"):
+        runner = _runner(request, options, simulator)
     outcomes, skipped = [], []
     for name in names:
         try:
@@ -319,7 +340,8 @@ def calibrate(request: dict, out_dir, progress_cb=None) -> dict:
                 raise InputError(f"target {name}: {reason}") from None
             skipped.append({"target": name, "status": "skipped", "reason": str(reason)})
             continue
-        outcome = run_target(problem, ctx, simulator, out_dir=out_dir, project_path=project_path, report=report)
+        outcome = run_target(problem, ctx, simulator, out_dir=out_dir, project_path=project_path, report=report,
+                             runner=runner)
         outcomes.append(outcome)
         for record in outcome["fit"].params:
             if _written(record)[0]:

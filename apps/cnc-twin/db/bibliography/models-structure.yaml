@@ -139,3 +139,18 @@ entries:
     year: 2005
     doi: "10.1007/0-387-28687-X"
     pages: "ch. 4 / 6: rotors with an anisotropic cross-section: in the inertial frame the mean stiffness (k1 + k2)/2 plus a deviatoric part varying at twice the spin speed"
+  hetenyi-1946-elastic-foundation:
+    type: book
+    authors: "Hetenyi, M."
+    title: "Beams on Elastic Foundation"
+    publisher: "University of Michigan Press, Ann Arbor"
+    year: 1946
+    pages: "ch. 2-3: semi-infinite beam on a Winkler foundation, end deflection 2 P lambda / k and slope, lambda = (k / 4 E I)^(1/4)"
+  bhat-1985-orthogonal-polynomials:
+    type: article
+    authors: "Bhat, R.B."
+    title: "Natural frequencies of rectangular plates using characteristic orthogonal polynomials in Rayleigh-Ritz method"
+    venue: "Journal of Sound and Vibration 102(4), 493-499"
+    year: 1985
+    doi: "10.1016/S0022-460X(85)80109-7"
+    pages: "start function satisfying the geometric edge conditions times Gram-Schmidt polynomials; any edge combination"

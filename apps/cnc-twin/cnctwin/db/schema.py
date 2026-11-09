@@ -588,8 +588,9 @@ class Text(Leaf):
 
     expected = "text"
 
-    def __init__(self, enum=None, *, pattern=None, nullable=False, doc="", allow_empty=False, sourced=True):
-        super().__init__(nullable=nullable, doc=doc, sourced=sourced)
+    def __init__(self, enum=None, *, pattern=None, nullable=False, doc="", allow_empty=False, sourced=True,
+                 extras=None):
+        super().__init__(nullable=nullable, doc=doc, sourced=sourced, extras=extras)
         self.enum = tuple(enum) if enum is not None else None
         self.pattern = re.compile(pattern) if pattern else None
         self.allow_empty = allow_empty

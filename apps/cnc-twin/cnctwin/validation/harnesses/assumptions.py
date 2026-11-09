@@ -49,3 +49,19 @@ READING_AT = "end of the cutting time"
 
 __all__ = ["Assumed", "TEST_CUT_TIME", "LADDER_STEP", "IR_WINDOW_ALONG_RAKE", "IR_WINDOW_DOWN_FLANK",
            "CHIP_COOLING_LENGTH", "EMBEDDED_TC_DEPTH", "GUIMARAES_DIAMETER_FROM", "READING_AT"]
+
+
+# primary clearance of a solid end mill whose clearance the source does not state: catalogue solid end mills
+# are ground with 8-12 deg primary clearance; with no flank wear only the process-damping and flank-land terms
+# of the cutting model use it
+ENDMILL_CLEARANCE = Assumed(10.0, "deg", "primary clearance not stated: the middle of the 8-12 deg of catalogue "
+                            "solid end mills")
+
+# outer diameter of an orthogonal test tube the source does not dimension: only the variation of the cutting
+# speed across the width depends on it (+-2 % at 2 mm width)
+TUBE_DIAMETER = Assumed(50e-3, "m", "tube diameter not stated: only the speed variation across the width "
+                        "depends on it")
+
+# radial rake of an end mill whose rake the source does not state: catalogue general-purpose HSS and carbide end
+# mills for steel and aluminium are ground with 5-15 deg radial rake
+ENDMILL_RAKE = Assumed(10.0, "deg", "radial rake not stated: the middle of the 5-15 deg of general-purpose end mills")

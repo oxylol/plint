@@ -6,7 +6,8 @@ E 68.9 GPa; Makro-Grip 14 kN at 60 Nm; machine positioning repeatability 4 um (X
 
 ## 1. Carry-over and pose (OP10 -> OP20)
 
-* The OP20 part is the OP10 result (from_previous) placed by the OP20 stock pose: a point
+* The OP20 part is the OP10 result (from_previous: turned 180 deg about X, the turned blank box
+  re-based at the origin) placed by the OP20 stock pose (translation -40, -30, -2.5): a point
   (x, y, z) of the OP10 stock frame is at W (x - 40, 30 - y, 22.5 - z). Checks: the OP10 top
   (z 22.5) lies on W z 0 (the jaw seat); the OP10 pocket floor (z 16.5) is at W z 6, facing down;
   the drilled hole tips (z 1.5) are at W z 21.0, i.e. 1.0 mm below the OP20 stock top (W z 22.5)
@@ -79,21 +80,20 @@ finding naming the debris; an aluminium facing chip (h about the chip thickness 
 
 * Blank 120 000 mm3 - part 87 314 mm3 (OCC volume of `part.step`) = **32 686 mm3 = 88.25 g**
   (OP10 + OP20). Acceptance +-0.3 %.
-* OP20: controller dry run 57.7 s (T1 14.8, T6 28.3, T5 14.3 s). OP10: the scan bound is 46.2 s
-  plus the G13 loops (path radii 1, 4, 7, 10 mm: 2 pi x 22 mm + transitions = 160 mm at
-  F3474 = 2.8 s): 49 s; the controller dry run stops at G82 in this build (TW0001, no canned-cycle
-  provider). Expected OP10 50-60 s, OP20 58-68 s.
+* OP20: controller dry run 57.7 s (T1 14.8, T6 28.3, T5 14.3 s). OP10: controller dry run 53.0 s
+  (the scan bound of 46.2 s plus the G13 loops, path radii 1, 4, 7, 10 mm: 2 pi x 22 mm + transitions
+  = 160 mm at F3474 = 2.8 s, plus the canned cycles' own moves). Both are ideal-machine lower bounds.
+  Expected OP10 50-60 s, OP20 58-68 s.
 
 ## 7. Program sanity (cnctwin.sanity on the resolved project)
 
 | op | line | rule | severity | why |
 |---|---|---|---|---|
 | OP10 | 12 | scan-limits | info | `G53 G00 Z0.` before the first tool call |
-| OP10 | 55 | scan-limits | info | G13 is not expanded by the static scan |
 | OP20 | 11 | scan-limits | info | `G53 G00 Z0.` before the first tool call |
 | OP20 | 14 | scan-limits | info | first move after the tool change: start position unknown to the scan |
 
-The chamfer passes feed out to Z5 before the rapid: the sanity context builds the vise jaws in
-the stock frame, so in the flipped OP20 it places them on top of the part (W z 19.5-22.5) and a
-rapid out of the Z-1.55 chamfer depth would be reported as crossing a jaw (a sanity limitation,
-see notes); a G01 retract avoids the false report and is harmless.
+The G13 pocket of OP10 is checked as the controller expands it (radial steps of 3 mm). The
+vise jaws are built in the workholding frame, on the seat (W z 0-3 in both setups), not with the
+turned part. The chamfer passes feed out to Z5 before the rapid (kept from when the jaws were
+placed with the part; harmless).

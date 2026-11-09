@@ -7,7 +7,7 @@ from cnctwin.core.errors import InputError, SourceError
 from cnctwin.db import Database
 from cnctwin.db.check import main as check_main
 from cnctwin.db.simap import Curve, PoseMap, Sourced, Table
-from dbfixture import MATERIAL, TOOLS, write_db
+from tests.unit.db.dbfixture import MATERIAL, TOOLS, write_db
 
 RPM = 2 * math.pi / 60
 

@@ -24,13 +24,16 @@ report = check_program(text, "op10.nc", ctx, commands=None, subprograms={"O2000"
 
 * `check_operation(project, op_index, *, program_text=None, commands=None, subprograms=None,
   restart_analysis=None, trace=None, timeline=None, project_dir=None, stock_box_M=None,
-  clamps_M=None) -> SanityReport` reads `operations[i].program_text` (else the file
-  `project_dir/operations[i].program`).
+  clamps_M=None, use_controller=True) -> SanityReport` reads `operations[i].program_text` (else the
+  file `project_dir/operations[i].program`); with `use_controller` (and no `commands`) it runs the
+  controller's dry run of the operation for what the scan cannot evaluate (section 3a).
 * `check_program(text, name, ctx, *, commands=None, subprograms=None, restart_analysis=None,
-  trace=None, timeline=None, tick_s=1e-6) -> SanityReport`.
+  trace=None, timeline=None, tick_s=1e-6, assist=None) -> SanityReport`.
 * `SanityReport`: `issues` (rule id, severity, message, line, program, block, command index,
   quantities, causes, pos_W_m), `findings` (core `Finding`s, ids -1 until added to a run's
-  `FindingList` with `add_to`), `program` (the view), `engagement`, `trace`, `context`, `safe()`.
+  `FindingList` with `add_to`), `program` (the view), `engagement`, `trace`, `context`, `assist`
+  (the controller assist consulted, or None; `assist.note` says why there is none, `assist.alarm`
+  the alarm the dry run stopped at), `safe()`.
 * Findings: `category=sanity`, `domain="sanity"`, `message="<rule-id>: <text>"`, `line`, `block`,
   `op`, `program`, `pos_W_m` (intended tool tip, program coordinates of the active work offset),
   `pos_M_m` (that plus the work offset), `quantities` (SI, keys carry units), `cause_chain`: trace
@@ -114,14 +117,51 @@ Assumptions (each a choice with its consequence):
 * H00 and G49 apply no length; Fanuc coordinates without a decimal point are least input
   increments (machine `least_input_increment_mm`, `fanuc_inch_increment_m` in inch), Haas whole
   units; block-delete blocks are executed (switch off);
-* not evaluated, and reported as `scan-limits` info findings: macro expressions and statements
-  (positions after an unknown value are NaN), G65/G66 macro calls, G68 rotation, G51 scaling,
-  G15/G16 polar, mirror, TCP (G43.4/G234), DWO, Haas pattern cycles (G12/G13/G150/G70-G72, G47),
-  G30 positions, G29, unknown G/M codes, subprograms not available, the lathe multiple-repetitive
-  cycles' passes (G70-G76 and G90/G92/G94 are checked as one feed move to their end point).
+* not evaluated by the scan alone, and reported as `scan-limits` info findings: macro expressions
+  and statements (positions after an unknown value are NaN), G65/G66 macro calls, G68 rotation,
+  G51 scaling, G15/G16 polar, mirror, TCP (G43.4/G234), DWO, Haas pattern cycles
+  (G12/G13/G150/G70-G72, G47), G30 positions, G29, unknown G/M codes, subprograms not available, the
+  lathe multiple-repetitive cycles' passes (G70-G76 and G90/G92/G94 are checked as one feed move to
+  their end point). With the controller assist (3a) most of these come from the controller.
+* lathe G71/G72/G73 with P and Q continue after the shape's last block N(nf) (the shape blocks are
+  not run after the cycle, as on the control); G70 P Q runs the blocks N(ns)..N(nf) and then returns
+  to its start point at rapid, so the finishing contour is checked with the finishing tool;
+* `,C` / `,R` corner words are read and the programmed corner is kept (the chamfer or fillet lies
+  within its size of it); the Haas device and check M codes (brakes, gears, clamps, M16, M78/M79,
+  lathe M14/M15, M21/M22, M23/M24, M36/M37, M146/M147) have no effect on the scan's geometry.
 
 Dialects other than Fanuc and Haas (Siemens 840D, Heidenhain) need the controller's command
 stream; without it one `scan-limits` info finding says so and no other rule runs.
+
+### 3a. Controller assist (`cnctwin.sanity.assist`)
+
+`check_operation` runs the controller's dry run of the operation (cnctwin.controller.dry_run: the
+ideal machine, with `cnctwin.controller.domain.stock_probe`, an ideal spindle probe against the
+stock as set up) with the executor's block log on, and the scan asks it about the lines it cannot
+evaluate. A line's k-th visit by the scan is matched with the k-th execution of that program line by
+the controller (without macro flow the two orders are the same; with GOTO/WHILE the scan's single
+pass takes the first execution). From the matched execution the scan takes:
+
+* the values of addresses written as macro expressions (`G43 H#3026`, `G41 D#7`, `X#101`,
+  `Z[#1 - 2]`): the values the executor evaluated, in program units;
+* the motion of lines it does not expand, as the controller ran them (tool-tip positions in program
+  coordinates of the active work offset, the controller's machine targets and tool axis): moves
+  under tool centre point control (G43.4/G43.5, Haas G234), dynamic work offsets (G254) and tilted
+  planes (G68.2) until their cancel; the lathe cycles (G70-G76, G90/G92/G94, the Haas lathe drilling
+  cycles) through their cycle providers; the Haas mill pattern cycles (G12/G13/G150, G47) and bolt
+  hole patterns (G70-G72, whose holes are recorded with their cycle phases like the scan's own
+  canned-cycle holes); G65 macro calls and subprograms the scan cannot read (the motion of every
+  block they run); G31 skip moves, which end where the probe latched; G codes the scan does not
+  interpret.
+
+The scan keeps its own modal state, holes, sections and notes; mill canned cycles G73-G89 keep the
+scan's own six-operation model (its R, Z and return planes are what the depth and clearance rules
+read; the providers' peck re-approaches inside the hole are not checked as rapids). A move taken from
+the controller carries `modal source: controller`: `part-outside-travel` reads its machine targets
+(the controller's inverse kinematics) instead of tip + offset + length. Lines after a controller
+alarm have no execution and the scan reads them alone (the alarm itself is the controller's
+finding in a run). When the controller cannot be built or run for the operation, the scan runs
+alone and `report.assist.note` says why.
 
 ## 4. Context (`SanityContext`)
 
@@ -133,7 +173,12 @@ number: type, hand, tool-material class, diameter, flutes, corner radius, point 
 cutting length, stickout, length and radius offsets, coolant holes, thread pitch, chamfer threads,
 maker's `cutting_data` per ISO group, project comment, price, regrinds), the work offsets of the
 operation, the stock box and the clamps. A tool given only by a database id that the resolver did
-not resolve has `resolved=False` (geometry unknown: reported, see `scan-limits`).
+not resolve has `resolved=False` (geometry unknown: reported, see `scan-limits`). A probe
+(`project.tools.probes`, or a raw `kind: probe` entry of `tools.list`) is a known T number of type
+`probe`: its diameter is the stylus ball, it does not rotate and never cuts (the engagement estimate
+checks its rapids only); its comment may name it `PROBE` (bare model numbers such as `OMP40-2` are
+not read as a diameter for a probe). The stock box is the operation's own (`stock_box_S_m` of the
+resolved project: the turned box of a `from_previous` operation), else the stock's size.
 
 **Setup geometry convention.** For a 3-axis mill the table frame (where `fixture_pose` and the
 work offsets are written, db/_templates/project.yaml) is the machine coordinate frame: the stock
@@ -143,13 +188,19 @@ offset `G5x` are machine coordinates minus the offset. Poses use the project con
 (`cnctwin.db.simap.pose_matrix`). Callers that know the kinematics better pass `stock_box_M` and
 `clamps_M` (`Box(lo, hi, name)`, machine coordinates).
 
-**Clamps.** A workholding entry with `outline_mm: [[x0, y0, z0], [x1, y1, z1]]` (additive project
-key: a box in the stock frame) is used as it is; a vise or soft jaws give two jaw boxes beside the
-stock along y_S, `jaw_width_mm` wide (default: the stock length), `jaw_height_mm` high (default: to
-the stock bottom), `vise_jaw_thickness_m` thick, their top `grip_depth_mm` above the stock bottom
-(default: the stock top); vacuum, magnetic, adhesive, fixture plates, tabs and lathe chucks have
-nothing above the part; any other device without an outline is listed as unknown (an info finding:
-moves are not checked against it).
+**Clamps.** A device is fixed to the workholding frame W, not to the part: its frame D is the
+entry's `pose` in W (the identity when none is written), so in a flipped setup the clamps stay
+where the fixture holds them. A workholding entry with `outline_mm: [[x0, y0, z0], [x1, y1, z1]]`
+(a box in D, docs/formats.md) is used as it is; a vise or soft jaws give two jaw boxes in D by the
+holding convention (cnctwin.holding.devices.build_vise: D's origin on the seat, the parallels' top
+else the bed, x along the jaw width, y the clamping direction): the jaw faces at the part's y faces
+(the stock box as placed in D), `vise_jaw_thickness_m` thick, `jaw_width_mm` wide (default: the
+part's length) centred on D (on the part when it does not lie there), their tops `grip_depth_mm`
+above the seat (else jaw height - parallels, else the part top), rising from the bed (z =
+-parallels), or from the vise's mounting face when `seat_height_mm` gives the body below the seat;
+vacuum, magnetic, adhesive, fixture plates, tabs and lathe chucks have nothing above the part; any
+other device without an outline is listed as unknown (an info finding: moves are not checked
+against it).
 
 ## 5. Engagement estimate (`cnctwin.sanity.geometry`)
 
@@ -163,16 +214,28 @@ tool's lower envelope `z_tip + lift(r)`: flat end mill `lift = 0`; torus/ball wi
   sagitta of a quarter cell; a vertical plunge is the disc at its lower end; ramps and helices are
   sampled along the path (step `min(cell, R/2)`, at least half a cell) with the front half of the
   disc (the half the tool moves into) evaluated against the heights before the move.
-* A move cuts when material stands more than 1 um above the envelope; `ap` is the highest engaged
-  material above the tip, `ae` the extent of the engaged cells across the feed direction plus one
-  cell, capped at the diameter (for a plunge the larger of the x and y extents).
+* A move cuts when material stands more than 1 um above the envelope. Material lies between the
+  stock bottom and the cell's height: a cell carved below the bottom (a through cut) holds none.
+  `ap` is the depth of the engaged material: from the highest engaged material down to the tip, or
+  to the stock bottom when the tip is below it (a through hole or a profile cut past the bottom);
+  `reach` how far below that material top the tip reaches (through or not). `ae` is the extent of the
+  engaged cells across the feed direction plus one cell, capped at the diameter (for a plunge the
+  larger of the x and y extents); on an arc in XY whose engagement is a crescent on one side of the
+  path it is the radial depth measured from the arc's centre (outward: rho + R minus the nearest
+  engaged cell's distance; inward, around a boss: the farthest minus rho - R; plus half a cell), the
+  radial depth of cut on a circular path, where the swept width across a chord would count the
+  crescent's length.
 * Rapids: `gap` = the smallest clearance between envelope and material (negative: into it).
+* Not estimated: probe moves other than rapids (a probe touches, it never cuts) and moves whose tool
+  axis is tilted more than `max_tool_tilt_rad` from +z (five-axis moves from the controller assist:
+  the 3-axis model does not apply; reported under `scan-limits`).
 
 Error: `ap` and `ae` within about one cell (0.5 mm by default) plus, on arcs, the chord sagitta
 (cell/4); ramps add the sampling step. The map knows the stock only (no previous operation's
 result, fixtures are separate boxes, the part's CAD is not used). Lathes: a feed move cuts when its
 radius is inside the stock radius; ap = stock radius - radius. Cost on this machine: about 0.2 ms
-per block (a 40 000-block zig-zag program in 8 s, scan and rules included).
+per block (a 40 000-block zig-zag program in 8 s, scan and rules included), plus the controller's
+dry run of the assist (about 70 us per command).
 
 ## 6. Rules
 
@@ -192,12 +255,12 @@ quantities), at the first line where it applies; sections are numbered by tool c
 | `work-offset-unset` | the active work offset has no value in the setup and the program does not set it; no work offset selected before the first move (power-on G54 used) | error / warning | all |
 | `missing-g43` | after a tool change, a Z move or feed move before G43 H is programmed in the section | error | Fanuc/Haas mills |
 | `tap-depth` | a tap with no smaller drilled hole at its X/Y (within `hole_match_tolerance_m`); tap end below the drill tip (error) or within the drill point cone plus `tap_bottom_margin_pitches` (warning); through holes pass | error / warning | mills |
-| `flute-length` | depth of cut (ap from the stock top or the material at the hole) over the tool's flute (else cutting) length, or over its stickout (the holder reaches the part) | error | mills |
+| `flute-length` | the tool's reach below the top of the engaged material over its flute (else cutting) length (the shank behind the flutes is as wide as the cut), or over its stickout (the holder reaches the part); a tap counts the material its thread engages (`ap`: to the stock bottom on a through hole), its neck passing the tapped hole | error | mills |
 | `coolant-unavailable` | a coolant code needing a pump/nozzle the machine does not have (M07 mist or shower, M08 flood, M88 through-spindle, M73 through-tool air, M83 air blast, M34/M35 programmable nozzle); through-spindle coolant on a tool without coolant holes (warning) | error / warning | all |
 | `cutting-data` | vc, fz (side milling; plunges only against the maximum), f per rev (drills), ap, ae (fraction of D or mm) outside the maker's range for the material's ISO group (`cutting_data`, exact material id preferred, then operation); warning, error beyond `cutting_data_error_factor`; tapping feed per rev not the pitch (error, `tapping_feed_tolerance_frac`); no data for the group: info | warning / error / info | all (lathes: vc, f) |
 | `coolant-required` | cutting dry where the maker's data say wet, the tool type needs lubrication (`coolant_required_tool_types`), drilling deeper than `deep_hole_depth_ratio` x D, or the ISO group requires coolant (`coolant_need_by_iso_group`); water-based fluid on a water-free family (error); coolant on a dry tool class (warning) | warning / error | all |
 | `retract-below-clamps` | a rapid (or the move between holes at the retract level) passing over a clamp below its top (error); a cycle's retract plane (R for G99, initial for G98) below the clamp tops without such a crossing (warning); clamp geometry unknown (info) | error / warning / info | mills |
-| `part-outside-travel` | a programmed position that, with its work offset and the active H, needs machine coordinates outside the axis travel | error | mills |
+| `part-outside-travel` | a programmed position that, with its work offset and the active H, needs machine coordinates outside the axis travel (moves from the controller assist: its machine targets) | error | mills |
 | `arc-endpoint` | I/J/K arc whose end-point radius differs from the start radius by more than `arc_accept_increments` least input increments (warning: the control blends a spiral) or by more than the control's tolerance (error: it alarms; machine `controller.arc_radius_tolerance_mm`, else `arc_alarm_tolerance_m`); R arc shorter than half its chord (error) | warning / error | all |
 | `program-end` | no M30/M02/M99 reached (error); M30/M02 with the spindle or coolant still on (warning) | error / warning | all |
 | `restart-modal` | the controller's restart analysis issues (records `{line, program, issues: [{group, message, severity}]}`); otherwise per tool section (restart at the N-numbered line before the tool change, else the tool change): a modal group used before the section writes it, whose value differs from the power-on default (distance, work offset, plane, units, cutter compensation, active cycle: error; feed mode: warning), and G90/G91 not stated before the first move even when it equals the default (warning; not on lathes) | error / warning | all |
@@ -231,6 +294,7 @@ Setting 15 H/T agreement) in haas-ngc-mill-om-2020.
 | `tapping_feed_tolerance_frac` | 0.01 | est |
 | `zmap_cell_m`, `zmap_max_cells` | 5e-4, 4e6 | numerical settings |
 | `vise_jaw_thickness_m` | 0.025 | est |
+| `max_tool_tilt_rad` | 0.1 deg | est (a D20 tool's lower edge moves 0.02 mm, below the map's cell) |
 | `coolant_need_by_iso_group` | P recommended, M required, K optional, N required, S required, H optional, O optional | est (tool makers' practice; iso-513-2012 groups) |
 | `coolant_required_tool_types` | taps, reamer, gun drill | est |
 | `water_free_families` | magnesium | est |
@@ -252,10 +316,14 @@ examples/sanity-mistakes reuses the program with the same setup.
 ## 9. Validity and limits
 
 Valid for 3-axis milling with the tool axis along +z of the program frame (VMCs; HMCs at a fixed
-B), 2-axis turning, Fanuc and Haas dialects; five-axis and TCP programs, rotated work planes and
-multi-path lathes are checked only by the rules that do not need geometry, and say so
-(`scan-limits`). The checks are as good as the setup data: a wrong fixture pose moves the stock box
-and the clamps (section 4). Cutting data are compared at the programmed speed (overrides ignored).
+B), 2-axis turning, Fanuc and Haas dialects; five-axis and TCP programs and tilted planes get their
+tool-tip positions and machine targets from the controller assist (section 3a) but no engagement
+estimate where the tool axis is tilted, rotated work planes (G68) and multi-path lathes are checked
+only by the rules that do not need geometry, and say so (`scan-limits`). The checks are as good as
+the setup data: a wrong fixture pose moves the stock box and the clamps (section 4); the stock box of
+an operation carried over by `from_previous` still contains what the earlier operation removed. The
+assist is only as right as the controller's dry run: its ideal probe triggers on the stock box as set
+up. Cutting data are compared at the programmed speed (overrides ignored).
 Everything is deterministic: same inputs, same findings in the same order (sorted by program, line,
 rule order, message).
 

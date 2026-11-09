@@ -122,6 +122,7 @@ tool_life:
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: same as CFRP (T = 10 min at 100 m/min); glass fibres (E 76 GPa) are hard and abrade the carbide binder; no GFRP tool-life fit could be read"
   - tool_class: carbide
@@ -134,6 +135,7 @@ tool_life:
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 30 min at 200 m/min assumed"
   - tool_class: pcd
@@ -146,6 +148,7 @@ tool_life:
     ap_ref_mm: 5
     VB_limit_mm: 0.1
     T_ref_min: 1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 60 min at 300 m/min assumed; Leitz recommends DP for fibre reinforced plastics (leitz-2017-lexicon-ed7-ch11)"
 tool_life_usui: []

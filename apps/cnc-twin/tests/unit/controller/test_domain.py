@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pytest
 
@@ -125,3 +127,26 @@ def test_machine_model_of_the_real_machine_files():
         model = build_machine(load_file(swiss).data)
         assert len(model.paths) == 2 and model.paths[1][0].name == "X2" and model.paths[1][0].diameter
     assert np.isfinite(1.0)
+
+
+def test_project_work_offset_lists_are_x_y_z_on_every_machine_type():
+    """A project's work_offsets_mm list is the work zero's machine coordinates X, Y, Z (then the path's other
+    axes), on lathes too (sanity reads the same [x, y, z]); the executor reads lists in its own axis order (X, Z,
+    Y, C on a lathe), so the setup reorders them. A lathe G54 [-426, 0, -333] is X -426 (diameter) and Z -333."""
+    from cnctwin.controller.domain import offset_row
+    from harness import LATHE
+    assert offset_row([-0.4, -0.2, -0.3], ["X", "Y", "Z"]) == [-0.4, -0.2, -0.3]
+    assert offset_row([-0.3, -0.25, -0.65, 0.1, 0.2], ["X", "Y", "Z", "B", "C"]) == [-0.3, -0.25, -0.65, 0.1, 0.2]
+    assert offset_row([-0.426, 0.0, -0.333], ["X", "Z", "Y", "C"]) == [-0.426, -0.333, 0.0, 0.0]
+    assert offset_row([-0.426, 0.01, -0.333, 0.5], ["X", "Z", "C"]) == [-0.426, -0.333, 0.5]   # no Y: dropped
+    machine = copy.deepcopy(LATHE)
+    project = simap({"machine": machine, "physics": {},
+                     "operations": [{"name": "OP10", "program": "op10.nc", "program_text": wrap("G00 X40. Z2."),
+                                     "setup": {"work_offsets_mm": {"G54": [-426, 0, -333]}}}],
+                     "tools": {"list": []}})
+    ctx = RunContext(project=project, db=None, run_dir=None, seed=1, tick_s=1e-6, ipo_ticks=1000, macro_ipo=10)
+    setup = setup_from_project(ctx, SimState())
+    letters = [a.letter for a in build_machine(machine).paths[0]]
+    assert letters[:2] == ["X", "Z"]
+    row = dict(zip(letters, setup.work_offsets_m[0]["G54"]))
+    assert row["X"] == pytest.approx(-0.426) and row["Z"] == pytest.approx(-0.333)

@@ -4,7 +4,8 @@ Per macro step it reads ``prev`` (cutting zone heat and fraction tables, coolant
 removal geometry, wear) and writes only ``nxt.thermal``:
 
 1. distributes each contact's zone heat once (partition.py) - chips, tool elements, workpiece;
-2. steps the active tools' ladders and edge fields (toolmodel.py), idle tools lazily;
+2. steps the active tools' ladders, 3-D cutting-region fields (toolfield.py) and edge fields
+   (toolmodel.py), idle tools lazily;
 3. steps spindles (bearing heat, holder conduction), ballscrew axes and the structure (machine.py);
 4. accumulates the work heat rows and every ``every_n_macro`` steps runs the workpiece finite
    volumes and fixtures (workpiece.py); evaluates the two-scale surface temperature and preheat
@@ -88,6 +89,7 @@ class ThermalDomain:
         th.fixture_mass_kg = self._fixture_mass(project)
         for slot in state.tools.slots:
             th.tools[slot.slot] = self._new_tool(project, slot, st, ambient, time_s)
+            self._ensure_field(th.tools[slot.slot], st)
         if self.geometry is not None:
             th.works[0] = WorkThermal(0, self.geometry, th.material, st, ambient, family, time_s,
                                       th.fixture_mass_kg or None, self.contact)
@@ -186,7 +188,10 @@ class ThermalDomain:
             work.clamped = False
             work.update_contact()
         th.macro_since_fv = 0
+        turret_flush = self._flush_fields(th, step)
         wait = I.time_between_ops_s(ctx.project)
+        if turret_flush:
+            th.structure.body.step(0.0, 0.0, th.ambient_K, turret_flush, st.energy_tol, th.time_s)
         if wait > 0.0:
             n = st.cooldown_steps
             for w, work in sorted(th.works.items()):
@@ -223,7 +228,11 @@ class ThermalDomain:
     def finalize(self, ctx, state) -> dict:
         th: ThermalState = state.thermal
         self._attach(th)
-        leftover = self._table_heat(th)
+        flush_step = {"coolant": 0.0}
+        flushed = self._flush_fields(th, flush_step)
+        state.ledger.heat_to_coolant_J += flush_step["coolant"]
+        th.totals["coolant"] = th.totals.get("coolant", 0.0) + flush_step["coolant"]
+        leftover = self._table_heat(th) + flushed
         if leftover:
             th.structure.body.step(0.0, 0.0, th.ambient_K, leftover, th.settings.energy_tol, th.time_s)
         ledgers = self._ledgers(th)
@@ -234,6 +243,11 @@ class ThermalDomain:
                                 "cycle_amp_max_K": th.maxima.get(f"tool.{slot}.amp_K", 0.0),
                                 "length_growth_m": tool.last_heat.length_growth_m,
                                 "holder_growth_m": tool.last_heat.holder_growth_m}
+            if tool.field is not None:
+                f = tool.field
+                tools[str(slot)]["field"] = {"kind": f.kind, "cells": int(f.sys.T.size), "wedge_rad": f.beta,
+                                             "teeth": f.mult, "last_iterations": f.iterations,
+                                             "last_residual": f.residual}
         works = {}
         for w, work in sorted(th.works.items()):
             mean_K, max_K = work.bulk()
@@ -299,6 +313,32 @@ class ThermalDomain:
         mat_tool = props.tool_material_table_by_id(spec.tool_material_id)
         mat_holder = props.material_table_by_id(spec.holder_material_id)
         return ToolThermal(slot.slot, spec, mat_tool, mat_holder, st.tool_cell_m, ambient, time_s)
+
+    def _ensure_field(self, tool: ToolThermal, st, edges=None) -> None:
+        """Build the tool's 3-D cutting-region field once its EdgeModel is known (physics.thermal.tool_field)."""
+        if not st.tool_field or tool.field is not None:
+            return
+        if edges is None and self.edges is not None:
+            edges = self.edges.edge_model(tool.slot)
+        if edges is not None:
+            tool.enable_field(st, edges, every_n_steps=st.tool_field_every_n_macro)
+
+    def _flush_fields(self, th: ThermalState, step: dict) -> float:
+        """Solve every tool field over the time it accumulated (end of an operation, end of the run);
+        returns the heat its clamped end passed to the turret / table (to the structure body)."""
+        env = ToolEnvironment(in_spindle=False, T_air_K=th.ambient_K, T_end_K=th.structure.body.T_K,
+                              T_fluid_K=th.ambient_K)
+        to_structure = 0.0
+        for slot, tool in sorted(th.tools.items()):
+            result = tool.flush_field(env, th.settings.energy_tol)
+            step["coolant"] = step.get("coolant", 0.0) + result["coolant_J"]
+            to_structure += result["spindle_J"]
+        return to_structure
+
+    def tool_temperature_at(self, state, slot: int, points_T) -> np.ndarray:
+        """Tool temperatures (K) at points of the tool frame T of a slot (rotating tools at spindle angle 0):
+        the 3-D cutting-region field where it exists, else the ladder's body temperature there."""
+        return state.thermal.tool_temperature_at(slot, points_T)
 
     def _new_part(self, th: ThermalState) -> None:
         for w, work in sorted(th.works.items()):
@@ -445,7 +485,11 @@ class ThermalDomain:
                 to_ends["turret"] += result["spindle_J"]           # idle: only turret-clamped tools conduct
             for cut, rem, heat, edges, vb in items:
                 if edges is not None and np.shape(edges.elem_z_m) == heat.tool_rake_elem_J.shape:
-                    tool.deposit(edges.elem_z_m, heat.tool_rake_elem_J + heat.tool_flank_elem_J)
+                    self._ensure_field(tool, st, edges)
+                    if tool.field is not None:
+                        tool.deposit_elements(edges, heat, vb)
+                    else:
+                        tool.deposit(edges.elem_z_m, heat.tool_rake_elem_J + heat.tool_flank_elem_J)
                 else:
                     length = rem.geometry.ap_m if rem is not None and rem.geometry.ap_m > 0 else tool.spec.flute_length_m
                     tool.deposit_uniform(length, heat.tool_J)

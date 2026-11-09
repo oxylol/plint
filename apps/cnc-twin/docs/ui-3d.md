@@ -184,7 +184,10 @@ occupied cells, coloured by the chips' mean colour or by height with the chips l
 
 ## Coolant
 
-Nozzles are drawn from `scene.nozzles`. Jets are the `jet_*` rows of the newest keyframe: along the coolant
+Nozzles are drawn from `scene.nozzles` (a body behind the orifice, along the aim); head-mounted ones
+(`attached_to` a tool-chain link, a head, spindle or tool) at the origins of their jets instead, since the
+scene's position of a moving nozzle belongs to no particular time. Jets are the `jet_*` rows of the newest
+keyframe: along the coolant
 model's own path `jet_path_M_m` when recorded, else along the free trajectory from the nozzle: straight for
 gas, mist and MQL, for liquid jets the ballistic curve `p(s) = p0 + v0 t + g t^2 / 2`, `t = s / |v0|`, g =
 standard gravity along `gravity_M`. Validity: the coherent jet; the momentum it loses to skin friction in still
@@ -193,7 +196,8 @@ curve is its centreline until it breaks up; beyond break-up the drops slow and t
 spray's reach (the model's path is drawn when the run records it). The centreline is cut at the first obstacle
 it meets (part bricks, fixture, machine, tool: a ray per segment) or at `jet_max_length_m` (600 mm). The radius
 starts at `jet_diameter_m / 2`, else at the continuity radius `sqrt(Q / (pi v))`, and widens with
-`jet_half_angle_rad`; opacity fades along it (as cnctwin.render draws jets). Jets of nozzles `attached_to` a
+`jet_half_angle_rad`; opacity fades along it (as cnctwin.render draws jets), and beyond `jet_breakup_m` (when
+recorded) the stream is drawn at its end opacity: spray, not a coherent jet. Jets of nozzles `attached_to` a
 tool-chain link (or a head, spindle or tool) ride with the tool between keyframes; the others stay where the
 keyframe has them.
 
@@ -380,9 +384,15 @@ always give the same picture.
 * A rotating workpiece needs `scene.stock.spin`; multi-workpiece runs need `scene.workpieces[w].pose_S0_S`.
 * Component meshes are drawn in kind colours (the GLB's own colours are not used).
 * Chips are not advanced between keyframes; spray is a visual cue.
+* Fixture and machine components are placed by their scene poses; a part that slips in its fixture (the
+  keyframe field `part_pose`, holding) is not shown moving against the fixture: the workpiece is drawn in S, and
+  the scene does not say in which frame a slip should move the fixture meshes.
 * A 2-D field's plane height is not used (projection along its normal): a pile grid under the part also colours
   the part's top faces above it with the chips layer (only where the pile is above 0.1 mm).
 * WebGL 2 is required (three.js r170 has no WebGL 1 path).
+* Brick meshes closed each on their own (the synthetic run's boxes and carved columns) meet in coincident walls
+  at brick boundaries, which show as thin seams on the faces they cross; the removal meshing writes bricks as
+  pieces of one welded closed surface (docs/models/removal.md 10), which have no such walls.
 
 ## Tests
 
@@ -398,7 +408,7 @@ always give the same picture.
   exact trilinear on a linear field, no bleeding), float16 rounding and shortest digits as numpy, the
   circumcircle and point-to-plane, ballistic jets, the cantilever bend, hashing, colour lookups against the
   shell's maps, the api adapter, the parameters.
-* `test_view3d_browser_desktop.py` (79 checks) and `test_view3d_browser_runs.py` (25 checks) run
+* `test_view3d_browser_desktop.py` (79 checks) and `test_view3d_browser_runs.py` (30 checks) run
   `browser_test.mjs` in `mcr.microsoft.com/playwright:v1.48.2-jammy` (`--memory 1g --cpus 1 --user 1002:1002
   --rm --network host`, docker reached through `sg docker` under bin/tsafe) against `serve_view3d.py`: the real
   API on port 5996 (else the next free port in 5990-5999) with three synthetic runs and the test page
@@ -406,8 +416,10 @@ always give the same picture.
   against frames.bin, every layer's shader mode, picture change and colour range against the shell's
   `layerLegend`, section caps by colour, picks with normal and layer value, the three measurements (2.000 mm
   pocket depth to 1e-5 m, a 12 mm circle), follow and reset, visibility, exaggeration, coolant shadows, destroy,
-  the default run, a running run through a minimal `{get, getBinary}` api, a phone (pixel-ratio cap, tap to
-  pick, 44 px buttons), and no console errors. Screens: `rich-*.png`, `default-*.png`, `partial-0.png`,
+  the default run, a running run through a minimal `{get, getBinary}` api, a copy of the rich run with a
+  spinning stock (the view frame turns by the work spindle angle) and a component placed by the work chain with
+  `stock.pose_F_S` (it moves by minus the X travel in S), a phone (pixel-ratio cap, tap to pick, 44 px buttons),
+  and no console errors. Screens: `rich-*.png`, `default-*.png`, `partial-0.png`,
   `phone-0.png` in the test's output folder.
 * `test_view3d_params.py`: the YAML is valid, params.js is current, shared values equal their sources.
 * `test_view3d_vendor.py`: the vendored files are the release's (sha256), the examples differ only in their
@@ -417,6 +429,21 @@ always give the same picture.
   attributes).
 * The shell's own suite (tests/ui/run_ui_tests.sh) passes with the real view in place (desktop 125, phone 42
   checks, every layer's view canvas rendered, no console errors).
+
+By hand (the same steps the fixtures take):
+
+```
+cd /opt/plint/apps/cnc-twin
+TSAFE_MEM=1200M bin/tsafe python tests/unit/view3d/serve_view3d.py --data /tmp/cnctwin-v3d/data --web /tmp/cnctwin-v3d/web --port 5996 --build
+mkdir -p /tmp/cnctwin-v3d-node && (cd /tmp/cnctwin-v3d-node && echo '{"private": true}' > package.json && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --no-audit --no-fund playwright@1.48.2)
+docker run --rm --network host --user 1002:1002 --memory 1g --cpus 1 -e HOME=/tmp -e SUITE=all \
+  -v /tmp/cnctwin-v3d-node:/deps:ro -v $PWD/tests/unit/view3d:/tests:ro -v /tmp/cnctwin-v3d/out:/out \
+  mcr.microsoft.com/playwright:v1.48.2-jammy node /tests/browser_test.mjs
+node tests/unit/view3d/view3d_unit.mjs web <expect.json from view3d_expect.py>
+```
+
+`http://127.0.0.1:5996/view3d-harness.html?run=00002-v3d-rich&t=1.2` (add `&api=minimal` for the contract's
+two-method api) shows the view on its own; the shell at `http://127.0.0.1:5996/#/runs/00002-v3d-rich/playback`.
 
 The synthetic run generator (tests/fixtures/make_synthetic_run.py) has an additive `view3d=True` option
 (`--view3d`): the pocket carved along the tool path as the IPW (closed brick meshes written with

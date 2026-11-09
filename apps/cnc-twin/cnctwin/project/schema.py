@@ -132,13 +132,22 @@ STOCK = Struct({
     "mesh": FilePath(exts=(".stl", ".3mf", ".obj", ".step", ".stp"), nullable=True),
 }, required=("kind",), checks=(_stock_rules,), meta=False)
 
+WEAR_OFFSETS = Struct({"length": Qty(lo=-0.1, hi=0.1), "radius": Qty(lo=-0.1, hi=0.1),
+                       "x": Qty(lo=-0.1, hi=0.1), "z": Qty(lo=-0.1, hi=0.1)}, meta=False,
+                      doc="wear offsets as set on the control: length/radius (mills), x (diameter on a diameter-"
+                          "programmed lathe) and z (lathes)")
+
 TOOL_ENTRY = Struct({
-    "number": Count(lo=0, hi=100000), "tool": DbRef("tool"), "holder": DbRef("holder", nullable=True),
+    "number": Count(lo=0, hi=100000), "kind": Text(("tool",)), "tool": DbRef("tool"),
+    "holder": DbRef("holder", nullable=True),
     "path": Count(lo=1, hi=16), "spindle": Text(pattern=r"[a-z][a-z0-9_-]*"), "turret": Text(),
     "station": Count(lo=1, hi=200),
     "stickout_mm": DS.length(2.0, nullable=True), "length_offset_mm": Qty(lo=-10.0, hi=10.0, nullable=True),
     "radius_offset_mm": Qty(lo=-1.0, hi=1.0, nullable=True),
-    "wear_offsets_mm": Struct({"length": Qty(lo=-0.1, hi=0.1), "radius": Qty(lo=-0.1, hi=0.1)}, meta=False),
+    # lathe geometry offsets as set on the control's offset page (X in diameter on a diameter-programmed lathe)
+    "x_offset_mm": Qty(lo=-10.0, hi=10.0, nullable=True), "z_offset_mm": Qty(lo=-10.0, hi=10.0, nullable=True),
+    "nose_radius_mm": DS.length(0.1, positive=False, nullable=True), "tip": Count(lo=0, hi=9),
+    "wear_offsets_mm": WEAR_OFFSETS,
     "runout_um": DS.length(1e-3, positive=False, nullable=True), "runout_phase_deg": DS.angle(-360, 360),
     "tilt_urad": Qty(lo=0, hi=0.1),
     "life": Struct({"group": Count(lo=0), "limit_min": Qty(gt=0, hi=1e8, nullable=True),
@@ -149,12 +158,84 @@ TOOL_ENTRY = Struct({
     "comment": Text(allow_empty=True, nullable=True),
 }, required=("number", "tool"), meta=False)
 
+PROBE_NAME = r"[a-z][a-z0-9_]*"
+# The probe body (shank to stylus): a cylinder below the gauge line; the stylus: a stem with its ball.
+PROBE_BODY = Struct({"diameter_mm": DS.length(0.5), "length_mm": DS.length(1.0)},
+                    required=("diameter_mm", "length_mm"), meta=False)
+
+
+def _inline_probe_rules(m, p, u, ctx):
+    if not has(m, "extends") and not has(m, "stylus_ball_mm"):
+        ctx.add(p, "an inline probe needs stylus_ball_mm (or extends: <machine probe> giving it)", "required")
+
+
+INLINE_PROBE = Struct({
+    "extends": Text(pattern=PROBE_NAME, doc="a probe of the machine's probes section (spindle_probe)"),
+    "model": Text(), "stylus_ball_mm": DS.length(0.05), "stylus_length_mm": DS.length(0.5),
+    "stylus_diameter_mm": DS.length(0.05), "body": PROBE_BODY,
+    "pretravel_um": DS.length(1e-3, positive=False), "repeatability_um": DS.length(1e-3, positive=False),
+    "trigger_force_N": Qty(gt=0, hi=1e3), "overtravel_z_mm": DS.length(0.1, positive=False),
+}, checks=(_inline_probe_rules,), meta=False)
+
+# A probe entry's probe once resolved: the machine's probe (db PROBE fields, with their sources) merged with
+# the inline keys of the entry (stylus, body); the SI view is ``project.tools.probes[i].probe``.
+RESOLVED_PROBE = Struct({**{k: v for k, v in INLINE_PROBE.fields.items() if k != "extends"}, **DS.PROBE.fields},
+                        meta=True)
+
+PROBE_ENTRY = Struct({
+    "number": Count(lo=0, hi=100000), "kind": Text(("probe",)),
+    "probe": ByType(text=Text(pattern=PROBE_NAME), mapping=INLINE_PROBE,
+                    expected="a probe of the machine (spindle_probe) or an inline probe {stylus_ball_mm, ...}"),
+    "path": Count(lo=1, hi=16), "spindle": Text(pattern=r"[a-z][a-z0-9_-]*"),
+    "length_offset_mm": Qty(lo=-10.0, hi=10.0, nullable=True),
+    "radius_offset_mm": DS.length(0.05, positive=False, nullable=True),
+    "wear_offsets_mm": WEAR_OFFSETS, "comment": Text(allow_empty=True, nullable=True),
+}, required=("number", "kind", "probe"), meta=False)
+
+
+class ToolListEntry(Node):
+    """A ``tools.list`` entry: a cutting tool (TOOL_ENTRY), or with ``kind: probe`` a spindle probe the
+    program calls by its T number (PROBE_ENTRY)."""
+
+    takes_unit = False
+
+    def __init__(self):
+        self.nullable = False
+
+    @staticmethod
+    def select(value):
+        kind = unwrap(value.get("kind")) if isinstance(value, Mapping) else None
+        return PROBE_ENTRY if kind == "probe" else TOOL_ENTRY
+
+    def check(self, value, path, unit, ctx):
+        if not isinstance(value, Mapping):
+            ctx.add(path, "expected a tool entry {number, tool, ...} or a probe {number, kind: probe, probe}", "type")
+            return
+        self.select(value).check(value, path, None, ctx)
+
+    def build(self, value, unit, src, si_key):
+        return self.select(value).build(value, None, src, si_key) if isinstance(value, Mapping) else value
+
+
+TOOL_LIST_ENTRY = ToolListEntry()
+
+
+def _workholding_rules(m, p, u, ctx):
+    outline = unwrap(m.get("outline_mm")) if isinstance(m, Mapping) else None
+    if isinstance(outline, list) and len(outline) != 2:
+        ctx.add(p + ("outline_mm",), "outline_mm is a box: [[x0, y0, z0], [x1, y1, z1]]", "rule")
+
+
 WORKHOLDING_ENTRY = Struct({
     "device": DbRef("workholding"), "pose": POSE, "jaw_opening_mm": DS.length(5.0, nullable=True),
     "input_torque_Nm": Qty(gt=0, hi=1e4, nullable=True), "grip_depth_mm": DS.length(1.0, nullable=True),
     "parallels_mm": DS.length(1.0, nullable=True), "pressure_bar": Qty(gt=0, hi=1e8, nullable=True),
+    # additive: the device's outline (a box in its own frame, placed by pose) and the height of a vise's seat
+    # above its mounting face, for devices whose database item gives no body
+    "outline_mm": Qty(shape=("rows", 3), lo=-100.0, hi=100.0, nullable=True),
+    "seat_height_mm": DS.length(2.0, positive=False, nullable=True),
     "jaws": Text(), "label": Text(),
-}, required=("device",), meta=False)
+}, required=("device",), checks=(_workholding_rules,), meta=False)
 
 OPERATION = Struct({
     "name": Text(pattern=r"[A-Za-z0-9][A-Za-z0-9_.-]*"), "description": Text(),
@@ -310,7 +391,7 @@ PROJECT = Struct({
                    "units": Text(("mm", "inch")), "placement": POSE, "datums": Seq(Struct({"label": Text(
                        pattern=r"[A-Z][A-Z0-9]*"), "feature": FEATURE}, required=("label", "feature"), meta=False)),
                    "tolerances": Seq(TOLERANCE, unique="id")}, required=("path",), meta=False, nullable=True),
-    "tools": Struct({"library": FilePath(kind="any", nullable=True), "list": Seq(TOOL_ENTRY)}, meta=False),
+    "tools": Struct({"library": FilePath(kind="any", nullable=True), "list": Seq(TOOL_LIST_ENTRY)}, meta=False),
     "coolant": Struct({"fluid": DbRef("coolant"), "concentration_pct": Qty(lo=0, hi=1, nullable=True),
                        "tank_fill_fraction": DS.fraction()}, required=("fluid",), meta=False),
     "operations": Seq(OPERATION, min_len=1, unique="name"),
@@ -345,5 +426,6 @@ def physics_schema(domain: str) -> Node | None:
     return DomainPhysics(domain).declared()
 
 
-__all__ = ["PROJECT", "PHYSICS", "RESOLVED", "TOOL_ENTRY", "OPERATION", "DbRef", "FORMAT", "CURRENT_VERSION",
-           "DOMAINS", "TICK_S", "is_path_ref", "physics_schema"]
+__all__ = ["PROJECT", "PHYSICS", "RESOLVED", "TOOL_ENTRY", "PROBE_ENTRY", "TOOL_LIST_ENTRY", "INLINE_PROBE", "RESOLVED_PROBE",
+           "WORKHOLDING_ENTRY", "OPERATION", "DbRef", "FORMAT", "CURRENT_VERSION", "DOMAINS", "TICK_S", "is_path_ref",
+           "physics_schema"]

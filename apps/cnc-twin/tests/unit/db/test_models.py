@@ -5,7 +5,7 @@ import pytest
 
 from cnctwin.core.errors import InputError, SourceError
 from cnctwin.db import models
-from dbfixture import write_db
+from tests.unit.db.dbfixture import write_db
 
 
 @pytest.fixture()

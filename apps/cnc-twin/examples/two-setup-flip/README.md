@@ -21,9 +21,12 @@ above.
   front corner, Z0 at the finished top = blank top - 2.5 (machine Z -487.5). Datums: A = the
   OP10 top face, B = the left end (x stop in both setups), C = the OP10 front face.
 * **OP20**: `from_previous: {op: OP10, flip: {axis: X, angle_deg: 180}}`; the part lies on its
-  OP10 top face on the jaw steps. `stock_pose` gives the flipped pose explicitly: rotation 180 deg
-  about X, translation (-40, 30, 22.5), i.e. W = (x - 40, 30 - y, 22.5 - z) for a point (x, y, z)
-  of the OP10 stock frame. G55 X0 = left end, Y0 = the face that was y 60 in OP10 (now in front),
+  OP10 top face on the jaw steps. The flip turns the OP10 part about X and re-bases the turned
+  80 x 60 x 25 blank box at the origin (docs/formats.md "Project file": OP20's stock frame is
+  (x, 60 - y, 25 - z) of the OP10 frame); `stock_pose` is only the extra placement of that frame:
+  translation (-40, -30, -2.5), no rotation (centred in the vise, the OP10 top, now 2.5 above the
+  box bottom, on the jaw steps). Together: W = (x - 40, 30 - y, 22.5 - z) for a point (x, y, z) of
+  the OP10 stock frame. G55 X0 = left end, Y0 = the face that was y 60 in OP10 (now in front),
   Z0 = finished bottom (W z 20, machine Z -490.0). An OP10 hole at (x, y) is at (x, 60 - y) in
   OP20; the four holes map onto the same four positions.
 * Between the setups (`time_between_ops_min: 2`) the operator unloads, blows the jaw steps clean,
@@ -59,7 +62,8 @@ because the programs are checked against the blank.
 
 ## What the run is meant to show
 
-* the part carried from OP10 into OP20 with its machined state, turned over by the stock pose;
+* the part carried from OP10 into OP20 with its machined state, turned over by `from_previous`
+  and placed by the OP20 stock pose;
 * seating on a machined face: the thickness and the parallelism come from what lies between the
   OP10 top face and the jaw steps (clean steps and edge breaks: microns; a chip or burr: its own
   height, see EXPECTED.md);

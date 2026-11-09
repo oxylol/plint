@@ -2,6 +2,7 @@
 # read on the accessed date (PDF text extraction plus page renders for tables and charts);
 # `pages` says where the values are. Tungaloy page numbers are the printed catalogue pages
 # (section letter + number); OSG page numbers are the printed pages of gc_1.pdf.
+# iso-68-1-1998 (metric thread basic profile) is in models-tooling.yaml.
 format: cnctwin-bibliography
 version: 1
 entries:
@@ -104,9 +105,3 @@ entries:
     url: "https://tungaloy.com/wpdata/wp-content/uploads/GC_2023-2024_G_L_UsersGuide.pdf"
     accessed: "2026-11-03"
     pages: "p. L002-L003 turning tool nomenclature ('TAC indexable inserts of steel cutting grades are honed'); p. L029 threading: rake angle of toolholders -10 deg external / -15 deg internal, full-profile inserts; p. L085 TDX cutting force guideline (power, thrust, torque vs drill diameter, SCM440 at 100 m/min); p. L089 gundrill nomenclature (primary clearance angle 8-15 deg)"
-  iso-68-1-1998:
-    type: standard
-    title: "ISO 68-1:1998 ISO general purpose screw threads - Basic profile - Part 1: Metric screw threads"
-    institution: "International Organization for Standardization"
-    year: 1998
-    pages: "basic profile: H = 0.866025 P, flat P/8 at the major diameter, P/4 at the minor diameter"

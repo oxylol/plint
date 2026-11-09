@@ -1,6 +1,7 @@
 """Probing, tool setter, ISO 230-1 error map effects, machine lock, spindle orientation and gear change."""
 
 import copy
+import math
 
 import numpy as np
 import pytest
@@ -171,3 +172,46 @@ def test_per_revolution_corners_blend_and_finish():
     assert np.max(speed[np.isin(blk, z_steps)]) == pytest.approx(0.2e-3 * 1000 / 60, rel=2e-3)
     for r in recs:
         assert r.ideal_ticks > 0 and r.motion_ticks >= r.ideal_ticks - 2 * dom.ipo_ticks
+
+
+def test_one_feedback_per_buffer_stop_when_a_live_read_starts_inside_a_step():
+    """A live read (SYNC) prepared after the axes came to rest starts inside a macro step; its feedback is
+    committed once, with the tick that started it, so the probe move after it gets its own feedback (a duplicate
+    used to answer the probe's wait with 'not triggered')."""
+    s = Script()
+    s.rapid(X=-100, Y=-100, Z=-150)
+    sync = s.sync("live_read")
+    sync.ready_tick = 2_003_500                   # block preparation ends 3.5 ms into a macro step
+    s.probe(300, X=-100, Y=-100, Z=-160)
+    s.stop()
+    plane_M = 0.6 - 0.155
+    res, dom, state, ctrl = run(MILL, s, probe=lambda p, k, inputs: inputs.out.tip_M[k, p, 2] <= plane_M)
+    assert ctrl.done()
+    fbs = [fb for _, fb in ctrl.feedbacks[0]]
+    assert len(fbs) == 2
+    assert fbs[0].probe is None and fbs[1].probe is not None and fbs[1].probe.triggered
+    retired = sum(1 for _ in ctrl.retire_ticks[0])
+    assert retired == len(s.cmds)                 # every command retired exactly once
+
+
+def test_per_revolution_run_after_a_stop_keeps_its_length_while_the_spindle_turns():
+    """The lathe's C axis is the spindle (not in C-axis mode it turns with it): a per-revolution block after an exact
+    stop, ending in a blended corner, is not rebuilt over the spindle angle the C command carries by then."""
+    from mfix import LATHE
+    s = Script()
+    s.spindle(1000)
+    s.rapid(X=-100, Z=-200)
+    s.dwell(s=1.0)
+    s.line(0, per_rev_mm=0.2, exact=True, X=-100, Z=-202)
+    s.line(0, per_rev_mm=0.2, tol_mm=0.01, X=-99, Z=-204)
+    s.line(0, per_rev_mm=0.2, tol_mm=0.01, X=-99, Z=-206)
+    s.stop()
+    res, dom, state, ctrl = run(LATHE, s, max_s=20.0)
+    assert ctrl.done()
+    pl = dom.planners[0]
+    for j in range(pl.piece0, pl.n_pieces()):
+        pc = pl.piece(j)
+        assert pc.length <= 2.3e-3                # no piece is longer than its block (sqrt(1 + 4) mm at most)
+    recs = [r for r in dom.timeline.records if r.kind == "linear"]
+    speed = 0.2e-3 * 1000 / 60
+    assert (recs[1].tick1 - recs[1].tick0) * 1e-6 < 2.0 * math.hypot(1e-3, 2e-3) / speed

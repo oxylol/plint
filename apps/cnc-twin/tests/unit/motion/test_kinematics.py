@@ -160,3 +160,28 @@ def test_tcp_motion_keeps_the_tip_on_the_programmed_line(tcp_type):
     assert np.max(np.abs(np.diff(c))) / 1e-3 <= dom.model.axis("C").rapid * 1.0001
     # while the rotary axes turn (a joint move would swing the tip far off the line)
     assert abs(full[sel[-1], dom.model.axis_index["B"]] - math.radians(25.0)) < 1e-9
+
+
+def test_source_keys_beside_the_axes_are_not_axes():
+    """A sourced axes mapping carries src / note / notes / page beside the axis entries (the SIEMENS DMU 50 file
+    gets a src there from its same_mechanics_as source): the motion model reads only the axis definitions."""
+    m = five_axis("table_bc")
+    m["axes"]["src"] = "dmgmori-dmu50-3rd-2018"
+    m["axes"]["note"] = "all axes as the HEIDENHAIN version"
+    m["axes"]["notes"] = ["direct measuring"]
+    m["axes"]["page"] = "p. 11"
+    model = MachineModel(copy.deepcopy(m))
+    assert [ax.name for ax in model.axes] == ["X", "Y", "Z", "B", "C"]
+    assert model.paths[0].axes == ["X", "Y", "Z", "B", "C"]
+    clean = MachineModel(copy.deepcopy(five_axis("table_bc")))
+    assert [(a.name, a.rapid, a.accel) for a in model.axes] == [(a.name, a.rapid, a.accel) for a in clean.axes]
+    # and the database machine that showed it builds a whole motion domain
+    from cnctwin.db import Database
+    from cnctwin.motion.domain import MotionDomain
+    from cnctwin.core.state import SimState
+    from mfix import context
+    machine = Database.load().get("machine", "dmg-dmu50-3rd-siemens")
+    assert "src" in list(machine.axes.keys())
+    dom = MotionDomain(machine, tool_lengths={0: 0.1}, rotating={0: True}, tick_s=1e-6, ipo_ticks=2000, macro_ipo=10)
+    dom.init(context(), SimState())
+    assert [ax.name for ax in dom.model.axes] == ["X", "Y", "Z", "B", "C"]

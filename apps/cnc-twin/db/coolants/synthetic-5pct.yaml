@@ -7,6 +7,7 @@ id: synthetic-5pct
 name: "Synthetic (oil-free) solution, 5 % concentrate in water"
 kind: synthetic
 src: est
+note: "water (nist-webbook-water-2026) corrected for 5 % dissolved concentrate: every property below gives its own mixing rule and assumptions; the concentration is the fluid's definition"
 concentration_pct: 5
 density_kg_m3: {table: [[20, 1002.3], [40, 996.1], [60, 987.0], [80, 975.6]], src: est, note: "volume mixing of water (nist-webbook-water-2026) with 5 % concentrate of 1080 kg/m3 at 20 C (glycol/amine solution, assumed)"}
 viscosity_mPa_s: {table: [[20, 1.152], [40, 0.751], [60, 0.536], [80, 0.407]], src: est, note: "water viscosity (NIST) x (1 + 3.0 phi) for dissolved glycols/polymers, assumed"}
@@ -20,15 +21,15 @@ flash_point_degC: null
 smoke_point_degC: null
 friction_factor:
   - {tool_class: carbide, work_family: steel, value: 0.9, range: [0.8, 1.0], src: est, note: "oil-free fluids give little boundary lubrication unless EP/polymer additives are present, assumed"}
-  - {tool_class: carbide, work_family: aluminium, value: 0.8, src: est}
-  - {tool_class: carbide, work_family: titanium, value: 0.95, src: est}
-  - {tool_class: hss, work_family: steel, value: 0.85, src: est}
-lubricity_index: {value: 0.3, src: est}
+  - {tool_class: carbide, work_family: aluminium, value: 0.8, src: est, note: "aluminium: some adhesion relief from the wetting agents but no oil phase: 0.8, between the emulsions (0.7) and dry (assumed)"}
+  - {tool_class: carbide, work_family: titanium, value: 0.95, src: est, note: "titanium: water vaporises before the hot contact and no oil is present: 0.95 (assumed)"}
+  - {tool_class: hss, work_family: steel, value: 0.85, src: est, note: "HSS at low speeds: polymer and EP additives give some boundary lubrication: 0.85, above the emulsions' 0.75 (assumed)"}
+lubricity_index: {value: 0.3, src: est, note: "oil-free solution: 0.3, below the emulsions (0.45) and above water (0), assumed"}
 heat_transfer:
   latent_heat_kJ_kg: {value: 2256, src: nist-webbook-water-2026, note: "water at 100 C"}
   flood_htc_W_m2K: {value: 7000, range: [2500, 20000], src: est, note: "best cooling of the water-based fluids (highest k and cp)"}
 drag_out_ml_per_kg_chips: {value: 30, range: [15, 60], src: est, note: "thin, low-viscosity film; drains best"}
-evaporation_l_per_h_per_m2: {value: 0.3, range: [0.1, 0.6], src: est}
-mist_loss_fraction: {value: 2.0e-6, src: est}
+evaporation_l_per_h_per_m2: {value: 0.3, range: [0.1, 0.6], src: est, note: "water evaporation from a 25-35 C tank surface, 0.3 L/(h m2), as the emulsions"}
+mist_loss_fraction: {value: 2.0e-6, src: est, note: "aerosol fraction of the pumped volume, as the other fluids (2e-6)"}
 cost_eur_per_l: {value: 7.0, src: est, note: "concentrate price"}
 notes: "Derived estimates on NIST water data. Common for grinding and cast iron."

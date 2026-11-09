@@ -33,16 +33,17 @@ from .abi import (MAT_A_PA, MAT_B_PA, MAT_C, MAT_EPS0_1_S, MAT_M, MAT_N, MAT_RHO
                   P_BETA_SWITCH, P_C0_MAX, P_C0_MIN, P_C0_N, P_C0_RES_MAX, P_CONTACT_ASPECT, P_DELTA_ITER,
                   P_DELTA_MAX, P_DELTA_MIN, P_DELTA_N, P_DTM_A, P_DTM_B, P_DTM_C, P_ETA, P_ITER_MAX,
                   P_MERCHANT_C0, P_MERCHANT_DELTA, P_MU, P_MU_FALLBACK, P_PHI_FLOOR, P_PHI_MAX, P_PHI_MIN,
-                  P_PHI_N, P_PSI, P_RATE_MIN, P_REF_C0, P_REF_CM, P_REF_DELTA, P_REF_LAMBDA, P_TOL_C0,
-                  P_TOL_PHI, P_TOL_T, P_TSTAR_MAX, PL_AREA, PL_CONTACT, PL_FA, PL_FR, PL_FT, REGIME_SLIDING,
-                  REGIME_STICKING, STATUS_INDENTATION, STATUS_MERCHANT, STATUS_OXLEY, TOOL_R_COAT_M2K_W,
-                  TOOL_RHO_KG_M3, TOOL_T_RAKE_K, TOOL_TIME_S, TOOL_WIDTH_M)
+                  P_PHI_N, P_PSI, P_RATE_MIN, P_REF_C0, P_REF_CM, P_REF_DELTA, P_REF_LAMBDA, P_STICK_FACTOR,
+                  P_TOL_C0, P_TOL_PHI, P_TOL_T, P_TSTAR_MAX, PL_AREA, PL_CONTACT, PL_FA, PL_FR, PL_FT,
+                  REGIME_LUBRICATED, REGIME_SLIDING, REGIME_STICKING, STATUS_INDENTATION, STATUS_MERCHANT,
+                  STATUS_OXLEY, TOOL_R_COAT_M2K_W, TOOL_RHO_KG_M3, TOOL_T_RAKE_K, TOOL_TIME_S, TOOL_WIDTH_M)
 
 _OPTS = dict(cache=True, nogil=True, error_model="numpy")
 SQRT3 = math.sqrt(3.0)
 HALF_PI = 0.5 * math.pi
 DBL_EPS = 2.220446049250313e-16      # IEEE-754 double machine epsilon (Brent's tolerance floor)
 GOLDEN = 0.6180339887498949          # (sqrt(5) - 1) / 2
+DELTA_EDGE = 0.999                   # a force-minimising delta within 0.1 % of the range top counts as at the edge
 
 # case vector: the cutting condition of one orthogonal solve
 CASE_T1_M = 0
@@ -543,8 +544,10 @@ def interface_state(st, delta, case, mat, cp_T, cp_v, k_T, k_v, tool, kt_T, kt_v
     Chip temperatures after Boothroyd/Oxley with the share R of the rake friction heat that
     enters the chip; R equalises the mean interface temperature seen by the chip (moving
     source) and by the tool (stationary source at the tool rake temperature; Loewen & Shaw).
-    The interface shear stress allowed is min(k_chip, mu sigma_N) (Coulomb-Tresca limit; mu <= 0
-    gives Oxley's sticking condition). Returns g1 = tau_int - tau_lim."""
+    The interface shear stress the chip carries is m k_chip with m = prm[P_STICK_FACTOR]
+    (Oxley's sticking condition for m = 1, a lubricated interface for the coolant's factor
+    m < 1); with prm[P_MU] > 0 it is limited to mu sigma_N (Coulomb-Tresca, the documented
+    alternative). Returns g1 = tau_int - tau_lim."""
     t1 = case[CASE_T1_M]
     v = case[CASE_V_M_S]
     tw = case[CASE_TW_K]
@@ -593,8 +596,8 @@ def interface_state(st, delta, case, mat, cp_T, cp_v, k_T, k_v, tool, kt_T, kt_v
     dtc = force * vc / (rho * v * t1 * cp)
     tint = tw + dtsz + psi * share * dtm
     k_chip = jc_flow_stress(eps_i, epsdot_i, tint, mat, prm[P_TSTAR_MAX], prm[P_RATE_MIN]) / SQRT3
-    tau_lim = k_chip
-    regime = REGIME_STICKING
+    tau_lim = prm[P_STICK_FACTOR] * k_chip
+    regime = REGIME_STICKING if prm[P_STICK_FACTOR] >= 1.0 else REGIME_LUBRICATED
     if prm[P_MU] > 0.0:
         sliding = prm[P_MU] * st[ST_SIGN]
         if sliding < tau_lim:
@@ -758,7 +761,9 @@ def oxley_point(case, mat, cp_T, cp_v, k_T, k_v, tool, kt_T, kt_v, ct_T, ct_v, p
     2. delta grid (log-spaced) and golden-section refinement: for each delta the phi root of
        the interface condition; delta minimises the cutting force (Oxley's criterion).
     3. Polish: exact Brent root in phi at the optimal delta with exact C0(phi).
-    Falls back to :func:`merchant_point` when no solution exists. Results in ``out`` (OX_*)."""
+    Falls back to :func:`merchant_point` when no solution exists, including when the force
+    minimum lies at the top of the delta range (no admissible thin secondary zone). Results in
+    ``out`` (OX_*)."""
     nphi = int(prm[P_PHI_N])
     phis = np.zeros(nphi)
     states = np.zeros((nphi, N_ST))
@@ -825,6 +830,12 @@ def oxley_point(case, mat, cp_T, cp_v, k_T, k_v, tool, kt_T, kt_v, ct_T, ct_v, p
         x_best = x2
         f_best = f2
     delta = math.exp(x_best)
+    if delta >= prm[P_DELTA_MAX] * DELTA_EDGE:
+        # the force minimum lies at (or beyond) the top of the secondary-zone range: the thin
+        # secondary zone of the theory does not hold (the flow zone grows into the chip), so the
+        # condition has no admissible solution and the fallback applies
+        merchant_point(case, mat, cp_T, cp_v, k_T, k_v, tool, kt_T, kt_v, ct_T, ct_v, prm, out)
+        return
     phi_root_on_grid(delta, phis, states, valid, case, mat, cp_T, cp_v, k_T, k_v, tool, kt_T, kt_v, ct_T, ct_v, prm,
                      res)
     phi_star = res[0]

@@ -124,6 +124,17 @@ def lex_line(raw: str, number: int) -> Line:
         if char == "%":
             i += 1
             continue
+        if char == "," and i + 1 < n and text[i + 1].upper() in "CRA":
+            # ,C chamfer / ,R corner rounding / ,A angle (Fanuc and Haas G01): read, the scan keeps the
+            # programmed corner (the chamfer or fillet is within its size of it)
+            letter = "," + text[i + 1].upper()
+            match = _NUMBER.match(text, i + 2)
+            if match is None:
+                macro = True
+                break
+            words.append(Word(letter, float(match.group(0)), match.group(0), "." in match.group(0)))
+            i = match.end()
+            continue
         if char == "#":
             macro = True
             break
@@ -220,10 +231,12 @@ COMMENT_KINDS: dict[str, tuple[str, ...]] = {
     "threadmill": ("thread_mill",),
     "boring": ("boring_head", "boring_bar"),
     "engraver": ("engraver",),
+    "probe": ("probe",),
 }
 
 # (pattern, kind): checked in order, the first match names the kind.
 _KIND_PATTERNS: tuple[tuple[re.Pattern, str], ...] = tuple((re.compile(p), k) for p, k in (
+    (r"\bPROBE\b|\bTOUCH\s*PROBE\b", "probe"),            # before "ball": a probe's stylus has a ball
     (r"\bFACE\s*MILL|\bFACEMILL|\bFACING\b|\bSHELL\s*MILL", "facemill"),
     (r"\bBALL\s*(?:NOSE|END)?\s*(?:MILL|EM|E/M)?\b|\bBNEM\b|\bBEM\b", "ballmill"),
     (r"\bBULL\s*(?:NOSE)?\b|\bTORUS\b|\bCORNER\s*RAD", "bullmill"),
@@ -260,6 +273,7 @@ class ToolComment:
     kind: str | None = None
     thread_major_m: float | None = None
     thread_pitch_m: float | None = None
+    diameter_bare: bool = False         # the diameter is the comment's only bare number (no D, DIA, Ø or MM)
 
     @property
     def describes_tool(self) -> bool:
@@ -289,30 +303,31 @@ def parse_tool_comment(text: str, line: int, unit_m: float) -> ToolComment:
             thread_major = float(thread.group(1)) * 1e-3
             if thread.group(2):
                 thread_pitch = float(thread.group(2)) * 1e-3
-    diameter = _diameter(upper, unit_m, number, thread_major is not None)
-    return ToolComment(line, text, number, diameter, kind, thread_major, thread_pitch)
+    diameter, bare = _diameter(upper, unit_m, number, thread_major is not None)
+    return ToolComment(line, text, number, diameter, kind, thread_major, thread_pitch, bare)
 
 
-def _diameter(upper: str, unit_m: float, number: int | None, has_thread: bool) -> float | None:
+def _diameter(upper: str, unit_m: float, number: int | None, has_thread: bool) -> tuple[float | None, bool]:
+    """(diameter, whether it was the comment's only bare number)."""
     cleaned = _T_NUMBER.sub(" ", upper)
     if has_thread:
         cleaned = _THREAD.sub(" ", cleaned)
     for pattern in (_DIA_EXPLICIT, _DIA_TRAILING):
         match = pattern.search(cleaned)
         if match is not None:
-            return float(match.group(1)) * unit_m
+            return float(match.group(1)) * unit_m, False
     match = _DIA_MM.search(cleaned)
     if match is not None:
-        return float(match.group(1)) * 1e-3
+        return float(match.group(1)) * 1e-3, False
     match = _FRACTION.search(cleaned)
     if match is not None and float(match.group(2)) > 0:
-        return float(match.group(1)) / float(match.group(2)) * INCH_M
+        return float(match.group(1)) / float(match.group(2)) * INCH_M, False
     if has_thread:
-        return None
+        return None, False
     bare = [m for m in _DIA_BARE.finditer(cleaned)]
     if len(bare) == 1:
-        return float(bare[0].group(1)) * unit_m
-    return None
+        return float(bare[0].group(1)) * unit_m, True
+    return None, False
 
 
 # ----------------------------------------------------------------------------- the view

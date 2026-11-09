@@ -99,6 +99,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.15
     ap_ref_mm: 1
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "no published Taylor fit read; C set so that T = 15 min at vc = 45 m/min (coated S-grade carbide on aged 718, general knowledge). Measured comparison (lima-2012-inconel-tool-wear Table 4.28, dry turning of a softer 718 at 32-34 HRC, Kennametal KC5510 PVD-TiAlN WC-6Co SNMG120412, f 0.2 mm/rev, ap 2 mm, VBB 0.4 mm): 645 s at 45 m/min and 227 s at 60 m/min with a 45 deg approach angle, i.e. a two-point n 0.28 and C 87 m/min (15 min at 41 m/min); with an 85 deg approach angle 210 and 193 s (no meaningful exponent). Not adopted: two speeds only, different hardness"
   - tool_class: ceramic
@@ -111,6 +112,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.15
     ap_ref_mm: 1
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 10 min at vc = 250 m/min (SiAlON roughing, round inserts, general knowledge); notch wear at the depth-of-cut line often ends life before VB"
   - tool_class: ceramic
@@ -123,6 +125,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.15
     ap_ref_mm: 1
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 10 min at vc = 200 m/min (general knowledge)"
 tool_life_usui: null

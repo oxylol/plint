@@ -562,6 +562,7 @@ class HeidenhainHandler(NativeHandler):
         else:
             feed, kind = ex.feed_spec(True), "rapid"
         ex.flush_comp("M140")
+        s.applied = {l: self.tool_offset_counts(l) for l in ex.letters}      # the called tool's tip afterwards
         ex.machine_move(kind, {letter: counts[letter]}, feed, modal={"machine_coordinates": True, "m140": True})
         s.sys["last_element"] = "machine"
 
@@ -629,10 +630,15 @@ class HeidenhainHandler(NativeHandler):
         if not target:
             return
         if machine:
+            # M91 / M92: the coordinates are the machine axes' own (machine datum, or the additional machine
+            # datum for M92); "radius compensation remains the same in blocks that are programmed with M91 or
+            # M92. The tool length, however, is not compensated" (TNC 640 Klartext manual, M91/M92): L Z-10
+            # M91 puts the spindle 10 mm below the machine datum whatever tool is in it. The length of the called
+            # tool stays active: the program position after the block is that tool's tip (machine - length),
+            # so the next block programmed in the workpiece system starts from the tip
             ex.flush_comp("M91")
             counts = dict(target)
-            for letter in counts:
-                counts[letter] = counts[letter] + self.tool_offset_counts(letter)
+            self.s.applied = {l: self.tool_offset_counts(l) for l in ex.letters}
             ex.machine_move("rapid" if rapid else "linear", counts, ex.feed_spec(True) if rapid else self.cutting_feed(),
                             modal={"machine_coordinates": True})
             self.s.sys["last_element"] = "machine"

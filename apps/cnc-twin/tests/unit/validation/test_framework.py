@@ -143,8 +143,10 @@ def test_budgets_are_read_from_the_file_with_their_rule():
     assert budgets["chip_ratio"].pct == 20
     assert budgets["cutting_force"].components["thrust_force_pct"] == 30
     assert budgets["cutting_force"].pct_for(None) is None
-    assert "taylor_life" not in budgets
+    assert budgets["taylor_life"].pct == 50 and budgets["stability_lobe"].pct == 25
+    assert "no_such_quantity" not in budgets
     header = B.header_text().lower()
+    assert "a first run" in header and "class matches" in header
     assert "at least 80 %" in header and "twice its tolerance" in header and "2 * uncertainty" in header
     assert B.tolerance(None, 1.0, 0.1) is None
     assert B.tolerance(10.0, 2.0, 0.15) == pytest.approx(0.3)

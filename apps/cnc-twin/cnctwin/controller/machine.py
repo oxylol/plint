@@ -159,6 +159,26 @@ def _order(names: list[str], lathe: bool) -> list[str]:
     return head + [n for n in names if n not in head]
 
 
+# Keys a database mapping may carry beside its entries (docs/formats.md "Sources and estimates"):
+# they describe the mapping, they are not axes.
+META_KEYS = frozenset(("src", "note", "notes", "page", "pages", "est", "estimated", "accessed"))
+
+
+def axis_names(axes) -> list[str]:
+    """Names of the axes of a machine's ``axes`` mapping: the entries that are axis definitions
+    (mappings), without the source keys a sourced mapping carries (``src``, ``note`` ...)."""
+    if axes is None:
+        return []
+    names = []
+    for name in axes.keys():
+        if str(name) in META_KEYS:
+            continue
+        entry = axes[name]
+        if isinstance(entry, SIMap) or isinstance(entry, dict):
+            names.append(str(name))
+    return names
+
+
 def build_machine(machine, settings=None) -> MachineModel:
     """MachineModel from a machine definition (SIMap or plain mapping)."""
     m = machine if isinstance(machine, SIMap) else wrap(machine)
@@ -170,7 +190,7 @@ def build_machine(machine, settings=None) -> MachineModel:
     diameter = bool(plain(controller.diameter_programming_X)) if controller.diameter_programming_X is not None \
         else lathe
     axes = m.axes
-    names = list(axes.keys())
+    names = axis_names(axes)
     two_path = bool(plain(controller.two_path)) if controller.two_path is not None else False
     two_path = two_path or mtype == "swiss"
     overrides = getattr(settings, "paths", None) if settings is not None else None

@@ -113,7 +113,7 @@ entries:
     title: "The exit failure in interrupted cutting"
     venue: "Annals of the CIRP 27(1), 5-10"
     year: 1978
-    pages: "edge fracture when the tool leaves the work (foot formation): the exit loads the wedge as severely as the entry"
+    pages: "edge fracture when the tool leaves the work (foot formation): the exit loads the wedge as severely as the entry; the remaining material bends about the exit edge instead of being sheared"
 
   bouzakis-2012-coated-tools:
     type: article
@@ -153,7 +153,10 @@ entries:
     title: "ISO 8688-2:1989 Tool life testing in milling - Part 2: End milling"
     venue: "International Organization for Standardization, Geneva"
     year: 1989
-    pages: "tool-life criteria for end mills: uniform flank wear VB 0.3 mm, localised 0.5 mm"
+    url: "https://cdn.standards.iteh.ai/samples/16092/a785a7dd1b4e46888f7f20f352a1ce4f/ISO-8688-2-1989.pdf"
+    accessed: 2026-11-03
+    pages: "tool-life criteria for end mills: uniform flank wear VB 0.3 mm, localised 0.5 mm; clause 1 (three test types: slot milling, end milling with the periphery predominantly, with the end teeth predominantly); clause 4 (reference cutters: four-flute end mill and two-flute slot drill, D = 25 mm, figures 5 and 6); clause 6.1 Table 2 (slot milling: ar = D = 25 mm, aa 12.5 / 20 mm, fz 0.08 / 0.125 mm) and Table 3 (end milling, conditions I and II with aa > ar: aa 20 mm, ar 2.5 mm; III and IV with aa < ar: aa 12.5 mm, ar 20 mm; fz 0.08 / 0.125 mm); clause 6.2 (ar at most 0.8 D)"
+    note: "Clauses 0-6 read in the iTeh preview of the standard (pages 1-7)."
 
   iso-3327-2009:
     type: standard

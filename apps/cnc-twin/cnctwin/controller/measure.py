@@ -21,6 +21,17 @@ from .alarms import ControllerAlarm
 from .hooks import CycleCall, Step, register_probe
 
 
+def _offset_number(ex, call: CycleCall, letter: str) -> int:
+    """The offset number of an H/D word of a cycle block by the handler's rules (no decimal point unless
+    the value comes from a macro variable, H#var rounded, tool life H99/D99 resolved)."""
+    from .dialects.fanuc import WordValue
+
+    raw = call.extra.get("word_values", {}).get(letter)
+    if raw is None:
+        return int(round(float(call.words[letter])))
+    return int(ex.handler.offset_word(letter, WordValue(letter, float(raw[0]), bool(raw[1]), "", bool(raw[2]))))
+
+
 class ToolMeasure:
     def start(self, ex, call: CycleCall) -> list[Step]:
         s = ex.s
@@ -37,7 +48,7 @@ class ToolMeasure:
         if "H" in call.words and not haas:
             raise ControllerAlarm("g37_with_h", call.code)
         if haas and "H" in call.words:
-            offset = int(call.words["H"])
+            offset = _offset_number(ex, call, "H")
         else:
             offset = s.offset_number if lathe else s.h_number
         if offset <= 0:

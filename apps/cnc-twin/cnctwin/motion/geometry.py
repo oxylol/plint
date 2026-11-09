@@ -125,6 +125,7 @@ class Piece:
     feed_v: float = math.inf    # programmed path speed without override (inf for rapids)
     per_rev: float = 0.0        # feed per spindle revolution (m) of per-revolution pieces (speed set at plan time)
     limit_v: float = math.inf   # axis, curvature and machine limits at 100 % rapid override
+    helix_m: float = 0.0        # rise of a helical joint arc along its normal over the whole arc (m)
 
     def eval(self, s: np.ndarray, axes: np.ndarray, out: np.ndarray) -> None:
         """Axis values at path positions s (joint and blend pieces) into out[:, axes]."""
@@ -227,7 +228,7 @@ def arc_piece(item: int, q0: np.ndarray, q1: np.ndarray, arc, model, path: int) 
         t0[a] = dq[a]
         t1[a] = dq[a]
     piece = Piece(item, PK_JOINT, GEO_ARC, length, vec, np.array([r0, r1, sweep]), q0.copy(), q1.copy(),
-                  _unit_or_zero(sc * t0), _unit_or_zero(sc * t1))
+                  _unit_or_zero(sc * t0), _unit_or_zero(sc * t1), helix_m=abs(h))
     r_mean = 0.5 * (r0 + r1)
     piece.curvature_scaled = 1.0 / r_mean if r_mean > 0 else 0.0
     return piece
@@ -326,6 +327,100 @@ def apply_limits(piece: Piece, model, axes: list[int], feed_v: float, rapid_scal
     piece.vmax = max(min(feed_v, limit * (rapid_scale if piece.rapid else 1.0)), 0.0)
     piece.amax = amax
     piece.jmax = jmax
+
+
+# ------------------------------------------------------------------------------- tolerance-driven limits
+
+def piece_radius(piece: Piece) -> float:
+    """Radius of curvature of a piece's path (inf for lines): joint arcs and blends in the scaled joint space, a
+    TCP arc on the tip path in W; a helix r(1 + (c/r)^2) with c the lead per radian (its curvature is
+    r / (r^2 + c^2)), so a helical arc is no more limited than its own curve."""
+    if piece.kind == PK_TIP:
+        tip = piece.tip
+        if tip is None or tip.kind != GEO_ARC or tip.sweep == 0.0:
+            return math.inf
+        r = 0.5 * (tip.r0 + tip.r1)
+        c = float(np.linalg.norm(tip.helix)) / abs(tip.sweep)
+    elif piece.geo == GEO_ARC:
+        r0, r1, sweep = (float(x) for x in piece.par)
+        if sweep == 0.0:
+            return math.inf
+        r = 0.5 * (r0 + r1)
+        c = piece.helix_m / abs(sweep)
+    else:
+        return math.inf
+    if not r > 0.0:
+        return math.inf
+    return r + c * c / r
+
+
+def chord_speed(radius: float, tol: float, ipo_s: float) -> float:
+    """Chord error of the linearised path at the interpolation period: the control hands the drives one point per
+    IPO period T, and between two points the commanded path is their chord. On a curve of radius R a chord of
+    length v T lies R - sqrt(R^2 - (v T / 2)^2) inside it; within the contour tolerance e that needs
+    v <= 2 sqrt(2 R e - e^2) / T, about sqrt(8 R e) / T (Suh et al. 2008, sampled-data interpolation; Yeh & Hsu
+    2002, confined chord error). e is capped at R (no chord is longer than the diameter)."""
+    if not (radius > 0.0 and math.isfinite(radius)) or tol <= 0.0 or ipo_s <= 0.0:
+        return math.inf
+    e = min(tol, radius)
+    return 2.0 * math.sqrt(max(2.0 * radius * e - e * e, 0.0)) / ipo_s
+
+
+def filter_band_speed(radius: float, tol: float, filter_s: float) -> float:
+    """Contour tolerance band of an axis setpoint filter of length T_f (a moving average: FANUC's linear
+    acceleration/deceleration after interpolation, a nominal-position or jerk filter; Biagiotti & Melchiorri 2012):
+    on a circle of radius R the filtered position lies v^2 T_f^2 / (24 R) inside the commanded one (the radius
+    error of linear acc/dec after interpolation, FANUC 30i-B operator's manual, feedrate control), so the control
+    holds it within the tolerance e with v <= sqrt(24 R e) / T_f."""
+    if not (radius > 0.0 and math.isfinite(radius)) or tol <= 0.0 or filter_s <= 0.0:
+        return math.inf
+    return math.sqrt(24.0 * radius * tol) / filter_s
+
+
+def tolerance_speed(piece: Piece, tol: float, ipo_s: float, filter_s: float = 0.0) -> float:
+    """The tolerance-driven speed bound of a piece: chord error at the IPO period and, when the control filters
+    its axis setpoints, the filter's tolerance band (inf on lines)."""
+    r = piece_radius(piece)
+    if not math.isfinite(r):
+        return math.inf
+    return min(chord_speed(r, tol, ipo_s), filter_band_speed(r, tol, filter_s))
+
+
+def end_curvatures(piece: Piece, model) -> tuple[np.ndarray, np.ndarray]:
+    """d2q/ds2 of every axis at the start and at the end of a joint or blend piece (zero for lines; TCP pieces
+    are taken as zero: their IK samples do not resolve the end curvature)."""
+    n_axes = len(model.axes)
+    L = piece.length
+    if L <= 0.0 or piece.kind == PK_TIP or piece.geo != GEO_ARC:
+        return np.zeros(n_axes), np.zeros(n_axes)
+    r0, r1, ph = (float(x) for x in piece.par)
+    dr = r1 - r0
+    v1, v2 = piece.vec[1], piece.vec[2]
+    start = (2.0 * dr * ph * v2 - r0 * ph * ph * v1) / (L * L)
+    c, s = math.cos(ph), math.sin(ph)
+    end = (2.0 * dr * ph * (-s * v1 + c * v2) - r1 * ph * ph * (c * v1 + s * v2)) / (L * L)
+    return start, end
+
+
+def curvature_step_speed(prev: Piece, nxt: Piece, model, axes: list[int], filter_s: float = 0.0) -> float:
+    """Highest speed at a junction where the path curvature changes (a line meeting an arc, two arcs): each axis'
+    acceleration steps there by v^2 |dk_i| (dk_i the jump of d2q_i/ds2). The step may not exceed the axis'
+    acceleration A_i (the same allowance as the velocity step of one interpolation period at a corner,
+    jump_speed); a control that filters its setpoints over T_f spreads the step over the filter and keeps the
+    jerk within J_i only up to J_i T_f, so min(A_i, J_i T_f) then."""
+    _, k1 = end_curvatures(prev, model)
+    k2, _ = end_curvatures(nxt, model)
+    v = math.inf
+    for a in axes:
+        ax = model.axes[a]
+        if ax.synthetic:
+            continue
+        step = abs(float(k2[a] - k1[a]))
+        if step <= 1e-12:
+            continue
+        allowed = ax.accel if filter_s <= 0.0 else min(ax.accel, ax.jerk * filter_s)
+        v = min(v, math.sqrt(allowed / step))
+    return v
 
 
 # ------------------------------------------------------------------------------- corners

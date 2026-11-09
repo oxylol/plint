@@ -5,7 +5,8 @@ Database objects arrive as SIMap views (cnctwin.db / cnctwin.project, architectu
 mappings with file keys (wrapped here). Usui constants are converted from the unit system the file
 states, explicitly: ``A_per_MPa`` with its ``rate_unit`` (cnctwin.db.schemas.USUI_RATE_UNITS), or
 ``A_per_Pa`` in SI rates; a constant without its unit system is an input error. Taylor entries keep
-their reference values (``T_ref``, feed and depth references, the VB limit).
+their reference values (``T_ref``, feed and depth references, the VB limit) and their life basis
+(what T counts, and the share of it the edge is in contact in the reference cut).
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ import numpy as np
 
 from ..core.errors import InputError
 from ..db import models
-from ..db.schemas import USUI_RATE_UNITS
+from ..db.schemas import LIFE_BASES, USUI_RATE_UNITS, default_life_basis
 from ..db.simap import SIMap, Sourced, Table, wrap
 from ..mechanics.materials import coating_matches, normalise, table_arrays
 from ..units import REFERENCE_TEMP_K, STANDARD_GRAVITY_M_S2
@@ -190,9 +191,20 @@ def select_usui(entries, surface: str, family: str, tool_class: str, coating: st
 
 
 # ------------------------------------------------------------------------------------------ Taylor
+CUTTING_TIME = "cutting_time"
+CONTACT_TIME = "contact_time"
+INTERRUPTED_PROCESSES = ("milling",)     # an edge is in the material only over its engaged arc
+
+
 @dataclass(frozen=True)
 class TaylorEntry:
-    """Extended Taylor: vc (T / T_ref)^n (f / f_ref)^a (ap / ap_ref)^b = C at the VB limit."""
+    """Extended Taylor: vc (T / T_ref)^n (f / f_ref)^a (ap / ap_ref)^b = C at the VB limit.
+
+    ``life_basis`` says what T counts: ``cutting_time`` (the tool feeding in the material) or
+    ``contact_time`` (the edge in contact). ``contact_fraction`` is the share of the entry's own life
+    the edge is in contact in its reference cut: 1 for a contact-time life and for a continuous cut;
+    engaged arc / 2 pi for a milling cutting-time life. The wear law integrates contact time, so the
+    calibration targets ``contact_life_s`` (docs/models/wear.md section 3)."""
 
     tool_class: str
     coating: str
@@ -208,6 +220,9 @@ class TaylorEntry:
     vc_range_m_s: tuple[float, float] | None
     src: str
     index: int
+    life_basis: str = CUTTING_TIME
+    contact_fraction: float = 1.0
+    engagement: str = "continuous"     # stated | default | continuous | contact (how contact_fraction was set)
 
     def _load(self, feed_m, ap_m) -> float:
         factor = 1.0
@@ -218,7 +233,12 @@ class TaylorEntry:
         return factor
 
     def life_s(self, vc_m_s: float, feed_m: float | None = None, ap_m: float | None = None) -> float:
+        """The Taylor life on the entry's own basis (cutting or contact time)."""
         return self.T_ref_s * (self.C_m_s / (vc_m_s * self._load(feed_m, ap_m))) ** (1.0 / self.n)
+
+    def contact_life_s(self, vc_m_s: float, feed_m: float | None = None, ap_m: float | None = None) -> float:
+        """Edge contact time to the VB limit in the entry's reference cut: life x contact fraction."""
+        return self.life_s(vc_m_s, feed_m, ap_m) * self.contact_fraction
 
     def speed_for_life(self, life_s: float, feed_m: float | None = None, ap_m: float | None = None) -> float:
         return self.C_m_s * (self.T_ref_s / life_s) ** self.n / self._load(feed_m, ap_m)
@@ -226,6 +246,29 @@ class TaylorEntry:
     @property
     def uncoated(self) -> bool:
         return normalise(self.coating or "none") in ("none", "uncoated", "")
+
+
+def life_basis_of(entry) -> tuple[str, float, str]:
+    """(life basis, contact fraction, how the fraction was set) of one Taylor entry (database view):
+    the stated ``life_basis``, else the default of its process (cnctwin.db.schemas.default_life_basis);
+    for a cutting-time milling life the fraction is the reference cut's engaged arc / 2 pi (the entry's
+    ``engaged_arc_ref_deg``, else wear-calibration's ``milling_reference_arc_rad``, ISO 8688-2)."""
+    process = text(entry, "process")
+    basis = text(entry, "life_basis") or default_life_basis(process or None)
+    if basis not in LIFE_BASES:
+        raise InputError(f"Taylor entry: life_basis {basis!r} is not one of {', '.join(LIFE_BASES)}")
+    if basis == CONTACT_TIME:
+        return basis, 1.0, "contact"
+    arc = num(entry, "engaged_arc_ref_rad")
+    if arc is not None:
+        how = "stated"
+    elif process in INTERRUPTED_PROCESSES:
+        arc, how = number(CALIBRATION, "milling_reference_arc_rad"), "default"
+    else:
+        return basis, 1.0, "continuous"
+    if not 0.0 < arc <= 2.0 * math.pi:
+        raise InputError(f"Taylor entry: engaged_arc_ref_deg must lie in (0, 360] deg, got {math.degrees(arc):g}")
+    return basis, arc / (2.0 * math.pi), how
 
 
 def taylor_entries(items) -> tuple[TaylorEntry, ...]:
@@ -241,9 +284,13 @@ def taylor_entries(items) -> tuple[TaylorEntry, ...]:
             raise InputError(f"tool_life[{i}]: a Taylor entry needs its reference life T_ref_min")
         rng = plain(field_of(e, "vc_range_m_s"))
         vc_range = (float(rng[0]), float(rng[1])) if isinstance(rng, (list, tuple)) and len(rng) == 2 else None
+        try:
+            basis, fraction, how = life_basis_of(e)
+        except InputError as error:
+            raise InputError(f"tool_life[{i}]: {error}") from None
         out.append(TaylorEntry(text(e, "tool_class"), text(e, "coating"), text(e, "process"), c, n,
                                num(e, "a", 0.0), num(e, "b", 0.0), t_ref, num(e, "feed_ref_m"), num(e, "ap_ref_m"),
-                               vb, vc_range, text(e, "src"), i))
+                               vb, vc_range, text(e, "src"), i, basis, fraction, how))
     return tuple(out)
 
 
@@ -448,6 +495,6 @@ def work_data(obj) -> WorkData:
 
 
 __all__ = ["get", "number", "HV_PA", "UsuiEntry", "usui_entry", "usui_entries", "select_usui", "TaylorEntry",
-           "taylor_entries", "select_taylor", "ToolMaterialData", "tool_material_data",
+           "taylor_entries", "life_basis_of", "select_taylor", "CUTTING_TIME", "CONTACT_TIME", "INTERRUPTED_PROCESSES", "ToolMaterialData", "tool_material_data",
            "CoatingData", "coating_data", "generic_coating", "WorkData", "work_data", "as_map", "field_of", "num",
            "text", "plain", "table", "FLANK", "CALIBRATION", "FRACTURE", "LIFE", "TOOL_CLASSES_BRITTLE"]

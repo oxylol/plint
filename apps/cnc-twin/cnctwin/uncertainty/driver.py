@@ -269,17 +269,34 @@ def write_outputs(document: dict, folder: Path) -> None:
 
 
 def run_study(request: dict, out_dir, progress_cb=None) -> dict:
-    """API job entry (docs/api.md): ``request`` {run_id, run_dir, project_id, project_path, project_dir, options}."""
+    """API job entry (docs/api.md): ``request`` {run_id, run_dir, project_id, project_path, project_dir, options};
+    the job manager adds ``simulate_entry`` (the server's simulation: the runner when the options name none) and
+    ``outputs_entry`` (with it the run's report is made again with the study's section). With a run, the study
+    is attached to it (cnctwin.core.outputs.attach_study: uncertainty/study.json, uncertainty.json, the output
+    index of run.json)."""
     project_path = request.get("project_path")
     if not project_path:
         raise InputError("the uncertainty request names no project_path (the run was not started by this server)")
-    document = study(project_path, out_dir, options=request.get("options") or {}, progress_cb=progress_cb,
+    options = dict(request.get("options") or {})
+    runner = resolve_runner(request["simulate_entry"]) if request.get("simulate_entry") and not options.get("runner") \
+        else None
+    document = study(project_path, out_dir, options=options, runner=runner, progress_cb=progress_cb,
                      base_run_dir=request.get("run_dir"))
+    run_dir = request.get("run_dir")
+    attached = None
+    if run_dir and options.get("attach", True) and not options.get("plan_only") and (Path(run_dir) / "run.json").is_file():
+        from ..core.outputs import attach_study
+        outputs_entry = request.get("outputs_entry")
+        attached = attach_study(run_dir, document, progress_cb=progress_cb, outputs_entry=outputs_entry,
+                                refresh=bool(outputs_entry) and str(outputs_entry).strip().lower() not in ("none", "off"))
     results = document.get("results") or {}
+    report = (attached or {}).get("report")
     return {"format": document.get("format"), "study": str(Path(out_dir) / "study.json"),
             "page": str(Path(out_dir) / "uncertainty.html"), "samples_ok": results.get("samples_ok"),
             "samples_failed": results.get("samples_failed"), "verdict": results.get("verdict"),
-            "factors": [f["name"] for f in document.get("factors", [])]}
+            "factors": [f["name"] for f in document.get("factors", [])],
+            "attached": attached["files"] if attached else None,
+            "report": {"failed": report.get("failed"), "files": report.get("files")} if report else None}
 
 
 __all__ = ["study", "plan_study", "execute", "assemble", "run_study", "resolve_runner", "settings_for",

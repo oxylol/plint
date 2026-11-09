@@ -60,7 +60,7 @@ def _feed(ex, call: CycleCall, letter: str = "F") -> float:
 
 def _tool_radius(ex, call: CycleCall) -> float:
     word = _word(call, "D")
-    number = ex.handler.integer(word) if word is not None else ex.s.d_number
+    number = ex.handler.offset_word("D", word) if word is not None else ex.s.d_number
     if number <= 0:
         return 0.0
     row = ex.s.tool_offsets.get(str(number))

@@ -100,14 +100,22 @@ chip:
 tool_life:                         # extended Taylor: vc (T/T_ref)^n f^a ap^b = C, T_ref = 1 min, at the VB limit
   - tool_class: carbide
     coating: TiAlN
+    process: milling                 # milling | turning | drilling | boring | tapping | threading | grooving | orthogonal | any
     C_m_min: 1200
     n: 0.3
     a: 0.2
     b: 0.1
-    feed_ref_mm: 0.1
+    feed_ref_mm: 0.1                 # fz for milling, f per revolution for turning and drilling
     ap_ref_mm: 2
     VB_limit_mm: 0.3
     T_ref_min: 1
+    life_basis: cutting_time         # what T counts: cutting_time = the tool feeding in the material (ISO 3685,
+                                     # ISO 8688, makers' catalogues; default for milling, drilling, tapping and
+                                     # entries without a process) | contact_time = the edge in contact (default for
+                                     # turning, boring, grooving, threading, orthogonal, where the two are equal)
+    engaged_arc_ref_deg: 36.87       # milling cutting-time lives: arc of each revolution the edge is in the material
+                                     # in the reference cut (side milling arccos(1 - 2 ae/D), slot 180); default the
+                                     # ISO 8688-2 end-milling test, ae/D = 0.1 (db/models/wear-calibration.yaml)
     src: key
 
 tool_life_usui: []                 # optional published Usui constants, see tool_material.yaml for the key units

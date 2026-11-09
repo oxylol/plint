@@ -99,6 +99,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 800 m/min (uncoated K10 carbide in wrought aluminium, general knowledge, not a cited source); n, a, b assumed typical of carbide. In practice BUE and edge chipping limit life more than flank wear"
   - tool_class: pcd
@@ -110,6 +111,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.1
+    life_basis: cutting_time
     src: est
     note: "placeholder: T = 15 min at vc ~ 2300 m/min; PCD life in aluminium is typically very long; not a cited value"
   - tool_class: hss
@@ -121,6 +123,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     feed_ref_mm: 0.2
     ap_ref_mm: 2
     VB_limit_mm: 0.3
+    life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 120 m/min (general knowledge); n typical of HSS"
 tool_life_usui: null               # template puts `usui` under the tool_life list, which is not valid YAML; kept as a sibling key

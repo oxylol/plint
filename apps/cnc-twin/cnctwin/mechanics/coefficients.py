@@ -36,7 +36,8 @@ from . import kernels as K
 from . import oblique as O
 from . import params as P
 from .materials import KienzleEntry, MechanisticEntry, ToolSide, WorkMaterial, coating_matches
-from .oxley import effective_mu, kernel_inputs, zorev_split
+from .oxley import (continuation_reference, effective_mu, interface_coulomb, interface_inputs, merchant_from,
+                    zorev_split)
 
 REGIME_NONE = 0
 REGIME_OXLEY = 1
@@ -99,12 +100,14 @@ def default_tool_temp_grid(work_temp_K: float) -> np.ndarray:
 
 def build_process_map(work: WorkMaterial, tool: ToolSide | None, rake_rad: float, *, speed_grid_m_s,
                       work_temp_K: float = REFERENCE_TEMP_K, friction_factor: float = 1.0, t1_grid_m=None,
-                      tool_temp_grid_K=None, adiabatic_tool: bool = False, coulomb_limit: bool = True,
+                      tool_temp_grid_K=None, adiabatic_tool: bool = False, coulomb_limit: bool | None = None,
                       contact_width_m: float | None = None, contact_time_s: float | None = None) -> abi.ProcessMap:
     """Oxley outputs on a (tool temperature, speed, t1) grid for one context (see module doc).
 
     ``adiabatic_tool`` (or no tool) gives a single tool-temperature node and Oxley's original
-    assumption that all rake heat enters the chip."""
+    assumption that all rake heat enters the chip. The interface condition follows
+    :func:`cnctwin.mechanics.oxley.interface_coulomb` (Oxley's condition unless
+    ``coulomb_limit=True``)."""
     t1 = contiguous(default_t1_grid() if t1_grid_m is None else t1_grid_m, np.float64)
     speeds = contiguous(speed_grid_m_s, np.float64)
     adiabatic = adiabatic_tool or tool is None
@@ -114,11 +117,13 @@ def build_process_map(work: WorkMaterial, tool: ToolSide | None, rake_rad: float
         ttool = contiguous(default_tool_temp_grid(work_temp_K) if tool_temp_grid_K is None else tool_temp_grid_K,
                            np.float64)
     mu = effective_mu(work, tool, friction_factor)
-    inputs = kernel_inputs(work, tool, tool_temp_K=None if adiabatic else float(ttool[0]),
-                           mu_limit=mu if coulomb_limit else -1.0, mu_fallback=mu, contact_width_m=contact_width_m,
-                           contact_time_s=contact_time_s)
+    coulomb = interface_coulomb(coulomb_limit)
+    inputs = interface_inputs(work, tool, tool_temp_K=None if adiabatic else float(ttool[0]),
+                              friction_factor=friction_factor, coulomb_limit=coulomb_limit,
+                              contact_width_m=contact_width_m, contact_time_s=contact_time_s)
     values = np.zeros((ttool.shape[0], speeds.shape[0], t1.shape[0], abi.N_OUT))
     K.oxley_map(t1, speeds, ttool, float(rake_rad), float(work_temp_K), *inputs, values)
+    _refine_fallbacks(values, t1, speeds, ttool, float(rake_rad), float(work_temp_K), inputs, adiabatic)
     exponent = P.number(P.CONTACT, "zorev_exponent")
     for idx in np.ndindex(values.shape[:3]):
         vec = values[idx]
@@ -127,18 +132,80 @@ def build_process_map(work: WorkMaterial, tool: ToolSide | None, rake_rad: float
     context = np.zeros(abi.N_CTX)
     context[abi.CTX_RAKE_RAD] = rake_rad
     context[abi.CTX_WORK_TEMP_K] = work_temp_K
-    context[abi.CTX_MU] = mu if coulomb_limit else -1.0
+    context[abi.CTX_MU] = mu           # friction state (database mu x friction factor) in either interface mode
     context[abi.CTX_ADIABATIC] = 1.0 if adiabatic else 0.0
     context[abi.CTX_CONTACT_WIDTH_M] = contact_width_m or 0.0
     context[abi.CTX_CONTACT_TIME_S] = contact_time_s or 0.0
+    context[abi.CTX_COULOMB] = 1.0 if coulomb else 0.0
     return abi.ProcessMap(t1, speeds, ttool, values, context)
 
 
+def _refine_fallbacks(values, t1, speeds, ttool, rake_rad, work_temp_K, inputs, adiabatic) -> None:
+    """Replace the kernel's nearest-node fallback of the map nodes without an admissible Oxley
+    solution by the fallback continued from the edge of the admissible region, located by
+    bisection, so a node's value does not depend on the grid (as oxley.solve): in a row of
+    t1 nodes (one speed and tool temperature) a block of such nodes is continued from the edge
+    between it and its nearer admissible neighbour; a row without an admissible node from the
+    continuation of each node (oxley.continuation_reference)."""
+    n_bisect = int(P.get(P.OXLEY)["fallback_bisection_steps"])
+    tool = inputs.tool.copy()
+    node_inputs = inputs._replace(tool=tool)
+    case = np.zeros(4)
+    case[2] = rake_rad
+    case[3] = work_temp_K
+    out = np.zeros(abi.N_OUT)
+    n_h = t1.shape[0]
+    for it_ in range(ttool.shape[0]):
+        if not adiabatic:
+            tool[abi.TOOL_T_RAKE_K] = ttool[it_]
+        for iv in range(speeds.shape[0]):
+            case[1] = speeds[iv]
+            ok = values[it_, iv, :, abi.OX_STATUS] == abi.STATUS_OXLEY
+            if ok.all():
+                continue
+            edges: dict[tuple[int, int], np.ndarray] = {}
+            for ih in range(n_h):
+                if ok[ih]:
+                    continue
+                case[0] = t1[ih]
+                left = next((j for j in range(ih - 1, -1, -1) if ok[j]), None)
+                right = next((j for j in range(ih + 1, n_h) if ok[j]), None)
+                if left is None and right is None:
+                    found = continuation_reference(case, node_inputs)
+                    if found is not None:
+                        values[it_, iv, ih] = merchant_from(case, node_inputs, found[0])
+                    continue
+                if right is None or (left is not None and ih - left <= right - ih):
+                    pair = (left + 1, left)
+                else:
+                    pair = (right - 1, right)
+                if pair not in edges:
+                    lo, hi = math.log(t1[pair[0]]), math.log(t1[pair[1]])     # lo inadmissible, hi admissible
+                    best = values[it_, iv, pair[1]].copy()
+                    trial = case.copy()
+                    for _ in range(n_bisect):
+                        mid = 0.5 * (lo + hi)
+                        trial[0] = math.exp(mid)
+                        K.oxley_point(trial, *node_inputs, out)
+                        if out[abi.OX_STATUS] == abi.STATUS_OXLEY:
+                            hi = mid
+                            best = out.copy()
+                        else:
+                            lo = mid
+                    edges[pair] = best
+                values[it_, iv, ih] = merchant_from(case, node_inputs, edges[pair])
+
+
 def map_matches(pmap: abi.ProcessMap, rake_rad: float, work_temp_K: float, mu: float, *, rake_tol_rad: float,
-                temp_tol_K: float, mu_rel_tol: float) -> bool:
-    """True if a map was built for this context within the tolerances (cutting's rebuild policy)."""
+                temp_tol_K: float, mu_rel_tol: float, coulomb_limit: bool | None = None) -> bool:
+    """True if a map was built for this context within the tolerances (cutting's rebuild policy).
+    ``mu`` is the effective friction coefficient (database x friction factor), which identifies
+    the friction state of both interface modes; ``coulomb_limit`` (when given) must select the
+    map's interface mode."""
     ctx = pmap.context
     if abs(ctx[abi.CTX_RAKE_RAD] - rake_rad) > rake_tol_rad or abs(ctx[abi.CTX_WORK_TEMP_K] - work_temp_K) > temp_tol_K:
+        return False
+    if coulomb_limit is not None and (ctx[abi.CTX_COULOMB] > 0.5) != interface_coulomb(coulomb_limit):
         return False
     if ctx[abi.CTX_MU] <= 0.0 or mu <= 0.0:
         return ctx[abi.CTX_MU] <= 0.0 and mu <= 0.0

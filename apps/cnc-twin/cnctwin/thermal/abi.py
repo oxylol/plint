@@ -182,6 +182,82 @@ class EdgeOutput(NamedTuple):
     amp: np.ndarray            # [nt, ne] cycle amplitude at the cutting edge (K)
 
 
+# EdgeInput.scal[2]: what edge_temperatures returns
+EDGE_OUT_TEMPERATURE = 0   # body temperature + local rise minus the far field the 1-D body holds
+EDGE_OUT_DEVIATION = 1     # periodic deviation from the cycle mean (the 3-D field holds the mean), K
+
+
+# ------------------------------------------------------------------ 3-D cutting-region field (toolfield.py)
+class FieldMesh(NamedTuple):
+    """Static finite-volume mesh of the cutting region, solved together with the tool ladder
+    (docs/models/thermal.md 2.4). Unknowns 0..n-1 are the field cells, n..n+nL-1 the ladder nodes;
+    ``row_ptr``/``col`` is the strictly lower CSR pattern of the combined symmetric system (columns
+    ascending in each row) and the ``*_slot`` arrays the CSR entry of every off-diagonal coupling."""
+
+    m: np.ndarray              # [n] cell mass (kg), times the multiplicity
+    link_a: np.ndarray         # [nl] int32 cell on one side of an internal face
+    link_b: np.ndarray         # [nl] int32 the other cell (> link_a)
+    link_area: np.ndarray      # [nl] face area (m2), times the multiplicity
+    link_da: np.ndarray        # [nl] distance of cell a's centroid from the face (m)
+    link_db: np.ndarray        # [nl] same for cell b
+    face_cell: np.ndarray      # [nf] int32 cell of a boundary face
+    face_area: np.ndarray      # [nf] face area (m2), times the multiplicity
+    face_d: np.ndarray         # [nf] distance of the cell centroid from the face (m)
+    face_node: np.ndarray      # [nf] int32 ladder node of a coupled face (insert seat, tooth root), -1: exposed
+    face_rc: np.ndarray        # [nf] contact resistance of a coupled face (m2K/W)
+    face_lk: np.ndarray        # [nf] conduction length on the ladder side (m): resistance face_lk / k(node)
+    row_ptr: np.ndarray        # [N + 1] int32
+    col: np.ndarray            # [nnz] int32
+    link_slot: np.ndarray      # [nl] int32
+    face_slot: np.ndarray      # [nf] int32 (-1: exposed face)
+    lad_slot: np.ndarray       # [nll] int32 per ladder link (-1: the link is not in the system)
+    blk_ptr: np.ndarray        # [nb + 1] int32 contiguous diagonal blocks (the slabs of the field, the ladder) of
+                               # the block symmetric Gauss-Seidel preconditioner; each banded within band.shape[1] - 1
+
+
+class FieldSystem(NamedTuple):
+    """State and per-step arrays of the field (written by ToolField, read and updated by the kernel)."""
+
+    h: np.ndarray              # [n] specific enthalpy (J/kg, rel. 20 degC)
+    T: np.ndarray              # [n] temperature (K)
+    src: np.ndarray            # [n] energy entering the cells this step (J)
+    fa_h: np.ndarray           # [nf] film coefficient to air incl. linearised radiation (W/m2K)
+    fa_w: np.ndarray           # [nf] face area exposed to air (m2, times the multiplicity)
+    fc_h: np.ndarray           # [nf] film coefficient to the coolant (W/m2K)
+    fc_w: np.ndarray           # [nf] face area wetted by the coolant (m2, times the multiplicity)
+    active: np.ndarray         # [nL] int8 ladder node in the system (0: a view of the field)
+    cap: np.ndarray            # [N] scratch: heat capacities (J/K)
+    kk: np.ndarray             # [N] scratch: conductivities (W/mK)
+    dia: np.ndarray            # [N] scratch: matrix diagonal
+    val: np.ndarray            # [nnz] scratch: strictly lower matrix entries
+    band: np.ndarray           # [N, bw + 1] scratch: Cholesky factors of the diagonal blocks (band[i, d] = L[i, i - d])
+    acc: np.ndarray            # [N] scratch of the preconditioner
+    x: np.ndarray              # [N] scratch: solution (temperature change)
+    r: np.ndarray              # [N] scratch: residual
+    z: np.ndarray              # [N] scratch
+    p: np.ndarray              # [N] scratch
+    q: np.ndarray              # [N] scratch
+    b: np.ndarray              # [N] scratch: right-hand side
+    scal: np.ndarray           # [N_FS] FS_* settings
+
+
+FS_TOL = 0                 # relative residual of the conjugate-gradient solve
+FS_MAX_ITER = 1            # iteration limit
+N_FS = 4
+
+FD_SRC = 0                 # energy entering (field cells + ladder nodes) (J)
+FD_AIR = 1                 # loss to air (J)
+FD_COOL = 2                # loss to the coolant (J)
+FD_SP = 3                  # loss to the spindle nose / turret (ladder end) (J)
+FD_DU = 4                  # sum of C dT (J)
+FD_U0 = 5                  # internal energy before (cells + solved ladder nodes) (J, rel. 20 degC)
+FD_U1 = 6                  # after
+FD_ITER = 7                # conjugate-gradient iterations
+FD_RES = 8                 # final relative residual |b - A x| / |b|
+FD_COUPLE = 9              # heat from the field into the ladder through the coupled faces (J)
+N_FD = 12
+
+
 # ------------------------------------------------------------------ builders
 def f64(shape) -> np.ndarray:
     return np.zeros(shape, dtype=np.float64)
@@ -211,8 +287,24 @@ def new_work_boundary(n_near: int = 0, wet_shape=(0, 0)) -> WorkBoundary:
     return WorkBoundary(f64(6), f64((n_near, 5)), np.zeros(wet_shape, np.int8), f64(3), f64(N_BSCAL))
 
 
-def new_edge_input(shape: tuple[int, int], nq: int) -> EdgeInput:
-    return EdgeInput(np.zeros(shape, np.int8), *(f64(shape) for _ in range(14)), f64(nq), f64(2))
+def new_edge_input(shape: tuple[int, int], nq: int, out_mode: int | None = None) -> EdgeInput:
+    """scal: [0] n_direct, [1] n_window and, when ``out_mode`` is given, [2] the EDGE_OUT_* output (without
+    it the kernel returns temperatures)."""
+    scal = f64(2) if out_mode is None else np.array([0.0, 0.0, float(out_mode)])
+    return EdgeInput(np.zeros(shape, np.int8), *(f64(shape) for _ in range(14)), f64(nq), scal)
+
+
+def new_field_system(n: int, nf: int, n_ladder: int, nnz: int, bw: int) -> FieldSystem:
+    big = n + n_ladder
+    return FieldSystem(f64(n), f64(n), f64(n), f64(nf), f64(nf), f64(nf), f64(nf), np.ones(n_ladder, np.int8),
+                       f64(big), f64(big), f64(big), f64(nnz), f64((big, bw + 1)), f64(big), f64(big), f64(big),
+                       f64(big), f64(big), f64(big), f64(big), f64(N_FS))
+
+
+def field_mesh_sample() -> FieldMesh:
+    i32 = lambda k: np.zeros(k, np.int32)
+    return FieldMesh(f64(2), i32(1), i32(1), f64(1), f64(1), f64(1), i32(1), f64(1), f64(1), i32(1), f64(1),
+                     f64(1), i32(5), i32(1), i32(1), i32(1), i32(1), i32(3))
 
 
 def new_edge_output(shape: tuple[int, int], nq: int) -> EdgeOutput:
@@ -232,3 +324,8 @@ def sample_types():
     edge_in = new_edge_input((1, 1), 2)
     edge_out = new_edge_output((1, 1), 2)
     return mat, grid, scratch, bnd, ladder, resp, edge_in, edge_out
+
+
+def field_sample_types():
+    """Small instances of the field layouts, for the field kernel's explicit signature."""
+    return field_mesh_sample(), new_field_system(2, 1, 2, 1, 1)

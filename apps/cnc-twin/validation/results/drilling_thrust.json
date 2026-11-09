@@ -6,9 +6,27 @@
   "pct": 20.0,
   "src": "est"
  },
- "calibration_dependent": null,
+ "calibration_dependent": {
+  "cases": 1,
+  "cases_with_values": 1,
+  "class_matches": 0,
+  "class_values": 0,
+  "compared": 9,
+  "median_abs_rel": 0.475294,
+  "median_curves_abs_rel": 0.475294,
+  "median_values_abs_rel": null,
+  "no_prediction": 0,
+  "p90_abs_rel": 0.609858,
+  "passing": 0,
+  "uncertainty_known": 9,
+  "values": 9,
+  "within_uncertainty": 0,
+  "worst_case": "thrust-drill-al7075-luo2021",
+  "worst_miss_ratio": 3.2436
+ },
  "cases": [
   {
+   "ambient_K": null,
    "calibration_dependent": false,
    "case_assumed_inputs": [
     {
@@ -30,21 +48,237 @@
      "value": 573
     }
    ],
+   "curve_errors": [],
+   "curves": [],
    "dependencies": [],
    "digitised": false,
-   "error": "no harness registered for 'drilling_thrust'",
+   "error": "",
    "file": "validation/cases/drilling_thrust/thrust-drill-aisi1040-gok2013-helix.yaml",
+   "harness_assumptions": [
+    {
+     "input": "tool material",
+     "reason": "HSS: the M2 entry",
+     "source": "db/tool_materials",
+     "value": "hss-m2"
+    },
+    {
+     "input": "coating",
+     "reason": "not stated in the case: uncoated assumed",
+     "source": "case",
+     "value": "none"
+    },
+    {
+     "input": "ambient temperature",
+     "reason": "case states none (or marks it assumed): ISO 1 reference temperature",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "tool and work temperature",
+     "reason": "a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition)",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "cutting-edge radius",
+     "reason": "not stated in the case: tooling's default for the drill's edge preparation",
+     "source": "db/models/tooling.yaml",
+     "value": "3.0 um"
+    },
+    {
+     "input": "runout",
+     "reason": "not stated in the case: an ideal concentric drill",
+     "source": "est",
+     "value": "0"
+    }
+   ],
    "id": "thrust-drill-aisi1040-gok2013-helix",
    "location": "Sect. 2.1-2.2 (setup, Table 2), Table 5 (measured and predicted force and torque per helix angle), Sect. 3 text (condition of Table 5)",
    "material": "aisi1045",
    "measured": true,
+   "model_chain": [
+    "cnctwin.mechanics.materials (databases)",
+    "cnctwin.tooling.build_tool (twist drill: lips, chisel, margins)",
+    "cnctwin.cutting.coefficients.MechanicsModel (process drilling: lips by Oxley, chisel and slow centre by indentation, calibration to measured data of the pairing)",
+    "cnctwin.cutting.kernels.cut_step (steady full-diameter drilling, cnctwin.cutting.drive.Driver)"
+   ],
+   "notes": [
+    "Material: database entry aisi1045; the case says: AISI 1040 (not 1045), 'heat treatment applied before testing' (not specified); Table 3: yield 353.4 MPa, UTS 518.8 MPa (simulation inputs). The DB 1045 entry is stronger; scale the flow stress when comparing",
+    "Drill model (D 10 mm): chisel edge angle not given: 125 deg",
+    "Drill model (D 10 mm): lip clearance not given: 10 deg",
+    "Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)",
+    "Drill model (D 10 mm): margin width not given: 0.70 mm",
+    "Coefficients: the mechanics prediction alone (no measured Kienzle or mechanistic data in the material file for hss/none, drilling)."
+   ],
    "operation": "drilling",
+   "provenance": [
+    {
+     "note": "20 °C value 21.8 W/mK from bohler-2026-s600 p. 4; 400 and 600 °C scaled with the Vanadis 23 (HS6-5-3) ratios 28/24 and 27/24 from uddeholm-vanadis23-datasheet p. 4",
+     "src": "bohler-2026-s600",
+     "what": "tool material hss-m2 thermal properties"
+    },
+    {
+     "note": "Jaspers & Dautzenberg (2002) constants as stated by Burns et al. 2012 Eq. (1.2), with Tr = 20 C and Tf = 1490 C; also used by xiu-2019-1045-grinding-fe Table 4. Burns et al. report that FE simulations with this set under-predict the peak tool-chip temperature by hundreds of C and that rapidly heated 1045 is stiffer below the eutectoid (723 C). Alternative: Murugesan & Jung 2019 (Materials 12:609) fitted A 50.1, B 176.1 for hot forming at 1223 K reference, not suitable for cutting. The Jaspers & Dautzenberg original (J. Mater. Process. Technol., 2002) could not be read in the second research round either (paywalled; no open thesis copy found), so the set is confirmed only through Burns et al. and xiu-2019-1045-grinding-fe.",
+     "src": "burns-2012-1045-cutting-temperature",
+     "what": "aisi1045 flow stress (Johnson-Cook)"
+    },
+    {
+     "note": "20 C; Table 1 gives 7850 (20 C) falling to 7649 (1000 C)",
+     "src": "xiu-2019-1045-grinding-fe",
+     "what": "aisi1045 physical.density_kg_m3"
+    },
+    {
+     "note": "",
+     "src": "xiu-2019-1045-grinding-fe",
+     "what": "aisi1045 physical.specific_heat_J_kgK"
+    },
+    {
+     "note": "",
+     "src": "xiu-2019-1045-grinding-fe",
+     "what": "aisi1045 physical.conductivity_W_mK"
+    },
+    {
+     "note": "taken from the 0.25-0.30 ratio found for 304 stainless (zou-2026-304-min-cutting-thickness); no 1045-specific value read",
+     "src": "est",
+     "what": "aisi1045 cutting.min_chip_thickness_ratio"
+    },
+    {
+     "note": "0.78 = Albrecht-method estimate from the ETH force data (klippel-2022 Sect. 3.4), which the authors call very high and likely inaccurate because of BUE and segmentation; 0.3-0.6 is the range of Coulomb coefficients used in the FE studies read for other steels; 0.5 chosen",
+     "src": "est",
+     "what": "aisi1045 friction mu_sliding (carbide, uncoated)"
+    },
+    {
+     "note": "Ksp = 3.4e14 N/m3 as identified for slot milling of AISI 1045 with a two-tooth cutter in the process-damping stability example of the MAL course (slide p. 164: flank wear land lw = 60 um, mu_c = 0.3, giving Ct = 0.19 and Cr = 0.61 N/um; the slide also lists Ktc 3242 and Krc 1978 MPa for that cut, not stored as a mechanistic set because edge and axial coefficients and the tool geometry are not given). The steel's condition is not stated on the slide. Replaces a placeholder of 2.9e4 N/mm3 (3.0e4 assumed at 200 HB, scaled by hardness), an order of magnitude lower",
+     "src": "mal-2015-machining-course",
+     "what": "aisi1045 cutting.indentation_coeff_N_mm3"
+    }
+   ],
    "quantity": "drilling_thrust",
+   "settings": {
+    "calibration": "none",
+    "calibration_sources": [],
+    "coating": "none",
+    "edge_element_m": 0.00025,
+    "h_min_ratio": 0.27,
+    "mu_sliding": 0.5,
+    "process": "drilling",
+    "statistic": "mean over one revolution of the steady cut",
+    "tool_material": "hss-m2"
+   },
    "src": "gok-2013-aisi1040-drilling-thrust-torque",
-   "status": "no_harness",
-   "uncertainty_pct": null
+   "stats": {
+    "class_matches": 0,
+    "class_values": 0,
+    "classification": false,
+    "compared": 3,
+    "max_abs_rel": 0.831469,
+    "max_miss_ratio": 4.15735,
+    "median_abs_rel": 0.782362,
+    "no_prediction": 0,
+    "not_compared": 0,
+    "passes": false,
+    "rms_rel": 0.78514,
+    "uncertainty_known": 0,
+    "within_tolerance": 0,
+    "within_uncertainty": 0
+   },
+   "status": "ok",
+   "uncertainty_pct": null,
+   "values": [
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.831469,
+     "extra": {
+      "torque_Nm": 5.81019
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.15735,
+     "name": "Fz_helix20",
+     "note": "D 10 mm, 573 rpm, f 0.1 mm/rev, helix 20 deg",
+     "point": null,
+     "reference": 1290,
+     "reference_note": "",
+     "scale": 1290.0,
+     "simulated": 2362.6,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 258.0,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "value",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 20,
+     "x_name": "helix angle",
+     "x_unit": "deg"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.738852,
+     "extra": {
+      "torque_Nm": 5.11801
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 3.69426,
+     "name": "Fz_helix25",
+     "note": "D 10 mm, 573 rpm, f 0.1 mm/rev, helix 25 deg",
+     "point": null,
+     "reference": 1250,
+     "reference_note": "",
+     "scale": 1250.0,
+     "simulated": 2173.56,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 250.0,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "value",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 25,
+     "x_name": "helix angle",
+     "x_unit": "deg"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.782362,
+     "extra": {
+      "torque_Nm": 4.46709
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 3.91181,
+     "name": "Fz_helix30",
+     "note": "D 10 mm, 573 rpm, f 0.1 mm/rev, helix 30 deg",
+     "point": null,
+     "reference": 1120,
+     "reference_note": "",
+     "scale": 1120.0,
+     "simulated": 1996.24,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 224.0,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "value",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 30,
+     "x_name": "helix angle",
+     "x_unit": "deg"
+    }
+   ]
   },
   {
+   "ambient_K": null,
    "calibration_dependent": false,
    "case_assumed_inputs": [
     {
@@ -84,22 +318,1046 @@
      "value": 15
     }
    ],
+   "curve_errors": [
+    {
+     "compared": 3,
+     "curve": "Fz_D6_vc50",
+     "index": 0,
+     "max_rel": 1.25035,
+     "points": 3,
+     "rms_rel": 1.00104
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D6_vc60",
+     "index": 1,
+     "max_rel": 1.16941,
+     "points": 3,
+     "rms_rel": 0.944255
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D6_vc70",
+     "index": 2,
+     "max_rel": 1.12421,
+     "points": 3,
+     "rms_rel": 0.896946
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D8_vc50",
+     "index": 3,
+     "max_rel": 0.37751,
+     "points": 3,
+     "rms_rel": 0.33944
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D8_vc60",
+     "index": 4,
+     "max_rel": 0.327658,
+     "points": 3,
+     "rms_rel": 0.304223
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D8_vc70",
+     "index": 5,
+     "max_rel": 0.315483,
+     "points": 3,
+     "rms_rel": 0.294016
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D10_vc50",
+     "index": 6,
+     "max_rel": 1.04689,
+     "points": 3,
+     "rms_rel": 0.957388
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D10_vc60",
+     "index": 7,
+     "max_rel": 0.96202,
+     "points": 3,
+     "rms_rel": 0.9197
+    },
+    {
+     "compared": 3,
+     "curve": "Fz_D10_vc70",
+     "index": 8,
+     "max_rel": 0.920683,
+     "points": 3,
+     "rms_rel": 0.879201
+    }
+   ],
+   "curves": [
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 1.25035,
+     "extra": {
+      "torque_Nm": 0.654138
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 6.25173,
+     "name": "Fz_D6_vc50",
+     "note": "D 6 mm, 2653 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 180.47,
+     "reference_note": "",
+     "scale": 180.47,
+     "simulated": 406.12,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 36.094,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.941532,
+     "extra": {
+      "torque_Nm": 1.45734
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.70766,
+     "name": "Fz_D6_vc50",
+     "note": "D 6 mm, 2653 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 436.2,
+     "reference_note": "",
+     "scale": 436.2,
+     "simulated": 846.896,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 87.24,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.745915,
+     "extra": {
+      "torque_Nm": 2.14421
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 3.72957,
+     "name": "Fz_D6_vc50",
+     "note": "D 6 mm, 2653 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 690.35,
+     "reference_note": "",
+     "scale": 690.35,
+     "simulated": 1205.29,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 138.07,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 1.16941,
+     "extra": {
+      "torque_Nm": 0.650122
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 5.84706,
+     "name": "Fz_D6_vc60",
+     "note": "D 6 mm, 3183 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 187.51,
+     "reference_note": "",
+     "scale": 187.51,
+     "simulated": 406.787,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 37.502,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.903526,
+     "extra": {
+      "torque_Nm": 1.44465
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 4.51763,
+     "name": "Fz_D6_vc60",
+     "note": "D 6 mm, 3183 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 444.28,
+     "reference_note": "",
+     "scale": 444.28,
+     "simulated": 845.699,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 88.856,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.700689,
+     "extra": {
+      "torque_Nm": 2.11978
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 3.50345,
+     "name": "Fz_D6_vc60",
+     "note": "D 6 mm, 3183 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 704.86,
+     "reference_note": "",
+     "scale": 704.86,
+     "simulated": 1198.75,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 140.972,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 1.12421,
+     "extra": {
+      "torque_Nm": 0.645377
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 5.62106,
+     "name": "Fz_D6_vc70",
+     "note": "D 6 mm, 3714 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 191.19,
+     "reference_note": "",
+     "scale": 191.19,
+     "simulated": 406.128,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 38.238,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.818094,
+     "extra": {
+      "torque_Nm": 1.42935
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 4.09047,
+     "name": "Fz_D6_vc70",
+     "note": "D 6 mm, 3714 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 462.28,
+     "reference_note": "",
+     "scale": 462.28,
+     "simulated": 840.468,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 92.456,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.693115,
+     "extra": {
+      "torque_Nm": 2.09104
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 3.46557,
+     "name": "Fz_D6_vc70",
+     "note": "D 6 mm, 3714 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 700.69,
+     "reference_note": "",
+     "scale": 700.69,
+     "simulated": 1186.35,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 140.138,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.337444,
+     "extra": {
+      "torque_Nm": 1.16286
+     },
+     "index": 3,
+     "kind": "scalar",
+     "miss_ratio": 1.68722,
+     "name": "Fz_D8_vc50",
+     "note": "D 8 mm, 1989 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 404.73,
+     "reference_note": "",
+     "scale": 404.73,
+     "simulated": 541.304,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 80.946,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.37751,
+     "extra": {
+      "torque_Nm": 2.59069
+     },
+     "index": 3,
+     "kind": "scalar",
+     "miss_ratio": 1.88755,
+     "name": "Fz_D8_vc50",
+     "note": "D 8 mm, 1989 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 819.25,
+     "reference_note": "",
+     "scale": 819.25,
+     "simulated": 1128.53,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 163.85,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.298791,
+     "extra": {
+      "torque_Nm": 3.81133
+     },
+     "index": 3,
+     "kind": "scalar",
+     "miss_ratio": 1.49396,
+     "name": "Fz_D8_vc50",
+     "note": "D 8 mm, 1989 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 1235.76,
+     "reference_note": "",
+     "scale": 1235.76,
+     "simulated": 1604.99,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 247.152,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.292111,
+     "extra": {
+      "torque_Nm": 1.15592
+     },
+     "index": 4,
+     "kind": "scalar",
+     "miss_ratio": 1.46056,
+     "name": "Fz_D8_vc60",
+     "note": "D 8 mm, 2387 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 419.72,
+     "reference_note": "",
+     "scale": 419.72,
+     "simulated": 542.325,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 83.944,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.327658,
+     "extra": {
+      "torque_Nm": 2.56883
+     },
+     "index": 4,
+     "kind": "scalar",
+     "miss_ratio": 1.63829,
+     "name": "Fz_D8_vc60",
+     "note": "D 8 mm, 2387 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 849.16,
+     "reference_note": "",
+     "scale": 849.16,
+     "simulated": 1127.39,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 169.832,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.29149,
+     "extra": {
+      "torque_Nm": 3.76906
+     },
+     "index": 4,
+     "kind": "scalar",
+     "miss_ratio": 1.45745,
+     "name": "Fz_D8_vc60",
+     "note": "D 8 mm, 2387 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 1236.58,
+     "reference_note": "",
+     "scale": 1236.58,
+     "simulated": 1597.03,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 247.316,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.277253,
+     "extra": {
+      "torque_Nm": 1.14752
+     },
+     "index": 5,
+     "kind": "scalar",
+     "miss_ratio": 1.38626,
+     "name": "Fz_D8_vc70",
+     "note": "D 8 mm, 2785 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 423.93,
+     "reference_note": "",
+     "scale": 423.93,
+     "simulated": 541.466,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 84.786,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.315483,
+     "extra": {
+      "torque_Nm": 2.54168
+     },
+     "index": 5,
+     "kind": "scalar",
+     "miss_ratio": 1.57741,
+     "name": "Fz_D8_vc70",
+     "note": "D 8 mm, 2785 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 851.75,
+     "reference_note": "",
+     "scale": 851.75,
+     "simulated": 1120.46,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 170.35,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.287988,
+     "extra": {
+      "torque_Nm": 3.71798
+     },
+     "index": 5,
+     "kind": "scalar",
+     "miss_ratio": 1.43994,
+     "name": "Fz_D8_vc70",
+     "note": "D 8 mm, 2785 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 1227.1,
+     "reference_note": "",
+     "scale": 1227.1,
+     "simulated": 1580.49,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 245.42,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.934703,
+     "extra": {
+      "torque_Nm": 1.81718
+     },
+     "index": 6,
+     "kind": "scalar",
+     "miss_ratio": 4.67352,
+     "name": "Fz_D10_vc50",
+     "note": "D 10 mm, 1592 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 349.67,
+     "reference_note": "",
+     "scale": 349.67,
+     "simulated": 676.508,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 69.934,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 1.04689,
+     "extra": {
+      "torque_Nm": 4.04814
+     },
+     "index": 6,
+     "kind": "scalar",
+     "miss_ratio": 5.23443,
+     "name": "Fz_D10_vc50",
+     "note": "D 10 mm, 1592 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 688.92,
+     "reference_note": "",
+     "scale": 688.92,
+     "simulated": 1410.14,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 137.784,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.883254,
+     "extra": {
+      "torque_Nm": 5.95551
+     },
+     "index": 6,
+     "kind": "scalar",
+     "miss_ratio": 4.41627,
+     "name": "Fz_D10_vc50",
+     "note": "D 10 mm, 1592 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 1064.77,
+     "reference_note": "",
+     "scale": 1064.77,
+     "simulated": 2005.23,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 212.954,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.936729,
+     "extra": {
+      "torque_Nm": 1.80613
+     },
+     "index": 7,
+     "kind": "scalar",
+     "miss_ratio": 4.68364,
+     "name": "Fz_D10_vc60",
+     "note": "D 10 mm, 1910 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 349.9,
+     "reference_note": "",
+     "scale": 349.9,
+     "simulated": 677.661,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 69.98,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.96202,
+     "extra": {
+      "torque_Nm": 4.01302
+     },
+     "index": 7,
+     "kind": "scalar",
+     "miss_ratio": 4.8101,
+     "name": "Fz_D10_vc60",
+     "note": "D 10 mm, 1910 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 717.74,
+     "reference_note": "",
+     "scale": 717.74,
+     "simulated": 1408.22,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 143.548,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.857089,
+     "extra": {
+      "torque_Nm": 5.88786
+     },
+     "index": 7,
+     "kind": "scalar",
+     "miss_ratio": 4.28544,
+     "name": "Fz_D10_vc60",
+     "note": "D 10 mm, 1910 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 1073.97,
+     "reference_note": "",
+     "scale": 1073.97,
+     "simulated": 1994.46,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 214.794,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.920683,
+     "extra": {
+      "torque_Nm": 1.79291
+     },
+     "index": 8,
+     "kind": "scalar",
+     "miss_ratio": 4.60342,
+     "name": "Fz_D10_vc70",
+     "note": "D 10 mm, 2228 rpm, f 0.1 mm/rev",
+     "point": 0,
+     "reference": 352.24,
+     "reference_note": "",
+     "scale": 352.24,
+     "simulated": 676.541,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 70.448,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.1,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.90293,
+     "extra": {
+      "torque_Nm": 3.97043
+     },
+     "index": 8,
+     "kind": "scalar",
+     "miss_ratio": 4.51465,
+     "name": "Fz_D10_vc70",
+     "note": "D 10 mm, 2228 rpm, f 0.25 mm/rev",
+     "point": 1,
+     "reference": 735.42,
+     "reference_note": "",
+     "scale": 735.42,
+     "simulated": 1399.45,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 147.084,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.25,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.809965,
+     "extra": {
+      "torque_Nm": 5.80796
+     },
+     "index": 8,
+     "kind": "scalar",
+     "miss_ratio": 4.04983,
+     "name": "Fz_D10_vc70",
+     "note": "D 10 mm, 2228 rpm, f 0.4 mm/rev",
+     "point": 2,
+     "reference": 1090.48,
+     "reference_note": "",
+     "scale": 1090.48,
+     "simulated": 1973.73,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 218.096,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 0.4,
+     "x_name": "f",
+     "x_unit": "mm/rev"
+    }
+   ],
    "dependencies": [],
    "digitised": false,
-   "error": "no harness registered for 'drilling_thrust'",
+   "error": "",
    "file": "validation/cases/drilling_thrust/thrust-drill-al2024-craciun2024-hss.yaml",
+   "harness_assumptions": [
+    {
+     "input": "tool material",
+     "reason": "HSS: the M2 entry",
+     "source": "db/tool_materials",
+     "value": "hss-m2"
+    },
+    {
+     "input": "coating",
+     "reason": "not stated in the case: uncoated assumed",
+     "source": "case",
+     "value": "none"
+    },
+    {
+     "input": "ambient temperature",
+     "reason": "case states none (or marks it assumed): ISO 1 reference temperature",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "tool and work temperature",
+     "reason": "a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition)",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "cutting-edge radius",
+     "reason": "not stated in the case: tooling's default for the drill's edge preparation",
+     "source": "db/models/tooling.yaml",
+     "value": "3.0 um"
+    },
+    {
+     "input": "runout",
+     "reason": "not stated in the case: an ideal concentric drill",
+     "source": "est",
+     "value": "0"
+    }
+   ],
    "id": "thrust-drill-al2024-craciun2024-hss",
    "location": "Sect. 2 (setup, Tables 1-2), Sect. 2 text (selection of the stabilised range, averaging), Table 3 (Fz per run)",
    "material": "al7075-t7351",
    "measured": true,
+   "model_chain": [
+    "cnctwin.mechanics.materials (databases)",
+    "cnctwin.tooling.build_tool (twist drill: lips, chisel, margins)",
+    "cnctwin.cutting.coefficients.MechanicsModel (process drilling: lips by Oxley, chisel and slow centre by indentation, calibration to measured data of the pairing)",
+    "cnctwin.cutting.kernels.cut_step (steady full-diameter drilling, cnctwin.cutting.drive.Driver)"
+   ],
+   "notes": [
+    "Material: database entry al7075-t7351; the case says: Al 2024-T351 (Table 1: Cu 3.8-4.9, Mg 1.2-1.8, Mn 0.3-0.9 %); not in the DB: the over-aged 7075-T7351 entry is taken as the nearest high-strength wrought alloy; use 2024-T351 data when available",
+    "Drill model (D 6 mm): chisel edge angle not given: 125 deg",
+    "Drill model (D 6 mm): lip clearance not given: 10 deg",
+    "Drill model (D 6 mm): edge radius not given: 3 um (no preparation default)",
+    "Drill model (D 6 mm): margin width not given: 0.42 mm",
+    "Coefficients calibrated to the material's kienzle data (est) for hss/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).",
+    "Drill model (D 8 mm): chisel edge angle not given: 125 deg",
+    "Drill model (D 8 mm): lip clearance not given: 10 deg",
+    "Drill model (D 8 mm): edge radius not given: 3 um (no preparation default)",
+    "Drill model (D 8 mm): margin width not given: 0.56 mm",
+    "Drill model (D 10 mm): chisel edge angle not given: 125 deg",
+    "Drill model (D 10 mm): lip clearance not given: 10 deg",
+    "Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)",
+    "Drill model (D 10 mm): margin width not given: 0.70 mm"
+   ],
    "operation": "drilling",
+   "provenance": [
+    {
+     "note": "20 °C value 21.8 W/mK from bohler-2026-s600 p. 4; 400 and 600 °C scaled with the Vanadis 23 (HS6-5-3) ratios 28/24 and 27/24 from uddeholm-vanadis23-datasheet p. 4",
+     "src": "bohler-2026-s600",
+     "what": "tool material hss-m2 thermal properties"
+    },
+    {
+     "note": "No published JC set for T7351 was found. Derived from the 7075-T6 machining set of luo-2021-al7075-drilling (A 452, B 457, n 0.357, C 0.01, m 1.1) by scaling A with the typical yield ratio T7351/T6 = 434/503 (A = 390 MPa). Treat as an estimate.",
+     "src": "est",
+     "what": "al7075-t7351 flow stress (Johnson-Cook)"
+    },
+    {
+     "note": "also NASA 2.80 g/cm3",
+     "src": "kaiser-2006-al7075-datasheet",
+     "what": "al7075-t7351 physical.density_kg_m3"
+    },
+    {
+     "note": "alloy curve digitised from NASA Fig. 9.2111; Kaiser gives 960 J/kgK at 100 C",
+     "src": "muraca-1972-al7075-handbook",
+     "what": "al7075-t7351 physical.specific_heat_J_kgK"
+    },
+    {
+     "note": "T7351 at 20 C (90 Btu/ft h F)",
+     "src": "kaiser-2006-al7075-datasheet",
+     "what": "al7075-t7351 physical.conductivity_W_mK"
+    },
+    {
+     "note": "no 7075 entry; chosen inside the aluminium-alloy range of Table 1",
+     "src": "wojciechowski-2022-min-chip-thickness",
+     "what": "al7075-t7351 cutting.min_chip_thickness_ratio"
+    },
+    {
+     "note": "the 7075-T6 FE value of luo-2021-al7075-drilling adopted for T7351",
+     "src": "est",
+     "what": "al7075-t7351 friction mu_sliding (carbide, uncoated)"
+    },
+    {
+     "note": "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (135/95)",
+     "src": "est",
+     "what": "al7075-t7351 cutting.indentation_coeff_N_mm3"
+    },
+    {
+     "note": "carbide catalogue value x 1.15 assumed for HSS",
+     "src": "est",
+     "what": "al7075-t7351 cutting.kienzle (hss, uncoated, any) calibrating the forces"
+    }
+   ],
    "quantity": "drilling_thrust",
+   "settings": {
+    "calibration": "kienzle",
+    "calibration_sources": [
+     "est"
+    ],
+    "coating": "none",
+    "edge_element_m": 0.00025,
+    "h_min_ratio": 0.3,
+    "mu_sliding": 0.55,
+    "process": "drilling",
+    "statistic": "mean over one revolution of the steady cut",
+    "tool_material": "hss-m2"
+   },
    "src": "craciun-2024-al2024-drilling-forces",
-   "status": "no_harness",
-   "uncertainty_pct": null
+   "stats": {
+    "class_matches": 0,
+    "class_values": 0,
+    "classification": false,
+    "compared": 27,
+    "max_abs_rel": 1.25035,
+    "max_miss_ratio": 6.25173,
+    "median_abs_rel": 0.818094,
+    "no_prediction": 0,
+    "not_compared": 0,
+    "passes": false,
+    "rms_rel": 0.783713,
+    "uncertainty_known": 0,
+    "within_tolerance": 0,
+    "within_uncertainty": 0
+   },
+   "status": "ok",
+   "uncertainty_pct": null,
+   "values": []
   },
   {
-   "calibration_dependent": false,
+   "ambient_K": null,
+   "calibration_dependent": true,
    "case_assumed_inputs": [
     {
      "input": "setup.tool.chisel_edge_angle_deg",
@@ -126,21 +1384,461 @@
      "value": "dry"
     }
    ],
-   "dependencies": [],
+   "curve_errors": [
+    {
+     "compared": 3,
+     "curve": "thrust feed 60 mm/min",
+     "index": 0,
+     "max_rel": 0.64872,
+     "points": 3,
+     "rms_rel": 0.60085
+    },
+    {
+     "compared": 3,
+     "curve": "thrust feed 100 mm/min",
+     "index": 1,
+     "max_rel": 0.505674,
+     "points": 3,
+     "rms_rel": 0.477208
+    },
+    {
+     "compared": 3,
+     "curve": "thrust feed 140 mm/min",
+     "index": 2,
+     "max_rel": 0.436654,
+     "points": 3,
+     "rms_rel": 0.399739
+    }
+   ],
+   "curves": [
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.549595,
+     "extra": {
+      "torque_Nm": 1.40651
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 2.74797,
+     "name": "thrust feed 60 mm/min",
+     "note": "D 10 mm, 800 rpm, f 0.075 mm/rev",
+     "point": 0,
+     "reference": 1089,
+     "reference_note": "",
+     "scale": 1089.0,
+     "simulated": 490.491,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 217.8,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 800,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.600142,
+     "extra": {
+      "torque_Nm": 1.15338
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 3.00071,
+     "name": "thrust feed 60 mm/min",
+     "note": "D 10 mm, 1000 rpm, f 0.06 mm/rev",
+     "point": 1,
+     "reference": 1021,
+     "reference_note": "",
+     "scale": 1021.0,
+     "simulated": 408.255,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 204.2,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 1000,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.64872,
+     "extra": {
+      "torque_Nm": 0.973241
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 3.2436,
+     "name": "thrust feed 60 mm/min",
+     "note": "D 10 mm, 1200 rpm, f 0.05 mm/rev",
+     "point": 2,
+     "reference": 988,
+     "reference_note": "",
+     "scale": 988.0,
+     "simulated": 347.065,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 197.6,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 1200,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.448969,
+     "extra": {
+      "torque_Nm": 2.27018
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 2.24484,
+     "name": "thrust feed 100 mm/min",
+     "note": "D 10 mm, 800 rpm, f 0.125 mm/rev",
+     "point": 0,
+     "reference": 1398,
+     "reference_note": "",
+     "scale": 1398.0,
+     "simulated": 770.342,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 279.6,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 800,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.475294,
+     "extra": {
+      "torque_Nm": 1.83245
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 2.37647,
+     "name": "thrust feed 100 mm/min",
+     "note": "D 10 mm, 1000 rpm, f 0.1 mm/rev",
+     "point": 1,
+     "reference": 1226,
+     "reference_note": "",
+     "scale": 1226.0,
+     "simulated": 643.29,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 245.2,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 1000,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.505674,
+     "extra": {
+      "torque_Nm": 1.53615
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 2.52837,
+     "name": "thrust feed 100 mm/min",
+     "note": "D 10 mm, 1200 rpm, f 0.0833333 mm/rev",
+     "point": 2,
+     "reference": 1107,
+     "reference_note": "",
+     "scale": 1107.0,
+     "simulated": 547.219,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 221.4,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 1200,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.363508,
+     "extra": {
+      "torque_Nm": 3.1871
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 1.81754,
+     "name": "thrust feed 140 mm/min",
+     "note": "D 10 mm, 800 rpm, f 0.175 mm/rev",
+     "point": 0,
+     "reference": 1618,
+     "reference_note": "",
+     "scale": 1618.0,
+     "simulated": 1029.84,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 323.6,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 800,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.395688,
+     "extra": {
+      "torque_Nm": 2.53446
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 1.97844,
+     "name": "thrust feed 140 mm/min",
+     "note": "D 10 mm, 1000 rpm, f 0.14 mm/rev",
+     "point": 1,
+     "reference": 1428,
+     "reference_note": "",
+     "scale": 1428.0,
+     "simulated": 862.957,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 285.6,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 1000,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.436654,
+     "extra": {
+      "torque_Nm": 2.10444
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 2.18327,
+     "name": "thrust feed 140 mm/min",
+     "note": "D 10 mm, 1200 rpm, f 0.116667 mm/rev",
+     "point": 2,
+     "reference": 1309,
+     "reference_note": "",
+     "scale": 1309.0,
+     "simulated": 737.42,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 261.8,
+     "uncertainty": 12.0,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 1200,
+     "x_name": "spindle speed",
+     "x_unit": "rpm"
+    }
+   ],
+   "dependencies": [
+    {
+     "note": "Table 3 of Luo et al. 2021, used there for 7075-T6 drilling FE validated against measured thrust and torque; the authors attribute the constants to Nemat-Nasser et al. 2007 (JoMMS 2:1901, not read). Tm = 604 C is the value used with the set (below the 635 C liquidus). Alternatives seen but not adopted: Brar, Joshi & Harris 2009 (AIP Conf. Proc. 1195:945) determined JC constants for 7075-T6 and T651 from quasi-static and Hopkinson-bar data, but the constants could not be read: the AIP paper is paywalled and the APS meeting-abstract page could not be read in full on 2026-11-03 (truncated, bot-protected), so no Brar constants are stored.",
+     "src": "luo-2021-al7075-drilling",
+     "via": "src",
+     "what": "al7075-t6 flow stress (Johnson-Cook)"
+    },
+    {
+     "note": "Coulomb coefficient chosen for 7075-T6 drilling FE from the 0.5-0.6 range of Ceretti and Arrazola; an FE input, not a tribometer measurement. Jomaa et al. 2014 report Merchant friction angles of 11-45 deg (mu 0.19-1.0) depending on speed and feed",
+     "src": "luo-2021-al7075-drilling",
+     "via": "src",
+     "what": "al7075-t6 friction mu_sliding (carbide, uncoated)"
+    }
+   ],
    "digitised": true,
-   "error": "no harness registered for 'drilling_thrust'",
+   "error": "",
    "file": "validation/cases/drilling_thrust/thrust-drill-al7075-luo2021.yaml",
+   "harness_assumptions": [
+    {
+     "input": "tool material",
+     "reason": "grade not in the database: the carbide class default",
+     "source": "db/tool_materials",
+     "value": "carbide-k20-6co"
+    },
+    {
+     "input": "coating",
+     "reason": "not stated in the case: uncoated assumed",
+     "source": "case",
+     "value": "none"
+    },
+    {
+     "input": "ambient temperature",
+     "reason": "case states none (or marks it assumed): ISO 1 reference temperature",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "tool and work temperature",
+     "reason": "a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition)",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "cutting-edge radius",
+     "reason": "not stated in the case: tooling's default for the drill's edge preparation",
+     "source": "db/models/tooling.yaml",
+     "value": "3.0 um"
+    },
+    {
+     "input": "runout",
+     "reason": "not stated in the case: an ideal concentric drill",
+     "source": "est",
+     "value": "0"
+    }
+   ],
    "id": "thrust-drill-al7075-luo2021",
    "location": "Fig. 8a-c, 'Experimental' bars (digitised; 8.4, 10.8 and 11.9 N/px)",
    "material": "al7075-t6",
    "measured": true,
+   "model_chain": [
+    "cnctwin.mechanics.materials (databases)",
+    "cnctwin.tooling.build_tool (twist drill: lips, chisel, margins)",
+    "cnctwin.cutting.coefficients.MechanicsModel (process drilling: lips by Oxley, chisel and slow centre by indentation, calibration to measured data of the pairing)",
+    "cnctwin.cutting.kernels.cut_step (steady full-diameter drilling, cnctwin.cutting.drive.Driver)"
+   ],
+   "notes": [
+    "Material: database entry al7075-t6; the case says: 7075-T6 workpiece (application: space-station suspended-ball structure); form, thickness and clamping identical for all tests but not given in numbers",
+    "Drill model (D 10 mm): lip clearance not given: 10 deg",
+    "Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)",
+    "Drill model (D 10 mm): margin width not given: 0.70 mm",
+    "Coefficients calibrated to the material's kienzle data (iscar-materials-groups) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions)."
+   ],
    "operation": "drilling",
+   "provenance": [
+    {
+     "note": "20 °C value 79 W/mK for RT9010 (mitsubishi-2026-tm102g p. 4; zhang-2025 Tab. 2 uses 88 for H13A); 30 % loss RT->1000 °C after vornberger-2020-carbide-hot-hardness, linear in T",
+     "src": "mitsubishi-2026-tm102g",
+     "what": "tool material carbide-k20-6co thermal properties"
+    },
+    {
+     "note": "Table 3 of Luo et al. 2021, used there for 7075-T6 drilling FE validated against measured thrust and torque; the authors attribute the constants to Nemat-Nasser et al. 2007 (JoMMS 2:1901, not read). Tm = 604 C is the value used with the set (below the 635 C liquidus). Alternatives seen but not adopted: Brar, Joshi & Harris 2009 (AIP Conf. Proc. 1195:945) determined JC constants for 7075-T6 and T651 from quasi-static and Hopkinson-bar data, but the constants could not be read: the AIP paper is paywalled and the APS meeting-abstract page could not be read in full on 2026-11-03 (truncated, bot-protected), so no Brar constants are stored.",
+     "src": "luo-2021-al7075-drilling",
+     "what": "al7075-t6 flow stress (Johnson-Cook)"
+    },
+    {
+     "note": "Kaiser 2.80 Mg/m3 as well",
+     "src": "muraca-1972-al7075-handbook",
+     "what": "al7075-t6 physical.density_kg_m3"
+    },
+    {
+     "note": "digitised from Fig. 9.2111 (C in cal/g C x 4184). The tabulated value 0.23 cal/g C = 962 J/kgK at 100 C (NASA; Kaiser 960) lies about 4 % above the digitised curve",
+     "src": "muraca-1972-al7075-handbook",
+     "what": "al7075-t6 physical.specific_heat_J_kgK"
+    },
+    {
+     "note": "T6: 0.31 cal/cm s C = 129.7 W/mK at 25 C; Kaiser T651 130 W/mK. Fig. 9.2111 shows K rising to about 177 W/mK above ~230 C, an over-ageing effect of exposure, not used here",
+     "src": "muraca-1972-al7075-handbook",
+     "what": "al7075-t6 physical.conductivity_W_mK"
+    },
+    {
+     "note": "no 7075 entry in Table 1; value chosen inside the aluminium-alloy range (6061 0.23, 6082-T6 0.2-0.4, 2024-T6 0.29-0.45)",
+     "src": "wojciechowski-2022-min-chip-thickness",
+     "what": "al7075-t6 cutting.min_chip_thickness_ratio"
+    },
+    {
+     "note": "Coulomb coefficient chosen for 7075-T6 drilling FE from the 0.5-0.6 range of Ceretti and Arrazola; an FE input, not a tribometer measurement. Jomaa et al. 2014 report Merchant friction angles of 11-45 deg (mu 0.19-1.0) depending on speed and feed",
+     "src": "luo-2021-al7075-drilling",
+     "what": "al7075-t6 friction mu_sliding (carbide, uncoated)"
+    },
+    {
+     "note": "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (150/95)",
+     "src": "est",
+     "what": "al7075-t6 cutting.indentation_coeff_N_mm3"
+    },
+    {
+     "note": "ISCAR group 22: aluminium wrought alloy, hardenable (100 HB nominal; 7075-T6 is 150 HB, so forces may be under-predicted) | rake_ref_deg: reference geometry not stated by ISCAR; neutral 0 deg rake assumed (Sandvik's kc1 convention) | vc_ref_m_min: no reference speed in the catalogue; assumed",
+     "src": "iscar-materials-groups",
+     "what": "al7075-t6 cutting.kienzle (carbide, any, any) calibrating the forces"
+    }
+   ],
    "quantity": "drilling_thrust",
+   "settings": {
+    "calibration": "kienzle",
+    "calibration_sources": [
+     "iscar-materials-groups"
+    ],
+    "coating": "none",
+    "edge_element_m": 0.00025,
+    "h_min_ratio": 0.3,
+    "mu_sliding": 0.55,
+    "process": "drilling",
+    "statistic": "mean over one revolution of the steady cut",
+    "tool_material": "carbide-k20-6co"
+   },
    "src": "luo-2021-al7075-drilling-thrust-torque",
-   "status": "no_harness",
-   "uncertainty_pct": 2.0
+   "stats": {
+    "class_matches": 0,
+    "class_values": 0,
+    "classification": false,
+    "compared": 9,
+    "max_abs_rel": 0.64872,
+    "max_miss_ratio": 3.2436,
+    "median_abs_rel": 0.475294,
+    "no_prediction": 0,
+    "not_compared": 0,
+    "passes": false,
+    "rms_rel": 0.499513,
+    "uncertainty_known": 9,
+    "within_tolerance": 0,
+    "within_uncertainty": 0
+   },
+   "status": "ok",
+   "uncertainty_pct": 2.0,
+   "values": []
   },
   {
+   "ambient_K": null,
    "calibration_dependent": false,
    "case_assumed_inputs": [
     {
@@ -156,21 +1854,434 @@
      "value": "3191 (D 8, 80.21 m/min); 5960 (D 8, 149.79); 2128 (D 12, 80.21); 3973 (D 12, 149.79)"
     }
    ],
+   "curve_errors": [
+    {
+     "compared": 5,
+     "curve": "Ff_D8_vc80.21",
+     "index": 0,
+     "max_rel": 3.1334,
+     "points": 5,
+     "rms_rel": 1.74447
+    }
+   ],
+   "curves": [
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.525256,
+     "extra": {
+      "torque_Nm": 1.4105
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 2.62628,
+     "name": "Ff_D8_vc80.21",
+     "note": "D 8 mm, 3191 rpm, f 0.09 mm/rev, flood",
+     "point": 0,
+     "reference": 342.014,
+     "reference_note": "text values with +- 2.246, 8.439, 2.939, 4.899, 4.359 N; curve uncertainty = the largest of them",
+     "scale": 342.014,
+     "simulated": 521.659,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 68.4028,
+     "uncertainty": 8.4,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 0.09,
+     "x_name": "fn",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.14831,
+     "extra": {
+      "torque_Nm": 1.87758
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 0.74155,
+     "name": "Ff_D8_vc80.21",
+     "note": "D 8 mm, 3191 rpm, f 0.13 mm/rev, flood",
+     "point": 1,
+     "reference": 550.92,
+     "reference_note": "text values with +- 2.246, 8.439, 2.939, 4.899, 4.359 N; curve uncertainty = the largest of them",
+     "scale": 550.92,
+     "simulated": 632.627,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 110.184,
+     "uncertainty": 8.4,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": true,
+     "within_uncertainty": false,
+     "x": 0.13,
+     "x_name": "fn",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.82955,
+     "extra": {
+      "torque_Nm": 2.47301
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.14775,
+     "name": "Ff_D8_vc80.21",
+     "note": "D 8 mm, 3191 rpm, f 0.175 mm/rev, flood",
+     "point": 2,
+     "reference": 907.039,
+     "reference_note": "text values with +- 2.246, 8.439, 2.939, 4.899, 4.359 N; curve uncertainty = the largest of them",
+     "scale": 907.039,
+     "simulated": 1659.47,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 181.408,
+     "uncertainty": 8.4,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 0.175,
+     "x_name": "fn",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 2.10041,
+     "extra": {
+      "torque_Nm": 3.10821
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 10.5021,
+     "name": "Ff_D8_vc80.21",
+     "note": "D 8 mm, 3191 rpm, f 0.22 mm/rev, flood",
+     "point": 3,
+     "reference": 1031.39,
+     "reference_note": "text values with +- 2.246, 8.439, 2.939, 4.899, 4.359 N; curve uncertainty = the largest of them",
+     "scale": 1031.39,
+     "simulated": 3197.73,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 206.278,
+     "uncertainty": 8.4,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 0.22,
+     "x_name": "fn",
+     "x_unit": "mm/rev"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 3.1334,
+     "extra": {
+      "torque_Nm": 3.69719
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 15.667,
+     "name": "Ff_D8_vc80.21",
+     "note": "D 8 mm, 3191 rpm, f 0.26 mm/rev, flood",
+     "point": 4,
+     "reference": 1151.94,
+     "reference_note": "text values with +- 2.246, 8.439, 2.939, 4.899, 4.359 N; curve uncertainty = the largest of them",
+     "scale": 1151.94,
+     "simulated": 4761.41,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 230.387,
+     "uncertainty": 8.4,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": 0.26,
+     "x_name": "fn",
+     "x_unit": "mm/rev"
+    }
+   ],
    "dependencies": [],
    "digitised": false,
-   "error": "no harness registered for 'drilling_thrust'",
+   "error": "",
    "file": "validation/cases/drilling_thrust/thrust-drill-c45-sklenicka2024-carbide.yaml",
+   "harness_assumptions": [
+    {
+     "input": "tool material",
+     "reason": "grade not in the database: the carbide class default",
+     "source": "db/tool_materials",
+     "value": "carbide-k20-6co"
+    },
+    {
+     "input": "coating",
+     "reason": "not stated in the case: uncoated assumed",
+     "source": "case",
+     "value": "none"
+    },
+    {
+     "input": "ambient temperature",
+     "reason": "case states none (or marks it assumed): ISO 1 reference temperature",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "tool and work temperature",
+     "reason": "a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition)",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "coolant fluid emulsion-8pct",
+     "reason": "the case's fluid is not in the database: the closest database fluid, full reach of the jet",
+     "source": "db/coolants",
+     "value": "database entry"
+    },
+    {
+     "input": "runout",
+     "reason": "not stated in the case: an ideal concentric drill",
+     "source": "est",
+     "value": "0"
+    }
+   ],
    "id": "thrust-drill-c45-sklenicka2024-carbide",
    "location": "Sects. 3.1-3.3 (material, machine, tools), Table 4 (constant tool factors), Table 5 (factor levels), Sect. 5 verification experiment text (Ff per feed at D 8 mm, vc 80.21 m/min; feed-averaged Ff for the four D/vc settings of Fig. 13)",
    "material": "aisi1045",
    "measured": true,
+   "model_chain": [
+    "cnctwin.mechanics.materials (databases)",
+    "cnctwin.tooling.build_tool (twist drill: lips, chisel, margins)",
+    "cnctwin.cutting.coefficients.MechanicsModel (process drilling: lips by Oxley, chisel and slow centre by indentation, calibration to measured data of the pairing)",
+    "cnctwin.cutting.kernels.cut_step (steady full-diameter drilling, cnctwin.cutting.drive.Driver)"
+   ],
+   "notes": [
+    "Material: database entry aisi1045; the case says: C45 ground bar D 118 x 30 mm; measured HV10 221.5 +- 3.0, Rm 740.5 +- 1.4 MPa, ferritic-pearlitic with 17.5 % ferrite (source Sect. 3.1, Table 2); harder than the normalised DB entry (190 HB)",
+    "Thinned point: the chisel from the stated chisel length 0.20 mm (the web 2.40 mm is thinned to it; the gash is modelled as lip).",
+    "Drill model (D 8 mm): chisel edge angle not given: 125 deg",
+    "Coefficients calibrated to the material's kienzle data (klippel-2022-ck45-cutting-database) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).",
+    "Thinned point: the chisel from the stated chisel length 0.30 mm (the web 3.60 mm is thinned to it; the gash is modelled as lip).",
+    "Drill model (D 12 mm): chisel edge angle not given: 125 deg"
+   ],
    "operation": "drilling",
+   "provenance": [
+    {
+     "note": "20 °C value 79 W/mK for RT9010 (mitsubishi-2026-tm102g p. 4; zhang-2025 Tab. 2 uses 88 for H13A); 30 % loss RT->1000 °C after vornberger-2020-carbide-hot-hardness, linear in T",
+     "src": "mitsubishi-2026-tm102g",
+     "what": "tool material carbide-k20-6co thermal properties"
+    },
+    {
+     "note": "Jaspers & Dautzenberg (2002) constants as stated by Burns et al. 2012 Eq. (1.2), with Tr = 20 C and Tf = 1490 C; also used by xiu-2019-1045-grinding-fe Table 4. Burns et al. report that FE simulations with this set under-predict the peak tool-chip temperature by hundreds of C and that rapidly heated 1045 is stiffer below the eutectoid (723 C). Alternative: Murugesan & Jung 2019 (Materials 12:609) fitted A 50.1, B 176.1 for hot forming at 1223 K reference, not suitable for cutting. The Jaspers & Dautzenberg original (J. Mater. Process. Technol., 2002) could not be read in the second research round either (paywalled; no open thesis copy found), so the set is confirmed only through Burns et al. and xiu-2019-1045-grinding-fe.",
+     "src": "burns-2012-1045-cutting-temperature",
+     "what": "aisi1045 flow stress (Johnson-Cook)"
+    },
+    {
+     "note": "20 C; Table 1 gives 7850 (20 C) falling to 7649 (1000 C)",
+     "src": "xiu-2019-1045-grinding-fe",
+     "what": "aisi1045 physical.density_kg_m3"
+    },
+    {
+     "note": "",
+     "src": "xiu-2019-1045-grinding-fe",
+     "what": "aisi1045 physical.specific_heat_J_kgK"
+    },
+    {
+     "note": "",
+     "src": "xiu-2019-1045-grinding-fe",
+     "what": "aisi1045 physical.conductivity_W_mK"
+    },
+    {
+     "note": "taken from the 0.25-0.30 ratio found for 304 stainless (zou-2026-304-min-cutting-thickness); no 1045-specific value read",
+     "src": "est",
+     "what": "aisi1045 cutting.min_chip_thickness_ratio"
+    },
+    {
+     "note": "0.78 = Albrecht-method estimate from the ETH force data (klippel-2022 Sect. 3.4), which the authors call very high and likely inaccurate because of BUE and segmentation; 0.3-0.6 is the range of Coulomb coefficients used in the FE studies read for other steels; 0.5 chosen",
+     "src": "est",
+     "what": "aisi1045 friction mu_sliding (carbide, uncoated)"
+    },
+    {
+     "note": "Ksp = 3.4e14 N/m3 as identified for slot milling of AISI 1045 with a two-tooth cutter in the process-damping stability example of the MAL course (slide p. 164: flank wear land lw = 60 um, mu_c = 0.3, giving Ct = 0.19 and Cr = 0.61 N/um; the slide also lists Ktc 3242 and Krc 1978 MPa for that cut, not stored as a mechanistic set because edge and axial coefficients and the tool geometry are not given). The steel's condition is not stated on the slide. Replaces a placeholder of 2.9e4 N/mm3 (3.0e4 assumed at 200 HB, scaled by hardness), an order of magnitude lower",
+     "src": "mal-2015-machining-course",
+     "what": "aisi1045 cutting.indentation_coeff_N_mm3"
+    },
+    {
+     "note": "Table C.17, dry quasi-orthogonal cutting, Sandvik CCMW 09T304 H13A, edge radius 20-50 um, f = 0.01-0.4 mm. Other speeds (kc1.1 N/mm2 / mc): 10: 1935/0.19, 30: 1803/0.17, 50: 1417/0.51, 70: 1729/0.35, 150: 1707/0.28, 200: 1716/0.26, 250: 1794/0.22, 300: 1851/0.22 (rise attributed to dynamic strain ageing), 350: 1575/0.27, 450: 1368/0.29. Feed force kf1.1 at 100 m/min: 809 N/mm2, mf 0.65.",
+     "src": "klippel-2022-ck45-cutting-database",
+     "what": "aisi1045 cutting.kienzle (carbide, uncoated, any) calibrating the forces"
+    }
+   ],
    "quantity": "drilling_thrust",
+   "settings": {
+    "calibration": "kienzle",
+    "calibration_sources": [
+     "klippel-2022-ck45-cutting-database"
+    ],
+    "coating": "none",
+    "edge_element_m": 0.00025,
+    "h_min_ratio": 0.27,
+    "mu_sliding": 0.5,
+    "process": "drilling",
+    "statistic": "mean over one revolution of the steady cut",
+    "tool_material": "carbide-k20-6co"
+   },
    "src": "sklenicka-2024-c45-drilling-feed-force",
-   "status": "no_harness",
-   "uncertainty_pct": 1.0
+   "stats": {
+    "class_matches": 0,
+    "class_values": 0,
+    "classification": false,
+    "compared": 9,
+    "max_abs_rel": 3.1334,
+    "max_miss_ratio": 15.667,
+    "median_abs_rel": 0.82955,
+    "no_prediction": 0,
+    "not_compared": 0,
+    "passes": false,
+    "rms_rel": 1.54948,
+    "uncertainty_known": 9,
+    "within_tolerance": 1,
+    "within_uncertainty": 0
+   },
+   "status": "ok",
+   "uncertainty_pct": 1.0,
+   "values": [
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 1.78369,
+     "extra": {
+      "torque_Nm": 2.71676
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 8.91847,
+     "name": "Ff_feedavg_D8_vc149.79",
+     "note": "D 8 mm, 5960 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood",
+     "point": null,
+     "reference": 831.775,
+     "reference_note": "average of Ff over the five feeds 0.09-0.26 mm/rev at D 8 mm, vc 149.79 m/min (text: 831.775 +- 99.506 N)",
+     "scale": 831.775,
+     "simulated": 2315.41,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 166.355,
+     "uncertainty": 10.0,
+     "unit": "N",
+     "where": "value",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": null,
+     "x_name": "",
+     "x_unit": ""
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.352226,
+     "extra": {
+      "torque_Nm": 5.62526
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 1.76113,
+     "name": "Ff_feedavg_D12_vc80.21",
+     "note": "D 12 mm, 2128 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood",
+     "point": null,
+     "reference": 1031.37,
+     "reference_note": "average over the five feeds at D 12 mm, vc 80.21 m/min (text: 1031.368 +- 139.602 N; elsewhere 1032 N)",
+     "scale": 1031.37,
+     "simulated": 1394.64,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 206.274,
+     "uncertainty": 10.0,
+     "unit": "N",
+     "where": "value",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": null,
+     "x_name": "",
+     "x_unit": ""
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 0.425577,
+     "extra": {
+      "torque_Nm": 5.97695
+     },
+     "index": 2,
+     "kind": "scalar",
+     "miss_ratio": 2.12788,
+     "name": "Ff_feedavg_D12_vc149.79",
+     "note": "D 12 mm, 3973 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood",
+     "point": null,
+     "reference": 1128.01,
+     "reference_note": "average over the five feeds at D 12 mm, vc 149.79 m/min (text: 1128.008 +- 129.383 N)",
+     "scale": 1128.01,
+     "simulated": 1608.06,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 225.602,
+     "uncertainty": 10.0,
+     "unit": "N",
+     "where": "value",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": null,
+     "x_name": "",
+     "x_unit": ""
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": 1.70452,
+     "extra": {
+      "torque_Nm": 2.5133
+     },
+     "index": 3,
+     "kind": "scalar",
+     "miss_ratio": 8.52259,
+     "name": "Ff_feedavg_D8_vc80.21",
+     "note": "D 8 mm, 3191 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood",
+     "point": null,
+     "reference": 796.66,
+     "reference_note": "check: equals the mean of the five per-feed values of the curve below (computed here: 796.66 N)",
+     "scale": 796.66,
+     "simulated": 2154.58,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 159.332,
+     "uncertainty": 10.0,
+     "unit": "N",
+     "where": "value",
+     "within_tolerance": false,
+     "within_uncertainty": false,
+     "x": null,
+     "x_name": "",
+     "x_unit": ""
+    }
+   ]
   },
   {
+   "ambient_K": null,
    "calibration_dependent": false,
    "case_assumed_inputs": [
     {
@@ -180,27 +2291,520 @@
      "value": 30
     }
    ],
+   "curve_errors": [
+    {
+     "compared": 5,
+     "curve": "Fz_f0.05",
+     "index": 0,
+     "max_rel": 0.941808,
+     "points": 5,
+     "rms_rel": 0.924993
+    },
+    {
+     "compared": 5,
+     "curve": "Fz_f0.10",
+     "index": 1,
+     "max_rel": 0.946246,
+     "points": 5,
+     "rms_rel": 0.927254
+    }
+   ],
+   "curves": [
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.913237,
+     "extra": {
+      "torque_Nm": 0.483205
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.56619,
+     "name": "Fz_f0.05",
+     "note": "D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 3 mm, flood",
+     "point": 0,
+     "reference": 591,
+     "reference_note": "",
+     "scale": 591.0,
+     "simulated": 51.2767,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 118.2,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 3,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.925908,
+     "extra": {
+      "torque_Nm": 0.403097
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.62954,
+     "name": "Fz_f0.05",
+     "note": "D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 4 mm, flood",
+     "point": 1,
+     "reference": 460,
+     "reference_note": "",
+     "scale": 460.0,
+     "simulated": 34.0822,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 92.0,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 4,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.920097,
+     "extra": {
+      "torque_Nm": 0.340651
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.60049,
+     "name": "Fz_f0.05",
+     "note": "D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 5 mm, flood",
+     "point": 2,
+     "reference": 319,
+     "reference_note": "",
+     "scale": 319.0,
+     "simulated": 25.4889,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 63.8,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 5,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.923674,
+     "extra": {
+      "torque_Nm": 0.270627
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.61837,
+     "name": "Fz_f0.05",
+     "note": "D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 6 mm, flood",
+     "point": 3,
+     "reference": 242,
+     "reference_note": "",
+     "scale": 242.0,
+     "simulated": 18.4709,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 48.4,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 6,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.941808,
+     "extra": {
+      "torque_Nm": 0.149996
+     },
+     "index": 0,
+     "kind": "scalar",
+     "miss_ratio": 4.70904,
+     "name": "Fz_f0.05",
+     "note": "D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 7 mm, flood",
+     "point": 4,
+     "reference": 169,
+     "reference_note": "",
+     "scale": 169.0,
+     "simulated": 9.83444,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 33.8,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 7,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.903176,
+     "extra": {
+      "torque_Nm": 0.8752
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 4.51588,
+     "name": "Fz_f0.10",
+     "note": "D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 3 mm, flood",
+     "point": 0,
+     "reference": 723,
+     "reference_note": "",
+     "scale": 723.0,
+     "simulated": 70.004,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 144.6,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 3,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.923251,
+     "extra": {
+      "torque_Nm": 0.729807
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 4.61625,
+     "name": "Fz_f0.10",
+     "note": "D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 4 mm, flood",
+     "point": 1,
+     "reference": 565,
+     "reference_note": "",
+     "scale": 565.0,
+     "simulated": 43.3633,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 113.0,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 4,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.929271,
+     "extra": {
+      "torque_Nm": 0.616504
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 4.64636,
+     "name": "Fz_f0.10",
+     "note": "D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 5 mm, flood",
+     "point": 2,
+     "reference": 440,
+     "reference_note": "",
+     "scale": 440.0,
+     "simulated": 31.1205,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 88.0,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 5,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.933783,
+     "extra": {
+      "torque_Nm": 0.489686
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 4.66892,
+     "name": "Fz_f0.10",
+     "note": "D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 6 mm, flood",
+     "point": 3,
+     "reference": 332,
+     "reference_note": "",
+     "scale": 332.0,
+     "simulated": 21.984,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 66.4,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 6,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    },
+    {
+     "bound": "none",
+     "budget_pct": 20.0,
+     "component": null,
+     "error_rel": -0.946246,
+     "extra": {
+      "torque_Nm": 0.271726
+     },
+     "index": 1,
+     "kind": "scalar",
+     "miss_ratio": 4.73123,
+     "name": "Fz_f0.10",
+     "note": "D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 7 mm, flood",
+     "point": 4,
+     "reference": 225,
+     "reference_note": "",
+     "scale": 225.0,
+     "simulated": 12.0946,
+     "status": "compared",
+     "temperature": false,
+     "tolerance": 45.0,
+     "uncertainty": null,
+     "unit": "N",
+     "where": "curve",
+     "within_tolerance": false,
+     "within_uncertainty": null,
+     "x": 7,
+     "x_name": "pilot hole diameter D0",
+     "x_unit": "mm"
+    }
+   ],
    "dependencies": [],
    "digitised": false,
-   "error": "no harness registered for 'drilling_thrust'",
+   "error": "",
    "file": "validation/cases/drilling_thrust/thrust-drill-ti64-beranoagirre2018-pilot.yaml",
+   "harness_assumptions": [
+    {
+     "input": "tool material",
+     "reason": "grade not in the database: the carbide class default",
+     "source": "db/tool_materials",
+     "value": "carbide-k20-6co"
+    },
+    {
+     "input": "coating",
+     "reason": "not stated in the case: uncoated assumed",
+     "source": "case",
+     "value": "none"
+    },
+    {
+     "input": "ambient temperature",
+     "reason": "case states none (or marks it assumed): ISO 1 reference temperature",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "tool and work temperature",
+     "reason": "a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition)",
+     "source": "est",
+     "value": "20 degC"
+    },
+    {
+     "input": "cutting-edge radius",
+     "reason": "not stated in the case: tooling's default for the drill's edge preparation",
+     "source": "db/models/tooling.yaml",
+     "value": "3.0 um"
+    },
+    {
+     "input": "coolant fluid emulsion-8pct",
+     "reason": "the case's fluid is not in the database: the closest database fluid, full reach of the jet",
+     "source": "db/coolants",
+     "value": "database entry"
+    },
+    {
+     "input": "runout",
+     "reason": "not stated in the case: an ideal concentric drill",
+     "source": "est",
+     "value": "0"
+    }
+   ],
    "id": "thrust-drill-ti64-beranoagirre2018-pilot",
    "location": "Sect. 2.2-2.3 (machine, dynamometer, plan, tool, coolant), Table 1 (Ti-6Al-4V properties), Table 2 (vc, n, f), Table 4 (measured Fz and Tc for Ti-6Al-4V, calibration tests)",
    "material": "ti6al4v",
    "measured": true,
+   "model_chain": [
+    "cnctwin.mechanics.materials (databases)",
+    "cnctwin.tooling.build_tool (twist drill: lips, chisel, margins)",
+    "cnctwin.cutting.coefficients.MechanicsModel (process drilling: lips by Oxley, chisel and slow centre by indentation, calibration to measured data of the pairing)",
+    "cnctwin.cutting.kernels.cut_step (steady full-diameter drilling, cnctwin.cutting.drive.Driver)"
+   ],
+   "notes": [
+    "Material: database entry ti6al4v; the case says: Ti-6Al-4V annealed (source Table 1: Rm 1087, Rp 942 MPa, 7.8 % elongation, 8.6 W/m K)",
+    "Drill model (D 8.5 mm): chisel edge angle not given: 125 deg",
+    "Drill model (D 8.5 mm): web thickness not given: 0.15 D",
+    "Drill model (D 8.5 mm): lip clearance not given: 10 deg",
+    "Drill model (D 8.5 mm): edge radius not given: 3 um (no preparation default)",
+    "Drill model (D 8.5 mm): margin width not given: 0.60 mm",
+    "Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions)."
+   ],
    "operation": "drilling",
+   "provenance": [
+    {
+     "note": "20 °C value 79 W/mK for RT9010 (mitsubishi-2026-tm102g p. 4; zhang-2025 Tab. 2 uses 88 for H13A); 30 % loss RT->1000 °C after vornberger-2020-carbide-hot-hardness, linear in T",
+     "src": "mitsubishi-2026-tm102g",
+     "what": "tool material carbide-k20-6co thermal properties"
+    },
+    {
+     "note": "Set 16 of Ducobu et al. 2017 Table 1 (Seo, Min & Yang 2005, SHPB up to 1273 K and 1400 1/s), which Ducobu et al. recommend after comparing 20 sets in a CEL orthogonal-cutting model against experiments (best cutting force, mid-range feed force and chip thickness). Alternatives in the same table: Lee & Lin 1998 (782.7, 498.4, n 0.28, C 0.028, m 1, eps0 1e-5), Johnson 1985 (862.5, 331.2, 0.34, 0.012, 0.8), Meyer & Kleponis 2001 (896, 656, 0.5, 0.0128, 0.8), Kay 2002 (1098, 1092, 0.93, 0.014, 1.1). klippel-2024-ck45-orthogonal fitted A 867, B 344, n 0.361, C 0.0145 to their own bar (Table 9). Cross-check: lesuer-2001-llnl-jc (Table 1) use the Johnson 1985 set (862, 331, 0.34, 0.012, 0.8) for AMS 4911 plate, with JC damage constants D1 -0.09, D2 0.25, D3 -0.5, D4 0.014, D5 3.87 (not stored: they belong to another strength set). the Lee & Lin 1998 original was not readable (paywalled); its constants above are as quoted by Ducobu et al.",
+     "src": "ducobu-2017-jc-ti6al4v",
+     "what": "ti6al4v flow stress (Johnson-Cook)"
+    },
+    {
+     "note": "Aubert & Duval 4.43; ATI 4.47; UPMET (ELI) 4.42",
+     "src": "aubert-duval-2018-ta6v",
+     "what": "ti6al4v physical.density_kg_m3"
+    },
+    {
+     "note": "ELI grade datasheet; the 870 C point is inside the alpha+beta to beta transition range",
+     "src": "upmet-2026-ti64-eli",
+     "what": "ti6al4v physical.specific_heat_J_kgK"
+    },
+    {
+     "note": "ELI grade, mill annealed; Aubert & Duval Grade 5: 6.7 W/mK at 20 C; ducobu-2017-jc-ti6al4v uses 7.3",
+     "src": "upmet-2026-ti64-eli",
+     "what": "ti6al4v physical.conductivity_W_mK"
+    },
+    {
+     "note": "Ti-6Al-4V micro-milling, dry: 25-49 % of the edge radius (Rezaei et al., from specific cutting force); 15-34 % with MQL; mid-value used",
+     "src": "wojciechowski-2022-min-chip-thickness",
+     "what": "ti6al4v cutting.min_chip_thickness_ratio"
+    },
+    {
+     "note": "Albrecht-method friction coefficient 0.3 (edge ploughing separated); apparent coefficient 0.4-0.6 at higher feeds, higher at small feeds; H13A, rake 0, dry",
+     "src": "klippel-2024-ck45-orthogonal",
+     "what": "ti6al4v friction mu_sliding (carbide, uncoated)"
+    },
+    {
+     "note": "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (~300 HB)",
+     "src": "est",
+     "what": "ti6al4v cutting.indentation_coeff_N_mm3"
+    },
+    {
+     "note": "Table 19 (Sandvik CCMW 09T304 H13A, WC-6Co uncoated, rake 0, clearance 7, edge radius 20-50 um, mean 37.5 um; f = 0.01-0.4 mm). Feed force kf1.1 421 N/mm2, mf 0.54. Neighbours: 11 m/min 1299/0.21, 13: 1264/0.22, 40: 1253/0.22",
+     "src": "klippel-2024-ck45-orthogonal",
+     "what": "ti6al4v cutting.kienzle (carbide, uncoated, any) calibrating the forces"
+    },
+    {
+     "note": "Table 19; kf1.1 300, mf 0.69. Neighbours: 50 m/min 1061/0.28, 52: 1156/0.27, 70: 1156/0.24",
+     "src": "klippel-2024-ck45-orthogonal",
+     "what": "ti6al4v cutting.kienzle (carbide, uncoated, any) calibrating the forces"
+    },
+    {
+     "note": "Table 19; kf1.1 226, mf 0.77. Neighbours: 74: 941/0.32, 80: 1084/0.28, 89: 891/0.34, 125: 962/0.31, 150: 998/0.30, 159: 869/0.31, 162: 1027/0.28",
+     "src": "klippel-2024-ck45-orthogonal",
+     "what": "ti6al4v cutting.kienzle (carbide, uncoated, any) calibrating the forces"
+    },
+    {
+     "note": "Table 19; kf1.1 248, mf 0.72. Neighbours: 191: 881/0.32, 254: 749/0.37",
+     "src": "klippel-2024-ck45-orthogonal",
+     "what": "ti6al4v cutting.kienzle (carbide, uncoated, any) calibrating the forces"
+    },
+    {
+     "note": "Table 19; kf1.1 186, mf 0.78. Higher speeds: 381: 663/0.38, 400: 803/0.35, 500: 662/0.41",
+     "src": "klippel-2024-ck45-orthogonal",
+     "what": "ti6al4v cutting.kienzle (carbide, uncoated, any) calibrating the forces"
+    }
+   ],
    "quantity": "drilling_thrust",
+   "settings": {
+    "calibration": "kienzle",
+    "calibration_sources": [
+     "klippel-2024-ck45-orthogonal"
+    ],
+    "coating": "none",
+    "edge_element_m": 0.00025,
+    "h_min_ratio": 0.37,
+    "mu_sliding": 0.3,
+    "process": "drilling",
+    "statistic": "mean over one revolution of the steady cut",
+    "tool_material": "carbide-k20-6co"
+   },
    "src": "beranoagirre-2018-tial-ti64-drilling",
-   "status": "no_harness",
-   "uncertainty_pct": null
+   "stats": {
+    "class_matches": 0,
+    "class_values": 0,
+    "classification": false,
+    "compared": 10,
+    "max_abs_rel": 0.946246,
+    "max_miss_ratio": 4.73123,
+    "median_abs_rel": 0.924791,
+    "no_prediction": 0,
+    "not_compared": 0,
+    "passes": false,
+    "rms_rel": 0.926124,
+    "uncertainty_known": 0,
+    "within_tolerance": 0,
+    "within_uncertainty": 0
+   },
+   "status": "ok",
+   "uncertainty_pct": null,
+   "values": []
   }
  ],
  "format": "cnctwin-validation-results",
- "harness": "",
- "independent": null,
+ "harness": "cnctwin.validation.harnesses.drilling.drilling_thrust",
+ "independent": {
+  "cases": 4,
+  "cases_with_values": 4,
+  "class_matches": 0,
+  "class_values": 0,
+  "compared": 49,
+  "median_abs_rel": 0.90293,
+  "median_curves_abs_rel": 0.903351,
+  "median_values_abs_rel": 0.782362,
+  "no_prediction": 0,
+  "p90_abs_rel": 1.1856,
+  "passing": 0,
+  "uncertainty_known": 9,
+  "values": 49,
+  "within_uncertainty": 0,
+  "worst_case": "thrust-drill-c45-sklenicka2024-carbide",
+  "worst_miss_ratio": 15.667
+ },
  "quantity": "drilling_thrust",
  "rule": "tolerance = max(budget_pct/100 x |reference| (for temperatures: x the rise above ambient), 2 x the reference's uncertainty); a case passes when every compared value lies within its tolerance; a quantity passes when at least 80 % of its cases pass and no case misses by more than twice its tolerance",
- "verdict": "no harness",
- "verdict_reason": "no harness registered yet",
+ "verdict": "fail",
+ "verdict_reason": "only 0 of 4 cases within budget (0% < 80%); thrust-drill-c45-sklenicka2024-carbide misses by 15.67 tolerances (> 2)",
  "version": 1
 }

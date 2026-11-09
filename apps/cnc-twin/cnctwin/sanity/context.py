@@ -110,7 +110,12 @@ class ToolFacts:
     @property
     def rotating(self) -> bool:
         return self.type not in (None, "turning_insert", "grooving_insert", "parting_insert", "threading_insert",
-                                 "form_tool", "boring_bar")
+                                 "form_tool", "boring_bar", "probe")
+
+    @property
+    def is_probe(self) -> bool:
+        """A spindle probe (a ``kind: probe`` entry): it touches the part, it never cuts."""
+        return self.type == "probe"
 
 
 @dataclass
@@ -181,7 +186,11 @@ class SanityContext:
         _read_material(ctx, material)
         ctx.coolant_kind = text(get(si_view(get(project, "coolant")), "fluid", "kind"))
         for entry in items(get(project, "tools", "list")):
-            facts = tool_facts(si_view(entry))
+            raw = si_view(entry)
+            facts = probe_facts(raw) if text(get(raw, "kind")) == "probe" else tool_facts(raw)
+            ctx.tools[facts.number] = facts
+        for entry in items(get(project, "tools", "probes")):
+            facts = probe_facts(si_view(entry))
             ctx.tools[facts.number] = facts
         offsets = get(setup, "work_offsets_m") or {}
         for code, value in dict(offsets).items():
@@ -193,7 +202,7 @@ class SanityContext:
         stock = si_view(get(project, "stock"))
         ctx.stock_kind = text(get(stock, "kind"), "block")
         transform = _setup_transform(setup)
-        box_S = stock_box_S(stock)
+        box_S = _operation_box(operation) or stock_box_S(stock)
         if stock_box_M is not None:
             ctx.stock_box_M = stock_box_M
         elif box_S is not None:
@@ -204,7 +213,7 @@ class SanityContext:
         if clamps_M is not None:
             ctx.clamps_M = list(clamps_M)
         else:
-            _read_clamps(ctx, setup, box_S, transform)
+            _read_clamps(ctx, setup, box_S)
         return ctx
 
 
@@ -302,6 +311,25 @@ def tool_facts(entry) -> ToolFacts:
     return facts
 
 
+def probe_facts(entry) -> ToolFacts:
+    """:class:`ToolFacts` of a probe entry (``tools.probes`` of the resolved project, or a raw ``kind: probe``
+    entry of ``tools.list``): the stylus ball is its diameter; it has no cutting edge."""
+    number = int(num(get(entry, "number"), 0))
+    probe = get(entry, "probe")
+    name = plain(probe) if isinstance(plain(probe), str) else text(get(probe, "name")) or text(get(probe, "extends"))
+    facts = ToolFacts(number=number, tool_id=f"probe:{name or 'inline'}", type="probe")
+    if not isinstance(plain(probe), str):
+        probe = si_view(probe)
+        facts.diameter_m = num(get(probe, "stylus_ball_m"))
+        facts.cutting_length_m = num(get(probe, "stylus_length_m"))
+    facts.length_offset_m = num(get(entry, "length_offset_m"))
+    facts.radius_offset_m = num(get(entry, "radius_offset_m"))
+    if facts.radius_offset_m is None and facts.diameter_m is not None:
+        facts.radius_offset_m = 0.5 * facts.diameter_m
+    facts.comment = text(get(entry, "comment"))
+    return facts
+
+
 def _triple(value) -> tuple[float | None, float | None, float | None]:
     if value is None:
         return (None, None, None)
@@ -364,21 +392,38 @@ def transform_box(matrix: np.ndarray, box: Box, name: str = "") -> Box:
     return Box(tuple(moved.min(axis=0)), tuple(moved.max(axis=0)), name or box.name)
 
 
-def _read_clamps(ctx: SanityContext, setup, box_S: Box | None, transform: np.ndarray) -> None:
+def _operation_box(operation) -> Box | None:
+    """The stock box in this operation's stock frame as the resolver gives it (``stock_box_S_m``: the turned
+    box of a ``from_previous`` operation), else None."""
+    box = plain(get(operation, "stock_box_S_m"))
+    if isinstance(box, (list, tuple)) and len(box) == 2 and all(isinstance(c, (list, tuple)) for c in box):
+        return Box(tuple(float(v) for v in box[0]), tuple(float(v) for v in box[1]), "stock")
+    return None
+
+
+def _read_clamps(ctx: SanityContext, setup, box_S: Box | None) -> None:
+    """Clamp boxes in machine coordinates. A workholding device is fixed to the workholding frame W (it
+    does not turn with the part of a flipped setup): its frame D is the entry's ``pose`` in W, its
+    ``outline_mm`` a box in D; a vise's jaws are built in D from the part as it lies between them."""
+    fixture = pose_matrix(get(setup, "fixture_pose"))
+    stock_W = pose_matrix(get(setup, "stock_pose"))
     for index, entry in enumerate(items(get(setup, "workholding"))):
         entry = si_view(entry)
         device = get(entry, "device")
         device_view = si_view(device) if not isinstance(plain(device), str) else None
         name = text(get(device_view, "id")) if device_view is not None else text(device, f"workholding-{index}")
+        pose_W_D = pose_matrix(get(entry, "pose"))
         outline = plain(get(entry, "outline_m"))
         if isinstance(outline, (list, tuple)) and len(outline) == 2:
             lo = np.minimum(outline[0], outline[1])
             hi = np.maximum(outline[0], outline[1])
-            ctx.clamps_M.append(transform_box(transform, Box(tuple(lo), tuple(hi)), name))
+            ctx.clamps_M.append(transform_box(fixture @ pose_W_D, Box(tuple(lo), tuple(hi)), name))
             continue
         kind = text(get(device_view, "type")) or text(get(entry, "type"))
         if kind in ("vise", "soft_jaws") and box_S is not None:
-            ctx.clamps_M.extend(_vise_jaws(ctx, entry, device_view, box_S, transform, name))
+            part_D = transform_box(np.linalg.inv(pose_W_D) @ stock_W, box_S, "stock")
+            for jaw in _vise_jaws(ctx, entry, device_view, part_D, name):
+                ctx.clamps_M.append(transform_box(fixture @ pose_W_D, jaw))
         elif kind in ("vacuum", "magnetic", "adhesive", "fixture_plate", "tabs"):
             continue
         elif kind in ("chuck_3jaw", "chuck_4jaw", "collet_chuck", "collet", "tailstock_centre", "steady_rest"):
@@ -387,16 +432,34 @@ def _read_clamps(ctx: SanityContext, setup, box_S: Box | None, transform: np.nda
             ctx.clamps_unknown.append(name or f"workholding-{index}")
 
 
-def _vise_jaws(ctx, entry, device, box_S: Box, transform, name) -> list[Box]:
+def _vise_jaws(ctx, entry, device, part_D: Box, name) -> list[Box]:
+    """The two jaws of a vise in its frame D (the holding convention, cnctwin.holding.devices.build_vise):
+    origin on the seat (the parallels' top, else the bed), x along the jaw width, y the clamping
+    direction. The jaw faces are where the part's y faces are; their tops ``grip_depth_mm`` above the seat
+    (else jaw height - parallels, else the part top); they rise from the bed (z = -parallels), or from the
+    vise's mounting face when ``seat_height_mm`` gives the body below the seat. Across the jaw width
+    (default: the part's length) they are centred on D, or on the part when it does not lie there."""
     grip = num(get(entry, "grip_depth_m"))
-    size_y = box_S.hi[1] - box_S.lo[1]
-    top = box_S.lo[2] + (grip if grip is not None else box_S.hi[2] - box_S.lo[2])
-    jaw_height = num(get(device, "jaw_height_m")) or (top - box_S.lo[2])
-    jaw_width = num(get(device, "jaw_width_m")) or (box_S.hi[0] - box_S.lo[0])
+    parallels = num(get(entry, "parallels_m")) or 0.0
+    seat_height = num(get(entry, "seat_height_m"))
+    jaw_height = num(get(device, "jaw_height_m"))
+    jaw_width = num(get(device, "jaw_width_m"))
+    if grip is not None:
+        top = grip
+    elif jaw_height is not None:
+        top = jaw_height - parallels
+    else:
+        top = part_D.hi[2]
+    bottom = -seat_height if seat_height is not None else -parallels
     thickness = float(ctx.p("vise_jaw_thickness_m"))
-    centre_x = 0.5 * (box_S.lo[0] + box_S.hi[0])
+    part_xc = 0.5 * (part_D.lo[0] + part_D.hi[0])
+    if jaw_width is None:
+        jaw_width = part_D.hi[0] - part_D.lo[0]
+        centre_x = part_xc
+    else:
+        between = min(part_D.hi[0], 0.5 * jaw_width) > max(part_D.lo[0], -0.5 * jaw_width)
+        centre_x = 0.0 if between else part_xc
     x0, x1 = centre_x - 0.5 * jaw_width, centre_x + 0.5 * jaw_width
-    z0 = top - jaw_height
-    fixed = Box((x0, box_S.lo[1] - thickness, z0), (x1, box_S.lo[1], top), f"{name} fixed jaw")
-    moving = Box((x0, box_S.lo[1] + size_y, z0), (x1, box_S.lo[1] + size_y + thickness, top), f"{name} moving jaw")
-    return [transform_box(transform, fixed), transform_box(transform, moving)]
+    fixed = Box((x0, part_D.lo[1] - thickness, bottom), (x1, part_D.lo[1], top), f"{name} fixed jaw")
+    moving = Box((x0, part_D.hi[1], bottom), (x1, part_D.hi[1] + thickness, top), f"{name} moving jaw")
+    return [fixed, moving]

@@ -139,10 +139,13 @@ def path_frame(tick0=0, n_ticks=10, omega=-1047.2, feed_m_s=0.0167, slot=0, path
 
 
 def cutting(edge, speed=3.0, h=1e-4, duty=0.25, dt=0.01, sigma_f=1.2e9, sigma_r=0.6e9, chip_ratio=0.4, entries=4,
-            engaged=None, shocks=None, section_moment=None, torque=0.0, slot=0, contact=0, surface=None):
+            engaged=None, shocks=None, section_moment=None, torque=0.0, slot=0, contact=0, surface=None,
+            edge_fraction=None):
+    """One contact record: the tool is in cut ``duty`` of the step; each engaged element is in contact
+    ``edge_fraction`` of it (its engaged arc / 2 pi of the cutting time; default ``duty``)."""
     nt, ne = np.shape(edge.elem_z_m)
     mask = np.ones((nt, ne), bool) if engaged is None else np.asarray(engaged, bool)
-    t_in = np.where(mask, duty * dt, 0.0)
+    t_in = np.where(mask, (duty if edge_fraction is None else edge_fraction) * dt, 0.0)
     contact_rec = CuttingContact(
         contact=contact, tool_slot=slot, in_cut_s=duty * dt, in_cut_time_s=t_in, flank_sliding_m=speed * t_in,
         rake_sliding_m=speed * chip_ratio * t_in, int_sigma_v_flank=sigma_f * speed * t_in,
