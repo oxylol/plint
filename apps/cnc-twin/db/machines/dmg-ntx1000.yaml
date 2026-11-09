@@ -188,6 +188,10 @@ kinematics:
 spindles:
   - id: main
     kind: turning
+    drive_type: {value: built_in, src: est, note: "the published built-in motor (DDS)"}
+    bearings:
+      - {position: front, type: angular_contact, count: 3, bore_mm: 100, outer_mm: 150, contact_angle_deg: 25, lubrication: grease, axially_fixed: true, src: est, note: "not published: a front set on the published 100 mm bearing bore (7020 size, 25 deg for the radial and axial loads of turning), grease as the bearing-heat estimate below"}
+      - {position: rear, type: cylindrical_roller, count: 1, bore_mm: 90, outer_mm: 140, lubrication: grease, axially_fixed: false, src: est, note: "double-row cylindrical roller bearing (NN 3018 size) at the rear, assumed"}
     nose: A2-5                       # A2-6 with the 65 mm bar option
     max_rpm: 6000
     drive: "built-in motor (DDS), 2 ranges by winding change-over"
@@ -217,6 +221,8 @@ spindles:
     runout_um: {value: 2, src: est, note: "spindle nose runout of a new A2-5 spindle, 2 um assumed (not published)"}
     frf_modes: []
     thermal:
+      housing_growth_length_mm: {value: 200, src: est, note: "headstock bolted to the bed over its length: the front bearings sit about 200 mm ahead of the centre of the bolt pattern (assumed)"}
+      jacket: {flow_l_min: 10, src: est, note: "built-in motor spindles of turning centres are liquid cooled (assumed); geometry from the model's defaults"}
       growth_um_at_max_rpm: {value: 15, src: est, note: "zero-centre-displacement spindle design keeps the centre in place radially (p. 5); axial growth assumed"}
       time_constant_min: {value: 30, src: est, note: "tau = C / G: built-in spindle and headstock near the bearings, about 120 kg x 460 J/kgK = 55 kJ/K, over G = 400 W / 13 K = 31 W/K (est) = 1780 s, about 30 min"}
       bearing_heat_W_at_max_rpm: {value: 400, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for the front set of the 100 mm bearing bore (dm about 125 mm), grease f0 = 1, nu = 20 mm2/s, n = 6000 rpm: (1.2e5)^(2/3) = 2430, 0.47 Nm per bearing x 2 = 0.95 Nm x 628 rad/s = 600 W; 400 W assumed for the oil-air version with f0 about 0.7"}
@@ -224,6 +230,14 @@ spindles:
       comp_residual_fraction: {value: 0.3, src: est, note: "the thermal compensation leaves 30 % of the growth (as the other machines, assumed)"}
   - id: sub
     kind: sub
+    drive_type: {value: built_in, src: est, note: "built-in motor of the second spindle (assumed, as the main spindle)"}
+    bearings:
+      - {position: front, type: angular_contact, count: 2, bore_mm: 70, outer_mm: 110, contact_angle_deg: 25, lubrication: grease, axially_fixed: true, src: est, note: "not published: a pair on the published 70 mm bearing bore (7014 size, 25 deg)"}
+      - {position: rear, type: angular_contact, count: 1, bore_mm: 60, outer_mm: 95, contact_angle_deg: 25, lubrication: grease, axially_fixed: false, src: est, note: "rear bearing (7012 size), assumed"}
+    thermal:
+      housing_mass_kg: {value: 120, src: est, note: "sub-spindle headstock near its bearings (assumed)"}
+      housing_growth_length_mm: {value: 150, src: est, note: "front bearings ahead of the headstock's mounting centre (assumed)"}
+      jacket: {flow_l_min: 8, src: est, note: "liquid-cooled built-in motor (assumed)"}
     nose: "flat nose dia 80 g6"
     max_rpm: 6000
     bore_mm: 38
@@ -249,6 +263,10 @@ spindles:
     frf_modes: []
   - id: tool
     kind: milling
+    drive_type: {value: built_in, src: est, note: "turn-mill head with a built-in motor (compactMASTER type, assumed)"}
+    bearings:
+      - {position: front, type: angular_contact, count: 3, bore_mm: 65, outer_mm: 100, contact_angle_deg: 15, lubrication: grease, axially_fixed: true, src: est, note: "not published: a front triplet on the published 65 mm bearing bore (7013 C size)"}
+      - {position: rear, type: angular_contact, count: 2, bore_mm: 55, outer_mm: 90, contact_angle_deg: 15, lubrication: grease, axially_fixed: false, src: est, note: "floating rear pair (7011 C size), assumed"}
     nose: "Capto C5"                 # HSK-A50 (T50) or KM-50 optional
     max_rpm: 12000                   # NTX1000 HSC: 20,000
     clamping_force_N: {value: 28000, note: "Capto C5 tool clamping force (p. 3)"}
@@ -275,6 +293,7 @@ spindles:
       - {fn_Hz: 900, zeta: 0.04, k_N_um: 40, direction: x, src: est, note: "Capto C5 motor spindle on a B-axis head (head compliance included)"}
       - {fn_Hz: 900, zeta: 0.04, k_N_um: 40, direction: y, src: est, note: "the x mode repeated in y: axisymmetric spindle (the B head adds compliance in both directions)"}
     thermal:
+      jacket: {flow_l_min: 8, src: est, note: "liquid-cooled built-in motor of the milling head (assumed)"}
       growth_um_at_max_rpm: {value: 15, src: est, note: "axial growth alpha L dT = 11.5e-6 1/K x 0.2 m (rear bearing to nose, assumed) x 6.5 K (steady rise of the shaft at the 300 W bearing heat, assumed) = 15 um"}
       time_constant_min: {value: 20, src: est, note: "tau = C / G for the compact motor spindle: about 40 kg x 460 J/kgK = 18 kJ/K over G = 300 W / 20 K = 15 W/K (est) = 1230 s, about 20 min"}
       bearing_heat_W_at_max_rpm: {value: 300, src: est, note: "Palmgren speed term for three 80 mm pitch-diameter bearings (65 mm bore), oil-air f0 = 1, nu = 10 mm2/s, n = 12 000 rpm: (1.2e5)^(2/3) = 2430, 3 x 0.124 Nm = 0.37 Nm x 1257 rad/s = 470 W; 300 W for f0 about 0.65 (assumed)"}

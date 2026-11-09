@@ -59,6 +59,9 @@ FIELDS: dict[str, tuple[str, str, float, float, float, str]] = {
                        "relative residual of the cutting-region field's conjugate-gradient solve"),
     "tool_field_max_iter": ("tool_field_max_iter", "count", 5000, 10, 100000,
                             "iteration limit of the cutting-region field's solve"),
+    "spindle_every_n_macro": ("spindle_every_n_macro", "count", 10, 1, 100000,
+                              "spindle networks stepped every n macro steps (time, speeds and holder heat accumulated "
+                              "exactly in between; their time constants are minutes)"),
 }
 
 
@@ -86,6 +89,7 @@ class ThermalSettings:
     tool_field_length_m: float = 0.012
     tool_field_tol: float = 1.0e-12
     tool_field_max_iter: int = 5000
+    spindle_every_n_macro: int = 10
 
 
 def _lookup(section, name: str, file_key: str, kind: str):

@@ -17,6 +17,7 @@ return `None`; it writes only `nxt.coolant`.
 | `reference.py` | plain-Python references of every kernel (brute-force geometry) |
 | `occlusion.py` | job assembly, aggregation (reach, shadows, arrivals), film map, checkpointable result |
 | `heat.py` | Martin 1977 impinging jets, boiling curve, aerosols |
+| `engagement.py` | the jet at the cutting engagement: nozzle jet, face coefficients with the normal speed, hydraulic wedge and contact length |
 | `lubrication.py` | friction factor with capillary access |
 | `tank.py` | tank energy, evaporation, chiller, concentration |
 | `kinematics.py` | link poses of the machine chains, nozzle mount frames |
@@ -291,6 +292,36 @@ Carrier-air Martin coefficient plus the deposited liquid flux
 `h = h_air + m'' [c_pl (min(T_w, T_b) - T_f) + h_fg (T_b <= T_w < T_L)] / (T_w - T_f)`
 (drops bounce above the Leidenfrost point).
 
+### 5.4 The jet at the engagement (`engagement.py`)
+
+Library functions for the jet that reaches the cut (used by the coolant_reach harness; the domain's own
+per-contact coefficients are 5 above):
+
+* **Nozzle jet**: `v = C_v sqrt(2 p / rho)` at the supply pressure (C_v = `nozzle_discharge_coefficient` of
+  `coolant-supply`, converging nozzle); a stated flow gives the jet diameter by continuity,
+  `d = sqrt(4 Q / (pi v))`, else the bore and `Q = v pi d0^2 / 4`.
+* **Face coefficient** at the engagement (rake face beyond the contact, flank, the work surface): Martin's
+  liquid-jet coefficient (`heat.jet_h`) with the component of the jet speed normal to the face, `v sin(i)` (i the
+  angle between jet and face): an inclined jet transfers less heat, its stagnation zone set by the normal
+  momentum (Goldstein & Franchett 1988); times the arriving share (reach). An approximation of the inclined
+  jet: Goldstein & Franchett's averages fall less steeply than `sin(i)^0.5` (laminar Re^0.5) near normal
+  incidence and the stagnation point moves upstream; error about +-30 % on top of Martin's below 45 deg.
+* **Hydraulic wedge** (Mazurkiewicz, Kubala & Chow 1989; Kaminski & Alvelid 2000): the momentum flux of the
+  arriving jet along the rake face against the chip flow, `F_w = rho Q_arr v cos(a) max(0, -e . u_chip)` (a the
+  elevation above the rake face, e the jet's unit direction in the rake plane, u_chip the chip flow), enters
+  the gap between the curling chip and the rake face and lifts the chip at the end of contact. With the shear
+  zone unchanged, the chip's normal-force balance gives the rake normal force `N' = N - F_w`, and its moment
+  balance about the cutting edge, with the rake normal stress falling linearly to zero at the end of contact
+  (resultant at l_c / 3; Zorev 1963, Oxley 1989), `N' l_c' / 3 + F_w l_c' = N l_c / 3`, so
+
+      l_c' / l_c = 1 / (1 + 2 F_w / N)          (wedge_moment_factor 2)
+
+  not below `wedge_min_contact_ratio` (0.5: the sticking zone next to the edge stays, Zorev). A jet onto the
+  chip's back (its normal component) does not reach under the chip; its push on the chip is not modelled.
+  Consumers apply the ratio where the contact length acts: the rake friction force (proportional to l_c at the
+  interface stress) and the chip's natural up-curl (proportional to l_c, mechanics.chipform). The mechanics
+  has no input for an imposed contact length yet (docs/validation.md 10).
+
 ### 5.3 Validity and error
 
 | part | range | error |
@@ -461,7 +492,9 @@ Cost grows linearly with jets x rays x segments to the first hit (~1.3 us per se
 
 ## 14. References
 
-Martin 1977; Colebrook 1939; Moody 1944; Haaland 1983; Crane TP-410 (2013); Idelchik 2008; Guelich
+Martin 1977; Goldstein & Franchett 1988 (oblique jets); Mazurkiewicz, Kubala & Chow 1989, Kaminski & Alvelid
+2000 (hydraulic wedge); Zorev 1963, Oxley 1989 (rake stress distribution, chip moment balance); Colebrook 1939;
+Moody 1944; Haaland 1983; Crane TP-410 (2013); Idelchik 2008; Guelich
 2014; Karassik et al. 2008; Anderson 2003; Birch et al. 1984; Grant & Middleman 1966; Rayleigh 1878;
 Lefebvre 1989; Schiller & Naumann 1933; Watson 1964; Liu & Lienhard 1993; Glauert 1956; Pope 2000;
 Rohsenow 1952; Zuber 1959; Lienhard & Dhir 1973; Ivey & Morris 1962; Kutateladze 1961; Bromley 1950;

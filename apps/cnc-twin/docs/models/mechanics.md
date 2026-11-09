@@ -177,7 +177,10 @@ failing condition (seizure persists; the friction angle stays an output of the t
 database coefficient does not enter). Process maps (`coefficients.build_process_map`) refine the
 kernel's nearest-node fallback the same way: in a row of t1 nodes, a block of failing nodes is
 continued from the bisected edge between it and its nearer admissible node; a row without an
-admissible node uses the point continuation of each node. A map node and `oxley.solve` therefore
+admissible node uses the point continuation of each node, which skips a thickness trial lying closer to one of
+the row's own (solved, inadmissible) nodes than the precision the edge is located to (1.72^(1/256), 0.2 %: the
+ladder's t1 factor is the default map's node spacing, so the interior nodes' thickness trials are not solved
+again; about half the cost of a continuation). A map node and `oxley.solve` therefore
 give the same fallback (within 1 %, tested), whatever the grid; with the earlier nearest-node rule a
 single-speed calibration map and a cutting map continued the same condition from different nodes
 (shear angle 19.3 against 13.1 deg for Ti6Al4V at 20 m/min) and a calibration factor did not
@@ -289,7 +292,10 @@ interpolated divided by t1 (linear in t1 below the first node), flags take the n
 effective friction coefficient (database mu x friction factor, which identifies the friction state
 in both interface modes) and the interface mode (`CTX_COULOMB`). Nodes without an admissible Oxley
 solution are continued from the bisected edge of the admissible region (section 3), so a node does
-not depend on the grid. Interpolation error midway between nodes (tested on a coarse grid, t1
+not depend on the grid. `build_process_map(..., lazy=True)` (cutting's pipeline) solves the grid but refines a
+(tool temperature, speed) row's fallback nodes only when `lookup` first reads the row (`LazyRefinement`; a lookup
+reads the two speed and two temperature rows around its query): every node read has the value of the eager map
+(same raw row, same edges), the rows never read cost nothing (the continuation is most of a map's cost). Interpolation error midway between nodes (tested on a coarse grid, t1
 factor 2.3): within 2 % for forces and temperatures in the admissible region, within 4 % next to
 its edge, where the shear angle changes fastest with t1.
 

@@ -100,6 +100,10 @@ kinematics:
 spindles:
   - id: main
     kind: milling
+    drive_type: {value: coupled, src: est, note: "the published inline direct drive: the motor on top of the spindle through a coupling"}
+    bearings:
+      - {position: front, type: angular_contact, count: 3, bore_mm: 70, outer_mm: 110, contact_angle_deg: 15, lubrication: oil_air, axially_fixed: true, src: est, note: "not published: 40-taper 12 000 rpm spindles carry 65-70 mm 15 deg spindle bearings (7014 C size) as a front triplet; air/oil injection as published; preload and C0 from the model's light-preload defaults"}
+      - {position: rear, type: angular_contact, count: 2, bore_mm: 60, outer_mm: 95, contact_angle_deg: 15, lubrication: oil_air, axially_fixed: false, src: est, note: "floating rear pair (7012 C size), assumed"}
     nose: CAT40                      # BT40 also offered ("BT or CT 40")
     max_rpm: 12000
     drive: "inline direct-drive"

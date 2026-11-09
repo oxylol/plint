@@ -224,9 +224,19 @@ At every macro step with a contact and the slot's ProcessCoefficients (from `bus
 chip thickness over the arc; the limit at the operating speed (ZOA / variable pitch / multi-frequency, process
 damping when K_sp > 0); refreshed when the engagement signature (arc, thickness, coefficient and structure
 versions, engaged count) or speed / depth change by `engagement_tol`, at least every `sld_refresh_macro` steps.
-A new engagement signature gets a lobe diagram over `[sld_speed_lo_frac, 1] x` the spindle's maximum speed and its
-mode-coupling limit. Up to `sd_max_points` new operating points are checked by SD at their depth (with process
-damping): `stable = margin > 1 and sd_stable`. `sld/T<n>.json`: `format cnctwin-sld`, `tool`, `slot`, `number`,
+The limit is cached by engagement class (the signature), FRF and spindle speed (relative step 1e-3) in the
+checkpointed state (`meta.limits`), so a repeated engagement costs nothing; the chatter-frequency scan evaluates
+the characteristic matrices of all frequencies at once (one stacked eigenvalue call) and the cut model's per-tooth
+means are cached. During the run that limit (the bus `depth_limit_m`, the "lobe diagram predicts chatter"
+finding when the margin is below 1) is all the stability analysis does: lobe diagrams and the SD check are report
+artefacts and an input to nothing in the loop (chatter detection is the time-domain index of every step). Each
+engagement class (its linearised cut and FRF) is kept in the checkpointed `pending` state and, at the end of the
+operation (`end_operation`, or `finalize` for what is left), gets its lobe diagram over `[sld_speed_lo_frac, 1] x`
+the spindle's maximum speed and its mode-coupling limit (at most `sld_max_diagrams` per tool, the classes of the
+operating points with the smallest margins first; a class keeps its diagram for later operations); then up to
+`sd_max_points` operating points, smallest margins first, are checked by SD at their depth (with process damping):
+`stable = margin > 1 and sd_stable`, and a point SD finds unstable that the zero-order limit passed raises the
+finding then, at the point's tick. `sld/T<n>.json`: `format cnctwin-sld`, `tool`, `slot`, `number`,
 `speed_rad_s`, `depth_limit_m`, `chatter_freq_Hz` (the lower envelope of the diagram of the worst operating
 point), `radial_immersion_m`, `method`, `diagrams [{method, ae_m, arc, n_teeth, h_mean_m, speed_rad_s,
 depth_limit_m, chatter_freq_Hz, lobes [{k, branch, speed_rad_s, depth_limit_m, chatter_freq_Hz}],
@@ -341,7 +351,8 @@ min_amplitude_per_feed 0.05, severe_amplitude_per_feed 1.0 (tlusty-ismail-1981-n
 (architecture 5.1), basis_mac_threshold 0.999, basis_freq_tol 1e-6. Bibliography: `models-dynamics.yaml`.
 Settings `physics.dynamics` (`schema.py`): sample_margin, chatter_window_revs (20), chatter_window_max_s,
 chatter_min_revs, chatter_clear_steps, max_findings, sld_n_freq, sld_n_lobes, sld_n_speeds, sld_speed_lo_frac,
-sld_freq_lo_factor, sld_freq_hi_factor, sld_refresh_macro, engagement_tol, mf_harmonics (0: ZOA), pd_max_iter,
+sld_freq_lo_factor, sld_freq_hi_factor, sld_refresh_macro, sld_max_classes (64 engagement classes kept per tool and
+operation), sld_max_diagrams (8 end-of-operation diagrams per tool), engagement_tol, mf_harmonics (0: ZOA), pd_max_iter,
 pd_tol, mode_coupling_max_m, sd_check, sd_m, sd_points_per_period, sd_max_points, sd_a_max_m, sd_scan, sd_tol,
 max_operating_points, relax_estimate, rotation_length_m. Numerical constants of the closed forms (series radius
 0.2, Taylor switch omega h = 0.1, 44 terms) are floating-point accuracy choices, documented in kernels.py.

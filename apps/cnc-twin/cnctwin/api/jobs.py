@@ -375,9 +375,12 @@ class JobManager:
     def _entries_for(self, kind: str, request: dict) -> None:
         """The other entry points a job calls: a simulation its outputs (report, pictures, video, sound) after a
         successful run; uncertainty studies and calibrations the server's simulation (each variant, each loop
-        evaluation) and a study the outputs that show it on the run's report."""
+        evaluation) and a study the outputs that show it on the run's report; a sweep the server's simulation (its
+        points' runner when the spec names none and the server overrides the default loop)."""
         if kind == "simulate":
             request.setdefault("outputs_entry", self.s.entries.get("outputs"))
+        elif kind == "sweep":
+            request.setdefault("simulate_entry", self.s.entries.get("simulate"))
         elif kind in ("uncertainty", "calibrate"):
             request.setdefault("simulate_entry", self.s.entries.get("simulate"))
             if kind == "uncertainty":

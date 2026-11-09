@@ -25,13 +25,15 @@ GiB = 1024 * MiB
 # "/path/file.py:attr"). Overridable with CNCTWIN_ENTRY_<KIND>. "outputs" is not a job kind: it is what the
 # worker of a simulation calls after a successful run (the report, pictures, video and sound,
 # cnctwin.core.outputs.finalize_outputs(run_dir, options, progress_cb)); CNCTWIN_ENTRY_OUTPUTS=none turns it off.
-JOB_POOLS = {"simulate": "heavy", "uncertainty": "heavy", "calibrate": "heavy", "check": "light", "compare": "light"}
+JOB_POOLS = {"simulate": "heavy", "uncertainty": "heavy", "calibrate": "heavy", "sweep": "heavy", "check": "light",
+             "compare": "light"}
 DEFAULT_ENTRIES = {
     "simulate": "cnctwin.core.loop:run_project",
     "check": "cnctwin.project.check:check_project",
     "compare": "cnctwin.report.compare:compare_runs",
     "uncertainty": "cnctwin.uncertainty:run_study",
     "calibrate": "cnctwin.mdata.calibrate:calibrate",
+    "sweep": "cnctwin.sweep:run_sweep_job",
     "outputs": "cnctwin.core.outputs:finalize_outputs",
 }
 NO_ENTRY = ("", "none", "off")      # an entry set to one of these is switched off
@@ -62,7 +64,7 @@ class Settings:
     db_dir: Path = paths.DB
     host: str = DEFAULT_HOST
     port: int = DEFAULT_PORT
-    max_heavy_jobs: int = 1                   # simulations, uncertainty studies, calibrations
+    max_heavy_jobs: int = 1                   # simulations, uncertainty studies, calibrations, sweeps
     max_light_jobs: int = 1                   # checks, comparisons
     heavy_memory_bytes: int = 1536 * MiB
     light_memory_bytes: int = 1024 * MiB

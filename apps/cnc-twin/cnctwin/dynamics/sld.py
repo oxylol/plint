@@ -51,6 +51,16 @@ def rotation_z(theta: float) -> np.ndarray:
     return np.array([[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]])
 
 
+def harmonic_stack(M: np.ndarray) -> np.ndarray:
+    """harmonic_coefficients of every matrix of M [n, 3, 3] at once: [5, n, 3, 3] for m = -2..2."""
+    parts = ((0, _P0), (1, _PP), (-1, _PM))
+    out = np.zeros((5, M.shape[0], 3, 3), complex)
+    for na, Pa in parts:
+        for nb, Pb in parts:
+            out[na + nb + 2] += np.einsum("ij,ejk,lk->eil", Pa, M, Pb)
+    return out
+
+
 def harmonic_coefficients(M: np.ndarray) -> dict[int, np.ndarray]:
     """C_m (m = -2..2) with R(theta) M R(theta)^T = sum_m C_m e^(i m theta)."""
     parts = ((0, _P0), (1, _PP), (-1, _PM))
@@ -136,11 +146,41 @@ class CutModel:
 
     # ---------------------------------------------------------------- means
     def mean(self, tooth: int | None = None, damping: bool = False) -> np.ndarray:
-        """Mean over one revolution of K (or of tooth j's K_j), per unit depth (real 3x3)."""
+        """Mean over one revolution of K (or of tooth j's K_j), per unit depth (real 3x3). Cached per (tooth,
+        damping) for the model's arc: the general solver asks for it at every chatter frequency."""
+        mats = self.damping_M if damping else self.M
+        cache = self.__dict__.setdefault("_means", {})
+        key = (tooth, bool(damping), float(self.arc_lo_rad), float(self.arc_hi_rad), len(mats))
+        hit = cache.get(key)
+        if hit is not None:
+            return hit.copy()
+        out = self._mean(tooth, damping)
+        cache[key] = out
+        return out.copy()
+
+    def _mean(self, tooth: int | None, damping: bool) -> np.ndarray:
         mats = self.damping_M if damping else self.M
         out = np.zeros((3, 3))
         if len(mats) == 0:
             return out
+        if self.rotating:
+            # all elements at once: sum_e Re sum_m C_m(M_e) int_(lo_e)^(hi_e) e^(i m theta) d theta / 2 pi
+            sel = np.ones(len(mats), bool) if tooth is None else (np.asarray(self.tooth) == tooth)
+            if not np.any(sel):
+                return out
+            M = np.asarray(mats, float)[sel]
+            a0 = np.asarray(self.alpha0_rad, float)[sel]
+            lo = self.arc_lo_rad - a0
+            hi = self.arc_hi_rad - a0
+            C = harmonic_stack(M)
+            total = np.zeros((3, 3), complex)
+            for i, m in enumerate(range(-2, 3)):
+                if m == 0:
+                    E = (hi - lo).astype(complex)
+                else:
+                    E = (np.exp(1j * m * hi) - np.exp(1j * m * lo)) / (1j * m)
+                total += np.einsum("e,eij->ij", E, C[i])
+            return total.real / TWO_PI
         harm = self._harm(damping) if self.rotating else None
         for e in range(len(mats)):
             if tooth is not None and int(self.tooth[e]) != tooth:
@@ -234,6 +274,34 @@ class CutModel:
         if not self.rotating:
             V = w * self.work_radius_m
             return self.mean(damping=True) / V if V > 0.0 else np.zeros((3, 3))
+        # sum_e (mean of R D_e R^T over the arc) / V_e with V_e = |Omega| r_e: the speed-free sum is computed once per
+        # model (all elements at once) and divided by |Omega| (the PD limit asks for it at every iteration)
+        key = ("_pd_unit", float(self.arc_lo_rad), float(self.arc_hi_rad), len(self.damping_M))
+        unit = self.__dict__.get(key)
+        if unit is None:
+            unit = np.zeros((3, 3))
+            r = np.asarray(self.radius_m, float)
+            ok = r > 0.0
+            if np.any(ok):
+                D = np.asarray(self.damping_M, float)[ok]
+                a0 = np.asarray(self.alpha0_rad, float)[ok]
+                lo = self.arc_lo_rad - a0
+                hi = self.arc_hi_rad - a0
+                C = harmonic_stack(D)
+                total = np.zeros((3, 3), complex)
+                inv_r = 1.0 / r[ok]
+                for i, m in enumerate(range(-2, 3)):
+                    E = (hi - lo).astype(complex) if m == 0 else (np.exp(1j * m * hi) - np.exp(1j * m * lo)) / (1j * m)
+                    total += np.einsum("e,eij->ij", E * inv_r, C[i])
+                unit = total.real / TWO_PI
+            self.__dict__[key] = unit
+        if w <= 0.0:
+            return np.zeros((3, 3))
+        return unit / w
+
+    def _process_damping_loop(self, speed_rad_s: float) -> np.ndarray:
+        """process_damping element by element (reference of the vectorised form)."""
+        w = abs(float(speed_rad_s))
         out = np.zeros((3, 3))
         harm = self._harm(damping=True)
         for e in range(len(self.damping_M)):
@@ -387,7 +455,7 @@ def zoa_lobes(cut: CutModel, frf: ModalFRF, speeds_rad_s: np.ndarray, *, n_freq:
     K0 = cut.mean()
     omegas = frf.frequency_grid(n_freq, lo_factor, hi_factor)
     G = frf(omegas)
-    lam = np.array([_eigs(K0 @ G[i]) for i in range(len(omegas))])
+    lam = np.linalg.eigvals(np.matmul(K0, G))
     for i in range(1, len(omegas)):
         lam[i] = _match(lam[i - 1], lam[i])
     N = cut.n_teeth if cut.rotating else 1
@@ -465,6 +533,19 @@ def characteristic_ZOA(cut: CutModel, G: np.ndarray, omega: float, speed_rad_s: 
     return (1.0 - np.exp(-1j * omega * tau)) * (cut.mean() @ G)
 
 
+def characteristic_ZOA_grid(cut: CutModel, G: np.ndarray, omegas: np.ndarray, speed_rad_s: float) -> np.ndarray:
+    """characteristic_ZOA at every chatter frequency of ``omegas`` at once (G: [n, 3, 3] FRF there) -> [n, 3, 3]."""
+    w = np.asarray(omegas, float)
+    taus = cut.delays_s(speed_rad_s)
+    if cut.rotating and not cut.uniform_pitch:
+        B = np.zeros((w.shape[0], 3, 3), complex)
+        for j in range(cut.n_teeth):
+            B += (1.0 - np.exp(-1j * w * taus[j]))[:, None, None] * np.matmul(cut.mean(tooth=j), G)
+        return B
+    tau = taus[0] if not cut.rotating else TWO_PI / (cut.n_teeth * abs(speed_rad_s))
+    return (1.0 - np.exp(-1j * w * tau))[:, None, None] * np.matmul(cut.mean(), G)
+
+
 def characteristic_MF(cut: CutModel, G_of, omega: float, speed_rad_s: float, harmonics: int,
                       K_r: dict | None = None) -> np.ndarray:
     """B(omega) of the multi-frequency solution (uniform pitch): (1 - e^(-i omega tau)) [G(omega + p w_T) K_(p-q)];
@@ -483,43 +564,65 @@ def characteristic_MF(cut: CutModel, G_of, omega: float, speed_rad_s: float, har
     return (1.0 - np.exp(-1j * omega * tau)) * B
 
 
-def _real_positive_crossings(omegas: np.ndarray, mats_fn) -> list[tuple[float, float]]:
+def _real_positive_crossings(omegas: np.ndarray, mats_fn, mats_grid=None) -> list[tuple[float, float]]:
     """(omega, a) where an eigenvalue mu of B(omega) is real and positive (a = 1 / mu): sign changes of Im(mu)
-    along nearest-neighbour branches, refined by bisection on the branch."""
-    mus = [np.linalg.eigvals(mats_fn(w)) for w in omegas]
+    along nearest-neighbour branches, refined by bisection on the branch. ``mats_grid(omegas)`` gives B at every
+    frequency of an array at once ([n, m, m]; the eigenvalues in one stacked call): the scan and every bisection
+    round of all brackets together use it; else ``mats_fn`` per point."""
+    if mats_grid is not None and len(omegas):
+        stacked = np.linalg.eigvals(mats_grid(np.asarray(omegas, float)))
+        mus = [stacked[i] for i in range(stacked.shape[0])]
+    else:
+        mus = [np.linalg.eigvals(mats_fn(w)) for w in omegas]
     for i in range(1, len(mus)):
         mus[i] = _match(mus[i - 1], mus[i])
-    out = []
+    entries = []            # in scan order: (omega, a) found on the grid, or a bracket [lo, hi, mlo, mhi]
     for i in range(len(omegas) - 1):
         a0 = mus[i]
         a1 = mus[i + 1]
         for b in range(len(a0)):
             m0, m1 = a0[b], a1[b]
             if m0.imag == 0.0 and m0.real > 0.0:
-                out.append((float(omegas[i]), 1.0 / m0.real))
+                entries.append((float(omegas[i]), 1.0 / m0.real))
                 continue
             if m0.imag * m1.imag >= 0.0 or (m0.real <= 0.0 and m1.real <= 0.0):
                 continue
-            lo, hi = float(omegas[i]), float(omegas[i + 1])
-            mlo, mhi = m0, m1
-            for _ in range(40):
-                mid = 0.5 * (lo + hi)
-                cand = np.linalg.eigvals(mats_fn(mid))
-                t = 0.5
-                guess = mlo + t * (mhi - mlo)
-                mm = cand[int(np.argmin(np.abs(cand - guess)))]
-                if mm.imag * mlo.imag <= 0.0:
-                    hi, mhi = mid, mm
-                else:
-                    lo, mlo = mid, mm
-                if hi - lo <= 1e-12 * hi:
-                    break
-            if abs(mlo.imag) <= abs(mhi.imag):
-                mu, w_c = mlo, lo
+            entries.append([float(omegas[i]), float(omegas[i + 1]), m0, m1, False])
+    brackets = [e for e in entries if isinstance(e, list)]
+    for _ in range(40):
+        active = [br for br in brackets if not br[4]]
+        if not active:
+            break
+        mids = np.array([0.5 * (br[0] + br[1]) for br in active])
+        if mats_grid is not None:
+            cands = np.linalg.eigvals(mats_grid(mids))
+        else:
+            cands = [np.linalg.eigvals(mats_fn(float(mid))) for mid in mids]
+        for k, br in enumerate(active):
+            lo, hi, mlo, mhi = br[0], br[1], br[2], br[3]
+            mid = float(mids[k])
+            cand = cands[k]
+            guess = mlo + 0.5 * (mhi - mlo)
+            mm = cand[int(np.argmin(np.abs(cand - guess)))]
+            if mm.imag * mlo.imag <= 0.0:
+                hi, mhi = mid, mm
             else:
-                mu, w_c = mhi, hi
-            if mu.real > 0.0:
-                out.append((w_c, 1.0 / mu.real))
+                lo, mlo = mid, mm
+            br[0], br[1], br[2], br[3] = lo, hi, mlo, mhi
+            if hi - lo <= 1e-12 * hi:
+                br[4] = True
+    out = []
+    for e in entries:
+        if not isinstance(e, list):
+            out.append(e)
+            continue
+        lo, hi, mlo, mhi = e[0], e[1], e[2], e[3]
+        if abs(mlo.imag) <= abs(mhi.imag):
+            mu, w_c = mlo, lo
+        else:
+            mu, w_c = mhi, hi
+        if mu.real > 0.0:
+            out.append((w_c, 1.0 / mu.real))
     return out
 
 
@@ -536,19 +639,32 @@ def limit_at_speed(cut: CutModel, frf, speed_rad_s: float, omegas: np.ndarray, *
     ``depth_for_pd``: include process damping at that depth (G -> (I + i w a C G)^-1 G)."""
     C = cut.process_damping(speed_rad_s) if depth_for_pd is not None else None
 
+    pd = C is not None and bool(np.any(C != 0.0))
+
     def G_of(w):
         G = frf(w)
-        if C is not None and np.any(C != 0.0):
+        if pd:
             G = np.linalg.solve(np.eye(3) + 1j * w * depth_for_pd * (G @ C), G)
+        return G
+
+    def G_grid(w):
+        G = frf(w)
+        if pd:
+            A = np.eye(3)[None, :, :] + 1j * np.asarray(w, float)[:, None, None] * depth_for_pd * np.matmul(G, C)
+            G = np.linalg.solve(A, G)
         return G
 
     if method == "mf":
         if not cut.uniform_pitch:
             raise InputError("the multi-frequency solution here needs a uniform pitch")
+        if K_r is None:
+            K_r = {r: cut.harmonic(r) for r in range(-2 * int(harmonics), 2 * int(harmonics) + 1)}
         fn = (lambda w: characteristic_MF(cut, G_of, w, speed_rad_s, harmonics, K_r))
+        grid = None
     else:
         fn = (lambda w: characteristic_ZOA(cut, G_of(w), w, speed_rad_s))
-    crossings = _real_positive_crossings(np.asarray(omegas, float), fn)
+        grid = (lambda w: characteristic_ZOA_grid(cut, G_grid(w), w, speed_rad_s))
+    crossings = _real_positive_crossings(np.asarray(omegas, float), fn, grid)
     if not crossings:
         return SpeedLimit(float(speed_rad_s), math.inf, 0.0)
     w_c, a = min(crossings, key=lambda c: c[1])
@@ -644,4 +760,5 @@ def mode_coupling_limit(cut: CutModel, frf: ModalFRF, *, a_max: float, n_scan: i
 
 __all__ = ["CutModel", "ModalFRF", "Lobes", "SpeedLimit", "classic_milling", "immersion_angles", "turning_cut",
            "zoa_lobes", "limit_at_speed", "limit_with_process_damping", "mode_coupling_limit", "rotated_integral",
-           "harmonic_coefficients", "engaged_pieces", "rotation_z", "characteristic_ZOA", "characteristic_MF"]
+           "harmonic_coefficients", "engaged_pieces", "rotation_z", "characteristic_ZOA", "characteristic_MF",
+           "characteristic_ZOA_grid"]

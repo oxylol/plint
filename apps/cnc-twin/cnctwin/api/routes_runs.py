@@ -33,24 +33,39 @@ def register(app: FastAPI, ctx: ApiContext) -> None:
     runs = ctx.runs
 
     # ------------------------------------------------------------------ lifecycle
-    @app.post("/api/runs", tags=["runs"], status_code=201, response_model=RunRecord, responses=errors(400, 404, 422, 503))
+    @app.post("/api/runs", tags=["runs"], status_code=201, response_model=RunRecord,
+              responses={200: {"model": RunRecord, "description": "The run cache holds this run: it is answered "
+                                                                 "instead of a new simulation"},
+                         **errors(400, 404, 422, 503)})
     def create_run(body: RunCreate):
-        """Queue a simulation of a project; follow it with GET /api/runs/{id}/events."""
+        """Queue a simulation of a project; follow it with GET /api/runs/{id}/events. When the run cache holds a
+        finished run of the same project, inputs, options and build (and ``no_cache`` is not set), that run is
+        answered (200, ``cache.hit``) instead; a new run is registered in the cache when it has finished."""
+        from . import runcache
         project = ctx.projects.get(body.project_id)
         _, error = ctx.projects.document(project)
         if error:
             raise ApiError(422, f"project {project.id}: {error}")
+        cache = {"hit": False, "key": None, "note": "no_cache: the cache was not consulted"} if body.no_cache else None
+        if not body.no_cache:
+            cached_id, cache = runcache.lookup(ctx, project, body.options)
+            if cached_id is not None:
+                record = run_record(ctx, runs.get(cached_id))
+                record["cache"] = cache
+                return json_response(record, 200, headers={"Location": f"/api/runs/{cached_id}"})
         run_id, run_dir = runs.allocate(slugify(project.id))
         request = {"kind": "simulate", "run_id": run_id, "run_dir": str(run_dir), "project_id": project.id,
                    "project_path": str(project.file), "project_dir": str(project.dir), "options": body.options,
-                   "resume_from": None}
+                   "resume_from": None, "cache": runcache.enabled()}
         try:
             ctx.jobs.submit("simulate", request, run_id=run_id, project_id=project.id)
         except Exception:
             if not any(run_dir.iterdir()):
                 run_dir.rmdir()
             raise
-        return json_response(run_record(ctx, runs.get(run_id)), 201, headers={"Location": f"/api/runs/{run_id}"})
+        record = run_record(ctx, runs.get(run_id))
+        record["cache"] = cache
+        return json_response(record, 201, headers={"Location": f"/api/runs/{run_id}"})
 
     @app.get("/api/runs", tags=["runs"], response_model=RunList)
     def list_runs(project_id: str | None = None, status: str | None = None,

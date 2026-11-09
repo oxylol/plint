@@ -108,24 +108,96 @@ def envelope_profile_ref(passes: A.Passes, tpl: A.Templates, u0: float, du: floa
                 wv = min(wa, wb) if flat else wa + (u0 + i * du - sa) * slope
                 if i not in cur or wv < cur[i][0]:
                     cur[i] = (wv, slope)
-        for i in sorted(cur):
-            wv, slope = cur[i]
-            if kind == A.KIND_CUT:
-                hmin = float(passes.hmin[k])
-                if wv < z[i]:
-                    if z[i] == math.inf:
-                        z[i] = wv
+        if not cur:
+            continue
+        if kind != A.KIND_CUT:
+            for i in sorted(cur):
+                if z[i] < math.inf:
+                    z[i] += cur[i][0]
+            continue
+        hmin = float(passes.hmin[k])
+        lo, hi = min(cur), max(cur)
+
+        def tool(i):
+            return cur[i][0] if i in cur else math.inf
+
+        def thin(i):
+            """The pass ploughs sample i: below the surface by less than h_min (normal to the pass)."""
+            t = tool(i)
+            if not (t < math.inf and t < z[i] < math.inf):
+                return False
+            slope = cur[i][1]
+            return (z[i] - t) / math.sqrt(1.0 + slope * slope) < hmin
+
+        i = lo
+        while i <= hi:
+            t = tool(i)
+            if not t < math.inf:
+                i += 1
+                continue
+            if t < z[i]:
+                if z[i] == math.inf:
+                    z[i] = t
+                elif not thin(i):
+                    slope = cur[i][1]
+                    h = (z[i] - t) / math.sqrt(1.0 + slope * slope)
+                    if hmin > 0.0 and recovery > 0.0 and h < (1.0 + recovery) * hmin:
+                        z[i] = z[i] + (h - hmin) / (recovery * hmin) * (t - z[i])
                     else:
-                        h = (z[i] - wv) / math.sqrt(1.0 + slope * slope)
-                        if h >= hmin:
-                            if hmin > 0.0 and recovery > 0.0 and h < (1.0 + recovery) * hmin:
-                                z[i] = z[i] + (h - hmin) / (recovery * hmin) * (wv - z[i])
-                            else:
-                                z[i] = wv
-                hits[i] += 1
-            elif z[i] < math.inf:
-                z[i] += wv
+                        z[i] = t
+                else:
+                    a, vol = i, 0.0
+                    while i <= hi and thin(i):
+                        vol += z[i] - tool(i)
+                        z[i] = tool(i)
+                        hits[i] += 1
+                        i += 1
+                    _place_ploughed_ref(z, tool, a, i - 1, lo, hi, vol)
+                    continue
+            hits[i] += 1
+            i += 1
     return np.array(z), np.array(hits, dtype=np.int64)
+
+
+def _place_ploughed_ref(z: list, tool, a: int, b: int, lo: int, hi: int, vol: float) -> None:
+    """Twin of kernels._place_ploughed: the ploughed volume fills the free space under the pass next to the run
+    (nearest first, left and right alternating); the rest stays spread over the run."""
+    left, right = a - 1, b + 1
+
+    def room(j):
+        t = tool(j)
+        return t - z[j] if (t < math.inf and z[j] < math.inf and t > z[j]) else None
+
+    while vol > 0.0:
+        moved = False
+        if lo <= left:
+            r = room(left)
+            if r is not None:
+                if vol < r:
+                    z[left] += vol
+                    vol = 0.0
+                    break
+                z[left] = tool(left)
+                vol -= r
+                left -= 1
+                moved = True
+        if vol > 0.0 and right <= hi:
+            r = room(right)
+            if r is not None:
+                if vol < r:
+                    z[right] += vol
+                    vol = 0.0
+                    break
+                z[right] = tool(right)
+                vol -= r
+                right += 1
+                moved = True
+        if not moved:
+            break
+    if vol > 0.0:
+        share = vol / (b - a + 1)
+        for j in range(a, b + 1):
+            z[j] += share
 
 
 def pass_valleys_ref(passes: A.Passes, tpl: A.Templates, cap: int, n_parab: int, side: float = 0.0):

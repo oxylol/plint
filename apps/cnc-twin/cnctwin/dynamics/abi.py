@@ -97,6 +97,15 @@ N_DA = 16
 N_SCRATCH = 16
 SC_OMEGA = 15           # scratch slot: |spindle speed| given to external_force (recorded with the samples)
 
+# ------------------------------------------------------------------------------- DynSystem.act
+ACT_LO = 0              # first station of the step (< 0: every station)
+ACT_HI = 1              # last station of the step
+ACT_PREV_LO = 2         # the range of the previous corrected step (its loads are cleared in DynState.st_force)
+ACT_PREV_HI = 3
+ACT_LOAD_LO = 4         # stations that may carry a load this step (the engaged ones; < 0: ACT_LO..ACT_HI)
+ACT_LOAD_HI = 5
+N_ACT = 6
+
 # ------------------------------------------------------------------------------- DynAccum.tick_u columns
 TU_TOOL = 0             # [0:3] tool deflection at the reference station (T0, modal + residual)
 TU_WORK = 3             # [3:6] workpiece deflection at the contact (S, modal + residual)
@@ -182,6 +191,9 @@ class DynSystem(NamedTuple):
     fe: np.ndarray              # [2, nm] external modal force at the next node: unbalance, base (scratch)
     fx: np.ndarray              # [nm] modal force of the evaluated cutting wrenches (scratch)
     scratch: np.ndarray         # [N_SCRATCH] (scratch)
+    act: np.ndarray             # [N_ACT] int64 stations of the step (additive): deflections are computed and loads
+                                #   projected for stations ACT_LO..ACT_HI only (the caller's engaged stations with
+                                #   their neighbours; every other station has zero load); ACT_LO < 0: all stations
 
 
 # ------------------------------------------------------------------------------- constructors
@@ -250,7 +262,12 @@ def empty_system(nm: int = 1, nst: int = 1, nm_work: int = 1, n_ticks: int = 1, 
     nm = max(int(nm), 1)
     return DynSystem(empty_modal_model(nm, nst, nm_work), empty_modal_state(nm), empty_dyn_model(nm),
                      empty_dyn_state(nm, nst, capacity), empty_dyn_accum(n_ticks), empty_deflection(nst), _f(nm, 2),
-                     _f(2, nm), _f(nm), _f(N_SCRATCH))
+                     _f(2, nm), _f(nm), _f(N_SCRATCH), all_stations())
+
+
+def all_stations() -> np.ndarray:
+    """DynSystem.act for every station (the default)."""
+    return np.full(N_ACT, -1, np.int64)
 
 
 def core_accum(n_ticks: int = 1, n_axes: int = 1, nt: int = 1, ne: int = 1) -> Accum:
@@ -285,4 +302,4 @@ __all__ = [name for name in dir() if name.isupper() or name in (
     "DynModel", "DynState", "DynAccum", "ModalDeflection", "WorkGrid", "AxisBase", "DynSystem", "ModalModel",
     "ModalState", "Accum", "RingBuffer", "empty_modal_model", "empty_modal_state", "empty_dyn_model",
     "empty_dyn_state", "empty_dyn_accum", "empty_deflection", "empty_work_grid", "empty_axes", "empty_system",
-    "core_accum", "is_kernel_layout", "reset_extremes")]
+    "core_accum", "is_kernel_layout", "reset_extremes", "all_stations")]

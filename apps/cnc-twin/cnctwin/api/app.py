@@ -18,7 +18,7 @@ from fastapi.routing import APIRoute
 
 import cnctwin
 
-from . import routes_db, routes_jobs, routes_projects, routes_runs
+from . import routes_db, routes_jobs, routes_projects, routes_runs, routes_sweeps
 from .jsonio import json_response
 from .safety import ApiError, resolve_inside
 from .settings import Settings
@@ -29,7 +29,8 @@ HTTP API of CNC Twin, the one-to-one CNC machining simulator: projects, simulati
 jobs, followed with Server-Sent Events, cancelled and resumed from checkpoints), everything a run
 writes (findings and their causes, time series downsampled with M4, the scene, frames, keyframes,
 chips, coolant jets, inspection, surface, tools, production, files with range requests), studies
-(compare, uncertainty, calibration) and the databases. SI units throughout (names carry units).
+(compare, uncertainty, calibration, parameter sweeps with their training data) and the databases. A run the run
+cache holds is answered instead of simulated again. SI units throughout (names carry units).
 See docs/api.md.
 """
 
@@ -42,7 +43,7 @@ TAGS = [
     {"name": "scene", "description": "Scene, frames, keyframes, bricks, chips, jets"},
     {"name": "files", "description": "Any file of a run, with range requests"},
     {"name": "jobs", "description": "The job queue (simulations, checks, studies)"},
-    {"name": "studies", "description": "Comparison, uncertainty and calibration"},
+    {"name": "studies", "description": "Comparison, uncertainty, calibration and parameter sweeps"},
     {"name": "database", "description": "Machines, tools, holders, materials, coolants, bibliography"},
 ]
 
@@ -79,6 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     routes_jobs.register(app, ctx)
     routes_projects.register(app, ctx)
     routes_runs.register(app, ctx)
+    routes_sweeps.register(app, ctx)
     routes_db.register(app, ctx)
     _register_fallbacks(app, ctx)
     return app

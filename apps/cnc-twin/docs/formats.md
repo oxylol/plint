@@ -154,7 +154,19 @@ is used); `pages`, `note` and `accessed` are merged (`a | b`).
   (back tool post, second turret); every axis must be in some chain or turret; `home_mm` holds
   linear axes, `home_deg` rotary ones. A turret `chain` may list links by name (links of a chain).
   `turret_index_axis` is an axis name or the index axis direction. `capacity:` is the lathe working
-  envelope. A spindle without `gear_ranges` is a warning (no power/torque limits).
+  envelope. A spindle without `gear_ranges` is a warning (no power/torque limits). A spindle's
+  thermal model (docs/models/thermal.md 4.1) is built from `drive_type` (built_in | coupled | belt |
+  gear; else read from the `drive` text), `bearings: [{position: front | rear | middle, type:
+  angular_contact | cylindrical_roller | tapered_roller | deep_groove | thrust_ball, count, bore_mm,
+  outer_mm, contact_angle_deg, preload_N, static_load_rating_kN, lubrication: grease | oil_mist | oil_air |
+  oil_bath | oil_jet, oil_viscosity_40C_mm2_s, oil_viscosity_100C_mm2_s, mass_kg, axially_fixed,
+  designation}]` and `thermal: {shaft_diameter_mm, shaft_bore_mm, shaft_length_mm, bearing_span_mm,
+  nose_diameter_mm, nose_to_fixed_bearing_mm, housing_mass_kg, housing_size_mm: [w, d, h],
+  housing_growth_length_mm, housing_material, motor_no_load_loss_pct, motor_heat_to_head_pct, jacket:
+  {flow_l_min, channel_diameter_mm, channels, area_cm2, inlet_degC | inlet_offset_dK}, model: network |
+  lumped}`; absent keys take the model's defaults (db/models/thermal-machine.yaml, reported as estimated).
+  The lumped keys (`growth_at_max_speed_um`, `time_constant_min`, `bearing_heat_at_max_speed_W`) select
+  the first-order body when they are the only thermal data or `model: lumped` says so.
 * **material**: `flow_stress.model` is `johnson_cook` (required for metals), `temperature_table`
   (polymers: `tensile_strength_MPa` table, `compressive_yield_MPa`, `T_soft_degC`) or `none`
   (no constitutive model: optional `yield_MPa`, `compressive_flow_MPa`, `shear_yield_MPa`,
@@ -767,3 +779,93 @@ keyframes to load from the GLB files alone (the newest full snapshot and every k
 `decode_record(bytes) -> (vertices, faces, header)`. At a resume every keyframe file with k at or
 after the cut's count is removed, index.jsonl is truncated to its byte length, bricks.idx is rewritten
 from the restored state and attr/ is removed.
+
+## Sweep
+
+(owner: `cnctwin/sweep`; guide: docs/ml.md "Sweeps")
+
+A sweep spec is YAML (format `cnctwin-sweep`, version 1; `cnctwin.sweep.spec.load_spec`, every problem listed in
+one InputError, unknown keys are errors, `note`/`notes` free):
+
+| key | value |
+|---|---|
+| `format`, `version` | `cnctwin-sweep`, 1 |
+| `name` | required; the default sweep folder is `DATA_DIR/sweeps/<slug of name>` |
+| `description` | text |
+| `base` | the base project (a `project.yaml` or its folder), relative to the spec file; the API replaces it by the project it is given |
+| `seed` | integer >= 0 (default 0), seeds the design only (the simulation keeps the project's seed) |
+| `design` | `{kind: grid \| lhs \| sobol \| random \| list, points, optimization: none \| random-cd \| lloyd (lhs), scramble: true (sobol), list: [{parameter: value}] (list)}`; `points` for lhs, sobol and random only |
+| `parameters` | a list of at least one parameter (below) |
+| `generators` | `{<name>: {script, function: main, call: constants \| kwargs, output, operation, constants: {}, timeout_s: 600}}` |
+| `placeholders` | `{NAME: value}`: fixed values of template placeholders no parameter sets |
+| `options` | run options of every point (cnctwin.core.loop.run_project; default `{outputs: false}`); `operator` is not allowed here (overrides are parameters) |
+| `execution` | `{workers: 1, memory: 1536M, memory_mode: auto \| systemd \| rlimit \| none, isolation: process \| inline, runner: cnctwin.sweep.runner:run_project, retry_failed: false, verify: full \| quick}` |
+
+**Parameters**: `name` (letters, digits, `_`, `.`, `-`; unique), `kind`, the values: `range: [lo, hi]` (lo < hi;
+`scale: linear | log` (log needs lo > 0), `step` (multiples of step above lo, at most hi), `integer: true`,
+`levels: n` (n >= 2: the grid's values, ends included)) or `values: [...]` (any YAML values: a categorical
+parameter), `default` (a `list` point that omits the parameter), `unit` (text, default `-`; the dataset's unit of
+`param.<name>`), `doc`; and per kind:
+
+| kind | keys | written as |
+|---|---|---|
+| `override` | `target: feed \| spindle \| rapid`, `tool` (T number; none: every tool), `path` (controller path of the tool, default 1); `rapid` has no tool | the point's run option `operator` (below), values are fractions (1 = 100 %) |
+| `program_template` | `placeholder` (default the name), `template` (a program file relative to the base project's folder; default the operation's own program), `operation` (default the first), `format` (Python format string, e.g. `"{:.0f}."`) | `{{NAME}}` (spaces inside the braces allowed) replaced in the template, which becomes `points/p<n>/<program file name>`; every placeholder of a template must be bound |
+| `project` | `path`: a key path of the project file: keys separated by `.`, list items by `[index]` or `[field=value]` (exactly one item must match) | the value at that path of the variant (the last key may be new); the variant must validate |
+| `generator` | `generator` (a name of `generators`), `argument` (the constant or keyword argument) | the generator's program for the operation (`operation` of the generator, default the first), written as `points/p<n>/<output>` |
+
+**Generators** (`cnctwin.sweep.generate`): the script (in the base project's folder) runs in its own process in a
+copy of that folder (working directory and first on `sys.path`), with `__name__` not `"__main__"`. `call:
+constants`: every top-level assignment (`NAME = ...`, `NAME: type = ...`) of an argument or of a `constants` entry
+gets the value (written as a Python literal) before the module runs; a name the script does not assign at top
+level is an error; then `function()` is called. `call: kwargs`: `function(**values)` after the module ran
+unchanged. The program is the call's return value when it is text, else the file `output` (default the
+operation's program file name) in the copied folder. Its standard output is kept in
+`points/p<n>/.generated-<name>.json` (`request_sha256` over the script folder's files, the call and the values;
+an unchanged request reuses the program).
+
+**Operator option** (`options.operator`, written by `override` parameters; cnctwin.sweep.operator):
+`{feed_override: {"*": f, "T<n>": f, "T<n>@<p>": f}, spindle_override: {...}, rapid_override: r}`, normalised (an
+entry equal to its default and a table at 100 % are dropped; nothing overridden: no `operator` option, the plain
+run). Checked against the machine's `feed_override_range_pct`, `spindle_override_range_pct` and
+`rapid_override_steps_pct` (plus 100 %) and the project's cutting tools (a spindle override of a tap or threading
+insert is refused).
+
+**The sweep folder** (`cnctwin.sweep.execute`):
+
+| file | format | what |
+|---|---|---|
+| `sweep.json` | `cnctwin-sweep-run` | `name`, `spec` (resolved: absolute base, defaults filled in), `spec_sha256`, `spec_path`, `points`, `notes` (of the design) |
+| `plan.json` | `cnctwin-sweep-plan` | `parameters` (as described), `points: [{index, values, units, project, options, project_sha256, programs}]` |
+| `points/p<nnnnn>/project.yaml` | `cnctwin-project` | the variant (a comment header names the sweep, point and values) |
+| `points/p<nnnnn>/result.json` | `cnctwin-sweep-point` | `index, values, project, project_sha256, options, status (done \| cached \| failed), key, run_dir, run_id, verdict, complete, registered, error {type, message, traceback}, notes, wall_s` |
+| `points/p<nnnnn>/job.json`, `progress.json`, `outcome.json`, `log.txt` | | a point process's request, progress (`sim_time_s, est_total_s, op, phase, wall_s`), outcome `{status, outcome, error}` and output |
+| `status.json` | `cnctwin-sweep-status` | volatile: `status (running \| done \| failed \| cancelled), total, finished, done, cached, failed, running, wall_s, eta_s, message, error` |
+| `summary.json` | `cnctwin-sweep-summary` | at the end: `points, done, cached, failed, safe, unsafe, results [{index, status, key, run_dir, run_id, safe, error}]` (no wall times) |
+
+## Run cache
+
+(owner: `cnctwin/cache.py`; guide: docs/ml.md "Run cache")
+
+`<root>/index.jsonl` (root `CNCTWIN_CACHE_DIR`, else `DATA_DIR/cache`), JSON lines with sorted keys, append-only:
+`{op: format, format: cnctwin-cache-index, version: 1}` first, then `{op: put, key, run_dir, run_id, owned, digest,
+files, result_bytes, bytes, build, project_hash, at_s, components}` (`components`: the key's project hash,
+databases digest, build, runner, options, platform and environment), `{op: hit, key, run_dir, at_s}`, `{op: drop,
+key, run_dir, reason, at_s}`; a compacted index carries `used_s` and `hits` in its puts. The state is the lines
+replayed in order per (key, run_dir); a line without its newline (a torn append) is skipped.
+`<root>/runs/<run_id>/` holds the runs the cache owns, `<root>/locks/<key>.lock` the key locks, `<root>/.lock`
+the index lock. The digest is sha256 over `<relative path>\0<sha256 of the file>\n` of the result set
+(cnctwin.core.rundir.result_set_files, sorted) without `series/fast/replay-*.parquet`, series/index.jsonl taken
+without its `replay: true` lines.
+
+## Dataset
+
+(owner: `cnctwin/dataset`; guide and every column: docs/ml.md "Datasets", "Columns")
+
+`runs.parquet` / `runs.csv`, `blocks.parquet` / `blocks.csv`: one table each, the columns of `schema.json`
+(`cnctwin-dataset-schema`, version 1: `{tables: {runs: [{name, dtype, unit, provenance, doc}], blocks: [...]},
+dtypes}`) in that order. Parquet: zstd, no dictionary encoding, statistics, non-nullable fields with
+`{unit, provenance, doc}` field metadata and the schema metadata `cnctwin = {format: cnctwin-dataset-table,
+version: 1, table}`. CSV: UTF-8, one header row, `\n`, floats as their shortest round-trip text, NaN as an empty
+cell. `manifest.json` (`cnctwin-dataset`, version 1): `cnctwin, formats, runs, blocks, files, sources [{run_dir,
+run_id, sweep, point, cache_key, build}], skipped [{source, point, reason}], builds, notes`.

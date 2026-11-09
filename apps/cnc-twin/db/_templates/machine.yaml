@@ -96,7 +96,30 @@ spindles:
     frf_modes:                       # modes at the holder flange (for receptance coupling with the tool)
       - {fn_Hz: 900, zeta: 0.04, k_N_um: 60, direction: x, src: est, note: "typical 40-taper spindle, Schmitz & Smith 2009"}
       - {fn_Hz: 900, zeta: 0.04, k_N_um: 60, direction: y, src: est}
+    drive_type: coupled              # built_in (motor spindle) | coupled (inline direct drive) | belt | gear
+    bearings:                        # bearing sets from the nose (thermal network, docs/models/thermal.md 4.1)
+      - {position: front, type: angular_contact, count: 3, bore_mm: 70, outer_mm: 110, contact_angle_deg: 15,
+         preload_N: 300, static_load_rating_kN: 30, lubrication: oil_air, axially_fixed: true, src: est,
+         note: "type: angular_contact | cylindrical_roller | tapered_roller | deep_groove | thrust_ball; lubrication: grease | oil_mist | oil_air | oil_bath | oil_jet; optional oil_viscosity_40C_mm2_s / oil_viscosity_100C_mm2_s, mass_kg (per bearing), designation"}
+      - {position: rear, type: angular_contact, count: 2, bore_mm: 60, outer_mm: 95, contact_angle_deg: 15,
+         preload_N: 220, lubrication: oil_air, axially_fixed: false, src: est}
     thermal:
+      # physical network (the default when bearings are given): construction of shaft, housing, jacket, drive
+      shaft_diameter_mm: {value: 70, src: est}
+      shaft_bore_mm: {value: 28, src: est}        # drawbar bore
+      shaft_length_mm: {value: 455, src: est}
+      bearing_span_mm: {value: 280, src: est}     # between the front and rear sets (air annulus to the housing)
+      nose_to_fixed_bearing_mm: {value: 84, src: est}   # nose face to the axially fixed set: shaft growth length
+      housing_mass_kg: {value: 180, src: est}     # cartridge + the head casting that warms with it
+      housing_size_mm: {value: [500, 500, 600], src: est}   # w, d, h of that part (exposed area, height)
+      housing_growth_length_mm: {value: 350, src: est}  # head's axial datum (Z nut) to the fixed bearing set
+      housing_material: grey-cast-iron-gjl250
+      motor_no_load_loss_pct: {value: 3, src: est}
+      motor_heat_to_head_pct: {value: 30, src: est}     # separate motors only (built-in: all of it)
+      jacket: {flow_l_min: 10, channel_diameter_mm: 8, channels: 1, area_cm2: 1500, inlet_offset_dK: 0, src: est}
+      # model: network | lumped     (default: network when bearings are given, lumped when only the
+      #                               lumped values below are given)
+      # lumped first-order body (measured or calibrated values; mdata's thermal_growth target writes them):
       growth_at_max_speed_um: {value: 25, src: est}  # steady-state axial growth at max speed
       time_constant_min: {value: 30, src: est}
       bearing_heat_at_max_speed_W: {value: 400, src: est}

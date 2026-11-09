@@ -155,6 +155,8 @@ class ProcessMap(NamedTuple):
     Ttool_grid_K: np.ndarray        # [nT] ascending (a single node for an adiabatic tool)
     values: np.ndarray              # [nT, nv, nh, N_OUT]
     context: np.ndarray             # [N_CTX] the fixed conditions the map was built for
+    refine: object = None           # additive: the fallback refinement still to do per (T, V) row of a map built
+                                    #   with lazy=True (mechanics.coefficients.LazyRefinement); None: complete
 
 
 CTX_RAKE_RAD = 0

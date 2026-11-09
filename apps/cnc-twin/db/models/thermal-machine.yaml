@@ -40,6 +40,381 @@ params:
     range: [100.0, 2000.0]
     src: est
     note: "front-bearing heat at max speed when the machine file gives none"
+  # ---- physical spindle network (cnctwin/thermal/spindle.py, docs/models/thermal.md 4.1)
+  spindle_network_max_step_s:
+    value: 20.0
+    unit: s
+    src: est
+    note: "longest sub-step of the spindle network: the convection coefficients are evaluated and the bearing heat linearised at the start of each sub-step, so the scheme is first order in this step: the growth of a 1 h warm-up at 6000 rpm is 0.14 % from the converged value at 20 s (0.46 % at 60 s, 0.06 % at 10 s; test_spindle_network)"
+  palmgren_mv_coefficient:
+    value: 1.0e-7
+    unit: "-"
+    src: palmgren-1959-bearings
+    note: "viscous (load-independent) friction moment M_v = 1e-7 f0 (nu n)^(2/3) dm^3 in N mm with nu in mm2/s, n in rpm, dm in mm (also harris-kotzalas-2007-bearings ch. 6)"
+  palmgren_mv_exponent:
+    value: 0.6666666666666666
+    unit: "-"
+    src: palmgren-1959-bearings
+  palmgren_mv_limit:
+    value: 2000.0
+    unit: "-"
+    src: palmgren-1959-bearings
+    note: "nu n in mm2/s rpm below which M_v = 160e-7 f0 dm^3 (speed-independent)"
+  palmgren_mv_low_coefficient:
+    value: 1.6e-5
+    unit: "-"
+    src: palmgren-1959-bearings
+    note: "160e-7, N mm with dm in mm"
+  bearing_types:
+    value: [angular_contact, cylindrical_roller, tapered_roller, deep_groove, thrust_ball]
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+    note: "rows of bearing_f0, bearing_f1_z, bearing_f1_y"
+  bearing_lubrications:
+    value: [grease, oil_mist, oil_air, oil_bath, oil_jet]
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+    note: "columns of bearing_f0 and of the lubricant viscosities; oil-air (air/oil injection) is given the oil-mist values (both feed a minimal oil quantity in an air stream)"
+  bearing_f0:
+    value: [[2.0, 1.7, 1.7, 3.3, 6.6], [0.8, 2.2, 2.2, 3.1, 3.1], [6.0, 3.0, 3.0, 6.0, 9.0], [1.35, 1.0, 1.0, 2.0, 4.0], [5.5, 0.8, 0.8, 1.5, 3.0]]
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+    note: "Palmgren's factor f0 of the viscous moment per single bearing, after palmgren-1959-bearings: single-row angular-contact ball 2 / 1.7 / 3.3 / 6.6 (grease / oil mist / oil bath / oil jet), cylindrical roller with cage 0.6-1 / 1.5-2.8 / 2.2-4 / 2.2-4, tapered roller 6 / 3 / 6 / 8-10, deep-groove ball 0.7-2 / 1 / 2 / 4, thrust ball 5.5 / 0.8 / 1.5 / 3 (mid values of the ranges); recalled from that table, not re-read in this session"
+  bearing_f1_z:
+    value: [0.001, 0.0003, 0.0004, 0.0005, 0.0008]
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+    note: "load-dependent moment M_l = f1 F_beta dm, f1 = z (P0 / C0)^y for ball bearings (angular-contact z 0.001, y 0.33; deep-groove z 0.0004-0.0006, y 0.55; thrust ball z 0.0008, y 0.33), f1 = z for roller bearings (cylindrical 0.0002-0.0004, tapered 0.0004); recalled, not re-read in this session"
+  bearing_f1_y:
+    value: [0.33, 0.0, 0.0, 0.55, 0.33]
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+  fbeta_acbb_axial_factor:
+    value: 0.9
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+    note: "angular-contact ball bearings: F_beta = max(0.9 Fa cot(alpha) - 0.1 Fr, Fr)"
+  fbeta_radial_factor:
+    value: 0.1
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+  fbeta_deep_groove_axial_factor:
+    value: 3.0
+    unit: "-"
+    src: harris-kotzalas-2007-bearings
+    note: "deep-groove ball bearings: F_beta = max(3 Fa - 0.1 Fr, Fr)"
+  iso281_tapered_y_cot_factor:
+    value: 0.4
+    unit: "-"
+    src: iso-281-2007-dynamic-load-ratings
+    note: "tapered roller bearings: Y = 0.4 cot(alpha); Palmgren's F_beta = 2 Y Fa (harris-kotzalas-2007-bearings); recalled"
+  iso76_acbb_angles_rad:
+    value: [15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0]
+    unit: deg
+    src: iso-76-2006-static-load-ratings
+    note: "contact angles of the single-row angular-contact ball bearing factors Y0"
+  iso76_acbb_y0:
+    value: [0.46, 0.42, 0.38, 0.33, 0.29, 0.26, 0.22]
+    unit: "-"
+    src: iso-76-2006-static-load-ratings
+    note: "static equivalent load P0 = max(Fr, X0 Fr + Y0 Fa) of single-row angular-contact ball bearings; recalled, not re-read in this session"
+  iso76_acbb_x0:
+    value: 0.5
+    unit: "-"
+    src: iso-76-2006-static-load-ratings
+  iso76_deep_groove_x0:
+    value: 0.6
+    unit: "-"
+    src: iso-76-2006-static-load-ratings
+  iso76_deep_groove_y0:
+    value: 0.5
+    unit: "-"
+    src: iso-76-2006-static-load-ratings
+  iso76_tapered_y0_cot_factor:
+    value: 0.22
+    unit: "-"
+    src: iso-76-2006-static-load-ratings
+    note: "tapered roller bearings: Y0 = 0.22 cot(alpha); recalled"
+  walther_min_temp_K:
+    value: -20.0
+    unit: degC
+    src: astm-d341-2020-viscosity-temperature
+    note: "below, the lubricant viscosity is held at its -20 degC value (lower end of the usual chart range)"
+  walther_max_temp_K:
+    value: 150.0
+    unit: degC
+    src: astm-d341-2020-viscosity-temperature
+    note: "above, held at its 150 degC value"
+  lubricant_viscosity_40C_m2_s:
+    value: [22.0, 32.0, 32.0, 10.0, 10.0]
+    unit: mm2_s
+    src: est
+    note: "kinematic viscosity at 40 degC per lubrication when the machine file names none: base oil of spindle greases ISO VG 22 (high-speed spindle greases have 15-25 mm2/s base oils), ISO VG 32 spindle oil for oil mist / oil-air, VG 10 for jet and bath lubrication"
+  lubricant_viscosity_100C_m2_s:
+    value: [4.3, 5.4, 5.4, 2.6, 2.6]
+    unit: mm2_s
+    src: est
+    note: "at 100 degC: the values of mineral oils of viscosity index about 100 at the 40 degC grades above (ASTM D2270 tables, recalled)"
+  bearing_heat_rolling_fraction:
+    value: 0.5
+    unit: "-"
+    src: blok-1937-flash-temperature
+    note: "heat generated in a ball-race contact divides equally between the ball and the race (like bodies passing the contact at the same speed: equal partition); the rolling elements pass their share on to both rings through their contacts"
+  bearing_heat_inner_ring_fraction:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "share of the rings' heat entering the inner ring: the inner and outer contacts are taken to generate equal heat"
+  bearing_contact_conductance_W_K:
+    value: 1.0
+    unit: "-"
+    src: est
+    note: "W/K between the rolling elements and one ring, per bearing, at bearing_contact_ref_dm_m and bearing_contact_ref_rad_s: a 7014 C (20 balls of 11 mm) at a 300 N preload has elliptic contacts of about 0.4 x 0.05 mm semi-axes, a stationary constriction resistance 1 / (2 k sqrt(a b)) = 90 K/W per contact (k = 40 W/mK); the contact moves at about 10 m/s (Peclet ~20), which lowers the mean rise by about sqrt(Pe) (jaeger-1942-moving-sources): 19 K/W per ball, 1.0 W/K for the 20 balls; scaled with dm and sqrt(omega)"
+  bearing_contact_ref_dm_m:
+    value: 90.0
+    unit: mm
+    src: est
+    note: "pitch diameter of the reference bearing (7014: (70 + 110) / 2)"
+  bearing_contact_ref_rad_s:
+    value: 4000.0
+    unit: rpm
+    src: est
+    note: "speed at which bearing_contact_conductance_W_K was derived (the middle of the usual 40-taper speed range)"
+  bearing_contact_min_rad_s:
+    value: 250.0
+    unit: rpm
+    src: est
+    note: "below, the conductance is held (the moving-contact enhancement falls to the stationary contact, about a quarter of the reference value)"
+  bearing_width_ratio:
+    value: 0.5
+    unit: "-"
+    src: est
+    note: "bearing width / (outer - bore diameter) of ISO dimension series 10 spindle bearings (7014: 20 / 40) when the machine file gives no bearing mass"
+  bearing_solid_fraction:
+    value: 0.6
+    unit: "-"
+    src: est
+    note: "steel volume of a ball bearing / its annulus (rings, balls, cage; a 7014 C weighs 0.6 kg against 0.53 kg estimated)"
+  bearing_rolling_mass_fraction:
+    value: 0.3
+    unit: "-"
+    src: est
+    note: "rolling elements and cage / bearing mass (the bearing node's heat capacity; the rings belong to the shaft and housing nodes)"
+  bearing_material:
+    value: aisi52100-62hrc
+    unit: "-"
+    src: est
+    note: "rolling bearing steel (density, cp from db/materials)"
+  default_reference_bore_m:
+    value: 70.0
+    unit: mm
+    src: est
+    note: "front bearing bore at which the default housing, jacket and shaft dimensions below are stated (40-taper spindle); other spindles scale them geometrically with their front bore"
+  default_front_bore_taper_sizes:
+    value: [30.0, 40.0, 45.0, 50.0]
+    unit: "-"
+    src: est
+    note: "steep-taper sizes (HSK sizes mapped to them: A63 -> 40, A100 -> 50) read from the nose designation"
+  default_front_bore_m:
+    value: [50.0, 70.0, 85.0, 100.0]
+    unit: mm
+    src: est
+    note: "front bearing bore of a spindle of that taper size when the machine file names no bearings: 40-taper spindles carry 65-70 mm front bearings (7013/7014), 30-taper 45-55 mm, 50-taper 90-110 mm (typical of spindle makers' sections)"
+  default_bearing_outer_ratio:
+    value: 1.57
+    unit: "-"
+    src: est
+    note: "outer / bore diameter of ISO dimension series 10 angular-contact bearings (7014: 110 / 70, 7020: 150 / 100)"
+  default_front_bearing_count:
+    value: 3
+    unit: "-"
+    src: est
+    note: "front set of a 40-taper spindle (triplet; quadruplets in heavier spindles)"
+  default_rear_bearing_count:
+    value: 2
+    unit: "-"
+    src: est
+    note: "rear (floating) pair of a 40-taper spindle"
+  default_rear_bore_ratio:
+    value: 0.857
+    unit: "-"
+    src: est
+    note: "rear / front bearing bore (7012 behind 7014)"
+  default_contact_angle_rad:
+    value: 15.0
+    unit: deg
+    src: est
+    note: "C-type (15 deg) spindle bearings, the usual choice for speed"
+  default_tapered_contact_angle_rad:
+    value: 15.0
+    unit: deg
+    src: est
+    note: "cone angle of tapered roller bearings of lathe headstocks (10-20 deg in the standard series)"
+  default_c0_per_dm2_Pa:
+    value: 3.7
+    unit: N_mm2
+    src: est
+    note: "basic static load rating / dm^2 of 15 deg spindle bearings (7014 C: about 30 kN at dm 90 mm) when the machine file gives none"
+  default_preload_c0_ratio:
+    value: 0.01
+    unit: "-"
+    src: est
+    note: "light preload of 15 deg spindle bearings is about 1 % of C0 (300 N for a 7014 C; makers' light / medium / heavy classes run about 0.5 / 1.5 / 3 %)"
+  default_lubrication:
+    value: grease
+    unit: "-"
+    src: est
+    note: "lifetime grease, the standard of 40-taper spindles up to about 12 000 rpm"
+  default_shaft_bore_ratio:
+    value: 0.4
+    unit: "-"
+    src: est
+    note: "drawbar bore / shaft diameter (28 mm in a 70 mm shaft)"
+  default_shaft_length_to_bore:
+    value: 6.5
+    unit: "-"
+    src: est
+    note: "shaft length / front bearing bore (455 mm for a 40-taper cartridge)"
+  default_bearing_span_to_bore:
+    value: 4.0
+    unit: "-"
+    src: est
+    note: "shaft length between the front and rear bearing sets / front bore (280 mm): the air annulus to the housing"
+  default_nose_diameter_ratio:
+    value: 1.5
+    unit: "-"
+    src: est
+    note: "nose outer diameter / shaft diameter (about 105 mm for a 40-taper nose)"
+  default_nose_to_fixed_bearing_to_bore:
+    value: 1.2
+    unit: "-"
+    src: est
+    note: "distance from the nose face to the load centre of the axially fixed front set / front bore (about 85 mm)"
+  default_nose_exposed_to_bore:
+    value: 0.6
+    unit: "-"
+    src: est
+    note: "length of the rotating nose exposed to the air / front bore (the holder flange and the tool are the tool ladder's)"
+  housing_material:
+    value: grey-cast-iron-gjl250
+    unit: "-"
+    src: est
+    note: "head casting around the spindle cartridge (CTE, cp from db/materials)"
+  housing_emissivity:
+    value: 0.9
+    unit: "-"
+    src: incropera-2007-heat-mass-transfer
+    note: "painted metal surfaces 0.90-0.98 (Table A.11)"
+  default_housing_mass_kg:
+    value: 180.0
+    unit: kg
+    src: est
+    note: "spindle cartridge (about 30 kg of steel: 150 mm x 420 mm, 60 % solid) plus the part of the cast head around it that warms with it (about 150 kg) at the 70 mm reference bore; scaled with (d / d_ref)^3"
+  default_housing_area_m2:
+    value: 1.2
+    unit: "-"
+    src: est
+    note: "m2: exterior of that head part exposed to the air (a 0.5 x 0.5 x 0.6 m box without its face on the column: 1.4 m2), at the reference bore; scaled with (d / d_ref)^2"
+  default_housing_height_m:
+    value: 0.6
+    unit: m
+    src: est
+    note: "height of the head for its free convection (vertical plate), at the reference bore; scaled with d / d_ref"
+  default_housing_growth_length_to_bore:
+    value: 5.0
+    unit: "-"
+    src: est
+    note: "length of the head between its axial datum (the Z-axis nut bracket of a vertical head, the bed mounting of a headstock) and the fixed front bearing set / front bore (350 mm at 70 mm)"
+  default_housing_to_structure_W_K:
+    value: 8.0
+    unit: "-"
+    src: est
+    note: "W/K from the head to the column or bed: four linear-guide carriages and the ballscrew nut are rolling contacts of about 1-2 W/K each (as the bearings above), plus the bolted brackets"
+  default_jacket_flow_m3_s:
+    value: 1.6667e-4
+    unit: "-"
+    src: est
+    note: "SI value, m3/s (10 l/min): coolant flow of a spindle cooling unit (oil or water-glycol chillers of 40-taper heads deliver 8-20 l/min) when the machine says liquid cooled and gives no jacket data"
+  default_jacket_channel_diameter_m:
+    value: 8.0
+    unit: mm
+    src: est
+    note: "hydraulic diameter of the spiral jacket groove"
+  default_jacket_channels:
+    value: 1
+    unit: "-"
+    src: est
+    note: "one spiral groove around the bearing housing"
+  default_jacket_area_m2:
+    value: 0.15
+    unit: "-"
+    src: est
+    note: "m2: wetted jacket area around the bearing housing (150 mm x 320 mm) at the reference bore; scaled with (d / d_ref)^2"
+  jacket_fluid_density_kg_m3:
+    value: 1040.0
+    unit: kg_m3
+    src: est
+    note: "30 % ethylene glycol in water at 20 degC (ASHRAE Handbook Fundamentals tables, recalled)"
+  jacket_fluid_cp_J_kgK:
+    value: 3700.0
+    unit: J_kgK
+    src: est
+    note: "30 % ethylene glycol in water at 20 degC (recalled)"
+  jacket_fluid_k_W_mK:
+    value: 0.45
+    unit: W_mK
+    src: est
+    note: "30 % ethylene glycol in water at 20 degC (recalled)"
+  jacket_fluid_viscosity_Pa_s:
+    value: 2.2
+    unit: mPa_s
+    src: est
+    note: "30 % ethylene glycol in water at 20 degC (recalled)"
+  default_jacket_inlet_offset_dK:
+    value: 0.0
+    unit: dK
+    src: est
+    note: "spindle chillers regulate the coolant to the room (or bed) temperature: inlet = ambient + offset"
+  drive_types:
+    value: [built_in, coupled, belt, gear]
+    unit: "-"
+    src: est
+    note: "entries of motor_heat_to_housing_fraction"
+  motor_heat_to_housing_fraction:
+    value: [1.0, 0.3, 0.15, 0.3]
+    unit: "-"
+    src: est
+    note: "share of the drive motor's loss entering the spindle housing: built-in motors all (rotor share to the shaft, motor_rotor_loss_fraction), a motor on the head coupled in line or through a gearbox about 0.3 by conduction through its flange, a belt-driven motor beside the head about 0.15; the rest leaves with the motor's own fan"
+  default_drive_type:
+    value: belt
+    unit: "-"
+    src: est
+    note: "drive of a spindle whose machine file names none: belt-driven 40-taper spindles are the common VMC drive up to about 10 000 rpm"
+  default_motor_rated_W:
+    value: 7.5
+    unit: kW
+    src: est
+    note: "continuous rating of a 40-taper VMC spindle motor when the machine file has no drive power or power curve"
+  default_motor_base_rad_s:
+    value: 1500.0
+    unit: rpm
+    src: est
+    note: "base speed of the spindle motor (constant torque below, field weakening above) when there is no power curve"
+  motor_base_power_fraction:
+    value: 0.95
+    unit: "-"
+    src: est
+    note: "the base speed is read where the power curve first reaches this fraction of its maximum"
+  motor_no_load_loss_fraction:
+    value: 0.03
+    unit: "-"
+    src: iec-60034-2-1-2014-motor-losses
+    note: "no-load loss (iron, friction and windage) / rated power of 5-20 kW induction spindle motors at and above the base speed, about 2.5-4 %, taken proportional to the speed below it (iron loss at constant flux); estimate, the standard defines the segregation, not this value"
+  motor_rotor_loss_fraction:
+    value: 0.33
+    unit: "-"
+    src: bossmanns-tu-2001-power-flow
+    note: "share of a built-in motor's loss produced in the rotor (into the shaft); the stator's two thirds go to the housing and its jacket (recalled)"
   default_comp_residual_fraction:
     value: 0.3
     unit: "-"

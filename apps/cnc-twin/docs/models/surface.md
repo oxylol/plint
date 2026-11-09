@@ -84,12 +84,26 @@ evaluated only where both sides' valleys reach (crossed marks when both cut). Th
 are one rigid edge in one pose: per tooth pass only the element nearest the tool's lowest point is kept (its
 template window carries the rest).
 
-**Minimum chip thickness** (Brammertz 1961, Grzesik 1996). A pass lowers a sample only where the chip thickness
-normal to its edge, (z_old - z_new) / sqrt(1 + g'^2), reaches h_min = (min_chip_thickness_ratio) x (edge
-radius at generation, from the event); thinner layers stay and accumulate until a later pass removes them
-(the profile simulation reproduces R_t = f^2 / 8 r + (h_min / 2)(1 + r h_min / f^2) within 1 %, test).
-`recovery_ratio` (0 by default) blends linearly between h_min and (1 + ratio) h_min like cutting's surface
-memory; 0 is Brammertz's validated rule (with 1 the peaks rise by up to h_min).
+**Minimum chip thickness and side flow** (Brammertz 1961, Grzesik 1996; Lambert 1961 and Brown & Schoop 2020
+for the plastic flow of the uncut layer). A pass removes material only where the chip thickness normal to its
+edge, (z_old - z_new) / sqrt(1 + g'^2), reaches h_min = (min_chip_thickness_ratio) x (edge radius at generation,
+from the event). Where the pass lies below the surface by less than h_min the layer is **ploughed**, not cut:
+it is pressed to the pass and, being plastically incompressible, its volume (the profile area above the pass)
+flows into the free space under the pass next to the ploughed run (side flow: the samples where the pass lies
+above the surface, nearest first, both sides alternating, filled up to the pass; never into the chip, i.e. not
+across samples the pass cuts); what finds no free space stays where it was ploughed, spread over the run (a
+uniform layer under a wide edge cannot escape sideways: steady plane ploughing returns the surface behind the
+edge, Challen & Oxley 1979; a later pass then meets it as a thicker layer, as cutting's surface memory does).
+Consequences, all tested: Brammertz's uncut chip tail moves to the mirror position across the intersection of
+two passes, which keeps his R_t = f^2 / 8 r + (h_min / 2)(1 + r h_min / f^2) (within 1 %, f 0.125-0.353 mm,
+r 0.8 mm); a flat trailing edge (a wiper or a nearly flat minor or end edge) passing over the feed-mark ridges by
+less than h_min levels them into the valleys (Pt 1.7 um against 1.3 um kinematic for a 0.5 deg minor edge at
+f 0.2 mm, h_min 9 um, where keeping the layer in place left 9.6 um); the profile area is conserved by every
+ploughing pass. Below f = sqrt(2 r h_min) (the minimum of Brammertz's formula, where the bottom of the nose no
+longer cuts in a pass) the surface is generated where the per-pass chip thickness reaches h_min on the leading
+side of the nose: R_t = h_min, a regular sawtooth of period f (Brammertz's formula, read beyond its validity,
+would grow as r h_min^2 / 2 f^2). `recovery_ratio` (0 by default) blends linearly between h_min and
+(1 + ratio) h_min like cutting's surface memory (with 1 the peaks rise by up to h_min).
 
 **Wear** rounds the outline: per element radial wear (r - VB_r, the edge recedes from the material) and axial
 wear (z + VB_a) from the bus are interpolated along the outline's arc length between the generating tooth's
@@ -306,6 +320,7 @@ mark_height_m` (NaN where no machined patch matches the vertex normal and plane)
 | turned feed marks Pt | exact circle envelope (0.5 % below f^2 / 8 r at f / r = 0.4) | tests, f = 0.1-0.3 mm, r = 0.8 mm |
 | Ra of the parabolic profile | 3 % vs f^2 / (18 sqrt 3 r) after the ISO filter | test |
 | minimum-chip term | 1 % vs Brammertz's formula | test, f 0.125-0.353 mm |
+| ploughed layer (side flow) | profile area conserved to 1e-12; a 0.5 deg trailing edge keeps Pt within 0.25 h_min of the kinematic Pt | tests |
 | turned Ra vs measured | -13 % ... +21 % (mean 11 %) | Cirstoiu 2024, 42MoCr11, TNMG 220408, f 0.125-0.353 mm, r_beta 25 um assumed |
 | wall feed marks, runout marks | 2 % vs fz^2 / 8 R_eff, (N fz)^2 / 8 R_eff; RSm = N fz within 5 % | tests |
 | floor marks, leading-side floors | 2-3 % vs an independent envelope of the outline | tests |
@@ -330,8 +345,13 @@ stated yield stress (composites: delamination and pull-out only).
   passage (leading twins added from the tool axis tilt; the leading-side deflection is taken equal to the
   trailing one: error up to the deflection difference, typically < 1 um), turning one event per
   `surface_event_deg` of work rotation.
-* Lateral (side-flow) plastic flow beyond Brammertz's rule is not modelled: at feeds below h_min-scale the
-  measured roughness can exceed the prediction (Cirstoiu 2024 low feeds: -3 % to -13 %).
+* Side flow is volume-conserving lateral flow of the ploughed layer into the free space under the generating
+  pass, nearest first; its split between the two sides, the filling up to the pass and the absence of flow into
+  the chip are the model's choices (none is measured). Material pushed into the chip would lower the profile;
+  burrs rising above the pass (outside the pass's envelope) are not represented. At feeds below
+  sqrt(2 r h_min) the profile carries the h_min sawtooth (R_t = h_min): the measured low-feed roughness then
+  follows h_min, i.e. the edge radius and min_chip_thickness_ratio, which most cases do not state (Magalhaes 2026,
+  r 0.2 mm, f 0.025-0.05 mm with the 35 um default insert hone: Ra 2.3 um simulated, 0.44-0.92 um measured).
 * BUE overcut, fragment and recut-dent coefficients are estimates (db/models/surface-roughness.yaml): the BUE
   and recut contributions to Rt are indications within a factor of 2.
 * Servo marks are converted for linear axes named X, Y, Z (ISO 841); reversals of rotary axes and of axes with
@@ -354,7 +374,7 @@ stated yield stress (composites: delamination and pull-out only).
 All `@njit(explicit signature, cache=True, nogil=True, error_model="numpy")`, one signature each (test), each
 with a plain-Python twin in reference.py compared in tests/unit/surface/test_kernels.py (1e-18 m absolute):
 `pass_polyline(PASSES_T, TEMPLATES_T, i8, f8[::1], f8[::1], i8) -> i8`,
-`envelope_profile(PASSES_T, TEMPLATES_T, GRID_T, i8, f8)`, `pass_valleys(PASSES_T, TEMPLATES_T, GRID_T, i8, f8,
+`envelope_profile(PASSES_T, TEMPLATES_T, GRID_T, i8, f8)` (with `_place_ploughed(GRID_T, i8, i8, i8, i8, f8)`), `pass_valleys(PASSES_T, TEMPLATES_T, GRID_T, i8, f8,
 f8[::1]) -> i8`, `gaussian_mean(f8[::1], f8, f8, f8, i8, f8[::1])`, `profile_params(f8[::1], f8, i8, i8, i8, f8,
 f8, f8[::1])` (with `_rsm_core`), `silhouette(f8[::1] x 7, i8, f8, f8, f8[::1])` (with `_raster_min`),
 `wire_centre(f8[::1], f8[::1], f8, f8, i8) -> f8`. Layouts in abi.py (`Passes`, `Templates`, `Grid`).
@@ -368,7 +388,7 @@ element)` or the arrival index: no state, resume-exact.
 ## 16. Parameters
 
 db/models/surface-roughness.yaml: min_chip_ratio 0.3 (est; the material's ratio first), recovery_ratio 0
-(brammertz-1961-roughness), gauss_alpha 0.4697 (iso-16610-21-2011), sampling_lengths 5, cutoff_by_rsm_m and
+(brammertz-1961-roughness; the ploughed layer's side flow has no parameter), gauss_alpha 0.4697 (iso-16610-21-2011), sampling_lengths 5, cutoff_by_rsm_m and
 cutoff_by_ra_m (iso-4288-1996), stylus_table_m (iso-3274-1996), rsm discriminations 0.1 / 0.01 (iso-4287-1997),
 bue_overcut_ratio 0.5, bue_width_ratio 2, bue_fragment_probability 0.2, bue_fragment_height_ratio 0.3,
 recut_chip_hardness_ratio 1.6, recut_dent_width_ratio 4 (est). db/models/surface-burr.yaml: rollover_height_ratio
@@ -384,6 +404,9 @@ white_layer_hardness_ratio 0.3, overtemper_softening_ratio 0.15 (est).
 
 * Boothroyd, G.; Knight, W.A. (2006) Fundamentals of Machining and Machine Tools, 3rd ed., CRC.
 * Brammertz, P.H. (1961) Industrie-Anzeiger 83(2), 25-32. Grzesik, W. (1996) Wear 194, 143-148.
+* Brown, I.; Schoop, J. (2020) An iterative size effect model of surface generation in finish machining, J. Manuf.
+  Mater. Process. 4(3), 63 (material below h_min deforms plastically and side-flows; Lambert 1961).
+* Challen, J.M.; Oxley, P.L.B. (1979) Wear 53, 229-243 (wave model of plane ploughing).
 * Carslaw, H.S.; Jaeger, J.C. (1959) Conduction of Heat in Solids, 2nd ed., Oxford.
 * Cirstoiu, A. (2024) Scientific Bulletin of Valahia University - Materials and Mechanics 20(22).
 * Gillespie, L.K.; Blotter, P.T. (1976) ASME J. Eng. Ind. 98(1), 66-74.

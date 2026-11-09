@@ -172,6 +172,8 @@ class DynamicsState:
     diagrams: dict = field(default_factory=dict)         # tool slot -> [diagram dict]
     points: dict = field(default_factory=dict)           # tool slot -> [operating point dict]
     last_point: dict = field(default_factory=dict)       # path -> {signature, tick, depth_limit_m, ...}
+    pending: dict = field(default_factory=dict)          # str(slot) -> {class key: linearised cut, FRF, ...} of the
+    #                                                      operation, for its end-of-operation lobe diagrams
     counters: dict = field(default_factory=dict)         # "category:slot:op" -> findings raised
     totals: dict = field(default_factory=dict)           # cumulative energy terms (J)
     values: dict = field(default_factory=dict)           # last macro channel values
@@ -195,6 +197,7 @@ class DynamicsState:
                 "diagrams": _json_safe({str(k): v for k, v in sorted(self.diagrams.items())}),
                 "points": _json_safe({str(k): v for k, v in sorted(self.points.items())}),
                 "last_point": _json_safe({str(k): v for k, v in sorted(self.last_point.items())}),
+                "pending": _json_safe({str(k): v for k, v in sorted(self.pending.items())}),
                 "counters": _json_safe(dict(sorted(self.counters.items()))),
                 "totals": _json_safe(dict(sorted(self.totals.items()))),
                 "values": _json_safe(dict(sorted(self.values.items()))),
@@ -215,6 +218,7 @@ class DynamicsState:
         out.diagrams = {int(k): v for k, v in _json_load(meta["diagrams"]).items()}
         out.points = {int(k): v for k, v in _json_load(meta["points"]).items()}
         out.last_point = {int(k): v for k, v in _json_load(meta["last_point"]).items()}
+        out.pending = {str(k): v for k, v in _json_load(meta.get("pending", {})).items()}
         out.counters = dict(_json_load(meta["counters"]))
         out.totals = dict(_json_load(meta["totals"]))
         out.values = dict(_json_load(meta["values"]))

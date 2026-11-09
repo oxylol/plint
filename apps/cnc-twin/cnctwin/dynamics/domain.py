@@ -20,6 +20,7 @@ contact (structure's grids). Per macro step:
 
 from __future__ import annotations
 
+import json
 import math
 import struct
 from dataclasses import dataclass
@@ -746,7 +747,13 @@ class DynamicsDomain:
         ctx.finding(state, DOMAIN, Category.CHATTER, sev, msg, tick, path=p, quantities=quantities, parents=[ev])
 
     def _stability(self, ctx, state, p: int, rec: SystemRecord, c: DynamicsContact) -> None:
-        """Limit at the operating point (and a lobe diagram for a new engagement), recorded per tool."""
+        """Limit at the operating point, recorded per tool (docs/models/dynamics.md "Stability during the run").
+
+        The run needs only the limit at the operating speed (bus depth_limit_m, the stability findings): one speed,
+        cached by engagement class and quantised speed (state.dynamics.meta, checkpointed). Lobe diagrams and the
+        semi-discretisation check are report artefacts (sld/<tool>.json) and an input to nothing in the loop: the
+        engagement class is kept (state.dynamics.pending) and both are computed once at the end of the operation
+        (:meth:`finish_stability`); chatter detection stays the time-domain index of every step."""
         op = self._op.get(p)
         ds = state.dynamics
         st = self.settings
@@ -767,25 +774,11 @@ class DynamicsDomain:
         frf = self._frf(sys, rec)
         if frf is None:
             return
-        omegas = frf.frequency_grid(st.sld_n_freq, st.sld_freq_lo_factor, st.sld_freq_hi_factor)
         method = "mf" if st.mf_harmonics > 0 and op.cut.uniform_pitch and op.rotating else "zoa"
-        if len(op.cut.damping_M):
-            lim, _ = SL.limit_with_process_damping(op.cut, frf, op.speed_rad_s, omegas, tol_rel=st.pd_tol,
-                                                   max_iter=st.pd_max_iter, method=method,
-                                                   harmonics=st.mf_harmonics)
-        else:
-            lim = SL.limit_at_speed(op.cut, frf, op.speed_rad_s, omegas, method=method, harmonics=st.mf_harmonics)
+        lim = self._limit(ds, op, frf, method)
         margin = lim.depth_limit_m / op.ap_m if op.ap_m > 0.0 else math.inf
-        diagram = self._diagram(ctx, state, rec, op, frf, sig)
-        sd_stable = None
-        n_checked = ds.meta.get("sd_checked", 0)
-        if st.sd_check and n_checked < st.sd_max_points:
-            sd_frf = _dominant(frf, rec, P.p(P.MODES, "stride_compliance_share"))
-            rho = SD.spectral_radius(op.cut, sd_frf, op.speed_rad_s, op.ap_m, st.sd_m, st.sd_points_per_period,
-                                     process_damping=bool(len(op.cut.damping_M)))
-            sd_stable = bool(rho < 1.0)
-            ds.meta["sd_checked"] = n_checked + 1
-        stable = bool(margin > 1.0) and (sd_stable is None or sd_stable)
+        cls = self._remember_class(ds, rec, op, frf, sig)
+        stable = bool(margin > 1.0)
         q = {"path": p, "slot": rec.slot, "speed_rad_s": op.speed_rad_s, "ap_m": op.ap_m, "ae_m": op.ae_m,
              "depth_limit_m": lim.depth_limit_m if math.isfinite(lim.depth_limit_m) else -1.0,
              "margin": margin if math.isfinite(margin) else -1.0, "chatter_freq_Hz": lim.chatter_freq_Hz,
@@ -800,8 +793,8 @@ class DynamicsDomain:
         point = {"op": line[0], "program": line[1], "line": line[2], "time_s": tick * ctx.tick_s, "tick": tick,
                  "speed_rad_s": op.speed_rad_s, "ap_m": op.ap_m, "ae_m": op.ae_m, "stable": stable,
                  "depth_limit_m": lim.depth_limit_m, "margin": margin, "chatter_freq_Hz": lim.chatter_freq_Hz,
-                 "method": method + ("+pd" if len(op.cut.damping_M) else ""), "diagram": diagram,
-                 "sd_stable": sd_stable, "path": p}
+                 "method": method + ("+pd" if len(op.cut.damping_M) else ""), "diagram": None,
+                 "sd_stable": None, "path": p, "class": cls, "event": ev}
         pts = ds.points.setdefault(rec.slot, [])
         for old in pts:
             if old["line"] == point["line"] and old["op"] == point["op"] and \
@@ -814,17 +807,112 @@ class DynamicsDomain:
             if len(pts) < st.max_operating_points:
                 pts.append(point)
         if not stable:
-            key = f"stability:{rec.slot}:{getattr(state.clock, 'op_index', 0)}"
-            n = ds.counters.get(key, 0)
-            ds.counters[key] = n + 1
-            if n < st.max_findings:
-                msg = (f"Lobe diagram predicts chatter: depth of cut {op.ap_m * 1e3:.3g} mm above the stability limit "
-                       f"{lim.depth_limit_m * 1e3:.3g} mm at {op.speed_rad_s * 60.0 / TWO_PI:.0f} rpm "
-                       f"(chatter frequency {lim.chatter_freq_Hz:.0f} Hz)" + ("" if sd_stable is not False else
-                                                                             "; semi-discretisation agrees"))
-                ctx.finding(state, DOMAIN, Category.CHATTER, Severity.WARNING, msg, tick, path=p,
-                            quantities={"depth_limit_m": lim.depth_limit_m, "ap_m": op.ap_m,
-                                        "chatter_freq_Hz": lim.chatter_freq_Hz, "margin": margin}, parents=[ev])
+            self._stability_finding(ctx, state, rec.slot, point, ev, sd_agrees=False)
+
+    def _stability_finding(self, ctx, state, slot: int, point: dict, ev, sd_agrees: bool) -> None:
+        ds = state.dynamics
+        st = self.settings
+        key = f"stability:{slot}:{getattr(state.clock, 'op_index', 0)}"
+        n = ds.counters.get(key, 0)
+        ds.counters[key] = n + 1
+        if n >= st.max_findings:
+            return
+        lim = float(point["depth_limit_m"])
+        msg = (f"Lobe diagram predicts chatter: depth of cut {point['ap_m'] * 1e3:.3g} mm above the stability limit "
+               f"{lim * 1e3:.3g} mm at {point['speed_rad_s'] * 60.0 / TWO_PI:.0f} rpm "
+               f"(chatter frequency {point['chatter_freq_Hz']:.0f} Hz)" + ("; semi-discretisation agrees"
+                                                                           if sd_agrees else ""))
+        if point.get("sd_stable") is False and point["margin"] > 1.0:
+            msg = (f"Semi-discretisation predicts chatter at depth of cut {point['ap_m'] * 1e3:.3g} mm, "
+                   f"{point['speed_rad_s'] * 60.0 / TWO_PI:.0f} rpm (the zero-order limit {lim * 1e3:.3g} mm misses "
+                   "a period-doubling lobe)")
+        ctx.finding(state, DOMAIN, Category.CHATTER, Severity.WARNING, msg, int(point["tick"]), path=int(point["path"]),
+                    quantities={"depth_limit_m": lim, "ap_m": point["ap_m"], "chatter_freq_Hz": point["chatter_freq_Hz"],
+                                "margin": point["margin"]}, parents=[ev] if ev is not None else [])
+
+    def _limit(self, ds, op: OperatingPoint, frf: SL.ModalFRF, method: str) -> SL.SpeedLimit:
+        """Limit at the operating speed for the engagement class, cached by (class, FRF, quantised speed) in
+        state.dynamics.meta["limits"] (checkpointed: a resumed run reads the same values)."""
+        st = self.settings
+        pd = bool(len(op.cut.damping_M))
+        key = "|".join([json.dumps(_plain_sig(list(op.signature))), _frf_key(frf), method, "pd" if pd else "-",
+                        str(int(round(math.log(max(op.speed_rad_s, 1e-9)) / LIMIT_SPEED_QUANTUM)))])
+        cache = ds.meta.setdefault("limits", {})
+        hit = cache.get(key)
+        if hit is not None:
+            return SL.SpeedLimit(op.speed_rad_s, float(hit[0]), float(hit[1]))
+        omegas = frf.frequency_grid(st.sld_n_freq, st.sld_freq_lo_factor, st.sld_freq_hi_factor)
+        if pd:
+            lim, _ = SL.limit_with_process_damping(op.cut, frf, op.speed_rad_s, omegas, tol_rel=st.pd_tol,
+                                                   max_iter=st.pd_max_iter, method=method,
+                                                   harmonics=st.mf_harmonics)
+        else:
+            lim = SL.limit_at_speed(op.cut, frf, op.speed_rad_s, omegas, method=method, harmonics=st.mf_harmonics)
+        if len(cache) >= LIMIT_CACHE_MAX:
+            cache.pop(next(iter(cache)))
+        cache[key] = [float(lim.depth_limit_m), float(lim.chatter_freq_Hz)]
+        return lim
+
+    def _remember_class(self, ds, rec: SystemRecord, op: OperatingPoint, frf: SL.ModalFRF, sig) -> str:
+        """Key of the operating point's engagement class; the class (its linearised cut and FRF) is kept until the
+        end of the operation, when its lobe diagram is computed (state.dynamics.pending, checkpointed)."""
+        key = json.dumps(_plain_sig(sig)) + "|" + _frf_key(frf)
+        classes = ds.pending.setdefault(str(rec.slot), {})
+        if key not in classes and len(classes) < self.settings.sld_max_classes:
+            classes[key] = {"cut": _cut_doc(op.cut), "frf": _frf_doc(frf), "signature": _plain_sig(sig),
+                            "ae_m": op.ae_m, "arc_lo_rad": op.arc_lo_rad, "arc_hi_rad": op.arc_hi_rad,
+                            "n_teeth": op.n_teeth, "rotating": op.rotating, "h_mean_m": op.h_mean_m,
+                            "tick": op.tick, "speed_rad_s": op.speed_rad_s,
+                            "modes": [{"label": m.label, "freq_Hz": m.freq_Hz, "zeta": m.zeta} for m in rec.modes]}
+        return key
+
+    def finish_stability(self, ctx, state) -> None:
+        """End of an operation (or of the run): the lobe diagram of every engagement class seen (at most
+        sld_max_diagrams per tool, the classes of the operating points with the smallest margins first; cached by
+        class in the tool's diagram list) and the semi-discretisation check of the operating points with the
+        smallest margins (at most sd_max_points per run); a point the check finds unstable raises the stability
+        finding then (at the point's tick)."""
+        ds = state.dynamics
+        st = self.settings
+        for slot_key in sorted(ds.pending):
+            classes = ds.pending[slot_key]
+            slot = int(slot_key)
+            pts = ds.points.get(slot, [])
+            worst: dict = {}
+            for q in pts:
+                k = q.get("class")
+                if k in classes and q.get("diagram") is None:
+                    m = q["margin"] if math.isfinite(q["margin"]) else math.inf
+                    worst[k] = min(worst.get(k, math.inf), m)
+            order = sorted(worst, key=lambda k: (worst[k], k))[:max(st.sld_max_diagrams, 0)]
+            index = {}
+            for k in order:
+                entry = classes[k]
+                index[k] = self._diagram(ctx, state, slot, entry)
+            for q in pts:
+                k = q.get("class")
+                if k in index:
+                    q["diagram"] = index[k]
+            if st.sd_check:
+                todo = sorted((q for q in pts if q.get("sd_stable") is None and q.get("class") in classes),
+                              key=lambda q: (q["margin"] if math.isfinite(q["margin"]) else math.inf, q["tick"]))
+                for q in todo:
+                    n_checked = ds.meta.get("sd_checked", 0)
+                    if n_checked >= st.sd_max_points:
+                        break
+                    entry = classes[q["class"]]
+                    cut = _cut_from(entry["cut"])
+                    frf = _frf_from(entry["frf"])
+                    sd_frf = _dominant(frf, None, P.p(P.MODES, "stride_compliance_share"))
+                    rho = SD.spectral_radius(cut, sd_frf, q["speed_rad_s"], q["ap_m"], st.sd_m, st.sd_points_per_period,
+                                             process_damping=bool(len(cut.damping_M)))
+                    ds.meta["sd_checked"] = n_checked + 1
+                    q["sd_stable"] = bool(rho < 1.0)
+                    was = bool(q["stable"])
+                    q["stable"] = bool(q["margin"] > 1.0) and q["sd_stable"]
+                    if was and not q["stable"]:
+                        self._stability_finding(ctx, state, slot, q, q.get("event"), sd_agrees=False)
+        ds.pending.clear()
 
     def _frf(self, sys: DynSystem, rec: SystemRecord) -> SL.ModalFRF | None:
         nm = len(rec.modes)
@@ -841,19 +929,21 @@ class DynamicsDomain:
         return SL.ModalFRF(np.array([m.omega_rad_s for m in rec.modes]), np.array([m.zeta for m in rec.modes]), psi,
                            static)
 
-    def _diagram(self, ctx, state, rec: SystemRecord, op: OperatingPoint, frf: SL.ModalFRF, sig) -> int:
-        """Index of the tool's lobe diagram for this engagement (computed when new)."""
+    def _diagram(self, ctx, state, slot: int, entry: dict) -> int:
+        """Index of the tool's lobe diagram for an engagement class (computed when new; cached by class)."""
         st = self.settings
         ds = state.dynamics
-        diagrams = ds.diagrams.setdefault(rec.slot, [])
-        plain = _plain_sig(sig)
+        diagrams = ds.diagrams.setdefault(slot, [])
+        plain = entry["signature"]
         for i, d in enumerate(diagrams):
             if d["signature"] == plain:
                 return i
-        w_max = self._max_speed(op)
+        cut = _cut_from(entry["cut"])
+        frf = _frf_from(entry["frf"])
+        w_max = self._max_speed_of(float(entry["speed_rad_s"]))
         speeds = np.linspace(st.sld_speed_lo_frac * w_max, w_max, st.sld_n_speeds)
-        if op.cut.uniform_pitch:
-            lob = SL.zoa_lobes(op.cut, frf, speeds, n_freq=st.sld_n_freq, n_lobes=st.sld_n_lobes,
+        if cut.uniform_pitch:
+            lob = SL.zoa_lobes(cut, frf, speeds, n_freq=st.sld_n_freq, n_lobes=st.sld_n_lobes,
                                lo_factor=st.sld_freq_lo_factor, hi_factor=st.sld_freq_hi_factor)
             env, freq = lob.depth_limit_m, lob.chatter_freq_Hz
             lobes = [{"k": int(l["k"]), "branch": int(l["branch"]), "speed_rad_s": l["speed_rad_s"],
@@ -863,28 +953,30 @@ class DynamicsDomain:
         else:
             coarse = speeds[::max(1, len(speeds) // 80)]
             om = frf.frequency_grid(max(st.sld_n_freq // 4, 64), st.sld_freq_lo_factor, st.sld_freq_hi_factor)
-            res = [SL.limit_at_speed(op.cut, frf, w, om) for w in coarse]
+            res = [SL.limit_at_speed(cut, frf, w, om) for w in coarse]
             speeds = coarse
             env = np.array([r.depth_limit_m for r in res])
             freq = np.array([r.chatter_freq_Hz for r in res])
             lobes = []
             method = "zoa-variable-pitch"
-        mc = SL.mode_coupling_limit(op.cut, frf, a_max=st.mode_coupling_max_m, n_scan=40, tol_rel=1e-3)
-        diagrams.append({"signature": plain, "method": method, "ae_m": op.ae_m, "arc_lo_rad": op.arc_lo_rad,
-                         "arc_hi_rad": op.arc_hi_rad, "n_teeth": op.n_teeth, "rotating": op.rotating,
-                         "h_mean_m": op.h_mean_m, "speed_rad_s": np.asarray(speeds, float),
+        mc = SL.mode_coupling_limit(cut, frf, a_max=st.mode_coupling_max_m, n_scan=40, tol_rel=1e-3)
+        diagrams.append({"signature": plain, "method": method, "ae_m": entry["ae_m"], "arc_lo_rad": entry["arc_lo_rad"],
+                         "arc_hi_rad": entry["arc_hi_rad"], "n_teeth": entry["n_teeth"], "rotating": entry["rotating"],
+                         "h_mean_m": entry["h_mean_m"], "speed_rad_s": np.asarray(speeds, float),
                          "depth_limit_m": np.asarray(env, float), "chatter_freq_Hz": np.asarray(freq, float),
-                         "lobes": lobes, "mode_coupling_limit_m": mc, "tick": op.tick,
-                         "modes": [{"label": m.label, "freq_Hz": m.freq_Hz, "zeta": m.zeta} for m in rec.modes]})
+                         "lobes": lobes, "mode_coupling_limit_m": mc, "tick": entry["tick"], "modes": entry["modes"]})
         return len(diagrams) - 1
 
     def _max_speed(self, op: OperatingPoint) -> float:
+        return self._max_speed_of(op.speed_rad_s)
+
+    def _max_speed_of(self, speed_rad_s: float) -> float:
         best = 0.0
         for sp in _get(self.machine, "spindles") or []:
             v = _get(sp, "max_rad_s")
             if v is not None:
                 best = max(best, float(v))
-        return best if best > 0.0 else 2.0 * op.speed_rad_s
+        return best if best > 0.0 else 2.0 * speed_rad_s
 
     def _line(self, ctx, state, tick: int, path: int) -> tuple:
         timeline = getattr(ctx, "timeline", None)
@@ -946,6 +1038,7 @@ class DynamicsDomain:
     # ------------------------------------------------------------------ end of operation / run
     def end_operation(self, ctx, state) -> None:
         ds = state.dynamics
+        self.finish_stability(ctx, state)
         for win in ds.windows.values():
             win.clear()
         for ep in ds.episodes.values():
@@ -954,6 +1047,8 @@ class DynamicsDomain:
 
     def finalize(self, ctx, state) -> dict:
         ds = state.dynamics
+        if ds.pending:
+            self.finish_stability(ctx, state)
         tools = getattr(state, "tools", None)
         files = []
         run_dir = getattr(ctx, "run_dir", None)
@@ -993,14 +1088,56 @@ class DynamicsDomain:
                 "radial_immersion_m": main["ae_m"] if main else None,
                 "method": main["method"] if main else "",
                 "diagrams": [{k: v for k, v in d.items() if k != "signature"} for d in diagrams],
-                "operating_points": [{k: v for k, v in q.items()} for q in points]}
+                "operating_points": [{k: v for k, v in q.items() if k not in _POINT_PRIVATE} for q in points]}
+
+
+# keys of an operating point kept for the end-of-operation analysis only (not in sld/<tool>.json)
+_POINT_PRIVATE = ("class", "event")
+LIMIT_SPEED_QUANTUM = 1e-3      # relative spindle-speed step of the limit cache (state.dynamics.meta["limits"])
+LIMIT_CACHE_MAX = 4096          # cached limits (oldest dropped first)
+
+
+def _frf_key(frf: SL.ModalFRF) -> str:
+    """Content key of an FRF (modes and residual): equal FRFs give equal keys."""
+    import hashlib
+    h = hashlib.sha256()
+    for a in (frf.omega_rad_s, frf.zeta, frf.psi, frf.static):
+        h.update(np.ascontiguousarray(np.asarray(a, float)).tobytes())
+    return h.hexdigest()[:16]
+
+
+def _cut_doc(cut: SL.CutModel) -> dict:
+    return {"M": np.asarray(cut.M, float), "alpha0_rad": np.asarray(cut.alpha0_rad, float),
+            "tooth": np.asarray(cut.tooth, np.int64), "n_teeth": int(cut.n_teeth),
+            "pitch_rad": np.asarray(cut.pitch_rad, float), "arc_lo_rad": float(cut.arc_lo_rad),
+            "arc_hi_rad": float(cut.arc_hi_rad), "spin": float(cut.spin), "rotating": bool(cut.rotating),
+            "damping_M": np.asarray(cut.damping_M, float), "radius_m": np.asarray(cut.radius_m, float),
+            "work_radius_m": float(cut.work_radius_m)}
+
+
+def _cut_from(doc: dict) -> SL.CutModel:
+    return SL.CutModel(np.asarray(doc["M"], float).reshape(-1, 3, 3), np.asarray(doc["alpha0_rad"], float),
+                       np.asarray(doc["tooth"], np.int64), int(doc["n_teeth"]), np.asarray(doc["pitch_rad"], float),
+                       float(doc["arc_lo_rad"]), float(doc["arc_hi_rad"]), float(doc["spin"]), bool(doc["rotating"]),
+                       np.asarray(doc["damping_M"], float).reshape(-1, 3, 3), np.asarray(doc["radius_m"], float),
+                       float(doc["work_radius_m"]))
+
+
+def _frf_doc(frf: SL.ModalFRF) -> dict:
+    return {"omega_rad_s": np.asarray(frf.omega_rad_s, float), "zeta": np.asarray(frf.zeta, float),
+            "psi": np.asarray(frf.psi, float), "static": np.asarray(frf.static, float)}
+
+
+def _frf_from(doc: dict) -> SL.ModalFRF:
+    return SL.ModalFRF(np.asarray(doc["omega_rad_s"], float), np.asarray(doc["zeta"], float),
+                       np.asarray(doc["psi"], float).reshape(-1, 3), np.asarray(doc["static"], float).reshape(3, 3))
 
 
 def _plain_sig(sig) -> list:
     return [bool(v) if isinstance(v, bool) else (int(v) if isinstance(v, (int, np.integer)) else v) for v in sig]
 
 
-def _dominant(frf: SL.ModalFRF, rec: SystemRecord, share: float) -> SL.ModalFRF:
+def _dominant(frf: SL.ModalFRF, rec: SystemRecord | None, share: float) -> SL.ModalFRF:
     """The modes carrying at least ``share`` of the static compliance at the contact (the semi-discretisation check
     runs on them; at most 8)."""
     c = np.sum(frf.psi ** 2, axis=1) / frf.omega_rad_s ** 2

@@ -25,6 +25,13 @@
         server: plint
         container: cnc-studio
 
+    - CNC Twin:
+        icon: mdi-robot-industrial
+        href: https://twin.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Physics twin · verify a program before it runs
+        server: plint
+        container: cnc-twin
+
     - Polybot:
         icon: mdi-chart-timeline-variant
         href: https://poly.{{HOMEPAGE_VAR_DOMAIN}}

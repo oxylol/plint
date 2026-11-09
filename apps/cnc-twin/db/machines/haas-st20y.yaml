@@ -126,6 +126,10 @@ kinematics:
 spindles:
   - id: main
     kind: turning
+    drive_type: {value: belt, src: est, note: "the published belt drive"}
+    bearings:
+      - {position: front, type: angular_contact, count: 3, bore_mm: 110, outer_mm: 170, contact_angle_deg: 25, lubrication: grease, axially_fixed: true, src: est, note: "not published: a front set of about 140 mm pitch diameter on the 89 mm spindle bore (7022 size, 25 deg), grease as the bearing-heat estimate below"}
+      - {position: rear, type: cylindrical_roller, count: 1, bore_mm: 100, outer_mm: 150, lubrication: grease, axially_fixed: false, src: est, note: "double-row cylindrical roller bearing (NN 3020 size) at the rear, assumed"}
     nose: A2-6
     max_rpm: 4000
     drive: "belt drive, vector motor"
@@ -158,6 +162,9 @@ spindles:
     runout_um: {value: 3, src: est, note: "spindle nose; chuck runout is in the workholding file"}
     frf_modes: []
     thermal:
+      housing_mass_kg: {value: 300, src: est, note: "headstock casting near the bearings (as the time-constant estimate below: 150 kg near the bearings plus the casting around them, assumed)"}
+      housing_size_mm: {value: [450, 450, 450], src: est, note: "exposed headstock, assumed"}
+      housing_growth_length_mm: {value: 200, src: est, note: "front bearings about 200 mm ahead of the centre of the headstock's bolt pattern (assumed)"}
       growth_um_at_max_rpm: {value: 25, src: est, note: "axial growth of the headstock toward +z at 4000 rpm"}
       time_constant_min: {value: 40, src: est, note: "tau = C / G: spindle and headstock housing near the bearings, about 150 kg x 460 J/kgK = 69 kJ/K, over the conductance to air and bed G = 400 W / 14 K = 29 W/K (bearing heat at 4000 rpm, a 14 K steady rise, both est) = 2400 s = 40 min"}
       bearing_heat_W_at_max_rpm: {value: 400, src: est, note: "Palmgren speed term M0 = 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for the two front bearings of the A2-6 spindle (89 mm bore: dm about 140 mm), grease (base oil nu = 20 mm2/s, f0 = 1), n = 4000 rpm: 2 x 0.51 Nm = 1.0 Nm x 419 rad/s = 430 W, i.e. 400 W"}
@@ -167,6 +174,14 @@ spindles:
     optional: "5000 rpm A2-6 22.4 kW spindle (haas-torque-st-2016 p. 2)"
   - id: live
     kind: live_tool
+    drive_type: {value: coupled, src: est, note: "driven tool on the turret's live-tool drive (assumed)"}
+    bearings:
+      - {position: front, type: angular_contact, count: 2, bore_mm: 25, outer_mm: 42, contact_angle_deg: 25, lubrication: grease, axially_fixed: true, src: est, note: "BMT65 driven-tool spindle: a 7005 size pair, assumed"}
+    thermal:
+      housing_mass_kg: {value: 5, src: est, note: "driven-tool body, assumed"}
+      housing_size_mm: {value: [100, 100, 120], src: est, note: "driven-tool body, assumed"}
+      housing_growth_length_mm: {value: 50, src: est, note: "mounting face to the front bearings, assumed"}
+      motor_heat_to_head_pct: {value: 0, src: est, note: "the live-tool motor sits in the turret, not in the tool body"}
     nose: BMT65
     max_rpm: {value: 4000, src: haas-st-yaxis-flyer-2021, note: "standard; 6000 rpm with the upgrade (the UK page lists 6000 rpm)"}
     max_rpm_option: {value: 6000, src: haas-uk-st20y-2026}
@@ -190,6 +205,13 @@ spindles:
       - {fn_Hz: 650, zeta: 0.04, k_N_um: 15, direction: y, src: est, note: "the x mode repeated in y: axisymmetric driven holder"}
   - id: sub
     kind: sub
+    drive_type: {value: built_in, src: est, note: "built-in motor of the sub-spindle (assumed)"}
+    bearings:
+      - {position: front, type: angular_contact, count: 2, bore_mm: 70, outer_mm: 110, contact_angle_deg: 25, lubrication: grease, axially_fixed: true, src: est, note: "not published: a 7014 size pair around the 33 mm bore, assumed"}
+      - {position: rear, type: angular_contact, count: 1, bore_mm: 60, outer_mm: 95, contact_angle_deg: 25, lubrication: grease, axially_fixed: false, src: est, note: "rear bearing (7012 size), assumed"}
+    thermal:
+      housing_mass_kg: {value: 120, src: est, note: "sub-spindle headstock near its bearings (assumed)"}
+      housing_growth_length_mm: {value: 150, src: est, note: "front bearings ahead of the mounting centre (assumed)"}
     option: true
     src: haas-st-yaxis-flyer-2021
     nose: A2-5

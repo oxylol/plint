@@ -7,7 +7,7 @@
   S in M (motion's fk_poses);
 * :func:`set_step_pose` - cutting's StepPose of an L0 step from its start, mid and end frames;
 * :func:`refill_planes` - field planes of the stale memory bins the coming step reads (removal's ray cast
-  against the field at the moment of reading: no L2 query, no replay);
+  against the field at the moment of reading: no L2 query, no replay); :func:`clear_planes` removes them;
 * :func:`displacement_at` - structure's displacement d(X) at a point (trilinear on its grid in S);
 * :func:`slab_point` - a slab's axis point at its generation instant (tip + u_tool - u_work, material
   configuration, architecture 4.1);
@@ -15,6 +15,9 @@
 * :func:`rotvec` - rotation vector of the relative rotation of two frames.
 
 Every helper has one explicit signature (architecture 5.5); the small ones are inlined at the Numba IR level.
+The per-step helpers take the few layouts they read (never the whole CutArgs or HotContact: a call that is not
+inlined copies every member array descriptor of its arguments, ~1 us for a CutArgs) and allocate nothing; they
+are compiled without reference counting (``RAW``, as removal.nbt; docs/performance.md).
 """
 
 from __future__ import annotations
@@ -34,6 +37,7 @@ from . import hot_abi as H
 
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
 INLINE = dict(OPTS, inline="always")
+RAW = dict(OPTS, _nrt=False)
 f8 = types.float64
 i8 = types.int64
 b1 = types.boolean
@@ -43,6 +47,11 @@ F2 = types.float64[:, ::1]
 F3 = types.float64[:, :, ::1]
 F4 = types.float64[:, :, :, ::1]
 I1 = types.int64[::1]
+I4 = types.int32[::1]
+B1 = types.int8[::1]
+I8_2 = types.int64[:, ::1]
+B2 = types.int8[:, ::1]
+POSE_T = CA.POSE_T
 I2 = types.int64[:, ::1]
 CUT_T = H.CUTARGS_T
 VIEW_T = CA.POLAR_T
@@ -64,7 +73,15 @@ WK_PASS = 81                # [12] pose of a tooth pass: tip (3), x0 (3), y0 (3)
 WK_PFX = 93                 # feed direction (T0 xy) and slack of a pass refused by a pool overflow
 WK_PFY = 94
 WK_PSLACK = 95
-WK_SIZE = 112
+WK_X0 = 96                  # [3] scratch vectors of the loop (views; the RAW kernels allocate nothing)
+WK_Y0 = 99                  # [3]
+WK_W0 = 102                 # [3]
+WK_TSIG = 105               # direction of rotation the tooth windows (HotContact.teeth) were computed for
+WK_PROBE = 106              # [8] sweep_contact output of the probe sweep (scratch)
+WK_TIPC = 114               # [3] tool tip of the collision check (viewed as [1, 3])
+WK_XP = 117                 # [3] contact point (structure displacement, workpiece shapes)
+WK_DV = 120                 # [3] structure displacement there
+WK_SIZE = 128
 
 
 @njit(types.UniTuple(f8, 2)(f8, f8, f8, f8, f8, f8), **INLINE)
@@ -92,7 +109,7 @@ def interp_axes(servo, ss, q0, actual, k, th0, w0, th1, w1, a, h, out):
             out[ax] = q0[ax] + a * (actual[k, ax] - q0[ax])
 
 
-@njit(void(CHAIN_T, i8, F1, F3, F3, F1, i8, f8, f8, f8), **OPTS)
+@njit(void(CHAIN_T, i8, F1, F3, F3, F1, i8, f8, f8, f8), **RAW)
 def fk_frame(chain, p, q, poses, fkw, dst, off, mx, my, mz):
     """FK of path p at axis values q into dst[off:off + FR_SIZE]: tip and T0 axes in S, S in M. (mx, my, mz):
     the tool mount, signs of the chain's T0 axes in the tool's own T0 (HotContact.fpar CF_MOUNT_*)."""
@@ -115,18 +132,23 @@ def fk_frame(chain, p, q, poses, fkw, dst, off, mx, my, mz):
 def rotvec(w, off0, off1, dt, out):
     """Angular velocity (rotation vector / dt, in the parent frame) of the rotation R1 R0^T of the row-major 3x3
     blocks w[off0:off0 + 9] (R0) and w[off1:off1 + 9] (R1)."""
-    d = np.empty(9)
-    for r in range(3):
-        for c in range(3):
-            acc = 0.0
-            for m in range(3):
-                acc += w[off1 + 3 * r + m] * w[off0 + 3 * c + m]
-            d[3 * r + c] = acc
-    vx = d[7] - d[5]
-    vy = d[2] - d[6]
-    vz = d[3] - d[1]
+    a = off1
+    b = off0
+    # d = R1 R0^T, d[r, c] = sum_m R1[r, m] R0[c, m]
+    d0 = w[a] * w[b] + w[a + 1] * w[b + 1] + w[a + 2] * w[b + 2]
+    d1 = w[a] * w[b + 3] + w[a + 1] * w[b + 4] + w[a + 2] * w[b + 5]
+    d2 = w[a] * w[b + 6] + w[a + 1] * w[b + 7] + w[a + 2] * w[b + 8]
+    d3 = w[a + 3] * w[b] + w[a + 4] * w[b + 1] + w[a + 5] * w[b + 2]
+    d4 = w[a + 3] * w[b + 3] + w[a + 4] * w[b + 4] + w[a + 5] * w[b + 5]
+    d5 = w[a + 3] * w[b + 6] + w[a + 4] * w[b + 7] + w[a + 5] * w[b + 8]
+    d6 = w[a + 6] * w[b] + w[a + 7] * w[b + 1] + w[a + 8] * w[b + 2]
+    d7 = w[a + 6] * w[b + 3] + w[a + 7] * w[b + 4] + w[a + 8] * w[b + 5]
+    d8 = w[a + 6] * w[b + 6] + w[a + 7] * w[b + 7] + w[a + 8] * w[b + 8]
+    vx = d7 - d5
+    vy = d2 - d6
+    vz = d3 - d1
     s = 0.5 * math.sqrt(vx * vx + vy * vy + vz * vz)
-    cth = 0.5 * (d[0] + d[4] + d[8] - 1.0)
+    cth = 0.5 * (d0 + d4 + d8 - 1.0)
     if s > 1e-300:
         scale = math.atan2(s, cth) / (2.0 * s * dt)
     else:
@@ -136,12 +158,10 @@ def rotvec(w, off0, off1, dt, out):
     out[2] = vz * scale
 
 
-@njit(void(CUT_T, F1, F2, f8), **OPTS)
-def set_step_pose(cut, wk, W_S, dt):
+@njit(void(POSE_T, F1, F2, f8), **RAW)
+def set_step_pose(pose, wk, W_S, dt):
     """Cutting's StepPose of an L0 step: pose at the mid frame, velocities from the end frames (mean over the
     step, second order at the midpoint)."""
-    pose = cut.pose
-    w = np.empty(3)
     for r in range(3):
         pose.tip_S_m[r] = wk[WK_MID + FR_TIP + r]
         pose.v_tip_S_m_s[r] = (wk[WK_A1 + FR_TIP + r] - wk[WK_A0 + FR_TIP + r]) / dt
@@ -152,12 +172,8 @@ def set_step_pose(cut, wk, W_S, dt):
             pose.R_S_T0[r, c] = wk[WK_MID + FR_R + 3 * r + c]
             pose.R_M_S[r, c] = wk[WK_MID + FR_RM + 3 * r + c]
             pose.R_W_S[r, c] = W_S[r, c]
-    rotvec(wk, WK_A0 + FR_R, WK_A1 + FR_R, dt, w)
-    for r in range(3):
-        pose.w_T0_S_rad_s[r] = w[r]
-    rotvec(wk, WK_A0 + FR_RM, WK_A1 + FR_RM, dt, w)
-    for r in range(3):
-        pose.w_S_M_rad_s[r] = w[r]
+    rotvec(wk, WK_A0 + FR_R, WK_A1 + FR_R, dt, pose.w_T0_S_rad_s)
+    rotvec(wk, WK_A0 + FR_RM, WK_A1 + FR_RM, dt, pose.w_S_M_rad_s)
 
 
 @njit(void(F1, F1, F4, F1, F1), **OPTS)
@@ -205,11 +221,10 @@ def displacement_at(origin, cell, disp, x, out):
                     out[d] += wt * disp[ia, ib, ic, d]
 
 
-@njit(void(CUT_T, F1, F1, f8, F1), **INLINE)
-def tool_deflection_S(cut, st_z, wk, z, out):
-    """Tool deflection (translation, S) at height z_T from the station deflections (linear in z between the
-    stations, end values held), rotated with the step's R_S_T0."""
-    u = cut.defl.u_st_T0_m
+@njit(types.UniTuple(f8, 3)(F2, F2, F1, f8), **INLINE)
+def tool_deflection_S(u, R, st_z, z):
+    """Tool deflection (translation, S) at height z_T from the station deflections u [nst, 6] (T0; linear in z
+    between the stations, end values held), rotated with the step's R_S_T0."""
     n = st_z.shape[0]
     ux = 0.0
     uy = 0.0
@@ -236,41 +251,39 @@ def tool_deflection_S(cut, st_z, wk, z, out):
         ux = u[lo, 0] + t * (u[hi, 0] - u[lo, 0])
         uy = u[lo, 1] + t * (u[hi, 1] - u[lo, 1])
         uz = u[lo, 2] + t * (u[hi, 2] - u[lo, 2])
-    R = cut.pose.R_S_T0
-    for r in range(3):
-        out[r] = R[r, 0] * ux + R[r, 1] * uy + R[r, 2] * uz
+    return (R[0, 0] * ux + R[0, 1] * uy + R[0, 2] * uz, R[1, 0] * ux + R[1, 1] * uy + R[1, 2] * uz,
+            R[2, 0] * ux + R[2, 1] * uy + R[2, 2] * uz)
 
 
-@njit(void(CUT_T, F1, F1, f8, f8, F1), **OPTS)
-def slab_point(cut, st_z, wk, s_frac, z, out):
+@njit(void(F2, F2, F1, F1, F1, f8, f8, F1), **RAW)
+def slab_point(u_st, R, u_work, st_z, wk, s_frac, z, out):
     """Axis point of a slab at its generation instant (fraction s_frac of the step): the tip there plus the
-    tool deflection at the slab height minus the workpiece deflection and structure displacement (the
-    cutting Deflection's u_work), i.e. X_e of the slab's axis (architecture 4.1)."""
-    u = np.empty(3)
-    tool_deflection_S(cut, st_z, wk, z, u)
-    uw = cut.defl.u_work_S_m
-    for r in range(3):
-        t0 = wk[WK_A0 + FR_TIP + r]
-        t1 = wk[WK_A1 + FR_TIP + r]
-        out[r] = t0 + s_frac * (t1 - t0) + u[r] - uw[r]
+    tool deflection at the slab height (station deflections u_st, T0, rotated by the step's R_S_T0) minus the
+    workpiece deflection and structure displacement (the cutting Deflection's u_work), i.e. X_e of the slab's
+    axis (architecture 4.1)."""
+    ux, uy, uz = tool_deflection_S(u_st, R, st_z, z)
+    t0 = wk[WK_A0 + FR_TIP]
+    out[0] = t0 + s_frac * (wk[WK_A1 + FR_TIP] - t0) + ux - u_work[0]
+    t0 = wk[WK_A0 + FR_TIP + 1]
+    out[1] = t0 + s_frac * (wk[WK_A1 + FR_TIP + 1] - t0) + uy - u_work[1]
+    t0 = wk[WK_A0 + FR_TIP + 2]
+    out[2] = t0 + s_frac * (wk[WK_A1 + FR_TIP + 2] - t0) + uz - u_work[2]
 
 
-@njit(b1(CUT_T, i8, i8, i8, i8, i8), **INLINE)
-def _stale(cut, row, b, tick, stale_ticks, stale_before):
-    mem = cut.mem
-    if mem.valid[row, b] == 0:
+@njit(b1(B2, I8_2, i8, i8, i8, i8, i8), **INLINE)
+def _stale(valid, mtick, row, b, tick, stale_ticks, stale_before):
+    if valid[row, b] == 0:
         return True
-    t = mem.tick[row, b]
+    t = mtick[row, b]
     return t < stale_before or tick - t > stale_ticks
 
 
-@njit(b1(CUT_T, i8, f8, f8), **INLINE)
-def _in_intervals(cut, s, a, margin):
+@njit(b1(F2, F2, I4, i8, f8, f8), **INLINE)
+def _in_intervals(lo_rad, hi_rad, count, s, a, margin):
     """Angle a (T0, [0, 2 pi)) inside one of station s's engaged intervals widened by margin."""
-    iv = cut.iv
-    for j in range(iv.count[s]):
-        lo = iv.lo_rad[s, j] - margin
-        hi = iv.hi_rad[s, j] + margin
+    for j in range(count[s]):
+        lo = lo_rad[s, j] - margin
+        hi = hi_rad[s, j] + margin
         if lo <= a <= hi or lo <= a + TWO_PI <= hi or lo <= a - TWO_PI <= hi:
             return True
     return False
@@ -317,49 +330,46 @@ def surface_plane(f, px, py, pz, nx, ny, nz, out):
     return True
 
 
-@njit(i8(CUT_T, FIELD_T, F1, F1, F1, F1, i8, f8, f8, F1, I1, i8, i8, I2), **OPTS)
-def refill_planes(cut, f, st_z, st_r, st_nr, st_nz, tick, theta, reach, hit, count, i_found, i_miss, pairs):
-    """Field planes (cutting Refill) of the memory bins the coming L0 step reads that are stale (or that an
-    element reads from the field directly, read_row -1) and have none yet in this macro step: the material
-    boundary along the station's chip-thickness normal from the station circle at the bin centre (step mid
-    pose), found by removal's ray cast against the field as it is now (architecture 5.4: stale bins are
-    refilled from the field; core.hot_kernels.surface_plane). A plane lives for this step only: the (row, bin)
-    of every plane set is listed in pairs[1:] (pairs[0, 0] = count; capacity exceeded: pairs[0, 1] = 1) and
-    clear_planes removes them after the force kernel, so a later tooth never reads a plane of an earlier pose.
-    count[i_found] += planes found, count[i_miss] += bins refilled at the element itself. Returns planes set."""
-    tool = cut.tool
-    mem = cut.mem
-    refill = cut.refill
-    pose = cut.pose
-    iv = cut.iv
-    nb = mem.point_S_m.shape[1]
+@njit(i8(I4, I4, F1, I4, B2, I8_2, F3, F3, B2, F2, F1, F2, F2, I4, F1, I1, FIELD_T, F1, F1, F1, F1, i8, f8, f8, F1, I1,
+         i8, i8, I2), **RAW)
+def refill_planes(st_ptr, st_elem, alpha0, read_row, mvalid, mtick, rq, rm, rvalid, R, tip, iv_lo, iv_hi, iv_count,
+                  step, istep, f, st_z, st_r, st_nr, st_nz, tick, theta, reach, hit, count, i_found, i_miss, pairs):
+    """Field planes (cutting Refill: q rq, m rm, valid rvalid) of the memory bins the coming L0 step reads that are
+    stale (or that an element reads from the field directly, read_row -1) and have none yet in this macro step:
+    the material boundary along the station's chip-thickness normal from the station circle at the bin centre
+    (step mid pose R, tip), found by removal's ray cast against the field as it is now (architecture 5.4: stale
+    bins are refilled from the field; core.hot_kernels.surface_plane). A plane lives for this step only: the
+    (row, bin) of every plane set is listed in pairs[1:] (pairs[0, 0] = count; capacity exceeded: pairs[0, 1] = 1)
+    and clear_planes removes them after the force kernel, so a later tooth never reads a plane of an earlier pose.
+    count[i_found] += planes found, count[i_miss] += bins refilled at the element itself. Returns planes set.
+    Arguments: cutting's CutTool station lists, element angles and read rows, SurfaceMemory valid / tick, Refill,
+    StepPose R_S_T0 / tip_S_m, EngagedIntervals; hit: [16] output and scratch."""
+    nb = mvalid.shape[1]
     inv_bin = nb / TWO_PI
     bw = TWO_PI / nb
-    stale_ticks = cut.istep[CA.SI_STALE_TICKS]
-    stale_before = cut.istep[CA.SI_STALE_BEFORE]
+    stale_ticks = istep[CA.SI_STALE_TICKS]
+    stale_before = istep[CA.SI_STALE_BEFORE]
     nst = st_z.shape[0]
-    R = pose.R_S_T0
-    tip = pose.tip_S_m
-    half = 0.5 * abs(cut.step[CA.ST_OMEGA_RAD_S] * cut.step[CA.ST_DT_S]) + bw
+    half = 0.5 * abs(step[CA.ST_OMEGA_RAD_S] * step[CA.ST_DT_S]) + bw
     found = 0
-    for s in range(min(nst, iv.count.shape[0])):
-        if iv.count[s] == 0:
+    for s in range(min(nst, iv_count.shape[0])):
+        if iv_count[s] == 0:
             continue
-        for idx in range(tool.st_ptr[s], tool.st_ptr[s + 1]):
-            e = tool.st_elem[idx]
-            a = tool.alpha0_rad[e] + theta
+        for idx in range(st_ptr[s], st_ptr[s + 1]):
+            e = st_elem[idx]
+            a = alpha0[e] + theta
             a -= TWO_PI * math.floor(a / TWO_PI)
-            if not _in_intervals(cut, s, a, half):
+            if not _in_intervals(iv_lo, iv_hi, iv_count, s, a, half):
                 continue
-            row = tool.read_row[e]
+            row = read_row[e]
             direct = row < 0
             r = s if direct else row
             b_first = int(math.floor(a * inv_bin - 0.5)) - 1
             for d in range(4):
                 b = (b_first + d) % nb
-                if refill.valid[r, b] != 0:
+                if rvalid[r, b] != 0:
                     continue
-                if not direct and not _stale(cut, r, b, tick, stale_ticks, stale_before):
+                if not direct and not _stale(mvalid, mtick, r, b, tick, stale_ticks, stale_before):
                     continue
                 npair = pairs[0, 0]
                 if npair + 1 < pairs.shape[0]:
@@ -400,26 +410,22 @@ def refill_planes(cut, f, st_z, st_r, st_nr, st_nz, tick, theta, reach, hit, cou
                     hit[4] = -dx
                     hit[5] = -dy
                     hit[6] = -dz
-                mx = hit[4]
-                my = hit[5]
-                mz = hit[6]
-                mn = 1.0
-                refill.q_S_m[r, b, 0] = hit[1]
-                refill.q_S_m[r, b, 1] = hit[2]
-                refill.q_S_m[r, b, 2] = hit[3]
-                refill.m_S[r, b, 0] = mx / mn
-                refill.m_S[r, b, 1] = my / mn
-                refill.m_S[r, b, 2] = mz / mn
-                refill.valid[r, b] = 1
+                rq[r, b, 0] = hit[1]
+                rq[r, b, 1] = hit[2]
+                rq[r, b, 2] = hit[3]
+                rm[r, b, 0] = hit[4]
+                rm[r, b, 1] = hit[5]
+                rm[r, b, 2] = hit[6]
+                rvalid[r, b] = 1
                 found += 1
     count[i_found] += found
     return found
 
 
-@njit(void(CUT_T, I2), **OPTS)
-def clear_planes(cut, pairs):
-    """Remove the planes refill_planes set for this step (all of them when its list overflowed)."""
-    valid = cut.refill.valid
+@njit(void(B2, I2), **RAW)
+def clear_planes(valid, pairs):
+    """Remove the planes refill_planes set for this step (all of them when its list overflowed); valid: the
+    cutting Refill's valid flags."""
     if pairs[0, 1] != 0:
         for r in range(valid.shape[0]):
             for b in range(valid.shape[1]):
@@ -500,4 +506,5 @@ def polar_max_radius(pf, z_lo, z_hi):
 
 __all__ = ["hermite", "interp_axes", "fk_frame", "rotvec", "set_step_pose", "displacement_at", "tool_deflection_S",
            "slab_point", "surface_plane", "refill_planes", "clear_planes", "polar_view_update", "polar_max_radius", "WK_A0", "WK_MID", "WK_A1", "WK_DISP", "WK_UREL", "WK_FEED", "WK_PASS", "WK_PFX", "WK_PFY", "WK_PSLACK", "WK_SIZE", "FR_TIP",
-           "FR_R", "FR_RM", "FR_TM", "FR_SIZE"]
+           "FR_R", "FR_RM", "FR_TM", "FR_SIZE", "WK_X0", "WK_Y0", "WK_W0", "WK_TSIG", "WK_PROBE", "WK_TIPC", "WK_XP",
+           "WK_DV"]

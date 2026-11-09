@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import functools
 import math
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 
@@ -223,6 +224,7 @@ class TaylorEntry:
     life_basis: str = CUTTING_TIME
     contact_fraction: float = 1.0
     engagement: str = "continuous"     # stated | default | continuous | contact (how contact_fraction was set)
+    grade: str = ""                    # the entry's tool grade text (tool-material family within the class)
 
     def _load(self, feed_m, ap_m) -> float:
         factor = 1.0
@@ -290,28 +292,46 @@ def taylor_entries(items) -> tuple[TaylorEntry, ...]:
             raise InputError(f"tool_life[{i}]: {error}") from None
         out.append(TaylorEntry(text(e, "tool_class"), text(e, "coating"), text(e, "process"), c, n,
                                num(e, "a", 0.0), num(e, "b", 0.0), t_ref, num(e, "feed_ref_m"), num(e, "ap_ref_m"),
-                               vb, vc_range, text(e, "src"), i, basis, fraction, how))
+                               vb, vc_range, text(e, "src"), i, basis, fraction, how, text(e, "grade")))
     return tuple(out)
 
 
-def select_taylor(entries, tool_class: str, coating: str, process: str) -> tuple[TaylorEntry | None, str]:
+def _words(value: str) -> set[str]:
+    return {w for w in re.split(r"[^0-9a-z]+", (value or "").lower()) if len(w) > 1}
+
+
+def grade_score(entry: TaylorEntry, tool_material: "ToolMaterialData | None") -> int:
+    """Words of the entry's grade text (``SiAlON``, ``Al2O3-SiC whisker``) found in the tool material's id and
+    name: which entry of a tool class describes this tool material (0 without a grade or a tool material)."""
+    if tool_material is None or not entry.grade:
+        return 0
+    known = _words(tool_material.id) | _words(tool_material.name)
+    return len(_words(entry.grade) & known)
+
+
+def select_taylor(entries, tool_class: str, coating: str, process: str,
+                  tool_material: "ToolMaterialData | None" = None) -> tuple[TaylorEntry | None, str]:
     """The Taylor entry the calibration uses and how its coating relates to the tool's:
-    ``same`` (coating matches), ``substrate`` (an uncoated entry), ``other`` (another coating)."""
+    ``same`` (coating matches), ``substrate`` (an uncoated entry), ``other`` (another coating). Among entries
+    of the tool class: coating first, then process, then the entry whose grade names the tool material
+    (``grade_score``: a whisker-reinforced alumina tool takes the whisker entry, not a SiAlON one of the same
+    class), then file order."""
     same_class = [e for e in entries if e.tool_class == tool_class]
     if not same_class:
         return None, ""
 
-    def process_score(e):
-        return 2 if e.process == process else (1 if not e.process else 0)
+    def rank(e):
+        process_score = 2 if e.process == process else (1 if not e.process else 0)
+        return process_score, grade_score(e, tool_material), -e.index
 
     tool_uncoated = normalise(coating or "none") in ("none", "uncoated", "")
     matched = [e for e in same_class if coating_matches(e.coating, coating) == 3 and (tool_uncoated or not e.uncoated)]
     if matched:
-        return max(matched, key=lambda e: (process_score(e), -e.index)), ("substrate" if tool_uncoated else "same")
+        return max(matched, key=rank), ("substrate" if tool_uncoated else "same")
     plain_entries = [e for e in same_class if e.uncoated]
     if plain_entries:
-        return max(plain_entries, key=lambda e: (process_score(e), -e.index)), "substrate"
-    return max(same_class, key=lambda e: (process_score(e), -e.index)), "other"
+        return max(plain_entries, key=rank), "substrate"
+    return max(same_class, key=rank), "other"
 
 
 # ------------------------------------------------------------------------------------------ tool material
@@ -337,6 +357,7 @@ class ToolMaterialData:
     grain_m: float | None
     max_service_K: float
     usui: tuple[UsuiEntry, ...] = ()
+    name: str = ""                 # the file's descriptive name (grade family; matched against Taylor grades)
 
     def youngs(self, temp_K):
         return np.interp(temp_K, self.E_T_K, self.E_Pa)
@@ -385,7 +406,7 @@ def tool_material_data(obj, tool_class: str = "") -> ToolMaterialData:
         hardness_T_K=h_tab[0], hardness_Pa=h_tab[1], trs_Pa=num(m, "transverse_rupture_Pa"),
         kic_Pa_sqrt_m=num(m, "fracture_toughness_Pa_sqrt_m"), weibull_m=num(m, "weibull_modulus"),
         grain_m=num(m, "grain_size_m"), max_service_K=t_max,
-        usui=usui_entries(field_of(m, "usui"), f"tool material {mid}"))
+        usui=usui_entries(field_of(m, "usui"), f"tool material {mid}"), name=text(m, "name"))
 
 
 # ------------------------------------------------------------------------------------------ coating
@@ -495,6 +516,6 @@ def work_data(obj) -> WorkData:
 
 
 __all__ = ["get", "number", "HV_PA", "UsuiEntry", "usui_entry", "usui_entries", "select_usui", "TaylorEntry",
-           "taylor_entries", "life_basis_of", "select_taylor", "CUTTING_TIME", "CONTACT_TIME", "INTERRUPTED_PROCESSES", "ToolMaterialData", "tool_material_data",
+           "taylor_entries", "life_basis_of", "select_taylor", "grade_score", "CUTTING_TIME", "CONTACT_TIME", "INTERRUPTED_PROCESSES", "ToolMaterialData", "tool_material_data",
            "CoatingData", "coating_data", "generic_coating", "WorkData", "work_data", "as_map", "field_of", "num",
            "text", "plain", "table", "FLANK", "CALIBRATION", "FRACTURE", "LIFE", "TOOL_CLASSES_BRITTLE"]

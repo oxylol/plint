@@ -43,7 +43,7 @@ from .abi import EventBuffer, RingBuffer, ring_buffer
 MAX_CONTACTS = 2            # contacts (paths with a tool) per step; one contact per controller path
 MAX_PATHS = 2               # removal's per-path tuples (profiles, slabs, accumulators) are padded to this
 MAX_WORK = 2                # workpieces (main and sub spindle)
-WORK_SIZE = 112             # HotContact.work (core.hot_kernels WK_SIZE)
+WORK_SIZE = 128             # HotContact.work (core.hot_kernels WK_SIZE)
 REFILL_PAIRS = 4096         # refill planes one L0 step may set before clearing all (HotContact.planes)
 
 # ------------------------------------------------------------------------------- HotContact.ipar
@@ -68,6 +68,10 @@ CI_N_AXES = 17              # axes of the path (dynamics AxisBase order)
 CI_POLAR = 18               # 1: the workpiece has a polar field (turning)
 CI_STALE_BEFORE = 19        # cutting's SI_STALE_BEFORE from L2 (the loop raises it after a rapid)
 CI_PROBE = 20               # 1: a probe stylus profile is set for this path (G31 sweep)
+CI_ST_MARGIN = 21           # stations beyond the engaged ones whose deflections the step computes (a slab point
+                            #   interpolates between the stations around the slab's mid height: 2 + stations per slab)
+CI_DEFL_SHARED = 22         # 1: cutting's Deflection shares the station arrays of dynamics' (identity tool mount): the
+                            #   loop copies only the workpiece deflection
 N_CI = 24
 
 # ------------------------------------------------------------------------------- HotContact.fpar
@@ -105,6 +109,15 @@ CS_OVERFLOW_TOOTH = 11      # tooth whose pass hit a pool overflow (-1 none): re
 CS_GATINGS = 12             # engaged-interval refreshes (passes and timer)
 CS_FORCED = 13              # passes forced by the staleness fallback (a slab missed its generation angle)
 N_CS = 16
+
+# HotContact.teeth columns: per tooth, derived from ContactState.gamma / slab_done whenever those change (not
+# checkpointed; core.hotloop.tooth_windows): tooth_events skips a tooth whose slabs cannot pass their generation
+# angle in the step (docs/models/hotloop.md "Tooth passes")
+TW_N_ENG = 0                # engaged slabs of the tooth (gamma valid)
+TW_N_DONE = 1               # engaged slabs recorded since the tooth's last pass
+TW_LO = 2                   # start of the arc holding every engaged slab's phase sigma (gamma - a0), [0, 2 pi)
+TW_WIDTH = 3                # its width (rad); -1: the phases spread over half a turn or more (no skip)
+N_TW = 4
 
 # ContactState.fval
 CSF_BETA = 0                # turning: unwrapped angle of the tool's reference plane in S at the last step end
@@ -257,6 +270,7 @@ class HotContact(NamedTuple):
     planes: np.ndarray          # [REFILL_PAIRS + 1, 2] int64 (row, bin) of the refill planes of the current step
     probe: object               # removal.abi.Profile of the stylus (G31 sweep; empty: no probe)
     probe_out: np.ndarray       # [8] sweep_contact output
+    teeth: np.ndarray           # [nt, N_TW] per-tooth slab counts and phase windows (TW_*; derived, scratch)
 
 
 class HotGlobal(NamedTuple):
@@ -314,7 +328,8 @@ def empty_contact(n_axes: int = 1) -> HotContact:
     return HotContact(_i8(N_CI), _f(N_CF), empty_cut_args(), DA.empty_system(), DA.empty_axes(1),
                       DA.empty_work_grid(), _f(3), empty_geo(), empty_contact_state(), RN.example_spec(), _f(4), _f(4),
                       _f(3), _f(WORK_SIZE), _f(DA.N_BASE), _f(DA.N_BASE), _f(1), MA.eye_stack(MA.N_FK), _f(6, 4, 4), _f(na),
-                      _f(RA.N_PS), _f(8), np.zeros((REFILL_PAIRS + 1, 2), np.int64), RA.empty_profile(), _f(8))
+                      _f(RA.N_PS), _f(8), np.zeros((REFILL_PAIRS + 1, 2), np.int64), RA.empty_profile(), _f(8),
+                      _f(1, N_TW))
 
 
 def empty_global(n_axes: int = 1, n_spindles: int = 1, n_paths: int = 1, n_ticks: int = 1) -> HotGlobal:

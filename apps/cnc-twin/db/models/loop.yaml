@@ -1,0 +1,85 @@
+# Settings of the run loop and of `twin check` (cnctwin.core.loop, cnctwin.core.check; docs/models/loop.md):
+# the coupling-lag monitor of architecture 5.3, the frequency the fast ring is sized for, and the cost model
+# `twin check` estimates CPU seconds per simulated second with. Not physical coefficients: the monitor's ratio
+# is the architecture's rule, the rest bound or estimate what the loop does on this box. Read in SI by
+# cnctwin.db.models.params("loop").
+format: cnctwin-model-params
+version: 1
+model: loop
+description: "Coupling-lag monitor, fast-ring sizing and the CPU cost model of twin check"
+params:
+  # ------------------------------------------------------------------ coupling-lag monitor (architecture 5.3)
+  coupling_ratio:
+    value: 0.5
+    unit: "-"
+    src: cnctwin-architecture-2026
+    note: "architecture 5.3: two successive changes of a frozen quantity with opposite sign and a magnitude ratio above 0.5 flag a staggered instability"
+  coupling_rel_change:
+    value: 0.001
+    unit: "-"
+    range: [1.0e-9, 0.1]
+    src: est
+    note: "a change counts only above this fraction of the quantity's value: below it the alternation is round-off or the noise of a converged quantity (tool temperatures settle to 1e-6 relative between steps in a steady cut), not a coupling oscillation"
+  coupling_alternations:
+    value: 3
+    unit: "-"
+    range: [1, 100]
+    src: est
+    note: "consecutive alternating changes before the warning: one alternation follows any single disturbance (a tool entering the cut); three in a row is a sustained oscillation of the stagger"
+  # ------------------------------------------------------------------ energy balance
+  chip_kinetic_in_balance:
+    value: 0
+    unit: "-"
+    range: [0, 1]
+    src: est
+    note: "1: the chips' kinetic energy at separation (chips.kinetic_energy_J) is an out term of the energy balance (architecture 12). 0: it is reported, not balanced: cutting's force model (Kienzle / Oxley coefficient tables) has no momentum flux, its shaft work does not contain the energy chips give the chips (1/2 v^2 per kg, about 1e-5 of the shaft work at aluminium speeds), so the out term alone would break the 1e-6 balance by that much. Set 1 when cutting's torque carries the chip momentum force"
+  energy_scale_floor_J:
+    value: 1.0e-6
+    unit: J
+    range: [0, 1.0]
+    src: est
+    note: "smallest energy scale an interval's relative residual is taken against (the run's ledger, cnctwin.core.loop_wiring.RunLedger): out of the cut the only terms can be the modes' free vibration after a spindle start or an axis move, a few picojoules of damping against the same modal energy change, whose integrator round-off alone is 1e-6 of them (the lathe warmup: 6.7e-18 J residual on 3.0e-12 J terms, relative 1.1e-6). With 1 uJ the absolute floor of the check is 1e-12 J, below 1e-9 of the shaft work of any macro step in contact"
+  # ------------------------------------------------------------------ fast ring
+  ring_f_max_Hz:
+    value: 20000
+    unit: Hz
+    range: [100, 1.0e6]
+    src: est
+    note: "the recorder's ring is sized for the smallest L0 stride the run can take; the modal rule 2 pi f_max dt <= 0.3 is evaluated for modes up to this frequency (tool bending modes of short carbide tools reach 5-10 kHz, spindle flange modes 1-3 kHz). A smaller stride than the estimate still fits: the ring holds 32 MiB of rows (recording.ring_max_bytes), at least one macro step at a 1-tick stride for up to 380 fast columns"
+  # ------------------------------------------------------------------ twin check: cost model (one core of this box)
+  cost_l0_fixed_s:
+    value: 7.0e-6
+    unit: s
+    range: [0, 1.0e-3]
+    src: est
+    note: "CPU time of one L0 step in contact independent of the element count: cutting's cut_step fixed part (about 4 us) plus the loop's own work (FK, refill planes, tooth events: about 3 us), measured on the D10 4-flute slot (docs/models/hotloop.md 13, docs/models/cutting.md limitations)"
+  cost_l0_element_s:
+    value: 2.9e-7
+    unit: s
+    range: [0, 1.0e-4]
+    src: est
+    note: "CPU time per engaged edge element and L0 step in cut_step (about 160 ns geometry and memory, 110 ns forces and accumulation; docs/models/cutting.md limitations)"
+  cost_l0_mode_s:
+    value: 4.0e-7
+    unit: s
+    range: [0, 1.0e-4]
+    src: est
+    note: "CPU time per mode and L0 step of dynamics' modal_begin + modal_correct: 1.3 us with 5 modes, 2.4 us with 9, 5.1 us with 13 (docs/models/dynamics.md limitations)"
+  cost_l1_tick_s:
+    value: 1.5e-5
+    unit: s
+    range: [0, 1.0e-2]
+    src: est
+    note: "CPU time per L1 tick out of contact: motion's tick (servo, spindle, FK) and dynamics' free propagation (4.5-14 us per free tick, docs/models/dynamics.md), broad phase"
+  cost_l2_step_s:
+    value: 0.015
+    unit: s
+    range: [0, 10]
+    src: est
+    note: "CPU time per macro step of the slow domains and the recording while cutting: thermal 2-3 ms (plus its FV step every few steps), chips 2.6-3.1 ms, surface about 5 ms in finishing, coolant 1-3 ms, wear 0.7 ms, holding, structure and dynamics' L2, recording 0.5 ms (each domain's cost note in docs/models/*.md)"
+  cost_l2_idle_step_s:
+    value: 0.006
+    unit: s
+    range: [0, 10]
+    src: est
+    note: "CPU time per macro step of the slow domains out of the cut (chips 1.3 ms idle, coolant 1 ms, thermal's machine and tool models, recording)"

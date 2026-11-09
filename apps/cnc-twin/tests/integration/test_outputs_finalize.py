@@ -17,6 +17,7 @@ from cnctwin.core.errors import InputError
 from cnctwin.core.outputs import (GENERATORS, finalize_outputs, main, output_settings, positioned_findings,
                                   update_index)
 from tests.integration import test_outputs_fakes as fakes
+from tests.fixtures.make_synthetic_run import VIDEO_FPS
 
 SMALL = fakes.SMALL
 STANDARD = ("setup.png", "cut.png", "part_OP10.png", "part_OP10_section.png", "temperature.png", "chip_pile.png",
@@ -163,12 +164,12 @@ def test_settings_come_from_the_project_and_the_options(finalized, tmp_path):
     # run.json of the synthetic run has no project outputs: the project file's are read (video at speed 1)
     assert settings["report"] == ["html", "pdf"] and settings["images"] and settings["audio"] == {"listener": None,
                                                                                                     "sources": None}
-    assert settings["video"]["speed"] == 1.0 and settings["video"]["fps"] == 25.0 and settings["only"] is None
+    assert settings["video"]["speed"] == 1.0 and settings["video"]["fps"] == float(VIDEO_FPS) and settings["only"] is None
     assert settings["memory_bytes"]["images"] == 1610612736 and settings["simulated_s"] == pytest.approx(2.32)
     assert settings["timeout_s"]["video"] == pytest.approx(1800 + 30 * 2.32)
     merged = output_settings(run_dir, {"outputs": {"video": {"speed": 4}, "report": "html", "audio": False,
                                                    "memory_bytes": "1.5G", "only": "report,images"}})
-    assert merged["video"]["speed"] == 4.0 and merged["video"]["fps"] == 25.0 and merged["report"] == ["html"]
+    assert merged["video"]["speed"] == 4.0 and merged["video"]["fps"] == float(VIDEO_FPS) and merged["report"] == ["html"]
     assert merged["audio"] is None and merged["memory_bytes"]["audio"] == int(1.5 * 2 ** 30)
     assert merged["only"] == ["images", "report"]
     assert output_settings(run_dir, {"outputs": False})["report"] == []

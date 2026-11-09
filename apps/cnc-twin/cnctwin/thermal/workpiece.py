@@ -23,7 +23,7 @@ from . import convection as cv
 from . import kernels as K
 from . import props
 from .abi import (B_ALL_WET, B_COOLANT_ON, B_EPS, B_FMIN, B_H_CONTACT, B_H_WET, B_SIGMA, B_T_AIR, B_T_FIX,
-                  B_T_FLUID, B_T_RAD, FACE_NORMALS, L_AIR, L_CONTACT, L_COOL, L_LOST, L_MASS, L_RAD, L_SRC,
+                  B_T_FLUID, B_T_RAD, FACE_NORMALS, L_AIR, L_CONTACT, L_COOL, L_LOST, L_MASS, L_RAD, L_SRC, L_TMEAN,
                   L_TSURF, L_U0, L_U1, N_L, MatTable, WorkBoundary, WorkGrid, new_work_boundary,
                   new_work_grid, new_work_scratch)
 from .ledger import SolverLedger
@@ -307,7 +307,10 @@ class WorkThermal:
         if np.isfinite(out[L_TSURF]):
             self.surface_mean_K = float(out[L_TSURF])
         losses = out[L_AIR] + out[L_COOL] + out[L_RAD] + out[L_CONTACT]
-        self.ledger.book(u_before, out[L_U1], out[L_SRC], losses, removed - added, self.settings.energy_tol, time_s)
+        content = float(out[L_MASS]) * float(np.max(self.mat.cp_J_kgK)) * float(out[L_TMEAN]) \
+            if float(out[L_MASS]) > 0.0 and np.isfinite(out[L_TMEAN]) else 0.0
+        self.ledger.book(u_before, out[L_U1], out[L_SRC], losses, removed - added, self.settings.energy_tol, time_s,
+                         content_J=content)
         self.mass_kg = float(out[L_MASS])
         fixture = self.fixture.step(dt, out[L_CONTACT] + self.fixture_heat_J, env.T_air_K, env.T_table_K,
                                     self.settings.energy_tol, time_s)

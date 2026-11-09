@@ -146,6 +146,10 @@ kinematics:
 spindles:
   - id: main
     kind: milling
+    drive_type: {value: coupled, src: est, note: "the published inline direct drive"}
+    bearings:
+      - {position: front, type: angular_contact, count: 3, bore_mm: 65, outer_mm: 100, contact_angle_deg: 15, lubrication: oil_air, axially_fixed: true, src: est, note: "not published: three 15 deg spindle bearings of about 85 mm pitch diameter (7013 C size), as the bearing-heat estimate below; air/oil injection as published"}
+      - {position: rear, type: angular_contact, count: 2, bore_mm: 55, outer_mm: 90, contact_angle_deg: 15, lubrication: oil_air, axially_fixed: false, src: est, note: "floating rear pair (7011 C size), assumed"}
     nose: CAT40
     max_rpm: 8100
     drive: "inline direct-drive"

@@ -27,6 +27,21 @@ class RunCreate(BaseModel):
     project_id: str = Field(description="A project id from GET /api/projects")
     options: dict[str, Any] = Field(default_factory=dict,
                                     description="Passed unchanged to cnctwin.core.loop.run_project")
+    no_cache: bool = Field(default=False, description="Simulate even when the run cache holds this run (the same "
+                           "project, inputs, options and build); the new run is registered and supersedes it")
+
+
+class SweepCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [{
+        "project_id": "example-pocket-islands-al6061",
+        "spec": {"name": "feeds", "design": {"kind": "lhs", "points": 8},
+                 "parameters": [{"name": "feed", "kind": "override", "target": "feed", "range": [0.7, 1.3]}]},
+        "options": {}}]})
+    project_id: str = Field(description="The base project (a project id from GET /api/projects)")
+    spec: dict[str, Any] = Field(description="The sweep spec (docs/formats.md \"Sweep\") without base: the project is "
+                                 "the base; generator scripts must lie in the project's folder")
+    options: dict[str, Any] = Field(default_factory=dict, description="dataset (default true), no_cache, "
+                                    "retry_failed, isolation (process | inline)")
 
 
 class OptionsBody(BaseModel):
@@ -97,7 +112,7 @@ class ProjectUpload(ProjectDetail):
 
 class JobRecord(Open):
     id: str
-    kind: Literal["simulate", "check", "compare", "uncertainty", "calibrate"]
+    kind: Literal["simulate", "check", "compare", "uncertainty", "calibrate", "sweep"]
     state: Literal["queued", "running", "cancelling", "done", "failed", "cancelled"]
     pool: Literal["heavy", "light"]
     run_id: str | None
@@ -224,6 +239,31 @@ class JetsResponse(Open):
 class FileList(Open):
     count: int
     files: list[FileEntry]
+
+
+class SweepPoint(Open):
+    index: int
+    values: dict[str, Any] | None
+    status: str = Field(description="pending | done | cached | failed")
+    run_id: str | None
+    safe: bool | None
+
+
+class SweepRecord(Open):
+    id: str = Field(description="The sweep's job id")
+    name: str | None
+    project_id: str | None
+    job: JobRecord
+    status: dict[str, Any] | None = Field(description="status.json of the sweep folder (progress, ETA)")
+    summary: dict[str, Any] | None = Field(description="summary.json once the sweep has finished")
+    points: list[SweepPoint]
+    result: Any = Field(default=None, description="The job's result once done (with the dataset's files)")
+    links: dict[str, str]
+
+
+class SweepList(Open):
+    total: int
+    sweeps: list[dict[str, Any]]
 
 
 class DbKinds(Open):

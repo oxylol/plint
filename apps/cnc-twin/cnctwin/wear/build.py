@@ -3,7 +3,8 @@
 * element geometry from the nominal EdgeModel: VB / VN = cot(a) - tan(g), the coating depth at the edge
   per unit VN cos(a)(1 - tan(a) tan(g)) (yen-2004-tool-wear-fem land geometry), wedge angle, kappa shares;
 * the wear law: published Usui constants of the tool material or the work material when they match
-  (converted explicitly to SI rates), else Usui constants calibrated to the work material's Taylor
+  (converted explicitly to SI rates; with a Taylor entry for the pairing their A is anchored to it at the
+  15-min speed, B as published: calibration.anchor_published), else Usui constants calibrated to the work material's Taylor
   life (calibration.py), else the abrasive (Archard) term alone; the rake uses its own published set,
   else the flank law (Usui et al. 1984: one characteristic equation for both faces);
 * hardness tables (the database's, hot hardness when tabulated), the Basquin curve, the initial flaw;
@@ -130,6 +131,40 @@ def taylor_check(taylor: P.TaylorEntry, response, slot: int, fg: CAL.FlankGeomet
     return out
 
 
+def _anchored(ref: P.TaylorEntry, relation: str, fA: np.ndarray, fB: np.ndarray, flo: np.ndarray, report: dict,
+              coating: P.CoatingData | None, tool_mat: P.ToolMaterialData, work: P.WorkData, abrasive: float,
+              hs: tuple, fg: CAL.FlankGeometry, response, slot: int, vb0_m: float, settings,
+              estimated: list) -> tuple[np.ndarray, P.TaylorEntry | None]:
+    """The published flank set with its A anchored to the pairing's Taylor entry (calibration.anchor_published):
+    (A array, the entry used) or the set unchanged and None when it cannot be anchored (noted in estimated)."""
+    phase = coating if relation == "same" else (
+        P.generic_coating(ref.coating, coating, tool_mat) if relation == "other" else None)
+    abrasion = CAL.Abrasion(abrasive, hs[0], hs[1], *(phase.hardness_table() if phase is not None else (None, None)))
+    key = ("anchor", work.id, tool_mat.id, tuple(report["flank"]["src"]), tuple(fA),
+           tuple(fB), tuple(flo), ref, relation, round(fg.rake_rad, 9), round(fg.clearance_rad, 9),
+           round(fg.edge_radius_m, 12), round(fg.incl_rad, 9), round(vb0_m, 12), int(settings.calib_nodes),
+           getattr(response, "cache_key", id(response)), abrasive,
+           None if phase is None else (phase.id, phase.factor, phase.thickness_m))
+    try:
+        anchor = _CALIBRATIONS.get(key)
+        if anchor is None:
+            coated = relation == "same"
+            anchor = CAL.anchor_published(ref, lambda v, vb: response.response(
+                slot, _taylor_condition(ref, fg, v, vb, coated)), fg, phase, abrasion, vb0_m, settings.calib_nodes,
+                fA, fB, flo)
+            _CALIBRATIONS[key] = anchor
+    except (InputError, ValueError, LookupError, ZeroDivisionError) as error:
+        estimated.append(f"tool slot {slot}: published Usui set used as published, not anchored to {work.id} "
+                         f"tool_life[{ref.index}] ({error})")
+        report["flank"]["anchor"] = {"error": str(error)}
+        return fA, None
+    report["flank"]["anchor"] = {**anchor.report, "relation": relation, "A_published_per_Pa": fA.tolist()}
+    report["flank"]["A_per_Pa"] = (fA * anchor.factor).tolist()
+    estimated.append(f"tool slot {slot}: published Usui set anchored to {work.id} tool_life[{ref.index}] at the "
+                     f"15-min speed: A x {anchor.factor:.3g} for this model's flank temperatures (B as published)")
+    return fA * anchor.factor, ref
+
+
 def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coating: P.CoatingData | None,
              coating_id: str, process: str, fg: CAL.FlankGeometry, response, vb0_m: float, settings,
              estimated: list, flow_stress: bool = True) -> tuple[A.Law, dict, P.TaylorEntry | None]:
@@ -154,8 +189,12 @@ def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coati
         fA, fB, flo = _branches(flank_pub, coating, coating_id)
         report["flank"] = {"source": "published", "src": [e.src for e in flank_pub],
                            "origin": [e.origin for e in flank_pub], "A_per_Pa": fA.tolist(), "B_K": fB.tolist()}
+        ref, relation = P.select_taylor(work.taylor, tool_mat.tool_class, coating_id, process, tool_mat)
+        if ref is not None and response is not None and flow_stress:
+            fA, taylor = _anchored(ref, relation, fA, fB, flo, report, coating, tool_mat, work, abrasive, hs, fg,
+                                   response, slot, vb0_m, settings, estimated)
     else:
-        taylor, relation = P.select_taylor(work.taylor, tool_mat.tool_class, coating_id, process)
+        taylor, relation = P.select_taylor(work.taylor, tool_mat.tool_class, coating_id, process, tool_mat)
         fA = fB = flo = None
         if taylor is not None and not flow_stress:
             report["flank"] = {"source": "abrasive_only", "reason": "no flow-stress law: abrasive wear with the "
@@ -191,6 +230,11 @@ def wear_law(*, slot: int, work: P.WorkData, tool_mat: P.ToolMaterialData, coati
                 report["flank"] = {"source": "taylor", "relation": relation, "A_per_Pa": [cal.A_per_Pa],
                                    "B_K": [cal.B_K], "coating_phase": None if phase is None else phase.id,
                                    "calibration": cal.report}
+                if not cal.report.get("bracketed", True):
+                    estimated.append(f"tool slot {slot}: Taylor calibration not bracketed (B = {cal.B_K:.4g} K at the "
+                                     f"end of its range, residual at the upper speed {cal.report['residual_rel'][1]:+.1%}): "
+                                     f"the response's flank temperature changes too little between the calibration "
+                                     f"speeds for the entry's speed exponent")
                 if relation == "other":
                     estimated.append(f"tool slot {slot}: Taylor entry for coating {taylor.coating!r} calibrated with a "
                                      f"generic coating (factor {phase.factor:g}, {phase.thickness_m * 1e6:.1f} um)")

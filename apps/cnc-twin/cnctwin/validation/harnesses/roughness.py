@@ -1,16 +1,18 @@
 """Harness for roughness: cnctwin.surface's kinematic profile model with the case's feeds and tools.
 
 The profile is the lower envelope of the generating edge placed at each pass (cnctwin.surface.kernels.
-envelope_profile: the passes in time order, each lowering the surface only where the layer it removes reaches
-the minimum chip thickness h_min = ratio x edge radius, Brammertz 1961; docs/models/surface.md 2), evaluated by
-cnctwin.surface.roughness (ISO 4287 parameters with the ISO 4288 cut-off chosen from the feed spacing, Gaussian
-filter of ISO 16610-21). The generating edge in the profile plane, per process:
+envelope_profile: the passes in time order, each removing material only where the layer it meets reaches the
+minimum chip thickness h_min = ratio x edge radius, Brammertz 1961; a thinner layer is ploughed, pressed to the
+pass and moved by side flow into the free space under the pass, or left in place where there is none;
+docs/models/surface.md 2), evaluated by cnctwin.surface.roughness (ISO 4287 parameters with the ISO 4288 cut-off
+chosen from the feed spacing, Gaussian filter of ISO 16610-21). The generating edge in the profile plane, per
+process, with the tool moving along +u (major edge leading, minor edge trailing over the generated surface):
 
 * **turning**: the insert's nose radius with the major and minor edges (entering angle kappa_r, minor angle
   kappa_r' from the insert's corner angle: kappa_r' = 180 deg - corner - kappa_r), one pass per revolution at
   the feed;
 * **face and end-mill floors**: the cutter's corner (corner radius, or a sharp corner) with the minor (end) edge
-  at its dish angle, one pass per tooth at the feed per tooth (ideal cutter: equal teeth, no runout);
+  at its dish angle trailing, one pass per tooth at the feed per tooth (ideal cutter: equal teeth, no runout);
 * **ball-end milling**: the scallop (cross-feed) profile of the ball (radius R, any lead or tilt: the ball's
   silhouette stays a circle of radius R) at the step-over, and the feed-mark profile (the swept sphere, radius
   R) at the feed per tooth; the roughest direction is reported (ISO 4288: perpendicular to the lay).
@@ -45,29 +47,31 @@ INSERT_CORNER = {"C": 80.0, "D": 55.0, "R": 180.0, "S": 90.0, "T": 60.0, "V": 35
 HOLDER_KAPPA = {"A": 90.0, "B": 75.0, "D": 45.0, "F": 90.0, "G": 90.0, "J": 93.0, "K": 75.0, "L": 95.0, "N": 63.0,
                 "Q": 107.5, "S": 45.0, "V": 72.5, "X": 117.5}
 MODEL_CHAIN = ["generating edge in the profile plane (case tool)", "cnctwin.surface.kernels.envelope_profile "
-               "(lower envelope with the minimum chip thickness)", "cnctwin.surface.roughness.evaluate (ISO 4287, "
-               "ISO 4288 cut-off, ISO 16610-21 filter)"]
+               "(lower envelope with the minimum chip thickness and side flow of the ploughed layer)",
+               "cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter)"]
 
 
 # ================================================================================================ profile
 def corner_template(r_m: float, kappa_r: float, kappa_minor: float, depth_m: float, du: float) -> np.ndarray:
-    """(u, w) of a corner of radius r between the major edge (entering angle kappa_r, feed side u < 0) and the
-    minor edge (kappa_r', u > 0), w = height above the lowest point, up to the depth of cut (u along the feed
-    direction of the profile; r = 0: a sharp corner)."""
-    lo = -(depth_m / max(math.tan(kappa_r), 1e-9) + r_m + 4.0 * du) if kappa_r < 0.5 * math.pi - 1e-9 \
-        else -(r_m + 4.0 * du)
-    hi = r_m * math.sin(kappa_minor) + depth_m / max(math.tan(kappa_minor), 1e-9) if kappa_minor > 1e-9 else 1e-2
-    hi = min(hi, 5e-3)
+    """(u, w) of a corner of radius r between the major edge (entering angle kappa_r) and the minor edge
+    (kappa_r'), w = height above the lowest point, up to the depth of cut; u along the feed direction of the
+    profile. :func:`profile_roughness` moves the tool along +u, so the major edge leads (u > 0, facing the uncut
+    material, rising at kappa_r to the feed direction) and the minor edge trails over the generated surface
+    (u < 0, rising at kappa_r'), as on the tool (surface.protocols.turning_insert_outline; r = 0: a sharp
+    corner). Entering angles of 90 deg and more end the profile at the side of the nose (a wall above it)."""
+    steep = kappa_r >= 0.5 * math.pi - 1e-9
+    hi = (r_m + 4.0 * du) if steep else (depth_m / math.tan(kappa_r) + r_m + 4.0 * du)
+    lo = -(r_m * math.sin(kappa_minor) + depth_m / max(math.tan(kappa_minor), 1e-9)) if kappa_minor > 1e-9 else -1e-2
+    lo = max(lo, -5e-3)
     u = np.arange(lo, hi + du, du)
-    zt_major = -r_m * math.sin(kappa_r)
-    wt_major = r_m - r_m * math.cos(kappa_r)
-    zt_minor = r_m * math.sin(kappa_minor)
+    ut_major = r_m * min(math.sin(kappa_r), 1.0) if not steep else r_m
+    wt_major = r_m - r_m * math.cos(kappa_r) if not steep else r_m
+    ut_minor = -r_m * math.sin(kappa_minor)
     wt_minor = r_m - r_m * math.cos(kappa_minor)
     nose = r_m - np.sqrt(np.clip(r_m * r_m - u * u, 0.0, None))
-    major = wt_major + (zt_major - u) / max(math.tan(kappa_r), 1e-12) if kappa_r < 0.5 * math.pi - 1e-9 \
-        else np.where(u < zt_major, np.inf, 0.0)
-    minor = wt_minor + (u - zt_minor) * math.tan(kappa_minor)
-    w = np.where(u <= zt_major, major, np.where(u >= zt_minor, minor, nose))
+    major = np.where(u > ut_major, np.inf, nose) if steep else wt_major + (u - ut_major) * math.tan(kappa_r)
+    minor = wt_minor + (ut_minor - u) * math.tan(kappa_minor)
+    w = np.where(u >= ut_major, major, np.where(u <= ut_minor, minor, nose))
     keep = np.isfinite(w) & (w <= depth_m)
     return np.stack([u[keep], w[keep]], axis=1)
 
@@ -315,13 +319,19 @@ def _discuss(q) -> dict:
         inside = sum(1 for c in comps if c.within_tolerance)
         text = f"{inside}/{len(comps)} within tolerance, mean signed error {mean * 100:+.0f} %"
         if mean < -0.3:
-            text += ("; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout, "
-                     "side flow and the stylus/filter of the instrument add to the feed marks and are not in the "
-                     "kinematic model")
+            text += ("; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout "
+                     "and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model "
+                     "(the case states none of them)")
+        elif mean > 0.3:
+            text += ("; the profile is dominated by the minimum chip thickness h_min = ratio x edge radius (below "
+                     "f = sqrt(2 r h_min) the surface forms where the per-pass chip reaches h_min: R_t = h_min); the "
+                     "edge radius used is the tooling default listed above, not a stated value")
         out[r.id] = text + "."
     out["summary"] = (H.budget_summary(q) + "Where the feed marks dominate (turning at larger feeds) the kinematic "
-                      "profile with the minimum chip thickness follows the measurements; at small feeds and step-overs "
-                      "the non-kinematic contributions decide the measured value.")
+                      "profile with the minimum chip thickness follows the measurements; at small feeds the minimum-"
+                      "chip-thickness sawtooth (R_t = h_min) sets the simulated value, so it follows the edge radius, "
+                      "which most cases do not state; built-up edge, runout and vibration are in no case record "
+                      "(Nowakowski gives the insert loads, not the offsets behind them).")
     return out
 
 

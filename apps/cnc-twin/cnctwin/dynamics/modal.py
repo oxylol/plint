@@ -36,7 +36,7 @@ from . import discretize as DZ
 from .abi import (BASE_LINEAR, KIND_MACHINE, KIND_TOOL, KIND_WORK, MAX_ROTARY, MI_HAS_TOOL_RES, MI_IPO_TICKS,
                   MI_L0_TICKS, MI_N_NONWORK, MI_REF_STATION, MI_RELAX, MI_ROTATING, MS_DT_L0_S, MS_DT_TICK_S,
                   MS_TICK_S, N_BASE, DynSystem, WorkGrid, empty_dyn_accum, empty_dyn_model, empty_dyn_state,
-                  empty_deflection, empty_modal_model, empty_modal_state, N_SCRATCH)
+                  empty_deflection, empty_modal_model, empty_modal_state, N_SCRATCH, all_stations)
 
 AXIS_LETTERS = {"x": (1.0, 0.0, 0.0), "y": (0.0, 1.0, 0.0), "z": (0.0, 0.0, 1.0)}
 
@@ -448,7 +448,8 @@ def build_system(modes: list, *, nst: int, ref_station: int, residual: np.ndarra
     dm.scal[MS_TICK_S] = tick_s
     nm_ = nm_alloc
     sys = DynSystem(model, state, dm, empty_dyn_state(nm_, nst, capacity), empty_dyn_accum(n_ticks),
-                    empty_deflection(nst), np.zeros((nm_, 2)), np.zeros((2, nm_)), np.zeros(nm_), np.zeros(N_SCRATCH))
+                    empty_deflection(nst), np.zeros((nm_, 2)), np.zeros((2, nm_)), np.zeros(nm_), np.zeros(N_SCRATCH),
+                    all_stations())
     from .reference import refresh_work_shapes_ref
     if work:
         refresh_work_shapes_ref(sys, grid, np.asarray(point_S, float))

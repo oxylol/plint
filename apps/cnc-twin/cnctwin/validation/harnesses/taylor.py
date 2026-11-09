@@ -95,6 +95,11 @@ class _Law:
         if source == "published":
             for src, origin in zip(flank.get("src") or [], flank.get("origin") or []):
                 self.col.used(f"Usui flank constants ({origin})", src)
+            if self.taylor is not None:            # A anchored to the pairing's Taylor entry
+                H.material_provenance(self.raw, self.col, tool_life_entry=self.taylor.index,
+                                      friction_entry=self.work_mech.friction_for(self.side.tool_class,
+                                                                                 self.side.coating))
+                return
         elif source == "taylor" and self.taylor is not None:
             H.material_provenance(self.raw, self.col, flow=True, chip_thickness=True, physical=True,
                                   tool_life_entry=self.taylor.index,
@@ -173,6 +178,13 @@ class _Law:
                "rake_deg": math.degrees(self.rake), "clearance_deg": math.degrees(self.clearance),
                "edge_radius_um": self.edge_radius * 1e6, "VB_per_VN": self.fg.g_vb, "notch_factor": self.notch_factor,
                "B_K": list(map(float, self.law.fl_B)), "A_per_Pa": list(map(float, self.law.fl_A))}
+        anchor = flank.get("anchor") or {}
+        if flank.get("source") == "published" and self.taylor is not None and "factor" in anchor:
+            out.update({"taylor_entry": f"{self.case.material_id} tool_life[{self.taylor.index}] "
+                                        f"({self.taylor.tool_class}, {self.taylor.coating or 'any'})",
+                        "taylor_src": self.taylor.src, "anchor_factor": anchor["factor"],
+                        "A_published_per_Pa": anchor.get("A_published_per_Pa"),
+                        "anchor_residuals": anchor.get("residual_rel")})
         if flank.get("source") == "taylor" and self.taylor is not None:
             cal = flank.get("calibration") or {}
             out.update({"taylor_entry": f"{self.case.material_id} tool_life[{self.taylor.index}] "
@@ -338,6 +350,10 @@ def _discuss(q) -> dict:
         elif law == "abrasive_only":
             text += (" (no Usui constants for the pairing and no Taylor entry for this tool class in the material: "
                      "only the Archard floor, K_ref 2e-8 est, wears the tool)")
+        elif law == "published" and (r.output.settings or {}).get("anchor_factor") is not None:
+            text += (f" (published Usui B with A anchored to {r.output.settings.get('taylor_entry')}, src "
+                     f"{src or 'est'}, at its 15-min speed: the published A belongs to the source's own FE "
+                     f"temperatures and is scaled by {r.output.settings['anchor_factor']:.3g} for this model's)")
         elif law == "published":
             text += (" (published Usui constants fitted with the source's own FE temperatures; the mechanics "
                      "response's flank temperatures differ, and the life moves by exp(B dT / T^2))")

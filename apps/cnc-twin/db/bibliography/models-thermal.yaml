@@ -157,3 +157,53 @@ entries:
     publisher: "National Bureau of Standards, Applied Mathematics Series 55"
     year: 1964
     pages: "25.4.29-30 (Gauss-Legendre quadrature)"
+
+  # ---- spindle thermal network (cnctwin/thermal/spindle.py, docs/models/thermal.md 4.1)
+  bossmanns-tu-1999-spindle-thermal:
+    type: article
+    authors: "Bossmanns, B.; Tu, J.F."
+    title: "A thermal model for high speed motorized spindles"
+    venue: "International Journal of Machine Tools and Manufacture 39(9), 1345-1366"
+    year: 1999
+    note: "Lumped/finite-difference spindle network: Palmgren-Harris bearing heat, motor losses, rotating-shaft and coolant-jacket convection, bearing-housing contact."
+
+  bossmanns-tu-2001-power-flow:
+    type: article
+    authors: "Bossmanns, B.; Tu, J.F."
+    title: "A power flow model for high speed motorized spindles - heat generation characterization"
+    venue: "Journal of Manufacturing Science and Engineering 123(3), 494-505"
+    year: 2001
+    note: "Split of the losses of a built-in spindle motor between stator and rotor."
+
+  holkup-2010-spindle-thermomechanical:
+    type: article
+    authors: "Holkup, T.; Cao, H.; Kolar, P.; Altintas, Y.; Zeleny, J."
+    title: "Thermo-mechanical model of spindles"
+    venue: "CIRP Annals 59(1), 365-368"
+    year: 2010
+
+  iso-76-2006-static-load-ratings:
+    type: standard
+    authors: "ISO"
+    title: "ISO 76: Rolling bearings - Static load ratings"
+    year: 2006
+
+  iso-281-2007-dynamic-load-ratings:
+    type: standard
+    authors: "ISO"
+    title: "ISO 281: Rolling bearings - Dynamic load ratings and rating life"
+    year: 2007
+
+  astm-d341-2020-viscosity-temperature:
+    type: standard
+    authors: "ASTM International"
+    title: "ASTM D341: Standard practice for viscosity-temperature equations and charts for liquid petroleum or hydrocarbon products"
+    year: 2020
+    note: "Walther's relation log log(nu + 0.7) = A - B log T, the two-point form."
+
+  iec-60034-2-1-2014-motor-losses:
+    type: standard
+    authors: "IEC"
+    title: "IEC 60034-2-1: Rotating electrical machines - Part 2-1: Standard methods for determining losses and efficiency from tests"
+    year: 2014
+    note: "Segregation of the no-load losses (iron, friction and windage) of induction machines."

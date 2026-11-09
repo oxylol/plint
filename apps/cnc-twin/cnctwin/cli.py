@@ -19,13 +19,22 @@ serve          cnctwin.api.serve                               serve(argv) -> in
 db             cnctwin.db.check.main                           main(argv) -> int  (``twin db check ...``)
 bench          cnctwin.bench.main                              main(argv) -> int
 warmup         cnctwin.core.warmup.main                        main(argv) -> int
+sweep          cnctwin.sweep.main                              main(argv) -> int  (parameter sweeps, docs/ml.md)
+dataset        cnctwin.dataset.main                            main(argv) -> int  (training data, docs/ml.md)
+cache          cnctwin.cache.main                              main(argv) -> int  (the run cache, docs/ml.md)
 explain        here                                            the cause chain of a finding from trace.jsonl
 =============  ==============================================  ==================================================
 
 ``twin run`` allocates ``<runs>/<run_id>`` (cnctwin.core.rundir.run_id) unless ``--out`` names the run
 directory, passes ``--set KEY=VALUE`` options (JSON values, dotted keys nest) and ``resume_from`` (the
 latest committed checkpoint marker for ``--resume``), and writes status.json from the progress callback
-(as the API worker does for its jobs: the loop never writes it).
+(as the API worker does for its jobs: the loop never writes it). It goes through the run cache
+(cnctwin.cache): a finished run of the same key (project and its inputs, databases, options, build, platform)
+that still verifies is reported instead of running again (copied into ``--out`` when given); a new run is
+registered when the key did not change while it ran (a resumed run too: it is bit-identical to an uninterrupted
+one). ``--no-cache`` runs regardless (the new run supersedes); a project whose key cannot be computed runs
+uncached. ``twin replay`` of a run made with operator overrides
+(run.json ``options.operator``) replays through cnctwin.sweep.runner, which applies them again.
 
 Exit status: 0 success (``run``: safe to run), 1 an error, 2 a usage error, 3 ``run`` finished and the
 program is not safe to run, 4 the subcommand's module is not in this build, 130 interrupted.
@@ -55,6 +64,9 @@ FORWARDED = {
     "bench": ("cnctwin.bench", "main", "performance benchmarks (CPU seconds per simulated second)"),
     "warmup": ("cnctwin.core.warmup", "main", "compile and cache every kernel (the image runs it at build time)"),
     "export": ("cnctwin.core.recorder", "export_main", "export a run's time series as CSV or Parquet"),
+    "sweep": ("cnctwin.sweep", "main", "run a parameter sweep through the run cache (training data, docs/ml.md)"),
+    "dataset": ("cnctwin.dataset", "main", "export run-level and per-block training tables from sweeps and runs"),
+    "cache": ("cnctwin.cache", "main", "the run cache: list, key, verify, evict, compact"),
 }
 LOOP = "cnctwin.core.loop"
 
@@ -178,10 +190,50 @@ def _project_file(path: str) -> Path:
     return project.resolve()
 
 
+def _cache_key(project: Path, options: dict):
+    """The run's cache key, or None (the cache is off, this process is not deterministic, or the project does not
+    resolve: the run then says why itself)."""
+    from . import cache
+    if not cache.enabled():
+        return None
+    if not cache.deterministic_environment():
+        print("twin run: not cached: this process does not run under the deterministic environment "
+              "(OMP/OPENBLAS/MKL/NUMBA_NUM_THREADS=1, PYTHONHASHSEED=0; bin/twin sets them)", file=sys.stderr)
+        return None
+    from .core.errors import InputError
+    try:
+        return cache.key_for(project, options, runner=cache.DEFAULT_RUNNER)
+    except (InputError, OSError):
+        return None
+
+
+def _cached_run(key, out: str | None) -> Path | None:
+    """The verified cached run of ``key`` (copied into ``out`` when given), or None."""
+    from . import cache
+    store = cache.RunCache()
+    hit = store.lookup(key.key)
+    if hit is None:
+        return None
+    print(f"cached run: {hit.run_dir} (key {key.key[:12]})", file=sys.stderr)
+    if not out:
+        return Path(hit.run_dir)
+    run_dir = Path(out)
+    if run_dir.resolve() != Path(hit.run_dir).resolve():
+        cache.copy_run(hit.run_dir, run_dir)
+        from .core.rundir import RunDirectory
+        RunDirectory(run_dir).write_status("done", message=f"copied from the cached run {hit.run_dir}")
+    return run_dir
+
+
 def cmd_run(args) -> int:
     run_project = resolve(LOOP, "run_project")
     project = _project_file(args.project)
     options = _options(args.set)
+    key = _cache_key(project, options)
+    if key is not None and not args.no_cache and args.resume is None:
+        cached = _cached_run(key, args.out)
+        if cached is not None:
+            return _report_verdict(cached)
     if args.out:
         run_dir = Path(args.out)
         run_dir.mkdir(parents=True, exist_ok=True)
@@ -189,7 +241,7 @@ def cmd_run(args) -> int:
         from .core import rundir
         from .paths import data_dir
         runs = Path(args.runs) if args.runs else data_dir() / "runs"
-        project_hash = _project_hash(project)
+        project_hash = key.components["project_hash"] if key is not None else _project_hash(project)
         run_dir = rundir.allocate_run_dir(runs, project_hash, options, slug=project.parent.name)
     if args.resume is not None:
         if not args.out:
@@ -218,6 +270,15 @@ def cmd_run(args) -> int:
     finally:
         progress.done()
     progress.status("done")
+    if key is not None:
+        from . import cache
+        registered = cache.register_finished(project, run_dir, options, key, runner=cache.DEFAULT_RUNNER)
+        if not registered["registered"]:
+            print(f"twin run: not cached: {registered['note']}", file=sys.stderr)
+    return _report_verdict(run_dir)
+
+
+def _report_verdict(run_dir: Path) -> int:
     verdict = _verdict(run_dir)
     if verdict is None:
         print(f"{run_dir}: the run wrote no verdict (run.json)", file=sys.stderr)
@@ -283,8 +344,15 @@ def _print_check(result: dict) -> None:
 
 
 def cmd_replay(args) -> int:
-    replay_window = resolve(LOOP, "replay_window")
     run_dir = Path(args.run_dir)
+    try:
+        recorded = json.loads((run_dir / "run.json").read_text(encoding="utf-8")).get("options") or {}
+    except (OSError, ValueError, AttributeError):
+        recorded = {}
+    if isinstance(recorded, dict) and recorded.get("operator"):
+        replay_window = resolve("cnctwin.sweep.runner", "replay_window")    # the run's overrides, applied again
+    else:
+        replay_window = resolve(LOOP, "replay_window")
     tick_s = _tick_s(run_dir)
     tick0 = int(round(args.window[0] / tick_s))
     tick1 = int(round(args.window[1] / tick_s))
@@ -473,6 +541,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--resume", nargs="?", const="", default=None, metavar="CHECKPOINT",
                      help="continue the run in --out from a checkpoint marker (default: its latest)")
     run.add_argument("--set", action="append", metavar="KEY=VALUE", help="a run option (JSON value), repeatable")
+    run.add_argument("--no-cache", action="store_true",
+                     help="run even when the run cache has this run (the new run is registered and supersedes it)")
     run.add_argument("--quiet", action="store_true", help="no progress lines")
     run.set_defaults(handler=cmd_run)
 

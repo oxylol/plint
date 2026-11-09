@@ -6,10 +6,13 @@ Each is a first-order lumped body integrated exactly over a step (constant input
     T(t + dt) = T_eq + (T - T_eq) exp(-dt / tau),  T_eq = T_env + P / G
     loss = G [(T_eq - T_env) dt + (T - T_eq) tau (1 - exp(-dt / tau))]
 
-* spindle: bearing heat P = P_max (|omega| / omega_max)^(5/3) (Palmgren's viscous moment), time
-  constant and steady growth at max speed from the machine file; the growth delta = alpha L_eff
-  (T - T_env) along the spindle axis; the control's compensation leaves ``comp_residual_fraction``.
-  The tool holder conducts into the spindle nose (from the tool ladder).
+* spindle: the physical network of :mod:`.spindle` (bearing friction from speed, preload, size and
+  lubricant viscosity; motor losses; shaft, bearing sets, housing, cooling jacket, the head's mounting to
+  the structure; growth from the shaft and housing temperatures and lengths), or, for a machine file that
+  gives only the lumped data (``growth_at_max_speed_um``, ``time_constant_min``,
+  ``bearing_heat_at_max_speed_W``) or says ``thermal.model: lumped``, the first-order body: bearing heat
+  P = P_max (|omega| / omega_max)^(5/3), growth alpha L_eff (T - T_ref). The control's compensation leaves
+  ``comp_residual_fraction``. The tool holder conducts into the spindle nose (from the tool ladder).
 * axes: nut and bearing heat per metre of travel heats the screw (C from its steel volume, G = C /
   tau); the error at axis position s is alpha (T - T0) (s - s_fixed) along the axis (zero with linear
   scales; times the residual with electronic compensation).
@@ -32,6 +35,7 @@ from ..db.models import params
 from . import props
 from .inputs import MIN, MM, UM, flag, get, number, plain
 from .ledger import SolverLedger
+from .spindle import SpindleNetwork, build_network
 
 
 @functools.lru_cache(maxsize=1)
@@ -105,6 +109,9 @@ class LumpedBody:
 
 @dataclass
 class SpindleThermal:
+    """Thermal model of one spindle: the physical network (``network`` set; ``body`` is the network, whose
+    temperature is the shaft's) or the lumped first-order body."""
+
     sid: str
     kind: str
     omega_max_rad_s: float
@@ -120,9 +127,20 @@ class SpindleThermal:
     growth0_m: float = 0.0
     estimated: list = field(default_factory=list)
     last_heat_W: float = 0.0
+    network: SpindleNetwork | None = None
+    T_ref_K: float | None = None              # growth reference (ambient at the start); None: T_env_K
+    last_to_structure_J: float = 0.0          # heat the head passed to the machine structure in the last step
+
+    @property
+    def model(self) -> str:
+        return "network" if self.network is not None else "lumped"
 
     def growth_abs_m(self) -> float:
-        return self.alpha_1_K * self.length_m * (self.body.T_K - self.T_env_K)
+        """Growth toward the work relative to the reference (ambient) state."""
+        if self.network is not None:
+            return self.network.growth_m()
+        ref = self.T_env_K if self.T_ref_K is None else self.T_ref_K
+        return self.alpha_1_K * self.length_m * (self.body.T_K - ref)
 
     def growth_rel_m(self) -> float:
         """Growth since the start of the run left after the control's compensation."""
@@ -131,28 +149,78 @@ class SpindleThermal:
 
     def bearing_heat(self, omega_abs: np.ndarray) -> float:
         """Time mean of the bearing heat over the ticks of a step (W)."""
+        omega_abs = np.asarray(omega_abs, dtype=float)
+        if self.network is not None:
+            return self.network.bearing_heat_W(omega_abs) if omega_abs.size else 0.0
         if self.omega_max_rad_s <= 0.0 or omega_abs.size == 0:
             return 0.0
         ratio = np.clip(np.abs(omega_abs) / self.omega_max_rad_s, 0.0, None)
         return float(self.bearing_heat_max_W * np.mean(ratio ** self.exponent))
 
-    def step(self, dt: float, omega_abs: np.ndarray, heat_in_J: float, tol: float, time_s: float) -> float:
+    def step(self, dt: float, omega_abs: np.ndarray, heat_in_J: float, tol: float, time_s: float,
+             T_struct_K: float | None = None) -> float:
+        """Advance dt; returns the heat lost over the step (J). ``T_struct_K``: temperature of the machine
+        structure the head is mounted on (network only; default the ambient). The part of the loss that went
+        into the structure is ``last_to_structure_J`` (the caller gives it to the structure body)."""
+        if self.network is not None:
+            out = self.network.step(dt, omega_abs, heat_in_J, tol, time_s, self.T_env_K,
+                                    self.T_env_K if T_struct_K is None else float(T_struct_K))
+            self.last_heat_W = self.network.last.get("bearing_W", 0.0) + self.network.last.get("motor_W", 0.0)
+            self.last_to_structure_J = out["structure"]
+            return float(sum(out.values()))
         self.last_heat_W = self.bearing_heat(omega_abs)
+        self.last_to_structure_J = 0.0
         return self.body.step(dt, self.last_heat_W, self.T_env_K, heat_in_J, tol, time_s)
 
     def to_dict(self) -> dict:
-        out = {k: v for k, v in asdict(self).items() if k != "body"}
-        out["body"] = self.body.to_dict()
+        out = {k: getattr(self, k) for k in self.__dataclass_fields__ if k not in ("body", "network")}
+        out["estimated"] = list(self.estimated)
+        if self.network is not None:
+            out["network"] = self.network.to_dict()
+            out["body"] = None
+        else:
+            out["network"] = None
+            out["body"] = self.body.to_dict()
         return out
 
     @classmethod
     def from_dict(cls, values: dict) -> "SpindleThermal":
         values = dict(values)
-        body = LumpedBody.from_dict(values.pop("body"))
-        return cls(body=body, **values)
+        net = values.pop("network", None)
+        raw_body = values.pop("body")
+        if net is not None:
+            network = SpindleNetwork.from_dict(net)
+            return cls(body=network, network=network, **values)
+        return cls(body=LumpedBody.from_dict(raw_body), **values)
 
 
-def spindle_models(machine: dict, ambient_K: float, start, tol: float, time_s: float) -> dict[str, SpindleThermal]:
+LUMPED_KEYS = ("growth_um_at_max_rpm", "growth_at_max_speed_um", "growth_at_max_speed_mm", "time_constant_min",
+               "time_constant_s", "bearing_heat_W_at_max_rpm", "bearing_heat_at_max_speed_W",
+               "bearing_heat_at_max_speed_kW")
+
+
+def spindle_model_kind(spindle: dict) -> str:
+    """'network' or 'lumped' for a spindle of a machine file: ``thermal.model`` when given; else the network
+    when the file describes the bearings, the lumped body when it gives only the lumped data, and the network
+    (from the model's defaults) when it gives neither."""
+    thermal = spindle.get("thermal") or {}
+    if not isinstance(thermal, dict):
+        thermal = {}
+    chosen = plain(thermal.get("model"))
+    if chosen:
+        if str(chosen) not in ("network", "lumped"):
+            raise ValueError(f"thermal: spindle {plain(spindle.get('id'))}: thermal.model must be network or lumped, "
+                             f"not {chosen!r}")
+        return str(chosen)
+    if spindle.get("bearings"):
+        return "network"
+    if any(key in thermal for key in LUMPED_KEYS):
+        return "lumped"
+    return "network"
+
+
+def spindle_models(machine: dict, ambient_K: float, start, tol: float, time_s: float,
+                   structure_K: float | None = None) -> dict[str, SpindleThermal]:
     """Spindle models of a machine (raw machine mapping) at the start state ('cold', 'warm', dict)."""
     p = _p()
     steel = props.material_table_by_id(str(p["spindle_material"]))
@@ -160,6 +228,10 @@ def spindle_models(machine: dict, ambient_K: float, start, tol: float, time_s: f
     for spindle in machine.get("spindles") or []:
         sid = str(plain(spindle.get("id")) or "main")
         thermal = spindle.get("thermal") or {}
+        if spindle_model_kind(spindle) == "network":
+            out[sid] = _network_model(machine, spindle, sid, ambient_K, start, tol,
+                                      ambient_K if structure_K is None else structure_K)
+            continue
         estimated = []
         growth = number(thermal, (("growth_um_at_max_rpm", UM, 0.0), ("growth_at_max_speed_um", UM, 0.0),
                                   ("growth_at_max_speed_mm", MM, 0.0)))
@@ -196,6 +268,30 @@ def spindle_models(machine: dict, ambient_K: float, start, tol: float, time_s: f
         model.growth0_m = model.growth_abs_m()
         out[sid] = model
     return out
+
+
+def _network_model(machine: dict, spindle: dict, sid: str, ambient_K: float, start, tol: float,
+                   structure_K: float) -> SpindleThermal:
+    p = _p()
+    thermal = spindle.get("thermal") or {}
+    net, estimated = build_network(sid, spindle, ambient_K)
+    comp = flag(thermal, "thermal_comp", False)
+    residual = number(thermal, (("comp_residual_fraction", 1.0, 0.0),), None)
+    if comp and residual is None:
+        residual = p["default_comp_residual_fraction"]
+        estimated.append("comp_residual_fraction")
+    omega_max = number(spindle, (("max_rpm", 2.0 * math.pi / 60.0, 0.0),), 0.0)
+    model = SpindleThermal(sid, str(plain(spindle.get("kind")) or "milling"), omega_max, 0.0, 0.0, comp,
+                           float(residual if residual is not None else 1.0), p["bearing_heat_speed_exponent"],
+                           props.mean_expansion(props.material_table_by_id(str(p["spindle_material"])), REF_K),
+                           net.nose_length_m, net, ambient_K, estimated=estimated, network=net, T_ref_K=ambient_K)
+    if isinstance(start, dict):
+        net.set_temperature(start.get("spindle_K") or ambient_K)
+    elif start != "cold":
+        net.warm_up(p["warmup_speed_fraction"] * omega_max, warmup_time_s(machine), ambient_K, structure_K, tol)
+    net.reset_ledger()
+    model.growth0_m = model.growth_abs_m()
+    return model
 
 
 def warmup_time_s(machine: dict) -> float:

@@ -15,7 +15,7 @@ from cnctwin.surface import reference as R
 def test_every_kernel_has_one_signature():
     names = [n for n in dir(K) if hasattr(getattr(K, n), "signatures") and getattr(K, n).py_func.__module__ == K.__name__]
     assert set(names) >= {"pass_polyline", "envelope_profile", "gaussian_mean", "profile_params", "silhouette",
-                          "wire_centre", "_rsm_core", "_raster_min"}
+                          "wire_centre", "_rsm_core", "_raster_min", "_place_ploughed"}
     for name in names:
         assert len(getattr(K, name).signatures) == 1, name
 
@@ -110,6 +110,78 @@ def test_minimum_chip_thickness_leaves_the_thin_layer():
         G = A.new_grid(-5e-4, 1e-6, 1001, 10)
         K.envelope_profile(P, T, G, 2, recovery)
         assert G.z[500] == pytest.approx(expect, abs=1e-15)
+
+
+def _two_pass_profile(first, second, hmin, du=2.5e-7, lo=-1e-4, n=801):
+    """z after a first pass with template ``first`` (generates the surface) and a second with ``second``."""
+    T = A.new_templates([first, second])
+    P = A.new_passes(2)
+    P.kind[:] = A.KIND_CUT
+    P.mode[:] = A.MODE_DIRECT
+    P.tpl[:] = [0, 1]
+    P.hmin[:] = hmin
+    P.half[:] = 1.0
+    G = A.new_grid(lo, du, n, 64)
+    K.envelope_profile(P, T, G, 2, 0.0)
+    z_ref, _ = R.envelope_profile_ref(P, T, lo, du, n, 64, 2, 0.0)
+    np.testing.assert_allclose(G.z, z_ref, rtol=0.0, atol=1e-18)
+    return G.z
+
+
+def test_ploughed_ridge_flows_into_the_free_space_under_the_pass():
+    """A ridge thinner than h_min under a flat pass is pressed to the pass and its volume fills the free space
+    under the pass next to it (plastic incompressibility): the profile area is conserved and nothing stays above
+    the pass, unlike the in-place rule that left the whole ridge."""
+    ridge = np.array([[-1e-4, 0.0], [-1e-5, 0.0], [0.0, 1e-6], [1e-5, 0.0], [1e-4, 0.0]])    # 1 um ridge on a flat
+    flat = np.array([[-1e-4, 0.5e-6], [1e-4, 0.5e-6]])                                       # 0.5 um below its top
+    du = 2.5e-7
+    z0 = _two_pass_profile(ridge, np.array([[-1e-4, 1.0], [1e-4, 1.0]]), 2e-6)               # first pass only
+    z1 = _two_pass_profile(ridge, flat, 2e-6)
+    assert float(np.max(z1)) <= 0.5e-6 + 1e-15
+    assert float(np.sum(z1)) * du == pytest.approx(float(np.sum(z0)) * du, rel=1e-12)
+    filled = (z1 > 1e-12) & (z0 == 0.0)
+    assert filled.any() and np.all(z1[filled] <= 0.5e-6 + 1e-15)
+    # with h_min below the interference the ridge top is simply cut off (volume removed)
+    z2 = _two_pass_profile(ridge, flat, 0.2e-6)
+    assert float(np.max(z2)) == pytest.approx(0.5e-6, abs=1e-15)
+    assert float(np.sum(z2)) < float(np.sum(z0))
+
+
+def test_trailing_flat_edge_levels_the_feed_marks():
+    """A nose radius with a nearly flat trailing minor edge (0.5 deg, a wiper-like edge): the minor edge passes
+    over the feed-mark residue by less than h_min, levels it by side flow, and the profile stays close to the
+    kinematic one (the in-place rule kept an h_min-high residue the minor edge could never remove)."""
+    r, f, hmin, du = 0.8e-3, 0.2e-3, 9e-6, 5e-7
+    k_minor = math.radians(0.5)
+    u_t = r * math.sin(k_minor)
+    u = np.arange(-2.0e-3, r + du, du)                 # tool moves along +u: nose bottom at 0, minor edge trails (u < 0)
+    nose = r - np.sqrt(np.clip(r * r - u * u, 0.0, None))
+    minor = (r - r * math.cos(k_minor)) + (-u - u_t) * math.tan(k_minor)
+    w = np.where(u < -u_t, minor, nose)
+    tpl = np.stack([u, w], axis=1)[w <= 0.2e-3]
+    T = A.new_templates([tpl])
+    n = 60
+
+    def pt(h):
+        P = A.new_passes(n)
+        P.kind[:] = A.KIND_CUT
+        P.mode[:] = A.MODE_DIRECT
+        P.tpl[:] = 0
+        P.s[:] = np.arange(n) * f
+        P.hmin[:] = h
+        P.half[:] = 2.2e-3
+        G = A.new_grid(-2.5e-3, du, int((n * f + 3e-3) / du), len(tpl) + 2)
+        K.envelope_profile(P, T, G, 2, 0.0)
+        x = -2.5e-3 + np.arange(len(G.z)) * du
+        mid = G.z[(x > 20 * f) & (x < 40 * f)]
+        return float(np.max(mid) - np.min(mid))
+
+    kinematic = pt(0.0)
+    # independent envelope of the shifted outlines (h_min = 0)
+    x = np.arange(25 * f, 35 * f, du)
+    env = np.min([np.interp(x - k * f, tpl[:, 0], tpl[:, 1], left=np.inf, right=np.inf) for k in range(n)], axis=0)
+    assert kinematic == pytest.approx(float(np.ptp(env)), rel=0.01)
+    assert pt(hmin) < kinematic + 0.25 * hmin
 
 
 def test_gaussian_mean_matches_reference_and_halves_the_cutoff_wavelength():

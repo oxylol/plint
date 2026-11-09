@@ -33,9 +33,15 @@ signature `i4(MOTION_T, REMOVAL_T, CONTACTS_T, RING_T, GLOBAL_T)`.
   `base`, `grid` (dynamics' system, axis base, work grid), `geo: ContactGeo` (stations, slab -> station map,
   slab lags, the path's machine axes and their direction in S), `cst: ContactState` (the loop's own state:
   generation angle per tooth and slab, recorded slab points, slab done flags, last pass tick, polar view
-  window, counters `CS_*`, angles `CSF_*`), removal's `SubtractSpec`, gate parameters, `work` [112] (frames
-  and vectors of the step, `hot_kernels.WK_*`), base-excitation inputs, FK scratch, polar step, refill plane
-  list, probe profile.
+  window, counters `CS_*`, angles `CSF_*`), removal's `SubtractSpec`, gate parameters, `work` [128] (frames
+  and vectors of the step and the loop's scratch vectors, `hot_kernels.WK_*`), base-excitation inputs, FK scratch,
+  polar step, refill plane list, probe profile, `teeth` [nt, `TW_*`] (per tooth: engaged and recorded slab counts
+  and the window of the slabs' phases; derived from `ContactState`, not checkpointed, section 4).
+* Every kernel of the loop (`run_macro`, `contact_steps`, `tooth_events`, the helpers) allocates nothing (scratch
+  vectors are views of `work`) and is compiled without reference counting (`RAW`, `_nrt=False`, as removal's hot
+  kernels): the loop body takes members of large NamedTuples, which otherwise costs an atomic incref / decref per
+  member array. The per-step helpers of `hot_kernels` take the few layouts they read, never the whole `CutArgs`
+  or `HotContact` (a call that is not inlined copies every member array descriptor: ~1 us for a `CutArgs`).
 * `HotGlobal`: `ipar` [`GI_*`] (tick0, ipo ticks, resume point, buffer row bounds), `fpar`, the carried L1
   loads per axis and spindle, the tick-start axis values and spindle angles, the tool tips (probe sweep), the
   structure displacement grid d(X), `result` [`RES_*`], counters `CNT_*`, per-tick in-cut flags.
@@ -83,7 +89,11 @@ the surface (architecture 4.1, 5.4). The generation angle of a slab is the exit 
 interval in the direction of rotation (`update_gamma`; NaN when the station is not engaged). After every L0
 step the stateless crossing test `d0 = sigma (gamma - (theta0 + a0)) mod 2 pi < |dtheta|` (a0 the slab's
 angular lag on the helix) finds the slabs that passed their angle in the step; the slab's point is taken at
-that fraction of the step (`slab_point`: tip, axis and u_rel interpolated between the step's end frames).
+that fraction of the step (`slab_point`: tip, axis and u_rel interpolated between the step's end frames). A tooth
+is visited only when the step's swept angle reaches the arc holding its engaged slabs' phases sigma (gamma - a0)
+(`HotContact.teeth`, `tooth_windows`, rebuilt whenever gamma or the recorded flags change and once per call; margin
+1e-8 rad): the exact per-slab test runs for that tooth only, and the slab counts of the pass test are kept with the
+slabs' states, so a step without a generation instant costs O(teeth) (13.8 us -> 0.2 us per step in the slot).
 A tooth's pass (`do_pass` -> removal's `tooth_pass`: engaged intervals refreshed against the field, sector box,
 `subtract_envelope` per slab at the recorded points) runs once every engaged slab of the tooth is done, or is
 forced when the tooth had no pass for `SI_STALE_TICKS` (a slab missed its angle while the engagement changed:
@@ -202,6 +212,16 @@ loop's arrays, the ledger and the driver's counters (bit-identical continuation,
 
 ## 11. Changes in domain packages (additive, documented)
 
+* `dynamics/abi.py` `DynSystem.act` [`ACT_*`]: the station range of the step. The loop sets it before
+  `modal_begin` to the engaged stations (engaged intervals) with `CI_ST_MARGIN` neighbours on each side (2 + the
+  most stations of one slab: a slab point interpolates between the stations around the slab's mid height);
+  `modal_begin` computes the deflections there only and `modal_correct` projects the loads of those stations
+  (every other station has no load; `DynState.st_force` is updated over the union with the previous step's range).
+  Unset (`ACT_LO` < 0, `all_stations()`): every station (dynamics' own drivers and tests; turning contacts).
+  Deflections of stations outside the range keep their last values: only a forced pass's slab that is not engaged
+  (its stations have no engaged interval) can read them.
+* `cutting/abi.py` `CutTool.pk` / `pki`: the element constants packed per element in station-list order
+  (`pack_elements`, built at L2 by `build_cut_tool`; not stored in checkpoints, rebuilt on restore).
 * `removal/domain.py` `density_20C`: falls back to `material.physical.density_kg_m3` when the material has no
   density table (the pocket example's al6061-t6 failed at init).
 * `removal/collision.py` `device_body_box` (used by `fixture_meshes` and `RemovalDomain._held_from_setup`): a
@@ -231,20 +251,21 @@ alone ~283 s).
 | `test_chatter.py` (e) | 1-DOF regenerative slot (900 Hz, zeta 0.02, 5 N/um) | stable at 0.4 x the ZOA limit, chatter (index > 0.5, 1063 Hz) at 2 x |
 | `test_determinism_checkpoint.py` (f, g) | two runs; checkpoint between macro steps | bit-identical (dynamics on) |
 | `test_signatures.py` (h) | every dispatcher reached from run_macro | one signature each |
-| `test_performance.py` (i) | CPU s per simulated s, slot and pocket-islands helical entry | section 13; the 0.45 s/s budget is a strict expected failure |
+| `test_performance.py` (i) | CPU s per simulated s: slot (rigid, with the machine's modes), pocket-islands helical entry (0.3 s of cut, and the whole run with the default L2 settings) | section 13; the 0.45 s/s budget and the 1 s/s whole-run target are strict expected failures (removal's tooth pass) |
 
 ## 13. Measurements
 
-One core of the i5-4690 (shared box, `bin/tsafe`, nice 10), process CPU time.
+One core of the i5-4690 (shared box, `bin/tsafe`, nice 10, a load of 4-6 from other jobs: +-30 %), process CPU
+time; docs/performance.md has the per-kernel, per-level, whole-run and memory tables and how the costs were reached.
 
 | case | numbers |
 |---|---|
-| slot, rigid (D10 4FL, 119 stations, 10000 rpm, stride 8 us) | run_macro 53 us per L0 step = 6.6 s per simulated s in cut; cut_step ~50 us of it; refill planes 4.4 per step |
-| slot, 8 dynamics modes | 108 us per L0 step = 13.5 s/s |
-| pocket-islands helical entry, rigid (D10 3FL, 12000 rpm, stride 5 us) | 61 us per L0 step = 19 s/s in cut; whole run 6.5 s simulated in 42.7 s CPU (hot 18.9, L2 21.0); removed 173.5 mm^3 = field change exactly |
-| turning pass, rigid (CNMG, stride 50 us) | ~4 s/s in cut (polar cut and view per step) |
-| L2 between macro steps | dynamics' lobes ~200 s per new engagement at the default grids (1.3 s coarse); cutting's coefficient pipeline in a run-up 16 s (end mill), 211 s (drill) |
-| cold compile of the hot loop | ~283 s (all domains' kernels: longer) |
+| slot, rigid (D10 4FL, 119 stations, 15 engaged, 27 engaged elements, 10000 rpm, stride 8 us) | run_macro 40-46 us per L0 step = 5-6 s per simulated s in cut (2026-11-04: 53-80 us); removal's tooth passes 33 us of it (5.9 ms per pass), cut_step 8 us, pose (motion FK x 2) 4.6 us, refill planes 4.2 us (4.4 per step), slab events 0.2 us, regate 2.4 us |
+| slot, the machine's 8 modes | run_macro +4 us per L0 step (predictor and corrector over the engaged stations: 3.8 us before the load-range and in-place deflection changes; 2026-11-04: ~55 us); see docs/performance.md for the current split |
+| pocket-islands helical entry, rigid (D10 3FL, 12000 rpm, stride 5 us) | run_macro 38-43 us per L0 step = 8 s/s in cut (61-71 us); removal's tooth passes 34 us (11.3 ms per pass), cut_step 3.0 us, pose 4.2 us, refill planes 0.8 us |
+| turning pass, rigid (CNMG, stride 50 us) | ~4 s/s in cut (polar cut and view per step; not re-measured) |
+| L2 between macro steps | dynamics: the limit at the operating point only, cached by engagement class and speed (stacked frequency scan, batched bisection, cached cut-model means); lobe diagrams and SD checks once per class at the end of the operation. Cutting's coefficient pipeline: end-mill run-up 7.0 s -> 0.8 s, drill run-up 211 s (27 s re-measured with the old rule) -> 7 s (provisional rows before the speed settles, quantised slow state, lazy process maps, cheaper continuations) |
+| cold compile of the hot loop | see docs/performance.md "Compile time" |
 | slot forces | mean [-103.96, 163.85, -38.33] N vs stand-alone [-104.07, 163.90, -38.49]; peak 237.2 vs 219.6 N |
 | slot volume | removed 9.718006e-7 m^3, lattice 9.718077e-7, continuous 9.72235e-7; floor 7 um below the programmed depth (machine geometric errors) |
 | drill (Kienzle) | thrust 493.67 vs 494.04 N, torque 1.4864 vs 1.4884 N m; hole 3.4003130e-7 vs lattice 3.4003207e-7 m^3 |
@@ -255,14 +276,15 @@ One core of the i5-4690 (shared box, `bin/tsafe`, nice 10), process CPU time.
 
 ## 14. Open problems
 
-* **Cost.** `run_macro` costs about 53 us per L0 step for the D10 4FL slot (119 stations, rigid) and 108 us
-  with 8 dynamics modes, i.e. 6.6 and 13.5 CPU s per simulated second at the 8 us stride of 0.5 deg per step
-  at 10000 rpm: 15-30 x the 0.45 s/s budget. 94 % of it is cutting's `cut_step` (about 50 us per step) and
-  dynamics' `modal_begin` / `modal_correct`; the loop's own work (FK, refills, tooth events) is about 3 us
-  per step. The budget needs cheaper kernels or a coarser stride (steps_per_tooth, max_deg_per_step).
-* **L2 costs between macro steps.** dynamics' lobe diagram per new engagement (minutes at the default grids;
-  the tests use coarse grids) and cutting's coefficient pipeline during a spindle run-up (16 s for the end
-  mill, 211 s for the drill; the tests run it every 50 macro steps).
+* **Cost.** `run_macro` costs 40-46 us per L0 step for the D10 4FL slot (rigid) and 38-43 us for the pocket's
+  helical entry: 5-8 CPU s per simulated second in cut, 11-18 x the 0.45 s/s budget. Removal's tooth pass
+  (`tooth_pass`: engaged intervals and the subtraction of the tooth's envelope, once per tooth per revolution) is
+  about 33 us of every L0 step (5.9 ms per pass at lattice 0.1 mm, 11.3 ms at 0.075 mm): alone 4-7 s/s. The rest:
+  cut_step 3-8 us (about 270 ns per engaged element), the two FK frames of a step (motion's `fk_poses`) ~4 us,
+  refill planes 1-4 us. docs/performance.md "Open problems".
+* **L2 costs between macro steps.** The first coefficient build of a tool (lazy process maps; continuations of
+  map rows without an admissible Oxley solution) is 0.3-0.8 s for the end mills and ~5 s for the drill's 18 rows;
+  the end-of-operation lobe diagrams and SD checks cost seconds per engagement class at the default grids.
 * **Turning tool frame.** The mount belongs in motion's chain (a tool's mounting rotation on its station);
   the bus (`pose_S_T`) and dynamics' L2 operating point still use the chain's frame for turning tools.
   Left-hand turning tools also reverse z_T: dynamics' station positions along z_T would then be mirrored.

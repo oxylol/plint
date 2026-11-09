@@ -29,7 +29,12 @@ itself at the reference engagement.
 
 :class:`MechanicsResponse` is the default response: cnctwin.mechanics (Oxley with Johnson-Cook, or the
 data-only model) for the chip and the rake contact, Smithey's flank-land stresses and Blok's partition
-(Jaeger band source on the work, stationary source on the tool) for the flank temperature. The
+(Jaeger band source on the work, stationary source on the tool) for the flank temperature, with the land's
+friction stress softened at the land's own temperature (fixed point, :meth:`MechanicsResponse.flank_temperature`).
+
+:func:`anchor_published` scales the A of a published Usui set (B kept) so that this response reaches the
+pairing's Taylor life at the 15-min speed: a published set belongs to the temperatures its source fitted it
+with. The
 integration may wire a response that runs cutting's coefficient pipeline and thermal's edge model at
 the Taylor conditions instead (then the calibration and the run use exactly the same models).
 """
@@ -85,6 +90,7 @@ class TaylorResponse(Protocol):
 
 
 ABRASIVE_REDUCTIONS = 6          # quarterings of the abrasive floor tried before it is removed
+FLANK_BISECTIONS = 60            # halvings of the flank-temperature bracket (below 1e-12 K for any bracket)
 
 
 class CalibrationError(InputError):
@@ -151,6 +157,59 @@ class MechanicsResponse:
         self._chip[key] = out
         return out
 
+    def _thermal_factor(self, temp_K: float) -> float:
+        """Flow stress of the work at ``temp_K`` relative to its value at the same strain and rate at 20 degC:
+        Johnson-Cook's 1 - T*^m (T* clipped to [0, 1]), or the data-only model's linear fall to its softening
+        temperature."""
+        from ..mechanics.abi import MAT_M, MAT_TMELT_K, MAT_TREF_K
+        from ..mechanics.materials import flow_stress_fallback
+
+        jc = self.work.jc
+        if jc is not None:
+            span = float(jc[MAT_TMELT_K] - jc[MAT_TREF_K])
+            ts = (temp_K - float(jc[MAT_TREF_K])) / span if span > 0.0 else 0.0
+            ts = min(max(ts, 0.0), 1.0)
+            return 1.0 - ts ** float(jc[MAT_M])
+        strength = self.work.yield_Pa or self.work.ultimate_Pa
+        return flow_stress_fallback(self.work, temp_K) / strength if strength else 1.0
+
+    def flank_temperature(self, t_ws: float, t_base: float, t_ref_K: float, tau_Pa: float, speed: float,
+                          m_w: float, m_t: float | None) -> float:
+        """Mean flank-land temperature with the land's friction stress softened at that temperature.
+
+        The land's shear stress tau (Smithey: min(mu sigma_0, k_AB) times the land's stress factor) is the work's
+        shear flow stress at the shear plane, k_AB at T_AB; where the land runs hotter than the shear plane, the
+        work under it is softer: tau(T) = tau x min(1, theta(T) / theta(T_AB)), theta the flow stress's thermal
+        factor (Johnson-Cook 1 - T*^m). The heat flux tau(T) V and Blok's partition (Jaeger band source on the
+        work, the stationary source on the tool) then fix T self-consistently, as Oxley's interface temperature
+        is fixed with the chip's flow stress at that temperature; T stays below the melting temperature of the
+        flow-stress law. The pressure sigma_0 is not softened: the hot layer at the land (Peclet depth
+        sqrt(kappa VB / V), about ten microns) is thin against the plastic zone that carries it (of the order
+        of VB). Bisection, fixed steps (deterministic)."""
+        from ..mechanics import heat as H
+
+        theta_ref = self._thermal_factor(t_ref_K)
+
+        def tool_side(temp_K: float) -> float:
+            ratio = self._thermal_factor(temp_K) / theta_ref if theta_ref > 0.0 else 1.0
+            flux = tau_Pa * min(1.0, ratio) * speed
+            if m_t is None:
+                return t_ws + flux * m_w
+            share = H.blok_partition_to_tool(flux, m_w, m_t, t_ws, t_base)
+            return t_base + share * flux * m_t
+
+        lo = min(t_ws, t_base) if m_t is not None else t_ws
+        hi = tool_side(lo)
+        if not hi > lo:
+            return hi
+        for _ in range(FLANK_BISECTIONS):
+            mid = 0.5 * (lo + hi)
+            if tool_side(mid) > mid:
+                lo = mid
+            else:
+                hi = mid
+        return 0.5 * (lo + hi)
+
     def response(self, slot: int, cond: Condition) -> Response:
         from ..mechanics import contact as C
         from ..mechanics import heat as H
@@ -169,14 +228,9 @@ class MechanicsResponse:
         width = max(cond.depth_m, land)
         weight = get(FLANK)["flank_base_weight"]
         t_base = t_ws + weight * (t_rake - t_ws)
-        flux = t_mean * speed
         m_w = H.work_side_resistance(land, width, speed, self.work, t_ws)
-        if side is None:
-            t_flank = t_ws + flux * m_w
-        else:
-            m_t = H.tool_side_resistance(land, t_base, side, width)
-            share = H.blok_partition_to_tool(flux, m_w, m_t, t_ws, t_base)
-            t_flank = t_base + share * flux * m_t
+        m_t = None if side is None else H.tool_side_resistance(land, t_base, side, width)
+        t_flank = self.flank_temperature(t_ws, t_base, t_ws, t_mean, speed, m_w, m_t)
         return Response(flank_sv_Pa_m_s=s_mean * speed, flank_temp_K=np.array([t_flank]),
                         rake_sv_Pa_m_s=sigma_rake * v_chip, rake_temp_K=np.array([t_rake]), weights=np.array([1.0]),
                         flank_sigma_Pa=s_mean, rake_sigma_Pa=sigma_rake,
@@ -387,5 +441,86 @@ def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], 
     return Calibration(float(A), float(B), float(scale), report)
 
 
+def _branch_rate(A: np.ndarray, B: np.ndarray, lo: np.ndarray, temp_K: float) -> float:
+    """A exp(-B / T) of the branch in force at T (kernels.usui_rate's rule: the last branch whose lower end is at
+    or below T, the first below every range)."""
+    if A.size == 0 or temp_K <= 0.0:
+        return 0.0
+    b = 0
+    for i in range(A.size):
+        if temp_K >= lo[i]:
+            b = i
+    return float(A[b] * math.exp(-B[b] / temp_K))
+
+
+@dataclass
+class Anchor:
+    factor: float                   # on every published branch's A
+    report: dict = field(default_factory=dict)
+
+
+def anchor_published(entry: TaylorEntry, response: Callable[[float, float], Response], geometry: FlankGeometry,
+                     coating: CoatingData | None, abrasion: Abrasion, vb0_m: float, nodes_per_interval: int,
+                     A: np.ndarray, B: np.ndarray, lo: np.ndarray) -> Anchor:
+    """Factor s on the A of a published Usui set so that, with this response's flank temperatures, the set reaches
+    the Taylor entry's VB limit in its contact life at the entry's check speed (the 15-min speed v15, at the
+    entry's feed and depth references). B and the branch ranges stay as published.
+
+    A published set (A, B) holds for the temperatures it was fitted with (often the source's FE model): a
+    systematic difference dT of another temperature model changes its rate by about exp(B dT / T^2) near the
+    fitted range, a factor A absorbs. The pairing's Taylor life fixes that factor; the published activation
+    temperature B keeps the speed and temperature dependence of the mechanism. The residuals at the entry's two
+    calibration speeds are reported (not fitted)."""
+    p = get(CALIBRATION)
+    v1, v2, v3 = calibration_speeds(entry)
+    f, ap = entry.feed_ref_m, entry.ap_ref_m
+    vb_lim = entry.VB_limit_m
+    if not vb0_m < vb_lim:
+        raise InputError(f"wear: the initial flank wear {vb0_m:.3g} m is not below the Taylor VB limit {vb_lim:.3g} m")
+    n = int(nodes_per_interval)
+
+    def life(nodes, scale: float) -> float:
+        total = 0.0
+        for node in nodes:
+            usui = 0.0
+            for temp, weight, ok in zip(node.temps, node.weights, node.coat_ok):
+                fc = coating.factor if (coating is not None and ok) else 1.0
+                usui += float(weight) * fc * _branch_rate(A, B, lo, float(temp))
+            rate = geometry.g_vb * (scale * usui + node.abr) * node.sv
+            if not rate > 0.0:
+                return math.inf
+            total += node.weight_m / rate
+        return total
+
+    nodes = {v: _nodes(response, v, vb0_m, vb_lim, geometry, coating, abrasion, n) for v in (v1, v2, v3)}
+    target = entry.contact_life_s(v3, f, ap)
+    if life(nodes[v3], 0.0) <= target:
+        raise CalibrationError("wear: the abrasive term alone wears the land out before the Taylor life at v15; the "
+                               "published Usui set cannot be anchored")
+    published = life(nodes[v3], 1.0)
+    if not math.isfinite(published):
+        raise CalibrationError("wear: the published Usui set gives no wear at the Taylor check speed")
+    hi = math.log(published / target) + 1.0
+    lo_ = hi - 6.0
+
+    def g(log_s: float) -> float:
+        return math.log(life(nodes[v3], math.exp(log_s)) / target)
+
+    while g(lo_) <= 0.0:
+        lo_ -= 6.0
+    while g(hi) > 0.0:
+        hi += 6.0
+    scale = math.exp(optimize.brentq(g, lo_, hi, xtol=1e-13, rtol=1e-15, maxiter=500))
+    lives = [life(nodes[v], scale) for v in (v1, v2, v3)]
+    targets = [entry.contact_life_s(v, f, ap) for v in (v1, v2, v3)]
+    report = {"entry_index": entry.index, "entry_src": entry.src, "entry_coating": entry.coating,
+              "speeds_m_s": [v1, v2, v3], "contact_life_s": targets, "published_life_v15_s": published,
+              "factor": scale, "model_life_s": [m if math.isfinite(m) else None for m in lives],
+              "residual_rel": [(m / t - 1.0) if math.isfinite(m) else None for m, t in zip(lives, targets)],
+              "flank_temp_K": [float(np.sum(nodes[v][0].weights * nodes[v][0].temps)) for v in (v1, v2, v3)],
+              "check_life_s": float(p["check_life_s"])}
+    return Anchor(float(scale), report)
+
+
 __all__ = ["Condition", "Response", "TaylorResponse", "MechanicsResponse", "CalibrationError", "FlankGeometry",
-           "Abrasion", "Calibration", "calibrate", "calibration_speeds", "life_s"]
+           "Abrasion", "Calibration", "calibrate", "calibration_speeds", "life_s", "Anchor", "anchor_published"]

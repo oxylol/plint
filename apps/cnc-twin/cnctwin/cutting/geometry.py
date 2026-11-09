@@ -18,9 +18,9 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..core.abi import EDGE_CHISEL, EDGE_INSERT, EDGE_LIP, EDGE_MARGIN, EDGE_NOSE, EDGE_PERIPHERAL, EdgeModel
-from .abi import (N_TC, TC_TANGENT_VN, TC_FLOAT_K, TC_FLOAT_TRAVEL, TC_H_CAP, TC_HAND, TC_HOLE_MAKING, TC_N_ELEM,
+from .abi import (N_PK, N_PKI, N_TC, TC_TANGENT_VN, TC_FLOAT_K, TC_FLOAT_TRAVEL, TC_H_CAP, TC_HAND, TC_HOLE_MAKING, TC_N_ELEM,
                   TC_N_TEETH, TC_PD_MAX_LEN, TC_POLAR_SIDE, TC_R_CUT, TC_RECOVERY_RATIO, TC_RECUT_ROW, TC_ROTATING,
-                  TC_SURF_EVENT_RAD, TC_TURN_COLWELL, TC_Z_HI, TC_Z_LO, CutTool)
+                  TC_SURF_EVENT_RAD, TC_TURN_COLWELL, TC_Z_HI, TC_Z_LO, CutTool, with_packed)
 from .coefficients import RowGeometry, Rows, flank_stress
 
 HOLE_MAKING_TYPES = ("twist_drill", "indexable_drill", "gun_drill", "spot_drill", "centre_drill", "reamer",
@@ -228,11 +228,13 @@ def build_cut_tool(geometry, edge: EdgeModel, frames, rows: list[Rows], elem_row
                 if geometry.rotating else np.zeros(nt))
     c = np.ascontiguousarray
     read_row, write_row = helix_rows(geometry, edge, P, normal, dS, station, valid, tooth, nt, ne, nst)
-    return CutTool(c(P), c(normal), c(cut), c(dirs), c(arms), c(alpha0), c(r_xy), c(db), c(dS), c(row), c(tooth),
+    tool = CutTool(c(P), c(normal), c(cut), c(dirs), c(arms), c(alpha0), c(r_xy), c(db), c(dS), c(row), c(tooth),
                    c(elem), c(station), c(read_row), c(write_row), c(kind), c(forming), c(valid), c(flank), c(sig_flank), c(pd),
                    c(er), c(vb),
                    c(chip), c(rake), c(incl), c(st_z if nst else np.zeros(1)), c(st_ptr), c(st_elem), c(st_sec),
-                   c(st_centre), c(sec_z), c(sec_zb), c(sec_zp), c(tooth_a0), c(scal))
+                   c(st_centre), c(sec_z), c(sec_zb), c(sec_zp), c(tooth_a0), c(scal), np.zeros((1, N_PK)),
+                   np.zeros((1, N_PKI), np.int64))
+    return with_packed(tool)
 
 
 def _meridian_normal(n_T: np.ndarray, p_T: np.ndarray) -> tuple[float, float]:

@@ -20,7 +20,7 @@ Contents: [running the server](#running-the-server) · [endpoints](#endpoints) �
 [examples](#examples) · [server-sent events](#server-sent-events) · [series and M4](#series-and-m4-downsampling) ·
 [files and ranges](#files-range-requests-and-safety) · [jobs](#the-job-manager) ·
 [entry points](#entry-points-what-the-worker-calls) · [run directory](#run-directory-as-read-by-the-api) ·
-[decisions](#decisions-and-their-consequences) · [OpenAPI](#openapi)
+[run cache](#run-cache) · [sweeps](#sweeps) · [decisions](#decisions-and-their-consequences) · [OpenAPI](#openapi)
 
 ## Running the server
 
@@ -71,7 +71,7 @@ There are no `/docs` or `/redoc` pages: they load scripts from a CDN and the box
 | `GET /api/projects/{id}` | project.yaml as written, operations, files | 200, 404 |
 | `GET /api/projects/{id}/files/{path}` | a project file (ranges) | 200/206, 400, 403, 404 |
 | `POST /api/projects/{id}/check?wait_s=20` | `twin check` as a job; body `{options}` | 200 result, 202 job, 409, 500, 501 |
-| `POST /api/runs` | queue a simulation: `{project_id, options}` | 201 (Location), 404, 422 |
+| `POST /api/runs` | queue a simulation: `{project_id, options, no_cache}`; a run the [run cache](#run-cache) holds is answered instead | 201 (Location), 200 cached run, 404, 422 |
 | `GET /api/runs?project_id=&status=&limit=&offset=` | runs, newest first | 200 |
 | `GET /api/runs/{id}` | `{id, run: run.json or null, status: status.json, job, checkpoint, links}` | 200, 404 |
 | `GET /api/runs/{id}/events?timeout_s=` | SSE: `progress`, `finding`, `keyframe`, `done` | 200 stream |
@@ -98,6 +98,8 @@ There are no `/docs` or `/redoc` pages: they load scripts from a CDN and the box
 | `GET /api/compare?a=&b=&wait_s=&retry=` | compare two finished runs (job, result kept) | 200, 202, 409, 500, 501 |
 | `POST /api/runs/{id}/uncertainty` | uncertainty study around a run: `{options}` | 202 job, 409 |
 | `POST /api/calibrate` | `{project_id?, run_id?, machine_data?, options}` | 202 job, 400, 404 |
+| `POST /api/sweeps` | a parameter sweep of a project as a job: `{project_id, spec, options}` ([sweeps](#sweeps)) | 202 job, 400, 403, 404, 422 |
+| `GET /api/sweeps` · `/api/sweeps/{id}` | sweeps, newest first · one: job, progress, summary, every point | 200, 404 |
 | `GET /api/jobs?kind=&state=&limit=` · `/api/jobs/{id}` | jobs, newest first · one, with its result | 200, 404 |
 | `POST /api/jobs/{id}/cancel` · `GET /api/jobs/{id}/events` | cancel · SSE `progress`, `done` | 202, 409 · stream |
 | `GET /api/jobs/{id}/files` · `/files/{path}` · `/log` | what the job wrote · its output (ranges) | 200, 404 |
@@ -107,7 +109,40 @@ There are no `/docs` or `/redoc` pages: they load scripts from a CDN and the box
 Added to architecture 17 (additive): `/api/jobs/*` (checks and studies are jobs that need a
 handle), `/api/runs/{id}/files` and `/api/runs/{id}/sld` listings, `/api/db` (the kinds), the
 `timeout_s` and `Last-Event-ID` stream options, `max_frames`, `format=json|npz` on arrays, `t0/t1`
-on export and timeline, and the HEAD variants of file routes.
+on export and timeline, the HEAD variants of file routes, the run cache of `POST /api/runs`
+(`no_cache`, the 200 answer, `cache` in the record) and `/api/sweeps`.
+
+## Run cache
+
+`POST /api/runs` looks the run up in the run cache (`DATA_DIR/cache`, cnctwin.cache, docs/ml.md "Run cache")
+before it queues a simulation: the key of the job it would start (the project, its inputs and databases, the
+options, the `simulate` entry, the build, the platform, the jobs' environment and SOURCE_DATE_EPOCH). A verified
+finished run in the runs folder is answered with **200** (`Location` the run, `cache: {hit: true, key, run_id}`);
+one held elsewhere (a sweep's point in the cache's own store) is copied into a new run folder first (`cache:
+{hit: true, key, run_id, copied_from}`, the copy is registered too). Otherwise the answer is 201 as before with
+`cache: {hit: false, key}` (or a `note` saying why there is no key: a project that does not resolve, the cache
+switched off with CNCTWIN_CACHE=off) and the simulation's worker registers the finished run when its key did not
+change while it ran (the job's result `cache: {registered, key, note}`). `no_cache: true` skips the lookup; the
+new run is registered and supersedes. A cache problem never fails the request.
+
+## Sweeps
+
+`POST /api/sweeps {project_id, spec, options}` starts a sweep (cnctwin.sweep, docs/ml.md "Sweeps", the spec's
+format in docs/formats.md "Sweep") as a heavy job (kind `sweep`, one at a time with the simulations): the
+project is the base (a `base` in the spec is ignored), generator scripts and templates must lie in the project's
+folder (403/400 otherwise), a spec that does not validate is 422. A request may not name `execution.runner` (422:
+the points run the server's own simulation) and may use generators (Python from the project's folder) only for
+the example projects shipped with the server (403 for an uploaded project, unless the server runs with
+CNCTWIN_ALLOW_UPLOAD_GENERATORS=1). The job's output folder is the sweep folder:
+the points run one after another through the run cache (each in its own process inside the job's memory cap;
+`options.isolation: inline` runs them in the job's process), then the dataset is exported into `dataset/`
+(`options.dataset: false` skips it; `options.no_cache`, `options.retry_failed` as `twin sweep`). The points'
+runner is the server's `simulate` entry when CNCTWIN_ENTRY_SIMULATE overrides the default loop, else
+cnctwin.sweep.runner (the loop plus the operator overrides). `GET /api/sweeps/{id}` (the job id): `{id, name, project_id, job,
+status (status.json: progress, ETA), summary (summary.json), notes, points [{index, values, status, key, run_id,
+run_dir, safe, error}], result, links}`; every file at `/api/jobs/{id}/files/...` (`links.dataset`,
+`links.blocks`, `links.schema`). Cancel with `POST /api/jobs/{id}/cancel`: running points stop, finished ones
+stay cached, a new `POST` with the same spec resumes.
 
 ## Examples
 
@@ -333,7 +368,7 @@ file name, slugged and made unique (`-2`, `-3`); an upload id never starts with 
 Every simulation, check, comparison, uncertainty study and calibration is a job in its own
 process: `python -m cnctwin.api.worker DATA_DIR/jobs/<id>`.
 
-* **Pools.** `heavy` (simulate, uncertainty, calibrate; default 1 at a time) and `light` (check,
+* **Pools.** `heavy` (simulate, uncertainty, calibrate, sweep; default 1 at a time) and `light` (check,
   compare; default 1). Within a pool jobs start in submission order; `queue_position` counts the
   jobs ahead. A job that has reported its end keeps its slot until its process exits.
 * **Memory cap.** `systemd` (when systemd runs and root or passwordless sudo may call it):
@@ -387,6 +422,7 @@ process: `python -m cnctwin.api.worker DATA_DIR/jobs/<id>`.
 | compare | `cnctwin.report.compare:compare_runs` | `compare_runs(request, out_dir, progress_cb) -> dict` |
 | uncertainty | `cnctwin.uncertainty:run_study` | `run_study(request, out_dir, progress_cb) -> dict` |
 | calibrate | `cnctwin.mdata.calibrate:calibrate` | `calibrate(request, out_dir, progress_cb) -> dict` |
+| sweep | `cnctwin.sweep:run_sweep_job` | `run_sweep_job(request, out_dir, progress_cb) -> dict` |
 
 Override any with `CNCTWIN_ENTRY_<KIND>=module:function` or `/path/to/file.py:function`. When the
 module or function is not in the build, the job fails with type `EntryPointMissing` and a message
@@ -402,7 +438,8 @@ such as `cnctwin.core.loop.run_project is not available in this build (no module
 * `request` of the other kinds: `check` {project_id, project_path, project_dir, read_only, options}
   (`options.write` is refused for examples); `compare` {run_a, run_b, run_a_dir, run_b_dir, options};
   `uncertainty` {run_id, run_dir, project_id, project_path, project_dir, options};
-  `calibrate` {project_id, project_path, project_dir, run_id, run_dir, machine_data, options}.
+  `calibrate` {project_id, project_path, project_dir, run_id, run_dir, machine_data, options};
+  `sweep` {project_id, project_path, project_dir, spec, options, simulate_entry}.
   Every request also has `out_dir` (the job's output folder, served at `/api/jobs/{id}/files`).
 * `progress_cb(progress: dict | None = None, **fields) -> None` takes `sim_time_s`, `est_total_s`,
   `eta_s`, `op`, `phase`, `message`, `checkpoint` ({tick, file}) and any other JSON-able fields

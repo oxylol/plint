@@ -13,7 +13,7 @@ sources: `db/bibliography/models-wear.yaml` (plus the keys already in other bibl
 | `kernels.py` | Numba kernels: `advance_elements`, `element_outputs`, `chip_trials` and helpers |
 | `reference.py` | plain-Python twins of every kernel (the tests compare them) |
 | `params.py` | model files, database data as SI values (tool material, coating, work material, Usui, Taylor) |
-| `calibration.py` | Usui constants calibrated to the Taylor life; `TaylorResponse` protocol, `MechanicsResponse` default |
+| `calibration.py` | Usui constants calibrated to the Taylor life, published sets anchored to it; `TaylorResponse` protocol, `MechanicsResponse` default (flank land softened at its temperature) |
 | `fracture.py` | Weibull strength and size effect, section criteria, Basquin curves, crack strength |
 | `build.py` | per-slot construction at init: geometry, wear law, chipping law, sections, fallback table |
 | `step.py` | one macro step of one slot: bus inputs, kernel inputs and fallbacks, BUE, chipping, sections, criteria, record |
@@ -107,7 +107,10 @@ at its VB limit:
 1. Entry: same tool class; the tool's coating (`same`: the calibration models the coating phase with the
    tool's coating data), else an uncoated entry (`substrate`: the substrate law; the run then adds the
    coating phase), else another coating (`other`: a generic coating phase, factor 0.6, 3 um PVD /
-   10 um CVD by keyword, est); best process match; first in file order.
+   10 um CVD by keyword, est); best process match; then the entry whose `grade` names the tool material
+   (`params.grade_score`: words of the grade text found in the tool material's id and name, so a
+   whisker-reinforced alumina takes the `Al2O3-SiC whisker` entry and a SiAlON the `SiAlON` one of the same
+   class); first in file order.
 2. Speeds: the entry's `vc_range` ends, else the speeds of Taylor lives 60 min and 5 min
    (`calibration_life_long_s`, `calibration_life_short_s`; ISO 3685 test practice), at the entry's feed
    and depth references; check speed: the 15-min life (v15).
@@ -158,29 +161,58 @@ law). Documented bound: the calibration error below (6 %).
 the chip speed; Smithey's land stresses from sigma_0 = (2 + pi) k_AB, tau_0 = min(mu sigma_0, k_AB);
 flank temperature by Blok's partition with Jaeger's band source on the work and the stationary source on
 the tool flank (cnctwin.mechanics.heat), the tool-side base temperature T_AB + 0.5 (T_int - T_AB)
-(`flank_base_weight`, est). `Condition.coated` False models the uncoated substrate.
+(`flank_base_weight`, est). The land's friction stress is the work's flow stress, so where the land runs
+hotter than the shear plane it is softened at the land's own temperature, tau(T) = tau_0 x min(1, theta(T) /
+theta(T_AB)) with theta the flow stress's thermal factor (Johnson-Cook 1 - T*^m; the data-only model's linear
+fall), and the flank temperature is the fixed point of Blok's balance with that flux (`flank_temperature`,
+bisection), as Oxley fixes T_int with the chip's softened flow stress: it stays below the melting temperature of
+the law (without it the response gave 1830-2200 degC flanks for IN718 with ceramics at 150-250 m/min, above the
+alloy's melting range, and 1475-1600 degC for Ti6Al4V at 150 m/min; now 900-1060 and 960-990 degC). The pressure
+sigma_0 is not softened (the hot layer, sqrt(kappa VB / V) of about ten microns, is thin against the plastic
+zone under the land). `Condition.coated` False models the uncoated substrate.
+
+**Published sets and the pairing's Taylor life** (`calibration.anchor_published`). A published Usui set holds
+for the temperatures its source fitted it with (often an FE model): a systematic difference dT of another
+temperature model changes its rate by about exp(B dT / T^2). When the work material has a Taylor entry for the
+pairing (selected as in step 1), the published set keeps its B and branch ranges and its A (all branches by one
+factor) is scaled so that the response reaches the entry's VB limit in the entry's contact life at the 15-min
+speed v15 (with the coating phase as in the calibration); the residuals at the entry's two calibration speeds are
+reported (`law.flank.anchor`), the entry's VB limit becomes the tool's limit, and the original A is kept in the
+report. Without a Taylor entry the set is used as published. Example: Zhang 2025 (carbide-k20-6co on Ti6Al4V,
+B 15 909 K) anchored to Batista-Ponce 2019 (ti6al4v tool_life[0], f 0.2 mm, ap 1 mm, 15 min at 69 m/min):
+A x 0.041; residuals -20 % at 50 m/min and +150 % at 200 m/min (the source's adhesion-driven failure makes the
+Taylor exponent steeper than the published B with this response's temperatures).
+
+A calibration whose B reaches the end of its bracket (the response's flank temperature changes too little
+between the two speeds for the entry's speed exponent, e.g. IN718 with ceramics, whose flank runs near the
+melt-limited temperature) is listed in `estimated` with its residual.
 
 **Materials without a flow-stress law** (composites, polymers, wood, foam): the mechanics data-only
 model's temperatures come from Merchant geometry on a material that forms no chip, so a Usui fit would
 not match the run's thermal temperatures; these wear by the abrasive term with the database
 abrasiveness factor, and their Taylor data are reported as a check (`law.flank.taylor_check`), not fitted.
 
-**Measured** (database materials of 2026-11-03, default response, carbide uncoated entries, rake 0.1,
+**Measured** (database materials of 2026-11-09, default response, carbide uncoated entries, rake 0.1,
 clearance 0.12, hone 20 um, abrasive floor included): residual at both calibration speeds < 1e-9; at the
 15-min check speed:
 
 | material / tool material | B (K) | flank T at v1..v2 (K) | check residual |
 |---|---|---|---|
-| aisi1045 / carbide-p30 | 24 843 | 897-949 | +0.6 % |
-| aisi4140-qt30 / carbide-p30 | 26 863 | 908-962 | +0.9 % |
-| aisi304 / carbide-k20-6co | 47 526 | 890-939 | +4.0 % |
-| ti6al4v / carbide-k20-6co | 16 518 | 1040-1366 | +0.3 % |
-| inconel718 / carbide-k20-6co | 25 877 | 1029-1129 | +3.9 % |
-| al6061-t6 / carbide-k20-6co | 18 700 | 575-603 | -4.6 % |
-| grey-cast-iron-gjl250 / carbide-k20-6co | 13 034 | 640-713 | +5.4 % |
-| aisi1045 / hss-m2 | 30 628 | 757-802 | -0.4 % |
+| aisi1045 / carbide-p30 | 30 664 | 897-949 | +4.3 % |
+| aisi4140-qt30 / carbide-p30 | 28 217 | 908-962 | +1.3 % |
+| aisi304 / carbide-k20-6co | 30 087 | 890-939 | +1.4 % |
+| ti6al4v / carbide-k20-6co | 27 755 | 1062-1205 | -3.0 % |
+| inconel718 / carbide-k20-6co | 66 079 | 1030-1065 | +0.5 % |
+| al6061-t6 / carbide-k20-6co | 19 217 | 575-603 | +5.3 % |
+| grey-cast-iron-gjl250 / carbide-k20-6co | 21 913 | 715-763 | +1.4 % |
+| aisi1045 / hss-m2 | 50 227 | 774-802 | +2.8 % |
 
-Without the abrasive floor the residuals are -5.1 % to +0.4 %. **Error bound**: within the calibrated
+(Recomputed 2026-11-09 with the softened land; the uncoated entries of the tool class picked by step 1; the
+flank temperatures are those at the first Gauss node, a land of about the hone radius, which the softening hardly
+changes; it lowers the hot end of the land and so raises B, most for IN718, whose flank approaches the
+melt-limited temperature. Before: B 24 843, 26 863, 47 526, 16 518, 25 877, 18 700, 13 034, 30 628 K.)
+
+**Error bound**: within the calibrated
 window (5-60 min) the wear model reproduces the Taylor life within 6 % (the curvature of B / T(ln v)
 against Taylor's straight line; synthetic response test bound 5 %, kernel integration to the VB limit
 within 0.5 % of the integral, test `test_the_kernel_reaches_the_vb_limit_in_the_taylor_life`). This is

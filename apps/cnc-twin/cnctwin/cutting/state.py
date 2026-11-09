@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from ..core.abi import EngagedIntervals, SurfaceMemory
-from .abi import CutState, CutTable, CutTool, Refill
+from .abi import CutState, CutTable, CutTool, Refill, with_packed
 from .coefficients import RowGeometry, Rows, RowState
 from .schema import CuttingSettings
 
@@ -35,12 +35,14 @@ class ToolCut:
     rows: list = field(default_factory=list)            # Rows per table row (current coefficients)
     row_states: list = field(default_factory=list)      # RowState of the last computation (None: never)
     row_radius: list = field(default_factory=list)      # edge radius of the last computation
+    row_prov: list = field(default_factory=list)        # True: the row is provisional (built before the speed settled)
     table: CutTable | None = None
     tool: CutTool | None = None
     h_hi_m: float = 0.0
     version: int = 0                                    # ProcessCoefficients version
     tooling_version: int = -1
     omega_plan_rad_s: float = 0.0                       # spindle speed the low-speed rows were planned for
+    omega_last_rad_s: float = 0.0                       # spindle speed at the last pipeline call (run-up rule)
     lag: list = field(default_factory=list)             # last two changes of the reference coefficient
     ref_coeff: float = 0.0
     computed: int = 0                                   # row computations (cost report)
@@ -93,7 +95,8 @@ class CuttingState:
                     arrays[p + "table." + name] = np.array(getattr(tc.table, name))
             if tc.tool is not None:
                 for name in CutTool._fields:
-                    arrays[p + "tool." + name] = np.array(getattr(tc.tool, name))
+                    if name not in _DERIVED_TOOL:
+                        arrays[p + "tool." + name] = np.array(getattr(tc.tool, name))
             rows_meta = []
             for r, rows in enumerate(tc.rows):
                 for name in _ROW_ARRAYS:
@@ -107,8 +110,10 @@ class CuttingState:
             meta["tools"].append({
                 "slot": int(slot), "rows_geom": [dataclasses.asdict(g) for g in tc.rows_geom], "rows": rows_meta,
                 "row_states": [None if s is None else s.as_list() for s in tc.row_states],
-                "row_radius": [float(v) for v in tc.row_radius], "h_hi_m": float(tc.h_hi_m), "version": int(tc.version),
+                "row_radius": [float(v) for v in tc.row_radius], "row_prov": [bool(v) for v in tc.row_prov],
+                "h_hi_m": float(tc.h_hi_m), "version": int(tc.version),
                 "tooling_version": int(tc.tooling_version), "omega_plan_rad_s": float(tc.omega_plan_rad_s),
+                "omega_last_rad_s": float(tc.omega_last_rad_s),
                 "lag": [float(v) for v in tc.lag], "ref_coeff": float(tc.ref_coeff), "computed": int(tc.computed),
                 "has_table": tc.table is not None, "has_tool": tc.tool is not None})
         for i, (key, cc) in enumerate(sorted(self.contacts.items())):
@@ -142,10 +147,12 @@ class CuttingState:
             tc.elem_row = arr(p + "elem_row")
             tc.row_states = [None if s is None else RowState.from_list(s) for s in tm["row_states"]]
             tc.row_radius = list(tm["row_radius"])
+            tc.row_prov = [bool(v) for v in tm.get("row_prov", [])]
             tc.h_hi_m = float(tm["h_hi_m"])
             tc.version = int(tm["version"])
             tc.tooling_version = int(tm["tooling_version"])
             tc.omega_plan_rad_s = float(tm["omega_plan_rad_s"])
+            tc.omega_last_rad_s = float(tm.get("omega_last_rad_s", 0.0))
             tc.lag = list(tm["lag"])
             tc.ref_coeff = float(tm["ref_coeff"])
             tc.computed = int(tm["computed"])
@@ -160,7 +167,8 @@ class CuttingState:
             if tm["has_table"]:
                 tc.table = CutTable(*(arr(p + "table." + name) for name in CutTable._fields))
             if tm["has_tool"]:
-                tc.tool = CutTool(*(arr(p + "tool." + name) for name in CutTool._fields))
+                tc.tool = with_packed(CutTool(*(np.zeros(1) if name in _DERIVED_TOOL else arr(p + "tool." + name)
+                                                for name in CutTool._fields)))
             obj.tools[slot] = tc
         for cm in meta["contacts"]:
             p = f"c{cm['index']}."
@@ -174,5 +182,8 @@ class CuttingState:
             obj.contacts[key] = cc
         return obj
 
+
+# CutTool fields derived from the others (abi.pack_elements): not stored, rebuilt on restore
+_DERIVED_TOOL = ("pk", "pki")
 
 __all__ = ["CuttingState", "ToolCut", "ContactCut"]

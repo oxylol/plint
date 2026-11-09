@@ -155,21 +155,43 @@ def test_published_usui_constants_convert_their_unit_systems():
     assert [b.T_lo_K for b in branches] == [-math.inf, 1150.0]
 
 
-def test_published_constants_take_precedence_over_the_taylor_calibration():
+def _published_law(material):
     tm = dict(fx.TOOL_MATERIAL)
     tm["usui"] = [{"work_family": "steel", "surface": "flank", "A_per_MPa": 7.8e-9,
                    "rate_unit": "mm/s with sigma_n in MPa, V_s in mm/s", "B_K": 5302},
                   {"work_family": "steel", "surface": "rake", "A_per_Pa": 4e-12,
                    "rate_unit": "m/s with sigma_n in Pa, V_s in m/s", "B_K": 10456}]
     tool_mat = P.tool_material_data(SIMap(tm))
-    work = P.work_data(SIMap(fx.MATERIAL))
+    work = P.work_data(SIMap(material))
     estimated = []
-    law, report, taylor = B.wear_law(slot=0, work=work, tool_mat=tool_mat, coating=None, coating_id="none",
-                                     process="milling", fg=GEO, response=fx.AnalyticResponse(), vb0_m=0.0,
-                                     settings=type("S", (), {"calib_nodes": 6})(), estimated=estimated)
-    assert report["flank"]["source"] == "published" and taylor is None
+    out = B.wear_law(slot=0, work=work, tool_mat=tool_mat, coating=None, coating_id="none", process="milling",
+                     fg=GEO, response=fx.AnalyticResponse(), vb0_m=0.0, settings=type("S", (), {"calib_nodes": 6})(),
+                     estimated=estimated)
+    return (*out, estimated)
+
+
+def test_published_constants_take_precedence_over_the_taylor_calibration():
+    """Without Taylor data for the pairing a published set is used as written."""
+    material = dict(fx.MATERIAL)
+    material["tool_life"] = []
+    law, report, taylor, _ = _published_law(material)
+    assert report["flank"]["source"] == "published" and taylor is None and "anchor" not in report["flank"]
     assert law.fl_A[0] == pytest.approx(7.8e-15) and law.fl_B[0] == 5302.0
     assert report["rake"]["source"] == "published" and law.rk_A[0] == pytest.approx(4e-12)
+
+
+def test_published_constants_are_anchored_to_the_pairings_taylor_life():
+    """With a Taylor entry for the pairing the published set keeps its B and branch ranges, and its A is scaled so
+    that this response's temperatures reach the entry's VB limit in the Taylor life at the 15-min speed (an
+    Arrhenius set holds only for the temperature scale it was fitted with)."""
+    law, report, taylor, estimated = _published_law(fx.MATERIAL)
+    anchor = report["flank"]["anchor"]
+    assert report["flank"]["source"] == "published" and taylor is not None and taylor.index == 0
+    assert law.fl_B[0] == 5302.0 and law.fl_A[0] == pytest.approx(7.8e-15 * anchor["factor"], rel=1e-12)
+    assert abs(anchor["residual_rel"][2]) < 1e-9                     # the 15-min speed is met
+    assert all(r is not None for r in anchor["residual_rel"][:2])   # the calibration speeds are reported
+    assert report["rake"]["source"] == "published" and law.rk_A[0] == pytest.approx(4e-12)
+    assert any("anchored" in text for text in estimated)
 
 
 def test_default_mechanics_response_calibrates_a_steel():

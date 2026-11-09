@@ -36,7 +36,7 @@ from . import memory as MEM
 from .channels import channels as cutting_channels
 from .channels import macro_values, tick_values
 from .coefficients import (LinearModel, MechanicsModel, RowGeometry, RowState, Tolerances, build_table, coeff_table,
-                           flank_stress, log_grid, process_record, state_changed)
+                           flank_stress, log_grid, process_record, quantised_radius, quantised_state)
 from .geometry import ToolOptions, build_cut_tool, row_plan
 from .kernels import copy_element_accumulators, cut_step, turn_step
 from .schema import model_params
@@ -46,6 +46,9 @@ from .state import ContactCut, CuttingState, ToolCut
 
 DOMAIN = "cutting"
 TWO_PI = 2.0 * math.pi
+ROW_CACHE_MAX = 512             # coefficient rows kept by quantised slow state (CuttingDomain._rows)
+SETTLE_SHARE = 0.1              # a spindle whose speed changed by more than this share of tol_speed_rel within the last
+                                #   step is still changing speed: rows of a tool not cutting wait (update_tool)
 
 
 class ContactInputs(NamedTuple):
@@ -149,6 +152,9 @@ class CuttingDomain:
         self.work = None
         self.replay_requested = False
         self._inputs: CuttingInputs | None = None
+        # rows by (slot, row, geometry, quantised slow state, model map context): a row is computed at its quantised
+        # state, so an entry equals what the model would compute now (not checkpointed: recomputing gives the same)
+        self._row_cache: dict = {}
 
     # ================================================================== interface
     def channels(self):
@@ -287,8 +293,14 @@ class CuttingDomain:
     def _contact_index(key) -> int:
         return int(key[2])
 
-    def update_tool(self, ctx, state, slot: int, prev: Bus, force: bool = False) -> bool:
-        """Coefficient pipeline of one tool slot for the next step; True when its table changed."""
+    def update_tool(self, ctx, state, slot: int, prev: Bus, force: bool = False, cutting_now: bool = False) -> bool:
+        """Coefficient pipeline of one tool slot for the next step; True when its table changed.
+
+        Rows are computed at the quantised slow state (coefficients.quantised_state) and recomputed only when its
+        grid cell changes; equal cells come from a cache. While the tool is not cutting and its spindle speed is
+        still moving (a run-up or run-down: the speed changed by more than the speed tolerance since the last call),
+        the rows wait for the speed to settle instead of being rebuilt at every speed passed through (they are
+        built on the first call where the tool cuts or the speed is steady)."""
         cs = state.cutting
         st_ = cs.settings
         tc = cs.tools[slot]
@@ -301,21 +313,32 @@ class CuttingDomain:
         tol = Tolerances(speed_rel=st_.tol_speed_rel, temp_K=st_.tol_temp_K, work_temp_K=st_.tol_work_temp_K,
                          friction_rel=st_.tol_friction_rel, VB_m=st_.tol_VB_m, bue_m=st_.tol_bue_m,
                          edge_radius_m=st_.tol_edge_radius_m)
+        cutting = self._cutting(prev, slot) or cutting_now
+        unsettled = omega <= 0.0 or self._accelerating(prev, slot, st_.tol_speed_rel) or \
+            abs(omega - tc.omega_last_rad_s) > st_.tol_speed_rel * max(abs(tc.omega_last_rad_s), 1e-9)
+        settling = not force and bool(tc.rows) and all(r is not None for r in tc.rows) and not cutting and unsettled
+        # rows a tool needs before its speed settled (the first build after a tool change, spindle stopped or running
+        # up) are provisional: cheaper, replaced once the speed settles or the tool cuts
+        provisional = not cutting and unsettled
+        tc.omega_last_rad_s = omega
         v_min = float(self._v_min())
         replan = (tc.tooling_version != tver or not tc.rows_geom
-                  or (geo.rotating and omega > 0.0 and abs(omega - tc.omega_plan_rad_s) > 0.2 * max(tc.omega_plan_rad_s, 1e-9)))
+                  or (geo.rotating and omega > 0.0 and not settling
+                      and abs(omega - tc.omega_plan_rad_s) > 0.2 * max(tc.omega_plan_rad_s, 1e-9)))
         changed = force
         if replan:
             rows_geom, elem_row = row_plan(geo, edge, omega, v_min)
             if rows_geom != tc.rows_geom:
-                keep = {g: (tc.rows[i], tc.row_states[i], tc.row_radius[i]) for i, g in enumerate(tc.rows_geom)
-                        if i < len(tc.rows)}
-                tc.rows, tc.row_states, tc.row_radius = [], [], []
+                keep = {g: (tc.rows[i], tc.row_states[i], tc.row_radius[i],
+                            tc.row_prov[i] if i < len(tc.row_prov) else False)
+                        for i, g in enumerate(tc.rows_geom) if i < len(tc.rows)}
+                tc.rows, tc.row_states, tc.row_radius, tc.row_prov = [], [], [], []
                 for g in rows_geom:
                     old = keep.get(g)
                     tc.rows.append(old[0] if old else None)
                     tc.row_states.append(old[1] if old else None)
                     tc.row_radius.append(old[2] if old else 0.0)
+                    tc.row_prov.append(old[3] if old else False)
                 tc.rows_geom = rows_geom
                 changed = True
             if not np.array_equal(elem_row, tc.elem_row):
@@ -330,17 +353,24 @@ class CuttingDomain:
         edge_r = np.asarray(edge.elem_edge_radius_m, float)
         h_grid = log_grid(st_.h_log_lo_m, max(st_.h_hi_m, 2e-3), st_.log_nodes)
         model = self.models[slot]
+        while len(tc.row_prov) < len(tc.rows_geom):
+            tc.row_prov.append(False)
+        del tc.row_prov[len(tc.rows_geom):]
         for r, geom in enumerate(tc.rows_geom):
+            if settling and tc.rows[r] is not None:
+                continue
             members = valid & (tc.elem_row == r)
-            radius = float(np.mean(edge_r[members])) if members.any() else geom.edge_radius_m
+            radius = quantised_radius(float(np.mean(edge_r[members])) if members.any() else geom.edge_radius_m, tol)
             g_now = RowGeometry(geom.kind, geom.rake_rad, geom.incl_rad, geom.clear_rad, radius, geom.forming,
                                 geom.low_speed, geom.radius_m, geom.lobes, geom.diameter_m)
-            rs = self._row_state(ctx, state, slot, r, g_now, prev, omega, r_contact, members, geo.rotating)
-            if tc.rows[r] is None or state_changed(tc.row_states[r], rs, tc.row_radius[r], radius, tol):
-                tc.rows[r] = model.rows((slot, r), g_now, rs, h_grid)
+            rs = quantised_state(self._row_state(ctx, state, slot, r, g_now, prev, omega, r_contact, members,
+                                                 geo.rotating), tol)
+            if tc.rows[r] is None or tc.row_states[r] != rs or tc.row_radius[r] != radius or \
+                    (tc.row_prov[r] and not provisional):
+                tc.rows[r] = self._rows(model, tc, slot, r, g_now, rs, h_grid, provisional)
                 tc.row_states[r] = rs
                 tc.row_radius[r] = radius
-                tc.computed += 1
+                tc.row_prov[r] = provisional
                 changed = True
         h_obs = cs.peaks.get(f"h_max:{slot}", 0.0)
         h_hi = max(st_.h_hi_m, st_.h_grow * h_obs)
@@ -365,6 +395,50 @@ class CuttingDomain:
             tc.version += 1
         self._lag_monitor(ctx, state, tc, slot, prev)
         return changed
+
+    def _rows(self, model, tc, slot: int, r: int, geom: RowGeometry, rs: RowState, h_grid: np.ndarray,
+              provisional: bool = False):
+        """Coefficients of row r at its quantised slow state, from the cache when the same cell (and the same
+        model map) was computed before. state.cutting's ToolCut.computed counts the computations."""
+        ctx_now = getattr(model, "contexts", {}).get((slot, r)) if hasattr(model, "contexts") else None
+        key = (slot, r, geom, tuple(rs.as_list()), None if ctx_now is None else tuple(ctx_now), float(h_grid[0]),
+               float(h_grid[-1]), int(h_grid.shape[0]), bool(provisional))
+        hit = self._row_cache.get(key)
+        if hit is not None:
+            return hit
+        rows = None
+        if provisional:
+            try:
+                rows = model.rows((slot, r), geom, rs, h_grid, provisional=True)
+            except TypeError:       # a CoefficientModel without the provisional option computes the full row
+                rows = None
+        if rows is None:
+            rows = model.rows((slot, r), geom, rs, h_grid)
+        tc.computed += 1
+        ctx_after = getattr(model, "contexts", {}).get((slot, r)) if hasattr(model, "contexts") else None
+        key = key[:4] + (None if ctx_after is None else tuple(ctx_after),) + key[5:]
+        if len(self._row_cache) >= ROW_CACHE_MAX:
+            self._row_cache.pop(next(iter(self._row_cache)))
+        self._row_cache[key] = rows
+        return rows
+
+    @staticmethod
+    def _accelerating(prev: Bus, slot: int, tol_rel: float) -> bool:
+        """The slot's spindle changed speed within the previous step by more than SETTLE_SHARE of the speed
+        tolerance (a run-up, run-down or speed change in progress)."""
+        for frame in getattr(prev.motion, "paths", []) or []:
+            if int(frame.tool_slot) == slot and len(frame.spindle_omega_rad_s) >= 2:
+                w = np.abs(np.asarray(frame.spindle_omega_rad_s, float))
+                return float(abs(w[-1] - w[0])) > SETTLE_SHARE * tol_rel * max(float(w[-1]), 1e-9)
+        return False
+
+    @staticmethod
+    def _cutting(prev: Bus, slot: int) -> bool:
+        """The tool of the slot cut during the previous step (cutting's own record)."""
+        for c in getattr(prev.cutting, "contacts", []) or []:
+            if int(c.tool_slot) == slot and float(getattr(c, "in_cut_s", 0.0)) > 0.0:
+                return True
+        return False
 
     def _v_min(self) -> float:
         from ..mechanics.contact import min_shear_speed
@@ -670,7 +744,7 @@ class CuttingDomain:
             if slot not in cs.tools:
                 continue
             if macro % every == 0 or cs.tools[slot].table is None:
-                self.update_tool(ctx, state, slot, prev)
+                self.update_tool(ctx, state, slot, prev, cutting_now=self._cutting(nxt, slot))
             frame.coefficients[slot] = self.record(state, slot)
         self._spindle_checks(ctx, state, frame, ctx.macro_s)
         nxt.cutting = frame

@@ -60,7 +60,10 @@ def fixture_pose_F(machine, fixture_pose_mc: np.ndarray, path: int = 0, letters=
 
 class Feeder:
     """The controller side of the loop protocol: produce -> motion accept at the step start and every sync,
-    motion's controller actions back to the controller."""
+    motion's controller actions back to the controller. The tool numbers whose life the wear domain ended
+    (``bus_prev.wear.expired``) reach each path's control as ``Feedback.tool_life_expired`` (its tool-life
+    management then calls a sister tool): inside the next feedback motion sends, or alone when the path is not
+    waiting for a feedback (a feedback would answer that wait)."""
 
     def __init__(self, ctx, state, controller, motion, *, parts: int = 1, operator_delay_ticks: int = 0):
         self.ctx = ctx
@@ -71,10 +74,22 @@ class Feeder:
         self.delay = int(operator_delay_ticks)
         self.runs = [0] * motion.P
         self.ended = [False] * motion.P
+        self.forwarded = [[] for _ in range(motion.P)]      # expired tool numbers each path's control knows
+
+    def _expired(self, p: int) -> list[int]:
+        wear = getattr(self.state.bus_prev, "wear", None)
+        numbers = {int(n) for n in (getattr(wear, "expired", None) or [])}
+        return sorted(numbers - set(self.forwarded[p]))
 
     def feed(self, now: int) -> None:
         ctx, state = self.ctx, self.state
         for p in range(self.md.P):
+            numbers = self._expired(p)
+            if numbers and self.cd.waiting(state, p) is None:
+                from ..controller.ir import Feedback
+                self.cd.feedback(ctx, state, p, Feedback(time_s=int(now) * float(ctx.tick_s),
+                                                         tool_life_expired=numbers), int(now))
+                self.forwarded[p].extend(numbers)
             cmds = self.cd.produce(ctx, state, p, int(now))
             self.md.accept(ctx, state, p, cmds, panel=self.cd.operator(state, p))
 
@@ -84,6 +99,10 @@ class Feeder:
             if kind == "retire":
                 self.cd.retire(ctx, state, p, int(arg), int(tick))
             elif kind == "feedback":
+                numbers = self._expired(p)
+                if numbers and arg is not None:
+                    arg.tool_life_expired = sorted(set(arg.tool_life_expired) | set(numbers))
+                    self.forwarded[p].extend(numbers)
                 self.cd.feedback(ctx, state, p, arg, int(tick))
             elif kind == "cycle_start":
                 self.cd.cycle_start(ctx, state, p, int(tick) + self.delay)

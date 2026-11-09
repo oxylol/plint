@@ -165,6 +165,19 @@
 		}
 	}
 
+	@twin host twin.{$DOMAIN}
+	handle @twin {
+		# CNC Twin (apps/cnc-twin): a physics twin for verifying CNC programs before they
+		# run. Own look (Plint tokens built in); run progress streams over SSE, so no
+		# buffering; projects upload as zip files.
+		request_body {
+			max_size 500MB
+		}
+		reverse_proxy localhost:5210 {
+			flush_interval -1
+		}
+	}
+
 	@music host music.{$DOMAIN}
 	handle @music {
 		# Hertz (apps/hertz): a music maker of waves and dials. Own look; the

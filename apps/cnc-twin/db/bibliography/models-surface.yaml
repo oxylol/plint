@@ -184,3 +184,22 @@ entries:
     year: 1963
     doi: "10.1243/pime_proc_1963_177_052_02"
     pages: "residual stresses and the shakedown limit p0 = 4 k of a line contact on an elastic-perfectly plastic half-space"
+
+  brown-schoop-2020-size-effect-surface:
+    type: article
+    authors: "Brown, I.; Schoop, J."
+    title: "An iterative size effect model of surface generation in finish machining"
+    venue: "Journal of Manufacturing and Materials Processing 4(3), 63"
+    year: 2020
+    doi: "10.3390/jmmp4030063"
+    pages: "Brammertz-type models assume that the uncut material of the Spanzipfel springs back elastically, which does not hold for plastically deforming metals; following Lambert (1961) the material left by the minimum-chip-thickness effect is not confined to the Spanzipfel but deforms plastically as it moves under the tool and side-flows; Brammertz's formula over-predicts at low kinematic roughness"
+    note: "Abstract and the summaries of the paper's introduction read (2026-11-09); the full text was not accessible. Cited for the mechanism (plastic flow and side flow of the uncut layer) behind the side-flow rule of cnctwin.surface.kernels.envelope_profile, not for numbers"
+
+  challen-oxley-1979-wave-model:
+    type: article
+    authors: "Challen, J.M.; Oxley, P.L.B."
+    title: "An explanation of the different regimes of friction and wear using asperity deformation models"
+    venue: "Wear 53(2), 229-243"
+    year: 1979
+    pages: "slip-line models of a hard wedge ploughing a rigid-plastic surface in plane strain: below a critical attack angle a plastic wave is pushed ahead of the wedge and the material passes under it without being removed (wave model); above it a chip is formed (wear model)"
+    note: "Cited for the plane-strain case of envelope_profile: a uniform ploughed layer that cannot flow sideways is not removed and returns behind the edge (from the paper's known content, not re-read in this session)"

@@ -10,8 +10,9 @@ error_model="numpy"``, no fastmath, no parallel) and has a plain-Python twin in
   kappa_v cos^2 + silhouette), or the element's own path (a parabola) when the cutting velocity lies in
   the profile plane, or a direct (u, w) template; the built-up edge lowers it near the element.
 * :func:`envelope_profile` - the kinematic profile: every pass rasterised onto the grid in time order and
-  merged as the lower envelope, except where its chip thickness normal to the edge stays below h_min
-  (the material is ploughed and recovers: Brammertz 1961); additive passes add dents and fragments.
+  merged as the lower envelope where its chip thickness normal to the edge reaches h_min; a thinner layer is
+  ploughed: pressed to the pass, its volume flowing into the free space under the pass beside it (side flow)
+  or, where there is none, staying in place (Brammertz 1961); additive passes add dents and fragments.
 * :func:`gaussian_mean` - the ISO 16610-21 Gaussian mean line (lambda_c or lambda_s), evaluated every
   ``stride`` samples and interpolated linearly in between, weights renormalised at the profile ends.
 * :func:`profile_params` - ISO 4287 parameters of a roughness profile over whole sampling lengths.
@@ -130,14 +131,64 @@ def pass_polyline(passes, tpl, k, ps, pw, n_parab):
     return npt
 
 
+@njit(types.void(GRID_T, i8, i8, i8, i8, f8), **OPTS)
+def _place_ploughed(grid, a, b, lo, hi, vol):
+    """Volume ``vol`` ploughed out of samples a..b (already pressed to the pass) flows into the free space
+    under the pass on both sides, nearest samples first, alternating; what finds no free space stays where
+    it was ploughed (spread evenly over a..b)."""
+    left = a - 1
+    right = b + 1
+    while vol > 0.0:
+        moved = False
+        if lo <= left:
+            t = grid.tmp[left]
+            zl = grid.z[left]
+            if t < INF and zl < INF and t > zl:
+                room = t - zl
+                if vol < room:
+                    grid.z[left] = zl + vol
+                    vol = 0.0
+                    break
+                grid.z[left] = t
+                vol -= room
+                left -= 1
+                moved = True
+        if vol > 0.0 and right <= hi:
+            t = grid.tmp[right]
+            zr = grid.z[right]
+            if t < INF and zr < INF and t > zr:
+                room = t - zr
+                if vol < room:
+                    grid.z[right] = zr + vol
+                    vol = 0.0
+                    break
+                grid.z[right] = t
+                vol -= room
+                right += 1
+                moved = True
+        if not moved:
+            break
+    if vol > 0.0:
+        share = vol / (b - a + 1)
+        for j in range(a, b + 1):
+            grid.z[j] += share
+
+
 @njit(types.void(PASSES_T, TEMPLATES_T, GRID_T, i8, f8), **OPTS)
 def envelope_profile(passes, tpl, grid, n_parab, recovery):
     """Merge every pass, in order, into grid.z (inf where nothing generated the surface yet).
 
-    A cutting pass lowers a sample only where it lies below the surface by a chip thickness (normal to the
+    A cutting pass removes material only where it lies below the surface by a chip thickness (normal to the
     pass's edge) of at least h_min; between h_min and (1 + recovery) h_min the sample moves part of the way,
-    w = (h - h_min) / (recovery h_min) (the elastic-recovery rule of cutting's surface memory); the layer left
-    uncut accumulates until a later pass exceeds h_min."""
+    w = (h - h_min) / (recovery h_min) (the partial-removal band of cutting's surface memory). Where the pass
+    lies below the surface by less than h_min the layer is ploughed, not cut: it is pressed to the pass and,
+    being plastically incompressible, flows into the free space under the pass next to the ploughed run
+    (side flow: nearest samples first, both sides alternating, never into the chip); what finds no free space
+    stays in place (steady plane ploughing returns the surface behind the edge: Brammertz's uncut layer,
+    which a later pass then meets as a thicker layer). The thin layer of Brammertz's chip tail thus moves to
+    the other side of the intersection of two passes, which keeps his R_t = f^2 / 8 r + (h_min / 2)(1 +
+    r h_min / f^2), while a flat (wiper or minor) edge passing over feed-mark ridges levels them into the
+    valleys instead of leaving them."""
     u0 = grid.u0[0]
     du = grid.du[0]
     inv_du = 1.0 / du
@@ -203,25 +254,51 @@ def envelope_profile(passes, tpl, grid, n_parab, recovery):
             if ic > ihi:
                 ihi = ic
         hmin = passes.hmin[k]
-        for i in range(ilo, ihi + 1):
-            t = grid.tmp[i]
-            if t < INF:
-                if kind == KIND_CUT:
-                    zi = grid.z[i]
-                    if t < zi:
-                        if zi == INF:
-                            grid.z[i] = t
+        if kind == KIND_CUT:
+            i = ilo
+            while i <= ihi:
+                t = grid.tmp[i]
+                if not t < INF:
+                    i += 1
+                    continue
+                zi = grid.z[i]
+                if t < zi:
+                    if zi == INF:
+                        grid.z[i] = t
+                    else:
+                        sl = grid.tmp_slope[i]
+                        h = (zi - t) / math.sqrt(1.0 + sl * sl)
+                        if h >= hmin:
+                            if hmin > 0.0 and recovery > 0.0 and h < (1.0 + recovery) * hmin:
+                                grid.z[i] = zi + (h - hmin) / (recovery * hmin) * (t - zi)
+                            else:
+                                grid.z[i] = t
                         else:
-                            sl = grid.tmp_slope[i]
-                            h = (zi - t) / math.sqrt(1.0 + sl * sl)
-                            if h >= hmin:
-                                if hmin > 0.0 and recovery > 0.0 and h < (1.0 + recovery) * hmin:
-                                    grid.z[i] = zi + (h - hmin) / (recovery * hmin) * (t - zi)
-                                else:
-                                    grid.z[i] = t
-                    grid.hits[i] += 1
-                elif grid.z[i] < INF:
+                            # a ploughed run: pressed to the pass, its volume placed by _place_ploughed
+                            run0 = i
+                            vol = 0.0
+                            while i <= ihi:
+                                t = grid.tmp[i]
+                                zi = grid.z[i]
+                                if not (t < INF and t < zi < INF):
+                                    break
+                                sl = grid.tmp_slope[i]
+                                if (zi - t) / math.sqrt(1.0 + sl * sl) >= hmin:
+                                    break
+                                vol += zi - t
+                                grid.z[i] = t
+                                grid.hits[i] += 1
+                                i += 1
+                            _place_ploughed(grid, run0, i - 1, ilo, ihi, vol)
+                            continue
+                grid.hits[i] += 1
+                i += 1
+        else:
+            for i in range(ilo, ihi + 1):
+                t = grid.tmp[i]
+                if t < INF and grid.z[i] < INF:
                     grid.z[i] += t
+        for i in range(ilo, ihi + 1):
             grid.tmp[i] = INF
             grid.tmp_slope[i] = 0.0
 

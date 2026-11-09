@@ -1000,6 +1000,33 @@ POSITION_LOOP = Struct({"kv_1_s": Qty(gt=0, hi=1e4), "feedforward": Qty(lo=0, hi
                         "encoder_counts": Count(lo=1, hi=10 ** 9),
                         "max_accel_rad_s2_per_gear": Seq(Qty(gt=0, hi=1e6)),
                         "velocity_bw_Hz": Qty(gt=0, hi=1e5)}, nullable=True)
+SPINDLE_BEARING_TYPES = ("angular_contact", "cylindrical_roller", "tapered_roller", "deep_groove", "thrust_ball")
+SPINDLE_LUBRICATIONS = ("grease", "oil_mist", "oil_air", "oil_bath", "oil_jet")
+# A bearing set of the spindle (thermal network, docs/models/thermal.md 4.1): identical bearings at one position.
+SPINDLE_BEARING = Struct({
+    "position": Text(("front", "rear", "middle")), "type": Text(SPINDLE_BEARING_TYPES), "count": Count(lo=1, hi=16),
+    "bore_mm": length(2.0), "outer_mm": length(3.0), "contact_angle_deg": angle(0, 90), "preload_N": Qty(lo=0, hi=1e6),
+    "static_load_rating_kN": Qty(gt=0, hi=1e8), "lubrication": Text(SPINDLE_LUBRICATIONS),
+    "oil_viscosity_40C_mm2_s": Qty(gt=0, hi=1e-2), "oil_viscosity_100C_mm2_s": Qty(gt=0, hi=1e-2),
+    "mass_kg": Qty(gt=0, hi=1e4), "axially_fixed": Flag(), "designation": Text(),
+}, required=("position",),
+    checks=(lambda m, p, u, c: _order(m, ("bore_mm", "outer_mm"), p, c, "mm", " (bore and outer diameter)"),))
+SPINDLE_JACKET = Struct({
+    "flow_l_min": Qty(gt=0, hi=1.0), "channel_diameter_mm": length(0.2), "channels": Count(lo=1, hi=100),
+    "area_cm2": Qty(gt=0, hi=100.0), "inlet_degC": temp(), "inlet_offset_dK": Qty(lo=-50.0, hi=50.0),
+}, nullable=True)
+SPINDLE_THERMAL = Struct({
+    # lumped first-order body (measured or calibrated data; also what the mdata calibration writes)
+    "growth_at_max_speed_um": length(1e-2, positive=False), "time_constant_min": Qty(gt=0, hi=1e6),
+    "bearing_heat_at_max_speed_W": Qty(lo=0, hi=1e6), "thermal_comp": Flag(), "comp_residual_fraction": fraction(),
+    # physical network (cnctwin/thermal/spindle.py): construction of shaft, housing, jacket and drive losses
+    "model": Text(("network", "lumped")),
+    "shaft_diameter_mm": length(1.0), "shaft_bore_mm": length(1.0, positive=False), "shaft_length_mm": length(5.0),
+    "bearing_span_mm": length(5.0), "nose_diameter_mm": length(1.0), "nose_to_fixed_bearing_mm": length(5.0),
+    "housing_mass_kg": Qty(gt=0, hi=1e5), "housing_size_mm": Qty(gt=0, hi=20.0, shape=3),
+    "housing_growth_length_mm": length(10.0), "housing_material": Text(),
+    "motor_no_load_loss_pct": Qty(lo=0, hi=0.5), "motor_heat_to_head_pct": fraction(), "jacket": SPINDLE_JACKET,
+})
 SPINDLE = Struct({
     "id": Text(pattern=r"[a-z][a-z0-9_-]*", sourced=False), "kind": Text(("milling", "turning", "live_tool", "sub")),
     "nose": Text(), "max_rpm": Qty(gt=0, hi=RAD_S_MAX), "min_rpm": Qty(lo=0, hi=RAD_S_MAX),
@@ -1009,9 +1036,8 @@ SPINDLE = Struct({
     "orient_time_s": Qty(gt=0, hi=60, nullable=True), "position_loop": POSITION_LOOP,
     "rotor_inertia_kgm2": Qty(gt=0, hi=1e4), "efficiency": Qty(gt=0, hi=1),
     "idle_power_W": Qty(lo=0, hi=1e6), "runout_um": length(1e-3, positive=False), "frf_modes": Seq(MODE),
-    "thermal": Struct({"growth_at_max_speed_um": length(1e-2, positive=False), "time_constant_min": Qty(gt=0, hi=1e6),
-                       "bearing_heat_at_max_speed_W": Qty(lo=0, hi=1e6), "thermal_comp": Flag(),
-                       "comp_residual_fraction": fraction()}),
+    "thermal": SPINDLE_THERMAL, "bearings": Seq(SPINDLE_BEARING),
+    "drive_type": Text(("built_in", "coupled", "belt", "gear")),
     "drive": Text(), "drive_power_kW": Qty(gt=0, hi=1e6, nullable=True), "bearing_lubrication": Text(),
     "cooling": Text(), "option": Flag(),
     "bar_capacity_mm": length(2.0), "bore_mm": length(2.0), "bearing_id_mm": length(2.0),

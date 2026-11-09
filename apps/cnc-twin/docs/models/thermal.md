@@ -12,7 +12,8 @@ coefficient pipeline reads (architecture 5.3).
 | `toolmodel.py` | tool + holder ladder (1-D finite volumes), per-element edge field, growths |
 | `toolfield.py` | 3-D field of the cutting region (insert, or the tooth tip of a solid tool), solved with the ladder |
 | `workpiece.py` | cut-cell finite volumes on the stock lattice, fixture body, two-scale contact temperature |
-| `machine.py` | spindle, ballscrew axes, structure (first-order bodies, exact integration) |
+| `machine.py` | spindles (network or lumped body), ballscrew axes, structure (first-order bodies, exact integration) |
+| `spindle.py` | physical spindle network: bearing friction, motor losses, shaft / bearing sets / housing / jacket, growth |
 | `damage.py` | burn / over-temper / white layer / melt thresholds -> `thermal_damage` findings |
 | `kernels.py` | Numba kernels (one signature each); `reference.py` their plain-Python references |
 | `response.py` | dimensionless step-response tables of a heated rectangle (edge model) |
@@ -411,16 +412,15 @@ micro-kelvin changes keep their precision; `expm1` for the decay):
 
     theta(t+dt) = theta_eq + (theta - theta_eq) exp(-dt/tau),  loss = G[(theta_eq - theta_env) dt + (theta - theta_eq) tau (1 - e^-dt/tau)]
 
-* **Spindle**: bearing heat `P = P_max (|omega|/omega_max)^(5/3)` (Palmgren viscous moment, time
-  mean over the ticks); time constant and growth at max speed from the machine file
-  (`growth_um_at_max_rpm` or `growth_at_max_speed_um`, `time_constant_min`,
-  `bearing_heat_W_at_max_rpm` / `bearing_heat_at_max_speed_W`), else the estimates of
-  `thermal-machine.yaml` (listed in `finalize()["estimated"]`). With `L_eff` (spindle growth length,
-  est. 0.25 m) and the spindle steel CTE: `dT_max = growth_max / (alpha L_eff)`, `G = P_max / dT_max`,
-  `C = tau G`. Growth `delta = alpha L_eff (T - T_ambient)`; published growth since the start of the
-  run (when tool lengths were set) times `comp_residual_fraction` when the control compensates.
-  Direction in M: milling/live spindles `-axis_T_M` (nose toward the work), turning `+z_M`, sub
-  spindles `-z_M`. The holder's taper conduction enters the spindle body.
+* **Spindle**: the physical network of 4.1 (the default), or the lumped first-order body when the
+  machine file gives only the lumped data or says `thermal.model: lumped`: bearing heat
+  `P = P_max (|omega|/omega_max)^(5/3)`, time constant and growth at max speed from the file
+  (`growth_at_max_speed_um`, `time_constant_min`, `bearing_heat_at_max_speed_W`), `L_eff` (est. 0.25 m),
+  `dT_max = growth_max / (alpha L_eff)`, `G = P_max / dT_max`, `C = tau G`, growth `alpha L_eff (T - T_ref)`.
+  Either way the published growth is the growth since the start of the run (when tool lengths were set)
+  times `comp_residual_fraction` when the control compensates. Direction in M: milling/live spindles
+  `-axis_T_M` (nose toward the work), turning `+z_M`, sub spindles `-z_M`. The holder's taper conduction
+  enters the spindle (the shaft node of the network). Defaults used are listed in `finalize()["estimated"]`.
 * **Axes** (linear, ballscrew): heat `heat_per_m_travel_J x travel` (from the actual axis values
   per tick), C from the screw steel volume, G = C / tau. Error at position s:
   `alpha (T - T0)(s - s_fixed)` along the axis' kinematic direction (zero with `scale_feedback`,
@@ -439,10 +439,73 @@ micro-kelvin changes keep their precision; `expm1` for the decay):
   structure advanced the same time; then clamped again for the next setup. `finalize` reports the
   lumped time for the part to come within `unload_settle_band_dK` of ambient.
 
-Error: spindle growth of a first-order model vs a real spindle: +-30 % of the growth (two time
-constants in reality: shaft and housing); axis drift: first-order lumped screw, the temperature
-profile along the screw (hotter in the travelled range) is not resolved (+-50 %); structure:
-sensitivity is a machine-file estimate.
+Error: the network's growth is uncertain by about +-50 % when the bearings, lubricant, housing and
+cooling are estimates (Palmgren's f0 alone spans a factor 2 between makers' and textbook values; the
+housing's exposed area and growth length each move the plateau by tens of per cent), +-30 % with a
+described spindle; the lumped body +-30 % against a measured warm-up curve; axis drift: first-order lumped
+screw, the temperature profile along the screw (hotter in the travelled range) is not resolved (+-50 %);
+structure: sensitivity is a machine-file estimate.
+
+### 4.1 Spindle network (`spindle.py`)
+
+Nodes: the **shaft** (with the inner rings and a built-in motor's rotor), one node per **bearing set**
+(rolling elements, cage, lubricant: `bearing_rolling_mass_fraction` of the set's mass) and the **housing**
+(cartridge and the part of the head casting that warms with it). Boundaries: the ambient air, the jacket
+coolant, the machine structure (the structure body of this section, which receives that heat).
+
+Heat at the speed n of the step (the time mean over its ticks):
+
+* **bearings**, per bearing (Palmgren 1959; Harris & Kotzalas 2007 ch. 6): `M = M_v + M_l`,
+  `M_v = 1e-7 f0 (nu n)^(2/3) dm^3` N mm (nu mm2/s, n rpm, dm mm; `nu n < 2000`: `160e-7 f0 dm^3`),
+  `M_l = f1 F_beta dm`, `f1 = z (P0/C0)^y` (ball bearings; rollers `f1 = z`), P0 the static equivalent load
+  (ISO 76), F_beta Palmgren's friction load (angular-contact ball `max(0.9 Fa cot(alpha) - 0.1 Fr, Fr)`, Fa the
+  preload); f0, z, y per bearing type and lubrication from `thermal-machine.yaml`. nu is the lubricant's
+  kinematic viscosity at the **bearing node's** temperature (Walther's relation, ASTM D341, through its 40
+  and 100 degC values), so a cold machine (thick oil) makes more heat and grows more, and the friction falls
+  as the bearings warm. Heat `M omega`: half enters the rolling elements (Blok's equal partition at a rolling
+  contact of like bodies), the other half the rings, `bearing_heat_inner_ring_fraction` of it the inner ring
+  (shaft), the rest the outer ring (housing).
+* **motor**: no-load loss `r P_rated min(1, n / n_base)` (P_rated: `drive_power_kW`, else the S1 rating or
+  the main power curve; n_base where that curve reaches 95 % of its maximum); built-in motors put
+  `motor_rotor_loss_fraction` into the shaft and the rest into the housing (Bossmanns & Tu 2001), separate
+  motors `motor_heat_to_housing_fraction` (coupled, gear 0.3, belt 0.15) into the housing. Load losses
+  (copper, proportional to the torque squared) are not included (the domain passes speeds only).
+* **holder**: the heat the tool holder conducts through the taper (tool ladder) enters the shaft.
+
+Links: bearing node to shaft and to housing through the rolling contacts, per bearing and side
+`G_ref (dm / dm_ref) sqrt(omega / omega_ref)` (Hertzian contacts with the moving-source enhancement of
+Jaeger 1942); shaft to housing through the air annulus between the bearing sets (rotating cylinder, Kays &
+Bjorklund); shaft to air at the exposed nose (rotating cylinder plus radiation); housing to air (vertical
+plate, Churchill & Chu, plus radiation at the paint's emissivity 0.9) over its exterior; housing to the
+jacket coolant `G = m c_p (1 - exp(-h A / (m c_p)))` (h of pipe flow in the channels, the inlet at the
+ambient plus an offset unless stated); housing to the structure `default_housing_to_structure_W_K` (guide
+carriages and nut). Shaft and housing capacities from their dimensions and masses (steel, cast iron).
+
+Integration: sub-steps of at most `spindle_network_max_step_s` (20 s); in each, the convection coefficients
+at the start temperatures and the bearing heat linearised in its node temperature
+(`P = P0 + dP/dT (T - T0)`, dP/dT < 0 through the viscosity: it stiffens the system), then the linear system
+`C dT/dt = P - K T + G_b T_b` integrated exactly for constant sources and boundary temperatures through the
+symmetric eigen-decomposition of `C^-1/2 K C^-1/2`; every loss is the exact integral of its link, so the
+ledger `spindle.<id>` closes to round-off (1e-15 measured). First order in the sub-step: a 1 h warm-up at
+6000 rpm is 0.14 % from the converged growth at 20 s (test). The domain steps a network every
+`spindle_every_n_macro` macro steps (time, speeds and holder heat accumulated exactly in between; flushed at
+operation ends and `finalize`; the pending part is in the checkpoint).
+
+Growth toward the work: `eps_s(T_shaft) L_n + eps_h(T_housing) L_h`, the free strains of the mean-CTE tables
+from the reference (ambient at the start), L_n = nose to the axially fixed bearing set
+(`nose_to_fixed_bearing_mm`), L_h = housing length from the head's axial datum (the Z nut of a vertical head,
+the bed mounting of a headstock) to that set (`housing_growth_length_mm`).
+
+Parameters: the machine file (`drive_type`, `bearings`, `thermal.*`, docs/formats.md "Kind notes"); absent
+keys take the 40-taper defaults of `thermal-machine.yaml` scaled with the front bearing bore (from
+`bearings`, `bearing_id_mm` or the nose's taper size): mass and areas with (d / 70 mm)^3 and ^2, lengths with
+d. The shipped machines carry estimated bearing arrangements (noted in their files). Cost: 0.33 ms per
+network step (one core).
+
+Not modelled: the radial thermal expansion of the rings (thermally induced preload change), centrifugal and
+gyroscopic ball loads at high speed, the axial shift of angular-contact contacts, the head's temperature
+gradient (one housing node), forced convection by the motor's fan, the test mandrel or tool of a warm-up test
+(the tool ladder holds the run's tool).
 
 ## 5. Ledgers (architecture 12)
 
@@ -480,7 +543,9 @@ new array at every finite-volume step, NaN outside material, never modified afte
 `heat_to_chip_J`, `heat_to_tool_J`, `heat_to_work_J` (per contact), `unplaced_heat_J`,
 `pending_heat_J`, `contact_surface_temp_K`, `contact_preheat_K`, `spindle_growth_abs_M_m`,
 `axis_drift_strain`, `axis_drift_ref_m`, `structure_drift_M_m`, `fixture_temp_K`,
-`work_unload_mean_K`, `ledger_residual_rel`.
+`work_unload_mean_K`, `ledger_residual_rel`. `finalize()["spindles"][id]` adds `model` (network | lumped)
+and, for a network, `node_temps_K`, `growth_parts_m` (shaft, housing) and `energy_J` (bearing, motor and
+holder heat, losses to air, structure, jacket).
 
 ## 7. Settings (`physics.thermal`, `schema.py`)
 
@@ -489,7 +554,7 @@ new array at every finite-volume step, NaN outside material, never modified afte
 `deposit_search_cells` 3, `cooldown_steps` 24, `idle_tool_steps` 8, `energy_tol` 1e-9; cutting-region
 field (2.4): `tool_field` 1, `tool_field_ring_mm` 0.002, `tool_field_growth` 1.4, `tool_field_sector_deg`
 15, `tool_field_dy_mm` 0.5, `tool_field_length_mm` 12, `tool_field_every_n_macro` 10, `tool_field_tol`
-1e-12, `tool_field_max_iter` 5000.
+1e-12, `tool_field_max_iter` 5000; `spindle_every_n_macro` 10 (spindle networks, 4.1).
 
 ## 8. Cost (measured, one core of the i5-4690, bin/tsafe)
 
@@ -521,7 +586,9 @@ Stephenson & Ali 1992 (interrupted cutting); Blok 1937 (flash temperature, parti
 Boothroyd 1963; Trent & Wright 2000; Astakhov 2006 (Poletika contact length); Komanduri & Hou
 2000; Douglas & Gunn 1964 (ADI, rejected); Churchill & Chu 1975a,b; Incropera et al. 2007;
 Kays & Bjorklund 1958; Dittus & Boelter 1930; White 2006 (Sutherland); Palmgren 1959,
-Harris & Kotzalas 2007 (bearing friction); Madhusudana 2014 (contact conductance); Bryan 1990,
+Harris & Kotzalas 2007 (bearing friction); ISO 76 and ISO 281 (bearing load factors); ASTM D341 (Walther's
+viscosity relation); Bossmanns & Tu 1999, 2001, Holkup et al. 2010 (spindle thermal networks, motor loss
+split); IEC 60034-2-1 (motor loss segregation); Madhusudana 2014 (contact conductance); Bryan 1990,
 Mayr et al. 2012 (machine thermal errors); ISO 7388-1, ISO 12164-1 (tapers); Abramowitz & Stegun
 1964 (Gauss-Legendre). Full entries: `db/bibliography/models-thermal.yaml` (Hestenes & Stiefel 1952 and
 Saad 2003 are not in it yet).

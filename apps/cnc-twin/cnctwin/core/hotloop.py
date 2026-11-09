@@ -43,6 +43,7 @@ from numba import njit, types
 
 from ..cutting import abi as CA
 from ..cutting.kernels import cut_step, turn_step
+from ..dynamics.abi import ACT_HI, ACT_LO, ACT_LOAD_HI, ACT_LOAD_LO
 from ..dynamics.kernels import modal_begin, modal_correct, modal_free, record_tick, refresh_work_shapes, \
     relative_axis_acceleration, ring_write
 from ..motion.abi import SYNC_NONE, SYNC_PROBE_TRIGGER, SYNC_QUEUE_EMPTY
@@ -58,7 +59,8 @@ from . import hot_abi as H
 from .hot_abi import (BUF_DEPOSIT, BUF_PASS, BUF_RECUT, BUF_REFILL, BUF_REMOVAL, BUF_SHOCK, BUF_SURFACE, CF_COLLISION_TOL,
                       CF_FEED_FRAC, CF_HAND, CF_LATTICE, CF_MOUNT_X, CF_MOUNT_Y, CF_MOUNT_Z, CF_POLAR_SX, CF_POLAR_SZ,
                       CF_R_CUT, CF_REACH, CF_WORK_SIGN,
-                      CI_ACTIVE, CI_DYN, CI_KIND, CI_L0_TICKS, CI_N_TEETH, CI_NS_MAX, CI_PATH, CI_PROBE,
+                      CI_ACTIVE, CI_DEFL_SHARED, CI_DYN, CI_KIND, CI_L0_TICKS, CI_N_TEETH, CI_NS_MAX, CI_PATH, CI_PROBE,
+                      CI_ST_MARGIN,
                       CI_RING_DYN, CI_RING_FORCE, CI_RING_TORQUE, CI_ROTATING, CI_STALE_BEFORE, CI_TOOL_SPINDLE,
                       CI_WORK, CI_WORK_SPINDLE, CNT_BROAD, CNT_FREE, CNT_HELIX_CALLS, CNT_L0, CNT_PASSES,
                       CNT_POLAR_CUTS, CNT_PROBE_SWEEPS, CNT_REFILLS, CNT_SPLITS, CNT_TICKS, CONTACT_T, CONTACTS_T,
@@ -70,12 +72,18 @@ from .hot_abi import (BUF_DEPOSIT, BUF_PASS, BUF_RECUT, BUF_REFILL, BUF_REMOVAL,
                       GI_ROWS_SHOCK, GI_ROWS_SURFACE, GI_TICK0, GLOBAL_T, HOT_SPLIT, MAX_CONTACTS, MOTION_T,
                       REMOVAL_T, RES_CODE, RES_CONTACT, RES_DETAIL, RES_PATH, RES_REASON, RES_TICK, RING_T,
                       SPLIT_DRAIN, SPLIT_POLAR, SPLIT_POOL)
-from .hot_kernels import (FR_R, FR_TIP, WK_A0, WK_A1, WK_DISP, WK_FEED, WK_MID, WK_PASS, WK_PFX, WK_PFY, WK_PSLACK,
-                          clear_planes, displacement_at, fk_frame, hermite, interp_axes, polar_max_radius, polar_view_update,
-                          refill_planes, set_step_pose, slab_point)
+from .hot_abi import N_TW, TW_LO, TW_N_DONE, TW_N_ENG, TW_WIDTH
+from .hot_kernels import (FR_R, FR_TIP, WK_A0, WK_A1, WK_DISP, WK_DV, WK_FEED, WK_MID, WK_PASS, WK_PFX, WK_PFY, WK_PROBE,
+                          WK_PSLACK, WK_TIPC, WK_TSIG, WK_W0, WK_X0, WK_XP, WK_Y0, clear_planes, displacement_at,
+                          fk_frame, hermite, interp_axes, polar_max_radius, polar_view_update, refill_planes,
+                          set_step_pose, slab_point)
 from .recorder import ring_begin
 
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
+# every kernel of the loop allocates nothing (scratch lives in HotContact.work) and is compiled without reference
+# counting: the loop body takes members of large NamedTuples, which otherwise costs an atomic incref / decref per
+# member array (docs/performance.md "Hot loop composition"; removal.nbt RAW)
+RAW = dict(OPTS, _nrt=False)
 f8 = types.float64
 i8 = types.int64
 i4 = types.int32
@@ -84,10 +92,11 @@ void = types.void
 TWO_PI = 2.0 * math.pi
 
 GI_RESUME_CODE = 21         # motion's sync code of the tick a split interrupted (HotGlobal.ipar; hot_abi N_GI = 24)
+WIN_EPS = 1e-8              # rad: margin of the tooth-window test (the exact per-slab test decides inside it)
 
 
 # =============================================================================== small helpers
-@njit(i8(CONTACT_T, REMOVAL_T, GLOBAL_T), **OPTS)
+@njit(i8(CONTACT_T, REMOVAL_T, GLOBAL_T), **RAW)
 def headroom(ct, rm, g):
     """-1 when every event buffer of the contact (and removal's) has room for one L0 step, else the BUF_* index of
     the first that has not (docs/models/hotloop.md "Splits")."""
@@ -110,7 +119,7 @@ def headroom(ct, rm, g):
     return -1
 
 
-@njit(void(GLOBAL_T, i8, i8, i8, i8, i8, i8), **OPTS)
+@njit(void(GLOBAL_T, i8, i8, i8, i8, i8, i8), **RAW)
 def _split(g, k, c, s, reason, detail, code):
     g.ipar[GI_RESUME] = 1
     g.ipar[GI_RESUME_K] = k
@@ -126,14 +135,14 @@ def _split(g, k, c, s, reason, detail, code):
     g.count[CNT_SPLITS] += 1
 
 
-@njit(f8(f8, f8), **OPTS)
+@njit(f8(f8, f8), **RAW)
 def _unwrap_near(a, ref):
     """a + 2 pi n closest to ref."""
     return a + TWO_PI * math.floor((ref - a) / TWO_PI + 0.5)
 
 
 # =============================================================================== tooth passes (rotating tools)
-@njit(i8(REMOVAL_T, CONTACT_T, GLOBAL_T, i8, i8, f8, f8, f8, b1), **OPTS)
+@njit(i8(REMOVAL_T, CONTACT_T, GLOBAL_T, i8, i8, f8, f8, f8, b1), **RAW)
 def do_pass(rm, ct, g, j, tick, feed_x, feed_y, slack, rapid):
     """Removal's tooth_pass for tooth j of the contact: engaged intervals of every station refreshed against the
     field (the warm start is cutting's EngagedIntervals), contact geometry, engaged-sector box and the
@@ -183,11 +192,58 @@ def do_pass(rm, ct, g, j, tick, feed_x, feed_y, slack, rapid):
     return status
 
 
-@njit(void(CONTACT_T, f8), **OPTS)
+@njit(void(CONTACT_T, f8), **RAW)
+def tooth_windows(ct, sigma):
+    """HotContact.teeth from ContactState.gamma / slab_done (call after either changes): per tooth the engaged
+    slabs, those recorded since the last pass, and the arc of the engaged slabs' phases sigma (gamma - a0) (the
+    spindle angle, in the direction of rotation, at which each slab passes its generation angle). A tooth whose
+    arc the step's swept angle does not reach has no generation instant in the step (tooth_events)."""
+    cst = ct.cst
+    tw = ct.teeth
+    a0 = ct.geo.slab_a0
+    nt = min(cst.gamma.shape[0], tw.shape[0], a0.shape[0])
+    ns = min(cst.gamma.shape[1], a0.shape[1])
+    for j in range(tw.shape[0]):
+        for c in range(N_TW):
+            tw[j, c] = 0.0
+    for j in range(nt):
+        n_eng = 0
+        n_done = 0
+        ref = 0.0
+        lo = 0.0
+        hi = 0.0
+        for k in range(ns):
+            gam = cst.gamma[j, k]
+            if gam != gam:
+                continue
+            ph = sigma * (gam - a0[j, k])
+            ph -= TWO_PI * math.floor(ph / TWO_PI)
+            if n_eng == 0:
+                ref = ph
+            else:
+                rel = ph - ref
+                rel -= TWO_PI * math.floor(rel / TWO_PI + 0.5)
+                if rel < lo:
+                    lo = rel
+                if rel > hi:
+                    hi = rel
+            n_eng += 1
+            if cst.slab_done[j, k] != 0:
+                n_done += 1
+        tw[j, TW_N_ENG] = n_eng
+        tw[j, TW_N_DONE] = n_done
+        start = ref + lo
+        start -= TWO_PI * math.floor(start / TWO_PI)
+        tw[j, TW_LO] = start
+        tw[j, TW_WIDTH] = hi - lo if hi - lo < math.pi else -1.0
+    ct.work[WK_TSIG] = sigma
+
+
+@njit(void(CONTACT_T, f8), **RAW)
 def update_gamma(ct, sigma):
     """Generation angle of every slab after an engaged-interval refresh: the end, in the direction of rotation
     sigma, of the largest engaged interval among the slab's stations (NaN when none is engaged); a full circle
-    (continuous cut: drilling, plunging) takes its start."""
+    (continuous cut: drilling, plunging) takes its start. The tooth windows follow (tooth_windows)."""
     iv = ct.cut.iv
     geo = ct.geo
     cst = ct.cst
@@ -215,30 +271,27 @@ def update_gamma(ct, sigma):
                 cst.gamma[j, k] = lo
             else:
                 cst.gamma[j, k] = hi if sigma > 0.0 else lo
+    tooth_windows(ct, sigma)
 
 
-@njit(void(REMOVAL_T, CONTACT_T, i8, f8), **OPTS)
+@njit(void(REMOVAL_T, CONTACT_T, i8, f8), **RAW)
 def regate(rm, ct, tick, sigma):
     """Engaged intervals of every station at the step-end pose (removal's engaged_intervals, warm-started from the
     current ones), then the slabs' generation angles."""
     wk = ct.work
     f = rm.fields[ct.ipar[CI_WORK]]
-    tip = np.empty(3)
-    xv = np.empty(3)
-    yv = np.empty(3)
-    wv = np.empty(3)
     for r in range(3):
-        tip[r] = wk[WK_A1 + FR_TIP + r]
-        xv[r] = wk[WK_A1 + FR_R + 3 * r + 0]
-        yv[r] = wk[WK_A1 + FR_R + 3 * r + 1]
-        wv[r] = wk[WK_A1 + FR_R + 3 * r + 2]
+        wk[WK_X0 + r] = wk[WK_A1 + FR_R + 3 * r + 0]
+        wk[WK_Y0 + r] = wk[WK_A1 + FR_R + 3 * r + 1]
+        wk[WK_W0 + r] = wk[WK_A1 + FR_R + 3 * r + 2]
     geo = ct.geo
-    engaged_intervals(f, tip, xv, yv, wv, geo.st_z, geo.st_r, geo.st_active, ct.cut.iv, tick, ct.gate3, ct.stats)
+    engaged_intervals(f, wk[WK_A1 + FR_TIP:WK_A1 + FR_TIP + 3], wk[WK_X0:WK_X0 + 3], wk[WK_Y0:WK_Y0 + 3],
+                      wk[WK_W0:WK_W0 + 3], geo.st_z, geo.st_r, geo.st_active, ct.cut.iv, tick, ct.gate3, ct.stats)
     ct.cst.ival[CS_GATINGS] += 1
     update_gamma(ct, sigma)
 
 
-@njit(i8(REMOVAL_T, CONTACT_T, GLOBAL_T, i8, b1, i8, f8, f8), **OPTS)
+@njit(i8(REMOVAL_T, CONTACT_T, GLOBAL_T, i8, b1, i8, f8, f8), **RAW)
 def tooth_events(rm, ct, g, tick, rapid, n_teeth, th0, th1):
     """Generation instants of the step just taken (docs/models/hotloop.md "Tooth passes"): a slab of a tooth is
     generated when it passes its generation angle (the exit of its station's engaged interval in the direction
@@ -247,18 +300,26 @@ def tooth_events(rm, ct, g, tick, rapid, n_teeth, th0, th1):
     runs once every engaged slab of the tooth has been generated, or when the tooth has had no pass for longer
     than a bin stays fresh (one revolution and one tooth period: a slab missed its angle while the engagement
     changed); slabs not engaged take the step end. Without a pass for a tooth period the engaged intervals are
-    refreshed alone. Returns -1, or the tooth whose pass overflowed the pool (repeated at the resume)."""
+    refreshed alone. Returns -1, or the tooth whose pass overflowed the pool (repeated at the resume).
+
+    Cost: a tooth whose window of slab phases (HotContact.teeth, tooth_windows) the step does not reach is skipped
+    without visiting its slabs (the exact per-slab test runs for the others); the slab counts of the pass test
+    are kept with the slabs' states, so a step costs O(teeth) without a generation instant."""
     p = ct.ipar[CI_PATH]
     slabs = rm.slabs[p]
     cst = ct.cst
     geo = ct.geo
     wk = ct.work
-    cut = ct.cut
+    tw = ct.teeth
+    defl = ct.cut.defl
+    R = ct.cut.pose.R_S_T0
     dth = th1 - th0
     adth = abs(dth)
     if adth <= 0.0:
         return -1
     sigma = 1.0 if dth > 0.0 else -1.0
+    if wk[WK_TSIG] != sigma:
+        tooth_windows(ct, sigma)
     # feed direction of the tip relative to the material in the T0 xy plane (contact geometry, plunge flag)
     vx = wk[WK_FEED]
     vy = wk[WK_FEED + 1]
@@ -272,8 +333,17 @@ def tooth_events(rm, ct, g, tick, rapid, n_teeth, th0, th1):
         fy = vy / vxy
     a0 = geo.slab_a0
     zm = geo.slab_zm
-    nt = min(n_teeth, slabs.n.shape[0], cst.gamma.shape[0])
+    nt = min(n_teeth, slabs.n.shape[0], cst.gamma.shape[0], tw.shape[0])
     for j in range(nt):
+        if tw[j, TW_N_ENG] <= 0.0:
+            continue
+        width = tw[j, TW_WIDTH]
+        if width >= 0.0:
+            # start of the tooth's phase window after the step start, in the direction of rotation
+            x = tw[j, TW_LO] - sigma * th0
+            x -= TWO_PI * math.floor(x / TWO_PI)
+            if x > adth + WIN_EPS and x + width < TWO_PI - WIN_EPS:
+                continue
         for k in range(slabs.n[j]):
             gam = cst.gamma[j, k]
             if gam != gam:
@@ -281,32 +351,27 @@ def tooth_events(rm, ct, g, tick, rapid, n_teeth, th0, th1):
             d0 = sigma * (gam - (th0 + a0[j, k]))
             d0 -= TWO_PI * math.floor(d0 / TWO_PI)
             if d0 < adth:
-                slab_point(cut, geo.st_z, wk, d0 / adth, zm[j, k], cst.slab_c[j, k])
+                slab_point(defl.u_st_T0_m, R, defl.u_work_S_m, geo.st_z, wk, d0 / adth, zm[j, k], cst.slab_c[j, k])
+                if cst.slab_done[j, k] == 0:
+                    tw[j, TW_N_DONE] += 1.0
                 cst.slab_done[j, k] = 1
-    stale = cut.istep[CA.SI_STALE_TICKS]
+    stale = ct.cut.istep[CA.SI_STALE_TICKS]
     passed = False
     for j in range(nt):
         ns = slabs.n[j]
         if ns <= 0:
             continue
-        n_eng = 0
-        n_done = 0
-        complete = True
-        for k in range(ns):
-            if cst.gamma[j, k] == cst.gamma[j, k]:
-                n_eng += 1
-                if cst.slab_done[j, k] != 0:
-                    n_done += 1
-                else:
-                    complete = False
-        forced = n_done > 0 and not complete and tick - cst.last_pass[j] > stale
-        if n_eng == 0 or n_done == 0 or not (complete or forced):
+        n_eng = tw[j, TW_N_ENG]
+        n_done = tw[j, TW_N_DONE]
+        complete = n_done >= n_eng
+        forced = n_done > 0.0 and not complete and tick - cst.last_pass[j] > stale
+        if n_eng <= 0.0 or n_done <= 0.0 or not (complete or forced):
             continue
         if forced:
             cst.ival[CS_FORCED] += 1
         for k in range(ns):
             if cst.slab_done[j, k] == 0:
-                slab_point(cut, geo.st_z, wk, 1.0, zm[j, k], cst.slab_c[j, k])
+                slab_point(defl.u_st_T0_m, R, defl.u_work_S_m, geo.st_z, wk, 1.0, zm[j, k], cst.slab_c[j, k])
         # pose of the pass: the step end
         for r in range(3):
             wk[WK_PASS + r] = wk[WK_A1 + FR_TIP + r]
@@ -349,7 +414,7 @@ def tooth_events(rm, ct, g, tick, rapid, n_teeth, th0, th1):
 
 
 # =============================================================================== L0 steps of one contact
-@njit(i8(MOTION_T, REMOVAL_T, CONTACT_T, RING_T, GLOBAL_T, i8, i8, i8, i8), **OPTS)
+@njit(i8(MOTION_T, REMOVAL_T, CONTACT_T, RING_T, GLOBAL_T, i8, i8, i8, i8), **RAW)
 def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
     """L0 steps s0 .. n - 1 of tick k for contact c (in contact). Returns -1 when the tick is done, or the step
     index to resume at after a split (g.result filled)."""
@@ -404,6 +469,29 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
             cst.slab_done[j, kk] = 0
         cst.last_pass[j] = istep[CA.SI_TICK_END]
         update_gamma(ct, 1.0 if step[CA.ST_OMEGA_RAD_S] > 0.0 else -1.0)
+    # the per-tooth slab windows of tooth_events (derived scratch: rebuilt once per call)
+    if rotating and kind == RA.TK_ENVELOPE:
+        sig0 = 1.0
+        if st_t >= 0 and (th1_all[st_t] - g.th0[st_t] < 0.0 or (th1_all[st_t] == g.th0[st_t] and w1_all[st_t] < 0.0)):
+            sig0 = -1.0
+        tooth_windows(ct, sig0)
+    # the layouts the step's kernels take (members of CutArgs: taken once, not per step)
+    dfl = cut.defl
+    tool = cut.tool
+    table = cut.table
+    mem = cut.mem
+    iv = cut.iv
+    refill = cut.refill
+    pose = cut.pose
+    occ = cut.occ
+    pack = cut.pack
+    axes = cut.axes
+    kst = cut.st
+    acc = cut.acc
+    cacc = cut.cacc
+    cout = cut.out
+    ev = cut.ev
+    polar = cut.polar
     # frame at the start of the first step taken in this call
     a_start = s0 / n_sub
     interp_axes(servo, ss, g.q0, out.actual, k, g.th0, g.w0, th1_all, w1_all, a_start, h_tick, ct.qv)
@@ -432,7 +520,7 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
     step[CA.ST_DT_S] = dt
     step[CA.ST_TICK_FRAC] = 1.0 / n_sub
     step[CA.ST_TICK_S] = tick_s
-    nb_mem = cut.mem.point_S_m.shape[1]
+    nb_mem = mem.point_S_m.shape[1]
     for s in range(s0, n_sub):
         tick_end = tick0 + k * ipo + (s + 1) * l0
         # ---------------------------------------------------- headroom of the event buffers (split rule)
@@ -459,10 +547,10 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
         fk_frame(chain, p, ct.qv, ct.poses, ct.fkw, wk, WK_MID, mx, my, mz)
         interp_axes(servo, ss, g.q0, out.actual, k, g.th0, g.w0, th1_all, w1_all, a1, h_tick, ct.qv)
         fk_frame(chain, p, ct.qv, ct.poses, ct.fkw, wk, WK_A1, mx, my, mz)
-        set_step_pose(cut, wk, W_S, dt)
+        set_step_pose(pose, wk, W_S, dt)
         # feed velocity relative to the material in T0 (generation angle, plunge flag)
-        R = cut.pose.R_S_T0
-        v = cut.pose.v_tip_S_m_s
+        R = pose.R_S_T0
+        v = pose.v_tip_S_m_s
         for r in range(3):
             wk[WK_FEED + r] = R[0, r] * v[0] + R[1, r] * v[1] + R[2, r] * v[2]
         # ---------------------------------------------------- step scalars
@@ -483,16 +571,47 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
             step[CA.ST_OMEGA_RAD_S] = om_s
             step[CA.ST_TOOTH_PERIOD_S] = TWO_PI / abs(om_s) if om_s != 0.0 else 0.0
         # ---------------------------------------------------- dynamics predictor, deflections
-        dfl = cut.defl
         if dyn:
+            # stations of the step for dynamics (deflections, load projection): the engaged ones and CI_ST_MARGIN
+            # neighbours on each side (slab points interpolate between the stations around a slab's mid height;
+            # every other station has no load)
+            act = sys.act
+            n_d = min(dfl.u_st_T0_m.shape[0], sys.defl.u_st_T0_m.shape[0])
+            if rotating:
+                lo_e = -1
+                hi_e = -2
+                for st_i in range(min(iv.count.shape[0], n_d)):
+                    if iv.count[st_i] > 0:
+                        if lo_e < 0:
+                            lo_e = st_i
+                        hi_e = st_i
+                if lo_e >= 0:
+                    m_st = ip[CI_ST_MARGIN]
+                    act[ACT_LO] = max(lo_e - m_st, 0)
+                    act[ACT_HI] = min(hi_e + m_st, n_d - 1)
+                    act[ACT_LOAD_LO] = lo_e
+                    act[ACT_LOAD_HI] = hi_e
+                else:
+                    act[ACT_LO] = 0
+                    act[ACT_HI] = -1
+                    act[ACT_LOAD_LO] = 0
+                    act[ACT_LOAD_HI] = -1
+            else:
+                act[ACT_LO] = -1
+                act[ACT_HI] = -1
+                act[ACT_LOAD_LO] = -1
+                act[ACT_LOAD_HI] = -1
             modal_begin(sys, th_t1, om_t1, alpha_t, ct.base1)
             md = sys.defl
-            # dynamics works in the chain's T0 (motion's pose_S_T); the tool mount turns it into the tool's
-            for st_i in range(min(dfl.u_st_T0_m.shape[0], md.u_st_T0_m.shape[0])):
-                for cc in range(6):
-                    sg = mx if cc % 3 == 0 else (my if cc % 3 == 1 else mz)
-                    dfl.u_st_T0_m[st_i, cc] = sg * md.u_st_T0_m[st_i, cc]
-                    dfl.v_st_T0_m_s[st_i, cc] = sg * md.v_st_T0_m_s[st_i, cc]
+            if ip[CI_DEFL_SHARED] == 0:
+                d_lo = 0 if act[ACT_LO] < 0 else act[ACT_LO]
+                d_hi = n_d - 1 if act[ACT_LO] < 0 else act[ACT_HI]
+                # dynamics works in the chain's T0 (motion's pose_S_T); the tool mount turns it into the tool's
+                for st_i in range(d_lo, d_hi + 1):
+                    for cc in range(6):
+                        sg = mx if cc % 3 == 0 else (my if cc % 3 == 1 else mz)
+                        dfl.u_st_T0_m[st_i, cc] = sg * md.u_st_T0_m[st_i, cc]
+                        dfl.v_st_T0_m_s[st_i, cc] = sg * md.v_st_T0_m_s[st_i, cc]
             for cc in range(3):
                 dfl.u_work_S_m[cc] = md.u_work_S_m[cc] + wk[WK_DISP + cc]
                 dfl.v_work_S_m_s[cc] = md.v_work_S_m_s[cc]
@@ -501,26 +620,27 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
                 dfl.u_work_S_m[cc] = wk[WK_DISP + cc]
         # ---------------------------------------------------- refill planes, forces
         if rotating:
-            n_ref = refill_planes(cut, f, geo.st_z, geo.st_r, geo.st_nr, geo.st_nz, tick_end, theta_mid,
-                                  ct.fpar[CF_REACH], ct.plane, cst.ival, CS_REFILLS, CS_REFILL_MISS, ct.planes)
+            n_ref = refill_planes(tool.st_ptr, tool.st_elem, tool.alpha0_rad, tool.read_row, mem.valid, mem.tick,
+                                  refill.q_S_m, refill.m_S, refill.valid, pose.R_S_T0, pose.tip_S_m, iv.lo_rad,
+                                  iv.hi_rad, iv.count, step, istep, f, geo.st_z, geo.st_r, geo.st_nr, geo.st_nz,
+                                  tick_end, theta_mid, ct.fpar[CF_REACH], ct.plane, cst.ival, CS_REFILLS,
+                                  CS_REFILL_MISS, ct.planes)
             g.count[CNT_REFILLS] += n_ref
-            cut_step(cut.tool, cut.table, cut.mem, cut.iv, cut.refill, step, istep, cut.pose, cut.defl, cut.occ,
-                     cut.pack, cut.axes, cut.st, cut.acc, cut.cacc, cut.out, cut.ev)
+            cut_step(tool, table, mem, iv, refill, step, istep, pose, dfl, occ, pack, axes, kst, acc, cacc, cout, ev)
             if n_ref > 0 or ct.planes[0, 1] != 0:
-                clear_planes(cut, ct.planes)
+                clear_planes(refill.valid, ct.planes)
         else:
-            turn_step(cut.tool, cut.table, cut.polar, step, istep, cut.pose, cut.defl, cut.axes, cut.st, cut.acc,
-                      cut.cacc, cut.out, cut.ev)
-        if cut.out.misc[CA.SO_ENGAGED] > 0.0:
+            turn_step(tool, table, polar, step, istep, pose, dfl, axes, kst, acc, cacc, cout, ev)
+        if cout.misc[CA.SO_ENGAGED] > 0.0:
             cst.ival[CS_ENGAGED_TICK] = 1
         if dyn:
             # station loads back into the chain's T0 for dynamics (sign flips: exact, restored after)
-            stw = cut.out.station_T0
+            stw = cout.station_T0
             if mounted:
                 for st_i in range(stw.shape[0]):
                     for cc in range(6):
                         stw[st_i, cc] *= mx if cc % 3 == 0 else (my if cc % 3 == 1 else mz)
-            modal_correct(sys, stw, cut.out.force_S_N, tick_end, cut.acc)
+            modal_correct(sys, stw, cout.force_S_N, tick_end, acc)
             if mounted:
                 for st_i in range(stw.shape[0]):
                     for cc in range(6):
@@ -538,9 +658,9 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
                 slot = ring_begin(ring, tick_end)
             if cf >= 0:
                 for cc in range(3):
-                    ring.data[slot, cf + cc] = cut.out.wrench_T0[cc]
+                    ring.data[slot, cf + cc] = cout.wrench_T0[cc]
             if ctq >= 0:
-                ring.data[slot, ctq] = cut.out.misc[CA.SO_TORQUE_NM]
+                ring.data[slot, ctq] = cout.misc[CA.SO_TORQUE_NM]
             if cd >= 0 and dyn:
                 ring_write(sys, ring, slot, cd)
         # ---------------------------------------------------- removal
@@ -560,9 +680,9 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
             sev_at = RA.RI_PATH0 + RA.RI_PSTRIDE * npaths + w_
             tip_a = wk[WK_A0 + FR_TIP:WK_A0 + FR_TIP + 3]
             tip_b = wk[WK_A1 + FR_TIP:WK_A1 + FR_TIP + 3]
-            wax = np.empty(3)
-            x0 = np.empty(3)
-            y0 = np.empty(3)
+            wax = wk[WK_W0:WK_W0 + 3]
+            x0 = wk[WK_X0:WK_X0 + 3]
+            y0 = wk[WK_Y0:WK_Y0 + 3]
             for r in range(3):
                 x0[r] = wk[WK_A1 + FR_R + 3 * r]
                 y0[r] = wk[WK_A1 + FR_R + 3 * r + 1]
@@ -589,7 +709,7 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
             # cutting composes its elements): the tip's displacement from the station nearest it (translation
             # and rotation, T0) and the workpiece's (deflection and d(X), S); the insert as a rigid body
             ust = dfl.u_st_T0_m
-            stz = cut.tool.st_z_m
+            stz = tool.st_z_m
             s_tip = 0
             for st_i in range(min(stz.shape[0], ust.shape[0])):
                 if abs(stz[st_i]) < abs(stz[s_tip]):
@@ -676,7 +796,7 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
                 if inc:
                     if b_st > pw[0]:
                         hi_b = min(pw[1], b_st - 1)
-                        polar_view_update(pf, cut.polar, pw[0], hi_b, pw[2], pw[3], sx)
+                        polar_view_update(pf, polar, pw[0], hi_b, pw[2], pw[3], sx)
                         if hi_b >= pw[1]:
                             pw[0] = -1
                             pw[4] = -1
@@ -684,7 +804,7 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
                             pw[0] = hi_b + 1
                 elif b_st + 1 < pw[1]:
                     lo_b = max(pw[0], b_st + 2)
-                    polar_view_update(pf, cut.polar, lo_b, pw[1], pw[2], pw[3], sx)
+                    polar_view_update(pf, polar, lo_b, pw[1], pw[2], pw[3], sx)
                     if lo_b <= pw[0]:
                         pw[0] = -1
                         pw[4] = -1
@@ -697,7 +817,7 @@ def contact_steps(mo, rm, ct, ring, g, k, s0, c, code):
 
 
 # =============================================================================== one macro step
-@njit(i4(MOTION_T, REMOVAL_T, CONTACTS_T, RING_T, GLOBAL_T), **OPTS)
+@njit(i4(MOTION_T, REMOVAL_T, CONTACTS_T, RING_T, GLOBAL_T), **RAW)
 def run_macro(mo, rm, cs, ring, g):
     """Ticks mo.k_from .. macro_ipo - 1 of the macro step (module doc). Returns motion's sync code (mo.result =
     (code, tick, path) as motion.kernels.run_motion), SYNC_NONE at the step end, or HOT_SPLIT (g.result: tick,
@@ -734,7 +854,6 @@ def run_macro(mo, rm, cs, ring, g):
         k = g.ipar[GI_RESUME_K]
     dist_force = mo.dist_force
     dist_torque = mo.dist_torque
-    probe_out = np.empty(8)
     while k < n_ticks:
         c_start = 0
         s_start = 0
@@ -773,8 +892,10 @@ def run_macro(mo, rm, cs, ring, g):
                     continue
                 f = rm.fields[ct.ipar[CI_WORK]]
                 c1 = out.tip_S[k, p]
-                wv = np.empty(3)
-                xv = np.empty(3)
+                wkc = ct.work
+                wv = wkc[WK_W0:WK_W0 + 3]
+                xv = wkc[WK_X0:WK_X0 + 3]
+                probe_out = wkc[WK_PROBE:WK_PROBE + 8]
                 st0 = out.poses[p, 3]
                 for r in range(3):
                     wv[r] = st0[r, 2]
@@ -802,7 +923,8 @@ def run_macro(mo, rm, cs, ring, g):
                 f = rm.fields[w_]
                 tip = out.tip_S[k, p]
                 st0 = out.poses[p, 3]
-                wv = np.empty(3)
+                wkc = ct.work
+                wv = wkc[WK_W0:WK_W0 + 3]
                 for r in range(3):
                     wv[r] = st0[r, 2]
                 move = 0.0
@@ -825,7 +947,7 @@ def run_macro(mo, rm, cs, ring, g):
                     feed = setp.rapid[k, p] == 0
                     contact = l1_contact(f, prof, tip, wv, margin, feed, tick_end, tick_s, rm.accum[p])
                     if contact:
-                        tipc = np.empty((1, 3))
+                        tipc = wkc[WK_TIPC:WK_TIPC + 3].reshape((1, 3))
                         for r in range(3):
                             tipc[0, r] = tip[r]
                         collide_envelope(f, rm.whole[p], prof, wv, tipc, wv, tick_end, p, ct.fpar[CF_COLLISION_TOL],
@@ -835,11 +957,10 @@ def run_macro(mo, rm, cs, ring, g):
                     cst.ival[CS_FIRST] = 1
                     if kind == RA.TK_ENVELOPE:
                         # gating at the start of an engagement (the passes refresh it once per tooth period)
-                        xv = np.empty(3)
+                        xv = wkc[WK_X0:WK_X0 + 3]
+                        yv = wkc[WK_Y0:WK_Y0 + 3]
                         for r in range(3):
                             xv[r] = st0[r, 0]
-                        yv = np.empty(3)
-                        for r in range(3):
                             yv[r] = st0[r, 1]
                         geo = ct.geo
                         engaged_intervals(f, tip, xv, yv, wv, geo.st_z, geo.st_r, geo.st_active, ct.cut.iv, tick_end,
@@ -853,22 +974,20 @@ def run_macro(mo, rm, cs, ring, g):
                         for jj in range(cst.slab_done.shape[0]):
                             for kk in range(cst.slab_done.shape[1]):
                                 cst.slab_done[jj, kk] = 0
+                        tooth_windows(ct, sg)
                 cst.ival[CS_IN_CONTACT] = 1 if contact else 0
                 # structure displacement d(X) at the contact point for this tick
                 wk = ct.work
+                xp = wk[WK_XP:WK_XP + 3]
+                for r in range(3):
+                    xp[r] = tip[r] + ct.offset_S[r]
                 if g.ipar[GI_HAS_DISP] != 0:
-                    xp = np.empty(3)
-                    for r in range(3):
-                        xp[r] = tip[r] + ct.offset_S[r]
-                    dv = np.empty(3)
+                    dv = wk[WK_DV:WK_DV + 3]
                     displacement_at(g.disp_origin, g.disp_cell, g.disp, xp, dv)
                     for r in range(3):
                         wk[WK_DISP + r] = dv[r]
                 # workpiece mode shapes at the contact point
                 if ct.ipar[CI_DYN] != 0:
-                    xp = np.empty(3)
-                    for r in range(3):
-                        xp[r] = tip[r] + ct.offset_S[r]
                     refresh_work_shapes(ct.sys, ct.grid, xp)
         # ---------------------------------------------------- L0 steps of the contacts in contact
         for c in range(c_start, n_c):
@@ -966,7 +1085,8 @@ def run_macro(mo, rm, cs, ring, g):
     return SYNC_NONE
 
 
-KERNELS = (headroom, _split, _unwrap_near, do_pass, update_gamma, tooth_events, regate, contact_steps, run_macro)
+KERNELS = (headroom, _split, _unwrap_near, do_pass, tooth_windows, update_gamma, tooth_events, regate, contact_steps,
+           run_macro)
 
 
 # =============================================================================== Python wrapper
@@ -1352,6 +1472,8 @@ class HotLoop:
         ip[H.CI_N_AXES] = len(path_axes)
         ip[H.CI_POLAR] = 1 if (w < len(ri.polars) and kind == RA.TK_TURNING) else 0
         ip[H.CI_STALE_BEFORE] = int(cin.istep[CA.SI_STALE_BEFORE])
+        ptr = np.asarray(geo.slab_ptr, np.int64)
+        ip[H.CI_ST_MARGIN] = 2 + (int(np.max(np.diff(ptr))) if ptr.shape[0] > 1 else 0)
         ip[H.CI_RING_FORCE] = self._ring_col(H.FAST_FORCE, p, 3)
         ip[H.CI_RING_TORQUE] = self._ring_col(H.FAST_TORQUE, p, 1)
         fp[H.CF_HAND] = float(np.asarray(edge.hand_sign)[0])
@@ -1374,7 +1496,15 @@ class HotLoop:
         gate = np.array([fp[H.CF_GATE_SAMPLE], fp[H.CF_GATE_TOL], fp[H.CF_GATE_MARGIN], fp[H.CF_SECTOR_MARGIN]])
         # cutting arguments; the event buffers get the headroom of a step (docs/models/hotloop.md "Splits")
         polar = self._view(ri, w, float(fp[H.CF_POLAR_SX])) if ip[H.CI_POLAR] else cin.polar
-        cut = H.CutArgs(tool, cin.table, cin.mem, cin.iv, cin.refill, cin.step, cin.istep, cin.pose, cin.defl,
+        defl = cin.defl
+        if self.use_dynamics and di is not None and p in di.systems:
+            md = di.systems[p].defl
+            identity = fp[H.CF_MOUNT_X] == 1.0 and fp[H.CF_MOUNT_Y] == 1.0 and fp[H.CF_MOUNT_Z] == 1.0
+            if identity and md.u_st_T0_m.shape == defl.u_st_T0_m.shape:
+                # the tool's T0 is the chain's: cutting reads dynamics' station deflections in place (no copy)
+                defl = CA.Deflection(md.u_st_T0_m, md.v_st_T0_m_s, defl.u_work_S_m, defl.v_work_S_m_s)
+                ip[H.CI_DEFL_SHARED] = 1
+        cut = H.CutArgs(tool, cin.table, cin.mem, cin.iv, cin.refill, cin.step, cin.istep, cin.pose, defl,
                         cin.occ, cin.pack, cin.axes, cin.st, cin.acc, cin.cacc, cin.out, cin.ev, polar)
         # dynamics
         if self.use_dynamics and di is not None and p in di.systems:
@@ -1402,7 +1532,8 @@ class HotLoop:
                             np.ascontiguousarray(gate[:3].copy()), np.zeros(H.WORK_SIZE), b0, np.zeros(DA.N_BASE),
                             np.zeros(max(len(path_axes), 1)), eye_stack(N_FK), np.zeros((6, 4, 4)),
                             np.zeros(int(mi.servo.kv.shape[0])), np.zeros(RA.N_PS), np.zeros(8),
-                            np.zeros((H.REFILL_PAIRS + 1, 2), np.int64), RA.empty_profile(), np.zeros(8))
+                            np.zeros((H.REFILL_PAIRS + 1, 2), np.int64), RA.empty_profile(), np.zeros(8),
+                            np.zeros((max(nt, 1), H.N_TW)))
 
     def _turning_signs(self, mi, p: int, slot: int, external: bool = True, hand: float = -1.0) -> tuple:
         """(sz, sx, work spindle sign, mx, my, mz) of a turning contact.

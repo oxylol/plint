@@ -26,11 +26,14 @@ class SolverLedger:
     steps: int = 0
 
     def book(self, u_before: float, u_after: float, sources: float, losses: float, removed: float,
-             tol: float, time_s: float) -> float:
-        """Book one step; returns the relative residual (raises when it exceeds ``tol``)."""
+             tol: float, time_s: float, content_J: float = 0.0) -> float:
+        """Book one step; returns the relative residual (raises when it exceeds ``tol``). ``content_J``: the
+        solver's heat content above 0 K (mass x cp x mean temperature), added to the scale: the internal energies
+        are booked relative to 20 degC but computed from absolute temperatures, whose round-off (eps x cp x T
+        per cell) would otherwise dominate a body sitting at the reference temperature (scale near zero)."""
         du = u_after - u_before
         expected = sources - losses - removed
-        scale = abs(u_before) + abs(u_after) + abs(sources) + abs(losses) + abs(removed)
+        scale = abs(u_before) + abs(u_after) + abs(sources) + abs(losses) + abs(removed) + abs(float(content_J))
         rel = abs(du - expected) / scale if scale > 0.0 else 0.0
         if rel > tol:
             raise ConservationError(f"thermal energy ({self.name})", expected, du, tol, time_s)

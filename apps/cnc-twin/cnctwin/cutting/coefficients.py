@@ -155,6 +155,44 @@ class Tolerances:
     map_rake_rad: float = 1e-3
 
 
+def _snap_log(value: float, rel: float) -> float:
+    if rel <= 0.0 or value <= 0.0:
+        return float(value)
+    step = math.log1p(rel)
+    return float(math.exp(round(math.log(value) / step) * step))
+
+
+def _snap(value: float, step: float) -> float:
+    if step <= 0.0:
+        return float(value)
+    return float(round(value / step) * step)
+
+
+CONTACT_QUANTUM_REL = 0.05      # relative grid of the engaged edge length and engagement time in a row's slow state
+
+
+def quantised_state(state: RowState, tol: Tolerances) -> RowState:
+    """The slow state snapped to the rebuild grid (docs/models/cutting.md "Coefficient pipeline"): speed and
+    friction factor on log grids of the relative tolerances, temperatures, VB and BUE height on uniform grids of the
+    absolute ones. A row is computed at its quantised state, so its coefficients are a function of the grid cell
+    (and the model's map): the cell changes exactly when the state moved beyond a threshold, and equal cells give
+    equal rows (cached)."""
+    return RowState(speed_m_s=_snap_log(state.speed_m_s, tol.speed_rel),
+                    tool_temp_K=None if state.tool_temp_K is None else _snap(state.tool_temp_K, tol.temp_K),
+                    flank_temp_K=None if state.flank_temp_K is None else _snap(state.flank_temp_K, tol.temp_K),
+                    work_temp_K=_snap(state.work_temp_K, tol.work_temp_K),
+                    friction_factor=_snap_log(state.friction_factor, tol.friction_rel),
+                    VB_m=max(_snap(state.VB_m, tol.VB_m), 0.0), bue_m=max(_snap(state.bue_m, tol.bue_m), 0.0),
+                    contact_width_m=None if state.contact_width_m is None else
+                    _snap_log(state.contact_width_m, CONTACT_QUANTUM_REL),
+                    contact_time_s=None if state.contact_time_s is None else
+                    _snap_log(state.contact_time_s, CONTACT_QUANTUM_REL))
+
+
+def quantised_radius(radius_m: float, tol: Tolerances) -> float:
+    return max(_snap(radius_m, tol.edge_radius_m), 0.0)
+
+
 def state_changed(old: RowState | None, new: RowState, old_radius: float, new_radius: float,
                   tol: Tolerances) -> bool:
     if old is None:
@@ -178,8 +216,11 @@ class CoefficientModel(Protocol):
 
     name: str
 
-    def rows(self, key: tuple, geom: RowGeometry, state: RowState, h_grid_m: np.ndarray) -> Rows:
-        """Coefficients of one row at the slow state over the log h grid."""
+    def rows(self, key: tuple, geom: RowGeometry, state: RowState, h_grid_m: np.ndarray,
+             provisional: bool = False) -> Rows:
+        """Coefficients of one row at the slow state over the log h grid. ``provisional``: a cheaper approximation
+        is acceptable (the tool is not cutting and its spindle speed is not settled); the pipeline replaces the
+        row once the speed settles or the tool cuts."""
 
     def checkpoint(self) -> dict:
         """JSON metadata that makes the model's caches reproducible after a resume."""
@@ -301,10 +342,12 @@ class MechanicsModel:
     def _build_map(self, ctx: list, rake_rad: float):
         M = self._mech()
         speed = max(ctx[3], 1e-6)
+        # lazy: the fallback refinement of a (tool temperature, speed) row runs when a lookup first reads it (the
+        # pipeline reads the two speed and temperature rows around the slow state; mechanics build_process_map)
         return M.build_process_map(self.work, self.tool, rake_rad, speed_grid_m_s=M.coefficients.default_speed_grid(speed),
                                    work_temp_K=ctx[1], friction_factor=ctx[2], adiabatic_tool=ctx[4] > 0.5,
                                    contact_width_m=None if ctx[5] < 0 else ctx[5],
-                                   contact_time_s=None if ctx[6] < 0 else ctx[6])
+                                   contact_time_s=None if ctx[6] < 0 else ctx[6], lazy=True)
 
     def process_map(self, key, group, state: RowState):
         cached = self._maps.get(key)
@@ -338,7 +381,11 @@ class MechanicsModel:
             self._cal[key] = cal
         return cal
 
-    def rows(self, key: tuple, geom: RowGeometry, state: RowState, h_grid_m: np.ndarray) -> Rows:
+    def rows(self, key: tuple, geom: RowGeometry, state: RowState, h_grid_m: np.ndarray,
+             provisional: bool = False) -> Rows:
+        """Rows from the process map of the row's context. ``provisional`` (a tool not cutting while its spindle
+        speed is not settled): the map's fallback nodes that are not refined yet keep the kernel's own fallback (no
+        continuation); the pipeline recomputes the row in full once the speed settles or the tool cuts."""
         M = self._mech()
         group = self._group(geom)
         mstate = M.SlowState(speed_m_s=max(float(state.speed_m_s), 1e-6), tool_temp_K=state.tool_temp_K,
@@ -347,6 +394,9 @@ class MechanicsModel:
                              contact_width_m=state.contact_width_m, contact_time_s=state.contact_time_s)
         pmap = None if self.work.jc is None else self.process_map(key, group, state)
         bue = None if geom.forming or geom.low_speed else self.bue_map(key, group, state)
+        if provisional:
+            pmap = pmap._replace(refine=None) if pmap is not None and pmap.refine is not None else pmap
+            bue = bue._replace(refine=None) if bue is not None and bue.refine is not None else bue
         cal = None if (geom.forming or geom.low_speed) else self.calibration(key, group)
         g = M.group_coefficients(self.work, self.tool, group, mstate, h_grid_m, pmap, bue_map=bue, calibration=cal)
         base = Rows.from_group(g, geom.edge_radius_m)
@@ -398,7 +448,8 @@ class LinearModel:
             return self.coeffs["low_speed"]
         return self.coeffs.get(int(geom.kind), self.coeffs.get("default", {}))
 
-    def rows(self, key: tuple, geom: RowGeometry, state: RowState, h_grid_m: np.ndarray) -> Rows:
+    def rows(self, key: tuple, geom: RowGeometry, state: RowState, h_grid_m: np.ndarray,
+             provisional: bool = False) -> Rows:
         self.calls += 1
         c = self._c(geom)
         h = np.asarray(h_grid_m, float)
@@ -648,5 +699,6 @@ def flank_stress(rows: Rows, VB_m: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 __all__ = ["Rows", "RowGeometry", "RowState", "Tolerances", "CoefficientModel", "MechanicsModel", "LinearModel",
-           "forming_rows", "flow_stress_for_forming", "state_changed", "log_grid", "node_values", "linearise_row",
+           "forming_rows", "flow_stress_for_forming", "state_changed", "quantised_state", "quantised_radius",
+           "log_grid", "node_values", "linearise_row",
            "build_table", "table_forces", "process_record", "coeff_table", "flank_stress", "row_nodes"]

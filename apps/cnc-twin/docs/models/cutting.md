@@ -18,11 +18,21 @@ verification), `drive.py` (a stand-alone driver of the kernels over prescribed m
 ## 1. Timing, frames and conventions
 
 * **L2 (once per macro step per tool slot).** `CuttingDomain.macro_step` reads `bus_prev`
-  (thermal, wear, coolant, motion), decides per table row whether the coefficients must be recomputed
-  (`coefficients.state_changed`, tolerances in `physics.cutting`), calls the coefficient model
-  (`MechanicsModel` on `cnctwin.mechanics`, or any `CoefficientModel`), linearises the rows into the
-  kernel's `CutTable` and publishes `ProcessCoefficients` in `bus_next.cutting.coefficients`. It also
-  integrates the spindle load (section 7).
+  (thermal, wear, coolant, motion), snaps each table row's slow state to the rebuild grid
+  (`coefficients.quantised_state`: speed and friction factor on log grids of `tol_speed_rel` /
+  `tol_friction_rel`, temperatures, VB, BUE height and edge radius on uniform grids of their tolerances in
+  `physics.cutting`, engaged edge length and engagement time on 5 % log grids), recomputes a row only when its
+  grid cell changed - at the snapped state, so equal cells give equal rows (`CuttingDomain._rows` caches them by
+  cell and the model's map context) - calls the coefficient model (`MechanicsModel` on `cnctwin.mechanics`, its
+  process maps built lazily, or any `CoefficientModel`), linearises the rows into the kernel's `CutTable` and
+  publishes `ProcessCoefficients` in `bus_next.cutting.coefficients`. While a tool is not cutting (previous and
+  current step) and its spindle is stopped or changing speed (more than `SETTLE_SHARE` = 0.1 of `tol_speed_rel`
+  within the last step, or more than `tol_speed_rel` since the last call), its rows wait for the speed to settle: a
+  run-up is not rebuilt at every speed it passes through. Rows a tool needs before then (the first build after a
+  tool change) are provisional (`MechanicsModel.rows(..., provisional=True)`: the process map's fallback nodes keep
+  the kernel's own fallback, no continuation) and are recomputed in full once the speed settles or the tool cuts.
+  End mill run-up: 7.0 s -> 0.8 s, drill: 211 s -> 7 s (docs/performance.md). It also integrates the spindle load
+  (section 7).
 * **L0 (every step, in the compiled hot loop).** `cut_step` (rotating tools) or `turn_step` (lathe
   tools on the rotating work) per contact. The hot loop never calls Python: stale memory is refilled
   from field planes computed at L2 (section 3.4), and missing planes become refill requests answered
@@ -206,13 +216,18 @@ Python reference: `reference.cut_step_ref` (rotation matrices, vectors in S, dir
 `cut_step` to round-off over 60 steps with runout, clipping, deflection, rotary motion, work
 vibration, wear land and process damping (`test_kernels_reference.py`).
 
-**Measured cost** (Plint, 2026-11-03, `test_tools_state_perf.py::test_milling_kernel_cost`, called
-from a compiled loop so the 17 NamedTuple arguments are not boxed): slotting with a 4-flute 30 deg
-helix cutter, 160 engaged elements per step: **~50 us per L0 step** (~4 us fixed, ~290 ns per engaged
-element: ~160 ns geometry and memory, ~110 ns forces and accumulation). The target of < 1 us per step
-for 4 x 40 elements is **not met** (factor ~50). Called from Python each call adds ~40 us of argument
-unboxing. The likely costs are the per-element helper calls that take NamedTuples (not inlined), the
-per-element accumulators and the event bookkeeping; see limitations.
+**Measured cost** (docs/performance.md "cut_step"; `test_tools_state_perf.py::test_milling_kernel_cost`, called
+from a compiled loop so the 17 NamedTuple arguments are not boxed): slotting with a 4-flute 30 deg helix cutter,
+160 engaged elements per step: ~34 us per L0 step (~210 ns per engaged element; 2026-11-03: ~50 us, ~290 ns). In
+the integrated hot loop: 3.0 us per step for the pocket-islands helical entry, 8 us for the D10 4FL slot (27
+engaged elements). How: `cut_step` visits only stations with engaged intervals (or loads written in the last two
+steps), classifies an element's swept arc against a station's single interval with two comparisons (the general
+`gate` within 1e-12 rad of a boundary, so the results are those of `gate`), skips the boundary tests of interior
+elements, reads every element constant from one packed row (`CutTool.pk` / `pki`, built at L2 by
+`abi.pack_elements`, rows in station-list order), inlines its small helpers at the IR level and is compiled
+without reference counting (`RAW`: it allocates nothing). Per element and step it evaluates only table lines and
+products (no pow / exp; sin and cos of the spindle angle by angle addition in the caller). Called from Python each
+call adds ~40 us of argument unboxing.
 
 ## 6. Spindle (`spindle.py`, L2)
 
@@ -293,7 +308,8 @@ buffer overflow are bit-identical.
 
 ## 11. Limitations
 
-* Kernel cost ~50 us per step for 160 engaged elements (target 1 us not met).
+* Kernel cost ~200-300 ns per engaged element and step (docs/performance.md): 8 us per step for the D10 4FL
+  slot's 27 engaged elements (the 3 us target is met for the pocket's helical entry, not for the slot).
 * Tap retraction (spindle reversal) reverses predecessor relations; the handover rows then hold the
   wrong turn until refilled (approximate rubbing on retraction).
 * The turning chip of a radial edge (kappa_r = 90 deg) resolves its previous wall to the polar field's

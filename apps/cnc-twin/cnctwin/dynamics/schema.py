@@ -40,6 +40,11 @@ FIELDS: dict[str, tuple] = {
                            "highest chatter frequency of a scan / highest mode frequency"),
     "sld_refresh_macro": ("sld_refresh_macro", "count", 50, 1, 10 ** 6,
                           "macro steps between operating-point limits of an unchanged cut"),
+    "sld_max_classes": ("sld_max_classes", "count", 64, 1, 10 ** 5,
+                        "engagement classes kept per tool and operation for the end-of-operation lobe diagrams"),
+    "sld_max_diagrams": ("sld_max_diagrams", "count", 8, 0, 10 ** 4,
+                         "lobe diagrams computed per tool at the end of an operation (classes of the operating points "
+                         "with the smallest margins first)"),
     "engagement_tol": ("engagement_tol", "number", 0.05, 0.0, 1.0,
                        "relative change of radial immersion, speed range or coefficients that starts a new diagram"),
     "mf_harmonics": ("mf_harmonics", "count", 0, 0, 8,
@@ -84,6 +89,8 @@ class DynamicsSettings:
     sld_freq_lo_factor: float = 0.5
     sld_freq_hi_factor: float = 2.0
     sld_refresh_macro: int = 50
+    sld_max_classes: int = 64
+    sld_max_diagrams: int = 8
     engagement_tol: float = 0.05
     mf_harmonics: int = 0
     pd_max_iter: int = 30

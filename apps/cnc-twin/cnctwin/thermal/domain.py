@@ -6,7 +6,9 @@ removal geometry, wear) and writes only ``nxt.thermal``:
 1. distributes each contact's zone heat once (partition.py) - chips, tool elements, workpiece;
 2. steps the active tools' ladders, 3-D cutting-region fields (toolfield.py) and edge fields
    (toolmodel.py), idle tools lazily;
-3. steps spindles (bearing heat, holder conduction), ballscrew axes and the structure (machine.py);
+3. steps spindles (bearing heat, motor losses, holder conduction: the network of spindle.py, or a lumped
+   body), ballscrew axes and the structure, which also takes the heat the spindle heads pass into it
+   (machine.py);
 4. accumulates the work heat rows and every ``every_n_macro`` steps runs the workpiece finite
    volumes and fixtures (workpiece.py); evaluates the two-scale surface temperature and preheat
    at every contact and raises thermal_damage findings (damage.py);
@@ -79,7 +81,7 @@ class ThermalDomain:
                           family, DamageMonitor(name, thresholds(material)), structure, time_s=time_s)
         if mat_table is None:
             th.estimated.append("workpiece material: none in the project, aisi1045 used for any grid")
-        th.spindles = M.spindle_models(machine, ambient, start, st.energy_tol, time_s)
+        th.spindles = M.spindle_models(machine, ambient, start, st.energy_tol, time_s, structure.body.T_K)
         th.axes = M.axis_models(machine, ambient, start, st.energy_tol, time_s)
         for sid, model in sorted(th.spindles.items()):
             th.estimated.extend(f"spindle {sid}: {e}" for e in model.estimated)
@@ -188,7 +190,7 @@ class ThermalDomain:
             work.clamped = False
             work.update_contact()
         th.macro_since_fv = 0
-        turret_flush = self._flush_fields(th, step)
+        turret_flush = self._flush_fields(th, step) + self._flush_spindles(th, th.time_s)
         wait = I.time_between_ops_s(ctx.project)
         if turret_flush:
             th.structure.body.step(0.0, 0.0, th.ambient_K, turret_flush, st.energy_tol, th.time_s)
@@ -204,12 +206,14 @@ class ThermalDomain:
             turret_heat = 0.0
             for slot, tool in sorted(th.tools.items()):
                 turret_heat += tool.advance_idle(th.time_s + wait, env, st.idle_tool_steps, st.energy_tol)["spindle_J"]
+            head_heat = 0.0
             for sid, spindle in sorted(th.spindles.items()):
-                spindle.step(wait, np.zeros(1), 0.0, st.energy_tol, th.time_s + wait)
+                spindle.step(wait, np.zeros(1), 0.0, st.energy_tol, th.time_s + wait, T_struct_K=th.structure.body.T_K)
+                head_heat += spindle.last_to_structure_J
             for axis, model in sorted(th.axes.items()):
                 model.step(wait, 0.0, th.ambient_K, st.energy_tol, th.time_s + wait)
-            th.structure.body.step(wait, 0.0, th.ambient_K, self._table_heat(th) + turret_heat, st.energy_tol,
-                                   th.time_s + wait)
+            th.structure.body.step(wait, 0.0, th.ambient_K, self._table_heat(th) + turret_heat + head_heat,
+                                   st.energy_tol, th.time_s + wait)
             th.time_s += wait
         for axis, model in sorted(th.axes.items()):
             model.T0_K = model.body.T_K
@@ -229,7 +233,7 @@ class ThermalDomain:
         th: ThermalState = state.thermal
         self._attach(th)
         flush_step = {"coolant": 0.0}
-        flushed = self._flush_fields(th, flush_step)
+        flushed = self._flush_fields(th, flush_step) + self._flush_spindles(th, th.time_s)
         state.ledger.heat_to_coolant_J += flush_step["coolant"]
         th.totals["coolant"] = th.totals.get("coolant", 0.0) + flush_step["coolant"]
         leftover = self._table_heat(th) + flushed
@@ -256,15 +260,24 @@ class ThermalDomain:
                              "fv_steps": work.fv_count}
         return {
             "tools": tools, "workpieces": works, "unload": list(th.unload),
-            "spindles": {sid: {"temp_K": m.body.T_K, "growth_m": m.growth_rel_m(), "growth_abs_m": m.growth_abs_m(),
-                               "growth_max_m": th.maxima.get(f"spindle.{sid}.growth_m", 0.0)}
-                         for sid, m in sorted(th.spindles.items())},
+            "spindles": {sid: self._spindle_report(th, sid, m) for sid, m in sorted(th.spindles.items())},
             "axes": {a: {"temp_K": m.body.T_K, "strain": m.strain()} for a, m in sorted(th.axes.items())},
             "structure": {"temp_K": th.structure.body.T_K, "drift_m": th.structure.drift_m()},
             "damage": {"counts": dict(sorted(th.damage.counts.items())), "max_K": dict(sorted(th.damage.max_K.items()))},
             "energy_J": {k: v for k, v in sorted(th.totals.items())},
             "ledgers": ledgers, "estimated": list(th.estimated),
         }
+
+    @staticmethod
+    def _spindle_report(th, sid, m) -> dict:
+        out = {"temp_K": m.body.T_K, "growth_m": m.growth_rel_m(), "growth_abs_m": m.growth_abs_m(),
+               "growth_max_m": th.maxima.get(f"spindle.{sid}.growth_m", 0.0), "model": m.model}
+        if m.network is not None:
+            net = m.network
+            out["node_temps_K"] = {name: float(T) for name, T in zip(net.names, net.temps_K())}
+            out["growth_parts_m"] = net.growth_parts_m()
+            out["energy_J"] = {k: float(v) for k, v in sorted(net.totals.items())}
+        return out
 
     # ------------------------------------------------------------------ results for the recorder
     def macro_values(self, state) -> dict:
@@ -533,7 +546,22 @@ class ThermalDomain:
                 if p["spindle"] == sid and p["omega"].size:
                     omega = p["omega"]
                     break
-            spindle.step(dt, omega, to_ends.get(sid, 0.0), st.energy_tol, th.time_s + dt)
+            if spindle.network is None:
+                spindle.step(dt, omega, to_ends.get(sid, 0.0), st.energy_tol, th.time_s + dt,
+                             T_struct_K=th.structure.body.T_K)
+            else:                                                  # networks: every spindle_every_n_macro steps
+                pend = th.spindle_pending.setdefault(sid, {"n": 0, "dt": 0.0, "heat_J": 0.0, "omega": []})
+                pend["n"] += 1
+                pend["dt"] += dt
+                pend["heat_J"] += to_ends.get(sid, 0.0)
+                pend["omega"].extend(float(w) for w in np.abs(np.asarray(omega, dtype=float)).ravel())
+                if pend["n"] < st.spindle_every_n_macro:
+                    continue
+                turret_heat += self._flush_spindle(th, sid, th.time_s + dt)
+                th.maxima[f"spindle.{sid}.growth_m"] = max(th.maxima.get(f"spindle.{sid}.growth_m", 0.0),
+                                                           abs(spindle.growth_rel_m()))
+                continue
+            turret_heat += spindle.last_to_structure_J            # the head's mounting heats the structure
             th.maxima[f"spindle.{sid}.growth_m"] = max(th.maxima.get(f"spindle.{sid}.growth_m", 0.0),
                                                        abs(spindle.growth_rel_m()))
         travel = {}
@@ -543,6 +571,22 @@ class ThermalDomain:
         for name, model in sorted(th.axes.items()):
             model.step(dt, travel.get(name, 0.0), th.ambient_K, st.energy_tol, th.time_s + dt)
         th.structure.body.step(dt, 0.0, th.ambient_K, self._table_heat(th) + turret_heat, st.energy_tol, th.time_s + dt)
+
+    @staticmethod
+    def _flush_spindle(th, sid: str, time_s: float) -> float:
+        """Step a spindle network over its accumulated time (time-mean speeds, the holder heat of those steps);
+        returns the heat its head passed into the structure."""
+        pend = th.spindle_pending.pop(sid, None)
+        if not pend or pend["dt"] <= 0.0:
+            return 0.0
+        spindle = th.spindles[sid]
+        omega = np.asarray(pend["omega"], dtype=float) if pend["omega"] else np.zeros(1)
+        spindle.step(pend["dt"], omega, pend["heat_J"], th.settings.energy_tol, time_s,
+                     T_struct_K=th.structure.body.T_K)
+        return spindle.last_to_structure_J
+
+    def _flush_spindles(self, th, time_s: float) -> float:
+        return sum(self._flush_spindle(th, sid, time_s) for sid in sorted(th.spindle_pending))
 
     @staticmethod
     def _table_heat(th) -> float:

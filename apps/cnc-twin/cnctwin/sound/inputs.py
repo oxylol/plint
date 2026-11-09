@@ -109,6 +109,10 @@ def _sourced(value):
         return value["value"]
     if isinstance(value, dict) and "table" in value and value["table"]:
         return value["table"][0][1]
+    if isinstance(value, dict) and "x" in value and value.get("values"):
+        # a property table as run.json's resolved project writes it ({x, x_unit, values}): its first point (the
+        # lowest temperature tabulated, room temperature for the elastic constants)
+        return value["values"][0]
     return value
 
 

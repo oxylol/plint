@@ -147,6 +147,10 @@ kinematics:
 spindles:
   - id: main
     kind: milling
+    drive_type: {value: built_in, src: est, note: "speedMASTER motor spindle (built-in motor)"}
+    bearings:
+      - {position: front, type: angular_contact, count: 3, bore_mm: 60, outer_mm: 95, contact_angle_deg: 15, lubrication: oil_air, axially_fixed: true, src: est, note: "not published: as dmg-dmu50-3rd (7012 C size triplet, oil-air assumed)"}
+      - {position: rear, type: angular_contact, count: 2, bore_mm: 50, outer_mm: 80, contact_angle_deg: 15, lubrication: oil_air, axially_fixed: false, src: est, note: "floating rear pair (7010 C size), assumed"}
     nose: SK40                       # HSK-A63 alternative
     max_rpm: 15000
     min_rpm: 20
@@ -183,6 +187,7 @@ spindles:
       - {fn_Hz: 2300, zeta: 0.03, k_N_um: 220, direction: x, src: est, note: "second (bearing/shaft) mode of the motor spindle: 2300 Hz, 220 N/um, a stiffer 15k cartridge than the 2100 Hz / 200 N/um of haas-vf2ss (assumed)"}
       - {fn_Hz: 2300, zeta: 0.03, k_N_um: 220, direction: y, src: est, note: "the x mode repeated in y"}
     thermal:
+      jacket: {flow_l_min: 10, src: est, note: "cooled motor spindle (as dmg-dmu50-3rd); channel geometry and area from the model's defaults"}
       growth_um_at_max_rpm: {value: 15, src: est, note: "cooled motor spindle (brochure p. 4); 10-25 um typical"}
       time_constant_min: {value: 20, src: est, note: "tau = C / G for the liquid-cooled motor spindle: cartridge about 80 kg x 460 J/kgK = 37 kJ/K over G = 600 W / 19 K = 32 W/K (bearing heat at max speed, a 19 K steady rise of the nose, both est) = 1170 s = 20 min"}
       bearing_heat_W_at_max_rpm: {value: 600, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for three 75 mm pitch-diameter spindle bearings, oil-air f0 = 1, nu = 10 mm2/s, n = 15 000 rpm: 3 x 0.119 Nm = 0.36 Nm x 1571 rad/s = 560 W, i.e. 600 W"}

@@ -13,8 +13,8 @@ What each experiment measured decides what is simulated:
   weighted by their lengths; at the end of the cut for turning, at the maximum chip thickness of the
   engagement with the engagement time as contact time for milling (peak readings);
 * IR window or spot, embedded thermocouple: the tool temperature at the measured location from
-  thermal's tool model (``toolheat``: insert ladder + local edge field), at the end of the cut or as the
-  time mean the source reports.
+  thermal's tool model (``toolheat``: the insert ladder with its 3-D cutting-region field), at the end of the
+  cut or as the time mean the source reports.
 
 The sensor geometry of each case is in :data:`SENSORS` with the case text it comes from.
 """
@@ -323,9 +323,9 @@ def _milling_peak(case, geo, contact_models, work, tool, amb, target: _Target, s
                                      "cnctwin.thermal.kernels.moving_rect_rise"),
          description="The contact through the coefficient pipeline (cnctwin.mechanics.coefficients: Oxley rows, "
                      "edge forces, partition at the tool body temperature) coupled to thermal's tool ladder of the "
-                     "insert; readings as measured: natural thermocouple = mean interface temperature, IR window or "
-                     "spot and embedded thermocouple = the tool temperature at the location (body + local edge "
-                     "field, thermal's edge-model composition).")
+                     "insert with its 3-D cutting-region field (the rake and flank heat as contact patches); readings "
+                     "as measured: natural thermocouple = mean interface temperature, IR window or spot and embedded "
+                     "thermocouple = the field's temperature at the location.")
 def tool_temperature(case, db) -> HarnessOutput:
     col = H.Collector()
     work, raw = H.work_material(db, case, col)
@@ -471,14 +471,14 @@ def _discuss_tool(q) -> dict:
     causes = {
         "interface": "the natural thermocouple averages the whole contact; the simulated rake contact is Oxley's mean "
                      "with the database Johnson-Cook set and friction",
-        "side_window": "beyond about 2 max(l_c, l_f, edge element) from the edge thermal's composition leaves only the "
-                       "1-D insert body (a cross-section mean of the whole insert), so a window 0-2 mm from the edge "
-                       "is read nearly at the body temperature, while the measured window sees the steep 3-D field "
-                       "near the contact (and the source's assumed emissivity 0.48)",
-        "rake_spot": "the same limitation 1 mm from the edge (body + local field, the local field cut at r_far); the "
-                     "material is the database's 30 HRC entry for a 50 HRC bar",
-        "point": "the junction sits in the insert body: the 1-D ladder heats the insert as a whole (seat contact, "
-                 "holder bar and cutting time are estimates or derived)",
+        "side_window": "the window is read on the side face of thermal's 3-D cutting-region field; the field follows "
+                       "the contact heat of the coefficient pipeline (partition and contact length), and the measured "
+                       "window carries the source's assumed emissivity 0.48",
+        "rake_spot": "the spot 1 mm from the edge beside the chip is read in the 3-D field, which follows the rake and "
+                     "flank heat of the coefficient pipeline; the material is the database's 30 HRC entry for a 50 HRC "
+                     "bar, so the heat into the insert is that of a softer work",
+        "point": "the junction sits in the insert: the 3-D field with the ladder of the bar heats it with the "
+                 "pipeline's tool heat (seat contact, holder bar and cutting time are estimates or derived)",
         "interface_peak_milling": "a 3-6 um aluminium chip at a 20 um hone (tooling default): the flank contact of the "
                                   "edge dominates the contact mean; minimum chip thickness and edge radius are estimates",
     }
@@ -492,12 +492,12 @@ def _discuss_tool(q) -> dict:
         parts = [f"{kind}: mean signed error of the rise {sum(v) / len(v) * 100:+.0f} % ({causes.get(kind, kind)})"
                  for kind, v in sorted(by_kind.items())]
         out[r.id] = "; ".join(parts) + "."
-    out["summary"] = (H.budget_summary(q) + "Temperatures are compared as rises above ambient. Readings at a distance "
-                      "from the contact (IR window and spot) come out low because thermal's tool model resolves the "
-                      "contact flash and a 1-D insert body, not the 3-D field in the first millimetres of the insert; "
-                      "readings inside the insert depend on the heat into the insert, the seat and holder contact and "
-                      "the cutting time. No coefficient was adjusted; the cutting times and sensor positions the "
-                      "sources leave open are listed per case.")
+    out["summary"] = (H.budget_summary(q) + "Temperatures are compared as rises above ambient. Readings away from the "
+                      "contact (IR window and spot, embedded junctions) are read in thermal's 3-D cutting-region field "
+                      "of the insert, driven by the contact heat of the coefficient pipeline, so they follow its "
+                      "partition and contact length (and the seat, holder and cutting time where those are estimates); "
+                      "the contact readings follow the pipeline's interface temperatures. No coefficient was adjusted; "
+                      "the cutting times and sensor positions the sources leave open are listed per case.")
     return out
 
 

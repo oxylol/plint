@@ -54,9 +54,19 @@ from .abi import (ACCUM_T, AXES_T, CA_AXIAL_K, CA_DEFLECTION_J, CA_DISPLACED_M3,
                   TS_FZ, TS_HV, TS_INCLV, TS_LAST_ANGLE, TS_LAST_ELEM, TS_LAST_ENTRY_S, TS_LAST_EXIT_S, TS_LAST_H,
                   TS_LOADING, TS_LV, TS_NEW, TS_NOW, TS_NX, TS_NY, TS_NZ, TS_PASS_ON, TS_PX, TS_PY, TS_PZ,
                   TS_RAKEV, TS_RV, TS_S_NX, TS_S_NY, TS_S_NZ, TS_S_PX, TS_S_PY, TS_S_PZ, TS_S_VX, TS_S_VY, TS_S_VZ,
-                  TS_STEP_B, TS_STEP_DV, TS_STEP_E, TS_TV, TS_UX, TS_UY, TS_UZ, TS_VOL, TS_VV, TS_WORK_J, TS_AVAIL)
+                  TS_STEP_B, TS_STEP_DV, TS_STEP_E, TS_TV, TS_UX, TS_UY, TS_UZ, TS_VOL, TS_VV, TS_WORK_J, TS_AVAIL,
+                  PK_ALPHA0, PK_ARM, PK_C, PK_CHIP, PK_DB, PK_DIR, PK_DS, PK_EDGE_R, PK_FLANK, PK_INCL, PK_N,
+                  PK_NPXY, PK_P, PK_PD, PK_RAKE, PK_RXY, PK_SIG_FLANK, PK_VB, PKI_AXIAL, PKI_ELEM, PKI_FORMING,
+                  PKI_KIND, PKI_READ, PKI_ROW, PKI_TOOTH, PKI_WRITE)
 
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
+# kernels that allocate nothing are compiled with Numba's reference counting off for that function: every array
+# they touch arrives as an argument, and an inlined helper would otherwise pay an atomic incref / decref per
+# array argument (as removal.nbt RAW; docs/performance.md)
+RAW = dict(OPTS, _nrt=False)
+# small per-element helpers are inlined at the Numba IR level (no call boundary in the element loop; they are
+# still compiled for their explicit signature as kernels of their own)
+INL = dict(OPTS, inline="always")
 TWO_PI = 2.0 * math.pi
 f8 = types.float64
 i8 = types.int64
@@ -78,7 +88,7 @@ MSTATE_T = typeof(ModalState(np.zeros((1, 2)), np.zeros(1)))
 
 
 # =============================================================================== event rows
-@njit(b1(F2, I1), **OPTS)
+@njit(b1(F2, I1), **INL)
 def row_ok(rec, n):
     """True when one more row fits (else sets the overflow flag n[1])."""
     if n[0] >= rec.shape[0]:
@@ -161,7 +171,7 @@ def put_surface(rec, n, tick, tooth, elem, x, y, z, nx, ny, nz, h, radius, vb, u
 
 
 # =============================================================================== model helpers
-@njit(f8(f8, f8, f8, f8), **OPTS)
+@njit(f8(f8, f8, f8, f8), **INL)
 def flank_interference_area(slope, land_m, tan_clear, max_len_m):
     """Area (m2 per m of edge) between the flank and the surface the same edge has just generated,
     for a path entering the material with slope = v_n / V (Wu 1989; Altintas, Eynian & Onozuka 2008;
@@ -188,7 +198,7 @@ def flank_interference_area(slope, land_m, tan_clear, max_len_m):
     return 0.5 * slope * xs * xs - 0.5 * tan_clear * d * d
 
 
-@njit(GATE_T(INTERVALS_T, i8, f8, f8, f8), **OPTS)
+@njit(GATE_T(INTERVALS_T, i8, f8, f8, f8), **INL)
 def gate(iv, s, a, half, inv_dal):
     """Engaged part of the arc an element sweeps in the step: (fraction, centroid s, s_lo, s_hi) with
     s in [0, 1] along the step (angle(s) = a + (s - 1/2) dal, a the midpoint angle in [0, 2 pi)).
@@ -243,7 +253,7 @@ def gate(iv, s, a, half, inv_dal):
     return frac, 0.5 * (s_a + s_b), s_a, s_b
 
 
-@njit(b1(INTERVALS_T, i8, f8), **OPTS)
+@njit(b1(INTERVALS_T, i8, f8), **INL)
 def in_intervals(iv, s, a):
     """True when the right-handed T0 angle a (any value) lies in one of station s's engaged intervals."""
     x = a - TWO_PI * np.floor(a / TWO_PI)
@@ -255,7 +265,7 @@ def in_intervals(iv, s, a):
     return False
 
 
-@njit(b1(INTERVALS_T, i8, f8, f8), **OPTS)
+@njit(b1(INTERVALS_T, i8, f8, f8), **INL)
 def near_edge(iv, s, a, width):
     """True when angle a is within ``width`` of a boundary of station s's intervals."""
     x = a - TWO_PI * np.floor(a / TWO_PI)
@@ -271,7 +281,7 @@ def near_edge(iv, s, a, width):
     return False
 
 
-@njit(types.void(MEMORY_T, i8, i8, f8, f8, f8, f8, f8, f8, i8), **OPTS)
+@njit(types.void(MEMORY_T, i8, i8, f8, f8, f8, f8, f8, f8, i8), **INL)
 def memory_commit(mem, s, b, x, y, z, h, h_min, ratio, tick):
     """Write one passage into memory bin (s, b) with the elastic-recovery rule (docs/models/cutting.md
     "Surface memory"): unchanged below h_min (the ploughed layer recovers), moved by
@@ -292,7 +302,7 @@ def memory_commit(mem, s, b, x, y, z, h, h_min, ratio, tick):
     mem.valid[s, b] = 1
 
 
-@njit(b1(MEMORY_T, i8, i8, i8, i8, i8), **OPTS)
+@njit(b1(MEMORY_T, i8, i8, i8, i8, i8), **INL)
 def bin_fresh(mem, s, b, tick, stale_ticks, stale_before):
     if mem.valid[s, b] == 0:
         return False
@@ -300,7 +310,7 @@ def bin_fresh(mem, s, b, tick, stale_ticks, stale_before):
     return t >= stale_before and tick - t <= stale_ticks
 
 
-@njit(f8(REFILL_T, i8, i8, f8, f8, f8, f8, f8, f8, i8, b1, EVENTS_T, CACCUM_T), **OPTS)
+@njit(f8(REFILL_T, i8, i8, f8, f8, f8, f8, f8, f8, i8, b1, EVENTS_T, CACCUM_T), **INL)
 def field_depth(refill, s, b, px, py, pz, nx, ny, nz, tick, request, ev, cacc):
     """Depth of an element point below the field plane of bin (s, b) along its normal n (positive inside the
     material), for elements that read the field directly (no predecessor on the thread helix). Without a
@@ -333,7 +343,7 @@ def field_depth(refill, s, b, px, py, pz, nx, ny, nz, tick, request, ev, cacc):
     return 0.0
 
 
-@njit(b1(MEMORY_T, REFILL_T, i8, i8, f8, f8, f8, f8, f8, f8, i8, b1, EVENTS_T, CACCUM_T), **OPTS)
+@njit(b1(MEMORY_T, REFILL_T, i8, i8, f8, f8, f8, f8, f8, f8, i8, b1, EVENTS_T, CACCUM_T), **INL)
 def refill_bin(mem, refill, s, b, px, py, pz, nx, ny, nz, tick, commit, ev, cacc):
     """Refill a stale bin from its field plane: the surface point along -n from the element. Without a
     plane, write a refill request (the integration replays the step after the L2 query) and leave the
@@ -375,7 +385,7 @@ def refill_bin(mem, refill, s, b, px, py, pz, nx, ny, nz, tick, commit, ev, cacc
     return mem.valid[s, b] != 0
 
 
-@njit(i8(TABLE_T, i8, f8, CACCUM_T), **OPTS)
+@njit(i8(TABLE_T, i8, f8, CACCUM_T), **INL)
 def table_segment(table, row, h, cacc):
     """Segment of chip thickness h (> 0) on a table row; above the table the last segment
     (linear extrapolation, counted)."""
@@ -516,7 +526,7 @@ def emit_pass(st, ev, cacc, pose, step, istep, j, tick):
     ts[j, TS_EMIT_TICK] = tick
 
 
-@njit(types.void(TOOL_T, TABLE_T, MEMORY_T, STATE_T, EVENTS_T, CACCUM_T, i8, f8, f8, f8, i8, b1, f8, f8), **OPTS)
+@njit(types.void(TOOL_T, TABLE_T, MEMORY_T, STATE_T, EVENTS_T, CACCUM_T, i8, f8, f8, f8, i8, b1, f8, f8), **INL)
 def element_exit(tool, table, mem, st, ev, cacc, e, t_ex, h_ex, ang_ex, tick, commit, ratio, slot):
     """An element left the cut: commit its pending memory write and update the tooth's exit bookkeeping."""
     if not commit:
@@ -973,15 +983,24 @@ def _surface_event(ev, cacc, tool, defl, e, j, tick, dTx, dTy, dTz, toff, vex, v
 
 
 # =============================================================================== rotating tools
+GATE_EPS = 1e-12        # rad: an arc this close to an interval boundary takes the general gate (identical results)
+
+
 @njit(types.void(TOOL_T, TABLE_T, MEMORY_T, INTERVALS_T, REFILL_T, F1, I1, POSE_T, DEFLECTION_T, OCCUPANCY_T,
-                 PACKING_T, AXES_T, STATE_T, ACCUM_T, CACCUM_T, OUT_T, EVENTS_T), **OPTS)
+                 PACKING_T, AXES_T, STATE_T, ACCUM_T, CACCUM_T, OUT_T, EVENTS_T), **RAW)
 def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, axes, st, acc, cacc, out, ev):
     """One L0 step of one contact of a rotating tool (see the module doc and docs/models/cutting.md).
 
     Everything is evaluated at the engaged centroid of each element's swept arc (the step midpoint for
     elements fully inside an engaged interval), and the impulse is the force there times the engaged
     duration: the closed-form integral of the piecewise-linear force over the swept angle clipped to
-    the intervals (exact for forces linear in h and h linear in the angle within a step)."""
+    the intervals (exact for forces linear in h and h linear in the angle within a step).
+
+    Cost (docs/performance.md "cut_step"): only stations with engaged intervals (or loads written in the last
+    two steps) are visited; an element whose arc lies inside or outside a station's single interval is
+    classified with two comparisons (the general :func:`gate` within GATE_EPS of a boundary); the element
+    constants come from one packed row per element in station-list order (``tool.pk`` / ``tool.pki``, row kk for
+    element st_elem[kk]); compiled without reference counting (it allocates nothing)."""
     dt = step[ST_DT_S]
     if dt <= 0.0:
         return
@@ -1006,6 +1025,7 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     bin_w = TWO_PI / nb
     sag_c = 0.5 * bin_w * bin_w
     bps = dal * inv_bin
+    inv_bps = 1.0 / bps if bps != 0.0 else 0.0
     stale_ticks = istep[SI_STALE_TICKS]
     stale_before = istep[SI_STALE_BEFORE]
     ratio = tool.scal[TC_RECOVERY_RATIO]
@@ -1017,6 +1037,36 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     nlo = table.n_lo[0]
     nseg = table.coef.shape[1]
     coef = table.coef
+    t_hmin = table.h_min_m
+    t_dlo = table.inv_dlo
+    t_dhi = table.inv_dhi
+    t_hwrite = table.h_write_m
+    pk = tool.pk
+    pki = tool.pki
+    st_ptr = tool.st_ptr
+    st_elem = tool.st_elem
+    st_zs = tool.st_z_m
+    pts = mem.point_S_m
+    mtick = mem.tick
+    mvalid = mem.valid
+    fl_a = st.flags
+    h_last = st.h_last_m
+    t_last = st.tick_last
+    pend = st.pend
+    pend_tick = st.pend_tick
+    vn_last = st.vn_last_m_s
+    ea = st.elem_acc
+    ts = st.tooth
+    written = st.st_written
+    ust = defl.u_st_T0_m
+    vst = defl.v_st_T0_m_s
+    uw = defl.u_work_S_m
+    vw = defl.v_work_S_m_s
+    sto = out.station_T0
+    sec = out.sec
+    iv_cnt = iv.count
+    iv_lo = iv.lo_rad
+    iv_hi = iv.hi_rad
     R = pose.R_S_T0
     # G = R Rz(theta_mid): T (at the step midpoint) -> S
     g00 = R[0, 0] * cm + R[0, 1] * sm
@@ -1029,26 +1079,23 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     g21 = R[2, 1] * cm - R[2, 0] * sm
     g22 = R[2, 2]
     # tool tip minus the work deflection, in T: cT = G^T (tip - u_work)
-    ox = pose.tip_S_m[0] - defl.u_work_S_m[0]
-    oy = pose.tip_S_m[1] - defl.u_work_S_m[1]
-    oz = pose.tip_S_m[2] - defl.u_work_S_m[2]
+    ox = pose.tip_S_m[0] - uw[0]
+    oy = pose.tip_S_m[1] - uw[1]
+    oz = pose.tip_S_m[2] - uw[2]
     cTx = g00 * ox + g10 * oy + g20 * oz
     cTy = g01 * ox + g11 * oy + g21 * oz
     cTz = g02 * ox + g12 * oy + g22 * oz
     # tip velocity relative to the (vibrating) material, in T
-    wvx = pose.v_tip_S_m_s[0] - defl.v_work_S_m_s[0]
-    wvy = pose.v_tip_S_m_s[1] - defl.v_work_S_m_s[1]
-    wvz = pose.v_tip_S_m_s[2] - defl.v_work_S_m_s[2]
+    wvx = pose.v_tip_S_m_s[0] - vw[0]
+    wvy = pose.v_tip_S_m_s[1] - vw[1]
+    wvz = pose.v_tip_S_m_s[2] - vw[2]
     vTx = g00 * wvx + g10 * wvy + g20 * wvz
     vTy = g01 * wvx + g11 * wvy + g21 * wvz
     vTz = g02 * wvx + g12 * wvy + g22 * wvz
     # work vibration velocity alone in T (its share of the force power goes to the deflection work)
-    wkx = defl.v_work_S_m_s[0]
-    wky = defl.v_work_S_m_s[1]
-    wkz = defl.v_work_S_m_s[2]
-    vWx = g00 * wkx + g10 * wky + g20 * wkz
-    vWy = g01 * wkx + g11 * wky + g21 * wkz
-    vWz = g02 * wkx + g12 * wky + g22 * wkz
+    vWx = g00 * vw[0] + g10 * vw[1] + g20 * vw[2]
+    vWy = g01 * vw[0] + g11 * vw[1] + g21 * vw[2]
+    vWz = g02 * vw[0] + g12 * vw[1] + g22 * vw[2]
     # angular velocity of T relative to S, in T: omega e_z + G^T w_frame
     fwx = pose.w_T0_S_rad_s[0]
     fwy = pose.w_T0_S_rad_s[1]
@@ -1065,15 +1112,24 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     a_trail = math.atan2(-t0y, -t0x) if floor_on else 0.0
     if a_trail < 0.0:
         a_trail += TWO_PI
-    ts = st.tooth
-    # station rows written last step are cleared (they are rewritten when engaged)
+    # station rows written last step are cleared (they are rewritten when engaged); the stations to visit lie in
+    # [s_first, s_last]: engaged now or written in the last two steps
+    contact_any = False
+    s_first = nst
+    s_last = -1
     for s in range(nst):
-        if st.st_written[s] != 0:
+        if written[s] != 0:
             for c in range(6):
-                out.station_T0[s, c] = 0.0
-    for k in range(out.sec.shape[0]):
+                sto[s, c] = 0.0
+        if iv_cnt[s] > 0:
+            contact_any = True
+        if written[s] != 0 or iv_cnt[s] > 0:
+            if s < s_first:
+                s_first = s
+            s_last = s
+    for k in range(sec.shape[0]):
         for c in range(9):
-            out.sec[k, c] = 0.0
+            sec[k, c] = 0.0
     if commit:
         for j in range(nt):
             ts[j, TS_FX] = 0.0
@@ -1089,6 +1145,7 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             ts[j, TS_AVAIL] = 0.0
             for c in range(TS_S_PX, TS_S_NZ + 1):
                 ts[j, c] = 0.0
+    floor_test = floor_on and contact_any
     FTx = 0.0
     FTy = 0.0
     FTz = 0.0
@@ -1109,39 +1166,46 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     v_int = 0.0
     h_max = 0.0
     Kz = 0.0
-    contact_any = False
-    for s in range(nst):
-        if iv.count[s] > 0:
-            contact_any = True
-            break
-    for s in range(nst):
-        k0 = tool.st_ptr[s]
-        k1 = tool.st_ptr[s + 1]
-        cnt = iv.count[s]
-        if k1 <= k0 or (cnt <= 0 and st.st_written[s] == 0):
+    for s in range(s_first, s_last + 1):
+        k0 = st_ptr[s]
+        k1 = st_ptr[s + 1]
+        cnt = iv_cnt[s]
+        if k1 <= k0 or (cnt <= 0 and written[s] == 0):
             continue
         # station deflection: T0 -> T (rotate by -theta_mid); the float shifts the tool along z
-        ux = defl.u_st_T0_m[s, 0]
-        uy = defl.u_st_T0_m[s, 1]
+        ux = ust[s, 0]
+        uy = ust[s, 1]
         uTx = cm * ux + sm * uy
         uTy = cm * uy - sm * ux
-        uTz = defl.u_st_T0_m[s, 2] + u_f
-        rx = defl.u_st_T0_m[s, 3]
-        ry = defl.u_st_T0_m[s, 4]
+        uTz = ust[s, 2] + u_f
+        rx = ust[s, 3]
+        ry = ust[s, 4]
         rTx = cm * rx + sm * ry
         rTy = cm * ry - sm * rx
-        rTz = defl.u_st_T0_m[s, 5]
-        vx = defl.v_st_T0_m_s[s, 0]
-        vy = defl.v_st_T0_m_s[s, 1]
+        rTz = ust[s, 5]
+        vx = vst[s, 0]
+        vy = vst[s, 1]
         vuTx = cm * vx + sm * vy
         vuTy = cm * vy - sm * vx
-        vuTz = defl.v_st_T0_m_s[s, 2]
-        vx = defl.v_st_T0_m_s[s, 3]
-        vy = defl.v_st_T0_m_s[s, 4]
+        vuTz = vst[s, 2]
+        vx = vst[s, 3]
+        vy = vst[s, 4]
         vrTx = cm * vx + sm * vy
         vrTy = cm * vy - sm * vx
-        vrTz = defl.v_st_T0_m_s[s, 5]
-        zst = tool.st_z_m[s]
+        vrTz = vst[s, 5]
+        zst = st_zs[s]
+        # the station's interval for the fast classification (one interval, not a full circle, wide margins)
+        fast = False
+        full = False
+        lo_s = 0.0
+        wid_s = 0.0
+        if cnt == 1 and half > 0.0:
+            lo_s = iv_lo[s, 0]
+            wid_s = iv_hi[s, 0] - lo_s
+            if wid_s >= TWO_PI - 1e-12:
+                full = True
+            elif lo_s >= 0.0 and lo_s < TWO_PI and wid_s >= 0.0 and wid_s < TWO_PI - 4.0 * (half + bin_w):
+                fast = True
         sFx = 0.0
         sFy = 0.0
         sFz = 0.0
@@ -1151,15 +1215,15 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
         any_in = False
         centre = tool.st_centre[s] != 0
         for kk in range(k0, k1):
-            e = tool.st_elem[kk]
-            j = tool.tooth[e]
-            flags = st.flags[e]
+            e = st_elem[kk]
+            j = pki[kk, PKI_TOOTH]
+            flags = fl_a[e]
             if commit and cnt > 0:
                 ts[j, TS_AVAIL] += 1.0
-            a = theta + tool.alpha0_rad[e]
+            a = theta + pk[kk, PK_ALPHA0]
             if a >= TWO_PI:
                 a -= TWO_PI
-            if floor_on and contact_any and abs(tool.n_T[e, 2]) > 0.7:
+            if floor_test and pki[kk, PKI_AXIAL] != 0:
                 # axial-normal edges (end, corner bottom, wiper) leave the floor where they pass the trailing side
                 d_ang = a_trail - a
                 if d_ang > math.pi:
@@ -1167,9 +1231,9 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 elif d_ang < -math.pi:
                     d_ang += TWO_PI
                 if abs(d_ang) <= half:
-                    fpx = tool.p_T_m[e, 0]
-                    fpy = tool.p_T_m[e, 1]
-                    fpz = tool.p_T_m[e, 2]
+                    fpx = pk[kk, PK_P]
+                    fpy = pk[kk, PK_P + 1]
+                    fpz = pk[kk, PK_P + 2]
                     fpr = fpz - zst
                     fux = uTx + (rTy * fpr - rTz * fpy)
                     fuy = uTy + (rTz * fpx - rTx * fpr)
@@ -1177,40 +1241,67 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                     qx = cTx + fpx + fux
                     qy = cTy + fpy + fuy
                     qz = cTz + fpz + fuz
-                    fnx = tool.n_T[e, 0]
-                    fny = tool.n_T[e, 1]
-                    fnz = tool.n_T[e, 2]
+                    fnx = pk[kk, PK_N]
+                    fny = pk[kk, PK_N + 1]
+                    fnz = pk[kk, PK_N + 2]
                     sx_ = g00 * qx + g01 * qy + g02 * qz
                     sy_ = g10 * qx + g11 * qy + g12 * qz
                     sz_ = g20 * qx + g21 * qy + g22 * qz
                     nx_ = -(g00 * fnx + g01 * fny + g02 * fnz)
                     ny_ = -(g10 * fnx + g11 * fny + g12 * fnz)
                     nz_ = -(g20 * fnx + g21 * fny + g22 * fnz)
-                    ux_ = g00 * fux + g01 * fuy + g02 * fuz - defl.u_work_S_m[0]
-                    uy_ = g10 * fux + g11 * fuy + g12 * fuz - defl.u_work_S_m[1]
-                    uz_ = g20 * fux + g21 * fuy + g22 * fuz - defl.u_work_S_m[2]
+                    ux_ = g00 * fux + g01 * fuy + g02 * fuz - uw[0]
+                    uy_ = g10 * fux + g11 * fuy + g12 * fuz - uw[1]
+                    uz_ = g20 * fux + g21 * fuy + g22 * fuz - uw[2]
                     tick_f = float(tick0 + l0 // 2)
-                    put_surface(ev.surface.rec, ev.surface.n, tick_f, float(j), float(tool.elem[e]), sx_, sy_, sz_,
-                                nx_, ny_, nz_, 0.0, tool.edge_radius_m[e], tool.VB_m[e], ux_, uy_, uz_, slot, cacc)
-            if cnt > 0:
-                frac, s_c, s_lo, s_hi = gate(iv, s, a, half, inv_dal)
-            else:
+                    put_surface(ev.surface.rec, ev.surface.n, tick_f, float(j), float(pki[kk, PKI_ELEM]), sx_, sy_,
+                                sz_, nx_, ny_, nz_, 0.0, pk[kk, PK_EDGE_R], pk[kk, PK_VB], ux_, uy_, uz_, slot, cacc)
+            # ---------------------------------------------------- gating (engaged part of the swept arc)
+            interior = False
+            if cnt <= 0:
                 frac = 0.0
                 s_c = 0.5
                 s_lo = 0.0
                 s_hi = 0.0
+            elif full:
+                frac = 1.0
+                s_c = 0.5
+                s_lo = 0.0
+                s_hi = 1.0
+                interior = True
+            else:
+                general = True
+                frac = 0.0
+                s_c = 0.0
+                s_lo = 0.0
+                s_hi = 0.0
+                if fast:
+                    x = a - lo_s
+                    if x < 0.0:
+                        x += TWO_PI
+                    if x - half > GATE_EPS and x + half < wid_s - GATE_EPS:
+                        frac = 1.0
+                        s_c = 0.5
+                        s_lo = 0.0
+                        s_hi = 1.0
+                        general = False
+                        interior = x > bin_w + GATE_EPS and x < wid_s - bin_w - GATE_EPS
+                    elif x - half > wid_s + GATE_EPS and x + half < TWO_PI - GATE_EPS:
+                        general = False
+                if general:
+                    frac, s_c, s_lo, s_hi = gate(iv, s, a, half, inv_dal)
             if frac <= 0.0:
                 if (flags & FL_IN_CUT) != 0:
-                    element_exit(tool, table, mem, st, ev, cacc, e, t_start, st.h_last_m[e], a - 0.5 * dal, tick0,
+                    element_exit(tool, table, mem, st, ev, cacc, e, t_start, h_last[e], a - 0.5 * dal, tick0,
                                  commit, ratio, slot)
-                elif commit and st.pend[e, PD_BIN] >= 0.0:
-                    if tool.write_row[e] >= 0:
-                        memory_commit(mem, tool.write_row[e], int(st.pend[e, PD_BIN]), st.pend[e, PD_X],
-                                      st.pend[e, PD_Y], st.pend[e, PD_Z], st.pend[e, PD_H],
-                                      table.h_write_m[tool.row[e]], ratio, st.pend_tick[e])
-                    st.pend[e, PD_BIN] = -1.0
+                elif commit and pend[e, PD_BIN] >= 0.0:
+                    wsr = pki[kk, PKI_WRITE]
+                    if wsr >= 0:
+                        memory_commit(mem, wsr, int(pend[e, PD_BIN]), pend[e, PD_X], pend[e, PD_Y], pend[e, PD_Z],
+                                      pend[e, PD_H], t_hwrite[pki[kk, PKI_ROW]], ratio, pend_tick[e])
+                    pend[e, PD_BIN] = -1.0
                 if commit:
-                    st.tick_last[e] = -1
+                    t_last[e] = -1
                 continue
             # ---------------------------------------------------- evaluation frame (centroid of the engaged arc)
             if frac < 1.0:
@@ -1269,19 +1360,19 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 cd = 1.0
                 sd = 0.0
                 ac = a
-            px = tool.p_T_m[e, 0]
-            py = tool.p_T_m[e, 1]
-            pz = tool.p_T_m[e, 2]
+            px = pk[kk, PK_P]
+            py = pk[kk, PK_P + 1]
+            pz = pk[kk, PK_P + 2]
             pzr = pz - zst
             dTx = ccx + px + ucx + (rcy * pzr - rTz * py)
             dTy = ccy + py + ucy + (rTz * px - rcx * pzr)
             dTz = ccz + pz + uTz + (rcx * py - rcy * px)
-            nx = tool.n_T[e, 0]
-            ny = tool.n_T[e, 1]
-            nz = tool.n_T[e, 2]
+            nx = pk[kk, PK_N]
+            ny = pk[kk, PK_N + 1]
+            nz = pk[kk, PK_N + 2]
             # ---------------------------------------------------- memory read at the centroid angle
             xb = ac * inv_bin - 0.5
-            fb = np.floor(xb)
+            fb = math.floor(xb)
             w = xb - fb
             u_b = w
             b0 = int(fb)
@@ -1290,7 +1381,7 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             bb = b0 + 1
             if bb >= nb:
                 bb = 0
-            if frac < 1.0 or near_edge(iv, s, ac, bin_w):
+            if frac < 1.0 or (not interior and near_edge(iv, s, ac, bin_w)):
                 # next to an interval boundary one bin of the stencil can lie outside the material, where no tooth
                 # renews the memory: read the inside bin only
                 in0 = in_intervals(iv, s, (b0 + 0.5) * bin_w)
@@ -1299,7 +1390,7 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                     w = 0.0
                 elif in1 and not in0:
                     w = 1.0
-            rs = tool.read_row[e]
+            rs = pki[kk, PKI_READ]
             if rs < 0:
                 # no predecessor on the thread helix: the field surface (refill plane of the station, uncached)
                 psx = e00 * dTx + e01 * dTy + g02 * dTz
@@ -1317,43 +1408,51 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 m1x = m0x
                 m1y = m0y
                 m1z = m0z
-            elif not (bin_fresh(mem, rs, b0, tick_end, stale_ticks, stale_before)
-                      and bin_fresh(mem, rs, bb, tick_end, stale_ticks, stale_before)):
-                ok0 = bin_fresh(mem, rs, b0, tick_end, stale_ticks, stale_before)
-                ok1 = bin_fresh(mem, rs, bb, tick_end, stale_ticks, stale_before)
-                psx = e00 * dTx + e01 * dTy + g02 * dTz
-                psy = e10 * dTx + e11 * dTy + g12 * dTz
-                psz = e20 * dTx + e21 * dTy + g22 * dTz
-                nsx = e00 * nx + e01 * ny + g02 * nz
-                nsy = e10 * nx + e11 * ny + g12 * nz
-                nsz = e20 * nx + e21 * ny + g22 * nz
-                if not ok0:
-                    ok0 = refill_bin(mem, refill, rs, b0, psx, psy, psz, nsx, nsy, nsz, tick_end, commit, ev, cacc)
-                if not ok1:
-                    ok1 = refill_bin(mem, refill, rs, bb, psx, psy, psz, nsx, nsy, nsz, tick_end, commit, ev, cacc)
-                if ok0:
-                    m0x = mem.point_S_m[rs, b0, 0]
-                    m0y = mem.point_S_m[rs, b0, 1]
-                    m0z = mem.point_S_m[rs, b0, 2]
-                else:
-                    m0x = psx
-                    m0y = psy
-                    m0z = psz
-                if ok1:
-                    m1x = mem.point_S_m[rs, bb, 0]
-                    m1y = mem.point_S_m[rs, bb, 1]
-                    m1z = mem.point_S_m[rs, bb, 2]
-                else:
-                    m1x = psx
-                    m1y = psy
-                    m1z = psz
             else:
-                m0x = mem.point_S_m[rs, b0, 0]
-                m0y = mem.point_S_m[rs, b0, 1]
-                m0z = mem.point_S_m[rs, b0, 2]
-                m1x = mem.point_S_m[rs, bb, 0]
-                m1y = mem.point_S_m[rs, bb, 1]
-                m1z = mem.point_S_m[rs, bb, 2]
+                ok0 = mvalid[rs, b0] != 0
+                if ok0:
+                    tk = mtick[rs, b0]
+                    ok0 = tk >= stale_before and tick_end - tk <= stale_ticks
+                ok1 = mvalid[rs, bb] != 0
+                if ok1:
+                    tk = mtick[rs, bb]
+                    ok1 = tk >= stale_before and tick_end - tk <= stale_ticks
+                if not (ok0 and ok1):
+                    psx = e00 * dTx + e01 * dTy + g02 * dTz
+                    psy = e10 * dTx + e11 * dTy + g12 * dTz
+                    psz = e20 * dTx + e21 * dTy + g22 * dTz
+                    nsx = e00 * nx + e01 * ny + g02 * nz
+                    nsy = e10 * nx + e11 * ny + g12 * nz
+                    nsz = e20 * nx + e21 * ny + g22 * nz
+                    if not ok0:
+                        ok0 = refill_bin(mem, refill, rs, b0, psx, psy, psz, nsx, nsy, nsz, tick_end, commit, ev,
+                                         cacc)
+                    if not ok1:
+                        ok1 = refill_bin(mem, refill, rs, bb, psx, psy, psz, nsx, nsy, nsz, tick_end, commit, ev,
+                                         cacc)
+                    if ok0:
+                        m0x = pts[rs, b0, 0]
+                        m0y = pts[rs, b0, 1]
+                        m0z = pts[rs, b0, 2]
+                    else:
+                        m0x = psx
+                        m0y = psy
+                        m0z = psz
+                    if ok1:
+                        m1x = pts[rs, bb, 0]
+                        m1y = pts[rs, bb, 1]
+                        m1z = pts[rs, bb, 2]
+                    else:
+                        m1x = psx
+                        m1y = psy
+                        m1z = psz
+                else:
+                    m0x = pts[rs, b0, 0]
+                    m0y = pts[rs, b0, 1]
+                    m0z = pts[rs, b0, 2]
+                    m1x = pts[rs, bb, 0]
+                    m1y = pts[rs, bb, 1]
+                    m1z = pts[rs, bb, 2]
             Mx_ = m0x + w * (m1x - m0x)
             My_ = m0y + w * (m1y - m0y)
             Mz_ = m0z + w * (m1z - m0z)
@@ -1366,44 +1465,58 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 # the bins hold points on the swept circle: the linear stencil reads a chord, inside the circle
                 # by r dphi^2 [(1 - w) u^2 + w (1 - u)^2] / 2 at the element's angle (u: its position between the
                 # bin centres, w: the stencil weight); along n that is (n . p_xy) times it
-                h -= sag_c * ((1.0 - w) * u_b * u_b + w * (1.0 - u_b) * (1.0 - u_b)) * (nx * px + ny * py)
-            slope = h - st.h_last_m[e] if st.tick_last[e] == tick0 else 0.0
+                h -= sag_c * ((1.0 - w) * u_b * u_b + w * (1.0 - u_b) * (1.0 - u_b)) * pk[kk, PK_NPXY]
+            hl = h_last[e]
+            slope = h - hl if t_last[e] == tick0 else 0.0
             # element velocity relative to the material (T): tip + frame rotation + deflection rates
             vex = bvx + (ofy * pz - OTz * py) + (wry * pzr - vrTz * py)
             vey = bvy + (OTz * px - ofx * pz) + (vrTz * px - wrx * pzr)
             vez = vTz + vuTz + (ofx * py - ofy * px) + (wrx * py - wry * px)
             vn = vex * nx + vey * ny + vez * nz
-            Vc = vex * tool.c_T[e, 0] + vey * tool.c_T[e, 1] + vez * tool.c_T[e, 2]
+            Vc = vex * pk[kk, PK_C] + vey * pk[kk, PK_C + 1] + vez * pk[kk, PK_C + 2]
+            row = pki[kk, PKI_ROW]
             # ---------------------------------------------------- memory crossings (delayed by one bin)
             if commit and bps != 0.0:
-                row_m = tool.row[e]
-                hmin_m = table.h_write_m[row_m]
+                hmin_m = t_hwrite[row]
                 xs = xb - (s_c - 0.5) * bps - 0.5 * bps
                 xe = xs + bps
                 if bps > 0.0:
-                    cA = int(np.floor(xs)) + 1
-                    cB = int(np.floor(xe))
+                    cA = int(math.floor(xs)) + 1
+                    cB = int(math.floor(xe))
                     step_c = 1
                 else:
-                    cA = int(np.ceil(xs)) - 1
-                    cB = int(np.ceil(xe))
+                    cA = int(math.ceil(xs)) - 1
+                    cB = int(math.ceil(xe))
                     step_c = -1
-                ws = tool.write_row[e]
+                ws = pki[kk, PKI_WRITE]
                 if (step_c > 0 and cB >= cA) or (step_c < 0 and cB <= cA):
                     c = cA
                     while True:
-                        sx = (c - xs) / bps
+                        sx = (c - xs) * inv_bps
                         if s_lo <= sx <= s_hi:
                             hx = h + (sx - s_c) * slope
-                            pb = int(st.pend[e, PD_BIN])
+                            pb = int(pend[e, PD_BIN])
                             if pb >= 0:
                                 if ws >= 0:
-                                    memory_commit(mem, ws, pb, st.pend[e, PD_X], st.pend[e, PD_Y],
-                                                  st.pend[e, PD_Z], st.pend[e, PD_H], hmin_m, ratio,
-                                                  st.pend_tick[e])
-                                st.pend[e, PD_BIN] = -1.0
-                            bi = c % nb
-                            if bi < 0:
+                                    # the pending write of the previous bin (memory_commit, elastic recovery)
+                                    hp = pend[e, PD_H]
+                                    if hp >= hmin_m:
+                                        if hmin_m <= 0.0 or ratio <= 0.0 or hp >= (1.0 + ratio) * hmin_m or \
+                                                mvalid[ws, pb] == 0:
+                                            wc = 1.0
+                                        else:
+                                            wc = (hp - hmin_m) / (ratio * hmin_m)
+                                        if wc > 0.0:
+                                            pts[ws, pb, 0] += wc * (pend[e, PD_X] - pts[ws, pb, 0])
+                                            pts[ws, pb, 1] += wc * (pend[e, PD_Y] - pts[ws, pb, 1])
+                                            pts[ws, pb, 2] += wc * (pend[e, PD_Z] - pts[ws, pb, 2])
+                                            mtick[ws, pb] = pend_tick[e]
+                                            mvalid[ws, pb] = 1
+                                pend[e, PD_BIN] = -1.0
+                            bi = c
+                            while bi >= nb:
+                                bi -= nb
+                            while bi < 0:
                                 bi += nb
                             off = (sx - s_c) * dt
                             # the element at the crossing: its velocity carries the motion to first order; the
@@ -1416,19 +1529,21 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                             ex = e00 * qx + e01 * qy + g02 * qz
                             ey = e10 * qx + e11 * qy + g12 * qz
                             ez = e20 * qx + e21 * qy + g22 * qz
-                            have = False
-                            rx = 0.0
-                            ry = 0.0
-                            rz = 0.0
-                            rtick = tick_end
-                            if ws >= 0 and rs != ws:
+                            if ws < 0:
+                                pass
+                            elif rs != ws:
+                                have = False
+                                rx_ = 0.0
+                                ry_ = 0.0
+                                rz_ = 0.0
+                                rtick = tick_end
                                 if rs >= 0:
-                                    if mem.valid[rs, bi] != 0:
+                                    if mvalid[rs, bi] != 0:
                                         have = True
-                                        rx = mem.point_S_m[rs, bi, 0]
-                                        ry = mem.point_S_m[rs, bi, 1]
-                                        rz = mem.point_S_m[rs, bi, 2]
-                                        rtick = mem.tick[rs, bi]
+                                        rx_ = pts[rs, bi, 0]
+                                        ry_ = pts[rs, bi, 1]
+                                        rz_ = pts[rs, bi, 2]
+                                        rtick = mtick[rs, bi]
                                 elif refill.valid[s, bi] != 0:
                                     nsx = e00 * nx + e01 * ny + g02 * nz
                                     nsy = e10 * nx + e11 * ny + g12 * nz
@@ -1436,86 +1551,91 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                                     hf = field_depth(refill, s, bi, ex, ey, ez, nsx, nsy, nsz, tick_end, False, ev,
                                                      cacc)
                                     have = True
-                                    rx = ex - hf * nsx
-                                    ry = ey - hf * nsy
-                                    rz = ez - hf * nsz
-                            if ws < 0:
-                                pass
-                            elif have:
-                                # thread helix: the element writes another row than it reads. The surface it
-                                # passes on is the one it read, renewed by the elastic-recovery rule
-                                if hmin_m <= 0.0 or ratio <= 0.0:
-                                    wr = 1.0 if hx >= hmin_m else 0.0
-                                elif hx < hmin_m:
-                                    wr = 0.0
-                                elif hx >= (1.0 + ratio) * hmin_m:
-                                    wr = 1.0
-                                else:
-                                    wr = (hx - hmin_m) / (ratio * hmin_m)
-                                st.pend[e, PD_BIN] = float(bi)
-                                st.pend[e, PD_X] = rx + wr * (ex - rx)
-                                st.pend[e, PD_Y] = ry + wr * (ey - ry)
-                                st.pend[e, PD_Z] = rz + wr * (ez - rz)
-                                st.pend[e, PD_H] = 1e300
-                                st.pend_tick[e] = tick0 + int(np.floor(sx * l0 + 0.5)) if wr > 0.0 else rtick
+                                    rx_ = ex - hf * nsx
+                                    ry_ = ey - hf * nsy
+                                    rz_ = ez - hf * nsz
+                                if have:
+                                    # thread helix: the element writes another row than it reads. The surface it
+                                    # passes on is the one it read, renewed by the elastic-recovery rule
+                                    if hmin_m <= 0.0 or ratio <= 0.0:
+                                        wr = 1.0 if hx >= hmin_m else 0.0
+                                    elif hx < hmin_m:
+                                        wr = 0.0
+                                    elif hx >= (1.0 + ratio) * hmin_m:
+                                        wr = 1.0
+                                    else:
+                                        wr = (hx - hmin_m) / (ratio * hmin_m)
+                                    pend[e, PD_BIN] = float(bi)
+                                    pend[e, PD_X] = rx_ + wr * (ex - rx_)
+                                    pend[e, PD_Y] = ry_ + wr * (ey - ry_)
+                                    pend[e, PD_Z] = rz_ + wr * (ez - rz_)
+                                    pend[e, PD_H] = 1e300
+                                    pend_tick[e] = tick0 + int(math.floor(sx * l0 + 0.5)) if wr > 0.0 else rtick
+                                elif hx >= hmin_m:
+                                    pend[e, PD_BIN] = float(bi)
+                                    pend[e, PD_X] = ex
+                                    pend[e, PD_Y] = ey
+                                    pend[e, PD_Z] = ez
+                                    pend[e, PD_H] = hx
+                                    pend_tick[e] = tick0 + int(math.floor(sx * l0 + 0.5))
                             elif hx >= hmin_m:
-                                st.pend[e, PD_BIN] = float(bi)
-                                st.pend[e, PD_X] = ex
-                                st.pend[e, PD_Y] = ey
-                                st.pend[e, PD_Z] = ez
-                                st.pend[e, PD_H] = hx
-                                st.pend_tick[e] = tick0 + int(np.floor(sx * l0 + 0.5))
+                                pend[e, PD_BIN] = float(bi)
+                                pend[e, PD_X] = ex
+                                pend[e, PD_Y] = ey
+                                pend[e, PD_Z] = ez
+                                pend[e, PD_H] = hx
+                                pend_tick[e] = tick0 + int(math.floor(sx * l0 + 0.5))
                         if c == cB:
                             break
                         c += step_c
             if h <= 0.0:
                 if (flags & FL_IN_CUT) != 0:
-                    q = st.h_last_m[e] / (st.h_last_m[e] - h) if st.h_last_m[e] > h else 0.0
+                    q = hl / (hl - h) if hl > h else 0.0
                     element_exit(tool, table, mem, st, ev, cacc, e, t_start + (q - 0.5) * dt, 0.0,
-                                 a + (q - 1.0) * dal, tick0 + int(np.floor((q - 0.5) * l0 + 0.5)), commit, ratio,
+                                 a + (q - 1.0) * dal, tick0 + int(math.floor((q - 0.5) * l0 + 0.5)), commit, ratio,
                                  slot)
                 if commit:
-                    st.h_last_m[e] = h
-                    st.tick_last[e] = tick_end if frac >= 1.0 else -1
+                    h_last[e] = h
+                    t_last[e] = tick_end if frac >= 1.0 else -1
                 continue
             # ---------------------------------------------------- forces
-            row = tool.row[e]
-            hm = table.h_min_m[row]
+            hm = t_hmin[row]
             if h < hm:
-                sg = int(h * table.inv_dlo[row])
+                sg = int(h * t_dlo[row])
                 if sg >= nlo:
                     sg = nlo - 1
             else:
-                sg = nlo + int((h - hm) * table.inv_dhi[row])
+                sg = nlo + int((h - hm) * t_dhi[row])
                 if sg >= nseg:
                     sg = nseg - 1
                     cacc.scalars[CA_TABLE_OVER] += 1.0
-            db = tool.db_m[e]
-            dS = tool.dS_m[e]
+            db = pk[kk, PK_DB]
+            dS = pk[kk, PK_DS]
             ft0 = (coef[row, sg, 0, COL_FT] + coef[row, sg, 1, COL_FT] * h) * db + \
                 (coef[row, sg, 0, COL_ET] + coef[row, sg, 1, COL_ET] * h) * dS
             fr0 = (coef[row, sg, 0, COL_FR] + coef[row, sg, 1, COL_FR] * h) * db + \
                 (coef[row, sg, 0, COL_ER] + coef[row, sg, 1, COL_ER] * h) * dS
             fa0 = (coef[row, sg, 0, COL_FA] + coef[row, sg, 1, COL_FA] * h) * db + \
                 (coef[row, sg, 0, COL_EA] + coef[row, sg, 1, COL_EA] * h) * dS
-            fft = tool.flank_N[e, 0]
-            ffr = tool.flank_N[e, 1]
+            fft = pk[kk, PK_FLANK]
+            ffr = pk[kk, PK_FLANK + 1]
             fpd = 0.0
-            if vn > 0.0 and Vc > 0.0 and tool.pd[e, 0] > 0.0:
-                fpd = tool.pd[e, 0] * flank_interference_area(vn / Vc, tool.pd[e, 1], tool.pd[e, 2], pd_max)
-            mu_pd = tool.pd[e, 3]
+            kpd = pk[kk, PK_PD]
+            if vn > 0.0 and Vc > 0.0 and kpd > 0.0:
+                fpd = kpd * flank_interference_area(vn / Vc, pk[kk, PK_PD + 1], pk[kk, PK_PD + 2], pd_max)
+            mu_pd = pk[kk, PK_PD + 3]
             ft = ft0 + fft + mu_pd * fpd
             fr = fr0 + ffr + fpd
             fa = fa0
-            Fx = ft * tool.dir_T[e, 0, 0] + fr * tool.dir_T[e, 1, 0] + fa * tool.dir_T[e, 2, 0]
-            Fy = ft * tool.dir_T[e, 0, 1] + fr * tool.dir_T[e, 1, 1] + fa * tool.dir_T[e, 2, 1]
-            Fz = ft * tool.dir_T[e, 0, 2] + fr * tool.dir_T[e, 1, 2] + fa * tool.dir_T[e, 2, 2]
-            Mx = ft * tool.arm_T[e, 0, 0] + fr * tool.arm_T[e, 1, 0] + fa * tool.arm_T[e, 2, 0]
-            My = ft * tool.arm_T[e, 0, 1] + fr * tool.arm_T[e, 1, 1] + fa * tool.arm_T[e, 2, 1]
-            Mz = ft * tool.arm_T[e, 0, 2] + fr * tool.arm_T[e, 1, 2] + fa * tool.arm_T[e, 2, 2]
+            Fx = ft * pk[kk, PK_DIR] + fr * pk[kk, PK_DIR + 3] + fa * pk[kk, PK_DIR + 6]
+            Fy = ft * pk[kk, PK_DIR + 1] + fr * pk[kk, PK_DIR + 4] + fa * pk[kk, PK_DIR + 7]
+            Fz = ft * pk[kk, PK_DIR + 2] + fr * pk[kk, PK_DIR + 5] + fa * pk[kk, PK_DIR + 8]
+            Mx = ft * pk[kk, PK_ARM] + fr * pk[kk, PK_ARM + 3] + fa * pk[kk, PK_ARM + 6]
+            My = ft * pk[kk, PK_ARM + 1] + fr * pk[kk, PK_ARM + 4] + fa * pk[kk, PK_ARM + 7]
+            Mz = ft * pk[kk, PK_ARM + 2] + fr * pk[kk, PK_ARM + 5] + fa * pk[kk, PK_ARM + 8]
             dtw = frac * dt
             # power dissipated by the element (-F . v), split by zone below
-            va = vex * tool.dir_T[e, 2, 0] + vey * tool.dir_T[e, 2, 1] + vez * tool.dir_T[e, 2, 2]
+            va = vex * pk[kk, PK_DIR + 6] + vey * pk[kk, PK_DIR + 7] + vez * pk[kk, PK_DIR + 8]
             p_tab = ft0 * Vc + fr0 * vn - fa0 * va
             p_fl = fft * Vc + ffr * vn + mu_pd * fpd * Vc
             p_pd = fpd * vn
@@ -1538,7 +1658,7 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 dft = coef[row, sg, 1, COL_FT] * db + coef[row, sg, 1, COL_ET] * dS
                 dfr = coef[row, sg, 1, COL_FR] * db + coef[row, sg, 1, COL_ER] * dS
                 dfa = coef[row, sg, 1, COL_FA] * db + coef[row, sg, 1, COL_EA] * dS
-                Kz += frac * nz * (dft * tool.dir_T[e, 0, 2] + dfr * tool.dir_T[e, 1, 2] + dfa * tool.dir_T[e, 2, 2])
+                Kz += frac * nz * (dft * pk[kk, PK_DIR + 2] + dfr * pk[kk, PK_DIR + 5] + dfa * pk[kk, PK_DIR + 8])
             n_in += 1.0
             if h > h_max:
                 h_max = h
@@ -1549,8 +1669,9 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             pr = coef[row, sg, 0, COL_PR] + coef[row, sg, 1, COL_PR] * h
             rc = coef[row, sg, 0, COL_RC] + coef[row, sg, 1, COL_RC] * h
             et = p_tab * dtw
-            forming = tool.forming[e] != 0
-            dV = h * db * tool.r_xy_m[e] * abs_dal * frac
+            forming = pki[kk, PKI_FORMING] != 0
+            r_xy = pk[kk, PK_RXY]
+            dV = h * db * r_xy * abs_dal * frac
             if forming:
                 e_plough += et
                 e_forming += et
@@ -1564,13 +1685,12 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             e_pd += p_pd * dtw
             edge_len += dS * frac * dt
             v_int += Vc * dtw
-            ea = st.elem_acc
             ea[e, ELEM_IN_CUT_S] += dtw
             ea[e, ELEM_RAKE_SLIDING_M] += rc * Vc * dtw
             ea[e, ELEM_FLANK_SLIDING_M] += Vc * dtw
             ea[e, ELEM_INT_SIGMA_V_RAKE] += (coef[row, sg, 0, COL_SIG_RAKE] + coef[row, sg, 1, COL_SIG_RAKE] * h) \
                 * rc * Vc * dtw
-            ea[e, ELEM_INT_SIGMA_V_FLANK] += tool.sig_flank_Pa[e] * Vc * dtw
+            ea[e, ELEM_INT_SIGMA_V_FLANK] += pk[kk, PK_SIG_FLANK] * Vc * dtw
             ea[e, ELEM_INT_H_DT] += h * dtw
             if h > ea[e, ELEM_H_MAX]:
                 ea[e, ELEM_H_MAX] = h
@@ -1597,8 +1717,8 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                     h_en = 0.0
                 if ts[j, TS_PASS_ON] < 0.5:
                     ts[j, TS_PASS_ON] = 1.0
-                    ts[j, TS_ENTRY_TICK] = float(tick0 + int(np.floor(s_en * l0 + 0.5)))
-                    ts[j, TS_ENTRY_ELEM] = float(tool.elem[e])
+                    ts[j, TS_ENTRY_TICK] = float(tick0 + int(math.floor(s_en * l0 + 0.5)))
+                    ts[j, TS_ENTRY_ELEM] = float(pki[kk, PKI_ELEM])
                     ts[j, TS_ENTRY_H] = h_en
                     ts[j, TS_ENTRY_ANGLE] = ang
                     ts[j, TS_LOADING] = 1.0
@@ -1616,7 +1736,7 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 if s_lo > 0.0 and abs(vn) <= vt_tol:
                     # entry through the outer boundary where the path is tangent: the entry point is on the
                     # generated surface (up-milling side wall)
-                    tick_x = float(tick0 + int(np.floor(s_en * l0 + 0.5)))
+                    tick_x = float(tick0 + int(math.floor(s_en * l0 + 0.5)))
                     toff = (s_en - s_c) * dt
                     _surface_event(ev, cacc, tool, defl, e, j, tick_x, dTx, dTy, dTz, toff, vex, vey, vez, h_en, nx,
                                    ny, nz, ucx, ucy, uTz, rcx, rcy, rTz, pzr, px, py, e00, e01, g02, e10, e11, g12,
@@ -1629,39 +1749,39 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             if centre:
                 ts[j, TS_CENTRE_ON] = 1.0
             # ---------------------------------------------------- tooth-pass accumulation (chip emission, deposits)
-            tch = coef[row, sg, 0, COL_TCHIP] + coef[row, sg, 1, COL_TCHIP] * h
-            ws = coef[row, sg, 0, COL_WS] + coef[row, sg, 1, COL_WS] * h
-            wf = coef[row, sg, 0, COL_WF] + coef[row, sg, 1, COL_WF] * h
             if not forming:
+                tch = coef[row, sg, 0, COL_TCHIP] + coef[row, sg, 1, COL_TCHIP] * h
                 ts[j, TS_VOL] += dV
                 ts[j, TS_HV] += h * dV
                 ts[j, TS_VV] += Vc * dV
-                ts[j, TS_RAKEV] += tool.rake_rad[e] * dV
-                ts[j, TS_INCLV] += tool.incl_rad[e] * dV
+                ts[j, TS_RAKEV] += pk[kk, PK_RAKE] * dV
+                ts[j, TS_INCLV] += pk[kk, PK_INCL] * dV
                 ts[j, TS_TV] += tch * dV
-                ts[j, TS_RV] += tool.r_xy_m[e] * dV
+                ts[j, TS_RV] += r_xy * dV
                 if dV > ts[j, TS_DOM_VOL]:
                     ts[j, TS_DOM_VOL] = dV
-                    ts[j, TS_DOM_KIND] = float(tool.kind[e])
+                    ts[j, TS_DOM_KIND] = float(pki[kk, PKI_KIND])
                     ts[j, TS_DOM_ROW] = float(row)
                 ts[j, TS_STEP_DV] += dV
                 ts[j, TS_S_PX] += dTx * dV
                 ts[j, TS_S_PY] += dTy * dV
                 ts[j, TS_S_PZ] += dTz * dV
                 vch = rc * Vc
-                ts[j, TS_S_VX] += (vex + vch * tool.chip_T[e, 0]) * dV
-                ts[j, TS_S_VY] += (vey + vch * tool.chip_T[e, 1]) * dV
-                ts[j, TS_S_VZ] += (vez + vch * tool.chip_T[e, 2]) * dV
+                ts[j, TS_S_VX] += (vex + vch * pk[kk, PK_CHIP]) * dV
+                ts[j, TS_S_VY] += (vey + vch * pk[kk, PK_CHIP + 1]) * dV
+                ts[j, TS_S_VZ] += (vez + vch * pk[kk, PK_CHIP + 2]) * dV
                 ts[j, TS_S_NX] += nx * dV
                 ts[j, TS_S_NY] += ny * dV
                 ts[j, TS_S_NZ] += nz * dV
-            ts[j, TS_WORK_J] += et * ps * ws + (et * (1.0 - ps - pr) + p_fl * dtw) * wf
+            wsh = coef[row, sg, 0, COL_WS] + coef[row, sg, 1, COL_WS] * h
+            wfl = coef[row, sg, 0, COL_WF] + coef[row, sg, 1, COL_WF] * h
+            ts[j, TS_WORK_J] += et * ps * wsh + (et * (1.0 - ps - pr) + p_fl * dtw) * wfl
             # ---------------------------------------------------- surface events (envelope: v.n from + to -)
             if (flags & FL_VN_POS) != 0 and vn <= 0.0 and (flags & FL_EVENT_DONE) == 0:
-                vl = st.vn_last_m_s[e]
+                vl = vn_last[e]
                 q = vl / (vl - vn) if vl > vn else 1.0
-                hq = st.h_last_m[e] + q * (h - st.h_last_m[e])
-                tick_x = float(tick0 + int(np.floor((q - 0.5) * l0 + 0.5)))
+                hq = hl + q * (h - hl)
+                tick_x = float(tick0 + int(math.floor((q - 0.5) * l0 + 0.5)))
                 toff = (q - 1.0) * dt
                 _surface_event(ev, cacc, tool, defl, e, j, tick_x, dTx, dTy, dTz, toff, vex, vey, vez, hq, nx, ny, nz,
                                ucx, ucy, uTz, rcx, rcy, rTz, pzr, px, py, e00, e01, g02, e10, e11, g12, e20, e21, g22,
@@ -1671,9 +1791,9 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 flags |= FL_VN_POS
             else:
                 flags &= ~FL_VN_POS
-            st.vn_last_m_s[e] = vn
-            st.h_last_m[e] = h
-            st.tick_last[e] = tick_end if frac >= 1.0 else -1
+            vn_last[e] = vn
+            h_last[e] = h
+            t_last[e] = tick_end if frac >= 1.0 else -1
             # an arc clipped at its end: the element leaves the interval within this step
             if s_hi < 1.0 and frac < 1.0 and s_lo <= 0.0:
                 if abs(vn) <= vt_tol and (flags & FL_EVENT_DONE) == 0:
@@ -1681,27 +1801,27 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                     hx = h + (s_hi - s_c) * slope
                     if hx < 0.0:
                         hx = 0.0
-                    tick_x = float(tick0 + int(np.floor(s_hi * l0 + 0.5)))
+                    tick_x = float(tick0 + int(math.floor(s_hi * l0 + 0.5)))
                     toff = (s_hi - s_c) * dt
                     _surface_event(ev, cacc, tool, defl, e, j, tick_x, dTx, dTy, dTz, toff, vex, vey, vez, hx, nx, ny,
                                    nz, ucx, ucy, uTz, rcx, rcy, rTz, pzr, px, py, e00, e01, g02, e10, e11, g12, e20,
                                    e21, g22, slot)
-                st.flags[e] = flags
+                fl_a[e] = flags
                 element_exit(tool, table, mem, st, ev, cacc, e, t_start + s_hi * dt, h, a + (s_hi - 0.5) * dal,
-                             tick0 + int(np.floor(s_hi * l0 + 0.5)), commit, ratio, slot)
-                st.tick_last[e] = -1
+                             tick0 + int(math.floor(s_hi * l0 + 0.5)), commit, ratio, slot)
+                t_last[e] = -1
             else:
-                st.flags[e] = flags
+                fl_a[e] = flags
         # ---------------------------------------------------- station totals
         if any_in:
             inv = 1.0 / dt
-            out.station_T0[s, 0] = (cm * sFx - sm * sFy) * inv
-            out.station_T0[s, 1] = (sm * sFx + cm * sFy) * inv
-            out.station_T0[s, 2] = sFz * inv
-            out.station_T0[s, 3] = (cm * sMx - sm * sMy) * inv
-            out.station_T0[s, 4] = (sm * sMx + cm * sMy) * inv
-            out.station_T0[s, 5] = sMz * inv
-            st.st_written[s] = 2
+            sto[s, 0] = (cm * sFx - sm * sFy) * inv
+            sto[s, 1] = (sm * sFx + cm * sFy) * inv
+            sto[s, 2] = sFz * inv
+            sto[s, 3] = (cm * sMx - sm * sMy) * inv
+            sto[s, 4] = (sm * sMx + cm * sMy) * inv
+            sto[s, 5] = sMz * inv
+            written[s] = 2
             FTx += sFx
             FTy += sFy
             FTz += sFz
@@ -1710,21 +1830,21 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             MTz += sMz
             e_def += sFx * vuTx + sFy * vuTy + sFz * vuTz + sMx * vrTx + sMy * vrTy + sMz * vrTz
             sb = tool.st_sec[s]
-            if 0 <= sb < out.sec.shape[0]:
-                out.sec[sb, 0] += sFx
-                out.sec[sb, 1] += sFy
-                out.sec[sb, 2] += sFz
-                out.sec[sb, 3] += zst * sFx
-                out.sec[sb, 4] += zst * sFy
-                out.sec[sb, 5] += zst * sFz
-                out.sec[sb, 6] += sMx
-                out.sec[sb, 7] += sMy
-                out.sec[sb, 8] += sMz
-    for s in range(nst):
-        if st.st_written[s] == 2:
-            st.st_written[s] = 1
-        elif st.st_written[s] == 1:
-            st.st_written[s] = 0
+            if 0 <= sb < sec.shape[0]:
+                sec[sb, 0] += sFx
+                sec[sb, 1] += sFy
+                sec[sb, 2] += sFz
+                sec[sb, 3] += zst * sFx
+                sec[sb, 4] += zst * sFy
+                sec[sb, 5] += zst * sFz
+                sec[sb, 6] += sMx
+                sec[sb, 7] += sMy
+                sec[sb, 8] += sMz
+    for s in range(s_first, s_last + 1):
+        if written[s] == 2:
+            written[s] = 1
+        elif written[s] == 1:
+            written[s] = 0
     # the work's vibration velocity is part of vT above: its share of the force power is deflection work
     e_def -= FTx * vWx + FTy * vWy + FTz * vWz
     # ---------------------------------------------------- tooth ends, shocks, emission

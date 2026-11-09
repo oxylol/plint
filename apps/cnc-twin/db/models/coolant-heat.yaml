@@ -7,6 +7,9 @@ version: 1
 model: coolant-heat
 description: "Martin 1977 round jet, boiling curve (Rohsenow, Zuber, Ivey-Morris, Bromley, Berenson), zone temperatures"
 params:
+  # ---- the jet at the cutting engagement (cnctwin/coolant/engagement.py, docs/models/coolant.md 5.4)
+  wedge_moment_factor: {value: 2.0, unit: "-", src: oxley-1989-mechanics-of-machining, note: "contact length under a jet lifting the chip at the end of contact: l_c' = l_c / (1 + 2 F_w / N) from the chip's force and moment balance about the cutting edge with the rake normal stress falling linearly to zero at the end of contact (resultant at l_c / 3, zorev-1963-tool-face-shear); derivation in docs/models/coolant.md 5.4"}
+  wedge_min_contact_ratio: {value: 0.5, unit: "-", range: [0.3, 0.7], src: zorev-1963-tool-face-shear, note: "the jet cannot lift the chip off the sticking zone next to the edge, about half of the contact length (Zorev's distribution): l_c' >= 0.5 l_c"}
   martin_g_a: {value: 1.1, unit: "-", src: martin-1977-impinging-jets, note: "G = (D/r)(1 - a D/r)/(1 + b (H/D - h0) D/r)"}
   martin_g_b: {value: 0.1, unit: "-", src: martin-1977-impinging-jets}
   martin_g_h0: {value: 6.0, unit: "-", src: martin-1977-impinging-jets}

@@ -89,8 +89,9 @@ def table_value(obj, key: str, at_K: float = REFERENCE_TEMP_K):
         value = value.get("value")
     if value is None:
         return None
-    if callable(value) and hasattr(value, "x"):
-        return float(value(at_K))
+    inner = value.value if hasattr(value, "src") and hasattr(value, "value") else value   # a Sourced scalar or table
+    if callable(inner) and hasattr(inner, "x"):
+        return float(inner(at_K))
     try:
         return float(plain(value))
     except (TypeError, ValueError):

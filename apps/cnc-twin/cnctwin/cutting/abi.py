@@ -105,6 +105,42 @@ TC_PD_MAX_LEN = 16      # longest flank interference length of the process-dampi
 TC_N_ELEM = 17          # elements per tooth of the EdgeModel (flat index e = tooth * n_elem + elem)
 N_TC = 20
 
+# ------------------------------------------------------------------------------- CutTool.pk columns (additive)
+# The per-element constants of the force kernel packed into one row per element (built at L2 from the fields
+# above by pack_elements): the kernel reads one contiguous row instead of ~25 arrays (register pressure and
+# array-descriptor reloads were most of its cost, docs/performance.md "cut_step").
+PK_ALPHA0 = 0           # alpha0_rad
+PK_P = 1                # p_T_m (3)
+PK_N = 4                # n_T (3)
+PK_C = 7                # c_T (3)
+PK_DIR = 10             # dir_T (9): component j = t, r, a at PK_DIR + 3 j + (x, y, z)
+PK_ARM = 19             # arm_T (9), same order
+PK_DB = 28              # db_m
+PK_DS = 29              # dS_m
+PK_RXY = 30             # r_xy_m
+PK_NPXY = 31            # n_x p_x + n_y p_y (the memory stencil's chord correction along n)
+PK_PZR = 32             # p_z - z of the element's station (moment arm of the station rotation)
+PK_FLANK = 33           # flank_N (2): tangential, normal
+PK_PD = 35              # pd (4): K_sp dS, land, tan(clearance), friction
+PK_SIG_FLANK = 39       # sig_flank_Pa
+PK_RAKE = 40            # rake_rad
+PK_INCL = 41            # incl_rad
+PK_CHIP = 42            # chip_T (3)
+PK_EDGE_R = 45          # edge_radius_m
+PK_VB = 46              # VB_m
+N_PK = 48
+# CutTool.pki columns (int64)
+PKI_ROW = 0             # row
+PKI_TOOTH = 1           # tooth
+PKI_STATION = 2         # station
+PKI_READ = 3            # read_row
+PKI_WRITE = 4           # write_row
+PKI_KIND = 5            # kind
+PKI_FORMING = 6         # forming
+PKI_ELEM = 7            # elem
+PKI_AXIAL = 8           # 1: axial-normal edge (|n_z| > 0.7: end, corner bottom, wiper) - floor surface events
+N_PKI = 10
+
 # ------------------------------------------------------------------------------- CutState.flags bits
 FL_IN_CUT = 1           # the element was in cut (engaged and h > 0) at its last evaluation
 FL_VN_POS = 2           # its relative normal velocity was positive (moving into the material)
@@ -311,6 +347,9 @@ class CutTool(NamedTuple):
     sec_Zp_m3: np.ndarray       # [nsec] polar section modulus
     tooth_a0_rad: np.ndarray    # [nt] right-handed angle of each tooth's reference at spindle angle 0 (recut rows)
     scal: np.ndarray            # [N_TC]
+    pk: np.ndarray              # [n_valid, N_PK] the element constants above packed per element, rows in the order of
+                                #   st_elem (row k holds element st_elem[k]: the kernel streams through them; additive)
+    pki: np.ndarray             # [n_valid, N_PKI] int64 the element indices above, same rows (additive)
 
 
 class CutTable(NamedTuple):
@@ -473,7 +512,57 @@ def empty_tool(n: int = 1, nst: int = 1, nsec: int = 1) -> CutTool:
                    _f(n), _f(n), _f(n), _f(n), _i32(n), _i32(n), _i32(n), _i32(n), _i32(n), _i32(n), _i32(n), _i8(n),
                    _i8(n),
                    _f(n, 2), _f(n), _f(n, 4), _f(n), _f(n), _f(n, 3), _f(n), _f(n), _f(nst), _i32(nst + 1),
-                   _i32(n), _i32(nst), _i8(nst), _f(nsec), _f(nsec), _f(nsec), _f(1), _f(N_TC))
+                   _i32(n), _i32(nst), _i8(nst), _f(nsec), _f(nsec), _f(nsec), _f(1), _f(N_TC), _f(n, N_PK),
+                   np.zeros((n, N_PKI), np.int64))
+
+
+def pack_elements(tool) -> tuple[np.ndarray, np.ndarray]:
+    """(pk [n_valid, N_PK], pki [n_valid, N_PKI]) of a CutTool from its per-element fields: the kernel's packed rows,
+    in the order of the station lists st_elem (the element loop reads them consecutively)."""
+    n = int(tool.p_T_m.shape[0])
+    pk = np.zeros((n, N_PK))
+    pki = np.zeros((n, N_PKI), np.int64)
+    P = np.asarray(tool.p_T_m, float)
+    N = np.asarray(tool.n_T, float)
+    pk[:, PK_ALPHA0] = tool.alpha0_rad
+    pk[:, PK_P:PK_P + 3] = P
+    pk[:, PK_N:PK_N + 3] = N
+    pk[:, PK_C:PK_C + 3] = tool.c_T
+    pk[:, PK_DIR:PK_DIR + 9] = np.asarray(tool.dir_T, float).reshape(n, 9)
+    pk[:, PK_ARM:PK_ARM + 9] = np.asarray(tool.arm_T, float).reshape(n, 9)
+    pk[:, PK_DB] = tool.db_m
+    pk[:, PK_DS] = tool.dS_m
+    pk[:, PK_RXY] = tool.r_xy_m
+    pk[:, PK_NPXY] = N[:, 0] * P[:, 0] + N[:, 1] * P[:, 1]
+    nst = int(tool.st_z_m.shape[0])
+    station = np.asarray(tool.station, np.int64)
+    zst = np.asarray(tool.st_z_m, float)[np.clip(station, 0, max(nst - 1, 0))] if nst else np.zeros(n)
+    pk[:, PK_PZR] = P[:, 2] - zst
+    pk[:, PK_FLANK:PK_FLANK + 2] = tool.flank_N
+    pk[:, PK_PD:PK_PD + 4] = tool.pd
+    pk[:, PK_SIG_FLANK] = tool.sig_flank_Pa
+    pk[:, PK_RAKE] = tool.rake_rad
+    pk[:, PK_INCL] = tool.incl_rad
+    pk[:, PK_CHIP:PK_CHIP + 3] = tool.chip_T
+    pk[:, PK_EDGE_R] = tool.edge_radius_m
+    pk[:, PK_VB] = tool.VB_m
+    pki[:, PKI_ROW] = tool.row
+    pki[:, PKI_TOOTH] = tool.tooth
+    pki[:, PKI_STATION] = station
+    pki[:, PKI_READ] = tool.read_row
+    pki[:, PKI_WRITE] = tool.write_row
+    pki[:, PKI_KIND] = tool.kind
+    pki[:, PKI_FORMING] = tool.forming
+    pki[:, PKI_ELEM] = tool.elem
+    pki[:, PKI_AXIAL] = (np.abs(N[:, 2]) > 0.7).astype(np.int64)
+    order = np.asarray(tool.st_elem, np.int64)
+    return np.ascontiguousarray(pk[order]), np.ascontiguousarray(pki[order])
+
+
+def with_packed(tool):
+    """The tool with pk / pki rebuilt from its per-element fields (after any change of those fields)."""
+    pk, pki = pack_elements(tool)
+    return tool._replace(pk=pk, pki=pki)
 
 
 def memory_rows(tool: CutTool) -> int:
@@ -608,7 +697,7 @@ COEFF_T = numba.typeof(CoeffTable(_f(2), _f(1, 2, 3), _f(1, 3), _f(1, 2, 3), _f(
 __all__ = [name for name in dir() if name.isupper() or name in (
     "CutTool", "CutTable", "Refill", "StepPose", "Deflection", "CutOccupancy", "CutPacking", "AxisMap", "PolarView",
     "CutState", "CutAccum", "StepOut", "CutEvents", "empty_tool", "empty_table", "empty_memory", "empty_intervals",
-    "memory_rows", "row_station",
+    "memory_rows", "row_station", "pack_elements", "with_packed",
     "empty_refill", "identity_pose", "empty_deflection", "empty_occupancy", "empty_packing", "empty_axes",
     "empty_polar", "empty_state", "empty_accum", "empty_out", "core_accum", "empty_events", "is_kernel_layout",
     "Accum", "EventBuffer", "SurfaceMemory", "EngagedIntervals", "CoeffTable")]

@@ -8,7 +8,8 @@ starts), resolves the entry point and calls it:
   ``options["resume_from"]`` is the checkpoint marker ``.json`` when the run is resumed. After it returns with
   run.json written, the request's ``outputs_entry`` (cnctwin.core.outputs.finalize_outputs(run_dir, options,
   progress_cb)) makes the report, setup sheet, pictures, video and sound; its summary is the result's
-  ``outputs``.
+  ``outputs``. With ``request["cache"]`` the finished run is registered in the run cache (DATA_DIR/cache) when its
+  key (computed before the run) is unchanged; the result's ``cache`` says whether it was.
 * every other kind: ``entry(request, out_dir, progress_cb) -> dict`` (the request carries the
   paths and options of that kind; the returned dict is saved as the job's ``result.json``).
 
@@ -86,6 +87,7 @@ class Worker:
         self.run_dir = Path(self.request["run_dir"]) if self.kind == "simulate" else None
         self.last_write = 0.0
         self.thread: threading.Thread | None = None
+        self.cache_note: str | None = None
 
     # ------------------------------------------------------------------ the run
     def run(self) -> int:
@@ -101,8 +103,10 @@ class Worker:
                 options = dict(self.request.get("options") or {})
                 if self.request.get("resume_from"):
                     options["resume_from"] = self.request["resume_from"]
+                key = self._cache_key(options)
                 result = function(Path(self.request["project_path"]), self.run_dir, options, self.progress_cb)
                 result = self._outputs(options, result)
+                result = self._register(key, options, result)
             else:
                 out_dir = Path(self.request["out_dir"])
                 out_dir.mkdir(parents=True, exist_ok=True)
@@ -141,6 +145,36 @@ class Worker:
         except Exception as error:
             merged["outputs_error"] = {"type": type(error).__name__, "message": str(error),
                                        "traceback": traceback.format_exc(limit=30)}
+        return merged
+
+    def _cache_key(self, options: dict):
+        """The run's cache key before it runs (``request["cache"]``, set by POST /api/runs), or None: the finished
+        run is registered in DATA_DIR/cache when the key is the same afterwards (cnctwin.cache). A cache problem is
+        noted in the result and never fails the run."""
+        self.cache_note = None
+        if not self.request.get("cache"):
+            return None
+        try:
+            from ..cache import deterministic_environment, key_for
+            if not deterministic_environment():
+                self.cache_note = "not cached: the job does not run under the deterministic environment"
+                return None
+            return key_for(Path(self.request["project_path"]), options, runner=self.job["entry"])
+        except Exception as error:      # the run reports a project that does not resolve itself
+            self.cache_note = f"not cached: no key ({type(error).__name__}: {error})"
+            return None
+
+    def _register(self, key, options: dict, result):
+        if key is None and self.cache_note is None:
+            return result
+        merged = dict(result) if isinstance(result, dict) else {"run": result}
+        if key is None:
+            merged["cache"] = {"registered": False, "key": None, "note": self.cache_note}
+            return merged
+        from ..cache import RunCache, register_finished
+        from ..paths import data_dir
+        merged["cache"] = register_finished(Path(self.request["project_path"]), self.run_dir, options, key,
+                                            runner=self.job["entry"], cache=RunCache(data_dir() / "cache"))
         return merged
 
     def progress_cb(self, progress: dict | None = None, **fields) -> None:

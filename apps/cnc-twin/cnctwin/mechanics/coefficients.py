@@ -101,13 +101,19 @@ def default_tool_temp_grid(work_temp_K: float) -> np.ndarray:
 def build_process_map(work: WorkMaterial, tool: ToolSide | None, rake_rad: float, *, speed_grid_m_s,
                       work_temp_K: float = REFERENCE_TEMP_K, friction_factor: float = 1.0, t1_grid_m=None,
                       tool_temp_grid_K=None, adiabatic_tool: bool = False, coulomb_limit: bool | None = None,
-                      contact_width_m: float | None = None, contact_time_s: float | None = None) -> abi.ProcessMap:
+                      contact_width_m: float | None = None, contact_time_s: float | None = None,
+                      lazy: bool = False) -> abi.ProcessMap:
     """Oxley outputs on a (tool temperature, speed, t1) grid for one context (see module doc).
 
     ``adiabatic_tool`` (or no tool) gives a single tool-temperature node and Oxley's original
     assumption that all rake heat enters the chip. The interface condition follows
     :func:`cnctwin.mechanics.oxley.interface_coulomb` (Oxley's condition unless
-    ``coulomb_limit=True``)."""
+    ``coulomb_limit=True``).
+
+    ``lazy``: the fallback refinement of the nodes without an admissible Oxley solution (the expensive part: a
+    continuation per node in a row without any admissible node) is done per (tool temperature, speed) row when
+    :func:`lookup` first reads the row (:class:`LazyRefinement`); every node read has the value the eager map
+    gives it (same raw row, same edges), and rows never read cost nothing."""
     t1 = contiguous(default_t1_grid() if t1_grid_m is None else t1_grid_m, np.float64)
     speeds = contiguous(speed_grid_m_s, np.float64)
     adiabatic = adiabatic_tool or tool is None
@@ -123,12 +129,21 @@ def build_process_map(work: WorkMaterial, tool: ToolSide | None, rake_rad: float
                               contact_width_m=contact_width_m, contact_time_s=contact_time_s)
     values = np.zeros((ttool.shape[0], speeds.shape[0], t1.shape[0], abi.N_OUT))
     K.oxley_map(t1, speeds, ttool, float(rake_rad), float(work_temp_K), *inputs, values)
-    _refine_fallbacks(values, t1, speeds, ttool, float(rake_rad), float(work_temp_K), inputs, adiabatic)
     exponent = P.number(P.CONTACT, "zorev_exponent")
-    for idx in np.ndindex(values.shape[:3]):
-        vec = values[idx]
-        if vec[abi.OX_STATUS] in (abi.STATUS_OXLEY, abi.STATUS_MERCHANT):
-            vec[abi.OX_STICK] = zorev_split(vec[abi.OX_TAU_INT], vec[abi.OX_SIGMA_N], mu, exponent)[0]
+    refine = None
+    if lazy:
+        refine = LazyRefinement(t1, speeds, ttool, float(rake_rad), float(work_temp_K), inputs, adiabatic, mu,
+                                exponent, values)
+        for idx in np.ndindex(values.shape[:3]):
+            vec = values[idx]
+            if vec[abi.OX_STATUS] == abi.STATUS_OXLEY:
+                vec[abi.OX_STICK] = zorev_split(vec[abi.OX_TAU_INT], vec[abi.OX_SIGMA_N], mu, exponent)[0]
+    else:
+        _refine_fallbacks(values, t1, speeds, ttool, float(rake_rad), float(work_temp_K), inputs, adiabatic)
+        for idx in np.ndindex(values.shape[:3]):
+            vec = values[idx]
+            if vec[abi.OX_STATUS] in (abi.STATUS_OXLEY, abi.STATUS_MERCHANT):
+                vec[abi.OX_STICK] = zorev_split(vec[abi.OX_TAU_INT], vec[abi.OX_SIGMA_N], mu, exponent)[0]
     context = np.zeros(abi.N_CTX)
     context[abi.CTX_RAKE_RAD] = rake_rad
     context[abi.CTX_WORK_TEMP_K] = work_temp_K
@@ -137,7 +152,84 @@ def build_process_map(work: WorkMaterial, tool: ToolSide | None, rake_rad: float
     context[abi.CTX_CONTACT_WIDTH_M] = contact_width_m or 0.0
     context[abi.CTX_CONTACT_TIME_S] = contact_time_s or 0.0
     context[abi.CTX_COULOMB] = 1.0 if coulomb else 0.0
-    return abi.ProcessMap(t1, speeds, ttool, values, context)
+    return abi.ProcessMap(t1, speeds, ttool, values, context, refine)
+
+
+class LazyRefinement:
+    """Fallback refinement of a lazily built process map, row by row (see build_process_map ``lazy``): the raw
+    admissibility of every row is kept, so a row refined later gets exactly the values of the eager refinement."""
+
+    def __init__(self, t1, speeds, ttool, rake_rad, work_temp_K, inputs, adiabatic, mu, exponent, values):
+        self.t1 = t1
+        self.speeds = speeds
+        self.ttool = ttool
+        self.rake_rad = rake_rad
+        self.work_temp_K = work_temp_K
+        self.inputs = inputs
+        self.adiabatic = adiabatic
+        self.mu = mu
+        self.exponent = exponent
+        self.done = np.zeros(values.shape[:2], bool)
+        self.done |= np.all(values[..., abi.OX_STATUS] == abi.STATUS_OXLEY, axis=2)
+
+    def rows(self, values, it_: int, iv: int) -> None:
+        """Refine row (it_, iv) of ``values`` (the map's own array) if not done yet."""
+        if self.done[it_, iv]:
+            return
+        row = values[it_:it_ + 1, iv:iv + 1]
+        _refine_fallbacks(row, self.t1, self.speeds[iv:iv + 1], self.ttool[it_:it_ + 1], self.rake_rad,
+                          self.work_temp_K, self.inputs, self.adiabatic)
+        for ih in range(row.shape[2]):
+            vec = row[0, 0, ih]
+            if vec[abi.OX_STATUS] in (abi.STATUS_OXLEY, abi.STATUS_MERCHANT):
+                vec[abi.OX_STICK] = zorev_split(vec[abi.OX_TAU_INT], vec[abi.OX_SIGMA_N], self.mu, self.exponent)[0]
+        self.done[it_, iv] = True
+
+
+def _bracket_log(grid: np.ndarray, x: float) -> tuple[int, int]:
+    """The two nodes map_lookup interpolates between in log x (its index rule)."""
+    n = grid.shape[0]
+    if n <= 1:
+        return 0, 0
+    lx = math.log(x) if x > 0.0 else -1e300
+    if lx <= math.log(grid[0]):
+        return 0, 1
+    if lx >= math.log(grid[n - 1]):
+        return n - 2, n - 1
+    i = 0
+    while i < n - 2 and math.log(grid[i + 1]) <= lx:
+        i += 1
+    return i, i + 1
+
+
+def _bracket_lin(grid: np.ndarray, x: float) -> tuple[int, int]:
+    n = grid.shape[0]
+    if n <= 1:
+        return 0, 0
+    if x <= grid[0]:
+        return 0, 1
+    if x >= grid[n - 1]:
+        return n - 2, n - 1
+    i = 0
+    while i < n - 2 and grid[i + 1] <= x:
+        i += 1
+    return i, i + 1
+
+
+def ensure_refined(pmap: abi.ProcessMap, speed_m_s: float | None = None, tool_temp_K: float | None = None) -> None:
+    """Refine the rows of a lazy map that a lookup at (speed, tool temperature) reads (all rows when None)."""
+    lz = pmap.refine
+    if lz is None:
+        return
+    if speed_m_s is None:
+        for it_ in range(pmap.values.shape[0]):
+            for iv in range(pmap.values.shape[1]):
+                lz.rows(pmap.values, it_, iv)
+        return
+    t_tool = float(pmap.Ttool_grid_K[0] if tool_temp_K is None else tool_temp_K)
+    for it_ in sorted(set(_bracket_lin(pmap.Ttool_grid_K, t_tool))):
+        for iv in sorted(set(_bracket_log(pmap.speed_grid_m_s, float(speed_m_s)))):
+            lz.rows(pmap.values, it_, iv)
 
 
 def _refine_fallbacks(values, t1, speeds, ttool, rake_rad, work_temp_K, inputs, adiabatic) -> None:
@@ -171,7 +263,8 @@ def _refine_fallbacks(values, t1, speeds, ttool, rake_rad, work_temp_K, inputs, 
                 left = next((j for j in range(ih - 1, -1, -1) if ok[j]), None)
                 right = next((j for j in range(ih + 1, n_h) if ok[j]), None)
                 if left is None and right is None:
-                    found = continuation_reference(case, node_inputs)
+                    # the row's own nodes are solved and inadmissible: thickness trials next to them are not repeated
+                    found = continuation_reference(case, node_inputs, inadmissible_t1=t1)
                     if found is not None:
                         values[it_, iv, ih] = merchant_from(case, node_inputs, found[0])
                     continue
@@ -216,6 +309,7 @@ def lookup(pmap: abi.ProcessMap, t1_m, speed_m_s: float, tool_temp_K: float | No
     """Output vectors (abi.OX_*) at each t1 for one speed and tool temperature: [n, N_OUT]."""
     query = contiguous(np.atleast_1d(np.asarray(t1_m, dtype=float)), np.float64)
     out = np.zeros((query.shape[0], abi.N_OUT))
+    ensure_refined(pmap, speed_m_s, tool_temp_K)
     t_tool = float(pmap.Ttool_grid_K[0] if tool_temp_K is None else tool_temp_K)
     K.map_lookup(pmap.t1_grid_m, pmap.speed_grid_m_s, pmap.Ttool_grid_K, pmap.values, _SCALED, _DISCRETE, query,
                  float(speed_m_s), t_tool, out)
@@ -691,6 +785,7 @@ def _oblique_shearing_forces(rows: np.ndarray, t1: np.ndarray, shearing: np.ndar
 
 
 def _first_positive(pmap: abi.ProcessMap, slot: int) -> float:
+    ensure_refined(pmap)
     vals = pmap.values[..., slot]
     pos = vals[vals > 0.0]
     return float(pos[0]) if pos.size else 0.0

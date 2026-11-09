@@ -31,7 +31,7 @@ import numpy as np
 from numba import njit, types
 
 from ..core.abi import ACC_DAMPING_J, ACC_PROCESS_DAMPING_J, ACC_UNBALANCE_WORK_J
-from .abi import (ACCUM_T, AXES_T, BASE_LINEAR, DA_DAMPING_J, DA_ENERGY_MAX_J, DA_FORCE_MAX_N, DA_N_FREE, DA_N_L0,
+from .abi import (ACCUM_T, ACT_HI, ACT_LO, ACT_LOAD_HI, ACT_LOAD_LO, ACT_PREV_HI, ACT_PREV_LO, AXES_T, BASE_LINEAR, DA_DAMPING_J, DA_ENERGY_MAX_J, DA_FORCE_MAX_N, DA_N_FREE, DA_N_L0,
                   DA_UMAX_X, DA_UMIN_X, DA_W_BASE_J, DA_W_CUT_J, DA_W_CUT_QUAD_J, DA_W_UNB_J, DEFL_T, FL_CONTACT,
                   FL_HISTORY, FL_STEP_ERROR, FL_STEP_SEEN, GRID_T, KIND_WORK, MI_HAS_TOOL_RES, MI_HAS_WORK_RES,
                   MI_L0_TICKS, MI_REF_STATION, MI_RELAX, MS_TICK_S, N_TU, RING_T, SC_OMEGA, SYSTEM_T)
@@ -297,22 +297,36 @@ def modal_predict(sys):
 
 
 # =============================================================================== deflections
-@njit(types.void(F2, F3, F2, I1B, I4, F2, F2, F2, F1, I8V, F2, F2, F1, F1), **INLINE)
+@njit(types.UniTuple(i8, 2)(I8V, i8), **INLINE)
+def station_range(act, nst):
+    """First and last station (inclusive) of the step from DynSystem.act (every station when unset)."""
+    lo = act[ACT_LO]
+    hi = act[ACT_HI]
+    if lo < 0:
+        return 0, nst - 1
+    if hi > nst - 1:
+        hi = nst - 1
+    return lo, hi
+
+
+@njit(types.void(F2, F3, F2, I1B, I4, F2, F2, F2, F1, I8V, F2, F2, F1, F1, i8, i8), **INLINE)
 def _deflection(x, tool_shape, work_shape, is_work, row, residual, st_force, res_work, work_force, iscal, u_st, v_st,
-                u_work, v_work):
-    """Modal + residual deflections of state x (tool stations from tool and machine modes, the workpiece at the
-    contact from the work modes); the residual flexibilities use the last evaluated wrenches."""
+                u_work, v_work, lo, hi):
+    """Modal + residual deflections of state x at stations lo..hi (tool stations from tool and machine modes, the
+    workpiece at the contact from the work modes); the residual flexibilities use the last evaluated wrenches
+    (non-zero only at the stations of the previous step)."""
     nst = u_st.shape[0]
     ns = tool_shape.shape[1]
     nm = x.shape[0]
-    for s in range(nst):
+    hi_s = hi if hi < nst - 1 else nst - 1
+    for s in range(lo, hi_s + 1):
         for c in range(6):
             u_st[s, c] = 0.0
             v_st[s, c] = 0.0
     for c in range(3):
         u_work[c] = 0.0
         v_work[c] = 0.0
-    nsm = ns if ns < nst else nst
+    hi_m = hi_s if hi_s < ns - 1 else ns - 1
     for k in range(nm):
         q = x[k, 0]
         v = x[k, 1]
@@ -325,7 +339,7 @@ def _deflection(x, tool_shape, work_shape, is_work, row, residual, st_force, res
             continue
         if r < 0 or r >= tool_shape.shape[0] or (q == 0.0 and v == 0.0):
             continue
-        for s in range(nsm):
+        for s in range(lo, hi_m + 1):
             for c in range(6):
                 phi = tool_shape[r, s, c]
                 u_st[s, c] += phi * q
@@ -333,13 +347,14 @@ def _deflection(x, tool_shape, work_shape, is_work, row, residual, st_force, res
     if iscal[MI_HAS_TOOL_RES] != 0:
         nres = residual.shape[0] // 3
         lim = nres if nres < nst else nst
+        a_hi = hi_s if hi_s < lim - 1 else lim - 1
         for b in range(lim):
             fb0 = st_force[b, 0]
             fb1 = st_force[b, 1]
             fb2 = st_force[b, 2]
             if fb0 == 0.0 and fb1 == 0.0 and fb2 == 0.0:
                 continue
-            for a in range(lim):
+            for a in range(lo, a_hi + 1):
                 for ca in range(3):
                     rr = 3 * a + ca
                     u_st[a, ca] += residual[rr, 3 * b] * fb0 + residual[rr, 3 * b + 1] * fb1 \
@@ -353,10 +368,12 @@ def _deflection(x, tool_shape, work_shape, is_work, row, residual, st_force, res
 def modal_deflection(sys):
     """Deflections at the predicted state sys.xp into sys.defl: tool stations u, v (dx dy dz rx ry rz, T0) from
     tool_shape rows (tool and machine modes) plus the tool residual flexibility times the last station forces;
-    the workpiece at the contact (S) from the work modes plus its residual compliance times the reaction."""
+    the workpiece at the contact (S) from the work modes plus its residual compliance times the reaction. Only
+    the stations of sys.act (all when unset) are computed; the others keep their values."""
+    lo, hi = station_range(sys.act, sys.defl.u_st_T0_m.shape[0])
     _deflection(sys.xp, sys.model.tool_shape, sys.model.work_shape_at_contact, sys.model.is_work, sys.dm.row,
                 sys.model.static_residual, sys.ds.st_force, sys.dm.res_work_S, sys.ds.work_force_S, sys.dm.iscal,
-                sys.defl.u_st_T0_m, sys.defl.v_st_T0_m_s, sys.defl.u_work_S_m, sys.defl.v_work_S_m_s)
+                sys.defl.u_st_T0_m, sys.defl.v_st_T0_m_s, sys.defl.u_work_S_m, sys.defl.v_work_S_m_s, lo, hi)
 
 
 @njit(types.void(SYSTEM_T, f8, f8, f8, F1), **OPTS)
@@ -420,7 +437,8 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
     (tool and machine modes), -phi_w . F_S (work modes); relaxed correction df = relax (f_x - f*_cut);
     x_(n+1) = x* + G1 df. Energy integrals of the step are exact for the first-order-hold force path
     (DynModel.gram_D / gram_W); structural damping goes to acc[ACC_DAMPING_J], the work of unbalance and base
-    excitation to acc[ACC_UNBALANCE_WORK_J] (positive: into the modes)."""
+    excitation to acc[ACC_UNBALANCE_WORK_J] (positive: into the modes). The wrenches are read for the stations
+    of sys.act only (zero elsewhere: the caller's engaged stations with their neighbours)."""
     tool_shape = sys.model.tool_shape
     work_shape = sys.model.work_shape_at_contact
     is_work = sys.model.is_work
@@ -455,20 +473,37 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
     hist = flags[FL_HISTORY] != 0
     ns = tool_shape.shape[1]
     nsm = ns if ns < nst else nst
-    # ---- modal projection of the evaluated wrenches; fx becomes the predictor miss f_x - f*_cut
+    act = sys.act
+    s_lo, s_hi = station_range(act, nst)
+    if act[ACT_LO] >= 0 and act[ACT_LOAD_LO] >= 0:
+        # only the engaged stations can carry a load (the range's margins are for the deflections)
+        s_lo = max(s_lo, act[ACT_LOAD_LO])
+        s_hi = min(s_hi, act[ACT_LOAD_HI])
+    if s_hi > nsm - 1:
+        s_hi = nsm - 1
+    # ---- modal projection of the evaluated wrenches; fx becomes the predictor miss f_x - f*_cut. The station sums of
+    # all tool / machine modes run side by side (the modes inner): each mode's sum keeps its order over the stations
+    # and components (the same result), and the modes' addition chains no longer wait for each other
     inv_dt = 1.0 / dt
     w_quad = 0.0
+    n_rows = tool_shape.shape[0]
+    for k in range(nm):
+        fx_arr[k] = 0.0
+    for s in range(s_lo, s_hi + 1):
+        for c in range(6):
+            w_sc = station_T0[s, c]
+            for k in range(nm):
+                r = row[k]
+                if is_work[k] != KIND_WORK and 0 <= r < n_rows:
+                    fx_arr[k] += tool_shape[r, s, c] * w_sc
     for k in range(nm):
         r = row[k]
-        fx = 0.0
+        fx = fx_arr[k]
         if is_work[k] == KIND_WORK:
+            fx = 0.0
             if 0 <= r < work_shape.shape[0]:
                 fx = -(work_shape[r, 0] * force_S_N[0] + work_shape[r, 1] * force_S_N[1]
                        + work_shape[r, 2] * force_S_N[2])
-        elif 0 <= r < tool_shape.shape[0]:
-            for s in range(nsm):
-                for c in range(6):
-                    fx += tool_shape[r, s, c] * station_T0[s, c]
         w_quad += fx * xp[k, 1] * dt
         fstar = 2.0 * f_cut[k] - f_cut_prev[k] if hist else f_cut[k]
         fx_arr[k] = fx - fstar
@@ -522,9 +557,17 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
     flags[FL_HISTORY] = 1
     flags[FL_CONTACT] = 1
     node[0] = tick
-    for s in range(st_force.shape[0]):
+    if act[ACT_LO] < 0 or act[ACT_PREV_LO] < 0:
+        c_lo = 0
+        c_hi = st_force.shape[0] - 1
+    else:
+        c_lo = min(act[ACT_LO], act[ACT_PREV_LO])
+        c_hi = min(max(act[ACT_HI], act[ACT_PREV_HI]), st_force.shape[0] - 1)
+    for s in range(c_lo, c_hi + 1):
         for c in range(6):
             st_force[s, c] = station_T0[s, c] if s < nst else 0.0
+    act[ACT_PREV_LO] = act[ACT_LO]
+    act[ACT_PREV_HI] = act[ACT_HI]
     for c in range(3):
         work_force[c] = force_S_N[c]
     da[DA_W_CUT_J] += w_cut
@@ -558,7 +601,7 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
     if iscal[MI_HAS_TOOL_RES] != 0:
         nres = residual.shape[0] // 3
         if 0 <= ref < nres:
-            for b in range(min(nres, nst)):
+            for b in range(s_lo, min(nres, nst, s_hi + 1)):
                 fb0 = station_T0[b, 0]
                 fb1 = station_T0[b, 1]
                 fb2 = station_T0[b, 2]

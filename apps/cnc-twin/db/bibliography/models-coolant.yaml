@@ -292,3 +292,28 @@ entries:
     publisher: "Arnold, London"
     year: 2000
     pages: "ch. 2-3: chip-tool contact length of continuous chips of the order of one to a few chip thicknesses"
+
+  # ---- the jet at the cutting engagement (cnctwin/coolant/engagement.py, docs/models/coolant.md 5.4)
+  mazurkiewicz-1989-hpwj-machining:
+    type: article
+    authors: "Mazurkiewicz, M.; Kubala, Z.; Chow, J."
+    title: "Metal machining with high-pressure water-jet cooling assistance - a new possibility"
+    venue: "Journal of Engineering for Industry 111(1), 7-12"
+    year: 1989
+    note: "A high-pressure jet directed into the gap between chip and rake face shortens the tool-chip contact (hydraulic wedge)."
+
+  kaminski-alvelid-2000-water-jet-turning:
+    type: article
+    authors: "Kaminski, J.; Alvelid, B."
+    title: "Temperature reduction in the cutting zone in water-jet assisted turning"
+    venue: "Journal of Materials Processing Technology 106(1-3), 68-73"
+    year: 2000
+    note: "The jet lifts the chip and reduces the contact length and the cutting-zone temperature."
+
+  goldstein-franchett-1988-oblique-jet:
+    type: article
+    authors: "Goldstein, R.J.; Franchett, M.E."
+    title: "Heat transfer from a flat surface to an oblique impinging jet"
+    venue: "Journal of Heat Transfer 110(1), 84-90"
+    year: 1988
+    note: "The heat transfer of an inclined jet falls with the inclination; the stagnation region shifts toward the jet's upstream side."

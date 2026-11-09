@@ -188,18 +188,27 @@ class OrthogonalResult:
         return zorev_split(self.interface_shear_Pa, self.interface_normal_Pa, mu, a)
 
 
-def continuation_reference(case: np.ndarray, inputs: KernelInputs) -> tuple[np.ndarray, str] | None:
+def continuation_reference(case: np.ndarray, inputs: KernelInputs,
+                           inadmissible_t1: np.ndarray | None = None) -> tuple[np.ndarray, str] | None:
     """The admissible Oxley state at the edge of the theory's validity nearest to a condition
     that has no admissible solution: thinner and thicker cuts at the same speed are tried first,
     then lower and higher speeds at the same thickness (steps of mechanics-oxley fallback_*,
     smaller steps first, lower before higher); between the first admissible trial and the
     inadmissible one before it the boundary is located by bisection in log t1 or log V
     (``fallback_bisection_steps``), so the reference does not depend on the step size or on a
-    map's grid. Returns (output vector, description) or None when no trial is admissible."""
+    map's grid. Returns (output vector, description) or None when no trial is admissible.
+
+    ``inadmissible_t1``: chip thicknesses already solved without an admissible solution at this case's speed and
+    tool temperature (a process map's row). A thickness trial closer to one of them than the precision the boundary
+    is located to (fallback_t1_ratio^(1 / 2^bisections)) is known inadmissible and not solved again."""
     ox = P.get(P.OXLEY)
     plan = ((0, float(ox["fallback_t1_ratio"]), int(ox["fallback_t1_steps"]), "t1"),
             (1, float(ox["fallback_speed_ratio"]), int(ox["fallback_speed_steps"]), "V"))
     n_bisect = int(ox["fallback_bisection_steps"])
+    known = None
+    if inadmissible_t1 is not None and len(inadmissible_t1):
+        known = np.log(np.sort(np.asarray(inadmissible_t1, float)))
+        near = math.log(float(ox["fallback_t1_ratio"])) / (2.0 ** n_bisect)
     out = np.zeros(abi.N_OUT)
     trial = np.array(case, dtype=np.float64)
     for axis, ratio, steps, name in plan:
@@ -207,6 +216,11 @@ def continuation_reference(case: np.ndarray, inputs: KernelInputs) -> tuple[np.n
             for sign in (-1.0, 1.0):
                 trial[:] = case
                 trial[axis] = case[axis] * ratio ** (sign * k)
+                if axis == 0 and known is not None:
+                    lt = math.log(trial[0])
+                    i = int(np.searchsorted(known, lt))
+                    if (i < known.shape[0] and known[i] - lt <= near) or (i > 0 and lt - known[i - 1] <= near):
+                        continue
                 K.oxley_point(trial, *inputs, out)
                 if out[abi.OX_STATUS] != abi.STATUS_OXLEY:
                     continue

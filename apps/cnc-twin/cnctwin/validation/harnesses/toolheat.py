@@ -2,15 +2,14 @@
 
 The body is thermal's own tool ladder (``cnctwin.thermal.toolmodel.ToolThermal``, a turning insert on
 its holder bar: 1-D finite volumes along the insert, seat contact, the clamped bar to the turret,
-air convection and radiation), stepped with the contact's tool heat from :mod:`contact` at the
-body temperature of the first insert node (the coefficient pipeline's rake partition takes the
-body temperature at the edge, without the local field). The temperature at a point near the edge is
-composed as thermal's edge model composes it (docs/models/thermal.md 2.2): the body temperature at
-the point's distance from the corner plus the local field of the rake and flank contact sources on a
-quarter space (``cnctwin.thermal.kernels.moving_rect_rise`` at v = 0, the source mirrored across the
-other face), times the wedge factor (pi/2)/beta, minus the far field the body already holds,
-P / (pi k r_far) erfc(r_far / 2 sqrt(alpha t)) with r_far = 2 max(l_c, l_f, edge element width)
-(``physics.edge_element_mm`` of the project template); never below the body temperature.
+air convection and radiation) with its 3-D cutting-region field (docs/models/thermal.md 2.4, built at the
+first contact): the contact's rake and flank heat from :mod:`contact` is deposited as two contact patches
+(``ToolThermal.deposit_contact``, the wedge angle beta = pi/2 - rake - clearance and the edge radius of the
+case) and the ladder and field are stepped together; the coefficient pipeline's partition takes the body
+temperature of the first insert node. The temperature at a point near the edge is the field's
+(``ToolThermal.temperature_at`` in the edge frame: x along the rake face from the edge, y along the edge with
+the contact on [0, width], z the rake face's outward normal; points outside the field take the nearest cell).
+``local_rise`` keeps the analytic quarter-space composition (docs/models/thermal.md 2.2) for reference.
 """
 
 from __future__ import annotations

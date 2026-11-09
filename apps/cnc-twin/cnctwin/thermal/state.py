@@ -55,6 +55,7 @@ class ThermalState:
     op_index: int = 0
     fixture_mass_kg: float = 0.0
     trace_notes: dict = field(default_factory=dict)     # what was already written to the trace once
+    spindle_pending: dict = field(default_factory=dict)  # spindle id -> {n, dt, heat_J, omega}: not yet stepped
 
     def tool_temperature_at(self, slot: int, points_T) -> np.ndarray:
         """Tool temperatures (K) at points [n, 3] of the tool frame T of a slot (rotating tools at spindle
@@ -80,7 +81,10 @@ class ThermalState:
                       "fixture_mass_kg": self.fixture_mass_kg, "trace_notes": dict(sorted(self.trace_notes.items())),
                       "tools": [], "works": [], "fractions": [], "published": [],
                       "spindles": [m.to_dict() for _, m in sorted(self.spindles.items())],
-                      "axes": [m.to_dict() for _, m in sorted(self.axes.items())]}
+                      "axes": [m.to_dict() for _, m in sorted(self.axes.items())],
+                      "spindle_pending": {sid: {"n": int(v["n"]), "dt": _f(v["dt"]), "heat_J": _f(v["heat_J"]),
+                                                "omega": [_f(w) for w in v["omega"]]}
+                                          for sid, v in sorted(self.spindle_pending.items())}}
         for name in MatTable._fields:
             arrays[f"material.{name}"] = np.array(getattr(self.material, name))
         for slot, tool in sorted(self.tools.items()):
@@ -131,4 +135,7 @@ class ThermalState:
             obj.published[int(w)] = np.array(arrays[f"pub.{w}"])
         obj.spindles = {d["sid"]: SpindleThermal.from_dict(d) for d in meta["spindles"]}
         obj.axes = {d["name"]: AxisThermal.from_dict(d) for d in meta["axes"]}
+        obj.spindle_pending = {str(sid): {"n": int(v["n"]), "dt": float(v["dt"]), "heat_J": float(v["heat_J"]),
+                                          "omega": [float(w) for w in v["omega"]]}
+                               for sid, v in sorted((meta.get("spindle_pending") or {}).items())}
         return obj

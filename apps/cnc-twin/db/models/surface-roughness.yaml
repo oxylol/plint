@@ -51,7 +51,7 @@ params:
     value: 0.0
     unit: "-"
     src: brammertz-1961-roughness
-    note: "0: the layer thinner than h_min stays and anything thicker is removed (Brammertz's rule behind R_t = f^2/8r + h_min/2 (1 + r h_min / f^2), validated in grzesik-1996-roughness); cutting's surface memory uses a linear share between h_min and 2 h_min for the forces (docs/models/cutting.md), which would raise the simulated peaks by up to h_min"
+    note: "0: anything at least h_min thick is removed and a thinner layer is ploughed (pressed to the pass, its volume moved by side flow into the free space under the pass, or left in place where there is none: docs/models/surface.md 2), which keeps Brammertz's R_t = f^2/8r + h_min/2 (1 + r h_min / f^2) (validated in grzesik-1996-roughness); cutting's surface memory uses a linear share between h_min and 2 h_min for the forces (docs/models/cutting.md), which would raise the simulated peaks by up to h_min"
   bue_overcut_ratio:
     value: 0.5
     unit: "-"
