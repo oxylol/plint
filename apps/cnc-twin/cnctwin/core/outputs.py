@@ -1071,7 +1071,10 @@ GENERATOR_FUNCTIONS = {"images": generate_images, "video": generate_video, "audi
 
 
 def cap_memory(limit: int) -> None:
-    """RLIMIT_DATA (else RLIMIT_AS) of this process (rlimit mode: before anything large is imported)."""
+    """RLIMIT_DATA (else RLIMIT_AS) of this process (rlimit mode: before anything large is imported), after
+    :func:`warm_blas` (every rlimit-capped process of the twin caps itself here: generators, API jobs, sweep
+    points, bench children)."""
+    warm_blas()
     import resource
     for name in ("RLIMIT_DATA", "RLIMIT_AS"):
         kind = getattr(resource, name, None)
@@ -1130,12 +1133,11 @@ def _traceback_text() -> str:
 
 def generator_main(name: str, run_dir: str, settings_path: str, result_path: str, mode: str, cap: int) -> int:
     """The generator subprocess: cap the memory (rlimit mode) before anything large is imported (only NumPy, whose
-    BLAS buffer :func:`warm_blas` maps first), lower the priority, run the generator, write its result (or its
+    BLAS buffer :func:`cap_memory` maps first), lower the priority, run the generator, write its result (or its
     error) as JSON."""
     import resource  # noqa: F401 (usage() reads it, also after a MemoryError)
     from .rundir import write_json_atomic       # before the cap: the error record must still be writable
     if mode == "rlimit":
-        warm_blas()
         cap_memory(int(cap))
     settings = json.loads(Path(settings_path).read_text(encoding="utf-8"))
     record: dict

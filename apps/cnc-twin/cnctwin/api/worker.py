@@ -48,18 +48,8 @@ def _apply_memory_cap(job: dict) -> None:
     limit = int(job.get("memory_bytes") or 0)
     if memory != "rlimit" or limit <= 0:
         return
-    import resource
-    for name in ("RLIMIT_DATA", "RLIMIT_AS"):
-        kind = getattr(resource, name, None)
-        if kind is None:
-            continue
-        soft, hard = resource.getrlimit(kind)
-        cap = limit if hard == resource.RLIM_INFINITY else min(limit, hard)
-        try:
-            resource.setrlimit(kind, (cap, cap))
-            return
-        except (ValueError, OSError):
-            continue
+    from ..core.outputs import cap_memory       # maps the BLAS buffer first: OpenBLAS spins on a failed map
+    cap_memory(limit)
 
 
 def _jsonable(value):

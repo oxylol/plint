@@ -36,19 +36,8 @@ VERSION = 1
 def _apply_memory_cap(job: dict) -> None:
     if job.get("memory_mode") != "rlimit" or not int(job.get("memory_bytes") or 0):
         return
-    import resource
-    limit = int(job["memory_bytes"])
-    for name in ("RLIMIT_DATA", "RLIMIT_AS"):
-        kind = getattr(resource, name, None)
-        if kind is None:
-            continue
-        soft, hard = resource.getrlimit(kind)
-        cap = limit if hard == resource.RLIM_INFINITY else min(limit, hard)
-        try:
-            resource.setrlimit(kind, (cap, cap))
-            return
-        except (ValueError, OSError):
-            continue
+    from ..core.outputs import cap_memory       # maps the BLAS buffer first: OpenBLAS spins on a failed map
+    cap_memory(int(job["memory_bytes"]))
 
 
 def _watch_stdin() -> None:
