@@ -39,6 +39,19 @@ FEED_GRID_M = tuple(np.round(np.geomspace(0.04e-3, 0.8e-3, 24), 9))
 DEPTH_GRID_M = tuple(np.round(np.geomspace(0.25e-3, 8e-3, 24), 9))
 
 
+def seat_and_breaker(db, item_id: str) -> tuple[float, float, float]:
+    """(seat normal rake at the major edge, seat inclination, chip-breaker rake) of a database turning insert by the
+    twin's own rule: tooling.turning's holder seat (the holder's stated rake and inclination, else the negative-holder
+    defaults for a negative insert) and the breaker's land rake, which tooling adds normal to every edge."""
+    from ...tooling.inserts import chip_breaker_rake, insert_clearance
+    from ...tooling.spec import read_tool, sub
+    from ...tooling.turning import _holder_seat
+    spec = read_tool(db.tool(item_id), item_id)
+    insert = sub(spec.geometry, "insert")
+    seat, incl = _holder_seat(spec, sub(spec.geometry, "holder"), insert_clearance(spec, insert))
+    return float(seat), float(incl), float(chip_breaker_rake(insert))
+
+
 class _Chips:
     def __init__(self, db, case, col: H.Collector, *, coolant: bool):
         self.case = case
@@ -66,12 +79,18 @@ class _Chips:
                        "not in the database", "db/tools")
         friction = self.work.friction_for(self.tool.tool_class, self.tool.coating)
         H.material_provenance(self.raw, col, friction_entry=friction)
-        self.rake = (self.tool.chip_breaker.rake_rad if self.tool.chip_breaker is not None and
-                     self.tool.chip_breaker.rake_rad is not None else HOLDER_RAKE_DEG * H.DEG)
-        if self.tool.chip_breaker is None or self.tool.chip_breaker.rake_rad is None:
+        if item_id is not None:
+            seat, self.incl, breaker = seat_and_breaker(db, item_id)
+            self.rake = seat + breaker
+            col.assume("rake and inclination", f"{math.degrees(self.rake):+.3g} / {math.degrees(self.incl):.3g} deg "
+                       f"working (seat {math.degrees(seat):+.3g} deg + chip breaker {math.degrees(breaker):+.3g} deg)",
+                       "as the twin builds the insert in its holder (tooling.turning: the holder's stated seat, else "
+                       "the negative-holder defaults; the element's normal rake is seat + breaker)", "db/tools")
+        else:
+            self.rake = HOLDER_RAKE_DEG * H.DEG
+            self.incl = HOLDER_INCL_DEG * H.DEG
             col.assume("rake and inclination", f"{HOLDER_RAKE_DEG:g} / {HOLDER_INCL_DEG:g} deg", "not stated: a "
                        "negative ISO holder for a negative insert", "est")
-        self.incl = HOLDER_INCL_DEG * H.DEG
         kappa = case.value("tool", "entering_angle_deg")
         self.kappa = (float(kappa) if isinstance(kappa, (int, float)) else 95.0) * H.DEG
         if not isinstance(kappa, (int, float)):
