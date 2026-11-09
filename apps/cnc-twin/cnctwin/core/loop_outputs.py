@@ -86,6 +86,16 @@ def _tool_mesh(state, slot: int):
     return revolved_mesh(z, r, closed=False, chordal_tol_m=2.0e-5, name=f"tool_{slot}")
 
 
+def box_mesh(lo, hi) -> tuple[np.ndarray, np.ndarray]:
+    """(vertices [8, 3], faces [12, 3]) of the axis-aligned box [lo, hi], faces counter-clockwise from outside."""
+    lo, hi = np.asarray(lo, float), np.asarray(hi, float)
+    V = np.array([[lo[0], lo[1], lo[2]], [hi[0], lo[1], lo[2]], [hi[0], hi[1], lo[2]], [lo[0], hi[1], lo[2]],
+                  [lo[0], lo[1], hi[2]], [hi[0], lo[1], hi[2]], [hi[0], hi[1], hi[2]], [lo[0], hi[1], hi[2]]])
+    F = np.array([[0, 2, 1], [0, 3, 2], [4, 5, 6], [4, 6, 7], [0, 1, 5], [0, 5, 4], [1, 2, 6], [1, 6, 5],
+                  [2, 3, 7], [2, 7, 6], [3, 0, 4], [3, 4, 7]], np.int64)
+    return V, F
+
+
 def write_scene(run) -> None:
     """scene.json + scene/*.glb: the stock as set up (S), the fixture bodies of every operation (S), every rotating
     tool's envelope (T), gravity, the frames.bin header and the keyframe brick layout (architecture 16)."""
@@ -98,10 +108,16 @@ def write_scene(run) -> None:
     writer = SceneWriter(ctx.run_dir)
     wp = state.removal.workpieces[0]
     stock_rel = None
-    stock = RM.mesh_level(wp.field)
-    if len(stock.faces):
-        stock_rel = writer.add_mesh("stock", (np.asarray(stock.vertices), np.asarray(stock.faces)),
-                                    color_rgba=(0.72, 0.74, 0.76, 1.0), quantize=True)
+    size = [float(v) for v in (getattr(project.stock, "size_m", None) or [])]
+    if str(getattr(project.stock, "kind", "") or "") == "block" and len(size) == 3:
+        # the block as removal builds it (S from 0 to its size): exact in 12 triangles, where the field's own
+        # mesh at a fine lattice is millions (0.075 mm on 100 x 80 x 30 mm: 9.5 M triangles, a 1.8 GB process)
+        V, F = box_mesh(np.zeros(3), np.asarray(size, float))
+    else:
+        stock = RM.mesh_level(wp.field)
+        V, F = np.asarray(stock.vertices), np.asarray(stock.faces)
+    if len(F):
+        stock_rel = writer.add_mesh("stock", (V, F), color_rgba=(0.72, 0.74, 0.76, 1.0), quantize=True)
     ops = list(project.operations)
     fixture = []
     for i, op in enumerate(ops):
@@ -137,6 +153,8 @@ def write_scene(run) -> None:
 
 # =============================================================================== keyframes
 
+KEYFRAME_MESH_CHUNK = 256          # bricks meshed per call for a keyframe
+
 def keyframe_payload(run, full: bool = False) -> dict:
     """Arguments of KeyframeWriter.write for the current state: the re-meshed dirty bricks of every workpiece (all
     surface bricks for a full snapshot), coarse fields (workpiece temperatures, chip pile, wetted cells, coolant
@@ -151,13 +169,18 @@ def keyframe_payload(run, full: bool = False) -> dict:
         bricks = [int(b) for b in np.asarray(bricks).reshape(-1)]
         if not bricks:
             continue
-        built = RM.mesh_bricks(wp.field, bricks, 0)
-        for b in bricks:
-            key = b if w == 0 else (w, b)
-            mesh = built.get(b) if isinstance(built, dict) else None
-            changed.append(key)
-            if mesh is not None and len(mesh.faces):
-                meshes[key] = (np.asarray(mesh.vertices), np.asarray(mesh.faces))
+        # meshed a chunk of bricks at a time and kept as float32 / int32 (the records quantise the vertices to
+        # 16 bits per brick anyway): a full snapshot of a fine field is millions of triangles
+        for i in range(0, len(bricks), KEYFRAME_MESH_CHUNK):
+            part = bricks[i:i + KEYFRAME_MESH_CHUNK]
+            built = RM.mesh_bricks(wp.field, part, 0)
+            for b in part:
+                key = b if w == 0 else (w, b)
+                mesh = built.get(b) if isinstance(built, dict) else None
+                changed.append(key)
+                if mesh is not None and len(mesh.faces):
+                    meshes[key] = (np.asarray(mesh.vertices, np.float32), np.asarray(mesh.faces, np.int32))
+            del built
         RM.clear_dirty(wp.field, bricks)
     bus = state.bus_prev
     fields: dict = {"pose_M_S": pose_M_S(run.motion, state)}
@@ -241,5 +264,5 @@ def finite_or_none(value):
     return v if math.isfinite(v) else None
 
 
-__all__ = ["axis_origins", "frames_layout", "pose_M_S", "write_scene", "keyframe_payload", "write_keyframe",
+__all__ = ["axis_origins", "box_mesh", "frames_layout", "pose_M_S", "write_scene", "keyframe_payload", "write_keyframe",
            "emission_buffer", "finite_or_none"]

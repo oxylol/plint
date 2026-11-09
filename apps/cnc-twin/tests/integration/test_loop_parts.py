@@ -127,3 +127,27 @@ def test_free_vibration_round_off_is_judged_against_the_floor():
     floored.energy_scale_floor_J = 1e-6
     values = interval(floored)
     assert values["ledger.energy_residual_rel"] < 1e-10
+
+
+def test_a_run_without_energy_has_a_balanced_summary():
+    # a run that stops in its first step (a controller alarm): chips booked no window, so no interval was checked
+    ledger = _ledger()
+    ledger.energy_scale_floor_J = 1e-6
+    state = SimState()
+    state.bus_next = Bus()
+    state.bus_next.chips.booked_until_tick = -1
+    ledger.check(None, state, 10000)
+    summary = ledger.summary()["energy"]
+    assert summary["checked_steps"] == 0 and summary["ok"] and "nothing to balance" in summary["note"]
+
+
+def test_friction_is_booked_once():
+    # cutting's recut and packing work: the loop books it unless cutting's own ledger hook did during the hot loop
+    contact = CuttingContact()
+    contact.recut_J, contact.packing_J = 0.03, 0.01
+    nxt = Bus()
+    nxt.cutting.contacts.append(contact)
+    for booked, expected in ((0.0, 0.04), (0.04, 0.0)):
+        run = types.SimpleNamespace(state=SimState())
+        Run._book_friction(run, nxt, booked)
+        assert run.state.ledger.friction_J == pytest.approx(expected)

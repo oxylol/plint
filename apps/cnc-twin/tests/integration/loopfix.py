@@ -64,13 +64,15 @@ M30
 """
 
 
-def tiny_mill(tmp: Path, parts: int = 1) -> Path:
+def tiny_mill(tmp: Path, parts: int = 1, physics: dict | None = None) -> Path:
     """cnctwin.core.warmup's mill project (a side step 0.5 mm wide and 1 mm deep along 12 mm of the front face of
-    a 30 x 20 x 10 mm Al block, D10 at 10 000 rpm), ``parts`` parts."""
+    a 30 x 20 x 10 mm Al block, D10 at 10 000 rpm), ``parts`` parts, ``physics`` settings merged per domain."""
     project = mill_project(tmp)
-    if parts != 1:
+    if parts != 1 or physics:
         data = yaml.safe_load(project.read_text())
         data["production"]["parts"] = int(parts)
+        for domain, settings in (physics or {}).items():
+            data["physics"].setdefault(domain, {}).update(settings)
         project.write_text(yaml.safe_dump(data, sort_keys=False))
     return project
 

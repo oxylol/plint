@@ -175,12 +175,20 @@ def compile_modules(stream=None, isolated: bool = True) -> list[str]:
 
 
 def _run_kind(kind: str, base: Path, stream) -> bool:
-    """One tiny project through run_project in this process; True when the run completed."""
+    """One tiny project through run_project in this process; True when the run completed. A run the physics
+    stops (a conservation or model error) is reported, not raised: the kernels it reached are cached."""
+    from .errors import TwinError
     from .loop import run_project
     build = {"mill": mill_project, "lathe": lathe_project}[kind]
     start = time.perf_counter()
     project = build(base / f"{kind}-project")
-    result = run_project(project, base / f"{kind}-run", {"outputs": False, "sanity": False}, None)
+    try:
+        result = run_project(project, base / f"{kind}-run", {"outputs": False, "sanity": False}, None)
+    except (TwinError, ValueError, FloatingPointError) as error:
+        if stream is not None:
+            stream.write(f"{kind}: stopped after {time.perf_counter() - start:.1f} s: {type(error).__name__}: "
+                         f"{error}\n")
+        return False
     ok = bool(result.get("complete"))
     if stream is not None:
         stream.write(f"{kind}: {'done' if ok else 'incomplete'} in {time.perf_counter() - start:.1f} s "

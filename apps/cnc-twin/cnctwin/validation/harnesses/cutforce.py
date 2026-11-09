@@ -66,8 +66,20 @@ def coolant_factor(db, case, col: H.Collector, mode: str, work, tool, speed_m_s:
     text = " ".join(_text(case.section("conditions").get(k)) for k in ("coolant", "flood_fluid", "fluid")).lower()
     text += " " + mode.lower()
     fluid_id = next((fid for key, fid in FLUIDS if key in text), "emulsion-8pct")
-    from .coolant import _fluid
-    return float(_fluid(db, fluid_id, tool.tool_class, work.family, speed_m_s, ambient_K, col))
+    return _fluid_factor(db, fluid_id, tool.tool_class, work.family, speed_m_s, ambient_K, col)
+
+
+def _fluid_factor(db, fluid_id: str, tool_class: str, family: str, v_m_s: float, ambient_K: float, col) -> float:
+    """cnctwin.coolant.lubrication.friction of a database fluid at full reach of the jet (the helper the coolant
+    harness used to provide; it now traces each jet through its scene, which the force cases do not describe)."""
+    from ...coolant import fluid as F
+    from ...coolant import lubrication as L
+    fluid = F.fluid_from_db(db.coolant(fluid_id))
+    lub = L.friction(fluid, fluid.props(ambient_K), 1.0, tool_class, family, v_m_s, None, None, 1e-3, fluid.is_mql,
+                     fluid.dosage_m3_s or 0.0)
+    col.assume(f"coolant fluid {fluid_id}", "database entry", "the case's fluid is not in the database: the closest "
+               "database fluid, full reach of the jet", "db/coolants")
+    return float(lub.factor)
 
 
 def coolant_mode(case, name: str = "") -> str:

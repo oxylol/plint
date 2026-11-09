@@ -40,6 +40,10 @@ OPTS = dict(cache=True, nogil=True, error_model="numpy")
 # helpers called inside the kernels are inlined at the Numba IR level (no call boundary, no per-array argument
 # overhead); they are still compiled for their explicit signature as kernels of their own
 INLINE = dict(OPTS, inline="always")
+# the L0 kernels (modal_begin, modal_correct) allocate nothing and are compiled without reference counting (as the
+# hot loop's and removal's hot kernels): otherwise every member array of the system tuple taken in the kernel costs
+# an atomic incref / decref, about 1.2 us per L0 step for a DynSystem (docs/performance.md "Dynamics")
+RAW = dict(OPTS, _nrt=False)
 f8 = types.float64
 i8 = types.int64
 c16 = types.complex128
@@ -236,8 +240,8 @@ def free_interval(w, zeta, h, q0, v0, Pr, Pi, W, g0, g1, out):
 
 
 # Style note: kernels bind the individual arrays they use (``x = sys.state.x``), never a whole sub-tuple
-# (``model = sys.model``): Numba reference-counts every member array of a tuple bound to a local, which costs
-# ~0.5 us per call for a DynSystem; single arrays cost nothing.
+# (``model = sys.model``): with reference counting (the kernels other than the RAW L0 pair), Numba reference-counts
+# every member array of a tuple bound to a local, which costs ~0.5 us per call for a DynSystem.
 
 # =============================================================================== external forces
 @njit(types.void(SYSTEM_T, f8, f8, f8, F1), **INLINE)
@@ -314,19 +318,28 @@ def _deflection(x, tool_shape, work_shape, is_work, row, residual, st_force, res
                 u_work, v_work, lo, hi):
     """Modal + residual deflections of state x at stations lo..hi (tool stations from tool and machine modes, the
     workpiece at the contact from the work modes); the residual flexibilities use the last evaluated wrenches
-    (non-zero only at the stations of the previous step)."""
+    (non-zero only at the stations of the previous step). The stations lo..hi are one contiguous run of 6
+    components each (u_st, v_st and a mode's tool_shape row are C-contiguous [station, 6]): the loops over it are
+    vectorised, and every element still sums the modes in their order (the same results as a station loop)."""
     nst = u_st.shape[0]
     ns = tool_shape.shape[1]
     nm = x.shape[0]
     hi_s = hi if hi < nst - 1 else nst - 1
-    for s in range(lo, hi_s + 1):
-        for c in range(6):
-            u_st[s, c] = 0.0
-            v_st[s, c] = 0.0
+    uf = u_st.reshape(6 * nst)
+    vf = v_st.reshape(6 * nst)
+    if hi_s >= lo:
+        u_run = uf[6 * lo:6 * (hi_s + 1)]
+        v_run = vf[6 * lo:6 * (hi_s + 1)]
+        for j in range(u_run.shape[0]):
+            u_run[j] = 0.0
+            v_run[j] = 0.0
     for c in range(3):
         u_work[c] = 0.0
         v_work[c] = 0.0
     hi_m = hi_s if hi_s < ns - 1 else ns - 1
+    n_run = 6 * (hi_m - lo + 1) if hi_m >= lo else 0
+    u_m = uf[6 * lo:6 * lo + n_run]
+    v_m = vf[6 * lo:6 * lo + n_run]
     for k in range(nm):
         q = x[k, 0]
         v = x[k, 1]
@@ -337,13 +350,13 @@ def _deflection(x, tool_shape, work_shape, is_work, row, residual, st_force, res
                     u_work[c] += work_shape[r, c] * q
                     v_work[c] += work_shape[r, c] * v
             continue
-        if r < 0 or r >= tool_shape.shape[0] or (q == 0.0 and v == 0.0):
+        if r < 0 or r >= tool_shape.shape[0] or (q == 0.0 and v == 0.0) or n_run == 0:
             continue
-        for s in range(lo, hi_m + 1):
-            for c in range(6):
-                phi = tool_shape[r, s, c]
-                u_st[s, c] += phi * q
-                v_st[s, c] += phi * v
+        shape_k = tool_shape[r].reshape(6 * ns)[6 * lo:6 * lo + n_run]
+        for j in range(n_run):
+            phi = shape_k[j]
+            u_m[j] += phi * q
+            v_m[j] += phi * v
     if iscal[MI_HAS_TOOL_RES] != 0:
         nres = residual.shape[0] // 3
         lim = nres if nres < nst else nst
@@ -376,7 +389,7 @@ def modal_deflection(sys):
                 sys.defl.u_st_T0_m, sys.defl.v_st_T0_m_s, sys.defl.u_work_S_m, sys.defl.v_work_S_m_s, lo, hi)
 
 
-@njit(types.void(SYSTEM_T, f8, f8, f8, F1), **OPTS)
+@njit(types.void(SYSTEM_T, f8, f8, f8, F1), **RAW)
 def modal_begin(sys, theta_rad, omega_rad_s, alpha_rad_s2, base_in):
     """external_force + modal_predict + modal_deflection in one call (the same results; one call boundary): the
     predicted state of the coming node and its deflections in sys.defl, ready for the force kernel."""
@@ -428,7 +441,7 @@ def relative_deflection(sys, out):
 
 
 # =============================================================================== L0 step: corrector
-@njit(types.void(SYSTEM_T, F2, F1, i8, ACCUM_T), **OPTS)
+@njit(types.void(SYSTEM_T, F2, F1, i8, ACCUM_T), **RAW)
 def modal_correct(sys, station_T0, force_S_N, tick, acc):
     """Correct the predicted state with the force evaluated there and advance the node to ``tick``.
 
@@ -481,21 +494,75 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
         s_hi = min(s_hi, act[ACT_LOAD_HI])
     if s_hi > nsm - 1:
         s_hi = nsm - 1
-    # ---- modal projection of the evaluated wrenches; fx becomes the predictor miss f_x - f*_cut. The station sums of
-    # all tool / machine modes run side by side (the modes inner): each mode's sum keeps its order over the stations
-    # and components (the same result), and the modes' addition chains no longer wait for each other
+    # ---- modal projection of the evaluated wrenches; fx becomes the predictor miss f_x - f*_cut. The tool / machine
+    # modes four at a time over the load stations' components as one contiguous run (C-contiguous [station, 6]):
+    # four independent sums, each mode's sum in its order over the stations and components (the same result)
     inv_dt = 1.0 / dt
     w_quad = 0.0
     n_rows = tool_shape.shape[0]
     for k in range(nm):
         fx_arr[k] = 0.0
-    for s in range(s_lo, s_hi + 1):
-        for c in range(6):
-            w_sc = station_T0[s, c]
-            for k in range(nm):
-                r = row[k]
-                if is_work[k] != KIND_WORK and 0 <= r < n_rows:
-                    fx_arr[k] += tool_shape[r, s, c] * w_sc
+    n_run = 6 * (s_hi - s_lo + 1) if s_hi >= s_lo else 0
+    if n_run > 0:
+        w_run = station_T0.reshape(6 * nst)[6 * s_lo:6 * s_lo + n_run]
+        kk = 0
+        while kk < nm:
+            n_g = 0
+            ka = -1
+            kb = -1
+            kc = -1
+            kd = -1
+            ra = 0
+            rb = 0
+            rc = 0
+            rd = 0
+            while kk < nm and n_g < 4:
+                r = row[kk]
+                if is_work[kk] != KIND_WORK and 0 <= r < n_rows:
+                    if n_g == 0:
+                        ka = kk
+                        ra = r
+                    elif n_g == 1:
+                        kb = kk
+                        rb = r
+                    elif n_g == 2:
+                        kc = kk
+                        rc = r
+                    else:
+                        kd = kk
+                        rd = r
+                    n_g += 1
+                kk += 1
+            if n_g == 0:
+                break
+            # a short group repeats its first mode in the free lanes (computed, not stored)
+            if n_g < 2:
+                rb = ra
+            if n_g < 3:
+                rc = ra
+            if n_g < 4:
+                rd = ra
+            sh_a = tool_shape[ra].reshape(6 * ns)[6 * s_lo:6 * s_lo + n_run]
+            sh_b = tool_shape[rb].reshape(6 * ns)[6 * s_lo:6 * s_lo + n_run]
+            sh_c = tool_shape[rc].reshape(6 * ns)[6 * s_lo:6 * s_lo + n_run]
+            sh_d = tool_shape[rd].reshape(6 * ns)[6 * s_lo:6 * s_lo + n_run]
+            sum_a = 0.0
+            sum_b = 0.0
+            sum_c = 0.0
+            sum_d = 0.0
+            for j in range(n_run):
+                w_j = w_run[j]
+                sum_a += sh_a[j] * w_j
+                sum_b += sh_b[j] * w_j
+                sum_c += sh_c[j] * w_j
+                sum_d += sh_d[j] * w_j
+            fx_arr[ka] = sum_a
+            if n_g > 1:
+                fx_arr[kb] = sum_b
+            if n_g > 2:
+                fx_arr[kc] = sum_c
+            if n_g > 3:
+                fx_arr[kd] = sum_d
     for k in range(nm):
         r = row[k]
         fx = fx_arr[k]

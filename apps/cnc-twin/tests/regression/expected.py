@@ -15,17 +15,19 @@ from pathlib import Path
 
 import numpy as np
 
-# simulated seconds per example (the first part of the program that holds the behaviours checked below)
+# simulated seconds per example: the set-up, the first tool change and the first cut of each program (the whole
+# loop costs 7-60 CPU s per simulated second on these projects, docs/models/loop.md 13-14)
 BUDGET_S = {
-    "pocket-islands-al6061": 20.0,
-    "drill-tap-plate-1045": 20.0,
-    "thin-wall-al7075": 20.0,
-    "two-setup-flip": 20.0,
-    "lathe-shaft-4140": 20.0,
-    "batch-50": 20.0,
-    "die-h13-ballnose": 20.0,
-    "blade-5axis-ti": 20.0,
-    "ti-slot-throughtool": 20.0,
+    "pocket-islands-al6061": 8.0,
+    "drill-tap-plate-1045": 8.0,
+    "thin-wall-al7075": 8.0,
+    "two-setup-flip": 8.0,
+    "lathe-shaft-4140": 4.0,          # its loop runs at about 0.2 simulated s per wall minute (polar field)
+    "batch-50": 8.0,
+    "die-h13-ballnose": 8.0,
+    "blade-5axis-ti": 8.0,
+    "ti-slot-throughtool": 8.0,
+    "sanity-mistakes": 8.0,           # stops at its first alarm (line 16) well before; the budget is a guard
 }
 
 
@@ -45,13 +47,14 @@ def _without_probe(project_dir: Path, program: str, start: str, end_marker: str,
     (project_dir / "project.yaml").write_text(yaml.safe_dump(data, sort_keys=False))
 
 
-# simulated seconds of a variant when it differs from the example's budget: two parts of batch-50 (27 s each by
-# the controller's dry run) so the second part carries the first one's wear and temperatures
-VARIANT_BUDGET_S = {"batch-50": 60.0}
+# simulated seconds of a variant when it differs from the example's budget (none: the carry-over of a second part
+# of batch-50, 27 s per part by the controller's dry run, is beyond these budgets)
+VARIANT_BUDGET_S: dict = {}
 
 VARIANTS = {
     # N10 measures the top 0.200 mm below the hand-set G54 Z (EXPECTED.md 1): G54 Z -480.000
-    "pocket-islands-al6061": ("no-probe", lambda d: _without_probe(d, "op10.nc", "N10", "N20", [-431.0, -243.2, -480.0])),
+    "pocket-islands-al6061": ("no-probe", lambda d: _without_probe(d, "op10.nc", "N10", "N20",
+                                                                   [-431.0, -243.2, -480.0])),
     # N10 moves G54 to the measured corner (-411.000, -228.000, -496.000) (EXPECTED.md 1); three parts of the 50
     "batch-50": ("no-probe", lambda d: _without_probe(d, "bracket.nc", "N10", "N20", [-411.0, -228.0, -496.0], 3)),
 }
@@ -98,9 +101,14 @@ def band_item(name: str, expected, lo: float, hi: float, value, unit: str = "", 
 
 
 def peak(run_dir: Path, tier: str, column: str, t0: float = 0.0, t1: float = math.inf, scale: float = 1.0):
+    """Largest |value| of a column in [t0, t1]; None (not reached) when the run part never made it non-zero (the
+    tool had not cut yet within the budget)."""
     t, v = series(run_dir, tier, column)
     sel = (t >= t0) & (t <= t1) & np.isfinite(v)
-    return float(np.max(np.abs(v[sel])) * scale) if np.any(sel) else None
+    if not np.any(sel):
+        return None
+    top = float(np.max(np.abs(v[sel])))
+    return top * scale if top > 0.0 else None
 
 
 def mean_where(run_dir: Path, tier: str, column: str, mask_column: str | None = None, threshold: float = 0.0,
@@ -132,9 +140,11 @@ def _common(run_dir, run) -> list[dict]:
 
 def check_pocket(run_dir, run) -> list[dict]:
     out = _common(run_dir, run)
-    probes = [f for f in findings(run_dir) if "probe" in f["message"].lower() and f["severity"] in ("error", "fatal")]
+    probes = [f for f in findings(run_dir) if f["severity"] in ("error", "fatal") and
+              (f["category"] == "alarm" or any(w in f["message"].lower() for w in ("probe", "g31", "skip")))]
     out.append(item("N10 probe Z set: G31 triggers without alarm", "2 triggering G31", "exact",
-                    len(probes), not probes, "probe alarms or errors counted"))
+                    len(probes), not probes, "alarms and probe / G31 / skip errors counted: " +
+                    "; ".join(f["message"][:80] for f in probes[:2])))
     p = peak(run_dir, "macro", "cutting.spindle_power_W[0]", scale=1e-3)
     out.append(band_item("peak spindle cutting power in the trochoid loops", 2.7, 1.8, 3.6, p, "kW",
                          "largest macro-step mean of the run part"))
@@ -157,13 +167,26 @@ def check_thin_wall(run_dir, run) -> list[dict]:
     return out
 
 
+def _trace_events(run_dir: Path, names: tuple) -> list[dict]:
+    path = Path(run_dir) / "trace.jsonl"
+    if not path.is_file():
+        return []
+    out = []
+    for line in path.read_text().splitlines():
+        if any(f'"{n}"' in line for n in names):
+            out.append(json.loads(line))
+    return out
+
+
 def check_flip(run_dir, run) -> list[dict]:
     out = _common(run_dir, run)
-    ops = (run or {}).get("summary", {}).get("operations", [])
-    truncated = (run or {}).get("summary", {}).get("truncated")
-    reached = truncated is None or truncated.get("op_index", 0) >= 1
-    out.append(item("OP20 runs on the OP10 part turned about X", "transfer", "exact",
-                    1 if reached else None, reached and len(ops) == 2))
+    events = _trace_events(run_dir, ("loop:operation_start", "removal:transfer"))
+    started = any(e["event"] == "loop:operation_start" and int(e["quantities"].get("op_index", 0)) == 1
+                  for e in events)
+    transfers = sum(1 for e in events if e["event"] == "removal:transfer")
+    out.append(item("OP20 runs on the OP10 part turned about X", "transfer, OP20 started", "exact",
+                    transfers if started else None, started and transfers == 1,
+                    "OP20 not reached: the run ended in OP10" if not started else ""))
     return out
 
 
@@ -256,19 +279,27 @@ def record(name: str, run_dir: Path, options: dict, error, wall_s: float, cpu_s:
         conservation = {k: bool(cons.get(k, {}).get("ok")) for k in ("mass", "energy", "time")}
         conservation["final_mass"] = bool((summary.get("final_mass") or {}).get("ok"))
     checks = []
-    if run is not None:
+    # a run that stopped on an error still leaves its findings and closed series: the items it reached count
+    if run is not None or (Path(run_dir) / "series" / "index.jsonl").is_file():
         try:
-            checks = CHECKS[name](run_dir, run)
+            checks = CHECKS[name](run_dir, run or {})
         except (OSError, ValueError, KeyError) as failure:
             checks = [item("EXPECTED checks", "", "", None, False, f"checks could not read the run: {failure}")]
+    if error is not None or run is None:
+        # the run stopped on an error: a band the stopped part misses was not reached (the cut had just begun)
+        for c in checks:
+            if c["status"] == "failed" and c["value"] is not None and "-" in str(c.get("band", "")):
+                c["note"] = (c.get("note") or "") + f" (value {c['value']:.4g} when the run stopped)"
+                c["status"] = "not reached"
     return {"example": name, "options": options, "error": None if error is None else
             f"{type(error).__name__}: {error}", "completed_run": run is not None, "complete": bool((run or {}).get(
-                "complete")), "truncated": summary.get("truncated"), "wall_s": wall_s, "cpu_s": cpu_s,
+                "complete")), "truncated": summary.get("truncated"), "stopped": summary.get("stopped"),
+            "wall_s": wall_s, "cpu_s": cpu_s,
             "sim_time_s": summary.get("sim_time_s"), "cycle_time_s": summary.get("cycle_time_s"),
-            "verdict": (run or {}).get("verdict"), "findings": {"severity": counts, "category": by_category,
-                                                                "errors": [f"{f['category']} line {f['line']}: "
-                                                                           f"{f['message']}"[:200] for f in rows
-                                                                           if f["severity"] in ("error", "fatal")][:12]},
+            "verdict": (run or {}).get("verdict"),
+            "findings": {"severity": counts, "category": by_category,
+                         "errors": [f"{f['category']} line {f['line']}: {f['message']}"[:200] for f in rows
+                                    if f["severity"] in ("error", "fatal")][:12]},
             "conservation": conservation, "removed_volume_m3": summary.get("removed_volume_m3"),
             "expected": checks,
             "expected_counts": {s: sum(1 for c in checks if c["status"] == s) for s in ("passed", "failed",

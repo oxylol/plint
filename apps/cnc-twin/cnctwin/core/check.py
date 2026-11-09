@@ -295,8 +295,8 @@ def check_project(request: dict, out_dir, progress_cb=None) -> dict:
         for seg in dry["segments"]:
             slot = seg["slot"]
             if slot < 0:
-                slot = next((s.slot for s in state.tools.slots if s.number == seg["tool"] and s.path == seg["path"] - 1),
-                            -1)
+                slot = next((s.slot for s in state.tools.slots
+                             if s.number == seg["tool"] and s.path == seg["path"] - 1), -1)
             if slot < 0:
                 warnings.append(f"{name}: T{seg['tool']} is not in the project's tool list (no stride)")
                 continue

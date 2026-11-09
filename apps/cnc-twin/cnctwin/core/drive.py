@@ -114,14 +114,20 @@ class Feeder:
                     self.ended[p] = True
 
     def finished(self) -> bool:
+        """Every path has run its parts or stopped with an alarm, and motion has executed what it holds. An alarm
+        stops its path's motion as on the machine: commands queued before it do not execute (one of them may wait
+        for the control, which answers nothing in alarm)."""
         ctx, state = self.ctx, self.state
         if not self.cd.done(ctx, state):
             return False
-        for planner in self.md.planners:
+        ctrl = self.cd.controller(ctx, state)
+        alarmed = [ctrl.state.paths[p].alarm is not None for p in range(self.md.P)]
+        for p, planner in enumerate(self.md.planners):
+            if alarmed[p]:
+                continue
             if planner.queued() > 0 and planner.st.alarm is None and planner.st.cur.phase not in (5, 6):
                 return False
-        ctrl = self.cd.controller(ctx, state)
-        return all(self.runs[p] >= self.parts or ctrl.state.paths[p].alarm is not None for p in range(self.md.P))
+        return all(self.runs[p] >= self.parts or alarmed[p] for p in range(self.md.P))
 
 
 @dataclass

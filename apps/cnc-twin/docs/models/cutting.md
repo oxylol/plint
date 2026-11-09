@@ -219,8 +219,8 @@ vibration, wear land and process damping (`test_kernels_reference.py`).
 **Measured cost** (docs/performance.md "cut_step"; `test_tools_state_perf.py::test_milling_kernel_cost`, called
 from a compiled loop so the 17 NamedTuple arguments are not boxed): slotting with a 4-flute 30 deg helix cutter,
 160 engaged elements per step: ~34 us per L0 step (~210 ns per engaged element; 2026-11-03: ~50 us, ~290 ns). In
-the integrated hot loop: 3.0 us per step for the pocket-islands helical entry, 8 us for the D10 4FL slot (27
-engaged elements). How: `cut_step` visits only stations with engaged intervals (or loads written in the last two
+the integrated hot loop: 2.8-3.0 us per step for the pocket-islands helical entry, 8.2-8.3 us for the D10 4FL slot
+(27 engaged elements; 16.9 us and 8.5 us before). How: `cut_step` visits only stations with engaged intervals (or loads written in the last two
 steps), classifies an element's swept arc against a station's single interval with two comparisons (the general
 `gate` within 1e-12 rad of a boundary, so the results are those of `gate`), skips the boundary tests of interior
 elements, reads every element constant from one packed row (`CutTool.pk` / `pki`, built at L2 by
@@ -308,8 +308,8 @@ buffer overflow are bit-identical.
 
 ## 11. Limitations
 
-* Kernel cost ~200-300 ns per engaged element and step (docs/performance.md): 8 us per step for the D10 4FL
-  slot's 27 engaged elements (the 3 us target is met for the pocket's helical entry, not for the slot).
+* Kernel cost ~200-300 ns per engaged element and step (docs/performance.md): 8.3 us per step for the D10 4FL
+  slot's 27 engaged elements (the 3 us target is met for the pocket's helical entry, 2.8 us, not for the slot).
 * Tap retraction (spindle reversal) reverses predecessor relations; the handover rows then hold the
   wrong turn until refilled (approximate rubbing on retraction).
 * The turning chip of a radial edge (kappa_r = 90 deg) resolves its previous wall to the polar field's

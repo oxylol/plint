@@ -308,6 +308,14 @@ class RunLedger(Ledger):
 
     def summary(self) -> dict:
         out = super().summary()
+        if not self.checked["energy"] and self.active("cutting"):
+            # no interval was checked (a run that stops in its first steps, before chips books a window): with no
+            # energy booked at all there is nothing to balance; with energy booked the balance stays unproven
+            booked = sum(abs(float(v)) for st in self.steps for name, v in st.delta.items()
+                         if name in ENERGY_IN + self.OUT)
+            if booked <= self.energy_scale_floor_J * self.tol_energy:
+                out["energy"].update({"ok": True, "max_residual_rel": 0.0, "final_residual_rel": 0.0,
+                                      "note": "no energy booked in the run (no cut): nothing to balance"})
         out["energy"]["chip_kinetic_reported_J"] = None if self.kinetic_in_balance else self.kinetic_reported_J
         out["energy"]["modal_quadrature_J"] = self.quadrature_J
         out["energy"]["terms_added"] = ["modal_quadrature_J (out: cutting's quadrature of the work on the deflection "

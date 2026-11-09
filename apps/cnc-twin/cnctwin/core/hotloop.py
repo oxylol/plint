@@ -1159,6 +1159,7 @@ class HotLoop:
         self.reports: list = []
         self.keep_reports = False
         self._geo_cache: dict = {}
+        self._placeholders: dict = {}     # padding contacts and rigid-dynamics placeholders (read by no kernel)
         self._phys = getattr(ctx.project, "physics", None) if ctx.project is not None else None
 
     # ------------------------------------------------------------------ settings
@@ -1341,13 +1342,23 @@ class HotLoop:
         n_c = len(contacts)
         n_axes = int(mi.servo.kv.shape[0])
         while len(contacts) < H.MAX_CONTACTS:
-            contacts.append(H.empty_contact(n_axes))
+            contacts.append(self._padding(n_axes))
         g = self.g
         g.ipar[H.GI_N_CONTACTS] = n_c
         self._rows(contacts, n_c)
         g.tick_flags[:] = 0
         return {"rm": rm, "ri": ri, "ci": ci, "di": di, "ti": ti, "contacts": tuple(contacts), "paths": paths,
                 "l0": l0, "drained": {c: {b: [] for b in range(7)} for c in range(n_c)}}
+
+    def _padding(self, n_axes: int):
+        """An inactive contact of the right types for the contact tuple (CI_ACTIVE = 0: run_macro never reads or
+        writes it), made once per axis count."""
+        key = ("pad", int(n_axes))
+        pad = self._placeholders.get(key)
+        if pad is None:
+            pad = H.empty_contact(n_axes)
+            self._placeholders[key] = pad
+        return pad
 
     def _work_spindle(self, mi, p: int) -> int:
         from ..motion.abi import CHAIN_WORK
@@ -1515,9 +1526,14 @@ class HotLoop:
             ip[H.CI_DYN] = 1
             ip[H.CI_RING_DYN] = int(di.ring_columns.get(p, -1))
         else:
-            sys = DA.empty_system(1, nst, 1, int(ctx.macro_ipo), 1)
-            base = DA.empty_axes(max(len(path_axes), 1))
-            grid = DA.empty_work_grid()
+            # rigid contact: placeholders of the right types that no kernel touches (CI_DYN = 0), made once
+            key = ("rigid", nst, int(ctx.macro_ipo), max(len(path_axes), 1))
+            held = self._placeholders.get(key)
+            if held is None:
+                held = (DA.empty_system(1, nst, 1, int(ctx.macro_ipo), 1), DA.empty_axes(max(len(path_axes), 1)),
+                        DA.empty_work_grid())
+                self._placeholders[key] = held
+            sys, base, grid = held
             offset = np.zeros(3)
             ip[H.CI_DYN] = 0
             ip[H.CI_RING_DYN] = -1

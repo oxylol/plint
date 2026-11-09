@@ -68,7 +68,8 @@ class CouplingMonitor:
             last, change, count, done = entry
             new_change = value - last
             significant = abs(new_change) > self.rel_change * max(abs(value), abs(last), 1e-300)
-            if significant and change != 0.0 and new_change * change < 0.0 and abs(new_change) > self.ratio * abs(change):
+            alternates = change != 0.0 and new_change * change < 0.0 and abs(new_change) > self.ratio * abs(change)
+            if significant and alternates:
                 count += 1
             elif significant:
                 count = 0
@@ -158,6 +159,7 @@ class Run:
         self.findings_written = -1
         self.est_total_s = None
         self.truncated = None
+        self.stopped = None                # {at_s, reason: alarm, op, op_index, part, alarms} when a control alarmed
         self.monitor = CouplingMonitor()
         self.identity = {"in_J": 0.0, "out_J": 0.0, "abs_J": 0.0}
         self.unregistered: set = set()
@@ -166,7 +168,7 @@ class Run:
         self.part_files: list = []
         self.last_ended = ("", -1)
         self.l0_seen: dict = {}            # operation name -> the L0 strides its steps used
-        self.cpu = {"hot_s": 0.0, "l2_s": 0.0, "record_s": 0.0, "steps": 0, "l2_by_domain_s": {}}
+        self.cpu = {"hot_s": 0.0, "l2_s": 0.0, "record_s": 0.0, "steps": 0, "l2_by_domain_s": {}, "split": {}}
 
     # ================================================================== small helpers
     @property
@@ -371,23 +373,24 @@ class Run:
 
     def _continue_axes(self, previous) -> None:
         """A new operation's machine starts where the last program left it (the operator turns or changes the
-        part; the axes and spindles do not move): the servo and spindle states of the previous operation's motion
-        carried into the new one (same machine, same axes), its planners starting at the last commanded axis
-        position. Without this the axes would jump home in one tick, which holding reads as a table acceleration
-        of 1e5 m/s2 (the part slips) and dynamics as a base excitation."""
+        part; the axes do not move): the new motion's drives at rest at the axis positions the previous operation's
+        motion ended with (``initial_servo_state`` at those positions: velocities zero, gravity preloads held), its
+        planners starting there. The spindles start at rest as before (minutes pass between operations; a residual
+        coast-down speed of 1e-15 rad/s would only make tooth periods of 1e22 ticks). Without this the axes would
+        jump home in one tick, which holding reads as a table acceleration of 1e5 m/s2 (the part slips and comes
+        free) and dynamics as a base excitation."""
         from ..motion.planner import PathPlanner
+        from ..motion.servo import initial_servo_state
         if previous is None:
             return
         ms, motion = self.state.motion, self.motion
-        old_servo, old_spindle = getattr(previous, "servo", None), getattr(previous, "spindle", None)
-        if old_servo is None or np.shape(old_servo.x) != np.shape(ms.servo.x):
+        old = getattr(previous, "servo", None)
+        if old is None or np.shape(old.load) != np.shape(ms.servo.load):
             return
+        q = np.asarray(old.load, float).copy()
+        rest = initial_servo_state(motion.servo, q)
         for name, target in zip(ms.servo._fields, ms.servo):
-            np.copyto(target, np.asarray(getattr(old_servo, name)).astype(target.dtype, copy=False))
-        if old_spindle is not None and np.shape(old_spindle.angle) == np.shape(ms.spindle.angle):
-            for name, target in zip(ms.spindle._fields, ms.spindle):
-                np.copyto(target, np.asarray(getattr(old_spindle, name)).astype(target.dtype, copy=False))
-        q = np.asarray(old_servo.cmd, float).copy()
+            np.copyto(target, np.asarray(getattr(rest, name)).astype(target.dtype, copy=False))
         motion.planners = [PathPlanner(motion.env, p, q) for p in range(len(motion.model.paths))]
         ms.planners = motion.planners
 
@@ -454,10 +457,18 @@ class Run:
         inspection, transfer), the part files of the operation, then the next operation or part."""
         from .loop_wiring import END_ORDER
         ctx, state, d = self.ctx, self.state, self.domains
+        alarms = self._alarms()
+        unfinished = self.truncated is not None or bool(alarms)
         for name in END_ORDER:
-            if name == "structure":
+            if name == "structure" and not unfinished:
                 self.results.capture_as_cut(state)
             if name == "inspect":
+                if unfinished:
+                    # an operation cut short (options.max_sim_s, or a control alarm): the unfinished part is not
+                    # inspected against the CAD and gets no part files (meshing a fine field: millions of triangles)
+                    self.notes.add("an operation ended unfinished (options.max_sim_s or an alarm): its part was not "
+                                   "inspected and no part files were written")
+                    continue
                 self._inspect_end()
                 continue
             domain = self.motion if name == "motion" else d[name]
@@ -471,7 +482,12 @@ class Run:
         self.trace("loop:operation_end", {"op_index": float(op_index), "part": float(part)})
         self.last_ended = (self.op_name(), op_index)
         self.op_active = False
-        if self.truncated is not None:
+        if alarms and self.stopped is None:
+            # the machine stopped in alarm: nothing runs on until someone resets it (no next operation or part)
+            self.stopped = {"at_s": int(state.clock.tick) * ctx.tick_s, "reason": "alarm", "op": self.op_name(),
+                            "op_index": op_index, "part": part, "alarms": alarms}
+            self.trace("loop:stopped_by_alarm", {"paths": float(len(alarms)), "part": float(part)})
+        if self.truncated is not None or self.stopped is not None:
             self.done = True
         elif op_index + 1 < len(self.ops):
             state.clock.op_index = op_index + 1
@@ -482,6 +498,18 @@ class Run:
             self.done = True
         if self.done:
             self.checkpoint(op_end=True, ended=self.last_ended)
+
+    def _alarms(self) -> list:
+        """The paths whose control stopped with an alarm: [{path, alarm}]."""
+        ctrl = self.domains["controller"].controller(self.ctx, self.state)
+        out = []
+        for p, path in enumerate(ctrl.state.paths):
+            alarm = path.alarm
+            if alarm is not None:
+                text = f"{alarm.get('code', '')} {alarm.get('text', '')}".strip() if isinstance(alarm, dict) \
+                    else str(alarm)
+                out.append({"path": p, "alarm": text})
+        return out
 
     def _inspect_end(self) -> None:
         ctx, state = self.ctx, self.state
@@ -532,7 +560,9 @@ class Run:
         state.bus_next = Bus()
         self._apply_resolved_strides()
         head0 = int(self.recorder.ring.head[0])
+        friction0 = float(state.ledger.friction_J)
         rep = self.hot.run_step(self.feeder)
+        friction_by_cutting = float(state.ledger.friction_J) - friction0
         self._restamp_ring(head0)
         self.l0_seen.setdefault(self.op_name(), set()).update(int(v) for v in rep.l0_ticks.values())
         t1 = time.process_time()
@@ -548,7 +578,7 @@ class Run:
             by_domain[name] = by_domain.get(name, 0.0) + (tb - ta)
             ta = tb
         self._coupling_monitor(prev, nxt, rep.tick1)
-        self._book_friction(nxt)
+        self._book_friction(nxt, friction_by_cutting)
         values = {}
         if self.ledger is not None:
             values = self.ledger.check(ctx, state, rep.tick1)
@@ -573,6 +603,13 @@ class Run:
         self.cpu["l2_s"] += t2 - t1
         self.cpu["record_s"] += t3 - t2
         self.cpu["steps"] += 1
+        # the split the cost model of twin check is calibrated on (db/models/loop.yaml): steps with a tool in cut
+        in_cut = any(float(getattr(c, "in_cut_s", 0.0) or 0.0) > 0.0 for c in nxt.cutting.contacts)
+        key = "in_cut" if in_cut else "idle"
+        split = self.cpu["split"].setdefault(key, {"steps": 0, "hot_s": 0.0, "l2_s": 0.0})
+        split["steps"] += 1
+        split["hot_s"] += t1 - t0
+        split["l2_s"] += t2 - t1
 
     def _restamp_ring(self, head0: int) -> None:
         """The hot loop stamps each fast (L0) ring row with the end tick of its L0 step, so the last row of a macro
@@ -688,14 +725,15 @@ class Run:
                 self._write_findings()
                 raise ConservationError("removed volume", change, booked, 1e-9, tick * self.ctx.tick_s)
 
-    def _book_friction(self, nxt) -> None:
+    def _book_friction(self, nxt, booked: float = 0.0) -> None:
         """The work the step's chip recut impulses and chip-packing loads took from the tool (cutting's
         CuttingContact.recut_J and packing_J, terms of its own energy identity) into SimState.ledger.friction_J,
-        the ledger's friction term (architecture 12: packing, recut and slip friction; cutting computes them and
-        writes no SimState.ledger field, so the loop books them)."""
+        the ledger's friction term (architecture 12: packing, recut and slip friction), unless cutting booked them
+        itself while the hot loop absorbed the step (``booked``: the friction term's change over the hot loop;
+        cutting's ``_ledger`` does so since 2026-11-09, earlier builds wrote no SimState.ledger field for them)."""
         work = sum(float(getattr(c, "recut_J", 0.0) or 0.0) + float(getattr(c, "packing_J", 0.0) or 0.0)
                    for c in nxt.cutting.contacts)
-        if work:
+        if work and abs(booked) <= 1e-12 * abs(work):
             self.state.ledger.friction_J += work
 
     def _identity(self, nxt) -> None:
@@ -743,7 +781,8 @@ class Run:
     # ================================================================== checkpoints
     def loop_state(self) -> dict:
         hot_arrays, hot_meta = self.hot.to_arrays() if self.hot is not None else ({}, {})
-        return {"op_active": self.op_active, "done": self.done, "ops_started": self.ops_started,
+        return {"op_active": self.op_active, "done": self.done, "stopped": self.stopped,
+                "ops_started": self.ops_started,
                 "tl_base": self.tl_base, "tl_first": self.tl_first, "v0": [list(v) for v in self.v0],
                 "booked": list(self.booked), "part_mass": {str(k): v for k, v in self.part_mass.items()},
                 "part_mass_start": self.part_mass_start, "est_total_s": self.est_total_s,
@@ -796,6 +835,7 @@ class Run:
         state = self.state
         self.op_active = bool(saved["op_active"])
         self.done = bool(saved["done"])
+        self.stopped = saved.get("stopped")
         self.ops_started = int(saved["ops_started"])
         self.tl_base, self.tl_first = int(saved["tl_base"]), int(saved["tl_first"])
         self.v0 = [tuple(v) for v in saved["v0"]]
@@ -1019,6 +1059,8 @@ class Run:
         }
         if self.truncated is not None:
             summary["truncated"] = dict(self.truncated)
+        if self.stopped is not None:
+            summary["stopped"] = dict(self.stopped)
         if production is not None:
             summary["production"] = {k: production.get(k) for k in ("parts_simulated", "cycle_time_s", "per_part_s",
                                                                     "energy_J", "removed_mass_kg") if k in production}

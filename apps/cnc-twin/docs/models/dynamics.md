@@ -226,7 +226,8 @@ damping when K_sp > 0); refreshed when the engagement signature (arc, thickness,
 versions, engaged count) or speed / depth change by `engagement_tol`, at least every `sld_refresh_macro` steps.
 The limit is cached by engagement class (the signature), FRF and spindle speed (relative step 1e-3) in the
 checkpointed state (`meta.limits`), so a repeated engagement costs nothing; the chatter-frequency scan evaluates
-the characteristic matrices of all frequencies at once (one stacked eigenvalue call) and the cut model's per-tooth
+the characteristic matrices of all frequencies at once (one stacked eigenvalue call), the sign changes of all
+frequency intervals are bisected together (one stacked call per bisection level) and the cut model's per-tooth
 means are cached. During the run that limit (the bus `depth_limit_m`, the "lobe diagram predicts chatter"
 finding when the margin is below 1) is all the stability analysis does: lobe diagrams and the SD check are report
 artefacts and an input to nothing in the loop (chatter detection is the time-domain index of every step). Each
@@ -330,17 +331,26 @@ scratch); constants `MI_*`, `MS_*`, `FL_*`, `DA_*`, `TU_*`, `BASE_*`.
 | `phi1`, `psi1`, `j0`, `j1`, `_deflection`, `_relative` | helpers (one signature each) |
 | `bench_run`, `cost_contact`, `cost_free` (drive.py) | verification harness |
 
-**Measured cost** (Plint, one core, bin/tsafe, from a compiled loop; `test_cost_and_settings.py`):
+**Measured cost** (Plint, one core, bin/tsafe, from a compiled loop; `test_cost_and_settings.py`, and the hot
+loop's instrumented slot, docs/performance.md; 2026-11-09, a load of 4-6):
 
 | system | L0 step (modal_begin + modal_correct) | free tick |
 |---|---|---|
-| 5 modes, 1 station | 1.3 us | 4.5-6 us |
-| 9 modes, 10 stations | 2.4 us | 8.5-9.5 us |
-| 13 modes, 20 stations | 5.1 us | 10-14 us |
+| 5 modes, 1 station | 0.76 us (1.3-1.7 us with reference counting) | 4.7 us |
+| 13 modes, 20 stations | 4.5 us (5.1-7.9 us) | 11 us |
+| the slot's shape: 4 tool / machine + 4 workpiece modes, 119 stations, deflections at 61 (`act`), loads at 15 | 1.8 us (5.2 us) | |
+| the same inside the hot loop (caches shared with cut_step and removal) | 3.5 us (7.6 us) | |
 
-About half of the L0 cost is Numba's reference counting of the system tuple's member arrays at each call (kernels
-bind single arrays, never sub-tuples; helpers are inlined at the IR level). Per simulated second at 10 000 rpm
-(8 us steps): 0.16 s (5 modes) to 0.64 s (13 modes, 20 stations) in contact, 5-14 ms out of contact.
+`modal_begin` and `modal_correct` allocate nothing and are compiled without reference counting (`RAW`; with it,
+every member array of the system tuple taken in a kernel cost an atomic incref / decref, about half of the former
+cost); kernels bind single arrays, never sub-tuples, and the helpers are inlined at the IR level. Their station
+loops run over the stations' 6 components as one contiguous run (`u_st`, `v_st`, a mode's `tool_shape` row and the
+station loads are C-contiguous [station, 6]): the deflection update is vectorised, every element still summing the
+modes in their order, and the load projection sums four modes side by side, each in its order: the results are
+bit-identical to the station loops. A tool's static residual flexibility adds a dense 3 x 3 block per (deflected,
+loaded) station pair (+2.6 us for 27 x 15 stations). Per simulated second at 10 000 rpm (8 us steps): 0.1 s (5
+modes, 1 station) to 0.56 s (13 modes, 20 stations) in contact, 0.44 s for the slot inside the hot loop; 5-11 ms
+out of contact.
 
 ## 9. Parameters and settings
 

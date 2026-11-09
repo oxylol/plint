@@ -81,9 +81,15 @@ def test_explain_reads_the_synthetic_run(tmp_path):
 
 def test_main_dispatch_and_missing_modules(capsys):
     assert cli.main([]) == cli.EXIT_USAGE
-    assert cli.main(["bench"]) == cli.EXIT_MISSING
-    assert "cnctwin.bench.main is not available in this build (no module 'cnctwin.bench')" in capsys.readouterr().err
-    assert cli.main(["warmup"]) == cli.EXIT_MISSING
+    # a subcommand whose module is missing from a build exits EXIT_MISSING and names the module
+    with pytest.raises(cli.Missing, match="cnctwin.not_in_this_build.main is not available in this build"):
+        cli.resolve("cnctwin.not_in_this_build", "main")
+    cli.FORWARDED["ghost"] = ("cnctwin.not_in_this_build", "main", "test-only command")
+    try:
+        assert cli.main(["ghost"]) == cli.EXIT_MISSING
+        assert "not available in this build (no module 'cnctwin.not_in_this_build')" in capsys.readouterr().err
+    finally:
+        del cli.FORWARDED["ghost"]
     assert cli.main(["db", "check", "--help"]) == 0
     assert "twin db check" in capsys.readouterr().out
     assert cli.main(["new", "--help"]) == 0
@@ -181,5 +187,6 @@ def test_export_through_the_cli(tmp_path, capsys):
 def test_bin_twin_runs_the_cli():
     result = subprocess.run([str(ROOT / "bin" / "twin"), "--help"], capture_output=True, text=True, timeout=120)
     assert result.returncode == 0 and "usage: twin" in result.stdout
-    missing = subprocess.run([str(ROOT / "bin" / "twin"), "bench"], capture_output=True, text=True, timeout=120)
-    assert missing.returncode == cli.EXIT_MISSING and "not available in this build" in missing.stderr
+    unknown = subprocess.run([str(ROOT / "bin" / "twin"), "no-such-command"], capture_output=True, text=True,
+                             timeout=120)
+    assert unknown.returncode == cli.EXIT_USAGE
