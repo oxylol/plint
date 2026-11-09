@@ -51,7 +51,7 @@ own length.
 | 11 | same | same | sister of T1 (`life.sister_of: 1`), new, set 0.024 longer |
 | 2 | `osg-60568-ex-gdr-6.8` | `haimer-40-720-16` ER16 | 12 of 45 min used |
 | 12 | same | same | sister of T2, never needed in this batch |
-| 20 | machine spindle probe (`probes.spindle_probe`) | - | not in `tools.list`: the project format has no probe tool type; H20 set by G10 L10 |
+| 20 | machine spindle probe (`probes.spindle_probe`) | - | a `kind: probe` entry of `tools.list` (length 125.000, effective stylus radius 2.999); H20 also set by G10 L10 |
 
 Operator model (project `production.operator`): load 12 s, unload 6 s, clean 6 s, door 3 s, inspection
 45 s every 10th part (and the first article).
@@ -81,12 +81,13 @@ Numbers and bands: `EXPECTED.md` (calculations in `expected_calc.py`).
 
 ## Notes and limits
 
-* T20 is not in the tool list (no probe tool type in the project schema), so the controller warns
-  that T20 is not in the project's tool list and the sanity rule `tool-unknown` reports it; the same
-  holds for the sibling example `pocket-islands-al6061`.
+* T20 is the machine's spindle probe as a `kind: probe` entry of the tool list (docs/formats.md "Project
+  file"): the controller knows it by its T number and the static checks report no `tool-unknown` for it (as in
+  the sibling example `pocket-islands-al6061`).
 * Tool life management: the program calls T1 and T2; the sister selection is the tool-life provider's
   (`cnctwin.controller.hooks.register_tool_life`), driven by `life.limit_min`, `used_min` and
   `sister_of`. On a real NGC this is Advanced Tool Management with a tool group; the group call (T1000 ...)
   is not used because the twin's tool table has no group numbers as tools.
-* In this build G81 has no cycle provider (TW0001); with the cycle expanded by hand and the probe checks
-  removed the program dry-runs to M30 in 29.33 s.
+* The program as written dry-runs to M30 with no alarm (checked 2026-11-09 with the controller's dry run
+  under bin/tsafe): G81 runs through the drilling cycle provider, and the three G31 moves trigger on the
+  blank (the dry run's ideal probe against the stock as set up), so the ideal cycle is 26.71 s (11.92 s in feed).

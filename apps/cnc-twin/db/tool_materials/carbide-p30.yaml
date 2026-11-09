@@ -4,7 +4,7 @@ id: carbide-p30
 class: carbide
 name: "WC-(Ti,Ta,Nb)C-Co steel-cutting grade, ISO P30 (Mitsubishi ZU525H / Kyocera CA530 substrate as reference grades)"
 src: mitsubishi-2026-tm102g
-composition: {text: "ZU525H: P30, Co 12.5 %, grain < 3.0 µm (cubic carbide content not printed)", src: mitsubishi-2026-tm102g, page: "p. 4"}
+composition: {value: "ZU525H: P30, Co 12.5 %, grain < 3.0 µm (cubic carbide content not printed)", src: mitsubishi-2026-tm102g, page: "p. 4"}
 grain_size_um: {value: 3.0, src: mitsubishi-2026-tm102g, page: "ZU525H '< 3.0 µm'", note: "upper bound as printed"}
 binder_wt_pct: {value: 12.5, src: mitsubishi-2026-tm102g}
 density_kg_m3: {value: 13900, src: kyocera-2015-insert-grades, page: "p. A19, CA530 (P30 CVD grade substrate) specific gravity 13.9"}
@@ -28,15 +28,17 @@ weibull_modulus: {value: 15, src: est, note: "inside the 10-20 band for WC/Co in
 thermal_shock_parameter: null
 usui:
   - work_family: steel
-    A: 7.8e-15                         # 7.8e-9 mm2/N in the usual DEFORM form (p in MPa, v in mm/s, w in mm)
+    A_per_Pa: 7.8e-15                         # 7.8e-9 mm2/N in the usual DEFORM form (p in MPa, v in mm/s, w in mm)
     B_K: 5302
     T_range_K: [null, 1150]
     src: est
     note: "NOT VERIFIED: constants widely quoted for P20 carbide vs plain carbon steel (Usui, Shirakashi, Kitagawa, Wear 100 (1984) 129-151; Kitagawa et al. 1988), seen only in secondary-source excerpts, original not read. Converted from mm2/N to 1/Pa (x 1e-6). The two branches meet near 1150 K, which supports the pairing"
+    rate_unit: "m/s with sigma_n in Pa, V_s in m/s"
   - work_family: steel
-    A: 1.198e-8                        # 1.198e-2 mm2/N
+    A_per_Pa: 1.198e-8                        # 1.198e-2 mm2/N
     B_K: 21950
     T_range_K: [1150, null]
     src: est
     note: "NOT VERIFIED: high-temperature branch of the same quoted constant set; see the first entry"
+    rate_unit: "m/s with sigma_n in Pa, V_s in m/s"
 notes: "The Usui entries are flagged as unverified estimates until the 1984 paper is read."

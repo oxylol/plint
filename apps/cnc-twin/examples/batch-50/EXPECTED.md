@@ -64,7 +64,10 @@ controller's ideal dry run of `bracket.nc`. Force law: Kienzle **kc11 = 800 N/mm
 
 * Ideal dry run (no acceleration, probe moves to the end of travel): **29.33 s**. With the probes
   triggering 2 mm early (-2.4 s) and spindle ramps, accelerations and the orient (+2-4 s):
-  **cycle 29-32 s per part** (< 40 s). The switch part has the same cycle (same chip-to-chip time).
+  **cycle 29-32 s per part** (< 40 s). The switch part has the same cycle (same chip-to-chip time). The
+  controller's ideal dry run of `bracket.nc` as written (G81 through its cycle provider, the G31 moves
+  triggering on the blank) gives **26.71 s** (11.92 s in feed), no alarm: the 29.33 s less the early
+  triggers, the lower bound the ramps and accelerations add to.
 * Operator per part: load 12 + unload 6 + clean 6 + 2 x door 3 = 30 s, machine waiting (no pallet
   changer); inspection 45 s on part 1 (first article) and every 10th part (6 in all).
   **Takt ~59 s, batch ~54 min, ~56 parts per hour.**

@@ -119,10 +119,13 @@ Numbers and bands are in `EXPECTED.md` (from `expected_calc.py`, `toolpath_stats
 
 ## Notes and limits
 
-* cnctwin has no HEIDENHAIN dialect yet. The program cannot be dry-run, and the static scan reports
-  only "scan-limits". The travel check in `make_program.py` uses the machine file's kinematics, where
-  the B pivot is assumed to be 120 mm below the table top: X +-50.4, Y +-16.9, Z -468.9..-453.0
-  (limit -475).
+* The controller's HEIDENHAIN Klartext dialect (`heidenhain_klartext`, docs/dialects.md) runs the program:
+  its ideal dry run (no acceleration) reaches `END PGM` with no alarm in 1155.0 s, 1137.5 s of it in feed
+  (38 207 commands; checked 2026-11-09 with the controller's dry run under bin/tsafe). The static program
+  checks (cnctwin.sanity) read only FANUC and Haas syntax themselves, so they report one `scan-limits`
+  finding for this program and no other rule. The travel check in `make_program.py` uses the machine file's
+  kinematics, where the B pivot is assumed to be 120 mm below the table top: X +-50.4, Y +-16.9,
+  Z -468.9..-453.0 (limit -475).
 * Machine time is about 19.5 min (333 s roughing and 804 s finishing in feed), well above the
   5-minute guidance. Hard finishing a die cavity to Ra 1.6 with a D10 ball takes this long. For a
   shorter run, simulate one tool or one half: the blocks from `TOOL CALL 2` are 13.6 min, and one

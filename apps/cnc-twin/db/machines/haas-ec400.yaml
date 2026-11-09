@@ -31,7 +31,9 @@ controller:
   feed_override_range_pct: {value: [0, 200], src: est, note: "override keys -10 %, 100 %, +10 % and handle steps of 1 % (haas-ngc-mill-om-2020 p. 48 Table 2.16), limits not given; 0-200 % assumed as on haas-vf2ss"}
   tool_life_management: {value: true, src: est}
   probing: {value: true, src: haas-ec-flyer-2022, note: "automatic tool-probe arm, M104 raise / M105 retract"}
-  tcpc_dwo: {value: option, src: haas-uk-ec400-flyer-2018, note: "DWO/TCPC listed as optional control features"}
+  five_axis:
+    tcpc: {value: option, src: haas-uk-ec400-flyer-2018, note: "DWO/TCPC listed as optional control features"}
+    dwo: {value: option, src: haas-uk-ec400-flyer-2018, note: "DWO/TCPC listed as optional control features"}
 
 axes:
   X:
@@ -92,7 +94,7 @@ axes:
     continuous: true
     rapid_deg_s: {value: 150, src: haas-ec400-web-2026}
     max_rpm: {value: 25, src: haas-ec400-web-2026, note: "150 deg/s = 25 rpm"}
-    rotation_90deg_s: {value: 3.0, src: haas-ec400-web-2026, note: "published 90 deg rotation time (full 4th); includes unclamp/clamp, which are not stated separately"}
+    index_90deg_s: {value: 3.0, src: haas-ec400-web-2026, note: "published 90 deg rotation time (full 4th); includes unclamp/clamp, which are not stated separately"}
     accel_rad_s2: {value: 10, src: est, note: "chosen so that 90 deg takes ~0.75 s of motion, leaving ~2.2 s of the published 3.0 s for unclamp + clamp + settle"}
     jerk_rad_s3: {value: 200, src: est, note: "the 10 rad/s2 acceleration is reached in a/j = 50 ms, longer than one period of the 120 Hz clamped-pallet torsion mode, as for the linear axes"}
     drive: {value: "cycloidal reducer", src: haas-ec-flyer-2022, note: "shock-load capacity 5x the rated gearbox torque"}
@@ -119,10 +121,11 @@ kinematics:
     - {link: column_z, axis: Z, direction: [0, 0, 1]}
     - {link: head, axis: Y, direction: [0, 1, 0]}
     - {link: spindle_nose, fixed: {translate_mm: [279.5, 688, 660]}, src: haas-ec400-mld-2018, note: "p. 4: spindle home 279 mm from the pallet CL in X (travel 559 centred), spindle CL 53-688 mm above the pallet (2.1 in clearance + 635 mm Y; flyer: 689 mm), nose 102-660 mm from the B axis. Which X end is home, and that X/Y/Z all move the tool, are assumptions (src: est)."}
-  home_mm: {X: 0, Y: 0, Z: 0, B: 0}
+  home_mm: {X: 0, Y: 0, Z: 0}
   tool_axis: [0, 0, 1]
   gravity_direction: [0, -1, 0]
   singularities: null
+  home_deg: {B: 0}
 
 spindles:
   - id: main
@@ -134,7 +137,6 @@ spindles:
     nose: CAT40
     max_rpm: 8100
     drive: "inline direct-drive"
-    max_torque_published: {value_Nm: 122, at_rpm: 2000}
     direction_reversible: {value: true, src: est}
     gear_ranges:
       - rpm: [0, 8100]
@@ -160,12 +162,12 @@ spindles:
       - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "40-taper motor-spindle flange mode, typical 700-1200 Hz"}
       - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est, note: "the x mode repeated in y: axisymmetric shaft and bearings"}
     thermal:
-      growth_um_at_max_rpm: {value: 20, src: est, note: "8100 rpm inline spindle; growth along +z (spindle axis horizontal)"}
+      growth_at_max_speed_um: {value: 20, src: est, note: "8100 rpm inline spindle; growth along +z (spindle axis horizontal)"}
       time_constant_min: {value: 25, src: est, note: "tau = C / G: heat capacity of the spindle cartridge and nose housing, about 100 kg x 460 J/kgK = 46 kJ/K, over the conductance to the cooled head, G = 300 W / 10 K = 30 W/K (bearing heat at 8100 rpm at a 10 K steady rise, both est) = 1530 s, about 25 min"}
-      bearing_heat_W_at_max_rpm: {value: 300, src: est, note: "Palmgren speed term M0 = 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for three angular-contact bearings of 85 mm pitch diameter, oil-air (f0 = 1), nu = 10 mm2/s, n = 8100 rpm: 3 x 0.115 Nm = 0.35 Nm, x 848 rad/s = 290 W, rounded to 300 W"}
+      bearing_heat_at_max_speed_W: {value: 300, src: est, note: "Palmgren speed term M0 = 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for three angular-contact bearings of 85 mm pitch diameter, oil-air (f0 = 1), nu = 10 mm2/s, n = 8100 rpm: 3 x 0.115 Nm = 0.35 Nm, x 848 rad/s = 290 W, rounded to 300 W"}
       thermal_comp: {value: true, src: est}
       comp_residual_fraction: {value: 0.3, src: est, note: "as haas-vf2ss: the model-based spindle growth compensation leaves 30 % of the growth (assumed)"}
-    optional: "10,000 / 12,000 / 15,000 rpm inline spindles; HSK-A63 available (haas-ec-flyer-2022)"
+    notes: "optional: 10,000 / 12,000 / 15,000 rpm inline spindles; HSK-A63 available (haas-ec-flyer-2022); max_torque_published: {value_Nm: 122, at_rpm: 2000}"
 
 structure:
   modes:
@@ -221,8 +223,7 @@ doors: {count: {value: 1, src: est, note: "one operator door at the pallet-chang
 
 probes:
   spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS)", trigger_force_N: 0.50, trigger_force_z_N: 5.85, repeatability_um: 1.0, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS hardware assumed (est.)"}
-  tool_setter: {model: "Renishaw OTS on automatic probe arm (M104/M105)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], src: renishaw-ots-2026, note: "arm described in haas-ec-flyer-2022; setter model assumed"}
-  tool_setter_extra: {position_mm: [-200, 450, 300], src: est, note: "deployed position in the base frame, assumed"}
+  tool_setter: {model: "Renishaw OTS on automatic probe arm (M104/M105)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], src: renishaw-ots-2026, note: "arm described in haas-ec-flyer-2022; setter model assumed", position_mm: {value: [-200, 450, 300], src: est, note: "deployed position in the base frame, assumed"}}
   laser: null
 
 coolant:
@@ -237,11 +238,10 @@ coolant:
     - {id: ring3, kind: flood, attached_to: head, position_mm: [-45, 0, 60], aim: [0.45, 0, -0.89], diameter_mm: 4, pump: flood, src: est, note: "aimed for longer tools"}
     - {id: ring4, kind: flood, attached_to: head, position_mm: [0, -45, 60], aim: [0, 0.45, -0.89], diameter_mm: 4, pump: flood, src: est, note: "as ring3 (aimed for longer tools), rotated 90 deg about the spindle axis"}
     - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
-  pcool: {value: "not available on EC-400/500", src: haas-ec-flyer-2022}
   air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: est, note: "air gun as on Haas VMCs (6 scfm), assumed"}
-  machine_air_l_min: {value: 255, note: "air required 9 scfm @ 100 psi (255 L/min @ 6.9 bar)"}
   chiller: null
   filtration_um: {value: 40, src: est, note: "finest particle the standard flood circuit is assumed to hold back: 40 um (as haas-vf2ss); the TSC option carries its own filter"}
+  notes: "pcool: {value: not available on EC-400/500, src: haas-ec-flyer-2022}; machine_air_l_min: {value: 255, note: air required 9 scfm @ 100 psi (255 L/min @ 6.9 bar)}"
 
 chip_conveyor: {type: belt, position: "centre, under the spindle", src: haas-ec-flyer-2022, rate_kg_h: {value: 120, src: est, note: "about the chip mass rate of continuous steel roughing at the S1 spindle power: 17 kW (50 % of the 34.5 kW peak) / 2.5 J/mm3 specific cutting energy = 6.8 cm3/s = 190 kg/h; the belt is sized for 120 kg/h average (roughing duty about 60 %, assumed)"}, discharge_height_mm: {value: 1041, src: haas-ec400-mld-2018, page: "p. 1"}}
 

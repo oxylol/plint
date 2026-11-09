@@ -155,6 +155,32 @@ PD_Z = 3
 PD_H = 4
 N_PD = 5
 
+# ------------------------------------------------------------------------------- process-damping wave memory (CutState.pd_ring / pd_aux)
+# The surface an element generated behind it, held as its relative vibration displacement u (tool deflection at the
+# element minus the work's, T0) sampled every pd_max_flank / (PD_RING_N - 1) of its travel along the material since it
+# entered the cut: the flank meets the wave the edge left there (docs/models/cutting.md "Process damping")
+PD_RING_N = 16
+PDA_X = 0               # travel along the material since the element entered the cut, at its last committed evaluation
+PDA_UX = 1              # u at that evaluation (T0)
+PDA_UY = 2
+PDA_UZ = 3
+PDA_COUNT = 4           # samples written since the entry (sample g at travel g dx, ring slot g mod PD_RING_N)
+N_PDA = 5
+
+# ------------------------------------------------------------------------------- recut strikes in progress (CutState.recut_act)
+# A struck chip voxel is cut like material: a load on the tool at the struck point for the crossing time
+# (docs/models/cutting.md "Recutting"); each row is one load still acting
+RECUT_SLOTS = 16
+RA_FX = 0               # force on the tool (T0)
+RA_FY = 1
+RA_FZ = 2
+RA_MX = 3               # its moment about the tool tip (T0)
+RA_MY = 4
+RA_MZ = 5
+RA_T = 6                # time it still acts (s; <= 0: free row)
+RA_Z = 7                # z_T of the struck point (the station that takes the load)
+N_RA = 8
+
 # ------------------------------------------------------------------------------- per-element accumulators (CutState.elem_acc)
 # the first N_ELEM_ACC columns are the core.abi ELEM_* slots in the same order (copied to Accum.elem at absorb)
 EA_LAST_H = N_ELEM_ACC  # h at the last surface-relevant evaluation (surface events of degenerate elements)
@@ -464,6 +490,11 @@ class CutState(NamedTuple):
     misc: np.ndarray            # [N_MS]
     st_written: np.ndarray      # [nst] int8 station rows of StepOut written last step
     last_p: np.ndarray          # [n, 10] last in-cut sample of a degenerate element: p_S (3), h, n_S (3), u_rel_S (3)
+    # additive (process damping from the generated surface, recut loads over their crossing time;
+    # docs/models/cutting.md "Process damping", "Recutting")
+    pd_ring: np.ndarray         # [n, PD_RING_N, 3] wave memory: u (T0) at travel g dx since the entry
+    pd_aux: np.ndarray          # [n, N_PDA]
+    recut_act: np.ndarray       # [RECUT_SLOTS, N_RA] recut loads still acting
 
 
 class CutAccum(NamedTuple):
@@ -641,7 +672,7 @@ def empty_state(n: int = 1, nt: int = 1, nst: int = 1) -> CutState:
     tooth[:, TS_EMIT_TICK] = -1.0
     tooth[:, TS_STEP_E] = -1.0
     return CutState(_f(n), _f(n), np.full(n, -1, np.int64), _i8(n), pend, np.zeros(n, np.int64), _f(n, N_EA),
-                    tooth, _f(N_MS), _i8(nst), _f(n, 10))
+                    tooth, _f(N_MS), _i8(nst), _f(n, 10), _f(n, PD_RING_N, 3), _f(n, N_PDA), _f(RECUT_SLOTS, N_RA))
 
 
 def empty_accum(nsec: int = 1) -> CutAccum:

@@ -258,13 +258,22 @@ class CuttingDomain:
         tool_T = member_mean(getattr(thermal, "rake_temp_mean_K", None)) if thermal is not None else None
         flank_T = None
         if thermal is not None:
-            q = np.asarray(getattr(thermal, "flank_temp_q_K", np.zeros((0, 0, 0))), float)
-            w = np.asarray(getattr(thermal, "q_weights", np.zeros(0)), float)
-            if q.ndim == 3 and q.shape[:2] == members.shape and w.size == q.shape[2] and w.sum() > 0 and members.any():
-                # a row without members in this step (e.g. a low-speed variant no element runs at) has no flank
-                # temperature of its own: None (the rake temperature then stands in), never a NaN mean
-                value = float(np.mean((q @ w)[members] / w.sum()))
-                flank_T = value if math.isfinite(value) else None
+            # mechanics' flank partition adds the rise of the step's own flank heat to the temperature at the entry
+            # into the cut (thermal's flank_entry_K, docs/models/thermal.md 2.2); the in-cut flank temperature
+            # (flank_temp_q_K, which wear needs) already holds that rise: reading it counted it twice. A thermal
+            # record without the entry temperature keeps the in-cut mean.
+            entry = np.asarray(getattr(thermal, "flank_entry_K", np.zeros((0, 0))), float)
+            if entry.shape == members.shape and entry.size:
+                flank_T = member_mean(entry)
+            else:
+                q = np.asarray(getattr(thermal, "flank_temp_q_K", np.zeros((0, 0, 0))), float)
+                w = np.asarray(getattr(thermal, "q_weights", np.zeros(0)), float)
+                if q.ndim == 3 and q.shape[:2] == members.shape and w.size == q.shape[2] and w.sum() > 0 \
+                        and members.any():
+                    # a row without members in this step (e.g. a low-speed variant no element runs at) has no flank
+                    # temperature of its own: None (the rake temperature then stands in), never a NaN mean
+                    value = float(np.mean((q @ w)[members] / w.sum()))
+                    flank_T = value if math.isfinite(value) else None
         work_T = REFERENCE_TEMP_K
         pre = getattr(prev.thermal, "contact_preheat_K", {}) or {}
         wpre = getattr(prev.thermal, "work_preheat_K", {}) or {}
@@ -367,8 +376,10 @@ class CuttingDomain:
             radius = quantised_radius(float(np.mean(edge_r[members])) if members.any() else geom.edge_radius_m, tol)
             g_now = RowGeometry(geom.kind, geom.rake_rad, geom.incl_rad, geom.clear_rad, radius, geom.forming,
                                 geom.low_speed, geom.radius_m, geom.lobes, geom.diameter_m)
+            # quantised with hysteresis against the row's last cell (coefficients.quantised_state)
             rs = quantised_state(self._row_state(ctx, state, slot, r, g_now, prev, omega, r_contact, members,
-                                                 geo.rotating), tol)
+                                                 geo.rotating), tol,
+                                 tc.row_states[r] if r < len(tc.row_states) else None)
             if tc.rows[r] is None or tc.row_states[r] != rs or tc.row_radius[r] != radius or \
                     (tc.row_prov[r] and not provisional):
                 tc.rows[r] = self._rows(model, tc, slot, r, g_now, rs, h_grid, provisional)

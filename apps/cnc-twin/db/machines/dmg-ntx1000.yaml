@@ -36,7 +36,6 @@ axes:
   X:
     type: linear
     travel_mm: [-380, 0]
-    travel_note: "380 mm = 330 mm + 50 mm (published as '380 (330 + 50)')"
     rapid_mm_min: 40000
     max_feed_mm_min: {value: 40000, src: est, note: "max cutting feed not read: the 40 m/min X rapid taken as the limit (as controller.max_feed_mm_min)"}
     accel_m_s2: {value: 5.0, src: est, note: "not published"}
@@ -52,6 +51,7 @@ axes:
     motor_force_N: {value: 8000, src: est, note: "a 3 kW feed servo (about 14 Nm rated) through the 20 mm lead at 90 % gives 2 pi x 14 x 0.9 / 0.020 = 4.0 kN continuous and 2-3 x that peak; 8 kN taken as the usable peak (assumed motor size); X lifts the 700 kg ram (+x up), 700 x (5 + 9.81) = 10.4 kN at 5 m/s2, so upward accelerations use the peak"}
     moving_mass_kg: {value: 700, src: est, note: "octagonal ram with tool spindle and DDM B axis"}
     guideways: {value: "box (square) guideways, 4 located diagonally (octagonal ram construction)", src: dmgmori-ntx1000-2013, page: "p. 4"}
+    notes: "travel_note: 380 mm = 330 mm + 50 mm (published as '380 (330 + 50)')"
   Y:
     type: linear
     travel_mm: [-105, 105]
@@ -72,7 +72,6 @@ axes:
   Z:
     type: linear
     travel_mm: [-615, 0]
-    travel_note: "460 mm + 155 mm for ATC (published)"
     rapid_mm_min: 50000
     max_feed_mm_min: {value: 50000, src: est, note: "not read: the 50 m/min Z rapid taken as the limit"}
     accel_m_s2: {value: 5.0, src: est, note: "0.5 g as X: 10 kN (est) on the 1200 kg saddle allows 8.3 m/s2"}
@@ -87,9 +86,9 @@ axes:
     positioning: {accuracy_um: 6, repeatability_um: 3, src: est, note: "as X over the longer 615 mm travel: 6 um accuracy, 3 um repeatability (semi-closed-loop ballscrew axis without published scales: ISO 230-2 values typical of this machine class (not published))"}
     motor_force_N: {value: 10000, src: est, note: "a 4 kW servo (about 19 Nm rated) through the 20 mm lead: 5.4 kN continuous; 10 kN taken as the usable peak (assumed)"}
     moving_mass_kg: {value: 1200, src: est, note: "saddle carrying the X ram (700 kg) and its own casting, about 500 kg, assumed"}
+    notes: "travel_note: 460 mm + 155 mm for ATC (published)"
   A:
     type: linear
-    description: "spindle 2 travel along z"
     travel_mm: {value: [-470, 0], src: est, note: "spindle-2 stroke not given in the catalogue table; assumed from the 424 mm max turning length"}
     rapid_mm_min: 36000
     max_feed_mm_min: {value: 36000, src: est, note: "not read: the 36 m/min A (spindle-2) rapid taken as the limit"}
@@ -105,6 +104,7 @@ axes:
     positioning: {accuracy_um: 6, repeatability_um: 3, src: est, note: "as Z: semi-closed-loop ballscrew axis without published scales: ISO 230-2 values typical of this machine class (not published)"}
     motor_force_N: {value: 8000, src: est, note: "as Y: a 3 kW servo through the 16 mm lead, 8 kN usable peak"}
     moving_mass_kg: {value: 400, src: est, note: "spindle-2 headstock with its built-in 7.5 kW motor and 5 in chuck on the slide, assumed"}
+    notes: "description: spindle 2 travel along z"
   B:
     type: rotary
     travel_deg: [-120, 120]
@@ -128,7 +128,6 @@ axes:
     motor_torque_Nm: {value: 300, src: est, note: "DDM torque: J alpha = 3.5 kg m2 x 60 rad/s2 = 210 Nm for the assumed acceleration, plus the unbalance of the head: 300 Nm (assumed)"}
   C1:
     type: rotary
-    description: "spindle 1 C axis"
     travel_deg: [0, 360]
     continuous: true
     max_rpm: {value: 250, note: "rapid traverse C 250 min-1"}
@@ -146,9 +145,9 @@ axes:
       clamped_stiffness_Nm_rad: {value: 8.0e5, src: est, note: "clamped spindle: 8.0e5 Nm/rad assumed (a disc clamp of about 250 mm diameter with a tangential stiffness of about 5e7 N/m: 5e7 x 0.125^2)"}
     positioning: {accuracy_arcsec: 10, repeatability_arcsec: 5, src: est, note: "C indexing with the built-in motor and spindle encoder: 10 arcsec accuracy, 5 arcsec repeatability assumed (the B and spindle indexing increment is 0.0001 deg, published)"}
     motor_torque_Nm: 223
+    notes: "description: spindle 1 C axis"
   C2:
     type: rotary
-    description: "spindle 2 C axis"
     travel_deg: [0, 360]
     continuous: true
     max_rpm: {value: 250, src: est, note: "assumed equal to C1"}
@@ -166,24 +165,27 @@ axes:
       clamped_stiffness_Nm_rad: {value: 2.0e5, src: est, note: "clamped spindle 2: a quarter of C1's 8.0e5 for the smaller 80 mm flat-nose spindle, 2.0e5 Nm/rad assumed"}
     positioning: {accuracy_arcsec: 10, repeatability_arcsec: 5, src: est, note: "as C1: 10 arcsec, 5 arcsec"}
     motor_torque_Nm: 37
+    notes: "description: spindle 2 C axis"
 
 kinematics:
   workpiece_chain:
     - {link: spindle1, axis: C1, axis_point_mm: [0, 0, 0], direction: [0, 0, -1]}
     - {link: chuck1_face, fixed: {translate_mm: [0, 0, 0]}}
-  workpiece_chain_sub:
-    - {link: spindle2_slide, axis: A, direction: [0, 0, 1]}
-    - {link: spindle2, axis: C2, axis_point_mm: [0, 0, 900], direction: [0, 0, 1], src: est, note: "spindle 2 faces spindle 1, so its C sense is mirrored; position assumed (see chuck2_face)"}
-    - {link: chuck2_face, fixed: {translate_mm: [0, 0, 900], rotate_deg: [0, 180, 0]}, src: est, note: "spindle-2 face 900 mm from spindle 1 at A = 0 (home), 430 mm at A min; assumed"}
   tool_chain:
     - {link: saddle, axis: Z, direction: [0, 0, 1]}
     - {link: ram, axis: X, direction: [1, 0, 0]}
     - {link: y_slide, axis: Y, direction: [0, 1, 0]}
     - {link: b_head, axis: B, axis_point_mm: [450, 0, 700], direction: [0, 1, 0], src: est, note: "B-axis centre at home assumed 450 mm from the spindle axis and 700 mm from the spindle-1 face"}
     - {link: spindle_nose, fixed: {translate_mm: [-120, 0, 0], rotate_deg: [0, 90, 0]}, src: est, note: "nose 120 mm from the B axis (assumed); at B = 0 the tool points toward -x (radial), so the nose z axis is base +x"}
-  home_mm: {X: 0, Y: 0, Z: 0, A: 0, B: 0, C1: 0, C2: 0}
+  home_mm: {X: 0, Y: 0, Z: 0, A: 0}
   tool_axis: [0, 0, 1]
   singularities: [{axis: C1, when: "B = 90 or -90 with Y = 0", behaviour: slow_down, note: "tool axis parallel to the spindle axis"}]
+  workpiece_chains:
+    sub:
+      - {link: spindle2_slide, axis: A, direction: [0, 0, 1]}
+      - {link: spindle2, axis: C2, axis_point_mm: [0, 0, 900], direction: [0, 0, 1], src: est, note: "spindle 2 faces spindle 1, so its C sense is mirrored; position assumed (see chuck2_face)"}
+      - {link: chuck2_face, fixed: {translate_mm: [0, 0, 900], rotate_deg: [0, 180, 0]}, src: est, note: "spindle-2 face 900 mm from spindle 1 at A = 0 (home), 430 mm at A min; assumed"}
+  home_deg: {B: 0, C1: 0, C2: 0}
 
 spindles:
   - id: main
@@ -210,7 +212,6 @@ spindles:
         additional_ratings:
           - {rating: "S2 30 min", src: est, note: "built from the tabulated S2 30 min values (11 kW, 172 Nm) like the 40 % ED curve: constant torque to 11 kW / 172 Nm = 611 rpm, then constant power", power_kW: [[0, 0], [611, 11], [6000, 11]], torque_Nm: [[0, 172], [611, 172], [6000, 17.5]]}
           - {rating: "S1 continuous", src: est, note: "built from the tabulated continuous values (7.5 kW, 158 Nm): constant torque to 453 rpm, then constant power", power_kW: [[0, 0], [453, 7.5], [6000, 7.5]], torque_Nm: [[0, 158], [453, 158], [6000, 11.9]]}
-    tabulated: {motor_kW: [11, 11, 7.5], torque_Nm: [223, 172, 158], duties: ["40 % ED", "30 min", "cont"]}
     accel_time_s: {value: 1.2, src: est, note: "0-6000 rpm with J = 0.06 kg m2 (built-in rotor + 6 in chuck) at 11 kW"}
     decel_time_s: {value: 1.2, src: est, note: "regenerative braking at the same torque as the acceleration: symmetric 1.2 s"}
     gear_change_s: {value: 0, src: est, note: "electronic winding change-over"}
@@ -223,11 +224,12 @@ spindles:
     thermal:
       housing_growth_length_mm: {value: 200, src: est, note: "headstock bolted to the bed over its length: the front bearings sit about 200 mm ahead of the centre of the bolt pattern (assumed)"}
       jacket: {flow_l_min: 10, src: est, note: "built-in motor spindles of turning centres are liquid cooled (assumed); geometry from the model's defaults"}
-      growth_um_at_max_rpm: {value: 15, src: est, note: "zero-centre-displacement spindle design keeps the centre in place radially (p. 5); axial growth assumed"}
+      growth_at_max_speed_um: {value: 15, src: est, note: "zero-centre-displacement spindle design keeps the centre in place radially (p. 5); axial growth assumed"}
       time_constant_min: {value: 30, src: est, note: "tau = C / G: built-in spindle and headstock near the bearings, about 120 kg x 460 J/kgK = 55 kJ/K, over G = 400 W / 13 K = 31 W/K (est) = 1780 s, about 30 min"}
-      bearing_heat_W_at_max_rpm: {value: 400, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for the front set of the 100 mm bearing bore (dm about 125 mm), grease f0 = 1, nu = 20 mm2/s, n = 6000 rpm: (1.2e5)^(2/3) = 2430, 0.47 Nm per bearing x 2 = 0.95 Nm x 628 rad/s = 600 W; 400 W assumed for the oil-air version with f0 about 0.7"}
+      bearing_heat_at_max_speed_W: {value: 400, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for the front set of the 100 mm bearing bore (dm about 125 mm), grease f0 = 1, nu = 20 mm2/s, n = 6000 rpm: (1.2e5)^(2/3) = 2430, 0.47 Nm per bearing x 2 = 0.95 Nm x 628 rad/s = 600 W; 400 W assumed for the oil-air version with f0 about 0.7"}
       thermal_comp: {value: true, src: est}
       comp_residual_fraction: {value: 0.3, src: est, note: "the thermal compensation leaves 30 % of the growth (as the other machines, assumed)"}
+    notes: "tabulated: {motor_kW: [11, 11, 7.5], torque_Nm: [223, 172, 158], duties: [40 % ED, 30 min, cont]}"
   - id: sub
     kind: sub
     drive_type: {value: built_in, src: est, note: "built-in motor of the second spindle (assumed, as the main spindle)"}
@@ -294,9 +296,9 @@ spindles:
       - {fn_Hz: 900, zeta: 0.04, k_N_um: 40, direction: y, src: est, note: "the x mode repeated in y: axisymmetric spindle (the B head adds compliance in both directions)"}
     thermal:
       jacket: {flow_l_min: 8, src: est, note: "liquid-cooled built-in motor of the milling head (assumed)"}
-      growth_um_at_max_rpm: {value: 15, src: est, note: "axial growth alpha L dT = 11.5e-6 1/K x 0.2 m (rear bearing to nose, assumed) x 6.5 K (steady rise of the shaft at the 300 W bearing heat, assumed) = 15 um"}
+      growth_at_max_speed_um: {value: 15, src: est, note: "axial growth alpha L dT = 11.5e-6 1/K x 0.2 m (rear bearing to nose, assumed) x 6.5 K (steady rise of the shaft at the 300 W bearing heat, assumed) = 15 um"}
       time_constant_min: {value: 20, src: est, note: "tau = C / G for the compact motor spindle: about 40 kg x 460 J/kgK = 18 kJ/K over G = 300 W / 20 K = 15 W/K (est) = 1230 s, about 20 min"}
-      bearing_heat_W_at_max_rpm: {value: 300, src: est, note: "Palmgren speed term for three 80 mm pitch-diameter bearings (65 mm bore), oil-air f0 = 1, nu = 10 mm2/s, n = 12 000 rpm: (1.2e5)^(2/3) = 2430, 3 x 0.124 Nm = 0.37 Nm x 1257 rad/s = 470 W; 300 W for f0 about 0.65 (assumed)"}
+      bearing_heat_at_max_speed_W: {value: 300, src: est, note: "Palmgren speed term for three 80 mm pitch-diameter bearings (65 mm bore), oil-air f0 = 1, nu = 10 mm2/s, n = 12 000 rpm: (1.2e5)^(2/3) = 2430, 3 x 0.124 Nm = 0.37 Nm x 1257 rad/s = 470 W; 300 W for f0 about 0.65 (assumed)"}
       thermal_comp: {value: true, src: est}
       comp_residual_fraction: {value: 0.3, src: est, note: "as spindle 1: 30 % of the growth remains after compensation (assumed)"}
 
@@ -360,9 +362,9 @@ coolant:
     - {id: tool_nozzle, kind: flood, attached_to: b_head, position_mm: [-100, 50, 0], aim: [-1, 0, 0], diameter_mm: 4, pump: flood, src: est, note: "flood nozzle on the B head beside the tool spindle (position and aim assumed, B-head frame)"}
     - {id: through_tool, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: through_tool}
   air_blast: {flow_l_min: 300, pressure_bar: 5, note: "tool-tip air blow needs >300 L/min extra (p. 20); supply 0.5 MPa"}
-  machine_air_l_min: {value: 650, note: "compressed air 0.5 MPa, 650 L/min (ANR)"}
   chiller: null
   filtration_um: {value: 50, src: est, note: "finest particle the flood circuit is assumed to hold back: 50 um"}
+  notes: "machine_air_l_min: {value: 650, note: compressed air 0.5 MPa, 650 L/min (ANR)}"
 
 chip_conveyor: {type: hinged_belt, discharge: right, src: dmgmori-ntx1000-2013, page: "p. 12 (right disposal only; two conveyor types)", rate_kg_h: {value: 80, src: est, note: "continuous steel turning at spindle 1's continuous 7.5 kW: 7500 W / 2.5 J/mm3 = 3.0 cm3/s = 85 kg/h; 80 kg/h assumed"}}
 

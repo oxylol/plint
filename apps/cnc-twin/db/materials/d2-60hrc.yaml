@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 120, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "Walter group H3 'hardened steels 58-62 HRC', p. F9 (D2 itself is not in Walter's comparison table; the 12 % Cr steels 1.2080 and 1.2601 are listed as P11/H3 and P14/H3). One value per workpiece group, independent of tool class"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: ceramic
       coating: uncoated
       kc11_N_mm2: 4300
@@ -58,6 +60,8 @@ cutting:
       vc_ref_m_min: {value: 100, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "same Walter H3 value applied to ceramic tools (tool-class assignment is this database's)"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.2, src: est, note: "assumed lower for brittle hardened steel"}
   indentation_coeff_N_mm3: {value: 9.5e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (~630 HB equivalent / 200)"}
@@ -118,6 +122,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 90 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []

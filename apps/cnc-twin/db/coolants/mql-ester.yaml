@@ -17,11 +17,11 @@ boiling_degC: {value: 350, range: [300, 420], src: est, note: "synthetic esters 
 leidenfrost_degC: {value: 400, range: [340, 480], src: est, note: "above the boiling range; as straight-oil"}
 flash_point_degC: {value: 220, range: [150, 280], src: est, note: "DGUV guide value: flash point COC > 150 C (Table 6); esters have higher flash points than fatty alcohols at equal viscosity (Table 5); 220 C assumed for a 30 mm2/s ester"}
 smoke_point_degC: {value: 190, src: est, note: "visible smoking starts some 20-30 K below the COC flash point (as straight-oil.yaml): 220 - 30 = 190 C"}
-noack_loss_pct_max: {value: 65, note: "guide value: evaporation loss at 250 C (Noack, DIN 51581-1) < 65 % (Table 6)"}
-dosage_ml_h: {range: [5, 50], note: "typical MQL dosage 5-50 ml per process hour (p. 8, 10); MQL defined as <= 50 ml/h per tool, > 150 ml/h briefly for tools > 40 mm (p. 12)"}
+max_noack_loss_pct: {value: 65, note: "guide value: evaporation loss at 250 C (Noack, DIN 51581-1) < 65 % (Table 6)"}
+dosage_ml_h: {value: [5, 50], note: "typical MQL dosage 5-50 ml per process hour (p. 8, 10); MQL defined as <= 50 ml/h per tool, > 150 ml/h briefly for tools > 40 mm (p. 12)"}
 dosage_default_ml_h: {value: 20, src: est, note: "default inside the DGUV range"}
-air_pressure_bar_min: {value: 4, note: "> 4 bar for 1- and 2-channel systems (p. 37)"}
-aerosol_droplet_um: {range: [0.5, 2], note: "venturi 1-channel aerosol (p. 33)"}
+min_air_pressure_bar: {value: 4, note: "> 4 bar for 1- and 2-channel systems (p. 37)"}
+aerosol_droplet_um: {value: [0.5, 2], note: "venturi 1-channel aerosol (p. 33)"}
 system_capacity_ml_h: {one_channel_max: 200, two_channel_min_max: 400, note: "1-channel up to 200 ml/h, 2-channel > 400 ml/h possible (p. 38)"}
 friction_factor:
   - {tool_class: carbide, work_family: steel, value: 0.75, range: [0.5, 0.95], src: est, note: "tribometer and cutting studies report roughly 20-70 % lower friction than dry depending on access to the contact; 0.75 assumed for continuous cutting"}

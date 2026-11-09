@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "Walter row 'low and high-alloy steels, low heat treatment level, Rm 750-1100 N/mm2' (groups P5, P8, P11, P12), chosen by the 900-1100 MPa strength of this condition; the comparison table lists 42CrMo4 as P7/P9, and P9 (Rm 1100-1400) has kc1.1 = 2500, mc = 0.25"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.25, src: est, note: "assumed; lower than for annealed steel because of the stronger, less ductile structure"}
   indentation_coeff_N_mm3: {value: 4.4e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (295/200)"}
@@ -74,7 +76,7 @@ chip:
     criterion: critical_speed
     vc_onset_m_min: {value: 200, src: est, note: "Q&T medium-carbon alloy steels at ~30 HRC form shear-localised chips at lower speeds than annealed steel; value assumed, no measurement read"}
   bue:
-    interface_temp_degC: {range: [200, 500], src: est, note: "assumed"}
+    interface_temp_degC: {value: [200, 500], src: est, note: "assumed"}
     vc_m_min: [5, 40]
     src: est
     note: "BUE window assumed narrower and at lower speed than for annealed steel; not measured"
@@ -97,6 +99,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read; C set so that T = 15 min at vc = 230 m/min (typical P-grade recommendation for ~300 HB alloy steel, general knowledge)"
+    T_ref_min: 1
   - tool_class: carbide
     coating: uncoated
     C_m_min: 200
@@ -109,6 +112,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 110 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []                # quenched-and-tempered bar profile: none published in the sources read

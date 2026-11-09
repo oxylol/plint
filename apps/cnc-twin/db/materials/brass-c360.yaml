@@ -51,6 +51,8 @@ cutting:
       vc_ref_m_min: {value: 250, src: est, note: "no reference speed in the catalogue; assumed"}
       src: iscar-materials-groups
       note: "ISCAR group 26: copper alloys > 1 % Pb, free cutting (110 HB)"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: hss
       coating: uncoated
       kc11_N_mm2: 805
@@ -59,6 +61,8 @@ cutting:
       vc_ref_m_min: 60
       src: est
       note: "carbide catalogue value x 1.15 assumed for HSS"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []                  # no published end-milling calibration for leaded brass was read
   min_chip_thickness_ratio: {value: 0.3, src: wojciechowski-2022-min-chip-thickness, range: [0.2, 0.4], note: "brass 360, experimental micro-milling (Kim et al. 2004) in Table 1; aluminium/copper/brass analytic range 0.2-0.4 (Son et al.)"}
   indentation_coeff_N_mm3: {value: 2.0e4, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (~125 HB for HRB 72)"}
@@ -97,6 +101,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 500 m/min (general knowledge, not a cited source)"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 185
@@ -109,6 +114,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 100 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
 
 residual_stress: []                # drawn rod: profile not read (stress relief 250-350 C per Jacques Allemann)

@@ -1,0 +1,718 @@
+{
+ "analysis": {
+  "F_mean_N": {
+   "coarsest_within_tol_h": 0.125,
+   "conclusive": true,
+   "default_error": 0.018999227422053355,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 26.935542824022722,
+   "errors": [
+    0.0022026784329135457,
+    0.017080601761205617,
+    0.018999227422053355,
+    0.01646617604342615,
+    0.012089491019291602,
+    0.0011370062596603
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 2.9550280052361235,
+   "reference": 27.45603988220932,
+   "reference_uncertainty": 0.00275334804114192,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.015,
+   "values": [
+    27.395695973533762,
+    26.988104909314327,
+    26.935542824022722,
+    27.004937529476933,
+    27.12483986177004,
+    27.424890804399663
+   ],
+   "within_tol_h": [
+    0.125,
+    2.0,
+    4.0
+   ]
+  },
+  "F_peak_N": {
+   "coarsest_within_tol_h": 0.125,
+   "conclusive": false,
+   "default_error": 0.053815101275810254,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 104.079818752349,
+   "errors": [
+    0.0,
+    0.020533167632598263,
+    0.053815101275810254,
+    0.07340129154413558,
+    0.15660600389674983,
+    0.5594896337723407
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 1.8563429437750407,
+   "reference": 109.99945031112568,
+   "reference_uncertainty": 0.053815101275810254,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.02,
+   "values": [
+    109.99945031112568,
+    112.25808746385769,
+    104.079818752349,
+    118.07355203310728,
+    127.22602465519017,
+    171.5430024808562
+   ],
+   "within_tol_h": [
+    0.125
+   ]
+  },
+  "Fx_N": {
+   "coarsest_within_tol_h": 2.0,
+   "conclusive": true,
+   "default_error": 0.0014375201477624128,
+   "default_h": 0.5,
+   "default_inside": true,
+   "default_value": -13.029641655702758,
+   "errors": [
+    0.0,
+    0.0005788614771429112,
+    0.0014375201477624128,
+    0.0014018439272294116,
+    0.007804651743749651,
+    0.01743936635125574
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 1.800478657924933,
+   "reference": -13.048398992150016,
+   "reference_uncertainty": 0.0014375201477624128,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.015,
+   "values": [
+    -13.048398992150016,
+    -13.055952207664962,
+    -13.029641655702758,
+    -13.030107173262804,
+    -12.946560782202791,
+    -12.820843181828556
+   ],
+   "within_tol_h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0
+   ]
+  },
+  "Fy_N": {
+   "coarsest_within_tol_h": 0.125,
+   "conclusive": false,
+   "default_error": 0.02717011631170833,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 22.940974995586835,
+   "errors": [
+    0.0,
+    0.02563000293127936,
+    0.02717011631170833,
+    0.022188695452575374,
+    0.011743403318214456,
+    0.009877055811024027
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 4.05672517502398,
+   "reference": 23.58169231871319,
+   "reference_uncertainty": 0.02717011631170833,
+   "relative": true,
+   "sign": 1,
+   "status": "finest",
+   "tol": 0.015,
+   "values": [
+    23.58169231871319,
+    22.977293475460044,
+    22.940974995586835,
+    23.05844532959693,
+    23.304762994888502,
+    23.814610009863518
+   ],
+   "within_tol_h": [
+    0.125,
+    2.0,
+    4.0
+   ]
+  },
+  "chip_tooth_spread": {
+   "coarsest_within_tol_h": null,
+   "conclusive": false,
+   "default_error": 0.08295764989815341,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 0.20603864482307072,
+   "errors": [
+    0.045766089083729034,
+    0.06799555731939144,
+    0.08295764989815341,
+    0.08376271869589433,
+    0.09233924882888586,
+    0.10504688514547209
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 0.5711614744267889,
+   "reference": 0.2889962947212241,
+   "reference_uncertainty": 0.057207611354661285,
+   "relative": false,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.01,
+   "values": [
+    0.2432302056374951,
+    0.22100073740183268,
+    0.20603864482307072,
+    0.2052335760253298,
+    0.19665704589233826,
+    0.18394940957575204
+   ],
+   "within_tol_h": []
+  },
+  "chip_volume_analytic_mm3": {
+   "coarsest_within_tol_h": 0.125,
+   "conclusive": true,
+   "default_error": 0.027330774022009268,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 0.17445364649403897,
+   "errors": [
+    0.0016436445919606204,
+    0.025791874339592964,
+    0.027330774022009268,
+    0.021833869695588103,
+    0.005949220679885968,
+    0.03257242312674769
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 3.971946338575922,
+   "reference": 0.1793473036894478,
+   "reference_uncertainty": 0.0020545557399509052,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.01,
+   "values": [
+    0.1790530041874408,
+    0.1747291911053187,
+    0.17445364649403897,
+    0.17543788372741562,
+    0.17828207785414016,
+    0.18517949390395644
+   ],
+   "within_tol_h": [
+    0.125,
+    2.0
+   ]
+  },
+  "torque_Nm": {
+   "coarsest_within_tol_h": 0.125,
+   "conclusive": false,
+   "default_error": 0.023479616867125606,
+   "default_h": 0.5,
+   "default_inside": false,
+   "default_value": 0.14740967816104433,
+   "errors": [
+    0.0,
+    0.022696147605375427,
+    0.023479616867125606,
+    0.017860909460086456,
+    0.003670713824673881,
+    0.02531846453672354
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 4.856426954343043,
+   "reference": 0.15095402073239306,
+   "reference_uncertainty": 0.023479616867125606,
+   "relative": true,
+   "sign": 1,
+   "status": "finest",
+   "tol": 0.015,
+   "values": [
+    0.15095402073239306,
+    0.14752794599622576,
+    0.14740967816104433,
+    0.14825784463545577,
+    0.15039991172160055,
+    0.15477594475298198
+   ],
+   "within_tol_h": [
+    0.125,
+    2.0
+   ]
+  },
+  "vib_pp_um": {
+   "coarsest_within_tol_h": 0.125,
+   "conclusive": false,
+   "default_error": 0.02324045695103948,
+   "default_h": 0.5,
+   "default_inside": true,
+   "default_value": 10.312431621332342,
+   "errors": [
+    0.0,
+    0.05582636713439926,
+    0.02324045695103948,
+    0.08540882959197753,
+    0.15041526301933178,
+    0.9610179202124051
+   ],
+   "h": [
+    0.125,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    4.0
+   ],
+   "order": 0.7766983841068812,
+   "reference": 10.07820942895515,
+   "reference_uncertainty": 0.05582636713439926,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.025,
+   "values": [
+    10.07820942895515,
+    10.640839248593364,
+    10.312431621332342,
+    10.938977500665041,
+    11.594125950975348,
+    19.76354929383468
+   ],
+   "within_tol_h": [
+    0.125,
+    0.5
+   ]
+  }
+ },
+ "default_label": "bins720",
+ "h_name": "angle per memory bin (deg)",
+ "levels": [
+  {
+   "cost": {
+    "cpu_in_cut_s": 7.511060749999997,
+    "cpu_total_s": 9.610511470999999,
+    "in_cut_sim_s": 0.9386799999999986,
+    "l0_steps": 138875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 13.998612981999997,
+   "details": {
+    "analytic_total_mm3": 111.2561872336607,
+    "chatter_index": 0.8713716780768697,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 7.511060749999997,
+     "cpu_total_s": 9.610511470999999,
+     "in_cut_sim_s": 0.9386799999999986,
+     "l0_steps": 138875.0,
+     "strides": [
+      8
+     ]
+    },
+    "depth_limit_mm": 2.090916100320698,
+    "finished": true,
+    "removed_total_mm3": 145.42402,
+    "steps_cut": 102,
+    "vib_pp_um_late": 19.449225963679034
+   },
+   "error": null,
+   "h": 4.0,
+   "label": "bins90",
+   "physics": {
+    "memory_bins": 90
+   },
+   "quantities": {
+    "F_mean_N": 27.424890804399663,
+    "F_peak_N": 171.5430024808562,
+    "Fx_N": -12.820843181828556,
+    "Fy_N": 23.814610009863518,
+    "Fz_N": -4.540370669704594,
+    "chip_tooth_spread": 0.18394940957575204,
+    "chip_volume_analytic_mm3": 0.18517949390395644,
+    "chip_volume_field_mm3": 0.24317733143695475,
+    "chip_volume_xyz_mm3": [
+     0.2002036532006494,
+     0.20040721272287151,
+     0.24317733143695475
+    ],
+    "engaged_deg": 187.01185177677777,
+    "h_mean_um": 44.029507317951094,
+    "revolutions": 106.1666683964828,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.15477594475298198,
+    "vib_pp_um": 19.76354929383468
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 7.515888377999996,
+    "cpu_total_s": 9.715057206000001,
+    "in_cut_sim_s": 0.9396079999999986,
+    "l0_steps": 138875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 9.897642624,
+   "details": {
+    "analytic_total_mm3": 107.32086637629953,
+    "chatter_index": 0.8190195697104116,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 7.515888377999996,
+     "cpu_total_s": 9.715057206000001,
+     "in_cut_sim_s": 0.9396079999999986,
+     "l0_steps": 138875.0,
+     "strides": [
+      8
+     ]
+    },
+    "depth_limit_mm": 2.0904700198616357,
+    "finished": true,
+    "removed_total_mm3": 145.42518125000012,
+    "steps_cut": 102,
+    "vib_pp_um_late": 12.459936733083028
+   },
+   "error": null,
+   "h": 2.0,
+   "label": "bins180",
+   "physics": {
+    "memory_bins": 180
+   },
+   "quantities": {
+    "F_mean_N": 27.12483986177004,
+    "F_peak_N": 127.22602465519017,
+    "Fx_N": -12.946560782202791,
+    "Fy_N": 23.304762994888502,
+    "Fz_N": -5.003151326061716,
+    "chip_tooth_spread": 0.19665704589233826,
+    "chip_volume_analytic_mm3": 0.17828207785414016,
+    "chip_volume_field_mm3": 0.2430897657981533,
+    "chip_volume_xyz_mm3": [
+     0.20012384896937208,
+     0.20031602754152575,
+     0.24308976579815345
+    ],
+    "engaged_deg": 187.1236259566362,
+    "h_mean_um": 40.217179284019565,
+    "revolutions": 106.16666662291246,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.15039991172160055,
+    "vib_pp_um": 11.594125950975348
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 7.639030189000003,
+    "cpu_total_s": 9.739182608,
+    "in_cut_sim_s": 0.9395119999999987,
+    "l0_steps": 138875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 9.919506257999998,
+   "details": {
+    "analytic_total_mm3": 105.5373412213601,
+    "chatter_index": 0.8286510608072573,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 7.639030189000003,
+     "cpu_total_s": 9.739182608,
+     "in_cut_sim_s": 0.9395119999999987,
+     "l0_steps": 138875.0,
+     "strides": [
+      8
+     ]
+    },
+    "depth_limit_mm": 2.089336493325538,
+    "finished": true,
+    "removed_total_mm3": 145.42614062499993,
+    "steps_cut": 102,
+    "vib_pp_um_late": 10.826293739561708
+   },
+   "error": null,
+   "h": 1.0,
+   "label": "bins360",
+   "physics": {
+    "memory_bins": 360
+   },
+   "quantities": {
+    "F_mean_N": 27.004937529476933,
+    "F_peak_N": 118.07355203310728,
+    "Fx_N": -13.030107173262804,
+    "Fy_N": 23.05844532959693,
+    "Fz_N": -5.271722394647363,
+    "chip_tooth_spread": 0.2052335760253298,
+    "chip_volume_analytic_mm3": 0.17543788372741562,
+    "chip_volume_field_mm3": 0.24309178956858807,
+    "chip_volume_xyz_mm3": [
+     0.20012927033115457,
+     0.20031602330687648,
+     0.24309178956858826
+    ],
+    "engaged_deg": 187.04668489723278,
+    "h_mean_um": 39.88448388716347,
+    "revolutions": 106.1666670456361,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.14825784463545577,
+    "vib_pp_um": 10.938977500665041
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 7.638076247999962,
+    "cpu_total_s": 9.8865805,
+    "in_cut_sim_s": 0.9413199999999987,
+    "l0_steps": 138875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 10.075200955,
+   "details": {
+    "analytic_total_mm3": 104.86629806692171,
+    "chatter_index": 0.8580335803464045,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 7.638076247999962,
+     "cpu_total_s": 9.8865805,
+     "in_cut_sim_s": 0.9413199999999987,
+     "l0_steps": 138875.0,
+     "strides": [
+      8
+     ]
+    },
+    "depth_limit_mm": 2.0892354971914364,
+    "finished": true,
+    "removed_total_mm3": 145.42609062499994,
+    "steps_cut": 102,
+    "vib_pp_um_late": 10.738224807886892
+   },
+   "error": null,
+   "h": 0.5,
+   "label": "bins720",
+   "physics": {
+    "memory_bins": 720
+   },
+   "quantities": {
+    "F_mean_N": 26.935542824022722,
+    "F_peak_N": 104.079818752349,
+    "Fx_N": -13.029641655702758,
+    "Fy_N": 22.940974995586835,
+    "Fz_N": -5.428035722118747,
+    "chip_tooth_spread": 0.20603864482307072,
+    "chip_volume_analytic_mm3": 0.17445364649403897,
+    "chip_volume_field_mm3": 0.24309167098510098,
+    "chip_volume_xyz_mm3": [
+     0.20012255642754853,
+     0.20030954452267444,
+     0.24309167098510123
+    ],
+    "engaged_deg": 187.0953178144169,
+    "h_mean_um": 39.88467816374133,
+    "revolutions": 106.16666701539049,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.14740967816104433,
+    "vib_pp_um": 10.312431621332342
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 7.455242049999995,
+    "cpu_total_s": 9.756227144,
+    "in_cut_sim_s": 0.9416079999999986,
+    "l0_steps": 138875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 9.947018448000001,
+   "details": {
+    "analytic_total_mm3": 105.04324713244972,
+    "chatter_index": 0.8776266346410215,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 7.455242049999995,
+     "cpu_total_s": 9.756227144,
+     "in_cut_sim_s": 0.9416079999999986,
+     "l0_steps": 138875.0,
+     "strides": [
+      8
+     ]
+    },
+    "depth_limit_mm": 2.089581089044925,
+    "finished": true,
+    "removed_total_mm3": 145.42611562499994,
+    "steps_cut": 102,
+    "vib_pp_um_late": 10.872191804407805
+   },
+   "error": null,
+   "h": 0.25,
+   "label": "bins1440",
+   "physics": {
+    "memory_bins": 1440
+   },
+   "quantities": {
+    "F_mean_N": 26.988104909314327,
+    "F_peak_N": 112.25808746385769,
+    "Fx_N": -13.055952207664962,
+    "Fy_N": 22.977293475460044,
+    "Fz_N": -5.472102255066666,
+    "chip_tooth_spread": 0.22100073740183268,
+    "chip_volume_analytic_mm3": 0.1747291911053187,
+    "chip_volume_field_mm3": 0.24309173009926055,
+    "chip_volume_xyz_mm3": [
+     0.20012924954267441,
+     0.20031954418509668,
+     0.24309173009926077
+    ],
+    "engaged_deg": 187.1708503243542,
+    "h_mean_um": 40.011489043236566,
+    "revolutions": 106.16666716943875,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.14752794599622576,
+    "vib_pp_um": 10.640839248593364
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 7.599148894000102,
+    "cpu_total_s": 9.935591843999994,
+    "in_cut_sim_s": 0.9413039999999987,
+    "l0_steps": 138875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 10.121685692,
+   "details": {
+    "analytic_total_mm3": 107.45123537994901,
+    "chatter_index": 0.8006508952739468,
+    "chatter_share": 1.0,
+    "cost": {
+     "cpu_in_cut_s": 7.599148894000102,
+     "cpu_total_s": 9.935591843999994,
+     "in_cut_sim_s": 0.9413039999999987,
+     "l0_steps": 138875.0,
+     "strides": [
+      8
+     ]
+    },
+    "depth_limit_mm": 2.08949648893441,
+    "finished": true,
+    "removed_total_mm3": 145.42576875000003,
+    "steps_cut": 102,
+    "vib_pp_um_late": 10.697648820443309
+   },
+   "error": null,
+   "h": 0.125,
+   "label": "bins2880",
+   "physics": {
+    "memory_bins": 2880
+   },
+   "quantities": {
+    "F_mean_N": 27.395695973533762,
+    "F_peak_N": 109.99945031112568,
+    "Fx_N": -13.048398992150016,
+    "Fy_N": 23.58169231871319,
+    "Fz_N": -4.9160175957268155,
+    "chip_tooth_spread": 0.2432302056374951,
+    "chip_volume_analytic_mm3": 0.1790530041874408,
+    "chip_volume_field_mm3": 0.24309116299980482,
+    "chip_volume_xyz_mm3": [
+     0.20013774347898697,
+     0.20032564526416752,
+     0.243091162999805
+    ],
+    "engaged_deg": 187.09212476100575,
+    "h_mean_um": 39.851836702933475,
+    "revolutions": 106.16666710822209,
+    "steady_s": 0.63,
+    "steady_steps": 63,
+    "steady_ticks": 679,
+    "torque_Nm": 0.15095402073239306,
+    "vib_pp_um": 10.07820942895515
+   }
+  }
+ ],
+ "note": "D10 4FL, Al 6061-T6, 10 000 rpm, f_z 0.04 mm, full slot ap 0.6 mm, runout 5 um TIR, the VF-2SS with one spindle mode in x (900 Hz, zeta 0.02, 5 N/um; stable: forced vibration imprinted on the surface)",
+ "root": "/tmp/cconv/tree-20261109-1238",
+ "setting": "physics.memory_bins",
+ "study": "bins_runout",
+ "title": "Surface-memory bins: runout and regeneration (1-DOF)"
+}

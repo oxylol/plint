@@ -14,7 +14,6 @@ items:
     bore_mm: {value: [1.5, 20.0], src: haimer-shop-cc6-021-32}
     gauge_length_mm: {value: 100, src: haimer-shop-cc6-021-32, note: "length A, long version"}
     nose_diameter_mm: {value: 50, src: haimer-shop-cc6-021-32, note: "clamping nut D"}
-    length_L_mm: {value: 47.5, src: haimer-shop-cc6-021-32}
     profile_mm: {value: [[0, 50], [100, 50]], src: est, note: "only nut and flange (63 mm) diameters printed; body assumed not wider than the nut"}
     clamping_torque_Nm: null
     axial_retention_N: null
@@ -26,6 +25,8 @@ items:
     mass_kg: {value: 1.402, src: haimer-shop-cc6-021-32}
     clamp_length_mm: null
     price_eur: null
+    dimensions_mm:
+      L: {value: 47.5, src: haimer-shop-cc6-021-32}
   - id: haimer-cc6-021-16
     order_code: "CC6.021.16"
     type: er_collet
@@ -35,7 +36,6 @@ items:
     bore_mm: {value: [0.5, 10.0], src: haimer-shop-cc6-021}
     gauge_length_mm: {value: 100, src: haimer-shop-cc6-021}
     nose_diameter_mm: {value: 28, src: haimer-shop-cc6-021}
-    length_L_mm: {value: 33, src: haimer-shop-cc6-021}
     profile_mm: {value: [[0, 28], [100, 28]], src: est, note: "only nut diameter printed"}
     clamping_torque_Nm: null
     axial_retention_N: null
@@ -47,4 +47,6 @@ items:
     mass_kg: {value: 1.035, src: haimer-shop-cc6-021}
     clamp_length_mm: null
     price_eur: null
+    dimensions_mm:
+      L: {value: 33, src: haimer-shop-cc6-021}
 notes: "Variant table also lists CC6.021.20/.25/.40 (100 mm) and CC6.022.xx (160 mm). A KM63 adaptor and a Capto C6-to-HSK adaptor were not read (gap). ER clamping-nut tightening torque (REGO-FIX recommendation for standard ER/ERC nuts, regofix-tightening-torque p. 1; HAIMER values not found): ER32 136 Nm for 3.0-22.0 mm collets (24 Nm for 2.0-2.5 mm), ER16 56 Nm for 5.0-10.0 mm (40 Nm for 4.0-4.5, 20 Nm for 1.5-3.5, 8 Nm for 1.0 mm); not more than 25 % above these (regofix-2009-er-technical-information). Transmissible torque not published (gap)."

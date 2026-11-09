@@ -51,6 +51,8 @@ cutting:
       vc_ref_m_min: {value: 300, src: est, note: "no reference speed in the catalogue; assumed"}
       src: iscar-materials-groups
       note: "ISCAR group 21: aluminium wrought alloy, not hardenable, 60 HB nominal (matches 7075-O at 60 HB)"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: hss
       coating: uncoated
       kc11_N_mm2: 805
@@ -59,6 +61,8 @@ cutting:
       vc_ref_m_min: 60
       src: est
       note: "carbide catalogue value x 1.15 assumed for HSS"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.3, src: wojciechowski-2022-min-chip-thickness, range: [0.2, 0.45], note: "no 7075 entry; chosen inside the aluminium-alloy range of Table 1"}
   indentation_coeff_N_mm3: {value: 9.5e3, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (60/95)"}
@@ -81,7 +85,7 @@ chip:
   tendency: continuous
   segmentation: null
   bue:
-    interface_temp_degC: {range: [100, 350], src: est, note: "assumed"}
+    interface_temp_degC: {value: [100, 350], src: est, note: "assumed"}
     vc_m_min: [10, 300]
     src: est
     note: "assumed from the 7075 data read for the aged tempers (BUE/BUL at 40-300 m/min: trujillo-2017-al7075-adhesion, jomaa-2014-al7075-orthogonal), extended to low speed for the soft temper"
@@ -101,6 +105,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge); BUE rather than flank wear usually limits life"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 200
@@ -113,6 +118,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 110 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
 
 residual_stress: []                # annealed: as-supplied residual stresses assumed negligible; none read

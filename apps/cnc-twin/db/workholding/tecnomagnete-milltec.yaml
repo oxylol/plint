@@ -8,13 +8,10 @@ items:
   - id: tecnomagnete-milltec
     order_code: null
     type: magnetic
-    holding_pressure_max_N_cm2: {value: 157, src: tecnomagnete-web-milltec, note: "'fino a 16 kg/cm2' = 16 x 9.81 N/cm2"}
+    max_holding_pressure_N_cm2: {value: 157, src: tecnomagnete-web-milltec, note: "'fino a 16 kg/cm2' = 16 x 9.81 N/cm2"}
     magnetisation_levels: {value: 8, src: tecnomagnete-web-milltec, note: "ST200/R control unit"}
     thin_part_version: {value: "/SC with recess, for thin workpieces from 10 mm", src: tecnomagnete-web-milltec}
-    holding_pressure_N_cm2_vs_thickness_mm:
-      table: [[3, 15], [5, 35], [10, 80], [15, 115], [20, 140], [25, 157], [50, 157]]
-      src: est
-      note: "shape assumed: the flux saturates in parts thinner than about half the pole size, so pressure rises roughly with thickness and reaches the 157 N/cm2 maximum (tecnomagnete-web-milltec) at about 25 mm for low-carbon steel; the 10 mm point follows the stated thin-part limit of the /SC version. Not a published curve; scale down for alloy steels and cast iron, zero for non-ferrous"
     pole_pitch_mm: null
     jaw_friction: {value: 0.2, src: est, note: "steel part on ground steel poles; not published. Lateral capacity = friction x magnetic force"}
+    holding_pressure_N_cm2: {table: [[3, 15], [5, 35], [10, 80], [15, 115], [20, 140], [25, 157], [50, 157]], src: est, note: "shape assumed: the flux saturates in parts thinner than about half the pole size, so pressure rises roughly with thickness and reaches the 157 N/cm2 maximum (tecnomagnete-web-milltec) at about 25 mm for low-carbon steel; the 10 mm point follows the stated thin-part limit of the /SC version. Not a published curve; scale down for alloy steels and cast iron, zero for non-ferrous", x: mm}
 notes: "Only the maximum pressure and the thin-part limit are maker data; the thickness curve is an estimate (gap)."

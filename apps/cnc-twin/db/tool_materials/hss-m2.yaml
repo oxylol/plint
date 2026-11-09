@@ -4,7 +4,7 @@ id: hss-m2
 class: hss
 name: "HSS M2 (HS6-5-2C, 1.3343), hardened and tempered 62-65 HRC (BÖHLER S600 as the reference grade)"
 src: bohler-2026-s600
-composition: {text: "C 0.9, Cr 4.1, Mo 5, V 1.8, W 6.2 wt%", src: bohler-2026-s600, page: "p. 2"}
+composition: {value: "C 0.9, Cr 4.1, Mo 5, V 1.8, W 6.2 wt%", src: bohler-2026-s600, page: "p. 2"}
 density_kg_m3: {value: 8070, src: bohler-2026-s600, page: "p. 4, 20 °C"}
 youngs_modulus_GPa: {value: 219, src: bohler-2026-s600, page: "p. 4, 20 °C"}
 poisson: {value: 0.29, src: est, note: "not in the BÖHLER sheet; typical value for hardened tool steels (0.28-0.30), 0.29 chosen"}

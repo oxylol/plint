@@ -156,11 +156,12 @@ states its duty:
         torque_Nm: [[0, 125], [600, 125], ..., [12000, 20.7]]
 ```
 
-(The VF-2SS file predates some key renames: it still writes `growth_um_at_max_rpm`, which the loader migrates
-to `growth_at_max_speed_um` and reports with `--migrations`. Write the new form in a new file.)
+(Every database file is written in the current key forms: `twin db check --migrations` lists no migrated key.
+The loader still migrates the older forms of the migration table, docs/formats.md, for files written against the
+first templates, such as `growth_um_at_max_rpm` for `growth_at_max_speed_um`; write the new form.)
 
 An **extending** machine: `db/machines/dmg-dmu50-3rd-siemens.yaml` is the DMU 50 with a SINUMERIK 840D sl
-instead of the TNC 640. It names its base with `same_mechanics_as: dmg-dmu50-3rd` (the older form of
-`extends: dmg-dmu50-3rd`, migrated at load), but as written it still repeats every section of the base with
-the same values. A new variant needs only `extends: <base id>` and the sections that differ: here the
-`controller` section.
+instead of the TNC 640. It writes only its identity (`id`, `model`), `extends: dmg-dmu50-3rd`, its `src` and the
+section that differs, `controller`; everything else is the base's. `extends` deep-merges mappings, so a controller
+key the base writes and the variant does not (here the TNC's `five_axis.tcpm` name) stays the base's: write such
+a key in the variant when the base's value is wrong for it.

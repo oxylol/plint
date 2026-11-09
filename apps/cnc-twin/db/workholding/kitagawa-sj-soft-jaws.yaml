@@ -10,9 +10,9 @@ items:
     type: soft_jaws
     fits: {value: "B-206, BL206, BS306, HOH-206", src: kitagawa-jaws-catalogue, page: "pp. 105-106"}
     jaws_per_set: {value: 3, src: kitagawa-jaws-catalogue, page: "p. 105 model key"}
-    length_mm: {value: 66, src: kitagawa-jaws-catalogue, page: "p. 107, S-1"}
-    width_mm: {value: 26, src: kitagawa-jaws-catalogue, page: "S-2"}
-    height_mm: {value: 28, src: kitagawa-jaws-catalogue, page: "S-3"}
+    jaw_length_mm: {value: 66, src: kitagawa-jaws-catalogue, page: "p. 107, S-1"}
+    jaw_width_mm: {value: 26, src: kitagawa-jaws-catalogue, page: "S-2"}
+    jaw_height_mm: {value: 28, src: kitagawa-jaws-catalogue, page: "S-3"}
     serration: {value: "1.5 x 60°", src: kitagawa-jaws-catalogue}
     mounting_bolts: {value: "M10x25", src: kitagawa-jaws-catalogue, page: "p. 106"}
     form: {value: "L = light weight type", src: kitagawa-jaws-catalogue, page: "p. 105 model key"}
@@ -24,9 +24,9 @@ items:
     type: soft_jaws
     fits: {value: "B-208, BB208, BS308, BL208, HOH-208, BR08, QJR08", src: kitagawa-jaws-catalogue, page: "pp. 105-106"}
     jaws_per_set: {value: 3, src: kitagawa-jaws-catalogue}
-    length_mm: {value: 95, src: kitagawa-jaws-catalogue, page: "p. 107, S-1"}
-    width_mm: {value: 35, src: kitagawa-jaws-catalogue, page: "S-2"}
-    height_mm: {value: 38, src: kitagawa-jaws-catalogue, page: "S-3"}
+    jaw_length_mm: {value: 95, src: kitagawa-jaws-catalogue, page: "p. 107, S-1"}
+    jaw_width_mm: {value: 35, src: kitagawa-jaws-catalogue, page: "S-2"}
+    jaw_height_mm: {value: 38, src: kitagawa-jaws-catalogue, page: "S-3"}
     serration: {value: "1.5 x 60°", src: kitagawa-jaws-catalogue}
     mounting_bolts: {value: "M12x30", src: kitagawa-jaws-catalogue, page: "p. 106"}
     form: {value: "B = cut of crest", src: kitagawa-jaws-catalogue, page: "p. 105 model key"}

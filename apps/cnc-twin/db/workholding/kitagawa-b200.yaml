@@ -4,12 +4,10 @@ series_id: kitagawa-b200
 maker: "Kitagawa"
 series: "B-200 series thru-hole 3-jaw power chuck (wedge type, hydraulic cylinder actuated)"
 src: kitagawa-open-centre-catalogue
-speed_rule: {text: "allowable max speed = speed at which the dynamic gripping force has fallen to about 1/3 of the max static gripping force, Kitagawa standard soft jaws at mid stroke, jaw outer end flush with the chuck periphery; centrifugal force is proportional to the square of speed", src: kitagawa-2021-b200-manual, page: "section 3"}
-jaw_friction: {value: 0.1, src: kitagawa-gripforce-setting, page: "p. 4, mu = 0.1 (determine by the actual surface of the jaw and workpiece)", note: "used by Kitagawa for gripping torque = F_dyn mu r_g; Carr Lane uses 0.19 in its clamp example (carrlane-clamping-force-calc). No measured jaw/part friction study was read"}
-safety_factor: {continuous: 2.5, interrupted: 3.0, src: kitagawa-gripforce-setting, page: "p. 5"}
-centrifugal_loss_general:
-  formula: "F_loss = c * M * omega^2, M = sum(m_jaw * r_cg) over all jaws (kg m), omega in rad/s"
-  c: {value: 1.09, src: est, note: "Kitagawa BB208 example: M = 259.2 kg mm, 3500 min-1 -> loss 38 kN (kitagawa-gripforce-setting p. 3); M omega^2 = 34.8 kN, ratio 1.09 (master jaws and wedge add to the top-jaw value)"}
+defaults:
+  jaw_friction: {value: 0.1, src: kitagawa-gripforce-setting, page: "p. 4, mu = 0.1 (determine by the actual surface of the jaw and workpiece)", note: "used by Kitagawa for gripping torque = F_dyn mu r_g; Carr Lane uses 0.19 in its clamp example (carrlane-clamping-force-calc). No measured jaw/part friction study was read"}
+  safety_factor: {continuous: 2.5, interrupted: 3.0, src: kitagawa-gripforce-setting, page: "p. 5"}
+  centrifugal_loss_coeff: {value: 1.09, src: est, note: "Kitagawa BB208 example: M = 259.2 kg mm, 3500 min-1 -> loss 38 kN (kitagawa-gripforce-setting p. 3); M omega^2 = 34.8 kN, ratio 1.09 (master jaws and wedge add to the top-jaw value)"}
 items:
   - id: kitagawa-b-206
     order_code: "B-206"
@@ -24,14 +22,14 @@ items:
     gripping_force_kN: {value: 57, src: kitagawa-open-centre-catalogue, note: "max static gripping force (total of 3 jaws)"}
     max_rpm: {value: 6000, src: kitagawa-open-centre-catalogue}
     mass_kg: {value: 11.9, src: kitagawa-open-centre-catalogue, note: "net, with standard soft top jaws"}
-    moment_of_inertia_kg_m2: {value: 0.058, src: kitagawa-open-centre-catalogue}
+    moment_of_inertia_kgm2: {value: 0.058, src: kitagawa-open-centre-catalogue}
     matching_cylinder: {value: "S1246, max pressure 2.8 MPa", src: kitagawa-open-centre-catalogue}
     body_mm: {outer_diameter: 169, length: 81, spigot_diameter_H6: 140, src: kitagawa-open-centre-catalogue, page: "p. 9 dimensions A, B, C"}
     standard_soft_jaw: {value: "SJ06L1A (bolts M10x25)", src: kitagawa-jaws-catalogue, page: "p. 106"}
     jaw_mass_moment_kg_mm: {value: 39, src: kitagawa-2021-b200-manual, page: "section 3-3 example, standard soft jaw", note: "sum over the 3 jaws (Kitagawa writes mass moment = m r 3)"}
     jaw_mass_kg: {value: 0.30, src: est, note: "steel soft jaw SJ06L1A 66 x 26 x 28 mm (kitagawa-jaws-catalogue p. 107) less bolt holes and serration"}
     jaw_cg_radius_mm: {value: 43, src: est, note: "39 kg mm / 3 jaws / 0.30 kg"}
-    centrifugal_loss_model: {type: quadratic_in_speed, loss_kN: 38, at_rpm: 6000, src: kitagawa-2021-b200-manual, note: "gripping force loss with standard soft jaws, H <= 14 mm; loss(n) = 38 kN (n/6000)^2"}
+    centrifugal_loss_model: {method: quadratic_in_speed, loss_kN: 38, at_rpm: 6000, src: kitagawa-2021-b200-manual, note: "gripping force loss with standard soft jaws, H <= 14 mm; loss(n) = 38 kN (n/6000)^2"}
     grip_length_mm: null
     accuracy_um: null
   - id: kitagawa-b-208
@@ -47,13 +45,13 @@ items:
     gripping_force_kN: {value: 86, src: kitagawa-open-centre-catalogue}
     max_rpm: {value: 5000, src: kitagawa-open-centre-catalogue}
     mass_kg: {value: 22.3, src: kitagawa-open-centre-catalogue}
-    moment_of_inertia_kg_m2: {value: 0.170, src: kitagawa-open-centre-catalogue}
+    moment_of_inertia_kgm2: {value: 0.170, src: kitagawa-open-centre-catalogue}
     matching_cylinder: {value: "S1552, max pressure 2.65 MPa", src: kitagawa-open-centre-catalogue}
     body_mm: {outer_diameter: 210, length: 91, spigot_diameter_H6: 170, src: kitagawa-open-centre-catalogue}
     standard_soft_jaw: {value: "SJ08B1 (bolts M12x30)", src: kitagawa-jaws-catalogue, page: "p. 106"}
     jaw_mass_kg: {value: 0.95, src: est, note: "steel soft jaw SJ08B1 95 x 35 x 38 mm (kitagawa-jaws-catalogue p. 107) less holes"}
     jaw_cg_radius_mm: {value: 57, src: est, note: "jaw outer end flush with the chuck periphery (r 105 mm), centroid half a jaw length (47.5 mm) inside"}
-    centrifugal_loss_model: {type: quadratic_in_speed, loss_kN: 57.3, at_rpm: 5000, src: est, note: "from the Kitagawa speed rule (kitagawa-2021-b200-manual section 3): dynamic force at max speed = 1/3 of 86 kN, so loss = 2/3 x 86 kN at 5000 min-1"}
+    centrifugal_loss_model: {method: quadratic_in_speed, loss_kN: 57.3, at_rpm: 5000, src: est, note: "from the Kitagawa speed rule (kitagawa-2021-b200-manual section 3): dynamic force at max speed = 1/3 of 86 kN, so loss = 2/3 x 86 kN at 5000 min-1"}
     grip_length_mm: null
     accuracy_um: null
   - id: kitagawa-b-210
@@ -69,13 +67,13 @@ items:
     gripping_force_kN: {value: 111, src: kitagawa-open-centre-catalogue}
     max_rpm: {value: 4200, src: kitagawa-open-centre-catalogue}
     mass_kg: {value: 34.5, src: kitagawa-open-centre-catalogue}
-    moment_of_inertia_kg_m2: {value: 0.315, src: kitagawa-open-centre-catalogue}
+    moment_of_inertia_kgm2: {value: 0.315, src: kitagawa-open-centre-catalogue}
     matching_cylinder: {value: "S1875, max pressure 2.70 MPa", src: kitagawa-open-centre-catalogue}
     body_mm: {outer_diameter: 254, length: 100, spigot_diameter_H6: 220, src: kitagawa-open-centre-catalogue}
     standard_soft_jaw: {value: "SJ10B1 (bolts M12x30)", src: kitagawa-jaws-catalogue, page: "p. 106"}
     jaw_mass_kg: {value: 1.4, src: est, note: "SJ10B1 dimensions not read; scaled from SJ08B1 by the chuck size ratio cubed (254/210)^3 ~ 1.8, rounded down"}
     jaw_cg_radius_mm: {value: 70, src: est, note: "flush with the periphery (r 127 mm), assumed 115 mm jaw length"}
-    centrifugal_loss_model: {type: quadratic_in_speed, loss_kN: 74.0, at_rpm: 4200, src: est, note: "Kitagawa speed rule: loss = 2/3 x 111 kN at 4200 min-1"}
+    centrifugal_loss_model: {method: quadratic_in_speed, loss_kN: 74.0, at_rpm: 4200, src: est, note: "Kitagawa speed rule: loss = 2/3 x 111 kN at 4200 min-1"}
     grip_length_mm: null
     accuracy_um: null
-notes: "Dynamic gripping force F_dyn(n) = F_static - loss(n). For non-standard jaws use centrifugal_loss_general with the jaw mass moment."
+notes: "Dynamic gripping force F_dyn(n) = F_static - loss(n). For non-standard jaws use centrifugal_loss_general with the jaw mass moment.; speed_rule: {text: allowable max speed = speed at which the dynamic gripping force has fallen to about 1/3 of the max static gripping force, Kitagawa standard soft jaws at mid stroke, jaw outer end flush with the chuck periphery; centrifugal force is proportional to the square of speed, src: kitagawa-2021-b200-manual, page: section 3}; centrifugal_loss_general: {formula: F_loss = c * M * omega^2, M = sum(m_jaw * r_cg) over all jaws (kg m), omega in rad/s}"

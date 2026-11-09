@@ -51,6 +51,8 @@ cutting:
       vc_ref_m_min: 500
       src: est
       note: "no Kienzle value for magnesium was read (ISCAR has no magnesium group). Estimated by scaling ISCAR group 22 (hardenable wrought aluminium, 800 N/mm2, mc 0.25) by the shear-strength ratio ~145/207 (AZ31B shear assumed 0.58 x UTS; 6061-T6 shear 207 MPa, kaiser-2006-al6061-datasheet)"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: hss
       coating: uncoated
       kc11_N_mm2: 645
@@ -59,6 +61,8 @@ cutting:
       vc_ref_m_min: 150
       src: est
       note: "carbide estimate x 1.15"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.2, src: est, range: [0.1, 0.4], note: "no AZ31B value read; korpysa-2025-az91d-micromilling saw shearing start at fz/rn = 0.1 on AZ91D (not a minimum chip thickness); 0.2 assumed, inside the 0.08-0.63 range of wojciechowski-2022-min-chip-thickness"}
   indentation_coeff_N_mm3: {value: 9.5e3, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (60/95)"}
@@ -103,6 +107,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 1200 m/min (general knowledge, not a cited source); magnesium is gentle on tools, and chip temperature/ignition, not wear, usually limits speed"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 555
@@ -115,6 +120,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 300 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
 
 residual_stress: []                # no as-supplied profile read

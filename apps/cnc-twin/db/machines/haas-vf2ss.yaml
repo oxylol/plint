@@ -109,7 +109,6 @@ spindles:
     drive: "inline direct-drive"
     bearing_lubrication: "air/oil injection"
     cooling: "liquid cooled"
-    max_torque_published: {value_Nm: 122, at_rpm: 2000}
     direction_reversible: {value: true, src: est}
     gear_ranges:
       - rpm: [0, 12000]
@@ -138,12 +137,12 @@ spindles:
       - {fn_Hz: 2100, zeta: 0.03, k_N_um: 200, direction: x, src: est, note: "second (bearing/shaft) mode, assumed"}
       - {fn_Hz: 2100, zeta: 0.03, k_N_um: 200, direction: y, src: est, note: "the x mode repeated in y: axisymmetric shaft and bearings"}
     thermal:
-      growth_um_at_max_rpm: {value: 25, src: est, note: "steady axial growth of a liquid-cooled 12k inline spindle head (head coolant jacket: haas-europe-vmc-brochure-2013 p. 21); 10-40 um typical"}
+      growth_at_max_speed_um: {value: 25, src: est, note: "steady axial growth of a liquid-cooled 12k inline spindle head (head coolant jacket: haas-europe-vmc-brochure-2013 p. 21); 10-40 um typical"}
       time_constant_min: {value: 25, src: est, note: "first-order spindle warm-up time constant, typical 15-40 min"}
-      bearing_heat_W_at_max_rpm: {value: 450, src: est, note: "part of the idle loss dissipated in the front bearings"}
+      bearing_heat_at_max_speed_W: {value: 450, src: est, note: "part of the idle loss dissipated in the front bearings"}
       thermal_comp: {value: true, src: est, note: "Haas offers spindle thermal compensation on NGC (not verified this session)"}
       comp_residual_fraction: {value: 0.3, src: est, note: "model-based compensation typically removes ~70 % of growth"}
-    optional: "15,000 rpm inline spindle, same 22.4 kW / 122 Nm rating (haas-uk-vf2ss-2026)"
+    notes: "optional: 15,000 rpm inline spindle, same 22.4 kW / 122 Nm rating (haas-uk-vf2ss-2026); max_torque_published: {value_Nm: 122, at_rpm: 2000}"
 
 structure:
   modes:
@@ -190,10 +189,8 @@ guide_bushing: null
 doors: {count: {value: 2, src: est, note: "the two sliding front doors of the enclosure (doors note; opening width 939 mm on haas-vf2-mld-2023 p. 3)"}, auto: {value: false, src: est}, open_time_s: null, opening_width_mm: {value: 939, src: haas-vf2-mld-2023, page: "p. 3"}, note: "two sliding front doors; servo auto-door is an option"}
 
 probes:
-  spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS work probe)", trigger_force_N: 0.50, trigger_force_high_N: 0.90, trigger_force_z_N: 5.85, repeatability_um: 1.0, overtravel_xy_deg: 12.5, overtravel_z_mm: 6, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS hardware assumed to be the Renishaw OMP40-2 + OTS (est.)"}
-  spindle_probe_extra: {pretravel_um: 1, stylus_ball_mm: 6, src: est, note: "pretravel/lobing not given in the data sheet; 6 mm ruby ball assumed"}
-  tool_setter: {model: "Renishaw OTS (Haas WIPS tool setter)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], overtravel_xy_mm: 3.5, overtravel_z_mm: 6, src: renishaw-ots-2026}
-  tool_setter_extra: {position_mm: [-330, 0, 0], disc_mm: 12.7, src: est, note: "mounted on the table left end, assumed (table frame); disc diameter as commonly supplied"}
+  spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS work probe)", trigger_force_N: 0.50, trigger_force_z_N: 5.85, repeatability_um: 1.0, overtravel_xy_deg: 12.5, overtravel_z_mm: 6, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS hardware assumed to be the Renishaw OMP40-2 + OTS (est.)", pretravel_um: {value: 1, src: est, note: "pretravel/lobing not given in the data sheet; 6 mm ruby ball assumed"}, stylus_ball_mm: {value: 6, src: est, note: "pretravel/lobing not given in the data sheet; 6 mm ruby ball assumed"}, notes: "trigger_force_high_N: 0.9"}
+  tool_setter: {model: "Renishaw OTS (Haas WIPS tool setter)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], overtravel_xy_mm: 3.5, overtravel_z_mm: 6, src: renishaw-ots-2026, position_mm: {value: [-330, 0, 0], src: est, note: "mounted on the table left end, assumed (table frame); disc diameter as commonly supplied"}, disc_mm: {value: 12.7, src: est, note: "mounted on the table left end, assumed (table frame); disc diameter as commonly supplied"}}
   laser: null
 
 coolant:
@@ -217,13 +214,14 @@ coolant:
       pump: flood
       option: true
       src: haas-pcool-web-2026
-      programmable: {code: "M34/M35", positions: 34, src: haas-pcool-web-2026, note: "M34 = next position away from home (nozzle lower, longer tools), M35 = toward home; 0.05 s per step"}
-      geometry: {position_mm: [90, -40, -40], step_deg: 1.5, home_aim: [-0.7, 0, -0.7], diameter_mm: 5, src: est, note: "angle per position is not published; ~50 deg sweep over 34 positions assumed"}
+      programmable: {code: "M34/M35", positions: 34, src: haas-pcool-web-2026, note: "M34 = next position away from home (nozzle lower, longer tools), M35 = toward home; 0.05 s per step", step_deg: {value: 1.5, src: est, note: "angle per position is not published; ~50 deg sweep over 34 positions assumed"}, home_aim: {value: [-0.7, 0, -0.7], src: est, note: "angle per position is not published; ~50 deg sweep over 34 positions assumed"}}
+      position_mm: {value: [90, -40, -40], src: est, note: "angle per position is not published; ~50 deg sweep over 34 positions assumed"}
+      diameter_mm: {value: 5, src: est, note: "angle per position is not published; ~50 deg sweep over 34 positions assumed"}
     - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
   air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: haas-europe-vmc-brochure-2013, page: "p. 28: automatic air gun 6 scfm; supply 100 psi", note: "6 scfm = 170 L/min"}
-  machine_air_l_min: {value: 113, note: "air required 4 scfm at 100 psi (113 L/min, 6.9 bar)"}
   chiller: null
   filtration_um: {value: 40, src: est, note: "standard tank screen/strainer; finer filtration is an option"}
+  notes: "machine_air_l_min: {value: 113, note: air required 4 scfm at 100 psi (113 L/min, 6.9 bar)}"
 
 chip_conveyor: {type: auger, option: true, src: est, note: "chip auger option assumed", rate_kg_h: {value: 60, src: est, note: "auger capacity for steel chips, assumed"}}
 

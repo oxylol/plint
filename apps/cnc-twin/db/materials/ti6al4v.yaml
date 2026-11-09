@@ -52,6 +52,8 @@ cutting:
       vc_ref_m_min: 20
       src: klippel-2024-ck45-orthogonal
       note: "Table 19 (Sandvik CCMW 09T304 H13A, WC-6Co uncoated, rake 0, clearance 7, edge radius 20-50 um, mean 37.5 um; f = 0.01-0.4 mm). Feed force kf1.1 421 N/mm2, mf 0.54. Neighbours: 11 m/min 1299/0.21, 13: 1264/0.22, 40: 1253/0.22"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: carbide
       coating: uncoated
       kc11_N_mm2: 1146
@@ -60,6 +62,8 @@ cutting:
       vc_ref_m_min: 60
       src: klippel-2024-ck45-orthogonal
       note: "Table 19; kf1.1 300, mf 0.69. Neighbours: 50 m/min 1061/0.28, 52: 1156/0.27, 70: 1156/0.24"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: carbide
       coating: uncoated
       kc11_N_mm2: 932
@@ -68,6 +72,8 @@ cutting:
       vc_ref_m_min: 100
       src: klippel-2024-ck45-orthogonal
       note: "Table 19; kf1.1 226, mf 0.77. Neighbours: 74: 941/0.32, 80: 1084/0.28, 89: 891/0.34, 125: 962/0.31, 150: 998/0.30, 159: 869/0.31, 162: 1027/0.28"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: carbide
       coating: uncoated
       kc11_N_mm2: 859
@@ -76,6 +82,8 @@ cutting:
       vc_ref_m_min: 212
       src: klippel-2024-ck45-orthogonal
       note: "Table 19; kf1.1 248, mf 0.72. Neighbours: 191: 881/0.32, 254: 749/0.37"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: carbide
       coating: uncoated
       kc11_N_mm2: 712
@@ -84,6 +92,8 @@ cutting:
       vc_ref_m_min: 318
       src: klippel-2024-ck45-orthogonal
       note: "Table 19; kf1.1 186, mf 0.78. Higher speeds: 381: 663/0.38, 400: 803/0.35, 500: 662/0.41"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: carbide
       coating: any
       kc11_N_mm2: 2110
@@ -92,6 +102,8 @@ cutting:
       vc_ref_m_min: {value: 60, src: est, note: "no reference speed in the catalogue; assumed"}
       src: iscar-materials-groups
       note: "ISCAR group 37, titanium alpha+beta alloys hardened (Rm 1050). About 1.7x the measured values above at h = 0.06 mm; catalogue values serve machine-power sizing and are conservative. The measured entries are preferred; a 15 deg rake orthogonal test at 30 m/min, h = 60 um (ducobu-2017-jc-ti6al4v Table 3: 113 N/mm, i.e. 1883 N/mm2) agrees with them within the rake-angle effect"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: hss
       coating: uncoated
       kc11_N_mm2: 1400
@@ -100,6 +112,8 @@ cutting:
       vc_ref_m_min: 15
       src: est
       note: "measured carbide value at 11-20 m/min (1265-1299) x ~1.1 assumed for HSS; no HSS data read"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic:
     - tool_class: carbide
       coating: uncoated
@@ -175,6 +189,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 75 m/min (general knowledge); coatings help less in titanium than in steel"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 22
@@ -187,6 +202,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 12 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
 
 residual_stress: []                # annealed mill product: no profile read

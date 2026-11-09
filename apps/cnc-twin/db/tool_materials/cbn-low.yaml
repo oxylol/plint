@@ -4,7 +4,7 @@ id: cbn-low
 class: cbn
 name: "Low-content PCBN with ceramic (TiN/TiC) binder for hard turning of hardened steel (Kyocera KBN510 as reference grade)"
 src: kyocera-2015-insert-grades
-composition: {text: "about 45-65 vol% cBN in a TiN/TiCN ceramic binder (typical of the hard-turning class; content not printed for KBN510)", src: est}
+composition: {value: "about 45-65 vol% cBN in a TiN/TiCN ceramic binder (typical of the hard-turning class; content not printed for KBN510)", src: est}
 grain_size_um: {value: 2, src: kyocera-2015-insert-grades, page: "p. A16, KBN510 average grain size 2 µm"}
 cbn_content_vol_pct: {value: 55, range: [45, 65], src: est, note: "class range for hard-turning PCBN; not printed by Kyocera. The same-class Sandvik CBN7020 is given as 57 % CBN + 35 % Ti(C,N) in aouici-2010-h11-cbn (basis of the percentage not stated)"}
 density_kg_m3: {value: 4300, src: aouici-2010-h11-cbn, page: "Table 2", note: "CBN7020 (57 % CBN + 35 % Ti(C,N), same hard-turning class as KBN510): 4.3 g/cm3. The earlier rule-of-mixtures estimate (55 vol% cBN at 3.48 g/cm3 + 45 vol% TiN/TiC at ~5.2 g/cm3) gave the same 4300"}

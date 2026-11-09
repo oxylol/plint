@@ -77,11 +77,14 @@ computer"; cylinders and faces need no correction. T3 and T5 are programmed on t
 ## Notes and limits
 
 * The machine file has no parts catcher, so the part drops into the chip pan at part-off.
-* In this build the controller has no provider for the lathe cycles G70/G71/G76 (TW0001), and the Haas
-  dialect reads the `D` word of a G71/G76 block as an offset number, so `D2.5` raises alarm 311
-  (decimal point). Haas writes D with a decimal point in these cycles, so the program keeps it. With the
-  three cycle blocks replaced by plain moves the rest of the program dry-runs to M30.
-* The project format cannot carry lathe X/Z tool geometry offsets (the controller reads `x_offset_m`,
-  `z_offset_m`, `nose_radius_m`, `tip`, which the project schema does not declare), so the offsets are
-  left to the presetter (`length_offset_mm: null`). The tailstock stiffness is not in the machine or the
-  centre's database item; EXPECTED.md brackets it (30-60 N/um).
+* The controller runs G71 (type I), G70 and G76 through its lathe cycle providers and reads the `D` of a
+  G71/G76 block as the depth, with the decimal point Haas writes there (`D2.5`, `D0.3`): the program as
+  written dry-runs to M30 with no alarm in 156.9 s on the ideal machine, 142.8 s of it in feed (the feed
+  time of EXPECTED.md section 9), the thread in 11 passes (checked 2026-11-09 with the controller's dry run
+  under bin/tsafe).
+* The project format declares the lathe geometry offsets as set on the control's offset page
+  (`x_offset_mm`, `z_offset_mm`, `nose_radius_mm`, `tip`, and wear `x`, `z`, `radius`; docs/formats.md
+  "Project file"). This project leaves them unset, as a presetter would hand them over at the machine: the
+  controller then works with zero geometry offsets and nose radius (the program uses no tool nose radius
+  compensation, G40 throughout). The tailstock stiffness is not in the machine or the centre's database
+  item; EXPECTED.md brackets it (30-60 N/um).

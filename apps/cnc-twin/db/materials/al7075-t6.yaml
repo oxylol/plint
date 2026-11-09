@@ -51,6 +51,8 @@ cutting:
       vc_ref_m_min: {value: 300, src: est, note: "no reference speed in the catalogue; assumed"}
       src: iscar-materials-groups
       note: "ISCAR group 22: aluminium wrought alloy, hardenable (100 HB nominal; 7075-T6 is 150 HB, so forces may be under-predicted)"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: hss
       coating: uncoated
       kc11_N_mm2: 920
@@ -59,6 +61,8 @@ cutting:
       vc_ref_m_min: 60
       src: est
       note: "carbide catalogue value x 1.15 assumed for HSS; no published HSS value read"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic:
     - tool_class: carbide
       coating: "coated (type not stated)"
@@ -97,7 +101,7 @@ chip:
   tendency: continuous
   segmentation: null
   bue:
-    interface_temp_degC: {range: [150, 400], src: est, note: "assumed; no interface temperature measured in the sources read (Trujillo et al. argue thermo-mechanical adhesion at the edge)"}
+    interface_temp_degC: {value: [150, 400], src: est, note: "assumed; no interface temperature measured in the sources read (Trujillo et al. argue thermo-mechanical adhesion at the edge)"}
     vc_m_min: [40, 300]
     src: trujillo-2017-al7075-adhesion
     note: "Trujillo et al. 2017: BUE/BUL at every tested speed 40-200 m/min (dry, TiN-coated WC), intensity driven by feed (highest at 0.2-0.3 mm), speed of little influence. jomaa-2014-al7075-orthogonal (T651, uncoated carbide, dry): BUE present at 300 m/min, reduced on the flank at 1000 m/min where a BUL forms on the rake. Upper bound 300 m/min = highest speed with clear BUE read; it fades between 300 and 1000 m/min"
@@ -117,6 +121,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge, not a cited source); adhesion and edge chipping often limit life before flank wear"
+    T_ref_min: 1
   - tool_class: pcd
     coating: uncoated
     C_m_min: 5500
@@ -129,6 +134,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "placeholder: T = 15 min at vc ~ 2100 m/min; not a cited value"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 185
@@ -141,6 +147,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 100 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
 
 residual_stress:

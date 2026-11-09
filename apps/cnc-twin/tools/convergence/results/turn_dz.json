@@ -1,0 +1,459 @@
+{
+ "analysis": {
+  "F_mean_N": {
+   "coarsest_within_tol_h": 50.0,
+   "conclusive": true,
+   "default_error": 0.0019270080716857038,
+   "default_h": 6.25,
+   "default_inside": true,
+   "default_value": 1142.575445894083,
+   "errors": [
+    0.0019270080716857038,
+    0.003690935009122079,
+    0.007069509174212266,
+    0.011670952647733056
+   ],
+   "h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ],
+   "order": 0.9376237198001606,
+   "reference": 1140.3736937873352,
+   "reference_uncertainty": 0.002408760089606999,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.015,
+   "values": [
+    1142.575445894083,
+    1144.590865501149,
+    1148.4511413843131,
+    1153.7086377128276
+   ],
+   "within_tol_h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ]
+  },
+  "Fx_N": {
+   "coarsest_within_tol_h": 50.0,
+   "conclusive": true,
+   "default_error": 0.0,
+   "default_h": 6.25,
+   "default_inside": true,
+   "default_value": -83.15279560148684,
+   "errors": [
+    0.0,
+    0.0016320603832406736,
+    0.00306737689446285,
+    0.0009132959442022929
+   ],
+   "h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ],
+   "order": 0.18532552507268424,
+   "reference": -83.15279560148684,
+   "reference_uncertainty": 0.00306737689446285,
+   "relative": true,
+   "sign": 1,
+   "status": "finest",
+   "tol": 0.015,
+   "values": [
+    -83.15279560148684,
+    -83.01708521802995,
+    -82.89773463754885,
+    -83.07685249051492
+   ],
+   "within_tol_h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ]
+  },
+  "Fy_N": {
+   "coarsest_within_tol_h": 50.0,
+   "conclusive": true,
+   "default_error": 0.0021064448235467038,
+   "default_h": 6.25,
+   "default_inside": true,
+   "default_value": 1055.1895797585312,
+   "errors": [
+    0.0021064448235467038,
+    0.004050616969996148,
+    0.007789189469484717,
+    0.012939437044563075
+   ],
+   "h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ],
+   "order": 0.9433315426477882,
+   "reference": 1052.9668811303884,
+   "reference_uncertainty": 0.0026330560294335137,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.015,
+   "values": [
+    1055.1895797585312,
+    1057.2410499487214,
+    1061.1859526933536,
+    1066.6204402677529
+   ],
+   "within_tol_h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ]
+  },
+  "Fz_N": {
+   "coarsest_within_tol_h": 50.0,
+   "conclusive": true,
+   "default_error": 0.0011168509122212135,
+   "default_h": 6.25,
+   "default_inside": true,
+   "default_value": 430.2780646427774,
+   "errors": [
+    0.0011168509122212135,
+    0.0019228445892397862,
+    0.003310496749306941,
+    0.004684771371482621
+   ],
+   "h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ],
+   "order": 0.7838055497772646,
+   "reference": 429.79750819377233,
+   "reference_uncertainty": 0.001396063640276308,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.015,
+   "values": [
+    430.2780646427774,
+    430.62486604223926,
+    431.2219423280703,
+    431.81326255278776
+   ],
+   "within_tol_h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ]
+  },
+  "Ra_um": {
+   "coarsest_within_tol_h": 50.0,
+   "conclusive": true,
+   "default_error": 0.0,
+   "default_h": 6.25,
+   "default_inside": true,
+   "default_value": 2.3141122332952073,
+   "errors": [
+    0.0,
+    2.007471979161006e-05,
+    0.00026363663205516285,
+    0.0015329957355363734
+   ],
+   "h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ],
+   "order": 3.6008367895810762,
+   "reference": 2.3141122332952073,
+   "reference_uncertainty": 2.007471979161006e-05,
+   "relative": true,
+   "sign": 1,
+   "status": "finest",
+   "tol": 0.03,
+   "values": [
+    2.3141122332952073,
+    2.314158688449857,
+    2.314722318050591,
+    2.310564709110013
+   ],
+   "within_tol_h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ]
+  },
+  "Rt_um": {
+   "coarsest_within_tol_h": 6.25,
+   "conclusive": true,
+   "default_error": 0.01919122507825703,
+   "default_h": 6.25,
+   "default_inside": true,
+   "default_value": 8.79545990404169,
+   "errors": [
+    0.01919122507825703,
+    0.03907056708321184,
+    0.07954204100983835,
+    0.16380591542698744
+   ],
+   "h": [
+    6.25,
+    12.5,
+    25.0,
+    50.0
+   ],
+   "order": 1.025635386037213,
+   "reference": 8.96425555472694,
+   "reference_uncertainty": 0.023989031347821148,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.03,
+   "values": [
+    8.79545990404169,
+    8.620611948518379,
+    8.264646722339267,
+    7.523507193544027
+   ],
+   "within_tol_h": [
+    6.25
+   ]
+  }
+ },
+ "default_label": "fmin0.05",
+ "h_name": "polar row height dz (um)",
+ "levels": [
+  {
+   "cost": {
+    "cpu_in_cut_s": 3.4366506940000114,
+    "cpu_total_s": 23.087895664999998,
+    "in_cut_sim_s": 0.9012499999999971,
+    "l0_steps": 35900.0,
+    "strides": [
+     50
+    ]
+   },
+   "cpu_level_s": 27.605024367,
+   "details": {
+    "Ra_ideal_um": 2.518241053456181,
+    "Rt_ideal_um": 9.825968536044641,
+    "cost": {
+     "cpu_in_cut_s": 3.4366506940000114,
+     "cpu_total_s": 23.087895664999998,
+     "in_cut_sim_s": 0.9012499999999971,
+     "l0_steps": 35900.0,
+     "strides": [
+      50
+     ]
+    },
+    "dz_um": 50.0,
+    "finished": true,
+    "n_theta": 720,
+    "notes": [],
+    "nz": 800,
+    "r_mean_mm": 21.003190526111112,
+    "removed_total_mm3": 998.7853031010396
+   },
+   "error": null,
+   "h": 50.0,
+   "label": "fmin0.4",
+   "physics": {
+    "removal": {
+     "polar_max_mb": 400,
+     "polar_min_feed_mm_rev": 0.4
+    }
+   },
+   "quantities": {
+    "F_mean_N": 1153.7086377128276,
+    "Fx_N": -83.07685249051492,
+    "Fy_N": 1066.6204402677529,
+    "Fz_N": 431.81326255278776,
+    "Ra_um": 2.310564709110013,
+    "Rt_um": 7.523507193544027,
+    "torque_Nm": 0.0011564444961612902
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 3.8033712590000093,
+    "cpu_total_s": 23.770210072999998,
+    "in_cut_sim_s": 0.9012499999999971,
+    "l0_steps": 35900.0,
+    "strides": [
+     50
+    ]
+   },
+   "cpu_level_s": 24.057099821,
+   "details": {
+    "Ra_ideal_um": 2.518241053456181,
+    "Rt_ideal_um": 9.825968536044641,
+    "cost": {
+     "cpu_in_cut_s": 3.8033712590000093,
+     "cpu_total_s": 23.770210072999998,
+     "in_cut_sim_s": 0.9012499999999971,
+     "l0_steps": 35900.0,
+     "strides": [
+      50
+     ]
+    },
+    "dz_um": 25.0,
+    "finished": true,
+    "n_theta": 720,
+    "notes": [],
+    "nz": 1600,
+    "r_mean_mm": 21.003184333611117,
+    "removed_total_mm3": 998.6898159559378
+   },
+   "error": null,
+   "h": 25.0,
+   "label": "fmin0.2",
+   "physics": {
+    "removal": {
+     "polar_max_mb": 400,
+     "polar_min_feed_mm_rev": 0.2
+    }
+   },
+   "quantities": {
+    "F_mean_N": 1148.4511413843131,
+    "Fx_N": -82.89773463754885,
+    "Fy_N": 1061.1859526933536,
+    "Fz_N": 431.2219423280703,
+    "Ra_um": 2.314722318050591,
+    "Rt_um": 8.264646722339267,
+    "torque_Nm": 0.0011508175642564254
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 4.405741016000022,
+    "cpu_total_s": 26.042785124999995,
+    "in_cut_sim_s": 0.902999999999997,
+    "l0_steps": 35900.0,
+    "strides": [
+     50
+    ]
+   },
+   "cpu_level_s": 26.531268629000003,
+   "details": {
+    "Ra_ideal_um": 2.518241053456181,
+    "Rt_ideal_um": 9.825968536044641,
+    "cost": {
+     "cpu_in_cut_s": 4.405741016000022,
+     "cpu_total_s": 26.042785124999995,
+     "in_cut_sim_s": 0.902999999999997,
+     "l0_steps": 35900.0,
+     "strides": [
+      50
+     ]
+    },
+    "dz_um": 12.5,
+    "finished": true,
+    "n_theta": 720,
+    "notes": [],
+    "nz": 3200,
+    "r_mean_mm": 21.003180269027773,
+    "removed_total_mm3": 998.6287964801725
+   },
+   "error": null,
+   "h": 12.5,
+   "label": "fmin0.1",
+   "physics": {
+    "removal": {
+     "polar_max_mb": 400,
+     "polar_min_feed_mm_rev": 0.1
+    }
+   },
+   "quantities": {
+    "F_mean_N": 1144.590865501149,
+    "Fx_N": -83.01708521802995,
+    "Fy_N": 1057.2410499487214,
+    "Fz_N": 430.62486604223926,
+    "Ra_um": 2.314158688449857,
+    "Rt_um": 8.620611948518379,
+    "torque_Nm": 0.0011466203357584281
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 5.913163301999958,
+    "cpu_total_s": 29.741184856999993,
+    "in_cut_sim_s": 0.902999999999997,
+    "l0_steps": 35900.0,
+    "strides": [
+     50
+    ]
+   },
+   "cpu_level_s": 30.343309692000005,
+   "details": {
+    "Ra_ideal_um": 2.518241053456181,
+    "Rt_ideal_um": 9.825968536044641,
+    "cost": {
+     "cpu_in_cut_s": 5.913163301999958,
+     "cpu_total_s": 29.741184856999993,
+     "in_cut_sim_s": 0.902999999999997,
+     "l0_steps": 35900.0,
+     "strides": [
+      50
+     ]
+    },
+    "dz_um": 6.25,
+    "finished": true,
+    "n_theta": 720,
+    "notes": [],
+    "nz": 6400,
+    "r_mean_mm": 21.00317690760416,
+    "removed_total_mm3": 998.5969362326481
+   },
+   "error": null,
+   "h": 6.25,
+   "label": "fmin0.05",
+   "physics": {
+    "removal": {
+     "polar_max_mb": 400,
+     "polar_min_feed_mm_rev": 0.05
+    }
+   },
+   "quantities": {
+    "F_mean_N": 1142.575445894083,
+    "Fx_N": -83.15279560148684,
+    "Fy_N": 1055.1895797585312,
+    "Fz_N": 430.2780646427774,
+    "Ra_um": 2.3141122332952073,
+    "Rt_um": 8.79545990404169,
+    "torque_Nm": 0.0011443966094412848
+   }
+  },
+  {
+   "cost": {},
+   "cpu_level_s": 26.811439197,
+   "details": {},
+   "error": "AssertionError: workpiece 0: removed volume 8.470526310494712e-07 m3 booked, field changed by -2.4265548156951225e-05 m3",
+   "h": 3.125,
+   "label": "fmin0.025",
+   "physics": {
+    "removal": {
+     "polar_max_mb": 400,
+     "polar_min_feed_mm_rev": 0.025
+    }
+   },
+   "quantities": {}
+  }
+ ],
+ "note": "OD pass, 4140 d45, CNMG120408 / PCLNR, 1400 rpm, f 0.25 mm/rev, ap 1.5 mm, rigid, 720 theta bins; dz = min(f_min / 8, r_nose / 16) with f_min = polar_min_feed_mm_rev (the default 0.05 mm gives 6.25 um), polar_max_mb 400 (no coarsening)",
+ "root": "/tmp/cconv/tree-20261109-1238",
+ "setting": "physics.removal.polar_min_feed_mm_rev (dz = f_min / 8)",
+ "study": "turn_dz",
+ "title": "Turning: polar row height (axial resolution)"
+}

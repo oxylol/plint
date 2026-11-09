@@ -450,9 +450,11 @@ errors.
 **Calibration reduces them.** `twin calibrate` (docs/models/calibration.md) fits model coefficients to recorded
 data of the real machine (spindle power or load, positions, following error, temperatures; MTConnect, OPC UA,
 FOCAS logs or CSV): `kc_scale` of the material's cutting coefficients, the spindle's idle and bearing power, the
-axes' servo dynamics, the thermal model. The result is a calibration overlay the project includes: it is an
-input of the project, so every cached run of that project is out of date by its key and a sweep run again
-simulates every point with the calibrated twin. Calibrate on the machine, tools and materials the model will be
+axes' servo dynamics, the thermal model. The result is a calibration overlay the project includes
+(`calibration: calibration.yaml` in project.yaml, applied when the project is resolved; docs/formats.md "Project
+file"): it is an input of the project, so every cached run of that project is out of date by its key and a sweep
+run again simulates every point with the calibrated twin (its variants keep the key, with the overlay's path made
+absolute). Calibrate on the machine, tools and materials the model will be
 used for, and validate on cuts it was not calibrated on.
 
 **Further limits of the data.**

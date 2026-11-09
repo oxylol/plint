@@ -51,6 +51,8 @@ cutting:
       vc_ref_m_min: {value: 300, src: est, note: "no reference speed in the catalogue; assumed"}
       src: iscar-materials-groups
       note: "ISCAR group 21: aluminium wrought alloy, not hardenable (60 HB). Annealed 6061 (30 HB) is softer than the group's nominal hardness but gummy (BUE), so the group value is used unchanged"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: hss
       coating: uncoated
       kc11_N_mm2: 805
@@ -59,6 +61,8 @@ cutting:
       vc_ref_m_min: 60
       src: est
       note: "carbide catalogue value x 1.15 assumed for HSS; no published HSS value read"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.23, src: wojciechowski-2022-min-chip-thickness, range: [0.08, 0.45], note: "6061 (temper not stated), analytic, Table 1; aluminium alloys 0.08-0.45"}
   indentation_coeff_N_mm3: {value: 4.7e3, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for 6061-T6 (95 HB) scaled by hardness (30/95)"}
@@ -81,7 +85,7 @@ chip:
   tendency: continuous
   segmentation: null
   bue:
-    interface_temp_degC: {range: [80, 300], src: est, note: "assumed"}
+    interface_temp_degC: {value: [80, 300], src: est, note: "assumed"}
     vc_m_min: [5, 250]
     src: est
     note: "assumed wider than for the aged tempers: soft, ductile aluminium forms BUE readily; by analogy with 7075 data (trujillo-2017-al7075-adhesion, jomaa-2014-al7075-orthogonal) where BUE/BUL persisted up to 300 m/min"
@@ -101,6 +105,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 700 m/min (general knowledge); life is usually limited by BUE and surface finish rather than flank wear in the O temper"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 200
@@ -113,6 +118,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 110 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
 
 residual_stress: []                # annealed: as-supplied residual stresses assumed negligible; none read

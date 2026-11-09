@@ -11,7 +11,7 @@ items:
     plate_mm: {value: [406.4, 355.6, 31.75], src: miteebite-2024-catalog, page: "p. 37 drawing, 16.00 x 14.00 x 1.25 in"}
     surface: {value: "textured, for extra holding force through friction; 4 vacuum ports (can be plugged); M6 tapped grid", src: miteebite-2024-catalog, page: "p. 37"}
     vacuum_with_pump_kPa: {value: 86, range: [83, 90], src: miteebite-2024-catalog, page: "p. 41, pump 46350: 'approximately 12-13 psi of vacuum holding force' at dead head, 4 cfm", note: "12.5 psi mid value = 86 kPa below atmosphere"}
-    pressure_kPa_abs_min: {value: 15, src: est, note: "101.3 kPa standard atmosphere minus the 86 kPa pump vacuum (p. 41)"}
+    min_abs_pressure_kPa: {value: 15, src: est, note: "101.3 kPa standard atmosphere minus the 86 kPa pump vacuum (p. 41)"}
     holding_pressure_N_cm2: {value: 8.6, src: est, note: "= pressure difference 86 kPa; holding force = 8.6 N/cm2 x sealed area inside the gasket"}
     seal: {value: "cord gasket in grooves (black 0.170 in standard; white for small parts/dry)", src: miteebite-2024-catalog, page: "p. 38 gasket table"}
     area_utilisation: {value: 0.8, src: est, note: "fraction of the part footprint inside the gasket loop; depends on the gasket layout cut for the part"}

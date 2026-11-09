@@ -13,12 +13,12 @@ items:
     cylinder_bore_mm: {value: 50, src: kitagawa-2013-steady-rests}
     pressure_bar: {value: [8, 60], src: kitagawa-2013-steady-rests}
     clamp_force_per_roller_kN: {value: 3.5, src: kitagawa-2013-steady-rests, note: "max 350 daN per roller"}
-    clamp_force_per_roller_at_15bar_kN: {value: 1.0, src: kitagawa-2013-steady-rests, note: "100 daN at 15 bar"}
     centring_accuracy_mm: {value: 0.02, src: kitagawa-2013-steady-rests, note: "over the whole clamping range"}
     repeatability_mm: {value: 0.005, src: kitagawa-2013-steady-rests}
     max_peripheral_speed_m_min: {value: 950, src: kitagawa-2013-steady-rests}
     mass_kg: {value: 18.5, src: kitagawa-2013-steady-rests}
     roller_stiffness_N_um: {value: 50, src: est, note: "not published; roller bearing plus arm compliance assumed ~50 N/µm for this size"}
+    clamp_force_per_roller_vs_pressure_kN: {value: [[15, 1.0]], src: kitagawa-2013-steady-rests, note: "100 daN at 15 bar"}
   - id: kitagawa-fru3
     order_code: "FRU3"
     type: steady_rest
@@ -27,12 +27,12 @@ items:
     cylinder_bore_mm: {value: 80, src: kitagawa-2013-steady-rests}
     pressure_bar: {value: [8, 60], src: kitagawa-2013-steady-rests}
     clamp_force_per_roller_kN: {value: 10.0, src: kitagawa-2013-steady-rests, note: "1000 daN"}
-    clamp_force_per_roller_at_15bar_kN: {value: 2.5, src: kitagawa-2013-steady-rests}
     centring_accuracy_mm: {value: 0.04, src: kitagawa-2013-steady-rests}
     repeatability_mm: {value: 0.007, src: kitagawa-2013-steady-rests}
     max_peripheral_speed_m_min: {value: 800, src: kitagawa-2013-steady-rests}
     mass_kg: {value: 48, src: kitagawa-2013-steady-rests}
     roller_stiffness_N_um: {value: 100, src: est, note: "not published; scaled with size"}
+    clamp_force_per_roller_vs_pressure_kN: {value: [[15, 2.5]], src: kitagawa-2013-steady-rests}
   - id: kitagawa-fru4
     order_code: "FRU4"
     type: steady_rest
@@ -41,10 +41,10 @@ items:
     cylinder_bore_mm: {value: 100, src: kitagawa-2013-steady-rests}
     pressure_bar: {value: [8, 60], src: kitagawa-2013-steady-rests}
     clamp_force_per_roller_kN: {value: 15.0, src: kitagawa-2013-steady-rests, note: "1500 daN"}
-    clamp_force_per_roller_at_15bar_kN: {value: 5.0, src: kitagawa-2013-steady-rests}
     centring_accuracy_mm: {value: 0.05, src: kitagawa-2013-steady-rests}
     repeatability_mm: {value: 0.007, src: kitagawa-2013-steady-rests}
     max_peripheral_speed_m_min: {value: 725, src: kitagawa-2013-steady-rests}
     mass_kg: {value: 104, src: kitagawa-2013-steady-rests}
     roller_stiffness_N_um: {value: 150, src: est, note: "not published; scaled with size"}
+    clamp_force_per_roller_vs_pressure_kN: {value: [[15, 5.0]], src: kitagawa-2013-steady-rests}
 notes: "Clamping force grows with hydraulic pressure between the 15 bar value and the maximum; linear interpolation in pressure is a reasonable model."

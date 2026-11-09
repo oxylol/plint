@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from ..core.abi import EngagedIntervals, SurfaceMemory
-from .abi import CutState, CutTable, CutTool, Refill, with_packed
+from .abi import CutState, CutTable, CutTool, Refill, empty_state, with_packed
 from .coefficients import RowGeometry, Rows, RowState
 from .schema import CuttingSettings
 
@@ -173,10 +173,15 @@ class CuttingState:
         for cm in meta["contacts"]:
             p = f"c{cm['index']}."
             key = tuple(int(k) for k in cm["key"])
+            ks = {n: arr(p + "ks." + n) for n in CutState._fields if p + "ks." + n in arrays}
+            if len(ks) < len(CutState._fields):
+                # a checkpoint written before the wave memory and the recut loads existed: they start empty
+                fresh = empty_state(ks["h_last_m"].shape[0], ks["tooth"].shape[0], ks["st_written"].shape[0])
+                ks = {n: ks.get(n, getattr(fresh, n)) for n in CutState._fields}
             cc = ContactCut(key=key, mem=SurfaceMemory(*(arr(p + "mem." + n) for n in SurfaceMemory._fields)),
                             iv=EngagedIntervals(*(arr(p + "iv." + n) for n in EngagedIntervals._fields)),
                             refill=Refill(*(arr(p + "refill." + n) for n in Refill._fields)),
-                            kstate=CutState(*(arr(p + "ks." + n) for n in CutState._fields)),
+                            kstate=CutState(**ks),
                             stale_before=int(cm["stale_before"]), last_tick=int(cm["last_tick"]),
                             capacity=int(cm["capacity"]))
             obj.contacts[key] = cc

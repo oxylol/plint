@@ -3,12 +3,16 @@ all modules in one process outgrow a 1.8 GB cap). Usage: bin/tsafe python tools/
 
 from __future__ import annotations
 
+import os
 import sys
 import time
 
 import env
 
 root = env.setup()
+# each module compiles in a child "python -c": its sys.path starts with the working directory, so the children
+# import the chosen tree only when they start in it
+os.chdir(root)
 
 from cnctwin.core.warmup import compile_modules  # noqa: E402
 

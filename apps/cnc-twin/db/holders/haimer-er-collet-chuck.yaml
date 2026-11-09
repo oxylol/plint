@@ -4,7 +4,6 @@ series_id: haimer-er-collet-chuck
 maker: "HAIMER"
 series: "Collet chucks type ER (ISO 15488 collets) for HSK-A63, CAT40 and BT40"
 src: haimer-shop-a63-020-32
-collet: {standard: "ISO 15488 (formerly DIN 6499)", runout_um: 5, src: haimer-shop-collet-81-320, note: "HAIMER high-precision ER collet runout accuracy 5 µm (measuring distance not printed); standard-class collets are not covered here"}
 items:
   - id: haimer-a63-020-32
     order_code: "A63.020.32"
@@ -57,7 +56,6 @@ items:
     bore_mm: {value: [1.5, 20.0], src: haimer-shop-40-520-32}
     gauge_length_mm: {value: 70, src: haimer-shop-40-520-32}
     nose_diameter_mm: {value: 50, src: haimer-shop-40-520-32}
-    length_L_mm: {value: 64, src: haimer-shop-40-520-32}
     profile_mm: {value: [[0, 50], [70, 50]], src: est, note: "cylinder of nut diameter assumed"}
     clamping_torque_Nm: null
     axial_retention_N: null
@@ -69,6 +67,8 @@ items:
     mass_kg: {value: 1.260, src: haimer-shop-40-520-32}
     clamp_length_mm: null
     price_eur: null
+    dimensions_mm:
+      L: {value: 64, src: haimer-shop-40-520-32}
   - id: haimer-a63-026-16
     order_code: "A63.026.16"
     type: er_collet
@@ -77,7 +77,6 @@ items:
     bore_mm: {value: [0.5, 10.0], src: haimer-shop-a63-026-16}
     gauge_length_mm: {value: 200, src: haimer-shop-a63-026-16, note: "ZG200 long version"}
     nose_diameter_mm: {value: 28, src: haimer-shop-a63-026-16}
-    length_L_mm: {value: 32.5, src: haimer-shop-a63-026-16}
     profile_mm: {value: [[0, 28], [200, 28]], src: est, note: "slim extension; only nut diameter printed, body assumed not wider than the nut"}
     clamping_torque_Nm: null
     axial_retention_N: null
@@ -89,6 +88,8 @@ items:
     mass_kg: {value: 1.388, src: haimer-shop-a63-026-16}
     clamp_length_mm: null
     price_eur: null
+    dimensions_mm:
+      L: {value: 32.5, src: haimer-shop-a63-026-16}
   - id: haimer-40-720-16
     order_code: "40.720.16"
     type: er_collet
@@ -127,4 +128,4 @@ items:
     mass_kg: {value: 1.130, src: haimer-shop-40-520-16}
     clamp_length_mm: null
     price_eur: null
-notes: "Transmissible torque of ER chucks depends on nut torque and collet; HAIMER does not print it on these pages (gap). Prices need a login (gap). ER clamping-nut tightening torque, REGO-FIX recommendation for its standard ER/ERC nuts with standard ER collets (regofix-tightening-torque p. 1; HAIMER's own nut torques were not found, the REGO-FIX values are a guide for the ISO 15488 system): ER16 8 Nm (1.0 mm collet), 20 Nm (1.5-3.5 mm), 40 Nm (4.0-4.5 mm), 56 Nm (5.0-10.0 mm); ER32 24 Nm (2.0-2.5 mm), 136 Nm (3.0-22.0 mm). Ball-bearing ERB/ERBC nuts: ER16 56 Nm and ER32 128-136 Nm in the largest ranges; ERAX/ERAXC nuts 40 and 104 Nm. REGO-FIX: the torque must not exceed the recommendation by more than 25 %, higher torque may damage the toolholder (regofix-2009-er-technical-information, 14.03, where the same table is in ft-lbs: ER32 100 ft-lbs, ER16 40 ft-lbs). REGO-FIX quotes 89 Nm transferable torque for its ER system with a 12 mm carbide test rod (collet size and nut torque not stated, regofix-2025-er-flyer); no per-size transmissible-torque table was found, so clamping_torque_Nm stays null (gap)."
+notes: "Transmissible torque of ER chucks depends on nut torque and collet; HAIMER does not print it on these pages (gap). Prices need a login (gap). ER clamping-nut tightening torque, REGO-FIX recommendation for its standard ER/ERC nuts with standard ER collets (regofix-tightening-torque p. 1; HAIMER's own nut torques were not found, the REGO-FIX values are a guide for the ISO 15488 system): ER16 8 Nm (1.0 mm collet), 20 Nm (1.5-3.5 mm), 40 Nm (4.0-4.5 mm), 56 Nm (5.0-10.0 mm); ER32 24 Nm (2.0-2.5 mm), 136 Nm (3.0-22.0 mm). Ball-bearing ERB/ERBC nuts: ER16 56 Nm and ER32 128-136 Nm in the largest ranges; ERAX/ERAXC nuts 40 and 104 Nm. REGO-FIX: the torque must not exceed the recommendation by more than 25 %, higher torque may damage the toolholder (regofix-2009-er-technical-information, 14.03, where the same table is in ft-lbs: ER32 100 ft-lbs, ER16 40 ft-lbs). REGO-FIX quotes 89 Nm transferable torque for its ER system with a 12 mm carbide test rod (collet size and nut torque not stated, regofix-2025-er-flyer); no per-size transmissible-torque table was found, so clamping_torque_Nm stays null (gap).; collet: {standard: ISO 15488 (formerly DIN 6499), runout_um: 5, src: haimer-shop-collet-81-320, note: HAIMER high-precision ER collet runout accuracy 5 µm (measuring distance not printed); standard-class collets are not covered here}"

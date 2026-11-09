@@ -41,8 +41,10 @@ controller's dry run on an ideal machine (alarms with their lines, the tools and
 cycle-time lower bound), the planner's cycle time, the L0 time step of every tool by architecture 5.1, the
 lattice rule (`lattice_mm <= min(ae) / 4` on every cut, or a refine box), the estimated CPU seconds per
 simulated second and the disk a full fast recording would take, and the static program checks (sanity
-findings). It writes `check.json` (format `cnctwin-check`) to `--out` (default `<project>/.twin-check`, which
-writes into the project folder: give `--out` for the examples). `--write` stores the resolved time steps under
+findings). It writes `check.json` (format `cnctwin-check`) to `--out`, by default
+`DATA_DIR/checks/<project folder>-<8 hex digits of its path>` (the data directory of the runs; under the
+temporary folder, `cnctwin-check/`, when that cannot be written), never into the project folder, so checking an
+example leaves the repository as it was; the folder is printed. `--write` stores the resolved time steps under
 `physics.resolved` in project.yaml (only that entry is changed, comments kept); a run then uses them. Exit
 status 1 when the check found errors.
 
@@ -269,9 +271,14 @@ bin/twin calibrate --project PROJECT --run RUN_DIR --data machine_data.yaml --ta
 * Outputs in `--out`: `machine_log.json/.parquet`, `alignment.json`, `calibration.yaml` (the overlay, format
   `cnctwin-calibration`), `calibration.json` (parameters, intervals, correlations, metrics before and after),
   `overlay.json` (measured, simulated and calibrated series) and **`project.calibrated.yaml`**, a standalone
-  project with the calibrated values in place (inline `extends` objects): run that file to simulate with the
-  calibrated twin. In this build `project.yaml` has no key that includes a `calibration.yaml` (the project
-  schema refuses one).
+  project with the calibrated values in place (inline `extends` objects, absolute paths).
+* Two ways to simulate with the calibrated twin: copy `calibration.yaml` into the project folder and add
+  `calibration: calibration.yaml` to `project.yaml` (the resolver applies the overlay to the machine, the
+  material and the tools and hashes it as an input, so cached runs of the uncalibrated project are not reused;
+  formats.md "Project file"), or run `project.calibrated.yaml` as it is. Calibrating a project that already
+  includes an overlay writes a `project.calibrated.yaml` with both overlays baked in. `models.*` and `factors.*`
+  entries (production energy parameters, the tool stiffness factor) are not applied by the simulation yet: the
+  resolver warns about each.
 * The intervals cover random measurement error only; check the residual metrics in `calibration.json`, and
   validate on cuts that were not used for the fit.
 

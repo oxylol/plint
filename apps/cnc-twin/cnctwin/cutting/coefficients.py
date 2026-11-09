@@ -169,24 +169,52 @@ def _snap(value: float, step: float) -> float:
 
 
 CONTACT_QUANTUM_REL = 0.05      # relative grid of the engaged edge length and engagement time in a row's slow state
+HYSTERESIS_CELLS = 0.75         # a quantised value keeps its cell while the state stays within this many cells of it
 
 
-def quantised_state(state: RowState, tol: Tolerances) -> RowState:
+def _keep(value: float | None, prev: float | None, step: float) -> bool:
+    """The state is still within HYSTERESIS_CELLS of the cell it had (uniform grid)."""
+    return value is not None and prev is not None and step > 0.0 and abs(value - prev) <= HYSTERESIS_CELLS * step
+
+
+def _keep_log(value: float | None, prev: float | None, rel: float) -> bool:
+    """The same on a log grid of relative step rel."""
+    return (value is not None and prev is not None and rel > 0.0 and value > 0.0 and prev > 0.0
+            and abs(math.log(value / prev)) <= HYSTERESIS_CELLS * math.log1p(rel))
+
+
+def quantised_state(state: RowState, tol: Tolerances, prev: RowState | None = None) -> RowState:
     """The slow state snapped to the rebuild grid (docs/models/cutting.md "Coefficient pipeline"): speed and
     friction factor on log grids of the relative tolerances, temperatures, VB and BUE height on uniform grids of the
     absolute ones. A row is computed at its quantised state, so its coefficients are a function of the grid cell
     (and the model's map): the cell changes exactly when the state moved beyond a threshold, and equal cells give
-    equal rows (cached)."""
-    return RowState(speed_m_s=_snap_log(state.speed_m_s, tol.speed_rel),
-                    tool_temp_K=None if state.tool_temp_K is None else _snap(state.tool_temp_K, tol.temp_K),
-                    flank_temp_K=None if state.flank_temp_K is None else _snap(state.flank_temp_K, tol.temp_K),
-                    work_temp_K=_snap(state.work_temp_K, tol.work_temp_K),
-                    friction_factor=_snap_log(state.friction_factor, tol.friction_rel),
-                    VB_m=max(_snap(state.VB_m, tol.VB_m), 0.0), bue_m=max(_snap(state.bue_m, tol.bue_m), 0.0),
-                    contact_width_m=None if state.contact_width_m is None else
-                    _snap_log(state.contact_width_m, CONTACT_QUANTUM_REL),
-                    contact_time_s=None if state.contact_time_s is None else
-                    _snap_log(state.contact_time_s, CONTACT_QUANTUM_REL))
+    equal rows (cached).
+
+    ``prev`` (the row's last quantised state): hysteresis - a value keeps its cell while it stays within
+    HYSTERESIS_CELLS (0.75) cells of that cell's centre, and is snapped afresh beyond. Plain rounding switched a
+    value lying at a cell boundary between the two cells from one macro step to the next (with the one-step stagger
+    of the slow feedback a limit cycle: the coupling-lag monitor flagged it at the tiny project's entry,
+    docs/models/loop.md 15)."""
+    def lin(name, step, lo=None):
+        value = getattr(state, name)
+        if value is None:
+            return None
+        old = getattr(prev, name) if prev is not None else None
+        out = float(old) if _keep(value, old, step) else _snap(value, step)
+        return out if lo is None else max(out, lo)
+
+    def log(name, rel):
+        value = getattr(state, name)
+        if value is None:
+            return None
+        old = getattr(prev, name) if prev is not None else None
+        return float(old) if _keep_log(value, old, rel) else _snap_log(value, rel)
+
+    return RowState(speed_m_s=log("speed_m_s", tol.speed_rel), tool_temp_K=lin("tool_temp_K", tol.temp_K),
+                    flank_temp_K=lin("flank_temp_K", tol.temp_K), work_temp_K=lin("work_temp_K", tol.work_temp_K),
+                    friction_factor=log("friction_factor", tol.friction_rel), VB_m=lin("VB_m", tol.VB_m, 0.0),
+                    bue_m=lin("bue_m", tol.bue_m, 0.0), contact_width_m=log("contact_width_m", CONTACT_QUANTUM_REL),
+                    contact_time_s=log("contact_time_s", CONTACT_QUANTUM_REL))
 
 
 def quantised_radius(radius_m: float, tol: Tolerances) -> float:

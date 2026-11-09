@@ -4,7 +4,7 @@ id: carbide-submicron-10co
 class: carbide
 name: "Submicron WC-10%Co (ISO K20-K30, solid end-mill rod grade; Hyperion H10F / Mitsubishi TF15 as reference grades)"
 src: hyperion-insert-blanks-grades
-composition: {text: "WC 89.5, binder 10.5 wt%, WC grain 0.8 µm (H10F); TF15: Co 10.0 %, grain < 0.9 µm", src: hyperion-insert-blanks-grades}
+composition: {value: "WC 89.5, binder 10.5 wt%, WC grain 0.8 µm (H10F); TF15: Co 10.0 %, grain < 0.9 µm", src: hyperion-insert-blanks-grades}
 grain_size_um: {value: 0.8, src: hyperion-insert-blanks-grades}
 binder_wt_pct: {value: 10.5, src: hyperion-insert-blanks-grades}
 density_kg_m3: {value: 14500, src: hyperion-insert-blanks-grades, page: "H10F row"}

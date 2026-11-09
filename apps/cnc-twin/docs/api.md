@@ -71,7 +71,7 @@ There are no `/docs` or `/redoc` pages: they load scripts from a CDN and the box
 | `GET /api/projects/{id}` | project.yaml as written, operations, files | 200, 404 |
 | `GET /api/projects/{id}/files/{path}` | a project file (ranges) | 200/206, 400, 403, 404 |
 | `POST /api/projects/{id}/check?wait_s=20` | `twin check` as a job; body `{options}` | 200 result, 202 job, 409, 500, 501 |
-| `POST /api/runs` | queue a simulation: `{project_id, options, no_cache}`; a run the [run cache](#run-cache) holds is answered instead | 201 (Location), 200 cached run, 404, 422 |
+| `POST /api/runs` | queue a simulation: `{project_id, options, no_cache}` (`options.operator`, the operator overrides, is normalised and applied by the default simulate entry; a malformed one is a 422); a run the [run cache](#run-cache) holds is answered instead; the new run's id is `<nnnnn>-<project slug>-<h8>` as `twin run` names it | 201 (Location), 200 cached run, 404, 422 |
 | `GET /api/runs?project_id=&status=&limit=&offset=` | runs, newest first | 200 |
 | `GET /api/runs/{id}` | `{id, run: run.json or null, status: status.json, job, checkpoint, links}` | 200, 404 |
 | `GET /api/runs/{id}/events?timeout_s=` | SSE: `progress`, `finding`, `keyframe`, `done` | 200 stream |
@@ -468,14 +468,17 @@ API expects (tests/fixtures/make_synthetic_run.py writes them, deterministically
 * `findings.json`: `{"findings": [...]}` or a bare list, in id order.
 * `trace.jsonl`: one TraceEvent per line, `id` equal to the line number (cnctwin.core.trace);
   `/trace/{id}` bisects byte offsets (no index in memory) and ignores a line still being written;
-  the chain is breadth first, each event once, like TraceLog.chain.
+  the chain is breadth first, each event once, like TraceLog.chain. Its format is named in the sidecar
+  `trace.json` (`cnctwin-trace`), which the reader does not need.
 * `channels.json`: `{"channels": [...]}` or a list; `timeline.json`: `{"blocks": [...]}` or a list.
-* `series/index.jsonl` and `series/<tier>/part-<n>.parquet` with an int64 `tick` column (parts
+* `series/index.jsonl` (first line the header `{format: cnctwin-series-index, version}`, skipped; an index
+  without it reads the same) and `series/<tier>/part-<n>.parquet` with an int64 `tick` column (parts
   without an index are read in part-number order; a part's tick range from the index, else from
   its Parquet statistics).
 * `scene.json["frames"]`: `{record_bytes, fields: [{name, dtype, shape, offset}], tick_s, ...}` with
   a `tick` field; `frames.bin` records in tick order (a record still being written is ignored).
-* `keyframes/index.jsonl`: `{k, tick, time_s, glb, fields, chips, ...}`; missing names default to
+* `keyframes/index.jsonl`: `{k, tick, time_s, glb, fields, chips, ...}` per keyframe (the header line
+  `{format: cnctwin-keyframes-index, version}` has no `k` and is skipped); missing names default to
   `keyframes/kf_<k>.glb`, `keyframes/kf_<k>.npz`, `chips/kf_<k>.npz`. `keyframes/bricks.idx`: JSON
   `{"bricks": {"<brick>": [[k, file, offset, length], ...]}}` (or JSON lines
   `{brick, k, file, offset, length}`), file relative to `keyframes/`. `/bricks/{brick}?t=` takes

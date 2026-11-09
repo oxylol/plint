@@ -66,6 +66,10 @@ class DriverRun:
                "tip_lo": tips.min(axis=0).tolist(), "tip_hi": tips.max(axis=0).tolist(),
                "l0": sorted(int(v) for v in rec.l0_ticks.values()), "cpu": dict(rec.cpu),
                "omega": float(om.mean())}
+        if cc is not None:
+            hdt = np.asarray(cc.int_h_dt, float)
+            if hdt.ndim == 2 and hdt.size:
+                row["h_dt_tooth"] = np.nansum(hdt, axis=1).tolist()     # per tooth: sum over elements of int h dt
         if dc is not None:
             row.update(vib_pp_m=float(dc.vibration_pp_m), chatter=bool(dc.chatter),
                        chatter_index=float(dc.chatter_index), chatter_freq_Hz=float(dc.chatter_freq_Hz),
@@ -148,6 +152,13 @@ def steady_means(run: DriverRun, tick_mask: np.ndarray, *, teeth: int, rho: floa
         vib = [s["vib_pp_m"] for s in inside if "vib_pp_m" in s]
         if vib:
             out["vib_pp_um"] = float(1e6 * np.mean(vib))
+        hdt = [s["h_dt_tooth"] for s in inside if s.get("h_dt_tooth")]
+        if hdt and len({len(v) for v in hdt}) == 1:
+            per = np.sum(np.asarray(hdt, float), axis=0)
+            if per.size == teeth and per.mean() > 0.0:
+                # every tooth spends the same time per revolution: the spread of int h dt between the teeth is the
+                # spread of their mean chip (runout, pitch, regeneration)
+                out["chip_tooth_spread"] = float((per.max() - per.min()) / per.mean())
     # tooth passes (emission rows) inside the steady ticks
     if run.emissions:
         from cnctwin.chips.abi import EM
@@ -155,14 +166,11 @@ def steady_means(run: DriverRun, tick_mask: np.ndarray, *, teeth: int, rho: floa
         t_lo, t_hi = int(a["tick"][idx].min()), int(a["tick"][idx].max())
         rows = em[(em[:, EM["tick"]] >= t_lo) & (em[:, EM["tick"]] <= t_hi)]
         if rows.shape[0] >= teeth:
+            # a tooth pass may be booked in more than one row (a pass split by a step boundary): per tooth the sum of
+            # its rows over the window (every tooth passes equally often) gives the spread between the teeth
             vols = rows[:, EM["mass_kg"]] / rho
-            teeth_ids = rows[:, EM["tooth"]].astype(int)
-            per = [float(np.mean(vols[teeth_ids == k])) for k in sorted(set(teeth_ids.tolist()))]
-            out["chip_volume_pass_mm3"] = float(1e9 * np.mean(vols))
-            if len(per) > 1 and np.mean(per) > 0.0:
-                out["chip_tooth_spread"] = float((max(per) - min(per)) / np.mean(per))
-            hm = rows[:, EM["h_m"]]
-            out["h_mean_um"] = float(1e6 * np.mean(hm))
+            w = vols / max(float(vols.sum()), 1e-300)
+            out["h_mean_um"] = float(1e6 * np.sum(w * rows[:, EM["h_m"]]))
     return out
 
 

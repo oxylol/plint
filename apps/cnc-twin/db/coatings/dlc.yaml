@@ -3,7 +3,6 @@ version: 1
 id: dlc
 name: "DLC, hydrogenated amorphous carbon a-C:H (PACVD; Oerlikon Balzers BALINIT DLC as reference)"
 process: CVD
-process_detail: {value: "PACVD (plasma-assisted CVD, below 250 °C)", src: balzers-web-dlc}
 src: balzers-web-dlc
 colour: {value: "black", src: balzers-web-dlc}
 hardness_HV: {value: 2000, range: [2000, 2800], src: balzers-2010-hq040, page: "p. 21, BALINIT DLC microhardness HK0.01 > 2000", note: "lower bound as printed; Ionbond 41 a-C:H:W + a-C:H 2000-2800 HV"}
@@ -15,3 +14,4 @@ friction_vs_steel: {value: 0.15, range: [0.1, 0.2], src: balzers-web-dlc, page: 
 typical_thickness_um: {value: [0.5, 3], src: balzers-2010-hq040, page: "p. 21, BALINIT DLC"}
 wear_rate_factor: {value: 0.5, src: est, note: "for non-ferrous work (anti-adhesion); not suited for steel at cutting temperatures above the 300 °C limit, where the simulator should treat it as worn through"}
 thermal_barrier_factor: {value: 0.95, src: est, note: "very thin film; low k but small thickness"}
+notes: "process_detail: {value: PACVD (plasma-assisted CVD, below 250 °C), src: balzers-web-dlc}"

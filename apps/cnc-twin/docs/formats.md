@@ -157,7 +157,8 @@ is used); `pages`, `note` and `accessed` are merged (`a | b`).
   spindle list). Before merging, every mapping of both sides is given the `src` in force where it
   was written, so values keep their own sources. The extending file alone is checked for wrong keys
   and values; the merged object is checked completely. `dmg-dmu50-3rd-siemens` extends
-  `dmg-dmu50-3rd` (its `same_mechanics_as` is migrated).
+  `dmg-dmu50-3rd` and writes only its identity and its `controller` (the merged machine is the base's apart
+  from them: test `tests/unit/db/test_real_db.py`).
 * Series files: every item is an object of its own with the series `maker`, `series`, `series_id`
   and `src` (unless it sets them) and the series `defaults:` mapping deep-merged under it.
 * References checked: tool `tool_material.id`, `coating.id` (or `none`), tool `cutting_data[].material`,
@@ -292,6 +293,15 @@ defined once (a file that cites a key defined elsewhere says where in its header
 `clamping_area_mm` is `[630, 500]` (diameter, width across the flats), the haas-st20y sub spindle has
 an estimated gear range, and every coated catalogue tool states its coating thickness. The machines
 that name the controller `fanuc-31i-b` resolve to db/controllers/fanuc-31i-b.yaml.
+
+Since 2026-11-09 the files themselves are in the current key forms: the old forms the table above maps (323
+keys in 59 files) were rewritten with the loader's own rules, comments and the text of every unchanged value
+kept, so every value, source and note loads as before (the migrated data and the SI view of every object were
+compared before and after) and `twin db check --migrations` lists nothing (test
+`test_real_db.py::test_no_file_waits_for_migration`). The table stays for files written against the first
+templates (a project's own database files, an older checkout). Values that a rule moves to `notes` are in the
+`notes` text now, so they are no longer listed as estimates; implicit defaults the rules add (`h_ref_mm: 1`,
+`T_ref_min: 1`) are written out with the source of their entry.
 
 ## Project file
 
@@ -554,7 +564,10 @@ runs/<run_id>/
 digits (one above the highest numbered folder, as the API numbers its runs), the project folder's slug,
 and the first 8 hex digits of sha256(`<project hash>\n<options as canonical JSON>`) (sorted keys, no
 spaces, `resume_from` left out: a resumed run is the same run). The same project, options and counter
-always give the same id. `allocate_run_dir(runs_dir, project_hash, options, slug)` creates the folder.
+always give the same id. `allocate_run_dir(runs_dir, project_hash, options, slug)` creates the folder. The
+API names its runs with the same function (`cnctwin.api.runfiles.RunStore.allocate`, the slug of the project
+id; "API data folder" below), so `twin run` and `POST /api/runs` give the same project and options the same
+suffix; folders of the older API form `<nnnnn>-<project id>` are still read and counted.
 
 **run.json** (`cnctwin-run`, version 1), written once at the end (`fsync`, rename); a resume removes it:
 `run_id`, `complete`, `project` (the ResolvedProject as plain SI data, `operations[].program_sha256`
@@ -871,7 +884,10 @@ an unchanged request reuses the program).
 entry equal to its default and a table at 100 % are dropped; nothing overridden: no `operator` option, the plain
 run). Checked against the machine's `feed_override_range_pct`, `spindle_override_range_pct` and
 `rapid_override_steps_pct` (plus 100 %) and the project's cutting tools (a spindle override of a tap or threading
-insert is refused).
+insert is refused), by a sweep before it runs and by cnctwin.sweep.runner before every run. The same option is a run
+option of `twin run` (`--set operator.feed_override=1.2`) and of `POST /api/runs`: both normalise it and run it
+through cnctwin.sweep.runner (the CLI picks that runner when the option is set, the API's default `simulate` entry
+is that runner), which applies it; the loop's own `run_project` does not read it.
 
 **The sweep folder** (`cnctwin.sweep.execute`):
 
@@ -881,7 +897,7 @@ insert is refused).
 | `plan.json` | `cnctwin-sweep-plan` | `parameters` (as described), `points: [{index, values, units, project, options, project_sha256, programs}]` |
 | `points/p<nnnnn>/project.yaml` | `cnctwin-project` | the variant (a comment header names the sweep, point and values) |
 | `points/p<nnnnn>/result.json` | `cnctwin-sweep-point` | `index, values, project, project_sha256, options, status (done \| cached \| failed), key, run_dir, run_id, verdict, complete, registered, error {type, message, traceback}, notes, wall_s` |
-| `points/p<nnnnn>/job.json`, `progress.json`, `outcome.json`, `log.txt` | | a point process's request, progress (`sim_time_s, est_total_s, op, phase, wall_s`), outcome `{status, outcome, error}` and output |
+| `points/p<nnnnn>/job.json`, `progress.json`, `outcome.json`, `log.txt` | `cnctwin-sweep-job`, `cnctwin-sweep-progress`, `cnctwin-sweep-outcome`, text | a point process's request, progress (`sim_time_s, est_total_s, op, phase, wall_s`), outcome `{status, outcome, error}` and output ("Sweep point files") |
 | `status.json` | `cnctwin-sweep-status` | volatile: `status (running \| done \| failed \| cancelled), total, finished, done, cached, failed, running, wall_s, eta_s, message, error` |
 | `summary.json` | `cnctwin-sweep-summary` | at the end: `points, done, cached, failed, safe, unsafe, results [{index, status, key, run_dir, run_id, safe, error}]` (no wall times) |
 

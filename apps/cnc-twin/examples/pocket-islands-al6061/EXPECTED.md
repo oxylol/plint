@@ -126,10 +126,12 @@ the top = 20 mm above the stock bottom).
 
 | line | rule | severity | why |
 |---|---|---|---|
-| 10 | scan-limits | info | the 4 moves of T20 have no tool geometry (the probe is not a tool-table entry) |
-| 12 | tool-unknown | error | T20 (the machine's OMP40-2) cannot be listed in tools.list: the project format has no probe tool type (format gap, see notes) |
-| 17 | scan-limits | info | G65 P9810/P9811 are not evaluated by the static scan |
-| 767 | cutting-data | warning | the height-map estimate (0.5 mm cells, chord capsules) gives ae 5.8-5.9 mm on the R2 tool-centre corner and lead-in arcs of the D12 wall passes, where the radial depth is 0.3 mm |
+| 10 | scan-limits | info | the move of T20 has no cutting geometry: T20 is the machine's OMP40-2, a `kind: probe` entry of the tool list (known to the controller by its T number, so no `tool-unknown`); the G65 P9810/P9811 probing calls run in the controller's dry run, which gives the scan their motion |
+| 631 | cutting-data | warning | the engagement estimate gives ae 4.03 mm on two moves of the D10 slot passes, above the 4 mm Helical gives for slotting |
+| 803 | cutting-data | warning | the engagement estimate gives ae 6.45 mm on two moves (the arcs at lines 803-805) of the D12 finishing passes, above the 4.8 mm Helical gives for slotting |
+
+(As found by cnctwin.sanity with the controller assist on 2026-11-09, run through bin/tsafe; the program
+dry-runs to M30 with no alarm, 165.2 s on the ideal machine.)
 
 No other finding. In particular no rapid below the stock top, no G43/H, D or work-offset
 problem, no cutting data outside Helical's limits on the straight passes.

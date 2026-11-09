@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: 100
       src: klippel-2022-ck45-cutting-database
       note: "Table C.17, dry quasi-orthogonal cutting, Sandvik CCMW 09T304 H13A, edge radius 20-50 um, f = 0.01-0.4 mm. Other speeds (kc1.1 N/mm2 / mc): 10: 1935/0.19, 30: 1803/0.17, 50: 1417/0.51, 70: 1729/0.35, 150: 1707/0.28, 200: 1716/0.26, 250: 1794/0.22, 300: 1851/0.22 (rise attributed to dynamic strain ageing), 350: 1575/0.27, 450: 1368/0.29. Feed force kf1.1 at 100 m/min: 809 N/mm2, mf 0.65."
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: carbide
       coating: any
       kc11_N_mm2: 1700
@@ -58,6 +60,8 @@ cutting:
       vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed; a typical carbide turning speed is assumed"}
       src: walter-2025-technical-compendium
       note: "Walter machining group P2 (C45 / 1.0503 per the material comparison table): standard value for a neutral cutting edge geometry, p. F9"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []                  # no published linear edge-force calibration for 1045 was read
   min_chip_thickness_ratio: {value: 0.27, src: est, note: "taken from the 0.25-0.30 ratio found for 304 stainless (zou-2026-304-min-cutting-thickness); no 1045-specific value read"}
   indentation_coeff_N_mm3: {value: 3.4e5, src: mal-2015-machining-course, note: "Ksp = 3.4e14 N/m3 as identified for slot milling of AISI 1045 with a two-tooth cutter in the process-damping stability example of the MAL course (slide p. 164: flank wear land lw = 60 um, mu_c = 0.3, giving Ct = 0.19 and Cr = 0.61 N/um; the slide also lists Ktc 3242 and Krc 1978 MPa for that cut, not stored as a mechanistic set because edge and axial coefficients and the tool geometry are not given). The steel's condition is not stated on the slide. Replaces a placeholder of 2.9e4 N/mm3 (3.0e4 assumed at 200 HB, scaled by hardness), an order of magnitude lower"}
@@ -82,7 +86,7 @@ chip:
     criterion: critical_speed
     vc_onset_m_min: {value: 300, src: est, note: "klippel-2024-ck45-orthogonal Fig. 28 shows segmentation only towards high vc and f (graph not read numerically); klippel-2022 attributes a temperature drop above ~450 m/min to a change in chip formation. 300 m/min at f >= 0.1 mm assumed"}
   bue:
-    interface_temp_degC: {range: [200, 550], src: est, note: "lower bound ~ chip temperatures from temper colours at low speed (klippel-2022 Sect. 3.5, up to 360 C); upper bound assumed where BUE disappears"}
+    interface_temp_degC: {value: [200, 550], src: est, note: "lower bound ~ chip temperatures from temper colours at low speed (klippel-2022 Sect. 3.5, up to 360 C); upper bound assumed where BUE disappears"}
     vc_m_min: [10, 50]
     src: klippel-2024-ck45-orthogonal
     note: "BUE traces in chips at vc = 10-50 m/min for f = 0.02-0.1 mm; at 150 m/min only at f = 0.02 mm; none at 450 m/min"
@@ -121,6 +125,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 160 m/min (uncoated P20, general knowledge); n typical of uncoated carbide"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 50
@@ -133,6 +138,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 30 m/min (HSS turning of ~190 HB steel, general knowledge); n = 0.125 typical of HSS"
+    T_ref_min: 1
 tool_life_usui: null               # template puts `usui` under the tool_life list, which is not valid YAML; kept as a sibling key
 
 residual_stress: []                # as-supplied bar: no published profile read

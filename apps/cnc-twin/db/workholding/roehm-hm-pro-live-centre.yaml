@@ -4,7 +4,6 @@ series_id: roehm-hm-pro-live-centre
 maker: "RÖHM"
 series: "HM Pro live centre, carbide insert, 60° point, 3-fold bearing (A06)"
 src: roehm-2025-centres
-dimension_key: "drawing letters: A length from point to taper start, B body diameter, C and D point/nose diameters, G Morse taper gauge diameter, K point to body face"
 items:
   - id: roehm-hm-pro-mt3-104
     order_code: "090089"
@@ -45,4 +44,4 @@ items:
     mass_kg: {value: 4.7, src: roehm-2025-centres}
     dims_mm: {A: 129, B: 88.5, C: 18, D: 40, G: 44.399, K: 49.5, src: roehm-2025-centres}
     radial_load_N: null
-notes: "Load ratings are for 2000 h roller-bearing life (radial: workpiece mass; axial: daN), charts only."
+notes: "Load ratings are for 2000 h roller-bearing life (radial: workpiece mass; axial: daN), charts only.; dimension_key: drawing letters: A length from point to taper start, B body diameter, C and D point/nose diameters, G Morse taper gauge diameter, K point to body face"

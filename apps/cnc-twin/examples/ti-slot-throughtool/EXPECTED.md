@@ -101,7 +101,8 @@ life used is 2.3 min of the 30 min limit (cutting time, all edges).
 Feed time (exact from the program): slotting 2 x 132 mm / 183 = 86.6 s, finishing 2 x 132 / 336 = 47.1 s,
 air feeds at F2000 0.35 s, dwell G4 F2 = 2.0 s: **lower bound 136.0 s**. With the tool change
 (chip-to-chip 5.5 s est.), spindle ramp (< 0.1 s to 573 rpm), rapids at 42 m/min and acceleration:
-**expected 140-150 s**. In-cut time (cutter over the plate) about 108 s.
+**expected 140-150 s**. In-cut time (cutter over the plate) about 108 s. The controller's ideal dry run
+(SINUMERIK dialect, no acceleration) gives 134.0 s of feed and 142.7 s in all, no alarm.
 
 ## 10. Conservation
 

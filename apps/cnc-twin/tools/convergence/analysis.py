@@ -23,7 +23,7 @@ from __future__ import annotations
 import math
 
 P_MIN = 0.5          # observed orders outside [P_MIN, P_MAX] are not trusted for extrapolation
-P_MAX = 6.0
+P_MAX = 4.0          # the schemes are first or second order; a larger fitted order is a jump, not asymptotic
 
 
 def observed_order(h, f, max_iter: int = 200):
@@ -48,11 +48,12 @@ def observed_order(h, f, max_iter: int = 200):
     return p, int(s)
 
 
-def analyse(levels_h, values, *, default_h, tol, relative: bool = True, noise: float = 0.0):
+def analyse(levels_h, values, *, default_h, tol, relative: bool = True, noise: float = 0.0, exact=None):
     """Convergence of one quantity. ``levels_h``: the step sizes, ``values``: f at each level (same order),
     ``default_h``: the shipped default's step size (one of the levels), ``tol``: the documented tolerance (relative
     when ``relative``, else absolute in the quantity's unit), ``noise``: differences at or below this (in the same
-    sense as ``tol``) are noise. Returns a JSON-able dict."""
+    sense as ``tol``) are noise, ``exact``: the exact value when the case has one (it is then the reference; the
+    observed order and the Richardson estimate are still reported). Returns a JSON-able dict."""
     pairs = sorted((float(h), float(v)) for h, v in zip(levels_h, values) if v is not None and math.isfinite(v))
     out = {"h": [p[0] for p in pairs], "values": [p[1] for p in pairs], "tol": tol, "relative": relative,
            "default_h": float(default_h)}
@@ -91,6 +92,11 @@ def analyse(levels_h, values, *, default_h, tol, relative: bool = True, noise: f
         elif err(fs[1], fs[0]) <= noise:
             status = "finest"
             unc = err(fs[1], finest)
+    if exact is not None:
+        out["richardson"] = ref if status == "richardson" else None
+        ref, status, unc = float(exact), "exact", 0.0
+        if relative and ref != 0.0:
+            scale = abs(ref)
     errors = [err(v, ref) for v in fs]
     out.update(status=status, order=p, sign=s, reference=ref, reference_uncertainty=unc, errors=errors)
     d = [i for i, h in enumerate(hs) if abs(h - default_h) <= 1e-12 * max(1.0, abs(default_h))]

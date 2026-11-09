@@ -4,7 +4,6 @@ series_id: bigdaishowa-mega-synchro
 maker: "BIG DAISHOWA (BIG KAISER)"
 series: "MEGA SYNCHRO tapping holder (synchronous / rigid tapping with micro compensation), BIG-PLUS BT40"
 src: bigdaishowa-web-mega-synchro
-feature: {value: "compensates synchronisation errors in rigid tapping; thrust load reduced by up to 90 %", src: bigdaishowa-web-mega-synchro}
 items:
   - id: bigdaishowa-bbt40-mgt12-75
     order_code: "BBT40-MGT12-75"
@@ -63,4 +62,4 @@ items:
     max_rpm: null
     clamp_length_mm: null
     price_eur: null
-notes: "Listing shows only BIG-PLUS BT items on page 1; CAT40 and HSK-A63 versions exist in the filter but were not listed. Compensation stroke/stiffness are in the catalogue (not read; gap)."
+notes: "Listing shows only BIG-PLUS BT items on page 1; CAT40 and HSK-A63 versions exist in the filter but were not listed. Compensation stroke/stiffness are in the catalogue (not read; gap).; feature: {value: compensates synchronisation errors in rigid tapping; thrust load reduced by up to 90 %, src: bigdaishowa-web-mega-synchro}"

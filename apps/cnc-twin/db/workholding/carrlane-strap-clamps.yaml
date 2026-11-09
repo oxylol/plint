@@ -4,8 +4,6 @@ series_id: carrlane-strap-clamps
 maker: "Carr Lane"
 series: "Standard clamp straps on T-slot studs, 2:1 lever ratio (approximate clamping force per stud size)"
 src: carrlane-strap-clamp-force
-basis: {text: "clean, dry clamping stud torqued to about 33 % of its 100,000 psi yield strength, 2:1 lever ratio (clamping force = half the stud tension)", src: carrlane-strap-clamp-force}
-friction_example: {value: 0.19, src: carrlane-clamping-force-calc, note: "coefficient of friction used in Carr Lane's clamping force example (workpiece on fixture), with a recommended 2:1 safety factor"}
 items:
   - id: carrlane-strap-m10
     order_code: null
@@ -43,4 +41,4 @@ items:
     stud_preload_kN: {value: 56.05, src: carrlane-strap-clamp-force, note: "12600 lb"}
     lever_ratio: 2.0
     jaw_friction: {value: 0.19, src: carrlane-clamping-force-calc}
-notes: "Unit conversions: 1 ft-lb = 1.3558 N m, 1 lb = 4.4482 N. Implied torque-preload factor K = T/(F d) is about 0.2 for all sizes."
+notes: "Unit conversions: 1 ft-lb = 1.3558 N m, 1 lb = 4.4482 N. Implied torque-preload factor K = T/(F d) is about 0.2 for all sizes.; basis: {text: clean, dry clamping stud torqued to about 33 % of its 100,000 psi yield strength, 2:1 lever ratio (clamping force = half the stud tension), src: carrlane-strap-clamp-force}; friction_example: {value: 0.19, src: carrlane-clamping-force-calc, note: coefficient of friction used in Carr Lane's clamping force example (workpiece on fixture), with a recommended 2:1 safety factor}"

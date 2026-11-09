@@ -4,7 +4,6 @@ series_id: schunk-tendo-e-compact
 maker: "SCHUNK"
 series: "TENDO E compact hydraulic expansion toolholder, HSK-A63 (DIN ISO 12164-1)"
 src: schunk-web-tendo-ec-206406
-dimension_key: "SCHUNK drawing letters: L1 projecting length (spindle face to nose), D6 front diameter, L4 length of the front diameter section, D2 rear body diameter, L2 clamping length, L3 10 mm (adjustment range); the pages do not label L2-L4, the reading of them is an inference"
 items:
   - id: schunk-tendo-ec-hsk-a63-12x80
     order_code: "206404"
@@ -81,4 +80,4 @@ items:
     mass_kg: {value: 2.0, src: schunk-web-tendo-ec-1323447}
     clamp_length_mm: {value: 61.0, src: schunk-web-tendo-ec-1323447, note: "L2"}
     price_eur: null
-notes: "SCHUNK prints the minimum transmissible torque per item. Max speed is not printed; 25000 rpm is only the balancing speed. List prices need a login; one distributor price is recorded."
+notes: "SCHUNK prints the minimum transmissible torque per item. Max speed is not printed; 25000 rpm is only the balancing speed. List prices need a login; one distributor price is recorded.; dimension_key: SCHUNK drawing letters: L1 projecting length (spindle face to nose), D6 front diameter, L4 length of the front diameter section, D2 rear body diameter, L2 clamping length, L3 10 mm (adjustment range); the pages do not label L2-L4, the reading of them is an inference"

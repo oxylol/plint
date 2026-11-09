@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "Walter machining group P7 (42CrMo4 listed as P7 / P9; P7 = not heat treated), p. F9; standard value for a neutral cutting edge"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []                  # no published calibration read
   min_chip_thickness_ratio: {value: 0.27, src: est, note: "taken from the 0.25-0.30 found for 304 (zou-2026-304-min-cutting-thickness)"}
   indentation_coeff_N_mm3: {value: 3.0e4, src: est, note: "order-of-magnitude placeholder: 3.0e4 N/mm3 assumed for ~200 HB steel"}
@@ -74,7 +76,7 @@ chip:
     criterion: critical_speed
     vc_onset_m_min: {value: 300, src: est, note: "assumed as for annealed/normalised 0.4 % C steel (see aisi1045)"}
   bue:
-    interface_temp_degC: {range: [200, 550], src: est, note: "assumed as for 1045"}
+    interface_temp_degC: {value: [200, 550], src: est, note: "assumed as for 1045"}
     vc_m_min: [10, 60]
     src: est
     note: "BUE window assumed similar to the measured 10-50 m/min window of Ck45 (klippel-2024-ck45-orthogonal), widened slightly for the softer, more adhesive annealed structure"
@@ -97,6 +99,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read; C set so that T = 15 min at vc = 300 m/min (typical CVD P-grade recommendation for annealed low-alloy steel, general knowledge)"
+    T_ref_min: 1
   - tool_class: carbide
     coating: uncoated
     C_m_min: 263
@@ -109,6 +112,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 145 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []                # no published profile of annealed bar read; soft annealing leaves low residual stress

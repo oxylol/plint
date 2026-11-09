@@ -94,6 +94,44 @@ def commit_ref(mem_pts, mem_tick, mem_valid, s, b, p, h, h_write, ratio, tick) -
     mem_valid[s, b] = 1
 
 
+def wave_area_ref(ring: np.ndarray, aux: np.ndarray, e: int, u: np.ndarray, n: np.ndarray, travel: float,
+                  land: float, tan_clear: float, x_max: float, dx: float) -> float:
+    """Process damping's indented area from the element's wave memory (independent of kernels.wave_area): the
+    profile delta(x) = (u - u(x)) . n - max(0, x - L) tan(gamma) behind the edge on the nodes (current point, last
+    evaluation, ring samples), refined at the land's end and at x_max, and its positive part integrated exactly
+    segment by segment (delta is linear between the refined nodes)."""
+    cnt = int(aux[e, A.PDA_COUNT])
+    if cnt <= 0 or x_max <= 0.0:
+        return 0.0
+    L = min(max(float(land), 0.0), x_max)
+    nk = ring.shape[1]
+    xs = [0.0, travel - float(aux[e, A.PDA_X])]
+    us = [np.asarray(u, float), np.array(aux[e, A.PDA_UX:A.PDA_UZ + 1], float)]
+    for g in range(cnt - 1, max(cnt - nk, 0) - 1, -1):
+        xs.append(travel - g * dx)
+        us.append(np.array(ring[e, g % nk], float))
+    xs = np.array(xs)
+    du = np.array([float((us[0] - v) @ n) for v in us])
+    # refine: the land's end and x_max inside the node range (u linear between nodes)
+    cuts = sorted({c for c in (L, x_max) if xs[0] < c < xs[-1]})
+    grid = sorted(set(xs.tolist()) | set(cuts))
+    grid = [x for x in grid if x <= x_max]
+    dd = np.interp(grid, xs, du)
+    prof = dd - np.maximum(np.array(grid) - L, 0.0) * tan_clear
+    area = 0.0
+    for i in range(len(grid) - 1):
+        x0, x1, f0, f1 = grid[i], grid[i + 1], prof[i], prof[i + 1]
+        w = x1 - x0
+        if w <= 0.0:
+            continue
+        if f0 >= 0.0 and f1 >= 0.0:
+            area += 0.5 * (f0 + f1) * w
+        elif f0 > 0.0 or f1 > 0.0:
+            fp = max(f0, f1)
+            area += 0.5 * fp * fp / abs(f1 - f0) * w
+    return area
+
+
 def _field_depth(refill: A.Refill | None, s: int, b: int, p: np.ndarray, n: np.ndarray) -> float | None:
     """Depth of p below the field plane of bin (s, b) along n (None without a plane)."""
     if refill is None or not refill.valid[s, b]:
@@ -283,14 +321,14 @@ def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A
             fa0 = col[A.COL_FA] * db + col[A.COL_EA] * dS
             fft, ffr = float(tool.flank_N[e, 0]), float(tool.flank_N[e, 1])
             fpd = 0.0
-            if vn_vib > 0.0 and Vc > 0.0 and tool.pd[e, 0] > 0.0:
-                # process damping: the slope of the wave the vibration leaves (not the steady feed path)
-                slope_p = vn_vib / Vc
-                L = min(float(tool.pd[e, 1]), pd_max)
-                tg = float(tool.pd[e, 2])
-                xs_ = pd_max if slope_p >= tg else min(L * tg / (tg - slope_p), pd_max)
-                xs_ = max(xs_, L)
-                area = 0.5 * slope_p * xs_ ** 2 - 0.5 * tg * (xs_ - L) ** 2
+            if was_in and Vc > 0.0 and tool.pd[e, 0] > 0.0:
+                # process damping: the flank indents the surface the edge generated behind it (wave memory)
+                u_rel = u_e - R.T @ u_work
+                n_T0 = Rz @ np.asarray(tool.n_T[e], float)
+                n_teeth = float(tool.scal[A.TC_N_TEETH])
+                x_lim = min(pd_max, TWO_PI * float(tool.r_xy_m[e]) / (n_teeth if n_teeth >= 1.0 else 1.0))
+                area = wave_area_ref(st.pd_ring, st.pd_aux, e, u_rel, n_T0, float(st.pd_aux[e, A.PDA_X]) + Vc * frac * dt,
+                                     float(tool.pd[e, 1]), float(tool.pd[e, 2]), x_lim, pd_max / (A.PD_RING_N - 1))
                 fpd = float(tool.pd[e, 0]) * area
             mu = float(tool.pd[e, 3])
             ft = ft0 + fft + mu * fpd

@@ -51,6 +51,8 @@ cutting:
       vc_ref_m_min: 500
       src: est
       note: "no Kienzle value for magnesium was read. Estimated by scaling ISCAR group 22 (hardenable wrought aluminium, 800 N/mm2, mc 0.25) by the shear-strength ratio 140/207 (AZ91D shear 140 MPa, matweb-az91d-cast; 6061-T6 207 MPa, kaiser-2006-al6061-datasheet)"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: hss
       coating: uncoated
       kc11_N_mm2: 620
@@ -59,6 +61,8 @@ cutting:
       vc_ref_m_min: 150
       src: est
       note: "carbide estimate x 1.15"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.2, src: est, range: [0.1, 0.4], note: "korpysa-2025-az91d-micromilling: shearing began at fz/rn = 0.1 (fz 0.54 um/tooth, rn 5.4 um), which the author says is not the minimum chip thickness; 0.2 assumed"}
   indentation_coeff_N_mm3: {value: 1.0e4, src: est, note: "placeholder: 1.5e4 N/mm3 assumed for a 95 HB aluminium alloy scaled by hardness (63/95)"}
@@ -99,6 +103,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read. C set so that T = 15 min at vc = 1200 m/min (general knowledge, not a cited source); the hard die-cast skin and Mg17Al12 particles wear tools more than AZ31B"
+    T_ref_min: 1
   - tool_class: hss
     coating: uncoated
     C_m_min: 500
@@ -111,6 +116,7 @@ tool_life:
     life_basis: cutting_time
     src: est
     note: "C set so that T = 60 min at vc = 270 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null               # kept as a sibling key (template's nested `usui` is not valid YAML)
 
 residual_stress: []

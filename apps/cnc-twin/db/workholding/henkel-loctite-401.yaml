@@ -14,6 +14,6 @@ items:
     cure_s: {value: 259200, src: henkel-2012-loctite-401, note: "72 h at 22 °C is the full-cure condition of the strength tests"}
     peel_strength_N_mm: null           # not in the TDS; cyanoacrylates are weak in peel
     specific_gravity: {value: 1.1, src: henkel-2012-loctite-401, page: "p. 1, at 25 °C"}
-    hot_strength: {text: "strength falls with temperature (chart, % of 22 °C strength vs temperature to 140 °C), not digitised", src: henkel-2012-loctite-401, page: "p. 2"}
+    hot_strength: {value: "strength falls with temperature (chart, % of 22 °C strength vs temperature to 140 °C), not digitised", src: henkel-2012-loctite-401, page: "p. 2"}
     bond_area_utilisation: {value: 0.5, src: est, note: "fraction of the footprint actually wetted by a thin glue film; depends on surface flatness and application"}
 notes: "Glue fixturing releases by heat (above roughly 100-120 °C) or impact; the release behaviour is not in the TDS."

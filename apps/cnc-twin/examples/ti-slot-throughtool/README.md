@@ -71,9 +71,11 @@ Numbers and acceptance bands: `EXPECTED.md` (calculations in `expected_calc.py`)
 
 ## Notes and limits
 
-* The SINUMERIK dialect of the controller was not yet in the tree when this example was written, so
-  the program has not been dry-run; it uses only words listed in `db/controllers/siemens-840d-sl.yaml`.
-* `cnctwin.controller.machine.build_machine` fails on `dmg-dmu50-3rd-siemens` as resolved by the database
-  (its `axes` mapping carries a `src` entry inherited through `same_mechanics_as`); the Heidenhain twin of
-  the machine builds. To be fixed in the database loader or the machine model, not in this project.
+* The controller's SINUMERIK 840D sl dialect (`siemens840d`, docs/dialects.md) runs the program on
+  `dmg-dmu50-3rd-siemens` (the machine model builds; the machine file now extends `dmg-dmu50-3rd` and writes
+  only its controller): the ideal dry run (no acceleration) reaches M30 with no alarm in 142.7 s, 134.0 s of
+  it in feed, which is the feed time of EXPECTED.md section 9 (checked 2026-11-09 with the controller's dry
+  run under bin/tsafe). The program uses only words listed in `db/controllers/siemens-840d-sl.yaml`. The
+  static program checks (cnctwin.sanity) read only FANUC and Haas syntax themselves: they report one
+  `scan-limits` finding for this program and no other rule.
 * The vise height (65 mm) and the 4 mm grip are setup values for the work offset, not database values.

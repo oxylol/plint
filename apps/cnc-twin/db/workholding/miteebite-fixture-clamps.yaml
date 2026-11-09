@@ -4,34 +4,33 @@ series_id: miteebite-fixture-clamps
 maker: "Mitee-Bite"
 series: "Fixture clamps (cam-action edge/toe clamps), metric MB-xM"
 src: miteebite-2024-catalog
-usage: {text: "maximum torque is not necessary, normally half that value is sufficient; clockwise rotation recommended with the locating pin on the right of the workpiece", src: miteebite-2024-catalog, page: "p. 4"}
 items:
   - id: miteebite-50206
     order_code: "50206 (MB-6M)"
     type: clamp
     screw: {value: "M6x1.0", src: miteebite-2024-catalog}
-    max_torque_Nm: {value: 8.5, src: miteebite-2024-catalog}
+    max_input_torque_Nm: {value: 8.5, src: miteebite-2024-catalog}
     clamping_force_kN: {value: 3.558, at_handle_torque_Nm: 8.5, src: miteebite-2024-catalog, note: "holding force 3558 N at max torque"}
     force_per_torque_N_per_Nm: {value: 419, src: miteebite-2024-catalog, note: "3558 / 8.5, assumes proportionality"}
   - id: miteebite-50210
     order_code: "50210 (MB-10M)"
     type: clamp
     screw: {value: "M10x1.5", src: miteebite-2024-catalog}
-    max_torque_Nm: {value: 28.0, src: miteebite-2024-catalog}
+    max_input_torque_Nm: {value: 28.0, src: miteebite-2024-catalog}
     clamping_force_kN: {value: 8.895, at_handle_torque_Nm: 28.0, src: miteebite-2024-catalog}
     force_per_torque_N_per_Nm: {value: 318, src: miteebite-2024-catalog, note: "8895 / 28"}
   - id: miteebite-50212
     order_code: "50212 (MB-12M)"
     type: clamp
     screw: {value: "M12x1.75", src: miteebite-2024-catalog}
-    max_torque_Nm: {value: 88.0, src: miteebite-2024-catalog}
+    max_input_torque_Nm: {value: 88.0, src: miteebite-2024-catalog}
     clamping_force_kN: {value: 17.79, at_handle_torque_Nm: 88.0, src: miteebite-2024-catalog}
     force_per_torque_N_per_Nm: {value: 202, src: miteebite-2024-catalog, note: "17790 / 88"}
   - id: miteebite-50216
     order_code: "50216 (MB-16M)"
     type: clamp
     screw: {value: "M16x2.0", src: miteebite-2024-catalog}
-    max_torque_Nm: {value: 125.0, src: miteebite-2024-catalog}
+    max_input_torque_Nm: {value: 125.0, src: miteebite-2024-catalog}
     clamping_force_kN: {value: 26.68, at_handle_torque_Nm: 125.0, src: miteebite-2024-catalog}
     force_per_torque_N_per_Nm: {value: 213, src: miteebite-2024-catalog, note: "26680 / 125"}
-notes: "Holding force acts mostly sideways and down onto the fixture plate; friction to the plate decides the shear capacity."
+notes: "Holding force acts mostly sideways and down onto the fixture plate; friction to the plate decides the shear capacity.; usage: {text: maximum torque is not necessary, normally half that value is sufficient; clockwise rotation recommended with the locating pin on the right of the workpiece, src: miteebite-2024-catalog, page: p. 4}"

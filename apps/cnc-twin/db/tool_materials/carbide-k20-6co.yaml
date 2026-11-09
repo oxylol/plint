@@ -4,7 +4,7 @@ id: carbide-k20-6co
 class: carbide
 name: "Straight WC-6%Co, medium grain (ISO K10-K20 uncoated insert grade, e.g. Sandvik H13A; Mitsubishi RT9010 / HTi10 as reference grades)"
 src: mitsubishi-2026-tm102g
-composition: {text: "RT9010: K20, Co 5.7 %, grain < 1.5 µm; HTi10: K10, Co 6.0 %, grain < 1.0 µm", src: mitsubishi-2026-tm102g, page: "pp. 4 and 8"}
+composition: {value: "RT9010: K20, Co 5.7 %, grain < 1.5 µm; HTi10: K10, Co 6.0 %, grain < 1.0 µm", src: mitsubishi-2026-tm102g, page: "pp. 4 and 8"}
 grain_size_um: {value: 1.5, src: mitsubishi-2026-tm102g, page: "RT9010 '< 1.5 µm'", note: "upper bound as printed"}
 binder_wt_pct: {value: 6.0, range: [5.7, 6.0], src: mitsubishi-2026-tm102g}
 density_kg_m3: {value: 15000, range: [15000, 15250], src: kyocera-2015-insert-grades, page: "p. A19, KW10 (WC+Co) specific gravity 15.0", note: "Co content of KW10 not printed; zhang-2025-mmsj-ti64-usui Tab. 2 uses 15250 kg/m3 for H13A (WC-6Co)"}
@@ -29,18 +29,20 @@ thermal_shock_parameter: null
 usui:
   - work_family: titanium
     surface: rake
-    A: 4.02148e-12                     # = C1 4021.48 [1/GPa µm/m] x 1e-15
+    A_per_Pa: 4.02148e-12                     # = C1 4021.48 [1/GPa µm/m] x 1e-15
     B_K: 10456.69
     T_range_K: null
     src: zhang-2025-mmsj-ti64-usui
     page: "Tab. 3, rake, physical based"
     note: "uncoated WC-6Co (Sandvik H13A) on Ti6Al4V, dry, vc 150-350 m/min, h = 0.1 mm; C1 converted from µm per m sliding per GPa to 1/Pa (dW/dt [m/s] = A sigma_n[Pa] V_s[m/s] exp(-B/T))"
+    rate_unit: "m/s with sigma_n in Pa, V_s in m/s"
   - work_family: titanium
     surface: flank
-    A: 6.8567295e-10                   # = C1 685672.95 [1/GPa µm/m] x 1e-15
+    A_per_Pa: 6.8567295e-10                   # = C1 685672.95 [1/GPa µm/m] x 1e-15
     B_K: 15909.42
     T_range_K: null
     src: zhang-2025-mmsj-ti64-usui
     page: "Tab. 3, clearance, physical based"
     note: "same tests as the rake set; flank C2 is higher than crater C2 (different mechanism)"
+    rate_unit: "m/s with sigma_n in Pa, V_s in m/s"
 notes: "Usui constants for this grade against steel (Usui 1984) are stored under carbide-p30 (the original work used a P20 grade)."

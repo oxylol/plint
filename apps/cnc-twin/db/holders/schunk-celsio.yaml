@@ -4,7 +4,6 @@ series_id: schunk-celsio
 maker: "SCHUNK"
 series: "CELSIO shrink-fit toolholder, HSK-A63, DIN 69882-8 contour"
 src: schunk-web-celsio-208123
-dimension_key: "D6 nose diameter, D2 body diameter at L4 from the nose, L1 projecting length, L2 read as clamping length (labels not explained on the pages)"
 items:
   - id: schunk-celsio-hsk-a63-6x80
     order_code: "208120"
@@ -63,4 +62,4 @@ items:
     clamp_length_mm: {value: 51.0, src: schunk-web-celsio-208125, note: "L2"}
     shank_tolerance: {value: "h6", src: schunk-web-celsio-208125}
     price_eur: null
-notes: "runout_at_mm 0 means runout measured in the bore, as SCHUNK states for CELSIO."
+notes: "runout_at_mm 0 means runout measured in the bore, as SCHUNK states for CELSIO.; dimension_key: D6 nose diameter, D2 body diameter at L4 from the nose, L1 projecting length, L2 read as clamping length (labels not explained on the pages)"

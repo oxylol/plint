@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 100, src: est, note: "Walter gives no reference speed; typical hard-milling speed assumed"}
       src: walter-2025-technical-compendium
       note: "Walter machining group H1 'hardened steels 46-52 HRC' (1.2344 listed as P11/H1), p. F9. Walter gives one value per workpiece group, independent of tool class"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: cbn
       coating: uncoated
       kc11_N_mm2: 3000
@@ -58,6 +60,8 @@ cutting:
       vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "same Walter H1 value applied to CBN (assignment to tool class is this database's; real CBN edges are chamfered and negative, which raises kc)"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.25, src: est, note: "assumed"}
   indentation_coeff_N_mm3: {value: 7.2e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (~480 HB equivalent / 200)"}
@@ -118,6 +122,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 150 m/min (general knowledge)"
+    T_ref_min: 1
   - tool_class: carbide
     coating: TiAlN
     process: milling
@@ -131,6 +136,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "hard milling: C set so that T = 15 min at vc = 100 m/min (general knowledge); T counts cutting time (the cutter feeding in the material), feed_ref is fz; no reference engagement is stated, so the calibration reads the life at the ISO 8688-2 reference end-milling arc (db/models/wear-calibration.yaml milling_reference_arc_rad)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []                # hardened block/bar: no published as-supplied profile read

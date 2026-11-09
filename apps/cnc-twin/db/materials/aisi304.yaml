@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "Walter group M1 'stainless, austenitic steels, Rm 400-900' (1.4301 listed as M1), p. F9"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: carbide
       coating: uncoated
       kc11_N_mm2: 1910
@@ -58,6 +60,8 @@ cutting:
       vc_ref_m_min: 38
       src: est
       note: "least-squares fit by this database of kc = Fc/(b h) to the 11 orthogonal tests of marcicano-2005-304-machining Table 3 (uncoated M-type carbide TPGN 160308, rake 5 deg, b = 1 mm, h = 0.06-0.43 mm, vc = 24-60 m/min); the 13 tests with the second insert (Table 4, b = 1.5 mm, vc 13-67 m/min) give 1656 N/mm2, mc 0.184"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.27, src: zou-2026-304-min-cutting-thickness, range: [0.25, 0.30], note: "minimum cutting thickness / tool nose (edge) radius stays at 0.25-0.30 for radii 0.01-0.04 mm (FE and analytical model)"}
   indentation_coeff_N_mm3: {value: 2.7e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (180/200)"}
@@ -82,7 +86,7 @@ chip:
     criterion: critical_speed
     vc_onset_m_min: {value: 100, src: mao-2026-304-milling-shear, note: "end milling with TiAlN-coated carbide under flood coolant: band-like chips at 50 m/min, serrated chip edges from 100 m/min, sharper serrations at 150-200 m/min"}
   bue:
-    interface_temp_degC: {range: [200, 600], src: est, note: "assumed"}
+    interface_temp_degC: {value: [200, 600], src: est, note: "assumed"}
     vc_m_min: [5, 60]
     src: est
     note: "austenitic stainless forms BUE and adhesion at low speeds; window assumed, not measured"
@@ -121,6 +125,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 100 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []                # solution-annealed bar: no published as-supplied profile read

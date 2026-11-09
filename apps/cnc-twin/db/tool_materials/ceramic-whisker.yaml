@@ -4,7 +4,7 @@ id: ceramic-whisker
 class: ceramic
 name: "Whisker-reinforced alumina Al2O3-SiCw (about 20-30 % SiC whiskers), ISO S/K grades for nickel alloys and cast iron"
 src: krawczynska-2006-al2o3-sicw
-composition: {text: "Al2O3 + 20 wt% SiC whiskers (hot pressed 1650 °C, 35 MPa) in the reference study", src: krawczynska-2006-al2o3-sicw}
+composition: {value: "Al2O3 + 20 wt% SiC whiskers (hot pressed 1650 °C, 35 MPa) in the reference study", src: krawczynska-2006-al2o3-sicw}
 density_kg_m3: {value: 3800, src: est, note: "rule of mixtures 76 vol% Al2O3 (3.98 g/cm3) + 24 vol% SiC (3.21 g/cm3), i.e. 20 wt% whiskers"}
 youngs_modulus_GPa: {value: 390, src: est, note: "between alumina (370-400 GPa) and SiC (400-410 GPa) from syalons-2023-material-properties"}
 poisson: {value: 0.22, src: est, note: "alumina 0.22, SSiC 0.21 (syalons-2023-material-properties)"}

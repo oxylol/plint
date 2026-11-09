@@ -4,7 +4,7 @@ id: ceramic-sialon
 class: ceramic
 name: "SiAlON (alpha/beta Si-Al-O-N), ISO S10-S20 for heat-resistant alloys (Kyocera KS6040 cutting grade; International Syalons 050/101 for physical data)"
 src: syalons-2023-material-properties
-composition: {text: "Syalon 050: alpha/beta-Sialon; Syalon 101: beta-Sialon", src: syalons-2023-material-properties}
+composition: {value: "Syalon 050: alpha/beta-Sialon; Syalon 101: beta-Sialon", src: syalons-2023-material-properties}
 density_kg_m3: {value: 3240, range: [3230, 3240], src: syalons-2023-material-properties, page: "Syalon 101 3.24, Syalon 050 3.23 g/cc"}
 youngs_modulus_GPa: {value: 290, range: [288, 290], src: syalons-2023-material-properties, page: "Syalon 050 290 GPa, Syalon 101 288 GPa"}
 poisson: {value: 0.23, src: syalons-2023-material-properties}
@@ -21,7 +21,7 @@ specific_heat_J_kgK:
   src: est
   note: "20 °C value 650 J/kgK from syalons-101-datasheet; rise to 1000 °C assumed as for silicon nitride"
 expansion_1_K: {value: 3.2e-6, range: [3.04e-6, 3.2e-6], src: syalons-2023-material-properties, page: "Syalon 050 3.2e-6; Syalon 101 3.04e-6 (0-1200 °C, syalons-101-datasheet)"}
-thermal_shock_deltaT_degC: {value: 600, range: [600, 900], src: syalons-2023-material-properties, page: "Syalon 050 600, Syalon 101 900 (water quench)"}
+thermal_shock_dK: {value: 600, range: [600, 900], src: syalons-2023-material-properties, page: "Syalon 050 600, Syalon 101 900 (water quench)"}
 max_service_temp_degC: {value: 1200, range: [1200, 1450], src: syalons-101-datasheet, page: "maximum use temperature 1200 °C", note: "Syalon 050 1450 °C; 1200 used conservatively"}
 weibull_modulus: {value: 15, src: syalons-101-datasheet}
 thermal_shock_parameter: null

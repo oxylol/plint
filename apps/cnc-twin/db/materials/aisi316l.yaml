@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 150, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "Walter group M1 (1.4401, 1.4435 316L and related grades listed as M1), p. F9"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.27, src: est, note: "taken from 304 (zou-2026-304-min-cutting-thickness, 0.25-0.30)"}
   indentation_coeff_N_mm3: {value: 2.6e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (170/200)"}
@@ -74,7 +76,7 @@ chip:
     criterion: critical_speed
     vc_onset_m_min: {value: 100, src: est, note: "assumed equal to 304 (mao-2026: serrated edges from 100 m/min in milling)"}
   bue:
-    interface_temp_degC: {range: [200, 600], src: est, note: "assumed"}
+    interface_temp_degC: {value: [200, 600], src: est, note: "assumed"}
     vc_m_min: [5, 60]
     src: est
     note: "BUE/adhesion window assumed as for 304"
@@ -97,6 +99,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read; C set so that T = 15 min at vc = 190 m/min (5 % below 304, consistent with the Outokumpu machining index 100 vs 105 for 4301)"
+    T_ref_min: 1
   - tool_class: carbide
     coating: uncoated
     C_m_min: 172
@@ -109,6 +112,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 95 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []                # as-supplied bar: none read. (benmeddour-2021 measured machining-induced stress: +654 MPa at the surface, tensile layer ~0.15 mm, max -67 MPa at 0.26 mm after turning at 100 m/min, f 0.1 - a validation target, not stock data)

@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 50, src: est, note: "Walter gives no reference speed; typical carbide speed for aged 718"}
       src: walter-2025-technical-compendium
       note: "Walter group S4 'heat-resistant alloys, nickel-cobalt-based, hardened' (2.4668 Inconel 718 listed as S4), p. F9; S3 (annealed) is 2800"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: ceramic
       coating: uncoated
       kc11_N_mm2: 2900
@@ -58,6 +60,8 @@ cutting:
       vc_ref_m_min: {value: 250, src: est, note: "Walter gives no reference speed; typical SiAlON speed"}
       src: walter-2025-technical-compendium
       note: "same S4 value applied to ceramic tools (tool-class assignment is this database's; at ceramic speeds thermal softening lowers kc)"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.3, src: est, note: "assumed; no IN718 value read"}
   indentation_coeff_N_mm3: {value: 5.9e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (~390 HB equivalent / 200)"}
@@ -82,7 +86,7 @@ chip:
     criterion: critical_speed
     vc_onset_m_min: {value: 60, src: est, note: "wang-2018 (FE validated by orthogonal tests, h = 0.1 mm, rake 0) find a continuous chip at 50 m/min and serrated chips at higher speed (next simulated speeds much higher); they note serrated chips form over a wide range of speeds. 60 m/min assumed"}
   bue:
-    interface_temp_degC: {range: [200, 600], src: est, note: "assumed"}
+    interface_temp_degC: {value: [200, 600], src: est, note: "assumed"}
     vc_m_min: [5, 30]
     src: est
     note: "adhesion/BUE of aged 718 at low carbide speeds assumed; not measured in a read source"
@@ -102,6 +106,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "no published Taylor fit read; C set so that T = 15 min at vc = 45 m/min (coated S-grade carbide on aged 718, general knowledge). Measured comparison (lima-2012-inconel-tool-wear Table 4.28, dry turning of a softer 718 at 32-34 HRC, Kennametal KC5510 PVD-TiAlN WC-6Co SNMG120412, f 0.2 mm/rev, ap 2 mm, VBB 0.4 mm): 645 s at 45 m/min and 227 s at 60 m/min with a 45 deg approach angle, i.e. a two-point n 0.28 and C 87 m/min (15 min at 41 m/min); with an 85 deg approach angle 210 and 193 s (no meaningful exponent). Not adopted: two speeds only, different hardness"
+    T_ref_min: 1
   - tool_class: ceramic
     coating: uncoated
     grade: SiAlON
@@ -115,6 +120,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 10 min at vc = 250 m/min (SiAlON roughing, round inserts, general knowledge); notch wear at the depth-of-cut line often ends life before VB"
+    T_ref_min: 1
   - tool_class: ceramic
     coating: uncoated
     grade: "Al2O3-SiC whisker"
@@ -128,6 +134,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 10 min at vc = 200 m/min (general knowledge)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []                # solution-treated and aged bar/forging: no published as-supplied profile read

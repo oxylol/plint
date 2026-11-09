@@ -72,3 +72,31 @@ def test_model_files_read_through_params():
         pytest.skip("db/models has no files yet")
     for path in files:
         assert isinstance(models.params(path.stem), dict)
+
+
+def test_no_file_waits_for_migration(real_db):
+    """The files are written in the current key forms (the migration table maps nothing of them), so a file reads
+    as written and matches its template."""
+    assert [f"{m.file}:{m.line}: {m.path_from} -> {m.path_to} ({m.rule})" for m in real_db.migrations()] == []
+
+
+def _without(value, drop=("src",)):
+    if isinstance(value, dict):
+        return {k: _without(v, drop) for k, v in value.items() if k not in drop}
+    if isinstance(value, list):
+        return [_without(v, drop) for v in value]
+    return value
+
+
+def test_the_siemens_dmu50_is_its_base_with_another_controller(real_db):
+    obj = real_db.object("machine", "dmg-dmu50-3rd-siemens")
+    assert obj.extends == "dmg-dmu50-3rd"
+    assert set(obj.raw) <= {"format", "version", "id", "model", "extends", "src", "controller"}
+    siemens = real_db.machine("dmg-dmu50-3rd-siemens").to_dict()
+    base = real_db.machine("dmg-dmu50-3rd").to_dict()
+    identity = ("controller", "id", "model")
+    # section sources are pinned on the merged object (the same effective source): compared without them
+    assert _without({k: v for k, v in siemens.items() if k not in identity}) == \
+        _without({k: v for k, v in base.items() if k not in identity})
+    assert siemens["controller"]["dialect"] == "siemens840d" and base["controller"]["dialect"] == "heidenhain_klartext"
+    assert siemens["controller"]["alarms"] == "siemens-840d-sl"

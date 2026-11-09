@@ -50,6 +50,8 @@ cutting:
       vc_ref_m_min: {value: 250, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "Walter group K3 (0.6025 EN-GJL-250 listed as K3; row 'grey cast iron + CGI + malleable cast iron with low tensile strength, Rm 200-400'), p. F9. Walter K4 'grey cast iron with higher tensile strength' is 1200 / 0.28. Measured forces with chamfered PCBN in wu-2025 (FC220P, f 0.4-0.6 mm, ap 1 mm, 416-625 m/min: Fc 1018-1495 N) imply kc ~ 2500 N/mm2, far above this value because of the strongly negative chamfered edge"
+      h_ref_mm: 1
+      b_ref_mm: 1
     - tool_class: ceramic
       coating: uncoated
       kc11_N_mm2: 800
@@ -58,6 +60,8 @@ cutting:
       vc_ref_m_min: {value: 600, src: est, note: "Walter gives no reference speed"}
       src: walter-2025-technical-compendium
       note: "same K3 value applied to Si3N4 ceramics (tool-class assignment is this database's)"
+      h_ref_mm: 1
+      b_ref_mm: 1
   mechanistic: []
   min_chip_thickness_ratio: {value: 0.2, src: est, note: "assumed; brittle material separates at small h"}
   indentation_coeff_N_mm3: {value: 2.7e4, src: est, note: "placeholder 3.0e4 N/mm3 at 200 HB scaled by hardness (180/200)"}
@@ -135,6 +139,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "C set so that T = 15 min at vc = 350 m/min (K-grade CVD carbide, general knowledge)"
+    T_ref_min: 1
   - tool_class: cbn
     coating: uncoated
     C_m_min: 3486
@@ -147,6 +152,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     life_basis: cutting_time
     src: est
     note: "high-CBN on pearlitic grey iron: C set so that T = 15 min at vc = 900 m/min (general knowledge); wu-2025 turned brake discs with PCBN at 416-625 m/min (tool life given only as a comparison chart)"
+    T_ref_min: 1
 tool_life_usui: null
 
 residual_stress: []                # as-cast residual stresses depend on casting geometry; no profile read

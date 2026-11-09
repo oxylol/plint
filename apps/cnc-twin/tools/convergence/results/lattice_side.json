@@ -1,0 +1,601 @@
+{
+ "analysis": {
+  "F_mean_N": {
+   "coarsest_within_tol_h": 0.25,
+   "conclusive": true,
+   "default_error": 0.014967188938287282,
+   "default_h": 0.25,
+   "default_inside": true,
+   "default_value": 18.797741024951065,
+   "errors": [
+    0.0,
+    0.0016753774564965648,
+    0.004376862154710746,
+    0.014967188938287282,
+    0.03866401898332056
+   ],
+   "h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+   ],
+   "order": 1.8529829395287172,
+   "reference": 19.083365359870616,
+   "reference_uncertainty": 0.004376862154710746,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.015,
+   "values": [
+    19.083365359870616,
+    19.11533719998863,
+    18.99984010024248,
+    18.797741024951065,
+    18.345525759330936
+   ],
+   "within_tol_h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25
+   ]
+  },
+  "F_peak_N": {
+   "coarsest_within_tol_h": 0.03125,
+   "conclusive": true,
+   "default_error": 0.34186719992268005,
+   "default_h": 0.25,
+   "default_inside": false,
+   "default_value": 84.24412875176479,
+   "errors": [
+    0.004442256415886624,
+    0.06558789863555135,
+    0.06972928183435056,
+    0.34186719992268005,
+    0.3991910756092143
+   ],
+   "h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+   ],
+   "order": 3.8840650777941,
+   "reference": 62.70998244612182,
+   "reference_uncertainty": 0.005552820519858379,
+   "relative": true,
+   "sign": 1,
+   "status": "richardson",
+   "tol": 0.02,
+   "values": [
+    62.98979928613607,
+    66.84135101677464,
+    67.10221591323398,
+    84.24412875176479,
+    87.854948175563
+   ],
+   "within_tol_h": [
+    0.03125
+   ]
+  },
+  "chip_volume_analytic_mm3": {
+   "coarsest_within_tol_h": 0.125,
+   "conclusive": true,
+   "default_error": 0.014822561844232819,
+   "default_h": 0.25,
+   "default_inside": false,
+   "default_value": 0.0605429212803334,
+   "errors": [
+    0.0,
+    0.0005292964708778778,
+    0.006134408988726513,
+    0.014822561844232819,
+    0.05202567207720633
+   ],
+   "h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+   ],
+   "order": 3.6541766941479144,
+   "reference": 0.061453824392962715,
+   "reference_uncertainty": 0.006134408988726513,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.01,
+   "values": [
+    0.061453824392962715,
+    0.06148635168533586,
+    0.061076841500214904,
+    0.0605429212803334,
+    0.058256647877204214
+   ],
+   "within_tol_h": [
+    0.03125,
+    0.0625,
+    0.125
+   ]
+  },
+  "engaged_deg": {
+   "coarsest_within_tol_h": 0.03125,
+   "conclusive": false,
+   "default_error": 0.025746107859863226,
+   "default_h": 0.25,
+   "default_inside": false,
+   "default_value": 21.70151798000338,
+   "errors": [
+    0.0,
+    0.02503987493105592,
+    0.0027541061761863408,
+    0.025746107859863226,
+    0.24533471092988415
+   ],
+   "h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+   ],
+   "order": 0.16810462828277983,
+   "reference": 21.15681240583194,
+   "reference_uncertainty": 0.02503987493105592,
+   "relative": true,
+   "sign": -1,
+   "status": "oscillating",
+   "tol": 0.01,
+   "values": [
+    21.15681240583194,
+    21.686576342413783,
+    21.215080513547257,
+    21.70151798000338,
+    26.347312861614505
+   ],
+   "within_tol_h": [
+    0.03125,
+    0.125
+   ]
+  },
+  "removed_mm3": {
+   "coarsest_within_tol_h": null,
+   "conclusive": true,
+   "default_error": 0.18129658396503717,
+   "default_h": 0.25,
+   "default_inside": false,
+   "default_value": 31.2939125,
+   "errors": [
+    0.023380087598291605,
+    0.023379258802327805,
+    0.18129658396503734,
+    0.18129658396503717,
+    0.6374068320699261
+   ],
+   "h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+   ],
+   "order": 17.913892427890072,
+   "reference": 38.223747314453114,
+   "reference_uncertainty": 0.0,
+   "relative": true,
+   "richardson": null,
+   "sign": 1,
+   "status": "exact",
+   "tol": 0.01,
+   "values": [
+    39.11742187499999,
+    39.117390195312495,
+    31.293912499999994,
+    31.2939125,
+    62.58782500000002
+   ],
+   "within_tol_h": []
+  },
+  "wall_dev_um": {
+   "coarsest_within_tol_h": 0.5,
+   "conclusive": true,
+   "default_error": 0.0009101928846035889,
+   "default_h": 0.25,
+   "default_inside": true,
+   "default_value": -3.319341805653117,
+   "errors": [
+    0.0,
+    0.016749113009722816,
+    0.002855666401263779,
+    0.0009101928846035889,
+    0.017754022805724468
+   ],
+   "h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+   ],
+   "order": null,
+   "reference": -3.320251998537721,
+   "reference_uncertainty": 0.017754022805724468,
+   "relative": false,
+   "sign": null,
+   "status": "flat",
+   "tol": 1.0,
+   "values": [
+    -3.320251998537721,
+    -3.303502885527998,
+    -3.3231076649389846,
+    -3.319341805653117,
+    -3.3380060213434453
+   ],
+   "within_tol_h": [
+    0.03125,
+    0.0625,
+    0.125,
+    0.25,
+    0.5
+   ]
+  }
+ },
+ "default_label": "lat0.25",
+ "h_name": "lattice spacing (mm)",
+ "levels": [
+  {
+   "cost": {
+    "cpu_in_cut_s": 2.090005389000007,
+    "cpu_total_s": 4.28269321,
+    "in_cut_sim_s": 0.582960000000009,
+    "l0_steps": 193500.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 8.87837779,
+   "details": {
+    "analytic_total_mm3": 36.192743320614355,
+    "cost": {
+     "cpu_in_cut_s": 2.090005389000007,
+     "cpu_total_s": 4.28269321,
+     "in_cut_sim_s": 0.582960000000009,
+     "l0_steps": 193500.0,
+     "strides": [
+      8
+     ]
+    },
+    "finished": true,
+    "removed_analytic_mm3": 37.7904334862158,
+    "removed_total_mm3": 62.58782500000002,
+    "removed_xyz_mm3": [
+     62.50000000000025,
+     38.22511999999997,
+     62.587825000000244
+    ],
+    "removed_y_mm3": 38.22511999999997,
+    "steps_cut": 101,
+    "wall_dev_um": -3.3380060213434453,
+    "wall_max_mm": 11.694849999999999,
+    "wall_min_mm": 11.69383,
+    "wall_mm": 11.694187463235291,
+    "wall_n": 272
+   },
+   "error": null,
+   "h": 0.5,
+   "label": "lat0.5",
+   "physics": {
+    "lattice_mm": 0.5
+   },
+   "quantities": {
+    "F_mean_N": 18.345525759330936,
+    "F_peak_N": 87.854948175563,
+    "Fx_N": 9.680328316960884,
+    "Fy_N": 15.15021091525251,
+    "Fz_N": -3.649749071577924,
+    "chip_tooth_spread": 0.7989093252548511,
+    "chip_volume_analytic_mm3": 0.058256647877204214,
+    "chip_volume_field_mm3": 0.10118864377619506,
+    "chip_volume_xyz_mm3": [
+     0.10001140303245647,
+     0.061185379785437984,
+     0.10118864377619509
+    ],
+    "engaged_deg": 26.347312861614505,
+    "h_mean_um": 10.290902452892151,
+    "removed_mm3": 62.58782500000002,
+    "revolutions": 136.33333311118818,
+    "steady_s": 0.81,
+    "steady_steps": 81,
+    "steady_ticks": 870,
+    "torque_Nm": 0.06219442990413679,
+    "wall_dev_um": -3.3380060213434453
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 2.0596111629999942,
+    "cpu_total_s": 4.375786628,
+    "in_cut_sim_s": 0.5925040000000092,
+    "l0_steps": 187875.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 4.656412058999999,
+   "details": {
+    "analytic_total_mm3": 37.76100353302019,
+    "cost": {
+     "cpu_in_cut_s": 2.0596111629999942,
+     "cpu_total_s": 4.375786628,
+     "in_cut_sim_s": 0.5925040000000092,
+     "l0_steps": 187875.0,
+     "strides": [
+      8
+     ]
+    },
+    "finished": true,
+    "removed_analytic_mm3": 37.7904334862158,
+    "removed_total_mm3": 31.2939125,
+    "removed_xyz_mm3": [
+     31.24999999999991,
+     38.22340874999993,
+     31.293912500000122
+    ],
+    "removed_y_mm3": 38.22340874999993,
+    "steps_cut": 101,
+    "wall_dev_um": -3.319341805653117,
+    "wall_max_mm": 11.69487,
+    "wall_min_mm": 11.69383,
+    "wall_mm": 11.694206127450983,
+    "wall_n": 1224
+   },
+   "error": null,
+   "h": 0.25,
+   "label": "lat0.25",
+   "physics": {
+    "lattice_mm": 0.25
+   },
+   "quantities": {
+    "F_mean_N": 18.797741024951065,
+    "F_peak_N": 84.24412875176479,
+    "Fx_N": 9.863107757421282,
+    "Fy_N": 15.558158956177603,
+    "Fz_N": -3.7440436563874524,
+    "chip_tooth_spread": 0.7818621318884689,
+    "chip_volume_analytic_mm3": 0.0605429212803334,
+    "chip_volume_field_mm3": 0.049838462931114415,
+    "chip_volume_xyz_mm3": [
+     0.05000010529212224,
+     0.06114899880351621,
+     0.04983846293111441
+    ],
+    "engaged_deg": 21.70151798000338,
+    "h_mean_um": 10.977094191078109,
+    "removed_mm3": 31.2939125,
+    "revolutions": 136.33333328764837,
+    "steady_s": 0.81,
+    "steady_steps": 81,
+    "steady_ticks": 870,
+    "torque_Nm": 0.06411255282553453,
+    "wall_dev_um": -3.319341805653117
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 2.2610854590000002,
+    "cpu_total_s": 4.658452457999999,
+    "in_cut_sim_s": 0.5944880000000092,
+    "l0_steps": 183250.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 4.9945664549999975,
+   "details": {
+    "analytic_total_mm3": 38.153658238049594,
+    "cost": {
+     "cpu_in_cut_s": 2.2610854590000002,
+     "cpu_total_s": 4.658452457999999,
+     "in_cut_sim_s": 0.5944880000000092,
+     "l0_steps": 183250.0,
+     "strides": [
+      8
+     ]
+    },
+    "finished": true,
+    "removed_analytic_mm3": 37.7904334862158,
+    "removed_total_mm3": 31.293912499999994,
+    "removed_xyz_mm3": [
+     31.24999999999991,
+     38.22338468750025,
+     31.293912500000122
+    ],
+    "removed_y_mm3": 38.22338468750025,
+    "steps_cut": 101,
+    "wall_dev_um": -3.3231076649389846,
+    "wall_max_mm": 11.694899999999999,
+    "wall_min_mm": 11.69382,
+    "wall_mm": 11.694202361591696,
+    "wall_n": 4624
+   },
+   "error": null,
+   "h": 0.125,
+   "label": "lat0.125",
+   "physics": {
+    "lattice_mm": 0.125
+   },
+   "quantities": {
+    "F_mean_N": 18.99984010024248,
+    "F_peak_N": 67.10221591323398,
+    "Fx_N": 9.92272970074005,
+    "Fy_N": 15.754234930409426,
+    "Fz_N": -3.7864813320946076,
+    "chip_tooth_spread": 0.8096102120496699,
+    "chip_volume_analytic_mm3": 0.061076841500214904,
+    "chip_volume_field_mm3": 0.050128221063029096,
+    "chip_volume_xyz_mm3": [
+     0.04999998929220031,
+     0.061159760125136124,
+     0.050128221063029096
+    ],
+    "engaged_deg": 21.215080513547257,
+    "h_mean_um": 10.09370474433221,
+    "removed_mm3": 31.293912499999994,
+    "revolutions": 136.33333337880796,
+    "steady_s": 0.81,
+    "steady_steps": 81,
+    "steady_ticks": 870,
+    "torque_Nm": 0.0648214474974484,
+    "wall_dev_um": -3.3231076649389846
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 2.445431062999994,
+    "cpu_total_s": 4.7492945330000005,
+    "in_cut_sim_s": 0.5994400000000094,
+    "l0_steps": 181750.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 5.320024317999998,
+   "details": {
+    "analytic_total_mm3": 38.43484278816621,
+    "cost": {
+     "cpu_in_cut_s": 2.445431062999994,
+     "cpu_total_s": 4.7492945330000005,
+     "in_cut_sim_s": 0.5994400000000094,
+     "l0_steps": 181750.0,
+     "strides": [
+      8
+     ]
+    },
+    "finished": true,
+    "removed_analytic_mm3": 37.7904334862158,
+    "removed_total_mm3": 39.117390195312495,
+    "removed_xyz_mm3": [
+     39.0625000000001,
+     38.220675507812395,
+     39.117390195312616
+    ],
+    "removed_y_mm3": 38.220675507812395,
+    "steps_cut": 101,
+    "wall_dev_um": -3.303502885527998,
+    "wall_max_mm": 11.69495,
+    "wall_min_mm": 11.69382,
+    "wall_mm": 11.694221966371108,
+    "wall_n": 18496
+   },
+   "error": null,
+   "h": 0.0625,
+   "label": "lat0.0625",
+   "physics": {
+    "lattice_mm": 0.0625
+   },
+   "quantities": {
+    "F_mean_N": 19.11533719998863,
+    "F_peak_N": 66.84135101677464,
+    "Fx_N": 9.979218821103714,
+    "Fy_N": 15.85248607822389,
+    "Fz_N": -3.8091984891202895,
+    "chip_tooth_spread": 0.8053822225968987,
+    "chip_volume_analytic_mm3": 0.06148635168533586,
+    "chip_volume_field_mm3": 0.06258114199721977,
+    "chip_volume_xyz_mm3": [
+     0.062499987700347634,
+     0.06115305822990891,
+     0.06258114199721977
+    ],
+    "engaged_deg": 21.686576342413783,
+    "h_mean_um": 10.079140240709938,
+    "removed_mm3": 39.117390195312495,
+    "revolutions": 136.33333335499083,
+    "steady_s": 0.81,
+    "steady_steps": 81,
+    "steady_ticks": 870,
+    "torque_Nm": 0.06522872223835806,
+    "wall_dev_um": -3.303502885527998
+   }
+  },
+  {
+   "cost": {
+    "cpu_in_cut_s": 3.2791493610000018,
+    "cpu_total_s": 6.262346473000001,
+    "in_cut_sim_s": 0.5948400000000093,
+    "l0_steps": 180625.0,
+    "strides": [
+     8
+    ]
+   },
+   "cpu_level_s": 7.8082517350000025,
+   "details": {
+    "analytic_total_mm3": 38.425447818399434,
+    "cost": {
+     "cpu_in_cut_s": 3.2791493610000018,
+     "cpu_total_s": 6.262346473000001,
+     "in_cut_sim_s": 0.5948400000000093,
+     "l0_steps": 180625.0,
+     "strides": [
+      8
+     ]
+    },
+    "finished": true,
+    "removed_analytic_mm3": 37.7904334862158,
+    "removed_total_mm3": 39.11742187499999,
+    "removed_xyz_mm3": [
+     39.0625000000001,
+     38.223747314453114,
+     39.117421875000026
+    ],
+    "removed_y_mm3": 38.223747314453114,
+    "steps_cut": 101,
+    "wall_dev_um": -3.320251998537721,
+    "wall_max_mm": 11.694895,
+    "wall_min_mm": 11.693825,
+    "wall_mm": 11.694205217258098,
+    "wall_n": 75072
+   },
+   "error": null,
+   "h": 0.03125,
+   "label": "lat0.03125",
+   "physics": {
+    "lattice_mm": 0.03125
+   },
+   "quantities": {
+    "F_mean_N": 19.083365359870616,
+    "F_peak_N": 62.98979928613607,
+    "Fx_N": 9.964879946230402,
+    "Fy_N": 15.824095456032497,
+    "Fz_N": -3.8044715945708685,
+    "chip_tooth_spread": 0.804677176408792,
+    "chip_volume_analytic_mm3": 0.061453824392962715,
+    "chip_volume_field_mm3": 0.06258364342311555,
+    "chip_volume_xyz_mm3": [
+     0.0624999692152229,
+     0.06115832727016185,
+     0.06258364342311554
+    ],
+    "engaged_deg": 21.15681240583194,
+    "h_mean_um": 10.068524392742312,
+    "removed_mm3": 39.11742187499999,
+    "revolutions": 136.33333336780717,
+    "steady_s": 0.81,
+    "steady_steps": 81,
+    "steady_ticks": 870,
+    "torque_Nm": 0.06516166547010961,
+    "wall_dev_um": -3.320251998537721
+   }
+  }
+ ],
+ "note": "D10 4FL, Al 6061-T6, 10 000 rpm, f_z 0.04 mm, climb, ae 0.3 mm, ap 5 mm, rigid; the template default 0.25 mm is above the twin check limit ae / 4 = 0.075 mm for this pass",
+ "root": "/tmp/cconv/tree-20261109-1238",
+ "setting": "physics.lattice_mm",
+ "study": "lattice_side",
+ "title": "Dexel lattice: side-milling finish (rigid)"
+}

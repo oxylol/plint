@@ -463,7 +463,9 @@ class _Resolver:
         applied = sorted(path for root in ("machine", "material", "tools")
                          for path, _, _ in overlay.entries_for(document, root))
         record = {"file": str(self.overlay_path), "name": document.get("name"), "machine": document.get("machine"),
-                  "material": document.get("material"), "applied": applied, "models": models, "factors": factors}
+                  "material": document.get("material"), "applied": applied,
+                  "set": {path: dict(document["set"][path]) for path in applied}, "models": models,
+                  "factors": factors}
         for path, _, _ in overlay.entries_for(document, "models") + overlay.entries_for(document, "factors"):
             self.problems.append(Problem(str(self.project.path), self.locations.line(("calibration",)), "calibration",
                                          f"calibration overlay entry {path} is not applied by the simulation in this "

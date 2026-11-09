@@ -4,7 +4,7 @@ id: cermet-ticn
 class: cermet
 name: "TiCN-based cermet (Ti(C,N)+NbC, Co/Ni binder), ISO P10-P20 finishing grade (Kyocera TN60 / TC0300 as reference grades)"
 src: kyocera-2015-insert-grades
-composition: {text: "TN60: TiCN + NbC; Mitsubishi cermets: binder Co+Ni 19-23 mass%", src: kyocera-2015-insert-grades, page: "p. A19; mitsubishi-2026-tm102g p. 5"}
+composition: {value: "TN60: TiCN + NbC; Mitsubishi cermets: binder Co+Ni 19-23 mass%", src: kyocera-2015-insert-grades, page: "p. A19; mitsubishi-2026-tm102g p. 5"}
 density_kg_m3: {value: 6600, range: [6000, 6900], src: kyocera-2015-insert-grades, page: "p. A19, TN60 specific gravity 6.6", note: "TC0300 6.0 (kyocera-2023-tc0300), TN620 6.9"}
 youngs_modulus_GPa: {value: 440, src: kyocera-2023-tc0300, page: "JIS R 1602"}
 poisson: {value: 0.21, src: kyocera-2023-tc0300, page: "JIS R 1602"}
@@ -24,7 +24,7 @@ expansion_1_K:
   table: [[400, 7.4e-6], [800, 8.3e-6]]
   src: kyocera-2023-tc0300
   page: "JIS R 1618, mean 40-400 °C and 40-800 °C"
-thermal_shock_deltaT_degC: {value: 310, src: kyocera-2023-tc0300, page: "JIS R 1648 water quench"}
+thermal_shock_dK: {value: 310, src: kyocera-2023-tc0300, page: "JIS R 1648 water quench"}
 max_service_temp_degC: {value: 1100, src: est, note: "cermets keep hardness and resist oxidation better than WC-Co (Kyocera high-temperature hardness chart, kyocera-2015-insert-grades p. A15, not digitised); 1100 °C assumed"}
 weibull_modulus: {value: 8, range: [5, 10], src: roebuck-2009-npl-mgpg20, page: "4.3.3: 'low values of m (<= about 10), for example for most of the Ti(C,N) cermet materials'", note: "8 chosen inside the stated band"}
 thermal_shock_parameter: null

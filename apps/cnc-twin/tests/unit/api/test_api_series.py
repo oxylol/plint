@@ -117,3 +117,18 @@ def test_export_parquet_everything(client, data_dir):
     np.testing.assert_array_equal(table.column("cutting.spindle_power_W").to_numpy(), values)
     assert table.column("cutting.chip_thickness_m[15].max").null_count == 2320
     assert not list((data_dir / "tmp").glob("export-*"))      # the temporary file is gone
+
+
+def test_indexes_with_their_header_line_read_the_same(client, data_dir):
+    """The core writes series/index.jsonl and keyframes/index.jsonl with a header line {format, version}; the
+    synthetic runs have none (the older form): both read the same."""
+    before_series = client.get(f"{RUN}/series", params={"tier": "macro", "channels": "thermal.edge_temp_K"}).json()
+    before_keyframes = client.get(f"{RUN}/keyframes").json()
+    run = data_dir / "runs" / DONE_RUN
+    for relative, fmt in (("series/index.jsonl", "cnctwin-series-index"),
+                          ("keyframes/index.jsonl", "cnctwin-keyframes-index")):
+        path = run / relative
+        path.write_bytes(('{"format": "%s", "version": 1}\n' % fmt).encode() + path.read_bytes())
+    assert client.get(f"{RUN}/series", params={"tier": "macro", "channels": "thermal.edge_temp_K"}).json() \
+        == before_series
+    assert client.get(f"{RUN}/keyframes").json() == before_keyframes

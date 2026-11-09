@@ -13,8 +13,8 @@ items:
     adapter_size: {value: "01", src: haimer-shop-a63-070}
     bore_mm: {value: 20, src: haimer-shop-a63-070, note: "D1 (quick-change adapter seat)"}
     nose_diameter_mm: {value: 36, src: haimer-shop-a63-070, note: "D2"}
-    axial_compensation_mm: {value: [-3, 3], src: haimer-shop-a63-070, note: "length compensation +/- 3 mm (compression and tension)"}
-    coolant_bar: {value: 50, src: haimer-shop-a63-070, note: "internal high-pressure coolant up to 50 bar"}
+    axial_float_mm: {value: [-3, 3], src: haimer-shop-a63-070, note: "length compensation +/- 3 mm (compression and tension)"}
+    max_coolant_pressure_bar: {value: 50, src: haimer-shop-a63-070, note: "internal high-pressure coolant up to 50 bar"}
     gauge_length_mm: null              # not printed on the page
     profile_mm: null
     clamping_torque_Nm: null
@@ -34,7 +34,7 @@ items:
     adapter_size: {value: "03", src: haimer-shop-a63-070}
     bore_mm: {value: 28, src: haimer-shop-a63-070, note: "D1"}
     tap_range: null
-    axial_compensation_mm: null
+    axial_float_mm: null
     gauge_length_mm: null
     nose_diameter_mm: null
     profile_mm: null

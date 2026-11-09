@@ -138,10 +138,11 @@ kinematics:
     - {link: ram, axis: Y, direction: [0, 1, 0]}
     - {link: head, axis: Z, direction: [0, 0, 1]}
     - {link: spindle_nose, fixed: {translate_mm: [330, 254, 610]}, src: haas-umc750-mld-2022, note: "p. 4: C axis 330 mm from the X travel end (432 mm from the other end) and 254 +- 8 mm from the Y travel end; spindle nose to table 102-610 mm (haas-uk-umc750-2026). Which travel ends are home is an assumption (est)."}
-  home_mm: {X: 0, Y: 0, Z: 0, B: 0, C: 0}
+  home_mm: {X: 0, Y: 0, Z: 0}
   mrzp_mm: {X: -330, Y: -254, Z: -661, src: est, note: "machine position of the rotary zero point implied by the drawing (C axis and B pivot); the real values are factory-set in Settings 255-257 (haas-umc-supplement-2020 Sec. 3.3)"}
   tool_axis: [0, 0, 1]
   singularities: [{axis: C, when: "B = 0", behaviour: slow_down, note: "C parallel to the tool axis"}]
+  home_deg: {B: 0, C: 0}
 
 spindles:
   - id: main
@@ -155,7 +156,6 @@ spindles:
     drive: "inline direct-drive"
     bearing_lubrication: "air/oil injection"
     cooling: "air"
-    max_torque_published: {value_Nm: 122, at_rpm: 2000}
     direction_reversible: {value: true, src: est}
     gear_ranges:
       - rpm: [0, 8100]
@@ -181,12 +181,12 @@ spindles:
       - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: x, src: est, note: "40-taper motor spindle, typical 700-1200 Hz"}
       - {fn_Hz: 850, zeta: 0.04, k_N_um: 70, direction: y, src: est, note: "the x mode repeated in y: axisymmetric shaft and bearings"}
     thermal:
-      growth_um_at_max_rpm: {value: 30, src: est, note: "air-cooled spindle (published 'Cooling: Air'), so more growth than the liquid-cooled VF-SS head"}
+      growth_at_max_speed_um: {value: 30, src: est, note: "air-cooled spindle (published 'Cooling: Air'), so more growth than the liquid-cooled VF-SS head"}
       time_constant_min: {value: 30, src: est, note: "tau = C / G: spindle cartridge and nose housing about 100 kg x 460 J/kgK = 46 kJ/K over G = 300 W / 12 K = 25 W/K for this air-cooled head (a 12 K steady rise at the 300 W bearing heat, est) = 1840 s, about 30 min"}
-      bearing_heat_W_at_max_rpm: {value: 300, src: est, note: "as haas-ec400 (same 8100 rpm head): Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 for three 85 mm angular-contact bearings, oil-air f0 = 1, nu = 10 mm2/s: 0.35 Nm x 848 rad/s = 290 W (palmgren-1959-bearings)"}
+      bearing_heat_at_max_speed_W: {value: 300, src: est, note: "as haas-ec400 (same 8100 rpm head): Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 for three 85 mm angular-contact bearings, oil-air f0 = 1, nu = 10 mm2/s: 0.35 Nm x 848 rad/s = 290 W (palmgren-1959-bearings)"}
       thermal_comp: {value: true, src: est}
       comp_residual_fraction: {value: 0.3, src: est, note: "as haas-vf2ss: the model-based growth compensation leaves 30 % (assumed)"}
-    optional: "12,000 rpm (UMC-750SS) and 15,000 rpm, HSK-A63 versions (haas-umc-flyer-2024)"
+    notes: "optional: 12,000 rpm (UMC-750SS) and 15,000 rpm, HSK-A63 versions (haas-umc-flyer-2024); max_torque_published: {value_Nm: 122, at_rpm: 2000}"
 
 structure:
   modes:
@@ -213,8 +213,8 @@ thermal:
     heat_per_m_travel_J: {value: 60, src: est, note: "nut drag torque 0.15 Nm (light preload of a 40 mm double nut, assumed) x 2 pi / 0.016 m = 59 J per metre, as haas-vf2ss"}
     time_constant_min: {value: 40, src: est, note: "tau = rho c d / (4 h) = 7850 x 460 x 0.040 / (4 x 15 W/m2K) = 2400 s = 40 min for the 40 mm screws (as haas-vf2ss)"}
   structure_sensitivity_um_per_K: {value: 4, src: est, note: "cast-iron CTE 10.5e-6 1/K (db/materials/grey-cast-iron-gjl250.yaml) x the about 0.4 m loop from the platter through the trunnion, base and column to the nose = 4.2 um/K"}
-  mrzp_drift: {value: "MRZP offsets can change over time; re-check with the VPS MRZP probing routine", src: haas-umc-supplement-2020, page: "Sec. 3.3.1"}
   warmup: {cold_to_warm_min: 60, src: est, note: "1.5 x the 40 min axis-drift time constant (78 % of the steady drift)"}
+  notes: "mrzp_drift: {value: MRZP offsets can change over time; re-check with the VPS MRZP probing routine, src: haas-umc-supplement-2020, page: Sec. 3.3.1}"
 
 tool_changer:
   type: side_mount
@@ -240,14 +240,13 @@ workholding_interface:
   t_slots: {count: 7, width_mm: 16, pitch_mm: 63}
   max_load_kg: 300
   max_combined_height_mm: {value: 585, src: haas-umc750-mld-2022, page: "p. 5: tool length + workpiece height < 23.0 in (585 mm) at B0"}
-  envelope_note: {value: "parts > 500 mm diameter or > 460 mm tall need an application review", src: haas-umc750-mld-2022, page: "p. 5"}
+  notes: "envelope_note: {value: parts > 500 mm diameter or > 460 mm tall need an application review, src: haas-umc750-mld-2022, page: p. 5}"
 
 probes:
   spindle_probe: {model: "Renishaw OMP40-2 (Haas WIPS)", trigger_force_N: 0.50, trigger_force_z_N: 5.85, repeatability_um: 1.0, stylus_length_mm: 50, src: renishaw-omp40-2-2025, note: "WIPS standard (haas-umc-flyer-2024); hardware model assumed"}
-  tool_setter: {model: "Renishaw OTS (Haas WIPS)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], src: renishaw-ots-2026}
-  tool_setter_extra: {position_mm: [-560, 200, -60], src: est, note: "fixed to the base beside the trunnion, assumed (base frame)"}
-  calibration_ball: {value: "tooling ball on a magnetic base for the centre-of-rotation (MRZP) routines", src: haas-umc-supplement-2020, page: "Sec. 3.1 (UMC WIPS basics)"}
+  tool_setter: {model: "Renishaw OTS (Haas WIPS)", repeatability_um: 1.0, trigger_force_N: [1.30, 2.40], src: renishaw-ots-2026, position_mm: {value: [-560, 200, -60], src: est, note: "fixed to the base beside the trunnion, assumed (base frame)"}}
   laser: null
+  notes: "calibration_ball: {value: tooling ball on a magnetic base for the centre-of-rotation (MRZP) routines, src: haas-umc-supplement-2020, page: Sec. 3.1 (UMC WIPS basics)}"
 
 coolant:
   tank_l: {value: 284, src: haas-umc-supplement-2020, page: "T1.5: 75 gal (284 L)", note: "the UK product page lists 55 gal (208 L); the 2020 manual value is used"}
@@ -260,9 +259,9 @@ coolant:
     - {id: n2, kind: flood, attached_to: head, position_mm: [-70, -60, 60], aim: [0.6, 0.4, -0.7], diameter_mm: 4, pump: flood, src: est, note: "as haas-vf2ss n2: second flex nozzle, mirrored"}
     - {id: tsc, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: tsc}
   air_blast: {flow_l_min: 170, pressure_bar: 6.9, src: est, note: "air gun as on Haas VMCs"}
-  machine_air_l_min: {value: 113, note: "4 scfm at 100 psi"}
   chiller: null
   filtration_um: {value: 40, src: est, note: "40 um as haas-vf2ss (standard flood circuit; the TSC option carries its own filter)"}
+  notes: "machine_air_l_min: {value: 113, note: 4 scfm at 100 psi}"
 
 chip_conveyor: {type: auger, src: est, note: "chip augers/conveyor visible on the layout drawing; type assumed", rate_kg_h: {value: 60, src: est, note: "auger capacity: 60 kg/h, a third of the 190 kg/h of continuous steel roughing at the S1 spindle power (17 kW / 2.5 J/mm3), since 5-axis parts are mostly profiled at lower removal rates (assumed)"}}
 

@@ -698,3 +698,49 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
 * **Corner rounding and test references.** The controller's look-ahead rounds program corners within the
   machine's tolerance (the VF-2SS: about 0.7 mm at the side step's 90 degree corner at F1600). The tests take
   the removed-volume reference from the path recorded in frames.bin, not from the program.
+* **`run_project` ignores `options.operator` (for the loop's owner; 2026-11-09).** The loop's `run_project` does
+  not read the operator overrides. `twin run` and the API's default `simulate` entry now send a run whose options
+  carry them through `cnctwin.sweep.runner.run_project`, which applies them and refuses overrides the machine or the
+  tools cannot take (docs/howto-run.md section 3, docs/api.md), but a direct caller of
+  `cnctwin.core.loop.run_project` (an uncertainty study or a calibration with the loop as runner, a test) still gets
+  the plain run without a word. Exact change in `cnctwin/core/loop.py`, at the top of `run_project` right after
+  `options = dict(options or {})`:
+
+  ```python
+      if options.get("operator") and not options.get("replay"):
+          from ..sweep.operator import normalise
+          if normalise(options["operator"]) is not None:
+              from ..sweep.runner import run_project as with_overrides     # applies them (OverrideRun)
+              return with_overrides(project_path, run_dir, options, progress_cb)
+  ```
+
+  It does not recurse: the runner's non-replay path builds its `Run` subclass itself and calls `loop.run_project`
+  only after dropping an operator option at 100 %, and its replay path (which calls `loop.run_project` with the
+  option under the patched `Run`) is excluded by the `replay` test. Test: `run_project(project, run_dir,
+  {"operator": {"feed_override": 1.2}})` returns `operator.batches > 0` and run.json `options.operator`.
+* **Calibration overlays the project includes (for structure's and the loop's owners; 2026-11-09).** A project's
+  `calibration: <file>` is applied by `cnctwin.project.resolve` (docs/formats.md "Project file"): machine, material
+  and tool values arrive in `ctx.project` already calibrated, so `Run` needs nothing for them. Two kinds of entry
+  have no database object and wait in `ctx.project.calibration_overlay` (None without the key), each reported as a
+  `calibration` warning by the resolver until a domain applies it:
+  * `factors.tool_stiffness[<T>]` (`calibration_overlay["factors"]["tool_stiffness"][str(T)]`, the calibrate
+    target `tool_stiffness_factor`): exact change in `cnctwin/structure/toolmodel.py` `tool_modes(...)`, a keyword
+    `stiffness_factor: float = 1.0` applied before `solve_modes`: `sys.K = sys.K * stiffness_factor`,
+    `sys.K_full = sys.K_full * stiffness_factor`, every `(name, eta, K)` of `sys.parts` and `sys.parts_full` with
+    `K * stiffness_factor` (the masses and the base modes unchanged: the static tip stiffness and the modal
+    stiffness scale by the factor, the frequencies by its square root); and in `cnctwin/structure/domain.py`
+    `_build_tool`, the call `TM.tool_modes(..., stiffness_factor=_tool_stiffness_factor(ctx, slot_obj.number))`
+    with `_tool_stiffness_factor` reading `((getattr(ctx.project, "calibration_overlay", None) or
+    {}).get("factors") or {}).get("tool_stiffness", {}).get(str(number), 1.0)`. Then the resolver's warning for
+    `factors.tool_stiffness` can go (`cnctwin/project/loader.py` `_calibration_record`: skip the entries a domain
+    reads).
+  * `models.<model>.<name>` (`calibration_overlay["models"]`, e.g. `production-energy.axis_seal_drag_N`): the
+    readers of `cnctwin.db.models.params(model)` for a run (production's energy model) should merge them over the
+    file's values; `cnctwin.production` is not a loop file, the hook it needs is the project it is given.
+  * The calibrated values are `src: est` values of the overlay file, not of a database file, so `_estimates` in
+    `cnctwin/core/loop.py` does not list them in run.json `estimates` (the report's "Estimated database values
+    used"). Exact change at its end: `calibration = getattr(project, "calibration_overlay", None)`; when set,
+    append for every `path, entry` of `calibration["set"].items()` a `cnctwin.db.problems.Estimate(file=
+    calibration["file"], line=0, path=path, value=entry["value"], note=f"calibrated ({calibration['name']})" +
+    (f", parameter {entry['parameter']}" if entry.get("parameter") else ""), obj="calibration")` to the list it
+    returns (`_run_document` writes file, path, value and note of each).

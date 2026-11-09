@@ -139,9 +139,10 @@ kinematics:
   tool_chain:
     - {link: head, axis: Z, direction: [0, 0, 1]}
     - {link: spindle_nose, fixed: {translate_mm: [0, 0, 625]}, src: est, note: "spindle nose 625 mm above the table top at Z0 assumed (max workpiece height 600 mm, dmgmori-dmu50-web-2026)"}
-  home_mm: {X: 0, Y: 0, Z: 0, B: 0, C: 0}
+  home_mm: {X: 0, Y: 0, Z: 0}
   tool_axis: [0, 0, 1]
   singularities: [{axis: C, when: "B = 0", behaviour: slow_down, note: "C parallel to the tool axis"}]
+  home_deg: {B: 0, C: 0}
 
 spindles:
   - id: main
@@ -187,12 +188,12 @@ spindles:
       - {fn_Hz: 2300, zeta: 0.03, k_N_um: 220, direction: y, src: est, note: "the x mode repeated in y"}
     thermal:
       jacket: {flow_l_min: 10, src: est, note: "cooled motor spindle (dmgmori-dmu50-3rd-2018 p. 4); channel geometry and area from the model's defaults"}
-      growth_um_at_max_rpm: {value: 15, src: est, note: "cooled motor spindle (brochure p. 4); 10-25 um typical"}
+      growth_at_max_speed_um: {value: 15, src: est, note: "cooled motor spindle (brochure p. 4); 10-25 um typical"}
       time_constant_min: {value: 20, src: est, note: "tau = C / G for the liquid-cooled motor spindle: cartridge about 80 kg x 460 J/kgK = 37 kJ/K over G = 600 W / 19 K = 32 W/K (bearing heat at max speed, a 19 K steady rise of the nose, both est) = 1170 s = 20 min"}
-      bearing_heat_W_at_max_rpm: {value: 600, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for three 75 mm pitch-diameter spindle bearings, oil-air f0 = 1, nu = 10 mm2/s, n = 15 000 rpm: 3 x 0.119 Nm = 0.36 Nm x 1571 rad/s = 560 W, i.e. 600 W"}
+      bearing_heat_at_max_speed_W: {value: 600, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for three 75 mm pitch-diameter spindle bearings, oil-air f0 = 1, nu = 10 mm2/s, n = 15 000 rpm: 3 x 0.119 Nm = 0.36 Nm x 1571 rad/s = 560 W, i.e. 600 W"}
       thermal_comp: {value: true, src: est}
       comp_residual_fraction: {value: 0.3, src: est, note: "the model-based growth compensation leaves 30 % (as the Haas machines, assumed)"}
-    optional: "15,000 rpm / 46 kW / 200 Nm and 20,000 rpm / 35 kW / 130 Nm speedMASTER spindles (SK40 or HSK-A63)"
+    notes: "optional: 15,000 rpm / 46 kW / 200 Nm and 20,000 rpm / 35 kW / 130 Nm speedMASTER spindles (SK40 or HSK-A63)"
 
 structure:
   modes:
@@ -262,9 +263,9 @@ coolant:
     - {id: n3, kind: flood, attached_to: head, position_mm: [0, 80, 50], aim: [0, -0.6, -0.8], diameter_mm: 3, pump: flood, src: est, note: "third flood nozzle behind the spindle (position and aim assumed)"}
     - {id: ics, kind: through_spindle, attached_to: spindle_nose, position_mm: [0, 0, 0], aim: [0, 0, -1], pump: ics}
   air_blast: {flow_l_min: 200, pressure_bar: 6, src: est, note: "coolant/air blast switch and through-spindle air blast are published options (brochure p. 11); flow assumed"}
-  chiller: {value: "spindle, ballscrew-nut and table-bearing cooling unit", src: dmgmori-dmu50-3rd-2018, page: "p. 4"}
+  chiller: {kind: "spindle, ballscrew-nut and table-bearing cooling unit", src: dmgmori-dmu50-3rd-2018, page: "p. 4"}
   filtration_um: {value: 50, src: est, note: "finest particle the flood circuit is assumed to hold back: 50 um (the ICS option carries its own filter)"}
-  mist_separator: {value: option, src: dmgmori-dmu50-3rd-2018, page: "p. 11 options: oil mist separator"}
+  notes: "mist_separator: {value: option, src: dmgmori-dmu50-3rd-2018, page: p. 11 options: oil mist separator}"
 
 chip_conveyor: {type: hinged_belt, option: true, src: dmgmori-dmu50-3rd-2018, note: "chip conveyor is a published option; type assumed", rate_kg_h: {value: 100, src: est, note: "continuous steel roughing at the S1 power: 16 kW / 2.5 J/mm3 = 6.4 cm3/s = 180 kg/h; the conveyor is sized for 100 kg/h average (roughing duty about 55 %, assumed)"}}
 

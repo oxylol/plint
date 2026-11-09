@@ -67,7 +67,7 @@ axes:
     positioning: {accuracy_um: 8, repeatability_um: 4, src: est, note: "combined X/Y' motion"}
     motor_force_N: 10231
     moving_mass_kg: {value: 250, src: est, note: "Y' wedge slide with the BMT65 turret and 12 tools (the X mass 350 kg minus the cross slide, about 100 kg), assumed"}
-    implementation: {value: "Y = X slide + inclined Y' slide (wedge), interpolated by the control", src: haas-st-yaxis-flyer-2021, page: "p. 2"}
+    notes: "implementation: {value: Y = X slide + inclined Y' slide (wedge), interpolated by the control, src: haas-st-yaxis-flyer-2021, page: p. 2}"
   Z:
     type: linear
     travel_mm: [-572, 0]
@@ -104,8 +104,7 @@ axes:
       clamp_time_s: {value: 0.3, src: est, note: "hydraulic disc-brake clamp or release, 0.3 s assumed (valve and pressure build-up)"}
       unclamped_stiffness_Nm_rad: {value: 1.3e4, src: est, note: "RE-DERIVED (was 2.0e5, which with the 0.2 kg m2 spindle and chuck would put the unclamped mode at 160 Hz, not at the 40 Hz of rotary_modes): k = J (2 pi f)^2 = 0.2 x (2 pi x 40)^2 = 1.26e4 Nm/rad; a poly-V belt drive gives the same order, 2 EA r^2 / L = 2 x 1.6e5 N x (0.1 m)^2 / 0.4 m = 8e3 Nm/rad (8-rib belt, EA about 2e4 N per rib, 100 mm spindle pulley, 0.4 m span: assumed)"}
       clamped_stiffness_Nm_rad: {value: 1.0e6, src: est, note: "clamped: the 366 mm brake disc held at r = 183 mm with a tangential pad/disc stiffness of about 3e7 N/m (assumed): 3e7 x 0.183^2 = 1.0e6 Nm/rad, about 80 x the belt-held stiffness (mode about 360 Hz with J = 0.2 kg m2)"}
-    positioning: {accuracy_arcsec: 36, note: "published positioning +-0.01 deg (36 arcsec)"}
-    positioning_repeatability_arcsec: {value: 18, src: est, note: "assumed half the positioning tolerance"}
+    positioning: {accuracy_arcsec: 36, note: "published positioning +-0.01 deg (36 arcsec)", repeatability_arcsec: {value: 18, src: est, note: "assumed half the positioning tolerance"}}
     drive_rating_kW: {value: 3.7, note: "published 'C Axis: Max Rating 5 hp (3.7 kW)'"}
 
 kinematics:
@@ -118,10 +117,11 @@ kinematics:
     - {link: y_slide, axis: Y, direction: [0, 1, 0]}
     - {link: turret, fixed: {translate_mm: [443, 0, 662]}, src: est, note: "turret axis ~230 mm beyond the OD tool tip (BMT65 clearance diameter 387 mm, max turret swing 889 mm: haas-st20y-mld-2019 p. 5); assumed"}
     - {link: od_tool_tip_ref, fixed: {translate_mm: [-230, 0, 0]}, src: haas-st20y-mld-2019, note: "p. 4 (BMT OD): at home the OD tool tip sits 213 mm from the spindle axis and 662 mm from the spindle face (129 + 533 mm envelope; 90 mm at Z min). Net position [213, 0, 662]."}
-  home_mm: {X: 0, Y: 0, Z: 0, C: 0}
+  home_mm: {X: 0, Y: 0, Z: 0}
   tool_axis: [0, 0, 1]
   turret_index_axis: [0, 0, 1]
   singularities: null
+  home_deg: {C: 0}
 
 spindles:
   - id: main
@@ -136,7 +136,6 @@ spindles:
     bore_mm: 88.9
     bar_capacity_mm: 63.5
     chuck_mm: 210
-    max_torque_published: {value_Nm: 203, at_rpm: 500, note: "spec table value (150 ft-lbf @ 500 rpm); the 200 % load chart shows ~226 Nm at 500 rpm"}
     centre_height_mm: {value: 1000, src: haas-st20y-mld-2019, page: "p. 3 spindle CL approx. 39.4 in above floor"}
     direction_reversible: {value: true, src: est}
     gear_ranges:
@@ -165,13 +164,13 @@ spindles:
       housing_mass_kg: {value: 300, src: est, note: "headstock casting near the bearings (as the time-constant estimate below: 150 kg near the bearings plus the casting around them, assumed)"}
       housing_size_mm: {value: [450, 450, 450], src: est, note: "exposed headstock, assumed"}
       housing_growth_length_mm: {value: 200, src: est, note: "front bearings about 200 mm ahead of the centre of the headstock's bolt pattern (assumed)"}
-      growth_um_at_max_rpm: {value: 25, src: est, note: "axial growth of the headstock toward +z at 4000 rpm"}
+      growth_at_max_speed_um: {value: 25, src: est, note: "axial growth of the headstock toward +z at 4000 rpm"}
       time_constant_min: {value: 40, src: est, note: "tau = C / G: spindle and headstock housing near the bearings, about 150 kg x 460 J/kgK = 69 kJ/K, over the conductance to air and bed G = 400 W / 14 K = 29 W/K (bearing heat at 4000 rpm, a 14 K steady rise, both est) = 2400 s = 40 min"}
-      bearing_heat_W_at_max_rpm: {value: 400, src: est, note: "Palmgren speed term M0 = 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for the two front bearings of the A2-6 spindle (89 mm bore: dm about 140 mm), grease (base oil nu = 20 mm2/s, f0 = 1), n = 4000 rpm: 2 x 0.51 Nm = 1.0 Nm x 419 rad/s = 430 W, i.e. 400 W"}
+      bearing_heat_at_max_speed_W: {value: 400, src: est, note: "Palmgren speed term M0 = 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for the two front bearings of the A2-6 spindle (89 mm bore: dm about 140 mm), grease (base oil nu = 20 mm2/s, f0 = 1), n = 4000 rpm: 2 x 0.51 Nm = 1.0 Nm x 419 rad/s = 430 W, i.e. 400 W"}
       thermal_comp: {value: true, src: est}
       comp_residual_fraction: {value: 0.3, src: est, note: "as the Haas mills: the model-based growth compensation leaves 30 % (assumed)"}
     spindle_nose_detail: {value: "A2-6, drawtube thread 75 x 2.0 mm, drawtube ID 65 mm, counterbore 90.4 mm", src: haas-st20y-mld-2019, page: "p. 7 (machines built after May 2019)"}
-    optional: "5000 rpm A2-6 22.4 kW spindle (haas-torque-st-2016 p. 2)"
+    notes: "optional: 5000 rpm A2-6 22.4 kW spindle (haas-torque-st-2016 p. 2); max_torque_published: {value_Nm: 203, at_rpm: 500, note: spec table value (150 ft-lbf @ 500 rpm); the 200 % load chart shows ~226 Nm at 500 rpm}"
   - id: live
     kind: live_tool
     drive_type: {value: coupled, src: est, note: "driven tool on the turret's live-tool drive (assumed)"}
@@ -184,8 +183,6 @@ spindles:
       motor_heat_to_head_pct: {value: 0, src: est, note: "the live-tool motor sits in the turret, not in the tool body"}
     nose: BMT65
     max_rpm: {value: 4000, src: haas-st-yaxis-flyer-2021, note: "standard; 6000 rpm with the upgrade (the UK page lists 6000 rpm)"}
-    max_rpm_option: {value: 6000, src: haas-uk-st20y-2026}
-    duty: {value: "driven holders: continuous at 4500 rpm, up to 6000 rpm at 15 % duty", src: haas-livetool-web-2026}
     gear_ranges:
       - rpm: [0, 4000]
         rating: "est. continuous"
@@ -203,6 +200,7 @@ spindles:
     frf_modes:
       - {fn_Hz: 650, zeta: 0.04, k_N_um: 15, direction: x, src: est, note: "driven holder on a BMT turret; low stiffness typical of live tools"}
       - {fn_Hz: 650, zeta: 0.04, k_N_um: 15, direction: y, src: est, note: "the x mode repeated in y: axisymmetric driven holder"}
+    notes: "max_rpm_option: {value: 6000, src: haas-uk-st20y-2026}; duty: {value: driven holders: continuous at 4500 rpm, up to 6000 rpm at 15 % duty, src: haas-livetool-web-2026}"
   - id: sub
     kind: sub
     drive_type: {value: built_in, src: est, note: "built-in motor of the sub-spindle (assumed)"}
@@ -219,7 +217,7 @@ spindles:
     chuck_mm: {value: 135, src: haas-st-yaxis-flyer-2021}
     bore_mm: {value: 33, src: haas-st-yaxis-flyer-2021, note: "non-through"}
     face_to_face_mm: {value: 985, src: haas-st20y-mld-2019, page: "p. 5: spindle face to spindle face 985 mm, chuck face to chuck face approx. 823 mm"}
-    note: {value: "finishing sub-spindle option; not compatible with the tailstock", src: haas-st-yaxis-flyer-2021}
+    note: "finishing sub-spindle option; not compatible with the tailstock (src haas-st-yaxis-flyer-2021)"
     gear_ranges:
       - rpm: [0, 6000]
         rating: "est. continuous"
@@ -304,9 +302,9 @@ coolant:
   nozzles:
     - {id: turret_ring, kind: flood, attached_to: turret, position_mm: [-200, 0, -30], aim: [-0.8, 0, -0.6], diameter_mm: 5, pump: flood, src: est, note: "coolant delivered through the BMT station to the active tool; geometry assumed"}
   air_blast: null
-  machine_air_l_min: {value: 113, note: "4 scfm at 100 psi"}
   chiller: null
   filtration_um: {value: 50, src: est, note: "finest particle the plain flood circuit is assumed to hold back: 50 um (no TSC filter on the standard lathe circuit)"}
+  notes: "machine_air_l_min: {value: 113, note: 4 scfm at 100 psi}"
 
 chip_conveyor: {type: hinged_belt, option: true, src: est, note: "conveyor drawn on haas-st20y-mld-2019 p. 1/3 (70 in removal space); type assumed", rate_kg_h: {value: 80, src: est, note: "the chip mass rate of continuous steel turning at the S1 spindle power: 7.5 kW (50 % of the 14.9 kW peak) / 2.5 J/mm3 = 3.0 cm3/s = 85 kg/h; 80 kg/h assumed"}}
 

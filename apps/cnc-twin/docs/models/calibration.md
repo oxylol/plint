@@ -469,20 +469,24 @@ Command line: `python -m cnctwin.mdata.calibrate --project P --run RUN (--data s
 
 ## Integration (what other parts must do)
 
-* Project schema and loader (`cnctwin/project`): accept `calibration: <path>` (a
-  `cnctwin-calibration` file relative to the project); in resolution apply
-  `overlay.apply_to_raw("machine" | "material", raw, overlay)` to the resolved raws before the SI
-  views are built, `overlay.apply_to_project` to the project document (tools, controller
-  overrides), and hash the overlay as an input. Until then `project.calibrated.yaml` is the
-  calibrated project.
-* `cnctwin.core.loop.run_project`: nothing new for `simulator: loop` (it runs the calibrated
-  project file); `options["calibration"]` (an overlay path) should be honoured the same way as the
-  project key once it exists.
-* `cnctwin.db.models.params` users (production energy): `overlay.model_overrides(overlay)` gives
-  calibrated model parameters by model and SI name, to be merged over `params(name)` for a
-  calibrated project.
-* Structure domain: `overlay.factors(overlay)["tool_stiffness"][<T number>]` multiplies the static
-  (and modal) stiffness of that tool's chain at the tip.
+* Project schema and loader (`cnctwin/project`, done 2026-11-09): `calibration: <path>` (a
+  `cnctwin-calibration` file relative to the project) is applied at resolve time: `apply_to_tools` to
+  the tool list (after the library rows joined it), `apply_to_raw("machine", ...)` to the machine after
+  the project's `controller_overrides` (a calibrated controller value wins and keeps its note),
+  `apply_to_raw("material", ...)` to the material, each patched object checked; the overlay is hashed
+  as an input (`input_hashes`, so the project hash, run ids and cache keys change with it). Its
+  `models.*` and `factors.*` entries are listed in `ResolvedProject.calibration_overlay` and reported as
+  `calibration` warnings while no domain applies them (docs/formats.md "Project file").
+  `project.calibrated.yaml` remains the standalone form; for a project that includes an overlay it is
+  written with both baked in (`combined`) and without the key.
+* `cnctwin.core.loop.run_project`: a project with `calibration:` runs calibrated through the ordinary
+  resolver; `options["calibration"]` (an overlay path given per run) is not read.
+* `cnctwin.db.models.params` users (production energy): `ResolvedProject.calibration_overlay["models"]`
+  (`overlay.model_overrides`) gives calibrated model parameters by model and SI name, to be merged over
+  `params(name)` for a calibrated project (not done yet).
+* Structure domain: `calibration_overlay["factors"]["tool_stiffness"][<T number>]` should multiply the
+  static (and modal) stiffness of that tool's chain at the tip (not done yet: the exact change is in
+  docs/models/loop.md section 15, the structure domain being another owner's).
 * Motion domain: should record `data_starvation` ticks in the timeline's `ticks` and
   `cutting.axis_force_N[i]` per tick; the block-time and axis-friction targets then use them.
 

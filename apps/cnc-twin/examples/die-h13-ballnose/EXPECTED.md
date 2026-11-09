@@ -124,7 +124,9 @@ Error budget (normal to the surface, finishing tool):
 
 * Feed time: **T1 333.7 s + T2 803.7 s = 1137 s**. Two tool changes take 2 x 5.5 s. There are four
   swivels with `MB MAX` retract, plus approaches and retracts, and the spindle run-up overlaps the
-  positioning. **The cycle is about 1165-1185 s (19.5 min).**
+  positioning. **The cycle is about 1165-1185 s (19.5 min).** The controller's ideal dry run (HEIDENHAIN
+  dialect, no acceleration) gives 1137.5 s of feed and 1155.0 s in all, no alarm: the lower bound the
+  accelerations and swivels add to.
 * The blocks are 0.125-0.25 mm long and run at 290-349 mm/min, i.e. 25-50 blocks/s. That is far below
   the TNC's block rate, and at these feeds no acceleration or jerk limit slows the path, so the real
   time matches the programmed feed time.

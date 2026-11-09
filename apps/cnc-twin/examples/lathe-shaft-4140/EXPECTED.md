@@ -100,5 +100,6 @@ Bar 365 715 mm3 (with the centre hole), part 167 680 mm3 = **1.316 kg**, stub 74
 Feed times: rough 63.0 s, finish 51.8 s, groove 1.3 s, thread ~11 s in feed (+ returns), part-off 14.1 s
 -> about **141 s of feed**. Turret indexes (0.5-1.2 s est.), G53 X0 retracts at 12 m/min (about 1 s
 each way), spindle ramps between the CSS settings and the tailstock moves add 15-25 s:
-**expected 155-170 s**. (The controller's ideal dry run is not a useful bound here: it keeps the
-spindle speed of the G96 block, computed at the X home position.)
+**expected 155-170 s**. The controller's ideal dry run (no acceleration) gives 142.8 s of feed, the 141 s
+above within the rounding of the hand calculation (which follows the CSS speeds), and 156.9 s in all, no
+alarm: the lower bound the turret, retracts, ramps and tailstock add to.

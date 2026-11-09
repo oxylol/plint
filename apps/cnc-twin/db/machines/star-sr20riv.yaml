@@ -28,12 +28,11 @@ controller:
   feed_override_range_pct: {value: [0, 150], src: est, note: "feed override 0-150 % assumed for the Star operator panel (not read this session)"}
   tool_life_management: {value: true, src: est}
   probing: {value: false, src: est}
-  two_path: {value: true, src: est, note: "main side (path 1) and back working (path 2) run as separate channels synchronised with wait codes"}
+  paths: {value: 2, src: est, note: "main side (path 1) and back working (path 2) run as separate channels synchronised with wait codes"}
 
 axes:
   Z1:
     type: linear
-    description: "headstock (bar) stroke through the guide bush"
     travel_mm: [0, 205]
     travel_non_guide_bush_mm: {value: 50, note: "non-guide-bush mode: bar diameter x 2.5, max. 50 mm"}
     rapid_mm_min: 35000
@@ -50,6 +49,7 @@ axes:
     positioning: {accuracy_um: 4, repeatability_um: 2, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
     motor_force_N: {value: 4000, src: est, note: "a small feed servo (about 7.1 Nm through the 10 mm lead at 90 %) gives 4 kN: 33 m/s2 on the 120 kg slide, well above the 8 m/s2 used (assumed motor size)"}
     moving_mass_kg: {value: 120, src: est, note: "headstock with built-in motor and bar"}
+    notes: "description: headstock (bar) stroke through the guide bush"
   X1:
     type: linear
     travel_mm: {value: [-5, 150], src: est, note: "gang slide travel not on the spec page; assumed"}
@@ -69,7 +69,6 @@ axes:
     moving_mass_kg: {value: 80, src: est, note: "gang tool slide with its tools and, for X2/Z2, the sub-spindle unit: 80 kg assumed"}
   Y1:
     type: linear
-    description: "gang tool selection / Y milling"
     travel_mm: {value: [-200, 200], src: est, note: "assumed"}
     rapid_mm_min: 35000
     max_feed_mm_min: {value: 35000, src: est, note: "max cutting feed not published: the 35 m/min Y1 rapid taken as the limit"}
@@ -85,6 +84,7 @@ axes:
     positioning: {accuracy_um: 3, repeatability_um: 1.5, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
     motor_force_N: {value: 3000, src: est, note: "a small feed servo (about 5.3 Nm through the 10 mm lead at 90 %) gives 3 kN: 30 m/s2 on the 100 kg slide, well above the 8 m/s2 used (assumed motor size)"}
     moving_mass_kg: {value: 100, src: est, note: "gang tool selection slide with its tools and, for X2/Z2, the sub-spindle unit: 100 kg assumed"}
+    notes: "description: gang tool selection / Y milling"
   X2:
     type: linear
     travel_mm: {value: [-5, 150], src: est, note: "cross stroke of the back-working spindle not on the spec page: as X1 (-5..150 mm), assumed"}
@@ -121,7 +121,6 @@ axes:
     moving_mass_kg: {value: 120, src: est, note: "back-working (sub-spindle) z slide with its tools and, for X2/Z2, the sub-spindle unit: 120 kg assumed"}
   Y2:
     type: linear
-    description: "back tool post Y"
     travel_mm: {value: [-60, 60], src: est, note: "axis exists (15 m/min rapid published); stroke assumed"}
     rapid_mm_min: 15000
     max_feed_mm_min: {value: 15000, src: est, note: "max cutting feed not published: the 15 m/min Y2 rapid taken as the limit"}
@@ -137,11 +136,11 @@ axes:
     positioning: {accuracy_um: 4, repeatability_um: 2, src: est, note: "ISO 230-2 accuracy and repeatability typical of short semi-closed-loop ballscrew axes of small lathes (not published)"}
     motor_force_N: {value: 2000, src: est, note: "a small feed servo (about 1.8 Nm through the 5 mm lead at 90 %) gives 2 kN: 40 m/s2 on the 50 kg slide, well above the 4 m/s2 used (assumed motor size)"}
     moving_mass_kg: {value: 50, src: est, note: "back tool post Y slide with its tools and, for X2/Z2, the sub-spindle unit: 50 kg assumed"}
+    notes: "description: back tool post Y"
   C1:
     type: rotary
     travel_deg: [0, 360]
     continuous: true
-    indexing: "C-axis control"
     max_rpm: {value: 100, src: est, note: "C-axis contouring speed not published: 100 rpm assumed (C rapid of small built-in spindles)"}
     accel_rad_s2: {value: 100, src: est, note: "100 rad/s2 reaches 100 rpm (10.5 rad/s) in 0.1 s; the 23.6 Nm motor would accelerate the 0.004 kg m2 spindle at 5900 rad/s2, so the value is the C-mode tuning (assumed)"}
     jerk_rad_s3: {value: 2000, src: est, note: "the 100 rad/s2 is reached in a/j = 50 ms"}
@@ -153,11 +152,11 @@ axes:
     brake: {clamp_torque_Nm: {value: 60, src: est, note: "about 2.5 x the 23.6 Nm motor torque, so milling loads on the clamped spindle never drive it: 60 Nm assumed"}, clamp_time_s: {value: 0.1, src: est, note: "spindle clamp of a small Swiss-type headstock: 0.1 s assumed"}}
     positioning: {accuracy_arcsec: 30, repeatability_arcsec: 15, src: est, note: "C indexing on the spindle encoder: 30 arcsec accuracy, 15 arcsec repeatability assumed"}
     motor_torque_Nm: {value: 23.6, src: est, note: "3.7 kW at the assumed 1500 rpm base speed"}
+    notes: "indexing: C-axis control"
   C2:
     type: rotary
     travel_deg: [0, 360]
     continuous: true
-    indexing: "C-axis control"
     max_rpm: {value: 100, src: est, note: "as C1: 100 rpm"}
     accel_rad_s2: {value: 100, src: est, note: "as C1: 100 rad/s2 (same motor rating and spindle size)"}
     jerk_rad_s3: {value: 2000, src: est, note: "as C1: 50 ms ramp"}
@@ -169,27 +168,30 @@ axes:
     brake: {clamp_torque_Nm: {value: 60, src: est, note: "as C1: 60 Nm"}, clamp_time_s: {value: 0.1, src: est, note: "as C1: 0.1 s"}}
     positioning: {accuracy_arcsec: 30, repeatability_arcsec: 15, src: est, note: "as C1: 30 arcsec, 15 arcsec"}
     motor_torque_Nm: {value: 23.6, src: est, note: "as C1: 3.7 kW at the assumed 1500 rpm base speed = 23.6 Nm (same published motor rating)"}
+    notes: "indexing: C-axis control"
 
 kinematics:
   workpiece_chain:
     - {link: headstock, axis: Z1, direction: [0, 0, 1], note: "+Z1 feeds the bar out of the guide bush (+z), so the tool moves back along the part; machine convention assumed"}
     - {link: spindle1, axis: C1, axis_point_mm: [0, 0, 0], direction: [0, 0, -1]}
     - {link: bar_end, fixed: {translate_mm: [0, 0, 0]}, note: "part datum at the guide bush face when Z1 = 0"}
-  workpiece_chain_sub:
-    - {link: sub_x, axis: X2, direction: [1, 0, 0]}
-    - {link: sub_z, axis: Z2, direction: [0, 0, 1]}
-    - {link: spindle2, axis: C2, axis_point_mm: [0, 0, 0], direction: [0, 0, 1]}
-    - {link: chuck2_face, fixed: {translate_mm: [0, 0, 20], rotate_deg: [0, 180, 0]}, src: est, note: "sub-spindle collet face 20 mm from the guide bush at Z2 = 0, X2 = 0 on the axis; assumed"}
   tool_chain:
     - {link: gang_x, axis: X1, direction: [1, 0, 0]}
     - {link: gang_y, axis: Y1, direction: [0, 1, 0]}
     - {link: gang_tool_ref, fixed: {translate_mm: [0, 0, 1.5]}, src: est, note: "turning tools cut ~1.5 mm in front of the guide bush; assumed"}
   home_mm: {Z1: 0, X1: 150, Y1: 0, X2: 150, Z2: 300, Y2: 0}
-  back_tool_chain:
-    - {link: back_y, axis: Y2, direction: [0, 1, 0]}
-    - {link: back_tool_ref, fixed: {translate_mm: [0, 0, 150]}, src: est, note: "back working tools facing -z toward the sub spindle, assumed"}
   tool_axis: [1, 0, 0]
   singularities: null
+  workpiece_chains:
+    sub:
+      - {link: sub_x, axis: X2, direction: [1, 0, 0]}
+      - {link: sub_z, axis: Z2, direction: [0, 0, 1]}
+      - {link: spindle2, axis: C2, axis_point_mm: [0, 0, 0], direction: [0, 0, 1]}
+      - {link: chuck2_face, fixed: {translate_mm: [0, 0, 20], rotate_deg: [0, 180, 0]}, src: est, note: "sub-spindle collet face 20 mm from the guide bush at Z2 = 0, X2 = 0 on the axis; assumed"}
+  tool_chains:
+    back:
+      - {link: back_y, axis: Y2, direction: [0, 1, 0]}
+      - {link: back_tool_ref, fixed: {translate_mm: [0, 0, 150]}, src: est, note: "back working tools facing -z toward the sub spindle, assumed"}
 
 spindles:
   - id: main
@@ -210,7 +212,6 @@ spindles:
         torque_Nm: [[0, 23.6], [1500, 23.6], [10000, 3.5]]
         additional_ratings:
           - {rating: "S1 continuous", src: est, note: "the published 2.2 kW continuous rating with the same assumed 1500 rpm base speed: 14.0 Nm, then constant power", power_kW: [[0, 0], [1500, 2.2], [10000, 2.2]], torque_Nm: [[0, 14.0], [1500, 14.0], [10000, 2.1]]}
-    motor_kW: {cont: 2.2, s2_10min_25ed: 3.7}
     direction_reversible: {value: true, src: est}
     accel_time_s: {value: 0.5, src: est, note: "small built-in spindle, J ~ 0.004 kg m2"}
     decel_time_s: {value: 0.5, src: est, note: "regenerative braking at the same torque as the acceleration: symmetric 0.5 s"}
@@ -225,11 +226,12 @@ spindles:
       housing_mass_kg: {value: 25, src: est, note: "small sliding headstock (as the time-constant estimate below)"}
       housing_size_mm: {value: [250, 200, 200], src: est, note: "headstock, assumed"}
       housing_growth_length_mm: {value: 150, src: est, note: "bearing span of the small headstock (as the growth estimate below)"}
-      growth_um_at_max_rpm: {value: 8, src: est, note: "axial growth alpha L dT = 11.5e-6 1/K x 0.15 m (bearing span of the small headstock, assumed) x 4.6 K (steady rise at the 120 W bearing heat, assumed) = 8 um"}
+      growth_at_max_speed_um: {value: 8, src: est, note: "axial growth alpha L dT = 11.5e-6 1/K x 0.15 m (bearing span of the small headstock, assumed) x 4.6 K (steady rise at the 120 W bearing heat, assumed) = 8 um"}
       time_constant_min: {value: 20, src: est, note: "tau = C / G for the small headstock: about 25 kg x 460 J/kgK = 11.5 kJ/K over G = 120 W / 12 K = 10 W/K (est) = 1150 s, about 20 min"}
-      bearing_heat_W_at_max_rpm: {value: 120, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for two 55 mm pitch-diameter bearings, oil-air f0 = 1, nu = 10 mm2/s, n = 10 000 rpm: (1e5)^(2/3) = 2154, 2 x 0.036 Nm = 0.072 Nm x 1047 rad/s = 75 W; 120 W with the collet-closer seals and the guide-bush drive (assumed)"}
+      bearing_heat_at_max_speed_W: {value: 120, src: est, note: "Palmgren speed term 1e-7 f0 (nu n)^(2/3) dm^3 (palmgren-1959-bearings) for two 55 mm pitch-diameter bearings, oil-air f0 = 1, nu = 10 mm2/s, n = 10 000 rpm: (1e5)^(2/3) = 2154, 2 x 0.036 Nm = 0.072 Nm x 1047 rad/s = 75 W; 120 W with the collet-closer seals and the guide-bush drive (assumed)"}
       thermal_comp: {value: true, src: est}
       comp_residual_fraction: {value: 0.3, src: est, note: "the thermal compensation leaves 30 % of the growth (as the other machines, assumed)"}
+    notes: "motor_kW: {cont: 2.2, s2_10min_25ed: 3.7}"
   - id: sub
     kind: sub
     drive_type: {value: built_in, src: est, note: "built-in spindle motor (star-gb-sr20riv-e-web-2026)"}
@@ -250,7 +252,6 @@ spindles:
         note: "as main (same published motor rating 2.2 / 3.7 kW)"
         power_kW: [[0, 0], [1500, 3.7], [10000, 3.7]]
         torque_Nm: [[0, 23.6], [1500, 23.6], [10000, 3.5]]
-    motor_kW: {cont: 2.2, s2_10min_25ed: 3.7}
     direction_reversible: {value: true, src: est}
     accel_time_s: {value: 0.5, src: est, note: "as the main spindle (same published motor rating, same assumed inertia): 0.5 s"}
     decel_time_s: {value: 0.5, src: est, note: "as the main spindle: 0.5 s"}
@@ -262,6 +263,7 @@ spindles:
     frf_modes: []
     front_ejection_length_mm: 80
     max_work_projection_mm: 30
+    notes: "motor_kW: {cont: 2.2, s2_10min_25ed: 3.7}"
   - id: live
     kind: live_tool
     drive_type: {value: coupled, src: est, note: "ER16 driven units on the gang's live-tool drive (assumed)"}
@@ -274,7 +276,7 @@ spindles:
       motor_heat_to_head_pct: {value: 0, src: est, note: "the drive motor sits on the gang, not in the tool body"}
     nose: {value: "ER16 driven units", src: star-gb-sr20riv-e-web-2026}
     max_rpm: 8000
-    drive_kW: 2.2
+    drive_power_kW: 2.2
     gear_ranges:
       - rpm: [0, 8000]
         rating: "est."
@@ -325,18 +327,6 @@ tool_changer:
   max_tool_mass_kg: null
   pocket_pitch_mm: null
 
-tooling:
-  turning_tools: {front: 5, rear: 2, rear_shank_mm: 12, note: "7 turning tools; 12 mm square shanks (star-gb-sr20riv-e-web-2026)"}
-  sleeve_holder_4: {front: 4, rear: 4, max_drilling_mm: 12, max_tapping: "M10 x 1.5"}
-  sleeve_holder_2_front: {tools: 2, max_drilling_mm: 10, max_hole_depth_mm: 100}
-  cross_milling: 3
-  cartridge_driven_positions: 2
-  type_a_adjustable_angle: {positions: 1, tools: "front 3 + rear 3"}
-  type_b_b_axis: {positions: 1, tools: "front 3 + rear 3"}
-  back_tools: 8
-  back_stationary_max_drilling_mm: 12
-  back_driven_max_drilling_mm: 6
-  gang_pitch_mm: {value: 16, src: est, note: "spacing of 12 mm shank tools on the gang plate, assumed"}
 
 turrets: []
 pallet_changer: null
@@ -346,7 +336,7 @@ guide_bushing:
   type: {value: rotary, src: est, note: "guide-bush type is not stated on the pages read; a spindle-synchronised rotary bush is assumed"}
   clearance_um: {value: 5, src: est, note: "adjusted bush-to-bar clearance for h8/h9 ground bar, typical"}
   position_mm: 0
-  switchable_to_non_guide_bush: {value: true, src: star-gb-sr20riv-e-web-2026}
+  switchable: {value: true, src: star-gb-sr20riv-e-web-2026}
   max_bar_diameter_mm: 20
 doors: {count: {value: 1, src: est, note: "one front door, assumed"}, auto: {value: false, src: est}, open_time_s: null}
 
@@ -364,7 +354,7 @@ coolant:
     - {id: gang, kind: flood, attached_to: gang_x, position_mm: [20, 0, 20], aim: [-0.7, 0, -0.7], diameter_mm: 3, pump: flood, src: est, note: "flood nozzle on the gang slide aimed at the cut in front of the guide bush (position and aim assumed)"}
     - {id: back, kind: flood, attached_to: sub_z, position_mm: [20, 0, 40], aim: [-0.7, 0, -0.7], diameter_mm: 3, pump: flood, src: est, note: "flood nozzle on the back-working slide aimed at the sub-spindle tools (position and aim assumed)"}
   air_blast: null
-  chiller: {value: "oil cooler", src: est}
+  chiller: {kind: "oil cooler", src: est}
   filtration_um: {value: 25, src: est, note: "neat-oil machine with a fine filter for the small tools and the guide bush: 25 um assumed"}
 
 chip_conveyor: {type: none, src: est, note: "chip box; conveyor optional", rate_kg_h: {value: 15, src: est, note: "chip box capacity in steel at the 2.2 kW continuous spindle rating: 2200 W / 2.5 J/mm3 = 0.9 cm3/s = 25 kg/h at full load; 15 kg/h average (light cuts on 20 mm bar, assumed)"}}
@@ -405,4 +395,4 @@ geometry:
     src: est
     note: "sub-spindle head: 110 mm diameter, 200 mm long behind the collet face, assumed"
 
-notes: "Main-unit specification from Star's SR-20RIV page; controller and guide-bush switchability from Star GB (Type E). Axis strokes other than the 205 mm headstock stroke, all accelerations, torques (only motor kW published), coolant system and geometry are estimates."
+notes: "Main-unit specification from Star's SR-20RIV page; controller and guide-bush switchability from Star GB (Type E). Axis strokes other than the 205 mm headstock stroke, all accelerations, torques (only motor kW published), coolant system and geometry are estimates.; tooling: {turning_tools: {front: 5, rear: 2, rear_shank_mm: 12, note: 7 turning tools; 12 mm square shanks (star-gb-sr20riv-e-web-2026)}, sleeve_holder_4: {front: 4, rear: 4, max_drilling_mm: 12, max_tapping: M10 x 1.5}, sleeve_holder_2_front: {tools: 2, max_drilling_mm: 10, max_hole_depth_mm: 100}, cross_milling: 3, cartridge_driven_positions: 2, type_a_adjustable_angle: {positions: 1, tools: front 3 + rear 3}, type_b_b_axis: {positions: 1, tools: front 3 + rear 3}, back_tools: 8, back_stationary_max_drilling_mm: 12, back_driven_max_drilling_mm: 6, gang_pitch_mm: {value: 16, src: est, note: spacing of 12 mm shank tools on the gang plate, assumed}}"

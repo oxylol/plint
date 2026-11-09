@@ -4,7 +4,7 @@ id: ceramic-al2o3-tic
 class: ceramic
 name: "Mixed (black) ceramic Al2O3-TiC, ISO K01-K10 / H01-H10 (Kyocera KT66 / A66N substrate as reference grade)"
 src: kyocera-2015-insert-grades
-composition: {text: "Al2O3 + TiC (about 30 % TiC typical; fraction not printed by Kyocera)", src: kyocera-2015-insert-grades, page: "p. A14"}
+composition: {value: "Al2O3 + TiC (about 30 % TiC typical; fraction not printed by Kyocera)", src: kyocera-2015-insert-grades, page: "p. A14"}
 density_kg_m3: {value: 4270, src: est, note: "rule of mixtures 70 vol% Al2O3 (3.98 g/cm3) + 30 vol% TiC (4.93 g/cm3); the TiC fraction itself is assumed"}
 youngs_modulus_GPa: {value: 400, src: est, note: "between dense alumina (370-400 GPa, syalons-2023-material-properties Aloxalon 995/999) and TiC (~450 GPa)"}
 poisson: {value: 0.22, src: est, note: "alumina 0.22 (syalons-2023-material-properties); TiC similar"}

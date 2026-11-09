@@ -16,7 +16,7 @@ items:
     gripping_force_kN: {value: 60, src: est, note: "max input 20 kN x pull-back ratio 3; friction in the collet taper ignored"}
     max_rpm: {value: 6000, src: klamp-2023-collet-chucks}
     mass_kg: {value: 6.8, src: klamp-2023-collet-chucks}
-    body_mm: {nose_diameter_A: 72, length_B: 139, flange_diameter_I: 135, D: 90, src: klamp-2023-collet-chucks, page: "p. 43 dimension table"}
+    body_mm: {nose_diameter: 72, length: 139, flange_diameter: 135, src: klamp-2023-collet-chucks, page: "p. 43 dimension table", notes: "D: 90", outer_diameter: 135}
     matching_cylinder: {value: "S1246 / SS1246 / SR1146", src: klamp-2023-collet-chucks}
     grip_length_mm: null
   - id: klamp-del5c-a6
@@ -30,7 +30,7 @@ items:
     gripping_force_kN: {value: 60, src: est, note: "20 kN x 3"}
     max_rpm: {value: 6000, src: klamp-2023-collet-chucks}
     mass_kg: {value: 10.8, src: klamp-2023-collet-chucks}
-    body_mm: {nose_diameter_A: 72, length_B: 141, flange_diameter_I: 170, D: 98, src: klamp-2023-collet-chucks}
+    body_mm: {nose_diameter: 72, length: 141, flange_diameter: 170, src: klamp-2023-collet-chucks, notes: "D: 98", outer_diameter: 170}
     matching_cylinder: {value: "S1246 / SS1246 / SR1146", src: klamp-2023-collet-chucks}
     grip_length_mm: null
   - id: klamp-del5c-z140
@@ -44,7 +44,7 @@ items:
     gripping_force_kN: {value: 60, src: est, note: "20 kN x 3"}
     max_rpm: {value: 6000, src: klamp-2023-collet-chucks}
     mass_kg: {value: 9.3, src: klamp-2023-collet-chucks}
-    body_mm: {nose_diameter_A: 72, length_B: 139, flange_diameter_I: 159, D: 90, src: klamp-2023-collet-chucks}
+    body_mm: {nose_diameter: 72, length: 139, flange_diameter: 159, src: klamp-2023-collet-chucks, notes: "D: 90", outer_diameter: 159}
     matching_cylinder: {value: "S1246 / SS1246 / SR1146", src: klamp-2023-collet-chucks}
     grip_length_mm: null
 notes: "An ER collet chuck for lathes was not found in the sources read; 5C covers the lathe collet case."
