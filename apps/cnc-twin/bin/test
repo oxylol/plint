@@ -7,7 +7,7 @@
 #   bin/test --ui            also the browser UI tests (needs docker)
 #   bin/test unit/thermal    one package (any path under tests/)
 set -uo pipefail
-root=/opt/plint/apps/cnc-twin
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)    # this checkout (a git worktree tests its own code)
 cd "$root"
 marks="not slow and not ui"
 targets=()
@@ -26,8 +26,10 @@ fi
 failed=()
 total_pass=0; total_fail=0
 for t in "${targets[@]}"; do
-  out=$(TSAFE_MEM="${TSAFE_MEM:-1500M}" bin/tsafe python -m pytest -q -p no:cacheprovider ${marks:+-m "$marks"} "$t" 2>&1 | tail -n 3)
-  line=$(echo "$out" | grep -E "passed|failed|error|no tests ran" | tail -n 1)
+  # the whole output: a library printing at exit (OCCT's STEP parser) must not push pytest's summary out of view
+  out=$(TSAFE_MEM="${TSAFE_MEM:-1500M}" bin/tsafe python -m pytest -q -p no:cacheprovider ${marks:+-m "$marks"} "$t" 2>&1)
+  line=$(echo "$out" | grep -E "[0-9]+ (passed|failed|errors?|deselected|skipped|xfailed)|no tests ran" | tail -n 1)
+  out=$(echo "$out" | tail -n 3)
   p=$(echo "$line" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' || echo 0)
   f=0; for n in $(echo "$line" | grep -oE '[0-9]+ (failed|errors?)' | grep -oE '[0-9]+'); do f=$((f + n)); done
   total_pass=$((total_pass + ${p:-0})); total_fail=$((total_fail + ${f:-0}))

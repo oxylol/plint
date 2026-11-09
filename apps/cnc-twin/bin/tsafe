@@ -5,7 +5,7 @@
 # The Numba cache directory is keyed by a hash of every kernel source file: Numba does not
 # notice that a cached caller's callee in another file changed, so a stale cache is never reused.
 set -euo pipefail
-root=/opt/plint/apps/cnc-twin
+root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)    # this checkout (a git worktree tests its own code)
 mem="${TSAFE_MEM:-900M}"
 if [ -z "${NUMBA_CACHE_DIR:-}" ]; then
   key=$( (cd "$root" && grep -rl --include='*.py' -e '@njit' -e '@numba' -e 'cuda.jit' cnctwin 2>/dev/null | LC_ALL=C sort | xargs -r sha256sum; \
