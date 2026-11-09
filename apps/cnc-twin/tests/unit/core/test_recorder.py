@@ -185,8 +185,11 @@ def test_tiers_windows_and_parts(tmp_path):
     run_steps(rec, range(20, 60), contact, findings)
     entries = rec.close_parts()
     assert {e["tier"] for e in entries} == {"fast", "tick", "macro"}
-    index = [json.loads(line) for line in (tmp_path / "series" / "index.jsonl").read_text().splitlines()]
+    lines = [json.loads(line) for line in (tmp_path / "series" / "index.jsonl").read_text().splitlines()]
+    assert lines[0] == {"format": "cnctwin-series-index", "version": 1}          # the header line, then the parts
+    index = lines[1:]
     assert [e["tier"] for e in index] == ["fast", "tick", "macro"]
+    assert rec.index_lines == 3 and rec.index_bytes == (tmp_path / "series" / "index.jsonl").stat().st_size
     tick = pq.read_table(tmp_path / index[1]["file"])
     assert tick.num_rows == 600 and tick.column("tick").to_pylist()[:3] == [0, 1000, 2000]
     assert tick.schema.field("m.mode").type == "int32"

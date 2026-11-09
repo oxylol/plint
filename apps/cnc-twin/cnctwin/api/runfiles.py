@@ -358,8 +358,12 @@ class RunStore:
                 out.append(path.name)
         return sorted(out)
 
-    def allocate(self, slug: str) -> tuple[str, Path]:
-        """A new run folder ``<nnnnn>-<slug>`` (the number one above every numbered run)."""
+    def allocate(self, slug: str, project_hash: str, options: dict | None = None) -> tuple[str, Path]:
+        """A new run folder named as ``twin run`` names its runs (cnctwin.core.rundir.run_id): ``<nnnnn>-<slug>-<h8>``,
+        the number one above every numbered run (the older API form ``<nnnnn>-<project id>`` counts too, and such
+        folders are still read), the slug of the project id and the first 8 hex digits of sha256(project hash,
+        canonical options)."""
+        from ..core.rundir import run_id as make_run_id
         with self._lock:
             self.dir.mkdir(parents=True, exist_ok=True)
             highest = 0
@@ -369,7 +373,7 @@ class RunStore:
                     highest = max(highest, int(match.group(1)))
             number = highest + 1
             while True:
-                run_id = f"{number:05d}-{slug}"[:128]
+                run_id = make_run_id(project_hash, options or {}, number, slug)
                 path = self.dir / run_id
                 try:
                     path.mkdir()

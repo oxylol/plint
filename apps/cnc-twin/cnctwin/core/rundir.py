@@ -55,6 +55,12 @@ FINDINGS_FORMAT = "cnctwin-findings"
 TIMELINE_FORMAT = "cnctwin-timeline"
 FRAMES_FORMAT = "cnctwin-frames"
 SCENE_FORMAT = "cnctwin-scene"
+# JSON-lines files of a run directory: the two indexes start with a header line {"format", "version"}
+# (jsonl_header; files written before it have none and are read the same), trace.jsonl keeps id = line number and
+# names its format in the sidecar trace.json (cnctwin.core.trace)
+SERIES_INDEX_FORMAT = "cnctwin-series-index"
+KEYFRAMES_INDEX_FORMAT = "cnctwin-keyframes-index"
+TRACE_FORMAT = "cnctwin-trace"
 THREAD_VARIABLES = ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMBA_NUM_THREADS",
                     "PYTHONHASHSEED")
 LIBRARIES = ("numpy", "scipy", "numba", "llvmlite", "pyarrow")
@@ -65,8 +71,8 @@ STATUSES = ("queued", "running", "cancelling", "done", "failed", "cancelled")
 RESULT_SET = ("findings.json", "trace.jsonl", "series", "frames.bin", "keyframes", "inspection.json",
               "surface.json", "tools.json", "production.json")
 RESULT_GLOBS = ("part_*",)
-INCREMENTAL = ("frames.bin", "trace.jsonl", "findings.json", "timeline.json", "run.json", "channels.json",
-               "scene.json")
+INCREMENTAL = ("frames.bin", "trace.jsonl", "trace.json", "findings.json", "timeline.json", "run.json",
+               "channels.json", "scene.json")
 INCREMENTAL_DIRS = ("scene", "series", "keyframes", "chips", "checkpoints")
 LATE_OUTPUT_GLOBS = ("part_*", "inspection.json", "surface.json", "tools.json", "production.json", "sld/*.json",
                      "report.html", "report.pdf", "setup_sheet.html", "setup_sheet.pdf", "images/*",
@@ -160,6 +166,19 @@ def write_json_atomic(path, value, fsync: bool = False, indent: int | None = 1) 
 def read_json(path):
     with open(path, "rb") as handle:
         return json.loads(handle.read().decode("utf-8"))
+
+
+def jsonl_header(fmt: str) -> bytes:
+    """The first line of a JSON-lines index of the run directory (series/index.jsonl, keyframes/index.jsonl):
+    ``{"format": fmt, "version": FORMAT_VERSION}`` with sorted keys. Its writer puts it before the first record;
+    its byte length is part of the index's checkpoint cut, so a resume keeps it."""
+    return (json.dumps({"format": fmt, "version": FORMAT_VERSION}, sort_keys=True) + "\n").encode("utf-8")
+
+
+def is_jsonl_header(record) -> bool:
+    """A header line of a JSON-lines index (exactly ``format`` and ``version``), not a record. Readers skip it;
+    an index written before the headers has none and reads the same."""
+    return isinstance(record, Mapping) and set(record) == {"format", "version"}
 
 
 def sha256_file(path) -> str:
@@ -1111,4 +1130,5 @@ __all__ = ["RunDirectory", "Timeline", "BlockRef", "FramesWriter", "SceneWriter"
            "platform_info", "verdict", "finding_counts", "run_document", "project_document", "result_set_digest",
            "result_set_files", "jsonable", "dumps", "write_json_atomic", "write_bytes_atomic", "read_json",
            "npz_bytes", "write_npz", "sha256_file", "fsync_dir", "fsync_file", "safe_name", "ticks_to_seconds",
-           "tick_time_s", "project_hash_of", "RESULT_SET", "TICK_S", "ZIP_DATE"]
+           "tick_time_s", "project_hash_of", "jsonl_header", "is_jsonl_header", "RESULT_SET", "TICK_S", "ZIP_DATE",
+           "SERIES_INDEX_FORMAT", "KEYFRAMES_INDEX_FORMAT", "TRACE_FORMAT"]

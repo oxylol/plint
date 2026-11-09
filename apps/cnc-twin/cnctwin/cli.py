@@ -33,8 +33,15 @@ latest committed checkpoint marker for ``--resume``), and writes status.json fro
 that still verifies is reported instead of running again (copied into ``--out`` when given); a new run is
 registered when the key did not change while it ran (a resumed run too: it is bit-identical to an uninterrupted
 one). ``--no-cache`` runs regardless (the new run supersedes); a project whose key cannot be computed runs
-uncached. ``twin replay`` of a run made with operator overrides
-(run.json ``options.operator``) replays through cnctwin.sweep.runner, which applies them again.
+uncached. A run whose options carry operator overrides (``--set operator.feed_override=1.2``, docs/formats.md
+"Operator option") is normalised (entries at 100 % dropped; nothing left: the plain run) and runs through
+cnctwin.sweep.runner, which applies them (the loop's run_project does not read them); its cache key names that
+runner, as a sweep point's does. ``twin replay`` of a run made with operator overrides (run.json
+``options.operator``) replays through cnctwin.sweep.runner too, which applies them again.
+
+``twin check`` writes ``check.json`` to ``--out``, by default ``DATA_DIR/checks/<project folder>-<h8>`` (the data
+directory of the runs; ``<h8>`` from the project folder's path), or ``<tmp>/cnctwin-check/...`` when that folder
+cannot be written: never into the project folder (the examples are part of the repository).
 
 Exit status: 0 success (``run``: safe to run), 1 an error, 2 a usage error, 3 ``run`` finished and the
 program is not safe to run, 4 the subcommand's module is not in this build, 130 interrupted.
@@ -43,10 +50,12 @@ program is not safe to run, 4 the subcommand's module is not in this build, 130 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import json
 import os
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -69,6 +78,7 @@ FORWARDED = {
     "cache": ("cnctwin.cache", "main", "the run cache: list, key, verify, evict, compact"),
 }
 LOOP = "cnctwin.core.loop"
+OVERRIDE_RUNNER = "cnctwin.sweep.runner"      # run_project with the operator overrides of options["operator"]
 
 
 class Missing(Exception):
@@ -190,9 +200,9 @@ def _project_file(path: str) -> Path:
     return project.resolve()
 
 
-def _cache_key(project: Path, options: dict):
-    """The run's cache key, or None (the cache is off, this process is not deterministic, or the project does not
-    resolve: the run then says why itself)."""
+def _cache_key(project: Path, options: dict, runner: str | None = None):
+    """The run's cache key through ``runner`` (default the loop), or None (the cache is off, this process is not
+    deterministic, or the project does not resolve: the run then says why itself)."""
     from . import cache
     if not cache.enabled():
         return None
@@ -202,9 +212,27 @@ def _cache_key(project: Path, options: dict):
         return None
     from .core.errors import InputError
     try:
-        return cache.key_for(project, options, runner=cache.DEFAULT_RUNNER)
+        return cache.key_for(project, options, runner=runner or cache.DEFAULT_RUNNER)
     except (InputError, OSError):
         return None
+
+
+def operator_overrides(options: dict) -> bool:
+    """Normalise ``options["operator"]`` in place (cnctwin.sweep.operator.normalise: entries at 100 % dropped; nothing
+    overridden: the option is removed, the run is the plain run) and say whether the run carries overrides. A value
+    that is not an operator option is a UsageError."""
+    if "operator" not in options:
+        return False
+    from .sweep.operator import normalise
+    try:
+        operator = normalise(options["operator"])
+    except ValueError as error:
+        raise UsageError(f"--set operator: {error}") from None
+    if operator is None:
+        options.pop("operator")
+        return False
+    options["operator"] = operator
+    return True
 
 
 def _cached_run(key, out: str | None) -> Path | None:
@@ -226,10 +254,18 @@ def _cached_run(key, out: str | None) -> Path | None:
 
 
 def cmd_run(args) -> int:
-    run_project = resolve(LOOP, "run_project")
     project = _project_file(args.project)
     options = _options(args.set)
-    key = _cache_key(project, options)
+    # the loop's run_project does not read options["operator"]: a run with overrides goes through the runner that
+    # applies them (and refuses overrides the machine or the tools cannot take), and its cache key names that runner
+    overrides = operator_overrides(options)
+    if overrides:
+        from .cache import SWEEP_RUNNER
+        run_project, runner = resolve(OVERRIDE_RUNNER, "run_project"), SWEEP_RUNNER
+    else:
+        from .cache import DEFAULT_RUNNER
+        run_project, runner = resolve(LOOP, "run_project"), DEFAULT_RUNNER
+    key = _cache_key(project, options, runner)
     if key is not None and not args.no_cache and args.resume is None:
         cached = _cached_run(key, args.out)
         if cached is not None:
@@ -272,7 +308,7 @@ def cmd_run(args) -> int:
     progress.status("done")
     if key is not None:
         from . import cache
-        registered = cache.register_finished(project, run_dir, options, key, runner=cache.DEFAULT_RUNNER)
+        registered = cache.register_finished(project, run_dir, options, key, runner=runner)
         if not registered["registered"]:
             print(f"twin run: not cached: {registered['note']}", file=sys.stderr)
     return _report_verdict(run_dir)
@@ -304,11 +340,34 @@ def _verdict(run_dir: Path):
         return None
 
 
+def default_check_dir(project: Path) -> Path:
+    """Where ``twin check`` writes when ``--out`` is not given: ``DATA_DIR/checks/<project folder slug>-<h8>`` (the
+    data directory of the runs, cnctwin.paths.data_dir; h8 = the first 8 hex digits of sha256(project folder path),
+    so two projects in folders of the same name do not share one), else ``<tmp>/cnctwin-check/<same name>`` when that
+    folder cannot be created or written. Never the project folder: the examples are part of the repository."""
+    from .core.rundir import slugify
+    from .paths import data_dir
+    folder = Path(project).resolve().parent
+    name = f"{slugify(folder.name, 40)}-{hashlib.sha256(str(folder).encode('utf-8')).hexdigest()[:8]}"
+    for base in (data_dir() / "checks", Path(tempfile.gettempdir()) / "cnctwin-check"):
+        target = base / name
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            continue
+        if os.access(target, os.W_OK | os.X_OK):
+            return target
+    raise UsageError(f"no writable folder for the check's files ({data_dir() / 'checks'}, "
+                     f"{Path(tempfile.gettempdir()) / 'cnctwin-check'}): give --out DIR")
+
+
 def cmd_check(args) -> int:
     check_project = resolve(LOOP, "check_project")
     project = _project_file(args.project)
-    out_dir = Path(args.out) if args.out else project.parent / ".twin-check"
+    out_dir = Path(args.out) if args.out else default_check_dir(project)
     out_dir.mkdir(parents=True, exist_ok=True)
+    if not args.out and not args.quiet:
+        print(f"check files: {out_dir}", file=sys.stderr)
     request = {"project_path": str(project), "project_dir": str(project.parent), "read_only": not args.write,
                "options": {"write": bool(args.write), **_options(args.set)}, "out_dir": str(out_dir)}
     progress = Progress(args.quiet)
@@ -550,7 +609,8 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("project", help="project.yaml or its folder")
     check.add_argument("--write", action="store_true", help="store the resolved strides under physics.resolved")
     check.add_argument("--json", action="store_true", help="print the result as JSON")
-    check.add_argument("--out", help="folder for the check's files (default: <project>/.twin-check)")
+    check.add_argument("--out", help="folder for the check's files (default: DATA_DIR/checks/<project>-<h8>, "
+                                     "else under the temporary folder; never the project folder)")
     check.add_argument("--set", action="append", metavar="KEY=VALUE", help="a check option (JSON value)")
     check.add_argument("--quiet", action="store_true")
     check.set_defaults(handler=cmd_check)

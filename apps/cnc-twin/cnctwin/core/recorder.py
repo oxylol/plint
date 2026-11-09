@@ -16,7 +16,8 @@ Channels (cnctwin.core.channels) are recorded in three tiers:
 
 Rows go to one Parquet file per tier per checkpoint interval, ``series/<tier>/part-<n>.parquet`` (zstd;
 written row group by row group into a temporary file, closed and renamed at each checkpoint), listed in
-the append-only ``series/index.jsonl``. :func:`iter_series` reads them back in time order (the API's
+the append-only ``series/index.jsonl`` (first line the header ``{"format": "cnctwin-series-index", "version": 1}``;
+an index written before it has none). :func:`iter_series` reads them back in time order (the API's
 backend), :func:`read_series` with M4 (min/max-preserving) downsampling, :func:`export` writes CSV or
 Parquet (``twin export``). The recorder is a checkpoint participant (its windows, counters and ring
 are part of the cut).
@@ -46,7 +47,8 @@ from ..db.models import params as model_params
 from .abi import RingBuffer, ring_buffer
 from .channels import Channel, ChannelRegistry, Tier
 from .errors import InputError, TwinError
-from .rundir import TICK_S, fsync_dir, fsync_file, jsonable, ticks_to_seconds, write_json_atomic
+from .rundir import (SERIES_INDEX_FORMAT, TICK_S, fsync_dir, fsync_file, is_jsonl_header, jsonable, jsonl_header,
+                     ticks_to_seconds, write_json_atomic)
 
 TIERS = ("fast", "tick", "macro")
 FAST_MODES = ("windows", "all", "none")
@@ -790,6 +792,8 @@ class Recorder:
             line = (json.dumps(entry, sort_keys=True) + "\n").encode("utf-8")
             index = self.run_dir / "series" / "index.jsonl"
             index.parent.mkdir(parents=True, exist_ok=True)
+            if not index.exists() or index.stat().st_size == 0:
+                line = jsonl_header(SERIES_INDEX_FORMAT) + line       # counted in index_bytes, not in index_lines
             with open(index, "ab") as handle:
                 handle.write(line)
                 handle.flush()
@@ -895,13 +899,16 @@ class Recorder:
 # =============================================================================== reading
 
 def _index_records(run_dir: Path) -> list[dict]:
+    """The part records of series/index.jsonl (its header line skipped; an index without one reads the same)."""
     path = Path(run_dir) / "series" / "index.jsonl"
     if not path.is_file():
         return []
     out = []
     for raw in path.read_bytes().splitlines(keepends=True):
         if raw.endswith(b"\n") and raw.strip():
-            out.append(json.loads(raw))
+            record = json.loads(raw)
+            if not is_jsonl_header(record):
+                out.append(record)
     return out
 
 

@@ -7,7 +7,9 @@
   :class:`cnctwin.db.Database` (an id, a database file relative to the project, or an inline object
   in place of the id), the tool library (CSV rows join ``tools.list``, ISO 13399 items can be named
   or extended), checks that every file exists, reads the programs, applies
-  ``controller_overrides`` to the machine, and hashes every input file.
+  ``controller_overrides`` to the machine and the calibration overlay the project includes
+  (``calibration: <file>``, cnctwin.mdata.overlay) to the tool list, the machine and the material, and
+  hashes every input file (the overlay included).
 
 The result, :class:`ResolvedProject`, is the SI view of the project file (a
 :class:`~cnctwin.db.simap.SIMap`: ``project.stock.size_m``, ``project.physics.max_deg_per_step_rad``)
@@ -47,7 +49,7 @@ from ..db.sources import check_sources
 from ..db.yamlio import Locations, load_file
 from . import toollib
 from .migrate import migrate_with_locations, version_of
-from .schema import FORMAT, PROJECT, RESOLVED_PROBE, TICK_S, TOOL_ENTRY, is_path_ref
+from .schema import FORMAT, PROJECT, RESOLVED_PROBE, TICK_S, TOOL_ENTRY, TOOL_LIST_ENTRY, is_path_ref
 
 PROJECT_FILE = "project.yaml"
 DS_TEMPLATE = Path(DEFAULT_ROOT) / "_templates" / "project.yaml"
@@ -201,6 +203,8 @@ class _Resolver:
         self.library_items: dict[str, dict] = {}
         self.data = copy.deepcopy(project.data)     # library rows join tools.list here, not in the file data
         self.locations = project.locations.copy()
+        self.overlay: dict | None = None            # the included calibration overlay (calibration: <file>)
+        self.overlay_path: Path | None = None
 
     def error(self, path, message, kind="reference", severity="error", file=None, line=None):
         loc = self.locations
@@ -212,12 +216,16 @@ class _Resolver:
         self.files[PROJECT_FILE] = project.path
         self._library()
         self._paths()
+        self._calibration()
         refs = list(project.refs) + self._library_refs
         for kind, value, path in refs:
             self._resolve_ref(kind, value, path)
-        if self.data.get("controller_overrides") and ("machine",) in self.raws:
+        if ("machine",) in self.raws and (self.data.get("controller_overrides") or self._calibrates("machine")):
             self._machine_overrides(self.raws[("machine",)], ("machine",))
+        if ("material", "id") in self.raws and self._calibrates("material"):
+            self._calibrated_material(self.raws[("material", "id")], ("material", "id"))
         self._holder_checks()
+        calibration = self._calibration_record()
         raise_for(self.problems, f"project {project.path}")
         view = self._view()
         raise_for(self.problems, f"project {project.path}")
@@ -231,6 +239,7 @@ class _Resolver:
         resolved.input_hashes = {name: _sha256(path) for name, path in sorted(self.files.items())}
         resolved.input_hashes[PROJECT_FILE] = project.sha256
         resolved.programs = {op["name"]: op["program_text"] for op in view["operations"]}
+        resolved.calibration_overlay = calibration
         return resolved
 
     # -------------------------------------------------------------- library and files
@@ -342,19 +351,125 @@ class _Resolver:
                     self.files[self._name(file)] = file
 
     def _machine_overrides(self, raw: Mapping, path: tuple) -> None:
+        """The machine with the project's ``controller_overrides`` deep-merged over its controller and then the
+        calibration overlay's ``machine.*`` entries set (so a calibrated controller value wins over an override);
+        the result is checked as a machine and becomes the project's machine."""
         overrides = self.data.get("controller_overrides") or {}
-        merged = deep_merge(raw, {"controller": overrides})
+        merged = deep_merge(raw, {"controller": overrides}) if overrides else copy.deepcopy(dict(raw))
+        what = "controller_overrides" if overrides else ""
+        if self._calibrates("machine"):
+            from ..mdata import overlay
+            try:
+                merged = overlay.apply_to_raw("machine", merged, self.overlay)
+            except InputError as error:
+                self.error(("calibration",), f"calibration overlay: {error}", "calibration")
+                self.objects.pop(path, None)
+                return
+            what = f"{what} and the calibration overlay" if what else "the calibration overlay"
         ctx = Ctx(self.locations, obj="project", file=str(self.project.path))
         DS.MACHINE.check(merged, (), None, ctx)
         for problem in ctx.problems:
             if problem.is_error:
-                self.error(("controller_overrides",), f"the machine with controller_overrides is invalid: "
-                                                      f"{problem.path}: {problem.message}", "rule")
+                self.error(("controller_overrides",) if overrides else ("calibration",),
+                           f"the machine with {what} is invalid: {problem.path}: {problem.message}", "rule")
         if errors_only(ctx.problems):
             self.objects.pop(path, None)
             return
         self.objects[path] = DS.MACHINE.build(merged, None, None, merged.get("id"))
         self.raws[path] = merged
+
+    # -------------------------------------------------------------- the calibration overlay
+    def _calibration(self) -> None:
+        """``calibration: <file>``: the overlay (format cnctwin-calibration, cnctwin.mdata.overlay) is loaded and
+        checked, and its ``tools[...]`` entries are set in the tool list (after the library rows joined it; each
+        changed entry is checked again). Its ``machine.*`` and ``material.*`` entries are set in the resolved raws
+        (:meth:`_machine_overrides`, :meth:`_calibrated_material`); the file itself is an input (``_paths`` hashed
+        it with the other files)."""
+        self.overlay = None
+        self.overlay_path = None
+        text = self.data.get("calibration")
+        if not isinstance(text, str) or not text:
+            return
+        where = ("calibration",)
+        path = Path(text) if Path(text).is_absolute() else (self.project.dir / text).resolve()
+        if not path.is_file():
+            return                      # reported by _paths
+        from ..mdata import overlay
+        try:
+            document = overlay.load_overlay(path)
+        except InputError as error:
+            self.error(where, f"calibration overlay {text!r}: {error}", "calibration")
+            return
+        try:
+            patched = overlay.apply_to_tools(self.data, document)
+        except InputError as error:
+            self.error(where, f"calibration overlay {text!r}: {error}", "calibration")
+            return
+        before = (self.data.get("tools") or {}).get("list") or []
+        after = (patched.get("tools") or {}).get("list") or []
+        for i, entry in enumerate(after):
+            if i < len(before) and entry == before[i]:
+                continue
+            ctx = Ctx(self.locations, obj="project", file=str(self.project.path))
+            TOOL_LIST_ENTRY.check(entry, ("tools", "list", i), None, ctx)
+            for problem in ctx.problems:
+                if problem.is_error:
+                    self.error(where, f"calibration overlay {text!r} makes tools.list[{i}] invalid: {problem.path}: "
+                                      f"{problem.message}", "calibration")
+        if "tools" in patched:
+            self.data["tools"] = patched["tools"]
+        self.overlay = document
+        self.overlay_path = path
+
+    def _calibrates(self, kind: str) -> bool:
+        if self.overlay is None:
+            return False
+        from ..mdata import overlay
+        return bool(overlay.entries_for(self.overlay, kind))
+
+    def _calibrated_material(self, raw: Mapping, path: tuple) -> None:
+        """The material with the overlay's ``material.*`` entries set, checked as a material."""
+        from ..mdata import overlay
+        try:
+            patched = overlay.apply_to_raw("material", raw, self.overlay)
+        except InputError as error:
+            self.error(("calibration",), f"calibration overlay: {error}", "calibration")
+            self.objects.pop(path, None)
+            return
+        schema = DS.SCHEMAS["material"]
+        ctx = Ctx(self.locations, obj="project", file=str(self.project.path))
+        schema.check(patched, (), None, ctx)
+        for problem in ctx.problems:
+            if problem.is_error:
+                self.error(("calibration",), f"the material with the calibration overlay is invalid: {problem.path}: "
+                                             f"{problem.message}", "rule")
+        if errors_only(ctx.problems):
+            self.objects.pop(path, None)
+            return
+        self.objects[path] = schema.build(patched, None, None, patched.get("id"))
+        self.raws[path] = patched
+
+    def _calibration_record(self) -> dict | None:
+        """``ResolvedProject.calibration_overlay``: what the included overlay set and where its other entries are
+        (None without ``calibration``). ``models`` ({model: {parameter: SI value}}) and ``factors`` ({name: {key:
+        value}}) have no database object to land in: they are listed here for the domains that read them, and
+        each is reported as a warning while no domain applies it."""
+        if self.overlay is None:
+            return None
+        from ..mdata import overlay
+        document = self.overlay
+        models = overlay.model_overrides(document)
+        factors = overlay.factors(document)
+        applied = sorted(path for root in ("machine", "material", "tools")
+                         for path, _, _ in overlay.entries_for(document, root))
+        record = {"file": str(self.overlay_path), "name": document.get("name"), "machine": document.get("machine"),
+                  "material": document.get("material"), "applied": applied, "models": models, "factors": factors}
+        for path, _, _ in overlay.entries_for(document, "models") + overlay.entries_for(document, "factors"):
+            self.problems.append(Problem(str(self.project.path), self.locations.line(("calibration",)), "calibration",
+                                         f"calibration overlay entry {path} is not applied by the simulation in this "
+                                         f"build (listed in project.calibration_overlay)", "calibration", "warning",
+                                         "project"))
+        return record
 
     def _inline(self, kind: str, value: Mapping, path: tuple, label: str | None = None) -> None:
         bases = self.library_items if kind == "tool" else {}

@@ -93,8 +93,9 @@ doc = write_comparison(run_a_dir, run_b_dir, out_dir)   # + compare.html, compar
 13. **Conservation residuals**: mass, energy and time balances (largest and final residual, tolerance,
     result), the balance channels (`ledger.*`, `*consistency*`, `*residual*`), and the time check of
     path 0 (block time against span, in ticks).
-14. **Model approximations** relevant to the run (section 4) and 15. the **estimated database values**
-    used (file, line, key, value, note).
+14. **Model approximations** relevant to the run (section 4: the rows of the domains the run exercised that
+    state an error bound, largest error first, at most 40, and a link to the full table) and 15. the
+    **estimated database values** used (file, line, key, value, note).
 16. **Pictures**: the tool path drawn from frames.bin (top and side views over the stock with the work
     zero; feed moves in the first palette colour, rapids grey) and every image of `images/`
     (cnctwin.render) embedded.
@@ -172,13 +173,25 @@ own those files write the same keys or say how theirs map (section 9).
   or `displacement`; their rows are attributed to the tool of the timeline block they fall in (path 0;
   tools assigned as cnctwin.production assigns them); the bound combines the component peaks, which
   need not occur at the same instant (an upper bound of the vector magnitude).
-* **Approximations** (docs/approximations.md, when run.json lists none): the Markdown sections whose
-  heading or text names a domain the run used (a domain of its channels, findings or trace events,
-  plus `production` when it has production.json), or whose heading names a topic of every run
-  (`general, scope, core, loop, clock, frames, conservation, recording, determinism, numerics, all
-  runs`); when no section names any domain the document is not organised by domain and every
-  section is listed. A small Markdown subset is rendered (paragraphs, bullets, tables, code, bold),
-  escaped.
+* **Approximations** (docs/approximations.md, when run.json lists none; `cnctwin/report/approximations.py`):
+  the rows of the generated table (`domain | approximation | consequence | error bound | evidence |
+  source`) that concern what the run exercised and state an error bound, sorted by impact, at most 40
+  (`MAX_ROWS`), with a link to the full table (`/api/docs/approximations.md`, the build's document as the
+  API serves it). A domain was exercised when it shows activity in the run: a recorded channel of it
+  whose value changed (macro and tick tiers; a domain declares its channels whether or not it acted, so
+  a force that stayed 0 or a temperature that stayed at ambient does not count), a finding or a trace
+  event of it, or its result with content (production.json, an inspection with tolerances, remaining
+  material or gouges, rendered pictures, sound, an attached uncertainty study, a calibration overlay
+  the project included). Table domains without activity of their own follow another
+  (`mechanics` with `cutting`, `geom` with `inspect`, `hotloop` with itself or `cutting`); `controller`,
+  `motion` and `loop` concern every run; `scope`, `performance` and `gpu` none (scope decisions and CPU
+  cost, not errors of a result). Impact is the largest relative error the bound states, in percent
+  (percentages and ranges, a validation row's p90, a factor f as (f - 1) x 100 %, an order of magnitude
+  as 900 %); bounds without one (exactness, ulps, absolute errors) come after, in document order. A
+  document that is not in the generated form is listed by sections instead: those whose heading or
+  text names an active domain or whose heading names a topic of every run (`general, scope, core,
+  loop, clock, frames, conservation, recording, determinism, numerics, all runs`), rendered from a
+  small Markdown subset (paragraphs, bullets, tables, code, bold), escaped.
 * **Bounds** (presentation, `cnctwin/report/context.py`, `rundir.py`, `sections_*.py`): the findings
   table shows the worst 400 findings with their chains (the table by category counts all of them,
   findings.json holds them); a program is listed whole up to 400 lines, else as excerpts of 3 lines

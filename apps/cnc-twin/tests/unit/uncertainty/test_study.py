@@ -237,3 +237,26 @@ def test_cli(tmp_path, capsys):
     values = np.array([s["values"]["stock_size[0]"] for s in stored["samples"]])
     assert sorted(np.floor((values - 0.0399) / 2e-4 * 5).astype(int).tolist()) == [0, 1, 2, 3, 4]   # LHS strata
     assert main([str(project), "--out", str(tmp_path / "x"), "--runner", "cnctwin.nothing:run"]) == 1
+
+
+def test_variant_results_carry_a_header_and_older_ones_are_reused(tmp_path):
+    """variants/v<n>/result.json: {format: cnctwin-uncertainty-variant, version, project_sha256, result}; a result
+    written before the header (the bare {project_sha256, result}) is still reused by a resumed study."""
+    import json
+    from cnctwin.uncertainty import driver
+    from cnctwin.uncertainty.results import SampleResult
+    sample = {"index": 3, "project_sha256": "ab" * 32}
+    result = SampleResult(3, True, None, "run", True, {}, [], {"cycle_time_s": 12.5})
+    folder = tmp_path / "v0003"
+    folder.mkdir()
+    driver._write_json(folder / "result.json", {"format": driver.VARIANT_FORMAT, "version": driver.VERSION,
+                                                "project_sha256": sample["project_sha256"], "result": result.to_dict()})
+    assert driver._cached(folder, sample).scalars == {"cycle_time_s": 12.5}
+    (folder / "result.json").write_text(json.dumps({"project_sha256": sample["project_sha256"],
+                                                    "result": result.to_dict()}))
+    assert driver._cached(folder, sample).scalars == {"cycle_time_s": 12.5}
+    (folder / "result.json").write_text(json.dumps({"format": driver.VARIANT_FORMAT, "version": 9,
+                                                    "project_sha256": sample["project_sha256"],
+                                                    "result": result.to_dict()}))
+    assert driver._cached(folder, sample) is None                       # a newer layout: the variant runs again
+    assert driver._cached(folder, {"index": 3, "project_sha256": "cd" * 32}) is None

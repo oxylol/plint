@@ -104,12 +104,13 @@ There are no `/docs` or `/redoc` pages: they load scripts from a CDN and the box
 | `POST /api/jobs/{id}/cancel` · `GET /api/jobs/{id}/events` | cancel · SSE `progress`, `done` | 202, 409 · stream |
 | `GET /api/jobs/{id}/files` · `/files/{path}` · `/log` | what the job wrote · its output (ranges) | 200, 404 |
 | `GET /api/db` · `/api/db/{kind}` · `/api/db/{kind}/{id}` | kinds · items · one item with SI view, problems, sources | 200, 404 |
+| `GET /api/docs/{path}` | a Markdown document of the build's `docs/` (`approximations.md`, `models/loop.md` ...): the report links the full approximation table here | 200, 403, 404 |
 | `GET /` · `GET /{path}` | the UI: `web/` files, `index.html` for client-side routes | 200, 404 |
 
 Added to architecture 17 (additive): `/api/jobs/*` (checks and studies are jobs that need a
 handle), `/api/runs/{id}/files` and `/api/runs/{id}/sld` listings, `/api/db` (the kinds), the
 `timeout_s` and `Last-Event-ID` stream options, `max_frames`, `format=json|npz` on arrays, `t0/t1`
-on export and timeline, the HEAD variants of file routes, the run cache of `POST /api/runs`
+on export and timeline, the HEAD variants of file routes, `/api/docs/{path}`, the run cache of `POST /api/runs`
 (`no_cache`, the 200 answer, `cache` in the record) and `/api/sweeps`.
 
 ## Run cache
@@ -156,7 +157,7 @@ $ curl -s localhost:5210/api/health
 {"status": "ok", "version": "1.0.0", "format_version": 1, "data_dir": "/data", "memory_mode": "systemd",
  "jobs": {"queued": 0, "running": 0, "cancelling": 0, "max_heavy": 1, "max_light": 1,
           "heavy_memory_bytes": 1610612736, "light_memory_bytes": 1073741824},
- "entry_points": {"simulate": {"entry": "cnctwin.core.loop:run_project", "module_found": true}, ...},
+ "entry_points": {"simulate": {"entry": "cnctwin.sweep.runner:run_project", "module_found": true}, ...},
  "series_reader": "pyarrow", "db_backend": "cnctwin.db.database", "numba_cache_key": "f47d5bf4d6c1c2c7",
  "ui": true}
 ```
@@ -178,21 +179,21 @@ $ curl -s -X POST localhost:5210/api/projects/pocket/check
 
 $ curl -s -X POST -H 'Content-Type: application/json' -d '{"project_id": "pocket", "options": {}}' \
        localhost:5210/api/runs
-{"id": "00002-pocket", "run": null,
+{"id": "00002-pocket-3f1c9a2e", "run": null,
  "status": {"format": "cnctwin-run-status", "version": 1, "status": "queued",
             "progress": {"sim_time_s": 0.0, "est_total_s": null, "wall_s": 0.0, "eta_s": null},
             "job_id": "j000001", "attempt": 1, "error": null, "checkpoint": null, "resume_from": null,
             "queue_position": 0},
- "job": {"id": "j000001", "kind": "simulate", "state": "queued", "pool": "heavy", "run_id": "00002-pocket",
+ "job": {"id": "j000001", "kind": "simulate", "state": "queued", "pool": "heavy", "run_id": "00002-pocket-3f1c9a2e",
          "project_id": "pocket", "queue_position": 0, "attempt": 1, "memory_mode": "systemd",
          "memory_bytes": 1610612736, "links": {"self": "/api/jobs/j000001", ...}, ...},
- "checkpoint": null, "links": {"self": "/api/runs/00002-pocket", "events": "/api/runs/00002-pocket/events", ...}}
+ "checkpoint": null, "links": {"self": "/api/runs/00002-pocket-3f1c9a2e", "events": "/api/runs/00002-pocket-3f1c9a2e/events", ...}}
 ```
 
 ### Follow it
 
 ```
-$ curl -sN localhost:5210/api/runs/00002-pocket/events
+$ curl -sN localhost:5210/api/runs/00002-pocket-3f1c9a2e/events
 retry: 2000
 
 event: progress
@@ -212,32 +213,32 @@ id: f5k5
 data: {"status":"done","verdict":{"safe":false,"reasons":["out_of_tolerance (error) at OP10 line 17: pocket-depth 2.062 mm, tolerance 2 +/- 0.05 mm (tool growth 12 um)"]},"error":null,"findings":5,"keyframes":5}
 ```
 
-In a browser: `new EventSource("/api/runs/00002-pocket/events")` with listeners for `progress`,
+In a browser: `new EventSource("/api/runs/00002-pocket-3f1c9a2e/events")` with listeners for `progress`,
 `finding`, `keyframe` and `done` (close it on `done`; EventSource reconnects by itself otherwise,
 sending `Last-Event-ID`).
 
 ### Cancel and resume
 
 ```
-$ curl -s -X POST localhost:5210/api/runs/00002-pocket/cancel      # 202: status cancelling, then cancelled
-$ curl -s -X POST localhost:5210/api/runs/00002-pocket/resume      # 202: attempt 2, resume_from the last checkpoint
-{"id": "00002-pocket", "status": {"status": "queued", ...},
- "job": {"id": "j000003", "attempt": 2, "resume_from": "/data/runs/00002-pocket/checkpoints/ck_1000000.json", ...},
+$ curl -s -X POST localhost:5210/api/runs/00002-pocket-3f1c9a2e/cancel      # 202: status cancelling, then cancelled
+$ curl -s -X POST localhost:5210/api/runs/00002-pocket-3f1c9a2e/resume      # 202: attempt 2, resume_from the last checkpoint
+{"id": "00002-pocket-3f1c9a2e", "status": {"status": "queued", ...},
+ "job": {"id": "j000003", "attempt": 2, "resume_from": "/data/runs/00002-pocket-3f1c9a2e/checkpoints/ck_1000000.json", ...},
  "checkpoint": {"tick": 1000000, "file": "checkpoints/ck_1000000.json", "time_s": 1.0, "op": "OP10"}, ...}
 ```
 
 ### Findings and their causes
 
 ```
-$ curl -s 'localhost:5210/api/runs/00002-pocket/findings?severity=error'
-{"run_id": "00002-pocket", "total": 5, "count": 1, "worst": "error", "safe": false,
+$ curl -s 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/findings?severity=error'
+{"run_id": "00002-pocket-3f1c9a2e", "total": 5, "count": 1, "worst": "error", "safe": false,
  "findings": [{"category": "out_of_tolerance", "severity": "error",
                "message": "pocket-depth 2.062 mm, tolerance 2 +/- 0.05 mm (tool growth 12 um)",
                "time_s": 2.161, "tick": 2161000, "domain": "inspect", "op": "OP10", "program": "op10.nc",
                "line": 17, "block": "G01 X0.", "pos_W_m": [0.01005, 0.021, 0.013], "pos_M_m": [-0.38095, -0.1912, -0.4084],
                "quantities": {"deviation_m": 6.2e-05, "measured_m": 0.002062, "nominal_m": 0.002},
                "cause_chain": [30, 29, 10, 28, 8, 25, 3, 0], "id": 4}]}
-$ curl -s localhost:5210/api/runs/00002-pocket/trace/30
+$ curl -s localhost:5210/api/runs/00002-pocket-3f1c9a2e/trace/30
 {"event": {"domain": "inspect", "event": "finding:out_of_tolerance", "id": 30, "line": 17, "parents": [29], ...},
  "chain": [{"id": 30, ...}, {"id": 29, "event": "floor_position", "parents": [10, 28], ...},
            {"id": 10, "event": "thermal_growth", "domain": "thermal", ...}, ...]}
@@ -246,37 +247,37 @@ $ curl -s localhost:5210/api/runs/00002-pocket/trace/30
 ### Series
 
 ```
-$ curl -s 'localhost:5210/api/runs/00002-pocket/series?tier=tick&channels=cutting.spindle_power_W&t0=1.0&t1=1.002'
-{"run_id": "00002-pocket", "tier": "tick", "tick_s": 1e-06, "t0_s": 1.0, "t1_s": 1.002, "rows": 3,
+$ curl -s 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/series?tier=tick&channels=cutting.spindle_power_W&t0=1.0&t1=1.002'
+{"run_id": "00002-pocket-3f1c9a2e", "tier": "tick", "tick_s": 1e-06, "t0_s": 1.0, "t1_s": 1.002, "rows": 3,
  "max_points": 2000, "downsampled": false, "method": "raw", "buckets": null,
  "series": [{"column": "cutting.spindle_power_W", "channel": "cutting.spindle_power_W", "unit": "W", "n": 3,
              "t_s": [1.0, 1.001, 1.002], "v": [1120.68, 1153.60, 1185.13]}]}
-$ curl -s 'localhost:5210/api/runs/00002-pocket/series?tier=tick&channels=cutting.spindle_power_W&max_points=8'
+$ curl -s 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/series?tier=tick&channels=cutting.spindle_power_W&max_points=8'
 {..., "rows": 2320, "max_points": 8, "downsampled": true, "method": "m4", "buckets": 2,
  "series": [{"column": "cutting.spindle_power_W", ..., "n": 7,
              "t_s": [0.0, 0.982, 1.159, 1.16, 1.373, 2.162, 2.319],
              "v": [0.0, 1192.0, 506.9, 525.1, 1191.8, 0.0, 0.0]}]}
-$ curl -s -o tick.csv 'localhost:5210/api/runs/00002-pocket/export?format=csv&tier=tick&channels=cutting.force_N'
+$ curl -s -o tick.csv 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/export?format=csv&tier=tick&channels=cutting.force_N'
 ```
 
 ### Scene, frames, keyframes
 
 ```
-$ curl -s 'localhost:5210/api/runs/00002-pocket/frames?t0=1.0&t1=1.001&format=json'
-{"run_id": "00002-pocket", "count": 2, "stride": 1, "tick_s": 1e-06,
+$ curl -s 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/frames?t0=1.0&t1=1.001&format=json'
+{"run_id": "00002-pocket-3f1c9a2e", "count": 2, "stride": 1, "tick_s": 1e-06,
  "header": {"format": "cnctwin-frames", "record_bytes": 52, "byte_order": "little", "tick_s": 1e-06, "ipo_ticks": 1000,
             "axes": [{"name": "X", "kind": "linear", "unit": "m"}, ...],
             "fields": [{"name": "tick", "dtype": "<i8", "shape": [], "offset": 0}, {"name": "axis", "dtype": "<f4", "shape": [3], "offset": 8}, ...]},
  "fields": {"tick": [1000000, 1001000], "axis": [[0.026, 0.0109, 0.013], [0.026, 0.01095, 0.013]], ...}}
-$ curl -s -D- -o frames.bin 'localhost:5210/api/runs/00002-pocket/frames?t0=0.5&t1=0.6'
+$ curl -s -D- -o frames.bin 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/frames?t0=0.5&t1=0.6'
 x-frame-count: 101  x-frame-stride: 1  x-record-bytes: 52  x-first-tick: 500000  x-tick-s: 1e-06
-$ curl -s -D- -o b0 'localhost:5210/api/runs/00002-pocket/bricks/0?t=1.2'
+$ curl -s -D- -o b0 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/bricks/0?t=1.2'
 x-keyframe: 2  x-keyframe-time-s: 1.0  x-brick: 0  x-source-file: kf_2.glb  x-source-offset: 1236  content-length: 236
-$ curl -s 'localhost:5210/api/runs/00002-pocket/keyframes/3/fields?names=tool_deflection_m,jet_kind'
+$ curl -s 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/keyframes/3/fields?names=tool_deflection_m,jet_kind'
 {"k": 3, "time_s": 1.5, "file": "keyframes/kf_3.npz",
  "arrays": {"tool_deflection_m": {"dtype": "float64", "shape": [3], "data": [2.795e-06, 4.985e-06, 7.73e-07]},
             "jet_kind": {"dtype": "str", "shape": [1], "data": ["flood"]}}}
-$ curl -s 'localhost:5210/api/runs/00002-pocket/jets?t=1.2'
+$ curl -s 'localhost:5210/api/runs/00002-pocket-3f1c9a2e/jets?t=1.2'
 {"k": 2, "time_s": 1.0, "jets": [{"nozzle_id": "n1", "kind": "flood", "origin_M_m": [0.08, 0.05, -0.25],
   "direction_M": [-0.6, -0.4, -0.69], "speed_m_s": 3.2, "flow_m3_s": 0.00025, "half_angle_rad": 0.12,
   "reach_fraction": 0.82}], "nozzles": [{"id": "n1", "kind": "flood", ...}]}
@@ -285,7 +286,7 @@ $ curl -s 'localhost:5210/api/runs/00002-pocket/jets?t=1.2'
 ### Video with a range request, and the database
 
 ```
-$ curl -s -H 'Range: bytes=0-1023' -o head.mp4 -w '%{http_code}\n' localhost:5210/api/runs/00002-pocket/files/video.mp4
+$ curl -s -H 'Range: bytes=0-1023' -o head.mp4 -w '%{http_code}\n' localhost:5210/api/runs/00002-pocket-3f1c9a2e/files/video.mp4
 206
 $ curl -s localhost:5210/api/db/holders/haimer-a63-000-16
 {"backend": "cnctwin.db.database", "kind": "holder", "id": "haimer-a63-000-16", "file": "db/holders/haimer-weldon.yaml",
@@ -417,7 +418,7 @@ process: `python -m cnctwin.api.worker DATA_DIR/jobs/<id>`.
 
 | kind | default | call |
 |---|---|---|
-| simulate | `cnctwin.core.loop:run_project` | `run_project(project_path: Path, run_dir: Path, options: dict, progress_cb)` |
+| simulate | `cnctwin.sweep.runner:run_project` (the loop's `run_project`, with the operator overrides of `options.operator` applied) | `run_project(project_path: Path, run_dir: Path, options: dict, progress_cb)` |
 | check | `cnctwin.project.check:check_project` | `check_project(request: dict, out_dir: Path, progress_cb) -> dict` |
 | compare | `cnctwin.report.compare:compare_runs` | `compare_runs(request, out_dir, progress_cb) -> dict` |
 | uncertainty | `cnctwin.uncertainty:run_study` | `run_study(request, out_dir, progress_cb) -> dict` |
@@ -432,9 +433,13 @@ such as `cnctwin.core.loop.run_project is not available in this build (no module
 
 * `project_path` is the project's `project.yaml`; `run_dir` exists and holds the API's
   status.json (the loop must not delete it; it may overwrite everything else);
-  `options` is the client's `options` object unchanged, plus `resume_from` (absolute path of the
-  checkpoint marker `.json`) when resuming. The return value (JSON-able) is kept as the job's
-  `result.json`.
+  `options` is the client's `options` object, unchanged except `operator` (normalised by
+  `POST /api/runs`: entries at 100 % dropped, nothing overridden: no option; a malformed value is a 422),
+  plus `resume_from` (absolute path of the checkpoint marker `.json`) when resuming. The default entry
+  applies `operator` (the loop's run_project does not read it) and refuses overrides the machine or the
+  project's tools cannot take (the job fails with that message); a custom `CNCTWIN_ENTRY_SIMULATE` gets
+  the option as it is. The return value (JSON-able) is kept as the job's `result.json` (format
+  `cnctwin-job-result`, "API data folder" in docs/formats.md).
 * `request` of the other kinds: `check` {project_id, project_path, project_dir, read_only, options}
   (`options.write` is refused for examples); `compare` {run_a, run_b, run_a_dir, run_b_dir, options};
   `uncertainty` {run_id, run_dir, project_id, project_path, project_dir, options};
@@ -485,9 +490,14 @@ API expects (tests/fixtures/make_synthetic_run.py writes them, deterministically
 
 ## Decisions and their consequences
 
-* **Run ids** are `<nnnnn>-<project id>` (one above the highest numbered run): readable and in
-  creation order. Consequence: an id says nothing about the result; runs made elsewhere keep
-  their own folder names and are listed too.
+* **Run ids** are the ids `twin run` gives its runs (cnctwin.core.rundir.run_id): `<nnnnn>-<slug of the
+  project id>-<h8>`, the number one above the highest numbered run and the first 8 hex digits of
+  sha256(project hash, canonical options without `resume_from`): readable, in creation order, and
+  the same project with the same options gives the same suffix whether the CLI or the API ran it.
+  The project hash is the one of the run cache key (or, with `no_cache`, of the project resolved
+  the same way; of the file alone when it does not resolve). Consequence: an id says nothing about
+  the result; runs of the older API form `<nnnnn>-<project id>` and runs made elsewhere keep their
+  folder names, are listed and read, and count for the next number.
 * **Examples are `example-<folder>`**, read-only, always listed; their check may not write.
   Consequence: to change an example, upload a copy.
 * **A GET that starts a job** (`/api/compare`): the comparison is a deterministic function of two

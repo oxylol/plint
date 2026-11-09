@@ -5,7 +5,8 @@ Layout of a study folder (``out_dir``)::
     plan.json                       settings, factors, every sample's draws and values, variant files
     variants/v<nnnn>/project.yaml   the variant (checked with cnctwin.project.load_project)
     variants/v<nnnn>/run/           its run directory (architecture 16)
-    variants/v<nnnn>/result.json    what the run said (read back when the study is resumed)
+    variants/v<nnnn>/result.json    what the run said (format cnctwin-uncertainty-variant; read back when the
+                                    study is resumed; an older one without the header is read too)
     study.json                      the results (format cnctwin-uncertainty)
     uncertainty.html                the results as a page (the report includes the same section)
 
@@ -39,6 +40,7 @@ from .variants import variant_data, write_variant
 
 FORMAT = "cnctwin-uncertainty"
 PLAN_FORMAT = "cnctwin-uncertainty-plan"
+VARIANT_FORMAT = "cnctwin-uncertainty-variant"     # variants/v<n>/result.json: {format, version, project_sha256, result}
 VERSION = 1
 DEFAULT_RUNNER = "cnctwin.core.loop:run_project"
 
@@ -202,7 +204,8 @@ def execute(plan: dict, out_dir, runner, *, progress_cb=None, simulate_options: 
             result = SampleResult(int(sample["index"]), False, f"{type(error).__name__}: {error}", str(run_dir))
         else:
             result = read_sample(run_dir, int(sample["index"]))
-        _write_json(folder / "result.json", {"project_sha256": sample["project_sha256"], "result": result.to_dict()})
+        _write_json(folder / "result.json", {"format": VARIANT_FORMAT, "version": VERSION,
+                                              "project_sha256": sample["project_sha256"], "result": result.to_dict()})
         if not plan["settings"].get("keep_runs", True) and result.ok:
             shutil.rmtree(run_dir)
         results.append(result)
@@ -219,8 +222,10 @@ def _cached(folder: Path, sample: dict) -> SampleResult | None:
         record = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
-    if record.get("project_sha256") != sample["project_sha256"]:
+    if not isinstance(record, dict) or record.get("project_sha256") != sample["project_sha256"]:
         return None
+    if record.get("format", VARIANT_FORMAT) != VARIANT_FORMAT or int(record.get("version") or VERSION) > VERSION:
+        return None                     # not a variant result this build reads: the variant runs again
     return SampleResult.from_dict(record["result"])
 
 

@@ -50,6 +50,14 @@ def intervals(cut: CutModel, frf: ModalFRF, speed_rad_s: float, m: int, points_p
     return max(int(m), int(math.ceil(points_per_period * f_max * tau)))
 
 
+def state_size(cut: CutModel, frf: ModalFRF, speed_rad_s: float, m: int) -> int:
+    """Dimension 2 n + r n of the semi-discretised map with m intervals per tooth period (r: the longest delay in
+    intervals): its monodromy matrix holds that squared, its eigenvalues cost that cubed."""
+    n = len(frf.omega_rad_s)
+    _, _, _, delays, _ = _setup(cut, speed_rad_s, m)
+    return 2 * n + max(delays) * n
+
+
 def _setup(cut: CutModel, speed_rad_s: float, m: int):
     """(period T, intervals per period, dt, delays in intervals per tooth group, tooth groups); m intervals per
     tooth period (per revolution for turning)."""

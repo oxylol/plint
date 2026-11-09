@@ -41,7 +41,7 @@ import numpy as np
 import yaml
 
 from ..core.errors import InputError
-from .align import Alignment, align, error_metrics, reduce_m4
+from .align import Alignment, align, alignment_document, error_metrics, reduce_m4
 from .fit import FitSettings, Param, fit
 from .importers import load_machine_data
 from .overlay import calibrated_project, make_overlay, write_overlay
@@ -416,7 +416,7 @@ def write_outputs(ctx: Context, outcomes: list[dict], skipped: list[dict], out_d
         "alignment": ctx.alignment.to_dict() if ctx.alignment is not None else None, "series": series}),
         indent=1, sort_keys=True) + "\n", encoding="utf-8")
     if ctx.alignment is not None:
-        (out_dir / "alignment.json").write_text(json.dumps(_jsonable(ctx.alignment.to_dict()), indent=1,
+        (out_dir / "alignment.json").write_text(json.dumps(_jsonable(alignment_document(ctx.alignment)), indent=1,
                                                            sort_keys=True) + "\n", encoding="utf-8")
         files["alignment"] = "alignment.json"
     if ctx.log is not None:

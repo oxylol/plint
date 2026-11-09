@@ -159,6 +159,69 @@ def test_run_check_and_replay_through_the_loop(tmp_path, fake_loop, capsys):
     assert status["status"] == "failed" and status["error"]["type"] == "ConservationError"
 
 
+def test_operator_options_run_through_the_runner_that_applies_them(tmp_path, fake_loop, monkeypatch, capsys):
+    """The loop's run_project does not read options.operator: twin run sends such a run through cnctwin.sweep.runner
+    (normalised, with that runner in its cache key); overrides at 100 % are the plain run through the loop."""
+    from cnctwin import cache
+    from cnctwin.core.errors import InputError
+    from cnctwin.sweep import runner
+    project = tmp_path / "proj"
+    project.mkdir()
+    (project / "project.yaml").write_text("format: cnctwin-project\n")
+    calls = {}
+
+    def override_run(project_path, run_dir, options, progress_cb):
+        calls["options"] = dict(options)
+        write_json_atomic(Path(run_dir) / "run.json", {"verdict": {"safe": True, "reasons": []}})
+        return {"operator": options["operator"]}
+
+    def key_for(project_path, options, runner=None, **kwargs):
+        calls["key_runner"] = runner
+        raise InputError("not a resolvable project (test)")
+
+    monkeypatch.setattr(runner, "run_project", override_run)
+    monkeypatch.setattr(cache, "key_for", key_for)
+    monkeypatch.setenv("CNCTWIN_CACHE", "on")
+    for name, value in cache.DETERMINISTIC_ENV.items():
+        monkeypatch.setenv(name, value)
+    out = tmp_path / "runs" / "r1"
+    assert cli.main(["run", str(project), "--out", str(out), "--set", "operator.feed_override=1.2",
+                     "--set", "operator.rapid_override=1", "--quiet"]) == 0
+    assert calls["options"] == {"operator": {"feed_override": {"*": 1.2}}}         # normalised: 100 % dropped
+    assert calls["key_runner"] == cache.SWEEP_RUNNER and "run" not in fake_loop
+    calls.clear()
+    assert cli.main(["run", str(project), "--out", str(out), "--set", "operator.feed_override=1.0", "--quiet"]) == 0
+    assert fake_loop["run"][2] == {} and "options" not in calls and calls["key_runner"] == cache.DEFAULT_RUNNER
+    assert cli.main(["run", str(project), "--out", str(out), "--set", "operator.torque_override=2"]) == cli.EXIT_ERROR
+    assert "options.operator.torque_override: one of feed_override" in capsys.readouterr().err
+
+
+def test_check_writes_into_the_data_folder_not_the_project(tmp_path, fake_loop, monkeypatch, capsys):
+    project = tmp_path / "examples" / "pocket"
+    project.mkdir(parents=True)
+    (project / "project.yaml").write_text("format: cnctwin-project\n")
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
+    assert cli.main(["check", str(project)]) == 0
+    _, out_dir = fake_loop["check"]
+    assert out_dir.parent == tmp_path / "data" / "checks" and out_dir.name.startswith("pocket-") and out_dir.is_dir()
+    assert not (project / ".twin-check").exists() and f"check files: {out_dir}" in capsys.readouterr().err
+    other = tmp_path / "elsewhere" / "pocket"                   # the same folder name elsewhere: another folder
+    other.mkdir(parents=True)
+    (other / "project.yaml").write_text("format: cnctwin-project\n")
+    assert cli.default_check_dir(other / "project.yaml") != out_dir
+    import tempfile
+    (tmp_path / "tmp").mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path / "tmp"))
+    third = tmp_path / "third" / "pocket"
+    third.mkdir(parents=True)
+    (tmp_path / "data" / "checks").chmod(0o500)               # the data folder cannot be written: the temporary one
+    try:
+        fallback = cli.default_check_dir(third / "project.yaml")
+    finally:
+        (tmp_path / "data" / "checks").chmod(0o700)
+    assert fallback.parent == tmp_path / "tmp" / "cnctwin-check" and fallback.name.startswith("pocket-")
+
+
 def test_run_allocates_a_deterministic_run_id(tmp_path, fake_loop, monkeypatch):
     project = tmp_path / "pocket"
     project.mkdir()

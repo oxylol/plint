@@ -36,6 +36,9 @@ from .protocols import GeometryToolInfo, ProjectTolerances, StockShell
 from .schema import settings as read_settings
 from .state import WearState
 
+TOOLS_FORMAT = "cnctwin-tools"         # tools.json (docs/formats.md "Results of a run"); older files have no header
+TOOLS_VERSION = 1
+
 
 class WearDomain:
     """Tool wear, damage, life and breakage."""
@@ -163,7 +166,8 @@ class WearDomain:
             sw.counters["op_events"] = 0
 
     def finalize(self, ctx, state) -> dict:
-        """The tools.json document (docs/models/wear.md "Results")."""
+        """The tools.json document (docs/models/wear.md "Results"): ``{format: cnctwin-tools, version: 1, tools,
+        estimated}``."""
         ws: WearState = state.wear
         self._attach(ctx, state)
         self._close_part(ws)
@@ -214,7 +218,7 @@ class WearDomain:
                 last = sw.per_part[-1]
                 record["life_used_part_fraction"] = last["life_used_part_fraction"]
             tools.append(record)
-        return {"tools": tools, "estimated": list(ws.estimated)}
+        return {"format": TOOLS_FORMAT, "version": TOOLS_VERSION, "tools": tools, "estimated": list(ws.estimated)}
 
     # ------------------------------------------------------------------ results for the recorder
     def macro_values(self, state) -> dict:

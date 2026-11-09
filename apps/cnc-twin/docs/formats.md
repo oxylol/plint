@@ -1,8 +1,26 @@
 # File formats
 
-Every file the simulator reads or writes is plain text or a documented binary, carries a
-`format` name and a `version`, and is migrated forward by the loader when an older version
-is read.
+Every file the simulator reads or writes is plain text or a documented binary. Exactly two kinds of
+file are **migrated forward** when an older form is read: project files (`project.yaml`,
+`project.calibrated.yaml`, the variants of sweeps and uncertainty studies: version 0, the flat layout,
+becomes version 1 in `cnctwin.project.migrate`) and database files with validation cases (older key
+forms renamed at load by the migration table; the files themselves are not changed). The other inputs
+with a header (sweep specs, calibration overlays, validation budgets) are read at their one version.
+Everything else the simulator writes (apart from logs, empty markers and the scratch and lock files of
+[the last section](#scratch-lock-and-reference-files)) is a **versioned output** that is never
+migrated: it carries a `format` name and a `version` (in the body of a JSON document; in the first line of
+`series/index.jsonl`, `keyframes/index.jsonl` and the cache's `index.jsonl`; for `trace.jsonl`, whose
+line numbers are its event ids, in the sidecar `trace.json`; in the key-value metadata of the series
+parts and dataset tables; `machine_log.parquet` is described by `machine_log.json`), its readers take
+the version 1 layout, also as written before its header existed (`tools.json`,
+`alignment.json`, a job's `result.json`, an uncertainty variant's `result.json`, a sweep point's
+`progress.json`, `outcome.json` and `.generated-<name>.json`, the two run-directory indexes without their header line,
+`trace.jsonl` without `trace.json`), and an output of another version is made again by the current
+build, never converted. Files in a foreign or standard format (NC programs, CAD and meshes, CSV and
+ISO 10303-21 tool libraries, machine data, glTF, PNG, MP4, WAV, HTML, PDF, Markdown, OpenAPI, NumPy
+`.npz`, the frame records of `frames.bin` described by `scene.json`) carry no header of ours. The
+[Format index](#format-index) lists every file with its format, version and rule, and
+[Migration rules](#migration-rules) says what each rule does.
 
 ## Databases
 
@@ -326,6 +344,10 @@ and wrong units are errors, `note`/`notes` free). Required: `format`, `version`,
   fixture_pose}`, `from_previous: {op, flip, transfer}` naming an earlier operation,
   `nozzle_positions: {<T>: <position>}` for listed tools); `production`, `recording`, `outputs`,
   `uncertainty`, `machine_data`.
+* `calibration`: a calibration overlay (`calibration.yaml` of `twin calibrate`, format
+  `cnctwin-calibration`, "Machine data and calibration" below), a path relative to the project: its
+  values are applied at resolve time (below) and the file is an input of the project (its hash is in
+  `input_hashes`, so in the project hash, the run ids and the cache keys).
 * `setup.work_offsets_mm`: `{<code>: [x, y, z, ...]}`, the work zero's machine coordinates as set on the
   machine, in the order X, Y, Z, then the path's other axes in the control's order, on every machine type
   (lathes included: `[x, 0, z]`); the controller and sanity read the same values.
@@ -367,7 +389,7 @@ and wrong units are errors, `note`/`notes` free). Required: `format`, `version`,
   every operation named exists.
 
 All file paths are relative to the project file and must exist (`program`, `programs`,
-`cad.path`, `stock.mesh`, `tools.library`). Every problem names `file:line` and the key path;
+`cad.path`, `stock.mesh`, `tools.library`, `calibration`). Every problem names `file:line` and the key path;
 `load_project` and `resolve` raise one `InputError` listing every error.
 
 ### Resolution (`cnctwin.project.resolve(path, db)` -> `ResolvedProject`)
@@ -398,9 +420,23 @@ A used holder must give `gauge_length_mm`, `nose_diameter_mm` and `profile_mm`; 
 item has them as `null` (not published) the project is refused with the inline form to add them
 (`holder: {extends: <id>, profile_mm: [...]}`).
 
+**The calibration overlay** (`calibration: <file>`, cnctwin.mdata.overlay): the file is loaded and
+checked (format `cnctwin-calibration`, a newer version is refused), then its entries are set where they
+belong, each as written in the overlay, a database value becoming `{value, src: est, note: "calibrated
+(<overlay name>), parameter <p>, interval [lo, hi]"}`: `tools[<T>[@<path>]].<key>` in the tool list (after
+the library rows joined it; a changed entry is checked again), `machine.*` in the machine after the
+project's `controller_overrides` were merged (a calibrated controller value wins over an override and
+keeps its note), `material.*` in the material; the patched machine and material are checked as such.
+An overlay written for another machine or material id, a target that names no tool, or a value that
+makes an object invalid is a project error at the `calibration` line. `models.*` and `factors.*` entries
+have no database object: they are listed in `ResolvedProject.calibration_overlay` (`{file, name, machine,
+material, applied, models: {model: {parameter: SI value}}, factors: {name: {key: value}}}`, None without
+the key) and each is reported as a `calibration` warning, because no domain applies them in this build.
+`project.calibrated.yaml` (below) remains the standalone alternative.
+
 `project.input_hashes` is the sha256 of every input file (`project.yaml`, programs, CAD, stock
-mesh, tool library files, and the database files of every object used: their `extends` chains,
-tool materials, coatings, controllers); `project.input_files` their paths.
+mesh, tool library files, the calibration overlay, and the database files of every object used: their
+`extends` chains, tool materials, coatings, controllers); `project.input_files` their paths.
 `project_hash(project)` is the sha256 of the canonical JSON of the migrated project data (comments
 and formatting do not count), the hashes of the other input files and of every `db/models/*.yaml`.
 
@@ -503,6 +539,7 @@ runs/<run_id>/
   status.json         volatile: status, progress, ETA                      the progress callback's owner (API worker, twin run)
   findings.json       rewritten when findings change                        RunDirectory.write_findings
   trace.jsonl         append-only, one TraceEvent per line, id = line       cnctwin.core.trace.TraceLog
+  trace.json          the header of trace.jsonl (format cnctwin-trace)      TraceLog (when it opens a fresh trace)
   channels.json       written at the start                                  Recorder.write_channels
   timeline.json       rewritten (closed, final blocks)                      Timeline.write
   series/<tier>/part-<n>.parquet, series/index.jsonl                        Recorder
@@ -568,8 +605,11 @@ value's shape and values not given in a step are NaN (float columns) or null (in
 tick tier ends with `<fast column>.min`, `.mean`, `.max` (float64) of every fast column over the L0 rows
 of each L1 tick `[t, t + ipo_ticks)` (finite values only; NaN where a tick had none). Rows: fast = L0
 samples (in mode `windows` only those inside windows), tick = one per L1 tick (its first base tick),
-macro = one per macro step (its end tick). `series/index.jsonl` (append-only, fsynced): one line per
-closed part `{tier, part, file, tick0, tick1, t0_s, t1_s, rows}` (`replay: true` for a replay part).
+macro = one per macro step (its end tick). `series/index.jsonl` (append-only, fsynced): the header line
+`{"format": "cnctwin-series-index", "version": 1}` (written with the first part; its bytes are in the checkpoint
+cut, `index_lines` counts the parts only), then one line per closed part `{tier, part, file, tick0, tick1, t0_s,
+t1_s, rows}` (`replay: true` for a replay part); readers skip the header, and an index written before it (none)
+reads the same (a replay appends to such an index without adding one).
 
 Fast windows (`fast: windows`; settings in db/models/recording.yaml, project `recording:`): the ring
 (`RingBuffer`, core/abi.py) holds `ring_buffer_s` (0.5 s) of L0 rows, fewer when `ring_max_bytes` (32 MiB)
@@ -758,8 +798,10 @@ A keyframe is written every `recording.keyframe_period_s` (0.5 s; the first at t
   length], ...]}}`, entries sorted by k, file relative to keyframes/. A full snapshot adds no entry for a
   brick whose record did not change, so the index grows with the changes only. Brick ids: the removal
   field's brick number on workpiece 0, `w<w>.<brick>` on workpiece w.
-* `keyframes/index.jsonl` (append-only): `{k, tick, time_s, glb, fields, chips, full, bricks [written],
-  empty [emptied], ...extra}`.
+* `keyframes/index.jsonl` (append-only): the header line `{"format": "cnctwin-keyframes-index", "version": 1}`
+  (written with keyframe 0, inside the checkpoint cut), then per keyframe `{k, tick, time_s, glb, fields, chips,
+  full, bricks [written], empty [emptied], ...extra}`; readers take the records with a `k` (an index written before
+  the header has none).
 * `keyframes/kf_<k>.npz` (deterministic zip, members sorted, dated 1980-01-01, read with
   `allow_pickle=False`): `tick` (int64, 0-d), `time_s`, the loop's fields as given (chip pile heights,
   wetted cells, tool deflection, part pose, coolant jets `jet_*`), every float field whose name ends in
@@ -874,7 +916,8 @@ run_id, sweep, point, cache_key, build}], skipped [{source, point, reason}], bui
 
 Every file the simulator reads or writes, with its format name, version and migration rule. "Header" means
 the file carries `format` and `version` (Parquet parts and dataset tables carry them in their key-value
-metadata); files marked *no header* are identified by their name and place. The rules are in
+metadata, the JSON-lines indexes in their first line, `trace.jsonl` in its sidecar `trace.json`); a file in a
+foreign or standard format, a log or a marker has none and is identified by its name and place. The rules are in
 [Migration rules](#migration-rules) below.
 
 | file | format | version | written / read by | migration rule | documented in |
@@ -892,20 +935,20 @@ metadata); files marked *no header* are identified by their name and place. The 
 | `run.json` | `cnctwin-run` | 1 | the loop / API, report, UI, cache, dataset | run directory | "Run directory" |
 | `status.json` | `cnctwin-run-status` | 1 | `twin run`, the API manager and worker / API, UI | run directory | "Run directory" |
 | `findings.json` | `cnctwin-findings` | 1 | the loop / everyone | run directory | "Run directory", "Results of a run" |
-| `trace.jsonl` | *no header* (one TraceEvent per line) | - | the loop / API, `twin explain` | run directory | "Results of a run" |
+| `trace.jsonl`, `trace.json` | `cnctwin-trace` in the sidecar `trace.json` (no header line: an event's id is its line number; a trace without the sidecar reads the same) | 1 | the loop / API, `twin explain`, report | run directory | "Results of a run" |
 | `channels.json` | `cnctwin-channels` | 1 | the recorder / API, UI, report | run directory | "Run directory" |
 | `timeline.json` | `cnctwin-timeline` | 1 | the loop / production, report, UI, dataset | run directory | "Run directory" |
 | `series/<tier>/part-<n>.parquet`, `replay-*.parquet` | `cnctwin-series` (Parquet metadata `cnctwin`) | 1 | the recorder / API, export, dataset | run directory | "Run directory" |
-| `series/index.jsonl` | *no header* | - | the recorder | run directory | "Run directory" |
+| `series/index.jsonl` | `cnctwin-series-index` (header line; an index without it reads the same) | 1 | the recorder / API, export, report, dataset, render | run directory | "Run directory" |
 | `scene.json`, `scene/*.glb` | `cnctwin-scene`, glTF 2.0 | 1 | the loop / UI, render | run directory | "Run directory" |
 | `frames.bin` (header in `scene.json["frames"]`) | `cnctwin-frames` | 1 | the loop / UI, render, calibration | run directory | "frames.bin" |
 | `keyframes/kf_<k>.glb`, `kf_<k>.npz`, `chips/kf_<k>.npz`, `keyframes/attr/*.npz` | glTF 2.0 with `BRK1` records, NumPy npz | - | the loop / UI, render, report | run directory | "Keyframes" |
 | `keyframes/bricks.idx` | `cnctwin-bricks-index` | 1 | the loop / UI, API | run directory | "Keyframes" |
-| `keyframes/index.jsonl` | *no header* | - | the loop / API, UI | run directory | "Keyframes" |
+| `keyframes/index.jsonl` | `cnctwin-keyframes-index` (header line; an index without it reads the same) | 1 | the loop / API, UI, report, render | run directory | "Keyframes" |
 | `checkpoints/ck_<tick>.json` + `.npz` | `cnctwin-checkpoint` | 1 | the loop / resume, replay | checkpoint | "Run directory" |
 | `inspection.json` | `cnctwin-inspection` | 1 | inspect / report, UI, dataset, uncertainty | run directory | docs/models/inspect.md 16 |
 | `surface.json` | `cnctwin-surface` | 1 | surface / report, UI, dataset | run directory | docs/models/surface.md 11 |
-| `tools.json` | *no header* (`{tools, estimated}`) | - | wear / report, UI, dataset, production | run directory | "Results of a run" |
+| `tools.json` | `cnctwin-tools` (`{format, version, tools, estimated}`; readers also take it without the header) | 1 | wear / report, UI, dataset, production | run directory | "Results of a run" |
 | `production.json` | `cnctwin-production` | 1 | production / report, UI, dataset | run directory | docs/models/production.md 9 |
 | `sld/T<n>.json` | `cnctwin-sld` | 1 | dynamics / report, UI | run directory | docs/models/dynamics.md 5.4 |
 | `part_<op>.glb`, `.stl`, `.3mf`, `part_<op>_unload.stl` | glTF 2.0, STL, 3MF | - | inspect / UI, next operation | run directory | docs/models/inspect.md |
@@ -919,17 +962,18 @@ metadata); files marked *no header* are identified by their name and place. The 
 | `DATA_DIR/cache/index.jsonl` | `cnctwin-cache-index` (first line) | 1 | `cnctwin.cache` | cache index | "Run cache" |
 | cache key components (`twin cache key --json`) | `cnctwin-cache-key` | 1 | `cnctwin.cache` | regenerated | "Studies around runs" |
 | sweep folder: `sweep.json`, `plan.json`, `points/p<n>/result.json`, `status.json`, `summary.json` | `cnctwin-sweep-run`, `-sweep-plan`, `-sweep-point`, `-sweep-status`, `-sweep-summary` | 1 | `cnctwin.sweep` | sweep folder | "Sweep" |
-| sweep point process: `job.json`; `progress.json`, `outcome.json`, `.generated-<name>.json` | `cnctwin-sweep-job`; *no header* | 1 | `cnctwin.sweep` | sweep folder | "Sweep point files" |
+| sweep point process: `job.json`, `progress.json`, `outcome.json`, `.generated-<name>.json` | `cnctwin-sweep-job`, `-sweep-progress`, `-sweep-outcome`, `-sweep-generated` (the last three also read without the header) | 1 | `cnctwin.sweep` | sweep folder | "Sweep point files" |
 | dataset `runs.*`, `blocks.*`, `schema.json`, `manifest.json` | `cnctwin-dataset-table`, `cnctwin-dataset-schema`, `cnctwin-dataset` | 1 | `twin dataset` / training code | regenerated | "Dataset" |
-| uncertainty study folder: `plan.json`, `variants/v<n>/project.yaml`, `variants/v<n>/result.json`, `study.json` | `cnctwin-uncertainty-plan`, `cnctwin-project`, *no header*, `cnctwin-uncertainty` | 1 | `cnctwin.uncertainty` | study folder | "Uncertainty study files" |
+| uncertainty study folder: `plan.json`, `variants/v<n>/project.yaml`, `variants/v<n>/result.json`, `study.json` | `cnctwin-uncertainty-plan`, `cnctwin-project`, `cnctwin-uncertainty-variant` (also read without the header), `cnctwin-uncertainty` | 1 | `cnctwin.uncertainty` | study folder | "Uncertainty study files" |
 | machine data: MTConnect streams, OPC UA servers and exports, FOCAS logs, CSV | MTConnect XML, `cnctwin-opcua-history`, `cnctwin-focas-log`, CSV | 1 | machines, collectors / `cnctwin.mdata` | read as written | "Machine data and calibration" |
 | `machine_log.json` + `machine_log.parquet` | `cnctwin-machine-log` | 1 | `cnctwin.mdata` | regenerated | "Machine data and calibration" |
-| `alignment.json` | *no header* | - | calibrate | regenerated | "Machine data and calibration" |
+| `alignment.json` | `cnctwin-alignment` (`read_alignment` also reads it without the header) | 1 | calibrate | regenerated | "Machine data and calibration" |
 | `calibration.yaml` (the overlay) | `cnctwin-calibration` | 1 | calibrate / `cnctwin.mdata.overlay` | calibration overlay | "Machine data and calibration" |
 | `calibration.json`, `overlay.json` | `cnctwin-calibration-result`, `cnctwin-calibration-overlay` | 1 | calibrate / UI, report | regenerated | "Machine data and calibration" |
 | `project.calibrated.yaml` | `cnctwin-project` | 1 | calibrate / the loop | project | "Machine data and calibration" |
 | `DATA_DIR/jobs/<id>/job.json`, `worker.json` | `cnctwin-job`, `cnctwin-worker` | 1 | the API manager and worker | job files | "API data folder" |
-| `DATA_DIR/jobs/<id>/result.json`, `cancel`, `log.txt`, `out/` | *no header* | - | the API worker | job files | "API data folder" |
+| `DATA_DIR/jobs/<id>/result.json` | `cnctwin-job-result` (`{format, version, job_id, kind, result}`; the bare value of an older worker is read too) | 1 | the API worker / the manager | job files | "API data folder" |
+| `DATA_DIR/jobs/<id>/cancel`, `log.txt`, `out/` | an empty marker, text, the job's output folder | - | the API manager and worker | job files | "API data folder" |
 | `docs/approximations.md`, `docs/doc-gaps.md` | Markdown | - | `python -m cnctwin.docs_tools` / report, people | regenerated | cnctwin/docs_tools.py |
 
 Formats returned by functions but not written to a file: `cnctwin-outputs` (the summary
@@ -950,10 +994,10 @@ in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSIO
 | exact version | sweep spec | `version` must be 1 (a missing `version` reads as 1); any other number is an InputError |
 | calibration overlay | `calibration.yaml` | a version newer than 1 is refused (InputError "newer than this build reads"); a missing version reads as current |
 | checkpoint | `checkpoints/ck_<tick>.json` + `.npz` | a version newer than 1 is refused (CheckpointError); so is a checkpoint whose `project_hash` or `build` differs from the run's: a continuation under other inputs or other code could not be bit-identical, so the run starts again instead |
-| run directory | every file of a run directory except checkpoints | not migrated: a run directory is the result of the build named in run.json `versions.build`. Readers (API, UI, report, dataset) accept the version 1 layouts and the older list forms docs/api.md "Run directory as read by the API" names, ignore keys they do not know and report a missing file as not recorded; the run cache never reuses a run of another build (its key holds the build), so a run of an older build is simulated again rather than converted |
+| run directory | every file of a run directory except checkpoints | not migrated: a run directory is the result of the build named in run.json `versions.build`. Readers (API, UI, report, dataset) accept the version 1 layouts and the older list forms docs/api.md "Run directory as read by the API" names, the files written before their header existed (`tools.json` without `format`, the two index files without their header line, `trace.jsonl` without `trace.json`), ignore keys they do not know and report a missing file as not recorded; the run cache never reuses a run of another build (its key holds the build), so a run of an older build is simulated again rather than converted |
 | cache index | `DATA_DIR/cache/index.jsonl` | the first line names the format and version; readers replay `put`, `hit` and `drop` lines and skip every other line (a torn or unknown line too); no version check (version 1 is the only one); `twin cache compact` rewrites it in the current form |
 | sweep folder, study folder | sweep folders, uncertainty study folders | not migrated: a point or sample is reused only when its key (sweep: the run cache key; study: the variant project's sha256 in `result.json`) matches, so files of another build or another spec are recomputed, never converted |
-| job files | `DATA_DIR/jobs/<id>/` | read back by a restarted server; unknown keys are ignored (`Job.from_record` keeps the declared fields); no version check |
+| job files | `DATA_DIR/jobs/<id>/` | read back by a restarted server; unknown keys are ignored (`Job.from_record` keeps the declared fields); no version check; `result.json` is read with its header or as the bare value an older worker wrote |
 | regenerated | results, studies, dataset files, generated docs | outputs of a command: never read back for migration; run the command again with the current build |
 | read as written | inputs in foreign or free formats | no version; parsed by their own grammar (NC programs by the dialect, CSV by its header, ISO 10303-21 by `parse_p21`, MTConnect by its schema version) |
 
@@ -995,8 +1039,9 @@ in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSIO
 * **`machine_log.json`** (`cnctwin-machine-log`, version 1: `source`, `epoch`, channels with canonical names and
   SI units, events, meta) with **`machine_log.parquet`** (long table `channel, t_s, value, text`, zstd); the same
   log gives the same bytes. `MachineLog.load` checks the format name.
-* **`alignment.json`** (*no header*): the alignment the calibration used (`offset_s`, `scale`, `method`,
-  quality), `Alignment.to_dict()`.
+* **`alignment.json`** (`cnctwin-alignment`, version 1): the alignment the calibration used (`offset_s`, `scale`,
+  `method`, `quality`), `Alignment.to_dict()` under the header; `cnctwin.mdata.align.read_alignment` also reads
+  one written before the header (the bare `to_dict()`).
 * **`calibration.yaml`** (`cnctwin-calibration`, version 1, the overlay): `name`, `machine`, `material`, `inputs`
   (machine data source, run id and run.json sha256, project sha256), `alignment`, `set` (target path -> `{value,
   parameter, ci}`, the value in the unit of the path's last key), `parameters` (prior, value, interval, flags,
@@ -1008,9 +1053,13 @@ in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSIO
   correlations, confounded pairs and metrics before and after; **`overlay.json`** (`cnctwin-calibration-overlay`,
   version 1): `time_base: simulation`, the alignment and the measured, simulated and calibrated series of every
   observation set (M4-reduced) with error metrics.
+* **Including the overlay**: `calibration: calibration.yaml` in `project.yaml` applies it at resolve time and hashes
+  it as an input ("Project file", "The calibration overlay" above).
 * **`project.calibrated.yaml`** (`cnctwin-project`, version 1): the project with the overlay applied through
-  inline `extends` objects and absolute paths, so it runs with the ordinary loader. `project.yaml` itself has no
-  key that includes an overlay in this build.
+  inline `extends` objects and absolute paths, so it runs anywhere without the overlay file. A project that
+  includes an overlay already is written with both overlays baked in (the newer wins on a target both set; the
+  older entries keep their overlay's name in their notes) and without its `calibration` key, so no value is
+  applied twice.
 
 ## Uncertainty study files
 
@@ -1018,8 +1067,9 @@ in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSIO
 
 * Study folder: **`plan.json`** (`cnctwin-uncertainty-plan`, version 1: settings, factors with their
   distributions, every sample's draws and values, the variant files), **`variants/v<nnnn>/project.yaml`**
-  (`cnctwin-project`), `variants/v<nnnn>/run/` (a run directory), **`variants/v<nnnn>/result.json`** (*no header*:
-  `{project_sha256, result}`, read back to resume), **`study.json`** (`cnctwin-uncertainty`, version 1; fields in
+  (`cnctwin-project`), `variants/v<nnnn>/run/` (a run directory), **`variants/v<nnnn>/result.json`**
+  (`cnctwin-uncertainty-variant`, version 1: `{project_sha256, result}`, read back to resume; one written before the
+  header is reused too), **`study.json`** (`cnctwin-uncertainty`, version 1; fields in
   docs/models/uncertainty.md section 10; sorted keys, no NaN, variant paths relative to the folder) and
   `uncertainty.html`.
 * Attached to a run (`--run`, the API): `RUN_DIR/uncertainty/study.json`, `RUN_DIR/uncertainty/uncertainty.html` and
@@ -1035,11 +1085,15 @@ in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSIO
 * **`trace.jsonl`**: one JSON object per line, `{id, time_s, tick, domain, event, quantities, parents, line}`
   (`cnctwin.core.trace.TraceEvent`); `id` equals the line number (from 0); `parents` are earlier ids; a finding's
   `cause_chain` lists ids from the finding back to its root causes. Truncated to the checkpoint's byte length
-  at a resume.
+  at a resume. No header line (it would break id = line number, which readers bisect on): the format is in the
+  sidecar **`trace.json`** (`{format: cnctwin-trace, version: 1, file: "trace.jsonl", lines}`), written when a fresh
+  trace is opened; `cnctwin.core.trace.read_sidecar` gives it, or the implied version 1 for a trace written before
+  the sidecar.
 * **Findings** (`findings.json`): `{findings: [{id, category, severity, message, time_s, tick, domain, op, program,
   line, block, pos_W_m, pos_M_m, quantities, cause_chain}]}`; categories in `cnctwin/core/findings.py`, severities
   info, warning, error, fatal; the verdict is safe when none is error or fatal.
-* **`tools.json`** (*no header*, written by the wear domain's `finalize`): `{tools: [{slot, number, tool_id,
+* **`tools.json`** (`cnctwin-tools`, version 1, written by the wear domain's `finalize`; readers also take one
+  written before the header): `{format, version, tools: [{slot, number, tool_id,
   holder_id, tool_material, coating, VB_m (per tooth), VB_max_m, VB_limit_m, KT_max_m, notch_max_m,
   edge_radius_max_m, coating_min_m, chipped_elements, chip_events, coating_spalls, bue_breakoffs,
   thermal_damage_max, comb_crack_depth_max_m, section_fatigue, broken, broken_tick, broken_cause,
@@ -1057,7 +1111,8 @@ in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSIO
 
 ## Studies around runs
 
-* **`check.json`** (`cnctwin-check`, version 1; in `twin check --out`, default `<project>/.twin-check/`): `project`,
+* **`check.json`** (`cnctwin-check`, version 1; in `twin check --out`, default `DATA_DIR/checks/<project folder>-<h8>/`,
+  else `<tmp>/cnctwin-check/...` when that cannot be written; never the project folder): `project`,
   `project_file`, `ok`, `errors`, `warnings`, `operations [{op, dry_run_cycle_time_s, planner_cycle_time_s,
   feed_time_s, commands, strides, lattice, sanity, estimated_cpu_s, estimated_cpu_s_per_s, fast_all_bytes,
   stopped}]`, `resolved` (the `physics.resolved` block), `written` (whether `--write` stored it), `cycle_time_s`,
@@ -1075,10 +1130,11 @@ in this build is 1 (`cnctwin.FORMAT_VERSION`, `cnctwin.db.schemas.CURRENT_VERSIO
 
 A point run in its own process (`isolation: process`) leaves in `points/p<nnnnn>/`: `job.json`
 (`cnctwin-sweep-job`, version 1: `index, project, options, runner, cache_root, cache_max_bytes,
-cache_max_age_s, runs_dir, no_cache, verify, key, watch_stdin, memory_mode, memory_bytes`), `progress.json` (*no header*:
-`sim_time_s, est_total_s, op, phase, wall_s`, at most every 0.5 s), `outcome.json` (*no header*: `{status,
-outcome, error}`) and `log.txt`; a generator parameter leaves `.generated-<name>.json` (`request_sha256` and the
-generator's output). The scratch files are removed when the point is done; `result.json` (`cnctwin-sweep-point`)
+cache_max_age_s, runs_dir, no_cache, verify, key, watch_stdin, memory_mode, memory_bytes`), `progress.json`
+(`cnctwin-sweep-progress`, version 1: `sim_time_s, est_total_s, op, phase, wall_s`, at most every 0.5 s),
+`outcome.json` (`cnctwin-sweep-outcome`, version 1: `{status, outcome, error}`) and `log.txt`; a generator parameter
+leaves `.generated-<name>.json` (`cnctwin-sweep-generated`, version 1: `request_sha256` and the generator's
+output). The sweep process reads these also without their header (written by an older point process). The scratch files are removed when the point is done; `result.json` (`cnctwin-sweep-point`)
 stays.
 
 ## API data folder
@@ -1088,9 +1144,10 @@ stays.
 ```
 DATA_DIR/.api.lock              flock: one server per DATA_DIR
 DATA_DIR/projects/<id>/         uploaded projects (project.yaml at the top)
-DATA_DIR/runs/<run_id>/         run directories; run ids <nnnnn>-<project id> (the CLI adds the 8-digit hash)
+DATA_DIR/runs/<run_id>/         run directories; run ids <nnnnn>-<slug>-<h8> as twin run names them (older
+                                <nnnnn>-<project id> folders are read and counted)
 DATA_DIR/jobs/<job_id>/         job.json (cnctwin-job), worker.json (cnctwin-worker), cancel (empty marker),
-                                log.txt, result.json (the entry point's return value, no header), out/
+                                log.txt, result.json (cnctwin-job-result: the entry point's return value), out/
 DATA_DIR/sweeps/<name>/         sweep folders of twin sweep (the API's sweeps are job output folders)
 DATA_DIR/cache/                 the run cache (index.jsonl, runs/, locks/)
 DATA_DIR/tmp/                   uploads and exports in progress
@@ -1099,8 +1156,16 @@ DATA_DIR/tmp/                   uploads and exports in progress
 `job.json`: `{id, seq, kind, pool, entry, request, state, run_id, project_id, key, created_s, started_s,
 finished_s, pid, pgid, worker_pid, returncode, error, progress, cancel_requested_s, term_sent_s, kill_sent_s,
 memory_mode, memory_bytes, attempt, prior_wall_s, has_result}`; `worker.json`: `{pid, state, final, progress,
-error, result, wall_s}`, written before the worker's last status.json. A simulation job's run directory gets
-`status.json` (`cnctwin-run-status`) from the manager while queued and from the worker while it runs.
+error, result, wall_s}`, written before the worker's last status.json; `result.json` (`cnctwin-job-result`, version 1):
+`{format, version, job_id, kind, result}` with the entry's return value as `result` (a header beside the value: a
+returned document may carry `format` keys of its own); `JobManager.result` also reads the bare value an older
+worker wrote. A simulation job's run directory gets `status.json` (`cnctwin-run-status`) from the manager while
+queued and from the worker while it runs.
+
+Run ids (`RunStore.allocate`) are cnctwin.core.rundir.run_id's, as `twin run` gives them: `<nnnnn>-<slug of the
+project id>-<h8>` with h8 from the project hash (the run cache key's, or the project resolved against the server's
+database when the cache is not asked; the project file's own hash when it does not resolve) and the canonical
+options; the counter is one above every numbered folder, the older API form `<nnnnn>-<project id>` included.
 
 ## Inputs and caches
 

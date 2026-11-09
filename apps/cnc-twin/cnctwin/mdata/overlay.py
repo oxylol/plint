@@ -28,13 +28,20 @@ against the item's ``id`` (``[main]``). A ``key=value`` selector that matches no
 with those keys (a new Usui entry).
 
 Applying (:func:`apply_to_raw`, :func:`controller_overrides`, :func:`model_overrides`,
-:func:`factors`, :func:`apply_to_project`): every value lands as written in the overlay; a
+:func:`factors`, :func:`apply_to_tools`, :func:`apply_to_project`): every value lands as written in the overlay; a
 database value becomes ``{value, src: est, note: "calibrated (<overlay name>): <parameter> ..."}``
 (a calibrated value is a statistical estimate; the note names its interval). Entries under
-``machine.controller`` are also given as ``controller_overrides`` so that they win over any
-override the project already has. :func:`calibrated_project` writes a standalone project file with
-the overlay applied through the existing project syntax (inline ``extends`` objects), so a
-calibrated project runs without a loader that knows ``calibration:``.
+``machine.controller`` win over any override the project already has.
+
+Two ways to run a calibrated project:
+
+* the project includes the overlay (``calibration: calibration.yaml`` in project.yaml): cnctwin.project.resolve
+  applies it at resolve time (:func:`apply_to_tools` to the tool list, the project's ``controller_overrides`` and
+  then :func:`apply_to_raw` to the machine, :func:`apply_to_raw` to the material) and hashes the file as an input;
+  ``models.*`` and ``factors.*`` entries are listed in ``project.calibration`` for the domains that read them;
+* :func:`calibrated_project` writes a standalone project file (``project.calibrated.yaml`` of ``twin calibrate``)
+  with the overlay applied through the existing project syntax (inline ``extends`` objects, absolute paths); a
+  project that already includes an overlay is written with both baked in (:func:`combined`) and without the key.
 """
 
 from __future__ import annotations
@@ -232,7 +239,8 @@ def write_overlay(path, document: dict) -> Path:
     check_overlay(document)
     path = Path(path)
     header = ("# CNC Twin calibration overlay (docs/models/calibration.md). Include it from project.yaml with\n"
-              "# `calibration: <this file>`. Values under `set:` are in the unit of the last key of their path.\n")
+              "# `calibration: <this file>` (a path relative to the project). Values under `set:` are in the unit\n"
+              "# of the last key of their path.\n")
     text = header + yaml.safe_dump(_yaml_plain(document), sort_keys=False, allow_unicode=True, width=110)
     tmp = path.with_name(f".{path.name}.tmp")
     tmp.write_text(text, encoding="utf-8")
@@ -254,7 +262,7 @@ def load_overlay(path) -> dict:
 # ----------------------------------------------------------------------------- applying
 
 def _note(document: dict, entry: dict) -> str:
-    parts = [f"calibrated ({document.get('name') or 'calibration overlay'})"]
+    parts = [f"calibrated ({entry.get('overlay') or document.get('name') or 'calibration overlay'})"]
     if entry.get("parameter"):
         parts.append(f"parameter {entry['parameter']}")
     if entry.get("ci"):
@@ -312,9 +320,17 @@ def factors(document: dict) -> dict[str, dict[str, float]]:
     return out
 
 
-def apply_to_project(project: dict, document: dict) -> dict:
-    """A copy of a project document with the ``tools[...]`` entries set in its tool list and the
-    controller entries merged into controller_overrides."""
+def _tool_path(value) -> int:
+    """The controller path of a tool list entry or selector (``path`` absent: 1, as the project file defaults it)."""
+    try:
+        return int(value) if value not in (None, "") else 1
+    except (TypeError, ValueError):
+        return -1
+
+
+def apply_to_tools(project: dict, document: dict) -> dict:
+    """A copy of a project document with the ``tools[<T number>[@<path>]].<key>`` entries set in its tool list (file
+    units, as written in the overlay). A selector names one entry by its number and controller path (default 1)."""
     out = copy.deepcopy(project)
     tools = (out.get("tools") or {}).get("list") or []
     for path, segments, entry in entries_for(document, "tools"):
@@ -322,17 +338,38 @@ def apply_to_project(project: dict, document: dict) -> dict:
         if selector is None:
             raise InputError(f"target {path}: write tools[<T number>].<key>")
         number, _, tool_path = selector.partition("@")
-        matches = [t for t in tools if str(t.get("number")) == number.strip()
-                   and str(t.get("path", 0)) == (tool_path.strip() or "0")]
+        matches = [t for t in tools if isinstance(t, dict) and str(t.get("number")) == number.strip()
+                   and _tool_path(t.get("path")) == _tool_path(tool_path.strip())]
         if len(matches) != 1:
-            raise InputError(f"target {path}: the project has {len(matches)} tools numbered {number}")
+            raise InputError(f"target {path}: the project has {len(matches)} tools numbered {number}"
+                             + (f" on path {tool_path.strip()}" if tool_path.strip() else ""))
         set_path(matches[0], segments[1:], entry["value"], sourced=False, note="", path=path)
+    return out
+
+
+def apply_to_project(project: dict, document: dict) -> dict:
+    """A copy of a project document with the ``tools[...]`` entries set in its tool list and the
+    controller entries deep-merged into controller_overrides (so they win over the project's own)."""
+    from ..db.merge import deep_merge
+    out = apply_to_tools(project, document)
     overrides = controller_overrides(document)
     if overrides:
-        merged = copy.deepcopy(out.get("controller_overrides") or {})
-        merged.update(overrides)
-        out["controller_overrides"] = merged
+        out["controller_overrides"] = deep_merge(out.get("controller_overrides") or {}, overrides)
     return out
+
+
+def combined(first: dict, second: dict) -> dict:
+    """One overlay with the entries of ``first`` and ``second`` (``second`` wins on a target both set): what a
+    project that includes ``first`` (``calibration: <file>``) is after ``second`` was calibrated on top of it. The
+    entries of ``first`` keep their overlay's name for their notes (``overlay``)."""
+    entries = {path: {**entry, "overlay": entry.get("overlay") or first.get("name") or "calibration overlay"}
+               for path, entry in (first.get("set") or {}).items()}
+    entries.update(copy.deepcopy(second.get("set") or {}))
+    out = copy.deepcopy(second)
+    out["set"] = dict(sorted(entries.items()))
+    out["machine"] = second.get("machine") or first.get("machine")
+    out["material"] = second.get("material") or first.get("material")
+    return check_overlay(out)
 
 
 def minimal_patch(raw: dict, document: dict, kind: str) -> dict:
@@ -363,13 +400,19 @@ def calibrated_project(project_path, document: dict, out_path, *, machine_raw: d
 
     ``machine_raw`` / ``material_raw``: the raw (migrated, merged) database objects the project uses,
     needed when the overlay has entries for them (cnctwin.db.Database.raw). File paths of the
-    project are made absolute so the file can live anywhere."""
+    project are made absolute so the file can live anywhere. A project that includes an overlay itself
+    (``calibration: <file>``) is written with both overlays baked in (:func:`combined`: this one wins on a target
+    both set) and without the ``calibration`` key, so no value is applied twice."""
     project_path = Path(project_path)
     base = project_path.parent
     try:
         data = yaml.safe_load(project_path.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError) as error:
         raise InputError(f"cannot read the project: {error}", str(project_path)) from None
+    included = data.pop("calibration", None) if isinstance(data, dict) else None
+    if included:
+        included_path = Path(included) if Path(str(included)).is_absolute() else base / str(included)
+        document = combined(load_overlay(included_path), document)
     data = apply_to_project(data, document)
     if entries_for(document, "machine"):
         patch = minimal_patch(machine_raw, document, "machine") if machine_raw is not None else None
@@ -419,5 +462,5 @@ def calibrated_project(project_path, document: dict, out_path, *, machine_raw: d
 
 
 __all__ = ["FORMAT", "VERSION", "Target", "parse_path", "set_path", "make_overlay", "check_overlay", "write_overlay",
-           "load_overlay", "apply_to_raw", "apply_to_project", "controller_overrides", "model_overrides", "factors",
-           "minimal_patch", "calibrated_project", "entries_for"]
+           "load_overlay", "apply_to_raw", "apply_to_tools", "apply_to_project", "controller_overrides",
+           "model_overrides", "factors", "minimal_patch", "combined", "calibrated_project", "entries_for"]

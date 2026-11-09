@@ -58,6 +58,13 @@ def test_job_recovers_spindle_values_and_writes_the_overlay(project_file, synthe
     for name in ("calibration.yaml", "calibration.json", "overlay.json", "alignment.json", "machine_log.json",
                  "machine_log.parquet", "project.calibrated.yaml"):
         assert (out / name).is_file(), name
+    from cnctwin.mdata.align import read_alignment
+    written = json.loads((out / "alignment.json").read_text())
+    assert written["format"] == "cnctwin-alignment" and written["version"] == 1
+    assert read_alignment(out / "alignment.json").offset_s == pytest.approx(result["alignment"]["offset_s"])
+    bare = {k: v for k, v in written.items() if k not in ("format", "version")}     # as written before the header
+    (tmp_path / "old-alignment.json").write_text(json.dumps(bare))
+    assert read_alignment(tmp_path / "old-alignment.json").method == "markers"
     overlay = load_overlay(out / "calibration.yaml")
     assert overlay["machine"] == "haas-vf2ss" and overlay["material"] == "al6061-t6"
     kc = overlay["set"]["material.cutting.kienzle[tool_class=carbide,coating=any].kc11_N_mm2"]

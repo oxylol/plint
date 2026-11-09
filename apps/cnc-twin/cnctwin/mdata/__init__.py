@@ -9,7 +9,8 @@
   the Jacobian.
 * ``cnctwin.mdata.calibrate.calibrate`` - the ``calibrate`` job (cnctwin.api worker entry) and
   ``cnctwin.mdata.calibrate.main`` its command line; writes the calibration overlay (``calibration.yaml``,
-  format cnctwin-calibration) a project includes.
+  format cnctwin-calibration) a project includes (``calibration: calibration.yaml``, applied by
+  cnctwin.project.resolve) and ``project.calibrated.yaml`` with it baked in.
 
 The submodules are imported lazily, so ``import cnctwin.mdata`` stays cheap (``align``, ``fit``, ``overlay`` and
 ``calibrate`` are submodules: their functions of the same name are reached through them).
@@ -28,8 +29,8 @@ _EXPORTS = {
     "Alignment": "align", "error_metrics": "align", "resample": "align",
     "Param": "fit", "ObservationSet": "fit", "FitSettings": "fit", "FitResult": "fit",
     "Target": "overlay", "load_overlay": "overlay", "write_overlay": "overlay", "apply_to_raw": "overlay",
-    "apply_to_project": "overlay", "controller_overrides": "overlay", "model_overrides": "overlay",
-    "factors": "overlay", "calibrated_project": "overlay",
+    "apply_to_project": "overlay", "apply_to_tools": "overlay", "controller_overrides": "overlay",
+    "model_overrides": "overlay", "factors": "overlay", "calibrated_project": "overlay", "combined": "overlay",
     "Context": "targets", "Problem": "targets", "TARGETS": "targets",
 }
 

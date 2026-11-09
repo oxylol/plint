@@ -148,3 +148,43 @@ def test_the_runner_hooks_every_motion_the_run_creates(monkeypatch):
     monkeypatch.setattr(loop, "Run", Unhooked)
     with pytest.raises(TwinError, match="no command reached the hook"):
         runner.run_project("p.yaml", "/tmp/twin-sweep-runner-test", {"operator": {"feed_override": 2.0}})
+
+
+def test_the_runner_refuses_overrides_the_project_cannot_take(monkeypatch, tmp_path):
+    """twin run, the API and the sweeps reach the overrides through this runner: an override outside the machine's
+    range (or for a tool the project does not have) is refused before the run starts, naming each problem."""
+    from cnctwin.core import loop
+    from cnctwin.core.errors import InputError
+    from cnctwin.sweep import runner
+    started = []
+
+    class FakeRun:
+        def __init__(self, project_path, run_dir, options=None, progress_cb=None, *, replay=None):
+            self.project = project((1, 1, "square_endmill"), feed_range=(0.0, 1.5))
+            self.options = dict(options or {})
+
+        def _new_motion(self, op_index):
+            return FakeMotion()
+
+        def execute(self):
+            started.append(True)
+            return {"complete": True}
+
+    monkeypatch.setattr(loop, "Run", FakeRun)
+    with pytest.raises(InputError, match=r"options.operator cannot be applied to this project: feed_override\.\*: "
+                                         r"2 is outside the machine's override range 0-150 %; feed_override.T7: the "
+                                         r"project has no cutting tool 7 on path 1"):
+        runner.run_project("p.yaml", tmp_path / "run", {"operator": {"feed_override": {"*": 2.0, "T7": 1.1}}})
+    assert started == []
+
+
+def test_point_scratch_files_carry_their_format(tmp_path):
+    """progress.json and outcome.json of a point process name their format (cnctwin.sweep.point); the sweep process
+    reads them with or without it."""
+    import json
+    from cnctwin.sweep import point
+    progress = point.Progress(tmp_path)
+    progress(sim_time_s=0.5, est_total_s=2.0, op="OP10", phase="done")
+    document = json.loads((tmp_path / "progress.json").read_text())
+    assert document["format"] == "cnctwin-sweep-progress" and document["version"] == 1
+    assert document["sim_time_s"] == 0.5 and document["op"] == "OP10"

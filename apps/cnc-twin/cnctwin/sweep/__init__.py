@@ -88,7 +88,8 @@ def run_sweep_job(request: dict, out_dir, progress_cb=None) -> dict:
     runner = None
     named = (spec.data.get("execution") or {}).get("runner") if isinstance(spec.data.get("execution"), dict) else None
     simulate = request.get("simulate_entry")
-    if not named and simulate and str(simulate).strip() != "cnctwin.core.loop:run_project":
+    if not named and simulate and str(simulate).strip() not in ("cnctwin.core.loop:run_project",
+                                                                 "cnctwin.sweep.runner:run_project"):
         runner = str(simulate)               # the server's own simulation (CNCTWIN_ENTRY_SIMULATE)
     isolation = options.get("isolation") if options.get("isolation") in ("process", "inline") else None
     summary = run_sweep(spec, out, progress_cb=progress_cb, workers=1, runner=runner, isolation=isolation,

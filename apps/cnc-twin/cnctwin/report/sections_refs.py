@@ -9,18 +9,55 @@ import numpy as np
 
 from . import approximations, fmt, plots
 from .context import Context
-from .html import Section, code, esc, figure, note, para, table
+from .html import Raw, Section, code, esc, figure, link, note, para, table
 
 
 # ----------------------------------------------------------------------------- approximations
 
-def active_domains(ctx: Context) -> set[str]:
+def _varying_channel_domains(ctx: Context) -> set[str]:
+    """Domains with a recorded channel whose value changed during the run (macro and tick tiers: the summaries the
+    series sections read anyway). A domain wired into the run declares its channels whether or not it acted; a
+    value that never changed (a force that stayed 0, a temperature that stayed at ambient) is no activity."""
     run = ctx.run
-    domains = {str(c.get("domain", "")) for c in run.channels}
+    domain_of = {str(c.get("name", "")): str(c.get("domain", "")) for c in run.channels if isinstance(c, dict)}
+    found: set[str] = set()
+    for tier in ("macro", "tick"):
+        summary = run.tier_summary(tier)
+        if summary is None:
+            continue
+        for column, stats in summary.columns.items():
+            if stats.finite and stats.vmax > stats.vmin:
+                name = column.split("[", 1)[0]
+                for suffix in (".min", ".mean", ".max"):
+                    if name.endswith(suffix) and name not in domain_of:
+                        name = name[: -len(suffix)]
+                domain = domain_of.get(name) or name.split(".", 1)[0]
+                found.add(domain)
+    return found
+
+
+def active_domains(ctx: Context) -> set[str]:
+    """The domains with activity in the run: a recorded channel whose value changed, a finding or a trace event of
+    theirs, or their result file with content (production.json; an inspection with tolerances, remaining material or
+    gouges; rendered pictures; sound; an attached uncertainty study; a calibration overlay the project included)."""
+    run = ctx.run
+    domains = _varying_channel_domains(ctx)
     domains |= {str(f.get("domain", "")) for f in run.findings}
     domains |= run.trace.domains()
     if run.production is not None:
         domains.add("production")
+    inspection = run.inspection or {}
+    if any(inspection.get(key) for key in ("tolerances", "remaining", "gouges")):
+        domains.add("inspect")
+    images = run.path / "images"
+    if run.has("render.json") or (images.is_dir() and any(images.glob("*.png"))):
+        domains.add("render")
+    if run.has("audio.wav") or run.has("audio.json"):
+        domains.add("sound")
+    if run.has("uncertainty.json"):
+        domains.add("uncertainty")
+    if (run.project or {}).get("calibration"):
+        domains.add("calibration")
     return {d for d in domains if d}
 
 
@@ -37,14 +74,35 @@ def approximations_section(ctx: Context, path: Path | None = None) -> Section:
                                                "approximations cannot be listed")
         return Section("approximations", "Model approximations",
                        note("docs/approximations.md is not in this build, and run.json lists no approximations."))
-    sections = approximations.read_sections(path)
-    picked, rule = approximations.relevant(sections, active_domains(ctx))
-    body = para(f"From docs/approximations.md: {len(picked)} of {len(sections)} sections ({rule}).")
-    for section in picked:
-        body += f"<h4>{esc(section.heading)}</h4>"
-        body += approximations.render(section)
-    return Section("approximations", "Model approximations", body,
-                   lead="What the models leave out, and how large an error that can make, for this run.")
+    lead = "What the models leave out, and how large an error that can make, for this run."
+    rows = approximations.read_rows(path)
+    if not rows:                    # not the generated table: the sections that name an active domain
+        sections = approximations.read_sections(path)
+        picked, rule = approximations.relevant(sections, active_domains(ctx))
+        body = para(f"From docs/approximations.md: {len(picked)} of {len(sections)} sections ({rule}).")
+        for section in picked:
+            body += f"<h4>{esc(section.heading)}</h4>"
+            body += approximations.render(section)
+        return Section("approximations", "Model approximations", body, lead=lead)
+    active = active_domains(ctx)
+    picked = approximations.relevant_rows(rows, active)
+    shown = picked[: approximations.MAX_ROWS]
+    domains = sorted({r.domain for r in picked})
+    body = para(f"From docs/approximations.md: the {len(shown)} approximations with the largest stated error of the "
+                f"{len(picked)} that state an error bound in the domains this run exercised "
+                f"({', '.join(domains) or 'none'}); the document has {len(rows)} rows in all.")
+    table_rows = [[r.domain, r.approximation, r.consequence, r.error_bound,
+                   fmt.DASH if r.impact is None else f"{r.impact:.4g} %", r.evidence, r.source] for r in shown]
+    body += table(["domain", "approximation", "consequence", "error bound", "largest stated error", "evidence",
+                   "source"], table_rows, numeric=(4,),
+                  caption="Sorted by the largest relative error the bound states (a factor f counts as (f - 1) x 100 "
+                          "%); bounds without one (exact, absolute) last.",
+                  empty="No approximation of the domains this run exercised states an error bound.")
+    rest = len(picked) - len(shown)
+    body += para(Raw(f"{'%d more rows with an error bound for these domains, and ' % rest if rest > 0 else ''}"
+                     f"every approximation of every domain (with the method and the documents it is collected from): "
+                     f"the full table, {link(approximations.FULL_TABLE_URL, 'docs/approximations.md')}."))
+    return Section("approximations", "Model approximations", body, lead=lead)
 
 
 # ----------------------------------------------------------------------------- estimates

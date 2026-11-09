@@ -112,10 +112,68 @@ def test_approximations_relevant_to_the_run(runs, tmp_path):
                    "## Thermal\n\n| approximation | error |\n|---|---|\n| lumped tool body | 5 % |\n\n"
                    "## Sound\n\nThe sound model ignores room reflections.\n\n"
                    "## Chips\n\n- particles are spheres of equal volume, **drag +-20 %**\n", encoding="utf-8")
-    section = approximations_section(Context(RunData(runs["unsafe"])), path=doc)
+    # a hand-written document (not the generated table): the sections naming a domain the run was active in; the
+    # safe run made no sound (no audio.wav)
+    section = approximations_section(Context(RunData(runs["safe"])), path=doc)
     body = section.body
     assert "General" in body and "Thermal" in body and "lumped tool body" in body and "<b>drag +-20 %</b>" in body
     assert "Sound" not in body and "room reflections" not in body
+
+
+TABLE_HEADER = ("| domain | approximation | consequence | error bound | evidence | source |\n"
+                "|---|---|---|---|---|---|\n")
+
+
+def test_approximations_keep_the_exercised_rows_with_an_error_bound_by_impact(runs, tmp_path):
+    from cnctwin.report import approximations as A
+    doc = tmp_path / "approximations.md"
+    doc.write_text(
+        "# Approximations\n\nGenerated.\n\n## Cutting (docs/models/cutting.md)\n\n" + TABLE_HEADER +
+        "| cutting | force kernel | forces | median 31.0 %, p90 181.6 % over 295 values | validation case | c § 10 |\n"
+        "| cutting | memory refill | chip thickness | < 1e-13 m | convergence/test | c § 3 |\n"
+        "| cutting | quiet model | none | not stated | not stated | c § 11 |\n"
+        "\n## Mechanics (docs/models/mechanics.md)\n\n" + TABLE_HEADER +
+        "| mechanics | sharp-tool thrust | thrust | uncertain by about a factor 2 near h_min | estimate | m § 13 |\n"
+        "\n## Sound (docs/models/sound.md)\n\n" + TABLE_HEADER +
+        "| sound | room reflections | level | 50 % | estimate | s § 6 |\n"
+        "\n## Loop cost and performance (docs/performance.md)\n\n" + TABLE_HEADER +
+        "| performance | timing scatter | cost | +-15 % | measurement | p § 4 |\n", encoding="utf-8")
+    ctx = Context(RunData(runs["safe"]))                         # no audio: sound did nothing in this run
+    from cnctwin.report.sections_refs import active_domains
+    active = active_domains(ctx)
+    assert "cutting" in active and "sound" not in active
+    body = approximations_section(ctx, path=doc).body
+    check(f"<!DOCTYPE html><html><head><title>t</title></head><body>{body}</body></html>")
+    # by impact: 181.6 %, then the factor 2 (100 %), then the absolute bound; nothing without a bound
+    assert body.index("force kernel") < body.index("sharp-tool thrust") < body.index("memory refill")
+    assert "181.6 %" in body and ">100 %<" in body
+    for absent in ("quiet model", "room reflections", "timing scatter"):
+        assert absent not in body, absent
+    assert 'href="/api/docs/approximations.md"' in body and "3 that state an error bound" in body
+    assert A.impact("about +-15-20 % (fit)") == 20 and A.impact("1 % (5 x 5 nodes)") == 1
+    assert A.impact("ZOA 43 % high, 3.8 x at the flip lobe") == pytest.approx(280)
+    assert A.impact("threshold factor 2-3, rate factor 2-5") == 400 and A.impact("F_C -20 to +43 %") == 43
+    assert A.impact("an order-of-magnitude estimate") == 900 and A.impact("exact (1e-12 relative)") is None
+
+
+def test_the_real_approximations_table_is_cut_to_what_the_run_exercised(runs):
+    from cnctwin.report import approximations as A
+    path = A.default_path()
+    rows = A.read_rows(path)
+    assert len(rows) > 300                                       # the generated table, every domain
+    ctx = Context(RunData(runs["safe"]))
+    picked = A.relevant_rows(rows, active_domains_of(ctx))
+    assert picked and all(r.stated for r in picked) and not any(r.domain in A.NEVER for r in picked)
+    impacts = [r.impact for r in picked if r.impact is not None]
+    assert impacts == sorted(impacts, reverse=True)
+    body = approximations_section(ctx).body
+    assert body.count("<tr>") <= A.MAX_ROWS + 1 and len(body) < 60_000          # was every section: ~158 KB
+    assert 'href="/api/docs/approximations.md"' in body
+
+
+def active_domains_of(ctx):
+    from cnctwin.report.sections_refs import active_domains
+    return active_domains(ctx)
 
 
 def test_threads_and_unknown_kinds_are_shown(run_copy):

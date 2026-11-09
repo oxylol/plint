@@ -25,10 +25,14 @@ GiB = 1024 * MiB
 # "/path/file.py:attr"). Overridable with CNCTWIN_ENTRY_<KIND>. "outputs" is not a job kind: it is what the
 # worker of a simulation calls after a successful run (the report, pictures, video and sound,
 # cnctwin.core.outputs.finalize_outputs(run_dir, options, progress_cb)); CNCTWIN_ENTRY_OUTPUTS=none turns it off.
+# The default simulation is cnctwin.sweep.runner.run_project: the loop's run_project, and for a run whose options carry
+# operator overrides (options.operator, which the loop does not read) the loop with the overrides applied; without
+# overrides its runs are the loop's runs and have the loop's cache keys (cnctwin.cache.canonical_runner).
 JOB_POOLS = {"simulate": "heavy", "uncertainty": "heavy", "calibrate": "heavy", "sweep": "heavy", "check": "light",
              "compare": "light"}
+LOOP_ENTRY = "cnctwin.core.loop:run_project"
 DEFAULT_ENTRIES = {
-    "simulate": "cnctwin.core.loop:run_project",
+    "simulate": "cnctwin.sweep.runner:run_project",
     "check": "cnctwin.project.check:check_project",
     "compare": "cnctwin.report.compare:compare_runs",
     "uncertainty": "cnctwin.uncertainty:run_study",

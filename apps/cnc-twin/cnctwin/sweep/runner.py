@@ -1,5 +1,6 @@
-"""The sweep's simulation entry: cnctwin.core.loop.run_project plus the operator overrides of
-``options["operator"]`` (cnctwin.sweep.operator).
+"""The simulation entry that applies operator overrides: cnctwin.core.loop.run_project plus the overrides of
+``options["operator"]`` (cnctwin.sweep.operator). The sweeps, ``twin run`` (when its options carry ``operator``) and
+the API's default ``simulate`` entry (cnctwin.api.settings) run through it.
 
 * :func:`run_project` ``(project_path, run_dir, options, progress_cb) -> dict``: without overrides (or with every
   override at 100 %) exactly the loop's run_project, so its runs share the loop's cache keys; with overrides the
@@ -8,7 +9,10 @@
   made with overrides (the CLI dispatches here when run.json ``options.operator`` is set): the loop's replay with the
   same hook, so the replayed window is the window of that run.
 
-A run with overrides whose hook saw no command batch is refused (TwinError): the overrides would have been ignored.
+Overrides the project cannot take (:func:`cnctwin.sweep.operator.problems`: outside the machine's override ranges or
+rapid keys, a tool the project does not have, a spindle override of a tap) are refused before the run starts
+(InputError naming each). A run with overrides whose hook saw no command batch is refused (TwinError): the overrides
+would have been ignored.
 """
 
 from __future__ import annotations
@@ -16,8 +20,8 @@ from __future__ import annotations
 import contextlib
 import threading
 
-from ..core.errors import TwinError
-from .operator import OperatorHook, Overrides, normalise
+from ..core.errors import InputError, TwinError
+from .operator import OperatorHook, Overrides, normalise, problems
 
 _PATCH_LOCK = threading.Lock()
 
@@ -32,6 +36,9 @@ def _run_class(overrides: Overrides):
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
+            refused = problems(self.options.get("operator"), self.project)
+            if refused:
+                raise InputError("options.operator cannot be applied to this project: " + "; ".join(refused))
             self.operator_hook = OperatorHook(overrides, self.project)
             OverrideRun.instances.append(self)
 

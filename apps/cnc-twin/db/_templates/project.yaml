@@ -136,3 +136,5 @@ uncertainty:
   vary: {stock_size: true, tool_offsets_um: 5, runout_um: 3, kc_scale_sigma: 0.04, clamping_force_rel: 0.1}
 
 machine_data: null                   # {kind: mtconnect | opcua | focas | csv, path: ..., mapping: {...}}
+calibration: null                    # a calibration overlay (format cnctwin-calibration: twin calibrate's calibration.yaml),
+                                     # relative to the project; applied to the machine, material and tools at resolve time

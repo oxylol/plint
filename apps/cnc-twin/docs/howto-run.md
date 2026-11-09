@@ -78,9 +78,15 @@ keys in `options`):
 | `sanity` | `false`: no static program checks at operation start |
 | `resume_from` | set by `--resume` (section 6) |
 
-Operator overrides (`operator`: feed, spindle and rapid override per tool) are applied by the sweep's runner
-(cnctwin.sweep.runner), not by `twin run`: run a one-point sweep to simulate a project at an override
-(section 8).
+Operator overrides (`operator`: feed, spindle and rapid override per tool, fractions with 1 = 100 %; format in
+formats.md "Operator option"), for example `--set operator.feed_override=1.2` (every tool) or
+`--set 'operator.spindle_override={"T3": 0.9}'`: the loop's run_project does not read them, so `twin run` sends a
+run whose options carry them through cnctwin.sweep.runner, which applies them (and refuses, before the run, an
+override outside the machine's override ranges or rapid keys, for a tool the project does not have, or of a tap's
+spindle speed). The option is normalised first (entries at 100 % dropped; nothing left: the plain run) and the
+run's cache key names that runner, so it is the run a sweep point with the same overrides makes. The API does the
+same (its default `simulate` entry is cnctwin.sweep.runner); a sweep (section 8) varies the overrides as
+parameters.
 
 A long program takes long: with every domain on, the loop costs several CPU seconds per simulated second
 (docs/models/loop.md section 13, docs/performance.md). Simulate the start with `max_sim_s`, check the cost with

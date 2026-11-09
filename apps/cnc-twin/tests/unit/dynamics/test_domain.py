@@ -313,3 +313,39 @@ def test_a_turning_contact_takes_its_operating_point_from_cuttings_engaged_eleme
     tip_S = np.asarray(bus.motion.paths[0].pose_S_T, float)[:3, 3]
     assert sysrec.ref_station == int(np.argmin(np.asarray(edge.station_z_m)))    # the tip's station
     assert np.allclose(tip_S, 0.0)
+
+
+def test_a_semi_discretisation_too_large_to_build_is_recorded_not_built(tmp_path):
+    """The end-of-run check resolves the highest checked mode over the delay: at a low spindle speed that needs a
+    state of 2 n + r n with r in the tens of thousands (examples/drill-tap-plate-1045 at 830 rpm and
+    ti-slot-throughtool at 573 rpm were killed by the 1.8 GB cap building it). A point whose state exceeds
+    sd_max_states keeps its frequency-domain verdict and is recorded as not checked, with the size it needed."""
+    dom, ctx, state = _run(physics_dynamics={"sld_n_freq": 400, "sld_n_speeds": 40, "sd_m": 20,
+                                             "sd_points_per_period": 8, "sld_n_lobes": 4, "sd_max_states": 50})
+    ctx.run_dir = tmp_path
+    h = np.geomspace(1e-6, 1e-3, 8)
+    coeffs = ProcessCoefficients(tool_slot=0, h_grid_m=h, Kt_Pa=np.full((1, 8), 7e8), Kr_Pa=np.full((1, 8), 2.5e8),
+                                 Ka_Pa=np.zeros((1, 8)), Kte_N_per_m=np.zeros(1), Kre_N_per_m=np.zeros(1),
+                                 Kae_N_per_m=np.zeros(1), h_min_m=np.zeros(1), K_sp_N_per_m3=np.zeros(1), version=3)
+    R = 0.005
+    centroid = np.array([R * math.cos(-math.pi / 4), R * math.sin(-math.pi / 4), 0.006])
+    contact = RemovalContact(contact=0, tool_slot=0, workpiece=0, path=0,
+                             geometry=ToolContact(in_cut=True, point_S_m=centroid, point_M_m=centroid, ae_m=R,
+                                                  ap_m=0.012, engaged_angle_rad=0.5 * math.pi))
+    tick0 = 0
+    for step in range(2):
+        bus = _bus(step - 1, contact=contact, coeffs=coeffs, feed=(0.05, 0.0, 0.0))
+        bus.motion.tick = tick0
+        inputs = dom.kernel_inputs(ctx, state, bus)
+        _free_step(dom, inputs, tick0)
+        nxt = Bus()
+        dom.absorb(ctx, state, None, nxt)
+        dom.macro_step(ctx, state, bus, nxt)
+        tick0 += IPO * MACRO
+    dom.finalize(ctx, state)
+    pts = json.loads((tmp_path / "sld" / "T1.json").read_text())["operating_points"]
+    assert len(pts) == 1
+    q = pts[0]
+    assert q["sd_stable"] is None and q["sd_states_needed"] > 50
+    assert q["stable"] == (q["margin"] > 1.0)                       # the frequency-domain verdict stands
+    assert state.dynamics.meta.get("sd_not_checked") == 1 and not state.dynamics.meta.get("sd_checked")

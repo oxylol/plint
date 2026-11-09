@@ -251,12 +251,20 @@ the spindle's maximum speed and its mode-coupling limit (at most `sld_max_diagra
 operating points with the smallest margins first; a class keeps its diagram for later operations); then up to
 `sd_max_points` operating points, smallest margins first, are checked by SD at their depth (with process damping):
 `stable = margin > 1 and sd_stable`, and a point SD finds unstable that the zero-order limit passed raises the
-finding then, at the point's tick. `sld/T<n>.json`: `format cnctwin-sld`, `tool`, `slot`, `number`,
+finding then, at the point's tick. The check resolves the highest checked mode over the delay (`sd_points_per_period`
+intervals per its period), so its state 2 n + r n grows with the delay: a point whose state would exceed
+`sd_max_states` (2000) keeps the frequency-domain verdict and is recorded as not checked (`sd_stable` null,
+`sd_states_needed`, the run's `sd_not_checked` count). Before 2026-11-09 the state was not bounded: a D6.8 drill at
+830 rpm or a 4-flute cutter at 573 rpm (tooth periods of 36 and 26 ms against modes up to 10-20 kHz) asked for
+r of tens of thousands, a monodromy matrix of 1e10 entries, and examples/ti-slot-throughtool was killed by the
+1.8 GB cap at the end of its run (tests/unit/dynamics/test_domain.py, test_stability.py).
+`sld/T<n>.json`: `format cnctwin-sld`, `tool`, `slot`, `number`,
 `speed_rad_s`, `depth_limit_m`, `chatter_freq_Hz` (the lower envelope of the diagram of the worst operating
 point), `radial_immersion_m`, `method`, `diagrams [{method, ae_m, arc, n_teeth, h_mean_m, speed_rad_s,
 depth_limit_m, chatter_freq_Hz, lobes [{k, branch, speed_rad_s, depth_limit_m, chatter_freq_Hz}],
 mode_coupling_limit_m, modes}]`, `operating_points [{op, program, line, time_s, tick, speed_rad_s, ap_m, ae_m,
-stable, depth_limit_m, margin, chatter_freq_Hz, method, diagram, sd_stable, path}]`.
+stable, depth_limit_m, margin, chatter_freq_Hz, method, diagram, sd_stable, sd_states_needed (when not checked),
+path}]`.
 
 ## 6. Basis change
 
@@ -377,7 +385,8 @@ Settings `physics.dynamics` (`schema.py`): sample_margin, chatter_window_revs (2
 chatter_min_revs, chatter_clear_steps, max_findings, sld_n_freq, sld_n_lobes, sld_n_speeds, sld_speed_lo_frac,
 sld_freq_lo_factor, sld_freq_hi_factor, sld_refresh_macro, sld_max_classes (64 engagement classes kept per tool and
 operation), sld_max_diagrams (8 end-of-operation diagrams per tool), engagement_tol, mf_harmonics (0: ZOA), pd_max_iter,
-pd_tol, mode_coupling_max_m, sd_check, sd_m, sd_points_per_period, sd_max_points, sd_a_max_m, sd_scan, sd_tol,
+pd_tol, mode_coupling_max_m, sd_check, sd_m, sd_points_per_period, sd_max_points, sd_max_states, sd_a_max_m,
+sd_scan, sd_tol,
 max_operating_points, relax_estimate, rotation_length_m. Numerical constants of the closed forms (series radius
 0.2, Taylor switch omega h = 0.1, 44 terms) are floating-point accuracy choices, documented in kernels.py.
 

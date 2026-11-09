@@ -6,10 +6,13 @@ lowers its priority (nice 10), watches its standard input (the sweep process hol
 means that process is gone, and the point stops), runs the variant through the run cache
 (cnctwin.cache.run_cached) and writes:
 
-* ``progress.json`` (at most every 0.5 s): the loop's progress (``sim_time_s``, ``est_total_s``, ``op``, ``phase``)
-  and this process's wall time;
-* ``outcome.json`` at the end: ``{status: done | failed, outcome: run_cached's record, error: {type, message,
-  traceback}}``.
+* ``progress.json`` (at most every 0.5 s; format ``cnctwin-sweep-progress``): the loop's progress
+  (``sim_time_s``, ``est_total_s``, ``op``, ``phase``) and this process's wall time;
+* ``outcome.json`` at the end (format ``cnctwin-sweep-outcome``): ``{status: done | failed, outcome: run_cached's
+  record, error: {type, message, traceback}}``.
+
+Both carry ``format`` and ``version`` (1); the sweep process (cnctwin.sweep.execute) also reads them without (written
+by an older point process).
 
 Exit status 0 when the run finished (safe or not), 1 when it failed.
 """
@@ -25,6 +28,9 @@ import traceback
 from pathlib import Path
 
 PROGRESS_EVERY_S = 0.5
+PROGRESS_FORMAT = "cnctwin-sweep-progress"
+OUTCOME_FORMAT = "cnctwin-sweep-outcome"
+VERSION = 1
 
 
 def _apply_memory_cap(job: dict) -> None:
@@ -97,7 +103,7 @@ class Progress:
                                                                  "message", "part")}
         document["wall_s"] = now - self.t0
         try:
-            _write(self.folder / "progress.json", _plain(document))
+            _write(self.folder / "progress.json", {"format": PROGRESS_FORMAT, "version": VERSION, **_plain(document)})
         except OSError:
             pass
 
@@ -136,7 +142,7 @@ def main(argv=None) -> int:
         document = {"status": "failed", "outcome": None, "error": {
             "type": type(error).__name__, "message": str(error), "traceback": traceback.format_exc(limit=30)}}
         code = 1
-    _write(folder / "outcome.json", document)
+    _write(folder / "outcome.json", {"format": OUTCOME_FORMAT, "version": VERSION, **document})
     return code
 
 

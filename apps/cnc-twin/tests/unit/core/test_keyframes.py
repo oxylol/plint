@@ -156,7 +156,8 @@ def test_truncate_to_a_cut(tmp_path):
     fresh.truncate_outputs(cut)
     assert not (tmp_path / "keyframes" / "kf_1.glb").exists() and not (tmp_path / "chips" / "kf_1.npz").exists()
     assert not (tmp_path / "keyframes" / "attr").exists()
-    assert len((tmp_path / "keyframes" / "index.jsonl").read_text().splitlines()) == 1
+    lines = (tmp_path / "keyframes" / "index.jsonl").read_text().splitlines()
+    assert len(lines) == 2 and json.loads(lines[0]) == {"format": "cnctwin-keyframes-index", "version": 1}
     assert [e[0] for e in json.loads((tmp_path / "keyframes" / "bricks.idx").read_text())["bricks"]["0"]] == [0]
     entry = fresh.write(10, {0: box((0, 0, 0), (0.008, 0.008, 0.004))})
     assert entry["k"] == 1

@@ -65,8 +65,9 @@ database load. The suite reads it as written (`Case.raw`) with these conventions
 
 ### Adding a case
 
-Write `validation/cases/<quantity>/<id>.yaml` from the template, run `twin db check --validation`
-(schema, bibliography keys), then `twin validate --case <id>`. If the case's quantity has a harness, the
+Write `validation/cases/<quantity>/<id>.yaml` from the template, run `twin db check` (it checks the
+cases of `validation/cases/` with the databases by default: schema, bibliography keys; `--validation DIR`
+only names another case root), then `twin validate --case <id>`. If the case's quantity has a harness, the
 harness must be able to read everything it needs from the case: use the key forms above (per-test lists
 with units, `test_ids`, reference names that carry the test id or an `x`). If it needs geometry the
 template has no key for (a sensor position), add the case to the harness's table (for example

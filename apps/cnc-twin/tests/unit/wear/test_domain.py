@@ -222,6 +222,7 @@ def test_finalize_writes_the_tools_document():
     dom, ctx, state, edge = _setup()
     fx.run(dom, ctx, state, edge, 3)
     doc = dom.finalize(ctx, state)
+    assert doc["format"] == "cnctwin-tools" and doc["version"] == 1          # tools.json carries its format
     tool = doc["tools"][0]
     for key in ("number", "slot", "tool_id", "VB_m", "VB_max_m", "VB_limit_m", "life_used_fraction", "cut_time_s",
                 "broken", "remaining_life_s", "per_part", "wear_offsets_m", "law", "criteria"):
@@ -230,6 +231,8 @@ def test_finalize_writes_the_tools_document():
     from cnctwin.production.rundir import tool_states
     parsed = tool_states(doc, 0, 1)
     assert parsed[0].number == 1 and parsed[0].VB_max_m == pytest.approx(tool["VB_max_m"])
+    older = {k: v for k, v in doc.items() if k not in ("format", "version")}     # a tools.json without the header
+    assert tool_states(older, 0, 1)[0].VB_max_m == parsed[0].VB_max_m
     import json
     json.dumps(doc)                                     # JSON-safe (no inf, no NumPy types)
 

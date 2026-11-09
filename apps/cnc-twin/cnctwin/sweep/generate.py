@@ -222,9 +222,16 @@ def generate(generator, base_dir: Path, values: dict, point_dir: Path, *, output
     return program, record
 
 
+RECORD_FORMAT = "cnctwin-sweep-generated"      # points/p<n>/.generated-<name>.json; older records have no header
+
+
 def write_record(point_dir: Path, record: dict) -> None:
+    """``.generated-<name>.json``: ``{format: cnctwin-sweep-generated, version: 1, generator, request_sha256,
+    program_sha256, values, log}`` (a record without the header, written before it, is reused the same)."""
     from ..core.rundir import write_json_atomic
-    write_json_atomic(Path(point_dir) / f".generated-{record['generator']}.json", record)
+    body = {k: v for k, v in record.items() if k not in ("format", "version")}
+    write_json_atomic(Path(point_dir) / f".generated-{record['generator']}.json",
+                      {"format": RECORD_FORMAT, "version": 1, **body})
 
 
 __all__ = ["generate", "inject_constants", "run_request", "write_record", "main"]

@@ -20,8 +20,9 @@ from ..core.errors import InputError, SourceError
 #   extends    an extends chain that is broken or circular
 #   path       a project file path that does not exist
 #   migration  a format version or a key form that cannot be migrated mechanically
+#   calibration  a project's calibration overlay that cannot be read or applied, or an entry not applied
 KINDS = ("yaml", "format", "unknown", "required", "type", "range", "rule", "source", "reference",
-         "duplicate", "extends", "path", "migration")
+         "duplicate", "extends", "path", "migration", "calibration")
 
 
 @dataclass(frozen=True)

@@ -16,9 +16,16 @@ def start(client, **options):
 
 
 def test_run_streams_progress_findings_keyframes_and_done(client, data_dir):
+    from cnctwin.api.runcache import project_hash
+    from cnctwin.core.rundir import run_id as make_run_id
     record = start(client, step_delay_s=0.002)
     run_id = record["id"]
-    assert run_id == "00003-example-pocket" and record["status"]["status"] in ("queued", "running")
+    # named as twin run names its runs: the counter above the old-form 00001-done and 00002-partial, the project's
+    # slug and the hash of the project and the options
+    expected = make_run_id(project_hash(data_dir / "examples" / "pocket" / "project.yaml"), {"step_delay_s": 0.002}, 3,
+                           "example-pocket")
+    assert run_id == expected and run_id.startswith("00003-example-pocket-") and len(run_id) == len("00003-example-pocket-") + 8
+    assert record["status"]["status"] in ("queued", "running")
     assert record["job"]["kind"] == "simulate" and record["links"]["events"] == f"/api/runs/{run_id}/events"
     with client.stream("GET", f"/api/runs/{run_id}/events") as stream:
         assert stream.headers["content-type"].startswith("text/event-stream")

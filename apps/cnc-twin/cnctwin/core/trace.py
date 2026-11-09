@@ -7,13 +7,54 @@ A finding then carries the chain of ids back to its roots, and ``twin explain`` 
 Only an id -> byte-offset index is kept in memory (events are read back from the file when a
 chain is followed), so a long run's trace costs little RAM. :meth:`TraceLog.resume` reopens the
 file at a checkpoint's byte offset, truncating what was written after it.
+
+The file has no header line (an event's id is its line number, which readers bisect on): its format is named
+in the sidecar ``trace.json`` (:func:`sidecar_path`), ``{format: cnctwin-trace, version: 1, file, lines}``, written
+when a fresh trace file is opened. A trace without it (written before the sidecar) reads the same.
 """
 
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
+
+TRACE_FORMAT = "cnctwin-trace"
+TRACE_VERSION = 1
+LINES_DOC = ("one TraceEvent per line {id, time_s, tick, domain, event, quantities, parents, line}, keys sorted; "
+             "id = line number from 0; parents are earlier ids")
+
+
+def sidecar_path(path) -> Path:
+    """``trace.json`` beside ``trace.jsonl`` (the file's stem with ``.json``)."""
+    path = Path(path)
+    return path.with_name(path.stem + ".json")
+
+
+def write_sidecar(path) -> Path:
+    """The header of a trace file, written atomically beside it."""
+    target = sidecar_path(path)
+    document = {"format": TRACE_FORMAT, "version": TRACE_VERSION, "file": Path(path).name, "lines": LINES_DOC}
+    tmp = target.with_name(f".{target.name}.tmp")
+    tmp.write_text(json.dumps(document, indent=1) + "\n", encoding="utf-8")
+    os.replace(tmp, target)
+    return target
+
+
+def read_sidecar(path) -> dict:
+    """The format of a trace file: its sidecar, or for a trace written before the sidecar the implied version 1
+    (``implied: true``). A version newer than this build reads is a ValueError."""
+    target = sidecar_path(path)
+    try:
+        document = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"format": TRACE_FORMAT, "version": TRACE_VERSION, "file": Path(path).name, "implied": True}
+    if document.get("format") != TRACE_FORMAT:
+        raise ValueError(f"{target} is not a {TRACE_FORMAT} header")
+    if int(document.get("version") or 0) > TRACE_VERSION:
+        raise ValueError(f"{target}: {TRACE_FORMAT} version {document.get('version')} is newer than this build reads")
+    return document
 
 
 @dataclass
@@ -39,6 +80,8 @@ class TraceLog:
         if self.path is not None:
             mode = "r+b" if (truncate_at is not None and self.path.exists()) else "wb"
             self._file = open(self.path, mode)
+            if mode == "wb":
+                write_sidecar(self.path)
             if truncate_at is not None:
                 self._file.truncate(truncate_at)
                 self._file.seek(truncate_at)

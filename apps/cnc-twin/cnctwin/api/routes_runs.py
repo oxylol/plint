@@ -29,6 +29,25 @@ JSON_FRAME_LIMIT = 100000
 FRAME_CHUNK = 65536
 
 
+def run_options(options: dict | None) -> dict:
+    """The options of a new run with ``operator`` normalised (cnctwin.sweep.operator.normalise: entries at 100 %
+    dropped; nothing overridden: no option, the plain run), so run.json, the run id and the cache key hold the form
+    a sweep point with the same overrides has; a value that is not an operator option is a 422. The default simulate
+    entry (cnctwin.sweep.runner) applies the overrides and refuses those the machine or the tools cannot take."""
+    options = dict(options or {})
+    if "operator" in options:
+        from ..sweep.operator import normalise
+        try:
+            operator = normalise(options["operator"])
+        except ValueError as error:
+            raise ApiError(422, str(error)) from None
+        if operator is None:
+            options.pop("operator")
+        else:
+            options["operator"] = operator
+    return options
+
+
 def register(app: FastAPI, ctx: ApiContext) -> None:
     runs = ctx.runs
 
@@ -46,16 +65,19 @@ def register(app: FastAPI, ctx: ApiContext) -> None:
         _, error = ctx.projects.document(project)
         if error:
             raise ApiError(422, f"project {project.id}: {error}")
+        options = run_options(body.options)
         cache = {"hit": False, "key": None, "note": "no_cache: the cache was not consulted"} if body.no_cache else None
+        key = None
         if not body.no_cache:
-            cached_id, cache = runcache.lookup(ctx, project, body.options)
+            cached_id, cache, key = runcache.lookup(ctx, project, options)
             if cached_id is not None:
                 record = run_record(ctx, runs.get(cached_id))
                 record["cache"] = cache
                 return json_response(record, 200, headers={"Location": f"/api/runs/{cached_id}"})
-        run_id, run_dir = runs.allocate(slugify(project.id))
+        project_hash = key.components["project_hash"] if key is not None else runcache.project_hash(project.file)
+        run_id, run_dir = runs.allocate(slugify(project.id), project_hash, options)
         request = {"kind": "simulate", "run_id": run_id, "run_dir": str(run_dir), "project_id": project.id,
-                   "project_path": str(project.file), "project_dir": str(project.dir), "options": body.options,
+                   "project_path": str(project.file), "project_dir": str(project.dir), "options": options,
                    "resume_from": None, "cache": runcache.enabled()}
         try:
             ctx.jobs.submit("simulate", request, run_id=run_id, project_id=project.id)

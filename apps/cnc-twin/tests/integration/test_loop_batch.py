@@ -6,16 +6,8 @@ from __future__ import annotations
 
 import pytest
 
-from cnctwin.core.errors import TwinError
 from cnctwin.core.loop import run_project
 from tests.integration import loopfix as LF
-
-# The run stops in the second part on NaN states the domains hand on across the transition (docs/models/loop.md
-# "Open problems": thermal's tool flank temperatures into cutting's coefficient pipeline, structure's work modes of
-# the re-seated part into dynamics, thermal's tool field after the same tool's M06): a model error (TwinError,
-# ValueError) marks the test as an expected failure until those are fixed; a wrong loop result still fails it.
-pytestmark = pytest.mark.xfail(raises=(TwinError, ValueError), strict=False,
-                               reason="domain NaN at the transition: docs/models/loop.md Open problems")
 
 PARTS = 3
 
@@ -41,16 +33,20 @@ def test_three_parts_ran_with_the_ledgers_passing(batch):
 
 
 def test_wear_and_tool_life_carry_over(batch):
+    """The same edge cuts every part: each part's own cutting time (wear's per-part rows: the part's share), the
+    same for the same program on the same blank, adds up to the tool's; its wear and used life never go back.
+    (The tool comes in used: 720 s of earlier cutting, VB 131 um; three 0.13 s side steps in Al add little.)"""
     run_dir, _ = batch
     tool = LF.read(run_dir, "tools.json")["tools"][0]
     rows = sorted(tool["per_part"], key=lambda r: r["part"])
     assert [r["part"] for r in rows] == list(range(PARTS))
     cut = [r["cut_time_s"] for r in rows]
-    assert all(b > a for a, b in zip(cut, cut[1:]))                      # cumulative: the same edge keeps cutting
+    assert all(c > 0.0 for c in cut) and max(cut) <= 1.05 * min(cut)
+    assert sum(cut) == pytest.approx(tool["cut_time_s"], rel=1e-9)        # the tool's time carries over the parts
     vb = [r["VB_max_m"] for r in rows]
-    assert all(b >= a for a, b in zip(vb, vb[1:])) and vb[-1] > vb[0]
+    assert all(b >= a for a, b in zip(vb, vb[1:]))
     used = [r["life_used_fraction"] for r in rows]
-    assert all(b > a for a, b in zip(used, used[1:]))
+    assert all(b >= a for a, b in zip(used, used[1:]))
     production = LF.read(run_dir, "production.json")
     assert production["parts_simulated"] == PARTS
     life = [t["life_used_part_frac"] for p in production["per_part"] for t in p["tools"] if t["number"] == 1]

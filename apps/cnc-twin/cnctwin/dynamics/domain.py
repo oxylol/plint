@@ -938,7 +938,8 @@ class DynamicsDomain:
                 if k in index:
                     q["diagram"] = index[k]
             if st.sd_check:
-                todo = sorted((q for q in pts if q.get("sd_stable") is None and q.get("class") in classes),
+                todo = sorted((q for q in pts if q.get("sd_stable") is None and q.get("class") in classes
+                               and not q.get("sd_states_needed")),
                               key=lambda q: (q["margin"] if math.isfinite(q["margin"]) else math.inf, q["tick"]))
                 for q in todo:
                     n_checked = ds.meta.get("sd_checked", 0)
@@ -948,6 +949,16 @@ class DynamicsDomain:
                     cut = _cut_from(entry["cut"])
                     frf = _frf_from(entry["frf"])
                     sd_frf = _dominant(frf, None, P.p(P.MODES, "stride_compliance_share"))
+                    # the check resolves the highest checked mode over the delay: at a low spindle speed (a drill
+                    # at 830 rpm, a 4-flute cutter at 573 rpm) that needs tens of thousands of intervals and a
+                    # monodromy matrix of 1e10 entries (the runs were killed by the memory cap at their end).
+                    # Such a point keeps the frequency-domain verdict and is recorded as not checked
+                    mm = SD.intervals(cut, sd_frf, q["speed_rad_s"], st.sd_m, st.sd_points_per_period)
+                    states = SD.state_size(cut, sd_frf, q["speed_rad_s"], mm)
+                    if states > st.sd_max_states:
+                        q["sd_states_needed"] = int(states)
+                        ds.meta["sd_not_checked"] = ds.meta.get("sd_not_checked", 0) + 1
+                        continue
                     rho = SD.spectral_radius(cut, sd_frf, q["speed_rad_s"], q["ap_m"], st.sd_m, st.sd_points_per_period,
                                              process_damping=bool(len(cut.damping_M)))
                     ds.meta["sd_checked"] = n_checked + 1

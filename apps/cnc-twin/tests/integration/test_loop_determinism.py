@@ -70,7 +70,7 @@ def test_a_replay_reproduces_the_recorded_fast_rows(runs):
     base, _, _, _ = runs
     run_dir = base / "run0"
     index = [json.loads(line) for line in (run_dir / "series" / "index.jsonl").read_text().splitlines()]
-    fast = [e for e in index if e["tier"] == "fast" and not e.get("replay")]
+    fast = [e for e in index if e.get("tier") == "fast" and not e.get("replay")]          # the header has no tier
     assert fast, "the run recorded no fast window"
     table = pq.read_table(run_dir / fast[0]["file"])
     ticks = table.column("tick").to_numpy()

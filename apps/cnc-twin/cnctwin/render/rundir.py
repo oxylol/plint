@@ -114,7 +114,8 @@ class RunData:
         self.channels = {c["name"]: c for c in items if isinstance(c, dict) and "name" in c}
         doc = _json(self.path / "timeline.json")
         self.timeline = (doc.get("blocks", []) if isinstance(doc, dict) else (doc or [])) or []
-        self.keyframes = _jsonl(self.path / "keyframes" / "index.jsonl")
+        # the keyframe records (the index's header line {format, version} skipped; an older index has none)
+        self.keyframes = [e for e in _jsonl(self.path / "keyframes" / "index.jsonl") if "k" in e]
         self.keyframe_ticks = np.array([int(e["tick"]) for e in self.keyframes], np.int64)
         doc = _json(self.path / "keyframes" / "bricks.idx")
         self.bricks_index = self._bricks_index(doc)

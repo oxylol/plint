@@ -26,7 +26,10 @@ class RunCreate(BaseModel):
         "examples": [{"project_id": "example-pocket", "options": {}}]})
     project_id: str = Field(description="A project id from GET /api/projects")
     options: dict[str, Any] = Field(default_factory=dict,
-                                    description="Passed unchanged to cnctwin.core.loop.run_project")
+                                    description="Passed to the simulate entry (default cnctwin.sweep.runner.run_project: "
+                                                "the loop's run_project, which applies the operator overrides of "
+                                                "options.operator); operator is normalised first (entries at 100 % "
+                                                "dropped), every other option is passed unchanged")
     no_cache: bool = Field(default=False, description="Simulate even when the run cache holds this run (the same "
                            "project, inputs, options and build); the new run is registered and supersedes it")
 

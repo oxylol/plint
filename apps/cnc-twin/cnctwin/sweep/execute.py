@@ -304,8 +304,8 @@ class SweepRun:
             child = self.children[index]
             folder = child.plan.project.parent
             progress = _read_json(folder / "progress.json")
-            if isinstance(progress, dict):
-                self._child_progress(index, progress)
+            if isinstance(progress, dict):          # format/version (cnctwin.sweep.point), or none from an older one
+                self._child_progress(index, {k: v for k, v in progress.items() if k not in ("format", "version")})
             code = child.process.poll()
             if code is None:
                 continue

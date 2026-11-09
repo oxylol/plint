@@ -140,6 +140,18 @@ def test_check_job(client):
     assert done["job"]["id"] == job_id
 
 
+def test_job_result_json_has_a_header_and_a_bare_older_one_still_reads(client, data_dir):
+    import json
+    body = client.post(f"/api/projects/{EXAMPLE}/check", json={"options": {}}).json()
+    job_id = body["job"]["id"]
+    path = data_dir / "jobs" / job_id / "result.json"
+    document = json.loads(path.read_text())
+    assert document["format"] == "cnctwin-job-result" and document["version"] == 1
+    assert document["job_id"] == job_id and document["kind"] == "check" and document["result"] == body["result"]
+    path.write_text(json.dumps(body["result"]))                    # as an older worker wrote it: the bare value
+    assert client.get(f"/api/jobs/{job_id}").json()["result"] == body["result"]
+
+
 def test_check_entry_point_missing(data_dir):
     settings = make_settings(data_dir, entries=fake_entries(check="cnctwin.project.nothing_here:check_project"))
     with TestClient(create_app(settings)) as client:

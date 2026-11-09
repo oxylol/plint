@@ -416,6 +416,10 @@ PROJECT = Struct({
                           meta=False, nullable=True),
     "machine_data": Struct({"kind": Text(("mtconnect", "opcua", "focas", "csv")), "path": Text(),
                             "mapping": MapOf(Text(), meta=False)}, required=("kind",), meta=False, nullable=True),
+    # a calibration overlay (format cnctwin-calibration, written by twin calibrate) applied at resolve time
+    "calibration": FilePath(exts=(".yaml", ".yml"), nullable=True,
+                            doc="a cnctwin-calibration overlay (twin calibrate's calibration.yaml), relative to the "
+                                "project: its values are applied to the machine, material and tools at resolve time"),
 }, required=("format", "version", "name", "machine", "material", "stock", "tools", "coolant", "operations"),
     meta=False, hints={"program": "write operations: [{name: OP10, program: <file>}] (or version: 0 for the flat layout)",
                        "tool_list": "write tools: {list: [...]} (or version: 0 for the flat layout)"})

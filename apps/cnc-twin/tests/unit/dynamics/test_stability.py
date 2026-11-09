@@ -175,3 +175,19 @@ def test_process_damping_iteration():
     assert a_pd.depth_limit_m > 1.5 * a_0 and it < 60
     check = SL.limit_at_speed(cut, FRF1, lo, om, depth_for_pd=a_pd.depth_limit_m).depth_limit_m
     assert abs(check / a_pd.depth_limit_m - 1.0) < 1e-3
+
+
+def test_semi_discretisation_state_size_grows_with_the_delay_over_the_highest_mode():
+    """state_size = 2 n + r n: r intervals of the longest delay, at least points_per_period per period of the highest
+    checked mode (cnctwin.dynamics.semidisc.intervals): a tenfold lower spindle speed needs ten times the state."""
+    import math as _m
+    from cnctwin.dynamics import semidisc as SD
+    from cnctwin.dynamics.sld import ModalFRF, turning_cut
+    frf = ModalFRF(np.array([2 * _m.pi * 3000.0, 2 * _m.pi * 9000.0]), np.array([0.03, 0.03]),
+                   np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]))
+    cut = turning_cut(1e9, np.array([1.0, 0.0, 0.0]), np.array([0.6, 0.8, 0.0]))
+    fast, slow = 2 * _m.pi * 3000 / 60, 2 * _m.pi * 300 / 60
+    m_fast = SD.intervals(cut, frf, fast, 20, 8)
+    m_slow = SD.intervals(cut, frf, slow, 20, 8)
+    assert m_slow == pytest.approx(10 * m_fast, rel=0.01)
+    assert SD.state_size(cut, frf, slow, m_slow) == 2 * 2 + m_slow * 2

@@ -59,6 +59,9 @@ FIELDS: dict[str, tuple] = {
     "sd_points_per_period": ("sd_points_per_period", "count", 24, 4, 1000,
                              "semi-discretisation intervals per period of the highest checked mode over the delay"),
     "sd_max_points": ("sd_max_points", "count", 20, 0, 10000, "operating points checked by semi-discretisation"),
+    "sd_max_states": ("sd_max_states", "count", 2000, 50, 100000,
+                      "largest semi-discretised state (2 n + r n) a check may build; a point needing more is recorded "
+                      "as not checked"),
     "sd_a_max_m": ("sd_a_max_m", "length", 0.05, 1e-4, 1.0, "largest depth of the semi-discretisation scan"),
     "sd_scan": ("sd_scan", "count", 30, 4, 10000, "depths of the semi-discretisation scan before bisection"),
     "sd_tol": ("sd_tol", "number", 1e-3, 1e-9, 0.1, "relative tolerance of the semi-discretisation limit"),
@@ -100,6 +103,7 @@ class DynamicsSettings:
     sd_m: int = 40
     sd_points_per_period: int = 24
     sd_max_points: int = 20
+    sd_max_states: int = 2000
     sd_a_max_m: float = 0.05
     sd_scan: int = 30
     sd_tol: float = 1e-3

@@ -298,8 +298,8 @@ predicted stability limit (0.044 mm at 10 000 rpm) and the simulated chatter gro
 |---|---|
 | `test_loop_run.py` | the tiny project (warmup's: a side step 0.5 mm wide, 1 mm deep along 12 mm of a 30 x 20 x 10 mm Al block, D10 at 10 000 rpm) through `run_project` with every domain on and small outputs: complete, safe, every ledger passes (mass 1e-9, energy 1e-6, time exact, end-of-run mass), the removed volume is the volume the tool path recorded in frames.bin sweeps (3 %), every file of the run directory exists and is indexed, report / pictures / video / sound made, frames / timeline / production / tools agree, every domain wrote its channels and trace events |
 | `test_loop_determinism.py` | two runs give the same `result_set_digest`; a run cancelled from its progress callback after its second checkpoint (2 s, before the cut) and resumed from it gives the same digest; a replay of a recorded fast window reproduces its rows exactly (every column) |
-| `test_loop_flip.py` | (xfail on model errors, section 15) examples/two-setup-flip with one side step per operation: OP20 cuts the OP10 part turned 180 deg about X (one removal transfer, the OP10 step ends up at the bottom of OP20's S), both steps' volumes against each operation's recorded path, timeline and ledgers over both operations, operation-end checkpoints, part files per operation |
-| `test_loop_batch.py` | (xfail on model errors, section 15) three parts of the tiny project: fresh blanks, the same removed mass, tools.json per-part rows with rising cut time, VB and life used, production.json with three parts, thermal unload records per part, the time balance over the parts |
+| `test_loop_flip.py` | examples/two-setup-flip with one side step per operation: OP20 cuts the OP10 part turned 180 deg about X (one removal transfer, the OP10 step ends up at the bottom of OP20's S), both steps' volumes against each operation's recorded path, timeline and ledgers over both operations, operation-end checkpoints, part files per operation |
+| `test_loop_batch.py` | three parts of the tiny project: fresh blanks, the same removed mass, every ledger over the three parts, tools.json per-part rows (each part's own cutting time, equal for equal parts, adding up to the tool's; VB and life used never decreasing: the tool comes in used), production.json with three parts and each part's share of the tool life, thermal unload records per part, the time balance over the parts |
 | `test_loop_check.py` | `check_project`: strides by the 5.1 rules, cycle times, estimates; `--write` stores physics.resolved and a run uses those strides (and `max_sim_s` truncates it); a project with errors is not written |
 | `test_loop_probe.py` | G31 through the whole loop: the tiny project's block with the pocket example's spindle probe; a skip move from 10 mm above the top to 5 mm below stops at the top (the program checks #5063 and raises #3000 otherwise: the run must end without an alarm), the gauge line comes to rest within the braking distance (25 um) below 125 mm above the top and the retract goes straight up |
 | `test_loop_parts.py` | the loop's pieces without a simulation: the coupling monitor, the ring restamping, the peak view, the run ledger's kinetic-energy report, quadrature term, holding's slip energy pair, energy scale floor and the summary of a run without energy, friction booked once, the adapters' change tracking through a checkpoint |
@@ -319,7 +319,9 @@ again keep the model, `test_the_next_part_of_a_batch_gets_its_own_setup`), tests
 operator cleans), tests/unit/dynamics/test_chatter_detection.py (free ringing is no chatter) and test_domain.py
 `test_a_turning_contact_takes_its_operating_point_from_cuttings_engaged_elements`,
 tests/integration/test_turning_split.py (a polar overflow repeats only the refused removal: the pass with one inline
-segment per ray reproduces the pass with sixteen).
+segment per ray finishes balanced, its booking exact; its equality with the pass with sixteen is open, section 15),
+tests/unit/dynamics/test_domain.py `test_a_semi_discretisation_too_large_to_build_is_recorded_not_built` and
+test_stability.py (the state size of the check).
 
 ## 13. Measurements
 
@@ -364,9 +366,19 @@ sound), `test_loop_determinism` 3 min 2 s (3; four runs and a replay), `test_out
 dynamics). The hot loop's tests that use `drive.py` (test_slot, test_turning, test_drill, test_chatter,
 test_determinism_checkpoint, test_free_dynamics, test_signatures: 19 tests) pass on the live tree.
 
+2026-11-09 11:39, the frozen tree of section 14 (one process each): the unit suites of the domains the loop fix
+changed pass (core 70, thermal 97, holding 73, structure 55, surface 84, chips 59, coolant 90, dynamics 158,
+motion 140: 826 tests, 4 min 30 s together), and test_loop_parts (10), test_loop_probe (1, 19 s), test_turning (5),
+test_slot (3), test_drill (3), test_signatures (2); test_loop_flip (4, 78 s) and test_loop_batch (3, 144 s) run
+through both operations and all three parts with every ledger passing, for the first time (until then expected
+failures on the NaN states at the transitions); the batch's per-part tool rows then failed an expectation of the
+test (cumulative per-part cutting time; wear's rows hold each part's own), corrected (section 12).
+
 **Cold compile**: the first `twin warmup` in an empty cache compiled every kernel module in 13 min 59 s in one
 process and was killed by the 1.8 GB cap in the mill run that followed (hence one process per module now); the
-second, with the cache filled, took 2 min 56 s (mill run 51.6 s; the lathe run stops, section 15).
+second, with the cache filled, took 2 min 56 s (mill run 51.6 s; the lathe run stops, section 15). 2026-11-09:
+`twin warmup --only mill` on the frozen tree of section 14, cold cache, one process per module: 12 min 46 s, its
+mill run 41.0 s (safe).
 
 ## 14. Regression
 
@@ -383,7 +395,7 @@ cache compiled cold by `twin warmup --only mill` in 12.8 min, its mill run 41.0 
 | case | wall s | sim s | run | verdict | findings | EXPECTED passed | failed | not reached | conservation |
 |---|---|---|---|---|---|---|---|---|---|
 | sanity-mistakes | 122 | 0.01 | stopped by its alarm 320 at line 16 | not safe (the program's mistakes) | error 14, warning 11 (sanity 23, alarm 1, remaining_material 1) | the 23 sanity findings; alarm 320 at line 16 | - | - | ok |
-| ti-slot-throughtool | 358 | 7.98 | killed by the 1.8 GB cap at the first contact (exit 137, no record) | - | info 2, warning 2 (thermal_damage 887 degC, tool_end_of_life) at 7.97-7.98 s | - | - | - | - |
+| ti-slot-throughtool | 412 | 8.00 | budget (30 ms into the slot); first run killed by the 1.8 GB cap at its end (358 s), fixed (section 15) and run again at 12:31 | safe | info 2, warning 4 (thermal_damage 887 degC, tool_end_of_life, burr, air_cutting) | no spindle overload; cutting-data rule silent for T1 | slotting torque 9.7 N m (10-24) and power 0.09 kW (0.6-1.4), both at the slot's entry | - | ok |
 | drill-tap-plate-1045 | 768 | 8.00 | budget | not safe (the D6.8's entry blows up at 4.99 s: tool_breakage, thermal_damage) | error 2, warning 5, info 2 | no spindle overload | drilling torque 0.86 N m (2.6-4.6); thrust 12.3 kN (0.8-1.4) | - | ok |
 | two-setup-flip | 344 | 3.81 | stopped by the energy balance at the first cut (1.01e-6) | - | fatal 1, error 1 (gouge 6 um), warning 2 | no spindle overload | - | OP20 on the turned part | stopped |
 | thin-wall-al7075 | 393 | 4.46 | stopped by the energy balance at the first cut (1.66e-5) | - | fatal 1, warning 4 (chip_recutting 3.9 %, tool_end_of_life) | no spindle overload | - | peel power | stopped |
@@ -395,18 +407,20 @@ cache compiled cold by `twin warmup --only mill` in 12.8 min, its mill run 41.0 
 | die-h13-ballnose | 889 | 8.00 | budget | not safe (the unclamped insert slips and comes free, section 15) | error 4, warning 1, info 3 | no spindle overload; no overtravel | - | T1 power, T1 force | ok |
 | blade-5axis-ti | 598 | 8.00 | budget | safe | info 2, warning 1 | no spindle overload; no overtravel; no pass through B = 0 | - | - | ok |
 
-Compared with the regression before this task's fixes (same budgets): 7 of 12 cases now run to their budget or
+Compared with the regression before this task's fixes (same budgets): 8 of 12 cases now run to their budget or
 their program's own alarm conserving (before 5), the probing examples probe (pocket-islands' EXPECTED probe
 item passes; before alarm 379 at the first G31 on both), drill-tap passes the coefficient pipeline's NaN (cutting's
-owner's fix) and ti-slot its set-up (thermal's and production's machine models), lathe-shaft-4140 runs 8 s in
-8.6 min of wall time (before stopped by hand after 28 min at 2.4 s). EXPECTED items over the 11 recorded cases: 17
-passed, 2 failed (drill-tap's torque and thrust at the blown-up entry), 9 not reached (beyond the budget or a run
-that stopped at its first cut).
+owner's fix) and ti-slot its set-up (thermal's and production's machine models) and its end (dynamics' bounded
+semi-discretisation check), lathe-shaft-4140 runs 8 s in 8.6 min of wall time (before stopped by hand after 28 min
+at 2.4 s). EXPECTED items over the 12 cases: 19 passed, 4 failed (drill-tap's torque and thrust at its blown-up
+entry; ti-slot's torque and power in the slot's first 30 ms, below the full slot's bands), 9 not reached (beyond
+the budget or a run that stopped at its first cut).
 
 Where the runs end:
 
-* **Budget or the program's alarm, conserving** (7): sanity-mistakes (its alarm), pocket-islands and batch-50
-  (their probing done, no cut yet), lathe-shaft-4140 (no cut yet), blade-5axis-ti, die-h13-ballnose (its insert
+* **Budget or the program's alarm, conserving** (8): sanity-mistakes (its alarm), pocket-islands and batch-50
+  (their probing done, no cut yet), lathe-shaft-4140 (no cut yet), blade-5axis-ti, ti-slot-throughtool (into its
+  slot by 30 ms), die-h13-ballnose (its insert
   slips before the first cut: no clamping of the zero-point plate, section 15) and drill-tap-plate-1045, whose
   D6.8 blows up at its entry at 4.99 s (lateral vibration 38 um within 0.1 ms of the first contact, then forces of
   10-30 kN: tool_breakage, white layer, edge chipping; the run conserves through it; bisection in section 15).
@@ -415,11 +429,19 @@ Where the runs end:
   the recut and packing loads (`friction_J` 0.02-1.05 J): cutting's recut impulse and the recut / packing work on
   the deflection rates missing from `e_def` (section 15, items 1 and 2 of "Cuts went unstable at entry";
   the pocket run balances with the recut frozen).
-* **Memory** (1): ti-slot-throughtool was killed by the 1.8 GB cap at its first contact (7.98 s), with T1 chipped
-  and "worn out" in its first 4 ms (wear's edge chipping at 829 N) and an 887 degC surface; not analysed further.
+* **Memory** (fixed): ti-slot-throughtool was killed by the 1.8 GB cap at the end of its run, in dynamics'
+  end-of-run semi-discretisation check (section 15); run again with the check bounded it completes as above (its
+  T1 chipped and "worn out" in its first 4 ms by wear's edge chipping at 829 N, for wear's owner; the 887 degC
+  surface is thermal's flash estimate on a fresh edge's hone-wide flank contact, not validated, section 15).
 
-No case reaches a second operation or part within its budget; tests/integration/test_loop_flip.py and
-test_loop_batch.py run those transitions on small variants (section 12).
+A longer run to take one example through a complete operation: examples/batch-50 with one part and 30 s
+(`/tmp/lf/scripts/longrun.py`, the regression's record) probed, changed to T1 and stopped at 13.88 s at T1's first
+cut on the energy balance (5.98e-6; friction 0.28 J of recut and packing in the interval: the same cause), after
+940 s of wall time; a part slip margin of 0.41 and a 6 um gouge on the way in. No example therefore completes an
+operation until cutting's recut terms are fixed; the complete operations and transitions run on small variants:
+tests/integration/test_loop_flip.py (both operations of examples/two-setup-flip with one side step each) and
+test_loop_batch.py (three complete parts of the tiny project) pass on the frozen tree, every ledger balanced
+(section 12).
 
 ## 15. Open problems
 
@@ -452,6 +474,14 @@ test_loop_batch.py run those transitions on small variants (section 12).
   That end killed its first regression runs at the 1.8 GB cap (exit 137) when its probe alarm ended the
   operation; unfinished operations are not inspected now (section 1), but a finished operation of a
   fine-lattice example still needs more than 1.8 GB there.
+* **Memory at the end of a run** (fixed, dynamics): examples/ti-slot-throughtool ran its set-up, ICS coolant start
+  and approach to its budget (the first contact at 7.97 s) and was killed by the 1.8 GB cap; the harness run of
+  drill-tap with process damping off the same at 5.03 s. Both ended right after their first operating point: the
+  end-of-run semi-discretisation check sized its intervals to resolve the highest checked mode over the delay,
+  r = 24 x f_max x tau, which at 573 rpm (4 teeth, tau 26 ms) or 830 rpm (2 teeth, 36 ms) against modes of
+  10-20 kHz is tens of thousands, and built a monodromy matrix of (2 n + r n)^2 entries. A point whose check would
+  exceed `sd_max_states` (2000) now keeps its frequency-domain verdict and is recorded as not checked
+  (docs/models/dynamics.md 5.4).
 * **Chip kinetic energy** is reported, not balanced, until cutting's torque carries the chip momentum force
   (section 6).
 * **Transfers and the slow domains' grids.** removal transfers the material to the next operation's stock frame
@@ -611,6 +641,12 @@ test_loop_batch.py run those transitions on small variants (section 12).
     normal displacement over the last pd_max_flank / Vc (a ring of u_n per element: delta(x) = u_n(t) -
     u_n(t - x / Vc) less the clearance), or equivalently low-pass the slope with the contact time L / Vc - so that
     vibration much shorter than the flank gives no indentation while chatter keeps its process damping.
+    The same cause breaks examples/drill-tap-plate-1045's D6.8 at its entry (regression, section 14): at 4.99 s the
+    first contact's lateral vibration reaches 38 um within 0.1 ms and the forces 10-30 kN (edge chipping, a 530 GPa
+    bending stress, 3296 degC). Bisected on the frozen tree to 5.03 s: with the chips' recut grid frozen the entry
+    blows up identically; with K_sp = 0 it does not (that run reached its budget; its end then needed the bounded
+    semi-discretisation check of section 15). Near a drill's centre the cutting speed goes to zero, so the slope
+    vnd / Vc saturates the flank interference for any vibration at all.
   * *Heat of a turning pass in the work* (fixed, thermal): thermal spread the shear-zone heat over the edge
     elements with weights h db r, r = `elem_r_m`, which tooling defines for non-rotating tools as the x_T
     coordinate (<= 0); every weight was clipped to zero, the share fell back to an even split over all 254
@@ -626,6 +662,30 @@ test_loop_batch.py run those transitions on small variants (section 12).
     cuts accumulate). Every consumer of the contact point read the S origin (thermal's source, dynamics' reference
     station and operating point, above). Thermal and dynamics now take the tool tip and cutting's engaged
     elements; fix in removal: accumulate the turning step's centroid and z range in polar_cut as the other cuts do.
+* **Polar capacity changes the pass** (open; for removal's owner and the hot loop): tests/integration/
+  test_turning_split.py turns the same OD pass (d45 bar, ap 1.5 mm, f 0.25 mm/rev, 1400 rpm) with one and with
+  sixteen inline segments per polar ray (`physics.removal.polar_kp`). With one, the hot loop splits once on a polar
+  overflow at the first revolution's feed marks and resumes with only the refused removal (the fix of this task:
+  the pass finishes, its ledgers balance and the booked removal is the field's change, the first test). The pass
+  should not depend on the field's capacity, but it removes 1.1 % less (5.89e-7 against 5.96e-7 m3, rigid; 5.86e-7
+  against 5.93e-7 with the modes), and the rigid runs' step forces differ by 36 N already in the step before the
+  first split (the first contact step, nothing booked yet in either), the removal per step then 10-60 % lower for
+  a few steps and about 8 % lower at full engagement. Not isolated: a part of removal's polar cut or of the field's
+  growth that depends on `PI_KP` before an overflow is reported, or the hot loop's view of the refused step. The
+  exactness test is marked xfail with this note.
+* **Surface temperatures of fresh edges** (open, thermal): thermal's surface temperature (the feed-band rise plus
+  Jaeger's flash rise of the work's heat over the flank contact) reports 887 degC at ti-slot's entry with 22 W of
+  work heat (flash rise 797 K), 981 degC in warmup's turning pass, 589-700 degC (melt smear of 6061) in batch-50's
+  roughing entry. With VB 0 the flank contact is `flank_contact_edge_factor` x the hone radius wide (tens of um),
+  which concentrates the flank and ploughing heat; the estimate has not been compared with measured machined-
+  surface temperatures and its damage findings (burn, white layer, melt smear) are not trusted until it is.
+* **Wear from the entry spikes (for wear's owner)**: the regression's runs that stop at their first cut's entry
+  report wear that a few milliseconds cannot give: examples/thin-wall-al7075 at 4.43 s `VB_max_m` 146 (metres;
+  notch 22.6 m, "dimensional drift 6334.931 mm"), ti-slot's T1 "worn out" after 4 ms (edge chipping at 829 N),
+  drill-tap's D6.8 with a fatigue damage of 1.7e24 after its blown-up entry. The loads are the spikes of the entry
+  (cutting's recut impulse, the process-damping relay, above); `cnctwin/wear` integrates them without a bound of
+  its own (a VB larger than the insert, a wear rate from one step's peak). The tiny batch's tool, which comes in
+  used (720 s, VB 131 um), wears by nm per part, as it should.
 * **A zero-point plate does not clamp** (holding's devices and the workholding database, open): examples/
   die-h13-ballnose holds its insert on a Lang Quick-Point 52 grid plate, "pulled down by two d16 clamping studs"
   (the entry's label). db/workholding/lang-quick-point-52.yaml types the plate `fixture_plate` with its size, grid

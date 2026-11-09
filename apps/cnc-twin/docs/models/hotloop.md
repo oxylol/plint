@@ -141,8 +141,8 @@ resumed at the same L0 step and repeated all of it: the step's forces, work inte
 twice and dynamics was stepped by 0 base ticks (the TwinError that stopped warmup's lathe pass and
 examples/lathe-shaft-4140 at their first contact). No row is lost and nothing is rolled back, so the results do
 not depend on buffer capacities (test f runs with small buffers; tests/integration/test_turning_split.py runs an OD
-pass with one inline segment per polar ray, which overflows on the feed marks' scallops, against the same pass
-with 16).
+pass with one inline segment per polar ray, which overflows on the feed marks' scallops: it finishes balanced with
+its booking exact; that it equals the pass with 16 segments is still open, docs/models/loop.md 15).
 
 ## 7. Turning
 

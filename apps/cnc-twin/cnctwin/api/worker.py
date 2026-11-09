@@ -13,6 +13,9 @@ starts), resolves the entry point and calls it:
 * every other kind: ``entry(request, out_dir, progress_cb) -> dict`` (the request carries the
   paths and options of that kind; the returned dict is saved as the job's ``result.json``).
 
+``result.json`` (every kind) is ``{format: cnctwin-job-result, version: 1, job_id, kind, result}`` with the entry's
+return value as ``result``; the manager (``JobManager.result``) also reads the bare value an older worker wrote.
+
 ``progress_cb(progress: dict | None = None, **fields)`` takes any of ``sim_time_s``,
 ``est_total_s``, ``eta_s``, ``op``, ``phase``, ``message``, ``checkpoint`` (and other JSON-able
 fields, kept as given). It returns None, and raises :class:`Cancelled` after a cancel request; that
@@ -266,9 +269,13 @@ class Worker:
             progress["eta_s"] = None if state != "done" else 0.0
         has_result = False
         if state == "done" and result is not None:
+            from .jobs import RESULT_FORMAT
             from .jsonio import write_json_atomic
             try:
-                write_json_atomic(self.dir / "result.json", result)
+                # the entry's return value under a header (a bare value could itself carry format keys)
+                write_json_atomic(self.dir / "result.json", {"format": RESULT_FORMAT, "version": 1,
+                                                             "job_id": self.job.get("id"), "kind": self.kind,
+                                                             "result": result})
                 has_result = True
             except TypeError as problem:
                 state, error = "failed", {"type": "TypeError",

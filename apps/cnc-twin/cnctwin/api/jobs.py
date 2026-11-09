@@ -47,6 +47,7 @@ TERMINAL = ("done", "failed", "cancelled")
 ACTIVE = ("queued", "running", "cancelling")
 RUN_STATUS_FORMAT = "cnctwin-run-status"
 JOB_FORMAT = "cnctwin-job"
+RESULT_FORMAT = "cnctwin-job-result"         # result.json: {format, version, job_id, kind, result} (worker.py)
 WORKER_MODULE = "cnctwin.api.worker"
 _KERNEL_PATTERN = re.compile(rb"@njit|@numba|cuda.jit")
 PACKAGE_DIR = Path(cnctwin.__file__).resolve().parent
@@ -472,8 +473,15 @@ class JobManager:
         return self.jobs_dir / job_id
 
     def result(self, job: Job):
+        """The entry's return value: result.json is ``{format: cnctwin-job-result, version, job_id, kind, result}``
+        (cnctwin.api.worker); a result.json written before that header is the bare value and is returned as it is."""
         path = self.job_dir(job.id) / "result.json"
-        return read_json(path) if path.exists() else None
+        if not path.exists():
+            return None
+        document = read_json(path)
+        if isinstance(document, dict) and document.get("format") == RESULT_FORMAT:
+            return document.get("result")
+        return document
 
     def log_tail(self, job: Job, max_bytes: int = 4096) -> str:
         path = self.job_dir(job.id) / "log.txt"

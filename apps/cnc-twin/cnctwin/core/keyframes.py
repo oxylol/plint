@@ -17,7 +17,9 @@ At every keyframe (``recording.keyframe_period_s``) the run writes:
 * ``keyframes/kf_<k>.npz``: coarse fields (temperatures as float16, 3-D grids block-averaged to cells
   of at most ``keyframe_field_max_cell_m`` = 8 mm; chip piles, wetted cells, deflection, part pose,
   coolant jets as given); ``chips/kf_<k>.npz``: the chips' particles and pile summary.
-* ``keyframes/index.jsonl`` (append-only): ``{k, tick, time_s, glb, fields, chips, full, bricks, empty}``.
+* ``keyframes/index.jsonl`` (append-only): the header line ``{"format": "cnctwin-keyframes-index", "version": 1}``, then
+  ``{k, tick, time_s, glb, fields, chips, full, bricks, empty}`` per keyframe (an index written before the header has
+  none and reads the same).
 * ``keyframes/attr/brick_<brick>.npz``: per-brick final attributes, written at the end of the run.
 
 Quantisation error: positions are rounded to ``step = extent / 65535`` of the brick's own vertex
@@ -44,8 +46,8 @@ import numpy as np
 
 from .. import FORMAT_VERSION
 from ..db.models import params as model_params
-from .rundir import (TICK_S, fsync_dir, fsync_file, jsonable, npz_bytes, read_json, tick_time_s, write_bytes_atomic,
-                     write_json_atomic, write_npz)
+from .rundir import (KEYFRAMES_INDEX_FORMAT, TICK_S, fsync_dir, fsync_file, is_jsonl_header, jsonable, jsonl_header,
+                     npz_bytes, read_json, tick_time_s, write_bytes_atomic, write_json_atomic, write_npz)
 
 BRICK_MAGIC = b"BRK1"
 RECORD_HEADER = struct.Struct("<4sIIffff")      # magic, n_vertices, n_indices, origin_S_m[3], step_m
@@ -361,7 +363,10 @@ class KeyframeWriter:
         if extra:
             entry.update(jsonable(dict(extra)))
         line = (json.dumps(jsonable(entry), sort_keys=True, separators=(",", ":"), allow_nan=False) + "\n").encode()
-        with open(self.dir / "index.jsonl", "ab") as handle:
+        index = self.dir / "index.jsonl"
+        if not index.exists() or index.stat().st_size == 0:
+            line = jsonl_header(KEYFRAMES_INDEX_FORMAT) + line     # part of index_bytes: a resume keeps it
+        with open(index, "ab") as handle:
             handle.write(line)
         self.index_bytes += len(line)
         self.k += 1
@@ -464,7 +469,9 @@ class KeyframeReader:
             if path.is_file():
                 for raw in path.read_bytes().splitlines(keepends=True):
                     if raw.endswith(b"\n") and raw.strip():
-                        out.append(json.loads(raw))
+                        record = json.loads(raw)
+                        if not is_jsonl_header(record):
+                            out.append(record)
             self._entries = sorted(out, key=lambda e: int(e["k"]))
         return self._entries
 

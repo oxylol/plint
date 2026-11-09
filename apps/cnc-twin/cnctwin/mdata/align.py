@@ -65,6 +65,30 @@ class Alignment:
                    dict(data.get("quality") or {}))
 
 
+ALIGNMENT_FORMAT = "cnctwin-alignment"      # alignment.json of a calibration (calibrate.py)
+ALIGNMENT_VERSION = 1
+
+
+def alignment_document(alignment: "Alignment") -> dict:
+    """alignment.json: ``{format: cnctwin-alignment, version: 1, offset_s, scale, method, quality}``."""
+    return {"format": ALIGNMENT_FORMAT, "version": ALIGNMENT_VERSION, **alignment.to_dict()}
+
+
+def read_alignment(path) -> "Alignment":
+    """An alignment.json, also one written before it had a header (the bare ``Alignment.to_dict()``); another format
+    or a newer version is a ValueError."""
+    import json
+    from pathlib import Path
+    document = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
+        raise ValueError(f"{path}: not an alignment")
+    if document.get("format", ALIGNMENT_FORMAT) != ALIGNMENT_FORMAT:
+        raise ValueError(f"{path}: format {document.get('format')!r} is not {ALIGNMENT_FORMAT}")
+    if int(document.get("version") or ALIGNMENT_VERSION) > ALIGNMENT_VERSION:
+        raise ValueError(f"{path}: {ALIGNMENT_FORMAT} version {document.get('version')} is newer than this build reads")
+    return Alignment.from_dict(document)
+
+
 def _plain(value):
     if isinstance(value, dict):
         return {str(k): _plain(v) for k, v in value.items()}
@@ -647,4 +671,5 @@ def overlay(sim_log: MachineLog, measured: MachineLog, alignment: Alignment, pai
 
 
 __all__ = ["Alignment", "align", "align_markers", "align_program_start", "program_starts", "align_xcorr", "masked_ncc", "robust_line", "measured_markers",
-           "resample", "overlay", "error_metrics", "reduce_m4", "block_comparison", "measured_cycle_time", "FORMAT"]
+           "resample", "overlay", "error_metrics", "reduce_m4", "block_comparison", "measured_cycle_time", "FORMAT",
+           "ALIGNMENT_FORMAT", "alignment_document", "read_alignment"]

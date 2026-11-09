@@ -18,7 +18,7 @@ from fastapi.routing import APIRoute
 
 import cnctwin
 
-from . import routes_db, routes_jobs, routes_projects, routes_runs, routes_sweeps
+from . import routes_db, routes_docs, routes_jobs, routes_projects, routes_runs, routes_sweeps
 from .jsonio import json_response
 from .safety import ApiError, resolve_inside
 from .settings import Settings
@@ -82,6 +82,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     routes_runs.register(app, ctx)
     routes_sweeps.register(app, ctx)
     routes_db.register(app, ctx)
+    routes_docs.register(app, ctx)
     _register_fallbacks(app, ctx)
     return app
 

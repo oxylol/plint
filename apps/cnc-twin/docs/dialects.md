@@ -1570,3 +1570,21 @@ test_siemens_heidenhain_same_part.py.
 6. **Tests** in `tests/unit/controller/` with inline machine and controller-database fixtures
    (`tests/unit/controller/harness.py` shows the minimal machine definitions), including a
    checkpoint/resume test of the dialect's own state.
+7. **The name outside the controller package.** Each of these holds the list of dialect names and
+   refuses or mishandles a name it does not have:
+   * `cnctwin/db/schemas.py` `DIALECTS`: the machine schema's `controller.dialect` and the controller
+     schema's `dialect` accept only these names (`twin db check` rejects a machine or controller file
+     with a new name until it is added; `db/_templates/machine.yaml` and `controller.yaml` list the
+     allowed values in their comments);
+   * `cnctwin/controller/hooks.py` `PLUGIN_PACKAGES`: a new package (not `dialects.siemens840d` or
+     `dialects.heidenhain`) must be listed, or its `register_dialect` never runs (step 1);
+   * `cnctwin/project/new.py` `program_skeleton` and `PROGRAM_SUFFIX`: the shortest complete program and
+     the file extension `twin new` writes for the dialect (without an entry `twin new --machine <a
+     machine of the dialect>` fails with "no program skeleton for dialect ...");
+   * `cnctwin/api/views.py` `TEXT_PROGRAMS`: the program extensions the API serves as text (the UI shows
+     them in place);
+   * the static program checks (`cnctwin.sanity`) scan only FANUC and Haas syntax themselves: a program of
+     any other dialect gets one `scan-limits` finding and no other rule unless the controller's command
+     stream is passed (docs/models/sanity.md section 3).
+
+   [howto-add-dialect.md](howto-add-dialect.md) walks through these steps with the checks to run.

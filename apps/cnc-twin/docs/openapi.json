@@ -3693,6 +3693,79 @@
           }
         }
       }
+    },
+    "/api/docs/{path}": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Get Doc",
+        "description": "A document of the build's docs/ folder (``approximations.md``, ``models/loop.md`` ...) as Markdown text.",
+        "operationId": "get_doc",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The Markdown document",
+            "content": {
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4696,7 +4769,7 @@
             "additionalProperties": true,
             "type": "object",
             "title": "Options",
-            "description": "Passed unchanged to cnctwin.core.loop.run_project"
+            "description": "Passed to the simulate entry (default cnctwin.sweep.runner.run_project: the loop's run_project, which applies the operator overrides of options.operator); operator is normalised first (entries at 100 % dropped), every other option is passed unchanged"
           },
           "no_cache": {
             "type": "boolean",
