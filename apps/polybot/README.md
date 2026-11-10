@@ -365,6 +365,7 @@ Change a value, then `plint restart poly`.
 - `polybot/consensus.py` + `strategy_consensus.py` — the agreement logic (pure, tested) and its strategy, variants included
 - `polybot/credibility.py` + `pack.py` — who is worth copying (pure rules, tested) and the measuring of a board
 - `polybot/model.py` + `model.json` (round 3) / `model_r2.json`, `polybot/features.py`, `research/` — the data models, the shared feature code and the scripts that collected and fitted them
+- `research/REPORT4.md` — round 4 (2026-11-10): makers, anchors and carry; no edge found, the `carry` rule is specified there but not built (`research/r4_carry_live.py` lists what it would hold)
 - `polybot/underdog.py` + `strategy_underdog.py` — the underdog rules (pure, tested) and its strategy
 - `polybot/weather.py` + `strategy_forecast.py` — temperature markets, stations, Open-Meteo forecasts (pure parts tested) and the forecast strategy
 - `polybot/metar.py` + `collector.py` + `strategy_collector.py` — the station reports read by the markets' rule, when a day's value is final (tested), and the collector strategy
