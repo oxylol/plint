@@ -21,12 +21,15 @@ services:
       TZ: ${TZ}
       DATA_DIR: /data
       CNCTWIN_MAX_JOBS: 1
+      # one simulation peaks at 1.7-2.0 GB on the examples (docs/performance.md); the job's RLIMIT_DATA counts
+      # reserved mappings too, the container's cgroup limit below bounds the resident memory
+      CNCTWIN_JOB_MEMORY: 3584M
     volumes:
       - ../../data/cnc-twin:/data
     # not read_only: Numba loads its warm cache (/app/.numba-cache) only from a writable directory
     tmpfs: [/tmp]
-    # One simulation of a reference part stays under ~1.2 GB (docs/performance.md).
-    mem_limit: 1536m
+    # server + one simulation (up to ~2 GB resident) + one light job (check, compare)
+    mem_limit: 3584m
     cpus: 2
     networks:
       - twin

@@ -25,7 +25,7 @@ video and the sound of the cut. All of it is files in one run directory (docs/fo
 in `data/cnc-twin`, one simulation at a time, 1.5 GB memory cap, 2 CPUs.
 
 ```
-sudo install -d -o 1002 -g 1002 /opt/plint/data/cnc-twin   # once: the container runs as uid 1002 on a read-only root
+sudo install -d -o 1002 -g 1002 /opt/plint/data/cnc-twin   # once: the container runs as uid 1002
 plint up twin                                              # builds the image the first time (it compiles every kernel)
 plint logs cnc-twin
 ```
@@ -139,43 +139,45 @@ Start at [docs/index.md](docs/index.md). Adding data: [machine](docs/howto-add-m
 
 **Accuracy.** The models take their parameters from published sources; nothing is tuned to the validation
 references, and no validated quantity meets its error budget yet. Median absolute relative error over the
-independent cases (validation/results/*.json as written by `twin validate` on 2026-11-04; per case:
-[docs/validation-report.md](docs/validation-report.md)):
+independent cases (validation/results/*.json as written by `twin validate` on 2026-11-10;
+per case: [docs/validation-report.md](docs/validation-report.md)):
 
-| quantity | independent cases | median error | 90th percentile | budget |
+| quantity | independent cases (within budget) | median error | 90th percentile | budget |
 |---|---|---|---|---|
-| cycle time | 2 | 7.0 % | 21.9 % | 5 % |
-| stability limit (lobes) | 12 | 12.0 % | 44.8 % | 25 % |
-| chip temperature | 1 | 20.2 % | 44.4 % | 20 % |
-| drilling torque | 4 | 24.7 % | 82.3 % | 15 % |
-| chip compression ratio | 3 | 26.4 % | 49.1 % | 20 % |
-| cutting force | 17 | 31.0 % | 181.6 % | 15 / 20 / 30 % (main, milling peak, thrust) |
-| shear angle | 2 | 35.1 % | 48.1 % | 20 % |
-| roughness | 9 | 55.6 % | 188.8 % | 30 % |
-| coolant reach | 2 | 64.5 % (10 of 18 classes) | 105.5 % | 15 % |
-| tool temperature | 5 | 65.3 % | 120.6 % | 15 % |
-| wall error | 6 | 71.1 % | 163.4 % | 25 % |
-| drilling thrust | 4 | 90.3 % | 118.6 % | 20 % |
-| spindle growth | 4 | 92.8 % | 95.5 % | 30 % |
-| tool life (Taylor) | 5 | 99.5 % | 213.6 % | 50 % |
-| chip form | 2 | 5 of 32 classes match | | 25 % |
+| cycle time | 2 (0) | 7.0 % | 21.9 % | 5 % |
+| stability limit (lobes) | 12 (1) | 12.0 % | 44.8 % | 25 % |
+| chip temperature | 1 (0) | 20.2 % | 44.4 % | 20 % |
+| drilling torque | 4 (0) | 24.4 % | 82.1 % | 15 % |
+| coolant reach | 2 (0) | 25.8 % (10 of 18 classes) | 52.9 % | 15 % |
+| chip compression ratio | 3 (0) | 26.4 % | 49.1 % | 20 % |
+| cutting force | 17 (0) | 28.5 % | 91.6 % | 15 / 20 / 30 % (main, milling peak, thrust) |
+| wall error | 6 (1) | 29.3 % | 58.8 % | 25 % |
+| shear angle | 2 (0) | 35.1 % | 48.1 % | 20 % |
+| drilling thrust | 4 (0) | 43.9 % | 91.7 % | 20 % |
+| roughness | 9 (0) | 46.5 % | 78.1 % | 30 % |
+| tool temperature | 5 (0) | 62.9 % | 191.4 % | 15 % |
+| tool life (Taylor) | 5 (1) | 87.7 % | 117.3 % | 50 % |
+| spindle growth | 4 (0) | 107.4 % | 147.3 % | 30 % |
+| chip form | 2 (0) | 5 of 32 classes match | | 25 % |
 
-Model fixes of 2026-11-09 described in docs/validation.md section 10 (drilling thrust, flank wear land,
-roughness, mechanistic calibration) are not in these files until `twin validate` runs again. In practice:
-geometry, kinematics, cycle time, collisions and removed volume are the reliable outputs; forces, power and
-deflection are good for comparing candidates on the same tool and material; tool life, temperatures,
-roughness, burrs, thermal growth and coolant reach are not a basis for decisions (docs/ml.md "Limits").
+With the pairing's own measured cutting data (calibration-dependent cases, reported apart): cutting force
+16 %, tool life 16 % (2 of 2 within). In practice: geometry, kinematics, cycle time, collisions and removed
+volume are the reliable outputs; forces, power and deflection are good for comparing candidates on the same
+tool and material; tool life, temperatures, roughness, thermal growth and coolant reach are not a basis for
+decisions without calibration against the machine (docs/models/calibration.md, docs/ml.md "Limits").
 
 **Approximations.** Every approximation, its consequence, its error bound and what the bound rests on is in
 [docs/approximations.md](docs/approximations.md) (generated from the model docs by
 `bin/tsafe python -m cnctwin.docs_tools approximations`); what each model doc still lacks is in
 [docs/doc-gaps.md](docs/doc-gaps.md).
 
-**Cost.** With every domain on, a run costs several CPU seconds per simulated second (7.4 for the warm-up
-project; 7 to 60 on the examples in docs/models/loop.md sections 13-14, measured on 2026-11-09 before the
-day's later speed-ups; the current hot-loop figures are in docs/performance.md). A program of minutes takes
-hours on one core; use `max_sim_s` to simulate its start, and expect about 12 CPU minutes of compilation
-after any change to a kernel file.
+**Cost.** With every domain on, a run costs tens to hundreds of CPU seconds per simulated second: 22 for the
+first 15 s of examples/pocket-islands-al6061 (mostly probing and moves; the compiled hot loop 0.9 of it, the
+slow domains 18), about 70 for examples/thin-wall-al7075 over 52 s, 120-170 in continuous cutting (pocket
+helix, lathe roughing) and about 1100 for the spot drill in full engagement (docs/performance.md, docs/models/loop.md
+13). A program of minutes takes hours to days on one core: simulate its critical part with `max_sim_s`, cache the
+run and play it back. Peak memory 1.7-2.0 GB on the examples; about 15 CPU minutes of compilation after any
+change to a kernel file (the image compiles them when it is built).
 
 **Whole runs.** The loop's regression (docs/models/loop.md section 14) runs the first 8 simulated seconds of
 each example: at its last recorded state several runs stopped at the first cut with a conservation error or
