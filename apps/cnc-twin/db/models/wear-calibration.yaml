@@ -40,6 +40,11 @@ params:
     unit: K
     src: est
     note: "upper end of the B bracket (an activation energy of 830 kJ/mol, above every wear mechanism; published Usui B are 5e3-3e4 K)"
+  max_unbracketed_activation_K:
+    value: 3.0e4
+    unit: K
+    src: usui-1984-tool-wear
+    note: "largest B a calibration that does not bracket may take: the steepest published thermal activation of a Usui law (5.302e3 K below and 2.195e4 K above 1150 K for P20 carbide on carbon steel, Usui, Shirakashi & Kitagawa 1984; published sets span about 5e3-3e4 K, up to 250 kJ/mol). Without a root the response's flank temperature is too flat between the calibration speeds to set B, and the best residual lies at the end of the search bracket: 1e5 K, which extrapolates the Taylor rate by exp(1e5 (1/T_cal - 1/T)) outside the calibration temperatures (examples/thin-wall-al7075's carbide in 7075: flank 633-641 K at the three calibration speeds, the run's 742 K flank at 4.45 s: x 1e10, VB 35 mm in one 10 ms step, the cut diverged; docs/models/wear.md 3, docs/models/loop.md 15). A bracketed root keeps its value (the steel of the tests calibrates above 3e4 K with this response)"
   max_abrasive_share:
     value: 0.1
     unit: "-"

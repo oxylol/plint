@@ -145,7 +145,8 @@ at its VB limit:
    (fixed 2026-11-09; test `test_the_life_integral_is_split_at_the_lands_kinks`). The integral is **edge contact
    time**; its targets are the Taylor lives converted to contact time (life basis, below).
 4. For each B, A follows from T(v1) = eta_ref T_Taylor(v1) (closed form; a monotone root with the abrasive
-   term); B is the root of ln(T(v2) / (eta_ref T_Taylor(v2))) in [10 K, 1e5 K] (Brent, fixed tolerances). The Usui
+   term); B is the root of ln(T(v2) / (eta_ref T_Taylor(v2))) in [10 K, 1e5 K] (Brent, fixed tolerances; without a
+   root the best residual in [10 K, 3e4 K], below). The Usui
    factor is evaluated as exp(-B (1/T - 1/T_ref)) with A' = A exp(-B/T_ref) so large B neither
    underflows nor overflows.
 5. The abrasive term carries at most `max_abrasive_share` (10 %) of the Taylor rate at the calibration
@@ -233,7 +234,18 @@ exponent steeper than the published B with this response's temperatures).
 
 A calibration whose B reaches the end of its bracket (the response's flank temperature changes too little
 between the two speeds for the entry's speed exponent, e.g. IN718 with ceramics, whose flank runs near the
-melt-limited temperature) is listed in `estimated` with its residual.
+melt-limited temperature) is listed in `estimated` with its residual. Without a root the data do not set B, and
+the best residual lay at the end of the numerical bracket, 1e5 K (830 kJ/mol, no wear mechanism), which
+extrapolates the Taylor rate by exp(B (1/T_cal - 1/T)) as soon as the run's flank leaves the calibration
+temperatures. Since 2026-11-10 an unbracketed calibration takes B from [10 K, `max_unbracketed_activation_K`] =
+[10 K, 3e4 K], the steepest published activations of Usui's law (5.302e3 K and 2.195e4 K for P20 carbide on carbon
+steel, Usui, Shirakashi & Kitagawa 1984; published sets 5e3-3e4 K); a bracketed root keeps its value up to 1e5 K.
+Measured on examples/thin-wall-al7075 (carbide uncoated in 7075, Taylor entry `est` C 1600 m/min, n 0.3; the
+response's flank 633.9, 632.9 and 641.0 K at 7.8, 16.5 and 11.8 m/s): B 1e5 K, A 3.3e50 /Pa before, so the run's
+742 K flank at the end of the first peel's contact (4.45 s) wore 9.7 mm in one 10 ms step (VB 35 mm, notch 2.9 mm,
+hone 9.7 mm), which tooling, cutting and dynamics then took as the tool's land and the cut diverged (docs/models/
+loop.md 15); now B 3e4 K, A 384 /Pa (residuals +174 % at 16.5 m/s and +45 % at the 11.8 m/s check, reported), and the
+same flank wears VB 20 -> 22.2 um over the first 0.55 s of cutting. Test `test_an_unbracketed_calibration_keeps_a_published_activation`.
 
 **Materials without a flow-stress law** (composites, polymers, wood, foam): the mechanics data-only
 model's temperatures come from Merchant geometry on a material that forms no chip, so a Usui fit would
@@ -523,6 +535,7 @@ Coefficients: `db/models/wear-{flank,calibration,fracture,life}.yaml`; sources: 
 |---|---|---|
 | wear-life | VB limit 0.3 mm (VB_max 0.6 mm), notch 1.0 mm, crater depth KT = 0.06 mm + 0.3 f | iso-3685-1993 |
 | wear-calibration | milling reference arc 36.87 deg (ae/D = 0.1) | iso-8688-2-1989 |
+| | largest activation of an unbracketed calibration 3e4 K | usui-1984-tool-wear |
 | | calibration lives 60 and 5 min, check life 15 min, activation bracket 10-1e5 K, abrasive share at most 0.1, reference land 0.1 mm, fallback speed span 3, default feed 0.1 mm and depth 2 mm, table speeds 10-600 m/min | est |
 | wear-flank | minimum clearance 2 deg, edge rounding ratio 1, abrasive coefficient 2e-8 (range 2e-9-2e-7), flank base weight 0.5, notch hardness exponent 2, depth-of-cut line at 0.5 h, BUE protection 0.5 and pluck fraction 3e-4, grain size 1 um, crater onset 1 um, generic coating factor 0.6 and thicknesses (PVD 3 um, CVD 10 um), friction 0.5 | est (ranges in the file) |
 | wear-fracture | crack shape factor 1.1215 | tada-paris-irwin-2000-cracks |

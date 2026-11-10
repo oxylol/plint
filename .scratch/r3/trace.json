@@ -1,0 +1,6 @@
+{
+ "format": "cnctwin-trace",
+ "version": 1,
+ "file": "trace.jsonl",
+ "lines": "one TraceEvent per line {id, time_s, tick, domain, event, quantities, parents, line}, keys sorted; id = line number from 0; parents are earlier ids"
+}

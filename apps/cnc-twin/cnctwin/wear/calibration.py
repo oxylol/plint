@@ -592,7 +592,13 @@ def calibrate(entry: TaylorEntry, response: Callable[[float, float], Response], 
     if bracketed:
         B = optimize.brentq(lambda b: residual(b, scale), b_lo, b_hi, xtol=1e-9, rtol=1e-15, maxiter=500)
     else:
-        grid = np.exp(np.linspace(math.log(b_lo), math.log(b_hi), 61))
+        # no root: the response's flank temperature is too flat between the calibration speeds to set B, and the best
+        # residual lies at the end of the search bracket (1e5 K, no wear mechanism), which extrapolates the Taylor
+        # rate by exp(B (1/T_cal - 1/T)) outside the calibration temperatures (thin-wall-al7075: x 1e10 at a flank
+        # 100 K above them, VB 35 mm in one step). B stays within the published activations (wear-calibration.yaml
+        # max_unbracketed_activation_K, Usui et al. 1984); the residual is reported (docs/models/wear.md 3)
+        b_top = min(b_hi, float(p.get("max_unbracketed_activation_K", b_hi)))
+        grid = np.exp(np.linspace(math.log(b_lo), math.log(b_top), 61))
         values = []
         for b in grid:
             r = residual(b, scale)

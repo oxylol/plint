@@ -287,6 +287,36 @@ def test_the_calibrated_activation_follows_the_responses_temperature_slope():
     assert found[40.0] > 2.5 * found[120.0]
 
 
+def test_an_unbracketed_calibration_keeps_a_published_activation():
+    """A response whose flank temperature hardly rises with speed (a carbide in 7075: 633.9, 632.9 and 641.0 K at
+    the three calibration speeds of examples/thin-wall-al7075) cannot reproduce the Taylor speed exponent with any
+    activation in the bracket: no root. The best residual then lay at the end of the numerical bracket, 1e5 K, and a flank 100 K
+    above the calibration temperatures wore 1e10 times the Taylor rate (VB 35 mm in one step, the run diverged at
+    4.45 s). Without a root B stays within the published Usui activations (max_unbracketed_activation_K, 3e4 K;
+    Usui, Shirakashi & Kitagawa 1984), and the calibration says it did not bracket (docs/models/wear.md 3)."""
+
+    class Flat:
+        cache_key = ("flat", 1)
+
+        def temp(self, v):
+            return 634.0 + 5.0 * math.log(v / 3.0)          # 5 K per e-fold of speed: needs B of about 4e5 K
+
+        def response(self, slot, cond):
+            t = np.array([self.temp(cond.speed_m_s)])
+            return CAL.Response(1.0e9 * cond.speed_m_s, t, 0.0, t, np.array([1.0]), 1.0e9, 0.0, 0.0)
+
+    from cnctwin.wear.params import CALIBRATION, get
+    top = get(CALIBRATION)["max_unbracketed_activation_K"]
+    assert top == pytest.approx(3.0e4) and top < get(CALIBRATION)["max_activation_K"]
+    cal = CAL.calibrate(_entry(), _response(Flat()), GEO, None, NO_ABRASION, 0.0, 6, 8)
+    assert cal.report["bracketed"] is False
+    assert cal.B_K == pytest.approx(top, rel=1e-9)
+    # the lower calibration speed's Taylor life is still met exactly, the upper one's miss is reported
+    assert abs(cal.report["residual_rel"][0]) < 1e-9 and cal.report["residual_rel"][1] > 0.0
+    # a flank 100 K above the calibration temperature wears at most exp(3e4 (1/634 - 1/734)) = 630 x faster
+    assert math.exp(cal.B_K * (1.0 / 634.0 - 1.0 / 734.0)) < 1.0e3
+
+
 def test_the_default_response_takes_the_runs_flank_partition():
     """The flank temperature the Taylor calibration sees is the one the run's partition gives (2026-11-10): the flank
     contact (wear land plus the edge arc below the stagnation point), its heat (friction on both, the edge's plastic
