@@ -4,8 +4,7 @@
 in the hot loop. Per macro step and tool slot it turns cutting's per-element integrals and shocks and
 thermal's edge temperatures into the wear state of every edge element, decides chipping, coating
 spallation, thermal cracking, section breakage and the end of the tool's life, and publishes
-`WearFeedback` (`nxt.wear`). Coefficients: `db/models/wear-{flank,calibration,fracture,life}.yaml`;
-sources: `db/bibliography/models-wear.yaml` (plus the keys already in other bibliography files).
+`WearFeedback` (`nxt.wear`). Coefficients and their sources: section 13.
 
 | module | content |
 |---|---|
@@ -109,6 +108,8 @@ thermally activated and a mechanical term; Archard 1953):
   and chip larger: convergence.md 9, item 9.)
 * **Edge rounding**: r_e = r_e0 + `edge_rounding_ratio` (1, est) (VN + VN_notch); a chipped edge at least
   half the chip depth.
+
+### Validity of the flank wear model
 
 Validity: continuous and interrupted cutting with in-cut times resolved by thermal's quadrature;
 Usui's law for diffusion/adhesion-dominated wear of carbide, cermet, ceramic, PCBN and HSS above
@@ -498,8 +499,24 @@ candidates in flat element order; the calibration uses fixed Gauss nodes, fixed 
 tolerances. Checkpoint: `WearState.to_arrays()` / `from_arrays()` hold every array and counter (test:
 bit-identical continuation; a checkpoint written before the edge's fatigue sum existed loads with an empty one).
 
-## 13. Settings (`physics.wear`, schema.py)
+## 13. Parameters and settings (`physics.wear`, schema.py)
 
+Coefficients: `db/models/wear-{flank,calibration,fracture,life}.yaml`; sources: `db/bibliography/models-wear.yaml`
+(plus the keys already in other bibliography files). The wear laws' constants themselves come from the databases
+(Usui and Taylor entries of the work materials, tool materials, coatings) or from the calibration of section 3.
+
+| file | parameters (SI) | source |
+|---|---|---|
+| wear-life | VB limit 0.3 mm (VB_max 0.6 mm), notch 1.0 mm, crater depth KT = 0.06 mm + 0.3 f | iso-3685-1993 |
+| wear-calibration | milling reference arc 36.87 deg (ae/D = 0.1) | iso-8688-2-1989 |
+| | calibration lives 60 and 5 min, check life 15 min, activation bracket 10-1e5 K, abrasive share at most 0.1, reference land 0.1 mm, fallback speed span 3, default feed 0.1 mm and depth 2 mm, table speeds 10-600 m/min | est |
+| wear-flank | minimum clearance 2 deg, edge rounding ratio 1, abrasive coefficient 2e-8 (range 2e-9-2e-7), flank base weight 0.5, notch hardness exponent 2, depth-of-cut line at 0.5 h, BUE protection 0.5 and pluck fraction 3e-4, grain size 1 um, crater onset 1 um, generic coating factor 0.6 and thicknesses (PVD 3 um, CVD 10 um), friction 0.5 | est (ranges in the file) |
+| wear-fracture | crack shape factor 1.1215 | tada-paris-irwin-2000-cracks |
+| | hardmetal fatigue limit 0.7 of the strength at 1e7 cycles | nakajima-2006-wc-co-fatigue |
+| | steel Basquin exponent -0.09, coefficient 0.623, strength exponent 0.832 | muralidharan-manson-1988-universal-slopes |
+| | TRS specimen 6.5 x 5.25 mm on a 14.5 mm span (ISO 3327 type B as commonly described; the standard was not read), entry contact ratio 2, chip size ratio 1, exit stress factor 1, wedge angles 20-160 deg, crack growth damage 1, thermal fatigue 0.25 at 5000 cycles, coating impact strength 4000 MPa, Weibull moduli 6 (coating) and 10 (default) | est |
+
+Numerical settings (`physics.wear`, schema.py):
 `strength` median | sample, `breakage_risk_warn` 0.01, `calib_nodes` 6, `calib_pieces` 8, `rate_window_s` 10 s,
 `chip_theta_nodes` 64, `skin_samples` 64, `max_chip_events` 20 (trace events per tool and operation; the
 counts are complete), `fallback_speeds` 7, `dimensional_share` 1.0, `every_n_macro` 1 (fixed: wear

@@ -8,11 +8,8 @@ package is not a physics domain: it reads run directories (architecture 16) and 
 writes into a job's output folder; it reads and writes no bus record and draws no random numbers
 (no RNG streams).
 
-Coefficients: `db/models/mdata-import.yaml`, `mdata-align.yaml`, `mdata-calibration.yaml`
-(read through `cnctwin.db.models.params`), sources in `db/bibliography/models-mdata.yaml`. The
-speed laws of the spindle models are read from the models that simulate them, so a calibration
-and the simulator agree: `production-energy` `palmgren_speed_exponent` (idle power) and
-`thermal-machine` `bearing_heat_speed_exponent` (bearing friction, spindle growth).
+Coefficients and settings, with their sources and the bounds of every fitted parameter: section
+"Parameters".
 
 | module | what |
 |---|---|
@@ -188,7 +185,7 @@ path 0 per L1 tick; float32 angles give 4e-4 rad/s noise at 1 ms), `spindle.shaf
 block start (timeline.json), and the block markers. Simulated time is `tick * tick_s` from the
 start of the run.
 
-## Alignment
+## Alignment and its error
 
 One affine map, `t_sim = offset + scale * t_meas` (`Alignment`; `scale` absorbs clock drift).
 
@@ -271,7 +268,7 @@ interval is flagged approximate (curvature, bates-watts-1988 ch. 7). For a linea
 intervals equal ordinary least squares exactly (test_mdata_fit.py, relative 1e-4). Before/after
 error metrics of every set and the cost before and after are reported.
 
-## Targets and models (`targets.py`, `surrogates.py`)
+## Targets and models: validity and error (`targets.py`, `surrogates.py`)
 
 Each target builds its parameters (prior = the project's / database's value), observation sets
 (measured values at their simulated times) and `observe(sim_log, theta, sim_effects)`. Default free
@@ -442,6 +439,30 @@ Command line: `python -m cnctwin.mdata.calibrate --project P --run RUN (--data s
 [--options options.yaml] --out DIR` (exit 0, 1 on an input error). Import alone:
 `python -m cnctwin.mdata.importers --kind K --path P [--map ...] [--start T --end T] [--out DIR]`,
 `--browse opc.tcp://...` lists an OPC UA server's variables.
+
+## Parameters
+
+Coefficients: `db/models/mdata-import.yaml`, `mdata-align.yaml`, `mdata-calibration.yaml`
+(read through `cnctwin.db.models.params`), sources in `db/bibliography/models-mdata.yaml`. The
+speed laws of the spindle models are read from the models that simulate them, so a calibration
+and the simulator agree: `production-energy` `palmgren_speed_exponent` (idle power) and
+`thermal-machine` `bearing_heat_speed_exponent` (bearing friction, spindle growth).
+
+| file | parameters | source |
+|---|---|---|
+| mdata-align | Huber k 1.345, MAD to sigma 1.4826 | huber-1981 |
+| | cross-correlation ambiguity ratio 0.9 | knapp-carter-1976 |
+| | marker outliers at 4 robust deviations, scale fitted from 3 markers over 30 s, scale refused beyond 1 %, overlap >= 0.5, at most 262144 correlation points, 4 scale windows, minimum correlation 0.3, gaps beyond 3 sampling intervals, overlays of at most 2e4 points | est |
+| mdata-calibration | confidence level 0.95 | jcgm-100-2008 |
+| | at most 100 evaluations per parameter | virtanen-2020-scipy |
+| | singular-value cut-off 1e-10, correlation flag 0.95 | seber-wild-2003 |
+| | interval check ratio 2 | bates-watts-1988 |
+| | bounds: mc 0-0.7; feed-forward 0-1; growth 0-500 um, thermal time constant 1-1000 min; Taylor n 0.05-1.5; Usui A 1e-24-1e-3 1/Pa, B 10-1e5 K; seal drag 0-5000 N, friction coefficient 0-0.3 | kienzle-1952, ellis-2012-control-design, mayr-2012-thermal-issues, taylor-1907, usui-1984-tool-wear, armstrong-1994-friction |
+| | solver tolerances (1e-10 surrogate, 1e-6 loop), difference steps (1e-6, 1e-3), 2 reweighting passes, cut trim 0.1; bounds: efficiency 0.3-0.99, idle power 0-10 x prior (at most 50 kW), bearing power 0-10 x prior (at most 20 kW), kc_scale 0.3-3, kc1.1 and cutting coefficients 0.2-5 x prior, edge coefficients up to 300 N/mm, K_v 1-1000 1/s, block time 0.01-100 ms, growth offset +-5 mm, compensation residual 0-1, Taylor C 0.05-20 x prior, Taylor exponents -1-3, stiffness factor 0.1-10, runout 0-200 um, meter time constant 0-5 s | est |
+| mdata-import | MTConnect 1000 samples per request, at most 1e5 requests, time-outs 10 s, OPC UA browse depth 4 and 5000 nodes, at most 2e7 observations | est (request sizes and memory caps) |
+
+The bounds are the validity range of a calibration: a value at a bound is written and flagged `at_bound`
+(its interval one-sided).
 
 ## Decisions and their consequences
 

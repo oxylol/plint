@@ -102,7 +102,7 @@ Order inside a block: unit codes, the other G codes (modal groups), F and S, the
 "before motion" M codes (M03/M04/M06/M19/M29 and the coolant-on codes), one-shot G codes or the
 motion, then the remaining M codes (M05, M09, stops, M30/M02, calls).
 
-Assumptions (each a choice with its consequence):
+#### Assumptions of the scan (each a choice with its consequence)
 
 * the program starts with the tool at the machine home (`kinematics.home_mm`), G49, G40, G80,
   G90, G94 (lathes G99), G17 (lathes G18) and the units of `default_units`; the tool in the
@@ -232,6 +232,8 @@ tool's lower envelope `z_tip + lift(r)`: flat end mill `lift = 0`; torus/ball wi
 * Not estimated: probe moves other than rapids (a probe touches, it never cuts) and moves whose tool
   axis is tilted more than `max_tool_tilt_rad` from +z (five-axis moves from the controller assist:
   the 3-axis model does not apply; reported under `scan-limits`).
+
+### Error of the estimate
 
 Error: `ap` and `ae` within about one cell (0.5 mm by default) plus, on arcs, the chord sagitta
 (cell/4); ramps add the sampling step. The map knows the stock only (no previous operation's

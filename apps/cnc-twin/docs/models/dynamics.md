@@ -390,7 +390,7 @@ sd_scan, sd_tol,
 max_operating_points, relax_estimate, rotation_length_m. Numerical constants of the closed forms (series radius
 0.2, Taylor switch omega h = 0.1, 44 terms) are floating-point accuracy choices, documented in kernels.py.
 
-## 10. Validity and limitations
+## 10. Assumptions, validity and limitations (consequences)
 
 * Linear modal structure; modes with 0 < zeta < 1 (InputError otherwise). Stations of structure's tool modes
   outside the edge stations are reached by rigid extrapolation (error ~ curvature x dz^2 / 2 of the shape).

@@ -63,12 +63,30 @@ Tool factors exist for every `tools.list` entry and every row of a CSV tool libr
 paths other than 1); clamping factors for every workholding entry of every operation (each clamp is
 tightened independently). Factor values are SI; the variant writes them in the file's units.
 
-Consequences: a tolerance is treated as a hard bound with every value inside equally likely, the
-conservative reading of a tolerance without a stated distribution (a normal with the bounds at
-3 sigma has 0.58 times its standard deviation); a batch spread beyond 3 sigma is not sampled
-(0.27 % of the probability; the sampled standard deviation is 1.3 % below the stated sigma); factors
-are independent (no stated correlation; a harder batch with a higher specific force must be stated
-by the user as a larger kc spread).
+### 2.1 Assumptions and their consequences
+
+* **A tolerance is rectangular**: a hard bound with every value inside equally likely, the conservative
+  reading of a tolerance without a stated distribution. Consequence: the spread is wider than a normal
+  with the bounds at 3 sigma, which has 0.58 times its standard deviation.
+* **A 1-sigma spread is a normal truncated at 3 sigma** (`normal_truncation_sigma`) and at the scale
+  floor 0.1. Consequence: a batch beyond 3 sigma is not sampled (0.27 % of the probability; the sampled
+  standard deviation is 1.3 % below the stated sigma).
+* **Factors are independent** (no stated correlation). Consequence: a harder batch with a higher specific
+  force must be stated by the user as a larger kc spread; random pairing leaves spurious correlations of
+  order `1/sqrt(n)`, which the partial rank correlation removes (section 6).
+* **A material batch scales the flow-stress curve** (A and B of Johnson-Cook by kc x flow-stress scale) and
+  the Kienzle and mechanistic coefficients by the kc scale (section 4). Consequence: the specific cutting
+  force scales with kc to first order; the thermal softening of the hotter cut changes it by a fraction of
+  the scale change.
+* **Common random numbers**: every sample keeps the project seed unless `vary_seed`. Consequence: the
+  spread and the sensitivities show the tolerances, not the stochastic models' own scatter (chipping,
+  noise), which is left out of the distribution.
+* **Options-only factors** (`coolant_reach_scale`, clamps without torque or pressure, unknown `vary` keys)
+  act only where the simulation reads `options["uncertainty"]["options_only"]`. Consequence: a runner that
+  does not read them shows no effect of those factors; the study lists them and the report says so.
+* **The simulation's model errors are not sampled** (section 7). Consequence: the distributions are those of
+  the stated input tolerances through a fixed model; add the model errors of docs/approximations.md to judge
+  a capability against a real process.
 
 ## 3. Sampling plans
 

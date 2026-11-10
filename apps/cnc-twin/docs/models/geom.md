@@ -357,6 +357,41 @@ Validity: meshes up to the int32 index range; trees to any size (memory ~180 B/t
 envelopes must be z-monotone (non-decreasing z, steps allowed; checked); point-in-mesh parity assumes a
 closed mesh (holes are outvoted up to one leaking ray of three; the winding number handles larger holes).
 
+### Assumptions and their consequences
+
+* **Inscribed tessellation.** Curved surfaces become meshes whose vertices lie on the true surface, at a
+  chordal tolerance of 10 um for primitives and envelopes (`tessellation_chordal_tolerance_m`, at least 12
+  segments) and 5 um for STEP faces (`step_chordal_tolerance_m`, with 10 deg angular deflection).
+  Consequence: a mesh lies inside a convex true surface: volumes are low by `0 < V - V_h <= 2 A tol`,
+  distances to the true surface are off by up to the chord tolerance (sphere test <= 2 tol), selectors
+  and STEP features are exact on the tessellation only. Collision envelopes are made conservative instead
+  (`profile_polyline(conservative=True)`: circumscribed polygons), so they never lie inside the true profile.
+* **Closed, consistently oriented meshes** for signed distance and point-in-mesh. Consequence: an open mesh
+  is refused by `signed_distance` (unless `allow_open`); point-in-mesh parity survives one leaking ray of
+  three, larger holes fall back to the winding number at O(faces) per point; a point within rounding
+  distance of the surface may be classified either way.
+* **Rigid poses.** Poses are rotations plus translations: computed ones are rigid to `1000 eps`, poses
+  handed in to `1e-6` (`RIGID_INPUT_TOLERANCE`). Consequence: a scaled or sheared transform is rejected,
+  never silently used (single-precision rotations pass).
+* **Revolved envelopes are z-monotone about z** (non-decreasing z, steps allowed). Consequence: a profile
+  that turns back in z is refused (checked); the mesh-vs-envelope clearance is exact for overlap, equals
+  the Euclidean gap on cylindrical portions and end faces, exceeds it by `1/cos(alpha)` on a cone of slope
+  alpha (a near-miss margin reads larger than the true gap) and lies between `1/sqrt(2)` and 1 times it
+  beyond the ends.
+* **Mesh-mesh overlap tests surfaces.** Consequence: a mesh entirely inside another touches nothing;
+  callers combine it with `points_in_mesh` where containment matters.
+* **File units.** STL, OBJ and PLY carry no unit: the `unit` argument (default mm, the CAD convention)
+  scales them; 3MF uses its own unit, GLB metres, STEP the OCCT session unit (mm) scaled to metres.
+  Consequence: a file written in another unit than declared comes in scaled by that ratio (25.4 for
+  inches); STEP reports its file unit so a caller can check.
+* **PMI mapping.** Limit dimensions become nominal = mid-range with symmetric plus/minus; PMI items without
+  a project form (datum targets, dimensions on edges or vertices, oriented or path dimensions) are kept in
+  `pmi_unmapped` with the reason. Consequence: those items are not inspected; the asymmetric limits of a
+  dimension are kept as a symmetric band of the same width.
+* **IEEE double arithmetic** everywhere; the tolerances of the predicates (`32 eps |n||p - v0|` plane
+  distance, `64 eps` SAT guard, 8-ulp roots) are rounding bounds of their own evaluation. Consequence:
+  touching counts as overlap; results are reproducible bit for bit on one build (determinism, section 13).
+
 ## 13. Determinism, RNG, bus
 
 No random numbers (no RNG streams). Builds, traversals, ties (lowest face id), sorting of all-hits (by t,

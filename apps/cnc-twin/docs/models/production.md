@@ -161,6 +161,8 @@ split into basic, ready and cutting power):
   `air_supply_gauge_pressure_Pa`): 0.379 MJ/m3 at 6.9 bar(g), i.e. 0.105 kWh/m3, the range of
   industrial screw compressors (doe-compressed-air-2003).
 
+### 6.1 Parameters (`db/models/production-energy.yaml`, `production-operator.yaml`, `production-consumables.yaml`)
+
 Parameters (db/models/production-energy.yaml): `palmgren_speed_exponent` 5/3 (palmgren-1959),
 `spindle_regen_recovered_frac` 0, `axis_guide_friction_coeff` 0.003 (0.002-0.005),
 `axis_seal_drag_N` 30 N, `ballscrew_efficiency` 0.9, `axis_drive_efficiency` 0.85,
@@ -168,6 +170,29 @@ Parameters (db/models/production-energy.yaml): `palmgren_speed_exponent` 5/3 (pa
 iec-60034-30-1-2014), `pump_load_factor` 1, `conveyor_power_W` by type (auger 200 W, belt and
 scraper 370 W, drum filter 750 W), `compressor_isothermal_efficiency` 0.55 (0.4-0.7),
 `air_supply_gauge_pressure_Pa` 6e5. All but the exponent are estimates (`src: est`, with notes).
+The operator times of section 4 (db/models/production-operator.yaml) and the consumables' defaults of
+section 7 (db/models/production-consumables.yaml: tank depth 0.35 m, MQL 20 ml/h and 100 l/min of carrier
+air) are `src: est` too. Ranges of the estimates:
+
+| parameter | value | range | source |
+|---|---|---|---|
+| `spindle_regen_recovered_frac`, `axis_regen_recovered_frac` | 0 | 0-0.9 | est (braking resistor) |
+| `axis_guide_friction_coeff` | 0.003 | 0.002-0.005 | est (rolling guides) |
+| `axis_seal_drag_N` | 30 N | 5-150 N | est |
+| `ballscrew_efficiency`, `axis_drive_efficiency` | 0.9, 0.85 | 0.8-0.97, 0.6-0.95 | est |
+| `pump_motor_efficiency`, `pump_load_factor` | 0.8, 1 | 0.6-0.92, 0.3-1.2 | est (iec-60034-30-1-2014 for the IE2 value) |
+| `compressor_isothermal_efficiency` | 0.55 | 0.4-0.7 | est (doe-compressed-air-2003 for the resulting kWh/m3) |
+| `air_supply_gauge_pressure_Pa` | 6 bar | 3-10 bar | est |
+| `mql_dosage_m3_s`, `mql_air_m3_s` | 20 ml/h, 100 l/min | 5-50 ml/h, 30-300 l/min | est (dguv-209-025-mql-2010) |
+| `tank_depth_m` | 0.35 m | 0.1-1.0 m | est |
+
+### 6.2 Validity and error bounds
+
+Validity: the idle law `(|omega| / omega_max)^(5/3)` holds where Palmgren's viscous term applies,
+`nu n >= 2000` mm2/s rpm (above a few hundred rpm with spindle oils; below it the model keeps the 5/3 law and
+overstates the drop of the idle power); the efficiencies are those at rated load (part load: section below);
+the axis work is exact for piecewise-constant velocity samples of linear axes (rotary axes are not in the
+axis model); the compressed-air figure holds for 3-10 bar supplies and screw compressors.
 
 **Error bounds** (from the parameter ranges, propagated term by term; the machine-file values are
 estimates themselves and bound the result as much): spindle cutting energy +0/-10 % (the rated-load

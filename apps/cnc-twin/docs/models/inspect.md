@@ -381,21 +381,28 @@ from_mesh: removal.stock.mesh_field; the NextStock is `domain.next_stock(op_inde
 files (`state.files`) with RunDirectory.register_output. `physics.inspect` is declared (`schema.physics_schema()`) but
 the project schema routes physics sections only for SimState domains; until it adds `inspect`, the defaults apply.
 
-## 19. Settings (`db/models/inspect.yaml`, `schema.py`)
+## 19. Parameters and settings (`db/models/inspect.yaml`, `schema.py`)
 
-| setting | default | role |
-|---|---|---|
-| assign_band, assign_angle | 0.5 mm, 30 deg | point assignment (section 4) |
-| max_points_per_face, sections, section_min_points | 4000, 8, 8 | dense sampling, cross sections |
-| ls_iterations, ls_step_tolerance | 60, 1e-13 | least squares |
-| lp_iterations, lp_tolerance, lp_trust, zone_polygon_sides | 12, 1 pm, 1 mm, 64 | Chebyshev solvers |
-| pair_angle | 1 deg | slots, tabs, pocket walls |
-| probe_radius, probe_prehit, probe_search, probe_inset | 1, 2, 2, 0.5 mm | CMM |
-| probe_points_plane, probe_points_circle, probe_levels | 9, 8, 3 | CMM plans |
-| probe_trace_iterations, probe_trace_tolerance | 400, 1 nm | sphere tracing |
-| remaining_tolerance, gouge_tolerance, region_min_volume, column_merge | 5 um, 5 um, 0.001 mm^3, 1 nm | remaining material, gouges |
-| chordal_samples, chordal_iterations, chordal_max_distance, chordal_tolerance | 8, 40, 5 mm, 10 um | chord errors |
-| thread_match_rel | 2 % | matching measured threads |
+| setting | default | role | source |
+|---|---|---|---|
+| assign_band, assign_angle | 0.5 mm, 30 deg | point assignment (section 4) | est |
+| max_points_per_face, sections, section_min_points | 4000, 8, 8 | dense sampling, cross sections | est |
+| ls_iterations, ls_step_tolerance | 60, 1e-13 | least squares | est |
+| lp_iterations | 12 | Chebyshev solvers | carr-ferreira-1995a |
+| lp_tolerance, lp_trust, zone_polygon_sides | 1 pm, 1 mm, 64 | Chebyshev solvers | est |
+| pair_angle | 1 deg | slots, tabs, pocket walls | est |
+| probe_radius | 1 mm | CMM stylus | renishaw-2020-styli |
+| probe_prehit, probe_search, probe_inset | 2, 2, 0.5 mm | CMM | est |
+| probe_points_plane, probe_points_circle | 9, 8 | CMM plans | iso-10360-6-2001 |
+| probe_levels | 3 | CMM plans | est |
+| probe_trace_iterations | 400 | sphere tracing | hart-1996-sphere-tracing |
+| probe_trace_tolerance | 1 nm | sphere tracing | est |
+| remaining_tolerance, gouge_tolerance, region_min_volume, column_merge | 5 um, 5 um, 0.001 mm^3, 1 nm | remaining material, gouges | est |
+| chordal_iterations | 40 | chord errors (golden section) | kiefer-1953-golden |
+| chordal_samples, chordal_max_distance, chordal_tolerance | 8, 5 mm, 10 um | chord errors | est |
+| thread_match_rel | 2 % | matching measured threads | est |
+| `inspect-iso286.yaml`: IT1-IT18 grades, shaft fundamental deviations a-g, k, m, n, p, r, s up to 500 mm | tables | size limits (section 12) | iso-286-1-2010, iso-286-2-2010 |
+| `inspect-threads.yaml`: ISO 68-1 profile (H = 0.866 P, crest truncations), ISO 965-1 tolerance formulas and grades, ISO 261 coarse pitches, R40 rounding, ASME B1.1 class formulas | formulas and tables | thread limits (section 13) | iso-68-1-1998, iso-965-1-2013, iso-261-1998, iso-3-1973, asme-b1-1-2019, oberg-2016, amesweb-metric-thread-chart, engineersedge-unified-thread-limits |
 
 Each value's source and reason is in the file; out-of-range overrides are rejected.
 

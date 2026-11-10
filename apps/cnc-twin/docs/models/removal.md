@@ -29,8 +29,7 @@ tri-dexel, raises findings and carries the workpiece from one operation to the n
 | `kernels.py`, `reference.py` | kernel index; plain-Python references of every kernel |
 | `state.py`, `schema.py`, `channels.py`, `domain.py` | domain plumbing |
 
-Model parameters: `db/models/removal.yaml` (loose-body hazard sizes), sources in
-`db/bibliography/models-removal.yaml`. Numerical settings: `physics.removal` (`schema.py`, section 13).
+Model parameters and numerical settings: section 13.
 RNG streams: **none** (removal is deterministic geometry; no stochastic phenomenon is modelled here).
 
 ## 1. Layouts (`abi.py`)
@@ -477,7 +476,7 @@ Per path, in the compiled loop:
 consistency, connectivity, polar sync and air cutting; `end_operation` rebuilds from the polar field,
 releases loose bodies, checks the remaining material (last operation) or transfers the part.
 
-## 13. Domain, bus, ledger, settings
+## 13. Domain, bus, ledger, parameters and settings
 
 **Bus read** (`bus_prev`): `motion.paths[*]` (`tool_slot`, `workpiece`, `spindle_omega_rad_s`, `ipo_ticks`,
 `pose_M_T`, `pose_S_T`), `cutting.contacts[*]` (`contact`, `analytic_chip_volume_m3`). The hot loop itself
@@ -513,6 +512,17 @@ plunge, fixture contact (errors); part_free, chip_hazard; remaining material aft
 **Channels** (macro): `removal.removed_volume_m3`, `removal_rate_m3_s`, `field_volume_m3`,
 `freed_mass_kg`, `pool_used_blocks`, `events`, `field_version`, `polar_volume_m3`; per path
 `volume_consistency`, `ae_m`, `ap_m`, `engaged_angle_rad`, `in_cut_fraction`, `air_cut_time_s`.
+
+**Parameters** `db/models/removal.yaml` (sources in `db/bibliography/models-removal.yaml`): the loose-body hazard
+sizes of section 9, given as cube edges.
+
+| parameter | value | range | source |
+|---|---|---|---|
+| `slug_max_cube_edge_m` | 12.6 mm (2000 mm^3, about 5 g of aluminium, 16 g of steel) | 8-27 mm (500-20000 mm^3) | est: no published threshold; the range covers the drop-out sizes chip conveyors are specified to pass |
+| `swarf_cube_edge_m` | 1.0 mm (1 mm^3) | 0.2-2.2 mm | est: chip-sized fragments of webs thinner than the lattice |
+
+The geometric model itself has no physical coefficients: its constants belong to the representation (the 10 nm
+quantum of the segment endpoints, section 1.1; the marching-cubes table, section 10) or are numerical settings.
 
 **Settings** `physics.removal` (`schema.py`, range-checked): `margin_nodes` 1, `gouge_tolerance_um` 5,
 `collision_tolerance_um` 10, `gate_sample_cells` 1, `gate_tolerance_nm` 10, `gate_margin_um` 0,

@@ -22,8 +22,7 @@ coefficient pipeline reads (architecture 5.3).
 | `protocols.py` | `WorkGeometry`, `ToolEdges`, `FixtureContact` (wired by the integration) |
 | `state.py`, `schema.py`, `channels.py`, `domain.py`, `ledger.py` | domain plumbing |
 
-Model coefficients: `db/models/thermal-{convection,tool,work,machine,partition}.yaml`, sources in
-`db/bibliography/models-thermal.yaml`. RNG streams: **none** (no stochastic thermal phenomena).
+Model coefficients and their sources: section 7. RNG streams: **none** (no stochastic thermal phenomena).
 
 ## 1. Heat distribution (single owner, architecture 12)
 
@@ -665,8 +664,35 @@ new array at every finite-volume step, NaN outside material, never modified afte
 and, for a network, `node_temps_K`, `growth_parts_m` (shaft, housing) and `energy_J` (bearing, motor and
 holder heat, losses to air, structure, jacket).
 
-## 7. Settings (`physics.thermal`, `schema.py`)
+## 7. Parameters and settings
 
+Model coefficients: `db/models/thermal-{convection,tool,work,machine,partition}.yaml`, sources in
+`db/bibliography/models-thermal.yaml`; material properties (k(T), cp(T), mean CTE, emissivity family,
+thermal-damage thresholds) from the material and tool databases. Machine-file values replace the
+`thermal-machine` defaults; every default used is listed in `finalize()["estimated"]`.
+
+| file | parameters (SI) | source |
+|---|---|---|
+| thermal-convection | vertical plates 0.825, 0.387, Pr 0.492; horizontal cylinders 0.6, 0.387, Pr 0.559 | churchill-chu-1975-vertical-plate, churchill-chu-1975-horizontal-cylinder |
+| | horizontal plates 0.54 Ra^1/4 / 0.15 Ra^1/3 (switch 1e7) up, 0.27 Ra^1/4 down; laminar pipe Nu 4.36, transition Re 2300 | incropera-2007-heat-mass-transfer |
+| | rotating cylinder 0.133 Re^(2/3) Pr^(1/3), Re <= 4.3e5 | kays-bjorklund-1958-rotating-cylinder |
+| | Dittus-Boelter 0.023 Re^0.8 Pr^0.4 | dittus-boelter-1930-tubes |
+| | air: Sutherland constants at 273.15 K | white-2006-viscous-fluid-flow |
+| | emissivity by material family (aluminium 0.08, steels 0.35, stainless, titanium, nickel 0.3, cast iron 0.45, polymers 0.9, default 0.3) | est |
+| thermal-tool | Poletika exponent 1.5, default compression ratio 2.5, flank contact edge factor 1.0, fluted solid fraction 0.65 and perimeter factor 1.6, shank and taper contact conductances 5000 and 3000 W/m2K, holder proportions, insert and bar defaults (12.7 x 4.76 mm, bar 25 mm, 30 mm overhang), wedge angle limits 30-180 deg | est |
+| | steep tapers 30/40/50, HSK 40-100 (gauge diameters and lengths) | iso-7388-1-2007-steep-taper, iso-12164-1-2001-hsk |
+| thermal-work | fixture contact 3000 W/m2K, default fixture 20 kg of 1045 steel, area factor 8, surface h 8 W/m2K, default shear angle 30 deg (flash band), near-cut coolant radius 1.5 tool diameters, unload band 1 K | est |
+| thermal-partition | literature fallback when cutting publishes no table: shear to chip 0.85, rake to tool 0.15, flank to tool 0.4 | est |
+| thermal-machine | Palmgren M_v = 1e-7 f0 (nu n)^(2/3) dm^3 (160e-7 f0 dm^3 below nu n 2000), lumped bearing heat ~ n^(5/3) | palmgren-1959-bearings |
+| | f0, f1 = z (P0/C0)^y per bearing type and lubrication, F_beta factors 0.9 / 0.1 / 3 | harris-kotzalas-2007-bearings |
+| | static equivalent load factors X0, Y0 | iso-76-2006-static-load-ratings, iso-281-2007-dynamic-load-ratings |
+| | Walther's relation, -20 to 150 degC | astm-d341-2020-viscosity-temperature |
+| | half the bearing heat into the rolling elements | blok-1937-flash-temperature |
+| | housing paint emissivity 0.9 | incropera-2007-heat-mass-transfer |
+| | motor no-load loss 0.03 of rated power; rotor share 0.33 | iec-60034-2-1-2014-motor-losses, bossmanns-tu-2001-power-flow |
+| | 40-taper spindle defaults (bearing arrangement, bores, masses, areas, lubricant viscosities, jacket), lumped spindle (growth 20 um, 25 min, 400 W, L_eff 0.25 m), compensation residual 0.3, housing to structure 8 W/K, warm-up at 0.5 of max speed, structure time constant 4 h, ballscrew 50 J per m of travel and 40 min (69 entries) | est (ranges in the file) |
+
+Numerical settings (`physics.thermal`, `schema.py`):
 `every_n_macro` 5, `cell_mm` 2, `tool_cell_mm` 1, `edge_quadrature` 3, `edge_every_n_macro` 2,
 `edge_interval_ms` 20 (0: every `edge_every_n_macro` steps), `edge_window_periods` 4,
 `sa_direct_cycles` 4, `window_points` 3, `jaeger_points` 24, `min_fraction` 1e-9,
@@ -675,6 +701,48 @@ field (2.4): `tool_field` 1, `tool_field_ring_mm` 0.002, `tool_field_growth` 1.4
 15, `tool_field_dy_mm` 0.5, `tool_field_length_mm` 12, `tool_field_every_n_macro` 10, `tool_field_interval_ms` 100
 (0: every `tool_field_every_n_macro` steps), `tool_field_tol` 1e-12, `tool_field_max_iter` 5000;
 `spindle_every_n_macro` 10 (spindle networks, 4.1).
+
+## 7a. Assumptions and their consequences
+
+* **One split of the zone heat** (section 1) by the partition fractions cutting published one step earlier
+  (literature fallback 0.85 / 0.15 / 0.4 without a table), shares per element from the step's integrals with
+  a uniform friction coefficient along the edge. Consequence: chip + tool + work = generation to round-off;
+  the fractions and the contact length (each about +-30 %) dominate the tool temperature: +-20-30 % on the
+  local rise (2.3).
+* **Tool body as a 1-D axial ladder** (cross-section means) with the edge region as a quarter space whose
+  faces are adiabatic away from the contacts and without convection at the edge. Consequence: radial
+  gradients in shank and holder are not resolved (Biot number below 0.01); the edge field is off by ~ l / r
+  when the contacts are not small against the edge radius, and convection there would change it by less
+  than 5 % for h < 1e4 W/m2K (2.3).
+* **Quasi-periodic edge field** established within `l^2 / alpha`. Consequence: accurate after the first macro
+  step of an engagement for carbide (1-4 ms); for HSS and large contacts (up to ~40 ms) the first steps of an
+  engagement are overestimated; running sums lag a change of the cut by `edge_window_periods` periods.
+* **Workpiece on a uniform cut-cell grid** (`cell_mm` 2) stepped by first-order fractional steps every
+  `every_n_macro` (5) macro steps. Consequence: the steady state with sources differs by O(dt); exposed areas
+  of oblique cut cells carry a voxel error up to sqrt 3 except at 45 deg; walls thinner than a cell are shells
+  (valid for Bi < 0.1); the bulk, hottest-cell and contact-surface temperatures move with the cell and the
+  cadence (docs/convergence.md 6) while the contact's local temperature comes from the two-scale model.
+* **Two-scale contact temperature** on a half space with a flat generated surface and one band source.
+  Consequence: an estimate within about +-30 %; at a convex edge of the part the near field is up to twice the
+  half-space value (3.3).
+* **Fixture as one lumped body**; without a wired `FixtureContact` the part rests on the faces most aligned
+  with gravity on its lowest material layer. Consequence: vise jaws are not inferred, so heat conducted into
+  jaws through the part's side faces is missed.
+* **Free convection per face orientation** at the previous step's mean exposed temperature, radiation
+  linearised at the cell temperature, coolant coefficients over the reached share only. Consequence: the
+  boundary coefficients lag the surface temperature by one finite-volume step.
+* **Removed material leaves with its cell's mean enthalpy**. Consequence: the chip's own heat is the
+  partition's chip share (single owner); the cell mean only decides what leaves the part's ledger.
+* **Machine bodies are first-order** (axes, structure) and the spindle a network with one housing node,
+  no load (copper) losses, no thermally induced preload change. Consequence: spindle growth +-50 % with
+  estimated bearings and housing, +-30 % with a described spindle, the lumped body +-30 %, axis drift +-50 %
+  (the screw's temperature profile is not resolved), structure drift as good as the machine file's
+  sensitivity (section 4).
+* **Thermal damage is a threshold crossing** of the two-scale peak; time at temperature (tempering kinetics) is
+  not modelled. Consequence: a finding marks the first crossing with the +-30 % margin of the peak, not the
+  depth or degree of the damage.
+* **Grids stay in their build frame** after a removal transfer (docs/models/loop.md 15). Consequence: after
+  a flip the first operation's workpiece temperatures are misplaced by the turn.
 
 ## 8. Cost (measured, one core of the i5-4690, bin/tsafe)
 

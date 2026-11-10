@@ -331,7 +331,7 @@ convention: the table frame is the machine frame), with the stylus ball of each 
 real one; a feed per revolution with the spindle stopped ends it with a stall message (the real axes
 would not move).
 
-### Limitations
+### Assumptions and limitations
 
 * Canned cycles, cutter compensation, TCP/tilted planes beyond Haas G234/G254/G268, probing cycles
   beyond G31/G37 and tool life management are providers (section "Cycles and compensation"); a code
@@ -342,15 +342,17 @@ would not move).
 * A work offset the project writes as a list (`setup.work_offsets_mm`) is the work zero's machine
   coordinates X, Y, Z, then the path's other axes, on every machine type; `setup_from_project`
   (`domain.offset_row`) puts it in the executor's axis order (X, Z, Y, C on lathes). Lists handed to
-  `ControllerSetup` directly are in the executor's order.
+  `ControllerSetup` directly are in the executor's order. Consequence: a project list written in the
+  lathe's executor order (X, Z, ...) puts the work zero on the wrong axes.
 * Tool numbers: a `kind: probe` entry of the project's tool list is a probe T number (no "not in the
   tool list" warning; tool changes carry `tool.probe`); the setup takes the lathe geometry offsets
   (X as set, Z, nose radius, tip, X/Z wear) and each entry's 1-based `path`.
 * Single block and operator switches act at the next block the interpreter processes (up to the
   look-ahead depth later than on the control when switched during a run).
-* The block-time parameters and the arc tolerances are estimates (above); FANUC alarm texts are
-  built-in until db/controllers/fanuc-0i-mf.yaml lists them (Haas texts come from the database
-  where present).
+* The block-time parameters and the arc tolerances are estimates (above). Consequence: data starvation
+  on short-segment programs and the arc end-point alarms are as good as those estimates (block_time can
+  be calibrated from machine data, docs/models/calibration.md). FANUC alarm texts are built-in until
+  db/controllers/fanuc-0i-mf.yaml lists them (Haas texts come from the database where present).
 * #4201-#4330 (modal data of the executing block), interface signals without `interface_inputs`,
   and the variables listed per dialect below are not modelled and raise TW0006/TW0007.
 
@@ -558,7 +560,9 @@ The interpretation is exact for the documented semantics (tests: tests/unit/cont
 point, the M-code timing within a block, the order of G92 and G52 cancellation) the choice is the
 most common FANUC behaviour and is listed above; positions are exact to the least increment.
 
-References: FANUC CNC Functions catalogue (fanuc-cnc-functions-catalog-2024); Smid, *Fanuc CNC Custom
+### References
+
+FANUC CNC Functions catalogue (fanuc-cnc-functions-catalog-2024); Smid, *Fanuc CNC Custom
 Macros* (smid-2005-fanuc-macros) and *CNC Programming Handbook* (smid-2008-cnc-handbook); ISO
 6983-1:2009 (iso-6983-1-2009); db/controllers/fanuc-0i-mf.yaml and fanuc-0i-tf.yaml.
 
@@ -728,7 +732,9 @@ unused addresses), 312 program end, 313 no P, 314 subprogram not in memory, 315 
 339 multiple codes, 344 plane change in comp, 369 tool too big, 370 pocket definition, 376 comp in
 skip, 378/379 skip found/not found, 467 arc with per-axis scaling, 1000 + n program alarms.
 
-References: Haas NGC mill and lathe operator's manuals (haas-ngc-mill-om-2020, haas-ngc-lathe-om-2020)
+### References
+
+Haas NGC mill and lathe operator's manuals (haas-ngc-mill-om-2020, haas-ngc-lathe-om-2020)
 as read into db/controllers/haas-ngc.yaml; Smid 2005/2008 for the FANUC-compatible parts.
 
 ## Cycles and compensation
@@ -1239,16 +1245,20 @@ CYCLE801 802 830 899 930 940 950-952, LONGHOLE; a program of that name in the pr
 instead), tool management by name (`T="name"`: 17190), more than one cutting edge per tool. A program
 that is not there is 14011.
 
-References: SINUMERIK 840D sl Programming Manual Fundamentals (siemens-840dsl-fund-ru-2018: G
-functions, groups, modal effect) and Job Planning (siemens-840dsl-jobplan-ru-2018: cycle parameter
-lists, CYCLE800, CYCLE832); alarm texts and causes: SINUMERIK 802D sl Diagnostics Manual
-(siemens-802dsl-diag-2011, the same NCK and cycle alarms) and the 840D sl alarm list
-(siemens-840dsl-diag-zh-2022, numbers); Murray, Li and Sastry 1994 (subproblem 2); db/controllers/
-siemens-840d-sl.yaml. Tests: tests/unit/controller/test_siemens.py (motion, arcs, frames, language,
+Tests: tests/unit/controller/test_siemens.py (motion, arcs, frames, language,
 tools, alarms), test_siemens_cycles.py (expected command streams of the cycles, CYCLE800, TRAORI,
 turning), test_siemens_checkpoint.py (resume inside a FOR loop and inside a cycle expansion
 bit-identical), test_siemens_heidenhain_same_part.py (one part in FANUC, Siemens, Klartext and ISO: the
 same toolpath).
+
+### References
+
+SINUMERIK 840D sl Programming Manual Fundamentals (siemens-840dsl-fund-ru-2018: G
+functions, groups, modal effect) and Job Planning (siemens-840dsl-jobplan-ru-2018: cycle parameter
+lists, CYCLE800, CYCLE832); alarm texts and causes: SINUMERIK 802D sl Diagnostics Manual
+(siemens-802dsl-diag-2011, the same NCK and cycle alarms) and the 840D sl alarm list
+(siemens-840dsl-diag-zh-2022, numbers); Murray, Li and Sastry 1994 (subproblem 2); db/controllers/
+siemens-840d-sl.yaml.
 
 ## Heidenhain TNC (Klartext and ISO)
 
@@ -1523,14 +1533,18 @@ other manual, are 160-000B), FK data relative to other blocks, 3-D radius compen
 M120 look-ahead, datum / preset tables, PLANE on head kinematics, FUNCTION TCPM options other than the
 defaults, ISO G26 / G27 / G53.
 
-References: TNC 640 User's Manuals Klartext (heidenhain-tnc640-klartext-2023), ISO
-(heidenhain-tnc640-iso-2023) and Machining Cycles (heidenhain-tnc640-cycles-2023), NC Error Messages
-(heidenhain-nc-errors-2023), Setup (heidenhain-tnc640-setup-2023); Murray, Li and Sastry 1994
-(subproblem 2); db/controllers/heidenhain-tnc640.yaml. Tests: tests/unit/controller/test_heidenhain.py
+Tests: tests/unit/controller/test_heidenhain.py
 (paths, Q parameters, strings, flow, APPR / DEP, FK, PLANE, TCPM, M140, M126, ISO, errors),
 test_heidenhain_cycles.py (expected command streams of the cycles, 204, PATTERN DEF, transformations),
 test_heidenhain_checkpoint.py (resume inside a CALL LBL REP section bit-identical),
 test_siemens_heidenhain_same_part.py.
+
+### References
+
+TNC 640 User's Manuals Klartext (heidenhain-tnc640-klartext-2023), ISO
+(heidenhain-tnc640-iso-2023) and Machining Cycles (heidenhain-tnc640-cycles-2023), NC Error Messages
+(heidenhain-nc-errors-2023), Setup (heidenhain-tnc640-setup-2023); Murray, Li and Sastry 1994
+(subproblem 2); db/controllers/heidenhain-tnc640.yaml.
 
 ## Adding a dialect
 

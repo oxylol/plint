@@ -583,7 +583,7 @@ tie-breaks are fixed.
 | contact width / time | `RemovalFrame` contact geometry, cutting's engagement |
 | outputs | cutting writes `ProcessCoefficients` (`process_coefficients`); chips fills `ChipFormationContact` (shear angle, chip ratio, shear strain and rate, flow angle, chip temperature, form code, bue_active) and `EmissionBatch` (thickness, width, length, curl radius, form code, colour, segmented, velocities); wear integrates `bue_advance` |
 
-## 13. Assumptions and limitations (with error estimates)
+## 13. Assumptions, validity and limitations (with error estimates)
 
 * Continuous-chip shear-plane theory with Oxley's seized interface; segmented chips (Ti, hardened
   steels, high speeds) are flagged but not modelled: for Ti6Al4V the theory gives chips 1.5-3 times

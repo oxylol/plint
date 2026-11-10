@@ -24,10 +24,7 @@ return `None`; it writes only `nxt.coolant`.
 | `protocols.py` | `ToolShapes`, `WorkpieceBricks`, `SceneMeshes`, `MountPoses` and complete default implementations |
 | `state.py`, `schema.py`, `channels.py`, `domain.py`, `abi.py` | domain plumbing |
 
-Model coefficients: `db/models/coolant-{fluid,supply,jet,heat,lubrication,tank,occlusion}.yaml`;
-sources: `db/bibliography/models-coolant.yaml` (plus existing keys: incropera-2007-heat-mass-transfer,
-white-2006-viscous-fluid-flow, pope-2000, churchill-chu-1975-vertical-plate, schlichting-gersten-2017,
-nist-webbook-water-2026, wikipedia-leidenfrost-2026, dguv-209-025-mql-2010). **RNG streams: none**
+Model coefficients and their sources: section 10. **RNG streams: none**
 (every sampling pattern is deterministic: sunflower rays, equally spaced spindle angles).
 
 ## 1. Macro step
@@ -449,8 +446,47 @@ Note for consumers: thermal reads `wetted` as a grid over S x-y from `wetted_ori
 the grid's frame when its axes are (x_S, y_S, z_S) (`wetted_axes_S` = identity: mills with S z up). For
 other orientations use `wetted_axes_S` (columns e_u, e_v, e_w in S).
 
-## 10. Settings (`physics.coolant`, `schema.py`)
+## 10. Parameters and settings
 
+Model coefficients: `db/models/coolant-{fluid,supply,jet,heat,lubrication,tank,occlusion}.yaml`;
+sources: `db/bibliography/models-coolant.yaml` (plus existing keys: incropera-2007-heat-mass-transfer,
+white-2006-viscous-fluid-flow, pope-2000, churchill-chu-1975-vertical-plate, schlichting-gersten-2017,
+nist-webbook-water-2026, wikipedia-leidenfrost-2026, dguv-209-025-mql-2010). Every `est` entry carries its
+range in the file (the ranges are what an uncertainty study varies).
+
+| file | parameters (SI) | source |
+|---|---|---|
+| coolant-fluid | air: Sutherland mu 1.716e-5 Pa s / 110.4 K, k 0.0241 W/mK / 194 K at 273.15 K | white-2006-viscous-fluid-flow |
+| | gamma 1.4 | anderson-2003-compressible-flow |
+| | water vapour at 1 atm, 380-850 K (rho, cp, mu, k) | incropera-2007-heat-mass-transfer (Table A.4) |
+| | water: sigma 0.072 N/m, boiling 373.12 K, h_fg 2256.4 kJ/kg | nist-webbook-water-2026 |
+| | water Leidenfrost 193 degC | wikipedia-leidenfrost-2026 |
+| | oil vapour cp 2500 J/kgK, mu 1e-5 Pa s, k 0.03 W/mK, R 27.7 J/kgK; oil sigma 0.03 N/m, boiling 320 degC, h_fg 250 kJ/kg, Leidenfrost +60 K; gas constants of air and vapour (R/M) | est |
+| coolant-supply | laminar f = 64/Re up to Re 2000, turbulent from 4000 | white-2006-viscous-fluid-flow |
+| | Colebrook 2.51, 3.7; Haaland 1.8, 6.9, 1.11; hose roughness 1.5 um | colebrook-1939, haaland-1983, moody-1944 |
+| | K contraction and inlet 0.5 | crane-tp410-2013 |
+| | radial pump shut-off pressure 1.25 p_r, shut-off power 0.5 P_r | gulich-2014-centrifugal-pumps |
+| | line geometry (flood 16 mm x 2.5 m, K 4; branch 6.35 mm x 0.3 m, K 3; through-spindle 10 mm x 3 m, K 6; rotary union 6 mm, K 3; drawbar 8 mm x 0.45 m; holder 4 mm, K 1.5), drilled-hole roughness 5 um, static head 1.2 m, nozzle C_d 0.9 (air 0.85), default nozzle 3 mm, pump efficiency 0.35 radial / 0.6 displacement, MQL 1.667e-3 m3/s air at 6 bar and 5.6e-9 m3/s (20 ml/h; dguv-209-025-mql-2010: 5-50 ml per process hour) oil, mist 8.3e-4 m3/s air and 2.8e-7 m3/s liquid | est |
+| coolant-jet | gas jet B = 5.8, spreading 0.094 | pope-2000 |
+| | break-up 8.51 We^0.32 (turbulent), 19.5 [We^0.5 (1 + 3 Oh)]^0.85 (laminar), turbulent from Re 2300 | grant-middleman-1966, white-2006-viscous-fluid-flow |
+| | drop diameter 1.89 d | rayleigh-1878-jets |
+| | C_D = 24/Re (1 + 0.15 Re^0.687), 0.44 above Re 1000 | schiller-naumann-1933 |
+| | film r0 = 0.1833 d Re^(1/3), c = 1.402; wall-jet decay a = 1 | watson-1964-radial-spread, glauert-1956-wall-jet |
+| | spread half-angles 2 deg (liquid), 6 deg (spray), 3 deg (through-tool), gas jet visible edge 2 x r_1/2, column skin friction 0.005, film step 1 mm | est |
+| coolant-heat | Martin G and F1 constants, Pr^0.42, validity 2000 <= Re <= 4e5, 2.5 <= r/D <= 7.5, 2 <= H/D <= 12 | martin-1977-impinging-jets |
+| | Rohsenow C_sf 0.0130 (range 0.006-0.015), n 1 / 1.7 | rohsenow-1952 (incropera-2007-heat-mass-transfer Table 10.1) |
+| | peak flux 0.149; subcooling 0.1, 0.75; superposition n = 2 | lienhard-dhir-1973, ivey-morris-1962, kutateladze-1961 |
+| | film boiling 0.425 (plates), 0.62 and h'_fg factor 0.80 (cylinders), forced 2.7 | berenson-1961, bromley-1950, bromley-leroy-robbers-1953 |
+| | hydraulic wedge moment factor 2, minimum contact ratio 0.5 | oxley-1989-mechanics-of-machining, zorev-1963-tool-face-shear |
+| | film emissivity 0.3, near-zone wall temperature fraction 0.5, heat zone radius factor 1, far radius fraction 0.5 | est |
+| coolant-lubrication | contact length / deformed chip thickness 2 (reported range 1.5-3) | childs-2000-metal-machining |
+| | capillary radius 1 um, wetting cos 1, reference chip speed 1 m/s and contact 0.3 mm, friction floor 0.2, boundary film 50 nm, default chip ratio 0.4 and thickness 0.05 mm | est |
+| coolant-tank | Churchill-Chu 0.825, 0.387, 0.492; plates 0.54 Ra^1/4 / 0.15 Ra^1/3 (switch 1e7), 0.27 Ra^1/4 down, Ra >= 1e4 | churchill-chu-1975-vertical-plate, lloyd-moran-1974, incropera-2007-heat-mass-transfer |
+| | Magnus 610.94 Pa, 17.625, 243.04 K | alduchov-eskridge-1996 |
+| | tank depth 0.35 m, fill 0.9, wall emissivity 0.9, evaporation reference 30 / 20 degC, relative humidity 0.5, chiller band 2 K | est |
+| coolant-occlusion | zone radius factor 1.5, minimum 1 mm, tool zone height 1 R, shadow warning below reach 0.5, recovery 0.7, minimum flow 0.1 l/min | est |
+
+Numerical settings (`physics.coolant`, `schema.py`):
 `every_n_macro` (5), `latency_macro` (1), `rays_per_jet` (64), `rays_through_tool` (8),
 `through_tool_angles` (4), `step_max_mm` (10), `step_min_mm` (0.5), `sagitta_mm` (0.05),
 `trace_length_mm` (1500), `aim_length_mm` (1000), `max_points` (128), `profile_dz_mm` (0.25),
@@ -484,20 +520,62 @@ for bit (test).
 
 Cost grows linearly with jets x rays x segments to the first hit (~1.3 us per segment).
 
-## 13. Limitations
+## 13. Assumptions and limitations (with consequences)
 
-* Coolant sticking to a rotating tool is carried into the cut when it hits the fluted part inside the
-  zone sphere; centrifugal flinging at high speed and the air boundary layer around fast tools (which
-  matters for MQL and air at surface speeds comparable to the jet) are not modelled.
-* The cut itself is a sphere; the jet's penetration into the tool-chip gap is the lubrication access
-  model only.
+* **Quasi-steady supply.** The operating point is a pure function of the pump and nozzle configuration and
+  the fluid temperature bucket (`supply_temp_step_dK` 0.5 K); pump run-up, line filling and pressure waves
+  are not modelled. Consequence: the flow is at its steady value from the macro step of M08 on (the reach
+  is 0 until the first occlusion job is applied, one macro step later); fluid properties are those of a
+  temperature at most 0.25 K from the tank's.
+* **Estimated line geometry.** Line and hose lengths, diameters and lumped loss coefficients of the flood
+  and through-spindle circuits are estimates (`coolant-supply`, est, with ranges) unless the machine file
+  gives a pressure-flow curve. Consequence: the flow a nozzle receives from a pump curve moves with them
+  (a through-spindle tool's holes dominate the loss, so their flow is the least affected); in the
+  laminar-turbulent transition (Re 2000-4000) f is interpolated and uncertain by about +-30 %.
+* **All shaft power heats the fluid** (pump losses, friction, jet impact, relief throttling); motor losses
+  go to the air. Consequence: the tank's heat input is an upper bound for the pump share.
+* **Top-hat jets coherent within their spread cone**: every ray carries Q/n, liquid jets do not decay
+  before break-up, drops after break-up are Rayleigh drops of 1.89 d. Consequence: turbulent atomisation
+  makes smaller drops whose stronger drag is underestimated (sprays reach slightly too far); reach
+  converges to 0.02 with the default 64 rays (4.3).
+* **Isentropic expansion of air jets to ambient** at the notional nozzle: the expanded velocity is an upper
+  bound, about 10 % above the jet after its shock cells.
+* **The rotating tool occludes by its swept envelope** and a jet that hits the fluted part inside the zone
+  sphere counts as reaching the cut. Consequence: a jet between teeth is never let through to the work;
+  centrifugal flinging at high speed and the air boundary layer around fast tools (which matters for MQL
+  and air at surface speeds comparable to the jet) are not modelled, so reach is overestimated for fast
+  tools under MQL and air.
+* **The cut is a sphere** of 1.5 x max(R_tool, ap/2, ae/2, 1 mm); the jet's penetration into the tool-chip
+  gap is the lubrication access model only. Consequence: the factor 1.5 +- 0.5 changes reach by up to
+  +-0.2 for jets grazing the zone, which dominates the reach uncertainty (4.3).
+* **One jet sets each coefficient** (the strongest; colliding wall jets do not add) with Martin's
+  submerged-jet correlation applied to free-surface liquid jets on flat targets. Consequence: +-35 % in h
+  inside Martin's range, +-50 % outside it, +-25 % more on tools (curvature neglected for
+  D_target / d_jet > 2) (5.3).
+* **Wall temperature of the work target** at the near-zone fraction 0.5 (+-0.3) between preheat and
+  generated-surface peak. Consequence: h_work moves by up to a factor 2 near the boiling transitions.
+* **One boiling curve for every fluid and surface**: Rohsenow's C_sf of water on polished stainless steel
+  (0.0130) for carbide, steels and oils alike, pool-boiling peak flux plus a forced share under a jet,
+  saturated film boiling. Consequence: +-100 % in q at a given superheat in nucleate boiling, +-30 % on the
+  peak flux (conservative: jets raise it), subcooled film boiling up to 2x higher than modelled
+  (conservative).
+* **Occlusion on a cadence**: a job every `every_n_macro` (5) macro steps and on every configuration or
+  contact-set change, applied `latency_macro` (1) later. Consequence: within one configuration the reach
+  lags the moving tool and part by up to 6 macro steps (60 ms at the default 10 ms step).
+* **Film map**: flood fill downhill over steps of at most `film_step_m` (1 mm); the hydraulic jump and
+  drainage off part edges are not resolved. Consequence: every connected flat cell is wetted (what
+  flooded parts show); flush pressure beyond the jump is overestimated, by less than 1 % of the impact value
+  beyond ~10 r0.
 * Secondary flows (splash from the tool, fluid running down walls into pockets) are represented only by
-  the drain film below tool hits.
+  the drain film below tool hits. Consequence: pockets wetted only by run-off get no `h_work_far` and no
+  flush pressure.
 * Turning: the rotating workpiece should be wired as its revolved occupancy (WorkpieceBricks); the
-  default for cylinder stock is axisymmetric.
+  default for cylinder stock is axisymmetric. Consequence: a non-round turned part occludes as its stock
+  cylinder.
 * Flash and smoke points of oils are not checked (no fire or smoke hazard finding).
 * Coolant filtration and contamination, foaming and the concentration's effect on the fluid properties
-  during a run (properties stay those of the file) are not modelled.
+  during a run are not modelled. Consequence: properties stay those of the fluid file for the whole run
+  (the tank's concentration is tracked and reported, not fed back).
 
 ## 14. References
 

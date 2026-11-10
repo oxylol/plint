@@ -926,3 +926,58 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
     calibration["file"], line=0, path=path, value=entry["value"], note=f"calibrated ({calibration['name']})" +
     (f", parameter {entry['parameter']}" if entry.get("parameter") else ""), obj="calibration")` to the list it
     returns (`_run_document` writes file, path, value and note of each).
+
+## 16. Parameters and settings
+
+The loop composes the domains; its own values are settings of its checks, its ring and the cost model of
+`twin check` (db/models/loop.yaml, read by `cnctwin.db.models.params("loop")`), and project settings of the run.
+
+| name | value | source |
+|---|---|---|
+| `coupling_ratio` | 0.5 | cnctwin-architecture-2026 (5.3: two successive changes of opposite sign with a magnitude ratio above 0.5) |
+| `coupling_rel_change` | 1e-3 of the quantity's value (range 1e-9-0.1) | est: below it an alternation is round-off or the noise of a converged quantity (tool temperatures settle to 1e-6 between steps) |
+| `coupling_alternations` | 3 (range 1-100) | est: one alternation follows any single disturbance (a tool entering the cut) |
+| `chip_kinetic_in_balance` | 0 (reported, not balanced) | est: cutting's force model has no momentum flux (section 6) |
+| `energy_scale_floor_J` | 1e-6 J | est: the smallest scale an interval's relative residual is taken against (out of the cut the modal terms are picojoules; the lathe warmup: 6.7e-18 J residual on 3.0e-12 J terms) |
+| `probe_stem_diameter_ratio`, `probe_ball_diameter_m`, `probe_stylus_length_m` | 0.75, 6 mm, 50 mm | est (docs/models/hotloop.md 9a) |
+| `ring_f_max_Hz` | 20 kHz | est: tool bending modes of short carbide tools reach 5-10 kHz, spindle flange modes 1-3 kHz |
+| cost model `cost_l0_fixed_s`, `cost_l0_element_s`, `cost_l0_mode_s` | 7 us, 0.29 us per engaged element, 0.4 us per mode (per L0 step) | est, measured on the D10 slot (docs/models/hotloop.md 13, cutting.md, dynamics.md) |
+| cost model `cost_l1_tick_s`, `cost_l2_step_s`, `cost_l2_idle_step_s` | 0.9 ms per L1 tick out of contact, 0.2 s per macro step in the cut, 41 ms out of it | est, measured on warmup's mill project (section 13) |
+| `physics.tol_mass`, `physics.tol_energy` | 1e-9, 1e-6 (relative) | project template; cnctwin-architecture-2026 (12) |
+| `checkpoint_interval_s` | 10 s of simulated time | db/models/recording.yaml (cnctwin-architecture-2026, 10) |
+| `recording.keyframe_period_s` | 0.5 s | project template |
+| `physics.lag_macro` | 1 (2 is accepted and computed as 1) | cnctwin-architecture-2026 (5.3); section 15 |
+
+## 17. Assumptions, validity and error bounds
+
+| assumption | consequence | validity | error bound (how established) |
+|---|---|---|---|
+| The slow domains run after the step's hot loop and read `bus_prev` (one-step stagger; `lag_macro: 2` is computed as lag 1) | every slow coupling closes one macro step (10 ms) late | `physics.macro_ipo` 5-20 ms | tool state and the 0.5 s means of the coupling temperatures within 0.2-1.5 % from 5 to 20 ms; values at one instant of the rake temperature and the preheat scatter 1-2 %, the workpiece bulk rise and the edge peak's 0.5 s mean move 2-6 % (docs/convergence.md 5); lag 1 and 2 identical |
+| The time between operations is not simulated time; thermal and coolant cool down on their own clocks, production's operator model books the handling | the run's clock is machine time only; `timeline.json` has no gap between operations | any project | exact (time balance in integer ticks) |
+| An operation starts where the last program left the axes, drives at rest | no jump of the axes between operations (which holding would read as ~1e5 m/s2) | mills and lathes, one machine per run | - |
+| A new part starts from a fresh blank and carries tool wear, controller state, machine and tank temperatures; the workpiece grid is reset | a batch is one continuous machine history | `production.parts` of one or more operations | three-part batch: equal removed mass, every ledger over the parts (test_loop_batch) |
+| An alarm stops the run; `max_sim_s` ends the running operation without inspecting the unfinished part | a stopped run has no later operations, parts or part files of the unfinished part | any project | - |
+| The chips' kinetic energy at separation is reported, not balanced | the energy balance omits a term of about 1e-5 of the shaft work at aluminium speeds | until cutting's torque carries the chip momentum force | below the 1e-6 energy tolerance by construction |
+| Cutting's quadrature of the work on the deflection rates and the modes' exact work differ; the difference is its own ledger term | the balance closes to round-off | runs with dynamics | the difference is 0.1-3 % of the vibration work (docs/models/dynamics.md "Ledger note") |
+| Thermal's and structure's workpiece grids stay in the frame they were built in after a removal transfer | after a flip the first operation's workpiece temperatures are misplaced by the turn | multi-setup projects | not bounded (the part has cooled for `time_between_ops` by then) |
+| Defaults where no adapter exists: holding's PartGeometry (the stock's shape), coolant's WorkpieceBricks (the stock box), inspect's MeshColumns (the result mesh dexelised at 0.25 mm) | those domains see the stock, not the cut part, where these protocols act | until the adapters exist | not bounded |
+| `twin check`'s cost model: per-step costs measured on one project; in-cut time = the dry run's feed-move time | an estimate of CPU s per simulated s, the in-cut part an upper bound | projects like warmup's mill (about 9 CPU s per simulated s) | the examples cost 7-60 CPU s per simulated s (section 14); the first model (the domains' own cost notes) said 2.3 where the run took 7.4 |
+| `twin check`'s lattice rule decides on sanity's engagement estimate at lattice / 4 | a pass is warned about from its estimated ae, recommended from its lower bound | cutting moves with ae < 4 x the lattice in force | the estimate is within one cell of the true ae; the ledger's removed-volume error bound is lattice / (2 ae) |
+
+Checks of every run (section 6) and their tolerances: mass relative to the removed mass <= `tol_mass` (1e-9;
+measured 4.5e-16 on warmup's mill project), energy per interval <= `tol_energy` (1e-6 against at least the
+1e-6 J scale floor; measured 4.3e-9), time exact in integer ticks, exact volume (integer quanta) to 1e-9,
+cutting's identity reported (5.7e-11 dry, 1.2e-9 lubricated; bounded at 1e-8 by test_loop_run). Removed
+volume against the swept path of frames.bin within 3 % (test_loop_run; 6.106 against 6.105 mm3 measured).
+Resumed runs equal the uninterrupted run byte for byte (test_loop_determinism).
+
+Validated range of the whole loop: the tiny projects of the tests (a side step, a 3 mm OD pass, a two-setup
+flip with one side step per operation, a three-part batch) run complete and balanced; the long examples run to
+an 8 s budget, and none completes an operation until cutting's recut terms are fixed (section 14).
+
+## References
+
+* cnctwin-architecture-2026: the contract the loop implements (5.1 clock, 5.3 macro step and coupling-lag
+  monitor, 10 recording and checkpoints, 12 ledgers, 16 run directory).
+* renishaw-omp40-2-2025: the spindle probe the probe defaults stand for.
+* The domains' own references for every model the loop runs: docs/models/*.md.

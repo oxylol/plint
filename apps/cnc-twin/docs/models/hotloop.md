@@ -349,3 +349,52 @@ time; docs/performance.md has the per-kernel, per-level, whole-run and memory ta
 * **Zero-depth rapid** (fixed 2026-11-09: the rapid's event carries its depth, a crash is a depth beyond the
   collision tolerance; docs/models/removal.md "Rapids"). Removal flagged `rapid_into_material` (error) with 0.000 mm depth and volume when the
   pocket variant retracts with G00 from the helix floor; the rule needs a tolerance.
+
+## 15. Parameters and constants
+
+The hot loop has no physical coefficients of its own: the forces, the removal, the modes and the drives are
+the domains' (their docs and `db/models` files). Its settings and constants:
+
+| name | value | source |
+|---|---|---|
+| `MAX_CONTACTS`, `MAX_PATHS`, `MAX_WORK` (`hot_abi.py`) | 2, 2, 2 | one contact per controller path, main and sub spindle (the scope of cnctwin-architecture-2026, section 1) |
+| L0 stride rule (`physics.max_deg_per_step`, `physics.steps_per_tooth`, modal rule) | 0.5 deg, 96 steps per tooth period, `2 pi f_max dt <= 0.3` for modes carrying >= 1 % of the tip compliance | cnctwin-architecture-2026 (5.1); docs/convergence.md 1 |
+| macro step (`physics.macro_ipo`) | 10 L1 ticks (10 ms at a 1 ms IPO period) | cnctwin-architecture-2026 (5.1); docs/convergence.md 5 |
+| dexel lattice (`physics.lattice_mm`) | 0.25 mm (template); `twin check` asks for <= ae / 4 | docs/convergence.md 2 |
+| surface-memory bins (`physics.memory_bins`) | 720 per revolution | docs/convergence.md 4 |
+| stale memory bin | older than one revolution plus one tooth period (cutting's `SI_STALE_TICKS` entry) | cnctwin-architecture-2026 (5.4) |
+| station margin of the step's range (`CI_ST_MARGIN` entry) | 2 + the most stations of one slab | a slab point interpolates between the stations around the slab's mid height (section 11) |
+| tooth-window margin (`WIN_EPS`) | 1e-8 rad | round-off margin; the exact per-slab test decides inside the window |
+| refill plane validity | the boundary faces the element when `m . n <= -0.3`; covered: the engaged intervals plus half the step's rotation and one bin, four bins around each element | est (section 5) |
+| event buffer rows per L0 step (`HotLoop._rows`) | shocks 4 nt + 4, surface 3 n_el + 8, deposits 2 nt + 4, recut n_el + 4 nt + 4, passes 2 nt + 4, refills 2 n_el + 4, removal 8 nt + 8; buffers >= 4 x the largest | upper bounds of what one step writes (section 6); the results do not depend on them |
+| `probe_stem_diameter_ratio`, `probe_ball_diameter_m`, `probe_stylus_length_m` | 0.75, 6 mm, 50 mm | est, db/models/loop.yaml (Renishaw M4 / M2 styli and the OMP40-2 / Haas WIPS kits in its notes; renishaw-omp40-2-2025) |
+| `ring_f_max_Hz` (fast ring sizing) | 20 kHz | est, db/models/loop.yaml |
+
+## 16. Assumptions, validity and error bounds
+
+| assumption | consequence | validity | error bound (how established) |
+|---|---|---|---|
+| Kernel inputs are frozen for a macro step (coefficients, temperatures, structure grids from the L2 domains of the previous step, architecture 5.3) | the slow couplings close one macro step late | `physics.macro_ipo` 5-20 ms | tool state and the 0.5 s means of the coupling temperatures within 0.2-1.5 % from 5 to 20 ms; values at one instant scatter 1-2 % (docs/convergence.md 5) |
+| A tick's mean cutting load per axis and the spindle torque act on the drives in the next L1 tick | the servo sees the cutting disturbance one IPO period late | drive velocity bandwidths far below the IPO frequency (default 50 Hz, est, against 1 kHz at a 1 ms IPO period) | not measured separately; inside the cycle-time and following-error bounds of docs/models/motion.md 9 |
+| Spindle angles and axis values inside a tick are cubic Hermite interpolants of the tick's end values and speeds | L0 poses follow a cubic between L1 ticks; the servo's variation within a tick is not seen | any L1 period | exact for motion of constant jerk within a tick (a cubic Hermite interpolant reproduces cubics) |
+| Generation instant of a slab: the step's crossing fraction, the slab point interpolated linearly between the step's end frames; a tooth that missed an angle while the engagement changed is forced after the stale age, its undone slabs at the step end (`CS_FORCED`) | the field is cut where the surface was generated, not at a step end | L0 strides by the rule above | removed volume = the field's change to 1e-9 (every macro step); slot: removed = lattice slot volume to 1e-5, drill hole to 2e-7 (tests a, b) |
+| Stale memory bins are refilled from removal's interpolated boundary plane of the best-aligned dexel family, else at the element (zero chip until a tooth writes the bin); a plane lives for one L0 step | chips at a bin the memory cannot give come from the field | boundaries that face the element (`m . n <= -0.3`) | exact for planes, `a^2 kappa / 4` on curved boundaries (a the lattice, kappa the curvature) |
+| The field decides a column's top to a lattice cell | within one cell of a stock edge the chip is the field's, not the feed's | lattice <= ae / 4 (`twin check`) | 6 % force deficit at lattice 0.25 mm and ap 3.0 mm in the slot (section 8); steady peak force +31 %, mean 1.5-1.9 % at 0.25 mm in a side finish (docs/convergence.md 2) |
+| Station deflections are computed over the engaged stations plus the margin; others keep their last values; static (residual) deflections lag one L0 step | only a forced pass's slab that is not engaged can read an old deflection | statically stable cuts (`c_res K_c < 1`, docs/models/dynamics.md 1) | slot with 8 modes against the full range: not separately bounded; free dynamics 0.3 % against the closed form, base excitation 3 % against quasi-static (test d) |
+| Turning: the insert is a rigid body at the deflected tip (translation and rotation of the station nearest the tip); the polar view carries the hull and one air gap per cell | a third material segment on one radial ray is not represented | steady external and internal passes (none has a third segment) | mean force within 0.15 % of the stand-alone turning driver over the exact earlier-revolution surface, every element's chip within 3.7 % (test c); without the deflected polar cut -6.7 % |
+| Peak forces are the instantaneous wrench at a step's start or end where larger than the step mean (2026-11-10) | peaks resolve to the step ends, not within the step | default stride 0.5 deg | slot: 259 N at 0.5 deg against 258 N at 0.0625 deg (docs/models/loop.md 15); the integrated slot's peak is 9 % above the stand-alone kernel's (unexplained, section 14) |
+| Probe: the stylus is a ball and a stem of 0.75 x the ball diameter; only spindle probes on a path's tool spindle get a contact | a G31 move that meets material with the stem first triggers at the estimated stem | spindle work probes (tool setters keep motion's trigger rule) | trigger within the 25 um braking distance (tests/integration/test_loop_probe.py) |
+| At most 2 contacts, 2 paths and 2 workpieces per step; a turned workpiece milled by live tools in the same operation is cut in the tri-dexel only | the exact-volume check does not cover that case | mills, lathes with one or two paths | - |
+
+Overall, against the domains' stand-alone kernels: slot mean force within 0.2 % (of its magnitude), drill thrust
+and torque within 0.2 %, cutting's energy identity cumulative residual <= 1e-9 of the term magnitudes, runs and
+checkpoint continuations bit-identical (tests a-g, section 12).
+
+## References
+
+* cnctwin-architecture-2026: the contract the loop implements (5.1 clock and strides, 5.3 macro step, 5.4 hot loop, 5.5 layouts, 12 ledgers).
+* altintas-budak-1995-zoa: the zero-order stability limit the chatter test is set against (test e).
+* kienzle-1952: the drill test's force table (test b).
+* renishaw-omp40-2-2025: spindle probe the probe defaults stand for (section 9a).
+* The domains' own references for every model the loop composes: docs/models/motion.md, cutting.md, removal.md,
+  dynamics.md (15, 12, 19, 11).

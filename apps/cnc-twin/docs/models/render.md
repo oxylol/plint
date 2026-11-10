@@ -10,9 +10,8 @@ Package: `kernels.py` (Numba, explicit signatures), `reference.py` (plain-Python
 planes), `camera.py`, `colour.py` (sRGB, colour maps, Planck and CIE), `cues.py` (visual cue model),
 `layers.py`, `shapes.py`, `text.py`, `rundir.py` (run-directory readers, shared with `cnctwin.sound`),
 `compose.py` (one picture of a run), `pipeline.py` (`render_run`, `render_images`, `render_video`,
-`render_image`, `render_frame`), `output.py` (PNG, MP4), `__main__.py`.
-Parameters: `db/models/render.yaml` (appearance, sizes, cameras: settings, not physics) and
-`db/models/render-cues.yaml` (visual cue model); sources: `db/bibliography/models-render.yaml`.
+`render_image`, `render_frame`), `output.py` (PNG, MP4), `__main__.py`. Parameters and their sources:
+section 8.
 
 ```
 python -m cnctwin.render RUN_DIR                       # images/*.png, video.mp4, render.json
@@ -282,6 +281,47 @@ sparks. `test_pipeline.py` (synthetic run): readers, PNG determinism (two render
 layers. `test_scene_rules.py` (a run directory written by hand): coolant streams stop at the tool or part they hit,
 M objects follow pose_M_S, the tool follows frames.bin, glowing chips spark, hot wet surfaces steam, runs without
 pose_M_S leave M objects out and say so.
+
+## 8. Parameters
+
+`db/models/render.yaml` (appearance, sizes, cameras: settings, not physics) and `db/models/render-cues.yaml`
+(visual cue model); sources: `db/bibliography/models-render.yaml`.
+
+| file | parameters (SI) | source |
+|---|---|---|
+| render | supersampling 3 x 3 (images), 2 x 2 (video) | foley-1990 |
+| | x264 crf 18, preset medium | ffmpeg-x264-2026 |
+| | specular intensity 0.22, exponent 40 | blinn-1977 |
+| | shadow map 1024 texels, bias 0.002, PCF radius 1 texel | williams-1978, reeves-1987 |
+| | enclosure opacity 0.1, door 0.22 | porter-duff-1984 |
+| | colour maps per layer | smith-vanderwalt-2015 |
+| | sizes (1280 x 720 images, 960 x 540 video at 25 Hz and speed 10), lights (key 0.75 at 35 / 50 deg, fill 0.28, ambient 0.22), crease angle 35 deg, colours, jets (opacity 0.45, 600 mm, 12 sides), chip and pile display sizes, cameras (follow: 70 mm view, -55 / 32 deg, 30 deg field, 0.25 s smoothing; framing margin 1.15), labels and colour bars | est (display choices, ranges in the file) |
+| render-cues | Draper point 798 K | draper-1847 |
+| | water boiling point 99.974 degC at 101.325 kPa | wagner-pruss-2002 |
+| | h, c (exact) | codata-2018 |
+| | CIE 1931 observer 380-780 nm in 5 nm steps; multi-lobe fit | cie-015-2018, wyman-2013-cmf |
+| | XYZ to linear sRGB matrix | iec-61966-2-1-1999 |
+| | plume rise 0.25 m/s (smoke), 0.45 m/s (steam) | morton-taylor-turner-1956 |
+| | glow saturation 1400 K, oil smoke point 165 degC, full-scale 60 K, spark exposure 0.02 s and radius 0.35 mm, puff sizes, lifetimes (1.2 / 0.5 s), opacities and colours, 10 puffs per source, hot-spot cell 2 mm, 12 hot spots | est |
+
+## 9. Validity range
+
+* **Sizes**: images 64 x 48 to 7680 x 4320, video 64 x 48 to 3840 x 2160 with even sizes (yuv420p), frame
+  rates 1-120 Hz (the ranges of `render.yaml`); memory is 20 bytes per supersample (160 MB at the image
+  default), so the largest sizes need `ssaa` 1 inside bin/tsafe's cap.
+* **Geometry**: any triangle meshes up to the int32 index range; depth z/w in float64 between the near plane
+  (2 % of the eye distance) and the far plane (20 view heights behind the tip for the follow camera); colours
+  in float32 (interpolation agrees with the ray-plane intersection to 1e-5). Objects in M are drawn only when
+  the run gives `pose_M_S`.
+* **Incandescence**: the black-body colour is computed for any temperature; it is drawn above the Draper point
+  (798 K) and its intensity saturates at `glow_saturation_K` (1400 K), so hotter bodies look alike. The CIE fit
+  covers 380-780 nm (mean squared error 3e-5 / 7e-6 / 2e-5 against the 1931 observer); colours are checked
+  against Wien's law within 0.1 % and the hues at 1000 K and 6500 K.
+* **Smoke and steam**: with the coolant on and a hot spot above the fluid's threshold (smoke point, else
+  165 degC; boiling point, else 99.974 degC), full density at 60 K above it; they mark that and where a
+  threshold is crossed, valid as indicators only (no aerosol mass), as good as the fluid's threshold data.
+* **Files**: byte-identical output for the same inputs on the same Pillow and FFmpeg builds (section 4); a
+  different FFmpeg build gives other video bytes of the same frames.
 
 ## References
 

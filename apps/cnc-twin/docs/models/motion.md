@@ -515,18 +515,43 @@ path), and returns at the first non-zero sync code with `inputs.result = (code, 
 | 5-axis TCP (table B/C), 60 blocks | 0.19 s/s |
 | kernel compilation (cold cache) | 20-30 s once per cache key |
 
-## 14. Limitations
+## 14. Assumptions and limitations (with consequences)
 
+* **Machine-file values first, estimates otherwise.** Every drive, spindle, smoothing and timing value
+  the machine file lacks takes its `db/models/motion.yaml` default (40 of its entries are est, with
+  ranges: feed-forward 0.9, velocity bandwidth 50 Hz, 3 m/s2 and 50 m/s3, backlash 2 um, contour tolerance
+  0.01 mm, tool change 5 s, ...), listed in `MachineModel.estimated` and `finalize()["estimated"]`.
+  Consequence: cycle times and contour errors of a machine described only by its axes rest on those
+  estimates; the run says which.
+* **1 deg counts as 1 mm** where a control mixes linear and rotary quantities (combined feeds, rotary
+  in-position bands, blend tolerances; FANUC/Haas rule, fanuc-30i-b-operator). Consequence: on a control
+  with another rule the rotary share of combined feeds, bands and blends differs from the simulation.
+* **Time-optimal jerk-limited look-ahead** in place of the controls' proprietary planners. Consequence:
+  cycle times of short-segment programs lie within the block-rate and limit bounds of section 9, not to
+  the millisecond (validation/cases/cycle_time).
+* **Coulomb friction with a tanh regularisation** (no Stribeck dip, no pre-sliding hysteresis).
+  Consequence: quadrant glitches have the right height (within 25 % of the published spike) but not
+  their shape.
+* **Backlash as a compensated lost motion**: the control's compensation leaves `backlash_comp_residual_frac`
+  (0.1, est; ISO 230-2 reversal values after compensation are typically 10-30 %) of the lost motion.
+  Consequence: reversal steps of 0.1 x 2 um = 0.2 um on a machine with the default backlash, a factor 3
+  more at the upper end of that range.
 * A spindle's C axis engages only when a block changes the programmed C value (the IR has no
   C-axis on/off command): the first target of C in a program is taken as its modal value, and a
   speed command or orientation always leaves C-axis mode. Polar and cylindrical interpolation are
-  the controller's transforms; motion executes their joint moves.
+  the controller's transforms; motion executes their joint moves. Consequence: a program that relies
+  on an explicit C-axis mode command without moving C runs its spindle as a spindle.
 * Corner blends are geometric between joint lines only; arc and TCP corners keep their corner at the
-  bounded node speed (no blend).
+  bounded node speed (no blend). Consequence: those corners are slower and sharper than on a control
+  that blends them.
 * One rigid-body mode per axis; no structural dynamics, cross-coupling between axes, motor current
-  loop, encoder quantisation or thermal effects on the drive parameters.
+  loop, encoder quantisation or thermal effects on the drive parameters. Consequence: contour errors
+  above the velocity-loop bandwidth and below the input increment are absent (structural modes are
+  dynamics' and structure's).
 * Proprietary smoothing of controls (FANUC nano smoothing, SINUMERIK COMPCAD, Heidenhain ADP) is
   represented by the tolerance-band blend, the tolerance-driven limits and the jerk-limited profile only.
+  Consequence: the commanded path stays inside the programmed tolerance as on the control; its shape
+  inside the band differs.
 * The setpoint-filter band needs the filter time from the machine file (`controller.setpoint_filter_ms`);
   no machine file in db/ gives one, because no control publishes it. The TNC 640 documents a feed
   reduction on arcs that keeps its HSC filter within cycle 32 T (heidenhain-tnc640-cycles-2023, cycle 32),

@@ -142,7 +142,17 @@ an ordered host commit:
   471 settles. Dense settling in one window therefore moves most of the work back to the host (results
   stay exact).
 
-## 2. Tolerances and how they were established
+## 2. Validity range and tolerances (how they were established)
+
+**Validity range.** The equalities below hold for CUDA devices of compute capability 5.2 (sm_52) and
+newer with double-precision arithmetic, kernels compiled through `device.exact_compile` (`-fma=0`,
+`-prec-div=1`, `-prec-sqrt=1`) with numba-cuda 0.30 and the CUDA 12.x toolkit (12.9 checked offline; a
+driver of at least 12.2 through nvJitLink), and inputs inside the CPU kernels' own layouts: dexel rays of
+up to `MAX_RAW` = 64 raw and `MAX_OUT` = 16 merged intervals on the device (more: the host computes the ray),
+particles with up to `CAP_LOG` = 128 heat addends per call (more: the host recomputes the particle). Outside
+that range nothing changes in the results: the host computes the item or the whole call (section 5); only
+the speed does. Not covered: devices on which the probe's arithmetic check fails (no GPU path runs there),
+CUDA 13 toolkits (no sm_52), and a run on real hardware has not been made here (section 4).
 
 * **Dexel and thermal: bit-identical** on any device whose kernels are compiled with `exact_compile`
   (they use only +, -, *, /, sqrt, floor, comparisons and integer operations). Established by the parity
@@ -190,6 +200,26 @@ cell; particles about 2.5 KB) and the measured CPU cost per item and host share 
 `min_slabs` 24 because the dexel path's host part costs as much as the whole CPU kernel up to about 12
 slabs. They are estimates until `python -m cnctwin.gpu bench default` has run on a real device; tune
 them from it.
+
+### 3.1 Parameters and settings
+
+No model coefficients (no `db/models` file): the GPU paths compute what the CPU kernels compute. The numerical
+settings and constants that decide where a call runs:
+
+| name | value | source |
+|---|---|---|
+| `physics.gpu.mode` | auto | this package's choice: the GPU only on a real device and above the thresholds |
+| `device` | 0 | CUDA_VISIBLE_DEVICES order |
+| `min_rays` | 2048 | est: launch latency (~10 us per kernel and transfer) and bytes per candidate (88 B in, 264 B out) at ~12 GB/s against 0.31 + 0.022 x slabs us per candidate on the CPU (section 6) |
+| `min_slabs` | 24 | measured: the dexel path's host part costs as much as the whole CPU kernel up to about 12 slabs on this box; at 24 its host share is about 0.7 (0.58 us against 0.31 + 0.022 x 24 = 0.84 us per candidate, section 6) |
+| `min_cells` | 32768 | est: ~100 B per cell moved, 160 ns per cell on the CPU, host share 0.28 (section 6) |
+| `min_particles` | 1024 | est: ~2.5 KB per particle moved, 38.7 us per particle on the CPU, host share 0.21 (section 6) |
+| `MAX_RAW`, `MAX_OUT` (`k_dexel.py`) | 64, 16 | a thread's own buffers (k_rays keeps its 64-interval buffer in local memory, section 7); a ray beyond them is computed on the host with removal's capacity (`MAX_IV` = 512) |
+| `CAP_LOG` (`k_particles.py`) | 128 | heat addends a thread logs; more: host recompute |
+| `PROBE_TIMEOUT_S` (`device.py`) | 120 s | the probe's compile and launch take 1-10 s |
+| PTX check target (`ptxcheck.py`) | sm_52, 900 s timeout | the GTX 950 of this host (section 4) |
+
+The thresholds are estimates until `python -m cnctwin.gpu bench default` has run on a real device.
 
 ## 4. Device detection
 
