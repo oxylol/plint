@@ -34,6 +34,8 @@ for t in "${targets[@]}"; do
   f=0; for n in $(echo "$line" | grep -oE '[0-9]+ (failed|errors?)' | grep -oE '[0-9]+'); do f=$((f + n)); done
   total_pass=$((total_pass + ${p:-0})); total_fail=$((total_fail + ${f:-0}))
   printf '%-34s %s\n' "$t" "${line:-$out}"
+  # no summary line: the process died (memory cap, signal) before pytest could report
+  if [ -z "$line" ]; then line="no pytest summary (killed?): $(echo "$out" | tail -n 1)"; f=1; total_fail=$((total_fail + 1)); fi
   if [ "${f:-0}" != "0" ] || echo "$out" | grep -qE "^ERROR|errors? during collection"; then failed+=("$t"); fi
 done
 echo "total: $total_pass passed, $total_fail failed/errors"
