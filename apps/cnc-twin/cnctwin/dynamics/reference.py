@@ -13,10 +13,10 @@ import numpy as np
 
 from ..core.abi import ACC_DAMPING_J, ACC_PROCESS_DAMPING_J, ACC_UNBALANCE_WORK_J
 from . import discretize as DZ
-from .abi import (BASE_LINEAR, DA_DAMPING_J, DA_ENERGY_MAX_J, DA_FORCE_MAX_N, DA_N_FREE, DA_N_L0, DA_UMAX_X, DA_UMIN_X,
+from .abi import (ACT_HI, ACT_LO, ACT_LOAD_HI, ACT_LOAD_LO, BASE_LINEAR, DA_DAMPING_J, DA_ENERGY_MAX_J, DA_FORCE_MAX_N, DA_N_FREE, DA_N_L0, DA_UMAX_X, DA_UMIN_X,
                   DA_W_BASE_J, DA_W_CUT_J, DA_W_CUT_QUAD_J, DA_W_UNB_J, FL_CONTACT, FL_HISTORY, FL_STEP_ERROR,
-                  FL_STEP_SEEN, KIND_WORK, MI_HAS_TOOL_RES, MI_HAS_WORK_RES, MI_L0_TICKS, MI_REF_STATION, MS_TICK_S,
-                  SC_OMEGA)
+                  FL_STEP_SEEN, KIND_WORK, MI_HAS_TOOL_RES, MI_HAS_WORK_RES, MI_L0_TICKS, MI_REF_STATION, MI_RES_RELAX,
+                  MS_RES_RELAX, MS_TICK_S, SC_OMEGA)
 
 
 def free_interval_ref(w, zeta, h, q0, v0, Pr, Pi, W, g0, g1):
@@ -143,6 +143,19 @@ def relative_deflection_ref(sys) -> np.ndarray:
     return np.concatenate([tool, work, rel])
 
 
+def _load_range(sys, nst: int) -> tuple[int, int]:
+    """The kernel's load stations of a corrected step (kernels.modal_correct: sys.act, clipped to the shapes)."""
+    act = sys.act
+    lo, hi = int(act[ACT_LO]), int(act[ACT_HI])
+    if lo < 0:
+        lo, hi = 0, nst - 1
+    hi = min(hi, nst - 1)
+    if act[ACT_LO] >= 0 and act[ACT_LOAD_LO] >= 0:
+        lo = max(lo, int(act[ACT_LOAD_LO]))
+        hi = min(hi, int(act[ACT_LOAD_HI]))
+    return lo, min(hi, min(sys.model.tool_shape.shape[1], nst) - 1)
+
+
 def modal_correct_ref(sys, station_T0, force_S_N, tick, acc) -> None:
     m = sys.model
     dm = sys.dm
@@ -194,9 +207,19 @@ def modal_correct_ref(sys, station_T0, force_S_N, tick, acc) -> None:
     ds.flags[FL_HISTORY] = 1
     ds.flags[FL_CONTACT] = 1
     ds.node_tick[0] = tick
+    prev = ds.st_force.copy()
     ds.st_force[:] = 0.0
     ds.st_force[:min(nst, ds.st_force.shape[0])] = station_T0[:min(nst, ds.st_force.shape[0])]
-    ds.work_force_S[:] = force_S_N
+    if dm.iscal[MI_RES_RELAX]:
+        # the residual flexibilities' forces at the load stations: F_(n-1) + (I - K_c C)^-1 (F_n - F_(n-1))
+        Rr = np.asarray(dm.scal[MS_RES_RELAX:MS_RES_RELAX + 9], float).reshape(3, 3)
+        lo, hi = _load_range(sys, nst)
+        for s in range(lo, min(hi, nst - 1, ds.st_force.shape[0] - 1) + 1):
+            ds.st_force[s, :3] = prev[s, :3] + Rr @ (station_T0[s, :3] - prev[s, :3])
+        R = dm.R_S_T0
+        ds.work_force_S[:] = ds.work_force_S + R @ (Rr @ (R.T @ (force_S_N - ds.work_force_S)))
+    else:
+        ds.work_force_S[:] = force_S_N
     da.scal[DA_N_L0] += 1.0
     e = DZ.modal_energy(x, dm.omega_rad_s)
     da.scal[DA_ENERGY_MAX_J] = max(da.scal[DA_ENERGY_MAX_J], e)

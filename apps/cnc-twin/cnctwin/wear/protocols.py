@@ -10,8 +10,9 @@
   (conventions of cnctwin.removal.stock); removal can answer it from its field's stock-surface ids.
 * :class:`ToolTolerances` - the tightest surface displacement the tool's wear may cause, and the finish
   specification, of the surfaces a tool finishes. :class:`ProjectTolerances` reads the project's
-  ``cad.tolerances`` and, unless a slot is assigned explicitly, applies the tightest of them to every
-  tool that writes surface events (it finishes some final surface).
+  ``cad.tolerances``; :meth:`ProjectTolerances.finishing` places the surface events on the tolerances' plane
+  features, and the domain assigns each slot the tightest tolerance and finish of the features it generates (a
+  tolerance whose features cannot be placed applies to every tool that writes surface events).
 
 The Taylor-calibration response is the fourth protocol, :class:`cnctwin.wear.calibration.TaylorResponse`.
 """
@@ -233,7 +234,11 @@ class ProjectTolerances:
         self.sources: list[str] = []
         self.unused: list[str] = []
         self._assigned: dict[int, tuple[float | None, float | None, float | None]] = {}
+        # per tolerance: (allowed displacement, Ra, Rt, [(point_S, unit normal_S)] of its plane features, every feature
+        # a plane with a point and a normal); see finishing()
+        self.features: list[tuple] = []
         cad = field_of(project, "cad") if project is not None else None
+        self._pose = _placement(cad)
         tolerances = field_of(cad, "tolerances") if cad is not None else None
         for tol in tolerances or []:
             self._read(tol)
@@ -245,12 +250,76 @@ class ProjectTolerances:
     def _tighten(self, value: float | None, ident: str) -> None:
         if value is None or value <= 0.0:
             return
+        self._last_allowed = value
         if self.allowed_m is None or value < self.allowed_m:
             self.allowed_m = value
         self.sources.append(ident)
 
     def _read(self, tol) -> None:
         tol = as_map(tol)
+        self._read_values(tol)
+        kind = text(tol, "kind")
+        if kind == "roughness":
+            ra, rz, rt = num(tol, "Ra_m"), num(tol, "Rz_m"), num(tol, "Rt_m")
+            rt = min(v for v in (rz, rt) if v is not None) if (rz is not None or rt is not None) else None
+            allowed = None
+        else:
+            ra = rt = None
+            allowed = self._last_allowed          # set by _tighten for the kinds that give a displacement
+        if allowed is None and ra is None and rt is None:
+            return
+        self.features.append((allowed, ra, rt, self._planes(tol)))
+
+    def _planes(self, tol) -> list | None:
+        """The tolerance's features as planes (point and unit normal in S); None when one is not a plane with both."""
+        feats = []
+        feature = field_of(tol, "feature")
+        if feature is not None:
+            feats.append(feature)
+        feats.extend(field_of(tol, "between") or [])
+        if not feats:
+            return None
+        planes = []
+        R, t = self._pose[:3, :3], self._pose[:3, 3]
+        for feat in feats:
+            if str(plain(field_of(feat, "face")) or "") != "plane":
+                return None
+            near, normal = _vector(feat, "near_m", "near_mm", 1e-3), _vector(feat, "normal", "normal", 1.0)
+            if near is None or normal is None or not np.linalg.norm(normal) > 0.0:
+                return None
+            n = R @ normal
+            planes.append((R @ near + t, n / np.linalg.norm(n)))
+        return planes
+
+    def finishing(self, points_S_m, normals_S, band_m: float):
+        """Which surface events generate a toleranced feature's final surface, and the tightest (allowed
+        displacement, Ra, Rt) of the tolerances they generate: an event belongs to a plane feature when its normal is
+        within 30 deg of the feature's and it lies within max(band_m, 2 x the tolerance's allowed displacement) of
+        the plane. A tolerance whose features are not all planes with a point and a normal cannot be placed and
+        applies to every event, as before. (mask [m] bool, allowed, Ra, Rt), None where nothing applies."""
+        pts = np.asarray(points_S_m, dtype=float).reshape(-1, 3)
+        nrm = np.asarray(normals_S, dtype=float).reshape(-1, 3)
+        mask = np.zeros(len(pts), bool)
+        best = [None, None, None]
+        cos_tol = math.cos(math.radians(30.0))
+        for allowed, ra, rt, planes in self.features:
+            if planes is None:
+                on = np.ones(len(pts), bool)
+            else:
+                band = max(float(band_m), 2.0 * allowed if allowed else 0.0)
+                on = np.zeros(len(pts), bool)
+                for point, normal in planes:
+                    on |= (np.abs((pts - point) @ normal) <= band) & (nrm @ normal >= cos_tol)
+            if not on.any():
+                continue
+            mask |= on
+            for i, value in enumerate((allowed, ra, rt)):
+                if value is not None and value > 0.0:
+                    best[i] = value if best[i] is None else min(best[i], value)
+        return mask, best[0], best[1], best[2]
+
+    def _read_values(self, tol) -> None:
+        self._last_allowed = None
         kind = text(tol, "kind")
         ident = text(tol, "id", kind)
         plus, minus = num(tol, "plus_m"), num(tol, "minus_m")
@@ -298,6 +367,24 @@ class ProjectTolerances:
 
     def applies(self, slot: int, finishes: bool) -> bool:
         return slot in self._assigned or bool(finishes)
+
+
+def _placement(cad) -> np.ndarray:
+    """The CAD placement in the stock frame (identity without one)."""
+    placement = field_of(cad, "placement") if cad is not None else None
+    if placement is not None and hasattr(placement, "matrix"):
+        return np.asarray(placement.matrix(), dtype=float)
+    return np.eye(4)
+
+
+def _vector(obj, si_key, raw_key, scale):
+    value = field_of(obj, si_key)
+    if value is None:
+        value = field_of(obj, raw_key)
+        if value is None:
+            return None
+        return np.asarray([float(plain(x)) for x in plain(value)], dtype=float) * scale
+    return np.asarray([float(plain(x)) for x in plain(value)], dtype=float)
 
 
 __all__ = ["SectionInfo", "ToolInfo", "StaticToolInfo", "GeometryToolInfo", "SkinQuery", "StockShell",

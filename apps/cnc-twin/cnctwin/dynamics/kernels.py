@@ -34,7 +34,7 @@ from ..core.abi import ACC_DAMPING_J, ACC_PROCESS_DAMPING_J, ACC_UNBALANCE_WORK_
 from .abi import (ACCUM_T, ACT_HI, ACT_LO, ACT_LOAD_HI, ACT_LOAD_LO, ACT_PREV_HI, ACT_PREV_LO, AXES_T, BASE_LINEAR, DA_DAMPING_J, DA_ENERGY_MAX_J, DA_FORCE_MAX_N, DA_N_FREE, DA_N_L0,
                   DA_UMAX_X, DA_UMIN_X, DA_W_BASE_J, DA_W_CUT_J, DA_W_CUT_QUAD_J, DA_W_UNB_J, DEFL_T, FL_CONTACT,
                   FL_HISTORY, FL_STEP_ERROR, FL_STEP_SEEN, GRID_T, KIND_WORK, MI_HAS_TOOL_RES, MI_HAS_WORK_RES,
-                  MI_L0_TICKS, MI_REF_STATION, MI_RELAX, MS_TICK_S, N_TU, RING_T, SC_OMEGA, SYSTEM_T)
+                  MI_L0_TICKS, MI_REF_STATION, MI_RELAX, MI_RES_RELAX, MS_RES_RELAX, MS_TICK_S, N_TU, RING_T, SC_OMEGA, SYSTEM_T)
 
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
 # helpers called inside the kernels are inlined at the Numba IR level (no call boundary, no per-array argument
@@ -630,13 +630,42 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
     else:
         c_lo = min(act[ACT_LO], act[ACT_PREV_LO])
         c_hi = min(max(act[ACT_HI], act[ACT_PREV_HI]), st_force.shape[0] - 1)
+    # the residual flexibilities' forces: this evaluation's, or with an estimate (MI_RES_RELAX) the fixed point
+    # F_(n-1) + (I - K_c C)^-1 (F_n - F_(n-1)) at the load stations and for the workpiece (modal.residual_relaxation)
+    res_relax = iscal[MI_RES_RELAX] != 0
+    rr = sys.dm.scal
     for s in range(c_lo, c_hi + 1):
-        for c in range(6):
-            st_force[s, c] = station_T0[s, c] if s < nst else 0.0
+        if res_relax and s_lo <= s <= s_hi and s < nst:
+            d0 = station_T0[s, 0] - st_force[s, 0]
+            d1 = station_T0[s, 1] - st_force[s, 1]
+            d2 = station_T0[s, 2] - st_force[s, 2]
+            st_force[s, 0] += rr[MS_RES_RELAX] * d0 + rr[MS_RES_RELAX + 1] * d1 + rr[MS_RES_RELAX + 2] * d2
+            st_force[s, 1] += rr[MS_RES_RELAX + 3] * d0 + rr[MS_RES_RELAX + 4] * d1 + rr[MS_RES_RELAX + 5] * d2
+            st_force[s, 2] += rr[MS_RES_RELAX + 6] * d0 + rr[MS_RES_RELAX + 7] * d1 + rr[MS_RES_RELAX + 8] * d2
+            for c in range(3, 6):
+                st_force[s, c] = station_T0[s, c]
+        else:
+            for c in range(6):
+                st_force[s, c] = station_T0[s, c] if s < nst else 0.0
     act[ACT_PREV_LO] = act[ACT_LO]
     act[ACT_PREV_HI] = act[ACT_HI]
-    for c in range(3):
-        work_force[c] = force_S_N[c]
+    if res_relax:
+        # in T0 (R^T F_S), relaxed, back to S
+        Rw = sys.dm.R_S_T0
+        e0 = force_S_N[0] - work_force[0]
+        e1 = force_S_N[1] - work_force[1]
+        e2 = force_S_N[2] - work_force[2]
+        t0 = Rw[0, 0] * e0 + Rw[1, 0] * e1 + Rw[2, 0] * e2
+        t1 = Rw[0, 1] * e0 + Rw[1, 1] * e1 + Rw[2, 1] * e2
+        t2 = Rw[0, 2] * e0 + Rw[1, 2] * e1 + Rw[2, 2] * e2
+        g0 = rr[MS_RES_RELAX] * t0 + rr[MS_RES_RELAX + 1] * t1 + rr[MS_RES_RELAX + 2] * t2
+        g1 = rr[MS_RES_RELAX + 3] * t0 + rr[MS_RES_RELAX + 4] * t1 + rr[MS_RES_RELAX + 5] * t2
+        g2 = rr[MS_RES_RELAX + 6] * t0 + rr[MS_RES_RELAX + 7] * t1 + rr[MS_RES_RELAX + 8] * t2
+        for c in range(3):
+            work_force[c] += Rw[c, 0] * g0 + Rw[c, 1] * g1 + Rw[c, 2] * g2
+    else:
+        for c in range(3):
+            work_force[c] = force_S_N[c]
     da[DA_W_CUT_J] += w_cut
     da[DA_W_UNB_J] += w_unb
     da[DA_W_BASE_J] += w_base
@@ -651,7 +680,8 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
     acc.scalars[ACC_DAMPING_J] += dis
     acc.scalars[ACC_UNBALANCE_WORK_J] += w_unb + w_base
     # ---- vibration sample at the reference station: relative modal shape there (DynModel.contact_shape) plus the
-    # tool residual (block row of the reference station) and the workpiece residual with this step's forces
+    # tool residual (block row of the reference station) and the workpiece residual with this step's forces as the
+    # residuals hold them (st_force, work_force: relaxed with an estimate)
     cshape = sys.dm.contact_shape
     residual = sys.model.static_residual
     res_w = sys.dm.res_work_S
@@ -669,9 +699,9 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
         nres = residual.shape[0] // 3
         if 0 <= ref < nres:
             for b in range(s_lo, min(nres, nst, s_hi + 1)):
-                fb0 = station_T0[b, 0]
-                fb1 = station_T0[b, 1]
-                fb2 = station_T0[b, 2]
+                fb0 = st_force[b, 0]
+                fb1 = st_force[b, 1]
+                fb2 = st_force[b, 2]
                 r0 += residual[3 * ref, 3 * b] * fb0 + residual[3 * ref, 3 * b + 1] * fb1 + residual[3 * ref, 3 * b + 2] * fb2
                 r1 += residual[3 * ref + 1, 3 * b] * fb0 + residual[3 * ref + 1, 3 * b + 1] * fb1 \
                     + residual[3 * ref + 1, 3 * b + 2] * fb2
@@ -679,9 +709,9 @@ def modal_correct(sys, station_T0, force_S_N, tick, acc):
                     + residual[3 * ref + 2, 3 * b + 2] * fb2
     if iscal[MI_HAS_WORK_RES] != 0:
         # workpiece residual deflection -C F (S); the relative deflection subtracts it in T0: + R^T C F
-        w0 = res_w[0, 0] * force_S_N[0] + res_w[0, 1] * force_S_N[1] + res_w[0, 2] * force_S_N[2]
-        w1 = res_w[1, 0] * force_S_N[0] + res_w[1, 1] * force_S_N[1] + res_w[1, 2] * force_S_N[2]
-        w2 = res_w[2, 0] * force_S_N[0] + res_w[2, 1] * force_S_N[1] + res_w[2, 2] * force_S_N[2]
+        w0 = res_w[0, 0] * work_force[0] + res_w[0, 1] * work_force[1] + res_w[0, 2] * work_force[2]
+        w1 = res_w[1, 0] * work_force[0] + res_w[1, 1] * work_force[1] + res_w[1, 2] * work_force[2]
+        w2 = res_w[2, 0] * work_force[0] + res_w[2, 1] * work_force[1] + res_w[2, 2] * work_force[2]
         r0 += R[0, 0] * w0 + R[1, 0] * w1 + R[2, 0] * w2
         r1 += R[0, 1] * w0 + R[1, 1] * w1 + R[2, 1] * w2
         r2 += R[0, 2] * w0 + R[1, 2] * w1 + R[2, 2] * w2

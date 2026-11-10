@@ -83,6 +83,7 @@ class SystemRecord:
     mode_signature: tuple = ()
     work_shape: np.ndarray = field(default_factory=lambda: np.zeros((0, 3)))   # work shapes at the contact (S)
     carry_terms: np.ndarray = field(default_factory=lambda: np.zeros(4))      # catch-up W_unb, W_base, D, dE
+    f_contact_Hz: float = 0.0                    # highest contact-stiffened mode frequency (modal.f_contact_Hz)
 
     def arrays(self, prefix: str) -> tuple[dict, dict]:
         arrays = {f"{prefix}x": self.x.copy(), f"{prefix}f_prev": self.f_prev.copy(), f"{prefix}f_cut": self.f_cut.copy(),
@@ -106,7 +107,7 @@ class SystemRecord:
                 "l0_ticks": self.l0_ticks, "rotating": self.rotating, "n_teeth": self.n_teeth,
                 "node_tick": int(self.node_tick), "energy_start_J": _json_safe(self.energy_start_J),
                 "basis_change_J": _json_safe(self.basis_change_J), "modes": modes_meta,
-                "mode_signature": _json_safe(list(self.mode_signature))}
+                "mode_signature": _json_safe(list(self.mode_signature)), "f_contact_Hz": float(self.f_contact_Hz)}
         return arrays, meta
 
     @classmethod
@@ -128,7 +129,8 @@ class SystemRecord:
                    int(meta["node_tick"]), np.array(arrays[f"{prefix}flags"]),
                    float(_json_load(meta["energy_start_J"])), float(_json_load(meta["basis_change_J"])),
                    tuple(_to_tuple(v) for v in _json_load(meta["mode_signature"])),
-                   np.array(arrays[f"{prefix}work_shape"], float), np.array(arrays[f"{prefix}carry_terms"], float))
+                   np.array(arrays[f"{prefix}work_shape"], float), np.array(arrays[f"{prefix}carry_terms"], float),
+                   float(meta.get("f_contact_Hz", 0.0)))
 
 
 def _to_tuple(value):

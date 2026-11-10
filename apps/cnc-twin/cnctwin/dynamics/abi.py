@@ -62,13 +62,15 @@ MI_ROTATING = 4         # 1 rotating tool (unbalance applies)
 MI_HAS_WORK_RES = 5     # 1 the workpiece residual compliance is non-zero
 MI_HAS_TOOL_RES = 6     # 1 the tool residual compliance is non-zero
 MI_RELAX = 7            # 1 DynModel.relax differs from the identity (the corrector multiplies by it)
-N_MI = 8
+MI_RES_RELAX = 8        # 1 the residual flexibilities' forces are relaxed (scal[MS_RES_RELAX:+9], model doc 2.3)
+N_MI = 9
 
 # ------------------------------------------------------------------------------- DynModel.scal
 MS_DT_L0_S = 0          # L0 step (= ModalModel.dt_s[0])
 MS_DT_TICK_S = 1        # L1 tick
 MS_TICK_S = 2           # base clock
-N_MS = 4
+MS_RES_RELAX = 4        # [4:13] (I - K_c C_res)^-1 row-major (T0): the residual flexibilities' force relaxation
+N_MS = 13
 
 # ------------------------------------------------------------------------------- DynState.flags
 FL_HISTORY = 0          # 1: f_cut_prev holds the cutting force of the node before the current one

@@ -1441,16 +1441,19 @@ class HotLoop:
         from ..dynamics import params as DP
         from ..dynamics.domain import l0_ticks_rule
         ctx = self.ctx
-        f_max = 0.0
+        f_max = f_contact = 0.0
         rec = getattr(self.state.dynamics, "systems", {}).get(p) if self.use_dynamics and \
             getattr(self.state, "dynamics", None) is not None else None
         if rec is not None and rec.modes:
             f_max = float(MD.f_max_resolved_Hz(rec.modes, rec.ref_station, DP.p(DP.MODES, "stride_compliance_share")))
+            # the modes stiffened by the last step's stiffness estimate (cut and flank contact, dynamics.md 2.3)
+            f_contact = float(getattr(rec, "f_contact_Hz", 0.0) or 0.0) if rec.slot == slot else 0.0
         rad = self._physics("max_rad_per_step", 0.5 * math.pi / 180.0)
         spt = int(self._physics("steps_per_tooth", 96))
         omega_dt = DP.p(DP.MODES, "stride_omega_dt")
         return int(l0_ticks_rule(int(ctx.ipo_ticks), float(ctx.tick_s), float(omega_max), max(int(n_teeth), 1),
-                                 f_max, float(rad), spt, float(omega_dt)))
+                                 f_max, float(rad), spt, float(omega_dt), f_contact,
+                                 float(DP.p(DP.MODES, "stride_contact_omega_dt"))))
 
     # ------------------------------------------------------------------ the step
     def run_step(self, feeder) -> StepReport:

@@ -237,20 +237,28 @@ def estimate_bytes(size_m, lattice_m: float, margin_nodes: int = 1, pool_fractio
 
 
 # --------------------------------------------------------------------------- checkpoint
+# The field's own arrays, not copies: a checkpoint writes them at once (the field does not change while it is written),
+# and a copy of a refined field (8.3 M rays, 0.72 GB with its target in examples/thin-wall-al7075) doubled the run's
+# memory at every checkpoint. Restoring takes the arrays read from the file (fresh, writable, C-contiguous).
 def to_arrays(field: A.DexelField, prefix: str = "") -> dict:
-    return {prefix + name: np.array(getattr(field, name)) for name in A.DexelField._fields}
+    return {prefix + name: np.asarray(getattr(field, name)) for name in A.DexelField._fields}
 
 
 def from_arrays(arrays: dict, prefix: str = "") -> A.DexelField:
-    return A.DexelField(*(np.ascontiguousarray(np.array(arrays[prefix + name])) for name in A.DexelField._fields))
+    return A.DexelField(*(_writable(arrays[prefix + name]) for name in A.DexelField._fields))
 
 
 def target_to_arrays(target: A.TargetField, prefix: str = "") -> dict:
-    return {prefix + name: np.array(getattr(target, name)) for name in A.TargetField._fields}
+    return {prefix + name: np.asarray(getattr(target, name)) for name in A.TargetField._fields}
 
 
 def target_from_arrays(arrays: dict, prefix: str = "") -> A.TargetField:
-    return A.TargetField(*(np.ascontiguousarray(np.array(arrays[prefix + name])) for name in A.TargetField._fields))
+    return A.TargetField(*(_writable(arrays[prefix + name]) for name in A.TargetField._fields))
+
+
+def _writable(array) -> np.ndarray:
+    array = np.ascontiguousarray(array)
+    return array if array.flags.writeable else array.copy()
 
 
 def copy_field(field: A.DexelField) -> A.DexelField:

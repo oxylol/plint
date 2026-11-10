@@ -44,6 +44,7 @@ class Gathered:
     force_peak_N: float = 0.0
     peak_row: int = -1                       # per-tick row of the largest force (-1: unknown)
     surface: np.ndarray = field(default_factory=lambda: np.zeros((0, 2), np.int64))   # (tooth, elem) of events
+    surface_rows: np.ndarray = field(default_factory=lambda: np.zeros((0, 16)))   # the events (SURFACE_EVENT_COLUMNS)
     friction_factor: float = 1.0
 
     @property
@@ -93,6 +94,7 @@ def gather(prev, slot: int, shape: tuple, nsec: int) -> Gathered:
             own = events[events[:, 15].astype(np.int64) == slot]
             if own.size:
                 g.surface = np.concatenate([g.surface, own[:, 1:3].astype(np.int64)])
+                g.surface_rows = np.concatenate([g.surface_rows, own])
     if g.shocks.shape[0] > 1:
         order = np.lexsort((g.shocks[:, A.SH_ELEM], g.shocks[:, A.SH_TOOTH], g.shocks[:, A.SH_TICK]))
         g.shocks = np.ascontiguousarray(g.shocks[order])

@@ -44,6 +44,11 @@ FIELDS: dict[str, tuple] = {
     "dimensional_share": ("dimensional_share", "number", 1.0, 0.01, 1.0,
                           "share of the tightest tolerance's allowed surface displacement the tool's wear may use "
                           "before the dimensional life criterion is reached"),
+    "final_surface_band_m": ("final_surface_band_mm", "length", 5e-5, 1e-6, 1e-2,
+                             "a surface event belongs to a toleranced plane feature (and its tool's wear to that "
+                             "tolerance and finish) within this distance of the feature (or twice the tolerance's own "
+                             "allowed displacement if larger): a roughing pass that leaves stock for finishing is not "
+                             "the feature's final surface"),
 }
 
 
@@ -60,6 +65,7 @@ class WearSettings:
     max_chip_events: int = 20
     fallback_speeds: int = 7
     dimensional_share: float = 1.0
+    final_surface_band_m: float = 5e-5
 
 
 def _get(section, key):

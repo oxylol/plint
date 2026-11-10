@@ -481,7 +481,10 @@ buffer overflow are bit-identical.
   or a ball nose's tip, where the memory spans up to 2 pi r / teeth (pi rad for a two-lip drill). There the
   indentation of a large lateral vibration is a delayed stiffness of arbitrary phase; on the drill example the
   response to a 0.4 mm kick became a sustained vibration with process damping on and decayed with it off
-  (docs/models/loop.md 15; open: project each node on its own normal and apply the force along it).
+  (docs/models/loop.md 15; open: project each node on its own normal and apply the force along it). The same
+  example's later divergence at 6.8-6.95 s was not this but dynamics' integration: the force is a contact stiffness
+  K_sp dS L along n per element with the remembered surface held, and the residual flexibilities, one step behind,
+  turned it into a step-to-step alternation (docs/models/dynamics.md 2.3, where both are now treated implicitly).
 * Recutting: every struck chip is cut (trapped against the work), none knocked away freely; the voxel's chips are
   spread uniformly over it (2 mm cells), also over its material and its part inside the tool, so the air layer the
   edges sweep takes the voxel's mean density.

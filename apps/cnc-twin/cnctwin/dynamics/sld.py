@@ -128,6 +128,10 @@ class CutModel:
     damping_M: np.ndarray = field(default_factory=lambda: np.zeros((0, 3, 3)))   # [ne, 3, 3] PD at unit speed
     radius_m: np.ndarray = field(default_factory=lambda: np.zeros(0))            # [ne] element radius (PD speed)
     work_radius_m: float = 0.0       # turning: cutting radius on the workpiece (PD speed)
+    # [ne, 3, 3] process damping's flank contact stiffness per unit depth: d F / d u of the hot loop's wave-memory
+    # indentation K_sp dS A with the remembered surface held (A grows by the zero-clearance land L per unit of u . n):
+    # -K_sp dS L n n^T / a_p. Not part of the delay model (the lobes); the step's predictor-corrector relaxation takes it
+    contact_M: np.ndarray = field(default_factory=lambda: np.zeros((0, 3, 3)))
 
     def _harm(self, damping: bool = False) -> list:
         """Harmonic coefficients of every element matrix (cached)."""
@@ -158,8 +162,21 @@ class CutModel:
         cache[key] = out
         return out.copy()
 
+    def contact_mean(self) -> np.ndarray:
+        """Mean over one revolution of the flank contact stiffness (contact_M) of every engaged element, per unit
+        depth (real 3x3; zero without process damping)."""
+        cache = self.__dict__.setdefault("_means", {})
+        key = ("contact", float(self.arc_lo_rad), float(self.arc_hi_rad), len(self.contact_M))
+        hit = cache.get(key)
+        if hit is None:
+            hit = self._mean_of(self.contact_M, None, False)
+            cache[key] = hit
+        return hit.copy()
+
     def _mean(self, tooth: int | None, damping: bool) -> np.ndarray:
-        mats = self.damping_M if damping else self.M
+        return self._mean_of(self.damping_M if damping else self.M, tooth, damping)
+
+    def _mean_of(self, mats, tooth: int | None, damping: bool) -> np.ndarray:
         out = np.zeros((3, 3))
         if len(mats) == 0:
             return out

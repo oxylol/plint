@@ -16,7 +16,11 @@ Finish (Brammertz 1961 as revised by Grzesik 1996): R_t = f^2 / (8 r) + (h_min /
 h_min = minimum chip thickness ratio x the worn hone radius, plus the drop of the edge's lowest point by a chip on
 a finishing element (its depth x sin of the clearance, kernels.flank_recession); Ra = R_t 8 / (18 sqrt 3) (the exact ratio of a parabolic feed-mark profile). f is the feed per
 revolution (turning) or per tooth (milling: Martellotti 1941, the radius being the corner radius, or
-the tool radius for peripheral finishing), r the radius of the finishing edge.
+the tool radius for peripheral finishing), r the radius of the finishing edge. The formula holds for
+f >= sqrt(2 r h_min) (where it equals h_min); below, the bottom of the edge no longer cuts in a pass, the uncut
+layer accumulates until a pass meets it at h_min, and the profile is a sawtooth of height R_t = h_min, Ra = R_t / 4
+(the surface domain's kinematic profile, docs/models/surface.md 2). A D10 end mill's periphery (r = 5 mm) at
+f_z 0.05 mm is far below that limit for any honed edge: Brammertz's formula read there gave R_t ~ r h_min^2 / 2 f^2.
 
 Remaining life: each criterion's quantity grows at a rate per second of cutting, averaged with an
 exponential window of ``rate_window_s`` of cutting time (deterministic); the remaining cutting time is
@@ -39,6 +43,11 @@ def roughness_m(feed_m: float, radius_m: float, h_min_m: float, chip_m: float = 
     if radius_m <= 0.0:
         rt = feed_m + chip_m
         return RA_PER_RT * rt, rt
+    if h_min_m > 0.0 and feed_m * feed_m < 2.0 * radius_m * h_min_m:
+        # below f = sqrt(2 r h_min) the bottom of the edge no longer cuts in a pass: the uncut layer accumulates
+        # until a pass meets it at h_min on the leading side, a sawtooth of height h_min (Ra = R_t / 4); Brammertz's
+        # formula read there grows as r h_min^2 / 2 f^2 (docs/models/surface.md 2, "Minimum chip thickness")
+        return 0.25 * h_min_m + RA_PER_RT * chip_m, h_min_m + chip_m
     rt = feed_m * feed_m / (8.0 * radius_m)
     if h_min_m > 0.0:
         rt += 0.5 * h_min_m * (1.0 + radius_m * h_min_m / (feed_m * feed_m))

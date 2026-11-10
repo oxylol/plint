@@ -115,6 +115,11 @@ def test_checkpoint_round_trip_bitwise():
     g = F.from_arrays(arrays, "w0.")
     assert F.fields_equal(f, g)
     assert all(np.asarray(x).flags.c_contiguous and np.asarray(x).flags.writeable for x in g)
+    # the checkpoint takes the field's own arrays (no copy: a refined field of 0.7 GB doubled the run's memory)
+    assert all(np.shares_memory(arrays["w0." + name], getattr(f, name)) for name in A.DexelField._fields
+               if getattr(f, name).size)
+    t = F.target_to_arrays(A.TargetField(np.zeros(3, np.int64), np.zeros((0, 2), np.int32), np.zeros(4, np.int64)))
+    assert F.target_from_arrays(t).start.flags.writeable
 
 
 def test_memory_budget_reference_part():

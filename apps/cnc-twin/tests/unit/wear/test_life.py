@@ -154,3 +154,49 @@ def test_empty_steps_give_zero_rates_and_no_nan():
     assert np.all(record.tools[0].VB_m == 0.0) and np.all(np.isfinite(record.tools[0].thermal_damage))
     assert all(np.all(np.isfinite(v)) for k, v in state.wear.values.items() if k != "wear.coating_min_m"
                and k != "wear.remaining_life_s" and not k.endswith("tooth_m") and k != "wear.life_used_slot")
+
+
+def test_roughness_below_the_brammertz_limit_is_the_minimum_chip_sawtooth():
+    """Below f = sqrt(2 r h_min) the profile is a sawtooth of height h_min (docs/models/surface.md 2), continuous
+    with Brammertz's formula at the limit; a D10 periphery at f_z 0.047 mm with a 2.4 um h_min is not 6.5 um R_t."""
+    from cnctwin.wear.life import RA_PER_RT, roughness_m
+    r, h = 5e-3, 2.4e-6
+    f_lim = math.sqrt(2.0 * r * h)
+    ra_hi, rt_hi = roughness_m(f_lim * (1.0 + 1e-9), r, h)
+    ra_lo, rt_lo = roughness_m(f_lim * (1.0 - 1e-9), r, h)
+    assert rt_hi == pytest.approx(h, rel=1e-6) and rt_lo == pytest.approx(h, rel=1e-6)
+    assert ra_hi == pytest.approx(RA_PER_RT * h, rel=1e-6) and ra_lo == pytest.approx(0.25 * h, rel=1e-12)
+    ra, rt = roughness_m(4.7e-5, r, h)
+    assert rt == pytest.approx(h) and ra == pytest.approx(0.6e-6)
+    # above the limit Brammertz's formula is unchanged (turning nose, f 0.2 mm, r 0.8 mm)
+    ra, rt = roughness_m(2e-4, 8e-4, 3e-6)
+    assert rt == pytest.approx(2e-4 ** 2 / 6.4e-3 + 1.5e-6 * (1.0 + 8e-4 * 3e-6 / 4e-8))
+
+
+def _rows_at(edge, z_m):
+    rows = fx.surface_rows(edge)
+    rows[:, 3:6] = [0.05, 0.016, z_m]
+    rows[:, 6:9] = [0.0, 0.0, 1.0]
+    return rows
+
+
+@pytest.mark.parametrize("z_m,finishes", [(20.0e-3, True), (20.2e-3, False)])
+def test_tolerances_apply_to_the_tools_that_generate_the_feature(z_m, finishes):
+    """examples/pocket-islands-al6061: the floor's Ra 1.6 um and the islands' 0.02 mm flatness belong to the
+    finished faces; a roughing pass that leaves 0.2 mm on the floor generates no toleranced surface, so neither the
+    finish nor the dimensional criterion applies to its tool (before, it reached its 'end of life' 0.32 s into its
+    first cut); the finishing pass on the floor takes both."""
+    floor = {"face": "plane", "normal": [0, 0, 1], "near_mm": [50, 16, 20]}
+    tol = [{"id": "floor-finish", "kind": "roughness", "feature": floor, "Ra_um": 1.6},
+           {"id": "floor-flat", "kind": "flatness", "feature": floor, "tolerance_mm": 0.02}]
+    dom, ctx, state, edge = _setup(tolerances=tol)
+    heat = fx.heat(edge, **HOT)
+    fx.run(dom, ctx, state, edge, 5, heat_rec=heat, duty=1.0, entries=0, surface=_rows_at(edge, z_m))
+    sw = state.wear.slots[0]
+    assert bool(sw.finishes.any()) == finishes
+    limits = sw.life["limits"]
+    if finishes:
+        assert limits.get("dimension") == pytest.approx(1e-5) and limits.get("finish") in (1.0, None)
+        assert sw.props["finish_assignment"][:2] == [pytest.approx(1e-5), pytest.approx(1.6e-6)]
+    else:
+        assert limits.get("dimension") is None and limits.get("finish") is None

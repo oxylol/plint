@@ -415,6 +415,17 @@ every domain on and outputs off, one at a time under `bin/tsafe` with `TSAFE_MEM
 At these costs (240 CPU s per simulated second in the lathe's cut, structure's refresh alone 60-70 s/s) an
 operation of 150-265 s takes 10-17 hours of CPU per example: no example was run through a whole operation.
 
+**Runs of 2026-11-10** (worktree with section 15's fixes of that day, `run_project` with every domain on and
+outputs off, one at a time under `bin/tsafe` with `TSAFE_MEM=1800M`; /tmp/runsfix/scripts/longrun.py; resumes read
+checkpoints of the same tree with the build check bypassed):
+
+| run | wall s | CPU s | simulated | end | findings |
+|---|---|---|---|---|---|
+| thin-wall-al7075, resumed at 4.3 s | 3694 | 3675 | 4.3 -> 56.68 s | fatal divergence at 56.68 s (chip thickness 185.7 mm, Y axis 23.6 kN demanded against 8874 N; trochoid between the fins, line 120) | memory flat: anon RSS 1.68-1.69 GB from 6 s on, checkpoints at 10-50 s; gouges 0.603 mm with breakthrough at 21.8, 24.5, 44.7, 47.4 s; melt smear 478-518 degC repeatedly; chatter warnings (81-5057 Hz); 3-16 % recut chips |
+| pocket-islands-al6061, resumed at 12.5 s | 255 | 249 | 12.5 -> 14.5 s (0.8 s of T1's helix) | budget | verdict safe, no end-of-life finding (was tool_end_of_life at 13.80 s); a 205 um witness mark on a finished surface at 14.49 s and servo marks (not examined) |
+| pocket-islands-al6061, finish formula fixed but not yet the per-feature assignment | - | - | 10 -> 16 s | killed by the cap at its end (the end-of-run keyframe: anon RSS 1.38 -> 1.85 GB) | T1's finish estimate 0.90 of its limit at 16 s with the hone at 14.3 um, 42 elements held to the floor's Ra 1.6 um (the reason for the per-feature assignment, section 15) |
+| drill-tap-plate-1045, resumed at 6.79 s | 1914 | 1908 | 6.79 -> 8.5 s | budget (the spot drill's first spot, dwell and retract) | no divergence (was 6.80-6.95 s); thrust 1.10-1.36 kN (EXPECTED 0.8-1.4 kN); gouges 0.008-0.072 mm on the first countersink; packed flutes (fill up to 2.5) |
+
 ## 14. Regression
 
 `tests/regression/test_examples.py` runs every example (and a no-probe variant of the two that probe) through
@@ -802,6 +813,41 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   6.88 s the divergence finding stops the run (a chip of 41 mm, 4948 evaluations); thrust peaked at 1.18 kN (EXPECTED
   0.8-1.4 kN, passed), torque 2.51 N m when it stopped (2.6-4.6, not reached). What drives the last 10 ms (the
   packing load, the self-sustained vibration above, or the axis) is open.
+  fixed (2026-11-10, dynamics; isolated on the tree of 8d51cc1 from checkpoints at 6.6 and 6.79 s, each variant
+  resumed from the same state): none of the three. The run diverged at 6.80 s (6.88 s in the run above: the same
+  kind of event, the tree had changed); resumed without chip packing it diverged at 6.80 s as before, without the
+  recut grid at 6.87 s, without process damping it cut steadily past 6.9 s (packing loads at the divergence: 1.6 N,
+  0.01 N m; the 27 kN on the Z axis are the consequence). Logged L0 step by L0 step (run_macro and contact_steps in
+  Python around the compiled kernels, from 6.79 s): steady 1.10 kN thrust, then from 6.798 s the lateral force
+  alternates in sign from one 2 us step to the next and grows by 8 % per step (+-270 N -> +-1.4 kN in 12 steps, the
+  station rotation rates 23 -> 87 rad/s), a numerical relay, not a vibration of the drill. Three steps, each
+  measured on the same state:
+  (1) process damping's flank contact (K_sp dS L per element with the remembered surface held, 5.4e7 N/m on the
+  drill) was missing from the predictor-corrector's stiffness estimate: added (docs/models/dynamics.md 2.3), the
+  divergence moved to 6.95 s;
+  (2) a contact-stiffened L0 stride rule (2 pi f_c dt <= 1; f_c 19.3 kHz, 0.24 at the 2 us step): not binding, the
+  run still diverged at 6.95 s; and the estimate existed only in the steps where removal subtracted (the spot
+  drill's teeth subtract every 36 ms against 10 ms steps): dynamics now keeps the last subtracting step's contact
+  while cutting reports the tool in cut (`_engaged_contact`); with it alone the divergence came at 6.84 s;
+  (3) the cause: the residual flexibilities take the last evaluated forces (one L0 step behind), and the tool's
+  residual at the contact station is 1.1-1.5e-8 m/N, so against the contact the explicit iteration's gain is of
+  order one (the alternation's -1.08: a restoring sensitivity of about -8e7 N/m laterally), whatever the step. The
+  corrector now stores the residuals' forces at the fixed point F_(n-1) + (I - K C)^-1 (F_n - F_(n-1)) with the
+  flank contact's K (docs/models/dynamics.md 2.3, `modal.residual_relaxation`). Resumed from 6.79 s the spot drill
+  cuts its first spot to Z-4.5, dwells and retracts (7.8-8.0 s) and the run reaches its 8.5 s budget without a
+  divergence (wall 1914 s for 1.71 s; thrust 1.10 -> 1.36 kN at 7.5 s against EXPECTED 0.8-1.4 kN, vibration 2-7 um
+  peak to peak in the cut). New on the way: gouges of 0.008-0.072 mm (0.002-1.95 mm^3) once per tooth period from
+  7.55 s to 7.93 s on the countersink of the first hole (CAD 9.0 mm, +-0.1 mm; not examined: the tool's tip geometry,
+  the spindle's thermal growth or the countersink's CAD), and the flutes packed (fill up to 2.5, packing force
+  60-70 N). With the cut's linearised sensitivity in K as well the first relaxed step blew up: the delay model's mean
+  on this drill is not restoring (trace +4e8 N/m, open, dynamics.md 2.3).
+  The drill's mass balance (field volume 1.4-5 x the analytic chip volume) was removal's pass bookkeeping, not
+  missing chips: a pass ended at the first macro step without a subtraction, and the spot drill's teeth subtract
+  every 36 ms (830 rpm, two lips) against 10 ms steps, so each piece compared one tooth's field volume with the chips
+  of one or two steps (docs/models/removal.md "Volume consistency"; the operation driver's totals of the same drill,
+  summed over every step, agree within 3 %). The wave memory's projection on the current normal (cutting.md 10) is
+  still open: near the axis it spans up to 1.3 rad of the circle for the inner lip elements of this drill (the chisel
+  elements' normals are axial and do not turn).
 
 * **Structure's refresh dominates every run's cost** (open, structure; measured 2026-11-09 with the loop's own CPU
   split): pocket-islands' first 12 s (probing, no cut) took 954 CPU s, 818 s of it in structure; the lathe-shaft
@@ -860,6 +906,24 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   closes to 1.22e-9 of its terms (tests/integration/test_loop_run.py `test_every_ledger_passes` asks < 1e-9) where
   it closed to 5.7e-11 unlubricated (`aim_hand_nozzles: 0`); the terms are cutting's (hot loop heat by zone against
   shaft and feed work), not the coolant's.
+* **A fresh roughing end mill at its end of life 0.08 s into its first cut** (fixed 2026-11-10, wear;
+  examples/pocket-islands-al6061, T1 D10 3FL at 12 000 rpm, helix at f_z 0.047 mm, sharp corner, hone 4 um, the
+  example's 0.02 mm initial land): two errors in the criteria, measured on the run itself (wear's inputs logged per
+  macro step from the first contact at 13.72 s). (1) The finish estimate read Brammertz's formula beyond its range:
+  R_t = f^2/8r + (h_min/2)(1 + r h_min/f^2) holds for f >= sqrt(2 r h_min) (140 um here: r is the tool radius,
+  5 mm, for a square end mill), and below it grows as r h_min^2/2f^2; with the worn hone rising from 8.5 to 9.5 um it
+  gave Ra 1.38 -> 1.68 um, "1.05 of 1" against the floor's Ra 1.6 um at 13.80 s. Below that feed the profile is the
+  sawtooth of height h_min that the surface domain's kinematic profile already gives (docs/models/surface.md 2):
+  Ra 0.49 -> 0.55 um there (`wear.life.roughness_m`). (2) The limits were the part's: every element that wrote a
+  surface event "finished", and every tool took the part's tightest tolerance and finish, so the roughing tool,
+  which leaves 0.2 mm on the floor and the walls, was held to the floor's Ra and the islands' 0.02 mm flatness;
+  with (1) alone it reached its end of life by dimensional drift at 14.04 s (10.0 um of recession, the initial land
+  growing, against 10 um). The tolerances now apply where a tool generates the toleranced feature's final surface
+  (surface events on the feature's plane within 0.05 mm, docs/models/wear.md 10). Resumed from 12.5 s with both
+  fixes the run cuts to its 14.5 s budget with no end-of-life finding and verdict safe (T1: no finishing elements on
+  a toleranced face, Ra estimate 0.80 um at 14.5 s). Open (wear's owner): the hone radius of this tool grows from
+  8.5 to 14 um in 0.3 s of cutting (edge rounding; at that rate a finishing tool reaches Ra 1.6 um, h_min = 0.23 x
+  28 um, within seconds).
 * **A zero-point plate does not clamp** (holding's devices and the workholding database, open): examples/
   die-h13-ballnose holds its insert on a Lang Quick-Point 52 grid plate, "pulled down by two d16 clamping studs"
   (the entry's label). db/workholding/lang-quick-point-52.yaml types the plate `fixture_plate` with its size, grid
@@ -880,6 +944,24 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   after the fix on the convergence case's air-cut variant at 2 ms: 2500 macro steps through the tool change, RSS
   944-983 MB, trend -13.5 kB per step after it (allocator noise), the largest step +36 MB at the tool change itself
   (the new tool's tables). tests/integration/test_loop_memory.py.
+* **Checkpoints and resumes doubled the material field** (fixed 2026-11-10, removal and the loop; measured on
+  examples/thin-wall-al7075, whose two refine boxes give 8.3 M rays: field 0.57 GB, its CAD target 0.15 GB). Nothing
+  grows in that run: per-owner array sizes logged every 0.1 s from 4.2 to 6.3 s stay flat (removal 734 MB, structure
+  19 -> 26 MB at its first refresh in cut, dynamics 6 MB, surface 2 MB, chips 2 MB); the process's anonymous memory
+  is 1.48 GB before the first cut, 1.65 GB at 6.3 s: the field, about 0.6 GB of compiled kernels (522 Numba functions
+  loaded from the cache: hot loop 0.2 GB alone, the domain imports 0.3 GB, tooling's 0.3 GB) and the domains. What
+  killed the earlier runs was a copy: `removal.field.to_arrays` copied every field array for the checkpoint
+  (`np.array`), so the end-of-run checkpoint (and every periodic one) asked for another 0.72 GB (the 2.1 GB peak); and a
+  resume built the scratch state's field before reading the checkpoint's (1.9 GB, killed before its first step).
+  The checkpoint now writes the field's own arrays (they do not change while it is written; the operation
+  driver's in-memory `checkpoint()` copies them, it is held while the run goes on), and a resume drops
+  the scratch state's fields before reading (`Run._release_scratch_fields`: 1.37 -> 0.65 GB before the read). With
+  both, the run checkpoints at 4.4 and 6.0 s and ends at its budget (anonymous memory 1.66 GB at 6.5 s); resumed
+  from 4.3 s with a 60 s budget it cut to 56.68 s with anonymous memory flat at 1.68-1.69 GB and a checkpoint every
+  10 s, and stopped there on a divergence (Y axis 23.6 kN demanded, chip thickness 185.7 mm; section 13, open). Still at
+  the edge of the 1.8 GB cap: the end-of-run full keyframe (every surface brick meshed and held until written) took
+  examples/pocket-islands-al6061 from 1.38 GB to 1.85 GB (with 0.25 GB in swap) at 14.5 s and killed its run at 16 s;
+  the compiled kernels' 0.6 GB is the largest item after the field (open).
 * **`run_project` ignores `options.operator` (for the loop's owner; 2026-11-09).** The loop's `run_project` does
   not read the operator overrides. `twin run` and the API's default `simulate` entry now send a run whose options
   carry them through `cnctwin.sweep.runner.run_project`, which applies them and refuses overrides the machine or the

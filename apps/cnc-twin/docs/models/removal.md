@@ -494,7 +494,13 @@ in_cut, point and normal in M and S, ae, ap, engaged length and angle, in-cut fr
 **Volume consistency** (architecture 5.4): field volume / analytic chip volume per contact. Cutting's
 analytic volume of step n arrives in `prev` at step n + 1, so the ratio published in step n + 1 is that of
 step n (lag one step). A pass whose ratio leaves `1 +- (volume_consistency_tol + family spread)` raises a
-`mass_balance` warning.
+`mass_balance` warning. A pass lasts while the contact subtracts in the step or cutting reported chips for the
+previous step (2026-11-10): a tooth subtracts once per tooth period, and a slow tool's period spans several macro
+steps (the D10 spot drill at 830 rpm: 36 ms against 10 ms). Closing at the first step without a subtraction split
+such a cut at every tooth period, each piece holding one tooth's field volume against only the chips of the step or
+two it was open (the rest of the analytic volume fell between passes): examples/drill-tap-plate-1045's spot entry
+reported 36 warnings in 1.5 s with ratios 0.8-2.7, 1.85 over all its pieces, while the operation driver's totals of
+the same spot drill (field and analytic summed over every step) agree within 3 %.
 
 **Ledger**: removal writes only its bus record; the core Ledger (cnctwin.core.ledger) books from it the
 removed volume and mass (`removed_volume_m3`, rho at 20 degC x the field volume), the displaced volume (0,

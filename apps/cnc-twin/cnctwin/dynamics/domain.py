@@ -24,6 +24,7 @@ import json
 import math
 import struct
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -84,9 +85,11 @@ class DynamicsInputs:
 
 
 def l0_ticks_rule(ipo_ticks: int, tick_s: float, omega_max_rad_s: float, n_teeth: int, f_max_Hz: float,
-                  max_rad_per_step: float, steps_per_tooth: int, omega_dt_max: float) -> int:
-    """Largest divisor of ipo_ticks with |omega| dt <= max angle per step, 2 pi f_max dt <= omega_dt_max and at least
-    steps_per_tooth steps per tooth period (architecture 5.1)."""
+                  max_rad_per_step: float, steps_per_tooth: int, omega_dt_max: float, f_contact_Hz: float = 0.0,
+                  contact_omega_dt_max: float = math.inf) -> int:
+    """Largest divisor of ipo_ticks with |omega| dt <= max angle per step, 2 pi f_max dt <= omega_dt_max, at least
+    steps_per_tooth steps per tooth period (architecture 5.1) and 2 pi f_contact dt <= contact_omega_dt_max, f_contact
+    the highest frequency of the modes stiffened by the contact (modal.f_contact_Hz)."""
     best = 1
     for d in range(1, int(ipo_ticks) + 1):
         if ipo_ticks % d:
@@ -99,6 +102,8 @@ def l0_ticks_rule(ipo_ticks: int, tick_s: float, omega_max_rad_s: float, n_teeth
             if tooth / dt < steps_per_tooth - 1e-9:
                 continue
         if f_max_Hz > 0.0 and TWO_PI * f_max_Hz * dt > omega_dt_max + 1e-15:
+            continue
+        if f_contact_Hz > 0.0 and TWO_PI * f_contact_Hz * dt > contact_omega_dt_max + 1e-15:
             continue
         best = d
     return best
@@ -258,20 +263,49 @@ class DynamicsDomain:
             Phi[k], G0[k], G1[k], gD[k], gW[k] = hit
         return Phi, G0, G1, gD, gW
 
-    def _l0_ticks(self, ctx, p: int, frame, n_teeth: int, modes, ref: int, rotating: bool) -> int:
+    def _l0_ticks(self, ctx, p: int, frame, n_teeth: int, modes, ref: int, rotating: bool,
+                  f_contact: float = 0.0) -> int:
         if p in self.l0_override:
             return self.l0_override[p]
         ipo = int(ctx.ipo_ticks)
         omega = float(np.max(np.abs(frame.spindle_omega_rad_s))) if len(frame.spindle_omega_rad_s) else 0.0
         f_max = MD.f_max_resolved_Hz(modes, ref, P.p(P.MODES, "stride_compliance_share"))
         return l0_ticks_rule(ipo, ctx.tick_s, omega, n_teeth if rotating else 1, f_max, self.max_rad_per_step,
-                             self.steps_per_tooth, P.p(P.MODES, "stride_omega_dt"))
+                             self.steps_per_tooth, P.p(P.MODES, "stride_omega_dt"), f_contact,
+                             P.p(P.MODES, "stride_contact_omega_dt"))
 
     def _contact(self, bus: Bus, path: int, slot: int):
         for c in bus.removal.contacts:
             if int(c.tool_slot) == slot and int(c.path) == path and bool(c.geometry.in_cut):
                 return c
         return None
+
+    def _engaged_contact(self, state, bus: Bus, path: int, slot: int):
+        """The contact the step's operating point (the corrector's stiffness estimate) is built on: removal's contact
+        of a step that subtracted, else, while cutting still reports the tool in cut, the geometry of the path's last
+        subtracting step. Removal subtracts a tooth's swept material when the tooth has passed; a slow tool (the D10
+        spot drill of examples/drill-tap-plate-1045: two lips at 830 rpm, a tooth every 36 ms against 10 ms steps)
+        cuts without subtracting in most steps, and those steps ran without the stiffness estimate (no relaxation of
+        the modes or of the residual flexibilities, docs/models/dynamics.md 2.3). Kept in ``state.dynamics.meta["held_contact"]`` so a resumed run
+        builds the same systems as an uninterrupted one."""
+        held = state.dynamics.meta.setdefault("held_contact", {})
+        key = str(int(path))
+        contact = self._contact(bus, path, slot)
+        if contact is not None:
+            g = contact.geometry
+            held[key] = {"slot": int(slot), "point_S_m": [float(v) for v in np.asarray(g.point_S_m, float)],
+                         "ap_m": float(g.ap_m), "ae_m": float(g.ae_m),
+                         "engaged_angle_rad": float(g.engaged_angle_rad)}
+            return contact
+        cutting = any(int(c.tool_slot) == slot and float(c.in_cut_s) > 0.0 for c in bus.cutting.contacts)
+        h = held.get(key)
+        if not cutting or h is None or int(h["slot"]) != int(slot):
+            held.pop(key, None)
+            return None
+        geometry = SimpleNamespace(point_S_m=np.array(h["point_S_m"], float), ap_m=float(h["ap_m"]),
+                                   ae_m=float(h["ae_m"]), engaged_angle_rad=float(h["engaged_angle_rad"]),
+                                   in_cut=True)
+        return SimpleNamespace(tool_slot=int(slot), path=int(path), geometry=geometry)
 
     def _build(self, ctx, state, bus: Bus, p: int, frame, slot: int, tick0: int, n_ticks: int):
         st = self.settings
@@ -286,7 +320,7 @@ class DynamicsDomain:
         R_S_T0 = np.asarray(frame.pose_S_T, float)[:3, :3] @ undo
         tip_M = np.asarray(frame.pose_M_T, float)[:3, 3]
         tip_S = np.asarray(frame.pose_S_T, float)[:3, 3]
-        contact = self._contact(bus, p, slot)
+        contact = self._engaged_contact(state, bus, p, slot)
         # the contact point: removal's centroid of the engaged region for a rotating tool; a turning tool cuts at
         # its nose (removal's turning contacts carry no centroid: point_S_m is zero, docs/models/loop.md 15)
         point_S = np.asarray(contact.geometry.point_S_m, float) if (contact is not None and rotating) else \
@@ -322,8 +356,18 @@ class DynamicsDomain:
         op = self._operating_point(state, bus, p, frame, slot, edge, frames, rotating, R_S_T0, R_M_T0, tip_S,
                                    contact, n_teeth, tick0)
         self._op[p] = op
-        K_c = op.ap_m * op.cut.mean() if (op is not None and op.cut is not None and st.relax_estimate) else None
-        l0 = self._l0_ticks(ctx, p, frame, n_teeth, modes, ref, rotating)
+        # the corrector's stiffness estimate: the cut's force sensitivity and process damping's flank contact, both
+        # evaluated by the hot loop at the predicted state (the contact: K_sp dS L per element along its normal,
+        # 5.4e7 N/m on the spot drill of examples/drill-tap-plate-1045; docs/models/dynamics.md 2.3)
+        K_c = op.ap_m * (op.cut.mean() + op.cut.contact_mean()) \
+            if (op is not None and op.cut is not None and st.relax_estimate) else None
+        # the residual flexibilities' relaxation (model doc 2.3) takes the flank contact only: the cut's linearised
+        # sensitivity is the delay model's, and on the spot drill its symmetric part is not restoring (trace +4e8 N/m
+        # at 6.79 s) where the run's own step-to-step alternation shows a restoring loop: with it, (I - K_c C) was
+        # near singular and the relaxation amplified (open, docs/models/dynamics.md 2.3)
+        K_res = op.ap_m * op.cut.contact_mean() if K_c is not None else None
+        f_contact = MD.f_contact_Hz(modes, ref, K_c)
+        l0 = self._l0_ticks(ctx, p, frame, n_teeth, modes, ref, rotating, f_contact)
         unb = None
         if hold is not None and rotating:
             unb = (np.asarray(_get(hold, "unbalance_static_kg_m", np.zeros(3)), float),
@@ -333,7 +377,7 @@ class DynamicsDomain:
         sys, layout = MD.build_system(modes, nst=nst, ref_station=ref, residual=residual, grid=grid, point_S=point_S,
                                       l0_ticks=l0, ipo_ticks=int(ctx.ipo_ticks), tick_s=ctx.tick_s, n_ticks=n_ticks,
                                       capacity=capacity, rotating=rotating, unbalance_T=unb, K_c_T0=K_c,
-                                      R_S_T0=R_S_T0, discretise=self._discretise)
+                                      R_S_T0=R_S_T0, discretise=self._discretise, K_res_T0=K_res)
         work_shape0 = sys.model.work_shape_at_contact
         # ---------------------------------------------------------------- carried state or basis change
         signature = tuple(m.key for m in modes) + (("slot", slot), ("work", int(frame.workpiece)))
@@ -381,6 +425,7 @@ class DynamicsDomain:
                            sys.ds.f_unb.copy(), sys.ds.f_base.copy(), sys.ds.st_force.copy(),
                            sys.ds.work_force_S.copy(), int(sys.ds.node_tick[0]), sys.ds.flags.copy(), energy0, basis_J,
                            signature, np.array(work_shape0, float).copy(), carry_terms)
+        new.f_contact_Hz = float(f_contact)
         ds.systems[p] = new
         reset_extremes(sys.da.scal)
         offset = point_S - tip_S

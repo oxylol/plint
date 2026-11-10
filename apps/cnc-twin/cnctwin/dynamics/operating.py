@@ -117,6 +117,10 @@ def cut_model(edge, frames, coeffs, *, engaged: np.ndarray, ap_m: float, h_mean_
     L = vb + land_per_radius * np.asarray(edge.elem_edge_radius_m, float)[jj, kk]
     Ksp = np.asarray(K_sp_scale, float)[g] if np.ndim(K_sp_scale) else np.full(len(jj), float(K_sp_scale))
     damp = (Ksp * db * L * L / (4.0 * ap_m))[:, None, None] * (n[:, :, None] * n[:, None, :])
+    # the flank contact's stiffness as the hot loop evaluates it (cutting's wave memory: force K_sp dS A along n, the
+    # indented area A growing by the zero-clearance land L per unit of the current displacement along n)
+    dS = np.asarray(getattr(edge, "elem_len_m", edge.elem_db_m), float)[jj, kk]
+    contact = -(Ksp * dS * L / ap_m)[:, None, None] * (n[:, :, None] * n[:, None, :])
     alpha0 = a0
     tooth = jj
     radius = np.asarray(edge.elem_r_m, float)[jj, kk]
@@ -131,11 +135,13 @@ def cut_model(edge, frames, coeffs, *, engaged: np.ndarray, ap_m: float, h_mean_
             pitch[j] = float(np.min(d))
     M = M if len(jj) else np.zeros((0, 3, 3))
     D = damp if len(jj) and np.any(damp != 0.0) else np.zeros((0, 3, 3))
+    Kf = contact if len(jj) and np.any(contact != 0.0) else np.zeros((0, 3, 3))
     return CutModel(M=M, alpha0_rad=np.asarray(alpha0, float), tooth=np.asarray(tooth, int),
                     n_teeth=max(nt, 1) if rotating else 1,
                     pitch_rad=pitch if rotating else np.array([TWO_PI]), arc_lo_rad=float(arc[0]),
                     arc_hi_rad=float(arc[1]), spin=float(spin), rotating=bool(rotating), damping_M=D,
-                    radius_m=np.array(radius), work_radius_m=float(work_radius_m))
+                    radius_m=np.array(radius), work_radius_m=float(work_radius_m),
+                    contact_M=Kf if len(Kf) else np.zeros((0, 3, 3)))
 
 
 __all__ = ["OperatingPoint", "incremental_coefficient", "mean_chip_thickness", "cut_model", "_arc_from_geometry"]

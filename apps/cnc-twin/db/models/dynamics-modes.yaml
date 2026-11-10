@@ -18,6 +18,12 @@ params:
     range: [0.05, 1.0]
     src: est
     note: "largest 2 pi f dt of a governing mode (docs/architecture.md 5.1): the predictor-corrector keeps the numerical damping within 1 % of the exact closed-loop damping up to this value for cutting stiffness up to the modal stiffness (tests/unit/dynamics/test_predictor_corrector.py)"
+  stride_contact_omega_dt:
+    value: 1.0
+    unit: "-"
+    range: [0.1, 2.0]
+    src: est
+    note: "largest 2 pi f dt of a mode stiffened at the contact by the step's stiffness estimate (the cut's force sensitivity and process damping's flank contact, docs/models/dynamics.md 2.3): the predictor-corrector diverges as a step-to-step alternation beyond about 1.2 without the estimate and about 2 with it (tests/unit/dynamics/test_contact_relaxation.py); 1 keeps a factor 2 on the relaxed limit"
   basis_mac_threshold:
     value: 0.999
     unit: "-"

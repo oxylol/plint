@@ -282,18 +282,29 @@ class RemovalDomain:
         analytic = {}
         for cc in getattr(prev.cutting, "contacts", []) or []:
             analytic[int(cc.contact)] = float(getattr(cc, "analytic_chip_volume_m3", 0.0))
+        chips = set()
         for c in frame.contacts:
             p = int(c.contact)
             va = analytic.get(p, 0.0)
             vf = float(rs.prev_field_m3[p]) if p < len(rs.prev_field_m3) else 0.0
             c.volume_consistency = vf / va if va > 0.0 else 1.0
-            if p < rs.pass_stats.shape[0] and rs.pass_stats[p, PS_ACTIVE]:
-                rs.pass_stats[p, PS_V_ANALYTIC] += va
+            if p < rs.pass_stats.shape[0]:
+                ps = rs.pass_stats[p]
+                if va > 0.0:
+                    # the tool made chips in the previous step: it is in the pass (a slow tool's teeth subtract once
+                    # per tooth period, which can span several macro steps without a subtraction)
+                    chips.add(p)
+                    if not ps[PS_ACTIVE]:
+                        ps[:] = 0.0
+                        ps[PS_ACTIVE] = 1.0
+                        ps[PS_START_TICK] = float(tick)
+                if ps[PS_ACTIVE]:
+                    ps[PS_V_ANALYTIC] += va
         for c in frame.contacts:
             p = int(c.contact)
             if p < len(rs.prev_field_m3):
                 rs.prev_field_m3[p] = float(c.removed_volume_m3)
-        self._pass_close(ctx, state, rs, frame, tick)
+        self._pass_close(ctx, state, rs, frame, tick, chips)
         # ---- connectivity / loose bodies
         if rs.macro - rs.last_connect_macro >= s.connect_every_n_macro:
             for w, wp in enumerate(rs.workpieces):
@@ -625,12 +636,17 @@ class RemovalDomain:
             ps[PS_V_Y] += vy
             ps[PS_LAST_TICK] = tick
 
-    def _pass_close(self, ctx, state, rs, frame, tick) -> None:
+    def _pass_close(self, ctx, state, rs, frame, tick, chips=frozenset()) -> None:
+        """Close the passes whose tool neither subtracted in this step nor made chips in the previous one (cutting's
+        analytic volume arrives a step late). Closing at the first step without a subtraction split a slow tool's
+        pass at every tooth period (the D10 spot drill at 830 rpm subtracts every 36 ms, the macro step is 10 ms):
+        each piece held one tooth's field volume against one or two steps' chips, and the ratio read 0.8-2.7
+        (examples/drill-tap-plate-1045, 36 mass-balance warnings in 1.5 s; over the whole entry 1.85)."""
         s = rs.settings
         in_cut = {int(c.contact): bool(c.geometry.in_cut) for c in frame.contacts}
         for p in range(rs.pass_stats.shape[0]):
             ps = rs.pass_stats[p]
-            if not ps[PS_ACTIVE] or in_cut.get(p, False):
+            if not ps[PS_ACTIVE] or in_cut.get(p, False) or p in chips:
                 continue
             ps[PS_ACTIVE] = 0.0
             vf, va = float(ps[PS_V_FIELD]), float(ps[PS_V_ANALYTIC])

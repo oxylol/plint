@@ -33,9 +33,9 @@ import numpy as np
 
 from ..core.errors import InputError
 from . import discretize as DZ
-from .abi import (BASE_LINEAR, KIND_MACHINE, KIND_TOOL, KIND_WORK, MAX_ROTARY, MI_HAS_TOOL_RES, MI_IPO_TICKS,
-                  MI_L0_TICKS, MI_N_NONWORK, MI_REF_STATION, MI_RELAX, MI_ROTATING, MS_DT_L0_S, MS_DT_TICK_S,
-                  MS_TICK_S, N_BASE, DynSystem, WorkGrid, empty_dyn_accum, empty_dyn_model, empty_dyn_state,
+from .abi import (BASE_LINEAR, KIND_MACHINE, KIND_TOOL, KIND_WORK, MAX_ROTARY, MI_HAS_TOOL_RES, MI_HAS_WORK_RES,
+                  MI_IPO_TICKS, MI_L0_TICKS, MI_N_NONWORK, MI_REF_STATION, MI_RELAX, MI_RES_RELAX, MI_ROTATING,
+                  MS_DT_L0_S, MS_DT_TICK_S, MS_RES_RELAX, MS_TICK_S, N_BASE, DynSystem, WorkGrid, empty_dyn_accum, empty_dyn_model, empty_dyn_state,
                   empty_deflection, empty_modal_model, empty_modal_state, N_SCRATCH, all_stations)
 
 AXIS_LETTERS = {"x": (1.0, 0.0, 0.0), "y": (0.0, 1.0, 0.0), "z": (0.0, 0.0, 1.0)}
@@ -369,6 +369,23 @@ def contact_shapes(modes: list, ref_station: int, grid: WorkGrid, work_shape: np
     return out
 
 
+def f_contact_Hz(modes: list, ref_station: int, K_c_T0: np.ndarray | None) -> float:
+    """Highest natural frequency of the tool and machine modes stiffened at the reference station by the step's
+    stiffness estimate (the symmetric part of -K_c, T0; the corrector's relaxation uses the same estimate): the
+    eigenvalues of diag(omega^2) + Psi^T sym(-K_c) Psi (mass-normalised shapes). 0 without an estimate."""
+    if K_c_T0 is None:
+        return 0.0
+    rows = [m for m in modes if m.kind != KIND_WORK and m.stations is not None
+            and 0 <= ref_station < np.asarray(m.stations).shape[0]]
+    if not rows:
+        return 0.0
+    Psi = np.array([np.asarray(m.stations, float)[ref_station, :3] for m in rows]).T     # [3, nm]
+    K = -np.asarray(K_c_T0, float)
+    A = np.diag([m.omega_rad_s ** 2 for m in rows]) + Psi.T @ (0.5 * (K + K.T)) @ Psi
+    w2 = float(np.max(np.linalg.eigvalsh(0.5 * (A + A.T))))
+    return math.sqrt(w2) / (2.0 * math.pi) if w2 > 0.0 else 0.0
+
+
 def relaxation(modes: list, contact_shape: np.ndarray, G1q: np.ndarray, K_c_T0: np.ndarray | None) -> np.ndarray:
     """(I + K_m diag(G1[:, 0]))^-1 with the modal cutting stiffness K_m = -Psi^T K_c Psi (Psi = contact shapes,
     K_c = d F_tool / d u_rel, T0); the identity without an estimate."""
@@ -381,10 +398,35 @@ def relaxation(modes: list, contact_shape: np.ndarray, G1q: np.ndarray, K_c_T0: 
     return np.ascontiguousarray(np.linalg.inv(A))
 
 
+def residual_relaxation(residual: np.ndarray | None, ref_station: int, res_work_S: np.ndarray | None,
+                        R_S_T0: np.ndarray, K_c_T0: np.ndarray | None) -> np.ndarray:
+    """(I - K_c C)^-1 (T0, 3 x 3), C the residual flexibilities in series with the contact at the reference station
+    (the tool's driving-point block plus the workpiece's, R^T C_w R); the identity without an estimate or residual.
+
+    The residual flexibilities are quasi-static and take the last evaluated forces (one step behind): against a
+    contact of stiffness -K_c that is the explicit iteration F_n = F(u_m) + K_c C F_(n-1), which alternates and grows
+    when the gain |K_c C| exceeds 1 (examples/drill-tap-plate-1045's spot drill: C 1.1-1.3e-8 m/N, K_c 3.6e8 N/m,
+    gain 2.2-2.4). The corrector stores F_(n-1) + (I - K_c C)^-1 (F_n - F_(n-1)) for them instead, the fixed point
+    of F = F(u_m) + K_c C (F - F_(n-1)): exact in one step for a linear contact, convergent for any true gain below
+    1 + 2 x the estimate's (model doc 2.3)."""
+    if K_c_T0 is None:
+        return np.eye(3)
+    C = np.zeros((3, 3))
+    res = np.asarray(residual, float) if residual is not None else np.zeros((0, 0))
+    if res.ndim == 2 and res.shape[0] >= 3 * (ref_station + 1) and res.shape[1] >= 3 * (ref_station + 1):
+        C += res[3 * ref_station:3 * ref_station + 3, 3 * ref_station:3 * ref_station + 3]
+    if res_work_S is not None:
+        R = np.asarray(R_S_T0, float)
+        C += R.T @ np.asarray(res_work_S, float) @ R
+    if not np.any(C):
+        return np.eye(3)
+    return np.ascontiguousarray(np.linalg.inv(np.eye(3) - np.asarray(K_c_T0, float) @ C))
+
+
 def build_system(modes: list, *, nst: int, ref_station: int, residual: np.ndarray | None, grid: WorkGrid,
                  point_S: np.ndarray, l0_ticks: int, ipo_ticks: int, tick_s: float, n_ticks: int, capacity: int,
                  rotating: bool, unbalance_T: tuple | None, K_c_T0: np.ndarray | None,
-                 R_S_T0: np.ndarray, discretise=None) -> tuple[DynSystem, Layout]:
+                 R_S_T0: np.ndarray, discretise=None, K_res_T0="K_c") -> tuple[DynSystem, Layout]:
     """All kernel arrays of one system for the coming macro step (state zero; the caller copies the carried
     state in). ``discretise(omega, zeta, dt) -> (Phi, G0, G1, gram_D, gram_W)`` (default: discretize.modal_discretisation;
     the domain passes a cached one)."""
@@ -455,7 +497,6 @@ def build_system(modes: list, *, nst: int, ref_station: int, residual: np.ndarra
         refresh_work_shapes_ref(sys, grid, np.asarray(point_S, float))
     else:
         dm.res_work_S[:] = grid.extra_S
-        from .abi import MI_HAS_WORK_RES
         dm.iscal[MI_HAS_WORK_RES] = int(np.any(grid.extra_S != 0.0))
     dm.contact_shape[:] = 0.0
     if nm:
@@ -463,6 +504,11 @@ def build_system(modes: list, *, nst: int, ref_station: int, residual: np.ndarra
         relax = relaxation(modes, dm.contact_shape[:nm], G1[:, 0], K_c_T0)
         dm.relax[:] = relax
         dm.iscal[MI_RELAX] = 0 if np.array_equal(relax, np.eye(nm)) else 1
+    res_relax = residual_relaxation(sys.model.static_residual if dm.iscal[MI_HAS_TOOL_RES] else None, ref_station,
+                                    dm.res_work_S if dm.iscal[MI_HAS_WORK_RES] else None, R_S_T0,
+                                    K_c_T0 if isinstance(K_res_T0, str) else K_res_T0)
+    dm.scal[MS_RES_RELAX:MS_RES_RELAX + 9] = res_relax.reshape(9)
+    dm.iscal[MI_RES_RELAX] = 0 if np.array_equal(res_relax, np.eye(3)) else 1
     layout = Layout(modes, nst, int(ref_station), bool(rotating), grid, int(l0_ticks), int(ipo_ticks))
     return sys, layout
 

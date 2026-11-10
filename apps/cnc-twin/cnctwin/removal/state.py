@@ -3,7 +3,9 @@
 Everything that affects later results is stored: every workpiece's tri-dexel field (all levels, the pool and
 the brick flags), its target, its polar field, the cumulative removed lengths (Python integers, stored as
 text), the per-contact accumulators and pass statistics, the finding episodes, the air-cut runs and the tool
-profiles. ``from_arrays(to_arrays())`` continues bit for bit.
+profiles. ``from_arrays(to_arrays())`` continues bit for bit. ``to_arrays`` hands out the fields' own arrays (the
+checkpoint writes them at once; a copy of a refined field doubled the run's memory), so a caller that wants an
+independent state copies them.
 """
 
 from __future__ import annotations

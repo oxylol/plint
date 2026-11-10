@@ -122,6 +122,7 @@ def test_lifecycle_bus_ledger_checkpoint_and_transfer():
     assert state.bus_next.removal.contacts[0].volume_consistency == pytest.approx(1.0, rel=1e-12)
     # checkpoint continuation is bit-identical
     arrays, meta = rs.to_arrays()
+    arrays = {k: np.array(v) for k, v in arrays.items()}     # the checkpoint file's copy (to_arrays does not copy)
     rs2 = RemovalState.from_arrays(arrays, meta)
     state2 = SimState()
     state2.removal = rs2
@@ -282,3 +283,39 @@ def test_a_lathe_turns_a_mesh_stock_through_its_polar_field(tmp_path):
     assert PO.volume_m3(wp.polar) == pytest.approx(vol_mesh, rel=2e-3)
     assert float(wp.polar.geom[A.PG_Z0]) == 0.0
     assert int(wp.polar.geom[A.PG_NZ]) * float(wp.polar.geom[A.PG_DZ]) >= L
+
+
+def test_a_slow_tools_pass_spans_the_steps_between_its_tooth_subtractions():
+    """A tooth subtracts once per tooth period, which for a slow tool spans several macro steps (the spot drill of
+    examples/drill-tap-plate-1045: 36 ms against 10 ms); the pass lasts while cutting reports chips, so its field
+    volume is compared with the chips of all its steps (docs/models/removal.md "Volume consistency")."""
+    ctx = _ctx()
+    state = SimState()
+    dom = RemovalDomain(tool_shapes={0: _shape()}, n_paths=1)
+    dom.init(ctx, state)
+    from cnctwin.removal import ledger as LG
+    v0 = LG.volume_m3(state.removal.workpieces[0])
+
+    def step(cut: bool, chips_prev: float):
+        state.bus_prev.motion.paths = [PathFrame(tool_slot=0, workpiece=0)]
+        state.bus_prev.cutting.contacts = [CuttingContact(contact=0, tool_slot=0, analytic_chip_volume_m3=chips_prev)]
+        inputs = dom.kernel_inputs(ctx, state, state.bus_prev)
+        if cut:
+            _hot_loop(inputs, np.arange(-2e-3, 6e-3, 0.1e-3), int(state.clock.tick))
+        dom.absorb(ctx, state, None, state.bus_next)
+        dom.macro_step(ctx, state, state.bus_prev, state.bus_next)
+        state.swap_bus()
+        state.clock.tick += 10000
+
+    step(True, 0.0)                     # one tooth's subtraction in the first step of the cut
+    removed = v0 - LG.volume_m3(state.removal.workpieces[0])
+    for _ in range(3):                  # the chips of the cut arrive one step late, a third per step
+        step(False, removed / 3.0)
+    from cnctwin.removal.state import PS_ACTIVE, PS_V_ANALYTIC, PS_V_FIELD
+    ps = state.removal.pass_stats[0]
+    assert ps[PS_ACTIVE] == 1.0                                   # still in the pass
+    assert ps[PS_V_FIELD] == pytest.approx(removed, rel=1e-12)
+    assert ps[PS_V_ANALYTIC] == pytest.approx(removed, rel=1e-12)
+    step(False, 0.0)                    # no subtraction, no chips: the pass ends, field and chips agree
+    assert state.removal.pass_stats[0, PS_ACTIVE] == 0.0
+    assert not [f for f in state.findings if f.category == Category.MASS_BALANCE]

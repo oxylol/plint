@@ -20,6 +20,7 @@ check, recorder / frames / timeline / findings, the bus swap and the clock, keyf
 
 from __future__ import annotations
 
+import gc
 import math
 import time
 from pathlib import Path
@@ -837,6 +838,7 @@ class Run:
         self._init_domains()
         self._writers(fresh=False)
         self.op_active = False
+        self._release_scratch_fields()
         restored = self.checkpointer.resume(marker, self.participants(), run_directory=self.rd)
         self.state = restored.state
         self.ctx.trace = restored.trace
@@ -882,6 +884,19 @@ class Run:
         # nothing is written to the trace here: a resumed run's result set equals an uninterrupted run's
         self.progress(phase="run", message=f"resumed at {int(state.clock.tick) * self.ctx.tick_s:.3f} s",
                       sim_time_s=int(state.clock.tick) * self.ctx.tick_s)
+
+    def _release_scratch_fields(self) -> None:
+        """Drop the scratch state's material fields (built by the inits of a resume, replaced by the checkpoint's)
+        before the checkpoint is read: both at once doubled the memory of a resume (a refined dexel field and its
+        target of 0.72 GB in examples/thin-wall-al7075: the resume was killed by the 1.8 GB cap)."""
+        removal = getattr(self.state, "removal", None)
+        if removal is None:
+            return
+        for wp in removal.workpieces:
+            wp.field = wp.target = wp.polar = None
+            wp.vol_cache = None
+        removal.last_inputs = None
+        gc.collect()
 
     # ================================================================== the run
     def execute(self) -> dict:

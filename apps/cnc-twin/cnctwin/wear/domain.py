@@ -350,6 +350,33 @@ class WearDomain:
                            h_min_ratio=ratio, z_load_m=z_load)
             rt.out = self._outputs(sw)
             self._rt[slot] = rt
+            assigned = sw.props.get("finish_assignment")
+            if assigned is not None and hasattr(tolerances, "assign"):
+                tolerances.assign(slot, *assigned)
+
+    @staticmethod
+    def _finishing(ws, rt, sw, g, nt, ne) -> None:
+        """Mark the elements whose surface events generate a toleranced feature's final surface and assign the slot
+        the tightest tolerance and finish of those features (persisted in the slot's props). Before 2026-11-10 every
+        element that wrote a surface event finished and every tool took the part's tightest tolerance and finish: a
+        roughing end mill leaving 0.2 mm on the floor of examples/pocket-islands-al6061 was held to the floor's
+        Ra 1.6 um and the islands' 0.02 mm flatness and reached its 'end of life' 0.32 s into its first cut."""
+        rows = g.surface_rows
+        if rows.shape[0] == 0:
+            return
+        tol = rt.tolerances
+        if hasattr(tol, "finishing"):
+            mask, allowed, ra, rt_ = tol.finishing(rows[:, 3:6], rows[:, 6:9], ws.settings.final_surface_band_m)
+            if mask.any() and hasattr(tol, "assign"):
+                old = sw.props.get("finish_assignment") or [None, None, None]
+                new = [b if a is None else (a if b is None else min(a, b)) for a, b in zip(old, (allowed, ra, rt_))]
+                sw.props["finish_assignment"] = new
+                tol.assign(sw.slot, *new)
+        else:
+            mask = np.ones(rows.shape[0], bool)
+        for j, k in rows[mask, 1:3].astype(np.int64):
+            if 0 <= j < nt and 0 <= k < ne:
+                sw.finishes[j, k] = 1
 
     @staticmethod
     def _outputs(sw) -> A.ElemOut:
@@ -364,9 +391,7 @@ class WearDomain:
         rt = self._rt[slot]
         nt, ne = sw.geo.valid.shape
         g = S.gather(prev, slot, (nt, ne), sw.sections["z_m"].shape[0])
-        for j, k in g.surface:
-            if 0 <= j < nt and 0 <= k < ne:
-                sw.finishes[j, k] = 1
+        self._finishing(ws, rt, sw, g, nt, ne)
         tick0, tick1 = self._ticks(prev, frame)
         window = ws.settings.rate_window_s
         if frame is not None:

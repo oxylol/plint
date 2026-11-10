@@ -461,12 +461,26 @@ slot), parts (parts in which the tool cut). End of life: the first criterion cro
 | `finish` | Ra (or Rt) estimate / specification | 1 (only when the new edge met the specification at this feed) |
 | `fatigue`, `breakage` | section Miner sum, broken | 1 |
 
-Finishing elements are those that wrote surface events. Allowed displacement (`ProjectTolerances`):
+Finishing elements are those whose surface events generate a toleranced feature's final surface (2026-11-10):
+an event belongs to a tolerance's plane feature (`near_mm` and `normal`, placed in S by `cad.placement`) when its
+normal is within 30 deg of the feature's and it lies within `physics.wear.final_surface_band_mm` (0.05 mm) or
+twice the tolerance's allowed displacement of the plane; the slot takes the tightest allowed displacement, Ra
+and Rt of the features it generated (persisted in the slot's props, `finish_assignment`). A tolerance whose
+features are not all such planes (cylinders, unplaced features) cannot be placed and applies to every event, as
+before. Until then every element that wrote a surface event finished and every tool took the part's tightest
+tolerance and finish: examples/pocket-islands-al6061's roughing D10, which leaves 0.2 mm on the floor and the
+walls, was held to the floor's Ra 1.6 um and the islands' 0.02 mm flatness and reached its 'end of life' by
+dimensional drift 0.32 s into its first cut (10.0 um of recession against 10 um), after the finish estimate's
+fix below had removed the first, at 0.08 s. Allowed displacement (`ProjectTolerances`):
 distance and radius +-band / 2, diameter band / 4, zone tolerances zone / 2; fits without plus/minus are
 not converted (listed as unused); the integration may assign per tool (`assign`). Finish (Brammertz
 1961, Grzesik 1996): R_t = f^2/(8 r) + (h_min/2)(1 + r h_min / f^2) + chip depth, h_min = the material's
 minimum chip thickness ratio x the worn hone radius, Ra = R_t 8/(18 sqrt 3); f per revolution
 (turning) or per tooth (milling, Martellotti 1941), r the corner/nose/ball radius, else the tool radius.
+Below f = sqrt(2 r h_min), where the formula equals h_min, the edge's bottom no longer cuts in a pass and the
+profile is the sawtooth of height R_t = h_min (Ra = R_t / 4) that the surface domain's kinematic profile gives
+(docs/models/surface.md 2); Brammertz's formula read there grows as r h_min^2 / 2 f^2 (2026-11-10: a D10 end mill's
+periphery, r 5 mm at f_z 0.05 mm, reached the 1.6 um floor specification 0.08 s into its first cut with a 9.5 um hone).
 The first criterion writes `wear:life_end:<criterion>` and a `tool_end_of_life` finding (warning) and
 puts the tool number into `WearFeedback.expired`. Remaining life: each criterion's rate per second of
 cutting as a bias-corrected exponential average over `rate_window_s` (10 s) of cutting; remaining

@@ -76,6 +76,46 @@ extrapolation assumes a force that is smooth from node to node: a force componen
 the predicted state (cutting's process damping as it is evaluated today, a one-sided function of the predicted
 normal velocity; docs/models/loop.md 15) is overshot by `2 f_n - f_n-1` and the pair can lock into a
 step-to-step relay; the relaxation, a linearisation, does not cover it.
+
+**Process damping's flank contact in the estimate** (2026-11-10). Cutting's process damping is now the wave-memory
+indentation K_sp dS A evaluated at the predicted state (docs/models/cutting.md "Process damping"): with the
+remembered surface held, A grows by the zero-clearance land L per unit of the current displacement along the
+element's normal, so each engaged element adds a contact stiffness K_sp dS L n n^T to the force sensitivity. The
+relaxation's estimate is `K_c = a_p (mean of the cut's sensitivity + mean of the flank contact)` (`CutModel.
+contact_M`, `contact_mean`; the lobes' delay model does not use it). On examples/drill-tap-plate-1045's D10 spot
+drill in 1045 (K_sp 3.4e14 N/m3, L 26-35 um) at 6.79 s: |cut| 3.1e8 N/m, |flank contact| 5.4e7 N/m. The modal
+scheme's limit (tests/unit/dynamics/test_contact_relaxation.py, one mode, zeta 0.01): the plain predictor-corrector
+holds to a contact-stiffened 2 pi f_c dt of about 1.2, the relaxed one to about 2; the L0 stride rule keeps
+2 pi f_c dt <= `stride_contact_omega_dt` (1.0), f_c the largest eigenfrequency of diag(omega^2) + Psi^T sym(-K_c)
+Psi over the tool and machine modes at the reference station (`modal.f_contact_Hz`, `SystemRecord.f_contact_Hz`;
+19.3 kHz on the spot drill, 2 pi f_c dt = 0.24 at its 2 us step: not binding there).
+
+**The residual flexibilities against the contact** (2026-11-10). The quasi-static residual flexibilities (the tool's
+static residual over its stations, the workpiece's at the contact) take the last evaluated forces, one L0 step
+behind. Against a contact that is the explicit iteration F_n = F(u_modal) + K_c C F_(n-1), C the residual
+compliance in series with the contact at the reference station (tool block plus R^T C_w R): it alternates in sign
+from step to step and grows once |K_c C| > 1, whatever the step. On the spot drill C = 1.1-1.5e-8 m/N laterally (the
+tool's residual; the workpiece's 3e-10). That was the drill's divergence: the lateral force alternated from one 2 us
+step to the next and grew by 8 % per step from 6.798 s (+-270 N -> +-1.4 kN in 12 steps; a real loop gain of
+-1.08, a restoring sensitivity of about -8e7 N/m laterally), then 15-27 kN on the Z axis and the chip-thickness
+divergence finding at 6.80-6.95 s depending on the variant; it went away with process damping off. The corrector now
+stores, for the residuals, the fixed point of F = F(u_modal) + K C (F - F_(n-1)):
+`F_(n-1) + (I - K_c C)^-1 (F_n - F_(n-1))` at the load stations and for the workpiece (`modal.residual_relaxation`,
+DynModel.scal[MS_RES_RELAX], kernels.modal_correct and reference.modal_correct_ref; the identity without an
+estimate). For a linear contact it is exact in one step; with an estimate off by a factor it converges for any true
+gain below 1 + 2 x the estimated one (tests/unit/dynamics/test_contact_relaxation.py: gains 0.5, 2.4 and 5, and
+estimates of 0.5 and 3 x the true stiffness). The vibration sample reads the residuals' forces as they hold them.
+K here is the flank contact's stiffness alone (`K_res_T0`; -2.0e7 N/m per lateral axis on the drill, gain 0.26-0.3,
+so the measured -1.08 is within 1 + 2 x 0.3). The cut's linearised sensitivity (the delay model's `CutModel.M`) does
+not enter: on the drill its symmetric part is not restoring (+1.3e8 N/m laterally, +1.5e8 axially, trace +4e8, where
+each element's trace is -db (K_r - K_a a.n) / a_p; and the run's own alternation shows a restoring loop), with it I - K C had
+eigenvalues 0.48 and -0.52 +- 1.92i and the first relaxed step blew up (1e50 mm chip thickness at 6.791 s). Why
+the delay model's mean has that sign on a drill (the incremental K_r at the mean chip thickness, the axial-force
+direction of the lip elements, the engaged arc) is open; the modal relaxation still takes it.
+The estimate exists only while the step has an operating point: removal reports a contact in the steps that
+subtracted, and a slow tool's tooth subtracts every few steps (the spot drill's every 36 ms against 10 ms steps), so
+dynamics keeps the last subtracting step's geometry while cutting reports the tool in cut
+(`DynamicsDomain._engaged_contact`, persisted in `state.dynamics.meta["held_contact"]`).
 **Numerical damping** of the closed loop `F = -K_c u` against the exact damping ratio
 `zeta / sqrt(1 + K_c / k)` (tests/unit/dynamics/test_predictor_corrector.py, the real kernels):
 
@@ -379,7 +419,7 @@ out of contact.
 `db/models/dynamics-chatter.yaml`: chatter_index_threshold 0.5, clear_index 0.35, min_amplitude_m 0.5 um,
 min_amplitude_per_feed 0.05, severe_amplitude_per_feed 1.0 (tlusty-ismail-1981-nonlinearity), flip_growth_ratio
 1.5, flip_min_share 0.05 (est). `dynamics-process-damping.yaml`: edge_land_per_radius 1.0, max_interference_m
-0.5 mm (est, = cutting-contact). `dynamics-modes.yaml`: stride_compliance_share 0.01, stride_omega_dt 0.3
+0.5 mm (est, = cutting-contact). `dynamics-modes.yaml`: stride_compliance_share 0.01, stride_omega_dt 0.3, stride_contact_omega_dt 1.0 (2.3)
 (architecture 5.1), basis_mac_threshold 0.999, basis_freq_tol 1e-6. Bibliography: `models-dynamics.yaml`.
 Settings `physics.dynamics` (`schema.py`): sample_margin, chatter_window_revs (20), chatter_window_max_s,
 chatter_min_revs, chatter_clear_steps, max_findings, sld_n_freq, sld_n_lobes, sld_n_speeds, sld_speed_lo_frac,

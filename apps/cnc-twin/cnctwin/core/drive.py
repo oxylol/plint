@@ -359,6 +359,9 @@ class OperationDriver:
         core ledger's and the driver's counters. A plain dict of JSON-able values and NumPy arrays."""
         from .checkpoint import encode
         document, arrays = encode(self.state)
+        # held in memory while the run goes on: copies (the codec hands out the domains' own arrays, e.g. the removal
+        # field's, which the next steps change; the loop writes its checkpoints to disk at once)
+        arrays = {k: np.array(v, copy=True) for k, v in arrays.items()}
         hot_arrays, hot_meta = self.hot.to_arrays()
         return {"document": document, "arrays": arrays, "hot": (hot_arrays, hot_meta),
                 "ledger": self.ledger.checkpoint_state() if self.ledger is not None else None,
