@@ -127,6 +127,33 @@ def ray_overlap_ref(f, ray, q0, q1):
     return total, touched
 
 
+def ledger_volume_ref(f, lvl: int = 0) -> int:
+    """The ledger volume of a level in doubled quanta (k_volume): per node the three rays' material inside the node's
+    dual cell [2 k cq - cq, 2 k cq + cq) (doubled quanta), the shortest when the node is in material on its z ray,
+    the longest otherwise, summed."""
+    cq = int(f.lv_cell_q[lvl])
+    dims = [int(d) for d in f.lv_dims[lvl]]
+    chords = {}
+    for fam in range(3):
+        u, v = A.TRANS_U[fam], A.TRANS_V[fam]
+        for iu in range(dims[u]):
+            for iv in range(dims[v]):
+                segs = [(2 * lo, 2 * hi) for lo, hi, _, _ in ray_segments(f, ray_index(f, lvl, fam, iu, iv))]
+                for k in range(dims[fam]):
+                    c0, c1 = 2 * k * cq - cq, 2 * k * cq + cq
+                    length = sum(max(0, min(hi, c1) - max(lo, c0)) for lo, hi in segs)
+                    node = [0, 0, 0]
+                    node[fam], node[u], node[v] = k, iu, iv
+                    entry = chords.setdefault(tuple(node), [0, 0, 0, False])
+                    entry[fam] = length
+                    if fam == 2:
+                        entry[3] = any(lo <= 2 * k * cq < hi for lo, hi in segs)
+    total = 0
+    for lx, ly, lz, inside in chords.values():
+        total += min(lx, ly, lz) if inside else max(lx, ly, lz)
+    return total
+
+
 # --------------------------------------------------------------------------- envelopes
 def profile_radius(prof: A.Profile, z: float) -> float | None:
     for k in range(len(prof.z0_m)):

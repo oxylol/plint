@@ -234,7 +234,7 @@ publishers, ledger, energy, record, exact volume, observers, clock, bus swap. Pe
   recut + packing + the work on the deflection rates), cumulative residual <= 1e-9 of the term magnitudes;
   dynamics' exact modal work is reported next to it (`modal_cutting_work_J`);
 * the exact removed volume per workpiece: the booked removal equals the field's own change (the polar field
-  for a turned workpiece, the tri-dexel z family otherwise) to 1e-9. A turned workpiece milled by live tools
+  for a turned workpiece, the tri-dexel's ledger volume otherwise: docs/models/removal.md 1.1) to 1e-9. A turned workpiece milled by live tools
   in the same operation is not covered (removal mills the tri-dexel, the polar field does not see it).
 
 Frames: `fixture_pose` is written in machine coordinates; for mills `F_W = T(F(0)^-1 N(0)) fixture_pose`

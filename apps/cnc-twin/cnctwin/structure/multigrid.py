@@ -246,5 +246,10 @@ class SPDSolver:
     def operator(self) -> spla.LinearOperator:
         return spla.LinearOperator((self.n, self.n), matvec=self.solve, dtype=float)
 
+    def preconditioner(self):
+        """The multigrid V-cycle (a symmetric approximation of A^-1 at the cost of about one CG iteration), or None
+        for a factorised system (its solve is cheap)."""
+        return self._mg
+
 
 __all__ = ["Multigrid", "pcg", "SPDSolver", "prolongation"]

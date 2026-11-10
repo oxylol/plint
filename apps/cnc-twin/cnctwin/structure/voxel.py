@@ -473,6 +473,7 @@ class System:
         V[self.fixed] = 0.0
         n_strict = n_modes if n_strict is None else int(n_strict)
         lam, V = MO.rayleigh_ritz(self.K, self.M, V, n_modes)
+        lam, V = self._preconditioned_steps(lam, V, n_modes, tol, n_strict)
         worst = np.inf
         Z_prev = None
         for it in range(max_iter + 1):
@@ -492,6 +493,39 @@ class System:
             lam, V = MO.rayleigh_ritz(self.K, self.M, basis, n_modes)
         lam, V = self._finish(lam, V)
         return lam, V, worst, False
+
+    def _preconditioned_steps(self, lam, V, n_modes: int, tol: float, n_strict: int):
+        """Block Rayleigh-Ritz steps on [V, P^-1 R, the previous P^-1 R] with P^-1 the multigrid V-cycle (about one
+        CG iteration per column instead of the 14 of a solve to pcg_rtol), while the residual measured with it,
+        sqrt(r^T P^-1 r / lambda), exceeds PRE_SAFETY x tol (10 x for the residual modes), at most PRE_STEPS steps
+        (Knyazev 2001: LOBPCG's preconditioned block step). They only improve the start of the exact iteration of
+        ``ritz``, whose check with K^-1 decides as before; a start that already passes is returned unchanged. Without
+        a multigrid hierarchy (a factorised system) nothing is done."""
+        precond = self.solver.preconditioner() if hasattr(self.solver, "preconditioner") else None
+        if precond is None:
+            return lam, V
+        P_prev = None
+        for _ in range(PRE_STEPS):
+            R = self.K @ V - (self.M @ V) * lam[None, :]
+            Pz = precond(R)
+            Pz[self.fixed] = 0.0
+            eps = np.sqrt(np.maximum(np.einsum("ij,ij->j", R, Pz), 0.0) / np.where(lam > 0.0, lam, 1.0))
+            worst = max(float(np.max(eps[:n_strict], initial=0.0)), float(np.max(eps[n_strict:], initial=0.0)) / 10.0)
+            if worst <= PRE_SAFETY * tol:
+                break
+            basis = np.hstack([V, Pz] if P_prev is None else [V, Pz, P_prev])
+            del R
+            P_prev = Pz
+            lam, V = MO.rayleigh_ritz(self.K, self.M, basis, n_modes)
+            V[self.fixed] = 0.0
+        return lam, V
+
+
+# preconditioned block steps before the exact Ritz iteration (System._preconditioned_steps): at most PRE_STEPS, until
+# the V-cycle's residual estimate is below PRE_SAFETY x ritz_tol (the V-cycle is spectrally close to K^-1; the margin
+# makes the first exact check pass)
+PRE_STEPS = 8
+PRE_SAFETY = 0.5
 
 # columns per block CG solve: every Ritz column in one block (20 = work_modes + work_residual_modes); the per-column
 # arithmetic does not depend on the block width (bit-identical solutions), one block of 20 is 1.45 times faster than

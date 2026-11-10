@@ -35,6 +35,7 @@ from ..core.findings import Category, Severity
 from ..tooling.abi import PART_NAMES
 from . import abi as A
 from . import field as FD
+from . import ledger as LG
 from . import polar as PO
 from . import profile as PR
 from . import stock as SK
@@ -138,6 +139,7 @@ class RemovalDomain:
         for wp in rs.workpieces:
             need = max(int(s.pool_min_free), int(math.ceil(s.pool_headroom * wp.peak_blocks_step)))
             wp.field = FD.ensure_free(wp.field, need)
+            LG.cache(wp)            # the ledger volume before the step (made here after a restore)
         paths = list(getattr(bus.motion, "paths", []) or []) if bus is not None else []
         cut, whole, inserts, helix, slabs = [], [], [], [], []
         ip = np.zeros(A.RI_PATH0 + A.RI_PSTRIDE * rs.n_paths + len(rs.workpieces), np.int64)
@@ -209,6 +211,7 @@ class RemovalDomain:
                 ctx.finding(state, DOMAIN, Category.SANITY, Severity.ERROR,
                             f"a ray of workpiece {w} holds more than {A.MAX_SEG} material segments: the field cannot "
                             f"represent the cut there", tick_now)
+        booked = self._ledger_shares(rs)
         for p in range(rs.n_paths):
             acc = rs.accum[p]
             w = rs.contact_work[p]
@@ -218,7 +221,9 @@ class RemovalDomain:
             vy = float(acc.removed_q[0, 1]) * FD.volume_factor_m3(wp.field, 0)
             q2 = int(acc.ivals[A.IA_POLAR_Q2])
             turning = wp.polar is not None and q2 > 0
-            vol = float(q2) * PO.q2_volume_factor(wp.polar) if turning else vz
+            # the field's ledger volume change (removal.md 1.1): the family most normal to the cut in every cell
+            vol = float(q2) * PO.q2_volume_factor(wp.polar) if turning else float(booked[p]) * LG.factor_m3(wp.field)
+            wp.removed_dq += int(booked[p])
             for lvl in range(acc.removed_q.shape[0]):
                 if lvl < len(wp.removed_q):
                     for fam in range(3):
@@ -332,8 +337,10 @@ class RemovalDomain:
             removed_z = wp.removed_q[0][2] if wp.removed_q else 0
             out["workpieces"].append({
                 "workpiece": w, "kind": wp.kind, "initial_volume_m3": wp.initial_volume_m3,
-                "volume_m3": FD.volume_m3(wp.field, 0, 2), "removed_volume_m3": float(removed_z) * FD.volume_factor_m3(
-                    wp.field, 0), "polar_removed_m3": float(wp.polar_q2) * PO.q2_volume_factor(wp.polar)
+                "volume_m3": LG.volume_m3(wp), "removed_volume_m3": float(wp.removed_dq) * LG.factor_m3(wp.field),
+                "volume_z_m3": FD.volume_m3(wp.field, 0, 2),
+                "removed_volume_z_m3": float(removed_z) * FD.volume_factor_m3(wp.field, 0),
+                "polar_removed_m3": float(wp.polar_q2) * PO.q2_volume_factor(wp.polar)
                 if wp.polar is not None else 0.0,
                 "target_volume_m3": wp.target_volume_m3, "memory_bytes": FD.memory_bytes(wp.field, wp.target),
                 "pool_peak_blocks": int(wp.field.info[A.FI_PEAK_USED]),
@@ -370,7 +377,7 @@ class RemovalDomain:
         vol = sum(float(c.removed_volume_m3) for c in contacts)
         wp = rs.workpieces[0]
         out = {"removal.removed_volume_m3": vol, "removal.removal_rate_m3_s": vol / ctx.macro_s,
-               "removal.field_volume_m3": FD.volume_m3(wp.field, 0, 2),
+               "removal.field_volume_m3": LG.volume_m3(wp),
                "removal.freed_mass_kg": float(sum(float(r["mass_kg"]) for r in rs.loose_log)),
                "removal.pool_used_blocks": float(wp.field.info[A.FI_N_BLOCKS] - wp.field.info[A.FI_N_FREE]),
                "removal.events": float(len(getattr(rec, "events", []) or [])),
@@ -437,8 +444,8 @@ class RemovalDomain:
             target, info = SK.target_from_mesh(fld, SK.transform_points(V, pose), Fc)
             target_volume = float(info["cad_volume_m3"])
         wp = Workpiece(index=0, field=fld, target=target, rho_kg_m3=rho, kind=kind,
-                       removed_q=[[0, 0, 0] for _ in range(FD.n_levels(fld))],
-                       initial_volume_m3=FD.volume_m3(fld, 0, 2), target_volume_m3=target_volume)
+                       removed_q=[[0, 0, 0] for _ in range(FD.n_levels(fld))], target_volume_m3=target_volume)
+        wp.initial_volume_m3 = LG.volume_m3(wp)
         wp.held_boxes = list(self._held) if self._held is not None else self._held_from_setup(project, 0)
         machine_type = str(_get(_get(project, "machine"), "type", ""))
         if machine_type in LATHES and kind in ("cylinder", "tube", "mesh"):
@@ -531,6 +538,28 @@ class RemovalDomain:
         return ts
 
     # ------------------------------------------------------------------ absorb helpers
+    @staticmethod
+    def _ledger_shares(rs: RemovalState) -> list[int]:
+        """Per contact the ledger volume (doubled quanta) its cuts took from the field in the step: the field's own
+        change per workpiece (ledger.removed_dq), split exactly among the workpiece's milling and tapping contacts
+        in proportion to the lengths their cuts removed (all three families, level 0). Turning contacts book the
+        polar field (authoritative while turning) and take no share."""
+        shares = [0] * rs.n_paths
+        for w, wp in enumerate(rs.workpieces):
+            change = LG.removed_dq(wp)
+            if change == 0:
+                continue
+            members = [p for p in range(rs.n_paths) if rs.contact_work[p] == w
+                       and not (wp.polar is not None and int(rs.accum[p].ivals[A.IA_POLAR_Q2]) > 0)]
+            if not members:
+                members = [p for p in range(rs.n_paths) if rs.contact_work[p] == w]
+            if not members:
+                continue
+            weights = [int(np.sum(rs.accum[p].removed_q[0])) for p in members]
+            for p, share in zip(members, LG.split(change, weights)):
+                shares[p] += share
+        return shares
+
     def _contact_geometry(self, ctx, state, acc, p) -> ToolContact:
         fv = acc.fvals
         iv = acc.ivals
@@ -547,6 +576,12 @@ class RemovalDomain:
             g.point_S_m = np.array([r_c * math.cos(th), r_c * math.sin(th), float(fv[A.FA_CZ]) / W])
             sign = 1.0 if float(fv[A.FA_NX]) >= 0.0 else -1.0
             normal_S = sign * np.array([math.cos(th), math.sin(th), 0.0])
+        elif _family_pieces(fv) > 0.0:
+            # every family's centroid and normal of the removed pieces, weighted by its piece count: the z family
+            # alone held nothing in the steps of a side cut that reached no new column (the point at the S origin)
+            # and a whole column of a^2 x ap in the others (docs/models/removal.md 5 "Contact geometry")
+            g.point_S_m, normal_S = _family_centroid(fv)
+            W = max(W, sum(float(fv[A.FA_FAM0 + A.FA_FSTRIDE * f + A.FF_W]) for f in range(3)))
         elif W > 0.0:
             g.point_S_m = np.array([fv[A.FA_CX], fv[A.FA_CY], fv[A.FA_CZ]]) / W
             nvec = np.array([fv[A.FA_NX], fv[A.FA_NY], fv[A.FA_NZ]])
@@ -562,6 +597,8 @@ class RemovalDomain:
         g.normal_M = R @ normal_S
         g.ae_m = float(fv[A.FA_AE_MAX])
         zmin, zmax = float(fv[A.FA_ZREL_MIN]), float(fv[A.FA_ZREL_MAX])
+        if not turning and math.isfinite(float(fv[A.FA_ZE_LO])) and math.isfinite(float(fv[A.FA_ENV_ZMIN])):
+            zmin, zmax = _axial_extent(fv)
         if turning:
             # the depth of cut of a turning step: the removed material's extent across the feed (radial in
             # longitudinal turning, axial in facing; docs/models/removal.md "Polar field")
@@ -687,10 +724,18 @@ class RemovalDomain:
             return
         # the operation's end labels the whole field (force); every macro step checks the changed region only while
         # the material is known to be one component (connect.release_loose_incremental)
+        LG.cache(wp)
         released, held, removed_q, wp.one_body, _local = release_loose_incremental(
             wp.field, wp.held_boxes, wp.one_body and not force)
         if not released:
+            LG.resync(wp)
             return
+        # the bodies' volumes in the field's ledger volume (what the release took from it, exactly), split by their
+        # z-family volumes
+        change = LG.removed_dq(wp)
+        zq = FD.volume_factor_m3(wp.field, 0)
+        for b, share in zip(released, LG.split(change, [int(round(b.volume_m3 / zq)) for b in released])):
+            b.volume_m3 = float(share) * LG.factor_m3(wp.field)
         pr = params("removal")
         slug = float(pr["slug_max_cube_edge_m"]) ** 3
         swarf = float(pr["swarf_cube_edge_m"]) ** 3
@@ -743,6 +788,7 @@ class RemovalDomain:
                              rs.settings.gouge_tolerance_m, ev, tick, wp.next_sev, rs.scratch)
         PO.clear_dirty(pf)
         refresh_zmax(pf, 0)
+        LG.resync(wp)                   # the rebuild resamples the polar field, which the turning contacts booked
         wp.polar_turned_rad = 0.0
         for i in range(int(ev.n[0])):
             row = ev.rec[i]
@@ -798,6 +844,8 @@ class RemovalDomain:
             if wp.polar is not None:
                 wp.polar = TR.polar_transfer(wp.polar, R, length)
             wp.field = new
+            wp.vol_cache = None
+            LG.cache(wp)                # the transferred part's ledger volume (a new operation's baseline)
             wp.one_body = False
             wp.removed_q = [[0, 0, 0]] + [[0, 0, 0] for _ in range(FD.n_levels(new) - 1)]
             wp.held_boxes = self._held_from_setup(ctx.project, int(getattr(state.clock, "op_index", 0)) + 1)
@@ -805,7 +853,7 @@ class RemovalDomain:
             if note:
                 wp.notes.append(note)
             ctx.trace.record(state.clock.tick * ctx.tick_s, state.clock.tick, DOMAIN, "removal:transfer",
-                             {"workpiece": float(w), "volume_m3": FD.volume_m3(new, 0, 2)}, [])
+                             {"workpiece": float(w), "volume_m3": LG.volume_m3(wp)}, [])
 
     def _target_after(self, ctx, new_field, T, wp) -> A.TargetField:
         cad = _get(ctx.project, "cad")
@@ -887,6 +935,46 @@ def build_shape(geo, edge, slot: int, slab_height_m: float, version: int = 0) ->
     return ToolShape(slot=slot, kind=kind, rotating=rotating, centre_cutting=centre, hand_sign=hand, cut=cut,
                      whole=whole, insert=insert, helix=helix, slabs=slabs, r_dead_m=r_dead if not centre else 0.0,
                      z_dead_m=z_dead, radius_m=radius, edge_version=version)
+
+
+def _family_pieces(fv) -> float:
+    return sum(float(fv[A.FA_FAM0 + A.FA_FSTRIDE * f + A.FF_N]) for f in range(3))
+
+
+def _family_centroid(fv) -> tuple[np.ndarray, np.ndarray]:
+    """(centroid, unit normal) in S of a step's removed pieces (subtract_envelope's per-family sums, level 0): each
+    family's volume-weighted centroid and normal, combined with the family's piece count as weight. A family
+    samples the removed material on its own rays (exact along them, at the nodes across them); the family crossing
+    the cut surface has many short pieces every step, a family along it few long ones (a side cut's z columns: one
+    column of a^2 x ap every a / feed steps), whose centroid sits at a node up to half a cell from the sliver."""
+    point = np.zeros(3)
+    nvec = np.zeros(3)
+    weight = 0.0
+    for f in range(3):
+        b = A.FA_FAM0 + A.FA_FSTRIDE * f
+        n = float(fv[b + A.FF_N])
+        w = float(fv[b + A.FF_W])
+        if n <= 0.0 or w <= 0.0:
+            continue
+        point += n * np.array([fv[b + A.FF_CX], fv[b + A.FF_CY], fv[b + A.FF_CZ]]) / w
+        nvec += n * np.array([fv[b + A.FF_NX], fv[b + A.FF_NY], fv[b + A.FF_NZ]]) / w
+        weight += n
+    if weight <= 0.0:
+        return np.zeros(3), np.zeros(3)
+    nn = float(np.linalg.norm(nvec))
+    return point / weight, (nvec / nn if nn > 0.0 else np.zeros(3))
+
+
+def _axial_extent(fv) -> tuple[float, float]:
+    """(low, high) of a step's removed material along the tool axis from the tip (subtract_envelope's FA_ZE_*). A ray
+    across the axis cuts the material at its own height only; the material it stands for spans its dual cell. Each
+    end is the envelope's (the tip, the top of the cutting part) where a removed piece's whole cell reaches it (the
+    next row beyond held no removal because the envelope ends between the two), else the half-cell extent (the
+    material's own face between the last row cut and the next: a stock face lies there exactly)."""
+    e0, e1 = float(fv[A.FA_ENV_ZMIN]), float(fv[A.FA_ENV_ZMAX])
+    lo = e0 if float(fv[A.FA_ZE_LO2]) <= e0 else float(fv[A.FA_ZE_LO])
+    hi = e1 if float(fv[A.FA_ZE_HI2]) >= e1 else float(fv[A.FA_ZE_HI])
+    return max(lo, e0), min(hi, e1)
 
 
 def _m_from_s(state, p) -> tuple[np.ndarray, np.ndarray]:

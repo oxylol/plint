@@ -222,7 +222,22 @@ current model, then on those plus their static residual vectors `Z = K^-1 (K phi
 
     eps_k = sqrt( r_k^T K^-1 r_k / lambda_k ),   r_k = K phi_k - lambda_k M phi_k
 
-is below `ritz_tol` (2e-3) for the published modes (10 x for the residual modes); else a full solve. The first check
+is below `ritz_tol` (2e-3) for the published modes (10 x for the residual modes); else a full solve. On the
+multigrid path the exact iteration starts after **preconditioned block steps** (since 2026-11-10,
+`System._preconditioned_steps`): Rayleigh-Ritz on `[V, P^-1 R, P^-1 R_prev]` with P^-1 one multigrid V-cycle (about
+one CG iteration per column, where a solve to `pcg_rtol` takes 14), while `sqrt(r^T P^-1 r / lambda)` exceeds
+`PRE_SAFETY` (0.5) x `ritz_tol`, at most `PRE_STEPS` (8) steps (Knyazev 2001, LOBPCG's preconditioned block step).
+They only improve the start; the check with K^-1 decides acceptance as before, and a start that passes is returned
+unchanged. Measured on the side-step stock at 46 662 DOF clamped on its bottom face (a scratch harness: trenches of
+5 / 30 / 300 cells along the front top edge, against a full eigen solve of the changed model, 59 / 61 / 71 s): the
+refresh took 12.9 / 13.0 / 30.5 s with 30 / 30 / 70 CG iterations (2 / 2 / 5 block solves) and takes 9.2 / 9.1 /
+12.6 s with 15 / 15 / 17 (one block solve); published frequencies within 2e-8 / 7e-8 / 2e-8 of the full solve (were
+2e-7 / 1.3e-6 / 2e-9), MAC above 1 - 2e-8 (1 - 8e-7), the residual-mode eigenvalues within 1.4e-4 / 1.5e-3 / 6e-4
+(2.3e-4 / 1.9e-3 / 4.5e-4) and the residual compliance per node within a median 0.4 / 5.3 / 1.0 % (0.5 / 5.7 /
+0.9 %) of the full solve's: no loss in any quantity beyond the residual modes' 10 x tolerance, which the former
+refresh shared. On a small multigrid model a 96-cell trench that the former refresh did not resolve in
+`RITZ_ITERATIONS` (a full solve followed) converges after two block solves (test
+`test_preconditioned_steps_halve_a_changed_refresh_without_loss`). The first check
 is on the previous modes' own Ritz pairs in the current model (one block solve: the check needs `K^-1 r`), so a
 change that hardly moved the modes is accepted then; before 2026-11-09 the raw previous pairs went into the first
 Krylov step and the first check came after the second block solve. The eigenvalue error is about eps^2 (test: 1e-5
@@ -232,6 +247,16 @@ changed model (the side-step stock at 46 600 DOF, a trench of 5 / 30 / 300 cells
 edge): published frequencies within 3e-10 / 6e-8 / 2e-13, MAC above 1 - 1.4e-8, total displacement identical; the
 residual compliance within 1.4 / 1.7 / 4.4 % (the residual modes are accepted at 10 x the tolerance: their
 eigenvalues within 1.2e-4 / 1.7e-4 / 2.4e-3), the same as the former refresh gave.
+
+**The schedule is in run time** (2026-11-10). A job starts in the first macro step that starts at or after each
+multiple of `refresh_interval_ms` (500 ms) and applies in the first step that starts at or after its start plus
+`REFRESH_LATENCY_S` (0.5 s; `domain.refresh_due`, pending jobs carry their apply tick). Counted in macro steps
+(every 50th, applied 50 steps later) the refresh and its latency scaled with `physics.macro_ipo`: at 20 ms steps a
+job started at 1 s and applied at 2 s, at 50 ms at 2.5 s and 5 s, so the thermal expansion published at the contact
+at the same moment of the same cut was -0.32 / -0.11 / 0.00 um at 10 / 20 / 50 ms (docs/convergence.md 5 and 9).
+At 10 ms the schedule is the former one, step for step; at 2, 5, 20 and 50 ms the jobs start and apply at the same
+run times (test `test_refresh_schedule_is_in_run_time`). A step that does not divide the interval starts its job in
+the first step at or after the multiple.
 
 **An unchanged model is not solved again** (2026-11-09). Every solution carries `model_key` (`work.model_key`: the
 cells in the model, the grid, the material's E, nu and rho, the clamped state and every support array: held,
@@ -373,8 +398,10 @@ L0 step, `material_points(origin[w], cell[w], total_m[w], x_e, 1, X_e)` with `St
 
 ## 9. Settings (`physics.structure`) and parameters
 
-Settings (file key, default): `every_n_macro` 50 (refresh cadence; the latency is fixed at
-`REFRESH_LATENCY_MACRO` = 50 by the contract), `max_dof` 50000, `min_cell_mm` 1, `fill_threshold` 0.5,
+Settings (file key, default): `refresh_interval_ms` 500 (refresh cadence in run time; the latency is fixed at
+`REFRESH_LATENCY_S` = 0.5 s by the contract), `every_n_macro` 0 (the former cadence key: a value above 0 sets the
+interval to every_n_macro x 10 ms, the reference macro step it was written for, so the examples' `every_n_macro:
+50` keep 500 ms at every macro step), `max_dof` 50000, `min_cell_mm` 1, `fill_threshold` 0.5,
 `work_modes` 8, `work_residual_modes` 12, `eig_tol` 1e-8, `ritz_tol` 2e-3, `direct_max_dof` 8000, `pcg_rtol`
 1e-10, `pcg_max_iter` 3000, `gmg_coarse_dof` 1500, `gmg_degree` 3, `tool_max_freq_Hz` 20000, `tool_max_modes` 16,
 `tool_element_mm` 2, `tool_stations` 24, `pullout_refresh_mm` 0.02, `thin_wall_cells` 2, `wall_terms` 6,
@@ -460,7 +487,7 @@ the sum of the modal tip compliances plus the residual equals the static tip com
   direction along the longer side; bars: axisymmetric profiles (none in the database yet). Linear elastic release
   (no plasticity, no machining-induced layer stresses: those are surface's).
 * Long turned parts: axisymmetric mean section stiffness; jaw crushing not modelled; tailstock axially free.
-* Refresh jobs are computed when they start and applied 50 macro steps later (deterministic); a new setup, the
+* Refresh jobs are computed when they start and applied 0.5 s of run time later (deterministic); a new setup, the
   first step with holding's record of the part (the run's second step: section 3.5) and the end of an operation
   are solved at once. A new `supports_version` of the same operation and
   clamped state is a new setup only when the re-placed supports changed materially (`supports_unchanged`:
@@ -478,7 +505,7 @@ Tool model: 0.4-0.5 s per tool (480 DOF: dense eigen solve, static solves, RCSA 
 triggers. Idle macro step: 0.3 ms. Workpiece at 3 000 DOF: setup (full eigen solve, displacements) 0.2 s. At 52 000
 DOF: model build 0.07 s, multigrid setup 0.4 s, one solve 1 s (14 CG iterations to 1e-10), a block of 20 solves 6 s,
 full eigen solve of 20 modes 60 s, a Ritz refresh 2-5 block solves (12-30 s); memory 90 MB model + 60 MB system,
-peak 220 MB during block solves (budget 200 MB). Jobs run every `every_n_macro` (0.5 s simulated by default) and
+peak 220 MB during block solves (budget 200 MB). Jobs run every `refresh_interval_ms` (0.5 s simulated) and
 are skipped when geometry, temperatures and supports did not change.
 
 Since 2026-11-09 (docs/performance.md 11, the convergence study's side-step stock at 46 662 DOF): a refresh whose
@@ -487,6 +514,8 @@ for 300 (was 28 and 50 s; a block solve of the 20 Ritz columns 7.7 s, was 11.1 s
 operation (no longer twice at the run's start), structure's macro steps 0.091 s each over a 7 s run with its
 set-up (was 0.72 s), 0.022 s amortised (was 0.56 s). The kept model and system (`work.WorkCache`) hold about
 150 MB at that size between jobs; a block of 20 columns adds about 55 MB during block solves.
+Since 2026-11-10 a Ritz refresh after cells flipped takes one block solve after a few preconditioned steps: 9.1-12.6
+s for 5-300 cells at 46 662 DOF on a bottom-clamped stock (was 12.9-30.5 s on the same harness; section 3.5).
 
 ## 13. Integration
 
@@ -541,3 +570,5 @@ set-up (was 0.72 s), 0.022 s amortised (was 0.56 s). The kept model and system (
   J. Appl. Phys. 22, 130-134 (`treuting-read-1951`).
 * Warburton, G.B. (1954) The vibration of rectangular plates, Proc. IMechE 168, 371-384 (`warburton-1954-plates`).
 * Young, W.C.; Budynas, R.G.; Sadegh, A.M. (2012) Roark's Formulas for Stress and Strain (`young-budynas-2012-roark`).
+* Knyazev, A. V. (2001). Toward the optimal preconditioned eigensolver: locally optimal block preconditioned
+  conjugate gradient method. SIAM J. Sci. Comput. 23(2), 517-541.

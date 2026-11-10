@@ -19,9 +19,9 @@ from cnctwin.db.schema import Ctx
 from cnctwin.structure import fixture as FX
 from cnctwin.structure import kernels as K
 from cnctwin.structure.channels import NAMES, channels
-from cnctwin.structure.domain import StructureDomain
+from cnctwin.structure.domain import StructureDomain, refresh_due
 from cnctwin.structure.protocols import BoxGeometry
-from cnctwin.structure.schema import PHYSICS_SCHEMA, REFRESH_LATENCY_MACRO, settings
+from cnctwin.structure.schema import PHYSICS_SCHEMA, REFRESH_LATENCY_MACRO, REFRESH_LATENCY_S, settings
 from cnctwin.structure.state import StructureState
 from cnctwin.tooling import build_tool
 
@@ -54,7 +54,12 @@ def test_channels_settings_and_schema():
                                                             for c in chans)
     st = settings({"min_cell_mm": 2.0, "max_dof": 9000, "tool_element_mm": 1.0})
     assert st.min_cell_m == pytest.approx(2e-3) and st.max_dof == 9000 and st.tool_element_m == pytest.approx(1e-3)
-    assert settings(None).every_n_macro == 50 and REFRESH_LATENCY_MACRO == 50
+    assert settings(None).every_n_macro == 0 and settings(None).interval_s == pytest.approx(0.5)
+    assert REFRESH_LATENCY_MACRO == 50 and REFRESH_LATENCY_S == pytest.approx(0.5)
+    # the former key: every_n_macro steps of the reference 10 ms (the cadence it was stated for), at any macro step
+    assert settings({"every_n_macro": 50}).interval_s == pytest.approx(0.5)
+    assert settings({"refresh_interval_ms": 250}).interval_s == pytest.approx(0.25)
+    assert settings({"refresh_interval_s": 0.25}).interval_s == pytest.approx(0.25)
     with pytest.raises(InputError):
         settings({"fill_threshold": 1.5})
     with pytest.raises(InputError):
@@ -62,6 +67,7 @@ def test_channels_settings_and_schema():
     ctx = Ctx(None, obj="project", file="p")
     PHYSICS_SCHEMA.check({"max_dof": 20000, "min_cell_mm": 1.5, "every_n_macro": 25}, ("physics", "structure"), None,
                          ctx)
+    PHYSICS_SCHEMA.check({"refresh_interval_ms": 500}, ("physics", "structure"), None, ctx)
     assert not ctx.problems
     PHYSICS_SCHEMA.check({"no_such_setting": 1}, ("physics", "structure"), None, ctx)
     assert ctx.problems
@@ -93,6 +99,20 @@ def test_records_fixture_and_additive_fields():
     assert state.bus_next.cutting.contacts == [] and state.bus_next.holding.parts == {}
 
 
+def test_refresh_schedule_is_in_run_time():
+    """The workpiece refresh starts and applies at the same run times at every macro step that divides the interval
+    (docs/convergence.md 9: counted in macro steps, the thermal expansion at the contact moved with macro_ipo)."""
+    tick_s = 1e-6
+    starts = {}
+    for macro_ms in (2, 5, 10, 20, 50):
+        mt = macro_ms * 1000
+        starts[macro_ms] = [t for t in range(0, 3_000_001, mt) if refresh_due(t, mt, 0.5, tick_s)]
+    assert all(v == [500_000, 1_000_000, 1_500_000, 2_000_000, 2_500_000, 3_000_000] for v in starts.values())
+    # a step that does not divide the interval starts its job at the first step at or after each multiple
+    assert [t for t in range(0, 1_100_001, 30_000) if refresh_due(t, 30_000, 0.5, tick_s)] == [510_000, 1_020_000]
+    assert not refresh_due(0, 10_000, 0.5, tick_s)
+
+
 def test_fixed_latency_skip_and_new_setup():
     dom, ctx, state, geo = make()
     b = bus()
@@ -102,7 +122,8 @@ def test_fixed_latency_skip_and_new_setup():
     fx.run(dom, ctx, state, b, 4)                           # macros 1-4: nothing due
     geo.remove_box([0.01, 0.008, 0.008], [0.03, 0.022, 0.013])
     fx.run(dom, ctx, state, b, 1)                           # macro 5: a job starts
-    assert len(ws.pending) == 1 and ws.pending[0][0] == 5 + REFRESH_LATENCY_MACRO
+    # the job applies REFRESH_LATENCY_S of run time after the step it started in (macro 5 starts at tick 50 000)
+    assert len(ws.pending) == 1 and ws.pending[0][0] == 50_000 + int(round(REFRESH_LATENCY_S / ctx.tick_s))
     assert ws.solution.modes.version == v0
     fx.run(dom, ctx, state, b, REFRESH_LATENCY_MACRO - 1)   # macros 6-54: published modes unchanged
     assert ws.solution.modes.version == v0

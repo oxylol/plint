@@ -42,6 +42,9 @@ class Workpiece:
     notes: list = field(default_factory=list)
     one_body: bool = False                                  # one component at the last connectivity check, removals
                                                             #   only since (the incremental check applies)
+    removed_dq: int = 0                                     # cumulative ledger volume booked by the cuts (doubled
+                                                            #   quanta of level 0, ledger.factor_m3)
+    vol_cache: object = field(default=None, repr=False, compare=False)   # ledger.VolumeCache (a memo, not stored)
 
 
 @dataclass
@@ -109,7 +112,7 @@ class RemovalState:
                 "next_sev": int(wp.next_sev), "polar_turned_rad": float(wp.polar_turned_rad),
                 "peak_blocks_step": int(wp.peak_blocks_step), "initial_volume_m3": float(wp.initial_volume_m3),
                 "target_volume_m3": float(wp.target_volume_m3), "notes": list(wp.notes),
-                "one_body": bool(wp.one_body)})
+                "one_body": bool(wp.one_body), "removed_dq": str(int(wp.removed_dq))})
         for c, acc in enumerate(self.accum):
             for name in A.RemovalAccum._fields:
                 arrays[f"c{c}.acc.{name}"] = np.array(getattr(acc, name))
@@ -154,11 +157,17 @@ class RemovalState:
                 next_sev=int(wm["next_sev"]), polar_turned_rad=float(wm["polar_turned_rad"]),
                 peak_blocks_step=int(wm["peak_blocks_step"]), initial_volume_m3=float(wm["initial_volume_m3"]),
                 target_volume_m3=float(wm["target_volume_m3"]), notes=list(wm["notes"]),
-                one_body=bool(wm.get("one_body", False))))
+                one_body=bool(wm.get("one_body", False)), removed_dq=int(wm.get("removed_dq", "0"))))
         c = 0
         while f"c{c}.acc.removed_q" in arrays:
-            st.accum.append(A.RemovalAccum(*(np.ascontiguousarray(np.array(arrays[f"c{c}.acc.{name}"]))
-                                             for name in A.RemovalAccum._fields)))
+            acc = A.RemovalAccum(*(np.ascontiguousarray(np.array(arrays[f"c{c}.acc.{name}"]))
+                                   for name in A.RemovalAccum._fields))
+            if acc.fvals.shape[0] < A.N_FA:
+                # a checkpoint of fewer accumulator slots (before the additive FA_FAM0 ..): the new ones reset
+                fresh = A.new_accum(acc.removed_q.shape[0])
+                fresh.fvals[:acc.fvals.shape[0]] = acc.fvals
+                acc = A.RemovalAccum(acc.removed_q, acc.ivals, fresh.fvals)
+            st.accum.append(acc)
             c += 1
         if "events.rec" in arrays:
             st.events = EventBuffer(np.ascontiguousarray(np.array(arrays["events.rec"])),

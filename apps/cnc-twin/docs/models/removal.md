@@ -57,9 +57,29 @@ Write semantics: a write that needs more pool blocks than are free is refused (`
 unchanged); every kernel that writes is idempotent, so the loop grows the pool (`field.grow_pool`,
 doubling) and repeats the step (`RemovalDomain.needs_replay` / `prepare_replay`).
 
-Volume: `V = a^2 QUANTUM_M sum(z-family lengths)` of level 0, an exact integer sum (architecture 10). The
-x and y families give two further estimates of the same material; their spread is the representation
-uncertainty of the field (published per contact as `removed_volume_xyz_m3`).
+Volume (the **ledger volume**, `ledger.py`, `k_volume.py`, since 2026-11-10): every node of level 0 owns its dual
+cell (the cube of side a centred on it; the stock faces lie on cell faces), and the three rays through the node give
+the material length inside the cell along each axis, `L_x, L_y, L_z`, exact to the quantum. The cell's volume is
+`a^2 L_f` of the family most normal to the surface through it: the shortest chord when the node is in material (on
+its z ray), the longest when it is in air (for a plane at signed distance d from the node `L_f = a / 2 + d / |n_f|`
+clipped to [0, a], so the least clipped chord belongs to the largest |n_f|, and it is exact when the plane crosses
+the cell's four f-edges). The field's volume is the sum, an exact integer in doubled quanta (one dq = `a^2
+QUANTUM_M / 2`: the cell faces lie half a spacing from the nodes, a half quantum for an odd spacing). It is exact for
+planes along the lattice axes and second order otherwise (edges and corners inside a cell). A single family's
+`a^2 QUANTUM_M sum(lengths)` (the former ledger volume, the z family) is the midpoint rule across the family: first
+order where the surface is parallel to it (a wall along z makes the z lengths jump between columns: a finishing
+layer 0.3 mm thick held whole node rows, -18 % at 0.25 mm and +2.3 % at 0.03125 mm, docs/convergence.md 2). Measured
+on analytic layers 0.3 mm thick (tests/unit/removal/test_13_ledger.py): a face normal to y exact at every lattice
+(the z family -17 % at 0.25 mm), faces at 11 deg and oblique within 0.06 % from 0.25 mm and falling with the
+lattice; a sphere of R 4.9 mm +0.15 / +0.03 / +0.009 % at 0.5 / 0.25 / 0.125 mm, a cylinder with end faces off the
+cell faces +0.35 / +0.08 / +0.018 / +0.004 % at 0.5 - 0.0625 mm (second order; the x and y families +4.2 / +2.3 /
++1.2 / +0.6 %). The domain keeps the volume per brick of level 0 (`ledger.VolumeCache`, a memo never checkpointed) and
+recomputes the bricks whose change counter `bver` moved (a brick's first dual cell along a ray starts half a spacing
+before its first node, so `k_core.mark` and `book_piece` also mark the next brick along the ray when a changed part
+reaches that last half spacing; bulk and air bricks are taken from their material sums): the removal of a step is the
+difference of two exact sums. The family
+volumes stay available (`field.volume_m3(field, level, fam)`, `removed_volume_xyz_m3` per contact); their spread is
+the representation uncertainty of a single family.
 
 ### 1.2 Other layouts
 
@@ -251,7 +271,21 @@ per tooth below the lattice the gating sees the outer boundaries only (verified:
 
 **Contact geometry** (`contact_geometry`): largest engaged angle and arc, radial engagement ae across the
 feed direction at the largest engaged radius, engaged edge length (sum of the engaged stations' element
-lengths). **Engaged-sector box** (`sector_box`): the union of the engaged angle intervals as a wedge of
+lengths). The contact's **point and normal** (`ToolContact.point_S_m`, `normal_M`) are the centroid and mean
+machined-surface normal of the step's removed pieces, combined over the three families (level 0): per family the
+volume-weighted centroid and normal, weighted by the family's piece count (`FA_FAM0` .. per family: sums of volume x
+position, volume, pieces, volume x normal). Before 2026-11-10 they came from the z family alone, which on a side cut
+holds a removal only in the steps whose tooth passes reached a new column (once every a / (feed per step) steps):
+in the D10 side step of the convergence case at 5 ms steps (0.13 mm of feed per step, 0.25 mm lattice) every other
+step published the S origin, and the steps with a column put the centroid at the column's node, up to half a cell
+from the sliver. The **depth of cut** ap is the extent of the removed material along the tool axis: a ray across
+the axis samples the material at its own height, standing for its dual cell, so each piece is widened across its ray
+by half and by a whole cell (`FA_ZE_*`); an end is the envelope's (the tip, the top of the cutting part) where a
+piece's whole cell reaches it, else the half-cell extent (a stock face lies there exactly). Before, the piece ends
+gave ap: the rows' extent, 0.75 mm of a 1 mm step on a 0.25 mm lattice, in the steps without a column and 1.0 mm in
+the others (thermal's preheat band, the surface temperature and the work deposits read it). Test:
+`test_side_cut_contact_geometry_is_steady_from_step_to_step` (ap 1 mm within 1 nm in every step, the centroid on the
+sliver in every step). **Engaged-sector box** (`sector_box`): the union of the engaged angle intervals as a wedge of
 radius `R_max + max dr` from the axis, swept over the envelope's axial range, grown by `sector_margin_cells`
 (material outside it inside the envelope is in the trailing half, removed by the previous tooth).
 
@@ -451,8 +485,9 @@ reads the rapid flag, spindle angle and poses from motion's kernel inputs. State
 `edge_model(slot)`, `version`) for the tool shapes, `state.clock`. **Bus written**: `removal` only
 (`RemovalFrame`: `contacts`, `events`, `loose_bodies`, `field_version`).
 
-`RemovalContact` per contact: `removed_volume_m3` (exact field volume of the step: z family, or the polar
-radial family), `displaced_volume_m3` (0: no forming / burr model, section 15), `geometry` (ToolContact:
+`RemovalContact` per contact: `removed_volume_m3` (the field's ledger volume change of the step, section 1.1, split
+exactly among the workpiece's milling and tapping contacts by the lengths their cuts removed; or the polar radial
+family of a turning contact), `displaced_volume_m3` (0: no forming / burr model, section 15), `geometry` (ToolContact:
 in_cut, point and normal in M and S, ae, ap, engaged length and angle, in-cut fraction, air-cut time),
 `volume_consistency`, and the additive fields `removed_volume_xyz_m3` (x, y, z family volumes),
 `polar`, `surface_ids` (first and last surface event id of the step).
@@ -464,7 +499,11 @@ step n (lag one step). A pass whose ratio leaves `1 +- (volume_consistency_tol +
 
 **Ledger**: removal writes only its bus record; the core Ledger (cnctwin.core.ledger) books from it the
 removed volume and mass (`removed_volume_m3`, rho at 20 degC x the field volume), the displaced volume (0,
-section 15) and the freed bodies (`loose_bodies[*].mass_kg` -> `freed_body_mass_kg`). Chips scales its
+section 15) and the freed bodies (`loose_bodies[*].mass_kg` -> `freed_body_mass_kg`; a released body's
+`volume_m3` is the ledger volume the release took from the field, split among the bodies by their z-family
+volumes). The loop's and the operation driver's exact-volume checks compare the booked removal with the field's
+ledger volume change (`ledger.volume_m3(workpiece)`; the polar field's while turning); a rebuild from the polar field
+and a transfer are taken as the new reference without booking (`ledger.resync`). Chips scales its
 emitted mass to rho x `removed_volume_m3` of each contact.
 
 **Findings** (once per episode): rapid into material, collision, gouge, breakthrough, non-centre-cutting
@@ -532,6 +571,8 @@ Other kernels (compiled callers unless noted):
 
 | kernel | case | cost |
 |---|---|---|
+| `bricks_volume_dq` (ledger volume, section 1.1) | a d45 x 40 mm tube at 0.25 mm, all 216 bricks (a VolumeCache from scratch: 47 ms) | 259 us per brick |
+| ledger per macro step (`VolumeCache.update`: the changed bricks, bulk and air bricks from their material sums) | the convergence studies' side finish and pocket corner in the operation driver, in-cut CPU (0.59 s in cut) | side 2.06 -> 2.14 s at 0.25 mm, 2.60 -> 2.90 s at 0.0625 mm, 3.51 -> 4.08 s at 0.03125 mm (one brick of 32 cells is 1 mm there); corner 2.95 -> 2.91, 3.88 -> 3.99, 6.14 -> 6.34 s (2026-11-10, load 2-5: +-15 %); the full slot of tests/integration/test_performance.py (0.1 mm lattice): the hot loop's wrapper share (kernel_inputs, absorb) 8 % -> 16 % of run_macro (absorb 1.4 % -> 8.6 % of the hot step) |
 | `broad_phase` | D10 envelope box | 0.66 us |
 | `l1_contact` | with the broad phase | 1.1 us |
 | `point_inside` | | 0.63 us |
@@ -690,9 +731,20 @@ outputs in the docstrings):
 | `k_drive.tooth_pass` | raw | `i8(FIELD_T, PROFILE_T, SLABS_T, i8, F2, F1, F1, F1, F1, F1, F1, B1, ENGAGED_T, F1, f8, f8, F1, SPEC_T, TARGET_T, ACCUM_T, EVENTS_T, SCRATCH_T, F1)` | Gate, bound and subtract one tooth pass. |
 | `k_drive.l1_contact` | call | `b1(FIELD_T, PROFILE_T, F1, F1, f8, b1, i8, f8, ACCUM_T)` | Broad phase of one path at one L1 tick; |
 | `k_drive.excess_material` | call | `i8(FIELD_T, TARGET_T, f8, F1)` | Material of level 0 outside the target, from the z family: out = [volume (m^3), largest excess along a z ray (m), x, y, z of its middle, rays with ... |
+| `k_volume.brick_volume_dq` | call | `i8(FIELD_T, i8, i8, I1, I1)` | Ledger volume of one brick of a level in doubled quanta: per dual cell of its nodes the shortest of the three chords when the node is in material, the longest otherwise (work arrays L, st) |
+| `k_volume.bricks_volume_dq` | call | `void(FIELD_T, i8, I1, I1, I1, I1)` | `brick_volume_dq` of every brick index of a list into `out` (work arrays L, st from the caller) |
 
 ## 18. Additive changes to shared records and layouts
 
+* 2026-11-10: `RemovalAccum.fvals` grew from 36 to 66 slots (`FA_FAM0` + 8 per family: the per-family centroid,
+  piece count and normal sums; `FA_ZE_LO`, `FA_ZE_LO2`, `FA_ZE_HI`, `FA_ZE_HI2`, `FA_ENV_ZMIN`, `FA_ENV_ZMAX`: the
+  widened axial extent, section 5); a checkpoint of 36 slots is padded on restore. `RemovalContact.removed_volume_m3`
+  is the ledger volume (section 1.1; the z family's is `removed_volume_xyz_m3[2]`), `finalize` reports both
+  (`volume_m3` / `removed_volume_m3` ledger, `volume_z_m3` / `removed_volume_z_m3`), the channel
+  `removal.field_volume_m3` is the ledger volume. `Workpiece.removed_dq` (cumulative booked dq; checkpoint meta
+  `removed_dq`, default 0) and `Workpiece.vol_cache` (not stored). New module `ledger.py`, kernel module
+  `k_volume.py` (`brick_volume_dq`, `bricks_volume_dq`; reference `reference.ledger_volume_ref`). Outside removal
+  (listed): `core/loop.py` and `core/drive.py` `_volumes` read `ledger.volume_m3(workpiece)` instead of the z family.
 * `RemovalAccum.fvals` (removal's own, 2026-11-09): `FA_POLAR_TH`, `FA_DEPTH_MIN`, `FA_DEPTH_MAX` in the three free
   slots (33-35, `N_FA` unchanged); `_cut_inline` also returns the removed q^3 sum and range; `_polar_rows` takes
   the contact's fvals, the bin width and the feed normal; `k_subtract.AG_R_D` (3 slots of the free 36-38).

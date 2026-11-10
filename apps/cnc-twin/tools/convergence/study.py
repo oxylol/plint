@@ -20,6 +20,7 @@ ROOT = env.setup()
 
 import json  # noqa: E402
 import math  # noqa: E402
+import os  # noqa: E402
 import shutil  # noqa: E402
 import time  # noqa: E402
 from dataclasses import dataclass, field  # noqa: E402
@@ -32,7 +33,7 @@ import measure as M  # noqa: E402
 from analysis import analyse  # noqa: E402
 
 RESULTS = env.HERE / "results"
-WORK = Path("/tmp") / "cnctwin-convergence"
+WORK = Path(os.environ.get("CNCTWIN_CONVERGENCE_WORK") or (Path("/tmp") / "cnctwin-convergence"))   # per-agent work dir
 TEETH_D10 = 4
 IPO_S = 1e-3
 DEG_PER_TICK = 360.0 * C.RPM / 60.0 * 1e-6          # spindle angle per base tick at 10 000 rpm

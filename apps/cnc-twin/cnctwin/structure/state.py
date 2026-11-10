@@ -91,7 +91,7 @@ class WorkStructState:
     lathe: LatheSupports = field(default_factory=LatheSupports)
     solution: WorkSolution | None = None
     latest: WorkSolution | None = None
-    pending: list = field(default_factory=list)          # [(apply_macro, WorkSolution)] in start order
+    pending: list = field(default_factory=list)          # [(apply_tick, WorkSolution)] in start order (base ticks)
     reference: np.ndarray | None = None
     reference_digest: str = ""
     modes_version: int = 0
@@ -126,14 +126,14 @@ class WorkStructState:
             a, m = self.latest.to_arrays(prefix + "lat.")
             arrays.update(a)
             meta["latest"] = m
-        for i, (apply_macro, sol) in enumerate(self.pending):
+        for i, (apply_tick, sol) in enumerate(self.pending):
             is_latest = sol is self.latest
             if is_latest and self.latest is not self.solution:
-                meta["pending"].append({"apply_macro": int(apply_macro), "latest": True})
+                meta["pending"].append({"apply_tick": int(apply_tick), "latest": True})
                 continue
             a, m = sol.to_arrays(prefix + f"p{i}.")
             arrays.update(a)
-            meta["pending"].append({"apply_macro": int(apply_macro), "latest": False, "meta": m})
+            meta["pending"].append({"apply_tick": int(apply_tick), "latest": False, "meta": m})
         if self.reference is not None:
             arrays[prefix + "ref"] = self.reference
         for k, v in sorted(self.fixture.items()):
@@ -168,7 +168,9 @@ class WorkStructState:
                                                                                                prefix + "lat.")
         for i, entry in enumerate(meta["pending"]):
             sol = ws.latest if entry["latest"] else WorkSolution.from_arrays(a, entry["meta"], prefix + f"p{i}.")
-            ws.pending.append((int(entry["apply_macro"]), sol))
+            # "apply_macro": a checkpoint written while the schedule counted macro steps (of the reference 10 ms)
+            apply_tick = int(entry["apply_tick"]) if "apply_tick" in entry else int(entry["apply_macro"]) * 10000
+            ws.pending.append((apply_tick, sol))
         if meta["has_reference"]:
             ws.reference = np.array(a[prefix + "ref"])
         for k in meta["fixture"]:

@@ -757,6 +757,23 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   although nothing changed (identical first frequency every time): its input key hashes the thermal field's bytes
   exactly, and micro-kelvin changes make every refresh a new job. With it a whole operation of these examples
   costs about 10 hours of CPU (240 s per simulated second in the lathe's cut).
+  fixed (structure; 2026-11-09 and 2026-11-10): an unchanged model is no longer solved again (`work.model_key`: the
+  cells, supports, clamped state and material; only the thermal displacement is solved, 0.9-1.1 s per job instead
+  of 27-31 s at 47 000 DOF, docs/performance.md 11), and a refresh after cells flipped starts with block steps
+  preconditioned by the multigrid V-cycle, so the exact check passes after one block solve (9.1-12.6 s for 5-300
+  removed cells at 46 662 DOF, was 12.9-30.5 s; frequencies within 7e-8 of a full solve; docs/models/structure.md
+  3.5). The refresh's cadence and latency are in run time (500 ms each; they were 50 macro steps, so at 50 ms steps
+  the work model was refreshed every 2.5 s and applied 2.5 s late, docs/convergence.md 9 item 13).
+* **Removal's ledger volume and contact geometry** (fixed 2026-11-10, removal; docs/convergence.md 9 items 4 and 12):
+  the booked removed volume of a thin finishing layer came from the z family (whole node rows: -18 % at 0.25 mm) and
+  is now the field's ledger volume (per dual cell the family most normal to the surface; the side finish's removed
+  volume within 0.28 % at every lattice, the pocket corner within 0.06 %); the loop's and the driver's exact-volume
+  checks read the same volume (`_volumes` in core/loop.py and core/drive.py: one line each). The contact point,
+  normal and depth of cut of a milling step came from the z family and the rows' ends: in the convergence case's
+  side step at 5 ms steps 37 of 142 steps published the point at the S origin and ap alternated 0.75 / 0.88 /
+  1.01 mm; now no step has a zero point, ap is 1.007 mm in every step and the point moves by 0.03 mm across the
+  steady steps (was 0.25 / 0.50 mm in y / z); thermal's preheat band, the surface temperature and the work deposits
+  read them.
 * **Surface temperatures of fresh edges** (open, thermal): thermal's surface temperature (the feed-band rise plus
   Jaeger's flash rise of the work's heat over the flank contact) reports 887 degC at ti-slot's entry with 22 W of
   work heat (flash rise 797 K), 981 degC in warmup's turning pass, 589-700 degC (melt smear of 6061) in batch-50's

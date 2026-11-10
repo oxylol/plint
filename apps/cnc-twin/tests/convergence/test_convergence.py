@@ -36,12 +36,10 @@ OUTSIDE: dict[str, dict[str, str]] = {
                                  "16:00; 0.125 mm",
                      "F_peak_N": "34 % high at 0.25 mm, inside only at 0.03125 mm",
                      "chip_volume_analytic_mm3": "1.7 % low at 0.25 mm; 0.125 mm",
-                     "engaged_deg": "oscillates by +-1.3 % between neighbouring lattices",
-                     "removed_mm3": "the z family samples a 0.3 mm layer at lattice nodes: -18 % at 0.25 mm, +2.3 % at "
-                                    "0.03125 mm (docs/convergence.md 2, 9)"},
+                     "engaged_deg": "oscillates by +-1.3 % between neighbouring lattices"},
+    # removed_mm3 is inside since the ledger volume (docs/convergence.md 9 item 4: 0.16 % / 0.02 % at 0.25 mm)
     "lattice_corner": {"F_mean_N": "1.8 % low at 0.25 mm; 0.125 mm",
-                       "engaged_max_deg": "oscillates by +-2 % between neighbouring lattices",
-                       "removed_mm3": "the z family samples a 0.3 mm layer at lattice nodes: -16 % at 0.25 mm"},
+                       "engaged_max_deg": "oscillates by +-2 % between neighbouring lattices"},
     "element_flat": {q: _TOP for q in ("F_mean_N", "Fx_N", "Fy_N", "Fz_N", "F_peak_N", "torque_Nm",
                                        "chip_volume_analytic_mm3")},
     "bins_stride": {"F_peak_N": _PEAK, "vib_pp_um": "+7 % at 720 bins and 0.5 deg; 1440 bins with 0.25 deg",

@@ -114,7 +114,7 @@ physics:
   tol_mass: 1.0e-9
   tol_energy: 1.0e-6
   thermal: {every_n_macro: 5, cell_mm: 2.0}
-  structure: {every_n_macro: 50, max_dof: 50000}
+  structure: {refresh_interval_ms: 500, max_dof: 50000}   # workpiece refresh cadence in run time (latency 500 ms)
   coolant: {every_n_macro: 1, rays_per_jet: 64}
   resolved: {}                       # written by 'twin check --write': per operation l0_ticks, ipo_ticks (the recorded timestep)
 

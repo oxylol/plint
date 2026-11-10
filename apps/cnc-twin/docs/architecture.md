@@ -128,7 +128,9 @@ Kernels use `phi_cut = sign(omega) * phi` internally. Arcs are right-handed (CW 
 * **Macro step** = `macro_ipo` L1 ticks (default 10 ms). Per-domain cadence:
   `physics.<domain>.every_n_macro`; long jobs use a fixed latency `k` macro steps (contract:
   structure mode refresh k = 50, workpiece FV k = 1, coolant occlusion k = 1): a job started at
-  macro n is applied at n + k, the loop waits if it is not done, never applies it early.
+  macro n is applied at n + k, the loop waits if it is not done, never applies it early. The structure
+  refresh states its cadence and latency in run time (500 ms each, 50 steps at the default 10 ms;
+  docs/models/structure.md 3.5) so that they do not move with `macro_ipo`.
 
 ### 5.2 Levels
 
@@ -229,7 +231,8 @@ Per L0 step, for every active contact (tool slot, workpiece, path):
   removed volume while turning; at operation end the tri-dexel is rebuilt exactly from it.
 * **Mass**: emission mass per tooth period = rho x analytic chip volume (integral of h db r dphi
   from the force kernel); the field's removed volume is the exact integer sum of its own interval
-  deltas (Z family for the tri-dexel, radial family for polar). Once per macro step emissions are
+  deltas (for the tri-dexel the ledger volume: per dual cell the family most normal to the surface,
+  docs/models/removal.md 1.1, the Z family before 2026-11-10; the radial family for polar). Once per macro step emissions are
   scaled by `V_field / V_analytic`; the ratio is the channel `removal.volume_consistency`, and a
   finding is raised if it leaves 1 +/- 2 % over a pass. Displaced volume (forming taps, burrs,
   side flow, re-added to the field) and freed bodies (connectivity check after each subtraction:

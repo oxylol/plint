@@ -422,10 +422,12 @@ class OperationDriver:
 
 
 def _volumes(rs) -> list[tuple]:
-    """(tri-dexel z-family volume, polar field volume or None) per workpiece."""
-    from ..removal import field as FD
+    """(tri-dexel ledger volume, polar field volume or None) per workpiece."""
     from ..removal import polar as PO
-    return [(float(FD.volume_m3(wp.field, 0, 2)), float(PO.volume_m3(wp.polar)) if wp.polar is not None else None)
+    from ..removal import ledger as LG
+    # the tri-dexel's ledger volume (docs/models/removal.md 1.1: per dual cell the family most normal to the
+    # surface), the volume removal books per contact
+    return [(float(LG.volume_m3(wp)), float(PO.volume_m3(wp.polar)) if wp.polar is not None else None)
             for wp in rs.workpieces]
 
 

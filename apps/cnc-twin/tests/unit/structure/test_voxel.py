@@ -137,6 +137,53 @@ def test_ritz_accepts_a_guess_the_change_hardly_moved_after_one_block_solve():
     assert np.allclose(lam_r, lam, rtol=1e-10)
 
 
+def test_preconditioned_steps_halve_a_changed_refresh_without_loss():
+    """On the multigrid path a Ritz refresh after cells were removed starts with block steps preconditioned by the
+    V-cycle (System._preconditioned_steps): the exact check passes after fewer block solves than the former refresh
+    took (docs/performance.md 11), with the modes as close to a full solve (the eigenvalue error about eps^2)."""
+    grid = VX.VoxelGrid((0.0, 0.0, 0.0), 1e-3, (24, 10, 8))
+    active = np.ones(grid.shape, bool)
+    st = settings({"direct_max_dof": 100, "gmg_coarse_dof": 300})
+    model0 = VX.VoxelModel(grid, active, E, NU, RHO)
+    pts = model0.node_xyz()[model0.node_ijk[:, 2] == 0]
+    k = np.tile(np.eye(3) * 5e7, (len(pts), 1, 1))
+    sys0 = VX.System(model0, model0.spring_data(pts, k), None, st)
+    lam0, V0 = sys0.eigen(12, 1e-12)
+    saved = VX.PRE_STEPS
+    out = {}
+    try:
+        for trench in ((slice(None), slice(0, 1), slice(7, 8)), (slice(None), slice(0, 2), slice(6, 8))):
+            removed = active.copy()
+            removed[trench] = False                   # a trench along the front top edge (24 / 96 cells)
+            model1 = VX.VoxelModel(grid, removed, E, NU, RHO)
+            sys1 = VX.System(model1, model1.spring_data(pts, k), None, st)
+            assert sys1.solver.kind == "multigrid"
+            guess = np.stack([model1.from_lattice(model0.to_lattice(V0[:, j])) for j in range(12)], axis=1)
+            lam_f, V_f = sys1.eigen(12, 1e-12)
+            for name, steps in (("former", 0), ("new", saved)):
+                VX.PRE_STEPS = steps
+                calls = []
+                solve = sys1.solve
+                sys1.solve = lambda f, solve=solve, calls=calls: (calls.append(1), solve(f))[1]
+                lam_r, V_r, res, ok = sys1.ritz(guess, lam0, 12, 2e-3, 8)
+                sys1.solve = solve
+                mac = np.einsum("ij,ij->j", V_r[:, :8], sys1.M @ V_f[:, :8]) ** 2
+                out[(trench[1].stop, name)] = (ok, len(calls), float(np.max(np.abs(lam_r[:8] / lam_f[:8] - 1.0))),
+                                               float(np.min(mac)))
+    finally:
+        VX.PRE_STEPS = saved
+    # 24 cells: the former refresh converged after 4 block solves, the new one after 1
+    ok_f, n_f, _, _ = out[(1, "former")]
+    ok_n, n_n, err_n, mac_n = out[(1, "new")]
+    assert ok_f and ok_n and n_n == 1 and n_f >= 2 * n_n
+    assert err_n < 1e-5 and mac_n > 1 - 1e-5
+    # 96 cells: the former refresh did not converge in RITZ_ITERATIONS (a full eigen solve follows), the new one did
+    ok_f, n_f, _, _ = out[(2, "former")]
+    ok_n, n_n, err_n, mac_n = out[(2, "new")]
+    assert ok_n and n_n <= 2 and err_n < 1e-5 and mac_n > 1 - 1e-5
+    assert n_n < n_f
+
+
 def test_block_solves_do_not_depend_on_the_block_width():
     """Every column of a block CG solve is its own recurrence: one block of 20 columns gives bit-identical solutions
     to blocks of at most 6 (voxel.BLOCK)."""

@@ -66,9 +66,10 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
     """Second pass of a subtraction over the recorded pieces (ray, level, family, iu, iv, q0, q1): brick
     material and change flags, target checks (gouge: removed target material deeper than the tolerance
     along the ray; breakthrough: a target segment left without material), the non-cutting centre while
-    plunging, the tool-frame extent, and (level 0, z family) the removed-volume centroid and the
-    machined-surface normal sums. Aggregates go to ``agg`` (AG_*). Allocation-free (work arrays from the
-    scratch ``sc``), reference counting off."""
+    plunging, the tool-frame extent (piece ends; widened across the ray by half and by a whole dual cell: FA_ZE_*),
+    (level 0, z family) the removed-volume centroid and the machined-surface normal sums, and (level 0, every
+    family) the same sums per family with the piece counts (FA_FAM0 ..). Aggregates go to ``agg`` (AG_*).
+    Allocation-free (work arrays from the scratch ``sc``), reference counting off."""
     cnt = f.cnt
     seg = f.seg
     link = f.link
@@ -106,8 +107,9 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
     bq = np.int64(1)
     binv = 1.0
     # the brick of the last piece booked into one brick: a piece of the same level and family whose column lies
-    # strictly inside the same brick column and whose ends lie strictly inside its brick along the ray is booked
-    # into it directly (book_piece would find that one brick)
+    # strictly inside the same brick column and whose ends lie strictly inside its brick along the ray, short of the
+    # last half spacing (which also marks the next brick: k_core.mark), is booked into it directly (book_piece would
+    # find that one brick)
     m_lvl = -1
     m_fam = -1
     m_qu = -1
@@ -119,6 +121,12 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
     zr_min = agg[AG_ZR_MIN]
     zr_max = agg[AG_ZR_MAX]
     rr_max = agg[AG_RR_MAX]
+    ze_lo = afv[A.FA_ZE_LO]
+    ze_lo2 = afv[A.FA_ZE_LO2]
+    ze_hi = afv[A.FA_ZE_HI]
+    ze_hi2 = afv[A.FA_ZE_HI2]
+    afv[A.FA_ENV_ZMIN] = zmin
+    afv[A.FA_ENV_ZMAX] = zmax
     s_cx = afv[A.FA_CX]
     s_cy = afv[A.FA_CY]
     s_cz = afv[A.FA_CZ]
@@ -145,6 +153,7 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
             qu = np.int64(np.uint64(iu) // np.uint64(C.BR))
             qv = np.int64(np.uint64(iv) // np.uint64(C.BR))
             if (lvl == m_lvl and fam == m_fam and qu == m_qu and qv == m_qv and p0 > m_lo and p1 < m_hi
+                    and 2 * p1 + lv_cell_q[lvl] <= 2 * m_hi
                     and (iu - qu * C.BR != 0 or iu == 0) and (iv - qv * C.BR != 0 or iv == 0)):
                 bmat[m_idx, fam] -= p1 - p0
                 bdirty[m_idx] = 1
@@ -214,6 +223,13 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
                 x1 = div[kk, 1] if div[kk, 1] < p1 * Q else p1 * Q
                 if x1 > x0:
                     agg[AG_D_LEN] += (x1 - x0) * a2 / 3.0
+        # half the dual cell across the ray, projected on the tool axis (0 for the family along the axis)
+        if fam == 0:
+            half = 0.5 * a * (abs(w1) + abs(w2))
+        elif fam == 1:
+            half = 0.5 * a * (abs(w0) + abs(w2))
+        else:
+            half = 0.5 * a * (abs(w0) + abs(w1))
         for e in range(2):
             qq = p0 if e == 0 else p1
             x, y, z = _point(fam, of + qq * Q, pu, pv)
@@ -225,6 +241,14 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
                 zr_min = zr
             if zr > zr_max:
                 zr_max = zr
+            if zr - half < ze_lo:
+                ze_lo = zr - half
+            if zr - 2.0 * half < ze_lo2:
+                ze_lo2 = zr - 2.0 * half
+            if zr + half > ze_hi:
+                ze_hi = zr + half
+            if zr + 2.0 * half > ze_hi2:
+                ze_hi2 = zr + 2.0 * half
             ex = dx - zr * w0
             ey = dy - zr * w1
             ez = dz - zr * w2
@@ -234,13 +258,9 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
                 rr = math.sqrt(r2)
                 if rr > rr_max:
                     rr_max = rr
-        if lvl == 0 and fam == 2:
+        if lvl == 0:
             vol = lm * a2
             x, y, z = _point(fam, of + 0.5 * (p0 + p1) * Q, pu, pv)
-            s_cx += vol * x
-            s_cy += vol * y
-            s_cz += vol * z
-            s_w += vol
             dx = x - c0x
             dy = y - c0y
             dz = z - c0z
@@ -253,18 +273,37 @@ def post_pieces(f, tgt, spec, pinfo, acc, pcs, npc, agg, sc):
             ny = c0y + zr * w1 - y
             nz = c0z + zr * w2 - z
             nn_ = math.sqrt(nx * nx + ny * ny + nz * nz)
+            fb = A.FA_FAM0 + A.FA_FSTRIDE * fam
+            afv[fb + A.FF_CX] += vol * x
+            afv[fb + A.FF_CY] += vol * y
+            afv[fb + A.FF_CZ] += vol * z
+            afv[fb + A.FF_W] += vol
+            afv[fb + A.FF_N] += 1.0
             if nn_ > 0.0:
-                s_nx += vol * nx / nn_
-                s_ny += vol * ny / nn_
-                s_nz += vol * nz / nn_
-            if rapid:
-                agg[AG_R_VOL] += vol
-                agg[AG_R_X] += vol * x
-                agg[AG_R_X + 1] += vol * y
-                agg[AG_R_X + 2] += vol * z
+                afv[fb + A.FF_NX] += vol * nx / nn_
+                afv[fb + A.FF_NY] += vol * ny / nn_
+                afv[fb + A.FF_NZ] += vol * nz / nn_
+            if fam == 2:
+                s_cx += vol * x
+                s_cy += vol * y
+                s_cz += vol * z
+                s_w += vol
+                if nn_ > 0.0:
+                    s_nx += vol * nx / nn_
+                    s_ny += vol * ny / nn_
+                    s_nz += vol * nz / nn_
+                if rapid:
+                    agg[AG_R_VOL] += vol
+                    agg[AG_R_X] += vol * x
+                    agg[AG_R_X + 1] += vol * y
+                    agg[AG_R_X + 2] += vol * z
     agg[AG_ZR_MIN] = zr_min
     agg[AG_ZR_MAX] = zr_max
     agg[AG_RR_MAX] = rr_max
+    afv[A.FA_ZE_LO] = ze_lo
+    afv[A.FA_ZE_LO2] = ze_lo2
+    afv[A.FA_ZE_HI] = ze_hi
+    afv[A.FA_ZE_HI2] = ze_hi2
     afv[A.FA_CX] = s_cx
     afv[A.FA_CY] = s_cy
     afv[A.FA_CZ] = s_cz

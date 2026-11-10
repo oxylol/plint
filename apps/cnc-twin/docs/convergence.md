@@ -16,8 +16,8 @@ the verdicts below.
 |---|---|---|---|---|---|
 | L0 stride: D10 slot (rigid) | `physics.max_deg_per_step, physics.steps_per_tooth` | deg0.5-spt96 | 8 / 9 | peak force 4.97 % (2 %) | outside for some quantities |
 | L0 stride: side-milling finish (VF-2SS modes) | `physics.max_deg_per_step, physics.steps_per_tooth` | deg0.5-spt96 | 7 / 8 | peak force 9.65 % (2 %) | outside for some quantities |
-| Dexel lattice: side-milling finish (rigid) | `physics.lattice_mm` | lat0.25 | 2 / 6 | removed volume 18.1 % (1 %) | outside for some quantities |
-| Dexel lattice: pocket corner (rigid) | `physics.lattice_mm` | lat0.25 | 3 / 6 | removed volume 16.3 % (1 %) | outside for some quantities |
+| Dexel lattice: side-milling finish (rigid) | `physics.lattice_mm` | lat0.25 | 3 / 6 | peak force 31.2 % (2 %) | outside for some quantities |
+| Dexel lattice: pocket corner (rigid) | `physics.lattice_mm` | lat0.25 | 5 / 6 | largest engaged arc 5.14 % (1 %) | outside for some quantities |
 | Edge element size: D10 flat end mill, slot (rigid) | `physics.edge_element_mm` | el0.5 | 1 / 8 | chip per tooth (analytic) 5.32 % (1 %) | outside for some quantities |
 | Edge element size: D10 ball nose, slot (rigid) | `physics.edge_element_mm` | el0.5 | 8 / 8 | chip per tooth (analytic) 0.561 % (1 %) | inside the converged range |
 | Surface-memory bins with the stride (1-DOF, runout, regeneration) | `physics.memory_bins with physics.max_deg_per_step = 360 / memory_bins` | bins720 | 5 / 8 | peak force 10.9 % (2 %) | outside for some quantities |
@@ -28,14 +28,14 @@ the verdicts below.
 | Workpiece thermal grid: cell size | `physics.thermal.cell_mm` | cell2 | 6 / 9 | workpiece hottest cell rise 64.1 % (1.5 %) | outside for some quantities |
 | Workpiece thermal grid: cadence | `physics.thermal.every_n_macro` | every5 | 4 / 7 | workpiece hottest cell rise 20.4 % (1.5 %) | outside for some quantities |
 | Turning: polar theta bins | `physics.polar_theta_bins` | th720 | 6 / 6 | mean Fx (T0) 0.00241 % (1.5 %) | inside the converged range |
-| Turning: polar row height (axial resolution) | `physics.removal.polar_min_feed_mm_rev (dz = f_min / 8)` | fmin0.05 | 6 / 6 | Rt of the turned surface 1.92 % (3 %) | inside the converged range |
+| Turning: polar row height (axial resolution) | `physics.removal.polar_min_feed_mm_rev (dz = f_min / 8)` | fmin0.05 | 6 / 6 | Rt of the turned surface 2.54 % (3 %) | inside the converged range |
 <!-- convergence:summary:end -->
 
 **Inside the converged range at the shipped defaults:** every step-averaged hot-loop quantity against the L0 stride
 (mean forces, torque, chip volumes, wall positions, vibration: converged from 3 deg per step on); the means against
 the surface-memory bins refined with the stride, and the chatter onset depth; every turning quantity against the
-polar theta bins and the row height; the wall positions (exact) and the corner's peak force against the lattice; the
-ball nose's forces against the edge element size (at this depth, by alignment); the thermal expansion at the contact
+polar theta bins and the row height; the wall positions (exact), the corner's peak force and (since section 9 item
+4) the removed volume against the lattice; the ball nose's forces against the edge element size (at this depth, by alignment); the thermal expansion at the contact
 against the workpiece grid's cell and cadence; `lag_macro` (2 is computed as 1: identical runs); since the fixes of
 section 9 items 8 and 9, the coupled tool against the macro step (tool body, edge peak at the comparison moment, the
 0.5 s means of the rake temperature cutting reads and of the preheat, the mean force at the tolerance) and against
@@ -45,10 +45,10 @@ the workpiece grid's cell and cadence (the tool's state the same to six digits a
 **Outside:** (1) peak forces against the stride, 5-11 % low at 0.5 deg because a peak is a step mean (within 2 %
 from 0.125 deg, 2.2-2.5 times the CPU in cut); (2) the forces of a flat end mill against the edge element size, -4.8 %
 at ap 3 mm, because the element at the depth-of-cut line is engaged whole or not at all (scaled by the engaged
-length every size agrees to 0.05 %: a model fix, not a smaller default); (3) against the lattice, the ledger's
-removed volume of a thin finishing layer (-18 % at 0.25 mm, still +2 % at 0.03125 mm: first order, not cured by
-refinement), the steady peak force (+34 % at 0.25 mm), the engaged arc (oscillating +-1.3 %), the corner's mean
-force (-1.8 %); (4) against the memory bins, the peak force, vibration and tooth-to-tooth chip spread, which need
+length every size agrees to 0.05 %: a model fix, not a smaller default); (3) against the lattice, the steady peak
+force (+31 % at 0.25 mm), the engaged arc (oscillating +-1.3 %; the corner's largest arc 5 % low), the mean force
+(1.5-1.9 %); the ledger's removed volume of a thin finishing layer was outside too until 2026-11-10 (-18 % at 0.25
+mm, +2 % at 0.03125 mm, first order: section 9 item 4); (4) against the memory bins, the peak force, vibration and tooth-to-tooth chip spread, which need
 the finer stride; (5) against the macro step, the values at one instant of the rake temperature and the preheat
 (a step-to-step scatter of 1-2 % at every level), the workpiece's bulk rise and the edge peak's 0.5 s mean (2-6 %),
 and VB growth, now below 1 um; before the fixes of section 9 items 8 and 9 the rake temperature cutting reads
@@ -214,8 +214,9 @@ positions on a ray are exact to the 10 nm quantum, so a lattice error is a sampl
 cases are finishing passes 0.3 mm into a wall (ae is not a multiple of any level's spacing, so the levels sample the
 layer differently), rigid (the deflection would mix the forces into the wall position). `twin check` requires
 lattice_mm <= ae / 4 = 0.075 mm here (or a refine box): the template's 0.25 mm is the default a project gets, and
-0.0625 mm is the first level the check admits. The **removed volume** is the ledger's: the z family's exact integer
-sum (architecture 5.4, 10); its reference is the volume the tool's envelope sweeps along the path the tool actually
+0.0625 mm is the first level the check admits. The **removed volume** is the ledger's: the field's exact integer
+ledger volume (since 2026-11-10 per dual cell the family most normal to the surface, removal.md 1.1; the z family's
+sum before; architecture 5.4, 10); its reference is the volume the tool's envelope sweeps along the path the tool actually
 took (the side wall: the y family, which crosses that wall and is exact on every ray; the corner: the envelope swept
 along the 1 ms tool positions, `swept_wall_volume`, because the control rounds the corner by up to 0.45 mm and the
 machine's errors offset the walls by 3-5 um; measured on the commanded and actual tip paths, the tree of these
@@ -231,37 +232,38 @@ is above the twin check limit ae / 4 = 0.075 mm for this pass.
 
 | level | lattice spacing (mm) | mean force magnitude (N) | peak force (N) | chip per tooth (analytic) (mm3) | engaged arc (deg) | removed volume (mm3) | wall position - nominal (um) | CPU s | in cut |
 |---|---|---|---|---|---|---|---|---|---|
-| lat0.5 | 0.5000 | 18.35 | 87.85 | 0.05653 | 26.35 | 62.59 | -3.338 | 4.33 | 2.16 |
-| lat0.25 (default) | 0.2500 | 18.80 | 84.24 | 0.05894 | 21.70 | 31.29 | -3.319 | 4.39 | 2.15 |
-| lat0.125 | 0.1250 | 19.00 | 67.10 | 0.05955 | 21.22 | 31.29 | -3.323 | 4.81 | 2.28 |
-| lat0.0625 | 0.06250 | 19.12 | 66.84 | 0.05994 | 21.69 | 39.12 | -3.304 | 5.07 | 2.53 |
-| lat0.03125 | 0.03125 | 19.08 | 62.99 | 0.05993 | 21.16 | 39.12 | -3.320 | 6.25 | 3.32 |
+| lat0.5 | 0.5000 | 18.15 | 93.80 | 0.05602 | 26.40 | 38.31 | -3.342 | 4.48 | 2.16 |
+| lat0.25 (default) | 0.2500 | 18.80 | 84.26 | 0.05885 | 21.65 | 38.27 | -3.323 | 4.38 | 2.14 |
+| lat0.125 | 0.1250 | 19.08 | 72.72 | 0.05964 | 21.73 | 38.27 | -3.323 | 4.79 | 2.51 |
+| lat0.0625 | 0.06250 | 19.09 | 63.45 | 0.05991 | 21.18 | 38.28 | -3.320 | 5.22 | 2.90 |
+| lat0.03125 | 0.03125 | 19.14 | 64.23 | 0.05994 | 21.72 | 38.26 | -3.155 | 6.41 | 4.08 |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| mean force magnitude | 19.08 N | finest (oscillating) | (1.85) | 1.5 % | 1.5 % | inside |
-| peak force | 62.71 N | Richardson (3 finest) | 3.88 | 34.2 % | 2 % | outside: use 0.03125 |
-| chip per tooth (analytic) | 0.05993 mm3 | finest (oscillating) | (4.77) | 1.65 % | 1 % | outside: use 0.125 |
-| engaged arc | 21.16 deg | finest (oscillating) | (0.168) | 2.57 % | 1 % | outside: no measured level converged |
-| removed volume | 38.22 mm3 | exact | (17.9) | 18.1 % | 1 % | outside: no measured level converged |
-| wall position - nominal | -3.320 um | all levels agree | - | 0.00091 um | 1 um | inside |
+| mean force magnitude | 19.15 N | Richardson (3 finest) | 2.18 | 1.86 % | 1.5 % | outside: use 0.125 |
+| peak force | 64.23 N | finest (oscillating) | (3.58) | 31.2 % | 2 % | outside: use 0.0625 |
+| chip per tooth (analytic) | 0.05994 mm3 | Richardson (3 finest) | 3.37 | 1.81 % | 1 % | outside: use 0.125 |
+| engaged arc | 21.72 deg | finest (oscillating) | (0.0175) | 0.338 % | 1 % | inside (reference uncertain) |
+| removed volume | 38.20 mm3 | exact | (0.768) | 0.163 % | 1 % | inside |
+| wall position - nominal | -3.155 um | finest level | (5.95) | 0.168 um | 1 um | inside |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
 <!-- convergence:lattice_side:end -->
 
-The wall position is exact at every level (the y rays end on the wall to the quantum). The ledger's removed volume
-is not: the z columns stand at lattice nodes, so a layer 0.3 mm thick holds a whole number of node rows, and the
-volume is that number times the spacing (62.6 mm3 at 0.5 mm, 31.3 at 0.25 and 0.125, 39.1 at 0.0625 and 0.03125
-against 38.2): -18 % at the default and +2.3 % even at 0.03125 mm. The error is first order in the spacing, bounded
-by a / (2 ae), and depends on where the wall falls between nodes, so refinement alone does not bring it within 1 %;
-the x and y families estimate the same material (removal publishes the three as `removed_volume_xyz_m3`), and the
-family normal to the cut surface is exact for it. The forces converge at about first order (the mean is 1.50 % low
-at the default, at the tolerance, and 1.59 % on the working tree of 16:00, so it counts as outside; 0.17 % at 0.0625
-mm); the peak force is 34 % high at the default (84 against 63 N) and still moving at 0.03125 mm; cutting's analytic
-chip volume is 1.7 % low at the default and inside from 0.125 mm; the engaged arc oscillates by +-1.3 % between
-neighbouring levels at every spacing up to 0.25 mm, so its reference is uncertain by more than the 1 % tolerance
-(the cause was not isolated).
+The tables of 2.1 and 2.2 were measured again on 2026-11-10 (the tree of commit c686647, before and after the
+ledger fix of section 9 item 4: every quantity but the removed volume identical to the digits; the tables are the
+after runs). The wall position is exact at every level (the y rays end on the wall to the quantum; the finest
+level's -3.155 um against -3.32 um is the same at both runs). **The removed volume** is now the field's ledger volume
+(per dual cell the family most normal to the surface, removal.md 1.1): 38.31, 38.27, 38.27, 38.28, 38.26 mm3 at 0.5 to
+0.03125 mm against the y family's 38.205 at the finest level, every level within 0.28 % and the default 0.16 %:
+inside. Before (the z family) the layer held a whole number of node rows: 62.6 mm3 at 0.5 mm, 31.3 at 0.25 and 0.125,
+39.1 at 0.0625 and 0.03125 (-18 % at the default and +2.4 % at 0.03125 mm, first order, depending on where the wall
+fell between nodes). The forces converge at about first order (the mean 1.86 % from the Richardson value at the
+default, inside from 0.125 mm); the peak force is 31 % high at the default (84 against 64 N) and still moving at
+0.03125 mm; cutting's analytic chip volume is 1.8 % low at the default and inside from 0.125 mm; the engaged arc
+oscillates between neighbouring levels (21.65, 21.73, 21.18, 21.72 deg from 0.25 mm), inside at the default against
+the finest level but with a reference uncertain by more than the tolerance (the cause was not isolated).
 
 ### 2.2 Pocket corner
 
@@ -273,29 +275,32 @@ through the internal corner, ap 5 mm, 10 000 rpm, f_z 0.04 mm, rigid.
 
 | level | lattice spacing (mm) | mean force magnitude (N) | peak force in the corner (N) | largest engaged arc (deg) | removed volume (mm3) | bottom wall - nominal (um) | right wall - nominal (um) | CPU s | in cut |
 |---|---|---|---|---|---|---|---|---|---|
-| lat0.5 | 0.5000 | 18.26 | 137.6 | 33.97 | 75.11 | -3.327 | -4.162 | 4.77 | 2.77 |
-| lat0.25 (default) | 0.2500 | 18.79 | 141.3 | 36.05 | 40.37 | -3.320 | -3.948 | 4.77 | 2.80 |
-| lat0.125 | 0.1250 | 19.06 | 140.8 | 35.12 | 40.29 | -3.329 | -3.913 | 5.09 | 3.02 |
-| lat0.0625 | 0.06250 | 19.10 | 141.8 | 34.34 | 49.43 | -3.324 | -3.969 | 6.14 | 3.64 |
-| lat0.03125 | 0.03125 | 19.14 | 141.0 | 35.59 | 49.22 | -3.218 | -3.985 | 8.73 | 5.09 |
+| lat0.5 | 0.5000 | 18.44 | 192.2 | 35.06 | 51.16 | -3.332 | -3.651 | 5.02 | 2.86 |
+| lat0.25 (default) | 0.2500 | 18.77 | 188.6 | 35.83 | 51.12 | -3.325 | -3.705 | 4.97 | 2.91 |
+| lat0.125 | 0.1250 | 18.98 | 187.9 | 37.42 | 51.12 | -3.323 | -3.677 | 5.48 | 3.36 |
+| lat0.0625 | 0.06250 | 19.05 | 186.9 | 37.48 | 51.14 | -3.324 | -3.717 | 5.99 | 3.99 |
+| lat0.03125 | 0.03125 | 19.05 | 187.9 | 37.68 | 51.14 | -3.323 | -3.744 | 8.48 | 6.34 |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| mean force magnitude | 19.14 N | finest level | (0.155) | 1.83 % | 1.5 % | outside: use 0.125 |
-| peak force in the corner | 141.0 N | finest (oscillating) | (0.272) | 0.242 % | 2 % | inside |
-| largest engaged arc | 35.59 deg | finest (oscillating) | (0.685) | 1.27 % | 1 % | outside: no measured level converged |
-| removed volume | 48.25 mm3 | exact | (5.44) | 16.3 % | 1 % | outside: no measured level converged |
-| bottom wall - nominal | -3.218 um | finest level | (4.40) | 0.103 um | 1 um | inside |
-| right wall - nominal | -3.985 um | finest level | (1.75) | 0.037 um | 1 um | inside |
+| mean force magnitude | 19.05 N | finest level | (6.63) | 1.47 % | 1.5 % | inside |
+| peak force in the corner | 187.9 N | finest (oscillating) | (0.00954) | 0.418 % | 2 % | inside |
+| largest engaged arc | 37.76 deg | Richardson (3 finest) | 1.72 | 5.14 % | 1 % | outside: use 0.125 |
+| removed volume | 51.13 mm3 | exact | (2.79) | 0.02 % | 1 % | inside |
+| bottom wall - nominal | -3.323 um | all levels agree | - | 0.00142 um | 1 um | inside |
+| right wall - nominal | -3.804 um | Richardson (3 finest) | 0.542 | 0.0997 um | 1 um | inside |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
 <!-- convergence:lattice_corner:end -->
 
-The corner shows the same pattern: walls exact, the ledger volume -16 % at the default and +2.0 % at 0.03125 mm
-against the swept volume (48.25 mm3; the y family is within 0.15 % of it at 0.03125 mm), the mean force 1.8 % low at
-the default (inside from 0.125 mm), the largest engaged arc oscillating by +-2 %. The peak force in the corner (141
-N, the largest load of the pass) is within 0.6 % at every level from 0.25 mm: the corner's load is set by the
+The corner: walls within 0.15 um at every level (the right wall's Richardson value -3.80 um, 0.10 um from the
+default); the ledger volume 51.16, 51.12, 51.12, 51.14, 51.14 mm3 against the swept 51.128 mm3, every level within
+0.06 % and the default 0.02 % (the z family: 80.1, 42.9, 42.7, 52.4, 52.2 mm3, -16 % at the default and +2.0 % at
+0.03125 mm); the mean force 1.5 % low at the default (at the tolerance, inside on this tree); the largest engaged arc
+5 % below its Richardson value at the default (35.8 against 37.8 deg; 37.4-37.7 from 0.125 mm). The peak force in
+the corner (188 N on this tree, where the corner is rounded to its 0.44 mm radius since section 9 item 11; 141 N on
+the copy of the earlier tables) is within 0.6 % at every level from 0.25 mm: the corner's load is set by the
 engagement the path gives, which the gating finds on plane walls exactly; the peak along the steady wall is the
 quantity the lattice moves (+30 % at 0.25 mm, as in 2.1; not isolated: the refill of stale memory bins from the
 field near the stock's edge is the likely path).
@@ -607,7 +612,8 @@ the workpiece's bulk rise (0.83, 0.81, 0.86, 1.01 K: thermal's finite volumes ru
 the edge peak's 0.5 s mean (364, 371, 380 K at 5, 10, 20 ms, Richardson 348 K, 6 %: over 5.0-7.5 s the three agree
 within 1 %, in the last half second the 20 ms run's hottest element ran hotter). The expansion at the contact is
 inside at 10 ms (0.014 um from 5 ms) but structure's refresh is counted in macro steps (every 50, latency 50), so at
-20 and 50 ms it lags: -0.11 and 0.00 um. The energy balance closes at every level (worst interval 3e-12 of its
+20 and 50 ms it lags: -0.11 and 0.00 um (since 2026-11-10 the refresh runs in run time: -0.315 / -0.315 / -0.307 /
+-0.271 um at 5 / 10 / 20 / 50 ms on a rerun of those levels, section 9 item 13; the table is the earlier run). The energy balance closes at every level (worst interval 3e-12 of its
 terms). CPU: 296, 185, 101, 61 s at 5, 10, 20, 50 ms. **2 ms** (600 s, within the memory cap since section 9 item 10)
 is left out of the analysis: its edge chipped at 7.90 s (one Weibull chipping trial of the wear model, VB +56 um;
 no other level chipped), 0.19 s before the comparison moment, so its values there describe another edge (kept in the
@@ -755,20 +761,20 @@ min(f_min / 8, r_nose / 16) with f_min = polar_min_feed_mm_rev (the default 0.05
 
 | level | polar row height dz (um) | mean force magnitude (N) | mean Fx (T0) (N) | mean Fy (T0) (N) | mean Fz (T0) (N) | Ra of the turned surface (um) | Rt of the turned surface (um) | CPU s | in cut |
 |---|---|---|---|---|---|---|---|---|---|
-| fmin0.4 | 50.00 | 1154 | -83.08 | 1067 | 431.8 | 2.311 | 7.524 | 22.3 | 3.32 |
-| fmin0.2 | 25.00 | 1148 | -82.90 | 1061 | 431.2 | 2.315 | 8.265 | 23.4 | 3.70 |
-| fmin0.1 | 12.50 | 1145 | -83.02 | 1057 | 430.6 | 2.314 | 8.621 | 25.7 | 4.52 |
-| fmin0.05 (default) | 6.250 | 1143 | -83.15 | 1055 | 430.3 | 2.314 | 8.795 | 29.9 | 6.11 |
-| fmin0.025 | 3.125 | - | - | - | - | - | - | failed: AssertionError: workpiece 0: removed volume 8.470526310494712e-07 m3 booked, fie | - |
+| fmin0.4 | 50.00 | 1064 | -80.99 | 979.1 | 408.0 | 2.311 | 7.524 | 41.7 | 8.83 |
+| fmin0.2 | 25.00 | 1065 | -80.52 | 979.9 | 408.6 | 2.315 | 8.265 | 53.6 | 10.7 |
+| fmin0.1 | 12.50 | 1065 | -80.38 | 980.0 | 408.8 | 2.314 | 8.622 | 82.0 | 16.6 |
+| fmin0.05 (default) | 6.250 | 1065 | -80.34 | 980.3 | 408.8 | 2.314 | 8.797 | 127 | 26.0 |
+| fmin0.025 | 3.125 | 1065 | -80.34 | 980.2 | 408.8 | 2.314 | 8.895 | 261 | 46.7 |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| mean force magnitude | 1140 N | Richardson (3 finest) | 0.938 | 0.193 % | 1.5 % | inside |
-| mean Fx (T0) | -83.15 N | finest level | (0.185) | 0 % | 1.5 % | inside |
-| mean Fy (T0) | 1053 N | Richardson (3 finest) | 0.943 | 0.211 % | 1.5 % | inside |
-| mean Fz (T0) | 429.8 N | Richardson (3 finest) | 0.784 | 0.112 % | 1.5 % | inside |
-| Ra of the turned surface | 2.314 um | finest level | (3.60) | 0 % | 3 % | inside |
-| Rt of the turned surface | 8.964 um | Richardson (3 finest) | 1.03 | 1.92 % | 3 % | inside |
+| mean force magnitude | 1065 N | finest (oscillating) | (4.75) | 0.000758 % | 1.5 % | inside |
+| mean Fx (T0) | -80.34 N | finest level | (3.35) | 0.00506 % | 1.5 % | inside |
+| mean Fy (T0) | 980.2 N | finest (oscillating) | (4.51) | 0.000979 % | 1.5 % | inside |
+| mean Fz (T0) | 408.8 N | finest level | (4.24) | 0.000678 % | 1.5 % | inside |
+| Ra of the turned surface | 2.314 um | finest (oscillating) | (0.847) | 0.00114 % | 3 % | inside |
+| Rt of the turned surface | 9.023 um | Richardson (3 finest) | 0.827 | 2.54 % | 3 % | inside |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
@@ -778,17 +784,17 @@ outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cu
 0.01 %: every bin is cut at its centre angle with the tool at that angle's position, so the helical feed marks are
 exact at any bin count, and cutting reads the chip at the nearest bin of a surface that changes by f / n_theta per
 bin (0.35 um at 720 bins). 360 bins would do for a steady pass (0.8 times the CPU in cut); threading and interrupted
-cuts were not studied. **Row height: inside.** The forces converge at first order (p 0.94; the default is 0.19 %
-above the Richardson value), because an element reads the radius of the nearest row; Ra is flat (2.314 um); Rt
-converges at first order (p 1.03; the cusp tips fall between row centres, so the sampled peak-to-valley misses up to
-the profile's slope times dz / 2): the default is 1.9 % below the Richardson value 8.96 um, inside the 3 %
-tolerance. (The simulated Ra and Rt lie below the nose-radius values f^2 / (18 sqrt 3 r) = 2.52 um and r - sqrt(r^2
+cuts were not studied. **Row height: inside.** On the copy of the earlier table the forces converged at first order
+(p 0.94, the default 0.19 % above the Richardson value), because an element reads the radius of the nearest row; Ra
+is flat (2.314 um); Rt converges at first order (the cusp tips fall between row centres, so the sampled
+peak-to-valley misses up to the profile's slope times dz / 2), inside the 3 % tolerance. (The simulated Ra and Rt lie below the nose-radius values f^2 / (18 sqrt 3 r) = 2.52 um and r - sqrt(r^2
 - f^2 / 4) = 9.83 um because the insert's trailing edge, 5 deg behind the nose, cuts the cusp; the rigid model
-reproduces the kinematic profile.) The finer level (dz 3.125 um, f_min 0.025 mm) stops at its first cut: removal's
-polar volume, the int64 sum of q_hi^2 - q_lo^2 over all radial rays (`k_polar.polar_q2_sum`), exceeds 2^63 for this
-bar (720 x 12 800 rays of radii up to 2.25e6 quanta: about 4.7e19) and the driver's exact-volume check sees the
-change wrap by 2^64 quanta (2.4e-5 m3); at 6.25 um the sum also exceeds 2^63, but the wrap happens not to fall
-inside the pass (section 9).
+reproduces the kinematic profile.) The table of the row height was measured again on 2026-11-10 (the tree of
+commit c686647; the same values before and after this round's changes): the forces now agree to 0.1 % across every level (cutting's turning changes since the
+copy of the earlier table), Rt converges at first order (p 0.83; the default 2.5 % below the Richardson value 9.02
+um, inside the 3 % tolerance). The 3.125 um level completes: on the copy of the earlier table it stopped at its first
+cut, the polar volume's int64 sum of q_hi^2 - q_lo^2 (`k_polar.polar_q2_sum`, about 4.7e19 for this bar) wrapping
+by 2^64 quanta between two checks; every volume is the exact `polar.q2_sum` since 2026-11-09 (section 9 item 6).
 
 ## 8. Recommended defaults and their cost
 
@@ -841,6 +847,25 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    estimate on a map of lattice / 4 (sanity's map: material only where a cell centre is inside the stock) and warns
    once per finishing pass with its lines, ae, the lattice in force, the one the rule asks for, the refine factor and
    the error bound lattice / (2 ae) (docs/models/loop.md 9; tests/integration/test_check_rules.py).
+   fixed (2026-11-10, removal: the ledger's booking): the ledger volume is now the sum over level 0's dual cells
+   (the cube of side a around each node) of the chord of the family most normal to the surface through the cell:
+   the shortest of the three rays' lengths inside the cell when the node is in material, the longest when it is in
+   air (for a plane through the cell the least clipped chord, exact when the plane crosses the cell's four edges of
+   that family). An exact integer (doubled quanta of a^2 QUANTUM_M / 2), exact for planes along the lattice axes,
+   second order otherwise; kept per brick and recomputed for the bricks a step changed, so the booked removal is the
+   difference of two exact sums and the loop's and the driver's exact-volume checks (now on this volume) close to
+   the integer; loose bodies carry their share of the same volume, a polar rebuild and a transfer are not booked
+   (docs/models/removal.md 1.1, 13). Lattice convergence of the removed volume (rerun 2026-11-10 on this tree, the
+   same runs before and after): side finish 62.59 / 31.29 / 31.29 / 39.12 / 39.12 mm3 -> 38.31 / 38.27 / 38.27 /
+   38.28 / 38.26 mm3 at 0.5 / 0.25 / 0.125 / 0.0625 / 0.03125 mm against 38.205 (the default's error 18.1 % ->
+   0.16 %, every level within 0.28 %: inside the 1 % tolerance); pocket corner 80.11 / 42.87 / 42.72 / 52.38 / 52.17
+   -> 51.16 / 51.12 / 51.12 / 51.14 / 51.14 mm3 against the swept 51.128 (16.1 % -> 0.02 %, every level within
+   0.06 %). On analytic layers 0.3 mm thick a face normal to y is exact at every lattice and oblique faces are
+   within 0.06 % from 0.25 mm (the z family: whole node rows); curved surfaces converge at second order (a cylinder
+   +0.35 / +0.08 / +0.018 / +0.004 % at 0.5 to 0.0625 mm). Nothing else in these studies changed (forces, arcs and
+   walls identical to the digits). Tests: tests/unit/removal/test_13_ledger.py (kernel against its reference,
+   axis planes, oblique layers, a side cut booked through the domain: field change = booked removal, and within
+   0.3 % of the swept volume at 0.25 and 0.125 mm where the z family was -17 %).
 5. **`memory_bins` finer than one bin per L0 step changes the result** (cutting): 2880 bins at 0.48 deg per step
    move the mean force by +1.5 % and the chip volume by +2.5 % against 1440 bins (section 4.2). The memory should be
    refined only with the stride (memory_bins <= 360 / angle per step); `twin check` could warn above it.
@@ -853,6 +878,13 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    the ledgers take is right only while the wrap does not fall between two checks, and at 3.125 um rows the driver's
    exact-volume check stopped the run (section 7). Summing per row in int64 and accumulating the rows in a wider
    integer (or Python int) would keep it exact.
+   fixed (2026-11-09 by the turning fix of docs/models/loop.md 15, "The lathe-shaft example cut air"; checked
+   2026-11-10): every volume the ledger and the exact-volume checks take is `polar.q2_sum`, each ray's sum of q_hi^2 -
+   q_lo^2 in int64 (at most a few 1e12 per ray) and the rays' sums accumulated in 31-bit halves into a Python
+   integer, exact without bound; the per-step accumulator `IA_POLAR_Q2` holds one step's removal (about 1.5e16 at
+   3.125 um rows and 10 ms, 2^63 = 9.2e18). `k_polar.polar_q2_sum` (int64) is no longer called. The turn_dz study's
+   3.125 um level now completes (rerun 2026-11-10 on the unmodified tree: mean force 1065.1 N, Rt 8.895 um; the
+   6.25 um level 1065.1 N, Rt 8.797 um); unit test tests/unit/removal/test_08_polar.py (a sum of 1.4e19).
 7. **`lag_macro: 2` is computed as lag 1** (loop; docs/models/loop.md says so): the two give the same result here
    (section 5), and cutting's `coupling_lag` warning ("compare physics.lag_macro 1 and 2") asks for a comparison
    that cannot differ.
@@ -963,6 +995,49 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
     and FANUC's smoothing tolerance are deviations by their documentation and stay so (docs/models/motion.md 2.2).
     The swept-volume reference of section 2.2 (the path the tool took) is unaffected; the tables above were measured
     before this change.
+12. **Removal's contact geometry of a milling step jumps from step to step** (removal; found by thermal in the
+    macro-step case at 5 ms): `RemovalContact.geometry.point_S_m` was zero in some steps and `ap_m` alternated
+    1.01 / 0.88 / 0.75 mm; thermal's preheat band, the two-scale surface temperature and the work deposits read them.
+    fixed (2026-11-10, removal): two causes, both the sampling of a side cut by the families. The point and normal
+    were the centroid and mean normal of the step's removed z-family pieces only; a 0.5 mm side step on a 0.25 mm
+    lattice reaches a new column every 0.25 mm of feed, 0.13 mm per 5 ms step, so a step held a whole column of
+    a^2 x ap (its node up to half a cell from the sliver) or nothing (the point at the S origin). The depth of cut was
+    the extent of the removed pieces' ends along the axis: a ray across the axis cuts the material at its own height,
+    so without a column the rows gave 0.75 mm of the 1 mm step. Now every family's pieces enter the point and normal
+    (each family's centroid weighted by its piece count) and each piece stands for its dual cell along the axis (the
+    envelope's end where a piece's whole cell reaches it, else the half-cell extent; a stock face lies there
+    exactly; docs/models/removal.md 5). Measured on the case's side step at 5 ms (the operation driver, the slow
+    domains off; removal's geometry does not depend on them; 142 steady steps, x 5-24 mm): steps with a zero point
+    37 -> 0; ap 0.750 / 0.882 / 1.007 mm -> 1.007 mm in every step (the tip 7 um below the programmed depth); the
+    point's spread across the steps 0.25 / 0.50 mm -> 0.035 / 0.029 mm in y / z. Test:
+    tests/unit/removal/test_13_ledger.py `test_side_cut_contact_geometry_is_steady_from_step_to_step`.
+13. **Structure's refresh cadence and latency are counted in macro steps** (structure): every 50 steps, applied 50
+    steps later, so the thermal expansion published at the contact at the same moment of the same cut is -0.32 /
+    -0.11 / 0.00 um at 10 / 20 / 50 ms (section 5).
+    fixed (2026-11-10, structure): `physics.structure.refresh_interval_ms` (500) and the contract's latency
+    `REFRESH_LATENCY_S` (0.5 s): a job starts in the first step that starts at or after each multiple of the interval
+    and applies in the first step that starts at or after its start + 0.5 s (`domain.refresh_due`, pending jobs carry
+    their apply tick); the former `every_n_macro` is read as that many steps of the reference 10 ms (the examples'
+    `every_n_macro: 50` keep 500 ms), so the schedule is the same at 2, 5, 10, 20 and 50 ms and, at 10 ms, the former
+    one step for step (docs/models/structure.md 3.5; tests/unit/structure/test_domain.py
+    `test_refresh_schedule_is_in_run_time`). The macro-step study's levels 5-50 ms rerun 2026-11-10 on this
+    tree before and after this round's changes (the after runs also carry removal's steady contact point, item 12,
+    at which the case reads the expansion): the thermal expansion at the contact -0.295 / -0.318 / -0.104 / +0.001
+    um -> -0.315 / -0.315 / -0.307 / -0.271 um at 5 / 10 / 20 / 50 ms (spread 0.32 -> 0.044 um; 20 ms within 0.007
+    um and 50 ms within 0.044 um of 10 ms, inside the 0.1 um tolerance). What remains at 50 ms follows the work's
+    temperature field (bulk rise 1.007 against 0.805 K at 10 ms: thermal's finite volumes every 5 macro steps, 250
+    ms there; thermal's cadence, not structure's). Cost of the levels 345 / 182 / 114 / 57 s (were 321 / 175 / 96 /
+    54 s: at 20 and 50 ms the work model is refreshed as often as at 10 ms now).
+14. **Structure's refresh after cells flip costs about 20 s at 47 000 DOF** (structure; docs/performance.md 11): two
+    block solves of the 20 Ritz columns at least (the check of the old modes' Ritz pairs, then of the improved ones).
+    fixed (2026-11-10, structure): block Rayleigh-Ritz steps preconditioned by the multigrid V-cycle (one V-cycle per
+    column, LOBPCG's step) improve the start until the V-cycle's residual estimate is below half the tolerance; the
+    exact check with K^-1 then decides as before. On the side-step stock at 46 662 DOF clamped on its bottom face, 5 /
+    30 / 300 cells removed: 12.9 / 13.0 / 30.5 s -> 9.2 / 9.1 / 12.6 s (one block solve each), full eigen solve 59-71
+    s; against it the published frequencies within 2e-8 / 7e-8 / 2e-8 (were 2e-7 / 1.3e-6 / 2e-9), MAC above 1 -
+    2e-8, the residual compliance per node within a median 0.4 / 5.3 / 1.0 % (was 0.5 / 5.7 / 0.9 %, the residual
+    modes' 10 x tolerance). The start from a local patch's static corrections was not needed. Test:
+    tests/unit/structure/test_voxel.py `test_preconditioned_steps_halve_a_changed_refresh_without_loss`.
 
 ## 10. Reproducing
 

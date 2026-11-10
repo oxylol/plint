@@ -308,7 +308,9 @@ def floordiv(a, b, binv):
 
 @njit(void(I1, I2, I1, B1_, B1_, I4_1, i8, i8, i8, i8, i8, i8), **INLINE)
 def mark(lv_cell_q, lv_bdims, lv_brick0, bdirty, bconn, bver, lvl, fam, iu, iv, q0, q1):
-    """Mark changed the bricks whose closed node ranges hold the ray part [q0, q1]."""
+    """Mark changed the bricks whose closed node ranges hold the ray part [q0, q1], and the next brick along the ray
+    when the part reaches into the last half spacing before it: the dual cell of the next brick's first node (the
+    ledger volume's cells, k_volume) starts half a spacing before the brick's first node."""
     u = 1 if fam == 0 else 0
     v = 2 if fam < 2 else 1
     bdu = lv_bdims[lvl, u]
@@ -324,6 +326,8 @@ def mark(lv_cell_q, lv_bdims, lv_brick0, bdirty, bconn, bver, lvl, fam, iu, iv, 
     if q0 - w0 * bq == 0 and w0 > 0:
         w0 -= 1
     w1 = floordiv(q1, bq, binv)
+    if 2 * q1 + lv_cell_q[lvl] > 2 * (w1 + 1) * bq:
+        w1 += 1
     if w0 < 0:
         w0 = 0
     if w1 > bdw - 1:
@@ -415,6 +419,8 @@ def book_piece(lv_bdims, lv_brick0, bmat, bdirty, bconn, bver, lvl, fam, iu, iv,
     if p0 - f0 * bq == 0 and m0 > 0:
         m0 -= 1
     m1 = g1 + 1 if p1 == (g1 + 1) * bq else g1
+    if 2 * p1 + bq // BR > 2 * (g1 + 1) * bq:
+        m1 = g1 + 1            # the next brick's first dual cell starts half a spacing before it (mark)
     if m0 < 0:
         m0 = 0
     if m1 > bdw - 1:

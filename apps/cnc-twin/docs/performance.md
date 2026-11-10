@@ -335,7 +335,12 @@ The gain is the block width (one block of 20 columns: 7.7 s per block solve agai
 solutions) and the Ritz start on the previous modes' own Ritz pairs (a change that hardly moves the modes is
 accepted after one block solve; none of these three was). The residual compliance differs from the full solve by the
 former refresh's own amount (residual modes accepted at 10 x `ritz_tol`), the displacement grids not at all. Each
-Ritz iteration is one block solve (about 7.7 s here: 20 columns of 14 CG iterations). Open: a start that passes the
+Ritz iteration is one block solve (about 7.7 s here: 20 columns of 14 CG iterations). Since 2026-11-10 the exact
+iteration starts after block steps preconditioned by the V-cycle (docs/models/structure.md 3.5): on the same stock
+clamped on its bottom face (a different support from the table above) the three trenches cost 9.2 / 9.1 / 12.6 s
+against 12.9 / 13.0 / 30.5 s for the former refresh (one block solve instead of 2 / 2 / 5), against a full eigen
+solve frequencies within 7e-8 and the residual compliance as before; the start from the old modes plus static
+corrections from a local patch (below) was not needed for this. Open before that change: a start that passes the
 first check (the previous modes plus their static corrections from a direct solve on a patch of a few cells around
 the removed ones: the residual of the old modes in the new model is the removed cells' element forces, local and
 for the stiffness part self-equilibrated; the one global block solve then checks it), which would halve a changed

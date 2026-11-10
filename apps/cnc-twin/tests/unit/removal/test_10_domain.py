@@ -81,6 +81,9 @@ def test_lifecycle_bus_ledger_checkpoint_and_transfer():
     rs = state.removal
     v0 = F.volume_m3(rs.workpieces[0].field, 0, 2)
     assert v0 == pytest.approx(20e-3 * 16e-3 * 8e-3)
+    from cnctwin.removal import ledger as LG
+    v0_ledger = LG.volume_m3(rs.workpieces[0])
+    assert v0_ledger == pytest.approx(v0, rel=1e-12)       # the block's faces lie on cell faces
     state.bus_prev.motion.paths = [PathFrame(tool_slot=0, workpiece=0)]
     inputs = dom.kernel_inputs(ctx, state, state.bus_prev)
     assert isinstance(inputs, A.RemovalInputs) and inputs.iparams[A.RI_NPATHS] == 1
@@ -89,8 +92,14 @@ def test_lifecycle_bus_ledger_checkpoint_and_transfer():
     dom.absorb(ctx, state, None, state.bus_next)
     rec = state.bus_next.removal
     c = rec.contacts[0]
-    removed = v0 - F.volume_m3(rs.workpieces[0].field, 0, 2)
+    # the booked removal is the field's ledger volume change (removal.md 1.1), exactly
+    removed = v0_ledger - LG.volume_m3(rs.workpieces[0])
     assert c.removed_volume_m3 == pytest.approx(removed, rel=1e-12)
+    # the slot swept by the last pass at x = 5.9 mm: (5.9 x 8 + pi 4^2 / 2) mm^2 x 3 mm; the ledger volume within
+    # 0.05 % of it, the z family 0.23 % (whole columns of the end's semicircle)
+    swept = (5.9e-3 * 8e-3 + 0.5 * math.pi * R0 ** 2) * 3e-3
+    assert removed == pytest.approx(swept, rel=5e-4)
+    assert c.removed_volume_xyz_m3[2] == pytest.approx(v0 - F.volume_m3(rs.workpieces[0].field, 0, 2), rel=1e-12)
     # the core Ledger books the removed volume and mass from this record (removal writes only its record)
     from cnctwin.core.ledger import Ledger
     Ledger(tol_mass=1e-6, tol_energy=1e-3, density_kg_m3=2700.0, domains={"removal"}).book(state, 0)
@@ -129,6 +138,7 @@ def test_lifecycle_bus_ledger_checkpoint_and_transfer():
     assert names == set(vals)
     # end of the first operation: flip about X; volume and material kept
     v_before = F.volume_m3(state.removal.workpieces[0].field, 0, 2)
+    l_before = LG.volume_m3(state.removal.workpieces[0])
     state.clock.op_index = 0
     dom.end_operation(ctx, state)
     f2 = state.removal.workpieces[0].field
@@ -141,7 +151,9 @@ def test_lifecycle_bus_ledger_checkpoint_and_transfer():
     KQ.surface_height(f2, 2, -1, np.array([3e-3]), np.array([8e-3]), h, kind)
     assert -h[0] == pytest.approx(3e-3, abs=1e-8)
     out = dom.finalize(ctx, state)
-    assert out["workpieces"][0]["volume_m3"] == pytest.approx(v_before, rel=1e-12)
+    assert out["workpieces"][0]["volume_z_m3"] == pytest.approx(v_before, rel=1e-12)
+    # the flip is a lattice symmetry: dual cells map onto dual cells, the ledger volume is kept exactly
+    assert out["workpieces"][0]["volume_m3"] == pytest.approx(l_before, rel=1e-12)
 
 
 def test_events_become_findings_once_per_episode():

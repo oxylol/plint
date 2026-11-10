@@ -174,7 +174,34 @@ FA_DEAD_V = 32              # volume removed by a non-cutting centre while plung
 FA_POLAR_TH = 33            # the tool's reference-plane angle in S (rotating) at the last polar removal (unwrapped)
 FA_DEPTH_MIN = 34           # removed material across the feed direction from the tool tip (m): min / max
 FA_DEPTH_MAX = 35
-N_FA = 36
+# every family of level 0 (subtract_envelope, additive 2026-11-10): per family f at FA_FAM0 + FA_FSTRIDE f the sums of
+# removed volume x position (3), removed volume, pieces, volume x machined-surface normal (3). The z family alone
+# (FA_CX .. FA_NZ) misses whole steps of a side cut whose columns the tool front has not reached (a column is cut
+# once every a / (feed per step) steps): the contact's centroid and normal combine the families, each family's
+# centroid weighted by its piece count (docs/models/removal.md 5 "Contact geometry")
+FA_FAM0 = 36
+FA_FSTRIDE = 8
+FF_CX = 0
+FF_CY = 1
+FF_CZ = 2
+FF_W = 3
+FF_N = 4
+FF_NX = 5
+FF_NY = 6
+FF_NZ = 7
+# the removed material's extent along the tool axis from the tip with each piece widened across its ray by half the
+# dual cell (FA_ZE_LO / FA_ZE_HI) and by the whole cell (FA_ZE_LO2 / FA_ZE_HI2), and the envelope's axial range of the
+# last subtraction (FA_ENV_ZMIN / FA_ENV_ZMAX): a ray across the axis samples the material at its own height only, so
+# the extent of FA_ZREL_* (piece ends) is that of the rows the step cut (0.75 mm of a 1 mm side step on a 0.25 mm
+# lattice in the steps no column was cut, 1.0 mm in the others); the domain takes the envelope's end where the cell
+# reaches it, else the half-cell extent (removal.md 5)
+FA_ZE_LO = 60
+FA_ZE_LO2 = 61
+FA_ZE_HI = 62
+FA_ZE_HI2 = 63
+FA_ENV_ZMIN = 64
+FA_ENV_ZMAX = 65
+N_FA = 66
 
 # a piece of material a subtraction leaves on a ray, touching its removal and shorter than this (quanta, 1 um), is
 # removed with it: a leftover of the envelope's slab discretisation between two passes (the slabs follow the tip's
@@ -446,6 +473,12 @@ def reset_accum(acc: RemovalAccum) -> None:
     acc.fvals[FA_DEPTH_MIN] = np.inf
     acc.fvals[FA_DEPTH_MAX] = -np.inf
     acc.fvals[FA_M_FROM_S:FA_M_FROM_S + 9] = np.eye(3).ravel()
+    acc.fvals[FA_ZE_LO] = np.inf
+    acc.fvals[FA_ZE_LO2] = np.inf
+    acc.fvals[FA_ZE_HI] = -np.inf
+    acc.fvals[FA_ZE_HI2] = -np.inf
+    acc.fvals[FA_ENV_ZMIN] = np.nan
+    acc.fvals[FA_ENV_ZMAX] = np.nan
 
 
 def subtract_spec(axis_S, slab_c, slab_z, slab_dr, box_lo, box_hi, *, event_id: int = SEV_FIRST_CUT, tick: int = 0,

@@ -10,10 +10,11 @@ fixture compliance.
   (length lost) or when a non-rotating tool's block orientation changes (a few ms each).
 * Workpieces: at a new setup (holding's supports_version, the operation, clamped or released) the model is built
   and solved at once (full eigen solve; at the run's first step it waits for holding's first record of the part);
-  every ``every_n_macro`` steps a refresh job starts (Ritz on the latest modes, displacement grids; the latest
-  modes, clamping and residual-stress displacements as they are when the model is unchanged, only the thermal
-  displacement solved) and its result is applied exactly ``REFRESH_LATENCY_MACRO`` (50) steps later (architecture
-  5.1); a job whose inputs did not change since the previous one is skipped. At the end of an operation the
+  every ``refresh_interval_ms`` of run time (500 ms) a refresh job starts (Ritz on the latest modes, displacement
+  grids; the latest modes, clamping and residual-stress displacements as they are when the model is unchanged, only
+  the thermal displacement solved) and its result is applied ``REFRESH_LATENCY_S`` (0.5 s) later, at the first
+  macro step that starts then (architecture 5.1; both in run time, so the schedule is the same at every macro step
+  that divides them); a job whose inputs did not change since the previous one is skipped. At the end of an operation the
   released state (no clamp loads, minimal 3-2-1 support) is computed at once.
 
 Geometry comes through :class:`cnctwin.structure.protocols.WorkGeometry` (removal's FieldGeometry); without it the
@@ -40,11 +41,22 @@ from .abi import StructureInputs
 from .channels import MAX_PARTS, MAX_SLOTS, channels as structure_channels
 from .materials import work_material
 from .protocols import FillSnapshot, stock_geometry
-from .schema import REFRESH_LATENCY_MACRO, settings as read_settings
+from .schema import REFRESH_LATENCY_S, settings as read_settings
 from .state import StructureState, ToolStructState, WorkStructState
 
 DOMAIN = "structure"
 ORIENTATION_TOL = 1e-6
+
+
+def refresh_due(tick: int, macro_ticks: int, interval_s: float, tick_s: float) -> bool:
+    """A workpiece refresh starts in the macro step that starts at ``tick`` (base ticks of run time) when a multiple
+    of the refresh interval lies in (tick - macro_ticks, tick]: the first step that starts at or after it. At 10 ms
+    steps and the 500 ms interval that is every 50th step, as the former every_n_macro 50; at 5, 20 or 50 ms the
+    same run times."""
+    if tick <= 0 or macro_ticks <= 0:
+        return False
+    interval = max(int(round(float(interval_s) / float(tick_s))), 1)
+    return tick // interval > (tick - macro_ticks) // interval
 
 
 def _get(obj, key, default=None):
@@ -434,18 +446,22 @@ class StructureDomain:
             ws.solution = ws.latest = sol
             st.version += 1
             return
-        due = [p for p in ws.pending if p[0] <= macro]
+        # the schedule is in run time (base ticks of the step's start): a job applies at the first step that starts
+        # at or after its start + REFRESH_LATENCY_S, and one starts at the first step that starts at or after each
+        # multiple of the refresh interval (docs/models/structure.md 3.5)
+        tick = int(state.clock.tick)
+        due = [p for p in ws.pending if p[0] <= tick]
         if due:
-            ws.pending = [p for p in ws.pending if p[0] > macro]
+            ws.pending = [p for p in ws.pending if p[0] > tick]
             ws.solution = due[-1][1]
             st.version += 1
-        if macro > 0 and macro % st.settings.every_n_macro == 0:
+        if refresh_due(tick, int(ctx.ipo_ticks) * int(ctx.macro_ipo), st.settings.interval_s, float(ctx.tick_s)):
             inputs = self._inputs(ctx, st, ws, prev)
             if self._input_key(inputs) == (ws.latest.stats.get("key") if ws.latest is not None else None):
                 ws.counters["skipped"] = int(ws.counters.get("skipped", 0)) + 1
                 return
             sol = self._compute(ctx, state, st, ws, inputs, ws.latest, "refresh")
-            ws.pending.append((macro + REFRESH_LATENCY_MACRO, sol))
+            ws.pending.append((tick + int(round(REFRESH_LATENCY_S / float(ctx.tick_s))), sol))
             ws.latest = sol
 
     def _fixture(self, ctx, ws: WorkStructState, prev) -> None:

@@ -17,15 +17,16 @@ from the cache) every kernel; the domain and the tests import the k_* modules th
 | k_polar | polar field cut, radius, polar -> tri-dexel rebuild |
 | k_transfer | exact lattice remap |
 | k_drive | tooth_pass, l1_contact, excess_material (composition for core.hotloop.run_macro) |
+| k_volume | the ledger volume per brick (per dual cell the family most normal to the surface) |
 """
 
 from __future__ import annotations
 
 from . import (k_collide, k_connect, k_core, k_drive, k_envelope, k_gate, k_helix, k_mesh, k_polar, k_query,
-               k_ray, k_sd, k_stock, k_subtract, k_transfer)
+               k_ray, k_sd, k_stock, k_subtract, k_transfer, k_volume)
 
 MODULES = (k_ray, k_stock, k_envelope, k_subtract, k_helix, k_collide, k_sd, k_gate, k_query, k_connect, k_mesh,
-           k_polar, k_transfer, k_drive)
+           k_polar, k_transfer, k_drive, k_volume)
 KERNELS = tuple(k for m in MODULES for k in m.KERNELS)
 INLINED = tuple(getattr(k_envelope, "INLINED", ())) + tuple(getattr(k_gate, "INLINED", ()))
 

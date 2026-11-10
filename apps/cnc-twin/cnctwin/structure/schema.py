@@ -13,15 +13,26 @@ from dataclasses import asdict, dataclass, fields
 
 from ..core.errors import InputError
 
-# fixed by the contract (architecture 5.1): a structure refresh job started at macro n is applied at n + 50
+# fixed by the contract (architecture 5.1): a structure refresh job started at run time t is applied at the first
+# macro step that starts at or after t + REFRESH_LATENCY_S. The contract was 50 macro steps; it is stated in time
+# (2026-11-10) so that the refresh does not move with physics.macro_ipo (docs/convergence.md 9: the thermal
+# expansion at the contact moved by -0.32 / -0.11 / 0.00 um at 10 / 20 / 50 ms macro steps). REFRESH_LATENCY_MACRO
+# is that latency in steps of the reference macro step (10 ms), kept for callers of the former constant.
+REFRESH_LATENCY_S = 0.5
+REFERENCE_MACRO_S = 0.01
 REFRESH_LATENCY_MACRO = 50
 
 # name (SI) -> (file key, kind, default (SI), lo, hi, doc); kinds: count | number | length (file key in mm) |
-# frequency (file key in Hz)
+# frequency (file key in Hz) | time_ms (file key in ms)
 FIELDS: dict[str, tuple] = {
-    "every_n_macro": ("every_n_macro", "count", 50, 1, 10 ** 6,
-                      "workpiece refresh cadence (modes by Rayleigh-Ritz, displacement grids); each job is applied "
-                      f"{REFRESH_LATENCY_MACRO} macro steps after it starts (fixed latency)"),
+    "refresh_interval_s": ("refresh_interval_ms", "time_ms", 0.5, 1.0e-4, 1.0e4,
+                           "workpiece refresh cadence in run time (modes by Rayleigh-Ritz, displacement grids): a job "
+                           "starts at the first macro step that starts at or after each multiple of it, and is "
+                           f"applied {REFRESH_LATENCY_S * 1e3:g} ms after it starts (fixed latency)"),
+    "every_n_macro": ("every_n_macro", "count", 0, 0, 10 ** 6,
+                      "former cadence in macro steps (0: refresh_interval_ms decides). A value above 0 sets the "
+                      "interval to every_n_macro x 10 ms, the reference macro step it was stated for, so the "
+                      "cadence is the same at every physics.macro_ipo"),
     "max_dof": ("max_dof", "count", 50000, 300, 2 * 10 ** 6,
                 "largest number of degrees of freedom of the workpiece voxel model (sets the cell size)"),
     "min_cell_m": ("min_cell_mm", "length", 1.0e-3, 1.0e-4, 0.1, "smallest voxel cell of the workpiece model"),
@@ -68,7 +79,8 @@ FIELDS: dict[str, tuple] = {
 
 @dataclass(frozen=True)
 class StructureSettings:
-    every_n_macro: int = 50
+    refresh_interval_s: float = 0.5
+    every_n_macro: int = 0
     max_dof: int = 50000
     min_cell_m: float = 1.0e-3
     fill_threshold: float = 0.5
@@ -99,6 +111,14 @@ class StructureSettings:
     def to_dict(self) -> dict:
         return asdict(self)
 
+    @property
+    def interval_s(self) -> float:
+        """The workpiece refresh interval in run time (s): every_n_macro x the reference 10 ms step when set (the
+        projects written before the cadence was stated in time), else refresh_interval_ms."""
+        if self.every_n_macro > 0:
+            return self.every_n_macro * REFERENCE_MACRO_S
+        return float(self.refresh_interval_s)
+
 
 def _get(section, key):
     if section is None:
@@ -119,6 +139,8 @@ def settings(section) -> StructureSettings:
             found = _get(section, file_key)
             if found is not None and kind == "length" and file_key.endswith("_mm"):
                 scale = 1e-3          # a raw file value (the SI view names it item.name)
+            if found is not None and kind == "time_ms" and file_key.endswith("_ms"):
+                scale = 1e-3
         found = getattr(found, "value", found)
         if found is None:
             found = default
@@ -155,4 +177,5 @@ def _schema():
 
 PHYSICS_SCHEMA = _schema()
 
-__all__ = ["StructureSettings", "settings", "from_dict", "FIELDS", "PHYSICS_SCHEMA", "REFRESH_LATENCY_MACRO"]
+__all__ = ["StructureSettings", "settings", "from_dict", "FIELDS", "PHYSICS_SCHEMA", "REFRESH_LATENCY_MACRO",
+           "REFRESH_LATENCY_S", "REFERENCE_MACRO_S"]
