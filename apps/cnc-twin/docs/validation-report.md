@@ -11,18 +11,18 @@ Plain summary (verdicts use the independent cases only; 'within budget' counts i
 | chip_form | 3 | 2 | 1 | 0/2 | 5/32 classes match | fail |
 | chip_ratio | 5 | 3 | 2 | 0/3 | 26.4 % | fail |
 | chip_temperature | 1 | 1 | 0 | 0/1 | 20.2 % | fail |
-| coolant_reach | 2 | 2 | 0 | 0/2 | 64.5 % | fail |
-| cutting_force | 25 | 17 | 8 | 0/17 | 31.0 % | fail |
+| coolant_reach | 2 | 2 | 0 | 0/2 | 25.8 % | fail |
+| cutting_force | 25 | 17 | 8 | 0/17 | 28.5 % | fail |
 | cycle_time | 2 | 2 | 0 | 0/2 | 7.0 % | fail |
-| drilling_thrust | 5 | 4 | 1 | 0/4 | 90.3 % | fail |
-| drilling_torque | 5 | 4 | 1 | 0/4 | 24.7 % | fail |
-| roughness | 9 | 9 | 0 | 0/9 | 55.6 % | fail |
+| drilling_thrust | 5 | 4 | 1 | 0/4 | 43.9 % | fail |
+| drilling_torque | 5 | 4 | 1 | 0/4 | 24.4 % | fail |
+| roughness | 9 | 9 | 0 | 0/9 | 46.5 % | fail |
 | shear_angle | 2 | 2 | 0 | 0/2 | 35.1 % | fail |
-| spindle_growth | 4 | 4 | 0 | 0/4 | 92.8 % | fail |
+| spindle_growth | 4 | 4 | 0 | 0/4 | 107.4 % | fail |
 | stability_lobe | 12 | 12 | 0 | 1/12 | 12.0 % | fail |
-| taylor_life | 7 | 5 | 2 | 0/5 | 99.5 % | fail |
-| tool_temperature | 5 | 5 | 0 | 0/5 | 65.3 % | fail |
-| wall_error | 6 | 6 | 0 | 1/6 | 71.1 % | fail |
+| taylor_life | 7 | 5 | 2 | 1/5 | 87.7 % | fail |
+| tool_temperature | 5 | 5 | 0 | 0/5 | 62.9 % | fail |
+| wall_error | 6 | 6 | 0 | 1/6 | 29.3 % | fail |
 
 Detailed statistics:
 
@@ -31,18 +31,18 @@ Detailed statistics:
 | chip_form | 3 | 2 | 1 | 0/2 | - | - | 5/32 | - | 25 % | **fail** |
 | chip_ratio | 5 | 3 | 2 | 0/3 | 26.4 % | 49.1 % | - | 1/5 | 20 % | **fail** |
 | chip_temperature | 1 | 1 | 0 | 0/1 | 20.2 % | 44.4 % | - | - | 20 % | **fail** |
-| coolant_reach | 2 | 2 | 0 | 0/2 | 64.5 % | 105.5 % | 10/18 | - | 15 % | **fail** |
-| cutting_force | 25 | 17 | 8 | 0/17 | 31.0 % | 181.6 % | - | 0/127 | main_force_pct 15 %, milling_peak_force_pct 20 %, thrust_force_pct 30 % | **fail** |
+| coolant_reach | 2 | 2 | 0 | 0/2 | 25.8 % | 52.9 % | 10/18 | - | 15 % | **fail** |
+| cutting_force | 25 | 17 | 8 | 0/17 | 28.5 % | 91.6 % | - | 2/127 | main_force_pct 15 %, milling_peak_force_pct 20 %, thrust_force_pct 30 % | **fail** |
 | cycle_time | 2 | 2 | 0 | 0/2 | 7.0 % | 21.9 % | - | 4/16 | 5 % | **fail** |
-| drilling_thrust | 5 | 4 | 1 | 0/4 | 90.3 % | 118.6 % | - | 0/9 | 20 % | **fail** |
-| drilling_torque | 5 | 4 | 1 | 0/4 | 24.7 % | 82.3 % | - | 1/31 | 15 % | **fail** |
-| roughness | 9 | 9 | 0 | 0/9 | 55.6 % | 188.8 % | - | 0/4 | 30 % | **fail** |
+| drilling_thrust | 5 | 4 | 1 | 0/4 | 43.9 % | 91.7 % | - | 0/9 | 20 % | **fail** |
+| drilling_torque | 5 | 4 | 1 | 0/4 | 24.4 % | 82.1 % | - | 1/31 | 15 % | **fail** |
+| roughness | 9 | 9 | 0 | 0/9 | 46.5 % | 78.1 % | - | 0/4 | 30 % | **fail** |
 | shear_angle | 2 | 2 | 0 | 0/2 | 35.1 % | 48.1 % | - | - | 20 % | **fail** |
-| spindle_growth | 4 | 4 | 0 | 0/4 | 92.8 % | 95.5 % | - | 5/320 | 30 % | **fail** |
+| spindle_growth | 4 | 4 | 0 | 0/4 | 107.4 % | 147.3 % | - | 0/320 | 30 % | **fail** |
 | stability_lobe | 12 | 12 | 0 | 1/12 | 12.0 % | 44.8 % | - | 238/796 | 25 % | **fail** |
-| taylor_life | 7 | 5 | 2 | 0/5 | 99.5 % | 213.6 % | - | 0/94 | 50 % | **fail** |
-| tool_temperature | 5 | 5 | 0 | 0/5 | 65.3 % | 120.6 % | - | 0/108 | 15 % | **fail** |
-| wall_error | 6 | 6 | 0 | 1/6 | 71.1 % | 163.4 % | - | 11/198 | 25 % | **fail** |
+| taylor_life | 7 | 5 | 2 | 1/5 | 87.7 % | 117.3 % | - | 3/94 | 50 % | **fail** |
+| tool_temperature | 5 | 5 | 0 | 0/5 | 62.9 % | 191.4 % | - | 3/108 | 15 % | **fail** |
+| wall_error | 6 | 6 | 0 | 1/6 | 29.3 % | 58.8 % | - | 29/198 | 25 % | **fail** |
 
 * **Pass**: none.
 * **Fail**: chip_form, chip_ratio, chip_temperature, coolant_reach, cutting_force, cycle_time, drilling_thrust, drilling_torque, roughness, shear_angle, spindle_growth, stability_lobe, taylor_life, tool_temperature, wall_error.
@@ -123,9 +123,9 @@ Calibration-dependent cases (excluded from the verdicts):
 * File: `validation/cases/chip_form/chipform-tungaloy-cnmg120408-tm-steel.yaml`; operation longitudinal_turning; material `aisi1045`.
 * Validation class: **calibration-dependent**: tool tungaloy-cnmg120408-tm-t9215-pclnr2525m12e chip breaker window from `tungaloy-2023-gc-insert` (source).
 * Model chain: cnctwin.mechanics.oxley.solve -> cnctwin.mechanics.chipform.chip_form.
-* Settings: breaking_codes = [22, 23, 31, 32, 42, 43, 51, 52, 61, 62, 70], coating = al2o3-cvd, db_insert = tungaloy-cnmg120408-tm-t9215-pclnr2525m12e, edge_radius_um = 35, entering_angle_deg = 95, rake_deg = 6, tool_material = carbide-p30.
+* Settings: breaking_codes = [22, 23, 31, 32, 42, 43, 51, 52, 61, 62, 70], coating = al2o3-cvd, db_insert = tungaloy-cnmg120408-tm-t9215-pclnr2525m12e, edge_radius_um = 35, entering_angle_deg = 95, rake_deg = 0, tool_material = carbide-p30.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = emulsion (not stated); `setup.conditions.cutting_speed_m_min` = 250 (the chart states no speed; middle of the B004 range for TM / T9215 in medium carbon steels).
-* Inputs the harness assumed: ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); entering angle = 95 deg (not stated: the C-insert holders named (PCLNR, PCMNN) are 95 deg holders, est); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml).
+* Inputs the harness assumed: ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); rake and inclination = +0 / -6 deg working (seat -6 deg + chip breaker +6 deg) (as the twin builds the insert in its holder (tooling.turning: the holder's stated seat, else the negative-holder defaults; the element's normal rake is seat + breaker), db/tools); entering angle = 95 deg (not stated: the C-insert holders named (PCLNR, PCMNN) are 95 deg holders, est); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml).
 * Database values used: tool tungaloy-cnmg120408-tm-t9215-pclnr2525m12e chip breaker window (`tungaloy-2023-gc-insert`); aisi1045 flow stress (Johnson-Cook) (`burns-2012-1045-cutting-temperature`); aisi1045 physical.density_kg_m3 (`xiu-2019-1045-grinding-fe`); aisi1045 physical.specific_heat_J_kgK (`xiu-2019-1045-grinding-fe`); aisi1045 physical.conductivity_W_mK (`xiu-2019-1045-grinding-fe`); aisi1045 cutting.min_chip_thickness_ratio (`est`); aisi1045 friction mu_sliding (carbide, uncoated) (`est`).
 * Material: database entry aisi1045; the case says: the chart is for ISO group P without a named steel; B004 lists 1045 and 4140 as 'medium carbon steels, alloy steels' for the TM conditions
 * Insert from the database: tungaloy-cnmg120408-tm-t9215-pclnr2525m12e (chip breaker TM, window and land/rake of the maker's catalogue).
@@ -470,126 +470,128 @@ Curve `chip_control_lower_ap` (feed [mm/rev] -> mm): RMS abs. error 75.4 %, max 
 * Budget: 15 % (relative error of the coolant-dependent quantity (tool-work interface temperature rise above ambient, cutting force) under the case's coolant; chip grades are classifications (class match)).
 * Verdict: **fail** - only 0 of 2 cases within budget (0% < 80%); coolant-struzikiewicz2023-ti64-jet-direction misses by inf tolerances (> 2).
 * Harness: `cnctwin.validation.harnesses.coolant.coolant_reach`.
-* The coolant's effect on the measured quantity through cnctwin.coolant (reach of the jet at the cut, lubrication friction factor) applied to the mechanics: the contact temperature of a milling engagement (tool-work thermocouple), or the chip form and the cutting force of a turning cut.
+* The case's jet traced through a minimal scene of its own geometry to the cut (cnctwin.coolant: reach and arrival), then the coolant's three actions on the measured quantity: lubrication (friction factor), convective cooling of the tool faces at the engagement (Martin, normal speed component) in thermal's tool ladder over the pass, and the hydraulic wedge of a jet running against the chip flow (shorter contact: friction force and natural chip curl).
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 2 | 0/2 | 63 (0) | 64.5 % / 64.5 % / - | 105.5 % | 10/18 | - | inf (coolant-struzikiewicz2023-ti64-jet-direction) |
+| independent | 2 | 0/2 | 63 (0) | 25.8 % / 25.8 % / - | 52.9 % | 10/18 | - | inf (coolant-struzikiewicz2023-ti64-jet-direction) |
 
-**Failures and likely causes.** 0 of 2 independent cases within budget. Values within tolerance per case: coolant-struzikiewicz2023-ti64-jet-direction 10/36; coolant-sultana2023-ti64-endmill-hpc-vs-dry 5/27. In these set-ups the coolant model reaches the mechanics only through the lubrication friction factor, so measured effects of jet direction, convective cooling during the engagement and jet-assisted chip breaking are not reproduced.
+**Failures and likely causes.** 0 of 2 independent cases within budget. Values within tolerance per case: coolant-struzikiewicz2023-ti64-jet-direction 10/36; coolant-sultana2023-ti64-endmill-hpc-vs-dry 17/27. The coolant now acts through the reach traced in each case's scene, the lubrication friction factor, the convective cooling of the tool faces at the engagement and the hydraulic wedge of a jet that runs under the chip; the dry levels of the mechanics set most of the remaining error.
 
 ### coolant-struzikiewicz2023-ti64-jet-direction
 
 * Source: `struzikiewicz-2023-hpc-jet-direction`, Sect. 2 (setup), Fig. 1b (nozzle geometry: 0.7 mm bore, 20 mm distance, alpha/beta definition), Table 1 (material), Tables 3 and 5 (plan, Fc and Cch per test), Table 8 (chip-form grade) (measured).
 * File: `validation/cases/coolant_reach/coolant-struzikiewicz2023-ti64-jet-direction.yaml`; operation longitudinal_turning; material `ti6al4v`.
 * Validation class: **independent**.
-* Model chain: cnctwin.coolant.lubrication.friction -> cnctwin.mechanics.chipform.chip_form -> cnctwin.mechanics.coefficients (cutting force).
-* Settings: edge_radius_um = 35, fluid = emulsion-8pct, friction_factor = 0.8268, h_min_um = 12.95, rake_deg = -6.
+* Model chain: cnctwin.coolant.occlusion (case scene: insert, holder, bar) -> cnctwin.coolant.lubrication.friction -> cnctwin.coolant.engagement (hydraulic wedge) -> cnctwin.mechanics.chipform.chip_form -> cnctwin.mechanics.coefficients (cutting force).
+* Settings: edge_radius_um = 35, fluid = emulsion-8pct, h_min_um = 12.95, jet_diameter_mm = 0.605, jet_speed_m_s = 156.5, rake_deg = 9, zone_radius_mm = 1.5.
 * Inputs the case marks as assumed: `setup.coolant.flow_l_min` = 2.7 (not stated; orifice estimate Q = Cd A sqrt(2 p / rho) with Cd 0.7, A of a 0.7 mm bore, p 150 bar, rho 1000 kg/m3).
-* Inputs the harness assumed: ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool material = carbide-submicron-10co (Sandvik 1115: PVD-coated fine-grained S-grade substrate, db/tool_materials); coating = none (case coating 'PVD-coated grade (Sandvik 1115)' has no database entry: modelled uncoated, db/coatings); chip breaker geometry = none (natural curl) (the SGF breaker's land and groove are not in the database, db/tools); rake and inclination = -6 / -6 deg (not stated: a negative ISO holder for a negative insert, est); entering angle = 95 deg (not stated: the C-insert holders named (PCLNR, PCMNN) are 95 deg holders, est); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml); coolant emulsion-8pct = friction factor 0.83 (the case's emulsion is not in the database: the database emulsion, full reach of the jet at the rake face, db/coolants).
+* Inputs the harness assumed: ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool material = carbide-submicron-10co (Sandvik 1115: PVD-coated fine-grained S-grade substrate, db/tool_materials); coating = none (case coating 'PVD-coated grade (Sandvik 1115)' has no database entry: modelled uncoated, db/coatings); chip breaker geometry = none (natural curl) (the SGF breaker's land and groove are not in the database, db/tools); entering angle = 95 deg (not stated: the C-insert holders named (PCLNR, PCMNN) are 95 deg holders, est); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml); rake = +9 deg working (the case's 15 deg rake land of the insert profile on a negative holder tilted -6 deg (the holder's tilt not stated: negative ISO holder), case); inclination = -6 deg (not stated: a negative ISO holder for a negative insert, est); jet direction = alpha = elevation above the rake face; beta = azimuth in the rake plane from the insert's corner bisector, positive toward the major cutting edge (the case defines beta from a reference line drawn only in its Fig. 1b; the bisector is the usual reference and the sign the only one that keeps the 20 mm nozzle outside the bar at alpha 30 deg, est); chip flow direction = normal to the chord of the engaged edge (Colwell 1954) (nose radius, entering angle, ap and feed as stated, case); occlusion scene = insert 12.7 mm IC x 4.76 mm (box below the rake face), holder shank 20 x 20 mm, bar D 50 mm stepped by ap (the case's insert, holder designation and stock; insert size from thermal's defaults (CNGG 1204: 12.7 x 4.76 mm), case, db/models/thermal-tool.yaml).
 * Database values used: tool material carbide-submicron-10co thermal properties (`hyperion-insert-blanks-grades`); ti6al4v flow stress (Johnson-Cook) (`ducobu-2017-jc-ti6al4v`); ti6al4v physical.density_kg_m3 (`aubert-duval-2018-ta6v`); ti6al4v physical.specific_heat_J_kgK (`upmet-2026-ti64-eli`); ti6al4v physical.conductivity_W_mK (`upmet-2026-ti64-eli`); ti6al4v cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); ti6al4v friction mu_sliding (carbide, uncoated) (`klippel-2024-ck45-orthogonal`).
 * Material: database entry ti6al4v; the case says: Grade 5 ELI (extra-low interstitials) bar D 50 mm: Rm 902 MPa, Rp0.2 815 MPa, A 13 %, Z 49 %, 29 HRC (Table 1)
-* Coolant 'Blaser Blasocut 2000 universal, 10 % emulsion' as emulsion-8pct; reach 1 for every jet direction (one free jet 20 mm from the corner aimed at the rake face).
-* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 79.3 %, max 108.7 %; 10/18 classes match; case **outside budget**; largest miss inf tolerances.
-* Likely cause: scalar values: mean signed error +81 %; classes: 10 of 18 match. The model's coolant effect is the friction factor; the jet's cooling and chip-breaking actions and its direction (beyond reach) do not change the predicted quantity.
+* Coolant 'Blaser Blasocut 2000 universal, 10 % emulsion' as emulsion-8pct; jet 157 m/s, 0.61 mm (Bernoulli at 150 bar, the stated flow by continuity), 20 mm from the corner, traced through the case's insert, holder and bar.
+* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 40.4 %, max 54.9 %; 10/18 classes match; case **outside budget**; largest miss inf tolerances.
+* Likely cause: scalar values: mean signed error +41 %; classes: 10 of 18 match. The jet reaches the cut in the case's scene; its lubrication, the cooling of the tool body and the hydraulic wedge are in the prediction. The remaining miss sits in the dry level of the mechanics (contact temperature, cutting force) and, for the chip grades, in the jet's push on the chip's back and the chip-breaker geometry, which are not modelled. The flank heat no longer offsets the jet: the coefficient pipeline's flank share is computed for the heat it is applied to (the friction on the wear land and the edge arc and the edge's plastic work) over the contact it is deposited on, and a cooled tool side of that contact runs cooler, not hotter (docs/models/mechanics.md 6); the jet moves the contact means little because the flank contact of a sharp, unworn edge is short against the rake contact.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Cch_f0.08_alpha30 | 0 deg | + | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha30 | 30 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha30 | 60 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha60 | 0 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha60 | 30 deg | + | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha60 | 60 deg | 0 | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha90 | 0 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha90 | 30 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.08_alpha90 | 60 deg | 0 | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.91 |
-| Cch_f0.13_alpha30 | 0 deg | + | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha30 | 30 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha30 | 60 deg | + | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha60 | 0 deg | 0 | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha60 | 30 deg | + | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha60 | 60 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha90 | 0 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha90 | 30 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00 |
-| Cch_f0.13_alpha90 | 60 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00 |
-| Fc_mean_f0.08 | 1 index | 64.7 | 134.2 | N | +107.4 % | 9.71 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 2 index | 64.3 | 134.2 | N | +108.7 % | 9.64 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 3 index | 67.3 | 134.2 | N | +99.4 % | 10.1 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 4 index | 66 | 134.2 | N | +103.3 % | 9.9 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 5 index | 66.7 | 134.2 | N | +101.2 % | 10 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 6 index | 71.3 | 134.2 | N | +88.2 % | 10.7 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 7 index | 73 | 134.2 | N | +83.8 % | 10.9 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 8 index | 82.3 | 134.2 | N | +63.1 % | 12.3 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.08 | 9 index | 72.3 | 134.2 | N | +85.6 % | 10.8 | **no** | f 0.08: friction factor 0.83 |
-| Fc_mean_f0.13 | 10 index | 101.7 | 188.7 | N | +85.6 % | 15.3 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 11 index | 111.3 | 188.7 | N | +69.6 % | 16.7 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 12 index | 109.7 | 188.7 | N | +72.0 % | 16.5 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 13 index | 108 | 188.7 | N | +74.7 % | 16.2 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 14 index | 114.7 | 188.7 | N | +64.5 % | 17.2 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 15 index | 116.7 | 188.7 | N | +61.7 % | 17.5 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 16 index | 108 | 188.7 | N | +74.7 % | 16.2 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 17 index | 123.3 | 188.7 | N | +53.1 % | 18.5 | **no** | f 0.13: friction factor 0.83 |
-| Fc_mean_f0.13 | 18 index | 115.7 | 188.7 | N | +63.1 % | 17.4 | **no** | f 0.13: friction factor 0.83 |
+| Cch_f0.08_alpha30 | 0 deg | + | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.47; alpha 30 beta 0: reach 0.91 (blocked: insert 8%, workpiece 0 2%), friction factor 0.88, wedge 5.47 N on N 92 N, contact x 0.893 |
+| Cch_f0.08_alpha30 | 30 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.47; alpha 30 beta 30: reach 0.95 (blocked: insert 5%), friction factor 0.88, wedge 4.78 N on N 91 N, contact x 0.905 |
+| Cch_f0.08_alpha30 | 60 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.49; alpha 30 beta 60: reach 0.94 (blocked: insert 6%), friction factor 0.88, wedge 2.49 N on N 92 N, contact x 0.948 |
+| Cch_f0.08_alpha60 | 0 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.51; alpha 60 beta 0: reach 0.81 (blocked: workpiece 0 19%), friction factor 0.90, wedge 2.83 N on N 92 N, contact x 0.942 |
+| Cch_f0.08_alpha60 | 30 deg | + | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.49; alpha 60 beta 30: reach 0.92 (blocked: workpiece 0 8%), friction factor 0.88, wedge 2.67 N on N 92 N, contact x 0.945 |
+| Cch_f0.08_alpha60 | 60 deg | 0 | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.51; alpha 60 beta 60: reach 0.91 (blocked: workpiece 0 9%), friction factor 0.88, wedge 1.39 N on N 92 N, contact x 0.971 |
+| Cch_f0.08_alpha90 | 0 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.65; alpha 90 beta 0: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.94, wedge 0.00 N on N 95 N, contact x 1.000 |
+| Cch_f0.08_alpha90 | 30 deg | - | - |  | match | - | yes | f 0.08: conical helical, short, Cch 0.65; alpha 90 beta 30: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.94, wedge 0.00 N on N 95 N, contact x 1.000 |
+| Cch_f0.08_alpha90 | 60 deg | 0 | - |  | mismatch | - | **no** | f 0.08: conical helical, short, Cch 0.65; alpha 90 beta 60: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.94, wedge 0.00 N on N 95 N, contact x 1.000 |
+| Cch_f0.13_alpha30 | 0 deg | + | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 0.92; alpha 30 beta 0: reach 0.91 (blocked: insert 8%, workpiece 0 2%), friction factor 0.91, wedge 5.48 N on N 133 N, contact x 0.924 |
+| Cch_f0.13_alpha30 | 30 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 0.91; alpha 30 beta 30: reach 0.95 (blocked: insert 5%), friction factor 0.91, wedge 4.88 N on N 132 N, contact x 0.931 |
+| Cch_f0.13_alpha30 | 60 deg | + | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 0.95; alpha 30 beta 60: reach 0.94 (blocked: insert 6%), friction factor 0.91, wedge 2.64 N on N 132 N, contact x 0.962 |
+| Cch_f0.13_alpha60 | 0 deg | 0 | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 0.99; alpha 60 beta 0: reach 0.81 (blocked: workpiece 0 19%), friction factor 0.92, wedge 2.84 N on N 133 N, contact x 0.959 |
+| Cch_f0.13_alpha60 | 30 deg | + | - |  | mismatch | - | **no** | f 0.13: conical helical, short, Cch 0.95; alpha 60 beta 30: reach 0.92 (blocked: workpiece 0 8%), friction factor 0.91, wedge 2.72 N on N 132 N, contact x 0.960 |
+| Cch_f0.13_alpha60 | 60 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 0.97; alpha 60 beta 60: reach 0.91 (blocked: workpiece 0 9%), friction factor 0.91, wedge 1.48 N on N 133 N, contact x 0.978 |
+| Cch_f0.13_alpha90 | 0 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00; alpha 90 beta 0: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.95, wedge 0.00 N on N 134 N, contact x 1.000 |
+| Cch_f0.13_alpha90 | 30 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00; alpha 90 beta 30: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.95, wedge 0.00 N on N 134 N, contact x 1.000 |
+| Cch_f0.13_alpha90 | 60 deg | - | - |  | match | - | yes | f 0.13: conical helical, short, Cch 1.00; alpha 90 beta 60: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.95, wedge 0.00 N on N 134 N, contact x 1.000 |
+| Fc_mean_f0.08 | 1 index | 64.7 | 99.14 | N | +53.2 % | 9.71 | **no** | f 0.08: alpha 30 beta 0: reach 0.91 (blocked: insert 8%, workpiece 0 2%), friction factor 0.88, wedge 5.47 N on N 92 N, contact x 0.893 |
+| Fc_mean_f0.08 | 2 index | 64.3 | 99.41 | N | +54.6 % | 9.64 | **no** | f 0.08: alpha 30 beta 30: reach 0.95 (blocked: insert 5%), friction factor 0.88, wedge 4.78 N on N 91 N, contact x 0.905 |
+| Fc_mean_f0.08 | 3 index | 67.3 | 101.7 | N | +51.1 % | 10.1 | **no** | f 0.08: alpha 30 beta 60: reach 0.94 (blocked: insert 6%), friction factor 0.88, wedge 2.49 N on N 92 N, contact x 0.948 |
+| Fc_mean_f0.08 | 4 index | 66 | 102.2 | N | +54.9 % | 9.9 | **no** | f 0.08: alpha 60 beta 0: reach 0.81 (blocked: workpiece 0 19%), friction factor 0.90, wedge 2.83 N on N 92 N, contact x 0.942 |
+| Fc_mean_f0.08 | 5 index | 66.7 | 101.6 | N | +52.3 % | 10 | **no** | f 0.08: alpha 60 beta 30: reach 0.92 (blocked: workpiece 0 8%), friction factor 0.88, wedge 2.67 N on N 92 N, contact x 0.945 |
+| Fc_mean_f0.08 | 6 index | 71.3 | 103.1 | N | +44.7 % | 10.7 | **no** | f 0.08: alpha 60 beta 60: reach 0.91 (blocked: workpiece 0 9%), friction factor 0.88, wedge 1.39 N on N 92 N, contact x 0.971 |
+| Fc_mean_f0.08 | 7 index | 73 | 109.6 | N | +50.1 % | 10.9 | **no** | f 0.08: alpha 90 beta 0: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.94, wedge 0.00 N on N 95 N, contact x 1.000 |
+| Fc_mean_f0.08 | 8 index | 82.3 | 109.6 | N | +33.1 % | 12.3 | **no** | f 0.08: alpha 90 beta 30: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.94, wedge 0.00 N on N 95 N, contact x 1.000 |
+| Fc_mean_f0.08 | 9 index | 72.3 | 109.6 | N | +51.5 % | 10.8 | **no** | f 0.08: alpha 90 beta 60: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.94, wedge 0.00 N on N 95 N, contact x 1.000 |
+| Fc_mean_f0.13 | 10 index | 101.7 | 144.1 | N | +41.7 % | 15.3 | **no** | f 0.13: alpha 30 beta 0: reach 0.91 (blocked: insert 8%, workpiece 0 2%), friction factor 0.91, wedge 5.48 N on N 133 N, contact x 0.924 |
+| Fc_mean_f0.13 | 11 index | 111.3 | 144.2 | N | +29.6 % | 16.7 | **no** | f 0.13: alpha 30 beta 30: reach 0.95 (blocked: insert 5%), friction factor 0.91, wedge 4.88 N on N 132 N, contact x 0.931 |
+| Fc_mean_f0.13 | 12 index | 109.7 | 145.8 | N | +32.9 % | 16.5 | **no** | f 0.13: alpha 30 beta 60: reach 0.94 (blocked: insert 6%), friction factor 0.91, wedge 2.64 N on N 132 N, contact x 0.962 |
+| Fc_mean_f0.13 | 13 index | 108 | 146.4 | N | +35.5 % | 16.2 | **no** | f 0.13: alpha 60 beta 0: reach 0.81 (blocked: workpiece 0 19%), friction factor 0.92, wedge 2.84 N on N 133 N, contact x 0.959 |
+| Fc_mean_f0.13 | 14 index | 114.7 | 145.8 | N | +27.2 % | 17.2 | **no** | f 0.13: alpha 60 beta 30: reach 0.92 (blocked: workpiece 0 8%), friction factor 0.91, wedge 2.72 N on N 132 N, contact x 0.960 |
+| Fc_mean_f0.13 | 15 index | 116.7 | 146.8 | N | +25.8 % | 17.5 | **no** | f 0.13: alpha 60 beta 60: reach 0.91 (blocked: workpiece 0 9%), friction factor 0.91, wedge 1.48 N on N 133 N, contact x 0.978 |
+| Fc_mean_f0.13 | 16 index | 108 | 150.3 | N | +39.2 % | 16.2 | **no** | f 0.13: alpha 90 beta 0: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.95, wedge 0.00 N on N 134 N, contact x 1.000 |
+| Fc_mean_f0.13 | 17 index | 123.3 | 150.3 | N | +21.9 % | 18.5 | **no** | f 0.13: alpha 90 beta 30: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.95, wedge 0.00 N on N 134 N, contact x 1.000 |
+| Fc_mean_f0.13 | 18 index | 115.7 | 150.3 | N | +29.9 % | 17.4 | **no** | f 0.13: alpha 90 beta 60: reach 0.48 (blocked: workpiece 0 52%), friction factor 0.95, wedge 0.00 N on N 134 N, contact x 1.000 |
 
 ### coolant-sultana2023-ti64-endmill-hpc-vs-dry
 
 * Source: `sultana-2023-ti64-hpc-milling`, Sect. 2 and Table 4 (setup, nozzle data), Sect. 2 text (thermocouple calibration), Table 5 (L27 full factorial: T per run) (measured).
 * File: `validation/cases/coolant_reach/coolant-sultana2023-ti64-endmill-hpc-vs-dry.yaml`; operation peripheral_milling; material `ti6al4v`.
 * Validation class: **independent**.
-* Model chain: cnctwin.coolant.lubrication.friction -> cnctwin.mechanics.coefficients (contact mean temperature).
-* Settings: coating = none, edge_radius_um = 20, engagement_deg = 90, fluid = straight-oil, helix_deg = 30, tool_material = hss-m42.
+* Model chain: cnctwin.coolant.occlusion (case scene: rotating cutter, block) -> cnctwin.coolant.engagement.face_h (jet cooling) -> cnctwin.coolant.lubrication.friction -> cnctwin.thermal.toolmodel.ToolThermal (tool body over the pass) -> cnctwin.mechanics.coefficients (contact mean temperature).
+* Settings: coating = none, cut_length_mm = 100, edge_radius_um = 3, engagement_deg = 90, fluid = straight-oil, helix_deg = 30, hpc_jet_h_W_m2K = 2.451e+04, rhpc_jet_h_W_m2K = 1.777e+04, tool_material = hss-m42.
 * Inputs the case marks as assumed: `setup.conditions.spindle_rpm` = [424, 637, 849] (derived n = 1000 vc / (pi x 12 mm); the CFD model used 850 rpm for 32 m/min).
-* Inputs the harness assumed: tool material = hss-m42 (powder-metallurgical cobalt HSS: the HSS-Co (M42) entry, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool body temperature = ambient (the reading is the engagement's contact temperature; the cut's duration is not stated, est); chip thickness = mean over the engagement, fz (1 - cos phi_e) / phi_e (a thermocouple average over the cut, est); coolant fluid straight-oil = database entry (the case's fluid is not in the database: the closest database fluid, full reach of the jet, db/coolants).
+* Inputs the harness assumed: tool material = hss-m42 (powder-metallurgical cobalt HSS: the HSS-Co (M42) entry, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); chip thickness = mean over the engagement, fz (1 - cos phi_e) / phi_e (a thermocouple average over the cut, est); cut length = 100 mm (not stated: one pass along the 100 mm block, est); end-mill stickout = 40 mm (not stated: the 27 mm flutes and 13 mm of shank out of the holder; holder from thermal's defaults, est); coolant fluid straight-oil = database entry (the case's fluid is not in the database: the closest database fluid, db/coolants); HPC jet direction = normal to the tool axis at mid-depth, 45 deg to the feed, from the cut's open side (the case shows the jet only in a schematic (Fig. 3), est); rotary applicator = 4 jets turning with the tool, each onto a rake face at normal incidence (the case: nozzles at 90 deg spacing aimed at the rake faces, case).
 * Database values used: tool material hss-m42 thermal properties (`bohler-2026-s500`); ti6al4v flow stress (Johnson-Cook) (`ducobu-2017-jc-ti6al4v`); ti6al4v physical.density_kg_m3 (`aubert-duval-2018-ta6v`); ti6al4v physical.specific_heat_J_kgK (`upmet-2026-ti64-eli`); ti6al4v physical.conductivity_W_mK (`upmet-2026-ti64-eli`); ti6al4v cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); ti6al4v friction mu_sliding (hss, uncoated) (`est`).
 * Material: database entry ti6al4v; the case says: Ti-6Al-4V grade 5, bimodal alpha+beta, 37 HRC; convex-shaped block 100 x 50 x 25 mm
-* The rotary applicator (rhpc) and the single jet (hpc) differ in the model only through reach, which is 1 for both: they get the same prediction.
-* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 36.7 %, max 145.3 %; case **outside budget**; largest miss 9.68 tolerances.
-* Likely cause: scalar values: mean signed error +50 %. The model's coolant effect is the friction factor; the jet's cooling and chip-breaking actions and its direction (beyond reach) do not change the predicted quantity.
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
+* hpc: 1 jet(s) of 121 m/s, 0.59 mm (Bernoulli at 80 bar, the stated flow by continuity), Martin h 24511 W/m2K over 44% of the flutes, reach 0.86.
+* rhpc: 4 jet(s) of 121 m/s, 0.30 mm (Bernoulli at 80 bar, the stated flow by continuity), Martin h 17771 W/m2K over 44% of the flutes, reach 1.00.
+* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 12.5 %, max 67.0 %; case **outside budget**; largest miss 4.47 tolerances.
+* Likely cause: scalar values: mean signed error +13 %. The jet reaches the cut in the case's scene; its lubrication, the cooling of the tool body and the hydraulic wedge are in the prediction. The remaining miss sits in the dry level of the mechanics (contact temperature, cutting force) and, for the chip grades, in the jet's push on the chip's back and the chip-breaker geometry, which are not modelled. The flank heat no longer offsets the jet: the coefficient pipeline's flank share is computed for the heat it is applied to (the friction on the wear land and the edge arc and the edge's plastic work) over the contact it is deposited on, and a cooled tool side of that contact runs cooler, not hotter (docs/models/mechanics.md 6); the jet moves the contact means little because the flank contact of a sharp, unworn edge is short against the rake contact.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_dry_vc16 | 0.08 mm | 350.2 | 574.6 | degC | +67.9 % | 49.5 | **no** | dry: friction factor 1.00, h_mean 50.9 um, contact 35.3 ms; rake 491 degC, flank 1151 degC |
-| T_dry_vc16 | 0.12 mm | 480 | 646.5 | degC | +36.2 % | 69 | **no** | dry: friction factor 1.00, h_mean 76.4 um, contact 35.3 ms; rake 595 degC, flank 1205 degC |
-| T_dry_vc16 | 0.16 mm | 615.7 | 703.7 | degC | +14.8 % | 89.4 | yes | dry: friction factor 1.00, h_mean 101.9 um, contact 35.3 ms; rake 668 degC, flank 1239 degC |
-| T_dry_vc24 | 0.08 mm | 384.2 | 687.4 | degC | +83.2 % | 54.6 | **no** | dry: friction factor 1.00, h_mean 50.9 um, contact 23.6 ms; rake 587 degC, flank 1376 degC |
-| T_dry_vc24 | 0.12 mm | 539 | 756 | degC | +41.8 % | 77.8 | **no** | dry: friction factor 1.00, h_mean 76.4 um, contact 23.6 ms; rake 694 degC, flank 1428 degC |
-| T_dry_vc24 | 0.16 mm | 646.7 | 811.5 | degC | +26.3 % | 94 | **no** | dry: friction factor 1.00, h_mean 101.9 um, contact 23.6 ms; rake 768 degC, flank 1458 degC |
-| T_dry_vc32 | 0.08 mm | 482.9 | 771 | degC | +62.2 % | 69.4 | **no** | dry: friction factor 1.00, h_mean 50.9 um, contact 17.7 ms; rake 657 degC, flank 1551 degC |
-| T_dry_vc32 | 0.12 mm | 617 | 835.8 | degC | +36.7 % | 89.5 | **no** | dry: friction factor 1.00, h_mean 76.4 um, contact 17.7 ms; rake 765 degC, flank 1599 degC |
-| T_dry_vc32 | 0.16 mm | 686.7 | 888.9 | degC | +30.3 % | 100 | **no** | dry: friction factor 1.00, h_mean 101.9 um, contact 17.7 ms; rake 839 degC, flank 1627 degC |
-| T_hpc_vc16 | 0.08 mm | 307.7 | 591.8 | degC | +98.8 % | 43.2 | **no** | hpc: friction factor 0.20, h_mean 50.9 um, contact 35.3 ms; rake 330 degC, flank 1259 degC |
-| T_hpc_vc16 | 0.12 mm | 413 | 531.4 | degC | +30.1 % | 58.9 | **no** | hpc: friction factor 0.20, h_mean 76.4 um, contact 35.3 ms; rake 352 degC, flank 1259 degC |
-| T_hpc_vc16 | 0.16 mm | 482.7 | 502.6 | degC | +4.3 % | 69.4 | yes | hpc: friction factor 0.20, h_mean 101.9 um, contact 35.3 ms; rake 366 degC, flank 1259 degC |
-| T_hpc_vc24 | 0.08 mm | 332.3 | 721.4 | degC | +124.6 % | 46.8 | **no** | hpc: friction factor 0.20, h_mean 50.9 um, contact 23.6 ms; rake 352 degC, flank 1663 degC |
-| T_hpc_vc24 | 0.12 mm | 471 | 643.9 | degC | +38.3 % | 67.6 | **no** | hpc: friction factor 0.20, h_mean 76.4 um, contact 23.6 ms; rake 373 degC, flank 1737 degC |
-| T_hpc_vc24 | 0.16 mm | 531.3 | 607 | degC | +14.8 % | 76.7 | yes | hpc: friction factor 0.20, h_mean 101.9 um, contact 23.6 ms; rake 394 degC, flank 1785 degC |
-| T_hpc_vc32 | 0.08 mm | 411.7 | 696.1 | degC | +72.6 % | 58.8 | **no** | hpc: friction factor 0.29, h_mean 50.9 um, contact 17.7 ms; rake 372 degC, flank 1581 degC |
-| T_hpc_vc32 | 0.12 mm | 518 | 657.6 | degC | +28.0 % | 74.7 | **no** | hpc: friction factor 0.29, h_mean 76.4 um, contact 17.7 ms; rake 431 degC, flank 1636 degC |
-| T_hpc_vc32 | 0.16 mm | 609 | 644.7 | degC | +6.1 % | 88.3 | yes | hpc: friction factor 0.29, h_mean 101.9 um, contact 17.7 ms; rake 472 degC, flank 1667 degC |
-| T_rhpc_vc16 | 0.08 mm | 296.3 | 591.8 | degC | +106.9 % | 41.4 | **no** | rhpc: friction factor 0.20, h_mean 50.9 um, contact 35.3 ms; rake 330 degC, flank 1259 degC |
-| T_rhpc_vc16 | 0.12 mm | 356 | 531.4 | degC | +52.2 % | 50.4 | **no** | rhpc: friction factor 0.20, h_mean 76.4 um, contact 35.3 ms; rake 352 degC, flank 1259 degC |
-| T_rhpc_vc16 | 0.16 mm | 472.7 | 502.6 | degC | +6.6 % | 67.9 | yes | rhpc: friction factor 0.20, h_mean 101.9 um, contact 35.3 ms; rake 366 degC, flank 1259 degC |
-| T_rhpc_vc24 | 0.08 mm | 306 | 721.4 | degC | +145.3 % | 42.9 | **no** | rhpc: friction factor 0.20, h_mean 50.9 um, contact 23.6 ms; rake 352 degC, flank 1663 degC |
-| T_rhpc_vc24 | 0.12 mm | 392 | 643.9 | degC | +67.7 % | 55.8 | **no** | rhpc: friction factor 0.20, h_mean 76.4 um, contact 23.6 ms; rake 373 degC, flank 1737 degC |
-| T_rhpc_vc24 | 0.16 mm | 504 | 607 | degC | +21.3 % | 72.6 | **no** | rhpc: friction factor 0.20, h_mean 101.9 um, contact 23.6 ms; rake 394 degC, flank 1785 degC |
-| T_rhpc_vc32 | 0.08 mm | 380 | 696.1 | degC | +87.8 % | 54 | **no** | rhpc: friction factor 0.29, h_mean 50.9 um, contact 17.7 ms; rake 372 degC, flank 1581 degC |
-| T_rhpc_vc32 | 0.12 mm | 488.2 | 657.6 | degC | +36.2 % | 70.2 | **no** | rhpc: friction factor 0.29, h_mean 76.4 um, contact 17.7 ms; rake 431 degC, flank 1636 degC |
-| T_rhpc_vc32 | 0.16 mm | 559 | 644.7 | degC | +15.9 % | 80.9 | **no** | rhpc: friction factor 0.29, h_mean 101.9 um, contact 17.7 ms; rake 472 degC, flank 1667 degC |
+| T_dry_vc16 | 0.08 mm | 350.2 | 536.3 | degC | +56.3 % | 49.5 | **no** | dry: friction factor 1.00, h_mean 50.9 um, contact 35.3 ms; dry: air only; tool body under the contact 113 degC at the end of the pass; rake 546 degC, flank 415 degC |
+| T_dry_vc16 | 0.12 mm | 480 | 625.6 | degC | +31.7 % | 69 | **no** | dry: friction factor 1.00, h_mean 76.4 um, contact 35.3 ms; dry: air only; tool body under the contact 110 degC at the end of the pass; rake 634 degC, flank 429 degC |
+| T_dry_vc16 | 0.16 mm | 615.7 | 690.4 | degC | +12.5 % | 89.4 | yes | dry: friction factor 1.00, h_mean 101.9 um, contact 35.3 ms; dry: air only; tool body under the contact 107 degC at the end of the pass; rake 697 degC, flank 439 degC |
+| T_dry_vc24 | 0.08 mm | 384.2 | 628.4 | degC | +67.0 % | 54.6 | **no** | dry: friction factor 1.00, h_mean 50.9 um, contact 23.6 ms; dry: air only; tool body under the contact 112 degC at the end of the pass; rake 637 degC, flank 479 degC |
+| T_dry_vc24 | 0.12 mm | 539 | 720.8 | degC | +35.0 % | 77.8 | **no** | dry: friction factor 1.00, h_mean 76.4 um, contact 23.6 ms; dry: air only; tool body under the contact 107 degC at the end of the pass; rake 728 degC, flank 493 degC |
+| T_dry_vc24 | 0.16 mm | 646.7 | 786.9 | degC | +22.4 % | 94 | **no** | dry: friction factor 1.00, h_mean 101.9 um, contact 23.6 ms; dry: air only; tool body under the contact 103 degC at the end of the pass; rake 793 degC, flank 501 degC |
+| T_dry_vc32 | 0.08 mm | 482.9 | 695.7 | degC | +46.0 % | 69.4 | **no** | dry: friction factor 1.00, h_mean 50.9 um, contact 17.7 ms; dry: air only; tool body under the contact 110 degC at the end of the pass; rake 703 degC, flank 533 degC |
+| T_dry_vc32 | 0.12 mm | 617 | 789.4 | degC | +28.9 % | 89.5 | **no** | dry: friction factor 1.00, h_mean 76.4 um, contact 17.7 ms; dry: air only; tool body under the contact 104 degC at the end of the pass; rake 795 degC, flank 545 degC |
+| T_dry_vc32 | 0.16 mm | 686.7 | 852.3 | degC | +24.8 % | 100 | **no** | dry: friction factor 1.00, h_mean 101.9 um, contact 17.7 ms; dry: air only; tool body under the contact 98 degC at the end of the pass; rake 857 degC, flank 549 degC |
+| T_hpc_vc16 | 0.08 mm | 307.7 | 335.4 | degC | +9.6 % | 43.2 | yes | hpc: friction factor 0.20, h_mean 50.9 um, contact 35.3 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 23 degC at the end of the pass; rake 337 degC, flank 299 degC |
+| T_hpc_vc16 | 0.12 mm | 413 | 357.9 | degC | -14.0 % | 58.9 | yes | hpc: friction factor 0.30, h_mean 76.4 um, contact 35.3 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 25 degC at the end of the pass; rake 359 degC, flank 322 degC |
+| T_hpc_vc16 | 0.16 mm | 482.7 | 421.7 | degC | -13.2 % | 69.4 | yes | hpc: friction factor 0.39, h_mean 101.9 um, contact 35.3 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 26 degC at the end of the pass; rake 423 degC, flank 342 degC |
+| T_hpc_vc24 | 0.08 mm | 332.3 | 362.1 | degC | +9.6 % | 46.8 | yes | hpc: friction factor 0.30, h_mean 50.9 um, contact 23.6 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 25 degC at the end of the pass; rake 362 degC, flank 366 degC |
+| T_hpc_vc24 | 0.12 mm | 471 | 456.2 | degC | -3.3 % | 67.6 | yes | hpc: friction factor 0.43, h_mean 76.4 um, contact 23.6 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 27 degC at the end of the pass; rake 458 degC, flank 399 degC |
+| T_hpc_vc24 | 0.16 mm | 531.3 | 534 | degC | +0.5 % | 76.7 | yes | hpc: friction factor 0.51, h_mean 101.9 um, contact 23.6 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 28 degC at the end of the pass; rake 536 degC, flank 418 degC |
+| T_hpc_vc32 | 0.08 mm | 411.7 | 428.4 | degC | +4.3 % | 58.8 | yes | hpc: friction factor 0.39, h_mean 50.9 um, contact 17.7 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 27 degC at the end of the pass; rake 428 degC, flank 431 degC |
+| T_hpc_vc32 | 0.12 mm | 518 | 536.9 | degC | +3.8 % | 74.7 | yes | hpc: friction factor 0.51, h_mean 76.4 um, contact 17.7 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 28 degC at the end of the pass; rake 539 degC, flank 462 degC |
+| T_hpc_vc32 | 0.16 mm | 609 | 616.2 | degC | +1.2 % | 88.3 | yes | hpc: friction factor 0.57, h_mean 101.9 um, contact 17.7 ms; jet h 24511 W/m2K on 44% of the flutes, reach 0.86; tool body under the contact 29 degC at the end of the pass; rake 619 degC, flank 475 degC |
+| T_rhpc_vc16 | 0.08 mm | 296.3 | 335.4 | degC | +14.2 % | 41.4 | yes | rhpc: friction factor 0.20, h_mean 50.9 um, contact 35.3 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 23 degC at the end of the pass; rake 337 degC, flank 299 degC |
+| T_rhpc_vc16 | 0.12 mm | 356 | 355 | degC | -0.3 % | 50.4 | yes | rhpc: friction factor 0.20, h_mean 76.4 um, contact 35.3 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 24 degC at the end of the pass; rake 356 degC, flank 310 degC |
+| T_rhpc_vc16 | 0.16 mm | 472.7 | 386.7 | degC | -19.0 % | 67.9 | **no** | rhpc: friction factor 0.30, h_mean 101.9 um, contact 35.3 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 26 degC at the end of the pass; rake 388 degC, flank 329 degC |
+| T_rhpc_vc24 | 0.08 mm | 306 | 359 | degC | +18.5 % | 42.9 | **no** | rhpc: friction factor 0.20, h_mean 50.9 um, contact 23.6 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 25 degC at the end of the pass; rake 359 degC, flank 351 degC |
+| T_rhpc_vc24 | 0.12 mm | 392 | 420.6 | degC | +7.7 % | 55.8 | yes | rhpc: friction factor 0.34, h_mean 76.4 um, contact 23.6 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 27 degC at the end of the pass; rake 422 degC, flank 384 degC |
+| T_rhpc_vc24 | 0.16 mm | 504 | 499.4 | degC | -0.9 % | 72.6 | yes | rhpc: friction factor 0.42, h_mean 101.9 um, contact 23.6 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 28 degC at the end of the pass; rake 501 degC, flank 406 degC |
+| T_rhpc_vc32 | 0.08 mm | 380 | 393.3 | degC | +3.7 % | 54 | yes | rhpc: friction factor 0.30, h_mean 50.9 um, contact 17.7 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 27 degC at the end of the pass; rake 393 degC, flank 412 degC |
+| T_rhpc_vc32 | 0.12 mm | 488.2 | 502.4 | degC | +3.0 % | 70.2 | yes | rhpc: friction factor 0.42, h_mean 76.4 um, contact 17.7 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 28 degC at the end of the pass; rake 504 degC, flank 449 degC |
+| T_rhpc_vc32 | 0.16 mm | 559 | 583.3 | degC | +4.5 % | 80.9 | yes | rhpc: friction factor 0.50, h_mean 101.9 um, contact 17.7 ms; jet h 17771 W/m2K on 44% of the flutes, reach 1.00; tool body under the contact 30 degC at the end of the pass; rake 585 degC, flank 471 degC |
 
 ## cutting_force
 
 * Budget: main_force_pct 15 %, milling_peak_force_pct 20 %, thrust_force_pct 30 % (relative error of the simulated steady mean force component (turning, orthogonal cutting) or of the peak / extreme value of a force component (milling) against the reference value).
-* Verdict: **fail** - only 0 of 17 cases within budget (0% < 80%); force-slot-in718-zheng2023-ballend misses by 166.27 tolerances (> 2).
+* Verdict: **fail** - only 0 of 17 cases within budget (0% < 80%); force-slot-in718-zheng2023-ballend misses by 39.00 tolerances (> 2).
 * Harness: `cnctwin.validation.harnesses.cutforce.cutting_force`.
 * The cutting domain's force model at the case's engagement: rows of the coefficient pipeline (MechanicsModel: Oxley / Johnson-Cook, calibrated to the material's measured Kienzle or mechanistic data of the pairing where the database has them) integrated by the domain's kernels over a prescribed steady cut (turn_step on a polar field for orthogonal tube turning, cut_step with analytic straight-cut engagement for milling); each reference statistic (mean, peak, extreme, RMS) taken from the simulated force on the tool.
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 17 | 0/17 | 295 (0) | 31.0 % / 25.8 % / 35.3 % | 181.6 % | - | 0/127 | 166 (force-slot-in718-zheng2023-ballend) |
-| calibration-dependent | 8 | 0/8 | 254 (0) | 16.2 % / 16.2 % / - | 112.4 % | - | 19/196 | 11.5 (force-orth-ss304-marcicano2005-b) |
+| independent | 17 | 0/17 | 295 (0) | 28.5 % / 26.3 % / 29.2 % | 91.6 % | - | 2/127 | 39 (force-slot-in718-zheng2023-ballend) |
+| calibration-dependent | 8 | 0/8 | 254 (0) | 16.1 % / 16.1 % / - | 113.7 % | - | 18/196 | 11.6 (force-orth-ss304-marcicano2005-b) |
 
-**Failures and likely causes.** 0 of 17 independent cases within budget. Values within tolerance per case: force-facemill-42crmo4-plodzien2023-toroidal 0/27; force-highfeed-ss1.4541-reznicek2023 24/36; force-mill-aisi1045-villarrazo2023-mql 0/2; force-orth-al6061-javidikia2021-feed 1/12; force-orth-al6061-javidikia2021-speed 4/16; force-orth-al7075-jomaa2014 0/8; force-orth-in718-diazalvarez2017 7/24; force-orth-in718-wood2020 3/6; force-orth-ti64-loschner2025 5/34; force-orth-ti64-slusarczyk2025 21/40; force-sidemill-al7075-zylka2023-edge-microgeometry 1/3; force-sidemill-in718-lin2021-annealed 15/36; force-sidemill-ss304-wang2025-hss 3/18; force-slot-in718-zheng2023-ballend 3/18; force-slot-ti64-engin-bullnose 0/3; force-slot-ti64-engin-taperball 0/3; force-thinwall-al7050-zawada2025-finish 1/9. Independent values: main_force_pct 14/70 values within tolerance, mean signed error +3 %; thrust_force_pct 27/70 values within tolerance, mean signed error +54 %; milling_peak_force_pct 47/155 values within tolerance, mean signed error +22 %. The thrust (feed) force is the weak part of the orthogonal model: it is set by the edge force below the stagnation point and the friction estimate, while the main force follows the flow stress. Milling cases add the tool geometry the sources leave open (rake, edge radius, entering angle: listed as assumptions per case). Cases whose material file holds Kienzle data of the same experiments are calibration-dependent and reported apart. No coefficient was changed for this report.
+**Failures and likely causes.** 0 of 17 independent cases within budget. Values within tolerance per case: force-facemill-42crmo4-plodzien2023-toroidal 14/27; force-highfeed-ss1.4541-reznicek2023 24/36; force-mill-aisi1045-villarrazo2023-mql 0/2; force-orth-al6061-javidikia2021-feed 1/12; force-orth-al6061-javidikia2021-speed 4/16; force-orth-al7075-jomaa2014 0/8; force-orth-in718-diazalvarez2017 7/24; force-orth-in718-wood2020 3/6; force-orth-ti64-loschner2025 5/34; force-orth-ti64-slusarczyk2025 22/40; force-sidemill-al7075-zylka2023-edge-microgeometry 1/3; force-sidemill-in718-lin2021-annealed 14/36; force-sidemill-ss304-wang2025-hss 2/18; force-slot-in718-zheng2023-ballend 1/18; force-slot-ti64-engin-bullnose 0/3; force-slot-ti64-engin-taperball 0/3; force-thinwall-al7050-zawada2025-finish 0/9. Independent values: main_force_pct 15/70 values within tolerance, mean signed error +4 %; thrust_force_pct 27/70 values within tolerance, mean signed error +55 %; milling_peak_force_pct 56/155 values within tolerance, mean signed error -27 %. The thrust (feed) force is the weak part of the orthogonal model: it is set by the edge force below the stagnation point and the friction estimate, while the main force follows the flow stress. Milling cases add the tool geometry the sources leave open (rake, edge radius, entering angle: listed as assumptions per case). Cases whose material file holds Kienzle data of the same experiments are calibration-dependent and reported apart. No coefficient was changed for this report.
 
 ### force-facemill-42crmo4-plodzien2023-toroidal
 
@@ -605,80 +607,80 @@ Curve `chip_control_lower_ap` (feed [mm/rev] -> mm): RMS abs. error 75.4 %, max 
 * Tool model: core diameter not given: 0.50 D (core_ratio_by_flutes)
 * Ff along the feed = X, FfN normal to the feed in the face plane = Y, Fa axial = Z; peak magnitudes (source frame signs not compared).
 * Coefficients calibrated to the material's kienzle data (walter-2025-technical-compendium) for carbide/tialn, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 118.4 %, max 308.1 %; 0/27 within uncertainty; case **outside budget**; largest miss 15.4 tolerances.
-* Likely cause: milling_peak_force_pct: 0/27 within, mean signed error +128 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
+* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 19.0 %, max 44.7 %; 2/27 within uncertainty; case **outside budget**; largest miss 2.23 tolerances.
+* Likely cause: milling_peak_force_pct: 14/27 within, mean signed error -4 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
-Curve `FfN_fz0.05` (ap [mm] -> N): RMS abs. error 78.3 %, max 121.8 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| FfN_fz0.05 | 0.5 mm | 172 | 381.5 | N | +121.8 % | 34.4 | **no** | peak Y, magnitude; 1743 rpm, fz 0.05, ap 0.5, ae 20 mm, down |
-| FfN_fz0.05 | 1.5 mm | 372 | 570 | N | +53.2 % | 74.4 | **no** | peak Y, magnitude; 1743 rpm, fz 0.05, ap 1.5, ae 20 mm, down |
-| FfN_fz0.05 | 2.5 mm | 588 | 746.9 | N | +27.0 % | 118 | **no** | peak Y, magnitude; 1743 rpm, fz 0.05, ap 2.5, ae 20 mm, down |
-
-Curve `FfN_fz0.10` (ap [mm] -> N): RMS abs. error 40.6 %, max 51.4 % over 3 compared points.
+Curve `FfN_fz0.05` (ap [mm] -> N): RMS abs. error 23.7 %, max 33.7 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| FfN_fz0.10 | 0.5 mm | 288 | 436 | N | +51.4 % | 57.6 | **no** | peak Y, magnitude; 1743 rpm, fz 0.1, ap 0.5, ae 20 mm, down |
-| FfN_fz0.10 | 1.5 mm | 525 | 737.5 | N | +40.5 % | 105 | **no** | peak Y, magnitude; 1743 rpm, fz 0.1, ap 1.5, ae 20 mm, down |
-| FfN_fz0.10 | 2.5 mm | 812 | 1020 | N | +25.6 % | 162 | **no** | peak Y, magnitude; 1743 rpm, fz 0.1, ap 2.5, ae 20 mm, down |
+| FfN_fz0.05 | 0.5 mm | 172 | 114 | N | -33.7 % | 34.4 | **no** | peak Y, magnitude; 1743 rpm, fz 0.05, ap 0.5, ae 20 mm, down |
+| FfN_fz0.05 | 1.5 mm | 372 | 310.1 | N | -16.6 % | 74.4 | yes | peak Y, magnitude; 1743 rpm, fz 0.05, ap 1.5, ae 20 mm, down |
+| FfN_fz0.05 | 2.5 mm | 588 | 491.6 | N | -16.4 % | 118 | yes | peak Y, magnitude; 1743 rpm, fz 0.05, ap 2.5, ae 20 mm, down |
 
-Curve `FfN_fz0.15` (ap [mm] -> N): RMS abs. error 48.0 %, max 69.0 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| FfN_fz0.15 | 0.5 mm | 289 | 488.5 | N | +69.0 % | 57.8 | **no** | peak Y, magnitude; 1743 rpm, fz 0.15, ap 0.5, ae 20 mm, down |
-| FfN_fz0.15 | 1.5 mm | 645 | 899.7 | N | +39.5 % | 129 | **no** | peak Y, magnitude; 1743 rpm, fz 0.15, ap 1.5, ae 20 mm, down |
-| FfN_fz0.15 | 2.5 mm | 1033 | 1282 | N | +24.1 % | 207 | **no** | peak Y, magnitude; 1743 rpm, fz 0.15, ap 2.5, ae 20 mm, down |
-
-Curve `Ff_fz0.05` (ap [mm] -> N): RMS abs. error 193.9 %, max 271.4 % over 3 compared points.
+Curve `FfN_fz0.10` (ap [mm] -> N): RMS abs. error 25.0 %, max 41.7 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ff_fz0.05 | 0.5 mm | 89 | 330.6 | N | +271.4 % | 17.8 | **no** | peak X, magnitude; 1743 rpm, fz 0.05, ap 0.5, ae 20 mm, down |
-| Ff_fz0.05 | 1.5 mm | 155 | 400.5 | N | +158.4 % | 31 | **no** | peak X, magnitude; 1743 rpm, fz 0.05, ap 1.5, ae 20 mm, down |
-| Ff_fz0.05 | 2.5 mm | 206 | 450 | N | +118.4 % | 41.2 | **no** | peak X, magnitude; 1743 rpm, fz 0.05, ap 2.5, ae 20 mm, down |
+| FfN_fz0.10 | 0.5 mm | 288 | 167.9 | N | -41.7 % | 57.6 | **no** | peak Y, magnitude; 1743 rpm, fz 0.1, ap 0.5, ae 20 mm, down |
+| FfN_fz0.10 | 1.5 mm | 525 | 474.4 | N | -9.6 % | 105 | yes | peak Y, magnitude; 1743 rpm, fz 0.1, ap 1.5, ae 20 mm, down |
+| FfN_fz0.10 | 2.5 mm | 812 | 761.6 | N | -6.2 % | 162 | yes | peak Y, magnitude; 1743 rpm, fz 0.1, ap 2.5, ae 20 mm, down |
 
-Curve `Ff_fz0.10` (ap [mm] -> N): RMS abs. error 131.3 %, max 184.1 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Ff_fz0.10 | 0.5 mm | 121 | 343.8 | N | +184.1 % | 24.2 | **no** | peak X, magnitude; 1743 rpm, fz 0.1, ap 0.5, ae 20 mm, down |
-| Ff_fz0.10 | 1.5 mm | 196 | 425.2 | N | +117.0 % | 39.2 | **no** | peak X, magnitude; 1743 rpm, fz 0.1, ap 1.5, ae 20 mm, down |
-| Ff_fz0.10 | 2.5 mm | 305 | 501.8 | N | +64.5 % | 61 | **no** | peak X, magnitude; 1743 rpm, fz 0.1, ap 2.5, ae 20 mm, down |
-
-Curve `Ff_fz0.15` (ap [mm] -> N): RMS abs. error 70.3 %, max 97.6 % over 3 compared points.
+Curve `FfN_fz0.15` (ap [mm] -> N): RMS abs. error 13.8 %, max 23.8 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ff_fz0.15 | 0.5 mm | 177 | 349.8 | N | +97.6 % | 35.4 | **no** | peak X, magnitude; 1743 rpm, fz 0.15, ap 0.5, ae 20 mm, down |
-| Ff_fz0.15 | 1.5 mm | 302 | 480.3 | N | +59.1 % | 60.4 | **no** | peak X, magnitude; 1743 rpm, fz 0.15, ap 1.5, ae 20 mm, down |
-| Ff_fz0.15 | 2.5 mm | 415 | 590.8 | N | +42.3 % | 83 | **no** | peak X, magnitude; 1743 rpm, fz 0.15, ap 2.5, ae 20 mm, down |
+| FfN_fz0.15 | 0.5 mm | 289 | 220.3 | N | -23.8 % | 57.8 | **no** | peak Y, magnitude; 1743 rpm, fz 0.15, ap 0.5, ae 20 mm, down |
+| FfN_fz0.15 | 1.5 mm | 645 | 635.1 | N | -1.5 % | 129 | yes | peak Y, magnitude; 1743 rpm, fz 0.15, ap 1.5, ae 20 mm, down |
+| FfN_fz0.15 | 2.5 mm | 1033 | 1021 | N | -1.2 % | 207 | yes | peak Y, magnitude; 1743 rpm, fz 0.15, ap 2.5, ae 20 mm, down |
 
-Curve `Fa_fz0.05` (ap [mm] -> N): RMS abs. error 224.3 %, max 291.4 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fa_fz0.05 | 0.5 mm | 144 | 563.6 | N | +291.4 % | 28.8 | **no** | peak Z, magnitude; 1743 rpm, fz 0.05, ap 0.5, ae 20 mm, down |
-| Fa_fz0.05 | 1.5 mm | 221 | 698.3 | N | +216.0 % | 44.2 | **no** | peak Z, magnitude; 1743 rpm, fz 0.05, ap 1.5, ae 20 mm, down |
-| Fa_fz0.05 | 2.5 mm | 321 | 767.3 | N | +139.0 % | 64.2 | **no** | peak Z, magnitude; 1743 rpm, fz 0.05, ap 2.5, ae 20 mm, down |
-
-Curve `Fa_fz0.10` (ap [mm] -> N): RMS abs. error 209.6 %, max 261.0 % over 3 compared points.
+Curve `Ff_fz0.05` (ap [mm] -> N): RMS abs. error 20.0 %, max 25.0 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fa_fz0.10 | 0.5 mm | 165 | 595.7 | N | +261.0 % | 33 | **no** | peak Z, magnitude; 1743 rpm, fz 0.1, ap 0.5, ae 20 mm, down |
-| Fa_fz0.10 | 1.5 mm | 257 | 764.7 | N | +197.5 % | 51.4 | **no** | peak Z, magnitude; 1743 rpm, fz 0.1, ap 1.5, ae 20 mm, down |
-| Fa_fz0.10 | 2.5 mm | 331 | 851 | N | +157.1 % | 66.2 | **no** | peak Z, magnitude; 1743 rpm, fz 0.1, ap 2.5, ae 20 mm, down |
+| Ff_fz0.05 | 0.5 mm | 89 | 66.79 | N | -25.0 % | 17.8 | **no** | peak X, magnitude; 1743 rpm, fz 0.05, ap 0.5, ae 20 mm, down |
+| Ff_fz0.05 | 1.5 mm | 155 | 132.4 | N | -14.6 % | 31 | yes | peak X, magnitude; 1743 rpm, fz 0.05, ap 1.5, ae 20 mm, down |
+| Ff_fz0.05 | 2.5 mm | 206 | 245.1 | N | +19.0 % | 41.2 | yes | peak X, magnitude; 1743 rpm, fz 0.05, ap 2.5, ae 20 mm, down |
 
-Curve `Fa_fz0.15` (ap [mm] -> N): RMS abs. error 225.2 %, max 308.1 % over 3 compared points.
+Curve `Ff_fz0.10` (ap [mm] -> N): RMS abs. error 21.9 %, max 36.1 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fa_fz0.15 | 0.5 mm | 152 | 620.4 | N | +308.1 % | 30.4 | **no** | peak Z, magnitude; 1743 rpm, fz 0.15, ap 0.5, ae 20 mm, down |
-| Fa_fz0.15 | 1.5 mm | 278 | 813.4 | N | +192.6 % | 55.6 | **no** | peak Z, magnitude; 1743 rpm, fz 0.15, ap 1.5, ae 20 mm, down |
-| Fa_fz0.15 | 2.5 mm | 377 | 910.9 | N | +141.6 % | 75.4 | **no** | peak Z, magnitude; 1743 rpm, fz 0.15, ap 2.5, ae 20 mm, down |
+| Ff_fz0.10 | 0.5 mm | 121 | 77.26 | N | -36.1 % | 24.2 | **no** | peak X, magnitude; 1743 rpm, fz 0.1, ap 0.5, ae 20 mm, down |
+| Ff_fz0.10 | 1.5 mm | 196 | 174.3 | N | -11.1 % | 39.2 | yes | peak X, magnitude; 1743 rpm, fz 0.1, ap 1.5, ae 20 mm, down |
+| Ff_fz0.10 | 2.5 mm | 305 | 296.8 | N | -2.7 % | 61 | yes | peak X, magnitude; 1743 rpm, fz 0.1, ap 2.5, ae 20 mm, down |
+
+Curve `Ff_fz0.15` (ap [mm] -> N): RMS abs. error 30.4 %, max 44.7 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Ff_fz0.15 | 0.5 mm | 177 | 97.92 | N | -44.7 % | 35.4 | **no** | peak X, magnitude; 1743 rpm, fz 0.15, ap 0.5, ae 20 mm, down |
+| Ff_fz0.15 | 1.5 mm | 302 | 234.4 | N | -22.4 % | 60.4 | **no** | peak X, magnitude; 1743 rpm, fz 0.15, ap 1.5, ae 20 mm, down |
+| Ff_fz0.15 | 2.5 mm | 415 | 346 | N | -16.6 % | 83 | yes | peak X, magnitude; 1743 rpm, fz 0.15, ap 2.5, ae 20 mm, down |
+
+Curve `Fa_fz0.05` (ap [mm] -> N): RMS abs. error 14.6 %, max 24.1 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fa_fz0.05 | 0.5 mm | 144 | 139 | N | -3.5 % | 28.8 | yes | peak Z, magnitude; 1743 rpm, fz 0.05, ap 0.5, ae 20 mm, down |
+| Fa_fz0.05 | 1.5 mm | 221 | 274.3 | N | +24.1 % | 44.2 | **no** | peak Z, magnitude; 1743 rpm, fz 0.05, ap 1.5, ae 20 mm, down |
+| Fa_fz0.05 | 2.5 mm | 321 | 343.5 | N | +7.0 % | 64.2 | yes | peak Z, magnitude; 1743 rpm, fz 0.05, ap 2.5, ae 20 mm, down |
+
+Curve `Fa_fz0.10` (ap [mm] -> N): RMS abs. error 25.3 %, max 32.6 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fa_fz0.10 | 0.5 mm | 165 | 171.2 | N | +3.8 % | 33 | yes | peak Z, magnitude; 1743 rpm, fz 0.1, ap 0.5, ae 20 mm, down |
+| Fa_fz0.10 | 1.5 mm | 257 | 340.8 | N | +32.6 % | 51.4 | **no** | peak Z, magnitude; 1743 rpm, fz 0.1, ap 1.5, ae 20 mm, down |
+| Fa_fz0.10 | 2.5 mm | 331 | 427.3 | N | +29.1 % | 66.2 | **no** | peak Z, magnitude; 1743 rpm, fz 0.1, ap 2.5, ae 20 mm, down |
+
+Curve `Fa_fz0.15` (ap [mm] -> N): RMS abs. error 33.1 %, max 40.1 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fa_fz0.15 | 0.5 mm | 152 | 195.9 | N | +28.9 % | 30.4 | **no** | peak Z, magnitude; 1743 rpm, fz 0.15, ap 0.5, ae 20 mm, down |
+| Fa_fz0.15 | 1.5 mm | 278 | 389.4 | N | +40.1 % | 55.6 | **no** | peak Z, magnitude; 1743 rpm, fz 0.15, ap 1.5, ae 20 mm, down |
+| Fa_fz0.15 | 2.5 mm | 377 | 487 | N | +29.2 % | 75.4 | **no** | peak Z, magnitude; 1743 rpm, fz 0.15, ap 2.5, ae 20 mm, down |
 
 ### force-highfeed-ss1.4541-reznicek2023
 
@@ -696,89 +698,89 @@ Curve `Fa_fz0.15` (ap [mm] -> N): RMS abs. error 225.2 %, max 308.1 % over 3 com
 * Tool model: cutter body diameter not given: 0.80 D (chip pockets)
 * Centred cut: strip y in [-ae/2, ae/2].
 * Coefficients calibrated to the material's kienzle data (walter-2025-technical-compendium) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 4.4 %, max 57.6 %; case **outside budget**; largest miss 2.88 tolerances.
+* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 4.3 %, max 58.7 %; case **outside budget**; largest miss 2.94 tolerances.
 * Likely cause: milling_peak_force_pct: 24/36 within, mean signed error -17 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
-Curve `Fx_ap0.5` (fz [mm/tooth] -> N): RMS abs. error 3.0 %, max 5.1 % over 4 compared points.
+Curve `Fx_ap0.5` (fz [mm/tooth] -> N): RMS abs. error 3.0 %, max 4.8 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fx_ap0.5 | 0.5 mm/tooth | 346 | 363.8 | N | +5.1 % | 69.2 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.5, ae 14 mm, centred |
-| Fx_ap0.5 | 0.6 mm/tooth | 407 | 410.7 | N | +0.9 % | 81.4 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.5, ae 14 mm, centred |
-| Fx_ap0.5 | 0.7 mm/tooth | 454.8 | 454.8 | N | +0.0 % | 91 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.5, ae 14 mm, centred |
-| Fx_ap0.5 | 0.8 mm/tooth | 513.7 | 498.1 | N | -3.0 % | 103 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.5, ae 14 mm, centred |
+| Fx_ap0.5 | 0.5 mm/tooth | 346 | 362.6 | N | +4.8 % | 69.2 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.5, ae 14 mm, centred |
+| Fx_ap0.5 | 0.6 mm/tooth | 407 | 409.2 | N | +0.5 % | 81.4 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.5, ae 14 mm, centred |
+| Fx_ap0.5 | 0.7 mm/tooth | 454.8 | 453 | N | -0.4 % | 91 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.5, ae 14 mm, centred |
+| Fx_ap0.5 | 0.8 mm/tooth | 513.7 | 496 | N | -3.4 % | 103 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.5, ae 14 mm, centred |
 
-Curve `Fy_ap0.5` (fz [mm/tooth] -> N): RMS abs. error 2.3 %, max 3.6 % over 4 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fy_ap0.5 | 0.5 mm/tooth | 600.1 | 621.9 | N | +3.6 % | 120 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.5, ae 14 mm, centred |
-| Fy_ap0.5 | 0.6 mm/tooth | 690.7 | 711.2 | N | +3.0 % | 138 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.5, ae 14 mm, centred |
-| Fy_ap0.5 | 0.7 mm/tooth | 798.7 | 799.8 | N | +0.1 % | 160 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.5, ae 14 mm, centred |
-| Fy_ap0.5 | 0.8 mm/tooth | 886 | 885.5 | N | -0.1 % | 177 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.5, ae 14 mm, centred |
-
-Curve `Fz_ap0.5` (fz [mm/tooth] -> N): RMS abs. error 55.9 %, max 57.6 % over 4 compared points.
+Curve `Fy_ap0.5` (fz [mm/tooth] -> N): RMS abs. error 2.2 %, max 3.5 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_ap0.5 | 0.5 mm/tooth | 594.7 | 275 | N | -53.8 % | 119 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.5, ae 14 mm, centred |
-| Fz_ap0.5 | 0.6 mm/tooth | 636.9 | 282.4 | N | -55.7 % | 127 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.5, ae 14 mm, centred |
-| Fz_ap0.5 | 0.7 mm/tooth | 665 | 289.4 | N | -56.5 % | 133 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.5, ae 14 mm, centred |
-| Fz_ap0.5 | 0.8 mm/tooth | 698.6 | 296.3 | N | -57.6 % | 140 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.5, ae 14 mm, centred |
+| Fy_ap0.5 | 0.5 mm/tooth | 600.1 | 620.9 | N | +3.5 % | 120 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.5, ae 14 mm, centred |
+| Fy_ap0.5 | 0.6 mm/tooth | 690.7 | 709.9 | N | +2.8 % | 138 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.5, ae 14 mm, centred |
+| Fy_ap0.5 | 0.7 mm/tooth | 798.7 | 798.3 | N | -0.1 % | 160 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.5, ae 14 mm, centred |
+| Fy_ap0.5 | 0.8 mm/tooth | 886 | 883.7 | N | -0.3 % | 177 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.5, ae 14 mm, centred |
 
-Curve `Fx_ap0.6` (fz [mm/tooth] -> N): RMS abs. error 3.9 %, max 5.1 % over 4 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fx_ap0.6 | 0.5 mm/tooth | 408.1 | 401.3 | N | -1.7 % | 81.6 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.6, ae 14 mm, centred |
-| Fx_ap0.6 | 0.6 mm/tooth | 466.1 | 453.1 | N | -2.8 % | 93.2 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.6, ae 14 mm, centred |
-| Fx_ap0.6 | 0.7 mm/tooth | 526.9 | 501.5 | N | -4.8 % | 105 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.6, ae 14 mm, centred |
-| Fx_ap0.6 | 0.8 mm/tooth | 578.8 | 549.3 | N | -5.1 % | 116 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.6, ae 14 mm, centred |
-
-Curve `Fy_ap0.6` (fz [mm/tooth] -> N): RMS abs. error 1.5 %, max 2.1 % over 4 compared points.
+Curve `Fz_ap0.5` (fz [mm/tooth] -> N): RMS abs. error 56.9 %, max 58.7 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fy_ap0.6 | 0.5 mm/tooth | 679.2 | 693.5 | N | +2.1 % | 136 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.6, ae 14 mm, centred |
-| Fy_ap0.6 | 0.6 mm/tooth | 794.2 | 793.2 | N | -0.1 % | 159 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.6, ae 14 mm, centred |
-| Fy_ap0.6 | 0.7 mm/tooth | 903.5 | 892.2 | N | -1.3 % | 181 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.6, ae 14 mm, centred |
-| Fy_ap0.6 | 0.8 mm/tooth | 972.6 | 987.9 | N | +1.6 % | 195 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.6, ae 14 mm, centred |
+| Fz_ap0.5 | 0.5 mm/tooth | 594.7 | 270.1 | N | -54.6 % | 119 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.5, ae 14 mm, centred |
+| Fz_ap0.5 | 0.6 mm/tooth | 636.9 | 276.5 | N | -56.6 % | 127 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.5, ae 14 mm, centred |
+| Fz_ap0.5 | 0.7 mm/tooth | 665 | 282.4 | N | -57.5 % | 133 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.5, ae 14 mm, centred |
+| Fz_ap0.5 | 0.8 mm/tooth | 698.6 | 288.3 | N | -58.7 % | 140 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.5, ae 14 mm, centred |
 
-Curve `Fz_ap0.6` (fz [mm/tooth] -> N): RMS abs. error 51.5 %, max 52.7 % over 4 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fz_ap0.6 | 0.5 mm/tooth | 610.5 | 305.2 | N | -50.0 % | 122 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.6, ae 14 mm, centred |
-| Fz_ap0.6 | 0.6 mm/tooth | 645 | 313.4 | N | -51.4 % | 129 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.6, ae 14 mm, centred |
-| Fz_ap0.6 | 0.7 mm/tooth | 679.3 | 321.2 | N | -52.7 % | 136 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.6, ae 14 mm, centred |
-| Fz_ap0.6 | 0.8 mm/tooth | 684.3 | 328.9 | N | -51.9 % | 137 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.6, ae 14 mm, centred |
-
-Curve `Fx_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 2.0 %, max 3.2 % over 4 compared points.
+Curve `Fx_ap0.6` (fz [mm/tooth] -> N): RMS abs. error 4.2 %, max 5.5 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fx_ap0.7 | 0.5 mm/tooth | 472.4 | 475.3 | N | +0.6 % | 94.5 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.7, ae 14 mm, centred |
-| Fx_ap0.7 | 0.6 mm/tooth | 538.9 | 536.4 | N | -0.5 % | 108 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.7, ae 14 mm, centred |
-| Fx_ap0.7 | 0.7 mm/tooth | 608 | 593.7 | N | -2.4 % | 122 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.7, ae 14 mm, centred |
-| Fx_ap0.7 | 0.8 mm/tooth | 672.2 | 650.4 | N | -3.2 % | 134 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.7, ae 14 mm, centred |
+| Fx_ap0.6 | 0.5 mm/tooth | 408.1 | 399.8 | N | -2.0 % | 81.6 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.6, ae 14 mm, centred |
+| Fx_ap0.6 | 0.6 mm/tooth | 466.1 | 451.3 | N | -3.2 % | 93.2 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.6, ae 14 mm, centred |
+| Fx_ap0.6 | 0.7 mm/tooth | 526.9 | 499.4 | N | -5.2 % | 105 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.6, ae 14 mm, centred |
+| Fx_ap0.6 | 0.8 mm/tooth | 578.8 | 547 | N | -5.5 % | 116 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.6, ae 14 mm, centred |
 
-Curve `Fy_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 5.4 %, max 6.2 % over 4 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fy_ap0.7 | 0.5 mm/tooth | 790.2 | 836.8 | N | +5.9 % | 158 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.7, ae 14 mm, centred |
-| Fy_ap0.7 | 0.6 mm/tooth | 901.6 | 957.4 | N | +6.2 % | 180 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.7, ae 14 mm, centred |
-| Fy_ap0.7 | 0.7 mm/tooth | 1035 | 1077 | N | +4.1 % | 207 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.7, ae 14 mm, centred |
-| Fy_ap0.7 | 0.8 mm/tooth | 1132 | 1193 | N | +5.4 % | 226 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.7, ae 14 mm, centred |
-
-Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 44.6 %, max 46.7 % over 4 compared points.
+Curve `Fy_ap0.6` (fz [mm/tooth] -> N): RMS abs. error 1.4 %, max 1.9 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_ap0.7 | 0.5 mm/tooth | 620.5 | 365.6 | N | -41.1 % | 124 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.7, ae 14 mm, centred |
-| Fz_ap0.7 | 0.6 mm/tooth | 672.4 | 375.5 | N | -44.2 % | 134 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.7, ae 14 mm, centred |
-| Fz_ap0.7 | 0.7 mm/tooth | 715.7 | 384.9 | N | -46.2 % | 143 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.7, ae 14 mm, centred |
-| Fz_ap0.7 | 0.8 mm/tooth | 740 | 394.1 | N | -46.7 % | 148 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.7, ae 14 mm, centred |
+| Fy_ap0.6 | 0.5 mm/tooth | 679.2 | 692.4 | N | +1.9 % | 136 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.6, ae 14 mm, centred |
+| Fy_ap0.6 | 0.6 mm/tooth | 794.2 | 791.8 | N | -0.3 % | 159 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.6, ae 14 mm, centred |
+| Fy_ap0.6 | 0.7 mm/tooth | 903.5 | 890.6 | N | -1.4 % | 181 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.6, ae 14 mm, centred |
+| Fy_ap0.6 | 0.8 mm/tooth | 972.6 | 986 | N | +1.4 % | 195 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.6, ae 14 mm, centred |
+
+Curve `Fz_ap0.6` (fz [mm/tooth] -> N): RMS abs. error 52.6 %, max 53.8 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_ap0.6 | 0.5 mm/tooth | 610.5 | 299.8 | N | -50.9 % | 122 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.6, ae 14 mm, centred |
+| Fz_ap0.6 | 0.6 mm/tooth | 645 | 306.9 | N | -52.4 % | 129 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.6, ae 14 mm, centred |
+| Fz_ap0.6 | 0.7 mm/tooth | 679.3 | 313.5 | N | -53.8 % | 136 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.6, ae 14 mm, centred |
+| Fz_ap0.6 | 0.8 mm/tooth | 684.3 | 320 | N | -53.2 % | 137 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.6, ae 14 mm, centred |
+
+Curve `Fx_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 2.3 %, max 3.7 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fx_ap0.7 | 0.5 mm/tooth | 472.4 | 473.5 | N | +0.2 % | 94.5 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.7, ae 14 mm, centred |
+| Fx_ap0.7 | 0.6 mm/tooth | 538.9 | 534.3 | N | -0.9 % | 108 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.7, ae 14 mm, centred |
+| Fx_ap0.7 | 0.7 mm/tooth | 608 | 591.2 | N | -2.8 % | 122 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.7, ae 14 mm, centred |
+| Fx_ap0.7 | 0.8 mm/tooth | 672.2 | 647.6 | N | -3.7 % | 134 | yes | peak X (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.7, ae 14 mm, centred |
+
+Curve `Fy_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 5.3 %, max 6.0 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fy_ap0.7 | 0.5 mm/tooth | 790.2 | 835.4 | N | +5.7 % | 158 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.7, ae 14 mm, centred |
+| Fy_ap0.7 | 0.6 mm/tooth | 901.6 | 955.7 | N | +6.0 % | 180 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.7, ae 14 mm, centred |
+| Fy_ap0.7 | 0.7 mm/tooth | 1035 | 1075 | N | +3.9 % | 207 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.7, ae 14 mm, centred |
+| Fy_ap0.7 | 0.8 mm/tooth | 1132 | 1190 | N | +5.2 % | 226 | yes | peak Y (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.7, ae 14 mm, centred |
+
+Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 45.8 %, max 48.2 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_ap0.7 | 0.5 mm/tooth | 620.5 | 359.2 | N | -42.1 % | 124 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.5, ap 0.7, ae 14 mm, centred |
+| Fz_ap0.7 | 0.6 mm/tooth | 672.4 | 367.7 | N | -45.3 % | 134 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.6, ap 0.7, ae 14 mm, centred |
+| Fz_ap0.7 | 0.7 mm/tooth | 715.7 | 375.7 | N | -47.5 % | 143 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.7, ap 0.7, ae 14 mm, centred |
+| Fz_ap0.7 | 0.8 mm/tooth | 740 | 383.6 | N | -48.2 % | 148 | **no** | peak Z (on the workpiece), magnitude; 2546 rpm, fz 0.8, ap 0.7, ae 14 mm, centred |
 
 ### force-mill-aisi1045-villarrazo2023-mql
 
@@ -795,19 +797,19 @@ Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 44.6 %, max 46.7 % over 4 
 * Tool model: cutter body diameter not given: 0.80 D (chip pockets)
 * MQL and CryoMQL get the same prediction: the CO2 of CryoMQL is not modelled; the MQL oil enters through the lubrication friction factor.
 * Coefficients calibrated to the material's kienzle data (klippel-2022-ck45-cutting-database) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 2 compared, 0 without prediction, 6 not compared; median abs. error 87.9 %, max 88.1 %; case **outside budget**; largest miss 4.41 tolerances.
+* Result: 2 compared, 0 without prediction, 6 not compared; median abs. error 88.3 %, max 88.5 %; case **outside budget**; largest miss 4.43 tolerances.
 * Likely cause: milling_peak_force_pct: 0/2 within, mean signed error +88 %. Coefficients: calibrated to kienzle data. Ck45 forms a built-up edge below about 70 m/min (database BUE window); the force rows carry no BUE. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| F_RMS_MQL_630mm | - | 178.8 | 336.4 | N | +88.1 % | 35.8 | **no** | rms3 , magnitude; 6000 rpm, fz 0.15, ap 3, ae 9 mm, down, mql |
-| F_RMS_CryoMQL_630mm | - | 179.3 | 336.4 | N | +87.6 % | 35.9 | **no** | rms3 , magnitude; 6000 rpm, fz 0.15, ap 3, ae 9 mm, down, mql |
-| F_RMS_MQL_5040mm | - | 188.3 | 336.4 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
-| F_RMS_CryoMQL_5040mm | - | 185.4 | 336.4 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
-| F_RMS_MQL_6300mm | - | 189.5 | 336.4 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
-| F_RMS_CryoMQL_6300mm | - | 192.3 | 336.4 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
-| F_RMS_MQL_7245mm | - | 192.1 | 336.4 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
-| F_RMS_CryoMQL_7245mm | - | 195.3 | 336.4 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
+| F_RMS_MQL_630mm | - | 178.8 | 337.2 | N | +88.5 % | 35.8 | **no** | rms3 , magnitude; 6000 rpm, fz 0.15, ap 3, ae 9 mm, down, mql |
+| F_RMS_CryoMQL_630mm | - | 179.3 | 337.2 | N | +88.0 % | 35.9 | **no** | rms3 , magnitude; 6000 rpm, fz 0.15, ap 3, ae 9 mm, down, mql |
+| F_RMS_MQL_5040mm | - | 188.3 | 337.2 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
+| F_RMS_CryoMQL_5040mm | - | 185.4 | 337.2 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
+| F_RMS_MQL_6300mm | - | 189.5 | 337.2 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
+| F_RMS_CryoMQL_6300mm | - | 192.3 | 337.2 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
+| F_RMS_MQL_7245mm | - | 192.1 | 337.2 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
+| F_RMS_CryoMQL_7245mm | - | 195.3 | 337.2 | N | - | - | not compared | worn tool after 5040+ mm of cut, wear not stated (case: only the 630 mm values are fresh-tool references) |
 
 ### force-orth-al6061-javidikia2021-feed
 
@@ -822,23 +824,23 @@ Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 44.6 %, max 46.7 % over 4 
 * Material: database entry al6061-t6; the case says: AA6061-T6 cylinder, 150 mm diameter, 120 mm long
 * Coefficients calibrated to the material's kienzle data (iscar-materials-groups) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 12 compared, 0 without prediction, 0 not compared; median abs. error 29.0 %, max 70.3 %; case **outside budget**; largest miss 2.34 tolerances.
+* Result: 12 compared, 0 without prediction, 0 not compared; median abs. error 28.9 %, max 70.1 %; case **outside budget**; largest miss 2.34 tolerances.
 * Likely cause: main_force_pct: 1/6 within, mean signed error +18 %; thrust_force_pct: 0/6 within, mean signed error +51 %. Coefficients: calibrated to kienzle data.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Fc dry f0.1 | 0.1 mm/rev | 270 | 318.1 | N | +17.8 % | 40.5 | **no** | h 0.100 mm, vc 950 m/min, r_e 20 um, b 4 mm |
 | Fc flood f0.1 | 0.1 mm/rev | 268 | 300.6 | N | +12.2 % | 40.2 | yes | h 0.100 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
-| Ft dry f0.1 | 0.1 mm/rev | 74 | 126 | N | +70.3 % | 22.2 | **no** | h 0.100 mm, vc 950 m/min, r_e 20 um, b 4 mm |
-| Ft flood f0.1 | 0.1 mm/rev | 75 | 106.1 | N | +41.5 % | 22.5 | **no** | h 0.100 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
+| Ft dry f0.1 | 0.1 mm/rev | 74 | 125.9 | N | +70.1 % | 22.2 | **no** | h 0.100 mm, vc 950 m/min, r_e 20 um, b 4 mm |
+| Ft flood f0.1 | 0.1 mm/rev | 75 | 106.1 | N | +41.4 % | 22.5 | **no** | h 0.100 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
 | Fc dry f0.16 | 0.16 mm/rev | 384 | 474.2 | N | +23.5 % | 57.6 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm |
-| Fc flood f0.16 | 0.16 mm/rev | 390 | 456.4 | N | +17.0 % | 58.5 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
-| Ft dry f0.16 | 0.16 mm/rev | 77 | 127.3 | N | +65.3 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm |
-| Ft flood f0.16 | 0.16 mm/rev | 77 | 107.8 | N | +40.0 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
+| Fc flood f0.16 | 0.16 mm/rev | 390 | 456.5 | N | +17.1 % | 58.5 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
+| Ft dry f0.16 | 0.16 mm/rev | 77 | 127.2 | N | +65.1 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm |
+| Ft flood f0.16 | 0.16 mm/rev | 77 | 107.6 | N | +39.8 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
 | Fc dry f0.2 | 0.2 mm/rev | 467 | 574.6 | N | +23.0 % | 70 | **no** | h 0.200 mm, vc 950 m/min, r_e 20 um, b 4 mm |
-| Fc flood f0.2 | 0.2 mm/rev | 475 | 557.1 | N | +17.3 % | 71.2 | **no** | h 0.200 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
-| Ft dry f0.2 | 0.2 mm/rev | 81 | 123.8 | N | +52.9 % | 24.3 | **no** | h 0.200 mm, vc 950 m/min, r_e 20 um, b 4 mm |
-| Ft flood f0.2 | 0.2 mm/rev | 78 | 104.9 | N | +34.5 % | 23.4 | **no** | h 0.200 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
+| Fc flood f0.2 | 0.2 mm/rev | 475 | 557.2 | N | +17.3 % | 71.2 | **no** | h 0.200 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
+| Ft dry f0.2 | 0.2 mm/rev | 81 | 123.7 | N | +52.7 % | 24.3 | **no** | h 0.200 mm, vc 950 m/min, r_e 20 um, b 4 mm |
+| Ft flood f0.2 | 0.2 mm/rev | 78 | 104.7 | N | +34.3 % | 23.4 | **no** | h 0.200 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
 
 ### force-orth-al6061-javidikia2021-speed
 
@@ -853,27 +855,27 @@ Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 44.6 %, max 46.7 % over 4 
 * Material: database entry al6061-t6; the case says: AA6061-T6 cylinder, 150 mm diameter, 120 mm long
 * Coefficients calibrated to the material's kienzle data (iscar-materials-groups) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 16 compared, 0 without prediction, 0 not compared; median abs. error 24.5 %, max 81.0 %; case **outside budget**; largest miss 2.7 tolerances.
+* Result: 16 compared, 0 without prediction, 0 not compared; median abs. error 24.5 %, max 80.8 %; case **outside budget**; largest miss 2.69 tolerances.
 * Likely cause: main_force_pct: 2/8 within, mean signed error +20 %; thrust_force_pct: 2/8 within, mean signed error +45 %. Coefficients: calibrated to kienzle data.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc dry vc361 | 361 m/min | 420 | 552.2 | N | +31.5 % | 63 | **no** | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm |
-| Fc flood vc361 | 361 m/min | 426 | 475.6 | N | +11.6 % | 63.9 | yes | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm, flood |
-| Ft dry vc361 | 361 m/min | 138 | 212.5 | N | +54.0 % | 41.4 | **no** | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm |
-| Ft flood vc361 | 361 m/min | 146 | 125.1 | N | -14.3 % | 43.8 | yes | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm, flood |
-| Fc dry vc650 | 650 m/min | 399 | 500.5 | N | +25.4 % | 59.8 | **no** | h 0.160 mm, vc 650 m/min, r_e 20 um, b 4 mm |
+| Fc dry vc361 | 361 m/min | 420 | 552.3 | N | +31.5 % | 63 | **no** | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm |
+| Fc flood vc361 | 361 m/min | 426 | 475.7 | N | +11.7 % | 63.9 | yes | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm, flood |
+| Ft dry vc361 | 361 m/min | 138 | 212.4 | N | +53.9 % | 41.4 | **no** | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm |
+| Ft flood vc361 | 361 m/min | 146 | 125 | N | -14.4 % | 43.8 | yes | h 0.160 mm, vc 361 m/min, r_e 20 um, b 4 mm, flood |
+| Fc dry vc650 | 650 m/min | 399 | 500.6 | N | +25.5 % | 59.8 | **no** | h 0.160 mm, vc 650 m/min, r_e 20 um, b 4 mm |
 | Fc flood vc650 | 650 m/min | 402 | 468.1 | N | +16.4 % | 60.3 | **no** | h 0.160 mm, vc 650 m/min, r_e 20 um, b 4 mm, flood |
-| Ft dry vc650 | 650 m/min | 99 | 155.4 | N | +57.0 % | 29.7 | **no** | h 0.160 mm, vc 650 m/min, r_e 20 um, b 4 mm |
-| Ft flood vc650 | 650 m/min | 107 | 119.1 | N | +11.3 % | 32.1 | yes | h 0.160 mm, vc 650 m/min, r_e 20 um, b 4 mm, flood |
+| Ft dry vc650 | 650 m/min | 99 | 155.3 | N | +56.8 % | 29.7 | **no** | h 0.160 mm, vc 650 m/min, r_e 20 um, b 4 mm |
+| Ft flood vc650 | 650 m/min | 107 | 119 | N | +11.2 % | 32.1 | yes | h 0.160 mm, vc 650 m/min, r_e 20 um, b 4 mm, flood |
 | Fc dry vc950 | 950 m/min | 384 | 474.2 | N | +23.5 % | 57.6 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm |
-| Fc flood vc950 | 950 m/min | 390 | 456.4 | N | +17.0 % | 58.5 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
-| Ft dry vc950 | 950 m/min | 77 | 127.3 | N | +65.3 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm |
-| Ft flood vc950 | 950 m/min | 77 | 107.8 | N | +40.0 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
+| Fc flood vc950 | 950 m/min | 390 | 456.5 | N | +17.1 % | 58.5 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
+| Ft dry vc950 | 950 m/min | 77 | 127.2 | N | +65.1 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm |
+| Ft flood vc950 | 950 m/min | 77 | 107.6 | N | +39.8 % | 23.1 | **no** | h 0.160 mm, vc 950 m/min, r_e 20 um, b 4 mm, flood |
 | Fc dry vc1250 | 1250 m/min | 385 | 458.2 | N | +19.0 % | 57.8 | **no** | h 0.160 mm, vc 1250 m/min, r_e 20 um, b 4 mm |
-| Fc flood vc1250 | 1250 m/min | 394 | 446.6 | N | +13.4 % | 59.1 | yes | h 0.160 mm, vc 1250 m/min, r_e 20 um, b 4 mm, flood |
-| Ft dry vc1250 | 1250 m/min | 61 | 110.4 | N | +81.0 % | 18.3 | **no** | h 0.160 mm, vc 1250 m/min, r_e 20 um, b 4 mm |
-| Ft flood vc1250 | 1250 m/min | 60 | 97.89 | N | +63.2 % | 18 | **no** | h 0.160 mm, vc 1250 m/min, r_e 20 um, b 4 mm, flood |
+| Fc flood vc1250 | 1250 m/min | 394 | 446.7 | N | +13.4 % | 59.1 | yes | h 0.160 mm, vc 1250 m/min, r_e 20 um, b 4 mm, flood |
+| Ft dry vc1250 | 1250 m/min | 61 | 110.3 | N | +80.8 % | 18.3 | **no** | h 0.160 mm, vc 1250 m/min, r_e 20 um, b 4 mm |
+| Ft flood vc1250 | 1250 m/min | 60 | 97.76 | N | +62.9 % | 18 | **no** | h 0.160 mm, vc 1250 m/min, r_e 20 um, b 4 mm, flood |
 
 ### force-orth-al7075-jomaa2014
 
@@ -896,8 +898,8 @@ Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 44.6 %, max 46.7 % over 4 
 | Fc trial 1 | 0.05 mm/rev | 271 | 370.2 | N | +36.6 % | 40.6 | **no** | h 0.050 mm, vc 300 m/min, r_e 30 um, b 4 mm |
 | Ft trial 1 | 0.05 mm/rev | 168 | 335.7 | N | +99.8 % | 50.4 | **no** | h 0.050 mm, vc 300 m/min, r_e 30 um, b 4 mm |
 | Fc trial 2 | 0.25 mm/rev | 901 | 1240 | N | +37.6 % | 135 | **no** | h 0.250 mm, vc 300 m/min, r_e 30 um, b 4 mm |
-| Ft trial 2 | 0.25 mm/rev | 323 | 621.4 | N | +92.4 % | 96.9 | **no** | h 0.250 mm, vc 300 m/min, r_e 30 um, b 4 mm |
-| Fc trial 3 | 0.05 mm/rev | 234 | 293.5 | N | +25.4 % | 35.1 | **no** | h 0.050 mm, vc 1000 m/min, r_e 30 um, b 4 mm |
+| Ft trial 2 | 0.25 mm/rev | 323 | 621.5 | N | +92.4 % | 96.9 | **no** | h 0.250 mm, vc 300 m/min, r_e 30 um, b 4 mm |
+| Fc trial 3 | 0.05 mm/rev | 234 | 293.6 | N | +25.5 % | 35.1 | **no** | h 0.050 mm, vc 1000 m/min, r_e 30 um, b 4 mm |
 | Ft trial 3 | 0.05 mm/rev | 108 | 240.6 | N | +122.8 % | 32.4 | **no** | h 0.050 mm, vc 1000 m/min, r_e 30 um, b 4 mm |
 | Fc trial 4 | 0.25 mm/rev | 707 | 1075 | N | +52.1 % | 106 | **no** | h 0.250 mm, vc 1000 m/min, r_e 30 um, b 4 mm |
 | Ft trial 4 | 0.25 mm/rev | 171 | 421.6 | N | +146.6 % | 51.3 | **no** | h 0.250 mm, vc 1000 m/min, r_e 30 um, b 4 mm |
@@ -914,59 +916,59 @@ Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 44.6 %, max 46.7 % over 4 
 * Material: database entry aisi1045; the case says: Ck45 (C45E) rolled bar, one batch for all tests: supplier tensile test Rm 671 MPa, Rp0.2 420 MPa, A5 22.2 % (Table 2), ferritic-pearlitic; the outer scale and decarburised zone were turned off before the tests (Sect. 2.6). The DB entry is normalised AISI 1045 (+N, ~190 HB): use the batch strength above when calibrating flow stress.
 * Coefficients calibrated to the material's kienzle data (klippel-2022-ck45-cutting-database) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 48 compared, 0 without prediction, 0 not compared; median abs. error 10.7 %, max 226.6 %; 3/48 within uncertainty; case **outside budget**; largest miss 7.55 tolerances.
-* Likely cause: main_force_pct: 15/24 within, mean signed error +24 %; thrust_force_pct: 15/24 within, mean signed error +67 %. Coefficients: calibrated to kienzle data. Ck45 forms a built-up edge below about 70 m/min (database BUE window); the force rows carry no BUE.
+* Result: 48 compared, 0 without prediction, 0 not compared; median abs. error 11.5 %, max 225.6 %; 2/48 within uncertainty; case **outside budget**; largest miss 7.52 tolerances.
+* Likely cause: main_force_pct: 15/24 within, mean signed error +24 %; thrust_force_pct: 15/24 within, mean signed error +66 %. Coefficients: calibrated to kienzle data. Ck45 forms a built-up edge below about 70 m/min (database BUE window); the force rows carry no BUE.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc V0072 | 10.1 m/min | 325.1 | 507.9 | N/mm | +56.2 % | 53.4 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
-| Ff V0072 | 10.1 m/min | 185.5 | 519.8 | N/mm | +180.2 % | 55.6 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
-| Fc V0073 | 10.1 m/min | 312.1 | 505.9 | N/mm | +62.1 % | 77.6 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
-| Ff V0073 | 10.1 m/min | 175.8 | 514.4 | N/mm | +192.6 % | 52.7 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
-| Fc V0074 | 10.1 m/min | 310.3 | 505.8 | N/mm | +63.0 % | 50.4 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
-| Ff V0074 | 10.1 m/min | 173 | 514.1 | N/mm | +197.1 % | 51.9 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
-| Fc V0123 | 30 m/min | 262.5 | 468 | N/mm | +78.3 % | 46.8 | **no** | h 0.100 mm, vc 30 m/min, r_e 43 um, b 2 mm |
-| Ff V0123 | 30 m/min | 152.9 | 477.8 | N/mm | +212.5 % | 45.9 | **no** | h 0.100 mm, vc 30 m/min, r_e 43 um, b 2 mm |
-| Fc V0124 | 30 m/min | 253.2 | 466.2 | N/mm | +84.1 % | 53.4 | **no** | h 0.100 mm, vc 30 m/min, r_e 39 um, b 2 mm |
-| Ff V0124 | 30 m/min | 144.5 | 472 | N/mm | +226.6 % | 43.4 | **no** | h 0.100 mm, vc 30 m/min, r_e 39 um, b 2 mm |
-| Fc V0125 | 30 m/min | 258.1 | 465.9 | N/mm | +80.5 % | 51.4 | **no** | h 0.100 mm, vc 30 m/min, r_e 38 um, b 2 mm |
-| Ff V0125 | 30 m/min | 147.2 | 471.1 | N/mm | +220.1 % | 44.2 | **no** | h 0.100 mm, vc 30 m/min, r_e 38 um, b 2 mm |
-| Fc V0160 | 50.1 m/min | 262.1 | 441.4 | N/mm | +68.4 % | 39.8 | **no** | h 0.100 mm, vc 50 m/min, r_e 42 um, b 2 mm |
-| Ff V0160 | 50.1 m/min | 168.6 | 443.6 | N/mm | +163.1 % | 50.6 | **no** | h 0.100 mm, vc 50 m/min, r_e 42 um, b 2 mm |
-| Fc V0161 | 50.1 m/min | 261.7 | 440.1 | N/mm | +68.2 % | 40 | **no** | h 0.100 mm, vc 50 m/min, r_e 40 um, b 2 mm |
-| Ff V0161 | 50.1 m/min | 167.3 | 439.6 | N/mm | +162.8 % | 50.2 | **no** | h 0.100 mm, vc 50 m/min, r_e 40 um, b 2 mm |
-| Fc V0162 | 50.1 m/min | 257.4 | 437 | N/mm | +69.8 % | 38.6 | **no** | h 0.100 mm, vc 50 m/min, r_e 34 um, b 2 mm |
-| Ff V0162 | 50.1 m/min | 160.1 | 430.6 | N/mm | +168.9 % | 48 | **no** | h 0.100 mm, vc 50 m/min, r_e 34 um, b 2 mm |
-| Fc V0084 | 70.1 m/min | 379.7 | 407.8 | N/mm | +7.4 % | 57 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Ff V0084 | 70.1 m/min | 401 | 393.2 | N/mm | -2.0 % | 120 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Fc V0085 | 70.1 m/min | 387.3 | 411.4 | N/mm | +6.2 % | 58.1 | yes | h 0.100 mm, vc 70 m/min, r_e 44 um, b 2 mm |
-| Ff V0085 | 70.1 m/min | 412.2 | 402.8 | N/mm | -2.3 % | 124 | yes | h 0.100 mm, vc 70 m/min, r_e 44 um, b 2 mm |
-| Fc V0093 | 150 m/min | 344.4 | 321.3 | N/mm | -6.7 % | 51.7 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
-| Ff V0093 | 150 m/min | 334.9 | 270.4 | N/mm | -19.3 % | 100 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
-| Fc V0094 | 150 m/min | 346.8 | 323.1 | N/mm | -6.8 % | 52 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
-| Ff V0094 | 150 m/min | 340.2 | 274.5 | N/mm | -19.3 % | 102 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
-| Fc V0095 | 150 m/min | 342.9 | 316 | N/mm | -7.8 % | 51.4 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Ff V0095 | 150 m/min | 332.4 | 258.5 | N/mm | -22.2 % | 99.7 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Fc V0236 | 250.1 m/min | 304 | 283.8 | N/mm | -6.7 % | 45.6 | yes | h 0.100 mm, vc 250 m/min, r_e 39 um, b 2 mm |
-| Ff V0236 | 250.1 m/min | 256.9 | 214.7 | N/mm | -16.4 % | 77.1 | yes | h 0.100 mm, vc 250 m/min, r_e 39 um, b 2 mm |
-| Fc V0245 | 349.9 m/min | 285 | 267.8 | N/mm | -6.0 % | 42.8 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
-| Ff V0245 | 349.9 m/min | 216.7 | 193.3 | N/mm | -10.8 % | 65 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
-| Fc V0246 | 349.9 m/min | 283 | 265.7 | N/mm | -6.1 % | 42.4 | yes | h 0.100 mm, vc 350 m/min, r_e 38 um, b 2 mm |
-| Ff V0246 | 349.9 m/min | 212.8 | 188.4 | N/mm | -11.5 % | 63.8 | yes | h 0.100 mm, vc 350 m/min, r_e 38 um, b 2 mm |
-| Fc V0247 | 349.9 m/min | 283.3 | 267.3 | N/mm | -5.7 % | 42.5 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
-| Ff V0247 | 349.9 m/min | 215.1 | 192.1 | N/mm | -10.7 % | 64.5 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
-| Fc V0292 | 450 m/min | 265.1 | 258.7 | N/mm | -2.4 % | 39.8 | yes | h 0.100 mm, vc 450 m/min, r_e 42 um, b 2 mm |
-| Ff V0292 | 450 m/min | 183.9 | 182.1 | N/mm | -1.0 % | 55.2 | yes | h 0.100 mm, vc 450 m/min, r_e 42 um, b 2 mm |
-| Fc V0293 | 450 m/min | 263.6 | 254.7 | N/mm | -3.4 % | 39.5 | yes | h 0.100 mm, vc 450 m/min, r_e 38 um, b 2 mm |
-| Ff V0293 | 450 m/min | 180.2 | 173.1 | N/mm | -3.9 % | 54.1 | yes | h 0.100 mm, vc 450 m/min, r_e 38 um, b 2 mm |
-| Fc V0294 | 450 m/min | 261.6 | 254.6 | N/mm | -2.7 % | 39.2 | yes | h 0.100 mm, vc 450 m/min, r_e 37 um, b 2 mm |
-| Ff V0294 | 450 m/min | 178.5 | 172.9 | N/mm | -3.2 % | 53.5 | yes | h 0.100 mm, vc 450 m/min, r_e 37 um, b 2 mm |
-| Fc V0298 | 500 m/min | 259.6 | 250.2 | N/mm | -3.6 % | 38.9 | yes | h 0.100 mm, vc 500 m/min, r_e 37 um, b 2 mm |
-| Ff V0298 | 500 m/min | 169.5 | 166.7 | N/mm | -1.6 % | 50.9 | yes | h 0.100 mm, vc 500 m/min, r_e 37 um, b 2 mm |
+| Fc V0072 | 10.1 m/min | 325.1 | 507.4 | N/mm | +56.1 % | 53.4 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
+| Ff V0072 | 10.1 m/min | 185.5 | 517.7 | N/mm | +179.1 % | 55.6 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
+| Fc V0073 | 10.1 m/min | 312.1 | 505.6 | N/mm | +62.0 % | 77.6 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
+| Ff V0073 | 10.1 m/min | 175.8 | 512.6 | N/mm | +191.6 % | 52.7 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
+| Fc V0074 | 10.1 m/min | 310.3 | 505.5 | N/mm | +62.9 % | 50.4 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
+| Ff V0074 | 10.1 m/min | 173 | 512.3 | N/mm | +196.1 % | 51.9 | **no** | h 0.100 mm, vc 10 m/min, r_e 39 um, b 2 mm |
+| Fc V0123 | 30 m/min | 262.5 | 467.6 | N/mm | +78.1 % | 46.8 | **no** | h 0.100 mm, vc 30 m/min, r_e 43 um, b 2 mm |
+| Ff V0123 | 30 m/min | 152.9 | 476 | N/mm | +211.3 % | 45.9 | **no** | h 0.100 mm, vc 30 m/min, r_e 43 um, b 2 mm |
+| Fc V0124 | 30 m/min | 253.2 | 465.9 | N/mm | +84.0 % | 53.4 | **no** | h 0.100 mm, vc 30 m/min, r_e 39 um, b 2 mm |
+| Ff V0124 | 30 m/min | 144.5 | 470.4 | N/mm | +225.6 % | 43.4 | **no** | h 0.100 mm, vc 30 m/min, r_e 39 um, b 2 mm |
+| Fc V0125 | 30 m/min | 258.1 | 465.7 | N/mm | +80.4 % | 51.4 | **no** | h 0.100 mm, vc 30 m/min, r_e 38 um, b 2 mm |
+| Ff V0125 | 30 m/min | 147.2 | 469.6 | N/mm | +219.0 % | 44.2 | **no** | h 0.100 mm, vc 30 m/min, r_e 38 um, b 2 mm |
+| Fc V0160 | 50.1 m/min | 262.1 | 441.1 | N/mm | +68.3 % | 39.8 | **no** | h 0.100 mm, vc 50 m/min, r_e 42 um, b 2 mm |
+| Ff V0160 | 50.1 m/min | 168.6 | 441.9 | N/mm | +162.1 % | 50.6 | **no** | h 0.100 mm, vc 50 m/min, r_e 42 um, b 2 mm |
+| Fc V0161 | 50.1 m/min | 261.7 | 439.9 | N/mm | +68.1 % | 40 | **no** | h 0.100 mm, vc 50 m/min, r_e 40 um, b 2 mm |
+| Ff V0161 | 50.1 m/min | 167.3 | 438.1 | N/mm | +161.9 % | 50.2 | **no** | h 0.100 mm, vc 50 m/min, r_e 40 um, b 2 mm |
+| Fc V0162 | 50.1 m/min | 257.4 | 437.1 | N/mm | +69.8 % | 38.6 | **no** | h 0.100 mm, vc 50 m/min, r_e 34 um, b 2 mm |
+| Ff V0162 | 50.1 m/min | 160.1 | 429.5 | N/mm | +168.3 % | 48 | **no** | h 0.100 mm, vc 50 m/min, r_e 34 um, b 2 mm |
+| Fc V0084 | 70.1 m/min | 379.7 | 407.6 | N/mm | +7.3 % | 57 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Ff V0084 | 70.1 m/min | 401 | 391.7 | N/mm | -2.3 % | 120 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Fc V0085 | 70.1 m/min | 387.3 | 411 | N/mm | +6.1 % | 58.1 | yes | h 0.100 mm, vc 70 m/min, r_e 44 um, b 2 mm |
+| Ff V0085 | 70.1 m/min | 412.2 | 400.9 | N/mm | -2.7 % | 124 | yes | h 0.100 mm, vc 70 m/min, r_e 44 um, b 2 mm |
+| Fc V0093 | 150 m/min | 344.4 | 320.7 | N/mm | -6.9 % | 51.7 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Ff V0093 | 150 m/min | 334.9 | 268.4 | N/mm | -19.9 % | 100 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Fc V0094 | 150 m/min | 346.8 | 322.5 | N/mm | -7.0 % | 52 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
+| Ff V0094 | 150 m/min | 340.2 | 272.4 | N/mm | -19.9 % | 102 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
+| Fc V0095 | 150 m/min | 342.9 | 315.7 | N/mm | -7.9 % | 51.4 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Ff V0095 | 150 m/min | 332.4 | 256.9 | N/mm | -22.7 % | 99.7 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Fc V0236 | 250.1 m/min | 304 | 283.3 | N/mm | -6.8 % | 45.6 | yes | h 0.100 mm, vc 250 m/min, r_e 39 um, b 2 mm |
+| Ff V0236 | 250.1 m/min | 256.9 | 212.9 | N/mm | -17.1 % | 77.1 | yes | h 0.100 mm, vc 250 m/min, r_e 39 um, b 2 mm |
+| Fc V0245 | 349.9 m/min | 285 | 267.4 | N/mm | -6.2 % | 42.8 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
+| Ff V0245 | 349.9 m/min | 216.7 | 191.6 | N/mm | -11.6 % | 65 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
+| Fc V0246 | 349.9 m/min | 283 | 265.3 | N/mm | -6.3 % | 42.4 | yes | h 0.100 mm, vc 350 m/min, r_e 38 um, b 2 mm |
+| Ff V0246 | 349.9 m/min | 212.8 | 186.7 | N/mm | -12.3 % | 63.8 | yes | h 0.100 mm, vc 350 m/min, r_e 38 um, b 2 mm |
+| Fc V0247 | 349.9 m/min | 283.3 | 266.9 | N/mm | -5.8 % | 42.5 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
+| Ff V0247 | 349.9 m/min | 215.1 | 190.4 | N/mm | -11.5 % | 64.5 | yes | h 0.100 mm, vc 350 m/min, r_e 40 um, b 2 mm |
+| Fc V0292 | 450 m/min | 265.1 | 258.5 | N/mm | -2.5 % | 39.8 | yes | h 0.100 mm, vc 450 m/min, r_e 42 um, b 2 mm |
+| Ff V0292 | 450 m/min | 183.9 | 180.8 | N/mm | -1.7 % | 55.2 | yes | h 0.100 mm, vc 450 m/min, r_e 42 um, b 2 mm |
+| Fc V0293 | 450 m/min | 263.6 | 254.5 | N/mm | -3.5 % | 39.5 | yes | h 0.100 mm, vc 450 m/min, r_e 38 um, b 2 mm |
+| Ff V0293 | 450 m/min | 180.2 | 171.7 | N/mm | -4.7 % | 54.1 | yes | h 0.100 mm, vc 450 m/min, r_e 38 um, b 2 mm |
+| Fc V0294 | 450 m/min | 261.6 | 254.4 | N/mm | -2.8 % | 39.2 | yes | h 0.100 mm, vc 450 m/min, r_e 37 um, b 2 mm |
+| Ff V0294 | 450 m/min | 178.5 | 171.4 | N/mm | -4.0 % | 53.5 | yes | h 0.100 mm, vc 450 m/min, r_e 37 um, b 2 mm |
+| Fc V0298 | 500 m/min | 259.6 | 250.1 | N/mm | -3.6 % | 38.9 | yes | h 0.100 mm, vc 500 m/min, r_e 37 um, b 2 mm |
+| Ff V0298 | 500 m/min | 169.5 | 165.5 | N/mm | -2.4 % | 50.9 | yes | h 0.100 mm, vc 500 m/min, r_e 37 um, b 2 mm |
 | Fc V0299 | 500 m/min | 259.4 | 253 | N/mm | -2.5 % | 38.9 | yes | h 0.100 mm, vc 500 m/min, r_e 40 um, b 2 mm |
-| Ff V0299 | 500 m/min | 173.2 | 173.1 | N/mm | -0.1 % | 52 | yes | h 0.100 mm, vc 500 m/min, r_e 40 um, b 2 mm |
-| Fc V0300 | 500 m/min | 260.3 | 254.7 | N/mm | -2.1 % | 39 | yes | h 0.100 mm, vc 500 m/min, r_e 42 um, b 2 mm |
-| Ff V0300 | 500 m/min | 174.6 | 176.9 | N/mm | +1.3 % | 52.4 | yes | h 0.100 mm, vc 500 m/min, r_e 42 um, b 2 mm |
+| Ff V0299 | 500 m/min | 173.2 | 172 | N/mm | -0.7 % | 52 | yes | h 0.100 mm, vc 500 m/min, r_e 40 um, b 2 mm |
+| Fc V0300 | 500 m/min | 260.3 | 254.8 | N/mm | -2.1 % | 39 | yes | h 0.100 mm, vc 500 m/min, r_e 42 um, b 2 mm |
+| Ff V0300 | 500 m/min | 174.6 | 175.9 | N/mm | +0.7 % | 52.4 | yes | h 0.100 mm, vc 500 m/min, r_e 42 um, b 2 mm |
 
 ### force-orth-ck45-klippel2022-vc150
 
@@ -980,53 +982,53 @@ Curve `Fz_ap0.7` (fz [mm/tooth] -> N): RMS abs. error 44.6 %, max 46.7 % over 4 
 * Material: database entry aisi1045; the case says: Ck45 (C45E) rolled bar, one batch for all tests: supplier tensile test Rm 671 MPa, Rp0.2 420 MPa, A5 22.2 % (Table 2), ferritic-pearlitic; the outer scale and decarburised zone were turned off before the tests (Sect. 2.6). The DB entry is normalised AISI 1045 (+N, ~190 HB): use the batch strength above when calibrating flow stress.
 * Coefficients calibrated to the material's kienzle data (klippel-2022-ck45-cutting-database) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 42 compared, 0 without prediction, 0 not compared; median abs. error 12.5 %, max 269.8 %; 2/42 within uncertainty; case **outside budget**; largest miss 7.84 tolerances.
-* Likely cause: main_force_pct: 16/21 within, mean signed error +10 %; thrust_force_pct: 16/21 within, mean signed error +34 %. Coefficients: calibrated to kienzle data. 10 miss(es) at h <= 0.03 mm, where the edge (ploughing) force dominates: the (2 + pi) k contact pressure below the stagnation point is an upper-bound estimate (docs/models/mechanics.md 4). Ck45 forms a built-up edge below about 70 m/min (database BUE window); the force rows carry no BUE.
+* Result: 42 compared, 0 without prediction, 0 not compared; median abs. error 13.1 %, max 261.2 %; 2/42 within uncertainty; case **outside budget**; largest miss 7.59 tolerances.
+* Likely cause: main_force_pct: 16/21 within, mean signed error +10 %; thrust_force_pct: 16/21 within, mean signed error +33 %. Coefficients: calibrated to kienzle data. 10 miss(es) at h <= 0.03 mm, where the edge (ploughing) force dominates: the (2 + pi) k contact pressure below the stagnation point is an upper-bound estimate (docs/models/mechanics.md 4). Ck45 forms a built-up edge below about 70 m/min (database BUE window); the force rows carry no BUE.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc V0091 | 0.01 mm/rev | 36.5 | 55.88 | N/mm | +53.1 % | 11.8 | **no** | h 0.010 mm, vc 150 m/min, r_e 42 um, b 2 mm |
-| Ff V0091 | 0.01 mm/rev | 25 | 92.45 | N/mm | +269.8 % | 8.6 | **no** | h 0.010 mm, vc 150 m/min, r_e 42 um, b 2 mm |
-| Fc V0092 | 0.01 mm/rev | 36.3 | 55.76 | N/mm | +53.6 % | 12.8 | **no** | h 0.010 mm, vc 150 m/min, r_e 40 um, b 2 mm |
-| Ff V0092 | 0.01 mm/rev | 24.9 | 90.31 | N/mm | +262.7 % | 9.2 | **no** | h 0.010 mm, vc 150 m/min, r_e 40 um, b 2 mm |
-| Fc V0148 | 0.02 mm/rev | 73.5 | 100.4 | N/mm | +36.6 % | 11 | **no** | h 0.020 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Ff V0148 | 0.02 mm/rev | 59.7 | 127.1 | N/mm | +112.9 % | 17.9 | **no** | h 0.020 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Fc V0149 | 0.02 mm/rev | 68.2 | 101.1 | N/mm | +48.2 % | 15.8 | **no** | h 0.020 mm, vc 150 m/min, r_e 39 um, b 2 mm |
-| Ff V0149 | 0.02 mm/rev | 51.6 | 130.5 | N/mm | +152.8 % | 15.5 | **no** | h 0.020 mm, vc 150 m/min, r_e 39 um, b 2 mm |
-| Fc V0150 | 0.02 mm/rev | 69.2 | 101.4 | N/mm | +46.6 % | 12.6 | **no** | h 0.020 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Ff V0150 | 0.02 mm/rev | 53.7 | 132.3 | N/mm | +146.4 % | 16.1 | **no** | h 0.020 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Fc V0151 | 0.06 mm/rev | 224.4 | 230.4 | N/mm | +2.7 % | 33.7 | yes | h 0.060 mm, vc 150 m/min, r_e 37 um, b 2 mm |
-| Ff V0151 | 0.06 mm/rev | 239.6 | 230.4 | N/mm | -3.9 % | 71.9 | yes | h 0.060 mm, vc 150 m/min, r_e 37 um, b 2 mm |
-| Fc V0152 | 0.06 mm/rev | 226.2 | 231.2 | N/mm | +2.2 % | 33.9 | yes | h 0.060 mm, vc 150 m/min, r_e 38 um, b 2 mm |
-| Ff V0152 | 0.06 mm/rev | 244.7 | 232.3 | N/mm | -5.1 % | 73.4 | yes | h 0.060 mm, vc 150 m/min, r_e 38 um, b 2 mm |
-| Fc V0093 | 0.1 mm/rev | 344.4 | 323.1 | N/mm | -6.2 % | 51.7 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
-| Ff V0093 | 0.1 mm/rev | 334.9 | 273.2 | N/mm | -18.4 % | 100 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
-| Fc V0094 | 0.1 mm/rev | 346.8 | 324.9 | N/mm | -6.3 % | 52 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
-| Ff V0094 | 0.1 mm/rev | 340.2 | 277.3 | N/mm | -18.5 % | 102 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
-| Fc V0095 | 0.1 mm/rev | 342.9 | 317.8 | N/mm | -7.3 % | 51.4 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Ff V0095 | 0.1 mm/rev | 332.4 | 261.3 | N/mm | -21.4 % | 99.7 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Fc V0154 | 0.15 mm/rev | 428.6 | 430.6 | N/mm | +0.5 % | 64.3 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
-| Ff V0154 | 0.15 mm/rev | 353.1 | 302.3 | N/mm | -14.4 % | 106 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
-| Fc V0155 | 0.15 mm/rev | 425.4 | 430.7 | N/mm | +1.2 % | 63.8 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
-| Ff V0155 | 0.15 mm/rev | 345.2 | 302.6 | N/mm | -12.3 % | 104 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
-| Fc V0156 | 0.15 mm/rev | 430.4 | 433.1 | N/mm | +0.6 % | 64.6 | yes | h 0.150 mm, vc 150 m/min, r_e 38 um, b 2 mm |
-| Ff V0156 | 0.15 mm/rev | 356.7 | 308.1 | N/mm | -13.6 % | 107 | yes | h 0.150 mm, vc 150 m/min, r_e 38 um, b 2 mm |
-| Fc V0096 | 0.2 mm/rev | 549 | 534.1 | N/mm | -2.7 % | 82.3 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Ff V0096 | 0.2 mm/rev | 410.3 | 342.1 | N/mm | -16.6 % | 123 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Fc V0097 | 0.2 mm/rev | 544.6 | 538 | N/mm | -1.2 % | 81.7 | yes | h 0.200 mm, vc 150 m/min, r_e 45 um, b 2 mm |
-| Ff V0097 | 0.2 mm/rev | 401.9 | 351 | N/mm | -12.7 % | 121 | yes | h 0.200 mm, vc 150 m/min, r_e 45 um, b 2 mm |
-| Fc V0098 | 0.2 mm/rev | 544.8 | 534.8 | N/mm | -1.8 % | 81.7 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Ff V0098 | 0.2 mm/rev | 402 | 343.6 | N/mm | -14.5 % | 121 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Fc V0172 | 0.2 mm/rev | 517.5 | 526.4 | N/mm | +1.7 % | 77.6 | yes | h 0.200 mm, vc 150 m/min, r_e 33 um, b 2 mm |
-| Ff V0172 | 0.2 mm/rev | 373.6 | 324.6 | N/mm | -13.1 % | 112 | yes | h 0.200 mm, vc 150 m/min, r_e 33 um, b 2 mm |
-| Fc V0173 | 0.2 mm/rev | 519.2 | 533.8 | N/mm | +2.8 % | 77.9 | yes | h 0.200 mm, vc 150 m/min, r_e 40 um, b 2 mm |
-| Ff V0173 | 0.2 mm/rev | 377.3 | 341.4 | N/mm | -9.5 % | 113 | yes | h 0.200 mm, vc 150 m/min, r_e 40 um, b 2 mm |
-| Fc V0174 | 0.2 mm/rev | 520 | 534.2 | N/mm | +2.7 % | 78 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Ff V0174 | 0.2 mm/rev | 380.3 | 342.3 | N/mm | -10.0 % | 114 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
-| Fc V0100 | 0.4 mm/rev | 920.4 | 863.5 | N/mm | -6.2 % | 138 | yes | h 0.400 mm, vc 150 m/min, r_e 40 um, b 2 mm |
-| Ff V0100 | 0.4 mm/rev | 515.7 | 408.2 | N/mm | -20.8 % | 155 | yes | h 0.400 mm, vc 150 m/min, r_e 40 um, b 2 mm |
-| Fc V0101 | 0.4 mm/rev | 899.5 | 865.4 | N/mm | -3.8 % | 135 | yes | h 0.400 mm, vc 150 m/min, r_e 42 um, b 2 mm |
-| Ff V0101 | 0.4 mm/rev | 498.8 | 412.5 | N/mm | -17.3 % | 150 | yes | h 0.400 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Fc V0091 | 0.01 mm/rev | 36.5 | 54.62 | N/mm | +49.7 % | 11.8 | **no** | h 0.010 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Ff V0091 | 0.01 mm/rev | 25 | 90.31 | N/mm | +261.2 % | 8.6 | **no** | h 0.010 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Fc V0092 | 0.01 mm/rev | 36.3 | 54.55 | N/mm | +50.3 % | 12.8 | **no** | h 0.010 mm, vc 150 m/min, r_e 40 um, b 2 mm |
+| Ff V0092 | 0.01 mm/rev | 24.9 | 88.26 | N/mm | +254.5 % | 9.2 | **no** | h 0.010 mm, vc 150 m/min, r_e 40 um, b 2 mm |
+| Fc V0148 | 0.02 mm/rev | 73.5 | 99.38 | N/mm | +35.2 % | 11 | **no** | h 0.020 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Ff V0148 | 0.02 mm/rev | 59.7 | 125.3 | N/mm | +110.0 % | 17.9 | **no** | h 0.020 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Fc V0149 | 0.02 mm/rev | 68.2 | 99.95 | N/mm | +46.6 % | 15.8 | **no** | h 0.020 mm, vc 150 m/min, r_e 39 um, b 2 mm |
+| Ff V0149 | 0.02 mm/rev | 51.6 | 128.5 | N/mm | +149.1 % | 15.5 | **no** | h 0.020 mm, vc 150 m/min, r_e 39 um, b 2 mm |
+| Fc V0150 | 0.02 mm/rev | 69.2 | 100.3 | N/mm | +44.9 % | 12.6 | **no** | h 0.020 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Ff V0150 | 0.02 mm/rev | 53.7 | 130.3 | N/mm | +142.6 % | 16.1 | **no** | h 0.020 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Fc V0151 | 0.06 mm/rev | 224.4 | 230.1 | N/mm | +2.5 % | 33.7 | yes | h 0.060 mm, vc 150 m/min, r_e 37 um, b 2 mm |
+| Ff V0151 | 0.06 mm/rev | 239.6 | 229.1 | N/mm | -4.4 % | 71.9 | yes | h 0.060 mm, vc 150 m/min, r_e 37 um, b 2 mm |
+| Fc V0152 | 0.06 mm/rev | 226.2 | 230.8 | N/mm | +2.0 % | 33.9 | yes | h 0.060 mm, vc 150 m/min, r_e 38 um, b 2 mm |
+| Ff V0152 | 0.06 mm/rev | 244.7 | 230.9 | N/mm | -5.6 % | 73.4 | yes | h 0.060 mm, vc 150 m/min, r_e 38 um, b 2 mm |
+| Fc V0093 | 0.1 mm/rev | 344.4 | 322.6 | N/mm | -6.3 % | 51.7 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Ff V0093 | 0.1 mm/rev | 334.9 | 271.2 | N/mm | -19.0 % | 100 | yes | h 0.100 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Fc V0094 | 0.1 mm/rev | 346.8 | 324.3 | N/mm | -6.5 % | 52 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
+| Ff V0094 | 0.1 mm/rev | 340.2 | 275.2 | N/mm | -19.1 % | 102 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
+| Fc V0095 | 0.1 mm/rev | 342.9 | 317.5 | N/mm | -7.4 % | 51.4 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Ff V0095 | 0.1 mm/rev | 332.4 | 259.7 | N/mm | -21.9 % | 99.7 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Fc V0154 | 0.15 mm/rev | 428.6 | 430.4 | N/mm | +0.4 % | 64.3 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
+| Ff V0154 | 0.15 mm/rev | 353.1 | 300.5 | N/mm | -14.9 % | 106 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
+| Fc V0155 | 0.15 mm/rev | 425.4 | 430.5 | N/mm | +1.2 % | 63.8 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
+| Ff V0155 | 0.15 mm/rev | 345.2 | 300.8 | N/mm | -12.9 % | 104 | yes | h 0.150 mm, vc 150 m/min, r_e 35 um, b 2 mm |
+| Fc V0156 | 0.15 mm/rev | 430.4 | 432.8 | N/mm | +0.6 % | 64.6 | yes | h 0.150 mm, vc 150 m/min, r_e 38 um, b 2 mm |
+| Ff V0156 | 0.15 mm/rev | 356.7 | 306.1 | N/mm | -14.2 % | 107 | yes | h 0.150 mm, vc 150 m/min, r_e 38 um, b 2 mm |
+| Fc V0096 | 0.2 mm/rev | 549 | 533.7 | N/mm | -2.8 % | 82.3 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Ff V0096 | 0.2 mm/rev | 410.3 | 339.7 | N/mm | -17.2 % | 123 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Fc V0097 | 0.2 mm/rev | 544.6 | 537.4 | N/mm | -1.3 % | 81.7 | yes | h 0.200 mm, vc 150 m/min, r_e 45 um, b 2 mm |
+| Ff V0097 | 0.2 mm/rev | 401.9 | 348.3 | N/mm | -13.3 % | 121 | yes | h 0.200 mm, vc 150 m/min, r_e 45 um, b 2 mm |
+| Fc V0098 | 0.2 mm/rev | 544.8 | 534.3 | N/mm | -1.9 % | 81.7 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Ff V0098 | 0.2 mm/rev | 402 | 341.2 | N/mm | -15.1 % | 121 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Fc V0172 | 0.2 mm/rev | 517.5 | 526.3 | N/mm | +1.7 % | 77.6 | yes | h 0.200 mm, vc 150 m/min, r_e 33 um, b 2 mm |
+| Ff V0172 | 0.2 mm/rev | 373.6 | 322.8 | N/mm | -13.6 % | 112 | yes | h 0.200 mm, vc 150 m/min, r_e 33 um, b 2 mm |
+| Fc V0173 | 0.2 mm/rev | 519.2 | 533.4 | N/mm | +2.7 % | 77.9 | yes | h 0.200 mm, vc 150 m/min, r_e 40 um, b 2 mm |
+| Ff V0173 | 0.2 mm/rev | 377.3 | 339.1 | N/mm | -10.1 % | 113 | yes | h 0.200 mm, vc 150 m/min, r_e 40 um, b 2 mm |
+| Fc V0174 | 0.2 mm/rev | 520 | 533.8 | N/mm | +2.6 % | 78 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Ff V0174 | 0.2 mm/rev | 380.3 | 339.9 | N/mm | -10.6 % | 114 | yes | h 0.200 mm, vc 150 m/min, r_e 41 um, b 2 mm |
+| Fc V0100 | 0.4 mm/rev | 920.4 | 863.1 | N/mm | -6.2 % | 138 | yes | h 0.400 mm, vc 150 m/min, r_e 40 um, b 2 mm |
+| Ff V0100 | 0.4 mm/rev | 515.7 | 405.5 | N/mm | -21.4 % | 155 | yes | h 0.400 mm, vc 150 m/min, r_e 40 um, b 2 mm |
+| Fc V0101 | 0.4 mm/rev | 899.5 | 864.9 | N/mm | -3.8 % | 135 | yes | h 0.400 mm, vc 150 m/min, r_e 42 um, b 2 mm |
+| Ff V0101 | 0.4 mm/rev | 498.8 | 409.6 | N/mm | -17.9 % | 150 | yes | h 0.400 mm, vc 150 m/min, r_e 42 um, b 2 mm |
 
 ### force-orth-in718-diazalvarez2017
 
@@ -1051,52 +1053,52 @@ Curve `Fc f=0.05` (vc [m/min] -> N): RMS abs. error 32.8 %, max 36.9 % over 4 co
 | Fc f=0.05 | 60 m/min | 429 | 587.2 | N | +36.9 % | 64.3 | **no** | h 0.050 mm, vc 60 m/min, r_e 25 um, b 2 mm |
 | Fc f=0.05 | 90 m/min | 412 | 547.5 | N | +32.9 % | 61.8 | **no** | h 0.050 mm, vc 90 m/min, r_e 25 um, b 2 mm |
 | Fc f=0.05 | 120 m/min | 387 | 509.8 | N | +31.7 % | 58 | **no** | h 0.050 mm, vc 120 m/min, r_e 25 um, b 2 mm |
-| Fc f=0.05 | 180 m/min | 359 | 464.2 | N | +29.3 % | 53.9 | **no** | h 0.050 mm, vc 180 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.05 | 180 m/min | 359 | 464.3 | N | +29.3 % | 53.9 | **no** | h 0.050 mm, vc 180 m/min, r_e 25 um, b 2 mm |
 
 Curve `Fc f=0.08` (vc [m/min] -> N): RMS abs. error 33.3 %, max 42.9 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc f=0.08 | 60 m/min | 576 | 823.2 | N | +42.9 % | 86.4 | **no** | h 0.080 mm, vc 60 m/min, r_e 25 um, b 2 mm |
-| Fc f=0.08 | 90 m/min | 562 | 736.2 | N | +31.0 % | 84.3 | **no** | h 0.080 mm, vc 90 m/min, r_e 25 um, b 2 mm |
-| Fc f=0.08 | 120 m/min | 545 | 686.2 | N | +25.9 % | 81.8 | **no** | h 0.080 mm, vc 120 m/min, r_e 25 um, b 2 mm |
-| Fc f=0.08 | 180 m/min | 486 | 636.9 | N | +31.0 % | 72.9 | **no** | h 0.080 mm, vc 180 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.08 | 60 m/min | 576 | 823.4 | N | +42.9 % | 86.4 | **no** | h 0.080 mm, vc 60 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.08 | 90 m/min | 562 | 736.3 | N | +31.0 % | 84.3 | **no** | h 0.080 mm, vc 90 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.08 | 120 m/min | 545 | 686.3 | N | +25.9 % | 81.8 | **no** | h 0.080 mm, vc 120 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.08 | 180 m/min | 486 | 637 | N | +31.1 % | 72.9 | **no** | h 0.080 mm, vc 180 m/min, r_e 25 um, b 2 mm |
 
 Curve `Fc f=0.1` (vc [m/min] -> N): RMS abs. error 36.2 %, max 47.6 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc f=0.1 | 60 m/min | 661 | 975.4 | N | +47.6 % | 99.1 | **no** | h 0.100 mm, vc 60 m/min, r_e 25 um, b 2 mm |
-| Fc f=0.1 | 90 m/min | 646 | 874.3 | N | +35.3 % | 96.9 | **no** | h 0.100 mm, vc 90 m/min, r_e 25 um, b 2 mm |
-| Fc f=0.1 | 120 m/min | 632 | 822.2 | N | +30.1 % | 94.8 | **no** | h 0.100 mm, vc 120 m/min, r_e 25 um, b 2 mm |
-| Fc f=0.1 | 180 m/min | 598 | 768.2 | N | +28.5 % | 89.7 | **no** | h 0.100 mm, vc 180 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.1 | 60 m/min | 661 | 975.6 | N | +47.6 % | 99.1 | **no** | h 0.100 mm, vc 60 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.1 | 90 m/min | 646 | 874.5 | N | +35.4 % | 96.9 | **no** | h 0.100 mm, vc 90 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.1 | 120 m/min | 632 | 822.3 | N | +30.1 % | 94.8 | **no** | h 0.100 mm, vc 120 m/min, r_e 25 um, b 2 mm |
+| Fc f=0.1 | 180 m/min | 598 | 768.3 | N | +28.5 % | 89.7 | **no** | h 0.100 mm, vc 180 m/min, r_e 25 um, b 2 mm |
 
 Curve `Ft f=0.05` (vc [m/min] -> N): RMS abs. error 27.6 %, max 35.1 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ft f=0.05 | 60 m/min | 406 | 519.7 | N | +28.0 % | 122 | yes | h 0.050 mm, vc 60 m/min, r_e 25 um, b 2 mm |
-| Ft f=0.05 | 90 m/min | 360 | 469.2 | N | +30.3 % | 108 | **no** | h 0.050 mm, vc 90 m/min, r_e 25 um, b 2 mm |
-| Ft f=0.05 | 120 m/min | 310 | 418.9 | N | +35.1 % | 93 | **no** | h 0.050 mm, vc 120 m/min, r_e 25 um, b 2 mm |
+| Ft f=0.05 | 60 m/min | 406 | 519.8 | N | +28.0 % | 122 | yes | h 0.050 mm, vc 60 m/min, r_e 25 um, b 2 mm |
+| Ft f=0.05 | 90 m/min | 360 | 469.3 | N | +30.4 % | 108 | **no** | h 0.050 mm, vc 90 m/min, r_e 25 um, b 2 mm |
+| Ft f=0.05 | 120 m/min | 310 | 419 | N | +35.1 % | 93 | **no** | h 0.050 mm, vc 120 m/min, r_e 25 um, b 2 mm |
 | Ft f=0.05 | 180 m/min | 326 | 358.2 | N | +9.9 % | 97.8 | yes | h 0.050 mm, vc 180 m/min, r_e 25 um, b 2 mm |
 
-Curve `Ft f=0.08` (vc [m/min] -> N): RMS abs. error 29.8 %, max 41.2 % over 4 compared points.
+Curve `Ft f=0.08` (vc [m/min] -> N): RMS abs. error 29.9 %, max 41.2 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Ft f=0.08 | 60 m/min | 446 | 629.9 | N | +41.2 % | 134 | **no** | h 0.080 mm, vc 60 m/min, r_e 25 um, b 2 mm |
-| Ft f=0.08 | 90 m/min | 382 | 513.6 | N | +34.4 % | 115 | **no** | h 0.080 mm, vc 90 m/min, r_e 25 um, b 2 mm |
+| Ft f=0.08 | 90 m/min | 382 | 513.6 | N | +34.5 % | 115 | **no** | h 0.080 mm, vc 90 m/min, r_e 25 um, b 2 mm |
 | Ft f=0.08 | 120 m/min | 370 | 446.2 | N | +20.6 % | 111 | yes | h 0.080 mm, vc 120 m/min, r_e 25 um, b 2 mm |
-| Ft f=0.08 | 180 m/min | 330 | 382.4 | N | +15.9 % | 99 | yes | h 0.080 mm, vc 180 m/min, r_e 25 um, b 2 mm |
+| Ft f=0.08 | 180 m/min | 330 | 382.5 | N | +15.9 % | 99 | yes | h 0.080 mm, vc 180 m/min, r_e 25 um, b 2 mm |
 
 Curve `Ft f=0.1` (vc [m/min] -> N): RMS abs. error 31.2 %, max 52.3 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Ft f=0.1 | 60 m/min | 446 | 679.4 | N | +52.3 % | 134 | **no** | h 0.100 mm, vc 60 m/min, r_e 25 um, b 2 mm |
-| Ft f=0.1 | 90 m/min | 420 | 544.1 | N | +29.6 % | 126 | yes | h 0.100 mm, vc 90 m/min, r_e 25 um, b 2 mm |
+| Ft f=0.1 | 90 m/min | 420 | 544.2 | N | +29.6 % | 126 | yes | h 0.100 mm, vc 90 m/min, r_e 25 um, b 2 mm |
 | Ft f=0.1 | 120 m/min | 416 | 475 | N | +14.2 % | 125 | yes | h 0.100 mm, vc 120 m/min, r_e 25 um, b 2 mm |
-| Ft f=0.1 | 180 m/min | 444 | 406.5 | N | -8.4 % | 133 | yes | h 0.100 mm, vc 180 m/min, r_e 25 um, b 2 mm |
+| Ft f=0.1 | 180 m/min | 444 | 406.6 | N | -8.4 % | 133 | yes | h 0.100 mm, vc 180 m/min, r_e 25 um, b 2 mm |
 
 ### force-orth-in718-wood2020
 
@@ -1117,17 +1119,17 @@ Curve `Fc extruded` (vc [m/min] -> N): RMS abs. error 21.9 %, max 23.7 % over 3 
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc extruded | 60 m/min | 613 | 758 | N | +23.7 % | 92 | **no** | h 0.100 mm, vc 60 m/min, r_e 25 um, b 2 mm |
+| Fc extruded | 60 m/min | 613 | 758.1 | N | +23.7 % | 92 | **no** | h 0.100 mm, vc 60 m/min, r_e 25 um, b 2 mm |
 | Fc extruded | 90 m/min | 576 | 704.9 | N | +22.4 % | 86.4 | **no** | h 0.100 mm, vc 90 m/min, r_e 25 um, b 2 mm |
-| Fc extruded | 120 m/min | 570 | 680.2 | N | +19.3 % | 85.5 | **no** | h 0.100 mm, vc 120 m/min, r_e 25 um, b 2 mm |
+| Fc extruded | 120 m/min | 570 | 680.3 | N | +19.3 % | 85.5 | **no** | h 0.100 mm, vc 120 m/min, r_e 25 um, b 2 mm |
 
-Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 compared points.
+Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.4 %, max 8.6 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ff extruded | 60 m/min | 361 | 383.3 | N | +6.2 % | 108 | yes | h 0.100 mm, vc 60 m/min, r_e 25 um, b 2 mm |
-| Ff extruded | 90 m/min | 294 | 319.7 | N | +8.8 % | 88.2 | yes | h 0.100 mm, vc 90 m/min, r_e 25 um, b 2 mm |
-| Ff extruded | 120 m/min | 280 | 290.9 | N | +3.9 % | 84 | yes | h 0.100 mm, vc 120 m/min, r_e 25 um, b 2 mm |
+| Ff extruded | 60 m/min | 361 | 382.8 | N | +6.0 % | 108 | yes | h 0.100 mm, vc 60 m/min, r_e 25 um, b 2 mm |
+| Ff extruded | 90 m/min | 294 | 319.2 | N | +8.6 % | 88.2 | yes | h 0.100 mm, vc 90 m/min, r_e 25 um, b 2 mm |
+| Ff extruded | 120 m/min | 280 | 290.4 | N | +3.7 % | 84 | yes | h 0.100 mm, vc 120 m/min, r_e 25 um, b 2 mm |
 
 ### force-orth-ss304-marcicano2005-a
 
@@ -1142,33 +1144,33 @@ Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 co
 * Material: database entry aisi304; the case says: annealed AISI 304 tubes; quasi-static compression gives JC A 360 MPa, B 1244 MPa, n 0.72 (Table 1); hardness not stated
 * Coefficients calibrated to the material's kienzle data (est) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 22 compared, 0 without prediction, 0 not compared; median abs. error 22.5 %, max 63.0 %; case **outside budget**; largest miss 3.5 tolerances.
-* Likely cause: main_force_pct: 6/11 within, mean signed error -14 %; thrust_force_pct: 4/11 within, mean signed error -11 %. Coefficients: calibrated to kienzle data.
+* Result: 22 compared, 0 without prediction, 0 not compared; median abs. error 22.7 %, max 62.7 %; case **outside budget**; largest miss 3.46 tolerances.
+* Likely cause: main_force_pct: 6/11 within, mean signed error -13 %; thrust_force_pct: 4/11 within, mean signed error -10 %. Coefficients: calibrated to kienzle data.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc A1 | 0.097 mm | 360 | 227 | N | -36.9 % | 54 | **no** | h 0.097 mm, vc 38 m/min, r_e 15 um, b 1 mm |
-| Fa A1 | 0.097 mm | 341 | 221 | N | -35.2 % | 102 | **no** | h 0.097 mm, vc 38 m/min, r_e 15 um, b 1 mm |
-| Fc A2 | 0.428 mm | 983 | 1015 | N | +3.2 % | 147 | yes | h 0.428 mm, vc 38 m/min, r_e 15 um, b 1 mm |
-| Fa A2 | 0.428 mm | 548 | 529.3 | N | -3.4 % | 164 | yes | h 0.428 mm, vc 38 m/min, r_e 15 um, b 1 mm |
-| Fc A3 | 0.428 mm | 957 | 903.6 | N | -5.6 % | 144 | yes | h 0.428 mm, vc 60 m/min, r_e 15 um, b 1 mm |
-| Fa A3 | 0.428 mm | 633 | 384.3 | N | -39.3 % | 190 | **no** | h 0.428 mm, vc 60 m/min, r_e 15 um, b 1 mm |
-| Fc A4 | 0.097 mm | 401 | 190.5 | N | -52.5 % | 60.1 | **no** | h 0.097 mm, vc 60 m/min, r_e 15 um, b 1 mm |
-| Fa A4 | 0.097 mm | 455 | 168.3 | N | -63.0 % | 136 | **no** | h 0.097 mm, vc 60 m/min, r_e 15 um, b 1 mm |
-| Fc A5 | 0.06 mm | 281 | 133.7 | N | -52.4 % | 42.1 | **no** | h 0.060 mm, vc 60 m/min, r_e 15 um, b 1 mm |
-| Fa A5 | 0.06 mm | 335 | 132.5 | N | -60.5 % | 100 | **no** | h 0.060 mm, vc 60 m/min, r_e 15 um, b 1 mm |
-| Fc A6 | 0.06 mm | 190 | 153.2 | N | -19.3 % | 28.5 | **no** | h 0.060 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fa A6 | 0.06 mm | 136 | 157.6 | N | +15.9 % | 40.8 | yes | h 0.060 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fc A7 | 0.097 mm | 274 | 250.1 | N | -8.7 % | 41.1 | yes | h 0.097 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fa A7 | 0.097 mm | 185 | 252.2 | N | +36.3 % | 55.5 | **no** | h 0.097 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fc A8 | 0.428 mm | 1114 | 1189 | N | +6.7 % | 167 | yes | h 0.428 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fa A8 | 0.428 mm | 755 | 768.5 | N | +1.8 % | 226 | yes | h 0.428 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fc A9 | 0.205 mm | 612 | 768.4 | N | +25.6 % | 91.8 | **no** | h 0.205 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fa A9 | 0.205 mm | 447 | 714.3 | N | +59.8 % | 134 | **no** | h 0.205 mm, vc 24 m/min, r_e 15 um, b 1 mm |
-| Fc A10 | 0.205 mm | 582 | 597.2 | N | +2.6 % | 87.3 | yes | h 0.205 mm, vc 38 m/min, r_e 15 um, b 1 mm |
-| Fa A10 | 0.205 mm | 466 | 463.5 | N | -0.5 % | 140 | yes | h 0.205 mm, vc 38 m/min, r_e 15 um, b 1 mm |
-| Fc A11 | 0.205 mm | 549 | 485.7 | N | -11.5 % | 82.3 | yes | h 0.205 mm, vc 60 m/min, r_e 15 um, b 1 mm |
-| Fa A11 | 0.205 mm | 461 | 304.7 | N | -33.9 % | 138 | **no** | h 0.205 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fc A1 | 0.097 mm | 360 | 229.6 | N | -36.2 % | 54 | **no** | h 0.097 mm, vc 38 m/min, r_e 15 um, b 1 mm |
+| Fa A1 | 0.097 mm | 341 | 222.9 | N | -34.6 % | 102 | **no** | h 0.097 mm, vc 38 m/min, r_e 15 um, b 1 mm |
+| Fc A2 | 0.428 mm | 983 | 1024 | N | +4.1 % | 147 | yes | h 0.428 mm, vc 38 m/min, r_e 15 um, b 1 mm |
+| Fa A2 | 0.428 mm | 548 | 531.7 | N | -3.0 % | 164 | yes | h 0.428 mm, vc 38 m/min, r_e 15 um, b 1 mm |
+| Fc A3 | 0.428 mm | 957 | 911.3 | N | -4.8 % | 144 | yes | h 0.428 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fa A3 | 0.428 mm | 633 | 385.5 | N | -39.1 % | 190 | **no** | h 0.428 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fc A4 | 0.097 mm | 401 | 192.6 | N | -52.0 % | 60.1 | **no** | h 0.097 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fa A4 | 0.097 mm | 455 | 169.5 | N | -62.7 % | 136 | **no** | h 0.097 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fc A5 | 0.06 mm | 281 | 135.7 | N | -51.7 % | 42.1 | **no** | h 0.060 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fa A5 | 0.06 mm | 335 | 134 | N | -60.0 % | 100 | **no** | h 0.060 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fc A6 | 0.06 mm | 190 | 155.5 | N | -18.2 % | 28.5 | **no** | h 0.060 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fa A6 | 0.06 mm | 136 | 159.4 | N | +17.2 % | 40.8 | yes | h 0.060 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fc A7 | 0.097 mm | 274 | 252.9 | N | -7.7 % | 41.1 | yes | h 0.097 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fa A7 | 0.097 mm | 185 | 254.5 | N | +37.5 % | 55.5 | **no** | h 0.097 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fc A8 | 0.428 mm | 1114 | 1199 | N | +7.6 % | 167 | yes | h 0.428 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fa A8 | 0.428 mm | 755 | 772.5 | N | +2.3 % | 226 | yes | h 0.428 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fc A9 | 0.205 mm | 612 | 778.2 | N | +27.2 % | 91.8 | **no** | h 0.205 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fa A9 | 0.205 mm | 447 | 722.2 | N | +61.6 % | 134 | **no** | h 0.205 mm, vc 24 m/min, r_e 15 um, b 1 mm |
+| Fc A10 | 0.205 mm | 582 | 604.6 | N | +3.9 % | 87.3 | yes | h 0.205 mm, vc 38 m/min, r_e 15 um, b 1 mm |
+| Fa A10 | 0.205 mm | 466 | 467.9 | N | +0.4 % | 140 | yes | h 0.205 mm, vc 38 m/min, r_e 15 um, b 1 mm |
+| Fc A11 | 0.205 mm | 549 | 491.6 | N | -10.5 % | 82.3 | yes | h 0.205 mm, vc 60 m/min, r_e 15 um, b 1 mm |
+| Fa A11 | 0.205 mm | 461 | 307 | N | -33.4 % | 138 | **no** | h 0.205 mm, vc 60 m/min, r_e 15 um, b 1 mm |
 
 ### force-orth-ss304-marcicano2005-b
 
@@ -1183,37 +1185,37 @@ Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 co
 * Material: database entry aisi304; the case says: annealed AISI 304 tubes; quasi-static compression gives JC A 360 MPa, B 1244 MPa, n 0.72 (Table 1); hardness not stated
 * Coefficients calibrated to the material's kienzle data (est) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 26 compared, 0 without prediction, 0 not compared; median abs. error 104.8 %, max 345.6 %; case **outside budget**; largest miss 11.5 tolerances.
-* Likely cause: main_force_pct: 3/13 within, mean signed error +61 %; thrust_force_pct: 0/13 within, mean signed error +182 %. Coefficients: calibrated to kienzle data.
+* Result: 26 compared, 0 without prediction, 0 not compared; median abs. error 107.0 %, max 349.3 %; case **outside budget**; largest miss 11.6 tolerances.
+* Likely cause: main_force_pct: 3/13 within, mean signed error +63 %; thrust_force_pct: 0/13 within, mean signed error +185 %. Coefficients: calibrated to kienzle data.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc B1 | 0.06 mm | 265 | 321.9 | N | +21.5 % | 39.8 | **no** | h 0.060 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fa B1 | 0.06 mm | 165 | 376 | N | +127.9 % | 49.5 | **no** | h 0.060 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fc B2 | 0.097 mm | 378 | 515.8 | N | +36.5 % | 56.7 | **no** | h 0.097 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fa B2 | 0.097 mm | 227 | 595.5 | N | +162.3 % | 68.1 | **no** | h 0.097 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fc B3 | 0.205 mm | 665 | 1446 | N | +117.4 % | 99.8 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fa B3 | 0.205 mm | 375 | 1515 | N | +304.0 % | 112 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fc B4 | 0.428 mm | 1394 | 2186 | N | +56.8 % | 209 | **no** | h 0.428 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fa B4 | 0.428 mm | 743 | 1735 | N | +133.5 % | 223 | **no** | h 0.428 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fc B5 | 0.428 mm | 1322 | 2576 | N | +94.8 % | 198 | **no** | h 0.428 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fa B5 | 0.428 mm | 639 | 2303 | N | +260.5 % | 192 | **no** | h 0.428 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fc B6 | 0.06 mm | 260 | 250 | N | -3.8 % | 39 | yes | h 0.060 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fa B6 | 0.06 mm | 156 | 261.5 | N | +67.6 % | 46.8 | **no** | h 0.060 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fc B7 | 0.097 mm | 369 | 406.9 | N | +10.3 % | 55.4 | yes | h 0.097 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fa B7 | 0.097 mm | 210 | 417.9 | N | +99.0 % | 63 | **no** | h 0.097 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fc B8 | 0.205 mm | 650 | 1373 | N | +111.2 % | 97.5 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fa B8 | 0.205 mm | 349 | 1380 | N | +295.5 % | 105 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fc B9 | 0.205 mm | 652 | 1373 | N | +110.5 % | 97.8 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fa B9 | 0.205 mm | 338 | 1380 | N | +308.4 % | 101 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
-| Fc B10 | 0.205 mm | 627 | 1446 | N | +130.5 % | 94 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fa B10 | 0.205 mm | 340 | 1515 | N | +345.6 % | 102 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
-| Fc B11 | 0.205 mm | 733 | 1220 | N | +66.5 % | 110 | **no** | h 0.205 mm, vc 27 m/min, r_e 15 um, b 1.5 mm |
-| Fa B11 | 0.205 mm | 482 | 1189 | N | +146.6 % | 145 | **no** | h 0.205 mm, vc 27 m/min, r_e 15 um, b 1.5 mm |
-| Fc B12 | 0.205 mm | 639 | 856.8 | N | +34.1 % | 95.8 | **no** | h 0.205 mm, vc 42 m/min, r_e 15 um, b 1.5 mm |
-| Fa B12 | 0.205 mm | 349 | 639.9 | N | +83.4 % | 105 | **no** | h 0.205 mm, vc 42 m/min, r_e 15 um, b 1.5 mm |
-| Fc B13 | 0.205 mm | 622 | 702.3 | N | +12.9 % | 93.3 | yes | h 0.205 mm, vc 67 m/min, r_e 15 um, b 1.5 mm |
-| Fa B13 | 0.205 mm | 306 | 421 | N | +37.6 % | 91.8 | **no** | h 0.205 mm, vc 67 m/min, r_e 15 um, b 1.5 mm |
+| Fc B1 | 0.06 mm | 265 | 325.2 | N | +22.7 % | 39.8 | **no** | h 0.060 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fa B1 | 0.06 mm | 165 | 378.4 | N | +129.4 % | 49.5 | **no** | h 0.060 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fc B2 | 0.097 mm | 378 | 520.2 | N | +37.6 % | 56.7 | **no** | h 0.097 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fa B2 | 0.097 mm | 227 | 599 | N | +163.9 % | 68.1 | **no** | h 0.097 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fc B3 | 0.205 mm | 665 | 1461 | N | +119.7 % | 99.8 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fa B3 | 0.205 mm | 375 | 1528 | N | +307.4 % | 112 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fc B4 | 0.428 mm | 1394 | 2201 | N | +57.9 % | 209 | **no** | h 0.428 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fa B4 | 0.428 mm | 743 | 1741 | N | +134.3 % | 223 | **no** | h 0.428 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fc B5 | 0.428 mm | 1322 | 2599 | N | +96.6 % | 198 | **no** | h 0.428 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fa B5 | 0.428 mm | 639 | 2322 | N | +263.3 % | 192 | **no** | h 0.428 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fc B6 | 0.06 mm | 260 | 253.5 | N | -2.5 % | 39 | yes | h 0.060 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fa B6 | 0.06 mm | 156 | 264.2 | N | +69.4 % | 46.8 | **no** | h 0.060 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fc B7 | 0.097 mm | 369 | 411.4 | N | +11.5 % | 55.4 | yes | h 0.097 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fa B7 | 0.097 mm | 210 | 421.4 | N | +100.7 % | 63 | **no** | h 0.097 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fc B8 | 0.205 mm | 650 | 1390 | N | +113.9 % | 97.5 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fa B8 | 0.205 mm | 349 | 1396 | N | +300.0 % | 105 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fc B9 | 0.205 mm | 652 | 1390 | N | +113.2 % | 97.8 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fa B9 | 0.205 mm | 338 | 1396 | N | +313.0 % | 101 | **no** | h 0.205 mm, vc 13 m/min, r_e 15 um, b 1.5 mm |
+| Fc B10 | 0.205 mm | 627 | 1461 | N | +133.0 % | 94 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fa B10 | 0.205 mm | 340 | 1528 | N | +349.3 % | 102 | **no** | h 0.205 mm, vc 17 m/min, r_e 15 um, b 1.5 mm |
+| Fc B11 | 0.205 mm | 733 | 1233 | N | +68.2 % | 110 | **no** | h 0.205 mm, vc 27 m/min, r_e 15 um, b 1.5 mm |
+| Fa B11 | 0.205 mm | 482 | 1198 | N | +148.5 % | 145 | **no** | h 0.205 mm, vc 27 m/min, r_e 15 um, b 1.5 mm |
+| Fc B12 | 0.205 mm | 639 | 867.4 | N | +35.7 % | 95.8 | **no** | h 0.205 mm, vc 42 m/min, r_e 15 um, b 1.5 mm |
+| Fa B12 | 0.205 mm | 349 | 645.8 | N | +85.1 % | 105 | **no** | h 0.205 mm, vc 42 m/min, r_e 15 um, b 1.5 mm |
+| Fc B13 | 0.205 mm | 622 | 707.6 | N | +13.8 % | 93.3 | yes | h 0.205 mm, vc 67 m/min, r_e 15 um, b 1.5 mm |
+| Fa B13 | 0.205 mm | 306 | 419 | N | +36.9 % | 91.8 | **no** | h 0.205 mm, vc 67 m/min, r_e 15 um, b 1.5 mm |
 
 ### force-orth-ss304-zou2026
 
@@ -1228,21 +1230,21 @@ Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 co
 * Material: database entry aisi304; the case says: 304 stainless steel bar stock; the paper's model data: rho 7950, cp 500, k 16.2, E 193 GPa, yield 235 MPa (Table 1); condition not stated
 * Coefficients calibrated to the material's kienzle data (est) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 10 compared, 0 without prediction, 0 not compared; median abs. error 27.8 %, max 198.4 %; case **outside budget**; largest miss 6.61 tolerances.
-* Likely cause: main_force_pct: 1/5 within, mean signed error -34 %; thrust_force_pct: 3/5 within, mean signed error +43 %. Coefficients: calibrated to kienzle data.
+* Result: 10 compared, 0 without prediction, 0 not compared; median abs. error 26.1 %, max 196.3 %; case **outside budget**; largest miss 6.54 tolerances.
+* Likely cause: main_force_pct: 1/5 within, mean signed error -34 %; thrust_force_pct: 4/5 within, mean signed error +39 %. Coefficients: calibrated to kienzle data.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Fc case 1 | 0.05 mm/rev | 159 | 147.9 | N | -7.0 % | 23.8 | yes | h 0.050 mm, vc 90 m/min, r_e 20 um, b 1 mm |
-| Ft case 1 | 0.05 mm/rev | 58 | 173.1 | N | +198.4 % | 17.4 | **no** | h 0.050 mm, vc 90 m/min, r_e 20 um, b 1 mm |
-| Fc case 2 | 0.1 mm/rev | 264 | 155.6 | N | -41.1 % | 39.6 | **no** | h 0.100 mm, vc 90 m/min, r_e 20 um, b 1 mm |
-| Ft case 2 | 0.1 mm/rev | 96 | 114.3 | N | +19.1 % | 28.8 | yes | h 0.100 mm, vc 90 m/min, r_e 20 um, b 1 mm |
-| Fc case 3 | 0.15 mm/rev | 357 | 266.2 | N | -25.4 % | 53.5 | **no** | h 0.150 mm, vc 90 m/min, r_e 20 um, b 1 mm |
-| Ft case 3 | 0.15 mm/rev | 117 | 152.3 | N | +30.1 % | 35.1 | **no** | h 0.150 mm, vc 90 m/min, r_e 20 um, b 1 mm |
-| Fc case 4 | 0.1 mm/rev | 239 | 125.5 | N | -47.5 % | 35.9 | **no** | h 0.100 mm, vc 150 m/min, r_e 20 um, b 1 mm |
-| Ft case 4 | 0.1 mm/rev | 81 | 72.71 | N | -10.2 % | 24.3 | yes | h 0.100 mm, vc 150 m/min, r_e 20 um, b 1 mm |
-| Fc case 5 | 0.1 mm/rev | 225 | 114.8 | N | -49.0 % | 33.8 | **no** | h 0.100 mm, vc 210 m/min, r_e 20 um, b 1 mm |
-| Ft case 5 | 0.1 mm/rev | 75 | 58.94 | N | -21.4 % | 22.5 | yes | h 0.100 mm, vc 210 m/min, r_e 20 um, b 1 mm |
+| Ft case 1 | 0.05 mm/rev | 58 | 171.8 | N | +196.3 % | 17.4 | **no** | h 0.050 mm, vc 90 m/min, r_e 20 um, b 1 mm |
+| Fc case 2 | 0.1 mm/rev | 264 | 154.6 | N | -41.4 % | 39.6 | **no** | h 0.100 mm, vc 90 m/min, r_e 20 um, b 1 mm |
+| Ft case 2 | 0.1 mm/rev | 96 | 110.7 | N | +15.3 % | 28.8 | yes | h 0.100 mm, vc 90 m/min, r_e 20 um, b 1 mm |
+| Fc case 3 | 0.15 mm/rev | 357 | 265.5 | N | -25.6 % | 53.5 | **no** | h 0.150 mm, vc 90 m/min, r_e 20 um, b 1 mm |
+| Ft case 3 | 0.15 mm/rev | 117 | 147 | N | +25.7 % | 35.1 | yes | h 0.150 mm, vc 90 m/min, r_e 20 um, b 1 mm |
+| Fc case 4 | 0.1 mm/rev | 239 | 124.2 | N | -48.0 % | 35.9 | **no** | h 0.100 mm, vc 150 m/min, r_e 20 um, b 1 mm |
+| Ft case 4 | 0.1 mm/rev | 81 | 68.85 | N | -15.0 % | 24.3 | yes | h 0.100 mm, vc 150 m/min, r_e 20 um, b 1 mm |
+| Fc case 5 | 0.1 mm/rev | 225 | 113.6 | N | -49.5 % | 33.8 | **no** | h 0.100 mm, vc 210 m/min, r_e 20 um, b 1 mm |
+| Ft case 5 | 0.1 mm/rev | 75 | 55.13 | N | -26.5 % | 22.5 | yes | h 0.100 mm, vc 210 m/min, r_e 20 um, b 1 mm |
 
 ### force-orth-ti64-ducobu2017
 
@@ -1257,17 +1259,17 @@ Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 co
 * Material: database entry ti6al4v; the case says: Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed); the paper's model uses E 113.8 GPa, rho 4430 kg/m3, k 7.3 W/mK, cp 580 J/kgK (Table 4)
 * Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 6 compared, 0 without prediction, 0 not compared; median abs. error 26.1 %, max 68.1 %; 0/6 within uncertainty; case **outside budget**; largest miss 2.27 tolerances.
-* Likely cause: main_force_pct: 0/3 within, mean signed error -19 %; thrust_force_pct: 0/3 within, mean signed error +48 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
+* Result: 6 compared, 0 without prediction, 0 not compared; median abs. error 26.4 %, max 68.9 %; 0/6 within uncertainty; case **outside budget**; largest miss 2.3 tolerances.
+* Likely cause: main_force_pct: 0/3 within, mean signed error -18 %; thrust_force_pct: 0/3 within, mean signed error +49 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc h40 | 40 um | 86 | 68.85 | N/mm | -19.9 % | 12.9 | **no** | h 0.040 mm, vc 30 m/min, r_e 20 um, b 1 mm |
-| Ff h40 | 40 um | 40 | 52.94 | N/mm | +32.3 % | 12 | **no** | h 0.040 mm, vc 30 m/min, r_e 20 um, b 1 mm |
-| Fc h60 | 60 um | 113 | 92.59 | N/mm | -18.1 % | 16.9 | **no** | h 0.060 mm, vc 30 m/min, r_e 20 um, b 1 mm |
-| Ff h60 | 60 um | 44 | 63.06 | N/mm | +43.3 % | 13.2 | **no** | h 0.060 mm, vc 30 m/min, r_e 20 um, b 1 mm |
-| Fc h100 | 100 um | 174 | 140.6 | N/mm | -19.2 % | 26.1 | **no** | h 0.100 mm, vc 30 m/min, r_e 20 um, b 1 mm |
-| Ff h100 | 100 um | 50 | 84.04 | N/mm | +68.1 % | 15 | **no** | h 0.100 mm, vc 30 m/min, r_e 20 um, b 1 mm |
+| Fc h40 | 40 um | 86 | 69.43 | N/mm | -19.3 % | 12.9 | **no** | h 0.040 mm, vc 30 m/min, r_e 20 um, b 1 mm |
+| Ff h40 | 40 um | 40 | 53.38 | N/mm | +33.5 % | 12 | **no** | h 0.040 mm, vc 30 m/min, r_e 20 um, b 1 mm |
+| Fc h60 | 60 um | 113 | 93.28 | N/mm | -17.5 % | 16.9 | **no** | h 0.060 mm, vc 30 m/min, r_e 20 um, b 1 mm |
+| Ff h60 | 60 um | 44 | 63.52 | N/mm | +44.4 % | 13.2 | **no** | h 0.060 mm, vc 30 m/min, r_e 20 um, b 1 mm |
+| Fc h100 | 100 um | 174 | 141.3 | N/mm | -18.8 % | 26.1 | **no** | h 0.100 mm, vc 30 m/min, r_e 20 um, b 1 mm |
+| Ff h100 | 100 um | 50 | 84.46 | N/mm | +68.9 % | 15 | **no** | h 0.100 mm, vc 30 m/min, r_e 20 um, b 1 mm |
 
 ### force-orth-ti64-klippel2022-f010
 
@@ -1281,71 +1283,71 @@ Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 co
 * Material: database entry ti6al4v; the case says: Ti6Al4V Grade 5, triple VAR, heat treated 750 C / 90 min, air cooled; supplier minimum Rm 952 MPa, Rp0.2 869 MPa, A 16.5 %, Z 39 %, 30.0 HRC (Table 2); equiaxed alpha+beta, grain size ~9-10 um (Sect. 4).
 * Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 60 compared, 0 without prediction, 0 not compared; median abs. error 7.1 %, max 51.5 %; 14/60 within uncertainty; case **outside budget**; largest miss 1.72 tolerances.
-* Likely cause: main_force_pct: 30/30 within, mean signed error +3 %; thrust_force_pct: 12/30 within, mean signed error +30 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
+* Result: 60 compared, 0 without prediction, 0 not compared; median abs. error 7.1 %, max 51.1 %; 14/60 within uncertainty; case **outside budget**; largest miss 1.7 tolerances.
+* Likely cause: main_force_pct: 30/30 within, mean signed error +2 %; thrust_force_pct: 12/30 within, mean signed error +29 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc V0308 | 10 m/min | 223 | 228.8 | N/mm | +2.6 % | 33.4 | yes | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
-| Ff V0308 | 10 m/min | 152.4 | 222.6 | N/mm | +46.1 % | 45.7 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
-| Fc V0309 | 10 m/min | 223.5 | 228.8 | N/mm | +2.4 % | 33.5 | yes | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
-| Ff V0309 | 10 m/min | 154.6 | 222.8 | N/mm | +44.1 % | 46.4 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
-| Fc V0319 | 10 m/min | 221.9 | 227.4 | N/mm | +2.5 % | 33.3 | yes | h 0.100 mm, vc 10 m/min, r_e 38 um, b 2 mm |
-| Ff V0319 | 10 m/min | 145.8 | 219.1 | N/mm | +50.3 % | 43.7 | **no** | h 0.100 mm, vc 10 m/min, r_e 38 um, b 2 mm |
-| Fc V0326 | 19.9 m/min | 211.1 | 213.6 | N/mm | +1.2 % | 31.7 | yes | h 0.100 mm, vc 20 m/min, r_e 37 um, b 2 mm |
-| Ff V0326 | 19.9 m/min | 146.8 | 204.3 | N/mm | +39.2 % | 44 | **no** | h 0.100 mm, vc 20 m/min, r_e 37 um, b 2 mm |
-| Fc V0327 | 19.9 m/min | 213.5 | 215.2 | N/mm | +0.8 % | 32 | yes | h 0.100 mm, vc 20 m/min, r_e 43 um, b 2 mm |
-| Ff V0327 | 19.9 m/min | 158.1 | 208.3 | N/mm | +31.7 % | 47.4 | **no** | h 0.100 mm, vc 20 m/min, r_e 43 um, b 2 mm |
+| Fc V0308 | 10 m/min | 223 | 228.4 | N/mm | +2.4 % | 33.4 | yes | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
+| Ff V0308 | 10 m/min | 152.4 | 221.6 | N/mm | +45.4 % | 45.7 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
+| Fc V0309 | 10 m/min | 223.5 | 228.4 | N/mm | +2.2 % | 33.5 | yes | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
+| Ff V0309 | 10 m/min | 154.6 | 221.7 | N/mm | +43.4 % | 46.4 | **no** | h 0.100 mm, vc 10 m/min, r_e 42 um, b 2 mm |
+| Fc V0319 | 10 m/min | 221.9 | 227.1 | N/mm | +2.3 % | 33.3 | yes | h 0.100 mm, vc 10 m/min, r_e 38 um, b 2 mm |
+| Ff V0319 | 10 m/min | 145.8 | 218.3 | N/mm | +49.7 % | 43.7 | **no** | h 0.100 mm, vc 10 m/min, r_e 38 um, b 2 mm |
+| Fc V0326 | 19.9 m/min | 211.1 | 213.5 | N/mm | +1.1 % | 31.7 | yes | h 0.100 mm, vc 20 m/min, r_e 37 um, b 2 mm |
+| Ff V0326 | 19.9 m/min | 146.8 | 203.6 | N/mm | +38.7 % | 44 | **no** | h 0.100 mm, vc 20 m/min, r_e 37 um, b 2 mm |
+| Fc V0327 | 19.9 m/min | 213.5 | 214.9 | N/mm | +0.7 % | 32 | yes | h 0.100 mm, vc 20 m/min, r_e 43 um, b 2 mm |
+| Ff V0327 | 19.9 m/min | 158.1 | 207.4 | N/mm | +31.2 % | 47.4 | **no** | h 0.100 mm, vc 20 m/min, r_e 43 um, b 2 mm |
 | Fc V0328 | 19.9 m/min | 205.8 | 212.5 | N/mm | +3.3 % | 30.9 | yes | h 0.100 mm, vc 20 m/min, r_e 34 um, b 2 mm |
-| Ff V0328 | 19.9 m/min | 133 | 201.5 | N/mm | +51.5 % | 39.9 | **no** | h 0.100 mm, vc 20 m/min, r_e 34 um, b 2 mm |
-| Fc V0344 | 39.9 m/min | 211.9 | 227.8 | N/mm | +7.5 % | 31.8 | yes | h 0.100 mm, vc 40 m/min, r_e 40 um, b 2 mm |
-| Ff V0344 | 39.9 m/min | 152.2 | 214.6 | N/mm | +41.0 % | 45.7 | **no** | h 0.100 mm, vc 40 m/min, r_e 40 um, b 2 mm |
+| Ff V0328 | 19.9 m/min | 133 | 201 | N/mm | +51.1 % | 39.9 | **no** | h 0.100 mm, vc 20 m/min, r_e 34 um, b 2 mm |
+| Fc V0344 | 39.9 m/min | 211.9 | 227.7 | N/mm | +7.4 % | 31.8 | yes | h 0.100 mm, vc 40 m/min, r_e 40 um, b 2 mm |
+| Ff V0344 | 39.9 m/min | 152.2 | 213.9 | N/mm | +40.6 % | 45.7 | **no** | h 0.100 mm, vc 40 m/min, r_e 40 um, b 2 mm |
 | Fc V0345 | 39.9 m/min | 209 | 226.8 | N/mm | +8.5 % | 31.3 | yes | h 0.100 mm, vc 40 m/min, r_e 37 um, b 2 mm |
-| Ff V0345 | 39.9 m/min | 143.5 | 212.3 | N/mm | +47.9 % | 43 | **no** | h 0.100 mm, vc 40 m/min, r_e 37 um, b 2 mm |
-| Fc V0346 | 39.9 m/min | 209.3 | 226.6 | N/mm | +8.3 % | 31.4 | yes | h 0.100 mm, vc 40 m/min, r_e 37 um, b 2 mm |
-| Ff V0346 | 39.9 m/min | 143.8 | 211.6 | N/mm | +47.2 % | 43.1 | **no** | h 0.100 mm, vc 40 m/min, r_e 37 um, b 2 mm |
-| Fc V0316 | 50.1 m/min | 211.4 | 226.8 | N/mm | +7.3 % | 31.7 | yes | h 0.100 mm, vc 50 m/min, r_e 39 um, b 2 mm |
-| Ff V0316 | 50.1 m/min | 143.2 | 208.6 | N/mm | +45.7 % | 43 | **no** | h 0.100 mm, vc 50 m/min, r_e 39 um, b 2 mm |
+| Ff V0345 | 39.9 m/min | 143.5 | 211.6 | N/mm | +47.5 % | 43 | **no** | h 0.100 mm, vc 40 m/min, r_e 37 um, b 2 mm |
+| Fc V0346 | 39.9 m/min | 209.3 | 226.5 | N/mm | +8.2 % | 31.4 | yes | h 0.100 mm, vc 40 m/min, r_e 37 um, b 2 mm |
+| Ff V0346 | 39.9 m/min | 143.8 | 211 | N/mm | +46.8 % | 43.1 | **no** | h 0.100 mm, vc 40 m/min, r_e 37 um, b 2 mm |
+| Fc V0316 | 50.1 m/min | 211.4 | 226.7 | N/mm | +7.3 % | 31.7 | yes | h 0.100 mm, vc 50 m/min, r_e 39 um, b 2 mm |
+| Ff V0316 | 50.1 m/min | 143.2 | 208 | N/mm | +45.2 % | 43 | **no** | h 0.100 mm, vc 50 m/min, r_e 39 um, b 2 mm |
 | Fc V0317 | 50.1 m/min | 210.8 | 225.9 | N/mm | +7.2 % | 31.6 | yes | h 0.100 mm, vc 50 m/min, r_e 37 um, b 2 mm |
-| Ff V0317 | 50.1 m/min | 141.6 | 206.6 | N/mm | +45.9 % | 42.5 | **no** | h 0.100 mm, vc 50 m/min, r_e 37 um, b 2 mm |
+| Ff V0317 | 50.1 m/min | 141.6 | 206 | N/mm | +45.5 % | 42.5 | **no** | h 0.100 mm, vc 50 m/min, r_e 37 um, b 2 mm |
 | Fc V0318 | 50.1 m/min | 210.9 | 225.7 | N/mm | +7.0 % | 31.6 | yes | h 0.100 mm, vc 50 m/min, r_e 36 um, b 2 mm |
-| Ff V0318 | 50.1 m/min | 140.6 | 206.2 | N/mm | +46.6 % | 42.2 | **no** | h 0.100 mm, vc 50 m/min, r_e 36 um, b 2 mm |
-| Fc V0438 | 60 m/min | 211.8 | 219.2 | N/mm | +3.5 % | 31.8 | yes | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
-| Ff V0438 | 60 m/min | 136.2 | 192.9 | N/mm | +41.6 % | 40.9 | **no** | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
-| Fc V0439 | 60 m/min | 212.3 | 219.1 | N/mm | +3.2 % | 31.8 | yes | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
-| Ff V0439 | 60 m/min | 140 | 192.8 | N/mm | +37.7 % | 42 | **no** | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
-| Fc V0440 | 60 m/min | 214.3 | 220.6 | N/mm | +2.9 % | 32.1 | yes | h 0.100 mm, vc 60 m/min, r_e 40 um, b 2 mm |
-| Ff V0440 | 60 m/min | 145.3 | 196 | N/mm | +34.9 % | 43.6 | **no** | h 0.100 mm, vc 60 m/min, r_e 40 um, b 2 mm |
+| Ff V0318 | 50.1 m/min | 140.6 | 205.6 | N/mm | +46.2 % | 42.2 | **no** | h 0.100 mm, vc 50 m/min, r_e 36 um, b 2 mm |
+| Fc V0438 | 60 m/min | 211.8 | 219.1 | N/mm | +3.4 % | 31.8 | yes | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
+| Ff V0438 | 60 m/min | 136.2 | 192.2 | N/mm | +41.1 % | 40.9 | **no** | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
+| Fc V0439 | 60 m/min | 212.3 | 219 | N/mm | +3.2 % | 31.8 | yes | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
+| Ff V0439 | 60 m/min | 140 | 192.1 | N/mm | +37.2 % | 42 | **no** | h 0.100 mm, vc 60 m/min, r_e 37 um, b 2 mm |
+| Fc V0440 | 60 m/min | 214.3 | 220.5 | N/mm | +2.9 % | 32.1 | yes | h 0.100 mm, vc 60 m/min, r_e 40 um, b 2 mm |
+| Ff V0440 | 60 m/min | 145.3 | 195.2 | N/mm | +34.3 % | 43.6 | **no** | h 0.100 mm, vc 60 m/min, r_e 40 um, b 2 mm |
 | Fc V0411 | 70 m/min | 202.7 | 213.1 | N/mm | +5.1 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Ff V0411 | 70 m/min | 133 | 180 | N/mm | +35.3 % | 39.9 | **no** | h 0.100 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Fc V0412 | 70 m/min | 202.7 | 214 | N/mm | +5.6 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Ff V0412 | 70 m/min | 133.7 | 181.9 | N/mm | +36.0 % | 40.1 | **no** | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Fc V0413 | 70 m/min | 203 | 214.4 | N/mm | +5.6 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
-| Ff V0413 | 70 m/min | 138.5 | 182.6 | N/mm | +31.8 % | 41.5 | **no** | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Ff V0411 | 70 m/min | 133 | 179.3 | N/mm | +34.8 % | 39.9 | **no** | h 0.100 mm, vc 70 m/min, r_e 37 um, b 2 mm |
+| Fc V0412 | 70 m/min | 202.7 | 213.9 | N/mm | +5.5 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Ff V0412 | 70 m/min | 133.7 | 181.1 | N/mm | +35.5 % | 40.1 | **no** | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Fc V0413 | 70 m/min | 203 | 214.3 | N/mm | +5.5 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Ff V0413 | 70 m/min | 138.5 | 181.8 | N/mm | +31.3 % | 41.5 | **no** | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
 | Fc V0447 | 79.9 m/min | 205.6 | 205.4 | N/mm | -0.1 % | 30.8 | yes | h 0.100 mm, vc 80 m/min, r_e 33 um, b 2 mm |
-| Ff V0447 | 79.9 m/min | 126.9 | 163.7 | N/mm | +29.0 % | 38.1 | yes | h 0.100 mm, vc 80 m/min, r_e 33 um, b 2 mm |
-| Fc V0448 | 79.9 m/min | 213 | 210.6 | N/mm | -1.1 % | 31.9 | yes | h 0.100 mm, vc 80 m/min, r_e 40 um, b 2 mm |
-| Ff V0448 | 79.9 m/min | 148.4 | 174.2 | N/mm | +17.4 % | 44.5 | yes | h 0.100 mm, vc 80 m/min, r_e 40 um, b 2 mm |
-| Fc V0449 | 79.9 m/min | 212 | 211.8 | N/mm | -0.1 % | 31.8 | yes | h 0.100 mm, vc 80 m/min, r_e 41 um, b 2 mm |
-| Ff V0449 | 79.9 m/min | 149.3 | 176.7 | N/mm | +18.3 % | 44.8 | yes | h 0.100 mm, vc 80 m/min, r_e 41 um, b 2 mm |
-| Fc V0335 | 100 m/min | 203.3 | 205.1 | N/mm | +0.9 % | 30.5 | yes | h 0.100 mm, vc 100 m/min, r_e 38 um, b 2 mm |
-| Ff V0335 | 100 m/min | 140 | 160 | N/mm | +14.3 % | 42 | yes | h 0.100 mm, vc 100 m/min, r_e 38 um, b 2 mm |
-| Fc V0336 | 100 m/min | 200 | 200.7 | N/mm | +0.3 % | 30 | yes | h 0.100 mm, vc 100 m/min, r_e 32 um, b 2 mm |
-| Ff V0336 | 100 m/min | 122 | 151.1 | N/mm | +23.9 % | 36.6 | yes | h 0.100 mm, vc 100 m/min, r_e 32 um, b 2 mm |
-| Fc V0337 | 100 m/min | 199.2 | 200.9 | N/mm | +0.9 % | 29.9 | yes | h 0.100 mm, vc 100 m/min, r_e 33 um, b 2 mm |
-| Ff V0337 | 100 m/min | 123.6 | 151.6 | N/mm | +22.7 % | 37.1 | yes | h 0.100 mm, vc 100 m/min, r_e 33 um, b 2 mm |
-| Fc V0353 | 125 m/min | 197.3 | 198.6 | N/mm | +0.7 % | 29.6 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
-| Ff V0353 | 125 m/min | 141.2 | 150.1 | N/mm | +6.3 % | 42.4 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
-| Fc V0354 | 125 m/min | 197.7 | 198.3 | N/mm | +0.3 % | 29.7 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
-| Ff V0354 | 125 m/min | 141.2 | 149.5 | N/mm | +5.8 % | 42.4 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
-| Fc V0355 | 125 m/min | 195.9 | 198.1 | N/mm | +1.1 % | 29.4 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
-| Ff V0355 | 125 m/min | 138.9 | 149 | N/mm | +7.2 % | 41.7 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
-| Fc V0455 | 150 m/min | 196.3 | 190.5 | N/mm | -2.9 % | 29.4 | yes | h 0.100 mm, vc 150 m/min, r_e 38 um, b 2 mm |
-| Ff V0455 | 150 m/min | 137.2 | 136.1 | N/mm | -0.8 % | 41.2 | yes | h 0.100 mm, vc 150 m/min, r_e 38 um, b 2 mm |
-| Fc V0456 | 150 m/min | 195.9 | 188.9 | N/mm | -3.6 % | 29.4 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Ff V0456 | 150 m/min | 134.3 | 132.7 | N/mm | -1.2 % | 40.3 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
-| Fc V0457 | 150 m/min | 200.1 | 194 | N/mm | -3.1 % | 30 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
-| Ff V0457 | 150 m/min | 152.6 | 143.2 | N/mm | -6.2 % | 45.8 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
+| Ff V0447 | 79.9 m/min | 126.9 | 163.1 | N/mm | +28.5 % | 38.1 | yes | h 0.100 mm, vc 80 m/min, r_e 33 um, b 2 mm |
+| Fc V0448 | 79.9 m/min | 213 | 210.5 | N/mm | -1.2 % | 31.9 | yes | h 0.100 mm, vc 80 m/min, r_e 40 um, b 2 mm |
+| Ff V0448 | 79.9 m/min | 148.4 | 173.4 | N/mm | +16.8 % | 44.5 | yes | h 0.100 mm, vc 80 m/min, r_e 40 um, b 2 mm |
+| Fc V0449 | 79.9 m/min | 212 | 211.7 | N/mm | -0.2 % | 31.8 | yes | h 0.100 mm, vc 80 m/min, r_e 41 um, b 2 mm |
+| Ff V0449 | 79.9 m/min | 149.3 | 175.8 | N/mm | +17.8 % | 44.8 | yes | h 0.100 mm, vc 80 m/min, r_e 41 um, b 2 mm |
+| Fc V0335 | 100 m/min | 203.3 | 205 | N/mm | +0.8 % | 30.5 | yes | h 0.100 mm, vc 100 m/min, r_e 38 um, b 2 mm |
+| Ff V0335 | 100 m/min | 140 | 159.2 | N/mm | +13.7 % | 42 | yes | h 0.100 mm, vc 100 m/min, r_e 38 um, b 2 mm |
+| Fc V0336 | 100 m/min | 200 | 200.7 | N/mm | +0.4 % | 30 | yes | h 0.100 mm, vc 100 m/min, r_e 32 um, b 2 mm |
+| Ff V0336 | 100 m/min | 122 | 150.5 | N/mm | +23.4 % | 36.6 | yes | h 0.100 mm, vc 100 m/min, r_e 32 um, b 2 mm |
+| Fc V0337 | 100 m/min | 199.2 | 201 | N/mm | +0.9 % | 29.9 | yes | h 0.100 mm, vc 100 m/min, r_e 33 um, b 2 mm |
+| Ff V0337 | 100 m/min | 123.6 | 151 | N/mm | +22.2 % | 37.1 | yes | h 0.100 mm, vc 100 m/min, r_e 33 um, b 2 mm |
+| Fc V0353 | 125 m/min | 197.3 | 198.1 | N/mm | +0.4 % | 29.6 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
+| Ff V0353 | 125 m/min | 141.2 | 148.9 | N/mm | +5.5 % | 42.4 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
+| Fc V0354 | 125 m/min | 197.7 | 197.8 | N/mm | +0.1 % | 29.7 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
+| Ff V0354 | 125 m/min | 141.2 | 148.3 | N/mm | +5.0 % | 42.4 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
+| Fc V0355 | 125 m/min | 195.9 | 197.6 | N/mm | +0.9 % | 29.4 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
+| Ff V0355 | 125 m/min | 138.9 | 147.8 | N/mm | +6.4 % | 41.7 | yes | h 0.100 mm, vc 125 m/min, r_e 40 um, b 2 mm |
+| Fc V0455 | 150 m/min | 196.3 | 189.8 | N/mm | -3.3 % | 29.4 | yes | h 0.100 mm, vc 150 m/min, r_e 38 um, b 2 mm |
+| Ff V0455 | 150 m/min | 137.2 | 134.8 | N/mm | -1.7 % | 41.2 | yes | h 0.100 mm, vc 150 m/min, r_e 38 um, b 2 mm |
+| Fc V0456 | 150 m/min | 195.9 | 188.2 | N/mm | -3.9 % | 29.4 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Ff V0456 | 150 m/min | 134.3 | 131.5 | N/mm | -2.1 % | 40.3 | yes | h 0.100 mm, vc 150 m/min, r_e 36 um, b 2 mm |
+| Fc V0457 | 150 m/min | 200.1 | 193.2 | N/mm | -3.5 % | 30 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
+| Ff V0457 | 150 m/min | 152.6 | 141.7 | N/mm | -7.1 % | 45.8 | yes | h 0.100 mm, vc 150 m/min, r_e 43 um, b 2 mm |
 
 ### force-orth-ti64-klippel2022-vc70
 
@@ -1359,51 +1361,51 @@ Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 co
 * Material: database entry ti6al4v; the case says: Ti6Al4V Grade 5, triple VAR, heat treated 750 C / 90 min, air cooled; supplier minimum Rm 952 MPa, Rp0.2 869 MPa, A 16.5 %, Z 39 %, 30.0 HRC (Table 2); equiaxed alpha+beta, grain size ~9-10 um (Sect. 4).
 * Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 40 compared, 0 without prediction, 0 not compared; median abs. error 10.3 %, max 48.4 %; 0/40 within uncertainty; case **outside budget**; largest miss 1.61 tolerances.
-* Likely cause: main_force_pct: 20/20 within, mean signed error +7 %; thrust_force_pct: 10/20 within, mean signed error +29 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
+* Result: 40 compared, 0 without prediction, 0 not compared; median abs. error 10.3 %, max 48.0 %; 0/40 within uncertainty; case **outside budget**; largest miss 1.6 tolerances.
+* Likely cause: main_force_pct: 20/20 within, mean signed error +7 %; thrust_force_pct: 11/20 within, mean signed error +28 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc V0402 | 0.04 mm/rev | 100.6 | 107.3 | N/mm | +6.6 % | 15.1 | yes | h 0.040 mm, vc 70 m/min, r_e 40 um, b 2 mm |
-| Ff V0402 | 0.04 mm/rev | 108 | 115.1 | N/mm | +6.6 % | 32.4 | yes | h 0.040 mm, vc 70 m/min, r_e 40 um, b 2 mm |
-| Fc V0403 | 0.04 mm/rev | 99.6 | 106.6 | N/mm | +7.0 % | 14.9 | yes | h 0.040 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Ff V0403 | 0.04 mm/rev | 104.4 | 113 | N/mm | +8.3 % | 31.3 | yes | h 0.040 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Fc V0404 | 0.04 mm/rev | 98.4 | 106.2 | N/mm | +7.9 % | 14.8 | yes | h 0.040 mm, vc 70 m/min, r_e 36 um, b 2 mm |
-| Ff V0404 | 0.04 mm/rev | 99.3 | 111.9 | N/mm | +12.7 % | 29.8 | yes | h 0.040 mm, vc 70 m/min, r_e 36 um, b 2 mm |
-| Fc V0383 | 0.06 mm/rev | 140 | 150.3 | N/mm | +7.3 % | 21 | yes | h 0.060 mm, vc 70 m/min, r_e 42 um, b 2 mm |
-| Ff V0383 | 0.06 mm/rev | 127.8 | 151.8 | N/mm | +18.8 % | 38.3 | yes | h 0.060 mm, vc 70 m/min, r_e 42 um, b 2 mm |
-| Fc V0385 | 0.06 mm/rev | 139.1 | 149.6 | N/mm | +7.6 % | 20.9 | yes | h 0.060 mm, vc 70 m/min, r_e 39 um, b 2 mm |
-| Ff V0385 | 0.06 mm/rev | 122.6 | 150.1 | N/mm | +22.4 % | 36.8 | yes | h 0.060 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Fc V0402 | 0.04 mm/rev | 100.6 | 106.9 | N/mm | +6.3 % | 15.1 | yes | h 0.040 mm, vc 70 m/min, r_e 40 um, b 2 mm |
+| Ff V0402 | 0.04 mm/rev | 108 | 114.4 | N/mm | +5.9 % | 32.4 | yes | h 0.040 mm, vc 70 m/min, r_e 40 um, b 2 mm |
+| Fc V0403 | 0.04 mm/rev | 99.6 | 106.3 | N/mm | +6.7 % | 14.9 | yes | h 0.040 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Ff V0403 | 0.04 mm/rev | 104.4 | 112.4 | N/mm | +7.6 % | 31.3 | yes | h 0.040 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Fc V0404 | 0.04 mm/rev | 98.4 | 105.9 | N/mm | +7.6 % | 14.8 | yes | h 0.040 mm, vc 70 m/min, r_e 36 um, b 2 mm |
+| Ff V0404 | 0.04 mm/rev | 99.3 | 111.3 | N/mm | +12.1 % | 29.8 | yes | h 0.040 mm, vc 70 m/min, r_e 36 um, b 2 mm |
+| Fc V0383 | 0.06 mm/rev | 140 | 150.1 | N/mm | +7.2 % | 21 | yes | h 0.060 mm, vc 70 m/min, r_e 42 um, b 2 mm |
+| Ff V0383 | 0.06 mm/rev | 127.8 | 151.2 | N/mm | +18.3 % | 38.3 | yes | h 0.060 mm, vc 70 m/min, r_e 42 um, b 2 mm |
+| Fc V0385 | 0.06 mm/rev | 139.1 | 149.5 | N/mm | +7.5 % | 20.9 | yes | h 0.060 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Ff V0385 | 0.06 mm/rev | 122.6 | 149.5 | N/mm | +21.9 % | 36.8 | yes | h 0.060 mm, vc 70 m/min, r_e 39 um, b 2 mm |
 | Fc V0405 | 0.08 mm/rev | 168.2 | 184.9 | N/mm | +9.9 % | 25.2 | yes | h 0.080 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Ff V0405 | 0.08 mm/rev | 121.4 | 171.2 | N/mm | +41.0 % | 36.4 | **no** | h 0.080 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Fc V0406 | 0.08 mm/rev | 165.7 | 183.4 | N/mm | +10.7 % | 24.9 | yes | h 0.080 mm, vc 70 m/min, r_e 34 um, b 2 mm |
-| Ff V0406 | 0.08 mm/rev | 113.2 | 168 | N/mm | +48.4 % | 34 | **no** | h 0.080 mm, vc 70 m/min, r_e 34 um, b 2 mm |
-| Fc V0407 | 0.08 mm/rev | 165.7 | 184.6 | N/mm | +11.4 % | 24.9 | yes | h 0.080 mm, vc 70 m/min, r_e 36 um, b 2 mm |
-| Ff V0407 | 0.08 mm/rev | 115.7 | 170.4 | N/mm | +47.3 % | 34.7 | **no** | h 0.080 mm, vc 70 m/min, r_e 36 um, b 2 mm |
-| Fc V0411 | 0.1 mm/rev | 202.7 | 217.3 | N/mm | +7.2 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Ff V0411 | 0.1 mm/rev | 133 | 186.4 | N/mm | +40.1 % | 39.9 | **no** | h 0.100 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Fc V0412 | 0.1 mm/rev | 202.7 | 218.1 | N/mm | +7.6 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Ff V0412 | 0.1 mm/rev | 133.7 | 188.1 | N/mm | +40.7 % | 40.1 | **no** | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Fc V0413 | 0.1 mm/rev | 203 | 218.5 | N/mm | +7.6 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
-| Ff V0413 | 0.1 mm/rev | 138.5 | 188.8 | N/mm | +36.3 % | 41.5 | **no** | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
-| Fc V0386 | 0.12 mm/rev | 237.6 | 249 | N/mm | +4.8 % | 35.6 | yes | h 0.120 mm, vc 70 m/min, r_e 39 um, b 2 mm |
-| Ff V0386 | 0.12 mm/rev | 151.1 | 199.4 | N/mm | +32.0 % | 45.3 | **no** | h 0.120 mm, vc 70 m/min, r_e 39 um, b 2 mm |
-| Fc V0387 | 0.12 mm/rev | 236.2 | 248.1 | N/mm | +5.0 % | 35.4 | yes | h 0.120 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Ff V0387 | 0.12 mm/rev | 149.3 | 197.5 | N/mm | +32.3 % | 44.8 | **no** | h 0.120 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Fc V0388 | 0.12 mm/rev | 240 | 252.6 | N/mm | +5.2 % | 36 | yes | h 0.120 mm, vc 70 m/min, r_e 44 um, b 2 mm |
-| Ff V0388 | 0.12 mm/rev | 162.5 | 206.5 | N/mm | +27.1 % | 48.8 | yes | h 0.120 mm, vc 70 m/min, r_e 44 um, b 2 mm |
+| Ff V0405 | 0.08 mm/rev | 121.4 | 170.6 | N/mm | +40.5 % | 36.4 | **no** | h 0.080 mm, vc 70 m/min, r_e 37 um, b 2 mm |
+| Fc V0406 | 0.08 mm/rev | 165.7 | 183.5 | N/mm | +10.7 % | 24.9 | yes | h 0.080 mm, vc 70 m/min, r_e 34 um, b 2 mm |
+| Ff V0406 | 0.08 mm/rev | 113.2 | 167.5 | N/mm | +48.0 % | 34 | **no** | h 0.080 mm, vc 70 m/min, r_e 34 um, b 2 mm |
+| Fc V0407 | 0.08 mm/rev | 165.7 | 184.5 | N/mm | +11.4 % | 24.9 | yes | h 0.080 mm, vc 70 m/min, r_e 36 um, b 2 mm |
+| Ff V0407 | 0.08 mm/rev | 115.7 | 169.8 | N/mm | +46.8 % | 34.7 | **no** | h 0.080 mm, vc 70 m/min, r_e 36 um, b 2 mm |
+| Fc V0411 | 0.1 mm/rev | 202.7 | 217.2 | N/mm | +7.2 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 37 um, b 2 mm |
+| Ff V0411 | 0.1 mm/rev | 133 | 185.7 | N/mm | +39.6 % | 39.9 | **no** | h 0.100 mm, vc 70 m/min, r_e 37 um, b 2 mm |
+| Fc V0412 | 0.1 mm/rev | 202.7 | 218 | N/mm | +7.6 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Ff V0412 | 0.1 mm/rev | 133.7 | 187.4 | N/mm | +40.2 % | 40.1 | **no** | h 0.100 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Fc V0413 | 0.1 mm/rev | 203 | 218.4 | N/mm | +7.6 % | 30.4 | yes | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Ff V0413 | 0.1 mm/rev | 138.5 | 188.1 | N/mm | +35.8 % | 41.5 | **no** | h 0.100 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Fc V0386 | 0.12 mm/rev | 237.6 | 248.9 | N/mm | +4.8 % | 35.6 | yes | h 0.120 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Ff V0386 | 0.12 mm/rev | 151.1 | 198.5 | N/mm | +31.4 % | 45.3 | **no** | h 0.120 mm, vc 70 m/min, r_e 39 um, b 2 mm |
+| Fc V0387 | 0.12 mm/rev | 236.2 | 248 | N/mm | +5.0 % | 35.4 | yes | h 0.120 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Ff V0387 | 0.12 mm/rev | 149.3 | 196.6 | N/mm | +31.7 % | 44.8 | **no** | h 0.120 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Fc V0388 | 0.12 mm/rev | 240 | 252.3 | N/mm | +5.1 % | 36 | yes | h 0.120 mm, vc 70 m/min, r_e 44 um, b 2 mm |
+| Ff V0388 | 0.12 mm/rev | 162.5 | 205.4 | N/mm | +26.4 % | 48.8 | yes | h 0.120 mm, vc 70 m/min, r_e 44 um, b 2 mm |
 | Fc V0408 | 0.15 mm/rev | 271.8 | 285.3 | N/mm | +5.0 % | 40.8 | yes | h 0.150 mm, vc 70 m/min, r_e 34 um, b 2 mm |
-| Ff V0408 | 0.15 mm/rev | 149 | 200.2 | N/mm | +34.4 % | 44.7 | **no** | h 0.150 mm, vc 70 m/min, r_e 34 um, b 2 mm |
-| Fc V0409 | 0.15 mm/rev | 272.6 | 288.3 | N/mm | +5.8 % | 40.9 | yes | h 0.150 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Ff V0409 | 0.15 mm/rev | 158.4 | 206.2 | N/mm | +30.2 % | 47.5 | **no** | h 0.150 mm, vc 70 m/min, r_e 37 um, b 2 mm |
-| Fc V0410 | 0.15 mm/rev | 274.1 | 288.6 | N/mm | +5.3 % | 41.1 | yes | h 0.150 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Ff V0410 | 0.15 mm/rev | 160.4 | 206.7 | N/mm | +28.9 % | 48.1 | yes | h 0.150 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Fc V0389 | 0.2 mm/rev | 330.7 | 351.5 | N/mm | +6.3 % | 49.6 | yes | h 0.200 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Ff V0389 | 0.2 mm/rev | 167.6 | 217.8 | N/mm | +30.0 % | 50.3 | yes | h 0.200 mm, vc 70 m/min, r_e 38 um, b 2 mm |
-| Fc V0390 | 0.2 mm/rev | 334.4 | 353.6 | N/mm | +5.7 % | 50.2 | yes | h 0.200 mm, vc 70 m/min, r_e 40 um, b 2 mm |
-| Ff V0390 | 0.2 mm/rev | 181.7 | 222 | N/mm | +22.2 % | 54.5 | yes | h 0.200 mm, vc 70 m/min, r_e 40 um, b 2 mm |
-| Fc V0391 | 0.2 mm/rev | 335.3 | 354.7 | N/mm | +5.8 % | 50.3 | yes | h 0.200 mm, vc 70 m/min, r_e 42 um, b 2 mm |
-| Ff V0391 | 0.2 mm/rev | 188.1 | 224.2 | N/mm | +19.2 % | 56.4 | yes | h 0.200 mm, vc 70 m/min, r_e 42 um, b 2 mm |
+| Ff V0408 | 0.15 mm/rev | 149 | 199.4 | N/mm | +33.8 % | 44.7 | **no** | h 0.150 mm, vc 70 m/min, r_e 34 um, b 2 mm |
+| Fc V0409 | 0.15 mm/rev | 272.6 | 288.3 | N/mm | +5.7 % | 40.9 | yes | h 0.150 mm, vc 70 m/min, r_e 37 um, b 2 mm |
+| Ff V0409 | 0.15 mm/rev | 158.4 | 205.3 | N/mm | +29.6 % | 47.5 | yes | h 0.150 mm, vc 70 m/min, r_e 37 um, b 2 mm |
+| Fc V0410 | 0.15 mm/rev | 274.1 | 288.5 | N/mm | +5.3 % | 41.1 | yes | h 0.150 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Ff V0410 | 0.15 mm/rev | 160.4 | 205.8 | N/mm | +28.3 % | 48.1 | yes | h 0.150 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Fc V0389 | 0.2 mm/rev | 330.7 | 351.4 | N/mm | +6.3 % | 49.6 | yes | h 0.200 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Ff V0389 | 0.2 mm/rev | 167.6 | 216.6 | N/mm | +29.3 % | 50.3 | yes | h 0.200 mm, vc 70 m/min, r_e 38 um, b 2 mm |
+| Fc V0390 | 0.2 mm/rev | 334.4 | 353.4 | N/mm | +5.7 % | 50.2 | yes | h 0.200 mm, vc 70 m/min, r_e 40 um, b 2 mm |
+| Ff V0390 | 0.2 mm/rev | 181.7 | 220.7 | N/mm | +21.5 % | 54.5 | yes | h 0.200 mm, vc 70 m/min, r_e 40 um, b 2 mm |
+| Fc V0391 | 0.2 mm/rev | 335.3 | 354.5 | N/mm | +5.7 % | 50.3 | yes | h 0.200 mm, vc 70 m/min, r_e 42 um, b 2 mm |
+| Ff V0391 | 0.2 mm/rev | 188.1 | 222.9 | N/mm | +18.5 % | 56.4 | yes | h 0.200 mm, vc 70 m/min, r_e 42 um, b 2 mm |
 
 ### force-orth-ti64-loschner2025
 
@@ -1418,72 +1420,72 @@ Curve `Ff extruded` (vc [m/min] -> N): RMS abs. error 6.6 %, max 8.8 % over 3 co
 * Material: database entry ti6al4v; the case says: Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed)
 * Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 34 compared, 0 without prediction, 0 not compared; median abs. error 46.1 %, max 303.9 %; 0/34 within uncertainty; case **outside budget**; largest miss 10.1 tolerances.
-* Likely cause: main_force_pct: 5/17 within, mean signed error -17 %; thrust_force_pct: 0/17 within, mean signed error +161 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
+* Result: 34 compared, 0 without prediction, 0 not compared; median abs. error 46.5 %, max 305.1 %; 0/34 within uncertainty; case **outside budget**; largest miss 10.2 tolerances.
+* Likely cause: main_force_pct: 5/17 within, mean signed error -16 %; thrust_force_pct: 0/17 within, mean signed error +162 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
 
-Curve `Fc f=0.05` (vc [m/min] -> N): RMS abs. error 19.3 %, max 20.6 % over 6 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fc f=0.05 | 40 m/min | 269 | 213.6 | N | -20.6 % | 40.4 | **no** | h 0.050 mm, vc 40 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.05 | 50 m/min | 268 | 216.8 | N | -19.1 % | 40.2 | **no** | h 0.050 mm, vc 50 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.05 | 60 m/min | 272 | 218.8 | N | -19.5 % | 40.8 | **no** | h 0.050 mm, vc 60 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.05 | 70 m/min | 272 | 219.6 | N | -19.3 % | 40.8 | **no** | h 0.050 mm, vc 70 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.05 | 80 m/min | 269 | 220 | N | -18.2 % | 40.4 | **no** | h 0.050 mm, vc 80 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.05 | 90 m/min | 271 | 219.8 | N | -18.9 % | 40.6 | **no** | h 0.050 mm, vc 90 m/min, r_e 15 um, b 3 mm |
-
-Curve `Fc f=0.1` (vc [m/min] -> N): RMS abs. error 19.0 %, max 21.4 % over 6 compared points.
+Curve `Fc f=0.05` (vc [m/min] -> N): RMS abs. error 18.7 %, max 20.0 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc f=0.1 | 40 m/min | 484 | 380.3 | N | -21.4 % | 72.6 | **no** | h 0.100 mm, vc 40 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.1 | 50 m/min | 483 | 388.1 | N | -19.6 % | 72.5 | **no** | h 0.100 mm, vc 50 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.1 | 60 m/min | 481 | 390.4 | N | -18.8 % | 72.1 | **no** | h 0.100 mm, vc 60 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.1 | 70 m/min | 484 | 393.4 | N | -18.7 % | 72.6 | **no** | h 0.100 mm, vc 70 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.1 | 80 m/min | 483 | 395.4 | N | -18.1 % | 72.5 | **no** | h 0.100 mm, vc 80 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.1 | 90 m/min | 479 | 396.4 | N | -17.2 % | 71.8 | **no** | h 0.100 mm, vc 90 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.05 | 40 m/min | 269 | 215.2 | N | -20.0 % | 40.4 | **no** | h 0.050 mm, vc 40 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.05 | 50 m/min | 268 | 218.4 | N | -18.5 % | 40.2 | **no** | h 0.050 mm, vc 50 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.05 | 60 m/min | 272 | 220.5 | N | -18.9 % | 40.8 | **no** | h 0.050 mm, vc 60 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.05 | 70 m/min | 272 | 221.2 | N | -18.7 % | 40.8 | **no** | h 0.050 mm, vc 70 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.05 | 80 m/min | 269 | 221.6 | N | -17.6 % | 40.4 | **no** | h 0.050 mm, vc 80 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.05 | 90 m/min | 271 | 221.4 | N | -18.3 % | 40.6 | **no** | h 0.050 mm, vc 90 m/min, r_e 15 um, b 3 mm |
 
-Curve `Fc f=0.15` (vc [m/min] -> N): RMS abs. error 10.6 %, max 14.1 % over 5 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fc f=0.15 | 40 m/min | 635 | 545.8 | N | -14.1 % | 95.2 | yes | h 0.150 mm, vc 40 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.15 | 50 m/min | 627 | 558.4 | N | -10.9 % | 94 | yes | h 0.150 mm, vc 50 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.15 | 60 m/min | 624 | 569.1 | N | -8.8 % | 93.6 | yes | h 0.150 mm, vc 60 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.15 | 70 m/min | 614 | 560.9 | N | -8.6 % | 92.1 | yes | h 0.150 mm, vc 70 m/min, r_e 15 um, b 3 mm |
-| Fc f=0.15 | 80 m/min | 613 | 554.6 | N | -9.5 % | 92 | yes | h 0.150 mm, vc 80 m/min, r_e 15 um, b 3 mm |
-
-Curve `Fp f=0.05` (vc [m/min] -> N): RMS abs. error 84.6 %, max 98.4 % over 6 compared points.
+Curve `Fc f=0.1` (vc [m/min] -> N): RMS abs. error 18.6 %, max 21.0 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fp f=0.05 | 40 m/min | 74.3 | 126.9 | N | +70.8 % | 22.3 | **no** | h 0.050 mm, vc 40 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.05 | 50 m/min | 74.1 | 128.5 | N | +73.4 % | 22.2 | **no** | h 0.050 mm, vc 50 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.05 | 60 m/min | 70.1 | 129.1 | N | +84.2 % | 21 | **no** | h 0.050 mm, vc 60 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.05 | 70 m/min | 68.2 | 128.9 | N | +89.0 % | 20.5 | **no** | h 0.050 mm, vc 70 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.05 | 80 m/min | 68.1 | 128.3 | N | +88.5 % | 20.4 | **no** | h 0.050 mm, vc 80 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.05 | 90 m/min | 64 | 127 | N | +98.4 % | 19.2 | **no** | h 0.050 mm, vc 90 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.1 | 40 m/min | 484 | 382.2 | N | -21.0 % | 72.6 | **no** | h 0.100 mm, vc 40 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.1 | 50 m/min | 483 | 390.1 | N | -19.2 % | 72.5 | **no** | h 0.100 mm, vc 50 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.1 | 60 m/min | 481 | 392.4 | N | -18.4 % | 72.1 | **no** | h 0.100 mm, vc 60 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.1 | 70 m/min | 484 | 395.5 | N | -18.3 % | 72.6 | **no** | h 0.100 mm, vc 70 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.1 | 80 m/min | 483 | 397.5 | N | -17.7 % | 72.5 | **no** | h 0.100 mm, vc 80 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.1 | 90 m/min | 479 | 398.6 | N | -16.8 % | 71.8 | **no** | h 0.100 mm, vc 90 m/min, r_e 15 um, b 3 mm |
 
-Curve `Fp f=0.1` (vc [m/min] -> N): RMS abs. error 191.7 %, max 225.5 % over 6 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fp f=0.1 | 40 m/min | 64.2 | 175.5 | N | +173.4 % | 19.3 | **no** | h 0.100 mm, vc 40 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.1 | 50 m/min | 62.3 | 174.3 | N | +179.7 % | 18.7 | **no** | h 0.100 mm, vc 50 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.1 | 60 m/min | 51.4 | 167.3 | N | +225.5 % | 15.4 | **no** | h 0.100 mm, vc 60 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.1 | 70 m/min | 50.5 | 161.8 | N | +220.4 % | 15.1 | **no** | h 0.100 mm, vc 70 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.1 | 80 m/min | 60.4 | 156.4 | N | +158.9 % | 18.1 | **no** | h 0.100 mm, vc 80 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.1 | 90 m/min | 53.3 | 150.8 | N | +182.9 % | 16 | **no** | h 0.100 mm, vc 90 m/min, r_e 15 um, b 3 mm |
-
-Curve `Fp f=0.15` (vc [m/min] -> N): RMS abs. error 222.9 %, max 303.9 % over 5 compared points.
+Curve `Fc f=0.15` (vc [m/min] -> N): RMS abs. error 10.2 %, max 13.7 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fp f=0.15 | 40 m/min | 69.1 | 206.9 | N | +199.4 % | 20.7 | **no** | h 0.150 mm, vc 40 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.15 | 50 m/min | 63.6 | 193.8 | N | +204.7 % | 19.1 | **no** | h 0.150 mm, vc 50 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.15 | 60 m/min | 45.4 | 183.4 | N | +303.9 % | 13.6 | **no** | h 0.150 mm, vc 60 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.15 | 70 m/min | 52.4 | 168.7 | N | +222.0 % | 15.7 | **no** | h 0.150 mm, vc 70 m/min, r_e 15 um, b 3 mm |
-| Fp f=0.15 | 80 m/min | 60.8 | 157 | N | +158.3 % | 18.2 | **no** | h 0.150 mm, vc 80 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.15 | 40 m/min | 635 | 547.9 | N | -13.7 % | 95.2 | yes | h 0.150 mm, vc 40 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.15 | 50 m/min | 627 | 560.6 | N | -10.6 % | 94 | yes | h 0.150 mm, vc 50 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.15 | 60 m/min | 624 | 571.4 | N | -8.4 % | 93.6 | yes | h 0.150 mm, vc 60 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.15 | 70 m/min | 614 | 563.3 | N | -8.3 % | 92.1 | yes | h 0.150 mm, vc 70 m/min, r_e 15 um, b 3 mm |
+| Fc f=0.15 | 80 m/min | 613 | 557 | N | -9.1 % | 92 | yes | h 0.150 mm, vc 80 m/min, r_e 15 um, b 3 mm |
+
+Curve `Fp f=0.05` (vc [m/min] -> N): RMS abs. error 85.8 %, max 99.8 % over 6 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fp f=0.05 | 40 m/min | 74.3 | 127.8 | N | +72.0 % | 22.3 | **no** | h 0.050 mm, vc 40 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.05 | 50 m/min | 74.1 | 129.4 | N | +74.6 % | 22.2 | **no** | h 0.050 mm, vc 50 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.05 | 60 m/min | 70.1 | 130 | N | +85.4 % | 21 | **no** | h 0.050 mm, vc 60 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.05 | 70 m/min | 68.2 | 129.8 | N | +90.3 % | 20.5 | **no** | h 0.050 mm, vc 70 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.05 | 80 m/min | 68.1 | 129.2 | N | +89.7 % | 20.4 | **no** | h 0.050 mm, vc 80 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.05 | 90 m/min | 64 | 127.9 | N | +99.8 % | 19.2 | **no** | h 0.050 mm, vc 90 m/min, r_e 15 um, b 3 mm |
+
+Curve `Fp f=0.1` (vc [m/min] -> N): RMS abs. error 193.0 %, max 226.9 % over 6 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fp f=0.1 | 40 m/min | 64.2 | 176.3 | N | +174.6 % | 19.3 | **no** | h 0.100 mm, vc 40 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.1 | 50 m/min | 62.3 | 175 | N | +180.9 % | 18.7 | **no** | h 0.100 mm, vc 50 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.1 | 60 m/min | 51.4 | 168 | N | +226.9 % | 15.4 | **no** | h 0.100 mm, vc 60 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.1 | 70 m/min | 50.5 | 162.5 | N | +221.8 % | 15.1 | **no** | h 0.100 mm, vc 70 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.1 | 80 m/min | 60.4 | 157.1 | N | +160.1 % | 18.1 | **no** | h 0.100 mm, vc 80 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.1 | 90 m/min | 53.3 | 151.5 | N | +184.1 % | 16 | **no** | h 0.100 mm, vc 90 m/min, r_e 15 um, b 3 mm |
+
+Curve `Fp f=0.15` (vc [m/min] -> N): RMS abs. error 223.8 %, max 305.1 % over 5 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fp f=0.15 | 40 m/min | 69.1 | 207.5 | N | +200.3 % | 20.7 | **no** | h 0.150 mm, vc 40 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.15 | 50 m/min | 63.6 | 194.3 | N | +205.6 % | 19.1 | **no** | h 0.150 mm, vc 50 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.15 | 60 m/min | 45.4 | 183.9 | N | +305.1 % | 13.6 | **no** | h 0.150 mm, vc 60 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.15 | 70 m/min | 52.4 | 169.2 | N | +222.9 % | 15.7 | **no** | h 0.150 mm, vc 70 m/min, r_e 15 um, b 3 mm |
+| Fp f=0.15 | 80 m/min | 60.8 | 157.5 | N | +159.1 % | 18.2 | **no** | h 0.150 mm, vc 80 m/min, r_e 15 um, b 3 mm |
 
 ### force-orth-ti64-slusarczyk2025
 
@@ -1498,51 +1500,51 @@ Curve `Fp f=0.15` (vc [m/min] -> N): RMS abs. error 222.9 %, max 303.9 % over 5 
 * Material: database entry ti6al4v; the case says: Ti-6Al-4V shaft; only the composition is given (Table 1: Al 5.5-6.75, V 3.5-4.5, Fe 0.03, O 0.20, C 0.08, N 0.05, H 0.015 wt%); condition not stated
 * Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, turning (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * The kernel value (turn_step) is compared; 'closed_form' in the extras is the rows' (K h + Ke) b at the same h (a check of the table and the element integration, normally within 1-2 %).
-* Result: 40 compared, 0 without prediction, 0 not compared; median abs. error 19.0 %, max 42.5 %; case **outside budget**; largest miss 1.97 tolerances.
-* Likely cause: main_force_pct: 6/20 within, mean signed error -19 %; thrust_force_pct: 15/20 within, mean signed error -19 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
+* Result: 40 compared, 0 without prediction, 0 not compared; median abs. error 18.8 %, max 42.2 %; case **outside budget**; largest miss 1.94 tolerances.
+* Likely cause: main_force_pct: 7/20 within, mean signed error -18 %; thrust_force_pct: 15/20 within, mean signed error -19 %. Coefficients: calibrated to kienzle data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fc test 1 (rake 0, f 0.104) | 60 m/min | 924.3 | 821.5 | N | -11.1 % | 139 | yes | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Ft test 1 (rake 0, f 0.104) | 60 m/min | 687.2 | 619.9 | N | -9.8 % | 206 | yes | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Fc test 2 (rake 0, f 0.104) | 50 m/min | 938 | 853.6 | N | -9.0 % | 141 | yes | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Ft test 2 (rake 0, f 0.104) | 50 m/min | 699 | 686.9 | N | -1.7 % | 210 | yes | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Fc test 3 (rake 0, f 0.104) | 40 m/min | 963.5 | 877.8 | N | -8.9 % | 145 | yes | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Ft test 3 (rake 0, f 0.104) | 40 m/min | 724.5 | 744 | N | +2.7 % | 217 | yes | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Fc test 4 (rake 0, f 0.104) | 30 m/min | 976.3 | 892.1 | N | -8.6 % | 146 | yes | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Ft test 4 (rake 0, f 0.104) | 30 m/min | 746.9 | 791.7 | N | +6.0 % | 224 | yes | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Fc test 5 (rake 0, f 0.104) | 20 m/min | 984 | 842.6 | N | -14.4 % | 148 | yes | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
-| Ft test 5 (rake 0, f 0.104) | 20 m/min | 760.2 | 750.7 | N | -1.3 % | 228 | yes | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
-| Fc test 6 (rake 0, f 0.069) | 60 m/min | 705 | 599.5 | N | -15.0 % | 106 | yes | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Ft test 6 (rake 0, f 0.069) | 60 m/min | 642.3 | 512.6 | N | -20.2 % | 193 | yes | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Fc test 7 (rake 0, f 0.069) | 50 m/min | 730.2 | 618.3 | N | -15.3 % | 110 | **no** | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Ft test 7 (rake 0, f 0.069) | 50 m/min | 677.3 | 546.6 | N | -19.3 % | 203 | yes | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Fc test 8 (rake 0, f 0.069) | 40 m/min | 740 | 620 | N | -16.2 % | 111 | **no** | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Ft test 8 (rake 0, f 0.069) | 40 m/min | 685.5 | 554.7 | N | -19.1 % | 206 | yes | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Fc test 9 (rake 0, f 0.069) | 30 m/min | 762.2 | 615.4 | N | -19.3 % | 114 | **no** | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Ft test 9 (rake 0, f 0.069) | 30 m/min | 685 | 554.8 | N | -19.0 % | 206 | yes | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Fc test 10 (rake 0, f 0.069) | 20 m/min | 781 | 603.7 | N | -22.7 % | 117 | **no** | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
-| Ft test 10 (rake 0, f 0.069) | 20 m/min | 687.1 | 546.4 | N | -20.5 % | 206 | yes | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
-| Fc test 11 (rake 10, f 0.104) | 60 m/min | 762.1 | 634.3 | N | -16.8 % | 114 | **no** | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Ft test 11 (rake 10, f 0.104) | 60 m/min | 430.2 | 344.4 | N | -19.9 % | 129 | yes | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Fc test 12 (rake 10, f 0.104) | 50 m/min | 774.3 | 640.9 | N | -17.2 % | 116 | **no** | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Ft test 12 (rake 10, f 0.104) | 50 m/min | 440.3 | 369.9 | N | -16.0 % | 132 | yes | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Fc test 13 (rake 10, f 0.104) | 40 m/min | 782.5 | 639 | N | -18.3 % | 117 | **no** | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Ft test 13 (rake 10, f 0.104) | 40 m/min | 449.1 | 386.4 | N | -14.0 % | 135 | yes | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Fc test 14 (rake 10, f 0.104) | 30 m/min | 796.3 | 628.9 | N | -21.0 % | 119 | **no** | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Ft test 14 (rake 10, f 0.104) | 30 m/min | 468.2 | 397 | N | -15.2 % | 140 | yes | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Fc test 15 (rake 10, f 0.104) | 20 m/min | 810 | 589.2 | N | -27.3 % | 122 | **no** | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
-| Ft test 15 (rake 10, f 0.104) | 20 m/min | 487.2 | 373.9 | N | -23.3 % | 146 | yes | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
-| Fc test 16 (rake 10, f 0.069) | 60 m/min | 584.8 | 444.4 | N | -24.0 % | 87.7 | **no** | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Ft test 16 (rake 10, f 0.069) | 60 m/min | 451.8 | 280.6 | N | -37.9 % | 136 | **no** | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
-| Fc test 17 (rake 10, f 0.069) | 50 m/min | 589.3 | 447.3 | N | -24.1 % | 88.4 | **no** | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Ft test 17 (rake 10, f 0.069) | 50 m/min | 460.4 | 290.3 | N | -36.9 % | 138 | **no** | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
-| Fc test 18 (rake 10, f 0.069) | 40 m/min | 598.8 | 443.4 | N | -26.0 % | 89.8 | **no** | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Ft test 18 (rake 10, f 0.069) | 40 m/min | 475 | 290.7 | N | -38.8 % | 142 | **no** | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
-| Fc test 19 (rake 10, f 0.069) | 30 m/min | 596.3 | 435.8 | N | -26.9 % | 89.4 | **no** | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Ft test 19 (rake 10, f 0.069) | 30 m/min | 480.2 | 287.8 | N | -40.1 % | 144 | **no** | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
-| Fc test 20 (rake 10, f 0.069) | 20 m/min | 601.3 | 423.7 | N | -29.5 % | 90.2 | **no** | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
-| Ft test 20 (rake 10, f 0.069) | 20 m/min | 489.3 | 281.2 | N | -42.5 % | 147 | **no** | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Fc test 1 (rake 0, f 0.104) | 60 m/min | 924.3 | 824.1 | N | -10.8 % | 139 | yes | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Ft test 1 (rake 0, f 0.104) | 60 m/min | 687.2 | 620.9 | N | -9.6 % | 206 | yes | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Fc test 2 (rake 0, f 0.104) | 50 m/min | 938 | 856.4 | N | -8.7 % | 141 | yes | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Ft test 2 (rake 0, f 0.104) | 50 m/min | 699 | 688.2 | N | -1.5 % | 210 | yes | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Fc test 3 (rake 0, f 0.104) | 40 m/min | 963.5 | 880.7 | N | -8.6 % | 145 | yes | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Ft test 3 (rake 0, f 0.104) | 40 m/min | 724.5 | 745.5 | N | +2.9 % | 217 | yes | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Fc test 4 (rake 0, f 0.104) | 30 m/min | 976.3 | 895 | N | -8.3 % | 146 | yes | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Ft test 4 (rake 0, f 0.104) | 30 m/min | 746.9 | 793.4 | N | +6.2 % | 224 | yes | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Fc test 5 (rake 0, f 0.104) | 20 m/min | 984 | 845.2 | N | -14.1 % | 148 | yes | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Ft test 5 (rake 0, f 0.104) | 20 m/min | 760.2 | 752.1 | N | -1.1 % | 228 | yes | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Fc test 6 (rake 0, f 0.069) | 60 m/min | 705 | 602 | N | -14.6 % | 106 | yes | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Ft test 6 (rake 0, f 0.069) | 60 m/min | 642.3 | 513.9 | N | -20.0 % | 193 | yes | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Fc test 7 (rake 0, f 0.069) | 50 m/min | 730.2 | 620.9 | N | -15.0 % | 110 | yes | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Ft test 7 (rake 0, f 0.069) | 50 m/min | 677.3 | 548.1 | N | -19.1 % | 203 | yes | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Fc test 8 (rake 0, f 0.069) | 40 m/min | 740 | 622.6 | N | -15.9 % | 111 | **no** | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Ft test 8 (rake 0, f 0.069) | 40 m/min | 685.5 | 556.2 | N | -18.9 % | 206 | yes | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Fc test 9 (rake 0, f 0.069) | 30 m/min | 762.2 | 618 | N | -18.9 % | 114 | **no** | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Ft test 9 (rake 0, f 0.069) | 30 m/min | 685 | 556.3 | N | -18.8 % | 206 | yes | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Fc test 10 (rake 0, f 0.069) | 20 m/min | 781 | 606.3 | N | -22.4 % | 117 | **no** | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Ft test 10 (rake 0, f 0.069) | 20 m/min | 687.1 | 547.9 | N | -20.3 % | 206 | yes | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Fc test 11 (rake 10, f 0.104) | 60 m/min | 762.1 | 637.5 | N | -16.4 % | 114 | **no** | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Ft test 11 (rake 10, f 0.104) | 60 m/min | 430.2 | 346 | N | -19.6 % | 129 | yes | h 0.104 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Fc test 12 (rake 10, f 0.104) | 50 m/min | 774.3 | 644.1 | N | -16.8 % | 116 | **no** | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Ft test 12 (rake 10, f 0.104) | 50 m/min | 440.3 | 371.6 | N | -15.6 % | 132 | yes | h 0.104 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Fc test 13 (rake 10, f 0.104) | 40 m/min | 782.5 | 642.2 | N | -17.9 % | 117 | **no** | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Ft test 13 (rake 10, f 0.104) | 40 m/min | 449.1 | 388.2 | N | -13.6 % | 135 | yes | h 0.104 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Fc test 14 (rake 10, f 0.104) | 30 m/min | 796.3 | 632.1 | N | -20.6 % | 119 | **no** | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Ft test 14 (rake 10, f 0.104) | 30 m/min | 468.2 | 398.8 | N | -14.8 % | 140 | yes | h 0.104 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Fc test 15 (rake 10, f 0.104) | 20 m/min | 810 | 592.1 | N | -26.9 % | 122 | **no** | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Ft test 15 (rake 10, f 0.104) | 20 m/min | 487.2 | 375.6 | N | -22.9 % | 146 | yes | h 0.104 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Fc test 16 (rake 10, f 0.069) | 60 m/min | 584.8 | 447.3 | N | -23.5 % | 87.7 | **no** | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Ft test 16 (rake 10, f 0.069) | 60 m/min | 451.8 | 282.3 | N | -37.5 % | 136 | **no** | h 0.069 mm, vc 60 m/min, r_e 10 um, b 4 mm |
+| Fc test 17 (rake 10, f 0.069) | 50 m/min | 589.3 | 450.2 | N | -23.6 % | 88.4 | **no** | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Ft test 17 (rake 10, f 0.069) | 50 m/min | 460.4 | 292.1 | N | -36.6 % | 138 | **no** | h 0.069 mm, vc 50 m/min, r_e 10 um, b 4 mm |
+| Fc test 18 (rake 10, f 0.069) | 40 m/min | 598.8 | 446.3 | N | -25.5 % | 89.8 | **no** | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Ft test 18 (rake 10, f 0.069) | 40 m/min | 475 | 292.6 | N | -38.4 % | 142 | **no** | h 0.069 mm, vc 40 m/min, r_e 10 um, b 4 mm |
+| Fc test 19 (rake 10, f 0.069) | 30 m/min | 596.3 | 438.7 | N | -26.4 % | 89.4 | **no** | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Ft test 19 (rake 10, f 0.069) | 30 m/min | 480.2 | 289.6 | N | -39.7 % | 144 | **no** | h 0.069 mm, vc 30 m/min, r_e 10 um, b 4 mm |
+| Fc test 20 (rake 10, f 0.069) | 20 m/min | 601.3 | 426.6 | N | -29.1 % | 90.2 | **no** | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
+| Ft test 20 (rake 10, f 0.069) | 20 m/min | 489.3 | 283 | N | -42.2 % | 147 | **no** | h 0.069 mm, vc 20 m/min, r_e 10 um, b 4 mm |
 
 ### force-sidemill-al7075-zylka2023-edge-microgeometry
 
@@ -1552,62 +1554,63 @@ Curve `Fp f=0.15` (vc [m/min] -> N): RMS abs. error 222.9 %, max 303.9 % over 5 
 * Model chain: cnctwin.mechanics.materials (databases) -> cnctwin.tooling.build_tool (edge model) -> cnctwin.cutting.coefficients.MechanicsModel (rows per coefficient group) -> cnctwin.cutting.kernels.cut_step (cnctwin.cutting.drive.Driver, analytic engaged intervals, prefilled surface memory).
 * Settings: calibration = kienzle, calibration_sources = ["iscar-materials-groups"], coating = none, edge_element_m = 0.00025, h_min_ratio = 0.3, mu_sliding = 0.55, process = milling, runout = 0, tool_material = carbide-k20-6co, tool_type = square_endmill.
 * Inputs the case marks as assumed: `setup.tool.first_clearance_deg` = 12 (assumed: only the second clearance (25 deg) is stated); `setup.tool.stickout_mm` = 50 (assumed: not stated); `setup.conditions.direction` = down (assumed: not stated in the text (Fig. 3 is a perspective sketch)).
-* Inputs the harness assumed: cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); coating = none (case coating 'PVD ZrN, 2 um' has no database entry: modelled uncoated, db/coatings); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); coolant fluid semi-synthetic-6pct = database entry (the case's fluid is not in the database: the closest database fluid, full reach of the jet, db/coolants); runout = 0 (not stated in the case: an ideal concentric tool, est).
+* Inputs the harness assumed: coating = none (case coating 'PVD ZrN, 2 um' has no database entry: modelled uncoated, db/coatings); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); coolant fluid semi-synthetic-6pct = database entry (the case's fluid is not in the database: the closest database fluid, full reach of the jet, db/coolants); runout = 0 (not stated in the case: an ideal concentric tool, est).
 * Database values used: tool material carbide-k20-6co thermal properties (`mitsubishi-2026-tm102g`); al7075-t6 flow stress (Johnson-Cook) (`luo-2021-al7075-drilling`); al7075-t6 physical.density_kg_m3 (`muraca-1972-al7075-handbook`); al7075-t6 physical.specific_heat_J_kgK (`muraca-1972-al7075-handbook`); al7075-t6 physical.conductivity_W_mK (`muraca-1972-al7075-handbook`); al7075-t6 cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); al7075-t6 friction mu_sliding (carbide, uncoated) (`luo-2021-al7075-drilling`); al7075-t6 cutting.indentation_coeff_N_mm3 (`est`); al7075-t6 cutting.kienzle (carbide, any, any) calibrating the forces (`iscar-materials-groups`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Edge radius per point from the curve's x; mean FXY is compared; MeanUpF (peaks of the 1150 Hz low-pass filtered signal, filter order not stated) is listed unfiltered, not counted.
 * Material: database entry al7075-t6; the case says: '7075-aluminium alloy' cut from 100 x 100 mm square bar; temper not stated (DB entry T6)
 * Tool model: core diameter not given: 0.55 D (core_ratio_by_flutes)
 * Coefficients calibrated to the material's kienzle data (iscar-materials-groups) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 3 compared, 0 without prediction, 15 not compared; median abs. error 22.9 %, max 52.0 %; 0/3 within uncertainty; case **outside budget**; largest miss 2.6 tolerances.
+* Result: 3 compared, 0 without prediction, 15 not compared; median abs. error 23.2 %, max 52.0 %; 0/3 within uncertainty; case **outside budget**; largest miss 2.6 tolerances.
 * Likely cause: milling_peak_force_pct: 1/3 within, mean signed error -26 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
-Curve `MeanF_MAR0-30` (edge radius R [um] -> N): RMS abs. error 32.8 %, max 52.0 % over 3 compared points.
+Curve `MeanF_MAR0-30` (edge radius R [um] -> N): RMS abs. error 32.9 %, max 52.0 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| MeanF_MAR0-30 | 9.6 um | 321 | 154.2 | N | -52.0 % | 64.2 | **no** | meanxy; edge radius 9.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood |
-| MeanF_MAR0-30 | 18.4 um | 222 | 218.1 | N | -1.8 % | 44.4 | yes | meanxy; edge radius 18.4 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood |
-| MeanF_MAR0-30 | 25 um | 346 | 266.6 | N | -22.9 % | 69.2 | **no** | meanxy; edge radius 25 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood |
+| MeanF_MAR0-30 | 9.6 um | 321 | 154 | N | -52.0 % | 64.2 | **no** | meanxy; edge radius 9.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood |
+| MeanF_MAR0-30 | 18.4 um | 222 | 217.6 | N | -2.0 % | 44.4 | yes | meanxy; edge radius 18.4 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood |
+| MeanF_MAR0-30 | 25 um | 346 | 265.9 | N | -23.2 % | 69.2 | **no** | meanxy; edge radius 25 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood |
 
 Curve `MeanUpF_MAR0-30` (edge radius R [um] -> N): RMS abs. error -, max - over 0 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| MeanUpF_MAR0-30 | 9.6 um | 458 | 257.2 | N | - | - | not compared | peak of a 1150 Hz low-pass filtered signal (filter order not stated): the simulated unfiltered mean per-tooth peak is listed (toothpeakxy; edge radius 9.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanUpF_MAR0-30 | 18.4 um | 359 | 363.4 | N | - | - | not compared | peak of a 1150 Hz low-pass filtered signal (filter order not stated): the simulated unfiltered mean per-tooth peak is listed (toothpeakxy; edge radius 18.4 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanUpF_MAR0-30 | 25 um | 461 | 445 | N | - | - | not compared | peak of a 1150 Hz low-pass filtered signal (filter order not stated): the simulated unfiltered mean per-tooth peak is listed (toothpeakxy; edge radius 25 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR0-30 | 9.6 um | 458 | 256.8 | N | - | - | not compared | peak of a 1150 Hz low-pass filtered signal (filter order not stated): the simulated unfiltered mean per-tooth peak is listed (toothpeakxy; edge radius 9.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR0-30 | 18.4 um | 359 | 362.5 | N | - | - | not compared | peak of a 1150 Hz low-pass filtered signal (filter order not stated): the simulated unfiltered mean per-tooth peak is listed (toothpeakxy; edge radius 18.4 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR0-30 | 25 um | 461 | 443.8 | N | - | - | not compared | peak of a 1150 Hz low-pass filtered signal (filter order not stated): the simulated unfiltered mean per-tooth peak is listed (toothpeakxy; edge radius 25 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
 
 Curve `MeanF_MAR40-60` (edge radius R [um] -> N): RMS abs. error -, max - over 0 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| MeanF_MAR40-60 | 9 um | 518 | 150 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 9 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanF_MAR40-60 | 18.5 um | 365 | 218.8 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 18.5 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanF_MAR40-60 | 25.1 um | 434 | 267.3 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 25.1 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanF_MAR40-60 | 9 um | 518 | 149.8 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 9 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanF_MAR40-60 | 18.5 um | 365 | 218.3 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 18.5 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanF_MAR40-60 | 25.1 um | 434 | 266.6 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 25.1 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
 
 Curve `MeanUpF_MAR40-60` (edge radius R [um] -> N): RMS abs. error -, max - over 0 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| MeanUpF_MAR40-60 | 9 um | 672 | 250.2 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 9 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanUpF_MAR40-60 | 18.5 um | 547 | 364.6 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 18.5 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanUpF_MAR40-60 | 25.1 um | 642 | 446.2 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 25.1 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR40-60 | 9 um | 672 | 249.8 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 9 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR40-60 | 18.5 um | 547 | 363.8 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 18.5 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR40-60 | 25.1 um | 642 | 445 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 25.1 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
 
 Curve `MeanF_MAR95-110` (edge radius R [um] -> N): RMS abs. error -, max - over 0 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| MeanF_MAR95-110 | 9.2 um | 609 | 151.4 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 9.2 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanF_MAR95-110 | 18.6 um | 640 | 219.6 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 18.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanF_MAR95-110 | 24.8 um | 620 | 265.1 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 24.8 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanF_MAR95-110 | 9.2 um | 609 | 151.2 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 9.2 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanF_MAR95-110 | 18.6 um | 640 | 219 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 18.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanF_MAR95-110 | 24.8 um | 620 | 264.4 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (meanxy; edge radius 24.8 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
 
 Curve `MeanUpF_MAR95-110` (edge radius R [um] -> N): RMS abs. error -, max - over 0 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| MeanUpF_MAR95-110 | 9.2 um | 711 | 252.5 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 9.2 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanUpF_MAR95-110 | 18.6 um | 806 | 365.8 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 18.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
-| MeanUpF_MAR95-110 | 24.8 um | 773 | 442.5 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 24.8 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR95-110 | 9.2 um | 711 | 252.1 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 9.2 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR95-110 | 18.6 um | 806 | 364.9 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 18.6 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
+| MeanUpF_MAR95-110 | 24.8 um | 773 | 441.3 | N | - | - | not compared | the cylindrical margin (MAR 40-110 um) of this tool cannot be represented: tooling's end mill has no margin land (the case directs a model without margin contact to the MAR 0-30 curves) (toothpeakxy; edge radius 24.8 um; 18000 rpm, fz 0.1, ap 20, ae 0.7 mm, down, flood) |
 
 ### force-sidemill-in718-lin2021-annealed
 
@@ -1623,47 +1626,47 @@ Curve `MeanUpF_MAR95-110` (edge radius R [um] -> N): RMS abs. error -, max - ove
 * Tool model: core diameter not given: 0.50 D (core_ratio_by_flutes)
 * Mean forces; the dynamometer's X/Y orientation relative to the feed is taken as X feed, Y normal (magnitudes compared, signs as printed are not).
 * Coefficients calibrated to the material's kienzle data (walter-2025-technical-compendium) for carbide/tialn, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 27.1 %, max 262.4 %; case **outside budget**; largest miss 13.1 tolerances.
-* Likely cause: milling_peak_force_pct: 15/36 within, mean signed error -36 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
+* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 27.1 %, max 275.9 %; case **outside budget**; largest miss 13.8 tolerances.
+* Likely cause: milling_peak_force_pct: 14/36 within, mean signed error -38 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ax_a1 | - | -5.297 | -5.159 | N | +2.6 % | 1.06 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.2 mm, down |
-| Ay_a1 | - | -10.88 | -14.72 | N | -35.4 % | 2.18 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.2 mm, down |
-| Az_a1 | - | -6.078 | -3.6 | N | +40.8 % | 1.22 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.2 mm, down |
-| Ax_a2 | - | -7.355 | -7.769 | N | -5.6 % | 1.47 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.2 mm, down |
-| Ay_a2 | - | -13.81 | -18.34 | N | -32.8 % | 2.76 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.2 mm, down |
-| Az_a2 | - | -4.378 | -4.678 | N | -6.9 % | 0.876 | yes | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.2 mm, down |
-| Ax_a3 | - | -9.498 | -10.31 | N | -8.5 % | 1.9 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.2 mm, down |
-| Ay_a3 | - | -16.7 | -21.56 | N | -29.1 % | 3.34 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.2 mm, down |
-| Az_a3 | - | -4.934 | -5.795 | N | -17.5 % | 0.987 | yes | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.2 mm, down |
-| Ax_b1 | - | -7.02 | -7.741 | N | -10.3 % | 1.4 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.6, ae 1.2 mm, down |
-| Ay_b1 | - | -16.63 | -22.08 | N | -32.8 % | 3.33 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.6, ae 1.2 mm, down |
-| Az_b1 | - | -4.74 | -5.401 | N | -14.0 % | 0.948 | yes | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.6, ae 1.2 mm, down |
-| Ax_b2 | - | -10.28 | -11.65 | N | -13.4 % | 2.06 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.6, ae 1.2 mm, down |
-| Ay_b2 | - | -20.93 | -27.52 | N | -31.5 % | 4.19 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.6, ae 1.2 mm, down |
-| Az_b2 | - | -2.401 | -7.018 | N | -192.3 % | 0.48 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.6, ae 1.2 mm, down |
-| Ax_b3 | - | -13.54 | -15.46 | N | -14.2 % | 2.71 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.6, ae 1.2 mm, down |
-| Ay_b3 | - | -25.17 | -32.34 | N | -28.5 % | 5.03 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.6, ae 1.2 mm, down |
-| Az_b3 | - | -2.399 | -8.693 | N | -262.4 % | 0.48 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.6, ae 1.2 mm, down |
-| Ax_c1 | - | -6.343 | -5.205 | N | +17.9 % | 1.27 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.5 mm, down |
-| Ay_c1 | - | -13.01 | -17.83 | N | -37.0 % | 2.6 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.5 mm, down |
-| Az_c1 | - | -3.567 | -4.325 | N | -21.3 % | 0.713 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.5 mm, down |
-| Ax_c2 | - | -8.877 | -8.09 | N | +8.9 % | 1.78 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.5 mm, down |
-| Ay_c2 | - | -15.86 | -22.44 | N | -41.5 % | 3.17 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.5 mm, down |
-| Az_c2 | - | -3.973 | -5.681 | N | -43.0 % | 0.795 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.5 mm, down |
-| Ax_c3 | - | -11.63 | -10.94 | N | +5.9 % | 2.33 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.5 mm, down |
-| Ay_c3 | - | -19.41 | -26.52 | N | -36.6 % | 3.88 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.5 mm, down |
-| Az_c3 | - | -3.662 | -7.097 | N | -93.8 % | 0.732 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.5 mm, down |
-| Ax_d1 | - | -7.598 | -5.205 | N | +31.5 % | 1.52 | **no** | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.5, ae 1.5 mm, down |
-| Ay_d1 | - | -16.04 | -17.83 | N | -11.2 % | 3.21 | yes | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.5, ae 1.5 mm, down |
-| Az_d1 | - | -2.677 | -4.325 | N | -61.6 % | 0.535 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.5, ae 1.5 mm, down |
-| Ax_d2 | - | -10.89 | -8.09 | N | +25.7 % | 2.18 | **no** | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.5, ae 1.5 mm, down |
-| Ay_d2 | - | -19.79 | -22.44 | N | -13.4 % | 3.96 | yes | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.5, ae 1.5 mm, down |
-| Az_d2 | - | -2.648 | -5.681 | N | -114.5 % | 0.53 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.5, ae 1.5 mm, down |
-| Ax_d3 | - | -14.3 | -10.94 | N | +23.5 % | 2.86 | **no** | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.5, ae 1.5 mm, down |
-| Ay_d3 | - | -24.25 | -26.52 | N | -9.4 % | 4.85 | yes | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.5, ae 1.5 mm, down |
-| Az_d3 | - | -2.128 | -7.097 | N | -233.5 % | 0.426 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.5, ae 1.5 mm, down |
+| Ax_a1 | - | -5.297 | -5.177 | N | +2.3 % | 1.06 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.2 mm, down |
+| Ay_a1 | - | -10.88 | -14.68 | N | -35.0 % | 2.18 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.2 mm, down |
+| Az_a1 | - | -6.078 | -3.746 | N | +38.4 % | 1.22 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.2 mm, down |
+| Ax_a2 | - | -7.355 | -7.796 | N | -6.0 % | 1.47 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.2 mm, down |
+| Ay_a2 | - | -13.81 | -18.28 | N | -32.4 % | 2.76 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.2 mm, down |
+| Az_a2 | - | -4.378 | -4.864 | N | -11.1 % | 0.876 | yes | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.2 mm, down |
+| Ax_a3 | - | -9.498 | -10.34 | N | -8.9 % | 1.9 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.2 mm, down |
+| Ay_a3 | - | -16.7 | -21.48 | N | -28.6 % | 3.34 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.2 mm, down |
+| Az_a3 | - | -4.934 | -6.012 | N | -21.8 % | 0.987 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.2 mm, down |
+| Ax_b1 | - | -7.02 | -7.768 | N | -10.7 % | 1.4 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.6, ae 1.2 mm, down |
+| Ay_b1 | - | -16.63 | -22.02 | N | -32.4 % | 3.33 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.6, ae 1.2 mm, down |
+| Az_b1 | - | -4.74 | -5.62 | N | -18.6 % | 0.948 | yes | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.6, ae 1.2 mm, down |
+| Ax_b2 | - | -10.28 | -11.7 | N | -13.8 % | 2.06 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.6, ae 1.2 mm, down |
+| Ay_b2 | - | -20.93 | -27.43 | N | -31.1 % | 4.19 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.6, ae 1.2 mm, down |
+| Az_b2 | - | -2.401 | -7.296 | N | -203.9 % | 0.48 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.6, ae 1.2 mm, down |
+| Ax_b3 | - | -13.54 | -15.52 | N | -14.6 % | 2.71 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.6, ae 1.2 mm, down |
+| Ay_b3 | - | -25.17 | -32.21 | N | -28.0 % | 5.03 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.6, ae 1.2 mm, down |
+| Az_b3 | - | -2.399 | -9.018 | N | -275.9 % | 0.48 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.6, ae 1.2 mm, down |
+| Ax_c1 | - | -6.343 | -5.231 | N | +17.5 % | 1.27 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.5 mm, down |
+| Ay_c1 | - | -13.01 | -17.78 | N | -36.7 % | 2.6 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.5 mm, down |
+| Az_c1 | - | -3.567 | -4.5 | N | -26.2 % | 0.713 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.4, ae 1.5 mm, down |
+| Ax_c2 | - | -8.877 | -8.13 | N | +8.4 % | 1.78 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.5 mm, down |
+| Ay_c2 | - | -15.86 | -22.37 | N | -41.1 % | 3.17 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.5 mm, down |
+| Az_c2 | - | -3.973 | -5.902 | N | -48.5 % | 0.795 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.4, ae 1.5 mm, down |
+| Ax_c3 | - | -11.63 | -10.99 | N | +5.5 % | 2.33 | yes | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.5 mm, down |
+| Ay_c3 | - | -19.41 | -26.42 | N | -36.1 % | 3.88 | **no** | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.5 mm, down |
+| Az_c3 | - | -3.662 | -7.371 | N | -101.3 % | 0.732 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.4, ae 1.5 mm, down |
+| Ax_d1 | - | -7.598 | -5.231 | N | +31.2 % | 1.52 | **no** | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.5, ae 1.5 mm, down |
+| Ay_d1 | - | -16.04 | -17.78 | N | -10.9 % | 3.21 | yes | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.5, ae 1.5 mm, down |
+| Az_d1 | - | -2.677 | -4.5 | N | -68.1 % | 0.535 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.04, ap 0.5, ae 1.5 mm, down |
+| Ax_d2 | - | -10.89 | -8.13 | N | +25.3 % | 2.18 | **no** | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.5, ae 1.5 mm, down |
+| Ay_d2 | - | -19.79 | -22.37 | N | -13.0 % | 3.96 | yes | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.5, ae 1.5 mm, down |
+| Az_d2 | - | -2.648 | -5.902 | N | -122.9 % | 0.53 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.06, ap 0.5, ae 1.5 mm, down |
+| Ax_d3 | - | -14.3 | -10.99 | N | +23.1 % | 2.86 | **no** | mean X (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.5, ae 1.5 mm, down |
+| Ay_d3 | - | -24.25 | -26.42 | N | -9.0 % | 4.85 | yes | mean Y (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.5, ae 1.5 mm, down |
+| Az_d3 | - | -2.128 | -7.371 | N | -246.4 % | 0.426 | **no** | mean Z (on the workpiece), magnitude; 3000 rpm, fz 0.08, ap 0.5, ae 1.5 mm, down |
 
 ### force-sidemill-ss304-wang2025-hss
 
@@ -1679,28 +1682,28 @@ Curve `MeanUpF_MAR95-110` (edge radius R [um] -> N): RMS abs. error -, max - ove
 * Tool model: core diameter not given: 0.60 D (core_ratio_by_flutes)
 * Source X (normal to the feed) = Y here, source Y (feed) = X; magnitudes.
 * Coefficients: the mechanics prediction alone (no measured Kienzle or mechanistic data in the material file for hss/none, milling).
-* Result: 18 compared, 0 without prediction, 0 not compared; median abs. error 59.8 %, max 1047.9 %; 0/18 within uncertainty; case **outside budget**; largest miss 52.4 tolerances.
-* Likely cause: milling_peak_force_pct: 3/18 within, mean signed error -193 %. Coefficients: mechanics alone (no measured data of the pairing). Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
+* Result: 18 compared, 0 without prediction, 0 not compared; median abs. error 78.7 %, max 707.3 %; 0/18 within uncertainty; case **outside budget**; largest miss 35.4 tolerances.
+* Likely cause: milling_peak_force_pct: 2/18 within, mean signed error -139 %. Coefficients: mechanics alone (no measured data of the pairing). Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fx_mean_test1_VB0 | - | -74.02 | -69.98 | N | +5.5 % | 14.8 | yes | mean Y (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down |
-| Fy_mean_test1_VB0 | - | 76.61 | 37.57 | N | -51.0 % | 15.3 | **no** | mean X (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down |
+| Fx_mean_test1_VB0 | - | -74.02 | -69.7 | N | +5.8 % | 14.8 | yes | mean Y (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down |
+| Fy_mean_test1_VB0 | - | 76.61 | 37.62 | N | -50.9 % | 15.3 | **no** | mean X (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down |
 | Fz_mean_test1_VB0 | - | 9.76 | 10.89 | N | +11.5 % | 1.95 | yes | mean Z (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down |
-| Fx_mean_test2_VB0.11 | - | -98.41 | -630.9 | N | -541.1 % | 19.7 | **no** | mean Y (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.11 mm |
-| Fy_mean_test2_VB0.11 | - | 93.14 | 14.06 | N | -84.9 % | 18.6 | **no** | mean X (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.11 mm |
+| Fx_mean_test2_VB0.11 | - | -98.41 | -288.4 | N | -193.0 % | 19.7 | **no** | mean Y (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.11 mm |
+| Fy_mean_test2_VB0.11 | - | 93.14 | 18.92 | N | -79.7 % | 18.6 | **no** | mean X (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.11 mm |
 | Fz_mean_test2_VB0.11 | - | 6.75 | 10.89 | N | +61.3 % | 1.35 | **no** | mean Z (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.11 mm |
-| Fx_mean_test3_VB0.21 | - | -121.8 | -893 | N | -633.0 % | 24.4 | **no** | mean Y (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.21 mm |
-| Fy_mean_test3_VB0.21 | - | 108.4 | 45.2 | N | -58.3 % | 21.7 | **no** | mean X (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.21 mm |
+| Fx_mean_test3_VB0.21 | - | -121.8 | -792.9 | N | -550.9 % | 24.4 | **no** | mean Y (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.21 mm |
+| Fy_mean_test3_VB0.21 | - | 108.4 | 24.23 | N | -77.7 % | 21.7 | **no** | mean X (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.21 mm |
 | Fz_mean_test3_VB0.21 | - | -5.92 | -10.89 | N | -83.9 % | 1.18 | **no** | mean Z (on the workpiece), magnitude; 830 rpm, fz 0.05, ap 3.5, ae 0.6 mm, down, VB 0.21 mm |
-| Fx_mean_test4_VB0 | - | -60.13 | -72.69 | N | -20.9 % | 12 | **no** | mean Y (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down |
-| Fy_mean_test4_VB0 | - | 54.99 | 31.41 | N | -42.9 % | 11 | **no** | mean X (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down |
+| Fx_mean_test4_VB0 | - | -60.13 | -72.46 | N | -20.5 % | 12 | **no** | mean Y (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down |
+| Fy_mean_test4_VB0 | - | 54.99 | 31.45 | N | -42.8 % | 11 | **no** | mean X (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down |
 | Fz_mean_test4_VB0 | - | 8.21 | 11.65 | N | +41.9 % | 1.64 | **no** | mean Z (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down |
-| Fx_mean_test5_VB0.12 | - | -69.39 | -796.5 | N | -1047.9 % | 13.9 | **no** | mean Y (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.12 mm |
-| Fy_mean_test5_VB0.12 | - | 77.73 | 51.04 | N | -34.3 % | 15.5 | **no** | mean X (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.12 mm |
+| Fx_mean_test5_VB0.12 | - | -69.39 | -415.4 | N | -498.7 % | 13.9 | **no** | mean Y (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.12 mm |
+| Fy_mean_test5_VB0.12 | - | 77.73 | 5.804 | N | -92.5 % | 15.5 | **no** | mean X (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.12 mm |
 | Fz_mean_test5_VB0.12 | - | 6.41 | 11.65 | N | +81.8 % | 1.28 | **no** | mean Z (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.12 mm |
-| Fx_mean_test6_VB0.20 | - | -115.2 | -1029 | N | -793.6 % | 23 | **no** | mean Y (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.20 mm |
-| Fy_mean_test6_VB0.20 | - | 91.91 | 82.51 | N | -10.2 % | 18.4 | yes | mean X (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.20 mm |
+| Fx_mean_test6_VB0.20 | - | -115.2 | -929.9 | N | -707.3 % | 23 | **no** | mean Y (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.20 mm |
+| Fy_mean_test6_VB0.20 | - | 91.91 | 61.69 | N | -32.9 % | 18.4 | **no** | mean X (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.20 mm |
 | Fz_mean_test6_VB0.20 | - | -3.08 | -11.65 | N | -278.3 % | 1 | **no** | mean Z (on the workpiece), magnitude; 900 rpm, fz 0.03, ap 4, ae 0.7 mm, down, VB 0.20 mm |
 
 ### force-slot-in718-zheng2023-ballend
@@ -1711,47 +1714,48 @@ Curve `MeanUpF_MAR95-110` (edge radius R [um] -> N): RMS abs. error -, max - ove
 * Model chain: cnctwin.mechanics.materials (databases) -> cnctwin.tooling.build_tool (edge model) -> cnctwin.cutting.coefficients.MechanicsModel (rows per coefficient group) -> cnctwin.cutting.kernels.cut_step (cnctwin.cutting.drive.Driver, analytic engaged intervals, prefilled surface memory).
 * Settings: calibration = kienzle, calibration_sources = ["walter-2025-technical-compendium"], coating = none, edge_element_m = 0.00025, h_min_ratio = 0.3, mu_sliding = 0.3, process = milling, runout = 0, steps = <= 0.5 deg, >= 96 per tooth, tool_material = carbide-k20-6co, tool_type = ball_endmill.
 * Inputs the case marks as assumed: `setup.tool.flutes` = 4 (not stated; computed here from Table 1: feed speed / (fz x n) = 80 / (0.02 x 1000) = 4); `setup.tool.helix_deg` = 30 (assumed: not stated); `setup.tool.rake_deg` = 0 (assumed: not stated (radial rake of a ground ball-nose mill)); `setup.tool.stickout_mm` = 32 (assumed: not stated (4 D)); `setup.conditions.coolant` = dry (assumed: no coolant is mentioned in the source); `setup.conditions.tool_axis` = vertical, no tilt (assumed: plain 3-axis slotting with the ball end; not stated).
-* Inputs the harness assumed: clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); coating = none (not stated in the case: uncoated assumed, case); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
+* Inputs the harness assumed: clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); coating = none (not stated in the case: uncoated assumed, case); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
 * Database values used: tool material carbide-k20-6co thermal properties (`mitsubishi-2026-tm102g`); inconel718 flow stress (Johnson-Cook) (`qiu-2019-in718-jc-sensitivity`); inconel718 physical.density_kg_m3 (`special-metals-2007-in718`); inconel718 physical.specific_heat_J_kgK (`wang-2018-in718-chip-formation`); inconel718 physical.conductivity_W_mK (`special-metals-2007-in718`); inconel718 cutting.min_chip_thickness_ratio (`est`); inconel718 friction mu_sliding (carbide, PVD) (`qiu-2019-in718-jc-sensitivity`); inconel718 cutting.indentation_coeff_N_mm3 (`est`); inconel718 cutting.kienzle (carbide, any, any) calibrating the forces (`walter-2025-technical-compendium`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Material: database entry inconel718; the case says: Inconel 718; heat treatment, hardness and supplier are not given in the source (DB entry: solution treated and aged)
 * Tool model: core diameter not given: 0.60 D (core_ratio_by_flutes)
 * Mean forces in the source's frame (x feed, y normal, z axial), magnitudes.
 * Coefficients calibrated to the material's kienzle data (walter-2025-technical-compendium) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 18 compared, 0 without prediction, 0 not compared; median abs. error 55.4 %, max 3325.3 %; case **outside budget**; largest miss 166 tolerances.
-* Likely cause: milling_peak_force_pct: 3/18 within, mean signed error +236 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
+* Result: 18 compared, 0 without prediction, 0 not compared; median abs. error 55.2 %, max 780.0 %; case **outside budget**; largest miss 39 tolerances.
+* Likely cause: milling_peak_force_pct: 1/18 within, mean signed error +42 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
-Curve `Fx_mean` (fz [mm/tooth] -> N): RMS abs. error 56.1 %, max 66.8 % over 6 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fx_mean | 0.02 mm/tooth | 76.88 | 77.27 | N | +0.5 % | 15.4 | yes | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.02, ap 0.5, ae 8 mm, slot |
-| Fx_mean | 0.04 mm/tooth | 174.5 | 86.79 | N | -50.3 % | 34.9 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.04, ap 0.5, ae 8 mm, slot |
-| Fx_mean | 0.06 mm/tooth | 251.7 | 99.35 | N | -60.5 % | 50.3 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.06, ap 0.5, ae 8 mm, slot |
-| Fx_mean | 0.08 mm/tooth | 314.1 | 112.8 | N | -64.1 % | 62.8 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.08, ap 0.5, ae 8 mm, slot |
-| Fx_mean | 0.1 mm/tooth | 353.4 | 126.4 | N | -64.2 % | 70.7 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.1, ap 0.5, ae 8 mm, slot |
-| Fx_mean | 0.12 mm/tooth | 421.6 | 139.8 | N | -66.8 % | 84.3 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.12, ap 0.5, ae 8 mm, slot |
-
-Curve `Fy_mean` (fz [mm/tooth] -> N): RMS abs. error 109.1 %, max 255.2 % over 6 compared points.
+Curve `Fx_mean` (fz [mm/tooth] -> N): RMS abs. error 76.8 %, max 79.1 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fy_mean | 0.02 mm/tooth | -59.25 | -210.5 | N | -255.2 % | 11.9 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.02, ap 0.5, ae 8 mm, slot |
-| Fy_mean | 0.04 mm/tooth | -210.7 | -250.3 | N | -18.8 % | 42.1 | yes | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.04, ap 0.5, ae 8 mm, slot |
-| Fy_mean | 0.06 mm/tooth | -378.8 | -298.5 | N | +21.2 % | 75.8 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.06, ap 0.5, ae 8 mm, slot |
-| Fy_mean | 0.08 mm/tooth | -572 | -350.4 | N | +38.7 % | 114 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.08, ap 0.5, ae 8 mm, slot |
-| Fy_mean | 0.1 mm/tooth | -720.6 | -404.7 | N | +43.8 % | 144 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.1, ap 0.5, ae 8 mm, slot |
-| Fy_mean | 0.12 mm/tooth | -830.1 | -458.4 | N | +44.8 % | 166 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.12, ap 0.5, ae 8 mm, slot |
+| Fx_mean | 0.02 mm/tooth | 76.88 | 24.01 | N | -68.8 % | 15.4 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.02, ap 0.5, ae 8 mm, slot |
+| Fx_mean | 0.04 mm/tooth | 174.5 | 38.69 | N | -77.8 % | 34.9 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.04, ap 0.5, ae 8 mm, slot |
+| Fx_mean | 0.06 mm/tooth | 251.7 | 52.67 | N | -79.1 % | 50.3 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.06, ap 0.5, ae 8 mm, slot |
+| Fx_mean | 0.08 mm/tooth | 314.1 | 66.2 | N | -78.9 % | 62.8 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.08, ap 0.5, ae 8 mm, slot |
+| Fx_mean | 0.1 mm/tooth | 353.4 | 79.39 | N | -77.5 % | 70.7 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.1, ap 0.5, ae 8 mm, slot |
+| Fx_mean | 0.12 mm/tooth | 421.6 | 92.24 | N | -78.1 % | 84.3 | **no** | mean X (on the workpiece), magnitude; 1000 rpm, fz 0.12, ap 0.5, ae 8 mm, slot |
 
-Curve `Fz_mean` (fz [mm/tooth] -> N): RMS abs. error 1413.4 %, max 3325.3 % over 6 compared points.
+Curve `Fy_mean` (fz [mm/tooth] -> N): RMS abs. error 47.6 %, max 55.7 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_mean | 0.02 mm/tooth | 11.97 | 410 | N | +3325.3 % | 2.39 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.02, ap 0.5, ae 8 mm, slot |
-| Fz_mean | 0.04 mm/tooth | 44.67 | 454.2 | N | +916.7 % | 8.93 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.04, ap 0.5, ae 8 mm, slot |
-| Fz_mean | 0.06 mm/tooth | 133.1 | 498.2 | N | +274.3 % | 26.6 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.06, ap 0.5, ae 8 mm, slot |
-| Fz_mean | 0.08 mm/tooth | 265.2 | 543.9 | N | +105.1 % | 53 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.08, ap 0.5, ae 8 mm, slot |
-| Fz_mean | 0.1 mm/tooth | 430.1 | 591.6 | N | +37.6 % | 86 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.1, ap 0.5, ae 8 mm, slot |
-| Fz_mean | 0.12 mm/tooth | 552.3 | 639.1 | N | +15.7 % | 110 | yes | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.12, ap 0.5, ae 8 mm, slot |
+| Fy_mean | 0.02 mm/tooth | -59.25 | -81.27 | N | -37.2 % | 11.9 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.02, ap 0.5, ae 8 mm, slot |
+| Fy_mean | 0.04 mm/tooth | -210.7 | -143.2 | N | +32.0 % | 42.1 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.04, ap 0.5, ae 8 mm, slot |
+| Fy_mean | 0.06 mm/tooth | -378.8 | -203.2 | N | +46.4 % | 75.8 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.06, ap 0.5, ae 8 mm, slot |
+| Fy_mean | 0.08 mm/tooth | -572 | -261.8 | N | +54.2 % | 114 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.08, ap 0.5, ae 8 mm, slot |
+| Fy_mean | 0.1 mm/tooth | -720.6 | -319.3 | N | +55.7 % | 144 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.1, ap 0.5, ae 8 mm, slot |
+| Fy_mean | 0.12 mm/tooth | -830.1 | -375.6 | N | +54.8 % | 166 | **no** | mean Y (on the workpiece), magnitude; 1000 rpm, fz 0.12, ap 0.5, ae 8 mm, slot |
+
+Curve `Fz_mean` (fz [mm/tooth] -> N): RMS abs. error 335.7 %, max 780.0 % over 6 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_mean | 0.02 mm/tooth | 11.97 | 105.3 | N | +780.0 % | 2.39 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.02, ap 0.5, ae 8 mm, slot |
+| Fz_mean | 0.04 mm/tooth | 44.67 | 156.4 | N | +250.1 % | 8.93 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.04, ap 0.5, ae 8 mm, slot |
+| Fz_mean | 0.06 mm/tooth | 133.1 | 205 | N | +54.0 % | 26.6 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.06, ap 0.5, ae 8 mm, slot |
+| Fz_mean | 0.08 mm/tooth | 265.2 | 252.3 | N | -4.9 % | 53 | yes | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.08, ap 0.5, ae 8 mm, slot |
+| Fz_mean | 0.1 mm/tooth | 430.1 | 298.3 | N | -30.6 % | 86 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.1, ap 0.5, ae 8 mm, slot |
+| Fz_mean | 0.12 mm/tooth | 552.3 | 343.2 | N | -37.9 % | 110 | **no** | mean Z (on the workpiece), magnitude; 1000 rpm, fz 0.12, ap 0.5, ae 8 mm, slot |
 
 ### force-slot-ti64-engin-bullnose
 
@@ -1767,14 +1771,14 @@ Curve `Fz_mean` (fz [mm/tooth] -> N): RMS abs. error 1413.4 %, max 3325.3 % over
 * Tool model: core diameter not given: 0.50 D (core_ratio_by_flutes)
 * Signed extremes of the force on the tool (Altintas frame).
 * Coefficients calibrated to the material's mechanistic data (altintas-2000-mal-review) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 3 compared, 0 without prediction, 0 not compared; median abs. error 283.3 %, max 551.0 %; 0/3 within uncertainty; case **outside budget**; largest miss 27.5 tolerances.
-* Likely cause: milling_peak_force_pct: 0/3 within, mean signed error +140 %. Coefficients: calibrated to mechanistic data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
+* Result: 3 compared, 0 without prediction, 0 not compared; median abs. error 81.1 %, max 154.6 %; 0/3 within uncertainty; case **outside budget**; largest miss 7.73 tolerances.
+* Likely cause: milling_peak_force_pct: 0/3 within, mean signed error +47 %. Coefficients: calibrated to mechanistic data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fx_min | - | -830 | -3182 | N | -283.3 % | 166 | **no** | min X; 217 rpm, fz 0.1, ap 4, ae 31.75 mm, slot |
-| Fy_max | - | 955 | 2403 | N | +151.6 % | 191 | **no** | max Y; 217 rpm, fz 0.1, ap 4, ae 31.75 mm, slot |
-| Fz_max | - | 360 | 2344 | N | +551.0 % | 72 | **no** | max Z; 217 rpm, fz 0.1, ap 4, ae 31.75 mm, slot |
+| Fx_min | - | -830 | -1504 | N | -81.1 % | 166 | **no** | min X; 217 rpm, fz 0.1, ap 4, ae 31.75 mm, slot |
+| Fy_max | - | 955 | 1599 | N | +67.5 % | 191 | **no** | max Y; 217 rpm, fz 0.1, ap 4, ae 31.75 mm, slot |
+| Fz_max | - | 360 | 916.7 | N | +154.6 % | 72 | **no** | max Z; 217 rpm, fz 0.1, ap 4, ae 31.75 mm, slot |
 
 ### force-slot-ti64-engin-taperball
 
@@ -1784,20 +1788,21 @@ Curve `Fz_mean` (fz [mm/tooth] -> N): RMS abs. error 1413.4 %, max 3325.3 % over
 * Model chain: cnctwin.mechanics.materials (databases) -> cnctwin.tooling.build_tool (edge model) -> cnctwin.cutting.coefficients.MechanicsModel (rows per coefficient group) -> cnctwin.cutting.kernels.cut_step (cnctwin.cutting.drive.Driver, analytic engaged intervals, prefilled surface memory).
 * Settings: calibration = mechanistic, calibration_sources = ["altintas-2000-mal-review"], coating = none, edge_element_m = 0.00025, h_min_ratio = 0.37, mu_sliding = 0.3, process = milling, runout = 0, steps = <= 0.5 deg, >= 96 per tooth, tool_material = carbide-k20-6co, tool_type = ball_endmill.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = dry (assumed: not stated; dry assumed, as usual for force-model validation cuts (est.)).
-* Inputs the harness assumed: cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); flute helix = 10.18 deg (from the stated lead 105 mm at the ball radius (constant helix), case); taper = none (cylindrical flank) (tooling's ball end mill has no taper angle, est); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); coating = none (not stated in the case: uncoated assumed, case); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
+* Inputs the harness assumed: coating = none (not stated in the case: uncoated assumed, case); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); flute helix = 10.18 deg (from the stated lead 105 mm at the ball radius (constant helix), case); taper = none (cylindrical flank) (tooling's ball end mill has no taper angle, est); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
 * Database values used: tool material carbide-k20-6co thermal properties (`mitsubishi-2026-tm102g`); ti6al4v flow stress (Johnson-Cook) (`ducobu-2017-jc-ti6al4v`); ti6al4v physical.density_kg_m3 (`aubert-duval-2018-ta6v`); ti6al4v physical.specific_heat_J_kgK (`upmet-2026-ti64-eli`); ti6al4v physical.conductivity_W_mK (`upmet-2026-ti64-eli`); ti6al4v cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); ti6al4v friction mu_sliding (carbide, uncoated) (`klippel-2024-ck45-orthogonal`); ti6al4v cutting.indentation_coeff_N_mm3 (`est`); ti6al4v cutting.mechanistic (carbide, uncoated, any) calibrating the forces (`altintas-2000-mal-review`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Material: database entry ti6al4v; the case says: Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed)
 * Tool model: core diameter not given: 0.50 D (core_ratio_by_flutes)
 * Signed extremes of the force on the tool (Altintas frame); Fz plateau = mean of Fz while the flute is in the cut.
 * Coefficients calibrated to the material's mechanistic data (altintas-2000-mal-review) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 3 compared, 0 without prediction, 0 not compared; median abs. error 102.1 %, max 172.1 %; 0/3 within uncertainty; case **outside budget**; largest miss 8.61 tolerances.
-* Likely cause: milling_peak_force_pct: 0/3 within, mean signed error -34 %. Coefficients: calibrated to mechanistic data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
+* Result: 3 compared, 0 without prediction, 0 not compared; median abs. error 57.3 %, max 68.8 %; 0/3 within uncertainty; case **outside budget**; largest miss 3.44 tolerances.
+* Likely cause: milling_peak_force_pct: 0/3 within, mean signed error -19 %. Coefficients: calibrated to mechanistic data. Ti6Al4V forms segmented chips; Oxley's continuous-chip solution has no cyclic shear. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fy_max | - | 1015 | 2051 | N | +102.1 % | 203 | **no** | max Y; 500 rpm, fz 0.05, ap 10, ae 6 mm, slot |
-| Fx_min | - | -940 | -2558 | N | -172.1 % | 188 | **no** | min X; 500 rpm, fz 0.05, ap 10, ae 6 mm, slot |
-| Fz_plateau | - | 310 | 208.4 | N | -32.8 % | 62 | **no** | plateau Z; 500 rpm, fz 0.05, ap 10, ae 6 mm, slot |
+| Fy_max | - | 1015 | 1597 | N | +57.3 % | 203 | **no** | max Y; 500 rpm, fz 0.05, ap 10, ae 6 mm, slot |
+| Fx_min | - | -940 | -1377 | N | -46.5 % | 188 | **no** | min X; 500 rpm, fz 0.05, ap 10, ae 6 mm, slot |
+| Fz_plateau | - | 310 | 96.82 | N | -68.8 % | 62 | **no** | plateau Z; 500 rpm, fz 0.05, ap 10, ae 6 mm, slot |
 
 ### force-thinwall-al7050-zawada2025-finish
 
@@ -1807,38 +1812,39 @@ Curve `Fz_mean` (fz [mm/tooth] -> N): RMS abs. error 1413.4 %, max 3325.3 % over
 * Model chain: cnctwin.mechanics.materials (databases) -> cnctwin.tooling.build_tool (edge model) -> cnctwin.cutting.coefficients.MechanicsModel (rows per coefficient group) -> cnctwin.cutting.kernels.cut_step (cnctwin.cutting.drive.Driver, analytic engaged intervals, prefilled surface memory).
 * Settings: calibration = kienzle, calibration_sources = ["iscar-materials-groups"], coating = none, edge_element_m = 0.00025, h_min_ratio = 0.3, mu_sliding = 0.55, process = milling, runout = 0, steps = <= 0.5 deg, >= 96 per tooth, tool_material = carbide-k20-6co, tool_type = square_endmill.
 * Inputs the case marks as assumed: `setup.stock.wall_length_mm` = 100 (assumed equal to the sample length; not stated explicitly); `setup.tool.rake_deg` = 15 (assumed: not stated (typical of aluminium end mills)); `setup.conditions.spindle_rpm` = [7958, 15915, 23873] (computed here from vc and D 12 mm; not stated).
-* Inputs the harness assumed: clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); coating = none (case coating 'TiB2' has no database entry: modelled uncoated, db/coatings); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
+* Inputs the harness assumed: clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); coating = none (case coating 'TiB2' has no database entry: modelled uncoated, db/coatings); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
 * Database values used: tool material carbide-k20-6co thermal properties (`mitsubishi-2026-tm102g`); al7075-t7351 flow stress (Johnson-Cook) (`est`); al7075-t7351 physical.density_kg_m3 (`kaiser-2006-al7075-datasheet`); al7075-t7351 physical.specific_heat_J_kgK (`muraca-1972-al7075-handbook`); al7075-t7351 physical.conductivity_W_mK (`kaiser-2006-al7075-datasheet`); al7075-t7351 cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); al7075-t7351 friction mu_sliding (carbide, uncoated) (`est`); al7075-t7351 cutting.indentation_coeff_N_mm3 (`est`); al7075-t7351 cutting.kienzle (carbide, any, any) calibrating the forces (`iscar-materials-groups`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Material: database entry al7075-t7351; the case says: 7050-T7451 plate (AMS 4050K), Table 3: Cu 2.20, Mg 2.10, Zn 6.30, Zr 0.10 %; Rm 520, Rp0.2 450 MPa, A5 13 %. Not in the DB: the over-aged 7075-T7351 entry is the closest (similar strength level); use 7050 data when available.
 * Tool model: core diameter not given: 0.60 D (core_ratio_by_flutes)
 * Rigid wall and tool: the measured peaks include the wall's compliance and dynamics (case notes), which this force harness does not couple.
 * Coefficients calibrated to the material's kienzle data (iscar-materials-groups) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 42.0 %, max 196.6 %; 0/9 within uncertainty; case **outside budget**; largest miss 9.83 tolerances.
-* Likely cause: milling_peak_force_pct: 1/9 within, mean signed error +76 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
+* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 71.0 %, max 76.2 %; 0/9 within uncertainty; case **outside budget**; largest miss 3.81 tolerances.
+* Likely cause: milling_peak_force_pct: 0/9 within, mean signed error -64 %. Coefficients: calibrated to kienzle data. Milling statistics are taken from a rigid tool and workpiece without runout; dynamometer dynamics, runout and the unstated frame orientations of some sources are not modelled.
 
-Curve `Fx1_max_t1.0` (vc [m/min] -> N): RMS abs. error 120.8 %, max 196.6 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fx1_max_t1.0 | 300 m/min | 124.5 | 369.2 | N | +196.6 % | 24.9 | **no** | peak Y, magnitude; 7958 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
-| Fx1_max_t1.0 | 600 m/min | 269.1 | 353.6 | N | +31.4 % | 53.8 | **no** | peak Y, magnitude; 15915 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
-| Fx1_max_t1.0 | 900 m/min | 210.2 | 345.3 | N | +64.3 % | 42 | **no** | peak Y, magnitude; 23873 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
-
-Curve `Fx1_max_t1.5` (vc [m/min] -> N): RMS abs. error 89.2 %, max 146.5 % over 3 compared points.
+Curve `Fx1_max_t1.0` (vc [m/min] -> N): RMS abs. error 61.3 %, max 73.0 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fx1_max_t1.5 | 300 m/min | 149.8 | 369.2 | N | +146.5 % | 30 | **no** | peak Y, magnitude; 7958 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
-| Fx1_max_t1.5 | 600 m/min | 281.1 | 353.6 | N | +25.8 % | 56.2 | **no** | peak Y, magnitude; 15915 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
-| Fx1_max_t1.5 | 900 m/min | 243.3 | 345.3 | N | +42.0 % | 48.7 | **no** | peak Y, magnitude; 23873 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t1.0 | 300 m/min | 124.5 | 75.76 | N | -39.1 % | 24.9 | **no** | peak Y, magnitude; 7958 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t1.0 | 600 m/min | 269.1 | 72.69 | N | -73.0 % | 53.8 | **no** | peak Y, magnitude; 15915 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t1.0 | 900 m/min | 210.2 | 70.61 | N | -66.4 % | 42 | **no** | peak Y, magnitude; 23873 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
 
-Curve `Fx1_max_t2.0` (vc [m/min] -> N): RMS abs. error 80.4 %, max 135.9 % over 3 compared points.
+Curve `Fx1_max_t1.5` (vc [m/min] -> N): RMS abs. error 65.8 %, max 74.1 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fx1_max_t2.0 | 300 m/min | 156.5 | 369.2 | N | +135.9 % | 31.3 | **no** | peak Y, magnitude; 7958 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
-| Fx1_max_t2.0 | 600 m/min | 305.1 | 353.6 | N | +15.9 % | 61 | yes | peak Y, magnitude; 15915 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
-| Fx1_max_t2.0 | 900 m/min | 274.7 | 345.3 | N | +25.7 % | 54.9 | **no** | peak Y, magnitude; 23873 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t1.5 | 300 m/min | 149.8 | 75.76 | N | -49.4 % | 30 | **no** | peak Y, magnitude; 7958 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t1.5 | 600 m/min | 281.1 | 72.69 | N | -74.1 % | 56.2 | **no** | peak Y, magnitude; 15915 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t1.5 | 900 m/min | 243.3 | 70.61 | N | -71.0 % | 48.7 | **no** | peak Y, magnitude; 23873 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+
+Curve `Fx1_max_t2.0` (vc [m/min] -> N): RMS abs. error 68.3 %, max 76.2 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fx1_max_t2.0 | 300 m/min | 156.5 | 75.76 | N | -51.6 % | 31.3 | **no** | peak Y, magnitude; 7958 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t2.0 | 600 m/min | 305.1 | 72.69 | N | -76.2 % | 61 | **no** | peak Y, magnitude; 15915 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
+| Fx1_max_t2.0 | 900 m/min | 274.7 | 70.61 | N | -74.3 % | 54.9 | **no** | peak Y, magnitude; 23873 rpm, fz 0.025, ap 48, ae 0.2 mm, down |
 
 ## cycle_time
 
@@ -1903,16 +1909,16 @@ Curve `Fx1_max_t2.0` (vc [m/min] -> N): RMS abs. error 80.4 %, max 135.9 % over 
 ## drilling_thrust
 
 * Budget: 20 % (relative error of the simulated steady thrust (axial) force during full-diameter drilling).
-* Verdict: **fail** - only 0 of 4 cases within budget (0% < 80%); thrust-drill-c45-sklenicka2024-carbide misses by 15.67 tolerances (> 2).
+* Verdict: **fail** - only 0 of 4 cases within budget (0% < 80%); thrust-drill-ti64-beranoagirre2018-pilot misses by 4.71 tolerances (> 2).
 * Harness: `cnctwin.validation.harnesses.drilling.drilling_thrust`.
 * Steady full-diameter drilling through the cutting domain's kernel with the case's twist drill (tooling: lips with the helicoid rake of the stated helix, chisel, margins) and the coefficient pipeline for the process drilling (indentation model at the chisel and the slow centre); thrust = mean axial force on the drill.
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 4 | 0/4 | 49 (0) | 90.3 % / 78.2 % / 90.3 % | 118.6 % | - | 0/9 | 15.7 (thrust-drill-c45-sklenicka2024-carbide) |
-| calibration-dependent | 1 | 0/1 | 9 (0) | 47.5 % / - / 47.5 % | 61.0 % | - | 0/9 | 3.24 (thrust-drill-al7075-luo2021) |
+| independent | 4 | 0/4 | 49 (0) | 43.9 % / 18.6 % / 47.3 % | 91.7 % | - | 0/9 | 4.71 (thrust-drill-ti64-beranoagirre2018-pilot) |
+| calibration-dependent | 1 | 0/1 | 9 (0) | 58.7 % / - / 58.7 % | 69.4 % | - | 0/9 | 3.62 (thrust-drill-al7075-luo2021) |
 
-**Failures and likely causes.** 0 of 4 independent cases within budget. Values within tolerance per case: thrust-drill-aisi1040-gok2013-helix 0/3; thrust-drill-al2024-craciun2024-hss 0/27; thrust-drill-c45-sklenicka2024-carbide 1/9; thrust-drill-ti64-beranoagirre2018-pilot 0/10. Mean signed error over the independent values +48 %. Most sources leave the web, chisel angle, helix or point angle open (listed per case as assumed inputs); the thrust depends on the chisel length almost linearly (chisel indentation).
+**Failures and likely causes.** 0 of 4 independent cases within budget. Values within tolerance per case: thrust-drill-aisi1040-gok2013-helix 1/3; thrust-drill-al2024-craciun2024-hss 9/27; thrust-drill-c45-sklenicka2024-carbide 4/9; thrust-drill-ti64-beranoagirre2018-pilot 0/10. Mean signed error over the independent values -0 %. Most sources leave the web, chisel angle, helix or point angle open (listed per case as assumed inputs); the thrust depends on the chisel length almost linearly (chisel indentation).
 
 ### thrust-drill-aisi1040-gok2013-helix
 
@@ -1930,14 +1936,14 @@ Curve `Fx1_max_t2.0` (vc [m/min] -> N): RMS abs. error 80.4 %, max 135.9 % over 
 * Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 10 mm): margin width not given: 0.70 mm
 * Coefficients: the mechanics prediction alone (no measured Kienzle or mechanistic data in the material file for hss/none, drilling).
-* Result: 3 compared, 0 without prediction, 0 not compared; median abs. error 78.2 %, max 83.1 %; case **outside budget**; largest miss 4.16 tolerances.
-* Likely cause: 0/3 values within tolerance, mean signed error +78 %; coefficients from the mechanics alone. Drill geometry the source leaves open: coolant, lip_count, spindle_rpm. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
+* Result: 3 compared, 0 without prediction, 0 not compared; median abs. error 20.4 %, max 31.3 %; case **outside budget**; largest miss 1.56 tolerances.
+* Likely cause: 1/3 values within tolerance, mean signed error +23 %; coefficients from the mechanics alone. Drill geometry the source leaves open: coolant, lip_count, spindle_rpm. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_helix20 | 20 deg | 1290 | 2363 | N | +83.1 % | 258 | **no** | D 10 mm, 573 rpm, f 0.1 mm/rev, helix 20 deg |
-| Fz_helix25 | 25 deg | 1250 | 2174 | N | +73.9 % | 250 | **no** | D 10 mm, 573 rpm, f 0.1 mm/rev, helix 25 deg |
-| Fz_helix30 | 30 deg | 1120 | 1996 | N | +78.2 % | 224 | **no** | D 10 mm, 573 rpm, f 0.1 mm/rev, helix 30 deg |
+| Fz_helix20 | 20 deg | 1290 | 1694 | N | +31.3 % | 258 | **no** | D 10 mm, 573 rpm, f 0.1 mm/rev, helix 20 deg |
+| Fz_helix25 | 25 deg | 1250 | 1505 | N | +20.4 % | 250 | **no** | D 10 mm, 573 rpm, f 0.1 mm/rev, helix 25 deg |
+| Fz_helix30 | 30 deg | 1120 | 1328 | N | +18.6 % | 224 | yes | D 10 mm, 573 rpm, f 0.1 mm/rev, helix 30 deg |
 
 ### thrust-drill-al2024-craciun2024-hss
 
@@ -1963,80 +1969,80 @@ Curve `Fx1_max_t2.0` (vc [m/min] -> N): RMS abs. error 80.4 %, max 135.9 % over 
 * Drill model (D 10 mm): lip clearance not given: 10 deg
 * Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 10 mm): margin width not given: 0.70 mm
-* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 81.8 %, max 125.0 %; case **outside budget**; largest miss 6.25 tolerances.
-* Likely cause: 0/27 values within tolerance, mean signed error +72 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: coolant, helix_deg, hole_depth_mm, lip_count, point_angle_deg, web_thickness. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
+* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 44.1 %, max 67.2 %; case **outside budget**; largest miss 3.36 tolerances.
+* Likely cause: 9/27 values within tolerance, mean signed error +35 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: coolant, helix_deg, hole_depth_mm, lip_count, point_angle_deg, web_thickness. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
 
-Curve `Fz_D6_vc50` (f [mm/rev] -> N): RMS abs. error 100.1 %, max 125.0 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fz_D6_vc50 | 0.1 mm/rev | 180.5 | 406.1 | N | +125.0 % | 36.1 | **no** | D 6 mm, 2653 rpm, f 0.1 mm/rev |
-| Fz_D6_vc50 | 0.25 mm/rev | 436.2 | 846.9 | N | +94.2 % | 87.2 | **no** | D 6 mm, 2653 rpm, f 0.25 mm/rev |
-| Fz_D6_vc50 | 0.4 mm/rev | 690.4 | 1205 | N | +74.6 % | 138 | **no** | D 6 mm, 2653 rpm, f 0.4 mm/rev |
-
-Curve `Fz_D6_vc60` (f [mm/rev] -> N): RMS abs. error 94.4 %, max 116.9 % over 3 compared points.
+Curve `Fz_D6_vc50` (f [mm/rev] -> N): RMS abs. error 56.4 %, max 67.2 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_D6_vc60 | 0.1 mm/rev | 187.5 | 406.8 | N | +116.9 % | 37.5 | **no** | D 6 mm, 3183 rpm, f 0.1 mm/rev |
-| Fz_D6_vc60 | 0.25 mm/rev | 444.3 | 845.7 | N | +90.4 % | 88.9 | **no** | D 6 mm, 3183 rpm, f 0.25 mm/rev |
-| Fz_D6_vc60 | 0.4 mm/rev | 704.9 | 1199 | N | +70.1 % | 141 | **no** | D 6 mm, 3183 rpm, f 0.4 mm/rev |
+| Fz_D6_vc50 | 0.1 mm/rev | 180.5 | 301.7 | N | +67.2 % | 36.1 | **no** | D 6 mm, 2653 rpm, f 0.1 mm/rev |
+| Fz_D6_vc50 | 0.25 mm/rev | 436.2 | 675.4 | N | +54.8 % | 87.2 | **no** | D 6 mm, 2653 rpm, f 0.25 mm/rev |
+| Fz_D6_vc50 | 0.4 mm/rev | 690.4 | 999.7 | N | +44.8 % | 138 | **no** | D 6 mm, 2653 rpm, f 0.4 mm/rev |
 
-Curve `Fz_D6_vc70` (f [mm/rev] -> N): RMS abs. error 89.7 %, max 112.4 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fz_D6_vc70 | 0.1 mm/rev | 191.2 | 406.1 | N | +112.4 % | 38.2 | **no** | D 6 mm, 3714 rpm, f 0.1 mm/rev |
-| Fz_D6_vc70 | 0.25 mm/rev | 462.3 | 840.5 | N | +81.8 % | 92.5 | **no** | D 6 mm, 3714 rpm, f 0.25 mm/rev |
-| Fz_D6_vc70 | 0.4 mm/rev | 700.7 | 1186 | N | +69.3 % | 140 | **no** | D 6 mm, 3714 rpm, f 0.4 mm/rev |
-
-Curve `Fz_D8_vc50` (f [mm/rev] -> N): RMS abs. error 33.9 %, max 37.8 % over 3 compared points.
+Curve `Fz_D6_vc60` (f [mm/rev] -> N): RMS abs. error 51.9 %, max 61.2 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_D8_vc50 | 0.1 mm/rev | 404.7 | 541.3 | N | +33.7 % | 80.9 | **no** | D 8 mm, 1989 rpm, f 0.1 mm/rev |
-| Fz_D8_vc50 | 0.25 mm/rev | 819.2 | 1129 | N | +37.8 % | 164 | **no** | D 8 mm, 1989 rpm, f 0.25 mm/rev |
-| Fz_D8_vc50 | 0.4 mm/rev | 1236 | 1605 | N | +29.9 % | 247 | **no** | D 8 mm, 1989 rpm, f 0.4 mm/rev |
+| Fz_D6_vc60 | 0.1 mm/rev | 187.5 | 302.2 | N | +61.2 % | 37.5 | **no** | D 6 mm, 3183 rpm, f 0.1 mm/rev |
+| Fz_D6_vc60 | 0.25 mm/rev | 444.3 | 673.9 | N | +51.7 % | 88.9 | **no** | D 6 mm, 3183 rpm, f 0.25 mm/rev |
+| Fz_D6_vc60 | 0.4 mm/rev | 704.9 | 992.6 | N | +40.8 % | 141 | **no** | D 6 mm, 3183 rpm, f 0.4 mm/rev |
 
-Curve `Fz_D8_vc60` (f [mm/rev] -> N): RMS abs. error 30.4 %, max 32.8 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fz_D8_vc60 | 0.1 mm/rev | 419.7 | 542.3 | N | +29.2 % | 83.9 | **no** | D 8 mm, 2387 rpm, f 0.1 mm/rev |
-| Fz_D8_vc60 | 0.25 mm/rev | 849.2 | 1127 | N | +32.8 % | 170 | **no** | D 8 mm, 2387 rpm, f 0.25 mm/rev |
-| Fz_D8_vc60 | 0.4 mm/rev | 1237 | 1597 | N | +29.1 % | 247 | **no** | D 8 mm, 2387 rpm, f 0.4 mm/rev |
-
-Curve `Fz_D8_vc70` (f [mm/rev] -> N): RMS abs. error 29.4 %, max 31.5 % over 3 compared points.
+Curve `Fz_D6_vc70` (f [mm/rev] -> N): RMS abs. error 47.9 %, max 57.7 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_D8_vc70 | 0.1 mm/rev | 423.9 | 541.5 | N | +27.7 % | 84.8 | **no** | D 8 mm, 2785 rpm, f 0.1 mm/rev |
-| Fz_D8_vc70 | 0.25 mm/rev | 851.8 | 1120 | N | +31.5 % | 170 | **no** | D 8 mm, 2785 rpm, f 0.25 mm/rev |
-| Fz_D8_vc70 | 0.4 mm/rev | 1227 | 1580 | N | +28.8 % | 245 | **no** | D 8 mm, 2785 rpm, f 0.4 mm/rev |
+| Fz_D6_vc70 | 0.1 mm/rev | 191.2 | 301.4 | N | +57.7 % | 38.2 | **no** | D 6 mm, 3714 rpm, f 0.1 mm/rev |
+| Fz_D6_vc70 | 0.25 mm/rev | 462.3 | 668.4 | N | +44.6 % | 92.5 | **no** | D 6 mm, 3714 rpm, f 0.25 mm/rev |
+| Fz_D6_vc70 | 0.4 mm/rev | 700.7 | 979.6 | N | +39.8 % | 140 | **no** | D 6 mm, 3714 rpm, f 0.4 mm/rev |
 
-Curve `Fz_D10_vc50` (f [mm/rev] -> N): RMS abs. error 95.7 %, max 104.7 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fz_D10_vc50 | 0.1 mm/rev | 349.7 | 676.5 | N | +93.5 % | 69.9 | **no** | D 10 mm, 1592 rpm, f 0.1 mm/rev |
-| Fz_D10_vc50 | 0.25 mm/rev | 688.9 | 1410 | N | +104.7 % | 138 | **no** | D 10 mm, 1592 rpm, f 0.25 mm/rev |
-| Fz_D10_vc50 | 0.4 mm/rev | 1065 | 2005 | N | +88.3 % | 213 | **no** | D 10 mm, 1592 rpm, f 0.4 mm/rev |
-
-Curve `Fz_D10_vc60` (f [mm/rev] -> N): RMS abs. error 92.0 %, max 96.2 % over 3 compared points.
+Curve `Fz_D8_vc50` (f [mm/rev] -> N): RMS abs. error 7.3 %, max 10.0 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_D10_vc60 | 0.1 mm/rev | 349.9 | 677.7 | N | +93.7 % | 70 | **no** | D 10 mm, 1910 rpm, f 0.1 mm/rev |
-| Fz_D10_vc60 | 0.25 mm/rev | 717.7 | 1408 | N | +96.2 % | 144 | **no** | D 10 mm, 1910 rpm, f 0.25 mm/rev |
-| Fz_D10_vc60 | 0.4 mm/rev | 1074 | 1994 | N | +85.7 % | 215 | **no** | D 10 mm, 1910 rpm, f 0.4 mm/rev |
+| Fz_D8_vc50 | 0.1 mm/rev | 404.7 | 402.5 | N | -0.6 % | 80.9 | yes | D 8 mm, 1989 rpm, f 0.1 mm/rev |
+| Fz_D8_vc50 | 0.25 mm/rev | 819.2 | 900.8 | N | +10.0 % | 164 | yes | D 8 mm, 1989 rpm, f 0.25 mm/rev |
+| Fz_D8_vc50 | 0.4 mm/rev | 1236 | 1333 | N | +7.9 % | 247 | yes | D 8 mm, 1989 rpm, f 0.4 mm/rev |
 
-Curve `Fz_D10_vc70` (f [mm/rev] -> N): RMS abs. error 87.9 %, max 92.1 % over 3 compared points.
+Curve `Fz_D8_vc60` (f [mm/rev] -> N): RMS abs. error 5.8 %, max 7.1 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_D10_vc70 | 0.1 mm/rev | 352.2 | 676.5 | N | +92.1 % | 70.4 | **no** | D 10 mm, 2228 rpm, f 0.1 mm/rev |
-| Fz_D10_vc70 | 0.25 mm/rev | 735.4 | 1399 | N | +90.3 % | 147 | **no** | D 10 mm, 2228 rpm, f 0.25 mm/rev |
-| Fz_D10_vc70 | 0.4 mm/rev | 1090 | 1974 | N | +81.0 % | 218 | **no** | D 10 mm, 2228 rpm, f 0.4 mm/rev |
+| Fz_D8_vc60 | 0.1 mm/rev | 419.7 | 403.3 | N | -3.9 % | 83.9 | yes | D 8 mm, 2387 rpm, f 0.1 mm/rev |
+| Fz_D8_vc60 | 0.25 mm/rev | 849.2 | 899.3 | N | +5.9 % | 170 | yes | D 8 mm, 2387 rpm, f 0.25 mm/rev |
+| Fz_D8_vc60 | 0.4 mm/rev | 1237 | 1325 | N | +7.1 % | 247 | yes | D 8 mm, 2387 rpm, f 0.4 mm/rev |
+
+Curve `Fz_D8_vc70` (f [mm/rev] -> N): RMS abs. error 5.5 %, max 6.5 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_D8_vc70 | 0.1 mm/rev | 423.9 | 402.2 | N | -5.1 % | 84.8 | yes | D 8 mm, 2785 rpm, f 0.1 mm/rev |
+| Fz_D8_vc70 | 0.25 mm/rev | 851.8 | 892 | N | +4.7 % | 170 | yes | D 8 mm, 2785 rpm, f 0.25 mm/rev |
+| Fz_D8_vc70 | 0.4 mm/rev | 1227 | 1307 | N | +6.5 % | 245 | yes | D 8 mm, 2785 rpm, f 0.4 mm/rev |
+
+Curve `Fz_D10_vc50` (f [mm/rev] -> N): RMS abs. error 55.2 %, max 63.5 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_D10_vc50 | 0.1 mm/rev | 349.7 | 503.2 | N | +43.9 % | 69.9 | **no** | D 10 mm, 1592 rpm, f 0.1 mm/rev |
+| Fz_D10_vc50 | 0.25 mm/rev | 688.9 | 1126 | N | +63.5 % | 138 | **no** | D 10 mm, 1592 rpm, f 0.25 mm/rev |
+| Fz_D10_vc50 | 0.4 mm/rev | 1065 | 1667 | N | +56.6 % | 213 | **no** | D 10 mm, 1592 rpm, f 0.4 mm/rev |
+
+Curve `Fz_D10_vc60` (f [mm/rev] -> N): RMS abs. error 51.9 %, max 56.6 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_D10_vc60 | 0.1 mm/rev | 349.9 | 504.1 | N | +44.1 % | 70 | **no** | D 10 mm, 1910 rpm, f 0.1 mm/rev |
+| Fz_D10_vc60 | 0.25 mm/rev | 717.7 | 1124 | N | +56.6 % | 144 | **no** | D 10 mm, 1910 rpm, f 0.25 mm/rev |
+| Fz_D10_vc60 | 0.4 mm/rev | 1074 | 1655 | N | +54.1 % | 215 | **no** | D 10 mm, 1910 rpm, f 0.4 mm/rev |
+
+Curve `Fz_D10_vc70` (f [mm/rev] -> N): RMS abs. error 48.2 %, max 51.6 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_D10_vc70 | 0.1 mm/rev | 352.2 | 502.7 | N | +42.7 % | 70.4 | **no** | D 10 mm, 2228 rpm, f 0.1 mm/rev |
+| Fz_D10_vc70 | 0.25 mm/rev | 735.4 | 1115 | N | +51.6 % | 147 | **no** | D 10 mm, 2228 rpm, f 0.25 mm/rev |
+| Fz_D10_vc70 | 0.4 mm/rev | 1090 | 1634 | N | +49.8 % | 218 | **no** | D 10 mm, 2228 rpm, f 0.4 mm/rev |
 
 ### thrust-drill-al7075-luo2021
 
@@ -2053,32 +2059,32 @@ Curve `Fz_D10_vc70` (f [mm/rev] -> N): RMS abs. error 87.9 %, max 92.1 % over 3 
 * Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 10 mm): margin width not given: 0.70 mm
 * Coefficients calibrated to the material's kienzle data (iscar-materials-groups) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 47.5 %, max 64.9 %; 0/9 within uncertainty; case **outside budget**; largest miss 3.24 tolerances.
-* Likely cause: 0/9 values within tolerance, mean signed error -49 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: chisel_edge_angle_deg, coolant, lip_count, web_thickness_mm. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
+* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 58.7 %, max 72.3 %; 0/9 within uncertainty; case **outside budget**; largest miss 3.62 tolerances.
+* Likely cause: 0/9 values within tolerance, mean signed error -59 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: chisel_edge_angle_deg, coolant, lip_count, web_thickness_mm. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
 
-Curve `thrust feed 60 mm/min` (spindle speed [rpm] -> N): RMS abs. error 60.1 %, max 64.9 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| thrust feed 60 mm/min | 800 rpm | 1089 | 490.5 | N | -55.0 % | 218 | **no** | D 10 mm, 800 rpm, f 0.075 mm/rev |
-| thrust feed 60 mm/min | 1000 rpm | 1021 | 408.3 | N | -60.0 % | 204 | **no** | D 10 mm, 1000 rpm, f 0.06 mm/rev |
-| thrust feed 60 mm/min | 1200 rpm | 988 | 347.1 | N | -64.9 % | 198 | **no** | D 10 mm, 1200 rpm, f 0.05 mm/rev |
-
-Curve `thrust feed 100 mm/min` (spindle speed [rpm] -> N): RMS abs. error 47.7 %, max 50.6 % over 3 compared points.
+Curve `thrust feed 60 mm/min` (spindle speed [rpm] -> N): RMS abs. error 68.8 %, max 72.3 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| thrust feed 100 mm/min | 800 rpm | 1398 | 770.3 | N | -44.9 % | 280 | **no** | D 10 mm, 800 rpm, f 0.125 mm/rev |
-| thrust feed 100 mm/min | 1000 rpm | 1226 | 643.3 | N | -47.5 % | 245 | **no** | D 10 mm, 1000 rpm, f 0.1 mm/rev |
-| thrust feed 100 mm/min | 1200 rpm | 1107 | 547.2 | N | -50.6 % | 221 | **no** | D 10 mm, 1200 rpm, f 0.0833333 mm/rev |
+| thrust feed 60 mm/min | 800 rpm | 1089 | 379.9 | N | -65.1 % | 218 | **no** | D 10 mm, 800 rpm, f 0.075 mm/rev |
+| thrust feed 60 mm/min | 1000 rpm | 1021 | 319.9 | N | -68.7 % | 204 | **no** | D 10 mm, 1000 rpm, f 0.06 mm/rev |
+| thrust feed 60 mm/min | 1200 rpm | 988 | 273.5 | N | -72.3 % | 198 | **no** | D 10 mm, 1200 rpm, f 0.05 mm/rev |
 
-Curve `thrust feed 140 mm/min` (spindle speed [rpm] -> N): RMS abs. error 40.0 %, max 43.7 % over 3 compared points.
+Curve `thrust feed 100 mm/min` (spindle speed [rpm] -> N): RMS abs. error 58.8 %, max 61.5 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| thrust feed 140 mm/min | 800 rpm | 1618 | 1030 | N | -36.4 % | 324 | **no** | D 10 mm, 800 rpm, f 0.175 mm/rev |
-| thrust feed 140 mm/min | 1000 rpm | 1428 | 863 | N | -39.6 % | 286 | **no** | D 10 mm, 1000 rpm, f 0.14 mm/rev |
-| thrust feed 140 mm/min | 1200 rpm | 1309 | 737.4 | N | -43.7 % | 262 | **no** | D 10 mm, 1200 rpm, f 0.116667 mm/rev |
+| thrust feed 100 mm/min | 800 rpm | 1398 | 615.5 | N | -56.0 % | 280 | **no** | D 10 mm, 800 rpm, f 0.125 mm/rev |
+| thrust feed 100 mm/min | 1000 rpm | 1226 | 505.9 | N | -58.7 % | 245 | **no** | D 10 mm, 1000 rpm, f 0.1 mm/rev |
+| thrust feed 100 mm/min | 1200 rpm | 1107 | 425.8 | N | -61.5 % | 221 | **no** | D 10 mm, 1200 rpm, f 0.0833333 mm/rev |
+
+Curve `thrust feed 140 mm/min` (spindle speed [rpm] -> N): RMS abs. error 50.8 %, max 55.4 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| thrust feed 140 mm/min | 800 rpm | 1618 | 871.7 | N | -46.1 % | 324 | **no** | D 10 mm, 800 rpm, f 0.175 mm/rev |
+| thrust feed 140 mm/min | 1000 rpm | 1428 | 705.5 | N | -50.6 % | 286 | **no** | D 10 mm, 1000 rpm, f 0.14 mm/rev |
+| thrust feed 140 mm/min | 1200 rpm | 1309 | 584.3 | N | -55.4 % | 262 | **no** | D 10 mm, 1200 rpm, f 0.116667 mm/rev |
 
 ### thrust-drill-c45-sklenicka2024-carbide
 
@@ -2096,25 +2102,25 @@ Curve `thrust feed 140 mm/min` (spindle speed [rpm] -> N): RMS abs. error 40.0 %
 * Coefficients calibrated to the material's kienzle data (klippel-2022-ck45-cutting-database) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * Thinned point: the chisel from the stated chisel length 0.30 mm (the web 3.60 mm is thinned to it; the gash is modelled as lip).
 * Drill model (D 12 mm): chisel edge angle not given: 125 deg
-* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 83.0 %, max 313.3 %; 0/9 within uncertainty; case **outside budget**; largest miss 15.7 tolerances.
-* Likely cause: 1/9 values within tolerance, mean signed error +122 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: lip_count, spindle_rpm. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
+* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 24.3 %, max 34.2 %; 0/9 within uncertainty; case **outside budget**; largest miss 1.71 tolerances.
+* Likely cause: 4/9 values within tolerance, mean signed error -14 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: lip_count, spindle_rpm. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ff_feedavg_D8_vc149.79 | - | 831.8 | 2315 | N | +178.4 % | 166 | **no** | D 8 mm, 5960 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
-| Ff_feedavg_D12_vc80.21 | - | 1031 | 1395 | N | +35.2 % | 206 | **no** | D 12 mm, 2128 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
-| Ff_feedavg_D12_vc149.79 | - | 1128 | 1608 | N | +42.6 % | 226 | **no** | D 12 mm, 3973 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
-| Ff_feedavg_D8_vc80.21 | - | 796.7 | 2155 | N | +170.5 % | 159 | **no** | D 8 mm, 3191 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
+| Ff_feedavg_D8_vc149.79 | - | 831.8 | 754.8 | N | -9.3 % | 166 | yes | D 8 mm, 5960 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
+| Ff_feedavg_D12_vc80.21 | - | 1031 | 905.9 | N | -12.2 % | 206 | yes | D 12 mm, 2128 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
+| Ff_feedavg_D12_vc149.79 | - | 1128 | 1105 | N | -2.0 % | 226 | yes | D 12 mm, 3973 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
+| Ff_feedavg_D8_vc80.21 | - | 796.7 | 603.1 | N | -24.3 % | 159 | **no** | D 8 mm, 3191 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
 
-Curve `Ff_D8_vc80.21` (fn [mm/rev] -> N): RMS abs. error 174.4 %, max 313.3 % over 5 compared points.
+Curve `Ff_D8_vc80.21` (fn [mm/rev] -> N): RMS abs. error 29.1 %, max 34.2 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ff_D8_vc80.21 | 0.09 mm/rev | 342 | 521.7 | N | +52.5 % | 68.4 | **no** | D 8 mm, 3191 rpm, f 0.09 mm/rev, flood |
-| Ff_D8_vc80.21 | 0.13 mm/rev | 550.9 | 632.6 | N | +14.8 % | 110 | yes | D 8 mm, 3191 rpm, f 0.13 mm/rev, flood |
-| Ff_D8_vc80.21 | 0.175 mm/rev | 907 | 1659 | N | +83.0 % | 181 | **no** | D 8 mm, 3191 rpm, f 0.175 mm/rev, flood |
-| Ff_D8_vc80.21 | 0.22 mm/rev | 1031 | 3198 | N | +210.0 % | 206 | **no** | D 8 mm, 3191 rpm, f 0.22 mm/rev, flood |
-| Ff_D8_vc80.21 | 0.26 mm/rev | 1152 | 4761 | N | +313.3 % | 230 | **no** | D 8 mm, 3191 rpm, f 0.26 mm/rev, flood |
+| Ff_D8_vc80.21 | 0.09 mm/rev | 342 | 441.7 | N | +29.2 % | 68.4 | **no** | D 8 mm, 3191 rpm, f 0.09 mm/rev, flood |
+| Ff_D8_vc80.21 | 0.13 mm/rev | 550.9 | 507.2 | N | -7.9 % | 110 | yes | D 8 mm, 3191 rpm, f 0.13 mm/rev, flood |
+| Ff_D8_vc80.21 | 0.175 mm/rev | 907 | 596.8 | N | -34.2 % | 181 | **no** | D 8 mm, 3191 rpm, f 0.175 mm/rev, flood |
+| Ff_D8_vc80.21 | 0.22 mm/rev | 1031 | 691.5 | N | -33.0 % | 206 | **no** | D 8 mm, 3191 rpm, f 0.22 mm/rev, flood |
+| Ff_D8_vc80.21 | 0.26 mm/rev | 1152 | 778.3 | N | -32.4 % | 230 | **no** | D 8 mm, 3191 rpm, f 0.26 mm/rev, flood |
 
 ### thrust-drill-ti64-beranoagirre2018-pilot
 
@@ -2133,28 +2139,28 @@ Curve `Ff_D8_vc80.21` (fn [mm/rev] -> N): RMS abs. error 174.4 %, max 313.3 % ov
 * Drill model (D 8.5 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 8.5 mm): margin width not given: 0.60 mm
 * Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 10 compared, 0 without prediction, 0 not compared; median abs. error 92.5 %, max 94.6 %; case **outside budget**; largest miss 4.73 tolerances.
-* Likely cause: 0/10 values within tolerance, mean signed error -93 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: helix_deg. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
+* Result: 10 compared, 0 without prediction, 0 not compared; median abs. error 91.7 %, max 94.1 %; case **outside budget**; largest miss 4.71 tolerances.
+* Likely cause: 0/10 values within tolerance, mean signed error -92 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: helix_deg. The thrust is dominated by the chisel edge (indentation, -54 to -60 deg rake) whose model is an upper-bound-type contact estimate.
 
-Curve `Fz_f0.05` (pilot hole diameter D0 [mm] -> N): RMS abs. error 92.5 %, max 94.2 % over 5 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Fz_f0.05 | 3 mm | 591 | 51.28 | N | -91.3 % | 118 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 3 mm, flood |
-| Fz_f0.05 | 4 mm | 460 | 34.08 | N | -92.6 % | 92 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 4 mm, flood |
-| Fz_f0.05 | 5 mm | 319 | 25.49 | N | -92.0 % | 63.8 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 5 mm, flood |
-| Fz_f0.05 | 6 mm | 242 | 18.47 | N | -92.4 % | 48.4 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 6 mm, flood |
-| Fz_f0.05 | 7 mm | 169 | 9.834 | N | -94.2 % | 33.8 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 7 mm, flood |
-
-Curve `Fz_f0.10` (pilot hole diameter D0 [mm] -> N): RMS abs. error 92.7 %, max 94.6 % over 5 compared points.
+Curve `Fz_f0.05` (pilot hole diameter D0 [mm] -> N): RMS abs. error 91.8 %, max 93.8 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Fz_f0.10 | 3 mm | 723 | 70 | N | -90.3 % | 145 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 3 mm, flood |
-| Fz_f0.10 | 4 mm | 565 | 43.36 | N | -92.3 % | 113 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 4 mm, flood |
-| Fz_f0.10 | 5 mm | 440 | 31.12 | N | -92.9 % | 88 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 5 mm, flood |
-| Fz_f0.10 | 6 mm | 332 | 21.98 | N | -93.4 % | 66.4 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 6 mm, flood |
-| Fz_f0.10 | 7 mm | 225 | 12.09 | N | -94.6 % | 45 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 7 mm, flood |
+| Fz_f0.05 | 3 mm | 591 | 57.57 | N | -90.3 % | 118 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 3 mm, flood |
+| Fz_f0.05 | 4 mm | 460 | 37.71 | N | -91.8 % | 92 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 4 mm, flood |
+| Fz_f0.05 | 5 mm | 319 | 27.99 | N | -91.2 % | 63.8 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 5 mm, flood |
+| Fz_f0.05 | 6 mm | 242 | 20.12 | N | -91.7 % | 48.4 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 6 mm, flood |
+| Fz_f0.05 | 7 mm | 169 | 10.52 | N | -93.8 % | 33.8 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 7 mm, flood |
+
+Curve `Fz_f0.10` (pilot hole diameter D0 [mm] -> N): RMS abs. error 91.7 %, max 94.1 % over 5 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Fz_f0.10 | 3 mm | 723 | 81 | N | -88.8 % | 145 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 3 mm, flood |
+| Fz_f0.10 | 4 mm | 565 | 49.68 | N | -91.2 % | 113 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 4 mm, flood |
+| Fz_f0.10 | 5 mm | 440 | 35.45 | N | -91.9 % | 88 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 5 mm, flood |
+| Fz_f0.10 | 6 mm | 332 | 24.81 | N | -92.5 % | 66.4 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 6 mm, flood |
+| Fz_f0.10 | 7 mm | 225 | 13.26 | N | -94.1 % | 45 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 7 mm, flood |
 
 ## drilling_torque
 
@@ -2165,10 +2171,10 @@ Curve `Fz_f0.10` (pilot hole diameter D0 [mm] -> N): RMS abs. error 92.7 %, max 
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 4 | 0/4 | 68 (0) | 24.7 % / 36.5 % / 21.8 % | 82.3 % | - | 1/31 | 6.11 (torque-drill-ti64-beranoagirre2018-pilot) |
-| calibration-dependent | 1 | 0/1 | 9 (0) | 64.1 % / - / 64.1 % | 70.2 % | - | 0/9 | 4.81 (torque-drill-al7075-luo2021) |
+| independent | 4 | 0/4 | 68 (0) | 24.4 % / 36.7 % / 21.3 % | 82.1 % | - | 1/31 | 6.11 (torque-drill-ti64-beranoagirre2018-pilot) |
+| calibration-dependent | 1 | 0/1 | 9 (0) | 65.0 % / - / 65.0 % | 71.0 % | - | 0/9 | 4.86 (torque-drill-al7075-luo2021) |
 
-**Failures and likely causes.** 0 of 4 independent cases within budget. Values within tolerance per case: torque-drill-42crmo4-krivokapic2020-hss 0/9; torque-drill-al2024-craciun2024-hss 18/27; torque-drill-c45-hnatik2025-carbide 2/22; torque-drill-ti64-beranoagirre2018-pilot 0/10. Mean signed error over the independent values -23 %. Most sources leave the web, chisel angle, helix or point angle open (listed per case as assumed inputs); the torque comes mostly from the lips, whose rake follows the helix.
+**Failures and likely causes.** 0 of 4 independent cases within budget. Values within tolerance per case: torque-drill-42crmo4-krivokapic2020-hss 0/9; torque-drill-al2024-craciun2024-hss 21/27; torque-drill-c45-hnatik2025-carbide 2/22; torque-drill-ti64-beranoagirre2018-pilot 0/10. Mean signed error over the independent values -25 %. Most sources leave the web, chisel angle, helix or point angle open (listed per case as assumed inputs); the torque comes mostly from the lips, whose rake follows the helix.
 
 ### torque-drill-42crmo4-krivokapic2020-hss
 
@@ -2195,20 +2201,20 @@ Curve `Fz_f0.10` (pilot hole diameter D0 [mm] -> N): RMS abs. error 92.7 %, max 
 * Drill model (D 8 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 8 mm): margin width not given: 0.56 mm
 * Workpiece tilt (inclined entry) is not modelled: the steady torque of the full-diameter cut is compared (the tilt acts at the entry of a 3 D deep hole).
-* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 36.5 %, max 51.0 %; 0/9 within uncertainty; case **outside budget**; largest miss 3.4 tolerances.
-* Likely cause: 0/9 values within tolerance, mean signed error -36 %; coefficients from the mechanics alone. Drill geometry the source leaves open: coolant, helix_deg, lip_count, point_angle_deg, web_thickness_mm.
+* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 39.1 %, max 52.4 %; 0/9 within uncertainty; case **outside budget**; largest miss 3.5 tolerances.
+* Likely cause: 0/9 values within tolerance, mean signed error -38 %; coefficients from the mechanics alone. Drill geometry the source leaves open: coolant, helix_deg, lip_count, point_angle_deg, web_thickness_mm.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| M_mean_c1_new | - | 0.3 | 0.1471 | Nm | -51.0 % | 0.045 | **no** | D 3 mm, 300 rpm, f 0.03 mm/rev |
-| M_mean_c2_new | - | 0.23 | 0.1637 | Nm | -28.8 % | 0.04 | **no** | D 3 mm, 500 rpm, f 0.05 mm/rev |
-| M_mean_c3_new | - | 0.49 | 0.283 | Nm | -42.2 % | 0.0735 | **no** | D 3 mm, 800 rpm, f 0.1 mm/rev |
-| M_mean_c4_new | - | 0.75 | 0.4763 | Nm | -36.5 % | 0.112 | **no** | D 5 mm, 300 rpm, f 0.05 mm/rev |
-| M_mean_c5_new | - | 1.3 | 0.7849 | Nm | -39.6 % | 0.195 | **no** | D 5 mm, 500 rpm, f 0.1 mm/rev |
-| M_mean_c6_new | - | 0.45 | 0.2814 | Nm | -37.5 % | 0.0675 | **no** | D 5 mm, 800 rpm, f 0.03 mm/rev |
-| M_mean_c7_new | - | 3 | 2.013 | Nm | -32.9 % | 0.45 | **no** | D 8 mm, 300 rpm, f 0.1 mm/rev |
-| M_mean_c8_new | - | 1.01 | 0.7211 | Nm | -28.6 % | 0.151 | **no** | D 8 mm, 500 rpm, f 0.03 mm/rev |
-| M_mean_c9_new | - | 1.61 | 1.198 | Nm | -25.6 % | 0.241 | **no** | D 8 mm, 800 rpm, f 0.05 mm/rev |
+| M_mean_c1_new | - | 0.3 | 0.1427 | Nm | -52.4 % | 0.045 | **no** | D 3 mm, 300 rpm, f 0.03 mm/rev |
+| M_mean_c2_new | - | 0.23 | 0.1561 | Nm | -32.1 % | 0.04 | **no** | D 3 mm, 500 rpm, f 0.05 mm/rev |
+| M_mean_c3_new | - | 0.49 | 0.268 | Nm | -45.3 % | 0.0735 | **no** | D 3 mm, 800 rpm, f 0.1 mm/rev |
+| M_mean_c4_new | - | 0.75 | 0.4569 | Nm | -39.1 % | 0.112 | **no** | D 5 mm, 300 rpm, f 0.05 mm/rev |
+| M_mean_c5_new | - | 1.3 | 0.7442 | Nm | -42.8 % | 0.195 | **no** | D 5 mm, 500 rpm, f 0.1 mm/rev |
+| M_mean_c6_new | - | 0.45 | 0.2722 | Nm | -39.5 % | 0.0675 | **no** | D 5 mm, 800 rpm, f 0.03 mm/rev |
+| M_mean_c7_new | - | 3 | 1.908 | Nm | -36.4 % | 0.45 | **no** | D 8 mm, 300 rpm, f 0.1 mm/rev |
+| M_mean_c8_new | - | 1.01 | 0.6972 | Nm | -31.0 % | 0.151 | **no** | D 8 mm, 500 rpm, f 0.03 mm/rev |
+| M_mean_c9_new | - | 1.61 | 1.165 | Nm | -27.6 % | 0.241 | **no** | D 8 mm, 800 rpm, f 0.05 mm/rev |
 
 ### torque-drill-al2024-craciun2024-hss
 
@@ -2234,80 +2240,80 @@ Curve `Fz_f0.10` (pilot hole diameter D0 [mm] -> N): RMS abs. error 92.7 %, max 
 * Drill model (D 10 mm): lip clearance not given: 10 deg
 * Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 10 mm): margin width not given: 0.70 mm
-* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 11.2 %, max 24.6 %; case **outside budget**; largest miss 1.64 tolerances.
-* Likely cause: 18/27 values within tolerance, mean signed error +8 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: coolant, helix_deg, hole_depth_mm, lip_count, point_angle_deg, web_thickness.
+* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 8.6 %, max 21.7 %; case **outside budget**; largest miss 1.45 tolerances.
+* Likely cause: 21/27 values within tolerance, mean signed error +5 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: coolant, helix_deg, hole_depth_mm, lip_count, point_angle_deg, web_thickness.
 
-Curve `Mz_D6_vc50` (f [mm/rev] -> Nm): RMS abs. error 16.8 %, max 23.5 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Mz_D6_vc50 | 0.1 mm/rev | 0.71 | 0.6541 | Nm | -7.9 % | 0.106 | yes | D 6 mm, 2653 rpm, f 0.1 mm/rev |
-| Mz_D6_vc50 | 0.25 mm/rev | 1.18 | 1.457 | Nm | +23.5 % | 0.177 | **no** | D 6 mm, 2653 rpm, f 0.25 mm/rev |
-| Mz_D6_vc50 | 0.4 mm/rev | 1.86 | 2.144 | Nm | +15.3 % | 0.279 | **no** | D 6 mm, 2653 rpm, f 0.4 mm/rev |
-
-Curve `Mz_D6_vc60` (f [mm/rev] -> Nm): RMS abs. error 16.1 %, max 20.4 % over 3 compared points.
+Curve `Mz_D6_vc50` (f [mm/rev] -> Nm): RMS abs. error 15.0 %, max 20.2 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mz_D6_vc60 | 0.1 mm/rev | 0.58 | 0.6501 | Nm | +12.1 % | 0.087 | yes | D 6 mm, 3183 rpm, f 0.1 mm/rev |
-| Mz_D6_vc60 | 0.25 mm/rev | 1.2 | 1.445 | Nm | +20.4 % | 0.18 | **no** | D 6 mm, 3183 rpm, f 0.25 mm/rev |
-| Mz_D6_vc60 | 0.4 mm/rev | 1.85 | 2.12 | Nm | +14.6 % | 0.278 | yes | D 6 mm, 3183 rpm, f 0.4 mm/rev |
+| Mz_D6_vc50 | 0.1 mm/rev | 0.71 | 0.6338 | Nm | -10.7 % | 0.106 | yes | D 6 mm, 2653 rpm, f 0.1 mm/rev |
+| Mz_D6_vc50 | 0.25 mm/rev | 1.18 | 1.419 | Nm | +20.2 % | 0.177 | **no** | D 6 mm, 2653 rpm, f 0.25 mm/rev |
+| Mz_D6_vc50 | 0.4 mm/rev | 1.86 | 2.091 | Nm | +12.4 % | 0.279 | yes | D 6 mm, 2653 rpm, f 0.4 mm/rev |
 
-Curve `Mz_D6_vc70` (f [mm/rev] -> Nm): RMS abs. error 10.7 %, max 12.5 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Mz_D6_vc70 | 0.1 mm/rev | 0.6 | 0.6454 | Nm | +7.6 % | 0.09 | yes | D 6 mm, 3714 rpm, f 0.1 mm/rev |
-| Mz_D6_vc70 | 0.25 mm/rev | 1.27 | 1.429 | Nm | +12.5 % | 0.191 | yes | D 6 mm, 3714 rpm, f 0.25 mm/rev |
-| Mz_D6_vc70 | 0.4 mm/rev | 1.88 | 2.091 | Nm | +11.2 % | 0.282 | yes | D 6 mm, 3714 rpm, f 0.4 mm/rev |
-
-Curve `Mz_D8_vc50` (f [mm/rev] -> Nm): RMS abs. error 11.9 %, max 19.2 % over 3 compared points.
+Curve `Mz_D6_vc60` (f [mm/rev] -> Nm): RMS abs. error 13.0 %, max 17.2 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mz_D8_vc50 | 0.1 mm/rev | 1.44 | 1.163 | Nm | -19.2 % | 0.216 | **no** | D 8 mm, 1989 rpm, f 0.1 mm/rev |
-| Mz_D8_vc50 | 0.25 mm/rev | 2.42 | 2.591 | Nm | +7.1 % | 0.363 | yes | D 8 mm, 1989 rpm, f 0.25 mm/rev |
-| Mz_D8_vc50 | 0.4 mm/rev | 3.86 | 3.811 | Nm | -1.3 % | 0.579 | yes | D 8 mm, 1989 rpm, f 0.4 mm/rev |
+| Mz_D6_vc60 | 0.1 mm/rev | 0.58 | 0.6298 | Nm | +8.6 % | 0.087 | yes | D 6 mm, 3183 rpm, f 0.1 mm/rev |
+| Mz_D6_vc60 | 0.25 mm/rev | 1.2 | 1.406 | Nm | +17.2 % | 0.18 | **no** | D 6 mm, 3183 rpm, f 0.25 mm/rev |
+| Mz_D6_vc60 | 0.4 mm/rev | 1.85 | 2.067 | Nm | +11.7 % | 0.278 | yes | D 6 mm, 3183 rpm, f 0.4 mm/rev |
 
-Curve `Mz_D8_vc60` (f [mm/rev] -> Nm): RMS abs. error 5.1 %, max 5.7 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Mz_D8_vc60 | 0.1 mm/rev | 1.22 | 1.156 | Nm | -5.3 % | 0.183 | yes | D 8 mm, 2387 rpm, f 0.1 mm/rev |
-| Mz_D8_vc60 | 0.25 mm/rev | 2.43 | 2.569 | Nm | +5.7 % | 0.364 | yes | D 8 mm, 2387 rpm, f 0.25 mm/rev |
-| Mz_D8_vc60 | 0.4 mm/rev | 3.62 | 3.769 | Nm | +4.1 % | 0.543 | yes | D 8 mm, 2387 rpm, f 0.4 mm/rev |
-
-Curve `Mz_D8_vc70` (f [mm/rev] -> Nm): RMS abs. error 4.0 %, max 6.7 % over 3 compared points.
+Curve `Mz_D6_vc70` (f [mm/rev] -> Nm): RMS abs. error 7.7 %, max 9.5 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mz_D8_vc70 | 0.1 mm/rev | 1.23 | 1.148 | Nm | -6.7 % | 0.184 | yes | D 8 mm, 2785 rpm, f 0.1 mm/rev |
-| Mz_D8_vc70 | 0.25 mm/rev | 2.56 | 2.542 | Nm | -0.7 % | 0.384 | yes | D 8 mm, 2785 rpm, f 0.25 mm/rev |
-| Mz_D8_vc70 | 0.4 mm/rev | 3.66 | 3.718 | Nm | +1.6 % | 0.549 | yes | D 8 mm, 2785 rpm, f 0.4 mm/rev |
+| Mz_D6_vc70 | 0.1 mm/rev | 0.6 | 0.625 | Nm | +4.2 % | 0.09 | yes | D 6 mm, 3714 rpm, f 0.1 mm/rev |
+| Mz_D6_vc70 | 0.25 mm/rev | 1.27 | 1.39 | Nm | +9.5 % | 0.191 | yes | D 6 mm, 3714 rpm, f 0.25 mm/rev |
+| Mz_D6_vc70 | 0.4 mm/rev | 1.88 | 2.038 | Nm | +8.4 % | 0.282 | yes | D 6 mm, 3714 rpm, f 0.4 mm/rev |
 
-Curve `Mz_D10_vc50` (f [mm/rev] -> Nm): RMS abs. error 18.3 %, max 24.6 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Mz_D10_vc50 | 0.1 mm/rev | 1.85 | 1.817 | Nm | -1.8 % | 0.278 | yes | D 10 mm, 1592 rpm, f 0.1 mm/rev |
-| Mz_D10_vc50 | 0.25 mm/rev | 3.25 | 4.048 | Nm | +24.6 % | 0.487 | **no** | D 10 mm, 1592 rpm, f 0.25 mm/rev |
-| Mz_D10_vc50 | 0.4 mm/rev | 4.97 | 5.956 | Nm | +19.8 % | 0.745 | **no** | D 10 mm, 1592 rpm, f 0.4 mm/rev |
-
-Curve `Mz_D10_vc60` (f [mm/rev] -> Nm): RMS abs. error 14.7 %, max 17.5 % over 3 compared points.
+Curve `Mz_D8_vc50` (f [mm/rev] -> Nm): RMS abs. error 13.0 %, max 21.7 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mz_D10_vc60 | 0.1 mm/rev | 1.54 | 1.806 | Nm | +17.3 % | 0.231 | **no** | D 10 mm, 1910 rpm, f 0.1 mm/rev |
-| Mz_D10_vc60 | 0.25 mm/rev | 3.76 | 4.013 | Nm | +6.7 % | 0.564 | yes | D 10 mm, 1910 rpm, f 0.25 mm/rev |
-| Mz_D10_vc60 | 0.4 mm/rev | 5.01 | 5.888 | Nm | +17.5 % | 0.751 | **no** | D 10 mm, 1910 rpm, f 0.4 mm/rev |
+| Mz_D8_vc50 | 0.1 mm/rev | 1.44 | 1.127 | Nm | -21.7 % | 0.216 | **no** | D 8 mm, 1989 rpm, f 0.1 mm/rev |
+| Mz_D8_vc50 | 0.25 mm/rev | 2.42 | 2.522 | Nm | +4.2 % | 0.363 | yes | D 8 mm, 1989 rpm, f 0.25 mm/rev |
+| Mz_D8_vc50 | 0.4 mm/rev | 3.86 | 3.718 | Nm | -3.7 % | 0.579 | yes | D 8 mm, 1989 rpm, f 0.4 mm/rev |
 
-Curve `Mz_D10_vc70` (f [mm/rev] -> Nm): RMS abs. error 13.1 %, max 19.6 % over 3 compared points.
+Curve `Mz_D8_vc60` (f [mm/rev] -> Nm): RMS abs. error 5.1 %, max 8.2 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mz_D10_vc70 | 0.1 mm/rev | 1.61 | 1.793 | Nm | +11.4 % | 0.241 | yes | D 10 mm, 2228 rpm, f 0.1 mm/rev |
-| Mz_D10_vc70 | 0.25 mm/rev | 3.32 | 3.97 | Nm | +19.6 % | 0.498 | **no** | D 10 mm, 2228 rpm, f 0.25 mm/rev |
-| Mz_D10_vc70 | 0.4 mm/rev | 5.87 | 5.808 | Nm | -1.1 % | 0.88 | yes | D 10 mm, 2228 rpm, f 0.4 mm/rev |
+| Mz_D8_vc60 | 0.1 mm/rev | 1.22 | 1.12 | Nm | -8.2 % | 0.183 | yes | D 8 mm, 2387 rpm, f 0.1 mm/rev |
+| Mz_D8_vc60 | 0.25 mm/rev | 2.43 | 2.5 | Nm | +2.9 % | 0.364 | yes | D 8 mm, 2387 rpm, f 0.25 mm/rev |
+| Mz_D8_vc60 | 0.4 mm/rev | 3.62 | 3.676 | Nm | +1.5 % | 0.543 | yes | D 8 mm, 2387 rpm, f 0.4 mm/rev |
+
+Curve `Mz_D8_vc70` (f [mm/rev] -> Nm): RMS abs. error 5.9 %, max 9.6 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Mz_D8_vc70 | 0.1 mm/rev | 1.23 | 1.111 | Nm | -9.6 % | 0.184 | yes | D 8 mm, 2785 rpm, f 0.1 mm/rev |
+| Mz_D8_vc70 | 0.25 mm/rev | 2.56 | 2.473 | Nm | -3.4 % | 0.384 | yes | D 8 mm, 2785 rpm, f 0.25 mm/rev |
+| Mz_D8_vc70 | 0.4 mm/rev | 3.66 | 3.624 | Nm | -1.0 % | 0.549 | yes | D 8 mm, 2785 rpm, f 0.4 mm/rev |
+
+Curve `Mz_D10_vc50` (f [mm/rev] -> Nm): RMS abs. error 15.9 %, max 21.3 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Mz_D10_vc50 | 0.1 mm/rev | 1.85 | 1.761 | Nm | -4.8 % | 0.278 | yes | D 10 mm, 1592 rpm, f 0.1 mm/rev |
+| Mz_D10_vc50 | 0.25 mm/rev | 3.25 | 3.941 | Nm | +21.3 % | 0.487 | **no** | D 10 mm, 1592 rpm, f 0.25 mm/rev |
+| Mz_D10_vc50 | 0.4 mm/rev | 4.97 | 5.81 | Nm | +16.9 % | 0.745 | **no** | D 10 mm, 1592 rpm, f 0.4 mm/rev |
+
+Curve `Mz_D10_vc60` (f [mm/rev] -> Nm): RMS abs. error 11.8 %, max 14.6 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Mz_D10_vc60 | 0.1 mm/rev | 1.54 | 1.75 | Nm | +13.6 % | 0.231 | yes | D 10 mm, 1910 rpm, f 0.1 mm/rev |
+| Mz_D10_vc60 | 0.25 mm/rev | 3.76 | 3.906 | Nm | +3.9 % | 0.564 | yes | D 10 mm, 1910 rpm, f 0.25 mm/rev |
+| Mz_D10_vc60 | 0.4 mm/rev | 5.01 | 5.742 | Nm | +14.6 % | 0.751 | yes | D 10 mm, 1910 rpm, f 0.4 mm/rev |
+
+Curve `Mz_D10_vc70` (f [mm/rev] -> Nm): RMS abs. error 10.7 %, max 16.4 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Mz_D10_vc70 | 0.1 mm/rev | 1.61 | 1.737 | Nm | +7.9 % | 0.241 | yes | D 10 mm, 2228 rpm, f 0.1 mm/rev |
+| Mz_D10_vc70 | 0.25 mm/rev | 3.32 | 3.863 | Nm | +16.4 % | 0.498 | **no** | D 10 mm, 2228 rpm, f 0.25 mm/rev |
+| Mz_D10_vc70 | 0.4 mm/rev | 5.87 | 5.662 | Nm | -3.5 % | 0.88 | yes | D 10 mm, 2228 rpm, f 0.4 mm/rev |
 
 ### torque-drill-al7075-luo2021
 
@@ -2324,32 +2330,32 @@ Curve `Mz_D10_vc70` (f [mm/rev] -> Nm): RMS abs. error 13.1 %, max 19.6 % over 3
 * Drill model (D 10 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 10 mm): margin width not given: 0.70 mm
 * Coefficients calibrated to the material's kienzle data (iscar-materials-groups) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 64.1 %, max 72.2 %; 0/9 within uncertainty; case **outside budget**; largest miss 4.81 tolerances.
-* Likely cause: 0/9 values within tolerance, mean signed error -63 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: chisel_edge_angle_deg, coolant, lip_count, web_thickness_mm.
+* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 65.0 %, max 72.9 %; 0/9 within uncertainty; case **outside budget**; largest miss 4.86 tolerances.
+* Likely cause: 0/9 values within tolerance, mean signed error -64 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: chisel_edge_angle_deg, coolant, lip_count, web_thickness_mm.
 
-Curve `torque feed 60 mm/min` (spindle speed [rpm] -> Nm): RMS abs. error 69.5 %, max 72.2 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| torque feed 60 mm/min | 800 rpm | 4.2 | 1.407 | Nm | -66.5 % | 0.63 | **no** | D 10 mm, 800 rpm, f 0.075 mm/rev |
-| torque feed 60 mm/min | 1000 rpm | 3.8 | 1.153 | Nm | -69.6 % | 0.57 | **no** | D 10 mm, 1000 rpm, f 0.06 mm/rev |
-| torque feed 60 mm/min | 1200 rpm | 3.5 | 0.9732 | Nm | -72.2 % | 0.525 | **no** | D 10 mm, 1200 rpm, f 0.05 mm/rev |
-
-Curve `torque feed 100 mm/min` (spindle speed [rpm] -> Nm): RMS abs. error 62.2 %, max 65.9 % over 3 compared points.
+Curve `torque feed 60 mm/min` (spindle speed [rpm] -> Nm): RMS abs. error 70.3 %, max 72.9 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| torque feed 100 mm/min | 800 rpm | 5.2 | 2.27 | Nm | -56.3 % | 0.78 | **no** | D 10 mm, 800 rpm, f 0.125 mm/rev |
-| torque feed 100 mm/min | 1000 rpm | 5.1 | 1.832 | Nm | -64.1 % | 0.765 | **no** | D 10 mm, 1000 rpm, f 0.1 mm/rev |
-| torque feed 100 mm/min | 1200 rpm | 4.5 | 1.536 | Nm | -65.9 % | 0.675 | **no** | D 10 mm, 1200 rpm, f 0.0833333 mm/rev |
+| torque feed 60 mm/min | 800 rpm | 4.2 | 1.368 | Nm | -67.4 % | 0.63 | **no** | D 10 mm, 800 rpm, f 0.075 mm/rev |
+| torque feed 60 mm/min | 1000 rpm | 3.8 | 1.122 | Nm | -70.5 % | 0.57 | **no** | D 10 mm, 1000 rpm, f 0.06 mm/rev |
+| torque feed 60 mm/min | 1200 rpm | 3.5 | 0.9472 | Nm | -72.9 % | 0.525 | **no** | D 10 mm, 1200 rpm, f 0.05 mm/rev |
 
-Curve `torque feed 140 mm/min` (spindle speed [rpm] -> Nm): RMS abs. error 57.7 %, max 62.5 % over 3 compared points.
+Curve `torque feed 100 mm/min` (spindle speed [rpm] -> Nm): RMS abs. error 63.2 %, max 66.8 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| torque feed 140 mm/min | 800 rpm | 6.7 | 3.187 | Nm | -52.4 % | 1 | **no** | D 10 mm, 800 rpm, f 0.175 mm/rev |
-| torque feed 140 mm/min | 1000 rpm | 6 | 2.534 | Nm | -57.8 % | 0.9 | **no** | D 10 mm, 1000 rpm, f 0.14 mm/rev |
-| torque feed 140 mm/min | 1200 rpm | 5.61 | 2.104 | Nm | -62.5 % | 0.842 | **no** | D 10 mm, 1200 rpm, f 0.116667 mm/rev |
+| torque feed 100 mm/min | 800 rpm | 5.2 | 2.212 | Nm | -57.5 % | 0.78 | **no** | D 10 mm, 800 rpm, f 0.125 mm/rev |
+| torque feed 100 mm/min | 1000 rpm | 5.1 | 1.783 | Nm | -65.0 % | 0.765 | **no** | D 10 mm, 1000 rpm, f 0.1 mm/rev |
+| torque feed 100 mm/min | 1200 rpm | 4.5 | 1.493 | Nm | -66.8 % | 0.675 | **no** | D 10 mm, 1200 rpm, f 0.0833333 mm/rev |
+
+Curve `torque feed 140 mm/min` (spindle speed [rpm] -> Nm): RMS abs. error 58.7 %, max 63.5 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| torque feed 140 mm/min | 800 rpm | 6.7 | 3.118 | Nm | -53.5 % | 1 | **no** | D 10 mm, 800 rpm, f 0.175 mm/rev |
+| torque feed 140 mm/min | 1000 rpm | 6 | 2.472 | Nm | -58.8 % | 0.9 | **no** | D 10 mm, 1000 rpm, f 0.14 mm/rev |
+| torque feed 140 mm/min | 1200 rpm | 5.61 | 2.048 | Nm | -63.5 % | 0.842 | **no** | D 10 mm, 1200 rpm, f 0.116667 mm/rev |
 
 ### torque-drill-c45-hnatik2025-carbide
 
@@ -2367,53 +2373,53 @@ Curve `torque feed 140 mm/min` (spindle speed [rpm] -> Nm): RMS abs. error 57.7 
 * Coefficients calibrated to the material's kienzle data (klippel-2022-ck45-cutting-database) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
 * Thinned point: the chisel from the stated chisel length 0.30 mm (the web 3.60 mm is thinned to it; the gash is modelled as lip).
 * Drill model (D 12 mm): chisel edge angle not given: 125 deg
-* Result: 22 compared, 0 without prediction, 0 not compared; median abs. error 28.3 %, max 43.6 %; 1/22 within uncertainty; case **outside budget**; largest miss 2.91 tolerances.
+* Result: 22 compared, 0 without prediction, 0 not compared; median abs. error 28.4 %, max 43.4 %; 1/22 within uncertainty; case **outside budget**; largest miss 2.89 tolerances.
 * Likely cause: 2/22 values within tolerance, mean signed error -28 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: lip_count.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mc_feedavg_D8_vc80.21 | - | 3.956 | 2.513 | Nm | -36.5 % | 0.593 | **no** | D 8 mm, 3191 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
-| Mc_feedavg_D8_vc149.79 | - | 3.769 | 2.717 | Nm | -27.9 % | 0.565 | **no** | D 8 mm, 5960 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
+| Mc_feedavg_D8_vc80.21 | - | 3.956 | 2.504 | Nm | -36.7 % | 0.593 | **no** | D 8 mm, 3191 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
+| Mc_feedavg_D8_vc149.79 | - | 3.769 | 2.708 | Nm | -28.2 % | 0.565 | **no** | D 8 mm, 5960 rpm, f 0.09/0.13/0.175/0.22/0.26 mm/rev, flood |
 
-Curve `Mc_D8_vc80.21` (fn [mm/rev] -> Nm): RMS abs. error 37.3 %, max 43.6 % over 5 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Mc_D8_vc80.21 | 0.09 mm/rev | 2.22 | 1.411 | Nm | -36.5 % | 0.333 | **no** | D 8 mm, 3191 rpm, f 0.09 mm/rev, flood |
-| Mc_D8_vc80.21 | 0.13 mm/rev | 3.33 | 1.878 | Nm | -43.6 % | 0.499 | **no** | D 8 mm, 3191 rpm, f 0.13 mm/rev, flood |
-| Mc_D8_vc80.21 | 0.175 mm/rev | 3.92 | 2.473 | Nm | -36.9 % | 0.588 | **no** | D 8 mm, 3191 rpm, f 0.175 mm/rev, flood |
-| Mc_D8_vc80.21 | 0.22 mm/rev | 4.64 | 3.108 | Nm | -33.0 % | 0.696 | **no** | D 8 mm, 3191 rpm, f 0.22 mm/rev, flood |
-| Mc_D8_vc80.21 | 0.26 mm/rev | 5.77 | 3.697 | Nm | -35.9 % | 0.865 | **no** | D 8 mm, 3191 rpm, f 0.26 mm/rev, flood |
-
-Curve `Mc_D8_vc149.79` (fn [mm/rev] -> Nm): RMS abs. error 28.6 %, max 38.3 % over 5 compared points.
+Curve `Mc_D8_vc80.21` (fn [mm/rev] -> Nm): RMS abs. error 37.5 %, max 43.4 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mc_D8_vc149.79 | 0.09 mm/rev | 1.82 | 1.44 | Nm | -20.9 % | 0.273 | **no** | D 8 mm, 5960 rpm, f 0.09 mm/rev, flood |
-| Mc_D8_vc149.79 | 0.13 mm/rev | 3.12 | 1.926 | Nm | -38.3 % | 0.468 | **no** | D 8 mm, 5960 rpm, f 0.13 mm/rev, flood |
-| Mc_D8_vc149.79 | 0.175 mm/rev | 3.78 | 2.574 | Nm | -31.9 % | 0.567 | **no** | D 8 mm, 5960 rpm, f 0.175 mm/rev, flood |
-| Mc_D8_vc149.79 | 0.22 mm/rev | 4.41 | 3.406 | Nm | -22.8 % | 0.661 | **no** | D 8 mm, 5960 rpm, f 0.22 mm/rev, flood |
-| Mc_D8_vc149.79 | 0.26 mm/rev | 5.69 | 4.238 | Nm | -25.5 % | 0.854 | **no** | D 8 mm, 5960 rpm, f 0.26 mm/rev, flood |
+| Mc_D8_vc80.21 | 0.09 mm/rev | 2.22 | 1.417 | Nm | -36.2 % | 0.333 | **no** | D 8 mm, 3191 rpm, f 0.09 mm/rev, flood |
+| Mc_D8_vc80.21 | 0.13 mm/rev | 3.33 | 1.885 | Nm | -43.4 % | 0.499 | **no** | D 8 mm, 3191 rpm, f 0.13 mm/rev, flood |
+| Mc_D8_vc80.21 | 0.175 mm/rev | 3.92 | 2.471 | Nm | -37.0 % | 0.588 | **no** | D 8 mm, 3191 rpm, f 0.175 mm/rev, flood |
+| Mc_D8_vc80.21 | 0.22 mm/rev | 4.64 | 3.089 | Nm | -33.4 % | 0.696 | **no** | D 8 mm, 3191 rpm, f 0.22 mm/rev, flood |
+| Mc_D8_vc80.21 | 0.26 mm/rev | 5.77 | 3.656 | Nm | -36.6 % | 0.865 | **no** | D 8 mm, 3191 rpm, f 0.26 mm/rev, flood |
 
-Curve `Mc_D12_vc80.21` (fn [mm/rev] -> Nm): RMS abs. error 26.7 %, max 32.4 % over 5 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Mc_D12_vc80.21 | 0.09 mm/rev | 3.48 | 3.176 | Nm | -8.7 % | 0.522 | yes | D 12 mm, 2128 rpm, f 0.09 mm/rev, flood |
-| Mc_D12_vc80.21 | 0.13 mm/rev | 5.84 | 4.227 | Nm | -27.6 % | 0.876 | **no** | D 12 mm, 2128 rpm, f 0.13 mm/rev, flood |
-| Mc_D12_vc80.21 | 0.175 mm/rev | 7.82 | 5.548 | Nm | -29.1 % | 1.17 | **no** | D 12 mm, 2128 rpm, f 0.175 mm/rev, flood |
-| Mc_D12_vc80.21 | 0.22 mm/rev | 9.74 | 6.942 | Nm | -28.7 % | 1.46 | **no** | D 12 mm, 2128 rpm, f 0.22 mm/rev, flood |
-| Mc_D12_vc80.21 | 0.26 mm/rev | 12.18 | 8.234 | Nm | -32.4 % | 1.83 | **no** | D 12 mm, 2128 rpm, f 0.26 mm/rev, flood |
-
-Curve `Mc_D12_vc149.79` (fn [mm/rev] -> Nm): RMS abs. error 21.3 %, max 24.8 % over 5 compared points.
+Curve `Mc_D8_vc149.79` (fn [mm/rev] -> Nm): RMS abs. error 28.7 %, max 38.0 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Mc_D12_vc149.79 | 0.09 mm/rev | 3.23 | 3.24 | Nm | +0.3 % | 0.484 | yes | D 12 mm, 3973 rpm, f 0.09 mm/rev, flood |
-| Mc_D12_vc149.79 | 0.13 mm/rev | 5.76 | 4.329 | Nm | -24.8 % | 0.864 | **no** | D 12 mm, 3973 rpm, f 0.13 mm/rev, flood |
-| Mc_D12_vc149.79 | 0.175 mm/rev | 7.59 | 5.743 | Nm | -24.3 % | 1.14 | **no** | D 12 mm, 3973 rpm, f 0.175 mm/rev, flood |
-| Mc_D12_vc149.79 | 0.22 mm/rev | 9.53 | 7.45 | Nm | -21.8 % | 1.43 | **no** | D 12 mm, 3973 rpm, f 0.22 mm/rev, flood |
-| Mc_D12_vc149.79 | 0.26 mm/rev | 12.06 | 9.124 | Nm | -24.3 % | 1.81 | **no** | D 12 mm, 3973 rpm, f 0.26 mm/rev, flood |
+| Mc_D8_vc149.79 | 0.09 mm/rev | 1.82 | 1.447 | Nm | -20.5 % | 0.273 | **no** | D 8 mm, 5960 rpm, f 0.09 mm/rev, flood |
+| Mc_D8_vc149.79 | 0.13 mm/rev | 3.12 | 1.933 | Nm | -38.0 % | 0.468 | **no** | D 8 mm, 5960 rpm, f 0.13 mm/rev, flood |
+| Mc_D8_vc149.79 | 0.175 mm/rev | 3.78 | 2.572 | Nm | -31.9 % | 0.567 | **no** | D 8 mm, 5960 rpm, f 0.175 mm/rev, flood |
+| Mc_D8_vc149.79 | 0.22 mm/rev | 4.41 | 3.388 | Nm | -23.2 % | 0.661 | **no** | D 8 mm, 5960 rpm, f 0.22 mm/rev, flood |
+| Mc_D8_vc149.79 | 0.26 mm/rev | 5.69 | 4.199 | Nm | -26.2 % | 0.854 | **no** | D 8 mm, 5960 rpm, f 0.26 mm/rev, flood |
+
+Curve `Mc_D12_vc80.21` (fn [mm/rev] -> Nm): RMS abs. error 26.5 %, max 32.4 % over 5 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Mc_D12_vc80.21 | 0.09 mm/rev | 3.48 | 3.191 | Nm | -8.3 % | 0.522 | yes | D 12 mm, 2128 rpm, f 0.09 mm/rev, flood |
+| Mc_D12_vc80.21 | 0.13 mm/rev | 5.84 | 4.245 | Nm | -27.3 % | 0.876 | **no** | D 12 mm, 2128 rpm, f 0.13 mm/rev, flood |
+| Mc_D12_vc80.21 | 0.175 mm/rev | 7.82 | 5.566 | Nm | -28.8 % | 1.17 | **no** | D 12 mm, 2128 rpm, f 0.175 mm/rev, flood |
+| Mc_D12_vc80.21 | 0.22 mm/rev | 9.74 | 6.958 | Nm | -28.6 % | 1.46 | **no** | D 12 mm, 2128 rpm, f 0.22 mm/rev, flood |
+| Mc_D12_vc80.21 | 0.26 mm/rev | 12.18 | 8.235 | Nm | -32.4 % | 1.83 | **no** | D 12 mm, 2128 rpm, f 0.26 mm/rev, flood |
+
+Curve `Mc_D12_vc149.79` (fn [mm/rev] -> Nm): RMS abs. error 21.2 %, max 24.5 % over 5 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Mc_D12_vc149.79 | 0.09 mm/rev | 3.23 | 3.256 | Nm | +0.8 % | 0.484 | yes | D 12 mm, 3973 rpm, f 0.09 mm/rev, flood |
+| Mc_D12_vc149.79 | 0.13 mm/rev | 5.76 | 4.347 | Nm | -24.5 % | 0.864 | **no** | D 12 mm, 3973 rpm, f 0.13 mm/rev, flood |
+| Mc_D12_vc149.79 | 0.175 mm/rev | 7.59 | 5.762 | Nm | -24.1 % | 1.14 | **no** | D 12 mm, 3973 rpm, f 0.175 mm/rev, flood |
+| Mc_D12_vc149.79 | 0.22 mm/rev | 9.53 | 7.467 | Nm | -21.6 % | 1.43 | **no** | D 12 mm, 3973 rpm, f 0.22 mm/rev, flood |
+| Mc_D12_vc149.79 | 0.26 mm/rev | 12.06 | 9.127 | Nm | -24.3 % | 1.81 | **no** | D 12 mm, 3973 rpm, f 0.26 mm/rev, flood |
 
 ### torque-drill-ti64-beranoagirre2018-pilot
 
@@ -2432,63 +2438,63 @@ Curve `Mc_D12_vc149.79` (fn [mm/rev] -> Nm): RMS abs. error 21.3 %, max 24.8 % o
 * Drill model (D 8.5 mm): edge radius not given: 3 um (no preparation default)
 * Drill model (D 8.5 mm): margin width not given: 0.60 mm
 * Coefficients calibrated to the material's kienzle data (klippel-2024-ck45-orthogonal) for carbide/none, drilling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 10 compared, 0 without prediction, 0 not compared; median abs. error 84.1 %, max 91.7 %; case **outside budget**; largest miss 6.11 tolerances.
+* Result: 10 compared, 0 without prediction, 0 not compared; median abs. error 84.0 %, max 91.6 %; case **outside budget**; largest miss 6.11 tolerances.
 * Likely cause: 0/10 values within tolerance, mean signed error -84 %; coefficients calibrated to kienzle data. Drill geometry the source leaves open: helix_deg.
 
-Curve `Tc_f0.05` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 85.8 %, max 91.7 % over 5 compared points.
+Curve `Tc_f0.05` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 85.7 %, max 91.6 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Tc_f0.05 | 3 mm | 3.1 | 0.4832 | Nm | -84.4 % | 0.465 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 3 mm, flood |
-| Tc_f0.05 | 4 mm | 2.4 | 0.4031 | Nm | -83.2 % | 0.36 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 4 mm, flood |
-| Tc_f0.05 | 5 mm | 2.1 | 0.3407 | Nm | -83.8 % | 0.315 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 5 mm, flood |
-| Tc_f0.05 | 6 mm | 1.9 | 0.2706 | Nm | -85.8 % | 0.285 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 6 mm, flood |
-| Tc_f0.05 | 7 mm | 1.8 | 0.15 | Nm | -91.7 % | 0.27 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 7 mm, flood |
+| Tc_f0.05 | 3 mm | 3.1 | 0.487 | Nm | -84.3 % | 0.465 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 3 mm, flood |
+| Tc_f0.05 | 4 mm | 2.4 | 0.4063 | Nm | -83.1 % | 0.36 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 4 mm, flood |
+| Tc_f0.05 | 5 mm | 2.1 | 0.3433 | Nm | -83.7 % | 0.315 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 5 mm, flood |
+| Tc_f0.05 | 6 mm | 1.9 | 0.2728 | Nm | -85.6 % | 0.285 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 6 mm, flood |
+| Tc_f0.05 | 7 mm | 1.8 | 0.1512 | Nm | -91.6 % | 0.27 | **no** | D 8.5 mm, 1874 rpm, f 0.05 mm/rev, pilot 7 mm, flood |
 
-Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.3 %, max 91.2 % over 5 compared points.
+Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.1 %, max 91.2 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Tc_f0.10 | 3 mm | 3.9 | 0.8752 | Nm | -77.6 % | 0.585 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 3 mm, flood |
-| Tc_f0.10 | 4 mm | 3.7 | 0.7298 | Nm | -80.3 % | 0.555 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 4 mm, flood |
-| Tc_f0.10 | 5 mm | 3.4 | 0.6165 | Nm | -81.9 % | 0.51 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 5 mm, flood |
-| Tc_f0.10 | 6 mm | 3.2 | 0.4897 | Nm | -84.7 % | 0.48 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 6 mm, flood |
-| Tc_f0.10 | 7 mm | 3.1 | 0.2717 | Nm | -91.2 % | 0.465 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 7 mm, flood |
+| Tc_f0.10 | 3 mm | 3.9 | 0.8818 | Nm | -77.4 % | 0.585 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 3 mm, flood |
+| Tc_f0.10 | 4 mm | 3.7 | 0.7353 | Nm | -80.1 % | 0.555 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 4 mm, flood |
+| Tc_f0.10 | 5 mm | 3.4 | 0.6211 | Nm | -81.7 % | 0.51 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 5 mm, flood |
+| Tc_f0.10 | 6 mm | 3.2 | 0.4933 | Nm | -84.6 % | 0.48 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 6 mm, flood |
+| Tc_f0.10 | 7 mm | 3.1 | 0.2737 | Nm | -91.2 % | 0.465 | **no** | D 8.5 mm, 1874 rpm, f 0.1 mm/rev, pilot 7 mm, flood |
 
 ## roughness
 
 * Budget: 30 % (relative error of the simulated ISO 4287 roughness parameter (Ra, Rz) of the generated profile, evaluated with ISO 4288 cut-offs, against the measured value).
-* Verdict: **fail** - only 0 of 9 cases within budget (0% < 80%); roughness-nowakowski2024-facemill-c45-coromill490 misses by 49.42 tolerances (> 2).
+* Verdict: **fail** - only 0 of 9 cases within budget (0% < 80%); roughness-magalhaes2026-turning-aisi304-cermet-r0.2 misses by 14.47 tolerances (> 2).
 * Harness: `cnctwin.validation.harnesses.roughness.roughness`.
-* cnctwin.surface's kinematic profile: the lower envelope of the case's generating edge (insert nose and edges, cutter corner and end edge, ball) at the case's feed or step-over, with the minimum chip thickness rule (Brammertz), evaluated to ISO 4287 / 4288 (Gaussian filter, cut-off from the feed spacing).
+* cnctwin.surface's kinematic profile: the lower envelope of the case's generating edge (insert nose and edges, cutter corner and end edge, ball) at the case's feed or step-over, with the minimum chip thickness rule (Brammertz), evaluated to ISO 4287 / 4288 (Gaussian filter, the instrument's stated cut-off, else ISO 4288's from the feed spacing).
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 9 | 0/9 | 253 (0) | 55.6 % / 55.6 % / - | 188.8 % | - | 0/4 | 49.4 (roughness-nowakowski2024-facemill-c45-coromill490) |
+| independent | 9 | 0/9 | 253 (0) | 46.5 % / 46.5 % / - | 78.1 % | - | 0/4 | 14.5 (roughness-magalhaes2026-turning-aisi304-cermet-r0.2) |
 
-**Failures and likely causes.** 0 of 9 independent cases within budget. Values within tolerance per case: roughness-khellaf2026-hardturn-h11-ceramic-tin 17/36; roughness-khellaf2026-hardturn-h11-ceramic-uncoated 10/36; roughness-magalhaes2026-turning-aisi304-cermet-r0.2 0/4; roughness-matras2020-ballend-cbn-h13-pull-plunge 8/32; roughness-matras2020-ballend-cbn-h13-pull-reverse 9/32; roughness-matras2020-ballend-cbn-h13-push-plunge 10/32; roughness-matras2020-ballend-cbn-h13-push-reverse 7/32; roughness-nowakowski2024-facemill-c45-coromill490 2/22; roughness-sultana2023-endmill-ti64-hss 0/27. Where the feed marks dominate (turning at larger feeds) the kinematic profile with the minimum chip thickness follows the measurements; at small feeds and step-overs the non-kinematic contributions decide the measured value.
+**Failures and likely causes.** 0 of 9 independent cases within budget. Values within tolerance per case: roughness-khellaf2026-hardturn-h11-ceramic-tin 17/36; roughness-khellaf2026-hardturn-h11-ceramic-uncoated 10/36; roughness-magalhaes2026-turning-aisi304-cermet-r0.2 0/4; roughness-matras2020-ballend-cbn-h13-pull-plunge 13/32; roughness-matras2020-ballend-cbn-h13-pull-reverse 13/32; roughness-matras2020-ballend-cbn-h13-push-plunge 12/32; roughness-matras2020-ballend-cbn-h13-push-reverse 10/32; roughness-nowakowski2024-facemill-c45-coromill490 4/22; roughness-sultana2023-endmill-ti64-hss 0/27. Where the feed marks dominate (turning at larger feeds) the kinematic profile with the minimum chip thickness follows the measurements. At small feeds and step-overs the minimum-chip-thickness term sets the simulated value (R_t = h_min below f = sqrt(2 r h_min), Brammertz's R_t above), so it follows the edge radius, which no case states: with the tooling default of the tool kind the ball-end cases (uncoated CBN, ground edge 3 um) follow the measured Ra within about a third, while the 35 um insert hone puts Magalhaes' r 0.2 mm cermet turning at R_t = h_min = 9.4 um (the measured Ra is about a fifth of the simulated one). Built-up edge, runout and vibration are in no case record as values (Nowakowski gives the insert loads, from which the axial offsets that decide the floor cannot be separated from the radial ones).
 
 ### roughness-khellaf2026-hardturn-h11-ceramic-tin
 
 * Source: `khellaf-2026-x38crmov5-ceramic-turning`, Sect. 'Work piece material and cutting inserts' and 'Measuring instruments', Table 1 (levels), Table 2 (L36 runs, TiN-coated insert columns: Ra, Fc) (measured).
 * File: `validation/cases/roughness/roughness-khellaf2026-hardturn-h11-ceramic-tin.yaml`; operation longitudinal_turning; material `h13-50hrc`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.25, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the case marks as assumed: `setup.conditions.tool_state` = new (not stated for the L36 runs; tool wear was studied separately (Figs. 17-21)).
 * Inputs the harness assumed: minor cutting edge angle = 15 deg (180 deg - corner 90 deg (ISO 1832 shape S) - kappa_r 75 deg, case); cutting-edge radius = 8 um (not stated in the case: the tooling model's default for this tool (chamfer_corner_radius_m), db/models/tooling.yaml).
 * Database values used: h13-50hrc cutting.min_chip_thickness_ratio (`est`).
-* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 31.2 %, max 186.9 %; case **outside budget**; largest miss 6.23 tolerances.
-* Likely cause: 17/36 within tolerance, mean signed error +42 %.
+* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 31.2 %, max 187.0 %; case **outside budget**; largest miss 6.23 tolerances.
+* Likely cause: 17/36 within tolerance, mean signed error +42 %; the profile is dominated by the minimum chip thickness h_min = ratio x edge radius (below f = sqrt(2 r h_min) the surface forms where the accumulated layer reaches h_min: R_t = h_min; above it Brammertz's R_t); the edge radius used is the tooling default listed above, not a stated value.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra_r0.8 | 0.08 mm/rev | 0.39 | 0.5363 | um | +37.5 % | 0.117 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.37 | 0.5363 | um | +45.0 % | 0.111 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.36 | 0.5363 | um | +49.0 % | 0.108 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.33 | 0.5363 | um | +62.5 % | 0.099 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.24 | 0.5363 | um | +123.5 % | 0.072 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.3 | 0.5363 | um | +78.8 % | 0.09 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.39 | 0.5368 | um | +37.6 % | 0.117 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.37 | 0.5368 | um | +45.1 % | 0.111 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.36 | 0.5368 | um | +49.1 % | 0.108 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.33 | 0.5368 | um | +62.7 % | 0.099 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.24 | 0.5368 | um | +123.7 % | 0.072 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.3 | 0.5368 | um | +78.9 % | 0.09 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.14 mm/rev | 0.73 | 0.8798 | um | +20.5 % | 0.219 | yes | turning: r 0.8 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.14 mm/rev | 0.76 | 0.8798 | um | +15.8 % | 0.228 | yes | turning: r 0.8 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.14 mm/rev | 0.8 | 0.8798 | um | +10.0 % | 0.24 | yes | turning: r 0.8 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
@@ -2501,12 +2507,12 @@ Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.3 %, max
 | Ra_r0.8 | 0.2 mm/rev | 1.5 | 1.653 | um | +10.2 % | 0.45 | yes | turning: r 0.8 mm, f 0.2 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.2 mm/rev | 1.48 | 1.653 | um | +11.7 % | 0.444 | yes | turning: r 0.8 mm, f 0.2 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.2 mm/rev | 1.51 | 1.653 | um | +9.4 % | 0.453 | yes | turning: r 0.8 mm, f 0.2 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.3 | 0.5164 | um | +72.1 % | 0.09 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.18 | 0.5164 | um | +186.9 % | 0.054 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.28 | 0.5164 | um | +84.4 % | 0.084 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.24 | 0.5164 | um | +115.2 % | 0.072 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.3 | 0.5164 | um | +72.1 % | 0.09 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.26 | 0.5164 | um | +98.6 % | 0.078 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.3 | 0.5165 | um | +72.2 % | 0.09 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.18 | 0.5165 | um | +187.0 % | 0.054 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.28 | 0.5165 | um | +84.5 % | 0.084 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.24 | 0.5165 | um | +115.2 % | 0.072 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.3 | 0.5165 | um | +72.2 % | 0.09 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.26 | 0.5165 | um | +98.7 % | 0.078 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r1.2 | 0.14 mm/rev | 0.54 | 0.6738 | um | +24.8 % | 0.162 | yes | turning: r 1.2 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r1.2 | 0.14 mm/rev | 0.5 | 0.6738 | um | +34.8 % | 0.15 | **no** | turning: r 1.2 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r1.2 | 0.14 mm/rev | 0.46 | 0.6738 | um | +46.5 % | 0.138 | **no** | turning: r 1.2 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
@@ -2525,22 +2531,22 @@ Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.3 %, max
 * Source: `khellaf-2026-x38crmov5-ceramic-turning`, Sect. 'Work piece material and cutting inserts' and 'Measuring instruments', Table 1 (levels), Table 2 (L36 runs, uncoated insert columns: Ra, Fc) (measured).
 * File: `validation/cases/roughness/roughness-khellaf2026-hardturn-h11-ceramic-uncoated.yaml`; operation longitudinal_turning; material `h13-50hrc`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.25, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the case marks as assumed: `setup.conditions.tool_state` = new (not stated for the L36 runs; tool wear was studied separately (Figs. 17-21)).
 * Inputs the harness assumed: minor cutting edge angle = 15 deg (180 deg - corner 90 deg (ISO 1832 shape S) - kappa_r 75 deg, case); cutting-edge radius = 8 um (not stated in the case: the tooling model's default for this tool (chamfer_corner_radius_m), db/models/tooling.yaml).
 * Database values used: h13-50hrc cutting.min_chip_thickness_ratio (`est`).
-* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 44.6 %, max 158.2 %; case **outside budget**; largest miss 5.27 tolerances.
-* Likely cause: 10/36 within tolerance, mean signed error +51 %.
+* Result: 36 compared, 0 without prediction, 0 not compared; median abs. error 44.6 %, max 158.3 %; case **outside budget**; largest miss 5.28 tolerances.
+* Likely cause: 10/36 within tolerance, mean signed error +51 %; the profile is dominated by the minimum chip thickness h_min = ratio x edge radius (below f = sqrt(2 r h_min) the surface forms where the accumulated layer reaches h_min: R_t = h_min; above it Brammertz's R_t); the edge radius used is the tooling default listed above, not a stated value.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra_r0.8 | 0.08 mm/rev | 0.67 | 0.5363 | um | -20.0 % | 0.201 | yes | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.66 | 0.5363 | um | -18.7 % | 0.198 | yes | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.29 | 0.5363 | um | +84.9 % | 0.087 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.31 | 0.5363 | um | +73.0 % | 0.093 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.27 | 0.5363 | um | +98.6 % | 0.081 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r0.8 | 0.08 mm/rev | 0.36 | 0.5363 | um | +49.0 % | 0.108 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.67 | 0.5368 | um | -19.9 % | 0.201 | yes | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.66 | 0.5368 | um | -18.7 % | 0.198 | yes | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.29 | 0.5368 | um | +85.1 % | 0.087 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.31 | 0.5368 | um | +73.2 % | 0.093 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.27 | 0.5368 | um | +98.8 % | 0.081 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r0.8 | 0.08 mm/rev | 0.36 | 0.5368 | um | +49.1 % | 0.108 | **no** | turning: r 0.8 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.14 mm/rev | 0.67 | 0.8798 | um | +31.3 % | 0.201 | **no** | turning: r 0.8 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.14 mm/rev | 0.63 | 0.8798 | um | +39.7 % | 0.189 | **no** | turning: r 0.8 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.14 mm/rev | 0.61 | 0.8798 | um | +44.2 % | 0.183 | **no** | turning: r 0.8 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
@@ -2553,12 +2559,12 @@ Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.3 %, max
 | Ra_r0.8 | 0.2 mm/rev | 1.1 | 1.653 | um | +50.2 % | 0.33 | **no** | turning: r 0.8 mm, f 0.2 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.2 mm/rev | 1.14 | 1.653 | um | +45.0 % | 0.342 | **no** | turning: r 0.8 mm, f 0.2 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r0.8 | 0.2 mm/rev | 1.36 | 1.653 | um | +21.5 % | 0.408 | yes | turning: r 0.8 mm, f 0.2 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.29 | 0.5164 | um | +78.1 % | 0.087 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.26 | 0.5164 | um | +98.6 % | 0.078 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.2 | 0.5164 | um | +158.2 % | 0.06 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.33 | 0.5164 | um | +56.5 % | 0.099 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.26 | 0.5164 | um | +98.6 % | 0.078 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
-| Ra_r1.2 | 0.08 mm/rev | 0.3 | 0.5164 | um | +72.1 % | 0.09 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.29 | 0.5165 | um | +78.1 % | 0.087 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.26 | 0.5165 | um | +98.7 % | 0.078 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.2 | 0.5165 | um | +158.3 % | 0.06 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.33 | 0.5165 | um | +56.5 % | 0.099 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.26 | 0.5165 | um | +98.7 % | 0.078 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
+| Ra_r1.2 | 0.08 mm/rev | 0.3 | 0.5165 | um | +72.2 % | 0.09 | **no** | turning: r 1.2 mm, f 0.08 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r1.2 | 0.14 mm/rev | 0.63 | 0.6738 | um | +7.0 % | 0.189 | yes | turning: r 1.2 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r1.2 | 0.14 mm/rev | 0.51 | 0.6738 | um | +32.1 % | 0.153 | **no** | turning: r 1.2 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
 | Ra_r1.2 | 0.14 mm/rev | 0.54 | 0.6738 | um | +24.8 % | 0.162 | yes | turning: r 1.2 mm, f 0.14 mm/rev, kappa_r 75, kappa_r' 15 deg, h_min 2.0 um |
@@ -2577,18 +2583,18 @@ Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.3 %, max
 * Source: `magalhaes-2026-304-cermet-turning`, Sect. 2 (setup), Sect. 3.1 text (contact Ra, new inserts) (measured, stated uncertainty 5 %).
 * File: `validation/cases/roughness/roughness-magalhaes2026-turning-aisi304-cermet-r0.2.yaml`; operation longitudinal_turning; material `aisi304`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.27, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the harness assumed: entering angle = 90 deg (ISO 5608 holder style letter 'A' of SDACR062B, case); minor cutting edge angle = 35 deg (180 deg - corner 55 deg (ISO 1832 shape D) - kappa_r 90 deg, case); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml).
 * Database values used: aisi304 cutting.min_chip_thickness_ratio (`zou-2026-304-min-cutting-thickness`).
-* Result: 4 compared, 0 without prediction, 0 not compared; median abs. error 121.1 %, max 261.6 %; 0/4 within uncertainty; case **outside budget**; largest miss 8.72 tolerances.
-* Likely cause: 0/4 within tolerance, mean signed error +136 %.
+* Result: 4 compared, 0 without prediction, 0 not compared; median abs. error 280.0 %, max 434.1 %; 0/4 within uncertainty; case **outside budget**; largest miss 14.5 tolerances.
+* Likely cause: 0/4 within tolerance, mean signed error +286 %; the profile is dominated by the minimum chip thickness h_min = ratio x edge radius (below f = sqrt(2 r h_min) the surface forms where the accumulated layer reaches h_min: R_t = h_min; above it Brammertz's R_t); the edge radius used is the tooling default listed above, not a stated value.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra_vc120 | 0.025 mm/rev | 0.44 | 0.8386 | um | +90.6 % | 0.132 | **no** | turning: r 0.2 mm, f 0.025 mm/rev, kappa_r 90, kappa_r' 35 deg, h_min 9.4 um |
+| Ra_vc120 | 0.025 mm/rev | 0.44 | 2.35 | um | +434.1 % | 0.132 | **no** | turning: r 0.2 mm, f 0.025 mm/rev, kappa_r 90, kappa_r' 35 deg, h_min 9.4 um |
 | Ra_vc120 | 0.05 mm/rev | 0.64 | 2.315 | um | +261.6 % | 0.192 | **no** | turning: r 0.2 mm, f 0.05 mm/rev, kappa_r 90, kappa_r' 35 deg, h_min 9.4 um |
-| Ra_vc150 | 0.025 mm/rev | 0.59 | 0.8386 | um | +42.1 % | 0.177 | **no** | turning: r 0.2 mm, f 0.025 mm/rev, kappa_r 90, kappa_r' 35 deg, h_min 9.4 um |
+| Ra_vc150 | 0.025 mm/rev | 0.59 | 2.35 | um | +298.3 % | 0.177 | **no** | turning: r 0.2 mm, f 0.025 mm/rev, kappa_r 90, kappa_r' 35 deg, h_min 9.4 um |
 | Ra_vc150 | 0.05 mm/rev | 0.92 | 2.315 | um | +151.6 % | 0.276 | **no** | turning: r 0.2 mm, f 0.05 mm/rev, kappa_r 90, kappa_r' 35 deg, h_min 9.4 um |
 
 ### roughness-matras2020-ballend-cbn-h13-pull-plunge
@@ -2596,278 +2602,285 @@ Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.3 %, max
 * Source: `matras-2020-h13-cbn-milling`, Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'pull-oblique plunge' (average Ra, Rz) (measured).
 * File: `validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-pull-plunge.yaml`; operation ball_end_milling; material `h13-50hrc`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.25, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = dry (not stated).
-* Inputs the harness assumed: cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml).
+* Inputs the harness assumed: coating = none (not stated in the case: uncoated assumed, case); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml).
 * Database values used: h13-50hrc cutting.min_chip_thickness_ratio (`est`).
-* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (radius R both); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
-* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 56.7 %, max 476.9 %; case **outside budget**; largest miss 15.9 tolerances.
-* Likely cause: 8/32 within tolerance, mean signed error +51 %.
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
+* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (the ball's meridian of radius R up to the depth of cut in both), each with the minimum chip thickness (the layer a tooth meets near the ball's lowest point is the distance between the spheres along their normal, whatever the direction of the cutting velocity); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
+* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 33.7 %, max 75.9 %; case **outside budget**; largest miss 2.53 tolerances.
+* Likely cause: 13/32 within tolerance, mean signed error -33 %; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model (the case states none of them as a value).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra | 1 index | 0.47 | 0.3171 | um | -32.5 % | 0.141 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Ra | 2 index | 0.41 | 0.3171 | um | -22.7 % | 0.123 | yes | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Ra | 3 index | 0.33 | 0.5497 | um | +66.6 % | 0.099 | **no** | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Ra | 4 index | 0.51 | 1.327 | um | +160.2 % | 0.153 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Ra | 5 index | 0.86 | 0.5497 | um | -36.1 % | 0.258 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Ra | 6 index | 0.58 | 1.327 | um | +128.8 % | 0.174 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Ra | 7 index | 0.24 | 0.1797 | um | -25.1 % | 0.072 | yes | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Ra | 8 index | 0.31 | 0.2667 | um | -14.0 % | 0.093 | yes | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Ra | 9 index | 0.35 | 1.327 | um | +279.1 % | 0.105 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Ra | 10 index | 0.2 | 0.5497 | um | +174.8 % | 0.06 | **no** | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Ra | 11 index | 0.16 | 0.2667 | um | +66.7 % | 0.048 | **no** | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Ra | 12 index | 0.22 | 0.1584 | um | -28.0 % | 0.066 | yes | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Ra | 13 index | 0.17 | 0.2667 | um | +56.9 % | 0.051 | **no** | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Ra | 14 index | 0.2 | 0.1584 | um | -20.8 % | 0.06 | yes | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Ra | 15 index | 0.23 | 1.327 | um | +476.9 % | 0.069 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Ra | 16 index | 0.17 | 0.5497 | um | +223.3 % | 0.051 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
-| Rz | 1 index | 2.88 | 1.221 | um | -57.6 % | 0.864 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Rz | 2 index | 2.29 | 1.221 | um | -46.7 % | 0.687 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Rz | 3 index | 1.78 | 2.101 | um | +18.0 % | 0.534 | yes | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Rz | 4 index | 3.11 | 4.865 | um | +56.4 % | 0.933 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Rz | 5 index | 4.38 | 2.101 | um | -52.0 % | 1.31 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Rz | 6 index | 2.9 | 4.865 | um | +67.8 % | 0.87 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Rz | 7 index | 1.53 | 0.6905 | um | -54.9 % | 0.459 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Rz | 8 index | 2.8 | 0.9888 | um | -64.7 % | 0.84 | **no** | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Rz | 9 index | 2.23 | 4.865 | um | +118.2 % | 0.669 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Rz | 10 index | 1.42 | 2.101 | um | +48.0 % | 0.426 | **no** | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Rz | 11 index | 1.14 | 0.9888 | um | -13.3 % | 0.342 | yes | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Rz | 12 index | 2.37 | 0.5779 | um | -75.6 % | 0.711 | **no** | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Rz | 13 index | 1.14 | 0.9888 | um | -13.3 % | 0.342 | yes | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Rz | 14 index | 1.33 | 0.5779 | um | -56.5 % | 0.399 | **no** | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Rz | 15 index | 1.61 | 4.865 | um | +202.2 % | 0.483 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Rz | 16 index | 1.12 | 2.101 | um | +87.6 % | 0.336 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Ra | 1 index | 0.47 | 0.3477 | um | -26.0 % | 0.141 | yes | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Ra | 2 index | 0.41 | 0.3477 | um | -15.2 % | 0.123 | yes | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Ra | 3 index | 0.33 | 0.3477 | um | +5.4 % | 0.099 | yes | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Ra | 4 index | 0.51 | 0.3477 | um | -31.8 % | 0.153 | **no** | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Ra | 5 index | 0.86 | 0.2375 | um | -72.4 % | 0.258 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Ra | 6 index | 0.58 | 0.2375 | um | -59.1 % | 0.174 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Ra | 7 index | 0.24 | 0.2375 | um | -1.0 % | 0.072 | yes | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Ra | 8 index | 0.31 | 0.2375 | um | -23.4 % | 0.093 | yes | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Ra | 9 index | 0.35 | 0.1933 | um | -44.8 % | 0.105 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Ra | 10 index | 0.2 | 0.1933 | um | -3.4 % | 0.06 | yes | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Ra | 11 index | 0.16 | 0.1933 | um | +20.8 % | 0.048 | yes | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Ra | 12 index | 0.22 | 0.1933 | um | -12.1 % | 0.066 | yes | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Ra | 13 index | 0.17 | 0.1768 | um | +4.0 % | 0.051 | yes | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Ra | 14 index | 0.2 | 0.1768 | um | -11.6 % | 0.06 | yes | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Ra | 15 index | 0.23 | 0.1816 | um | -21.0 % | 0.069 | yes | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Ra | 16 index | 0.17 | 0.1774 | um | +4.4 % | 0.051 | yes | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Rz | 1 index | 2.88 | 1.553 | um | -46.1 % | 0.864 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Rz | 2 index | 2.29 | 1.553 | um | -32.2 % | 0.687 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Rz | 3 index | 1.78 | 1.553 | um | -12.7 % | 0.534 | yes | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Rz | 4 index | 3.11 | 1.553 | um | -50.1 % | 0.933 | **no** | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Rz | 5 index | 4.38 | 1.056 | um | -75.9 % | 1.31 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Rz | 6 index | 2.9 | 1.056 | um | -63.6 % | 0.87 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Rz | 7 index | 1.53 | 1.056 | um | -31.0 % | 0.459 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Rz | 8 index | 2.8 | 1.056 | um | -62.3 % | 0.84 | **no** | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Rz | 9 index | 2.23 | 0.7395 | um | -66.8 % | 0.669 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Rz | 10 index | 1.42 | 0.7395 | um | -47.9 % | 0.426 | **no** | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Rz | 11 index | 1.14 | 0.7395 | um | -35.1 % | 0.342 | **no** | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Rz | 12 index | 2.37 | 0.7395 | um | -68.8 % | 0.711 | **no** | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Rz | 13 index | 1.14 | 0.6658 | um | -41.6 % | 0.342 | **no** | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Rz | 14 index | 1.33 | 0.6658 | um | -49.9 % | 0.399 | **no** | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Rz | 15 index | 1.61 | 0.6895 | um | -57.2 % | 0.483 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Rz | 16 index | 1.12 | 0.6786 | um | -39.4 % | 0.336 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
 
 ### roughness-matras2020-ballend-cbn-h13-pull-reverse
 
 * Source: `matras-2020-h13-cbn-milling`, Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'pull-oblique revers' (average Ra, Rz) (measured).
 * File: `validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-pull-reverse.yaml`; operation ball_end_milling; material `h13-50hrc`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.25, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = dry (not stated).
-* Inputs the harness assumed: cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml).
+* Inputs the harness assumed: coating = none (not stated in the case: uncoated assumed, case); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml).
 * Database values used: h13-50hrc cutting.min_chip_thickness_ratio (`est`).
-* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (radius R both); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
-* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 54.3 %, max 598.4 %; case **outside budget**; largest miss 19.9 tolerances.
-* Likely cause: 9/32 within tolerance, mean signed error +52 %.
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
+* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (the ball's meridian of radius R up to the depth of cut in both), each with the minimum chip thickness (the layer a tooth meets near the ball's lowest point is the distance between the spheres along their normal, whatever the direction of the cutting velocity); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
+* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 39.2 %, max 74.6 %; case **outside budget**; largest miss 2.49 tolerances.
+* Likely cause: 13/32 within tolerance, mean signed error -33 %; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model (the case states none of them as a value).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra | 1 index | 0.38 | 0.3171 | um | -16.6 % | 0.114 | yes | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Ra | 2 index | 0.48 | 0.3171 | um | -33.9 % | 0.144 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Ra | 3 index | 0.33 | 0.5497 | um | +66.6 % | 0.099 | **no** | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Ra | 4 index | 0.34 | 1.327 | um | +290.3 % | 0.102 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Ra | 5 index | 0.8 | 0.5497 | um | -31.3 % | 0.24 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Ra | 6 index | 0.68 | 1.327 | um | +95.1 % | 0.204 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Ra | 7 index | 0.24 | 0.1797 | um | -25.1 % | 0.072 | yes | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Ra | 8 index | 0.22 | 0.2667 | um | +21.2 % | 0.066 | yes | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Ra | 9 index | 0.43 | 1.327 | um | +208.6 % | 0.129 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Ra | 10 index | 0.22 | 0.5497 | um | +149.8 % | 0.066 | **no** | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Ra | 11 index | 0.31 | 0.2667 | um | -14.0 % | 0.093 | yes | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Ra | 12 index | 0.18 | 0.1584 | um | -12.0 % | 0.054 | yes | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Ra | 13 index | 0.29 | 0.2667 | um | -8.0 % | 0.087 | yes | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Ra | 14 index | 0.16 | 0.1584 | um | -1.0 % | 0.048 | yes | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Ra | 15 index | 0.19 | 1.327 | um | +598.4 % | 0.057 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Ra | 16 index | 0.17 | 0.5497 | um | +223.3 % | 0.051 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
-| Rz | 1 index | 2.72 | 1.221 | um | -55.1 % | 0.816 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Rz | 2 index | 2.57 | 1.221 | um | -52.5 % | 0.771 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Rz | 3 index | 1.93 | 2.101 | um | +8.9 % | 0.579 | yes | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Rz | 4 index | 2.4 | 4.865 | um | +102.7 % | 0.72 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Rz | 5 index | 4.05 | 2.101 | um | -48.1 % | 1.21 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Rz | 6 index | 3.09 | 4.865 | um | +57.5 % | 0.927 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Rz | 7 index | 1.75 | 0.6905 | um | -60.5 % | 0.525 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Rz | 8 index | 1.38 | 0.9888 | um | -28.3 % | 0.414 | yes | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Rz | 9 index | 2.91 | 4.865 | um | +67.2 % | 0.873 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Rz | 10 index | 1.39 | 2.101 | um | +51.2 % | 0.417 | **no** | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Rz | 11 index | 2.91 | 0.9888 | um | -66.0 % | 0.873 | **no** | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Rz | 12 index | 1.51 | 0.5779 | um | -61.7 % | 0.453 | **no** | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Rz | 13 index | 1.97 | 0.9888 | um | -49.8 % | 0.591 | **no** | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Rz | 14 index | 1.24 | 0.5779 | um | -53.4 % | 0.372 | **no** | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Rz | 15 index | 1.36 | 4.865 | um | +257.7 % | 0.408 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Rz | 16 index | 1.12 | 2.101 | um | +87.6 % | 0.336 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Ra | 1 index | 0.38 | 0.3477 | um | -8.5 % | 0.114 | yes | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Ra | 2 index | 0.48 | 0.3477 | um | -27.6 % | 0.144 | yes | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Ra | 3 index | 0.33 | 0.3477 | um | +5.4 % | 0.099 | yes | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Ra | 4 index | 0.34 | 0.3477 | um | +2.3 % | 0.102 | yes | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Ra | 5 index | 0.8 | 0.2375 | um | -70.3 % | 0.24 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Ra | 6 index | 0.68 | 0.2375 | um | -65.1 % | 0.204 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Ra | 7 index | 0.24 | 0.2375 | um | -1.0 % | 0.072 | yes | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Ra | 8 index | 0.22 | 0.2375 | um | +8.0 % | 0.066 | yes | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Ra | 9 index | 0.43 | 0.1933 | um | -55.1 % | 0.129 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Ra | 10 index | 0.22 | 0.1933 | um | -12.1 % | 0.066 | yes | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Ra | 11 index | 0.31 | 0.1933 | um | -37.7 % | 0.093 | **no** | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Ra | 12 index | 0.18 | 0.1933 | um | +7.4 % | 0.054 | yes | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Ra | 13 index | 0.29 | 0.1768 | um | -39.0 % | 0.087 | **no** | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Ra | 14 index | 0.16 | 0.1768 | um | +10.5 % | 0.048 | yes | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Ra | 15 index | 0.19 | 0.1816 | um | -4.4 % | 0.057 | yes | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Ra | 16 index | 0.17 | 0.1774 | um | +4.4 % | 0.051 | yes | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Rz | 1 index | 2.72 | 1.553 | um | -42.9 % | 0.816 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Rz | 2 index | 2.57 | 1.553 | um | -39.6 % | 0.771 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Rz | 3 index | 1.93 | 1.553 | um | -19.5 % | 0.579 | yes | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Rz | 4 index | 2.4 | 1.553 | um | -35.3 % | 0.72 | **no** | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Rz | 5 index | 4.05 | 1.056 | um | -73.9 % | 1.21 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Rz | 6 index | 3.09 | 1.056 | um | -65.8 % | 0.927 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Rz | 7 index | 1.75 | 1.056 | um | -39.6 % | 0.525 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Rz | 8 index | 1.38 | 1.056 | um | -23.5 % | 0.414 | yes | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Rz | 9 index | 2.91 | 0.7395 | um | -74.6 % | 0.873 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Rz | 10 index | 1.39 | 0.7395 | um | -46.8 % | 0.417 | **no** | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Rz | 11 index | 2.91 | 0.7395 | um | -74.6 % | 0.873 | **no** | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Rz | 12 index | 1.51 | 0.7395 | um | -51.0 % | 0.453 | **no** | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Rz | 13 index | 1.97 | 0.6658 | um | -66.2 % | 0.591 | **no** | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Rz | 14 index | 1.24 | 0.6658 | um | -46.3 % | 0.372 | **no** | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Rz | 15 index | 1.36 | 0.6895 | um | -49.3 % | 0.408 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Rz | 16 index | 1.12 | 0.6786 | um | -39.4 % | 0.336 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
 
 ### roughness-matras2020-ballend-cbn-h13-push-plunge
 
 * Source: `matras-2020-h13-cbn-milling`, Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'push-oblique plunge' (average Ra, Rz) (measured).
 * File: `validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-push-plunge.yaml`; operation ball_end_milling; material `h13-50hrc`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.25, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = dry (not stated).
-* Inputs the harness assumed: cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml).
+* Inputs the harness assumed: coating = none (not stated in the case: uncoated assumed, case); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml).
 * Database values used: h13-50hrc cutting.min_chip_thickness_ratio (`est`).
-* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (radius R both); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
-* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 48.7 %, max 531.9 %; case **outside budget**; largest miss 17.7 tolerances.
-* Likely cause: 10/32 within tolerance, mean signed error +41 %.
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
+* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (the ball's meridian of radius R up to the depth of cut in both), each with the minimum chip thickness (the layer a tooth meets near the ball's lowest point is the distance between the spheres along their normal, whatever the direction of the cutting velocity); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
+* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 35.6 %, max 79.3 %; case **outside budget**; largest miss 2.64 tolerances.
+* Likely cause: 12/32 within tolerance, mean signed error -35 %; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model (the case states none of them as a value).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra | 1 index | 0.3 | 0.3171 | um | +5.7 % | 0.09 | yes | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Ra | 2 index | 1.03 | 0.3171 | um | -69.2 % | 0.309 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Ra | 3 index | 0.3 | 0.5497 | um | +83.2 % | 0.09 | **no** | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Ra | 4 index | 0.4 | 1.327 | um | +231.7 % | 0.12 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Ra | 5 index | 1.07 | 0.5497 | um | -48.6 % | 0.321 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Ra | 6 index | 0.68 | 1.327 | um | +95.1 % | 0.204 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Ra | 7 index | 0.18 | 0.1797 | um | -0.1 % | 0.054 | yes | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Ra | 8 index | 0.21 | 0.2667 | um | +27.0 % | 0.063 | yes | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Ra | 9 index | 0.42 | 1.327 | um | +215.9 % | 0.126 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Ra | 10 index | 0.3 | 0.5497 | um | +83.2 % | 0.09 | **no** | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Ra | 11 index | 0.27 | 0.2667 | um | -1.2 % | 0.081 | yes | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Ra | 12 index | 0.19 | 0.1584 | um | -16.6 % | 0.057 | yes | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Ra | 13 index | 0.2 | 0.2667 | um | +33.3 % | 0.06 | **no** | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Ra | 14 index | 0.17 | 0.1584 | um | -6.8 % | 0.051 | yes | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Ra | 15 index | 0.21 | 1.327 | um | +531.9 % | 0.063 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Ra | 16 index | 0.27 | 0.5497 | um | +103.6 % | 0.081 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
-| Rz | 1 index | 2.38 | 1.221 | um | -48.7 % | 0.714 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Rz | 2 index | 4.79 | 1.221 | um | -74.5 % | 1.44 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Rz | 3 index | 2.01 | 2.101 | um | +4.5 % | 0.603 | yes | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Rz | 4 index | 2.41 | 4.865 | um | +101.9 % | 0.723 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Rz | 5 index | 5.1 | 2.101 | um | -58.8 % | 1.53 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Rz | 6 index | 3.54 | 4.865 | um | +37.4 % | 1.06 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Rz | 7 index | 1.21 | 0.6905 | um | -42.9 % | 0.363 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Rz | 8 index | 1.39 | 0.9888 | um | -28.9 % | 0.417 | yes | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Rz | 9 index | 2.57 | 4.865 | um | +89.3 % | 0.771 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Rz | 10 index | 1.75 | 2.101 | um | +20.1 % | 0.525 | yes | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Rz | 11 index | 1.77 | 0.9888 | um | -44.1 % | 0.531 | **no** | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Rz | 12 index | 1.28 | 0.5779 | um | -54.9 % | 0.384 | **no** | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Rz | 13 index | 1.46 | 0.9888 | um | -32.3 % | 0.438 | **no** | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Rz | 14 index | 1.28 | 0.5779 | um | -54.9 % | 0.384 | **no** | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Rz | 15 index | 1.51 | 4.865 | um | +222.2 % | 0.453 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Rz | 16 index | 1.74 | 2.101 | um | +20.8 % | 0.522 | yes | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Ra | 1 index | 0.3 | 0.3477 | um | +15.9 % | 0.09 | yes | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Ra | 2 index | 1.03 | 0.3477 | um | -66.2 % | 0.309 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Ra | 3 index | 0.3 | 0.3477 | um | +15.9 % | 0.09 | yes | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Ra | 4 index | 0.4 | 0.3477 | um | -13.1 % | 0.12 | yes | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Ra | 5 index | 1.07 | 0.2375 | um | -77.8 % | 0.321 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Ra | 6 index | 0.68 | 0.2375 | um | -65.1 % | 0.204 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Ra | 7 index | 0.18 | 0.2375 | um | +31.9 % | 0.054 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Ra | 8 index | 0.21 | 0.2375 | um | +13.1 % | 0.063 | yes | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Ra | 9 index | 0.42 | 0.1933 | um | -54.0 % | 0.126 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Ra | 10 index | 0.3 | 0.1933 | um | -35.6 % | 0.09 | **no** | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Ra | 11 index | 0.27 | 0.1933 | um | -28.4 % | 0.081 | yes | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Ra | 12 index | 0.19 | 0.1933 | um | +1.7 % | 0.057 | yes | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Ra | 13 index | 0.2 | 0.1768 | um | -11.6 % | 0.06 | yes | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Ra | 14 index | 0.17 | 0.1768 | um | +4.0 % | 0.051 | yes | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Ra | 15 index | 0.21 | 0.1816 | um | -13.5 % | 0.063 | yes | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Ra | 16 index | 0.27 | 0.1774 | um | -34.3 % | 0.081 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Rz | 1 index | 2.38 | 1.553 | um | -34.7 % | 0.714 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Rz | 2 index | 4.79 | 1.553 | um | -67.6 % | 1.44 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Rz | 3 index | 2.01 | 1.553 | um | -22.7 % | 0.603 | yes | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Rz | 4 index | 2.41 | 1.553 | um | -35.6 % | 0.723 | **no** | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Rz | 5 index | 5.1 | 1.056 | um | -79.3 % | 1.53 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Rz | 6 index | 3.54 | 1.056 | um | -70.2 % | 1.06 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Rz | 7 index | 1.21 | 1.056 | um | -12.7 % | 0.363 | yes | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Rz | 8 index | 1.39 | 1.056 | um | -24.0 % | 0.417 | yes | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Rz | 9 index | 2.57 | 0.7395 | um | -71.2 % | 0.771 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Rz | 10 index | 1.75 | 0.7395 | um | -57.7 % | 0.525 | **no** | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Rz | 11 index | 1.77 | 0.7395 | um | -58.2 % | 0.531 | **no** | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Rz | 12 index | 1.28 | 0.7395 | um | -42.2 % | 0.384 | **no** | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Rz | 13 index | 1.46 | 0.6658 | um | -54.4 % | 0.438 | **no** | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Rz | 14 index | 1.28 | 0.6658 | um | -48.0 % | 0.384 | **no** | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Rz | 15 index | 1.51 | 0.6895 | um | -54.3 % | 0.453 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Rz | 16 index | 1.74 | 0.6786 | um | -61.0 % | 0.522 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
 
 ### roughness-matras2020-ballend-cbn-h13-push-reverse
 
 * Source: `matras-2020-h13-cbn-milling`, Sect. 4 (machine, workpiece), Tables 3-5 (cutting data, L16 plan), Table A1 (tool geometry), Table A2 column 'push-oblique revers' (average Ra, Rz) (measured).
 * File: `validation/cases/roughness/roughness-matras2020-ballend-cbn-h13-push-reverse.yaml`; operation ball_end_milling; material `h13-50hrc`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.25, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = dry (not stated).
-* Inputs the harness assumed: cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml).
+* Inputs the harness assumed: coating = none (not stated in the case: uncoated assumed, case); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml).
 * Database values used: h13-50hrc cutting.min_chip_thickness_ratio (`est`).
-* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (radius R both); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
-* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 49.4 %, max 302.1 %; case **outside budget**; largest miss 10.1 tolerances.
-* Likely cause: 7/32 within tolerance, mean signed error +25 %.
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
+* Ball-end milling: the scallop profile across the feed at the step-over and the feed-mark profile at the feed per tooth (the ball's meridian of radius R up to the depth of cut in both), each with the minimum chip thickness (the layer a tooth meets near the ball's lowest point is the distance between the spheres along their normal, whatever the direction of the cutting velocity); the rougher is compared. Lead and tilt angles do not change either kinematic profile (the ball's silhouette is a circle of radius R), only the cutting speed at the contact, which the kinematic model does not use.
+* Result: 32 compared, 0 without prediction, 0 not compared; median abs. error 46.9 %, max 78.8 %; case **outside budget**; largest miss 2.63 tolerances.
+* Likely cause: 10/32 within tolerance, mean signed error -43 %; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model (the case states none of them as a value).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra | 1 index | 0.36 | 0.3171 | um | -11.9 % | 0.108 | yes | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Ra | 2 index | 0.5 | 0.3171 | um | -36.6 % | 0.15 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Ra | 3 index | 0.38 | 0.5497 | um | +44.6 % | 0.114 | **no** | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Ra | 4 index | 0.41 | 1.327 | um | +223.7 % | 0.123 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Ra | 5 index | 0.95 | 0.5497 | um | -42.1 % | 0.285 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Ra | 6 index | 0.66 | 1.327 | um | +101.1 % | 0.198 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Ra | 7 index | 0.28 | 0.1797 | um | -35.8 % | 0.084 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Ra | 8 index | 0.3 | 0.2667 | um | -11.1 % | 0.09 | yes | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Ra | 9 index | 0.43 | 1.327 | um | +208.6 % | 0.129 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Ra | 10 index | 0.19 | 0.5497 | um | +189.3 % | 0.057 | **no** | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Ra | 11 index | 0.27 | 0.2667 | um | -1.2 % | 0.081 | yes | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Ra | 12 index | 0.24 | 0.1584 | um | -34.0 % | 0.072 | **no** | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Ra | 13 index | 0.23 | 0.2667 | um | +15.9 % | 0.069 | yes | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Ra | 14 index | 0.18 | 0.1584 | um | -12.0 % | 0.054 | yes | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Ra | 15 index | 0.33 | 1.327 | um | +302.1 % | 0.099 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Ra | 16 index | 0.27 | 0.5497 | um | +103.6 % | 0.081 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
-| Rz | 1 index | 2.75 | 1.221 | um | -55.6 % | 0.825 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
-| Rz | 2 index | 2.96 | 1.221 | um | -58.8 % | 0.888 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
-| Rz | 3 index | 2.75 | 2.101 | um | -23.6 % | 0.825 | yes | run 3: feed marks, ae 0.1 mm, fz 0.0267 mm |
-| Rz | 4 index | 2.91 | 4.865 | um | +67.2 % | 0.873 | **no** | run 4: feed marks, ae 0.1 mm, fz 0.0356 mm |
-| Rz | 5 index | 4.98 | 2.101 | um | -57.8 % | 1.49 | **no** | run 5: feed marks, ae 0.075 mm, fz 0.0267 mm |
-| Rz | 6 index | 3.42 | 4.865 | um | +42.3 % | 1.03 | **no** | run 6: feed marks, ae 0.075 mm, fz 0.0356 mm |
-| Rz | 7 index | 2.73 | 0.6905 | um | -74.7 % | 0.819 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
-| Rz | 8 index | 2.35 | 0.9888 | um | -57.9 % | 0.705 | **no** | run 8: feed marks, ae 0.075 mm, fz 0.0178 mm |
-| Rz | 9 index | 2.7 | 4.865 | um | +80.2 % | 0.81 | **no** | run 9: feed marks, ae 0.05 mm, fz 0.0356 mm |
-| Rz | 10 index | 1.57 | 2.101 | um | +33.8 % | 0.471 | **no** | run 10: feed marks, ae 0.05 mm, fz 0.0267 mm |
-| Rz | 11 index | 1.65 | 0.9888 | um | -40.1 % | 0.495 | **no** | run 11: feed marks, ae 0.05 mm, fz 0.0178 mm |
-| Rz | 12 index | 1.73 | 0.5779 | um | -66.6 % | 0.519 | **no** | run 12: feed marks, ae 0.05 mm, fz 0.0133 mm |
-| Rz | 13 index | 1.66 | 0.9888 | um | -40.4 % | 0.498 | **no** | run 13: feed marks, ae 0.025 mm, fz 0.0178 mm |
-| Rz | 14 index | 1.26 | 0.5779 | um | -54.1 % | 0.378 | **no** | run 14: feed marks, ae 0.025 mm, fz 0.0133 mm |
-| Rz | 15 index | 2.54 | 4.865 | um | +91.5 % | 0.762 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
-| Rz | 16 index | 1.74 | 2.101 | um | +20.8 % | 0.522 | yes | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Ra | 1 index | 0.36 | 0.3477 | um | -3.4 % | 0.108 | yes | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Ra | 2 index | 0.5 | 0.3477 | um | -30.5 % | 0.15 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Ra | 3 index | 0.38 | 0.3477 | um | -8.5 % | 0.114 | yes | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Ra | 4 index | 0.41 | 0.3477 | um | -15.2 % | 0.123 | yes | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Ra | 5 index | 0.95 | 0.2375 | um | -75.0 % | 0.285 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Ra | 6 index | 0.66 | 0.2375 | um | -64.0 % | 0.198 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Ra | 7 index | 0.28 | 0.2375 | um | -15.2 % | 0.084 | yes | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Ra | 8 index | 0.3 | 0.2375 | um | -20.8 % | 0.09 | yes | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Ra | 9 index | 0.43 | 0.1933 | um | -55.1 % | 0.129 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Ra | 10 index | 0.19 | 0.1933 | um | +1.7 % | 0.057 | yes | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Ra | 11 index | 0.27 | 0.1933 | um | -28.4 % | 0.081 | yes | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Ra | 12 index | 0.24 | 0.1933 | um | -19.5 % | 0.072 | yes | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Ra | 13 index | 0.23 | 0.1768 | um | -23.1 % | 0.069 | yes | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Ra | 14 index | 0.18 | 0.1768 | um | -1.8 % | 0.054 | yes | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Ra | 15 index | 0.33 | 0.1816 | um | -45.0 % | 0.099 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Ra | 16 index | 0.27 | 0.1774 | um | -34.3 % | 0.081 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
+| Rz | 1 index | 2.75 | 1.553 | um | -43.5 % | 0.825 | **no** | run 1: scallops (cross-feed), ae 0.1 mm, fz 0.0133 mm |
+| Rz | 2 index | 2.96 | 1.553 | um | -47.5 % | 0.888 | **no** | run 2: scallops (cross-feed), ae 0.1 mm, fz 0.0178 mm |
+| Rz | 3 index | 2.75 | 1.553 | um | -43.5 % | 0.825 | **no** | run 3: scallops (cross-feed), ae 0.1 mm, fz 0.0267 mm |
+| Rz | 4 index | 2.91 | 1.553 | um | -46.6 % | 0.873 | **no** | run 4: scallops (cross-feed), ae 0.1 mm, fz 0.0356 mm |
+| Rz | 5 index | 4.98 | 1.056 | um | -78.8 % | 1.49 | **no** | run 5: scallops (cross-feed), ae 0.075 mm, fz 0.0267 mm |
+| Rz | 6 index | 3.42 | 1.056 | um | -69.1 % | 1.03 | **no** | run 6: scallops (cross-feed), ae 0.075 mm, fz 0.0356 mm |
+| Rz | 7 index | 2.73 | 1.056 | um | -61.3 % | 0.819 | **no** | run 7: scallops (cross-feed), ae 0.075 mm, fz 0.0133 mm |
+| Rz | 8 index | 2.35 | 1.056 | um | -55.1 % | 0.705 | **no** | run 8: scallops (cross-feed), ae 0.075 mm, fz 0.0178 mm |
+| Rz | 9 index | 2.7 | 0.7395 | um | -72.6 % | 0.81 | **no** | run 9: scallops (cross-feed), ae 0.05 mm, fz 0.0356 mm |
+| Rz | 10 index | 1.57 | 0.7395 | um | -52.9 % | 0.471 | **no** | run 10: scallops (cross-feed), ae 0.05 mm, fz 0.0267 mm |
+| Rz | 11 index | 1.65 | 0.7395 | um | -55.2 % | 0.495 | **no** | run 11: scallops (cross-feed), ae 0.05 mm, fz 0.0178 mm |
+| Rz | 12 index | 1.73 | 0.7395 | um | -57.3 % | 0.519 | **no** | run 12: scallops (cross-feed), ae 0.05 mm, fz 0.0133 mm |
+| Rz | 13 index | 1.66 | 0.6658 | um | -59.9 % | 0.498 | **no** | run 13: scallops (cross-feed), ae 0.025 mm, fz 0.0178 mm |
+| Rz | 14 index | 1.26 | 0.6658 | um | -47.2 % | 0.378 | **no** | run 14: scallops (cross-feed), ae 0.025 mm, fz 0.0133 mm |
+| Rz | 15 index | 2.54 | 0.6895 | um | -72.9 % | 0.762 | **no** | run 15: feed marks, ae 0.025 mm, fz 0.0356 mm |
+| Rz | 16 index | 1.74 | 0.6786 | um | -61.0 % | 0.522 | **no** | run 16: feed marks, ae 0.025 mm, fz 0.0267 mm |
 
 ### roughness-nowakowski2024-facemill-c45-coromill490
 
 * Source: `nowakowski-2024-face-milling-insert-errors`, Sect. 2 (cutter, inserts, probe measurement of mounting errors, machine, instruments), Sect. 3 (cutting data, FFT fundamental 31.93 Hz), Table 1 (actual load per insert from the measured mounting errors), Table 3 (2D roughness per feed per tooth) (measured).
 * File: `validation/cases/roughness/roughness-nowakowski2024-facemill-c45-coromill490.yaml`; operation face_milling; material `aisi1045`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.27, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the harness assumed: minor edge angle = 1.00 deg (the tooling model's minor-edge dish of milling inserts (no wiper stated), db/models/tooling.yaml); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml).
 * Database values used: aisi1045 cutting.min_chip_thickness_ratio (`est`).
-* Ideal cutter: every insert at the same axial and radial position. The case's insert loads (Table 1 of the source) show axial runout of the individual inserts, whose offsets are not given.
-* Result: 22 compared, 0 without prediction, 0 not compared; median abs. error 95.3 %, max 1482.5 %; case **outside budget**; largest miss 49.4 tolerances.
-* Likely cause: 2/22 within tolerance, mean signed error +262 %.
+* Ideal cutter: every insert at the same axial and radial position. The insert loads of the case (Table 1 of the source) come from measured axial and radial insert offsets that are not printed. Inverted through the chip cross-section of the corner (r 0.8 mm > ap 0.2 mm), offset sets that reproduce the table equally well (2.2-2.4 % load rms) give the lowest insert a lead of 0 to 9 um over the next one, and radial-only or axial-only sets fit within 4.6 % (an axial offset moves the shallow corner arc like a radial one): the axial runout that decides the floor is not determined by the record. The insert's wiper edge is not stated either: with a parallel land longer than the feed per revolution the lowest insert alone would generate a flat floor.
+* Profiles evaluated with the instrument's stated cut-off 0.8 mm (case: conditions.roughness_instrument), not ISO 4288's choice from the feed spacing.
+* Result: 22 compared, 0 without prediction, 0 not compared; median abs. error 59.8 %, max 337.7 %; case **outside budget**; largest miss 11.3 tolerances.
+* Likely cause: 4/22 within tolerance, mean signed error +6 %.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra | 0.02 mm | 0.297 | 0.08141 | um | -72.6 % | 0.0891 | **no** | floor: corner r 0.8 mm, fz 0.02 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.04 mm | 0.533 | 0.1599 | um | -70.0 % | 0.16 | **no** | floor: corner r 0.8 mm, fz 0.04 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.06 mm | 0.756 | 1.583 | um | +109.4 % | 0.227 | **no** | floor: corner r 0.8 mm, fz 0.06 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.08 mm | 0.265 | 0.3398 | um | +28.2 % | 0.0795 | yes | floor: corner r 0.8 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.1 mm | 0.446 | 4.516 | um | +912.5 % | 0.134 | **no** | floor: corner r 0.8 mm, fz 0.1 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.12 mm | 0.383 | 4.305 | um | +1024.0 % | 0.115 | **no** | floor: corner r 0.8 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.14 mm | 0.735 | 2.296 | um | +212.4 % | 0.221 | **no** | floor: corner r 0.8 mm, fz 0.14 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.02 mm | 0.297 | 0.07966 | um | -73.2 % | 0.0891 | **no** | floor: corner r 0.8 mm, fz 0.02 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.04 mm | 0.533 | 0.1687 | um | -68.3 % | 0.16 | **no** | floor: corner r 0.8 mm, fz 0.04 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.06 mm | 0.756 | 0.2552 | um | -66.2 % | 0.227 | **no** | floor: corner r 0.8 mm, fz 0.06 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.08 mm | 0.265 | 0.343 | um | +29.4 % | 0.0795 | yes | floor: corner r 0.8 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.1 mm | 0.446 | 0.4291 | um | -3.8 % | 0.134 | yes | floor: corner r 0.8 mm, fz 0.1 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.12 mm | 0.383 | 0.5194 | um | +35.6 % | 0.115 | **no** | floor: corner r 0.8 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.14 mm | 0.735 | 0.6046 | um | -17.7 % | 0.221 | yes | floor: corner r 0.8 mm, fz 0.14 mm, minor angle 1.00 deg, h_min 9.4 um |
 | Ra | 0.16 mm | 0.367 | 0.6923 | um | +88.6 % | 0.11 | **no** | floor: corner r 0.8 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.18 mm | 0.671 | 0.782 | um | +16.5 % | 0.201 | yes | floor: corner r 0.8 mm, fz 0.18 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.2 mm | 0.211 | 3.339 | um | +1482.5 % | 0.0633 | **no** | floor: corner r 0.8 mm, fz 0.2 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Ra | 0.22 mm | 0.217 | 2.716 | um | +1151.5 % | 0.0651 | **no** | floor: corner r 0.8 mm, fz 0.22 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.02 mm | 2.813 | 0.3037 | um | -89.2 % | 0.844 | **no** | floor: corner r 0.8 mm, fz 0.02 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.04 mm | 3.905 | 0.6456 | um | -83.5 % | 1.17 | **no** | floor: corner r 0.8 mm, fz 0.04 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.06 mm | 4.898 | 9.862 | um | +101.3 % | 1.47 | **no** | floor: corner r 0.8 mm, fz 0.06 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.08 mm | 2.643 | 1.345 | um | -49.1 % | 0.793 | **no** | floor: corner r 0.8 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.1 mm | 3.176 | 9.764 | um | +207.4 % | 0.953 | **no** | floor: corner r 0.8 mm, fz 0.1 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.12 mm | 3.557 | 9.582 | um | +169.4 % | 1.07 | **no** | floor: corner r 0.8 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.14 mm | 7.218 | 9.469 | um | +31.2 % | 2.17 | **no** | floor: corner r 0.8 mm, fz 0.14 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.16 mm | 4.57 | 2.735 | um | -40.2 % | 1.37 | **no** | floor: corner r 0.8 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.18 mm | 7.79 | 3.082 | um | -60.4 % | 2.34 | **no** | floor: corner r 0.8 mm, fz 0.18 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.2 mm | 2.237 | 9.862 | um | +340.9 % | 0.671 | **no** | floor: corner r 0.8 mm, fz 0.2 mm, minor angle 1.00 deg, h_min 9.4 um |
-| Rz | 0.22 mm | 2.374 | 10.61 | um | +346.9 % | 0.712 | **no** | floor: corner r 0.8 mm, fz 0.22 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.18 mm | 0.671 | 0.775 | um | +15.5 % | 0.201 | yes | floor: corner r 0.8 mm, fz 0.18 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.2 mm | 0.211 | 0.8657 | um | +310.3 % | 0.0633 | **no** | floor: corner r 0.8 mm, fz 0.2 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Ra | 0.22 mm | 0.217 | 0.9498 | um | +337.7 % | 0.0651 | **no** | floor: corner r 0.8 mm, fz 0.22 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.02 mm | 2.813 | 0.2972 | um | -89.4 % | 0.844 | **no** | floor: corner r 0.8 mm, fz 0.02 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.04 mm | 3.905 | 0.6511 | um | -83.3 % | 1.17 | **no** | floor: corner r 0.8 mm, fz 0.04 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.06 mm | 4.898 | 0.9922 | um | -79.7 % | 1.47 | **no** | floor: corner r 0.8 mm, fz 0.06 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.08 mm | 2.643 | 1.343 | um | -49.2 % | 0.793 | **no** | floor: corner r 0.8 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.1 mm | 3.176 | 1.689 | um | -46.8 % | 0.953 | **no** | floor: corner r 0.8 mm, fz 0.1 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.12 mm | 3.557 | 2.037 | um | -42.7 % | 1.07 | **no** | floor: corner r 0.8 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.14 mm | 7.218 | 2.385 | um | -67.0 % | 2.17 | **no** | floor: corner r 0.8 mm, fz 0.14 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.16 mm | 4.57 | 2.733 | um | -40.2 % | 1.37 | **no** | floor: corner r 0.8 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.18 mm | 7.79 | 3.081 | um | -60.4 % | 2.34 | **no** | floor: corner r 0.8 mm, fz 0.18 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.2 mm | 2.237 | 3.429 | um | +53.3 % | 0.671 | **no** | floor: corner r 0.8 mm, fz 0.2 mm, minor angle 1.00 deg, h_min 9.4 um |
+| Rz | 0.22 mm | 2.374 | 3.778 | um | +59.1 % | 0.712 | **no** | floor: corner r 0.8 mm, fz 0.22 mm, minor angle 1.00 deg, h_min 9.4 um |
 
 ### roughness-sultana2023-endmill-ti64-hss
 
 * Source: `sultana-2023-ti64-hpc-milling`, Sect. 2 and Table 4 (setup), Sect. 2 text (Surtronic 3+, 0.8 mm sampling length), Table 5 (Ra per run) (measured).
 * File: `validation/cases/roughness/roughness-sultana2023-endmill-ti64-hss.yaml`; operation peripheral_milling; material `ti6al4v`.
 * Validation class: **independent**.
-* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
+* Model chain: generating edge in the profile plane (case tool) -> cnctwin.surface.kernels.envelope_profile (lower envelope with the minimum chip thickness and side flow of the ploughed layer) -> cnctwin.surface.roughness.evaluate (ISO 4287, ISO 4288 cut-off, ISO 16610-21 filter).
 * Settings: min_chip_ratio = 0.37, passes = 60, recovery_ratio = 0, window_spacings = 6.
 * Inputs the case marks as assumed: `setup.tool.tool_state` = new (not stated; wear was studied in separate long runs (Fig. 20)).
-* Inputs the harness assumed: end-edge dish = 1.00 deg (the tooling model's end-tooth dish (no corner radius stated: a sharp corner), db/models/tooling.yaml); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); measured surface = the slot floor (the case: not stated ('Ra was measured for each slot'); the wall's peripheral feed marks are listed with each value, case).
+* Inputs the harness assumed: end-edge dish = 1.00 deg (the tooling model's end-tooth dish (no corner radius stated: a sharp corner), db/models/tooling.yaml); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); measured surface = the slot floor (the case: not stated ('Ra was measured for each slot'); the wall's peripheral feed marks are listed with each value, case).
 * Database values used: ti6al4v cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
+* Profiles evaluated with the instrument's stated cut-off 0.8 mm (case: conditions.roughness_instrument), not ISO 4288's choice from the feed spacing.
 * Coolant does not enter the kinematic profile (it acts on built-up edge and friction, not modelled in the profile).
-* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 63.2 %, max 77.3 %; case **outside budget**; largest miss 2.58 tolerances.
-* Likely cause: 0/27 within tolerance, mean signed error -63 %; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout, side flow and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model.
+* Result: 27 compared, 0 without prediction, 0 not compared; median abs. error 61.0 %, max 77.6 %; case **outside budget**; largest miss 2.59 tolerances.
+* Likely cause: 0/27 within tolerance, mean signed error -62 %; the kinematic profile is well below the measured roughness: built-up edge, vibration, runout and the stylus/filter of the instrument add to the feed marks and are not in the kinematic model (the case states none of them as a value).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Ra_dry_vc16 | 0.08 mm | 1.53 | 0.3475 | um | -77.3 % | 0.459 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc16 | 0.12 mm | 1.63 | 0.4856 | um | -70.2 % | 0.489 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc16 | 0.16 mm | 2.35 | 0.7021 | um | -70.1 % | 0.705 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc24 | 0.08 mm | 1.47 | 0.3475 | um | -76.4 % | 0.441 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc24 | 0.12 mm | 1.55 | 0.4856 | um | -68.7 % | 0.465 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc24 | 0.16 mm | 2.25 | 0.7021 | um | -68.8 % | 0.675 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc32 | 0.08 mm | 1.32 | 0.3475 | um | -73.7 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc32 | 0.12 mm | 1.32 | 0.4856 | um | -63.2 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_dry_vc32 | 0.16 mm | 1.61 | 0.7021 | um | -56.4 % | 0.483 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc16 | 0.08 mm | 1.38 | 0.3475 | um | -74.8 % | 0.414 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc16 | 0.12 mm | 1.44 | 0.4856 | um | -66.3 % | 0.432 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc16 | 0.16 mm | 1.72 | 0.7021 | um | -59.2 % | 0.516 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc24 | 0.08 mm | 1.34 | 0.3475 | um | -74.1 % | 0.402 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc24 | 0.12 mm | 1.32 | 0.4856 | um | -63.2 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc24 | 0.16 mm | 1.59 | 0.7021 | um | -55.8 % | 0.477 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc32 | 0.08 mm | 1.18 | 0.3475 | um | -70.6 % | 0.354 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc32 | 0.12 mm | 1.24 | 0.4856 | um | -60.8 % | 0.372 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_hpc_vc32 | 0.16 mm | 1.32 | 0.7021 | um | -46.8 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc16 | 0.08 mm | 1.24 | 0.3475 | um | -72.0 % | 0.372 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc16 | 0.12 mm | 1.3 | 0.4856 | um | -62.6 % | 0.39 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc16 | 0.16 mm | 1.42 | 0.7021 | um | -50.6 % | 0.426 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc24 | 0.08 mm | 0.96 | 0.3475 | um | -63.8 % | 0.288 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc24 | 0.12 mm | 1.22 | 0.4856 | um | -60.2 % | 0.366 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc24 | 0.16 mm | 1.32 | 0.7021 | um | -46.8 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc32 | 0.08 mm | 0.82 | 0.3475 | um | -57.6 % | 0.246 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc32 | 0.12 mm | 1 | 0.4856 | um | -51.4 % | 0.3 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 7.4 um |
-| Ra_rhpc_vc32 | 0.16 mm | 1.08 | 0.7021 | um | -35.0 % | 0.324 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 7.4 um |
+| Ra_dry_vc16 | 0.08 mm | 1.53 | 0.3432 | um | -77.6 % | 0.459 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc16 | 0.12 mm | 1.63 | 0.5144 | um | -68.4 % | 0.489 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc16 | 0.16 mm | 2.35 | 0.6923 | um | -70.5 % | 0.705 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc24 | 0.08 mm | 1.47 | 0.3432 | um | -76.7 % | 0.441 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc24 | 0.12 mm | 1.55 | 0.5144 | um | -66.8 % | 0.465 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc24 | 0.16 mm | 2.25 | 0.6923 | um | -69.2 % | 0.675 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc32 | 0.08 mm | 1.32 | 0.3432 | um | -74.0 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc32 | 0.12 mm | 1.32 | 0.5144 | um | -61.0 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_dry_vc32 | 0.16 mm | 1.61 | 0.6923 | um | -57.0 % | 0.483 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc16 | 0.08 mm | 1.38 | 0.3432 | um | -75.1 % | 0.414 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc16 | 0.12 mm | 1.44 | 0.5144 | um | -64.3 % | 0.432 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc16 | 0.16 mm | 1.72 | 0.6923 | um | -59.7 % | 0.516 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc24 | 0.08 mm | 1.34 | 0.3432 | um | -74.4 % | 0.402 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc24 | 0.12 mm | 1.32 | 0.5144 | um | -61.0 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc24 | 0.16 mm | 1.59 | 0.6923 | um | -56.5 % | 0.477 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc32 | 0.08 mm | 1.18 | 0.3432 | um | -70.9 % | 0.354 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc32 | 0.12 mm | 1.24 | 0.5144 | um | -58.5 % | 0.372 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_hpc_vc32 | 0.16 mm | 1.32 | 0.6923 | um | -47.6 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc16 | 0.08 mm | 1.24 | 0.3432 | um | -72.3 % | 0.372 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc16 | 0.12 mm | 1.3 | 0.5144 | um | -60.4 % | 0.39 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc16 | 0.16 mm | 1.42 | 0.6923 | um | -51.2 % | 0.426 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc24 | 0.08 mm | 0.96 | 0.3432 | um | -64.2 % | 0.288 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc24 | 0.12 mm | 1.22 | 0.5144 | um | -57.8 % | 0.366 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc24 | 0.16 mm | 1.32 | 0.6923 | um | -47.6 % | 0.396 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc32 | 0.08 mm | 0.82 | 0.3432 | um | -58.1 % | 0.246 | **no** | floor: corner r 0 mm, fz 0.08 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc32 | 0.12 mm | 1 | 0.5144 | um | -48.6 % | 0.3 | **no** | floor: corner r 0 mm, fz 0.12 mm, minor angle 1.00 deg, h_min 1.1 um |
+| Ra_rhpc_vc32 | 0.16 mm | 1.08 | 0.6923 | um | -35.9 % | 0.324 | **no** | floor: corner r 0 mm, fz 0.16 mm, minor angle 1.00 deg, h_min 1.1 um |
 
 ## shear_angle
 
@@ -2974,460 +2987,464 @@ Curve `Tc_f0.10` (pilot hole diameter D0 [mm] -> Nm): RMS abs. error 83.3 %, max
 ## spindle_growth
 
 * Budget: 30 % (relative error of the simulated thermal Z displacement of the tool relative to the table at the measured times (curve points) and of its plateau value, from a cold start at the case's speed).
-* Verdict: **fail** - only 0 of 4 cases within budget (0% < 80%); spindlegrowth-wei2023-vcenter55-ambient-cold misses by 3.24 tolerances (> 2).
+* Verdict: **fail** - only 0 of 4 cases within budget (0% < 80%); spindlegrowth-yang2024-vmc850-constant-speed misses by 29.55 tolerances (> 2).
 * Harness: `cnctwin.validation.harnesses.spindle.spindle_growth`.
-* Thermal's spindle body (first-order, Palmgren bearing heat) at the case's constant speeds from a cold start; the machine's spindle data are not published, so the model's own defaults and the database VMC's maximum speed are used (listed).
+* Thermal's spindle network (Palmgren-Harris bearing friction with the lubricant viscosity at the bearing temperature, motor losses, shaft / bearing sets / housing, growth from the shaft and housing temperatures and lengths) at the case's constant speeds from a cold start, minus the drift of the machine structure the head heats (the measured tool-to-table loop); the spindles are not described in the papers, so the model's 40-taper defaults are used (listed).
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 4 | 0/4 | 320 (0) | 92.8 % / 93.5 % / 92.8 % | 95.5 % | - | 5/320 | 3.24 (spindlegrowth-wei2023-vcenter55-ambient-cold) |
+| independent | 4 | 0/4 | 320 (0) | 107.4 % / 109.3 % / 107.4 % | 147.3 % | - | 0/320 | 29.5 (spindlegrowth-yang2024-vmc850-constant-speed) |
 
-**Failures and likely causes.** 0 of 4 independent cases within budget. Values within tolerance per case: spindlegrowth-wei2023-vcenter55-ambient-cold 0/68; spindlegrowth-wei2023-vcenter55-ambient-mid 0/71; spindlegrowth-wei2023-vcenter55-ambient-warm 0/69; spindlegrowth-yang2024-vmc850-constant-speed 9/112. None of the papers describes the spindle (drive, bearings, cooling, maximum speed), so every spindle parameter is a model default: the result measures how far the defaults are from these two machines, not the model's physics. A case with a named spindle and its data would test the model (GAP.md).
+**Failures and likely causes.** 0 of 4 independent cases within budget. Values within tolerance per case: spindlegrowth-wei2023-vcenter55-ambient-cold 0/68; spindlegrowth-wei2023-vcenter55-ambient-mid 0/71; spindlegrowth-wei2023-vcenter55-ambient-warm 0/69; spindlegrowth-yang2024-vmc850-constant-speed 27/112. None of the papers describes the spindle (drive, bearings, preload, lubrication, cooling), so the physical network runs on the model's 40-taper defaults: the comparison tests the physics (speed and ambient dependence through the bearing friction and the lubricant viscosity, the two time scales of shaft and housing, the structure's slow lift) with generic construction data, not a described spindle. A case with a named spindle and its bearing data would test the model directly (GAP.md).
 
 ### spindlegrowth-wei2023-vcenter55-ambient-cold
 
 * Source: `wei-2023-vcenter55-thermal-error`, Sect. 2.1-2.3, Tables 1-3 (Table 2: K1 3.7 degC initial ambient, 2.2 K rise; K3 6.2 degC, 3.8 K rise), Fig. 4 Z panel (curves K7, K1, K3, digitised) (measured, digitised, stated uncertainty 3 %).
 * File: `validation/cases/spindle_growth/spindlegrowth-wei2023-vcenter55-ambient-cold.yaml`; operation spindle_warmup; material `None`.
 * Validation class: **independent**.
-* Model chain: cnctwin.thermal.machine.spindle_models (first-order spindle body).
-* Settings: bearing_heat_at_max_W = 400, growth_at_max_speed_um = 20, growth_length_m = 0.25, max_rpm = 1.2e+04, speed_exponent = 1.667, step_s = 60, time_constant_min = 25.
-* Inputs the harness assumed: ambient of Z_thermal_error_K7_2000rpm = 8.4 degC (initial ambient not given: middle of the case's ambient band, case); maximum spindle speed = 12000 rpm (not stated: the database vertical machining centre haas-vf2ss, db/machines); spindle growth = 2e-05 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle time constant = 1500 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle bearing heat = 400 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case).
-* The measured Z error is the whole tool-to-table loop (spindle, headstock, column); the model is the spindle body only.
-* Result: 68 compared, 0 without prediction, 3 not compared; median abs. error 93.0 %, max 97.1 %; 0/68 within uncertainty; case **outside budget**; largest miss 3.24 tolerances.
-* Likely cause: mean signed error -92 %: generic spindle defaults (20 um at the assumed 12 000 rpm, 25 min) against a measured whole-machine loop; the heat scales as (n/n_max)^(5/3), so at 2000-6000 rpm the model's growth is a small fraction of its default maximum.
+* Model chain: cnctwin.thermal.spindle (network: bearings, motor, shaft, housing) -> cnctwin.thermal.machine.structure_model (column drift).
+* Settings: front_bearings = 3 x 70/110 mm, housing_length_mm = 350, housing_mass_kg = 180, lubrication = grease, model = network, nose_length_mm = 84, spindle_share_um_per_K = 4.691, step_s = 60, structure_sensitivity_um_per_K = 3.
+* Inputs the harness assumed: ambient of Z_thermal_error_K7_2000rpm = 8.4 degC, constant (initial ambient not given: middle of the case's ambient band; its course over the batch not given, case); spindle bearings = front 3 x angular-contact 70/110 mm, 15 deg, preload 299 N; rear 2 x 60/94 mm; grease (f0 2, base oil 22 mm2/s at 40 degC) (not stated (no spindle data in the source): the model's 40-taper default arrangement, db/models/thermal-machine.yaml); spindle drive = belt, 225 W no-load loss above 1500 rpm, 0.15 of it into the head (not stated: the model's default drive (a separate motor, as the instrumented spindle motor of the sources implies), db/models/thermal-machine.yaml); spindle shaft and housing = shaft 70 mm, nose to the fixed bearing 84 mm; housing 180 kg cast iron, 1.20 m2 exposed, growth length 350 mm, 8 W/K to the column (not stated: the model's 40-taper defaults, db/models/thermal-machine.yaml); spindle cooling = none (not stated: no cooling jacket, est); machine structure = 3 um/K for the whole loop, 7.7 um/K on the structure body (the spindle network's own 4.7 um/K added back), 1.61 MJ/K, time constant 4.0 h (not stated: the structure sensitivity of the database VMC haas-vf2ss, the model's default machine mass, db/machines, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case); ambient course of Z_thermal_error_K1_4000rpm = linear rise of 2.2 K over the batch (the case states the batch's rise, not its course, case); ambient course of Z_thermal_error_K3_6000rpm = linear rise of 3.8 K over the batch (the case states the batch's rise, not its course, case).
+* Database values used: haas-vf2ss thermal.structure_sensitivity_um_per_K (`est`); bearing friction factors f0, f1 (thermal-machine) (`harris-kotzalas-2007-bearings`).
+* The measured Z error is the whole tool-to-table loop: simulated as the spindle network's growth toward the table (shaft over its nose length, housing over its length to the fixed bearings) minus the lift of the machine structure (column) warmed by the ambient and the head. The ISO 230-3 test mandrel's own growth and the table side's drift other than the structure's are not modelled.
+* Result: 68 compared, 0 without prediction, 3 not compared; median abs. error 93.5 %, max 119.5 %; 0/68 within uncertainty; case **outside budget**; largest miss 3.98 tolerances.
+* Likely cause: mean signed error +90 %: the spindle is not described in the source, so the network runs on the model's 40-taper defaults (bearing arrangement, grease and its base-oil viscosity, housing mass, exposed area and growth length, no cooling); the bearing friction (Palmgren's f0 for grease) and the housing's exposed area and growth length each move the plateau by tens of per cent.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Z_growth_max | 2000 rpm | 34.8 | 1.01 | um | -97.1 % | 10.4 | **no** | 2000 rpm, maximum over 390 min |
-| Z_growth_max | 4000 rpm | 49.5 | 3.205 | um | -93.5 % | 14.8 | **no** | 4000 rpm, maximum over 450 min |
-| Z_growth_max | 6000 rpm | 58.2 | 6.3 | um | -89.2 % | 17.5 | **no** | 6000 rpm, maximum over 470 min |
+| Z_growth_max | 2000 rpm | 34.8 | 54.21 | um | +55.8 % | 10.4 | **no** | 2000 rpm, maximum over 390 min (at 292 min): spindle 57.5 um, structure lift 3.3 um |
+| Z_growth_max | 4000 rpm | 49.5 | 95.77 | um | +93.5 % | 14.8 | **no** | 4000 rpm, maximum over 450 min (at 219 min): spindle 103.6 um, structure lift 7.9 um |
+| Z_growth_max | 6000 rpm | 58.2 | 126.1 | um | +116.6 % | 17.5 | **no** | 6000 rpm, maximum over 470 min (at 198 min): spindle 136.3 um, structure lift 10.3 um |
 
-Curve `Z_thermal_error_K7_2000rpm` (time [min] -> um): RMS abs. error 96.6 %, max 97.1 % over 18 compared points.
+Curve `Z_thermal_error_K7_2000rpm` (time [min] -> um): RMS abs. error 57.8 %, max 67.5 % over 18 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K7_2000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K7_2000rpm | 30 min | 16.4 | 0.7055 | um | -95.7 % | 4.92 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 35 min | 18 | 0.7606 | um | -95.8 % | 5.4 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 40 min | 19.5 | 0.8057 | um | -95.9 % | 5.85 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 50 min | 22.4 | 0.8729 | um | -96.1 % | 6.72 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 60 min | 24.8 | 0.9179 | um | -96.3 % | 7.44 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 70 min | 26.7 | 0.9481 | um | -96.4 % | 8.01 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 80 min | 28.2 | 0.9684 | um | -96.6 % | 8.46 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 90 min | 29.6 | 0.9819 | um | -96.7 % | 8.88 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 100 min | 30.1 | 0.991 | um | -96.7 % | 9.03 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 120 min | 32.2 | 1.001 | um | -96.9 % | 9.66 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 140 min | 33.3 | 1.006 | um | -97.0 % | 9.99 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 160 min | 34 | 1.008 | um | -97.0 % | 10.2 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 180 min | 34.3 | 1.009 | um | -97.1 % | 10.3 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 200 min | 34.5 | 1.009 | um | -97.1 % | 10.3 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 300 min | 34.8 | 1.01 | um | -97.1 % | 10.4 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 330 min | 34.6 | 1.01 | um | -97.1 % | 10.4 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 360 min | 33.9 | 1.01 | um | -97.0 % | 10.2 | **no** | 2000 rpm |
-| Z_thermal_error_K7_2000rpm | 390 min | 33.1 | 1.01 | um | -97.0 % | 9.93 | **no** | 2000 rpm |
+| Z_thermal_error_K7_2000rpm | 30 min | 16.4 | 27.47 | um | +67.5 % | 4.92 | **no** | 2000 rpm: spindle 27.6 um, structure lift 0.1 um |
+| Z_thermal_error_K7_2000rpm | 35 min | 18 | 29.85 | um | +65.9 % | 5.4 | **no** | 2000 rpm: spindle 30.0 um, structure lift 0.2 um |
+| Z_thermal_error_K7_2000rpm | 40 min | 19.5 | 32 | um | +64.1 % | 5.85 | **no** | 2000 rpm: spindle 32.2 um, structure lift 0.2 um |
+| Z_thermal_error_K7_2000rpm | 50 min | 22.4 | 35.71 | um | +59.4 % | 6.72 | **no** | 2000 rpm: spindle 36.0 um, structure lift 0.3 um |
+| Z_thermal_error_K7_2000rpm | 60 min | 24.8 | 38.81 | um | +56.5 % | 7.44 | **no** | 2000 rpm: spindle 39.2 um, structure lift 0.4 um |
+| Z_thermal_error_K7_2000rpm | 70 min | 26.7 | 41.41 | um | +55.1 % | 8.01 | **no** | 2000 rpm: spindle 42.0 um, structure lift 0.6 um |
+| Z_thermal_error_K7_2000rpm | 80 min | 28.2 | 43.61 | um | +54.6 % | 8.46 | **no** | 2000 rpm: spindle 44.3 um, structure lift 0.7 um |
+| Z_thermal_error_K7_2000rpm | 90 min | 29.6 | 45.46 | um | +53.6 % | 8.88 | **no** | 2000 rpm: spindle 46.3 um, structure lift 0.8 um |
+| Z_thermal_error_K7_2000rpm | 100 min | 30.1 | 47.01 | um | +56.2 % | 9.03 | **no** | 2000 rpm: spindle 48.0 um, structure lift 1.0 um |
+| Z_thermal_error_K7_2000rpm | 120 min | 32.2 | 49.4 | um | +53.4 % | 9.66 | **no** | 2000 rpm: spindle 50.7 um, structure lift 1.3 um |
+| Z_thermal_error_K7_2000rpm | 140 min | 33.3 | 51.07 | um | +53.4 % | 9.99 | **no** | 2000 rpm: spindle 52.6 um, structure lift 1.5 um |
+| Z_thermal_error_K7_2000rpm | 160 min | 34 | 52.22 | um | +53.6 % | 10.2 | **no** | 2000 rpm: spindle 54.0 um, structure lift 1.8 um |
+| Z_thermal_error_K7_2000rpm | 180 min | 34.3 | 53 | um | +54.5 % | 10.3 | **no** | 2000 rpm: spindle 55.1 um, structure lift 2.1 um |
+| Z_thermal_error_K7_2000rpm | 200 min | 34.5 | 53.52 | um | +55.1 % | 10.3 | **no** | 2000 rpm: spindle 55.9 um, structure lift 2.3 um |
+| Z_thermal_error_K7_2000rpm | 300 min | 34.8 | 54.2 | um | +55.8 % | 10.4 | **no** | 2000 rpm: spindle 57.6 um, structure lift 3.4 um |
+| Z_thermal_error_K7_2000rpm | 330 min | 34.6 | 54.16 | um | +56.5 % | 10.4 | **no** | 2000 rpm: spindle 57.8 um, structure lift 3.6 um |
+| Z_thermal_error_K7_2000rpm | 360 min | 33.9 | 54.08 | um | +59.5 % | 10.2 | **no** | 2000 rpm: spindle 57.9 um, structure lift 3.8 um |
+| Z_thermal_error_K7_2000rpm | 390 min | 33.1 | 53.99 | um | +63.1 % | 9.93 | **no** | 2000 rpm: spindle 58.0 um, structure lift 4.0 um |
 
-Curve `Z_thermal_error_K1_4000rpm` (time [min] -> um): RMS abs. error 93.1 %, max 93.5 % over 23 compared points.
+Curve `Z_thermal_error_K1_4000rpm` (time [min] -> um): RMS abs. error 90.7 %, max 102.0 % over 23 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K1_4000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K1_4000rpm | 30 min | 30.4 | 2.24 | um | -92.6 % | 9.12 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 35 min | 32.3 | 2.415 | um | -92.5 % | 9.69 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 40 min | 34.1 | 2.558 | um | -92.5 % | 10.2 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 50 min | 37.7 | 2.771 | um | -92.6 % | 11.3 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 60 min | 40.1 | 2.914 | um | -92.7 % | 12 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 70 min | 42.3 | 3.01 | um | -92.9 % | 12.7 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 80 min | 44 | 3.074 | um | -93.0 % | 13.2 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 90 min | 45.3 | 3.117 | um | -93.1 % | 13.6 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 100 min | 46.3 | 3.146 | um | -93.2 % | 13.9 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 120 min | 47.7 | 3.179 | um | -93.3 % | 14.3 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 140 min | 48.6 | 3.193 | um | -93.4 % | 14.6 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 160 min | 49.2 | 3.2 | um | -93.5 % | 14.8 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 180 min | 49.5 | 3.203 | um | -93.5 % | 14.8 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 200 min | 49.3 | 3.204 | um | -93.5 % | 14.8 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 220 min | 49.5 | 3.205 | um | -93.5 % | 14.8 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 240 min | 49.2 | 3.205 | um | -93.5 % | 14.8 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 270 min | 48.8 | 3.205 | um | -93.4 % | 14.6 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 300 min | 48.4 | 3.205 | um | -93.4 % | 14.5 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 330 min | 47.7 | 3.205 | um | -93.3 % | 14.3 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 360 min | 47.3 | 3.205 | um | -93.2 % | 14.2 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 390 min | 46.2 | 3.205 | um | -93.1 % | 13.9 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 420 min | 45.8 | 3.205 | um | -93.0 % | 13.7 | **no** | 4000 rpm |
-| Z_thermal_error_K1_4000rpm | 450 min | 45.4 | 3.205 | um | -92.9 % | 13.6 | **no** | 4000 rpm |
+| Z_thermal_error_K1_4000rpm | 30 min | 30.4 | 52.82 | um | +73.7 % | 9.12 | **no** | 4000 rpm: spindle 53.2 um, structure lift 0.3 um |
+| Z_thermal_error_K1_4000rpm | 35 min | 32.3 | 57.16 | um | +77.0 % | 9.69 | **no** | 4000 rpm: spindle 57.6 um, structure lift 0.5 um |
+| Z_thermal_error_K1_4000rpm | 40 min | 34.1 | 61.09 | um | +79.1 % | 10.2 | **no** | 4000 rpm: spindle 61.7 um, structure lift 0.6 um |
+| Z_thermal_error_K1_4000rpm | 50 min | 37.7 | 67.86 | um | +80.0 % | 11.3 | **no** | 4000 rpm: spindle 68.7 um, structure lift 0.9 um |
+| Z_thermal_error_K1_4000rpm | 60 min | 40.1 | 73.42 | um | +83.1 % | 12 | **no** | 4000 rpm: spindle 74.6 um, structure lift 1.2 um |
+| Z_thermal_error_K1_4000rpm | 70 min | 42.3 | 77.99 | um | +84.4 % | 12.7 | **no** | 4000 rpm: spindle 79.5 um, structure lift 1.5 um |
+| Z_thermal_error_K1_4000rpm | 80 min | 44 | 81.72 | um | +85.7 % | 13.2 | **no** | 4000 rpm: spindle 83.6 um, structure lift 1.9 um |
+| Z_thermal_error_K1_4000rpm | 90 min | 45.3 | 84.76 | um | +87.1 % | 13.6 | **no** | 4000 rpm: spindle 87.0 um, structure lift 2.3 um |
+| Z_thermal_error_K1_4000rpm | 100 min | 46.3 | 87.23 | um | +88.4 % | 13.9 | **no** | 4000 rpm: spindle 89.9 um, structure lift 2.7 um |
+| Z_thermal_error_K1_4000rpm | 120 min | 47.7 | 90.83 | um | +90.4 % | 14.3 | **no** | 4000 rpm: spindle 94.4 um, structure lift 3.5 um |
+| Z_thermal_error_K1_4000rpm | 140 min | 48.6 | 93.12 | um | +91.6 % | 14.6 | **no** | 4000 rpm: spindle 97.5 um, structure lift 4.4 um |
+| Z_thermal_error_K1_4000rpm | 160 min | 49.2 | 94.51 | um | +92.1 % | 14.8 | **no** | 4000 rpm: spindle 99.8 um, structure lift 5.3 um |
+| Z_thermal_error_K1_4000rpm | 180 min | 49.5 | 95.3 | um | +92.5 % | 14.8 | **no** | 4000 rpm: spindle 101.5 um, structure lift 6.2 um |
+| Z_thermal_error_K1_4000rpm | 200 min | 49.3 | 95.67 | um | +94.1 % | 14.8 | **no** | 4000 rpm: spindle 102.7 um, structure lift 7.0 um |
+| Z_thermal_error_K1_4000rpm | 220 min | 49.5 | 95.77 | um | +93.5 % | 14.8 | **no** | 4000 rpm: spindle 103.7 um, structure lift 7.9 um |
+| Z_thermal_error_K1_4000rpm | 240 min | 49.2 | 95.69 | um | +94.5 % | 14.8 | **no** | 4000 rpm: spindle 104.5 um, structure lift 8.8 um |
+| Z_thermal_error_K1_4000rpm | 270 min | 48.8 | 95.34 | um | +95.4 % | 14.6 | **no** | 4000 rpm: spindle 105.4 um, structure lift 10.1 um |
+| Z_thermal_error_K1_4000rpm | 300 min | 48.4 | 94.84 | um | +96.0 % | 14.5 | **no** | 4000 rpm: spindle 106.2 um, structure lift 11.4 um |
+| Z_thermal_error_K1_4000rpm | 330 min | 47.7 | 94.26 | um | +97.6 % | 14.3 | **no** | 4000 rpm: spindle 106.9 um, structure lift 12.6 um |
+| Z_thermal_error_K1_4000rpm | 360 min | 47.3 | 93.64 | um | +98.0 % | 14.2 | **no** | 4000 rpm: spindle 107.5 um, structure lift 13.9 um |
+| Z_thermal_error_K1_4000rpm | 390 min | 46.2 | 93.01 | um | +101.3 % | 13.9 | **no** | 4000 rpm: spindle 108.1 um, structure lift 15.1 um |
+| Z_thermal_error_K1_4000rpm | 420 min | 45.8 | 92.37 | um | +101.7 % | 13.7 | **no** | 4000 rpm: spindle 108.7 um, structure lift 16.3 um |
+| Z_thermal_error_K1_4000rpm | 450 min | 45.4 | 91.72 | um | +102.0 % | 13.6 | **no** | 4000 rpm: spindle 109.2 um, structure lift 17.5 um |
 
-Curve `Z_thermal_error_K3_6000rpm` (time [min] -> um): RMS abs. error 88.7 %, max 89.2 % over 24 compared points.
+Curve `Z_thermal_error_K3_6000rpm` (time [min] -> um): RMS abs. error 113.0 %, max 119.5 % over 24 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K3_6000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K3_6000rpm | 30 min | 37.4 | 4.402 | um | -88.2 % | 11.2 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 35 min | 39.1 | 4.746 | um | -87.9 % | 11.7 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 40 min | 41.1 | 5.028 | um | -87.8 % | 12.3 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 50 min | 45.7 | 5.447 | um | -88.1 % | 13.7 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 60 min | 48.7 | 5.728 | um | -88.2 % | 14.6 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 70 min | 50.9 | 5.917 | um | -88.4 % | 15.3 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 80 min | 52.8 | 6.043 | um | -88.6 % | 15.8 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 90 min | 54.1 | 6.127 | um | -88.7 % | 16.2 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 100 min | 55.3 | 6.184 | um | -88.8 % | 16.6 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 120 min | 56.6 | 6.248 | um | -89.0 % | 17 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 140 min | 57.3 | 6.276 | um | -89.0 % | 17.2 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 160 min | 58.1 | 6.289 | um | -89.2 % | 17.4 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 180 min | 58.2 | 6.295 | um | -89.2 % | 17.5 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 200 min | 58.1 | 6.297 | um | -89.2 % | 17.4 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 220 min | 58 | 6.299 | um | -89.1 % | 17.4 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 240 min | 57.8 | 6.299 | um | -89.1 % | 17.3 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 270 min | 57.4 | 6.299 | um | -89.0 % | 17.2 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 300 min | 56.8 | 6.3 | um | -88.9 % | 17 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 330 min | 56.1 | 6.3 | um | -88.8 % | 16.8 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 360 min | 55.9 | 6.3 | um | -88.7 % | 16.8 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 390 min | 55.5 | 6.3 | um | -88.6 % | 16.6 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 420 min | 55.1 | 6.3 | um | -88.6 % | 16.5 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 450 min | 54.1 | 6.3 | um | -88.4 % | 16.2 | **no** | 6000 rpm |
-| Z_thermal_error_K3_6000rpm | 470 min | 54 | 6.3 | um | -88.3 % | 16.2 | **no** | 6000 rpm |
+| Z_thermal_error_K3_6000rpm | 30 min | 37.4 | 72.36 | um | +93.5 % | 11.2 | **no** | 6000 rpm: spindle 72.9 um, structure lift 0.5 um |
+| Z_thermal_error_K3_6000rpm | 35 min | 39.1 | 78.3 | um | +100.3 % | 11.7 | **no** | 6000 rpm: spindle 79.0 um, structure lift 0.7 um |
+| Z_thermal_error_K3_6000rpm | 40 min | 41.1 | 83.64 | um | +103.5 % | 12.3 | **no** | 6000 rpm: spindle 84.5 um, structure lift 0.9 um |
+| Z_thermal_error_K3_6000rpm | 50 min | 45.7 | 92.74 | um | +102.9 % | 13.7 | **no** | 6000 rpm: spindle 94.0 um, structure lift 1.3 um |
+| Z_thermal_error_K3_6000rpm | 60 min | 48.7 | 100.1 | um | +105.5 % | 14.6 | **no** | 6000 rpm: spindle 101.8 um, structure lift 1.8 um |
+| Z_thermal_error_K3_6000rpm | 70 min | 50.9 | 106 | um | +108.2 % | 15.3 | **no** | 6000 rpm: spindle 108.2 um, structure lift 2.3 um |
+| Z_thermal_error_K3_6000rpm | 80 min | 52.8 | 110.7 | um | +109.6 % | 15.8 | **no** | 6000 rpm: spindle 113.5 um, structure lift 2.8 um |
+| Z_thermal_error_K3_6000rpm | 90 min | 54.1 | 114.4 | um | +111.5 % | 16.2 | **no** | 6000 rpm: spindle 117.8 um, structure lift 3.4 um |
+| Z_thermal_error_K3_6000rpm | 100 min | 55.3 | 117.4 | um | +112.3 % | 16.6 | **no** | 6000 rpm: spindle 121.4 um, structure lift 4.0 um |
+| Z_thermal_error_K3_6000rpm | 120 min | 56.6 | 121.5 | um | +114.7 % | 17 | **no** | 6000 rpm: spindle 126.7 um, structure lift 5.2 um |
+| Z_thermal_error_K3_6000rpm | 140 min | 57.3 | 124 | um | +116.3 % | 17.2 | **no** | 6000 rpm: spindle 130.5 um, structure lift 6.5 um |
+| Z_thermal_error_K3_6000rpm | 160 min | 58.1 | 125.3 | um | +115.7 % | 17.4 | **no** | 6000 rpm: spindle 133.1 um, structure lift 7.8 um |
+| Z_thermal_error_K3_6000rpm | 180 min | 58.2 | 125.9 | um | +116.4 % | 17.5 | **no** | 6000 rpm: spindle 135.0 um, structure lift 9.1 um |
+| Z_thermal_error_K3_6000rpm | 200 min | 58.1 | 126.1 | um | +117.0 % | 17.4 | **no** | 6000 rpm: spindle 136.5 um, structure lift 10.4 um |
+| Z_thermal_error_K3_6000rpm | 220 min | 58 | 125.9 | um | +117.1 % | 17.4 | **no** | 6000 rpm: spindle 137.6 um, structure lift 11.7 um |
+| Z_thermal_error_K3_6000rpm | 240 min | 57.8 | 125.5 | um | +117.2 % | 17.3 | **no** | 6000 rpm: spindle 138.6 um, structure lift 13.0 um |
+| Z_thermal_error_K3_6000rpm | 270 min | 57.4 | 124.8 | um | +117.4 % | 17.2 | **no** | 6000 rpm: spindle 139.8 um, structure lift 15.0 um |
+| Z_thermal_error_K3_6000rpm | 300 min | 56.8 | 123.9 | um | +118.1 % | 17 | **no** | 6000 rpm: spindle 140.8 um, structure lift 16.9 um |
+| Z_thermal_error_K3_6000rpm | 330 min | 56.1 | 122.9 | um | +119.0 % | 16.8 | **no** | 6000 rpm: spindle 141.7 um, structure lift 18.8 um |
+| Z_thermal_error_K3_6000rpm | 360 min | 55.9 | 121.9 | um | +118.0 % | 16.8 | **no** | 6000 rpm: spindle 142.6 um, structure lift 20.8 um |
+| Z_thermal_error_K3_6000rpm | 390 min | 55.5 | 120.8 | um | +117.7 % | 16.6 | **no** | 6000 rpm: spindle 143.5 um, structure lift 22.7 um |
+| Z_thermal_error_K3_6000rpm | 420 min | 55.1 | 119.8 | um | +117.4 % | 16.5 | **no** | 6000 rpm: spindle 144.3 um, structure lift 24.6 um |
+| Z_thermal_error_K3_6000rpm | 450 min | 54.1 | 118.7 | um | +119.5 % | 16.2 | **no** | 6000 rpm: spindle 145.2 um, structure lift 26.5 um |
+| Z_thermal_error_K3_6000rpm | 470 min | 54 | 118 | um | +118.6 % | 16.2 | **no** | 6000 rpm: spindle 145.8 um, structure lift 27.7 um |
 
 ### spindlegrowth-wei2023-vcenter55-ambient-mid
 
 * Source: `wei-2023-vcenter55-thermal-error`, Sect. 2.1-2.3, Tables 1-3, Fig. 4 Z panel (curves K30, K22, K19, digitised) (measured, digitised, stated uncertainty 3 %).
 * File: `validation/cases/spindle_growth/spindlegrowth-wei2023-vcenter55-ambient-mid.yaml`; operation spindle_warmup; material `None`.
 * Validation class: **independent**.
-* Model chain: cnctwin.thermal.machine.spindle_models (first-order spindle body).
-* Settings: bearing_heat_at_max_W = 400, growth_at_max_speed_um = 20, growth_length_m = 0.25, max_rpm = 1.2e+04, speed_exponent = 1.667, step_s = 60, time_constant_min = 25.
-* Inputs the harness assumed: ambient of Z_thermal_error_K30_2000rpm = 17.9 degC (initial ambient not given: middle of the case's ambient band, case); maximum spindle speed = 12000 rpm (not stated: the database vertical machining centre haas-vf2ss, db/machines); spindle growth = 2e-05 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle time constant = 1500 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle bearing heat = 400 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case); ambient of Z_thermal_error_K22_4000rpm = 17.9 degC (initial ambient not given: middle of the case's ambient band, case); ambient of Z_thermal_error_K19_6000rpm = 17.9 degC (initial ambient not given: middle of the case's ambient band, case).
-* The measured Z error is the whole tool-to-table loop (spindle, headstock, column); the model is the spindle body only.
-* Result: 71 compared, 0 without prediction, 3 not compared; median abs. error 91.6 %, max 95.9 %; 0/71 within uncertainty; case **outside budget**; largest miss 3.2 tolerances.
-* Likely cause: mean signed error -91 %: generic spindle defaults (20 um at the assumed 12 000 rpm, 25 min) against a measured whole-machine loop; the heat scales as (n/n_max)^(5/3), so at 2000-6000 rpm the model's growth is a small fraction of its default maximum.
+* Model chain: cnctwin.thermal.spindle (network: bearings, motor, shaft, housing) -> cnctwin.thermal.machine.structure_model (column drift).
+* Settings: front_bearings = 3 x 70/110 mm, housing_length_mm = 350, housing_mass_kg = 180, lubrication = grease, model = network, nose_length_mm = 84, spindle_share_um_per_K = 4.691, step_s = 60, structure_sensitivity_um_per_K = 3.
+* Inputs the harness assumed: ambient of Z_thermal_error_K30_2000rpm = 17.9 degC, constant (initial ambient not given: middle of the case's ambient band; its course over the batch not given, case); spindle bearings = front 3 x angular-contact 70/110 mm, 15 deg, preload 299 N; rear 2 x 60/94 mm; grease (f0 2, base oil 22 mm2/s at 40 degC) (not stated (no spindle data in the source): the model's 40-taper default arrangement, db/models/thermal-machine.yaml); spindle drive = belt, 225 W no-load loss above 1500 rpm, 0.15 of it into the head (not stated: the model's default drive (a separate motor, as the instrumented spindle motor of the sources implies), db/models/thermal-machine.yaml); spindle shaft and housing = shaft 70 mm, nose to the fixed bearing 84 mm; housing 180 kg cast iron, 1.20 m2 exposed, growth length 350 mm, 8 W/K to the column (not stated: the model's 40-taper defaults, db/models/thermal-machine.yaml); spindle cooling = none (not stated: no cooling jacket, est); machine structure = 3 um/K for the whole loop, 7.7 um/K on the structure body (the spindle network's own 4.7 um/K added back), 1.61 MJ/K, time constant 4.0 h (not stated: the structure sensitivity of the database VMC haas-vf2ss, the model's default machine mass, db/machines, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case); ambient of Z_thermal_error_K22_4000rpm = 17.9 degC, constant (initial ambient not given: middle of the case's ambient band; its course over the batch not given, case); ambient of Z_thermal_error_K19_6000rpm = 17.9 degC, constant (initial ambient not given: middle of the case's ambient band; its course over the batch not given, case).
+* Database values used: haas-vf2ss thermal.structure_sensitivity_um_per_K (`est`); bearing friction factors f0, f1 (thermal-machine) (`harris-kotzalas-2007-bearings`).
+* The measured Z error is the whole tool-to-table loop: simulated as the spindle network's growth toward the table (shaft over its nose length, housing over its length to the fixed bearings) minus the lift of the machine structure (column) warmed by the ambient and the head. The ISO 230-3 test mandrel's own growth and the table side's drift other than the structure's are not modelled.
+* Result: 71 compared, 0 without prediction, 3 not compared; median abs. error 110.3 %, max 151.5 %; 0/71 within uncertainty; case **outside budget**; largest miss 5.05 tolerances.
+* Likely cause: mean signed error +117 %: the spindle is not described in the source, so the network runs on the model's 40-taper defaults (bearing arrangement, grease and its base-oil viscosity, housing mass, exposed area and growth length, no cooling); the bearing friction (Palmgren's f0 for grease) and the housing's exposed area and growth length each move the plateau by tens of per cent.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Z_growth_max | 2000 rpm | 24.4 | 1.01 | um | -95.9 % | 7.32 | **no** | 2000 rpm, maximum over 420 min |
-| Z_growth_max | 4000 rpm | 39.5 | 3.205 | um | -91.9 % | 11.8 | **no** | 4000 rpm, maximum over 450 min |
-| Z_growth_max | 6000 rpm | 47.8 | 6.3 | um | -86.8 % | 14.3 | **no** | 6000 rpm, maximum over 450 min |
+| Z_growth_max | 2000 rpm | 24.4 | 47.55 | um | +94.9 % | 7.32 | **no** | 2000 rpm, maximum over 420 min (at 295 min): spindle 50.5 um, structure lift 2.9 um |
+| Z_growth_max | 4000 rpm | 39.5 | 82.69 | um | +109.3 % | 11.8 | **no** | 4000 rpm, maximum over 450 min (at 250 min): spindle 87.5 um, structure lift 4.8 um |
+| Z_growth_max | 6000 rpm | 47.8 | 113.6 | um | +137.7 % | 14.3 | **no** | 6000 rpm, maximum over 450 min (at 226 min): spindle 119.9 um, structure lift 6.3 um |
 
-Curve `Z_thermal_error_K30_2000rpm` (time [min] -> um): RMS abs. error 95.1 %, max 95.9 % over 22 compared points.
+Curve `Z_thermal_error_K30_2000rpm` (time [min] -> um): RMS abs. error 104.8 %, max 132.5 % over 22 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K30_2000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K30_2000rpm | 30 min | 10.2 | 0.7055 | um | -93.1 % | 3.06 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 35 min | 11.5 | 0.7606 | um | -93.4 % | 3.45 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 40 min | 12.4 | 0.8057 | um | -93.5 % | 3.72 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 50 min | 14.9 | 0.8729 | um | -94.1 % | 4.47 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 60 min | 16 | 0.9179 | um | -94.3 % | 4.8 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 70 min | 17.2 | 0.9481 | um | -94.5 % | 5.16 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 80 min | 18.6 | 0.9684 | um | -94.8 % | 5.58 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 90 min | 19.6 | 0.9819 | um | -95.0 % | 5.88 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 100 min | 20.5 | 0.991 | um | -95.2 % | 6.15 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 120 min | 21.6 | 1.001 | um | -95.4 % | 6.48 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 140 min | 22.7 | 1.006 | um | -95.6 % | 6.81 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 160 min | 23.3 | 1.008 | um | -95.7 % | 6.99 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 180 min | 23.7 | 1.009 | um | -95.7 % | 7.11 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 200 min | 23.8 | 1.009 | um | -95.8 % | 7.14 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 220 min | 24.4 | 1.009 | um | -95.9 % | 7.32 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 240 min | 24 | 1.009 | um | -95.8 % | 7.2 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 270 min | 24.2 | 1.009 | um | -95.8 % | 7.26 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 300 min | 24.1 | 1.01 | um | -95.8 % | 7.23 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 330 min | 24.3 | 1.01 | um | -95.8 % | 7.29 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 360 min | 23.8 | 1.01 | um | -95.8 % | 7.14 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 390 min | 23.2 | 1.01 | um | -95.6 % | 6.96 | **no** | 2000 rpm |
-| Z_thermal_error_K30_2000rpm | 420 min | 22.8 | 1.01 | um | -95.6 % | 6.84 | **no** | 2000 rpm |
+| Z_thermal_error_K30_2000rpm | 30 min | 10.2 | 23.71 | um | +132.5 % | 3.06 | **no** | 2000 rpm: spindle 23.8 um, structure lift 0.1 um |
+| Z_thermal_error_K30_2000rpm | 35 min | 11.5 | 25.82 | um | +124.6 % | 3.45 | **no** | 2000 rpm: spindle 26.0 um, structure lift 0.1 um |
+| Z_thermal_error_K30_2000rpm | 40 min | 12.4 | 27.72 | um | +123.6 % | 3.72 | **no** | 2000 rpm: spindle 27.9 um, structure lift 0.2 um |
+| Z_thermal_error_K30_2000rpm | 50 min | 14.9 | 31.01 | um | +108.1 % | 4.47 | **no** | 2000 rpm: spindle 31.3 um, structure lift 0.3 um |
+| Z_thermal_error_K30_2000rpm | 60 min | 16 | 33.76 | um | +111.0 % | 4.8 | **no** | 2000 rpm: spindle 34.1 um, structure lift 0.4 um |
+| Z_thermal_error_K30_2000rpm | 70 min | 17.2 | 36.07 | um | +109.7 % | 5.16 | **no** | 2000 rpm: spindle 36.6 um, structure lift 0.5 um |
+| Z_thermal_error_K30_2000rpm | 80 min | 18.6 | 38.03 | um | +104.4 % | 5.58 | **no** | 2000 rpm: spindle 38.6 um, structure lift 0.6 um |
+| Z_thermal_error_K30_2000rpm | 90 min | 19.6 | 39.67 | um | +102.4 % | 5.88 | **no** | 2000 rpm: spindle 40.4 um, structure lift 0.7 um |
+| Z_thermal_error_K30_2000rpm | 100 min | 20.5 | 41.05 | um | +100.3 % | 6.15 | **no** | 2000 rpm: spindle 41.9 um, structure lift 0.8 um |
+| Z_thermal_error_K30_2000rpm | 120 min | 21.6 | 43.19 | um | +100.0 % | 6.48 | **no** | 2000 rpm: spindle 44.3 um, structure lift 1.1 um |
+| Z_thermal_error_K30_2000rpm | 140 min | 22.7 | 44.69 | um | +96.9 % | 6.81 | **no** | 2000 rpm: spindle 46.0 um, structure lift 1.3 um |
+| Z_thermal_error_K30_2000rpm | 160 min | 23.3 | 45.73 | um | +96.3 % | 6.99 | **no** | 2000 rpm: spindle 47.3 um, structure lift 1.6 um |
+| Z_thermal_error_K30_2000rpm | 180 min | 23.7 | 46.43 | um | +95.9 % | 7.11 | **no** | 2000 rpm: spindle 48.3 um, structure lift 1.8 um |
+| Z_thermal_error_K30_2000rpm | 200 min | 23.8 | 46.9 | um | +97.1 % | 7.14 | **no** | 2000 rpm: spindle 48.9 um, structure lift 2.0 um |
+| Z_thermal_error_K30_2000rpm | 220 min | 24.4 | 47.2 | um | +93.5 % | 7.32 | **no** | 2000 rpm: spindle 49.5 um, structure lift 2.3 um |
+| Z_thermal_error_K30_2000rpm | 240 min | 24 | 47.39 | um | +97.5 % | 7.2 | **no** | 2000 rpm: spindle 49.8 um, structure lift 2.4 um |
+| Z_thermal_error_K30_2000rpm | 270 min | 24.2 | 47.52 | um | +96.4 % | 7.26 | **no** | 2000 rpm: spindle 50.2 um, structure lift 2.7 um |
+| Z_thermal_error_K30_2000rpm | 300 min | 24.1 | 47.55 | um | +97.3 % | 7.23 | **no** | 2000 rpm: spindle 50.5 um, structure lift 3.0 um |
+| Z_thermal_error_K30_2000rpm | 330 min | 24.3 | 47.51 | um | +95.5 % | 7.29 | **no** | 2000 rpm: spindle 50.7 um, structure lift 3.2 um |
+| Z_thermal_error_K30_2000rpm | 360 min | 23.8 | 47.45 | um | +99.4 % | 7.14 | **no** | 2000 rpm: spindle 50.8 um, structure lift 3.4 um |
+| Z_thermal_error_K30_2000rpm | 390 min | 23.2 | 47.37 | um | +104.2 % | 6.96 | **no** | 2000 rpm: spindle 50.9 um, structure lift 3.5 um |
+| Z_thermal_error_K30_2000rpm | 420 min | 22.8 | 47.29 | um | +107.4 % | 6.84 | **no** | 2000 rpm: spindle 51.0 um, structure lift 3.7 um |
 
-Curve `Z_thermal_error_K22_4000rpm` (time [min] -> um): RMS abs. error 91.2 %, max 91.9 % over 23 compared points.
+Curve `Z_thermal_error_K22_4000rpm` (time [min] -> um): RMS abs. error 109.3 %, max 119.4 % over 23 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K22_4000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K22_4000rpm | 30 min | 21.7 | 2.24 | um | -89.7 % | 6.51 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 35 min | 23.7 | 2.415 | um | -89.8 % | 7.11 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 40 min | 25 | 2.558 | um | -89.8 % | 7.5 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 50 min | 27.7 | 2.771 | um | -90.0 % | 8.31 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 60 min | 30 | 2.914 | um | -90.3 % | 9 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 70 min | 32 | 3.01 | um | -90.6 % | 9.6 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 80 min | 33.5 | 3.074 | um | -90.8 % | 10 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 90 min | 34.4 | 3.117 | um | -90.9 % | 10.3 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 100 min | 35.6 | 3.146 | um | -91.2 % | 10.7 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 120 min | 37.4 | 3.179 | um | -91.5 % | 11.2 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 140 min | 38.6 | 3.193 | um | -91.7 % | 11.6 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 160 min | 39.1 | 3.2 | um | -91.8 % | 11.7 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 180 min | 39.2 | 3.203 | um | -91.8 % | 11.8 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 200 min | 39.5 | 3.204 | um | -91.9 % | 11.8 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 220 min | 39.5 | 3.205 | um | -91.9 % | 11.8 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 240 min | 39.3 | 3.205 | um | -91.8 % | 11.8 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 270 min | 39.3 | 3.205 | um | -91.8 % | 11.8 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 300 min | 39 | 3.205 | um | -91.8 % | 11.7 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 330 min | 38.9 | 3.205 | um | -91.8 % | 11.7 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 360 min | 38.6 | 3.205 | um | -91.7 % | 11.6 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 390 min | 38.3 | 3.205 | um | -91.6 % | 11.5 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 420 min | 38.3 | 3.205 | um | -91.6 % | 11.5 | **no** | 4000 rpm |
-| Z_thermal_error_K22_4000rpm | 450 min | 37.2 | 3.205 | um | -91.4 % | 11.2 | **no** | 4000 rpm |
+| Z_thermal_error_K22_4000rpm | 30 min | 21.7 | 44.41 | um | +104.6 % | 6.51 | **no** | 4000 rpm: spindle 44.6 um, structure lift 0.2 um |
+| Z_thermal_error_K22_4000rpm | 35 min | 23.7 | 48.16 | um | +103.2 % | 7.11 | **no** | 4000 rpm: spindle 48.5 um, structure lift 0.3 um |
+| Z_thermal_error_K22_4000rpm | 40 min | 25 | 51.55 | um | +106.2 % | 7.5 | **no** | 4000 rpm: spindle 51.9 um, structure lift 0.4 um |
+| Z_thermal_error_K22_4000rpm | 50 min | 27.7 | 57.41 | um | +107.3 % | 8.31 | **no** | 4000 rpm: spindle 58.0 um, structure lift 0.6 um |
+| Z_thermal_error_K22_4000rpm | 60 min | 30 | 62.24 | um | +107.5 % | 9 | **no** | 4000 rpm: spindle 63.0 um, structure lift 0.8 um |
+| Z_thermal_error_K22_4000rpm | 70 min | 32 | 66.22 | um | +106.9 % | 9.6 | **no** | 4000 rpm: spindle 67.2 um, structure lift 1.0 um |
+| Z_thermal_error_K22_4000rpm | 80 min | 33.5 | 69.49 | um | +107.4 % | 10 | **no** | 4000 rpm: spindle 70.7 um, structure lift 1.2 um |
+| Z_thermal_error_K22_4000rpm | 90 min | 34.4 | 72.17 | um | +109.8 % | 10.3 | **no** | 4000 rpm: spindle 73.6 um, structure lift 1.4 um |
+| Z_thermal_error_K22_4000rpm | 100 min | 35.6 | 74.36 | um | +108.9 % | 10.7 | **no** | 4000 rpm: spindle 76.0 um, structure lift 1.7 um |
+| Z_thermal_error_K22_4000rpm | 120 min | 37.4 | 77.58 | um | +107.4 % | 11.2 | **no** | 4000 rpm: spindle 79.7 um, structure lift 2.2 um |
+| Z_thermal_error_K22_4000rpm | 140 min | 38.6 | 79.68 | um | +106.4 % | 11.6 | **no** | 4000 rpm: spindle 82.3 um, structure lift 2.6 um |
+| Z_thermal_error_K22_4000rpm | 160 min | 39.1 | 81.02 | um | +107.2 % | 11.7 | **no** | 4000 rpm: spindle 84.1 um, structure lift 3.1 um |
+| Z_thermal_error_K22_4000rpm | 180 min | 39.2 | 81.85 | um | +108.8 % | 11.8 | **no** | 4000 rpm: spindle 85.4 um, structure lift 3.5 um |
+| Z_thermal_error_K22_4000rpm | 200 min | 39.5 | 82.33 | um | +108.4 % | 11.8 | **no** | 4000 rpm: spindle 86.2 um, structure lift 3.9 um |
+| Z_thermal_error_K22_4000rpm | 220 min | 39.5 | 82.58 | um | +109.1 % | 11.8 | **no** | 4000 rpm: spindle 86.9 um, structure lift 4.3 um |
+| Z_thermal_error_K22_4000rpm | 240 min | 39.3 | 82.68 | um | +110.4 % | 11.8 | **no** | 4000 rpm: spindle 87.3 um, structure lift 4.6 um |
+| Z_thermal_error_K22_4000rpm | 270 min | 39.3 | 82.66 | um | +110.3 % | 11.8 | **no** | 4000 rpm: spindle 87.8 um, structure lift 5.1 um |
+| Z_thermal_error_K22_4000rpm | 300 min | 39 | 82.53 | um | +111.6 % | 11.7 | **no** | 4000 rpm: spindle 88.0 um, structure lift 5.5 um |
+| Z_thermal_error_K22_4000rpm | 330 min | 38.9 | 82.35 | um | +111.7 % | 11.7 | **no** | 4000 rpm: spindle 88.2 um, structure lift 5.9 um |
+| Z_thermal_error_K22_4000rpm | 360 min | 38.6 | 82.16 | um | +112.8 % | 11.6 | **no** | 4000 rpm: spindle 88.4 um, structure lift 6.2 um |
+| Z_thermal_error_K22_4000rpm | 390 min | 38.3 | 81.97 | um | +114.0 % | 11.5 | **no** | 4000 rpm: spindle 88.5 um, structure lift 6.5 um |
+| Z_thermal_error_K22_4000rpm | 420 min | 38.3 | 81.79 | um | +113.6 % | 11.5 | **no** | 4000 rpm: spindle 88.5 um, structure lift 6.8 um |
+| Z_thermal_error_K22_4000rpm | 450 min | 37.2 | 81.63 | um | +119.4 % | 11.2 | **no** | 4000 rpm: spindle 88.6 um, structure lift 7.0 um |
 
-Curve `Z_thermal_error_K19_6000rpm` (time [min] -> um): RMS abs. error 86.0 %, max 86.8 % over 23 compared points.
+Curve `Z_thermal_error_K19_6000rpm` (time [min] -> um): RMS abs. error 136.6 %, max 151.5 % over 23 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K19_6000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K19_6000rpm | 30 min | 28.1 | 4.402 | um | -84.3 % | 8.43 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 35 min | 30.5 | 4.746 | um | -84.4 % | 9.15 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 40 min | 32.2 | 5.028 | um | -84.4 % | 9.66 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 50 min | 36.3 | 5.447 | um | -85.0 % | 10.9 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 60 min | 39.1 | 5.728 | um | -85.4 % | 11.7 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 70 min | 40.8 | 5.917 | um | -85.5 % | 12.2 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 80 min | 42.4 | 6.043 | um | -85.7 % | 12.7 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 90 min | 43.6 | 6.127 | um | -85.9 % | 13.1 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 100 min | 44.7 | 6.184 | um | -86.2 % | 13.4 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 120 min | 46.3 | 6.248 | um | -86.5 % | 13.9 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 140 min | 46.7 | 6.276 | um | -86.6 % | 14 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 160 min | 47.1 | 6.289 | um | -86.6 % | 14.1 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 180 min | 47.8 | 6.295 | um | -86.8 % | 14.3 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 200 min | 47.7 | 6.297 | um | -86.8 % | 14.3 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 220 min | 47.7 | 6.299 | um | -86.8 % | 14.3 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 240 min | 47.6 | 6.299 | um | -86.8 % | 14.3 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 270 min | 47.7 | 6.299 | um | -86.8 % | 14.3 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 300 min | 47 | 6.3 | um | -86.6 % | 14.1 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 330 min | 47 | 6.3 | um | -86.6 % | 14.1 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 360 min | 46.1 | 6.3 | um | -86.3 % | 13.8 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 390 min | 45.4 | 6.3 | um | -86.1 % | 13.6 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 420 min | 44.8 | 6.3 | um | -85.9 % | 13.4 | **no** | 6000 rpm |
-| Z_thermal_error_K19_6000rpm | 450 min | 44.4 | 6.3 | um | -85.8 % | 13.3 | **no** | 6000 rpm |
+| Z_thermal_error_K19_6000rpm | 30 min | 28.1 | 63.7 | um | +126.7 % | 8.43 | **no** | 6000 rpm: spindle 64.1 um, structure lift 0.4 um |
+| Z_thermal_error_K19_6000rpm | 35 min | 30.5 | 69.04 | um | +126.4 % | 9.15 | **no** | 6000 rpm: spindle 69.5 um, structure lift 0.5 um |
+| Z_thermal_error_K19_6000rpm | 40 min | 32.2 | 73.84 | um | +129.3 % | 9.66 | **no** | 6000 rpm: spindle 74.4 um, structure lift 0.6 um |
+| Z_thermal_error_K19_6000rpm | 50 min | 36.3 | 82.06 | um | +126.1 % | 10.9 | **no** | 6000 rpm: spindle 82.9 um, structure lift 0.9 um |
+| Z_thermal_error_K19_6000rpm | 60 min | 39.1 | 88.71 | um | +126.9 % | 11.7 | **no** | 6000 rpm: spindle 89.9 um, structure lift 1.2 um |
+| Z_thermal_error_K19_6000rpm | 70 min | 40.8 | 94.06 | um | +130.5 % | 12.2 | **no** | 6000 rpm: spindle 95.6 um, structure lift 1.5 um |
+| Z_thermal_error_K19_6000rpm | 80 min | 42.4 | 98.37 | um | +132.0 % | 12.7 | **no** | 6000 rpm: spindle 100.2 um, structure lift 1.8 um |
+| Z_thermal_error_K19_6000rpm | 90 min | 43.6 | 101.8 | um | +133.5 % | 13.1 | **no** | 6000 rpm: spindle 104.0 um, structure lift 2.2 um |
+| Z_thermal_error_K19_6000rpm | 100 min | 44.7 | 104.6 | um | +133.9 % | 13.4 | **no** | 6000 rpm: spindle 107.1 um, structure lift 2.5 um |
+| Z_thermal_error_K19_6000rpm | 120 min | 46.3 | 108.5 | um | +134.3 % | 13.9 | **no** | 6000 rpm: spindle 111.7 um, structure lift 3.2 um |
+| Z_thermal_error_K19_6000rpm | 140 min | 46.7 | 110.9 | um | +137.4 % | 14 | **no** | 6000 rpm: spindle 114.7 um, structure lift 3.9 um |
+| Z_thermal_error_K19_6000rpm | 160 min | 47.1 | 112.3 | um | +138.4 % | 14.1 | **no** | 6000 rpm: spindle 116.8 um, structure lift 4.5 um |
+| Z_thermal_error_K19_6000rpm | 180 min | 47.8 | 113.1 | um | +136.6 % | 14.3 | **no** | 6000 rpm: spindle 118.2 um, structure lift 5.1 um |
+| Z_thermal_error_K19_6000rpm | 200 min | 47.7 | 113.5 | um | +137.9 % | 14.3 | **no** | 6000 rpm: spindle 119.1 um, structure lift 5.7 um |
+| Z_thermal_error_K19_6000rpm | 220 min | 47.7 | 113.6 | um | +138.2 % | 14.3 | **no** | 6000 rpm: spindle 119.8 um, structure lift 6.2 um |
+| Z_thermal_error_K19_6000rpm | 240 min | 47.6 | 113.6 | um | +138.6 % | 14.3 | **no** | 6000 rpm: spindle 120.2 um, structure lift 6.7 um |
+| Z_thermal_error_K19_6000rpm | 270 min | 47.7 | 113.4 | um | +137.7 % | 14.3 | **no** | 6000 rpm: spindle 120.7 um, structure lift 7.3 um |
+| Z_thermal_error_K19_6000rpm | 300 min | 47 | 113.1 | um | +140.6 % | 14.1 | **no** | 6000 rpm: spindle 121.0 um, structure lift 7.9 um |
+| Z_thermal_error_K19_6000rpm | 330 min | 47 | 112.8 | um | +139.9 % | 14.1 | **no** | 6000 rpm: spindle 121.2 um, structure lift 8.4 um |
+| Z_thermal_error_K19_6000rpm | 360 min | 46.1 | 112.5 | um | +143.9 % | 13.8 | **no** | 6000 rpm: spindle 121.3 um, structure lift 8.8 um |
+| Z_thermal_error_K19_6000rpm | 390 min | 45.4 | 112.2 | um | +147.1 % | 13.6 | **no** | 6000 rpm: spindle 121.4 um, structure lift 9.2 um |
+| Z_thermal_error_K19_6000rpm | 420 min | 44.8 | 111.9 | um | +149.8 % | 13.4 | **no** | 6000 rpm: spindle 121.5 um, structure lift 9.6 um |
+| Z_thermal_error_K19_6000rpm | 450 min | 44.4 | 111.7 | um | +151.5 % | 13.3 | **no** | 6000 rpm: spindle 121.5 um, structure lift 9.9 um |
 
 ### spindlegrowth-wei2023-vcenter55-ambient-warm
 
 * Source: `wei-2023-vcenter55-thermal-error`, Sect. 2.1-2.3, Tables 1-3 (Table 2: K45 28.9 degC initial ambient, 0.8 K rise; K46 32.2 degC, 1.5 K rise), Fig. 4 Z panel (curves K46, K32, K45, digitised) (measured, digitised, stated uncertainty 4 %).
 * File: `validation/cases/spindle_growth/spindlegrowth-wei2023-vcenter55-ambient-warm.yaml`; operation spindle_warmup; material `None`.
 * Validation class: **independent**.
-* Model chain: cnctwin.thermal.machine.spindle_models (first-order spindle body).
-* Settings: bearing_heat_at_max_W = 400, growth_at_max_speed_um = 20, growth_length_m = 0.25, max_rpm = 1.2e+04, speed_exponent = 1.667, step_s = 60, time_constant_min = 25.
-* Inputs the harness assumed: maximum spindle speed = 12000 rpm (not stated: the database vertical machining centre haas-vf2ss, db/machines); spindle growth = 2e-05 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle time constant = 1500 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle bearing heat = 400 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case); ambient of Z_thermal_error_K32_4000rpm = 27.5 degC (initial ambient not given: middle of the case's ambient band, case).
-* The measured Z error is the whole tool-to-table loop (spindle, headstock, column); the model is the spindle body only.
-* Result: 69 compared, 0 without prediction, 3 not compared; median abs. error 90.2 %, max 94.3 %; 0/69 within uncertainty; case **outside budget**; largest miss 3.14 tolerances.
-* Likely cause: mean signed error -90 %: generic spindle defaults (20 um at the assumed 12 000 rpm, 25 min) against a measured whole-machine loop; the heat scales as (n/n_max)^(5/3), so at 2000-6000 rpm the model's growth is a small fraction of its default maximum.
+* Model chain: cnctwin.thermal.spindle (network: bearings, motor, shaft, housing) -> cnctwin.thermal.machine.structure_model (column drift).
+* Settings: front_bearings = 3 x 70/110 mm, housing_length_mm = 350, housing_mass_kg = 180, lubrication = grease, model = network, nose_length_mm = 84, spindle_share_um_per_K = 4.691, step_s = 60, structure_sensitivity_um_per_K = 3.
+* Inputs the harness assumed: ambient course of Z_thermal_error_K46_2000rpm = linear rise of 1.5 K over the batch (the case states the batch's rise, not its course, case); spindle bearings = front 3 x angular-contact 70/110 mm, 15 deg, preload 299 N; rear 2 x 60/94 mm; grease (f0 2, base oil 22 mm2/s at 40 degC) (not stated (no spindle data in the source): the model's 40-taper default arrangement, db/models/thermal-machine.yaml); spindle drive = belt, 225 W no-load loss above 1500 rpm, 0.15 of it into the head (not stated: the model's default drive (a separate motor, as the instrumented spindle motor of the sources implies), db/models/thermal-machine.yaml); spindle shaft and housing = shaft 70 mm, nose to the fixed bearing 84 mm; housing 180 kg cast iron, 1.20 m2 exposed, growth length 350 mm, 8 W/K to the column (not stated: the model's 40-taper defaults, db/models/thermal-machine.yaml); spindle cooling = none (not stated: no cooling jacket, est); machine structure = 3 um/K for the whole loop, 7.7 um/K on the structure body (the spindle network's own 4.7 um/K added back), 1.61 MJ/K, time constant 4.0 h (not stated: the structure sensitivity of the database VMC haas-vf2ss, the model's default machine mass, db/machines, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case); ambient of Z_thermal_error_K32_4000rpm = 27.5 degC, constant (initial ambient not given: middle of the case's ambient band; its course over the batch not given, case); ambient course of Z_thermal_error_K45_6000rpm = linear rise of 0.8 K over the batch (the case states the batch's rise, not its course, case).
+* Database values used: haas-vf2ss thermal.structure_sensitivity_um_per_K (`est`); bearing friction factors f0, f1 (thermal-machine) (`harris-kotzalas-2007-bearings`).
+* The measured Z error is the whole tool-to-table loop: simulated as the spindle network's growth toward the table (shaft over its nose length, housing over its length to the fixed bearings) minus the lift of the machine structure (column) warmed by the ambient and the head. The ISO 230-3 test mandrel's own growth and the table side's drift other than the structure's are not modelled.
+* Result: 69 compared, 0 without prediction, 3 not compared; median abs. error 123.1 %, max 182.7 %; 0/69 within uncertainty; case **outside budget**; largest miss 6.09 tolerances.
+* Likely cause: mean signed error +124 %: the spindle is not described in the source, so the network runs on the model's 40-taper defaults (bearing arrangement, grease and its base-oil viscosity, housing mass, exposed area and growth length, no cooling); the bearing friction (Palmgren's f0 for grease) and the housing's exposed area and growth length each move the plateau by tens of per cent.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Z_growth_max | 2000 rpm | 17.7 | 1.01 | um | -94.3 % | 5.31 | **no** | 2000 rpm, maximum over 470 min |
-| Z_growth_max | 4000 rpm | 35 | 3.205 | um | -90.8 % | 10.5 | **no** | 4000 rpm, maximum over 390 min |
-| Z_growth_max | 6000 rpm | 46.1 | 6.3 | um | -86.3 % | 13.8 | **no** | 6000 rpm, maximum over 390 min |
+| Z_growth_max | 2000 rpm | 17.7 | 38.71 | um | +118.7 % | 5.31 | **no** | 2000 rpm, maximum over 470 min (at 246 min): spindle 43.1 um, structure lift 4.3 um |
+| Z_growth_max | 4000 rpm | 35 | 74.52 | um | +112.9 % | 10.5 | **no** | 4000 rpm, maximum over 390 min (at 253 min): spindle 78.9 um, structure lift 4.3 um |
+| Z_growth_max | 6000 rpm | 46.1 | 102.4 | um | +122.1 % | 13.8 | **no** | 6000 rpm, maximum over 390 min (at 218 min): spindle 109.1 um, structure lift 6.7 um |
 
-Curve `Z_thermal_error_K46_2000rpm` (time [min] -> um): RMS abs. error 93.0 %, max 94.3 % over 24 compared points.
+Curve `Z_thermal_error_K46_2000rpm` (time [min] -> um): RMS abs. error 139.3 %, max 182.7 % over 24 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K46_2000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K46_2000rpm | 30 min | 6.8 | 0.7055 | um | -89.6 % | 2.04 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 35 min | 7.5 | 0.7606 | um | -89.9 % | 2.25 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 40 min | 8.1 | 0.8057 | um | -90.1 % | 2.43 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 50 min | 9.7 | 0.8729 | um | -91.0 % | 2.91 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 60 min | 11.6 | 0.9179 | um | -92.1 % | 3.48 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 70 min | 12.5 | 0.9481 | um | -92.4 % | 3.75 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 80 min | 13.2 | 0.9684 | um | -92.7 % | 3.96 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 90 min | 13.6 | 0.9819 | um | -92.8 % | 4.08 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 100 min | 14.8 | 0.991 | um | -93.3 % | 4.44 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 120 min | 15.3 | 1.001 | um | -93.5 % | 4.59 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 140 min | 15.8 | 1.006 | um | -93.6 % | 4.74 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 160 min | 16.7 | 1.008 | um | -94.0 % | 5.01 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 180 min | 16.9 | 1.009 | um | -94.0 % | 5.07 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 200 min | 17.2 | 1.009 | um | -94.1 % | 5.16 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 220 min | 17.5 | 1.009 | um | -94.2 % | 5.25 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 240 min | 17.4 | 1.009 | um | -94.2 % | 5.22 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 270 min | 17.7 | 1.009 | um | -94.3 % | 5.31 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 300 min | 16.8 | 1.01 | um | -94.0 % | 5.04 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 330 min | 16.8 | 1.01 | um | -94.0 % | 5.04 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 360 min | 16.6 | 1.01 | um | -93.9 % | 4.98 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 390 min | 16.3 | 1.01 | um | -93.8 % | 4.89 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 420 min | 15.9 | 1.01 | um | -93.7 % | 4.77 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 450 min | 15.9 | 1.01 | um | -93.7 % | 4.77 | **no** | 2000 rpm |
-| Z_thermal_error_K46_2000rpm | 470 min | 15.1 | 1.01 | um | -93.3 % | 4.53 | **no** | 2000 rpm |
+| Z_thermal_error_K46_2000rpm | 30 min | 6.8 | 19.22 | um | +182.7 % | 2.04 | **no** | 2000 rpm: spindle 19.4 um, structure lift 0.1 um |
+| Z_thermal_error_K46_2000rpm | 35 min | 7.5 | 20.99 | um | +179.9 % | 2.25 | **no** | 2000 rpm: spindle 21.2 um, structure lift 0.2 um |
+| Z_thermal_error_K46_2000rpm | 40 min | 8.1 | 22.59 | um | +178.9 % | 2.43 | **no** | 2000 rpm: spindle 22.8 um, structure lift 0.2 um |
+| Z_thermal_error_K46_2000rpm | 50 min | 9.7 | 25.35 | um | +161.3 % | 2.91 | **no** | 2000 rpm: spindle 25.7 um, structure lift 0.3 um |
+| Z_thermal_error_K46_2000rpm | 60 min | 11.6 | 27.65 | um | +138.4 % | 3.48 | **no** | 2000 rpm: spindle 28.1 um, structure lift 0.5 um |
+| Z_thermal_error_K46_2000rpm | 70 min | 12.5 | 29.59 | um | +136.7 % | 3.75 | **no** | 2000 rpm: spindle 30.2 um, structure lift 0.6 um |
+| Z_thermal_error_K46_2000rpm | 80 min | 13.2 | 31.22 | um | +136.5 % | 3.96 | **no** | 2000 rpm: spindle 32.0 um, structure lift 0.8 um |
+| Z_thermal_error_K46_2000rpm | 90 min | 13.6 | 32.6 | um | +139.7 % | 4.08 | **no** | 2000 rpm: spindle 33.6 um, structure lift 1.0 um |
+| Z_thermal_error_K46_2000rpm | 100 min | 14.8 | 33.75 | um | +128.1 % | 4.44 | **no** | 2000 rpm: spindle 34.9 um, structure lift 1.1 um |
+| Z_thermal_error_K46_2000rpm | 120 min | 15.3 | 35.53 | um | +132.2 % | 4.59 | **no** | 2000 rpm: spindle 37.1 um, structure lift 1.5 um |
+| Z_thermal_error_K46_2000rpm | 140 min | 15.8 | 36.76 | um | +132.7 % | 4.74 | **no** | 2000 rpm: spindle 38.7 um, structure lift 1.9 um |
+| Z_thermal_error_K46_2000rpm | 160 min | 16.7 | 37.59 | um | +125.1 % | 5.01 | **no** | 2000 rpm: spindle 40.0 um, structure lift 2.4 um |
+| Z_thermal_error_K46_2000rpm | 180 min | 16.9 | 38.13 | um | +125.6 % | 5.07 | **no** | 2000 rpm: spindle 40.9 um, structure lift 2.8 um |
+| Z_thermal_error_K46_2000rpm | 200 min | 17.2 | 38.46 | um | +123.6 % | 5.16 | **no** | 2000 rpm: spindle 41.7 um, structure lift 3.3 um |
+| Z_thermal_error_K46_2000rpm | 220 min | 17.5 | 38.64 | um | +120.8 % | 5.25 | **no** | 2000 rpm: spindle 42.4 um, structure lift 3.7 um |
+| Z_thermal_error_K46_2000rpm | 240 min | 17.4 | 38.7 | um | +122.4 % | 5.22 | **no** | 2000 rpm: spindle 42.9 um, structure lift 4.2 um |
+| Z_thermal_error_K46_2000rpm | 270 min | 17.7 | 38.66 | um | +118.4 % | 5.31 | **no** | 2000 rpm: spindle 43.6 um, structure lift 4.9 um |
+| Z_thermal_error_K46_2000rpm | 300 min | 16.8 | 38.51 | um | +129.2 % | 5.04 | **no** | 2000 rpm: spindle 44.1 um, structure lift 5.6 um |
+| Z_thermal_error_K46_2000rpm | 330 min | 16.8 | 38.29 | um | +127.9 % | 5.04 | **no** | 2000 rpm: spindle 44.6 um, structure lift 6.3 um |
+| Z_thermal_error_K46_2000rpm | 360 min | 16.6 | 38.03 | um | +129.1 % | 4.98 | **no** | 2000 rpm: spindle 45.1 um, structure lift 7.1 um |
+| Z_thermal_error_K46_2000rpm | 390 min | 16.3 | 37.74 | um | +131.5 % | 4.89 | **no** | 2000 rpm: spindle 45.5 um, structure lift 7.8 um |
+| Z_thermal_error_K46_2000rpm | 420 min | 15.9 | 37.43 | um | +135.4 % | 4.77 | **no** | 2000 rpm: spindle 45.9 um, structure lift 8.5 um |
+| Z_thermal_error_K46_2000rpm | 450 min | 15.9 | 37.12 | um | +133.4 % | 4.77 | **no** | 2000 rpm: spindle 46.4 um, structure lift 9.2 um |
+| Z_thermal_error_K46_2000rpm | 470 min | 15.1 | 36.9 | um | +144.4 % | 4.53 | **no** | 2000 rpm: spindle 46.6 um, structure lift 9.7 um |
 
-Curve `Z_thermal_error_K32_4000rpm` (time [min] -> um): RMS abs. error 90.1 %, max 90.8 % over 21 compared points.
+Curve `Z_thermal_error_K32_4000rpm` (time [min] -> um): RMS abs. error 111.2 %, max 130.2 % over 21 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K32_4000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K32_4000rpm | 30 min | 19.2 | 2.24 | um | -88.3 % | 5.76 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 35 min | 21.4 | 2.415 | um | -88.7 % | 6.42 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 40 min | 22.6 | 2.558 | um | -88.7 % | 6.78 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 50 min | 25.3 | 2.771 | um | -89.0 % | 7.59 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 60 min | 27.3 | 2.914 | um | -89.3 % | 8.19 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 70 min | 29.3 | 3.01 | um | -89.7 % | 8.79 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 80 min | 30.5 | 3.074 | um | -89.9 % | 9.15 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 90 min | 31.3 | 3.117 | um | -90.0 % | 9.39 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 100 min | 32.1 | 3.146 | um | -90.2 % | 9.63 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 120 min | 33.3 | 3.179 | um | -90.5 % | 9.99 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 140 min | 33.9 | 3.193 | um | -90.6 % | 10.2 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 160 min | 34.7 | 3.2 | um | -90.8 % | 10.4 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 180 min | 34.8 | 3.203 | um | -90.8 % | 10.4 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 200 min | 35 | 3.204 | um | -90.8 % | 10.5 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 220 min | 34.9 | 3.205 | um | -90.8 % | 10.5 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 240 min | 34.6 | 3.205 | um | -90.7 % | 10.4 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 270 min | 34.8 | 3.205 | um | -90.8 % | 10.4 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 300 min | 34.3 | 3.205 | um | -90.7 % | 10.3 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 330 min | 33.9 | 3.205 | um | -90.5 % | 10.2 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 360 min | 33.1 | 3.205 | um | -90.3 % | 9.93 | **no** | 4000 rpm |
-| Z_thermal_error_K32_4000rpm | 390 min | 32.1 | 3.205 | um | -90.0 % | 9.63 | **no** | 4000 rpm |
+| Z_thermal_error_K32_4000rpm | 30 min | 19.2 | 39.64 | um | +106.5 % | 5.76 | **no** | 4000 rpm: spindle 39.8 um, structure lift 0.2 um |
+| Z_thermal_error_K32_4000rpm | 35 min | 21.4 | 43.04 | um | +101.1 % | 6.42 | **no** | 4000 rpm: spindle 43.3 um, structure lift 0.3 um |
+| Z_thermal_error_K32_4000rpm | 40 min | 22.6 | 46.11 | um | +104.0 % | 6.78 | **no** | 4000 rpm: spindle 46.4 um, structure lift 0.3 um |
+| Z_thermal_error_K32_4000rpm | 50 min | 25.3 | 51.42 | um | +103.2 % | 7.59 | **no** | 4000 rpm: spindle 51.9 um, structure lift 0.5 um |
+| Z_thermal_error_K32_4000rpm | 60 min | 27.3 | 55.81 | um | +104.4 % | 8.19 | **no** | 4000 rpm: spindle 56.5 um, structure lift 0.7 um |
+| Z_thermal_error_K32_4000rpm | 70 min | 29.3 | 59.42 | um | +102.8 % | 8.79 | **no** | 4000 rpm: spindle 60.3 um, structure lift 0.9 um |
+| Z_thermal_error_K32_4000rpm | 80 min | 30.5 | 62.39 | um | +104.6 % | 9.15 | **no** | 4000 rpm: spindle 63.5 um, structure lift 1.1 um |
+| Z_thermal_error_K32_4000rpm | 90 min | 31.3 | 64.83 | um | +107.1 % | 9.39 | **no** | 4000 rpm: spindle 66.1 um, structure lift 1.3 um |
+| Z_thermal_error_K32_4000rpm | 100 min | 32.1 | 66.83 | um | +108.2 % | 9.63 | **no** | 4000 rpm: spindle 68.3 um, structure lift 1.5 um |
+| Z_thermal_error_K32_4000rpm | 120 min | 33.3 | 69.78 | um | +109.6 % | 9.99 | **no** | 4000 rpm: spindle 71.7 um, structure lift 1.9 um |
+| Z_thermal_error_K32_4000rpm | 140 min | 33.9 | 71.71 | um | +111.5 % | 10.2 | **no** | 4000 rpm: spindle 74.1 um, structure lift 2.4 um |
+| Z_thermal_error_K32_4000rpm | 160 min | 34.7 | 72.95 | um | +110.2 % | 10.4 | **no** | 4000 rpm: spindle 75.7 um, structure lift 2.8 um |
+| Z_thermal_error_K32_4000rpm | 180 min | 34.8 | 73.72 | um | +111.8 % | 10.4 | **no** | 4000 rpm: spindle 76.9 um, structure lift 3.1 um |
+| Z_thermal_error_K32_4000rpm | 200 min | 35 | 74.17 | um | +111.9 % | 10.5 | **no** | 4000 rpm: spindle 77.7 um, structure lift 3.5 um |
+| Z_thermal_error_K32_4000rpm | 220 min | 34.9 | 74.41 | um | +113.2 % | 10.5 | **no** | 4000 rpm: spindle 78.2 um, structure lift 3.8 um |
+| Z_thermal_error_K32_4000rpm | 240 min | 34.6 | 74.51 | um | +115.3 % | 10.4 | **no** | 4000 rpm: spindle 78.7 um, structure lift 4.2 um |
+| Z_thermal_error_K32_4000rpm | 270 min | 34.8 | 74.5 | um | +114.1 % | 10.4 | **no** | 4000 rpm: spindle 79.1 um, structure lift 4.6 um |
+| Z_thermal_error_K32_4000rpm | 300 min | 34.3 | 74.39 | um | +116.9 % | 10.3 | **no** | 4000 rpm: spindle 79.3 um, structure lift 5.0 um |
+| Z_thermal_error_K32_4000rpm | 330 min | 33.9 | 74.23 | um | +119.0 % | 10.2 | **no** | 4000 rpm: spindle 79.5 um, structure lift 5.3 um |
+| Z_thermal_error_K32_4000rpm | 360 min | 33.1 | 74.06 | um | +123.8 % | 9.93 | **no** | 4000 rpm: spindle 79.6 um, structure lift 5.6 um |
+| Z_thermal_error_K32_4000rpm | 390 min | 32.1 | 73.89 | um | +130.2 % | 9.63 | **no** | 4000 rpm: spindle 79.7 um, structure lift 5.8 um |
 
-Curve `Z_thermal_error_K45_6000rpm` (time [min] -> um): RMS abs. error 85.3 %, max 86.3 % over 21 compared points.
+Curve `Z_thermal_error_K45_6000rpm` (time [min] -> um): RMS abs. error 122.9 %, max 135.1 % over 21 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | Z_thermal_error_K45_6000rpm | 0 min | 0 | 0 | um | - | 2 | not compared | zero by definition (ISO 230-3 relative displacement) |
-| Z_thermal_error_K45_6000rpm | 30 min | 27.1 | 4.402 | um | -83.8 % | 8.13 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 35 min | 29.2 | 4.746 | um | -83.7 % | 8.76 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 40 min | 30.6 | 5.028 | um | -83.6 % | 9.18 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 50 min | 34.4 | 5.447 | um | -84.2 % | 10.3 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 60 min | 37.1 | 5.728 | um | -84.6 % | 11.1 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 70 min | 38.8 | 5.917 | um | -84.8 % | 11.6 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 80 min | 40.1 | 6.043 | um | -84.9 % | 12 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 90 min | 41.1 | 6.127 | um | -85.1 % | 12.3 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 100 min | 42.8 | 6.184 | um | -85.6 % | 12.8 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 120 min | 43.4 | 6.248 | um | -85.6 % | 13 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 140 min | 44.6 | 6.276 | um | -85.9 % | 13.4 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 160 min | 44.8 | 6.289 | um | -86.0 % | 13.4 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 180 min | 45.5 | 6.295 | um | -86.2 % | 13.7 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 200 min | 45 | 6.297 | um | -86.0 % | 13.5 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 220 min | 46.1 | 6.299 | um | -86.3 % | 13.8 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 240 min | 45.1 | 6.299 | um | -86.0 % | 13.5 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 270 min | 45.3 | 6.299 | um | -86.1 % | 13.6 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 300 min | 44.7 | 6.3 | um | -85.9 % | 13.4 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 330 min | 44.2 | 6.3 | um | -85.7 % | 13.3 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 360 min | 43 | 6.3 | um | -85.3 % | 12.9 | **no** | 6000 rpm |
-| Z_thermal_error_K45_6000rpm | 390 min | 42.7 | 6.3 | um | -85.2 % | 12.8 | **no** | 6000 rpm |
+| Z_thermal_error_K45_6000rpm | 30 min | 27.1 | 56.95 | um | +110.1 % | 8.13 | **no** | 6000 rpm: spindle 57.3 um, structure lift 0.3 um |
+| Z_thermal_error_K45_6000rpm | 35 min | 29.2 | 61.8 | um | +111.6 % | 8.76 | **no** | 6000 rpm: spindle 62.2 um, structure lift 0.4 um |
+| Z_thermal_error_K45_6000rpm | 40 min | 30.6 | 66.17 | um | +116.2 % | 9.18 | **no** | 6000 rpm: spindle 66.7 um, structure lift 0.6 um |
+| Z_thermal_error_K45_6000rpm | 50 min | 34.4 | 73.64 | um | +114.1 % | 10.3 | **no** | 6000 rpm: spindle 74.5 um, structure lift 0.8 um |
+| Z_thermal_error_K45_6000rpm | 60 min | 37.1 | 79.7 | um | +114.8 % | 11.1 | **no** | 6000 rpm: spindle 80.9 um, structure lift 1.2 um |
+| Z_thermal_error_K45_6000rpm | 70 min | 38.8 | 84.59 | um | +118.0 % | 11.6 | **no** | 6000 rpm: spindle 86.1 um, structure lift 1.5 um |
+| Z_thermal_error_K45_6000rpm | 80 min | 40.1 | 88.53 | um | +120.8 % | 12 | **no** | 6000 rpm: spindle 90.4 um, structure lift 1.8 um |
+| Z_thermal_error_K45_6000rpm | 90 min | 41.1 | 91.69 | um | +123.1 % | 12.3 | **no** | 6000 rpm: spindle 93.9 um, structure lift 2.2 um |
+| Z_thermal_error_K45_6000rpm | 100 min | 42.8 | 94.21 | um | +120.1 % | 12.8 | **no** | 6000 rpm: spindle 96.8 um, structure lift 2.5 um |
+| Z_thermal_error_K45_6000rpm | 120 min | 43.4 | 97.8 | um | +125.3 % | 13 | **no** | 6000 rpm: spindle 101.1 um, structure lift 3.3 um |
+| Z_thermal_error_K45_6000rpm | 140 min | 44.6 | 100 | um | +124.2 % | 13.4 | **no** | 6000 rpm: spindle 104.0 um, structure lift 4.0 um |
+| Z_thermal_error_K45_6000rpm | 160 min | 44.8 | 101.3 | um | +126.1 % | 13.4 | **no** | 6000 rpm: spindle 106.0 um, structure lift 4.7 um |
+| Z_thermal_error_K45_6000rpm | 180 min | 45.5 | 102 | um | +124.2 % | 13.7 | **no** | 6000 rpm: spindle 107.4 um, structure lift 5.4 um |
+| Z_thermal_error_K45_6000rpm | 200 min | 45 | 102.3 | um | +127.4 % | 13.5 | **no** | 6000 rpm: spindle 108.4 um, structure lift 6.1 um |
+| Z_thermal_error_K45_6000rpm | 220 min | 46.1 | 102.4 | um | +122.1 % | 13.8 | **no** | 6000 rpm: spindle 109.2 um, structure lift 6.8 um |
+| Z_thermal_error_K45_6000rpm | 240 min | 45.1 | 102.3 | um | +126.9 % | 13.5 | **no** | 6000 rpm: spindle 109.7 um, structure lift 7.4 um |
+| Z_thermal_error_K45_6000rpm | 270 min | 45.3 | 102 | um | +125.3 % | 13.6 | **no** | 6000 rpm: spindle 110.3 um, structure lift 8.3 um |
+| Z_thermal_error_K45_6000rpm | 300 min | 44.7 | 101.7 | um | +127.4 % | 13.4 | **no** | 6000 rpm: spindle 110.8 um, structure lift 9.1 um |
+| Z_thermal_error_K45_6000rpm | 330 min | 44.2 | 101.2 | um | +129.0 % | 13.3 | **no** | 6000 rpm: spindle 111.2 um, structure lift 9.9 um |
+| Z_thermal_error_K45_6000rpm | 360 min | 43 | 100.8 | um | +134.4 % | 12.9 | **no** | 6000 rpm: spindle 111.5 um, structure lift 10.7 um |
+| Z_thermal_error_K45_6000rpm | 390 min | 42.7 | 100.4 | um | +135.1 % | 12.8 | **no** | 6000 rpm: spindle 111.8 um, structure lift 11.4 um |
 
 ### spindlegrowth-yang2024-vmc850-constant-speed
 
 * Source: `yang-2024-vmc850-thermal-error`, Sect. 3.1-3.2 (machine, sensors, test conditions), Sect. 4.1 (temperature and deformation behaviour), Fig. 11a,b (Z-axis thermal deformation, digitised) (measured, digitised, stated uncertainty 5 %).
 * File: `validation/cases/spindle_growth/spindlegrowth-yang2024-vmc850-constant-speed.yaml`; operation spindle_warmup; material `None`.
 * Validation class: **independent**.
-* Model chain: cnctwin.thermal.machine.spindle_models (first-order spindle body).
-* Settings: bearing_heat_at_max_W = 400, growth_at_max_speed_um = 20, growth_length_m = 0.25, max_rpm = 1.2e+04, speed_exponent = 1.667, step_s = 60, time_constant_min = 25.
+* Model chain: cnctwin.thermal.spindle (network: bearings, motor, shaft, housing) -> cnctwin.thermal.machine.structure_model (column drift).
+* Settings: front_bearings = 3 x 70/110 mm, housing_length_mm = 350, housing_mass_kg = 180, lubrication = grease, model = network, nose_length_mm = 84, spindle_share_um_per_K = 4.691, step_s = 60, structure_sensitivity_um_per_K = 3.
 * Inputs the case marks as assumed: `setup.conditions.machine_state_at_start` = cold start (assumed: the paper says the machine temperature is low after switching on; the time since the previous run is not stated).
-* Inputs the harness assumed: ambient of Z_thermal_deformation_2000rpm = 20 degC (not stated: ISO 1 reference temperature, est); maximum spindle speed = 12000 rpm (not stated: the database vertical machining centre haas-vf2ss, db/machines); spindle growth = 2e-05 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle time constant = 1500 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); spindle bearing heat = 400 (SI) (not stated (no spindle data in the source): the thermal model's default, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case); ambient of Z_thermal_deformation_4000rpm = 20 degC (not stated: ISO 1 reference temperature, est).
-* The measured Z error is the whole tool-to-table loop (spindle, headstock, column); the model is the spindle body only.
-* Result: 112 compared, 0 without prediction, 0 not compared; median abs. error 94.4 %, max 95.5 %; 5/112 within uncertainty; case **outside budget**; largest miss 3.18 tolerances.
-* Likely cause: mean signed error -87 %: generic spindle defaults (20 um at the assumed 12 000 rpm, 25 min) against a measured whole-machine loop; the heat scales as (n/n_max)^(5/3), so at 2000-6000 rpm the model's growth is a small fraction of its default maximum.
+* Inputs the harness assumed: ambient of Z_thermal_deformation_2000rpm = 20 degC, constant (not stated: ISO 1 reference temperature, est); spindle bearings = front 3 x angular-contact 70/110 mm, 15 deg, preload 299 N; rear 2 x 60/94 mm; grease (f0 2, base oil 22 mm2/s at 40 degC) (not stated (no spindle data in the source): the model's 40-taper default arrangement, db/models/thermal-machine.yaml); spindle drive = belt, 225 W no-load loss above 1500 rpm, 0.15 of it into the head (not stated: the model's default drive (a separate motor, as the instrumented spindle motor of the sources implies), db/models/thermal-machine.yaml); spindle shaft and housing = shaft 70 mm, nose to the fixed bearing 84 mm; housing 180 kg cast iron, 1.20 m2 exposed, growth length 350 mm, 8 W/K to the column (not stated: the model's 40-taper defaults, db/models/thermal-machine.yaml); spindle cooling = none (not stated: no cooling jacket, est); machine structure = 3 um/K for the whole loop, 7.7 um/K on the structure body (the spindle network's own 4.7 um/K added back), 1.61 MJ/K, time constant 4.0 h (not stated: the structure sensitivity of the database VMC haas-vf2ss, the model's default machine mass, db/machines, db/models/thermal-machine.yaml); thermal compensation = off (ISO 230-3 measures the uncompensated error, case); ambient of Z_thermal_deformation_4000rpm = 20 degC, constant (not stated: ISO 1 reference temperature, est).
+* Database values used: haas-vf2ss thermal.structure_sensitivity_um_per_K (`est`); bearing friction factors f0, f1 (thermal-machine) (`harris-kotzalas-2007-bearings`).
+* The measured Z error is the whole tool-to-table loop: simulated as the spindle network's growth toward the table (shaft over its nose length, housing over its length to the fixed bearings) minus the lift of the machine structure (column) warmed by the ambient and the head. The ISO 230-3 test mandrel's own growth and the table side's drift other than the structure's are not modelled.
+* Result: 112 compared, 0 without prediction, 0 not compared; median abs. error 83.6 %, max 2440.6 %; 0/112 within uncertainty; case **outside budget**; largest miss 29.5 tolerances.
+* Likely cause: mean signed error +209 %: the spindle is not described in the source, so the network runs on the model's 40-taper defaults (bearing arrangement, grease and its base-oil viscosity, housing mass, exposed area and growth length, no cooling); the bearing friction (Palmgren's f0 for grease) and the housing's exposed area and growth length each move the plateau by tens of per cent.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Z_growth_at_110min | 2000 rpm | 21 | 0.9971 | um | -95.3 % | 6.3 | **no** | 2000 rpm, at 110 min |
-| Z_growth_at_120min | 4000 rpm | 62 | 3.179 | um | -94.9 % | 18.6 | **no** | 4000 rpm, at 120 min |
+| Z_growth_at_110min | 2000 rpm | 21 | 41.02 | um | +95.3 % | 6.3 | **no** | 2000 rpm, at 110 min: spindle 42.0 um, structure lift 0.9 um |
+| Z_growth_at_120min | 4000 rpm | 62 | 75.83 | um | +22.3 % | 18.6 | yes | 4000 rpm, at 120 min: spindle 77.9 um, structure lift 2.1 um |
 
-Curve `Z_thermal_deformation_2000rpm` (time [min] -> um): RMS abs. error 94.5 %, max 95.5 % over 51 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Z_thermal_deformation_2000rpm | 2 min | 1 | 0.07761 | um | -92.2 % | 1 | yes | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 4 min | 2 | 0.1493 | um | -92.5 % | 1 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 6 min | 3 | 0.2154 | um | -92.8 % | 1 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 8 min | 4 | 0.2765 | um | -93.1 % | 1.2 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 10 min | 5 | 0.3328 | um | -93.3 % | 1.5 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 12 min | 6 | 0.3848 | um | -93.6 % | 1.8 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 14 min | 7 | 0.4329 | um | -93.8 % | 2.1 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 16 min | 5 | 0.4772 | um | -90.5 % | 1.5 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 18 min | 8 | 0.5181 | um | -93.5 % | 2.4 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 20 min | 9 | 0.5559 | um | -93.8 % | 2.7 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 22 min | 10 | 0.5908 | um | -94.1 % | 3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 24 min | 11 | 0.623 | um | -94.3 % | 3.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 26 min | 11 | 0.6527 | um | -94.1 % | 3.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 28 min | 12 | 0.6801 | um | -94.3 % | 3.6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 30 min | 12 | 0.7055 | um | -94.1 % | 3.6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 32 min | 13 | 0.7288 | um | -94.4 % | 3.9 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 34 min | 13 | 0.7504 | um | -94.2 % | 3.9 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 36 min | 14 | 0.7703 | um | -94.5 % | 4.2 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 38 min | 14 | 0.7887 | um | -94.4 % | 4.2 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 40 min | 15 | 0.8057 | um | -94.6 % | 4.5 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 42 min | 15 | 0.8214 | um | -94.5 % | 4.5 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 44 min | 16 | 0.8358 | um | -94.8 % | 4.8 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 46 min | 16 | 0.8492 | um | -94.7 % | 4.8 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 48 min | 17 | 0.8615 | um | -94.9 % | 5.1 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 50 min | 17 | 0.8729 | um | -94.9 % | 5.1 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 52 min | 17 | 0.8834 | um | -94.8 % | 5.1 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 54 min | 17 | 0.8931 | um | -94.7 % | 5.1 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 58 min | 18 | 0.9103 | um | -94.9 % | 5.4 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 60 min | 18 | 0.9179 | um | -94.9 % | 5.4 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 62 min | 19 | 0.925 | um | -95.1 % | 5.7 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 64 min | 19 | 0.9315 | um | -95.1 % | 5.7 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 66 min | 19 | 0.9375 | um | -95.1 % | 5.7 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 68 min | 20 | 0.943 | um | -95.3 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 70 min | 20 | 0.9481 | um | -95.3 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 72 min | 20 | 0.9528 | um | -95.2 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 74 min | 20 | 0.9572 | um | -95.2 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 76 min | 20 | 0.9612 | um | -95.2 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 78 min | 20 | 0.9649 | um | -95.2 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 80 min | 20 | 0.9684 | um | -95.2 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 82 min | 20 | 0.9715 | um | -95.1 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 84 min | 20 | 0.9744 | um | -95.1 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 86 min | 20 | 0.9771 | um | -95.1 % | 6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 88 min | 21 | 0.9796 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 92 min | 21 | 0.984 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 96 min | 21 | 0.9878 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 98 min | 21 | 0.9895 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 100 min | 21 | 0.991 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 104 min | 22 | 0.9938 | um | -95.5 % | 6.6 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 106 min | 21 | 0.995 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 108 min | 21 | 0.9961 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-| Z_thermal_deformation_2000rpm | 110 min | 21 | 0.9971 | um | -95.3 % | 6.3 | **no** | 2000 rpm |
-
-Curve `Z_thermal_deformation_4000rpm` (time [min] -> um): RMS abs. error 84.6 %, max 95.0 % over 59 compared points.
+Curve `Z_thermal_deformation_2000rpm` (time [min] -> um): RMS abs. error 97.2 %, max 210.9 % over 51 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Z_thermal_deformation_4000rpm | 2 min | 1 | 0.2464 | um | -75.4 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 4 min | 1 | 0.4739 | um | -52.6 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 6 min | 1 | 0.6839 | um | -31.6 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 8 min | 1 | 0.8777 | um | -12.2 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 10 min | 1 | 1.057 | um | +5.7 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 12 min | 1 | 1.222 | um | +22.2 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 14 min | 2 | 1.374 | um | -31.3 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 16 min | 2 | 1.515 | um | -24.2 % | 1 | yes | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 18 min | 3 | 1.645 | um | -45.2 % | 1 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 20 min | 4 | 1.765 | um | -55.9 % | 1.2 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 22 min | 5 | 1.876 | um | -62.5 % | 1.5 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 24 min | 7 | 1.978 | um | -71.7 % | 2.1 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 26 min | 10 | 2.072 | um | -79.3 % | 3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 28 min | 10 | 2.159 | um | -78.4 % | 3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 30 min | 11 | 2.24 | um | -79.6 % | 3.3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 32 min | 13 | 2.314 | um | -82.2 % | 3.9 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 36 min | 16 | 2.446 | um | -84.7 % | 4.8 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 38 min | 18 | 2.504 | um | -86.1 % | 5.4 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 40 min | 19 | 2.558 | um | -86.5 % | 5.7 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 42 min | 20 | 2.608 | um | -87.0 % | 6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 44 min | 21 | 2.654 | um | -87.4 % | 6.3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 46 min | 21 | 2.696 | um | -87.2 % | 6.3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 48 min | 22 | 2.735 | um | -87.6 % | 6.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 50 min | 25 | 2.771 | um | -88.9 % | 7.5 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 52 min | 28 | 2.805 | um | -90.0 % | 8.4 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 54 min | 31 | 2.835 | um | -90.9 % | 9.3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 56 min | 34 | 2.864 | um | -91.6 % | 10.2 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 62 min | 42 | 2.937 | um | -93.0 % | 12.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 64 min | 44 | 2.957 | um | -93.3 % | 13.2 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 66 min | 46 | 2.976 | um | -93.5 % | 13.8 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 68 min | 47 | 2.994 | um | -93.6 % | 14.1 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 70 min | 49 | 3.01 | um | -93.9 % | 14.7 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 72 min | 50 | 3.025 | um | -93.9 % | 15 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 74 min | 52 | 3.039 | um | -94.2 % | 15.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 76 min | 53 | 3.052 | um | -94.2 % | 15.9 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 78 min | 54 | 3.063 | um | -94.3 % | 16.2 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 80 min | 55 | 3.074 | um | -94.4 % | 16.5 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 82 min | 55 | 3.084 | um | -94.4 % | 16.5 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 84 min | 56 | 3.094 | um | -94.5 % | 16.8 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 86 min | 57 | 3.102 | um | -94.6 % | 17.1 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 88 min | 58 | 3.11 | um | -94.6 % | 17.4 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 90 min | 58 | 3.117 | um | -94.6 % | 17.4 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 92 min | 59 | 3.124 | um | -94.7 % | 17.7 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 94 min | 59 | 3.13 | um | -94.7 % | 17.7 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 96 min | 60 | 3.136 | um | -94.8 % | 18 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 98 min | 60 | 3.141 | um | -94.8 % | 18 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 102 min | 60 | 3.151 | um | -94.7 % | 18 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 106 min | 61 | 3.159 | um | -94.8 % | 18.3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 108 min | 61 | 3.162 | um | -94.8 % | 18.3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 110 min | 61 | 3.166 | um | -94.8 % | 18.3 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 112 min | 62 | 3.169 | um | -94.9 % | 18.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 114 min | 62 | 3.171 | um | -94.9 % | 18.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 116 min | 62 | 3.174 | um | -94.9 % | 18.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 118 min | 62 | 3.176 | um | -94.9 % | 18.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 120 min | 62 | 3.179 | um | -94.9 % | 18.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 122 min | 63 | 3.181 | um | -95.0 % | 18.9 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 124 min | 63 | 3.183 | um | -94.9 % | 18.9 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 126 min | 62 | 3.184 | um | -94.9 % | 18.6 | **no** | 4000 rpm |
-| Z_thermal_deformation_4000rpm | 128 min | 63 | 3.186 | um | -94.9 % | 18.9 | **no** | 4000 rpm |
+| Z_thermal_deformation_2000rpm | 2 min | 1 | 2.653 | um | +165.3 % | 1 | **no** | 2000 rpm: spindle 2.7 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 4 min | 2 | 5.117 | um | +155.8 % | 1 | **no** | 2000 rpm: spindle 5.1 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 6 min | 3 | 7.316 | um | +143.9 % | 1 | **no** | 2000 rpm: spindle 7.3 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 8 min | 4 | 9.287 | um | +132.2 % | 1.2 | **no** | 2000 rpm: spindle 9.3 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 10 min | 5 | 11.07 | um | +121.4 % | 1.5 | **no** | 2000 rpm: spindle 11.1 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 12 min | 6 | 12.69 | um | +111.5 % | 1.8 | **no** | 2000 rpm: spindle 12.7 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 14 min | 7 | 14.17 | um | +102.5 % | 2.1 | **no** | 2000 rpm: spindle 14.2 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 16 min | 5 | 15.55 | um | +210.9 % | 1.5 | **no** | 2000 rpm: spindle 15.6 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 18 min | 8 | 16.82 | um | +110.2 % | 2.4 | **no** | 2000 rpm: spindle 16.9 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 20 min | 9 | 18 | um | +100.0 % | 2.7 | **no** | 2000 rpm: spindle 18.0 um, structure lift 0.0 um |
+| Z_thermal_deformation_2000rpm | 22 min | 10 | 19.11 | um | +91.1 % | 3 | **no** | 2000 rpm: spindle 19.2 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 24 min | 11 | 20.16 | um | +83.3 % | 3.3 | **no** | 2000 rpm: spindle 20.2 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 26 min | 11 | 21.15 | um | +92.3 % | 3.3 | **no** | 2000 rpm: spindle 21.2 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 28 min | 12 | 22.09 | um | +84.1 % | 3.6 | **no** | 2000 rpm: spindle 22.2 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 30 min | 12 | 22.98 | um | +91.5 % | 3.6 | **no** | 2000 rpm: spindle 23.1 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 32 min | 13 | 23.83 | um | +83.3 % | 3.9 | **no** | 2000 rpm: spindle 23.9 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 34 min | 13 | 24.65 | um | +89.6 % | 3.9 | **no** | 2000 rpm: spindle 24.8 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 36 min | 14 | 25.43 | um | +81.6 % | 4.2 | **no** | 2000 rpm: spindle 25.6 um, structure lift 0.1 um |
+| Z_thermal_deformation_2000rpm | 38 min | 14 | 26.17 | um | +87.0 % | 4.2 | **no** | 2000 rpm: spindle 26.3 um, structure lift 0.2 um |
+| Z_thermal_deformation_2000rpm | 40 min | 15 | 26.89 | um | +79.3 % | 4.5 | **no** | 2000 rpm: spindle 27.1 um, structure lift 0.2 um |
+| Z_thermal_deformation_2000rpm | 42 min | 15 | 27.58 | um | +83.9 % | 4.5 | **no** | 2000 rpm: spindle 27.8 um, structure lift 0.2 um |
+| Z_thermal_deformation_2000rpm | 44 min | 16 | 28.25 | um | +76.5 % | 4.8 | **no** | 2000 rpm: spindle 28.5 um, structure lift 0.2 um |
+| Z_thermal_deformation_2000rpm | 46 min | 16 | 28.89 | um | +80.5 % | 4.8 | **no** | 2000 rpm: spindle 29.1 um, structure lift 0.2 um |
+| Z_thermal_deformation_2000rpm | 48 min | 17 | 29.5 | um | +73.5 % | 5.1 | **no** | 2000 rpm: spindle 29.7 um, structure lift 0.2 um |
+| Z_thermal_deformation_2000rpm | 50 min | 17 | 30.1 | um | +77.0 % | 5.1 | **no** | 2000 rpm: spindle 30.4 um, structure lift 0.3 um |
+| Z_thermal_deformation_2000rpm | 52 min | 17 | 30.67 | um | +80.4 % | 5.1 | **no** | 2000 rpm: spindle 31.0 um, structure lift 0.3 um |
+| Z_thermal_deformation_2000rpm | 54 min | 17 | 31.23 | um | +83.7 % | 5.1 | **no** | 2000 rpm: spindle 31.5 um, structure lift 0.3 um |
+| Z_thermal_deformation_2000rpm | 58 min | 18 | 32.28 | um | +79.3 % | 5.4 | **no** | 2000 rpm: spindle 32.6 um, structure lift 0.3 um |
+| Z_thermal_deformation_2000rpm | 60 min | 18 | 32.78 | um | +82.1 % | 5.4 | **no** | 2000 rpm: spindle 33.1 um, structure lift 0.4 um |
+| Z_thermal_deformation_2000rpm | 62 min | 19 | 33.26 | um | +75.0 % | 5.7 | **no** | 2000 rpm: spindle 33.6 um, structure lift 0.4 um |
+| Z_thermal_deformation_2000rpm | 64 min | 19 | 33.72 | um | +77.5 % | 5.7 | **no** | 2000 rpm: spindle 34.1 um, structure lift 0.4 um |
+| Z_thermal_deformation_2000rpm | 66 min | 19 | 34.18 | um | +79.9 % | 5.7 | **no** | 2000 rpm: spindle 34.6 um, structure lift 0.4 um |
+| Z_thermal_deformation_2000rpm | 68 min | 20 | 34.61 | um | +73.1 % | 6 | **no** | 2000 rpm: spindle 35.1 um, structure lift 0.4 um |
+| Z_thermal_deformation_2000rpm | 70 min | 20 | 35.03 | um | +75.2 % | 6 | **no** | 2000 rpm: spindle 35.5 um, structure lift 0.5 um |
+| Z_thermal_deformation_2000rpm | 72 min | 20 | 35.44 | um | +77.2 % | 6 | **no** | 2000 rpm: spindle 35.9 um, structure lift 0.5 um |
+| Z_thermal_deformation_2000rpm | 74 min | 20 | 35.83 | um | +79.2 % | 6 | **no** | 2000 rpm: spindle 36.3 um, structure lift 0.5 um |
+| Z_thermal_deformation_2000rpm | 76 min | 20 | 36.21 | um | +81.1 % | 6 | **no** | 2000 rpm: spindle 36.7 um, structure lift 0.5 um |
+| Z_thermal_deformation_2000rpm | 78 min | 20 | 36.58 | um | +82.9 % | 6 | **no** | 2000 rpm: spindle 37.1 um, structure lift 0.6 um |
+| Z_thermal_deformation_2000rpm | 80 min | 20 | 36.93 | um | +84.7 % | 6 | **no** | 2000 rpm: spindle 37.5 um, structure lift 0.6 um |
+| Z_thermal_deformation_2000rpm | 82 min | 20 | 37.28 | um | +86.4 % | 6 | **no** | 2000 rpm: spindle 37.9 um, structure lift 0.6 um |
+| Z_thermal_deformation_2000rpm | 84 min | 20 | 37.61 | um | +88.0 % | 6 | **no** | 2000 rpm: spindle 38.2 um, structure lift 0.6 um |
+| Z_thermal_deformation_2000rpm | 86 min | 20 | 37.93 | um | +89.6 % | 6 | **no** | 2000 rpm: spindle 38.6 um, structure lift 0.6 um |
+| Z_thermal_deformation_2000rpm | 88 min | 21 | 38.24 | um | +82.1 % | 6.3 | **no** | 2000 rpm: spindle 38.9 um, structure lift 0.7 um |
+| Z_thermal_deformation_2000rpm | 92 min | 21 | 38.83 | um | +84.9 % | 6.3 | **no** | 2000 rpm: spindle 39.5 um, structure lift 0.7 um |
+| Z_thermal_deformation_2000rpm | 96 min | 21 | 39.37 | um | +87.5 % | 6.3 | **no** | 2000 rpm: spindle 40.1 um, structure lift 0.8 um |
+| Z_thermal_deformation_2000rpm | 98 min | 21 | 39.63 | um | +88.7 % | 6.3 | **no** | 2000 rpm: spindle 40.4 um, structure lift 0.8 um |
+| Z_thermal_deformation_2000rpm | 100 min | 21 | 39.89 | um | +89.9 % | 6.3 | **no** | 2000 rpm: spindle 40.7 um, structure lift 0.8 um |
+| Z_thermal_deformation_2000rpm | 104 min | 22 | 40.36 | um | +83.5 % | 6.6 | **no** | 2000 rpm: spindle 41.2 um, structure lift 0.9 um |
+| Z_thermal_deformation_2000rpm | 106 min | 21 | 40.59 | um | +93.3 % | 6.3 | **no** | 2000 rpm: spindle 41.5 um, structure lift 0.9 um |
+| Z_thermal_deformation_2000rpm | 108 min | 21 | 40.81 | um | +94.3 % | 6.3 | **no** | 2000 rpm: spindle 41.7 um, structure lift 0.9 um |
+| Z_thermal_deformation_2000rpm | 110 min | 21 | 41.02 | um | +95.3 % | 6.3 | **no** | 2000 rpm: spindle 42.0 um, structure lift 0.9 um |
+
+Curve `Z_thermal_deformation_4000rpm` (time [min] -> um): RMS abs. error 637.1 %, max 2440.6 % over 59 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Z_thermal_deformation_4000rpm | 2 min | 1 | 6.372 | um | +537.2 % | 1 | **no** | 4000 rpm: spindle 6.4 um, structure lift 0.0 um |
+| Z_thermal_deformation_4000rpm | 4 min | 1 | 11.44 | um | +1043.7 % | 1 | **no** | 4000 rpm: spindle 11.4 um, structure lift 0.0 um |
+| Z_thermal_deformation_4000rpm | 6 min | 1 | 15.7 | um | +1469.6 % | 1 | **no** | 4000 rpm: spindle 15.7 um, structure lift 0.0 um |
+| Z_thermal_deformation_4000rpm | 8 min | 1 | 19.35 | um | +1835.2 % | 1 | **no** | 4000 rpm: spindle 19.4 um, structure lift 0.0 um |
+| Z_thermal_deformation_4000rpm | 10 min | 1 | 22.55 | um | +2155.3 % | 1 | **no** | 4000 rpm: spindle 22.6 um, structure lift 0.0 um |
+| Z_thermal_deformation_4000rpm | 12 min | 1 | 25.41 | um | +2440.6 % | 1 | **no** | 4000 rpm: spindle 25.4 um, structure lift 0.0 um |
+| Z_thermal_deformation_4000rpm | 14 min | 2 | 27.99 | um | +1299.3 % | 1 | **no** | 4000 rpm: spindle 28.0 um, structure lift 0.0 um |
+| Z_thermal_deformation_4000rpm | 16 min | 2 | 30.35 | um | +1417.7 % | 1 | **no** | 4000 rpm: spindle 30.4 um, structure lift 0.1 um |
+| Z_thermal_deformation_4000rpm | 18 min | 3 | 32.55 | um | +984.9 % | 1 | **no** | 4000 rpm: spindle 32.6 um, structure lift 0.1 um |
+| Z_thermal_deformation_4000rpm | 20 min | 4 | 34.6 | um | +764.9 % | 1.2 | **no** | 4000 rpm: spindle 34.7 um, structure lift 0.1 um |
+| Z_thermal_deformation_4000rpm | 22 min | 5 | 36.53 | um | +630.5 % | 1.5 | **no** | 4000 rpm: spindle 36.6 um, structure lift 0.1 um |
+| Z_thermal_deformation_4000rpm | 24 min | 7 | 38.35 | um | +447.9 % | 2.1 | **no** | 4000 rpm: spindle 38.5 um, structure lift 0.1 um |
+| Z_thermal_deformation_4000rpm | 26 min | 10 | 40.09 | um | +300.9 % | 3 | **no** | 4000 rpm: spindle 40.3 um, structure lift 0.2 um |
+| Z_thermal_deformation_4000rpm | 28 min | 10 | 41.74 | um | +317.4 % | 3 | **no** | 4000 rpm: spindle 41.9 um, structure lift 0.2 um |
+| Z_thermal_deformation_4000rpm | 30 min | 11 | 43.33 | um | +293.9 % | 3.3 | **no** | 4000 rpm: spindle 43.5 um, structure lift 0.2 um |
+| Z_thermal_deformation_4000rpm | 32 min | 13 | 44.84 | um | +244.9 % | 3.9 | **no** | 4000 rpm: spindle 45.1 um, structure lift 0.2 um |
+| Z_thermal_deformation_4000rpm | 36 min | 16 | 47.69 | um | +198.1 % | 4.8 | **no** | 4000 rpm: spindle 48.0 um, structure lift 0.3 um |
+| Z_thermal_deformation_4000rpm | 38 min | 18 | 49.03 | um | +172.4 % | 5.4 | **no** | 4000 rpm: spindle 49.4 um, structure lift 0.3 um |
+| Z_thermal_deformation_4000rpm | 40 min | 19 | 50.32 | um | +164.8 % | 5.7 | **no** | 4000 rpm: spindle 50.7 um, structure lift 0.4 um |
+| Z_thermal_deformation_4000rpm | 42 min | 20 | 51.56 | um | +157.8 % | 6 | **no** | 4000 rpm: spindle 52.0 um, structure lift 0.4 um |
+| Z_thermal_deformation_4000rpm | 44 min | 21 | 52.75 | um | +151.2 % | 6.3 | **no** | 4000 rpm: spindle 53.2 um, structure lift 0.4 um |
+| Z_thermal_deformation_4000rpm | 46 min | 21 | 53.89 | um | +156.6 % | 6.3 | **no** | 4000 rpm: spindle 54.4 um, structure lift 0.5 um |
+| Z_thermal_deformation_4000rpm | 48 min | 22 | 55 | um | +150.0 % | 6.6 | **no** | 4000 rpm: spindle 55.5 um, structure lift 0.5 um |
+| Z_thermal_deformation_4000rpm | 50 min | 25 | 56.06 | um | +124.2 % | 7.5 | **no** | 4000 rpm: spindle 56.6 um, structure lift 0.5 um |
+| Z_thermal_deformation_4000rpm | 52 min | 28 | 57.08 | um | +103.8 % | 8.4 | **no** | 4000 rpm: spindle 57.7 um, structure lift 0.6 um |
+| Z_thermal_deformation_4000rpm | 54 min | 31 | 58.06 | um | +87.3 % | 9.3 | **no** | 4000 rpm: spindle 58.7 um, structure lift 0.6 um |
+| Z_thermal_deformation_4000rpm | 56 min | 34 | 59.01 | um | +73.5 % | 10.2 | **no** | 4000 rpm: spindle 59.7 um, structure lift 0.7 um |
+| Z_thermal_deformation_4000rpm | 62 min | 42 | 61.63 | um | +46.7 % | 12.6 | **no** | 4000 rpm: spindle 62.4 um, structure lift 0.8 um |
+| Z_thermal_deformation_4000rpm | 64 min | 44 | 62.44 | um | +41.9 % | 13.2 | **no** | 4000 rpm: spindle 63.3 um, structure lift 0.8 um |
+| Z_thermal_deformation_4000rpm | 66 min | 46 | 63.22 | um | +37.4 % | 13.8 | **no** | 4000 rpm: spindle 64.1 um, structure lift 0.9 um |
+| Z_thermal_deformation_4000rpm | 68 min | 47 | 63.97 | um | +36.1 % | 14.1 | **no** | 4000 rpm: spindle 64.9 um, structure lift 0.9 um |
+| Z_thermal_deformation_4000rpm | 70 min | 49 | 64.69 | um | +32.0 % | 14.7 | **no** | 4000 rpm: spindle 65.6 um, structure lift 1.0 um |
+| Z_thermal_deformation_4000rpm | 72 min | 50 | 65.38 | um | +30.8 % | 15 | **no** | 4000 rpm: spindle 66.4 um, structure lift 1.0 um |
+| Z_thermal_deformation_4000rpm | 74 min | 52 | 66.04 | um | +27.0 % | 15.6 | yes | 4000 rpm: spindle 67.1 um, structure lift 1.0 um |
+| Z_thermal_deformation_4000rpm | 76 min | 53 | 66.68 | um | +25.8 % | 15.9 | yes | 4000 rpm: spindle 67.8 um, structure lift 1.1 um |
+| Z_thermal_deformation_4000rpm | 78 min | 54 | 67.3 | um | +24.6 % | 16.2 | yes | 4000 rpm: spindle 68.4 um, structure lift 1.1 um |
+| Z_thermal_deformation_4000rpm | 80 min | 55 | 67.89 | um | +23.4 % | 16.5 | yes | 4000 rpm: spindle 69.1 um, structure lift 1.2 um |
+| Z_thermal_deformation_4000rpm | 82 min | 55 | 68.46 | um | +24.5 % | 16.5 | yes | 4000 rpm: spindle 69.7 um, structure lift 1.2 um |
+| Z_thermal_deformation_4000rpm | 84 min | 56 | 69 | um | +23.2 % | 16.8 | yes | 4000 rpm: spindle 70.3 um, structure lift 1.3 um |
+| Z_thermal_deformation_4000rpm | 86 min | 57 | 69.53 | um | +22.0 % | 17.1 | yes | 4000 rpm: spindle 70.8 um, structure lift 1.3 um |
+| Z_thermal_deformation_4000rpm | 88 min | 58 | 70.03 | um | +20.7 % | 17.4 | yes | 4000 rpm: spindle 71.4 um, structure lift 1.4 um |
+| Z_thermal_deformation_4000rpm | 90 min | 58 | 70.52 | um | +21.6 % | 17.4 | yes | 4000 rpm: spindle 71.9 um, structure lift 1.4 um |
+| Z_thermal_deformation_4000rpm | 92 min | 59 | 70.98 | um | +20.3 % | 17.7 | yes | 4000 rpm: spindle 72.4 um, structure lift 1.5 um |
+| Z_thermal_deformation_4000rpm | 94 min | 59 | 71.43 | um | +21.1 % | 17.7 | yes | 4000 rpm: spindle 72.9 um, structure lift 1.5 um |
+| Z_thermal_deformation_4000rpm | 96 min | 60 | 71.85 | um | +19.8 % | 18 | yes | 4000 rpm: spindle 73.4 um, structure lift 1.6 um |
+| Z_thermal_deformation_4000rpm | 98 min | 60 | 72.27 | um | +20.4 % | 18 | yes | 4000 rpm: spindle 73.9 um, structure lift 1.6 um |
+| Z_thermal_deformation_4000rpm | 102 min | 60 | 73.04 | um | +21.7 % | 18 | yes | 4000 rpm: spindle 74.7 um, structure lift 1.7 um |
+| Z_thermal_deformation_4000rpm | 106 min | 61 | 73.75 | um | +20.9 % | 18.3 | yes | 4000 rpm: spindle 75.5 um, structure lift 1.8 um |
+| Z_thermal_deformation_4000rpm | 108 min | 61 | 74.09 | um | +21.5 % | 18.3 | yes | 4000 rpm: spindle 75.9 um, structure lift 1.8 um |
+| Z_thermal_deformation_4000rpm | 110 min | 61 | 74.41 | um | +22.0 % | 18.3 | yes | 4000 rpm: spindle 76.3 um, structure lift 1.9 um |
+| Z_thermal_deformation_4000rpm | 112 min | 62 | 74.72 | um | +20.5 % | 18.6 | yes | 4000 rpm: spindle 76.6 um, structure lift 1.9 um |
+| Z_thermal_deformation_4000rpm | 114 min | 62 | 75.01 | um | +21.0 % | 18.6 | yes | 4000 rpm: spindle 77.0 um, structure lift 2.0 um |
+| Z_thermal_deformation_4000rpm | 116 min | 62 | 75.29 | um | +21.4 % | 18.6 | yes | 4000 rpm: spindle 77.3 um, structure lift 2.0 um |
+| Z_thermal_deformation_4000rpm | 118 min | 62 | 75.57 | um | +21.9 % | 18.6 | yes | 4000 rpm: spindle 77.6 um, structure lift 2.1 um |
+| Z_thermal_deformation_4000rpm | 120 min | 62 | 75.83 | um | +22.3 % | 18.6 | yes | 4000 rpm: spindle 77.9 um, structure lift 2.1 um |
+| Z_thermal_deformation_4000rpm | 122 min | 63 | 76.07 | um | +20.8 % | 18.9 | yes | 4000 rpm: spindle 78.2 um, structure lift 2.2 um |
+| Z_thermal_deformation_4000rpm | 124 min | 63 | 76.31 | um | +21.1 % | 18.9 | yes | 4000 rpm: spindle 78.5 um, structure lift 2.2 um |
+| Z_thermal_deformation_4000rpm | 126 min | 62 | 76.54 | um | +23.5 % | 18.6 | yes | 4000 rpm: spindle 78.8 um, structure lift 2.3 um |
+| Z_thermal_deformation_4000rpm | 128 min | 63 | 76.76 | um | +21.8 % | 18.9 | yes | 4000 rpm: spindle 79.1 um, structure lift 2.3 um |
 
 ## stability_lobe
 
@@ -4452,78 +4469,78 @@ Curve `stability_limit` (spindle_speed [rpm] -> mm): RMS abs. error 21.5 %, max 
 ## taylor_life
 
 * Budget: 50 % (relative error of the simulated tool life to the stated wear criterion (VB, VN), or of the simulated flank wear at a stated cutting time (VB(t) curve points)).
-* Verdict: **fail** - only 0 of 5 cases within budget (0% < 80%); taylor-zhao2023-carbide-ti64-150mmin misses by inf tolerances (> 2).
+* Verdict: **fail** - only 1 of 5 cases within budget (20% < 80%); taylor-xue2022-sx9-in718-dry misses by 46.60 tolerances (> 2).
 * Harness: `cnctwin.validation.harnesses.taylor.taylor_life`.
 * The wear law as the wear domain builds it (published Usui constants, else calibrated to the database Taylor entry with the mechanics response), integrated from a fresh edge to the case's VB (or VN) criterion at each tested speed, feed and depth (equivalent orthogonal cut, h = f).
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 5 | 0/5 | 94 (2) | 99.5 % / 100.0 % / 99.3 % | 213.6 % | - | 0/94 | inf (taylor-zhao2023-carbide-ti64-150mmin) |
-| calibration-dependent | 2 | 2/2 | 21 (0) | 13.9 % / 13.9 % / - | 30.4 % | - | 5/21 | 0.875 (taylor-bouchelaghem2007-cbn-d3-60hrc-dry) |
+| independent | 5 | 1/5 | 94 (0) | 87.7 % / 71.0 % / 88.1 % | 117.3 % | - | 3/94 | 46.6 (taylor-xue2022-sx9-in718-dry) |
+| calibration-dependent | 2 | 2/2 | 21 (0) | 15.6 % / 15.6 % / - | 35.2 % | - | 5/21 | 0.895 (taylor-bouchelaghem2007-cbn-d3-60hrc-dry) |
 
-**Failures and likely causes.** 0 of 5 independent cases within budget. Values within tolerance per case: taylor-magalhaes2022-cermet-aisi1045-dry 1/14; taylor-magalhaes2026-cermet-aisi304-dry 1/2; taylor-xue2022-sx9-in718-dry 0/25; taylor-xue2022-wg300-in718-dry 0/37; taylor-zhao2023-carbide-ti64-150mmin 0/16. Where the wear law is calibrated to a database Taylor entry, the prediction can be no better than that entry for the case's tool and material (most entries are estimates); where the same paper supplied the entry the case is calibration-dependent and shows only that the integration reproduces its own fit. Ceramic, cermet and PCBN pairings rest on estimated Taylor entries or published Usui sets from other tests.
+**Failures and likely causes.** 1 of 5 independent cases within budget (taylor-magalhaes2022-cermet-aisi1045-dry). Values within tolerance per case: taylor-magalhaes2022-cermet-aisi1045-dry 14/14; taylor-magalhaes2026-cermet-aisi304-dry 0/2; taylor-xue2022-sx9-in718-dry 0/25; taylor-xue2022-wg300-in718-dry 2/37; taylor-zhao2023-carbide-ti64-150mmin 8/16. Where the wear law is calibrated to a database Taylor entry, the prediction can be no better than that entry for the case's tool and material (most entries are estimates); where the same paper supplied the entry the case is calibration-dependent and shows only that the integration reproduces its own fit. Ceramic, cermet and PCBN pairings rest on estimated Taylor entries or published Usui sets from other tests.
 
 ### taylor-aouici2010-cbn7020-h11-50hrc-dry
 
 * Source: `aouici-2010-cbn-h11-hard-turning`, Sect. 2 (setup), Table 2 (CBN7020 properties), Sect. 3.3 and Table 4 (tool life for VB = 0.30 mm, 3 x 3 full factorial) (measured).
 * File: `validation/cases/taylor_life/taylor-aouici2010-cbn7020-h11-50hrc-dry.yaml`; operation longitudinal_turning; material `h13-50hrc`.
 * Validation class: **calibration-dependent**: h13-50hrc tool_life[0] (cbn, uncoated) from `aouici-2010-h11-cbn` (named in its note).
-* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + Blok partition) -> life integral with cnctwin.wear.kernels.usui_rate.
-* Settings: A_per_Pa = [2.34715e-17], B_K = [4728.6], VB_per_VN = 9.619, calibration_residuals = [1.55431e-15, -1.66533e-15, 0.00266272], clearance_deg = 6, coating = none, edge_radius_um = 8, flank_law = taylor, notch_factor = 1.103, rake_deg = -6, taylor_entry = h13-50hrc tool_life[0] (cbn, uncoated), taylor_relation = substrate, taylor_src = est, tool_material = cbn-low.
+* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + the run's flank partition, mechanics.coefficients.flank_contact_heat) -> life integral with cnctwin.wear.kernels.usui_rate.
+* Settings: A_per_Pa = [1.8056e-14], B_K = [11359.0], VB_per_VN = 9.619, calibration_residuals = [-2.22045e-16, 3.10862e-15, 0.0121458], clearance_deg = 6, coating = none, edge_radius_um = 8, flank_law = taylor, notch_factor = 1.103, rake_deg = -6, taylor_entry = h13-50hrc tool_life[0] (cbn, uncoated), taylor_relation = substrate, taylor_src = est, tool_material = cbn-low.
 * Inputs the case marks as assumed: `setup.tool.edge_preparation` = S-type edge: chamfer 0.10 mm x 20 deg plus hone (decoded from the edge code S01020 of the designation; not stated in words).
 * Inputs the harness assumed: tool material = cbn-low (Sandvik CBN7020 (57 % cBN, ceramic binder) is a low-content PCBN, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); cutting-edge radius = 8 um (not stated in the case: the tooling model's default for this tool (chamfer_corner_radius_m), db/models/tooling.yaml).
 * Database values used: h13-50hrc flow stress (Johnson-Cook) (`matras-2020-h13-cbn-milling`); h13-50hrc physical.density_kg_m3 (`bohler-w302-fr-es`); h13-50hrc physical.specific_heat_J_kgK (`bohler-w302-fr-es`); h13-50hrc physical.conductivity_W_mK (`bohler-w302-fr-es`); h13-50hrc cutting.min_chip_thickness_ratio (`est`); h13-50hrc friction mu_sliding (cbn, uncoated) (`est`); h13-50hrc tool_life[0] (cbn, uncoated) (`est`).
 * Material: database entry h13-50hrc; the case says: AISI H11 (not H13) hardened to 50 HRC; Table 1: C 0.35, Cr 5.26, Mo 1.19, V 0.50, Si 1.01, Mn 0.32 %. H11 is the lower-vanadium sister grade of H13 (DB entry, 50 HRC).
-* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 9.8 %, max 20.5 %; 4/9 within uncertainty; case within budget; largest miss 0.409 tolerances.
+* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 7.2 %, max 17.7 %; 4/9 within uncertainty; case within budget; largest miss 0.353 tolerances.
 * Likely cause: mean signed error of the lives -1 %; flank law: taylor (calibrated to h13-50hrc tool_life[0] (cbn, uncoated), src est).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| tool_life_f0.08 | 120 m/min | 76 | 68.06 | min | -10.5 % | 38 | yes | vc 120 m/min, f 0.08 mm, ap 0.15 mm, VB 0.3 mm; flank 1305 degC, sigma_n 3950 MPa at VB 0.15 mm |
-| tool_life_f0.08 | 180 m/min | 40 | 32.96 | min | -17.6 % | 20 | yes | vc 180 m/min, f 0.08 mm, ap 0.15 mm, VB 0.3 mm; flank 1510 degC, sigma_n 3965 MPa at VB 0.15 mm |
-| tool_life_f0.08 | 240 m/min | 20.5 | 19.77 | min | -3.5 % | 10.2 | yes | vc 240 m/min, f 0.08 mm, ap 0.15 mm, VB 0.3 mm; flank 1683 degC, sigma_n 3975 MPa at VB 0.15 mm |
-| tool_life_f0.12 | 120 m/min | 67.5 | 68.48 | min | +1.5 % | 33.8 | yes | vc 120 m/min, f 0.12 mm, ap 0.15 mm, VB 0.3 mm; flank 1304 degC, sigma_n 3913 MPa at VB 0.15 mm |
-| tool_life_f0.12 | 180 m/min | 37 | 33.37 | min | -9.8 % | 18.5 | yes | vc 180 m/min, f 0.12 mm, ap 0.15 mm, VB 0.3 mm; flank 1506 degC, sigma_n 3926 MPa at VB 0.15 mm |
-| tool_life_f0.12 | 240 m/min | 20 | 20.08 | min | +0.4 % | 10 | yes | vc 240 m/min, f 0.12 mm, ap 0.15 mm, VB 0.3 mm; flank 1677 degC, sigma_n 3936 MPa at VB 0.15 mm |
-| tool_life_f0.16 | 120 m/min | 56.6 | 68.18 | min | +20.5 % | 28.3 | yes | vc 120 m/min, f 0.16 mm, ap 0.15 mm, VB 0.3 mm; flank 1304 degC, sigma_n 3886 MPa at VB 0.15 mm |
-| tool_life_f0.16 | 180 m/min | 32.67 | 33.69 | min | +3.1 % | 16.3 | yes | vc 180 m/min, f 0.16 mm, ap 0.15 mm, VB 0.3 mm; flank 1503 degC, sigma_n 3898 MPa at VB 0.15 mm |
-| tool_life_f0.16 | 240 m/min | 18.34 | 20.31 | min | +10.8 % | 9.17 | yes | vc 240 m/min, f 0.16 mm, ap 0.15 mm, VB 0.3 mm; flank 1672 degC, sigma_n 3907 MPa at VB 0.15 mm |
+| tool_life_f0.08 | 120 m/min | 76 | 70.54 | min | -7.2 % | 38 | yes | vc 120 m/min, f 0.08 mm, ap 0.15 mm, VB 0.3 mm; flank 974 degC, sigma_n 3605 MPa at VB 0.15 mm (flank 869 / 1110 degC at the fresh land / the criterion; the life halves per +95 K of the flank) |
+| tool_life_f0.08 | 180 m/min | 40 | 33.75 | min | -15.6 % | 20 | yes | vc 180 m/min, f 0.08 mm, ap 0.15 mm, VB 0.3 mm; flank 1028 degC, sigma_n 3569 MPa at VB 0.15 mm (flank 911 / 1162 degC at the fresh land / the criterion; the life halves per +103 K of the flank) |
+| tool_life_f0.08 | 240 m/min | 20.5 | 20.5 | min | -0.0 % | 10.2 | yes | vc 240 m/min, f 0.08 mm, ap 0.15 mm, VB 0.3 mm; flank 1064 degC, sigma_n 3520 MPa at VB 0.15 mm (flank 937 / 1194 degC at the fresh land / the criterion; the life halves per +109 K of the flank) |
+| tool_life_f0.12 | 120 m/min | 67.5 | 68.48 | min | +1.5 % | 33.8 | yes | vc 120 m/min, f 0.12 mm, ap 0.15 mm, VB 0.3 mm; flank 978 degC, sigma_n 3605 MPa at VB 0.15 mm (flank 874 / 1113 degC at the fresh land / the criterion; the life halves per +95 K of the flank) |
+| tool_life_f0.12 | 180 m/min | 37 | 32.93 | min | -11.0 % | 18.5 | yes | vc 180 m/min, f 0.12 mm, ap 0.15 mm, VB 0.3 mm; flank 1031 degC, sigma_n 3569 MPa at VB 0.15 mm (flank 916 / 1164 degC at the fresh land / the criterion; the life halves per +104 K of the flank) |
+| tool_life_f0.12 | 240 m/min | 20 | 20.08 | min | +0.4 % | 10 | yes | vc 240 m/min, f 0.12 mm, ap 0.15 mm, VB 0.3 mm; flank 1066 degC, sigma_n 3520 MPa at VB 0.15 mm (flank 940 / 1195 degC at the fresh land / the criterion; the life halves per +109 K of the flank) |
+| tool_life_f0.16 | 120 m/min | 56.6 | 66.6 | min | +17.7 % | 28.3 | yes | vc 120 m/min, f 0.16 mm, ap 0.15 mm, VB 0.3 mm; flank 980 degC, sigma_n 3605 MPa at VB 0.15 mm (flank 878 / 1115 degC at the fresh land / the criterion; the life halves per +96 K of the flank) |
+| tool_life_f0.16 | 180 m/min | 32.67 | 32.35 | min | -1.0 % | 16.3 | yes | vc 180 m/min, f 0.16 mm, ap 0.15 mm, VB 0.3 mm; flank 1033 degC, sigma_n 3569 MPa at VB 0.15 mm (flank 919 / 1165 degC at the fresh land / the criterion; the life halves per +104 K of the flank) |
+| tool_life_f0.16 | 240 m/min | 18.34 | 19.79 | min | +7.9 % | 9.17 | yes | vc 240 m/min, f 0.16 mm, ap 0.15 mm, VB 0.3 mm; flank 1068 degC, sigma_n 3520 MPa at VB 0.15 mm (flank 943 / 1197 degC at the fresh land / the criterion; the life halves per +110 K of the flank) |
 
 ### taylor-bouchelaghem2007-cbn-d3-60hrc-dry
 
 * Source: `bouchelaghem-2007-cbn-d3-wear`, Sect. 2 (setup, criterion), Fig. 7 (tool life versus cutting speed for [VB] = 0.3 and 0.4 mm; bar heights read from the vector drawing of the PDF), Sect. 3.3 and Fig. 8 (chip volumes, used as a check) (measured, digitised, stated uncertainty 1 %).
 * File: `validation/cases/taylor_life/taylor-bouchelaghem2007-cbn-d3-60hrc-dry.yaml`; operation longitudinal_turning; material `d2-60hrc`.
 * Validation class: **calibration-dependent**: d2-60hrc tool_life[0] (cbn, TiN) from `bouchelaghem-2007-d3-cbn` (source).
-* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + Blok partition) -> life integral with cnctwin.wear.kernels.usui_rate.
-* Settings: A_per_Pa = [5.98137e-17], B_K = [7598.48], VB_per_VN = 9.619, calibration_residuals = [-2.33147e-15, 6.66134e-16, -0.00067656], clearance_deg = 6, coating = tin, edge_radius_um = 8, flank_law = taylor, notch_factor = 1.061, rake_deg = -6, taylor_entry = d2-60hrc tool_life[0] (cbn, TiN), taylor_relation = same, taylor_src = bouchelaghem-2007-d3-cbn, tool_material = cbn-low.
+* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + the run's flank partition, mechanics.coefficients.flank_contact_heat) -> life integral with cnctwin.wear.kernels.usui_rate.
+* Settings: A_per_Pa = [1.68759e-05], B_K = [43720.8], VB_per_VN = 9.619, calibration_residuals = [-1.11022e-15, -3.55271e-15, -0.106269], clearance_deg = 6, coating = tin, edge_radius_um = 8, flank_law = taylor, notch_factor = 1.061, rake_deg = -6, taylor_entry = d2-60hrc tool_life[0] (cbn, TiN), taylor_relation = same, taylor_src = bouchelaghem-2007-d3-cbn, tool_material = cbn-low.
 * Inputs the case marks as assumed: `setup.tool.edge_preparation` = chamfer 0.10 mm x 20 deg (decoded from the edge code T01020 of the designation); `setup.tool.nose_radius_mm` = 0.8 (decoded from the ISO designation (nose-radius code 08 = 0.8 mm); not stated in words).
 * Inputs the harness assumed: tool material = cbn-low (57 % cBN with ceramic binder is a low-content PCBN, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); cutting-edge radius = 8 um (not stated in the case: the tooling model's default for this tool (chamfer_corner_radius_m), db/models/tooling.yaml).
 * Database values used: d2-60hrc flow stress (Johnson-Cook) (`tang-2016-skd11-milling`); d2-60hrc physical.density_kg_m3 (`voestalpine-2026-k110`); d2-60hrc physical.specific_heat_J_kgK (`voestalpine-2026-k110`); d2-60hrc physical.conductivity_W_mK (`voestalpine-2026-k110`); d2-60hrc cutting.min_chip_thickness_ratio (`est`); d2-60hrc friction mu_sliding (cbn, uncoated) (`est`); d2-60hrc tool_life[0] (cbn, TiN) (`bouchelaghem-2007-d3-cbn`).
 * Material: database entry d2-60hrc; the case says: AISI D3 (not D2) hardened to 60 HRC: quenched from 940 C, tempered at 280 C. Table 1 composition: C 2, Mn 0.29, Si 0.31, P 0.011, S 0.009, Ni 0.259 and 'Cr 1.14' (probably 11.4 misprinted: D3 is a 12 % Cr steel). The DB entry (D2, 1.5 C - 12 Cr - Mo - V, 60 HRC) is the closest grade; D3 has more carbide (higher C, no Mo/V).
-* Result: 12 compared, 0 without prediction, 0 not compared; median abs. error 15.1 %, max 43.7 %; 1/12 within uncertainty; case within budget; largest miss 0.875 tolerances.
-* Likely cause: mean signed error of the lives +5 %; flank law: taylor (calibrated to d2-60hrc tool_life[0] (cbn, TiN), src bouchelaghem-2007-d3-cbn).
+* Result: 12 compared, 0 without prediction, 0 not compared; median abs. error 24.4 %, max 44.8 %; 1/12 within uncertainty; case within budget; largest miss 0.895 tolerances.
+* Likely cause: mean signed error of the lives -10 %; flank law: taylor (calibrated to d2-60hrc tool_life[0] (cbn, TiN), src bouchelaghem-2007-d3-cbn).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| tool_life_VB0.3 | 85 m/min | 40 | 42.88 | min | +7.2 % | 20 | yes | vc 85 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 1910 degC, sigma_n 5476 MPa at VB 0.15 mm |
-| tool_life_VB0.3 | 115 m/min | 22 | 25.12 | min | +14.2 % | 11 | yes | vc 115 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 2102 degC, sigma_n 5418 MPa at VB 0.15 mm |
-| tool_life_VB0.3 | 150 m/min | 16.9 | 15.57 | min | -7.9 % | 8.45 | yes | vc 150 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 2300 degC, sigma_n 5395 MPa at VB 0.15 mm |
-| tool_life_VB0.3 | 200 m/min | 11 | 9.296 | min | -15.5 % | 5.5 | yes | vc 200 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 2544 degC, sigma_n 5369 MPa at VB 0.15 mm |
-| tool_life_VB0.3 | 240 m/min | 9 | 6.716 | min | -25.4 % | 4.5 | yes | vc 240 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 2718 degC, sigma_n 5351 MPa at VB 0.15 mm |
-| tool_life_VB0.3 | 310 m/min | 3 | 4.271 | min | +42.4 % | 1.5 | yes | vc 310 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 2989 degC, sigma_n 5324 MPa at VB 0.15 mm |
-| tool_life_VB0.4 | 85 m/min | 45 | 58.69 | min | +30.4 % | 22.5 | yes | vc 85 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 1894 degC, sigma_n 4694 MPa at VB 0.2 mm |
-| tool_life_VB0.4 | 115 m/min | 30 | 34.17 | min | +13.9 % | 15 | yes | vc 115 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 2085 degC, sigma_n 4644 MPa at VB 0.2 mm |
-| tool_life_VB0.4 | 150 m/min | 21.2 | 21.09 | min | -0.5 % | 10.6 | yes | vc 150 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 2280 degC, sigma_n 4624 MPa at VB 0.2 mm |
-| tool_life_VB0.4 | 200 m/min | 14.7 | 12.54 | min | -14.7 % | 7.35 | yes | vc 200 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 2522 degC, sigma_n 4602 MPa at VB 0.2 mm |
-| tool_life_VB0.4 | 240 m/min | 13 | 9.048 | min | -30.4 % | 6.5 | yes | vc 240 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 2694 degC, sigma_n 4586 MPa at VB 0.2 mm |
-| tool_life_VB0.4 | 310 m/min | 4 | 5.75 | min | +43.7 % | 2 | yes | vc 310 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 2963 degC, sigma_n 4564 MPa at VB 0.2 mm |
+| tool_life_VB0.3 | 85 m/min | 40 | 42.88 | min | +7.2 % | 20 | yes | vc 85 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 1250 degC, sigma_n 6282 MPa at VB 0.15 mm (flank 1173 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.3 | 115 m/min | 22 | 22.73 | min | +3.3 % | 11 | yes | vc 115 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 1250 degC, sigma_n 5999 MPa at VB 0.15 mm (flank 1199 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.3 | 150 m/min | 16.9 | 13.93 | min | -17.6 % | 8.45 | yes | vc 150 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 1250 degC, sigma_n 5764 MPa at VB 0.15 mm (flank 1215 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.3 | 200 m/min | 11 | 8.427 | min | -23.4 % | 5.5 | yes | vc 200 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 1250 degC, sigma_n 5528 MPa at VB 0.15 mm (flank 1231 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.3 | 240 m/min | 9 | 6.25 | min | -30.6 % | 4.5 | yes | vc 240 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 1250 degC, sigma_n 5388 MPa at VB 0.15 mm (flank 1240 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.3 | 310 m/min | 3 | 4.271 | min | +42.4 % | 1.5 | yes | vc 310 m/min, f 0.08 mm, ap 0.5 mm, VB 0.3 mm; flank 1250 degC, sigma_n 5202 MPa at VB 0.15 mm (flank 1250 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.4 | 85 m/min | 45 | 45.13 | min | +0.3 % | 22.5 | yes | vc 85 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 1250 degC, sigma_n 7539 MPa at VB 0.2 mm (flank 1173 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.4 | 115 m/min | 30 | 24.48 | min | -18.4 % | 15 | yes | vc 115 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 1250 degC, sigma_n 7199 MPa at VB 0.2 mm (flank 1199 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.4 | 150 m/min | 21.2 | 15.33 | min | -27.7 % | 10.6 | yes | vc 150 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 1250 degC, sigma_n 6917 MPa at VB 0.2 mm (flank 1215 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.4 | 200 m/min | 14.7 | 9.519 | min | -35.2 % | 7.35 | yes | vc 200 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 1250 degC, sigma_n 6634 MPa at VB 0.2 mm (flank 1231 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.4 | 240 m/min | 13 | 7.181 | min | -44.8 % | 6.5 | yes | vc 240 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 1250 degC, sigma_n 6465 MPa at VB 0.2 mm (flank 1240 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
+| tool_life_VB0.4 | 310 m/min | 4 | 5.02 | min | +25.5 % | 2 | yes | vc 310 m/min, f 0.08 mm, ap 0.5 mm, VB 0.4 mm; flank 1250 degC, sigma_n 6242 MPa at VB 0.2 mm (flank 1250 / 1250 degC at the fresh land / the criterion; the life halves per +37 K of the flank) |
 
 ### taylor-magalhaes2022-cermet-aisi1045-dry
 
 * Source: `magalhaes-2022-1045-dry-turning`, Sect. 2.1 and Table 2 (setup), Sect. 2.4 (criterion), Sect. 3 text (tool lives), Fig. 11 (VBB curves, digitised) (measured, digitised, stated uncertainty 5 %).
 * File: `validation/cases/taylor_life/taylor-magalhaes2022-cermet-aisi1045-dry.yaml`; operation longitudinal_turning; material `aisi1045`.
 * Validation class: **independent**.
-* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + Blok partition) -> life integral with cnctwin.wear.kernels.usui_rate.
+* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + the run's flank partition, mechanics.coefficients.flank_contact_heat) -> life integral with cnctwin.wear.kernels.usui_rate.
 * Settings: A_per_Pa = [0.0], B_K = [1.0], VB_per_VN = 9.409, clearance_deg = 6, coating = none, edge_radius_um = 35, flank_law = abrasive_only, notch_factor = 1.322, rake_deg = 6, tool_material = cermet-ticn.
 * Inputs the case marks as assumed: `setup.conditions.feed_mm_rev` = 0.025 (the tool-life feed is not stated; 0.025 mm/rev is the feed of the paper's roughness-versus-wear tests run on the same inserts (Sect. 3) and the lowest feed of Table 2).
 * Inputs the harness assumed: tool material = cermet-ticn (Sumitomo T1200A is a TiCN-based cermet, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); clearance angle = 6 deg (not stated in the case, est); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml).
@@ -4531,44 +4548,44 @@ Curve `stability_limit` (spindle_speed [rpm] -> mm): RMS abs. error 21.5 %, max 
 * Material: database entry aisi1045; the case says: as supplied, 248 HB; wt% 0.48 C, 0.73 Mn, 0.25 Si, 0.016 P, 0.05 S (maker's datasheet)
 * Wear model: tool slot 0: no Usui constants and no Taylor data for cermet on aisi1045; abrasive (Archard) wear only.
 * Wear model: tool slot 0: grain size 1 um assumed for BUE attrition.
-* Result: 14 compared, 0 without prediction, 2 not compared; median abs. error 128.9 %, max 319.9 %; 0/14 within uncertainty; case **outside budget**; largest miss 6.4 tolerances.
-* Likely cause: mean signed error of the lives -59 %; flank law: abrasive_only (no Usui constants for the pairing and no Taylor entry for this tool class in the material: only the Archard floor, K_ref 2e-8 est, wears the tool); VB(t) curves: mean signed error +165 % (the model's land grows slowly while it is small: the flank temperature rises with the land).
+* Result: 14 compared, 0 without prediction, 2 not compared; median abs. error 20.5 %, max 48.8 %; 2/14 within uncertainty; case within budget; largest miss 0.953 tolerances.
+* Likely cause: mean signed error of the lives +21 %; flank law: abrasive_only (no Usui constants for the pairing and no Taylor entry for this tool class in the material: only the Archard floor, K_ref 2e-8 est, wears the tool); VB(t) curves: mean signed error -5 % (the model's land grows slowly while it is small: the flank temperature and the land's stresses rise with the land, and the break-in of a fresh edge is not modelled).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| tool_life | 175 m/min | 35 | 14.59 | min | -58.3 % | 17.5 | **no** | vc 175 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 710 degC, sigma_n 3267 MPa at VB 0.05 mm |
-| tool_life | 275 m/min | 23 | 9.415 | min | -59.1 % | 11.5 | **no** | vc 275 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 834 degC, sigma_n 3220 MPa at VB 0.05 mm |
+| tool_life | 175 m/min | 35 | 42.58 | min | +21.7 % | 17.5 | yes | vc 175 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 613 degC, sigma_n 1119 MPa at VB 0.05 mm (flank 640 / 615 degC at the fresh land / the criterion) |
+| tool_life | 275 m/min | 23 | 27.53 | min | +19.7 % | 11.5 | yes | vc 275 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 670 degC, sigma_n 1101 MPa at VB 0.05 mm (flank 688 / 677 degC at the fresh land / the criterion) |
 
-Curve `flank_wear_vc175` (cutting_time [min] -> um): RMS abs. error 202.3 %, max 319.9 % over 6 compared points.
+Curve `flank_wear_vc175` (cutting_time [min] -> um): RMS abs. error 32.9 %, max 48.8 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | flank_wear_vc175 | 0 min | 4 | 0 | um | - | 6 | not compared | fresh edge (t = 0) |
-| flank_wear_vc175 | 2.42 min | 11.1 | 16.59 | um | +49.5 % | 6 | yes | vc 175 m/min |
-| flank_wear_vc175 | 4.99 min | 14.9 | 34.21 | um | +129.6 % | 7.45 | **no** | vc 175 m/min |
-| flank_wear_vc175 | 10 min | 19.9 | 68.56 | um | +244.5 % | 9.95 | **no** | vc 175 m/min |
-| flank_wear_vc175 | 19.99 min | 31.8 | 133.5 | um | +319.9 % | 15.9 | **no** | vc 175 m/min |
-| flank_wear_vc175 | 24.96 min | 47.8 | 160.4 | um | +235.5 % | 23.9 | **no** | vc 175 m/min |
-| flank_wear_vc175 | 35 min | 107.6 | 208.3 | um | +93.6 % | 53.8 | **no** | vc 175 m/min |
+| flank_wear_vc175 | 2.42 min | 11.1 | 5.684 | um | -48.8 % | 6 | yes | vc 175 m/min |
+| flank_wear_vc175 | 4.99 min | 14.9 | 11.72 | um | -21.3 % | 7.45 | yes | vc 175 m/min |
+| flank_wear_vc175 | 10 min | 19.9 | 23.49 | um | +18.0 % | 9.95 | yes | vc 175 m/min |
+| flank_wear_vc175 | 19.99 min | 31.8 | 46.95 | um | +47.6 % | 15.9 | yes | vc 175 m/min |
+| flank_wear_vc175 | 24.96 min | 47.8 | 58.62 | um | +22.6 % | 23.9 | yes | vc 175 m/min |
+| flank_wear_vc175 | 35 min | 107.6 | 82.2 | um | -23.6 % | 53.8 | yes | vc 175 m/min |
 
-Curve `flank_wear_vc275` (cutting_time [min] -> um): RMS abs. error 159.0 %, max 214.1 % over 6 compared points.
+Curve `flank_wear_vc275` (cutting_time [min] -> um): RMS abs. error 20.0 %, max 39.1 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | flank_wear_vc275 | 0 min | 4 | 0 | um | - | 6 | not compared | fresh edge (t = 0) |
-| flank_wear_vc275 | 2.48 min | 14.8 | 26.34 | um | +78.0 % | 7.4 | **no** | vc 275 m/min |
-| flank_wear_vc275 | 4.97 min | 19.7 | 52.79 | um | +168.0 % | 9.85 | **no** | vc 275 m/min |
-| flank_wear_vc275 | 9.98 min | 33.7 | 105.9 | um | +214.1 % | 16.9 | **no** | vc 275 m/min |
-| flank_wear_vc275 | 18.5 min | 57.8 | 178.8 | um | +209.4 % | 28.9 | **no** | vc 275 m/min |
-| flank_wear_vc275 | 21.5 min | 87.9 | 200.6 | um | +128.3 % | 44 | **no** | vc 275 m/min |
-| flank_wear_vc275 | 23 min | 102.6 | 211.1 | um | +105.8 % | 51.3 | **no** | vc 275 m/min |
+| flank_wear_vc275 | 2.48 min | 14.8 | 9.007 | um | -39.1 % | 7.4 | yes | vc 275 m/min |
+| flank_wear_vc275 | 4.97 min | 19.7 | 18.05 | um | -8.4 % | 9.85 | yes | vc 275 m/min |
+| flank_wear_vc275 | 9.98 min | 33.7 | 36.25 | um | +7.6 % | 16.9 | yes | vc 275 m/min |
+| flank_wear_vc275 | 18.5 min | 57.8 | 67.19 | um | +16.2 % | 28.9 | yes | vc 275 m/min |
+| flank_wear_vc275 | 21.5 min | 87.9 | 78.08 | um | -11.2 % | 44 | yes | vc 275 m/min |
+| flank_wear_vc275 | 23 min | 102.6 | 83.53 | um | -18.6 % | 51.3 | yes | vc 275 m/min |
 
 ### taylor-magalhaes2026-cermet-aisi304-dry
 
 * Source: `magalhaes-2026-304-cermet-turning`, Sect. 2 (setup), Sect. 2.3 (criterion), Sect. 3.2 text and conclusions (tool lives); the abstract gives different numbers (see notes) (measured).
 * File: `validation/cases/taylor_life/taylor-magalhaes2026-cermet-aisi304-dry.yaml`; operation longitudinal_turning; material `aisi304`.
 * Validation class: **independent**.
-* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + Blok partition) -> life integral with cnctwin.wear.kernels.usui_rate.
+* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + the run's flank partition, mechanics.coefficients.flank_contact_heat) -> life integral with cnctwin.wear.kernels.usui_rate.
 * Settings: A_per_Pa = [0.0], B_K = [1.0], VB_per_VN = 9.409, clearance_deg = 6, coating = none, edge_radius_um = 35, flank_law = abrasive_only, notch_factor = 2.89, rake_deg = 6, tool_material = cermet-ticn.
 * Inputs the case marks as assumed: `setup.conditions.feed_mm_rev` = 0.025 (not stated for the tool-life tests; the SEM wear analyses at end of life were made at the lower feed, 0.025 mm/rev (the other feed tested is 0.05 mm/rev)).
 * Inputs the harness assumed: tool material = cermet-ticn (Sumitomo T1200A is a TiCN-based cermet, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); clearance angle = 6 deg (not stated in the case, est); cutting-edge radius = 35 um (not stated in the case: the tooling model's default for this tool (insert_edge_radius_m), db/models/tooling.yaml).
@@ -4576,241 +4593,243 @@ Curve `flank_wear_vc275` (cutting_time [min] -> um): RMS abs. error 159.0 %, max
 * Material: database entry aisi304; the case says: as received, 215 HB; wt% 19.28 Cr, 11.25 Ni, 0.03 C, 1.73 Mn, 0.54 Si, 0.04 N (maker's datasheet)
 * Wear model: tool slot 0: no Usui constants and no Taylor data for cermet on aisi304; abrasive (Archard) wear only.
 * Wear model: tool slot 0: grain size 1 um assumed for BUE attrition.
-* Result: 2 compared, 0 without prediction, 0 not compared; median abs. error 58.1 %, max 87.3 %; 0/2 within uncertainty; case **outside budget**; largest miss 1.75 tolerances.
-* Likely cause: mean signed error of the lives +58 %; flank law: abrasive_only (no Usui constants for the pairing and no Taylor entry for this tool class in the material: only the Archard floor, K_ref 2e-8 est, wears the tool).
+* Result: 2 compared, 0 without prediction, 0 not compared; median abs. error 362.1 %, max 447.6 %; 0/2 within uncertainty; case **outside budget**; largest miss 8.95 tolerances.
+* Likely cause: mean signed error of the lives +362 %; flank law: abrasive_only (no Usui constants for the pairing and no Taylor entry for this tool class in the material: only the Archard floor, K_ref 2e-8 est, wears the tool).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| tool_life | 120 m/min | 18 | 23.2 | min | +28.9 % | 9 | yes | vc 120 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 776 degC, sigma_n 2995 MPa at VB 0.05 mm |
-| tool_life | 150 m/min | 10 | 18.73 | min | +87.3 % | 5 | **no** | vc 150 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 839 degC, sigma_n 2967 MPa at VB 0.05 mm |
+| tool_life | 120 m/min | 18 | 67.79 | min | +276.6 % | 9 | **no** | vc 120 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 638 degC, sigma_n 1025 MPa at VB 0.05 mm (flank 655 / 644 degC at the fresh land / the criterion) |
+| tool_life | 150 m/min | 10 | 54.76 | min | +447.6 % | 5 | **no** | vc 150 m/min, f 0.025 mm, ap 0.2 mm, VB 0.1 mm; flank 667 degC, sigma_n 1015 MPa at VB 0.05 mm (flank 680 / 674 degC at the fresh land / the criterion) |
 
 ### taylor-xue2022-sx9-in718-dry
 
 * Source: `xue-2022-in718-ceramic-tool-wear`, Sect. 2 and Table 3 (setup, criteria), Sect. 3.2 (inspection every 30 s, flank wear governs SX9 at all speeds), Fig. 2c-d (VB and VN versus cutting time, digitised) (measured, digitised, stated uncertainty 2 %).
 * File: `validation/cases/taylor_life/taylor-xue2022-sx9-in718-dry.yaml`; operation longitudinal_turning; material `inconel718`.
 * Validation class: **independent**.
-* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + Blok partition) -> life integral with cnctwin.wear.kernels.usui_rate.
-* Settings: A_per_Pa = [4.18549e-13], B_K = [20603.2], VB_per_VN = 9.619, calibration_residuals = [-1.03251e-14, 4.66294e-15, 0.0875975], clearance_deg = 6, coating = none, edge_radius_um = 8, flank_law = taylor, notch_factor = 2.19, rake_deg = -6, taylor_entry = inconel718 tool_life[1] (ceramic, uncoated), taylor_relation = substrate, taylor_src = est, tool_material = ceramic-sialon.
+* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + the run's flank partition, mechanics.coefficients.flank_contact_heat) -> life integral with cnctwin.wear.kernels.usui_rate.
+* Settings: A_per_Pa = [374.235], B_K = [58793.9], VB_per_VN = 9.619, calibration_residuals = [1.33227e-15, 3.33067e-15, 0.00806498], clearance_deg = 6, coating = none, edge_radius_um = 8, flank_law = taylor, notch_factor = 2.19, rake_deg = -6, taylor_entry = inconel718 tool_life[1] (ceramic, uncoated), taylor_relation = substrate, taylor_src = est, tool_material = ceramic-sialon.
 * Inputs the case marks as assumed: `setup.tool.edge_preparation` = T-land 0.10 mm x 20 deg (decoded from the edge code T01020 of the designation; not stated in words in the source); `setup.tool.inscribed_circle_mm` = 12.7 (decoded from the ISO designation (size 12 of a square insert = 1/2 in IC); not stated in the source); `setup.tool.nose_radius_mm` = 1.6 (decoded from the ISO designation (nose-radius code 16 = 1.6 mm); the coding standard was not read in this run).
 * Inputs the harness assumed: tool material = ceramic-sialon (Si3N4-based sialon ceramic, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); cutting-edge radius = 8 um (not stated in the case: the tooling model's default for this tool (chamfer_corner_radius_m), db/models/tooling.yaml).
 * Database values used: inconel718 flow stress (Johnson-Cook) (`qiu-2019-in718-jc-sensitivity`); inconel718 physical.density_kg_m3 (`special-metals-2007-in718`); inconel718 physical.specific_heat_J_kgK (`wang-2018-in718-chip-formation`); inconel718 physical.conductivity_W_mK (`special-metals-2007-in718`); inconel718 cutting.min_chip_thickness_ratio (`est`); inconel718 friction mu_sliding (ceramic, uncoated) (`est`); inconel718 tool_life[1] (ceramic, uncoated) (`est`).
 * Material: database entry inconel718; the case says: solution-treated and aged IN718 bar (source Table 2: Rm 1430 MPa, Rp0.2 1300 MPa, 40 HRC, 14.7 W/m K; Table 1: Ni 52.15, Cr 19.26, Nb 5.03, Mo 3.03, Ti 1.08, Al 0.56 wt%, Fe bal.)
 * Wear model: tool slot 0: grain size 1 um assumed for BUE attrition.
-* Result: 25 compared, 0 without prediction, 6 not compared; median abs. error 99.6 %, max 2353.7 %; 0/25 within uncertainty; case **outside budget**; largest miss 47.1 tolerances.
-* Likely cause: mean signed error of the lives +1585 %; flank law: taylor (calibrated to inconel718 tool_life[1] (ceramic, uncoated), src est); VB(t) curves: mean signed error -99 % (the model's land grows slowly while it is small: the flank temperature rises with the land).
+* Result: 25 compared, 0 without prediction, 6 not compared; median abs. error 97.4 %, max 2330.0 %; 0/25 within uncertainty; case **outside budget**; largest miss 46.6 tolerances.
+* Likely cause: mean signed error of the lives +1519 %; flank law: taylor (calibrated to inconel718 tool_life[1] (ceramic, uncoated), src est); VB(t) curves: mean signed error -95 % (the model's land grows slowly while it is small: the flank temperature and the land's stresses rise with the land, and the break-in of a fresh edge is not modelled).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| time_to_VB_0.3mm | 150 m/min | 2.27 | 55.7 | min | +2353.7 % | 1.14 | **no** | vc 150 m/min, f 0.15 mm, ap 1 mm, VB 0.3 mm; flank 1827 degC, sigma_n 4271 MPa at VB 0.15 mm |
-| time_to_VB_0.3mm | 200 m/min | 1.46 | 22.98 | min | +1473.8 % | 0.73 | **no** | vc 200 m/min, f 0.15 mm, ap 1 mm, VB 0.3 mm; flank 2025 degC, sigma_n 4266 MPa at VB 0.15 mm |
-| time_to_VB_0.3mm | 250 m/min | 1.04 | 10.69 | min | +927.6 % | 0.52 | **no** | vc 250 m/min, f 0.15 mm, ap 1 mm, VB 0.3 mm; flank 2198 degC, sigma_n 4262 MPa at VB 0.15 mm |
+| time_to_VB_0.3mm | 150 m/min | 2.27 | 55.16 | min | +2330.0 % | 1.14 | **no** | vc 150 m/min, f 0.15 mm, ap 1 mm, VB 0.3 mm; flank 1059 degC, sigma_n 3870 MPa at VB 0.15 mm (flank 975 / 1146 degC at the fresh land / the criterion; the life halves per +21 K of the flank) |
+| time_to_VB_0.3mm | 200 m/min | 1.46 | 21.32 | min | +1360.1 % | 0.73 | **no** | vc 200 m/min, f 0.15 mm, ap 1 mm, VB 0.3 mm; flank 1080 degC, sigma_n 3787 MPa at VB 0.15 mm (flank 988 / 1161 degC at the fresh land / the criterion; the life halves per +22 K of the flank) |
+| time_to_VB_0.3mm | 250 m/min | 1.04 | 10.05 | min | +866.3 % | 0.52 | **no** | vc 250 m/min, f 0.15 mm, ap 1 mm, VB 0.3 mm; flank 1095 degC, sigma_n 3724 MPa at VB 0.15 mm (flank 998 / 1172 degC at the fresh land / the criterion; the life halves per +22 K of the flank) |
 
-Curve `VB_vc150` (cutting_time [s] -> mm): RMS abs. error 99.7 %, max 99.8 % over 5 compared points.
+Curve `VB_vc150` (cutting_time [s] -> mm): RMS abs. error 98.3 %, max 98.6 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VB_vc150 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VB_vc150 | 30 s | 0.08 | 0.0001928 | mm | -99.8 % | 0.04 | **no** | vc 150 m/min |
-| VB_vc150 | 60 s | 0.13 | 0.0003857 | mm | -99.7 % | 0.065 | **no** | vc 150 m/min |
-| VB_vc150 | 90 s | 0.17 | 0.0005785 | mm | -99.7 % | 0.085 | **no** | vc 150 m/min |
-| VB_vc150 | 120 s | 0.22 | 0.0007714 | mm | -99.6 % | 0.11 | **no** | vc 150 m/min |
-| VB_vc150 | 150 s | 0.37 | 0.0009642 | mm | -99.7 % | 0.185 | **no** | vc 150 m/min |
+| VB_vc150 | 30 s | 0.08 | 0.001099 | mm | -98.6 % | 0.04 | **no** | vc 150 m/min |
+| VB_vc150 | 60 s | 0.13 | 0.002198 | mm | -98.3 % | 0.065 | **no** | vc 150 m/min |
+| VB_vc150 | 90 s | 0.17 | 0.003297 | mm | -98.1 % | 0.085 | **no** | vc 150 m/min |
+| VB_vc150 | 120 s | 0.22 | 0.004396 | mm | -98.0 % | 0.11 | **no** | vc 150 m/min |
+| VB_vc150 | 150 s | 0.37 | 0.005495 | mm | -98.5 % | 0.185 | **no** | vc 150 m/min |
 
-Curve `VB_vc200` (cutting_time [s] -> mm): RMS abs. error 99.6 %, max 99.6 % over 3 compared points.
+Curve `VB_vc200` (cutting_time [s] -> mm): RMS abs. error 97.4 %, max 97.6 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VB_vc200 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VB_vc200 | 30 s | 0.11 | 0.0003894 | mm | -99.6 % | 0.055 | **no** | vc 200 m/min |
-| VB_vc200 | 60 s | 0.18 | 0.0007788 | mm | -99.6 % | 0.09 | **no** | vc 200 m/min |
-| VB_vc200 | 90 s | 0.31 | 0.001168 | mm | -99.6 % | 0.155 | **no** | vc 200 m/min |
+| VB_vc200 | 30 s | 0.11 | 0.002602 | mm | -97.6 % | 0.055 | **no** | vc 200 m/min |
+| VB_vc200 | 60 s | 0.18 | 0.005204 | mm | -97.1 % | 0.09 | **no** | vc 200 m/min |
+| VB_vc200 | 90 s | 0.31 | 0.007805 | mm | -97.5 % | 0.155 | **no** | vc 200 m/min |
 
-Curve `VB_vc250` (cutting_time [s] -> mm): RMS abs. error 99.3 %, max 99.4 % over 3 compared points.
+Curve `VB_vc250` (cutting_time [s] -> mm): RMS abs. error 97.4 %, max 97.8 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VB_vc250 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VB_vc250 | 30 s | 0.16 | 0.001142 | mm | -99.3 % | 0.08 | **no** | vc 250 m/min |
-| VB_vc250 | 60 s | 0.28 | 0.002283 | mm | -99.2 % | 0.14 | **no** | vc 250 m/min |
-| VB_vc250 | 90 s | 0.56 | 0.003425 | mm | -99.4 % | 0.28 | **no** | vc 250 m/min |
+| VB_vc250 | 30 s | 0.16 | 0.004119 | mm | -97.4 % | 0.08 | **no** | vc 250 m/min |
+| VB_vc250 | 60 s | 0.28 | 0.008239 | mm | -97.1 % | 0.14 | **no** | vc 250 m/min |
+| VB_vc250 | 90 s | 0.56 | 0.01236 | mm | -97.8 % | 0.28 | **no** | vc 250 m/min |
 
-Curve `VN_vc150` (cutting_time [s] -> mm): RMS abs. error 99.6 %, max 99.8 % over 5 compared points.
+Curve `VN_vc150` (cutting_time [s] -> mm): RMS abs. error 96.8 %, max 98.3 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VN_vc150 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VN_vc150 | 30 s | 0.19 | 0.0003767 | mm | -99.8 % | 0.095 | **no** | vc 150 m/min, VN = notch factor x VB |
-| VN_vc150 | 60 s | 0.25 | 0.0007534 | mm | -99.7 % | 0.125 | **no** | vc 150 m/min, VN = notch factor x VB |
-| VN_vc150 | 90 s | 0.28 | 0.00113 | mm | -99.6 % | 0.14 | **no** | vc 150 m/min, VN = notch factor x VB |
-| VN_vc150 | 120 s | 0.3 | 0.001507 | mm | -99.5 % | 0.15 | **no** | vc 150 m/min, VN = notch factor x VB |
-| VN_vc150 | 150 s | 0.38 | 0.001883 | mm | -99.5 % | 0.19 | **no** | vc 150 m/min, VN = notch factor x VB |
+| VN_vc150 | 30 s | 0.19 | 0.003206 | mm | -98.3 % | 0.095 | **no** | vc 150 m/min, VN = notch factor x VB |
+| VN_vc150 | 60 s | 0.25 | 0.006411 | mm | -97.4 % | 0.125 | **no** | vc 150 m/min, VN = notch factor x VB |
+| VN_vc150 | 90 s | 0.28 | 0.009617 | mm | -96.6 % | 0.14 | **no** | vc 150 m/min, VN = notch factor x VB |
+| VN_vc150 | 120 s | 0.3 | 0.01276 | mm | -95.7 % | 0.15 | **no** | vc 150 m/min, VN = notch factor x VB |
+| VN_vc150 | 150 s | 0.38 | 0.01477 | mm | -96.1 % | 0.19 | **no** | vc 150 m/min, VN = notch factor x VB |
 
-Curve `VN_vc200` (cutting_time [s] -> mm): RMS abs. error 99.3 %, max 99.6 % over 3 compared points.
+Curve `VN_vc200` (cutting_time [s] -> mm): RMS abs. error 94.2 %, max 95.6 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VN_vc200 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VN_vc200 | 30 s | 0.18 | 0.0007979 | mm | -99.6 % | 0.09 | **no** | vc 200 m/min, VN = notch factor x VB |
-| VN_vc200 | 60 s | 0.23 | 0.001596 | mm | -99.3 % | 0.115 | **no** | vc 200 m/min, VN = notch factor x VB |
-| VN_vc200 | 90 s | 0.25 | 0.002394 | mm | -99.0 % | 0.125 | **no** | vc 200 m/min, VN = notch factor x VB |
+| VN_vc200 | 30 s | 0.18 | 0.007835 | mm | -95.6 % | 0.09 | **no** | vc 200 m/min, VN = notch factor x VB |
+| VN_vc200 | 60 s | 0.23 | 0.01332 | mm | -94.2 % | 0.115 | **no** | vc 200 m/min, VN = notch factor x VB |
+| VN_vc200 | 90 s | 0.25 | 0.01828 | mm | -92.7 % | 0.125 | **no** | vc 200 m/min, VN = notch factor x VB |
 
-Curve `VN_vc250` (cutting_time [s] -> mm): RMS abs. error 97.8 %, max 98.6 % over 3 compared points.
+Curve `VN_vc250` (cutting_time [s] -> mm): RMS abs. error 85.1 %, max 88.7 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VN_vc250 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VN_vc250 | 30 s | 0.11 | 0.001582 | mm | -98.6 % | 0.055 | **no** | vc 250 m/min, VN = notch factor x VB |
-| VN_vc250 | 60 s | 0.14 | 0.003164 | mm | -97.7 % | 0.07 | **no** | vc 250 m/min, VN = notch factor x VB |
-| VN_vc250 | 90 s | 0.16 | 0.004747 | mm | -97.0 % | 0.08 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 30 s | 0.11 | 0.01246 | mm | -88.7 % | 0.055 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 60 s | 0.14 | 0.02142 | mm | -84.7 % | 0.07 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 90 s | 0.16 | 0.02932 | mm | -81.7 % | 0.08 | **no** | vc 250 m/min, VN = notch factor x VB |
 
 ### taylor-xue2022-wg300-in718-dry
 
 * Source: `xue-2022-in718-ceramic-tool-wear`, Sect. 2 and Table 3 (setup, criteria), Sect. 3.2 (inspection every 30 s, failure modes), Fig. 2a-b (VB and VN versus cutting time, digitised) (measured, digitised, stated uncertainty 2 %).
 * File: `validation/cases/taylor_life/taylor-xue2022-wg300-in718-dry.yaml`; operation longitudinal_turning; material `inconel718`.
 * Validation class: **independent**.
-* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + Blok partition) -> life integral with cnctwin.wear.kernels.usui_rate.
-* Settings: A_per_Pa = [4.36717e-13], B_K = [20646.6], VB_per_VN = 9.619, calibration_residuals = [-1.31006e-14, -1.11022e-15, 0.0882273], clearance_deg = 6, coating = none, edge_radius_um = 8, flank_law = taylor, notch_factor = 2.19, rake_deg = -6, taylor_entry = inconel718 tool_life[1] (ceramic, uncoated), taylor_relation = substrate, taylor_src = est, tool_material = ceramic-whisker.
+* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + the run's flank partition, mechanics.coefficients.flank_contact_heat) -> life integral with cnctwin.wear.kernels.usui_rate.
+* Settings: A_per_Pa = [144.608], B_K = [56615.8], VB_per_VN = 9.619, calibration_residuals = [1.11022e-15, 6.66134e-16, 0.0124418], clearance_deg = 6, coating = none, edge_radius_um = 8, flank_law = taylor, notch_factor = 2.19, rake_deg = -6, taylor_entry = inconel718 tool_life[2] (ceramic, uncoated), taylor_relation = substrate, taylor_src = est, tool_material = ceramic-whisker.
 * Inputs the case marks as assumed: `setup.tool.edge_preparation` = T-land 0.10 mm x 20 deg (decoded from the edge code T01020 of the designation; not stated in words in the source); `setup.tool.inscribed_circle_mm` = 12.7 (decoded from the ISO designation (size 12 of a square insert = 1/2 in IC); not stated in the source); `setup.tool.nose_radius_mm` = 1.6 (decoded from the ISO designation (nose-radius code 16 = 1.6 mm); the coding standard was not read in this run).
 * Inputs the harness assumed: tool material = ceramic-whisker (SiC-whisker reinforced alumina, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); cutting-edge radius = 8 um (not stated in the case: the tooling model's default for this tool (chamfer_corner_radius_m), db/models/tooling.yaml).
-* Database values used: inconel718 flow stress (Johnson-Cook) (`qiu-2019-in718-jc-sensitivity`); inconel718 physical.density_kg_m3 (`special-metals-2007-in718`); inconel718 physical.specific_heat_J_kgK (`wang-2018-in718-chip-formation`); inconel718 physical.conductivity_W_mK (`special-metals-2007-in718`); inconel718 cutting.min_chip_thickness_ratio (`est`); inconel718 friction mu_sliding (ceramic, uncoated) (`est`); inconel718 tool_life[1] (ceramic, uncoated) (`est`).
+* Database values used: inconel718 flow stress (Johnson-Cook) (`qiu-2019-in718-jc-sensitivity`); inconel718 physical.density_kg_m3 (`special-metals-2007-in718`); inconel718 physical.specific_heat_J_kgK (`wang-2018-in718-chip-formation`); inconel718 physical.conductivity_W_mK (`special-metals-2007-in718`); inconel718 cutting.min_chip_thickness_ratio (`est`); inconel718 friction mu_sliding (ceramic, uncoated) (`est`); inconel718 tool_life[2] (ceramic, uncoated) (`est`).
 * Material: database entry inconel718; the case says: solution-treated and aged IN718 bar (source Table 2: Rm 1430 MPa, Rp0.2 1300 MPa, 40 HRC, 14.7 W/m K; Table 1: Ni 52.15, Cr 19.26, Nb 5.03, Mo 3.03, Ti 1.08, Al 0.56 wt%, Fe bal.)
 * Wear model: tool slot 0: grain size 1 um assumed for BUE attrition.
-* Result: 37 compared, 0 without prediction, 8 not compared; median abs. error 98.9 %, max 1043.7 %; 0/37 within uncertainty; case **outside budget**; largest miss 20.9 tolerances.
-* Likely cause: mean signed error of the lives +413 %; flank law: taylor (calibrated to inconel718 tool_life[1] (ceramic, uncoated), src est); VB(t) curves: mean signed error -99 % (the model's land grows slowly while it is small: the flank temperature rises with the land).
+* Result: 37 compared, 0 without prediction, 8 not compared; median abs. error 87.2 %, max 382.0 %; 0/37 within uncertainty; case **outside budget**; largest miss 7.64 tolerances.
+* Likely cause: mean signed error of the lives +134 %; flank law: taylor (calibrated to inconel718 tool_life[2] (ceramic, uncoated), src est); VB(t) curves: mean signed error -84 % (the model's land grows slowly while it is small: the flank temperature and the land's stresses rise with the land, and the break-in of a fresh edge is not modelled).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| test_end_time | 190 m/min | 2.5 | 28.59 | min | +1043.7 % | 1.25 | **no** | vc 190 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 2008 degC, sigma_n 4541 MPa at VB 0.136961 mm; end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
-| test_end_time | 250 m/min | 2.5 | 11.57 | min | +362.6 % | 1.25 | **no** | vc 250 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 2223 degC, sigma_n 4537 MPa at VB 0.136961 mm; end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
-| test_end_time | 310 m/min | 2 | 5.346 | min | +167.3 % | 1 | **no** | vc 310 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 2412 degC, sigma_n 4533 MPa at VB 0.136961 mm; end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
-| test_end_time | 370 m/min | 1 | 2.757 | min | +175.7 % | 0.5 | **no** | vc 370 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 2584 degC, sigma_n 4529 MPa at VB 0.136961 mm; end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
-| time_to_VB_0.3mm | 370 m/min | 0.57 | 2.359 | min | +313.8 % | 0.5 | **no** | vc 370 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 2569 degC, sigma_n 4296 MPa at VB 0.15 mm |
+| test_end_time | 190 m/min | 2.5 | 12.05 | min | +382.0 % | 1.25 | **no** | vc 190 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 1060 degC, sigma_n 3512 MPa at VB 0.136961 mm (flank 985 / 1150 degC at the fresh land / the criterion; the life halves per +22 K of the flank); end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
+| test_end_time | 250 m/min | 2.5 | 4.855 | min | +94.2 % | 1.25 | **no** | vc 250 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 1079 degC, sigma_n 3440 MPa at VB 0.136961 mm (flank 997 / 1164 degC at the fresh land / the criterion; the life halves per +22 K of the flank); end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
+| test_end_time | 310 m/min | 2 | 2.403 | min | +20.1 % | 1 | yes | vc 310 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 1094 degC, sigma_n 3385 MPa at VB 0.136961 mm (flank 1006 / 1175 degC at the fresh land / the criterion; the life halves per +23 K of the flank); end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
+| test_end_time | 370 m/min | 1 | 1.357 | min | +35.7 % | 0.5 | yes | vc 370 m/min, f 0.1 mm, ap 1 mm, VB 0.273923 mm; flank 1105 degC, sigma_n 3343 MPa at VB 0.136961 mm (flank 1013 / 1183 degC at the fresh land / the criterion; the life halves per +23 K of the flank); end by the first criterion (VN: VB 0.274 mm, notch factor 2.19) |
+| time_to_VB_0.3mm | 370 m/min | 0.57 | 1.357 | min | +138.1 % | 0.5 | **no** | vc 370 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1120 degC, sigma_n 3619 MPa at VB 0.15 mm (flank 1013 / 1190 degC at the fresh land / the criterion; the life halves per +24 K of the flank) |
 
-Curve `VB_vc190` (cutting_time [s] -> mm): RMS abs. error 99.2 %, max 99.5 % over 5 compared points.
+Curve `VB_vc190` (cutting_time [s] -> mm): RMS abs. error 89.8 %, max 91.9 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VB_vc190 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VB_vc190 | 30 s | 0.07 | 0.0003264 | mm | -99.5 % | 0.035 | **no** | vc 190 m/min |
-| VB_vc190 | 60 s | 0.11 | 0.0006528 | mm | -99.4 % | 0.055 | **no** | vc 190 m/min |
-| VB_vc190 | 90 s | 0.13 | 0.0009792 | mm | -99.2 % | 0.065 | **no** | vc 190 m/min |
-| VB_vc190 | 120 s | 0.14 | 0.001306 | mm | -99.1 % | 0.07 | **no** | vc 190 m/min |
-| VB_vc190 | 150 s | 0.15 | 0.001632 | mm | -98.9 % | 0.075 | **no** | vc 190 m/min |
+| VB_vc190 | 30 s | 0.07 | 0.005696 | mm | -91.9 % | 0.035 | **no** | vc 190 m/min |
+| VB_vc190 | 60 s | 0.11 | 0.009657 | mm | -91.2 % | 0.055 | **no** | vc 190 m/min |
+| VB_vc190 | 90 s | 0.13 | 0.013 | mm | -90.0 % | 0.065 | **no** | vc 190 m/min |
+| VB_vc190 | 120 s | 0.14 | 0.01619 | mm | -88.4 % | 0.07 | **no** | vc 190 m/min |
+| VB_vc190 | 150 s | 0.15 | 0.01923 | mm | -87.2 % | 0.075 | **no** | vc 190 m/min |
 
-Curve `VB_vc250` (cutting_time [s] -> mm): RMS abs. error 98.7 %, max 99.2 % over 5 compared points.
+Curve `VB_vc250` (cutting_time [s] -> mm): RMS abs. error 85.9 %, max 90.1 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VB_vc250 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VB_vc250 | 30 s | 0.1 | 0.0007533 | mm | -99.2 % | 0.05 | **no** | vc 250 m/min |
-| VB_vc250 | 60 s | 0.13 | 0.001507 | mm | -98.8 % | 0.065 | **no** | vc 250 m/min |
-| VB_vc250 | 90 s | 0.17 | 0.00226 | mm | -98.7 % | 0.085 | **no** | vc 250 m/min |
-| VB_vc250 | 120 s | 0.2 | 0.003013 | mm | -98.5 % | 0.1 | **no** | vc 250 m/min |
-| VB_vc250 | 150 s | 0.24 | 0.003766 | mm | -98.4 % | 0.12 | **no** | vc 250 m/min |
+| VB_vc250 | 30 s | 0.1 | 0.009915 | mm | -90.1 % | 0.05 | **no** | vc 250 m/min |
+| VB_vc250 | 60 s | 0.13 | 0.01736 | mm | -86.6 % | 0.065 | **no** | vc 250 m/min |
+| VB_vc250 | 90 s | 0.17 | 0.02453 | mm | -85.6 % | 0.085 | **no** | vc 250 m/min |
+| VB_vc250 | 120 s | 0.2 | 0.03211 | mm | -83.9 % | 0.1 | **no** | vc 250 m/min |
+| VB_vc250 | 150 s | 0.24 | 0.04057 | mm | -83.1 % | 0.12 | **no** | vc 250 m/min |
 
-Curve `VB_vc310` (cutting_time [s] -> mm): RMS abs. error 98.1 %, max 98.9 % over 4 compared points.
+Curve `VB_vc310` (cutting_time [s] -> mm): RMS abs. error 80.0 %, max 88.5 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VB_vc310 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VB_vc310 | 30 s | 0.14 | 0.001607 | mm | -98.9 % | 0.07 | **no** | vc 310 m/min |
-| VB_vc310 | 60 s | 0.18 | 0.003213 | mm | -98.2 % | 0.09 | **no** | vc 310 m/min |
-| VB_vc310 | 90 s | 0.2 | 0.00482 | mm | -97.6 % | 0.1 | **no** | vc 310 m/min |
-| VB_vc310 | 120 s | 0.28 | 0.006426 | mm | -97.7 % | 0.14 | **no** | vc 310 m/min |
+| VB_vc310 | 30 s | 0.14 | 0.01612 | mm | -88.5 % | 0.07 | **no** | vc 310 m/min |
+| VB_vc310 | 60 s | 0.18 | 0.03087 | mm | -82.9 % | 0.09 | **no** | vc 310 m/min |
+| VB_vc310 | 90 s | 0.2 | 0.04938 | mm | -75.3 % | 0.1 | **no** | vc 310 m/min |
+| VB_vc310 | 120 s | 0.28 | 0.07686 | mm | -72.6 % | 0.14 | **no** | vc 310 m/min |
 
-Curve `VB_vc370` (cutting_time [s] -> mm): RMS abs. error 98.4 %, max 98.5 % over 2 compared points.
+Curve `VB_vc370` (cutting_time [s] -> mm): RMS abs. error 88.9 %, max 90.2 % over 2 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VB_vc370 | 0 s | 0 | 0 | mm | - | 0.01 | not compared | fresh edge (t = 0) |
-| VB_vc370 | 30 s | 0.27 | 0.004107 | mm | -98.5 % | 0.135 | **no** | vc 370 m/min |
-| VB_vc370 | 60 s | 0.5 | 0.008215 | mm | -98.4 % | 0.25 | **no** | vc 370 m/min |
+| VB_vc370 | 30 s | 0.27 | 0.02638 | mm | -90.2 % | 0.135 | **no** | vc 370 m/min |
+| VB_vc370 | 60 s | 0.5 | 0.06198 | mm | -87.6 % | 0.25 | **no** | vc 370 m/min |
 
-Curve `VN_vc190` (cutting_time [s] -> mm): RMS abs. error 99.5 %, max 99.7 % over 5 compared points.
+Curve `VN_vc190` (cutting_time [s] -> mm): RMS abs. error 93.0 %, max 95.0 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VN_vc190 | 0 s | 0 | 0 | mm | - | 0.016 | not compared | fresh edge (t = 0) |
-| VN_vc190 | 30 s | 0.22 | 0.000715 | mm | -99.7 % | 0.11 | **no** | vc 190 m/min, VN = notch factor x VB |
-| VN_vc190 | 60 s | 0.29 | 0.00143 | mm | -99.5 % | 0.145 | **no** | vc 190 m/min, VN = notch factor x VB |
-| VN_vc190 | 90 s | 0.35 | 0.002145 | mm | -99.4 % | 0.175 | **no** | vc 190 m/min, VN = notch factor x VB |
-| VN_vc190 | 120 s | 0.47 | 0.00286 | mm | -99.4 % | 0.235 | **no** | vc 190 m/min, VN = notch factor x VB |
-| VN_vc190 | 150 s | 0.59 | 0.003575 | mm | -99.4 % | 0.295 | **no** | vc 190 m/min, VN = notch factor x VB |
+| VN_vc190 | 30 s | 0.22 | 0.01092 | mm | -95.0 % | 0.11 | **no** | vc 190 m/min, VN = notch factor x VB |
+| VN_vc190 | 60 s | 0.29 | 0.02107 | mm | -92.7 % | 0.145 | **no** | vc 190 m/min, VN = notch factor x VB |
+| VN_vc190 | 90 s | 0.35 | 0.02817 | mm | -92.0 % | 0.175 | **no** | vc 190 m/min, VN = notch factor x VB |
+| VN_vc190 | 120 s | 0.47 | 0.03527 | mm | -92.5 % | 0.235 | **no** | vc 190 m/min, VN = notch factor x VB |
+| VN_vc190 | 150 s | 0.59 | 0.04215 | mm | -92.9 % | 0.295 | **no** | vc 190 m/min, VN = notch factor x VB |
 
-Curve `VN_vc250` (cutting_time [s] -> mm): RMS abs. error 98.8 %, max 99.3 % over 5 compared points.
+Curve `VN_vc250` (cutting_time [s] -> mm): RMS abs. error 86.6 %, max 91.3 % over 5 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VN_vc250 | 0 s | 0 | 0 | mm | - | 0.016 | not compared | fresh edge (t = 0) |
-| VN_vc250 | 30 s | 0.25 | 0.00165 | mm | -99.3 % | 0.125 | **no** | vc 250 m/min, VN = notch factor x VB |
-| VN_vc250 | 60 s | 0.31 | 0.0033 | mm | -98.9 % | 0.155 | **no** | vc 250 m/min, VN = notch factor x VB |
-| VN_vc250 | 90 s | 0.36 | 0.00495 | mm | -98.6 % | 0.18 | **no** | vc 250 m/min, VN = notch factor x VB |
-| VN_vc250 | 120 s | 0.44 | 0.0066 | mm | -98.5 % | 0.22 | **no** | vc 250 m/min, VN = notch factor x VB |
-| VN_vc250 | 150 s | 0.58 | 0.00825 | mm | -98.6 % | 0.29 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 30 s | 0.25 | 0.02182 | mm | -91.3 % | 0.125 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 60 s | 0.31 | 0.03799 | mm | -87.7 % | 0.155 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 90 s | 0.36 | 0.05379 | mm | -85.1 % | 0.18 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 120 s | 0.44 | 0.07058 | mm | -84.0 % | 0.22 | **no** | vc 250 m/min, VN = notch factor x VB |
+| VN_vc250 | 150 s | 0.58 | 0.08911 | mm | -84.6 % | 0.29 | **no** | vc 250 m/min, VN = notch factor x VB |
 
-Curve `VN_vc310` (cutting_time [s] -> mm): RMS abs. error 97.5 %, max 98.6 % over 4 compared points.
+Curve `VN_vc310` (cutting_time [s] -> mm): RMS abs. error 74.3 %, max 85.9 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VN_vc310 | 0 s | 0 | 0 | mm | - | 0.016 | not compared | fresh edge (t = 0) |
-| VN_vc310 | 30 s | 0.25 | 0.003468 | mm | -98.6 % | 0.125 | **no** | vc 310 m/min, VN = notch factor x VB |
-| VN_vc310 | 60 s | 0.27 | 0.006936 | mm | -97.4 % | 0.135 | **no** | vc 310 m/min, VN = notch factor x VB |
-| VN_vc310 | 90 s | 0.29 | 0.0104 | mm | -96.4 % | 0.145 | **no** | vc 310 m/min, VN = notch factor x VB |
-| VN_vc310 | 120 s | 0.6 | 0.01387 | mm | -97.7 % | 0.3 | **no** | vc 310 m/min, VN = notch factor x VB |
+| VN_vc310 | 30 s | 0.25 | 0.03532 | mm | -85.9 % | 0.125 | **no** | vc 310 m/min, VN = notch factor x VB |
+| VN_vc310 | 60 s | 0.27 | 0.06763 | mm | -75.0 % | 0.135 | **no** | vc 310 m/min, VN = notch factor x VB |
+| VN_vc310 | 90 s | 0.29 | 0.1082 | mm | -62.7 % | 0.145 | **no** | vc 310 m/min, VN = notch factor x VB |
+| VN_vc310 | 120 s | 0.6 | 0.1684 | mm | -71.9 % | 0.3 | **no** | vc 310 m/min, VN = notch factor x VB |
 
-Curve `VN_vc370` (cutting_time [s] -> mm): RMS abs. error 96.0 %, max 96.6 % over 2 compared points.
+Curve `VN_vc370` (cutting_time [s] -> mm): RMS abs. error 61.7 %, max 70.1 % over 2 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
 | VN_vc370 | 0 s | 0 | 0 | mm | - | 0.016 | not compared | fresh edge (t = 0) |
-| VN_vc370 | 30 s | 0.19 | 0.006527 | mm | -96.6 % | 0.095 | **no** | vc 370 m/min, VN = notch factor x VB |
-| VN_vc370 | 60 s | 0.28 | 0.01307 | mm | -95.3 % | 0.14 | **no** | vc 370 m/min, VN = notch factor x VB |
+| VN_vc370 | 30 s | 0.19 | 0.05674 | mm | -70.1 % | 0.095 | **no** | vc 370 m/min, VN = notch factor x VB |
+| VN_vc370 | 60 s | 0.28 | 0.1347 | mm | -51.9 % | 0.14 | **no** | vc 370 m/min, VN = notch factor x VB |
 
 ### taylor-zhao2023-carbide-ti64-150mmin
 
 * Source: `zhao-2023-ti64-carbide-cooling-tool-life`, Sect. 2 (workpiece, tools), Sect. 3.1 and Table 4 (cutting and cooling conditions), Sect. 4.4 and Fig. 13 (cutting time to VB = 0.1, 0.2, 0.3 mm; values printed on the bars), Fig. 12 (wear curves, not digitised) (measured).
 * File: `validation/cases/taylor_life/taylor-zhao2023-carbide-ti64-150mmin.yaml`; operation longitudinal_turning; material `ti6al4v`.
 * Validation class: **independent**.
-* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + Blok partition) -> life integral with cnctwin.wear.kernels.usui_rate.
-* Settings: A_per_Pa = [6.85673e-10], B_K = [15909.4], VB_per_VN = 4.917, clearance_deg = 11, coated_variant = {"tool_material": "carbide-k20-6co", "coating": "tialn", "flank_law": "published", "rake_deg": 12.8, "clearance_deg": 11.0, "edge_radius_um": 80.0, "VB_per_VN": 4.91736, "notch_factor": 1.3225, "B_K": [15909.4], "A_per_Pa": [6.85673e-10]}, coating = none, edge_radius_um = 80, flank_law = published, notch_factor = 1.322, rake_deg = 12.8, tool_material = carbide-k20-6co.
+* Model chain: cnctwin.wear.build.wear_law -> cnctwin.wear.calibration.MechanicsResponse (cnctwin.mechanics Oxley + Smithey land + the run's flank partition, mechanics.coefficients.flank_contact_heat) -> life integral with cnctwin.wear.kernels.usui_rate.
+* Settings: A_per_Pa = [1.72305e-11], A_published_per_Pa = [6.85673e-10], B_K = [15909.4], VB_per_VN = 4.917, anchor_factor = 0.02513, anchor_residuals = [-0.343468, 3.26036, 2.66454e-15], clearance_deg = 11, coated_variant = {"tool_material": "carbide-k20-6co", "coating": "tialn", "flank_law": "published", "rake_deg": 12.8, "clearance_deg": 11.0, "edge_radius_um": 80.0, "VB_per_VN": 4.91736, "notch_factor": 1.3225, "B_K": [15909.4], "A_per_Pa": [1.29228e-11], "taylor_entry": "ti6al4v tool_life[1] (carbide, TiAlN)", "taylor_src": "est", "anchor_factor": 0.0188469, "A_published_per_Pa": [6.85673e-10], "anchor_residuals": [-0.293986, 0.4697, 3.33067e-15]}, coating = none, edge_radius_um = 80, flank_law = published, notch_factor = 1.322, rake_deg = 12.8, taylor_entry = ti6al4v tool_life[0] (carbide, uncoated), taylor_src = batista-ponce-2019-ti64-adhesion, tool_material = carbide-k20-6co.
 * Inputs the case marks as assumed: `setup.tool.nose_radius_mm` = 0.8 (decoded from the designation (code 08); not stated in words).
-* Inputs the harness assumed: tool material = carbide-k20-6co (Kennametal K313 is an uncoated straight WC-Co K grade, db/tool_materials); coating = none (not stated in the case: uncoated assumed, case); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); coolant fluid emulsion-5pct = friction factor 0.89 (the case's fluid is not in the database: the database emulsion-5pct entry, full reach, db/coolants); coolant fluid mql-ester = friction factor 0.84 (the case's fluid is not in the database: the database mql-ester entry, full reach, db/coolants).
-* Database values used: Usui flank constants (tool material carbide-k20-6co usui[1]) (`zhang-2025-mmsj-ti64-usui`); ti6al4v flow stress (Johnson-Cook) (`ducobu-2017-jc-ti6al4v`); ti6al4v physical.density_kg_m3 (`aubert-duval-2018-ta6v`); ti6al4v physical.specific_heat_J_kgK (`upmet-2026-ti64-eli`); ti6al4v physical.conductivity_W_mK (`upmet-2026-ti64-eli`); ti6al4v cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); ti6al4v friction mu_sliding (carbide, uncoated) (`klippel-2024-ck45-orthogonal`); ti6al4v friction mu_sliding (carbide, TiAlN) (`est`).
+* Inputs the harness assumed: tool material = carbide-k20-6co (Kennametal K313 is an uncoated straight WC-Co K grade, db/tool_materials); coating = none (not stated in the case: uncoated assumed, case); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); coolant fluid emulsion-5pct (flood) = friction factor 0.92 at the first condition (the case's fluid is not in the database: the database emulsion-5pct entry, full reach, db/coolants); coolant fluid mql-ester (mql) = friction factor 0.88 at the first condition (the case's fluid is not in the database: the database mql-ester entry, full reach, db/coolants); coolant fluid emulsion-5pct (coldspray) = friction factor 0.92 at the first condition (the case's chilled spray of its water-soluble coolant (LN6889 at 0 degC, 6-8 bar air): the database emulsion-5pct entry at 0 degC, full reach, liquid supply not limiting (no flow stated), db/coolants).
+* Database values used: Usui flank constants (tool material carbide-k20-6co usui[1]) (`zhang-2025-mmsj-ti64-usui`); ti6al4v flow stress (Johnson-Cook) (`ducobu-2017-jc-ti6al4v`); ti6al4v physical.density_kg_m3 (`aubert-duval-2018-ta6v`); ti6al4v physical.specific_heat_J_kgK (`upmet-2026-ti64-eli`); ti6al4v physical.conductivity_W_mK (`upmet-2026-ti64-eli`); ti6al4v cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); ti6al4v friction mu_sliding (carbide, uncoated) (`klippel-2024-ck45-orthogonal`); ti6al4v tool_life[0] (carbide, uncoated) (`batista-ponce-2019-ti64-adhesion`); ti6al4v friction mu_sliding (carbide, TiAlN) (`est`); ti6al4v tool_life[1] (carbide, TiAlN) (`est`).
 * Material: database entry ti6al4v; the case says: Ti-6Al-4V heat treated 1-4 h at 700-800 C and air cooled, 91.7 % alpha / 8.3 % beta (Sect. 2.1; Tables 1-3 of the source give composition and properties)
-* Result: 14 compared, 2 without prediction, 0 not compared; median abs. error 100.0 %, max 100.0 %; 0/16 within uncertainty; case **outside budget**; largest miss inf tolerances.
-* Likely cause: mean signed error of the lives -100 %; flank law: published (published Usui constants fitted with the source's own FE temperatures; the mechanics response's flank temperatures differ, and the life moves by exp(B dT / T^2)).
+* Wear model: tool slot 0: published Usui set anchored to ti6al4v tool_life[0] at the 15-min speed: A x 0.0251 for this model's flank temperatures (B as published).
+* Wear model: tool slot 0: published Usui set anchored to ti6al4v tool_life[1] at the 15-min speed: A x 0.0188 for this model's flank temperatures (B as published).
+* Result: 16 compared, 0 without prediction, 0 not compared; median abs. error 48.1 %, max 197.7 %; 1/16 within uncertainty; case **outside budget**; largest miss 3.95 tolerances.
+* Likely cause: mean signed error of the lives +61 %; flank law: published (published Usui B with A anchored to ti6al4v tool_life[0] (carbide, uncoated), src batista-ponce-2019-ti64-adhesion, at its 15-min speed: the published A belongs to the source's own FE temperatures and is scaled by 0.0251 for this model's).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| t_VB0.3_dry_uncoated | - | 130 | 0.08655 | s | -99.9 % | 65 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1554 degC, sigma_n 2720 MPa at VB 0.15 mm |
-| t_VB0.2_dry_uncoated | - | 103.8 | 0.05623 | s | -99.9 % | 51.9 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 1600 degC, sigma_n 3497 MPa at VB 0.1 mm |
-| t_VB0.1_dry_uncoated | - | 39.84 | 0.02881 | s | -99.9 % | 19.9 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 1475 degC, sigma_n 3497 MPa at VB 0.05 mm |
-| t_VB0.3_dry_TiAlN | - | 142 | 0.07605 | s | -99.9 % | 71 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1584 degC, sigma_n 2720 MPa at VB 0.15 mm |
-| t_VB0.2_dry_TiAlN | - | 105 | 0.04631 | s | -100.0 % | 52.5 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 1642 degC, sigma_n 3497 MPa at VB 0.1 mm |
-| t_VB0.1_dry_TiAlN | - | 60 | 0.02328 | s | -100.0 % | 30 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 1517 degC, sigma_n 3497 MPa at VB 0.05 mm |
-| t_VB0.3_flood_uncoated | - | 159.4 | 0.08963 | s | -99.9 % | 79.7 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1547 degC, sigma_n 2722 MPa at VB 0.15 mm; flood: friction factor 0.89 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.2_flood_uncoated | - | 130 | 0.05835 | s | -100.0 % | 65 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 1593 degC, sigma_n 3500 MPa at VB 0.1 mm; flood: friction factor 0.89 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.1_flood_uncoated | - | 66.86 | 0.02997 | s | -100.0 % | 33.4 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 1467 degC, sigma_n 3500 MPa at VB 0.05 mm; flood: friction factor 0.89 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.3_flood_TiAlN | - | 180 | 0.07818 | s | -100.0 % | 90 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1578 degC, sigma_n 2722 MPa at VB 0.15 mm; flood: friction factor 0.89 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.2_flood_TiAlN | - | 108 | 0.04762 | s | -100.0 % | 54 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 1636 degC, sigma_n 3500 MPa at VB 0.1 mm; flood: friction factor 0.89 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.1_flood_TiAlN | - | 67.76 | 0.02395 | s | -100.0 % | 33.9 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 1511 degC, sigma_n 3500 MPa at VB 0.05 mm; flood: friction factor 0.89 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.3_mql_uncoated | - | 186.2 | 0.09142 | s | -100.0 % | 93.1 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1543 degC, sigma_n 2724 MPa at VB 0.15 mm; mql: friction factor 0.84 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.3_mql_TiAlN | - | 190 | 0.07941 | s | -100.0 % | 95 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1575 degC, sigma_n 2724 MPa at VB 0.15 mm; mql: friction factor 0.84 (cnctwin.coolant.lubrication), flank cooling not in the response |
-| t_VB0.3_coldspray_uncoated | - | 230.4 | - | s | - | 115 | **no prediction** | cold-spray (cryogenic) jet: the database has no such fluid |
-| t_VB0.3_coldspray_TiAlN | - | 262 | - | s | - | 131 | **no prediction** | cold-spray (cryogenic) jet: the database has no such fluid |
+| t_VB0.3_dry_uncoated | - | 130 | 179.3 | s | +37.9 % | 65 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1055 degC, sigma_n 1984 MPa at VB 0.15 mm (flank 990 / 1163 degC at the fresh land / the criterion; the life halves per +77 K of the flank) |
+| t_VB0.2_dry_uncoated | - | 103.8 | 164.4 | s | +58.3 % | 51.9 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 989 degC, sigma_n 1190 MPa at VB 0.1 mm (flank 990 / 1101 degC at the fresh land / the criterion; the life halves per +69 K of the flank) |
+| t_VB0.1_dry_uncoated | - | 39.84 | 118.6 | s | +197.7 % | 19.9 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 985 degC, sigma_n 1190 MPa at VB 0.05 mm (flank 990 / 989 degC at the fresh land / the criterion; the life halves per +69 K of the flank) |
+| t_VB0.3_dry_TiAlN | - | 142 | 227.4 | s | +60.1 % | 71 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1059 degC, sigma_n 1984 MPa at VB 0.15 mm (flank 998 / 1167 degC at the fresh land / the criterion; the life halves per +77 K of the flank) |
+| t_VB0.2_dry_TiAlN | - | 105 | 208.2 | s | +98.3 % | 52.5 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 993 degC, sigma_n 1190 MPa at VB 0.1 mm (flank 998 / 1105 degC at the fresh land / the criterion; the life halves per +70 K of the flank) |
+| t_VB0.1_dry_TiAlN | - | 60 | 149.6 | s | +149.3 % | 30 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 990 degC, sigma_n 1190 MPa at VB 0.05 mm (flank 998 / 993 degC at the fresh land / the criterion; the life halves per +70 K of the flank) |
+| t_VB0.3_flood_uncoated | - | 159.4 | 183.5 | s | +15.1 % | 79.7 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1053 degC, sigma_n 1987 MPa at VB 0.15 mm (flank 988 / 1161 degC at the fresh land / the criterion; the life halves per +77 K of the flank); flood: friction factor 0.92 (cnctwin.coolant.lubrication), flank cooling not in the response |
+| t_VB0.2_flood_uncoated | - | 130 | 168.4 | s | +29.5 % | 65 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 987 degC, sigma_n 1192 MPa at VB 0.1 mm (flank 988 / 1099 degC at the fresh land / the criterion; the life halves per +69 K of the flank); flood: friction factor 0.92 (cnctwin.coolant.lubrication), flank cooling not in the response |
+| t_VB0.1_flood_uncoated | - | 66.86 | 121.6 | s | +81.9 % | 33.4 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 982 degC, sigma_n 1192 MPa at VB 0.05 mm (flank 988 / 987 degC at the fresh land / the criterion; the life halves per +69 K of the flank); flood: friction factor 0.92 (cnctwin.coolant.lubrication), flank cooling not in the response |
+| t_VB0.3_flood_TiAlN | - | 180 | 231.8 | s | +28.8 % | 90 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1057 degC, sigma_n 1987 MPa at VB 0.15 mm (flank 996 / 1165 degC at the fresh land / the criterion; the life halves per +77 K of the flank); flood: friction factor 0.92 (cnctwin.coolant.lubrication), flank cooling not in the response |
+| t_VB0.2_flood_TiAlN | - | 108 | 212.3 | s | +96.6 % | 54 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.2 mm; flank 991 degC, sigma_n 1192 MPa at VB 0.1 mm (flank 996 / 1103 degC at the fresh land / the criterion; the life halves per +70 K of the flank); flood: friction factor 0.92 (cnctwin.coolant.lubrication), flank cooling not in the response |
+| t_VB0.1_flood_TiAlN | - | 67.76 | 152.6 | s | +125.3 % | 33.9 | **no** | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.1 mm; flank 988 degC, sigma_n 1192 MPa at VB 0.05 mm (flank 996 / 991 degC at the fresh land / the criterion; the life halves per +69 K of the flank); flood: friction factor 0.92 (cnctwin.coolant.lubrication), flank cooling not in the response |
+| t_VB0.3_mql_uncoated | - | 186.2 | 185.8 | s | -0.2 % | 93.1 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1052 degC, sigma_n 1988 MPa at VB 0.15 mm (flank 986 / 1160 degC at the fresh land / the criterion; the life halves per +76 K of the flank); mql: friction factor 0.88 (cnctwin.coolant.lubrication, 200 ml/h as stated), flank cooling not in the response |
+| t_VB0.3_mql_TiAlN | - | 190 | 234.2 | s | +23.3 % | 95 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1056 degC, sigma_n 1988 MPa at VB 0.15 mm (flank 994 / 1164 degC at the fresh land / the criterion; the life halves per +77 K of the flank); mql: friction factor 0.88 (cnctwin.coolant.lubrication, 200 ml/h as stated), flank cooling not in the response |
+| t_VB0.3_coldspray_uncoated | - | 230.4 | 183.5 | s | -20.4 % | 115 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1053 degC, sigma_n 1987 MPa at VB 0.15 mm (flank 988 / 1161 degC at the fresh land / the criterion; the life halves per +77 K of the flank); coldspray: friction factor 0.92 (cnctwin.coolant.lubrication, the fluid at 0 degC), flank cooling not in the response |
+| t_VB0.3_coldspray_TiAlN | - | 262 | 231.8 | s | -11.5 % | 131 | yes | vc 150 m/min, f 0.1 mm, ap 1 mm, VB 0.3 mm; flank 1057 degC, sigma_n 1987 MPa at VB 0.15 mm (flank 996 / 1165 degC at the fresh land / the criterion; the life halves per +77 K of the flank); coldspray: friction factor 0.92 (cnctwin.coolant.lubrication, the fluid at 0 degC), flank cooling not in the response |
 
 ## tool_temperature
 
 * Budget: 15 % (relative error of the simulated temperature rise above ambient at the measured location (IR window average, or contact-area average for a tool-work thermocouple)).
-* Verdict: **fail** - only 0 of 5 cases within budget (0% < 80%); tooltemp-turn-aisi4140-kus2015-ir-tc misses by 13.23 tolerances (> 2).
+* Verdict: **fail** - only 0 of 5 cases within budget (0% < 80%); tooltemp-turn-aisi4140-kus2015-ir-tc misses by 18.13 tolerances (> 2).
 * Harness: `cnctwin.validation.harnesses.temperature.tool_temperature`.
-* The contact through the coefficient pipeline (cnctwin.mechanics.coefficients: Oxley rows, edge forces, partition at the tool body temperature) coupled to thermal's tool ladder of the insert; readings as measured: natural thermocouple = mean interface temperature, IR window or spot and embedded thermocouple = the tool temperature at the location (body + local edge field, thermal's edge-model composition).
+* The contact through the coefficient pipeline (cnctwin.mechanics.coefficients: Oxley rows, edge forces, partition at the tool body temperature) coupled to thermal's tool ladder of the insert with its 3-D cutting-region field (the rake and flank heat as contact patches); readings as measured: natural thermocouple = mean interface temperature, IR window or spot and embedded thermocouple = the field's temperature at the location.
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 5 | 0/5 | 108 (0) | 65.3 % / 32.7 % / 76.9 % | 120.6 % | - | 0/108 | 13.2 (tooltemp-turn-aisi4140-kus2015-ir-tc) |
+| independent | 5 | 0/5 | 108 (0) | 62.9 % / 17.2 % / 74.0 % | 191.4 % | - | 3/108 | 18.1 (tooltemp-turn-aisi4140-kus2015-ir-tc) |
 
-**Failures and likely causes.** 0 of 5 independent cases within budget. Values within tolerance per case: tooltemp-orth-ti64-loschner2025-ntc 0/17; tooltemp-orth-ti64-slusarczyk2025-ir 0/20; tooltemp-thinwall-al7050-zawada2025-ntc 6/9; tooltemp-turn-aisi1045-guimaraes2023-embedded-tc 4/6; tooltemp-turn-aisi4140-kus2015-ir-tc 0/56. Temperatures are compared as rises above ambient. Readings at a distance from the contact (IR window and spot) come out low because thermal's tool model resolves the contact flash and a 1-D insert body, not the 3-D field in the first millimetres of the insert; readings inside the insert depend on the heat into the insert, the seat and holder contact and the cutting time. No coefficient was adjusted; the cutting times and sensor positions the sources leave open are listed per case.
+**Failures and likely causes.** 0 of 5 independent cases within budget. Values within tolerance per case: tooltemp-orth-ti64-loschner2025-ntc 0/17; tooltemp-orth-ti64-slusarczyk2025-ir 10/20; tooltemp-thinwall-al7050-zawada2025-ntc 0/9; tooltemp-turn-aisi1045-guimaraes2023-embedded-tc 4/6; tooltemp-turn-aisi4140-kus2015-ir-tc 0/56. Temperatures are compared as rises above ambient. Readings away from the contact (IR window and spot, embedded junctions) are read in thermal's 3-D cutting-region field of the insert, driven by the contact heat of the coefficient pipeline, so they follow its partition and contact length (and the seat, holder and cutting time where those are estimates); the contact readings follow the pipeline's interface temperatures. No coefficient was adjusted; the cutting times and sensor positions the sources leave open are listed per case.
 
 ### tooltemp-orth-ti64-loschner2025-ntc
 
@@ -4825,40 +4844,40 @@ Curve `VN_vc370` (cutting_time [s] -> mm): RMS abs. error 96.0 %, max 96.6 % ove
 * Material: database entry ti6al4v; the case says: Ti6Al4V; heat treatment, hardness and supplier data are not given in the source (DB entry: mill annealed)
 * Sensor: natural (tool-work) thermocouple: contact-area mean interface temperature (case notes).
 * Chip section of the turning cases: h = f sin(kappa_r), width = ap / sin(kappa_r) (straight edge; the nose radius is not resolved).
-* Result: 17 compared, 0 without prediction, 0 not compared; median abs. error 30.9 %, max 37.5 %; 0/17 within uncertainty; case **outside budget**; largest miss 2.5 tolerances.
-* Likely cause: interface: mean signed error of the rise +31 % (the natural thermocouple averages the whole contact; the simulated rake contact is Oxley's mean with the database Johnson-Cook set and friction).
+* Result: 17 compared, 0 without prediction, 0 not compared; median abs. error 27.5 %, max 37.1 %; 0/17 within uncertainty; case **outside budget**; largest miss 2.47 tolerances.
+* Likely cause: interface: mean signed error of the rise +27 % (the natural thermocouple averages the whole contact; the simulated rake contact is Oxley's mean with the database Johnson-Cook set and friction).
 
-Curve `T f=0.05` (vc [m/min] -> degC): RMS abs. error 30.7 %, max 33.1 % over 6 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T f=0.05 | 40 m/min | 466 | 589.8 | degC | +27.7 % | 66.9 | **no** | vc 40 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 536 degC over 81 um, flank contact 882 degC over 15 um, body at the edge 233 degC, tool heat 71.6 W |
-| T f=0.05 | 50 m/min | 501 | 653.6 | degC | +31.7 % | 72.1 | **no** | vc 50 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 592 degC over 80 um, flank contact 981 degC over 15 um, body at the edge 256 degC, tool heat 78.7 W |
-| T f=0.05 | 60 m/min | 548 | 707.8 | degC | +30.3 % | 79.2 | **no** | vc 60 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 639 degC over 79 um, flank contact 1069 degC over 15 um, body at the edge 275 degC, tool heat 84.8 W |
-| T f=0.05 | 70 m/min | 572 | 754.8 | degC | +33.1 % | 82.8 | **no** | vc 70 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 679 degC over 78 um, flank contact 1148 degC over 15 um, body at the edge 292 degC, tool heat 90.1 W |
-| T f=0.05 | 80 m/min | 610 | 795.3 | degC | +31.4 % | 88.5 | **no** | vc 80 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 714 degC over 78 um, flank contact 1218 degC over 15 um, body at the edge 306 degC, tool heat 94.5 W |
-| T f=0.05 | 90 m/min | 645 | 831.1 | degC | +29.8 % | 93.8 | **no** | vc 90 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 744 degC over 77 um, flank contact 1281 degC over 15 um, body at the edge 319 degC, tool heat 98.4 W |
-
-Curve `T f=0.1` (vc [m/min] -> degC): RMS abs. error 30.1 %, max 31.6 % over 6 compared points.
+Curve `T f=0.05` (vc [m/min] -> degC): RMS abs. error 22.7 %, max 24.7 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T f=0.1 | 40 m/min | 559 | 725.8 | degC | +30.9 % | 80.8 | **no** | vc 40 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 710 degC over 169 um, flank contact 904 degC over 15 um, body at the edge 268 degC, tool heat 82.5 W |
-| T f=0.1 | 50 m/min | 601 | 784.7 | degC | +31.6 % | 87.1 | **no** | vc 50 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 766 degC over 162 um, flank contact 990 degC over 15 um, body at the edge 288 degC, tool heat 88.8 W |
-| T f=0.1 | 60 m/min | 642 | 836.8 | degC | +31.3 % | 93.3 | **no** | vc 60 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 814 degC over 153 um, flank contact 1064 degC over 15 um, body at the edge 304 degC, tool heat 94.2 W |
-| T f=0.1 | 70 m/min | 682 | 883.8 | degC | +30.5 % | 99.3 | **no** | vc 70 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 858 degC over 146 um, flank contact 1132 degC over 15 um, body at the edge 319 degC, tool heat 98.9 W |
-| T f=0.1 | 80 m/min | 727 | 926.4 | degC | +28.2 % | 106 | **no** | vc 80 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 898 degC over 140 um, flank contact 1195 degC over 15 um, body at the edge 332 degC, tool heat 103.2 W |
-| T f=0.1 | 90 m/min | 759 | 965.1 | degC | +27.9 % | 111 | **no** | vc 90 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 933 degC over 136 um, flank contact 1254 degC over 15 um, body at the edge 344 degC, tool heat 107.0 W |
+| T f=0.05 | 40 m/min | 466 | 562.6 | degC | +21.7 % | 66.9 | **no** | vc 40 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 546 degC over 80 um, flank contact 662 degC over 13 um, body at the edge 258 degC, tool heat 54.5 W |
+| T f=0.05 | 50 m/min | 501 | 619.7 | degC | +24.7 % | 72.1 | **no** | vc 50 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 601 degC over 79 um, flank contact 728 degC over 13 um, body at the edge 282 degC, tool heat 59.5 W |
+| T f=0.05 | 60 m/min | 548 | 667 | degC | +22.5 % | 79.2 | **no** | vc 60 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 647 degC over 78 um, flank contact 782 degC over 13 um, body at the edge 302 degC, tool heat 63.6 W |
+| T f=0.05 | 70 m/min | 572 | 707.2 | degC | +24.5 % | 82.8 | **no** | vc 70 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 686 degC over 77 um, flank contact 828 degC over 13 um, body at the edge 318 degC, tool heat 66.9 W |
+| T f=0.05 | 80 m/min | 610 | 741.5 | degC | +22.3 % | 88.5 | **no** | vc 80 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 720 degC over 77 um, flank contact 868 degC over 13 um, body at the edge 331 degC, tool heat 69.6 W |
+| T f=0.05 | 90 m/min | 645 | 771.7 | degC | +20.3 % | 93.8 | **no** | vc 90 m/min, f 0.05 mm, ap 3 mm; interface at 5 s; rake contact 749 degC over 76 um, flank contact 901 degC over 13 um, body at the edge 343 degC, tool heat 72.0 W |
 
-Curve `T f=0.15` (vc [m/min] -> degC): RMS abs. error 33.4 %, max 37.5 % over 5 compared points.
+Curve `T f=0.1` (vc [m/min] -> degC): RMS abs. error 27.4 %, max 29.5 % over 6 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T f=0.15 | 40 m/min | 598 | 814.8 | degC | +37.5 % | 86.7 | **no** | vc 40 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 810 degC over 236 um, flank contact 893 degC over 15 um, body at the edge 282 degC, tool heat 87.5 W |
-| T f=0.15 | 50 m/min | 653 | 880 | degC | +35.9 % | 95 | **no** | vc 50 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 873 degC over 220 um, flank contact 976 degC over 15 um, body at the edge 302 degC, tool heat 93.9 W |
-| T f=0.15 | 60 m/min | 710 | 936.7 | degC | +32.9 % | 104 | **no** | vc 60 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 929 degC over 209 um, flank contact 1051 degC over 15 um, body at the edge 319 degC, tool heat 99.2 W |
-| T f=0.15 | 70 m/min | 761 | 985.4 | degC | +30.3 % | 111 | **no** | vc 70 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 975 degC over 200 um, flank contact 1119 degC over 15 um, body at the edge 334 degC, tool heat 103.9 W |
-| T f=0.15 | 80 m/min | 801 | 1032 | degC | +29.6 % | 117 | **no** | vc 80 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 1021 degC over 194 um, flank contact 1182 degC over 15 um, body at the edge 347 degC, tool heat 108.9 W |
+| T f=0.1 | 40 m/min | 559 | 716.8 | degC | +29.3 % | 80.8 | **no** | vc 40 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 718 degC over 166 um, flank contact 699 degC over 13 um, body at the edge 306 degC, tool heat 64.4 W |
+| T f=0.1 | 50 m/min | 601 | 772.2 | degC | +29.5 % | 87.1 | **no** | vc 50 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 773 degC over 159 um, flank contact 758 degC over 13 um, body at the edge 327 degC, tool heat 68.7 W |
+| T f=0.1 | 60 m/min | 642 | 821.1 | degC | +28.8 % | 93.3 | **no** | vc 60 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 822 degC over 151 um, flank contact 807 degC over 13 um, body at the edge 345 degC, tool heat 72.4 W |
+| T f=0.1 | 70 m/min | 682 | 864.3 | degC | +27.5 % | 99.3 | **no** | vc 70 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 866 degC over 144 um, flank contact 849 degC over 13 um, body at the edge 360 degC, tool heat 75.6 W |
+| T f=0.1 | 80 m/min | 727 | 902.9 | degC | +24.9 % | 106 | **no** | vc 80 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 905 degC over 139 um, flank contact 885 degC over 13 um, body at the edge 373 degC, tool heat 78.3 W |
+| T f=0.1 | 90 m/min | 759 | 937.7 | degC | +24.2 % | 111 | **no** | vc 90 m/min, f 0.1 mm, ap 3 mm; interface at 5 s; rake contact 940 degC over 135 um, flank contact 918 degC over 13 um, body at the edge 385 degC, tool heat 80.8 W |
+
+Curve `T f=0.15` (vc [m/min] -> degC): RMS abs. error 32.7 %, max 37.1 % over 5 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T f=0.15 | 40 m/min | 598 | 812.4 | degC | +37.1 % | 86.7 | **no** | vc 40 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 818 degC over 232 um, flank contact 710 degC over 13 um, body at the edge 329 degC, tool heat 69.2 W |
+| T f=0.15 | 50 m/min | 653 | 875.4 | degC | +35.1 % | 95 | **no** | vc 50 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 882 degC over 217 um, flank contact 769 degC over 13 um, body at the edge 351 degC, tool heat 73.8 W |
+| T f=0.15 | 60 m/min | 710 | 929.2 | degC | +31.8 % | 104 | **no** | vc 60 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 936 degC over 207 um, flank contact 818 degC over 13 um, body at the edge 369 degC, tool heat 77.6 W |
+| T f=0.15 | 70 m/min | 761 | 973.8 | degC | +28.7 % | 111 | **no** | vc 70 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 981 degC over 199 um, flank contact 859 degC over 13 um, body at the edge 384 degC, tool heat 80.6 W |
+| T f=0.15 | 80 m/min | 801 | 1034 | degC | +29.9 % | 117 | **no** | vc 80 m/min, f 0.15 mm, ap 3 mm; interface at 5 s; rake contact 1044 degC over 193 um, flank contact 898 degC over 13 um, body at the edge 403 degC, tool heat 85.1 W |
 
 ### tooltemp-orth-ti64-slusarczyk2025-ir
 
@@ -4873,31 +4892,31 @@ Curve `T f=0.15` (vc [m/min] -> degC): RMS abs. error 33.4 %, max 37.5 % over 5 
 * Material: database entry ti6al4v; the case says: Ti-6Al-4V shaft; only the composition is given (Table 1: Al 5.5-6.75, V 3.5-4.5, Fe 0.03, O 0.20, C 0.08, N 0.05, H 0.015 wt%); condition not stated
 * Sensor: 'mean apparent temperature of a 2 x 1 mm area on the tool, seen from the side ... next to the chip-tool contact' (case notes).
 * Chip section of the turning cases: h = f sin(kappa_r), width = ap / sin(kappa_r) (straight edge; the nose radius is not resolved).
-* Result: 20 compared, 0 without prediction, 0 not compared; median abs. error 32.7 %, max 49.0 %; 0/20 within uncertainty; case **outside budget**; largest miss 2.92 tolerances.
-* Likely cause: side_window: mean signed error of the rise -33 % (beyond about 2 max(l_c, l_f, edge element) from the edge thermal's composition leaves only the 1-D insert body (a cross-section mean of the whole insert), so a window 0-2 mm from the edge is read nearly at the body temperature, while the measured window sees the steep 3-D field near the contact (and the source's assumed emissivity 0.48)).
+* Result: 20 compared, 0 without prediction, 0 not compared; median abs. error 17.2 %, max 40.9 %; 3/20 within uncertainty; case **outside budget**; largest miss 2.44 tolerances.
+* Likely cause: side_window: mean signed error of the rise +18 % (the window is read on the side face of thermal's 3-D cutting-region field; the field follows the contact heat of the coefficient pipeline (partition and contact length), and the measured window carries the source's assumed emissivity 0.48).
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_avg test 1 (rake 0, f 0.104) | 60 m/min | 556 | 374.3 | degC | -33.9 % | 89 | **no** | test 1; side_window at 5 s; rake contact 977 degC over 306 um, flank contact 1141 degC over 10 um, body at the edge 394 degC, tool heat 120.9 W |
-| T_avg test 2 (rake 0, f 0.104) | 50 m/min | 532 | 361.5 | degC | -33.3 % | 85.2 | **no** | test 2; side_window at 5 s; rake contact 939 degC over 342 um, flank contact 1092 degC over 10 um, body at the edge 380 degC, tool heat 116.9 W |
-| T_avg test 3 (rake 0, f 0.104) | 40 m/min | 501 | 346.6 | degC | -32.1 % | 80.2 | **no** | test 3; side_window at 5 s; rake contact 898 degC over 405 um, flank contact 1041 degC over 10 um, body at the edge 365 degC, tool heat 112.7 W |
-| T_avg test 4 (rake 0, f 0.104) | 30 m/min | 480 | 317.9 | degC | -35.2 % | 76.8 | **no** | test 4; side_window at 5 s; rake contact 824 degC over 431 um, flank contact 949 degC over 10 um, body at the edge 335 degC, tool heat 105.7 W |
-| T_avg test 5 (rake 0, f 0.104) | 20 m/min | 451 | 268.5 | degC | -42.3 % | 72.2 | **no** | test 5; side_window at 5 s; rake contact 710 degC over 451 um, flank contact 758 degC over 10 um, body at the edge 283 degC, tool heat 91.3 W |
-| T_avg test 6 (rake 0, f 0.069) | 60 m/min | 472 | 367.5 | degC | -23.1 % | 75.6 | **no** | test 6; side_window at 5 s; rake contact 901 degC over 260 um, flank contact 1182 degC over 10 um, body at the edge 387 degC, tool heat 117.9 W |
-| T_avg test 7 (rake 0, f 0.069) | 50 m/min | 470 | 350 | degC | -26.7 % | 75.2 | **no** | test 7; side_window at 5 s; rake contact 856 degC over 273 um, flank contact 1116 degC over 10 um, body at the edge 368 degC, tool heat 113.0 W |
-| T_avg test 8 (rake 0, f 0.069) | 40 m/min | 458 | 326.5 | degC | -30.0 % | 73.2 | **no** | test 8; side_window at 5 s; rake contact 795 degC over 278 um, flank contact 1030 degC over 10 um, body at the edge 343 degC, tool heat 106.3 W |
-| T_avg test 9 (rake 0, f 0.069) | 30 m/min | 445 | 294.7 | degC | -35.4 % | 71.2 | **no** | test 9; side_window at 5 s; rake contact 716 degC over 285 um, flank contact 928 degC over 10 um, body at the edge 310 degC, tool heat 97.9 W |
-| T_avg test 10 (rake 0, f 0.069) | 20 m/min | 447 | 237.8 | degC | -49.0 % | 71.6 | **no** | test 10; side_window at 5 s; rake contact 611 degC over 304 um, flank contact 722 degC over 10 um, body at the edge 250 degC, tool heat 81.9 W |
-| T_avg test 11 (rake 10, f 0.104) | 60 m/min | 444 | 346.2 | degC | -23.1 % | 71 | **no** | test 11; side_window at 5 s; rake contact 904 degC over 211 um, flank contact 1010 degC over 10 um, body at the edge 364 degC, tool heat 111.4 W |
-| T_avg test 12 (rake 10, f 0.104) | 50 m/min | 440 | 332.6 | degC | -25.6 % | 70.4 | **no** | test 12; side_window at 5 s; rake contact 861 degC over 233 um, flank contact 960 degC over 10 um, body at the edge 350 degC, tool heat 106.8 W |
-| T_avg test 13 (rake 10, f 0.104) | 40 m/min | 435 | 314.9 | degC | -28.9 % | 69.6 | **no** | test 13; side_window at 5 s; rake contact 812 degC over 260 um, flank contact 899 degC over 10 um, body at the edge 331 degC, tool heat 101.5 W |
-| T_avg test 14 (rake 10, f 0.104) | 30 m/min | 431 | 286.3 | degC | -35.2 % | 69 | **no** | test 14; side_window at 5 s; rake contact 735 degC over 266 um, flank contact 801 degC over 10 um, body at the edge 301 degC, tool heat 93.2 W |
-| T_avg test 15 (rake 10, f 0.104) | 20 m/min | 417 | 244.1 | degC | -43.5 % | 66.8 | **no** | test 15; side_window at 5 s; rake contact 625 degC over 276 um, flank contact 683 degC over 10 um, body at the edge 257 degC, tool heat 81.6 W |
-| T_avg test 16 (rake 10, f 0.069) | 60 m/min | 469 | 334.4 | degC | -30.0 % | 75 | **no** | test 16; side_window at 5 s; rake contact 815 degC over 167 um, flank contact 1041 degC over 10 um, body at the edge 352 degC, tool heat 107.1 W |
-| T_avg test 17 (rake 10, f 0.069) | 50 m/min | 419 | 315.6 | degC | -25.9 % | 67 | **no** | test 17; side_window at 5 s; rake contact 766 degC over 170 um, flank contact 967 degC over 10 um, body at the edge 332 degC, tool heat 101.3 W |
-| T_avg test 18 (rake 10, f 0.069) | 40 m/min | 403 | 292.5 | degC | -28.8 % | 64.4 | **no** | test 18; side_window at 5 s; rake contact 707 degC over 172 um, flank contact 883 degC over 10 um, body at the edge 307 degC, tool heat 94.2 W |
-| T_avg test 19 (rake 10, f 0.069) | 30 m/min | 393 | 262.6 | degC | -35.0 % | 62.8 | **no** | test 19; side_window at 5 s; rake contact 630 degC over 176 um, flank contact 784 degC over 10 um, body at the edge 276 degC, tool heat 85.2 W |
-| T_avg test 20 (rake 10, f 0.069) | 20 m/min | 391 | 219.4 | degC | -46.3 % | 62.6 | **no** | test 20; side_window at 5 s; rake contact 525 degC over 183 um, flank contact 663 degC over 10 um, body at the edge 231 degC, tool heat 73.5 W |
+| T_avg test 1 (rake 0, f 0.104) | 60 m/min | 556 | 617.5 | degC | +11.5 % | 89 | yes | test 1; side_window at 5 s; rake contact 977 degC over 306 um, flank contact 852 degC over 9 um, body at the edge 392 degC, tool heat 101.3 W |
+| T_avg test 2 (rake 0, f 0.104) | 50 m/min | 532 | 595.5 | degC | +12.4 % | 85.2 | yes | test 2; side_window at 5 s; rake contact 939 degC over 343 um, flank contact 814 degC over 9 um, body at the edge 378 degC, tool heat 97.9 W |
+| T_avg test 3 (rake 0, f 0.104) | 40 m/min | 501 | 570.6 | degC | +14.5 % | 80.2 | yes | test 3; side_window at 5 s; rake contact 897 degC over 406 um, flank contact 769 degC over 9 um, body at the edge 363 degC, tool heat 94.0 W |
+| T_avg test 4 (rake 0, f 0.104) | 30 m/min | 480 | 528.3 | degC | +10.5 % | 76.8 | yes | test 4; side_window at 5 s; rake contact 824 degC over 430 um, flank contact 698 degC over 9 um, body at the edge 337 degC, tool heat 87.5 W |
+| T_avg test 5 (rake 0, f 0.104) | 20 m/min | 451 | 463.6 | degC | +2.9 % | 72.2 | yes | test 5; side_window at 5 s; rake contact 714 degC over 444 um, flank contact 599 degC over 9 um, body at the edge 297 degC, tool heat 77.2 W |
+| T_avg test 6 (rake 0, f 0.069) | 60 m/min | 472 | 592.7 | degC | +26.7 % | 75.6 | **no** | test 6; side_window at 5 s; rake contact 900 degC over 262 um, flank contact 856 degC over 9 um, body at the edge 377 degC, tool heat 97.2 W |
+| T_avg test 7 (rake 0, f 0.069) | 50 m/min | 470 | 566 | degC | +21.3 % | 75.2 | **no** | test 7; side_window at 5 s; rake contact 854 degC over 274 um, flank contact 809 degC over 9 um, body at the edge 360 degC, tool heat 93.1 W |
+| T_avg test 8 (rake 0, f 0.069) | 40 m/min | 458 | 529.9 | degC | +16.4 % | 73.2 | yes | test 8; side_window at 5 s; rake contact 794 degC over 279 um, flank contact 750 degC over 9 um, body at the edge 338 degC, tool heat 87.5 W |
+| T_avg test 9 (rake 0, f 0.069) | 30 m/min | 445 | 482.4 | degC | +8.8 % | 71.2 | yes | test 9; side_window at 5 s; rake contact 716 degC over 286 um, flank contact 673 degC over 9 um, body at the edge 309 degC, tool heat 80.0 W |
+| T_avg test 10 (rake 0, f 0.069) | 20 m/min | 447 | 410.3 | degC | -8.6 % | 71.6 | yes | test 10; side_window at 5 s; rake contact 613 degC over 300 um, flank contact 571 degC over 9 um, body at the edge 263 degC, tool heat 68.9 W |
+| T_avg test 11 (rake 10, f 0.104) | 60 m/min | 444 | 617.5 | degC | +40.9 % | 71 | **no** | test 11; side_window at 5 s; rake contact 907 degC over 209 um, flank contact 806 degC over 9 um, body at the edge 388 degC, tool heat 92.3 W |
+| T_avg test 12 (rake 10, f 0.104) | 50 m/min | 440 | 590.9 | degC | +35.9 % | 70.4 | **no** | test 12; side_window at 5 s; rake contact 865 degC over 230 um, flank contact 764 degC over 9 um, body at the edge 372 degC, tool heat 88.5 W |
+| T_avg test 13 (rake 10, f 0.104) | 40 m/min | 435 | 558.5 | degC | +29.8 % | 69.6 | **no** | test 13; side_window at 5 s; rake contact 815 degC over 257 um, flank contact 711 degC over 9 um, body at the edge 353 degC, tool heat 83.9 W |
+| T_avg test 14 (rake 10, f 0.104) | 30 m/min | 431 | 509.7 | degC | +19.1 % | 69 | **no** | test 14; side_window at 5 s; rake contact 740 degC over 263 um, flank contact 635 degC over 9 um, body at the edge 323 degC, tool heat 77.0 W |
+| T_avg test 15 (rake 10, f 0.104) | 20 m/min | 417 | 439.6 | degC | +5.7 % | 66.8 | yes | test 15; side_window at 5 s; rake contact 633 degC over 271 um, flank contact 534 degC over 9 um, body at the edge 280 degC, tool heat 66.8 W |
+| T_avg test 16 (rake 10, f 0.069) | 60 m/min | 469 | 582.5 | degC | +25.3 % | 75 | **no** | test 16; side_window at 5 s; rake contact 817 degC over 165 um, flank contact 802 degC over 9 um, body at the edge 367 degC, tool heat 87.2 W |
+| T_avg test 17 (rake 10, f 0.069) | 50 m/min | 419 | 551 | degC | +33.1 % | 67 | **no** | test 17; side_window at 5 s; rake contact 770 degC over 168 um, flank contact 751 degC over 9 um, body at the edge 348 degC, tool heat 82.7 W |
+| T_avg test 18 (rake 10, f 0.069) | 40 m/min | 403 | 511.4 | degC | +28.3 % | 64.4 | **no** | test 18; side_window at 5 s; rake contact 711 degC over 171 um, flank contact 687 degC over 9 um, body at the edge 324 degC, tool heat 77.1 W |
+| T_avg test 19 (rake 10, f 0.069) | 30 m/min | 393 | 459.9 | degC | +17.9 % | 62.8 | **no** | test 19; side_window at 5 s; rake contact 636 degC over 174 um, flank contact 609 degC over 9 um, body at the edge 292 degC, tool heat 69.7 W |
+| T_avg test 20 (rake 10, f 0.069) | 20 m/min | 391 | 388.8 | degC | -0.6 % | 62.6 | yes | test 20; side_window at 5 s; rake contact 533 degC over 180 um, flank contact 507 degC over 9 um, body at the edge 248 degC, tool heat 59.2 W |
 
 ### tooltemp-thinwall-al7050-zawada2025-ntc
 
@@ -4905,38 +4924,39 @@ Curve `T f=0.15` (vc [m/min] -> degC): RMS abs. error 33.4 %, max 37.5 % over 5 
 * File: `validation/cases/tool_temperature/tooltemp-thinwall-al7050-zawada2025-ntc.yaml`; operation peripheral_milling; material `al7075-t7351`.
 * Validation class: **independent**.
 * Model chain: cnctwin.mechanics.coefficients.build_process_map/group_coefficients -> thermal partition (rake/edge shares, thermal/partition.py convention).
-* Settings: clearance_deg = 6, coating = none, edge_radius_um = 20, entering_angle_deg = 90, ladder_step_s = 0.25, mu_sliding = 0.55, rake_deg = 15, tool_material = carbide-k20-6co, wedge_factor = 1.304.
+* Settings: clearance_deg = 6, coating = none, edge_radius_um = 3, entering_angle_deg = 90, ladder_step_s = 0.25, mu_sliding = 0.55, rake_deg = 15, tool_material = carbide-k20-6co, wedge_factor = 1.304.
 * Inputs the case marks as assumed: `setup.tool.rake_deg` = 15 (assumed: not stated (typical of aluminium end mills)); `setup.conditions.ambient_temp_degC` = 20 (assumed: not stated).
-* Inputs the harness assumed: tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); coating = none (case coating 'TiB2' has no database entry: modelled uncoated, db/coatings); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); clearance angle = 6 deg (not stated in the case, est); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool body temperature (milling) = ambient (one short pass per test; the engagement's transient contact (contact time = engagement angle / omega) is in the partition, est).
+* Inputs the harness assumed: tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); coating = none (case coating 'TiB2' has no database entry: modelled uncoated, db/coatings); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); clearance angle = 6 deg (not stated in the case, est); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); tool body temperature (milling) = ambient (one short pass per test; the engagement's transient contact (contact time = engagement angle / omega) is in the partition, est).
 * Database values used: tool material carbide-k20-6co thermal properties (`mitsubishi-2026-tm102g`); al7075-t7351 flow stress (Johnson-Cook) (`est`); al7075-t7351 physical.density_kg_m3 (`kaiser-2006-al7075-datasheet`); al7075-t7351 physical.specific_heat_J_kgK (`muraca-1972-al7075-handbook`); al7075-t7351 physical.conductivity_W_mK (`kaiser-2006-al7075-datasheet`); al7075-t7351 cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); al7075-t7351 friction mu_sliding (carbide, uncoated) (`est`).
 * Material: database entry al7075-t7351; the case says: 7050-T7451 plate (AMS 4050K), not in the DB; see force-thinwall-al7050-zawada2025-finish for details
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Sensor: natural thermocouple, mean of ten peak values: peak contact temperature of the engagement (case notes).
-* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 12.7 %, max 53.1 %; 0/9 within uncertainty; case **outside budget**; largest miss 3.54 tolerances.
-* Likely cause: interface_peak_milling: mean signed error of the rise +25 % (a 3-6 um aluminium chip at a 20 um hone (tooling default): the flank contact of the edge dominates the contact mean; minimum chip thickness and edge radius are estimates).
+* Result: 9 compared, 0 without prediction, 0 not compared; median abs. error 41.3 %, max 48.5 %; 0/9 within uncertainty; case **outside budget**; largest miss 3.23 tolerances.
+* Likely cause: interface_peak_milling: mean signed error of the rise -38 % (a 3-6 um aluminium chip at a 20 um hone (tooling default): the flank contact of the edge dominates the contact mean; minimum chip thickness and edge radius are estimates).
 
-Curve `T_t1.0` (vc [m/min] -> degC): RMS abs. error 31.6 %, max 52.1 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_t1.0 | 300 m/min | 301 | 336.8 | degC | +12.7 % | 42.1 | yes | vc 300 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.31 ms, edge length in cut 2.37 mm; rake contact 37 degC over 0.7 um, flank 347 degC over 20.0 um |
-| T_t1.0 | 600 m/min | 358 | 394.6 | degC | +10.8 % | 50.7 | yes | vc 600 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.16 ms, edge length in cut 2.37 mm; rake contact 51 degC over 0.7 um, flank 407 degC over 20.0 um |
-| T_t1.0 | 900 m/min | 337 | 502.2 | degC | +52.1 % | 47.5 | **no** | vc 900 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.10 ms, edge length in cut 2.37 mm; rake contact 67 degC over 0.7 um, flank 518 degC over 20.0 um |
-
-Curve `T_t1.5` (vc [m/min] -> degC): RMS abs. error 32.2 %, max 53.1 % over 3 compared points.
+Curve `T_t1.0` (vc [m/min] -> degC): RMS abs. error 39.4 %, max 47.9 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_t1.5 | 300 m/min | 301 | 336.8 | degC | +12.7 % | 42.1 | yes | vc 300 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.31 ms, edge length in cut 2.37 mm; rake contact 37 degC over 0.7 um, flank 347 degC over 20.0 um |
-| T_t1.5 | 600 m/min | 355.2 | 394.6 | degC | +11.8 % | 50.3 | yes | vc 600 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.16 ms, edge length in cut 2.37 mm; rake contact 51 degC over 0.7 um, flank 407 degC over 20.0 um |
-| T_t1.5 | 900 m/min | 335 | 502.2 | degC | +53.1 % | 47.2 | **no** | vc 900 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.10 ms, edge length in cut 2.37 mm; rake contact 67 degC over 0.7 um, flank 518 degC over 20.0 um |
+| T_t1.0 | 300 m/min | 301 | 166.3 | degC | -47.9 % | 42.1 | **no** | vc 300 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.31 ms, edge length in cut 2.37 mm; rake contact 161 degC over 9.8 um, flank 187 degC over 2.4 um |
+| T_t1.0 | 600 m/min | 358 | 218.5 | degC | -41.3 % | 50.7 | **no** | vc 600 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.16 ms, edge length in cut 2.37 mm; rake contact 208 degC over 9.8 um, flank 261 degC over 2.4 um |
+| T_t1.0 | 900 m/min | 337 | 256.5 | degC | -25.4 % | 47.5 | **no** | vc 900 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.10 ms, edge length in cut 2.37 mm; rake contact 243 degC over 9.7 um, flank 311 degC over 2.4 um |
 
-Curve `T_t2.0` (vc [m/min] -> degC): RMS abs. error 30.8 %, max 51.2 % over 3 compared points.
+Curve `T_t1.5` (vc [m/min] -> degC): RMS abs. error 39.1 %, max 47.9 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_t2.0 | 300 m/min | 304 | 336.8 | degC | +11.5 % | 42.6 | yes | vc 300 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.31 ms, edge length in cut 2.37 mm; rake contact 37 degC over 0.7 um, flank 347 degC over 20.0 um |
-| T_t2.0 | 600 m/min | 362 | 394.6 | degC | +9.5 % | 51.3 | yes | vc 600 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.16 ms, edge length in cut 2.37 mm; rake contact 51 degC over 0.7 um, flank 407 degC over 20.0 um |
-| T_t2.0 | 900 m/min | 339 | 502.2 | degC | +51.2 % | 47.9 | **no** | vc 900 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.10 ms, edge length in cut 2.37 mm; rake contact 67 degC over 0.7 um, flank 518 degC over 20.0 um |
+| T_t1.5 | 300 m/min | 301 | 166.3 | degC | -47.9 % | 42.1 | **no** | vc 300 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.31 ms, edge length in cut 2.37 mm; rake contact 161 degC over 9.8 um, flank 187 degC over 2.4 um |
+| T_t1.5 | 600 m/min | 355.2 | 218.5 | degC | -40.8 % | 50.3 | **no** | vc 600 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.16 ms, edge length in cut 2.37 mm; rake contact 208 degC over 9.8 um, flank 261 degC over 2.4 um |
+| T_t1.5 | 900 m/min | 335 | 256.5 | degC | -24.9 % | 47.2 | **no** | vc 900 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.10 ms, edge length in cut 2.37 mm; rake contact 243 degC over 9.7 um, flank 311 degC over 2.4 um |
+
+Curve `T_t2.0` (vc [m/min] -> degC): RMS abs. error 39.9 %, max 48.5 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_t2.0 | 300 m/min | 304 | 166.3 | degC | -48.5 % | 42.6 | **no** | vc 300 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.31 ms, edge length in cut 2.37 mm; rake contact 161 degC over 9.8 um, flank 187 degC over 2.4 um |
+| T_t2.0 | 600 m/min | 362 | 218.5 | degC | -42.0 % | 51.3 | **no** | vc 600 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.16 ms, edge length in cut 2.37 mm; rake contact 208 degC over 9.8 um, flank 261 degC over 2.4 um |
+| T_t2.0 | 900 m/min | 339 | 256.5 | degC | -25.9 % | 47.9 | **no** | vc 900 m/min, f 0.025 mm, ap 48 mm; h_max 6.4 um (engagement 14.8 deg), contact 0.10 ms, edge length in cut 2.37 mm; rake contact 243 degC over 9.7 um, flank 311 degC over 2.4 um |
 
 ### tooltemp-turn-aisi1045-guimaraes2023-embedded-tc
 
@@ -4951,24 +4971,24 @@ Curve `T_t2.0` (vc [m/min] -> degC): RMS abs. error 30.8 %, max 51.2 % over 3 co
 * Material: database entry aisi1045; the case says: AISI 1045; condition, hardness and bar diameter are not given in the source
 * Sensor: K-type junction in the rake face 2.9 mm from the cutting edge, 0.2-0.4 mm deep (setup.tool.thermocouple, case notes).
 * Chip section of the turning cases: h = f sin(kappa_r), width = ap / sin(kappa_r) (straight edge; the nose radius is not resolved).
-* Result: 6 compared, 0 without prediction, 0 not compared; median abs. error 3.6 %, max 31.8 %; 0/6 within uncertainty; case **outside budget**; largest miss 2.12 tolerances.
-* Likely cause: point: mean signed error of the rise -1 % (the junction sits in the insert body: the 1-D ladder heats the insert as a whole (seat contact, holder bar and cutting time are estimates or derived)).
+* Result: 6 compared, 0 without prediction, 0 not compared; median abs. error 5.8 %, max 32.5 %; 0/6 within uncertainty; case **outside budget**; largest miss 2.16 tolerances.
+* Likely cause: point: mean signed error of the rise -0 % (the junction sits in the insert: the 3-D field with the ladder of the bar heats it with the pipeline's tool heat (seat contact, holder bar and cutting time are estimates or derived)).
 
-Curve `Tmax_ap1` (vc [m/min] -> degC): RMS abs. error 21.8 %, max 31.8 % over 4 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| Tmax_ap1 | 40 m/min | 178.1 | 223.3 | degC | +29.5 % | 23 | **no** | vc 40 m/min, f 0.246 mm, ap 1 mm; point at 150.85 s; rake contact 772 degC over 1237 um, flank contact 925 degC over 35 um, body at the edge 244 degC, tool heat 37.9 W |
-| Tmax_ap1 | 70 m/min | 246.7 | 238.6 | degC | -3.6 % | 33.2 | yes | vc 70 m/min, f 0.246 mm, ap 1 mm; point at 86.2 s; rake contact 860 degC over 928 um, flank contact 1032 degC over 35 um, body at the edge 262 degC, tool heat 42.0 W |
-| Tmax_ap1 | 130 m/min | 256.4 | 249.2 | degC | -3.1 % | 34.7 | yes | vc 130 m/min, f 0.246 mm, ap 1 mm; point at 40 s; rake contact 968 degC over 723 um, flank contact 1166 degC over 35 um, body at the edge 275 degC, tool heat 47.5 W |
-| Tmax_ap1 | 160 m/min | 327.2 | 231.1 | degC | -31.8 % | 45.3 | **no** | vc 160 m/min, f 0.246 mm, ap 1 mm; point at 15 s; rake contact 1005 degC over 674 um, flank contact 1239 degC over 35 um, body at the edge 259 degC, tool heat 51.7 W |
-
-Curve `Tmax_vc130` (ap [mm] -> degC): RMS abs. error 3.3 %, max 3.5 % over 2 compared points.
+Curve `Tmax_ap1` (vc [m/min] -> degC): RMS abs. error 22.9 %, max 32.5 % over 4 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| Tmax_vc130 | 1 mm | 256.4 | 249.2 | degC | -3.1 % | 34.7 | yes | vc 130 m/min, f 0.246 mm, ap 1 mm; point at 40 s; rake contact 968 degC over 723 um, flank contact 1166 degC over 35 um, body at the edge 275 degC, tool heat 47.5 W |
-| Tmax_vc130 | 2 mm | 340 | 351.1 | degC | +3.5 % | 47.3 | yes | vc 130 m/min, f 0.246 mm, ap 2 mm; point at 40 s; rake contact 973 degC over 715 um, flank contact 1066 degC over 35 um, body at the edge 390 degC, tool heat 68.2 W |
+| Tmax_ap1 | 40 m/min | 178.1 | 227.3 | degC | +32.1 % | 23 | **no** | vc 40 m/min, f 0.246 mm, ap 1 mm; point at 150.85 s; rake contact 770 degC over 1257 um, flank contact 622 degC over 26 um, body at the edge 210 degC, tool heat 30.2 W |
+| Tmax_ap1 | 70 m/min | 246.7 | 240.6 | degC | -2.7 % | 33.2 | yes | vc 70 m/min, f 0.246 mm, ap 1 mm; point at 86.2 s; rake contact 858 degC over 935 um, flank contact 688 degC over 26 um, body at the edge 225 degC, tool heat 33.2 W |
+| Tmax_ap1 | 130 m/min | 256.4 | 248.6 | degC | -3.3 % | 34.7 | yes | vc 130 m/min, f 0.246 mm, ap 1 mm; point at 40 s; rake contact 967 degC over 727 um, flank contact 751 degC over 26 um, body at the edge 234 degC, tool heat 36.9 W |
+| Tmax_ap1 | 160 m/min | 327.2 | 229.1 | degC | -32.5 % | 45.3 | **no** | vc 160 m/min, f 0.246 mm, ap 1 mm; point at 15 s; rake contact 1004 degC over 677 um, flank contact 765 degC over 26 um, body at the edge 215 degC, tool heat 39.3 W |
+
+Curve `Tmax_vc130` (ap [mm] -> degC): RMS abs. error 6.3 %, max 8.3 % over 2 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| Tmax_vc130 | 1 mm | 256.4 | 248.6 | degC | -3.3 % | 34.7 | yes | vc 130 m/min, f 0.246 mm, ap 1 mm; point at 40 s; rake contact 967 degC over 727 um, flank contact 751 degC over 26 um, body at the edge 234 degC, tool heat 36.9 W |
+| Tmax_vc130 | 2 mm | 340 | 366.2 | degC | +8.3 % | 47.3 | yes | vc 130 m/min, f 0.246 mm, ap 2 mm; point at 40 s; rake contact 971 degC over 717 um, flank contact 793 degC over 26 um, body at the edge 357 degC, tool heat 57.6 W |
 
 ### tooltemp-turn-aisi4140-kus2015-ir-tc
 
@@ -4985,149 +5005,149 @@ Curve `Tmax_vc130` (ap [mm] -> degC): RMS abs. error 3.3 %, max 3.5 % over 2 com
 * Sensor: K-type, 1 mm from the flank face and 1 mm below the rake face at the corner (setup.conditions.thermocouple); readings at the cutting times of Fig. 10.
 * Sensor: as the transient curves; Table 5 values are the mean of the readings over 5-20 s (case notes).
 * Chip section of the turning cases: h = f sin(kappa_r), width = ap / sin(kappa_r) (straight edge; the nose radius is not resolved).
-* Result: 56 compared, 0 without prediction, 0 not compared; median abs. error 96.2 %, max 198.4 %; 0/56 within uncertainty; case **outside budget**; largest miss 13.2 tolerances.
-* Likely cause: point: mean signed error of the rise +111 % (the junction sits in the insert body: the 1-D ladder heats the insert as a whole (seat contact, holder bar and cutting time are estimates or derived)); rake_spot: mean signed error of the rise -78 % (the same limitation 1 mm from the edge (body + local field, the local field cut at r_far); the material is the database's 30 HRC entry for a 50 HRC bar).
+* Result: 56 compared, 0 without prediction, 0 not compared; median abs. error 158.9 %, max 272.0 %; 0/56 within uncertainty; case **outside budget**; largest miss 18.1 tolerances.
+* Likely cause: point: mean signed error of the rise +179 % (the junction sits in the insert: the 3-D field with the ladder of the bar heats it with the pipeline's tool heat (seat contact, holder bar and cutting time are estimates or derived)); rake_spot: mean signed error of the rise -71 % (the spot 1 mm from the edge beside the chip is read in the 3-D field, which follows the rake and flank heat of the coefficient pipeline; the material is the database's 30 HRC entry for a 50 HRC bar, so the heat into the insert is that of a softer work).
 
-Curve `T_IR_ap0.4_f0.05` (vc [m/min] -> degC): RMS abs. error 82.9 %, max 84.0 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_IR_ap0.4_f0.05 | 76 m/min | 410 | 94.39 | degC | -82.0 % | 57.8 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 665 degC over 331 um, flank contact 1250 degC over 35 um, body at the edge 113 degC, tool heat 16.4 W |
-| T_IR_ap0.4_f0.05 | 114 m/min | 460 | 100.6 | degC | -82.6 % | 65.2 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 735 degC over 289 um, flank contact 1376 degC over 35 um, body at the edge 121 degC, tool heat 17.9 W |
-| T_IR_ap0.4_f0.05 | 170 m/min | 520 | 104.1 | degC | -84.0 % | 74.2 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 783 degC over 211 um, flank contact 1474 degC over 35 um, body at the edge 126 degC, tool heat 18.8 W |
-
-Curve `T_IR_ap0.4_f0.08` (vc [m/min] -> degC): RMS abs. error 82.0 %, max 82.7 % over 3 compared points.
+Curve `T_IR_ap0.4_f0.05` (vc [m/min] -> degC): RMS abs. error 77.2 %, max 79.1 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_IR_ap0.4_f0.08 | 76 m/min | 405 | 98.33 | degC | -80.7 % | 57 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 744 degC over 459 um, flank contact 1248 degC over 35 um, body at the edge 118 degC, tool heat 17.3 W |
-| T_IR_ap0.4_f0.08 | 114 m/min | 465 | 101.9 | degC | -82.5 % | 66 | **no** | vc 114 m/min, f 0.08 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 798 degC over 344 um, flank contact 1336 degC over 35 um, body at the edge 123 degC, tool heat 18.2 W |
-| T_IR_ap0.4_f0.08 | 170 m/min | 500 | 107.1 | degC | -82.7 % | 71.2 | **no** | vc 170 m/min, f 0.08 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 866 degC over 278 um, flank contact 1452 degC over 35 um, body at the edge 130 degC, tool heat 19.5 W |
+| T_IR_ap0.4_f0.05 | 76 m/min | 410 | 118.5 | degC | -75.7 % | 57.8 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 663 degC over 336 um, flank contact 792 degC over 25 um, body at the edge 87 degC, tool heat 12.1 W |
+| T_IR_ap0.4_f0.05 | 114 m/min | 460 | 125.6 | degC | -76.9 % | 65.2 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 734 degC over 296 um, flank contact 850 degC over 25 um, body at the edge 92 degC, tool heat 13.0 W |
+| T_IR_ap0.4_f0.05 | 170 m/min | 520 | 128.5 | degC | -79.1 % | 74.2 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 781 degC over 214 um, flank contact 893 degC over 25 um, body at the edge 94 degC, tool heat 13.4 W |
 
-Curve `T_IR_ap0.4_f0.12` (vc [m/min] -> degC): RMS abs. error 80.8 %, max 81.2 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_IR_ap0.4_f0.12 | 76 m/min | 410 | 101.1 | degC | -80.2 % | 57.8 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 799 degC over 534 um, flank contact 1217 degC over 35 um, body at the edge 119 degC, tool heat 17.6 W |
-| T_IR_ap0.4_f0.12 | 114 m/min | 445 | 104.5 | degC | -81.1 % | 63 | **no** | vc 114 m/min, f 0.12 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 869 degC over 431 um, flank contact 1319 degC over 35 um, body at the edge 126 degC, tool heat 18.8 W |
-| T_IR_ap0.4_f0.12 | 170 m/min | 475 | 109.8 | degC | -81.2 % | 67.5 | **no** | vc 170 m/min, f 0.12 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 943 degC over 363 um, flank contact 1435 degC over 35 um, body at the edge 133 degC, tool heat 20.1 W |
-
-Curve `T_IR_ap0.6_f0.05` (vc [m/min] -> degC): RMS abs. error 75.2 %, max 76.4 % over 3 compared points.
+Curve `T_IR_ap0.4_f0.08` (vc [m/min] -> degC): RMS abs. error 75.5 %, max 76.8 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_IR_ap0.6_f0.05 | 76 m/min | 400 | 120.3 | degC | -74.6 % | 56.2 | **no** | vc 76 m/min, f 0.05 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 668 degC over 324 um, flank contact 1239 degC over 35 um, body at the edge 147 degC, tool heat 22.6 W |
-| T_IR_ap0.6_f0.05 | 114 m/min | 430 | 128.6 | degC | -74.4 % | 60.8 | **no** | vc 114 m/min, f 0.05 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 736 degC over 281 um, flank contact 1361 degC over 35 um, body at the edge 158 degC, tool heat 24.5 W |
-| T_IR_ap0.6_f0.05 | 170 m/min | 485 | 133.5 | degC | -76.4 % | 69 | **no** | vc 170 m/min, f 0.05 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 785 degC over 208 um, flank contact 1459 degC over 35 um, body at the edge 165 degC, tool heat 25.8 W |
+| T_IR_ap0.4_f0.08 | 76 m/min | 405 | 126.1 | degC | -73.4 % | 57 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 743 degC over 467 um, flank contact 793 degC over 25 um, body at the edge 92 degC, tool heat 13.0 W |
+| T_IR_ap0.4_f0.08 | 114 m/min | 465 | 129.9 | degC | -76.2 % | 66 | **no** | vc 114 m/min, f 0.08 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 796 degC over 347 um, flank contact 837 degC over 25 um, body at the edge 95 degC, tool heat 13.5 W |
+| T_IR_ap0.4_f0.08 | 170 m/min | 500 | 135.1 | degC | -76.8 % | 71.2 | **no** | vc 170 m/min, f 0.08 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 864 degC over 280 um, flank contact 889 degC over 25 um, body at the edge 98 degC, tool heat 14.2 W |
 
-Curve `T_IR_ap0.6_f0.08` (vc [m/min] -> degC): RMS abs. error 74.7 %, max 77.4 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_IR_ap0.6_f0.08 | 76 m/min | 390 | 125.6 | degC | -72.4 % | 54.8 | **no** | vc 76 m/min, f 0.08 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 745 degC over 447 um, flank contact 1235 degC over 35 um, body at the edge 153 degC, tool heat 23.7 W |
-| T_IR_ap0.6_f0.08 | 114 m/min | 435 | 130.7 | degC | -74.2 % | 61.5 | **no** | vc 114 m/min, f 0.08 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 800 degC over 339 um, flank contact 1323 degC over 35 um, body at the edge 161 degC, tool heat 25.1 W |
-| T_IR_ap0.6_f0.08 | 170 m/min | 525 | 137.8 | degC | -77.4 % | 75 | **no** | vc 170 m/min, f 0.08 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 868 degC over 275 um, flank contact 1437 degC over 35 um, body at the edge 170 degC, tool heat 26.8 W |
-
-Curve `T_IR_ap0.6_f0.12` (vc [m/min] -> degC): RMS abs. error 72.8 %, max 74.4 % over 3 compared points.
+Curve `T_IR_ap0.4_f0.12` (vc [m/min] -> degC): RMS abs. error 73.5 %, max 74.2 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_IR_ap0.6_f0.12 | 76 m/min | 395 | 129.3 | degC | -71.8 % | 55.5 | **no** | vc 76 m/min, f 0.12 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 802 degC over 527 um, flank contact 1206 degC over 35 um, body at the edge 156 degC, tool heat 24.2 W |
-| T_IR_ap0.6_f0.12 | 114 m/min | 420 | 134.3 | degC | -72.3 % | 59.2 | **no** | vc 114 m/min, f 0.12 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 871 degC over 428 um, flank contact 1306 degC over 35 um, body at the edge 165 degC, tool heat 25.9 W |
-| T_IR_ap0.6_f0.12 | 170 m/min | 480 | 141.6 | degC | -74.4 % | 68.2 | **no** | vc 170 m/min, f 0.12 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 945 degC over 361 um, flank contact 1419 degC over 35 um, body at the edge 175 degC, tool heat 27.6 W |
+| T_IR_ap0.4_f0.12 | 76 m/min | 410 | 130.2 | degC | -72.7 % | 57.8 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 798 degC over 539 um, flank contact 783 degC over 25 um, body at the edge 94 degC, tool heat 13.4 W |
+| T_IR_ap0.4_f0.12 | 114 m/min | 445 | 135.3 | degC | -73.7 % | 63 | **no** | vc 114 m/min, f 0.12 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 867 degC over 434 um, flank contact 833 degC over 25 um, body at the edge 98 degC, tool heat 14.2 W |
+| T_IR_ap0.4_f0.12 | 170 m/min | 475 | 141.1 | degC | -74.2 % | 67.5 | **no** | vc 170 m/min, f 0.12 mm, ap 0.4 mm; rake_spot mean over 20 s of cutting; rake contact 942 degC over 365 um, flank contact 885 degC over 25 um, body at the edge 102 degC, tool heat 14.9 W |
 
-Curve `T_TC_ap0.4_f0.05` (vc [m/min] -> degC): RMS abs. error 124.4 %, max 141.1 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_TC_ap0.4_f0.05 | 76 m/min | 57 | 102.1 | degC | +141.1 % | 5 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 665 degC over 331 um, flank contact 1250 degC over 35 um, body at the edge 113 degC, tool heat 16.4 W |
-| T_TC_ap0.4_f0.05 | 114 m/min | 65 | 109.1 | degC | +110.1 % | 6 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 735 degC over 289 um, flank contact 1376 degC over 35 um, body at the edge 121 degC, tool heat 17.9 W |
-| T_TC_ap0.4_f0.05 | 170 m/min | 65 | 113 | degC | +119.9 % | 6 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 783 degC over 211 um, flank contact 1474 degC over 35 um, body at the edge 126 degC, tool heat 18.8 W |
-
-Curve `T_TC_ap0.4_f0.08` (vc [m/min] -> degC): RMS abs. error 119.0 %, max 137.6 % over 3 compared points.
+Curve `T_IR_ap0.6_f0.05` (vc [m/min] -> degC): RMS abs. error 67.9 %, max 69.9 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_TC_ap0.4_f0.08 | 76 m/min | 66 | 106.5 | degC | +98.7 % | 6.15 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 744 degC over 459 um, flank contact 1248 degC over 35 um, body at the edge 118 degC, tool heat 17.3 W |
-| T_TC_ap0.4_f0.08 | 114 m/min | 61 | 110.6 | degC | +137.6 % | 5.4 | **no** | vc 114 m/min, f 0.08 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 798 degC over 344 um, flank contact 1336 degC over 35 um, body at the edge 123 degC, tool heat 18.2 W |
-| T_TC_ap0.4_f0.08 | 170 m/min | 67 | 116.3 | degC | +117.3 % | 6.3 | **no** | vc 170 m/min, f 0.08 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 866 degC over 278 um, flank contact 1452 degC over 35 um, body at the edge 130 degC, tool heat 19.5 W |
+| T_IR_ap0.6_f0.05 | 76 m/min | 400 | 149.9 | degC | -66.7 % | 56.2 | **no** | vc 76 m/min, f 0.05 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 665 degC over 331 um, flank contact 801 degC over 25 um, body at the edge 114 degC, tool heat 17.1 W |
+| T_IR_ap0.6_f0.05 | 114 m/min | 430 | 159.1 | degC | -66.9 % | 60.8 | **no** | vc 114 m/min, f 0.05 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 735 degC over 289 um, flank contact 858 degC over 25 um, body at the edge 120 degC, tool heat 18.3 W |
+| T_IR_ap0.6_f0.05 | 170 m/min | 485 | 163.3 | degC | -69.9 % | 69 | **no** | vc 170 m/min, f 0.05 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 783 degC over 212 um, flank contact 902 degC over 25 um, body at the edge 124 degC, tool heat 18.9 W |
 
-Curve `T_TC_ap0.4_f0.12` (vc [m/min] -> degC): RMS abs. error 99.2 %, max 110.4 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_TC_ap0.4_f0.12 | 76 m/min | 72 | 109.3 | degC | +79.4 % | 7.05 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 799 degC over 534 um, flank contact 1217 degC over 35 um, body at the edge 119 degC, tool heat 17.6 W |
-| T_TC_ap0.4_f0.12 | 114 m/min | 67 | 113.4 | degC | +110.4 % | 6.3 | **no** | vc 114 m/min, f 0.12 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 869 degC over 431 um, flank contact 1319 degC over 35 um, body at the edge 126 degC, tool heat 18.8 W |
-| T_TC_ap0.4_f0.12 | 170 m/min | 71 | 119.3 | degC | +105.0 % | 6.9 | **no** | vc 170 m/min, f 0.12 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 943 degC over 363 um, flank contact 1435 degC over 35 um, body at the edge 133 degC, tool heat 20.1 W |
-
-Curve `T_TC_ap0.6_f0.05` (vc [m/min] -> degC): RMS abs. error 116.7 %, max 125.1 % over 3 compared points.
+Curve `T_IR_ap0.6_f0.08` (vc [m/min] -> degC): RMS abs. error 66.5 %, max 70.5 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_TC_ap0.6_f0.05 | 76 m/min | 72 | 130.8 | degC | +125.1 % | 7.05 | **no** | vc 76 m/min, f 0.05 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 668 degC over 324 um, flank contact 1239 degC over 35 um, body at the edge 147 degC, tool heat 22.6 W |
-| T_TC_ap0.6_f0.05 | 114 m/min | 80 | 140 | degC | +109.1 % | 8.25 | **no** | vc 114 m/min, f 0.05 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 736 degC over 281 um, flank contact 1361 degC over 35 um, body at the edge 158 degC, tool heat 24.5 W |
-| T_TC_ap0.6_f0.05 | 170 m/min | 81 | 145.5 | degC | +115.3 % | 8.4 | **no** | vc 170 m/min, f 0.05 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 785 degC over 208 um, flank contact 1459 degC over 35 um, body at the edge 165 degC, tool heat 25.8 W |
+| T_IR_ap0.6_f0.08 | 76 m/min | 390 | 159.8 | degC | -63.1 % | 54.8 | **no** | vc 76 m/min, f 0.08 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 744 degC over 458 um, flank contact 802 degC over 25 um, body at the edge 120 degC, tool heat 18.3 W |
+| T_IR_ap0.6_f0.08 | 114 m/min | 435 | 165.2 | degC | -65.8 % | 61.5 | **no** | vc 114 m/min, f 0.08 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 798 degC over 343 um, flank contact 847 degC over 25 um, body at the edge 125 degC, tool heat 19.1 W |
+| T_IR_ap0.6_f0.08 | 170 m/min | 525 | 172.3 | degC | -70.5 % | 75 | **no** | vc 170 m/min, f 0.08 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 866 degC over 278 um, flank contact 898 degC over 25 um, body at the edge 130 degC, tool heat 20.2 W |
 
-Curve `T_TC_ap0.6_f0.08` (vc [m/min] -> degC): RMS abs. error 150.7 %, max 198.4 % over 3 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_TC_ap0.6_f0.08 | 76 m/min | 80 | 136.6 | degC | +103.0 % | 8.25 | **no** | vc 76 m/min, f 0.08 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 745 degC over 447 um, flank contact 1235 degC over 35 um, body at the edge 153 degC, tool heat 23.7 W |
-| T_TC_ap0.6_f0.08 | 114 m/min | 75 | 142.4 | degC | +134.9 % | 7.5 | **no** | vc 114 m/min, f 0.08 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 800 degC over 339 um, flank contact 1323 degC over 35 um, body at the edge 161 degC, tool heat 25.1 W |
-| T_TC_ap0.6_f0.08 | 170 m/min | 67 | 150.3 | degC | +198.4 % | 6.3 | **no** | vc 170 m/min, f 0.08 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 868 degC over 275 um, flank contact 1437 degC over 35 um, body at the edge 170 degC, tool heat 26.8 W |
-
-Curve `T_TC_ap0.6_f0.12` (vc [m/min] -> degC): RMS abs. error 148.1 %, max 194.5 % over 3 compared points.
+Curve `T_IR_ap0.6_f0.12` (vc [m/min] -> degC): RMS abs. error 63.5 %, max 65.8 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_TC_ap0.6_f0.12 | 76 m/min | 76 | 140.5 | degC | +126.5 % | 7.65 | **no** | vc 76 m/min, f 0.12 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 802 degC over 527 um, flank contact 1206 degC over 35 um, body at the edge 156 degC, tool heat 24.2 W |
-| T_TC_ap0.6_f0.12 | 114 m/min | 83 | 146.4 | degC | +109.3 % | 8.7 | **no** | vc 114 m/min, f 0.12 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 871 degC over 428 um, flank contact 1306 degC over 35 um, body at the edge 165 degC, tool heat 25.9 W |
-| T_TC_ap0.6_f0.12 | 170 m/min | 69 | 154.6 | degC | +194.5 % | 6.6 | **no** | vc 170 m/min, f 0.12 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 945 degC over 361 um, flank contact 1419 degC over 35 um, body at the edge 175 degC, tool heat 27.6 W |
+| T_IR_ap0.6_f0.12 | 76 m/min | 395 | 165.4 | degC | -62.1 % | 55.5 | **no** | vc 76 m/min, f 0.12 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 800 degC over 533 um, flank contact 793 degC over 25 um, body at the edge 124 degC, tool heat 19.0 W |
+| T_IR_ap0.6_f0.12 | 114 m/min | 420 | 172.6 | degC | -62.6 % | 59.2 | **no** | vc 114 m/min, f 0.12 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 869 degC over 431 um, flank contact 843 degC over 25 um, body at the edge 129 degC, tool heat 20.1 W |
+| T_IR_ap0.6_f0.12 | 170 m/min | 480 | 180.4 | degC | -65.8 % | 68.2 | **no** | vc 170 m/min, f 0.12 mm, ap 0.6 mm; rake_spot mean over 20 s of cutting; rake contact 943 degC over 363 um, flank contact 894 degC over 25 um, body at the edge 135 degC, tool heat 21.2 W |
 
-Curve `T_TC_transient_vc76_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. error 136.7 %, max 155.8 % over 4 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_TC_transient_vc76_ap0.4_f0.05 | 5 s | 50.1 | 77.37 | degC | +108.6 % | 3.77 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 5 s; rake contact 662 degC over 338 um, flank contact 1280 degC over 35 um, body at the edge 81 degC, tool heat 17.4 W |
-| T_TC_transient_vc76_ap0.4_f0.05 | 10 s | 54.6 | 95.53 | degC | +138.3 % | 4.44 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 10 s; rake contact 664 degC over 334 um, flank contact 1263 degC over 35 um, body at the edge 99 degC, tool heat 16.9 W |
-| T_TC_transient_vc76_ap0.4_f0.05 | 15 s | 58.1 | 104.4 | degC | +140.0 % | 4.97 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 15 s; rake contact 665 degC over 332 um, flank contact 1255 degC over 35 um, body at the edge 108 degC, tool heat 16.6 W |
-| T_TC_transient_vc76_ap0.4_f0.05 | 20 s | 60.1 | 114.8 | degC | +155.8 % | 5.27 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 20 s; rake contact 665 degC over 331 um, flank contact 1250 degC over 35 um, body at the edge 113 degC, tool heat 16.4 W |
-
-Curve `T_TC_transient_vc76_ap0.4_f0.08` (cutting_time [s] -> degC): RMS abs. error 89.9 %, max 107.2 % over 4 compared points.
+Curve `T_TC_ap0.4_f0.05` (vc [m/min] -> degC): RMS abs. error 182.1 %, max 207.2 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_TC_transient_vc76_ap0.4_f0.08 | 5 s | 58.8 | 80.07 | degC | +62.9 % | 5.07 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 5 s; rake contact 743 degC over 469 um, flank contact 1280 degC over 35 um, body at the edge 84 degC, tool heat 18.3 W |
-| T_TC_transient_vc76_ap0.4_f0.08 | 10 s | 64.3 | 99.13 | degC | +88.6 % | 5.9 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 10 s; rake contact 743 degC over 463 um, flank contact 1262 degC over 35 um, body at the edge 103 degC, tool heat 17.7 W |
-| T_TC_transient_vc76_ap0.4_f0.08 | 15 s | 67.8 | 108.5 | degC | +95.0 % | 6.42 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 15 s; rake contact 744 degC over 460 um, flank contact 1253 degC over 35 um, body at the edge 113 degC, tool heat 17.4 W |
-| T_TC_transient_vc76_ap0.4_f0.08 | 20 s | 70.7 | 119.7 | degC | +107.2 % | 6.85 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 20 s; rake contact 744 degC over 459 um, flank contact 1248 degC over 35 um, body at the edge 118 degC, tool heat 17.3 W |
+| T_TC_ap0.4_f0.05 | 76 m/min | 57 | 123.3 | degC | +207.2 % | 5 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 663 degC over 336 um, flank contact 792 degC over 25 um, body at the edge 87 degC, tool heat 12.1 W |
+| T_TC_ap0.4_f0.05 | 114 m/min | 65 | 130.7 | degC | +164.2 % | 6 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 734 degC over 296 um, flank contact 850 degC over 25 um, body at the edge 92 degC, tool heat 13.0 W |
+| T_TC_ap0.4_f0.05 | 170 m/min | 65 | 133.8 | degC | +172.1 % | 6 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 781 degC over 214 um, flank contact 893 degC over 25 um, body at the edge 94 degC, tool heat 13.4 W |
 
-Curve `T_TC_transient_vc76_ap0.4_f0.12` (cutting_time [s] -> degC): RMS abs. error 68.5 %, max 82.4 % over 4 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| T_TC_transient_vc76_ap0.4_f0.12 | 5 s | 61.9 | 80.84 | degC | +51.3 % | 5.53 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 5 s; rake contact 797 degC over 541 um, flank contact 1247 degC over 35 um, body at the edge 85 degC, tool heat 18.6 W |
-| T_TC_transient_vc76_ap0.4_f0.12 | 10 s | 69.9 | 100.3 | degC | +67.6 % | 6.73 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 10 s; rake contact 798 degC over 537 um, flank contact 1230 degC over 35 um, body at the edge 104 degC, tool heat 18.0 W |
-| T_TC_transient_vc76_ap0.4_f0.12 | 15 s | 75.1 | 109.8 | degC | +69.2 % | 7.52 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 15 s; rake contact 799 degC over 535 um, flank contact 1222 degC over 35 um, body at the edge 114 degC, tool heat 17.7 W |
-| T_TC_transient_vc76_ap0.4_f0.12 | 20 s | 78.6 | 122.7 | degC | +82.4 % | 8.04 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 20 s; rake contact 799 degC over 534 um, flank contact 1217 degC over 35 um, body at the edge 119 degC, tool heat 17.6 W |
-
-Curve `T_TC_transient_vc114_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. error 106.3 %, max 122.2 % over 4 compared points.
+Curve `T_TC_ap0.4_f0.08` (vc [m/min] -> degC): RMS abs. error 181.4 %, max 206.3 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_TC_transient_vc114_ap0.4_f0.05 | 5 s | 56.7 | 82.2 | degC | +80.4 % | 4.75 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 5 s; rake contact 734 degC over 297 um, flank contact 1412 degC over 35 um, body at the edge 86 degC, tool heat 19.0 W |
-| T_TC_transient_vc114_ap0.4_f0.05 | 10 s | 62.3 | 101.9 | degC | +106.3 % | 5.6 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 10 s; rake contact 734 degC over 293 um, flank contact 1392 degC over 35 um, body at the edge 106 degC, tool heat 18.4 W |
-| T_TC_transient_vc114_ap0.4_f0.05 | 15 s | 65.9 | 111.6 | degC | +111.7 % | 6.13 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 15 s; rake contact 734 degC over 290 um, flank contact 1382 degC over 35 um, body at the edge 116 degC, tool heat 18.1 W |
-| T_TC_transient_vc114_ap0.4_f0.05 | 20 s | 69 | 122.8 | degC | +122.2 % | 6.6 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 20 s; rake contact 735 degC over 289 um, flank contact 1376 degC over 35 um, body at the edge 121 degC, tool heat 17.9 W |
+| T_TC_ap0.4_f0.08 | 76 m/min | 66 | 131.2 | degC | +159.0 % | 6.15 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 743 degC over 467 um, flank contact 793 degC over 25 um, body at the edge 92 degC, tool heat 13.0 W |
+| T_TC_ap0.4_f0.08 | 114 m/min | 61 | 135.3 | degC | +206.3 % | 5.4 | **no** | vc 114 m/min, f 0.08 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 796 degC over 347 um, flank contact 837 degC over 25 um, body at the edge 95 degC, tool heat 13.5 W |
+| T_TC_ap0.4_f0.08 | 170 m/min | 67 | 140.8 | degC | +175.8 % | 6.3 | **no** | vc 170 m/min, f 0.08 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 864 degC over 280 um, flank contact 889 degC over 25 um, body at the edge 98 degC, tool heat 14.2 W |
 
-Curve `T_TC_transient_vc170_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. error 98.9 %, max 112.2 % over 4 compared points.
+Curve `T_TC_ap0.4_f0.12` (vc [m/min] -> degC): RMS abs. error 159.8 %, max 176.1 % over 3 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| T_TC_transient_vc170_ap0.4_f0.05 | 5 s | 57.2 | 84.84 | degC | +85.8 % | 4.83 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 5 s; rake contact 781 degC over 215 um, flank contact 1509 degC over 35 um, body at the edge 89 degC, tool heat 19.9 W |
-| T_TC_transient_vc170_ap0.4_f0.05 | 10 s | 65.6 | 105.6 | degC | +98.6 % | 6.09 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 10 s; rake contact 782 degC over 213 um, flank contact 1489 degC over 35 um, body at the edge 110 degC, tool heat 19.3 W |
-| T_TC_transient_vc170_ap0.4_f0.05 | 15 s | 71 | 115.8 | degC | +97.4 % | 6.9 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 15 s; rake contact 782 degC over 212 um, flank contact 1479 degC over 35 um, body at the edge 120 degC, tool heat 19.0 W |
-| T_TC_transient_vc170_ap0.4_f0.05 | 20 s | 73.3 | 127.5 | degC | +112.2 % | 7.25 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 20 s; rake contact 783 degC over 211 um, flank contact 1474 degC over 35 um, body at the edge 126 degC, tool heat 18.8 W |
+| T_TC_ap0.4_f0.12 | 76 m/min | 72 | 135.5 | degC | +135.1 % | 7.05 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 798 degC over 539 um, flank contact 783 degC over 25 um, body at the edge 94 degC, tool heat 13.4 W |
+| T_TC_ap0.4_f0.12 | 114 m/min | 67 | 141 | degC | +176.1 % | 6.3 | **no** | vc 114 m/min, f 0.12 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 867 degC over 434 um, flank contact 833 degC over 25 um, body at the edge 98 degC, tool heat 14.2 W |
+| T_TC_ap0.4_f0.12 | 170 m/min | 71 | 147.1 | degC | +165.3 % | 6.9 | **no** | vc 170 m/min, f 0.12 mm, ap 0.4 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 942 degC over 365 um, flank contact 885 degC over 25 um, body at the edge 102 degC, tool heat 14.9 W |
+
+Curve `T_TC_ap0.6_f0.05` (vc [m/min] -> degC): RMS abs. error 165.8 %, max 179.7 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_ap0.6_f0.05 | 76 m/min | 72 | 156.5 | degC | +179.7 % | 7.05 | **no** | vc 76 m/min, f 0.05 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 665 degC over 331 um, flank contact 801 degC over 25 um, body at the edge 114 degC, tool heat 17.1 W |
+| T_TC_ap0.6_f0.05 | 114 m/min | 80 | 166.2 | degC | +156.7 % | 8.25 | **no** | vc 114 m/min, f 0.05 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 735 degC over 289 um, flank contact 858 degC over 25 um, body at the edge 120 degC, tool heat 18.3 W |
+| T_TC_ap0.6_f0.05 | 170 m/min | 81 | 170.6 | degC | +160.0 % | 8.4 | **no** | vc 170 m/min, f 0.05 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 783 degC over 212 um, flank contact 902 degC over 25 um, body at the edge 124 degC, tool heat 18.9 W |
+
+Curve `T_TC_ap0.6_f0.08` (vc [m/min] -> degC): RMS abs. error 212.7 %, max 269.5 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_ap0.6_f0.08 | 76 m/min | 80 | 166.8 | degC | +157.8 % | 8.25 | **no** | vc 76 m/min, f 0.08 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 744 degC over 458 um, flank contact 802 degC over 25 um, body at the edge 120 degC, tool heat 18.3 W |
+| T_TC_ap0.6_f0.08 | 114 m/min | 75 | 172.6 | degC | +195.2 % | 7.5 | **no** | vc 114 m/min, f 0.08 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 798 degC over 343 um, flank contact 847 degC over 25 um, body at the edge 125 degC, tool heat 19.1 W |
+| T_TC_ap0.6_f0.08 | 170 m/min | 67 | 180.2 | degC | +269.5 % | 6.3 | **no** | vc 170 m/min, f 0.08 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 866 degC over 278 um, flank contact 898 degC over 25 um, body at the edge 130 degC, tool heat 20.2 W |
+
+Curve `T_TC_ap0.6_f0.12` (vc [m/min] -> degC): RMS abs. error 214.6 %, max 272.0 % over 3 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_ap0.6_f0.12 | 76 m/min | 76 | 172.7 | degC | +189.7 % | 7.65 | **no** | vc 76 m/min, f 0.12 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 800 degC over 533 um, flank contact 793 degC over 25 um, body at the edge 124 degC, tool heat 19.0 W |
+| T_TC_ap0.6_f0.12 | 114 m/min | 83 | 180.4 | degC | +167.9 % | 8.7 | **no** | vc 114 m/min, f 0.12 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 869 degC over 431 um, flank contact 843 degC over 25 um, body at the edge 129 degC, tool heat 20.1 W |
+| T_TC_ap0.6_f0.12 | 170 m/min | 69 | 188.7 | degC | +272.0 % | 6.6 | **no** | vc 170 m/min, f 0.12 mm, ap 0.6 mm; point mean of the readings at 5, 10, 15, 20 s; rake contact 943 degC over 363 um, flank contact 894 degC over 25 um, body at the edge 135 degC, tool heat 21.2 W |
+
+Curve `T_TC_transient_vc76_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. error 224.8 %, max 250.6 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_transient_vc76_ap0.4_f0.05 | 5 s | 50.1 | 113 | degC | +250.6 % | 3.77 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 5 s; rake contact 661 degC over 341 um, flank contact 789 degC over 25 um, body at the edge 67 degC, tool heat 12.5 W |
+| T_TC_transient_vc76_ap0.4_f0.05 | 10 s | 54.6 | 123 | degC | +231.2 % | 4.44 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 10 s; rake contact 662 degC over 338 um, flank contact 790 degC over 25 um, body at the edge 78 degC, tool heat 12.3 W |
+| T_TC_transient_vc76_ap0.4_f0.05 | 15 s | 58.1 | 128.4 | degC | +212.4 % | 4.97 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 15 s; rake contact 663 degC over 337 um, flank contact 791 degC over 25 um, body at the edge 84 degC, tool heat 12.1 W |
+| T_TC_transient_vc76_ap0.4_f0.05 | 20 s | 60.1 | 130.9 | degC | +201.8 % | 5.27 | **no** | vc 76 m/min, f 0.05 mm, ap 0.4 mm; point at 20 s; rake contact 663 degC over 336 um, flank contact 792 degC over 25 um, body at the edge 87 degC, tool heat 12.1 W |
+
+Curve `T_TC_transient_vc76_ap0.4_f0.08` (cutting_time [s] -> degC): RMS abs. error 165.0 %, max 180.2 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_transient_vc76_ap0.4_f0.08 | 5 s | 58.8 | 119.7 | degC | +180.2 % | 5.07 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 5 s; rake contact 742 degC over 473 um, flank contact 790 degC over 25 um, body at the edge 71 degC, tool heat 13.4 W |
+| T_TC_transient_vc76_ap0.4_f0.08 | 10 s | 64.3 | 130.5 | degC | +168.4 % | 5.9 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 10 s; rake contact 743 degC over 470 um, flank contact 792 degC over 25 um, body at the edge 82 degC, tool heat 13.1 W |
+| T_TC_transient_vc76_ap0.4_f0.08 | 15 s | 67.8 | 136.2 | degC | +159.8 % | 6.42 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 15 s; rake contact 743 degC over 468 um, flank contact 793 degC over 25 um, body at the edge 88 degC, tool heat 13.0 W |
+| T_TC_transient_vc76_ap0.4_f0.08 | 20 s | 70.7 | 139.3 | degC | +150.1 % | 6.85 | **no** | vc 76 m/min, f 0.08 mm, ap 0.4 mm; point at 20 s; rake contact 743 degC over 467 um, flank contact 793 degC over 25 um, body at the edge 92 degC, tool heat 13.0 W |
+
+Curve `T_TC_transient_vc76_ap0.4_f0.12` (cutting_time [s] -> degC): RMS abs. error 141.3 %, max 165.9 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_transient_vc76_ap0.4_f0.12 | 5 s | 61.9 | 123.1 | degC | +165.9 % | 5.53 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 5 s; rake contact 796 degC over 543 um, flank contact 779 degC over 25 um, body at the edge 72 degC, tool heat 13.8 W |
+| T_TC_transient_vc76_ap0.4_f0.12 | 10 s | 69.9 | 134.3 | degC | +143.5 % | 6.73 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 10 s; rake contact 797 degC over 541 um, flank contact 781 degC over 25 um, body at the edge 84 degC, tool heat 13.6 W |
+| T_TC_transient_vc76_ap0.4_f0.12 | 15 s | 75.1 | 140.3 | degC | +130.1 % | 7.52 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 15 s; rake contact 798 degC over 540 um, flank contact 782 degC over 25 um, body at the edge 90 degC, tool heat 13.5 W |
+| T_TC_transient_vc76_ap0.4_f0.12 | 20 s | 78.6 | 144 | degC | +121.9 % | 8.04 | **no** | vc 76 m/min, f 0.12 mm, ap 0.4 mm; point at 20 s; rake contact 798 degC over 539 um, flank contact 783 degC over 25 um, body at the edge 94 degC, tool heat 13.4 W |
+
+Curve `T_TC_transient_vc114_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. error 178.7 %, max 198.8 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_transient_vc114_ap0.4_f0.05 | 5 s | 56.7 | 119.7 | degC | +198.8 % | 4.75 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 5 s; rake contact 733 degC over 301 um, flank contact 847 degC over 25 um, body at the edge 71 degC, tool heat 13.4 W |
+| T_TC_transient_vc114_ap0.4_f0.05 | 10 s | 62.3 | 130.5 | degC | +182.9 % | 5.6 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 10 s; rake contact 733 degC over 298 um, flank contact 849 degC over 25 um, body at the edge 82 degC, tool heat 13.2 W |
+| T_TC_transient_vc114_ap0.4_f0.05 | 15 s | 65.9 | 136.2 | degC | +172.0 % | 6.13 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 15 s; rake contact 734 degC over 297 um, flank contact 849 degC over 25 um, body at the edge 88 degC, tool heat 13.1 W |
+| T_TC_transient_vc114_ap0.4_f0.05 | 20 s | 69 | 138.9 | degC | +158.8 % | 6.6 | **no** | vc 114 m/min, f 0.05 mm, ap 0.4 mm; point at 20 s; rake contact 734 degC over 296 um, flank contact 850 degC over 25 um, body at the edge 92 degC, tool heat 13.0 W |
+
+Curve `T_TC_transient_vc170_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. error 167.4 %, max 202.9 % over 4 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| T_TC_transient_vc170_ap0.4_f0.05 | 5 s | 57.2 | 122.5 | degC | +202.9 % | 4.83 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 5 s; rake contact 780 degC over 216 um, flank contact 891 degC over 25 um, body at the edge 72 degC, tool heat 13.8 W |
+| T_TC_transient_vc170_ap0.4_f0.05 | 10 s | 65.6 | 133.7 | degC | +167.8 % | 6.09 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 10 s; rake contact 780 degC over 215 um, flank contact 892 degC over 25 um, body at the edge 84 degC, tool heat 13.6 W |
+| T_TC_transient_vc170_ap0.4_f0.05 | 15 s | 71 | 139.7 | degC | +149.3 % | 6.9 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 15 s; rake contact 781 degC over 215 um, flank contact 893 degC over 25 um, body at the edge 90 degC, tool heat 13.5 W |
+| T_TC_transient_vc170_ap0.4_f0.05 | 20 s | 73.3 | 142.3 | degC | +142.9 % | 7.25 | **no** | vc 170 m/min, f 0.05 mm, ap 0.4 mm; point at 20 s; rake contact 781 degC over 214 um, flank contact 893 degC over 25 um, body at the edge 94 degC, tool heat 13.4 W |
 
 ## wall_error
 
@@ -5138,9 +5158,9 @@ Curve `T_TC_transient_vc170_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. er
 
 | group | cases | cases within budget | counted values (no prediction) | median abs. error (all / values / curve points) | p90 abs. error | class matches | values within uncertainty | largest miss (tolerances) |
 |---|---|---|---|---|---|---|---|---|
-| independent | 6 | 1/6 | 200 (5) | 71.1 % / 115.5 % / 69.2 % | 163.4 % | - | 11/198 | inf (wallerror-insperger2006-sle-down10pct-ap0.8) |
+| independent | 6 | 1/6 | 200 (5) | 29.3 % / 20.7 % / 29.7 % | 58.8 % | - | 29/198 | inf (wallerror-insperger2006-sle-down10pct-ap0.8) |
 
-**Failures and likely causes.** 1 of 6 independent cases within budget (wallerror-budak1994-endmill-static-stiffness). Values within tolerance per case: wallerror-budak1994-aisi1040-carbide-up-radialwidth 1/18; wallerror-budak1994-al7075-hss-halfimmersion-down 0/60; wallerror-budak1994-al7075-hss-halfimmersion-up 49/94; wallerror-budak1994-endmill-static-stiffness 2/2; wallerror-insperger2006-sle-down10pct-ap0.4 5/16; wallerror-insperger2006-sle-down10pct-ap0.8 0/10. The wall error is the product of the force normal to the wall at the generating instant and the tool compliance: errors of the force model and of the tool section (no core data in the cases) multiply; the SLE cases depend on the dynamic amplification near the resonant speeds and on the stability of the cut.
+**Failures and likely causes.** 1 of 6 independent cases within budget (wallerror-budak1994-endmill-static-stiffness). Values within tolerance per case: wallerror-budak1994-aisi1040-carbide-up-radialwidth 10/18; wallerror-budak1994-al7075-hss-halfimmersion-down 32/60; wallerror-budak1994-al7075-hss-halfimmersion-up 43/94; wallerror-budak1994-endmill-static-stiffness 2/2; wallerror-insperger2006-sle-down10pct-ap0.4 5/16; wallerror-insperger2006-sle-down10pct-ap0.8 0/10. The wall error is the product of the force normal to the wall at the generating instant and the tool compliance: errors of the force model and of the tool section (no core data in the cases) multiply; the SLE cases depend on the dynamic amplification near the resonant speeds and on the stability of the cut.
 
 ### wallerror-budak1994-aisi1040-carbide-up-radialwidth
 
@@ -5150,35 +5170,36 @@ Curve `T_TC_transient_vc170_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. er
 * Model chain: cnctwin.cutting.coefficients.MechanicsModel + cnctwin.cutting.kernels.cut_step (station forces) -> cnctwin.tooling (fluted section ToolProps.fluted) -> cantilever on the stated collet spring (quasi-static deflection at the surface-generating instants).
 * Settings: E_Pa = 6.3e+11, I_m4 = 2.648e-09, calibration = kienzle, calibration_sources = ["klippel-2022-ck45-cutting-database"], clamp_stiffness_N_per_m = 2.5e+07, coating = none, direction = up, gauge_length_m = 0.05, h_min_ratio = 0.27, mu_sliding = 0.5, process = milling, rpm = 478, tool_material = carbide-k20-6co.
 * Inputs the case marks as assumed: `setup.tool.coating` = none (not stated); `setup.conditions.coolant` = dry (not stated).
-* Inputs the harness assumed: radial rake = 10 deg (radial rake not stated: the middle of the 5-15 deg of general-purpose end mills, harnesses/assumptions.py); clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
+* Inputs the harness assumed: radial rake = 10 deg (radial rake not stated: the middle of the 5-15 deg of general-purpose end mills, harnesses/assumptions.py); clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); tool material = carbide-k20-6co (grade not in the database: the carbide class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
 * Database values used: tool material carbide-k20-6co thermal properties (`mitsubishi-2026-tm102g`); aisi1045 flow stress (Johnson-Cook) (`burns-2012-1045-cutting-temperature`); aisi1045 physical.density_kg_m3 (`xiu-2019-1045-grinding-fe`); aisi1045 physical.specific_heat_J_kgK (`xiu-2019-1045-grinding-fe`); aisi1045 physical.conductivity_W_mK (`xiu-2019-1045-grinding-fe`); aisi1045 cutting.min_chip_thickness_ratio (`est`); aisi1045 friction mu_sliding (carbide, uncoated) (`est`); aisi1045 cutting.indentation_coeff_N_mm3 (`mal-2015-machining-course`); tool material carbide-k20-6co youngs_modulus_GPa (`mitsubishi-2026-tm102g`); aisi1045 cutting.kienzle (carbide, uncoated, any) calibrating the forces (`klippel-2022-ck45-cutting-database`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Material: database entry aisi1045; the case says: AISI 1040 free-machining steel in the source (Table 5.1 / Sect. 5.4.2); 1045 is the nearest database entry; the cutting coefficients below are the source's own
 * Tool model: core diameter not given: 0.60 D (core_ratio_by_flutes)
 * Tool: cantilever of 50 mm, E 630 GPa, fluted-section I 2648 mm4 (equivalent diameter 0.800 D from tooling; the source's model uses 0.8 D), collet 25000 N/mm.
 * Coefficients calibrated to the material's kienzle data (klippel-2022-ck45-cutting-database) for carbide/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 18 compared, 0 without prediction, 0 not compared; median abs. error 144.5 %, max 649.1 %; 0/18 within uncertainty; case **outside budget**; largest miss 24 tolerances.
-* Likely cause: 1/18 within tolerance, mean signed error +193 %; forces from the coefficient pipeline (calibrated to kienzle), so force errors (cutting_force) enter directly.
+* Result: 18 compared, 0 without prediction, 0 not compared; median abs. error 23.3 %, max 72.6 %; 5/18 within uncertainty; case **outside budget**; largest miss 2.87 tolerances.
+* Likely cause: 10/18 within tolerance, mean signed error -16 %; forces from the coefficient pipeline (calibrated to kienzle), so force errors (cutting_force) enter directly.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| max_surface_error_st0.01 | 1 mm | 4.4 | 21.99 | um | +399.7 % | 4 | **no** | largest /error/ over the engaged height; fz 0.01, ae 1 mm, up |
-| max_surface_error_st0.01 | 3.35 mm | 5.3 | 27.8 | um | +424.6 % | 4 | **no** | largest /error/ over the engaged height; fz 0.01, ae 3.35 mm, up |
-| max_surface_error_st0.01 | 5.5 mm | 15.8 | 27.8 | um | +76.0 % | 4 | **no** | largest /error/ over the engaged height; fz 0.01, ae 5.5 mm, up |
-| max_surface_error_st0.06 | 1 mm | 10.1 | 24.98 | um | +147.3 % | 6 | **no** | largest /error/ over the engaged height; fz 0.06, ae 1 mm, up |
-| max_surface_error_st0.06 | 3.35 mm | 15 | 28.15 | um | +87.7 % | 4 | **no** | largest /error/ over the engaged height; fz 0.06, ae 3.35 mm, up |
-| max_surface_error_st0.06 | 5.5 mm | 50.8 | 27.51 | um | -45.8 % | 12.7 | **no** | largest /error/ over the engaged height; fz 0.06, ae 5.5 mm, up |
-| max_surface_error_st0.10 | 1 mm | 14.5 | 27.43 | um | +89.2 % | 4 | **no** | largest /error/ over the engaged height; fz 0.1, ae 1 mm, up |
-| max_surface_error_st0.10 | 3.35 mm | 20.5 | 29.85 | um | +45.6 % | 5.12 | **no** | largest /error/ over the engaged height; fz 0.1, ae 3.35 mm, up |
-| max_surface_error_st0.10 | 5.5 mm | 80.9 | 37.25 | um | -54.0 % | 20.2 | **no** | largest /error/ over the engaged height; fz 0.1, ae 5.5 mm, up |
-| max_normal_force_st0.01 | 1 mm | 73 | 388.2 | N | +431.8 % | 20 | **no** | largest force normal to the wall over a revolution; fz 0.01, ae 1 mm |
-| max_normal_force_st0.01 | 3.35 mm | 74 | 554.4 | N | +649.1 % | 20 | **no** | largest force normal to the wall over a revolution; fz 0.01, ae 3.35 mm |
-| max_normal_force_st0.01 | 5.5 mm | 99 | 562.1 | N | +467.8 % | 24.8 | **no** | largest force normal to the wall over a revolution; fz 0.01, ae 5.5 mm |
-| max_normal_force_st0.06 | 1 mm | 166 | 443.9 | N | +167.4 % | 41.5 | **no** | largest force normal to the wall over a revolution; fz 0.06, ae 1 mm |
-| max_normal_force_st0.06 | 3.35 mm | 159 | 529 | N | +232.7 % | 39.8 | **no** | largest force normal to the wall over a revolution; fz 0.06, ae 3.35 mm |
-| max_normal_force_st0.06 | 5.5 mm | 408 | 527.8 | N | +29.4 % | 102 | **no** | largest force normal to the wall over a revolution; fz 0.06, ae 5.5 mm |
-| max_normal_force_st0.10 | 1 mm | 201 | 486 | N | +141.8 % | 50.2 | **no** | largest force normal to the wall over a revolution; fz 0.1, ae 1 mm |
-| max_normal_force_st0.10 | 3.35 mm | 196 | 552 | N | +181.6 % | 49 | **no** | largest force normal to the wall over a revolution; fz 0.1, ae 3.35 mm |
-| max_normal_force_st0.10 | 5.5 mm | 667 | 640.4 | N | -4.0 % | 167 | yes | largest force normal to the wall over a revolution; fz 0.1, ae 5.5 mm |
+| max_surface_error_st0.01 | 1 mm | 4.4 | 4.039 | um | -8.2 % | 4 | yes | largest /error/ over the engaged height; fz 0.01, ae 1 mm, up |
+| max_surface_error_st0.01 | 3.35 mm | 5.3 | 4.501 | um | -15.1 % | 4 | yes | largest /error/ over the engaged height; fz 0.01, ae 3.35 mm, up |
+| max_surface_error_st0.01 | 5.5 mm | 15.8 | 4.334 | um | -72.6 % | 4 | **no** | largest /error/ over the engaged height; fz 0.01, ae 5.5 mm, up |
+| max_surface_error_st0.06 | 1 mm | 10.1 | 7.5 | um | -25.7 % | 6 | yes | largest /error/ over the engaged height; fz 0.06, ae 1 mm, up |
+| max_surface_error_st0.06 | 3.35 mm | 15 | 7.686 | um | -48.8 % | 4 | **no** | largest /error/ over the engaged height; fz 0.06, ae 3.35 mm, up |
+| max_surface_error_st0.06 | 5.5 mm | 50.8 | 29.62 | um | -41.7 % | 12.7 | **no** | largest /error/ over the engaged height; fz 0.06, ae 5.5 mm, up |
+| max_surface_error_st0.10 | 1 mm | 14.5 | 10.12 | um | -30.2 % | 4 | **no** | largest /error/ over the engaged height; fz 0.1, ae 1 mm, up |
+| max_surface_error_st0.10 | 3.35 mm | 20.5 | 12.94 | um | -36.9 % | 5.12 | **no** | largest /error/ over the engaged height; fz 0.1, ae 3.35 mm, up |
+| max_surface_error_st0.10 | 5.5 mm | 80.9 | 50.46 | um | -37.6 % | 20.2 | **no** | largest /error/ over the engaged height; fz 0.1, ae 5.5 mm, up |
+| max_normal_force_st0.01 | 1 mm | 73 | 71.71 | N | -1.8 % | 20 | yes | largest force normal to the wall over a revolution; fz 0.01, ae 1 mm |
+| max_normal_force_st0.01 | 3.35 mm | 74 | 84 | N | +13.5 % | 20 | yes | largest force normal to the wall over a revolution; fz 0.01, ae 3.35 mm |
+| max_normal_force_st0.01 | 5.5 mm | 99 | 83.32 | N | -15.8 % | 24.8 | yes | largest force normal to the wall over a revolution; fz 0.01, ae 5.5 mm |
+| max_normal_force_st0.06 | 1 mm | 166 | 131.5 | N | -20.8 % | 41.5 | yes | largest force normal to the wall over a revolution; fz 0.06, ae 1 mm |
+| max_normal_force_st0.06 | 3.35 mm | 159 | 137.2 | N | -13.7 % | 39.8 | yes | largest force normal to the wall over a revolution; fz 0.06, ae 3.35 mm |
+| max_normal_force_st0.06 | 5.5 mm | 408 | 519.4 | N | +27.3 % | 102 | **no** | largest force normal to the wall over a revolution; fz 0.06, ae 5.5 mm |
+| max_normal_force_st0.10 | 1 mm | 201 | 177.2 | N | -11.9 % | 50.2 | yes | largest force normal to the wall over a revolution; fz 0.1, ae 1 mm |
+| max_normal_force_st0.10 | 3.35 mm | 196 | 236.3 | N | +20.6 % | 49 | yes | largest force normal to the wall over a revolution; fz 0.1, ae 3.35 mm |
+| max_normal_force_st0.10 | 5.5 mm | 667 | 886.5 | N | +32.9 % | 167 | **no** | largest force normal to the wall over a revolution; fz 0.1, ae 5.5 mm |
 
 ### wallerror-budak1994-al7075-hss-halfimmersion-down
 
@@ -5188,94 +5209,95 @@ Curve `T_TC_transient_vc170_ap0.4_f0.05` (cutting_time [s] -> degC): RMS abs. er
 * Model chain: cnctwin.cutting.coefficients.MechanicsModel + cnctwin.cutting.kernels.cut_step (station forces) -> cnctwin.tooling (fluted section ToolProps.fluted) -> cantilever on the stated collet spring (quasi-static deflection at the surface-generating instants).
 * Settings: E_Pa = 2.19e+11, I_m4 = 2.648e-09, calibration = kienzle, calibration_sources = ["est"], clamp_stiffness_N_per_m = 1.02e+07, coating = none, direction = down, gauge_length_m = 0.0545, h_min_ratio = 0.3, mu_sliding = 0.55, process = milling, rpm = 478, tool_material = hss-m2.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = dry (not stated).
-* Inputs the harness assumed: radial rake = 10 deg (radial rake not stated: the middle of the 5-15 deg of general-purpose end mills, harnesses/assumptions.py); clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool material = hss-m2 (grade not in the database: the hss class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
+* Inputs the harness assumed: radial rake = 10 deg (radial rake not stated: the middle of the 5-15 deg of general-purpose end mills, harnesses/assumptions.py); clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); tool material = hss-m2 (grade not in the database: the hss class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
 * Database values used: tool material hss-m2 thermal properties (`bohler-2026-s600`); al7075-t6 flow stress (Johnson-Cook) (`luo-2021-al7075-drilling`); al7075-t6 physical.density_kg_m3 (`muraca-1972-al7075-handbook`); al7075-t6 physical.specific_heat_J_kgK (`muraca-1972-al7075-handbook`); al7075-t6 physical.conductivity_W_mK (`muraca-1972-al7075-handbook`); al7075-t6 cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); al7075-t6 friction mu_sliding (carbide, uncoated) (`luo-2021-al7075-drilling`); al7075-t6 cutting.indentation_coeff_N_mm3 (`est`); tool material hss-m2 youngs_modulus_GPa (`bohler-2026-s600`); al7075-t6 cutting.kienzle (hss, uncoated, any) calibrating the forces (`est`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Material: database entry al7075-t6; the case says: 7075 aluminium alloy, temper not stated
 * Tool model: core diameter not given: 0.60 D (core_ratio_by_flutes)
 * Tool: cantilever of 54.5 mm, E 219 GPa, fluted-section I 2648 mm4 (equivalent diameter 0.800 D from tooling; the source's model uses 0.8 D), collet 10200 N/mm.
 * Coefficients calibrated to the material's kienzle data (est) for hss/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 60 compared, 0 without prediction, 0 not compared; median abs. error 75.4 %, max 146.2 %; 0/60 within uncertainty; case **outside budget**; largest miss 5.85 tolerances.
-* Likely cause: 0/60 within tolerance, mean signed error -84 %; forces from the coefficient pipeline (calibrated to kienzle), so force errors (cutting_force) enter directly.
+* Result: 60 compared, 0 without prediction, 0 not compared; median abs. error 20.1 %, max 40.7 %; 7/60 within uncertainty; case **outside budget**; largest miss 1.63 tolerances.
+* Likely cause: 32/60 within tolerance, mean signed error -20 %; forces from the coefficient pipeline (calibrated to kienzle), so force errors (cutting_force) enter directly.
 
-Curve `surface_error_st0.02` (axial_position_from_tip [mm] -> um): RMS abs. error 123.1 %, max 146.2 % over 11 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| surface_error_st0.02 | 3.05 mm | -73.6 | -181.2 | um | -146.2 % | 18.4 | **no** | z 3.05 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 4.94 mm | -74.5 | -176.9 | um | -137.4 % | 18.6 | **no** | z 4.94 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 10.05 mm | -71.7 | -168.7 | um | -135.4 % | 17.9 | **no** | z 10.05 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 11.31 mm | -71.7 | -167.3 | um | -133.3 % | 17.9 | **no** | z 11.31 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 12.59 mm | -71.6 | -165.7 | um | -131.4 % | 17.9 | **no** | z 12.59 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 13.82 mm | -72.9 | -163.9 | um | -124.9 % | 18.2 | **no** | z 13.82 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 15.08 mm | -74.3 | -162.3 | um | -118.4 % | 18.6 | **no** | z 15.08 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 16.35 mm | -74.1 | -160.7 | um | -116.8 % | 18.5 | **no** | z 16.35 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 17.55 mm | -76.7 | -159.4 | um | -107.8 % | 19.2 | **no** | z 17.55 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 18.79 mm | -79.3 | -157.9 | um | -99.2 % | 19.8 | **no** | z 18.79 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.02 | 20.05 mm | -81.7 | -156.5 | um | -91.6 % | 20.4 | **no** | z 20.05 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
-
-Curve `surface_error_st0.06` (axial_position_from_tip [mm] -> um): RMS abs. error 73.7 %, max 83.8 % over 19 compared points.
+Curve `surface_error_st0.02` (axial_position_from_tip [mm] -> um): RMS abs. error 4.3 %, max 9.0 % over 11 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| surface_error_st0.06 | 2.48 mm | -165.1 | -276.7 | um | -67.6 % | 41.3 | **no** | z 2.48 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 3.09 mm | -159.9 | -275.2 | um | -72.1 % | 40 | **no** | z 3.09 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 3.74 mm | -157.5 | -274.6 | um | -74.3 % | 39.4 | **no** | z 3.74 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 4.99 mm | -157.5 | -273 | um | -73.4 % | 39.4 | **no** | z 4.99 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 5.67 mm | -157.6 | -272 | um | -72.6 % | 39.4 | **no** | z 5.67 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 6.29 mm | -157.5 | -271.8 | um | -72.6 % | 39.4 | **no** | z 6.29 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 6.91 mm | -147.4 | -270.9 | um | -83.8 % | 36.9 | **no** | z 6.91 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 7.55 mm | -152.3 | -270.3 | um | -77.5 % | 38.1 | **no** | z 7.55 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 8.16 mm | -157.4 | -270.2 | um | -71.7 % | 39.4 | **no** | z 8.16 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 8.76 mm | -152.9 | -269.8 | um | -76.5 % | 38.2 | **no** | z 8.76 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 10.13 mm | -152.2 | -269 | um | -76.8 % | 38 | **no** | z 10.13 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 11.37 mm | -152.2 | -268.7 | um | -76.5 % | 38 | **no** | z 11.37 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 12.63 mm | -154.7 | -268.2 | um | -73.4 % | 38.7 | **no** | z 12.63 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 13.89 mm | -154.6 | -267.7 | um | -73.1 % | 38.6 | **no** | z 13.89 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 15.11 mm | -154.8 | -266.4 | um | -72.1 % | 38.7 | **no** | z 15.11 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 16.41 mm | -149.7 | -265.3 | um | -77.2 % | 37.4 | **no** | z 16.41 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 17.61 mm | -152.1 | -264.3 | um | -73.8 % | 38 | **no** | z 17.61 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 18.86 mm | -157.3 | -262.8 | um | -67.1 % | 39.3 | **no** | z 18.86 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.06 | 20.12 mm | -157.3 | -260.7 | um | -65.7 % | 39.3 | **no** | z 20.12 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 3.05 mm | -73.6 | -73.45 | um | +0.2 % | 18.4 | yes | z 3.05 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 4.94 mm | -74.5 | -73.49 | um | +1.4 % | 18.6 | yes | z 4.94 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 10.05 mm | -71.7 | -74.75 | um | -4.2 % | 17.9 | yes | z 10.05 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 11.31 mm | -71.7 | -75.05 | um | -4.7 % | 17.9 | yes | z 11.31 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 12.59 mm | -71.6 | -75.28 | um | -5.1 % | 17.9 | yes | z 12.59 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 13.82 mm | -72.9 | -75.24 | um | -3.2 % | 18.2 | yes | z 13.82 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 15.08 mm | -74.3 | -75.31 | um | -1.4 % | 18.6 | yes | z 15.08 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 16.35 mm | -74.1 | -75.26 | um | -1.6 % | 18.5 | yes | z 16.35 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 17.55 mm | -76.7 | -75.14 | um | +2.0 % | 19.2 | yes | z 17.55 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 18.79 mm | -79.3 | -74.78 | um | +5.7 % | 19.8 | yes | z 18.79 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.02 | 20.05 mm | -81.7 | -74.36 | um | +9.0 % | 20.4 | yes | z 20.05 mm, fz 0.02 mm, down, ae 9.525, ap 21.59 mm |
 
-Curve `surface_error_st0.10` (axial_position_from_tip [mm] -> um): RMS abs. error 79.3 %, max 94.3 % over 18 compared points.
+Curve `surface_error_st0.06` (axial_position_from_tip [mm] -> um): RMS abs. error 12.8 %, max 19.2 % over 19 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| surface_error_st0.10 | 2.62 mm | -209.4 | -362.9 | um | -73.3 % | 52.4 | **no** | z 2.62 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 3.58 mm | -203 | -361.6 | um | -78.1 % | 50.8 | **no** | z 3.58 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 4.77 mm | -205.6 | -361.2 | um | -75.7 % | 51.4 | **no** | z 4.77 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 5.53 mm | -192.8 | -360.9 | um | -87.2 % | 48.2 | **no** | z 5.53 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 6.11 mm | -185.7 | -360.8 | um | -94.3 % | 46.4 | **no** | z 6.11 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 6.8 mm | -189.8 | -360.9 | um | -90.1 % | 47.5 | **no** | z 6.8 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 7.44 mm | -192.8 | -360.8 | um | -87.1 % | 48.2 | **no** | z 7.44 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 8.02 mm | -197.8 | -361.4 | um | -82.7 % | 49.5 | **no** | z 8.02 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 8.69 mm | -197.7 | -361.3 | um | -82.8 % | 49.4 | **no** | z 8.69 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 9.96 mm | -197.7 | -361.9 | um | -83.1 % | 49.4 | **no** | z 9.96 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 11.26 mm | -205.4 | -362.2 | um | -76.4 % | 51.4 | **no** | z 11.26 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 12.5 mm | -205.4 | -361.7 | um | -76.1 % | 51.4 | **no** | z 12.5 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 13.77 mm | -207.8 | -361.7 | um | -74.1 % | 52 | **no** | z 13.77 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 15.02 mm | -210.3 | -361.5 | um | -71.9 % | 52.6 | **no** | z 15.02 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 16.24 mm | -207.7 | -361 | um | -73.8 % | 51.9 | **no** | z 16.24 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 17.48 mm | -205.2 | -359.4 | um | -75.2 % | 51.3 | **no** | z 17.48 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 18.73 mm | -210.3 | -357.9 | um | -70.2 % | 52.6 | **no** | z 18.73 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.10 | 19.97 mm | -210.3 | -355.9 | um | -69.2 % | 52.6 | **no** | z 19.97 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 2.48 mm | -165.1 | -167.3 | um | -1.3 % | 41.3 | yes | z 2.48 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 3.09 mm | -159.9 | -167.5 | um | -4.7 % | 40 | yes | z 3.09 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 3.74 mm | -157.5 | -168.4 | um | -6.9 % | 39.4 | yes | z 3.74 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 4.99 mm | -157.5 | -169.8 | um | -7.8 % | 39.4 | yes | z 4.99 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 5.67 mm | -157.6 | -170.2 | um | -8.0 % | 39.4 | yes | z 5.67 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 6.29 mm | -157.5 | -171.3 | um | -8.7 % | 39.4 | yes | z 6.29 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 6.91 mm | -147.4 | -171.4 | um | -16.3 % | 36.9 | yes | z 6.91 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 7.55 mm | -152.3 | -172 | um | -12.9 % | 38.1 | yes | z 7.55 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 8.16 mm | -157.4 | -173 | um | -9.9 % | 39.4 | yes | z 8.16 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 8.76 mm | -152.9 | -173.7 | um | -13.6 % | 38.2 | yes | z 8.76 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 10.13 mm | -152.2 | -174.9 | um | -14.9 % | 38 | yes | z 10.13 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 11.37 mm | -152.2 | -176.3 | um | -15.9 % | 38 | yes | z 11.37 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 12.63 mm | -154.7 | -177.4 | um | -14.7 % | 38.7 | yes | z 12.63 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 13.89 mm | -154.6 | -178.3 | um | -15.3 % | 38.6 | yes | z 13.89 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 15.11 mm | -154.8 | -178.3 | um | -15.2 % | 38.7 | yes | z 15.11 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 16.41 mm | -149.7 | -178.4 | um | -19.2 % | 37.4 | yes | z 16.41 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 17.61 mm | -152.1 | -178.3 | um | -17.2 % | 38 | yes | z 17.61 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 18.86 mm | -157.3 | -177.8 | um | -13.0 % | 39.3 | yes | z 18.86 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.06 | 20.12 mm | -157.3 | -176.7 | um | -12.3 % | 39.3 | yes | z 20.12 mm, fz 0.06 mm, down, ae 9.525, ap 21.59 mm |
 
-Curve `surface_error_st0.14` (axial_position_from_tip [mm] -> um): RMS abs. error 71.9 %, max 76.8 % over 12 compared points.
+Curve `surface_error_st0.10` (axial_position_from_tip [mm] -> um): RMS abs. error 31.8 %, max 39.6 % over 18 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| surface_error_st0.14 | 2.59 mm | -264 | -443.4 | um | -68.0 % | 66 | **no** | z 2.59 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 3.24 mm | -253.3 | -442.4 | um | -74.6 % | 63.3 | **no** | z 3.24 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 3.82 mm | -258.9 | -443 | um | -71.1 % | 64.7 | **no** | z 3.82 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 10.23 mm | -253.6 | -447.4 | um | -76.4 % | 63.4 | **no** | z 10.23 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 11.48 mm | -256.3 | -448.5 | um | -75.0 % | 64.1 | **no** | z 11.48 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 12.75 mm | -253.5 | -448.1 | um | -76.8 % | 63.4 | **no** | z 12.75 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 14 mm | -266.3 | -448.8 | um | -68.5 % | 66.6 | **no** | z 14 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 15.26 mm | -256.2 | -448.9 | um | -75.2 % | 64 | **no** | z 15.26 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 16.51 mm | -258.6 | -448.5 | um | -73.4 % | 64.7 | **no** | z 16.51 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 17.72 mm | -261 | -446.4 | um | -71.0 % | 65.2 | **no** | z 17.72 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 18.98 mm | -266.3 | -444.6 | um | -67.0 % | 66.6 | **no** | z 18.98 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
-| surface_error_st0.14 | 20.23 mm | -268.8 | -442.2 | um | -64.5 % | 67.2 | **no** | z 20.23 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 2.62 mm | -209.4 | -253.3 | um | -21.0 % | 52.4 | yes | z 2.62 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 3.58 mm | -203 | -254.4 | um | -25.3 % | 50.8 | **no** | z 3.58 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 4.77 mm | -205.6 | -256.9 | um | -25.0 % | 51.4 | yes | z 4.77 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 5.53 mm | -192.8 | -258.3 | um | -34.0 % | 48.2 | **no** | z 5.53 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 6.11 mm | -185.7 | -259.3 | um | -39.6 % | 46.4 | **no** | z 6.11 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 6.8 mm | -189.8 | -260.9 | um | -37.4 % | 47.5 | **no** | z 6.8 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 7.44 mm | -192.8 | -261.8 | um | -35.8 % | 48.2 | **no** | z 7.44 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 8.02 mm | -197.8 | -263.7 | um | -33.3 % | 49.5 | **no** | z 8.02 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 8.69 mm | -197.7 | -264.6 | um | -33.8 % | 49.4 | **no** | z 8.69 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 9.96 mm | -197.7 | -267.1 | um | -35.1 % | 49.4 | **no** | z 9.96 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 11.26 mm | -205.4 | -269.2 | um | -31.1 % | 51.4 | **no** | z 11.26 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 12.5 mm | -205.4 | -270.4 | um | -31.6 % | 51.4 | **no** | z 12.5 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 13.77 mm | -207.8 | -271.8 | um | -30.8 % | 52 | **no** | z 13.77 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 15.02 mm | -210.3 | -272.9 | um | -29.7 % | 52.6 | **no** | z 15.02 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 16.24 mm | -207.7 | -273.4 | um | -31.7 % | 51.9 | **no** | z 16.24 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 17.48 mm | -205.2 | -272.9 | um | -33.0 % | 51.3 | **no** | z 17.48 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 18.73 mm | -210.3 | -272.2 | um | -29.5 % | 52.6 | **no** | z 18.73 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.10 | 19.97 mm | -210.3 | -271 | um | -28.9 % | 52.6 | **no** | z 19.97 mm, fz 0.1 mm, down, ae 9.525, ap 21.59 mm |
+
+Curve `surface_error_st0.14` (axial_position_from_tip [mm] -> um): RMS abs. error 35.9 %, max 40.7 % over 12 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| surface_error_st0.14 | 2.59 mm | -264 | -333.3 | um | -26.3 % | 66 | **no** | z 2.59 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 3.24 mm | -253.3 | -333.8 | um | -31.8 % | 63.3 | **no** | z 3.24 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 3.82 mm | -258.9 | -336.2 | um | -29.9 % | 64.7 | **no** | z 3.82 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 10.23 mm | -253.6 | -352.9 | um | -39.2 % | 63.4 | **no** | z 10.23 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 11.48 mm | -256.3 | -355.8 | um | -38.8 % | 64.1 | **no** | z 11.48 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 12.75 mm | -253.5 | -356.8 | um | -40.7 % | 63.4 | **no** | z 12.75 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 14 mm | -266.3 | -358.9 | um | -34.8 % | 66.6 | **no** | z 14 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 15.26 mm | -256.2 | -360.3 | um | -40.6 % | 64 | **no** | z 15.26 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 16.51 mm | -258.6 | -361 | um | -39.6 % | 64.7 | **no** | z 16.51 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 17.72 mm | -261 | -360 | um | -37.9 % | 65.2 | **no** | z 17.72 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 18.98 mm | -266.3 | -359.1 | um | -34.9 % | 66.6 | **no** | z 18.98 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
+| surface_error_st0.14 | 20.23 mm | -268.8 | -357.4 | um | -33.0 % | 67.2 | **no** | z 20.23 mm, fz 0.14 mm, down, ae 9.525, ap 21.59 mm |
 
 ### wallerror-budak1994-al7075-hss-halfimmersion-up
 
@@ -5285,128 +5307,129 @@ Curve `surface_error_st0.14` (axial_position_from_tip [mm] -> um): RMS abs. erro
 * Model chain: cnctwin.cutting.coefficients.MechanicsModel + cnctwin.cutting.kernels.cut_step (station forces) -> cnctwin.tooling (fluted section ToolProps.fluted) -> cantilever on the stated collet spring (quasi-static deflection at the surface-generating instants).
 * Settings: E_Pa = 2.19e+11, I_m4 = 2.648e-09, calibration = kienzle, calibration_sources = ["est"], clamp_stiffness_N_per_m = 1.02e+07, coating = none, direction = up, gauge_length_m = 0.0545, h_min_ratio = 0.3, mu_sliding = 0.55, process = milling, rpm = 478, tool_material = hss-m2.
 * Inputs the case marks as assumed: `setup.conditions.coolant` = dry (not stated).
-* Inputs the harness assumed: radial rake = 10 deg (radial rake not stated: the middle of the 5-15 deg of general-purpose end mills, harnesses/assumptions.py); clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 20 um (not stated in the case: the tooling model's default for this tool (hone_edge_radius_m), db/models/tooling.yaml); tool material = hss-m2 (grade not in the database: the hss class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
+* Inputs the harness assumed: radial rake = 10 deg (radial rake not stated: the middle of the 5-15 deg of general-purpose end mills, harnesses/assumptions.py); clearance angle = 10 deg (primary clearance not stated: the middle of the 8-12 deg of catalogue solid end mills, harnesses/assumptions.py); cutting-edge radius = 3 um (not stated in the case: the tooling model's default for this tool (sharp_edge_radius_m), db/models/tooling.yaml); tool material = hss-m2 (grade not in the database: the hss class default, db/tool_materials); ambient temperature = 20 degC (case states none (or marks it assumed): ISO 1 reference temperature, est); tool and work temperature = 20 degC (a test cut of seconds: tool body and work at ambient (the contact flash is in the mechanics heat partition), est); runout = 0 (not stated in the case: an ideal concentric tool, est).
 * Database values used: tool material hss-m2 thermal properties (`bohler-2026-s600`); al7075-t6 flow stress (Johnson-Cook) (`luo-2021-al7075-drilling`); al7075-t6 physical.density_kg_m3 (`muraca-1972-al7075-handbook`); al7075-t6 physical.specific_heat_J_kgK (`muraca-1972-al7075-handbook`); al7075-t6 physical.conductivity_W_mK (`muraca-1972-al7075-handbook`); al7075-t6 cutting.min_chip_thickness_ratio (`wojciechowski-2022-min-chip-thickness`); al7075-t6 friction mu_sliding (carbide, uncoated) (`luo-2021-al7075-drilling`); al7075-t6 cutting.indentation_coeff_N_mm3 (`est`); tool material hss-m2 youngs_modulus_GPa (`bohler-2026-s600`); al7075-t6 cutting.kienzle (hss, uncoated, any) calibrating the forces (`est`).
+* Edge radius: an uncoated solid tool without a stated edge preparation has the ground (sharp) edge in the tooling model (tooling.common.edge_prep), not the light hone of coated solid tools.
 * Material: database entry al7075-t6; the case says: 7075 aluminium alloy, temper not stated
 * Tool model: core diameter not given: 0.60 D (core_ratio_by_flutes)
 * Tool: cantilever of 54.5 mm, E 219 GPa, fluted-section I 2648 mm4 (equivalent diameter 0.800 D from tooling; the source's model uses 0.8 D), collet 10200 N/mm.
 * Coefficients calibrated to the material's kienzle data (est) for hss/none, milling (cnctwin.mechanics build_calibration; Oxley carries the dependence away from the reference conditions).
-* Result: 94 compared, 0 without prediction, 0 not compared; median abs. error 20.0 %, max 641.4 %; 8/94 within uncertainty; case **outside budget**; largest miss 8.51 tolerances.
-* Likely cause: 49/94 within tolerance, mean signed error -51 %; forces from the coefficient pipeline (calibrated to kienzle), so force errors (cutting_force) enter directly.
+* Result: 94 compared, 0 without prediction, 0 not compared; median abs. error 29.2 %, max 97.9 %; 14/94 within uncertainty; case **outside budget**; largest miss 2.53 tolerances.
+* Likely cause: 43/94 within tolerance, mean signed error +25 %; forces from the coefficient pipeline (calibrated to kienzle), so force errors (cutting_force) enter directly.
 
-Curve `surface_error_st0.02` (axial_position_from_tip [mm] -> um): RMS abs. error 243.8 %, max 641.4 % over 20 compared points.
-
-| reference | x | ref. | sim. | unit | error | tolerance | within | note |
-|---|---|---|---|---|---|---|---|---|
-| surface_error_st0.02 | 2.78 mm | 44.1 | 24.6 | um | -44.2 % | 11 | **no** | z 2.78 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 3.8 mm | 45.4 | 19.26 | um | -57.6 % | 11.3 | **no** | z 3.8 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 4.47 mm | 40.3 | 16.35 | um | -59.4 % | 10.1 | **no** | z 4.47 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 5.1 mm | 40.3 | 13.23 | um | -67.2 % | 10.1 | **no** | z 5.1 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 5.59 mm | 36.6 | 11.26 | um | -69.2 % | 9.15 | **no** | z 5.59 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 6.09 mm | 32.4 | 8.445 | um | -73.9 % | 8.1 | **no** | z 6.09 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 6.88 mm | 35.4 | 5.45 | um | -84.6 % | 8.85 | **no** | z 6.88 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 7.65 mm | 32.8 | 1.669 | um | -94.9 % | 8.2 | **no** | z 7.65 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 8.42 mm | 34 | -1.016 | um | -103.0 % | 8.5 | **no** | z 8.42 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 8.92 mm | 30.1 | -3.837 | um | -112.7 % | 7.53 | **no** | z 8.92 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 10.02 mm | 31.4 | -8.224 | um | -126.2 % | 7.85 | **no** | z 10.02 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 11.24 mm | 27.4 | -12.52 | um | -145.7 % | 6.85 | **no** | z 11.24 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 12.98 mm | 24.4 | -18.94 | um | -177.6 % | 6.1 | **no** | z 12.98 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 14.01 mm | 22.3 | -22.67 | um | -201.6 % | 6 | **no** | z 14.01 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 15.27 mm | 18.5 | -26.76 | um | -244.7 % | 6 | **no** | z 15.27 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 16.35 mm | 21.3 | -29.76 | um | -239.7 % | 6 | **no** | z 16.35 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 17.29 mm | 12.1 | -31.97 | um | -364.2 % | 6 | **no** | z 17.29 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 17.69 mm | 6.1 | -33.03 | um | -641.4 % | 6 | **no** | z 17.69 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 18.4 mm | 13.5 | -34.6 | um | -356.3 % | 6 | **no** | z 18.4 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.02 | 19.04 mm | 9.5 | -35.86 | um | -477.4 % | 6 | **no** | z 19.04 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
-
-Curve `surface_error_st0.06` (axial_position_from_tip [mm] -> um): RMS abs. error 49.5 %, max 113.4 % over 24 compared points.
+Curve `surface_error_st0.02` (axial_position_from_tip [mm] -> um): RMS abs. error 25.2 %, max 97.9 % over 20 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| surface_error_st0.06 | 2.46 mm | 109.6 | 113.1 | um | +3.2 % | 27.4 | yes | z 2.46 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 3 mm | 105.1 | 109.4 | um | +4.1 % | 26.3 | yes | z 3 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 3.65 mm | 98.3 | 104.4 | um | +6.2 % | 24.6 | yes | z 3.65 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 4.41 mm | 99 | 97.08 | um | -1.9 % | 24.8 | yes | z 4.41 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 5.04 mm | 91.9 | 91.07 | um | -0.9 % | 23 | yes | z 5.04 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 5.66 mm | 86.8 | 85.86 | um | -1.1 % | 21.7 | yes | z 5.66 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 5.81 mm | 81.7 | 85.74 | um | +4.9 % | 20.4 | yes | z 5.81 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 6.32 mm | 77.2 | 79.88 | um | +3.5 % | 19.3 | yes | z 6.32 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 6.86 mm | 72.1 | 76.1 | um | +5.5 % | 18 | yes | z 6.86 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 7.61 mm | 62 | 68.82 | um | +11.0 % | 15.5 | yes | z 7.61 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 8.37 mm | 60 | 63.55 | um | +5.9 % | 15 | yes | z 8.37 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 8.9 mm | 56 | 58.03 | um | +3.6 % | 14 | yes | z 8.9 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 9.99 mm | 54.9 | 49.48 | um | -9.9 % | 13.7 | yes | z 9.99 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 10.96 mm | 50.9 | 42.72 | um | -16.1 % | 12.7 | yes | z 10.96 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 11.45 mm | 49 | 39.43 | um | -19.5 % | 12.2 | yes | z 11.45 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 12.7 mm | 44 | 30.09 | um | -31.6 % | 11 | **no** | z 12.7 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 13.23 mm | 44 | 25.72 | um | -41.6 % | 11 | **no** | z 13.23 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 14.08 mm | 41.5 | 20.16 | um | -51.4 % | 10.4 | **no** | z 14.08 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 15.2 mm | 39.1 | 13.59 | um | -65.2 % | 9.78 | **no** | z 15.2 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 16.32 mm | 36.5 | 7.826 | um | -78.6 % | 9.12 | **no** | z 16.32 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 17.27 mm | 33 | 3.566 | um | -89.2 % | 8.25 | **no** | z 17.27 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 17.78 mm | 31 | 0.4332 | um | -98.6 % | 7.75 | **no** | z 17.78 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 18.41 mm | 30.9 | -2.057 | um | -106.7 % | 7.72 | **no** | z 18.41 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.06 | 19.01 mm | 27.9 | -3.749 | um | -113.4 % | 6.97 | **no** | z 19.01 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 2.78 mm | 44.1 | 46.42 | um | +5.3 % | 11 | yes | z 2.78 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 3.8 mm | 45.4 | 43.52 | um | -4.1 % | 11.3 | yes | z 3.8 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 4.47 mm | 40.3 | 41.98 | um | +4.2 % | 10.1 | yes | z 4.47 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 5.1 mm | 40.3 | 40.12 | um | -0.5 % | 10.1 | yes | z 5.1 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 5.59 mm | 36.6 | 38.94 | um | +6.4 % | 9.15 | yes | z 5.59 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 6.09 mm | 32.4 | 37.4 | um | +15.4 % | 8.1 | yes | z 6.09 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 6.88 mm | 35.4 | 35.49 | um | +0.2 % | 8.85 | yes | z 6.88 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 7.65 mm | 32.8 | 33.22 | um | +1.3 % | 8.2 | yes | z 7.65 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 8.42 mm | 34 | 31.58 | um | -7.1 % | 8.5 | yes | z 8.42 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 8.92 mm | 30.1 | 29.84 | um | -0.9 % | 7.53 | yes | z 8.92 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 10.02 mm | 31.4 | 27.17 | um | -13.5 % | 7.85 | yes | z 10.02 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 11.24 mm | 27.4 | 24.44 | um | -10.8 % | 6.85 | yes | z 11.24 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 12.98 mm | 24.4 | 20.52 | um | -15.9 % | 6.1 | yes | z 12.98 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 14.01 mm | 22.3 | 18.29 | um | -18.0 % | 6 | yes | z 14.01 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 15.27 mm | 18.5 | 15.82 | um | -14.5 % | 6 | yes | z 15.27 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 16.35 mm | 21.3 | 14.02 | um | -34.2 % | 6 | **no** | z 16.35 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 17.29 mm | 12.1 | 12.68 | um | +4.8 % | 6 | yes | z 17.29 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 17.69 mm | 6.1 | 12.07 | um | +97.9 % | 6 | yes | z 17.69 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 18.4 mm | 13.5 | 11.13 | um | -17.5 % | 6 | yes | z 18.4 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.02 | 19.04 mm | 9.5 | 10.43 | um | +9.8 % | 6 | yes | z 19.04 mm, fz 0.02 mm, up, ae 9.525, ap 19.05 mm |
 
-Curve `surface_error_st0.10` (axial_position_from_tip [mm] -> um): RMS abs. error 25.6 %, max 51.8 % over 24 compared points.
+Curve `surface_error_st0.06` (axial_position_from_tip [mm] -> um): RMS abs. error 46.0 %, max 63.3 % over 24 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| surface_error_st0.10 | 2.33 mm | 152 | 195.7 | um | +28.7 % | 38 | **no** | z 2.33 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 2.86 mm | 149.3 | 187.6 | um | +25.6 % | 37.3 | **no** | z 2.86 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 3.74 mm | 147 | 177.2 | um | +20.6 % | 36.8 | yes | z 3.74 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 4.37 mm | 144.2 | 170.1 | um | +17.9 % | 36 | yes | z 4.37 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 4.98 mm | 141.7 | 161.5 | um | +14.0 % | 35.4 | yes | z 4.98 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 5.59 mm | 133.5 | 155.9 | um | +16.8 % | 33.4 | yes | z 5.59 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 6.23 mm | 131.6 | 148.5 | um | +12.8 % | 32.9 | yes | z 6.23 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 6.73 mm | 121.7 | 140.2 | um | +15.2 % | 30.4 | yes | z 6.73 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 7.53 mm | 121.5 | 132.5 | um | +9.1 % | 30.4 | yes | z 7.53 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 8.15 mm | 118.9 | 124.3 | um | +4.5 % | 29.7 | yes | z 8.15 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 8.86 mm | 109.7 | 116.9 | um | +6.5 % | 27.4 | yes | z 8.86 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 9.79 mm | 107 | 104.1 | um | -2.7 % | 26.8 | yes | z 9.79 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 10.81 mm | 105.1 | 94.24 | um | -10.3 % | 26.3 | yes | z 10.81 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 11.33 mm | 96.6 | 87.47 | um | -9.5 % | 24.1 | yes | z 11.33 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 12.59 mm | 89 | 74.03 | um | -16.8 % | 22.2 | yes | z 12.59 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 13.16 mm | 73.6 | 69.69 | um | -5.3 % | 18.4 | yes | z 13.16 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 13.94 mm | 71.4 | 61.6 | um | -13.7 % | 17.9 | yes | z 13.94 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 15.14 mm | 70 | 52.3 | um | -25.3 % | 17.5 | **no** | z 15.14 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 16.03 mm | 71 | 43.68 | um | -38.5 % | 17.8 | **no** | z 16.03 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 16.39 mm | 66 | 42.27 | um | -36.0 % | 16.5 | **no** | z 16.39 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 17.15 mm | 60 | 36.34 | um | -39.4 % | 15 | **no** | z 17.15 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 17.65 mm | 59.1 | 33.53 | um | -43.3 % | 14.8 | **no** | z 17.65 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 18.3 mm | 55.6 | 29.28 | um | -47.3 % | 13.9 | **no** | z 18.3 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.10 | 18.92 mm | 54.1 | 26.1 | um | -51.8 % | 13.5 | **no** | z 18.92 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 2.46 mm | 109.6 | 133.7 | um | +22.0 % | 27.4 | yes | z 2.46 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 3 mm | 105.1 | 130.9 | um | +24.5 % | 26.3 | yes | z 3 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 3.65 mm | 98.3 | 127.2 | um | +29.4 % | 24.6 | **no** | z 3.65 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 4.41 mm | 99 | 121.8 | um | +23.0 % | 24.8 | yes | z 4.41 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 5.04 mm | 91.9 | 117.2 | um | +27.5 % | 23 | **no** | z 5.04 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 5.66 mm | 86.8 | 113.3 | um | +30.5 % | 21.7 | **no** | z 5.66 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 5.81 mm | 81.7 | 113.1 | um | +38.4 % | 20.4 | **no** | z 5.81 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 6.32 mm | 77.2 | 108.6 | um | +40.6 % | 19.3 | **no** | z 6.32 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 6.86 mm | 72.1 | 105.6 | um | +46.4 % | 18 | **no** | z 6.86 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 7.61 mm | 62 | 99.96 | um | +61.2 % | 15.5 | **no** | z 7.61 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 8.37 mm | 60 | 95.84 | um | +59.7 % | 15 | **no** | z 8.37 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 8.9 mm | 56 | 91.47 | um | +63.3 % | 14 | **no** | z 8.9 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 9.99 mm | 54.9 | 84.79 | um | +54.4 % | 13.7 | **no** | z 9.99 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 10.96 mm | 50.9 | 79.36 | um | +55.9 % | 12.7 | **no** | z 10.96 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 11.45 mm | 49 | 76.71 | um | +56.6 % | 12.2 | **no** | z 11.45 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 12.7 mm | 44 | 69.29 | um | +57.5 % | 11 | **no** | z 12.7 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 13.23 mm | 44 | 65.78 | um | +49.5 % | 11 | **no** | z 13.23 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 14.08 mm | 41.5 | 61.37 | um | +47.9 % | 10.4 | **no** | z 14.08 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 15.2 mm | 39.1 | 56.22 | um | +43.8 % | 9.78 | **no** | z 15.2 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 16.32 mm | 36.5 | 51.63 | um | +41.4 % | 9.12 | **no** | z 16.32 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 17.27 mm | 33 | 48.25 | um | +46.2 % | 8.25 | **no** | z 17.27 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 17.78 mm | 31 | 45.94 | um | +48.2 % | 7.75 | **no** | z 17.78 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 18.41 mm | 30.9 | 44.02 | um | +42.4 % | 7.72 | **no** | z 18.41 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.06 | 19.01 mm | 27.9 | 42.64 | um | +52.8 % | 6.97 | **no** | z 19.01 mm, fz 0.06 mm, up, ae 9.525, ap 19.05 mm |
 
-Curve `surface_error_st0.14` (axial_position_from_tip [mm] -> um): RMS abs. error 22.2 %, max 41.4 % over 26 compared points.
+Curve `surface_error_st0.10` (axial_position_from_tip [mm] -> um): RMS abs. error 34.9 %, max 48.8 % over 24 compared points.
 
 | reference | x | ref. | sim. | unit | error | tolerance | within | note |
 |---|---|---|---|---|---|---|---|---|
-| surface_error_st0.14 | 2.35 mm | 235.9 | 269.9 | um | +14.4 % | 59 | yes | z 2.35 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 2.9 mm | 233.4 | 259.6 | um | +11.2 % | 58.4 | yes | z 2.9 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 3.66 mm | 212 | 250.5 | um | +18.1 % | 53 | yes | z 3.66 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 4.35 mm | 199.7 | 237.5 | um | +18.9 % | 49.9 | yes | z 4.35 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 4.96 mm | 194.1 | 230.3 | um | +18.6 % | 48.5 | yes | z 4.96 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 5.48 mm | 190.5 | 219.5 | um | +15.2 % | 47.6 | yes | z 5.48 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 5.67 mm | 183 | 217 | um | +18.6 % | 45.8 | yes | z 5.67 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 6.26 mm | 185.4 | 209.8 | um | +13.2 % | 46.4 | yes | z 6.26 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 6.79 mm | 174.6 | 199.1 | um | +14.0 % | 43.6 | yes | z 6.79 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 7.52 mm | 177.4 | 189.5 | um | +6.8 % | 44.4 | yes | z 7.52 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 8.31 mm | 174.3 | 176.2 | um | +1.1 % | 43.6 | yes | z 8.31 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 8.82 mm | 168.4 | 169.5 | um | +0.6 % | 42.1 | yes | z 8.82 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 9.72 mm | 160.5 | 156.5 | um | -2.5 % | 40.1 | yes | z 9.72 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 10.12 mm | 153.8 | 150.2 | um | -2.3 % | 38.5 | yes | z 10.12 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 10.89 mm | 149.5 | 138 | um | -7.7 % | 37.4 | yes | z 10.89 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 11.39 mm | 142.9 | 131.9 | um | -7.7 % | 35.7 | yes | z 11.39 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 12.63 mm | 136.7 | 114.9 | um | -16.0 % | 34.2 | yes | z 12.63 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 13.16 mm | 130.6 | 109.3 | um | -16.3 % | 32.6 | yes | z 13.16 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 13.93 mm | 130.7 | 99.05 | um | -24.2 % | 32.7 | yes | z 13.93 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 15.19 mm | 121.7 | 84.8 | um | -30.3 % | 30.4 | **no** | z 15.19 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 16.09 mm | 116.1 | 76.13 | um | -34.4 % | 29 | **no** | z 16.09 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 16.47 mm | 111.1 | 72.13 | um | -35.1 % | 27.8 | **no** | z 16.47 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 17.21 mm | 106.6 | 66.73 | um | -37.4 % | 26.6 | **no** | z 17.21 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 17.73 mm | 103.8 | 63.11 | um | -39.2 % | 25.9 | **no** | z 17.73 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 18.35 mm | 98.5 | 57.71 | um | -41.4 % | 24.6 | **no** | z 18.35 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
-| surface_error_st0.14 | 18.98 mm | 82.9 | 53.67 | um | -35.3 % | 20.7 | **no** | z 18.98 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 2.33 mm | 152 | 215.4 | um | +41.7 % | 38 | **no** | z 2.33 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 2.86 mm | 149.3 | 208.9 | um | +39.9 % | 37.3 | **no** | z 2.86 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 3.74 mm | 147 | 200.5 | um | +36.4 % | 36.8 | **no** | z 3.74 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 4.37 mm | 144.2 | 194.6 | um | +35.0 % | 36 | **no** | z 4.37 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 4.98 mm | 141.7 | 187.5 | um | +32.3 % | 35.4 | **no** | z 4.98 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 5.59 mm | 133.5 | 182.7 | um | +36.9 % | 33.4 | **no** | z 5.59 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 6.23 mm | 131.6 | 176.6 | um | +34.2 % | 32.9 | **no** | z 6.23 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 6.73 mm | 121.7 | 169.6 | um | +39.4 % | 30.4 | **no** | z 6.73 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 7.53 mm | 121.5 | 163.1 | um | +34.2 % | 30.4 | **no** | z 7.53 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 8.15 mm | 118.9 | 156.1 | um | +31.3 % | 29.7 | **no** | z 8.15 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 8.86 mm | 109.7 | 149.8 | um | +36.5 % | 27.4 | **no** | z 8.86 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 9.79 mm | 107 | 138.9 | um | +29.8 % | 26.8 | **no** | z 9.79 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 10.81 mm | 105.1 | 130.4 | um | +24.1 % | 26.3 | yes | z 10.81 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 11.33 mm | 96.6 | 124.8 | um | +29.2 % | 24.1 | **no** | z 11.33 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 12.59 mm | 89 | 113.3 | um | +27.3 % | 22.2 | **no** | z 12.59 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 13.16 mm | 73.6 | 109.5 | um | +48.8 % | 18.4 | **no** | z 13.16 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 13.94 mm | 71.4 | 102.7 | um | +43.8 % | 17.9 | **no** | z 13.94 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 15.14 mm | 70 | 94.52 | um | +35.0 % | 17.5 | **no** | z 15.14 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 16.03 mm | 71 | 87.41 | um | +23.1 % | 17.8 | yes | z 16.03 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 16.39 mm | 66 | 86.01 | um | +30.3 % | 16.5 | **no** | z 16.39 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 17.15 mm | 60 | 81.05 | um | +35.1 % | 15 | **no** | z 17.15 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 17.65 mm | 59.1 | 78.65 | um | +33.1 % | 14.8 | **no** | z 17.65 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 18.3 mm | 55.6 | 75.19 | um | +35.2 % | 13.9 | **no** | z 18.3 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.10 | 18.92 mm | 54.1 | 72.47 | um | +34.0 % | 13.5 | **no** | z 18.92 mm, fz 0.1 mm, up, ae 9.525, ap 19.05 mm |
+
+Curve `surface_error_st0.14` (axial_position_from_tip [mm] -> um): RMS abs. error 20.7 %, max 33.4 % over 26 compared points.
+
+| reference | x | ref. | sim. | unit | error | tolerance | within | note |
+|---|---|---|---|---|---|---|---|---|
+| surface_error_st0.14 | 2.35 mm | 235.9 | 289.5 | um | +22.7 % | 59 | yes | z 2.35 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 2.9 mm | 233.4 | 280.8 | um | +20.3 % | 58.4 | yes | z 2.9 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 3.66 mm | 212 | 272.9 | um | +28.7 % | 53 | **no** | z 3.66 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 4.35 mm | 199.7 | 261.9 | um | +31.1 % | 49.9 | **no** | z 4.35 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 4.96 mm | 194.1 | 255.5 | um | +31.7 % | 48.5 | **no** | z 4.96 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 5.48 mm | 190.5 | 246.3 | um | +29.3 % | 47.6 | **no** | z 5.48 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 5.67 mm | 183 | 244.1 | um | +33.4 % | 45.8 | **no** | z 5.67 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 6.26 mm | 185.4 | 237.7 | um | +28.2 % | 46.4 | **no** | z 6.26 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 6.79 mm | 174.6 | 228.5 | um | +30.9 % | 43.6 | **no** | z 6.79 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 7.52 mm | 177.4 | 220 | um | +24.0 % | 44.4 | yes | z 7.52 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 8.31 mm | 174.3 | 208.4 | um | +19.5 % | 43.6 | yes | z 8.31 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 8.82 mm | 168.4 | 202.4 | um | +20.2 % | 42.1 | yes | z 8.82 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 9.72 mm | 160.5 | 190.9 | um | +18.9 % | 40.1 | yes | z 9.72 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 10.12 mm | 153.8 | 185.4 | um | +20.5 % | 38.5 | yes | z 10.12 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 10.89 mm | 149.5 | 174.6 | um | +16.8 % | 37.4 | yes | z 10.89 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 11.39 mm | 142.9 | 169.2 | um | +18.4 % | 35.7 | yes | z 11.39 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 12.63 mm | 136.7 | 154.1 | um | +12.7 % | 34.2 | yes | z 12.63 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 13.16 mm | 130.6 | 149.1 | um | +14.2 % | 32.6 | yes | z 13.16 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 13.93 mm | 130.7 | 140.1 | um | +7.2 % | 32.7 | yes | z 13.93 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 15.19 mm | 121.7 | 127.5 | um | +4.8 % | 30.4 | yes | z 15.19 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 16.09 mm | 116.1 | 119.8 | um | +3.2 % | 29 | yes | z 16.09 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 16.47 mm | 111.1 | 116.3 | um | +4.7 % | 27.8 | yes | z 16.47 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 17.21 mm | 106.6 | 111.4 | um | +4.5 % | 26.6 | yes | z 17.21 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 17.73 mm | 103.8 | 108.2 | um | +4.2 % | 25.9 | yes | z 17.73 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 18.35 mm | 98.5 | 103.6 | um | +5.2 % | 24.6 | yes | z 18.35 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
+| surface_error_st0.14 | 18.98 mm | 82.9 | 99.97 | um | +20.6 % | 20.7 | yes | z 18.98 mm, fz 0.14 mm, up, ae 9.525, ap 19.05 mm |
 
 ### wallerror-budak1994-endmill-static-stiffness
 

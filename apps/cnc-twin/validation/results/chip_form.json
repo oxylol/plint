@@ -872,6 +872,12 @@
      "value": "20 degC"
     },
     {
+     "input": "rake and inclination",
+     "reason": "as the twin builds the insert in its holder (tooling.turning: the holder's stated seat, else the negative-holder defaults; the element's normal rake is seat + breaker)",
+     "source": "db/tools",
+     "value": "+0 / -6 deg working (seat -6 deg + chip breaker +6 deg)"
+    },
+    {
      "input": "entering angle",
      "reason": "not stated: the C-insert holders named (PCLNR, PCMNN) are 95 deg holders",
      "source": "est",
@@ -953,7 +959,7 @@
     "db_insert": "tungaloy-cnmg120408-tm-t9215-pclnr2525m12e",
     "edge_radius_um": 35.0,
     "entering_angle_deg": 95.0,
-    "rake_deg": 6.0,
+    "rake_deg": 0.0,
     "tool_material": "carbide-p30"
    },
    "src": "tungaloy-2023-gc-turning-us",
