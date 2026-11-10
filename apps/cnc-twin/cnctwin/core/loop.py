@@ -760,7 +760,12 @@ class Run:
         instability it flags becomes a warning with its history in a ``loop:coupling_lag`` trace event."""
         quantities = {}
         for slot, heat in sorted((getattr(nxt.thermal, "tools", {}) or {}).items()):
-            quantities[f"thermal.tools[{slot}].rake_temp_mean_K"] = _scalar(heat.rake_temp_mean_K)
+            # the rake temperature the coefficient rows read: the in-cut-time weighted mean over the elements that cut
+            # (cutting's _row_state); the largest element switched between elements from step to step and flagged
+            # their difference as an alternation. A step without cut adds nothing
+            value = _cut_weighted(heat.rake_temp_mean_K, nxt, int(slot))
+            if value is not None:
+                quantities[f"thermal.tools[{slot}].rake_temp_mean_K"] = value
         for contact, value in sorted((getattr(nxt.coolant, "friction_factor", {}) or {}).items()):
             quantities[f"coolant.friction_factor[{contact}]"] = _scalar(value)
         for slot, hold in sorted((getattr(nxt.holding, "tools", {}) or {}).items()):
@@ -777,7 +782,8 @@ class Run:
             self.ctx.finding(self.state, LOOP_DOMAIN, Category.SANITY, Severity.WARNING,
                              f"coupling lag: {name} alternates in sign from one macro step to the next "
                              f"({count} times, last change {change:.4g}, before {previous:.4g}): the one-step "
-                             "stagger between the hot loop and the slow domains is unstable here",
+                             "stagger between the hot loop and the slow domains is unstable here; halve "
+                             "physics.macro_ipo (the coupling interval) to check the result",
                              int(tick), quantities={"value": value, "change": change}, parents=[parent])
 
     # ================================================================== checkpoints
@@ -1144,6 +1150,25 @@ class _PeakView:
         if name == "h_max_m":
             return _scalar(value) if np.size(value) else 0.0
         return value
+
+
+def _cut_weighted(value, bus, slot: int):
+    """The in-cut-time weighted mean of a per-element tool quantity ([n_teeth, n_elem]) over the elements of tool
+    ``slot`` that cut in the step (cutting's contacts of ``bus``; weights summed over the teeth, as cutting's
+    coefficient rows read it); None when the tool did not cut or the shapes do not match."""
+    array = np.asarray(value, dtype=float)
+    weight = np.zeros(array.shape)
+    for c in getattr(bus.cutting, "contacts", []) or []:
+        ic = np.asarray(getattr(c, "in_cut_time_s", np.zeros((0, 0))), float)
+        if int(c.tool_slot) == slot and ic.shape == array.shape:
+            weight += ic
+    if weight.ndim == 2:
+        weight = np.broadcast_to(weight.sum(axis=0, keepdims=True), array.shape)
+    weight = np.where(np.isfinite(array), weight, 0.0)
+    total = float(weight.sum())
+    if not total > 0.0:
+        return None
+    return float(np.sum(weight * np.where(weight > 0.0, array, 0.0)) / total)
 
 
 def _scalar(value) -> float:

@@ -534,7 +534,24 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   the sound's cutting source is silent (its notes say so). cnctwin.production reads `cutting.spindle_power_W`
   from the tick tier; cutting records it at the macro tier: production.json lists the spindle cutting power as
   an assumption (0).
-* **lag_macro 2** is computed as lag 1 (nothing runs concurrently).
+* **lag_macro 2** is computed as lag 1 (nothing runs concurrently). fixed (2026-11-10, the advice): the coupling
+  warnings of cutting and of the loop asked to "compare physics.lag_macro 1 and 2", a comparison that cannot differ;
+  both now advise halving `physics.macro_ipo`, the coupling interval itself (docs/convergence.md 9 item 7). The
+  monitors were fixed with it: cutting's watched the main row's coefficient with a 1e-6 threshold (the quantised
+  state's +-0.15 % flips and unused rows flagged), the loop's the largest element's rake temperature (switching
+  elements flagged); both now watch the in-cut-time weighted quantity (the coefficient averaged over the rows the cut
+  uses, the rake temperature the rows read) under the loop's rule (1e-3 of the value, three alternations), and a
+  step without cut leaves them as they were (`CuttingDomain._lag_monitor`, `loop._cut_weighted`).
+* **Peaks were step means; the element at the depth-of-cut line was whole or nothing** (docs/convergence.md 9 items
+  1 and 2). fixed (2026-11-10, cutting and the hot loop): the step's peak is the instantaneous wrench at its start
+  or end where larger than the mean (stride_slot at the default 0.5 deg: 259 N against 258 N at 0.0625 deg, was
+  251 against 264), and the boundary element carries its engaged width, measured by `hotloop.edge_reach` with the
+  gating's point test along the edge after every interval refresh (element_flat: 196.7 N at every element size
+  from 1 to 0.0625 mm, was 186.8-200.2 N). Both first versions failed in the integrated slot and were corrected the
+  same day: the end forces extrapolated the table segment of the centroid chip (850 N peaks), and the boundary
+  was a ray cast along the chord between the stations, which at a flat end mill's corner runs through the cleared
+  inside of the cut (the lowest flank element lost half its width, -6 % at 0.5 mm). A slot is the case measured; an
+  inclined boundary is taken at one angle per station side.
 * **Numba cache.** The cache directory is keyed by every kernel source: a change in any kernel file costs the
   next run a cold compile of every kernel (12-14 minutes on this box under load).
 * **Found in integration** (each reproduced with the tiny project, a variant of it, or an example; 2026-11-09:
@@ -750,6 +767,38 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   envelope cylinder. To be settled between cutting (which chips a tooth can meet: the swept layer in front of the
   edges, not the flute volume) and chips (flute chips are carried, not frozen); and cut_step should refuse a chip
   thickness beyond the tool's reach (a finding, not a silent wrap of the index).
+  fixed (2026-11-10, cutting; root causes measured on the 2026-11-10 tree, every run from the start of the example,
+  logged per macro step from 4.95 s): the tool cutting from 4.99 s is T1, N10's D10 90 deg spot drill (G82 to
+  Z-4.5 at 830 rpm; this entry and section 14 called it the D6.8). With the tree as found it cut steadily from 4.99 s (138-214 N, station
+  deflection 4 um) until a recut strike at 5.13 s (0.39 mg, 431 N for 2.2 ms: 0.39 mm and 2.2 m/s), decayed, was
+  struck again at 5.21 s (0.54 mg), went into a sustained 2-3 kHz vibration of 0.1-0.4 mm (process damping
+  dissipating 0.6 J per macro step, the cutting forces' work on the deflection rates +1.2 J), and at 5.29 s read a
+  chip of 1.65 mm (forces 90 kN, 284 evaluations above the table) and died with exit 139 (the general protection
+  fault). Bisection by switches in the run script, everything else equal: with the chips' occupancy grid emptied
+  (no recut) the drill cut smoothly to 5.39 s (station deflection 4-10 um, forces rising 190 -> 512 N as the point
+  engaged); with process damping off but the strikes on it survived the strikes with 1-5 m/s bursts that decayed; the
+  L0 stride edit (0.125 deg) changed nothing (dynamics' rule already steps 2 us for the drill's modes). Three causes,
+  fixed: (1) **which chips a tooth meets**: every chip inside the envelope cylinder was cut once per tooth period, a
+  drill's own flute chips included; now only the layer the edges advance into through air (cutting.md "Recutting");
+  (2) **the strike's force**: even a few micrograms took the section force of whole chips, 431 N for 50 us from
+  13 ug near the axis, which the drill's light modes turned into 0.16 mm; the chips are spread over the voxel, so the
+  edges meet them over the time they sweep the band's arc: the mean force (about 6 N for that strike), bounded by the
+  section force; (3) **a diverged state read outside the coefficient table**: `int((h - h_min) inv_dhi)` of a
+  1.65 mm (later 649 km) chip wrapped; the index is compared before the conversion and a chip beyond the tool's
+  diameter stops the run with a fatal finding (`CA_H_BEYOND`). With the three: the first spot cuts steadily
+  from 4.99 to 6.49 s, station deflection 4-21 um, thrust rising to 1.03 kN as the point engages fully (EXPECTED
+  0.8-1.4 kN), strikes of 10-30 ug without a kick. Still open (cutting): process damping makes the drill's response
+  to a large disturbance self-sustained (stable at small amplitude, a 0.1-0.4 mm vibration after a 0.4 mm kick);
+  a likely cause is the wave memory's projection near a drill's axis, where the flank memory spans x / r of up to
+  pi rad of the element's circle but is projected on the current normal (cutting.md 10); and the drill's analytic
+  chip volume is 1.4-5 times below removal's field volume in its countersink entry (removal's mass-balance warning,
+  36 times in 1.5 s; not isolated). The example end to end (run_project, budget 8 s, 1925 s wall, 1.94 GB peak RSS
+  of the tsafe scope at 1.8 GB + swap): the spot cuts from 4.99 s, chip packing flags the flutes full at 6.39 s
+  (fill 1.00: a spot drill's G82 without pecking), the Z axis is asked for 27 kN at 6.877 s (limit 13.7 kN) and at
+  6.88 s the divergence finding stops the run (a chip of 41 mm, 4948 evaluations); thrust peaked at 1.18 kN (EXPECTED
+  0.8-1.4 kN, passed), torque 2.51 N m when it stopped (2.6-4.6, not reached). What drives the last 10 ms (the
+  packing load, the self-sustained vibration above, or the axis) is open.
+
 * **Structure's refresh dominates every run's cost** (open, structure; measured 2026-11-09 with the loop's own CPU
   split): pocket-islands' first 12 s (probing, no cut) took 954 CPU s, 818 s of it in structure; the lathe-shaft
   example's first 5.6 s (2.5 s of it in the G71 cut) 1308 s: structure 445, dynamics 220, cutting 200, recording

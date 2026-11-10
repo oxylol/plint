@@ -47,6 +47,39 @@ def straight_immersion(phi_st_rad: float, phi_ex_rad: float, feed_angle_rad: flo
     return lo_w, lo_w + (hi - lo)
 
 
+def edge_plane(tool: A.CutTool, iv, st_edge: np.ndarray, z_top_m: float, z_bottom_m: float = -np.inf) -> None:
+    """st_edge (CutState, [nst, N_SE]) of an analytic stock whose material lies between the planes z_T = z_bottom and
+    z_top, as core.hotloop.edge_reach computes it from the field: for each engaged station s and each neighbour
+    n = s -+ 1 adjacent along the edge and out of the material (no interval), the boundary plane's distance d from s
+    along the edge toward n (here a straight edge: the segment from s's circle to n's), in units of s's element width
+    db less the element's half."""
+    st_edge[:] = 0.0
+    nst = tool.st_z_m.shape[0]
+    first = lambda s: int(tool.st_ptr[s]) if int(tool.st_ptr[s + 1]) > int(tool.st_ptr[s]) else -1
+    for s in range(nst):
+        if int(iv.count[s]) <= 0 or first(s) < 0:
+            continue
+        ks = first(s)
+        L_s = float(tool.pk[ks, A.PK_DB])
+        rs = float(tool.pk[ks, A.PK_RXY])
+        zs = float(tool.pk[ks, A.PK_P + 2])
+        for side, n in ((A.SE_D_LO, s - 1), (A.SE_D_HI, s + 1)):
+            if n < 0 or n >= nst or first(n) < 0 or int(iv.count[n]) > 0:
+                continue
+            kn = first(n)
+            L_n = float(tool.pk[kn, A.PK_DB])
+            rn = float(tool.pk[kn, A.PK_RXY])
+            zn = float(tool.pk[kn, A.PK_P + 2])
+            c = math.hypot(rn - rs, zn - zs)
+            if c <= 0.0 or c > 0.75 * (L_s + L_n) or zn == zs:
+                continue
+            z_b = z_top_m if zn > zs else z_bottom_m
+            frac = min(max((z_b - zs) / (zn - zs), 0.0), 1.0)
+            st_edge[s, side] = frac * c / L_s - 0.5
+            st_edge[s, A.SE_ON] = 1.0
+            st_edge[s, A.SE_TICK] = float(iv.tick[0])
+
+
 class Driver:
     """Runs cut_step / turn_step for one contact over n steps of a prescribed motion."""
 
@@ -102,6 +135,12 @@ class Driver:
             self.iv.lo_rad[s, 0] = lo_rad % TWO_PI
             self.iv.hi_rad[s, 0] = lo_rad % TWO_PI + (hi_rad - lo_rad)
             self.iv.count[s] = 1
+
+    def set_edge_plane(self, z_top_m: float, z_bottom_m: float = -np.inf) -> None:
+        """CutState.st_edge for material between the planes z_T = z_bottom and z_top (a flat stock top and floor
+        crossing the edge, tool axis along S z): what the hot loop's edge_reach measures with removal's field
+        (docs/models/cutting.md 4 "Engaged length"), for the stations' current intervals."""
+        edge_plane(self.tool, self.iv, self.state.st_edge, z_top_m, z_bottom_m)
 
     def prefill_memory(self, tip_fn, t0_s: float, omega_rad_s: float, R_S_T0: np.ndarray | None = None,
                        theta0_rad: float | None = None) -> None:

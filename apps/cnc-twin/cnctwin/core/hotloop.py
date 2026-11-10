@@ -42,19 +42,21 @@ import numpy as np
 from numba import njit, types
 
 from ..cutting import abi as CA
-from ..cutting.kernels import cut_step, turn_step
+from ..cutting.kernels import cut_step, in_intervals, turn_step
 from ..dynamics.abi import ACT_HI, ACT_LO, ACT_LOAD_HI, ACT_LOAD_LO
 from ..dynamics.kernels import modal_begin, modal_correct, modal_free, record_tick, refresh_work_shapes, \
     relative_axis_acceleration, ring_write
 from ..motion.abi import SYNC_NONE, SYNC_PROBE_TRIGGER, SYNC_QUEUE_EMPTY
 from ..motion.kernels import motion_tick, replan_before
 from ..removal import abi as RA
+from ..removal import k_core as RK
 from ..removal.k_collide import collide_envelope
 from ..removal.k_drive import l1_contact, tooth_pass
 from ..removal.k_gate import engaged_intervals
 from ..removal.k_helix import helix_subtract
 from ..removal.k_polar import polar_cut
 from ..removal.k_query import broad_phase, sweep_contact
+from ..removal.nbt import FIELD_T
 from . import hot_abi as H
 from .hot_abi import (BUF_DEPOSIT, BUF_PASS, BUF_RECUT, BUF_REFILL, BUF_REMOVAL, BUF_SHOCK, BUF_SURFACE, CF_COLLISION_TOL,
                       CF_FEED_FRAC, CF_HAND, CF_LATTICE, CF_MOUNT_X, CF_MOUNT_Y, CF_MOUNT_Z, CF_POLAR_SX, CF_POLAR_SZ,
@@ -90,6 +92,7 @@ i8 = types.int64
 i4 = types.int32
 b1 = types.boolean
 void = types.void
+F1 = types.float64[::1]
 TWO_PI = 2.0 * math.pi
 
 GI_RESUME_CODE = 21         # motion's sync code of the tick a split interrupted (HotGlobal.ipar; hot_abi N_GI = 24)
@@ -142,6 +145,186 @@ def _unwrap_near(a, ref):
     return a + TWO_PI * math.floor((ref - a) / TWO_PI + 0.5)
 
 
+# =============================================================================== the element at the material's boundary
+EDGE_SAMPLES = 8        # angles per engaged interval where a neighbouring station is tested for material
+EDGE_PATH_SAMPLES = 16  # samples of the gating's point test along the edge from a station toward its neighbour
+EDGE_BISECT = 12        # halvings of the sample interval holding the boundary (1/65536 of the path)
+EDGE_CORNER_DEG = 45.0  # an edge turning by more than this between two elements has a corner there
+EDGE_CORNER_COS = math.cos(math.radians(EDGE_CORNER_DEG))
+
+
+@njit(b1(FIELD_T, i8, i8, F1, F1, F1, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8), **RAW)
+def _edge_material(f, nl, fam0, work, tip, w, ex, ey, ez, r_s, z_s, t_r, t_z, h1, e_r, e_z, u_r, u_z, d):
+    """The gating's point test at length d along edge_reach's path (S point at angle (ex, ey, ez))."""
+    if d <= h1:
+        r = r_s + d * t_r
+        z = z_s + d * t_z
+    else:
+        r = e_r + (d - h1) * u_r
+        z = e_z + (d - h1) * u_z
+    x = tip[0] + r * ex + z * w[0]
+    y = tip[1] + r * ey + z * w[1]
+    zz = tip[2] + r * ez + z * w[2]
+    lvl = RK.level_at(f.lv_box_lo_m, f.lv_box_hi_m, f.lv_cell_m, nl, x, y, zz)
+    ins, dd, fm = RK.classify(f.lv_cell_m, f.lv_origin_m, f.lv_dims, f.lv_cell_q, f.lv_ray0, f.cnt, f.seg, f.link,
+                              f.pseg, f.pnext, lvl, x, y, zz, fam0, work)
+    return ins
+
+
+@njit(void(REMOVAL_T, CONTACT_T, F1, F1, F1, F1), **OPTS)
+def edge_reach(rm, ct, tip, x0, y0, w):
+    """The material's boundary along the edge for cutting's element weights (CutState.st_edge, docs/models/cutting.md
+    4 "Engaged length"), after every refresh of the engaged intervals (pose of the gating: tip, x0, y0, w in S).
+
+    For each engaged station s and each neighbour n = s -+ 1 adjacent to it along the edge (station circles closer
+    than 0.75 x the two element widths), at the middle of the angles of s's intervals where n is out of the material
+    (EDGE_SAMPLES per interval): the material's boundary along the edge from s's circle point toward n's at that
+    angle, by the gating's own point test (removal's classify: the test engaged_intervals makes at its samples on the
+    station circles). The path follows the edge: along s's element (its meridian tangent, the normal's
+    perpendicular) to its end, then straight on to n's point (not past a corner of the edge: there the material is
+    s's own chip across its thickness), EDGE_PATH_SAMPLES samples refined by bisection to
+    EDGE_BISECT halvings; d is its length from s to the first point out of the material. st_edge[s, side] holds
+    d / db_s - 0.5 (the engaged width beyond the element's own half, in units of its width; negative: the boundary
+    lies inside the element), so that cut_step weights the element by 1 + that where n is out of the material at the
+    element's angle. Each row carries the gating's tick (stale weights are not used with other intervals).
+
+    Before 2026-11-10 the boundary was removal's ray_cast exit along the chord from s's point to n's: s's point lies
+    on the surface the edge is cutting (inside the uncut chip of a few tens of microns at most), where the ray's own
+    start test often found air, and at a corner the chord runs through the cleared inside of the cut instead of along
+    the edge: the lowest flank element lost its lower half (element_flat el1 -9.6 %, el0.5 -6.2 %)."""
+    f = rm.fields[ct.ipar[CI_WORK]]
+    geo = ct.geo
+    tool = ct.cut.tool
+    iv = ct.cut.iv
+    se = ct.cut.st.st_edge
+    nst = geo.st_z.shape[0]
+    if se.shape[0] < nst or tool.st_ptr.shape[0] < nst + 1:
+        return
+    tick = float(iv.tick[0])
+    for s in range(se.shape[0]):
+        for c_ in range(se.shape[1]):
+            se[s, c_] = 0.0
+    work = np.empty(4)
+    fam0 = 0
+    if abs(w[1]) > abs(w[fam0]):
+        fam0 = 1
+    if abs(w[2]) > abs(w[fam0]):
+        fam0 = 2
+    nl = f.info[RA.FI_NLEVELS]
+    pk = tool.pk
+    for s in range(nst):
+        cnt = iv.count[s]
+        if cnt <= 0:
+            continue
+        k = tool.st_ptr[s]
+        if tool.st_ptr[s + 1] <= k:
+            continue
+        L_s = pk[k, CA.PK_DB]
+        if L_s <= 0.0:
+            continue
+        # meridian tangent of s's element (perpendicular to the normal's meridian projection)
+        r_s = geo.st_r[s]
+        n_r = 0.0
+        rxy = pk[k, CA.PK_RXY]
+        if rxy > 0.0:
+            n_r = (pk[k, CA.PK_N] * pk[k, CA.PK_P] + pk[k, CA.PK_N + 1] * pk[k, CA.PK_P + 1]) / rxy
+        n_z = pk[k, CA.PK_N + 2]
+        nn = math.sqrt(n_r * n_r + n_z * n_z)
+        if nn <= 0.0:
+            continue
+        t_r0 = -n_z / nn
+        t_z0 = n_r / nn
+        for side in range(2):
+            n = s - 1 if side == 0 else s + 1
+            if n < 0 or n >= nst:
+                continue
+            kn = tool.st_ptr[n]
+            if tool.st_ptr[n + 1] <= kn:
+                continue
+            L_n = pk[kn, CA.PK_DB]
+            dr = geo.st_r[n] - r_s
+            dz = geo.st_z[n] - geo.st_z[s]
+            c = math.sqrt(dr * dr + dz * dz)
+            if c <= 0.0 or c > 0.75 * (L_s + L_n):
+                continue
+            tot = 0
+            for i in range(cnt):
+                lo = iv.lo_rad[s, i]
+                hi = iv.hi_rad[s, i]
+                for q in range(EDGE_SAMPLES):
+                    if not in_intervals(iv, n, lo + (q + 0.5) * (hi - lo) / EDGE_SAMPLES):
+                        tot += 1
+            if tot == 0:
+                continue
+            want = tot // 2
+            a = 0.0
+            m = 0
+            for i in range(cnt):
+                lo = iv.lo_rad[s, i]
+                hi = iv.hi_rad[s, i]
+                for q in range(EDGE_SAMPLES):
+                    aq = lo + (q + 0.5) * (hi - lo) / EDGE_SAMPLES
+                    if not in_intervals(iv, n, aq):
+                        if m == want:
+                            a = aq
+                        m += 1
+            # the path in the meridian: s's half element toward n, then on to n's point
+            t_r = t_r0
+            t_z = t_z0
+            if t_r * dr + t_z * dz < 0.0:
+                t_r = -t_r
+                t_z = -t_z
+            h1 = 0.5 * L_s
+            e_r = r_s + h1 * t_r
+            e_z = geo.st_z[s] + h1 * t_z
+            u_r = geo.st_r[n] - e_r
+            u_z = geo.st_z[n] - e_z
+            h2 = math.sqrt(u_r * u_r + u_z * u_z)
+            if h2 > 0.0:
+                u_r /= h2
+                u_z /= h2
+            # past a corner of the edge (the neighbour's element turns away by more than EDGE_CORNER_DEG) the material
+            # beyond s's element end is the uncut chip of s itself, seen across its thickness (a flat end mill's
+            # corner: the chip's first f_z sin(phi) along the floor), not width the neighbour's face would cut
+            total = h1 + h2
+            m_r = 0.0
+            kn_r = pk[kn, CA.PK_RXY]
+            if kn_r > 0.0:
+                m_r = (pk[kn, CA.PK_N] * pk[kn, CA.PK_P] + pk[kn, CA.PK_N + 1] * pk[kn, CA.PK_P + 1]) / kn_r
+            m_z = pk[kn, CA.PK_N + 2]
+            mn = math.sqrt(m_r * m_r + m_z * m_z)
+            if mn > 0.0 and abs(-m_z * t_r + m_r * t_z) / mn < EDGE_CORNER_COS:
+                total = h1
+            ca = math.cos(a)
+            sa = math.sin(a)
+            ex = ca * x0[0] + sa * y0[0]
+            ey = ca * x0[1] + sa * y0[1]
+            ez = ca * x0[2] + sa * y0[2]
+            d_in = 0.0
+            d_out = -1.0
+            for q in range(1, EDGE_PATH_SAMPLES + 1):
+                d = total * q / EDGE_PATH_SAMPLES
+                if not _edge_material(f, nl, fam0, work, tip, w, ex, ey, ez, r_s, geo.st_z[s], t_r, t_z, h1, e_r,
+                                      e_z, u_r, u_z, d):
+                    d_out = d
+                    break
+                d_in = d
+            if d_out < 0.0:
+                d = total
+            else:
+                for q in range(EDGE_BISECT):
+                    d = 0.5 * (d_in + d_out)
+                    if _edge_material(f, nl, fam0, work, tip, w, ex, ey, ez, r_s, geo.st_z[s], t_r, t_z, h1, e_r,
+                                      e_z, u_r, u_z, d):
+                        d_in = d
+                    else:
+                        d_out = d
+                d = 0.5 * (d_in + d_out)
+            se[s, side] = d / L_s - 0.5
+            se[s, CA.SE_ON] = 1.0
+            se[s, CA.SE_TICK] = tick
+
+
 # =============================================================================== tooth passes (rotating tools)
 @njit(i8(REMOVAL_T, CONTACT_T, GLOBAL_T, i8, i8, f8, f8, f8, b1), **RAW)
 def do_pass(rm, ct, g, j, tick, feed_x, feed_y, slack, rapid):
@@ -186,6 +369,7 @@ def do_pass(rm, ct, g, j, tick, feed_x, feed_y, slack, rapid):
                         ct.cut.iv, geo.st_len, feed_x, feed_y, ct.gate, spec, tgt, racc, rm.events, rm.scratch,
                         ct.stats)
     if status == 0:
+        edge_reach(rm, ct, tip, x0, y0, w)
         rm.iparams[sev_at] += 1
         ct.cst.ival[CS_PASSES] += 1
         ct.cst.ival[CS_SUBTRACT_CALLS] += 1
@@ -288,6 +472,8 @@ def regate(rm, ct, tick, sigma):
     geo = ct.geo
     engaged_intervals(f, wk[WK_A1 + FR_TIP:WK_A1 + FR_TIP + 3], wk[WK_X0:WK_X0 + 3], wk[WK_Y0:WK_Y0 + 3],
                       wk[WK_W0:WK_W0 + 3], geo.st_z, geo.st_r, geo.st_active, ct.cut.iv, tick, ct.gate3, ct.stats)
+    edge_reach(rm, ct, wk[WK_A1 + FR_TIP:WK_A1 + FR_TIP + 3], wk[WK_X0:WK_X0 + 3], wk[WK_Y0:WK_Y0 + 3],
+               wk[WK_W0:WK_W0 + 3])
     ct.cst.ival[CS_GATINGS] += 1
     update_gamma(ct, sigma)
 
@@ -1040,6 +1226,7 @@ def run_macro(mo, rm, cs, ring, g):
                         geo = ct.geo
                         engaged_intervals(f, tip, xv, yv, wv, geo.st_z, geo.st_r, geo.st_active, ct.cut.iv, tick_end,
                                           ct.gate3, ct.stats)
+                        edge_reach(rm, ct, tip, xv, yv, wv)
                         st_t = ct.ipar[CI_TOOL_SPINDLE]
                         sg = 1.0
                         if st_t >= 0 and sps.omega[st_t] < 0.0:

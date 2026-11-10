@@ -173,6 +173,16 @@ N_PDA = 5
 # A struck chip voxel is cut like material: a load on the tool at the struck point for the crossing time
 # (docs/models/cutting.md "Recutting"); each row is one load still acting
 RECUT_SLOTS = 16
+# CutState.st_edge columns: the boundary of the material along the edge between a station and its neighbours
+# (core.hot_kernels.edge_reach; docs/models/cutting.md 4 "Engaged length"). Where station s is engaged at an angle and
+# its neighbour toward lower (SE_LO) or higher (SE_HI) station index is not, its element's half toward that neighbour
+# is replaced by the engaged length up to the material's boundary, in units of the element's length: the element's
+# weight is 1 + SE_D_LO + SE_D_HI (each term only where that neighbour is out of the material at the element's angle)
+SE_D_LO = 0             # engaged length beyond the station toward s - 1, minus the element's half (fraction of it)
+SE_D_HI = 1             # the same toward s + 1
+SE_ON = 2               # 1: the row holds a boundary measured this pass (0: weight 1, the element engaged whole)
+SE_TICK = 3             # EngagedIntervals.tick of the gating it was measured with (other intervals: weight 1)
+N_SE = 4
 RA_FX = 0               # force on the tool (T0)
 RA_FY = 1
 RA_FZ = 2
@@ -296,7 +306,10 @@ CA_TIME = 27            # integral of dt over committed steps
 CA_FPEAK_MX = 28        # tool force at the instant of the largest |F| (M frame)
 CA_FPEAK_MY = 29
 CA_FPEAK_MZ = 30
-N_CA = 32
+CA_FPEAK_INST_N = 31    # largest instantaneous |F| (the step's ends and its mean; ACC_FORCE_PEAK_N is the same value)
+CA_H_BEYOND = 32        # element evaluations whose chip exceeded the tool's reach (2 x cutting radius) or was not finite
+CA_H_BEYOND_MAX = 33    # the largest such chip (m; inf for a non-finite one)
+N_CA = 36
 
 # ------------------------------------------------------------------------------- StepOut.misc
 SO_TORQUE_NM = 0        # process torque about the spindle axis this step (on the rotating body, right-handed)
@@ -498,6 +511,9 @@ class CutState(NamedTuple):
     pd_ring: np.ndarray         # [n, PD_RING_N, 3] wave memory: u (T0) at travel g dx since the entry
     pd_aux: np.ndarray          # [n, N_PDA]
     recut_act: np.ndarray       # [RECUT_SLOTS, N_RA] recut loads still acting
+    # additive (the element at the depth-of-cut line, docs/models/cutting.md 4 "Engaged length"): per station the
+    # engaged length beyond its element's half toward each neighbour where that neighbour is out of the material
+    st_edge: np.ndarray         # [nst, N_SE]
 
 
 class CutAccum(NamedTuple):
@@ -732,7 +748,8 @@ def empty_state(n: int = 1, nt: int = 1, nst: int = 1) -> CutState:
     tooth[:, TS_EMIT_TICK] = -1.0
     tooth[:, TS_STEP_E] = -1.0
     return CutState(_f(n), _f(n), np.full(n, -1, np.int64), _i8(n), pend, np.zeros(n, np.int64), _f(n, N_EA),
-                    tooth, _f(N_MS), _i8(nst), _f(n, 10), _f(n, PD_RING_N, 3), _f(n, N_PDA), _f(RECUT_SLOTS, N_RA))
+                    tooth, _f(N_MS), _i8(nst), _f(n, 10), _f(n, PD_RING_N, 3), _f(n, N_PDA), _f(RECUT_SLOTS, N_RA),
+                    _f(nst, N_SE))
 
 
 def empty_accum(nsec: int = 1) -> CutAccum:

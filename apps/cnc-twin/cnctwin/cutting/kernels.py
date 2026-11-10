@@ -38,7 +38,8 @@ from .abi import (ACCUM_T, AXES_T, CA_AXIAL_K, CA_DEFLECTION_J, CA_DISPLACED_M3,
                   CA_ENTRIES, CA_EVENTS_LOST, CA_FEED_POWER_PEAK, CA_FLOAT_U_MAX, CA_FORMING_J, CA_FX_INT, CA_FY_INT,
                   CA_FZ_INT, CA_H_MAX, CA_PACKING_J, CA_POWER_INT, CA_PROCESS_DAMPING_J, CA_RECUT_J, CA_RECUT_KG,
                   CA_REFILL_MISSING, CA_STALE_READS, CA_STEPS, CA_STEPS_IN_CUT, CA_TABLE_OVER, CA_TORQUE_INT,
-                  CA_V_INT, CA_OMEGA_INT, CA_TIME, CA_FPEAK_MX, CA_FPEAK_MY, CA_FPEAK_MZ, CACCUM_T, COL_EA, COL_ER, COL_ET, COL_FA, COL_FR, COL_FT, COL_PR, COL_PS, COL_RC,
+                  CA_V_INT, CA_OMEGA_INT, CA_TIME, CA_FPEAK_MX, CA_FPEAK_MY, CA_FPEAK_MZ, CA_FPEAK_INST_N, CA_H_BEYOND,
+                  CA_H_BEYOND_MAX, CACCUM_T, COL_EA, COL_ER, COL_ET, COL_FA, COL_FR, COL_FT, COL_PR, COL_PS, COL_RC,
                   COL_SIG_RAKE, COL_TCHIP, COL_WF, COL_WS, DEFLECTION_T, EVENTS_T, FL_EVENT_DONE, FL_IN_CUT,
                   FL_NONDEGEN, FL_VN_POS, INTERVALS_T, MEMORY_T, MS_FLOAT_F, MS_FLOAT_K, MS_FLOAT_U, MS_LAST_TICK,
                   MS_RECUT_ANGLE, MS_STEPS, MS_TURN_EVENT_ANGLE, OCCUPANCY_T, OUT_T, PACKING_T, PD_BIN, PD_H, PD_X,
@@ -58,7 +59,7 @@ from .abi import (ACCUM_T, AXES_T, CA_AXIAL_K, CA_DEFLECTION_J, CA_DISPLACED_M3,
                   PK_ALPHA0, PK_ARM, PK_C, PK_CHIP, PK_DB, PK_DIR, PK_DS, PK_EDGE_R, PK_FLANK, PK_INCL, PK_N,
                   PK_NPXY, PK_P, PK_PD, PK_RAKE, PK_RXY, PK_SIG_FLANK, PK_VB, PK_CURV, PKI_AXIAL, PKI_ELEM, PKI_FORMING,
                   PKI_KIND, PKI_READ, PKI_ROW, PKI_TOOTH, PKI_WRITE, PD_RING_N, PDA_COUNT, PDA_UX, PDA_UY, PDA_UZ,
-                  PDA_X, RA_FX, RA_FY, RA_FZ, RA_MX, RA_MY, RA_MZ, RA_T, RA_T0, RA_Z)
+                  PDA_X, RA_FX, RA_FY, RA_FZ, RA_MX, RA_MY, RA_MZ, RA_T, RA_T0, RA_Z, SE_D_HI, SE_D_LO, SE_ON, SE_TICK)
 
 OPTS = dict(cache=True, nogil=True, error_model="numpy")
 # kernels that allocate nothing are compiled with Numba's reference counting off for that function: every array
@@ -524,12 +525,13 @@ def table_segment(table, row, h, cacc):
         if k >= nlo:
             k = nlo - 1
         return k
-    k = nlo + int((h - hm) * table.inv_dhi[row])
     nseg = table.coef.shape[1]
-    if k >= nseg:
+    x = (h - hm) * table.inv_dhi[row]
+    # compared before the integer conversion: a chip far beyond the table (a diverged state) must not wrap the index
+    if not x < nseg - nlo:
         cacc.scalars[CA_TABLE_OVER] += 1.0
-        k = nseg - 1
-    return k
+        return nseg - 1
+    return nlo + int(x)
 
 
 # =============================================================================== deflection
@@ -786,7 +788,8 @@ def close_teeth(tool, st, ev, cacc, pose, step, istep, commit, g00, g01, g02, g1
 
 
 # =============================================================================== recut
-RECUT_SUB = 3           # sub-cells per voxel edge for the part of a chip voxel inside the tool's envelope
+CROSS_EPS = 1e-7        # bins: round-off margin of the memory crossings of a step (cut_step)
+CROSS_EPS_S = 1e-6      # the same margin in the step's own coordinate
 RECUT_R_MIN = 0.1       # struck point at least this share of the cutting radius from the axis (the teeth meet it)
 
 
@@ -833,28 +836,40 @@ def recut_load(act, fx, fy, fz, mx, my, mz, t0, t1, z_t):
     act[q, RA_T] = t_end
 
 
-@njit(types.void(TOOL_T, TABLE_T, OCCUPANCY_T, POSE_T, F1, I1, CACCUM_T, ACCUM_T, EVENTS_T, STATE_T, f8), **OPTS)
-def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
-    """Chips of the frozen occupancy grid that the teeth meet in the coming tooth period (scanned once per tooth
-    period: in one tooth period the teeth together sweep every angle of the envelope once) are recut like material
-    (docs/models/cutting.md "Recutting"):
+RECUT_ARC_PER_CELL = 16.0  # angle samples of a station's circle: at most 1/16 of a pile cell apart (0.125 mm)
+RECUT_N_ANG_MIN = 36
+RECUT_N_ANG_MAX = 2048
 
-    * struck mass: the voxel's chips are spread over its volume, so the teeth meet the share of them inside the
-      tool's cutting envelope (sub-cell centres inside the envelope cylinder), less what was already struck from
-      the voxel in this macro step (occ.taken_kg);
+
+@njit(types.void(TOOL_T, TABLE_T, OCCUPANCY_T, POSE_T, F1, I1, CACCUM_T, ACCUM_T, EVENTS_T, STATE_T, f8, INTERVALS_T),
+      **OPTS)
+def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta, iv):
+    """Chips of the frozen occupancy grid that the teeth meet in the coming tooth period (scanned once per tooth
+    period) are recut like material (docs/models/cutting.md "Recutting"):
+
+    * which chips: the edges meet loose chips only where they advance into air. In a tooth period the teeth sweep
+      every angle of the tool's surface of revolution once, while that surface moves by d = v T_tooth relative to
+      the stock: the volume they meet is the layer the surface's leading side sweeps, max(0, n . d) per unit area
+      (n the outward meridian normal of each station's band, r db per radian), less the part of it in material
+      (the station's engaged intervals: there the layer is the chip being formed). The voxel's chips are spread
+      over its volume, so the struck mass is that layer's volume in the voxel times the voxel's chip density, less
+      what was already struck from the voxel in this macro step (occ.taken_kg). Chips inside the envelope (in the
+      flutes, carried round and out by the rake faces) are not cut: their impulse m V is ~1e-7 N s;
     * the struck chips are cut across their section: uncut thickness h_r = the chips' thickness, width b_r = their
       width sqrt(V_chip / h_r) (V_chip from the volume-equivalent size) up to the edge length in the voxel, times
       the chips side by side along the edge (packing: solid fraction x edge length / chip width, at least one);
       force F = f(h_r) b_r n (table row TC_RECUT_ROW: tangential and thrust per unit width at h_r, edge forces
-      included) at the struck point (the centroid of the struck part, at least RECUT_R_MIN of the cutting radius
-      from the axis), opposite to the cutting direction there plus the thrust away from the chips;
+      included) at the struck layer's centroid (at least RECUT_R_MIN of the cutting radius from the axis), opposite
+      to the cutting direction there plus the thrust along the struck surface's inward normal;
     * it acts the crossing time V_struck / (h_r b_r n V) (the struck chip volume cut at that section at the edge
       speed V): impulse F V_struck / (A V) and energy f(h_r) V_struck / h_r (the table's specific cutting energy
       times the volume), as a load in st.recut_act applied step by step by cut_step.
 
-    Before 2026-11-09 a voxel's whole mass took J = m V + u m / (rho V) within one L0 step (17 kN to MN spikes at
-    the slot's and examples' first cuts, docs/models/loop.md 15). Recut rows (struck mass, voxel position in M) go
-    to the chips domain."""
+    Before 2026-11-10 the teeth met every chip inside the envelope cylinder: a drill took the chips of its own flutes
+    (the D6.8 of examples/drill-tap-plate-1045: 0.39 mg struck at 0.17 m/s, 431 N sideways for 2 ms, the drill
+    thrown into a 0.4 mm vibration; docs/models/loop.md 15). Before 2026-11-09 a voxel's whole mass took
+    J = m V + u m / (rho V) within one L0 step. Recut rows (struck mass, voxel position in M) go to the chips
+    domain."""
     cell = occ.cell_m[0]
     rcut = tool.scal[TC_R_CUT]
     if cell <= 0.0 or rcut <= 0.0:
@@ -865,12 +880,23 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
     row = int(tool.scal[TC_RECUT_ROW])
     if abs_om <= 0.0 or rho <= 0.0 or row < 0 or row >= table.coef.shape[0]:
         return
+    n_teeth = tool.scal[TC_N_TEETH]
+    if n_teeth < 1.0:
+        n_teeth = 1.0
+    t_tooth = TWO_PI / (abs_om * n_teeth)
     sgn = 1.0 if omega > 0.0 else -1.0
     nxg = occ.mass_kg.shape[0]
     nyg = occ.mass_kg.shape[1]
     nzg = occ.mass_kg.shape[2]
     R = pose.R_S_T0
     tip = pose.tip_S_m
+    # the advance of the tool's surface relative to the stock in the tooth period, T0
+    vs = pose.v_tip_S_m_s
+    dx = (R[0, 0] * vs[0] + R[1, 0] * vs[1] + R[2, 0] * vs[2]) * t_tooth
+    dy = (R[0, 1] * vs[0] + R[1, 1] * vs[1] + R[2, 1] * vs[2]) * t_tooth
+    dz = (R[0, 2] * vs[0] + R[1, 2] * vs[1] + R[2, 2] * vs[2]) * t_tooth
+    if dx * dx + dy * dy + dz * dz <= 0.0:
+        return
     zlo = tool.scal[TC_Z_LO]
     zhi = tool.scal[TC_Z_HI]
     lox = 1e300
@@ -896,15 +922,90 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
     j1 = min(nyg - 1, int(np.floor((hiy - o[1]) / cell)))
     k0 = max(0, int(np.floor((loz - o[2]) / cell)))
     k1 = min(nzg - 1, int(np.floor((hiz - o[2]) / cell)))
+    if i1 < i0 or j1 < j0 or k1 < k0:
+        return
+    ni = i1 - i0 + 1
+    nj = j1 - j0 + 1
+    nk = k1 - k0 + 1
+    # per voxel: the swept layer's volume in air, its centroid (T0, from the tip) and its normal, volume weighted
+    sw = np.zeros((ni, nj, nk, 10))
+    for i in range(ni):
+        for jj in range(nj):
+            for k in range(nk):
+                sw[i, jj, k, 7] = -1.0
+    n_ang = int(math.ceil(TWO_PI * rcut * RECUT_ARC_PER_CELL / cell))
+    if n_ang < RECUT_N_ANG_MIN:
+        n_ang = RECUT_N_ANG_MIN
+    if n_ang > RECUT_N_ANG_MAX:
+        n_ang = RECUT_N_ANG_MAX
+    dang = TWO_PI / n_ang
+    nst = tool.st_z_m.shape[0]
+    pk = tool.pk
+    any_sw = False
+    for s in range(nst):
+        kk = tool.st_ptr[s]
+        if tool.st_ptr[s + 1] <= kk:
+            continue
+        px = pk[kk, PK_P]
+        py = pk[kk, PK_P + 1]
+        pz = pk[kk, PK_P + 2]
+        r = pk[kk, PK_RXY]
+        n_r = 0.0
+        if r > 0.0:
+            n_r = (pk[kk, PK_N] * px + pk[kk, PK_N + 1] * py) / r
+        n_z = pk[kk, PK_N + 2]
+        band = r * pk[kk, PK_DB] * dang
+        if band <= 0.0:
+            continue
+        for ia in range(n_ang):
+            a = (ia + 0.5) * dang
+            ca = math.cos(a)
+            sa = math.sin(a)
+            dn = n_r * (dx * ca + dy * sa) + n_z * dz
+            if dn <= 0.0:
+                continue
+            if iv.count[s] > 0 and in_intervals(iv, s, a):
+                continue
+            qx = r * ca
+            qy = r * sa
+            sx = tip[0] + R[0, 0] * qx + R[0, 1] * qy + R[0, 2] * pz
+            sy = tip[1] + R[1, 0] * qx + R[1, 1] * qy + R[1, 2] * pz
+            sz = tip[2] + R[2, 0] * qx + R[2, 1] * qy + R[2, 2] * pz
+            i = int(np.floor((sx - o[0]) / cell)) - i0
+            jj = int(np.floor((sy - o[1]) / cell)) - j0
+            k = int(np.floor((sz - o[2]) / cell)) - k0
+            if i < 0 or i >= ni or jj < 0 or jj >= nj or k < 0 or k >= nk:
+                continue
+            if occ.mass_kg[i + i0, jj + j0, k + k0] <= 1e-18:
+                continue
+            dv = dn * band
+            sw[i, jj, k, 0] += dv
+            sw[i, jj, k, 1] += dv * qx
+            sw[i, jj, k, 2] += dv * qy
+            sw[i, jj, k, 3] += dv * pz
+            sw[i, jj, k, 4] += dv * n_r * ca
+            sw[i, jj, k, 5] += dv * n_r * sa
+            sw[i, jj, k, 6] += dv * n_z
+            # the arc of the band in the voxel (sample offsets from the first, unwrapped within half a turn)
+            if sw[i, jj, k, 7] < 0.0:
+                sw[i, jj, k, 7] = float(ia)
+            off = ia - int(sw[i, jj, k, 7])
+            if off > n_ang // 2:
+                off -= n_ang
+            elif off < -(n_ang // 2):
+                off += n_ang
+            if off < sw[i, jj, k, 8]:
+                sw[i, jj, k, 8] = float(off)
+            if off > sw[i, jj, k, 9]:
+                sw[i, jj, k, 9] = float(off)
+            any_sw = True
+    if not any_sw:
+        return
     tick = float(istep[SI_TICK_END])
     t_now = istep[SI_TICK_END] * step[ST_TICK_S] - step[ST_DT_S]      # the step's start: the loads act from here
     RM = pose.R_M_S
     tM = pose.t_M_S_m
     nt = tool.tooth_a0_rad.shape[0]
-    nst = tool.st_z_m.shape[0]
-    nsub = RECUT_SUB
-    inv_sub = 1.0 / nsub
-    n_cells = float(nsub * nsub * nsub)
     l_edge = zhi - zlo
     if l_edge > cell:
         l_edge = cell
@@ -912,43 +1013,34 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
         l_edge = cell
     r_min = RECUT_R_MIN * rcut
     coef = table.coef
-    for i in range(i0, i1 + 1):
-        for jj in range(j0, j1 + 1):
-            for k in range(k0, k1 + 1):
-                m_vox = occ.mass_kg[i, jj, k]
-                if m_vox <= 1e-18:
+    vol = cell * cell * cell
+    for i in range(ni):
+        for jj in range(nj):
+            for k in range(nk):
+                v_sw = sw[i, jj, k, 0]
+                if v_sw <= 0.0:
                     continue
-                # the part of the voxel inside the envelope: sub-cell centres in T0
-                n_in = 0
-                sx = 0.0
-                sy = 0.0
-                sz = 0.0
-                for a in range(nsub):
-                    qx = o[0] + (i + (a + 0.5) * inv_sub) * cell - tip[0]
-                    for b in range(nsub):
-                        qy = o[1] + (jj + (b + 0.5) * inv_sub) * cell - tip[1]
-                        for c in range(nsub):
-                            qz = o[2] + (k + (c + 0.5) * inv_sub) * cell - tip[2]
-                            tz = R[0, 2] * qx + R[1, 2] * qy + R[2, 2] * qz
-                            if tz < zlo or tz > zhi:
-                                continue
-                            tx = R[0, 0] * qx + R[1, 0] * qy + R[2, 0] * qz
-                            ty = R[0, 1] * qx + R[1, 1] * qy + R[2, 1] * qz
-                            if tx * tx + ty * ty > rcut * rcut:
-                                continue
-                            n_in += 1
-                            sx += tx
-                            sy += ty
-                            sz += tz
-                if n_in == 0:
-                    continue
-                m_s = (n_in / n_cells) * m_vox - occ.taken_kg[i, jj, k]
+                gi = i + i0
+                gj = jj + j0
+                gk = k + k0
+                m_vox = occ.mass_kg[gi, gj, gk]
+                m_s = m_vox * v_sw / vol
+                if m_s > m_vox - occ.taken_kg[gi, gj, gk]:
+                    m_s = m_vox - occ.taken_kg[gi, gj, gk]
                 if m_s <= 1e-18:
                     continue
-                occ.taken_kg[i, jj, k] += m_s
-                cx = sx / n_in
-                cy = sy / n_in
-                cz = sz / n_in
+                occ.taken_kg[gi, gj, gk] += m_s
+                cx = sw[i, jj, k, 1] / v_sw
+                cy = sw[i, jj, k, 2] / v_sw
+                cz = sw[i, jj, k, 3] / v_sw
+                nnx = sw[i, jj, k, 4]
+                nny = sw[i, jj, k, 5]
+                nnz = sw[i, jj, k, 6]
+                nn = math.sqrt(nnx * nnx + nny * nny + nnz * nnz)
+                if nn > 0.0:
+                    nnx /= nn
+                    nny /= nn
+                    nnz /= nn
                 rc = math.sqrt(cx * cx + cy * cy)
                 if rc > 0.0:
                     urx = cx / rc
@@ -960,8 +1052,8 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
                     rc = r_min
                 V = abs_om * rc
                 # the chips' section: thickness, width (platelet of the volume-equivalent size), side by side
-                h_r = occ.thickness_m[i, jj, k]
-                d_c = occ.size_m[i, jj, k]
+                h_r = occ.thickness_m[gi, gj, gk]
+                d_c = occ.size_m[gi, gj, gk]
                 if h_r <= 0.0:
                     h_r = d_c
                 if h_r <= 0.0:
@@ -973,7 +1065,7 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
                 if w_c < h_r:
                     w_c = h_r
                 b_r = w_c if w_c < l_edge else l_edge
-                phi = m_vox / (rho * cell * cell * cell)
+                phi = m_vox / (rho * vol)
                 n_side = phi * l_edge / w_c
                 if n_side < 1.0:
                     n_side = 1.0
@@ -987,15 +1079,30 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
                 width = b_r * n_side
                 Ft = f_t * width
                 Fr = f_r * width
-                t_cross = (m_s / rho) / (h_r * width * V)
-                # on the tool: -Ft along the cutting direction, the thrust away from the chips (-radial)
+                # the voxel's chips are spread uniformly over the layer, so the edges meet them all along the band's
+                # arc in the voxel, over the time they take to sweep it (each angle once per tooth period): the mean
+                # force cuts the struck volume at the specific energy f_t / h_r over that time, up to the section
+                # force of whole chips side by side (dense chips). Same impulse and energy either way
+                v_s = m_s / rho
+                arc = (sw[i, jj, k, 9] - sw[i, jj, k, 8] + 1.0) * dang
+                t_pass = arc / abs_om
+                if t_pass > t_tooth:
+                    t_pass = t_tooth
+                F_mean = v_s * (f_t / h_r) / (t_pass * V)
+                if F_mean < Ft:
+                    Fr *= F_mean / Ft
+                    Ft = F_mean
+                t_cross = v_s * (f_t / h_r) / (Ft * V)
+                # on the tool: -Ft along the cutting direction, the thrust against the struck surface's normal
                 cdx = -sgn * ury
                 cdy = sgn * urx
-                fx = -Ft * cdx - Fr * urx
-                fy = -Ft * cdy - Fr * ury
+                fx = -Ft * cdx - Fr * nnx
+                fy = -Ft * cdy - Fr * nny
+                fz = -Fr * nnz
                 px = rc * urx
                 py = rc * ury
-                recut_load(st.recut_act, fx, fy, 0.0, -cz * fy, cz * fx, px * fy - py * fx, t_now, t_now + t_cross, cz)
+                recut_load(st.recut_act, fx, fy, fz, py * fz - cz * fy, cz * fx - px * fz, px * fy - py * fx, t_now,
+                           t_now + t_cross, cz)
                 cacc.scalars[CA_RECUT_KG] += m_s
                 acc.scalars[ACC_RECUT_MASS_KG] += m_s
                 # the tooth that strikes it: the next one to reach its angle in the cutting sense
@@ -1015,9 +1122,9 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
                     if d < near_d:
                         near_d = d
                         near = s
-                vx = o[0] + (i + 0.5) * cell
-                vy = o[1] + (jj + 0.5) * cell
-                vz = o[2] + (k + 0.5) * cell
+                vx = o[0] + (gi + 0.5) * cell
+                vy = o[1] + (gj + 0.5) * cell
+                vz = o[2] + (gk + 0.5) * cell
                 put_recut(ev.recut.rec, ev.recut.n, tick, float(best), float(near), m_s,
                           RM[0, 0] * vx + RM[0, 1] * vy + RM[0, 2] * vz + tM[0],
                           RM[1, 0] * vx + RM[1, 1] * vy + RM[1, 2] * vz + tM[1], cacc)
@@ -1025,11 +1132,13 @@ def recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta):
 
 # =============================================================================== step totals -> outputs
 @njit(types.void(POSE_T, F1, I1, AXES_T, ACCUM_T, CACCUM_T, OUT_T, b1, f8, f8, f8, f8, f8, f8, f8, f8, f8, f8,
-                 f8), **OPTS)
+                 f8, f8, f8, f8, f8, f8, f8), **OPTS)
 def finish_step(pose, step, istep, axes, acc, cacc, out, commit, Fx, Fy, Fz, Mx, My, Mz, shaft, feed,
-                spindle_torque, power, n_in):
+                spindle_torque, power, n_in, pF0, pF1, pF2, pM0, pM1, pM2):
     """Impulses of the step (on the tool, T0, moment about the tip) -> StepOut means, the per-tick wrenches of
-    tool and part, axis loads, spindle torque, peaks and integrals (architecture 5.4 "Loads to L1")."""
+    tool and part, axis loads, spindle torque, peaks and integrals (architecture 5.4 "Loads to L1"). The peaks
+    (largest |F| of the macro step and of each tick, their wrenches on tool and part) take the step's peak wrench
+    (pF, pM: T0, about the tip): the instantaneous wrench at the step's start or end where it exceeds the mean."""
     dt = step[ST_DT_S]
     inv = 1.0 / dt
     wF0 = Fx * inv
@@ -1065,7 +1174,15 @@ def finish_step(pose, step, istep, axes, acc, cacc, out, commit, Fx, Fy, Fz, Mx,
     if n_in > 0.0:
         a[ACC_IN_CUT_S] += dt
         cacc.scalars[CA_STEPS_IN_CUT] += 1.0
-    fmag = math.sqrt(wF0 * wF0 + wF1 * wF1 + wF2 * wF2)
+    fmag = math.sqrt(pF0 * pF0 + pF1 * pF1 + pF2 * pF2)
+    ps0 = R[0, 0] * pF0 + R[0, 1] * pF1 + R[0, 2] * pF2
+    ps1 = R[1, 0] * pF0 + R[1, 1] * pF1 + R[1, 2] * pF2
+    ps2 = R[2, 0] * pF0 + R[2, 1] * pF1 + R[2, 2] * pF2
+    pm0 = R[0, 0] * pM0 + R[0, 1] * pM1 + R[0, 2] * pM2
+    pm1 = R[1, 0] * pM0 + R[1, 1] * pM1 + R[1, 2] * pM2
+    pm2 = R[2, 0] * pM0 + R[2, 1] * pM1 + R[2, 2] * pM2
+    if fmag > cacc.scalars[CA_FPEAK_INST_N]:
+        cacc.scalars[CA_FPEAK_INST_N] = fmag
     tq = abs(spindle_torque * inv)
     pw = abs(spindle_torque * inv * step[ST_OMEGA_RAD_S])
     if tq > a[ACC_TORQUE_PEAK_NM]:
@@ -1075,9 +1192,9 @@ def finish_step(pose, step, istep, axes, acc, cacc, out, commit, Fx, Fy, Fz, Mx,
     if fmag > a[ACC_FORCE_PEAK_N]:
         a[ACC_FORCE_PEAK_N] = fmag
         RMp = pose.R_M_S
-        cacc.scalars[CA_FPEAK_MX] = RMp[0, 0] * fs0 + RMp[0, 1] * fs1 + RMp[0, 2] * fs2
-        cacc.scalars[CA_FPEAK_MY] = RMp[1, 0] * fs0 + RMp[1, 1] * fs1 + RMp[1, 2] * fs2
-        cacc.scalars[CA_FPEAK_MZ] = RMp[2, 0] * fs0 + RMp[2, 1] * fs1 + RMp[2, 2] * fs2
+        cacc.scalars[CA_FPEAK_MX] = RMp[0, 0] * ps0 + RMp[0, 1] * ps1 + RMp[0, 2] * ps2
+        cacc.scalars[CA_FPEAK_MY] = RMp[1, 0] * ps0 + RMp[1, 1] * ps1 + RMp[1, 2] * ps2
+        cacc.scalars[CA_FPEAK_MZ] = RMp[2, 0] * ps0 + RMp[2, 1] * ps1 + RMp[2, 2] * ps2
     if abs(feed * inv) > cacc.scalars[CA_FEED_POWER_PEAK]:
         cacc.scalars[CA_FEED_POWER_PEAK] = abs(feed * inv)
     c = cacc.scalars
@@ -1121,18 +1238,21 @@ def finish_step(pose, step, istep, axes, acc, cacc, out, commit, Fx, Fy, Fz, Mx,
     tw[row, WRENCH_WORK_MEAN, 5] += mw2 * tf
     old = tw[row, WRENCH_TOOL_PEAK, 0] ** 2 + tw[row, WRENCH_TOOL_PEAK, 1] ** 2 + tw[row, WRENCH_TOOL_PEAK, 2] ** 2
     if fmag * fmag > old:
-        tw[row, WRENCH_TOOL_PEAK, 0] = wF0
-        tw[row, WRENCH_TOOL_PEAK, 1] = wF1
-        tw[row, WRENCH_TOOL_PEAK, 2] = wF2
-        tw[row, WRENCH_TOOL_PEAK, 3] = wM0
-        tw[row, WRENCH_TOOL_PEAK, 4] = wM1
-        tw[row, WRENCH_TOOL_PEAK, 5] = wM2
-        tw[row, WRENCH_WORK_PEAK, 0] = fw0
-        tw[row, WRENCH_WORK_PEAK, 1] = fw1
-        tw[row, WRENCH_WORK_PEAK, 2] = fw2
-        tw[row, WRENCH_WORK_PEAK, 3] = mw0
-        tw[row, WRENCH_WORK_PEAK, 4] = mw1
-        tw[row, WRENCH_WORK_PEAK, 5] = mw2
+        gw0 = -(RW[0, 0] * ps0 + RW[0, 1] * ps1 + RW[0, 2] * ps2)
+        gw1 = -(RW[1, 0] * ps0 + RW[1, 1] * ps1 + RW[1, 2] * ps2)
+        gw2 = -(RW[2, 0] * ps0 + RW[2, 1] * ps1 + RW[2, 2] * ps2)
+        tw[row, WRENCH_TOOL_PEAK, 0] = pF0
+        tw[row, WRENCH_TOOL_PEAK, 1] = pF1
+        tw[row, WRENCH_TOOL_PEAK, 2] = pF2
+        tw[row, WRENCH_TOOL_PEAK, 3] = pM0
+        tw[row, WRENCH_TOOL_PEAK, 4] = pM1
+        tw[row, WRENCH_TOOL_PEAK, 5] = pM2
+        tw[row, WRENCH_WORK_PEAK, 0] = gw0
+        tw[row, WRENCH_WORK_PEAK, 1] = gw1
+        tw[row, WRENCH_WORK_PEAK, 2] = gw2
+        tw[row, WRENCH_WORK_PEAK, 3] = -(RW[0, 0] * pm0 + RW[0, 1] * pm1 + RW[0, 2] * pm2) + (py * gw2 - pz * gw1)
+        tw[row, WRENCH_WORK_PEAK, 4] = -(RW[1, 0] * pm0 + RW[1, 1] * pm1 + RW[1, 2] * pm2) + (pz * gw0 - px * gw2)
+        tw[row, WRENCH_WORK_PEAK, 5] = -(RW[2, 0] * pm0 + RW[2, 1] * pm1 + RW[2, 2] * pm2) + (px * gw1 - py * gw0)
     acc.tick_spindle_torque_Nm[row] += spindle_torque * inv * tf
     # axis loads: force the process exerts on each axis' moving link (side +1 tool side, -1 work side)
     RM = pose.R_M_S
@@ -1294,6 +1414,9 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     st_ptr = tool.st_ptr
     st_elem = tool.st_elem
     st_zs = tool.st_z_m
+    st_edge = st.st_edge
+    iv_tick = float(iv.tick[0])
+    h_reach = 2.0 * tool.scal[TC_R_CUT] if tool.scal[TC_R_CUT] > 0.0 else 1.0
     pts = mem.point_S_m
     mtick = mem.tick
     mvalid = mem.valid
@@ -1426,6 +1549,19 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     v_int = 0.0
     h_max = 0.0
     Kz = 0.0
+    # instantaneous wrench (T, about the station axis points as the element sums) at the step's start and end
+    pS0 = 0.0
+    pS1 = 0.0
+    pS2 = 0.0
+    pS3 = 0.0
+    pS4 = 0.0
+    pS5 = 0.0
+    pE0 = 0.0
+    pE1 = 0.0
+    pE2 = 0.0
+    pE3 = 0.0
+    pE4 = 0.0
+    pE5 = 0.0
     for s in range(s_first, s_last + 1):
         k0 = st_ptr[s]
         k1 = st_ptr[s + 1]
@@ -1740,20 +1876,33 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                 hmin_m = t_hwrite[row]
                 xs = xb - (s_c - 0.5) * bps - 0.5 * bps
                 xe = xs + bps
+                # a bin centre at a step's end belongs to both steps: xs and xe of consecutive steps are computed
+                # separately and may leave it outside both by round-off (a commensurate stride, e.g. 0.25 deg on
+                # 0.5 deg bins, skipped the write of every other bin: the next tooth read a surface three passes old,
+                # h = 3 f_z). The range is widened by CROSS_EPS bins and a bin already pending is not crossed again
                 if bps > 0.0:
-                    cA = int(math.floor(xs)) + 1
-                    cB = int(math.floor(xe))
+                    cA = int(math.floor(xs - CROSS_EPS)) + 1
+                    cB = int(math.floor(xe + CROSS_EPS))
                     step_c = 1
                 else:
-                    cA = int(math.ceil(xs)) - 1
-                    cB = int(math.ceil(xe))
+                    cA = int(math.ceil(xs + CROSS_EPS)) - 1
+                    cB = int(math.ceil(xe - CROSS_EPS))
                     step_c = -1
                 ws = pki[kk, PKI_WRITE]
                 if (step_c > 0 and cB >= cA) or (step_c < 0 and cB <= cA):
                     c = cA
                     while True:
                         sx = (c - xs) * inv_bps
-                        if s_lo <= sx <= s_hi:
+                        if s_lo - CROSS_EPS_S < sx < s_lo:
+                            sx = s_lo
+                        elif s_hi < sx < s_hi + CROSS_EPS_S:
+                            sx = s_hi
+                        bw = c
+                        while bw >= nb:
+                            bw -= nb
+                        while bw < 0:
+                            bw += nb
+                        if s_lo <= sx <= s_hi and bw != int(pend[e, PD_BIN]):
                             hx = h + (sx - s_c) * slope
                             pb = int(pend[e, PD_BIN])
                             if pb >= 0:
@@ -1859,14 +2008,22 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
                     t_last[e] = tick_end if frac >= 1.0 else -1
                 continue
             # ---------------------------------------------------- forces
+            if not h < h_reach:
+                # a chip beyond the tool's reach (or not finite): the state has diverged. Counted for the domain's
+                # finding; the table is read at its last segment (no wrapped index)
+                cacc.scalars[CA_H_BEYOND] += 1.0
+                if not h <= cacc.scalars[CA_H_BEYOND_MAX]:
+                    cacc.scalars[CA_H_BEYOND_MAX] = h if h == h else 1e300
             hm = t_hmin[row]
             if h < hm:
                 sg = int(h * t_dlo[row])
                 if sg >= nlo:
                     sg = nlo - 1
             else:
-                sg = nlo + int((h - hm) * t_dhi[row])
-                if sg >= nseg:
+                xg = (h - hm) * t_dhi[row]
+                if xg < nseg - nlo:
+                    sg = nlo + int(xg)
+                else:
                     sg = nseg - 1
                     cacc.scalars[CA_TABLE_OVER] += 1.0
             # h is the projection on n of the surface's shift between passes at the element's own station (the memory),
@@ -1874,16 +2031,32 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             # narrow it (turn_step measures h along n instead: abi.edge_curvature)
             db = pk[kk, PK_DB]
             dS = pk[kk, PK_DS]
+            # the element at the material's boundary along the edge (the depth-of-cut line, a step's or a floor's
+            # edge): where a neighbouring station is out of the material at this angle, the element's half toward it
+            # is replaced by the engaged length up to the boundary (st_edge, measured at the interval refresh:
+            # core.hot_kernels.edge_reach). Before 2026-11-10 the element was engaged whole or not at all: the forces
+            # erred by (engaged length - ap) / ap, up to half an element's height over ap (-4.8 % at ap 3 mm, -32 % at
+            # 0.6 mm with 0.5 mm elements; docs/convergence.md 3)
+            wgt = 1.0
+            if st_edge[s, SE_ON] > 0.0 and st_edge[s, SE_TICK] == iv_tick:
+                if s > 0 and st_edge[s, SE_D_LO] != 0.0 and not in_intervals(iv, s - 1, ac):
+                    wgt += st_edge[s, SE_D_LO]
+                if s + 1 < nst and st_edge[s, SE_D_HI] != 0.0 and not in_intervals(iv, s + 1, ac):
+                    wgt += st_edge[s, SE_D_HI]
+                if wgt < 0.0:
+                    wgt = 0.0
+                db *= wgt
+                dS *= wgt
             ft0 = (coef[row, sg, 0, COL_FT] + coef[row, sg, 1, COL_FT] * h) * db + \
                 (coef[row, sg, 0, COL_ET] + coef[row, sg, 1, COL_ET] * h) * dS
             fr0 = (coef[row, sg, 0, COL_FR] + coef[row, sg, 1, COL_FR] * h) * db + \
                 (coef[row, sg, 0, COL_ER] + coef[row, sg, 1, COL_ER] * h) * dS
             fa0 = (coef[row, sg, 0, COL_FA] + coef[row, sg, 1, COL_FA] * h) * db + \
                 (coef[row, sg, 0, COL_EA] + coef[row, sg, 1, COL_EA] * h) * dS
-            fft = pk[kk, PK_FLANK]
-            ffr = pk[kk, PK_FLANK + 1]
+            fft = pk[kk, PK_FLANK] * wgt
+            ffr = pk[kk, PK_FLANK + 1] * wgt
             fpd = 0.0
-            kpd = pk[kk, PK_PD]
+            kpd = pk[kk, PK_PD] * wgt
             dtw = frac * dt
             was_in = (flags & FL_IN_CUT) != 0
             pux = 0.0
@@ -1927,6 +2100,60 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             p_tab = ft0 * Vc + fr0 * vn - fa0 * va
             p_fl = fft * Vc + ffr * vn + mu_pd * fpd * Vc
             p_pd = fpd * vn
+            # the instantaneous force at the step's ends (the peak; a step mean is 5-11 % below the peak at the default
+            # stride, docs/convergence.md 1): the element's force at its chip of that instant (h linear over the step,
+            # the table read at that chip: its own segment), where it is engaged then, in T (the same frame for every
+            # element). Before 2026-11-10 the end forces took the slope of the centroid chip's segment: a chip that
+            # fell from 49 um to 0.09 um within a step (below h_min, the steep low segment) gave 1.7 kN at the start
+            # (stride_slot F_peak 850 N at 1 deg against 258 N converged)
+            dft = coef[row, sg, 1, COL_FT] * db + coef[row, sg, 1, COL_ET] * dS
+            dfr = coef[row, sg, 1, COL_FR] * db + coef[row, sg, 1, COL_ER] * dS
+            dfa = coef[row, sg, 1, COL_FA] * db + coef[row, sg, 1, COL_EA] * dS
+            for end_ in range(2):
+                if end_ == 0:
+                    if s_lo > 1e-9:
+                        continue
+                    hq = h - s_c * slope
+                else:
+                    if s_hi < 1.0 - 1e-9:
+                        continue
+                    hq = h + (1.0 - s_c) * slope
+                if not hq > 0.0:
+                    continue
+                if hq < t_hmin[row]:
+                    sq = int(hq * t_dlo[row])
+                    if sq >= nlo:
+                        sq = nlo - 1
+                else:
+                    xq = (hq - t_hmin[row]) * t_dhi[row]
+                    sq = nlo + int(xq) if xq < nseg - nlo else nseg - 1
+                gt = (coef[row, sq, 0, COL_FT] + coef[row, sq, 1, COL_FT] * hq) * db + \
+                    (coef[row, sq, 0, COL_ET] + coef[row, sq, 1, COL_ET] * hq) * dS + (ft - ft0)
+                gr = (coef[row, sq, 0, COL_FR] + coef[row, sq, 1, COL_FR] * hq) * db + \
+                    (coef[row, sq, 0, COL_ER] + coef[row, sq, 1, COL_ER] * hq) * dS + (fr - fr0)
+                ga = (coef[row, sq, 0, COL_FA] + coef[row, sq, 1, COL_FA] * hq) * db + \
+                    (coef[row, sq, 0, COL_EA] + coef[row, sq, 1, COL_EA] * hq) * dS
+                gx = gt * pk[kk, PK_DIR] + gr * pk[kk, PK_DIR + 3] + ga * pk[kk, PK_DIR + 6]
+                gy = gt * pk[kk, PK_DIR + 1] + gr * pk[kk, PK_DIR + 4] + ga * pk[kk, PK_DIR + 7]
+                gz = gt * pk[kk, PK_DIR + 2] + gr * pk[kk, PK_DIR + 5] + ga * pk[kk, PK_DIR + 8]
+                # moment about the tip: about the station's axis point plus z_station x F
+                g3 = gt * pk[kk, PK_ARM] + gr * pk[kk, PK_ARM + 3] + ga * pk[kk, PK_ARM + 6] - zst * gy
+                g4 = gt * pk[kk, PK_ARM + 1] + gr * pk[kk, PK_ARM + 4] + ga * pk[kk, PK_ARM + 7] + zst * gx
+                g5 = gt * pk[kk, PK_ARM + 2] + gr * pk[kk, PK_ARM + 5] + ga * pk[kk, PK_ARM + 8]
+                if end_ == 0:
+                    pS0 += gx
+                    pS1 += gy
+                    pS2 += gz
+                    pS3 += g3
+                    pS4 += g4
+                    pS5 += g5
+                else:
+                    pE0 += gx
+                    pE1 += gy
+                    pE2 += gz
+                    pE3 += g3
+                    pE4 += g4
+                    pE5 += g5
             if frac < 1.0:
                 # forces at the engaged centroid act in the frame rotated by dl from the midpoint frame
                 tmp = cd * Fx - sd * Fy
@@ -1943,9 +2170,6 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
             sMz += Mz * dtw
             any_in = True
             if float_k > 0.0:
-                dft = coef[row, sg, 1, COL_FT] * db + coef[row, sg, 1, COL_ET] * dS
-                dfr = coef[row, sg, 1, COL_FR] * db + coef[row, sg, 1, COL_ER] * dS
-                dfa = coef[row, sg, 1, COL_FA] * db + coef[row, sg, 1, COL_EA] * dS
                 Kz += frac * nz * (dft * pk[kk, PK_DIR + 2] + dfr * pk[kk, PK_DIR + 5] + dfa * pk[kk, PK_DIR + 8])
             n_in += 1.0
             if h > h_max:
@@ -2159,6 +2383,13 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
     M0x = cm * MTx - sm * MTy
     M0y = sm * MTx + cm * MTy
     M0z = MTz
+    # the element impulses alone (the chip loads below are constant over the step: their mean joins both ends)
+    E0x = F0x
+    E0y = F0y
+    E0z = F0z
+    E0mx = M0x
+    E0my = M0y
+    E0mz = M0z
     # rigid-body work of the cutting forces: shaft (spindle rotation) and feed (axes, incl. rotary)
     shaft = -omega * M0z
     feed = -(vTx * FTx + vTy * FTy + vTz * FTz + (OTx * MTx + OTy * MTy + (OTz - omega) * MTz))
@@ -2172,7 +2403,7 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
         st.misc[MS_RECUT_ANGLE] += abs_dal
         if st.misc[MS_RECUT_ANGLE] >= TWO_PI * inv_nt:
             st.misc[MS_RECUT_ANGLE] = 0.0
-            recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta)
+            recut_scan(tool, table, occ, pose, step, istep, cacc, acc, ev, st, theta, iv)
     tp = pack.torque_Nm[0]
     pkx = pack.force_T0_N[0]
     pky = pack.force_T0_N[1]
@@ -2307,8 +2538,54 @@ def cut_step(tool, table, mem, iv, refill, step, istep, pose, defl, occ, pack, a
         section_peaks(tool, out, cacc, dt)
         st.misc[MS_STEPS] += 1.0
         st.misc[MS_LAST_TICK] = float(tick_end)
+    # ---------------------------------------------------- the step's peak: the instantaneous wrench at its start or
+    # end, or its mean, whichever has the largest |F| (T0; the ends rotated by the spindle angle at that instant)
+    inv_dt = 1.0 / dt
+    cxF = (F0x - E0x) * inv_dt
+    cyF = (F0y - E0y) * inv_dt
+    czF = (F0z - E0z) * inv_dt
+    cxM = (M0x - E0mx) * inv_dt
+    cyM = (M0y - E0my) * inv_dt
+    czM = (M0z - E0mz) * inv_dt
+    pkx = F0x * inv_dt
+    pky = F0y * inv_dt
+    pkz = F0z * inv_dt
+    pmx = M0x * inv_dt
+    pmy = M0y * inv_dt
+    pmz = M0z * inv_dt
+    best = pkx * pkx + pky * pky + pkz * pkz
+    ch = math.cos(0.5 * dal)
+    sh = math.sin(0.5 * dal)
+    for end in range(2):
+        if end == 0:
+            ce = cm * ch + sm * sh
+            se = sm * ch - cm * sh
+            qx = ce * pS0 - se * pS1 + cxF
+            qy = se * pS0 + ce * pS1 + cyF
+            qz = pS2 + czF
+            rx = ce * pS3 - se * pS4 + cxM
+            ry = se * pS3 + ce * pS4 + cyM
+            rz = pS5 + czM
+        else:
+            ce = cm * ch - sm * sh
+            se = sm * ch + cm * sh
+            qx = ce * pE0 - se * pE1 + cxF
+            qy = se * pE0 + ce * pE1 + cyF
+            qz = pE2 + czF
+            rx = ce * pE3 - se * pE4 + cxM
+            ry = se * pE3 + ce * pE4 + cyM
+            rz = pE5 + czM
+        q2 = qx * qx + qy * qy + qz * qz
+        if q2 > best:
+            best = q2
+            pkx = qx
+            pky = qy
+            pkz = qz
+            pmx = rx
+            pmy = ry
+            pmz = rz
     finish_step(pose, step, istep, axes, acc, cacc, out, commit, F0x, F0y, F0z, M0x, M0y, M0z, shaft, feed,
-                M0z, power, n_in)
+                M0z, power, n_in, pkx, pky, pkz, pmx, pmy, pmz)
     out.misc[SO_AXIAL_K] = Kz
     # ---------------------------------------------------- floating tapping holder (implicit static equilibrium)
     if float_k > 0.0 and commit:
@@ -2649,9 +2926,8 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
             if sg >= nlo:
                 sg = nlo - 1
         else:
-            sg = nlo + int((h_eq - hm) * table.inv_dhi[row])
-            if sg >= nseg:
-                sg = nseg - 1
+            xg = (h_eq - hm) * table.inv_dhi[row]
+            sg = nlo + int(xg) if xg < nseg - nlo else nseg - 1
         Ft_l = (coef[row, sg, 0, COL_FT] + coef[row, sg, 1, COL_FT] * h_eq) * L_tot
         Fr_l = (coef[row, sg, 0, COL_FR] + coef[row, sg, 1, COL_FR] * h_eq) * L_tot
         Fa_l = (coef[row, sg, 0, COL_FA] + coef[row, sg, 1, COL_FA] * h_eq) * L_tot
@@ -2727,8 +3003,10 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
                 if sg >= nlo:
                     sg = nlo - 1
             else:
-                sg = nlo + int((h - hm) * table.inv_dhi[row])
-                if sg >= nseg:
+                xg = (h - hm) * table.inv_dhi[row]
+                if xg < nseg - nlo:
+                    sg = nlo + int(xg)
+                else:
                     sg = nseg - 1
                     cacc.scalars[CA_TABLE_OVER] += 1.0
             db0 = tool.db_m[e]
@@ -2993,4 +3271,4 @@ def turn_step(tool, table, polar, step, istep, pose, defl, axes, st, acc, cacc, 
         st.misc[MS_STEPS] += 1.0
         st.misc[MS_LAST_TICK] = float(tick_end)
     finish_step(pose, step, istep, axes, acc, cacc, out, commit, FTx, FTy, FTz, MTx, MTy, MTz, shaft, feed,
-                torque_work * dt, power, n_in)
+                torque_work * dt, power, n_in, FTx / dt, FTy / dt, FTz / dt, MTx / dt, MTy / dt, MTz / dt)

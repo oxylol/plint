@@ -36,41 +36,113 @@ def _voxel(drv, mass, x0, size, thick, cell=2e-3):
     drv.occ = occ
 
 
-def test_a_recut_strike_is_cut_like_material_over_its_crossing_time():
-    """A 2 mm voxel holding 2 mg of 40 um chips (0.6 mm volume-equivalent size), two thirds of it inside the D10's
-    envelope: the teeth strike those two thirds once (not the voxel's whole mass), cut across the chips' section
-    (thickness 40 um x width sqrt(V/h) = 1.68 mm): the force is the table's f(h) at h = 40 um on that width (about
-    100 N tangential), lasting the crossing time V_struck / (h b V); the energy is the specific cutting energy times
-    the struck volume. Before, the whole voxel took J = m V + u m / (rho V) within one L0 step."""
+VF = 0.05e-3 * 4 * abs(OMEGA) / (2 * math.pi)       # f_z 0.05 mm
+T_TOOTH = 2 * math.pi / (4 * abs(OMEGA))
+
+
+def _grid(drv, mass_per_voxel, thick=40e-6, size=0.6e-3, cell=2e-3):
+    """Chips everywhere around the tool: 7 x 7 x 2 voxels of 2 mm, the same mass in each."""
+    occ = A.empty_occupancy(7, 7, 2)
+    occ.origin_S_m[:] = [-7e-3, -7e-3, -1e-3]
+    occ.cell_m[0] = cell
+    occ.mass_kg[:] = mass_per_voxel
+    occ.size_m[:] = size
+    occ.thickness_m[:] = thick
+    drv.occ = occ
+
+
+def _one_scan(drv, tip, v_tip):
+    """Steps over 1.5 tooth periods from rest: one recut scan (at the end of the first tooth period)."""
+    n = int(1.5 * T_TOOTH / DT)
+    return drv.run_rotating(n, OMEGA, DT, tip, v_tip_fn=lambda t: v_tip)
+
+
+def test_the_teeth_meet_the_chips_in_the_layer_their_advance_sweeps_in_air():
+    """Chips spread uniformly around a D10 cutter (ap 2 mm) feeding 0.05 mm per tooth along x through air: in one
+    tooth period the teeth meet the chips of the layer the leading half of the envelope sweeps, f_z x 2R x ap, at the
+    voxels' chip density (to the angle sampling's 0.1 %), not the chips inside the envelope."""
     drv, ct, table = _driver()
-    mass, size, thick = 2e-6, 0.6e-3, 40e-6
-    _voxel(drv, mass, 3.5e-3, size, thick)
-    tip = lambda t: np.zeros(3)                       # standing tool: no chip of the work, only the struck chips
-    n = 1200
-    rec = drv.run_rotating(n, OMEGA, DT, tip, v_tip_fn=lambda t: np.zeros(3))
+    m = 1e-6
+    _grid(drv, m)
+    v = np.array([VF, 0.0, 0.0])
+    _one_scan(drv, lambda t: v * t, v)
     struck = float(drv.cacc.scalars[A.CA_RECUT_KG])
-    assert struck == pytest.approx(mass * 18.0 / 27.0, rel=1e-12)       # 18 of the 27 sub-cells inside r = 5 mm
+    swept = VF * T_TOOTH * 2 * R_TOOL * AP
+    assert struck == pytest.approx(m / 8e-9 * swept, rel=2e-3)
+
+
+def test_chips_in_the_flutes_and_ahead_in_material_are_not_cut():
+    """The same chips with the cutter (1) plunging along its axis (a drill in its hole: the chips around it are in its
+    flutes, carried out, never in front of a lip), (2) slotting, the leading half of every station engaged in
+    material: nothing is struck. Before 2026-11-10 every chip inside the envelope cylinder was cut; the drill of
+    examples/drill-tap-plate-1045 took 0.39 mg of its own flute chips at 431 N sideways (docs/models/loop.md 15)."""
+    drv, ct, table = _driver()
+    _grid(drv, 1e-6)
+    v = np.array([0.0, 0.0, -VF])
+    rec = _one_scan(drv, lambda t: v * t, v)
+    assert float(drv.cacc.scalars[A.CA_RECUT_KG]) == 0.0
+    assert not np.any(np.array(rec.wrench))
+    drv, ct, table = _driver()
+    _grid(drv, 1e-6)
+    lo, hi = straight_immersion(0.0, math.pi)
+    drv.set_interval(lo, hi)
+    v = np.array([VF, 0.0, 0.0])
+    drv.prefill_memory(lambda t: v * t, 0.0, OMEGA)
+    _one_scan(drv, lambda t: v * t, v)
+    assert float(drv.cacc.scalars[A.CA_RECUT_KG]) == 0.0
+
+
+def _strike(mass, size=0.6e-3, thick=40e-6):
+    drv, ct, table = _driver()
+    _voxel(drv, mass, 3.5e-3, size, thick)
+    v = np.array([VF, 0.0, 0.0])
+    rec = _one_scan(drv, lambda t: v * t, v)
     F = np.array(rec.wrench)[:, :3]
-    on = np.linalg.norm(F, axis=1) > 0.0
-    # the expected load: the linear table at h = 40 um, width min(sqrt(V_chip / h), the 2 mm of edge in the voxel)
-    v_chip = math.pi / 6.0 * size ** 3
-    width = min(math.sqrt(v_chip / thick), 2e-3)
-    ft = (ALTINTAS["Ktc"] * thick + ALTINTAS["Kte"]) * width
-    fr = (ALTINTAS["Krc"] * thick + ALTINTAS["Kre"]) * width
-    peak = float(np.max(np.linalg.norm(F, axis=1)))
-    assert peak == pytest.approx(math.hypot(ft, fr), rel=1e-9)
-    assert peak < 200.0                               # the old spike: kilonewtons in one step
-    # struck point: the centroid of the inside part (x 4.17 mm), speed |omega| r; crossing time V / (h b V)
-    rc = (3.5e-3 + 2e-3 * (0.5 / 3)) * 0.5 + (3.5e-3 + 2e-3 * (1.5 / 3)) * 0.5
-    t_cross = struck / RHO / (thick * width * abs(OMEGA) * rc)
-    assert np.count_nonzero(on) * DT == pytest.approx(t_cross, abs=DT)
-    impulse = np.sum(F[on], axis=0) * DT
-    assert np.linalg.norm(impulse) == pytest.approx(math.hypot(ft, fr) * t_cross, rel=1e-9)
-    # energy: all of it dissipated in the chips (no feed, no vibration): the table's specific energy x volume
-    e_rec = float(drv.cacc.scalars[A.CA_RECUT_J])
-    assert e_rec == pytest.approx(ft / (thick * width) * struck / RHO, rel=1e-9)
-    a = drv.acc.scalars
-    assert a[A.ACC_SHAFT_WORK_J] + a[A.ACC_FEED_WORK_J] == pytest.approx(e_rec, rel=1e-12)
+    return drv, F
+
+
+def test_a_recut_strike_is_cut_like_material():
+    """A 2 mm voxel of 40 um chips (0.6 mm volume-equivalent size) straight ahead of the feeding D10. The chips are
+    spread over the voxel, so the edges meet the struck ones all along the band's arc in the voxel (2 asin(1 / 4.97)
+    = 23 deg) while they sweep it: the mean force cuts the struck volume at the table's specific energy f(h) / h over
+    that time (14 N for 2 mg in the voxel), bounded by the section force of whole chips side by side (thickness
+    40 um x width sqrt(V/h) = 1.68 mm: about 100 N), which a nearly solid voxel (20 mg) reaches; the spindle's work is
+    the specific energy times the struck volume either way. Before 2026-11-10 every strike took the section force
+    (the D6.8 drill: 431 N from 13 ug of chips near its axis); before 2026-11-09 the voxel took J = m V + u m / (rho V)
+    within one L0 step."""
+    v_chip = math.pi / 6.0 * 0.6e-3 ** 3
+    arc = 2.0 * math.asin(1e-3 / 4.97e-3)
+    l_edge = AP * 7.0 / 8.0                    # the edge length in the voxel: between the outer stations (8 per 2 mm)
+    for mass, thick in ((2e-6, 40e-6), (20e-6, 10e-6)):
+        b_r = min(math.sqrt(v_chip / thick), l_edge)
+        ft = (ALTINTAS["Ktc"] * thick + ALTINTAS["Kte"]) * b_r
+        fr = (ALTINTAS["Krc"] * thick + ALTINTAS["Kre"]) * b_r
+        drv, F = _strike(mass, thick=thick)
+        struck = float(drv.cacc.scalars[A.CA_RECUT_KG])
+        # the leading face inside the voxel (|y| <= 1 mm, z 0-2 mm) sweeps f_z x 2 mm x 2 mm in the tooth period
+        assert struck == pytest.approx(mass / 8e-9 * VF * T_TOOTH * 4e-6, rel=0.07)
+        energy = ft / (thick * b_r) * struck / RHO                 # the specific energy x the struck volume
+        a = drv.acc.scalars
+        if mass < 1e-5:            # (the dense strike lasts beyond the half tooth period simulated after the scan)
+            assert a[A.ACC_SHAFT_WORK_J] == pytest.approx(energy, rel=1e-6)
+        assert a[A.ACC_SHAFT_WORK_J] + a[A.ACC_FEED_WORK_J] == pytest.approx(float(drv.cacc.scalars[A.CA_RECUT_J]),
+                                                                             rel=1e-12)
+        mag = np.linalg.norm(F, axis=1)
+        on = mag > 0.0
+        peak = float(mag.max())
+        w_c = max(math.sqrt(v_chip / thick), thick)
+        n_side = max(mass / (RHO * 8e-9) * l_edge / w_c, 1.0)
+        section = math.hypot(ft, fr) * n_side
+        if mass < 1e-5:
+            # the mean force over the sweep of the arc: energy / (V t_pass), V at the face's centroid (r ~ 4.97 mm)
+            t_pass = arc / abs(OMEGA)
+            mean_ft = energy / (abs(OMEGA) * 4.97e-3 * t_pass)
+            assert peak == pytest.approx(mean_ft * math.hypot(ft, fr) / ft, rel=0.05)
+            assert peak < 0.2 * section
+            assert np.count_nonzero(on) * DT == pytest.approx(t_pass, rel=0.05, abs=DT)
+        else:
+            # dense chips: whole sections side by side (the mean over the sweep would be about three times more)
+            assert peak == pytest.approx(section, rel=1e-9)
 
 
 def _vibrate(d, t):
@@ -103,7 +175,8 @@ def test_chip_loads_close_the_energy_identity_and_agree_with_the_modal_work():
     fz = 0.05e-3
     vf = fz * 4 * abs(OMEGA) / (2 * math.pi)
     tip = lambda t: np.array([vf * t, 0.0, 0.0])
-    lo, hi = straight_immersion(0.0, math.pi)
+    # half immersion (down milling): the leading face on the other side is in air, where the voxel's chips lie
+    lo, hi = straight_immersion(0.5 * math.pi, math.pi)
     drv.set_interval(lo, hi)
     drv.prefill_memory(tip, 0.0, OMEGA)
     quad = 0.0
@@ -130,10 +203,12 @@ def test_chip_loads_act_at_an_engaged_station():
     _voxel(drv, 3e-6, 3.2e-3, 0.5e-3, 30e-6)
     drv.pack.torque_Nm[0] = 0.4
     drv.pack.force_T0_N[:] = [12.0, -7.0, 3.0]
-    lo, hi = straight_immersion(0.0, math.pi)
+    lo, hi = straight_immersion(0.5 * math.pi, math.pi)
     drv.set_interval(lo, hi, stations=range(2, 6))
-    tip = lambda t: np.zeros(3)
+    v = np.array([VF, 0.0, 0.0])
+    tip = lambda t: v * t
     for k in range(700):
-        drv.run_rotating(1, OMEGA, DT, tip, t0_s=k * DT, v_tip_fn=lambda t: np.zeros(3), record=False)
+        drv.run_rotating(1, OMEGA, DT, tip, t0_s=k * DT, v_tip_fn=lambda t: v, record=False)
         assert np.allclose(np.sum(drv.out.station_T0[:, :3], axis=0), drv.out.wrench_T0[:3], rtol=0, atol=1e-9)
         assert not np.any(drv.out.station_T0[:2]) and not np.any(drv.out.station_T0[6:])
+    assert float(drv.cacc.scalars[A.CA_RECUT_KG]) > 0.0

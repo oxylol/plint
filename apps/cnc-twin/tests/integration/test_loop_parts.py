@@ -11,7 +11,7 @@ import pytest
 
 from cnctwin.core.abi import ring_buffer
 from cnctwin.core.bus import Bus, CuttingContact
-from cnctwin.core.loop import CouplingMonitor, Run, _PeakView, _scalar
+from cnctwin.core.loop import CouplingMonitor, Run, _cut_weighted, _PeakView, _scalar
 from cnctwin.core.loop_wiring import LiveField, RunLedger
 from cnctwin.core.state import SimState
 
@@ -31,6 +31,29 @@ def test_the_monitor_flags_a_sustained_alternation_once():
     restored = CouplingMonitor(ratio=0.5, rel_change=1e-3, alternations=3)
     restored.restore(monitor.state())
     assert restored.state() == monitor.state()
+
+
+def test_the_rake_temperature_is_monitored_where_the_tool_cuts():
+    """The loop's monitor takes the rake temperature the coefficient rows read: the in-cut-time weighted mean over
+    the elements that cut (weights summed over the teeth). The largest element switched between two elements of
+    different temperature from step to step and flagged their difference as a coupling oscillation; the weighted
+    mean does not move, and a step without cut gives no value."""
+    rake = np.full((2, 4), 330.0)
+    rake[:, 3] = 420.0                                   # an idle element far up the flute, hot from an earlier cut
+    bus = Bus()
+    ic = np.zeros((2, 4))
+    ic[0, 0], ic[1, 1] = 2e-3, 1e-3                      # tooth 0 cut with element 0, tooth 1 with element 1
+    bus.cutting.contacts = [CuttingContact(tool_slot=0, in_cut_time_s=ic)]
+    rake[:, 0], rake[:, 1] = 350.0, 340.0
+    assert _cut_weighted(rake, bus, 0) == pytest.approx((2 * 350.0 + 340.0) / 3)
+    assert _cut_weighted(rake, bus, 1) is None
+    monitor = CouplingMonitor(ratio=0.5, rel_change=1e-3, alternations=3)
+    flagged = []
+    for k in range(10):                                  # the hottest element alternates between 0 and 3
+        rake[:, 3] = 420.0 if k % 2 else 300.0
+        flagged += monitor.update({"cut": _cut_weighted(rake, bus, 0)})
+    assert not flagged
+    assert _cut_weighted(rake, Bus(), 0) is None
 
 
 def test_the_ring_rows_of_a_step_move_inside_their_l0_step():

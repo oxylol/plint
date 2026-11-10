@@ -823,6 +823,15 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    5-11 % low at the default stride (sections 1, 4.1) and converges only from 0.125 deg. Evaluating the elements at
    the step's ends as well (the largest of the two end forces and the mean) would give the peak without refining the
    stride.
+   fixed (2026-11-10, cutting): each step also evaluates every element engaged at its start and at its end at the chip
+   of that instant (h linear over the step, the table read at that chip), plus the chip loads' mean, rotated at the
+   spindle angle of that instant; the step's peak is the largest |F| of start, end and mean and feeds every peak
+   (`CuttingContact.force_peak_inst_N` new; means unchanged; docs/models/cutting.md 4 item 5). stride_slot F_peak
+   (D10 slot, 4 to 0.0625 deg): 224, 224, 254, 251, 257, 265, 264 N before; 237, 237, 255, 259, 257, 257, 258 N
+   now (the default 0.5 deg within 0.7 % of the finest instead of -5 %; 2 and 4 deg still 8 % low: the peak falls
+   between step ends that far apart); F_mean 196.5-196.8 N at every stride. A first version extrapolated the
+   centroid chip's table segment to the ends: a chip falling below h_min within a step (the edge-force ramp) gave
+   850 N at 1 deg per step (tests/unit/cutting/test_boundary_and_peak.py, the last two tests).
 2. **The element at the depth-of-cut line is engaged whole or not at all** (cutting, tooling). The engaged edge ends
    at the boundary of the top engaged element, so the forces, torque, heat and the analytic chip volume err by
    (engaged length - ap) / ap, up to half an element's axial height over ap: -4.8 % at ap 3 mm and -32 % at ap 0.6
@@ -831,6 +840,15 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    the edge, which the gating already samples) would remove the error at the default size. Until then removal's
    volume consistency (field against analytic chip volume, warned outside 2 %) measures the element size as much as
    the field, and the chips' mass scaling carries the difference.
+   fixed (2026-11-10, cutting and the hot loop): an element whose station is engaged while a neighbour along the
+   edge is out of the material at its angle carries the weight 1 + d, d the engaged width beyond its half in units
+   of its own (`CutState.st_edge`), measured by the hot loop after every refresh of the intervals with the gating's
+   own point test along the edge (not past a corner of the edge; docs/models/cutting.md 4 item 3). element_flat F_mean
+   (1, 0.5, 0.25, 0.125, 0.0625 mm): 198.2, 186.8, 200.2, 193.5, 197.3 N before; 196.7 N at every size now, the
+   analytic chip volume 1.203 mm3 at every size (field 1.199-1.205). element_ball: 219.3, 241.3, 234.0, 242.1,
+   240.1 N before; 236.4, 237.6, 238.0, 238.1, 238.0 N now (analytic volume 0.436-0.448 against the field's 0.449).
+   Unit test: a slot of ap 2.86 mm gives the same force per depth and chip volume to 0.2 % with 1 to 0.125 mm
+   elements (tests/unit/cutting/test_boundary_and_peak.py).
 3. **`edge_element_mm` above 0.76 mm (helical end mills) or 0.65 mm (ball noses) changes nothing**: tooling's
    `max_lag_step_deg` (5 deg) and `max_kappa_step_deg` (7.5 deg) bind first (section 3).
 4. **The ledger's removed volume of a thin layer is first order in the lattice** (removal). The z family's columns
@@ -888,6 +906,20 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
 7. **`lag_macro: 2` is computed as lag 1** (loop; docs/models/loop.md says so): the two give the same result here
    (section 5), and cutting's `coupling_lag` warning ("compare physics.lag_macro 1 and 2") asks for a comparison
    that cannot differ.
+   fixed (2026-11-10, cutting and the loop; the advice, not a lag 2): nothing runs concurrently with the hot loop, so
+   a second macro step of lag would only add delay to the stagger; its difference from lag 1 is not an error estimate
+   the run can act on, while halving `physics.macro_ipo` halves the coupling interval itself (section 5 shows what
+   that changes). Both coupling warnings - cutting's on the coefficients and the loop's on the frozen quantities -
+   now advise halving `physics.macro_ipo` to check the result; `lag_macro: 2` is still accepted and computed as lag 1
+   (run.json says so). The monitors themselves were fixed too: cutting's flagged two successive changes of the main
+   row's coefficient above 1e-6 of it (the +-0.15 % flips of the quantised slow state between two cells, and rows the
+   cut did not use, raised it), the loop's took the largest element's rake temperature, which switched between
+   elements from step to step. Cutting now monitors the tangential coefficient at the reference chip averaged over
+   the rows with their elements' in-cut time, the loop the in-cut-time weighted rake temperature (the one the rows
+   read), both under the loop's rule (a change counts above 1e-3 of the value, three alternations in a row flag;
+   db/models/loop.yaml); a step without cut leaves them as they were (tests/unit/cutting/test_domain.py
+   `test_the_coupling_monitor_follows_the_cut_weighted_coefficient`, tests/integration/test_loop_parts.py
+   `test_the_rake_temperature_is_monitored_where_the_tool_cuts`).
 8. **The rake temperature cutting reads depends on the macro step** (thermal, cutting): 85, 55 and 37 K at 5, 10 and
    20 ms at the same moment of the same cut, and it alternates from step to step (+-50 K at 5 ms); the coefficient
    rows, the wear rates and the heat partition follow it (section 5). A coupling quantity computed from one step's

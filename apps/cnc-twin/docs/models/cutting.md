@@ -143,7 +143,11 @@ element's angle (inside-bin only next to an interval boundary, where the outer b
   term so the written point lies on the circle. Residual: fourth order (~r dphi^4 ~ 3e-11 m at
   r = 5 mm, 720 bins).
 * **Delayed write.** An element crossing a bin centre writes that bin one bin later (pending), so the
-  element's own stencil never reads what it just wrote.
+  element's own stencil never reads what it just wrote. A crossing at a step's end belongs to both steps: the range
+  is widened by 1e-7 bins and a bin already pending is not crossed again (2026-11-10: with a stride commensurate with
+  the bins, 0.25 or 0.05 deg on 0.5 deg bins, round-off left some bin centres outside both steps' ranges, the passing
+  tooth did not write them and the next read a surface three passes old: h = 3 f_z, the force doubled, the mean
+  +2 %; tests/unit/cutting/test_boundary_and_peak.py `test_a_commensurate_stride_writes_every_bin`).
 * **Elastic recovery** (Jun et al. 2006; Vogler et al. 2004): h < h_min leaves the bin unchanged (the
   ploughed layer recovers); h in [h_min, (1 + rho) h_min] moves the point by (h - h_min) / (rho h_min)
   toward the edge; above, the point is set (rho = `recovery_transition_ratio`). A bin without a point
@@ -200,14 +204,51 @@ rotation, from `deflection_from_modal`), floating-holder axial float. Per elemen
 2. **Chip thickness** from the memory (section 3); slope over the step; velocity of the element
    relative to the material (tip, frame rotation, deflection rates, work vibration).
 3. **Table** row segment, forces f_t, f_r, f_a, edge forces, wear-land and process-damping forces;
-   rotated to T0 and S; moments about the station and the tip.
+   rotated to T0 and S; moments about the station and the tip. **Engaged length** (2026-11-10): an element whose
+   station is engaged at its angle while a neighbouring station along the edge is not lies at the material's boundary
+   (the depth-of-cut line, a floor's or a step's edge); its half toward that neighbour is replaced by the engaged
+   length up to the boundary, so its chip width, edge length, wear-land and process-damping forces (and with them
+   heat, chip volume and torque) carry the weight 1 + d (`CutState.st_edge`, `SE_D_LO` / `SE_D_HI`, each where that
+   neighbour is out of the material at the element's angle). The hot loop measures d after every refresh of the
+   engaged intervals (`core.hotloop.edge_reach`: at the middle of the angles where the neighbour is out, the gating's
+   own point test (removal's `classify`, the test `engaged_intervals` makes on the station circles) is sampled along
+   the edge from s toward n, first along s's element (its meridian tangent) to the element's end, then on to n's
+   point, 16 samples refined by 12 bisections; the boundary lies at length d_b from s, d = d_b / db_s - 1/2. Past a
+   corner of the edge (n's element turned by more than 45 deg, a flat end mill's corner) the search ends at s's
+   element end: the material found beyond it is s's own uncut chip across its thickness, f_z sin(phi) along the
+   floor, which counted as width gave +1.6 % at 1 mm elements); rows
+   carry the gating's tick and are not used with other intervals; `drive.edge_plane` does the same for analytic
+   planes. A first version (2026-11-10, same day) took removal's `ray_cast` exit along the chord between the two
+   station circles: the station's point lies on the surface being cut, where the ray's start test often found air,
+   and at the corner of a flat end mill the chord runs through the cleared inside of the cut rather than along the
+   edge, so the lowest flank element lost its lower half (measured `st_edge` -0.48 at the D10's z 0.3 mm station;
+   element_flat el1 -9.6 %, el0.5 -6.2 %). Before, the element was engaged
+   whole or not at all: the forces erred by (engaged length - ap) / ap, up to half an element's height over ap (-4.8 %
+   at ap 3 mm, -32 % at 0.6 mm with 0.5 mm elements; docs/convergence.md 3). The boundary is taken at one angle per
+   station side (exact for a top or floor normal to the tool axis; an inclined boundary is averaged over the angles
+   where the neighbour is out), and a layer that ends between the tool's end and its first station (thinner than half
+   the first element) is not seen by the gating at all. Tests: tests/unit/cutting/test_boundary_and_peak.py (slot ap
+   2.86 mm with 1, 0.5, 0.25 and 0.125 mm elements: force per depth and chip volume within 0.2 %; whole elements
+   spread by several per cent; 0.7 mm with 1 mm elements: weight 0.7).
 4. **Energy** (exact identity, tested to 1e-12): shaft + feed work = heat in the shear plane, at the
    rake, at the flank, ploughing (edge, wear land, forming, process damping) + work on the deflection
    rates (+ recut + packing). Heat by zone with the row's partitions; work-heat deposits in S. The work on the
    deflection rates (`CA_DEFLECTION_J`) holds every load the modes receive: the element forces, the recut loads and
    the packing load at their stations, and the total force on the work's vibration velocity; it equals dynamics'
    quadrature of the modal work exactly (test `test_chip_loads_close_the_energy_identity_and_agree_with_the_modal_work`).
-5. **Accumulators**: per element integrals (`CutState.elem_acc`: in-cut time, h dt, force, energy),
+5. **Peak** (2026-11-10): besides the step mean, the instantaneous wrench at the step's start and end: each element
+   engaged at that instant at its chip of that instant (h linear over the step, the table read at that chip in its own
+   segment; constant flank and process-damping terms), plus the chip loads' mean, rotated to T0 at the spindle angle of that instant.
+   The step's peak wrench is whichever of start, end and mean has the largest |F|; it feeds every peak (`ACC_FORCE_PEAK_N`,
+   `CA_FPEAK_*` and the new `CA_FPEAK_INST_N` = `CuttingContact.force_peak_inst_N`, the per-tick `wrench_tool_T0_peak`
+   and `wrench_work_W_peak`); the means are unchanged. Before, a peak was the largest step mean: an element entering
+   the cut (its edge force, in down milling its whole chip) is averaged over the step, 5-11 % low at 0.5 deg per step
+   (docs/convergence.md 1, 4.1). Test: half-immersion down milling at 2 deg per step gives the instantaneous peak of a
+   0.05 deg stride within 1 % (its largest step mean was more than 3 % lower), the same mean force. A first version
+   (same day) extrapolated the centroid chip's segment slope to the ends: a chip that fell from 49 um to 0.09 um within
+   a step sat on the steep segment below h_min and gave 1.7 kN at the step's start (stride_slot F_peak 850 N at 1 deg
+   per step against 258 N converged).
+6. **Accumulators**: per element integrals (`CutState.elem_acc`: in-cut time, h dt, force, energy),
    per tooth pass rows (chips' `EMISSION_COLUMNS`: rho x analytic chip volume, separation point and
    velocity, chip temperature, mean h, width, length, speed, rake, inclination, edge kind, group),
    entry / exit / breakthrough / breakout shocks, surface events (interior where v.n changes sign,
@@ -219,24 +260,40 @@ rotation, from `deflection_from_modal`), floating-holder axial float. Per elemen
 ### Recutting and chip packing (loads of the chips on the tool)
 
 * **Recut strikes** (`recut_scan`, once per tooth period: in a tooth period the teeth together sweep every angle of
-  the envelope once). Chips' frozen occupancy grid (pile cells, 2 mm) holds each voxel's chip mass spread over its
-  volume, with the chips' mass-weighted thickness and volume-equivalent size. The teeth meet the share of a voxel's
-  chips inside the cutting envelope (sub-cell centres, 3 x 3 x 3, inside the envelope cylinder), less what was
-  struck from the voxel in the macro step (`taken_kg`). They cut them like material: uncut thickness h_r = the
-  chips' thickness, width b_r = their width sqrt(V_chip / h_r) (a platelet of the volume-equivalent size) up to the
-  edge length in the voxel, times the chips side by side along the edge (packing: solid fraction x edge length /
-  chip width, at least one); the force F = f(h_r) b_r n from the table row `TC_RECUT_ROW` (tangential and thrust
-  per unit width at h_r, edge forces included) acts at the struck part's centroid (at least 0.1 of the cutting
-  radius from the axis), opposite to the cutting direction there plus the thrust away from the chips, for the
-  crossing time V_struck / (h_r b_r n V) (the struck volume cut at that section at the edge speed V): impulse
-  F V_struck / (A V), energy f_t(h_r) V_struck / h_r (the table's specific energy times the volume). The loads
-  are kept per contact with their absolute start and end times (`CutState.recut_act`, 16 rows; a new load joins
-  the one that ends last with its remaining impulse kept when every row still acts) and each L0 step applies the
-  part of their time inside it: a load whose time passes while the tool is out of contact (cut_step is not called)
-  has ended, it is not carried to the next engagement. Before 2026-11-09 a voxel's whole mass took
-  J = m V + u m / (rho V) within one L0 step: 17 kN, then MN after the tool's response, at the tiny slot's, the
-  thin wall's and the flip's first cuts (docs/models/loop.md 15). Test `test_a_recut_strike_is_cut_like_material_over_its_crossing_time`
-  (a 2 mg voxel of 40 um chips: two thirds struck, 117 N for 1.7 ms instead of kilonewtons in 5 us).
+  the tool's surface of revolution once). Chips' frozen occupancy grid (pile cells, 2 mm) holds each voxel's chip mass
+  spread over its volume, with the chips' mass-weighted thickness and volume-equivalent size. **Which chips the teeth
+  meet** (2026-11-10): only those in the layer the edges advance into through air. In the tooth period the surface of
+  revolution moves by d = v_tip T_tooth relative to the stock; its leading side sweeps max(0, n . d) per unit area
+  (n the outward meridian normal of each station's band, of area r db per radian; sampled every 1/16 of a pile cell
+  along each station's circle, `RECUT_ARC_PER_CELL`), and where the station is engaged at that angle the layer is
+  material (the chip being formed), not chips. The struck mass of a voxel is that layer's air volume in it times its
+  chip density, less what was struck from the voxel in the macro step (`taken_kg`). Chips inside the envelope - in the
+  flutes, carried round and out by the rake faces - are not cut (their impulse m V is ~1e-7 N s). Before, every chip
+  inside the envelope cylinder was cut once per tooth period: a drill took the chips of its own flutes (the D6.8 of
+  examples/drill-tap-plate-1045 at 5.136 s: 0.39 mg struck near the axis at 0.17 m/s, 431 N sideways for 2.2 ms, the
+  drill thrown into a 0.15-0.4 mm vibration; docs/models/loop.md 15), and a standing tool took chips around it. A peck
+  drill re-entering a hole with chips below its point, or a cutter advancing on chips in a pocket, still meets them.
+  The teeth cut the struck chips like material, at the table's specific energy f_t(h_r) / h_r (row `TC_RECUT_ROW`,
+  h_r = the chips' thickness, edge forces included): energy f_t(h_r) V_struck / h_r. **Force** (2026-11-10): the
+  voxel's chips are spread uniformly over the layer, so the edges meet them all along the band's arc in the voxel,
+  over the time they take to sweep it, t_pass = min(arc / omega, T_tooth) (each angle once per tooth period): the
+  mean force F = f_t V_struck / (h_r t_pass V), V the edge speed at the struck layer's centroid (at least 0.1 of the
+  cutting radius from the axis), bounded by the section force of whole chips side by side, f(h_r) b_r n (width b_r =
+  the chips' width sqrt(V_chip / h_r), a platelet of the volume-equivalent size, up to the edge length in the voxel;
+  n = solid fraction x edge length / chip width, at least one), which dense chips reach. It acts opposite to the
+  cutting direction plus the thrust (f_r / f_t of it) against the struck surface's normal, for V_struck f_t / (h_r F V)
+  (t_pass, or the crossing time at the section force). Before, every strike took the section force for the crossing
+  time of its volume: 13 ug of chips near the D6.8's axis gave 431 N for 50 us, a kick a light drill mode turned into
+  a 0.16 mm vibration (the mean force of the same strike is about 6 N). The loads are kept per contact with their absolute start and end times
+  (`CutState.recut_act`, 16 rows; a new load joins the one that ends last with its remaining impulse kept when every
+  row still acts) and each L0 step applies the part of their time inside it: a load whose time passes while the tool
+  is out of contact (cut_step is not called) has ended, it is not carried to the next engagement. Before 2026-11-09 a
+  voxel's whole mass took J = m V + u m / (rho V) within one L0 step: 17 kN, then MN after the tool's response, at the
+  tiny slot's, the thin wall's and the flip's first cuts (docs/models/loop.md 15). Tests (tests/unit/cutting/
+  test_chip_loads.py): chips spread round a D10 feeding through air - the struck mass is f_z x 2R x ap at their density
+  (0.2 %); a plunging cutter (chips in its flutes) and a slot (the leading side in material) strike nothing; a strike's
+  energy is the specific energy times its volume, its force the mean over the arc's sweep (14 N for 2 mg in a voxel
+  ahead) or, for a nearly solid voxel, the section force of whole chips.
 * **Packing** (chips' flute packing load: a torque opposing the rotation and a force in T0) at the middle of the
   engaged edge.
 * Both act at a station dynamics takes loads at (the engaged range of the step, as the hot loop's `DynSystem.act`;
@@ -342,6 +399,25 @@ A row's slow state takes thermal's tool temperatures and wear's VB / BUE as mean
 a row without members in the step (a low-speed variant no element runs at) or a non-finite mean leaves the value
 unset (None: the model's default), never a NaN (it stopped the drill-tap example's run in the rebuild grid).
 
+**`_row_state` (the coupling round's change of 2026-11-09, reviewed 2026-11-10).** The means are weighted by the
+previous macro step's in-cut time of each member, summed over the teeth at its position along the edge (a helical
+edge's row spans the whole flute while a pass engages a few of its elements: the plain mean was dominated by the idle
+part, 2 of 44 elements per tooth cut on the convergence side step; summed over the teeth so that the weights do not
+follow how many passes of each tooth one step held). With no member in cut (a tool entering, or between cuts) the plain
+mean over the members stands in. Non-finite members get no weight. The rake partition reads `rake_temp_mean_K` and the
+flank partition `flank_entry_K` (the entry temperatures: thermal publishes the background of mechanics' stationary
+source; the in-cut values would count the step's own rise twice), `flank_temp_q_K` only for a record without it. The
+contact time of a rotating tool's element is its engaged arc over the spindle speed, min(arc, 2 pi) / omega, with
+removal's `engaged_angle_rad` (the largest engaged angle of any station in the step); before, the step's in-cut time
+over its entries, which followed how many passes crossed the step's ends. Review: correct and consistent with
+thermal's record; three limits, documented rather than changed: (1) the arc is the largest of the stations', an upper
+bound for tools whose engagement varies along the edge (a ball nose's small radii, a helical entry), so their contact
+time and the transient partition it feeds are those of the most engaged station; (2) a continuously engaged element
+(a drill's lips, a full slot's 180 deg is not one) gets one revolution, not a steady contact; (3) with several contacts
+of one slot in a step (two workpieces) the last contact's width, time and arc are used. The coupling monitor uses the
+same weights (section "Coupling-lag monitor" of `_lag_monitor`: the tangential coefficient at the reference chip
+averaged over the rows with their elements' in-cut time, under the loop's alternation rule, db/models/loop.yaml).
+
 ### Bus fields read (from `bus_prev`)
 
 | record | fields |
@@ -399,9 +475,20 @@ buffer overflow are bit-identical.
   than two spacings, about 70 um, are under-resolved: their indentation is bounded by their amplitude either way);
   plastic indentation coefficient K_sp from the row (linear in the indented area: no hardness bound of the
   indentation pressure); the flank's clearance face is straight (the circle's curvature behind a rotating edge,
-  x^2 / 2 r, is not subtracted).
+  x^2 / 2 r, is not subtracted). The surface x behind a rotating edge lies x / r rad back on the element's circle,
+  where the generated surface's normal is turned by that angle, but the wave memory is projected on the element's
+  current normal and the force acts along it: exact for x << r (end mills: x / r <= 0.1), not near a drill's axis
+  or a ball nose's tip, where the memory spans up to 2 pi r / teeth (pi rad for a two-lip drill). There the
+  indentation of a large lateral vibration is a delayed stiffness of arbitrary phase; on the drill example the
+  response to a 0.4 mm kick became a sustained vibration with process damping on and decayed with it off
+  (docs/models/loop.md 15; open: project each node on its own normal and apply the force along it).
 * Recutting: every struck chip is cut (trapped against the work), none knocked away freely; the voxel's chips are
-  spread uniformly over it (2 mm cells).
+  spread uniformly over it (2 mm cells), also over its material and its part inside the tool, so the air layer the
+  edges sweep takes the voxel's mean density.
+* A chip beyond the tool's reach (thicker than its diameter, or not finite) is a diverged state, not a cut: it is
+  counted (`CA_H_BEYOND`, `CuttingContact.h_beyond`), the table is read at its last segment (the index is compared
+  before its integer conversion: a 649 km chip wrapped it and the kernel read outside its table, a general protection
+  fault of the drill example), and the domain stops the run with a fatal finding naming the chip.
 * Indentation rows (chisel edges, normal rakes below -45 deg, elements below v_min): the rake face carries the
   wedge-indentation pressure of its inclination (mechanics.md 4), the rounded edge the flat-punch pressure.
 

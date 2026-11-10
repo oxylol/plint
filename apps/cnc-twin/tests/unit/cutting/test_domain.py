@@ -145,3 +145,58 @@ def test_the_flank_partition_reads_the_entry_temperature(run):
     heat.flank_entry_K = np.zeros((0, 0))                          # a record without it: the in-cut mean
     rs = dom._row_state(ctx, state, 0, 0, geom, prev, 1047.0, 0.0, members, True)
     assert rs.flank_temp_K == pytest.approx(900.0)
+
+
+def _monitor_bus(state, slot, rows, weight_row):
+    """A previous step in which the elements at the edge positions where every tooth's element is in table row
+    ``weight_row`` cut (1 ms each; the weights are summed over the teeth per position)."""
+    from cnctwin.core.bus import CuttingContact
+    prev = _bus(slot)
+    rows = np.asarray(rows)
+    ic = np.where(np.all(rows == weight_row, axis=0, keepdims=True) & (rows == weight_row), 1e-3, 0.0)
+    prev.cutting.contacts = [CuttingContact(contact=0, tool_slot=slot, in_cut_s=0.01, in_cut_time_s=ic)]
+    return prev
+
+
+def test_the_coupling_monitor_follows_the_cut_weighted_coefficient(run):
+    """The coefficient monitor takes the tangential coefficient averaged over the rows with their elements' in-cut
+    time, under the loop's rule (a change counts above coupling_rel_change, 1e-3; three alternations in a row flag):
+    +-0.05 % flips (the quantised slow state between two cells) and the rows the cut did not use never flag; a
+    sustained +-1 % alternation does, once."""
+    dom, ctx, state = run
+    slot = 0
+    dom.update_tool(ctx, state, slot, Bus(), force=True)
+    tc = state.cutting.tools[slot]
+    rows = np.asarray(tc.elem_row)
+    used = int(np.bincount(rows[rows >= 0].ravel()).argmax())
+    prev = _monitor_bus(state, slot, rows, used)
+    coef = tc.table.coef
+    base = coef.copy()
+    n_rows = coef.shape[0]
+
+    def warnings():
+        return [f for f in state.findings if f.domain == "cutting" and "alternates" in f.message]
+
+    before = len(warnings())
+    tc.lag, tc.ref_coeff = [], 0.0
+    for k in range(12):                      # small flips of the used row, large ones of an idle row
+        coef[:] = base
+        coef[used] *= 1.0 + (5e-4 if k % 2 else -5e-4)
+        for r in range(n_rows):
+            if r != used:
+                coef[r] *= 1.0 + (0.2 if k % 2 else -0.2)
+        dom._lag_monitor(ctx, state, tc, slot, prev)
+    assert len(warnings()) == before
+    tc.lag, tc.ref_coeff = [], 0.0
+    state.cutting.raised.pop(f"lag:{slot}", None)
+    for k in range(8):
+        coef[:] = base
+        coef[used] *= 1.0 + (1e-2 if k % 2 else -1e-2)
+        dom._lag_monitor(ctx, state, tc, slot, prev)
+    assert len(warnings()) == before + 1
+    assert "macro_ipo" in warnings()[-1].message and "lag_macro" not in warnings()[-1].message
+    coef[:] = base
+    idle = Bus()                             # a step without cut leaves the monitor as it was
+    lag = list(tc.lag)
+    dom._lag_monitor(ctx, state, tc, slot, idle)
+    assert tc.lag == lag

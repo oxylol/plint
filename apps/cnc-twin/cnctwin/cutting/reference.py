@@ -142,6 +142,16 @@ def _field_depth(refill: A.Refill | None, s: int, b: int, p: np.ndarray, n: np.n
     return d / den if den > 0.2 else d
 
 
+def _in_station(iv: A.EngagedIntervals, s: int, angle: float) -> bool:
+    """The right-handed T0 angle lies in one of station s's engaged intervals (kernels.in_intervals)."""
+    x = angle % TWO_PI
+    for i in range(int(iv.count[s])):
+        lo, hi = float(iv.lo_rad[s, i]), float(iv.hi_rad[s, i])
+        if lo <= x <= hi or lo <= x + TWO_PI <= hi:
+            return True
+    return False
+
+
 def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A.EngagedIntervals, step: np.ndarray,
                  istep: np.ndarray, pose: A.StepPose, defl: A.Deflection, st: A.CutState,
                  refill: A.Refill | None = None) -> RefResult:
@@ -316,10 +326,20 @@ def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A
             col = table_forces(table, row, h)
             db = float(tool.db_m[e])
             dS = float(tool.dS_m[e])
+            # the element at the material's boundary along the edge (cut_step's st_edge weight)
+            w_edge = 1.0
+            if float(st.st_edge[s, A.SE_ON]) > 0.0 and float(st.st_edge[s, A.SE_TICK]) == float(iv.tick[0]):
+                for nb_s, col_d in ((s - 1, A.SE_D_LO), (s + 1, A.SE_D_HI)):
+                    d_e = float(st.st_edge[s, col_d])
+                    if 0 <= nb_s < nst and d_e != 0.0 and not _in_station(iv, nb_s, ac):
+                        w_edge += d_e
+                w_edge = max(w_edge, 0.0)
+            db *= w_edge
+            dS *= w_edge
             ft0 = col[A.COL_FT] * db + col[A.COL_ET] * dS
             fr0 = col[A.COL_FR] * db + col[A.COL_ER] * dS
             fa0 = col[A.COL_FA] * db + col[A.COL_EA] * dS
-            fft, ffr = float(tool.flank_N[e, 0]), float(tool.flank_N[e, 1])
+            fft, ffr = float(tool.flank_N[e, 0]) * w_edge, float(tool.flank_N[e, 1]) * w_edge
             fpd = 0.0
             if was_in and Vc > 0.0 and tool.pd[e, 0] > 0.0:
                 # process damping: the flank indents the surface the edge generated behind it (wave memory)
@@ -329,7 +349,7 @@ def cut_step_ref(tool: A.CutTool, table: A.CutTable, mem: A.SurfaceMemory, iv: A
                 x_lim = min(pd_max, TWO_PI * float(tool.r_xy_m[e]) / (n_teeth if n_teeth >= 1.0 else 1.0))
                 area = wave_area_ref(st.pd_ring, st.pd_aux, e, u_rel, n_T0, float(st.pd_aux[e, A.PDA_X]) + Vc * frac * dt,
                                      float(tool.pd[e, 1]), float(tool.pd[e, 2]), x_lim, pd_max / (A.PD_RING_N - 1))
-                fpd = float(tool.pd[e, 0]) * area
+                fpd = float(tool.pd[e, 0]) * w_edge * area
             mu = float(tool.pd[e, 3])
             ft = ft0 + fft + mu * fpd
             fr = fr0 + ffr + fpd

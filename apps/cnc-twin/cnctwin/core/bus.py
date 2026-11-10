@@ -238,6 +238,9 @@ class CuttingContact:
     table_over: int = 0                     # evaluations above the coefficient table (linear extrapolation)
     float_u_max_m: float = 0.0              # largest axial float displacement of a floating tapping holder
     axis_names: tuple = ()                  # names of the columns of axis_force_N
+    force_peak_inst_N: float = 0.0          # largest instantaneous |F| of the step (the L0 steps' ends; = |force_peak_M_N|)
+    h_beyond: int = 0                       # element evaluations with a chip beyond the tool's reach (diverged state)
+    h_beyond_max_m: float = 0.0             # the largest such chip
 
 
 SURFACE_EVENT_COLUMNS = (

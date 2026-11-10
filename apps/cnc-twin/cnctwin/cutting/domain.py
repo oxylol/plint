@@ -499,31 +499,82 @@ class CuttingDomain:
         return process_record(base, slot, tc.version, flank)
 
     def _lag_monitor(self, ctx, state, tc, slot, prev) -> None:
-        """Coupling-lag monitor (architecture 5.3): two successive changes of the frozen reference
-        coefficient (tangential force at the reference h of the main row) with opposite sign and ratio > 0.5."""
+        """Coupling-lag monitor (architecture 5.3) of the frozen coefficients: the tangential force coefficient at a
+        reference chip thickness (half the tool's largest chip, at least 10 um), averaged over the table rows with
+        the in-cut time of their elements in the previous step (summed over the teeth; the contact the coefficients
+        describe), under the loop's rule (db/models/loop.yaml, cnctwin.core.loop.CouplingMonitor): a change counts
+        above ``coupling_rel_change`` of the value, and ``coupling_alternations`` successive counted changes of
+        alternating sign with a magnitude ratio above ``coupling_ratio`` flag a staggered instability.
+
+        Before 2026-11-10 two successive changes of the main row's coefficient above 1e-6 of it flagged: the
+        +-0.15 % flips of the quantised slow state between two rows' cells (no oscillation of the coupling) and a
+        row the cut did not use raised the warning. A step without cut leaves the monitor as it was."""
         if tc.table is None or tc.tool is None:
             return
+        from ..db.models import params as model_params
         from .coefficients import table_forces
-        row = int(tc.tool.scal[A.TC_RECUT_ROW])
-        h_ref = max(state.cutting.peaks.get(f"h_max:{slot}", 0.0) * 0.5, 1e-5)
-        value = float(table_forces(tc.table, row, h_ref)[A.COL_FT])
+        p = model_params("loop")
+        rel_change = float(p["coupling_rel_change"])
+        ratio = float(p["coupling_ratio"])
+        needed = int(p["coupling_alternations"])
+        value = self._cut_weighted_coeff(state, tc, slot, prev, table_forces)
+        if value is None:
+            return
+        # tc.lag holds [last counted change, count of alternations, flagged (0/1)]
+        lag = list(tc.lag) + [0.0] * (3 - len(tc.lag)) if len(tc.lag) < 3 else list(tc.lag[:3])
+        change, count, done = float(lag[0]), int(lag[1]), bool(lag[2])
         if tc.ref_coeff != 0.0:
             delta = value - tc.ref_coeff
-            tc.lag.append(delta)
-            tc.lag = tc.lag[-2:]
-            if len(tc.lag) == 2 and tc.lag[0] * tc.lag[1] < 0.0 and abs(tc.lag[0]) > 1e-6 * abs(value) \
-                    and abs(tc.lag[1]) > 0.5 * abs(tc.lag[0]):
+            significant = abs(delta) > rel_change * max(abs(value), abs(tc.ref_coeff), 1e-300)
+            alternates = change != 0.0 and delta * change < 0.0 and abs(delta) > ratio * abs(change)
+            if significant and alternates:
+                count += 1
+            elif significant:
+                count = 0
+            if count >= needed and not done:
+                done = True
                 tick = int(getattr(prev.motion, "tick", 0))
                 ctx.trace.record(tick * ctx.tick_s, tick, DOMAIN, "cutting:coupling_lag",
-                                 {"slot": slot, "delta_prev": tc.lag[0], "delta": tc.lag[1], "coeff": value}, [])
+                                 {"slot": slot, "delta_prev": change, "delta": delta, "coeff": value,
+                                  "alternations": count}, [])
                 key = f"lag:{slot}"
                 if key not in state.cutting.raised:
                     state.cutting.raised[key] = tick
                     ctx.finding(state, DOMAIN, Category.SANITY, Severity.WARNING,
-                                f"tool slot {slot}: the cutting coefficients oscillate between macro steps (staggered "
-                                "thermo-mechanical coupling); compare physics.lag_macro 1 and 2", tick,
-                                quantities={"delta_prev": tc.lag[0], "delta": tc.lag[1]})
+                                f"tool slot {slot}: the cut-weighted cutting coefficient alternates between macro "
+                                f"steps ({count} times, last change {delta / value:+.2%}, before "
+                                f"{change / value:+.2%}): the staggered thermo-mechanical coupling oscillates; "
+                                "halve physics.macro_ipo (the coupling interval) to check the result", tick,
+                                quantities={"delta_prev": change, "delta": delta, "alternations": float(count)})
+            if significant:
+                change = delta
+        tc.lag = [float(change), float(count), 1.0 if done else 0.0]
         tc.ref_coeff = value
+
+    @staticmethod
+    def _cut_weighted_coeff(state, tc, slot, prev, table_forces):
+        """The tangential force coefficient (N/m of chip width) at the reference chip thickness, averaged over the
+        rows with the previous step's in-cut time of their elements; None when the tool did not cut."""
+        h_ref = max(state.cutting.peaks.get(f"h_max:{slot}", 0.0) * 0.5, 1e-5)
+        rows = np.asarray(tc.elem_row)
+        weight = np.zeros(rows.shape)
+        for c in getattr(prev.cutting, "contacts", []) or []:
+            ic = np.asarray(getattr(c, "in_cut_time_s", np.zeros((0, 0))), float)
+            if int(c.tool_slot) == slot and ic.shape == rows.shape:
+                weight += ic
+        if weight.ndim == 2 and rows.ndim == 2:
+            weight = np.broadcast_to(weight.sum(axis=0, keepdims=True), rows.shape)
+        total = float(weight.sum())
+        if not total > 0.0:
+            return None
+        n_rows = int(tc.table.coef.shape[0])
+        value = 0.0
+        for r in np.unique(rows[weight > 0.0]):
+            r = int(r)
+            if 0 <= r < n_rows:
+                value += float(weight[rows == r].sum()) * float(table_forces(tc.table, r, h_ref)[A.COL_FT])
+        value /= total
+        return value if math.isfinite(value) and value != 0.0 else None
 
     # ================================================================== kernel inputs
     def kernel_inputs(self, ctx, state, bus: Bus) -> CuttingInputs:
@@ -645,6 +696,7 @@ class CuttingDomain:
             self._ledger(state, ci)
             self._buffers(ctx, state, ci, cc)
             self._accumulators_finite(ci)
+            self._diverged(ctx, state, ci)
             if cc is not None:
                 cc.last_tick = int(ci.istep[A.SI_TICK_END])
                 ci.st.elem_acc[:] = 0.0
@@ -713,6 +765,9 @@ class CuttingDomain:
         rec.omega_mean_rad_s = float(c[A.CA_OMEGA_INT]) / t_cut if t_cut > 0.0 else 0.0
         rec.refill_missing = int(c[A.CA_REFILL_MISSING])
         rec.table_over = int(c[A.CA_TABLE_OVER])
+        rec.force_peak_inst_N = float(c[A.CA_FPEAK_INST_N])
+        rec.h_beyond = int(c[A.CA_H_BEYOND])
+        rec.h_beyond_max_m = float(c[A.CA_H_BEYOND_MAX])
         rec.float_u_max_m = float(c[A.CA_FLOAT_U_MAX])
         rec.axis_names = tuple(self.axis_names)
         rec.spindle_load_fraction, rec.spindle_available_Nm = self._load_fraction(state, ci.slot, rec)
@@ -766,6 +821,25 @@ class CuttingDomain:
                 state.cutting.raised[key] = int(ci.istep[A.SI_TICK_END])
                 ctx.trace.record(ci.istep[A.SI_TICK_END] * ctx.tick_s, int(ci.istep[A.SI_TICK_END]), DOMAIN,
                                  "cutting:stale_memory_without_field", {"slot": ci.slot, "bins": missing}, [])
+
+    @staticmethod
+    def _diverged(ctx, state, ci) -> None:
+        """An element read a chip thicker than the tool's diameter (or not finite): the simulated state has diverged
+        (a vibration or a surface memory far from the material). The run stops with a fatal finding instead of
+        evaluating forces from it (before 2026-11-10 the table index of a 649 km chip wrapped and the kernel read
+        outside its table: examples/drill-tap-plate-1045 died with a general protection fault, docs/models/loop.md 15)."""
+        c = ci.cacc.scalars
+        if c[A.CA_H_BEYOND] <= 0.0:
+            return
+        h = float(c[A.CA_H_BEYOND_MAX])
+        reach = 2.0 * float(ci.tool.scal[A.TC_R_CUT])
+        tick = int(ci.istep[A.SI_TICK_END])
+        shown = f"{h * 1e3:.4g} mm" if h < 1e299 else "not finite"
+        msg = (f"tool slot {ci.slot}: an element's chip thickness is beyond the tool's reach ({shown}, the tool's "
+               f"diameter {reach * 1e3:.4g} mm; {int(c[A.CA_H_BEYOND])} evaluations): the simulated state diverged")
+        ctx.finding(state, DOMAIN, Category.SANITY, Severity.FATAL, msg, tick,
+                    quantities={"h_m": h, "reach_m": reach, "evaluations": float(c[A.CA_H_BEYOND])})
+        raise TwinError("cutting: " + msg)
 
     @staticmethod
     def _accumulators_finite(ci) -> None:
