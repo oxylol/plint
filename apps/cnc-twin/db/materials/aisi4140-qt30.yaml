@@ -126,7 +126,8 @@ skin:
 thermal_damage:
   burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour"}
   white_layer_degC: {value: 740, src: ovako-2026-42crmo4, range: [740, 770], note: "Ac1 740 C, Ac3 770 C"}
-  overtemper_degC: {value: 600, src: est, range: [540, 680], note: "range is the +QT tempering range (ovako-2026-42crmo4, thyssenkrupp-2017-42crmo4); 600 C assumed as the tempering temperature that gives ~30 HRC. Surface heating above it softens the surface (overtempering)."}
+  overtemper_degC: {value: 600, src: est, range: [540, 680], note: "range is the +QT tempering range (ovako-2026-42crmo4, thyssenkrupp-2017-42crmo4); 600 C assumed as the tempering temperature that gives ~30 HRC. The surface over-tempers when its tempering parameter (Hollomon-Jaffe, docs/models/thermal.md 3.4) exceeds that of this tempering (with tempering_hold_min)."}
+  tempering_hold_min: {value: 120, src: est, range: [60, 240], note: "hold at the tempering temperature (not given by the data sheets; 1-2 h per 25 mm section is common practice): sets the reference tempering parameter of the over-tempering criterion"}
   melt_smear_degC: null
 
 ignition: null

@@ -207,3 +207,56 @@ entries:
     title: "IEC 60034-2-1: Rotating electrical machines - Part 2-1: Standard methods for determining losses and efficiency from tests"
     year: 2014
     note: "Segregation of the no-load losses (iron, friction and windage) of induction machines."
+
+  # ---- machined-surface temperature and thermal damage (docs/models/thermal.md 3.4; 2026-11-10)
+  hollomon-jaffe-1945-tempering:
+    type: article
+    authors: "Hollomon, J.H.; Jaffe, L.D."
+    title: "Time-temperature relations in tempering steel"
+    venue: "Transactions of the American Institute of Mining and Metallurgical Engineers 162, 223-249"
+    year: 1945
+    note: "Tempering parameter P = T (C + log10 t), t in hours, C about 20 for carbon and low-alloy steels (recalled from the standard use of the paper; the paper itself was not re-read in this session)."
+
+  chen-2017-machined-surface-temperature:
+    type: article
+    authors: "Chen, L.; Tai, B.L.; Chaudhari, R.G.; Song, X.; Shih, A.J."
+    title: "Machined surface temperature in hard turning"
+    venue: "International Journal of Machine Tools and Manufacture 121, 10-21"
+    year: 2017
+    doi: "10.1016/j.ijmachtools.2017.03.003"
+    accessed: 2026-11-10
+    pages: "Sec. 2: AISI 52100 through-hardened 58-62 HRC (7810 kg/m3, 475 J/kgK, 46.6 W/mK), PCBN DNGA432 in MDJNL164D (-5 deg side rake, 3 deg side lead, 32 deg end lead, 5 deg relief), radial depth 0.1 mm, 100 m/min, feeds 0.05 / 0.1 / 0.15 mm/rev, 12 cuts of 2 min per tool. Abstract and Sec. 5.2 / Fig. 17: peak machined surface temperatures 500-800 C from tool-foil and embedded thermocouples (average deviation 30 C), higher with feed and flank wear; the shear-plane source dominates, flank friction adds 50-150 C with cutting time. Sec. 4.2: inverse shear-plane fluxes 2260 / 2130 / 2090 MW/m2, flank fluxes 132-734 / 400-628 / 152-489 MW/m2. Fig. 17 values were not digitised (text only)."
+
+  chou-evans-1999-white-layers:
+    type: article
+    authors: "Chou, Y.K.; Evans, C.J."
+    title: "White layers and thermal modeling of hard turned surfaces"
+    venue: "International Journal of Machine Tools and Manufacture 39(12), 1863-1881"
+    year: 1999
+    note: "Hard turning of AISI 52100 with CBN: white layers form with worn tools (flank wear land), their depth growing with flank wear and cutting speed; flank-land heat source on the work as the cause. Cited as reported in its abstract and in chen-2017-machined-surface-temperature (refs. 3, 4); figures not re-read."
+
+  griffiths-1987-white-layers:
+    type: article
+    authors: "Griffiths, B.J."
+    title: "Mechanisms of white layer generation with reference to machining and deformation processes"
+    venue: "ASME Journal of Tribology 109(3), 525-530"
+    year: 1987
+    note: "White layers: featureless (white-etching) under the optical microscope, of the order of 1-10 um in machining; rapid heating above the transformation temperature and quenching by the bulk among the mechanisms. Recalled, not re-read."
+
+  orlich-pietrzeniuk-1976-tta:
+    type: book
+    authors: "Orlich, J.; Pietrzeniuk, H.-J."
+    title: "Atlas zur Waermebehandlung der Staehle, Band 4: Zeit-Temperatur-Austenitisierung-Schaubilder"
+    venue: "Verlag Stahleisen, Duesseldorf"
+    year: 1976
+    note: "Continuous-heating and isothermal TTA diagrams: the start of austenite formation (Ac1b) and its end (Ac3) rise with the heating rate. Cited for the form of the dependence; no value of it is used."
+
+  miokovic-2005-4140-short-time:
+    type: article
+    authors: "Miokovic, T.; Schulze, V.; Loehe, D.; Voehringer, O."
+    title: "Influence of heating rate, cooling rate and numbers of pulses on the microstructure of AISI 4140 after short-time-hardening"
+    venue: "International Journal of Materials and Product Technology 24(1-4), 207-223"
+    year: 2005
+    doi: "10.1504/IJMPT.2005.007950"
+    accessed: 2026-11-10
+    note: "AISI 4140 (42CrMo4) austenitised at heating rates up to 1e4 K/s (with Miokovic et al., J. Phys. IV France 120 (2004) 591-598: TTA diagrams for continuous heating, Avrami model). Abstract read; the diagrams were not. A secondary summary of the group's abstracts gives Ac1 about 780 C and Ac3 about 890 C for the quenched and tempered state at 3000 K/s (not verified against the paper: see db/materials/aisi4140-qt30.yaml)."

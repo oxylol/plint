@@ -252,7 +252,10 @@ sigma(z) = sigma_mech e^(-z/d_m) + sigma_th e^(-z/d_th), the surface value clipp
 depth where it falls to 10 %. Hardness: the material file's work_hardening (layer depth and increase at the
 reference edge radius) scaled by min(1, p0 / p_s) and by l_c over the reference contact; white layer above
 white_layer_degC (+ white_layer_hardness_ratio, depth >= d_th), over-tempering above overtemper_degC
-(- overtemper_softening_ratio), burn and melt/smear flags. Each patch carries the integrity of its last
+(- overtemper_softening_ratio), burn and melt/smear flags. Where thermal judged the contact's machined-surface
+history (`ThermalFeedback.contact_damage`, docs/models/thermal.md 3.4: austenite start at the heating rate over a
+minimum depth, Hollomon-Jaffe tempering parameter, solidus) those flags and the white layer's depth come from its
+verdicts instead of the threshold crossings of the peak (2026-11-10). Each patch carries the integrity of its last
 generation.
 
 ## 7. Store and bounded memory (store.py, gather.py)

@@ -27,6 +27,7 @@ from .abi import (B_ALL_WET, B_COOLANT_ON, B_EPS, B_FMIN, B_H_CONTACT, B_H_WET, 
                   L_TSURF, L_U0, L_U1, N_L, MatTable, WorkBoundary, WorkGrid, new_work_boundary,
                   new_work_grid, new_work_scratch)
 from .ledger import SolverLedger
+from . import surfacetemp as ST
 from .response import gauss_legendre
 
 
@@ -114,6 +115,8 @@ class ContactSurface:
     flash_rise_K: float
     cell_mean_K: float
     point_S_m: np.ndarray
+    k_W_mK: float = 0.0              # work properties at the background (the machined-surface history uses them)
+    alpha_m2_s: float = 0.0
 
 
 class WorkThermal:
@@ -412,7 +415,11 @@ class WorkThermal:
             feed = max(float(K.moving_rect_rise(q, l, w, src.feed_speed_m_s, k, alpha, src.window_s, x * l, 0.0, 0.0,
                                                 glx, glw)) for x in BAND_SAMPLES)
         flash = 0.0
-        if src.flash_flux_W_m2 > 0.0 and src.flash_half_length_m > 0.0 and src.flash_speed_m_s > 0.0:
+        if src.edge is not None and src.edge.active():
+            # the machined surface under the edge: the work's shares of the shear-zone, flank and edge heat as
+            # moving sources over their own contacts (surfacetemp.py, docs/models/thermal.md 3.4)
+            flash = ST.surface_peak(src.edge, k, alpha, glx, glw)
+        elif src.flash_flux_W_m2 > 0.0 and src.flash_half_length_m > 0.0 and src.flash_speed_m_s > 0.0:
             lf = src.flash_half_length_m
             flash = max(float(K.moving_rect_rise(src.flash_flux_W_m2, lf, 0.5 * src.width_m, src.flash_speed_m_s, k,
                                                  alpha, src.flash_duration_s, x * lf, 0.0, 0.0, glx, glw))
@@ -424,7 +431,8 @@ class WorkThermal:
             cell_mean = min(cell_mean, feed)
         preheat = self._preheat(src, t_bg, k, alpha, glx, glw)
         surface = t_bg + feed - cell_mean + flash
-        return ContactSurface(surface, preheat, t_bg, feed, flash, cell_mean, np.asarray(src.point_S_m, dtype=float))
+        return ContactSurface(surface, preheat, t_bg, feed, flash, cell_mean, np.asarray(src.point_S_m, dtype=float),
+                              k, alpha)
 
     def _preheat(self, src: "ContactSource", t_bg: float, k: float, alpha: float, glx, glw) -> float:
         """Temperature of the material entering the cut, at the leading edge of the contact's feed source
@@ -570,6 +578,7 @@ class ContactSource:
     band_point_S_m: np.ndarray | None = None    # its contact point where removal gave none (None: point_S_m)
     pending_s: float = 0.0         # time since the heat was last put into the finite volumes (0 at their step)
     ahead_m: float = 0.0           # distance beyond the leading edge where the preheat's background is read
+    edge: "ST.EdgeSources | None" = None   # the edge passage's sources on the new surface (None: the flash band)
 
     def energy_in_cell_J(self, cell_m: float) -> float:
         """Energy of the feed source deposited inside the contact's cell during the window: the part of

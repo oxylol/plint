@@ -167,7 +167,7 @@ skin:
 thermal_damage:
   burn_degC: null
   white_layer_degC: null
-  melt_smear_degC: {value: 477, src: muraca-1972-al7075-handbook, note: "start of melting (eutectic) per the NASA melting range; Kaiser gives 532 C. Over-ageing of T6 starts far lower after time at temperature (Fig. 9.2111 conductivity rise above ~200 C reflects it)"}
+  melt_smear_degC: {value: 477, src: muraca-1972-al7075-handbook, note: "solidus: start of melting (eutectic) per the NASA melting range 477-635 C; Kaiser gives 532 C. The melt/smear criterion compares the peak of the machined surface's temperature history at the minimum affected depth with it (docs/models/thermal.md 3.4). Over-ageing of T6 starts far lower after time at temperature (Fig. 9.2111 conductivity rise above ~200 C reflects it)"}
 
 ignition: null
 composite: null

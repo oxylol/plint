@@ -20,6 +20,7 @@ domain by the architecture, its coupling to the forces goes through ProcessCoeff
 
 from __future__ import annotations
 
+import functools
 import math
 
 import numpy as np
@@ -32,7 +33,8 @@ from . import machine as M
 from . import props
 from .abi import L_TMAX, L_TMEAN
 from .channels import MAX_AXES, MAX_SPINDLES, MAX_WORKPIECES, channels as thermal_channels
-from .damage import DamageMonitor, thresholds
+from . import surfacetemp as ST
+from .damage import DamageMonitor, hj_constant, thresholds
 from .partition import FractionTable, split_contact
 from .protocols import FixtureContact, ToolEdges, WorkGeometry
 from .schema import settings as read_settings
@@ -40,6 +42,43 @@ from .state import ThermalState
 from .toolmodel import ToolEnvironment, ToolThermal, tool_spec
 from .workpiece import ContactSource, WorkEnvironment, WorkThermal, _p as work_params
 from . import convection as cv
+
+
+@functools.lru_cache(maxsize=4096)
+def _edge_split_cached(edge_radius_m: float, h_min_m: float, rake_rad: float, incl_rad: float) -> tuple[float, float]:
+    """(friction share of the edge force's power, contact arc) of material pressed under a rounded edge
+    (contact.contact_power_parts at depth h_min). The pressure is Prandtl's (2 + pi) k and the friction stress
+    min(mu p, k): k for every mu above 1 / (2 + pi) = 0.19, so the split does not depend on k or on mu there (mu is
+    taken at that limit)."""
+    from ..mechanics import contact as MC
+    if not (edge_radius_m > 0.0 and h_min_m > 0.0):
+        return 1.0, 0.0
+    f_p, f_tau, arc = MC.contact_power_parts(h_min_m, edge_radius_m, h_min_m, rake_rad, incl_rad, 1.0, 1.0)
+    total = f_p + f_tau
+    return (float(f_tau / total) if total > 0.0 else 1.0), float(arc)
+
+
+def _edge_split(th, cut, edges, heat, arc_m: float) -> tuple[float, float]:
+    """(friction share of the contact's edge heat, depth of its pressure part's source) for one contact: the edge
+    state weighted by the work's edge heat (elements' hone radius, rake, inclination, their group's h_min), the
+    ploughed-zone depth mechanics-contact ploughing_zone_depth_ratio x arc. Without h_min (no coefficient table) the
+    edge heat is all friction at the surface (the larger surface rise)."""
+    from ..mechanics import params as MP
+    table = th.fractions.get(int(cut.tool_slot))
+    w = np.asarray(heat.work_plough_elem_J, dtype=float)
+    if edges is None or table is None or table.h_min_m.size == 0 or not w.size or float(w.sum()) <= 0.0 or \
+            np.shape(edges.elem_edge_radius_m) != w.shape:
+        return 1.0, 0.0
+    groups = np.clip(np.asarray(edges.elem_group, dtype=np.int64), 0, table.h_min_m.shape[0] - 1)
+    mean = lambda a: float(np.sum(np.asarray(a, dtype=float) * w) / w.sum())
+    r = mean(edges.elem_edge_radius_m)
+    h_min = mean(table.h_min_m[groups])
+    rake = mean(edges.elem_rake_rad)
+    incl = mean(edges.elem_incl_rad)
+    key = tuple(float(f"{x:.3g}") for x in (r, h_min, rake, incl))
+    friction, arc = _edge_split_cached(*key)
+    ratio = float(MP.number(MP.CONTACT, "ploughing_zone_depth_ratio"))
+    return friction, ratio * (arc_m if arc_m > 0.0 else arc)
 
 
 class ThermalDomain:
@@ -78,7 +117,8 @@ class ThermalDomain:
         time_s = state.clock.tick * ctx.tick_s
         structure = M.structure_model(machine, ambient, start)
         th = ThermalState(st, ambient, mat_table if mat_table is not None else props.material_table_by_id("aisi1045"),
-                          family, DamageMonitor(name, thresholds(material)), structure, time_s=time_s)
+                          family, DamageMonitor(name, thresholds(material), hj_constant(material)), structure,
+                          time_s=time_s)
         if mat_table is None:
             th.estimated.append("workpiece material: none in the project, aisi1045 used for any grid")
         th.spindles = M.spindle_models(machine, ambient, start, st.energy_tol, time_s, structure.body.T_K)
@@ -734,19 +774,58 @@ class ThermalDomain:
             feedback.work_surface_temp_K[w] = max(feedback.work_surface_temp_K.get(w, -np.inf), surface.surface_K)
             feedback.work_preheat_K[w] = max(feedback.work_preheat_K.get(w, -np.inf), surface.preheat_K)
             th.maxima[f"work.{w}.surface_K"] = max(th.maxima.get(f"work.{w}.surface_K", 0.0), surface.surface_K)
-            if th.damage.limits and surface.surface_K > th.damage.limits[0].temp_K:
-                tick = path["tick"] if path is not None else state.clock.tick
-                quantities = {"x_S_m": float(surface.point_S_m[0]), "y_S_m": float(surface.point_S_m[1]),
-                              "z_S_m": float(surface.point_S_m[2]), "background_K": surface.background_K,
-                              "feed_rise_K": surface.feed_rise_K, "flash_rise_K": surface.flash_rise_K,
-                              "work_heat_W": heat.work_J / dt,
-                              "film_boiling": float(bool(coolant.film_boiling.get(cut.contact, False)))}
-                parent = ctx.trace.record(tick * ctx.tick_s, tick, "thermal", "thermal:surface_temperature",
-                                          dict(quantities, surface_temp_K=surface.surface_K), [])
-                th.damage.check(ctx, state, th.op_index, w, path["block"] if path is not None else 0, tick,
-                                path["path"] if path is not None else 0, surface.surface_K, quantities, [parent])
+            if source.edge is not None and source.edge.active() and th.damage.limits:
+                feedback.contact_damage[cut.contact] = {}
+            if th.damage.limits and surface.surface_K > th.damage.screen():
+                verdicts, extra = self._damage_verdicts(th, source, surface, engaged[cut.contact])
+                if verdicts is not None:
+                    feedback.contact_damage[cut.contact] = {v.kind: (v.depth_m if v.damaged else 0.0)
+                                                            for v in verdicts}
+                if verdicts is None or any(v.damaged for v in verdicts):
+                    tick = path["tick"] if path is not None else state.clock.tick
+                    quantities = {"x_S_m": float(surface.point_S_m[0]), "y_S_m": float(surface.point_S_m[1]),
+                                  "z_S_m": float(surface.point_S_m[2]), "background_K": surface.background_K,
+                                  "feed_rise_K": surface.feed_rise_K, "flash_rise_K": surface.flash_rise_K,
+                                  "work_heat_W": heat.work_J / dt,
+                                  "film_boiling": float(bool(coolant.film_boiling.get(cut.contact, False))),
+                                  **extra}
+                    parent = ctx.trace.record(tick * ctx.tick_s, tick, "thermal", "thermal:surface_temperature",
+                                              dict(quantities, surface_temp_K=surface.surface_K), [])
+                    th.damage.check(ctx, state, th.op_index, w, path["block"] if path is not None else 0, tick,
+                                    path["path"] if path is not None else 0, surface.surface_K, quantities, [parent],
+                                    verdicts=verdicts)
         th.engaged_s = engaged
         th.band_power = band
+
+    def _damage_verdicts(self, th, source: ContactSource, surface, engaged_s: float):
+        """The damage criteria on the machined surface's temperature history of one contact (damage.py,
+        surfacetemp.py): (verdicts, trace quantities); (None, {}) without edge sources (legacy threshold crossing).
+        The bulk and feed-scale temperature under the flash is held for the feed source's dwell over a point
+        (2 l / v_feed, at most the engagement)."""
+        edge = source.edge
+        if edge is None or not edge.active() or not surface.alpha_m2_s > 0.0:
+            return None, {}
+        from .damage import damage_params
+        glx, glw = self._gl(th)
+        base = surface.surface_K - surface.flash_rise_K
+        depths = ST.default_depths(edge, surface.alpha_m2_s, extra=(float(damage_params()["min_depth_m"]),))
+        hist = ST.history(edge, base, surface.k_W_mK, surface.alpha_m2_s, depths, glx, glw)
+        dwell = 2.0 * source.feed_half_length_m / source.feed_speed_m_s if source.feed_speed_m_s > 0.0 else engaged_s
+        hold_s = min(dwell, max(engaged_s, source.window_s)) if engaged_s > 0.0 else dwell
+        verdicts = th.damage.verdicts(hist, base, hold_s)
+        extra = {"edge_speed_m_s": edge.speed_m_s, "shear_work_W": edge.shear_W, "shear_length_m": edge.shear_length_m,
+                 "arc_work_W": edge.arc_W, "plough_work_W": edge.plough_W, "arc_length_m": edge.arc_length_m,
+                 "plough_depth_m": edge.plough_depth_m, "land_work_W": edge.land_W, "land_length_m": edge.land_length_m,
+                 "edge_width_m": edge.width_m, "hold_s": hold_s}
+        for v in verdicts:
+            extra[f"{v.kind}_value"] = v.metric
+            extra[f"{v.kind}_limit"] = v.limit
+        return verdicts, extra
+
+    @staticmethod
+    def _gl(th):
+        from .response import gauss_legendre
+        return gauss_legendre(th.settings.jaeger_points)
 
     @staticmethod
     def _band(th, contact: int, source: ContactSource, path, work_J: float, dt: float, decay: float) -> list:
@@ -833,10 +912,48 @@ class ThermalDomain:
         flux = heat.work_J / (band * max(band_width, 1e-6) * t_cut) if band > 0.0 and t_cut > 0.0 else 0.0
         # the preheat's background is read one tool size beyond the leading edge (diameter / insert size)
         ahead = (tool.spec.insert_ic_m if turning else tool.spec.diameter_m) if tool is not None else 2.0 * half
+        edge_src = self._edge_sources(th, cut, heat, edges, vb, h_mean, phi, edge_r, vb_mean, band_width, v_cut,
+                                      t_cut, t_pass, turning, engaged=window_s)
         return ContactSource(point_S_m=point, feed_dir_S=np.asarray(direction),
                              power_W=heat.work_J / dt, feed_speed_m_s=speed, feed_half_length_m=half, width_m=width,
                              window_s=window_s, flash_flux_W_m2=flux, flash_half_length_m=0.5 * band,
-                             flash_speed_m_s=v_cut, flash_duration_s=max(t_pass, 1e-9), ahead_m=float(ahead))
+                             flash_speed_m_s=v_cut, flash_duration_s=max(t_pass, 1e-9), ahead_m=float(ahead),
+                             edge=edge_src)
+
+    @staticmethod
+    def _edge_sources(th, cut, heat, edges, vb, h_mean, phi, edge_r, vb_mean, band_width, v_cut, t_cut, t_pass,
+                      turning, engaged) -> "ST.EdgeSources | None":
+        """The work's shares of one edge passage as the machined surface's sources (surfacetemp.py, docs/models/
+        thermal.md 3.4): heat rates while in cut (the step's work shares over the time in cut), the shear-plane
+        footprint h / tan(phi), the edge arc of the flank contact the partition used (l_f - VB, edge-heat-weighted),
+        the edge heat split into its friction (surface, on the arc) and pressure (plastic work to the depth of the
+        ploughed zone under the arc) parts by contact.contact_power_parts, the wear-land friction on the land behind
+        the arc (VB, in-cut mean; without a land it is put on the arc), the engaged edge length per tooth as the
+        width, on for one passage (turning: the engagement)."""
+        shear_J = float(getattr(heat, "work_shear_J", 0.0))
+        flank_J = float(getattr(heat, "work_flank_J", 0.0))
+        plough_J = float(getattr(heat, "work_plough_J", 0.0))
+        if not (t_cut > 0.0 and v_cut > 0.0 and band_width > 0.0) or shear_J + flank_J + plough_J <= 0.0:
+            return None
+        lengths = np.asarray(heat.flank_length_m, dtype=float)
+        weights = np.asarray(heat.work_plough_elem_J, dtype=float)
+        if lengths.size and lengths.shape == weights.shape and float(weights.sum()) > 0.0:
+            l_f = float(np.sum(lengths * weights) / weights.sum())
+        else:
+            l_f = vb_mean + edge_r
+        arc = l_f - vb_mean
+        if not arc > 0.0:
+            arc = edge_r
+        friction, delta = _edge_split(th, cut, edges, heat, arc)
+        tan_phi = math.tan(phi) if phi > 0.0 else 0.0
+        l_s = h_mean / tan_phi if tan_phi > 0.0 and h_mean > 0.0 else 0.0
+        land_J = flank_J if vb_mean > 0.0 else 0.0
+        return ST.EdgeSources(speed_m_s=float(v_cut), width_m=float(band_width),
+                              duration_s=float(max(engaged, t_pass) if turning else max(t_pass, 1e-9)),
+                              shear_W=shear_J / t_cut if l_s > 0.0 else 0.0, shear_length_m=float(l_s),
+                              arc_W=(friction * plough_J + flank_J - land_J) / t_cut,
+                              plough_W=(1.0 - friction) * plough_J / t_cut, arc_length_m=float(max(arc, 0.0)),
+                              plough_depth_m=float(delta), land_W=land_J / t_cut, land_length_m=float(vb_mean))
 
     # ------------------------------------------------------------------ helpers: results
     @staticmethod

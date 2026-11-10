@@ -120,6 +120,13 @@ class ContactHeat:
     shear_angle_rad: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))
     fallback: bool = False
     flank_length_m: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))   # contact of the flank heat
+    # the work share by zone (docs/models/thermal.md 3.4): the machined surface's sources. work_J is their sum.
+    work_shear_J: float = 0.0          # shear-zone heat conducted into the work (enters ahead of the edge)
+    work_flank_J: float = 0.0          # wear-land friction heat into the work (the flank contact)
+    work_plough_J: float = 0.0         # edge / ploughing heat into the work (the edge arc below the stagnation point)
+    work_shear_elem_J: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))
+    work_flank_elem_J: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))
+    work_plough_elem_J: np.ndarray = field(default_factory=lambda: np.zeros((0, 0)))
 
 
 def _shares(energy: float, candidates: list[np.ndarray], valid: np.ndarray) -> np.ndarray:
@@ -216,6 +223,12 @@ def split_contact(cut, removal_workpiece: int, table: FractionTable | None, edge
     out.tool_rake_elem_J = qr * f_rt
     out.tool_flank_elem_J = (qf + qp) * f_ft
     out.work_elem_J = qs * (1.0 - f_sc) + (qf + qp) * (1.0 - f_ft)
+    out.work_shear_elem_J = qs * (1.0 - f_sc)
+    out.work_flank_elem_J = qf * (1.0 - f_ft)
+    out.work_plough_elem_J = qp * (1.0 - f_ft)
+    out.work_shear_J = float(np.sum(out.work_shear_elem_J))
+    out.work_flank_J = float(np.sum(out.work_flank_elem_J))
+    out.work_plough_J = float(np.sum(out.work_plough_elem_J))
     out.h_mean_m = h_mean
     out.compression = zeta
     out.shear_angle_rad = phi

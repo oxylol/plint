@@ -1,0 +1,43 @@
+# Thermal damage of the machined surface (cnctwin/thermal/damage.py, surfacetemp.py;
+# docs/models/thermal.md 3.4). Names carry the SI unit; `unit:` is the unit written.
+format: cnctwin-model-params
+version: 1
+model: thermal-damage
+description: "Criteria of white layer, over-tempering, burn colours and melt smear on the machined-surface temperature history"
+params:
+  min_depth_m:
+    value: 1.0
+    unit: um
+    range: [0.5, 5.0]
+    src: est
+    note: "depth to which a criterion must hold for damage to be reported: white layers are reported from about 1 um (featureless layers of 1-10 um under the optical microscope: griffiths-1987-white-layers; hard-turning white layers grow from there with flank wear: chou-evans-1999-white-layers). A thinner film is below what metallography of a section resolves and is removed by the next pass's run-in; assumed 1 um. Consequence: a white layer thinner than this is not reported"
+  hollomon_jaffe_C:
+    value: 20.0
+    unit: "-"
+    range: [15.0, 22.0]
+    src: hollomon-jaffe-1945-tempering
+    note: "constant of the tempering parameter P = T (C + log10 t[h]) for carbon and low-alloy steels; a material file may give its own (thermal_damage.hollomon_jaffe_C). Use over seconds to microseconds is an extrapolation from hour-scale tempering (docs/models/thermal.md 3.4 validity)"
+  tempering_hold_default_s:
+    value: 2.0
+    unit: h
+    range: [1.0, 4.0]
+    src: est
+    note: "tempering hold of a hardened and tempered steel when the material file gives none (tempering_hold_min): data sheets give the tempering temperature, a hold of 1-2 h per 25 mm section is common practice; 2 h assumed. P changes by T log10(2) = 0.3 T per factor 2"
+  burn_hold_s:
+    value: 1.0
+    unit: h
+    range: [0.25, 2.0]
+    src: est
+    note: "time at burn_degC that the temper-colour table stands for: the table is a tempering-practice table and 'tempering temperatures and times are interchangeable' (wikipedia-de-anlassen); the colour is an oxide film grown during the hold. 1 h assumed (the table gives no time). Consequence: the flash temperature for colours moves by about 3 % per factor 2 of the hold"
+  slow_heating_rate_kelvin_per_second:
+    value: 0.05
+    unit: "-"
+    range: [0.003, 1.0]
+    src: est
+    note: "K/s: heating rate the data-sheet Ac1 stands for (slow dilatometry, a few K/min); the austenite start is interpolated in log(rate) from here to the material's fast point (white_layer_fast_degC at white_layer_fast_rate_kelvin_per_second)"
+  heating_rise_fraction:
+    value: 0.1
+    unit: "-"
+    range: [0.05, 0.25]
+    src: est
+    note: "the heating rate of a history is the mean rate between 10 % and 90 % of its rise to the peak (assumed; the rate enters Ac1 through its logarithm)"

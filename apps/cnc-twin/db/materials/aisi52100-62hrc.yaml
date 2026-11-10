@@ -134,7 +134,8 @@ skin:
 thermal_damage:
   burn_degC: {value: 200, src: wikipedia-de-anlassen, note: "first temper colour; softening starts lower (see overtemper_degC)"}
   white_layer_degC: {value: 750, src: ovako-2026-100cr6, range: [745, 760], note: "Ac1 745 C (Ovako), 760 C (dew-2015-100cr6 CCT); white (rehardened) layer forms when the surface briefly exceeds Ac1 and is quenched by the bulk; rapid heating raises the effective value"}
-  overtemper_degC: {value: 180, src: thyssenkrupp-2017-100cr6, range: [150, 180], note: "tempering range 150-180 C; the upper bound is used as the threshold above which the surface overtempers (dark layer, softening)"}
+  overtemper_degC: {value: 180, src: thyssenkrupp-2017-100cr6, range: [150, 180], note: "tempering range 150-180 C; the upper bound is used as the tempering the steel received: the surface over-tempers (dark layer, softening) when its tempering parameter (Hollomon-Jaffe, docs/models/thermal.md 3.4) exceeds that of this tempering (with tempering_hold_min)"}
+  tempering_hold_min: {value: 120, src: est, range: [60, 240], note: "hold at the tempering temperature (the data sheet gives none; 1-2 h usual for bearing steels): sets the reference tempering parameter of the over-tempering criterion"}
   melt_smear_degC: null
 
 ignition: null

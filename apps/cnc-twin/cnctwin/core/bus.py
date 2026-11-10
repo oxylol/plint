@@ -450,6 +450,9 @@ class ThermalFeedback:
     fixture_temp_K: dict[int, float] = field(default_factory=dict)      # workpiece -> lumped fixture temperature
     work_unload_mean_K: dict[int, float] = field(default_factory=dict)  # workpiece -> mean temperature at the last unload
     ledger_residual_rel: dict[str, float] = field(default_factory=dict)  # per solver: relative energy residual this step
+    # contact -> {damage kind: affected depth (m), 0 where the criterion was evaluated and does not hold}, for the
+    # contacts whose machined-surface history thermal judged (docs/models/thermal.md 3.4); absent: not judged
+    contact_damage: dict[int, dict[str, float]] = field(default_factory=dict)
 
 
 # ------------------------------------------------------------------- coolant (writer: coolant)

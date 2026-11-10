@@ -51,6 +51,13 @@ class ContactState:
         return self.rake_to_tool_W + self.flank_to_tool_W
 
     flank_temp_K: float = 0.0         # mean tool temperature over the flank (edge) contact (Blok, tool side)
+    # the heat by zone and the shares that stay in the work (thermal's partition; docs/models/thermal.md 3.4)
+    shear_W: float = 0.0              # primary-zone heat P x power_frac_shear
+    edge_W: float = 0.0               # edge (ploughing) heat P x power_frac_edge
+    land_W: float = 0.0               # wear-land friction tau_mean VB b V
+    frac_shear_to_chip: float = 0.0
+    frac_flank_to_tool: float = 0.0
+    VB_m: float = 0.0
 
     @property
     def forms_chip(self) -> bool:
@@ -125,7 +132,30 @@ class ContactModel:
                             regime=int(gc.regime[0]), force_t_N=ft * width_m, force_r_N=fr * width_m, power_W=power,
                             rake_to_tool_W=rake_tool, flank_to_tool_W=flank_tool, chip_W=chip, h_min_m=self.h_min,
                             edge_radius_m=self.edge_radius, flank_contact_m=l_f,
-                            shear_angle_rad=float(gc.shear_angle_rad[0]), flank_temp_K=t_flank)
+                            shear_angle_rad=float(gc.shear_angle_rad[0]), flank_temp_K=t_flank,
+                            shear_W=(power - land) * p_shear, edge_W=(power - land) * p_edge, land_W=land,
+                            frac_shear_to_chip=float(gc.frac_shear_to_chip[0]),
+                            frac_flank_to_tool=float(gc.frac_flank_to_tool[0]), VB_m=float(VB_m))
+
+    def edge_sources(self, st: ContactState, duration_s: float = 1.0):
+        """The machined surface's sources of this contact as thermal builds them (thermal.domain._edge_sources):
+        the work's shares of the shear-zone, wear-land and edge heat, the edge heat split into friction (surface)
+        and pressure (layer to the ploughed-zone depth) by contact.contact_power_parts."""
+        from ...thermal import surfacetemp as ST
+        from ...thermal.domain import _edge_split_cached
+        from ...mechanics import params as MP
+        keep_f = 1.0 - st.frac_flank_to_tool
+        friction, arc = _edge_split_cached(*(float(f"{x:.3g}") for x in (self.edge_radius, self.h_min, self.rake,
+                                                                          self.incl)))
+        arc_f = max(st.flank_contact_m - st.VB_m, 0.0) or arc
+        delta = float(MP.number(MP.CONTACT, "ploughing_zone_depth_ratio")) * arc_f
+        tan_phi = np.tan(st.shear_angle_rad) if st.shear_angle_rad > 0.0 else 0.0
+        l_s = st.h_m / tan_phi if tan_phi > 0.0 else 0.0
+        return ST.EdgeSources(speed_m_s=st.speed_m_s, width_m=st.width_m, duration_s=float(duration_s),
+                              shear_W=st.shear_W * (1.0 - st.frac_shear_to_chip) if l_s > 0.0 else 0.0,
+                              shear_length_m=float(l_s), arc_W=friction * st.edge_W * keep_f,
+                              plough_W=(1.0 - friction) * st.edge_W * keep_f, arc_length_m=arc_f,
+                              plough_depth_m=delta, land_W=st.land_W * keep_f, land_length_m=st.VB_m)
 
 
 __all__ = ["ContactModel", "ContactState"]

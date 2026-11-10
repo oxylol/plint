@@ -290,7 +290,9 @@ class SurfaceDomain:
         er = float(np.mean(rows[ok, 10])) if ok.any() else 0.0
         temps = getattr(prev.thermal, "contact_surface_temp_K", {}) or {}
         T = float(temps.get(int(contact.contact), rt["ambient_K"]))
-        res = IN.evaluate(p_t * ratio, vb, er, v, T, rt["ambient_K"], mat, rt["integ_p"], mu)
+        judged = getattr(prev.thermal, "contact_damage", {}) or {}
+        damage = judged.get(int(contact.contact))
+        res = IN.evaluate(p_t * ratio, vb, er, v, T, rt["ambient_K"], mat, rt["integ_p"], mu, damage=damage)
         pf = sst.store.pf
         for p in patches:
             pf[p, PF["T_peak"]] = res.surface_temp_K

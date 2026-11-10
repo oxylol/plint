@@ -65,8 +65,11 @@ class Integrity:
 
 
 def evaluate(force_n_per_m: float, VB_m: float, edge_r_m: float, speed_m_s: float, surface_K: float,
-             ambient_K: float, mat, params: dict, mu: float | None = None) -> Integrity:
-    """Integrity of a layer generated under the given loads (see the module doc)."""
+             ambient_K: float, mat, params: dict, mu: float | None = None, damage: dict | None = None) -> Integrity:
+    """Integrity of a layer generated under the given loads (see the module doc). ``damage``: thermal's judgement
+    of the machined surface's temperature history ({kind: affected depth m}, docs/models/thermal.md 3.4); when given
+    it sets the white layer / over-temper / burn / melt flags (and the white layer's depth) instead of the threshold
+    crossings of ``surface_K``."""
     out = Integrity(surface_temp_K=float(surface_K))
     sigma_y = max(mat.yield_Pa, 1.0)
     k = sigma_y / math.sqrt(3.0)
@@ -97,17 +100,25 @@ def evaluate(force_n_per_m: float, VB_m: float, edge_r_m: float, speed_m_s: floa
     out.sigma_surface_Pa = min(max(out.sigma_mech_Pa + out.sigma_thermal_Pa, -sigma_y), sigma_y)
     out.affected_depth_m = max(out.depth_mech_m if out.sigma_mech_Pa != 0.0 else 0.0,
                                out.depth_thermal_m if out.sigma_thermal_Pa != 0.0 else 0.0) * math.log(10.0)
-    if mat.white_layer_K is not None and surface_K > mat.white_layer_K:
+    if damage is not None:
+        white = float(damage.get("white_layer", 0.0) or 0.0)
+        is_white = white > 0.0
+        flags = {kind: float(damage.get(kind, 0.0) or 0.0) > 0.0 for kind in ("overtemper", "burn", "melt_smear")}
+    else:
+        is_white = mat.white_layer_K is not None and surface_K > mat.white_layer_K
+        white = out.depth_thermal_m
+        flags = {"overtemper": mat.overtemper_K is not None and surface_K > mat.overtemper_K,
+                 "burn": mat.burn_K is not None and surface_K > mat.burn_K,
+                 "melt_smear": mat.melt_smear_K is not None and surface_K > mat.melt_smear_K}
+    if is_white:
         out.white_layer = True
         out.hardness_change_frac += float(params["white_layer_hardness_ratio"])
-        out.hardened_depth_m = max(out.hardened_depth_m, out.depth_thermal_m)
-    elif mat.overtemper_K is not None and surface_K > mat.overtemper_K:
+        out.hardened_depth_m = max(out.hardened_depth_m, white)
+    elif flags["overtemper"]:
         out.overtemper = True
         out.hardness_change_frac -= float(params["overtemper_softening_ratio"])
-    if mat.burn_K is not None and surface_K > mat.burn_K:
-        out.burn = True
-    if mat.melt_smear_K is not None and surface_K > mat.melt_smear_K:
-        out.melt_smear = True
+    out.burn = bool(flags["burn"])
+    out.melt_smear = bool(flags["melt_smear"])
     return out
 
 

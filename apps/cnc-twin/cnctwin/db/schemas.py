@@ -398,7 +398,14 @@ SKIN = Struct({
 
 THERMAL_DAMAGE = Struct({"burn_degC": temp(nullable=True), "white_layer_degC": temp(nullable=True),
                          "melt_smear_degC": temp(nullable=True), "overtemper_degC": temp(nullable=True),
-                         "char_degC": temp(nullable=True)}, nullable=True)
+                         "char_degC": temp(nullable=True),
+                         # docs/models/thermal.md 3.4: the tempering the steel received (hold at overtemper_degC),
+                         # its Hollomon-Jaffe constant, and the austenite start at a fast heating rate
+                         "tempering_hold_min": Qty(gt=0.0, hi=1e5, nullable=True),
+                         "hollomon_jaffe_C": Qty(gt=0.0, hi=50.0, dimensionless=True, nullable=True),
+                         "white_layer_fast_degC": temp(nullable=True),
+                         "white_layer_fast_rate_kelvin_per_second": Qty(gt=0.0, hi=1e9, dimensionless=True,
+                                                                         nullable=True)}, nullable=True)
 IGNITION = Struct({"chip_ignition_degC": temp(nullable=True), "fines_ignition_degC": temp(nullable=True),
                    "bulk_ignition_degC": temp(nullable=True), "powder_ignition_degC": temp(nullable=True),
                    "chip_hazard_degC": temp(nullable=True), "autoignition_degC": temp(nullable=True),

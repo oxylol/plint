@@ -14,7 +14,8 @@ coefficient pipeline reads (architecture 5.3).
 | `workpiece.py` | cut-cell finite volumes on the stock lattice, fixture body, two-scale contact temperature |
 | `machine.py` | spindles (network or lumped body), ballscrew axes, structure (first-order bodies, exact integration) |
 | `spindle.py` | physical spindle network: bearing friction, motor losses, shaft / bearing sets / housing / jacket, growth |
-| `damage.py` | burn / over-temper / white layer / melt thresholds -> `thermal_damage` findings |
+| `surfacetemp.py` | temperature history of the machined surface under the edge (shear-zone, edge-arc, ploughed-layer and wear-land sources of the work share) |
+| `damage.py` | white layer (austenite start at the heating rate, minimum depth), over-tempering and burn colours (Hollomon-Jaffe tempering parameter), melt / smear (solidus) on that history -> `thermal_damage` findings |
 | `kernels.py` | Numba kernels (one signature each); `reference.py` their plain-Python references |
 | `response.py` | dimensionless step-response tables of a heated rectangle (edge model) |
 | `convection.py` | free convection, rotating cylinder, pipe flow, radiation |
@@ -460,10 +461,11 @@ Backward Euler, ledger `fixture.<w>`; its table loss is given to the structure b
   energy the source deposited in the contact's cell during the window divided by the cell's heat
   capacity (path and footprint shares of the cell; capped at theta_feed); between steps the
   pending heat is not yet in T_FV and nothing is subtracted.
-* `theta_flash`: one edge passage, the per-tooth flux `work_J / (L_s b t_cut)` on a band of length
-  `L_s = VB + r_edge + h / tan(phi)` (flank contact plus shear-plane footprint; phi from the
-  coefficient tables or 30 deg), width b (engaged edge length), moving at the cutting speed for
-  the passage duration; its energy is part of theta_feed, so its cell mean is not subtracted.
+* `theta_flash`: one edge passage over the new surface, the peak of the machined-surface history of 3.4 (the work's
+  shares of the shear-zone, edge and wear-land heat as moving sources over their own contacts at the cutting speed);
+  its energy is part of theta_feed, so its cell mean is not subtracted. Contacts without the per-zone split (callers
+  that build a `ContactSource` by hand) keep the former band: the per-tooth flux `work_J / (L_s b t_cut)` on
+  `L_s = VB + r_edge + h / tan(phi)`.
 * **Preheat** (material entering the cut, what cutting's coefficients read as the work temperature; 2026-11-09):
   the temperature at the leading edge of the feed source from two scales that each converge,
 
@@ -489,9 +491,8 @@ Backward Euler, ledger `fixture.<w>`; its table loss is given to the structure b
 
 Validity: half-space approximation of the part near the contact (error grows when sqrt(alpha t)
 of the window approaches the distance to other free surfaces: < 1 mm for steel at 50 ms, 1.9 mm
-for aluminium); flat generated surface; the work-bound heat treated as one band source (the
-shear-plane heat source of Komanduri & Hou 2000 is not resolved: its effect on the surface is
-within the flash band). The two-scale peak is an estimate within about +-30 % (partition and
+for aluminium); flat generated surface; the edge passage resolved as the shear-zone, edge-arc, ploughed-layer and wear-land
+sources of 3.4 (the shear plane as its footprint on the cut plane, not the inclined source of Komanduri & Hou 2000). The two-scale peak is an estimate within about +-30 % (partition and
 contact size dominate), adequate for threshold findings with that margin.
 
 Published values (`test_jaeger.py`): high-Peclet band mean `0.754 q l/(k sqrt L)` and maximum
@@ -499,15 +500,95 @@ Published values (`test_jaeger.py`): high-Peclet band mean `0.754 q l/(k sqrt L)
 `1.1222 q a/k` (Carslaw & Jaeger) within 0.5 %; 1-D short-time limit to 1e-6; kernel against
 adaptive quadrature within 2e-4.
 
-### 3.4 Thermal damage
+### 3.4 Machined-surface temperature and thermal damage (2026-11-10)
 
-The two-scale peak at each contact is compared with the material database `thermal_damage`:
-`burn_degC` (temper/oxide colours, warning), `overtemper_degC` where given (soft layer of hardened
-steels, warning), `white_layer_degC` (Ac1 rehardening, error), `melt_smear_degC` (error). One
-`thermal_damage` finding per (operation, workpiece, kind, program block) at the tick of the step,
-position from the tick and the contact point in S in the quantities; a trace event
-`thermal:surface_temperature` is its parent; repeats are counted (`finalize`). Time at
-temperature (tempering kinetics) is not modelled: a threshold crossing is reported.
+**What was wrong before.** The damage check compared the two-scale peak `T_FV + theta_feed + theta_flash` with fixed
+thresholds, where `theta_flash` put the contact's whole work-bound heat (`work_J`: the shear zone's work share plus
+the flank and edge heat's work share) on one band `VB + r_edge + h / tan(phi)` long, with the flux computed for the
+engaged edge length but the rectangle given the circumference as its width in turning, and judged white layer,
+over-tempering and burn by a threshold crossing at the surface for any duration. The warmup's 4140 pass (132 m/min,
+f 0.25 mm) was reported at 912 / 794 degC with white layer, over-tempering and burn.
+
+**Sources** (`surfacetemp.py`). In the frame of the edge (xi along the cutting direction, xi = 0 at the edge, xi < 0
+the new surface), the work's share of each zone heat (thermal.partition: `ContactHeat.work_shear_J`, `work_flank_J`,
+`work_plough_J`, additive fields) is put where it is generated:
+
+* shear zone, `Q_s (1 - f_sc)` (Boothroyd 1963): uniform band `0 < xi < L_s = h / tan(phi)` ahead of the edge, the
+  footprint of the shear plane on the cut plane through which it enters the material below the cut line;
+* edge arc: the friction part of the hot loop's edge (ploughing) heat, `(1 - f_ft)` of it, on `-l_a < xi < 0`, l_a the
+  arc below the stagnation point (`l_f - VB` of the coefficient tables, heat-weighted);
+* ploughed layer: the pressure part (the plastic work of the material pressed under the edge), its work share,
+  uniform to the depth `delta = ploughing_zone_depth_ratio x l_a` (mechanics-contact; Hill 1950) under the arc, as
+  buried plane sources with their images (adiabatic surface; Carslaw & Jaeger 1959 ch. X), three Gauss points.
+  The friction / pressure split is `contact.contact_power_parts` at the elements' hone radius, rake, inclination and
+  their group's h_min (heat-weighted); with Prandtl's pressure `(2 + pi) k` and friction `min(mu p, k)` it does not
+  depend on k, nor on mu above `1 / (2 + pi)`, where it is evaluated (about a third friction for a honed edge);
+* wear land: the hot loop's flank (land) heat, its work share, on `-(l_a + VB) < xi < -l_a` (in-cut mean VB).
+
+Each is Jaeger's rectangle of width b (the engaged edge length per tooth) moving at V over a half space
+(`kernels.moving_rect_rise`, any Peclet number), on for one passage (turning: the engagement). Rates are the step's
+work shares over the time in cut. A material point at depth z meets them in turn and then cools into the bulk:
+`T(z, t) = T_b + theta(xi0 - V t, z)` with `T_b = T_FV + theta_feed - <theta_feed>_cell` (3.3), sampled ahead of the
+shear band, across the arc and the land (the maximum of a fast band lies at 0.95-0.98 of its length) and on a
+geometric ladder behind, at depths 0, 1 um and `sqrt(alpha t_c) x (0.1 ... 4)`. `theta_flash` (3.3) is the surface
+maximum. Properties are taken at `T_b`.
+
+**Criteria** (`damage.py`, parameters `db/models/thermal-damage.yaml`, material `thermal_damage`):
+
+| kind | criterion | data |
+|---|---|---|
+| white layer (error) | peak at the minimum depth `min_depth_m` (1 um) above the austenite start at the heating rate there (mean rate between 10 % and 90 % of the rise); the start is the data sheet's Ac1 (`white_layer_degC`, slow heating) moving in log(rate) to `white_layer_fast_degC` at `white_layer_fast_rate_kelvin_per_second` where the material gives it, held beyond (no extrapolation) | continuous-heating TTA diagrams (Orlich & Pietrzeniuk 1976; AISI 4140 to 1e4 K/s: Miokovic et al. 2004, 2005); no material carries a verified fast point yet, so the data-sheet Ac1 applies (the lower, conservative value) |
+| over-tempering (warning) | Hollomon-Jaffe parameter `P = T (C + log10 t[h])` of the history at the minimum depth, accumulated by additivity (each interval adds its time to the equivalent time of the P so far at its own temperature), the bulk and feed-scale temperature appended for the feed source's dwell `2 l / v_feed` (at most the engagement), above the parameter of the tempering the steel received (`overtemper_degC` for `tempering_hold_min`, default 2 h) | Hollomon & Jaffe 1945, C = 20 (material may override) |
+| burn colours (warning) | the same parameter at the surface above that of `burn_degC` held `burn_hold_s` (1 h): the colour table is a tempering-practice table and tempering temperature and time are interchangeable | wikipedia-de-anlassen; hold assumed |
+| melt / smear (error) | peak at the minimum depth above the solidus `melt_smear_degC` | material (7075: 477 C, NASA) |
+
+A history is evaluated when the surface peak exceeds the lowest reference temperature of the material (a tempering
+parameter cannot exceed the reference while the temperature stays below the reference temperature for less than the
+reference time). One `thermal_damage` finding per (operation, workpiece, kind, program block) as before; its
+quantities add the criterion value and limit, the affected depth (deepest sampled depth where the criterion holds),
+the heating rate and the sources (`shear_work_W`, `arc_work_W`, `plough_work_W`, `land_work_W`, lengths, width, hold);
+the trace event `thermal:surface_temperature` is its parent. `ThermalFeedback.contact_damage` (added) carries
+`{kind: affected depth}` per judged contact; surface integrity (surface/integrity.py) takes its white-layer /
+over-temper / burn / melt flags and the white layer's depth from it instead of its own threshold crossings.
+
+**Results** (tests `tests/unit/thermal/test_surface_damage.py`; the warmup run of 2026-11-10):
+
+* fast band: trailing-edge maximum within 3 % of the 1-D flash `2 q sqrt(t / pi) / e` at L = 22 and 89; the layer
+  source tends to the surface source as delta -> 0 and is 10 %+ cooler at the surface for delta = 20 um;
+* AISI 52100 62 HRC, CBN, 200 m/min, f 0.1, ap 0.2 mm, VB 0.3 mm (the worn-tool hard-turning case of Chou & Evans
+  1999, white layers growing with flank wear): white layer to 37 um, over-tempered (dark) layer, depth more than twice
+  the sharp tool's 6 um;
+* Chen et al. 2017 (52100 58-62 HRC, PCBN, 100 m/min, ap 0.1 mm on the 0.8 mm nose): measured peak machined surface
+  temperatures at the intersection of edge and new surface 500-800 C rising with feed; the chain (coefficient
+  pipeline -> partition -> sources) gives 690 / 782 / 796 C at the edge for f 0.05 / 0.1 / 0.15 mm (fresh edge), in
+  range and rising with feed. The mean over the edge contact behind the edge is 1050-1160 C, 250-400 K above the
+  measured range: the edge heat entering the work is about 35 W on a 16 um x 0.45 mm arc (5 GW/m2), where Chen's
+  inverse analysis found flank fluxes of 0.13-0.73 GW/m2;
+* the warmup's 4140 pass (132 m/min, f 0.25, ap 1.5, 40 um hone, initial VB 50 um; `twin warmup --only lathe`):
+  over-tempering is no longer reported (P 15 400 / 16 600 K at 1 um against 17 700 K for 600 C / 2 h); a white
+  layer and burn colours still are: surface peaks 1138 / 1253 C, 1110 / 1219 C at 1 um, above Ac1 to 9 / 13 um, at
+  heating rates of 1.3e7 / 7e6 K/s. The sources at the second finding: shear 146 W over 0.37 mm, edge arc 95 W
+  (friction) + 182 W (plastic work to 20 um) over 28 um, land 85 W over 67 um, 2.1 mm wide, 1.98 m/s: the arc carries
+  4.7 GW/m2, from edge forces of about 70 N/mm. The same chain through the harness (`test_warmup_od_pass_on_4140_is_not_
+  damaged`, xfail) gives 940 C at 1 um. That is an input of the cutting / mechanics domains (the edge force's flow
+  stress and its share in the work), see the open problem below.
+
+**Validity and error.** Half space, flat new surface, constant properties at `T_b` (k of steel falls 30-40 % to
+800 C: the peak is underestimated by up to that share of the rise); sources uniform over their contacts (the
+trailing-edge maximum of a non-uniform land is within the same order); the tempering parameter is extrapolated from
+hour-scale tempering to 1e-5-1e-1 s (C = 20 +- 2 moves the equivalent temperature by about 10 %); the austenite start
+is the slow-heating Ac1 where no fast point is given (white layers flagged at temperatures where rapid heating would
+still need 40-150 K more: the criterion errs toward reporting); the minimum depth is an assumed detectability limit.
+The history is as good as its sources: with the coefficient pipeline's edge heat it overestimates the edge-contact
+mean against Chen et al. by 250-400 K (above); the temperature at the edge itself agrees within 30-100 K.
+
+**Open problem.** The edge (ploughing) heat that enters the work dominates the new surface's peak in every case
+checked (warmup 4140, Chen's fresh PCBN edge): about 70 N/mm (4140, 40 um hone) and 50 N/mm (52100, 25 um) times V,
+86-95 % of it into the work, on the arc below the stagnation point. Its flow stress is the primary zone's (k_AB at the
+strain cap) while the arc and the land run several hundred kelvin hotter; a land or arc stress softened at the
+contact temperature (Johnson-Cook's thermal term) would lower the heat where it is hottest (the worn 52100 case's
+3000 C surface peak, above the melting point, shows the missing feedback). Until that is resolved the warmup's
+4140 pass is reported with a white layer (`test_warmup_od_pass_on_4140_is_not_damaged`, xfail strict).
 
 ## 4. Machine
 
@@ -682,6 +763,7 @@ thermal-damage thresholds) from the material and tool databases. Machine-file va
 | thermal-tool | Poletika exponent 1.5, default compression ratio 2.5, flank contact edge factor 1.0, fluted solid fraction 0.65 and perimeter factor 1.6, shank and taper contact conductances 5000 and 3000 W/m2K, holder proportions, insert and bar defaults (12.7 x 4.76 mm, bar 25 mm, 30 mm overhang), wedge angle limits 30-180 deg | est |
 | | steep tapers 30/40/50, HSK 40-100 (gauge diameters and lengths) | iso-7388-1-2007-steep-taper, iso-12164-1-2001-hsk |
 | thermal-work | fixture contact 3000 W/m2K, default fixture 20 kg of 1045 steel, area factor 8, surface h 8 W/m2K, default shear angle 30 deg (flash band), near-cut coolant radius 1.5 tool diameters, unload band 1 K | est |
+| thermal-damage | minimum affected depth 1 um, Hollomon-Jaffe C 20, default tempering hold 2 h, burn hold 1 h, slow heating rate of the data-sheet Ac1 0.05 K/s, heating-rate band 10-90 % | est; hollomon-jaffe-1945-tempering |
 | thermal-partition | literature fallback when cutting publishes no table: shear to chip 0.85, rake to tool 0.15, flank to tool 0.4 | est |
 | thermal-machine | Palmgren M_v = 1e-7 f0 (nu n)^(2/3) dm^3 (160e-7 f0 dm^3 below nu n 2000), lumped bearing heat ~ n^(5/3) | palmgren-1959-bearings |
 | | f0, f1 = z (P0/C0)^y per bearing type and lubrication, F_beta factors 0.9 / 0.1 / 3 | harris-kotzalas-2007-bearings |
@@ -722,7 +804,8 @@ field (2.4): `tool_field` 1, `tool_field_ring_mm` 0.002, `tool_field_growth` 1.4
   of oblique cut cells carry a voxel error up to sqrt 3 except at 45 deg; walls thinner than a cell are shells
   (valid for Bi < 0.1); the bulk, hottest-cell and contact-surface temperatures move with the cell and the
   cadence (docs/convergence.md 6) while the contact's local temperature comes from the two-scale model.
-* **Two-scale contact temperature** on a half space with a flat generated surface and one band source.
+* **Two-scale contact temperature** on a half space with a flat generated surface; the edge passage as the sources
+  of 3.4.
   Consequence: an estimate within about +-30 %; at a convex edge of the part the near field is up to twice the
   half-space value (3.3).
 * **Fixture as one lumped body**; without a wired `FixtureContact` the part rests on the faces most aligned
@@ -738,9 +821,17 @@ field (2.4): `tool_field` 1, `tool_field_ring_mm` 0.002, `tool_field_growth` 1.4
   estimated bearings and housing, +-30 % with a described spindle, the lumped body +-30 %, axis drift +-50 %
   (the screw's temperature profile is not resolved), structure drift as good as the machine file's
   sensitivity (section 4).
-* **Thermal damage is a threshold crossing** of the two-scale peak; time at temperature (tempering kinetics) is
-  not modelled. Consequence: a finding marks the first crossing with the +-30 % margin of the peak, not the
-  depth or degree of the damage.
+* **Machined-surface history from moving sources** (3.4): the work's zone shares on their own contacts over a half
+  space at constant properties, a material point's history sampled at fixed positions and depths. Consequence: the
+  history is as good as the partition and the zone heats (the edge heat dominates, 3.4 open problem); the peak is
+  low by up to the conductivity's fall with temperature (30-40 % of the rise for steel at 800 C); sampling of the
+  maximum within 2 %.
+* **Damage criteria** (3.4): white layer by the austenite start at the heating rate (the slow Ac1 where the material
+  gives no fast point) at a minimum depth of 1 um; over-tempering and burn colours by the Hollomon-Jaffe parameter
+  with additivity (C = 20, burn hold 1 h and tempering hold 2 h assumed where not given); melt at the solidus.
+  Consequence: a white layer may be reported where rapid heating would still need 40-150 K more (errs toward
+  reporting); the tempering parameter is extrapolated from hours to microseconds; damage thinner than 1 um is not
+  reported; the reported depth is the deepest sampled depth (a ladder of factor 2).
 * **Grids stay in their build frame** after a removal transfer (docs/models/loop.md 15). Consequence: after
   a flip the first operation's workpiece temperatures are misplaced by the turn.
 
@@ -770,7 +861,9 @@ Jaeger 1942 (moving sources); Carslaw & Jaeger 1959 (conduction, disc and rectan
 slab and cylinder under a constant flux, ch. III and VII; sources and images, ch. X); Hestenes & Stiefel
 1952 (conjugate gradients, J. Res. NBS 49(6) 409-436); Saad 2003 (Iterative Methods for Sparse Linear
 Systems, 2nd ed., SIAM: block preconditioners);
-Stephenson & Ali 1992 (interrupted cutting); Blok 1937 (flash temperature, partition);
+Stephenson & Ali 1992 (interrupted cutting); Blok 1937 (flash temperature, partition); Hollomon & Jaffe 1945
+(tempering parameter); Orlich & Pietrzeniuk 1976 (TTA diagrams), Miokovic et al. 2005 (AISI 4140 to 1e4 K/s);
+Griffiths 1987, Chou & Evans 1999 (white layers); Chen et al. 2017 (machined surface temperature in hard turning);
 Boothroyd 1963; Trent & Wright 2000; Astakhov 2006 (Poletika contact length); Komanduri & Hou
 2000; Douglas & Gunn 1964 (ADI, rejected); Churchill & Chu 1975a,b; Incropera et al. 2007;
 Kays & Bjorklund 1958; Dittus & Boelter 1930; White 2006 (Sutherland); Palmgren 1959,
