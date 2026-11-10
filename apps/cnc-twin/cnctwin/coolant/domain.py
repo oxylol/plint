@@ -401,8 +401,39 @@ class CoolantDomain:
                                        nozzle.programmable_step_rad)
             origin = T[:3, :3] @ np.asarray(nozzle.position_m, dtype=float) + T[:3, 3]
             direction = T[:3, :3] @ unit(aim)
+            target = self._hand_aim_target(nozzle, rows)
+            if target is not None and np.linalg.norm(target - origin) > 0.0:
+                direction = unit(target - origin)
             jets.append(jet_spec(outlet, origin, direction, liquid, nozzle.spread_rad))
         return jets
+
+    def _hand_aim_target(self, nozzle, rows):
+        """The point (M) a hand-set nozzle is aimed at, or None for a nozzle whose aim the machine file fixes.
+
+        A flex nozzle on the head (an external nozzle on a tool-chain link, neither programmable nor through-tool) is
+        set by the operator to wet the cut of the tool in the spindle, and set again for a tool of another length
+        (shop practice; programmable nozzles exist to automate exactly this: Haas P-Cool's M34 lowers the jet for
+        longer tools, haas-pcool-web-2026). The
+        machine file's ``aim`` is one such setting for one tool length: kept fixed it misses tools of another length
+        (the D10 side step of docs/convergence.md: the jets crossed the spindle axis 141 mm below the nose and passed
+        26.6 mm from the cut, reach 0, the contact unlubricated). The aim point is the tool's own zone centre
+        (``tool_zone_height_ratio`` tool radii above the tip on its axis), which the operator sees; the jet then
+        follows its trajectory and the occlusion scene as before. ``physics.coolant.aim_hand_nozzles: 0`` keeps the
+        file's aim."""
+        if not self.settings.aim_hand_nozzles or nozzle.programmable_positions > 0:
+            return None
+        if nozzle.kind in ("through_spindle", "through_tool"):
+            return None
+        chain = self.chains.chain_of(nozzle.link)
+        if chain is None or "tool_chain" not in chain:
+            return None
+        path_index = self.chains.path_of_chain(chain)
+        from .occlusion import P as occ
+        ratio = occ()["tool_zone_height_ratio"]
+        for i, slot, shape, tip, R in rows:
+            if i == path_index:
+                return np.asarray(tip, dtype=float) + np.asarray(R, dtype=float)[:, 2] * ratio * shape.radius_m
+        return None
 
     def _supply_temp_from(self, sup) -> float:
         for o in sup.outlets:

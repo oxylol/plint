@@ -999,6 +999,40 @@ support, with the CPU time they cost on the cases above (CPU in cut, the share a
    from 5 to 50 ms and every workpiece cell from 8 to 0.5 mm VB grows by less than 1 um over the 3.6 s, and the tool
    state does not depend on the cell at all (sections 5, 6); the 2 ms run lost 56 um of land in one Weibull chipping
    event at 7.90 s (wear's stochastic chipping trial, one realisation). The two-pass 11 s cut was not rerun.
+   fixed (2026-11-10, wear, thermal, coolant): (1) **the calibration's flank temperature is the run's partition**:
+   wear's Taylor response (`MechanicsResponse`) still took Blok's share of the land friction alone, softened, while
+   the run partitioned the flank friction plus the edge's ploughing work over VB + arc; it now calls the run's
+   partition (`mechanics.coefficients.flank_contact_heat`; docs/models/wear.md 3), so the Usui constants calibrated
+   from the Taylor entries and the run's flank temperatures belong to one partition, with the work's flow stress in
+   the contact at the contact's temperature (carbide in 6061, uncoated entry: B 22.8 -> 24.0 kK, flank 575-603 ->
+   586-611 K at v60..v5; this tool's AlTiN law B 22.2 kK, A 0.104 / Pa; at the side step the response gives 437-465 K
+   where it gave 416-419 K; thermal's in-cut flank contact means 553-583 K, the difference now being the rake
+   contact's temperature, thermal's 545-575 K against Oxley's 433-468 K). (2) **The 2 ms
+   run's lone chipping event**: the rows (one entry and one exit per pass) and the fatigue sum per row are
+   independent of the macro step, but the force per unit width took the tooth's engaged width from the elements in
+   cut in the macro step; a pass across a step boundary (steps shorter than the 6 ms revolution) had part of its
+   width in each step, the stress rose by the ratio and the hazard by its m-th power. The width is now the tooth's
+   elements in cut in the last revolution (docs/models/wear.md 7; test `test_chipping_does_not_depend_on_the_macro_
+   step`: the same stress and hazard at 2, 5 and 10 ms, where the former rule gave the 2 ms step 1.75 x the stress).
+   (3) **The flood coolant never reached the cut** (item 9's friction factor 1.0 at every step): the coolant ->
+   contact feedback is right, the reach was 0 because the VF-2SS file's flex nozzles keep one assumed aim, which
+   crosses the spindle axis 141 mm below the nose and passed 26.6 mm from this D10's cut ("no coolant jet is aimed at
+   the cut of T1"); hand-set nozzles are now aimed by the operator at the tool in the spindle
+   (`physics.coolant.aim_hand_nozzles`, docs/models/coolant.md 3): reach 0.09-0.11 of the aimed flow at the contact,
+   friction factor 0.93-0.95 (was 1.0). (4) A continuous element of the cutting-region field entered the cut at its
+   own in-cut temperature (thermal.md 2.2), fixed with the field's strip mean less its own rise, bounded by the body
+   temperature while the field (solved every 100 ms) has not taken up a new engagement: in the first run of the fix
+   without that bound the entry fell to 109 K at the first contact and the flank spiked to 810-950 K (VB +4.5 um in
+   two steps). **Whole loop after the fixes, with thermal's own temperatures** (five side steps, each 0.5 mm deeper,
+   x -8 to 160 mm, 40.6 s simulated, about 29 s of cutting, 9.3 s of edge contact; 1010 CPU s; every domain on):
+   VB_max 20.0 -> 24.1 um (per tooth 22.2-24.1 um), crater 0.05 um, no chipping (19 coating spalls of the worn-through
+   AlTiN), the wear domain's projected remaining life 1446 s of contact; thermal's in-cut flank contact median 527 K
+   over the cut steps (p10-p90 383-569 K). About 2.5 um of the growth comes at the pass entries (4.33 s: +0.06 um,
+   11.53 s: +1.9 um, 25.95 s: +0.5 um) where thermal's flank spikes for 20-40 ms (median 620-710 K, maxima 720-880
+   K, the entry temperature 272-283 K, below the 294 K body); between entries VB_max grows by about 50 nm per second
+   of cutting (the mean over the used elements by 2-3 nm/s). The one-pass case (the response before the flow-stress
+   softening, B 21.9 kK): VB 20.0 -> 20.43 um over 4.4 s of cutting (the entry +0.13 um). Open (thermal): the entry
+   transients and the about 100 K between thermal's rake contact and Oxley's interface temperature.
 10. **`macro_ipo` 2 exceeds bin/tsafe's 1.8 GB cap** about 26 s into the run, before the cut (both copies), where
     the 10 ms run of the same project completes under it: something held per macro step grows with their number.
     fixed (2026-11-09, motion and chips): nothing grew per step. RSS per macro step on an air-cut variant of the case

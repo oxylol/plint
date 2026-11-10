@@ -244,13 +244,41 @@ def bue_step(sw, rt: Runtime, g: Gathered, inp: A.ElemIn, seed: int) -> int:
     return broke_total
 
 
-def chip_step(sw, inp: A.ElemIn, g: Gathered, seed: int) -> np.ndarray:
+def engaged_width(db: np.ndarray, in_cut_s: np.ndarray, last_cut_s: np.ndarray | None, now_s: float | None,
+                  period_s: float) -> np.ndarray:
+    """[nt] engaged chip width of each tooth for its shock rows: the summed width of the tooth's elements in cut in
+    the last revolution (``period_s``; 0 for a non-rotating tool, whose step holds its whole engagement), the
+    elements in cut in this step included. ``last_cut_s``: run time at the end of the last step in which each
+    element was in cut (before this step), ``now_s`` this step's end.
+
+    A shock row's force is the tooth's force of the pass, carried by the edge the pass engages. Until 2026-11-10 the
+    width was that of the elements in cut in the macro step alone: with steps shorter than the revolution a pass
+    that crosses a step boundary has part of its elements in each step, the width fell to a few elements, the force
+    per unit width and the wedge stress rose by the same ratio and the Weibull hazard by its m-th power (the 2 ms
+    macro run's lone chipping event, docs/convergence.md 9 item 9). Over the last revolution the width is the
+    pass's at every step no longer than the revolution and the step's at longer ones (the same set in a steady cut)."""
+    db = np.asarray(db, dtype=float)
+    cut = np.asarray(in_cut_s, dtype=float) > 0.0
+    if last_cut_s is not None and now_s is not None and period_s > 0.0 and np.shape(last_cut_s) == db.shape:
+        cut = cut | (np.asarray(last_cut_s, dtype=float) > float(now_s) - float(period_s))
+    return np.ascontiguousarray(np.sum(np.where(cut, db, 0.0), axis=1), dtype=np.float64)
+
+
+def chip_step(sw, inp: A.ElemIn, g: Gathered, seed: int, now_s: float | None = None,
+              period_s: float = 0.0) -> np.ndarray:
+    """Chipping and coating trials of the step's shock rows (kernels.chip_trials). ``now_s``: run time at the step's
+    end, ``period_s``: the spindle revolution of a rotating tool (0 otherwise): the tooth widths of the rows are
+    :func:`engaged_width` over the last revolution, and the elements in cut in this step are booked into
+    ``sw.last_cut_s``. Without ``now_s`` the width is the step's (the former rule)."""
     rows = np.ascontiguousarray(g.shocks, dtype=np.float64)
     out = np.zeros((rows.shape[0], A.N_CO))
+    last = sw.last_cut() if now_s is not None and hasattr(sw, "last_cut") else None
+    nt = sw.geo.valid.shape[0]
+    b_eng = engaged_width(sw.geo.db, inp.in_cut_s, last, now_s, period_s)
+    if last is not None and np.shape(inp.in_cut_s) == last.shape:
+        last[np.asarray(inp.in_cut_s) > 0.0] = float(now_s)
     if rows.shape[0] == 0:
         return out
-    nt = sw.geo.valid.shape[0]
-    b_eng = np.ascontiguousarray(np.sum(np.where(inp.in_cut_s > 0.0, sw.geo.db, 0.0), axis=1), dtype=np.float64)
     if b_eng.shape[0] != nt:
         b_eng = np.zeros(nt)
     keys = np.array([int(seed), _CHIP_KEY, _COAT_KEY, int(sw.slot)], dtype=np.int64)
@@ -437,6 +465,6 @@ def finding(ctx, state, category, severity, message, tick, path, quantities, par
                        quantities=quantities, parents=parents)
 
 
-__all__ = ["Gathered", "gather", "Runtime", "kernel_input", "bue_step", "chip_step", "SectionCheck", "check_sections",
+__all__ = ["Gathered", "gather", "Runtime", "kernel_input", "bue_step", "engaged_width", "chip_step", "SectionCheck", "check_sections",
            "criteria", "summary", "publish", "finding", "CHIP_STREAM", "COAT_STREAM", "BUE_STREAM", "Category",
            "Severity"]

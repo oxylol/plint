@@ -387,7 +387,10 @@ class WearDomain:
         broke = S.bue_step(sw, rt, g, inp, ws.seed)
         out = rt.out
         K.advance_elements(sw.geo, inp, sw.law, sw.elem, out)
-        chips = S.chip_step(sw, inp, g, ws.seed)
+        omega = float(np.mean(np.abs(np.asarray(frame.spindle_omega_rad_s, dtype=float)))) \
+            if frame is not None and np.size(frame.spindle_omega_rad_s) else 0.0
+        period = 2.0 * math.pi / omega if sw.rotating and omega > 0.0 else 0.0
+        chips = S.chip_step(sw, inp, g, ws.seed, now_s=tick1 * ctx.tick_s, period_s=period)
         K.element_outputs(sw.geo, sw.law, sw.elem, out)
         rt.summary = S.summary(sw, out)
         self._notes(ctx, ws, sw, notes, tick1)

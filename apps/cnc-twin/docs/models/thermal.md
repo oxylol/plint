@@ -206,7 +206,19 @@ of one engagement that mechanics' transient cap reads is, for a rotating tool, r
 spindle speed (the step's in-cut time over its entries moved by up to a third at 5 ms steps with the passes that
 cross the step's ends). With the cutting-region field the entry values of its elements are
 the field's cycle-mean strip temperatures plus the edge kernel's deviation at the entry (`EDGE_OUT_DEVIATION`:
-`rake_entry` / `flank_entry` of the kernel).
+`rake_entry` / `flank_entry` of the kernel). A continuous element (turning, slotting) has no cycle: its strip mean
+is its in-cut temperature and holds the steady rise of its own contact heat, which mechanics' stationary-source
+partitions add again. Since 2026-11-10 its entry values are the strip means less that rise
+(`ToolThermal._continuous_own_rise`): the edge kernel's continuous branch at the element's fluxes, contact lengths
+and contact time over the width the contact has (the engaged edge of the element's tooth, the width the
+coefficient rows' stationary-source tool side takes from cutting's `engaged_edge_m`) and with nothing removed for a
+far field (the field holds all of it), and not below the body temperature at the element (the rest of the field, the
+body and every other source, all heating, is not colder): the field is solved at intervals (100 ms) and has not yet
+taken up a new engagement's heat when the analytic rise already has it, so without the bound the entry of the
+aluminium side step's first contact fell to 109 K, mechanics put far too much heat into the tool and the flank
+spiked to 810-950 K. Until then the entry of a continuous field element was its in-cut mean, the
+double count the interrupted elements had before the entry temperature was introduced (test
+`test_edge_history.py::test_a_continuous_field_element_enters_at_the_field_less_its_own_rise`).
 `edge_interval_ms` (default 20): the edge field is evaluated at the first macro step ending at or after every
 multiple of it in run time (the same instants whatever the macro step); between evaluations the last local rise is
 kept on top of the current body temperature for the engaged elements (the field is quasi-steady on the scale of a

@@ -48,6 +48,10 @@ FIELDS: dict[str, tuple[str, str, float, float, float, str]] = {
                     "multiplier on every reach fraction (uncertainty studies: coolant_reach_rel)"),
     "idle_step_s": ("idle_step_s", "number", 60.0, 0.01, 3600.0,
                     "tank integration step for the time between operations"),
+    "aim_hand_nozzles": ("aim_hand_nozzles", "count", 1, 0, 1,
+                         "1: external nozzles on a tool-chain link that are not programmable (hand-set flex nozzles) "
+                         "are aimed by the operator at the cutting zone of the chain's tool, re-aimed with every tool; "
+                         "0: the machine file's fixed aim"),
 }
 
 
@@ -74,6 +78,7 @@ class CoolantSettings:
     solver_max_iter: int = 200
     reach_scale: float = 1.0
     idle_step_s: float = 60.0
+    aim_hand_nozzles: int = 1
 
 
 def _lookup(section, name: str, file_key: str, kind: str):

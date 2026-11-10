@@ -4,7 +4,7 @@ Per case the wear law is built exactly as the wear domain builds it at init (``c
 published Usui constants of the tool material or the work material when the pairing has them, else Usui
 constants calibrated to the work material's Taylor entry with the default ``MechanicsResponse``), for
 the case's tool material, coating and edge geometry. At each tested condition the response
-(``MechanicsResponse``: Oxley + Smithey's land stresses + Blok's flank partition, the same equivalent
+(``MechanicsResponse``: Oxley + Smithey's land stresses + the run's flank partition, the same equivalent
 continuous orthogonal cut the calibration uses, h = feed, engaged depth = ap) gives sigma_n V_s and the
 flank temperature at every land width; the time to grow the land from 0 to the criterion is the
 integral of dVB / (dVB/dt) (composite Gauss-Legendre in VB, split at the land's kinks: the coating wearing
@@ -19,8 +19,9 @@ wear response (noted per value). A chilled spray of the same water-soluble fluid
 LN6889 at 0 degC atomised by 6-8 bar air) is that fluid at its own temperature, its liquid supply not limiting
 (the case states no flow; an assumption listed per value).
 
-The flank temperatures the response feeds the wear law (Blok's partition of the land's friction heat, section 3
-of docs/models/wear.md) are reported per value at the fresh edge, half the criterion and the criterion, with the
+The flank temperatures the response feeds the wear law (the flank contact's mean temperature from the partition the
+run's coefficient rows give thermal: the friction on the wear land and the edge arc and the edge's plastic work over
+that contact, Blok's equal temperatures; section 3 of docs/models/wear.md) are reported per value at the fresh edge, half the criterion and the criterion, with the
 flank rise that halves the life (ln 2 T^2 / B). The life is edge contact time, which is the cutting time of these
 continuous turning cuts. A VB(t) point past the model's runaway reports the top of the integration (a lower bound).
 """
@@ -342,7 +343,8 @@ def taylor_life(case, db) -> HarnessOutput:
                                       f"vc {speed * 60:.0f} m/min{', VN = notch factor x VB' if factor != 1.0 else ''}"))
         curves.append(preds_c)
     out = HarnessOutput(preds, curves, ["cnctwin.wear.build.wear_law", "cnctwin.wear.calibration.MechanicsResponse "
-                                        "(cnctwin.mechanics Oxley + Smithey land + Blok partition)",
+                                        "(cnctwin.mechanics Oxley + Smithey land + the run's flank "
+                                        "partition, mechanics.coefficients.flank_contact_heat)",
                                         "life integral with cnctwin.wear.kernels.usui_rate"],
                         base.settings_dict(), col.assumptions, col.provenance, col.notes, base.ambient)
     if len(laws) > 1:

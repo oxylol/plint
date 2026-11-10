@@ -182,3 +182,24 @@ def test_channels_and_macro_values():
     assert {c.name for c in dom.channels()} == set(NAMES)
     assert values["coolant.reach_fraction"].shape == (4,)
     assert values["coolant.heat_in_W"] > 0.0
+
+
+def test_hand_set_nozzles_are_aimed_at_the_tool_in_the_spindle():
+    """A flex nozzle on the head (not programmable, not through-tool) is set by the operator to wet the cut of the tool
+    in the spindle: aimed at the tool's zone it reaches the cut and lubricates the contact, whatever the machine file's
+    aim (one setting for one tool length). With ``aim_hand_nozzles: 0`` the file's aim stays: a nozzle set for another
+    tool length misses the cut, the contact gets no reach and dry friction (the D10 side step of docs/convergence.md:
+    friction factor 1.0 at every step, the jet 26.6 mm from the cut)."""
+    off = CF.machine_raw(nozzles=[{"id": "n1", "kind": "flood", "attached_to": "head", "position_mm": [70, 0, -60],
+                                   "aim": [-70, 0, -250], "diameter_mm": 4, "pump": "flood"}])
+    physics = {"every_n_macro": 1, "latency_macro": 1, "rays_per_jet": 32}
+    dom, ctx, state = CF.make_domain(CF.project(machine=off, physics=dict(physics, aim_hand_nozzles=0)))
+    fixed = CF.run(dom, ctx, state, 3)[-1].coolant
+    assert fixed.on and fixed.reach_fraction[0] == 0.0 and fixed.friction_factor[0] == 1.0
+    dom, ctx, state = CF.make_domain(CF.project(machine=off, physics=physics))
+    aimed = CF.run(dom, ctx, state, 3)[-1].coolant
+    assert aimed.reach_fraction[0] > 0.5 and aimed.friction_factor[0] < 1.0
+    # the jet leaves the nozzle toward the tool's zone centre (one tool radius above the tip on its axis)
+    jet = [j for j in aimed.jets if j.nozzle_id == "n1"][0]
+    jet0 = [j for j in fixed.jets if j.nozzle_id == "n1"][0]
+    assert np.linalg.norm(np.asarray(jet.direction_M) - np.asarray(jet0.direction_M)) > 0.1

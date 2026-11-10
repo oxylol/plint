@@ -407,6 +407,9 @@ The per-case causes are in docs/validation-report.md ("Failures and likely cause
   from 474 to 351 degC under the rotary jets at 24 m/min; the contact means move by 1-6 K (the 3 um flank contact
   against a 150 um rake contact): case median 12.7 -> 12.5 %, worst 4.57 -> 4.47 tolerances, 17 of 27 values inside
   (unchanged); the quantity's median, p90 and classes unchanged (25.8 %, 52.9 %, 10/18).
+  *2026-11-10*: the coolant_reach discussion no longer says that the flank heat cancels the jet's cooling (it did
+  before the partition fix above); it names the dry mechanics, the jet's push on the chip and the short flank contact
+  of a sharp edge. Results unchanged (median 25.8 %, p90 52.9 %, 0 of 2 cases).
 * **Tool temperature** (fourth round): the harness reads thermal's 3-D cutting-region field (the rake and flank heat
   deposited as contact patches, `ToolThermal.deposit_contact`; points by `ToolThermal.temperature_at`) instead of the
   1-D insert body plus the analytic local field cut at r_far. On the same code the old composition gave median 63 %,
@@ -458,3 +461,18 @@ The per-case causes are in docs/validation-report.md ("Failures and likely cause
   this harness feeds the law are listed per value (fresh land, half the criterion, the criterion, and the flank rise
   that halves the life: 11-13 K for the IN718 ceramics, 46-59 K for Ti6Al4V, 51-86 K for the PCBN cases); they are
   the response's Blok values, the value the run's thermal model is being brought to.
+  *Addressed 2026-11-10 (the response's flank partition; wear.md 3)*: the response computed the flank temperature
+  with Blok's share of the land friction alone while the run partitions the friction on the land and the edge arc
+  plus the edge's plastic work over VB + arc (mechanics.md 6); it now calls the run's partition
+  (`mechanics.coefficients.flank_contact_heat`) with the work's flow stress in the contact at the contact's
+  temperature, and every Taylor calibration and anchoring is redone on it. taylor_life through `twin validate
+  --quantity taylor_life` on this tree (before -> after): independent median 95.8 -> 87.7 %, p90 383 -> 117 %, values
+  alone 240 -> 71 %, worst 45.9 -> 46.6 tolerances (Xue SX9), 1 of 5 cases within the budget (unchanged);
+  calibration-dependent 2/2 within (median 9.6 -> 15.6 %: Bouchelaghem 16.6 -> 24.4 %, Aouici 6.5 -> 7.2 %). Per
+  case: Zhao (anchored Ti6Al4V set) 227 -> 48 %, 0 -> 8 of 16 values within; Xue WG300 92 -> 87 % (0 -> 2 of 37), Xue
+  SX9 97.5 -> 97.4 % (0 of 25: the estimated Taylor entry, n 0.3 against about 0.66 measured, unchanged: no sourced
+  value independent of the case was readable, db notes); the cermet cases unchanged (abrasive floor). Without the
+  softening (an intermediate state) the hard-turning contacts ran to the solidus at every speed and Bouchelaghem's
+  calibration degenerated (B 94.6 kK, 9 then 4 of 12 within). The same tree's tool_temperature, chip_temperature and
+  coolant_reach results are unchanged (their harnesses use the contact model and thermal's field, not the wear
+  response; the continuous-element entry fix of thermal.md 2.2 is in the edge kernel path, which they do not use).

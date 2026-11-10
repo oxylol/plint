@@ -63,6 +63,14 @@ class SlotWear:
     flags: dict = field(default_factory=dict)
     per_part: list = field(default_factory=list)
     part_start: dict = field(default_factory=dict)
+    # [nt, ne] run time (s) at the end of the last step in which the element was in cut (-inf: not yet): the tooth's
+    # engaged chip width of a shock row is taken over the last revolution, not the step (step.engaged_width)
+    last_cut_s: np.ndarray | None = None
+
+    def last_cut(self) -> np.ndarray:
+        if self.last_cut_s is None or self.last_cut_s.shape != self.finishes.shape:
+            self.last_cut_s = np.full(self.finishes.shape, -np.inf)
+        return self.last_cut_s
 
     def to_arrays(self, prefix: str) -> tuple[dict, dict]:
         arrays = {}
@@ -74,6 +82,7 @@ class SlotWear:
         for name in FALLBACK_ARRAYS:
             arrays[f"{prefix}fb.{name}"] = np.array(self.fallback[name])
         arrays[f"{prefix}finishes"] = np.array(self.finishes)
+        arrays[f"{prefix}last_cut_s"] = np.array(self.last_cut())
         meta = {"slot": self.slot, "number": self.number, "tool_id": self.tool_id, "holder_id": self.holder_id,
                 "tool_class": self.tool_class, "rotating": self.rotating, "section_names": list(self.section_names),
                 "props": _json_safe(self.props), "info": _json_safe(self.info), "counters": _json_safe(self.counters),
@@ -106,7 +115,10 @@ class SlotWear:
                    fallback={name: np.ascontiguousarray(arrays[f"{prefix}fb.{name}"]).copy() for name in FALLBACK_ARRAYS},
                    finishes=np.ascontiguousarray(arrays[f"{prefix}finishes"]).copy(), props=dict(meta["props"]),
                    info=dict(meta["info"]), counters=dict(meta["counters"]), life=life, flags=dict(meta["flags"]),
-                   per_part=list(meta["per_part"]), part_start=dict(meta["part_start"]))
+                   per_part=list(meta["per_part"]), part_start=dict(meta["part_start"]),
+                   # a checkpoint written before 2026-11-10 has no last-cut times: no element cut before the resume
+                   last_cut_s=(np.ascontiguousarray(arrays[f"{prefix}last_cut_s"]).copy()
+                               if f"{prefix}last_cut_s" in arrays else None))
 
 
 @dataclass

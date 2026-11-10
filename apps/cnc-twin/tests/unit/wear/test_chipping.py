@@ -197,3 +197,57 @@ def test_reference_strength_of_the_trs_test_piece():
     assert v == pytest.approx(6.5e-3 * 5.25e-3 * 14.5e-3 / (2 * 16 ** 2))
     # the median of a volume twice the reference is lower by 2^(-1/m)
     assert FR.strength_Pa(2 * v, sigma0, v, m) / FR.strength_Pa(v, sigma0, v, m) == pytest.approx(2 ** (-1 / m))
+
+
+def test_chipping_does_not_depend_on_the_macro_step():
+    """A shock row's force per unit width uses the tooth's engaged width over the last revolution, not over the macro
+    step: a pass that crosses a step boundary (steps shorter than a revolution) has only part of its elements in cut
+    in each step, and the step's width had raised the wedge stress by the ratio and the hazard by its m-th power (the
+    2 ms macro run's lone chipping event, docs/convergence.md 9 item 9). The same pass at steps of 2, 5 and 10 ms (a
+    2 ms boundary inside the pass) gives the same widths, stresses and hazards."""
+    from types import SimpleNamespace
+    from cnctwin.wear import step as S
+
+    nt, ne = 1, 12
+    rev = 6e-3                                   # 10 000 rpm
+    pass_elems = np.arange(2, 9)                 # the elements one pass engages, in order, over 0.43 ms
+    entry_t = 1.00185                            # crosses the 2 ms step boundary at 1.002 s
+    exit_t = entry_t + 0.43e-3
+
+    def run(step_s, revolution=True):
+        sw = SimpleNamespace(geo=_geo(ne), elem=A.new_state(nt, ne), chip=_law(), slot=0, last_cut_s=None)
+
+        def last():
+            if sw.last_cut_s is None:
+                sw.last_cut_s = np.full((nt, ne), -np.inf)
+            return sw.last_cut_s
+        sw.last_cut = last
+        rows_out = []
+        t = 0.98
+        while t < entry_t + 2 * rev:
+            t_end = t + step_s
+            in_cut = np.zeros((nt, ne))
+            for i, k in enumerate(pass_elems):     # element k enters at entry + i/7 of the pass
+                tk = entry_t + (exit_t - entry_t) * i / len(pass_elems)
+                if t < tk <= t_end:
+                    in_cut[0, k] = 1e-4
+            rows = []
+            if t < exit_t <= t_end:                 # the exit row comes in the step that holds the exit
+                rows.append([exit_t / 1e-6, 0, pass_elems[-1], 4e-5, 0.0, 120.0, 0.0, 2.0])   # kind 2: exit (cutting.abi.SHOCK_EXIT)
+            g = SimpleNamespace(shocks=np.array(rows, float).reshape(-1, A.SHOCK_WIDTH) if rows else
+                                np.zeros((0, A.SHOCK_WIDTH)))
+            out = S.chip_step(sw, SimpleNamespace(in_cut_s=in_cut), g, 5,
+                              now_s=t_end if revolution else None, period_s=rev)
+            rows_out.extend(out.tolist())
+            t = t_end
+        return np.array(rows_out)
+
+    results = [run(dt) for dt in (2e-3, 5e-3, 10e-3)]
+    assert all(r.shape[0] == 1 for r in results)
+    sig = [r[0, A.CO_SIGMA_PA] for r in results]
+    haz = [r[0, A.CO_HAZARD] for r in results]
+    assert sig[0] > 0.0 and np.allclose(sig, sig[0], rtol=1e-12) and np.allclose(haz, haz[0], rtol=1e-12)
+    # the former rule (the width of the step's elements alone) gave the 2 ms step part of the pass's width
+    old2, old10 = run(2e-3, False), run(10e-3, False)
+    assert old10[0, A.CO_SIGMA_PA] == pytest.approx(sig[0], rel=1e-12)
+    assert old2[0, A.CO_SIGMA_PA] > 1.5 * sig[0] and old2[0, A.CO_HAZARD] > 100.0 * haz[0]

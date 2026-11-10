@@ -29,15 +29,17 @@ revolution then reaches the VB limit after T_Taylor phi_ref / phi_e of cutting t
 itself at the reference engagement.
 
 :class:`MechanicsResponse` is the default response: cnctwin.mechanics (Oxley with Johnson-Cook, or the
-data-only model) for the chip and the rake contact, Smithey's flank-land stresses and Blok's partition
-(Jaeger band source on the work, stationary source on the tool) for the flank temperature, with the land's
-friction stress softened at the land's own temperature (fixed point, :meth:`MechanicsResponse.flank_temperature`).
+data-only model) for the chip and the rake contact, Smithey's flank-land stresses and, for the flank temperature,
+the run's flank partition (mechanics.coefficients.flank_contact_heat: the land and edge-arc friction and the edge's
+plastic work over the wear land plus the edge arc, Blok's equal temperatures with the Jaeger band source on the work
+and the stationary source on the tool), with the work's flow stress in the contact softened at the contact's own
+temperature (fixed point, :meth:`MechanicsResponse._softened_contact`).
 
 :func:`anchor_published` scales the A of a published Usui set (B kept) so that this response reaches the
 pairing's Taylor life at the 15-min speed: a published set belongs to the temperatures its source fitted it
 with. The
 integration may wire a response that runs cutting's coefficient pipeline and thermal's edge model at
-the Taylor conditions instead (then the calibration and the run use exactly the same models).
+the Taylor conditions instead (then the calibration and the run would use the same rake temperature too).
 """
 
 from __future__ import annotations
@@ -221,27 +223,162 @@ class MechanicsResponse:
                 hi = mid
         return 0.5 * (lo + hi)
 
-    def response(self, slot: int, cond: Condition) -> Response:
+    def interface_max_K(self) -> float | None:
+        """The highest tool-work interface temperature the run's wear domain lets the law see: the work material's
+        solidus (else liquidus, else its flow law's melting temperature; WearDomain._interface_max_K); None without
+        one."""
+        for value in (getattr(self.work, "solidus_K", None), getattr(self.work, "liquidus_K", None)):
+            if value is not None and float(value) > 0.0:
+                return float(value)
+        jc = getattr(self.work, "jc", None)
+        if jc is not None:
+            from ..mechanics.abi import MAT_TMELT_K
+            if float(jc[MAT_TMELT_K]) > 0.0:
+                return float(jc[MAT_TMELT_K])
+        return None
+
+    def _edge_flow_stress(self, cond: Condition, k_chip: float) -> tuple[float, float]:
+        """(shear flow stress of the material at the edge, h_min) as the run's coefficient rows take it
+        (mechanics.coefficients._reference_shear_flow_stress): the primary-zone state at t1 = h_min with the strain
+        limited to chip material's saturation strain; the data-only model's k (``k_chip``) as it is."""
+        from ..mechanics import contact as C
+        from ..mechanics import oxley
+        from ..mechanics.abi import OX_EPS_AB
+        from ..mechanics.coefficients import default_t1_grid, edge_shear_flow_stress
+
+        h_min = C.min_chip_thickness(self.work, cond.edge_radius_m)
+        if self.work.jc is None:
+            return k_chip, h_min
+        key = ("edge", cond.speed_m_s, cond.rake_rad, cond.edge_radius_m, cond.coated)
+        if key not in self._chip:
+            t1 = max(h_min, float(default_t1_grid()[0]))
+            res = oxley.solve(self.work, t1, cond.speed_m_s, cond.rake_rad, work_temp_K=self.ambient_K,
+                              tool=self._side(cond), tool_temp_K=None, friction_factor=self.friction_factor)
+            k = res.shear_flow_stress_Pa if res.status != "invalid" else 0.0
+            self._chip[key] = edge_shear_flow_stress(self.work, k, float(res.vector[OX_EPS_AB])) if k > 0.0 \
+                else k_chip
+        return self._chip[key], h_min
+
+    def flank_contact(self, cond: Condition) -> dict:
+        """The flank contact of the condition as the run's partition has it (mechanics.coefficients.flank_contact_heat,
+        the share the coefficient rows give thermal): the wear land plus the edge arc below the stagnation point,
+        the friction on both and the edge's plastic work with the buried-layer factor, Blok's equal mean
+        temperatures between the work surface entering the contact (the shear plane's T_AB) and the tool flank
+        (``flank_base_weight`` of the way from T_AB to the rake interface: the rake-heated edge). Returns the
+        details of flank_contact_heat (at the shear plane's flow stress) plus ``T_flank_K`` (the contact's mean
+        temperature, the tool face's at the partition, what thermal's flank contact mean is in the run, with the
+        work's flow stress in the contact at that temperature), ``friction_softening`` (that flow stress over the
+        shear plane's, s of :meth:`_softened_contact`), ``share``, ``length_m``, ``sigma_mean_Pa``, ``T_base_K``,
+        ``T_work_surface_K``."""
         from ..mechanics import contact as C
         from ..mechanics import heat as H
+        from ..mechanics.coefficients import flank_contact_heat
         from ..mechanics.oxley import effective_mu
 
-        k_ref, t_ws, t_rake, sigma_rake, v_chip = self._chip_state(cond)
+        k_chip, t_ws, t_rake, _, _ = self._chip_state(cond)
+        k_edge, h_min = self._edge_flow_stress(cond, k_chip)
         side = self._side(cond)
         mu = effective_mu(self.work, side, self.friction_factor)
-        sigma0, tau0 = C.flank_reference_stresses(k_ref, mu)
-        if cond.VB_m > 0.0:
-            s_mean, t_mean = C.flank_stresses(cond.VB_m, sigma0, tau0)
+        sigma0, tau0 = C.flank_reference_stresses(k_edge, mu)
+        s_land, tau_land = C.flank_stresses(max(cond.VB_m, 0.0), sigma0, tau0)
+        indentation = C.uses_indentation(0, cond.rake_rad)
+        depth = cond.h_m if (indentation or cond.h_m < h_min) else h_min
+        t_base = t_ws + get(FLANK)["flank_base_weight"] * (t_rake - t_ws)
+        width = max(cond.depth_m, 1e-9)
+        share, length, info = flank_contact_heat(self.work, side, cond.edge_radius_m, cond.rake_rad, cond.incl_rad,
+                                                 depth, h_min, k_edge, mu, cond.VB_m, tau_land, cond.speed_m_s,
+                                                 width, t_ws, t_base if side is not None else None, None,
+                                                 indentation=indentation)
+        if side is None and length > 0.0 and cond.speed_m_s > 0.0:
+            # adiabatic tool: all the contact's heat goes into the work
+            m_w = H.work_side_resistance(length, width, cond.speed_m_s, self.work, t_ws)
+            q_d = info["q_deformation_W_m2"]
+            g = 1.0
+            if q_d > 0.0 and info["arc_m"] > 0.0:
+                from ..mechanics import params as MP
+                peclet = cond.speed_m_s * 0.5 * length / (2.0 * self.work.diffusivity(t_ws))
+                g = H.layer_source_factor(peclet, MP.number(MP.CONTACT, "ploughing_zone_depth_ratio")
+                                          * info["arc_m"] / length)
+            t_flank = t_ws + m_w * (info["q_friction_W_m2"] + g * q_d)
+        elif math.isfinite(info["T_contact_K"]):
+            t_flank, soft = self._softened_contact(info, t_ws, t_base)
+            info["friction_softening"] = soft
         else:
-            s_mean, t_mean = sigma0, tau0
-        land = max(cond.VB_m, cond.edge_radius_m, 1e-7)
+            t_flank = t_base
+        info.update(T_flank_K=float(t_flank), share=float(share), length_m=float(length),
+                    sigma_mean_Pa=float(s_land), sigma0_Pa=float(sigma0), tau_land_Pa=float(tau_land),
+                    T_base_K=float(t_base), T_work_surface_K=float(t_ws), k_edge_Pa=float(k_edge))
+        return info
+
+    def _softened_contact(self, info: dict, t_ws: float, t_base: float) -> tuple[float, float]:
+        """(contact temperature, flow-stress factor s) with the work's flow stress in the flank contact taken at the
+        contact's own temperature: s = min(1, theta(T) / theta(T_AB)), theta the work's flow-stress thermal factor.
+        The friction stress of the land and the arc is the work's shear flow stress at the interface, and the edge's
+        pressure, (2 + pi) k, is carried by the ploughed zone just under it, whose heat (g near 1) reaches the
+        interface during the passage: where the contact runs hotter than the shear plane both work against softer
+        material, so both heats scale with s (the run's partition takes k at the shear plane's state). Blok's balance
+        of the run's partition is linear in the fluxes, T = T_t + M_t H_t with H_t = clamp((T_ws - T_t + M_w s (q_f +
+        g q_d)) / (s (q_f + q_d)), 0, 1) s (q_f + q_d), so the fixed point is found on that closed form (bisection,
+        fixed steps); T stays below the melting temperature of the flow-stress law, where s = 0. Without it the
+        contact of hard work materials at their Taylor speeds runs to the work's solidus at every speed (D2 at 60 HRC
+        with PCBN, IN718 with ceramics: 1250-1260 degC flat), which leaves the calibration no speed dependence of the
+        temperature to fit; with the friction alone softened the PCBN in D2 still sat at the solidus."""
+        q_f, q_d = info["q_friction_W_m2"], info["q_deformation_W_m2"]
+        m_w, m_t, g = info["M_w"], info["M_t"], info["g"]
+        theta_ref = self._thermal_factor(t_ws)
+
+        def contact(temp_K: float) -> tuple[float, float]:
+            ratio = self._thermal_factor(temp_K) / theta_ref if theta_ref > 0.0 else 1.0
+            soft = min(1.0, max(ratio, 0.0))
+            total = soft * (q_f + q_d)
+            if not total > 0.0 or not (m_w + m_t) > 0.0:
+                return t_base, soft
+            h_t = (t_ws - t_base + m_w * soft * (q_f + g * q_d)) / (m_w + m_t)
+            frac = min(max(h_t / total, 0.0), 1.0)
+            return t_base + m_t * frac * total, soft
+
+        lo = t_base
+        hi, soft = contact(lo)
+        if not hi > lo:
+            return hi, soft
+        for _ in range(FLANK_BISECTIONS):
+            mid = 0.5 * (lo + hi)
+            if contact(mid)[0] > mid:
+                lo = mid
+            else:
+                hi = mid
+        return contact(0.5 * (lo + hi))[0], contact(0.5 * (lo + hi))[1]
+
+    def response(self, slot: int, cond: Condition) -> Response:
+        """sigma_n V_s on the land and the rake, and the flank and rake contact temperatures of the condition.
+
+        The flank temperature is the flank contact's mean temperature from the run's partition (:meth:`flank_contact`;
+        since 2026-11-10): the friction on the land and the edge arc and the edge's plastic work, over the contact
+        thermal deposits the tool's share on, as the coefficient rows give it to thermal in the run, so that the
+        Usui constants calibrated with this response and the run's flank temperatures belong to one partition; the
+        work's flow stress in the contact is taken at the contact's temperature (:meth:`_softened_contact`). Until
+        then the flank was Blok's share of the land friction alone over max(VB, r_e), softened at the land's
+        temperature (:meth:`flank_temperature`, kept for comparison): 416-419 K at the aluminium side step of
+        docs/convergence.md where this gives 437-465 K. Both temperatures are bounded by the work's solidus, as the
+        wear domain bounds thermal's (:meth:`interface_max_K`)."""
+        from ..mechanics import contact as C
+        from ..mechanics.oxley import effective_mu
+
+        k_chip, t_ws, t_rake, sigma_rake, v_chip = self._chip_state(cond)
+        k_edge, _ = self._edge_flow_stress(cond, k_chip)
+        side = self._side(cond)
+        mu = effective_mu(self.work, side, self.friction_factor)
+        sigma0, tau0 = C.flank_reference_stresses(k_edge, mu)
+        if cond.VB_m > 0.0:
+            s_mean, _ = C.flank_stresses(cond.VB_m, sigma0, tau0)
+        else:
+            s_mean = sigma0
         speed = cond.speed_m_s
-        width = max(cond.depth_m, land)
-        weight = get(FLANK)["flank_base_weight"]
-        t_base = t_ws + weight * (t_rake - t_ws)
-        m_w = H.work_side_resistance(land, width, speed, self.work, t_ws)
-        m_t = None if side is None else H.tool_side_resistance(land, t_base, side, width)
-        t_flank = self.flank_temperature(t_ws, t_base, t_ws, t_mean, speed, m_w, m_t)
+        t_flank = self.flank_contact(cond)["T_flank_K"]
+        cap = self.interface_max_K()
+        if cap is not None:
+            t_flank = min(t_flank, cap)
+            t_rake = min(t_rake, cap)
         return Response(flank_sv_Pa_m_s=s_mean * speed, flank_temp_K=np.array([t_flank]),
                         rake_sv_Pa_m_s=sigma_rake * v_chip, rake_temp_K=np.array([t_rake]), weights=np.array([1.0]),
                         flank_sigma_Pa=s_mean, rake_sigma_Pa=sigma_rake,

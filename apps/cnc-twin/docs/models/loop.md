@@ -480,6 +480,10 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
 
 ## 15. Open problems
 
+* **Cutting's energy identity with a lubricated contact** (2026-11-10): run.json's `cutting_identity_rel` on the
+  tiny project is 5.7e-11 dry and 1.2e-9 once the hand-set flood nozzle reaches the contact and the friction
+  factor varies from step to step (0.93-0.95). The cause is not isolated; it is three orders below the run's
+  energy contract (1e-6), and tests/integration/test_loop_run.py bounds it at 1e-8.
 * **Cost.** The tiny project costs 7.4 CPU s per simulated second (section 13): the hot loop 6 s per second in
   contact, the slow domains 20 s per second in contact (199 ms per macro step) and 4 s per second out of it
   (41 ms per step; dynamics 25 ms of it on average): a real program of minutes takes hours. The regression tests
@@ -838,6 +842,24 @@ test_loop_batch.py (three complete parts of the tiny project) pass on the frozen
   (cutting's recut impulse, the process-damping relay, above); `cnctwin/wear` integrates them without a bound of
   its own (a VB larger than the insert, a wear rate from one step's peak). The tiny batch's tool, which comes in
   used (720 s, VB 131 um), wears by nm per part, as it should.
+* **Wear, thermal and coolant of the flooded aluminium side step (fixed 2026-11-10; docs/convergence.md 9 item 9).**
+  (1) wear's Taylor response computed the flank temperature with Blok's share of the land friction alone while the
+  run partitions the flank friction and the edge's ploughing work over VB + arc: it now calls the run's partition
+  (`mechanics.coefficients.flank_contact_heat`, docs/models/wear.md 3) and the database laws are recalibrated on it;
+  (2) chipping took a shock row's force per unit width over the tooth's elements in cut in the macro step, so a pass
+  split by a step boundary chipped more at short steps: the width is now over the last revolution (wear.md 7); (3)
+  continuous elements of the cutting-region field published their own in-cut temperature as their entry temperature,
+  a double count in mechanics' partitions: now the field less their own steady rise, bounded by the body temperature
+  (thermal.md 2.2); (4) the flood never reached the cut (friction factor 1.0 at every step): the coolant -> contact
+  feedback was right, the VF-2SS's flex nozzles kept an aim that missed the D10 by 26.6 mm; hand-set nozzles are now
+  aimed at the tool in the spindle (`physics.coolant.aim_hand_nozzles`, coolant.md 3): reach 0.09-0.11, friction
+  factor 0.93-0.95. Five side steps in the whole loop (about 29 s of cutting) with thermal's own temperatures: VB_max
+  20.0 -> 24.1 um, no chipping, about 2.5 um of it at the pass entries where thermal's flank spikes for 20-40 ms
+  (open, thermal), about 50 nm per second of cutting between them. For cutting's owner: with the contact lubricated
+  (friction factors below 1 that change from step to step) cutting's own energy identity on the tiny mill project
+  closes to 1.22e-9 of its terms (tests/integration/test_loop_run.py `test_every_ledger_passes` asks < 1e-9) where
+  it closed to 5.7e-11 unlubricated (`aim_hand_nozzles: 0`); the terms are cutting's (hot loop heat by zone against
+  shaft and feed work), not the coolant's.
 * **A zero-point plate does not clamp** (holding's devices and the workholding database, open): examples/
   die-h13-ballnose holds its insert on a Lang Quick-Point 52 grid plate, "pulled down by two d16 clamping studs"
   (the entry's label). db/workholding/lang-quick-point-52.yaml types the plate `fixture_plate` with its size, grid

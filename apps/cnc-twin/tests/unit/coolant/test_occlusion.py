@@ -75,7 +75,9 @@ def test_holder_blocking_a_nozzle():
 
 
 def test_misaimed_nozzle_names_the_nearest_jet():
-    dom, ctx, state = domain_with(nozzles([70, 0, -60], [1, 0, 0]))
+    # a nozzle with a fixed aim (aim_hand_nozzles 0: a hand-set nozzle is otherwise aimed at the tool)
+    dom, ctx, state = domain_with(nozzles([70, 0, -60], [1, 0, 0]),
+                                  {"every_n_macro": 1, "latency_macro": 1, "rays_per_jet": 32, "aim_hand_nozzles": 0})
     rec = CF.run(dom, ctx, state, 3)[-1].coolant
     assert rec.reach_fraction[0] == 0.0 and rec.aimed_flow_kg_s[0] == 0.0
     found = [f for f in state.findings if f.category == Category.COOLANT_SHADOWING]

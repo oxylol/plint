@@ -476,6 +476,8 @@ class ToolThermal:
         self.field_next_s = 0.0            # run time of the next solve (field_interval_s > 0)
         self.field_pend = None             # element heat accumulated since the last solve (_field_pending)
         self.field_means = None            # [3, nE] rake, flank, edge temperatures of the field's elements
+        self.own = None                    # (rake, flank) steady rise of a continuous field element's own contact
+        #                                    heat, removed from its entry temperature (_continuous_own_rise)
         self.dev = None                    # last periodic deviation of the field's elements (rake, peak, flank,
         #                                    rake and flank at the entry into the cut)
 
@@ -991,6 +993,8 @@ class ToolThermal:
                 dev = new_edge_output(shape, xi.size)
                 K.edge_temperatures(inp, edge_response(), glx, glw, dev)
                 inp.mode[:] = modes
+                self.own = self._continuous_own_rise(inp, carried & (modes == EDGE_CONTINUOUS), glx, glw, weights,
+                                                     xi.size)
                 out.amp[:] = np.where(carried, dev.amp, out.amp)
                 self.dev = (dev.rake_q, dev.peak_q, dev.flank_q, dev.rake_entry, dev.flank_entry)
             base = t_body[:, :, None]
@@ -1016,6 +1020,13 @@ class ToolThermal:
             out.peak_q[:] = np.where(carried, edge_m[:, :, None] + dev_p, out.peak_q)
             out.rake_entry[:] = np.where(carried[:, :, 0], rake_m + ent_r, out.rake_entry)
             out.flank_entry[:] = np.where(carried[:, :, 0], flank_m + ent_f, out.flank_entry)
+            if self.own is not None and self.own[0].shape == t_body.shape:
+                # a continuous element enters at the field less the steady rise of its own contact heat; the rest of
+                # the field (the body and every other source, all heating) is not below the body temperature: the
+                # bound holds while the field, solved at intervals, has not yet taken up a new engagement's heat
+                own_r, own_f = (np.where(cutting[:, :, 0] & carried[:, :, 0], o, 0.0) for o in self.own)
+                out.rake_entry[:] = np.where(own_r > 0.0, np.maximum(t_body, rake_m - own_r), out.rake_entry)
+                out.flank_entry[:] = np.where(own_f > 0.0, np.maximum(t_body, flank_m - own_f), out.flank_entry)
         valid = np.asarray(edges.elem_valid) != 0
         strain = strain_from(self.mat_tool, t_body, self.temp_ref_K)
         result.edge_temp_q_K = out.rake_q
@@ -1033,6 +1044,33 @@ class ToolThermal:
             if not self.layout.turning else np.zeros(shape)
         self.last_heat = result
         return result
+
+    @staticmethod
+    def _continuous_own_rise(inp, cont: np.ndarray, glx, glw, weights, nq: int) -> tuple[np.ndarray, np.ndarray]:
+        """[nt, ne] steady rise of the rake and flank contact means that a continuous element's own contact heat makes
+        (0 elsewhere): the stationary source of the engagement on the quarter-space edge (the edge kernel's
+        continuous branch at the element's fluxes, contact lengths and contact time) over the width the contact has,
+        the engaged edge of the element's tooth (the width the coefficient pipeline's stationary-source tool side
+        takes, cutting's engaged_edge_m), with nothing removed for a far field (the cutting-region field holds all
+        of it).
+
+        The field's strip mean of a continuous element is its cycle mean, which holds this rise: published as its
+        entry temperature (the background of mechanics' stationary-source partitions, which add the rise of the
+        engagement's own heat themselves) it was counted twice. The entry is the strip mean less this rise, as an
+        interrupted element's entry is what is left when its heating ends (docs/models/thermal.md 2.2)."""
+        shape = inp.mode.shape
+        if not cont.any():
+            return np.zeros(shape), np.zeros(shape)
+        width = np.where(cont, 2.0 * inp.b, 0.0).sum(axis=1, keepdims=True)
+        own = inp._replace(mode=np.where(cont, EDGE_CONTINUOUS, EDGE_NONE).astype(np.int8),
+                           b=np.where(cont, 0.5 * np.broadcast_to(width, shape), inp.b),
+                           r_far=np.full(shape, 1e6), scal=np.array([inp.scal[0], inp.scal[1],
+                                                                     float(EDGE_OUT_TEMPERATURE)]))
+        res = new_edge_output(shape, nq)
+        K.edge_temperatures(own, edge_response(), glx, glw, res)
+        rake = np.einsum("ijq,q->ij", res.rake_q, weights) - inp.T_body
+        flank = np.einsum("ijq,q->ij", res.flank_q, weights) - inp.T_body
+        return np.where(cont, rake, 0.0), np.where(cont, flank, 0.0)
 
     def _field_means(self, field: ToolField, edges: EdgeModel, heat, vb_m, t_body: np.ndarray):
         """[nt, ne] rake-contact mean, flank-contact mean and edge-line temperature of the field's
@@ -1190,6 +1228,9 @@ class ToolThermal:
         if self.dev is not None:
             for i, name in enumerate(DEV_NAMES):
                 arrays[f"{prefix}dev.{name}"] = self.dev[i].copy()
+        if self.own is not None:
+            arrays[f"{prefix}own.rake"] = self.own[0].copy()
+            arrays[f"{prefix}own.flank"] = self.own[1].copy()
         if self.field_pend is not None:
             arrays[f"{prefix}field_pend"] = self.field_pend.copy()
         if self.field_means is not None:
@@ -1246,6 +1287,8 @@ class ToolThermal:
         obj.edge_next_s = float(meta.get("edge_next_s", 0.0))
         obj.rise = tuple(np.array(arrays[f"{prefix}rise.{name}"]) for name in RISE_NAMES) \
             if meta["has_rise"] and all(f"{prefix}rise.{name}" in arrays for name in RISE_NAMES) else None
+        obj.own = (np.array(arrays[f"{prefix}own.rake"]), np.array(arrays[f"{prefix}own.flank"])) \
+            if f"{prefix}own.rake" in arrays and f"{prefix}own.flank" in arrays else None
         obj.dev = tuple(np.array(arrays[f"{prefix}dev.{name}"]) for name in DEV_NAMES) \
             if meta.get("has_dev") and all(f"{prefix}dev.{name}" in arrays for name in DEV_NAMES) else None
         obj.field = ToolField.from_arrays(arrays, meta["field"], f"{prefix}field.") if meta.get("field") else None

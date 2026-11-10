@@ -119,7 +119,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     VB_limit_mm: 0.3
     life_basis: cutting_time
     src: est
-    note: "C set so that T = 10 min at vc = 250 m/min (SiAlON roughing, round inserts, general knowledge); notch wear at the depth-of-cut line often ends life before VB"
+    note: "C set so that T = 10 min at vc = 250 m/min (SiAlON roughing, round inserts, general knowledge); notch wear at the depth-of-cut line often ends life before VB. 2026-11-10: no measured SiAlON lives to a flank criterion independent of the validation cases were readable (lima-2012-inconel-tool-wear tested KY1540 at 150 and 300 m/min, but its PDF is encrypted and its ceramic lives were not read; Osmond et al. 2021, Wear 486-487 204128, compares SiAlON and whisker grades at 250 and 300 m/min, PDF not readable here). The estimate stays; the validation case of Xue et al. 2022 (NTK SX9 at f 0.15 mm) measures about 1.5 min at 200 m/min and n about 0.66, which this entry cannot take (it is the case)"
     T_ref_min: 1
   - tool_class: ceramic
     coating: uncoated
@@ -133,7 +133,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     VB_limit_mm: 0.3
     life_basis: cutting_time
     src: est
-    note: "C set so that T = 10 min at vc = 200 m/min (general knowledge)"
+    note: "C set so that T = 10 min at vc = 200 m/min (general knowledge). 2026-11-10 comparison (not adopted): Kennametal's US 7309475 B2 (2007), Tables 5-6, gives the Al2O3-SiCw grade sold as Greenleaf WG-300 / Sandvik CC670, RNG43T0320 round inserts, flood coolant, 295 m/min, f 0.152 mm/rev, depth-of-cut notch 1.52 mm, 4.8-6.0 min to flank/nose wear 1.0 mm or DOC notch 2.0 mm; this entry gives 2.7 min to VB 0.3 mm there. One speed, a 1 mm criterion, round inserts and coolant: no Taylor constants follow from it"
     T_ref_min: 1
 tool_life_usui: null
 

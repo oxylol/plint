@@ -320,6 +320,12 @@ F_te V, flank tau_f VB V. Partitions:
   deposited it over VB + 1.0 r_e: on AISI 1045 with a 20 um hone at 2 m/s and h 80 um the tool side of the flank
   contact came out 1152 degC with the body at 20 degC and fell to 554 degC as the body warmed to 524 degC (the share
   of the friction flux grows as the tool cools); now 621 -> 707 degC.
+  The partition of one edge state is `coefficients.flank_contact_heat` (2026-11-10: factored out of the rows'
+  `_flank_partition`, identical results; it also returns the fluxes, M_w, M_t, g and the contact temperature T_t +
+  M_t H_t); wear's default Taylor response (`wear.calibration.MechanicsResponse.flank_contact`) calls it, so that the
+  Usui constants calibrated to Taylor data and the run's flank temperatures belong to the same partition. The edge
+  flow stress k of the edge, ploughing and land stresses is `coefficients.edge_shear_flow_stress` (the primary-zone
+  state at t1 = h_min with the strain capped at `edge_strain_cap`), shared by the rows and the response.
 
 `GroupCoefficients.power_frac_shear/rake/edge` split the tangential force power of a row into the
 three zones (they sum to 1): edge share F_te/F_t (calibrated), the rest split by F_S V_s/(F_C V).

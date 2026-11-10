@@ -123,6 +123,15 @@ their own velocity head (`K = 1` at the exit).
   head frame needs them rewritten relative to the spindle nose (or a MountPoses wiring that says so).
 * **Programmable nozzles**: aim at position k = home aim rotated by `(k - 1) step` toward -z of the
   mount frame, about the axis perpendicular to the aim and z (M34 lowers the jet for longer tools).
+* **Hand-set nozzles** (2026-11-10; `physics.coolant.aim_hand_nozzles`, default 1): an external nozzle on a
+  tool-chain link that is neither programmable nor through-tool (the flex nozzles of a VMC head) is aimed by the
+  operator at the tool in the spindle: its jet leaves toward the tool's zone centre (`tool_zone_height_ratio` tool
+  radii above the tip on its axis), re-aimed with every tool, and then follows its trajectory and the occlusion
+  scene as any jet. The machine file's `aim` is one such setting for one tool length; kept fixed (setting 0) it
+  missed the D10 of docs/convergence.md by 26.6 mm (the VF-2SS's assumed n1/n2 aim crosses the spindle axis 141 mm
+  below the nose): reach 0 at the contact and dry friction at every step of the flooded side step. Aimed at the tool,
+  0.09-0.11 of the aimed flow reaches that contact and the friction
+  factor is 0.93-0.95 (test `test_hand_set_nozzles_are_aimed_at_the_tool_in_the_spindle`).
 * **Through-tool jets** leave `CoolantHoles.exit_pos_T_m` along `exit_dir_T` rotating with the
   spindle; the bus carries them at the end-of-step pose, occlusion samples `through_tool_angles` equally
   spaced spindle angles per revolution, each with `rays_through_tool` rays and 1/n of the flow.
@@ -447,7 +456,7 @@ other orientations use `wetted_axes_S` (columns e_u, e_v, e_w in S).
 `trace_length_mm` (1500), `aim_length_mm` (1000), `max_points` (128), `profile_dz_mm` (0.25),
 `profile_nodes` (2048), `brick_voxel_mm` (2), `brick_sub` (4), `wetted_cell_mm` (2),
 `supply_temp_step_dK` (0.5), `solver_rel_tol` (1e-12), `solver_max_iter` (200), `reach_scale` (1),
-`idle_step_s` (60).
+`idle_step_s` (60), `aim_hand_nozzles` (1: hand-set nozzles aimed at the tool in the spindle, section 3).
 
 ## 11. Kernels and determinism
 

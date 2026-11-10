@@ -105,7 +105,7 @@ tool_life:                         # extended Taylor: vc * T^n * (f/feed_ref)^a 
     VB_limit_mm: 0.3
     life_basis: cutting_time
     src: est
-    note: "no published Taylor fit read. C set so that T = 15 min at vc = 800 m/min (uncoated K10 carbide in wrought aluminium, general knowledge, not a cited source); n, a, b assumed typical of carbide. In practice BUE and edge chipping limit life more than flank wear"
+    note: "no published Taylor fit read. C set so that T = 15 min at vc = 800 m/min (uncoated K10 carbide in wrought aluminium, general knowledge, not a cited source); n, a, b assumed typical of carbide. In practice BUE and edge chipping limit life more than flank wear. 2026-11-10: searched again for measured lives of carbide in 6061-T6 independent of the validation cases (open-access turning and milling studies, Sandvik Coromant grade pages for H10/N-grades); none gives lives to a flank-wear criterion at more than one speed (the Sandvik pages give no cutting data for a stated tool life), so the estimate stays"
     T_ref_min: 1
   - tool_class: pcd
     coating: uncoated

@@ -285,3 +285,47 @@ def test_the_calibrated_activation_follows_the_responses_temperature_slope():
         found[slope] = cal.B_K
     # a response three times flatter in speed gives about three times the activation temperature
     assert found[40.0] > 2.5 * found[120.0]
+
+
+def test_the_default_response_takes_the_runs_flank_partition():
+    """The flank temperature the Taylor calibration sees is the one the run's partition gives (2026-11-10): the flank
+    contact (wear land plus the edge arc below the stagnation point), its heat (friction on both, the edge's plastic
+    work with the buried-layer factor) and Blok's share as the coefficient rows give thermal (group_coefficients'
+    frac_flank_to_tool and flank_contact_m at the same edge state), and the temperature of that contact, T_t + M_t H_t.
+    Until then the response took Blok's share of the land friction alone over max(VB, r_e), softened at the land's
+    temperature: a different temperature scale from the run's, which a law calibrated on it turned into runaway wear
+    (docs/convergence.md 9 item 9)."""
+    from cnctwin.mechanics import coefficients as CF
+    from cnctwin.mechanics.materials import ToolSide, WorkMaterial
+
+    work = WorkMaterial.from_db(SIMap(fx.MATERIAL))
+    side = ToolSide.from_db(SIMap(fx.TOOL), SIMap(fx.TOOL_MATERIAL), None)
+    response = CAL.MechanicsResponse(work, side, 293.15)
+    v, h, ap = 3.0, 1.5e-4, 2e-3
+    pmap = CF.build_process_map(work, side, 0.1, speed_grid_m_s=np.array([v]),
+                                t1_grid_m=np.geomspace(5e-7, 1e-3, 40), tool_temp_grid_K=np.array([293.15]))
+    for vb in (0.0, 4e-5, 2e-4):
+        cond = CAL.Condition(v, h, ap, vb, 0.1, 0.12, 2e-5)
+        fc = response.flank_contact(cond)
+        state = CF.SlowState(v, tool_temp_K=293.15, tool_flank_temp_K=fc["T_base_K"], VB_m=vb, contact_width_m=ap)
+        gc = CF.group_coefficients(work, side, CF.EdgeGroup(0.1, 0.0, 0.12, 2e-5), state, np.array([h]), pmap)
+        assert fc["length_m"] == pytest.approx(float(gc.flank_contact_m[0]), rel=1e-9)
+        # the same partition: the edge flow stress and T_AB from a direct Oxley solve here, from the map's
+        # interpolation in the rows
+        assert fc["share"] == pytest.approx(float(gc.frac_flank_to_tool[0]), rel=0.05, abs=2e-3)
+        assert fc["sigma_mean_Pa"] == pytest.approx(float(gc.flank_sigma_mean_Pa), rel=0.03) or vb == 0.0
+        # the response's flank temperature is the contact's, T_t + M_t H_t, with the work's flow stress in the contact
+        # at the contact's temperature (both heats x s = theta(T) / theta(T_AB) <= 1)
+        temp = response.response(0, cond).flank_temp_K[0]
+        soft = fc["friction_softening"]
+        assert 0.0 < soft <= 1.0 and temp <= fc["T_base_K"] + fc["M_t"] * fc["H_t"] + 1e-9
+        total = soft * (fc["q_friction_W_m2"] + fc["q_deformation_W_m2"])
+        h_t = min(max((fc["T_work_surface_K"] - fc["T_base_K"] + fc["M_w"] * soft * (
+            fc["q_friction_W_m2"] + fc["g"] * fc["q_deformation_W_m2"])) / (fc["M_w"] + fc["M_t"]), 0.0), total)
+        assert temp == pytest.approx(fc["T_base_K"] + fc["M_t"] * h_t, rel=1e-9)
+        assert soft == pytest.approx(min(1.0, response._thermal_factor(temp)
+                                         / response._thermal_factor(fc["T_work_surface_K"])), rel=1e-6, abs=1e-9)
+    # bounded by the work's melting as the wear domain bounds thermal's temperatures
+    cap = response.interface_max_K()
+    assert cap is not None and response.response(0, CAL.Condition(60.0, h, ap, 3e-4, 0.1, 0.12, 2e-5)).flank_temp_K[0] \
+        <= cap

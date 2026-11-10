@@ -138,3 +138,54 @@ def test_field_solves_fall_on_the_same_run_times():
         if out["source_J"] > 0.0:
             solved.append(round(tool.time_s, 9))
     assert solved == [0.1, 0.2, 0.3, 0.4]
+
+
+def test_a_continuous_field_element_enters_at_the_field_less_its_own_rise():
+    """A continuous element's field strip mean is its in-cut temperature: it holds the steady rise of the element's
+    own contact heat, which mechanics' stationary-source partitions add again. Its entry temperature (what cutting's
+    rows read as the tool's background) is the strip mean less that rise (2026-11-10; before, the strip mean itself:
+    the entry rose with the in-cut temperature, a double count). Without the field the entry is the body
+    temperature; with it the entry stays near that background while the in-cut rise is many times larger."""
+    def continuous(field: bool, dt=0.01, until=0.4):
+        tool = make_tool()
+        edges = F.edge_model()
+        nt, ne = edges.elem_z_m.shape
+        st = ThermalSettings()
+        if field:
+            assert tool.enable_field(st, edges, every_n_steps=st.tool_field_every_n_macro,
+                                     interval_s=st.tool_field_interval_s)
+        env = ToolEnvironment(in_spindle=True, omega_rad_s=OMEGA, T_air_K=293.15, T_end_K=293.15)
+        out = None
+        for i in range(int(round(until / dt))):
+            in_cut = np.zeros((nt, ne))
+            in_cut[:, :3] = dt                      # in the cut the whole time: one entry, then continuous
+            entries = np.zeros((nt, ne))
+            if i == 0:
+                entries[:, :3] = 1.0
+            heat = ContactHeat(0, 0, 0)
+            heat.tool_rake_elem_J = 0.25 * RAKE_W * in_cut
+            heat.tool_flank_elem_J = 0.25 * FLANK_W * in_cut
+            heat.h_mean_m = np.where(in_cut > 0.0, 4e-5, 0.0)
+            heat.compression = np.full((nt, ne), 2.5)
+            heat.flank_length_m = np.full((nt, ne), 6.4e-6)
+            if field:
+                tool.deposit_elements(edges, heat, None)
+            else:
+                tool.deposit(edges.elem_z_m, heat.tool_rake_elem_J + heat.tool_flank_elem_J)
+            tool.step(dt, env, 1e-9)
+            out = tool.edge_heat(edges, heat, in_cut, entries, None, dt, st, omega_rad_s=OMEGA)
+        return out
+
+    for field in (False, True):
+        out = continuous(field)
+        body = out.body_temp_at_elem_K[:, :3]
+        in_cut_rise = out.rake_contact_mean_K[:, :3] - body
+        entry_rise = out.rake_temp_mean_K[:, :3] - body
+        flank_in = np.einsum("ijq,q->ij", out.flank_temp_q_K[:, :3, :], out.q_weights) - body
+        flank_entry = out.flank_entry_K[:, :3] - body
+        assert np.all(in_cut_rise > 5.0) and np.all(flank_in > 5.0)
+        if not field:
+            assert np.allclose(entry_rise, 0.0, atol=1e-9) and np.allclose(flank_entry, 0.0, atol=1e-9)
+        else:
+            assert np.all(np.abs(entry_rise) < 0.25 * in_cut_rise)
+            assert np.all(np.abs(flank_entry) < 0.25 * flank_in)

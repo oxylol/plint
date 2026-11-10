@@ -182,30 +182,41 @@ law). Documented bound: the calibration error below (6 %).
 
 **Default response** (`MechanicsResponse`, cnctwin.mechanics): Oxley with Johnson-Cook at t1 = h - h_min
 (adiabatic tool) for the shear-plane temperature T_AB, the rake-contact temperature T_int, sigma_N and
-the chip speed; Smithey's land stresses from sigma_0 = (2 + pi) k_AB, tau_0 = min(mu sigma_0, k_AB);
-flank temperature by Blok's partition with Jaeger's band source on the work and the stationary source on
-the tool flank (cnctwin.mechanics.heat), the tool-side base temperature T_AB + 0.5 (T_int - T_AB)
-(`flank_base_weight`, est). The land's friction stress is the work's flow stress, so where the land runs
-hotter than the shear plane it is softened at the land's own temperature, tau(T) = tau_0 x min(1, theta(T) /
-theta(T_AB)) with theta the flow stress's thermal factor (Johnson-Cook 1 - T*^m; the data-only model's linear
-fall), and the flank temperature is the fixed point of Blok's balance with that flux (`flank_temperature`,
-bisection), as Oxley fixes T_int with the chip's softened flow stress: it stays below the melting temperature of
-the law (without it the response gave 1830-2200 degC flanks for IN718 with ceramics at 150-250 m/min, above the
-alloy's melting range, and 1475-1600 degC for Ti6Al4V at 150 m/min; now 900-1060 and 960-990 degC). The pressure
-sigma_0 is not softened (the hot layer, sqrt(kappa VB / V) of about ten microns, is thin against the plastic
-zone under the land). `Condition.coated` False models the uncoated substrate.
-Blok's partition of the land's friction heat is taken in [0, 1]: a small land, whose friction raises the work's
-surface less than the tool's base exceeds it, sits at the tool's base temperature (the rake-heated edge; 646-894
-degC for Ti6Al4V with carbide at 50-200 m/min, f 0.1-0.2 mm, for every land below VB*). Solving Blok's equality
-T = T_ws + (1 - f) q M_w = T_b + f q M_t with f unbounded (the tool face also giving heat to the colder work) was
-examined on 2026-11-09 and not adopted: the work surface entering the land is at T_AB here, without the heat of
-the edge's ploughing (the tertiary zone, section 17), so the unbounded flank of a small land follows T_AB, which
-hardly changes with speed (1045 / P30: 651-666 K between v60 and v5 against 897-949 K); every Taylor calibration
-then gave B of 50-100 kK (published Usui sets: 5-30 kK) with check residuals of 6-34 %, carbide in 6061 a law
-(B 43 kK, A 4e20 / Pa) that thermal's flank temperature of 2026-11-09 drove to kilometres of wear in the first
-step of the convergence case, while the anchored Ti6Al4V set needed A x 0.95 instead of x 0.15 and Zhao's VB 0.3
-mm lives came within -36..+16 % (+161..+234 % with the clamp; docs/validation.md 10). The unbounded partition
-belongs with a work surface that carries the ploughing heat.
+the chip speed; Smithey's land stresses from sigma_0 = (2 + pi) k, tau_0 = min(mu sigma_0, k) with k the edge's
+shear flow stress as the run's coefficient rows take it (`mechanics.coefficients.edge_shear_flow_stress`: the
+primary-zone state at t1 = h_min, strain capped at chip saturation); **the flank temperature from the run's
+partition** (`flank_contact`, `mechanics.coefficients.flank_contact_heat`; since 2026-11-10): the flank contact is
+the wear land plus the edge arc below the stagnation point, its heat the friction on the land (tau_land VB V) and
+on the arc (the friction part of the edge force) and the edge's plastic work (its pressure part) with the moving
+buried-layer factor g, split by Blok's equal mean temperatures between the work surface entering the contact (T_AB)
+and the tool flank, and the flank temperature is that contact's mean temperature T_t + M_t H_t: the share,
+contact and heat the coefficient rows give thermal in the run (docs/models/mechanics.md 6, thermal.md 1). The work's
+flow stress in that contact is taken at the contact's own temperature (`_softened_contact`): both heats scale with
+s = min(1, theta(T) / theta(T_AB)), theta the flow stress's thermal factor (Johnson-Cook 1 - T*^m; the data-only
+model's linear fall), and T is the fixed point of Blok's balance (closed form in s, bisection with fixed steps), as
+Oxley fixes T_int with the chip's softened flow stress. The friction stress is the work's shear flow stress at the
+interface, and the edge pressure is carried by the ploughed zone just under it, whose heat reaches the interface
+during the passage (g near 1); unsoftened, the contact of hard work at its Taylor speeds runs to the work's solidus
+at every speed (D2 at 60 HRC with PCBN, IN718 with ceramics: 1250-1260 degC flat; with the friction alone softened
+the PCBN in D2 still did), which leaves the calibration no temperature-speed slope (Bouchelaghem's calibration-
+dependent case went from 12 to 4 of 12 lives within the budget, B to the end of its bracket). The tool flank T_t is
+T_AB + 0.5 (T_int - T_AB) (`flank_base_weight`, est: the rake-heated edge, which thermal's flank contact also
+carries). Like the wear domain's input, the response's temperatures are bounded by the work's solidus
+(`interface_max_K`). `Condition.coated` False models the uncoated substrate. Test
+`test_the_default_response_takes_the_runs_flank_partition` (the same contact length to 1e-9 and share within 5 %
+as group_coefficients at the same edge state; the temperature is the softened fixed point of T_t + M_t H_t).
+
+Until 2026-11-10 the response took Blok's share of the **land friction alone** over max(VB, r_e) (softened at the
+land's temperature: `flank_temperature`, kept for comparison), clamped to [0, 1], while the run's mechanics had
+moved to the whole flank contact (friction plus ploughing work over VB + arc) on 2026-11-09. On the aluminium side
+step of docs/convergence.md (D10 AlTiN carbide, 314 m/min, h 11-17 um, VB 20 um, flood) the old response gave
+416-419 K at the flank, the new one 437-465 K; thermal's in-cut flank contact means in the run are 553-583 K
+(median 570 K) and its rake contact 545-575 K against Oxley's 433-468 K: what remains between the calibration's and
+the run's flank temperatures (about 100 K) is the rake contact's temperature (thermal's field over the rake contact
+against Oxley's interface temperature at the same cut), which the flank carries in both. Remaining difference of
+models: the run books the flank heat with k at the shear plane's state (cutting's flank and edge forces are not
+softened at the contact temperature); where the run's flank approaches the work's melting the run heats more than
+this response (for cutting's owner).
 
 **Published sets and the pairing's Taylor life** (`calibration.anchor_published`). A published Usui set holds for
 the temperatures its source fitted it with (often an FE model): a systematic difference dT of another temperature
@@ -228,25 +239,26 @@ model's temperatures come from Merchant geometry on a material that forms no chi
 not match the run's thermal temperatures; these wear by the abrasive term with the database
 abrasiveness factor, and their Taylor data are reported as a check (`law.flank.taylor_check`), not fitted.
 
-**Measured** (database materials of 2026-11-09, default response, carbide uncoated entries, rake 0.1,
-clearance 0.12, hone 20 um, abrasive floor included, composite life integral): residual at both calibration speeds
-< 1e-9; at the 15-min check speed:
+**Measured** (database materials of 2026-11-10, default response with the run's flank partition, carbide uncoated
+entries, published Usui sets set aside, rake 0.1, clearance 0.12, hone 20 um, abrasive floor included, composite
+life integral, through `build.wear_law`): residual at both calibration speeds < 1e-9; at the 15-min check speed:
 
-| material / tool material | B (K) | flank T at v1..v2 (K) | check residual |
-|---|---|---|---|
-| aisi1045 / carbide-p30 | 32 849 | 897-949 | -0.6 % |
-| aisi4140-qt30 / carbide-p30 | 32 800 | 908-962 | -0.1 % |
-| aisi304 / carbide-k20-6co | 34 092 | 890-939 | +0.2 % |
-| ti6al4v / carbide-k20-6co | 32 292 | 1062-1205 | -10.0 % |
-| inconel718 / carbide-k20-6co | 67 474 | 1030-1065 | +0.4 % |
-| al6061-t6 / carbide-k20-6co | 22 835 | 575-603 | +1.2 % |
-| grey-cast-iron-gjl250 / carbide-k20-6co | 22 276 | 715-763 | -0.2 % |
-| aisi1045 / hss-m2 | 50 385 | 774-802 | +3.1 % |
+| material / tool material | B (K) | flank T at v1..v2 (K) | check residual | before (2026-11-09): B, flank T, residual |
+|---|---|---|---|---|
+| aisi1045 / carbide-p30 | 34 134 | 897-949 | +0.2 % | 32 849, 897-949, -0.6 % |
+| aisi4140-qt30 / carbide-p30 | 34 197 | 908-962 | +0.8 % | 32 800, 908-962, -0.1 % |
+| aisi304 / carbide-k20-6co | 35 442 | 890-939 | +0.8 % | 34 092, 890-939, +0.2 % |
+| ti6al4v / carbide-k20-6co | 38 517 | 1120-1227 | -3.8 % | 32 292, 1062-1205, -10.0 % |
+| inconel718 / carbide-k20-6co | 63 458 | 1121-1162 | +2.7 % | 67 474, 1030-1065, +0.4 % |
+| al6061-t6 / carbide-k20-6co | 23 988 | 586-611 | +1.9 % | 22 835, 575-603, +1.2 % |
+| grey-cast-iron-gjl250 / carbide-k20-6co | 22 986 | 715-763 | +0.5 % | 22 276, 715-763, -0.2 % |
+| aisi1045 / hss-m2 | 51 439 | 774-802 | +4.0 % | 50 385, 774-802, +3.1 % |
 
-(Recomputed 2026-11-09 with the composite life integral; the uncoated entries of the tool class picked by step 1;
-the flank temperatures are those at the first Gauss node, a land of a few microns. Before, with one Gauss rule over
-the land: B 30 664, 28 217, 30 087, 27 755, 66 079, 19 217, 21 913, 50 227 K, check residuals +0.5 to +5.3 %;
-the Ti6Al4V check moved to -10 % because the integral now resolves the land's kink at VB*.)
+(The flank temperatures are those at the first Gauss node, a land of a few microns, where the base T_t dominates:
+the steels, cast iron and HSS keep their values to the kelvin, the contact's own rise growing with the land. The
+unsoftened run partition (an intermediate state of this change) gave B 22-32 kK for the carbides and flank
+temperatures 50-300 K higher at the speeds of the calibration, the hard-turning pairings at the solidus. With one
+Gauss rule over the land (before 2026-11-09): B 30 664, 28 217, 30 087, 27 755, 66 079, 19 217, 21 913, 50 227 K.)
 
 **Error bound**: within the calibrated
 window (5-60 min) the wear model reproduces the Taylor life within 10 % (the curvature of B / T(ln v)
@@ -283,6 +295,16 @@ twice Blok's value, gives about 484 K, dT 65 K: some 120 h): with the response's
 thermal's (a test-script substitution) the whole loop of five such side steps (29 s of cutting) keeps VB at 20 um to
 within nanometres (docs/convergence.md 9, item 9). The law is self-consistent only with the response's temperatures
 (or a response that is the run's own pipeline).
+
+**Since 2026-11-10** the response is the run's flank partition (above), so that difference is no longer a
+difference of models of the flank: at the side step the response gives 437-465 K and thermal's in-cut flank contact
+553-583 K, the remaining 90-120 K being the rake contact (thermal's 545-575 K against Oxley's 433-468 K), which the
+flank carries in both. The tool's own law (AlTiN on carbide-submicron-10co, calibrated with the coating phase) has
+B = 22.2 kK, A = 0.104 / Pa (check residual +4.5 %): the life halves per +10 K at 570 K. In the whole loop with
+thermal's own temperatures five such side steps (about 29 s of cutting) take VB_max from 20.0 to 24.1 um, about
+2.5 um of it at the pass entries where thermal's flank spikes for 20-40 ms, between them about 50 nm per second of
+cutting at the most worn element; no chipping; the projected remaining life 1446 s of contact (docs/convergence.md 9
+item 9).
 
 ## 4. Crater (Takeyama-Murata / Arrhenius)
 
@@ -329,8 +351,17 @@ Stream `wear.bue_breakoff`, counter per element. Error: BUE dynamics as mechanic
 Per shock row (sorted by tick, tooth, element), at the row's element:
 
 * contact l_c = max(`entry_contact_ratio` (2) x h_entry, worn hone radius); force per unit width
-  F' = F_first_full / b, b the tooth's engaged chip width in the step; exit, breakout and breakthrough
-  rows x `exit_stress_factor` (1; Pekelharing 1978);
+  F' = F_first_full / b, b the tooth's engaged chip width: the summed width of its elements in cut in the last
+  revolution of a rotating tool (`step.engaged_width`, from each element's last in-cut time `SlotWear.last_cut_s`;
+  the step's elements for a non-rotating tool); exit, breakout and breakthrough rows x `exit_stress_factor` (1;
+  Pekelharing 1978). Until 2026-11-10 b was the width of the elements in cut in the macro step: with steps shorter
+  than the revolution a pass that crosses a step boundary has part of its elements in each step, so b fell, the
+  stress rose by the same ratio and the hazard by its m-th power (the 2 ms macro run's lone chipping event, which no
+  5-50 ms level had; docs/convergence.md 9 item 9). The rows themselves (one entry and one exit row per pass, from
+  the hot loop) and the fatigue sum per row do not depend on the macro step; the width over the last revolution is
+  the pass's at any step no longer than the revolution and the step's at longer ones (the same set in a steady cut;
+  test `test_chipping_does_not_depend_on_the_macro_step`: a pass across a 2 ms boundary gives the same stress and
+  hazard at 2, 5 and 10 ms steps, where the former rule gave the 2 ms step 1.75 x the stress);
 * **wedge stress** (Flamant-Carothers, Timoshenko & Goodier 1970 sect. 36): wedge angle
   beta = pi/2 - rake - clearance, resultant at lambda - rake above the cutting direction (lambda =
   atan mu, the material's friction), components along and across the bisector P_x, P_y;
