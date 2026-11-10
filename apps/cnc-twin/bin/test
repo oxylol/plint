@@ -23,6 +23,12 @@ if [ ${#targets[@]} -eq 0 ]; then
     [ -d "$d" ] && ls "$d"/test_*.py >/dev/null 2>&1 && targets+=("${d%/}")
   done
 fi
+# the integration tests each run a whole loop: one process per file (together they outgrow the memory cap)
+expanded=()
+for t in "${targets[@]}"; do
+  if [ "${t%/}" = "tests/integration" ]; then expanded+=(tests/integration/test_*.py); else expanded+=("$t"); fi
+done
+targets=("${expanded[@]}")
 failed=()
 total_pass=0; total_fail=0
 for t in "${targets[@]}"; do
