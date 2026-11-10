@@ -15,12 +15,12 @@ the verdicts below.
 | study | setting | shipped default | quantities inside / measured | worst default error (tolerance) | verdict |
 |---|---|---|---|---|---|
 | L0 stride: D10 slot (rigid) | `physics.max_deg_per_step, physics.steps_per_tooth` | deg0.5-spt96 | 9 / 9 | peak force 0.573 % (2 %) | inside the converged range |
-| L0 stride: side-milling finish (VF-2SS modes) | `physics.max_deg_per_step, physics.steps_per_tooth` | deg0.5-spt96 | 7 / 8 | peak force 9.65 % (2 %) | outside for some quantities |
-| Dexel lattice: side-milling finish (rigid) | `physics.lattice_mm` | lat0.25 | 3 / 6 | peak force 31.2 % (2 %) | outside for some quantities |
+| L0 stride: side-milling finish (VF-2SS modes) | `physics.max_deg_per_step, physics.steps_per_tooth` | deg0.5-spt96 | 7 / 8 | peak force 8.55 % (2 %) | outside for some quantities |
+| Dexel lattice: side-milling finish (rigid) | `physics.lattice_mm` | lat0.25 | 3 / 6 | peak force 35.3 % (2 %) | outside for some quantities |
 | Dexel lattice: pocket corner (rigid) | `physics.lattice_mm` | lat0.25 | 5 / 6 | largest engaged arc 5.14 % (1 %) | outside for some quantities |
 | Edge element size: D10 flat end mill, slot (rigid) | `physics.edge_element_mm` | el0.5 | 8 / 8 | peak force 0.903 % (2 %) | inside the converged range |
 | Edge element size: D10 ball nose, slot (rigid) | `physics.edge_element_mm` | el0.5 | 8 / 8 | chip per tooth (analytic) 0.718 % (1 %) | inside the converged range |
-| Surface-memory bins with the stride (1-DOF, runout, regeneration) | `physics.memory_bins with physics.max_deg_per_step = 360 / memory_bins` | bins720 | 5 / 8 | peak force 10.9 % (2 %) | outside for some quantities |
+| Surface-memory bins with the stride (1-DOF, runout, regeneration) | `physics.memory_bins with physics.max_deg_per_step = 360 / memory_bins` | bins720 | 6 / 8 | vibration peak-to-peak 9.2 % (2.5 %) | outside for some quantities |
 | Surface-memory bins alone, stride fixed (1-DOF) | `physics.memory_bins` | bins720 | 2 / 8 | tooth-to-tooth chip spread 0.083 (0.01) | outside for some quantities |
 | Surface-memory bins: chatter onset depth (1-DOF) | `physics.memory_bins` | bins720 | 1 / 1 | chatter onset depth (5 N/um) 0 % (2.5 %) | inside the converged range |
 | Macro step (every domain on) | `physics.macro_ipo` | macro10 | 6 / 11 | VB growth 123 % (5 %) | outside for some quantities |
@@ -177,23 +177,23 @@ check rule), the VF-2SS machine's modes in the hot loop (dynamics L2 off).
 
 | level | spindle angle per L0 step (deg) | mean force magnitude (N) | peak force (N) | mean Fy (T0) (N) | chip per tooth (analytic) (mm3) | chip per tooth (field) (mm3) | mean torque (N m) | vibration peak-to-peak (um) | wall position - nominal (um) | CPU s | in cut |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| deg2-spt48 | 1.200 | 28.56 | 89.72 | 23.96 | 0.09884 | 0.1003 | 0.1017 | 2.381 | -1.576 | 4.96 | 2.36 |
-| deg1-spt96 | 0.6000 | 28.59 | 96.08 | 23.99 | 0.09878 | 0.1001 | 0.1017 | 2.362 | -1.574 | 5.42 | 2.79 |
-| deg0.5-spt96 (default) | 0.4800 | 28.62 | 97.35 | 24.02 | 0.09895 | 0.1002 | 0.1018 | 2.375 | -1.562 | 5.83 | 3.02 |
-| deg0.25-spt96 | 0.2400 | 28.68 | 98.62 | 24.07 | 0.09900 | 0.1001 | 0.1020 | 2.366 | -1.572 | 6.96 | 4.13 |
-| deg0.125-spt96 | 0.1200 | 28.68 | 107.6 | 24.07 | 0.09901 | 0.1001 | 0.1019 | 2.375 | -1.571 | 9.79 | 6.46 |
-| deg0.0625-spt96 | 0.06000 | 28.67 | 107.7 | 24.06 | 0.09900 | 0.09998 | 0.1019 | 2.376 | -1.567 | 15.0 | 10.9 |
+| deg2-spt48 | 1.200 | 29.21 | 99.09 | 24.51 | 0.1010 | 0.1011 | 0.1039 | 2.409 | -1.526 | 6.89 | 3.15 |
+| deg1-spt96 | 0.6000 | 29.27 | 106.0 | 24.56 | 0.1012 | 0.1011 | 0.1041 | 2.415 | -1.516 | 7.92 | 3.96 |
+| deg0.5-spt96 (default) | 0.4800 | 29.29 | 107.0 | 24.58 | 0.1011 | 0.1011 | 0.1041 | 2.360 | -1.512 | 7.06 | 3.57 |
+| deg0.25-spt96 | 0.2400 | 29.34 | 99.25 | 24.63 | 0.1011 | 0.1010 | 0.1042 | 2.384 | -1.512 | 8.03 | 5.12 |
+| deg0.125-spt96 | 0.1200 | 29.35 | 107.3 | 24.63 | 0.1012 | 0.1007 | 0.1043 | 2.387 | -1.516 | 12.0 | 8.15 |
+| deg0.0625-spt96 | 0.06000 | 29.34 | 111.7 | 24.63 | 0.1012 | 0.1007 | 0.1043 | 2.392 | -1.513 | 21.1 | 15.1 |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| mean force magnitude | 28.66 N | Richardson (3 finest) | 0.640 | 0.111 % | 1.5 % | inside |
-| peak force | 107.7 N | finest level | (5.57) | 9.65 % | 2 % | outside: use 0.12 |
-| mean Fy (T0) | 24.05 N | Richardson (3 finest) | 0.597 | 0.109 % | 1.5 % | inside |
-| chip per tooth (analytic) | 0.09900 mm3 | finest (oscillating) | (0.623) | 0.0543 % | 1 % | inside |
-| chip per tooth (field) | 0.09998 mm3 | finest level | (12.7) | 0.242 % | 1 % | inside |
-| mean torque | 0.1019 N m | finest level | (0.191) | 0.107 % | 1.5 % | inside |
-| vibration peak-to-peak | 2.376 um | Richardson (3 finest) | 3.20 | 0.053 % | 2.5 % | inside |
-| wall position - nominal | -1.567 um | all levels agree | - | 0.00557 um | 1 um | inside |
+| mean force magnitude | 29.34 N | finest (oscillating) | (0.500) | 0.189 % | 1.5 % | inside |
+| peak force | 116.6 N | Richardson (3 finest) | 0.909 | 8.55 % | 2 % | outside: no measured level converged |
+| mean Fy (T0) | 24.63 N | finest (oscillating) | (0.943) | 0.204 % | 1.5 % | inside |
+| chip per tooth (analytic) | 0.1012 mm3 | Richardson (3 finest) | 2.01 | 0.0809 % | 1 % | inside |
+| chip per tooth (field) | 0.1007 mm3 | finest (oscillating) | (4.79) | 0.388 % | 1 % | inside |
+| mean torque | 0.1043 N m | finest (oscillating) | (2.27) | 0.146 % | 1.5 % | inside |
+| vibration peak-to-peak | 2.398 um | Richardson (3 finest) | 0.832 | 1.57 % | 2.5 % | inside |
+| wall position - nominal | -1.513 um | all levels agree | - | 0.00128 um | 1 um | inside |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
@@ -232,17 +232,17 @@ is above the twin check limit ae / 4 = 0.075 mm for this pass.
 
 | level | lattice spacing (mm) | mean force magnitude (N) | peak force (N) | chip per tooth (analytic) (mm3) | engaged arc (deg) | removed volume (mm3) | wall position - nominal (um) | CPU s | in cut |
 |---|---|---|---|---|---|---|---|---|---|
-| lat0.5 | 0.5000 | 18.15 | 93.80 | 0.05602 | 26.40 | 38.31 | -3.342 | 4.48 | 2.16 |
-| lat0.25 (default) | 0.2500 | 18.80 | 84.26 | 0.05885 | 21.65 | 38.27 | -3.323 | 4.38 | 2.14 |
-| lat0.125 | 0.1250 | 19.08 | 72.72 | 0.05964 | 21.73 | 38.27 | -3.323 | 4.79 | 2.51 |
-| lat0.0625 | 0.06250 | 19.09 | 63.45 | 0.05991 | 21.18 | 38.28 | -3.320 | 5.22 | 2.90 |
-| lat0.03125 | 0.03125 | 19.14 | 64.23 | 0.05994 | 21.72 | 38.26 | -3.155 | 6.41 | 4.08 |
+| lat0.5 | 0.5000 | 18.50 | 109.9 | 0.05698 | 26.40 | 38.31 | -3.342 | 6.26 | 2.72 |
+| lat0.25 (default) | 0.2500 | 19.23 | 97.05 | 0.06017 | 21.65 | 38.27 | -3.323 | 6.42 | 3.01 |
+| lat0.125 | 0.1250 | 19.50 | 76.71 | 0.06095 | 21.73 | 38.27 | -3.323 | 5.88 | 3.29 |
+| lat0.0625 | 0.06250 | 19.46 | 71.65 | 0.06110 | 21.18 | 38.28 | -3.320 | 6.77 | 3.56 |
+| lat0.03125 | 0.03125 | 19.57 | 71.72 | 0.06127 | 21.72 | 38.26 | -3.155 | 8.01 | 4.91 |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| mean force magnitude | 19.15 N | Richardson (3 finest) | 2.18 | 1.86 % | 1.5 % | outside: use 0.125 |
-| peak force | 64.23 N | finest (oscillating) | (3.58) | 31.2 % | 2 % | outside: use 0.0625 |
-| chip per tooth (analytic) | 0.05994 mm3 | Richardson (3 finest) | 3.37 | 1.81 % | 1 % | outside: use 0.125 |
+| mean force magnitude | 19.57 N | finest (oscillating) | (1.33) | 1.78 % | 1.5 % | outside: use 0.125 |
+| peak force | 71.72 N | finest (oscillating) | (6.32) | 35.3 % | 2 % | outside: use 0.0625 |
+| chip per tooth (analytic) | 0.06127 mm3 | finest level | (0.248) | 1.8 % | 1 % | outside: use 0.125 |
 | engaged arc | 21.72 deg | finest (oscillating) | (0.0175) | 0.338 % | 1 % | inside (reference uncertain) |
 | removed volume | 38.20 mm3 | exact | (0.768) | 0.163 % | 1 % | inside |
 | wall position - nominal | -3.155 um | finest level | (5.95) | 0.168 um | 1 um | inside |
@@ -411,22 +411,22 @@ max_deg_per_step = 360 / memory_bins; steps_per_tooth 24 so that the angle rule 
 
 | level | angle per memory bin (deg) | mean force magnitude (N) | peak force (N) | mean Fx (T0) (N) | mean Fy (T0) (N) | tooth-to-tooth chip spread (-) | chip per tooth (analytic) (mm3) | mean torque (N m) | vibration peak-to-peak (um) | CPU s | in cut |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| bins180 | 2.000 | 27.08 | 88.91 | -13.09 | 23.15 | 0.2343 | 0.1763 | 0.1493 | 14.20 | 6.61 | 4.56 |
-| bins360 | 1.000 | 26.95 | 113.5 | -13.00 | 23.00 | 0.2527 | 0.1748 | 0.1480 | 10.39 | 8.69 | 6.60 |
-| bins720 (default) | 0.5000 | 26.94 | 104.1 | -13.03 | 22.94 | 0.2060 | 0.1741 | 0.1474 | 10.31 | 8.72 | 6.75 |
-| bins1440 | 0.2500 | 27.15 | 116.8 | -13.18 | 23.10 | 0.2380 | 0.1744 | 0.1481 | 9.472 | 13.8 | 11.8 |
-| bins2880 | 0.1250 | 27.18 | 116.8 | -13.17 | 23.14 | 0.2394 | 0.1749 | 0.1483 | 9.609 | 29.2 | 27.1 |
+| bins180 | 2.000 | 15.98 | 107.4 | -7.766 | 13.60 | 0.2475 | 0.1038 | 0.08795 | 8.283 | 7.14 | 4.82 |
+| bins360 | 1.000 | 15.56 | 101.2 | -7.571 | 13.22 | 0.2365 | 0.1009 | 0.08536 | 8.463 | 10.8 | 7.66 |
+| bins720 (default) | 0.5000 | 15.52 | 74.60 | -7.571 | 13.16 | 0.2104 | 0.1003 | 0.08494 | 7.290 | 11.5 | 8.21 |
+| bins1440 | 0.2500 | 15.58 | 78.20 | -7.638 | 13.19 | 0.2227 | 0.09999 | 0.08488 | 8.348 | 18.5 | 15.2 |
+| bins2880 | 0.1250 | 15.53 | 78.09 | -7.588 | 13.15 | 0.2195 | 0.09969 | 0.08453 | 8.028 | 36.6 | 33.2 |
 
 | quantity | reference | how | observed order | default error | tolerance | default |
 |---|---|---|---|---|---|---|
-| mean force magnitude | 27.18 N | Richardson (3 finest) | 2.90 | 0.906 % | 1.5 % | inside |
-| peak force | 116.8 N | finest (oscillating) | (8.24) | 10.9 % | 2 % | outside: use 0.25 |
-| mean Fx (T0) | -13.17 N | finest (oscillating) | (4.05) | 1.04 % | 1.5 % | inside |
-| mean Fy (T0) | 23.16 N | Richardson (3 finest) | 1.93 | 0.93 % | 1.5 % | inside |
-| tooth-to-tooth chip spread | 0.2394 - | finest level | (4.52) | 0.0333 - | 0.01 - | outside: use 0.25 |
-| chip per tooth (analytic) | 0.1758 mm3 | Richardson (3 finest) | 0.596 | 0.941 % | 1 % | inside |
-| mean torque | 0.1485 N m | Richardson (3 finest) | 1.46 | 0.725 % | 1.5 % | inside |
-| vibration peak-to-peak | 9.609 um | finest (oscillating) | (2.61) | 7.32 % | 2.5 % | outside: use 0.25 |
+| mean force magnitude | 15.53 N | finest (oscillating) | (0.214) | 0.0574 % | 1.5 % | inside |
+| peak force | 78.09 N | finest (oscillating) | (5.02) | 4.46 % | 2 % | outside: use 0.25 |
+| mean Fx (T0) | -7.588 N | finest (oscillating) | (0.430) | 0.227 % | 1.5 % | inside |
+| mean Fy (T0) | 13.15 N | finest (oscillating) | (0.551) | 0.0986 % | 1.5 % | inside |
+| tooth-to-tooth chip spread | 0.2195 - | finest (oscillating) | (1.91) | 0.00906 - | 0.01 - | inside |
+| chip per tooth (analytic) | 0.09969 mm3 | finest level | (0.0818) | 0.582 % | 1 % | inside |
+| mean torque | 0.08446 N m | Richardson (3 finest) | 2.52 | 0.575 % | 1.5 % | inside |
+| vibration peak-to-peak | 8.028 um | finest (oscillating) | (1.72) | 9.2 % | 2.5 % | outside: no measured level converged |
 
 Observed orders in parentheses are those of the three finest levels where they are not used (not monotone, or
 outside 0.5-4). "in cut": CPU seconds of the macro steps with the tool in the cut.
