@@ -7,7 +7,10 @@ chip thickness, speed and tool temperature. The heat of the contact is split as 
 does (thermal/partition.py): tangential power P = F_t V, rake heat to the tool P x power_frac_rake x
 frac_rake_to_tool, edge and wear-land heat to the tool (P x power_frac_edge + tau_land VB b V) x
 frac_flank_to_tool, deposited over the flank contact the share was computed for (wear land + the edge arc below
-the stagnation point, GroupCoefficients.flank_contact_m), as thermal deposits it.
+the stagnation point, GroupCoefficients.flank_contact_m), as thermal deposits it. The edge, ploughing and wear-land
+stresses (and so the edge heat and the land's friction ``flank_tau_mean_Pa``) are the rows': the work's flow stress at
+the flank contact's own temperature and strain rate (mechanics.coefficients.softened_flank_contact, since 2026-11-10),
+so the harness and the run see one contact state.
 """
 
 from __future__ import annotations

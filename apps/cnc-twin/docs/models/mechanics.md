@@ -225,6 +225,27 @@ holds a regular chip state at h_min (strains 0.5-1.2) nothing changes; where it 
 rakes of a chisel edge or of the inner drill lips, whose fallback shear angle of 4-6 deg means strains of 3-5)
 the Johnson-Cook extrapolation set the contact pressures before: k of a chisel row was 15-35 % higher (1045:
 883 instead of about 750 MPa) and up to 2.6 times for the strongly hardening Al 2024 set.
+**The contact's own state** (2026-11-10, `coefficients.softened_flank_contact`): k_ref is the primary zone's; the
+material pressed under the edge and over the wear land is at the flank contact's temperature and strain rate, so
+every contact stress (edge pressure and friction, ploughing, indentation, the land's sigma_0 and tau_0) is taken at
+
+    k_c = k_ref sigma_JC(eps_e, epsdot_c, T_c) / sigma_JC(eps_e, epsdot_AB, T_AB)
+
+(the same capped strain eps_e, the kernels' clamps), T_c the contact's mean temperature from the flank partition of
+section 6 with the fluxes at k_c (they are linear in k), epsdot_c = V / (sqrt 3 delta) the ploughed zone's rate
+(the velocity V taken up across the depth delta of Prandtl's field, section 6). T_c(k_c) rises and k_c(T_c) falls,
+so the fixed point is unique (bisection, 60 fixed steps). Johnson-Cook's thermal term is bounded by the work's
+solidus (else liquidus, else the law's T_m): if the stress at the solidus would still heat the contact beyond it,
+the contact sits at the solidus with the stress that keeps it there. Per h node (each node's work surface entering
+at its own T_AB) it scales the node's edge, ploughing and indentation forces (absorbed into K(h) as the calibration's
+node factors are); the group's scalars (Ke, the land stresses, K_sp, the ploughing shape) take the softening of the
+reference contact (depth h_min, the work surface at the T_AB of k_ref's state). `GroupCoefficients.edge_softening`,
+`edge_softening_ref`, `edge_flow_temp_K` report it. Effect: the warmup's 4140 OD pass (40 um hone, 132 m/min,
+f 0.25 mm, VB 50 um, tool at 600 K) 0.67 (contact 689 degC), edge force 57 -> 39 N/mm; AISI 52100 with PCBN
+(Chen et al. 2017, 100 m/min) 0.48-0.52 (720-750 degC); a 0.3 mm land in 52100 at 200 m/min 0.26 (960 degC); the
+cold-tool ETH Ck45 tests (tool at 20 degC) 0.71-0.80 (contact 400-710 degC). Before, the contact stresses were at k_ref while the contact ran several hundred
+kelvin hotter than the shear plane (the edge arc of the warmup pass carried 4.7 GW/m2, a worn CBN land drove the new
+surface to about 3000 degC).
 Above the stagnation height (indentation/extrusion) the friction reverses.
 **Ploughing** (h < h_min): the same contact at depth h; its interference area
 A(h) = (h - r) r sin w_h + r^2 (w_h/2 + sin(2 w_h)/4) defines the hot loop's indentation
@@ -325,7 +346,16 @@ F_te V, flank tau_f VB V. Partitions:
   M_t H_t); wear's default Taylor response (`wear.calibration.MechanicsResponse.flank_contact`) calls it, so that the
   Usui constants calibrated to Taylor data and the run's flank temperatures belong to the same partition. The edge
   flow stress k of the edge, ploughing and land stresses is `coefficients.edge_shear_flow_stress` (the primary-zone
-  state at t1 = h_min with the strain capped at `edge_strain_cap`), shared by the rows and the response.
+  state at t1 = h_min with the strain capped at `edge_strain_cap`), shared by the rows and the response; the rows take
+  it to the contact's own temperature and strain rate (section 4, `softened_flank_contact`, which calls
+  `flank_contact_heat` at the softened stress, so the partition, the edge forces and the land stresses belong to one
+  contact state). The temperature the flow stress is taken at is the two faces' common mean temperature,
+  (M_w T_t + M_t T_ws + M_w M_t s (q_f + g q_d)) / (M_w + M_t), the share's clamp to [0, 1] aside (where it binds,
+  the heat booked follows the clamped share). Wear's Taylor response (`MechanicsResponse._softened_contact`) softens
+  the same partition with its own fixed point: s <= 1, at the primary-zone strain rate and the tool face's temperature
+  (the wear domain's choice; the two agree where the contact runs hotter than the shear plane and the share is not
+  clamped, up to the rate term: 1-3 % for C = 0.013-0.014 (1045, 4140), about 7 % for the 52100 set's
+  C = 0.036).
 
 `GroupCoefficients.power_frac_shear/rake/edge` split the tangential force power of a row into the
 three zones (they sum to 1): edge share F_te/F_t (calibrated), the rest split by F_S V_s/(F_C V).
@@ -504,11 +534,11 @@ for continuous cutting, feed and depth for the breaker window, engaged nose radi
 | Oxley's conditions at the solution | residuals | < 1e-6 relative; tau_int = k_chip to 1e-6; F_C V = F_S V_s + F V_c to 1e-12 | |
 | friction is an output | database mu 0.5 -> 0.2 | rake-face solution unchanged (Coulomb alternative: lambda = atan 0.2) | exact |
 | fallback grid independence | map node against oxley.solve, two grids | phi and F_C within 1 % | 1 % |
-| ETH Ck45 orthogonal (Klippel et al. 2022, 15 conditions, 30-500 m/min, 0.04-0.4 mm, r_e 39 um), uncalibrated | 12 Oxley-regime points | F_C -20 to -7 % (mean abs 16 %); F_f -32 to -13 %; chip thickness -20 to +43 % | -25/+10 %, -40/+20 %, 50 % |
-| same | 3 fallback points (30 m/min in the BUE window; 100 m/min 0.06 mm; 200 m/min 0.04 mm) | F_C -2 to +52 %, F_f 0 to +160 %, chip thickness +9 to +209 % (30 m/min) | wide, documented |
-| same, calibrated to the 100 m/min Kienzle fit (with kf11 809, mf 0.65) | | Oxley points F_C -9 % to +9 %; fallback points +6 to +25 %, 30 m/min +79 % | 15 % / 80 % |
-| ETH Ti6Al4V (Klippel et al. 2022, 7 conditions, 20-150 m/min) | uncalibrated (Seo JC) | F_C +32 to +95 %, F_f +34 to +201 %, chip thickness +46 to +215 % | 0/+50 % (Oxley points), 0/+100 % (fallback) |
-| same, calibrated to five measured Kienzle speeds | | F_C -5 to +9 %, F_f -10 to +21 % | 12 % / 25 % |
+| ETH Ck45 orthogonal (Klippel et al. 2022, 15 conditions, 30-500 m/min, 0.04-0.4 mm, r_e 39 um), uncalibrated | 12 Oxley-regime points | F_C -24 to -10 % (mean abs 20 %; before the contact softening -20 to -7 %, 16 %); F_f -39 to -21 % (was -32 to -13 %); chip thickness -20 to +43 % | -25/+10 %, -40/+20 %, 50 %, mean 22 % |
+| same | 3 fallback points (30 m/min in the BUE window; 100 m/min 0.06 mm; 200 m/min 0.04 mm) | F_C -12 to +49 %, F_f -14 to +151 %, chip thickness +9 to +209 % (30 m/min) | wide, documented |
+| same, calibrated to the 100 m/min Kienzle fit (with kf11 809, mf 0.65) | | Oxley points F_C -10 % to +8 %; fallback points +2 to +25 %, 30 m/min +78 % | 15 % / 80 % |
+| ETH Ti6Al4V (Klippel et al. 2022, 7 conditions, 20-150 m/min) | uncalibrated (Seo JC) | F_C +22 to +92 %, F_f +16 to +195 % (before the contact softening +31 to +95 %, +33 to +200 %), chip thickness +46 to +215 % | 0/+50 % (Oxley points), 0/+100 % (fallback) |
+| same, calibrated to five measured Kienzle speeds | | F_C -4 to +12 %, F_f -7 to +25 % | 12 % / 30 % |
 
 Former Coulomb-limited model on the same ETH data (for comparison): Ck45 F_C -31 to -6 %, F_f -54 to
 +9 %; Ti6Al4V F_C +12 to +24 %, F_f +5 to +22 %. The Ti6Al4V agreement came from mu = 0.3, an
@@ -527,6 +557,19 @@ before = Coulomb-limited interface with the database mu, after = this model), 20
 | tool_temperature (uses the coefficient pipeline) | 52.8 % / 86.8 %, 1/5 | 65.3 % / 120.6 %, 0/5 | Ti6Al4V natural thermocouple (Loeschner 2025) 6.6 -> 30.9 % (the seized interface heats the Ti6Al4V contact more than the former mu = 0.3 limit), AISI 4140 IR/TC 76.8 -> 96.2 %, Ti6Al4V IR window 45.1 -> 32.7 %, AISI 1045 embedded TC 4.9 -> 3.6 % |
 | coolant_reach (friction factor in Oxley's condition) | 38.6 % / 85.4 %, 10/18 classes | 64.5 % / 105.5 %, 10/18 | Ti6Al4V jet-direction case 38.8 -> 79.3 % |
 | chip_form (Ti6Al4V, breaker inserts not in the database) | 6/32 classes | 5/32 | chips now break (bend 0.026-0.030 against eps_B 0.027 instead of 0.032 against 0.049) but the natural curl radius (4-20 mm) leaves pieces of 80-375 mm: the inserts' SF/SMC grooves decide the measured grades |
+
+Validation suite, 2026-11-10, before / after the contact stresses at the contact's own temperature and strain rate
+(section 4; `--no-write`, the same tree otherwise; median / p90 abs. error, cases in budget):
+
+| quantity | before | after | what moved |
+|---|---|---|---|
+| cutting_force, independent (17) | 28.5 % / 91.6 %, 0/17 | 23.4 % / 88.0 %, 0/17 | Al 6061 orthogonal (Javidikia) 28.9 -> 15.8 % and 24.5 -> 19.5 %, Al 7075 (Jomaa) 72.2 -> 58.2 %, 1045 MQL milling 88.3 -> 72.1 %, 304 HSS side milling 78.7 -> 58.5 %, IN718 (Diaz-Alvarez) 30.7 -> 24.7 %; worse: Ck45 ETH f010 / vc150 11.5 / 13.1 -> 22.0 / 17.6 % (thrust deficit), IN718 (Wood) 14.0 -> 20.4 %, 1.4541 high-feed 4.3 -> 11.0 %, Al 7075 edge microgeometry 23.2 -> 44.5 % |
+| cutting_force, calibration-dependent (8) | 16.1 % / 113.7 %, 0/8 | 19.0 % / 111.8 %, 0/8 | |
+| drilling_thrust | 43.9 % / 91.7 %, 0/4 (calibrated 58.7 %) | 45.7 % / 91.2 %, 0/4 (51.9 %) | 1040 helix 20.4 -> 16.6 %, Al 2024 HSS 44.1 -> 46.8 % |
+| drilling_torque | 24.4 % / 82.1 %, 0/4 (calibrated 65.0 %) | 25.9 % / 81.3 %, 0/4 (58.7 %) | Al 2024 HSS 8.6 -> 13.6 % |
+| tool_temperature | 62.9 % / 191.4 %, 0/5 | 64.9 % / 175.4 %, 0/5 | 4140 IR/TC 158.9 -> 143.1 %, Ti6Al4V IR 17.2 -> 12.3 %, Ti6Al4V NTC 27.5 -> 24.3 %, 1045 embedded TC 5.8 -> 9.0 % |
+| coolant_reach | 25.8 % / 52.9 %, 0/2 | 20.7 % / 38.6 %, 0/2 | Ti6Al4V jet direction 40.4 -> 30.7 % |
+| chip_ratio, shear_angle, chip_temperature, taylor_life | | unchanged | not through the edge contact (taylor_life: wear's own response) |
 
 Why the tolerances of the tests: the uncalibrated error combines the JC-set uncertainty (other
 published 1045 sets change predicted forces and temperatures by 10-20 %, Ning & Liang 2019 Table 5),
@@ -615,6 +658,12 @@ tie-breaks are fixed.
 * Tool-side partition: steady quarter-infinite source capped by the 1-D transient; the tool rake
   temperature passed in must exclude the sub-grid flash of the current contact (else the flash is
   counted twice; bounded by the flash rise times the fraction thermal resolves).
+* Contact flow stress (section 4): Johnson-Cook at the contact's mean temperature and the ploughed zone's rate V /
+  (sqrt 3 delta), the strain capped as k_ref's; the law is extrapolated in rate (contacts at 1e4-1e6 1/s, fits to
+  Hopkinson data at 1e3-1e4) and in temperature up to the solidus (the fits stop at 600-1000 degC). One mean
+  temperature for the whole contact (the arc's leading part is cooler, the land's trailing part hotter); the
+  ploughed layer's own mean temperature is taken as the surface's (its heat reaches the surface with the factor g).
+  Halving or doubling delta moves k_c by about C ln 2 (1-2.5 % for the steels' C = 0.013-0.036).
 * T_ws = T_AB for the flank partition (upper bound; flank tool share therefore a lower bound). The plastic work of
   the edge pressure is taken as uniform over the depth of Prandtl's field (1/sqrt 2 of the edge contact): with that
   depth halved or doubled the layer factor g of an unworn edge moves from 0.49 to 0.68 or 0.29 at L = 1 and from 0.87

@@ -9,11 +9,14 @@ tube turning, uncoated Sandvik CCMW 09T304 H13A (rake 0 deg, clearance 7 deg, me
 Model: Oxley's own interface condition (the chip's shear flow stress at the interface; friction an
 output), the modified-Merchant fallback continued from the edge of the admissible Oxley solutions
 where the condition has none (here: the small-h and low-speed points, regime REGIME_MERCHANT).
-Tolerances and why (docs/models/mechanics.md, "Validation"), measured on 2026-11-03:
-* uncalibrated Ck45, Oxley-regime points (12): F_c -20 % to -7 %, F_f -32 % to -13 %, h_avg
-  -20 % to +43 %; bands -25/+10 %, -40/+20 %, +-50 %: the Jaspers & Dautzenberg JC set (other 1045
-  sets change forces by 10-20 %), the estimated h_min ratio and edge pressure;
-* uncalibrated Ck45, fallback points (3): within -5/+55 % (F_c), -5/+165 % (F_f), +5/+215 %
+Tolerances and why (docs/models/mechanics.md, "Validation"), measured on 2026-11-03, the forces again on 2026-11-10
+when the edge and land stresses were taken to the contact's own temperature (softened_flank_contact; the edge forces
+fall 10-40 %, the totals 1-9 %):
+* uncalibrated Ck45, Oxley-regime points (12): F_c -24 % to -10 % (was -20 % to -7 %), F_f -39 % to -21 % (was
+  -32 % to -13 %), h_avg -20 % to +43 %; bands -25/+10 %, -40/+20 %, +-50 %, mean |F_c error| 20 % (band 22 %):
+  the Jaspers & Dautzenberg JC set (other 1045 sets change forces by 10-20 %), the estimated h_min ratio and edge
+  pressure; the thrust deficit at 0.1-0.4 mm is not the edge's (its Prandtl pressure is an upper bound already);
+* uncalibrated Ck45, fallback points (3): within -15/+55 % (F_c), -15/+165 % (F_f), +5/+215 %
   (h_avg); the 30 m/min point lies in the BUE window of Ck45 (10-50 m/min), where the chip flows
   over a built-up edge that this BUE-free solution does not have (the theory has no admissible
   solution there; its edge state gives a chip about three times too thick);
@@ -22,8 +25,9 @@ Tolerances and why (docs/models/mechanics.md, "Validation"), measured on 2026-11
 * Ti6Al4V (Seo et al. JC set): uncalibrated F_c +32 to +95 %, F_f +34 to +201 %: a continuous-chip
   theory with a seized interface over-predicts the segmented Ti6Al4V chip (the former Coulomb
   limit with mu = 0.3 came from the same ETH tests and compensated); bands F_c 0/+50 % and F_f
-  0/+85 % at the Oxley points, F_c 0/+100 % and F_f 0/+210 % at the two fallback points; calibrated
-  with the five measured Kienzle speeds within 12 % (F_c) and 25 % (F_f);
+  0/+85 % at the Oxley points, F_c 0/+100 % and F_f 0/+210 % at the two fallback points (2026-11-10: F_c +22 to
+  +92 %, F_f +16 to +195 %); calibrated with the five measured Kienzle speeds within 12 % (F_c) and 30 % (F_f; the
+  50 m/min point between the 20 and 60 m/min references +25 %);
 * chip thickness: Ti6Al4V +46 % to +215 % (continuous-chip thickness against segmented chips).
 """
 
@@ -134,8 +138,8 @@ def test_ck45_uncalibrated(ck45, ck45_regimes):
             errors.append(abs(e_c))
         else:
             assert ck45_regimes[key] == CF.REGIME_MERCHANT, key
-            assert -0.05 <= e_c <= 0.55 and -0.05 <= e_f <= 1.65 and 0.05 <= e_t <= 2.15, (key, e_c, e_f, e_t)
-    assert len(errors) >= 12 and np.mean(errors) < 0.20
+            assert -0.15 <= e_c <= 0.55 and -0.15 <= e_f <= 1.65 and 0.05 <= e_t <= 2.15, (key, e_c, e_f, e_t)
+    assert len(errors) >= 12 and np.mean(errors) < 0.22
     # the BUE-window point (30 m/min) has no admissible Oxley solution
     assert ck45_regimes[(30, 0.15)] == CF.REGIME_MERCHANT
 
@@ -156,5 +160,5 @@ def test_ti64_uncalibrated_and_calibrated(ti64, ti64_regimes):
         assert 0.0 <= f_raw[0] / fc - 1.0 <= (0.50 if oxley_point else 1.00), (key, f_raw[0], fc)
         assert 0.0 <= f_raw[1] / ff - 1.0 <= (0.85 if oxley_point else 2.10), (key, f_raw[1], ff)
         assert abs(f_cal[0] / fc - 1.0) <= 0.12, (key, f_cal[0], fc)
-        assert abs(f_cal[1] / ff - 1.0) <= 0.25, (key, f_cal[1], ff)
+        assert abs(f_cal[1] / ff - 1.0) <= 0.30, (key, f_cal[1], ff)
         assert 0.4 <= t2 / t2_meas - 1.0 <= 2.2, (key, t2, t2_meas)

@@ -97,7 +97,8 @@ def _closed_form_share(steel, carbide, group, slow, h_min, k_ref, mu, t_ws):
     peclet = v * 0.5 * length / (2.0 * steel.diffusivity(t_ws))
     g = HT.layer_source_factor(peclet, P.number(P.CONTACT, "ploughing_zone_depth_ratio") * arc / length)
     heat = (t_ws - slow.tool_flank_temp_K + m_w * (q_f + g * q_d)) / (m_w + m_t)
-    return min(max(heat / (q_f + q_d), 0.0), 1.0), length
+    equal = slow.tool_flank_temp_K + m_t * heat           # the two faces' common mean temperature
+    return min(max(heat / (q_f + q_d), 0.0), 1.0), length, equal
 
 
 @pytest.mark.parametrize("vb, tool_K", [(0.0, 400.0), (0.0, 700.0), (1.5e-4, 500.0)])
@@ -107,14 +108,49 @@ def test_the_flank_share_matches_bloks_closed_form(steel, carbide, steel_map, vb
                         contact_time_s=None)
     gc = CF.group_coefficients(steel, carbide, group, slow, H_GRID, steel_map)
     h_min = gc.h_min_m
-    k_ref = CF._reference_shear_flow_stress(steel, steel_map, h_min, slow)
+    k_ref, primary, _ = CF._reference_state(steel, steel_map, h_min, slow)
     above = np.nonzero(H_GRID > 2.0 * h_min)[0]
     assert above.size > 3
     for k in above[::4]:
-        share, length = _closed_form_share(steel, carbide, group, slow, h_min, k_ref, gc.mu_eff, gc.T_shear_K[k])
+        # the contact's flow stress is the work's at the contact's own temperature: k_c = k_ref s
+        k_c = k_ref * gc.edge_softening[k]
+        share, length, equal = _closed_form_share(steel, carbide, group, slow, h_min, k_c, gc.mu_eff, gc.T_shear_K[k])
         assert gc.frac_flank_to_tool[k] == pytest.approx(share, rel=1e-9, abs=1e-12)
         assert gc.flank_contact_m[k] == pytest.approx(length, rel=1e-12)
         assert 0.0 < gc.frac_flank_to_tool[k] < 1.0
+        # fixed point: Blok's equal temperature at k_c is the temperature k_c is taken at, and k_c is Johnson-Cook's
+        # stress there (at the ploughed zone's strain rate V / (sqrt 3 delta)) relative to the primary-zone state
+        assert gc.edge_flow_temp_K[k] == pytest.approx(equal, abs=1e-6)
+        arc = C.stagnation_arc_length(group.edge_radius_m, h_min, 0.0)
+        rate = CF.contact_strain_rate(slow.speed_m_s, arc)
+        assert rate == pytest.approx(slow.speed_m_s / (math.sqrt(3.0) * arc / math.sqrt(2.0)), rel=1e-12)
+        ox = P.get(P.OXLEY)
+        jc = lambda e, r, t: K.jc_flow_stress(e, r, t, steel.jc, ox["max_jc_Tstar"], ox["min_jc_rate_ratio"])
+        assert k_c == pytest.approx(k_ref * jc(primary.strain, rate, equal) / jc(primary.strain,
+                                                                                 primary.strain_rate_1_s,
+                                                                                 primary.temp_K), rel=1e-9)
+        assert gc.edge_softening[k] < 1.0             # the contact runs hotter than the shear plane
+
+
+def test_contact_flow_stress_softens_with_speed_and_stops_at_the_solidus(steel, carbide):
+    """The contact's flow stress falls as the contact heats (faster cut, hotter tool) and the contact never exceeds
+    the work's solidus: with a flux that would melt the contact at the reference stress it sits at the solidus with
+    the stress that keeps it there."""
+    r, h_min, mu = 2.5e-5, 0.27 * 2.5e-5, 0.5
+    primary = CF.PrimaryState(1.0, 1e5, 600.0)
+    k_ref = 6e8
+    args = (r, 0.0, 0.0, h_min, h_min, k_ref, primary, mu, 1e-4, 0.3)
+    out = [CF.softened_flank_contact(steel, carbide, *args, v, 2e-3, 600.0, 500.0)[3] for v in (1.0, 3.0, 9.0)]
+    s = [o["softening"] for o in out]
+    temps = [o["T_flow_K"] for o in out]
+    assert s[0] > s[1] > s[2] and temps[0] < temps[1] < temps[2]
+    hot = CF.softened_flank_contact(steel, carbide, *args, 3.0, 2e-3, 600.0, 1100.0)[3]
+    assert hot["softening"] < out[1]["softening"]
+    sol = CF.solidus_K(steel)
+    melt = CF.softened_flank_contact(steel, None, r, 0.0, 0.0, h_min, h_min, 5e10, primary, mu, 1e-3, 0.3, 50.0,
+                                     2e-3, 1500.0, None)[3]
+    assert melt["solidus_bound"] and melt["T_flow_K"] == pytest.approx(sol)
+    assert 0.0 < melt["softening"] < 0.02
 
 
 def test_cooling_the_tool_never_raises_its_contact_temperature(steel, carbide):

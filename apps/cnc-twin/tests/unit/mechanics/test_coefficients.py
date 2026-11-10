@@ -55,14 +55,16 @@ def test_group_rows_follow_the_force_convention(steel, carbide, steel_map):
     gc = CF.group_coefficients(steel, carbide, group, state, H_GRID, steel_map)
     h_min = gc.h_min_m
     assert h_min == pytest.approx(0.27 * 4e-5)
-    # above h_min: K h + Ke = shearing force at t1 = h - h_min plus the edge force
+    # above h_min: K h + Ke = shearing force at t1 = h - h_min plus the node's edge force (the edge force of the
+    # group's reference contact Ke taken to the node's own contact softening)
     k = int(np.searchsorted(H_GRID, 2e-4))
     t1 = H_GRID[k] - h_min
     row = CF.lookup(steel_map, t1, 2.5, 600.0)[0]
     total_t = gc.Kt_Pa[k] * H_GRID[k] + gc.Kte_N_per_m
     total_r = gc.Kr_Pa[k] * H_GRID[k] + gc.Kre_N_per_m
-    assert total_t == pytest.approx(row[abi.OX_FC] + gc.Kte_N_per_m, rel=1e-9)
-    assert total_r == pytest.approx(row[abi.OX_FT] + gc.Kre_N_per_m, rel=1e-9)
+    node = gc.edge_softening[k] / gc.edge_softening_ref
+    assert total_t == pytest.approx(row[abi.OX_FC] + gc.Kte_N_per_m * node, rel=1e-9)
+    assert total_r == pytest.approx(row[abi.OX_FT] + gc.Kre_N_per_m * node, rel=1e-9)
     assert gc.Ka_Pa[k] == pytest.approx(0.0, abs=1e-6)
     # continuity of the total at h_min and ploughing below it
     forces = gc.forces_per_width(np.array([h_min * 0.999, h_min * 1.001]))
@@ -195,7 +197,8 @@ def test_power_fractions_sum_to_one(steel, carbide, steel_map):
     assert np.allclose(total, 1.0, rtol=0, atol=1e-12)
     k = int(np.searchsorted(H_GRID, 2e-4))
     force_t = gc.Kt_Pa[k] * H_GRID[k] + gc.Kte_N_per_m
-    assert gc.power_frac_edge[k] == pytest.approx(gc.Kte_N_per_m / force_t, rel=1e-9)
+    edge_t = gc.Kte_N_per_m * gc.edge_softening[k] / gc.edge_softening_ref
+    assert gc.power_frac_edge[k] == pytest.approx(edge_t / force_t, rel=1e-9)
     row = CF.lookup(steel_map, H_GRID[k] - gc.h_min_m, 2.5, 600.0)[0]
     shear_share = gc.power_frac_shear[k] / (gc.power_frac_shear[k] + gc.power_frac_rake[k])
     assert shear_share == pytest.approx(row[abi.OX_P_SHEAR], rel=1e-9)

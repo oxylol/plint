@@ -173,21 +173,31 @@ def _judge(db, material_id, work, src):
     return hist, {v.kind: v for v in monitor.verdicts(hist, 293.15, 0.1)}
 
 
+def _depth(verdicts, kind):
+    """Affected depth of a criterion (0 where it is not met or the history never reached its screen)."""
+    v = verdicts.get(kind)
+    return v.depth_m if v is not None and v.damaged else 0.0
+
+
 def test_severely_worn_cbn_tool_in_hard_turning_leaves_a_white_layer(db):
     """AISI 52100 at 62 HRC, CBN, 200 m/min, f 0.1 mm, ap 0.2 mm: with a 0.3 mm wear land the land's friction
-    heats the new surface far above Ac1 to tens of microns, a white layer as Chou & Evans (1999) report for worn
-    tools in hard turning (their depth grew with flank wear); the layer is deeper than with the sharp tool."""
+    heats the new surface above Ac1 over microns, a white layer as Chou & Evans (1999) report for worn tools in hard
+    turning (their depth grew with flank wear; machining white layers are of the order of 1-10 um, Griffiths 1987);
+    the layer is more than twice as deep as with the sharp tool. With the land and edge stresses at the contact's
+    own temperature (2026-11-10) the land runs at about 960 C (softening 0.26) and the layer is 3.7 um deep; at the
+    shear plane's flow stress the surface reached about 3000 C (above the solidus) and the layer 37 um."""
     kr = math.radians(95.0)
     worn = _contact(db, "aisi52100-62hrc", "cbn-low", -6.0, 20e-6, 200 / 60, 1e-4 * math.sin(kr), 2e-4 / math.sin(kr),
                     3e-4)
     hist, verdicts = _judge(db, "aisi52100-62hrc", worn[0], worn[2])
     white = verdicts["white_layer"]
-    assert white.damaged and white.depth_m >= 5e-6
+    assert white.damaged and 1e-6 <= white.depth_m <= 1e-5
+    assert float(np.max(hist.temp_K)) < worn[0].solidus_K
     assert verdicts["overtemper"].damaged         # tempered at 180 C: the dark layer below
     sharp = _contact(db, "aisi52100-62hrc", "cbn-low", -6.0, 20e-6, 200 / 60, 1e-4 * math.sin(kr),
                      2e-4 / math.sin(kr), 0.0)
     _, sharp_verdicts = _judge(db, "aisi52100-62hrc", sharp[0], sharp[2])
-    assert white.depth_m > 2.0 * sharp_verdicts["white_layer"].depth_m
+    assert white.depth_m > 2.0 * _depth(sharp_verdicts, "white_layer")
 
 
 CHEN_FEEDS_MM = (0.05, 0.1, 0.15)
@@ -197,10 +207,11 @@ def test_edge_temperature_against_chen_2017_hard_turning(db):
     """Chen et al. (2017): AISI 52100 58-62 HRC, PCBN (-5 deg rake), 100 m/min, radial depth 0.1 mm on the 0.8 mm
     nose, feeds 0.05 / 0.1 / 0.15 mm/rev: peak machined surface temperatures 500-800 C at the intersection of the
     cutting edge and the machined surface (tool-foil and embedded thermocouples, 30 C apart), rising with feed. The
-    chain predicts the surface temperature at the edge (xi = 0) within that range +- 30 C, rising with feed.
-    Known (docs/models/thermal.md 3.4, open): the mean over the edge contact behind it is 250-400 K above the range
-    (the edge heat into the work, about 5 GW/m2 over the 16 um arc against their inverse flank fluxes of 0.13-0.73
-    GW/m2); asserted as found so that a change of it is seen."""
+    chain predicts the surface temperature at the edge (xi = 0) and the mean over the edge contact behind it within
+    that range +- 30 C, both rising with feed (2026-11-10, the edge stresses at the contact's own temperature: 510 /
+    593 / 604 C at the edge, 649 / 718 / 734 C over the contact; at the shear plane's flow stress they were 690 /
+    782 / 796 C and 1050-1160 C). The edge heat entering the work, about 2.3-2.5 GW/m2 over the 16 um arc, is still
+    3-17 times their inverse flank fluxes of 0.13-0.73 GW/m2 (docs/models/thermal.md 3.4)."""
     at_edge, means = [], []
     for f_mm in CHEN_FEEDS_MM:
         engaged = 0.8e-3 * math.acos(1.0 - 0.1 / 0.8) + 0.5 * f_mm * 1e-3
@@ -211,20 +222,22 @@ def test_edge_temperature_against_chen_2017_hard_turning(db):
         means.append(293.15 + ST.contact_mean_rise(src, k, alpha, GLX, GLW) - ZERO)
     assert all(470.0 <= t <= 830.0 for t in at_edge), at_edge
     assert at_edge[0] < at_edge[1] < at_edge[2]
-    assert all(m > 800.0 for m in means), means
+    assert all(470.0 <= m <= 830.0 for m in means), means
+    assert means[0] < means[1] < means[2]
 
 
-@pytest.mark.xfail(strict=True, reason="open (docs/models/thermal.md 3.4): the edge heat the coefficient pipeline "
-                   "puts into the work (about 180 W on a 29 um arc, 4 GW/m2) heats the new surface of the warmup's "
-                   "4140 pass to about 900 C at 1 um depth, above Ac1")
 def test_warmup_od_pass_on_4140_is_not_damaged(db):
     """The warmup's lathe pass (cnctwin.core.warmup.lathe_project): AISI 4140 QT ~30 HRC, CNMG120408-TM carbide
     (6 deg chip-breaker rake on the -6 deg holder, 40 um hone), 132 m/min, f 0.25 mm/rev, ap 1.5 mm, 95 deg approach,
     the run's initial 50 um land. Published machined-surface temperatures of such cuts are a few hundred degC and
-    white layers are a hard-turning, worn-tool phenomenon: no white layer and no over-tempering expected."""
+    white layers are a hard-turning, worn-tool phenomenon: no white layer and no over-tempering expected. With the
+    edge and land stresses at the contact's own temperature (2026-11-10: the contact at about 690 C, softening 0.67)
+    the edge force is 39 N/mm (was 57) and the new surface peaks at 716 C, 696 C at 1 um, below Ac1 (740 C); at the
+    shear plane's flow stress it was 982 / 953 C with a white layer."""
     kr = math.radians(95.0)
     work, st, src = _contact(db, "aisi4140-qt30", "carbide-p30", 0.0, 40e-6, 132 / 60, 0.25e-3 * math.sin(kr),
                              1.5e-3 / math.sin(kr), 50e-6, coat="al2o3-cvd")
     _, verdicts = _judge(db, "aisi4140-qt30", work, src)
-    assert not verdicts["overtemper"].damaged
-    assert not verdicts["white_layer"].damaged
+    # a criterion whose screen the history never reached has no verdict: not damaged
+    assert not (verdicts.get("overtemper") and verdicts["overtemper"].damaged)
+    assert not (verdicts.get("white_layer") and verdicts["white_layer"].damaged)

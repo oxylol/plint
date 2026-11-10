@@ -470,16 +470,22 @@ class _Reference:
                                  adiabatic_tool=state.tool_temp_K is None)
         mu = effective_mu(work, tool, state.friction_factor)
         h_min = C.min_chip_thickness(work, group.edge_radius_m)
-        k_ref = _reference_shear_flow_stress(work, pmap, h_min, state)
+        k_ref, primary, t_ref = _reference_state(work, pmap, h_min, state)
         self.parts = _force_parts(work, group, state, self.h, pmap, None, mu, h_min, k_ref)
+        # the reference test's edge contact at its own temperature (the tool at the test's temperature, no land)
+        parts = self.parts
+        t_shear = np.where(parts.shearing, parts.rows[:, abi.OX_T_AB], state.work_temp_K)
+        _, _, parts.soft, parts.soft_ref, _ = _flank_partition(work, tool, group, state, self.h, h_min, k_ref, primary, mu,
+                                                            1.0, 0.0, t_shear, t_ref,
+                                                            indentation=parts.indent_mask | parts.indentation_group)
         self.incl = group.incl_rad
 
     def totals(self, shift_rad) -> np.ndarray:
         """[3, n] model forces per unit width (t, r, a) with the friction angle shifted by ``shift_rad`` (scalar or
         per node), uncalibrated otherwise."""
         shift = np.broadcast_to(np.asarray(shift_rad, dtype=float), self.h.shape)
-        f_sh, ke, _ = _assembled_parts(self.parts, self.incl, shift)
-        return f_sh + ke[:, None]
+        f_sh, _, _, ke_nodes = _assembled_parts(self.parts, self.incl, shift)
+        return f_sh + ke_nodes
 
 
 def _solve_shift(ratio_fn, target: float, bound: float) -> tuple[float, bool]:
@@ -660,6 +666,13 @@ class GroupCoefficients:
     # flank contact length per h node: wear land + the edge arc below the stagnation point (contact.stagnation_arc_length
     # at min(h, h_min)), the length frac_flank_to_tool was computed for and thermal deposits the tool's part over
     flank_contact_m: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    # the work's shear flow stress in the flank contact (edge arc + land) over the primary-zone reference k_ref, at the
+    # contact's own temperature and strain rate (softened_flank_contact), per h node (the node's edge, ploughing and
+    # indentation forces carry it) and of the group's reference contact (Ke, the land stresses, K_sp); the temperature
+    # the node's flow stress is taken at (NaN: not softened)
+    edge_softening: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    edge_softening_ref: float = 1.0
+    edge_flow_temp_K: np.ndarray = field(default_factory=lambda: np.zeros(0))
 
     def forces_per_width(self, h_m) -> np.ndarray:
         """[3, n] total forces per unit width at h (table form, h-interpolation linear in log h)."""
@@ -688,9 +701,12 @@ def _defaults(h: np.ndarray, work_temp_K: float) -> dict:
 
 
 def _flank_partition(work, tool, group: EdgeGroup, state: SlowState, h: np.ndarray, h_min: float, k_ref: float,
-                     mu: float, edge_t_scale, tau_land_Pa: float, work_surface_K, *, indentation=False,
-                     rubbing: bool = False) -> tuple[np.ndarray, np.ndarray]:
-    """(share of the flank contact's heat entering the tool, flank contact length) at each h node.
+                     primary: "PrimaryState | None", mu: float, edge_t_scale, land_factor: float, work_surface_K,
+                     ref_surface_K: float, ref_edge_t_scale: float = 1.0, *, indentation=False,
+                     rubbing: bool = False) -> tuple[np.ndarray, np.ndarray, np.ndarray, float, np.ndarray]:
+    """(share of the flank contact's heat entering the tool, flank contact length, softening of the contact's flow
+    stress at each h node; softening of the group's reference contact; the temperature the node's flow stress is
+    taken at).
 
     The heat the hot loop books as flank (wear land) and ploughing (edge) heat - thermal splits both with this share
     and deposits the tool's part over the contact length (docs/models/thermal.md 1) - is, per unit edge length: the
@@ -698,9 +714,15 @@ def _flank_partition(work, tool, group: EdgeGroup, state: SlowState, h: np.ndarr
     the edge force, contact.contact_power_parts), and the plastic work of the material pressed under the edge (its
     pressure part). The share follows from equal mean temperatures of tool and work over the contact VB + arc
     (heat.flank_heat_to_tool: Blok 1937), the plastic work being a heat source inside the work, uniform to the depth
-    of the ploughed zone (ploughing_zone_depth_ratio x arc). ``edge_t_scale``: the calibration's factor on the
-    tangential edge force per node (1 without calibration); ``indentation`` (bool or per node): the node's forces are
-    the indentation contact (the rake face in contact, depth h)."""
+    of the ploughed zone (ploughing_zone_depth_ratio x arc). The work's flow stress in the contact is taken at the
+    contact's own temperature and strain rate (:func:`softened_flank_contact`, a fixed point): the softening s
+    (k_contact / ``k_ref``) per node scales the node's edge, ploughing and indentation forces and the land's
+    stresses, and the share is the one of the softened heat. ``edge_t_scale``: the calibration's factor on the
+    tangential edge force per node (1 without calibration); ``land_factor``: the land's mean friction stress per unit
+    k (calibration included); ``indentation`` (bool or per node): the node's forces are the indentation contact (the
+    rake face in contact, depth h). The reference contact (the group's scalars: Ke, the land stresses, K_sp) is the
+    edge contact at depth h_min with the work surface at ``ref_surface_K`` (the shear plane's temperature of the
+    primary-zone state k_ref is taken at) and the edge factor ``ref_edge_t_scale``."""
     h = np.atleast_1d(np.asarray(h, dtype=float))
     n = h.shape[0]
     surface = np.broadcast_to(np.atleast_1d(np.asarray(work_surface_K, dtype=float)), (n,))
@@ -708,23 +730,29 @@ def _flank_partition(work, tool, group: EdgeGroup, state: SlowState, h: np.ndarr
     indent = np.broadcast_to(np.atleast_1d(np.asarray(indentation, dtype=bool)), (n,))
     frac = np.zeros(n)
     length = np.zeros(n)
+    soft = np.ones(n)
+    temps = np.full(n, np.nan)
     flank_temp = state.tool_flank_temp_K if state.tool_flank_temp_K is not None else state.tool_temp_K
     vb = max(float(state.VB_m), 0.0)
     v = float(state.speed_m_s)
     cache: dict = {}
+
+    def contact(depth, indented, t_scale, t_ws):
+        key = (depth, indented, t_scale, t_ws)
+        if key not in cache:
+            k_c, share, l_f, info = softened_flank_contact(
+                work, tool, group.edge_radius_m, group.rake_rad, group.incl_rad, depth, h_min, k_ref, primary, mu, vb,
+                land_factor, v, state.contact_width_m, t_ws, flank_temp, state.contact_time_s, edge_t_scale=t_scale,
+                indentation=indented)
+            cache[key] = (share, l_f, k_c / k_ref if k_ref > 0.0 else 1.0, info["T_flow_K"])
+        return cache[key]
+
     for k in range(n):
         depth = h_min if (rubbing or h[k] >= h_min) and not indent[k] else float(h[k])
-        key = (depth, bool(indent[k]), float(scale[k]), float(surface[k]))
-        if key in cache:
-            frac[k], length[k] = cache[key]
-            continue
-        share, l_f, _ = flank_contact_heat(work, tool, group.edge_radius_m, group.rake_rad, group.incl_rad, depth,
-                                           h_min, k_ref, mu, vb, tau_land_Pa, v, state.contact_width_m,
-                                           float(surface[k]), flank_temp, state.contact_time_s,
-                                           edge_t_scale=float(scale[k]), indentation=bool(indent[k]))
-        frac[k], length[k] = share, l_f
-        cache[key] = (share, l_f)
-    return frac, length
+        frac[k], length[k], soft[k], temps[k] = contact(depth, bool(indent[k]), float(scale[k]), float(surface[k]))
+    group_indent = bool(np.all(indent)) and n > 0
+    soft_ref = contact(h_min, group_indent, float(ref_edge_t_scale), float(ref_surface_K))[2] if h_min > 0.0 else 1.0
+    return frac, length, soft, float(soft_ref), temps
 
 
 def flank_contact_heat(work, tool, edge_radius_m: float, rake_rad: float, incl_rad: float, depth_m: float,
@@ -779,27 +807,172 @@ def edge_shear_flow_stress(work: WorkMaterial, k_ab_Pa: float, equivalent_strain
     a, b, n = float(jc[abi.MAT_A_PA]), float(jc[abi.MAT_B_PA]), float(jc[abi.MAT_N])
     return float(k_ab_Pa * (a + b * cap ** n) / (a + b * eps ** n))
 
+CONTACT_BISECTIONS = 60         # halvings of the contact-temperature bracket (below 1e-12 K for any bracket)
 
-def _rubbing_group(work, tool, group, state, h, mu, h_min, k_ref, notes) -> GroupCoefficients:
+
+@dataclass(frozen=True)
+class PrimaryState:
+    """The primary-zone state the edge's reference shear flow stress k_ref is taken at (equivalent strain, already
+    limited to ``edge_strain_cap``; equivalent strain rate; temperature)."""
+
+    strain: float
+    strain_rate_1_s: float
+    temp_K: float
+
+
+def contact_strain_rate(speed_m_s: float, arc_m: float) -> float:
+    """Equivalent strain rate of the material pressed under the edge: the velocity V between the tool face and the
+    material below the deforming zone taken up across the depth of the ploughed zone, delta =
+    ``ploughing_zone_depth_ratio`` x arc (Prandtl's field under the contact, Hill 1950; the ploughing slip-line field of
+    Waldorf, DeVor & Kapoor 1998), shear rate V / delta, equivalent rate V / (sqrt(3) delta)."""
+    delta = P.number(P.CONTACT, "ploughing_zone_depth_ratio") * float(arc_m)
+    if not (delta > 0.0 and speed_m_s > 0.0):
+        return 0.0
+    return float(speed_m_s) / (math.sqrt(3.0) * delta)
+
+
+def contact_shear_flow_stress(work: WorkMaterial, k_ref_Pa: float, primary: "PrimaryState | None",
+                              strain_rate_1_s: float, temp_K: float) -> float:
+    """Shear flow stress of the work at a contact's own state: k_ref (the primary-zone state ``primary``) times the
+    Johnson-Cook ratio sigma(eps, epsdot_c, T_c) / sigma(eps, epsdot_ref, T_ref) at the same (capped) strain, with
+    the kernels' clamps (T* to [0, max_jc_Tstar], the rate ratio floor); k_ref without a flow-stress law or state."""
+    jc = work.jc
+    if jc is None or primary is None or not k_ref_Pa > 0.0:
+        return float(k_ref_Pa)
+    ox = P.get(P.OXLEY)
+    t_max, r_min = float(ox["max_jc_Tstar"]), float(ox["min_jc_rate_ratio"])
+    ref = K.jc_flow_stress(primary.strain, primary.strain_rate_1_s, primary.temp_K, jc, t_max, r_min)
+    if not ref > 0.0:
+        return float(k_ref_Pa)
+    rate = strain_rate_1_s if strain_rate_1_s > 0.0 else primary.strain_rate_1_s
+    return float(k_ref_Pa * K.jc_flow_stress(primary.strain, rate, temp_K, jc, t_max, r_min) / ref)
+
+
+def solidus_K(work: WorkMaterial) -> float | None:
+    """The work's solidus (else liquidus, else the melting temperature of its flow-stress law): above it the work
+    carries no shear stress."""
+    for value in (getattr(work, "solidus_K", None), getattr(work, "liquidus_K", None)):
+        if value is not None and float(value) > 0.0:
+            return float(value)
+    if work.jc is not None and float(work.jc[abi.MAT_TMELT_K]) > 0.0:
+        return float(work.jc[abi.MAT_TMELT_K])
+    return None
+
+
+def softened_flank_contact(work, tool, edge_radius_m: float, rake_rad: float, incl_rad: float, depth_m: float,
+                           h_min_m: float, k_ref_Pa: float, primary: "PrimaryState | None", mu: float, VB_m: float,
+                           land_factor: float, speed_m_s: float, contact_width_m: float | None, work_surface_K: float,
+                           tool_flank_K: float | None, contact_time_s: float | None = None, *,
+                           edge_t_scale: float = 1.0, indentation: bool = False) -> tuple[float, float, float, dict]:
+    """(shear flow stress of the work in the flank contact, share of the contact's heat entering the tool, contact
+    length, details) with the flow stress at the contact's own temperature and strain rate.
+
+    The edge pressure (2 + pi) k, the friction min(mu p, k) on the arc and the wear land's stresses (``land_factor``
+    x k: Smithey's mean friction stress per unit k) are all linear in k, so the contact's friction and plastic-work
+    fluxes are s (q_f, q_d) with s = k_c / k_ref and (q_f, q_d) those at k_ref (:func:`flank_contact_heat`). Equal mean
+    temperatures of the two faces (Blok 1937, the plastic work a source in the work, g its surface factor) give the
+    contact temperature
+
+        T(s) = (M_w T_t + M_t T_ws + M_w M_t s (q_f + g q_d)) / (M_w + M_t)     (T_ws + M_w s (q_f + g q_d) adiabatic)
+
+    (the equal-temperature solution itself, also where the heat share :func:`flank_contact_heat` books is clamped to
+    [0, 1]), increasing in s; k_c = :func:`contact_shear_flow_stress` at T and at the contact's strain rate
+    (:func:`contact_strain_rate`) falls with T, so T = T(s(T)) has one root (bisection, fixed steps). Johnson-Cook's
+    thermal term is bounded by the work's solidus (:func:`solidus_K`), above which the work carries no stress: when
+    the flow stress at the solidus would still heat the contact beyond it, the contact sits at the solidus with the
+    stress that keeps it there (T(s) = T_solidus). Returns flank_contact_heat's share, length and details at k_c,
+    the details extended by ``k_contact_Pa``, ``k_ref_Pa``, ``softening`` (s), ``T_flow_K`` (the temperature the
+    flow stress is taken at), ``strain_rate_1_s`` and ``solidus_bound``."""
+    v = float(speed_m_s)
+    vb = max(float(VB_m), 0.0)
+    share, l_f, info = flank_contact_heat(work, tool, edge_radius_m, rake_rad, incl_rad, depth_m, h_min_m, k_ref_Pa,
+                                          mu, vb, land_factor * k_ref_Pa, v, contact_width_m, work_surface_K,
+                                          tool_flank_K, contact_time_s, edge_t_scale=edge_t_scale,
+                                          indentation=indentation)
+    details = {"k_contact_Pa": float(k_ref_Pa), "k_ref_Pa": float(k_ref_Pa), "softening": 1.0,
+               "T_flow_K": float("nan"), "strain_rate_1_s": 0.0, "solidus_bound": False}
+    q_f, q_d = info["q_friction_W_m2"], info["q_deformation_W_m2"]
+    if work.jc is None or primary is None or not (k_ref_Pa > 0.0 and l_f > 0.0 and v > 0.0 and q_f + q_d > 0.0):
+        info.update(details)
+        return float(k_ref_Pa), share, l_f, info
+    t_ws = float(work_surface_K)
+    adiabatic = tool is None or tool_flank_K is None
+    if adiabatic or not info["M_w"] > 0.0:
+        width = contact_width_m or P.number(P.CONTACT, "default_contact_aspect") * l_f
+        m_w = H.work_side_resistance(l_f, width, v, work, t_ws)
+        g = 1.0
+        if q_d > 0.0 and info["arc_m"] > 0.0:
+            peclet = v * 0.5 * l_f / (2.0 * work.diffusivity(t_ws))
+            g = H.layer_source_factor(peclet, P.number(P.CONTACT, "ploughing_zone_depth_ratio") * info["arc_m"] / l_f)
+        if adiabatic:
+            base, slope = t_ws, m_w * (q_f + g * q_d)
+        else:
+            m_t = H.tool_side_resistance(l_f, float(tool_flank_K), tool, width, contact_time_s)
+            base = (m_w * float(tool_flank_K) + m_t * t_ws) / (m_w + m_t)
+            slope = m_w * m_t * (q_f + g * q_d) / (m_w + m_t)
+    else:
+        m_w, m_t, g = info["M_w"], info["M_t"], info["g"]
+        base = (m_w * float(tool_flank_K) + m_t * t_ws) / (m_w + m_t)
+        slope = m_w * m_t * (q_f + g * q_d) / (m_w + m_t)
+    rate = contact_strain_rate(v, info["arc_m"] if info["arc_m"] > 0.0 else l_f)
+
+    def soft(temp_K: float) -> float:
+        return contact_shear_flow_stress(work, k_ref_Pa, primary, rate, temp_K) / k_ref_Pa
+
+    cap = solidus_K(work)
+    bound = False
+    if cap is not None and base + slope * soft(cap) > cap:
+        s = max((cap - base) / slope, 0.0) if slope > 0.0 else 0.0
+        temp = cap
+        bound = True
+    else:
+        lo = base
+        hi = base + slope * soft(lo)
+        if cap is not None:
+            hi = min(hi, cap)
+        for _ in range(CONTACT_BISECTIONS):
+            mid = 0.5 * (lo + hi)
+            if base + slope * soft(mid) > mid:
+                lo = mid
+            else:
+                hi = mid
+        temp = 0.5 * (lo + hi)
+        s = soft(temp)
+    k_c = s * k_ref_Pa
+    share, l_f, info = flank_contact_heat(work, tool, edge_radius_m, rake_rad, incl_rad, depth_m, h_min_m, k_c, mu, vb,
+                                          land_factor * k_c, v, contact_width_m, work_surface_K, tool_flank_K,
+                                          contact_time_s, edge_t_scale=edge_t_scale, indentation=indentation)
+    info.update(k_contact_Pa=float(k_c), k_ref_Pa=float(k_ref_Pa), softening=float(s), T_flow_K=float(temp),
+                strain_rate_1_s=float(rate), solidus_bound=bound)
+    return float(k_c), share, l_f, info
+
+
+def _rubbing_group(work, tool, group, state, h, mu, h_min, k_ref, notes, primary=None) -> GroupCoefficients:
     """Margins and other rubbing-only elements: no chip; the hot loop's indentation model with
-    K_sp applies at every interference (h_min set to the top of the grid)."""
+    K_sp applies at every interference (h_min set to the top of the grid). The contact's flow stress is the work's at
+    the contact's own temperature and strain rate (the work surface entering it at the workpiece temperature)."""
     depth = max(h_min, 1e-9)
-    edge = C.edge_forces(group.edge_radius_m, depth, group.rake_rad, group.incl_rad, k_ref, mu)
-    k_sp, src = C.indentation_coefficient(work, edge[abi.PL_FR], depth, group.edge_radius_m, group.rake_rad)
     sigma0, tau0 = C.flank_reference_stresses(k_ref, mu)
     s_mean, t_mean = C.flank_stresses(state.VB_m, sigma0, tau0)
-    x, st, sr = C.ploughing_shape(group.edge_radius_m, depth, group.rake_rad, group.incl_rad, k_ref, mu)
-    notes.append("rubbing-only group: forces from the indentation model (K_sp) in the hot loop")
     kw = _defaults(h, state.work_temp_K)
-    flank_tool, flank_len = _flank_partition(work, tool, group, state, h, depth, k_ref, mu, 1.0, t_mean,
-                                             np.full(h.shape[0], state.work_temp_K), rubbing=True)
+    flank_tool, flank_len, _, soft, temps = _flank_partition(work, tool, group, state, h, depth, k_ref, primary, mu, 1.0,
+                                                      t_mean / k_ref if k_ref > 0.0 else 0.0,
+                                                      np.full(h.shape[0], state.work_temp_K), state.work_temp_K,
+                                                      rubbing=True)
+    k_edge = k_ref * soft
+    sigma0, tau0, s_mean, t_mean = (x * soft for x in (sigma0, tau0, s_mean, t_mean))
+    edge = C.edge_forces(group.edge_radius_m, depth, group.rake_rad, group.incl_rad, k_edge, mu)
+    k_sp, src = C.indentation_coefficient(work, edge[abi.PL_FR], depth, group.edge_radius_m, group.rake_rad)
+    x, st, sr = C.ploughing_shape(group.edge_radius_m, depth, group.rake_rad, group.incl_rad, k_edge, mu)
+    notes.append("rubbing-only group: forces from the indentation model (K_sp) in the hot loop")
     kw.update(frac_flank_to_tool=flank_tool, regime=np.full(h.shape[0], REGIME_PLOUGHING, np.int32), plough_x=x,
               plough_shape_t=st, plough_shape_r=sr)
     return GroupCoefficients(**kw, h_min_m=float(h[-1]), K_sp_N_per_m3=float(k_sp), K_sp_source=src,
                              v_min_m_s=C.min_shear_speed(), mu_eff=float(mu), flank_sigma0_Pa=float(sigma0),
                              flank_tau0_Pa=float(tau0), flank_land_star_m=P.number(P.CONTACT, "flank_plastic_land_m"),
                              flank_sigma_mean_Pa=float(s_mean), flank_tau_mean_Pa=float(t_mean), notes=notes,
-                             flank_contact_m=flank_len)
+                             flank_contact_m=flank_len, edge_softening=np.full(h.shape[0], soft),
+                             edge_softening_ref=float(soft), edge_flow_temp_K=temps)
 
 
 def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGroup, state: SlowState, h_grid_m,
@@ -819,34 +992,55 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
         return _data_only(work, tool, group, state, h, mu, h_min, notes)
     if pmap is None:
         raise ValueError("a process map is required for a material with a flow-stress law")
-    k_ref = _reference_shear_flow_stress(work, pmap, h_min, state)
+    k_ref, primary, t_ref = _reference_state(work, pmap, h_min, state)
     if group.kind == EDGE_MARGIN:
-        return _rubbing_group(work, tool, group, state, h, mu, h_min, k_ref, notes)
+        return _rubbing_group(work, tool, group, state, h, mu, h_min, k_ref, notes, primary)
     parts = _force_parts(work, group, state, h, pmap, bue_map, mu, h_min, k_ref)
     rows, t1, shearing, regime, edge = parts.rows, parts.t1, parts.shearing, parts.regime, parts.edge
     if parts.bue_note:
         notes.append(parts.bue_note)
     if parts.indentation_group:
         notes.append("indentation/extrusion group (chisel edge or normal rake below the shear limit)")
+    t_shear = np.where(shearing, rows[:, abi.OX_T_AB], state.work_temp_K)
+    t_int = np.where(shearing, rows[:, abi.OX_T_INT], state.work_temp_K)
+    t_chip = np.where(shearing, rows[:, abi.OX_T_CHIP], state.work_temp_K)
+    above = ~parts.below
+    first = int(np.argmax(above)) if np.any(above) else n - 1
     cal_name = "none"
     clamped = False
-    if calibration is not None and calibration.kind != "none":
+    calibrated = calibration is not None and calibration.kind != "none"
+    if calibrated:
         scale, shift, edge_scale = calibration.factors(h, state.speed_m_s)
-        f_sh, ke, below = _assembled_parts(parts, group.incl_rad, shift)
-        above = ~below
-        total = np.where(above[None, :], scale[None, :] * f_sh + edge_scale * ke[:, None],
-                         edge_scale * (f_sh + ke[:, None]))
-        edge_part = np.where(above[None, :], edge_scale * ke[:, None], total)
-        edge_part[:, h <= h_min] = total[:, h <= h_min]
-        first = int(np.argmax(above)) if np.any(above) else n - 1
-        ke = edge_scale[:, first] * ke
         cal_name = calibration.kind
         clamped = calibration.clamped
         notes.append(f"calibrated to {calibration.kind} data ({', '.join(calibration.sources)})")
+    # the flank contact (edge arc + wear land) at the work's flow stress at the contact's own temperature and strain
+    # rate (softened_flank_contact): the partition and the softening of the edge, ploughing, indentation and land
+    # stresses per node and of the group's reference contact
+    sigma0, tau0 = C.flank_reference_stresses(k_ref, mu)
+    if calibrated:
+        # the land carries the ploughing stresses of the edge (Waldorf 1999): the edge factors of the calibration
+        sigma0 *= float(edge_scale[1, first])
+        tau0 *= float(edge_scale[0, first])
+    s_mean, t_mean = C.flank_stresses(state.VB_m, sigma0, tau0)
+    edge_t = np.ones(n)
+    if calibrated:
+        edge_t = np.where(h <= h_min, edge_scale[0], float(edge_scale[0, first]))
+    land_factor = t_mean / k_ref if k_ref > 0.0 else 0.0
+    flank_tool, flank_len, soft, soft_ref, flow_temp = _flank_partition(
+        work, tool, group, state, h, h_min, k_ref, primary, mu, edge_t, land_factor, t_shear, t_ref,
+        float(edge_scale[0, first]) if calibrated else 1.0, indentation=parts.indent_mask | parts.indentation_group)
+    parts.soft, parts.soft_ref = soft, soft_ref
+    if calibrated:
+        f_sh, ke, below, ke_nodes = _assembled_parts(parts, group.incl_rad, shift)
+        total = np.where(above[None, :], scale[None, :] * f_sh + edge_scale * ke_nodes, edge_scale * (f_sh + ke_nodes))
+        edge_part = np.where(above[None, :], edge_scale * ke_nodes, total)
+        edge_part[:, h <= h_min] = total[:, h <= h_min]
+        ke = edge_scale[:, first] * ke
     else:
-        f_sh, ke, _ = _assembled_parts(parts, group.incl_rad, None)
-        total = f_sh + ke[:, None]
-        edge_part = np.broadcast_to(ke[:, None], total.shape).copy()
+        f_sh, ke, _, ke_nodes = _assembled_parts(parts, group.incl_rad, None)
+        total = f_sh + ke_nodes
+        edge_part = ke_nodes.copy()
         edge_part[:, h <= h_min] = total[:, h <= h_min]
     with np.errstate(divide="ignore", invalid="ignore"):
         kt = np.where(h > 0.0, (total[0] - ke[0]) / h, 0.0)
@@ -859,24 +1053,13 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
     with np.errstate(divide="ignore", invalid="ignore"):
         edge_share = np.where(total[0] > 0.0, np.clip(edge_part[0] / total[0], 0.0, 1.0), 1.0)
     edge_share = np.where(shearing, edge_share, 1.0)
-    t_shear = np.where(shearing, rows[:, abi.OX_T_AB], state.work_temp_K)
-    t_int = np.where(shearing, rows[:, abi.OX_T_INT], state.work_temp_K)
-    t_chip = np.where(shearing, rows[:, abi.OX_T_CHIP], state.work_temp_K)
-    sigma0, tau0 = C.flank_reference_stresses(k_ref, mu)
-    if cal_name != "none":
-        # the land carries the ploughing stresses of the edge (Waldorf 1999): the edge factors of the calibration
-        sigma0 *= float(edge_scale[1, first])
-        tau0 *= float(edge_scale[0, first])
-    s_mean, t_mean = C.flank_stresses(state.VB_m, sigma0, tau0)
-    edge_t = np.ones(n)
-    if cal_name != "none":
-        edge_t = np.where(h <= h_min, edge_scale[0], float(edge_scale[0, first]))
-    flank_tool, flank_len = _flank_partition(work, tool, group, state, h, h_min, k_ref, mu, edge_t, t_mean, t_shear,
-                                             indentation=parts.indent_mask | parts.indentation_group)
-    k_sp, k_src = C.indentation_coefficient(work, ke[1] if ke[1] > 0 else edge[abi.PL_FR], max(h_min, 1e-12),
-                                            group.edge_radius_m, group.rake_rad)
+    # the group's land stresses at the reference contact's softening
+    sigma0, tau0, s_mean, t_mean = (x * soft_ref for x in (sigma0, tau0, s_mean, t_mean))
+    k_edge = k_ref * soft_ref
+    k_sp, k_src = C.indentation_coefficient(work, ke[1] if ke[1] > 0 else edge[abi.PL_FR] * soft_ref,
+                                            max(h_min, 1e-12), group.edge_radius_m, group.rake_rad)
     if h_min > 0.0 and group.edge_radius_m > 0.0:
-        px, pst, psr = C.ploughing_shape(group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_ref, mu)
+        px, pst, psr = C.ploughing_shape(group.edge_radius_m, h_min, group.rake_rad, group.incl_rad, k_edge, mu)
     else:
         px, pst, psr = np.linspace(0.0, 1.0, 2), np.ones(2), np.ones(2)
     return GroupCoefficients(
@@ -900,20 +1083,35 @@ def group_coefficients(work: WorkMaterial, tool: ToolSide | None, group: EdgeGro
         v_min_m_s=C.min_shear_speed(), mu_eff=float(mu), flank_sigma0_Pa=float(sigma0), flank_tau0_Pa=float(tau0),
         flank_land_star_m=P.number(P.CONTACT, "flank_plastic_land_m"), flank_sigma_mean_Pa=float(s_mean),
         flank_tau_mean_Pa=float(t_mean), plough_x=px, plough_shape_t=pst, plough_shape_r=psr, calibration=cal_name,
-        calibration_clamped=clamped, notes=notes, flank_contact_m=flank_len)
+        calibration_clamped=clamped, notes=notes, flank_contact_m=flank_len, edge_softening=soft,
+        edge_softening_ref=float(soft_ref), edge_flow_temp_K=flow_temp)
 
 
 def _reference_shear_flow_stress(work: WorkMaterial, pmap: abi.ProcessMap, h_min_m: float, state: SlowState) -> float:
-    """Shear flow stress of the material at the edge (the edge, ploughing, indentation and wear-land pressures):
-    the Johnson-Cook stress of the primary-zone state at t1 = h_min, with the strain limited to the saturation strain
-    of chip material (Nakayama 1962: the strength of chips does not rise further above a shear strain of about 2).
-    Where the map holds no chip-forming solution at that thickness (very negative rakes: a chisel edge, where the
-    fallback's shear angle of a few degrees means strains of 3-5), the Johnson-Cook extrapolation would otherwise
-    set the contact pressure of the indentation and edge models."""
+    """Shear flow stress of the material at the edge at the primary-zone reference state (:func:`_reference_state`)."""
+    return _reference_state(work, pmap, h_min_m, state)[0]
+
+
+def _reference_state(work: WorkMaterial, pmap: abi.ProcessMap, h_min_m: float,
+                     state: SlowState) -> tuple[float, PrimaryState | None, float]:
+    """(k_ref, its primary-zone state, the shear plane's temperature there): the Johnson-Cook stress of the
+    primary-zone state at t1 = h_min, with the strain limited to the saturation strain of chip material (Nakayama 1962:
+    the strength of chips does not rise further above a shear strain of about 2). Where the map holds no chip-forming
+    solution at that thickness (very negative rakes: a chisel edge, where the fallback's shear angle of a few degrees
+    means strains of 3-5), the Johnson-Cook extrapolation would otherwise set the contact pressure of the indentation
+    and edge models; there the first positive node of the map gives k_ref and its state. The edge, ploughing,
+    indentation and wear-land stresses take k_ref to the contact's own temperature and strain rate
+    (:func:`softened_flank_contact`)."""
     ref = lookup(pmap, max(h_min_m, pmap.t1_grid_m[0]), state.speed_m_s, state.tool_temp_K)[0]
     if not ref[abi.OX_K_AB] > 0.0:
-        return float(_first_positive(pmap, abi.OX_K_AB))
-    return edge_shear_flow_stress(work, float(ref[abi.OX_K_AB]), float(ref[abi.OX_EPS_AB]))
+        ref = _first_positive_row(pmap, abi.OX_K_AB)
+        if ref is None:
+            return 0.0, None, float(state.work_temp_K)
+    eps = float(ref[abi.OX_EPS_AB])
+    k = edge_shear_flow_stress(work, float(ref[abi.OX_K_AB]), eps)
+    t_ab = float(ref[abi.OX_T_AB]) if ref[abi.OX_T_AB] > 0.0 else float(state.work_temp_K)
+    primary = PrimaryState(min(eps, P.number(P.CONTACT, "edge_strain_cap")), float(ref[abi.OX_EPSDOT_AB]), t_ab)
+    return float(k), primary, t_ab
 
 
 @dataclass
@@ -932,6 +1130,10 @@ class _Parts:
     plough: np.ndarray                   # [3, n] ploughing forces at the below nodes
     indentation_group: bool
     bue_note: str = ""
+    # the work's flow stress in the flank contact over k_ref (softened_flank_contact): per node (edge, ploughing and
+    # indentation forces of the node) and of the group's reference contact (the scalar edge force Ke)
+    soft: np.ndarray | None = None
+    soft_ref: float = 1.0
 
 
 def _force_parts(work, group: EdgeGroup, state: SlowState, h: np.ndarray, pmap, bue_map, mu: float, h_min: float,
@@ -981,17 +1183,25 @@ def _force_parts(work, group: EdgeGroup, state: SlowState, h: np.ndarray, pmap, 
                   note)
 
 
-def _assembled_parts(parts: _Parts, incl_rad: float, shift_rad) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """(shearing part f_sh [3, n], edge force ke [3], ploughing mask) with the model total f_sh + ke at every node:
-    shearing forces (friction angle shifted by ``shift_rad`` when given) or indentation forces above h_min, the
-    ploughing force minus ke below it."""
+def _assembled_parts(parts: _Parts, incl_rad: float,
+                     shift_rad) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """(shearing part f_sh [3, n], the group's edge force ke [3], ploughing mask, edge part per node [3, n]) with the
+    model total f_sh + edge part at every node: shearing forces (friction angle shifted by ``shift_rad`` when given) or
+    indentation forces above h_min plus the node's edge force, the ploughing force minus ke below it. The edge,
+    ploughing and indentation forces carry the contact's softening (``parts.soft`` per node, ``parts.soft_ref`` for
+    ke)."""
+    n = parts.t1.shape[0]
+    soft = np.ones(n) if parts.soft is None else np.asarray(parts.soft, dtype=float)
     f_sh = _oblique_shearing_forces(parts.rows, parts.t1, parts.shearing, parts.rake_rows, incl_rad, shift_rad)
     m = parts.indent_mask
-    f_sh[:, m] = parts.indent[:, m]
-    ke = np.array([parts.edge[abi.PL_FT], parts.edge[abi.PL_FR], parts.edge[abi.PL_FA]])
+    f_sh[:, m] = parts.indent[:, m] * soft[m][None, :]
+    edge = np.array([parts.edge[abi.PL_FT], parts.edge[abi.PL_FR], parts.edge[abi.PL_FA]])
+    ke = edge * float(parts.soft_ref)
+    ke_nodes = edge[:, None] * soft[None, :]
     b = parts.below
-    f_sh[:, b] = parts.plough[:, b] - ke[:, None]
-    return f_sh, ke, b
+    f_sh[:, b] = parts.plough[:, b] * soft[b][None, :] - ke[:, None]
+    ke_nodes[:, b] = ke[:, None]
+    return f_sh, ke, b, ke_nodes
 
 
 def _oblique_shearing_forces(rows: np.ndarray, t1: np.ndarray, shearing: np.ndarray, rake_rows: np.ndarray,
@@ -1031,6 +1241,14 @@ def _first_positive(pmap: abi.ProcessMap, slot: int) -> float:
     vals = pmap.values[..., slot]
     pos = vals[vals > 0.0]
     return float(pos[0]) if pos.size else 0.0
+
+
+def _first_positive_row(pmap: abi.ProcessMap, slot: int) -> np.ndarray | None:
+    """The map's first node (in storage order, as :func:`_first_positive`) whose ``slot`` is positive."""
+    ensure_refined(pmap)
+    vals = pmap.values.reshape(-1, pmap.values.shape[-1])
+    idx = np.nonzero(vals[:, slot] > 0.0)[0]
+    return vals[idx[0]].copy() if idx.size else None
 
 
 # ============================================================================ data-only model
@@ -1191,6 +1409,7 @@ def flank_coefficients(groups: list[GroupCoefficients], elem_group: np.ndarray, 
 __all__ = ["EdgeGroup", "SlowState", "GroupCoefficients", "Calibration", "NO_CALIBRATION", "build_process_map",
            "map_matches", "lookup", "build_calibration", "select_entries", "group_coefficients",
            "process_coefficients", "coeff_table", "flank_coefficients", "flank_contact_heat", "edge_shear_flow_stress",
+           "PrimaryState", "contact_strain_rate", "contact_shear_flow_stress", "solidus_K", "softened_flank_contact",
            "default_t1_grid", "default_speed_grid",
            "default_tool_temp_grid", "REGIME_NONE", "REGIME_OXLEY", "REGIME_MERCHANT", "REGIME_INDENTATION",
            "REGIME_PLOUGHING", "REGIME_DATA"]
