@@ -11,7 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY cnctwin ./cnctwin
-RUN pip install --no-cache-dir . && pip install --no-cache-dir numba-cuda || true
+# Only the dependencies go into site-packages: the package itself runs from /app (PYTHONPATH below), one copy,
+# so the server, the CLI and the warmup compile and load the same files (Numba's cache is keyed by source path)
+RUN pip install --no-cache-dir . && pip uninstall -y cnctwin \
+    && printf '#!/bin/sh\nexec python -m cnctwin.cli "$@"\n' > /usr/local/bin/twin && chmod 755 /usr/local/bin/twin
+RUN pip install --no-cache-dir numba-cuda || true
 COPY db ./db
 COPY web ./web
 COPY examples ./examples
@@ -21,8 +25,10 @@ COPY docs ./docs
 # Deterministic numerics (docs/determinism.md) and a pre-built kernel cache.
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PYTHONHASHSEED=0 \
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1 \
-    NUMBA_CACHE_DIR=/app/.numba-cache CNCTWIN_ROOT=/app DATA_DIR=/data PORT=5210
-RUN python -m cnctwin.cli warmup && chmod -R a+rX /app/.numba-cache
+    NUMBA_CACHE_DIR=/app/.numba-cache CNCTWIN_ROOT=/app PYTHONPATH=/app DATA_DIR=/data PORT=5210
+# Numba only uses a cache directory it can write to (it test-writes before loading), so the warm cache
+# belongs to the runtime user and the container's root filesystem stays writable (compose: no read_only)
+RUN python -m cnctwin.cli warmup && chown -R 1002:1002 /app/.numba-cache
 
 USER 1002:1002
 EXPOSE 5210

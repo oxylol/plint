@@ -35,6 +35,9 @@ twin = "cnctwin.cli:main"
 [tool.setuptools.packages.find]
 include = ["cnctwin*"]
 
+[tool.setuptools.package-data]
+"cnctwin.controller.macrolib" = ["*.nc"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
