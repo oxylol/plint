@@ -8,6 +8,10 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   sentence) is asked first whenever it answers; **Plint's own** (container `voicestudio` in the table stack, started by
   `COMPOSE_PROFILES=speech`, CPU, about 20 s per sentence) takes over when the PC is off. The page shows which one
   spoke: `CLONED · GPU` or `CLONED · CPU`.
+- **Manner**: the prompt in `server.js` describes how he talks in the film (thinking out loud, trailing off, losing a
+  word, the grand line undercut by a small one) and hands the model his own lines from `data/ultron/lines.txt` (one per
+  line, not in git) as the pattern. Add or remove lines there; the file is read again when it changes. Short sentences
+  are sent to the voice together, so a pause written as three dots stays inside one breath.
 - **Ears**: the browser's own speech recognition (tap his face or the microphone). Typing always works.
 - **Memory**: the talk in `data/ultron/history.jsonl`; every eight turns celeris-1 rewrites `data/ultron/notes.md`
   (lasting facts), which goes into every prompt. FORGET clears the talk (a dated copy stays), not the notes.
