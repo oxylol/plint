@@ -30,6 +30,11 @@ services:
       VOICE_ENGINE: ${ULTRON_VOICE_ENGINE:-omnivoice}
       VOICE_STEPS: 6
       VOICE_FORMAT: mp3
+      # The fast voice: VoiceStudio on the PC's GPU over the tailnet, asked first
+      # whenever it answers (16 steps there take about a second).
+      VOICE_FAST_URL: ${ULTRON_PC_VOICE_URL:-}
+      VOICE_FAST_KEY: ${ULTRON_PC_VOICE_KEY:-}
+      VOICE_FAST_STEPS: 16
       PLINT_DATA: /plint-data
     volumes:
       - ../../data/ultron:/data

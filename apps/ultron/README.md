@@ -3,8 +3,11 @@
 A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*, living in Plint.
 
 - **Mind**: celeris-1 through its OpenAI-style API (`CELERIS_API_KEY` in `/opt/plint/.env`). Answers arrive in about half a second.
-- **Voice**: VoiceStudio (container `voicestudio`, defined in the table stack, started by `COMPOSE_PROFILES=speech`) speaks each
-  sentence with the clone profile `Ultron`. The page plays the clips in order; the mouth of the face follows the sound.
+- **Voice**: VoiceStudio speaks each sentence with the clone profile `Ultron`; the page plays the clips in order and the
+  mouth of the face follows the sound. Two VoiceStudios: the **PC** (RX 9070 XT, over the tailnet, about a second per
+  sentence) is asked first whenever it answers; **Plint's own** (container `voicestudio` in the table stack, started by
+  `COMPOSE_PROFILES=speech`, CPU, about 20 s per sentence) takes over when the PC is off. The page shows which one
+  spoke: `CLONED · GPU` or `CLONED · CPU`.
 - **Ears**: the browser's own speech recognition (tap his face or the microphone). Typing always works.
 - **Memory**: the talk in `data/ultron/history.jsonl`; every eight turns celeris-1 rewrites `data/ultron/notes.md`
   (lasting facts), which goes into every prompt. FORGET clears the talk (a dated copy stays), not the notes.
@@ -47,10 +50,19 @@ Measured on Plint 2026-11-11 (four busy cores, no usable GPU), same reference cl
 \* speaker-embedding similarity (Resemblyzer); another clip of the same actor scores 0.91, an unrelated voice 0.50.
 Nobody has listened to it yet when this was written: the numbers say "same speaker", not "sounds like him".
 
+## The PC voice
+
+VoiceStudio 0.5.8 from a source checkout on Filip's PC with the opt-in ROCm runtime (`HANDOFF-pc-voice.md` is the brief
+its agent worked from). Plint reaches it at `ULTRON_PC_VOICE_URL` with `ULTRON_PC_VOICE_KEY` (both in `.env`; the URL is
+the PC's tailnet IP, its MagicDNS name does not resolve on Plint). The PC's firewall admits only Plint on port 3900.
+Measured from Plint 2026-11-11 at 16 steps: 0.8 s for a 2-second sentence, 0.9 s for a 9-second one; in the page the
+first sentence starts 1.5 s after sending. Plint asks the PC's `/health` every 20 s; a PC that stops answering in the
+middle of a turn costs up to 12 s once, then Plint's own voice finishes the answer.
+
 ## Limits
 
-- **Slow voice.** The text is there in half a second; the first spoken sentence follows after about half a minute and
-  each further one takes as long again. That is the CPU: OmniVoice needs a GPU to keep up with speech.
+- **Slow voice when the PC is off.** The text is there in half a second; on Plint's CPU the first spoken sentence
+  follows after about half a minute and each further one takes as long again.
 - **The GTX 950 in Plint does not help.** VoiceStudio's PyTorch is built for RTX 20-series cards and newer (sm_70+),
   the 950 is sm_52, usually has 2 GB, and its driver module is not installed for the running kernel. The ways to a
   quick voice: VoiceStudio on a machine with a newer GPU (set `VOICE_URL` to it), or a newer card here.

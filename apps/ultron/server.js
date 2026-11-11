@@ -26,6 +26,13 @@ const VOICE = {
   speed: Number(process.env.VOICE_SPEED || 1),
   format: process.env.VOICE_FORMAT || 'wav',
 };
+// A quicker VoiceStudio elsewhere (the PC with the GPU), asked first whenever it answers.
+const FAST = {
+  url: (process.env.VOICE_FAST_URL || '').replace(/\/$/, ''),
+  key: process.env.VOICE_FAST_KEY || '',
+  steps: Number(process.env.VOICE_FAST_STEPS || 16),
+  up: false, at: 0, device: '',
+};
 // Live facts about the server, written by scripts/theme-data.sh (optional).
 const PLINT_DATA = process.env.PLINT_DATA || '';
 
@@ -204,6 +211,24 @@ async function probeVoice() {
 probeVoice();
 setInterval(() => { if (voice.state !== 'ok') probeVoice(); }, 60e3).unref();
 
+// The fast voice is a machine that sleeps and gets switched off: ask it often, wait for it briefly.
+async function probeFast() {
+  if (!FAST.url) return false;
+  try {
+    const r = await fetch(FAST.url + '/health', { headers: { authorization: 'Bearer ' + FAST.key }, signal: AbortSignal.timeout(2500) });
+    const j = r.ok ? await r.json() : null;
+    FAST.up = !!j && j.status === 'ok';
+    FAST.device = (j && j.device) || '';
+  } catch { FAST.up = false; }
+  FAST.at = Date.now();
+  return FAST.up;
+}
+probeFast();
+setInterval(probeFast, 20e3).unref();
+
+// What the page is told: which voice would speak right now.
+const voiceNow = () => (FAST.up ? { state: 'ok', detail: FAST.device, via: 'gpu', at: FAST.at } : { ...voice, via: voice.state === 'ok' ? 'cpu' : '' });
+
 const clips = new Map();        // id → { buf, type, at }
 setInterval(() => { const t = Date.now() - AUDIO_TTL; for (const [k, v] of clips) if (v.at < t) clips.delete(k); }, 60e3).unref();
 
@@ -212,7 +237,33 @@ function sayable(s) {
   return s.replace(/[*_`#>]+/g, '').replace(/\s+/g, ' ').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").trim();
 }
 
+function keep(r, buf) {
+  const id = crypto.randomBytes(8).toString('hex');
+  clips.set(id, { buf, type: r.headers.get('content-type') || 'audio/wav', at: Date.now() });
+  return id;
+}
+
+async function speakFast(text, signal) {
+  const body = { model: 'omnivoice', input: sayable(text), voice: VOICE.name, response_format: VOICE.format, speed: VOICE.speed, num_step: FAST.steps };
+  const r = await fetch(FAST.url + '/v1/audio/speech', {
+    method: 'POST', signal: AbortSignal.any([signal, AbortSignal.timeout(12e3)]),
+    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + FAST.key }, body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`fast voice ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return keep(r, Buffer.from(await r.arrayBuffer()));
+}
+
+// Returns [clip id, which voice made it].
 async function speak(text, signal) {
+  if (FAST.up) {
+    try { return [await speakFast(text, signal), 'gpu']; } catch (e) {
+      if (signal.aborted) throw e;
+      FAST.up = false; FAST.at = Date.now();
+      console.error('fast voice lost, using the local one:', e.message);
+      if (voice.state !== 'ok') await probeVoice();
+      if (voice.state !== 'ok') throw e;
+    }
+  }
   const body = { model: VOICE.engine, input: sayable(text), voice: VOICE.name, response_format: VOICE.format, speed: VOICE.speed };
   if (VOICE.steps && VOICE.engine.startsWith('omnivoice')) body.num_step = VOICE.steps;
   const r = await fetch(VOICE.url + '/v1/audio/speech', {
@@ -223,11 +274,9 @@ async function speak(text, signal) {
     if (r.status === 403 && /licence/i.test(t)) voice = { state: 'licence', detail: 'the model licence is not accepted in VoiceStudio', at: Date.now() };
     throw new Error(`voice ${r.status}: ${t}`);
   }
-  const buf = Buffer.from(await r.arrayBuffer());
-  const id = crypto.randomBytes(8).toString('hex');
-  clips.set(id, { buf, type: r.headers.get('content-type') || 'audio/wav', at: Date.now() });
+  const id = keep(r, Buffer.from(await r.arrayBuffer()));
   if (voice.state !== 'ok') voice = { state: 'ok', detail: '', at: Date.now() };
-  return id;
+  return [id, 'cpu'];
 }
 
 // Cut the stream into things worth one breath: a sentence, or a long clause.
@@ -257,9 +306,12 @@ async function turn(req, res, input) {
 
   remember('user', input.text);
   // a voice that was not ready gets another look before each turn, so it comes back by itself
-  if (input.voice !== false && voice.state !== 'ok' && voice.state !== 'off' && Date.now() - voice.at > 15e3) await probeVoice();
-  const wantVoice = input.voice !== false && voice.state === 'ok';
-  send({ t: 'start', voice: input.voice === false ? 'muted' : voice.state });
+  if (input.voice !== false && FAST.url && Date.now() - FAST.at > 30e3) await probeFast();     // normally the timer keeps this fresh
+  if (input.voice !== false && !FAST.up && voice.state !== 'ok' && voice.state !== 'off' && Date.now() - voice.at > 15e3) await probeVoice();
+  const now = voiceNow();
+  const wantVoice = input.voice !== false && now.state === 'ok';
+  let via = now.via;
+  send({ t: 'start', voice: input.voice === false ? 'muted' : now.state, via });
 
   let full = '', buf = '', n = 0;
   let chain = Promise.resolve();
@@ -271,7 +323,8 @@ async function turn(req, res, input) {
     chain = chain.then(async () => {
       if (ac.signal.aborted || voiceFailed) return;
       try {
-        const id = await speak(sentence, ac.signal);
+        const [id, by] = await speak(sentence, ac.signal);
+        if (by !== via) { via = by; send({ t: 'via', via }); }
         send({ t: 'audio', i, id });
       } catch (e) {
         if (ac.signal.aborted) return;
@@ -324,12 +377,12 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
   try {
-    if (p === '/health') return json(res, 200, { ok: true, llm: !!LLM.key, voice: voice.state });
+    if (p === '/health') return json(res, 200, { ok: true, llm: !!LLM.key, voice: voiceNow().state, via: voiceNow().via });
 
     if (p === '/api/state' && req.method === 'GET') {
-      if (Date.now() - voice.at > 15e3 && voice.state !== 'ok') await probeVoice();
+      if (!FAST.up && Date.now() - voice.at > 15e3 && voice.state !== 'ok') await probeVoice();
       return json(res, 200, {
-        owner: OWNER, model: LLM.model, llm: !!LLM.key, voice,
+        owner: OWNER, model: LLM.model, llm: !!LLM.key, voice: voiceNow(),
         history: history.slice(-60).map((m) => ({ role: m.role, text: m.text, ts: m.ts })),
         turns: history.length,
       });
@@ -381,4 +434,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`ultron on :${PORT} · mind ${LLM.model}${LLM.key ? '' : ' (no key)'} · voice ${VOICE.url}`));
+server.listen(PORT, () => console.log(`ultron on :${PORT} · mind ${LLM.model}${LLM.key ? '' : ' (no key)'} · voice ${FAST.url ? FAST.url + ', then ' : ''}${VOICE.url}`));

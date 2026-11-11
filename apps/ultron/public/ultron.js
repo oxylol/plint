@@ -236,12 +236,13 @@ const VOICE_NOTE = {
   down: 'VoiceStudio does not answer. He answers in text.',
   off: 'No voice is configured. He answers in text.',
 };
-let voiceState = 'ok';
-function showVoice(st) {
+let voiceState = 'ok', voiceVia = '';     // via: gpu (the PC) or cpu (Plint itself)
+function showVoice(st, via) {
   voiceState = st;
+  if (via !== undefined) voiceVia = via;
   const b = $('rVoice');
   const on = $('swVoice').getAttribute('aria-pressed') === 'true';
-  b.textContent = !on && st === 'ok' ? 'MUTED' : (VOICE_WORD[st] || st.toUpperCase());
+  b.textContent = !on && st === 'ok' ? 'MUTED' : (VOICE_WORD[st] || st.toUpperCase()) + (st === 'ok' && voiceVia ? ' · ' + voiceVia.toUpperCase() : '');
   b.className = st === 'ok' ? '' : 'inv';
   notice(on ? VOICE_NOTE[st] : '');
 }
@@ -330,7 +331,7 @@ function on(t, ev, p) {
   if (t.dead) return;
   if (ev.t === 'start') {
     if (ev.voice !== 'ok') t.voice = false;
-    if (ev.voice !== 'muted' && ev.voice !== voiceState) showVoice(ev.voice);
+    if (ev.voice !== 'muted' && (ev.voice !== voiceState || ev.via !== voiceVia)) showVoice(ev.voice, ev.via);
   } else if (ev.t === 'sentence') {
     const stick = nearEnd();
     const el = document.createElement('span');
@@ -347,6 +348,8 @@ function on(t, ev, p) {
     fetch('api/audio/' + ev.id, { signal: t.ac.signal }).then((r) => r.arrayBuffer()).then(decode)
       .then((b) => { if (!s.skip) s.buf = b; }, () => { s.skip = true; })
       .then(() => pump(t));
+  } else if (ev.t === 'via') {
+    showVoice(voiceState, ev.via);
   } else if (ev.t === 'voice') {
     t.voice = false;
     for (const s of t.sentences) if (!s.buf) s.skip = true;
@@ -457,7 +460,7 @@ async function load() {
     owner = (s.owner || 'YOU').toUpperCase().slice(0, 8);
     $('rMind').textContent = (s.model || '').toUpperCase() + (s.llm ? '' : ' · NO KEY');
     turns = Math.floor(s.turns / 2); $('rTurns').textContent = turns;
-    showVoice(s.voice.state);
+    showVoice(s.voice.state, s.voice.via || '');
     if (!s.history.length) empty();
     else { log.innerHTML = ''; for (const m of s.history) line(m.role === 'ultron' ? 'ultron' : 'user', m.text, true); toEnd(); }
     if (!s.llm) notice('No CELERIS_API_KEY on the server: he cannot think.');
