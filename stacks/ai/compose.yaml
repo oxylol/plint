@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · ai stack
+#  silk-router: one Silk Compute key (SILK_API_KEY) behind /v1/models,
+#  /v1/chat/completions and /v1/messages. auto-sonnet/auto-haiku → deepseek
+#  flash, auto-opus → kimi pro; a stream that opens with a refusal is re-run on
+#  the -uncensored fallback. Source in apps/silk-router. Localhost only.
+# ─────────────────────────────────────────────────────────────
+name: ai
+
+services:
+  silk-router:
+    build: ../../apps/silk-router
+    image: plint/silk-router:local
+    container_name: silk-router
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4141:4141"
+    environment:
+      TZ: ${TZ}
+      SILK_API_KEY: ${SILK_API_KEY:-}
+      SILK_ROUTER_TOKEN: ${SILK_ROUTER_TOKEN:-}
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 256m
+    networks:
+      - ai
+
+networks:
+  ai:
+    name: plint-ai

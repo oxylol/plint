@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Claude Code on Silk models via silk-router (localhost:4141). Same flags as `claude`.
+export ANTHROPIC_BASE_URL=http://127.0.0.1:4141
+export ANTHROPIC_AUTH_TOKEN="${SILK_ROUTER_TOKEN:-silk}"
+export ANTHROPIC_MODEL=auto-sonnet
+export ANTHROPIC_DEFAULT_OPUS_MODEL=auto-opus
+export ANTHROPIC_DEFAULT_SONNET_MODEL=auto-sonnet
+export ANTHROPIC_DEFAULT_HAIKU_MODEL=auto-haiku
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+exec claude "$@"
