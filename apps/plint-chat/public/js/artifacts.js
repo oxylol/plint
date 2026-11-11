@@ -1,7 +1,7 @@
 // Artifacts: the panel beside the chat (full screen on phones), cards in the
 // thread and tiles in galleries. HTML/SVG/Mermaid run in a sandboxed iframe with
 // no access to this origin; Markdown is rendered with the escaped renderer.
-import { h, icon, toast, copyText, ago, narrow } from "./ui.js";
+import { h, icon, menu, toast, copyText, ago, narrow } from "./ui.js";
 import { api, text } from "./api.js";
 import { markdown, highlight } from "./md.js";
 
@@ -28,6 +28,30 @@ function srcdoc(kind, body) {
   return body;
 }
 
+// Drag the panel's left edge to resize it; the width is remembered.
+function grip(p) {
+  const g = h("div.panel-grip", { role: "separator", "aria-orientation": "vertical", "aria-label": "Resize side panel" });
+  g.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    g.setPointerCapture(e.pointerId);
+    document.body.classList.add("resizing");
+    const right = p.getBoundingClientRect().right;
+    const move = (ev) => { const w = Math.max(320, Math.min(right - ev.clientX, p.parentNode.clientWidth - 420)); p.style.flex = `0 0 ${w}px`; };
+    g.addEventListener("pointermove", move);
+    g.addEventListener("pointerup", () => { g.removeEventListener("pointermove", move); document.body.classList.remove("resizing"); }, { once: true });
+  });
+  return g;
+}
+export function showPanel(nodes, { slim = false } = {}) {
+  const p = document.getElementById("panel");
+  if (p.hidden) p.style.flex = "";
+  p.classList.toggle("slim", slim);
+  p.replaceChildren(grip(p), ...nodes);
+  p.hidden = false;
+  return p;
+}
+export const numbered = (html) => html.split("\n").map((l) => `<span class="ln">${l || " "}</span>`).join("");
+
 export async function openArtifact(id, version = null, { quiet = false } = {}) {
   const p = document.getElementById("panel");
   let a;
@@ -39,52 +63,57 @@ export async function openArtifact(id, version = null, { quiet = false } = {}) {
   current = { id, chatId: a.chatId };
   let tab = a.kind === "code" ? "code" : "preview";
   const view = h("div.panel-body");
-  const seg = h("div.seg",
-    h("button", { type: "button", on: { click: () => { tab = "preview"; draw(); } } }, "Preview"),
-    h("button", { type: "button", on: { click: () => { tab = "code"; draw(); } } }, "Code"));
-  const versions = a.versions.length > 1 ? h("select.version-sel", { "aria-label": "Version", on: { change: (e) => openArtifact(id, Number(e.target.value)) } },
-    a.versions.map((x) => h("option", { value: x.n, selected: x.n === v }, `v${x.n}${x.n === a.versions.length ? " · latest" : ""}`)).reverse()) : null;
+  const seg = h("div.seg.icons", { role: "radiogroup", "aria-label": "File view mode" },
+    h("button", { type: "button", role: "radio", title: "Preview", "aria-label": "Preview", on: { click: () => { tab = "preview"; draw(); } } }, icon("eye")),
+    h("button", { type: "button", role: "radio", title: "Code", "aria-label": "Code", on: { click: () => { tab = "code"; draw(); } } }, icon("code")));
+  const ext = (a.path?.split(".").pop() || a.kind).toUpperCase();
   function draw() {
     seg.children[0].classList.toggle("on", tab === "preview");
     seg.children[1].classList.toggle("on", tab === "code");
     if (tab === "code") {
       const lang = a.kind === "markdown" ? "md" : a.kind === "code" ? a.path.split(".").pop() : a.kind;
-      view.replaceChildren(h("div.code-view", h("pre", h("code", { html: highlight(body, lang) }))));
+      view.replaceChildren(h("div.code-view", h("pre.numbered", h("code", { html: numbered(highlight(body, lang)) }))));
     } else if (a.kind === "markdown") {
-      view.replaceChildren(h("div.prose", { html: markdown(body) }));
+      view.replaceChildren(h("div.doc", h("div.prose", { html: markdown(body) })));
     } else {
       view.replaceChildren(h("iframe", { sandbox: SANDBOX, title: a.title, srcdoc: srcdoc(a.kind, body), allow: "fullscreen; clipboard-write" }));
     }
   }
-  p.replaceChildren(
-    h("div.panel-head",
-      h("span.t", { title: a.title }, a.title),
-      versions,
+  const copy = h("button.btn.secondary", { type: "button", on: { click: async () => { await copyText(body, { quiet: true }); copy.textContent = "Copied"; setTimeout(() => (copy.textContent = "Copy"), 1600); } } }, "Copy");
+  const more = h("button.icon-btn", { type: "button", "aria-label": "More options", "aria-haspopup": "menu", on: { click: (e) => menu(e.currentTarget, [
+    { label: "Download", onClick: () => { location.href = `/api/artifacts/${id}/raw?v=${v}&download=1`; } },
+    a.chatId ? { label: "Go to chat", onClick: () => { location.hash = `#/chat/${a.chatId}`; } } : null,
+    a.versions.length > 1 ? "sep" : null,
+    a.versions.length > 1 ? { label: "Version", right: `${v} of ${a.versions.length}`, children: a.versions.map((x) => ({ label: `Version ${x.n}${x.n === a.versions.length ? " (latest)" : ""}`, checked: x.n === v, onClick: () => openArtifact(id, x.n) })).reverse() } : null,
+  ], { align: "end" }) } }, icon("downSmall", "s16"));
+  showPanel([
+    h("div.panel-head", { role: "toolbar", "aria-label": `${a.title} controls` },
       a.kind !== "code" ? seg : null,
-      h("button.icon-btn", { title: "Copy", "aria-label": "Copy", on: { click: () => copyText(body) } }, icon("copy")),
-      h("a.icon-btn", { title: "Download", "aria-label": "Download", href: `/api/artifacts/${id}/raw?v=${v}&download=1` }, icon("download")),
-      h("button.icon-btn", { title: "Close", "aria-label": "Close", on: { click: closePanel } }, icon("x"))),
-    view);
-  p.hidden = false;
+      h("h2.t", { style: { margin: 0 } }, a.title, h("span.dotsep", " · "), h("span", ext)),
+      copy, more,
+      h("button.icon-btn", { type: "button", title: "Close", "aria-label": "Close", on: { click: closePanel } }, icon("x"))),
+    view]);
   draw();
 }
 
 export function artifactCard(ev) {
   return h("button.art-card", { type: "button", on: { click: () => openArtifact(ev.id, ev.version) } },
     h("span.ai", icon(KIND_ICON[ev.kind] || "file")),
-    h("span.meta", h("div.t", ev.title), h("div.s", `${KIND_LABEL[ev.kind] || "File"}${ev.version > 1 ? ` · version ${ev.version}` : ""} · ${narrow() ? "Tap" : "Click"} to open`)));
+    h("span.meta", h("div.t", ev.title), h("div.s", `${KIND_LABEL[ev.kind] || "File"}${ev.version > 1 ? ` · Version ${ev.version}` : ""}`)));
 }
 
+const shortDate = (ts) => new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 export function artifactTile(a, { onMenu } = {}) {
-  const thumb = h("div.thumb", icon(KIND_ICON[a.kind] || "file"));
-  if (a.kind === "html" || a.kind === "svg") {
+  const live = a.kind === "html" || a.kind === "svg";
+  const sheet = h("span.sheet", live ? null : h("span.lines", h("i"), h("i", { style: { width: "68%" } }), h("i", { style: { width: "59%" } }), h("i", { style: { width: "62%" } }), h("i", { style: { width: "44%" } })));
+  if (live) {
     // Static thumbnail: no scripts, rendered small.
     text(`artifacts/${a.id}/raw`).then((body) => {
-      thumb.append(h("iframe", { sandbox: "", loading: "lazy", tabindex: "-1", "aria-hidden": "true", srcdoc: srcdoc(a.kind, body) }));
+      sheet.append(h("iframe", { sandbox: "", loading: "lazy", tabindex: "-1", "aria-hidden": "true", srcdoc: srcdoc(a.kind, body) }));
     }).catch(() => {});
   }
-  const tile = h("a.art-tile", { href: `#/chat/${a.chatId}`, on: { click: (e) => { e.preventDefault(); openArtifact(a.id); } } },
-    thumb, h("div.meta", h("div.t", a.title), h("div.s", `${KIND_LABEL[a.kind] || "File"} · ${ago(a.updated)}`)));
-  if (onMenu) tile.append(h("button.icon-btn.sm", { style: { position: "absolute", top: "6px", right: "6px", background: "var(--popover)" }, "aria-label": "More", on: { click: (e) => { e.preventDefault(); e.stopPropagation(); onMenu(e.currentTarget, a); } } }, icon("more")));
+  const tile = h(`a.art-tile${live ? ".live" : ""}`, { href: `#/chat/${a.chatId}`, title: a.title, on: { click: (e) => { e.preventDefault(); openArtifact(a.id); } } },
+    h("div.thumb", sheet), h("div.meta", h("span.t", a.title), h("time.s", shortDate(a.updated))));
+  if (onMenu) tile.append(h("button.icon-btn.sm.more", { type: "button", "aria-label": `More options for ${a.title}`, on: { click: (e) => { e.preventDefault(); e.stopPropagation(); onMenu(e.currentTarget, a); } } }, icon("more", "s16")));
   return tile;
 }

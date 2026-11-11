@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { chats, projects, artifacts, settings, saveSettings, allStyles, schedules, saveSchedules, chatSummary,
-  projectFilesDir, listFiles, safeName, DIRS, newId, now } from "./lib/store.js";
+  projectFilesDir, listFiles, safeName, DIRS, DATA, newId, now } from "./lib/store.js";
 import { signedIn, sendCode, login, logout } from "./lib/auth.js";
 import { MODELS, EFFORTS, CWD, ROUTER, emit, subscribe, subscribeAll, broadcast, startTurn, editTurn, stopTurn,
   answerAsk, approveAllPending, autoTitle, versionFile, lv } from "./lib/agent.js";
@@ -18,6 +18,10 @@ const PORT = Number(process.env.PORT || 5220);
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const PUBLIC = path.join(HERE, "public");
 const RUNNER = path.join(HERE, "runner");
+// Optional look-alike fonts (text + icon font) kept outside the repo. Without them the
+// page falls back to system fonts and its own line icons.
+const BRAND = path.join(DATA, "brand");
+const hasBrand = () => fs.existsSync(path.join(BRAND, "icons.woff2"));
 const MAX_UPLOAD = 25e6;
 
 // A service restart stops running turns; say so in those chats.
@@ -67,10 +71,21 @@ function serveStatic(req, res) {
     res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-cache" });
     return fs.createReadStream(path.join(RUNNER, name)).pipe(res);
   }
+  if (p.startsWith("/brand/")) {
+    const file = path.join(BRAND, path.basename(p));
+    if (!/^[a-z-]+\.woff2$/.test(path.basename(p)) || !fs.existsSync(file)) return json(res, 404, { error: "not found" });
+    res.writeHead(200, { "content-type": "font/woff2", "cache-control": "public, max-age=604800" });
+    return fs.createReadStream(file).pipe(res);
+  }
   if (p === "/" || !path.extname(p)) p = "/index.html";
   const file = path.join(PUBLIC, path.normalize(p));
   if (!file.startsWith(PUBLIC) || !fs.existsSync(file)) return json(res, 404, { error: "not found" });
   res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "application/octet-stream", "cache-control": "no-cache" });
+  if (p === "/index.html") {
+    // Fetch the text fonts with the page when they are installed, so the first paint is already in them.
+    const preload = hasBrand() ? ["sans", "serif", "icons"].map((f) => `<link rel="preload" href="/brand/${f}.woff2" as="font" type="font/woff2" crossorigin>`).join("\n") : "";
+    return res.end(fs.readFileSync(file, "utf8").replace("<!--brand-->", preload));
+  }
   fs.createReadStream(file).pipe(res);
 }
 // Model calls from runners go to silk-router, which only listens on Plint's localhost.
@@ -166,7 +181,7 @@ async function api(req, res, url) {
     return cookie ? json(res, 200, { ok: true }, { "set-cookie": cookie }) : json(res, 401, { error: "That code didn't work." });
   }
   if (top === "me") {
-    return json(res, 200, { signedIn: signedIn(req), name: settings.name, models: MODELS, efforts: EFFORTS, styles: signedIn(req) ? allStyles() : [] });
+    return json(res, 200, { signedIn: signedIn(req), name: settings.name, models: MODELS, efforts: EFFORTS, styles: signedIn(req) ? allStyles() : [], brand: hasBrand() });
   }
   if (!signedIn(req)) return json(res, 401, { error: "sign in" });
   if (top === "logout") return json(res, 200, { ok: true }, { "set-cookie": logout(req) });
@@ -223,7 +238,7 @@ async function api(req, res, url) {
     if (!id) {
       if (m === "GET") {
         const pid = url.searchParams.get("project");
-        return json(res, 200, chats.all().filter((c) => !c.incognito && (!pid || c.projectId === pid)).sort((a, b) => b.updated - a.updated).map(chatSummary));
+        return json(res, 200, chats.all().filter((c) => !c.incognito && (!pid || c.projectId === pid)).sort((a, b) => b.updated - a.updated).map((c) => ({ ...chatSummary(c), waiting: lv(c.id).pending.size > 0 })));
       }
       const b = await body(req);
       const text = String(b.text || "").trim();

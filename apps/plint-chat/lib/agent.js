@@ -198,7 +198,7 @@ function onMessage(chat, m, ctx) {
     const failed = m.subtype !== "success";
     ctx.reported = failed;
     const error = !failed ? undefined : lv(chat.id).stopped ? "Stopped." : (m.errors || [m.subtype]).join("; ");
-    emit(chat, { t: "done", ms: now() - ctx.started, cost: m.total_cost_usd, error });
+    emit(chat, { t: "done", at: now(), ms: now() - ctx.started, cost: m.total_cost_usd, error });
   }
 }
 
@@ -301,12 +301,14 @@ async function runTurn(chat, { text, files = [], fork = null }) {
     if (chat.mode === "auto") return { behavior: "allow", updatedInput: input };
     const id = randomBytes(6).toString("hex");
     emit(chat, { t: "ask", id, name, input });
+    setTimeout(broadcast, 0); // the sidebar marks chats that wait for an answer
     if (nobodyWatching(chat)) notify(`Plint Chat · ${chat.title}`, `Wants to run ${name}: ${askSummary(name, input)}`.slice(0, 300), "high", "warning");
     const answer = await new Promise((resolve) => {
       state.pending.set(id, resolve);
       signal?.addEventListener("abort", () => resolve({ allow: false, aborted: true }), { once: true });
     });
     state.pending.delete(id);
+    broadcast();
     emit(chat, { t: "answer", id, allow: answer.allow, always: !!answer.always });
     if (answer.allow) return { behavior: "allow", updatedInput: input, ...(answer.always && suggestions ? { updatedPermissions: suggestions } : {}) };
     return { behavior: "deny", message: answer.aborted ? "Stopped." : "Filip declined this tool call." };

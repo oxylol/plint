@@ -1,6 +1,6 @@
 // Markdown for model replies. Text is escaped before any markup is added, so a
 // reply can never inject HTML; links are limited to http(s).
-import { esc } from "./ui.js";
+import { esc, iconHTML } from "./ui.js";
 
 function inline(s) {
   const codes = [];
@@ -78,7 +78,7 @@ export function markdown(src) {
       while (i < lines.length && !lines[i].trim().startsWith(fence)) body.push(lines[i++]);
       i++;
       const lang = m[2] || "";
-      out.push(`<div class="code"><div class="code-head"><span>${esc(lang || "code")}</span><button data-copy type="button">Copy</button></div><pre><code>${highlight(body.join("\n"), lang)}</code></pre></div>`);
+      out.push(`<div class="code" role="group"><button class="icon-btn code-copy" data-copy type="button" aria-label="Copy to clipboard" title="Copy">${iconHTML("copy")}</button>${lang ? `<div class="code-lang">${esc(lang.toLowerCase())}</div>` : ""}<pre${lang ? "" : ' class="wrap"'}><code>${highlight(body.join("\n"), lang)}</code></pre></div>`);
       continue;
     }
     if ((m = line.match(/^(#{1,6})\s+(.*?)\s*#*$/))) { flush(); const n = Math.min(4, m[1].length); out.push(`<h${n}>${inline(m[2])}</h${n}>`); i++; continue; }
@@ -114,6 +114,26 @@ document.addEventListener("click", async (e) => {
   if (!b) return;
   const code = b.closest(".code").querySelector("code").textContent;
   try { await navigator.clipboard.writeText(code); } catch {}
-  b.textContent = "Copied";
-  setTimeout(() => (b.textContent = "Copy"), 1400);
+  b.innerHTML = iconHTML("check");
+  setTimeout(() => (b.innerHTML = iconHTML("copy")), 1600);
 });
+
+// While a reply streams, new words fade in. `shown` is how many characters were already on screen.
+export function fadeFresh(root, shown) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let seen = 0;
+  const fresh = [];
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const len = n.data.length;
+    if (seen + len > shown && n.data.trim() && !n.parentNode.closest("pre")) fresh.push([n, Math.max(0, shown - seen)]);
+    seen += len;
+  }
+  for (const [n, at] of fresh) {
+    const tail = at ? n.splitText(at) : n;
+    const span = document.createElement("span");
+    span.className = "fresh";
+    tail.replaceWith(span);
+    span.append(tail);
+  }
+  return seen;
+}

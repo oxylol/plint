@@ -20,18 +20,22 @@
     if (localStorage.getItem("reply") === "sans") document.documentElement.dataset.reply = "sans";
   } catch {}
 </script>
-<link rel="stylesheet" href="/css/app.css">
+<!--brand-->
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/shell.css">
+<link rel="stylesheet" href="/css/thread.css">
+<link rel="stylesheet" href="/css/pages.css">
 </head>
 <body>
 <section id="login" class="login" hidden>
   <div class="login-card">
-    <div><span class="spark" style="width:40px;height:40px" data-spark></span></div>
-    <h1 class="serif">Plint</h1>
+    <div><span data-spark></span></div>
+    <h1>Plint</h1>
     <p class="muted">Sign in with a code sent to your phone.</p>
-    <button id="send-code" class="btn primary wide">Send code to my phone</button>
+    <button id="send-code" class="btn primary lg wide">Send code to my phone</button>
     <form id="code-form" hidden>
       <input id="code" class="code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" aria-label="Login code">
-      <button class="btn brand wide">Continue</button>
+      <button class="btn brand lg wide">Continue</button>
     </form>
     <p id="login-msg" class="muted small" role="status"></p>
   </div>
@@ -39,12 +43,13 @@
 
 <div id="app" class="app" hidden>
   <aside id="sidebar" class="sidebar" aria-label="Sidebar"></aside>
-  <div id="scrim" class="scrim"></div>
-  <div class="main">
-    <header class="top" id="top"></header>
-    <div class="view" id="view"></div>
-  </div>
-  <section id="panel" class="panel" hidden aria-label="Artifact"></section>
+  <main class="main">
+    <div class="main-col">
+      <header class="top" id="top"></header>
+      <div class="view" id="view"></div>
+    </div>
+    <section id="panel" class="panel" hidden aria-label="Side panel"></section>
+  </main>
 </div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <script type="module" src="/js/main.js"></script>
