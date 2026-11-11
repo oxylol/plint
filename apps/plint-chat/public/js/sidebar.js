@@ -16,6 +16,13 @@ export function toggleRail() {
 }
 
 let filter = prefs.get("recentsFilter", "all"); // all | chats | scheduled | projects
+let mode = "chat"; // which app the sidebar shows: chat | code
+const codeRoute = () => /^#\/(code|computers)/.test(location.hash) || state.chats.find((c) => c.id === state.current)?.kind === "code";
+// Re-render the sidebar when the route moves between Chat and Code.
+export function syncMode() {
+  const want = codeRoute() ? "code" : "chat";
+  if (want !== mode) { mode = want; renderSidebar(); }
+}
 const RECENT_LIMIT = 30;
 
 export function renderSidebar() {
@@ -28,13 +35,22 @@ export function renderSidebar() {
       h("a.wordmark", { href: "#/" }, spark(), h("span.w", "Plint")),
       h("button.icon-btn.collapse", { title: "Toggle sidebar", "aria-label": "Toggle sidebar", on: { click: toggleRail } }, icon("sidebar")),
       h("button.icon-btn", { title: "Close", "aria-label": "Close", style: narrow() ? {} : { display: "none" }, on: { click: closeDrawer } }, icon("x"))),
-    h("nav.side-nav",
+    h("div.app-switch.label", { role: "tablist" },
+      h(`a${mode === "chat" ? ".on" : ""}`, { href: "#/", role: "tab" }, icon("sparkle"), "Chat"),
+      h(`a${mode === "code" ? ".on" : ""}`, { href: "#/code", role: "tab" }, icon("code"), "Code")),
+    mode === "code" ? h("nav.side-nav",
+      h("a.nav-item.new", { href: "#/code", title: "New session" }, icon("plus"), h("span.label", "New session")),
+      h("button.nav-item", { title: "Search", on: { click: () => { closeDrawer(); openSearch(); } } }, icon("search"), h("span.label", "Search"), h("span.kbd", mac ? "⌘K" : "Ctrl+K")),
+      navItem("#/computers", "terminal", "Computers"),
+      h("a.nav-item", { href: "#/", title: "Chat", "data-rail-only": "" }, icon("sparkle"), h("span.label", "Chat")))
+    : h("nav.side-nav",
       h("a.nav-item.new", { href: "#/", title: "New chat", on: { click: () => { state.incognito = false; } } }, icon("plus"), h("span.label", "New chat"), h("span.kbd", mac ? "⇧⌘O" : "Ctrl+Shift+O")),
       h("button.nav-item", { title: "Search", on: { click: () => { closeDrawer(); openSearch(); } } }, icon("search"), h("span.label", "Search"), h("span.kbd", mac ? "⌘K" : "Ctrl+K")),
       navItem("#/projects", "folder", "Projects"),
       navItem("#/artifacts", "artifacts", "Artifacts"),
       navItem("#/scheduled", "clock", "Scheduled"),
-      navItem("#/customize", "sliders", "Customize")),
+      navItem("#/customize", "sliders", "Customize"),
+      h("a.nav-item", { href: "#/code", title: "Code", "data-rail-only": "" }, icon("code"), h("span.label", "Code"))),
     h("div.side-scroll#side-lists"),
     h("div.side-foot",
       h("button.user-btn", { on: { click: (e) => accountMenu(e.currentTarget) } },
@@ -79,11 +95,33 @@ export function moveToProject(c) {
   });
 }
 
+function renderCodeLists(box) {
+  const sessions = state.chats.filter((c) => c.kind === "code");
+  const groups = new Map();
+  for (const c of sessions) {
+    const k = `${c.machine}|${c.cwd}`;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(c);
+  }
+  const name = (id) => (id === "plint" ? "Plint" : machinesCacheName(id));
+  box.replaceChildren(
+    ...[...groups.entries()].flatMap(([k, list]) => {
+      const [machine, cwd] = k.split("|");
+      return [h("div.side-head", { title: `${name(machine)}: ${cwd}` }, h("span.ellipsis", `${String(cwd).replace(/[\\/]+$/, "").split(/[\\/]/).pop()} · ${name(machine)}`)), ...list.slice(0, 12).map(chatLink)];
+    }),
+    sessions.length ? null : h("div.faint.small", { style: { padding: "14px 10px" } }, "No sessions yet. Pick a folder and describe a task."));
+}
+let machineNames = {};
+const machinesCacheName = (id) => machineNames[id] || "Computer";
+export function setMachineNames(list) { machineNames = Object.fromEntries(list.map((m) => [m.id, m.name])); if (mode === "code") renderLists(); }
+
 function renderLists() {
   const box = document.getElementById("side-lists");
   if (!box) return;
-  const pinned = state.chats.filter((c) => c.pinned);
-  let recents = state.chats.filter((c) => !c.pinned);
+  if (mode === "code") return renderCodeLists(box);
+  const chatsOnly = state.chats.filter((c) => c.kind !== "code");
+  const pinned = chatsOnly.filter((c) => c.pinned);
+  let recents = chatsOnly.filter((c) => !c.pinned);
   if (filter === "chats") recents = recents.filter((c) => !c.scheduleId && !c.projectId);
   if (filter === "scheduled") recents = recents.filter((c) => c.scheduleId);
   if (filter === "projects") recents = recents.filter((c) => c.projectId);
@@ -97,7 +135,7 @@ function renderLists() {
     h("div.side-head", h("span", filter === "all" ? "Recents" : `Recents · ${{ chats: "chats", projects: "projects", scheduled: "scheduled" }[filter]}`), filterBtn),
     ...recents.slice(0, RECENT_LIMIT).map(chatLink),
     recents.length === 0 ? h("div.faint.small", { style: { padding: "6px 10px" } }, "Nothing here yet.") : null,
-    state.chats.length > RECENT_LIMIT ? h("a.view-all", { href: "#/recents" }, "View all") : null);
+    chatsOnly.length > RECENT_LIMIT ? h("a.view-all", { href: "#/recents" }, "View all") : null);
 }
 
 export function highlight() {
@@ -126,6 +164,6 @@ function accountMenu(anchor) {
   ], { align: "start", side: "auto" });
 }
 
-on("chats", () => { renderLists(); highlight(); });
+on("chats", () => { const was = mode; syncMode(); if (was === mode) { renderLists(); highlight(); } });
 on("projects", renderLists);
 document.addEventListener("click", (e) => { if (narrow() && e.target.closest("#sidebar a[href]")) closeDrawer(); });

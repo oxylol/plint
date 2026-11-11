@@ -1,0 +1,10 @@
+{
+  "name": "plint-runner",
+  "private": true,
+  "type": "module",
+  "description": "Lets Plint Chat run Claude Code in folders on this computer",
+  "scripts": { "start": "node plint-runner.mjs" },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.322"
+  }
+}

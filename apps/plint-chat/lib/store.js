@@ -85,7 +85,7 @@ export function chatSummary(c) {
     id: c.id, title: c.title, model: c.model, effort: c.effort, mode: c.mode, style: c.style,
     projectId: c.projectId || null, pinned: !!c.pinned, incognito: !!c.incognito,
     created: c.created, updated: c.updated, running: !!c.running, scheduleId: c.scheduleId || null,
-    hasArtifact: !!c.hasArtifact,
+    hasArtifact: !!c.hasArtifact, kind: c.kind || "chat", machine: c.machine || null, cwd: c.cwd || null,
   };
 }
 

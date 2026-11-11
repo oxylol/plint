@@ -6,6 +6,7 @@ import { state, prefs, refreshChats, projectName, on } from "./state.js";
 import { openArtifact, artifactCard, artifactTile, closePanel, panelChat } from "./artifacts.js";
 import { chatMenu } from "./sidebar.js";
 import { topBar } from "./main.js";
+import { openChanges, openFiles, refreshCodePanel, machineName, baseName, refreshMachines } from "./code.js";
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const modelLabel = (id, short) => { const n = state.models[id]?.name || id; return short ? n.replace(/^Auto /, "") : n; };
@@ -17,11 +18,12 @@ export function composer(opts) {
   const s = {
     model: opts.chat?.model || prefs.get("model", "auto-sonnet"),
     effort: opts.chat?.effort || prefs.get("effort", "medium"),
-    mode: opts.chat?.mode || prefs.get("mode", "manual"),
+    mode: opts.chat?.mode || (opts.code ? prefs.get("codeMode", "edits") : prefs.get("mode", "manual")),
     style: opts.chat?.style || prefs.get("style", "normal"),
     projectId: opts.chat ? opts.chat.projectId : opts.projectId ?? null,
     files: [],
     running: false,
+    code: !!opts.code,
   };
   if (!state.models[s.model]) s.model = "auto-sonnet";
   const isNew = !opts.chat;
@@ -42,19 +44,19 @@ export function composer(opts) {
 
   const persist = (patch) => {
     Object.assign(s, patch);
-    if (isNew) for (const k of ["model", "effort", "mode", "style"]) if (k in patch) prefs.set(k, s[k]);
+    if (isNew) for (const k of ["model", "effort", "mode", "style"]) if (k in patch) prefs.set(s.code && k === "mode" ? "codeMode" : k, s[k]);
     if (!isNew && opts.chat) api(`chats/${opts.chat.id}/settings`, { body: patch }).catch((e) => toast(e.message));
     paint();
   };
   function paint() {
     const short = narrow();
     modelBtn.replaceChildren(h("span.t", modelLabel(s.model, short)), state.models[s.model]?.efforts ? h("span.faint", ` ${cap(s.effort)}`) : null, icon("down", "chev"));
-    modeBtn.replaceChildren(icon(s.mode === "auto" ? "bolt" : "hand"), short ? null : h("span.t", s.mode === "auto" ? "Auto" : "Manual"));
-    modeBtn.classList.toggle("on", s.mode === "auto");
+    modeBtn.replaceChildren(icon({ auto: "bolt", edits: "pen" }[s.mode] || "hand"), short ? null : h("span.t", { auto: "Auto", edits: "Accept edits" }[s.mode] || "Manual"));
+    modeBtn.classList.toggle("on", s.mode === "auto" || s.mode === "edits");
     const pname = s.projectId && projectName(s.projectId);
     projBtn.replaceChildren(icon("folder"), pname ? h("span.t", pname) : short ? null : h("span.t", "Project"));
     projBtn.classList.toggle("on", !!pname);
-    projBtn.hidden = !isNew && !pname;
+    projBtn.hidden = s.code || (!isNew && !pname);
     projBtn.disabled = !isNew;
     plusBtn.classList.toggle("on", s.style !== "normal");
     const busy = s.files.some((f) => f.uploading);
@@ -122,7 +124,8 @@ export function composer(opts) {
   ], { align: "end" });
   modeBtn.onclick = (e) => menu(e.currentTarget, [
     { heading: "Mode" },
-    { label: "Manual", sub: "Ask before running commands or editing files", icon: "hand", checked: s.mode !== "auto", onClick: () => persist({ mode: "manual" }) },
+    { label: "Manual", sub: "Ask before running commands or editing files", icon: "hand", checked: s.mode === "manual", onClick: () => persist({ mode: "manual" }) },
+    { label: "Accept edits", sub: "Edit files in the folder freely, ask before other commands", icon: "pen", checked: s.mode === "edits", onClick: () => persist({ mode: "edits" }) },
     { label: "Auto", sub: "Run everything without asking", icon: "bolt", checked: s.mode === "auto", onClick: () => persist({ mode: "auto" }) },
   ], { align: "end" });
 
@@ -177,7 +180,7 @@ export function composer(opts) {
     focus: () => { if (!touch) ta.focus(); },
     setText: (t) => { ta.value = t; autosize(); paint(); ta.focus(); ta.setSelectionRange(t.length, t.length); },
     setRunning: (r) => { s.running = r; paint(); },
-    setChat: (c) => { Object.assign(s, { model: c.model, effort: c.effort, mode: c.mode, style: c.style, projectId: c.projectId }); paint(); },
+    setChat: (c) => { Object.assign(s, { model: c.model, effort: c.effort, mode: c.mode, style: c.style, projectId: c.projectId, code: c.kind === "code" }); paint(); },
     repaint: paint,
   };
 }
@@ -288,7 +291,8 @@ export function renderChat(view, id) {
     },
     onStop: () => api(`chats/${id}/stop`, { body: {} }).catch(() => {}),
   });
-  const wrap = h("div.composer-wrap", h("div.inner", jump, c.el, h("p.fine", "Plint Chat runs commands on Plint. Check what it does.")));
+  const fine = h("p.fine", "Plint Chat runs commands on Plint. Check what it does.");
+  const wrap = h("div.composer-wrap", h("div.inner", jump, c.el, fine));
   view.replaceChildren(scroller, wrap);
   scroller.addEventListener("scroll", () => {
     stick = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 90;
@@ -297,6 +301,20 @@ export function renderChat(view, id) {
   const toBottom = () => { if (stick) scroller.scrollTop = scroller.scrollHeight; };
 
   function header() {
+    if (chat?.kind === "code") {
+      const gitPill = h("span.pill", { hidden: true });
+      if (chat.cwd) api(`machines/${chat.machine}/git?path=${encodeURIComponent(chat.cwd)}`).then((g) => { if (g.git) { gitPill.hidden = false; gitPill.replaceChildren(icon("branch"), g.branch || "detached"); } }).catch(() => {});
+      topBar({
+        title: chat.title,
+        onTitle: (e) => chatMenu(e.currentTarget, chat),
+        badges: [narrow() ? null : h("span.pill", { title: `${machineName(chat.machine)}: ${chat.cwd}` }, icon("folder"), `${machineName(chat.machine)} · ${baseName(chat.cwd)}`), narrow() ? null : gitPill],
+        right: [
+          h("button.icon-btn", { title: "Changes", "aria-label": "Changes", on: { click: () => openChanges(chat) } }, icon("branch")),
+          h("button.icon-btn", { title: "Files", "aria-label": "Files", on: { click: () => openFiles(chat) } }, icon("folder")),
+        ],
+      });
+      return;
+    }
     const artBtn = h("button.icon-btn", { title: "Artifacts in this chat", "aria-label": "Artifacts in this chat", hidden: !chat?.hasArtifact, on: { click: (e) => chatArtifacts(e.currentTarget) } }, icon("artifacts"));
     topBar({
       title: chat?.title || "",
@@ -481,7 +499,8 @@ export function renderChat(view, id) {
       case "answer": asks.get(ev.id)?.remove(); asks.delete(ev.id); if (chat?.running) working(true); break;
       case "done": if (ev.error) add(h(`div.note${ev.error === "Stopped." ? ".quiet" : ""}`, ev.error), aiTurn()); break;
       case "error": add(h(`div.note${ev.text === "Stopped." ? ".quiet" : ""}`, ev.text), aiTurn()); break;
-      case "idle": endTurn(); working(false); setRunning(false); break;
+      case "idle": endTurn(); working(false); setRunning(false); if (chat?.kind === "code") refreshCodePanel(chat); break;
+      case "changed": if (chat?.kind === "code") refreshCodePanel(chat); break;
       case "title": if (chat) { chat.title = ev.title; header(); document.title = `${ev.title} · Plint`; } break;
       case "reset": reload(); break;
       case "state": {
@@ -541,6 +560,7 @@ export function renderChat(view, id) {
     if (!alive) return;
     chat = data;
     delete chat.events;
+    if (chat.kind === "code") { refreshMachines().then(header); fine.textContent = `Runs Claude Code in ${chat.cwd} on ${machineName(chat.machine)}.`; }
     header();
     c.setChat(chat);
     document.title = `${chat.title} · Plint`;

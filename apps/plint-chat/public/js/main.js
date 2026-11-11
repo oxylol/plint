@@ -2,8 +2,9 @@
 import { h, icon, $, toast, narrow, closeMenu, closeModal } from "./ui.js";
 import { api, setUnauthorized } from "./api.js";
 import { state, refreshChats, refreshProjects, refreshStyles, connectEvents } from "./state.js";
-import { renderSidebar, highlight, openDrawer, closeDrawer } from "./sidebar.js";
+import { renderSidebar, highlight, openDrawer, closeDrawer, syncMode } from "./sidebar.js";
 import { renderHome, renderChat } from "./chat.js";
+import { renderCodeHome, renderComputers, refreshMachines } from "./code.js";
 import { renderProjects, renderProject, renderArtifacts, renderScheduled, renderCustomize, renderRecents, openSearch } from "./pages.js";
 
 // The bar above every view. title: text; onTitle: click handler (menu); right: nodes.
@@ -39,7 +40,10 @@ function route() {
   else if (seg[0] === "scheduled") cleanup = renderScheduled(view);
   else if (seg[0] === "customize") cleanup = renderCustomize(view, seg[1]);
   else if (seg[0] === "recents") cleanup = renderRecents(view);
+  else if (seg[0] === "code") cleanup = renderCodeHome(view);
+  else if (seg[0] === "computers") cleanup = renderComputers(view);
   else renderHome(view, { projectId: params.get("project") });
+  syncMode();
   highlight();
 }
 
@@ -91,6 +95,7 @@ async function start() {
   $("#app").hidden = false;
   await Promise.all([refreshChats(), refreshProjects()]);
   renderSidebar();
+  refreshMachines();
   connectEvents();
   route();
 }

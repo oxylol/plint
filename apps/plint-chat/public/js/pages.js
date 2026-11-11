@@ -266,7 +266,7 @@ export function renderRecents(view) {
   let q = "";
   const list = h("div.list");
   const draw = () => {
-    const items = state.chats.filter((c) => !q || c.title.toLowerCase().includes(q));
+    const items = state.chats.filter((c) => c.kind !== "code" && (!q || c.title.toLowerCase().includes(q)));
     list.replaceChildren(...(items.length ? items.map((c) => chatRow(c)) : [h("div.empty-note", "No chats.")]));
   };
   page(view,

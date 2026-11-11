@@ -483,3 +483,67 @@ svg.i { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor;
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- Code ---------- */
+.app-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin: 2px 12px 8px; padding: 3px; background: var(--hover); border-radius: 11px; }
+.app-switch a { display: flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-2); text-decoration: none; transition: background 0.15s, color 0.15s; }
+.app-switch a svg.i { width: 15px; height: 15px; }
+.app-switch a.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-s); }
+:root[data-theme="dark"] .app-switch a.on { background: var(--popover); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .app-switch a.on { background: var(--popover); } }
+.side-nav [data-rail-only] { display: none; }
+.app.rail .side-nav [data-rail-only] { display: flex; }
+.code-mark { width: 34px; height: 34px; display: grid !important; place-items: center; }
+.code-mark svg.i { width: 30px; height: 30px; stroke-width: 2; }
+.code-target { display: flex; align-items: center; gap: 4px; margin: 0 0 8px 4px; flex-wrap: wrap; }
+.code-chip { border: 1px solid var(--line); background: var(--surface); color: var(--text); max-width: 60vw; }
+.code-chip .offline { font-size: 11px; color: var(--danger); margin-left: 2px; }
+.code-recents { width: 100%; max-width: 680px; margin-top: 26px; display: grid; gap: 2px; }
+.code-recents .head { font-size: 13px; color: var(--text-2); margin: 0 0 6px 4px; }
+.code-folder { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 10px; text-align: left; }
+.code-folder > svg.i { color: var(--text-3); }
+.code-folder .t { font-size: 14px; font-weight: 500; }
+.code-folder .s { font-size: 12px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (hover: hover) { .code-folder:hover { background: var(--hover); } }
+.conn { width: 9px; height: 9px; border-radius: 50%; background: var(--line); flex: none; }
+.conn.on { background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent); }
+svg.i.flip { transform: rotate(180deg); }
+.wide-modal { max-width: 720px; }
+.wide-modal .code { margin-bottom: 12px; }
+.wide-modal pre code { white-space: pre-wrap; word-break: break-all; }
+
+/* folder picker */
+.fp-modal { max-width: 560px; }
+.fp-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.fp-path { flex: 1; min-width: 0; height: 36px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); padding: 0 10px; font: 13px var(--mono); outline: 0; }
+.fp-list { height: min(46dvh, 380px); overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; padding: 4px; }
+.fp-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 0 10px; border-radius: 8px; text-align: left; font-size: 14px; }
+.fp-row svg.i { color: var(--text-3); width: 16px; height: 16px; }
+.fp-row.file { color: var(--text-3); }
+@media (hover: hover) { button.fp-row:hover { background: var(--hover); } }
+.fp-crumb { display: flex; align-items: center; gap: 8px; font: 12.5px var(--mono); color: var(--text-2); padding: 0 0 10px; border-bottom: 1px solid var(--line-2); margin-bottom: 6px; }
+.fp-crumb svg.i { width: 15px; height: 15px; flex: none; }
+.fp-crumb .ellipsis { flex: 1; min-width: 0; }
+
+/* changes / diff */
+.panel-body .code-view.changes, .panel-body .code-view.files { padding: 14px 14px 60px; }
+.diff-sum { font-size: 13.5px; color: var(--text-2); margin: 2px 2px 12px; }
+.add { color: var(--ok); }
+.del { color: var(--danger); }
+.diff-file { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; overflow: hidden; background: var(--surface); }
+.diff-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; font: 12.5px var(--mono); text-align: left; }
+.diff-head svg.chev { width: 14px; height: 14px; transition: transform 0.2s var(--ease); color: var(--text-3); }
+.diff-file.open .diff-head svg.chev { transform: rotate(90deg); }
+.diff-head .st { width: 18px; height: 18px; border-radius: 5px; display: grid; place-items: center; font: 600 10.5px var(--sans); background: var(--raised); color: var(--text-2); flex: none; }
+.diff-head .st.new, .diff-head .st.added { color: var(--ok); }
+.diff-head .st.deleted { color: var(--danger); }
+.diff-head .add, .diff-head .del { font-size: 12px; }
+.diff-file > pre.diff, .diff-file > div { display: none; }
+.diff-file.open > pre.diff, .diff-file.open > div { display: block; }
+pre.diff { margin: 0; border-top: 1px solid var(--line-2); font: 12px/1.55 var(--mono); overflow-x: auto; white-space: pre; max-height: 60dvh; overflow-y: auto; background: var(--code); }
+pre.diff span { display: block; padding: 0 12px; min-width: max-content; }
+pre.diff .add { background: color-mix(in srgb, var(--ok) 13%, transparent); color: inherit; }
+pre.diff .del { background: color-mix(in srgb, var(--danger) 12%, transparent); color: inherit; }
+pre.diff .hunk { color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+pre.diff .meta { color: var(--text-3); }
+@media (hover: hover) { .diff-head:hover { background: var(--hover); } }

@@ -26,6 +26,16 @@ icons and fonts are our own (system sans, a serif for replies).
   Manual tasks send their approval asks to ntfy.
 - **Customize**: personal instructions, styles (built-in + your own, default), skills list, connectors note.
 - **Incognito**: not listed, not written to disk, gone an hour after last use.
+- **Code** (Chat | Code switch at the top of the sidebar): a session is Claude Code in one folder on one
+  computer. Pick the computer and folder (folder browser, recent folders), then work like in a chat;
+  modes Manual / Accept edits / Auto. Beside it: **Changes** (git status + diff of the folder) and
+  **Files** (browse and read). Plint's own folders are limited to `CODE_ROOTS` (default /opt, /srv,
+  /home/plint).
+- **Computers** (Code → Computers): other machines run `runner/plint-runner.mjs` (Node 18+, Mac / Windows
+  / Linux). "Add a computer" makes a token and shows the install command. The runner connects out to
+  `https://ai.${DOMAIN}` (LAN or Tailscale), runs Claude Code there, and sends its model calls back
+  through `/api/runner/llm` to silk-router. `--root <folder>` limits what it shares (default: home).
+  Tokens are stored hashed in `data/plint-chat/machines.json`; removing a computer revokes it.
 
 ## How it runs
 `server.js` routes; `lib/agent.js` runs turns with the Agent SDK (cwd /opt/plint or the project's

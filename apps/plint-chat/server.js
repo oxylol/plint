@@ -10,10 +10,14 @@ import { signedIn, sendCode, login, logout } from "./lib/auth.js";
 import { MODELS, EFFORTS, CWD, ROUTER, emit, subscribe, subscribeAll, broadcast, startTurn, editTurn, stopTurn,
   answerAsk, approveAllPending, autoTitle, versionFile, lv } from "./lib/agent.js";
 import { KINDS, nextRun, describe, runSchedule, startScheduler } from "./lib/scheduler.js";
+import * as machines from "./lib/machines.js";
+import { remoteEvent } from "./lib/agent.js";
 import { log } from "./lib/notify.js";
 
 const PORT = Number(process.env.PORT || 5220);
-const PUBLIC = path.join(path.dirname(new URL(import.meta.url).pathname), "public");
+const HERE = path.dirname(new URL(import.meta.url).pathname);
+const PUBLIC = path.join(HERE, "public");
+const RUNNER = path.join(HERE, "runner");
 const MAX_UPLOAD = 25e6;
 
 // A service restart stops running turns; say so in those chats.
@@ -57,19 +61,42 @@ function sendFile(res, file, { download = false, name } = {}) {
 }
 function serveStatic(req, res) {
   let p = decodeURIComponent(new URL(req.url, "http://x").pathname);
+  if (p.startsWith("/runner/")) {
+    const name = path.basename(p);
+    if (!["plint-runner.mjs", "ops.mjs", "package.json"].includes(name)) return json(res, 404, { error: "not found" });
+    res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-cache" });
+    return fs.createReadStream(path.join(RUNNER, name)).pipe(res);
+  }
   if (p === "/" || !path.extname(p)) p = "/index.html";
   const file = path.join(PUBLIC, path.normalize(p));
   if (!file.startsWith(PUBLIC) || !fs.existsSync(file)) return json(res, 404, { error: "not found" });
   res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "application/octet-stream", "cache-control": "no-cache" });
   fs.createReadStream(file).pipe(res);
 }
+// Model calls from runners go to silk-router, which only listens on Plint's localhost.
+async function proxyLLM(req, res, url) {
+  const target = `${ROUTER}${url.pathname.replace(/^\/api\/runner\/llm/, "")}${url.search}`;
+  const data = req.method === "GET" ? undefined : await readBody(req, 50e6);
+  const headers = { "content-type": req.headers["content-type"] || "application/json", "x-api-key": "silk", "anthropic-version": req.headers["anthropic-version"] || "2023-06-01" };
+  if (req.headers["anthropic-beta"]) headers["anthropic-beta"] = req.headers["anthropic-beta"];
+  const ac = new AbortController();
+  req.on("close", () => ac.abort());
+  let r;
+  try { r = await fetch(target, { method: req.method, headers, body: data, signal: ac.signal }); }
+  catch (err) { return json(res, 502, { type: "error", error: { type: "api_error", message: `router: ${err.message}` } }); }
+  res.writeHead(r.status, { "content-type": r.headers.get("content-type") || "application/json", "cache-control": "no-cache" });
+  const reader = r.body.getReader();
+  try { for (;;) { const { value, done } = await reader.read(); if (done) break; res.write(value); } } catch {}
+  res.end();
+}
+
 const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== undefined).map((k) => [k, obj[k]]));
 
 // Apply the settings a chat can carry (from the composer or the chat menu).
 function applyChatSettings(chat, b) {
   if (MODELS[b.model]) chat.model = b.model;
   if (EFFORTS.includes(b.effort)) chat.effort = b.effort;
-  if (b.mode === "auto" || b.mode === "manual") chat.mode = b.mode;
+  if (["auto", "manual", "edits"].includes(b.mode)) chat.mode = b.mode;
   if (typeof b.style === "string" && allStyles().some((s) => s.id === b.style)) chat.style = b.style;
   if (typeof b.title === "string" && b.title.trim()) chat.title = b.title.trim().slice(0, 100);
   if (typeof b.pinned === "boolean") chat.pinned = b.pinned;
@@ -119,6 +146,17 @@ async function api(req, res, url) {
   const parts = url.pathname.split("/").filter(Boolean).slice(1).map(decodeURIComponent);
   const [top, id, action, sub] = parts;
   const m = req.method;
+  // --- runners (token auth, not the cookie) ---
+  if (top === "runner") {
+    const mach = machines.byToken(req);
+    if (!mach) return json(res, 401, { error: "bad runner token" });
+    if (id === "llm") return proxyLLM(req, res, url);
+    if (id === "connect") return machines.connect(mach, req, res, url);
+    if (id === "event" && m === "POST") { remoteEvent(mach.id, await body(req)); return json(res, 200, { ok: true }); }
+    if (id === "reply" && m === "POST") { machines.reply(await body(req)); return json(res, 200, { ok: true }); }
+    if (id === "uploads" && action && sub) return sendFile(res, path.join(DIRS.uploads, action.replace(/[^a-f0-9]/g, ""), safeName(sub)), { download: true });
+    return json(res, 404, { error: "not found" });
+  }
   if (m !== "GET" && req.headers["x-plint"] !== "1") return json(res, 403, { error: "missing header" });
 
   if (top === "login") {
@@ -163,6 +201,23 @@ async function api(req, res, url) {
   }
   if (top === "skills") return json(res, 200, skills());
 
+  // --- computers for Code sessions ---
+  if (top === "machines") {
+    if (!id) {
+      if (m === "GET") return json(res, 200, machines.list());
+      const b = await body(req);
+      const mach = machines.create(b.name);
+      return json(res, 200, { ...mach, server: `https://${req.headers.host}` });
+    }
+    if (!machines.get(id)) return json(res, 404, { error: "No such computer." });
+    if (m === "DELETE") { machines.remove(id); return json(res, 200, { ok: true }); }
+    if (m === "POST" && !action) { machines.rename(id, (await body(req)).name); return json(res, 200, { ok: true }); }
+    if (["ls", "read", "git", "diff", "info"].includes(action)) {
+      try { return json(res, 200, await machines.rpc(id, action, { path: url.searchParams.get("path") || "" })); }
+      catch (err) { return json(res, 400, { error: err.message }); }
+    }
+  }
+
   // --- chats ---
   if (top === "chats") {
     if (!id) {
@@ -176,6 +231,11 @@ async function api(req, res, url) {
       const chat = { id: newId(), title: text.replace(/\s+/g, " ").slice(0, 60), model: "auto-sonnet", effort: "low", mode: "manual",
         style: settings.defaultStyle || "normal", projectId: null, pinned: false, incognito: !!b.incognito,
         created: now(), updated: now(), running: false, sessionId: null, events: [] };
+      if (b.kind === "code") {
+        if (!machines.get(b.machine)) return json(res, 400, { error: "Pick a computer." });
+        if (!String(b.cwd || "").trim()) return json(res, 400, { error: "Pick a folder." });
+        Object.assign(chat, { kind: "code", machine: b.machine, cwd: String(b.cwd).trim(), incognito: false });
+      }
       applyChatSettings(chat, b);
       chats.put(chat);
       const err = startTurn(chat, { text, files: uploadsFor(b.files) });

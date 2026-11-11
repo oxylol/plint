@@ -7,6 +7,7 @@ import path from "node:path";
 import { randomBytes } from "node:crypto";
 import { chats, projects, artifacts, settings, styleById, chatSummary, projectFilesDir, DIRS, newId, now } from "./store.js";
 import { notify, log } from "./notify.js";
+import * as machines from "./machines.js";
 
 export const CWD = process.env.CHAT_CWD || "/opt/plint";
 export const ROUTER = process.env.ROUTER_URL || "http://127.0.0.1:4141";
@@ -155,6 +156,135 @@ function promptText(text, files) {
 
 // --- a turn ------------------------------------------------------------------------
 
+const CODE_PROMPT = (chat, machineName) => `You are working in ${chat.cwd} on ${machineName}. Filip drives this session from
+Plint Chat, often on his phone: keep progress notes short, and end with what you changed and anything
+he should check. Tool calls that need permission show up for him as Allow / Deny buttons; if he denies
+one, ask what he wants instead.`;
+
+function permissionMode(chat) {
+  return chat.mode === "edits" ? "acceptEdits" : "default";
+}
+
+// Turn one Claude Code message into page events. Shared by local and remote runs.
+function onMessage(chat, m, ctx) {
+  if (m.parent_tool_use_id) return; // subagent frames; their asks still reach canUseTool
+  if (m.type === "system" && m.subtype === "init") {
+    chat.sessionId = m.session_id;
+    chats.save(chat);
+  } else if (m.type === "stream_event") {
+    const e = m.event;
+    if (e.type === "content_block_delta" && e.delta?.type === "text_delta") emit(chat, { t: "delta", text: e.delta.text }, { store: false });
+    else if (e.type === "content_block_delta" && e.delta?.type === "thinking_delta") emit(chat, { t: "thinking_delta", text: e.delta.thinking }, { store: false });
+  } else if (m.type === "assistant") {
+    for (const b of m.message?.content || []) {
+      if (b.type === "text" && b.text.trim()) { emit(chat, { t: "text", text: b.text, uuid: m.uuid }); ctx.lastText = b.text; }
+      else if (b.type === "thinking" && b.thinking?.trim()) emit(chat, { t: "thinking", text: clip(b.thinking, 6000), uuid: m.uuid });
+      else if (b.type === "tool_use") { ctx.tools.set(b.id, b); emit(chat, { t: "tool", id: b.id, name: b.name, input: b.input, uuid: m.uuid }); }
+    }
+    if (m.error) emit(chat, { t: "error", text: `Model error: ${m.error}` });
+  } else if (m.type === "user" && Array.isArray(m.message?.content)) {
+    for (const b of m.message.content) {
+      if (b.type !== "tool_result") continue;
+      emit(chat, { t: "result", id: b.tool_use_id, output: clip(resultText(b.content)), error: !!b.is_error, uuid: m.uuid });
+      const call = ctx.tools.get(b.tool_use_id);
+      const file = call?.input?.file_path;
+      if (chat.kind !== "code" && !b.is_error && file && ["Write", "Edit", "MultiEdit"].includes(call.name)) {
+        const a = recordArtifact(chat, file);
+        if (a) { emit(chat, { t: "artifact", id: a.id, title: a.title, kind: a.kind, version: a.versions.length }); broadcast("artifacts"); }
+      }
+      if (chat.kind === "code" && !b.is_error && ["Write", "Edit", "MultiEdit", "NotebookEdit"].includes(call?.name)) emit(chat, { t: "changed" }, { store: false });
+    }
+  } else if (m.type === "result") {
+    const failed = m.subtype !== "success";
+    ctx.reported = failed;
+    const error = !failed ? undefined : lv(chat.id).stopped ? "Stopped." : (m.errors || [m.subtype]).join("; ");
+    emit(chat, { t: "done", ms: now() - ctx.started, cost: m.total_cost_usd, error });
+  }
+}
+
+const MODEL_ENV = {
+  ANTHROPIC_DEFAULT_OPUS_MODEL: "auto-opus",
+  ANTHROPIC_DEFAULT_SONNET_MODEL: "auto-sonnet",
+  ANTHROPIC_DEFAULT_HAIKU_MODEL: "auto-haiku",
+  CLAUDE_CODE_SUBAGENT_MODEL: "auto-sonnet",
+  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
+  CLAUDE_AGENT_SDK_CLIENT_APP: "plint-chat/3",
+};
+
+// Options both backends share (plain JSON, so they can travel to a runner).
+function sharedOptions(chat, fork) {
+  const model = MODELS[chat.model]?.efforts && EFFORTS.includes(chat.effort) ? `${chat.model}@${chat.effort}` : chat.model;
+  const append = chat.kind === "code"
+    ? [CODE_PROMPT(chat, machines.get(chat.machine)?.name || chat.machine), settings.instructions?.trim() ? `Filip's personal preferences:\n${settings.instructions.trim()}` : "", styleById(chat.style).prompt].filter(Boolean).join("\n\n")
+    : systemAppend(chat);
+  return {
+    model,
+    resume: fork ? fork.sessionId || undefined : chat.sessionId || undefined,
+    ...(fork?.sessionId && fork.at ? { resumeSessionAt: fork.at, forkSession: true } : {}),
+    includePartialMessages: true,
+    permissionMode: permissionMode(chat),
+    settingSources: ["user", "project", "local"],
+    systemPrompt: { type: "preset", preset: "claude_code", append },
+    disallowedTools: ["AskUserQuestion", "EnterPlanMode", "ExitPlanMode"],
+  };
+}
+
+async function runLocal(chat, prompt, options, canUseTool, abort, ctx) {
+  const state = lv(chat.id);
+  const project = chat.kind !== "code" && chat.projectId && projects.get(chat.projectId);
+  const cwd = chat.kind === "code" ? chat.cwd : project?.cwd && fs.existsSync(project.cwd) ? project.cwd : CWD;
+  if (!fs.existsSync(cwd)) throw new Error(`The folder ${cwd} isn't there.`);
+  const q = query({
+    prompt,
+    options: {
+      ...options,
+      cwd,
+      additionalDirectories: chat.kind === "code" ? [DIRS.uploads] : [artifactDir(chat), DIRS.uploads, ...(project ? [projectFilesDir(project.id)] : [])],
+      canUseTool,
+      abortController: abort,
+      env: { ...process.env, ANTHROPIC_BASE_URL: ROUTER, ANTHROPIC_AUTH_TOKEN: process.env.SILK_ROUTER_TOKEN || "silk", ...MODEL_ENV },
+      stderr: (d) => log(`[${chat.id}] stderr:`, d.trim().slice(0, 400)),
+    },
+  });
+  state.q = q;
+  for await (const m of q) onMessage(chat, m, ctx);
+}
+
+// Remote turns: the runner posts messages to /api/runner/event, which lands in remoteEvent().
+const remote = new Map(); // chatId -> { ctx, canUseTool, abort, resolve, reject, machine }
+function runRemote(chat, text, files, options, canUseTool, abort, ctx) {
+  return new Promise((resolve, reject) => {
+    remote.set(chat.id, { ctx, canUseTool, abort, resolve, reject, machine: chat.machine });
+    const ok = machines.send(chat.machine, {
+      type: "turn", chatId: chat.id, cwd: chat.cwd, text,
+      files: files.map(({ id, name, size, type }) => ({ id, name, size, type })),
+      options, env: MODEL_ENV,
+    });
+    if (!ok) { remote.delete(chat.id); reject(new Error(`${machines.get(chat.machine)?.name || "That computer"} isn't connected. Start plint-runner on it.`)); }
+  });
+}
+export async function remoteEvent(machineId, body) {
+  const r = remote.get(body.chatId);
+  const chat = chats.get(body.chatId);
+  if (!r || !chat || r.machine !== machineId) return;
+  if (body.kind === "msg") onMessage(chat, body.m, r.ctx);
+  else if (body.kind === "ask") {
+    const result = await r.canUseTool(body.name, body.input || {}, { signal: r.abort.signal, suggestions: body.suggestions });
+    machines.send(machineId, { type: "answer", id: body.id, result });
+  } else if (body.kind === "error") { r.ctx.remoteError = body.text; }
+  else if (body.kind === "end") {
+    remote.delete(body.chatId);
+    r.ctx.remoteError && !r.ctx.reported ? r.reject(new Error(r.ctx.remoteError)) : r.resolve();
+  }
+}
+machines.onRunnerChange(() => {
+  for (const [id, r] of remote) {
+    if (machines.isConnected(r.machine)) continue;
+    remote.delete(id);
+    r.reject(new Error("The computer disconnected in the middle of this turn."));
+  }
+});
+
 async function runTurn(chat, { text, files = [], fork = null }) {
   const state = lv(chat.id);
   chat.running = true;
@@ -163,21 +293,18 @@ async function runTurn(chat, { text, files = [], fork = null }) {
   broadcast();
   const abort = new AbortController();
   state.abort = abort;
-  const tools = new Map(); // tool_use id -> { name, input }
-  let reported = false;
-  let lastText = "";
-  const started = now();
+  const ctx = { tools: new Map(), reported: false, lastText: "", started: now() };
 
   const canUseTool = async (name, input, { signal, suggestions }) => {
     const target = input?.file_path || input?.notebook_path;
-    if (["Write", "Edit", "MultiEdit"].includes(name) && target && inside(target, artifactDir(chat))) return { behavior: "allow", updatedInput: input };
+    if (chat.kind !== "code" && ["Write", "Edit", "MultiEdit"].includes(name) && target && inside(target, artifactDir(chat))) return { behavior: "allow", updatedInput: input };
     if (chat.mode === "auto") return { behavior: "allow", updatedInput: input };
     const id = randomBytes(6).toString("hex");
     emit(chat, { t: "ask", id, name, input });
     if (nobodyWatching(chat)) notify(`Plint Chat · ${chat.title}`, `Wants to run ${name}: ${askSummary(name, input)}`.slice(0, 300), "high", "warning");
     const answer = await new Promise((resolve) => {
       state.pending.set(id, resolve);
-      signal.addEventListener("abort", () => resolve({ allow: false, aborted: true }), { once: true });
+      signal?.addEventListener("abort", () => resolve({ allow: false, aborted: true }), { once: true });
     });
     state.pending.delete(id);
     emit(chat, { t: "answer", id, allow: answer.allow, always: !!answer.always });
@@ -185,76 +312,13 @@ async function runTurn(chat, { text, files = [], fork = null }) {
     return { behavior: "deny", message: answer.aborted ? "Stopped." : "Filip declined this tool call." };
   };
 
-  const model = MODELS[chat.model]?.efforts && EFFORTS.includes(chat.effort) ? `${chat.model}@${chat.effort}` : chat.model;
-  const project = chat.projectId && projects.get(chat.projectId);
   try {
-    const q = query({
-      prompt: promptText(text, files),
-      options: {
-        cwd: project?.cwd && fs.existsSync(project.cwd) ? project.cwd : CWD,
-        additionalDirectories: [artifactDir(chat), DIRS.uploads, ...(project ? [projectFilesDir(project.id)] : [])],
-        model,
-        resume: fork ? fork.sessionId || undefined : chat.sessionId || undefined,
-        ...(fork?.sessionId && fork.at ? { resumeSessionAt: fork.at, forkSession: true } : {}),
-        includePartialMessages: true,
-        permissionMode: "default",
-        settingSources: ["user", "project", "local"],
-        systemPrompt: { type: "preset", preset: "claude_code", append: systemAppend(chat) },
-        disallowedTools: ["AskUserQuestion", "EnterPlanMode", "ExitPlanMode"],
-        canUseTool,
-        abortController: abort,
-        env: {
-          ...process.env,
-          ANTHROPIC_BASE_URL: ROUTER,
-          ANTHROPIC_AUTH_TOKEN: process.env.SILK_ROUTER_TOKEN || "silk",
-          ANTHROPIC_DEFAULT_OPUS_MODEL: "auto-opus",
-          ANTHROPIC_DEFAULT_SONNET_MODEL: "auto-sonnet",
-          ANTHROPIC_DEFAULT_HAIKU_MODEL: "auto-haiku",
-          CLAUDE_CODE_SUBAGENT_MODEL: "auto-sonnet",
-          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
-          CLAUDE_AGENT_SDK_CLIENT_APP: "plint-chat/2",
-        },
-        stderr: (d) => log(`[${chat.id}] stderr:`, d.trim().slice(0, 400)),
-      },
-    });
-    state.q = q;
-    for await (const m of q) {
-      if (m.parent_tool_use_id) continue; // subagent frames; their asks still reach canUseTool
-      if (m.type === "system" && m.subtype === "init") {
-        chat.sessionId = m.session_id;
-        chats.save(chat);
-      } else if (m.type === "stream_event") {
-        const e = m.event;
-        if (e.type === "content_block_delta" && e.delta?.type === "text_delta") emit(chat, { t: "delta", text: e.delta.text }, { store: false });
-        else if (e.type === "content_block_delta" && e.delta?.type === "thinking_delta") emit(chat, { t: "thinking_delta", text: e.delta.thinking }, { store: false });
-      } else if (m.type === "assistant") {
-        for (const b of m.message.content || []) {
-          if (b.type === "text" && b.text.trim()) { emit(chat, { t: "text", text: b.text, uuid: m.uuid }); lastText = b.text; }
-          else if (b.type === "thinking" && b.thinking?.trim()) emit(chat, { t: "thinking", text: clip(b.thinking, 6000), uuid: m.uuid });
-          else if (b.type === "tool_use") { tools.set(b.id, b); emit(chat, { t: "tool", id: b.id, name: b.name, input: b.input, uuid: m.uuid }); }
-        }
-        if (m.error) emit(chat, { t: "error", text: `Model error: ${m.error}` });
-      } else if (m.type === "user" && Array.isArray(m.message?.content)) {
-        for (const b of m.message.content) {
-          if (b.type !== "tool_result") continue;
-          emit(chat, { t: "result", id: b.tool_use_id, output: clip(resultText(b.content)), error: !!b.is_error, uuid: m.uuid });
-          const call = tools.get(b.tool_use_id);
-          const file = call?.input?.file_path;
-          if (!b.is_error && file && ["Write", "Edit", "MultiEdit"].includes(call.name)) {
-            const a = recordArtifact(chat, file);
-            if (a) { emit(chat, { t: "artifact", id: a.id, title: a.title, kind: a.kind, version: a.versions.length }); broadcast("artifacts"); }
-          }
-        }
-      } else if (m.type === "result") {
-        const failed = m.subtype !== "success";
-        reported = failed;
-        const error = !failed ? undefined : state.stopped ? "Stopped." : (m.errors || [m.subtype]).join("; ");
-        emit(chat, { t: "done", ms: now() - started, cost: m.total_cost_usd, error });
-      }
-    }
+    const options = sharedOptions(chat, fork);
+    if (chat.kind === "code" && chat.machine && chat.machine !== "plint") await runRemote(chat, text, files, options, canUseTool, abort, ctx);
+    else await runLocal(chat, promptText(text, files), options, canUseTool, abort, ctx);
   } catch (err) {
-    log(`[${chat.id}] turn failed:`, err?.stack || err);
-    if (!reported) emit(chat, { t: "error", text: state.stopped || abort.signal.aborted ? "Stopped." : `Something broke: ${err?.message || err}` });
+    log(`[${chat.id}] turn failed:`, err?.message || err);
+    if (!ctx.reported) emit(chat, { t: "error", text: state.stopped || abort.signal.aborted ? "Stopped." : `Something broke: ${err?.message || err}` });
   } finally {
     chat.running = false;
     state.q = null;
@@ -263,12 +327,13 @@ async function runTurn(chat, { text, files = [], fork = null }) {
     emit(chat, { t: "idle" });
     chats.save(chat);
     broadcast();
-    if (nobodyWatching(chat) && lastText && !chat.incognito) notify(`Plint Chat · ${chat.title}`, lastText.slice(0, 300));
+    if (nobodyWatching(chat) && ctx.lastText && !chat.incognito) notify(`Plint Chat · ${chat.title}`, ctx.lastText.slice(0, 300));
   }
 }
 
 export function startTurn(chat, payload) {
   if (chat.running) return "This chat is still working.";
+  if (chat.kind === "code" && !machines.isConnected(chat.machine)) return `${machines.get(chat.machine)?.name || "That computer"} isn't connected. Start plint-runner on it.`;
   if (runningCount() >= MAX_RUNNING) return `${MAX_RUNNING} chats are already working; wait for one to finish.`;
   runTurn(chat, payload);
   return null;
@@ -296,6 +361,7 @@ export async function stopTurn(chat) {
   const state = lv(chat.id);
   state.stopped = true;
   for (const resolve of state.pending.values()) resolve({ allow: false, aborted: true });
+  if (remote.has(chat.id)) { machines.send(chat.machine, { type: "stop", chatId: chat.id }); state.abort?.abort(); return; }
   try { await state.q?.interrupt(); } catch { state.abort?.abort(); }
 }
 
