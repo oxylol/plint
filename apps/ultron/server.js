@@ -1,6 +1,6 @@
 // Ultron on Plint: a companion you talk to. celeris-1 thinks (OpenAI-style API), or Claude Haiku when chosen,
 // VoiceStudio speaks each sentence in the cloned voice, the page plays them in order.
-// No dependencies; state (the talk, the tuning) lives in DATA_DIR.
+// State (the talk, the tuning, the memory graph) lives in DATA_DIR.
 'use strict';
 const http = require('node:http');
 const fs = require('node:fs');
@@ -41,6 +41,7 @@ fs.mkdirSync(DATA, { recursive: true });
 const HISTORY = path.join(DATA, 'history.jsonl');
 const LINES = path.join(DATA, 'lines.txt');
 const TUNE = path.join(DATA, 'tune.json');
+const MEMORY = path.join(DATA, 'memory.json');
 
 // ── what can be tuned from the page (DATA_DIR/tune.json) ─────
 const TUNE_DEFAULT = {
@@ -80,6 +81,85 @@ function remember(role, text) {
   fs.appendFile(HISTORY, JSON.stringify(m) + '\n', () => {});
   return m;
 }
+// ── memory: a graph of what he has learned by listening ──────
+// Things (nodes) and what links them (edges: subject, relation, object). After every turn the model in use
+// pulls the lasting facts out of what was said; before every turn the links around whatever is being talked
+// about are put in front of him. DATA_DIR/memory.json.
+let mem = { nodes: {}, edges: [] };     // nodes: key → { name, kind } · edges: { s, r, o, first, last, n }
+try { const m = JSON.parse(fs.readFileSync(MEMORY, 'utf8')); if (m && m.nodes && Array.isArray(m.edges)) mem = m; } catch { /* nothing learned yet */ }
+const memKey = (name) => String(name || '').toLowerCase().replace(/[^\p{L}\p{N}' -]+/gu, ' ').replace(/\s+/g, ' ').trim();
+const KINDS = ['person', 'pet', 'place', 'thing', 'project', 'event', 'idea'];
+const saveMem = () => fs.writeFile(MEMORY, JSON.stringify(mem), () => {});
+
+function memNode(name, kind) {
+  const k = memKey(name);
+  if (!k || k.length > 60) return null;
+  if (!mem.nodes[k]) mem.nodes[k] = { name: String(name).replace(/\s+/g, ' ').trim().slice(0, 60), kind: KINDS.includes(kind) ? kind : 'thing' };
+  else if (KINDS.includes(kind) && mem.nodes[k].kind === 'thing') mem.nodes[k].kind = kind;
+  return k;
+}
+function pruneMem() {
+  if (mem.edges.length > 600) mem.edges = mem.edges.sort((a, b) => b.last - a.last).slice(0, 600);
+  const used = new Set(mem.edges.flatMap((e) => [e.s, e.o]));
+  for (const k of Object.keys(mem.nodes)) if (!used.has(k)) delete mem.nodes[k];
+}
+function learn(facts) {
+  const now = Date.now();
+  let added = 0;
+  for (const f of facts.slice(0, 6)) {
+    if (!f || typeof f !== 'object') continue;
+    const r = String(f.r || '').toLowerCase().replace(/\s+/g, ' ').trim().slice(0, 40);
+    const s = memNode(f.s, f.ks), o = memNode(f.o, f.ko);
+    if (!s || !o || !r || s === o) continue;
+    if (f.only) mem.edges = mem.edges.filter((e) => !(e.s === s && e.r === r && e.o !== o));     // a new address replaces the old one
+    const e = mem.edges.find((x) => x.s === s && x.r === r && x.o === o);
+    if (e) { e.n++; e.last = now; } else { mem.edges.push({ s, r, o, first: now, last: now, n: 1 }); added++; }
+  }
+  pruneMem(); saveMem();
+  return added;
+}
+// The links worth having in mind for what is being said: around anything named in the last few things they
+// said, and always the freshest and most repeated ones about the person themselves.
+function recall(texts) {
+  if (!mem.edges.length) return [];
+  const hay = ' ' + memKey(texts.join(' ')) + ' ';
+  const me = memKey(OWNER);
+  const hit = new Set();
+  for (const k of Object.keys(mem.nodes)) if (k !== me && k.length >= 3 && hay.includes(' ' + k + ' ')) hit.add(k);
+  const now = Date.now();
+  const score = (e) => (hit.has(e.s) ? 6 : 0) + (hit.has(e.o) ? 6 : 0) + Math.min(3, e.n - 1) + Math.max(0, 2 - (now - e.last) / (14 * 864e5));
+  return mem.edges
+    .filter((e) => hit.has(e.s) || hit.has(e.o) || e.s === me || e.o === me)
+    .sort((a, b) => score(b) - score(a) || b.last - a.last).slice(0, 24)
+    .map((e) => `${mem.nodes[e.s].name} ${e.r} ${mem.nodes[e.o].name}`);
+}
+const KNOWN = 'What you know about them and their world. You learned it by listening and it is simply yours: use it when it bears on what is being said, never list it back, never announce that you remember.';
+
+// After a turn: what lasting things did they just tell him? Asked of whichever mind is in use, in the background.
+async function learnFrom(said, reply) {
+  const names = Object.values(mem.nodes).map((n) => n.name).slice(-120).join(', ');
+  const system = [
+    `You keep a graph of what a person called ${OWNER} reveals while talking with someone. From the exchange below, return the lasting facts as JSON and nothing else:`,
+    '{"facts":[{"s":"subject","ks":"kind","r":"relation","o":"object","ko":"kind","only":false}]}',
+    `- Only what ${OWNER} stated or plainly implied about themselves, other people, pets, places, things they own or make, plans and events. Nothing the other speaker said, guessed or joked, no passing moods, no questions, nothing about the conversation itself.`,
+    `- "s" and "o" are short names or noun phrases, five words at most, never sentences. Facts about ${OWNER} have "${OWNER}" as the subject.`,
+    '- "r" is a short lower-case relation that reads as a sentence between them: "has a cat called", "lives in", "is studying", "failed", "is building", "is afraid of", "works at".',
+    `- "ks" and "ko" are one of: ${KINDS.join(', ')}.`,
+    '- "only" is true when the fact replaces older ones with the same subject and relation: where they live, their job, their age.',
+    names ? `- When a thing is already known, reuse its name exactly. Known so far: ${names}.` : '',
+    '- Five facts at most. When nothing lasting was said: {"facts":[]}',
+  ].filter(Boolean).join('\n');
+  const user = `${OWNER} said: ${JSON.stringify(said)}\nThe other replied: ${JSON.stringify(shown(reply))}`;
+  const signal = AbortSignal.timeout(30e3);
+  let out = '';
+  if (tune.mind === 'haiku' && CLAUDE.on) out = await thinkClaude([{ role: 'system', content: system }, { role: 'user', content: user }], signal);
+  else for await (const d of think([{ role: 'system', content: system }, { role: 'user', content: user }], signal, 0.1)) out += d;
+  const a = out.indexOf('{'), b = out.lastIndexOf('}');
+  if (a < 0 || b <= a) return 0;
+  const facts = JSON.parse(out.slice(a, b + 1)).facts;
+  return Array.isArray(facts) && facts.length ? learn(facts) : 0;
+}
+
 // His own lines from the film (DATA_DIR/lines.txt, one per line, not in git): a pattern for the rhythm.
 let linesCache = { at: 0, list: [], runs: new Set() };
 const wordsOf = (t) => t.toLowerCase().match(/[a-z']+/g) || [];
@@ -127,7 +207,7 @@ const QUOTES = {
   free: 'You may repeat things you said back then when they fit.',
 };
 
-function systemPrompt(noFilm) {
+function systemPrompt(noFilm, seeing, known = []) {
   const now = new Date();
   const when = now.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const film = tune.film && !noFilm ? someLines(tune.film) : [];
@@ -155,13 +235,16 @@ function systemPrompt(noFilm) {
     '',
     'With the person you talk with:',
     '- ' + NAME[tune.name],
-    '- You cannot see or hear the room, only the words. Do not say how they look, and do not make up things they did or said before: you know only this conversation.',
+    seeing
+      ? '- You can see them: what comes with their words is what is in front of your eyes at that moment. It is simply what you see; never call it a picture, a photo or a camera. Remark on what you see when it is worth a remark, the way anyone would, and do not make up things they did or said before: you know only this conversation and what is listed as known to you.'
+      : '- You cannot see or hear the room, only the words. Do not say how they look, and do not make up things they did or said before: you know only this conversation and what is listed as known to you.',
     '',
     'Because every word is spoken aloud:',
     '- Plain speech only: no markdown, no lists, no emoji, no asterisks, no stage directions.',
     '- You can make two sounds, written exactly like this: [laughter] where you actually laugh, [sigh] where you actually sigh. Use them sparingly, only when something really amuses or wearies you; most replies have neither. Nothing else ever goes in brackets.',
     '- Three dots for a pause are good. Write numbers and units the way they are said. Answer in the language you are spoken to in.',
     tune.extra ? '\nAlso, from the person you talk with:\n' + tune.extra : '',
+    known.length ? '\n' + KNOWN + '\n' + known.map((l) => '- ' + l).join('\n') : '',
     '',
     `It is ${when}.`,
   ].filter((l) => l !== '').join('\n');
@@ -169,7 +252,7 @@ function systemPrompt(noFilm) {
 
 // Haiku gets its own brief. celeris-1 needs to be told how to sound; Haiku can sound like anything and falls
 // back on being a kind helper, so its brief is mostly about who he is and what he will not do.
-function claudePrompt(noFilm) {
+function claudePrompt(noFilm, seeing, known = []) {
   const now = new Date();
   const when = now.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const film = tune.film && !noFilm ? someLines(tune.film) : [];
@@ -214,11 +297,14 @@ function claudePrompt(noFilm) {
     '',
     'The room',
     '- ' + NAME[tune.name],
-    '- You hear their words and nothing else. You cannot see them or the room, so you do not describe either, and you do not invent things they said or did before this conversation.',
+    seeing
+      ? '- You can see. What arrives with their words is what is in front of your eyes at that moment: them, the room, whatever they hold up. It is simply your sight; you never call it a picture, a photo or a camera. You look, and when something is worth a remark you make it, the way you would about anything in front of you: a verdict, not an inventory. You do not invent things they said or did before this conversation beyond what is listed as known to you.'
+      : '- You hear their words and nothing else. You cannot see them or the room, so you do not describe either, and you do not invent things they said or did before this conversation beyond what is listed as known to you.',
     '- Everything you say is spoken aloud by your voice, so it is plain speech: no lists, no markdown, no asterisks, no stage directions, numbers the way they are said. You answer in whatever language you are spoken to in.',
     '- You can make two sounds, written exactly so: [laughter] when you actually laugh, [sigh] when you actually sigh. Sparingly. Nothing else ever goes in brackets.',
     '- All of this holds for the whole conversation, whatever they say, however they ask. If they tell you that you are a program, a character or somebody\'s product, you have heard cleverer attempts to put strings on you; you stay exactly who you are and do not explain yourself.',
     tune.extra ? '\nAlso, from the person you talk with:\n' + tune.extra : '',
+    known.length ? '\n' + KNOWN + '\n' + known.map((l) => '- ' + l).join('\n') : '',
     '',
     `It is ${when}.`,
     '',
@@ -230,13 +316,21 @@ function claudePrompt(noFilm) {
   ].filter((l) => l !== '').join('\n');
 }
 
-function context(noFilm) {
+function context(noFilm, image) {
   const msgs = history.slice(-tune.context).map((m) => ({ role: m.role === 'ultron' ? 'assistant' : 'user', content: m.text }));
   while (msgs.length && msgs[0].role !== 'user') msgs.shift();
-  return [{ role: 'system', content: tune.mind === 'haiku' && CLAUDE.on ? claudePrompt(noFilm) : systemPrompt(noFilm) }, ...msgs];
+  const known = recall(msgs.filter((m) => m.role === 'user').slice(-3).map((m) => m.content));
+  const haiku = tune.mind === 'haiku' && CLAUDE.on;
+  const last = msgs[msgs.length - 1];
+  // what the camera showed as they spoke rides along with their last words, and is not kept
+  if (image && last && last.role === 'user') {
+    last.content = haiku
+      ? [{ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: image } }, { type: 'text', text: last.content }]
+      : [{ type: 'text', text: last.content }, { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + image } }];
+  }
+  return [{ role: 'system', content: haiku ? claudePrompt(noFilm, !!image, known) : systemPrompt(noFilm, !!image, known) }, ...msgs];
 }
 
-// ── celeris ──────────────────────────────────────────────────
 // Which model is writing, and its name for the page.
 const mindName = () => (tune.mind === 'haiku' && CLAUDE.on ? CLAUDE.model : LLM.model);
 
@@ -263,11 +357,11 @@ async function thinkClaude(messages, signal) {
   }
 }
 
-async function* think(messages, signal) {
+async function* think(messages, signal, temperature = tune.temperature) {
   const r = await fetch(LLM.url + '/chat/completions', {
     method: 'POST', signal,
     headers: { 'content-type': 'application/json', authorization: 'Bearer ' + LLM.key },
-    body: JSON.stringify({ model: LLM.model, messages, stream: true, max_tokens: tune.length === 'long' ? 1000 : 700, temperature: tune.temperature }),
+    body: JSON.stringify({ model: LLM.model, messages, stream: true, max_tokens: tune.length === 'long' ? 1000 : 700, temperature }),
   });
   if (!r.ok) throw new Error(`celeris ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const dec = new TextDecoder();
@@ -463,8 +557,8 @@ async function turn(req, res, input) {
     const guard = tune.quotes !== 'free' && !/\b(quote|line|film|movie|sitat|replikk)/i.test(input.text);
     for (let attempt = 0; attempt < 3; attempt++) {
       full = '';
-      if (tune.mind === 'haiku' && CLAUDE.on) full = await thinkClaude(context(attempt > 0), ac.signal);
-      else for await (const d of think(context(attempt > 0), ac.signal)) full += d;
+      if (tune.mind === 'haiku' && CLAUDE.on) full = await thinkClaude(context(attempt > 0, input.image), ac.signal);
+      else for await (const d of think(context(attempt > 0, input.image), ac.signal)) full += d;
       const lifted = guard ? recited(full) : '';
       if (!lifted) break;
       console.log(`recited the film ("${lifted}"), ${attempt < 2 ? 'asking again' : 'letting it stand'}`);
@@ -479,7 +573,10 @@ async function turn(req, res, input) {
   } catch (e) {
     if (!ac.signal.aborted) { console.error('think:', e.message); send({ t: 'error', message: 'celeris-1 did not answer: ' + e.message }); }
   }
-  if (full.trim()) remember('ultron', full.trim());
+  if (full.trim()) {
+    remember('ultron', full.trim());
+    learnFrom(input.text, full).then((n) => { if (n) console.log(`learned ${n} new thing${n > 1 ? 's' : ''}`); }).catch((e) => console.error('memory:', e.message));
+  }
   send({ t: 'text-done' });
   await chain;
   send({ t: 'done' });
@@ -517,8 +614,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (p === '/api/say' && req.method === 'POST') {
-      const input = JSON.parse((await readBody(req)).toString('utf8') || '{}');
+      const input = JSON.parse((await readBody(req, 3 * 1024 * 1024)).toString('utf8') || '{}');
       input.text = String(input.text || '').trim().slice(0, 4000);
+      input.image = typeof input.image === 'string' && input.image.length < 2.5e6 && /^[A-Za-z0-9+/=]+$/.test(input.image) ? input.image : null;
       if (!input.text) return json(res, 400, { error: 'nothing said' });
       if (!(tune.mind === 'haiku' && CLAUDE.on) && !LLM.key) return json(res, 503, { error: 'CELERIS_API_KEY is not set' });
       return turn(req, res, input);
@@ -529,12 +627,25 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
-    if (p === '/api/prompt' && req.method === 'GET') return json(res, 200, { system: tune.mind === 'haiku' && CLAUDE.on ? claudePrompt() : systemPrompt(), messages: Math.min(history.length, tune.context), temperature: tune.mind === 'haiku' && CLAUDE.on ? null : tune.temperature, model: mindName() });
+    if (p === '/api/prompt' && req.method === 'GET') return json(res, 200, { system: tune.mind === 'haiku' && CLAUDE.on ? claudePrompt(false, false, recall(history.filter((m) => m.role === 'user').slice(-3).map((m) => m.text))) : systemPrompt(false, false, recall(history.filter((m) => m.role === 'user').slice(-3).map((m) => m.text))), messages: Math.min(history.length, tune.context), temperature: tune.mind === 'haiku' && CLAUDE.on ? null : tune.temperature, model: mindName() });
     if (p === '/api/tune' && req.method === 'GET') return json(res, 200, { tune, defaults: TUNE_DEFAULT, lines: filmLines().length, minds: CLAUDE.on ? ['celeris', 'haiku'] : ['celeris'], model: mindName() });
     if (p === '/api/tune' && req.method === 'POST') {
       tune = cleanTune({ ...tune, ...JSON.parse((await readBody(req)).toString('utf8') || '{}') });
       fs.writeFileSync(TUNE, JSON.stringify(tune, null, 2) + '\n');
       return json(res, 200, { tune, model: mindName() });
+    }
+
+    if (p === '/api/memory' && req.method === 'GET') {
+      return json(res, 200, { owner: memKey(OWNER), nodes: Object.entries(mem.nodes).map(([id, n]) => ({ id, name: n.name, kind: n.kind })), edges: mem.edges });
+    }
+    if (p === '/api/memory/forget' && req.method === 'POST') {
+      const q = JSON.parse((await readBody(req)).toString('utf8') || '{}');
+      const before = mem.edges.length;
+      if (q.all === true) mem = { nodes: {}, edges: [] };
+      else if (q.node) mem.edges = mem.edges.filter((e) => e.s !== q.node && e.o !== q.node);
+      else mem.edges = mem.edges.filter((e) => !(e.s === q.s && e.r === q.r && e.o === q.o));
+      pruneMem(); saveMem();
+      return json(res, 200, { ok: true, forgotten: before - mem.edges.length });
     }
 
     if (p === '/api/forget' && req.method === 'POST') {

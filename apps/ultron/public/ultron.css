@@ -80,7 +80,14 @@ body {
 
 /* ── the middle: his face, then the talk ── */
 main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
-.core { padding: 6px var(--pad) 0; }
+.core { padding: 6px var(--pad) 0; position: relative; }
+/* what he sees: the camera, small, in his own grey */
+#eye {
+  position: absolute; top: 14px; right: var(--pad); width: 78px; height: 104px; object-fit: cover; cursor: pointer;
+  background: #000; filter: grayscale(1) contrast(1.15) brightness(0.92);
+  clip-path: var(--p-cut); outline: 1px solid var(--p-faint); outline-offset: -1px;
+}
+#eye.mirror { transform: scaleX(-1); }
 .face {
   all: unset; display: block; width: 100%; cursor: pointer;
   height: clamp(150px, 30dvh, 300px);
@@ -152,7 +159,7 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 .btn:disabled { opacity: 0.35; cursor: default; }
 #mic[aria-pressed="true"] svg { animation: blink 1s steps(1) infinite; }
 
-.sw { display: flex; gap: 8px; margin-top: 8px; }
+.sw { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .sw .gap { flex: 1; }
 
 /* ── tuning: a sheet over the transcript ── */
@@ -182,6 +189,24 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 #tuneText { margin: 10px 0 0; padding: 10px; box-shadow: inset 0 0 0 1px var(--p-line); font: 400 11px/1.55 var(--p-font); color: var(--p-ink2); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 46dvh; overflow-y: auto; }
 @media (max-width: 420px) { .trow { grid-template-columns: 1fr; gap: 7px; } .seg .btn { flex: 1; } }
 
+/* ── memory: the graph, then the links of whatever is picked ── */
+#memGraph { display: block; width: 100%; height: min(46dvh, 340px); margin-top: 2px; touch-action: manipulation; }
+#memGraph line { stroke: var(--p-line); stroke-width: 1; }
+#memGraph line.on { stroke: var(--p-ink); }
+#memGraph g.n { cursor: pointer; }
+#memGraph g.n rect { fill: var(--p-ink); }
+#memGraph g.n.me rect { fill: rgb(var(--u-ph)); }
+#memGraph g.n text { fill: var(--p-ink2); font: 600 8.5px/1 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase; }
+#memGraph g.n.on text { fill: var(--p-bg); }
+#memGraph g.n .bg { fill: none; }
+#memGraph g.n.on .bg { fill: var(--p-ink); }
+#memGraph g.n.dim { opacity: 0.3; }
+.memHint { margin: 6px 0 0; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2); line-height: 1.5; }
+.fact { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--p-line); font-size: 12px; line-height: 1.4; }
+.fact b { font-weight: 600; }
+.fact i { font-style: normal; color: var(--p-ink2); }
+.fact .btn { min-height: 32px; min-width: 36px; padding: 0 8px; }
+
 /* ── wider than a phone: face on the left, talk on the right ── */
 @media (min-width: 860px) {
   :root { --pad: 28px; }
@@ -192,6 +217,7 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
   .who h1 { font-size: 38px; }
   .ln > p { font-size: 15px; }
   .tune { left: 50%; right: auto; width: min(1180px, 100vw); transform: translateX(-50%); }
+  #eye { top: 26px; width: 96px; height: 128px; }
 }
 @media (max-height: 560px) { .face { height: 110px; } }
 

@@ -35,6 +35,7 @@
     <button class="face" id="faceBtn" type="button" aria-label="Stop Ultron speaking">
       <canvas id="face"></canvas>
     </button>
+    <video id="eye" playsinline muted hidden aria-label="What he sees. Tap to switch camera."></video>
     <div class="read">
       <div><span>MIND <span class="ru">/ РАЗУМ</span></span><b id="rMind">CELERIS-1</b></div>
       <div><span>VOICE <span class="ru">/ ГОЛОС</span></span><b id="rVoice">...</b></div>
@@ -62,6 +63,18 @@
   <pre id="tuneText" hidden></pre>
 </section>
 
+<section class="tune" id="memory" hidden aria-label="What he has learned">
+  <div class="grp"><span>MEMORY <span class="ru">/ ПАМЯТЬ</span></span><span id="memCount"></span></div>
+  <svg id="memGraph" role="img" aria-label="Graph of what he has learned"></svg>
+  <p class="memHint" id="memHint"></p>
+  <div id="memFacts"></div>
+  <div class="tfoot">
+    <button class="btn o sm" id="memWipe" type="button">WIPE</button>
+    <span class="gap"></span>
+    <button class="btn sm" id="memClose" type="button">DONE</button>
+  </div>
+</section>
+
 <footer class="deck">
   <form id="form" autocomplete="off">
     <span class="prompt" aria-hidden="true">&gt;</span>
@@ -75,6 +88,8 @@
     <button class="btn o sm" id="swVoice" type="button" aria-pressed="true">VOICE</button>
     <button class="btn o sm" id="swLoop" type="button" aria-pressed="false" aria-label="Talk mode: he listens again after each answer" hidden>TALK</button>
     <button class="btn o sm" id="swLang" type="button" aria-label="Language he listens for" hidden>EN</button>
+    <button class="btn o sm" id="swEyes" type="button" aria-pressed="false" aria-label="Eyes: let him see through this device's camera">EYES</button>
+    <button class="btn o sm" id="swMem" type="button" aria-pressed="false" aria-controls="memory">MEMORY</button>
     <button class="btn o sm" id="swTune" type="button" aria-pressed="false" aria-controls="tune">TUNE</button>
     <span class="gap"></span>
     <button class="btn o sm" id="swForget" type="button">FORGET</button>

@@ -300,7 +300,7 @@ async function say(text) {
   $('rTurns').textContent = ++turns;
 
   try {
-    const r = await fetch('api/say', { method: 'POST', signal: t.ac.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, voice: wantVoice }) });
+    const r = await fetch('api/say', { method: 'POST', signal: t.ac.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, voice: wantVoice, image: eyes.frame() || undefined }) });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'HTTP ' + r.status);
     const reader = r.body.getReader(), dec = new TextDecoder();
     let buf = '';
@@ -445,6 +445,142 @@ $('swLoop').onclick = () => {
   };
 })();
 
+// ── eyes: this device's camera; one frame goes along with each thing you say ──
+const eyes = (() => {
+  const v = $('eye'), sw = $('swEyes');
+  let stream = null, facing = store.get('facing', 'user');
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { sw.hidden = true; return { frame: () => null }; }
+  function off() {
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    stream = null; v.srcObject = null; v.hidden = true; sw.setAttribute('aria-pressed', 'false');
+  }
+  async function on() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+      v.srcObject = stream; v.classList.toggle('mirror', facing === 'user'); v.hidden = false;
+      await v.play();
+      sw.setAttribute('aria-pressed', 'true');
+    } catch { off(); notice('The browser will not let him see: allow the camera for this page.'); }
+  }
+  // what the camera shows right now, small enough to send: longest side 768
+  function frame() {
+    if (!stream || !v.videoWidth) return null;
+    const k = Math.min(1, 768 / Math.max(v.videoWidth, v.videoHeight));
+    const c = document.createElement('canvas');
+    c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+    c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.72).split(',')[1] || null;
+  }
+  sw.onclick = () => (stream ? off() : on());
+  v.onclick = async () => { facing = facing === 'user' ? 'environment' : 'user'; store.set('facing', facing); off(); await on(); };
+  return { frame };
+})();
+
+// ── memory: the graph of what he has learned ─────────────────
+(() => {
+  const box = $('memory'), sw = $('swMem'), svg = $('memGraph'), facts = $('memFacts'), NS = 'http://www.w3.org/2000/svg';
+  let data = null, picked = null;
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+
+  // where everything sits: links pull, everything else pushes apart, the person in the middle
+  function layout(W, H) {
+    const ns = data.nodes, idx = new Map(ns.map((n, i) => [n.id, i]));
+    let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    ns.forEach((n, i) => { const a = (i / ns.length) * Math.PI * 2; n.x = W / 2 + Math.cos(a) * W * 0.3 * (0.6 + rnd() * 0.4); n.y = H / 2 + Math.sin(a) * H * 0.3 * (0.6 + rnd() * 0.4); });
+    const k = Math.sqrt((W * H) / Math.max(1, ns.length)) * 0.75;
+    for (let it = 0; it < 260; it++) {
+      const t = 1 - it / 260, fx = new Float32Array(ns.length), fy = new Float32Array(ns.length);
+      for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) {
+        let dx = ns[i].x - ns[j].x, dy = (ns[i].y - ns[j].y) * 1.6, d = Math.hypot(dx, dy) || 0.01;
+        const f = (k * k) / d; dx = (dx / d) * f; dy = (dy / d) * f;
+        fx[i] += dx; fy[i] += dy; fx[j] -= dx; fy[j] -= dy;
+      }
+      for (const e of data.edges) {
+        const a = idx.get(e.s), b = idx.get(e.o); if (a === undefined || b === undefined) continue;
+        const dx = ns[a].x - ns[b].x, dy = ns[a].y - ns[b].y, d = Math.hypot(dx, dy) || 0.01, f = (d * d) / k / 2.2;
+        fx[a] -= (dx / d) * f; fy[a] -= (dy / d) * f; fx[b] += (dx / d) * f; fy[b] += (dy / d) * f;
+      }
+      ns.forEach((n, i) => {
+        if (n.id === data.owner) { n.x = W / 2; n.y = H / 2; return; }
+        const d = Math.hypot(fx[i], fy[i]) || 0.01, m = Math.min(d, 18 * t + 1);
+        n.x = Math.max(46, Math.min(W - 46, n.x + (fx[i] / d) * m + (W / 2 - n.x) * 0.012));
+        n.y = Math.max(16, Math.min(H - 16, n.y + (fy[i] / d) * m + (H / 2 - n.y) * 0.012));
+      });
+    }
+  }
+
+  function draw() {
+    svg.innerHTML = '';
+    const W = svg.clientWidth || 340, H = svg.clientHeight || 300;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    $('memCount').textContent = `${data.nodes.length} THINGS · ${data.edges.length} LINKS`;
+    $('memWipe').hidden = !data.edges.length;
+    if (!data.nodes.length) {
+      $('memHint').textContent = 'Nothing yet. He learns from what you tell him about yourself, the people and things around you, and your plans.';
+      facts.innerHTML = ''; return;
+    }
+    layout(W, H);
+    const at = new Map(data.nodes.map((n) => [n.id, n]));
+    const near = picked ? new Set([picked, ...data.edges.filter((e) => e.s === picked || e.o === picked).flatMap((e) => [e.s, e.o])]) : null;
+    for (const e of data.edges) {
+      const a = at.get(e.s), b = at.get(e.o); if (!a || !b) continue;
+      el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: picked && (e.s === picked || e.o === picked) ? 'on' : '' }, svg);
+    }
+    data.nodes.forEach((n, i) => {
+      const g = el('g', { class: 'n' + (n.id === data.owner ? ' me' : '') + (n.id === picked ? ' on' : '') + (near && !near.has(n.id) ? ' dim' : ''), tabindex: 0, role: 'button', 'aria-label': n.name }, svg);
+      const label = n.name.length > 18 ? n.name.slice(0, 17) + '…' : n.name;
+      const w = label.length * 6.4 + 10;
+      el('rect', { class: 'bg', x: n.x - w / 2, y: n.y + 6, width: w, height: 13 }, g);
+      el('rect', { x: n.x - 3.5, y: n.y - 5, width: 7, height: 9 }, g);
+      el('text', { x: n.x, y: n.y + 15.5, 'text-anchor': 'middle' }, g).textContent = label;
+      el('rect', { x: n.x - w / 2, y: n.y - 10, width: w, height: 32, fill: 'transparent', style: 'fill:transparent' }, g);
+      const pick = () => { picked = picked === n.id ? null : n.id; draw(); };
+      g.onclick = pick; g.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pick(); } };
+      if (!still && !picked) { g.style.opacity = 0; setTimeout(() => { g.style.opacity = ''; }, 40 + i * 45); }
+    });
+    list();
+  }
+
+  function list() {
+    facts.innerHTML = '';
+    const name = (id) => (data.nodes.find((n) => n.id === id) || { name: id }).name;
+    const es = (picked ? data.edges.filter((e) => e.s === picked || e.o === picked) : data.edges.slice().sort((a, b) => b.last - a.last).slice(0, 6));
+    $('memHint').textContent = picked ? `${name(picked)}: ${es.length} link${es.length === 1 ? '' : 's'}. Tap again to let go.` : 'Latest. Tap a thing to see what he knows about it.';
+    for (const e of es) {
+      const row = document.createElement('div'); row.className = 'fact';
+      const p = document.createElement('span');
+      const s = document.createElement('b'); s.textContent = name(e.s);
+      const r = document.createElement('i'); r.textContent = ' ' + e.r + ' ';
+      const o = document.createElement('b'); o.textContent = name(e.o);
+      p.append(s, r, o);
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'btn o sm'; x.textContent = '×'; x.setAttribute('aria-label', `Forget: ${name(e.s)} ${e.r} ${name(e.o)}`);
+      x.onclick = () => forget({ s: e.s, r: e.r, o: e.o });
+      row.append(p, x); facts.appendChild(row);
+    }
+  }
+  const load = () => fetch('api/memory').then((r) => r.json()).then((d) => { data = d; if (picked && !d.nodes.some((n) => n.id === picked)) picked = null; draw(); });
+  const forget = (q) => fetch('api/memory/forget', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(q) }).then(load).catch(() => {});
+  function open(on) {
+    box.hidden = !on; sw.setAttribute('aria-pressed', String(on));
+    if (on) {
+      if (!$('tune').hidden) $('tuneClose').click();
+      document.documentElement.style.setProperty('--deck-h', document.querySelector('.deck').offsetHeight + 'px');
+      picked = null; load().catch(() => open(false));
+    }
+  }
+  sw.onclick = () => open(box.hidden);
+  $('memClose').onclick = () => open(false);
+  (() => {
+    const b = $('memWipe'); let armed = 0;
+    b.onclick = () => {
+      if (!armed) { b.textContent = 'SURE?'; b.setAttribute('aria-pressed', 'true'); armed = setTimeout(() => { armed = 0; b.textContent = 'WIPE'; b.setAttribute('aria-pressed', 'false'); }, 3000); return; }
+      clearTimeout(armed); armed = 0; b.textContent = 'WIPE'; b.setAttribute('aria-pressed', 'false'); forget({ all: true });
+    };
+  })();
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !box.hidden) open(false); });
+  window.addEventListener('resize', () => { if (!box.hidden && data) draw(); });
+})();
+
 // ── tuning: what celeris-1 is given ──────────────────────────
 (() => {
   const SPEC = [
@@ -453,13 +589,13 @@ $('swLoop').onclick = () => {
     ['quotes', 'THE FILM', 'How much of the film comes back: its lines, strings, Stark.', [['never', 'NEVER'], ['rare', 'RARE'], ['free', 'FREE']]],
     ['film', 'FILM LINES', 'How many of his real lines he is shown, for the rhythm.', [[0, 'NONE'], [12, '12'], [24, '24'], [200, 'ALL']]],
     ['name', 'YOUR NAME', 'How often he says it.', [['never', 'NEVER'], ['rare', 'RARE'], ['often', 'OFTEN']]],
-    ['context', 'MEMORY', 'How many past messages he is handed each time.', [[10, '10'], [30, '30'], [60, '60']]],
+    ['context', 'CONTEXT', 'How many past messages he is handed each time.', [[10, '10'], [30, '30'], [60, '60']]],
   ];
   const box = $('tune'), rows = $('tuneRows'), extra = $('tuneExtra'), sw = $('swTune');
   let tune = null, timer = 0, minds = ['celeris'];
   const MIND = ['mind', 'MIND', 'Which model writes his answers. Haiku ignores WILDNESS.', [['celeris', 'CELERIS-1'], ['haiku', 'HAIKU']]];
   const save = (patch) => fetch('api/tune', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) })
-    .then((r) => r.json()).then((d) => { tune = d.tune; if (d.model) $('rMind').textContent = d.model.toUpperCase(); paint(); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
+    .then((r) => r.json()).then((d) => { tune = d.tune; if (d.model) $('rMind').textContent = d.model.replace(/^claude-/i, '').toUpperCase(); paint(); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
   function paint() {
     rows.innerHTML = '';
     for (const [key, name, what, opts] of (minds.length > 1 ? [MIND, ...SPEC] : SPEC)) {
@@ -488,6 +624,7 @@ $('swLoop').onclick = () => {
   function open(on) {
     box.hidden = !on; sw.setAttribute('aria-pressed', String(on));
     if (on) {
+      if (!$('memory').hidden) $('memClose').click();
       document.documentElement.style.setProperty('--deck-h', document.querySelector('.deck').offsetHeight + 'px');
       fetch('api/tune').then((r) => r.json()).then((d) => { tune = d.tune; minds = d.minds || minds; paint(); }).catch(() => { box.hidden = true; sw.setAttribute('aria-pressed', 'false'); });
     }
@@ -516,7 +653,7 @@ async function load() {
   try {
     const s = await fetch('api/state').then((r) => r.json());
     owner = (s.owner || 'YOU').toUpperCase().slice(0, 8);
-    $('rMind').textContent = (s.model || '').toUpperCase() + (s.llm ? '' : ' · NO KEY');
+    $('rMind').textContent = (s.model || '').replace(/^claude-/i, '').toUpperCase() + (s.llm ? '' : ' · NO KEY');
     turns = Math.floor(s.turns / 2); $('rTurns').textContent = turns;
     showVoice(s.voice.state, s.voice.via || '');
     if (!s.history.length) empty();
