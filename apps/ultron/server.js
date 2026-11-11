@@ -22,7 +22,7 @@ const VOICE = {
   key: process.env.VOICE_KEY || '',
   name: process.env.VOICE_NAME || 'Ultron',
   engine: process.env.VOICE_ENGINE || 'omnivoice',
-  steps: Number(process.env.VOICE_STEPS || 0),      // 0 = VoiceStudio's default (16)
+  steps: Number(process.env.VOICE_STEPS || 0),      // OmniVoice's unmasking steps; 0 = VoiceStudio's default (16)
   speed: Number(process.env.VOICE_SPEED || 1),
   format: process.env.VOICE_FORMAT || 'wav',
 };
@@ -214,7 +214,7 @@ function sayable(s) {
 
 async function speak(text, signal) {
   const body = { model: VOICE.engine, input: sayable(text), voice: VOICE.name, response_format: VOICE.format, speed: VOICE.speed };
-  if (VOICE.steps) body.num_step = VOICE.steps;
+  if (VOICE.steps && VOICE.engine.startsWith('omnivoice')) body.num_step = VOICE.steps;
   const r = await fetch(VOICE.url + '/v1/audio/speech', {
     method: 'POST', signal, headers: { 'content-type': 'application/json', ...vsHeaders() }, body: JSON.stringify(body),
   });

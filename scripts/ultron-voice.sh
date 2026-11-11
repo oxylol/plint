@@ -9,6 +9,11 @@
 #                                        whether you accept it (VoiceStudio will not
 #                                        synthesise before that)
 #    ultron-voice.sh say "text" [out]    synthesise one line and time it
+#                                        (ENGINE=moss-tts-nano STEPS=6 to compare)
+#    ultron-voice.sh models              fetch the speech model's files into the cache
+#                                        (VoiceStudio 0.5.7's own downloader dies on the
+#                                        small compressed ones: "process() takes no
+#                                        keyword arguments")
 #  VoiceStudio is not published; this talks to it from inside its container.
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -56,7 +61,7 @@ print(d["repo_id"]); print("  licence:", i["license"]); print("  category:", i["
     ;;
   say)
     text="${2:?text}"; out="${3:-/tmp/ultron-say.wav}"
-    body="$(python3 -c 'import json,sys; print(json.dumps({"model":"omnivoice","input":sys.argv[1],"voice":sys.argv[2],"response_format":"wav"}))' "$text" "$NAME")"
+    body="$(python3 -c 'import json,sys; b={"model":sys.argv[3],"input":sys.argv[1],"voice":sys.argv[2],"response_format":"wav"}; b.update({"num_step":int(sys.argv[4])} if sys.argv[4]!="0" else {}); print(json.dumps(b))' "$text" "$NAME" "${ENGINE:-omnivoice}" "${STEPS:-0}")"
     t0=$(date +%s.%N)
     code="$($VS -m 900 -o /tmp/ultron-say.wav -w '%{http_code}' -H 'content-type: application/json' "$API/v1/audio/speech" -d "$body")"
     t1=$(date +%s.%N)
@@ -64,5 +69,17 @@ print(d["repo_id"]); print("  licence:", i["license"]); print("  category:", i["
     docker cp -q voicestudio:/tmp/ultron-say.wav "$out"
     python3 -c 'import sys,wave; w=wave.open(sys.argv[1]); d=w.getnframes()/w.getframerate(); t=float(sys.argv[3])-float(sys.argv[2]); print(f"{sys.argv[1]}: {d:.1f}s of speech in {t:.1f}s ({t/d:.1f}x real time)")' "$out" "$t0" "$t1"
     ;;
-  *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 1;;
+  models)
+    repo="${REPOS[0]}"
+    rev="$(curl -sf "https://huggingface.co/api/models/$repo" | python3 -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
+    dir="/app/omnivoice_data/huggingface/hub/models--${repo//\//--}/snapshots/$rev"
+    curl -sf "https://huggingface.co/api/models/$repo/tree/$rev?recursive=true" \
+      | python3 -c 'import json,sys; [print(f["path"]) for f in json.load(sys.stdin) if f["type"]=="file"]' \
+      | while IFS= read -r f; do
+          docker exec voicestudio sh -c 'mkdir -p "$(dirname "$1/$2")"; [ -e "$1/$2" ] || { curl -sfL -o "$1/$2.part" "https://huggingface.co/$3/resolve/$4/$2" && mv "$1/$2.part" "$1/$2" && echo "fetched $2"; }' _ "$dir" "$f" "$repo" "$rev" </dev/null
+        done
+    docker exec voicestudio sh -c 'mkdir -p "$1/../../refs" && printf %s "$2" > "$1/../../refs/main"' _ "$dir" "$rev"
+    echo "cache complete: $repo@${rev:0:8}"
+    ;;
+  *) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 1;;
 esac

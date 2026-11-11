@@ -24,7 +24,12 @@ services:
       VOICE_URL: http://voicestudio:3900
       VOICE_KEY: ${OMNIVOICE_API_KEY:-}
       VOICE_NAME: ${ULTRON_VOICE:-Ultron}
-      VOICE_STEPS: ${ULTRON_VOICE_STEPS:-0}
+      # omnivoice says the words right but slowly on this CPU; moss-tts-nano
+      # (installed) is about five times faster and muddles them. Steps are
+      # OmniVoice's: 16 is its default, 6 was still word-perfect and far quicker.
+      VOICE_ENGINE: ${ULTRON_VOICE_ENGINE:-omnivoice}
+      VOICE_STEPS: 6
+      VOICE_FORMAT: mp3
       PLINT_DATA: /plint-data
     volumes:
       - ../../data/ultron:/data
