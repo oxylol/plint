@@ -21,6 +21,8 @@ services:
       TZ: ${TZ}
       DATA_DIR: /data
       CELERIS_API_KEY: ${CELERIS_API_KEY:-}
+      # a second mind to try (TUNE → MIND): Claude Haiku
+      ANTHROPIC_API_KEY: ${ULTRON_ANTHROPIC_API_KEY:-}
       VOICE_URL: http://voicestudio:3900
       VOICE_KEY: ${OMNIVOICE_API_KEY:-}
       VOICE_NAME: ${ULTRON_VOICE:-Ultron}

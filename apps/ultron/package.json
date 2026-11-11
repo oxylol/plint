@@ -1,0 +1,9 @@
+{
+  "name": "ultron",
+  "private": true,
+  "description": "Ultron on Plint: a companion you talk to",
+  "main": "server.js",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.8.0"
+  }
+}

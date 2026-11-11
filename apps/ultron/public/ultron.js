@@ -456,12 +456,13 @@ $('swLoop').onclick = () => {
     ['context', 'MEMORY', 'How many past messages he is handed each time.', [[10, '10'], [30, '30'], [60, '60']]],
   ];
   const box = $('tune'), rows = $('tuneRows'), extra = $('tuneExtra'), sw = $('swTune');
-  let tune = null, timer = 0;
+  let tune = null, timer = 0, minds = ['celeris'];
+  const MIND = ['mind', 'MIND', 'Which model writes his answers. Haiku ignores WILDNESS.', [['celeris', 'CELERIS-1'], ['haiku', 'HAIKU']]];
   const save = (patch) => fetch('api/tune', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) })
-    .then((r) => r.json()).then((d) => { tune = d.tune; paint(); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
+    .then((r) => r.json()).then((d) => { tune = d.tune; if (d.model) $('rMind').textContent = d.model.toUpperCase(); paint(); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
   function paint() {
     rows.innerHTML = '';
-    for (const [key, name, what, opts] of SPEC) {
+    for (const [key, name, what, opts] of (minds.length > 1 ? [MIND, ...SPEC] : SPEC)) {
       const row = document.createElement('div'); row.className = 'trow';
       const lab = document.createElement('div');
       const b = document.createElement('b'); b.textContent = name;
@@ -482,13 +483,13 @@ $('swLoop').onclick = () => {
     if (document.activeElement !== extra) extra.value = tune.extra || '';
   }
   const prompt = () => fetch('api/prompt').then((r) => r.json()).then((d) => {
-    $('tuneText').textContent = `MODEL ${d.model} · TEMPERATURE ${d.temperature} · THEN THE LAST ${d.messages} MESSAGES\n\n${d.system}`;
+    $('tuneText').textContent = `MODEL ${d.model}${d.temperature === null ? '' : ' · TEMPERATURE ' + d.temperature} · THEN THE LAST ${d.messages} MESSAGES\n\n${d.system}`;
   }).catch(() => {});
   function open(on) {
     box.hidden = !on; sw.setAttribute('aria-pressed', String(on));
     if (on) {
       document.documentElement.style.setProperty('--deck-h', document.querySelector('.deck').offsetHeight + 'px');
-      fetch('api/tune').then((r) => r.json()).then((d) => { tune = d.tune; paint(); }).catch(() => { box.hidden = true; sw.setAttribute('aria-pressed', 'false'); });
+      fetch('api/tune').then((r) => r.json()).then((d) => { tune = d.tune; minds = d.minds || minds; paint(); }).catch(() => { box.hidden = true; sw.setAttribute('aria-pressed', 'false'); });
     }
   }
   sw.onclick = () => open(box.hidden);

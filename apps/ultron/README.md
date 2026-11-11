@@ -2,7 +2,11 @@
 
 A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*.
 
-- **Mind**: celeris-1 through its OpenAI-style API (`CELERIS_API_KEY` in `/opt/plint/.env`). Answers arrive in about half a second.
+- **Mind**: celeris-1 through its OpenAI-style API (`CELERIS_API_KEY` in `/opt/plint/.env`); answers arrive in about
+  half a second. A second mind to try, switched with MIND in TUNE: Claude Haiku (`claude-haiku-5-5`) through the
+  Anthropic SDK (`ULTRON_ANTHROPIC_API_KEY`). Measured 2026-11-12 on the same eight messages: Haiku's text after 1.4 s
+  against 0.3 s, replies about twice as long (45 against 21 words), it keeps the thread of the talk better and got
+  the sum right that celeris-1 once got wrong. Haiku takes no temperature, so WILDNESS does nothing for it.
 - **Voice**: VoiceStudio speaks each sentence with the clone profile `Ultron`; the page plays the clips in order and the
   mouth of the face follows the sound. Two VoiceStudios: the **PC** (RX 9070 XT, over the tailnet, about a second per
   sentence) is asked first whenever it answers; **Plint's own** (container `voicestudio` in the table stack, started by
@@ -11,7 +15,7 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
 - **Manner**: the prompt in `server.js` never mentions a film: Sokovia is his own past. It describes how he talks (thinking out loud, pauses on three dots, the
   grand line undercut by a small one) and shows the model his own lines from `data/ultron/lines.txt` (one per line, not
   in git) for the rhythm only: he is told not to repeat them, to leave the film's subjects alone most of the time and
-  to almost never say your name. A reply that still lifts five words in a row from a film line is not shown: it is
+  to almost never say your name (and a name said to your face too soon after the last time is cut out of the reply). A reply that still lifts five words in a row from a film line is not shown: it is
   asked for again without the lines in view (celeris-1 answers whole in half a second, so this costs little; the log
   says `recited the film`). Asking him to quote himself, or THE FILM on FREE, switches that check off. Short sentences
   go to the voice together, so a pause stays inside one breath.

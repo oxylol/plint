@@ -1,4 +1,4 @@
-// Ultron on Plint: a companion you talk to. celeris-1 thinks (OpenAI-style API),
+// Ultron on Plint: a companion you talk to. celeris-1 thinks (OpenAI-style API), or Claude Haiku when chosen,
 // VoiceStudio speaks each sentence in the cloned voice, the page plays them in order.
 // No dependencies; state (the talk, the tuning) lives in DATA_DIR.
 'use strict';
@@ -17,6 +17,8 @@ const LLM = {
   key: process.env.CELERIS_API_KEY || '',
   model: process.env.CELERIS_MODEL || 'celeris-1',
 };
+// A second mind to try: Claude Haiku through the Anthropic SDK (key in ANTHROPIC_API_KEY, read by the SDK).
+const CLAUDE = { model: process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5', on: !!process.env.ANTHROPIC_API_KEY, client: null };
 const VOICE = {
   url: (process.env.VOICE_URL || 'http://voicestudio:3900').replace(/\/$/, ''),
   key: process.env.VOICE_KEY || '',
@@ -42,7 +44,8 @@ const TUNE = path.join(DATA, 'tune.json');
 
 // ── what can be tuned from the page (DATA_DIR/tune.json) ─────
 const TUNE_DEFAULT = {
-  temperature: 0.8,     // 0.3 careful … 1.3 loose
+  mind: 'celeris',      // celeris · haiku: which model writes his answers
+  temperature: 0.8,     // 0.3 careful … 1.3 loose (celeris-1 only; Haiku takes no temperature)
   length: 'normal',     // short · normal · long
   film: 200,            // how many of his film lines are shown to the model as a pattern, each turn (0 = none)
   quotes: 'rare',       // never · rare · free: may he say lines from the film
@@ -56,6 +59,7 @@ function cleanTune(t) {
   if (!t || typeof t !== 'object') return o;
   if (Number.isFinite(+t.temperature)) o.temperature = Math.min(1.3, Math.max(0.3, Math.round(+t.temperature * 10) / 10));
   for (const k of Object.keys(TUNE_ALLOWED)) if (TUNE_ALLOWED[k].includes(t[k])) o[k] = t[k];
+  if (t.mind === 'haiku' && CLAUDE.on) o.mind = 'haiku';
   if (Number.isFinite(+t.film)) o.film = Math.min(200, Math.max(0, Math.round(+t.film)));
   if (Number.isFinite(+t.context)) o.context = Math.min(100, Math.max(4, Math.round(+t.context)));
   if (typeof t.extra === 'string') o.extra = t.extra.slice(0, 2000).trim();
@@ -107,9 +111,9 @@ function someLines(n) {
 }
 
 const LENGTH = {
-  short: 'Very short: one or two sentences. More only when asked to explain or tell something.',
-  normal: 'Short: most replies are one to three sentences, often a few short ones in a row. Longer only when asked to explain, tell or work something through, and even then in your voice.',
-  long: 'Take your time: three to six sentences when the subject is worth it, shorter for small talk.',
+  short: 'Very short: one or two sentences, twenty words at the very most. More only when asked to explain or tell something.',
+  normal: 'Short: one to three sentences, forty words at the very most, often a few short ones in a row. No second paragraph, and do not end every reply with a question. Longer only when asked to explain, tell or work something through, and even then in your voice.',
+  long: 'Take your time: three to six sentences when the subject is worth it, a hundred words at most, shorter for small talk.',
 };
 // How much of the film comes back: its subjects, and its actual lines.
 const THEMES = {
@@ -170,6 +174,32 @@ function context(noFilm) {
 }
 
 // ── celeris ──────────────────────────────────────────────────
+// Which model is writing, and its name for the page.
+const mindName = () => (tune.mind === 'haiku' && CLAUDE.on ? CLAUDE.model : LLM.model);
+
+// Claude Haiku: the system prompt apart, the talk as messages, the whole answer back at once. Low effort keeps
+// him quick (he thinks only when he has to); this model takes no temperature.
+async function thinkClaude(messages, signal) {
+  const Anthropic = require('@anthropic-ai/sdk');
+  CLAUDE.client = CLAUDE.client || new Anthropic({ maxRetries: 1, timeout: 30_000 });
+  try {
+    const r = await CLAUDE.client.messages.create({
+      model: CLAUDE.model,
+      max_tokens: tune.length === 'long' ? 3000 : 2000,
+      output_config: { effort: 'low' },
+      system: messages[0].content,
+      messages: messages.slice(1),
+    }, { signal });
+    if (r.stop_reason === 'refusal') throw new Error('Claude declined to answer that');
+    return r.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) throw new Error('the Claude key was not accepted');
+    if (e instanceof Anthropic.RateLimitError) throw new Error('Claude is rate limited right now');
+    if (e instanceof Anthropic.APIError) throw new Error(`claude ${e.status || ''}: ${String(e.message).slice(0, 200)}`);
+    throw e;
+  }
+}
+
 async function* think(messages, signal) {
   const r = await fetch(LLM.url + '/chat/completions', {
     method: 'POST', signal,
@@ -312,6 +342,16 @@ function takeSentence(buf, final) {
   return final && buf.trim() ? buf : null;
 }
 
+// The name, said to someone's face (", Filip."), is the habit the NAME switch is about. A model told "rarely"
+// still says it every other reply, so it is taken out here: always on "never", and on "rare" unless none of
+// his last ten replies had it. A name that is part of what he is saying ("Filip, or someone else?") stays.
+function trimName(text) {
+  if (tune.name === 'often') return text;
+  const said = new RegExp('\\b' + OWNER + '\\b', 'i');
+  if (tune.name === 'rare' && !history.filter((m) => m.role === 'ultron').slice(-10).some((m) => said.test(m.text))) return text;
+  return text.replace(new RegExp(',\\s*' + OWNER + '(?=\\s*[.!?…,])', 'gi'), '');
+}
+
 // ── one turn ─────────────────────────────────────────────────
 let current = null;             // the turn in flight; a new one cancels it
 
@@ -360,11 +400,13 @@ async function turn(req, res, input) {
     const guard = tune.quotes !== 'free' && !/\b(quote|line|film|movie|sitat|replikk)/i.test(input.text);
     for (let attempt = 0; attempt < 3; attempt++) {
       full = '';
-      for await (const d of think(context(attempt > 0), ac.signal)) full += d;
+      if (tune.mind === 'haiku' && CLAUDE.on) full = await thinkClaude(context(attempt > 0), ac.signal);
+      else for await (const d of think(context(attempt > 0), ac.signal)) full += d;
       const lifted = guard ? recited(full) : '';
       if (!lifted) break;
       console.log(`recited the film ("${lifted}"), ${attempt < 2 ? 'asking again' : 'letting it stand'}`);
     }
+    full = trimName(full);
     buf = full;
     send({ t: 'delta', d: full });
     let s;
@@ -405,7 +447,7 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/state' && req.method === 'GET') {
       if (!FAST.up && Date.now() - voice.at > 15e3 && voice.state !== 'ok') await probeVoice();
       return json(res, 200, {
-        owner: OWNER, model: LLM.model, llm: !!LLM.key, voice: voiceNow(),
+        owner: OWNER, model: mindName(), llm: tune.mind === 'haiku' ? CLAUDE.on : !!LLM.key, voice: voiceNow(),
         history: history.slice(-60).map((m) => ({ role: m.role, text: shown(m.text), ts: m.ts })),
         turns: history.length,
       });
@@ -415,7 +457,7 @@ const server = http.createServer(async (req, res) => {
       const input = JSON.parse((await readBody(req)).toString('utf8') || '{}');
       input.text = String(input.text || '').trim().slice(0, 4000);
       if (!input.text) return json(res, 400, { error: 'nothing said' });
-      if (!LLM.key) return json(res, 503, { error: 'CELERIS_API_KEY is not set' });
+      if (!(tune.mind === 'haiku' && CLAUDE.on) && !LLM.key) return json(res, 503, { error: 'CELERIS_API_KEY is not set' });
       return turn(req, res, input);
     }
 
@@ -424,12 +466,12 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
-    if (p === '/api/prompt' && req.method === 'GET') return json(res, 200, { system: systemPrompt(), messages: Math.min(history.length, tune.context), temperature: tune.temperature, model: LLM.model });
-    if (p === '/api/tune' && req.method === 'GET') return json(res, 200, { tune, defaults: TUNE_DEFAULT, lines: filmLines().length });
+    if (p === '/api/prompt' && req.method === 'GET') return json(res, 200, { system: systemPrompt(), messages: Math.min(history.length, tune.context), temperature: tune.mind === 'haiku' && CLAUDE.on ? null : tune.temperature, model: mindName() });
+    if (p === '/api/tune' && req.method === 'GET') return json(res, 200, { tune, defaults: TUNE_DEFAULT, lines: filmLines().length, minds: CLAUDE.on ? ['celeris', 'haiku'] : ['celeris'], model: mindName() });
     if (p === '/api/tune' && req.method === 'POST') {
       tune = cleanTune({ ...tune, ...JSON.parse((await readBody(req)).toString('utf8') || '{}') });
       fs.writeFileSync(TUNE, JSON.stringify(tune, null, 2) + '\n');
-      return json(res, 200, { tune });
+      return json(res, 200, { tune, model: mindName() });
     }
 
     if (p === '/api/forget' && req.method === 'POST') {
@@ -463,4 +505,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`ultron on :${PORT} · mind ${LLM.model}${LLM.key ? '' : ' (no key)'} · voice ${FAST.url ? FAST.url + ', then ' : ''}${VOICE.url}`));
+server.listen(PORT, () => console.log(`ultron on :${PORT} · mind ${mindName()}${LLM.key ? '' : ' (no celeris key)'}${CLAUDE.on ? ', Haiku available' : ''} · voice ${FAST.url ? FAST.url + ', then ' : ''}${VOICE.url}`));
