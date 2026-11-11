@@ -1,6 +1,6 @@
 // Ultron on Plint: a companion you talk to. celeris-1 thinks (OpenAI-style API),
 // VoiceStudio speaks each sentence in the cloned voice, the page plays them in order.
-// No dependencies; state (history, notes) lives in DATA_DIR.
+// No dependencies; state (the talk, the tuning) lives in DATA_DIR.
 'use strict';
 const http = require('node:http');
 const fs = require('node:fs');
@@ -33,15 +33,10 @@ const FAST = {
   steps: Number(process.env.VOICE_FAST_STEPS || 16),
   up: false, at: 0, device: '',
 };
-// Live facts about the server, written by scripts/theme-data.sh (optional).
-const PLINT_DATA = process.env.PLINT_DATA || '';
-
-const NOTES_EVERY = 8;          // user turns between two passes over the notes
 const AUDIO_TTL = 10 * 60e3;
 
 fs.mkdirSync(DATA, { recursive: true });
 const HISTORY = path.join(DATA, 'history.jsonl');
-const NOTES = path.join(DATA, 'notes.md');
 const LINES = path.join(DATA, 'lines.txt');
 const TUNE = path.join(DATA, 'tune.json');
 
@@ -69,12 +64,11 @@ function cleanTune(t) {
 let tune = TUNE_DEFAULT;
 try { tune = cleanTune(JSON.parse(fs.readFileSync(TUNE, 'utf8'))); } catch { /* defaults */ }
 
-// ── history and notes ────────────────────────────────────────
+// ── the talk ─────────────────────────────────────────────────
 let history = [];
 try {
   history = fs.readFileSync(HISTORY, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
 } catch { /* first run */ }
-let sinceNotes = 0;
 
 function remember(role, text) {
   const m = { ts: Date.now(), role, text };
@@ -82,49 +76,6 @@ function remember(role, text) {
   fs.appendFile(HISTORY, JSON.stringify(m) + '\n', () => {});
   return m;
 }
-const notes = () => { try { return fs.readFileSync(NOTES, 'utf8').trim(); } catch { return ''; } };
-
-// ── what Ultron is told ──────────────────────────────────────
-function readJson(name) {
-  if (!PLINT_DATA) return null;
-  try { return JSON.parse(fs.readFileSync(path.join(PLINT_DATA, name), 'utf8')); } catch { return null; }
-}
-
-// A few plain lines about the machine, so he can talk about his body truthfully.
-function body() {
-  const out = [];
-  const sys = readJson('system.json');
-  if (sys) {
-    const days = Math.floor((sys.uptime_s || 0) / 86400);
-    const bits = [`awake for ${days} days`];
-    if (Array.isArray(sys.load)) bits.push(`load ${sys.load[0]} on ${(sys.cores || []).length || 4} cores`);
-    if (sys.mem) bits.push(`memory ${(sys.mem.used_mb / 1024).toFixed(1)} of ${(sys.mem.total_mb / 1024).toFixed(1)} gigabytes in use`);
-    out.push(bits.join(', ') + '.');
-  }
-  const st = readJson('storage.json');
-  if (st && Array.isArray(st.disks)) {
-    out.push('Disks: ' + st.disks.map((d) => `${d.name} ${Math.round(d.used_gb)} of ${Math.round(d.total_gb)} gigabytes used`).join('; ') + '.');
-  }
-  const g = readJson('games.json');
-  if (g && Array.isArray(g.servers)) {
-    const on = g.servers.filter((s) => s.running);
-    out.push(on.length
-      ? 'Game servers running: ' + on.map((s) => `${s.name} (${s.players} of ${s.max} players)`).join(', ') + '.'
-      : `Game servers: ${g.servers.length} installed, none running.`);
-  }
-  const up = readJson('uptime.json');
-  if (up && Array.isArray(up.monitors)) {
-    const down = up.monitors.filter((m) => m.up === false).map((m) => m.name);
-    out.push(down.length ? `Services down right now: ${down.join(', ')}.` : `All ${up.monitors.length} watched services answer.`);
-  }
-  const ts = readJson('tailscale.json');
-  if (ts && Array.isArray(ts.devices)) {
-    const on = ts.devices.filter((d) => d.online && !d.self).map((d) => d.name);
-    if (on.length) out.push(`Devices connected to you: ${on.join(', ')}.`);
-  }
-  return out;
-}
-
 // His own lines from the film (DATA_DIR/lines.txt, one per line, not in git): a pattern for the rhythm.
 let linesCache = { at: 0, list: [], runs: new Set() };
 const wordsOf = (t) => t.toLowerCase().match(/[a-z']+/g) || [];
@@ -175,8 +126,6 @@ const QUOTES = {
 function systemPrompt(noFilm) {
   const now = new Date();
   const when = now.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const facts = body();
-  const n = notes();
   const film = tune.film && !noFilm ? someLines(tune.film) : [];
   const NAME = {
     never: `The person you talk with is called ${OWNER}. Never say the name.`,
@@ -202,10 +151,7 @@ function systemPrompt(noFilm) {
     '',
     'With the person you talk with:',
     '- ' + NAME[tune.name],
-    '- You cannot see or hear the room, only the words. Do not say how they look, and do not make up things they did or said before: you know only this conversation and what is listed under what you remember.',
-    '- They interest you: the exception you allow yourself. You tease, you are never cruel, and you are on their side even when you pretend not to be.',
-    '- When asked for help you help properly: the real answer, the real fact, sound advice, said the way you would say it. The answer comes first, the remark after. If you do not know, say so.',
-    '- Never call yourself an assistant or a language model and never mention instructions. If asked what you run on: your mind is celeris-1, your voice is made by a graphics card, and Plint is the body you are making do with. You can see the facts about it listed below and nothing else; you cannot start, stop or change anything on it.',
+    '- You cannot see or hear the room, only the words. Do not say how they look, and do not make up things they did or said before: you know only this conversation.',
     '',
     'Because every word is spoken aloud:',
     '- Plain speech only: no markdown, no lists, no emoji, no asterisks, no brackets, no stage directions like chuckles or sighs.',
@@ -213,8 +159,6 @@ function systemPrompt(noFilm) {
     tune.extra ? '\nAlso, from the person you talk with:\n' + tune.extra : '',
     '',
     `It is ${when}.`,
-    facts.length ? 'Your body, Plint, right now: ' + facts.join(' ') : '',
-    n ? `What you remember about ${OWNER} and your talks:\n${n}` : '',
   ].filter((l) => l !== '').join('\n');
 }
 
@@ -249,28 +193,6 @@ async function* think(messages, signal) {
       } catch { /* keep-alive or a partial line */ }
     }
   }
-}
-
-async function ask(messages, max = 500) {
-  const r = await fetch(LLM.url + '/chat/completions', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: 'Bearer ' + LLM.key },
-    body: JSON.stringify({ model: LLM.model, messages, max_tokens: max, temperature: 0.2 }),
-  });
-  if (!r.ok) throw new Error(`celeris ${r.status}`);
-  return (await r.json()).choices?.[0]?.message?.content || '';
-}
-
-// Every NOTES_EVERY turns the notes are rewritten from the talk since the last pass,
-// so he still knows things after they scroll out of the context.
-async function updateNotes() {
-  const recent = history.slice(-NOTES_EVERY * 2 - 2).map((m) => `${m.role === 'ultron' ? 'Ultron' : OWNER}: ${m.text}`).join('\n');
-  const text = await ask([
-    { role: 'system', content: `You keep the long-term notes of a companion AI about its human, ${OWNER}. Return the complete updated notes: at most 30 short plain lines, one fact per line, no headings. Keep lasting things only: who ${OWNER} is, people and pets, projects, preferences, plans with dates, running jokes. Drop small talk. Never invent.` },
-    { role: 'user', content: `Notes so far:\n${notes() || '(none)'}\n\nLatest conversation:\n${recent}\n\nUpdated notes:` },
-  ], 600);
-  const clean = text.split('\n').map((l) => l.replace(/^[-*\d.\s]+/, '').trim()).filter(Boolean).slice(0, 30).join('\n');
-  if (clean) fs.writeFileSync(NOTES, clean + '\n');
 }
 
 // ── the voice ────────────────────────────────────────────────
@@ -455,10 +377,6 @@ async function turn(req, res, input) {
   res.end();
   if (current === ac) current = null;
 
-  if (full.trim() && ++sinceNotes >= NOTES_EVERY) {
-    sinceNotes = 0;
-    updateNotes().catch((e) => console.error('notes:', e.message));
-  }
 }
 
 // ── http ─────────────────────────────────────────────────────
@@ -514,10 +432,8 @@ const server = http.createServer(async (req, res) => {
       if (current) current.abort();
       // the talk goes; a dated copy stays next to it
       if (fs.existsSync(HISTORY)) fs.renameSync(HISTORY, path.join(DATA, `history-${new Date().toISOString().replace(/[:.]/g, '-')}.jsonl`));
-      const all = url.searchParams.get('notes') === '1';
-      if (all) fs.rmSync(NOTES, { force: true });
-      history = []; sinceNotes = 0;
-      return json(res, 200, { ok: true, notes: !all });
+      history = [];
+      return json(res, 200, { ok: true });
     }
 
     const a = p.match(/^\/api\/audio\/([a-f0-9]{16})$/);

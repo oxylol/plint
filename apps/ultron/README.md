@@ -20,10 +20,11 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   how often he says your name, how many past messages go along, and a box of extra instructions in plain words.
   SHOW THE PROMPT prints exactly what is sent.
 - **Ears**: the browser's own speech recognition (tap his face or the microphone). Typing always works.
-- **Memory**: the talk in `data/ultron/history.jsonl`; every eight turns celeris-1 rewrites `data/ultron/notes.md`
-  (lasting facts), which goes into every prompt. FORGET clears the talk (a dated copy stays), not the notes.
-- **Body**: he is told the live state of Plint from `data/theme/*.json` (load, memory, disks, game servers, services down,
-  tailnet devices). He can read it, he cannot change anything.
+- **Memory**: the talk in `data/ultron/history.jsonl`; the last 30 messages (MEMORY in TUNE) go along each time and
+  that is all he remembers. FORGET clears the talk (a dated copy stays).
+- **What he is not told** (removed on Filip's word, 2026-11-11, so that he simply is Ultron): nothing about being a
+  program or what he runs on, no rule to be helpful or kind, no facts about the server, no notes kept between talks.
+  A leftover `data/ultron/notes.md` from before is no longer read.
 
 ## Run
 
