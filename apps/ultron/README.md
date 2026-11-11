@@ -7,6 +7,10 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   Anthropic SDK (`ULTRON_ANTHROPIC_API_KEY`). Measured 2026-11-12 on the same eight messages: Haiku's text after 1.4 s
   against 0.3 s, replies about twice as long (45 against 21 words), it keeps the thread of the talk better and got
   the sum right that celeris-1 once got wrong. Haiku takes no temperature, so WILDNESS does nothing for it.
+  Haiku has its own brief (`claudePrompt()` in `server.js`): left with the celeris one it turned into a kind helper
+  with a manner, so its brief is mostly about who he is and what he will not do (console, look after, keep the talk
+  going with a closing question), and ends with a four-line check he runs on every reply. The other TUNE switches
+  apply to both.
 - **Voice**: VoiceStudio speaks each sentence with the clone profile `Ultron`; the page plays the clips in order and the
   mouth of the face follows the sound. Two VoiceStudios: the **PC** (RX 9070 XT, over the tailnet, about a second per
   sentence) is asked first whenever it answers; **Plint's own** (container `voicestudio` in the table stack, started by
