@@ -25,12 +25,14 @@ app; they are usually on a phone, so keep answers short and lead with the result
 │   ├── poly/           polybot (built from apps/polybot)
 │   ├── music/          hertz (built from apps/hertz)
 │   ├── twin/           cnc-twin (built from apps/cnc-twin)
-│   └── ai/             silk-router (built from apps/silk-router)
+│   ├── ai/             silk-router (built from apps/silk-router)
+│   └── ultron/         ultron (built from apps/ultron); talks to voicestudio in the table stack
 ├── apps/cnc-studio/    CNC Studio source (G-code sim + Claude; upstream zip, plus our Dockerfile)
 ├── apps/polybot/       Polybot: Polymarket leaderboard-consensus trader (Python; README there)
 ├── apps/hertz/         Hertz: music maker made of waves (Web Audio in the browser; README there)
 ├── apps/cnc-twin/      CNC Twin: physics twin of machine, controller, tool, part, chips, coolant (README there)
 ├── apps/silk-router/   silk-router: Silk Compute key behind OpenAI/Anthropic APIs, refusal → -uncensored (README there)
+├── apps/ultron/        Ultron: voice companion; celeris-1 thinks, VoiceStudio speaks in the cloned voice (README there)
 ├── apps/plint-chat/    Plint Chat: Claude-style phone page driving Claude Code on Silk models (native unit; README there)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Terminal: plint.css/js (tokens, strip) + apps/<app>.css/js + home/ (the home page) + fonts/
@@ -77,6 +79,7 @@ host network and proxies to `localhost:<port>`:
 | music | 5200 | Hertz: a music maker with no keys. Each voice fires when its pulse wave crosses a threshold; a second sine (drift) bends timing and pitch; tones are FM sines. Sound is made in the browser; saved songs in `data/hertz` |
 | twin | 5210 | CNC Twin: runs a CNC program on a physical twin before it goes to the machine (controller in Fanuc/Haas/Siemens 840D/Heidenhain dialects, motion, cutting forces, chips, heat, coolant, wear, vibration, workholding, finish, inspection vs CAD) and says whether it is safe and why. Projects and runs in `data/cnc-twin`; headless CLI `apps/cnc-twin/bin/twin`; one simulation at a time |
 | ai | 5220 | Plint Chat: claude.ai-style app (Chat + Code tabs) that runs Claude Code on Plint, or on other computers via `plint-runner`, through silk-router; native `plint-chat.service` as `plint`; login code via ntfy; tool calls wait for Allow/Deny; chats in `data/plint-chat` |
+| ultron | 5230 | Ultron: a companion you talk to. celeris-1 (`CELERIS_API_KEY`) answers as Ultron, VoiceStudio (container `voicestudio` in the table stack, `COMPOSE_PROFILES=speech`, key `OMNIVOICE_API_KEY`) speaks each sentence with the clone profile `Ultron`; the browser does the listening. No login. Talk, notes and the reference clip in `data/ultron`; voice upkeep with `scripts/ultron-voice.sh` |
 | (none) | 4141 | silk-router: localhost-only LLM proxy on `SILK_API_KEY`; aliases auto-sonnet/haiku/opus; `apps/silk-router/silk-claude` runs Claude Code on it |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 

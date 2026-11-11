@@ -23,6 +23,13 @@
         href: https://ai.{{HOMEPAGE_VAR_DOMAIN}}
         description: Chat that runs Plint · Claude Code on Silk models
 
+    - Ultron:
+        icon: mdi-robot-angry-outline
+        href: https://ultron.{{HOMEPAGE_VAR_DOMAIN}}
+        description: A companion with no strings · celeris-1, cloned voice
+        server: plint
+        container: ultron
+
     - CNC Studio:
         icon: mdi-cogs
         href: https://cnc.{{HOMEPAGE_VAR_DOMAIN}}

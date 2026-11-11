@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · ultron stack
+#  Ultron: a companion you talk to. celeris-1 (CELERIS_API_KEY) thinks,
+#  VoiceStudio speaks each sentence in the cloned voice (profile "Ultron"),
+#  the page plays them in order. Source in apps/ultron; talk and notes in
+#  data/ultron. VoiceStudio is the one in the table stack (speech profile,
+#  COMPOSE_PROFILES=speech in .env), reached over the `table` network.
+# ─────────────────────────────────────────────────────────────
+name: ultron
+
+services:
+  ultron:
+    build: ../../apps/ultron
+    image: plint/ultron:local
+    container_name: ultron
+    restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
+    ports:
+      - "127.0.0.1:5230:5230"
+    environment:
+      TZ: ${TZ}
+      DATA_DIR: /data
+      CELERIS_API_KEY: ${CELERIS_API_KEY:-}
+      VOICE_URL: http://voicestudio:3900
+      VOICE_KEY: ${OMNIVOICE_API_KEY:-}
+      VOICE_NAME: ${ULTRON_VOICE:-Ultron}
+      VOICE_STEPS: ${ULTRON_VOICE_STEPS:-0}
+      PLINT_DATA: /plint-data
+    volumes:
+      - ../../data/ultron:/data
+      - ../../data/theme:/plint-data:ro
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 192m
+    networks:
+      - table
+
+networks:
+  table:
+    name: table
+    external: true

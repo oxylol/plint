@@ -197,6 +197,15 @@
 		reverse_proxy localhost:5200
 	}
 
+	@ultron host ultron.{$DOMAIN}
+	handle @ultron {
+		# Ultron (apps/ultron): a companion you talk to. celeris-1 thinks,
+		# VoiceStudio speaks in the cloned voice. Own look; the answer streams.
+		reverse_proxy localhost:5230 {
+			flush_interval -1
+		}
+	}
+
 	@ai host ai.{$DOMAIN}
 	handle @ai {
 		# Plint Chat (apps/plint-chat, native systemd unit): Claude-style page

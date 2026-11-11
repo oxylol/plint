@@ -57,6 +57,7 @@
     ["amp", "games", "Games", 8080],
     ["table", "table", "D&D Table", 3200],
     ["ai", "ai", "Plint Chat", 5220],
+    ["ultron", "ultron", "Ultron", 5230],
     ["cnc", "cnc", "CNC Studio", 5178],
     ["twin", "twin", "CNC Twin", 5210],
     ["poly", "poly", "Polybot", 5190],

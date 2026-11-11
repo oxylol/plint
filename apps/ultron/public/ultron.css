@@ -1,0 +1,172 @@
+/* ─────────────────────────────────────────────────────────────
+   Ultron · in the Plint Terminal language (theme/plint.css on the
+   terminal branch): one light on black, cut blocks, inverse video,
+   dot-matrix figures, stepped motion, always dark. The tokens carry
+   the same names and values, so the shared sheet can take over later.
+   The one exception: his eyes and mouth burn red (--u-ph).
+   ───────────────────────────────────────────────────────────── */
+
+@font-face { font-family: "Geist Mono"; font-weight: 400; font-display: swap; src: url("fonts/geist-mono-latin-400.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+2000-206F, U+2212; }
+@font-face { font-family: "Geist Mono"; font-weight: 600; font-display: swap; src: url("fonts/geist-mono-latin-600.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+2000-206F, U+2212; }
+@font-face { font-family: "Geist Mono"; font-weight: 400; font-display: swap; src: url("fonts/geist-mono-cyrillic-400.woff2") format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Geist Mono"; font-weight: 600; font-display: swap; src: url("fonts/geist-mono-cyrillic-600.woff2") format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Doto"; font-weight: 900; font-display: swap; src: url("fonts/doto-900.woff2") format("woff2"); }
+
+:root {
+  color-scheme: dark;
+  --p-ph: 228, 248, 234;
+  --p-bg: #0f0e11;
+  --p-ink: rgb(var(--p-ph));
+  --p-ink2: rgba(var(--p-ph), 0.58);
+  --p-faint: rgba(var(--p-ph), 0.28);
+  --p-line: rgba(var(--p-ph), 0.14);
+  --p-track: rgba(var(--p-ph), 0.11);
+  --p-font: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --p-dot: "Doto", var(--p-font);
+  --p-glow: 0 0 9px rgba(var(--p-ph), 0.38);
+  --p-ch: 7px;
+  --p-cut: polygon(var(--p-ch) 0, 100% 0, 100% calc(100% - var(--p-ch)), calc(100% - var(--p-ch)) 100%, 0 100%, 0 var(--p-ch));
+
+  --u-ph: 255, 58, 44;            /* his own light */
+  --pad: 16px;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--p-bg); -webkit-text-size-adjust: 100%; height: 100%; }
+body {
+  margin: 0; min-height: 100%; height: 100dvh;
+  display: grid; grid-template-rows: auto 1fr auto;
+  background: var(--p-bg); color: var(--p-ink);
+  font: 400 13px/1.5 var(--p-font);
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+::selection { background: var(--p-ink); color: var(--p-bg); text-shadow: none; }
+* { scrollbar-width: thin; scrollbar-color: var(--p-faint) transparent; }
+[hidden] { display: none !important; }
+.ru { color: var(--p-ink2); }
+.num { font-variant-numeric: tabular-nums; }
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── top strip ── */
+.top {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
+  padding: calc(10px + env(safe-area-inset-top)) max(var(--pad), env(safe-area-inset-right)) 10px max(var(--pad), env(safe-area-inset-left));
+  border-bottom: 1px solid var(--p-line);
+}
+.home {
+  display: grid; place-items: center; width: 44px; height: 44px;
+  background: var(--p-ink); clip-path: var(--p-cut); --p-ch: 6px;
+}
+.home svg { width: 22px; height: 15px; fill: var(--p-bg); }
+.home:active { opacity: 0.55; }
+.who h1 {
+  margin: 0; font: 900 30px/0.85 var(--p-dot); letter-spacing: 0.06em;
+  text-shadow: var(--p-glow);
+}
+.who h1 span { display: inline-block; }
+.who small { display: block; margin-top: 5px; font-size: 9px; letter-spacing: 0.2em; color: var(--p-ink2); white-space: nowrap; }
+.state { display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: center; justify-items: end; font-size: 10px; letter-spacing: 0.16em; font-weight: 600; text-shadow: var(--p-glow); }
+.state .ru { grid-column: 1 / -1; font-weight: 400; font-size: 9px; letter-spacing: 0.2em; text-shadow: none; }
+.blk {
+  display: inline-block; width: 8px; height: 11px; flex: none; background: currentColor;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.6));
+}
+.state.busy .blk { animation: blink 0.5s steps(1) infinite; }
+.state.live .blk { color: rgb(var(--u-ph)); filter: drop-shadow(0 0 5px rgba(var(--u-ph), 0.8)); }
+.state.off .blk { background: none; box-shadow: inset 0 0 0 1px currentColor; clip-path: none; filter: none; opacity: 0.5; }
+
+/* ── the middle: his face, then the talk ── */
+main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.core { padding: 6px var(--pad) 0; }
+.face {
+  all: unset; display: block; width: 100%; cursor: pointer;
+  height: clamp(150px, 30dvh, 300px);
+}
+.face canvas { display: block; width: 100%; height: 100%; }
+.face:focus-visible { outline: 1px solid var(--p-ink); outline-offset: -4px; }
+
+.read { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--p-line); border-bottom: 1px solid var(--p-line); }
+.read > div { padding: 8px 0 9px; min-width: 0; }
+.read > div + div { border-left: 1px solid var(--p-line); padding-left: 10px; }
+.read > div > span { display: block; font-size: 9px; letter-spacing: 0.18em; white-space: nowrap; overflow: hidden; }
+.read b { display: block; margin-top: 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-shadow: var(--p-glow); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.read b.num { font: 900 20px/0.8 var(--p-dot); letter-spacing: 0.04em; margin-top: 5px; }
+.read b.inv { display: inline-block; background: var(--p-ink); color: var(--p-bg); text-shadow: none; padding: 1px 0.5em; }
+
+.notice { margin: 10px 0 0; padding: 7px 10px; background: var(--p-ink); color: var(--p-bg); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1.45; }
+
+.talk { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0 var(--pad); }
+.grp { display: flex; justify-content: space-between; gap: 10px; padding: 12px 0 7px; font-size: 9px; letter-spacing: 0.2em; }
+.grp > span:last-child { color: var(--p-ink2); font-variant-numeric: tabular-nums; }
+.log { overflow-y: auto; overscroll-behavior: contain; padding-bottom: 14px; scrollbar-width: none; }
+.log::-webkit-scrollbar { display: none; }
+
+.ln { display: grid; grid-template-columns: 58px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--p-line); }
+.ln > i { font-style: normal; font-size: 9px; letter-spacing: 0.18em; color: var(--p-ink2); padding-top: 4px; }
+.ln > p { margin: 0; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.ln.me > p { color: var(--p-ink2); }
+.ln.me > p::before { content: "> "; color: var(--p-faint); }
+.ln.he > i { color: var(--p-ink); }
+.ln.he > p { text-shadow: var(--p-glow); }
+/* a sentence waits dim until he gets to it */
+.ln .s { color: var(--p-faint); text-shadow: none; }
+.ln .s.said { color: inherit; text-shadow: inherit; }
+.ln .s.now { color: var(--p-bg); background: var(--p-ink); text-shadow: none; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.ln.old { opacity: 0.62; }
+.cursor { display: inline-block; width: 0.62em; height: 1.05em; vertical-align: -0.17em; background: var(--p-ink); box-shadow: var(--p-glow); animation: blink 1s steps(1) infinite; }
+.empty { padding: 18px 0; border-top: 1px solid var(--p-line); color: var(--p-ink2); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.7; }
+
+/* ── the deck: say something ── */
+.deck {
+  border-top: 1px solid var(--p-faint);
+  padding: 10px max(var(--pad), env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(var(--pad), env(safe-area-inset-left));
+  background: var(--p-bg);
+}
+#form { display: grid; grid-template-columns: auto 1fr auto auto; gap: 8px; align-items: center; }
+.prompt { font-weight: 600; text-shadow: var(--p-glow); }
+#input {
+  all: unset; box-sizing: border-box; width: 100%; min-width: 0; height: 44px;
+  font: 400 16px/1 var(--p-font); color: var(--p-ink); caret-color: var(--p-ink); text-shadow: var(--p-glow);
+}
+#input::placeholder { color: var(--p-faint); font-size: 12px; letter-spacing: 0.16em; text-shadow: none; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px; border: 0; border-radius: 0; cursor: pointer; margin: 0;
+  font: 600 11px/1 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase;
+  background: var(--p-ink); color: var(--p-bg); clip-path: var(--p-cut); touch-action: manipulation;
+  -webkit-user-select: none; user-select: none;
+}
+.btn.o { position: relative; color: var(--p-ink); isolation: isolate; }
+.btn.o::before { content: ""; position: absolute; inset: 1px; background: var(--p-bg); clip-path: var(--p-cut); z-index: -1; }
+.btn.sm { min-height: 36px; padding: 0 12px; font-size: 10px; --p-ch: 6px; }
+.btn.icon { padding: 0; width: 44px; }
+.btn.icon svg { width: 16px; height: 16px; fill: currentColor; }
+.btn:active { opacity: 0.55; }
+.btn.o:active, .btn.o[aria-pressed="true"] { opacity: 1; color: var(--p-bg); }
+.btn.o:active::before, .btn.o[aria-pressed="true"]::before { background: var(--p-ink); }
+.btn:focus-visible { outline: 1px solid var(--p-ink); outline-offset: 2px; }
+.btn:disabled { opacity: 0.35; cursor: default; }
+#mic[aria-pressed="true"] svg { animation: blink 1s steps(1) infinite; }
+
+.sw { display: flex; gap: 8px; margin-top: 8px; }
+.sw .gap { flex: 1; }
+
+/* ── wider than a phone: face on the left, talk on the right ── */
+@media (min-width: 860px) {
+  :root { --pad: 28px; }
+  body { max-width: 1180px; margin: 0 auto; border-left: 1px solid var(--p-line); border-right: 1px solid var(--p-line); }
+  main { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(320px, 5fr) 6fr; }
+  .core { padding-top: 18px; border-right: 1px solid var(--p-line); display: flex; flex-direction: column; }
+  .face { height: auto; flex: 1; min-height: 240px; max-height: 520px; }
+  .who h1 { font-size: 38px; }
+  .ln > p { font-size: 15px; }
+}
+@media (max-height: 560px) { .face { height: 110px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .state.busy .blk, .cursor, #mic[aria-pressed="true"] svg { animation: none; }
+}

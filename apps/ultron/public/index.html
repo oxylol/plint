@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0e11">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ultron">
+<title>Ultron</title>
+<link rel="icon" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="fonts/geist-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/doto-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="ultron.css">
+</head>
+<body>
+<header class="top">
+  <a class="home" id="home" href="/" aria-label="Plint home">
+    <svg viewBox="0 20 128 88" aria-hidden="true"><path d="M14 74h108v20l-8 8H6V82zM26 50h72v12l-6 6H20V56zM49 28h57v11l-5 5H44V33z"/></svg>
+  </a>
+  <div class="who">
+    <h1 id="name" aria-label="Ultron">ULTRON</h1>
+    <small><span class="ru">УЛЬТРОН // </span>UNIT 5230</small>
+  </div>
+  <div class="state" id="stateBox" role="status">
+    <i class="blk" id="lamp"></i><span id="state">READY</span><span class="ru" id="stateRu">ГОТОВ</span>
+  </div>
+</header>
+
+<main>
+  <section class="core">
+    <button class="face" id="faceBtn" type="button" aria-label="Stop Ultron speaking">
+      <canvas id="face"></canvas>
+    </button>
+    <div class="read">
+      <div><span>MIND <span class="ru">/ РАЗУМ</span></span><b id="rMind">CELERIS-1</b></div>
+      <div><span>VOICE <span class="ru">/ ГОЛОС</span></span><b id="rVoice">...</b></div>
+      <div><span>TURNS <span class="ru">/ ХОДЫ</span></span><b id="rTurns" class="num">0</b></div>
+    </div>
+    <p class="notice" id="notice" hidden></p>
+  </section>
+
+  <section class="talk">
+    <div class="grp"><span>TRANSCRIPT <span class="ru">/ ПРОТОКОЛ</span></span><span id="clock"></span></div>
+    <div class="log" id="log" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer class="deck">
+  <form id="form" autocomplete="off">
+    <span class="prompt" aria-hidden="true">&gt;</span>
+    <input id="input" type="text" enterkeyhint="send" placeholder="SAY SOMETHING" aria-label="Say something to Ultron" maxlength="4000">
+    <button class="btn o icon" id="mic" type="button" aria-label="Speak" aria-pressed="false" hidden>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 1h4v8H6zM3 7h1.5v3h7V7H13v4.5H8.75V13H11v1.5H5V13h2.25v-1.5H3z"/></svg>
+    </button>
+    <button class="btn" id="send" type="submit">SEND</button>
+  </form>
+  <div class="sw">
+    <button class="btn o sm" id="swVoice" type="button" aria-pressed="true">VOICE</button>
+    <button class="btn o sm" id="swLoop" type="button" aria-pressed="false" hidden>TALK MODE</button>
+    <button class="btn o sm" id="swLang" type="button" hidden>EN</button>
+    <span class="gap"></span>
+    <button class="btn o sm" id="swForget" type="button">FORGET</button>
+  </div>
+</footer>
+<script src="ultron.js"></script>
+</body>
+</html>
