@@ -185,6 +185,15 @@
 		reverse_proxy localhost:5200
 	}
 
+	@ai host ai.{$DOMAIN}
+	handle @ai {
+		# Plint Chat (apps/plint-chat, native systemd unit): Claude-style page
+		# driving Claude Code on Silk models. Own look; streams over SSE.
+		reverse_proxy localhost:5220 {
+			flush_interval -1
+		}
+	}
+
 	@speed host speed.{$DOMAIN}
 	handle @speed {
 		import theme speedtest

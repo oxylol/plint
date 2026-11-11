@@ -18,6 +18,11 @@
         server: plint
         container: table
 
+    - Plint Chat:
+        icon: mdi-chat-processing-outline
+        href: https://ai.{{HOMEPAGE_VAR_DOMAIN}}
+        description: Chat that runs Plint · Claude Code on Silk models
+
     - CNC Studio:
         icon: mdi-cogs
         href: https://cnc.{{HOMEPAGE_VAR_DOMAIN}}

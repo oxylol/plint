@@ -33,7 +33,7 @@ cmd_status() {
     local dot="$C_GREEN●"; [[ "$state" != running* ]] && dot="$C_RED●"
     printf '%s %-14s %-12s %s\n' "$dot$C_RESET" "$name" "$state" "$(url_for "$name")"
   done < <(docker ps -a --format '{{.Names}}|{{.State}}' | sort)
-  for svc in cockpit.socket tailscaled plint-claude; do
+  for svc in cockpit.socket tailscaled plint-claude plint-chat; do
     local st; st="$(systemctl is-active "$svc" 2>/dev/null || true)"
     local dot="$C_GREEN●"; [[ "$st" != active ]] && dot="$C_YELLOW●"
     printf '%s %-14s %-12s %s\n' "$dot$C_RESET" "${svc%.socket}" "$st" "$(url_for "$svc")"
@@ -67,6 +67,7 @@ url_for() {
     cockpit.socket) echo "https://host.${DOMAIN:-}";;
     tailscaled) tailscale ip -4 2>/dev/null | head -n1;;
     plint-claude) echo "claude.ai/code → Plint";;
+    plint-chat) echo "https://ai.${DOMAIN:-}";;
     *) echo "";;
   esac
 }
@@ -235,6 +236,13 @@ cmd_sync() {
   if ! cmp -s "$PLINT_DIR/systemd/plint-claude.service" /etc/systemd/system/plint-claude.service; then
     install -m 0644 "$PLINT_DIR/systemd/plint-claude.service" /etc/systemd/system/
     systemctl daemon-reload && systemctl restart plint-claude
+  fi
+  # Plint Chat runs natively (it drives Claude Code as plint); restart it when its unit or code changed.
+  if ! cmp -s "$PLINT_DIR/systemd/plint-chat.service" /etc/systemd/system/plint-chat.service; then
+    install -m 0644 "$PLINT_DIR/systemd/plint-chat.service" /etc/systemd/system/
+    systemctl daemon-reload && systemctl enable plint-chat >/dev/null 2>&1 && systemctl restart plint-chat
+  elif [[ "$before" != "$after" ]] && ! git -C "$PLINT_DIR" diff --quiet "$before" "$after" -- apps/plint-chat; then
+    sudo -u plint -H sh -c "cd '$PLINT_DIR/apps/plint-chat' && npm ci --no-audit --no-fund >/dev/null" && systemctl restart plint-chat
   fi
   ok "synced"
 }

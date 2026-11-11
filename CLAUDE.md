@@ -31,6 +31,7 @@ app; they are usually on a phone, so keep answers short and lead with the result
 ├── apps/hertz/         Hertz: music maker made of waves (Web Audio in the browser; README there)
 ├── apps/cnc-twin/      CNC Twin: physics twin of machine, controller, tool, part, chips, coolant (README there)
 ├── apps/silk-router/   silk-router: Silk Compute key behind OpenAI/Anthropic APIs, refusal → -uncensored (README there)
+├── apps/plint-chat/    Plint Chat: Claude-style phone page driving Claude Code on Silk models (native unit; README there)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
 ├── dashboard/          Homepage config (services/widgets/settings/images)
@@ -40,7 +41,7 @@ app; they are usually on a phone, so keep answers short and lead with the result
 ```
 
 Native (not in Docker): **AMP** (user `amp`, web :8080, `ampinstmgr`), **Cockpit** (:9090),
-**Tailscale** (`tailscale`), **Claude Code** (you).
+**Tailscale** (`tailscale`), **Claude Code** (you), **Plint Chat** (`plint-chat.service`).
 
 **Plint Table** (D&D 5e, human DM + voice AI DM) is its own repo at `/opt/plint-table`
 (README there). Its data lives in `/srv/dnd/{adventures,library,data}`; `plint sync` pulls that
@@ -75,6 +76,7 @@ host network and proxies to `localhost:<port>`:
 | poly | 5190 | Polybot: Polymarket strategies compared on one page. "Consensus" buys what the top traders agree on (`POLY_*`; `POLY_VARIANTS` runs extra setups such as other leaderboard windows), "credible"/"smart" copy only traders who pass credibility rules (`CR_*`), "underdog" buys the cheaper side of a game at kickoff and sells into the bounce (`UD_*`), "forecast" bets No on tomorrow's high at the forecast +2°C (`FC_*`), "collector" buys what a finished day's METAR reports have already decided and redeems at $1 (`CL_*`), "afternoon" buys Yes on the bucket the day's running high is in at each city's own hour (`AF_*`). Paper mode until `POLY_PRIVATE_KEY`, `POLY_WALLET` and `POLY_LIVE=1` are in `.env` (apps/polybot/README.md); book in `data/polybot` |
 | music | 5200 | Hertz: a music maker with no keys. Each voice fires when its pulse wave crosses a threshold; a second sine (drift) bends timing and pitch; tones are FM sines. Sound is made in the browser; saved songs in `data/hertz` |
 | twin | 5210 | CNC Twin: runs a CNC program on a physical twin before it goes to the machine (controller in Fanuc/Haas/Siemens 840D/Heidenhain dialects, motion, cutting forces, chips, heat, coolant, wear, vibration, workholding, finish, inspection vs CAD) and says whether it is safe and why. Projects and runs in `data/cnc-twin`; headless CLI `apps/cnc-twin/bin/twin`; one simulation at a time |
+| ai | 5220 | Plint Chat: Claude-style page that runs Claude Code on Plint through silk-router; native `plint-chat.service` as `plint`; login code via ntfy; tool calls wait for Allow/Deny; chats in `data/plint-chat` |
 | (none) | 4141 | silk-router: localhost-only LLM proxy on `SILK_API_KEY`; aliases auto-sonnet/haiku/opus; `apps/silk-router/silk-claude` runs Claude Code on it |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 

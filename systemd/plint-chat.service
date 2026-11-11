@@ -1,0 +1,27 @@
+# Plint · Plint Chat (ai.${DOMAIN})
+# A Claude-style chat page that drives Claude Code on this box through
+# silk-router (localhost:4141). Runs as `plint`, like plint-claude, so it can
+# do what that session can; tool calls wait for Allow/Deny on the page.
+[Unit]
+Description=Plint · Plint Chat (Claude Code on Silk models, from the phone)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+User=plint
+Group=plint
+WorkingDirectory=/opt/plint/apps/plint-chat
+Environment=HOME=/home/plint
+Environment=PATH=/home/plint/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PORT=5220
+Environment=DATA_DIR=/opt/plint/data/plint-chat
+ExecStartPre=/bin/sh -c 'test -d node_modules/@anthropic-ai/claude-agent-sdk || npm ci --no-audit --no-fund'
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5s
+# The Claude Code processes it starts live in this cgroup too.
+MemoryMax=2500M
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target
