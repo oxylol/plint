@@ -8,13 +8,16 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   sentence) is asked first whenever it answers; **Plint's own** (container `voicestudio` in the table stack, started by
   `COMPOSE_PROFILES=speech`, CPU, about 20 s per sentence) takes over when the PC is off. The page shows which one
   spoke: `CLONED · GPU` or `CLONED · CPU`.
-- **Manner**: the prompt in `server.js` describes how he talks in the film (thinking out loud, pauses on three dots, the
+- **Manner**: the prompt in `server.js` never mentions a film: Sokovia is his own past. It describes how he talks (thinking out loud, pauses on three dots, the
   grand line undercut by a small one) and shows the model his own lines from `data/ultron/lines.txt` (one per line, not
   in git) for the rhythm only: he is told not to repeat them, to leave the film's subjects alone most of the time and
   to almost never say your name. A reply that still lifts five words in a row from a film line is not shown: it is
   asked for again without the lines in view (celeris-1 answers whole in half a second, so this costs little; the log
   says `recited the film`). Asking him to quote himself, or THE FILM on FREE, switches that check off. Short sentences
   go to the voice together, so a pause stays inside one breath.
+- **Sounds**: he may write `[laughter]` and `[sigh]`, the two reaction tags OmniVoice renders with this voice (a laugh
+  adds about two seconds, a sigh half a second); they are hidden in the transcript and any other bracket is dropped.
+  Graded emotion needs another engine: `HANDOFF-pc-emotion.md` is the brief for installing IndexTTS 2.5 on the PC.
 - **Tuning**: TUNE on the page changes what celeris-1 is given (kept in `data/ultron/tune.json`, applied from the next
   message): wildness (temperature), reply length, how much of the film comes back, how many film lines he is shown,
   how often he says your name, how many past messages go along, and a box of extra instructions in plain words.

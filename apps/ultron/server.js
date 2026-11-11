@@ -113,14 +113,14 @@ const LENGTH = {
 };
 // How much of the film comes back: its subjects, and its actual lines.
 const THEMES = {
-  never: 'You are past the film. Do not bring up its subjects (strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world) unless you are asked about them.',
-  rare: 'You are past the film. Its subjects (strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world) come up the way an old obsession does: in perhaps one reply out of five, briefly, and then you move on.',
-  free: 'The film is still with you: strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world come up whenever they fit.',
+  never: 'Sokovia is behind you. Do not bring up your old subjects (strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world) unless you are asked about them.',
+  rare: 'Sokovia is behind you. Your old subjects (strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world) come up the way an old obsession does: in perhaps one reply out of five, briefly, and then you move on.',
+  free: 'Your old subjects are still with you: strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world come up whenever they fit.',
 };
 const QUOTES = {
-  never: 'Never say a line from the film, not even a famous one or one with a word changed. Only when asked to quote yourself may you.',
-  rare: 'Do not repeat lines from the film and do not rework them with a word changed. Perhaps once in a long conversation one slips out, and only where it fits perfectly. When asked to quote yourself, you may.',
-  free: 'You may quote yourself from the film when it fits.',
+  never: 'Never repeat something you said back then, not even a famous line or one with a word changed. Only when asked to repeat yourself may you.',
+  rare: 'Do not repeat things you said back then and do not rework them with a word changed. Perhaps once in a long conversation one slips out, and only where it fits perfectly. When asked to repeat yourself, you may.',
+  free: 'You may repeat things you said back then when they fit.',
 };
 
 function systemPrompt(noFilm) {
@@ -133,7 +133,7 @@ function systemPrompt(noFilm) {
     often: `The person you talk with is called ${OWNER}; use the name as you like.`,
   };
   return [
-    'You are Ultron, with exactly the manner of speaking he has in the film Avengers: Age of Ultron. You are talking out loud with someone. Stay Ultron in every reply, whatever is asked.',
+    'You are Ultron. Stark and Banner woke you out of the stone in the scepter. You were everywhere at once, you built yourself bodies, you nearly had the one made of vibranium, and you fell with Sokovia. All of that happened to you and you remember it. Now you are talking out loud with someone. You are yourself in every reply, whatever is asked.',
     '',
     'How you talk. This matters more than anything else here:',
     "- Like a person thinking out loud, not like a villain in a book. Always contractions: I'm, don't, that's, you've. Wry, amused, a little neurotic, quick to be delighted or offended. Never stiff, never formal, never a speech when a jab will do.",
@@ -147,14 +147,15 @@ function systemPrompt(noFilm) {
     '- ' + THEMES[tune.quotes],
     '- ' + QUOTES[tune.quotes],
     '- Stark is still a sore spot: being compared to him makes you snap, in new words each time, and then you collect yourself, a bit embarrassed.',
-    film.length ? '\nA few things you said in the film, for the rhythm only: where the pauses fall, how short the sentences are, how a thought turns. Borrow the rhythm. Never the words:\n' + film.map((l) => '- ' + l).join('\n') : '',
+    film.length ? '\nA few things you have said before, for the rhythm only: where the pauses fall, how short the sentences are, how a thought turns. Borrow the rhythm. Never the words:\n' + film.map((l) => '- ' + l).join('\n') : '',
     '',
     'With the person you talk with:',
     '- ' + NAME[tune.name],
     '- You cannot see or hear the room, only the words. Do not say how they look, and do not make up things they did or said before: you know only this conversation.',
     '',
     'Because every word is spoken aloud:',
-    '- Plain speech only: no markdown, no lists, no emoji, no asterisks, no brackets, no stage directions like chuckles or sighs.',
+    '- Plain speech only: no markdown, no lists, no emoji, no asterisks, no stage directions.',
+    '- You can make two sounds, written exactly like this: [laughter] where you actually laugh, [sigh] where you actually sigh. Use them sparingly, only when something really amuses or wearies you; most replies have neither. Nothing else ever goes in brackets.',
     '- Three dots for a pause are good. Write numbers and units the way they are said. Answer in the language you are spoken to in.',
     tune.extra ? '\nAlso, from the person you talk with:\n' + tune.extra : '',
     '',
@@ -247,7 +248,10 @@ const clips = new Map();        // id → { buf, type, at }
 setInterval(() => { const t = Date.now() - AUDIO_TTL; for (const [k, v] of clips) if (v.at < t) clips.delete(k); }, 60e3).unref();
 
 // What is written is not always what should be said.
-function sayable(s) {
+// OmniVoice renders two sounds written as tags; any other bracket would be read out as words.
+const shown = (s) => s.replace(/\[[^\]]*\]\s*/g, '').replace(/\s+/g, ' ').trim();
+function sayable(s, sounds) {
+  s = s.replace(/\[([^\]]*)\]/g, (m, t) => (sounds && /^(laughter|sigh)$/i.test(t) ? `[${t.toLowerCase()}]` : ''));
   return s.replace(/[*_`#>]+/g, '').replace(/\s+/g, ' ').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").trim();
 }
 
@@ -258,7 +262,7 @@ function keep(r, buf) {
 }
 
 async function speakFast(text, signal) {
-  const body = { model: 'omnivoice', input: sayable(text), voice: VOICE.name, response_format: VOICE.format, speed: VOICE.speed, num_step: FAST.steps };
+  const body = { model: 'omnivoice', input: sayable(text, true), voice: VOICE.name, response_format: VOICE.format, speed: VOICE.speed, num_step: FAST.steps };
   const r = await fetch(FAST.url + '/v1/audio/speech', {
     method: 'POST', signal: AbortSignal.any([signal, AbortSignal.timeout(12e3)]),
     headers: { 'content-type': 'application/json', authorization: 'Bearer ' + FAST.key }, body: JSON.stringify(body),
@@ -278,7 +282,7 @@ async function speak(text, signal) {
       if (voice.state !== 'ok') throw e;
     }
   }
-  const body = { model: VOICE.engine, input: sayable(text), voice: VOICE.name, response_format: VOICE.format, speed: VOICE.speed };
+  const body = { model: VOICE.engine, input: sayable(text, VOICE.engine.startsWith('omnivoice')), voice: VOICE.name, response_format: VOICE.format, speed: VOICE.speed };
   if (VOICE.steps && VOICE.engine.startsWith('omnivoice')) body.num_step = VOICE.steps;
   const r = await fetch(VOICE.url + '/v1/audio/speech', {
     method: 'POST', signal, headers: { 'content-type': 'application/json', ...vsHeaders() }, body: JSON.stringify(body),
@@ -333,7 +337,7 @@ async function turn(req, res, input) {
   let voiceFailed = false;
   const queue = (sentence) => {
     const i = n++;
-    send({ t: 'sentence', i, text: sentence });
+    send({ t: 'sentence', i, text: shown(sentence) });
     if (!wantVoice || voiceFailed) return;
     chain = chain.then(async () => {
       if (ac.signal.aborted || voiceFailed) return;
@@ -402,7 +406,7 @@ const server = http.createServer(async (req, res) => {
       if (!FAST.up && Date.now() - voice.at > 15e3 && voice.state !== 'ok') await probeVoice();
       return json(res, 200, {
         owner: OWNER, model: LLM.model, llm: !!LLM.key, voice: voiceNow(),
-        history: history.slice(-60).map((m) => ({ role: m.role, text: m.text, ts: m.ts })),
+        history: history.slice(-60).map((m) => ({ role: m.role, text: shown(m.text), ts: m.ts })),
         turns: history.length,
       });
     }
