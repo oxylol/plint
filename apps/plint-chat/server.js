@@ -1,257 +1,59 @@
-// Plint Chat: a Claude-style chat page that drives Claude Code on Plint through
-// silk-router. Each chat is a Claude Code session (resumed per message); turns
-// keep running when the phone sleeps, and tool calls that need permission wait
-// for Allow / Deny on the page. Login is a one-time code sent by ntfy.
-import { query } from "@anthropic-ai/claude-agent-sdk";
+// Plint Chat: a claude.ai-style page that drives Claude Code on Plint through
+// silk-router. HTTP routes only; the work lives in lib/.
 import { createServer } from "node:http";
-import { createHash, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
-import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
+import { chats, projects, artifacts, settings, saveSettings, allStyles, schedules, saveSchedules, chatSummary,
+  projectFilesDir, listFiles, safeName, DIRS, newId, now } from "./lib/store.js";
+import { signedIn, sendCode, login, logout } from "./lib/auth.js";
+import { MODELS, EFFORTS, CWD, ROUTER, emit, subscribe, subscribeAll, broadcast, startTurn, editTurn, stopTurn,
+  answerAsk, approveAllPending, autoTitle, versionFile, lv } from "./lib/agent.js";
+import { KINDS, nextRun, describe, runSchedule, startScheduler } from "./lib/scheduler.js";
+import { log } from "./lib/notify.js";
 
 const PORT = Number(process.env.PORT || 5220);
-const DATA = process.env.DATA_DIR || "/opt/plint/data/plint-chat";
-const CWD = process.env.CHAT_CWD || "/opt/plint";
-const ROUTER = process.env.ROUTER_URL || "http://127.0.0.1:4141";
-const NOTIFY = process.env.NOTIFY_CMD || "/opt/plint/scripts/notify.sh";
-const DEV_CODE = process.env.PLINT_CHAT_DEV_CODE || ""; // tests only: fixed login code, no ntfy
 const PUBLIC = path.join(path.dirname(new URL(import.meta.url).pathname), "public");
-const MODELS = { "auto-sonnet": "Auto Sonnet", "auto-opus": "Auto Opus", "auto-haiku": "Auto Haiku" };
-const MAX_RUNNING = 2;
-const APPEND = `You are talking to Filip through Plint Chat, a web page he usually opens on his phone.
-Keep answers short and lead with the result. Tool calls that need permission are shown to him
-with Allow / Deny buttons; if he denies one, ask what he wants instead of retrying it.`;
+const MAX_UPLOAD = 25e6;
 
-fs.mkdirSync(path.join(DATA, "chats"), { recursive: true });
-const sha = (s) => createHash("sha256").update(s).digest("hex");
-const now = () => Date.now();
-const log = (...a) => console.log(new Date().toISOString(), ...a);
-
-// --- storage ----------------------------------------------------------------
-
-function readJson(file, fallback) {
-  try { return JSON.parse(fs.readFileSync(file, "utf8")); } catch { return fallback; }
-}
-function writeJson(file, value) {
-  const tmp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(value), { mode: 0o600 });
-  fs.renameSync(tmp, file);
+// A service restart stops running turns; say so in those chats.
+for (const c of chats.all()) {
+  if (!c.running) continue;
+  c.running = false;
+  c.events.push({ t: "error", text: "Plint Chat restarted, so this turn stopped. Send it again to carry on." }, { t: "idle" });
+  chats.save(c);
 }
 
-const authFile = path.join(DATA, "auth.json");
-const auth = readJson(authFile, { sessions: {} });
-const chatFile = (id) => path.join(DATA, "chats", `${id}.json`);
-const chats = new Map();
-for (const f of fs.readdirSync(path.join(DATA, "chats"))) {
-  if (!f.endsWith(".json")) continue;
-  const c = readJson(path.join(DATA, "chats", f), null);
-  if (!c) continue;
-  if (c.running) { // the service stopped mid-turn
-    c.running = false;
-    c.events.push({ t: "error", text: "Plint Chat restarted, so this turn stopped. Send it again to carry on." });
-  }
-  chats.set(c.id, c);
-}
+// --- http helpers ------------------------------------------------------------------
 
-const saveTimers = new Map();
-function save(chat) {
-  clearTimeout(saveTimers.get(chat.id));
-  saveTimers.set(chat.id, setTimeout(() => writeJson(chatFile(chat.id), chat), 250));
-}
-function summary(c) {
-  return { id: c.id, title: c.title, model: c.model, updated: c.updated, running: c.running, auto: c.auto };
-}
-
-// --- live state: listeners, pending permission asks, running queries --------
-
-const live = new Map(); // id -> { listeners:Set<res>, pending:Map<askId,resolve>, q, abort }
-function lv(id) {
-  if (!live.has(id)) live.set(id, { listeners: new Set(), pending: new Map(), q: null, abort: null });
-  return live.get(id);
-}
-function send(res, ev, i) {
-  res.write(`${i === undefined ? "" : `id: ${i}\n`}data: ${JSON.stringify(ev)}\n\n`);
-}
-function emit(chat, ev, { store = true } = {}) {
-  if (store) {
-    chat.events.push(ev);
-    chat.updated = now();
-    save(chat);
-  }
-  const i = store ? chat.events.length - 1 : undefined;
-  for (const res of lv(chat.id).listeners) send(res, i === undefined ? ev : { ...ev, i }, i);
-}
-function nobodyWatching(chat) {
-  return lv(chat.id).listeners.size === 0;
-}
-function notify(title, body, prio = "default", tags = "speech_balloon") {
-  execFile(NOTIFY, [title, body, prio, tags], { timeout: 15000 }, (err) => err && log("notify failed:", err.message));
-}
-
-// --- running a turn -----------------------------------------------------------
-
-const clip = (s, n = 6000) => (s.length > n ? `${s.slice(0, n)}\n… (${s.length - n} more characters)` : s);
-function resultText(content) {
-  if (typeof content === "string") return content;
-  if (!Array.isArray(content)) return "";
-  return content.map((b) => (b.type === "text" ? b.text : b.type === "image" ? "[image]" : "")).join("\n");
-}
-function askSummary(name, input) {
-  if (name === "Bash") return input.command || "";
-  return input.file_path || input.path || input.url || input.pattern || JSON.stringify(input).slice(0, 200);
-}
-
-async function runTurn(chat, text) {
-  const state = lv(chat.id);
-  chat.running = true;
-  emit(chat, { t: "user", text });
-  const abort = new AbortController();
-  state.abort = abort;
-  state.stopped = false;
-  let reported = false;
-
-  const canUseTool = async (name, input, { signal, suggestions }) => {
-    if (chat.auto) return { behavior: "allow", updatedInput: input };
-    const id = randomBytes(6).toString("hex");
-    emit(chat, { t: "ask", id, name, input });
-    if (nobodyWatching(chat)) notify("Plint Chat wants to run", `${name}: ${askSummary(name, input)}`.slice(0, 300), "high", "warning");
-    const answer = await new Promise((resolve) => {
-      state.pending.set(id, resolve);
-      signal.addEventListener("abort", () => resolve({ allow: false, aborted: true }), { once: true });
-    });
-    state.pending.delete(id);
-    emit(chat, { t: "answer", id, allow: answer.allow, always: !!answer.always });
-    if (answer.allow) {
-      return { behavior: "allow", updatedInput: input, ...(answer.always && suggestions ? { updatedPermissions: suggestions } : {}) };
-    }
-    return { behavior: "deny", message: answer.aborted ? "Stopped." : "Filip declined this tool call." };
-  };
-
-  let lastText = "";
-  try {
-    const q = query({
-      prompt: text,
-      options: {
-        cwd: CWD,
-        model: chat.model,
-        resume: chat.sessionId || undefined,
-        includePartialMessages: true,
-        permissionMode: "default",
-        settingSources: ["user", "project", "local"],
-        systemPrompt: { type: "preset", preset: "claude_code", append: APPEND },
-        disallowedTools: ["AskUserQuestion", "EnterPlanMode", "ExitPlanMode"],
-        canUseTool,
-        abortController: abort,
-        env: {
-          ...process.env,
-          ANTHROPIC_BASE_URL: ROUTER,
-          ANTHROPIC_AUTH_TOKEN: process.env.SILK_ROUTER_TOKEN || "silk",
-          ANTHROPIC_DEFAULT_OPUS_MODEL: "auto-opus",
-          ANTHROPIC_DEFAULT_SONNET_MODEL: "auto-sonnet",
-          ANTHROPIC_DEFAULT_HAIKU_MODEL: "auto-haiku",
-          CLAUDE_CODE_SUBAGENT_MODEL: "auto-sonnet",
-          CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
-          CLAUDE_AGENT_SDK_CLIENT_APP: "plint-chat/1",
-        },
-        stderr: (d) => log(`[${chat.id}] stderr:`, d.trim().slice(0, 500)),
-      },
-    });
-    state.q = q;
-    for await (const m of q) {
-      if (m.parent_tool_use_id) continue; // subagent frames: their tool asks still come through canUseTool
-      if (m.type === "system" && m.subtype === "init") {
-        chat.sessionId = m.session_id;
-        save(chat);
-      } else if (m.type === "stream_event") {
-        const e = m.event;
-        if (e.type === "content_block_delta" && e.delta?.type === "text_delta") emit(chat, { t: "delta", text: e.delta.text }, { store: false });
-      } else if (m.type === "assistant") {
-        for (const b of m.message.content || []) {
-          if (b.type === "text" && b.text.trim()) { emit(chat, { t: "text", text: b.text }); lastText = b.text; }
-          else if (b.type === "thinking" && b.thinking?.trim()) emit(chat, { t: "thinking", text: clip(b.thinking, 4000) });
-          else if (b.type === "tool_use") emit(chat, { t: "tool", id: b.id, name: b.name, input: b.input });
-        }
-        if (m.error) emit(chat, { t: "error", text: `Model error: ${m.error}` });
-      } else if (m.type === "user" && Array.isArray(m.message?.content)) {
-        for (const b of m.message.content) {
-          if (b.type === "tool_result") emit(chat, { t: "result", id: b.tool_use_id, output: clip(resultText(b.content)), error: !!b.is_error });
-        }
-      } else if (m.type === "result") {
-        const failed = m.subtype !== "success";
-        reported = failed;
-        const error = !failed ? undefined : state.stopped ? "Stopped." : (m.errors || [m.subtype]).join("; ");
-        emit(chat, { t: "done", ms: m.duration_ms, error });
-      }
-    }
-  } catch (err) {
-    log(`[${chat.id}] turn failed:`, err?.stack || err);
-    if (!reported) emit(chat, { t: "error", text: state.stopped || abort.signal.aborted ? "Stopped." : `Something broke: ${err?.message || err}` });
-  } finally {
-    chat.running = false;
-    state.q = null;
-    state.abort = null;
-    for (const resolve of state.pending.values()) resolve({ allow: false, aborted: true });
-    emit(chat, { t: "idle" });
-    if (nobodyWatching(chat) && lastText) notify(`Plint Chat · ${chat.title}`, lastText.slice(0, 300));
-  }
-}
-
-function startTurn(chat, text, model) {
-  if (chat.running) return "This chat is still working.";
-  if ([...chats.values()].filter((c) => c.running).length >= MAX_RUNNING) return "Two chats are already working; wait for one to finish.";
-  if (model && MODELS[model]) chat.model = model;
-  runTurn(chat, text);
-  return null;
-}
-
-// --- auth -----------------------------------------------------------------------
-
-const COOKIE = "plint_chat";
-const codes = []; // { hash, expires, tries }
-const sends = []; // timestamps of codes sent, for rate limiting
-function cookies(req) {
-  return Object.fromEntries((req.headers.cookie || "").split(/;\s*/).filter(Boolean).map((p) => {
-    const i = p.indexOf("=");
-    return [p.slice(0, i), decodeURIComponent(p.slice(i + 1))];
-  }));
-}
-function signedIn(req) {
-  const t = cookies(req)[COOKIE];
-  return !!(t && auth.sessions[sha(t)]);
-}
-function sendCode() {
-  const t = now();
-  while (sends.length && sends[0] < t - 3600e3) sends.shift();
-  if (sends.length && sends.at(-1) > t - 30e3) return "Wait half a minute before asking for another code.";
-  if (sends.length >= 6) return "Too many codes this hour.";
-  sends.push(t);
-  const code = DEV_CODE || String(randomInt(0, 1e6)).padStart(6, "0");
-  codes.push({ hash: sha(code), expires: t + 10 * 60e3, tries: 0 });
-  if (!DEV_CODE) notify("Plint Chat login", `Your code: ${code} (valid 10 minutes)`, "high", "key");
-  return null;
-}
-function checkCode(code) {
-  const t = now();
-  const h = Buffer.from(sha(String(code || "").trim()));
-  for (const c of codes) {
-    if (c.expires < t || c.tries >= 5) continue;
-    c.tries++;
-    if (timingSafeEqual(Buffer.from(c.hash), h)) { c.expires = 0; return true; }
-  }
-  return false;
-}
-
-// --- http -------------------------------------------------------------------------
-
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".webmanifest": "application/manifest+json" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp",
+  ".webmanifest": "application/manifest+json", ".json": "application/json", ".pdf": "application/pdf", ".txt": "text/plain; charset=utf-8" };
 function json(res, code, body, headers = {}) {
   res.writeHead(code, { "content-type": "application/json", "cache-control": "no-store", ...headers });
   res.end(JSON.stringify(body));
 }
+async function readBody(req, limit = 2e6) {
+  const chunks = [];
+  let n = 0;
+  for await (const c of req) { n += c.length; if (n > limit) throw Object.assign(new Error("Too big."), { status: 413 }); chunks.push(c); }
+  return Buffer.concat(chunks);
+}
 async function body(req) {
-  let s = "";
-  for await (const c of req) { s += c; if (s.length > 1e6) throw new Error("too big"); }
-  return s ? JSON.parse(s) : {};
+  const b = await readBody(req);
+  return b.length ? JSON.parse(b.toString("utf8")) : {};
+}
+function sendFile(res, file, { download = false, name } = {}) {
+  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return json(res, 404, { error: "not found" });
+  const ext = path.extname(name || file).toLowerCase();
+  // Never let an uploaded or generated file run as a page on this origin.
+  const type = TYPES[ext] && !/html|svg/.test(TYPES[ext]) ? TYPES[ext] : "application/octet-stream";
+  res.writeHead(200, {
+    "content-type": download ? "application/octet-stream" : type,
+    "content-disposition": `${download || type === "application/octet-stream" ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(name || path.basename(file))}`,
+    "x-content-type-options": "nosniff", "content-security-policy": "sandbox", "cache-control": "private, max-age=3600",
+  });
+  fs.createReadStream(file).pipe(res);
 }
 function serveStatic(req, res) {
   let p = decodeURIComponent(new URL(req.url, "http://x").pathname);
@@ -261,98 +63,264 @@ function serveStatic(req, res) {
   res.writeHead(200, { "content-type": TYPES[path.extname(file)] || "application/octet-stream", "cache-control": "no-cache" });
   fs.createReadStream(file).pipe(res);
 }
+const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj[k] !== undefined).map((k) => [k, obj[k]]));
+
+// Apply the settings a chat can carry (from the composer or the chat menu).
+function applyChatSettings(chat, b) {
+  if (MODELS[b.model]) chat.model = b.model;
+  if (EFFORTS.includes(b.effort)) chat.effort = b.effort;
+  if (b.mode === "auto" || b.mode === "manual") chat.mode = b.mode;
+  if (typeof b.style === "string" && allStyles().some((s) => s.id === b.style)) chat.style = b.style;
+  if (typeof b.title === "string" && b.title.trim()) chat.title = b.title.trim().slice(0, 100);
+  if (typeof b.pinned === "boolean") chat.pinned = b.pinned;
+  if (b.projectId === null || (typeof b.projectId === "string" && projects.get(b.projectId))) chat.projectId = b.projectId;
+}
+function uploadsFor(ids) {
+  return (Array.isArray(ids) ? ids : []).map((id) => {
+    const dir = path.join(DIRS.uploads, String(id).replace(/[^a-f0-9]/g, ""));
+    const meta = fs.existsSync(path.join(dir, "meta.json")) ? JSON.parse(fs.readFileSync(path.join(dir, "meta.json"), "utf8")) : null;
+    return meta && { ...meta, path: path.join(dir, meta.name), url: `/api/uploads/${meta.id}/${encodeURIComponent(meta.name)}` };
+  }).filter(Boolean);
+}
+function skills() {
+  const out = [];
+  for (const root of [path.join(os.homedir(), ".claude", "skills"), path.join(CWD, ".claude", "skills")]) {
+    for (const d of fs.existsSync(root) ? fs.readdirSync(root) : []) {
+      const f = path.join(root, d, "SKILL.md");
+      if (!fs.existsSync(f)) continue;
+      const head = fs.readFileSync(f, "utf8").slice(0, 3000);
+      out.push({ name: head.match(/^name:\s*(.+)$/m)?.[1]?.trim() || d, description: head.match(/^description:\s*(.+)$/m)?.[1]?.trim().slice(0, 300) || "", where: root.startsWith(CWD) ? "project" : "personal" });
+    }
+  }
+  return out;
+}
+function search(q) {
+  const needle = q.toLowerCase();
+  const out = [];
+  for (const c of chats.all()) {
+    if (c.incognito) continue;
+    let snippet = null;
+    if (c.title.toLowerCase().includes(needle)) snippet = "";
+    for (const e of c.events) {
+      if (snippet !== null) break;
+      if ((e.t === "user" || e.t === "text") && e.text.toLowerCase().includes(needle)) {
+        const i = e.text.toLowerCase().indexOf(needle);
+        snippet = `${i > 40 ? "…" : ""}${e.text.slice(Math.max(0, i - 40), i + 80).replace(/\s+/g, " ")}`;
+      }
+    }
+    if (snippet !== null) out.push({ ...chatSummary(c), snippet });
+  }
+  return out.sort((a, b) => b.updated - a.updated).slice(0, 40);
+}
+
+// --- api ---------------------------------------------------------------------------
 
 async function api(req, res, url) {
-  const parts = url.pathname.split("/").filter(Boolean); // ["api", ...]
+  const parts = url.pathname.split("/").filter(Boolean).slice(1).map(decodeURIComponent);
+  const [top, id, action, sub] = parts;
   const m = req.method;
   if (m !== "GET" && req.headers["x-plint"] !== "1") return json(res, 403, { error: "missing header" });
 
-  if (parts[1] === "login") {
+  if (top === "login") {
+    if (id === "send") { const err = sendCode(); return err ? json(res, 429, { error: err }) : json(res, 200, { ok: true }); }
     const b = await body(req);
-    if (parts[2] === "send") {
-      const err = sendCode();
-      return err ? json(res, 429, { error: err }) : json(res, 200, { ok: true });
-    }
-    if (!checkCode(b.code)) return json(res, 401, { error: "That code didn't work." });
-    const token = randomBytes(32).toString("base64url");
-    auth.sessions[sha(token)] = { created: now(), ua: String(req.headers["user-agent"] || "").slice(0, 120) };
-    writeJson(authFile, auth);
-    return json(res, 200, { ok: true }, { "set-cookie": `${COOKIE}=${token}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax` });
+    const cookie = login(b.code, req.headers["user-agent"]);
+    return cookie ? json(res, 200, { ok: true }, { "set-cookie": cookie }) : json(res, 401, { error: "That code didn't work." });
   }
-  if (parts[1] === "me") return json(res, 200, { signedIn: signedIn(req), models: MODELS });
+  if (top === "me") {
+    return json(res, 200, { signedIn: signedIn(req), name: settings.name, models: MODELS, efforts: EFFORTS, styles: signedIn(req) ? allStyles() : [] });
+  }
   if (!signedIn(req)) return json(res, 401, { error: "sign in" });
+  if (top === "logout") return json(res, 200, { ok: true }, { "set-cookie": logout(req) });
+  if (top === "events") return subscribeAll(req, res);
+  if (top === "search") return json(res, 200, search(url.searchParams.get("q") || ""));
 
-  if (parts[1] === "logout") {
-    delete auth.sessions[sha(cookies(req)[COOKIE])];
-    writeJson(authFile, auth);
-    return json(res, 200, { ok: true }, { "set-cookie": `${COOKIE}=; Path=/; Max-Age=0` });
+  // uploads: raw body, name in x-filename
+  if (top === "uploads") {
+    if (m === "POST" && !id) {
+      const data = await readBody(req, MAX_UPLOAD);
+      const uid = newId();
+      const name = safeName(decodeURIComponent(req.headers["x-filename"] || "file"));
+      const dir = path.join(DIRS.uploads, uid);
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, name), data);
+      const meta = { id: uid, name, size: data.length, type: String(req.headers["content-type"] || "application/octet-stream").slice(0, 100) };
+      fs.writeFileSync(path.join(dir, "meta.json"), JSON.stringify(meta));
+      return json(res, 200, { ...meta, url: `/api/uploads/${uid}/${encodeURIComponent(name)}` });
+    }
+    if (m === "GET" && id && action) return sendFile(res, path.join(DIRS.uploads, id.replace(/[^a-f0-9]/g, ""), safeName(action)));
   }
-  if (parts[1] !== "chats") return json(res, 404, { error: "not found" });
 
-  if (parts.length === 2) {
-    if (m === "GET") return json(res, 200, [...chats.values()].sort((a, b) => b.updated - a.updated).map(summary));
-    if (m === "POST") {
+  if (top === "settings") {
+    if (m === "GET") return json(res, 200, { ...settings, allStyles: allStyles() });
+    const b = await body(req);
+    if (typeof b.instructions === "string") settings.instructions = b.instructions.slice(0, 20000);
+    if (typeof b.name === "string" && b.name.trim()) settings.name = b.name.trim().slice(0, 40);
+    if (Array.isArray(b.styles)) settings.styles = b.styles.filter((s) => s?.name && s?.prompt).slice(0, 20).map((s) => ({ id: s.id || newId(4), name: String(s.name).slice(0, 40), prompt: String(s.prompt).slice(0, 4000) }));
+    if (typeof b.defaultStyle === "string") settings.defaultStyle = b.defaultStyle;
+    saveSettings();
+    return json(res, 200, { ...settings, allStyles: allStyles() });
+  }
+  if (top === "skills") return json(res, 200, skills());
+
+  // --- chats ---
+  if (top === "chats") {
+    if (!id) {
+      if (m === "GET") {
+        const pid = url.searchParams.get("project");
+        return json(res, 200, chats.all().filter((c) => !c.incognito && (!pid || c.projectId === pid)).sort((a, b) => b.updated - a.updated).map(chatSummary));
+      }
       const b = await body(req);
       const text = String(b.text || "").trim();
       if (!text) return json(res, 400, { error: "empty" });
-      const chat = { id: randomBytes(8).toString("hex"), title: text.replace(/\s+/g, " ").slice(0, 60), model: MODELS[b.model] ? b.model : "auto-sonnet", auto: false, created: now(), updated: now(), running: false, sessionId: null, events: [] };
-      chats.set(chat.id, chat);
-      const err = startTurn(chat, text);
+      const chat = { id: newId(), title: text.replace(/\s+/g, " ").slice(0, 60), model: "auto-sonnet", effort: "low", mode: "manual",
+        style: settings.defaultStyle || "normal", projectId: null, pinned: false, incognito: !!b.incognito,
+        created: now(), updated: now(), running: false, sessionId: null, events: [] };
+      applyChatSettings(chat, b);
+      chats.put(chat);
+      const err = startTurn(chat, { text, files: uploadsFor(b.files) });
       if (err) { chats.delete(chat.id); return json(res, 409, { error: err }); }
-      return json(res, 200, summary(chat));
+      if (!chat.incognito) autoTitle(chat, text);
+      return json(res, 200, chatSummary(chat));
+    }
+    const chat = chats.get(id);
+    if (!chat) return json(res, 404, { error: "No such chat." });
+    if (!action) {
+      if (m === "GET") return json(res, 200, { ...chatSummary(chat), events: chat.events });
+      if (m === "DELETE") {
+        if (chat.running) await stopTurn(chat);
+        chats.delete(chat.id);
+        broadcast();
+        return json(res, 200, { ok: true });
+      }
+    }
+    if (action === "stream") return subscribe(chat, req, res, Number(url.searchParams.get("after") ?? -1));
+    const b = await body(req);
+    if (action === "send") {
+      const text = String(b.text || "").trim();
+      if (!text) return json(res, 400, { error: "empty" });
+      applyChatSettings(chat, b);
+      const err = startTurn(chat, { text, files: uploadsFor(b.files) });
+      return err ? json(res, 409, { error: err }) : json(res, 200, { ok: true });
+    }
+    if (action === "edit") {
+      applyChatSettings(chat, b);
+      const err = editTurn(chat, Number(b.index), typeof b.text === "string" && b.text.trim() ? b.text.trim() : undefined);
+      return err ? json(res, 409, { error: err }) : json(res, 200, { ok: true });
+    }
+    if (action === "stop") { await stopTurn(chat); return json(res, 200, { ok: true }); }
+    if (action === "answer") return answerAsk(chat, b.id, !!b.allow, !!b.always) ? json(res, 200, { ok: true }) : json(res, 410, { error: "That request is gone." });
+    if (action === "settings") {
+      applyChatSettings(chat, b);
+      chats.save(chat);
+      emit(chat, { t: "state", ...chatSummary(chat) }, { store: false });
+      if (chat.mode === "auto") approveAllPending(chat);
+      broadcast();
+      return json(res, 200, chatSummary(chat));
     }
   }
-  const chat = chats.get(parts[2]);
-  if (!chat) return json(res, 404, { error: "no such chat" });
-  const action = parts[3];
 
-  if (!action && m === "GET") return json(res, 200, { ...summary(chat), events: chat.events });
-  if (!action && m === "DELETE") {
-    if (chat.running) return json(res, 409, { error: "Stop it first." });
-    chats.delete(chat.id);
-    fs.rmSync(chatFile(chat.id), { force: true });
-    return json(res, 200, { ok: true });
+  // --- projects ---
+  if (top === "projects") {
+    const summary = (p) => ({ ...p, chats: chats.all().filter((c) => c.projectId === p.id && !c.incognito).length, files: listFiles(projectFilesDir(p.id)).length });
+    if (!id) {
+      if (m === "GET") return json(res, 200, projects.all().sort((a, b) => b.updated - a.updated).map(summary));
+      const b = await body(req);
+      if (!String(b.name || "").trim()) return json(res, 400, { error: "A project needs a name." });
+      const p = projects.put({ id: newId(), name: b.name.trim().slice(0, 80), description: String(b.description || "").slice(0, 500), instructions: "", cwd: CWD, created: now(), updated: now() });
+      broadcast();
+      return json(res, 200, summary(p));
+    }
+    const p = projects.get(id);
+    if (!p) return json(res, 404, { error: "No such project." });
+    if (action === "files") {
+      const dir = projectFilesDir(p.id);
+      if (m === "GET" && !sub) return json(res, 200, listFiles(dir));
+      if (m === "GET" && sub) return sendFile(res, path.join(dir, safeName(sub)));
+      if (m === "POST") {
+        const data = await readBody(req, MAX_UPLOAD);
+        const name = safeName(decodeURIComponent(req.headers["x-filename"] || "file"));
+        fs.writeFileSync(path.join(dir, name), data);
+        p.updated = now(); projects.save(p);
+        return json(res, 200, listFiles(dir));
+      }
+      if (m === "DELETE" && sub) { fs.rmSync(path.join(dir, safeName(sub)), { force: true }); return json(res, 200, listFiles(dir)); }
+    }
+    if (!action && m === "GET") return json(res, 200, summary(p));
+    if (!action && m === "DELETE") {
+      for (const c of chats.all()) if (c.projectId === p.id) { c.projectId = null; chats.save(c); }
+      projects.delete(p.id);
+      fs.rmSync(path.join(DIRS.projects, p.id), { recursive: true, force: true });
+      broadcast();
+      return json(res, 200, { ok: true });
+    }
+    if (!action && m === "POST") {
+      const b = await body(req);
+      Object.assign(p, pick({ name: b.name?.trim?.().slice(0, 80) || undefined, description: typeof b.description === "string" ? b.description.slice(0, 500) : undefined,
+        instructions: typeof b.instructions === "string" ? b.instructions.slice(0, 20000) : undefined,
+        cwd: typeof b.cwd === "string" && fs.existsSync(b.cwd) ? b.cwd : undefined }, ["name", "description", "instructions", "cwd"]));
+      p.updated = now();
+      projects.save(p);
+      broadcast();
+      return json(res, 200, summary(p));
+    }
   }
-  if (action === "stream") {
-    const after = Number(url.searchParams.get("after") ?? req.headers["last-event-id"] ?? -1);
-    res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", "x-accel-buffering": "no" });
-    chat.events.forEach((ev, i) => { if (i > after) send(res, { ...ev, i }, i); });
-    send(res, { t: "state", running: chat.running, auto: chat.auto, model: chat.model });
-    const state = lv(chat.id);
-    state.listeners.add(res);
-    const ping = setInterval(() => res.write(": ping\n\n"), 20000);
-    req.on("close", () => { clearInterval(ping); state.listeners.delete(res); });
-    return;
+
+  // --- artifacts ---
+  if (top === "artifacts") {
+    const summary = (a) => ({ ...a, chatTitle: chats.get(a.chatId)?.title || "Deleted chat" });
+    if (!id) return json(res, 200, artifacts.all().filter((a) => !chats.get(a.chatId)?.incognito).sort((a, b) => b.updated - a.updated).map(summary));
+    const a = artifacts.get(id);
+    if (!a) return json(res, 404, { error: "No such artifact." });
+    if (action === "raw") {
+      const n = Math.min(a.versions.length, Math.max(1, Number(url.searchParams.get("v")) || a.versions.length));
+      const file = versionFile(a, n);
+      if (url.searchParams.get("download")) return sendFile(res, file, { download: true, name: path.basename(a.path) });
+      res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "x-content-type-options": "nosniff", "cache-control": "no-store" });
+      return fs.createReadStream(file).pipe(res);
+    }
+    if (m === "GET") return json(res, 200, summary(a));
+    if (m === "DELETE") {
+      artifacts.delete(a.id);
+      fs.rmSync(path.dirname(versionFile(a, 1)), { recursive: true, force: true });
+      broadcast("artifacts");
+      return json(res, 200, { ok: true });
+    }
   }
-  const b = await body(req);
-  if (action === "send") {
-    const text = String(b.text || "").trim();
-    if (!text) return json(res, 400, { error: "empty" });
-    const err = startTurn(chat, text, b.model);
-    return err ? json(res, 409, { error: err }) : json(res, 200, { ok: true });
+
+  // --- scheduled tasks ---
+  if (top === "schedules") {
+    const view = (s) => ({ ...s, when: describe(s), lastChatTitle: s.lastChatId ? chats.get(s.lastChatId)?.title : null });
+    const clean = (b, s = {}) => {
+      if (typeof b.name === "string" && b.name.trim()) s.name = b.name.trim().slice(0, 80);
+      if (typeof b.prompt === "string" && b.prompt.trim()) s.prompt = b.prompt.trim().slice(0, 20000);
+      if (KINDS.includes(b.every)) s.every = b.every;
+      if (/^\d{1,2}:\d{2}$/.test(b.time || "")) s.time = b.time;
+      if (b.day !== undefined) s.day = Math.min(6, Math.max(0, Number(b.day) || 0));
+      if (b.minutes !== undefined) s.minutes = Math.max(15, Number(b.minutes) || 60);
+      if (MODELS[b.model]) s.model = b.model;
+      if (EFFORTS.includes(b.effort)) s.effort = b.effort;
+      if (b.mode === "auto" || b.mode === "manual") s.mode = b.mode;
+      if (b.projectId === null || projects.get(b.projectId)) s.projectId = b.projectId;
+      if (typeof b.enabled === "boolean") s.enabled = b.enabled;
+      return s;
+    };
+    if (!id) {
+      if (m === "GET") return json(res, 200, schedules.map(view));
+      const s = clean(await body(req), { id: newId(), every: "daily", time: "08:00", day: 1, minutes: 60, model: "auto-sonnet", effort: "low", mode: "manual", projectId: null, enabled: true, created: now(), runs: 0 });
+      if (!s.name || !s.prompt) return json(res, 400, { error: "A task needs a name and a prompt." });
+      s.nextRun = nextRun(s);
+      schedules.push(s);
+      saveSchedules();
+      return json(res, 200, view(s));
+    }
+    const s = schedules.find((x) => x.id === id);
+    if (!s) return json(res, 404, { error: "No such task." });
+    if (action === "run") { const err = runSchedule(s); return err ? json(res, 409, { error: err }) : json(res, 200, view(s)); }
+    if (m === "DELETE") { schedules.splice(schedules.indexOf(s), 1); saveSchedules(); return json(res, 200, { ok: true }); }
+    if (m === "POST") { clean(await body(req), s); s.nextRun = nextRun(s); saveSchedules(); return json(res, 200, view(s)); }
   }
-  if (action === "stop") {
-    const state = lv(chat.id);
-    state.stopped = true;
-    for (const resolve of state.pending.values()) resolve({ allow: false, aborted: true });
-    try { await state.q?.interrupt(); } catch { state.abort?.abort(); }
-    return json(res, 200, { ok: true });
-  }
-  if (action === "answer") {
-    const resolve = lv(chat.id).pending.get(b.id);
-    if (!resolve) return json(res, 410, { error: "That request is gone." });
-    resolve({ allow: !!b.allow, always: !!b.always });
-    return json(res, 200, { ok: true });
-  }
-  if (action === "settings") {
-    if (typeof b.auto === "boolean") chat.auto = b.auto;
-    if (MODELS[b.model]) chat.model = b.model;
-    if (typeof b.title === "string" && b.title.trim()) chat.title = b.title.trim().slice(0, 80);
-    save(chat);
-    emit(chat, { t: "state", running: chat.running, auto: chat.auto, model: chat.model }, { store: false });
-    if (chat.auto) for (const resolve of lv(chat.id).pending.values()) resolve({ allow: true });
-    return json(res, 200, summary(chat));
-  }
+
   return json(res, 404, { error: "not found" });
 }
 
@@ -363,14 +331,18 @@ createServer(async (req, res) => {
     return serveStatic(req, res);
   } catch (err) {
     log("request failed:", err?.stack || err);
-    if (!res.headersSent) json(res, 500, { error: String(err?.message || err) });
+    if (!res.headersSent) json(res, err.status || 500, { error: String(err?.message || err) });
     else res.end();
   }
 }).listen(PORT, "127.0.0.1", () => log(`plint-chat on 127.0.0.1:${PORT}, router ${ROUTER}`));
 
+startScheduler();
+
+// Incognito chats live in memory and go away an hour after they were last used.
+setInterval(() => {
+  for (const c of chats.all()) if (c.incognito && !c.running && now() - c.updated > 3600e3 && lv(c.id).listeners.size === 0) chats.delete(c.id);
+}, 10 * 60e3);
+
 for (const sig of ["SIGTERM", "SIGINT"]) {
-  process.on(sig, () => {
-    for (const c of chats.values()) writeJson(chatFile(c.id), c);
-    process.exit(0);
-  });
+  process.on(sig, () => { chats.flush(); projects.flush(); artifacts.flush(); process.exit(0); });
 }

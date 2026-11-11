@@ -38,9 +38,13 @@ def refused(text: str) -> bool:
     return bool(REFUSAL.search(text.replace("’", "'")))
 
 
+EFFORTS = ("low", "medium", "high")
+
+
 def resolve(model: str) -> tuple[str, str | None, dict]:
     # Claude Code also asks for its own ids (e.g. claude-sonnet-...); route those by family.
-    name = model or "auto-sonnet"
+    # "auto-opus@high" picks the reasoning effort for models that take one.
+    name, _, effort = (model or "auto-sonnet").partition("@")
     if name not in ALIASES:
         for fam in ("opus", "sonnet", "haiku"):
             if name.startswith("claude") and fam in name:
@@ -48,7 +52,10 @@ def resolve(model: str) -> tuple[str, str | None, dict]:
     a = ALIASES.get(name)
     if not a:
         return model, None, {}
-    return a["model"], a["fallback"], a.get("defaults", {})
+    defaults = dict(a.get("defaults", {}))
+    if effort in EFFORTS and "reasoning_effort" in defaults:
+        defaults["reasoning_effort"] = effort
+    return a["model"], a["fallback"], defaults
 
 
 def upstream_headers(request: Request) -> dict:
