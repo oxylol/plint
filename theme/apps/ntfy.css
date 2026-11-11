@@ -1,694 +1,738 @@
 /* ─────────────────────────────────────────────────────────────
-   Plint Soft UI · ntfy (notifications)
-   ntfy's web app is React + MUI with emotion styles. Emotion injects
+   Plint Terminal · ntfy (notifications)
+   ntfy's web app is React + MUI with Emotion styles. Emotion injects
    its rules after this sheet, at one class of specificity, so every
    rule here is scoped with :is(#root, body): that reads as "anywhere
-   in the page" but carries an id's weight, and wins without
-   !important. Only stable hooks are used: MUI's Mui* classes, ids,
-   roles and aria attributes, never the css-xxxx hashes.
-   ntfy has its own light/dark setting; nothing below depends on it,
-   so the device setting (plint.css tokens) always wins.
-   Breakpoints follow MUI: sm 600px (drawer docks), md 900px.
+   in the page" (portals hang off <body>) but carries an id's weight
+   and wins without !important. The few !important below are against
+   MUI's inline styles (transitions, spinner size) and its one
+   !important rule (hidden placeholders).
+   Only stable hooks are used: Mui* classes, ids, roles and aria
+   attributes, never the css-xxxx hashes. ntfy has its own light/dark
+   setting; every colour is set here, so it never shows.
+   Breakpoints follow MUI: sm 600px (the drawer docks).
    ───────────────────────────────────────────────────────────── */
 
-/* ── ground, type, colour scheme ──────────────────────────────── */
-html:root { color-scheme: light dark; }
-html, html.dark, html body, #root, #splash, html.dark #splash {
-  background: var(--p-bg);
-  color: var(--p-ink);
-}
-html body {
-  font-family: var(--p-font);
-  -webkit-font-smoothing: antialiased;
-}
-#splash img { opacity: 0.25; filter: grayscale(1); }
+/* ── ground and type ─────────────────────────────────────── */
+html { --n-head: 57px; color-scheme: dark; }
+html, html.dark, html body, #root, #splash { background: var(--p-bg); color: var(--p-ink); }
+html body { margin: 0; font: 400 13px/1.5 var(--p-font); }
+#splash img { filter: grayscale(1) brightness(1.6) contrast(.9); }
 
-:is(#root, body) :is(.MuiTypography-root, .MuiButtonBase-root, .MuiInputBase-root, .MuiAlert-root,
-  .MuiChip-root, .MuiTableCell-root, .MuiListSubheader-root, .MuiTooltip-tooltip, .MuiMenuItem-root,
-  .MuiSnackbarContent-root, .MuiFormLabel-root, .MuiFormHelperText-root, .MuiFormControlLabel-label,
-  .MuiInputLabel-root, .MuiSelect-select, .MuiBadge-badge, .MuiLink-root) {
-  font-family: var(--p-font);
+:is(#root, body) :is(.MuiTypography-root, .MuiButtonBase-root, .MuiInputBase-root, .MuiAlert-root, .MuiChip-root,
+  .MuiTableCell-root, .MuiListSubheader-root, .MuiTooltip-tooltip, .MuiMenuItem-root, .MuiSnackbarContent-root,
+  .MuiFormLabel-root, .MuiFormHelperText-root, .MuiFormControlLabel-label, .MuiInputLabel-root, .MuiSelect-select,
+  .MuiBadge-badge, .MuiLink-root) { font-family: var(--p-font); letter-spacing: 0; }
+:is(#root, body) :is(#root > .MuiBox-root, #main, .MuiContainer-root) { color: var(--p-ink); }
+:is(#root, body) .MuiTypography-root { color: inherit; }
+:is(#root, body) .MuiTypography-body1 { font: 400 13px/1.55 var(--p-font); }
+:is(#root, body) .MuiTypography-body2 { font: 400 12px/1.5 var(--p-font); }
+:is(#root, body) .MuiSvgIcon-root { color: inherit; transition: none; }
+:is(#root, body) .MuiPaper-root {
+  background-color: var(--p-bg); background-image: none; color: var(--p-ink);
+  border-radius: 0; box-shadow: none; transition: none;
 }
-/* MUI paints its own text colours per mode; take them all back */
-:is(#root, body) :is(.MuiPaper-root, .MuiTypography-root, .MuiListItemText-primary, .MuiTableCell-root,
-  .MuiFormControlLabel-label, .MuiDialogTitle-root, .MuiMenuItem-root, .MuiInputBase-root, .MuiSelect-select) {
-  color: var(--p-ink);
-}
-:is(#root, body) :is(.MuiListItemIcon-root, .MuiIconButton-root, .MuiSelect-icon, .MuiInputAdornment-root,
-  .MuiDialogContentText-root, .MuiFormHelperText-root, .MuiListItemText-secondary) {
-  color: var(--p-ink2);
-}
-:is(#root, body) .MuiPaper-root { background-color: var(--p-bg); background-image: none; }
-:is(#root, body) .MuiDivider-root { border-color: var(--p-line); }
-:is(#root, body) .MuiLink-root, :is(#root, body) main a {
-  color: var(--p-accent);
-  text-decoration-color: color-mix(in srgb, var(--p-accent) 40%, transparent);
-  text-underline-offset: 3px;
-  font-weight: 700;
-}
-:is(#root, body) :is(tt, code, pre, kbd) { font-family: var(--p-mono); font-size: 0.9em; }
-:is(#root, body) .MuiSvgIcon-root { color: inherit; }
-:is(#root, body) :focus-visible { outline: 2px solid var(--p-accent); outline-offset: 2px; }
+:is(#root, body) :is(.MuiButtonBase-root, .MuiInputBase-root, .MuiInputLabel-root, .MuiBadge-badge, .MuiChip-root,
+  .MuiSwitch-switchBase, .MuiSwitch-track, .MuiSwitch-thumb, .MuiLinearProgress-bar) { transition: none; }
+:is(#root, body) .MuiTouchRipple-root { display: none; }
+:is(#root, body) :is(.MuiCollapse-root, .MuiDrawer-paper) { transition: none !important; }
+:is(#root, body) :is(#main, .MuiDrawer-paper, .MuiDialogContent-root, .MuiMenu-paper) { scrollbar-width: thin; scrollbar-color: var(--p-faint) transparent; }
 
-/* ── header: one raised, ground-coloured bar that floats ───────
-   ntfy's gradient AppBar becomes a 64px raised card, 16px in from
-   every edge; the Plint pill is prepended into its toolbar. */
+/* links: the ink, underlined */
+:is(#root, body) .MuiLink-root,
+:is(#root, body) #main a:not(.MuiButtonBase-root) {
+  color: var(--p-ink); text-decoration: underline; text-decoration-color: var(--p-faint); text-underline-offset: 3px;
+}
+@media (hover: hover) {
+  :is(#root, body) .MuiLink-root:hover,
+  :is(#root, body) #main a:not(.MuiButtonBase-root):hover { text-decoration-color: var(--p-ink); }
+}
+
+/* focus, everywhere */
+:is(#root, body) .MuiButtonBase-root:focus-visible,
+:is(#root, body) .MuiButtonBase-root.Mui-focusVisible,
+:is(#root, body) .MuiLink-root:focus-visible { outline: 1px solid var(--p-ink); outline-offset: 2px; }
+
+/* ── header: the strip, the title, the topic's two buttons, the account ── */
 :is(#root, body) header.MuiAppBar-root {
-  top: 16px; left: 16px; right: 16px;
-  width: auto;
-  margin: 0;
-  border-radius: 24px;
-  background: var(--p-bg);
-  color: var(--p-ink);
-  box-shadow: var(--p-raise);
-  border: 1px solid var(--p-edge);
-  box-sizing: border-box;
-  --AppBar-background: var(--p-bg);
-  --AppBar-color: var(--p-ink);
+  --AppBar-background: var(--p-bg); --AppBar-color: var(--p-ink);
+  position: fixed; top: 0; left: 0; right: 0; width: 100%; margin: 0;
+  background: var(--p-bg); background-image: none; color: var(--p-ink);
+  border-bottom: 1px solid var(--p-line); border-radius: 0; box-shadow: none;
 }
+:is(#root, body) .MuiToolbar-root { background: none; background-image: none; }       /* ntfy paints a gradient on it */
 :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root {
-  background: none;
-  min-height: 62px;
-  height: 62px;
-  padding: 0 10px 0 9px;
-  gap: 4px;
+  box-sizing: border-box; min-height: 56px; height: 56px; padding: 0 12px; gap: 4px;
 }
-:is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > img { display: none; }  /* ntfy's teal logo */
+:is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > img { display: none; }
 :is(#root, body) header.MuiAppBar-root .MuiTypography-h6 {
-  font-size: 19px; font-weight: 800; letter-spacing: -0.01em; color: var(--p-ink);
-  margin-left: 6px;
+  flex: 1 1 0; min-width: 0;
+  font: 600 12px/1.3 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase;
+  text-shadow: var(--p-glow);
 }
-html[data-p-view="topic"] :is(#root, body) header.MuiAppBar-root .MuiTypography-h6 {
-  font-family: var(--p-mono); font-size: 17px; font-weight: 700; letter-spacing: 0;
-}
-:is(#root, body) header .MuiIconButton-root { color: var(--p-ink); margin: 0; }
-:is(#root, body) header .MuiButton-root { color: var(--p-accent); }
-:is(#root, body) header #plint-pill { margin-right: 6px; }
-.p-ntfy-mark {
-  width: 40px; height: 40px; flex: none;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 13px;
-  box-shadow: var(--p-press-sm);
-  color: var(--p-accent);
-  margin-left: 4px;
-}
-.p-ntfy-mark svg, .p-ntfy-hero svg {
-  width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
-  stroke-linecap: round; stroke-linejoin: round;
-}
+/* a topic's name is the user's own text: its own case */
+html[data-p-view="topic"] :is(#root, body) header.MuiAppBar-root .MuiTypography-h6 { text-transform: none; letter-spacing: 0.04em; font-size: 13px; }
+:is(#root, body) header.MuiAppBar-root .MuiIconButton-root { margin: 0; }
+:is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > .MuiButton-root { margin: 0 0 0 6px; flex: none; }
 
-/* spacers MUI puts under its fixed AppBar: #main is offset instead */
-:is(#root, body) #main > .MuiToolbar-root:first-child { display: none; }
+/* the spacers MUI puts under the fixed bar */
+:is(#root, body) #main > .MuiToolbar-root:first-child,
 :is(#root, body) .MuiDrawer-docked .MuiDrawer-paper > .MuiToolbar-root:first-child { display: none; }
-:is(#root, body) .MuiDrawer-modal .MuiDrawer-paper > .MuiToolbar-root:first-child { min-height: 16px; }
+:is(#root, body) .MuiDrawer-modal .MuiDrawer-paper > .MuiToolbar-root:first-child { min-height: var(--n-head); height: var(--n-head); }
 
-/* the scroller starts under the bar (16 + 64), so nothing peeks around it */
 :is(#root, body) #main {
   background: var(--p-bg);
   padding: 0;
-  margin-top: 80px;
-  height: calc(100dvh - 80px);
+  margin-top: var(--n-head);
+  height: calc(100dvh - var(--n-head));
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
-/* ── side menu: a raised card on desktop, a sheet on phones ─── */
+/* ── navigation drawer ───────────────────────────────────── */
 :is(#root, body) .MuiDrawer-paper {
-  background: var(--p-bg);
-  color: var(--p-ink);
-  border: 1px solid var(--p-edge);
-  box-sizing: border-box;
+  width: 280px; max-width: 86vw;
+  background: var(--p-bg); background-image: none; color: var(--p-ink);
+  border: 0; border-right: 1px solid var(--p-line); border-radius: 0; box-shadow: none;
 }
-:is(#root, body) .MuiDrawer-docked .MuiDrawer-paper {
-  top: 96px; left: 16px; bottom: 16px;
-  height: auto;
-  width: 248px;
-  border-radius: 26px;
-  box-shadow: var(--p-raise);
-  padding: 6px 0;
-  scrollbar-width: thin;
-}
-:is(#root, body) .MuiDrawer-modal .MuiDrawer-paper {
-  width: min(304px, 86vw);
-  border-radius: 0 26px 26px 0;
-  box-shadow: var(--p-raise), 0 18px 40px rgba(0, 0, 0, 0.2);
-  border-left: 0;
-}
-:is(#root, body) .MuiDrawer-paper > .MuiList-root { padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
-:is(#root, body) .MuiDrawer-paper .MuiDivider-root { margin: 8px 6px; }
-:is(#root, body) .MuiDrawer-paper .MuiListSubheader-root {
-  background: transparent;
-  position: static;
-  padding: 6px 12px 4px;
-  line-height: 1.4;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--p-ink2);
+:is(#root, body) .MuiDrawer-docked .MuiDrawer-paper { top: var(--n-head); height: calc(100% - var(--n-head)); }
+:is(#root, body) .MuiDrawer-modal .MuiDrawer-paper { border-right-color: var(--p-faint); box-shadow: 0 18px 50px #000; }
+:is(#root, body) .MuiDrawer-paper > .MuiList-root { padding: 6px 0 16px; }
+:is(#root, body) .MuiDivider-root { border-color: var(--p-line); background: none; margin: 6px 0; }
+:is(#root, body) .MuiListSubheader-root {
+  background: var(--p-bg); color: var(--p-ink2);
+  font: 400 9px/32px var(--p-font); letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0 14px;
 }
 :is(#root, body) .MuiListItemButton-root {
-  min-height: 48px;
-  padding: 6px 10px 6px 12px;
-  border-radius: 16px;
-  flex-grow: 0;
-  transition: box-shadow 0.15s ease;
+  min-height: 40px; padding: 0 14px; gap: 10px;
+  border-radius: 0; background: none; color: var(--p-ink2);
 }
-:is(#root, body) .MuiListItemButton-root:hover { background: transparent; box-shadow: var(--p-raise-sm); }
+:is(#root, body) .MuiListItemButton-root .MuiListItemIcon-root { min-width: 0; color: inherit; }
+:is(#root, body) .MuiListItemButton-root .MuiListItemIcon-root .MuiSvgIcon-root { font-size: 16px; }
+:is(#root, body) .MuiListItemButton-root .MuiListItemText-root { margin: 0; min-width: 0; }
+:is(#root, body) .MuiListItemButton-root .MuiListItemText-primary {
+  font: 400 11px/1.3 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; color: inherit;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* subscriptions: the topic's own name */
+:is(#root, body) .MuiListItemButton-root[aria-label] .MuiListItemText-primary { text-transform: none; letter-spacing: 0.04em; font-size: 12px; }
+:is(#root, body) .MuiListItemButton-root .MuiListItemText-secondary { font: 400 10px/1.3 var(--p-font); color: inherit; opacity: 0.7; }
+:is(#root, body) .MuiListItemButton-root .MuiListItemIcon-root .MuiIconButton-root { width: 32px; height: 32px; margin: 0 -8px 0 0; color: inherit; }
+@media (hover: hover) {
+  :is(#root, body) .MuiListItemButton-root:hover { background: none; color: var(--p-ink); }
+}
+:is(#root, body) .MuiListItemButton-root.Mui-focusVisible { background: none; outline-offset: -2px; }
+:is(#root, body) .MuiListItemButton-root:active,
 :is(#root, body) .MuiListItemButton-root.Mui-selected,
-:is(#root, body) .MuiListItemButton-root.Mui-selected:hover,
-:is(#root, body) .MuiListItemButton-root:active {
-  background: transparent;
-  box-shadow: var(--p-press-sm);
+:is(#root, body) .MuiListItemButton-root.Mui-selected.Mui-focusVisible { background: var(--p-ink); color: var(--p-bg); text-shadow: none; }
+@media (hover: hover) {
+  :is(#root, body) .MuiListItemButton-root.Mui-selected:hover { background: var(--p-ink); color: var(--p-bg); }
 }
-:is(#root, body) .MuiListItemButton-root.Mui-focusVisible { background: transparent; outline: 2px solid var(--p-accent); outline-offset: -2px; }
-:is(#root, body) .MuiListItemButton-root .MuiListItemIcon-root { min-width: 36px; color: var(--p-ink2); }
-:is(#root, body) .MuiListItemButton-root.Mui-selected .MuiListItemIcon-root { color: var(--p-accent); }
-:is(#root, body) .MuiListItemButton-root .MuiListItemText-primary { font-size: 15px; font-weight: 600; }
-:is(#root, body) .MuiListItemButton-root.Mui-selected .MuiListItemText-primary { font-weight: 800; }
-/* subscriptions carry their topic as aria-label; topics read in mono */
-:is(#root, body) .MuiListItemButton-root[aria-label] .MuiListItemText-primary {
-  font-family: var(--p-mono); font-size: 14px; font-weight: 600;
-}
-:is(#root, body) .MuiListItemButton-root[aria-label].Mui-selected .MuiListItemText-primary { font-weight: 800; }
-:is(#root, body) .MuiListItemButton-root .MuiListItemIcon-root .MuiIconButton-root { width: 36px; height: 36px; min-width: 36px; border-radius: 12px; }
+/* unread count: a flat inverse figure */
 :is(#root, body) .MuiBadge-badge {
-  background: var(--p-accent);
-  color: var(--p-on-accent);
-  font-weight: 800; font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 0 0 2px var(--p-bg);
+  min-width: 14px; height: 14px; padding: 0 3px; border-radius: 0;
+  background: var(--p-ink); color: var(--p-bg);
+  font: 600 9px/14px var(--p-font); font-variant-numeric: tabular-nums;
 }
+:is(#root, body) .MuiBadge-badge.MuiBadge-invisible { display: none; }
+:is(#root, body) .MuiListItemButton-root:is(.Mui-selected, :active) .MuiBadge-badge { background: var(--p-bg); color: var(--p-ink); }
 
-/* ── alerts ("notifications are blocked", errors, banners) ─── */
+/* ── alerts (notifications blocked / disabled / not supported) ──
+   a frame, a lamp for the icon: blinking = wants attention */
 :is(#root, body) .MuiAlert-root {
-  border-radius: 18px;
-  padding: 10px 12px 8px;
-  margin: 2px 0 4px;
-  box-shadow: none;
-  background: var(--p-warn-soft);
-  color: var(--p-ink);
-  font-size: 13px;
+  margin: 10px; padding: 10px 12px; gap: 10px; align-items: flex-start;
+  background: none; color: var(--p-ink);
+  border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--p-faint);
 }
-:is(#root, body) .MuiAlert-root .MuiAlert-icon { color: var(--p-warn); opacity: 1; }
-:is(#root, body) .MuiAlert-colorError { background: var(--p-bad-soft); }
-:is(#root, body) .MuiAlert-colorError .MuiAlert-icon { color: var(--p-bad); }
-:is(#root, body) .MuiAlert-colorInfo { background: var(--p-info-soft); }
-:is(#root, body) .MuiAlert-colorInfo .MuiAlert-icon { color: var(--p-info); }
-:is(#root, body) .MuiAlert-colorSuccess { background: var(--p-accent-soft); }
-:is(#root, body) .MuiAlert-colorSuccess .MuiAlert-icon { color: var(--p-accent); }
-:is(#root, body) .MuiAlert-root .MuiTypography-root { color: var(--p-ink); font-size: 13px; line-height: 1.45; }
-:is(#root, body) .MuiAlert-root .MuiAlertTitle-root { font-weight: 800; margin-bottom: 2px; }
-:is(#root, body) .MuiAlert-root .MuiAlert-action .MuiIconButton-root { width: 36px; height: 36px; min-width: 36px; color: var(--p-ink2); }
-:is(#root, body) .MuiAlert-root .MuiButton-root { min-height: 44px; margin-top: 6px; padding: 0 14px; }
+:is(#root, body) .MuiAlert-icon { margin: 0; padding: 3px 0 0; opacity: 1; color: var(--p-ink); }
+:is(#root, body) .MuiAlert-icon > .MuiSvgIcon-root { display: none; }
+:is(#root, body) .MuiAlert-icon::before {
+  content: ""; display: block; width: 8px; height: 11px; background: currentColor;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+:is(#root, body) .MuiAlert-colorWarning .MuiAlert-icon::before { animation: p-blink 2s steps(1) infinite; }
+:is(#root, body) .MuiAlert-message { padding: 0; min-width: 0; font: 400 11px/1.5 var(--p-font); color: var(--p-ink2); overflow: visible; }
+:is(#root, body) .MuiAlert-message .MuiTypography-root { font: 400 11px/1.5 var(--p-font); color: var(--p-ink2); }
+:is(#root, body) .MuiAlert-message .MuiAlertTitle-root {
+  margin: 0 0 4px; font: 600 10px/1.4 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-ink);
+}
+:is(#root, body) .MuiAlert-message .MuiButton-root { margin: 8px 0 0; }
+:is(#root, body) .MuiAlert-action { margin: -6px -8px 0 auto; padding: 0; }
+/* a fault: inverse video */
+:is(#root, body) .MuiAlert-colorError { background: var(--p-ink); color: var(--p-bg); box-shadow: none; }
+:is(#root, body) .MuiAlert-colorError :is(.MuiAlert-icon, .MuiAlert-message, .MuiTypography-root, .MuiAlertTitle-root, .MuiIconButton-root) { color: var(--p-bg); }
 
-/* ── buttons ──────────────────────────────────────────────── */
+/* ── buttons ─────────────────────────────────────────────── */
+/* secondary (the default): an outlined rectangle */
 :is(#root, body) .MuiButton-root {
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 15px;
-  font-size: 14px; font-weight: 800; letter-spacing: 0;
-  text-transform: none;
-  background: var(--p-bg);
-  color: var(--p-accent);
-  box-shadow: var(--p-raise-sm);
-  border: 1px solid var(--p-edge);
-  transition: box-shadow 0.15s ease;
+  min-width: 0; min-height: 36px; padding: 0 14px;
+  border: 0; border-radius: 0;
+  background: none; color: var(--p-ink);
+  box-shadow: inset 0 0 0 1px var(--p-faint);
+  font: 600 10px/1.2 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase;
 }
-:is(#root, body) .MuiButton-root:hover { background: var(--p-bg); box-shadow: var(--p-raise); }
-:is(#root, body) .MuiButton-root:active { box-shadow: var(--p-press-sm); }
-:is(#root, body) .MuiButton-root.Mui-disabled { color: var(--p-ink2); opacity: 0.55; box-shadow: var(--p-raise-sm); }
+:is(#root, body) .MuiButton-root .MuiButton-startIcon { margin: 0 8px 0 0; }
+:is(#root, body) .MuiButton-root .MuiButton-startIcon .MuiSvgIcon-root { font-size: 15px; }
+@media (hover: hover) {
+  :is(#root, body) .MuiButton-root:hover { background: none; box-shadow: inset 0 0 0 1px var(--p-ink); }
+}
+:is(#root, body) .MuiButton-root:active { background: var(--p-ink); color: var(--p-bg); box-shadow: none; }
+/* primary: inverse, chamfered (contained buttons and the last button of a dialog) */
 :is(#root, body) .MuiButton-contained,
 :is(#root, body) .MuiDialogActions-root > .MuiButton-root:last-child {
-  background: var(--p-accent);
-  color: var(--p-on-accent);
-  border-color: transparent;
+  --p-ch: 6px;
+  background: var(--p-ink); color: var(--p-bg); box-shadow: none; clip-path: var(--p-cut); padding: 0 18px;
 }
-:is(#root, body) .MuiButton-contained:hover,
-:is(#root, body) .MuiDialogActions-root > .MuiButton-root:last-child:hover { background: var(--p-accent); }
-:is(#root, body) .MuiButton-contained.Mui-disabled,
-:is(#root, body) .MuiDialogActions-root > .MuiButton-root.Mui-disabled:last-child {
-  background: var(--p-bg); color: var(--p-ink2); box-shadow: var(--p-press-sm); opacity: 0.75;
+@media (hover: hover) {
+  :is(#root, body) .MuiButton-contained:hover,
+  :is(#root, body) .MuiDialogActions-root > .MuiButton-root:last-child:hover { background: var(--p-ink); box-shadow: none; opacity: 0.86; }
 }
-:is(#root, body) .MuiButton-colorError { color: var(--p-bad); }
+:is(#root, body) .MuiButton-contained:active,
+:is(#root, body) .MuiDialogActions-root > .MuiButton-root:last-child:active { opacity: 0.55; }
+:is(#root, body) .MuiButton-contained:focus-visible,
+:is(#root, body) .MuiDialogActions-root > .MuiButton-root:last-child:focus-visible { outline: 1px solid var(--p-bg); outline-offset: -4px; }
+/* destructive: outlined at rest, inverse under the pointer or the finger */
+@media (hover: hover) {
+  :is(#root, body) .MuiButton-colorError:hover { background: var(--p-ink); color: var(--p-bg); box-shadow: none; opacity: 1; }
+}
+/* off: dim, no block */
+:is(#root, body) .MuiButton-root.Mui-disabled {
+  background: none; color: var(--p-faint); box-shadow: inset 0 0 0 1px var(--p-line); clip-path: none; opacity: 1;
+}
+
+/* icon buttons: bare ink, inverse while pressed */
 :is(#root, body) .MuiIconButton-root {
-  min-width: 44px; min-height: 44px;
-  border-radius: 14px;
-  transition: box-shadow 0.15s ease;
+  width: 36px; height: 36px; padding: 0; flex: none;
+  border-radius: 0; background: none; color: var(--p-ink2);
 }
-:is(#root, body) .MuiIconButton-root:hover { background: transparent; box-shadow: var(--p-raise-sm); }
-:is(#root, body) .MuiIconButton-root:active { box-shadow: var(--p-press-sm); }
-:is(#root, body) .MuiIconButton-root.Mui-disabled { opacity: 0.4; }
-:is(#root, body) .MuiTouchRipple-root { display: none; }
+:is(#root, body) .MuiIconButton-root .MuiSvgIcon-root { font-size: 18px; }
+@media (hover: hover) {
+  :is(#root, body) .MuiIconButton-root:hover { background: none; color: var(--p-ink); }
+}
+:is(#root, body) .MuiIconButton-root:active { background: var(--p-ink); color: var(--p-bg); }
+:is(#root, body) .MuiIconButton-root.Mui-disabled { color: var(--p-faint); background: none; }
 
-/* ── fields: pressed wells, no underlines or outlines ─────── */
+/* ── fields ──────────────────────────────────────────────── */
+:is(#root, body) .MuiFormControl-root { margin-left: 0; margin-right: 0; }
 :is(#root, body) .MuiInputBase-root {
-  border-radius: 14px;
-  background: transparent;
-  box-shadow: var(--p-press-sm);
-  min-height: 46px;
-  font-size: 15px;
-  transition: box-shadow 0.15s ease;
+  min-height: 36px; padding: 0; margin: 0;
+  background: var(--p-bg); color: var(--p-ink);
+  border-radius: 0; box-shadow: inset 0 0 0 1px var(--p-faint);
+  font: 400 13px/20px var(--p-font);
 }
-:is(#root, body) .MuiInputBase-root.Mui-focused { box-shadow: var(--p-press-sm), 0 0 0 2px var(--p-accent); }
-:is(#root, body) .MuiInputBase-root.Mui-error { box-shadow: var(--p-press-sm), 0 0 0 2px var(--p-bad); }
-:is(#root, body) .MuiInput-root { padding: 4px 14px; }
-:is(#root, body) .MuiInput-root::before, :is(#root, body) .MuiInput-root::after { display: none; }
-:is(#root, body) .MuiOutlinedInput-notchedOutline { border: 0; }
-:is(#root, body) .MuiInputBase-input { color: var(--p-ink); }
-:is(#root, body) .MuiInputBase-input:focus-visible { outline: none; }
-:is(#root, body) .MuiInputBase-input::placeholder { color: var(--p-ink2); opacity: 0.8; }
-:is(#root, body) .MuiInputBase-multiline { padding: 12px 14px; }
-:is(#root, body) .MuiInput-root.MuiSelect-root { padding: 0; }
-:is(#root, body) .MuiInput-root .MuiSelect-select {
-  padding: 12px 36px 12px 14px; min-height: 22px; line-height: 22px;
-  display: flex; align-items: center; gap: 8px; border-radius: 14px; background: transparent;
+:is(#root, body) .MuiInputBase-root.Mui-focused,
+:is(#root, body) .MuiInputBase-root.Mui-error { box-shadow: inset 0 0 0 1px var(--p-ink); }
+:is(#root, body) .MuiInputBase-root.Mui-disabled { color: var(--p-faint); box-shadow: inset 0 0 0 1px var(--p-line); }
+:is(#root, body) .MuiInput-root::before,
+:is(#root, body) .MuiInput-root::after,
+:is(#root, body) .MuiOutlinedInput-notchedOutline { display: none; }
+:is(#root, body) .MuiInputBase-input {
+  box-sizing: content-box; height: 20px; padding: 8px 10px;
+  font: inherit; color: var(--p-ink); letter-spacing: 0; background: none; border-radius: 0;
+  caret-color: var(--p-ink);
 }
-:is(#root, body) .MuiSelect-select img { display: none; }
+:is(#root, body) .MuiInputBase-input.Mui-disabled { -webkit-text-fill-color: var(--p-faint); }
+:is(#root, body) .MuiInputBase-input::placeholder { color: var(--p-faint); opacity: 1 !important; }
+:is(#root, body) .MuiInputBase-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 100px var(--p-bg) inset; -webkit-text-fill-color: var(--p-ink); caret-color: var(--p-ink); border-radius: 0;
+}
+:is(#root, body) .MuiInputBase-root.MuiInputBase-multiline { padding: 8px 10px; }
+:is(#root, body) .MuiInputBase-root .MuiInputBase-inputMultiline { padding: 0; }
+:is(#root, body) .MuiInputAdornment-root { height: auto; max-height: none; margin: 0 2px; color: var(--p-ink2); }
+
+/* selects */
+:is(#root, body) .MuiInputBase-root .MuiSelect-select {
+  min-height: 20px; height: auto; line-height: 20px; padding: 8px 32px 8px 10px;
+  display: flex; align-items: center; gap: 8px; background: none; border-radius: 0;
+}
+:is(#root, body) .MuiSelect-select > div { display: flex; align-items: center; gap: 8px; min-width: 0; }
 :is(#root, body) .MuiSelect-select > span, :is(#root, body) .MuiSelect-select .MuiBox-root { color: var(--p-ink2); }
-:is(#root, body) .MuiSelect-icon { right: 10px; }
-/* labels sit above the well, not inside it */
-:is(#root, body) .MuiTextField-root:has(> .MuiInputLabel-root) { margin-top: 30px; }
-:is(#root, body) .MuiInputLabel-root,
-:is(#root, body) .MuiInputLabel-root.Mui-focused,
-:is(#root, body) .MuiInputLabel-root.MuiInputLabel-shrink {
-  transform: translate(4px, -24px) scale(1);
-  font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--p-ink2);
-  max-width: none;
+:is(#root, body) :is(.MuiSelect-select, .MuiMenuItem-root) img { filter: grayscale(1) brightness(1.6) contrast(.9); width: 16px; height: auto; margin: 0; }
+:is(#root, body) .MuiSelect-icon { color: var(--p-ink2); right: 6px; top: calc(50% - 9px); font-size: 18px; }
+
+/* labels sit above the field, as captions */
+:is(#root, body) .MuiInputLabel-root {
+  position: static; transform: none; max-width: 100%; margin: 0 0 5px; padding: 0;
+  font: 400 9px/1.3 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; white-space: normal;
+  color: var(--p-ink2); pointer-events: auto;
 }
-:is(#root, body) .MuiInputLabel-root .MuiFormLabel-asterisk { color: var(--p-ink2); }
-:is(#root, body) .MuiFormControl-root > label + .MuiInput-root { margin-top: 0; }
-:is(#root, body) .MuiFormControl-root:has(> .MuiInputLabel-root):not(.MuiTextField-root) { margin-top: 30px; }
-:is(#root, body) .MuiOutlinedInput-notchedOutline legend { display: none; }
-:is(#root, body) .MuiFormHelperText-root { margin: 6px 4px 0; font-size: 12px; }
-:is(#root, body) .MuiFormHelperText-root.Mui-error { color: var(--p-bad); }
+:is(#root, body) .MuiInputLabel-root:is(.Mui-focused, .Mui-error) { color: var(--p-ink); }
+:is(#root, body) .MuiFormControl-root > label + .MuiInputBase-root { margin-top: 0; }
+:is(#root, body) .MuiFormHelperText-root { margin: 5px 0 0; font: 400 10px/1.4 var(--p-font); color: var(--p-ink2); }
+:is(#root, body) .MuiFormHelperText-root.Mui-error {
+  align-self: flex-start; padding: 1px 6px; background: var(--p-ink); color: var(--p-bg);
+  font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+}
 
-/* checkboxes, switches, radios */
-:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root) { color: var(--p-ink2); border-radius: 12px; }
-:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root).Mui-checked { color: var(--p-accent); }
-:is(#root, body) .MuiSwitch-root { padding: 9px; width: 62px; }
-:is(#root, body) .MuiSwitch-track { background: var(--p-track); opacity: 1; border-radius: 999px; box-shadow: var(--p-press-sm); }
-:is(#root, body) .MuiSwitch-thumb { background: var(--p-bg); box-shadow: var(--p-raise-sm); border: 1px solid var(--p-edge); }
-:is(#root, body) .MuiSwitch-switchBase:hover { background: transparent; box-shadow: none; }
-:is(#root, body) .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track { background: var(--p-accent); opacity: 1; }
-:is(#root, body) .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb { background: var(--p-on-accent); }
-:is(#root, body) .MuiFormControlLabel-label { font-size: 14px; font-weight: 600; }
+/* checkbox and radio: a square, hollow off, solid on */
+:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root) { width: 36px; height: 36px; padding: 0; border-radius: 0; background: none; color: var(--p-ink); }
+:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root) > :is(svg, span) { display: none; }
+:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root)::before { content: ""; width: 14px; height: 14px; box-shadow: inset 0 0 0 1px var(--p-ink2); }
+:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root).Mui-checked::before { background: var(--p-ink); box-shadow: none; }
+:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root).Mui-disabled { opacity: 0.4; }
+:is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root):has(:focus-visible)::before { outline: 1px solid var(--p-ink); outline-offset: 2px; }
 
-/* chips (ntfy's own: "no tier", the publish dialog's feature chips) */
+/* switch: a frame of two cells; the lit cell jumps */
+:is(#root, body) .MuiSwitch-root { width: 44px; height: 22px; padding: 0; margin: 0 10px 0 0; overflow: visible; border-radius: 0; flex: none; }
+:is(#root, body) .MuiSwitch-track {
+  position: relative; border-radius: 0; background: none; opacity: 1;
+  box-shadow: inset 0 0 0 1px var(--p-faint);
+}
+:is(#root, body) .MuiSwitch-track::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; margin-left: -0.5px; background: var(--p-faint); }
+:is(#root, body) .MuiSwitch-switchBase { top: 0; left: 0; padding: 3px; border-radius: 0; background: none; color: var(--p-faint); }
+:is(#root, body) .MuiSwitch-switchBase.Mui-checked { transform: translateX(22px); color: var(--p-ink); background: none; }
+:is(#root, body) .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track { background: none; opacity: 1; }
+:is(#root, body) .MuiSwitch-thumb { width: 16px; height: 16px; border-radius: 0; box-shadow: none; background: currentColor; }
+:is(#root, body) .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb { filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.6)); }
+:is(#root, body) .MuiSwitch-switchBase.Mui-disabled { opacity: 0.4; }
+:is(#root, body) .MuiSwitch-root:has(:focus-visible) { outline: 1px solid var(--p-ink); outline-offset: 2px; }
+@media (hover: hover) {
+  :is(#root, body) .MuiSwitch-switchBase:hover,
+  :is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root):hover { background: none; }
+}
+:is(#root, body) .MuiFormControlLabel-root { margin: 0; }
+:is(#root, body) .MuiFormControlLabel-label { font: 400 12px/1.3 var(--p-font); color: var(--p-ink); }
+
+/* chips: flat caps labels; the clickable ones are small outlined buttons */
 :is(#root, body) .MuiChip-root {
-  border-radius: 999px;
-  background: var(--p-accent-soft);
-  color: var(--p-accent);
-  font-weight: 700; font-size: 13px;
-  border: 0;
+  height: 22px; border: 0; border-radius: 0;
+  background: none; color: var(--p-ink2); box-shadow: inset 0 0 0 1px var(--p-line);
+  font: 400 9px/1 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase;
 }
-:is(#root, body) .MuiChip-sizeSmall { height: 24px; font-size: 12px; word-spacing: 0.1em; }
-:is(#root, body) .MuiChip-clickable { min-height: 36px; background: var(--p-bg); box-shadow: var(--p-raise-sm); }
-:is(#root, body) .MuiChip-clickable:hover { background: var(--p-bg); box-shadow: var(--p-raise); }
-:is(#root, body) .MuiChip-clickable:active { box-shadow: var(--p-press-sm); }
-:is(#root, body) .MuiChip-root .MuiChip-icon, :is(#root, body) .MuiChip-root .MuiChip-deleteIcon { color: currentColor; }
+:is(#root, body) .MuiChip-label { padding: 0 8px; }
+:is(#root, body) .MuiChip-icon { color: inherit; font-size: 13px; margin: 0 -3px 0 6px; }
+:is(#root, body) .MuiChip-deleteIcon { color: inherit; font-size: 14px; margin: 0 5px 0 -3px; }
+:is(#root, body) .MuiChip-clickable { height: 30px; color: var(--p-ink); box-shadow: inset 0 0 0 1px var(--p-faint); font-weight: 600; }
+@media (hover: hover) {
+  :is(#root, body) .MuiChip-clickable:hover { background: none; box-shadow: inset 0 0 0 1px var(--p-ink); }
+}
+:is(#root, body) .MuiChip-clickable:active { background: var(--p-ink); color: var(--p-bg); box-shadow: none; }
 
-/* ── content column ───────────────────────────────────────── */
+/* ── pages: settings and account ─────────────────────────── */
 :is(#root, body) #main > .MuiContainer-root,
-:is(#root, body) #main [role="list"].MuiContainer-root { margin-top: 24px; }
-:is(#root, body) .MuiContainer-root > .MuiStack-root > :not(style) ~ :not(style) { margin-top: 28px; }
-
-/* generic cards: settings, account, reservations… */
+:is(#root, body) #main [role="list"].MuiContainer-root {
+  box-sizing: border-box; max-width: 900px; margin: 0; padding: 22px 24px 96px;
+}
+:is(#root, body) #main .MuiContainer-root > .MuiStack-root > :not(style) ~ :not(style) { margin-top: 26px; }
+/* a section: a rule, a caps heading, rows under it */
 :is(#root, body) .MuiCard-root {
-  border-radius: 26px;
-  background: var(--p-bg);
-  color: var(--p-ink);
-  box-shadow: var(--p-raise);
-  border: 1px solid var(--p-edge);
-  overflow: visible;
+  background: none; color: var(--p-ink);
+  border: 0; border-top: 1px solid var(--p-line); border-radius: 0; box-shadow: none;
+  padding: 12px 0 0; overflow: visible;
 }
 :is(#root, body) .MuiCard-root > h5.MuiTypography-h5,
 :is(#root, body) .MuiCard-root > .MuiCardContent-root > h5.MuiTypography-h5 {
-  font-size: 19px; font-weight: 800; letter-spacing: -0.01em;
-  margin-bottom: 10px;
+  margin: 0 0 6px; padding: 0;
+  font: 600 10px/1.4 var(--p-font); letter-spacing: 0.2em; text-transform: uppercase; color: var(--p-ink);
 }
-:is(#root, body) .MuiCardContent-root { padding: 16px; }
-:is(#root, body) .MuiCardActions-root { padding: 4px 16px 16px; gap: 10px; flex-wrap: wrap; }
+:is(#root, body) .MuiCard-root > div:not([class*="MuiCard"]) { padding: 0; }
+:is(#root, body) .MuiCardContent-root, :is(#root, body) .MuiCardContent-root:last-child { padding: 0; }
+:is(#root, body) .MuiCardActions-root { padding: 10px 0 0; gap: 8px; flex-wrap: wrap; }
 :is(#root, body) .MuiCardActions-root > :not(style) ~ :not(style) { margin-left: 0; }
-
-/* settings / account rows: hairlines between, quiet descriptions */
-:is(#root, body) .MuiCard-root [role="row"] { padding: 14px 0; }
+:is(#root, body) .MuiCard-root [role="row"] { margin: 0; padding: 9px 0; gap: 4px 16px; }
 @media (min-width: 1001px) { :is(#root, body) .MuiCard-root [role="row"] { align-items: center; } }
 :is(#root, body) .MuiCard-root [role="row"] + [role="row"] { border-top: 1px solid var(--p-line); }
-:is(#root, body) .MuiCard-root [role="row"] b { font-size: 15px; font-weight: 800; }
-:is(#root, body) .MuiCard-root [role="row"] em { display: block; margin-top: 3px; font-style: normal; font-size: 13px; color: var(--p-ink2); line-height: 1.45; }
+:is(#root, body) .MuiCard-root [role="row"] b { font: 600 10px/1.4 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; }
+:is(#root, body) .MuiCard-root [role="row"] em { display: block; margin-top: 3px; font: normal 400 11px/1.45 var(--p-font); color: var(--p-ink2); }
+:is(#root, body) #prefLanguage b { filter: grayscale(1); }                 /* the flag in the label */
 :is(#root, body) .MuiCard-root > .MuiCardContent-root > p.MuiTypography-body1,
-:is(#root, body) .MuiCard-root > .MuiCardContent-root > div > p.MuiTypography-body1 { color: var(--p-ink2); font-size: 14px; line-height: 1.55; }
+:is(#root, body) .MuiCard-root > .MuiCardContent-root > div > p.MuiTypography-body1 { margin: 0 0 8px; font: 400 11px/1.55 var(--p-font); color: var(--p-ink2); }
+:is(#root, body) .MuiCard-root [role="row"] .MuiTypography-root { font-size: 12px; }
+:is(#root, body) .MuiCard-root [role="row"] .MuiTypography-body2 { font: 400 11px/1.5 var(--p-font); font-variant-numeric: tabular-nums; color: var(--p-ink2); }
 
-/* usage bars */
+/* usage bars: cells */
 :is(#root, body) .MuiLinearProgress-root {
-  height: 10px; border-radius: 999px;
-  background: var(--p-track);
-  box-shadow: var(--p-press-sm);
-  margin-top: 6px;
+  height: 11px; margin-top: 6px; border-radius: 0; background: var(--p-track);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='3' height='3'/%3E%3C/svg%3E");
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='3' height='3'/%3E%3C/svg%3E");
 }
-:is(#root, body) .MuiLinearProgress-bar { background: var(--p-accent); border-radius: 999px; }
-:is(#root, body) [role="row"] .MuiTypography-body2 { font-weight: 800; font-variant-numeric: tabular-nums; font-size: 13px; }
+:is(#root, body) .MuiLinearProgress-bar { background: var(--p-ink); border-radius: 0; }
 
-/* tables (users, tokens, reservations): flat hairline rows */
-:is(#root, body) .MuiTable-root { border-collapse: separate; }
+/* tables (users, tokens, reserved topics) */
+:is(#root, body) .MuiTable-root { border-collapse: collapse; }
 :is(#root, body) .MuiCardContent-root > div:has(> .MuiTable-root),
-:is(#root, body) .MuiCardContent-root > .MuiTableContainer-root { overflow-x: auto; scrollbar-width: thin; }
-:is(#root, body) .MuiTableCell-root { border-bottom: 1px solid var(--p-line); font-size: 14px; padding: 10px 8px; }
-:is(#root, body) .MuiTableCell-head {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2);
+:is(#root, body) .MuiCardContent-root > .MuiTableContainer-root { overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--p-faint) transparent; }
+:is(#root, body) .MuiTableCell-root {
+  padding: 6px 14px 6px 0; border-bottom: 1px solid var(--p-line);
+  font: 400 12px/1.4 var(--p-font); font-variant-numeric: tabular-nums; color: var(--p-ink);
 }
-:is(#root, body) .MuiTableRow-root:last-child > .MuiTableCell-body { border-bottom: 0; }
-:is(#root, body) .MuiTableCell-root[aria-label="Token"],
-:is(#root, body) .MuiTableCell-root[aria-label="Service URL"],
-:is(#root, body) .MuiTableCell-root[aria-label="Topic"] { font-family: var(--p-mono); font-size: 13px; }
-:is(#root, body) .MuiTableCell-root .MuiIconButton-root { color: var(--p-ink2); }
+:is(#root, body) .MuiTableCell-head {
+  padding: 6px 14px 6px 0;
+  font: 400 9px/1.4 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-ink2); white-space: nowrap;
+}
+:is(#root, body) .MuiTableCell-root em { font-style: normal; color: var(--p-ink2); }
+:is(#root, body) .MuiTableCell-root span[style*="monospace"] { font-family: var(--p-font) !important; }
+:is(#root, body) .MuiTableCell-root:last-child { padding-right: 0; white-space: nowrap; }
 
-/* empty states ("no subscriptions yet", "nothing on this topic") */
+/* ── nothing here yet ────────────────────────────────────── */
 :is(#root, body) #main > .MuiContainer-root:has(> h5.MuiTypography-alignCenter) {
-  max-width: 560px;
-  flex: none;
-  height: auto;
-  margin: auto;
-  padding: 28px 28px 20px;
-  border-radius: 28px;
-  box-shadow: var(--p-raise);
-  border: 1px solid var(--p-edge);
-  width: calc(100% - 32px);
-  box-sizing: border-box;
+  display: block; flex: none; height: auto; min-height: 0; max-width: 620px; padding-top: 26px; text-align: left;
 }
 :is(#root, body) #main > .MuiContainer-root > h5.MuiTypography-alignCenter {
-  font-size: 21px; font-weight: 800; line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 14px;
+  --Typography-textAlign: left; text-align: left; margin: 0 0 10px; padding: 0; color: var(--p-ink);
+  font: 600 13px/1.5 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; text-shadow: var(--p-glow);
 }
-:is(#root, body) #main > .MuiContainer-root > h5.MuiTypography-alignCenter > img { display: none; }
+:is(#root, body) #main > .MuiContainer-root > h5.MuiTypography-alignCenter > img,
 :is(#root, body) #main > .MuiContainer-root > h5.MuiTypography-alignCenter > br:first-of-type { display: none; }
-.p-ntfy-hero {
-  width: 72px; height: 72px; margin: 0 auto 18px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 24px;
-  box-shadow: var(--p-press);
-  color: var(--p-accent);
+:is(#root, body) #main > .MuiContainer-root:has(> h5.MuiTypography-alignCenter) > p.MuiTypography-root {
+  margin: 0 0 8px; text-align: left; font: 400 12px/1.6 var(--p-font); color: var(--p-ink2);
 }
-.p-ntfy-hero svg { width: 30px; height: 30px; }
-:is(#root, body) #main > .MuiContainer-root > p.MuiTypography-body1 { color: var(--p-ink2); font-size: 15px; line-height: 1.6; }
 :is(#root, body) #main > .MuiContainer-root tt {
-  display: block; margin-top: 8px; padding: 12px 14px;
-  border-radius: 14px; box-shadow: var(--p-press-sm);
-  color: var(--p-ink); font-size: 13px; overflow-x: auto; white-space: nowrap;
+  display: block; margin-top: 6px; padding: 10px 12px;
+  box-shadow: inset 0 0 0 1px var(--p-line);
+  font: 400 12px/1.5 var(--p-font); color: var(--p-ink); overflow-wrap: anywhere;
+}
+:is(#root, body) #main > .MuiContainer-root tt::after {
+  content: ""; display: inline-block; width: 0.62em; height: 1.05em; margin-left: 5px; vertical-align: text-bottom;
+  background: var(--p-ink); animation: p-blink 1s steps(1) infinite;
+}
+/* the line apps/ntfy.js puts above it */
+.p-ntfy-nosig {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding-top: 12px;
+  border-top: 1px solid var(--p-line);
+  font: 400 9px/1.2 var(--p-font); letter-spacing: 0.2em; text-transform: uppercase; color: var(--p-ink2);
 }
 
-/* ── notifications: a timeline of raised cards ────────────
+/* ── notifications: a log ───────────────────────────────
    apps/ntfy.js marks each card with data-p-prio (1–5) and the first
-   card of each day with data-p-day="Today"/"Yesterday"/"Tue 20 Oct". */
-:is(#root, body) [role="list"] > .MuiStack-root { position: relative; padding-left: 36px; }
-:is(#root, body) [role="list"] > .MuiStack-root::before {
-  content: ""; position: absolute; left: 13px; top: 6px; bottom: 6px; width: 2px;
-  border-radius: 2px; background: var(--p-line);
-}
-:is(#root, body) .MuiCard-root[role="listitem"] { position: relative; padding: 6px 8px 4px; }
+   card of each day with data-p-day ("Today" / "Yesterday" / "Tue 20 Oct").
+   Lamp in the gutter: hollow = read, lit = new; new + high blinks,
+   new + urgent blinks fast. */
+:is(#root, body) [role="list"] > .MuiStack-root { position: relative; padding-left: 0; }
+:is(#root, body) #main [role="list"] > .MuiStack-root > :not(style) ~ :not(style) { margin-top: 0; }
+:is(#root, body) .MuiCard-root[role="listitem"] { position: relative; padding: 11px 0 12px 22px; }
 :is(#root, body) .MuiCard-root[role="listitem"]::after {
-  content: ""; position: absolute; left: -29px; top: 26px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--p-bg);
-  border: 2px solid var(--p-accent);
-  box-shadow: 0 0 0 4px var(--p-bg);
+  content: ""; position: absolute; left: 0; top: 15px;
+  width: 8px; height: 11px; box-sizing: border-box;
+  border: 1px solid var(--p-faint);
 }
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="4"]::after { border-color: var(--p-warn); }
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="5"]::after { border-color: var(--p-bad); }
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="1"]::after,
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="2"]::after { border-color: var(--p-ink2); }
-/* unread: filled dot with a soft halo */
+:is(#root, body) .MuiCard-root[role="listitem"][data-p-day]::after { top: 49px; }
 :is(#root, body) .MuiCard-root[role="listitem"]:has(> .MuiCardContent-root > p:first-of-type > svg)::after {
-  background: var(--p-accent);
-  box-shadow: 0 0 0 4px var(--p-bg), 0 0 0 8px var(--p-accent-soft);
+  border: 0; background: var(--p-ink);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="4"]:has(> .MuiCardContent-root > p:first-of-type > svg)::after { background: var(--p-warn); box-shadow: 0 0 0 4px var(--p-bg), 0 0 0 8px var(--p-warn-soft); }
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="5"]:has(> .MuiCardContent-root > p:first-of-type > svg)::after { background: var(--p-bad); box-shadow: 0 0 0 4px var(--p-bg), 0 0 0 8px var(--p-bad-soft); }
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="1"]:has(> .MuiCardContent-root > p:first-of-type > svg)::after,
-:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="2"]:has(> .MuiCardContent-root > p:first-of-type > svg)::after { background: var(--p-ink2); box-shadow: 0 0 0 4px var(--p-bg); }
+:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="4"]:has(> .MuiCardContent-root > p:first-of-type > svg)::after { animation: p-blink 2s steps(1) infinite; }
+:is(#root, body) .MuiCard-root[role="listitem"][data-p-prio="5"]:has(> .MuiCardContent-root > p:first-of-type > svg)::after { animation: p-blink 1s steps(1) infinite; }
 
-/* day headings, drawn from the attribute */
-:is(#root, body) [role="list"] > .MuiStack-root > .MuiCard-root[data-p-day] { margin-top: 64px; }
-:is(#root, body) [role="list"] > .MuiStack-root > .MuiCard-root[data-p-day]:first-child { margin-top: 38px; }
+/* day headings, drawn from the attribute, under the card's own rule */
+:is(#root, body) [role="list"] > .MuiStack-root > .MuiCard-root[data-p-day]:not(:first-child) { margin-top: 18px; }
 :is(#root, body) .MuiCard-root[role="listitem"][data-p-day]::before {
-  content: attr(data-p-day);
-  position: absolute; left: -36px; top: -36px;
-  padding: 0 12px 0 0;
-  background: var(--p-bg);
-  font: 700 12px/24px var(--p-font);
-  letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--p-ink2);
-  white-space: nowrap;
+  content: attr(data-p-day); display: block; height: 34px; margin-left: -22px;
+  font: 600 10px/1.4 var(--p-font); letter-spacing: 0.2em; text-transform: uppercase; color: var(--p-ink);
 }
 
-/* inside a notification */
-:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root { padding: 16px 14px 14px; }
+/* inside a card: time and priority, title, text, tags, attachment, actions */
 :is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:first-of-type {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
-  min-height: 24px;
-  font-size: 13px; font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--p-ink2);
-  margin-bottom: 6px;
+  min-height: 18px; margin: 0 0 4px;
+  font: 400 10px/1.4 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase;
+  font-variant-numeric: tabular-nums; color: var(--p-ink2);
 }
-:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:first-of-type > img { display: none; }
-:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:first-of-type > svg { width: 8px; height: 8px; margin: 0; order: 3; }
-:is(#root, body) .MuiCard-root[role="listitem"] circle[fill] { fill: var(--p-accent); }
+:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:first-of-type > :is(img, svg) { display: none; }
 :is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:first-of-type::after {
-  order: 2;
-  display: none;
-  padding: 0 10px; height: 22px; line-height: 22px;
-  border-radius: 999px;
-  font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  display: none; padding: 2px 6px;
+  font: 600 9px/1.2 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase;
 }
-:is(#root, body) .MuiCard-root[data-p-prio="4"] > .MuiCardContent-root > p:first-of-type::after { content: "High"; display: inline-block; background: var(--p-warn-soft); color: var(--p-warn); }
-:is(#root, body) .MuiCard-root[data-p-prio="5"] > .MuiCardContent-root > p:first-of-type::after { content: "Urgent"; display: inline-block; background: var(--p-bad-soft); color: var(--p-bad); }
-:is(#root, body) .MuiCard-root[data-p-prio="2"] > .MuiCardContent-root > p:first-of-type::after { content: "Low"; display: inline-block; background: var(--p-line); color: var(--p-ink2); }
-:is(#root, body) .MuiCard-root[data-p-prio="1"] > .MuiCardContent-root > p:first-of-type::after { content: "Min"; display: inline-block; background: var(--p-line); color: var(--p-ink2); }
+:is(#root, body) .MuiCard-root[data-p-prio="5"] > .MuiCardContent-root > p:first-of-type::after { content: "Urgent"; display: inline-block; background: var(--p-ink); color: var(--p-bg); }
+:is(#root, body) .MuiCard-root[data-p-prio="4"] > .MuiCardContent-root > p:first-of-type::after { content: "High"; display: inline-block; color: var(--p-ink); box-shadow: inset 0 0 0 1px var(--p-ink); }
+:is(#root, body) .MuiCard-root[data-p-prio="2"] > .MuiCardContent-root > p:first-of-type::after { content: "Low"; display: inline-block; color: var(--p-ink2); box-shadow: inset 0 0 0 1px var(--p-line); }
+:is(#root, body) .MuiCard-root[data-p-prio="1"] > .MuiCardContent-root > p:first-of-type::after { content: "Min"; display: inline-block; color: var(--p-ink2); box-shadow: inset 0 0 0 1px var(--p-line); }
 :is(#root, body) .MuiCard-root[role="listitem"] [role="rowheader"] {
-  font-size: 18px; font-weight: 800; line-height: 1.35; letter-spacing: -0.01em;
-  margin: 2px 0 4px;
+  margin: 0 0 2px; font: 600 13px/1.45 var(--p-font); color: var(--p-ink); overflow-wrap: anywhere;
+  filter: grayscale(1);                                                   /* emoji from tags */
 }
 :is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:nth-of-type(2) {
-  font-size: 15px; line-height: 1.6; color: var(--p-ink);
-  overflow-wrap: anywhere;
+  margin: 0; font: 400 13px/1.55 var(--p-font); color: var(--p-ink); overflow-wrap: anywhere;
+  filter: grayscale(1);
 }
-:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > .MuiIconButton-root {
-  width: 44px; height: 44px; margin: -10px -8px 0 6px; color: var(--p-ink2);
-}
-:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > .MuiIconButton-root .MuiSvgIcon-root { font-size: 20px; }
-/* tags: ntfy's "Tags: a, b" line becomes chips (apps/ntfy.js) */
+:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:nth-of-type(2) .MuiTypography-root { font: inherit; }
+:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > .MuiIconButton-root { width: 32px; height: 32px; margin: -7px 0 0 8px; }
+:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > .MuiIconButton-root .MuiSvgIcon-root { font-size: 16px; }
+/* tags: ntfy's own line is hidden, apps/ntfy.js writes flat labels */
+:is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > p:nth-of-type(3) { margin: 6px 0 0; font: 400 10px/1.4 var(--p-font); color: var(--p-ink2); }
 :is(#root, body) .MuiCard-root[role="listitem"] [data-p-tags-src] { display: none; }
-.p-ntfy-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.p-ntfy-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .p-ntfy-tags span {
-  display: inline-flex; align-items: center; height: 26px; padding: 0 11px;
-  border-radius: 999px;
-  background: var(--p-accent-soft); color: var(--p-accent);
-  font: 700 12px/1 var(--p-mono);
+  padding: 4px 6px; box-shadow: inset 0 0 0 1px var(--p-line);
+  font: 400 9px/1 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-ink2);
 }
 /* attachments, images, markdown */
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > .MuiButtonBase-root:not(.MuiIconButton-root),
 :is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > .MuiPaper-root,
 :is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > .MuiBox-root:not(img) {
-  border-radius: 16px; box-shadow: var(--p-press-sm); background: transparent; padding: 10px 14px;
+  display: flex; align-items: center; justify-content: flex-start; gap: 10px; max-width: 100%;
+  margin: 10px 0 0; padding: 0; text-align: left;
+  border-radius: 0; background: none; box-shadow: inset 0 0 0 1px var(--p-line);
 }
-:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > .MuiPaper-root > a { border-radius: 14px; padding: 0; }
-:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > .MuiPaper-root > a:hover { background: transparent; }
-:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > :is(.MuiPaper-root, .MuiBox-root) img { filter: grayscale(1); opacity: 0.75; }
-:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > img.MuiBox-root { border-radius: 18px; box-shadow: var(--p-raise-sm); margin-top: 14px; }
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > :is(.MuiButtonBase-root, .MuiPaper-root) > a,
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > .MuiBox-root:not(img) {
+  padding: 8px 12px 8px 10px;
+}
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > :is(.MuiButtonBase-root, .MuiPaper-root) > a {
+  display: flex; align-items: center; gap: 10px; min-width: 0; border-radius: 0; background: none; text-decoration: none; color: var(--p-ink);
+}
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > :is(.MuiButtonBase-root, .MuiPaper-root, .MuiBox-root) img {
+  width: 26px; height: auto; margin: 0; filter: grayscale(1) brightness(1.6) contrast(.9);
+}
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > :is(.MuiButtonBase-root, .MuiPaper-root, .MuiBox-root) .MuiTypography-root {
+  margin: 0; font: 400 11px/1.45 var(--p-font); color: var(--p-ink2); overflow-wrap: anywhere;
+}
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > :is(.MuiButtonBase-root, .MuiPaper-root, .MuiBox-root) b { font-weight: 600; color: var(--p-ink); }
+@media (hover: hover) {
+  :is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > .MuiButtonBase-root:not(.MuiIconButton-root):hover { box-shadow: inset 0 0 0 1px var(--p-ink); }
+  :is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > :is(.MuiButtonBase-root, .MuiPaper-root) > a:hover { background: none; }
+}
+/* a picture in the log is grey; opened, it shows as sent */
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardContent-root > img.MuiBox-root {
+  display: block; max-width: 100%; margin-top: 10px;
+  border-radius: 0; box-shadow: none; outline: 1px solid var(--p-line);
+  filter: grayscale(1) contrast(1.05);
+}
 :is(#root, body) .MuiCard-root[role="listitem"] :is(pre, code) {
-  border-radius: 10px; background: transparent; box-shadow: var(--p-press-sm); padding: 2px 6px;
+  padding: 1px 5px; border-radius: 0; background: none; box-shadow: inset 0 0 0 1px var(--p-line);
+  font: 400 12px/1.5 var(--p-font); color: var(--p-ink);
 }
-:is(#root, body) .MuiCard-root[role="listitem"] pre { padding: 12px 14px; overflow-x: auto; }
+:is(#root, body) .MuiCard-root[role="listitem"] pre { margin: 6px 0; padding: 8px 10px; overflow-x: auto; }
 :is(#root, body) .MuiCard-root[role="listitem"] pre code { box-shadow: none; padding: 0; }
-:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardActions-root { padding: 2px 14px 16px; }
+:is(#root, body) .MuiCard-root[role="listitem"] :is(h1, h2, h3, h4) { margin: 6px 0 2px; font: 600 13px/1.45 var(--p-font); }
+:is(#root, body) .MuiCard-root[role="listitem"] blockquote { margin: 6px 0; padding-left: 10px; border-left: 1px solid var(--p-faint); color: var(--p-ink2); }
+:is(#root, body) .MuiCard-root[role="listitem"] hr { border: 0; border-top: 1px solid var(--p-line); }
+:is(#root, body) .MuiCard-root[role="listitem"] .MuiCardActions-root { padding: 10px 0 0; }
 
-/* ── messages per day (apps/ntfy.js) ────────────────────── */
-.p-ntfy-week {
-  box-sizing: border-box;
-  width: 100%; max-width: 900px;
-  margin: 24px auto 0;
-  padding: 0 24px;
-}
-.p-ntfy-week > div {
-  display: flex; flex-wrap: wrap; align-items: stretch; gap: 20px 28px;
-  padding: 22px 24px;
-  border-radius: 26px;
-  background: var(--p-bg);
-  box-shadow: var(--p-raise);
-  border: 1px solid var(--p-edge);
-  color: var(--p-ink);
-  font-family: var(--p-font);
-}
-.p-ntfy-sum { flex: 1 1 150px; display: flex; flex-direction: column; justify-content: center; gap: 6px; min-width: 0; }
-.p-ntfy-label { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2); }
-.p-ntfy-big { font-size: 40px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-.p-ntfy-big small { font-size: 14px; font-weight: 700; color: var(--p-ink2); letter-spacing: 0; margin-left: 6px; }
-.p-ntfy-facts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.p-ntfy-facts span {
-  word-spacing: 0.08em;
-  display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px;
-  border-radius: 999px; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
-  background: var(--p-accent-soft); color: var(--p-accent);
-}
-.p-ntfy-facts span.warn { background: var(--p-warn-soft); color: var(--p-warn); }
-.p-ntfy-facts span.bad { background: var(--p-bad-soft); color: var(--p-bad); }
-.p-ntfy-well {
-  flex: 999 1 380px; min-width: 0;
-  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px;
-  padding: 14px 16px 10px;
-  border-radius: 20px;
-  box-shadow: var(--p-press);
-}
-.p-ntfy-day { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
-.p-ntfy-n { font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--p-ink2); height: 14px; line-height: 14px; }
-.p-ntfy-n.zero { opacity: 0.45; }
-.p-ntfy-col {
-  height: 92px; width: 100%; max-width: 34px;
-  display: flex; flex-direction: column-reverse;
-  border-radius: 10px; overflow: hidden;
-  background: var(--p-track);
-}
-.p-ntfy-col i { display: block; width: 100%; background: var(--p-accent); flex: none; }
-.p-ntfy-col i.warn { background: var(--p-warn); }
-.p-ntfy-col i.bad { background: var(--p-bad); }
-.p-ntfy-col i + i { box-shadow: 0 -2px 0 var(--p-track) inset; }
-.p-ntfy-d { font-size: 12px; font-weight: 700; color: var(--p-ink2); white-space: nowrap; }
-.p-ntfy-day.today .p-ntfy-d { color: var(--p-ink); font-weight: 800; }
-.p-ntfy-day.today .p-ntfy-n { color: var(--p-ink); }
+/* ── the week (built by apps/ntfy.js): seven columns of cells ── */
+.p-ntfy-week { box-sizing: border-box; max-width: 900px; padding: 22px 24px 0; font-family: var(--p-font); color: var(--p-ink); }
+.p-ntfy-week + .infinite-scroll-component__outerdiv [role="list"].MuiContainer-root { padding-top: 26px; }
+.p-ntfy-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--p-line); }
+.p-ntfy-h { margin: 0; font: 600 10px/1.4 var(--p-font); letter-spacing: 0.2em; text-transform: uppercase; }
+.p-ntfy-note { font: 400 9px/1.4 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-ink2); text-align: right; }
+.p-ntfy-body { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 16px 36px; margin-top: 16px; }
+.p-ntfy-sum .p-num { display: block; text-shadow: var(--p-glow); }
+.p-ntfy-grid { display: flex; align-items: flex-end; gap: 12px; }
+.p-ntfy-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.p-ntfy-n { font: 400 10px/1 var(--p-font); font-variant-numeric: tabular-nums; color: var(--p-ink); }
+.p-ntfy-n.zero { color: var(--p-faint); }
+.p-ntfy-col { display: grid; grid-template-columns: repeat(4, 5px); grid-auto-rows: 5px; gap: 2px; }
+.p-ntfy-col i, .p-ntfy-key i { display: block; width: 5px; height: 5px; box-sizing: border-box; background: var(--p-track); }
+.p-ntfy-col i.lo, .p-ntfy-key i.lo { background: none; border: 1px solid var(--p-ink2); }
+.p-ntfy-col i.n, .p-ntfy-key i.n { background: var(--p-ink2); }
+.p-ntfy-col i.hi, .p-ntfy-key i.hi { background: var(--p-ink); filter: drop-shadow(0 0 3px rgba(var(--p-ph), 0.6)); }
+.p-ntfy-d { padding: 2px 3px; font: 400 9px/1 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase; color: var(--p-ink2); }
+.p-ntfy-day.today .p-ntfy-d { background: var(--p-ink); color: var(--p-bg); font-weight: 600; }
+.p-ntfy-key { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 14px; font: 400 9px/1 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; color: var(--p-ink2); }
+.p-ntfy-key span { display: inline-flex; align-items: center; gap: 6px; }
+.p-ntfy-read { margin: 10px 0 0; font: 400 10px/1.5 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-ink2); }
 
-/* ── publish bar at the bottom of a topic ──────────────── */
+/* ── publish bar: a prompt along the bottom ──────────────── */
 :is(#root, body) #main ~ .MuiPaper-root {
-  left: 296px; right: 16px; bottom: 16px;
-  width: auto;
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px;
-  border-radius: 24px;
-  background: var(--p-bg);
-  box-shadow: var(--p-raise);
-  border: 1px solid var(--p-edge);
-  box-sizing: border-box;
+  left: 280px; right: 0; bottom: 0; width: auto; box-sizing: border-box;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+  background: var(--p-bg); border-top: 1px solid var(--p-line); border-radius: 0; box-shadow: none;
 }
-:is(#root, body) #main ~ .MuiPaper-root .MuiTextField-root { margin: 0; }
-:is(#root, body) #main ~ .MuiPaper-root .MuiInputBase-root { border-radius: 16px; }
-:is(#root, body) #main ~ .MuiPaper-root > .MuiIconButton-root { margin: 0; color: var(--p-ink2); }
+:is(#root, body) #main ~ .MuiPaper-root .MuiTextField-root { margin: 0; flex: 1 1 0; min-width: 0; }
+:is(#root, body) #main ~ .MuiPaper-root > .MuiIconButton-root { margin: 0; }
 :is(#root, body) #main ~ .MuiPaper-root > .MuiIconButton-root:last-child {
-  background: var(--p-accent); color: var(--p-on-accent); box-shadow: var(--p-raise-sm);
-  width: 46px; height: 46px;
+  --p-ch: 6px; width: 44px; background: var(--p-ink); color: var(--p-bg); clip-path: var(--p-cut);
 }
-:is(#root, body) #main ~ .MuiPaper-root > .MuiIconButton-root:last-child:active { box-shadow: var(--p-press-sm); }
-:is(#root, body) #main ~ .MuiPaper-root > .MuiIconButton-root:last-child .MuiSvgIcon-root { font-size: 20px; }
+:is(#root, body) #main ~ .MuiPaper-root > .MuiIconButton-root:last-child:active { opacity: 0.55; }
+:is(#root, body) #main ~ .MuiPaper-root > .MuiIconButton-root:last-child.Mui-disabled { background: none; color: var(--p-faint); clip-path: none; box-shadow: inset 0 0 0 1px var(--p-line); }
 
 /* ── dialogs, menus, popovers, tooltips, snackbars ──────── */
-:is(#root, body) .MuiBackdrop-root:not(.MuiBackdrop-invisible) { background: rgba(24, 34, 29, 0.32); }
+:is(#root, body) .MuiBackdrop-root { transition: none !important; }
+:is(#root, body) .MuiBackdrop-root:not(.MuiBackdrop-invisible) { background: rgba(0, 0, 0, 0.72); backdrop-filter: none; }
+:is(#root, body) .MuiDialog-container { transition: none !important; }
 :is(#root, body) .MuiDialog-paper {
-  border-radius: 28px;
-  background: var(--p-bg);
-  color: var(--p-ink);
-  /* over a dimmed backdrop the light half of --p-raise reads as a glow */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 28px 70px rgba(0, 0, 0, 0.28);
-  border: 1px solid var(--p-edge);
+  background: var(--p-bg); background-image: none; color: var(--p-ink);
+  border: 1px solid var(--p-faint); border-radius: 0; box-shadow: 0 18px 50px #000;
 }
-:is(#root, body) .MuiDialog-paperFullScreen { border-radius: 0; border: 0; }
-:is(#root, body) .MuiDialogTitle-root { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; padding: 24px 24px 8px; }
-:is(#root, body) .MuiDialogContent-root { padding: 8px 24px 12px; }
-:is(#root, body) .MuiDialogContentText-root { font-size: 14px; line-height: 1.55; }
-:is(#root, body) .MuiDialogActions-root { padding: 8px 24px 22px; gap: 10px; flex-wrap: wrap; }
+:is(#root, body) .MuiDialog-paperFullScreen { border: 0; box-shadow: none; }
+:is(#root, body) .MuiDialogTitle-root {
+  padding: 16px 18px 10px;
+  font: 600 12px/1.4 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; text-shadow: var(--p-glow);
+  overflow-wrap: anywhere;
+}
+:is(#root, body) .MuiDialogTitle-root[data-p-raw] { text-transform: none; letter-spacing: 0.04em; }   /* it holds an address */
+:is(#root, body) .MuiDialogContent-root { padding: 6px 18px 12px; }
+:is(#root, body) .MuiDialogContentText-root { font: 400 12px/1.55 var(--p-font); color: var(--p-ink2); }
+:is(#root, body) .MuiDialogContent-root .MuiFormControl-root { margin-top: 10px; margin-bottom: 4px; }
+:is(#root, body) .MuiDialogContent-root > div[style*="flex"] { align-items: flex-end; gap: 8px; }
+:is(#root, body) .MuiDialogContent-root > div[style*="flex"] > .MuiIconButton-root { margin: 0 0 4px; }
+:is(#root, body) .MuiDialogContent-root .MuiTypography-body1 { margin-top: 12px; font: 400 12px/1.55 var(--p-font); color: var(--p-ink2); }
+:is(#root, body) .MuiDialogContent-root .MuiFormGroup-root { margin-top: 10px; }
+:is(#root, body) .MuiDialogActions-root { padding: 10px 18px 16px; gap: 8px; flex-wrap: wrap; }
 :is(#root, body) .MuiDialogActions-root > :not(style) ~ :not(style) { margin-left: 0; }
 :is(#root, body) .MuiDialogActions-root > .MuiFormControlLabel-root { margin-right: auto; }
-:is(#root, body) .MuiDialog-paper [role="row"] { display: flex; gap: 12px; align-items: center; }
-:is(#root, body) .MuiDialog-paper [role="row"] > .MuiButton-root { flex: none; margin-top: 4px; }
+:is(#root, body) .MuiDialog-paper .MuiBox-root > .MuiDialogContentText-root { padding-left: 0; font-size: 11px; color: var(--p-ink); }
+:is(#root, body) .MuiDialog-paper [role="row"] { display: flex; gap: 8px; align-items: flex-end; }
+:is(#root, body) .MuiDialog-paper [role="row"] > .MuiButton-root { flex: none; margin: 0 0 4px; }
+:is(#root, body) .MuiDialog-paper [role="row"] > .MuiIconButton-root { margin: 0 0 4px; }
 
 :is(#root, body) :is(.MuiMenu-paper, .MuiPopover-paper, .MuiAutocomplete-paper) {
-  border-radius: 18px;
-  background: var(--p-bg);
-  color: var(--p-ink);
-  box-shadow: var(--p-raise), 0 18px 40px rgba(0, 0, 0, 0.16);
-  border: 1px solid var(--p-edge);
+  background: var(--p-bg); background-image: none; color: var(--p-ink);
+  border: 1px solid var(--p-faint); border-radius: 0; box-shadow: 0 18px 50px #000;
+  transition: none !important;
 }
-:is(#root, body) .MuiMenu-list { padding: 8px; }
-:is(#root, body) .MuiMenu-paper::before, :is(#root, body) .MuiPopover-paper::before { display: none; }
-:is(#root, body) .MuiMenuItem-root { min-height: 44px; border-radius: 12px; font-size: 15px; font-weight: 600; gap: 4px; }
-:is(#root, body) .MuiMenuItem-root:hover { background: transparent; box-shadow: var(--p-raise-sm); }
-:is(#root, body) .MuiMenuItem-root:focus-visible { outline: none; }
-:is(#root, body) .MuiMenuItem-root.Mui-focusVisible { background: transparent; outline: 2px solid var(--p-accent); outline-offset: -2px; }
-:is(#root, body) .MuiMenuItem-root.Mui-selected,
-:is(#root, body) .MuiMenuItem-root.Mui-selected:hover { background: transparent; box-shadow: var(--p-press-sm); font-weight: 800; }
-:is(#root, body) .MuiMenuItem-root .MuiListItemIcon-root { color: var(--p-ink2); }
-:is(#root, body) .MuiMenuItem-root img { filter: grayscale(1); opacity: 0.7; }
+:is(#root, body) .MuiMenu-list { padding: 4px 0; }
+:is(#root, body) .MuiMenuItem-root {
+  min-height: 36px; padding: 0 14px; gap: 10px;
+  border-radius: 0; background: none; color: var(--p-ink);
+  font: 400 10px/1.3 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase;
+}
+:is(#root, body) .MuiMenuItem-root > div { display: flex; align-items: center; gap: 10px; }
+:is(#root, body) .MuiMenuItem-root b { font-weight: 600; text-transform: none; letter-spacing: 0.04em; font-size: 12px; }   /* the user's name */
+:is(#root, body) .MuiMenuItem-root .MuiListItemIcon-root { min-width: 0; color: inherit; }
+:is(#root, body) .MuiMenuItem-root .MuiListItemIcon-root .MuiSvgIcon-root { font-size: 16px; }
 :is(#root, body) .MuiMenuItem-root .MuiBox-root { color: var(--p-ink2); }
-:is(#root, body) .MuiCircularProgress-root { color: var(--p-accent); }
+:is(#root, body) .MuiMenuItem-root.Mui-focusVisible { background: none; outline-offset: -2px; }
+@media (hover: hover) {
+  :is(#root, body) .MuiMenuItem-root:hover { background: none; box-shadow: inset 0 0 0 1px var(--p-ink); }
+}
+:is(#root, body) .MuiMenuItem-root:active,
+:is(#root, body) .MuiMenuItem-root.Mui-selected,
+:is(#root, body) .MuiMenuItem-root.Mui-selected.Mui-focusVisible { background: var(--p-ink); color: var(--p-bg); box-shadow: none; }
+:is(#root, body) .MuiMenuItem-root:is(.Mui-selected, :active) .MuiBox-root { color: var(--p-bg); }
+:is(#root, body) .MuiMenuItem-root:is(.Mui-selected, :active) img { filter: grayscale(1) brightness(0.25); }
+@media (hover: hover) {
+  :is(#root, body) .MuiMenuItem-root.Mui-selected:hover { background: var(--p-ink); box-shadow: none; }
+}
+:is(#root, body) .MuiMenuItem-root.Mui-disabled { opacity: 1; color: var(--p-faint); }
+
+/* waiting: a blinking block instead of a spinner */
+:is(#root, body) .MuiCircularProgress-root {
+  width: 9px !important; height: 15px !important; background: var(--p-ink); color: var(--p-ink);
+  animation: p-blink 1s steps(1) infinite !important;
+}
+:is(#root, body) .MuiCircularProgress-root > svg { display: none; }
 
 :is(#root, body) .MuiTooltip-tooltip {
-  background: var(--p-ink); color: var(--p-bg);
-  border-radius: 10px; font-size: 12px; font-weight: 700; padding: 6px 10px;
+  padding: 5px 8px; background: var(--p-bg); color: var(--p-ink);
+  border: 1px solid var(--p-faint); border-radius: 0; box-shadow: 0 18px 50px #000;
+  font: 400 11px/1.4 var(--p-font);
+  transition: none !important;
 }
-:is(#root, body) .MuiTooltip-arrow { color: var(--p-ink); }
-:is(#root, body) #main .MuiSnackbar-root { left: 296px; right: auto; bottom: 100px; }
+:is(#root, body) .MuiTooltip-arrow { display: none; }
+
+:is(#root, body) #main .MuiSnackbar-root { left: 296px; right: auto; bottom: 76px; }
 :is(#root, body) .MuiSnackbarContent-root {
+  min-width: 0; padding: 8px 12px;
+  background: var(--p-bg); color: var(--p-ink);
+  border: 1px solid var(--p-faint); border-radius: 0; box-shadow: 0 18px 50px #000;
+  font: 400 11px/1.4 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase;
+  transition: none !important;
+}
+:is(#root, body) .MuiSnackbarContent-message { display: flex; align-items: center; gap: 9px; padding: 0; }
+:is(#root, body) .MuiSnackbarContent-message::before {
+  content: ""; flex: none; width: 8px; height: 11px; background: var(--p-ink);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+}
+:is(#root, body) .MuiSnackbarContent-action { margin: 0 0 0 12px; padding: 0; }
+
+/* the emoji picker (a popper with a search field and a grid): grey emoji, like the log */
+:is(#root, body) .MuiPopper-root:not(.MuiTooltip-popper) > .MuiBox-root {
+  padding: 8px 10px; background: var(--p-bg); color: var(--p-ink);
+  border: 1px solid var(--p-faint); border-radius: 0; box-shadow: 0 18px 50px #000;
+  transition: none !important;
+}
+:is(#root, body) .MuiPopper-root:not(.MuiTooltip-popper) > .MuiBox-root .MuiTextField-root { margin: 0 0 6px; }
+:is(#root, body) .MuiPopper-root:not(.MuiTooltip-popper) > .MuiBox-root .MuiTypography-body1 {
+  margin: 8px 0 4px; font: 400 9px/1.4 var(--p-font); letter-spacing: 0.2em; text-transform: uppercase; color: var(--p-ink2);
+}
+:is(#root, body) .MuiPopper-root:not(.MuiTooltip-popper) > .MuiBox-root div[title][aria-label] { border-radius: 0; filter: grayscale(1); }
+@media (hover: hover) {
+  :is(#root, body) .MuiPopper-root:not(.MuiTooltip-popper) > .MuiBox-root div[title][aria-label]:hover { background: none; box-shadow: inset 0 0 0 1px var(--p-ink); }
+}
+
+/* an opened picture */
+:is(#root, body) .MuiModal-root > img.MuiBox-root { border-radius: 0; box-shadow: none; outline: 1px solid var(--p-faint); transition: none !important; }
+
+/* ── sign in / sign up: a column under the floating strip ── */
+:is(#root, body) #root > .MuiBox-root:has(> a > .MuiAvatar-root) {
+  box-sizing: border-box; width: min(360px, calc(100% - 32px)); max-width: none;
+  margin: 0 auto; padding: 72px 0 32px;
+  align-items: stretch; align-content: stretch;
+}
+:is(#root, body) #root > .MuiBox-root > a:has(> .MuiAvatar-root) { display: none; }
+:is(#root, body) #root > .MuiBox-root:has(> a > .MuiAvatar-root) > .MuiTypography-root {
+  margin: 0 0 16px; padding-top: 12px; border-top: 1px solid var(--p-line);
+  font: 600 12px/1.4 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; text-shadow: var(--p-glow);
+}
+:is(#root, body) #root > .MuiBox-root:has(> a > .MuiAvatar-root) > form { width: 100%; max-width: none; margin: 0; }
+:is(#root, body) #root > .MuiBox-root:has(> a > .MuiAvatar-root) .MuiTextField-root { width: 100%; margin: 0 0 12px; }
+:is(#root, body) #root > .MuiBox-root:has(> a > .MuiAvatar-root) .MuiButton-fullWidth { margin: 6px 0 0; min-height: 44px; }
+:is(#root, body) #root > .MuiBox-root:has(> a > .MuiAvatar-root) form > .MuiBox-root { margin: 14px 0 0; font: 400 11px/1.5 var(--p-font); color: var(--p-ink2); }
+/* a refused sign-in: inverse */
+:is(#root, body) #root > .MuiBox-root > form > .MuiBox-root:has(> .MuiSvgIcon-root) {
+  align-items: center; justify-content: flex-start; gap: 8px; padding: 6px 10px;
   background: var(--p-ink); color: var(--p-bg);
-  border-radius: 16px; font-weight: 700;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
 }
-:is(#root, body) .MuiSnackbarContent-root .MuiButton-root { background: transparent; color: var(--p-bg); box-shadow: none; border: 0; }
+:is(#root, body) #root > .MuiBox-root > form > .MuiBox-root:has(> .MuiSvgIcon-root) > * { margin: 0; color: var(--p-bg); font: 600 10px/1.4 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; }
+:is(#root, body) #root > .MuiBox-root > form > .MuiBox-root:has(> .MuiSvgIcon-root) > .MuiSvgIcon-root { font-size: 15px; }
 
-/* ── sign-in / sign-up ────────────────────────────────── */
-:is(#root, body) #root:has(> .MuiBox-root > form) { min-height: 100dvh; display: flex; align-items: center; }
-:is(#root, body) #root > .MuiBox-root:has(> form) {
-  box-sizing: border-box;
-  width: min(440px, calc(100% - 32px));
-  max-width: none;
-  height: auto;
-  flex-grow: 0;
-  margin: 84px auto 40px;
-  padding: 32px 28px 26px;
-  border-radius: 28px;
-  background: var(--p-bg);
-  box-shadow: var(--p-raise);
-  border: 1px solid var(--p-edge);
+/* ── fingers: 44px targets, 16px in fields ───────────────── */
+@media (pointer: coarse) {
+  :is(#root, body) .MuiButton-root { min-height: 44px; }
+  :is(#root, body) .MuiIconButton-root,
+  :is(#root, body) .MuiCard-root[role="listitem"] > .MuiCardContent-root > .MuiIconButton-root,
+  :is(#root, body) .MuiListItemButton-root .MuiListItemIcon-root .MuiIconButton-root { width: 44px; height: 44px; }
+  :is(#root, body) .MuiListItemButton-root, :is(#root, body) .MuiMenuItem-root { min-height: 44px; }
+  :is(#root, body) .MuiInputBase-root { min-height: 44px; font-size: 16px; line-height: 24px; }
+  :is(#root, body) .MuiInputBase-input { height: 24px; padding: 10px; }
+  :is(#root, body) .MuiInputBase-root.MuiInputBase-multiline { padding: 10px; }
+  :is(#root, body) .MuiInputBase-root .MuiInputBase-inputMultiline { padding: 0; }
+  :is(#root, body) .MuiInputBase-root .MuiSelect-select { min-height: 24px; line-height: 24px; padding: 10px 32px 10px 10px; font-size: 13px; }
+  :is(#root, body) :is(.MuiCheckbox-root, .MuiRadio-root) { width: 44px; height: 44px; }
+  :is(#root, body) .MuiSwitch-root { margin: 11px 10px 11px 0; }
+  :is(#root, body) .MuiSwitch-switchBase .MuiSwitch-input { top: -11px; height: 44px; }
+  :is(#root, body) .MuiChip-clickable { height: 44px; }
+  :is(#root, body) .MuiChip-clickable .MuiChip-label { padding: 0 12px; }
 }
-:is(#root, body) #root > .MuiBox-root:has(> form) > form { width: 100%; }
-:is(#root, body) #root > .MuiBox-root:has(> form) .MuiAvatar-root {
-  width: 64px; height: 64px; border-radius: 21px;
-  background: transparent; box-shadow: var(--p-press); color: var(--p-accent);
-}
-:is(#root, body) #root > .MuiBox-root:has(> form) .MuiAvatar-root > img { display: none; }
-:is(#root, body) #root > .MuiBox-root:has(> form) .MuiAvatar-root svg {
-  width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-}
-:is(#root, body) #root > .MuiBox-root:has(> form) > .MuiTypography-root { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; margin-top: 18px; }
-:is(#root, body) #root > .MuiBox-root:has(> form) .MuiButton-fullWidth { margin-top: 22px; min-height: 48px; }
-:is(#root, body) #root > .MuiBox-root:has(> form) form > .MuiBox-root { color: var(--p-ink2); font-size: 14px; text-align: center; }
 
-/* ── phones (MUI xs: drawer becomes a sheet) ─────────────── */
+/* ── phones: the bar takes two rows (strip + account, then the page) ── */
 @media (max-width: 599.95px) {
-  :is(#root, body) header.MuiAppBar-root { top: 12px; left: 16px; right: 16px; border-radius: 22px; }
-  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root { min-height: 58px; height: 58px; padding: 0 6px 0 6px; gap: 0; }
-  :is(#root, body) header.MuiAppBar-root .MuiTypography-h6 { font-size: 17px; margin-left: 2px; }
-  html[data-p-view="topic"] :is(#root, body) header.MuiAppBar-root .MuiTypography-h6 { font-size: 15px; }
-  :is(#root, body) header #plint-pill { margin-right: 2px; }
-  :is(#root, body) header .MuiIconButton-root { min-width: 42px; min-height: 44px; padding: 8px; }
-  :is(#root, body) header .MuiIconButton-edgeStart { margin-left: 0; }
-  /* no room for both topic buttons: mute also lives in the ⋮ menu */
-  :is(#root, body) header .MuiToolbar-root > .MuiIconButton-root[aria-label="Mute/unmute notifications"] { display: none; }
-  .p-ntfy-mark { display: none; }
-  :is(#root, body) #main { margin-top: 72px; height: calc(100dvh - 72px); }
-  :is(#root, body) #main .MuiSnackbar-root { left: 16px; right: 16px; bottom: 92px; }
-  :is(#root, body) #main > .MuiContainer-root, :is(#root, body) #main [role="list"].MuiContainer-root { margin-top: 16px; padding-left: 16px; padding-right: 16px; }
-  :is(#root, body) [role="list"] > .MuiStack-root { padding-left: 22px; }
-  :is(#root, body) [role="list"] > .MuiStack-root::before { left: 6px; }
-  :is(#root, body) .MuiCard-root[role="listitem"]::after { left: -21px; }
-  :is(#root, body) .MuiCard-root[role="listitem"][data-p-day]::before { left: -22px; }
-  :is(#root, body) .MuiCard-root[role="listitem"] { padding: 4px 4px 2px; border-radius: 24px; }
-  :is(#root, body) .MuiCard-root[role="listitem"] [role="rowheader"] { font-size: 17px; }
-  .p-ntfy-week { margin-top: 16px; padding: 0 16px; }
-  .p-ntfy-week > div { padding: 18px 16px; gap: 16px; border-radius: 24px; }
-  .p-ntfy-well { gap: 6px; padding: 12px 10px 8px; flex-basis: 100%; }
-  .p-ntfy-col { height: 76px; }
-  .p-ntfy-big { font-size: 34px; }
-  :is(#root, body) #main ~ .MuiPaper-root { left: 16px; right: 16px; bottom: max(12px, env(safe-area-inset-bottom)); }
-  :is(#root, body) .MuiDialogActions-root { padding: 8px 16px 18px; }
-  :is(#root, body) .MuiDialogContent-root { padding: 8px 16px 12px; }
-  :is(#root, body) .MuiDialogTitle-root { padding: 20px 16px 8px; }
-  :is(#root, body) #root > .MuiBox-root:has(> form) { margin-top: 76px; padding: 26px 20px 22px; }
+  html { --n-head: 103px; }
+  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root {
+    flex-wrap: wrap; align-content: center; row-gap: 2px;
+    min-height: 102px; height: 102px; padding: 6px 8px;
+  }
+  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root::after { content: ""; order: 2; flex: 0 0 100%; height: 0; }
+  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > .MuiIconButton-edgeStart { order: 3; }
+  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > .MuiTypography-h6 { order: 4; margin-left: 4px; }
+  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > .MuiIconButton-edgeEnd { order: 5; }
+  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > .MuiButton-root,
+  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root > .MuiIconButton-root[data-p-prof] { order: 1; margin-left: auto; }
+  :is(#root, body) #main > .MuiContainer-root,
+  :is(#root, body) #main [role="list"].MuiContainer-root { padding: 16px 12px 96px; }
+  .p-ntfy-week { padding: 16px 12px 0; }
+  .p-ntfy-grid { gap: 10px; }
+  .p-ntfy-body { gap: 14px 24px; }
+  .p-ntfy-read { font-size: 9px; letter-spacing: 0.1em; }
+  :is(#root, body) #main ~ .MuiPaper-root { left: 0; padding-left: 8px; padding-right: 8px; }
+  :is(#root, body) #main .MuiSnackbar-root { left: 12px; right: 12px; bottom: 76px; }
+  :is(#root, body) .MuiDialogTitle-root { padding: 16px 14px 10px; }
+  :is(#root, body) .MuiDialogContent-root { padding: 6px 14px 12px; }
+  :is(#root, body) .MuiDialogActions-root { padding: 10px 14px 16px; }
+  :is(#root, body) .MuiDialog-paper:not(.MuiDialog-paperFullScreen) { margin: 12px; max-width: calc(100% - 24px); }
+  :is(#root, body) .MuiTableCell-root, :is(#root, body) .MuiTableCell-head { padding-right: 10px; }
 }
-@media (max-width: 599.95px) and (orientation: landscape) {
-  :is(#root, body) header.MuiAppBar-root > .MuiToolbar-root { min-height: 58px; }
+
+/* ── still for those who ask ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  :is(#root, body) .MuiAlert-icon::before,
+  :is(#root, body) .MuiCard-root[role="listitem"]::after,
+  :is(#root, body) #main > .MuiContainer-root tt::after,
+  :is(#root, body) .MuiCircularProgress-root { animation: none !important; }
+}
+
+/* ---------- late fixes ---------- */
+/* the popup menus' little arrow (a rotated square behind the frame) */
+:is(#root, body) :is(.MuiMenu-paper, .MuiPopover-paper)::before { display: none; content: none; }
+/* settings: the play button beside the sound select sits on the select's centre line */
+:is(#root, body) [role="cell"] > div[style*="flex"] { align-items: center; }
+:is(#root, body) [role="cell"] > div[style*="flex"] > .MuiIconButton-root { margin: 0 0 0 4px; }
+/* phone: in the publish dialog the priority select takes its own line under the tags */
+@media (max-width: 599.95px) {
+  :is(#root, body) .MuiDialogContent-root > div[style*="flex"]:has(> .MuiFormControl-root > .MuiSelect-root) { flex-wrap: wrap; }
+  :is(#root, body) .MuiDialogContent-root > div[style*="flex"] > .MuiFormControl-root:has(> .MuiSelect-root) { flex: 1 1 100%; min-width: 0; max-width: none; margin-left: 0; margin-right: 0; }
+  :is(#root, body) .MuiDialogContent-root > div[style*="flex"]:has(> .MuiFormControl-root > .MuiSelect-root) > .MuiTextField-root { flex: 1 1 0; min-width: 0; }
 }

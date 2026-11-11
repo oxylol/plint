@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────
-   Plint Soft UI · the Plint pill and per-app extras
+   Plint Terminal · the Plint strip and per-app extras
    Injected by Caddy as <script src="/_plint/plint.js" data-app="…">.
-   - Puts a small pill (home · all apps · health) into the app's own
+   - Puts a small strip (home · all apps · health) into the app's own
      header, or floats it top-left when the header can't be found.
    - Loads /_plint/apps/<app>.js for that app's infographics.
    - Shares a few drawing helpers on window.Plint.
@@ -41,27 +41,38 @@
   function icon(name, cls) {
     return '<svg class="' + (cls || "plint-ico") + '" viewBox="0 0 24 24" aria-hidden="true"><path d="' + ICONS[name] + '"/></svg>';
   }
-  var LOGO = '<svg class="plint-logo" viewBox="0 0 128 128" aria-hidden="true">' +
-    '<rect x="44" y="26" width="40" height="34" rx="7" opacity=".55"/>' +
-    '<rect x="32" y="62" width="64" height="18" rx="6" opacity=".78"/>' +
-    '<rect x="18" y="84" width="92" height="20" rx="7"/></svg>';
+  // The mark: a plinth and two stones, each cut top-left and bottom-right.
+  var STONES = [[6, 54, 122, 82, 8], [20, 30, 98, 48, 6], [44, 8, 106, 24, 5]];
+  function mark(cls) {
+    return '<svg class="' + (cls || "plint-logo") + '" viewBox="0 0 128 88" aria-hidden="true">' + STONES.map(function (s) {
+      var x0 = s[0], y0 = s[1], x1 = s[2], y1 = s[3], c = s[4];
+      return '<polygon points="' + [x0 + c, y0, x1, y0, x1, y1 - c, x1 - c, y1, x0, y1, x0, y0 + c].join(" ") + '"/>';
+    }).join("") + "</svg>";
+  }
 
-  // [injection name, subdomain, label, icon]
+  // The units, as on the home page: a heading, or [injection name, subdomain, label, port]
   var APPS = [
-    ["homepage", "", "Home", "home"],
-    ["adguard", "dns", "DNS", "dns"],
-    ["kuma", "status", "Status", "status"],
-    ["beszel", "metrics", "Metrics", "metrics"],
-    ["dockge", "stacks", "Stacks", "stacks"],
-    ["cockpit", "host", "Host", "host"],
-    ["kopia", "backup", "Backups", "backup"],
-    ["ntfy", "ntfy", "Notifications", "ntfy"],
-    ["speedtest", "speed", "Internet", "speed"],
-    ["amp", "games", "Games", "games"],
-    ["stremio", "stremio", "Stremio", "stremio"],
-    ["tv", "tv", "TV", "tv"],
-    ["poly", "poly", "Polybot", "poly"],
-    ["hertz", "music", "Hertz", "music"]
+    ["homepage", "", "Home", ""],
+    "EVERYDAY",
+    ["amp", "games", "Games", 8080],
+    ["table", "table", "D&D Table", 3200],
+    ["ai", "ai", "Plint Chat", 5220],
+    ["cnc", "cnc", "CNC Studio", 5178],
+    ["twin", "twin", "CNC Twin", 5210],
+    ["poly", "poly", "Polybot", 5190],
+    ["hertz", "music", "Hertz", 5200],
+    ["stremio", "stremio", "Stremio", 8095],
+    ["tv", "tv", "TV", 7700],
+    "HEALTH",
+    ["kuma", "status", "Status", 3001],
+    ["adguard", "dns", "AdGuard", 3000],
+    ["kopia", "backup", "Backups", 51515],
+    ["speedtest", "speed", "Internet", 8075],
+    ["ntfy", "ntfy", "Notifications", 8070],
+    "SYSTEM",
+    ["cockpit", "host", "Host", 9090],
+    ["dockge", "stacks", "Stacks", 5001],
+    ["beszel", "metrics", "Metrics", 8090]
   ];
 
   // Where the pill goes in each app's own header. First match wins.
@@ -78,13 +89,17 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
   // ── shared drawing helpers for apps/*.js ────────────────────
+  // A dial of ticks; the lit ones are the value. o: size, width, label, ticks
   function ring(pct, o) {
     o = o || {};
     var size = o.size || 112, w = o.width || 11, r = (size - w) / 2 - 1, c = 2 * Math.PI * r;
-    var v = Math.max(0, Math.min(100, pct || 0)) / 100 * c;
+    var n = o.ticks || Math.max(12, Math.round(c / 7)), step = c / n, on = step * 0.56, off = step - on;
+    var p = Math.max(0, Math.min(100, pct || 0)), k = p > 0 ? Math.max(1, Math.round(p / 100 * n)) : 0, lit = "";
+    for (var i = 0; i < k; i++) lit += on.toFixed(2) + " " + off.toFixed(2) + " ";
+    var at = ' cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + w + '" transform="rotate(-90 ' + size / 2 + " " + size / 2 + ')"';
     return '<svg class="p-ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + esc(o.label || Math.round(pct) + "%") + '">' +
-      '<circle class="p-ring-track" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + w + '"/>' +
-      '<circle class="p-ring-val' + (o.tone ? " p-" + o.tone : "") + '" cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" stroke-width="' + w + '" stroke-dasharray="' + v.toFixed(1) + " " + c.toFixed(1) + '" transform="rotate(-90 ' + size / 2 + " " + size / 2 + ')"' + (o.butt ? "" : ' stroke-linecap="round"') + "/></svg>";
+      '<circle class="p-ring-track"' + at + ' stroke-dasharray="' + on.toFixed(2) + " " + off.toFixed(2) + '"/>' +
+      '<circle class="p-ring-val' + (o.tone ? " p-" + o.tone : "") + '"' + at + ' stroke-dasharray="' + lit + "0 " + (c + 1).toFixed(1) + '"/></svg>';
   }
   function el(tag, cls, html) {
     var n = document.createElement(tag);
@@ -94,7 +109,52 @@
   }
   function fmt(n) { return Number(n).toLocaleString("en-GB"); }
 
-  window.Plint = { app: app, base: base, url: url, icon: icon, ring: ring, el: el, esc: esc, fmt: fmt, health: null, mount: null };
+  // ── light: every lamp strikes on by itself, with a stutter; nothing fades ──
+  function live() { return !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  // Switch one element on (give it class p-fl first to keep it dark until then).
+  function strike(node, delay) {
+    node.classList.add("on");
+    if (!live() || !node.animate) return;
+    var ev = [[0, 1]], t = 0;
+    for (var k = Math.floor(rnd(1, 3.5)); k > 0; k--) { t += rnd(30, 85); ev.push([t, 0]); t += rnd(25, 95); ev.push([t, 1]); }
+    var T = t + 40;
+    node.animate([{ opacity: 0, offset: 0, easing: "step-end" }].concat(ev.map(function (e, i) {
+      return { opacity: e[1] ? (i < ev.length - 1 ? rnd(0.45, 1) : 1) : rnd(0, 0.16), offset: (e[0] + 20) / T, easing: "step-end" };
+    })), { duration: T, delay: delay || 0, fill: "backwards" });
+  }
+  // A dot-matrix figure in `node`: each digit is its own light and spins when the figure changes.
+  function num(node, value, unit) {
+    var v = String(value), key = v + "|" + (unit || "");
+    if (node.dataset.k === key) return;
+    var first = !node.dataset.k;
+    node.dataset.k = key;
+    node.classList.add("p-num");
+    node.innerHTML = v.split("").map(function (ch) { return '<span data-v="' + esc(ch) + '">' + esc(ch) + "</span>"; }).join("") + (unit ? "<sub>" + esc(unit) + "</sub>" : "");
+    if (first || !live()) return;
+    Array.prototype.forEach.call(node.querySelectorAll("span"), function (sp) {
+      if (!/\d/.test(sp.dataset.v)) return;
+      var id = setInterval(function () { sp.textContent = Math.floor(Math.random() * 10); }, 50);
+      setTimeout(function () { clearInterval(id); sp.textContent = sp.dataset.v; }, rnd(160, 420));
+    });
+  }
+  function meter(pct) { return '<div class="p-meter" style="--v:' + Math.max(0, Math.min(100, pct || 0)).toFixed(1) + '%"></div>'; }
+  // state: true lit · false hollow · "alarm" blinking
+  function lamp(state) { return '<i class="p-blk' + (state === "alarm" ? " alarm" : state && state !== "off" ? "" : " off") + '"></i>'; }
+
+  window.Plint = { app: app, base: base, url: url, icon: icon, mark: mark, ring: ring, el: el, esc: esc, fmt: fmt, live: live, strike: strike, num: num, meter: meter, lamp: lamp, health: null, mount: null };
+
+  // One ground colour for the browser chrome, whatever the app asks for.
+  // The app's own tags lose their name but stay in the page: some apps (Uptime Kuma) keep writing to theirs.
+  function chrome() {
+    Array.prototype.forEach.call(document.querySelectorAll('meta[name="theme-color"]'), function (m) { if (!m.dataset.plint) m.removeAttribute("name"); });
+    if (!document.querySelector("meta[data-plint]")) {
+      var m = document.createElement("meta");
+      m.name = "theme-color"; m.content = "#0f0e11"; m.dataset.plint = "1";
+      document.head.appendChild(m);
+    }
+  }
+  chrome();
 
   // ── per-app extras (also inside Cockpit's iframes) ──────────
   if (app) {
@@ -112,15 +172,16 @@
     pill = el("div");
     pill.id = "plint-pill";
     pill.innerHTML =
-      '<a class="plint-home" href="' + url("") + '" title="Plint home">' + LOGO + "<span>Plint</span></a>" +
-      '<button type="button" class="plint-apps" aria-label="All apps" aria-expanded="false" aria-controls="plint-menu">' + icon("grid") + "</button>" +
+      '<a class="plint-home" href="' + url("") + '" title="Plint home">' + mark() + "<span>Plint</span></a>" +
+      '<button type="button" class="plint-apps" aria-label="All apps" aria-expanded="false" aria-controls="plint-menu">Apps</button>' +
       '<a class="plint-status" href="' + url("status") + '" title="Status"><i class="plint-dot"></i><span class="plint-health">…</span></a>';
     menu = el("nav");
     menu.id = "plint-menu";
     menu.setAttribute("aria-label", "Plint apps");
     menu.hidden = true;
     menu.innerHTML = APPS.map(function (a) {
-      return '<a href="' + url(a[1]) + '"' + (a[0] === app ? ' aria-current="page"' : "") + '><span class="plint-well">' + icon(a[3]) + "</span>" + esc(a[2]) + "</a>";
+      if (typeof a === "string") return "<h4>" + a + "</h4>";
+      return '<a href="' + url(a[1]) + '"' + (a[0] === app ? ' aria-current="page"' : "") + "><span>" + esc(a[2]) + "</span><small>" + (a[3] ? ":" + a[3] : "") + "</small></a>";
     }).join("");
     var btn = pill.querySelector(".plint-apps");
     btn.addEventListener("click", function (e) {
@@ -136,8 +197,8 @@
     var btn = pill.querySelector(".plint-apps");
     if (open) {
       var r = pill.getBoundingClientRect();
-      menu.style.top = Math.round(r.bottom + 10) + "px";
-      menu.style.left = Math.max(12, Math.min(Math.round(r.left), window.innerWidth - 352)) + "px";
+      menu.style.top = Math.round(r.bottom + 8) + "px";
+      menu.style.left = Math.max(10, Math.min(Math.round(r.left), window.innerWidth - 310)) + "px";
     }
     menu.hidden = !open;
     btn.setAttribute("aria-expanded", open ? "true" : "false");
@@ -183,7 +244,9 @@
         var dot = pill.querySelector(".plint-dot");
         dot.className = "plint-dot " + (up === ids.length ? "ok" : up + pending === ids.length ? "warn" : "bad");
         pill.querySelector(".plint-health").textContent = up + "/" + ids.length;
-        pill.querySelector(".plint-status").title = up + " of " + ids.length + " up";
+        var st = pill.querySelector(".plint-status");
+        st.title = up + " of " + ids.length + " up";
+        st.classList.toggle("bad", up + pending < ids.length);
         document.dispatchEvent(new CustomEvent("plint:health", { detail: d }));
       })
       .catch(function () {});
@@ -201,6 +264,7 @@
     }).observe(document.body, { childList: true, subtree: true });
     health();
     setInterval(health, 60000);
+    setTimeout(chrome, 2500);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
   else start();

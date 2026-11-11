@@ -27,14 +27,11 @@
 	}
 }
 
-# Plint Soft UI: serve /_plint/* from theme/ and slip the shared theme,
-# the app's own sheet and plint.js into every HTML page. Usage:
-#   import theme <app>         (app = the file name under theme/apps/)
-# The upstream must answer uncompressed so the page can be rewritten:
-#   reverse_proxy … { header_up Accept-Encoding identity }
-(theme) {
+# Plint Terminal: the look of every app.
+# (theme-files) serves /_plint/* from theme/ plus the live data the pages read.
+(theme-files) {
 	header /_plint/* Cache-Control "no-cache"
-	# Up/down for the Plint pill, from Uptime Kuma's public status page.
+	# Up/down for the Plint strip, from Uptime Kuma's public status page.
 	handle /_plint/health {
 		rewrite * /api/status-page/heartbeat/plint
 		reverse_proxy localhost:3001
@@ -43,7 +40,7 @@
 		rewrite * /api/status-page/plint
 		reverse_proxy localhost:3001
 	}
-	# Exported by scripts/theme-data.sh (backup history and the like).
+	# Written by scripts/theme-data.sh every two minutes.
 	handle /_plint/data/* {
 		uri strip_prefix /_plint/data
 		root * /srv/plint-data
@@ -53,6 +50,15 @@
 		root * /srv
 		file_server
 	}
+}
+
+# (theme) also slips the shared sheet, the app's own sheet and plint.js into
+# every HTML page. Usage:
+#   import theme <app>         (app = the file name under theme/apps/)
+# The upstream must answer uncompressed so the page can be rewritten:
+#   reverse_proxy … { header_up Accept-Encoding identity }
+(theme) {
+	import theme-files
 	replace {
 		match {
 			header Content-Type text/html*
@@ -64,9 +70,13 @@
 # ── Home screen ──────────────────────────────────────────────
 {$DOMAIN}, dash.{$DOMAIN} {
 	import wildcard
-	import theme homepage
-	reverse_proxy localhost:3100 {
-		header_up Accept-Encoding identity
+	import theme-files
+	# The home page is theme/home: the instruments, then every unit.
+	handle {
+		header Cache-Control "no-cache"
+		rewrite * /_plint/home/index.html
+		root * /srv
+		file_server
 	}
 }
 
@@ -168,12 +178,14 @@
 	@twin host twin.{$DOMAIN}
 	handle @twin {
 		# CNC Twin (apps/cnc-twin): a physics twin for verifying CNC programs before they
-		# run. Own look (Plint tokens built in); run progress streams over SSE, so no
-		# buffering; projects upload as zip files.
+		# run. It reads Plint's tokens, so the theme reaches it like any other app; run
+		# progress streams over SSE, so no buffering; projects upload as zip files.
+		import theme twin
 		request_body {
 			max_size 500MB
 		}
 		reverse_proxy localhost:5210 {
+			header_up Accept-Encoding identity
 			flush_interval -1
 		}
 	}

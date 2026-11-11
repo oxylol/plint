@@ -1,12 +1,14 @@
 /* ─────────────────────────────────────────────────────────────
-   Plint Soft UI · Kopia extras
-   - the Plint pill goes into Kopia's navbar; the brand becomes
-     a "Backups" well; every page gets a title
-   - Snapshots: a card per source with last / size / next and a
-     calendar of the last 28 nights
-   - a source's history: growth per snapshot (size vs the one
-     before), last 14, plus latest size / files / duration
-   - snapshot browser: a size bar under each entry
+   Plint Terminal · Kopia extras
+   - the Plint strip goes into Kopia's navbar; the brand becomes
+     BACKUPS / АРХИВ; every page gets a title
+   - Snapshots: one instrument per source: last / size / next as
+     dot-matrix figures, a strip of 28 night lamps (lit = kept,
+     hollow = missed, dim = still to run) and a one-line readout;
+     a lamp read by tap or pointer says its own night
+   - a source's history: latest size / files / duration, and growth
+     per snapshot (size vs the one before, last 14) as cell columns
+   - snapshot browser: a dot meter under each entry's size
    Data comes from read-only GETs on Kopia's own API (same origin, the
    browser is already signed in). Everything is redrawn idempotently
    under a MutationObserver, and only written when it changed.
@@ -30,7 +32,7 @@
   function q(sel, root) { return (root || document).querySelector(sel); }
   function qa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
   // write only when our own last write differs (innerHTML round-trips aren't exact)
-  function set(node, html) { if (node && node._p !== html) { node._p = html; node.innerHTML = html; } }
+  function set(node, html) { if (!node || node._p === html) return false; node._p = html; node.innerHTML = html; return true; }
   function attr(node, k, v) { if (node && node.getAttribute(k) !== v) node.setAttribute(k, v); }
   function text(node, v) { if (node && node.textContent !== v) node.textContent = v; }
 
@@ -98,10 +100,46 @@
     if (d === 1) return "tomorrow";
     return wdm(t);
   }
-  // "140.9 GB" → number big, unit small
-  function big(s) {
-    var m = String(s).match(/^(-?[\d.,]+)\s+(\S+)$/);
-    return m ? P.esc(m[1]) + '<span class="p-u">' + P.esc(m[2]) + "</span>" : P.esc(s);
+  // "140.9 GB" → ["140.9", "GB"]: the figure and its unit
+  function split(s) {
+    var m = String(s).match(/^(-?[\d.,:]+)\s+(\S+)$/);
+    return m ? [m[1], m[2]] : [String(s), ""];
+  }
+  // a duration as a figure: 0.4 S · 42 S · 4:12 MIN · 1:05 H
+  function durFig(ms) {
+    if (!(ms >= 0)) return ["--", ""];
+    var s = ms / 1000;
+    if (s < 10) return [s.toFixed(1), "s"];
+    if (s < 60) return [String(Math.round(s)), "s"];
+    var m = Math.floor(s / 60), r = Math.floor(s % 60);
+    if (m < 60) return [m + ":" + (r < 10 ? "0" : "") + r, "min"];
+    return [Math.floor(m / 60) + ":" + (m % 60 < 10 ? "0" : "") + (m % 60), "h"];
+  }
+  // one cell of a row of figures; the digits are lit by fill() once the markup is in
+  function fig(id, v, label, sub) {
+    return '<div><b data-id="' + P.esc(id) + '" data-n="' + P.esc(v[0]) + '" data-u="' + P.esc(v[1] || "") + '"></b>' +
+      '<span class="p-lbl">' + P.esc(label) + "</span><small>" + P.esc(sub || "") + "</small></div>";
+  }
+  function fill(box) {
+    var olds = box._v || {}, vals = {};
+    qa("b[data-n]", box).forEach(function (b) {
+      var id = b.getAttribute("data-id"), n = b.getAttribute("data-n"), u = b.getAttribute("data-u"), o = olds[id];
+      vals[id] = [n, u];
+      try {
+        if (o && (o[0] !== n || o[1] !== u)) P.num(b, o[0], o[1]);   // a changed figure spins into place
+        P.num(b, n, u);
+      } catch (e) { b.textContent = n + (u ? " " + u : ""); }
+    });
+    box._v = vals;
+  }
+  // lamps come on one after another, once per instrument
+  function light(box, sel) {
+    if (box._lit) return;
+    box._lit = 1;
+    try { qa(sel, box).forEach(function (l, i) { P.strike(l, (i % NIGHTS) * 34); }); } catch (e) {}
+  }
+  function sec(title, ru, right) {
+    return '<header class="p-sec"><h2>' + P.esc(title) + ' <span class="p-ru">/ ' + ru + "</span></h2><span>" + P.esc(right || "") + "</span></header>";
   }
 
   // ── data: read-only GETs on Kopia's API ─────────────────────
@@ -185,18 +223,20 @@
     return { cells: cells, nightly: nightly, first: first };
   }
 
-  function calendar(src, snaps, now) {
-    var n = nights(src, snaps, now), c = n.cells;
+  // the strip of lamps, its two end labels and the readout under it
+  function strip(n, took, now) {
+    var c = n.cells;
     var count = { ok: 0, miss: 0, none: 0, next: 0, run: 0 };
     c.forEach(function (x) { count[x.st]++; });
-    var dots = c.map(function (x) {
+    var lamps = c.map(function (x) {
       var d = wdm(x.at), t;
-      if (x.st === "ok") t = d + " · backed up " + hm(Date.parse(x.hit.startTime));
+      if (x.st === "ok") t = d + " · kept · started " + hm(Date.parse(x.hit.startTime)) +
+        (x.hit.summary && x.hit.summary.size != null ? " · " + bytes(x.hit.summary.size) : "");
       else if (x.st === "miss") t = d + " · missed";
-      else if (x.st === "next") t = d + " · runs " + (n.nightly ? hm(x.at) : "later");
+      else if (x.st === "next") t = d + " · runs " + (n.nightly ? "at " + hm(x.at) : "later");
       else if (x.st === "run") t = d + " · running now";
-      else t = d + " · " + (x.at < n.first ? "before the first backup" : "no snapshot kept");
-      return '<i class="' + x.st + '" title="' + P.esc(t) + '"></i>';
+      else t = d + " · " + (x.at < n.first ? "before the first backup" : "thinned out by retention");
+      return '<i class="' + x.st + '" data-t="' + P.esc(t) + '"></i>';
     }).join("");
     var ran = count.ok + count.miss;
     var word = n.nightly ? "nights" : "days";
@@ -204,11 +244,14 @@
       (count.none ? ", " + count.none + " with no snapshot on record" : "") + ". " +
       (count.run ? "A snapshot is running now. " : "") +
       (count.next && n.nightly ? "Tonight's runs at " + hm(c[c.length - 1].at) + "." : "");
-    var sum = ran ? count.ok + " of " + ran + " " + (ran === 1 ? word.slice(0, -1) : word) : count.run ? "running" : "first run tonight";
-    return '<div class="p-block"><div class="p-block-head"><span class="p-lbl">Every night · last 4 weeks</span><b>' + P.esc(sum) + "</b></div>" +
-      '<div class="p-cal" role="img" aria-label="' + P.esc(label) + '">' + dots + "</div>" +
-      '<div class="p-foot"><span>' + P.esc(dm(c[0].at)) + "</span><span>" + P.esc(n.nightly ? when(c[c.length - 1].at, now) : "today") + "</span></div>" +
-      '<div class="p-legend" aria-hidden="true"><span>backed up</span><span class="miss">missed</span><span class="next">' + (n.nightly ? "still to run" : "today") + '</span><span class="none">no record</span></div></div>';
+    var rd = ran ? count.ok + " of " + ran + " " + (ran === 1 ? word.slice(0, -1) : word) + " kept" + (count.miss ? " · " + count.miss + " missed" : "") +
+        (took ? " · last run took " + took : "") + (isFinite(n.first) ? " · on record since " + dm(n.first) : "")
+      : count.run ? "first snapshot running now"
+      : n.nightly ? "no snapshot yet · first run " + when(c[c.length - 1].at, now) + " at " + hm(c[c.length - 1].at)
+      : "no snapshot yet · manual only";
+    return '<div class="p-nights" role="img" aria-label="' + P.esc(label) + '">' + lamps + "</div>" +
+      '<div class="p-foot" aria-hidden="true"><span>' + P.esc(dm(c[0].at)) + "</span><span>" + P.esc(n.nightly ? when(c[c.length - 1].at, now) : "today") + "</span></div>" +
+      '<p class="p-rd" data-d="' + P.esc(rd) + '">' + P.esc(rd) + "</p>";
   }
 
   // the chip in each card's header: running > errors > never ran > missed > paused > ok
@@ -226,28 +269,24 @@
     return ["ok", "Up to date"];
   }
 
-  function stat(label, value, sub, raw) {
-    return '<div class="p-stat"><span class="p-lbl">' + P.esc(label) + "</span><b>" + (raw ? value : P.esc(value)) + "</b><small>" + P.esc(sub || "") + "</small></div>";
-  }
   function signed(d) { return (d > 0 ? "+" : d < 0 ? "−" : "±") + bytes(Math.abs(d)); }
 
-  function sourceCard(src, now) {
+  function sourceCard(src, now, i) {
     var s = src.source, snaps = data.snaps[sourceKey(s)] || [];
     var last = src.lastSnapshot, cal = nights(src, snaps, now), ch = chip(src, cal);
     var size = last && last.stats ? last.stats.totalSize : null;
     var files = last && last.rootEntry && last.rootEntry.summ ? last.rootEntry.summ.files : last && last.stats ? last.stats.fileCount : null;
     var lt = last ? Date.parse(last.startTime) : NaN, le = last ? Date.parse(last.endTime) : NaN;
     var next = src.nextSnapshotTime ? Date.parse(src.nextSnapshotTime) : NaN;
-    var stats =
-      stat("Last", isFinite(lt) ? hm(lt) : "–", isFinite(lt) ? when(lt, now) + (isFinite(le) ? " · " + dur(le - lt) : "") : "no snapshot yet") +
-      stat("Size", big(bytes(size)), files != null ? P.fmt(files) + (files === 1 ? " file" : " files") : "", true) +
-      stat("Next", isFinite(next) ? hm(next) : "–", isFinite(next) ? when(next, now) : "manual only");
-    return '<article class="p-card p-src" aria-label="' + P.esc(nameOf(s.path)) + '">' +
-      '<header class="p-card-head"><span class="p-well">' + P.icon("backup", "") + "</span>" +
-      '<div class="p-name"><h2><a href="' + P.esc(historyHref(s)) + '" data-p-nav>' + P.esc(nameOf(s.path)) + "</a></h2>" +
-      '<span class="p-path" title="' + P.esc(sourceKey(s)) + '">' + P.esc(s.path) + "</span></div>" +
-      '<span class="p-chip ' + ch[0] + '">' + P.esc(ch[1]) + "</span></header>" +
-      '<div class="p-stats">' + stats + "</div>" + calendar(src, snaps, now) + "</article>";
+    var figs =
+      fig(i + "l", [isFinite(lt) ? hm(lt) : "--", ""], "Last", isFinite(lt) ? when(lt, now) : "no snapshot yet") +
+      fig(i + "s", size != null ? split(bytes(size)) : ["--", ""], "Size", files != null ? P.fmt(files) + (files === 1 ? " file" : " files") : "") +
+      fig(i + "n", [isFinite(next) ? hm(next) : "--", ""], "Next", isFinite(next) ? when(next, now) : "manual only");
+    return '<article class="p-src" aria-label="' + P.esc(nameOf(s.path)) + '">' +
+      '<header class="p-head"><div class="p-name"><h3><a href="' + P.esc(historyHref(s)) + '" data-p-nav>' + P.esc(nameOf(s.path)) + "</a></h3>" +
+      '<span class="p-path">' + P.esc(s.path) + "</span></div>" +
+      '<span class="p-state ' + ch[0] + '"><i class="p-blk' + (ch[0] === "bad" ? " alarm" : "") + '"></i>' + P.esc(ch[1]) + "</span></header>" +
+      '<div class="p-big">' + figs + "</div>" + strip(cal, isFinite(le - lt) ? (le - lt < 100 ? "under 0.1 s" : dur(le - lt)) : "", now) + "</article>";
   }
 
   // ── pages ───────────────────────────────────────────────────
@@ -256,9 +295,11 @@
   function chrome(pg) {
     attr(document.documentElement, "data-p-page", pg);
     var brand = q("#root > nav.navbar .navbar-brand");
-    if (brand && !q(".p-well", brand)) {
-      brand.appendChild(P.el("span", "p-well", P.icon("backup", "")));
+    if (brand && !q(".p-label", brand)) {
       brand.appendChild(P.el("span", "p-label", "Backups"));
+      var ru = P.el("span", "p-ru", "/ Архив");
+      ru.setAttribute("aria-hidden", "true");
+      brand.appendChild(ru);
       brand.setAttribute("aria-label", "Backups home");
     }
     navHint();
@@ -308,7 +349,10 @@
     if (box.parentNode !== f || box.nextElementSibling !== anchor) f.insertBefore(box, anchor);
     // this server's own sources (Kopia's "Local Snapshots"); every source if none match
     var list = data.local && data.local.length ? data.local : data.sources;
-    set(box, list.map(function (s) { return sourceCard(s, now); }).join(""));
+    var at = list.map(function (s) { return s.nextSnapshotTime ? Date.parse(s.nextSnapshotTime) : NaN; }).filter(isFinite)[0];
+    var html = sec("Sources", "Источники", NIGHTS + " nights" + (at ? " · " + hm(at) : "")) +
+      '<div class="p-grid">' + list.map(function (s, i) { return sourceCard(s, now, i); }).join("") + "</div>";
+    if (set(box, html)) { fill(box); light(box, ".p-nights i"); }
   }
 
   function historyPage(now) {
@@ -321,7 +365,7 @@
     var snaps = data.snaps[key];
     if (!src || !snaps) return;
     var box = q("#p-history");
-    if (!box) { box = P.el("section", "p-card p-history"); box.id = "p-history"; box.setAttribute("aria-label", "Snapshot history"); }
+    if (!box) { box = P.el("section", "p-hist"); box.id = "p-history"; box.setAttribute("aria-label", "Snapshot history"); }
     if (box.parentNode !== f || box.nextElementSibling !== tableRow) f.insertBefore(box, tableRow);
 
     // growth = total size minus the snapshot before it (Kopia's list has no "bytes added")
@@ -331,19 +375,17 @@
       return { x: x, t: Date.parse(x.startTime), size: sz, d: p && p.summary && sz != null ? sz - p.summary.size : null, failed: x.summary ? x.summary.numFailed : 0 };
     });
     var ds = rows.map(function (r) { return r.d; }).filter(function (d) { return d != null; });
-    var up = Math.max.apply(null, ds.concat([0])), down = -Math.min.apply(null, ds.concat([0]));
-    var range = up + down || 1, base = down / range * 100;
+    // each column is CELLS cells; the biggest change of the window fills it, any change lights at least one
+    var CELLS = 8, top = Math.max.apply(null, ds.map(Math.abs).concat([0]));
     var bars = "", days = "", prevLabel = null;
-    for (var i = 0; i < BARS - rows.length; i++) { bars += '<span><i class="empty" style="bottom:' + base.toFixed(1) + '%"></i></span>'; days += "<span></span>"; }
-    rows.forEach(function (r, j) {
-      var tip = wdm(r.t) + " " + hm(r.t) + " · " + bytes(r.size) + (r.d != null ? " (" + signed(r.d) + ")" : " · first snapshot") +
+    for (var i = 0; i < BARS - rows.length; i++) { bars += '<i class="void"></i>'; days += "<span></span>"; }
+    rows.forEach(function (r) {
+      var tip = wdm(r.t) + " " + hm(r.t) + " · " + bytes(r.size) + (r.d != null ? " · " + signed(r.d) : " · first snapshot") +
         (r.failed ? " · " + r.failed + " failed" : "");
-      var cls = r.d == null ? "first" : r.d < 0 ? "neg" : r.d === 0 ? "zero" : "";
+      var cls = r.d != null && r.d < 0 ? "neg" : "";
       if (r.failed) cls += " err";
-      if (j === rows.length - 1) cls += " last";
-      var h = r.d ? Math.abs(r.d) / range * 100 : 0;
-      var pos = r.d != null && r.d < 0 ? "top:" + (100 - base).toFixed(1) + "%" : "bottom:" + base.toFixed(1) + "%";
-      bars += '<span title="' + P.esc(tip) + '"><i class="' + cls.trim() + '" style="' + pos + ";height:" + h.toFixed(1) + '%"></i></span>';
+      var lit = r.d && top ? Math.max(1, Math.round(Math.abs(r.d) / top * CELLS)) : 0;
+      bars += "<i" + (cls ? ' class="' + cls.trim() + '"' : "") + ' style="--v:' + (lit / CELLS * 100).toFixed(1) + '%" data-t="' + P.esc(tip) + '"></i>';
       var day = String(new Date(r.t).getDate()), mo = new Date(r.t).toLocaleDateString("en-GB", { month: "short" });
       var sub = prevLabel === null || prevLabel.mo !== mo ? mo : prevLabel.day === day ? hm(r.t) : "&nbsp;";
       days += "<span>" + day + "<small>" + sub + "</small></span>";
@@ -357,21 +399,23 @@
       "Growth per snapshot over the last " + rows.length + ", between " + signed(Math.min.apply(null, ds)) + " and " + signed(Math.max.apply(null, ds)) +
       (last.d != null ? "; latest " + signed(last.d) : "") + ".";
     var head = last && last.d != null ? signed(last.d) + " last time" : "";
-    var html =
-      '<header class="p-card-head"><span class="p-well">' + P.icon("backup", "") + "</span>" +
-      '<div class="p-name"><h2>' + P.esc(nameOf(src.source.path)) + '</h2><span class="p-path" title="' + P.esc(key) + '">' + P.esc(src.source.path) + "</span></div>" +
-      '<span class="p-chip info">' + P.fmt(snaps.length) + (snaps.length === 1 ? " snapshot" : " snapshots") + "</span></header>" +
-      '<div class="p-stats">' +
-      stat("Latest", sm ? big(bytes(sm.size)) : "–", isFinite(lt) ? when(lt, now) + " " + hm(lt) : "", true) +
-      stat("Files", sm ? P.fmt(sm.files) : "–", sm ? P.fmt(sm.dirs) + " folders" : "") +
-      stat("Took", isFinite(le - lt) ? big(dur(le - lt)) : "–", took.length > 1 ? "average " + dur(avg) : took.length ? "first snapshot" : "", true) +
-      "</div>" +
-      '<div class="p-chart"><div class="p-block-head"><span class="p-lbl">Growth per snapshot</span><b>' + P.esc(head) + "</b></div>" +
-      '<div class="p-bars' + (down ? " has-neg" : "") + '" role="img" aria-label="' + P.esc(label) + '">' + bars +
-      (!ds.length ? '<em class="p-note">' + (rows.length ? "Growth shows from the second snapshot on." : "No snapshots yet.") + "</em>" : "") +
-      (down ? '<em class="p-zero" style="bottom:calc(12px + (100% - 28px) * ' + (base / 100).toFixed(3) + ')"></em>' : "") + "</div>" +
-      '<div class="p-days" aria-hidden="true">' + days + "</div></div>";
-    set(box, html);
+    var rd = !rows.length ? "no snapshots yet" : !ds.length ? "one snapshot so far · " + bytes(last.size) + " · growth shows from the second one on" :
+      !top ? "no change in size over the last " + rows.length + " snapshots · " + bytes(last.size) :
+      "one cell = " + bytes(top / CELLS) + (last.d != null ? " · latest " + signed(last.d) : "") +
+      " · between " + signed(Math.min.apply(null, ds)) + " and " + signed(Math.max.apply(null, ds));
+    var html = sec("History", "История", P.fmt(snaps.length) + (snaps.length === 1 ? " snapshot" : " snapshots")) +
+      '<div class="p-hist-body"><div>' +
+      '<header class="p-head"><div class="p-name"><h3>' + P.esc(nameOf(src.source.path)) + '</h3><span class="p-path">' + P.esc(src.source.path) + "</span></div></header>" +
+      '<div class="p-big">' +
+      fig("hl", sm ? split(bytes(sm.size)) : ["--", ""], "Latest", isFinite(lt) ? when(lt, now) + " " + hm(lt) : "") +
+      fig("hf", [sm ? P.fmt(sm.files) : "--", ""], "Files", sm ? P.fmt(sm.dirs) + " folders" : "") +
+      fig("ht", durFig(le - lt), "Took", took.length > 1 ? "average " + dur(avg) : took.length ? "first snapshot" : "") +
+      "</div></div><div>" +
+      '<div class="p-sub"><span>Growth per snapshot</span><b>' + P.esc(head) + "</b></div>" +
+      '<div class="p-cols" role="img" aria-label="' + P.esc(label) + '">' + bars + "</div>" +
+      '<div class="p-days" aria-hidden="true">' + days + "</div></div></div>" +
+      '<p class="p-rd" data-d="' + P.esc(rd) + '">' + P.esc(rd) + "</p>";
+    if (set(box, html)) { fill(box); light(box, ".p-cols i"); }
   }
 
   // snapshot browser: a bar under each size, scaled to the biggest entry on the page
@@ -386,10 +430,10 @@
       cells.forEach(function (td, i) {
         var bar = q(":scope > .p-sizebar", td);
         if (vals[i] == null) { if (bar) bar.remove(); return; }
-        if (!bar) { bar = P.el("i", "p-sizebar", "<b></b>"); bar.setAttribute("aria-hidden", "true"); }
+        if (!bar) { bar = P.el("i", "p-sizebar"); bar.setAttribute("aria-hidden", "true"); }
         if (td.lastChild !== bar) td.appendChild(bar);   // React may re-add the value after us
-        var w = Math.max(1, vals[i] / max * 100).toFixed(1) + "%";
-        if (bar.firstChild.style.width !== w) bar.firstChild.style.width = w;
+        var w = Math.max(3, vals[i] / max * 100).toFixed(1) + "%";
+        if (bar.style.getPropertyValue("--v") !== w) bar.style.setProperty("--v", w);
       });
     });
   }
@@ -402,11 +446,33 @@
     });
   }
 
-  // Preferences: Kopia's theme picker no longer changes colours here
+  // Preferences: Kopia's theme and font-size pickers no longer change the look here
   function prefsPage() {
     var sel = q("#themeSelector");
     if (!sel || q(".p-note-theme", sel.parentNode)) return;
-    sel.parentNode.appendChild(P.el("small", "p-note-theme", "Plint follows your device's light or dark setting."));
+    sel.parentNode.appendChild(P.el("small", "p-note-theme", "The Plint look is fixed: theme and font size here do not change it."));
+  }
+
+  // a lamp or a column, tapped or pointed at, says its own night in the readout; then the summary returns
+  var rdNode = null, rdTimer = null;
+  function unread() {
+    clearTimeout(rdTimer); rdTimer = null;
+    if (!rdNode) return;
+    var host = rdNode.closest(".p-src, .p-hist"), rd = host && q(".p-rd", host);
+    rdNode.classList.remove("sel");
+    rdNode = null;
+    if (rd) text(rd, rd.getAttribute("data-d") || "");
+  }
+  function read(e) {
+    var i = e.target && e.target.closest && e.target.closest("#p-sources i[data-t], #p-history i[data-t]");
+    if (!i || i === rdNode) return;
+    var host = i.closest(".p-src, .p-hist"), rd = host && q(".p-rd", host);
+    if (!rd) return;
+    unread();
+    rdNode = i;
+    i.classList.add("sel");
+    text(rd, i.getAttribute("data-t"));
+    rdTimer = setTimeout(unread, 6000);
   }
 
   function cleanup(pg) {
@@ -445,6 +511,8 @@
     var twin = qa("#root a[href]").filter(function (x) { return !x.hasAttribute("data-p-nav") && x.getAttribute("href") === a.getAttribute("href"); })[0];
     if (twin) { e.preventDefault(); twin.click(); }
   });
+  document.addEventListener("click", read);
+  document.addEventListener("mouseover", read, { passive: true });
 
   function start() {
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, characterData: true });

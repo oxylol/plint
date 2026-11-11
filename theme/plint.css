@@ -1,206 +1,227 @@
 /* ─────────────────────────────────────────────────────────────
-   Plint Soft UI · shared layer
-   Caddy injects this (plus apps/<app>.css and plint.js) into every
-   themed app. Tokens are prefixed --p- so they never collide with an
-   app's own variables. Light/dark follows the device.
+   Plint Terminal · shared tokens and the Plint strip
+   Injected into every themed app by Caddy (see caddy/Caddyfile).
+   Each app adds its own sheet from /_plint/apps/<app>.css.
+
+   One light on black. No colour: a state is shown by inverse video,
+   a lamp that is lit or hollow, or a block that blinks. Every block
+   is cut top-left and bottom-right, like the stones of the mark.
+   Motion is stepped, never eased. Always dark.
    ───────────────────────────────────────────────────────────── */
 
-@font-face {
-  font-family: "Manrope";
-  src: url("/_plint/fonts/manrope.woff2") format("woff2");
-  font-weight: 200 800;
-  font-display: swap;
-}
-@font-face {
-  font-family: "JetBrains Mono";
-  src: url("/_plint/fonts/jetbrains-mono.woff2") format("woff2");
-  font-weight: 100 800;
-  font-display: swap;
-}
+@font-face { font-family: "Geist Mono"; font-weight: 400; font-display: swap; src: url("/_plint/fonts/geist-mono-latin-400.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+2000-206F, U+2212; }
+@font-face { font-family: "Geist Mono"; font-weight: 600; font-display: swap; src: url("/_plint/fonts/geist-mono-latin-600.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+2000-206F, U+2212; }
+@font-face { font-family: "Geist Mono"; font-weight: 400; font-display: swap; src: url("/_plint/fonts/geist-mono-cyrillic-400.woff2") format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Geist Mono"; font-weight: 600; font-display: swap; src: url("/_plint/fonts/geist-mono-cyrillic-600.woff2") format("woff2"); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: "Doto"; font-weight: 900; font-display: swap; src: url("/_plint/fonts/doto-900.woff2") format("woff2"); }
+/* Doto draws its full stop as a five-dot cross, which reads as a plus inside a figure: take the point and comma from the text face */
+@font-face { font-family: "Doto"; font-weight: 900; font-display: swap; src: url("/_plint/fonts/geist-mono-latin-600.woff2") format("woff2"); unicode-range: U+002C, U+002E; }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  --p-font: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --p-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* the light: white with a trace of green */
+  --p-ph: 228, 248, 234;
+  --p-bg: #0f0e11;
+  --p-ink: rgb(var(--p-ph));
+  --p-ink2: rgba(var(--p-ph), 0.58);          /* secondary text: the same light, dimmer */
+  --p-faint: rgba(var(--p-ph), 0.28);
+  --p-line: rgba(var(--p-ph), 0.14);
+  --p-track: rgba(var(--p-ph), 0.11);         /* the unlit part of a meter */
 
-  --p-bg: #e4e9e5;          /* ground: everything sits on this */
-  --p-ink: #22302a;         /* moss: text */
-  --p-ink2: #56655d;        /* lichen: secondary text, still 5:1 */
-  --p-line: rgba(34, 48, 42, 0.1);
-  --p-hi: rgba(255, 255, 255, 0.92);   /* light shadow (top-left) */
-  --p-lo: rgba(146, 163, 152, 0.55);   /* dark shadow (bottom-right) */
-  --p-edge: rgba(255, 255, 255, 0.6);  /* hairline that catches the light */
-  --p-track: #d3dad5;       /* empty part of a gauge */
-  --p-accent: #3f6a53;      /* sage */
-  --p-accent-soft: rgba(63, 106, 83, 0.13);
-  --p-on-accent: #f2f6f3;
-  --p-warn: #8a5010;
-  --p-warn-soft: rgba(138, 80, 16, 0.12);
-  --p-bad: #a63d32;
-  --p-bad-soft: rgba(166, 61, 50, 0.12);
-  --p-info: #4a6585;
-  --p-info-soft: rgba(74, 101, 133, 0.13);
+  --p-font: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --p-mono: var(--p-font);
+  --p-dot: "Doto", var(--p-font);             /* dot-matrix numerals, weight 900 */
 
-  --p-raise: 9px 9px 20px var(--p-lo), -9px -9px 20px var(--p-hi);
-  --p-raise-sm: 4px 4px 10px var(--p-lo), -4px -4px 10px var(--p-hi);
-  --p-press: inset 6px 6px 12px var(--p-lo), inset -6px -6px 12px var(--p-hi);
-  --p-press-sm: inset 3px 3px 6px var(--p-lo), inset -3px -3px 6px var(--p-hi);
+  --p-glow: 0 0 9px rgba(var(--p-ph), 0.38);  /* text-shadow */
+  --p-bloom: drop-shadow(0 0 7px rgba(var(--p-ph), 0.5)) drop-shadow(0 0 22px rgba(var(--p-ph), 0.22));   /* filter, for the mark and lit shapes */
+  --p-ch: 7px;                                /* the chamfer */
+  --p-cut: polygon(var(--p-ch) 0, 100% 0, 100% calc(100% - var(--p-ch)), calc(100% - var(--p-ch)) 100%, 0 100%, 0 var(--p-ch));
 
-  --p-r-lg: 26px;
-  --p-r: 18px;
-  --p-r-sm: 12px;
+  /* names kept from the Soft UI so the app sheets keep working. There is one
+     light: accent, warning, fault and info are all the ink; say which it is
+     with inverse video or a blinking block, not with a hue. */
+  --p-accent: var(--p-ink);
+  --p-accent-soft: var(--p-line);
+  --p-on-accent: var(--p-bg);
+  --p-warn: var(--p-ink);
+  --p-warn-soft: var(--p-line);
+  --p-bad: var(--p-ink);
+  --p-bad-soft: var(--p-line);
+  --p-info: var(--p-ink);
+  --p-info-soft: var(--p-line);
+  --p-hi: transparent;
+  --p-lo: transparent;
+  --p-edge: var(--p-line);
+  --p-raise: 0 0 0 1px var(--p-line);         /* a surface is a hairline frame */
+  --p-raise-sm: 0 0 0 1px var(--p-line);
+  --p-press: inset 0 0 0 1px var(--p-faint);  /* a well, or a pressed control */
+  --p-press-sm: inset 0 0 0 1px var(--p-faint);
+  --p-r-lg: 0px;
+  --p-r: 0px;
+  --p-r-sm: 0px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --p-bg: #1e2421;
-    --p-ink: #dde6e0;
-    --p-ink2: #9aa8a0;
-    --p-line: rgba(221, 230, 224, 0.08);
-    --p-hi: rgba(255, 255, 255, 0.05);
-    --p-lo: rgba(0, 0, 0, 0.5);
-    --p-edge: rgba(255, 255, 255, 0.04);
-    --p-track: #151a17;
-    --p-accent: #8ec3a4;
-    --p-accent-soft: rgba(142, 195, 164, 0.14);
-    --p-on-accent: #13201a;
-    --p-warn: #e0a458;
-    --p-warn-soft: rgba(224, 164, 88, 0.14);
-    --p-bad: #e5877b;
-    --p-bad-soft: rgba(229, 135, 123, 0.14);
-    --p-info: #93b0d6;
-    --p-info-soft: rgba(147, 176, 214, 0.14);
-  }
+html { background: var(--p-bg); -webkit-text-size-adjust: 100%; }
+body { -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--p-ink); color: var(--p-bg); text-shadow: none; }
+* { scrollbar-width: thin; scrollbar-color: var(--p-faint) transparent; }
+
+@keyframes p-blink { 50% { opacity: 0; } }
+
+/* ── shared pieces (use these class names in apps/*.css and apps/*.js) ── */
+
+/* a label: caps, wide */
+.p-u { text-transform: uppercase; letter-spacing: 0.14em; }
+.p-dim { color: var(--p-ink2); }
+.p-ru { color: var(--p-ink2); }               /* the Cyrillic twin of a label */
+
+/* inverse video: a notice, a selection, a fault */
+.p-inv { background: var(--p-ink); color: var(--p-bg); text-shadow: none; padding: 1px 0.5em; font-weight: 600; }
+
+/* a lamp: lit, hollow when off, blinking when it wants attention */
+.p-blk {
+  display: inline-block; width: 8px; height: 11px; vertical-align: -1px; flex: none;
+  background: currentColor;
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.6));
+}
+.p-blk.off { background: none; box-shadow: inset 0 0 0 1px currentColor; clip-path: none; filter: none; opacity: 0.5; }
+.p-blk.alarm { animation: p-blink 1s steps(1) infinite; }
+
+/* a block cut like the mark: solid (primary) or outlined (.o) */
+.p-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px; border: 0; border-radius: 0; cursor: pointer;
+  font: 600 11px/1 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none;
+  background: var(--p-ink); color: var(--p-bg); text-shadow: none; box-shadow: none;
+  clip-path: var(--p-cut); touch-action: manipulation;
+}
+.p-btn.o { position: relative; color: var(--p-ink); isolation: isolate; }
+.p-btn.o::before { content: ""; position: absolute; inset: 1px; background: var(--p-bg); clip-path: var(--p-cut); z-index: -1; }
+.p-btn.sm { min-height: 36px; padding: 0 12px; font-size: 10px; --p-ch: 6px; }
+.p-btn:active { opacity: 0.55; }
+.p-btn.o:active { opacity: 1; color: var(--p-bg); }
+.p-btn.o:active::before { background: var(--p-ink); }
+
+/* a dot-matrix figure */
+.p-num { font: 900 36px/0.85 var(--p-dot); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.p-num sub { font: 600 0.3em/1 var(--p-font); letter-spacing: 0.1em; vertical-align: baseline; position: static; bottom: auto; margin-left: 5px; }
+
+/* a meter made of dots: style="--v: 42%" */
+.p-meter {
+  height: 11px; background: linear-gradient(90deg, var(--p-ink) var(--v, 0%), var(--p-track) 0);
+  filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.4));
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='3' height='3'/%3E%3C/svg%3E");
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='3' height='3'/%3E%3C/svg%3E");
 }
 
-/* ── Plint pill: home · all apps · health ─────────────────────
-   plint.js mounts it inside each app's own header (or floats it). */
+/* the block cursor */
+.p-cursor { display: inline-block; width: 0.62em; height: 1.05em; vertical-align: -0.17em; background: var(--p-ink); box-shadow: var(--p-glow); animation: p-blink 1s steps(1) infinite; }
+
+/* a light that has not been struck yet (Plint.strike(el) switches it on) */
+.p-fl { opacity: 0; }
+.p-fl.on { opacity: 1; }
+
+/* the ring of Plint.ring(): a dial of ticks, the lit ones are the value */
+.p-ring { display: block; overflow: visible; filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.4)); }
+.p-ring-track { fill: none; stroke: var(--p-track); }
+.p-ring-val { fill: none; stroke: var(--p-ink); }
+
+/* ── the Plint strip: home · all apps · health ───────────────
+   plint.js mounts it inside each app's own header (or floats it).
+   The ids are the old pill's, so the app sheets still find it. */
 
 #plint-pill {
   all: initial;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex: none;
-  height: 44px;
-  padding: 4px;
+  display: inline-flex; align-items: center; gap: 8px; flex: none;
   margin-right: 14px;
-  border-radius: 15px;
-  background: var(--p-bg);
-  box-shadow: var(--p-raise-sm);
-  border: 1px solid var(--p-edge);
-  font-family: var(--p-font);
-  color: var(--p-ink);
-  position: relative;
-  z-index: 20;               /* inside the app's header: stays under its dialogs */
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
+  font-family: var(--p-font); color: var(--p-ink);
+  position: relative; z-index: 20;            /* inside the app's header: stays under its dialogs */
+  box-sizing: border-box; -webkit-font-smoothing: antialiased;
+  --p-ch: 6px;
 }
 #plint-pill.plint-float {
-  z-index: 2147483000;
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  margin: 0;
+  z-index: 2147483000; position: fixed; top: 10px; left: 10px; margin: 0;
+  padding: 4px; background: var(--p-bg); box-shadow: 0 0 0 1px var(--p-line);
 }
 #plint-pill * { box-sizing: border-box; font-family: inherit; }
 #plint-pill a, #plint-pill button {
-  all: unset;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 34px;
-  min-width: 34px;
-  padding: 0 10px;
-  border-radius: 11px;
-  cursor: pointer;
-  color: var(--p-ink);
-  font: 800 14px/1 var(--p-font);
-  transition: box-shadow 0.15s ease;
+  all: unset; box-sizing: border-box; cursor: pointer; touch-action: manipulation;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 36px; min-width: 36px; padding: 0 12px;
+  font: 600 10px/1 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
 }
-#plint-pill a:hover, #plint-pill button:hover { box-shadow: var(--p-raise-sm); }
-#plint-pill a:active, #plint-pill button:active,
-#plint-pill button[aria-expanded="true"] { box-shadow: var(--p-press-sm); }
-#plint-pill a:focus-visible, #plint-pill button:focus-visible {
-  outline: 2px solid var(--p-accent);
-  outline-offset: 2px;
-}
-#plint-pill .plint-home { padding: 0 10px 0 6px; }
-#plint-pill .plint-logo { width: 24px; height: 24px; flex: none; }
-#plint-pill .plint-logo rect { fill: var(--p-accent); }
+#plint-pill .plint-home { background: var(--p-ink); color: var(--p-bg); clip-path: var(--p-cut); padding-left: 10px; }
+#plint-pill .plint-apps { position: relative; isolation: isolate; background: var(--p-ink); color: var(--p-ink); clip-path: var(--p-cut); }
+#plint-pill .plint-apps::before { content: ""; position: absolute; inset: 1px; background: var(--p-bg); clip-path: var(--p-cut); z-index: -1; }
+#plint-pill .plint-apps[aria-expanded="true"] { color: var(--p-bg); }
+#plint-pill .plint-apps[aria-expanded="true"]::before { background: var(--p-ink); }
+#plint-pill .plint-home:active { opacity: 0.55; }
+#plint-pill .plint-apps:active { color: var(--p-bg); }
+#plint-pill .plint-apps:active::before { background: var(--p-ink); }
+#plint-pill .plint-status { padding: 0 4px; gap: 7px; font-weight: 400; letter-spacing: 0.14em; text-shadow: var(--p-glow); }
+/* the apps' own header rules (their link colours, gradients, radii) must not reach into the strip */
+#plint-pill a, #plint-pill button { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background-image: none !important; text-decoration: none !important; transform: none !important; transition: none !important; margin: 0 !important; }
+#plint-pill .plint-home { background-color: var(--p-ink) !important; color: var(--p-bg) !important; }
+#plint-pill .plint-apps { background-color: var(--p-ink) !important; color: var(--p-ink) !important; }
+#plint-pill .plint-apps[aria-expanded="true"], #plint-pill .plint-apps:active { color: var(--p-bg) !important; }
+#plint-pill .plint-status { background: none !important; color: var(--p-ink) !important; }
+#plint-pill svg.plint-logo { fill: currentColor !important; stroke: none !important; }
+#plint-pill a:focus-visible, #plint-pill button:focus-visible { outline: 1px solid var(--p-ink); outline-offset: 2px; }
+#plint-pill .plint-logo { width: 17px; height: 12px; flex: none; fill: currentColor; }
 #plint-pill .plint-dot {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: var(--p-ink2);
-  flex: none;
+  width: 8px; height: 11px; flex: none; background: var(--p-faint);
+  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
 }
-#plint-pill .plint-dot.ok { background: var(--p-accent); }
-#plint-pill .plint-dot.warn { background: var(--p-warn); }
-#plint-pill .plint-dot.bad { background: var(--p-bad); }
-#plint-pill .plint-health { font: 700 13px/1 var(--p-font); font-variant-numeric: tabular-nums; color: var(--p-ink2); }
-#plint-pill svg.plint-ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#plint-pill .plint-dot.ok { background: var(--p-ink); filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.6)); }
+#plint-pill .plint-dot.warn { background: var(--p-ink); animation: p-blink 2s steps(1) infinite; }
+#plint-pill .plint-dot.bad { background: var(--p-ink); animation: p-blink 1s steps(1) infinite; }
+#plint-pill .plint-status.bad .plint-health { background: var(--p-ink); color: var(--p-bg); text-shadow: none; padding: 3px 5px; font-weight: 600; }
+#plint-pill .plint-health { font-variant-numeric: tabular-nums; }
 
+/* the list of units, like the registry on the home page */
 #plint-menu {
   all: initial;
-  position: fixed;
-  z-index: 2147483001;
-  width: min(340px, calc(100vw - 24px));
-  padding: 14px;
-  border-radius: 22px;
-  background: var(--p-bg);
-  box-shadow: var(--p-raise), 0 18px 40px rgba(0, 0, 0, 0.18);
-  border: 1px solid var(--p-edge);
-  font-family: var(--p-font);
-  color: var(--p-ink);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
+  position: fixed; z-index: 2147483001;
+  width: min(300px, calc(100vw - 20px)); max-height: calc(100vh - 80px); max-height: calc(100dvh - 80px); overflow-y: auto;
+  padding: 4px 12px 8px;
+  background: var(--p-bg); box-shadow: 0 0 0 1px var(--p-faint), 0 18px 50px #000;
+  font-family: var(--p-font); color: var(--p-ink);
+  display: block; box-sizing: border-box; -webkit-font-smoothing: antialiased;
+  scrollbar-width: none;
 }
 #plint-menu[hidden] { display: none; }
+#plint-menu * { box-sizing: border-box; }
+#plint-menu h4 { all: unset; display: block; font: 400 9px/1 var(--p-font); letter-spacing: 0.2em; color: var(--p-ink2); padding: 14px 0 8px; }
 #plint-menu a {
-  all: unset;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 4px 10px;
-  border-radius: 16px;
-  cursor: pointer;
-  color: var(--p-ink);
-  font: 700 12px/1.2 var(--p-font);
-  text-align: center;
+  all: unset; box-sizing: border-box; cursor: pointer;
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 8px; margin: 0 -8px;
+  border-top: 1px solid var(--p-line);
+  font: 600 12px/1 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; text-shadow: var(--p-glow);
+  -webkit-tap-highlight-color: transparent;
 }
-#plint-menu a .plint-well {
-  width: 44px; height: 44px; border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--p-raise-sm);
-  color: var(--p-accent);
+#plint-menu a small { font: 400 9.5px/1 var(--p-font); letter-spacing: 0.12em; color: var(--p-ink2); }
+#plint-menu a[aria-current="page"], #plint-menu a:active { background: var(--p-ink); color: var(--p-bg); text-shadow: none; }
+#plint-menu a[aria-current="page"] small, #plint-menu a:active small { color: var(--p-bg); }
+#plint-menu a:focus-visible { outline: 1px solid var(--p-ink); outline-offset: -3px; }
+@media (hover: hover) {
+  #plint-menu a:hover { background: var(--p-ink); color: var(--p-bg); text-shadow: none; }
+  #plint-menu a:hover small { color: var(--p-bg); }
 }
-#plint-menu a:hover .plint-well { box-shadow: var(--p-press-sm); }
-#plint-menu a[aria-current="page"] .plint-well { box-shadow: var(--p-press-sm); }
-#plint-menu a:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 2px; }
-#plint-menu svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* fingers need 44px targets */
 @media (pointer: coarse) {
-  #plint-pill { height: 52px; }
   #plint-pill a, #plint-pill button { height: 44px; min-width: 44px; }
 }
-
 @media (max-width: 600px) {
-  #plint-pill { margin-right: 8px; }
-  #plint-pill .plint-home span, #plint-pill .plint-health { display: none; }
+  #plint-pill { margin-right: 8px; gap: 6px; }
+  #plint-pill .plint-home span { display: none; }
+  #plint-pill .plint-home { padding: 0 12px; }
 }
 
-/* ── shared infographic pieces (drawn by plint.js helpers) ── */
-.p-ring { display: block; overflow: visible; }
-.p-ring-track { fill: none; stroke: var(--p-track); }
-.p-ring-val { fill: none; stroke: var(--p-accent); transition: stroke-dasharray 0.6s ease; }
-.p-ring-val.p-info { stroke: var(--p-info); }
-.p-ring-val.p-warn { stroke: var(--p-warn); }
-.p-ring-val.p-bad { stroke: var(--p-bad); }
+@media (prefers-reduced-motion: reduce) {
+  #plint-pill .plint-dot, .p-blk.alarm, .p-cursor { animation: none; }
+}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" data-cyr="on" data-flk="on" class="boot">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f0e11">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plint">
+<title>Plint</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' fill='%230f0e11'/%3E%3Cpath fill='%23e4f8ea' d='M14 74h108v20l-8 8H6V82zM26 50h72v12l-6 6H20V56zM49 28h57v11l-5 5H44V33z'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/_plint/home/icon-180.png">
+<link rel="manifest" href="/_plint/home/manifest.json">
+<link rel="preload" href="/_plint/fonts/geist-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/_plint/fonts/doto-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/_plint/home/home.css">
+</head>
+<body>
+    <div class="stage" id="stage" role="img" aria-label="Plint is starting. Tap to skip.">
+      <div class="log" id="log"></div>
+      <i class="tk" style="right:6px;top:6px"></i><i class="tk" style="left:6px;bottom:6px"></i><i class="tk" style="right:6px;bottom:6px"></i>
+      <span class="ft" style="left:22px"><span class="ru">ПЛИНТ // </span>PL-01</span><span class="ft" style="right:22px">REV 1.0</span>
+      <div class="brand" id="brand"><canvas class="pix" id="mark"></canvas><canvas class="pix" id="word"></canvas></div>
+    </div>
+<main>
+  <section class="sec home">
+    <div class="tick fl"><div id="tick"></div></div>
+    <div class="mast fl">
+      <div class="id"><canvas class="pix" data-art="word" data-cell="2" data-gap="0"></canvas><small>HOME SERVER CONTROLLER</small></div>
+      <div class="clock"><span id="hh">23</span><span class="col"></span><span id="mm">41</span><small id="dt">SUN 09 NOV</small></div>
+    </div>
+    <div class="secs" id="secs"></div>
+    <div class="cairn fl" id="cairn"><canvas class="pix m" data-art="mark" data-cell="2" data-gap=".2"></canvas><canvas class="dith" data-rows="7"></canvas></div>
+    <div class="big fl">
+      <div><strong id="bUnits"></strong><span>UNITS ONLINE</span></div>
+      <div><strong id="bCpu"></strong><span>CPU LOAD</span></div>
+      <div><strong id="bUp"></strong><span>UPTIME</span></div>
+    </div>
+    <div class="src fl"><span class="blk"></span><span id="srcT"></span></div>
+
+    <div class="insg">
+      <div class="ins"><div class="grp"><span>SEATS <span class="ru dim">/ МЕСТА</span></span><a data-go="games">GAME SERVERS</a></div>
+        <div class="seats" id="seats"></div><p class="rd"></p></div>
+      <div class="ins"><div class="grp"><span>CORES <span class="ru dim">/ ЯДРА</span></span><a data-go="metrics">CPU · 4 CORES</a></div>
+        <div class="cores" id="cores"></div><p class="rd"></p></div>
+      <div class="ins"><div class="grp"><span>MEMORY MAP <span class="ru dim">/ ПАМЯТЬ</span></span><a data-go="metrics"><span id="memH"></span></a></div>
+        <div class="mem" id="mem"></div><p class="rd"></p></div>
+      <div class="ins"><div class="grp"><span>CORE SAMPLE <span class="ru dim">/ КЕРН</span></span><a data-go="host">2 DISKS</a></div>
+        <div class="core" id="core"></div><p class="rd"></p></div>
+      <div class="ins"><div class="grp"><span>DAY DIAL <span class="ru dim">/ СУТКИ</span></span><a data-go="dns">DNS · 24 H</a></div>
+        <div class="dialw"><div class="dial" id="dial"></div><ul class="key" id="dkey"></ul></div></div>
+      <div class="ins"><div class="grp"><span>CONSTELLATION <span class="ru dim">/ СОЗВЕЗДИЕ</span></span><span>TAILNET</span></div>
+        <div class="stars" id="stars"></div><p class="rd"></p></div>
+      <div class="ins w"><div class="grp"><span>PUNCH CARD <span class="ru dim">/ ПЕРФОКАРТА</span></span><a data-go="status">UPTIME · 30 D</a></div>
+        <div class="card" id="card"></div><p class="rd"></p></div>
+      <div class="ins"><div class="grp"><span>INTERNET <span class="ru dim">/ СВЯЗЬ</span></span><a data-go="speed">DOWNLOAD · 7 D</a></div>
+        <div id="net"></div><p class="rd"></p></div>
+      <div class="ins"><div class="grp"><span>BACKUPS <span class="ru dim">/ АРХИВ</span></span><a data-go="backup">14 NIGHTS · 03:30</a></div>
+        <div class="nwrap"><div class="nights" id="nights"></div></div><p class="rd"></p></div>
+    </div>
+
+    <div class="fl">
+      <div class="grp"><span>REGISTRY <span class="ru dim">/ РЕЕСТР</span></span><span>PORT · UNIT · STATE</span></div>
+      <div class="reg" id="reg"></div>
+    </div>
+  </section>
+  <footer class="plate fl">
+    <canvas class="dith" data-rows="8" data-flip="1"></canvas>
+    <div class="pl"><canvas class="pix" data-art="mark" data-cell="4" data-gap="0"></canvas>
+      <div><b><span class="ru">ПЛИНТ / </span>PLINT</b><small>MODEL PL-01 · SER 000417 <span class="ru">· СДЕЛАНО ДОМА</span> · MADE AT HOME</small></div>
+      <div class="bar" id="bar"></div></div>
+  </footer>
+</main>
+<noscript><p style="padding:40px 0">Plint's home page draws itself with JavaScript.</p></noscript>
+<script src="/_plint/home/home.js"></script>
+</body>
+</html>

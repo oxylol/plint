@@ -1,16 +1,20 @@
 /* ─────────────────────────────────────────────────────────────
-   Plint Soft UI · AdGuard Home extras
-   - the Plint pill goes first in AdGuard's own header row
-   - Dashboard hero, from the read-only GET control/stats and
-     control/status the browser is already logged in for:
-       1 blocked-share ring with a legend
-       2 queries over time, allowed vs blocked, stacked bars
-       3 average answer time gauge (+ fastest / slowest upstream)
-   - tags the Top blocked domains card so its bars turn amber
-   Colours: allowed = sage, blocked by filters = amber (warn),
-   malware/phishing = rust (bad), adult = slate (info).
-   Everything is redrawn idempotently: AdGuard is React and
-   re-renders whole pages on navigation and refresh.
+   Plint Terminal · AdGuard Home extras
+   - the Plint strip goes first in AdGuard's own header row
+   - three instruments above the Dashboard, from the read-only GET
+     control/stats and control/status the browser is already logged
+     in for:
+       1 FILTER   the blocked share on a tick dial, with a legend
+       2 QUERIES  queries over time: allowed solid, blocked hatched
+       3 ANSWER   average answer time on a dot meter (+ fastest /
+                  slowest upstream)
+     each ends in one plain line that says what the drawing shows
+   - tags the Top blocked domains card so its bars read as ticks
+   No colour: on = a lit lamp, a warning blinks, a fault is inverse.
+   The frame of each instrument is built once and only its slots
+   are rewritten (AdGuard is React and re-renders whole pages), so
+   the figures can spin when they change. The page is watched only
+   while the Dashboard is the route.
    ───────────────────────────────────────────────────────────── */
 (function () {
   "use strict";
@@ -34,7 +38,7 @@
   }
   function ms(sec) {
     var v = (+sec || 0) * 1000;
-    return v >= 100 ? Math.round(v) : v >= 10 ? v.toFixed(0) : v.toFixed(1).replace(/\.0$/, "");
+    return v >= 100 ? String(Math.round(v)) : v >= 10 ? v.toFixed(0) : v.toFixed(1).replace(/\.0$/, "");
   }
   function host(u) { return String(u).replace(/^[a-z]+:\/\//i, "").replace(/(:\d+)?(\/.*)?$/, ""); }
   function pairs(list) {
@@ -60,43 +64,12 @@
     });
   }
 
-  // ── drawing ─────────────────────────────────────────────────
-  // a ring split into parts, same classes as Plint.ring
-  function donut(parts, size, w, label) {
-    var r = (size - w) / 2 - 1, c = 2 * Math.PI * r, cx = size / 2;
-    var total = 0;
-    parts.forEach(function (p) { total += p.v; });
-    var live = parts.filter(function (p) { return p.v > 0; }).length;
-    var gap = live > 1 ? 3 : 0, off = 0;
-    var svg = '<svg class="p-ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + P.esc(label) + '">' +
-      '<circle class="p-ring-track" cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" stroke-width="' + w + '"/>';
-    if (total) parts.forEach(function (p) {
-      if (!p.v) return;
-      var len = p.v / total * c, seg = Math.max(len - gap, 2);
-      svg += '<circle class="p-ring-val' + (p.tone ? " p-" + p.tone : "") + '" cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" stroke-width="' + w +
-        '" stroke-dasharray="' + seg.toFixed(2) + " " + c.toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 ' + cx + " " + cx + ')"/>';
-      off += len;
-    });
-    return svg + "</svg>";
-  }
-
-  // a 270° arc gauge
-  function arc(frac, size, w, tone, label) {
-    var r = (size - w) / 2 - 1, c = 2 * Math.PI * r, cx = size / 2, a = 0.75 * c;
-    var v = Math.max(0, Math.min(1, frac)) * a;
-    var rot = ' transform="rotate(135 ' + cx + " " + cx + ')" stroke-linecap="round"';
-    return '<svg class="p-ring" width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + " " + size + '" role="img" aria-label="' + P.esc(label) + '">' +
-      '<circle class="p-ring-track" cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" stroke-width="' + w + '" stroke-dasharray="' + a.toFixed(2) + " " + c.toFixed(2) + '"' + rot + "/>" +
-      (v > 0 ? '<circle class="p-ring-val' + (tone ? " p-" + tone : "") + '" cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" stroke-width="' + w + '" stroke-dasharray="' + Math.max(v, 0.5).toFixed(2) + " " + c.toFixed(2) + '"' + rot + "/>" : "") +
-      "</svg>";
-  }
-
+  // ── time ────────────────────────────────────────────────────
   function niceMax(n) {
     if (n <= 0) return 1;
     var e = Math.pow(10, Math.floor(Math.log10(n))), m = n / e;
     return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * e;
   }
-
   // when bucket i (of n) started: the last bucket is the current day/hour
   function when(i, n, hours) {
     var d = new Date();
@@ -118,114 +91,137 @@
     return i === n - 1 ? "Today" : dm(d);
   }
 
-  // ── hero cards ──────────────────────────────────────────────
-  function shareCard(st) {
+  // ── the instruments ─────────────────────────────────────────
+  // state at the right of a heading: "on" lit lamp, "warn" blinking lamp, "bad" inverse video, "" plain
+  function state(node, kind, text) {
+    set(node, !text ? "" : kind === "bad" ? '<span class="p-inv">' + P.esc(text) + "</span>" :
+      (kind ? P.lamp(kind === "warn" ? "alarm" : true) : "") + "<span>" + P.esc(text) + "</span>");
+  }
+  function read(card, text) { set(q(".p-ag-read", card), '<span class="p-dim">&gt;</span> ' + text); }
+
+  function shareCard(c, st) {
     var total = +st.num_dns_queries || 0;
     var blk = +st.num_blocked_filtering || 0, sb = +st.num_replaced_safebrowsing || 0, par = +st.num_replaced_parental || 0;
-    var allowed = Math.max(total - blk - sb - par, 0);
-    var share = pct(blk + sb + par, total);
-    var s = S.status, chip = "";
-    if (s) {
-      if (s.protection_enabled) chip = '<span class="p-ag-chip">Protection on</span>';
-      else if (s.protection_disabled_duration > 0) chip = '<span class="p-ag-chip warn">Paused · ' + Math.max(1, Math.round(s.protection_disabled_duration / 60000)) + " min</span>";
-      else chip = '<span class="p-ag-chip bad">Protection off</span>';
-    }
-    var rows = [
-      ["", "Allowed", allowed], ["warn", "Blocked by filters", blk],
-      ["bad", "Malware / phishing", sb], ["info", "Adult sites", par]
-    ];
-    return '<div class="p-ag-head"><span class="p-ag-label">Blocked share</span>' + chip + "</div>" +
-      '<div class="p-ag-split"><div class="p-ag-dial">' +
-      donut([{ v: allowed }, { v: blk, tone: "warn" }, { v: sb, tone: "bad" }, { v: par, tone: "info" }], 120, 16,
-        pctTxt(share) + " of " + P.fmt(total) + " queries blocked") +
-      "<b>" + pctTxt(share) + "<small>BLOCKED</small></b></div>" +
-      '<ul class="p-ag-legend">' + rows.map(function (r) {
-        return '<li><i class="' + r[0] + '"></i><span>' + r[1] + "</span><b>" + P.fmt(r[2]) + "<small>" + pctTxt(pct(r[2], total)) + "</small></b></li>";
-      }).join("") + "</ul></div>";
+    var stopped = blk + sb + par, allowed = Math.max(total - stopped, 0), share = pct(stopped, total);
+    var s = S.status;
+    if (!s) state(q(".p-ag-state", c), "", "");
+    else if (s.protection_enabled) state(q(".p-ag-state", c), "on", "Protection on");
+    else if (s.protection_disabled_duration > 0) state(q(".p-ag-state", c), "warn", "Paused · " + Math.max(1, Math.round(s.protection_disabled_duration / 60000)) + " min");
+    else state(q(".p-ag-state", c), "bad", "Protection off");
+    set(q(".p-ag-ring", c), P.ring(share, { size: 120, width: 12, label: pctTxt(share) + " of " + P.fmt(total) + " queries blocked" }));
+    P.num(q(".p-ag-fig", c), share > 0 && share < 0.1 ? "<0.1" : share > 0 && share < 10 ? share.toFixed(1) : Math.round(share), "%");
+    // long name, and a short one for a narrow screen (the sheet shows one of them)
+    var rows = [["", "Allowed", "Allowed", allowed], ["on", "Blocked by filters", "Filters", blk], ["on", "Malware / phishing", "Malware", sb], ["on", "Adult sites", "Adult", par]];
+    set(q(".p-ag-legend", c), rows.map(function (r) {
+      return '<li><i class="' + r[0] + '"></i><span title="' + r[1] + '"><span class="w">' + r[1] + '</span><span class="n">' + r[2] + "</span></span><b>" + P.fmt(r[3]) + "</b><small>" + pctTxt(pct(r[3], total)) + "</small></li>";
+    }).join(""));
+    read(c, total ? P.fmt(stopped) + " of " + P.fmt(total) + " queries stopped" : "No queries counted yet");
   }
 
-  function queriesCard(st) {
+  function blockedAt(st, i) {
+    return Math.min(+(st.dns_queries || [])[i] || 0,
+      (+(st.blocked_filtering || [])[i] || 0) + (+(st.replaced_safebrowsing || [])[i] || 0) + (+(st.replaced_parental || [])[i] || 0));
+  }
+  function queriesCard(c, st) {
     var qs = st.dns_queries || [], n = qs.length, hours = st.time_units === "hours";
-    var bf = st.blocked_filtering || [], sb = st.replaced_safebrowsing || [], pa = st.replaced_parental || [];
     var total = +st.num_dns_queries || sum(qs);
-    var span = hours ? "last " + n + " hours" : "last " + n + " days";
-    var head = '<div class="p-ag-head"><span class="p-ag-label">Queries · ' + span + '</span><span class="p-ag-keys"><span><i></i>Allowed</span><span><i class="warn"></i>Blocked</span></span></div>';
-    if (!n) return head + '<div class="p-ag-read">No statistics yet.</div>';
+    state(q(".p-ag-state", c), "", n ? "Last " + n + (hours ? " hours" : " days") : "");
+    P.num(q(".p-ag-fig", c), P.fmt(total));
+    if (!n) { set(q(".p-ag-sub", c), "queries"); set(q(".p-ag-chart", c), ""); read(c, "No statistics yet"); return; }
 
-    var max = 0, first = -1;
-    for (var i = 0; i < n; i++) { if (qs[i] > max) max = qs[i]; if (first < 0 && qs[i] > 0) first = i; }
-    var top = niceMax(max);
-    var cols = "";
+    var max = 0, first = -1, i;
+    for (i = 0; i < n; i++) { if (qs[i] > max) max = qs[i]; if (first < 0 && qs[i] > 0) first = i; }
+    set(q(".p-ag-sub", c), "queries" + (first > 0 && !hours ? " · counting since " + dm(when(first, n, false)) : ""));
+    var top = niceMax(max), cols = "";
     for (i = 0; i < n; i++) {
-      var t = +qs[i] || 0, b = Math.min(t, (+bf[i] || 0) + (+sb[i] || 0) + (+pa[i] || 0)), a = t - b;
-      var d = when(i, n, hours);
-      var tip = dayName(d, i, n, hours) + ": " + P.fmt(t) + " queries, " + P.fmt(b) + " blocked";
-      cols += '<span class="p-ag-col' + (t ? "" : " nil") + (S.sel === i ? " on" : "") + '" data-i="' + i + '" title="' + P.esc(tip) + '">' +
-        '<i class="b" style="height:' + (b / top * 100).toFixed(2) + '%"></i><i class="a" style="height:' + (a / top * 100).toFixed(2) + '%"></i></span>';
+      var t = +qs[i] || 0, b = blockedAt(st, i), a = t - b;
+      cols += '<span class="p-ag-col" data-i="' + i + '">' +
+        (a ? '<i class="a" style="height:' + (a / top * 100).toFixed(2) + '%"></i>' : "") +
+        (b ? '<i class="b" style="height:' + (b / top * 100).toFixed(2) + '%"></i>' : "") + "</span>";
     }
     // ticks: the current bucket and every week (or every 6 hours) back from it
     var step = hours ? 6 : 7, ticks = "";
     for (i = n - 1; i >= 0; i -= step) {
       var x = (i + 0.5) / n * 100, cls = i === n - 1 ? "r" : x < 8 ? "l" : "";
-      if (i !== n - 1 && x > 82) continue;
+      if (i !== n - 1 && x > 80) continue;
       ticks += '<span class="' + cls + '" style="left:' + (cls === "l" ? 0 : x.toFixed(2)) + '%">' + P.esc(tickName(when(i, n, hours), i, n, hours)) + "</span>";
     }
-    var k = S.sel != null && S.sel < n ? S.sel : n - 1;
-    var kt = +qs[k] || 0, kb = Math.min(kt, (+bf[k] || 0) + (+sb[k] || 0) + (+pa[k] || 0));
-    var since = first > 0 && !hours ? " · counting since " + dm(when(first, n, false)) : "";
-    return head +
-      '<div class="p-ag-total"><strong>' + P.fmt(total) + "</strong><span>queries" + since + "</span></div>" +
-      '<div class="p-ag-chart"><div class="p-ag-well" role="img" aria-label="' + P.esc(P.fmt(total) + " queries over the " + span) + '">' +
-      '<span class="p-ag-grid" style="top:14px"><em>' + compact(top) + '</em></span><span class="p-ag-grid" style="top:calc(14px + (100% - 24px) / 2)"><em>' + compact(top / 2) + "</em></span>" +
+    set(q(".p-ag-chart", c),
+      '<div class="p-ag-well" role="img" aria-label="' + P.esc(P.fmt(total) + " queries over the last " + n + (hours ? " hours" : " days")) + '">' +
+      '<span class="p-ag-grid t"><em>' + compact(top) + '</em></span><span class="p-ag-grid m"><em>' + compact(top / 2) + "</em></span>" +
       '<div class="p-ag-bars">' + cols + "</div></div>" +
-      '<div class="p-ag-ticks">' + ticks + "</div></div>" +
-      '<div class="p-ag-read"><b>' + P.esc(dayName(when(k, n, hours), k, n, hours)) + "</b> · " + P.fmt(kt) + " queries · " + P.fmt(kb) + " blocked" + (kt ? " (" + pctTxt(pct(kb, kt)) + ")" : "") + "</div>";
+      '<div class="p-ag-ticks">' + ticks + "</div>");
+    pick(c, st);
+  }
+  // the picked column (hover / tap), or the current bucket: lit in the chart, read out below
+  function pick(c, st) {
+    c = c || q("#p-ag-hero .p-ag-queries");
+    st = st || S.stats;
+    if (!c || !st) return;
+    var qs = st.dns_queries || [], n = qs.length, hours = st.time_units === "hours";
+    if (!n) return;
+    if (S.sel != null && S.sel >= n) S.sel = null;
+    qa(".p-ag-col", c).forEach(function (col, i) {
+      var on = S.sel === i;
+      if (col.classList.contains("on") !== on) col.classList.toggle("on", on);
+    });
+    var k = S.sel != null ? S.sel : n - 1, kt = +qs[k] || 0, kb = blockedAt(st, k);
+    read(c, "<b>" + P.esc(dayName(when(k, n, hours), k, n, hours)) + "</b> · " + P.fmt(kt) + " queries · " + P.fmt(kb) + " blocked" + (kt ? " (" + pctTxt(pct(kb, kt)) + ")" : ""));
   }
 
-  function speedCard(st) {
+  function speedCard(c, st) {
     var sec = +st.avg_processing_time || 0, v = sec * 1000, SCALE = 50;
-    var tone = v < 20 ? "" : v < SCALE ? "warn" : "bad";
-    var word = !v ? "No data" : v < 20 ? "Fast" : v < SCALE ? "Fair" : "Slow";
+    if (!v) state(q(".p-ag-state", c), "", "No data");
+    else if (v < 20) state(q(".p-ag-state", c), "on", "Fast");
+    else if (v < SCALE) state(q(".p-ag-state", c), "warn", "Fair");
+    else state(q(".p-ag-state", c), "bad", "Slow");
+    P.num(q(".p-ag-fig", c), ms(sec), "MS");
+    set(q(".p-ag-m", c), P.meter(v / SCALE * 100));
     var up = pairs(st.top_upstreams_avg_time).filter(function (u) { return u.v > 0; }).sort(function (a, b) { return a.v - b.v; });
     function fact(label, u) {
-      return '<div class="p-ag-fact"><span><small>' + label + '</small><em title="' + P.esc(u.name) + '">' + P.esc(host(u.name)) + "</em></span><b>" + ms(u.v) + " ms</b></div>";
+      return '<div class="p-ag-fact"><small>' + label + '</small><em title="' + P.esc(u.name) + '">' + P.esc(host(u.name)) + "</em><b>" + ms(u.v) + " ms</b></div>";
     }
-    var facts = up.length ? fact(up.length > 1 ? "Fastest upstream" : "Upstream", up[0]) + (up.length > 1 ? fact("Slowest upstream", up[up.length - 1]) : "") : "";
-    return '<div class="p-ag-head"><span class="p-ag-label">Average answer</span><span class="p-ag-chip' + (tone ? " " + tone : "") + '">' + word + "</span></div>" +
-      '<div class="p-ag-speed"><div class="p-ag-gauge">' + arc(v / SCALE, 136, 13, tone, "Average answer time " + ms(sec) + " milliseconds") +
-      "<b>" + ms(sec) + "<small>MS</small></b>" +
-      '<span class="p-ag-scale"><span>0</span><span>' + SCALE + "</span></span></div>" +
-      (facts ? '<div class="p-ag-facts">' + facts + "</div>" : "") + "</div>";
+    set(q(".p-ag-facts", c), up.length ? fact(up.length > 1 ? "Fastest upstream" : "Upstream", up[0]) + (up.length > 1 ? fact("Slowest upstream", up[up.length - 1]) : "") : "");
+    read(c, !v ? "No answers timed yet" : v < 20 ? "Fast · under 20 ms on average" : v < SCALE ? "Fair · 20 to " + SCALE + " ms on average" : "Slow · over " + SCALE + " ms on average");
   }
 
+  function frame(cls, en, ru, body) {
+    return '<div class="p-ag-card p-ag-' + cls + ' p-fl"><div class="p-ag-head"><span class="p-ag-label">' + en + ' <span class="p-ru">/ ' + ru + '</span></span><span class="p-ag-state"></span></div>' +
+      body + '<div class="p-ag-read"></div></div>';
+  }
   function hero() {
     var dash = q(".row-cards.dashboard, .dashboard");
     var box = q("#p-ag-hero");
     if (!dash) { if (box) box.remove(); return; }
     if (!S.stats) return;
-    if (!box) {
+    var fresh = !box;
+    if (fresh) {
       box = P.el("section", "p-ag-hero");
       box.id = "p-ag-hero";
       box.setAttribute("aria-label", "DNS at a glance");
-      box.innerHTML = '<div class="p-ag-card p-ag-share"></div><div class="p-ag-card p-ag-queries"></div><div class="p-ag-card p-ag-time"></div>';
+      box.innerHTML =
+        frame("share", "Filter", "фильтр", '<div class="p-ag-split"><div class="p-ag-dial"><span class="p-ag-ring"></span><b><span class="p-ag-fig"></span><small>Blocked</small></b></div><ul class="p-ag-legend"></ul></div>') +
+        frame("queries", "Queries", "запросы", '<div class="p-ag-total"><span class="p-ag-fig"></span><span class="p-ag-sub"></span><span class="p-ag-keys"><span><i class="a"></i>Allowed</span><span><i class="b"></i>Blocked</span></span></div><div class="p-ag-chart"></div>') +
+        frame("time", "Answer", "ответ", '<div class="p-ag-speed"><span class="p-ag-fig"></span><div class="p-ag-gauge"><span class="p-ag-m"></span><div class="p-ag-scale"><span>0</span><span>25</span><span>50 ms</span></div></div></div><div class="p-ag-facts"></div>');
       bind(box);
     }
     if (box.nextElementSibling !== dash) dash.parentNode.insertBefore(box, dash);
-    set(q(".p-ag-share", box), shareCard(S.stats));
-    set(q(".p-ag-queries", box), queriesCard(S.stats));
-    set(q(".p-ag-time", box), speedCard(S.stats));
+    shareCard(q(".p-ag-share", box), S.stats);
+    queriesCard(q(".p-ag-queries", box), S.stats);
+    speedCard(q(".p-ag-time", box), S.stats);
+    if (fresh) qa(".p-ag-card", box).forEach(function (card, i) { P.strike(card, i * 60); });
   }
 
   // hover / tap a bar to read it; leaving goes back to the current bucket
   function bind(box) {
-    function pick(e) {
+    function over(e) {
       var c = e.target.closest && e.target.closest(".p-ag-col");
       var i = c ? +c.getAttribute("data-i") : null;
-      if (i !== S.sel) { S.sel = i; hero(); }
+      if (i !== S.sel) { S.sel = i; pick(); }
     }
-    box.addEventListener("mouseover", pick);
-    box.addEventListener("click", pick);
-    box.addEventListener("mouseleave", function () { if (S.sel != null) { S.sel = null; hero(); } });
+    box.addEventListener("mouseover", over);
+    box.addEventListener("click", over);
+    box.addEventListener("mouseleave", function () { if (S.sel != null) { S.sel = null; pick(); } });
   }
 
   // ── tables ──────────────────────────────────────────────────
@@ -248,7 +244,7 @@
   function decorate() {
     if (busy) return;
     busy = true;
-    try { hero(); tables(); } finally { busy = false; }
+    try { hero(); tables(); } catch (e) { /* the app's DOM moved: stay quiet */ } finally { busy = false; }
   }
   var queued = false;
   function schedule() {
@@ -256,15 +252,34 @@
     queued = true;
     requestAnimationFrame(function () { queued = false; decorate(); load(false); });
   }
+  // the page is watched only while the Dashboard is the route; our own redraws are not news
+  var mo = null, watching = false;
+  function home() { return /^#?\/?$/.test(location.hash) || !!q(".dashboard"); }
+  function watch() {
+    var want = home();
+    if (want === watching) return;
+    watching = want;
+    if (!mo) mo = new MutationObserver(function (list) {
+      for (var i = 0; i < list.length; i++) {
+        var t = list[i].target;
+        if (!t.closest || !t.closest("#p-ag-hero")) { schedule(); return; }
+      }
+    });
+    if (want) mo.observe(document.body, { childList: true, subtree: true });
+    else mo.disconnect();
+  }
   function start() {
-    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
+    watch();
     // AdGuard's own refresh / protection buttons: re-read once they've acted
     document.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest(".page-header .btn, .card-options .btn, .dropdown-menu--protection .dropdown-item");
-      if (b) setTimeout(function () { load(true); }, 1200);
+      if (b && watching) setTimeout(function () { load(true); }, 1200);
     }, true);
-    window.addEventListener("hashchange", function () { S.sel = null; setTimeout(function () { load(false); }, 50); });
-    setInterval(function () { if (!document.hidden) load(true); }, 60000);
+    window.addEventListener("hashchange", function () {
+      S.sel = null;
+      [50, 400, 1500].forEach(function (t) { setTimeout(function () { watch(); decorate(); load(false); }, t); });
+    });
+    setInterval(function () { if (!document.hidden && watching) load(true); }, 60000);
     load(true);
     decorate();
   }

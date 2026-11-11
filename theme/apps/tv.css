@@ -1,5 +1,136 @@
-/* Plint Soft UI · TV remote (tv.<domain>)
-   The page itself is built on the --p- tokens; this sheet only places the
-   pill and keeps the page's own header quiet. */
-header.tv-head { display: flex; align-items: center; gap: 12px; }
+/* TV remote in Plint Terminal. The page is ours but is served by the Mac on the TV, so the whole look is laid over
+   its inline <style> from here (this sheet loads after it: equal specificity wins).
+   A remote for one thumb: keys are chamfered blocks, outlined at rest and inverse video while pressed (.p-hit is
+   set by tv.js so a quick tap still shows); a running app is a lit lamp, the rest hollow; the TV gone is the status
+   line in inverse, its lamp blinking and the keys dimmed. */
+
+:root {
+  color-scheme: dark;
+  --bg: var(--p-bg); --ink: var(--p-ink); --ink2: var(--p-ink2);
+  --hi: transparent; --lo: transparent; --edge: var(--p-line); --track: var(--p-track);
+  --accent: var(--p-ink); --accent-soft: transparent; --on-accent: var(--p-bg); --bad: var(--p-ink);
+  --font: var(--p-font);
+  --raise: none; --raise-sm: none; --press: none; --press-sm: none; --r-lg: 0; --r: 0; --r-sm: 0;
+  --lamp: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
+  --cells: repeating-linear-gradient(90deg, #000 0 5px, transparent 5px 8px);
+}
+html, body { background: var(--p-bg); color: var(--p-ink); font: 400 12px/1.45 var(--p-font); }
+body {
+  max-width: 560px; margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+/* ── header: strip · title and status line · lamp ─────────────────────────────────────────────────────────────── */
+header.tv-head { display: flex; align-items: center; gap: 14px; min-height: 44px; margin-bottom: 18px; }
 header.tv-head #plint-pill { margin-right: 0; }
+header.tv-head .who { flex: 1; min-width: 0; }
+header.tv-head h1 { font: 600 15px/1 var(--p-font); letter-spacing: 0.2em; text-transform: uppercase; text-shadow: var(--p-glow); margin: 0; }
+header.tv-head .sub { display: inline-block; margin-top: 7px; font: 400 9.5px/1.4 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-ink2); }
+.dot { flex: none; width: 8px; height: 11px; margin-right: 1px; border-radius: 0; background: none; box-shadow: inset 0 0 0 1px var(--p-ink2); }
+.dot.ok { background: var(--p-ink); box-shadow: none; clip-path: var(--lamp); filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.6)); }
+.dot.bad { background: var(--p-ink); box-shadow: none; clip-path: var(--lamp); animation: p-blink 1s steps(1) infinite; }
+header.tv-head:has(.dot.bad) .sub { padding: 1px 6px; background: var(--p-ink); color: var(--p-bg); font-weight: 600; }
+body:has(.dot.bad) section > :not(h2) { opacity: 0.4; }
+
+/* ── sections: a rule, a heading ──────────────────────────────────────────────────────────────────────────────── */
+section { margin: 0 0 16px; padding: 9px 0 0; border: 0; border-top: 1px solid var(--p-line); border-radius: 0; background: none; box-shadow: none; }
+section:last-of-type { margin-bottom: 0; }
+h2 { margin: 0 0 10px; font: 600 10px/1.4 var(--p-font); letter-spacing: 0.2em; text-transform: uppercase; color: var(--p-ink); text-shadow: var(--p-glow); }
+
+/* ── keys ─────────────────────────────────────────────────────────────────────────────────────────────────────── */
+button { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+.btn {
+  position: relative; isolation: isolate; flex: 1; height: 48px; display: flex; align-items: center; justify-content: center; gap: 10px;
+  border: 0; border-radius: 0; box-shadow: none; background: var(--p-ink); color: var(--p-ink); clip-path: var(--p-cut);
+  font: 600 11px/1 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase;
+}
+.btn::before { content: ""; position: absolute; inset: 1px; background: var(--p-bg); clip-path: var(--p-cut); z-index: -1; }
+.btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: square; stroke-linejoin: miter; }
+.btn.sq { flex: none; width: 52px; }
+.btn:active, .btn.p-hit, .btn.on, .btn.primary { box-shadow: none; color: var(--p-bg); }
+.btn:active::before, .btn.p-hit::before, .btn.on::before, .btn.primary::before { content: none; }
+/* OK is the lit key; pressed, it goes dark inside its frame */
+.btn.primary { background: var(--p-ink); border-color: transparent; font-size: 13px; letter-spacing: 0.2em; }
+.btn.primary:active, .btn.primary.p-hit { color: var(--p-ink); text-shadow: var(--p-glow); }
+.btn.primary:active::before, .btn.primary.p-hit::before { content: ""; }
+.btn:focus-visible::before { inset: 3px; }
+.btn.primary:focus-visible::before { content: ""; inset: 3px; background: none; box-shadow: inset 0 0 0 1px var(--p-bg); clip-path: none; }
+@media (hover: hover) { .btn:not(.primary):not(.on):hover { text-shadow: var(--p-glow); } }
+
+/* ── now ──────────────────────────────────────────────────────────────────────────────────────────────────────── */
+.now { display: flex; align-items: center; gap: 12px; }
+.now .art { flex: none; width: 48px; height: 48px; display: grid; place-items: center; border-radius: 0; box-shadow: inset 0 0 0 1px var(--p-line); color: var(--p-ink); }
+.now .art svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
+.now .t { flex: 1; min-width: 0; }
+.now .t b { display: block; font: 600 13px/1.35 var(--p-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: var(--p-glow); }
+.now .t span { display: block; margin-top: 3px; min-height: 13px; font: 400 9.5px/1.4 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#pp svg { fill: currentColor; stroke-width: 1; }
+
+/* ── open: six apps, lamp lit on the ones running ─────────────────────────────────────────────────────────────── */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tile {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 68px; padding: 11px 4px 9px;
+  border: 0; border-radius: 0; box-shadow: inset 0 0 0 1px var(--p-line); color: var(--p-ink2); text-align: center; transition: none;
+  font: 600 9.5px/1.2 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase;
+}
+.tile .well { width: 24px; height: 24px; border-radius: 0; display: grid; place-items: center; color: inherit; }
+.tile .well svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
+.tile i.run { position: absolute; top: 7px; right: 7px; width: 6px; height: 9px; border-radius: 0; background: none; box-shadow: inset 0 0 0 1px var(--p-faint); }
+.tile.on { color: var(--p-ink); box-shadow: inset 0 0 0 1px var(--p-faint); text-shadow: var(--p-glow); }
+.tile.on i.run { background: var(--p-ink); box-shadow: none; clip-path: polygon(2px 0, 100% 0, 100% calc(100% - 2px), calc(100% - 2px) 100%, 0 100%, 0 2px); filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.6)); }
+.tile:active, .tile.p-hit, .tile.on:active, .tile.on.p-hit { background: var(--p-ink); color: var(--p-bg); box-shadow: none; text-shadow: none; }
+.tile:active i.run, .tile.p-hit i.run { box-shadow: inset 0 0 0 1px var(--p-bg); filter: none; }
+.tile.on:active i.run, .tile.on.p-hit i.run { background: var(--p-bg); box-shadow: none; }
+.tile:focus-visible { outline: 1px solid var(--p-ink); outline-offset: 2px; }
+@media (hover: hover) { .tile:hover { color: var(--p-ink); box-shadow: inset 0 0 0 1px var(--p-faint); } .tile:active:hover { color: var(--p-bg); box-shadow: none; } }
+@media (min-width: 480px) { .grid { grid-template-columns: repeat(6, 1fr); } }
+
+/* ── sound: a meter of cells under the (invisible) slider, the level in dot matrix ────────────────────────────── */
+.row { display: flex; gap: 8px; align-items: center; }
+.vol { display: flex; align-items: center; gap: 14px; }
+.vol .track { position: relative; flex: 1; height: 20px; border-radius: 0; box-shadow: none; background: none; }
+.vol .track::before { content: ""; position: absolute; inset: 0; background: var(--p-track); -webkit-mask: var(--cells); mask: var(--cells); }
+.vol .fill { position: absolute; inset: 0 auto 0 0; width: 50%; border-radius: 0; background: var(--p-ink); transition: none; -webkit-mask: var(--cells); mask: var(--cells); filter: drop-shadow(0 0 4px rgba(var(--p-ph), 0.4)); }
+.vol input { position: absolute; inset: -14px 0; width: 100%; height: 48px; margin: 0; opacity: 0; cursor: pointer; }
+.vol .track:has(input:focus-visible) { outline: 1px solid var(--p-ink); outline-offset: 5px; }
+.vol .n { flex: none; width: 56px; min-width: 0; text-align: right; color: var(--p-ink); font: 900 30px/0.85 var(--p-dot); font-variant-numeric: tabular-nums; text-transform: uppercase; text-shadow: var(--p-glow); }
+/* muted: the key stays lit (.on), the meter goes dim, the figure becomes the word in inverse */
+.vol:has(#mute.on) .fill { background: var(--p-faint); filter: none; }
+.vol:has(#mute.on) .n { font: 600 10px/20px var(--p-font); letter-spacing: 0.16em; text-align: center; background: var(--p-ink); color: var(--p-bg); text-shadow: none; }
+
+/* ── navigate ─────────────────────────────────────────────────────────────────────────────────────────────────── */
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 420px; margin: 0 auto; }
+.pad .btn { height: 60px; --p-ch: 9px; }
+.pad .btn svg { width: 24px; height: 24px; }
+.pad .mid { font-size: 11px; }
+.hint { position: relative; margin: 14px 0 0; padding: 10px 0 0 20px; border-top: 1px solid var(--p-line); font: 400 11px/1.55 var(--p-font); color: var(--p-ink2); }
+.hint::before { content: ""; position: absolute; left: 1px; top: 13px; width: 8px; height: 11px; background: var(--p-ink); clip-path: var(--lamp); animation: p-blink 2s steps(1) infinite; }
+.hint b { color: var(--p-ink); font-weight: 600; }
+.hint a { color: var(--p-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── the message line: switches on, switches off ──────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); opacity: 1; visibility: hidden; transition: none;
+  max-width: calc(100vw - 32px); padding: 13px 16px; border: 1px solid var(--p-faint); border-radius: 0; background: var(--p-bg); color: var(--p-ink) !important;
+  box-shadow: 0 18px 50px #000; font: 600 10px/1.3 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; pointer-events: none;
+}
+.toast::before { content: "> "; }
+.toast.show { opacity: 1; visibility: visible; transform: translateX(-50%); }
+.toast[style*="--bad"] { background: var(--p-ink); border-color: var(--p-ink); color: var(--p-bg) !important; }
+
+/* ── a wide screen: the pad stands beside the rest ────────────────────────────────────────────────────────────── */
+@media (min-width: 900px) {
+  body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; column-gap: 56px; align-content: start; max-width: 980px; padding-top: 24px; }
+  header.tv-head { grid-column: 1 / -1; margin-bottom: 26px; }
+  section { grid-column: 1; margin-bottom: 24px; padding-top: 12px; }
+  h2 { margin-bottom: 14px; }
+  section:last-of-type { grid-column: 2; grid-row: 2 / span 4; }
+  .pad { max-width: none; }
+  .pad .btn { height: 76px; }
+  .btn { height: 44px; }
+  .tile { min-height: 84px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot.bad, .hint::before { animation: none; }
+}

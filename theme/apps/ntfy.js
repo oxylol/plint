@@ -1,10 +1,13 @@
 /* ─────────────────────────────────────────────────────────────
-   Plint Soft UI · ntfy extras
-   - the Plint pill goes into ntfy's own toolbar (Plint.mount)
-   - messages per day, last 7 days, above the notification list
-   - notifications become a timeline: day headings, priority chips,
-     tags as chips (all via data attributes that apps/ntfy.css draws)
-   - line icons instead of ntfy's teal logo
+   Plint Terminal · ntfy extras
+   - the Plint strip goes into ntfy's own toolbar (Plint.mount)
+   - the week: seven columns of cells above the notification list,
+     one cell = k messages, with a one-line readout
+   - notifications become a log: day headings, priority labels and
+     tags as flat labels (all via data attributes that apps/ntfy.css draws)
+   - a "no signal" line above ntfy's empty-state text
+   - small hooks for the sheet: data-p-view on <html>, data-p-prof on the
+     account button, data-p-raw on a dialog title that holds an address
    Data comes from the web app's own IndexedDB (read-only; the same
    store the list is rendered from), so nothing extra hits the server.
    Everything is redrawn idempotently, because React re-renders.
@@ -39,14 +42,14 @@
   // ── data: the web app's IndexedDB, read-only ────────────────
   // ntfy keeps one database per signed-in user ("ntfy-<user>") or "ntfy".
   var data = null, loading = false, loadedSig = null, reloadTimer = null;
+  function signedIn() {
+    try { return !!(localStorage.getItem("user") && localStorage.getItem("token")); } catch (e) { return false; }
+  }
   function dbName() {
-    try {
-      var u = localStorage.getItem("user"), t = localStorage.getItem("token");
-      return u && t ? "ntfy-" + u : "ntfy";
-    } catch (e) { return "ntfy"; }
+    try { return signedIn() ? "ntfy-" + localStorage.getItem("user") : "ntfy"; } catch (e) { return "ntfy"; }
   }
   function load() {
-    if (loading || !window.indexedDB) return;
+    if (loading || !window.indexedDB || document.hidden) return;
     loading = true;
     function done(d) { loading = false; data = d; decorate(); }
     var req;
@@ -103,33 +106,30 @@
     return d.toLocaleDateString("en-GB", o).replace(",", "");
   }
 
-  // ── header: a bell in a pressed well before the title ───────
-  function header() {
+  // ── hooks for the sheet ─────────────────────────────────────
+  // The account button has a translated label, so it is found by place:
+  // signed in, it is the last thing in the toolbar.
+  function hooks() {
     var tb = q("header.MuiAppBar-root > .MuiToolbar-root");
-    if (!tb) return;
-    var title = q(":scope > .MuiTypography-h6", tb);
-    var mark = q(":scope > .p-ntfy-mark", tb);
-    if (title && !mark) {
-      mark = P.el("span", "p-ntfy-mark", P.icon("ntfy", ""));
-      mark.setAttribute("aria-hidden", "true");
-      tb.insertBefore(mark, title);
-    } else if (title && mark && mark.nextElementSibling !== title && mark.nextElementSibling && !mark.nextElementSibling.matches("img")) {
-      tb.insertBefore(mark, title);
+    if (tb) {
+      var last = tb.lastElementChild, on = signedIn();
+      qa(":scope > [data-p-prof]", tb).forEach(function (b) { if (b !== last || !on) b.removeAttribute("data-p-prof"); });
+      if (on && last && last.classList.contains("MuiIconButton-root")) attr(last, "data-p-prof", "");
     }
+    // "Publish to host/topic": an address keeps its own case
+    qa(".MuiDialogTitle-root").forEach(function (t) {
+      attr(t, "data-p-raw", t.textContent.indexOf("/") >= 0 ? "" : null);
+    });
   }
 
-  // ── empty states and sign-in: our bell instead of ntfy's logo ─
-  function marks() {
+  // ── empty states: a "no signal" line above ntfy's own words ──
+  function nosignal() {
     qa("#main > .MuiContainer-root > h5.MuiTypography-alignCenter").forEach(function (h5) {
       var box = h5.parentNode;
-      if (!q(":scope > .p-ntfy-hero", box)) {
-        var hero = P.el("div", "p-ntfy-hero", P.icon("ntfy", ""));
-        hero.setAttribute("aria-hidden", "true");
-        box.insertBefore(hero, h5);
-      }
-    });
-    qa("#root > .MuiBox-root > a > .MuiAvatar-root").forEach(function (av) {
-      if (!q("svg", av)) av.insertAdjacentHTML("beforeend", P.icon("ntfy", ""));
+      if (q(":scope > .p-ntfy-nosig", box)) return;
+      var line = P.el("div", "p-ntfy-nosig", '<i class="p-blk off"></i><span>No signal <span class="p-ru">/ Нет сигнала</span></span>');
+      line.setAttribute("aria-hidden", "true");
+      box.insertBefore(line, h5);
     });
   }
 
@@ -185,45 +185,63 @@
     });
   }
 
-  // ── messages per day, last 7 days ───────────────────────────
+  // ── the week: messages per day, last 7 days, as cells ───────
+  // Each day is a 4 x 6 field; cells light from the bottom:
+  // low/min hollow, normal dim, high/urgent full.
+  var COLS = 4, ROWS = 6, CELLS = COLS * ROWS;
+  function plural(n, word) { return P.fmt(n) + " " + word + (n === 1 ? "" : "s"); }
   function week(list) {
     var scroller = q("#main > .infinite-scroll-component__outerdiv");
     var box = q("#main > .p-ntfy-week");
     var today = dayStart(new Date()), days = [];
-    for (var i = 6; i >= 0; i--) days.push({ at: today - i * DAY, n: 0, hi: 0, max: 0 });
-    var total = 0, hi = 0, max = 0;
+    for (var i = 6; i >= 0; i--) days.push({ at: today - i * DAY, lo: 0, n: 0, hi: 0 });
+    var total = 0, high = 0, urgent = 0;
     (list || []).forEach(function (n) {
       var idx = 6 - Math.round((today - dayKey(n.time)) / DAY);
       if (idx < 0 || idx > 6) return;
       var p = n.priority || 3, d = days[idx];
-      if (p === 5) { d.max++; max++; } else if (p === 4) { d.hi++; hi++; } else d.n++;
+      if (p >= 4) { d.hi++; if (p === 5) urgent++; else high++; } else if (p <= 2) d.lo++; else d.n++;
       total++;
     });
     if (!scroller || !list || !total) { if (box) box.remove(); return; }
-    if (!box) {
-      box = P.el("section", "p-ntfy-week");
+    var fresh = !box;
+    if (fresh) {
+      box = P.el("section", "p-ntfy-week p-fl");
       box.setAttribute("aria-label", "Messages per day");
     }
     if (box.nextElementSibling !== scroller) scroller.parentNode.insertBefore(box, scroller);
-    var top = Math.max.apply(null, days.map(function (d) { return d.n + d.hi + d.max; })) || 1;
+    var top = Math.max.apply(null, days.map(function (d) { return d.lo + d.n + d.hi; })) || 1;
+    var per = Math.max(1, Math.ceil(top / CELLS));
     var said = [], cols = days.map(function (d, k) {
-      var sum = d.n + d.hi + d.max;
+      var sum = d.lo + d.n + d.hi;
       var name = k === 6 ? "Today" : new Date(d.at).toLocaleDateString("en-GB", { weekday: "short" });
       said.push(name + " " + sum);
-      function seg(v, cls) { return v ? '<i class="' + cls + '" style="height:' + (v / top * 100).toFixed(1) + '%"></i>' : ""; }
+      // cells, counted from the bottom left: low first, then normal, high on top
+      var all = Math.min(CELLS, Math.ceil(sum / per));
+      var hi = d.hi ? Math.min(all, Math.max(1, Math.round(d.hi / per))) : 0;
+      var lo = d.lo ? Math.min(all - hi, Math.max(1, Math.round(d.lo / per))) : 0;
+      var cells = "";
+      for (var r = ROWS - 1; r >= 0; r--) {
+        for (var c = 0; c < COLS; c++) {
+          var at = r * COLS + c;
+          cells += at >= all ? "<i></i>" : at < lo ? '<i class="lo"></i>' : at < all - hi ? '<i class="n"></i>' : '<i class="hi"></i>';
+        }
+      }
       return '<div class="p-ntfy-day' + (k === 6 ? " today" : "") + '"><span class="p-ntfy-n' + (sum ? "" : " zero") + '">' + sum + "</span>" +
-        '<span class="p-ntfy-col">' + seg(d.n, "ok") + seg(d.hi, "warn") + seg(d.max, "bad") + "</span>" +
+        '<span class="p-ntfy-col">' + cells + "</span>" +
         '<span class="p-ntfy-d">' + P.esc(name) + "</span></div>";
     }).join("");
-    var facts = "<span><b>" + (days[6].n + days[6].hi + days[6].max) + "</b>today</span>" +
-      (hi ? '<span class="warn"><b>' + hi + "</b>high</span>" : "") +
-      (max ? '<span class="bad"><b>' + max + "</b>urgent</span>" : "");
-    set(box, "<div>" +
-      '<div class="p-ntfy-sum"><span class="p-ntfy-label">Last 7 days</span>' +
-      '<span class="p-ntfy-big">' + P.fmt(total) + "<small>" + (total === 1 ? "message" : "messages") + "</small></span>" +
-      '<div class="p-ntfy-facts">' + facts + "</div></div>" +
-      '<div class="p-ntfy-well" role="img" aria-label="' + P.esc("Messages per day, last 7 days: " + said.join(", ")) + '">' + cols + "</div>" +
-      "</div>");
+    var now = days[6].lo + days[6].n + days[6].hi;
+    var read = "&gt; " + plural(total, "message") + " in 7 days · " + P.fmt(now) + " today" +
+      (urgent ? " · " + P.fmt(urgent) + " urgent" : "") + (high ? " · " + P.fmt(high) + " high" : "");
+    set(box,
+      '<div class="p-ntfy-head"><h2 class="p-ntfy-h">Last 7 days <span class="p-ru">/ 7 дней</span></h2>' +
+      '<span class="p-ntfy-note">One cell = ' + plural(per, "message") + "</span></div>" +
+      '<div class="p-ntfy-body"><div class="p-ntfy-sum"><span class="p-num">' + P.fmt(total) + "<sub>MSG</sub></span></div>" +
+      '<div class="p-ntfy-grid" role="img" aria-label="' + P.esc("Messages per day, last 7 days: " + said.join(", ")) + '">' + cols + "</div></div>" +
+      '<div class="p-ntfy-key" aria-hidden="true"><span><i class="hi"></i>High / urgent</span><span><i class="n"></i>Normal</span><span><i class="lo"></i>Low</span></div>' +
+      '<p class="p-ntfy-read">' + read + "</p>");
+    if (fresh) { if (P.strike) P.strike(box, 60); else box.classList.add("on"); }
   }
 
   // ── run ─────────────────────────────────────────────────────
@@ -241,10 +259,12 @@
       var sig = signature(v);
       if (sig !== loadedSig) { loadedSig = sig; reloadSoon(); }
       var list = listed(v);
-      header();
-      marks();
+      hooks();
+      nosignal();
       cards(list);
       week(list);
+    } catch (e) {
+      /* a redraw that fails leaves ntfy as it is */
     } finally { busy = false; }
   }
   var queued = false;
@@ -257,6 +277,7 @@
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, characterData: true });
     load();
     setInterval(load, 30000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) load(); });
     decorate();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
