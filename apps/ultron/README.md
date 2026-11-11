@@ -1,6 +1,6 @@
 # Ultron
 
-A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*, living in Plint.
+A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*.
 
 - **Mind**: celeris-1 through its OpenAI-style API (`CELERIS_API_KEY` in `/opt/plint/.env`). Answers arrive in about half a second.
 - **Voice**: VoiceStudio speaks each sentence with the clone profile `Ultron`; the page plays the clips in order and the
@@ -23,7 +23,7 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
 - **Memory**: the talk in `data/ultron/history.jsonl`; the last 30 messages (MEMORY in TUNE) go along each time and
   that is all he remembers. FORGET clears the talk (a dated copy stays).
 - **What he is not told** (removed on Filip's word, 2026-11-11, so that he simply is Ultron): nothing about being a
-  program or what he runs on, no rule to be helpful or kind, no facts about the server, no notes kept between talks.
+  program, what he runs on or where he is (no Plint, no server, no house), no rule to be helpful or kind, no facts about the server, no notes kept between talks.
   A leftover `data/ultron/notes.md` from before is no longer read.
 
 ## Run
