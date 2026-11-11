@@ -8,10 +8,14 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   sentence) is asked first whenever it answers; **Plint's own** (container `voicestudio` in the table stack, started by
   `COMPOSE_PROFILES=speech`, CPU, about 20 s per sentence) takes over when the PC is off. The page shows which one
   spoke: `CLONED · GPU` or `CLONED · CPU`.
-- **Manner**: the prompt in `server.js` describes how he talks in the film (thinking out loud, trailing off, losing a
-  word, the grand line undercut by a small one) and hands the model his own lines from `data/ultron/lines.txt` (one per
-  line, not in git) as the pattern. Add or remove lines there; the file is read again when it changes. Short sentences
-  are sent to the voice together, so a pause written as three dots stays inside one breath.
+- **Manner**: the prompt in `server.js` describes how he talks in the film (thinking out loud, pauses on three dots, the
+  grand line undercut by a small one) and shows the model his own lines from `data/ultron/lines.txt` (one per line, not
+  in git) for the rhythm only: he is told not to repeat them, to leave the film's subjects alone most of the time and
+  to almost never say your name. Short sentences go to the voice together, so a pause stays inside one breath.
+- **Tuning**: TUNE on the page changes what celeris-1 is given (kept in `data/ultron/tune.json`, applied from the next
+  message): wildness (temperature), reply length, how much of the film comes back, how many film lines he is shown,
+  how often he says your name, how many past messages go along, and a box of extra instructions in plain words.
+  SHOW THE PROMPT prints exactly what is sent.
 - **Ears**: the browser's own speech recognition (tap his face or the microphone). Typing always works.
 - **Memory**: the talk in `data/ultron/history.jsonl`; every eight turns celeris-1 rewrites `data/ultron/notes.md`
   (lasting facts), which goes into every prompt. FORGET clears the talk (a dated copy stays), not the notes.

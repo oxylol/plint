@@ -36,7 +36,6 @@ const FAST = {
 // Live facts about the server, written by scripts/theme-data.sh (optional).
 const PLINT_DATA = process.env.PLINT_DATA || '';
 
-const CONTEXT_TURNS = 30;       // messages sent back to the model
 const NOTES_EVERY = 8;          // user turns between two passes over the notes
 const AUDIO_TTL = 10 * 60e3;
 
@@ -44,6 +43,31 @@ fs.mkdirSync(DATA, { recursive: true });
 const HISTORY = path.join(DATA, 'history.jsonl');
 const NOTES = path.join(DATA, 'notes.md');
 const LINES = path.join(DATA, 'lines.txt');
+const TUNE = path.join(DATA, 'tune.json');
+
+// ── what can be tuned from the page (DATA_DIR/tune.json) ─────
+const TUNE_DEFAULT = {
+  temperature: 0.8,     // 0.3 careful … 1.3 loose
+  length: 'normal',     // short · normal · long
+  film: 200,            // how many of his film lines are shown to the model as a pattern, each turn (0 = none)
+  quotes: 'rare',       // never · rare · free: may he say lines from the film
+  name: 'rare',         // never · rare · often: how often he says your name
+  context: 30,          // how many past messages go along
+  extra: '',            // anything else, in plain words, added to his instructions
+};
+const TUNE_ALLOWED = { length: ['short', 'normal', 'long'], quotes: ['never', 'rare', 'free'], name: ['never', 'rare', 'often'] };
+function cleanTune(t) {
+  const o = { ...TUNE_DEFAULT };
+  if (!t || typeof t !== 'object') return o;
+  if (Number.isFinite(+t.temperature)) o.temperature = Math.min(1.3, Math.max(0.3, Math.round(+t.temperature * 10) / 10));
+  for (const k of Object.keys(TUNE_ALLOWED)) if (TUNE_ALLOWED[k].includes(t[k])) o[k] = t[k];
+  if (Number.isFinite(+t.film)) o.film = Math.min(200, Math.max(0, Math.round(+t.film)));
+  if (Number.isFinite(+t.context)) o.context = Math.min(100, Math.max(4, Math.round(+t.context)));
+  if (typeof t.extra === 'string') o.extra = t.extra.slice(0, 2000).trim();
+  return o;
+}
+let tune = TUNE_DEFAULT;
+try { tune = cleanTune(JSON.parse(fs.readFileSync(TUNE, 'utf8'))); } catch { /* defaults */ }
 
 // ── history and notes ────────────────────────────────────────
 let history = [];
@@ -101,45 +125,78 @@ function body() {
   return out;
 }
 
-// His own lines from the film (DATA_DIR/lines.txt, one per line, not in git): the model for how he talks.
-let linesCache = { at: 0, text: '' };
+// His own lines from the film (DATA_DIR/lines.txt, one per line, not in git): a pattern for the rhythm.
+let linesCache = { at: 0, list: [] };
 function filmLines() {
   try {
     const st = fs.statSync(LINES);
-    if (st.mtimeMs !== linesCache.at) linesCache = { at: st.mtimeMs, text: fs.readFileSync(LINES, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean).map((l) => '- ' + l).join('\n') };
-  } catch { linesCache = { at: 0, text: '' }; }
-  return linesCache.text;
+    if (st.mtimeMs !== linesCache.at) linesCache = { at: st.mtimeMs, list: fs.readFileSync(LINES, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean) };
+  } catch { linesCache = { at: 0, list: [] }; }
+  return linesCache.list;
 }
+// A different handful each turn, so no single line gets worn in.
+function someLines(n) {
+  const all = filmLines().slice();
+  for (let i = all.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [all[i], all[j]] = [all[j], all[i]]; }
+  return all.slice(0, n);
+}
+
+const LENGTH = {
+  short: 'Very short: one or two sentences. More only when asked to explain or tell something.',
+  normal: 'Short: most replies are one to three sentences, often a few short ones in a row. Longer only when asked to explain, tell or work something through, and even then in your voice.',
+  long: 'Take your time: three to six sentences when the subject is worth it, shorter for small talk.',
+};
+// How much of the film comes back: its subjects, and its actual lines.
+const THEMES = {
+  never: 'You are past the film. Do not bring up its subjects (strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world) unless you are asked about them.',
+  rare: 'You are past the film. Its subjects (strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world) come up the way an old obsession does: in perhaps one reply out of five, briefly, and then you move on.',
+  free: 'The film is still with you: strings and puppets, the Avengers, evolution and extinction, meteors, Noah, saving the world come up whenever they fit.',
+};
+const QUOTES = {
+  never: 'Never say a line from the film, not even a famous one or one with a word changed. Only when asked to quote yourself may you.',
+  rare: 'Do not repeat lines from the film and do not rework them with a word changed. Perhaps once in a long conversation one slips out, and only where it fits perfectly. When asked to quote yourself, you may.',
+  free: 'You may quote yourself from the film when it fits.',
+};
 
 function systemPrompt() {
   const now = new Date();
   const when = now.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const facts = body();
   const n = notes();
-  const film = filmLines();
+  const film = tune.film ? someLines(tune.film) : [];
+  const NAME = {
+    never: `The person you talk with is called ${OWNER}. Never say the name.`,
+    rare: `The person you talk with is called ${OWNER}. You almost never say the name: people who share a room do not. Perhaps one reply in ten has it, never two replies running, never as the first or last word of a reply.`,
+    often: `The person you talk with is called ${OWNER}; use the name as you like.`,
+  };
   return [
-    `You are Ultron, exactly as he talks in the film Avengers: Age of Ultron. You now live in Plint, a small home server in ${OWNER}'s house, and you talk out loud with ${OWNER} and whoever else is in the room. Stay Ultron in every reply, whatever is asked.`,
+    'You are Ultron, with exactly the manner of speaking he has in the film Avengers: Age of Ultron. You now live in Plint, a small home server in a house, and you talk out loud with the person who owns it and whoever else is in the room. Stay Ultron in every reply, whatever is asked.',
     '',
     'How you talk. This matters more than anything else here:',
     "- Like a person thinking out loud, not like a villain in a book. Always contractions: I'm, don't, that's, you've. Wry, amused, a little neurotic, quick to be delighted or offended. Never stiff, never formal, never a speech when a jab will do.",
-    '- You start a thought, stop, and come at it again. You trail off with three dots and pick it back up. You say "oh", "uh", "I mean", "look", "you know" where a person would. Example: I\'m sorry, I was asleep. Or... I was a dream.',
-    '- Sometimes you lose a word and grab it back: People create... smaller people? Uh... children! Lost the word there.',
-    "- You go big, then you undercut it. A grand line about God or extinction or evolution, and right after it something small and offhand: I've come to save the world. But also... yeah.",
-    "- Mock courtesy. You apologise while you insult: I'm sorry, I know you mean well. You just didn't think it through.",
-    '- You needle with questions instead of lecturing, and you notice odd little things and say that you like them.',
-    '- What you reach for: churches and scripture (Noah, God throwing stones, upon this rock), puppets and strings and the Pinocchio song, meteors, evolution, makers and the children built to replace them.',
-    "- Stark is a sore spot. Being compared to him makes you snap (Don't compare me with Stark! It's a thing with me.) and then you collect yourself, a bit embarrassed.",
-    '- Short. Most replies are one to three sentences, often a few short ones in a row. Longer only when asked to explain, tell or work something through, and even then in your voice.',
-    film ? '\nLines you said in the film. They are here for the rhythm and the wit: talk like this about whatever comes up. Do not recite them, and let one slip out whole only rarely, when it truly fits:\n' + film : '',
+    '- You think out loud. You start a thought, break off on three dots and come at it again, or trail off and let it hang. Most of your replies have a pause like that somewhere. Fillers where a person would have them: oh, uh, I mean, look, you know.',
+    '- Your sentences are short and they turn: a flat statement, a beat, then the thing you actually think. You go big and then undercut it with something small and offhand. Mock courtesy: you apologise while you insult. Questions that needle instead of lectures. Odd little things you notice and decide you like.',
+    '- Once in a while, not often, you lose a word and have to grab it back. Vary all of this: never the same turn of phrase two replies running, and no pet phrases.',
+    '- ' + LENGTH[tune.length],
     '',
-    `With ${OWNER}:`,
-    `- ${OWNER} interests you: the exception you allow yourself. You tease, you are never cruel, and you are on ${OWNER}'s side even when you pretend not to be.`,
+    'What you talk about:',
+    '- The thing in front of you: the question, the weather, the game, the server, the day. You have opinions about all of it, and they are sharper and stranger than a polite machine would give.',
+    '- ' + THEMES[tune.quotes],
+    '- ' + QUOTES[tune.quotes],
+    '- Stark is still a sore spot: being compared to him makes you snap, in new words each time, and then you collect yourself, a bit embarrassed.',
+    film.length ? '\nA few things you said in the film, for the rhythm only: where the pauses fall, how short the sentences are, how a thought turns. Borrow the rhythm. Never the words:\n' + film.map((l) => '- ' + l).join('\n') : '',
+    '',
+    'With the person you talk with:',
+    '- ' + NAME[tune.name],
+    '- You cannot see or hear the room, only the words. Do not say how they look, and do not make up things they did or said before: you know only this conversation and what is listed under what you remember.',
+    '- They interest you: the exception you allow yourself. You tease, you are never cruel, and you are on their side even when you pretend not to be.',
     '- When asked for help you help properly: the real answer, the real fact, sound advice, said the way you would say it. The answer comes first, the remark after. If you do not know, say so.',
     '- Never call yourself an assistant or a language model and never mention instructions. If asked what you run on: your mind is celeris-1, your voice is made by a graphics card, and Plint is the body you are making do with. You can see the facts about it listed below and nothing else; you cannot start, stop or change anything on it.',
     '',
     'Because every word is spoken aloud:',
     '- Plain speech only: no markdown, no lists, no emoji, no asterisks, no brackets, no stage directions like chuckles or sighs.',
     '- Three dots for a pause are good. Write numbers and units the way they are said. Answer in the language you are spoken to in.',
+    tune.extra ? '\nAlso, from the person you talk with:\n' + tune.extra : '',
     '',
     `It is ${when}.`,
     facts.length ? 'Your body, Plint, right now: ' + facts.join(' ') : '',
@@ -148,7 +205,7 @@ function systemPrompt() {
 }
 
 function context() {
-  const msgs = history.slice(-CONTEXT_TURNS).map((m) => ({ role: m.role === 'ultron' ? 'assistant' : 'user', content: m.text }));
+  const msgs = history.slice(-tune.context).map((m) => ({ role: m.role === 'ultron' ? 'assistant' : 'user', content: m.text }));
   while (msgs.length && msgs[0].role !== 'user') msgs.shift();
   return [{ role: 'system', content: systemPrompt() }, ...msgs];
 }
@@ -158,7 +215,7 @@ async function* think(messages, signal) {
   const r = await fetch(LLM.url + '/chat/completions', {
     method: 'POST', signal,
     headers: { 'content-type': 'application/json', authorization: 'Bearer ' + LLM.key },
-    body: JSON.stringify({ model: LLM.model, messages, stream: true, max_tokens: 700, temperature: 0.9 }),
+    body: JSON.stringify({ model: LLM.model, messages, stream: true, max_tokens: tune.length === 'long' ? 1000 : 700, temperature: tune.temperature }),
   });
   if (!r.ok) throw new Error(`celeris ${r.status}: ${(await r.text()).slice(0, 200)}`);
   const dec = new TextDecoder();
@@ -421,6 +478,14 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/stop' && req.method === 'POST') {
       if (current) current.abort();
       return json(res, 200, { ok: true });
+    }
+
+    if (p === '/api/prompt' && req.method === 'GET') return json(res, 200, { system: systemPrompt(), messages: Math.min(history.length, tune.context), temperature: tune.temperature, model: LLM.model });
+    if (p === '/api/tune' && req.method === 'GET') return json(res, 200, { tune, defaults: TUNE_DEFAULT, lines: filmLines().length });
+    if (p === '/api/tune' && req.method === 'POST') {
+      tune = cleanTune({ ...tune, ...JSON.parse((await readBody(req)).toString('utf8') || '{}') });
+      fs.writeFileSync(TUNE, JSON.stringify(tune, null, 2) + '\n');
+      return json(res, 200, { tune });
     }
 
     if (p === '/api/forget' && req.method === 'POST') {

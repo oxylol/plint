@@ -49,6 +49,19 @@
   </section>
 </main>
 
+<section class="tune" id="tune" hidden aria-label="Tune what celeris-1 is given">
+  <div class="grp"><span>TUNING <span class="ru">/ НАСТРОЙКА</span></span><span>WHAT CELERIS-1 IS GIVEN</span></div>
+  <div id="tuneRows"></div>
+  <label class="tx"><span>ALSO TELL HIM <span class="ru">/ ЕЩЁ</span></span>
+    <textarea id="tuneExtra" rows="3" maxlength="2000" placeholder="ANYTHING ELSE, IN PLAIN WORDS" spellcheck="false"></textarea></label>
+  <div class="tfoot">
+    <button class="btn o sm" id="tunePrompt" type="button" aria-pressed="false">SHOW THE PROMPT</button>
+    <span class="gap"></span>
+    <button class="btn sm" id="tuneClose" type="button">DONE</button>
+  </div>
+  <pre id="tuneText" hidden></pre>
+</section>
+
 <footer class="deck">
   <form id="form" autocomplete="off">
     <span class="prompt" aria-hidden="true">&gt;</span>
@@ -60,8 +73,9 @@
   </form>
   <div class="sw">
     <button class="btn o sm" id="swVoice" type="button" aria-pressed="true">VOICE</button>
-    <button class="btn o sm" id="swLoop" type="button" aria-pressed="false" hidden>TALK MODE</button>
-    <button class="btn o sm" id="swLang" type="button" hidden>EN</button>
+    <button class="btn o sm" id="swLoop" type="button" aria-pressed="false" aria-label="Talk mode: he listens again after each answer" hidden>TALK</button>
+    <button class="btn o sm" id="swLang" type="button" aria-label="Language he listens for" hidden>EN</button>
+    <button class="btn o sm" id="swTune" type="button" aria-pressed="false" aria-controls="tune">TUNE</button>
     <span class="gap"></span>
     <button class="btn o sm" id="swForget" type="button">FORGET</button>
   </div>

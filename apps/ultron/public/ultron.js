@@ -445,6 +445,63 @@ $('swLoop').onclick = () => {
   };
 })();
 
+// ── tuning: what celeris-1 is given ──────────────────────────
+(() => {
+  const SPEC = [
+    ['temperature', 'WILDNESS', 'How loose his wording gets. Wild also slips more.', [[0.5, 'CALM'], [0.8, 'NORMAL'], [1, 'LIVELY'], [1.2, 'WILD']]],
+    ['length', 'LENGTH', 'How long he talks before he stops.', [['short', 'SHORT'], ['normal', 'NORMAL'], ['long', 'LONG']]],
+    ['quotes', 'THE FILM', 'How much of the film comes back: its lines, strings, Stark.', [['never', 'NEVER'], ['rare', 'RARE'], ['free', 'FREE']]],
+    ['film', 'FILM LINES', 'How many of his real lines he is shown, for the rhythm.', [[0, 'NONE'], [12, '12'], [24, '24'], [200, 'ALL']]],
+    ['name', 'YOUR NAME', 'How often he says it.', [['never', 'NEVER'], ['rare', 'RARE'], ['often', 'OFTEN']]],
+    ['context', 'MEMORY', 'How many past messages he is handed each time.', [[10, '10'], [30, '30'], [60, '60']]],
+  ];
+  const box = $('tune'), rows = $('tuneRows'), extra = $('tuneExtra'), sw = $('swTune');
+  let tune = null, timer = 0;
+  const save = (patch) => fetch('api/tune', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) })
+    .then((r) => r.json()).then((d) => { tune = d.tune; paint(); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
+  function paint() {
+    rows.innerHTML = '';
+    for (const [key, name, what, opts] of SPEC) {
+      const row = document.createElement('div'); row.className = 'trow';
+      const lab = document.createElement('div');
+      const b = document.createElement('b'); b.textContent = name;
+      const sm = document.createElement('small'); sm.textContent = what;
+      lab.append(b, sm);
+      const seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'group'); seg.setAttribute('aria-label', name);
+      // the stored value may sit between two choices: light the nearest
+      const near = typeof opts[0][0] === 'number' ? opts.reduce((a, o) => (Math.abs(o[0] - tune[key]) < Math.abs(a[0] - tune[key]) ? o : a))[0] : tune[key];
+      for (const [val, label] of opts) {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'btn o sm'; btn.textContent = label;
+        btn.setAttribute('aria-pressed', String(val === near));
+        btn.onclick = () => save({ [key]: val });
+        seg.appendChild(btn);
+      }
+      row.append(lab, seg); rows.appendChild(row);
+    }
+    if (document.activeElement !== extra) extra.value = tune.extra || '';
+  }
+  const prompt = () => fetch('api/prompt').then((r) => r.json()).then((d) => {
+    $('tuneText').textContent = `MODEL ${d.model} · TEMPERATURE ${d.temperature} · THEN THE LAST ${d.messages} MESSAGES\n\n${d.system}`;
+  }).catch(() => {});
+  function open(on) {
+    box.hidden = !on; sw.setAttribute('aria-pressed', String(on));
+    if (on) {
+      document.documentElement.style.setProperty('--deck-h', document.querySelector('.deck').offsetHeight + 'px');
+      fetch('api/tune').then((r) => r.json()).then((d) => { tune = d.tune; paint(); }).catch(() => { box.hidden = true; sw.setAttribute('aria-pressed', 'false'); });
+    }
+  }
+  sw.onclick = () => open(box.hidden);
+  $('tuneClose').onclick = () => open(false);
+  extra.oninput = () => { clearTimeout(timer); timer = setTimeout(() => save({ extra: extra.value }), 700); };
+  $('tunePrompt').onclick = () => {
+    const t = $('tuneText'); t.hidden = !t.hidden;
+    $('tunePrompt').setAttribute('aria-pressed', String(!t.hidden));
+    if (!t.hidden) prompt().then(() => t.scrollIntoView({ block: 'nearest' }));
+  };
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !box.hidden) open(false); });
+})();
+
 // the way back to the home page: the apex of this name
 (() => {
   const h = location.hostname.split('.');

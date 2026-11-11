@@ -155,6 +155,33 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 .sw { display: flex; gap: 8px; margin-top: 8px; }
 .sw .gap { flex: 1; }
 
+/* ── tuning: a sheet over the transcript ── */
+.tune {
+  position: fixed; left: 0; right: 0; bottom: var(--deck-h, 112px); z-index: 5;
+  max-height: calc(100dvh - var(--deck-h, 112px) - 70px); overflow-y: auto; overscroll-behavior: contain;
+  padding: 0 max(var(--pad), env(safe-area-inset-right)) 12px max(var(--pad), env(safe-area-inset-left));
+  background: var(--p-bg); border-top: 1px solid var(--p-faint); box-shadow: 0 -18px 40px #000;
+}
+.trow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--p-line); }
+.trow > div:first-child { min-width: 0; }
+.trow b { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.16em; }
+.trow small { display: block; margin-top: 3px; font-size: 10px; line-height: 1.35; color: var(--p-ink2); }
+.seg { display: flex; gap: 4px; }
+.seg .btn { min-width: 44px; padding: 0 9px; letter-spacing: 0.1em; }
+.tx { display: block; padding: 10px 0 0; border-top: 1px solid var(--p-line); }
+.tx > span { display: block; font-size: 10px; font-weight: 600; letter-spacing: 0.16em; margin-bottom: 7px; }
+.tx textarea {
+  display: block; width: 100%; resize: vertical; min-height: 64px; padding: 9px 10px; border: 0; border-radius: 0; outline: 0;
+  background: none; box-shadow: inset 0 0 0 1px var(--p-faint); color: var(--p-ink); caret-color: var(--p-ink);
+  font: 400 16px/1.4 var(--p-font);
+}
+.tx textarea:focus { box-shadow: inset 0 0 0 1px var(--p-ink); }
+.tx textarea::placeholder { color: var(--p-faint); font-size: 11px; letter-spacing: 0.14em; }
+.tfoot { display: flex; gap: 8px; padding-top: 10px; }
+.tfoot .gap { flex: 1; }
+#tuneText { margin: 10px 0 0; padding: 10px; box-shadow: inset 0 0 0 1px var(--p-line); font: 400 11px/1.55 var(--p-font); color: var(--p-ink2); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 46dvh; overflow-y: auto; }
+@media (max-width: 420px) { .trow { grid-template-columns: 1fr; gap: 7px; } .seg .btn { flex: 1; } }
+
 /* ── wider than a phone: face on the left, talk on the right ── */
 @media (min-width: 860px) {
   :root { --pad: 28px; }
@@ -164,6 +191,7 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
   .face { height: auto; flex: 1; min-height: 240px; max-height: 520px; }
   .who h1 { font-size: 38px; }
   .ln > p { font-size: 15px; }
+  .tune { left: 50%; right: auto; width: min(1180px, 100vw); transform: translateX(-50%); }
 }
 @media (max-height: 560px) { .face { height: 110px; } }
 
