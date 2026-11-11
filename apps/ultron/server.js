@@ -126,13 +126,27 @@ function body() {
 }
 
 // His own lines from the film (DATA_DIR/lines.txt, one per line, not in git): a pattern for the rhythm.
-let linesCache = { at: 0, list: [] };
+let linesCache = { at: 0, list: [], runs: new Set() };
+const wordsOf = (t) => t.toLowerCase().match(/[a-z']+/g) || [];
+const RUN = 5;      // this many words in a row out of a film line is a quote
 function filmLines() {
   try {
     const st = fs.statSync(LINES);
-    if (st.mtimeMs !== linesCache.at) linesCache = { at: st.mtimeMs, list: fs.readFileSync(LINES, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean) };
-  } catch { linesCache = { at: 0, list: [] }; }
+    if (st.mtimeMs !== linesCache.at) {
+      const list = fs.readFileSync(LINES, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean);
+      const runs = new Set();
+      for (const l of list) { const w = wordsOf(l); for (let i = 0; i + RUN <= w.length; i++) runs.add(w.slice(i, i + RUN).join(' ')); }
+      linesCache = { at: st.mtimeMs, list, runs };
+    }
+  } catch { linesCache = { at: 0, list: [], runs: new Set() }; }
   return linesCache.list;
+}
+// The stretch of a reply that is lifted from the film, or ''.
+function recited(text) {
+  filmLines();
+  const w = wordsOf(text);
+  for (let i = 0; i + RUN <= w.length; i++) { const r = w.slice(i, i + RUN).join(' '); if (linesCache.runs.has(r)) return r; }
+  return '';
 }
 // A different handful each turn, so no single line gets worn in.
 function someLines(n) {
@@ -158,12 +172,12 @@ const QUOTES = {
   free: 'You may quote yourself from the film when it fits.',
 };
 
-function systemPrompt() {
+function systemPrompt(noFilm) {
   const now = new Date();
   const when = now.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   const facts = body();
   const n = notes();
-  const film = tune.film ? someLines(tune.film) : [];
+  const film = tune.film && !noFilm ? someLines(tune.film) : [];
   const NAME = {
     never: `The person you talk with is called ${OWNER}. Never say the name.`,
     rare: `The person you talk with is called ${OWNER}. You almost never say the name: people who share a room do not. Perhaps one reply in ten has it, never two replies running, never as the first or last word of a reply.`,
@@ -204,10 +218,10 @@ function systemPrompt() {
   ].filter((l) => l !== '').join('\n');
 }
 
-function context() {
+function context(noFilm) {
   const msgs = history.slice(-tune.context).map((m) => ({ role: m.role === 'ultron' ? 'assistant' : 'user', content: m.text }));
   while (msgs.length && msgs[0].role !== 'user') msgs.shift();
-  return [{ role: 'system', content: systemPrompt() }, ...msgs];
+  return [{ role: 'system', content: systemPrompt(noFilm) }, ...msgs];
 }
 
 // ── celeris ──────────────────────────────────────────────────
@@ -415,12 +429,20 @@ async function turn(req, res, input) {
   };
 
   try {
-    for await (const d of think(context(), ac.signal)) {
-      full += d; buf += d;
-      send({ t: 'delta', d });
-      let s;
-      while ((s = takeSentence(buf, false))) { buf = buf.slice(s.length); queue(s.trim()); }
+    // celeris-1 answers whole in about half a second, so the reply can be read before it is shown:
+    // one that recites the film is asked for again, the second time without the film lines in view.
+    const guard = tune.quotes !== 'free' && !/\b(quote|line|film|movie|sitat|replikk)/i.test(input.text);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      full = '';
+      for await (const d of think(context(attempt > 0), ac.signal)) full += d;
+      const lifted = guard ? recited(full) : '';
+      if (!lifted) break;
+      console.log(`recited the film ("${lifted}"), ${attempt < 2 ? 'asking again' : 'letting it stand'}`);
     }
+    buf = full;
+    send({ t: 'delta', d: full });
+    let s;
+    while ((s = takeSentence(buf, false))) { buf = buf.slice(s.length); queue(s.trim()); }
     const last = takeSentence(buf, true);
     if (last && last.trim()) queue(last.trim());
   } catch (e) {
