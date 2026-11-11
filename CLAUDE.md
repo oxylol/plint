@@ -33,8 +33,8 @@ app; they are usually on a phone, so keep answers short and lead with the result
 ├── apps/silk-router/   silk-router: Silk Compute key behind OpenAI/Anthropic APIs, refusal → -uncensored (README there)
 ├── apps/plint-chat/    Plint Chat: Claude-style phone page driving Claude Code on Silk models (native unit; README there)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
-├── theme/              Plint Soft UI: plint.css/js (tokens, Plint pill) + apps/<app>.css/js
-├── dashboard/          Homepage config (services/widgets/settings/images)
+├── theme/              Plint Terminal: plint.css/js (tokens, strip) + apps/<app>.css/js + home/ (the home page) + fonts/
+├── dashboard/          Homepage config (services/widgets/settings/images); no longer the home screen
 ├── systemd/            plint-claude.service, cockpit.conf, resolved + sysctl + apt drop-ins
 ├── scripts/            setup scripts (adguard, beszel, ntfy, kopia, amp, claude) + notify.sh
 └── data/               container state (gitignored; backed up by Kopia)
@@ -60,7 +60,7 @@ host network and proxies to `localhost:<port>`:
 
 | name | port | what |
 |---|---|---|
-| (apex), dash | 3100 | Homepage |
+| (apex), dash | (static) | Home page: `theme/home`, instruments on `data/theme/*.json` (written by `scripts/theme-data.sh`), then the registry of links. Homepage still runs on 3100, unused |
 | dns | 3000 | AdGuard Home |
 | games | 8080 | AMP |
 | stremio | 8095 | Stremio |
@@ -87,15 +87,17 @@ host network and proxies to `localhost:<port>`:
 - **Change config**: edit files in this repo, then `plint sync`. Commit and push so the
   change survives a rebuild (`git add -A && git commit -m "..." && git push`).
 - **Add a service**: service in the right `stacks/*/compose.yaml` (publish on
-  `127.0.0.1:<port>`), a `@name host name.{$DOMAIN}` block in `caddy/Caddyfile`, a card in
-  `dashboard/services.yaml`. Then `plint sync`. AdGuard's wildcard rewrite already covers
+  `127.0.0.1:<port>`), a `@name host name.{$DOMAIN}` block in `caddy/Caddyfile`, a row in `REG`
+  (`theme/home/home.js`) and in `APPS` (`theme/plint.js`). Then `plint sync`. AdGuard's wildcard rewrite already covers
   the new name.
-- **Look (Plint Soft UI)**: one neumorphic sage-grey theme, light/dark from the device.
-  Caddy injects `theme/plint.css`, `theme/apps/<app>.css` and `theme/plint.js` into every
-  themed app (`import theme <app>` + `header_up Accept-Encoding identity` in its handle).
-  Style a new app with its own `theme/apps/<app>.css/js`; tokens are the `--p-*` variables.
-  AMP and Stremio are deliberately left untouched. Theme files are served live, so a CSS
-  change needs no sync beyond `git pull`.
+- **Look (Plint Terminal)**: one dark ground, one light (white with a little green), no hue, the same
+  whatever the device asks for. Chamfered blocks, Geist Mono text, Doto dot-matrix figures, lamps (hollow =
+  off, blinking = alarm) and inverse video for selection, fault and loss; motion is stepped, never eased.
+  Caddy injects `theme/plint.css`, `theme/apps/<app>.css` and `theme/plint.js` into every themed app
+  (`import theme <app>` + `header_up Accept-Encoding identity` in its handle). Style a new app with its
+  own `theme/apps/<app>.css/js`; tokens are the `--p-*` variables, helpers are `Plint.num/meter/lamp/strike`.
+  A new app also goes in `APPS` in `theme/plint.js` and `REG` in `theme/home/home.js`. AMP and Stremio are
+  deliberately left untouched. Theme files are served live, so a CSS change needs no sync beyond `git pull`.
 - **Update**: `plint update` (containers) · `plint update --os` (also apt). Never update
   AMP or restart game servers while players are online; check `plint game` and ask.
 - **Game servers**: `plint game` lists AMP servers (running? port, connections);

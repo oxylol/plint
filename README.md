@@ -13,7 +13,7 @@ machine is this repository.
 
 | | |
 |---|---|
-| **plint.net** | Home screen (Homepage) |
+| **plint.net** | Home screen: live instruments and a registry of every service (`theme/home`) |
 | **dns.plint.net** | AdGuard Home — network-wide ad blocking, encrypted upstream DNS |
 | **games.plint.net** | AMP — game servers |
 | **stremio.plint.net** | Stremio streaming server + web player |
@@ -29,8 +29,8 @@ machine is this repository.
 | *Tailscale* | remote access, Tailscale SSH, LAN subnet routing |
 | *Claude* | Claude Code on the server, controlled from the Claude app |
 
-Every site except AMP and Stremio wears one theme, Plint Soft UI (`theme/`): neumorphic,
-sage-grey, light or dark with your device, numbers drawn as rings, bars and strips.
+Every site except AMP and Stremio wears one theme, Plint Terminal (`theme/`): one dark ground
+and one light, monospace text, dot-matrix figures, lamps and inverse video in place of colour.
 
 Nothing is exposed to the internet. The domain's public DNS has no records pointing at the
 server; it exists so Caddy can get a wildcard certificate via Cloudflare's API.
