@@ -18,6 +18,11 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
 - **Sounds**: he may write `[laughter]` and `[sigh]`, the two reaction tags OmniVoice renders with this voice (a laugh
   adds about two seconds, a sigh half a second); they are hidden in the transcript and any other bracket is dropped.
   Graded emotion needs another engine: `HANDOFF-pc-emotion.md` is the brief for installing IndexTTS 2.5 on the PC.
+- **Moods**: the clone copies the delivery of the clip it is given, so a second clip gives a second mood. A sentence
+  he marks `[angry]` is spoken from `data/ultron/voice/moods/angry.wav` (its words in `angry.txt`) through the PC's
+  `POST /generate`; everything else uses the ordinary profile. Any `<mood>.wav` + `.txt` put in that folder is picked
+  up within half a minute, but only `[angry]` is offered to him in the prompt. Only the PC voice does moods; on
+  Plint's own voice the sentence is said plainly. Other takes that were tried are in `voice/candidates/`.
 - **Tuning**: TUNE on the page changes what celeris-1 is given (kept in `data/ultron/tune.json`, applied from the next
   message): wildness (temperature), reply length, how much of the film comes back, how many film lines he is shown,
   how often he says your name, how many past messages go along, and a box of extra instructions in plain words.

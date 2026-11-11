@@ -156,6 +156,7 @@ function systemPrompt(noFilm) {
     'Because every word is spoken aloud:',
     '- Plain speech only: no markdown, no lists, no emoji, no asterisks, no stage directions.',
     '- You can make two sounds, written exactly like this: [laughter] where you actually laugh, [sigh] where you actually sigh. Use them sparingly, only when something really amuses or wearies you; most replies have neither. Nothing else ever goes in brackets.',
+    moodNames().includes('angry') ? '- When you truly snap, when you raise your voice at something, put [angry] at the very start of that sentence and it comes out in anger. One sentence at a time, and rarely: nearly everything you say is in your ordinary voice.' : '',
     '- Three dots for a pause are good. Write numbers and units the way they are said. Answer in the language you are spoken to in.',
     tune.extra ? '\nAlso, from the person you talk with:\n' + tune.extra : '',
     '',
@@ -226,14 +227,38 @@ async function probeVoice() {
 probeVoice();
 setInterval(() => { if (voice.state !== 'ok') probeVoice(); }, 60e3).unref();
 
+// Moods: other clips of the same voice (DATA_DIR/voice/moods/<mood>.wav with the words in <mood>.txt, not in
+// git). A sentence he marks [angry] is spoken from angry.wav: the clone copies the delivery of its clip.
+// Only the fast voice does this; everything else, and every other sentence, uses the ordinary profile.
+const MOODS_DIR = path.join(DATA, 'voice', 'moods');
+let moods = new Map(), moodsAt = 0;
+function loadMoods() {
+  if (Date.now() - moodsAt < 30e3) return moods;
+  moodsAt = Date.now();
+  const next = new Map();
+  try {
+    for (const f of fs.readdirSync(MOODS_DIR)) {
+      if (!f.endsWith('.wav')) continue;
+      const name = f.slice(0, -4).toLowerCase();
+      try { next.set(name, { wav: fs.readFileSync(path.join(MOODS_DIR, f)), text: fs.readFileSync(path.join(MOODS_DIR, name + '.txt'), 'utf8').trim() }); } catch { /* a clip without its words */ }
+    }
+  } catch { /* no moods */ }
+  moods = next;
+  return moods;
+}
+const moodNames = () => (FAST.url ? [...loadMoods().keys()] : []);
+
 // The fast voice is a machine that sleeps and gets switched off: ask it often, wait for it briefly.
 async function probeFast() {
   if (!FAST.url) return false;
   try {
     const r = await fetch(FAST.url + '/health', { headers: { authorization: 'Bearer ' + FAST.key }, signal: AbortSignal.timeout(2500) });
     const j = r.ok ? await r.json() : null;
+    const was = FAST.up;
     FAST.up = !!j && j.status === 'ok';
     FAST.device = (j && j.device) || '';
+    // the first use of a clip is slow there (it is analysed once): get that over with before he needs it
+    if (FAST.up && !was) for (const m of moodNames()) speakMood('Hm.', m, AbortSignal.timeout(60e3)).catch(() => {});
   } catch { FAST.up = false; }
   FAST.at = Date.now();
   return FAST.up;
@@ -271,8 +296,29 @@ async function speakFast(text, signal) {
   return keep(r, Buffer.from(await r.arrayBuffer()));
 }
 
+async function speakMood(text, mood, signal) {
+  const ref = loadMoods().get(mood);
+  const fd = new FormData();
+  fd.set('text', sayable(text, true));
+  fd.set('ref_audio', new Blob([ref.wav], { type: 'audio/wav' }), mood + '.wav');
+  fd.set('ref_text', ref.text);
+  fd.set('num_step', String(FAST.steps));
+  const r = await fetch(FAST.url + '/generate', {
+    method: 'POST', signal: AbortSignal.any([signal, AbortSignal.timeout(25e3)]),
+    headers: { authorization: 'Bearer ' + FAST.key }, body: fd,
+  });
+  if (!r.ok) throw new Error(`mood ${mood} ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  return keep(r, Buffer.from(await r.arrayBuffer()));
+}
+
 // Returns [clip id, which voice made it].
-async function speak(text, signal) {
+async function speak(text, signal, mood) {
+  if (FAST.up && mood && mood !== 'calm' && loadMoods().has(mood)) {
+    try { return [await speakMood(text, mood, signal), 'gpu']; } catch (e) {
+      if (signal.aborted) throw e;
+      console.error('mood clip failed, saying it plainly:', e.message);
+    }
+  }
   if (FAST.up) {
     try { return [await speakFast(text, signal), 'gpu']; } catch (e) {
       if (signal.aborted) throw e;
@@ -298,18 +344,34 @@ async function speak(text, signal) {
 }
 
 // Cut the stream into things worth one breath: a sentence, or a long clause.
-function takeSentence(buf, final) {
+function cutSentence(buf) {
   // a stop only counts once something follows it (it may be a decimal point)
   const re = /[.!?…]+["')\]]?(?=\s)/g;
   let m;
   while ((m = re.exec(buf))) {
     if (/^(\.{2,}|…+)/.test(m[0])) continue;                    // "in... in... strings": a pause, said in one breath
     const s = buf.slice(0, m.index + m[0].length);
-    if (s.trim().length < 45) continue;                         // "No." rides along with the next one
     if (/\b(Mr|Mrs|Ms|Dr|St|vs|etc)\.$/i.test(s)) continue;     // not the end of anything
     return s;
   }
-  return final && buf.trim() ? buf : null;
+  return null;
+}
+// The reply as the voice gets it: sentences, each in its mood, short neighbours of one mood sharing a breath.
+function chunks(text) {
+  const have = moodNames();
+  const out = [];
+  let buf = text, s;
+  const add = (raw) => {
+    if (!shown(raw)) { if (out.length) out[out.length - 1].text += raw; return; }       // a sound on its own rides along
+    const tag = (raw.match(/\[([a-z]+)\]/gi) || []).map((t) => t.slice(1, -1).toLowerCase()).find((t) => have.includes(t));
+    const mood = tag || 'calm';
+    const last = out[out.length - 1];
+    if (last && last.mood === mood && (shown(last.text).length < 45 || shown(raw).length < 20)) last.text += raw;
+    else out.push({ text: raw, mood });
+  };
+  while ((s = cutSentence(buf))) { add(s); buf = buf.slice(s.length); }
+  if (buf.trim()) add(buf);
+  return out.map((c) => ({ text: c.text.trim(), mood: c.mood }));
 }
 
 // ── one turn ─────────────────────────────────────────────────
@@ -332,17 +394,17 @@ async function turn(req, res, input) {
   let via = now.via;
   send({ t: 'start', voice: input.voice === false ? 'muted' : now.state, via });
 
-  let full = '', buf = '', n = 0;
+  let full = '', n = 0;
   let chain = Promise.resolve();
   let voiceFailed = false;
-  const queue = (sentence) => {
+  const queue = (sentence, mood) => {
     const i = n++;
     send({ t: 'sentence', i, text: shown(sentence) });
     if (!wantVoice || voiceFailed) return;
     chain = chain.then(async () => {
       if (ac.signal.aborted || voiceFailed) return;
       try {
-        const [id, by] = await speak(sentence, ac.signal);
+        const [id, by] = await speak(sentence, ac.signal, mood);
         if (by !== via) { via = by; send({ t: 'via', via }); }
         send({ t: 'audio', i, id });
       } catch (e) {
@@ -365,12 +427,8 @@ async function turn(req, res, input) {
       if (!lifted) break;
       console.log(`recited the film ("${lifted}"), ${attempt < 2 ? 'asking again' : 'letting it stand'}`);
     }
-    buf = full;
     send({ t: 'delta', d: full });
-    let s;
-    while ((s = takeSentence(buf, false))) { buf = buf.slice(s.length); queue(s.trim()); }
-    const last = takeSentence(buf, true);
-    if (last && last.trim()) queue(last.trim());
+    for (const c of chunks(full)) queue(c.text, c.mood);
   } catch (e) {
     if (!ac.signal.aborted) { console.error('think:', e.message); send({ t: 'error', message: 'celeris-1 did not answer: ' + e.message }); }
   }
