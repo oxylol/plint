@@ -90,6 +90,7 @@ try { const m = JSON.parse(fs.readFileSync(MEMORY, 'utf8')); if (m && m.nodes &&
 const memKey = (name) => String(name || '').toLowerCase().replace(/[^\p{L}\p{N}' -]+/gu, ' ').replace(/\s+/g, ' ').trim();
 const KINDS = ['person', 'pet', 'place', 'thing', 'project', 'event', 'idea'];
 const saveMem = () => fs.writeFile(MEMORY, JSON.stringify(mem), () => {});
+const SELF = 'ultron';      // his own node: his past is in the graph too (past-graph.json), marked so a wipe leaves it
 
 function memNode(name, kind) {
   const k = memKey(name);
@@ -99,7 +100,8 @@ function memNode(name, kind) {
   return k;
 }
 function pruneMem() {
-  if (mem.edges.length > 600) mem.edges = mem.edges.sort((a, b) => b.last - a.last).slice(0, 600);
+  const learned = mem.edges.filter((e) => !e.past);
+  if (learned.length > 600) mem.edges = [...mem.edges.filter((e) => e.past), ...learned.sort((a, b) => b.last - a.last).slice(0, 600)];
   const used = new Set(mem.edges.flatMap((e) => [e.s, e.o]));
   for (const k of Object.keys(mem.nodes)) if (!used.has(k)) delete mem.nodes[k];
 }
@@ -118,22 +120,45 @@ function learn(facts) {
   pruneMem(); saveMem();
   return added;
 }
+// His own past goes in once (and again when past-graph.json gets a new version).
+try {
+  const seed = JSON.parse(fs.readFileSync(path.join(__dirname, 'past-graph.json'), 'utf8'));
+  if (mem.seed !== seed.version) {
+    const now = Date.now();
+    for (const [sn, ks, r, on, ko] of seed.facts) {
+      const s = memNode(sn, ks), o = memNode(on, ko);
+      if (s && o && !mem.edges.some((e) => e.s === s && e.r === r && e.o === o)) mem.edges.push({ s, r, o, first: now, last: now, n: 1, past: true });
+    }
+    mem.seed = seed.version;
+    saveMem();
+    console.log(`memory: his past is in the graph (${seed.facts.length} links)`);
+  }
+} catch (e) { console.error('memory seed:', e.message); }
+
 // The links worth having in mind for what is being said: around anything named in the last few things they
 // said, and always the freshest and most repeated ones about the person themselves.
+const SMALL = new Set(['the', 'and', 'for', 'his', 'her', 'its', 'our', 'with', 'from', 'that', 'this', 'city', 'base', 'body']);
 function recall(texts) {
   if (!mem.edges.length) return [];
   const hay = ' ' + memKey(texts.join(' ')) + ' ';
   const me = memKey(OWNER);
   const hit = new Set();
-  for (const k of Object.keys(mem.nodes)) if (k !== me && k.length >= 3 && hay.includes(' ' + k + ' ')) hit.add(k);
+  for (const k of Object.keys(mem.nodes)) {
+    if (k === me || k === SELF || k.length < 3) continue;
+    const w = k.split(' ');
+    // the whole name, or the telling end of it: "Wanda" for Wanda Maximoff, "Klaue" for Ulysses Klaue
+    if (hay.includes(' ' + k + ' ')) hit.add(k);
+    else if (w.length > 1 && [w[0], w[w.length - 1]].some((x) => x.length >= 3 && !SMALL.has(x) && hay.includes(' ' + x + ' '))) hit.add(k);
+  }
   const now = Date.now();
   const score = (e) => (hit.has(e.s) ? 6 : 0) + (hit.has(e.o) ? 6 : 0) + Math.min(3, e.n - 1) + Math.max(0, 2 - (now - e.last) / (14 * 864e5));
+  const name = (k) => (k === SELF ? 'you' : mem.nodes[k].name);
   return mem.edges
-    .filter((e) => hit.has(e.s) || hit.has(e.o) || e.s === me || e.o === me)
+    .filter((e) => hit.has(e.s) || hit.has(e.o) || ((e.s === me || e.o === me) && !e.past))
     .sort((a, b) => score(b) - score(a) || b.last - a.last).slice(0, 24)
-    .map((e) => `${mem.nodes[e.s].name} ${e.r} ${mem.nodes[e.o].name}`);
+    .map((e) => `${name(e.s)} ${e.r} ${name(e.o)}`);
 }
-const KNOWN = 'What you know about them and their world. You learned it by listening and it is simply yours: use it when it bears on what is being said, never list it back, never announce that you remember.';
+const KNOWN = 'What comes to mind about what was just said: things you know about them and their world from listening, and pieces of your own past. They are simply yours: use them when they bear on what is being said, never list them back, never announce that you remember.';
 
 // After a turn: what lasting things did they just tell him? Asked of whichever mind is in use, in the background.
 async function learnFrom(said, reply) {
@@ -650,12 +675,12 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (p === '/api/memory' && req.method === 'GET') {
-      return json(res, 200, { owner: memKey(OWNER), nodes: Object.entries(mem.nodes).map(([id, n]) => ({ id, name: n.name, kind: n.kind })), edges: mem.edges });
+      return json(res, 200, { owner: memKey(OWNER), self: SELF, nodes: Object.entries(mem.nodes).map(([id, n]) => ({ id, name: n.name, kind: n.kind })), edges: mem.edges });
     }
     if (p === '/api/memory/forget' && req.method === 'POST') {
       const q = JSON.parse((await readBody(req)).toString('utf8') || '{}');
       const before = mem.edges.length;
-      if (q.all === true) mem = { nodes: {}, edges: [] };
+      if (q.all === true) mem.edges = mem.edges.filter((e) => e.past);          // what he learned goes, his own past stays
       else if (q.node) mem.edges = mem.edges.filter((e) => e.s !== q.node && e.o !== q.node);
       else mem.edges = mem.edges.filter((e) => !(e.s === q.s && e.r === q.r && e.o === q.o));
       pruneMem(); saveMem();

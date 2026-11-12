@@ -42,7 +42,9 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   `data/ultron/memory.json`: things and the links between them ("Filip · has a cat called · Loke"). After each turn the
   mind in use is asked for the lasting facts in what you said; before each turn the links around whatever you
   mention, plus the freshest ones about you, are put in front of him. MEMORY on the page draws the graph; tap a thing
-  to see its links, × forgets one, WIPE forgets everything.
+  to see its links, × forgets one. His own past is in the same graph (`past-graph.json`, 36 links around his node, put
+  in at start-up and marked as past): it comes to mind when a name from it is mentioned, and WIPE leaves it, clearing
+  only what he learned from you.
 - **What he is not told** (removed on Filip's word, 2026-11-11, so that he simply is Ultron): nothing about being a
   program, what he runs on or where he is (no Plint, no server, no house), no rule to be helpful or kind, no facts about the server. (The old
   notes file `data/ultron/notes.md` is no longer read; the memory graph replaced it on 2026-11-12.)

@@ -488,6 +488,10 @@ const eyes = (() => {
     let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     ns.forEach((n, i) => { const a = (i / ns.length) * Math.PI * 2; n.x = W / 2 + Math.cos(a) * W * 0.3 * (0.6 + rnd() * 0.4); n.y = H / 2 + Math.sin(a) * H * 0.3 * (0.6 + rnd() * 0.4); });
     const k = Math.sqrt((W * H) / Math.max(1, ns.length)) * 0.75;
+    // two fixed points when both are there: him and his past up and to the left, you and yours down and to the right
+    const both = idx.has(data.owner) && idx.has(data.self), pin = new Map();
+    if (idx.has(data.self)) pin.set(data.self, both ? [W * 0.36, H * 0.34] : [W / 2, H / 2]);
+    if (idx.has(data.owner)) pin.set(data.owner, both ? [W * 0.68, H * 0.74] : [W / 2, H / 2]);
     for (let it = 0; it < 260; it++) {
       const t = 1 - it / 260, fx = new Float32Array(ns.length), fy = new Float32Array(ns.length);
       for (let i = 0; i < ns.length; i++) for (let j = i + 1; j < ns.length; j++) {
@@ -501,7 +505,7 @@ const eyes = (() => {
         fx[a] -= (dx / d) * f; fy[a] -= (dy / d) * f; fx[b] += (dx / d) * f; fy[b] += (dy / d) * f;
       }
       ns.forEach((n, i) => {
-        if (n.id === data.owner) { n.x = W / 2; n.y = H / 2; return; }
+        if (pin.has(n.id)) { [n.x, n.y] = pin.get(n.id); return; }
         const d = Math.hypot(fx[i], fy[i]) || 0.01, m = Math.min(d, 18 * t + 1);
         n.x = Math.max(46, Math.min(W - 46, n.x + (fx[i] / d) * m + (W / 2 - n.x) * 0.012));
         n.y = Math.max(16, Math.min(H - 16, n.y + (fy[i] / d) * m + (H / 2 - n.y) * 0.012));
@@ -511,10 +515,11 @@ const eyes = (() => {
 
   function draw() {
     svg.innerHTML = '';
+    svg.style.height = data.nodes.length > 12 ? 'min(58dvh, 560px)' : '';
     const W = svg.clientWidth || 340, H = svg.clientHeight || 300;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     $('memCount').textContent = `${data.nodes.length} THINGS · ${data.edges.length} LINKS`;
-    $('memWipe').hidden = !data.edges.length;
+    $('memWipe').hidden = !data.edges.some((e) => !e.past);
     if (!data.nodes.length) {
       $('memHint').textContent = 'Nothing yet. He learns from what you tell him about yourself, the people and things around you, and your plans.';
       facts.innerHTML = ''; return;
@@ -527,7 +532,7 @@ const eyes = (() => {
       el('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: picked && (e.s === picked || e.o === picked) ? 'on' : '' }, svg);
     }
     data.nodes.forEach((n, i) => {
-      const g = el('g', { class: 'n' + (n.id === data.owner ? ' me' : '') + (n.id === picked ? ' on' : '') + (near && !near.has(n.id) ? ' dim' : ''), tabindex: 0, role: 'button', 'aria-label': n.name }, svg);
+      const g = el('g', { class: 'n' + (n.id === data.owner ? ' me' : '') + (n.id === data.self ? ' he' : '') + (n.id === picked ? ' on' : '') + (near && !near.has(n.id) ? ' dim' : ''), tabindex: 0, role: 'button', 'aria-label': n.name }, svg);
       const label = n.name.length > 18 ? n.name.slice(0, 17) + '…' : n.name;
       const w = label.length * 6.4 + 10;
       el('rect', { class: 'bg', x: n.x - w / 2, y: n.y + 6, width: w, height: 13 }, g);
@@ -544,8 +549,8 @@ const eyes = (() => {
   function list() {
     facts.innerHTML = '';
     const name = (id) => (data.nodes.find((n) => n.id === id) || { name: id }).name;
-    const es = (picked ? data.edges.filter((e) => e.s === picked || e.o === picked) : data.edges.slice().sort((a, b) => b.last - a.last).slice(0, 6));
-    $('memHint').textContent = picked ? `${name(picked)}: ${es.length} link${es.length === 1 ? '' : 's'}. Tap again to let go.` : 'Latest. Tap a thing to see what he knows about it.';
+    const es = (picked ? data.edges.filter((e) => e.s === picked || e.o === picked) : data.edges.slice().sort((a, b) => (a.past ? 1 : 0) - (b.past ? 1 : 0) || b.last - a.last).slice(0, 6));
+    $('memHint').textContent = picked ? `${name(picked)}: ${es.length} link${es.length === 1 ? '' : 's'}. Tap again to let go.` : 'Latest. Tap a thing to see what he knows about it. Wipe forgets what he learned from you; his own past stays.';
     for (const e of es) {
       const row = document.createElement('div'); row.className = 'fact';
       const p = document.createElement('span');

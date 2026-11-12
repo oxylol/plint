@@ -196,6 +196,7 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 #memGraph g.n { cursor: pointer; }
 #memGraph g.n rect { fill: var(--p-ink); }
 #memGraph g.n.me rect { fill: rgb(var(--u-ph)); }
+#memGraph g.n.he > rect:nth-of-type(2) { transform-box: fill-box; transform-origin: center; transform: scale(1.7); }
 #memGraph g.n text { fill: var(--p-ink2); font: 600 8.5px/1 var(--p-font); letter-spacing: 0.12em; text-transform: uppercase; }
 #memGraph g.n.on text { fill: var(--p-bg); }
 #memGraph g.n .bg { fill: none; }
