@@ -127,6 +127,11 @@ node battery.js http://127.0.0.1:5931 reach            # does he look things up 
 Copy `data/ultron/tune.json` and `lines.txt` into the scratch folder first so it runs with the live settings. Twenty
 replies swing by a few either way from run to run: run it twice before believing a difference.
 
+`test/page.js` checks the page itself in a browser against such a scratch copy (he speaks first and waits for a
+touch to be heard, the layout, TALK with a stand-in recogniser, his own looks with a drawn camera view), and
+`test/mockvoice.js` stands in for the two VoiceStudios so the voice logic (cold model, slow sentence, lost PC) can be
+driven without the real ones. How to run them is at the top of each.
+
 ## The voice
 
 The reference is a clip of about eight seconds of one speaker, with the exact words in the `.txt` next to it
