@@ -517,18 +517,25 @@ const ears = (() => {
 })();
 
 // ── awake: he speaks without being spoken to ─────────────────
-// When you come in after a while he has something to say; when you have gone quiet for a minute or so he
-// may add a thing of his own, and once more later; then he waits to be spoken to. The server has the last
-// word on each (and he may decline). Off: he only ever answers.
+// When you come in after a while he has something to say; when you have gone quiet he fills the silence
+// with a thing of his own, and again, each a little later than the last; after a number of them unanswered
+// he waits to be spoken to. How readily is SILENCE in TUNE. The server has the last word on each. Off: he
+// only ever answers.
+// seconds of quiet before the first thing he says, and before the second; each one after waits `grow` times longer
+const PACE = {
+  rare:  { first: [50, 90], next: [150, 240], grow: 1, most: 2 },
+  some:  { first: [25, 40], next: [50, 90], grow: 1.25, most: 4 },
+  often: { first: [10, 16], next: [18, 30], grow: 1.25, most: 8 },
+};
 const awake = (() => {
   const sw = $('swAwake');
-  let on = store.get('awake', '1') === '1', timer = 0, unasked = 0, later = false;
+  let on = store.get('awake', '1') === '1', timer = 0, unasked = 0, later = false, pace = PACE.often;
   const free = () => on && !turn && !document.hidden && quiet() && !$('input').value.trim() && $('tune').hidden && $('memory').hidden;
-  // a first thought after about a minute of quiet, a second a few minutes on, then none until you speak
   function arm() {
     clearTimeout(timer); timer = 0;
-    if (!on || unasked >= 2) return;
-    timer = setTimeout(() => { timer = 0; if (free()) cue('idle'); else arm(); }, unasked || later ? 150e3 + Math.random() * 90e3 : 50e3 + Math.random() * 40e3);
+    if (!on || unasked >= pace.most) return;
+    const [a, b] = unasked || later ? pace.next : pace.first, k = Math.min(4, pace.grow ** Math.max(0, unasked - 1));
+    timer = setTimeout(() => { timer = 0; if (free()) cue('idle'); else arm(); }, (a + Math.random() * (b - a)) * k * 1000);
   }
   const greet = () => { if (on && !turn && !document.hidden && quiet()) cue('greet'); };
   sw.setAttribute('aria-pressed', String(on));
@@ -537,8 +544,9 @@ const awake = (() => {
     if (on) { unasked = 0; later = false; unlock(); greet(); } else { clearTimeout(timer); timer = 0; }
   };
   return {
-    // may he look up and remark on what he sees: a little more often than he may break a silence
-    free: () => free() && unasked < 3,
+    // may he look up and remark on what he sees: once more than he may break a silence
+    free: () => free() && unasked <= pace.most,
+    pace(level) { pace = PACE[level] || PACE.often; if (timer) arm(); },
     said() { unasked = 0; later = false; arm(); },                             // he has answered you
     // He was given the chance to speak unasked. It counts when he took it or let it pass; when the server
     // said "not now" (you were only just here) it does not, and the next chance comes later.
@@ -771,6 +779,7 @@ const eyes = (() => {
   const SPEC = [
     ['temperature', 'WILDNESS', 'How loose his wording gets. Wild also slips more.', [[0.5, 'CALM'], [0.8, 'NORMAL'], [1, 'LIVELY'], [1.2, 'WILD']]],
     ['length', 'LENGTH', 'How long he talks before he stops.', [['short', 'SHORT'], ['normal', 'NORMAL'], ['long', 'LONG']]],
+    ['silence', 'SILENCE', 'How readily he fills it when you say nothing (with AWAKE on): often is after ten to fifteen seconds, up to eight things in a row.', [['rare', 'RARELY'], ['some', 'SOMETIMES'], ['often', 'OFTEN']]],
     ['quotes', 'THE FILM', 'How much of the film comes back: its lines, strings, Stark.', [['never', 'NEVER'], ['rare', 'RARE'], ['free', 'FREE']]],
     ['film', 'FILM LINES', 'How many of his real lines he is shown, for the rhythm.', [[0, 'NONE'], [12, '12'], [24, '24'], [200, 'ALL']]],
     ['name', 'YOUR NAME', 'How often he says it.', [['never', 'NEVER'], ['rare', 'RARE'], ['often', 'OFTEN']]],
@@ -789,7 +798,7 @@ const eyes = (() => {
     }
     return info.minds.length > 1 ? [MIND, ...s] : s;
   }
-  const took = (d) => { info = d; const m = (d.model || '').replace(/^claude-/i, '').toUpperCase(); $('rMind').textContent = m; $('tuneWho').textContent = `WHAT ${m} IS GIVEN`; paint(); };
+  const took = (d) => { info = d; awake.pace(d.tune.silence); const m = (d.model || '').replace(/^claude-/i, '').toUpperCase(); $('rMind').textContent = m; $('tuneWho').textContent = `WHAT ${m} IS GIVEN`; paint(); };
   const save = (patch) => fetch('api/tune', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) })
     .then((r) => r.json()).then((d) => { took(d); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
   function paint() {
@@ -861,6 +870,7 @@ async function load() {
     $('rMind').textContent = mind + (s.llm ? '' : ' · NO KEY');
     $('tuneWho').textContent = `WHAT ${mind} IS GIVEN`;
     turns = s.turns; $('rTurns').textContent = turns;
+    awake.pace(s.silence);
     showVoice(s.voice.state, s.voice.via || '');
     if (!s.history.length) empty();
     else { log.innerHTML = ''; for (const m of s.history) line(m.role === 'ultron' ? 'ultron' : 'user', m.text, true); toEnd(); }

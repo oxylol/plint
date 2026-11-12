@@ -57,6 +57,7 @@ async function say(body) {
   out.total = Date.now() - t0;
   return out;
 }
+let state = {};
 const forget = () => fetch(base + '/api/forget', { method: 'POST' }).then((r) => r.json());
 const median = (a) => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
 
@@ -103,23 +104,26 @@ async function cues() {
     const r = await say(body);
     got.push([label, r]);
     console.log(`  ${label}: ${r.refused ? '(not now: the server said no)' : r.quiet ? '(he chose to say nothing)' : r.text}`);
+    return r;
   };
-  console.log('cues: he speaks first');
-  await one('someone comes in, nothing said before', { cue: 'greet' });
+  console.log(`cues: he speaks first (SILENCE ${state.silence || '?'})`);
+  await one('someone comes in', { cue: 'greet' });
   await one('a second coming-in right away (should be refused)', { cue: 'greet' });
   await say({ text: 'I am repainting the hallway this week. Green, I think.' });
   await one('silence right after his reply (should be refused: too soon)', { cue: 'idle' });
-  console.log('  … waiting 21 s for a silence to be a silence');
-  await new Promise((ok) => setTimeout(ok, 21e3));
-  await one('silence', { cue: 'idle' });
-  await new Promise((ok) => setTimeout(ok, 21e3));
-  await one('silence again', { cue: 'idle' });
-  await new Promise((ok) => setTimeout(ok, 21e3));
-  await one('and again', { cue: 'idle' });
-  await new Promise((ok) => setTimeout(ok, 21e3));
-  await one('a fourth unanswered remark (should be refused)', { cue: 'idle' });
-  const spoke = got.filter(([, r]) => !r.refused && !r.quiet);
-  console.log(`  spoke ${spoke.length} times; brackets leaked ${spoke.filter(([, r]) => /[()]/.test(r.text)).length}; ended on a question ${spoke.filter(([, r]) => /\?["']?$/.test(r.text.trim())).length}; mentions silence or quiet ${spoke.filter(([, r]) => /\b(silen|quiet)/i.test(r.text)).length}`);
+  // silence after silence, until the server says he has said enough unanswered
+  const filled = [];
+  for (let i = 1; i <= 12; i++) {
+    await new Promise((ok) => setTimeout(ok, { often: 8e3, some: 15e3 }[state.silence] || 21e3));      // the least the server lets pass between two
+    const r = await one(`silence ${i}`, { cue: 'idle' });
+    if (r.refused) break;
+    if (!r.quiet) filled.push(r.text);
+  }
+  const opener = (t) => words(t).slice(0, 2).join(' ');
+  const openers = filled.map(opener);
+  console.log(`  filled ${filled.length} silences in a row before waiting to be spoken to
+  brackets leaked ${filled.filter((t) => /[()]/.test(t)).length} · ended on a question ${filled.filter((t) => /\?["']?$/.test(t.trim())).length} · about the silence itself ${filled.filter((t) => /\b(silen|quiet|nothing to say|say something|still there|cat got)/i.test(t)).length}
+  begins with the same word as one of the two before ${filled.filter((t, i) => i && [filled[i - 1], filled[i - 2]].some((o) => o && words(o)[0] === words(t)[0])).length} · about the hallway or the paint ${filled.filter((t) => /\b(hallway|paint|green)/i.test(t)).length}`);
 }
 
 // reach: does he look things up when a thing has to be known as it is now, and only then (Haiku, REACH on)
@@ -142,8 +146,8 @@ async function reach() {
 }
 
 (async () => {
-  const s = await fetch(base + '/api/state').then((r) => r.json());
-  console.log(`battery against ${base} · mind ${s.model}\n`);
+  state = await fetch(base + '/api/state').then((r) => r.json());
+  console.log(`battery against ${base} · mind ${state.model}\n`);
   if (which === 'terse' || which === 'all') await talk('terse', TERSE);
   if (which === 'full' || which === 'all') await talk('full', FULL);
   if (which === 'cues' || which === 'all') await cues();

@@ -48,7 +48,9 @@ const TV = { url: process.env.TV_IP ? `http://${process.env.TV_IP}:7700` : '', k
 
 const GAP = 60 * 60e3;            // an hour of nothing ends a talk
 const GREET_GAP = Number(process.env.GREET_AFTER_MIN || 20) * 60e3;      // away this long and he has something to say when you come back
-const UNPROMPTED = 3;             // he says this many things in a row unasked, then waits to be spoken to
+// How readily he fills a silence (SILENCE in TUNE): how many things in a row he says unasked before he waits
+// to be spoken to, and how soon after the last thing said he may. (When he speaks is the page's doing: see awake.)
+const SILENCE = { rare: { most: 2, rest: 20e3 }, some: { most: 4, rest: 14e3 }, often: { most: 8, rest: 7e3 } };
 
 // A new connection now and then hangs before it is made (measured from here: about one in a hundred to the
 // API, and Node then waits ten seconds before trying again, which is the odd answer that took twelve). A
@@ -77,9 +79,10 @@ const TUNE_DEFAULT = {
   name: 'rare',         // never · rare · often: how often he says your name
   context: 30,          // how many past messages go along
   reach: 'web',         // none · web · house: what he can touch (Haiku only): look things up; house adds the phone and the television
+  silence: 'often',     // rare · some · often: how readily he fills a silence when he may speak unasked (AWAKE on the page)
   extra: '',            // anything else, in plain words, added to his instructions
 };
-const TUNE_ALLOWED = { length: ['short', 'normal', 'long'], quotes: ['never', 'rare', 'free'], name: ['never', 'rare', 'often'], reach: ['none', 'web', 'house'] };
+const TUNE_ALLOWED = { length: ['short', 'normal', 'long'], quotes: ['never', 'rare', 'free'], name: ['never', 'rare', 'often'], reach: ['none', 'web', 'house'], silence: ['rare', 'some', 'often'] };
 function cleanTune(t) {
   const o = { ...TUNE_DEFAULT };
   if (!t || typeof t !== 'object') return o;
@@ -371,13 +374,50 @@ const BRACKETS = 'Anything of theirs in round brackets is not something they sai
 // When he speaks unasked: why now, and (except when someone has just come in) leave to stay quiet.
 const CUE = {
   greet: 'Right now they have not spoken: you speak first. One short remark of your own, the kind you make when someone walks back in: about the time they were gone, the hour, something you know about them, or whatever you have been turning over meanwhile. Not a greeting formula, and not a question about how they are.',
-  idle: 'Right now nobody has spoken for a while: you speak first, or not at all. If something is worth saying (a thought of your own, a new turn on what was said last, something you know about them) say that one short thing, as a statement. It is not about the silence, and it is not a question to get them talking. If nothing is worth it, answer with a single dash and nothing else.',
   glance: 'Right now nobody has spoken, and what is in front of your eyes has changed. If what you see now is worth a remark, make it: one short verdict, as yourself. If it is not, answer with a single dash and nothing else.',
 };
+// A silence. He does not remark on it (left to himself that is all he does: "Still nothing..." five times in
+// eight): he goes on by himself, and so that several in a row do not come out alike, where each remark comes
+// from is drawn here, not left to him: the thread of the talk at first, then further and further from it,
+// often just a thing to have a thought about. Only on RARELY may he let the silence pass.
+const THINGS = ['clocks', 'bridges', 'sleep', 'maps', 'birds', 'money', 'rain', 'chess', 'teeth', 'trains', 'mirrors', 'bread', 'dust', 'stairs', 'dogs',
+  'lifts', 'the sea', 'libraries', 'knots', 'shadows', 'queues', 'salt', 'bees', 'engines', 'keys', 'names', 'snow', 'museums', 'zoos', 'radio', 'glass',
+  'hands', 'ladders', 'weddings', 'ants', 'lighthouses', 'batteries', 'graveyards', 'postage stamps', 'pianos', 'tunnels', 'vending machines', 'the moon',
+  'wallpaper', 'umbrellas', 'handwriting', 'elevators', 'traffic lights', 'birthdays', 'fences', 'soup', 'passwords', 'statues', 'socks', 'tides', 'ink'];
+const drawn = [];      // the last few, so they do not come round again at once
+// Where his mind has gone, as the line in round brackets that reaches him in place of anything said.
+function wander(seeing, hasKnown) {
+  let run = 0;
+  for (let i = history.length - 1; i >= 0 && history[i].role !== 'user'; i--) if (history[i].role === 'cue') run++;
+  const thing = () => {
+    const free = THINGS.filter((t) => !drawn.includes(t)), t = free[Math.floor(Math.random() * free.length)];
+    drawn.push(t); if (drawn.length > 24) drawn.shift();
+    return `Your mind has wandered off to ${t}, of all things.`;
+  };
+  // [how likely, what kind, the line]; the same kind does not come twice running, except a new thing to think about
+  const to = [
+    [run ? 0.5 : 5, 'thread', () => 'You have gone on thinking about the last thing that was said.'],
+    [run ? 5 : 2, 'thing', thing],
+    [hasKnown ? 2 : 0, 'them', () => 'You find yourself thinking about them: something you know of them, or an earlier talk.'],
+    [tune.quotes === 'never' ? 0 : 1.2, 'past', () => 'Something from your own past has come back to you.'],
+    [1, 'hour', () => 'You notice the hour, and what day it is.'],
+    [seeing ? 4 : 0, 'sight', () => 'Something in front of your eyes has caught your attention.'],
+  ].filter(([, kind]) => kind === 'thing' || kind !== lastKind || !run);
+  let at = Math.random() * to.reduce((n, [w]) => n + w, 0);
+  for (const [w, kind, f] of to) { if ((at -= w) < 0) { lastKind = kind; return f(); } }
+  lastKind = 'thing';
+  return thing();
+}
+let lastKind = '';
+function cueText(cue) {
+  if (cue !== 'idle') return CUE[cue];
+  return 'Right now nobody is speaking, and you go on by yourself, the way you do: thinking out loud to whoever is in the room. Their line in round brackets says where your mind has gone. Say the one short thing that comes of it, as a statement, and stay there: you do not go back to what your earlier remarks were about. No two of these remarks are built alike: not the same length, not the same opening, not the same little sounds. You say nothing about the quiet, about waiting or about not being answered, and you ask them nothing.'
+    + (tune.silence === 'rare' ? ' If nothing is worth saying, answer with a single dash and nothing else.' : '');
+}
 const stage = (kind, away) => (kind === 'greet'
   ? (away ? `(They have just come back and have not said anything yet. You last heard from them ${span(away)} ago.)` : '(Someone has just come in and has not said anything yet.)')
   : kind === 'glance' ? '(Nothing has been said. What is in front of you has changed.)'
-  : `(They have gone quiet: ${span(away)} of silence.)`);
+  : `(A little later. ${wander(...away)})`);
 // What he is told when he has reached outside the talk (Haiku; how it is decided is under "reach" below).
 const REACH = {
   // what was looked up for this reply, or '' when the looking brought nothing back
@@ -438,7 +478,7 @@ function systemPrompt({ noFilm, seeing, known = [], talks = [], cue } = {}) {
     talks.length ? '\n' + TALKS + '\n' + talks.map((l) => '- ' + l).join('\n') : '',
     '',
     `It is ${when}.`,
-    cue ? '\n' + CUE[cue] : '',
+    cue ? '\n' + cueText(cue) : '',
   ].filter((l) => l !== '').join('\n');
 }
 
@@ -503,7 +543,7 @@ function claudePrompt({ noFilm, seeing, known = [], talks = [], cue, looked, hou
     talks.length ? '\n' + TALKS + '\n' + talks.map((l) => '- ' + l).join('\n') : '',
     '',
     `It is ${when}.`,
-    cue ? '\n' + CUE[cue] : '',
+    cue ? '\n' + cueText(cue) : '',
     looked !== undefined ? '\n' + REACH.looked(looked) : '',
     house && REACH.house() ? '\n' + REACH.house() : '',
     '',
@@ -513,6 +553,7 @@ function claudePrompt({ noFilm, seeing, known = [], talks = [], cue, looked, hou
     '3. Its last sentence is a statement. No closing question.',
     '4. There is no care in it: nothing telling them to sleep, rest, feel better, back things up or try again.',
     '5. Its first words are your own: it does not begin with a word they have just used, and not the way either of your last two replies began.',
+    cue === 'idle' ? '6. There is not a word in it about silence, quiet, waiting or being answered, and it is about where your mind has just gone, not about your last remark.' : '',
   ].filter((l) => l !== '').join('\n');
 }
 
@@ -958,7 +999,9 @@ async function turn(req, res, input) {
   const digested = digest();
   if (cue === 'greet') await Promise.race([digested, new Promise((ok) => setTimeout(ok, 4000))]);
   const away = lastHeard() ? Date.now() - lastHeard() : 0;
-  const cueLine = cue ? stage(cue, away) : null;
+  // (for a silence, what "away" carries is where his mind is sent: whether he can see, whether he knows anything of them)
+  const mind = cue === 'idle' ? inMind() : null;
+  const cueLine = cue ? stage(cue, cue === 'idle' ? [!!input.image, mind.known.length + mind.talks.length > 0] : away) : null;
   const before = history.filter((m) => m.role !== 'cue').slice(-2);
   if (!cue) remember('user', input.text);
   // a voice that was not ready gets another look before each turn, so it comes back by itself
@@ -1114,10 +1157,11 @@ function mayCue(cue, image) {
   const away = lastHeard() ? Date.now() - lastHeard() : Infinity;
   let run = 0;
   for (let i = history.length - 1; i >= 0 && history[i].role !== 'user'; i--) if (history[i].role === 'cue') run++;
-  if (cue === 'greet') return away >= GREET_GAP && (run < UNPROMPTED || away >= 6 * GAP);
-  const settled = !last || Date.now() - last.ts >= 20e3;
-  if (cue === 'glance') return !!image && run < UNPROMPTED && settled;      // what he sees needs no talk before it
-  return !!last && run < UNPROMPTED && settled;
+  const pace = SILENCE[tune.silence];
+  if (cue === 'greet') return away >= GREET_GAP && (run <= pace.most || away >= 6 * GAP);
+  const settled = !last || Date.now() - last.ts >= pace.rest;
+  if (cue === 'glance') return !!image && run <= pace.most && settled;      // what he sees needs no talk before it
+  return !!last && run < pace.most && settled;
 }
 
 const server = http.createServer(async (req, res) => {
@@ -1133,6 +1177,7 @@ const server = http.createServer(async (req, res) => {
         owner: OWNER, model: mindName(), llm: usesHaiku() || !!LLM.key, voice: voiceNow(),
         history: history.filter((m) => m.role !== 'cue').slice(-60).map((m) => ({ role: m.role, text: shown(m.text), ts: m.ts })),
         turns: history.filter((m) => m.role === 'user').length,
+        silence: tune.silence,
       });
     }
 

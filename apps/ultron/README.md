@@ -44,6 +44,7 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   Graded emotion needs another engine: `HANDOFF-pc-emotion.md` is the brief for installing IndexTTS 2.5 on the PC.
 - **Tuning**: TUNE on the page changes what the mind in use is given (kept in `data/ultron/tune.json`, applied from
   the next message): which mind, his reach (Haiku only), wildness (temperature, celeris-1 only), reply length, how
+  readily he fills a silence, how
   much of the film comes back, how many film lines he is shown, how often he says your name, how many past messages
   go along, and a box of extra instructions in plain words. SHOW THE PROMPT prints exactly what is sent.
 - **Ears**: the browser's own speech recognition. The microphone (or his face) takes one thing you say. TALK keeps
@@ -53,12 +54,21 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   line saying so. The screen is kept awake while TALK is on, and a page in the background does not listen. Typing
   always works.
 - **He speaks first** (AWAKE on the page, on unless switched off; kept per device): when you open the page after
-  twenty minutes or more (`GREET_AFTER_MIN`) he says something; when you have been quiet for about a minute he may
-  add a thing of his own, and once more a few minutes later; then he waits to be spoken to. The page only says what
+  twenty minutes or more (`GREET_AFTER_MIN`) he says something; when you fall quiet he goes on by himself, and
+  again, each time a little later than the last, until he has said a number of things unanswered and waits to be
+  spoken to. How readily is SILENCE in TUNE: OFTEN (the default since Filip asked for more, 2026-11-12) is a first
+  thing after 10 to 16 s and up to eight in a row over about six minutes; SOMETIMES 25 to 40 s and four; RARELY
+  50 to 90 s and two (the numbers are `PACE` in the page and `SILENCE` in the server). Typing or talking holds him
+  off. Left to himself he filled every silence with a remark on the silence ("Still nothing...", five of eight),
+  or stayed on the last subject for all eight, so where each remark comes from is drawn by the server
+  (`wander()`): the thread of the talk at first, then mostly a thing to have a thought about (umbrellas, maps,
+  traffic lights: `THINGS`), sometimes what he knows of you, his own past, the hour, or what he sees; never the
+  same kind twice running. It reaches him as the bracket line ("Your mind has wandered off to bread, of all
+  things."), which steers him where an instruction in his brief did not. The page only says what
   is happening (`cue`: greet, idle, glance in `/api/say`); it reaches him as a line of yours in round brackets,
   which he is told is not speech. The server has the last word (not over a turn, not within 20 s of the last thing
-  said, three unanswered remarks at most), and for a silence or a look he may answer with a dash, which is shown as
-  nothing. He knows how long you were gone: a message after an hour's hole is marked "(two days later)". A browser
+  said, no more unanswered remarks than SILENCE allows), and for a look, or a silence on RARELY, he may answer with
+  a dash, which is shown as nothing. He knows how long you were gone: a message after an hour's hole is marked "(two days later)". A browser
   plays no sound before the first touch, so a greeting on a page nobody has touched is shown and waits: TAP ANYWHERE
   TO HEAR HIM.
 - **Eyes**: EYES on the page turns on that device's camera (a small grey preview by his face; tap it to switch
