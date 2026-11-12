@@ -1,6 +1,8 @@
 // Ultron · the page. Sends what you say to /api/say, shows his answer sentence by
 // sentence and plays each sentence's clip in order. The face is a dot matrix: the
 // mouth is driven by the sound that is playing, the eyes by what he is doing.
+// He can also speak first (AWAKE): the page tells the server when you come in, when
+// you have gone quiet, and when the view through the camera has changed.
 (() => {
 'use strict';
 const $ = (id) => document.getElementById(id);
@@ -9,17 +11,22 @@ const store = {
   set(k, v) { try { localStorage.setItem('ultron.' + k, v); } catch { /* private window */ } },
 };
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pressed = (id) => $(id).getAttribute('aria-pressed') === 'true';
 
 // ── state lamp ───────────────────────────────────────────────
 const STATES = {
   idle:      ['READY', 'ГОТОВ', ''],
   listening: ['LISTENING', 'СЛУШАЮ', 'live'],
+  standby:   ['STANDBY', 'ЖДУ', ''],            // he hears, and answers to his name
   thinking:  ['THINKING', 'ДУМАЮ', 'busy'],
+  reaching:  ['REACHING', 'ИЩУ', 'busy'],       // looking something up, or working something in the house
   voicing:   ['VOICING', 'СИНТЕЗ', 'busy'],
   speaking:  ['SPEAKING', 'ГОВОРЮ', 'live'],
   offline:   ['NO LINK', 'НЕТ СВЯЗИ', 'off'],
 };
 let state = 'idle';
+const quiet = () => state === 'idle' || state === 'listening' || state === 'standby';
+const busy = () => state === 'thinking' || state === 'voicing' || state === 'reaching';
 function setState(s) {
   state = s;
   const [en, ru, cls] = STATES[s];
@@ -30,7 +37,7 @@ function setState(s) {
 
 // ── sound ────────────────────────────────────────────────────
 const sound = { ctx: null, an: null, bins: null, src: null };
-function unlock() {              // must run inside a tap or key press
+function unlock() {              // only inside a tap or key press does it actually start
   if (!sound.ctx) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
@@ -40,7 +47,7 @@ function unlock() {              // must run inside a tap or key press
     sound.an.connect(sound.ctx.destination);
     sound.bins = new Uint8Array(sound.an.frequencyBinCount);
   }
-  if (sound.ctx.state === 'suspended') sound.ctx.resume();
+  if (sound.ctx.state === 'suspended') sound.ctx.resume().catch(() => {});
 }
 function decode(buf) {
   return new Promise((ok, no) => sound.ctx.decodeAudioData(buf, ok, no));
@@ -154,7 +161,7 @@ const face = (() => {
       else if (k === 3) {
         let a = 0.9;
         if (shut) a = 0.08;
-        else if (state === 'thinking' || state === 'voicing') a = Math.abs(Math.abs(c - CC) - 2 - sweep) < 2 ? 1 : 0.3;
+        else if (busy()) a = Math.abs(Math.abs(c - CC) - 2 - sweep) < 2 ? 1 : 0.3;
         else if (state === 'speaking') a = 0.62 + 0.38 * level;
         else if (state === 'offline') a = 0.15;
         if (a > 0.5) { g.fillStyle = `rgba(${red},${a * 0.13})`; g.fillRect(ox + c * cell - cell, oy + r * cell - cell, d + 2 * cell, d + 2 * cell); }
@@ -163,8 +170,8 @@ const face = (() => {
         const [m0, m1] = mouth[c], mid = (m0 + m1) / 2, half = (m1 - m0) / 2 + 0.5;
         let a = 0.1;
         if (state === 'speaking') { if (Math.abs(r - mid) <= bands[Math.abs(c - CC)] * half) a = 1; }
-        else if (state === 'thinking' || state === 'voicing') { if (Math.random() < 0.06) a = 0.5; }
-        else if (state === 'idle' || state === 'listening') { if (Math.abs(r - mid) < 0.6) a = 0.32; }
+        else if (busy()) { if (Math.random() < 0.06) a = 0.5; }
+        else if (quiet()) { if (Math.abs(r - mid) < 0.6) a = 0.32; }
         if (a > 0.9) { g.fillStyle = `rgba(${red},0.1)`; g.fillRect(ox + c * cell - cell, oy + r * cell - cell, d + 2 * cell, d + 2 * cell); }
         dot(c, r, red, a);
       }
@@ -228,7 +235,14 @@ function empty() {
   log.appendChild(e);
 }
 
-function notice(text) { const n = $('notice'); n.hidden = !text; n.textContent = text || ''; }
+// One bar under the readout: what stands in the way (the voice, the microphone), or what to do about it.
+let voiceNote = '', passing = 0;
+function notice(text, forNow) {
+  clearTimeout(passing);
+  if (!forNow) voiceNote = text || '';
+  else if (text) passing = setTimeout(() => notice(voiceNote), forNow);
+  const n = $('notice'); n.hidden = !text; n.textContent = text || '';
+}
 const VOICE_WORD = { ok: 'CLONED', licence: 'WAITING', novoice: 'NO PROFILE', down: 'OFFLINE', off: 'NOT SET' };
 const VOICE_NOTE = {
   licence: 'Voice waiting: the speech model licence has not been accepted in VoiceStudio. He answers in text until it is.',
@@ -241,31 +255,44 @@ function showVoice(st, via) {
   voiceState = st;
   if (via !== undefined) voiceVia = via;
   const b = $('rVoice');
-  const on = $('swVoice').getAttribute('aria-pressed') === 'true';
+  const on = pressed('swVoice');
   b.textContent = !on && st === 'ok' ? 'MUTED' : (VOICE_WORD[st] || st.toUpperCase()) + (st === 'ok' && voiceVia ? ' · ' + voiceVia.toUpperCase() : '');
   b.className = st === 'ok' ? '' : 'inv';
   notice(on ? VOICE_NOTE[st] : '');
 }
 
 // ── a turn ───────────────────────────────────────────────────
+// Either you said something (text), or nobody did and the page says why he might (cue: greet · idle · glance).
 let turn = null;
 let turns = 0;
 
-function stop(quiet) {
-  if (turn) { turn.dead = true; turn.ac.abort(); for (const s of turn.sentences) s.el.className = 's said'; if (turn.cursor) turn.cursor.remove(); }
+function stop(quietly) {
+  if (turn) {
+    turn.dead = true; turn.ac.abort(); clearTimeout(turn.held);
+    for (const s of turn.sentences) s.el.className = 's said';
+    if (turn.cursor) turn.cursor.remove();
+    if (turn.held) notice(voiceNote);
+  }
   turn = null;
   hush();
-  if (!quiet) { fetch('api/stop', { method: 'POST' }).catch(() => {}); setState('idle'); }
+  if (!quietly) { fetch('api/stop', { method: 'POST' }).catch(() => {}); setState('idle'); }
 }
 
 function pump(t) {
-  if (t.dead || t.playing) return;
+  if (t.dead || t.playing || t.held) return;
   const s = t.sentences[t.next];
   if (!s) {
-    if (t.done) finish(t); else setState('thinking');
+    if (t.done) finish(t); else if (!t.cue || t.spoke) setState(t.reaching ? 'reaching' : 'thinking');
     return;
   }
   if (s.buf) {
+    // No tap on this page yet, so the browser will not let him be heard (he spoke first). The words are
+    // there to read; the first touch plays them, and without one they count as said.
+    if (sound.ctx.state !== 'running') {
+      setState('voicing'); notice('Tap anywhere to hear him.', 60e3);
+      t.held = setTimeout(() => { t.held = 0; notice(voiceNote); t.voice = false; for (const x of t.sentences) { x.skip = true; x.buf = null; } pump(t); }, 45e3);
+      return;
+    }
     t.playing = true;
     s.el.className = 's now'; setState('speaking');
     if (nearEnd()) s.el.scrollIntoView({ block: 'nearest' });
@@ -278,29 +305,52 @@ function pump(t) {
   } else setState('voicing');
 }
 
+// the first touch after he spoke unheard: now he may be heard
+let released = 0;
+function touched() {
+  const t = turn;
+  if (!t || !t.held) return;
+  clearTimeout(t.held); t.held = 0; released = Date.now(); notice(voiceNote);
+  unlock();
+  Promise.resolve(sound.ctx.state === 'running' || sound.ctx.resume()).catch(() => {}).then(() => pump(t));
+}
+document.addEventListener('pointerdown', touched, true);
+document.addEventListener('keydown', touched, true);
+
 function finish(t) {
   if (t.cursor) t.cursor.remove();
   turn = null;
   setState('idle');
-  if (loop.on && !t.failed) setTimeout(() => { if (!turn && state === 'idle') ears.start(true); }, 250);
+  if (t.spoke) loop.until = Date.now() + ATTEND;        // what you say next is meant for him
+  if (t.cue) awake.tried(t.cue, t.spoke, t.refused); else if (t.spoke) awake.said();
+  // TALK: he listens again (after an answer that failed, not at once)
+  if (loop.on) setTimeout(() => { if (loop.on && !turn && state === 'idle') ears.start(true); }, t.failed ? 3000 : 250);
 }
 
-async function say(text) {
-  text = text.trim();
-  if (!text) return;
+async function go(what) {
+  const cued = !!what.cue;
+  if (cued && (turn || state === 'offline')) return;
   unlock();
   ears.stop();
-  stop(true);
-  const wantVoice = $('swVoice').getAttribute('aria-pressed') === 'true' && !!sound.ctx;
-  line('user', text); toEnd();
-  const p = line('ultron', '');
-  const cursor = document.createElement('span'); cursor.className = 'cursor'; p.appendChild(cursor);
-  const t = turn = { ac: new AbortController(), sentences: [], next: 0, playing: false, voice: wantVoice, done: false, textDone: false, dead: false, failed: false, cursor };
-  setState('thinking'); toEnd();
-  $('rTurns').textContent = ++turns;
+  if (!cued) stop(true);
+  const wantVoice = pressed('swVoice') && !!sound.ctx;
+  const t = turn = { ac: new AbortController(), sentences: [], next: 0, playing: false, voice: wantVoice, done: false, dead: false, failed: false, cue: what.cue || null, spoke: false, refused: false, held: 0, reaching: false, p: null, cursor: null };
+  // his line in the transcript: at once when he was spoken to, with his first word when he was not
+  t.open = () => {
+    if (t.p) return;
+    t.p = line('ultron', '');
+    t.cursor = document.createElement('span'); t.cursor.className = 'cursor'; t.p.appendChild(t.cursor);
+  };
+  if (!cued) {
+    line('user', what.text); t.open();
+    setState('thinking'); toEnd();
+    $('rTurns').textContent = ++turns;
+    awake.heard();
+  }
 
   try {
-    const r = await fetch('api/say', { method: 'POST', signal: t.ac.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, voice: wantVoice, image: eyes.frame() || undefined }) });
+    const r = await fetch('api/say', { method: 'POST', signal: t.ac.signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...what, voice: wantVoice, image: eyes.frame() || undefined }) });
+    if (r.status === 204) { if (!t.dead) { t.refused = true; t.done = true; pump(t); } return; }       // not now, says the server
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'HTTP ' + r.status);
     const reader = r.body.getReader(), dec = new TextDecoder();
     let buf = '';
@@ -311,33 +361,39 @@ async function say(text) {
       let nl;
       while ((nl = buf.indexOf('\n')) >= 0) {
         const raw = buf.slice(0, nl); buf = buf.slice(nl + 1);
-        if (raw.trim()) on(t, JSON.parse(raw), p);
+        if (raw.trim()) on(t, JSON.parse(raw));
       }
     }
   } catch (e) {
     if (t.dead) return;
-    t.failed = true;
-    const s = document.createElement('span'); s.className = 's said';
-    s.textContent = (p.textContent ? ' ' : '') + '[' + (e.message || 'the line dropped') + ']';
-    p.insertBefore(s, cursor);
+    if (cued) t.refused = true;       // a remark of his own that did not come is no loss
+    else {                            // an answer that did not come is said
+      t.failed = true;
+      const s = document.createElement('span'); s.className = 's said';
+      s.textContent = (t.p.textContent ? ' ' : '') + '[' + (e.message || 'the line dropped') + ']';
+      t.p.insertBefore(s, t.cursor);
+    }
   }
   if (t.dead) return;
-  t.done = true; t.textDone = true;
+  t.done = true;
   for (const s of t.sentences) if (!s.buf && !s.asked) s.skip = true;     // no clip is coming for these
   pump(t);
 }
+const say = (text) => { text = text.trim(); if (text) go({ text }); };
+const cue = (kind) => go({ cue: kind });
 
-function on(t, ev, p) {
+function on(t, ev) {
   if (t.dead) return;
   if (ev.t === 'start') {
     if (ev.voice !== 'ok') t.voice = false;
     if (ev.voice !== 'muted' && (ev.voice !== voiceState || ev.via !== voiceVia)) showVoice(ev.voice, ev.via);
   } else if (ev.t === 'sentence') {
     const stick = nearEnd();
+    t.open(); t.spoke = true; t.reaching = false;
     const el = document.createElement('span');
     el.className = t.voice ? 's' : 's said';
     el.textContent = (ev.i ? ' ' : '') + ev.text;
-    p.insertBefore(el, t.cursor);
+    t.p.insertBefore(el, t.cursor);
     t.sentences[ev.i] = { el, buf: null, skip: !t.voice, asked: false };
     if (stick) toEnd();
     pump(t);
@@ -348,6 +404,9 @@ function on(t, ev, p) {
     fetch('api/audio/' + ev.id, { signal: t.ac.signal }).then((r) => r.arrayBuffer()).then(decode)
       .then((b) => { if (!s.skip) s.buf = b; }, () => { s.skip = true; })
       .then(() => pump(t));
+  } else if (ev.t === 'tool') {
+    t.reaching = true;
+    if (!t.playing && !t.sentences[t.next]) setState('reaching');
   } else if (ev.t === 'via') {
     showVoice(voiceState, ev.via);
   } else if (ev.t === 'voice') {
@@ -356,8 +415,7 @@ function on(t, ev, p) {
     showVoice(ev.state);
     pump(t);
   } else if (ev.t === 'text-done') {
-    t.textDone = true;
-    if (!t.voice) t.cursor.remove();
+    if (!t.voice && t.cursor) t.cursor.remove();
     pump(t);
   } else if (ev.t === 'error') {
     throw new Error(ev.message);
@@ -365,48 +423,132 @@ function on(t, ev, p) {
 }
 
 // ── ears: the browser's own speech recognition ───────────────
+// The microphone (or his face) takes one thing you say. TALK keeps listening for as long as it is on:
+// for a little while after he has spoken, anything you say is meant for him; after that he answers to
+// his name, so a room that is talking to itself does not set him off.
 const LANGS = [['EN', 'en-US'], ['NO', 'nb-NO'], ['SV', 'sv-SE']];
-const loop = { on: false, misses: 0 };
+const NAME = /\b(ultron|ultrons|ultran|ultra ?on|ultro|altron|oltron|all ?tron|ul ?tron)\b/i;
+const ATTEND = 25e3;
+const loop = { on: false, until: 0, fails: 0, lock: null };
 const ears = (() => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  let rec = null, heard = '', lang = Number(store.get('lang', 0)) % LANGS.length;
-  const mic = $('mic'), sw = $('swLang');
-  if (!SR) return { ok: false, start() {}, stop() {} };
+  let rec = null, heard = '', last = '', began = 0, lampAt = 0, lang = Number(store.get('lang', 0)) % LANGS.length;
+  const mic = $('mic'), sw = $('swLang'), input = $('input');
+  if (!SR) return { ok: false, start() {}, stop() {}, talk() {} };
   mic.hidden = false; sw.hidden = false; $('swLoop').hidden = false;
   sw.textContent = LANGS[lang][0];
   sw.onclick = () => { lang = (lang + 1) % LANGS.length; store.set('lang', lang); sw.textContent = LANGS[lang][0]; };
 
-  function start(auto) {
-    if (rec) return;
-    stop_speaking();
-    heard = '';
+  // the screen stays on while he is listening for good
+  async function awakeScreen(on) {
     try {
-      rec = new SR();
+      if (on && !loop.lock && navigator.wakeLock) { loop.lock = await navigator.wakeLock.request('screen'); loop.lock.addEventListener('release', () => { loop.lock = null; }); }
+      else if (!on && loop.lock) { const l = loop.lock; loop.lock = null; await l.release(); }
+    } catch { /* not allowed, or not there */ }
+  }
+  function talk(on) {
+    loop.on = on; loop.fails = 0;
+    $('swLoop').setAttribute('aria-pressed', String(on));
+    awakeScreen(on);
+    if (on) { loop.until = Date.now() + ATTEND; if (!turn && state === 'idle') start(true); }
+  }
+  // LISTENING while what you say is taken as meant for him, STANDBY once he waits for his name
+  function lamp(auto) {
+    clearTimeout(lampAt);
+    if (!rec) return;
+    const open = !auto || Date.now() < loop.until;
+    setState(open ? 'listening' : 'standby');
+    if (open && auto) lampAt = setTimeout(() => lamp(auto), loop.until - Date.now() + 60);
+  }
+
+  function start(auto) {
+    if (rec || (auto && (turn || document.hidden))) return;
+    if (turn) stop();
+    heard = ''; last = '';
+    try {
+      const mine = rec = new SR();
+      began = Date.now();
       rec.lang = LANGS[lang][1]; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
       rec.onresult = (e) => {
         let txt = '', fin = true;
         for (const r of e.results) { txt += r[0].transcript; if (!r.isFinal) fin = false; }
-        $('input').value = txt;
+        // shown in the box as it is heard, unless you are typing there yourself
+        if (!auto || input.value === last || !input.value) input.value = txt;
+        last = txt;
         if (fin) heard = txt;
+        awake.busy();
       };
-      rec.onerror = (e) => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { loop.on = false; $('swLoop').setAttribute('aria-pressed', 'false'); notice('The browser will not let him hear: allow the microphone for this page.'); } };
+      rec.onerror = (e) => {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { talk(false); notice('The browser will not let him hear: allow the microphone for this page.', 20e3); }
+        else if (e.error === 'audio-capture') { talk(false); notice('He cannot hear: this device gives him no microphone.', 20e3); }
+      };
       rec.onend = () => {
-        rec = null; mic.setAttribute('aria-pressed', 'false');
-        const said = (heard || $('input').value).trim();
-        if (state === 'listening') setState('idle');
-        if (said) { loop.misses = 0; $('input').value = ''; say(said); }
-        else if (auto && ++loop.misses >= 2) { loop.on = false; loop.misses = 0; $('swLoop').setAttribute('aria-pressed', 'false'); }
-        else if (auto && loop.on) setTimeout(() => { if (!turn && state === 'idle') start(true); }, 300);
+        if (rec !== mine) return;
+        rec = null; mic.setAttribute('aria-pressed', 'false'); clearTimeout(lampAt);
+        const said = (heard || last).trim();
+        const hears = state === 'listening' || state === 'standby';
+        if (input.value === last) input.value = '';
+        if (!auto || !loop.on) { if (hears) setState('idle'); if (!auto && said) say(said); return; }
+        if (said && (Date.now() < loop.until || NAME.test(said))) { loop.fails = 0; say(said); return; }
+        // Nothing, or something not meant for him: he listens again, and the lamp stays as it is meanwhile.
+        // A recogniser that gives up at once is not hammered: each quick failure waits longer, and after a
+        // few TALK switches itself off.
+        loop.fails = !said && Date.now() - began < 1200 ? loop.fails + 1 : 0;
+        if (loop.fails >= 6) { talk(false); if (hears) setState('idle'); notice('He cannot keep listening: speech recognition stops at once in this browser.', 20e3); return; }
+        setTimeout(() => { if (loop.on && !turn && !rec && quiet()) { if (!document.hidden) start(true); else setState('idle'); } }, loop.fails ? Math.min(8000, 400 * 2 ** loop.fails) : 300);
       };
       rec.start();
-      mic.setAttribute('aria-pressed', 'true'); setState('listening');
-    } catch { rec = null; loop.on = false; $('swLoop').setAttribute('aria-pressed', 'false'); }
+      mic.setAttribute('aria-pressed', 'true'); lamp(auto);
+    } catch { rec = null; talk(false); }
   }
-  function stop() { if (rec) { try { rec.onend = null; rec.abort(); } catch { /* gone */ } rec = null; mic.setAttribute('aria-pressed', 'false'); if (state === 'listening') setState('idle'); } }
-  function stop_speaking() { if (turn) stop(); }
-  mic.onclick = () => { unlock(); if (rec) { loop.on = false; $('swLoop').setAttribute('aria-pressed', 'false'); stop(); } else start(false); };
-  return { ok: true, start, stop };
+  function stop_() {
+    if (rec) { const r = rec; rec = null; try { r.onend = null; r.abort(); } catch { /* gone */ } }
+    mic.setAttribute('aria-pressed', 'false'); clearTimeout(lampAt);
+    if (input.value && input.value === last) input.value = '';
+    if (state === 'listening' || state === 'standby') setState('idle');
+  }
+  mic.onclick = () => { unlock(); if (rec) { talk(false); stop_(); } else start(false); };
+  // a page nobody is looking at does not listen
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop_();
+    else if (loop.on) { awakeScreen(true); if (!turn && state === 'idle') start(true); }
+  });
+  return { ok: true, start, stop: stop_, talk };
 })();
+
+// ── awake: he speaks without being spoken to ─────────────────
+// When you come in after a while he has something to say; when you have gone quiet for a minute or so he
+// may add a thing of his own, and once more later; then he waits to be spoken to. The server has the last
+// word on each (and he may decline). Off: he only ever answers.
+const awake = (() => {
+  const sw = $('swAwake');
+  let on = store.get('awake', '1') === '1', timer = 0, unasked = 0, later = false;
+  const free = () => on && !turn && !document.hidden && quiet() && !$('input').value.trim() && $('tune').hidden && $('memory').hidden;
+  // a first thought after about a minute of quiet, a second a few minutes on, then none until you speak
+  function arm() {
+    clearTimeout(timer); timer = 0;
+    if (!on || unasked >= 2) return;
+    timer = setTimeout(() => { timer = 0; if (free()) cue('idle'); else arm(); }, unasked || later ? 150e3 + Math.random() * 90e3 : 50e3 + Math.random() * 40e3);
+  }
+  const greet = () => { if (on && !turn && !document.hidden && quiet()) cue('greet'); };
+  sw.setAttribute('aria-pressed', String(on));
+  sw.onclick = () => {
+    on = !on; store.set('awake', on ? '1' : '0'); sw.setAttribute('aria-pressed', String(on));
+    if (on) { unasked = 0; later = false; unlock(); greet(); } else { clearTimeout(timer); timer = 0; }
+  };
+  return {
+    // may he look up and remark on what he sees: a little more often than he may break a silence
+    free: () => free() && unasked < 3,
+    said() { unasked = 0; later = false; arm(); },                             // he has answered you
+    // He was given the chance to speak unasked. It counts when he took it or let it pass; when the server
+    // said "not now" (you were only just here) it does not, and the next chance comes later.
+    tried(kind, spoke, refused) { if (refused) later = true; else if (spoke || kind !== 'greet') unasked++; arm(); },
+    heard() { unasked = 0; later = false; clearTimeout(timer); timer = 0; },   // you have spoken
+    busy() { if (timer) arm(); },                                              // you are typing or talking: not now
+    greet,
+  };
+})();
+$('input').addEventListener('input', () => awake.busy());
 
 // ── controls ─────────────────────────────────────────────────
 $('form').addEventListener('submit', (e) => {
@@ -416,24 +558,20 @@ $('form').addEventListener('submit', (e) => {
 });
 $('faceBtn').onclick = () => {
   unlock();
-  if (turn || state === 'listening') { loop.on = false; $('swLoop').setAttribute('aria-pressed', 'false'); ears.stop(); stop(); }
+  if (Date.now() - released < 600) return;      // this was the touch that let him be heard
+  if (turn || state === 'listening' || state === 'standby') { ears.talk(false); ears.stop(); stop(); }
   else if (ears.ok) ears.start(false);
   else $('input').focus();
 };
 $('swVoice').setAttribute('aria-pressed', store.get('voice', '1') === '1' ? 'true' : 'false');
 $('swVoice').onclick = () => {
   unlock();
-  const on = $('swVoice').getAttribute('aria-pressed') !== 'true';
+  const on = !pressed('swVoice');
   $('swVoice').setAttribute('aria-pressed', String(on)); store.set('voice', on ? '1' : '0');
-  if (!on) { hush(); if (turn) { turn.voice = false; turn.playing = false; for (const s of turn.sentences) { s.skip = true; s.buf = null; } pump(turn); } }
+  if (!on) { hush(); if (turn) { clearTimeout(turn.held); turn.held = 0; turn.voice = false; turn.playing = false; for (const s of turn.sentences) { s.skip = true; s.buf = null; } pump(turn); } }
   showVoice(voiceState);
 };
-$('swLoop').onclick = () => {
-  unlock();
-  loop.on = !loop.on; loop.misses = 0;
-  $('swLoop').setAttribute('aria-pressed', String(loop.on));
-  if (loop.on && !turn && state === 'idle') ears.start(true);
-};
+$('swLoop').onclick = () => { unlock(); ears.talk(!loop.on); if (!loop.on) ears.stop(); };
 (() => {
   const b = $('swForget'); let armed = 0;
   b.onclick = async () => {
@@ -450,17 +588,47 @@ const eyes = (() => {
   const v = $('eye'), sw = $('swEyes');
   let stream = null, facing = store.get('facing', 'user');
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { sw.hidden = true; return { frame: () => null }; }
+
+  // He also looks by himself. A small grey print of the view is kept from the last time he looked; when
+  // the view has changed since and then come to rest, he gets to see it and may say something (AWAKE).
+  const pc = document.createElement('canvas'); pc.width = 24; pc.height = 18;
+  const pg = pc.getContext('2d', { willReadFrequently: true });
+  const CELLS = 24 * 18;
+  let seen = null, before = null, glanced = 0, opened = false;
+  function print() {
+    pg.drawImage(v, 0, 0, 24, 18);
+    const d = pg.getImageData(0, 0, 24, 18).data, a = new Float32Array(CELLS);
+    let mean = 0;
+    for (let i = 0; i < CELLS; i++) { a[i] = d[i * 4] * 0.299 + d[i * 4 + 1] * 0.587 + d[i * 4 + 2] * 0.114; mean += a[i]; }
+    mean /= CELLS;
+    for (let i = 0; i < CELLS; i++) a[i] -= mean;       // a lamp switched on is not a change of view
+    return a;
+  }
+  const apart = (a, b) => { let s = 0; for (let i = 0; i < CELLS; i++) s += Math.abs(a[i] - b[i]); return s / CELLS / 255; };
+  const glance = () => { glanced = Date.now(); cue('glance'); };
+  setInterval(() => {
+    if (!stream || !v.videoWidth || document.hidden) return;
+    const now = print();
+    if (!seen) { seen = before = now; return; }
+    // his eyes have just opened: a first look, as soon as he is not in the middle of something
+    if (opened) { if (awake.free()) { opened = false; glance(); } return; }
+    const moved = apart(seen, now) > 0.07, atRest = apart(before, now) < 0.025;
+    before = now;
+    if (moved && atRest && Date.now() - glanced > 90e3 && awake.free()) glance();
+  }, 2500);
+
   function off() {
     if (stream) stream.getTracks().forEach((t) => t.stop());
-    stream = null; v.srcObject = null; v.hidden = true; sw.setAttribute('aria-pressed', 'false');
+    stream = null; seen = before = null; opened = false; v.srcObject = null; v.hidden = true; sw.setAttribute('aria-pressed', 'false');
   }
-  async function on() {
+  async function on(first) {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
       v.srcObject = stream; v.classList.toggle('mirror', facing === 'user'); v.hidden = false;
       await v.play();
       sw.setAttribute('aria-pressed', 'true');
-    } catch { off(); notice('The browser will not let him see: allow the camera for this page.'); }
+      opened = first;
+    } catch { off(); notice('The browser will not let him see: allow the camera for this page.', 20e3); }
   }
   // what the camera shows right now, small enough to send: longest side 768
   function frame() {
@@ -469,16 +637,17 @@ const eyes = (() => {
     const c = document.createElement('canvas');
     c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
     c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+    seen = print();
     return c.toDataURL('image/jpeg', 0.72).split(',')[1] || null;
   }
-  sw.onclick = () => (stream ? off() : on());
-  v.onclick = async () => { facing = facing === 'user' ? 'environment' : 'user'; store.set('facing', facing); off(); await on(); };
+  sw.onclick = () => { unlock(); if (stream) off(); else on(true); };
+  v.onclick = async () => { facing = facing === 'user' ? 'environment' : 'user'; store.set('facing', facing); off(); await on(false); };
   return { frame };
 })();
 
-// ── memory: the graph of what he has learned ─────────────────
+// ── memory: the graph of what he has learned, and the talks he remembers ──
 (() => {
-  const box = $('memory'), sw = $('swMem'), svg = $('memGraph'), facts = $('memFacts'), NS = 'http://www.w3.org/2000/svg';
+  const box = $('memory'), sw = $('swMem'), svg = $('memGraph'), facts = $('memFacts'), talks = $('memTalks'), NS = 'http://www.w3.org/2000/svg';
   let data = null, picked = null;
   const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
 
@@ -518,11 +687,11 @@ const eyes = (() => {
     svg.style.height = data.nodes.length > 12 ? 'min(58dvh, 560px)' : '';
     const W = svg.clientWidth || 340, H = svg.clientHeight || 300;
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    $('memCount').textContent = `${data.nodes.length} THINGS · ${data.edges.length} LINKS`;
-    $('memWipe').hidden = !data.edges.some((e) => !e.past);
+    $('memCount').textContent = `${data.nodes.length} THINGS · ${data.edges.length} LINKS · ${data.talks.length} TALK${data.talks.length === 1 ? '' : 'S'}`;
+    $('memWipe').hidden = !data.edges.some((e) => !e.past) && !data.talks.length;
     if (!data.nodes.length) {
       $('memHint').textContent = 'Nothing yet. He learns from what you tell him about yourself, the people and things around you, and your plans.';
-      facts.innerHTML = ''; return;
+      facts.innerHTML = ''; said(); return;
     }
     layout(W, H);
     const at = new Map(data.nodes.map((n) => [n.id, n]));
@@ -543,27 +712,38 @@ const eyes = (() => {
       g.onclick = pick; g.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); pick(); } };
       if (!still && !picked) { g.style.opacity = 0; setTimeout(() => { g.style.opacity = ''; }, 40 + i * 45); }
     });
-    list();
+    list(); said();
   }
+
+  const row = (into, parts, label, forget) => {
+    const r = document.createElement('div'); r.className = 'fact';
+    const p = document.createElement('span'); p.append(...parts);
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'btn o sm'; x.textContent = '×'; x.setAttribute('aria-label', 'Forget: ' + label);
+    x.onclick = forget;
+    r.append(p, x); into.appendChild(r);
+  };
+  const tag = (name, text) => { const e = document.createElement(name); e.textContent = text; return e; };
 
   function list() {
     facts.innerHTML = '';
     const name = (id) => (data.nodes.find((n) => n.id === id) || { name: id }).name;
     const es = (picked ? data.edges.filter((e) => e.s === picked || e.o === picked) : data.edges.slice().sort((a, b) => (a.past ? 1 : 0) - (b.past ? 1 : 0) || b.last - a.last).slice(0, 6));
-    $('memHint').textContent = picked ? `${name(picked)}: ${es.length} link${es.length === 1 ? '' : 's'}. Tap again to let go.` : 'Latest. Tap a thing to see what he knows about it. Wipe forgets what he learned from you; his own past stays.';
-    for (const e of es) {
-      const row = document.createElement('div'); row.className = 'fact';
-      const p = document.createElement('span');
-      const s = document.createElement('b'); s.textContent = name(e.s);
-      const r = document.createElement('i'); r.textContent = ' ' + e.r + ' ';
-      const o = document.createElement('b'); o.textContent = name(e.o);
-      p.append(s, r, o);
-      const x = document.createElement('button'); x.type = 'button'; x.className = 'btn o sm'; x.textContent = '×'; x.setAttribute('aria-label', `Forget: ${name(e.s)} ${e.r} ${name(e.o)}`);
-      x.onclick = () => forget({ s: e.s, r: e.r, o: e.o });
-      row.append(p, x); facts.appendChild(row);
-    }
+    $('memHint').textContent = picked ? `${name(picked)}: ${es.length} link${es.length === 1 ? '' : 's'}. Tap again to let go.` : 'Latest. Tap a thing to see what he knows about it. Wipe forgets what he learned from you and the talks he remembers; his own past stays.';
+    for (const e of es) row(facts, [tag('b', name(e.s)), tag('i', ' ' + e.r + ' '), tag('b', name(e.o))], `${name(e.s)} ${e.r} ${name(e.o)}`, () => forget({ s: e.s, r: e.r, o: e.o }));
   }
-  const load = () => fetch('api/memory').then((r) => r.json()).then((d) => { data = d; if (picked && !d.nodes.some((n) => n.id === picked)) picked = null; draw(); });
+  // the talks he remembers, newest first: a line or two each, kept when a talk is over
+  const ago = (ts) => {
+    const m = Math.round((Date.now() - ts) / 60e3);
+    return m < 60 ? `${Math.max(1, m)} MIN AGO` : m < 36 * 60 ? `${Math.round(m / 60)} H AGO` : `${Math.round(m / 1440)} DAYS AGO`;
+  };
+  function said() {
+    talks.innerHTML = '';
+    if (picked || !data.talks.length) return;
+    const h = document.createElement('div'); h.className = 'grp'; h.append(tag('span', 'TALKS HE REMEMBERS'), tag('span', ''));
+    talks.appendChild(h);
+    for (const t of data.talks.slice().reverse().slice(0, 8)) row(talks, [tag('i', ago(t.to) + '  '), document.createTextNode(t.text)], 'the talk of ' + ago(t.to).toLowerCase(), () => forget({ talk: t.to }));
+  }
+  const load = () => fetch('api/memory').then((r) => r.json()).then((d) => { data = d; data.talks = d.talks || []; if (picked && !d.nodes.some((n) => n.id === picked)) picked = null; draw(); });
   const forget = (q) => fetch('api/memory/forget', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(q) }).then(load).catch(() => {});
   function open(on) {
     box.hidden = !on; sw.setAttribute('aria-pressed', String(on));
@@ -586,7 +766,7 @@ const eyes = (() => {
   window.addEventListener('resize', () => { if (!box.hidden && data) draw(); });
 })();
 
-// ── tuning: what celeris-1 is given ──────────────────────────
+// ── tuning: what the mind in use is given ────────────────────
 (() => {
   const SPEC = [
     ['temperature', 'WILDNESS', 'How loose his wording gets. Wild also slips more.', [[0.5, 'CALM'], [0.8, 'NORMAL'], [1, 'LIVELY'], [1.2, 'WILD']]],
@@ -596,14 +776,26 @@ const eyes = (() => {
     ['name', 'YOUR NAME', 'How often he says it.', [['never', 'NEVER'], ['rare', 'RARE'], ['often', 'OFTEN']]],
     ['context', 'CONTEXT', 'How many past messages he is handed each time.', [[10, '10'], [30, '30'], [60, '60']]],
   ];
+  const MIND = ['mind', 'MIND', 'Which model writes his answers.', [['celeris', 'CELERIS-1'], ['haiku', 'HAIKU']]];
   const box = $('tune'), rows = $('tuneRows'), extra = $('tuneExtra'), sw = $('swTune');
-  let tune = null, timer = 0, minds = ['celeris'];
-  const MIND = ['mind', 'MIND', 'Which model writes his answers. Haiku ignores WILDNESS.', [['celeris', 'CELERIS-1'], ['haiku', 'HAIKU']]];
+  let info = null, timer = 0;
+  // the switches that mean something to the mind in use: Haiku takes no temperature, and only Haiku can reach
+  function spec() {
+    const s = SPEC.filter(([key]) => !(info.haiku && key === 'temperature'));
+    if (info.haiku) {
+      const h = info.house || {}, things = [h.phone && 'your phone', h.tv && 'the TV'].filter(Boolean).join(' and ');
+      s.unshift(['reach', 'REACH', 'What he can touch outside the talk. Web: what has to be known as it is now gets looked up first (a few seconds).' + (things ? ` House adds ${things}, when you ask him.` : ''),
+        things ? [['none', 'NONE'], ['web', 'WEB'], ['house', 'WEB + HOUSE']] : [['none', 'NONE'], ['web', 'WEB']]]);
+    }
+    return info.minds.length > 1 ? [MIND, ...s] : s;
+  }
+  const took = (d) => { info = d; const m = (d.model || '').replace(/^claude-/i, '').toUpperCase(); $('rMind').textContent = m; $('tuneWho').textContent = `WHAT ${m} IS GIVEN`; paint(); };
   const save = (patch) => fetch('api/tune', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(patch) })
-    .then((r) => r.json()).then((d) => { tune = d.tune; if (d.model) $('rMind').textContent = d.model.replace(/^claude-/i, '').toUpperCase(); paint(); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
+    .then((r) => r.json()).then((d) => { took(d); if (!$('tuneText').hidden) prompt(); }).catch(() => {});
   function paint() {
+    const tune = info.tune;
     rows.innerHTML = '';
-    for (const [key, name, what, opts] of (minds.length > 1 ? [MIND, ...SPEC] : SPEC)) {
+    for (const [key, name, what, opts] of spec()) {
       const row = document.createElement('div'); row.className = 'trow';
       const lab = document.createElement('div');
       const b = document.createElement('b'); b.textContent = name;
@@ -631,7 +823,7 @@ const eyes = (() => {
     if (on) {
       if (!$('memory').hidden) $('memClose').click();
       document.documentElement.style.setProperty('--deck-h', document.querySelector('.deck').offsetHeight + 'px');
-      fetch('api/tune').then((r) => r.json()).then((d) => { tune = d.tune; minds = d.minds || minds; paint(); }).catch(() => { box.hidden = true; sw.setAttribute('aria-pressed', 'false'); });
+      fetch('api/tune').then((r) => r.json()).then(took).catch(() => { box.hidden = true; sw.setAttribute('aria-pressed', 'false'); });
     }
   }
   sw.onclick = () => open(box.hidden);
@@ -654,17 +846,28 @@ const clock = () => { $('clock').textContent = new Date().toLocaleTimeString('en
 clock(); setInterval(clock, 20e3);
 
 // ── start ────────────────────────────────────────────────────
+// A page that is open keeps the quick voice ready (its model is dropped after fifteen idle minutes, and
+// loading it again costs the first sentence a quarter of a minute), and tells him you have come in.
+const wake = () => fetch('api/wake', { method: 'POST' }).then((r) => r.json())
+  .then((d) => { if (d.voice && !turn && (d.voice.state !== voiceState || (d.voice.via || '') !== voiceVia)) showVoice(d.voice.state, d.voice.via || ''); }).catch(() => {});
+setInterval(() => { if (!document.hidden && state !== 'offline') wake(); }, 4 * 60e3);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && state !== 'offline') { wake(); awake.greet(); } });
+
 async function load() {
   try {
     const s = await fetch('api/state').then((r) => r.json());
     owner = (s.owner || 'YOU').toUpperCase().slice(0, 8);
-    $('rMind').textContent = (s.model || '').replace(/^claude-/i, '').toUpperCase() + (s.llm ? '' : ' · NO KEY');
-    turns = Math.floor(s.turns / 2); $('rTurns').textContent = turns;
+    const mind = (s.model || '').replace(/^claude-/i, '').toUpperCase();
+    $('rMind').textContent = mind + (s.llm ? '' : ' · NO KEY');
+    $('tuneWho').textContent = `WHAT ${mind} IS GIVEN`;
+    turns = s.turns; $('rTurns').textContent = turns;
     showVoice(s.voice.state, s.voice.via || '');
     if (!s.history.length) empty();
     else { log.innerHTML = ''; for (const m of s.history) line(m.role === 'ultron' ? 'ultron' : 'user', m.text, true); toEnd(); }
-    if (!s.llm) notice('No CELERIS_API_KEY on the server: he cannot think.');
+    if (!s.llm) notice(`No key on the server for ${mind}: he cannot think.`);
     setState('idle');
+    wake();
+    awake.greet();
   } catch {
     setState('offline'); empty();
     setTimeout(load, 5000);

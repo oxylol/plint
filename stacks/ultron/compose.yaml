@@ -2,9 +2,10 @@
 #  Plint · ultron stack
 #  Ultron: a companion you talk to. celeris-1 (CELERIS_API_KEY) thinks,
 #  VoiceStudio speaks each sentence in the cloned voice (profile "Ultron"),
-#  the page plays them in order. Source in apps/ultron; talk and notes in
+#  the page plays them in order. Source in apps/ultron; talk and memory in
 #  data/ultron. VoiceStudio is the one in the table stack (speech profile,
-#  COMPOSE_PROFILES=speech in .env), reached over the `table` network.
+#  COMPOSE_PROFILES=speech in .env), reached over the `table` network; ntfy
+#  (his line to the phone) is in the ops stack, reached over `plint-ops`.
 # ─────────────────────────────────────────────────────────────
 name: ultron
 
@@ -37,6 +38,13 @@ services:
       VOICE_FAST_URL: ${ULTRON_PC_VOICE_URL:-}
       VOICE_FAST_KEY: ${ULTRON_PC_VOICE_KEY:-}
       VOICE_FAST_STEPS: 16
+      # His reach into the house (TUNE → REACH on WEB + HOUSE, Haiku only): a line on
+      # the phone through ntfy (ops stack, over its network), and the television
+      # (the Mac on the TV, tv/remote, key-gated). Unset means he cannot.
+      NTFY_URL: http://ntfy/plint
+      NTFY_TOKEN: ${NTFY_TOKEN:-}
+      TV_IP: ${TV_IP:-}
+      TV_KEY: ${TV_KEY:-}
     volumes:
       - ../../data/ultron:/data
     read_only: true
@@ -44,8 +52,12 @@ services:
     mem_limit: 192m
     networks:
       - table
+      - ops
 
 networks:
   table:
     name: table
+    external: true
+  ops:
+    name: plint-ops
     external: true

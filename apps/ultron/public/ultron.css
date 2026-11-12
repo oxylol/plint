@@ -67,6 +67,8 @@ body {
 }
 .who h1 span { display: inline-block; }
 .who small { display: block; margin-top: 5px; font-size: 9px; letter-spacing: 0.2em; color: var(--p-ink2); white-space: nowrap; }
+.who .clock { margin-left: 1.4em; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .who .clock { display: none; } }
 .state { display: grid; grid-template-columns: auto auto; column-gap: 8px; align-items: center; justify-items: end; font-size: 10px; letter-spacing: 0.16em; font-weight: 600; text-shadow: var(--p-glow); }
 .state .ru { grid-column: 1 / -1; font-weight: 400; font-size: 9px; letter-spacing: 0.2em; text-shadow: none; }
 .blk {
@@ -90,7 +92,7 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 #eye.mirror { transform: scaleX(-1); }
 .face {
   all: unset; display: block; width: 100%; cursor: pointer;
-  height: clamp(150px, 30dvh, 300px);
+  height: clamp(150px, 27dvh, 300px);
 }
 .face canvas { display: block; width: 100%; height: 100%; }
 .face:focus-visible { outline: 1px solid var(--p-ink); outline-offset: -4px; }
@@ -108,6 +110,12 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 .talk { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); padding: 0 var(--pad); }
 .grp { display: flex; justify-content: space-between; gap: 10px; padding: 12px 0 7px; font-size: 9px; letter-spacing: 0.2em; }
 .grp > span:last-child { color: var(--p-ink2); font-variant-numeric: tabular-nums; }
+/* over the transcript: its name, and the three things that are not switches (what he remembers, how he is tuned, forgetting this talk) */
+.grp.bar { align-items: center; padding: 5px 0 4px; }
+.grp.bar > span:first-child { white-space: nowrap; }
+.acts { display: flex; gap: 6px; }
+.acts .btn { min-height: 32px; padding: 0 10px; font-size: 9.5px; letter-spacing: 0.14em; }
+@media (max-width: 384px) { .grp.bar .ru { display: none; } }
 .log { overflow-y: auto; overscroll-behavior: contain; padding-bottom: 14px; scrollbar-width: none; }
 .log::-webkit-scrollbar { display: none; }
 
@@ -207,6 +215,8 @@ main { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 .fact b { font-weight: 600; }
 .fact i { font-style: normal; color: var(--p-ink2); }
 .fact .btn { min-height: 32px; min-width: 36px; padding: 0 8px; }
+#memTalks .grp { padding-top: 16px; }
+#memTalks .fact i { font-size: 9px; letter-spacing: 0.16em; }
 
 /* ── wider than a phone: face on the left, talk on the right ── */
 @media (min-width: 860px) {

@@ -23,7 +23,7 @@
   </a>
   <div class="who">
     <h1 id="name" aria-label="Ultron">ULTRON</h1>
-    <small><span class="ru">УЛЬТРОН // </span>UNIT 5230</small>
+    <small><span class="ru">УЛЬТРОН // </span>UNIT 5230<span class="clock" id="clock"></span></small>
   </div>
   <div class="state" id="stateBox" role="status">
     <i class="blk" id="lamp"></i><span id="state">READY</span><span class="ru" id="stateRu">ГОТОВ</span>
@@ -32,7 +32,7 @@
 
 <main>
   <section class="core">
-    <button class="face" id="faceBtn" type="button" aria-label="Stop Ultron speaking">
+    <button class="face" id="faceBtn" type="button" aria-label="Talk to Ultron">
       <canvas id="face"></canvas>
     </button>
     <video id="eye" playsinline muted hidden aria-label="What he sees. Tap to switch camera."></video>
@@ -45,13 +45,20 @@
   </section>
 
   <section class="talk">
-    <div class="grp"><span>TRANSCRIPT <span class="ru">/ ПРОТОКОЛ</span></span><span id="clock"></span></div>
+    <div class="grp bar">
+      <span>TRANSCRIPT <span class="ru">/ ПРОТОКОЛ</span></span>
+      <span class="acts">
+        <button class="btn o sm" id="swMem" type="button" aria-pressed="false" aria-controls="memory">MEMORY</button>
+        <button class="btn o sm" id="swTune" type="button" aria-pressed="false" aria-controls="tune">TUNE</button>
+        <button class="btn o sm" id="swForget" type="button" title="Forget this talk: the transcript is cleared, a line or two of it stays with him">FORGET</button>
+      </span>
+    </div>
     <div class="log" id="log" aria-live="polite"></div>
   </section>
 </main>
 
-<section class="tune" id="tune" hidden aria-label="Tune what celeris-1 is given">
-  <div class="grp"><span>TUNING <span class="ru">/ НАСТРОЙКА</span></span><span>WHAT CELERIS-1 IS GIVEN</span></div>
+<section class="tune" id="tune" hidden aria-label="Tune what he is given">
+  <div class="grp"><span>TUNING <span class="ru">/ НАСТРОЙКА</span></span><span id="tuneWho">WHAT HE IS GIVEN</span></div>
   <div id="tuneRows"></div>
   <label class="tx"><span>ALSO TELL HIM <span class="ru">/ ЕЩЁ</span></span>
     <textarea id="tuneExtra" rows="3" maxlength="2000" placeholder="ANYTHING ELSE, IN PLAIN WORDS" spellcheck="false"></textarea></label>
@@ -68,6 +75,7 @@
   <svg id="memGraph" role="img" aria-label="Graph of what he has learned"></svg>
   <p class="memHint" id="memHint"></p>
   <div id="memFacts"></div>
+  <div id="memTalks"></div>
   <div class="tfoot">
     <button class="btn o sm" id="memWipe" type="button">WIPE</button>
     <span class="gap"></span>
@@ -86,13 +94,10 @@
   </form>
   <div class="sw">
     <button class="btn o sm" id="swVoice" type="button" aria-pressed="true">VOICE</button>
-    <button class="btn o sm" id="swLoop" type="button" aria-pressed="false" aria-label="Talk mode: he listens again after each answer" hidden>TALK</button>
+    <button class="btn o sm" id="swLoop" type="button" aria-pressed="false" aria-label="Talk mode: he keeps listening. Right after he has spoken, anything you say is for him; later he answers to his name" hidden>TALK</button>
     <button class="btn o sm" id="swLang" type="button" aria-label="Language he listens for" hidden>EN</button>
     <button class="btn o sm" id="swEyes" type="button" aria-pressed="false" aria-label="Eyes: let him see through this device's camera">EYES</button>
-    <button class="btn o sm" id="swMem" type="button" aria-pressed="false" aria-controls="memory">MEMORY</button>
-    <button class="btn o sm" id="swTune" type="button" aria-pressed="false" aria-controls="tune">TUNE</button>
-    <span class="gap"></span>
-    <button class="btn o sm" id="swForget" type="button">FORGET</button>
+    <button class="btn o sm" id="swAwake" type="button" aria-pressed="true" aria-label="Awake: he may speak first, when you come in, when you have gone quiet, or when what he sees changes">AWAKE</button>
   </div>
 </footer>
 <script src="ultron.js"></script>
