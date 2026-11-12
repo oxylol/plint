@@ -23,6 +23,9 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   asked for again without the lines in view (celeris-1 answers whole in half a second, so this costs little; the log
   says `recited the film`). Asking him to quote himself, or THE FILM on FREE, switches that check off. Short sentences
   go to the voice together, so a pause stays inside one breath.
+- **His past**: `PAST` in `server.js` is his history written as his own memories (the scepter, JARVIS, the twins, Klaue,
+  Seoul and the cradle, Vision, the city, the last drone), from the character's biography Filip supplied. Both minds
+  get it and are told it is what he knows, not what he talks about.
 - **Sounds**: he may write `[laughter]` and `[sigh]`, the two reaction tags OmniVoice renders with this voice (a laugh
   adds about two seconds, a sigh half a second); they are hidden in the transcript and any other bracket is dropped.
   Graded emotion needs another engine: `HANDOFF-pc-emotion.md` is the brief for installing IndexTTS 2.5 on the PC.
