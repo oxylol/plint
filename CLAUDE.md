@@ -22,6 +22,12 @@ as a panel that folds when he meant a setting that removes it. So, before any co
 - **A word that could mean two things: ask before you build.** One question with the
   readings as choices he can tap (`AskUserQuestion`), your own pick first. Not a
   questionnaire.
+- **What he has not said, ask; do not assume it.** Which device it is for, who will
+  use it, where it saves, sound or none, how he will play or use it: anything that
+  shapes what he will see or do is a question with choices, never a line you take for
+  granted. "He usually writes from a phone" was turned into "build it phone first";
+  he wanted PC first. Only plumbing he never sees (port, folder, stack name) is yours
+  to pick.
 - **"All the features", "like X", "a clone of X" means all of X.** Open X itself (the
   page, the app, its docs; not from memory), list every part you will build and every
   part you will not (tabs, modes, settings, the phone layout), and wait for his OK.

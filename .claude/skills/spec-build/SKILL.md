@@ -23,7 +23,10 @@ a silence", not "refactor the recogniser loop"). Each line must be something tha
   considered and the one you took ("measure: a ruler he drags in the view; not the probe cycle"). If you cannot
   tell which he means, it becomes a question in step 3.
 - **Left out:** what a reasonable person might expect from the request that you do not plan to build.
-- **Taken for granted:** where it lives (name, port), which device comes first, whose data it touches.
+- **Not said by him:** anything that shapes what he will see or do and that he has not said (which device comes
+  first, who uses it, where it saves, sound or none, how he will play or use it) is a question in step 3. It is
+  never a line you take for granted: "phone first" was assumed that way and he wanted PC first.
+- **Plumbing:** what he never sees (port, folder, stack name) is yours to pick; list it in a line.
 
 Keep the list in `.scratch/spec-<name>.md` so it survives a long session. It is the thing you build and report against.
 
