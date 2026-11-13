@@ -184,7 +184,7 @@ function nights(){   // backups by the night they ran. Kopia keeps every night f
 // the registry: every unit, a tap away. [name under the domain, port, title, what it is (or a live figure), lamp: a monitor in Uptime Kuma or c:<container>]
 const REG=[['EVERYDAY'],['games',8080,'Games',()=>{const s=D.games.servers,r=s.filter(x=>x.running);return r.length?r.length+' running · '+r.reduce((a,x)=>a+x.players,0)+' players':'AMP · '+s.length+' servers, all stopped'},'Games'],
  ['table',3200,'D&D Table','campaigns, dice, DM screen','c:table'],['ai',5220,'Plint Chat','Claude Code from the phone',''],['cnc',5178,'CNC Studio','G-code simulator','c:cnc-studio'],['twin',5210,'CNC Twin','physics twin','c:cnc-twin'],
- ['poly',5190,'Polybot','Polymarket, paper mode','c:polybot'],['music',5200,'Hertz','music from waves','c:hertz'],['stremio',8095,'Stremio','movies & series','Stremio'],['tv',7700,'TV','the Mac on the TV',''],
+ ['poly',5190,'Polybot','Polymarket, paper mode','c:polybot'],['music',5200,'Hertz','music from waves','c:hertz'],['accrete',5240,'Accrete','a star from dust','c:accrete'],['stremio',8095,'Stremio','movies & series','Stremio'],['tv',7700,'TV','the Mac on the TV',''],
  ['HEALTH'],['status',3001,'Status',()=>'Uptime Kuma · '+upN()+' of '+mons().length+' up','c:uptime-kuma'],['dns',3000,'AdGuard',()=>{const d=dns24();return (d.q?(d.b/d.q*100).toFixed(1):'0')+' % blocked, last 24 h'},'DNS'],
  ['backup',51515,'Backups',()=>{const n=nights().last;return 'Kopia · last '+(n?dm(n.at)+' '+hm(n.at):'none')},'Backups'],['speed',8075,'Internet',()=>{const r=lastTest();return r?Math.round(r.down)+' down · '+Math.round(r.up)+' up':'no test yet'},'c:speedtest-tracker'],
  ['ntfy',8070,'Notifications','ntfy · messages to the phone','Notifications'],

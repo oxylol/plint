@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Accrete</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#05060c">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/accrete.css">
+</head>
+<body>
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<div id="app" class="app" data-view="cloud" data-layer="0" data-tab="bodies">
+  <header class="hud" id="hud">
+    <div class="brand">Accrete</div>
+    <div class="mass" id="mass" aria-label="mass">0</div>
+    <div class="rate"><b id="rate">0</b> mass a second <span class="chip" id="surge" hidden></span></div>
+    <div class="purse" id="purse"></div>
+  </header>
+
+  <aside class="panel left" id="left">
+    <div class="seg" id="buymode" role="group" aria-label="How many to buy"></div>
+    <div class="scroll" id="bodies"></div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <nav class="views" id="views" hidden></nav>
+    <div class="labels" id="labels"></div>
+    <div class="hint" id="hint" hidden></div>
+    <div class="dock">
+      <div class="lull" id="lull" hidden></div>
+      <button class="go" id="go" hidden></button>
+    </div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+  </main>
+
+  <div class="tools" id="tools"></div>
+  <aside class="panel right" id="right">
+    <section class="pane" id="pane-cloud">
+      <h2>Next</h2>
+      <div id="goals"></div>
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div class="scroll" id="upgrades"></div>
+      <div class="scroll" id="milestones" hidden></div>
+    </section>
+    <section class="pane scroll" id="pane-sky" hidden></section>
+    <section class="pane scroll" id="pane-galaxy" hidden></section>
+    <section class="pane scroll" id="pane-universe" hidden></section>
+  </aside>
+
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+
+<div class="veil" id="veil" hidden><div class="card" id="card" role="dialog" aria-modal="true"></div></div>
+
+<script src="js/big.js"></script>
+<script src="js/data.js"></script>
+<script src="js/format.js"></script>
+<script src="js/game.js"></script>
+<script src="js/why.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

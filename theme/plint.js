@@ -62,6 +62,7 @@
     ["twin", "twin", "CNC Twin", 5210],
     ["poly", "poly", "Polybot", 5190],
     ["hertz", "music", "Hertz", 5200],
+    ["accrete", "accrete", "Accrete", 5240],
     ["stremio", "stremio", "Stremio", 8095],
     ["tv", "tv", "TV", 7700],
     "HEALTH",

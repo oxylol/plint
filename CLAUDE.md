@@ -65,6 +65,7 @@ at the end still say when to stop for something that cannot be undone.
 │   ├── music/          hertz (built from apps/hertz)
 │   ├── twin/           cnc-twin (built from apps/cnc-twin)
 │   ├── ai/             silk-router (built from apps/silk-router)
+│   ├── accrete/        accrete (built from apps/accrete)
 │   └── ultron/         ultron (built from apps/ultron); talks to voicestudio in the table stack
 ├── apps/cnc-studio/    CNC Studio source (G-code sim + Claude; upstream zip, plus our Dockerfile)
 ├── apps/polybot/       Polybot: Polymarket leaderboard-consensus trader (Python; README there)
@@ -72,6 +73,7 @@ at the end still say when to stop for something that cannot be undone.
 ├── apps/cnc-twin/      CNC Twin: physics twin of machine, controller, tool, part, chips, coolant (README there)
 ├── apps/silk-router/   silk-router: Silk Compute key behind OpenAI/Anthropic APIs, refusal → -uncensored (README there)
 ├── apps/ultron/        Ultron: voice companion; celeris-1 thinks, VoiceStudio speaks in the cloned voice (README there)
+├── apps/accrete/       Accrete: incremental game, a star from dust (all in the browser; README there)
 ├── apps/plint-chat/    Plint Chat: Claude-style phone page driving Claude Code on Silk models (native unit; README there)
 ├── caddy/Caddyfile     one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/              Plint Terminal: plint.css/js (tokens, strip) + apps/<app>.css/js + home/ (the home page) + fonts/
@@ -119,6 +121,7 @@ host network and proxies to `localhost:<port>`:
 | twin | 5210 | CNC Twin: runs a CNC program on a physical twin before it goes to the machine (controller in Fanuc/Haas/Siemens 840D/Heidenhain dialects, motion, cutting forces, chips, heat, coolant, wear, vibration, workholding, finish, inspection vs CAD) and says whether it is safe and why. Projects and runs in `data/cnc-twin`; headless CLI `apps/cnc-twin/bin/twin`; one simulation at a time |
 | ai | 5220 | Plint Chat: claude.ai-style app (Chat + Code tabs) that runs Claude Code on Plint, or on other computers via `plint-runner`, through silk-router; native `plint-chat.service` as `plint`; login code via ntfy; tool calls wait for Allow/Deny; chats in `data/plint-chat` |
 | ultron | 5230 | Ultron: a companion you talk to. celeris-1 (`CELERIS_API_KEY`) answers as Ultron (or Claude Haiku, `ULTRON_ANTHROPIC_API_KEY`, when MIND in the page's TUNE sheet says so), VoiceStudio (container `voicestudio` in the table stack, `COMPOSE_PROFILES=speech`, key `OMNIVOICE_API_KEY`) speaks each sentence with the clone profile `Ultron`; the browser does the listening (TALK keeps listening and, after a while, answers to his name). No login. He can see through the page's camera (EYES), keeps a graph of what he learns and a line or two of each talk (`data/ultron/memory.json`, MEMORY on the page), speaks first when you come in or go quiet (AWAKE), and with Haiku he can reach out (REACH in TUNE): look things up on the web, and on WEB + HOUSE leave a line on the phone (ntfy) or work the TV (`TV_IP`/`TV_KEY`) when asked. Talk, memory and the reference clip in `data/ultron` (test on a scratch copy with `apps/ultron/battery.js`, never on the live talk); VoiceStudio's models on the array (`/mnt/storage/plint/voicestudio`); voice upkeep with `scripts/ultron-voice.sh`. The fast voice is VoiceStudio on Filip's PC (RX 9070 XT, `ULTRON_PC_VOICE_URL`/`_KEY`, about 1 s a sentence), asked first; Plint's own CPU voice (about 20 s a sentence) is the fallback when the PC is off (apps/ultron/README.md) |
+| accrete | 5240 | Accrete: an incremental game, a star from dust (bodies orbit a core and feed it; three resets: ignition, collapse, bang; an end). The game runs and is saved in the browser only (Filip's choice: no save on Plint, PC and phone are separate games), so the container just hands out files. Every number is in `apps/accrete/public/js/data.js`; after changing one, let the bot play it (`node apps/accrete/test/bot.js --first`). The `?` in the page lists each hook with its evidence |
 | (none) | 4141 | silk-router: localhost-only LLM proxy on `SILK_API_KEY`; aliases auto-sonnet/haiku/opus; `apps/silk-router/silk-claude` runs Claude Code on it |
 | tv | `TV_IP`:7700 | the Mac on the TV (remote page + API), key-gated |
 
@@ -152,6 +155,9 @@ host network and proxies to `localhost:<port>`:
 - **CNC Twin**: `apps/cnc-twin/bin/twin run <project.yaml>` (headless) · `bin/twin check` · tests `apps/cnc-twin/bin/test`
   (each package in its own process, memory-capped via `bin/tsafe`; `--all` adds regression and validation). Run any
   heavy Python for it through `apps/cnc-twin/bin/tsafe` so a runaway job cannot push the box into swap.
+- **Accrete**: no state on the server. Rebuild after edits with `plint sync` (files are baked into the image). Checks:
+  `node apps/accrete/test/unit.js`, `test/rules.js`, `test/bot.js`; the browser checks in `test/page.js` run against
+  a scratch copy on its own port (its head says how).
 - **Notify Filip**: `plint notify "message"` (ntfy → phone). Use it when you finish
   something he asked for while away, or when something needs a decision.
 

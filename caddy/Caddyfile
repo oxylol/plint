@@ -197,6 +197,13 @@
 		reverse_proxy localhost:5200
 	}
 
+	@accrete host accrete.{$DOMAIN}
+	handle @accrete {
+		# Accrete (apps/accrete): an incremental game, a star from dust. Own look;
+		# the game runs and is saved in the browser, the container hands out files.
+		reverse_proxy localhost:5240
+	}
+
 	@ultron host ultron.{$DOMAIN}
 	handle @ultron {
 		# Ultron (apps/ultron): a companion you talk to. celeris-1 thinks,

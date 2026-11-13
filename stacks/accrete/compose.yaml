@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · accrete stack
+#  Accrete: an incremental game, a star from dust. Source in apps/accrete.
+#  The whole game runs in the browser and is saved there (Filip's choice:
+#  nothing is kept on Plint), so the container only hands out the files.
+# ─────────────────────────────────────────────────────────────
+name: accrete
+
+services:
+  accrete:
+    build: ../../apps/accrete
+    image: plint/accrete:local
+    container_name: accrete
+    restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
+    ports:
+      - "127.0.0.1:5240:5240"
+    environment:
+      TZ: ${TZ}
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 64m
+    networks:
+      - accrete
+
+networks:
+  accrete:
+    name: plint-accrete

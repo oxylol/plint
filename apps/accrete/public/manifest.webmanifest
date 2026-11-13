@@ -1,0 +1,11 @@
+{
+  "name": "Accrete",
+  "short_name": "Accrete",
+  "description": "A star from dust: an incremental game on Plint.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05060c",
+  "theme_color": "#05060c",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
