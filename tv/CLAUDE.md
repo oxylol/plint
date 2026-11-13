@@ -8,7 +8,7 @@ a `screen` session kept alive by `net.plint.tv.claude` (launchd). People talk to
 the Claude app, usually from the sofa: keep answers to a line or two, lead with the result.
 
 The server-side `CLAUDE.md` one level up describes Plint itself; it does not apply here
-except for the rules.
+except for *Before you build* (how to read what Filip asks for) and the rules.
 
 ## What's here
 

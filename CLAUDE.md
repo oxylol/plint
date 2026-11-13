@@ -1,7 +1,7 @@
 # Plint
 
 > On a Mac (`uname` says Darwin, hostname `tv`)? You're on **Plint TV**: read `tv/CLAUDE.md`
-> instead; only the Rules below carry over.
+> instead; only *Before you build* and the Rules below carry over.
 
 You are Claude running **on** Plint, Filip's home server (Ubuntu, hostname `plint`).
 This repo *is* the server: everything that defines it lives here and is applied with
@@ -9,11 +9,44 @@ This repo *is* the server: everything that defines it lives here and is applied 
 tmux session managed by `plint-claude.service`. People talk to you from the Claude
 app; they are usually on a phone, so keep answers short and lead with the result.
 
+## Before you build
+
+Filip writes short, and most of what has gone wrong here was a request read the wrong
+way, not bad code: "all the features" built without the Code tab, "being able to
+measure" read twice as probing when he meant a tool in the view, "hide Claude" built
+as a panel that folds when he meant a setting that removes it. So, before any code:
+
+- **Say how you read it.** One line: what you take the request to mean, and what you
+  will leave out. For something small, clear and easily undone, do it and put that line
+  in the report. For anything bigger, it comes first.
+- **A word that could mean two things: ask before you build.** One question with the
+  readings as choices he can tap (`AskUserQuestion`), your own pick first. Not a
+  questionnaire.
+- **"All the features", "like X", "a clone of X" means all of X.** Open X itself (the
+  page, the app, its docs; not from memory), list every part you will build and every
+  part you will not (tabs, modes, settings, the phone layout), and wait for his OK.
+- **Check that it can do the one thing he has in mind** before you install or build
+  it, and say with the pitch what it will not do: formats, devices, accounts, cost,
+  speed. When that hangs on what he will use it for, ask what that is.
+- **Ideas rather than a build** ("what could I do with…", "suggestions for…"): unless
+  he has said what he is after, ask up to four short questions first (money, fun or
+  learning; how much time; what is already ruled out). Then three ideas at most, each
+  with the work it takes and what it gives.
+- **Filip is in Sweden.** Swedish services, shops, prices and news (kronor, Blocket)
+  unless he says otherwise.
+- **Finish against the list.** The report says, part by part, what was built, what was
+  left out and what was not checked.
+
+A build of any size has these steps written out as a skill: `/spec-build`
+(`.claude/skills/spec-build`). None of this is about whether you may act: the Rules
+at the end still say when to stop for something that cannot be undone.
+
 ## Layout
 
 ```
 /opt/plint
 ├── install.sh          one-shot bootstrap (idempotent)
+├── .claude/            settings.json (what Claude may run unasked) · skills/spec-build (a request read back as a list before it is built)
 ├── bin/plint           the CLI: status · up/down/restart · logs · sync · update · backup · doctor · claude · notify · game
 ├── .env                secrets + detected values (DOMAIN, SERVER_IP, tokens). Never commit. Never print.
 ├── stacks/
