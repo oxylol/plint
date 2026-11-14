@@ -20,13 +20,16 @@ the close), `trades` or `off`.
 
 ## What happens once the Alpaca keys are in
 
-1. The first run fetches ten years of daily prices (about an hour at the free plan's pace) and picks each
-   month's universe. The index fund starts that evening.
+1. The first run fetches ten years of daily prices (46 minutes on 14 Nov 2026: 13,800 symbols at the free
+   plan's pace), drops the old tickers of renamed companies and picks each month's universe. The index fund
+   starts that evening. With `SEC_CONTACT` set it then reads ten years of filings (the quarterly insider
+   sets, then each company: about three quarters of an hour), and with the Anthropic key the agent has its
+   first evening.
 2. The first backtests start by themselves: walk-forward fits, history replayed, a report per model in
-   `data/stocks/reports/`. Several hours, at low priority. No model but the index trades before its report
-   is written.
+   `data/stocks/reports/`. Several hours, at low priority. No model but the index and the agent trades
+   before its report is written (the agent cannot be backtested).
 3. From the next evening every model with a report decides daily. The learned models are refitted at the
-   weekend.
+   weekend, and the agent then looks over its own record.
 
 The exam stretch (the last eighteen months, held back) is never run by itself:
 `docker exec stocks python -m stocks research --exam`, once, when the design is frozen.
