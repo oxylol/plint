@@ -41,8 +41,11 @@ the thinnest, read off the dollars traded in them), 1 basis point of slip, and t
 and with a Swedish broker's 0.25 % currency fee on every trade.
 
 **One holding rule** for every model that ranks stocks (`portfolio.TopK`): hold 40, each 1/40 of the book;
-keep a holding while it still ranks in the top fifth; change at most 8 names a day. The models differ in what
-they know, not in how their book was tuned.
+keep a holding while it still ranks in the top fifth, and for five days at most unless it is still one of the
+top 40; change at most 8 names a day. The models differ in what they know, not in how their book was tuned.
+(The five-day limit came from Filip on 2026-11-14, "the network should probably not hold for long", before
+any full backtest existed. Five days is what the ranking speaks about. The rule without the limit is kept in
+the backtest as a yardstick: the network's report has a table of the same fits at three paces.)
 
 ## How a model is judged
 
@@ -68,6 +71,7 @@ A few months of paper can show that a model is broken. It cannot show that it is
 |---|---|---|
 | **index** | buys SPY once, holds | the bar |
 | **net** | the neural network: ranks the universe, holds the top 40 | what was asked for |
+| **netfast** | the same network on its one-day view: holdings last a day or two | Filip: it may trade more often if that pays. This shows whether it does |
 | **trees** | LightGBM on the network's inputs | the usual winner on tables of figures: the rival |
 | **ridge** | a linear fit on the same inputs | the floor: what the network adds is what it has over this |
 | **blend** | average of the three rankings | an average is usually steadier than its parts |
@@ -160,14 +164,18 @@ Frozen now: the universe rule, the cost model, the holding rule, the 56 figures,
 network's shape and sizes, the fit schedule, every rule model's numbers, the ledger's lamp, the two stretches.
 
 A change after seeing design-stretch figures is allowed, once it is written down (`python -m stocks variant
-"what and why"`); the list is printed in every report. After the exam has been run, a change to a model
+"what and why"`); the list is printed in every report. The first entry is the five-day limit above: it was made
+after a trial of the machinery on a 150-stock sample had been looked at, so it is on the list, though it did
+not come from those figures. After the exam has been run, a change to a model
 starts its record over (`python -m stocks reset <model>`).
 
 ## What this cannot show
 
-- **Vanished companies.** Free data has little on shares that stopped trading. A stock that went to zero is
-  missing, so every stock picker's history is flattered a little. The index's is not. Live paper has no such
-  problem.
+- **Vanished companies.** Free data is patchy on shares that stopped trading. Companies bought out since 2020
+  and companies pushed off their exchange are in the table (found through Alpaca's corporate-action list and
+  its over-the-counter symbols); many that left before 2020 are not, so the early years of every stock picker's
+  history are flattered a little. The index's are not. A holding that collapses and then stops trading is
+  written off; one that simply stops is cashed in at its last price. Live paper has no such problem.
 - **The auction.** Fills use the first price of the day on the tape. A real order at the open gets the
   auction's price: near it, not equal.
 - **Size.** At $10,000 a book the orders move nothing. The cost model has a term for larger books; it is a

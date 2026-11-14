@@ -17,10 +17,10 @@ import pyarrow.parquet as pq
 
 from .alpaca import Alpaca, AlpacaError
 from .bars import COLS, BarStore, d2s, tidy
+from .universe import TICKER
 
 log = logging.getLogger("stocks.ingest")
 LONG_GAP_DAYS = 45
-TICKER = re.compile(r"^[A-Z]{1,5}(\.[A-TVX-Z])?$")        # a share class after the dot; .U .W .R are units, warrants, rights
 PAPER = re.compile(r"^[A-Z]{4}[WURYFQ]$")          # a fifth letter: warrants, units, rights, foreign and bankrupt paper
 
 def _frame(pairs) -> pd.DataFrame:

@@ -3,9 +3,10 @@
 What is planted, so tests can ask whether the machinery finds it:
 - reversal: a stock's own move over the last 5 days is partly given back over the next days
 - momentum: a slow drift in the direction of its last 120 days
-- one stock splits 2-for-1 (S003), one pays a dividend (S004), one is halted for a week (S005), one lists
-  late (S006), one stops trading for good (S007)
-SPY is the common factor, BIL creeps up like a Treasury bill."""
+- stock 3 splits 2-for-1, stock 4 pays a dividend, stock 5 is halted for a week, stock 6 lists late, stock 7
+  stops trading for good
+Stocks are named like tickers, letters only: sym(3) is "SAAD". SPY is the common factor, BIL creeps up like
+a Treasury bill."""
 from __future__ import annotations
 
 from datetime import date
@@ -14,6 +15,11 @@ import numpy as np
 import pandas as pd
 
 from stocks.cal import trading_days
+
+
+def sym(j: int) -> str:
+    """The j-th invented stock's ticker: S, then its number spelled in letters (0 = A ... 9 = J)."""
+    return "S" + "".join("ABCDEFGHIJ"[int(c)] for c in f"{int(j):03d}")
 
 
 def market(n_stocks: int = 120, n_days: int = 700, seed: int = 0, reversal: float = 0.06, momentum: float = 0.0004,
@@ -39,25 +45,25 @@ def market(n_stocks: int = 120, n_days: int = 700, seed: int = 0, reversal: floa
     price0 = rng.uniform(15, 300, N)
     base_volume = np.exp(rng.normal(15.0, 1.0, N))                  # shares a day
     rows = []
-    syms = [f"S{j:03d}" for j in range(N)]
+    syms = [sym(j) for j in range(N)]
     for j, s in enumerate(syms):
         c_prev, first, last = price0[j], 0, T
-        if s == "S006":
+        if j == 6:
             first = 260
-        if s == "S007":
+        if j == 7:
             last = T - 150
         for t in range(first, last):
-            if s == "S005" and 300 <= t < 305:
+            if j == 5 and 300 <= t < 305:
                 continue                                           # halted: no bar
-            split = 2.0 if (s == "S003" and t == 400) else 1.0
+            split = 2.0 if (j == 3 and t == 400) else 1.0
             o = c_prev * np.exp(lov[t, j]) / split
-            if s == "S004" and t == 410:
+            if j == 4 and t == 410:
                 o -= 0.02 * c_prev                                  # goes ex-dividend: 2 % paid out
             c = o * np.exp(lit[t, j])
             ret = np.exp(lr[t, j]) - 1.0 if t > first else np.nan
             hi = max(o, c) * (1 + abs(rng.normal(0, 0.004)))
             lo = min(o, c) * (1 - abs(rng.normal(0, 0.004)))
-            v = base_volume[j] * split ** (t >= 400 and s == "S003") * np.exp(rng.normal(0, 0.35)) * (1 + 6 * abs(lr[t, j]))
+            v = base_volume[j] * (2.0 if (j == 3 and t >= 400) else 1.0) * np.exp(rng.normal(0, 0.35)) * (1 + 6 * abs(lr[t, j]))
             rows.append((d_int[t], s, o, hi, lo, c, v, (hi + lo + c) / 3, max(1, int(v / 180)), ret))
             c_prev = c
     for s, series, px in (("SPY", mkt, 270.0), ("BIL", np.full(T, 0.00015), 91.5)):

@@ -109,6 +109,8 @@ class EndToEnd(unittest.TestCase):
         pace = (self.tmp / "data" / "reports" / "netfast.md").read_text()
         self.assertIn("Does trading more often pay?", pace)
         self.assertIn("| Network, fast |", pace)
+        self.assertIn("| Network, slow |", pace)                     # the old holding rule, as a yardstick only
+        self.assertFalse((self.tmp / "data" / "reports" / "netslow.json").exists())
 
     def test_the_fast_network_trades_on_the_one_day_view_and_turns_over_more(self):
         slow, fast = self.detail("net"), self.detail("netfast")

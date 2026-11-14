@@ -29,7 +29,7 @@ class Ingest(unittest.TestCase):
         cls.frame = synth.market(12, 460, seed=2)
         cls.days = np.sort(cls.frame.loc[cls.frame["sym"] == "SPY", "d"].unique())
         cls.syms = sorted(cls.frame["sym"].unique())
-        cls.split_day = int(cls.days[400])          # S003 splits 2-for-1 here
+        cls.split_day = int(cls.days[400])          # SAAD splits 2-for-1 here
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="stocks-ingest-"))
@@ -44,30 +44,30 @@ class Ingest(unittest.TestCase):
 
     def test_return_comes_from_the_adjusted_series_and_prices_stay_raw(self):
         api = FakeAlpaca(self.frame, int(self.days[-1]))
-        df = ingest.pull(api, ["S003", "S004"], d2s(self.days[380]), d2s(self.days[420]))
-        row = df[(df["sym"] == "S003") & (df["d"] == self.split_day)].iloc[0]
-        self.assertAlmostEqual(row["ret"], self.truth("S003", self.split_day), places=5)   # the split is not in the return
+        df = ingest.pull(api, ["SAAD", "SAAE"], d2s(self.days[380]), d2s(self.days[420]))
+        row = df[(df["sym"] == "SAAD") & (df["d"] == self.split_day)].iloc[0]
+        self.assertAlmostEqual(row["ret"], self.truth("SAAD", self.split_day), places=5)   # the split is not in the return
         self.assertLess(row["raw_move"], -0.4)                                             # but it is in the raw price
-        div = df[(df["sym"] == "S004") & (df["d"] == int(self.days[410]))].iloc[0]
-        self.assertAlmostEqual(div["ret"], self.truth("S004", int(self.days[410])), places=5)
-        self.assertTrue(np.isnan(df[df["sym"] == "S003"].iloc[0]["ret"]))                  # no previous close in the pull
+        div = df[(df["sym"] == "SAAE") & (df["d"] == int(self.days[410]))].iloc[0]
+        self.assertAlmostEqual(div["ret"], self.truth("SAAE", int(self.days[410])), places=5)
+        self.assertTrue(np.isnan(df[df["sym"] == "SAAD"].iloc[0]["ret"]))                  # no previous close in the pull
 
     def test_a_split_alpaca_has_not_adjusted_yet_is_fixed_from_the_action_list(self):
         api = FakeAlpaca(self.frame, self.split_day)
-        api.late_splits.add(("S003", self.split_day))
-        raw = ingest.pull(api, ["S003"], d2s(self.days[390]), d2s(self.split_day))
+        api.late_splits.add(("SAAD", self.split_day))
+        raw = ingest.pull(api, ["SAAD"], d2s(self.days[390]), d2s(self.split_day))
         self.assertLess(raw.iloc[-1]["ret"], -0.4)                 # as Alpaca would serve it that evening: a fake crash
         self.assertEqual(len(ingest.split_suspects(raw)), 1)
-        api.splits[("S003", self.split_day)] = (2.0, 1.0)
+        api.splits[("SAAD", self.split_day)] = (2.0, 1.0)
         notes = []
         fixed = ingest.apply_splits(api, raw, notes.append)
-        self.assertAlmostEqual(fixed.iloc[-1]["ret"], self.truth("S003", self.split_day), places=4)
+        self.assertAlmostEqual(fixed.iloc[-1]["ret"], self.truth("SAAD", self.split_day), places=4)
         self.assertEqual(len(notes), 1)
 
     def test_a_halving_with_no_split_on_record_stays_a_loss(self):
         api = FakeAlpaca(self.frame, self.split_day)
-        api.late_splits.add(("S003", self.split_day))             # looks like a split, but the action list is empty
-        raw = ingest.pull(api, ["S003"], d2s(self.days[390]), d2s(self.split_day))
+        api.late_splits.add(("SAAD", self.split_day))             # looks like a split, but the action list is empty
+        raw = ingest.pull(api, ["SAAD"], d2s(self.days[390]), d2s(self.split_day))
         kept = ingest.apply_splits(api, raw, lambda t: None)
         self.assertLess(kept.iloc[-1]["ret"], -0.4)
 
@@ -79,27 +79,27 @@ class Ingest(unittest.TestCase):
         self.assertEqual(sorted(self.store.years()), sorted({int(d) // 10000 for d in self.days[:400]}))
         # the split evening: Alpaca is late, nothing on record → the table holds the fake crash
         api.today = self.split_day
-        api.late_splits.add(("S003", self.split_day))
+        api.late_splits.add(("SAAD", self.split_day))
         notes = []
         got = ingest.update(api, self.store, self.syms, as_date(self.split_day), note=notes.append)
         self.assertEqual(got["after"], self.split_day)
-        stored = self.store.read(self.split_day, self.split_day, ["S003"]).iloc[0]
+        stored = self.store.read(self.split_day, self.split_day, ["SAAD"]).iloc[0]
         self.assertLess(stored["ret"], -0.4)
         # the next evening the adjustment has arrived: the row is corrected and the correction is said out loud
         api.today = int(self.days[401])
         api.late_splits.clear()
         notes.clear()
         got = ingest.update(api, self.store, self.syms, as_date(int(self.days[401])), note=notes.append)
-        fixed = self.store.read(self.split_day, self.split_day, ["S003"]).iloc[0]
-        self.assertAlmostEqual(fixed["ret"], self.truth("S003", self.split_day), places=4)
-        self.assertTrue(any("S003" in c["sym"] for c in got["corrections"]))
-        self.assertTrue(any("data corrected: S003" in t for t in notes))
+        fixed = self.store.read(self.split_day, self.split_day, ["SAAD"]).iloc[0]
+        self.assertAlmostEqual(fixed["ret"], self.truth("SAAD", self.split_day), places=4)
+        self.assertTrue(any("SAAD" in c["sym"] for c in got["corrections"]))
+        self.assertTrue(any("data corrected: SAAD" in t for t in notes))
         # old rows keep their returns although each pull's first row has none
-        all_rows = self.store.read(None, None, ["S010"]).sort_values("d")
+        all_rows = self.store.read(None, None, ["SABA"]).sort_values("d")
         self.assertEqual(int(all_rows["ret"].isna().sum()), 1)     # only its very first bar
         self.assertEqual(len(all_rows), 402)
         self.assertAlmostEqual(float(all_rows.iloc[250]["c"]),
-                               float(self.frame[(self.frame["sym"] == "S010") & (self.frame["d"] == int(self.days[250]))].iloc[0]["c"]), places=3)
+                               float(self.frame[(self.frame["sym"] == "SABA") & (self.frame["d"] == int(self.days[250]))].iloc[0]["c"]), places=3)
 
     def test_a_history_fetch_stopped_halfway_picks_up_where_it_was(self):
         api = FakeAlpaca(self.frame, int(self.days[200]))
@@ -126,12 +126,12 @@ class Ingest(unittest.TestCase):
         self.assertEqual(api.calls, (chunks - 2) * 2)                         # the two finished handfuls were not fetched again
         self.assertFalse((self.store.dir / "staging").exists())
         self.assertEqual(self.store.last_day("SPY"), int(self.days[200]))
-        self.assertEqual(len(self.store.read(None, None, ["S001"])), 201)
+        self.assertEqual(len(self.store.read(None, None, ["SAAB"])), 201)
 
     def test_reading_filters_by_day_and_symbol(self):
         api = FakeAlpaca(self.frame, int(self.days[100]))
         ingest.backfill(api, self.store, self.syms, d2s(self.days[0]), d2s(self.days[100]))
-        df = self.store.read(int(self.days[10]), int(self.days[19]), ["S001", "SPY"], ["c"])
+        df = self.store.read(int(self.days[10]), int(self.days[19]), ["SAAB", "SPY"], ["c"])
         self.assertEqual(len(df), 20)
         self.assertEqual(list(df.columns), ["c"])
         self.assertEqual(list(self.store.days("SPY"))[:3], [int(d) for d in self.days[:3]])

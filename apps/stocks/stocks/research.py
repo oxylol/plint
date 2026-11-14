@@ -21,8 +21,10 @@ from .ledger import nw_t, table_ic
 from .metrics import clean
 from .models import Env, ScoreModel, build
 from .models.events import EventModel
+from .models.learned import Net
 from .panel import Panel
 from .pipeline import Lab
+from .portfolio import TopK
 from .util import quiet
 
 log = logging.getLogger("stocks.research")
@@ -147,6 +149,17 @@ def _report(o: backtest.Outcome, days: np.ndarray, t0: int, t1: int, cfg, sens: 
 LEARNED = {"ridge", "trees", "net", "netfast", "blend"}
 
 
+class NetSlow(Net):
+    """The network under the holding rule it was first given: a holding stays for as long as it ranks in the
+    top fifth. Backtest only, for the table that asks whether trading more often pays."""
+    id, title = "netslow", "Network, slow"
+    top = TopK(k=40, hold_frac=0.20, max_new=8, every="day")
+
+
+PACES = (("netslow", "as long as it ranks in the top fifth"), ("net", "five days at most, unless still a top pick"),
+         ("netfast", "a day or two, on its one-day view"))
+
+
 def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str, ...] = ()) -> dict:
     """The design stretch (default) or the exam. Writes reports/<id>.json and .md; returns a short summary.
     `only` limits it to some models (the index always comes along, as the bar); without a learned model
@@ -192,6 +205,9 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
 
     say("replaying history")
     models = [m for m in build(cfg.models) if (not only or m.id in only or m.id == "index") and (fitted or m.id not in LEARNED)]
+    if "net" in env.scores:
+        env.scores["netslow"] = env.scores["net"]
+        models.append(NetSlow())
     gone = frozenset(lab.assets.gone())
     out = backtest.run(panel, models, env, t0, t1, cfg.start_cash, cfg.slip_bps, cfg.impact_coef, bought_out=gone)
     backtest.score(panel, out, "index", cfg.cash_symbol, t0, t1)
@@ -208,7 +224,7 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
         if name in out and 5 in out[name].ic:
             label = {"ridge": "straight line", "trees": "boosted trees", "net": "network, reading the whole day", "blend": "blend"}[name]
             ladder.append((label, out[name].ic[5]["ic"], out[name].ic[5]["t"]))
-    pace = [(out[n].model.title, out[n].stats, sens[n]) for n in ("net", "netfast") if n in out]
+    pace = [(out[n].model.title, how, out[n].stats, sens[n]) for n, how in PACES if n in out]
     fwd20 = dataset.relative(dataset.forward(panel, 20), panel.member)
     with quiet():                                    # what holding every stock in the universe equally would have made
         each_day = np.nanmean(np.where(panel.member, panel.ret, np.nan), axis=1)[t0 + 1:t1 + 1]
@@ -218,6 +234,8 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
 
     summary = []
     for mid, o in out.items():
+        if mid == "netslow":                        # a yardstick for the pace table, not a contestant
+            continue
         m, s = o.model, o.stats
         waiting = m.waiting() if not isinstance(m, ScoreModel) else ""
         if waiting:                                 # an event model without its filings has nothing to report
@@ -231,11 +249,12 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
                  "ic": main.get("ic") if main else (ev["mean"] if ev else None),
                  "ic_t": main.get("t") if main else (ev["t"] if ev else None)}
         text = _report(o, days, t0, t1, cfg, sens[mid], ladder, ev, variants, exam_runs, "the exam" if exam else "backtest", basket)
-        if mid in ("net", "netfast") and len(pace) == 2:
-            text += "\n## Does trading more often pay?\n\nThe same fitted network at two paces, after costs.\n\n" \
-                    "| | against the index, a year | turnover (times the book a year) | costs a year | with costs doubled |\n|---|---|---|---|---|\n" \
-                    + "".join(f"| {title} | {_pct(st['vs_index_ann'])} | {_num(st['turnover'], 1)} | {_share(st['cost_drag'])} | {_pct(se.get(2))} |\n"
-                              for title, st, se in pace)
+        if mid in ("net", "netfast") and len(pace) > 1:
+            text += "\n## Does trading more often pay?\n\nThe same fitted network at each pace, after costs.\n\n" \
+                    "| | a holding stays | against the index, a year | turnover (times the book a year) | costs a year | with costs doubled |\n" \
+                    "|---|---|---|---|---|---|\n" \
+                    + "".join(f"| {title} | {how} | {_pct(st['vs_index_ann'])} | {_num(st['turnover'], 1)} | {_share(st['cost_drag'])} | {_pct(se.get(2))} |\n"
+                              for title, how, st, se in pace)
         rep = store.read_json(f"reports/{mid}.json") or {}
         path = Path(store.dir) / "reports" / f"{mid}.md"
         if exam:

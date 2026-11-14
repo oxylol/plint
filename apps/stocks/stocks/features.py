@@ -19,6 +19,7 @@ from .panel import Panel
 from .util import quiet
 
 LOOKBACK = 320          # rows a figure may reach back (the longest: a 21-day window a year ago), with room
+DAY_FLOOR, DAY_CAP = -0.60, 1.50
 _REG: list[tuple[str, Callable]] = []
 
 
@@ -68,11 +69,14 @@ class Base:
     def __init__(self, p: Panel, index_symbol: str):
         self.p = p
         self.valid = np.isfinite(p.c)
-        self.r = p.ret
         with quiet():
-            self.lr = np.log1p(np.clip(p.ret, -0.95, None))
-            self.lov = np.log1p(np.clip(p.ovn, -0.95, None))
-            self.lit = np.log1p(np.clip(p.intr, -0.95, None))
+            # A day beyond -60 % or +150 % is read as that much and no more. Such days are real news now and then,
+            # and now and then a re-issue of shares the adjusted prices missed; either way one day should not
+            # decide a year's momentum. The book and the outcomes are never clipped: they take prices as they are.
+            self.r = np.clip(p.ret, DAY_FLOOR, DAY_CAP)
+            self.lr = np.log1p(self.r)
+            self.lov = np.log1p(np.clip(p.ovn, DAY_FLOOR, DAY_CAP))
+            self.lit = np.log1p(np.clip(p.intr, DAY_FLOOR, DAY_CAP))
             # a total-return price line: only ratios of it are ever used, so its starting level is free
             line = np.exp(np.cumsum(np.nan_to_num(self.lr), axis=0, dtype=np.float64))
             line[~np.maximum.accumulate(self.valid, axis=0)] = np.nan

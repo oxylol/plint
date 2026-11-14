@@ -100,12 +100,20 @@ class HoldingRule(unittest.TestCase):
 
     def test_held_too_long_and_grown_too_big(self):
         top = TopK(k=10, hold_frac=0.5, max_new=3, max_hold=7)
-        orders = top.orders(self.ranked, view({"S001": (0.1, 6), "S002": (0.25, 2), "S003": (0.1, 1)}))
+        orders = top.orders(self.ranked, view({"S015": (0.1, 6), "S001": (0.1, 9), "S002": (0.25, 2), "S003": (0.1, 1)}))
         by = {o.symbol: o for o in orders}
-        self.assertEqual(by["S001"].weight, 0.0)
-        self.assertIn("held 7 days", by["S001"].why)
+        self.assertEqual(by["S015"].weight, 0.0)                      # seven sessions, and ranked 16th of a book of 10
+        self.assertIn("held 7 days", by["S015"].why)
+        self.assertNotIn("S001", by)                                  # held longer still, but ranked 2nd: it stays
         self.assertAlmostEqual(by["S002"].weight, 0.1)                # cut back to its share
         self.assertNotIn("S003", by)
+
+    def test_a_book_bought_on_one_day_does_not_leave_on_one_day(self):
+        top = TopK(k=10, hold_frac=0.5, max_new=2, max_hold=5)
+        held = {f"S{i:03d}": (0.1, 4) for i in range(20, 30)}         # ten names, all five sessions old, none a top pick now
+        orders = top.orders(self.ranked, view(held))
+        self.assertEqual([o.symbol for o in orders if o.weight == 0], ["S029", "S028"])     # the two worst go; the rest wait their turn
+        self.assertEqual([o.symbol for o in orders if o.weight > 0], ["S000", "S001"])      # and the book stays full
 
     def test_monthly_models_wait_for_the_month(self):
         top = TopK(every="month")
@@ -154,19 +162,19 @@ class Ledger(unittest.TestCase):
             store = Store(tmp)
             p = synth.panel(20, 200, seed=4)
             day = f"{p.days[150] // 10000}-{p.days[150] // 100 % 100:02d}-{p.days[150] % 100:02d}"
-            store.save_signal(Signal("agent", day, "S001", 5, 0.62, "up"))
-            store.save_signal(Signal("agent", day, "S002", 5, 0.40, "down"))
+            store.save_signal(Signal("agent", day, "SAAB", 5, 0.62, "up"))
+            store.save_signal(Signal("agent", day, "SAAC", 5, 0.40, "down"))
             late = f"{p.days[198] // 10000}-{p.days[198] // 100 % 100:02d}-{p.days[198] % 100:02d}"
-            store.save_signal(Signal("agent", late, "S003", 5, 0.6, "too new"))
+            store.save_signal(Signal("agent", late, "SAAD", 5, 0.6, "too new"))
             self.assertEqual(ledger.settle_signals(store, p, "SPY"), 2)
             got = {s["symbol"]: s for s in store.signals("agent")}
             fwd = dataset.forward(p, 5)
-            want = float(fwd[150, p.ix["S001"]] - fwd[150, p.ix["SPY"]])
-            self.assertAlmostEqual(got["S001"]["excess"], want, places=6)
-            self.assertIsNone(got["S003"]["excess"])
+            want = float(fwd[150, p.ix["SAAB"]] - fwd[150, p.ix["SPY"]])
+            self.assertAlmostEqual(got["SAAB"]["excess"], want, places=6)
+            self.assertIsNone(got["SAAD"]["excess"])
             self.assertEqual(len(store.open_signals()), 1)
             v = ledger.signal_verdict(store.signals("agent", settled=True), 5)
-            sign = (got["S001"]["excess"] - got["S002"]["excess"]) / 2          # the call against counts with its sign turned
+            sign = (got["SAAB"]["excess"] - got["SAAC"]["excess"]) / 2          # the call against counts with its sign turned
             self.assertAlmostEqual(v["ic"], round(sign, 4), places=4)
             self.assertEqual(v["n"], 1)
             self.assertEqual(ledger.brier(store.signals("agent"), 5)[1], 2)

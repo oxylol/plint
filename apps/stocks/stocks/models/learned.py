@@ -18,7 +18,10 @@ class Learned(ScoreModel):
     kind = "learned"
     algo = ""
     head = MAIN                 # which of the network's horizons it trades on (the others have only the 5-day one)
-    top = TopK(k=40, hold_frac=0.20, max_new=8, every="day")
+    # Five days is what the ranking speaks about, so five days is how long a holding stays unless it is still a
+    # top pick. (Filip, 2026-11-14: "the network should probably not hold for long". The same rule goes for the
+    # trees, the line and the blend, so the four still differ only in what they learned.)
+    top = TopK(k=40, hold_frac=0.20, max_new=8, every="day", max_hold=5)
     horizon = 5
 
     def score_table(self) -> np.ndarray:
@@ -56,7 +59,7 @@ class Trees(Learned):
 
 class Net(Learned):
     id, title, algo = "net", "Neural network", "net"
-    what = "A network trained on ten years of daily prices ranks 1,000 stocks each evening and holds the top 40."
+    what = "A network trained on ten years of daily prices ranks 1,000 stocks each evening and holds the top 40, a week at most each."
 
 
 class NetFast(Learned):
@@ -64,16 +67,16 @@ class NetFast(Learned):
     more often if that is more profitable". Whether it is, is for the backtest and the paper record to say:
     a one-day view is sharper and decays in a day, so this book turns over many times faster and pays for it."""
     id, title, algo = "netfast", "Network, fast", "net"
-    what = "The same network trading on its one-day view: up to twenty names change a day. Here to see whether trading more often pays after costs."
+    what = "The same network trading on its one-day view: holdings last a day or two. Here to see whether trading more often pays after costs."
     head = 0
     horizon = 1
-    top = TopK(k=40, hold_frac=0.08, max_new=20, every="day")
+    top = TopK(k=40, hold_frac=0.08, max_new=20, every="day", max_hold=2)
 
 
 class Blend(ScoreModel):
     id, title, kind = "blend", "Blend", "learned"
     what = "The average of the three learned rankings: often steadier than any one of them."
-    top = TopK(k=40, hold_frac=0.20, max_new=8, every="day")
+    top = Learned.top
     horizon = 5
     PARTS = ("ridge", "trees", "net")
 

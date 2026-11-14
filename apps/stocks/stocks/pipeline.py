@@ -66,6 +66,13 @@ class Lab:
     def instruments(self) -> list[str]:
         return [self.cfg.index_symbol, self.cfg.cash_symbol]
 
+    def thin(self, syms: list[str]) -> list[str]:
+        """All of them, or (a trial run) an even sample plus the two instruments."""
+        n = self.cfg.symbol_limit
+        if not n or len(syms) <= n:
+            return syms
+        return sorted(set(syms[:: max(1, len(syms) // n)]) | set(self.instruments()))
+
     def have_history(self) -> bool:
         """The long history is in (the flag is set when the backfill has finished, not while it runs)."""
         return bool(self.store.get("history_done")) and bool(self.bars.years())
@@ -115,7 +122,7 @@ def refresh_assets(lab: Lab, force: bool = False) -> None:
 
 def backfill(lab: Lab, today: date) -> None:
     """The long history, once. Takes about an hour on the free plan's rate."""
-    syms = sorted(set(lab.assets.common()) | set(lab.instruments()))
+    syms = lab.thin(sorted(set(lab.assets.common()) | set(lab.instruments())))
     lab.say(f"fetching history from {lab.cfg.history_start} for {len(syms)} symbols")
 
     def progress(done: int, total: int, rows: int) -> None:
@@ -130,7 +137,7 @@ def backfill(lab: Lab, today: date) -> None:
 
 def update_prices(lab: Lab, today: date, held: set[str]) -> dict:
     lab.doing("fetching today's prices")
-    syms = sorted(set(lab.assets.common(active_only=True)) | set(lab.instruments()) | held)
+    syms = sorted(set(lab.thin(sorted(set(lab.assets.common(active_only=True)) | set(lab.instruments())))) | held)
     return ingest.update(lab.api, lab.bars, syms, today, note=lambda t: lab.say(t, "warn"))
 
 

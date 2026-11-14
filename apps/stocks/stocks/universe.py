@@ -20,6 +20,10 @@ from .util import quiet
 
 EXCHANGES = {"NYSE", "NASDAQ", "AMEX"}          # ARCA and BATS list funds, not companies
 FALLEN = "OTC"
+# what a share's ticker looks like: letters, and perhaps a class after a dot. Anything else in the asset list is
+# a CUSIP standing in for a ticker, a contingent right, a preferred series, a warrant or a unit.
+TICKER = re.compile(r"^[A-Z]{1,5}(\.[A-TVX-Z])?$")
+GONE_TAG = "_DELISTED"                          # how the list marks a ticker whose company has left
 WINDOW, MIN_BARS = 63, 40
 
 # A fund, a note or a piece of paper on top of a share, by its listed name. Not perfect; what slips through
@@ -78,9 +82,17 @@ class Assets:
             return {}
 
     def save(self, assets: list[dict]) -> pd.DataFrame:
-        df = pd.DataFrame([{"sym": a["symbol"], "name": a.get("name") or "", "exchange": a.get("exchange") or "",
-                            "active": a.get("status") == "active", "tradable": bool(a.get("tradable"))}
-                           for a in assets if a.get("symbol")]).drop_duplicates("sym", keep="first")
+        rows = []
+        for a in assets:
+            sym = a.get("symbol") or ""
+            tagged = sym.endswith(GONE_TAG)
+            sym = sym[: -len(GONE_TAG)] if tagged else sym
+            if TICKER.match(sym):
+                rows.append({"sym": sym, "name": a.get("name") or "", "exchange": a.get("exchange") or "",
+                             "active": a.get("status") == "active", "tradable": bool(a.get("tradable")), "_tagged": tagged})
+        # a ticker listed twice: the live one wins over the one tagged as gone (the price table is by ticker either way)
+        df = pd.DataFrame(rows).sort_values(["_tagged", "active"], ascending=[True, False], kind="stable") \
+            .drop_duplicates("sym", keep="first").drop(columns="_tagged").sort_values("sym").reset_index(drop=True)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(self.path, index=False)
         self._df = None
@@ -209,6 +221,8 @@ class Universe:
         for y in sorted({int(d) // 10000 for d in days}):
             df = store.read(y * 10000 + 101, y * 10000 + 1231, None, ["d", "sym", "c", "v", "vw"])
             df = df[df["sym"].isin(sym_ix) & df["d"].isin(day_ix)]
+            if df.empty:
+                continue
             ti = df["d"].map(day_ix).to_numpy()
             ni = df["sym"].map(sym_ix).to_numpy()
             dv[ti, ni] = (df["vw"].where(df["vw"] > 0, df["c"]) * df["v"]).to_numpy(dtype=np.float32)

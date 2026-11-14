@@ -70,6 +70,7 @@ class Config:
     agent_searches: int       # most web searches per day
     agent_effort: str
     fast: bool                # tests only: one seed, three epochs, no ablations
+    symbol_limit: int         # tests only: fetch about this many symbols instead of all (0 = all)
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -102,6 +103,7 @@ class Config:
             agent_searches=_i("STK_AGENT_SEARCHES", 30),
             agent_effort=_s("STK_AGENT_EFFORT", "high"),
             fast=_b("STK_FAST", False),
+            symbol_limit=_i("STK_SYMBOL_LIMIT", 0),
         )
 
     # what is switched on

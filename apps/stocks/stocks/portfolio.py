@@ -2,8 +2,9 @@
 
 One rule for every model that ranks stocks, declared before any data was seen (DESIGN.md), so the models
 differ in what they know and not in how cleverly their book was tuned. A holding stays while it still
-ranks well (`hold_frac` is much looser than the entry bar: that gap is what keeps turnover, and so costs,
-down); at most `max_new` names change per decision; a new name gets 1/K of the book."""
+ranks well (`hold_frac` is looser than the entry bar: that gap keeps turnover, and so costs, down) and for
+`max_hold` days at most unless it is still one of the top K; at most `max_new` names change per decision;
+a new name gets 1/K of the book."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,7 +18,7 @@ class TopK:
     hold_frac: float = 0.20       # a holding is kept while it ranks in this top share of the day's stocks
     max_new: int = 8              # names swapped per decision (the first fill of an empty book is exempt)
     every: str = "day"            # "day" | "week" | "month": decide on the first trading day of each
-    max_hold: int | None = None   # trading days after which a holding is sold whatever its rank
+    max_hold: int | None = None   # trading days after which a holding is sold, unless it is still in the top K
     trim_at: float = 2.0          # a holding grown past this many times its share is cut back to its share
 
     def due(self, day: int, prev_day: int | None, empty: bool) -> bool:
@@ -35,18 +36,18 @@ class TopK:
         held = view.holdings
         share = 1.0 / self.k
         empty = not held
-        forced, weak = [], []
+        must, tired = [], []
         for s, h in held.items():
             r = rank.get(s)
             if r is None:
-                forced.append((s, "no longer ranked (left the universe or did not trade)"))
-            elif self.max_hold is not None and h.days + 1 >= self.max_hold:      # sessions held, today's included
-                forced.append((s, f"held {h.days + 1} days"))
+                must.append((s, "no longer ranked (left the universe or did not trade)"))
+            elif self.max_hold is not None and h.days + 1 >= self.max_hold and r > self.k:
+                tired.append((r, s, f"held {h.days + 1} days and no longer a top pick"))    # sessions held, today's included
             elif r > hold_rank:
-                weak.append((r, s))
-        weak.sort(reverse=True)                                     # worst first
-        room = max(0, self.max_new - len(forced))
-        out = forced + [(s, f"fell to rank {r} of {n}") for r, s in weak[:room]]
+                tired.append((r, s, f"fell to rank {r} of {n}"))
+        tired.sort(reverse=True)                                    # worst rank first
+        room = max(0, self.max_new - len(must))                     # a whole book bought on one day does not leave on one day
+        out = must + [(s, why) for _, s, why in tired[:room]]
         orders = [Order(s, 0.0, why) for s, why in out]
         gone = {s for s, _ in out}
         kept = [s for s in held if s not in gone]
