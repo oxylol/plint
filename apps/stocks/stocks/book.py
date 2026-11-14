@@ -82,6 +82,7 @@ class Book:
     costs: float = 0.0
     notes: list[str] = field(default_factory=list)
     bought_out: frozenset = frozenset()     # companies known to have been taken over: their last price was the deal
+    renamed: dict = field(default_factory=dict)    # old ticker -> new, for a company that changed its ticker
 
     def equity(self) -> float:
         return self.cash + sum(p.value for p in self.pos.values())
@@ -116,6 +117,19 @@ class Book:
         for s, p in list(self.pos.items()):
             j = panel.ix.get(s)
             has_bar = j is not None and np.isfinite(panel.c[t, j]) and panel.o[t, j] > 0
+            now = self.renamed.get(s)
+            k = panel.ix.get(now) if now and not has_bar else None
+            if k is not None and np.isfinite(panel.c[t, k]) and panel.o[t, k] > 0:
+                # the company trades on under a new ticker: the holding goes with it, nothing is bought or sold
+                del self.pos[s]
+                if now in self.pos:
+                    held = self.pos[now]
+                    held.value, held.basis = held.value + p.value, held.basis + p.basis
+                    p = held
+                else:
+                    self.pos[now] = p
+                self.notes.append(f"{s} is now {now}: the holding carries over ({_iso(d)})")
+                s, j, has_bar = now, k, True
             if not has_bar:
                 p.stale += 1
                 p.days += 1
@@ -226,10 +240,10 @@ class Record:
 
 
 def replay(panel: Panel, orders_by_day: dict[int, list[Order]], start_cash: float, costs: Costs,
-           first_day: int, bought_out: frozenset = frozenset()) -> Record:
+           first_day: int, bought_out: frozenset = frozenset(), renamed: dict | None = None) -> Record:
     """A book from decisions already made. `orders_by_day[d]` was decided at the close of day d and is
     filled at the next trading day's open. The record starts at the close of `first_day` (all cash)."""
-    book, rec = Book(start_cash, bought_out=bought_out), Record()
+    book, rec = Book(start_cash, bought_out=bought_out, renamed=dict(renamed or {})), Record()
     t0 = panel.t_of(first_day)
     rec.mark(panel.days[t0], book, [])
     for t in range(t0 + 1, panel.T):

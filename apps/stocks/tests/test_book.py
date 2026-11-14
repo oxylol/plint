@@ -57,6 +57,28 @@ class BookArithmetic(unittest.TestCase):
         b.step(p, 2, [], Flat())
         self.assertAlmostEqual(b.pos["A"].value / before, 1.01, places=5)
 
+    def test_a_holding_follows_its_company_to_a_new_ticker(self):
+        # OLD trades on days 0-2 and is NEW from day 3: NEW's bars are the company's whole history, as Alpaca gives them
+        old = [(DAYS[0], 100, 100, np.nan), (DAYS[1], 100, 100, 0.0), (DAYS[2], 100, 102, 0.02)]
+        new = old + [(DAYS[3], 103, 104, 104 / 102 - 1), (DAYS[4], 104, 105, 105 / 104 - 1)]
+        p = panel({"SPY": SPY, "OLD": old, "NEW": new})
+        b = Book(10_000.0, renamed={"OLD": "NEW"})
+        b.step(p, 1, [Order("OLD", 0.5, "")], Flat())
+        b.step(p, 2, [], Flat())
+        value, basis = b.pos["OLD"].value, b.pos["OLD"].basis
+        fills = b.step(p, 3, [], Flat())
+        self.assertEqual((fills, list(b.pos)), ([], ["NEW"]))                      # nothing bought or sold: the same shares
+        self.assertAlmostEqual(b.pos["NEW"].value, value * 104 / 102, delta=0.01)  # and the day's move is the company's
+        self.assertAlmostEqual(b.pos["NEW"].basis, basis)
+        self.assertEqual(b.pos["NEW"].days, 2)                                     # two nights held: the count goes on
+        self.assertTrue(any("OLD is now NEW" in n for n in b.notes))
+        # without the new name on record the old one goes quiet, as before
+        c = Book(10_000.0)
+        c.step(p, 1, [Order("OLD", 0.5, "")], Flat())
+        c.step(p, 2, [], Flat())
+        c.step(p, 3, [], Flat())
+        self.assertEqual((list(c.pos), c.pos["OLD"].stale), (["OLD"], 1))
+
     def test_a_dividend_is_kept(self):
         # day 2: goes ex a 2 % dividend. Raw close falls 2 %; total return is flat.
         a = [(DAYS[0], 100, 100, np.nan), (DAYS[1], 100, 100, 0.0), (DAYS[2], 98, 98, 0.0)]

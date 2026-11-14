@@ -97,6 +97,8 @@ class Lab:
         for mid in self.model_ids():
             for dec in self.store.decisions(mid, self.store.since(mid)):
                 syms.update(o.symbol for o in dec.orders)
+        renamed = self.assets.aliases()                  # a holding follows its company to the new ticker
+        syms.update(renamed[s] for s in list(syms) if s in renamed)
         panel = Panel.load(self.bars, sorted(syms), self.cfg.index_symbol, start.year * 10000 + start.month * 100 + start.day, today)
         panel.set_members(self.universe)
         return panel
@@ -212,7 +214,8 @@ def books(lab: Lab, panel: Panel) -> dict[str, Record]:
             continue
         orders = {s2d(dec.date): dec.orders for dec in lab.store.decisions(mid, since)}
         try:
-            out[mid] = replay(panel, orders, lab.cfg.start_cash, costs, s2d(since), frozenset(lab.assets.gone()))
+            out[mid] = replay(panel, orders, lab.cfg.start_cash, costs, s2d(since), frozenset(lab.assets.gone()),
+                              renamed=lab.assets.aliases())
         except KeyError:
             lab.say(f"{mid}: its first day {since} is not in the price table", "warn")
     return out
