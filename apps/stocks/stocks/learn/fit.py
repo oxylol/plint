@@ -62,6 +62,12 @@ def ensemble(algo: str, fits: list[dict], X: np.ndarray, ctx: np.ndarray, head: 
     return np.mean([_z(np.asarray(ALGOS[algo].predict(p, X, ctx, **kw), dtype=np.float64)) for p in fits], axis=0).astype(np.float32)
 
 
+def _val(fits: list[dict]) -> str:
+    """The validation figure for a log line, when the fit has one (the trees stop by their own rule)."""
+    got = [f["val_ic"] for f in fits if f.get("val_ic") is not None and np.isfinite(f["val_ic"])]
+    return f", validation IC {np.mean(got):+.4f}" if got else ""
+
+
 def fit_at(table: Table, algo: str, t_fit: int, seeds: int, log: Callable | None = None, **fit_kw) -> list[dict]:
     train, val = split(table, t_fit)
     out = []
@@ -70,7 +76,7 @@ def fit_at(table: Table, algo: str, t_fit: int, seeds: int, log: Callable | None
         out.append(ALGOS[algo].fit(table, train, val, seed=s, **kw))
         if log:
             log(f"{algo}: fit for {int(table.days[min(t_fit, table.T - 1)])}, seed {s + 1} of {seeds}, "
-                f"{len(train)} training days, validation IC {out[-1].get('val_ic', float('nan')):+.4f}")
+                f"{len(train)} training days" + _val([out[-1]]))
     return out
 
 
@@ -86,8 +92,7 @@ def walk_forward(table: Table, algo: str, t_first: int, t_last: int, n_cols: int
         train, val = split(table, tf)
         fits = [ALGOS[algo].fit(table, train, val, seed=s, **fit_kw) for s in range(seeds)]
         if log:
-            log(f"{algo}: fitted for {int(table.days[tf])} on {len(train)} days "
-                f"(validation IC {np.mean([f.get('val_ic', np.nan) for f in fits]):+.4f})")
+            log(f"{algo}: fitted for {int(table.days[tf])} on {len(train)} days" + _val(fits))
         t_end = points[i + 1] if i + 1 < len(points) else t_last + 1
         for t in range(tf, t_end):
             sl = table.rows(t)
