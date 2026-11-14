@@ -30,6 +30,7 @@ SYMS = sorted(NAMES)
 MODELS = [
     ("index", "Index fund", "index", "Buys the S&P 500 fund once and holds it. The bar the others must beat.", 0.0, None),
     ("net", "Neural network", "learned", "A network trained on ten years of daily prices ranks 1,000 stocks each evening and holds the top 40.", 0.9, 5),
+    ("netfast", "Neural network, fast", "learned", "The same network on its one-day view: it holds a stock for a day or two.", 0.5, 1),
     ("trees", "Boosted trees", "learned", "The same inputs as the network, read by gradient-boosted trees: the classic rival.", 0.6, 5),
     ("ridge", "Straight line", "learned", "The same inputs through a plain linear fit. If the network cannot beat this, it has learned nothing.", 0.2, 5),
     ("blend", "Blend", "learned", "The average of the three learned rankings.", 0.7, 5),

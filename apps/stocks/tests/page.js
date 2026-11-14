@@ -401,20 +401,21 @@ async function keyboard(browser) {
   const tag = '[pc running]';
   const { ctx, page } = await open(browser, 'pc');
   await page.goto(url('running')); await boardReady(page);
+  const top = order(stateOf('running')).run[0].id;       // the row under the index fund: the best against it
   let reached = null, tabs = 0;
   for (; tabs < 12 && !reached; tabs++) { await page.keyboard.press('Tab'); reached = await page.evaluate(() => { const a = document.activeElement; return a && a.dataset.k && a.dataset.k.startsWith('row:') ? a.dataset.k : null; }); }
   const ring = await page.evaluate(() => { const s = getComputedStyle(document.activeElement); return { style: s.outlineStyle, w: parseFloat(s.outlineWidth), color: s.outlineColor }; });
   check(`${tag} keyboard: Tab reaches the first model within a few presses, and the focused row is outlined`, reached === 'row:index' && tabs <= 8 && ring.style === 'solid' && ring.w >= 1 && ring.color === 'rgb(228, 248, 234)', `${reached} after ${tabs}; ${JSON.stringify(ring)}`);
   await page.keyboard.press('Tab'); await page.keyboard.press('Enter'); await bookReady(page);
   const o = await page.evaluate(() => ({ hash: location.hash, focus: document.activeElement.id }));
-  check(`${tag} keyboard: Enter opens the model and puts the reader at its title`, o.hash === '#/momentum' && o.focus === 'book-title', JSON.stringify(o));
+  check(`${tag} keyboard: Enter opens the model and puts the reader at its title`, o.hash === '#/' + top && o.focus === 'book-title', JSON.stringify(o));
   const stops = [];
   for (let i = 0; i < 12; i++) { await page.keyboard.press('Tab'); const k = await page.evaluate(() => { const a = document.activeElement, s = getComputedStyle(a); return a.dataset.k ? { k: a.dataset.k, ring: s.outlineStyle === 'solid' && parseFloat(s.outlineWidth) >= 1 } : null; }); if (k) stops.push(k); if (k && k.k.startsWith('more:trades')) break; }
-  const kinds = stops.map((s) => s.k.replace(/:momentum$/, ''));
-  check(`${tag} keyboard: from there Tab walks the page in order: the curve, the lamp's fold, the past rankings, show-all; each outlined when focused`, kinds.join(' ') === 'chart:curve fold:lamp-momentum chart:history more:trades' && stops.every((s) => s.ring), kinds.join(' '));
+  const kinds = stops.map((s) => s.k.replace(new RegExp(':' + top + '$'), ''));
+  check(`${tag} keyboard: from there Tab walks the page in order: the curve, the lamp's fold, the past rankings, show-all; each outlined when focused`, kinds.join(' ') === `chart:curve fold:lamp-${top} chart:history more:trades` && stops.every((s) => s.ring), kinds.join(' '));
   await page.keyboard.press('Escape'); await page.waitForFunction(() => document.getElementById('detail').hidden);
   const c = await page.evaluate(() => ({ hash: location.hash, focus: document.activeElement.dataset.k, view: document.body.dataset.view }));
-  check(`${tag} keyboard: Escape closes it and focus goes back to its row`, c.view === 'board' && c.focus === 'row:momentum' && (c.hash === '#/' || c.hash === ''), JSON.stringify(c));
+  check(`${tag} keyboard: Escape closes it and focus goes back to its row`, c.view === 'board' && c.focus === 'row:' + top && (c.hash === '#/' || c.hash === ''), JSON.stringify(c));
   // the rail: another model in one click, no way back needed
   await page.click('#board a.row-a[data-k="row:net"]'); await bookReady(page);
   await page.click('#board a.row-a[data-k="row:trees"]'); await page.waitForFunction(() => document.getElementById('book-title').textContent === 'Boosted trees');
@@ -475,7 +476,7 @@ async function refresh(browser, size) {
     mode = 'pass'; const ck = calls;
     await page.clock.fastForward(60500); await until(() => calls > ck); await page.waitForFunction(() => !document.querySelector('#status .st-fault'), null, { timeout: 5000 }).catch(() => {});
     const j2 = await snap();
-    check(`${tag} an answer that is not a state (${junk === 'junk' ? "a proxy's error page" : 'JSON without models'}) counts as stale, keeps the figures, and the next good one clears it`, /^Stale\./.test(norm(j1.stale || '')) && norm(j1.vs) === '+11.11%' && j1.rows === 11 && j2.stale == null && calls === ck + 1, `${j1.stale} -> ${j2.stale}`);
+    check(`${tag} an answer that is not a state (${junk === 'junk' ? "a proxy's error page" : 'JSON without models'}) counts as stale, keeps the figures, and the next good one clears it`, /^Stale\./.test(norm(j1.stale || '')) && norm(j1.vs) === '+11.11%' && j1.rows === stateOf('running').models.length && j2.stale == null && calls === ck + 1, `${j1.stale} -> ${j2.stale}`);
   }
   // the page tripping over what it was sent is said as the page's fault, and the reading goes on
   mode = 'boom'; const cb = calls;
@@ -484,7 +485,7 @@ async function refresh(browser, size) {
   mode = 'pass'; const cc = calls;
   await page.clock.fastForward(60500); await until(() => calls > cc); await page.waitForFunction(() => !document.querySelector('#status .st-fault'), null, { timeout: 5000 }).catch(() => {});
   const f2 = await snap();
-  check(`${tag} if the page itself cannot draw what it was sent it says "the page has a fault", not "stale", and mends itself on the next good read`, /^The page has a fault\./.test(norm(f1.stale || '')) && /boom went the page/.test(f1.stale) && !/Stale/.test(f1.stale) && f2.stale == null && f2.rows === 11 && norm(f2.vs) === '+11.11%', `${f1.stale} -> ${f2.stale}`);
+  check(`${tag} if the page itself cannot draw what it was sent it says "the page has a fault", not "stale", and mends itself on the next good read`, /^The page has a fault\./.test(norm(f1.stale || '')) && /boom went the page/.test(f1.stale) && !/Stale/.test(f1.stale) && f2.stale == null && f2.rows === stateOf('running').models.length && norm(f2.vs) === '+11.11%', `${f1.stale} -> ${f2.stale}`);
   // coming back to the tab reads at once
   const cv = calls;
   await page.clock.fastForward(20000);
