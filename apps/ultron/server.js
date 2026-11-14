@@ -867,8 +867,12 @@ function warmFast() {
     .finally(() => { FAST.warming = null; });
 }
 
-// What the page is told: which voice would speak right now.
-const voiceNow = () => (FAST.up ? { state: 'ok', detail: FAST.device, via: 'gpu', at: FAST.at } : { ...voice, via: voice.state === 'ok' ? 'cpu' : '' });
+// What the page is told: which voice would speak right now. Where the fast voice is the only one (no
+// local VoiceStudio, as on Plint), a fast voice that does not answer is a voice that is down, not one
+// that was never set up.
+const voiceNow = () => (FAST.up ? { state: 'ok', detail: FAST.device, via: 'gpu', at: FAST.at }
+  : voice.state === 'off' && FAST.url ? { state: 'down', detail: 'the voice on the PC does not answer', via: '', at: FAST.at }
+  : { ...voice, via: voice.state === 'ok' ? 'cpu' : '' });
 
 const clips = new Map();        // id → { buf, type, at }
 setInterval(() => { const t = Date.now() - AUDIO_TTL; for (const [k, v] of clips) if (v.at < t) clips.delete(k); }, 60e3).unref();
@@ -920,7 +924,7 @@ async function speak(text, signal) {
     try { return [await speakFast(text, signal), 'gpu']; } catch (e) {
       if (signal.aborted) throw e;
       FAST.up = false; FAST.at = Date.now();
-      console.error('fast voice lost, using the local one:', e.message);
+      console.error('fast voice lost, trying the local one:', e.message);
       if (voice.state !== 'ok') await probeVoice();
       if (voice.state !== 'ok') throw e;
     }
@@ -1029,7 +1033,7 @@ async function turn(req, res, input) {
         if (ac.signal.aborted) return;
         voiceFailed = true;
         console.error('voice:', e.message);
-        send({ t: 'voice', state: voice.state === 'ok' ? 'down' : voice.state, detail: voice.detail || e.message });
+        send({ t: 'voice', state: voice.state === 'ok' ? 'down' : voiceNow().state, detail: voice.detail || e.message });
       }
     });
   };
@@ -1262,4 +1266,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`ultron on :${PORT} · mind ${mindName()}${LLM.key ? '' : ' (no celeris key)'}${CLAUDE.on ? ', Haiku available' : ''} · voice ${FAST.url ? FAST.url + ', then ' : ''}${VOICE.url}`));
+server.listen(PORT, () => console.log(`ultron on :${PORT} · mind ${mindName()}${LLM.key ? '' : ' (no celeris key)'}${CLAUDE.on ? ', Haiku available' : ''} · voice ${[FAST.url, VOICE.key && VOICE.url].filter(Boolean).join(', then ') || 'none'}`));

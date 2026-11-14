@@ -1,11 +1,11 @@
 # ─────────────────────────────────────────────────────────────
 #  Plint · ultron stack
-#  Ultron: a companion you talk to. celeris-1 (CELERIS_API_KEY) thinks,
-#  VoiceStudio speaks each sentence in the cloned voice (profile "Ultron"),
-#  the page plays them in order. Source in apps/ultron; talk and memory in
-#  data/ultron. VoiceStudio is the one in the table stack (speech profile,
-#  COMPOSE_PROFILES=speech in .env), reached over the `table` network; ntfy
-#  (his line to the phone) is in the ops stack, reached over `plint-ops`.
+#  Ultron: a companion you talk to. celeris-1 (CELERIS_API_KEY) or Claude
+#  Haiku thinks, VoiceStudio speaks each sentence in the cloned voice
+#  (profile "Ultron"), the page plays them in order. Source in apps/ultron;
+#  talk and memory in data/ultron. The only VoiceStudio is the one on the
+#  PC, reached over the tailnet: when the PC is off he answers in text.
+#  ntfy (his line to the phone) is in the ops stack, over `plint-ops`.
 # ─────────────────────────────────────────────────────────────
 name: ultron
 
@@ -24,40 +24,26 @@ services:
       CELERIS_API_KEY: ${CELERIS_API_KEY:-}
       # a second mind to try (TUNE → MIND): Claude Haiku
       ANTHROPIC_API_KEY: ${ULTRON_ANTHROPIC_API_KEY:-}
-      VOICE_URL: http://voicestudio:3900
-      VOICE_KEY: ${OMNIVOICE_API_KEY:-}
+      # The voice: VoiceStudio on the PC's GPU over the tailnet (16 steps there
+      # take about a second). No VOICE_URL/VOICE_KEY: there is no local voice.
       VOICE_NAME: ${ULTRON_VOICE:-Ultron}
-      # omnivoice says the words right but slowly on this CPU; moss-tts-nano
-      # (installed) is about five times faster and muddles them. Steps are
-      # OmniVoice's: 16 is its default, 6 was still word-perfect and far quicker.
-      VOICE_ENGINE: ${ULTRON_VOICE_ENGINE:-omnivoice}
-      VOICE_STEPS: 6
       VOICE_FORMAT: mp3
-      # The fast voice: VoiceStudio on the PC's GPU over the tailnet, asked first
-      # whenever it answers (16 steps there take about a second).
       VOICE_FAST_URL: ${ULTRON_PC_VOICE_URL:-}
       VOICE_FAST_KEY: ${ULTRON_PC_VOICE_KEY:-}
       VOICE_FAST_STEPS: 16
-      # His reach into the house (TUNE → REACH on WEB + HOUSE, Haiku only): a line on
-      # the phone through ntfy (ops stack, over its network), and the television
-      # (the Mac on the TV, tv/remote, key-gated). Unset means he cannot.
+      # His reach into the house (TUNE → REACH on WEB + HOUSE, Haiku only): a line
+      # on the phone through ntfy (ops stack, over its network). Unset means he cannot.
       NTFY_URL: http://ntfy/plint
       NTFY_TOKEN: ${NTFY_TOKEN:-}
-      TV_IP: ${TV_IP:-}
-      TV_KEY: ${TV_KEY:-}
     volumes:
       - ../../data/ultron:/data
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 192m
     networks:
-      - table
       - ops
 
 networks:
-  table:
-    name: table
-    external: true
   ops:
     name: plint-ops
     external: true

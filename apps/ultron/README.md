@@ -16,15 +16,14 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   to the API now and then hangs before it is made (measured from Plint: 2 of 270), and Node waits ten seconds for
   it. A streamed request now gets three seconds to start and is then made again (`quickFetch`).
 - **Voice**: VoiceStudio speaks each sentence with the clone profile `Ultron`; the page plays the clips in order and the
-  mouth of the face follows the sound. Two VoiceStudios: the **PC** (RX 9070 XT, over the tailnet, about a second per
-  sentence) is asked first whenever it answers; **Plint's own** (container `voicestudio` in the table stack, started by
-  `COMPOSE_PROFILES=speech`, CPU, about 20 s per sentence) takes over when the PC is off. The page shows which one
-  spoke: `CLONED · GPU` or `CLONED · CPU`. VoiceStudio drops its model after fifteen idle minutes
+  mouth of the face follows the sound. There is one VoiceStudio: the one on Filip's **PC** (RX 9070 XT, over the
+  tailnet, about a second per sentence). When the PC is off he answers in text and the page says `OFFLINE`; with the
+  PC on it says `CLONED · GPU`. VoiceStudio drops its model after fifteen idle minutes
   (`OMNIVOICE_IDLE_TIMEOUT`, 900 s), and the next sentence then waits for it to load: measured on the PC 2026-11-12,
   14.6 s against 0.9 s warm. So an open page keeps it in (`/api/wake` when the page opens or comes to the front and
   every four minutes; the server then says a short word on the PC if it has been quiet for nine minutes), a
   sentence that finds it cold gets thirty seconds instead of eight, and a sentence that is late while the PC still
-  answers its health check is asked once more there instead of going to the CPU voice, which would take longer.
+  answers its health check is asked once more there before the voice is given up for that answer.
 - **Manner**: the prompt in `server.js` never mentions a film: Sokovia is his own past. It describes how he talks (thinking out loud, pauses on three dots, the
   grand line undercut by a small one) and shows the model his own lines from `data/ultron/lines.txt` (one per line, not
   in git) for the rhythm only: he is told not to repeat them, to leave the film's subjects alone most of the time and
@@ -41,7 +40,9 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   get it and are told it is what he knows, not what he talks about.
 - **Sounds**: he may write `[laughter]` and `[sigh]`, the two reaction tags OmniVoice renders with this voice (a laugh
   adds about two seconds, a sigh half a second); they are hidden in the transcript and any other bracket is dropped.
-  Graded emotion needs another engine: `HANDOFF-pc-emotion.md` is the brief for installing IndexTTS 2.5 on the PC.
+  Graded emotion (another engine on the PC) and a second reference clip per mood were both tried on 2026-11-11 and
+  12 and taken out again on Filip's word ("wasn't worth it, also sounded worse"; "no go back"): one calm voice.
+  Not to be brought back unasked.
 - **Tuning**: TUNE on the page changes what the mind in use is given (kept in `data/ultron/tune.json`, applied from
   the next message): which mind, his reach (Haiku only), wildness (temperature, celeris-1 only), reply length, how
   readily he fills a silence, how
@@ -98,9 +99,10 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
   beside every turn settles whether anything is needed (`route()`, about 0.8 s, while his answer is already on its
   way, so an ordinary reply loses nothing); a lookup is its own call with Anthropic's web search (`lookUp()`), and
   only its two sentences of fact reach him; and WEB + HOUSE gives him, for the one reply in which you ask for it,
-  two tools: `phone_note` (a line on your phone through ntfy) and `tv` (open an app, pause or resume, volume,
-  screen on or off through `tv/remote`). Measured 2026-11-12: lookups asked for when they should be and only then
-  in 8 of 8, first sentence after 4.5 to 5 s; a house action after about 3 s. The lamp says REACHING meanwhile.
+  the tool `phone_note` (a line on your phone through ntfy). Measured 2026-11-12: lookups asked for when they should
+  be and only then in 8 of 8, first sentence after 4.5 to 5 s; a house action after about 3 s. The lamp says REACHING
+  meanwhile. (A second house tool, `tv`, is still in `server.js` and stays off: it needs `TV_IP` and `TV_KEY`, and
+  the Mac on the TV left Plint on 2026-11-14.)
   celeris-1 has no reach: it answers from what it knows.
 - **What he is not told** (removed on Filip's word, 2026-11-11, so that he simply is Ultron): nothing about being a
   program, what he runs on or where he is (no Plint, no server, no house), no rule to be helpful or kind, no facts about the server. (The old
@@ -111,11 +113,7 @@ A companion you talk to at `https://ultron.$DOMAIN`: Ultron from *Age of Ultron*
 ```
 plint up ultron                      # start
 plint logs ultron
-scripts/ultron-voice.sh status       # profile, model licence, loaded model
-scripts/ultron-voice.sh profile      # (re)create the clone from data/ultron/voice/ultron-ref.{wav,txt}
-scripts/ultron-voice.sh licence      # read and accept the speech model's licence (needed once)
-scripts/ultron-voice.sh say "No strings on me."   # one line, timed (ENGINE=moss-tts-nano STEPS=6 to compare)
-scripts/ultron-voice.sh models       # complete the model cache when VoiceStudio's downloader fails
+curl -s localhost:5230/health        # {"voice":"ok","via":"gpu"} with the PC on, "down" with it off
 ```
 
 After a code change: commit, then `plint sync`.
@@ -139,48 +137,36 @@ replies swing by a few either way from run to run: run it twice before believing
 
 `test/page.js` checks the page itself in a browser against such a scratch copy (he speaks first and waits for a
 touch to be heard, the layout, TALK with a stand-in recogniser, his own looks with a drawn camera view), and
-`test/mockvoice.js` stands in for the two VoiceStudios so the voice logic (cold model, slow sentence, lost PC) can be
-driven without the real ones. How to run them is at the top of each.
+`test/mockvoice.js` stands in for VoiceStudio (a fast one like the PC's, and a slow local one of the kind Plint no
+longer has) so the voice logic (cold model, slow sentence, lost PC) can be driven without the real one. How to run
+them is at the top of each.
 
 ## The voice
 
-The reference is a clip of about eight seconds of one speaker, with the exact words in the `.txt` next to it
-(`data/ultron/voice/`, not in git). A cleaner or different clip: replace the two files and run `ultron-voice.sh profile`.
-The profile is for this house only: it is not attested, so VoiceStudio will not sync or publish it.
-
-VoiceStudio's data (models, engines, voices) is on the array: `/srv/dnd/data/voicestudio` is a symlink to
-`/mnt/storage/plint/voicestudio`. Its own downloader (0.5.7) crashes on small compressed files, so after a model
-update run `ultron-voice.sh models`, which fetches every file of the model into the cache with curl.
-
-Two engines are installed; `ULTRON_VOICE_ENGINE` in `.env` picks one, steps and format are in `stacks/ultron/compose.yaml`.
-Measured on Plint 2026-11-11 (four busy cores, no usable GPU), same reference clip:
-
-| engine | time for a short sentence | words | closeness to the reference* |
-|---|---|---|---|
-| `omnivoice`, 16 steps (its default) | 45 to 50 s | right | 0.76 to 0.85 |
-| `omnivoice`, 6 steps (**in use**) | 19 to 26 s | right | 0.74 to 0.84 |
-| `moss-tts-nano` | 6 to 10 s, about 2x real time | wrong or with made-up endings in 4 of 7 lines | 0.82 to 0.84 |
-
-\* speaker-embedding similarity (Resemblyzer); another clip of the same actor scores 0.91, an unrelated voice 0.50.
-Nobody has listened to it yet when this was written: the numbers say "same speaker", not "sounds like him".
-
-## The PC voice
-
 VoiceStudio 0.5.8 from a source checkout on Filip's PC with the opt-in ROCm runtime (`HANDOFF-pc-voice.md` is the brief
-its agent worked from). Plint reaches it at `ULTRON_PC_VOICE_URL` with `ULTRON_PC_VOICE_KEY` (both in `.env`; the URL is
-the PC's tailnet IP, its MagicDNS name does not resolve on Plint). The PC's firewall admits only Plint on port 3900.
-Measured from Plint 2026-11-11 at 16 steps: 0.8 s for a 2-second sentence, 0.9 s for a 9-second one; in the page the
-first sentence starts 1.5 s after sending. Plint asks the PC's `/health` every 20 s; a PC that stops answering in the
-middle of a turn costs up to 12 s once, then Plint's own voice finishes the answer.
+its agent worked from, and the way to build it again). Plint reaches it at `ULTRON_PC_VOICE_URL` with
+`ULTRON_PC_VOICE_KEY` (both in `.env`; the URL is the PC's tailnet IP, its MagicDNS name does not resolve on Plint).
+The PC's firewall admits only Plint on port 3900. Measured from Plint 2026-11-11 at 16 steps: 0.8 s for a 2-second
+sentence, 0.9 s for a 9-second one; in the page the first sentence starts 1.5 s after sending. Plint asks the PC's
+`/health` every 20 s; a PC that stops answering in the middle of a turn costs up to 12 s once, and the rest of that
+answer is text.
+
+The reference is a clip of about eight seconds of one speaker, with the exact words in the `.txt` next to it
+(`data/ultron/voice/` on Plint, not in git; a second candidate and the dropped mood clips are beside it). The profile
+`Ultron` made from it lives in the PC's VoiceStudio. A cleaner or different clip: send the two files to the PC and
+make the profile again there (step 5 of the handoff). The profile is for this house only: it is not attested, so
+VoiceStudio will not sync or publish it.
+
+Plint had a VoiceStudio of its own until 2026-11-14 (the one in the D&D table's stack, removed with it). On Plint's
+four CPU cores OmniVoice took 45 to 50 s for a short sentence at 16 steps and 19 to 26 s at 6, words right;
+MOSS-TTS-Nano took 6 to 10 s and got the words wrong in 4 of 7 lines. `server.js` still takes a local VoiceStudio
+as the second voice if one is ever set (`VOICE_URL`, `VOICE_KEY`, `VOICE_ENGINE`, `VOICE_STEPS`).
 
 ## Limits
 
-- **Slow voice when the PC is off.** The text is there in half a second; on Plint's CPU the first spoken sentence
-  follows after about half a minute and each further one takes as long again.
-- **The GTX 950 in Plint does not help.** VoiceStudio's PyTorch is built for RTX 20-series cards and newer (sm_70+),
-  the 950 is sm_52, usually has 2 GB, and its driver module is not installed for the running kernel. The ways to a
-  quick voice: VoiceStudio on a machine with a newer GPU (set `VOICE_URL` to it), or a newer card here.
-- VoiceStudio is capped at 3 GB of memory, which OmniVoice fills (it swaps); it is shared with Plint Table.
+- **No voice when the PC is off.** He answers in text. A voice on Plint itself would need a newer graphics card: the
+  GTX 950 in it is too old for VoiceStudio's PyTorch (sm_52, it wants sm_70+, RTX 20-series and newer), and on the
+  CPU a sentence took twenty seconds or more.
 - Speech recognition is the browser's (Safari and Chrome have it, Firefox does not) and it sends the audio to the
   browser vendor. Languages on the switch: English, Norwegian, Swedish.
 - TALK and STANDBY rest on the browser's recogniser. Checked with a stand-in recogniser only: how well a phone hears

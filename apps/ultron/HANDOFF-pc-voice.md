@@ -1,5 +1,9 @@
 # Handoff: Ultron's voice on Filip's PC (RX 9070 XT)
 
+> **Status:** done 2026-11-11; the result is under *The voice* in `README.md`. Kept as the way to build the PC voice
+> again. Since 2026-11-14 Plint has no voice of its own, so where this brief says Plint falls back to its CPU voice,
+> read: with the PC off, Ultron answers in text.
+
 Written 2026-11-11 by the Claude session on Plint (Filip's home server) for an agent working **on Filip's Windows PC**
 (tailnet name `filips-pc`). Everything you need is in this file and in two files next to it.
 
