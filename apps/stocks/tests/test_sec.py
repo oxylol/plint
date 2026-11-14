@@ -22,7 +22,8 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from stocks.sec import (DATA, GAP, SET_COLS, SETS_PAGE, WWW, Sec, SecError, _http, _StayAtSec, ny_time, read_insider_set,
+from stocks.sec import (DATA, GAP, ISSUER_COLS, SET_COLS, SETS_PAGE, WWW, Sec, SecError, _http, _StayAtSec, ny_time, read_insider_set,
+                        read_set_issuers, tickers_in,
                         read_ownership, readable, sec_url)
 
 FIX = Path(__file__).resolve().parent / "fixtures" / "sec"
@@ -580,6 +581,27 @@ class InsiderSets(unittest.TestCase):
             return s.encode()
         df = read_insider_set(insider_zip({t: respell(t) for t in TABLES}, ext=".txt", folder="2026q3_form345/"))
         self.assertEqual(df.to_dict("records"), IN_THE_SET)
+
+    def test_a_quarter_also_says_who_filed_under_which_ticker(self):
+        who = read_set_issuers(self.sec.insider_set(2026, 3))
+        self.assertEqual(list(who.columns), ISSUER_COLS)
+        self.assertEqual(who.to_dict("records"), [
+            # every form counts here, amendments and Form 5 too: the question is only whose ticker it was
+            {"cik": 9900001, "sym": "NWT", "first": "2026-08-14", "last": "2026-09-04", "n": 5},
+            {"cik": 9900002, "sym": "GONE", "first": "2026-09-04", "last": "2026-09-04", "n": 1},
+            {"cik": 9900003, "sym": "RVR.A", "first": "2026-09-09", "last": "2026-09-09", "n": 1},     # "RVR.A, RVR.B" in one field
+            {"cik": 9900003, "sym": "RVR.B", "first": "2026-09-09", "last": "2026-09-09", "n": 1},
+            {"cik": 9900009, "sym": "ELSW", "first": "2026-09-02", "last": "2026-09-02", "n": 1},
+        ])
+        self.assertEqual(len(read_set_issuers(self.sec.insider_set(2026, 1))), 0)
+        with self.assertRaisesRegex(ValueError, "SUBMISSION"):
+            read_set_issuers(insider_zip({"REPORTINGOWNER": fixture("form345/REPORTINGOWNER.tsv")}))
+
+    def test_tickers_as_filers_write_them(self):
+        for field, want in (("GFS", ["GFS"]), ("NYSE: ABC", ["ABC"]), ("Nasdaq:GOOG; GOOGL", ["GOOG", "GOOGL"]), ("BRK-B", ["BRK.B"]),
+                            ("brk/b", ["BRK.B"]), ("BF B", ["BF.B"]), ("(TPG)", ["TPG"]), ("UEC and UECW", ["UEC", "UECW"]),
+                            ("none", []), ("N/A", []), ("", []), (None, []), ("NOT APPLICABLE", []), ("ABCDEF", [])):
+            self.assertEqual(tickers_in(field), want, field)
 
     def test_a_set_without_a_table_or_a_column_says_which(self):
         tables = {t: fixture(f"form345/{t}.tsv") for t in TABLES}

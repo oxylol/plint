@@ -120,6 +120,42 @@ def _history(api: Alpaca, part: list[str], start: str, end: str) -> pd.DataFrame
     return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
 
 
+def aliases(store: BarStore, active: set[str], min_days: int = 30, share: float = 0.9) -> dict[str, str]:
+    """Symbols whose whole price history is another symbol's: the old ticker of a company that was renamed.
+
+    Alpaca answers for a renamed company under both names (META's bars reach back through the years it was
+    FB, and FB's own bars are those same years), so left alone the company would be two stocks in the same
+    universe. Two symbols are one company when they share a day's open, high, low, close and volume on at
+    least `min_days` days and on at least `share` of all the days the shorter one traded. Returns
+    {the name to drop: the name to keep}: the one no longer listed goes, or of two gone names the shorter."""
+    shared: dict[tuple[str, str], int] = {}
+    days: dict[str, int] = {}
+    for year in store.years():
+        df = store.read(year * 10000, year * 10000 + 9999, columns=["d", "sym", "o", "h", "l", "c", "v"])
+        df = df[df["v"] > 0]
+        for sym, n in df.groupby("sym").size().items():
+            days[sym] = days.get(sym, 0) + int(n)
+        key = pd.util.hash_pandas_object(df[["d", "o", "h", "l", "c", "v"]], index=False)
+        twin = df.assign(k=key.to_numpy())[["k", "sym"]]
+        size = twin.groupby("k")["sym"].transform("size")
+        twin = twin[(size >= 2) & (size <= 4)]            # a bar that a crowd shares is a coincidence of pennies
+        pairs = twin.merge(twin, on="k")
+        pairs = pairs[pairs["sym_x"] < pairs["sym_y"]]
+        for (a, b), n in pairs.groupby(["sym_x", "sym_y"]).size().items():
+            shared[(a, b)] = shared.get((a, b), 0) + int(n)
+    out: dict[str, str] = {}
+    for (a, b), n in sorted(shared.items(), key=lambda kv: -kv[1]):
+        if n < min_days or (a in active and b in active):
+            continue
+        if (a in active) != (b in active):
+            drop, keep = (b, a) if a in active else (a, b)
+        else:
+            drop, keep = sorted((a, b), key=lambda x: (days[x], x))
+        if n >= share * days[drop] and drop not in out and keep not in out:
+            out[drop] = keep
+    return out
+
+
 def backfill(api: Alpaca, store: BarStore, symbols: list[str], start: str, end: str, chunk: int = 50,
              progress: Callable[[int, int, int], None] | None = None) -> int:
     """The long history, a handful of symbols at a time (a page holds 10,000 bars). Each handful is parked
@@ -156,11 +192,25 @@ def backfill(api: Alpaca, store: BarStore, symbols: list[str], start: str, end: 
 
 
 def update(api: Alpaca, store: BarStore, symbols: list[str], today: date, back_days: int = 16, chunk: int = 200,
-           note: Callable[[str], None] = log.warning) -> dict:
-    """The evening tail: the last couple of weeks again, for every symbol. Returns what changed."""
+           note: Callable[[str], None] = log.warning, history_start: str | None = None) -> dict:
+    """The evening tail: the last couple of weeks again, for every symbol. Returns what changed.
+
+    A symbol the store has never seen gets its whole history (from `history_start`) instead of the tail: for
+    a new listing that is its short life, for a company that changed its ticker it is the company's past,
+    which Alpaca gives under the new name too."""
     start, end = (today - timedelta(days=back_days)).isoformat(), today.isoformat()
     before = store.last_day()
     frames = []
+    if history_start:
+        have = store.symbols()
+        fresh = [s for s in symbols if s not in have]
+        for i in range(0, len(fresh), 50):
+            df = _history(api, fresh[i:i + 50], history_start, end)
+            if len(df):
+                frames.append(df)
+        got = sorted({s for f in frames for s in f["sym"].unique()})
+        if got:
+            note(f"new to the price table, fetched with their whole history: {', '.join(got[:20])}" + (" …" if len(got) > 20 else ""))
     for i in range(0, len(symbols), chunk):
         df = apply_splits(api, pull(api, symbols[i:i + chunk], start, end), note)
         if df.empty:

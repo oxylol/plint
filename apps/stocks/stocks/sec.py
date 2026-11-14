@@ -47,6 +47,7 @@ SETS_PAGE = f"{WWW}/data-research/sec-markets-data/insider-transactions-data-set
 SET_DIRS = ("structureddata", "datastandardsinnovation")     # /files/<dir>/data/insider-transactions-data-sets/
 SET_COLS = ["cik", "sym", "filed", "accession", "owner", "officer", "director", "ten_pct", "title",
             "shares", "price", "usd", "date"]
+ISSUER_COLS = ["cik", "sym", "first", "last", "n"]
 EXHIBIT_ROOM = 4_000        # characters that must be left before a filing's press release is fetched as well
 EXHIBITS = 2
 
@@ -303,6 +304,10 @@ class Sec:
         """The open-market purchases reported on Form 4 in one quarter's set, one row per purchase (SET_COLS):
         `cik` the issuer, `sym` its ticker as the filer wrote it, `filed` the filing date, `date` the trade's.
         The sets carry a filing date and no acceptance time."""
+        return read_insider_set(self.insider_set(year, quarter))
+
+    def insider_set(self, year: int, quarter: int) -> bytes:
+        """One quarter's set as it is published: a zip, for read_insider_set and read_set_issuers."""
         try:
             listed = self.insider_quarters()
         except SecError as e:
@@ -315,7 +320,7 @@ class Sec:
             f"{WWW}/files/{d}/data/insider-transactions-data-sets/{int(year)}q{int(quarter)}_form345.zip" for d in SET_DIRS]
         for i, url in enumerate(urls):
             try:
-                return read_insider_set(self._get(url))
+                return self._get(url)
             except SecError as e:
                 if e.status != 404 or i == len(urls) - 1:
                     raise
@@ -646,3 +651,47 @@ def read_insider_set(body: bytes) -> pd.DataFrame:
     out["cik"] = out["cik"].astype("int64")
     out["usd"] = (out["shares"] * out["price"]).round(2)
     return out[SET_COLS].sort_values(["filed", "accession"], kind="stable").reset_index(drop=True)
+
+
+# ── who traded under which ticker, and when ─────────────────────────────────────────────────────
+_VENUE = re.compile(r"^(?:NYSE(?:\s?AMERICAN|\s?ARCA|\s?MKT)?|NASDAQ(?:GS|GM|CM)?|AMEX|OTC[A-Z]*|TSX[A-Z]*)\s*[:\-]\s*")
+_TICKER = re.compile(r"[A-Z]{1,5}(?:\.[A-Z]{1,2})?")
+
+
+def tickers_in(field) -> list[str]:
+    """The tickers in an ISSUERTRADINGSYMBOL field, in this app's spelling (a share class after a dot).
+    Filers write it by hand: "NYSE: ABC", "RVR.A, RVR.B", "BRK-B", "none". What is not a ticker is left out."""
+    out = []
+    for part in re.split(r"[,;]|\s+AND\s+|\s+/\s+", str(field or "").upper()):
+        t = _VENUE.sub("", " ".join(part.split()).strip("()[]\"' "))
+        t = re.sub(r"^([A-Z]{1,5})[\-/ ]([A-Z]{1,2})$", r"\1.\2", t)
+        if _TICKER.fullmatch(t) and t not in ("NONE", "NA", "N.A") and t not in out:
+            out.append(t)
+    return out
+
+
+def read_set_issuers(body: bytes) -> pd.DataFrame:
+    """Which company its insiders filed under which ticker in one quarter's set: a row per issuer and ticker
+    (ISSUER_COLS) with the first and last filing date and the number of filings, every Form 3, 4 and 5
+    counted. The SEC's ticker list names only companies listed today; one that was bought or delisted is
+    found here, under the ticker it had while it traded."""
+    with zipfile.ZipFile(io.BytesIO(body)) as z:
+        names = {re.sub(r"\.[^.]*$", "", n.rsplit("/", 1)[-1]).upper(): n for n in z.namelist()}
+        if "SUBMISSION" not in names:
+            raise ValueError(f"insider set: no SUBMISSION table among {sorted(names)}")
+        want = ["FILING_DATE", "ISSUERCIK", "ISSUERTRADINGSYMBOL"]
+        with z.open(names["SUBMISSION"]) as f:
+            df = pd.read_csv(f, sep="\t", dtype=str, usecols=lambda c: c in want, quoting=csv.QUOTE_NONE,
+                             keep_default_na=False, on_bad_lines="skip", encoding="utf-8", encoding_errors="replace")
+    missing = [c for c in want if c not in df.columns]
+    if missing:
+        raise ValueError(f"insider set: SUBMISSION has no column {', '.join(missing)}")
+    df = pd.DataFrame({"cik": pd.to_numeric(df["ISSUERCIK"], errors="coerce"), "filed": df["FILING_DATE"].map(_set_date),
+                       "sym": df["ISSUERTRADINGSYMBOL"].map(tickers_in)})
+    df = df[df["cik"].notna() & (df["filed"] != "")].explode("sym").dropna(subset=["sym"])
+    if df.empty:
+        return pd.DataFrame(columns=ISSUER_COLS)
+    out = df.groupby(["cik", "sym"], as_index=False).agg(first=("filed", "min"), last=("filed", "max"), n=("filed", "size"))
+    out["cik"] = out["cik"].astype("int64")
+    return out[ISSUER_COLS]
+

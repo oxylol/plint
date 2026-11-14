@@ -23,7 +23,7 @@ import pandas as pd
 
 from .cal import NY, is_trading_day, next_trading_day
 from .events import EARNINGS_COLS, FORMS_FOR_AGENT, INSIDER_COLS, Events
-from .sec import SET_COLS, Sec, SecError
+from .sec import ISSUER_COLS, SET_COLS, Sec, SecError, read_insider_set, read_set_issuers
 
 _log = logging.getLogger("stocks.filings")
 
@@ -33,6 +33,10 @@ RECENT_COLS = ["sym", "at", "form", "items", "title", "url", "accession"]
 IN_A_ROW = 8                    # this many requests failing one after another, and the run stops
 TAIL_DAYS = 200                 # the stretch after the last quarterly set that `backfill` will read Form 4 by Form 4
 BATCH = 50                      # companies between saves in `backfill`
+MIN_FILINGS = 3                 # insider filings under a ticker before the sets are believed about whose it was
+REACH_BACK = 400                # days before the first of them that the company's link to the ticker reaches,
+REACH_ON = 120                  # and days after the last: results are not filed on the days insiders' forms are
+EVER, ALWAYS = "0000-00-00", "9999-99-99"
 _BUY = ("owner", "officer", "director", "ten_pct", "title", "shares", "price", "usd")
 
 # Since December 2024 EDGAR lists these under their full names; events.FORMS_FOR_AGENT has the old ones.
@@ -153,13 +157,17 @@ class _Run:
         self.in_a_row = 0
         self.hours_from, self.seen, self.odd = hours_from, 0, 0
 
+    def current(self, symbols: list[str]) -> dict[str, int]:
+        """Symbol → CIK for the companies the SEC's ticker list knows: those listed today."""
+        try:
+            return self.sec.ciks(symbols)
+        except SecError as e:
+            raise Stopped(f"the SEC's ticker list could not be read: {e}", self.out) from e
+
     def companies(self, symbols: Iterable[str]) -> dict[int, list[str]]:
         """CIK → the symbols it trades under. Symbols the SEC's ticker list does not know are counted."""
         symbols = list(dict.fromkeys(symbols))
-        try:
-            ciks = self.sec.ciks(symbols)
-        except SecError as e:
-            raise Stopped(f"the SEC's ticker list could not be read: {e}", self.out) from e
+        ciks = self.current(symbols)
         by_cik: dict[int, list[str]] = {}
         for s in symbols:
             if s in ciks:
@@ -316,8 +324,9 @@ def _quarter_end(year: int, quarter: int) -> str:
     return f"{year}-{3 * quarter:02d}-{(31, 30, 30, 31)[quarter - 1]}"
 
 
-def _sets(run: _Run, ciks: set[int], start_year: int, today: date) -> pd.DataFrame:
-    """The purchases in every quarterly set from `start_year` on, for these companies."""
+def _sets(run: _Run, start_year: int, today: date) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Every quarterly set from `start_year` on: the purchases in them (SET_COLS), and who filed under which
+    ticker from when to when (ISSUER_COLS, the quarters added together)."""
     try:
         listed = sorted(run.sec.insider_quarters())
         if not listed:
@@ -325,21 +334,65 @@ def _sets(run: _Run, ciks: set[int], start_year: int, today: date) -> pd.DataFra
     except Exception as e:                                  # the page has moved or changed: every finished quarter
         run.fail(e, quarter="the page that lists the sets")  # is then tried at its known address
         listed = [(y, q) for y in range(start_year, today.year + 1) for q in (1, 2, 3, 4) if _quarter_end(y, q) < today.isoformat()]
-    parts = []
+    parts, names = [], []
     for year, quarter in listed:
         if year < start_year:
             continue
         try:
-            df = run.sec.insider_quarter(year, quarter)
+            body = run.sec.insider_set(year, quarter)
+            df, who = read_insider_set(body), read_set_issuers(body)
         except Exception as e:
             run.fail(e, quarter=f"{year}q{quarter}")
             continue
         run.in_a_row = 0
         run.out["quarters"] += 1
         run.out["insiders_through"] = max(run.out["insiders_through"] or "", _quarter_end(year, quarter))
-        parts.append(df[df["cik"].isin(ciks)])
-        run.say(f"insider purchases, {year} Q{quarter}: {len(parts[-1])} in our companies, {len(df)} in all")
-    return pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=SET_COLS)
+        parts.append(df)
+        names.append(who)
+        run.say(f"insider set {year} Q{quarter}: {len(df)} purchases, {who['cik'].nunique() if len(who) else 0} companies")
+    buys = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame(columns=SET_COLS)
+    names = [w for w in names if len(w)]
+    issuers = (pd.concat(names, ignore_index=True).groupby(["cik", "sym"], as_index=False)
+               .agg(first=("first", "min"), last=("last", "max"), n=("n", "sum"))[ISSUER_COLS]
+               if names else pd.DataFrame(columns=ISSUER_COLS))
+    return buys, issuers
+
+
+def _shift(day: str, days: int) -> str:
+    return (date.fromisoformat(day) + timedelta(days=days)).isoformat()
+
+
+def links(symbols: Iterable[str], current: dict[str, int], issuers: pd.DataFrame, start: str) -> dict[int, list[tuple[str, str, str]]]:
+    """Which company each symbol was, and from which day to which: CIK → [(symbol, first day, last day)].
+
+    The SEC's ticker list knows only who holds a ticker today. A backtest that stopped there would know the
+    results days and the insiders of the companies that survived, and of no company since bought, merged or
+    delisted. The insider sets say who filed under a ticker in each quarter, so:
+
+    - a company listed today is its symbol for all time: Alpaca's bars follow a company through a change of
+      ticker (META's reach back through the years it was FB), and so do its filings;
+    - a symbol nobody holds today belongs to whoever filed under it, from a little before the first of
+      those filings to a little after the last (from the start, if they were filing when the history begins);
+    - a ticker that passed from a company now gone to the one that holds it today gives the old company its
+      own years too (Dow Chemical until 2017, Dow Inc. from 2019), unless today's holder was already filing
+      then under another ticker: in that case the bars of those years are its own, and the old company's
+      are out of reach."""
+    seen = issuers[issuers["n"] >= MIN_FILINGS] if len(issuers) else issuers
+    born = seen.groupby("cik")["first"].min().to_dict() if len(seen) else {}
+    by_sym = {s: g.sort_values("first").to_dict("records") for s, g in seen.groupby("sym")} if len(seen) else {}
+    early = _shift(start, 365)
+    out: dict[int, list[tuple[str, str, str]]] = {}
+    for s in dict.fromkeys(symbols):
+        cur = current.get(s)
+        if cur is not None:
+            out.setdefault(int(cur), []).append((s, EVER, ALWAYS))
+        for i, r in enumerate(by_sym.get(s, [])):
+            cik = int(r["cik"])
+            if cik == cur or (cur is not None and born.get(cur, ALWAYS) <= r["last"]):
+                continue
+            lo = EVER if cur is None and i == 0 and r["first"] <= early else _shift(r["first"], -REACH_BACK)
+            out.setdefault(cik, []).append((s, lo, _shift(r["last"], REACH_ON)))
+    return out
 
 
 def backfill(sec: Sec, events: Events, symbols: Iterable[str], start_year: int, log: Callable[[str], None] | None = None,
@@ -352,31 +405,45 @@ def backfill(sec: Sec, events: Events, symbols: Iterable[str], start_year: int, 
     finished quarter that has been published, so with `tail` the Form 4s filed since are read one by one
     (a request each; skipped when that stretch is longer than TAIL_DAYS).
 
-    Returns {companies, earnings, insiders, quarters, insiders_through, form4, no_cik, failures};
-    `insiders_through` is the last day the sets cover. Raises Stopped when the run had to end early; run
-    again and it picks up, adding nothing twice."""
+    Companies listed today are found through the SEC's ticker list; those since bought, merged or delisted
+    through the tickers their insiders filed under (`links`), so the history is not one of survivors only.
+
+    Returns {companies, earnings, insiders, quarters, insiders_through, form4, no_cik, former, failures}:
+    `insiders_through` is the last day the sets cover, `former` the symbols found only through the sets,
+    `no_cik` those not found at all. Raises Stopped when the run had to end early; run again and it picks
+    up, adding nothing twice."""
     out = {"companies": 0, "earnings": 0, "insiders": 0, "quarters": 0, "insiders_through": None, "form4": 0,
-           "no_cik": 0, "failures": []}
+           "no_cik": 0, "former": 0, "failures": []}
     say = log or _log.info
     today = today or datetime.now(NY).date()
     start = f"{int(start_year)}-01-01"
+    symbols = list(dict.fromkeys(symbols))
     run = _Run(sec, events, out, say, hours_from=start)
-    by_cik = run.companies(symbols)
-    sets = _sets(run, set(by_cik), int(start_year), today)
-    by_issuer = {int(c): g for c, g in sets.groupby("cik")}
+    current = run.current(symbols)
+    sets, issuers = _sets(run, int(start_year), today)
+    spans = links(symbols, current, issuers, start)
+    linked = {s for rows in spans.values() for s, _, _ in rows}
+    out["no_cik"], out["former"] = len(symbols) - len(linked), len(linked - set(current))
+    if out["former"]:
+        say(f"{out['former']} symbols no longer listed were found through the tickers their insiders filed under")
+    by_issuer = {int(c): g for c, g in sets[sets["cik"].isin(set(spans))].groupby("cik")}
     through, tail_from = out["insiders_through"], None
     if tail and through and (today - date.fromisoformat(through)).days <= TAIL_DAYS:
         tail_from = (date.fromisoformat(through) - timedelta(days=4)).isoformat()    # a Form 4 of the quarter's last evening is in the next set
         say(f"insider purchases since {through}: reading each Form 4 filed since, one request apiece")
-    for n, (cik, syms) in enumerate(sorted(by_cik.items()), 1):
-        sub = run.read(cik, syms, start)
+    for n, (cik, rows) in enumerate(sorted(spans.items()), 1):
+        names = [s for s, _, _ in rows]
+
+        def on(day: str) -> list[str]:                      # the symbols this company was on that day
+            return [s for s, lo, hi in rows if lo <= day[:10] <= hi]
+        sub = run.read(cik, names, start)
         filings = [f for f in (sub["filings"] if sub else []) if f["filing_date"] >= start]
         try:
             for f in filings:
                 if f["form"] == "8-K" and "2.02" in _items(f["items"]):
                     day = reaction_day(f["at"]) if f["at"] else day_after(f["filing_date"])
                     run.earn += [{"sym": s, "day": day, "at": f["at"] or f["filing_date"], "form": "8-K",
-                                  "accession": f["accession"]} for s in syms]
+                                  "accession": f["accession"]} for s in on(f["filing_date"])]
             accepted = {f["accession"]: f["at"] for f in filings if f["at"]}
             for accession, g in (by_issuer[cik].groupby("accession", sort=False) if cik in by_issuer else ()):
                 if accession in run.have:
@@ -385,18 +452,18 @@ def backfill(sec: Sec, events: Events, symbols: Iterable[str], start_year: int, 
                 day = reaction_day(at) if at else day_after(filed)
                 for b in _lines(g.to_dict("records")):
                     run.buys += [{"sym": s, "day": day, "at": at or filed, **{k: b[k] for k in _BUY}, "accession": accession}
-                                 for s in syms]
+                                 for s in on(filed)]
                 run.have.add(accession)
             for f in filings if tail_from else ():
-                if f["form"] == "4" and f["filing_date"] >= tail_from and f["accession"] not in run.have:
-                    run.form4(cik, syms, f)
+                if f["form"] == "4" and f["filing_date"] >= tail_from and f["accession"] not in run.have and on(f["filing_date"]):
+                    run.form4(cik, on(f["filing_date"]), f)
         except Stopped:
             raise
         except Exception as e:
-            run.fail(e, sym=",".join(syms), cik=cik)
+            run.fail(e, sym=",".join(names), cik=cik)
         if n % BATCH == 0:
             run.save()
-            say(f"filings history: {n} of {len(by_cik)} companies read")
+            say(f"filings history: {n} of {len(spans)} companies read")
     run.save()
     return out
 

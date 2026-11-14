@@ -67,7 +67,18 @@ class Assets:
         self.path = Path(cache_dir) / "assets.parquet"
         self.overrides_path = Path(cache_dir) / "universe_overrides.json"
         self.gone_path = Path(cache_dir) / "gone.json"          # companies bought out: {symbol: day}
+        self.aliases_path = Path(cache_dir) / "aliases.json"    # old tickers of renamed companies: {old: new}
         self._df: pd.DataFrame | None = None
+
+    def save_aliases(self, aliases: dict[str, str]) -> None:
+        self.aliases_path.write_text(json.dumps(aliases, sort_keys=True))
+        self._df = None
+
+    def aliases(self) -> dict[str, str]:
+        try:
+            return json.loads(self.aliases_path.read_text())
+        except (FileNotFoundError, ValueError):
+            return {}
 
     def save_gone(self, gone: dict[str, str]) -> None:
         old = self.gone()
@@ -110,7 +121,7 @@ class Assets:
             ov = self.overrides()
             common = [is_common(s, n, e) for s, n, e in zip(df["sym"], df["name"], df["exchange"])]
             df["common"] = (pd.Series(common, index=df.index) | (df["exchange"] == "GONE") | df["sym"].isin(ov["include"])) \
-                & ~df["sym"].isin(ov["exclude"])
+                & ~df["sym"].isin(ov["exclude"]) & ~df["sym"].isin(self.aliases())      # a renamed company counts once
             self._df = df
         return self._df
 

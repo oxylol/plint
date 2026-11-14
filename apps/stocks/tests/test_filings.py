@@ -24,9 +24,9 @@ from stocks.panel import Panel
 from stocks.sec import SETS_PAGE, WWW, SecError, sec_url
 
 try:
-    from tests.test_sec import ARCH, COVER, SETS, SUBS, TICKERS, Clock, Web, client, fixture, site
+    from tests.test_sec import ARCH, COVER, SETS, SUBS, TICKERS, Clock, Web, client, fixture, insider_zip, site
 except ImportError:                                     # run with tests/ itself on the path
-    from test_sec import ARCH, COVER, SETS, SUBS, TICKERS, Clock, Web, client, fixture, site
+    from test_sec import ARCH, COVER, SETS, SUBS, TICKERS, Clock, Web, client, fixture, insider_zip, site
 
 SYMS = ["NWT", "RVR.A", "RVR.B", "GONE", "NOPE"]        # GONE has a CIK and no file at the SEC; NOPE has no CIK
 SINCE = "2026-11-04T00:00:00"                           # New York, no zone named: as pipeline.py passes it
@@ -430,6 +430,73 @@ class Backfill(Lab):
         self.assertEqual(self.web.asked[-1], self.Q3)
         self.assertNotIn(SUBS + "CIK0009900001.json", self.web.asked)
         self.assertTrue(self.ev.empty())
+
+
+def gone_company() -> dict:
+    """Oldcastle Works (CIK 9900005, ticker OLDC): bought out in the spring of 2026, so it is not in the SEC's
+    ticker list. Its insiders filed three Form 4s under OLDC in the first quarter, one of them a purchase;
+    its own list holds results from 2024, February 2026 and (a successor's paperwork) August 2026."""
+    head = lambda t: fixture(f"form345/{t}.tsv").split(b"\n", 1)[0] + b"\n"       # noqa: E731
+    sub = "".join(f"{A}{n}\t{d}\t{d}\t\t\t0\t\t\t4\t0009900005\tOldcastle Works Inc\tNYSE: OLDC\t\t0\n"
+                  for n, d in (("101", "12-JAN-2026"), ("102", "20-JAN-2026"), ("103", "02-FEB-2026")))
+    own = "".join(f"{A}{n}\t0001999005\tHALE MARY\tOfficer\tChief Executive Officer\t\t1 EXAMPLE WAY\t\tSPRINGFIELD\tIL\t62701\tILLINOIS\t\n"
+                  for n in ("101", "102", "103"))
+    buy = f"{A}102\t880101\tCommon Stock\t\t16-JAN-2026\t\t\t\t4\tP\t0\t\t\t\t3000\t\t50\t\tA\t\t9000\t\t\t\tD\t\t\t\n"
+    quarter = insider_zip({"SUBMISSION": head("SUBMISSION") + sub.encode(), "REPORTINGOWNER": head("REPORTINGOWNER") + own.encode(),
+                           "NONDERIV_TRANS": head("NONDERIV_TRANS") + buy.encode()})
+    rows = [("0009900005-26-000009", "2026-08-05", "2026-08-05T20:10:00.000Z"),      # after its last insider filing by more than 120 days
+            ("0009900005-26-000002", "2026-02-10", "2026-02-10T21:10:00.000Z"),      # 16:10 on a Tuesday
+            ("0009900005-24-000007", "2024-06-03", "2024-06-03T20:10:00.000Z")]      # more than 400 days before the first
+    cols = {"accessionNumber": [r[0] for r in rows], "filingDate": [r[1] for r in rows], "reportDate": [r[1] for r in rows],
+            "acceptanceDateTime": [r[2] for r in rows], "act": ["34"] * 3, "form": ["8-K"] * 3, "fileNumber": ["001-39905"] * 3,
+            "filmNumber": [""] * 3, "items": ["2.02,9.01"] * 3, "core_type": ["8-K"] * 3, "size": [1000] * 3, "isXBRL": [0] * 3,
+            "isInlineXBRL": [0] * 3, "isXBRLNumeric": [0] * 3, "primaryDocument": ["oldc8k.htm"] * 3, "primaryDocDescription": ["8-K"] * 3}
+    company = json.dumps({"cik": "0009900005", "sic": "3420", "name": "Oldcastle Works Inc", "tickers": [],
+                          "filings": {"recent": cols, "files": []}}).encode()
+    return {f"{WWW}/files/structureddata{SETS}2026q1_form345.zip": quarter, SUBS + "CIK0009900005.json": company}
+
+
+class NoLongerListed(Lab):
+    """The history is not one of survivors only: a company the ticker list has forgotten is found through
+    the ticker its insiders filed under, and is that symbol only for the years it filed under it."""
+
+    def test_a_company_since_bought_out_is_found_through_its_insiders_filings(self):
+        self.web.routes.update(gone_company())
+        got = filings.backfill(self.sec, self.ev, SYMS + ["OLDC"], 2016, log=self.said.append, today=date(2026, 11, 13), tail=False)
+        self.assertEqual((got["former"], got["no_cik"], got["companies"]), (1, 1, 3))      # NOPE is still nobody
+        e = self.ev.earnings
+        self.assertEqual(e[e["sym"] == "OLDC"][["day", "accession"]].values.tolist(), [[20260211, "0009900005-26-000002"]])
+        i = self.ev.insiders
+        self.assertEqual(i[i["sym"] == "OLDC"][["day", "owner", "shares", "price", "accession"]].values.tolist(),
+                         [[20260121, "HALE MARY", 3000.0, 50.0, A + "102"]])       # filed Tuesday the 20th, no time known: Wednesday
+        self.assertTrue(any("no longer listed" in line for line in self.said))
+
+    def test_links_follow_who_held_a_ticker_and_when(self):
+        rows = [
+            # cik, sym, first, last, n
+            (11, "AAA", "2016-01-20", "2026-10-30", 400),      # listed today, always under AAA
+            (22, "GONE", "2016-02-01", "2019-05-10", 90),      # bought out in 2019
+            (33, "LATE", "2021-03-01", "2023-06-30", 40),      # listed 2021, delisted 2023
+            (44, "TYPO", "2020-01-01", "2020-01-01", 2),       # two filings: someone's slip of the pen
+            (55, "DOW", "2016-01-15", "2017-08-31", 200),      # the old holder of a ticker …
+            (56, "DOW", "2019-03-20", "2026-11-02", 300),      # … and today's, a company that did not exist before
+            (66, "OLDT", "2016-01-10", "2021-05-30", 250),     # renamed in 2021: the same company …
+            (66, "NEWT", "2021-06-02", "2026-11-05", 220),     # … under its new ticker
+            (77, "NEWT", "2016-03-01", "2018-02-01", 30),      # someone else had NEWT while that company was OLDT
+        ]
+        issuers = pd.DataFrame(rows, columns=["cik", "sym", "first", "last", "n"])
+        current = {"AAA": 11, "DOW": 56, "NEWT": 66, "FPI": 88}
+        got = filings.links(["AAA", "GONE", "LATE", "TYPO", "DOW", "NEWT", "OLDT", "FPI", "NOPE"], current, issuers, "2016-01-01")
+        ever, always = filings.EVER, filings.ALWAYS
+        self.assertEqual(got, {
+            11: [("AAA", ever, always)],
+            22: [("GONE", ever, "2019-09-07")],                # filing when the history begins: from the start; 120 days past the last
+            33: [("LATE", "2020-01-26", "2023-10-28")],        # 400 days before its first
+            55: [("DOW", "2014-12-11", "2017-12-29")],         # the old company keeps its own years
+            56: [("DOW", ever, always)],
+            66: [("NEWT", ever, always), ("OLDT", ever, "2021-09-27")],   # today's company is NEWT all the way back
+            88: [("FPI", ever, always)],                       # never in the sets (a foreign company): the ticker list is all there is
+        })                                                     # not 44 (too few filings), not 77 (the bars of those years are company 66's)
 
 
 class Sectors(Lab):

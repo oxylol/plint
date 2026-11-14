@@ -117,7 +117,23 @@ def refresh_assets(lab: Lab, force: bool = False) -> None:
     except AlpacaError as e:
         lab.say(f"could not read the list of bought-out companies: {e}", "warn")
     lab.store.put("assets_at", datetime.now(timezone.utc).isoformat())
+    lab.store.put("aliases_due", True)               # a renamed company shows up as a new symbol: look again
     lab.say(f"asset list read: {len(lab.assets.frame())} symbols, {len(lab.assets.common(True))} listed common stocks")
+
+
+def refresh_aliases(lab: Lab) -> bool:
+    """Finds the old tickers of renamed companies, whose bars are the new ticker's over again, and keeps
+    them out of the universe. True when the list changed (the universe must then be picked again)."""
+    lab.doing("looking for companies listed under two names")
+    frame = lab.assets.frame()
+    found = ingest.aliases(lab.bars, set(frame.loc[frame["active"], "sym"]))
+    changed = found != lab.assets.aliases() or not lab.assets.aliases_path.exists()
+    lab.assets.save_aliases(found)
+    lab.store.put("aliases_due", None)
+    if changed:
+        some = ", ".join(f"{a} is {b}" for a, b in sorted(found.items())[:8])
+        lab.say(f"{len(found)} old tickers of renamed companies are kept out, so that no company counts twice" + (f" ({some} …)" if some else ""))
+    return changed
 
 
 def backfill(lab: Lab, today: date) -> None:
@@ -129,6 +145,7 @@ def backfill(lab: Lab, today: date) -> None:
         lab.doing(f"fetching price history: {done} of {total} symbols")
 
     ingest.backfill(lab.api, lab.bars, syms, lab.cfg.history_start, today.isoformat(), progress=progress)
+    refresh_aliases(lab)
     lab.doing("picking each month's universe")
     months = lab.universe.build(lab.bars, lab.assets.common(), lab.cfg.index_symbol, lab.cfg.universe_size, lab.cfg.min_price)
     lab.store.put("history_done", today.isoformat())
@@ -138,7 +155,7 @@ def backfill(lab: Lab, today: date) -> None:
 def update_prices(lab: Lab, today: date, held: set[str]) -> dict:
     lab.doing("fetching today's prices")
     syms = sorted(set(lab.thin(sorted(set(lab.assets.common(active_only=True)) | set(lab.instruments())))) | held)
-    return ingest.update(lab.api, lab.bars, syms, today, note=lambda t: lab.say(t, "warn"))
+    return ingest.update(lab.api, lab.bars, syms, today, note=lambda t: lab.say(t, "warn"), history_start=lab.cfg.history_start)
 
 
 def refresh_universe(lab: Lab, today: int) -> None:
@@ -152,6 +169,36 @@ def refresh_universe(lab: Lab, today: int) -> None:
         lab.universe.build(lab.bars, lab.assets.common(), lab.cfg.index_symbol, lab.cfg.universe_size,
                            lab.cfg.min_price, since_month=min(month_of(today), want))
         lab.say(f"universe for {want // 100}-{want % 100:02d}: {len(lab.universe.members(want * 100 + 1))} stocks")
+
+
+def read_filings(lab: Lab, members: list[str], now: datetime) -> dict | None:
+    """The SEC's part of an evening: the ten years of history once, then what was accepted since the last
+    look. When the SEC stops a run, what was read is kept and the mark stays where it was, so the next
+    evening asks for the same stretch again (a Form 4 already read is not fetched twice)."""
+    if lab.sec is None:
+        return None
+    from . import filings
+    stamp = lambda t: t.astimezone(cal.NY).strftime("%Y-%m-%dT%H:%M:%S")      # noqa: E731
+    try:
+        if not lab.store.get("filings_backfilled"):
+            lab.doing("reading ten years of filings: results days and insider purchases")
+            got = filings.backfill(lab.sec, lab.events, lab.universe.ever(), int(lab.cfg.history_start[:4]), log=lab.say)
+            lab.store.put("filings_backfilled", stamp(now)[:10])
+            lab.say(f"filings history in: {len(lab.events.earnings)} results days and {len(lab.events.insiders)} insider purchases, "
+                    f"{got['companies']} companies read ({got['former']} of them no longer listed), {got['no_cik']} symbols "
+                    f"not found at the SEC, {len(got['failures'])} could not be read")
+        lab.doing("reading today's filings")
+        since = lab.store.get("filings_since") or stamp(now - timedelta(days=5))
+        got = filings.update(lab.sec, lab.events, members, since, log=lab.say)
+        lab.store.put("filings_since", stamp(now))
+        log.info("filings: %s", {k: v for k, v in got.items() if k != "failures"})
+        return got
+    except filings.Stopped as e:
+        lab.say(f"filings: the run was stopped, and what it had read is kept ({e})", "warn")
+    except Exception as e:
+        lab.say(f"filings not read: {e}", "warn")
+        log.debug(traceback.format_exc())
+    return None
 
 
 def books(lab: Lab, panel: Panel) -> dict[str, Record]:
@@ -399,6 +446,10 @@ def evening(lab: Lab, now: datetime | None = None, next_run: datetime | None = N
                 st = lab.store.read_json(f"model_{mid}.json") or {}
                 held.update(p["symbol"] for p in st.get("positions", []))
             update_prices(lab, today, held)
+            if (lab.store.get("aliases_due") or not lab.assets.aliases_path.exists()) and refresh_aliases(lab):
+                lab.doing("picking each month's universe again")
+                months = lab.universe.build(lab.bars, lab.assets.common(), cfg.index_symbol, cfg.universe_size, cfg.min_price)
+                lab.say(f"universe picked again for {months} months")
         refresh_universe(lab, lab.bars.last_day(cfg.index_symbol) or today_i)
         lab.store.put("fault", None)
     except AlpacaError as e:
@@ -411,22 +462,7 @@ def evening(lab: Lab, now: datetime | None = None, next_run: datetime | None = N
     lab.doing("marking the books")
     panel = lab.live_panel(data_day)
     today_iso = d2s(int(panel.days[-1]))
-    if lab.sec is not None:
-        try:
-            from . import filings
-            if not lab.store.get("filings_backfilled"):
-                lab.doing("reading ten years of filings: results days and insider purchases")
-                got = filings.backfill(lab.sec, lab.events, lab.universe.ever(), int(cfg.history_start[:4]), log=lab.say)
-                lab.store.put("filings_backfilled", today.isoformat())
-                lab.say(f"filings history in: {len(lab.events.earnings)} results days, {len(lab.events.insiders)} insider purchases")
-            lab.doing("reading today's filings")
-            since = lab.store.get("filings_since") or (now - timedelta(days=5)).astimezone(cal.NY).strftime("%Y-%m-%dT%H:%M:%S")
-            got = filings.update(lab.sec, lab.events, [panel.syms[j] for j in panel.members(panel.T - 1)], since, log=lab.say)
-            lab.store.put("filings_since", now.astimezone(cal.NY).strftime("%Y-%m-%dT%H:%M:%S"))
-            log.info("filings: %s", {k: v for k, v in got.items() if k != "failures"})
-        except Exception as e:
-            lab.say(f"filings not read: {e}", "warn")
-            log.debug(traceback.format_exc())
+    read_filings(lab, [panel.syms[j] for j in panel.members(panel.T - 1)], now)
     recs = books(lab, panel)
     daily_line(lab, panel, recs, today_iso)
     lab.doing("deciding for tomorrow")

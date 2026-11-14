@@ -30,6 +30,11 @@ def weekly(lab: Lab) -> str:
     frame = lab.assets.frame()
     data = LiveDeskData(panel, cfg.index_symbol, lab.assets.names(), lab.universe.ranks(last),
                         exchanges=dict(zip(frame["sym"], frame["exchange"])) if len(frame) else {})
-    text = Desk(cfg, lab.store).weekly_review(data, closed[-60:], scored)
-    lab.say(f"the agent reviewed {len(closed)} closed trades and {len(scored)} settled forecasts and rewrote its playbook")
+    desk = Desk(cfg, lab.store)
+    before = desk._playbook()
+    text = desk.weekly_review(data, closed[-60:], scored)
+    if text.strip() != before.strip():
+        lab.say(f"the agent reviewed {len(closed)} closed trades and {len(scored)} settled forecasts and rewrote its playbook")
+    else:
+        lab.say("the agent's playbook stands as it was: nothing closed or settled yet, or the review could not be made")
     return text

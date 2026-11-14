@@ -7,6 +7,7 @@
     python -m stocks research --only drift,insiders   just these (nothing is fitted unless a learned model is named)
     python -m stocks fit             fit the learned models on everything known now
     python -m stocks review          the agent's weekly look at its own record
+    python -m stocks filings         read the SEC now: the ten years of history if not yet in, then the last days
     python -m stocks universe        this month's stocks, and what the name filter kept out
     python -m stocks status          keys, data, books, spend
     python -m stocks reset <model>   start a model's record over (after its rules changed)
@@ -27,7 +28,7 @@ from .config import Config
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="stocks", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", nargs="?", default="serve",
-                    choices=["serve", "run", "research", "fit", "review", "universe", "status", "reset", "variant"])
+                    choices=["serve", "run", "research", "fit", "review", "filings", "universe", "status", "reset", "variant"])
     ap.add_argument("arg", nargs="?")
     ap.add_argument("--exam", action="store_true")
     ap.add_argument("--only", default="", help="research: only these models, comma separated")
@@ -79,6 +80,17 @@ def main(argv: list[str] | None = None) -> int:
         from .review import weekly
         print(weekly(lab))
         return 0
+    if a.command == "filings":
+        from datetime import datetime, timezone
+        from .pipeline import read_filings
+        last = lab.bars.last_day(cfg.index_symbol)
+        if not cfg.has_sec or not last:
+            print("no SEC contact set" if not cfg.has_sec else "no prices yet")
+            return 1
+        got = read_filings(lab, lab.universe.members(last), datetime.now(timezone.utc))
+        lab.doing(None)
+        print(json.dumps({k: v for k, v in (got or {}).items() if k != "failures"}))
+        return 0 if got is not None else 1
     if a.command == "universe":
         from .universe import month_of
         last = lab.bars.last_day(cfg.index_symbol)

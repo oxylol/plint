@@ -128,6 +128,39 @@ class Ingest(unittest.TestCase):
         self.assertEqual(self.store.last_day("SPY"), int(self.days[200]))
         self.assertEqual(len(self.store.read(None, None, ["SAAB"])), 201)
 
+    def test_a_renamed_company_is_found_under_its_old_ticker(self):
+        f = self.frame
+        self.store.upsert(f)
+        # SAAC was renamed: its bars up to day 300 are also there as OLDN (which then stops), as Alpaca serves them
+        old = f[(f["sym"] == "SAAC") & (f["d"] <= int(self.days[300]))].assign(sym="OLDN")
+        # and a stock that merely shares five days of bars with SAAE is nobody's old name
+        few = f[f["sym"] == "SAAG"].copy()
+        same = f[(f["sym"] == "SAAE") & f["d"].isin(self.days[100:105])]
+        few = few[~few["d"].isin(same["d"])]
+        self.store.upsert(old)
+        self.store.upsert(same.assign(sym="FEWD"))
+        active = set(self.syms)
+        self.assertEqual(ingest.aliases(self.store, active), {"OLDN": "SAAC"})
+        # neither listed any more: the shorter history is the old name
+        self.assertEqual(ingest.aliases(self.store, active - {"SAAC"}), {"OLDN": "SAAC"})
+        # both listed today: left alone, whatever they share
+        self.assertEqual(ingest.aliases(self.store, active | {"OLDN"}), {})
+
+    def test_a_symbol_new_to_the_store_gets_its_whole_history(self):
+        api = FakeAlpaca(self.frame, int(self.days[-1]))
+        rest = [s for s in self.syms if s != "SAAF"]
+        ingest.backfill(api, self.store, rest, d2s(self.days[0]), d2s(self.days[-1]))
+        self.assertNotIn("SAAF", self.store.symbols())
+        said: list[str] = []
+        ingest.update(api, self.store, self.syms, as_date(int(self.days[-1])), note=said.append, history_start=d2s(self.days[0]))
+        got = self.store.days("SAAF")
+        truth = self.frame[(self.frame["sym"] == "SAAF") & (self.frame["v"] > 0)]
+        self.assertEqual(len(got), len(truth))                     # not the two-week tail: every day it traded
+        self.assertGreater(len(got), 400)
+        self.assertTrue(any("SAAF" in line for line in said))
+        self.assertAlmostEqual(float(self.store.read(int(self.days[200]), int(self.days[200]), ["SAAF"]).iloc[0]["ret"]),
+                               self.truth("SAAF", int(self.days[200])), places=5)
+
     def test_reading_filters_by_day_and_symbol(self):
         api = FakeAlpaca(self.frame, int(self.days[100]))
         ingest.backfill(api, self.store, self.syms, d2s(self.days[0]), d2s(self.days[100]))
