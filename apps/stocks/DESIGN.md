@@ -35,6 +35,14 @@ A book is not stored: it is replayed from the model's logged decisions over the 
 so a corrected price or a fixed bug reaches every figure. The first decision of an evening stands; running
 the evening twice changes nothing.
 
+**Money not in use.** The rankers are always full (40 names). The two models that wait for events are not:
+in the first backtest the drift book was 23 % in cash on average and the insider book 44 %, and in six
+years when the index made 16 % a year that cash was most of their gap to it. So their unused money waits in
+the index fund, and what is left of the gap is what their picks did. The agent may do the same, and on its
+first evening chose to. (This was changed on 2026-11-14 after the first backtest had been seen, so it is on
+the list of design changes: with cash, drift made -11.8 % a year against the index and insiders -9.9 %;
+with the money in the index fund, see their reports.)
+
 **Costs.** Per dollar traded at the open: half the spread (1 basis point for the busiest stocks up to 20 for
 the thinnest, read off the dollars traded in them), 1 basis point of slip, and the push of the order itself
 (daily volatility × √(order ÷ a day's trading)). Reports also show the result with costs doubled and tripled,
@@ -78,8 +86,8 @@ A few months of paper can show that a model is broken. It cannot show that it is
 | **agent** | Claude reads filings and news, trades ≤ 4 names a day | what was asked for |
 | **momentum** | past year's winners, last month skipped, monthly | Jegadeesh & Titman 1993; also checks the machinery |
 | **reversal** | last week's losers against their own volatility, a week | Lehmann 1990; lives or dies on costs |
-| **drift** | buys the day after a strong reaction to results, 40 days | Bernard & Thomas 1989; slow, a small account can reach it |
-| **insiders** | ≥ 2 officers or directors buy within a month, 60 days | Lakonishok & Lee 2001; purchases, in clusters |
+| **drift** | buys the day after a strong reaction to results, 40 days; the rest in the index fund | Bernard & Thomas 1989; slow, a small account can reach it |
+| **insiders** | ≥ 2 officers or directors buy within a month, 60 days; the rest in the index fund | Lakonishok & Lee 2001; purchases, in clusters |
 | **trend** | SPY above its 200-day average, else Treasury bills | Faber 2007; a risk rule, not a stock picker |
 
 ## The neural network
@@ -172,7 +180,8 @@ network's shape and sizes, the fit schedule, every rule model's numbers, the led
 A change after seeing design-stretch figures is allowed, once it is written down (`python -m stocks variant
 "what and why"`); the list is printed in every report. The first entry is the five-day limit above: it was made
 after a trial of the machinery on a 150-stock sample had been looked at, so it is on the list, though it did
-not come from those figures. After the exam has been run, a change to a model
+not come from those figures. The second is the event models' unused money going into the index fund, which
+did come from the first backtest. After the exam has been run, a change to a model
 starts its record over (`python -m stocks reset <model>`).
 
 ## What this cannot show

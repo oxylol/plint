@@ -19,7 +19,7 @@ from stocks.models import Env
 from stocks.models.events import Drift, Insiders
 from stocks.models.rules import Index, Reversal
 from stocks.panel import FIELDS, Panel
-from stocks.types import BookView
+from stocks.types import BookView, Holding
 
 
 def buy(sym, day, owner, usd, officer=True, director=False, acc=None):
@@ -113,25 +113,49 @@ class EventModels(unittest.TestCase):
         hits = {(self.p.syms[j], t) for t, j in zip(*np.nonzero(m.fire))}
         self.assertEqual(hits, {("SABA", 400)})
         d = m.decide(400, BookView(10_000.0, 1.0))
-        self.assertEqual([(o.symbol, o.weight) for o in d.orders], [("SABA", 1 / 40)])
-        self.assertIn("on results", d.orders[0].why)
+        self.assertEqual([(o.symbol, o.weight) for o in d.orders], [("SPY", 0.97), ("SABA", 1 / 40)])   # the rest waits in the index fund
+        self.assertIn("on results", d.orders[1].why)
         self.assertEqual(d.meta["signals"][0]["symbol"], "SABA")
         self.assertEqual(d.meta["signals"][0]["horizon"], 20)
-        self.assertEqual(m.decide(399, BookView(10_000.0, 1.0)).orders, [])       # the evening before: nothing known yet
+        before = m.decide(399, BookView(10_000.0, 1.0))                            # the evening before: nothing known yet,
+        self.assertEqual([(o.symbol, o.weight) for o in before.orders], [("SPY", 0.995)])       # so all of it waits there
+
+    def test_money_not_in_use_waits_in_the_index_fund_and_is_not_a_pick(self):
+        m = Drift()
+        m.prepare(self.p, self.env)
+        day = lambda n: Holding("X", 0.0, n, "2026-01-02", 0.0)        # noqa: E731
+        spy = lambda w, n=300: Holding("SPY", w, n, "2025-01-02", 0.1)   # noqa: E731
+        # held for far longer than any pick may be, and still not sold: it is not a pick, and takes no place among the forty
+        quiet = m.decide(399, BookView(10_000.0, 0.005, {"SPY": spy(0.995)}))
+        self.assertEqual(quiet.orders, [])
+        self.assertIn("0 held", quiet.note)
+        # it is left alone while it has only drifted a little, and put right once it is three points out
+        self.assertEqual(m.decide(399, BookView(10_000.0, 0.0, {"SPY": spy(0.975), "SACB": Holding("SACB", 0.025, 3, "2026-01-02", 0.0)})).orders, [])
+        moved = m.decide(399, BookView(10_000.0, 0.0, {"SPY": spy(0.93), "SACB": Holding("SACB", 0.025, 3, "2026-01-02", 0.0)}))
+        self.assertEqual([(o.symbol, o.weight) for o in moved.orders], [("SPY", 0.97)])
+        # a pick that has run its forty days is sold, and the money goes back to wait
+        old = m.decide(399, BookView(10_000.0, 0.0, {"SPY": spy(0.95), "SACB": Holding("SACB", 0.045, 39, "2026-01-02", 0.8)}))
+        self.assertEqual([(o.symbol, o.weight) for o in old.orders], [("SPY", 0.995), ("SACB", 0.0)])
+        # and with PARK off the rule is as it was first declared: cash
+        m.PARK = False
+        self.assertEqual([(o.symbol, o.weight) for o in m.decide(400, BookView(10_000.0, 1.0)).orders], [("SABA", 1 / 40)])
 
     def test_the_book_holds_forty_days_then_sells(self):
         out = backtest.run(self.p, [Index(), Drift(), Insiders()], self.env, 370, self.p.T - 1)
         drift = out["drift"].record.book
-        buys = [f for f in drift.fills if f.side == "buy"]
-        sells = [f for f in drift.fills if f.side == "sell"]
+        buys = [f for f in drift.fills if f.side == "buy" and f.sym != "SPY"]
+        sells = [f for f in drift.fills if f.side == "sell" and f.sym != "SPY"]
+        rec = out["drift"].record
+        self.assertLess(max(c / e for c, e in zip(rec.cash[2:], rec.equity[2:])), 0.02)      # and its money is never idle
         self.assertEqual([(f.sym, f.d) for f in buys], [("SABA", int(self.p.days[401]))])     # filled at the next open
         self.assertEqual(len(sells), 1)
         held = int(np.searchsorted(self.p.days, sells[0].d)) - 401
         self.assertEqual(held, 40)
         ins = out["insiders"].record.book
-        self.assertEqual([(f.sym, f.d) for f in ins.fills if f.side == "buy"], [("SACA", int(self.p.days[385]))])
-        self.assertEqual([(f.sym, f.d) for f in ins.fills if f.side == "sell"], [("SACA", int(self.p.days[445]))])   # sixty sessions on
-        self.assertIn("insiders bought $180,000", ins.fills[0].why)
+        picks = [f for f in ins.fills if f.sym != "SPY"]
+        self.assertEqual([(f.sym, f.d) for f in picks if f.side == "buy"], [("SACA", int(self.p.days[385]))])
+        self.assertEqual([(f.sym, f.d) for f in picks if f.side == "sell"], [("SACA", int(self.p.days[445]))])   # sixty sessions on
+        self.assertIn("insiders bought $180,000", picks[0].why)
 
     def test_without_filings_they_wait_and_say_why(self):
         m = Drift()

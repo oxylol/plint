@@ -6,7 +6,12 @@ Both are slow effects with a long paper trail, the kind a small account can stil
 - insider buying: Lakonishok & Lee (2001), Cohen, Malloy & Pomorski (2012): purchases, by several insiders
   at once, are the informative ones; sales mostly are not.
 Each buys at the next open and holds for a fixed stretch. Every qualifying event is logged as a forecast,
-bought or not, so the ledger can score the rule and not just the book."""
+bought or not, so the ledger can score the rule and not just the book.
+
+Events come when they come, so these books are seldom full: in the first backtest the drift book was 23 %
+in cash on average and the insider book 44 %, and since cash earns nothing here, most of their gap to the
+index was that cash and not their picks. So money not in use waits in the index fund (PARK), and the gap
+that is left is what the picks did."""
 from __future__ import annotations
 
 import numpy as np
@@ -24,6 +29,9 @@ class EventModel(Model):
     HOLD = 40               # trading days
     horizon = 20
     P = 0.55                # the chance logged with each event: the rule's standing claim, not a fitted number
+    PARK = True             # money not in use waits in the index fund
+    FULL = 0.995            # the share of the book that is put to work; the rest pays for trading
+    SLACK = 0.03            # the index holding is left alone until it is this far from where it should be
 
     def prepare(self, panel: Panel, env: Env) -> None:
         super().prepare(panel, env)
@@ -50,7 +58,8 @@ class EventModel(Model):
             d.note = self._wait
             return d
         p = self.panel
-        held = view.holdings
+        idx = self.env.index
+        held = {s: h for s, h in view.holdings.items() if s != idx}     # the index fund is where money waits, not a pick
         # `days` counts the closes since the day it was bought, so days + 1 is the sessions it has been held
         d.orders = [Order(s, 0.0, f"held {h.days + 1} days") for s, h in held.items() if h.days + 1 >= self.HOLD]
         free = self.K - (len(held) - len(d.orders))
@@ -66,12 +75,19 @@ class EventModel(Model):
                 free -= 1
         d.meta["signals"] = signals
         d.note = f"{len(cols)} new today; {len(held)} held" if len(cols) else f"nothing new today; {len(held)} held"
+        if self.PARK:
+            sold = {o.symbol for o in d.orders if o.weight <= 0}
+            bought = sum(o.weight for o in d.orders if o.weight > 0)
+            want = max(0.0, self.FULL - bought - sum(h.weight for s, h in held.items() if s not in sold))
+            have = view.holdings[idx].weight if idx in view.holdings else 0.0
+            if abs(want - have) > (0.0 if bought or sold else self.SLACK):     # moved with the trades, else only when it has drifted
+                d.orders.insert(0, Order(idx, round(want, 4) if want >= 0.01 else 0.0, "money not in use waits in the index fund"))
         return d
 
 
 class Drift(EventModel):
     id, title = "drift", "After-earnings drift"
-    what = "Buys a stock the day after a strong price reaction to its results and holds it eight weeks."
+    what = "Buys a stock the day after a strong price reaction to its results and holds it eight weeks. Money not in use waits in the index fund."
     MIN_MOVE, MIN_SIGMAS, MIN_SURGE = 0.04, 2.0, 1.5
 
     def fire_table(self) -> np.ndarray:
@@ -93,7 +109,8 @@ class Drift(EventModel):
 
 class Insiders(EventModel):
     id, title = "insiders", "Insider buying"
-    what = "Buys when two or more of a company's own officers or directors buy its shares on the open market within a month."
+    what = ("Buys when two or more of a company's own officers or directors buy its shares on the open market within a month, "
+            "and holds twelve weeks. Money not in use waits in the index fund.")
     HOLD = 60
     WINDOW, MIN_BUYERS, MIN_USD = 21, 2, 100_000.0
 
