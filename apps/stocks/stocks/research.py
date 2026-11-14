@@ -23,6 +23,7 @@ from .models import Env, ScoreModel, build
 from .models.events import EventModel
 from .panel import Panel
 from .pipeline import Lab
+from .util import quiet
 
 log = logging.getLogger("stocks.research")
 BACKTEST_START = 20190102
@@ -66,6 +67,11 @@ def _pct(x, digits: int = 1) -> str:
     return "n/a" if x is None or not np.isfinite(x) else f"{x * 100:+.{digits}f} %"
 
 
+def _share(x, digits: int = 2) -> str:
+    """A percentage without a sign (a cost, a share)."""
+    return "n/a" if x is None or not np.isfinite(x) else f"{x * 100:.{digits}f} %"
+
+
 def _num(x, digits: int = 2) -> str:
     return "n/a" if x is None or not np.isfinite(x) else f"{x:.{digits}f}"
 
@@ -85,7 +91,7 @@ def _event_stats(model: EventModel, fwd_rel: np.ndarray, t0: int, t1: int) -> di
 
 
 def _report(o: backtest.Outcome, days: np.ndarray, t0: int, t1: int, cfg, sens: dict, ladder: list, events: dict | None,
-            variants: list[str], exam_runs: int, title: str = "backtest") -> str:
+            variants: list[str], exam_runs: int, title: str = "backtest", basket: float = float("nan")) -> str:
     m, s = o.model, o.stats
     lines = [f"# {m.title}: {title}", "", m.what, "",
              f"**{d2s(days[t0])} to {d2s(days[t1])}**, {s['days']} trading days, ${cfg.start_cash:,.0f} to start, costs included. "
@@ -95,7 +101,11 @@ def _report(o: backtest.Outcome, days: np.ndarray, t0: int, t1: int, cfg, sens: 
              f"| in all | {_pct(s['ret'])} | {_pct(s['index_ret'])} |", "",
              f"- Against the index: **{_pct(s['vs_index_ann'])} a year** (90 % range {_pct(s['ci'][0])} to {_pct(s['ci'][1])}).",
              f"- Worst drop from a high: {_pct(s['max_dd'])}. Sharpe ratio {_num(s['sharpe'])}.",
-             f"- It traded {_num(s['turnover'], 1)} times its book a year in {s['trades']} trades; costs took {_pct(s['cost_drag'], 2)} a year."]
+             f"- It traded {_num(s['turnover'], 1)} times its book a year in {s['trades']} trades; costs took {_share(s['cost_drag'])} a year."]
+    if np.isfinite(basket) and m.kind != "index" and m.id != "trend":
+        lines.append(f"- A blind basket (every stock in the universe, equal weight, no costs) made {_pct(basket)} a year: "
+                     f"against that, this model made **{_pct(s['ret_ann'] - basket)}**. The index is weighted by size and the "
+                     "books here are not, so part of any gap to the index is that difference and not skill.")
     if sens:
         lines.append(f"- With costs doubled: {_pct(sens.get(2))} a year against the index; tripled: {_pct(sens.get(3))}. "
                      f"With a Swedish broker's currency fee on every trade ({cfg.fx_fee_bps / 100:.2f} %): {_pct(sens.get('fx'))}.")
@@ -187,6 +197,9 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
             label = {"ridge": "straight line", "trees": "boosted trees", "net": "network, reading the whole day", "blend": "blend"}[name]
             ladder.append((label, out[name].ic[5]["ic"], out[name].ic[5]["t"]))
     fwd20 = dataset.relative(dataset.forward(panel, 20), panel.member)
+    with quiet():                                    # what holding every stock in the universe equally would have made
+        each_day = np.nanmean(np.where(panel.member, panel.ret, np.nan), axis=1)[t0 + 1:t1 + 1]
+    basket = float(np.prod(1.0 + np.nan_to_num(each_day)) ** (252.0 / max(len(each_day), 1)) - 1.0)
     variants = store.get("variants") or []
     exam_runs = store.get("exam_runs") or 0
 
@@ -204,7 +217,7 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
                  "turnover": s["turnover"], "cost_drag": s["cost_drag"],
                  "ic": main.get("ic") if main else (ev["mean"] if ev else None),
                  "ic_t": main.get("t") if main else (ev["t"] if ev else None)}
-        text = _report(o, days, t0, t1, cfg, sens[mid], ladder, ev, variants, exam_runs, "the exam" if exam else "backtest")
+        text = _report(o, days, t0, t1, cfg, sens[mid], ladder, ev, variants, exam_runs, "the exam" if exam else "backtest", basket)
         rep = store.read_json(f"reports/{mid}.json") or {}
         path = Path(store.dir) / "reports" / f"{mid}.md"
         if exam:

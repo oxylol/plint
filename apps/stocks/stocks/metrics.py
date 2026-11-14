@@ -70,7 +70,11 @@ def summarize(equity: np.ndarray, index_equity: np.ndarray, traded: np.ndarray, 
     }
     out["vs_index"] = out["ret"] - out["index_ret"]
     out["vs_index_ann"] = out["ret_ann"] - out["index_ann"]
-    out["ci"] = list(bootstrap_ci(active)) if ci else [float("nan"), float("nan")]
+    if ci:      # the bootstrap works on daily log differences; put its range in the same terms as vs_index_ann
+        lo, hi = bootstrap_ci(active)
+        out["ci"] = [float((1.0 + out["index_ann"]) * np.expm1(lo)), float((1.0 + out["index_ann"]) * np.expm1(hi))]
+    else:
+        out["ci"] = [float("nan"), float("nan")]
     return out
 
 
