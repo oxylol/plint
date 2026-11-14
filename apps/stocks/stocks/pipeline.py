@@ -353,9 +353,19 @@ def phase_of(lab: Lab, recs: dict[str, Record]) -> tuple[str, str]:
         return "keys", "Waiting for the Alpaca keys"
     if not lab.have_history():
         return "backfill", "Fetching ten years of prices"
-    if not recs:
-        return "research", "Prices are in; fitting and backtesting before anything trades"
+    if not recs or lab.store.read_json("reports/index.json") is None:
+        return "research", "Prices are in; fitting and backtesting before anything but the index trades"
     return "running", "Running"
+
+
+def touch_state(lab: Lab) -> None:
+    """At the start of a run: the page's word on which keys are in place, without waiting for the run's end
+    (a first run reads ten years of filings before it publishes anything)."""
+    st = lab.store.read_json("state.json")
+    if st:
+        st["keys"] = lab.cfg.keys()
+        st["notices"] = notices(lab, st.get("phase", ""), None, None)
+        lab.store.write_json("state.json", st)
 
 
 def notices(lab: Lab, phase: str, data_day: int | None, today: int | None) -> list[dict]:
@@ -439,6 +449,7 @@ def evening(lab: Lab, now: datetime | None = None, next_run: datetime | None = N
         return "no Alpaca keys: nothing to do"
     today = cal.last_close(now, cfg.run_at)
     today_i = today.year * 10000 + today.month * 100 + today.day
+    touch_state(lab)
     try:
         refresh_assets(lab)
         if not lab.have_history():

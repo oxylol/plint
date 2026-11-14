@@ -87,13 +87,14 @@ class EndToEnd(unittest.TestCase):
 
     def test_first_evening_only_the_index_starts(self):
         s = self.state_first
-        self.assertEqual(s["phase"], "running")          # the index has a book from the first evening
+        self.assertEqual(s["phase"], "research")         # the index has a book from the first evening; the rest wait for their backtests
         self.assertEqual(self.model("index", s)["state"], "running")
         for mid in ("net", "trees", "ridge", "momentum", "reversal", "trend", "blend"):
             self.assertEqual(self.model(mid, s)["state"], "waiting", mid)
             self.assertEqual(self.model(mid, s)["state_text"], "waiting for its backtest" if mid not in ("net", "trees", "ridge", "blend")
                              else self.model(mid, s)["state_text"])
         self.assertIn("backtest", self.model("momentum", s)["state_text"])
+        self.assertEqual(self.state["phase"], "running")  # and once the backtests are written, the lab is running
 
     # ── research ────────────────────────────────────────────────────────────────────────────────
     def test_reports_written_and_shaped(self):
