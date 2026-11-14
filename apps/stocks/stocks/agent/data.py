@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 import numpy as np
 
 from ..bars import d2s
-from ..cal import NY, days_left_in_month
+from ..cal import NY, days_in_month, days_left_in_month
 from ..features import Base, lag, rmean, rstd, rsum
 from ..panel import Panel
 from ..types import Event
@@ -30,6 +30,7 @@ class LiveDeskData:
         self.date = d2s(panel.days[t])
         d = int(panel.days[t])
         self.days_left = days_left_in_month(date(d // 10000, d // 100 % 100, d % 100))
+        self.days_in_month = days_in_month(date(d // 10000, d // 100 % 100, d % 100))
         cols = panel.members(t)
         self.universe = [panel.syms[j] for j in cols if np.isfinite(panel.c[t, j])]
         b = Base(panel, index_symbol)

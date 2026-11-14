@@ -30,6 +30,7 @@ class DeskData(Protocol):
     universe: list[str]             # the stocks it may buy
     index_symbol: str
     days_left: int                  # trading days left this month, today included (for the day's allowance)
+    days_in_month: int              # trading days in the whole month: a day's allowance is never more than 1.5 even days
 
     def profile(self, symbol: str) -> dict:
         """{symbol, name, exchange, price, ret: {1,5,21,63,252} (total return over that many trading days),

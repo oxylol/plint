@@ -63,14 +63,18 @@ class Budget:
     """One run's view of the money. What was spent before the run is read from the store once; the run's
     own calls are added as they are recorded, so the gates see exactly what was written."""
 
-    def __init__(self, store: Store, cap_usd: float, days_left: int, now: str | None = None):
+    def __init__(self, store: Store, cap_usd: float, days_left: int, now: str | None = None,
+                 days_in_month: int | None = None):
         now = now or now_iso()
         self.store = store
         self.cap = cap_usd
         self.month_before = store.spend_month(now[:7])
         self.day_before = store.spend_day(now[:10])
         self.spent = 0.0            # this run
-        self.allowance = max(0.0, cap_usd - self.month_before) / max(1, days_left) * DAY_FACTOR
+        per_day = max(0.0, cap_usd - self.month_before) / max(1, days_left)
+        if days_in_month:           # the cap is a ceiling, not a target: a month begun late, or a quiet first
+            per_day = min(per_day, cap_usd / days_in_month)     # half, is not made up for by spending faster
+        self.allowance = per_day * DAY_FACTOR
 
     @property
     def month(self) -> float:

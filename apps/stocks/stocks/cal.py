@@ -100,6 +100,11 @@ def days_left_in_month(d: date) -> int:
     return len(trading_days(d, last))
 
 
+def days_in_month(d: date) -> int:
+    """Trading days in d's month."""
+    return days_left_in_month(date(d.year, d.month, 1))
+
+
 def next_run(now: datetime, run_at: str) -> datetime:
     """The next evening run: `run_at` New York time on a trading day, strictly after `now`."""
     hh, mm = (int(x) for x in run_at.split(":"))

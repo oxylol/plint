@@ -448,6 +448,12 @@ class TestBudget(Case):
         self.assertEqual(Budget(self.store, 50.0, days_left=5).allowance, 0.0)
         self.assertAlmostEqual(Budget(self.store, 200.0, days_left=0).allowance, 118.75 * 1.5)
 
+    def test_a_month_begun_late_is_not_made_up_for_by_spending_faster(self):
+        self.assertAlmostEqual(Budget(self.store, 200.0, days_left=5, days_in_month=20).allowance, 200.0 / 20 * 1.5)   # not 200 / 5
+        self.assertAlmostEqual(Budget(self.store, 200.0, days_left=20, days_in_month=20).allowance, 15.0)
+        self.spent_before(180.0)
+        self.assertAlmostEqual(Budget(self.store, 200.0, days_left=10, days_in_month=20).allowance, 20.0 / 10 * 1.5)   # and what is left still binds
+
     def test_fits_is_exact_at_the_line(self):
         self.spent_before(199.60)
         b = Budget(self.store, 200.0, days_left=5)

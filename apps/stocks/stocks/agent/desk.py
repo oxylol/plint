@@ -83,7 +83,7 @@ class Desk:
         if not self._ready():
             return DeskResult(stopped="no key")
         res = DeskResult()
-        budget = Budget(self.store, self.cfg.agent_cap_usd, data.days_left)
+        budget = Budget(self.store, self.cfg.agent_cap_usd, data.days_left, days_in_month=getattr(data, "days_in_month", None))
         self._begin(data.date)
         try:
             items = self._triage(data, budget, res)
@@ -107,7 +107,7 @@ class Desk:
         if not self._ready() or not (closed or scored):
             return old
         self._begin(data.date)
-        budget = Budget(self.store, self.cfg.agent_cap_usd, data.days_left)
+        budget = Budget(self.store, self.cfg.agent_cap_usd, data.days_left, days_in_month=getattr(data, "days_in_month", None))
         ask = Ask(model=self.cfg.agent_model, system=(prompts.REVIEW,), user=prompts.review_user(data.date, old, closed, scored),
                   schema=prompts.REVIEW_SCHEMA, max_tokens=REVIEW_MAX_TOKENS, effort=self.cfg.agent_effort, fallback=True)
         try:

@@ -42,6 +42,7 @@ class Calendar(unittest.TestCase):
         nxt = cal.next_run(fri_evening, "16:25")
         self.assertEqual((nxt.date(), nxt.hour, nxt.minute), (date(2026, 11, 16), 16, 25))
         self.assertEqual(cal.days_left_in_month(date(2026, 11, 13)), 11)
+        self.assertEqual(cal.days_in_month(date(2026, 11, 13)), 20)          # 21 weekdays less Thanksgiving
         self.assertEqual(cal.prev_trading_day(date(2026, 11, 16)), date(2026, 11, 13))
 
 
