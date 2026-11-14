@@ -148,12 +148,6 @@
 		}
 	}
 
-	@table host table.{$DOMAIN}
-	handle @table {
-		# Plint Table (D&D). Own look, own repo at /opt/plint-table; websockets pass through.
-		reverse_proxy localhost:3200
-	}
-
 	@cnc host cnc.{$DOMAIN}
 	handle @cnc {
 		# CNC Studio. Own look; drawings/PDFs for Claude and saved target models
@@ -175,28 +169,6 @@
 		}
 	}
 
-	@twin host twin.{$DOMAIN}
-	handle @twin {
-		# CNC Twin (apps/cnc-twin): a physics twin for verifying CNC programs before they
-		# run. It reads Plint's tokens, so the theme reaches it like any other app; run
-		# progress streams over SSE, so no buffering; projects upload as zip files.
-		import theme twin
-		request_body {
-			max_size 500MB
-		}
-		reverse_proxy localhost:5210 {
-			header_up Accept-Encoding identity
-			flush_interval -1
-		}
-	}
-
-	@music host music.{$DOMAIN}
-	handle @music {
-		# Hertz (apps/hertz): a music maker of waves and dials. Own look; the
-		# sound is made in the browser, the container keeps saved songs.
-		reverse_proxy localhost:5200
-	}
-
 	@accrete host accrete.{$DOMAIN}
 	handle @accrete {
 		# Accrete (apps/accrete): an incremental game, a star from dust. Own look;
@@ -216,8 +188,8 @@
 
 	@ultron host ultron.{$DOMAIN}
 	handle @ultron {
-		# Ultron (apps/ultron): a companion you talk to. celeris-1 thinks,
-		# VoiceStudio speaks in the cloned voice. Own look; the answer streams.
+		# Ultron (apps/ultron): a companion you talk to. celeris-1 or Haiku thinks,
+		# VoiceStudio on the PC speaks in the cloned voice. Own look; the answer streams.
 		reverse_proxy localhost:5230 {
 			flush_interval -1
 		}
@@ -236,17 +208,6 @@
 	handle @speed {
 		import theme speedtest
 		reverse_proxy localhost:8075 {
-			header_up Accept-Encoding identity
-		}
-	}
-
-	@tv host tv.{$DOMAIN}
-	handle @tv {
-		# The Mac on the TV (tv/ in this repo). Its remote service listens on :7700
-		# and only honours requests carrying the shared key, so the LAN can't drive it.
-		import theme tv
-		reverse_proxy {$TV_IP:127.0.0.1}:7700 {
-			header_up X-Plint-Key {$TV_KEY}
 			header_up Accept-Encoding identity
 		}
 	}

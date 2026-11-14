@@ -8,8 +8,8 @@ set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 need_root
 
-PORTS=(53 80 443 3000 3100 5001 8090 3001 8070 51515 8095)
-OURS=" caddy adguard homepage socket-proxy dockge beszel beszel-agent uptime-kuma ntfy kopia stremio "
+PORTS=(53 80 443 3000 5001 8090 3001 8070 51515 8095)
+OURS=" caddy adguard dockge beszel beszel-agent uptime-kuma ntfy kopia stremio speedtest-tracker "
 
 step "Clearing the way"
 removed=0

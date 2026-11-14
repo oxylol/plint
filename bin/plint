@@ -3,7 +3,7 @@
 #  plint · the one command for the box
 #
 #    plint status            what's running, what isn't
-#    plint up|down|restart   [stack]   (core | ops | media | table | cnc | poly | music | twin | ai | ultron | accrete | stocks | all)
+#    plint up|down|restart   [stack]   (core | ops | media | cnc | poly | ai | ultron | accrete | stocks | all)
 #    plint logs <name>       follow a container's logs
 #    plint sync              pull the repo, apply any changes
 #    plint update            update images + OS packages, then sync
@@ -12,7 +12,6 @@
 #    plint claude            attach to Claude on the box (Ctrl+B, D to leave)
 #    plint notify "msg"      push a message to your phone
 #    plint game [start|stop <name>]   AMP game servers (list · start · stop)
-#    plint tv [register <ip> <key>]   the Mac on the TV (state · register)
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
 PLINT_DIR="${PLINT_DIR:-/opt/plint}"
@@ -20,10 +19,10 @@ PLINT_DIR="${PLINT_DIR:-/opt/plint}"
 source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
-STACKS=(core ops media table cnc poly music twin ai ultron accrete stocks)
-usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+STACKS=(core ops media cnc poly ai ultron accrete stocks)
+usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
-stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|table|cnc|poly|music|twin|ai|ultron|accrete|stocks) echo "$1";; *) die "unknown stack: $1";; esac; }
+stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|cnc|poly|ai|ultron|accrete|stocks) echo "$1";; *) die "unknown stack: $1";; esac; }
 
 cmd_status() {
   printf '%s%s%s\n\n' "$C_BOLD" "Plint · $(hostname) · $(date '+%a %d %b %H:%M')" "$C_RESET"
@@ -51,7 +50,6 @@ cmd_status() {
 
 url_for() {
   case "$1" in
-    homepage) echo "https://${DOMAIN:-}";;
     adguard) echo "https://dns.${DOMAIN:-}";;
     dockge) echo "https://stacks.${DOMAIN:-}";;
     beszel) echo "https://metrics.${DOMAIN:-}";;
@@ -59,13 +57,10 @@ url_for() {
     ntfy) echo "https://ntfy.${DOMAIN:-}";;
     kopia) echo "https://backup.${DOMAIN:-}";;
     stremio) echo "https://stremio.${DOMAIN:-}";;
-    table) echo "https://table.${DOMAIN:-}";;
     cnc-studio) echo "https://cnc.${DOMAIN:-}";;
     polybot) echo "https://poly.${DOMAIN:-}";;
-    hertz) echo "https://music.${DOMAIN:-}";;
     accrete) echo "https://accrete.${DOMAIN:-}";;
     stocks) echo "https://stocks.${DOMAIN:-}";;
-    cnc-twin) echo "https://twin.${DOMAIN:-}";;
     ultron) echo "https://ultron.${DOMAIN:-}";;
     cockpit.socket) echo "https://host.${DOMAIN:-}";;
     tailscaled) tailscale ip -4 2>/dev/null | head -n1;;
@@ -222,8 +217,6 @@ cmd_sync() {
   sudo -u plint -H git -C "$PLINT_DIR" pull --ff-only
   after="$(git -C "$PLINT_DIR" rev-parse --short HEAD)"
   if [[ "$before" == "$after" ]]; then ok "already up to date ($after)"; else ok "$before → $after"; fi
-  # Plint Table lives in its own repo; pull it too so `plint sync` rebuilds the table image.
-  if [[ -d /opt/plint-table/.git ]]; then sudo -u plint -H git -C /opt/plint-table pull --ff-only >/dev/null 2>&1 && ok "plint-table up to date" || warn "plint-table: git pull failed (local changes?)"; fi
   for s in "${STACKS[@]}"; do compose "$s" up -d --remove-orphans --build; done
   docker exec caddy caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 || true
   local u units=0
@@ -297,27 +290,9 @@ cmd_claude() {
 
 cmd_notify() { "$PLINT_DIR/scripts/notify.sh" "Plint" "$*"; ok "sent"; }
 
-# ── The Mac on the TV (tv/ in this repo) ─────────────────────
-cmd_tv() {
-  case "${1:-state}" in
-    register)
-      local ip="${2:-}" key="${3:-}"
-      [[ -n "$ip" && -n "$key" ]] || die "plint tv register <ip> <key>   (both are printed by tv/install.sh on the Mac)"
-      env_set TV_IP "$ip"; env_set TV_KEY "$key"
-      compose core up -d caddy homepage >/dev/null
-      ok "tv.${DOMAIN} → ${ip}:7700"
-      ;;
-    state)
-      [[ -n "${TV_IP:-}" ]] || die "no TV registered yet — run tv/install.sh on the Mac, then: plint tv register <ip> <key>"
-      curl -fsS --max-time 5 -H "X-Plint-Key: ${TV_KEY:-}" "http://${TV_IP}:7700/api/state" | python3 -m json.tool
-      ;;
-    *) die "plint tv [register <ip> <key>]";;
-  esac
-}
-
 case "${1:-}" in
   status|"") cmd_status;;
-  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game|tv) c="$1"; shift; "cmd_$c" "$@";;
+  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game) c="$1"; shift; "cmd_$c" "$@";;
   -h|--help|help) usage;;
   *) usage 1;;
 esac

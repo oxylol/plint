@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────
 #  Plint · core stack
-#  The front door (Caddy), the network (AdGuard), the home screen
-#  (Homepage) and the stack manager (Dockge). If this is up, Plint is up.
+#  The front door (Caddy, which also serves the home page from theme/home),
+#  the network (AdGuard) and the stack manager (Dockge). If this is up, Plint is up.
 # ─────────────────────────────────────────────────────────────
 name: core
 
@@ -20,9 +20,6 @@ services:
       DOMAIN: ${DOMAIN}
       CF_API_TOKEN: ${CF_API_TOKEN}
       TZ: ${TZ}
-      # The Mac on the TV (set by `plint tv register`)
-      TV_IP: ${TV_IP:-127.0.0.1}
-      TV_KEY: ${TV_KEY:-}
     volumes:
       # The folder, not the file: git replaces files on pull, and a single-file
       # bind mount would keep showing Caddy the old copy.
@@ -50,52 +47,6 @@ services:
     volumes:
       - ../../data/adguard/work:/opt/adguardhome/work
       - ../../data/adguard/conf:/opt/adguardhome/conf
-    networks:
-      - core
-
-  homepage:
-    image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:3100:3000/tcp"
-    environment:
-      TZ: ${TZ}
-      PUID: ${PUID}
-      PGID: ${PGID}
-      HOMEPAGE_ALLOWED_HOSTS: ${DOMAIN},dash.${DOMAIN},localhost:3100
-      HOMEPAGE_VAR_DOMAIN: ${DOMAIN}
-      HOMEPAGE_VAR_ADMIN_USER: ${ADMIN_USER}
-      HOMEPAGE_VAR_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      HOMEPAGE_VAR_TV_IP: ${TV_IP:-127.0.0.1}
-    volumes:
-      - ../../dashboard:/app/config
-      - ../../dashboard/images:/app/public/images:ro
-      # Only for the Storage gauge: the disk backups live on (Kopia's blobs are encrypted).
-      - ${BACKUP_PATH}:/storage:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    depends_on:
-      - socket-proxy
-    networks:
-      - core
-
-  # Read-only, allow-listed access to the Docker API for the dashboard.
-  socket-proxy:
-    image: lscr.io/linuxserver/socket-proxy:latest
-    container_name: socket-proxy
-    restart: unless-stopped
-    environment:
-      CONTAINERS: 1
-      INFO: 1
-      PING: 1
-      VERSION: 1
-      POST: 0
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    read_only: true
-    tmpfs:
-      - /run
     networks:
       - core
 

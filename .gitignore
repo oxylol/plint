@@ -6,10 +6,12 @@ data/
 .claude/settings.local.json
 stacks/*/compose.override.yaml
 
-# Homepage recreates these unused skeletons on start
-dashboard/kubernetes.yaml
-dashboard/proxmox.yaml
 __pycache__/
+
+# working notes, design sketches and Claude's worktrees stay on the box
+.scratch/
+theme/sketch/
+.claude/worktrees/
 
 # local test installs of app dependencies
 apps/*/node_modules/
