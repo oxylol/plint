@@ -7,6 +7,7 @@ trade) reaches the table and is logged."""
 from __future__ import annotations
 
 import logging
+import re
 import zlib
 from datetime import date, timedelta
 from typing import Callable
@@ -18,10 +19,14 @@ from .alpaca import Alpaca, AlpacaError
 from .bars import COLS, BarStore, d2s, tidy
 
 log = logging.getLogger("stocks.ingest")
+LONG_GAP_DAYS = 45
+TICKER = re.compile(r"^[A-Z]{1,5}(\.[A-TVX-Z])?$")        # a share class after the dot; .U .W .R are units, warrants, rights
+PAPER = re.compile(r"^[A-Z]{4}[WURYFQ]$")          # a fifth letter: warrants, units, rights, foreign and bankrupt paper
 
 def _frame(pairs) -> pd.DataFrame:
+    # Alpaca fills a halted day with a bar that repeats the last price on zero volume. Nothing traded: no bar.
     rows = [(int(b["t"][:4]) * 10000 + int(b["t"][5:7]) * 100 + int(b["t"][8:10]), s,
-             b["o"], b["h"], b["l"], b["c"], b["v"], b.get("vw", b["c"]), b.get("n", 0)) for s, b in pairs]
+             b["o"], b["h"], b["l"], b["c"], b["v"], b.get("vw", b["c"]), b.get("n", 0)) for s, b in pairs if b["v"] > 0]
     return pd.DataFrame(rows, columns=["d", "sym", "o", "h", "l", "c", "v", "vw", "n"])
 
 
@@ -36,7 +41,31 @@ def pull(api: Alpaca, symbols: list[str], start: str, end: str) -> pd.DataFrame:
     g = df.groupby("sym", sort=False)
     df["ret"] = df["ac"] / g["ac"].shift(1) - 1.0
     df["raw_move"] = df["c"] / g["c"].shift(1) - 1.0
+    # A ticker is sometimes handed to another company after the first has gone. Bars that resume after a long
+    # silence are a new listing, not a return on the old price.
+    when = pd.to_datetime(df["d"].astype(str), format="%Y%m%d")
+    silent = (when - when.groupby(df["sym"], sort=False).shift(1)).dt.days > LONG_GAP_DAYS
+    df.loc[silent, ["ret", "raw_move"]] = float("nan")
     return df.drop(columns=["ac"]).reset_index(drop=True)
+
+
+def gone_symbols(api: Alpaca, start: str, end: str, companies: set[str]) -> dict[str, str]:
+    """Companies that were bought out, from the corporate-action list: {symbol: the day it happened}. The asset
+    list forgets most of them, and a backtest that never held a company that was later taken over is a
+    backtest of survivors. A buy-out paid in shares counts only when the buyer is itself a listed company
+    (`companies`): funds merge into funds the same way. (The list is thin before 2020: what is still missing
+    is said in every report.)"""
+    acts = api.corporate_actions(None, start, end, "cash_merger,stock_and_cash_merger,stock_merger")
+    out: dict[str, str] = {}
+    for kind, rows in acts.items():
+        for r in rows:
+            sym, buyer = r.get("acquiree_symbol") or "", r.get("acquirer_symbol")
+            if not TICKER.match(sym) or PAPER.search(sym) or sym == buyer:
+                continue
+            if kind != "cash_mergers" and buyer not in companies:
+                continue
+            out.setdefault(sym, r.get("effective_date") or r.get("process_date") or "")
+    return out
 
 
 def split_suspects(df: pd.DataFrame) -> pd.DataFrame:

@@ -19,6 +19,7 @@ from .cal import next_trading_day
 from .util import quiet
 
 EXCHANGES = {"NYSE", "NASDAQ", "AMEX"}          # ARCA and BATS list funds, not companies
+FALLEN = "OTC"
 WINDOW, MIN_BARS = 63, 40
 
 # A fund, a note or a piece of paper on top of a share, by its listed name. Not perfect; what slips through
@@ -38,11 +39,15 @@ _PAPER_SYMBOL = re.compile(r"[.\-](WS|W|U|R|RT|P[A-Z]?|PR[A-Z]?)$|^[A-Z]{4}[WUR]
 
 
 def is_common(symbol: str, name: str, exchange: str) -> bool:
-    """A company's ordinary share (or its depositary receipt), listed on a main exchange."""
-    if exchange not in EXCHANGES:
+    """A company's ordinary share (or its depositary receipt), listed on a main exchange, or one that was:
+    a company pushed off its exchange is quoted over the counter afterwards, and its exchange years count
+    (the price table only ever holds exchange trades, so its over-the-counter life is not in it)."""
+    if exchange not in EXCHANGES and exchange != FALLEN:
         return False
     if _PAPER_SYMBOL.search(symbol or ""):
         return False
+    if exchange == FALLEN and (not name or re.search(r"^[A-Z]{4}[YF]$", symbol or "")):
+        return False                                 # five letters ending Y or F: foreign shares that never listed here
     name = name or ""
     if _FUND_HOUSE.search(name):
         return False
@@ -57,7 +62,20 @@ class Assets:
     def __init__(self, cache_dir: Path):
         self.path = Path(cache_dir) / "assets.parquet"
         self.overrides_path = Path(cache_dir) / "universe_overrides.json"
+        self.gone_path = Path(cache_dir) / "gone.json"          # companies bought out: {symbol: day}
         self._df: pd.DataFrame | None = None
+
+    def save_gone(self, gone: dict[str, str]) -> None:
+        old = self.gone()
+        old.update(gone)
+        self.gone_path.write_text(json.dumps(old))
+        self._df = None
+
+    def gone(self) -> dict[str, str]:
+        try:
+            return json.loads(self.gone_path.read_text())
+        except (FileNotFoundError, ValueError):
+            return {}
 
     def save(self, assets: list[dict]) -> pd.DataFrame:
         df = pd.DataFrame([{"sym": a["symbol"], "name": a.get("name") or "", "exchange": a.get("exchange") or "",
@@ -73,9 +91,14 @@ class Assets:
             if not self.path.exists():
                 return pd.DataFrame(columns=["sym", "name", "exchange", "active", "tradable", "common"])
             df = pd.read_parquet(self.path)
+            extra = [s for s in self.gone() if s not in set(df["sym"])]
+            if extra:                               # no name, no exchange: all that is known is that it was bought
+                df = pd.concat([df, pd.DataFrame({"sym": extra, "name": "", "exchange": "GONE", "active": False,
+                                                  "tradable": False})], ignore_index=True)
             ov = self.overrides()
             common = [is_common(s, n, e) for s, n, e in zip(df["sym"], df["name"], df["exchange"])]
-            df["common"] = (pd.Series(common, index=df.index) | df["sym"].isin(ov["include"])) & ~df["sym"].isin(ov["exclude"])
+            df["common"] = (pd.Series(common, index=df.index) | (df["exchange"] == "GONE") | df["sym"].isin(ov["include"])) \
+                & ~df["sym"].isin(ov["exclude"])
             self._df = df
         return self._df
 
@@ -87,10 +110,15 @@ class Assets:
         return {"include": set(ov.get("include", [])), "exclude": set(ov.get("exclude", []))}
 
     def common(self, active_only: bool = False) -> list[str]:
+        """Common stocks. `active_only`: those listed on a main exchange today (what is fetched every evening);
+        otherwise also those that have left or fallen off (what the history is fetched for)."""
         df = self.frame()
         if df.empty:
             return []
-        df = df[df["common"] & (df["active"] if active_only else True)]
+        if active_only:
+            df = df[df["common"] & df["active"] & df["exchange"].isin(EXCHANGES)]
+        else:
+            df = df[df["common"]]
         return sorted(df["sym"])
 
     def names(self) -> dict[str, str]:

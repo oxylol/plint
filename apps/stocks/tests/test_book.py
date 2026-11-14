@@ -132,6 +132,25 @@ class BookArithmetic(unittest.TestCase):
         self.assertAlmostEqual(b.cash, 10_000 - 5.0, places=4)
         self.assertIn("no price", b.fills[-1].why)
 
+    def test_a_collapse_then_silence_is_written_off_unless_it_was_a_buy_out(self):
+        days = pd.bdate_range("2024-01-02", periods=STALE_DAYS + 6).strftime("%Y%m%d").astype(int).tolist()
+        crash = [(days[0], 100, 100, np.nan), (days[1], 100, 100, 0.0), (days[2], 100, 100, 0.0), (days[3], 60, 55, -0.45)]
+        calm = [(days[0], 100, 100, np.nan), (days[1], 100, 100, 0.0), (days[2], 100, 100, 0.0), (days[3], 100, 101, 0.01)]
+        p = panel({"SPY": [(d, 100.0, 100.0, 0.0) for d in days], "BANK": crash, "DEAL": calm, "TOOK": crash})
+        b = Book(30_000.0, bought_out=frozenset({"TOOK"}))
+        b.step(p, 1, [Order("BANK", 1 / 3, ""), Order("DEAL", 1 / 3, ""), Order("TOOK", 1 / 3, "")], Flat())
+        for t in range(2, len(days)):
+            b.step(p, t, [], Flat())
+        self.assertEqual(b.pos, {})
+        by = {f.sym: f for f in b.fills if f.side == "sell"}
+        self.assertEqual(by["BANK"].usd, 0.0)                      # fell 45 % and went silent: nothing came back
+        self.assertEqual(by["BANK"].ret, -1.0)
+        self.assertIn("written off", by["BANK"].why)
+        each = 30_000 / 3 / 1.001                                  # three equal buys, scaled so the costs fit in the cash
+        self.assertAlmostEqual(by["DEAL"].usd, each * 1.01, delta=1.0)       # quiet without a fall: its last price
+        self.assertAlmostEqual(by["TOOK"].usd, each * 0.55, delta=1.0)       # fell, but known to be a buy-out: the deal price
+        self.assertAlmostEqual(b.cash, by["DEAL"].usd + by["TOOK"].usd, delta=1.0)
+
     def test_a_change_inside_the_band_is_left_alone(self):
         a = [(DAYS[0], 100, 100, np.nan), (DAYS[1], 100, 100, 0.0), (DAYS[2], 100, 100, 0.0)]
         p = panel({"SPY": SPY, "A": a})

@@ -102,6 +102,13 @@ def refresh_assets(lab: Lab, force: bool = False) -> None:
         return
     lab.doing("reading the list of stocks")
     lab.assets.save(lab.api.assets())
+    try:                                             # the companies bought out since the last look (all of them the first time)
+        since = (lab.store.get("gone_at") or lab.cfg.history_start)[:10]
+        today = datetime.now(timezone.utc).date().isoformat()
+        lab.assets.save_gone(ingest.gone_symbols(lab.api, since, today, set(lab.assets.common())))
+        lab.store.put("gone_at", today)
+    except AlpacaError as e:
+        lab.say(f"could not read the list of bought-out companies: {e}", "warn")
     lab.store.put("assets_at", datetime.now(timezone.utc).isoformat())
     lab.say(f"asset list read: {len(lab.assets.frame())} symbols, {len(lab.assets.common(True))} listed common stocks")
 
@@ -150,7 +157,7 @@ def books(lab: Lab, panel: Panel) -> dict[str, Record]:
             continue
         orders = {s2d(dec.date): dec.orders for dec in lab.store.decisions(mid, since)}
         try:
-            out[mid] = replay(panel, orders, lab.cfg.start_cash, costs, s2d(since))
+            out[mid] = replay(panel, orders, lab.cfg.start_cash, costs, s2d(since), frozenset(lab.assets.gone()))
         except KeyError:
             lab.say(f"{mid}: its first day {since} is not in the price table", "warn")
     return out

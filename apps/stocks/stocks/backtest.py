@@ -30,7 +30,7 @@ class Outcome:
 
 def run(panel: Panel, models: list[Model], env: Env, t0: int, t1: int, start_cash: float = 10_000.0,
         slip_bps: float = 1.0, impact: float = 1.0, cost_scale: float = 1.0, extra_bps: float = 0.0,
-        prepare: bool = True) -> dict[str, Outcome]:
+        prepare: bool = True, bought_out: frozenset = frozenset()) -> dict[str, Outcome]:
     """Every model from the close of row t0 (all cash) to the close of row t1."""
     costs = Costs(panel, slip_bps + extra_bps / max(cost_scale, 1e-9), impact, cost_scale)
     if prepare:
@@ -40,7 +40,7 @@ def run(panel: Panel, models: list[Model], env: Env, t0: int, t1: int, start_cas
             m.prepare(panel, env)
     out = {}
     for m in models:
-        book, rec, pending = Book(start_cash), Record(), []
+        book, rec, pending = Book(start_cash, bought_out=bought_out), Record(), []
         for t in range(t0, t1 + 1):
             fills = book.step(panel, t, pending, costs) if t > t0 else []
             rec.mark(panel.days[t], book, fills)

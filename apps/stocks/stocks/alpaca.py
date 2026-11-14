@@ -14,12 +14,14 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Callable, Iterator
+from zoneinfo import ZoneInfo
 
 log = logging.getLogger("stocks.alpaca")
 
 DATA = "https://data.alpaca.markets"
 PAPER = "https://paper-api.alpaca.markets"     # read-only use: the asset list and the calendar
 HELD_BACK = timedelta(minutes=16)              # free data may not be newer than 15 minutes
+NY = ZoneInfo("America/New_York")
 
 
 class AlpacaError(Exception):
@@ -89,9 +91,10 @@ class Alpaca:
 
     # ── prices ──────────────────────────────────────────────────────────────────────────────────
     def _end(self, end: str) -> str:
-        """A window may not reach into the last 15 minutes: an end date of today or later becomes a time."""
+        """A window may not reach into the last 15 minutes. Alpaca reads a bare end date as the end of that day
+        in New York, so a date that is today or later there becomes a time 16 minutes ago."""
         limit = self._now() - HELD_BACK
-        if end >= limit.strftime("%Y-%m-%d"):
+        if end[:10] >= limit.astimezone(NY).strftime("%Y-%m-%d"):
             return limit.strftime("%Y-%m-%dT%H:%M:%SZ")
         return end
 
@@ -110,10 +113,11 @@ class Alpaca:
                 return
             params["page_token"] = token
 
-    def corporate_actions(self, symbols: list[str], start: str, end: str,
+    def corporate_actions(self, symbols: list[str] | None, start: str, end: str,
                           types: str = "forward_split,reverse_split,cash_dividend,stock_dividend") -> dict[str, list]:
+        """Actions between two dates, for the symbols given or (None) for every security."""
         out: dict[str, list] = {}
-        params = {"symbols": ",".join(symbols), "start": start, "end": end, "types": types, "limit": 1000}
+        params = {"symbols": ",".join(symbols) if symbols else None, "start": start, "end": end, "types": types, "limit": 1000}
         while True:
             page = self._get(DATA, "/v1/corporate-actions", params)
             for kind, rows in (page.get("corporate_actions") or {}).items():

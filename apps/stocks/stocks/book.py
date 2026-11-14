@@ -20,7 +20,8 @@ from .types import BookView, Holding, Order
 from .util import quiet
 
 BAND = 0.002            # a change smaller than this share of the book is not worth a trade
-STALE_DAYS = 10         # no price for this long: the position is closed at its last value and the page says so
+STALE_DAYS = 10         # no price for this long: the position is closed, and the page says how
+COLLAPSE = -0.30        # a fall this deep over its last ten days of trading, then silence: written off, not cashed in
 
 
 class Costs:
@@ -80,9 +81,27 @@ class Book:
     traded: float = 0.0     # dollars traded so far (both ways)
     costs: float = 0.0
     notes: list[str] = field(default_factory=list)
+    bought_out: frozenset = frozenset()     # companies known to have been taken over: their last price was the deal
 
     def equity(self) -> float:
         return self.cash + sum(p.value for p in self.pos.values())
+
+    def _gone_quiet(self, panel: Panel, t: int, s: str, p: Pos, j: int | None) -> None:
+        """A holding with no price for STALE_DAYS. A company that was bought out stopped at the deal price, so
+        it is cashed in at its last value. One that fell hard and then went silent was most likely seized or
+        went under (free data does not say which): it is written off. Anything else is cashed in at its last
+        value, which is right for a move off the exchange and kind to whatever else it may have been."""
+        d = int(panel.days[t])
+        fall = last_ten_days(panel, t, j)
+        if s not in self.bought_out and np.isfinite(fall) and fall <= COLLAPSE:
+            why = f"stopped trading after falling {abs(fall):.0%} in its last ten days: written off"
+            self.fills.append(Fill(d, s, "sell", 0.0, float("nan"), 0.0, why, -1.0))
+        else:
+            why = f"no price for {STALE_DAYS} days: closed at its last value"
+            self.cash += p.value
+            self.fills.append(Fill(d, s, "sell", p.value, float("nan"), 0.0, why, p.value / p.basis - 1.0 if p.basis > 0 else None))
+        self.notes.append(f"{s}: {why} ({_iso(d)})")
+        del self.pos[s]
 
     def view(self) -> BookView:
         eq = self.equity()
@@ -101,12 +120,7 @@ class Book:
                 p.stale += 1
                 p.days += 1
                 if p.stale >= STALE_DAYS:
-                    self.cash += p.value
-                    self.fills.append(Fill(d, s, "sell", p.value, float("nan"), 0.0,
-                                           f"no price for {STALE_DAYS} days: closed at its last value",
-                                           p.value / p.basis - 1.0 if p.basis > 0 else None))
-                    self.notes.append(f"{s}: no price for {STALE_DAYS} days, closed at its last value on {_iso(d)}")
-                    del self.pos[s]
+                    self._gone_quiet(panel, t, s, p, j)
                 continue
             p.stale = 0
             p.days += 1
@@ -179,6 +193,17 @@ def _iso(d: int) -> str:
     return f"{d // 10000:04d}-{d // 100 % 100:02d}-{d % 100:02d}"
 
 
+def last_ten_days(panel: Panel, t: int, j: int | None) -> float:
+    """What the stock did over its last ten days of trading before it went quiet (NaN if not known)."""
+    if j is None:
+        return float("nan")
+    rows = np.flatnonzero(np.isfinite(panel.c[: t + 1, j]))
+    if len(rows) < 2:
+        return float("nan")
+    tail = panel.ret[rows[-10:], j]
+    return float(np.prod(1.0 + tail[np.isfinite(tail)]) - 1.0)
+
+
 @dataclass
 class Record:
     """A book's history: one row per day, and every fill."""
@@ -201,10 +226,10 @@ class Record:
 
 
 def replay(panel: Panel, orders_by_day: dict[int, list[Order]], start_cash: float, costs: Costs,
-           first_day: int) -> Record:
+           first_day: int, bought_out: frozenset = frozenset()) -> Record:
     """A book from decisions already made. `orders_by_day[d]` was decided at the close of day d and is
     filled at the next trading day's open. The record starts at the close of `first_day` (all cash)."""
-    book, rec = Book(start_cash), Record()
+    book, rec = Book(start_cash, bought_out=bought_out), Record()
     t0 = panel.t_of(first_day)
     rec.mark(panel.days[t0], book, [])
     for t in range(t0 + 1, panel.T):

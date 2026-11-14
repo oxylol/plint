@@ -128,8 +128,10 @@ def _report(o: backtest.Outcome, days: np.ndarray, t0: int, t1: int, cfg, sens: 
         lines += ["", "## Year by year", "", "| year | this model | the index |", "|---|---|---|"]
         lines += [f"| {y['year']} | {_pct(y['ret'])} | {_pct(y['index'])} |" for y in o.years]
     lines += ["", "## What this does not show", "",
-              "- Free data has little on companies that left the market. A stock that went to zero and vanished is missing, "
-              "so every stock picker's history is flattered a little; the index's is not.",
+              "- Companies that left the market are only partly in free data. Those bought out since 2020 and those pushed "
+              "off their exchange are in the table; many that left before 2020 are not, so every stock picker's early years "
+              "are flattered a little. A holding that fell hard and then stopped trading is written off; one that simply "
+              "stopped is cashed in at its last price.",
               "- Fills are at the first price of the day on the consolidated tape. A real order at the open gets the auction's price, which is near it, not equal.",
               "- The backtest refits the learned models twice a year; live they are refitted every week.",
               f"- The design was changed {len(variants)} time(s) after first seeing these figures"
@@ -182,11 +184,13 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
 
     say("replaying history")
     models = [m for m in build(cfg.models) if (not only or m.id in only or m.id == "index") and (fitted or m.id not in LEARNED)]
-    out = backtest.run(panel, models, env, t0, t1, cfg.start_cash, cfg.slip_bps, cfg.impact_coef)
+    gone = frozenset(lab.assets.gone())
+    out = backtest.run(panel, models, env, t0, t1, cfg.start_cash, cfg.slip_bps, cfg.impact_coef, bought_out=gone)
     backtest.score(panel, out, "index", cfg.cash_symbol, t0, t1)
     sens: dict[str, dict] = {mid: {} for mid in out}
     for key, kw in ((2, {"cost_scale": 2.0}), (3, {"cost_scale": 3.0}), ("fx", {"extra_bps": cfg.fx_fee_bps})):
-        alt = backtest.run(panel, models, env, t0, t1, cfg.start_cash, cfg.slip_bps, cfg.impact_coef, prepare=False, **kw)
+        alt = backtest.run(panel, models, env, t0, t1, cfg.start_cash, cfg.slip_bps, cfg.impact_coef, prepare=False,
+                           bought_out=gone, **kw)
         ix = np.array(alt["index"].record.equity)
         years = max((len(ix) - 1) / 252.0, 1e-9)
         for mid, o in alt.items():

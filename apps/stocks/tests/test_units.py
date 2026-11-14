@@ -52,13 +52,15 @@ class Names(unittest.TestCase):
                ("IVZ", "Invesco Ltd Common Stock", "NYSE"), ("EPD", "Enterprise Products Partners L.P. Common Units", "NYSE"),
                ("VNO", "Vornado Realty Trust Common Stock", "NYSE"), ("BLK", "BlackRock, Inc. Common Stock", "NYSE"),
                ("WT", "WisdomTree, Inc. Common Stock", "NYSE"), ("UCTT", "Ultra Clean Holdings, Inc. Common Stock", "NASDAQ"),
-               ("PFBC", "Preferred Bank Common Stock", "NASDAQ")]
+               ("PFBC", "Preferred Bank Common Stock", "NASDAQ"),
+               ("SBNY", "Signature Bank Common Stock", "OTC")]       # pushed off its exchange: its exchange years count
         no = [("SPY", "SPDR S&P 500 ETF Trust", "ARCA"), ("QQQ", "Invesco QQQ Trust, Series 1", "NASDAQ"),
               ("TQQQ", "ProShares UltraPro QQQ", "NASDAQ"), ("TLT", "iShares 20+ Year Treasury Bond ETF", "NASDAQ"),
               ("IBIT", "iShares Bitcoin Trust ETF", "NASDAQ"), ("NVDL", "GraniteShares 2x Long NVDA Daily ETF", "NASDAQ"),
               ("ABCDW", "Abcd Acquisition Corp. Warrant", "NASDAQ"), ("ABCDU", "Abcd Acquisition Corp. Unit", "NASDAQ"),
               ("BAC.PRB", "Bank of America Corporation Depositary Shares each representing a 1/1000th interest in a share of Preferred Stock", "NYSE"),
-              ("XYZ", "XYZ Corp 6.50% Notes due 2029", "NYSE"), ("AAPL", "Apple Inc. Common Stock", "OTC"),
+              ("XYZ", "XYZ Corp 6.50% Notes due 2029", "NYSE"), ("AAPL", "Apple Inc. Common Stock", "ARCA"),
+              ("TCEHY", "Tencent Holdings Ltd Unsponsored ADR", "OTC"), ("NONAME", "", "OTC"),
               ("JEPQ", "JPMorgan Nasdaq Equity Premium Income ETF", "NASDAQ"), ("NUV", "Nuveen Municipal Value Fund, Inc.", "NYSE")]
         for sym, name, ex in yes:
             self.assertTrue(is_common(sym, name, ex), name)
