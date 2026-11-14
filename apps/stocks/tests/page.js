@@ -104,6 +104,13 @@ async function board(browser, size, fixture) {
   check(`${tag} 1 every model is listed (${st.models.length})`, rows.length === st.models.length && rows.every((r) => r.isLink), rows.map((r) => r.id).join(' '));
   check(`${tag} 1 the index comes first and is marked as the bar, not ranked`, rows[0].id === exp.idx[0].id && /is-index/.test(rows[0].cls) && /the bar/i.test(rows[0].tag || ''), `${rows[0].id} ${rows[0].cls} ${rows[0].tag}`);
   check(`${tag} 1 then the running models best to worst against the index, then those not running`, rows.map((r) => r.id).join() === exp.all.map((m) => m.id).join(), rows.map((r) => r.id).join());
+  const rivals = st.models.filter((m) => m.kind !== 'index' && typeof m.vs_index === 'number');
+  if (rivals.length) {
+    const up = rivals.filter((m) => m.vs_index > 0).length, down = rivals.filter((m) => m.vs_index < 0).length, level = rivals.length - up - down;
+    const said = await page.evaluate(() => { const t = document.querySelector('.tile-ahead'); return t ? { note: t.querySelector('.tn').textContent, all: t.textContent, lit: t.querySelectorAll('.mk.lit').length, marks: t.querySelectorAll('.mk').length } : {}; });
+    check(`${tag} 1 at a glance: ${up} of ${rivals.length} ahead of the index, ${down} behind; one that is level with it is not called behind`,
+      norm(said.note) === `${down} model${down === 1 ? '' : 's'} behind` + (level ? `, ${level} level with it` : '') && said.lit === up && said.marks === rivals.length && norm(said.all).includes(`of ${rivals.length}`), JSON.stringify(said));
+  }
   const wrong = [];
   for (const m of st.models) {
     const r = by[m.id];

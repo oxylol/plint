@@ -549,9 +549,10 @@
     }
     if (rivals.length) {
       var ahead = rivals.filter(function (m) { return m.vs_index > 0; }).length;
+      var behind = rivals.filter(function (m) { return m.vs_index < 0; }).length, level = rivals.length - ahead - behind;
       out.push(tile("ahead", "Ahead of the index", dot(String(ahead), "of " + rivals.length),
         h("span", { class: "marks", "aria-hidden": "true" }, rivals.map(function (m) { return h("i", { class: "mk" + (m.vs_index > 0 ? " lit" : "") }); })),
-        plural(rivals.length - ahead, "model") + " behind"));
+        plural(behind, "model") + " behind" + (level ? ", " + level + " level with it" : "")));      // on the first day nobody is behind yet
     }
     var scored = o.run.concat(o.out).filter(function (m) { return m.verdict && typeof m.verdict === "object"; });
     if (scored.length) {
