@@ -371,7 +371,7 @@ Change a value, then `plint restart poly`.
 - `polybot/strategy_afternoon.py` — the afternoon strategy (Yes on the running high's bucket at 15:00 local)
 - `polybot/runner.py` — runs both on their own clocks, writes the page's JSON
 - `polybot/store.py` — `data/polybot/state.json`, `trades.jsonl`, `status.json`
-- `static/index.html` — the page (Plint Soft UI tokens)
+- `static/index.html` — the page (it wears Plint Terminal: `theme/apps/poly.css`)
 
 Commands: `docker exec polybot python -m polybot once` runs one cycle of every
 strategy and prints their reasoning; `… check` shows the account state; `… collector` scans the finished temperature days without buying; `… afternoon` scans the cities in their afternoon window.

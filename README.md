@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="dashboard/images/logo.svg" width="96" alt="">
+  <img src="theme/home/icon-192.png" width="96" alt="">
 </p>
 <h1 align="center">Plint</h1>
 <p align="center">A home server that feels like one thing.<br>
-Ad blocking · game servers · streaming · remote access · and Claude living on the box.</p>
+Ad blocking · game servers · streaming · remote access · a few apps of its own · and Claude living on the box.</p>
 
 ---
 
@@ -13,27 +13,38 @@ machine is this repository.
 
 | | |
 |---|---|
-| **plint.net** | Home screen: live instruments and a registry of every service (`theme/home`) |
-| **dns.plint.net** | AdGuard Home — network-wide ad blocking, encrypted upstream DNS |
-| **games.plint.net** | AMP — game servers |
-| **stremio.plint.net** | Stremio streaming server + web player |
-| **host.plint.net** | Cockpit — updates, disks, logs, terminal |
-| **stacks.plint.net** | Dockge — containers |
-| **metrics.plint.net** | Beszel — CPU, memory, disk, per-container |
-| **status.plint.net** | Uptime Kuma — status page |
-| **ntfy.plint.net** | ntfy — push notifications to your phone |
-| **backup.plint.net** | Kopia — nightly snapshots |
-| **speed.plint.net** | Speedtest Tracker — internet speed, four tests a day |
-| **tv.plint.net** | Plint TV — the Mac on the TV: a phone remote, and its own Claude |
-| **poly.plint.net** | Polybot — follows the Polymarket leaderboard, trades where the leaders agree |
+| **plint.net** | Home page: live instruments and a registry of every service (`theme/home`) |
+| **dns.plint.net** | AdGuard Home: network-wide ad blocking, encrypted upstream DNS |
+| **games.plint.net** | AMP: game servers |
+| **stremio.plint.net** | Stremio: streaming server and web player |
+| **host.plint.net** | Cockpit: updates, disks, logs, terminal |
+| **stacks.plint.net** | Dockge: containers |
+| **metrics.plint.net** | Beszel: CPU, memory, disk, per container |
+| **status.plint.net** | Uptime Kuma: status page |
+| **ntfy.plint.net** | ntfy: push notifications to your phone |
+| **backup.plint.net** | Kopia: nightly snapshots |
+| **speed.plint.net** | Speedtest Tracker: internet speed, four tests a day |
 | *Tailscale* | remote access, Tailscale SSH, LAN subnet routing |
 | *Claude* | Claude Code on the server, controlled from the Claude app |
 
-Every site except AMP and Stremio wears one theme, Plint Terminal (`theme/`): one dark ground
-and one light, monospace text, dot-matrix figures, lamps and inverse video in place of colour.
+Built on top of that, each in `apps/` with its own README:
 
-Nothing is exposed to the internet. The domain's public DNS has no records pointing at the
-server; it exists so Caddy can get a wildcard certificate via Cloudflare's API.
+| | |
+|---|---|
+| **cnc.plint.net** | CNC Studio: a G-code simulator with Claude built in |
+| **poly.plint.net** | Polybot: Polymarket strategies compared on paper |
+| **stocks.plint.net** | Stocks: stock-trading models on paper, side by side |
+| **ultron.plint.net** | Ultron: a companion you talk to, in a cloned voice |
+| **accrete.plint.net** | Accrete: an incremental game, a star from dust |
+| **ai.plint.net** | Plint Chat: a Claude-style page that runs Claude Code on the box |
+
+The ready-made services (all but AMP and Stremio), Polybot and Stocks wear one theme, Plint
+Terminal (`theme/`): one dark ground and one light, monospace text, dot-matrix figures, lamps and
+inverse video in place of colour. The other apps carry their own look.
+
+Nothing is exposed to the internet: no port forward, no tunnel. The domain's public DNS has no
+records pointing at the server; it exists so Caddy can get a wildcard certificate via
+Cloudflare's API. From outside the house the way in is Tailscale.
 
 ## Install
 
@@ -85,7 +96,7 @@ have to be: the Tailscale login link, the AMP installer, and signing Claude in.
   add ntfy as the notification channel (`https://ntfy.plint.net`, topic `plint`,
   your admin login).
 - **games.plint.net** — finish AMP setup with your licence key, restore the backup.
-- **Phone** — install *ntfy*, add server `https://ntfy.plint.net`, log in, subscribe to
+- **Phone**: install *ntfy*, add server `https://ntfy.plint.net`, log in, subscribe to
   `plint`. Install *Tailscale*, sign in. In *Stremio* settings set the streaming server
   to `https://stremio.plint.net/`.
 
@@ -93,7 +104,7 @@ have to be: the Tailscale login link, the AMP installer, and signing Claude in.
 
 ```
 plint status          what's running
-plint doctor          DNS, certs, ports, tailscale — all green?
+plint doctor          DNS, certs, ports, tailscale: all green?
 plint logs stremio    follow a container
 plint update          refresh containers (add --os for apt as well)
 plint backup          snapshot now
@@ -114,35 +125,14 @@ Needs a Pro or Max plan. Sign-in happens once during install (`claude auth login
 the two one-time prompts (trust the folder, enable Remote Control) are answered with
 `plint claude`.
 
-## Plint TV — the Mac on the TV
-
-`tv/` turns a Mac hooked up to a TV into the second node: same domain, same look, same
-kind of Claude. No Homebrew (it no longer installs on Intel Macs): every app is fetched
-straight from its publisher. It never sleeps (screen goes dark at 01:00, any key wakes it), runs
-Stremio against Plint's streaming server, YouTube in its TV layout, Steam Link and
-Moonlight for games from the PC, Spotify and Music, Aerial as the idle screen, Tailscale,
-a Beszel agent, and a small remote at **tv.plint.net** you open on your phone: open an
-app, play/pause, volume, screen off/on (which lets the TV switch itself off), arrow keys.
-
-On the Mac, as the user that's logged in on the TV:
-
-```bash
-git clone git@github.com:oxylol/plint.git ~/plint     # same deploy-key dance as the server
-~/plint/tv/install.sh
-```
-
-Then on the server, the line the installer prints: `plint tv register <ip> <key>`.
-Day to day: `tv status`, `tv open stremio`, `tv screen off`, `tv claude`, `tv doctor`, `tv apps`.
-Claude on it appears as **Plint TV** in the Claude app; the Claude desktop app is
-installed too, so the Mac can be linked as a computer and Claude can see the TV screen.
-
 ## Change something
 
-Edit the file, `plint sync` (or `tv sync` on the Mac), commit, push. That's the whole
-workflow. A rebuilt box is `git clone` + `install.sh` + restoring `data/` from Kopia.
+Edit the file, `plint sync`, commit, push. That's the whole workflow. A rebuilt box is
+`git clone` + `install.sh` + restoring `data/` from Kopia, then `plint sync` to bring up the
+apps once their keys are in `.env` (`.env.example` lists them).
 
 ## Not included, on purpose
 
-Port forwarding, Portainer, auto-updating containers (Watchtower), and a public
+Port forwarding, tunnels, Portainer, auto-updating containers (Watchtower), and a public
 status page. Phase two, if you want them: Pocket ID (passkey single sign-on in front of
 the admin tools) and Immich or Jellyfin if a media library appears.

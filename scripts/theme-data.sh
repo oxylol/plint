@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Plint · data for the Soft UI infographics that apps can't serve themselves.
+# Plint · data for the home page's instruments and the registry: what the apps can't serve themselves.
 # Writes small JSON files to data/theme/, which Caddy serves read-only as
 # /_plint/data/<file>. Run every 2 minutes by plint-theme-data.timer.
 #   games.json          AMP game servers: running, players now (open connections), max

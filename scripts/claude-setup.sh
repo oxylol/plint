@@ -35,7 +35,7 @@ fi
 
 # ── Skills ───────────────────────────────────────────────────
 # Emil Kowalski's design-engineering skills (emil-design-eng, review-animations,
-# mobile-native, break-ui, …) for design reviews of the Plint Soft UI.
+# mobile-native, break-ui, …) for design reviews of Plint's pages.
 if [[ ! -d /home/plint/.claude/skills/emil-design-eng ]]; then
   say "Installing emilkowalski/skills"
   tmp="$(mktemp -d)"
