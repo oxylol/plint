@@ -39,6 +39,8 @@ docker exec stocks python -m stocks run               one evening run now
 docker exec stocks python -m stocks research          the design-stretch backtests again
 docker exec stocks python -m stocks research --exam   the held-back stretch (counted every time)
 docker exec stocks python -m stocks fit               refit the learned models now
+docker exec stocks python -m stocks filings           read the SEC now (the ten years of history first, if not in)
+docker exec stocks python -m stocks review            the agent's weekly look at its own record, now
 docker exec stocks python -m stocks universe          this month's stocks, and what the name filter kept out
 docker exec stocks python -m stocks variant "…"       write down a design change made after seeing figures
 docker exec stocks python -m stocks reset <model>     start a model's record over (after its rules changed)

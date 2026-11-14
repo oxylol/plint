@@ -182,7 +182,8 @@ def read_filings(lab: Lab, members: list[str], now: datetime) -> dict | None:
     try:
         if not lab.store.get("filings_backfilled"):
             lab.doing("reading ten years of filings: results days and insider purchases")
-            got = filings.backfill(lab.sec, lab.events, lab.universe.ever(), int(lab.cfg.history_start[:4]), log=lab.say)
+            got = filings.backfill(lab.sec, lab.events, lab.universe.ever(), int(lab.cfg.history_start[:4]), log=lab.say,
+                                   tail=members)           # the weeks since the last quarterly set: for today's stocks only
             lab.store.put("filings_backfilled", stamp(now)[:10])
             lab.say(f"filings history in: {len(lab.events.earnings)} results days and {len(lab.events.insiders)} insider purchases, "
                     f"{got['companies']} companies read ({got['former']} of them no longer listed), {got['no_cik']} symbols "

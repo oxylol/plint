@@ -133,7 +133,11 @@ gets one honest trial on a single split before it earns a place). Both are next 
 
 **The budget.** $200 a calendar month, a hard stop: before every call its worst case is added to the month's
 spend and the call is not made if it would cross. A day's allowance is what is left divided by the trading
-days left, times 1.5. When money runs short it gives up searches first, then deep reads, then the decision.
+days left, times 1.5, and never more than 1.5 even days of the month (about $14): the cap is a ceiling, not a
+target, so a month begun late is not made up for by spending faster. When money runs short it gives up
+searches first, then deep reads, then the decision. Measured on the first real evening (14 Nov 2026, three
+reads): screening 139 items cost under a cent, a read 4 to 24 cents (the dearer ones are those that search
+the web), the decision 4 cents.
 
 **It cannot be backtested.** The model has read about the past: any run over history leaks. It is judged on
 live paper and on its stated chances (every deep read is a forecast, traded or not), from the day it starts.
@@ -157,6 +161,8 @@ so, and no order can be placed from triage output alone.
 | overlapping outcomes read as independent | Newey-West t in the ledger; block bootstrap for the yearly edge |
 | an adjusted price series rewritten under you | raw bars plus total return; the tail re-pulled and corrections logged |
 | a split that looks like a crash | the adjusted series is the judge; a late split is fixed only from the action list |
+| one company counted twice | Alpaca answers for a renamed company under both tickers (META's bars reach back through FB's years, and FB's are those years again): a symbol whose whole history is another's is kept out (`ingest.aliases`) |
+| events known only for survivors | the SEC's ticker list names today's companies only; the results days and insider purchases of companies since bought or delisted are found through the tickers their insiders filed under, each for its own years (`filings.links`) |
 
 ## What is frozen, and how it may change
 

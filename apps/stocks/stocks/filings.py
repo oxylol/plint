@@ -396,14 +396,15 @@ def links(symbols: Iterable[str], current: dict[str, int], issuers: pd.DataFrame
 
 
 def backfill(sec: Sec, events: Events, symbols: Iterable[str], start_year: int, log: Callable[[str], None] | None = None,
-             tail: bool = True, today: date | None = None) -> dict:
+             tail: bool | Iterable[str] = True, today: date | None = None) -> dict:
     """The history from `start_year`: results days from every page of each company's filings, insider
     purchases from the SEC's quarterly sets.
 
     The sets carry a filing date only. A purchase is dated by the acceptance time in the company's own list
     of filings where the Form 4 is found there, and otherwise by `day_after`. The sets also end with the last
     finished quarter that has been published, so with `tail` the Form 4s filed since are read one by one
-    (a request each; skipped when that stretch is longer than TAIL_DAYS).
+    (a request each; skipped when that stretch is longer than TAIL_DAYS). `tail` may be a list of symbols:
+    then only theirs are read, which for the stocks a model can buy today is a third of the requests.
 
     Companies listed today are found through the SEC's ticker list; those since bought, merged or delisted
     through the tickers their insiders filed under (`links`), so the history is not one of survivors only.
@@ -428,7 +429,8 @@ def backfill(sec: Sec, events: Events, symbols: Iterable[str], start_year: int, 
         say(f"{out['former']} symbols no longer listed were found through the tickers their insiders filed under")
     by_issuer = {int(c): g for c, g in sets[sets["cik"].isin(set(spans))].groupby("cik")}
     through, tail_from = out["insiders_through"], None
-    if tail and through and (today - date.fromisoformat(through)).days <= TAIL_DAYS:
+    wanted = None if isinstance(tail, bool) else set(tail)      # None: every symbol's
+    if (tail is True or wanted) and through and (today - date.fromisoformat(through)).days <= TAIL_DAYS:
         tail_from = (date.fromisoformat(through) - timedelta(days=4)).isoformat()    # a Form 4 of the quarter's last evening is in the next set
         say(f"insider purchases since {through}: reading each Form 4 filed since, one request apiece")
     for n, (cik, rows) in enumerate(sorted(spans.items()), 1):
@@ -455,8 +457,10 @@ def backfill(sec: Sec, events: Events, symbols: Iterable[str], start_year: int, 
                                  for s in on(filed)]
                 run.have.add(accession)
             for f in filings if tail_from else ():
-                if f["form"] == "4" and f["filing_date"] >= tail_from and f["accession"] not in run.have and on(f["filing_date"]):
-                    run.form4(cik, on(f["filing_date"]), f)
+                if f["form"] == "4" and f["filing_date"] >= tail_from and f["accession"] not in run.have:
+                    mine = [s for s in on(f["filing_date"]) if wanted is None or s in wanted]
+                    if mine:
+                        run.form4(cik, mine, f)
         except Stopped:
             raise
         except Exception as e:

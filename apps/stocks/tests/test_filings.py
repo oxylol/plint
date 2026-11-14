@@ -393,6 +393,13 @@ class Backfill(Lab):
         self.assertNotIn(form4_url(9900001, FORM4_AUGUST), self.web.asked)             # the set already had it
         self.assertTrue(any("since 2026-09-30" in line for line in self.said))
 
+    def test_the_weeks_since_can_be_read_for_some_symbols_only(self):
+        got = filings.backfill(self.sec, self.ev, SYMS, 2016, log=self.said.append, today=self.TODAY, tail=["RVR.A"])
+        self.assertEqual((got["insiders"], got["form4"]), (6, 1))             # Riverbend's one Form 4 is read, and it is the buyer in it
+        self.assertNotIn(form4_url(9900001, FORM4_MIXED), self.web.asked)
+        got = filings.backfill(self.sec, self.ev, SYMS, 2016, log=self.said.append, today=self.TODAY, tail=[])
+        self.assertEqual(got["form4"], 0)
+
     def test_no_tail_when_the_sets_are_long_out_of_date(self):
         got = filings.backfill(self.sec, self.ev, SYMS, 2016, log=self.said.append, today=date(2027, 6, 1))
         self.assertEqual((got["insiders"], got["form4"]), (6, 0))
