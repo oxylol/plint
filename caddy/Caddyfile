@@ -204,6 +204,16 @@
 		reverse_proxy localhost:5240
 	}
 
+	@stocks host stocks.{$DOMAIN}
+	handle @stocks {
+		# Stocks (apps/stocks): stock-trading models on paper, side by side. The page and
+		# its JSON come from the app itself; nothing in it can place a real order.
+		import theme stocks
+		reverse_proxy localhost:5250 {
+			header_up Accept-Encoding identity
+		}
+	}
+
 	@ultron host ultron.{$DOMAIN}
 	handle @ultron {
 		# Ultron (apps/ultron): a companion you talk to. celeris-1 thinks,

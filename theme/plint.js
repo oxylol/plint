@@ -61,6 +61,7 @@
     ["cnc", "cnc", "CNC Studio", 5178],
     ["twin", "twin", "CNC Twin", 5210],
     ["poly", "poly", "Polybot", 5190],
+    ["stocks", "stocks", "Stocks", 5250],
     ["hertz", "music", "Hertz", 5200],
     ["accrete", "accrete", "Accrete", 5240],
     ["stremio", "stremio", "Stremio", 8095],
