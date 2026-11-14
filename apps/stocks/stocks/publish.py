@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -125,7 +125,8 @@ def model_json(meta: dict, rec: Record | None, panel: Panel | None, index_symbol
 
 
 def spend_block(store: Store, cap: float, stopped: str | None, now: datetime) -> dict:
-    month, day = now.strftime("%Y-%m"), now.strftime("%Y-%m-%d")
+    utc = now.astimezone(timezone.utc)               # the spend log keeps UTC days, so the meter does too
+    month, day = utc.strftime("%Y-%m"), utc.strftime("%Y-%m-%d")
     sm = store.spend_summary(month)
     return {"month": month, "used": round(sm["used"], 2), "cap": cap, "today": round(store.spend_day(day), 2),
             "calls": sm["calls"], "stopped": stopped, "by_day": [[d, round(u, 2)] for d, u in sm["by_day"]]}

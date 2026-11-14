@@ -71,6 +71,13 @@ class BarStore:
             return pd.DataFrame({c: pd.Series(dtype=DTYPES.get(c, "object")) for c in want})
         return pd.concat(parts, ignore_index=True)[want]
 
+    def symbols(self) -> set[str]:
+        """Every symbol that has at least one bar."""
+        out: set[str] = set()
+        for y in self.years():
+            out.update(pd.read_parquet(self._path(y), columns=["sym"])["sym"].unique())
+        return out
+
     def last_day(self, symbol: str | None = None) -> int | None:
         for y in reversed(self.years()):
             df = pd.read_parquet(self._path(y), columns=["d"], filters=[("sym", "==", symbol)] if symbol else None)

@@ -40,8 +40,8 @@ class TopK:
             r = rank.get(s)
             if r is None:
                 forced.append((s, "no longer ranked (left the universe or did not trade)"))
-            elif self.max_hold is not None and h.days >= self.max_hold:
-                forced.append((s, f"held {h.days} days"))
+            elif self.max_hold is not None and h.days + 1 >= self.max_hold:      # sessions held, today's included
+                forced.append((s, f"held {h.days + 1} days"))
             elif r > hold_rank:
                 weak.append((r, s))
         weak.sort(reverse=True)                                     # worst first

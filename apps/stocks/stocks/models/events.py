@@ -51,7 +51,8 @@ class EventModel(Model):
             return d
         p = self.panel
         held = view.holdings
-        d.orders = [Order(s, 0.0, f"held {h.days} days") for s, h in held.items() if h.days >= self.HOLD]
+        # `days` counts the closes since the day it was bought, so days + 1 is the sessions it has been held
+        d.orders = [Order(s, 0.0, f"held {h.days + 1} days") for s, h in held.items() if h.days + 1 >= self.HOLD]
         free = self.K - (len(held) - len(d.orders))
         row = self.fire[t]
         cols = np.flatnonzero((row > 0) & np.isfinite(p.c[t]) & (p.member[t] if p.member is not None else True))

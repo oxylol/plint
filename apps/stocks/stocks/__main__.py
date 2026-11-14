@@ -4,6 +4,7 @@
     python -m stocks run             one evening run now, with its reasoning in the log
     python -m stocks research        fit walk-forward, replay history, write the reports (design stretch)
     python -m stocks research --exam the stretch held back; counted every time it is run
+    python -m stocks research --only drift,insiders   just these (nothing is fitted unless a learned model is named)
     python -m stocks fit             fit the learned models on everything known now
     python -m stocks review          the agent's weekly look at its own record
     python -m stocks universe        this month's stocks, and what the name filter kept out
@@ -29,6 +30,7 @@ def main(argv: list[str] | None = None) -> int:
                     choices=["serve", "run", "research", "fit", "review", "universe", "status", "reset", "variant"])
     ap.add_argument("arg", nargs="?")
     ap.add_argument("--exam", action="store_true")
+    ap.add_argument("--only", default="", help="research: only these models, comma separated")
     ap.add_argument("-v", "--verbose", action="store_true")
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO, format="%(asctime)s %(name)s: %(message)s",
@@ -63,7 +65,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if a.command == "research":
         from . import research
-        out = research.run(lab, exam=a.exam, say=lambda t: (print(t, flush=True), lab.doing(t)))
+        out = research.run(lab, exam=a.exam, say=lambda t: (print(t, flush=True), lab.doing(t)),
+                           only=tuple(x for x in a.only.replace(",", " ").split() if x))
         lab.doing(None)
         print(json.dumps(out, indent=1))
         return 0

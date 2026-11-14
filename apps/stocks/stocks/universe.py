@@ -173,6 +173,8 @@ class Universe:
         if len(days) < MIN_BARS:
             return 0
         day_ix = {int(d): i for i, d in enumerate(days)}
+        have = store.symbols()
+        common = [s for s in common if s in have]        # the asset list is several times longer than the price table
         sym_ix = {s: j for j, s in enumerate(common)}
         dv = np.full((len(days), len(common)), np.nan, dtype=np.float32)
         close = np.full_like(dv, np.nan)

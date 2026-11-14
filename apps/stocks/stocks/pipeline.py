@@ -400,6 +400,11 @@ def evening(lab: Lab, now: datetime | None = None, next_run: datetime | None = N
     if lab.sec is not None:
         try:
             from . import filings
+            if not lab.store.get("filings_backfilled"):
+                lab.doing("reading ten years of filings: results days and insider purchases")
+                got = filings.backfill(lab.sec, lab.events, lab.universe.ever(), int(cfg.history_start[:4]), log=lab.say)
+                lab.store.put("filings_backfilled", today.isoformat())
+                lab.say(f"filings history in: {len(lab.events.earnings)} results days, {len(lab.events.insiders)} insider purchases")
             lab.doing("reading today's filings")
             since = lab.store.get("filings_since") or (now - timedelta(days=5)).astimezone(cal.NY).strftime("%Y-%m-%dT%H:%M:%S")
             got = filings.update(lab.sec, lab.events, [panel.syms[j] for j in panel.members(panel.T - 1)], since, log=lab.say)

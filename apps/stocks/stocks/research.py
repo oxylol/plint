@@ -128,8 +128,13 @@ def _report(o: backtest.Outcome, days: np.ndarray, t0: int, t1: int, cfg, sens: 
     return "\n".join(lines) + "\n"
 
 
-def run(lab: Lab, exam: bool = False, say=None, months: int = 6) -> dict:
-    """The design stretch (default) or the exam. Writes reports/<id>.json and .md; returns a short summary."""
+LEARNED = {"ridge", "trees", "net", "blend"}
+
+
+def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str, ...] = ()) -> dict:
+    """The design stretch (default) or the exam. Writes reports/<id>.json and .md; returns a short summary.
+    `only` limits it to some models (the index always comes along, as the bar); without a learned model
+    among them nothing is fitted, which turns hours into a minute."""
     cfg, store = lab.cfg, lab.store
     say = say or (lambda text: (log.info(text), lab.doing(text)))
     panel = full_panel(lab)
@@ -151,13 +156,14 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6) -> dict:
     env = Env(index=cfg.index_symbol, cash=cfg.cash_symbol, names=lab.assets.names(),
               events=None if lab.events.empty() else lab.events)
     quick = {"seeds": 1, "months": 12} if cfg.fast else {"months": months}
-    for algo in ("ridge", "trees", "net"):
+    fitted = not only or bool(LEARNED & set(only))
+    for algo in ("ridge", "trees", "net") if fitted else ():
         say(f"walk-forward fits: {algo}")
         kw = {**quick, "cfg": NetCfg(epochs=3, patience=2)} if cfg.fast and algo == "net" else quick
         env.scores[algo] = _scores(lab, table, algo, algo, t0, t1, panel.N, say, **kw)
     ladder = []
     fwd5 = dataset.relative(dataset.forward(panel, 5), panel.member)
-    if not exam and not cfg.fast:
+    if fitted and not exam and not cfg.fast:
         for name, mode in ABLATIONS:
             say(f"walk-forward fits: the network as '{mode}'")
             S = _scores(lab, table, name, "net", t0, t1, panel.N, say, months=12, seeds=1, cfg=NetCfg(mode=mode))
@@ -165,7 +171,7 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6) -> dict:
             ladder.append((f"network, {'each stock alone' if mode == 'mlp' else 'with the day average'}", ic, t))
 
     say("replaying history")
-    models = build(cfg.models)
+    models = [m for m in build(cfg.models) if (not only or m.id in only or m.id == "index") and (fitted or m.id not in LEARNED)]
     out = backtest.run(panel, models, env, t0, t1, cfg.start_cash, cfg.slip_bps, cfg.impact_coef)
     backtest.score(panel, out, "index", cfg.cash_symbol, t0, t1)
     sens: dict[str, dict] = {mid: {} for mid in out}
@@ -218,7 +224,8 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6) -> dict:
         path.write_text(text, encoding="utf-8")
         summary.append({"id": mid, "vs_index_ann": s["vs_index_ann"], "ci": s["ci"], "ic": block["ic"], "ic_t": block["ic_t"]})
         say(f"{mid}: {_pct(s['vs_index_ann'])} a year against the index, IC {_num(block['ic'], 4)} (t {_num(block['ic_t'], 1)})")
-    store.write_json("reports/summary.json", clean({"exam": exam, "from": d2s(days[t0]), "to": d2s(days[t1]), "models": summary}))
+    if not only:
+        store.write_json("reports/summary.json", clean({"exam": exam, "from": d2s(days[t0]), "to": d2s(days[t1]), "models": summary}))
     return {"from": d2s(days[t0]), "to": d2s(days[t1]), "models": summary}
 
 

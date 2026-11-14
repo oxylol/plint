@@ -59,6 +59,11 @@ class Runner:
                     store.log("backtests written and models fitted: they start at the next evening run")
                     self.child("run")                           # so the page shows the reports now
             return
+        if store.get("filings_backfilled") and store.read_json("reports/drift.json") is None \
+                and store.get("events_research_tried") != today:      # filings arrived after the first backtests
+            store.put("events_research_tried", today)
+            if self.child("research", "--only", "drift,insiders", nice=15):
+                self.child("run")
         last = store.get("fitted_at")
         week_old = not last or (now.date() - datetime.fromisoformat(last).date()).days >= 7
         if week_old and now.astimezone(cal.NY).weekday() >= 5:   # at the weekend, when no run is waiting

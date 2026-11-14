@@ -7,21 +7,17 @@ trade) reaches the table and is logged."""
 from __future__ import annotations
 
 import logging
+import zlib
 from datetime import date, timedelta
 from typing import Callable
 
-import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 from .alpaca import Alpaca, AlpacaError
-from .bars import BarStore, d2s
+from .bars import COLS, BarStore, d2s, tidy
 
 log = logging.getLogger("stocks.ingest")
-
-# what an unadjusted split looks like in the raw close-to-close move (new/old share counts)
-SPLIT_RATIOS = [2, 3, 4, 5, 6, 7, 8, 10, 15, 20, 25, 30, 40, 50, 1.5, 1.25, 4 / 3,
-                1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 8, 1 / 10, 1 / 12, 1 / 15, 1 / 20, 1 / 25, 1 / 30, 1 / 40, 1 / 50]
-
 
 def _frame(pairs) -> pd.DataFrame:
     rows = [(int(b["t"][:4]) * 10000 + int(b["t"][5:7]) * 100 + int(b["t"][8:10]), s,
@@ -44,18 +40,12 @@ def pull(api: Alpaca, symbols: list[str], start: str, end: str) -> pd.DataFrame:
 
 
 def split_suspects(df: pd.DataFrame) -> pd.DataFrame:
-    """Rows whose raw move is the size of a split and whose adjusted return is the same move: the adjustment
-    has not reached Alpaca's series yet. Only a suspicion; `apply_splits` asks the corporate-action list."""
+    """Rows with a large raw move that the adjusted series repeats exactly: either a real jump, or a split
+    whose adjustment has not reached Alpaca's series yet. Only a suspicion; `apply_splits` asks the
+    corporate-action list, and only a split on record for that very day changes anything."""
     if df.empty:
         return df
-    big = df[(df["raw_move"].abs() >= 0.19) & ((df["ret"] - df["raw_move"]).abs() < 1e-3)]
-    if big.empty:
-        return big
-    ratio = 1.0 + big["raw_move"].to_numpy()                 # new price / old price = old shares / new shares
-    near = np.zeros(len(big), dtype=bool)
-    for r in SPLIT_RATIOS:
-        near |= np.abs(ratio * r - 1.0) < 0.04
-    return big[near]
+    return df[(df["raw_move"].abs() >= 0.19) & ((df["ret"] - df["raw_move"]).abs() < 1e-3)]
 
 
 def apply_splits(api: Alpaca, df: pd.DataFrame, note: Callable[[str], None] = log.warning) -> pd.DataFrame:
@@ -86,29 +76,53 @@ def apply_splits(api: Alpaca, df: pd.DataFrame, note: Callable[[str], None] = lo
     return df
 
 
+def _history(api: Alpaca, part: list[str], start: str, end: str) -> pd.DataFrame:
+    try:
+        return apply_splits(api, pull(api, part, start, end))
+    except AlpacaError as e:
+        if e.status not in (400, 404, 422) or len(part) == 1:
+            raise
+    frames = []                                      # one bad symbol must not lose the other 49
+    for s in part:
+        try:
+            frames.append(apply_splits(api, pull(api, [s], start, end)))
+        except AlpacaError as e1:
+            log.warning("no history for %s: %s", s, e1)
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+
+
 def backfill(api: Alpaca, store: BarStore, symbols: list[str], start: str, end: str, chunk: int = 50,
              progress: Callable[[int, int, int], None] | None = None) -> int:
-    """The long history, a handful of symbols at a time (a page holds 10,000 bars). Returns rows written."""
+    """The long history, a handful of symbols at a time (a page holds 10,000 bars). Each handful is parked
+    in a staging file, so a stop halfway loses nothing; the year files are written once at the end.
+    Returns rows written."""
+    staging = store.dir / "staging"
+    staging.mkdir(parents=True, exist_ok=True)
     total = 0
     for i in range(0, len(symbols), chunk):
         part = symbols[i:i + chunk]
-        try:
-            df = apply_splits(api, pull(api, part, start, end))
-        except AlpacaError as e:
-            if e.status in (400, 404, 422) and len(part) > 1:     # one bad symbol must not lose the other 49
-                for s in part:
-                    try:
-                        one = apply_splits(api, pull(api, [s], start, end))
-                        store.upsert(one.drop(columns=["raw_move"], errors="ignore"))
-                        total += len(one)
-                    except AlpacaError as e1:
-                        log.warning("no history for %s: %s", s, e1)
-                continue
-            raise
-        store.upsert(df.drop(columns=["raw_move"], errors="ignore"))
-        total += len(df)
+        path = staging / f"{i // chunk:05d}-{zlib.crc32(','.join(part + [start, end]).encode()):08x}.parquet"
+        if path.exists():
+            total += pq.ParquetFile(path).metadata.num_rows
+        else:
+            df = _history(api, part, start, end)
+            df = tidy(df.drop(columns=["raw_move"], errors="ignore")) if len(df) else pd.DataFrame(columns=COLS)
+            tmp = path.with_suffix(".tmp")
+            df.to_parquet(tmp, index=False)
+            tmp.replace(path)
+            total += len(df)
         if progress:
             progress(min(i + chunk, len(symbols)), len(symbols), total)
+    parts = sorted(staging.glob("*.parquet"))
+    y0, y1 = int(start[:4]), int(end[:4])
+    for year in range(y0, y1 + 1):                   # a year at a time: the whole history does not fit in memory
+        frames = [pd.read_parquet(p, filters=[("d", ">=", year * 10000), ("d", "<", (year + 1) * 10000)]) for p in parts]
+        frames = [f for f in frames if len(f)]
+        if frames:
+            store.upsert(pd.concat(frames, ignore_index=True))
+    for p in parts:
+        p.unlink()
+    staging.rmdir()
     return total
 
 
@@ -117,15 +131,15 @@ def update(api: Alpaca, store: BarStore, symbols: list[str], today: date, back_d
     """The evening tail: the last couple of weeks again, for every symbol. Returns what changed."""
     start, end = (today - timedelta(days=back_days)).isoformat(), today.isoformat()
     before = store.last_day()
-    rows, corrections = 0, []
+    frames = []
     for i in range(0, len(symbols), chunk):
         df = apply_splits(api, pull(api, symbols[i:i + chunk], start, end), note)
         if df.empty:
             continue
         first = df.groupby("sym")["d"].transform("min")
-        df = df[(df["d"] > first) | df["ret"].notna()]          # a window's first row only if it carries a return
-        corrections += store.upsert(df.drop(columns=["raw_move"], errors="ignore"))
-        rows += len(df)
+        frames.append(df[(df["d"] > first) | df["ret"].notna()])          # a window's first row only if it carries a return
+    rows = sum(len(f) for f in frames)
+    corrections = store.upsert(pd.concat(frames, ignore_index=True).drop(columns=["raw_move"], errors="ignore")) if frames else []
     for c in corrections:
         note(f"data corrected: {c['sym']} {d2s(c['d'])} return {c['was']:+.2%} → {c['now']:+.2%}")
     return {"rows": rows, "corrections": corrections, "before": before, "after": store.last_day()}

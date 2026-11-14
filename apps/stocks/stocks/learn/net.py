@@ -12,7 +12,7 @@ which kinds of stock are being bought, how crowded its corner is. Trees cannot s
 is measured, not assumed: `mode` switches the cross-section off ("mlp") or down to a plain average
 ("pool"), and the backtest report shows all three beside the ridge and the trees.
 
-Sizes are small on purpose (about 60k weights): the signal in daily returns is faint and Plint has four
+Sizes are small on purpose (about 100k weights): the signal in daily returns is faint and Plint has four
 cores. Several seeds are averaged, which does more for a faint signal than any one larger network."""
 from __future__ import annotations
 

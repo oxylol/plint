@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · stocks stack
+#  Stocks: stock-trading models on paper, side by side. A neural network,
+#  an agent on the Claude API with a monthly budget, an index fund as the
+#  bar, and the classic rules, each with its own pretend-money book.
+#  One run per US trading day, after the close. Source in apps/stocks
+#  (README and DESIGN there). There is no broker connection: nothing here
+#  can place a real order. The record lives in data/stocks (backed up);
+#  prices and training tables on the array (can be fetched again).
+# ─────────────────────────────────────────────────────────────
+name: stocks
+
+services:
+  stocks:
+    build: ../../apps/stocks
+    image: plint/stocks:local
+    container_name: stocks
+    restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
+    ports:
+      - "127.0.0.1:5250:8000"
+    environment:
+      TZ: ${TZ}
+      HOME: /tmp
+      DATA_DIR: /data
+      CACHE_DIR: /cache
+      PORT: 8000
+      # ntfy only listens on the host's loopback, so talk to it over the ops network.
+      NTFY_URL: http://ntfy:80/plint
+      NTFY_TOKEN: ${NTFY_TOKEN:-}
+      # Keys. Each one missing switches off the part that needs it, and the page says so.
+      #   Alpaca (free paper account): prices. Without it nothing runs.
+      #   Anthropic: the agent. Without it the agent waits.
+      #   SEC_CONTACT: an email address; the SEC asks every script to say who is calling.
+      #   Without it the after-earnings and insider models wait and the agent reads headlines only.
+      ALPACA_API_KEY: ${ALPACA_API_KEY:-}
+      ALPACA_API_SECRET: ${ALPACA_API_SECRET:-}
+      STOCKS_ANTHROPIC_API_KEY: ${STOCKS_ANTHROPIC_API_KEY:-}
+      SEC_CONTACT: ${SEC_CONTACT:-}
+      # The lab (defaults are the declared design, apps/stocks/DESIGN.md; a change restarts the model's record).
+      STK_START_CASH: ${STK_START_CASH:-10000}
+      STK_UNIVERSE: ${STK_UNIVERSE:-1000}
+      STK_NOTIFY: ${STK_NOTIFY:-daily}          # daily | trades | off
+      STK_MODELS: ${STK_MODELS:-}               # empty = all
+      # The agent: hard stop per calendar month, in dollars.
+      STK_AGENT_CAP_USD: ${STK_AGENT_CAP_USD:-200}
+      STK_AGENT_MODEL: ${STK_AGENT_MODEL:-claude-opus-5-5}
+      STK_AGENT_SMALL_MODEL: ${STK_AGENT_SMALL_MODEL:-claude-haiku-5-5}
+    volumes:
+      - ../../data/stocks:/data
+      - /mnt/storage/plint/stocks:/cache
+    read_only: true
+    tmpfs: [/tmp]
+    # the page and the clock are small; the room is for the evening run and, once a week, a refit
+    # (about 1.5 GB at its peak). Three cores at most, so a long fit leaves the box usable.
+    mem_limit: 2500m
+    cpus: 3.0
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    networks:
+      - stocks
+      - ops
+
+networks:
+  stocks:
+    name: plint-stocks
+  ops:
+    external: true
+    name: plint-ops
