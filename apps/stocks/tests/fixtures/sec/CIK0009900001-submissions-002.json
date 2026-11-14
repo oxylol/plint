@@ -1,0 +1,18 @@
+{
+  "accessionNumber": ["0009900001-15-000040","0009900001-09-000007"],
+  "filingDate": ["2015-10-29","2009-03-02"],
+  "reportDate": ["2015-10-29","2009-03-02"],
+  "acceptanceDateTime": ["2015-10-29T20:05:00.000Z","2009-03-02T21:40:00.000Z"],
+  "act": ["34","34"],
+  "form": ["8-K","8-K"],
+  "fileNumber": ["001-39901","001-39901"],
+  "filmNumber": ["151182004","09648112"],
+  "items": ["2.02,9.01","2.02,9.01"],
+  "core_type": ["8-K","8-K"],
+  "size": [198220,120330],
+  "isXBRL": [0,0],
+  "isInlineXBRL": [0,0],
+  "isXBRLNumeric": [0,0],
+  "primaryDocument": ["nwt8k_q3.htm","form8k.htm"],
+  "primaryDocDescription": ["8-K","8-K"]
+}
