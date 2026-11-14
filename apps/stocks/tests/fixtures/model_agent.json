@@ -1,0 +1,1263 @@
+{
+ "id": "agent",
+ "title": "API agent",
+ "kind": "agent",
+ "what": "Claude reads the day's filings and news, writes a memo and trades at most four names a day.",
+ "state": "running",
+ "state_text": "",
+ "since": "2026-09-11",
+ "days": 45,
+ "equity": 10523.36,
+ "ret": 0.05234,
+ "index_ret": 0.00863,
+ "vs_index": 0.04371,
+ "day_ret": 0.0109,
+ "day_vs_index": 0.00991,
+ "max_dd": -0.0508,
+ "n_pos": 11,
+ "cash": 0.0476,
+ "trades": [
+  {
+   "date": "2026-11-13",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 868.46,
+   "price": 779.09,
+   "shares": 1.1147,
+   "cost": 0.289,
+   "why": "thesis played out",
+   "ret": 0.054
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "buy",
+   "usd": 1055.85,
+   "price": 421.79,
+   "shares": 2.5033,
+   "cost": 0.254,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "sell",
+   "usd": 805.73,
+   "price": 464.39,
+   "shares": 1.735,
+   "cost": 0.328,
+   "why": "thesis played out",
+   "ret": -0.0271
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 903.21,
+   "price": 221.99,
+   "shares": 4.0687,
+   "cost": 0.215,
+   "why": "thesis played out",
+   "ret": 0.0311
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "sell",
+   "usd": 850.5,
+   "price": 507.45,
+   "shares": 1.676,
+   "cost": 0.207,
+   "why": "thesis played out",
+   "ret": -0.0172
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "buy",
+   "usd": 1126.7,
+   "price": 214.58,
+   "shares": 5.2507,
+   "cost": 0.46,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 815.53,
+   "price": 121.23,
+   "shares": 6.7271,
+   "cost": 0.299,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "sell",
+   "usd": 1143.87,
+   "price": 399.02,
+   "shares": 2.8667,
+   "cost": 0.319,
+   "why": "thesis played out",
+   "ret": -0.004
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "side": "sell",
+   "usd": 930.44,
+   "price": 506.44,
+   "shares": 1.8372,
+   "cost": 0.256,
+   "why": "thesis played out",
+   "ret": -0.0013
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 963.72,
+   "price": 723.91,
+   "shares": 1.3313,
+   "cost": 0.238,
+   "why": "thesis played out",
+   "ret": 0.0946
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "usd": 1058.55,
+   "price": 154.78,
+   "shares": 6.8391,
+   "cost": 0.405,
+   "why": "thesis played out",
+   "ret": 0.0163
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 1042.76,
+   "price": 254.25,
+   "shares": 4.1013,
+   "cost": 0.172,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "buy",
+   "usd": 761.02,
+   "price": 482.49,
+   "shares": 1.5773,
+   "cost": 0.339,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "buy",
+   "usd": 864.36,
+   "price": 159.79,
+   "shares": 5.4093,
+   "cost": 0.164,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "buy",
+   "usd": 1100.92,
+   "price": 375.91,
+   "shares": 2.9287,
+   "cost": 0.493,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "side": "buy",
+   "usd": 877.03,
+   "price": 461.95,
+   "shares": 1.8985,
+   "cost": 0.237,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 1144.65,
+   "price": 291.41,
+   "shares": 3.928,
+   "cost": 0.328,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 766.61,
+   "price": 264.19,
+   "shares": 2.9017,
+   "cost": 0.314,
+   "why": "thesis played out",
+   "ret": 0.0338
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "buy",
+   "usd": 731.58,
+   "price": 554.49,
+   "shares": 1.3194,
+   "cost": 0.252,
+   "why": "8-K: guidance raised",
+   "ret": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "side": "sell",
+   "usd": 882.29,
+   "price": 780.2,
+   "shares": 1.1309,
+   "cost": 0.338,
+   "why": "thesis played out",
+   "ret": -0.1447
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "side": "sell",
+   "usd": 1062.23,
+   "price": 754.03,
+   "shares": 1.4087,
+   "cost": 0.436,
+   "why": "thesis played out",
+   "ret": 0.0186
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 900.9,
+   "price": 701.56,
+   "shares": 1.2841,
+   "cost": 0.36,
+   "why": "8-K: guidance raised",
+   "ret": null
+  }
+ ],
+ "costs": 6.7,
+ "turnover": 7.7,
+ "verdict": {
+  "lamp": "none",
+  "text": "No verdict yet: 25 of about 120 days scored",
+  "ic": 0.0033,
+  "t": 0.19,
+  "n": 25,
+  "horizon": 20
+ },
+ "spark": [
+  1.0,
+  0.99522,
+  1.00104,
+  0.99524,
+  0.99529,
+  0.99142,
+  0.99173,
+  1.00733,
+  1.01964,
+  1.03,
+  1.03326,
+  1.0354,
+  1.04189,
+  1.02919,
+  1.03837,
+  1.04848,
+  1.05453,
+  1.0315,
+  1.02392,
+  1.02151,
+  1.02387,
+  1.02781,
+  1.03463,
+  1.0461,
+  1.04082,
+  1.03914,
+  1.04823,
+  1.05233,
+  1.07056,
+  1.08349,
+  1.09665,
+  1.08874,
+  1.0838,
+  1.08402,
+  1.08008,
+  1.08822,
+  1.07693,
+  1.06454,
+  1.05711,
+  1.05079,
+  1.06318,
+  1.04828,
+  1.05317,
+  1.05478,
+  1.04099,
+  1.05234
+ ],
+ "spark_index": [
+  1.0,
+  0.99855,
+  1.00324,
+  1.00202,
+  1.0001,
+  0.99326,
+  0.99216,
+  1.00158,
+  1.00558,
+  1.01453,
+  1.01715,
+  1.02098,
+  1.0231,
+  1.01008,
+  1.0176,
+  1.02233,
+  1.02702,
+  1.01374,
+  1.00021,
+  0.99369,
+  0.99057,
+  0.99358,
+  0.99381,
+  0.99855,
+  0.99402,
+  0.99707,
+  1.00081,
+  0.99612,
+  1.0104,
+  1.01551,
+  1.02584,
+  1.02137,
+  1.01594,
+  1.01375,
+  1.0135,
+  1.01923,
+  1.02187,
+  1.01882,
+  1.01163,
+  1.00803,
+  1.01848,
+  1.01251,
+  1.0151,
+  1.01917,
+  1.00763,
+  1.00863
+ ],
+ "backtest": null,
+ "curve": [
+  [
+   "2026-09-11",
+   10000.0,
+   10000.0
+  ],
+  [
+   "2026-09-14",
+   9952.16,
+   9985.53
+  ],
+  [
+   "2026-09-15",
+   10010.4,
+   10032.38
+  ],
+  [
+   "2026-09-16",
+   9952.41,
+   10020.25
+  ],
+  [
+   "2026-09-17",
+   9952.93,
+   10001.01
+  ],
+  [
+   "2026-09-18",
+   9914.22,
+   9932.6
+  ],
+  [
+   "2026-09-21",
+   9917.3,
+   9921.61
+  ],
+  [
+   "2026-09-22",
+   10073.33,
+   10015.82
+  ],
+  [
+   "2026-09-23",
+   10196.39,
+   10055.81
+  ],
+  [
+   "2026-09-24",
+   10300.0,
+   10145.26
+  ],
+  [
+   "2026-09-25",
+   10332.59,
+   10171.55
+  ],
+  [
+   "2026-09-28",
+   10354.03,
+   10209.77
+  ],
+  [
+   "2026-09-29",
+   10418.9,
+   10231.04
+  ],
+  [
+   "2026-09-30",
+   10291.85,
+   10100.81
+  ],
+  [
+   "2026-10-01",
+   10383.7,
+   10175.98
+  ],
+  [
+   "2026-10-02",
+   10484.75,
+   10223.31
+  ],
+  [
+   "2026-10-05",
+   10545.34,
+   10270.24
+  ],
+  [
+   "2026-10-06",
+   10315.03,
+   10137.44
+  ],
+  [
+   "2026-10-07",
+   10239.16,
+   10002.09
+  ],
+  [
+   "2026-10-08",
+   10215.13,
+   9936.91
+  ],
+  [
+   "2026-10-09",
+   10238.71,
+   9905.65
+  ],
+  [
+   "2026-10-12",
+   10278.1,
+   9935.8
+  ],
+  [
+   "2026-10-13",
+   10346.28,
+   9938.11
+  ],
+  [
+   "2026-10-14",
+   10460.96,
+   9985.49
+  ],
+  [
+   "2026-10-15",
+   10408.17,
+   9940.18
+  ],
+  [
+   "2026-10-16",
+   10391.39,
+   9970.69
+  ],
+  [
+   "2026-10-19",
+   10482.34,
+   10008.12
+  ],
+  [
+   "2026-10-20",
+   10523.3,
+   9961.19
+  ],
+  [
+   "2026-10-21",
+   10705.63,
+   10104.03
+  ],
+  [
+   "2026-10-22",
+   10834.89,
+   10155.09
+  ],
+  [
+   "2026-10-23",
+   10966.52,
+   10258.43
+  ],
+  [
+   "2026-10-26",
+   10887.4,
+   10213.67
+  ],
+  [
+   "2026-10-27",
+   10838.02,
+   10159.38
+  ],
+  [
+   "2026-10-28",
+   10840.19,
+   10137.51
+  ],
+  [
+   "2026-10-29",
+   10800.8,
+   10134.96
+  ],
+  [
+   "2026-10-30",
+   10882.22,
+   10192.29
+  ],
+  [
+   "2026-11-02",
+   10769.3,
+   10218.66
+  ],
+  [
+   "2026-11-03",
+   10645.37,
+   10188.22
+  ],
+  [
+   "2026-11-04",
+   10571.12,
+   10116.34
+  ],
+  [
+   "2026-11-05",
+   10507.91,
+   10080.28
+  ],
+  [
+   "2026-11-06",
+   10631.75,
+   10184.78
+  ],
+  [
+   "2026-11-09",
+   10482.84,
+   10125.07
+  ],
+  [
+   "2026-11-10",
+   10531.74,
+   10150.97
+  ],
+  [
+   "2026-11-11",
+   10547.81,
+   10191.69
+  ],
+  [
+   "2026-11-12",
+   10409.91,
+   10076.34
+  ],
+  [
+   "2026-11-13",
+   10523.36,
+   10086.3
+  ]
+ ],
+ "positions": [
+  {
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "weight": 0.1103,
+   "value": 1160.73,
+   "since": "2026-10-19",
+   "days": 19,
+   "ret": 0.0184,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "weight": 0.1088,
+   "value": 1144.94,
+   "since": "2026-11-12",
+   "days": 1,
+   "ret": -0.0297,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "weight": 0.1085,
+   "value": 1141.78,
+   "since": "2026-11-03",
+   "days": 8,
+   "ret": 0.0004,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "weight": 0.1025,
+   "value": 1078.64,
+   "since": "2026-11-05",
+   "days": 6,
+   "ret": -0.002,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "weight": 0.0968,
+   "value": 1018.66,
+   "since": "2026-10-28",
+   "days": 12,
+   "ret": 0.079,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "weight": 0.096,
+   "value": 1010.24,
+   "since": "2026-10-23",
+   "days": 15,
+   "ret": -0.0455,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "weight": 0.0951,
+   "value": 1000.77,
+   "since": "2026-11-02",
+   "days": 9,
+   "ret": 0.0389,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "weight": 0.0909,
+   "value": 956.57,
+   "since": "2026-10-15",
+   "days": 21,
+   "ret": -0.0021,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "weight": 0.0875,
+   "value": 920.79,
+   "since": "2026-10-28",
+   "days": 12,
+   "ret": 0.0189,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "weight": 0.0818,
+   "value": 860.81,
+   "since": "2026-10-19",
+   "days": 19,
+   "ret": -0.0165,
+   "why": "guidance raised; drift not yet in the price"
+  },
+  {
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "weight": 0.0785,
+   "value": 826.08,
+   "since": "2026-10-26",
+   "days": 14,
+   "ret": -0.0684,
+   "why": "guidance raised; drift not yet in the price"
+  }
+ ],
+ "pending": [
+  {
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "buy",
+   "weight": 0.025,
+   "why": "rank 2 of 1000"
+  },
+  {
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "buy",
+   "weight": 0.025,
+   "why": "rank 2 of 1000"
+  },
+  {
+   "symbol": "CVNA",
+   "name": "Carvana Co.",
+   "side": "sell",
+   "weight": 0.0,
+   "why": "fell to rank 312"
+  }
+ ],
+ "today": null,
+ "ranking_history": [],
+ "signals": [
+  {
+   "date": "2026-11-13",
+   "symbol": "FSLR",
+   "horizon": 5,
+   "p": 0.56,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "NEM",
+   "horizon": 20,
+   "p": 0.69,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "WMT",
+   "horizon": 5,
+   "p": 0.68,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "ABNB",
+   "horizon": 20,
+   "p": 0.6,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "CVNA",
+   "horizon": 5,
+   "p": 0.59,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "APP",
+   "horizon": 20,
+   "p": 0.56,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "UBER",
+   "horizon": 5,
+   "p": 0.53,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "DAL",
+   "horizon": 20,
+   "p": 0.55,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "HOOD",
+   "horizon": 5,
+   "p": 0.67,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "SHOP",
+   "horizon": 20,
+   "p": 0.6,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "HOOD",
+   "horizon": 5,
+   "p": 0.7,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "MU",
+   "horizon": 20,
+   "p": 0.72,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "LLY",
+   "horizon": 5,
+   "p": 0.67,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "MRK",
+   "horizon": 20,
+   "p": 0.66,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "CRWD",
+   "horizon": 5,
+   "p": 0.62,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "ZS",
+   "horizon": 20,
+   "p": 0.6,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "ZS",
+   "horizon": 5,
+   "p": 0.52,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "MU",
+   "horizon": 20,
+   "p": 0.7,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "ZS",
+   "horizon": 5,
+   "p": 0.62,
+   "note": "raised guidance, quiet reaction",
+   "excess": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "GE",
+   "horizon": 20,
+   "p": 0.66,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.0226
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "MRK",
+   "horizon": 5,
+   "p": 0.5,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0355
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "ZS",
+   "horizon": 20,
+   "p": 0.7,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0349
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "TTD",
+   "horizon": 5,
+   "p": 0.62,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.0355
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "NVDA",
+   "horizon": 20,
+   "p": 0.6,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.0049
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "GE",
+   "horizon": 5,
+   "p": 0.52,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0338
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "NEM",
+   "horizon": 20,
+   "p": 0.69,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0897
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "AAPL",
+   "horizon": 5,
+   "p": 0.71,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0591
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "UBER",
+   "horizon": 20,
+   "p": 0.69,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0131
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "UBER",
+   "horizon": 5,
+   "p": 0.57,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0373
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "JPM",
+   "horizon": 20,
+   "p": 0.63,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0283
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "FSLR",
+   "horizon": 5,
+   "p": 0.57,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.0214
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "VRT",
+   "horizon": 20,
+   "p": 0.71,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0296
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "NVDA",
+   "horizon": 5,
+   "p": 0.68,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.029
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "FSLR",
+   "horizon": 20,
+   "p": 0.66,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0376
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "ZS",
+   "horizon": 5,
+   "p": 0.63,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0564
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "MRK",
+   "horizon": 20,
+   "p": 0.56,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.0496
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "CRWD",
+   "horizon": 5,
+   "p": 0.69,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0474
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "VRT",
+   "horizon": 20,
+   "p": 0.52,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.05
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "BKNG",
+   "horizon": 5,
+   "p": 0.54,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0064
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "DE",
+   "horizon": 20,
+   "p": 0.72,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0825
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "TSLA",
+   "horizon": 5,
+   "p": 0.62,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0559
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "FSLR",
+   "horizon": 20,
+   "p": 0.57,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.0721
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "COST",
+   "horizon": 5,
+   "p": 0.69,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.0783
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "ANET",
+   "horizon": 20,
+   "p": 0.65,
+   "note": "raised guidance, quiet reaction",
+   "excess": -0.0451
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "ZS",
+   "horizon": 5,
+   "p": 0.58,
+   "note": "raised guidance, quiet reaction",
+   "excess": 0.007
+  }
+ ],
+ "memo": {
+  "date": "2026-11-13",
+  "text": "**Tonight.** 212 filings and 1,480 headlines triaged, 27 companies read in depth.\n\n- **Bought VRT (6 %)**: the 8-K lifts full-year guidance by 9 % and the stock closed up only 2.1 %. I put the chance it beats the index over 20 days at 0.61.\n- **Sold DAL**: the fuel-cost thesis is in the price; +4.2 % over the index since entry.\n- **Held the rest.** Nothing in today's reading changes them.\n\n*Not acted on:* CVNA's beat looked strong, but the move was 14 % by the close."
+ },
+ "reads": [
+  {
+   "date": "2026-11-13",
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "thesis": "Guidance raised on data-centre orders; the reaction was small against the size of the change.",
+   "facts": [
+    "FY revenue guide +9 %",
+    "backlog $8.5bn, +30 % y/y",
+    "closed +2.1 % on 1.8x volume"
+   ],
+   "priced_in": "About a third: the stock had run 12 % into the print.",
+   "p5": 0.6,
+   "p20": 0.65,
+   "conviction": 0.51,
+   "risks": "One customer is 22 % of backlog.",
+   "sources": [
+    {
+     "title": "Form 8-K, 13 Nov 2026",
+     "url": "https://www.sec.gov/Archives/edgar/data/0000000/example.htm"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "thesis": "Guidance raised on data-centre orders; the reaction was small against the size of the change.",
+   "facts": [
+    "FY revenue guide +9 %",
+    "backlog $8.5bn, +30 % y/y",
+    "closed +2.1 % on 1.8x volume"
+   ],
+   "priced_in": "About a third: the stock had run 12 % into the print.",
+   "p5": 0.51,
+   "p20": 0.51,
+   "conviction": 0.67,
+   "risks": "One customer is 22 % of backlog.",
+   "sources": [
+    {
+     "title": "Form 8-K, 13 Nov 2026",
+     "url": "https://www.sec.gov/Archives/edgar/data/0000000/example.htm"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "thesis": "Guidance raised on data-centre orders; the reaction was small against the size of the change.",
+   "facts": [
+    "FY revenue guide +9 %",
+    "backlog $8.5bn, +30 % y/y",
+    "closed +2.1 % on 1.8x volume"
+   ],
+   "priced_in": "About a third: the stock had run 12 % into the print.",
+   "p5": 0.54,
+   "p20": 0.66,
+   "conviction": 0.26,
+   "risks": "One customer is 22 % of backlog.",
+   "sources": [
+    {
+     "title": "Form 8-K, 13 Nov 2026",
+     "url": "https://www.sec.gov/Archives/edgar/data/0000000/example.htm"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "thesis": "Guidance raised on data-centre orders; the reaction was small against the size of the change.",
+   "facts": [
+    "FY revenue guide +9 %",
+    "backlog $8.5bn, +30 % y/y",
+    "closed +2.1 % on 1.8x volume"
+   ],
+   "priced_in": "About a third: the stock had run 12 % into the print.",
+   "p5": 0.56,
+   "p20": 0.65,
+   "conviction": 0.39,
+   "risks": "One customer is 22 % of backlog.",
+   "sources": [
+    {
+     "title": "Form 8-K, 13 Nov 2026",
+     "url": "https://www.sec.gov/Archives/edgar/data/0000000/example.htm"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "thesis": "Guidance raised on data-centre orders; the reaction was small against the size of the change.",
+   "facts": [
+    "FY revenue guide +9 %",
+    "backlog $8.5bn, +30 % y/y",
+    "closed +2.1 % on 1.8x volume"
+   ],
+   "priced_in": "About a third: the stock had run 12 % into the print.",
+   "p5": 0.52,
+   "p20": 0.6,
+   "conviction": 0.69,
+   "risks": "One customer is 22 % of backlog.",
+   "sources": [
+    {
+     "title": "Form 8-K, 13 Nov 2026",
+     "url": "https://www.sec.gov/Archives/edgar/data/0000000/example.htm"
+    }
+   ]
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "thesis": "Guidance raised on data-centre orders; the reaction was small against the size of the change.",
+   "facts": [
+    "FY revenue guide +9 %",
+    "backlog $8.5bn, +30 % y/y",
+    "closed +2.1 % on 1.8x volume"
+   ],
+   "priced_in": "About a third: the stock had run 12 % into the print.",
+   "p5": 0.49,
+   "p20": 0.59,
+   "conviction": 0.58,
+   "risks": "One customer is 22 % of backlog.",
+   "sources": [
+    {
+     "title": "Form 8-K, 13 Nov 2026",
+     "url": "https://www.sec.gov/Archives/edgar/data/0000000/example.htm"
+    }
+   ]
+  }
+ ],
+ "report": null,
+ "by_year": null
+}

@@ -1,0 +1,2873 @@
+{
+ "id": "insiders",
+ "title": "Insider buying",
+ "kind": "rule",
+ "what": "Buys when two or more of a company's own officers buy its shares on the open market.",
+ "state": "running",
+ "state_text": "",
+ "since": "2026-09-11",
+ "days": 45,
+ "equity": 9796.67,
+ "ret": -0.02033,
+ "index_ret": 0.00863,
+ "vs_index": -0.02896,
+ "day_ret": 0.00402,
+ "day_vs_index": 0.00303,
+ "max_dd": -0.0575,
+ "n_pos": 40,
+ "cash": 0.0424,
+ "trades": [
+  {
+   "date": "2026-11-13",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 215.7,
+   "price": 495.74,
+   "shares": 0.4351,
+   "cost": 0.065,
+   "why": "fell to rank 413",
+   "ret": -0.0061
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 273.75,
+   "price": 185.25,
+   "shares": 1.4777,
+   "cost": 0.103,
+   "why": "rank 6 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "side": "sell",
+   "usd": 181.29,
+   "price": 612.95,
+   "shares": 0.2958,
+   "cost": 0.079,
+   "why": "fell to rank 521",
+   "ret": -0.0089
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "usd": 265.1,
+   "price": 514.38,
+   "shares": 0.5154,
+   "cost": 0.114,
+   "why": "fell to rank 695",
+   "ret": -0.1077
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 229.02,
+   "price": 612.52,
+   "shares": 0.3739,
+   "cost": 0.103,
+   "why": "rank 6 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "sell",
+   "usd": 251.34,
+   "price": 869.42,
+   "shares": 0.2891,
+   "cost": 0.056,
+   "why": "fell to rank 464",
+   "ret": 0.0664
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "buy",
+   "usd": 200.48,
+   "price": 139.69,
+   "shares": 1.4352,
+   "cost": 0.032,
+   "why": "rank 5 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "buy",
+   "usd": 272.69,
+   "price": 441.82,
+   "shares": 0.6172,
+   "cost": 0.083,
+   "why": "rank 18 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "buy",
+   "usd": 277.51,
+   "price": 847.6,
+   "shares": 0.3274,
+   "cost": 0.103,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 268.14,
+   "price": 166.11,
+   "shares": 1.6142,
+   "cost": 0.049,
+   "why": "rank 8 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "side": "sell",
+   "usd": 279.18,
+   "price": 633.67,
+   "shares": 0.4406,
+   "cost": 0.061,
+   "why": "fell to rank 341",
+   "ret": 0.0006
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 277.44,
+   "price": 786.71,
+   "shares": 0.3527,
+   "cost": 0.1,
+   "why": "rank 37 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "sell",
+   "usd": 269.48,
+   "price": 656.11,
+   "shares": 0.4107,
+   "cost": 0.096,
+   "why": "fell to rank 250",
+   "ret": -0.0409
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "sell",
+   "usd": 196.11,
+   "price": 878.82,
+   "shares": 0.2232,
+   "cost": 0.042,
+   "why": "fell to rank 283",
+   "ret": 0.0495
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "sell",
+   "usd": 263.36,
+   "price": 393.33,
+   "shares": 0.6696,
+   "cost": 0.046,
+   "why": "fell to rank 307",
+   "ret": 0.0128
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "side": "sell",
+   "usd": 229.93,
+   "price": 80.1,
+   "shares": 2.8705,
+   "cost": 0.079,
+   "why": "fell to rank 478",
+   "ret": 0.0255
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 271.33,
+   "price": 412.9,
+   "shares": 0.6571,
+   "cost": 0.049,
+   "why": "fell to rank 492",
+   "ret": 0.0326
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "sell",
+   "usd": 272.47,
+   "price": 850.27,
+   "shares": 0.3205,
+   "cost": 0.071,
+   "why": "fell to rank 278",
+   "ret": -0.0132
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 198.01,
+   "price": 474.52,
+   "shares": 0.4173,
+   "cost": 0.077,
+   "why": "fell to rank 251",
+   "ret": 0.0276
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "sell",
+   "usd": 259.48,
+   "price": 320.62,
+   "shares": 0.8093,
+   "cost": 0.088,
+   "why": "fell to rank 406",
+   "ret": -0.0744
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "sell",
+   "usd": 172.31,
+   "price": 612.49,
+   "shares": 0.2813,
+   "cost": 0.043,
+   "why": "fell to rank 398",
+   "ret": -0.0769
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "buy",
+   "usd": 293.21,
+   "price": 758.8,
+   "shares": 0.3864,
+   "cost": 0.086,
+   "why": "rank 8 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "sell",
+   "usd": 227.93,
+   "price": 154.82,
+   "shares": 1.4722,
+   "cost": 0.06,
+   "why": "fell to rank 314",
+   "ret": 0.0366
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "sell",
+   "usd": 242.53,
+   "price": 659.84,
+   "shares": 0.3676,
+   "cost": 0.091,
+   "why": "fell to rank 258",
+   "ret": -0.0428
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "buy",
+   "usd": 228.05,
+   "price": 326.08,
+   "shares": 0.6994,
+   "cost": 0.085,
+   "why": "rank 31 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 203.88,
+   "price": 189.74,
+   "shares": 1.0745,
+   "cost": 0.072,
+   "why": "fell to rank 273",
+   "ret": -0.0414
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "buy",
+   "usd": 183.03,
+   "price": 162.86,
+   "shares": 1.1238,
+   "cost": 0.065,
+   "why": "rank 30 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 277.11,
+   "price": 197.69,
+   "shares": 1.4017,
+   "cost": 0.077,
+   "why": "rank 1 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "side": "buy",
+   "usd": 217.97,
+   "price": 838.36,
+   "shares": 0.26,
+   "cost": 0.054,
+   "why": "rank 34 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "buy",
+   "usd": 198.1,
+   "price": 36.45,
+   "shares": 5.4348,
+   "cost": 0.087,
+   "why": "rank 15 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "side": "buy",
+   "usd": 208.34,
+   "price": 824.66,
+   "shares": 0.2526,
+   "cost": 0.034,
+   "why": "rank 15 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "buy",
+   "usd": 213.87,
+   "price": 410.26,
+   "shares": 0.5213,
+   "cost": 0.058,
+   "why": "rank 26 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 206.16,
+   "price": 799.97,
+   "shares": 0.2577,
+   "cost": 0.059,
+   "why": "fell to rank 629",
+   "ret": -0.0496
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "buy",
+   "usd": 187.01,
+   "price": 791.43,
+   "shares": 0.2363,
+   "cost": 0.05,
+   "why": "rank 36 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "buy",
+   "usd": 227.62,
+   "price": 632.22,
+   "shares": 0.36,
+   "cost": 0.053,
+   "why": "rank 10 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 285.87,
+   "price": 836.72,
+   "shares": 0.3417,
+   "cost": 0.072,
+   "why": "rank 32 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "buy",
+   "usd": 241.19,
+   "price": 787.66,
+   "shares": 0.3062,
+   "cost": 0.104,
+   "why": "rank 24 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 190.55,
+   "price": 800.63,
+   "shares": 0.238,
+   "cost": 0.073,
+   "why": "rank 27 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "sell",
+   "usd": 191.57,
+   "price": 824.68,
+   "shares": 0.2323,
+   "cost": 0.082,
+   "why": "fell to rank 644",
+   "ret": 0.0485
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "side": "buy",
+   "usd": 277.62,
+   "price": 27.03,
+   "shares": 10.2708,
+   "cost": 0.099,
+   "why": "rank 18 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "buy",
+   "usd": 197.57,
+   "price": 536.33,
+   "shares": 0.3684,
+   "cost": 0.084,
+   "why": "rank 17 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 293.58,
+   "price": 465.06,
+   "shares": 0.6313,
+   "cost": 0.128,
+   "why": "fell to rank 696",
+   "ret": -0.0533
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "buy",
+   "usd": 234.13,
+   "price": 716.37,
+   "shares": 0.3268,
+   "cost": 0.1,
+   "why": "rank 13 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 235.56,
+   "price": 419.25,
+   "shares": 0.5619,
+   "cost": 0.059,
+   "why": "fell to rank 502",
+   "ret": 0.0351
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "buy",
+   "usd": 213.54,
+   "price": 131.69,
+   "shares": 1.6215,
+   "cost": 0.065,
+   "why": "rank 39 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 235.01,
+   "price": 728.62,
+   "shares": 0.3225,
+   "cost": 0.097,
+   "why": "fell to rank 337",
+   "ret": -0.1197
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "sell",
+   "usd": 220.39,
+   "price": 291.82,
+   "shares": 0.7552,
+   "cost": 0.077,
+   "why": "fell to rank 295",
+   "ret": 0.0555
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "buy",
+   "usd": 233.02,
+   "price": 334.25,
+   "shares": 0.6971,
+   "cost": 0.048,
+   "why": "rank 38 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "sell",
+   "usd": 228.37,
+   "price": 430.72,
+   "shares": 0.5302,
+   "cost": 0.04,
+   "why": "fell to rank 432",
+   "ret": -0.0118
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "buy",
+   "usd": 255.67,
+   "price": 481.65,
+   "shares": 0.5308,
+   "cost": 0.052,
+   "why": "rank 20 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "sell",
+   "usd": 285.3,
+   "price": 768.49,
+   "shares": 0.3712,
+   "cost": 0.103,
+   "why": "fell to rank 592",
+   "ret": 0.0406
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "buy",
+   "usd": 283.42,
+   "price": 478.02,
+   "shares": 0.5929,
+   "cost": 0.097,
+   "why": "rank 1 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "sell",
+   "usd": 276.03,
+   "price": 421.32,
+   "shares": 0.6552,
+   "cost": 0.084,
+   "why": "fell to rank 419",
+   "ret": -0.0279
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 171.5,
+   "price": 356.0,
+   "shares": 0.4817,
+   "cost": 0.041,
+   "why": "rank 11 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "sell",
+   "usd": 207.19,
+   "price": 31.58,
+   "shares": 6.5608,
+   "cost": 0.089,
+   "why": "fell to rank 591",
+   "ret": 0.0686
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "sell",
+   "usd": 217.2,
+   "price": 99.08,
+   "shares": 2.1922,
+   "cost": 0.081,
+   "why": "fell to rank 370",
+   "ret": 0.0092
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "usd": 225.06,
+   "price": 776.09,
+   "shares": 0.29,
+   "cost": 0.04,
+   "why": "fell to rank 639",
+   "ret": -0.0371
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 184.14,
+   "price": 584.59,
+   "shares": 0.315,
+   "cost": 0.033,
+   "why": "fell to rank 469",
+   "ret": 0.0708
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "buy",
+   "usd": 190.24,
+   "price": 75.66,
+   "shares": 2.5144,
+   "cost": 0.081,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "sell",
+   "usd": 239.82,
+   "price": 870.98,
+   "shares": 0.2753,
+   "cost": 0.056,
+   "why": "fell to rank 413",
+   "ret": -0.0252
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 250.38,
+   "price": 221.87,
+   "shares": 1.1285,
+   "cost": 0.068,
+   "why": "rank 28 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "buy",
+   "usd": 182.6,
+   "price": 251.37,
+   "shares": 0.7264,
+   "cost": 0.028,
+   "why": "rank 19 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "sell",
+   "usd": 283.55,
+   "price": 730.89,
+   "shares": 0.388,
+   "cost": 0.103,
+   "why": "fell to rank 657",
+   "ret": 0.0175
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 287.33,
+   "price": 805.0,
+   "shares": 0.3569,
+   "cost": 0.094,
+   "why": "fell to rank 246",
+   "ret": 0.0238
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "sell",
+   "usd": 247.08,
+   "price": 564.93,
+   "shares": 0.4374,
+   "cost": 0.109,
+   "why": "fell to rank 694",
+   "ret": -0.0227
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "buy",
+   "usd": 270.53,
+   "price": 177.5,
+   "shares": 1.5241,
+   "cost": 0.044,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "side": "sell",
+   "usd": 227.38,
+   "price": 647.83,
+   "shares": 0.351,
+   "cost": 0.048,
+   "why": "fell to rank 297",
+   "ret": -0.0423
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "buy",
+   "usd": 230.8,
+   "price": 852.9,
+   "shares": 0.2706,
+   "cost": 0.04,
+   "why": "rank 34 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "sell",
+   "usd": 246.71,
+   "price": 410.37,
+   "shares": 0.6012,
+   "cost": 0.078,
+   "why": "fell to rank 581",
+   "ret": -0.0333
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "sell",
+   "usd": 185.32,
+   "price": 866.67,
+   "shares": 0.2138,
+   "cost": 0.058,
+   "why": "fell to rank 372",
+   "ret": 0.0754
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "buy",
+   "usd": 171.5,
+   "price": 287.52,
+   "shares": 0.5965,
+   "cost": 0.051,
+   "why": "rank 14 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "buy",
+   "usd": 291.23,
+   "price": 687.75,
+   "shares": 0.4235,
+   "cost": 0.096,
+   "why": "rank 19 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 208.12,
+   "price": 814.52,
+   "shares": 0.2555,
+   "cost": 0.039,
+   "why": "fell to rank 480",
+   "ret": 0.0182
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 216.38,
+   "price": 859.95,
+   "shares": 0.2516,
+   "cost": 0.062,
+   "why": "rank 23 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "buy",
+   "usd": 244.28,
+   "price": 166.72,
+   "shares": 1.4652,
+   "cost": 0.073,
+   "why": "rank 1 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 246.54,
+   "price": 752.38,
+   "shares": 0.3277,
+   "cost": 0.087,
+   "why": "fell to rank 330",
+   "ret": 0.0809
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 221.61,
+   "price": 540.55,
+   "shares": 0.41,
+   "cost": 0.08,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "side": "buy",
+   "usd": 176.08,
+   "price": 842.01,
+   "shares": 0.2091,
+   "cost": 0.072,
+   "why": "rank 28 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "buy",
+   "usd": 293.36,
+   "price": 560.94,
+   "shares": 0.523,
+   "cost": 0.088,
+   "why": "rank 12 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "buy",
+   "usd": 293.8,
+   "price": 149.12,
+   "shares": 1.9702,
+   "cost": 0.125,
+   "why": "rank 5 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "buy",
+   "usd": 272.16,
+   "price": 873.14,
+   "shares": 0.3117,
+   "cost": 0.044,
+   "why": "rank 33 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "buy",
+   "usd": 252.9,
+   "price": 863.58,
+   "shares": 0.2929,
+   "cost": 0.087,
+   "why": "rank 29 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 276.06,
+   "price": 533.98,
+   "shares": 0.517,
+   "cost": 0.059,
+   "why": "rank 24 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "sell",
+   "usd": 179.7,
+   "price": 803.25,
+   "shares": 0.2237,
+   "cost": 0.032,
+   "why": "fell to rank 298",
+   "ret": -0.0215
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "side": "buy",
+   "usd": 243.55,
+   "price": 349.03,
+   "shares": 0.6978,
+   "cost": 0.057,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 271.16,
+   "price": 146.31,
+   "shares": 1.8533,
+   "cost": 0.049,
+   "why": "fell to rank 533",
+   "ret": -0.051
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "sell",
+   "usd": 225.28,
+   "price": 709.33,
+   "shares": 0.3176,
+   "cost": 0.049,
+   "why": "fell to rank 402",
+   "ret": -0.1097
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 252.01,
+   "price": 299.8,
+   "shares": 0.8406,
+   "cost": 0.067,
+   "why": "rank 27 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 253.39,
+   "price": 817.56,
+   "shares": 0.3099,
+   "cost": 0.095,
+   "why": "fell to rank 239",
+   "ret": -0.0668
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "buy",
+   "usd": 232.23,
+   "price": 790.05,
+   "shares": 0.2939,
+   "cost": 0.103,
+   "why": "rank 39 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 256.02,
+   "price": 632.39,
+   "shares": 0.4048,
+   "cost": 0.044,
+   "why": "fell to rank 570",
+   "ret": 0.0066
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 238.8,
+   "price": 276.9,
+   "shares": 0.8624,
+   "cost": 0.078,
+   "why": "fell to rank 661",
+   "ret": 0.0122
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 212.03,
+   "price": 813.29,
+   "shares": 0.2607,
+   "cost": 0.071,
+   "why": "rank 23 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 286.75,
+   "price": 615.14,
+   "shares": 0.4662,
+   "cost": 0.077,
+   "why": "fell to rank 299",
+   "ret": -0.0338
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "side": "sell",
+   "usd": 175.75,
+   "price": 596.72,
+   "shares": 0.2945,
+   "cost": 0.026,
+   "why": "fell to rank 499",
+   "ret": 0.0078
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "side": "buy",
+   "usd": 271.64,
+   "price": 728.99,
+   "shares": 0.3726,
+   "cost": 0.081,
+   "why": "rank 16 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 220.15,
+   "price": 598.58,
+   "shares": 0.3678,
+   "cost": 0.048,
+   "why": "rank 29 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "sell",
+   "usd": 206.5,
+   "price": 169.77,
+   "shares": 1.2164,
+   "cost": 0.083,
+   "why": "fell to rank 475",
+   "ret": -0.026
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 269.89,
+   "price": 312.4,
+   "shares": 0.8639,
+   "cost": 0.099,
+   "why": "fell to rank 636",
+   "ret": -0.0687
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 189.84,
+   "price": 817.13,
+   "shares": 0.2323,
+   "cost": 0.069,
+   "why": "fell to rank 410",
+   "ret": -0.0472
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "buy",
+   "usd": 190.4,
+   "price": 370.88,
+   "shares": 0.5134,
+   "cost": 0.056,
+   "why": "rank 12 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "buy",
+   "usd": 245.64,
+   "price": 160.36,
+   "shares": 1.5318,
+   "cost": 0.094,
+   "why": "rank 25 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "side": "buy",
+   "usd": 206.93,
+   "price": 225.08,
+   "shares": 0.9194,
+   "cost": 0.072,
+   "why": "rank 17 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "side": "buy",
+   "usd": 189.77,
+   "price": 213.45,
+   "shares": 0.8891,
+   "cost": 0.06,
+   "why": "rank 34 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 261.75,
+   "price": 27.36,
+   "shares": 9.5669,
+   "cost": 0.084,
+   "why": "fell to rank 531",
+   "ret": 0.0728
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "buy",
+   "usd": 185.26,
+   "price": 758.59,
+   "shares": 0.2442,
+   "cost": 0.064,
+   "why": "rank 3 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "sell",
+   "usd": 216.74,
+   "price": 170.48,
+   "shares": 1.2714,
+   "cost": 0.054,
+   "why": "fell to rank 656",
+   "ret": -0.0022
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 281.88,
+   "price": 666.63,
+   "shares": 0.4228,
+   "cost": 0.104,
+   "why": "fell to rank 662",
+   "ret": -0.0075
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "buy",
+   "usd": 177.37,
+   "price": 461.84,
+   "shares": 0.3841,
+   "cost": 0.08,
+   "why": "rank 23 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 175.91,
+   "price": 110.65,
+   "shares": 1.5898,
+   "cost": 0.07,
+   "why": "fell to rank 399",
+   "ret": 0.0071
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 199.61,
+   "price": 764.63,
+   "shares": 0.2611,
+   "cost": 0.042,
+   "why": "fell to rank 377",
+   "ret": -0.0228
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "usd": 184.64,
+   "price": 135.77,
+   "shares": 1.3599,
+   "cost": 0.083,
+   "why": "fell to rank 256",
+   "ret": -0.0561
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "buy",
+   "usd": 268.32,
+   "price": 100.57,
+   "shares": 2.668,
+   "cost": 0.107,
+   "why": "rank 11 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "buy",
+   "usd": 175.96,
+   "price": 618.45,
+   "shares": 0.2845,
+   "cost": 0.056,
+   "why": "rank 38 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "side": "sell",
+   "usd": 185.53,
+   "price": 775.67,
+   "shares": 0.2392,
+   "cost": 0.051,
+   "why": "fell to rank 688",
+   "ret": 0.0317
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 223.68,
+   "price": 264.65,
+   "shares": 0.8452,
+   "cost": 0.059,
+   "why": "fell to rank 641",
+   "ret": -0.0008
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 248.08,
+   "price": 411.72,
+   "shares": 0.6025,
+   "cost": 0.049,
+   "why": "rank 33 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "buy",
+   "usd": 288.6,
+   "price": 142.19,
+   "shares": 2.0297,
+   "cost": 0.122,
+   "why": "rank 22 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "sell",
+   "usd": 255.84,
+   "price": 897.72,
+   "shares": 0.285,
+   "cost": 0.073,
+   "why": "fell to rank 422",
+   "ret": 0.0944
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 228.94,
+   "price": 711.41,
+   "shares": 0.3218,
+   "cost": 0.086,
+   "why": "rank 37 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "sell",
+   "usd": 237.43,
+   "price": 682.37,
+   "shares": 0.3479,
+   "cost": 0.089,
+   "why": "fell to rank 343",
+   "ret": 0.0756
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "sell",
+   "usd": 232.56,
+   "price": 339.5,
+   "shares": 0.685,
+   "cost": 0.103,
+   "why": "fell to rank 680",
+   "ret": -0.0093
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 212.05,
+   "price": 447.5,
+   "shares": 0.4739,
+   "cost": 0.036,
+   "why": "fell to rank 337",
+   "ret": -0.0308
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 249.38,
+   "price": 78.23,
+   "shares": 3.1878,
+   "cost": 0.073,
+   "why": "rank 23 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "buy",
+   "usd": 283.59,
+   "price": 441.38,
+   "shares": 0.6425,
+   "cost": 0.108,
+   "why": "rank 14 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 264.6,
+   "price": 253.85,
+   "shares": 1.0423,
+   "cost": 0.119,
+   "why": "fell to rank 226",
+   "ret": -0.0221
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 208.26,
+   "price": 353.06,
+   "shares": 0.5899,
+   "cost": 0.061,
+   "why": "fell to rank 668",
+   "ret": 0.0702
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "sell",
+   "usd": 225.39,
+   "price": 303.73,
+   "shares": 0.7421,
+   "cost": 0.084,
+   "why": "fell to rank 280",
+   "ret": 0.0599
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "CVNA",
+   "name": "Carvana Co.",
+   "side": "buy",
+   "usd": 280.09,
+   "price": 378.66,
+   "shares": 0.7397,
+   "cost": 0.065,
+   "why": "rank 11 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 286.05,
+   "price": 327.28,
+   "shares": 0.874,
+   "cost": 0.043,
+   "why": "rank 20 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "side": "buy",
+   "usd": 231.94,
+   "price": 446.11,
+   "shares": 0.5199,
+   "cost": 0.042,
+   "why": "rank 17 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "buy",
+   "usd": 261.21,
+   "price": 521.17,
+   "shares": 0.5012,
+   "cost": 0.108,
+   "why": "rank 39 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 199.77,
+   "price": 582.82,
+   "shares": 0.3428,
+   "cost": 0.042,
+   "why": "rank 18 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 268.43,
+   "price": 716.08,
+   "shares": 0.3749,
+   "cost": 0.065,
+   "why": "fell to rank 545",
+   "ret": -0.0738
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "sell",
+   "usd": 185.46,
+   "price": 425.96,
+   "shares": 0.4354,
+   "cost": 0.08,
+   "why": "fell to rank 542",
+   "ret": 0.0741
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "sell",
+   "usd": 205.34,
+   "price": 713.42,
+   "shares": 0.2878,
+   "cost": 0.05,
+   "why": "fell to rank 257",
+   "ret": 0.0489
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 238.56,
+   "price": 284.71,
+   "shares": 0.8379,
+   "cost": 0.097,
+   "why": "fell to rank 254",
+   "ret": 0.0813
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "sell",
+   "usd": 190.74,
+   "price": 572.21,
+   "shares": 0.3333,
+   "cost": 0.054,
+   "why": "fell to rank 580",
+   "ret": -0.0357
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "side": "sell",
+   "usd": 226.29,
+   "price": 517.84,
+   "shares": 0.437,
+   "cost": 0.069,
+   "why": "fell to rank 620",
+   "ret": -0.0616
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 287.66,
+   "price": 71.62,
+   "shares": 4.0165,
+   "cost": 0.099,
+   "why": "rank 15 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "sell",
+   "usd": 256.36,
+   "price": 201.43,
+   "shares": 1.2727,
+   "cost": 0.099,
+   "why": "fell to rank 601",
+   "ret": 0.0212
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 251.9,
+   "price": 54.44,
+   "shares": 4.6271,
+   "cost": 0.076,
+   "why": "fell to rank 570",
+   "ret": -0.0029
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "side": "buy",
+   "usd": 271.68,
+   "price": 494.67,
+   "shares": 0.5492,
+   "cost": 0.051,
+   "why": "rank 10 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "buy",
+   "usd": 178.96,
+   "price": 852.9,
+   "shares": 0.2098,
+   "cost": 0.07,
+   "why": "rank 4 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "side": "sell",
+   "usd": 287.03,
+   "price": 210.32,
+   "shares": 1.3647,
+   "cost": 0.077,
+   "why": "fell to rank 387",
+   "ret": 0.0269
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 215.9,
+   "price": 654.99,
+   "shares": 0.3296,
+   "cost": 0.062,
+   "why": "fell to rank 432",
+   "ret": 0.0058
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "side": "sell",
+   "usd": 194.47,
+   "price": 788.64,
+   "shares": 0.2466,
+   "cost": 0.076,
+   "why": "fell to rank 267",
+   "ret": -0.0108
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "buy",
+   "usd": 272.67,
+   "price": 649.34,
+   "shares": 0.4199,
+   "cost": 0.122,
+   "why": "rank 12 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "sell",
+   "usd": 187.91,
+   "price": 38.5,
+   "shares": 4.8808,
+   "cost": 0.049,
+   "why": "fell to rank 621",
+   "ret": -0.041
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 262.47,
+   "price": 779.01,
+   "shares": 0.3369,
+   "cost": 0.113,
+   "why": "fell to rank 302",
+   "ret": -0.0463
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "sell",
+   "usd": 229.95,
+   "price": 225.17,
+   "shares": 1.0212,
+   "cost": 0.065,
+   "why": "fell to rank 300",
+   "ret": 0.028
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "sell",
+   "usd": 235.83,
+   "price": 831.73,
+   "shares": 0.2835,
+   "cost": 0.08,
+   "why": "fell to rank 577",
+   "ret": -0.1088
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "side": "buy",
+   "usd": 269.09,
+   "price": 179.64,
+   "shares": 1.4979,
+   "cost": 0.088,
+   "why": "rank 24 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "sell",
+   "usd": 273.77,
+   "price": 896.81,
+   "shares": 0.3053,
+   "cost": 0.082,
+   "why": "fell to rank 362",
+   "ret": 0.0347
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "buy",
+   "usd": 290.76,
+   "price": 513.52,
+   "shares": 0.5662,
+   "cost": 0.082,
+   "why": "rank 13 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 179.9,
+   "price": 514.11,
+   "shares": 0.3499,
+   "cost": 0.063,
+   "why": "rank 9 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 228.41,
+   "price": 107.43,
+   "shares": 2.1261,
+   "cost": 0.054,
+   "why": "rank 6 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "sell",
+   "usd": 213.59,
+   "price": 435.72,
+   "shares": 0.4902,
+   "cost": 0.081,
+   "why": "fell to rank 502",
+   "ret": -0.0078
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 185.59,
+   "price": 223.53,
+   "shares": 0.8303,
+   "cost": 0.051,
+   "why": "fell to rank 225",
+   "ret": -0.028
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "buy",
+   "usd": 270.09,
+   "price": 102.15,
+   "shares": 2.6441,
+   "cost": 0.086,
+   "why": "rank 27 of 1000",
+   "ret": null
+  }
+ ],
+ "costs": 11.6,
+ "turnover": 6.0,
+ "verdict": {
+  "lamp": "none",
+  "text": "No verdict yet: 25 of about 120 days scored",
+  "ic": 0.0002,
+  "t": 0.01,
+  "n": 25,
+  "horizon": 20
+ },
+ "spark": [
+  1.0,
+  0.99876,
+  0.99988,
+  1.00095,
+  1.0023,
+  0.99357,
+  0.98983,
+  0.9993,
+  1.00711,
+  1.01293,
+  1.01482,
+  1.01384,
+  1.00875,
+  0.98984,
+  0.99856,
+  0.99674,
+  1.00472,
+  0.99138,
+  0.97413,
+  0.96151,
+  0.96212,
+  0.96715,
+  0.96627,
+  0.96827,
+  0.96089,
+  0.96076,
+  0.96389,
+  0.95646,
+  0.97262,
+  0.97547,
+  0.98501,
+  0.97828,
+  0.97678,
+  0.98119,
+  0.98497,
+  0.97898,
+  0.98646,
+  0.98513,
+  0.98529,
+  0.98084,
+  0.99323,
+  0.98703,
+  0.98971,
+  0.99093,
+  0.97575,
+  0.97967
+ ],
+ "spark_index": [
+  1.0,
+  0.99855,
+  1.00324,
+  1.00202,
+  1.0001,
+  0.99326,
+  0.99216,
+  1.00158,
+  1.00558,
+  1.01453,
+  1.01715,
+  1.02098,
+  1.0231,
+  1.01008,
+  1.0176,
+  1.02233,
+  1.02702,
+  1.01374,
+  1.00021,
+  0.99369,
+  0.99057,
+  0.99358,
+  0.99381,
+  0.99855,
+  0.99402,
+  0.99707,
+  1.00081,
+  0.99612,
+  1.0104,
+  1.01551,
+  1.02584,
+  1.02137,
+  1.01594,
+  1.01375,
+  1.0135,
+  1.01923,
+  1.02187,
+  1.01882,
+  1.01163,
+  1.00803,
+  1.01848,
+  1.01251,
+  1.0151,
+  1.01917,
+  1.00763,
+  1.00863
+ ],
+ "backtest": {
+  "from": "2020-01-02",
+  "to": "2025-05-13",
+  "ret_ann": 0.1308,
+  "index_ann": 0.128,
+  "vs_index_ann": 0.0028,
+  "ci": [
+   -0.0422,
+   0.0478
+  ],
+  "sharpe": 0.59,
+  "max_dd": -0.368,
+  "turnover": 11.2,
+  "cost_drag": 0.0243,
+  "ic": 0.0028,
+  "ic_t": 0.6,
+  "exam": {
+   "from": "2025-05-14",
+   "to": "2026-11-13",
+   "ret_ann": 0.1729,
+   "index_ann": 0.171,
+   "vs_index_ann": 0.0019,
+   "ci": [
+    -0.0881,
+    0.0919
+   ],
+   "ic": 0.0017,
+   "ic_t": 0.2
+  }
+ },
+ "curve": [
+  [
+   "2026-09-11",
+   10000.0,
+   10000.0
+  ],
+  [
+   "2026-09-14",
+   9987.58,
+   9985.53
+  ],
+  [
+   "2026-09-15",
+   9998.75,
+   10032.38
+  ],
+  [
+   "2026-09-16",
+   10009.51,
+   10020.25
+  ],
+  [
+   "2026-09-17",
+   10022.98,
+   10001.01
+  ],
+  [
+   "2026-09-18",
+   9935.71,
+   9932.6
+  ],
+  [
+   "2026-09-21",
+   9898.25,
+   9921.61
+  ],
+  [
+   "2026-09-22",
+   9992.97,
+   10015.82
+  ],
+  [
+   "2026-09-23",
+   10071.11,
+   10055.81
+  ],
+  [
+   "2026-09-24",
+   10129.29,
+   10145.26
+  ],
+  [
+   "2026-09-25",
+   10148.16,
+   10171.55
+  ],
+  [
+   "2026-09-28",
+   10138.37,
+   10209.77
+  ],
+  [
+   "2026-09-29",
+   10087.52,
+   10231.04
+  ],
+  [
+   "2026-09-30",
+   9898.44,
+   10100.81
+  ],
+  [
+   "2026-10-01",
+   9985.57,
+   10175.98
+  ],
+  [
+   "2026-10-02",
+   9967.37,
+   10223.31
+  ],
+  [
+   "2026-10-05",
+   10047.21,
+   10270.24
+  ],
+  [
+   "2026-10-06",
+   9913.79,
+   10137.44
+  ],
+  [
+   "2026-10-07",
+   9741.34,
+   10002.09
+  ],
+  [
+   "2026-10-08",
+   9615.09,
+   9936.91
+  ],
+  [
+   "2026-10-09",
+   9621.15,
+   9905.65
+  ],
+  [
+   "2026-10-12",
+   9671.53,
+   9935.8
+  ],
+  [
+   "2026-10-13",
+   9662.71,
+   9938.11
+  ],
+  [
+   "2026-10-14",
+   9682.67,
+   9985.49
+  ],
+  [
+   "2026-10-15",
+   9608.94,
+   9940.18
+  ],
+  [
+   "2026-10-16",
+   9607.56,
+   9970.69
+  ],
+  [
+   "2026-10-19",
+   9638.88,
+   10008.12
+  ],
+  [
+   "2026-10-20",
+   9564.59,
+   9961.19
+  ],
+  [
+   "2026-10-21",
+   9726.22,
+   10104.03
+  ],
+  [
+   "2026-10-22",
+   9754.71,
+   10155.09
+  ],
+  [
+   "2026-10-23",
+   9850.07,
+   10258.43
+  ],
+  [
+   "2026-10-26",
+   9782.83,
+   10213.67
+  ],
+  [
+   "2026-10-27",
+   9767.84,
+   10159.38
+  ],
+  [
+   "2026-10-28",
+   9811.9,
+   10137.51
+  ],
+  [
+   "2026-10-29",
+   9849.67,
+   10134.96
+  ],
+  [
+   "2026-10-30",
+   9789.77,
+   10192.29
+  ],
+  [
+   "2026-11-02",
+   9864.64,
+   10218.66
+  ],
+  [
+   "2026-11-03",
+   9851.29,
+   10188.22
+  ],
+  [
+   "2026-11-04",
+   9852.89,
+   10116.34
+  ],
+  [
+   "2026-11-05",
+   9808.44,
+   10080.28
+  ],
+  [
+   "2026-11-06",
+   9932.28,
+   10184.78
+  ],
+  [
+   "2026-11-09",
+   9870.34,
+   10125.07
+  ],
+  [
+   "2026-11-10",
+   9897.07,
+   10150.97
+  ],
+  [
+   "2026-11-11",
+   9909.25,
+   10191.69
+  ],
+  [
+   "2026-11-12",
+   9757.47,
+   10076.34
+  ],
+  [
+   "2026-11-13",
+   9796.67,
+   10086.3
+  ]
+ ],
+ "positions": [
+  {
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "weight": 0.0322,
+   "value": 315.45,
+   "since": "2026-10-28",
+   "days": 12,
+   "ret": -0.0313,
+   "why": "rank 23 of 1000"
+  },
+  {
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "weight": 0.0315,
+   "value": 308.6,
+   "since": "2026-10-26",
+   "days": 14,
+   "ret": -0.0032,
+   "why": "rank 8 of 1000"
+  },
+  {
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "weight": 0.0301,
+   "value": 294.88,
+   "since": "2026-10-20",
+   "days": 18,
+   "ret": -0.0842,
+   "why": "rank 18 of 1000"
+  },
+  {
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "weight": 0.0295,
+   "value": 289.0,
+   "since": "2026-11-06",
+   "days": 5,
+   "ret": 0.0743,
+   "why": "rank 36 of 1000"
+  },
+  {
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "weight": 0.0284,
+   "value": 278.23,
+   "since": "2026-10-15",
+   "days": 21,
+   "ret": 0.0208,
+   "why": "rank 24 of 1000"
+  },
+  {
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "weight": 0.028,
+   "value": 274.31,
+   "since": "2026-10-28",
+   "days": 12,
+   "ret": 0.0467,
+   "why": "rank 8 of 1000"
+  },
+  {
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "weight": 0.0278,
+   "value": 272.35,
+   "since": "2026-11-12",
+   "days": 1,
+   "ret": -0.0575,
+   "why": "rank 12 of 1000"
+  },
+  {
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "weight": 0.0264,
+   "value": 258.63,
+   "since": "2026-11-09",
+   "days": 4,
+   "ret": 0.0268,
+   "why": "rank 3 of 1000"
+  },
+  {
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "weight": 0.0263,
+   "value": 257.65,
+   "since": "2026-11-04",
+   "days": 7,
+   "ret": 0.0615,
+   "why": "rank 20 of 1000"
+  },
+  {
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "weight": 0.025,
+   "value": 244.92,
+   "since": "2026-11-04",
+   "days": 7,
+   "ret": 0.0515,
+   "why": "rank 23 of 1000"
+  },
+  {
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "weight": 0.0236,
+   "value": 231.2,
+   "since": "2026-10-13",
+   "days": 23,
+   "ret": 0.0464,
+   "why": "rank 35 of 1000"
+  },
+  {
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "weight": 0.0207,
+   "value": 202.79,
+   "since": "2026-11-02",
+   "days": 9,
+   "ret": 0.0138,
+   "why": "rank 18 of 1000"
+  },
+  {
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "weight": 0.0203,
+   "value": 198.87,
+   "since": "2026-11-11",
+   "days": 2,
+   "ret": 0.0884,
+   "why": "rank 18 of 1000"
+  },
+  {
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "weight": 0.0201,
+   "value": 196.91,
+   "since": "2026-10-19",
+   "days": 19,
+   "ret": 0.0199,
+   "why": "rank 9 of 1000"
+  }
+ ],
+ "pending": [
+  {
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "weight": 0.025,
+   "why": "rank 2 of 1000"
+  },
+  {
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "buy",
+   "weight": 0.025,
+   "why": "rank 2 of 1000"
+  },
+  {
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "weight": 0.0,
+   "why": "fell to rank 312"
+  }
+ ],
+ "today": null,
+ "ranking_history": [],
+ "signals": [
+  {
+   "date": "2026-11-13",
+   "symbol": "CVNA",
+   "horizon": 5,
+   "p": 0.57,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "CAT",
+   "horizon": 20,
+   "p": 0.61,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "DE",
+   "horizon": 5,
+   "p": 0.66,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "NEM",
+   "horizon": 20,
+   "p": 0.59,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "SHOP",
+   "horizon": 5,
+   "p": 0.66,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "XOM",
+   "horizon": 20,
+   "p": 0.57,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "WMT",
+   "horizon": 5,
+   "p": 0.57,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "MSFT",
+   "horizon": 20,
+   "p": 0.7,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "LLY",
+   "horizon": 5,
+   "p": 0.69,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "WMT",
+   "horizon": 20,
+   "p": 0.7,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "TSLA",
+   "horizon": 5,
+   "p": 0.51,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "HOOD",
+   "horizon": 20,
+   "p": 0.66,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "COST",
+   "horizon": 5,
+   "p": 0.71,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "XOM",
+   "horizon": 20,
+   "p": 0.69,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "TTD",
+   "horizon": 5,
+   "p": 0.54,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "BKNG",
+   "horizon": 20,
+   "p": 0.51,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "GE",
+   "horizon": 5,
+   "p": 0.57,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "COST",
+   "horizon": 20,
+   "p": 0.69,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "GE",
+   "horizon": 5,
+   "p": 0.56,
+   "note": "two officers bought $410k",
+   "excess": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "BKNG",
+   "horizon": 20,
+   "p": 0.59,
+   "note": "two officers bought $410k",
+   "excess": 0.0085
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "AMD",
+   "horizon": 5,
+   "p": 0.65,
+   "note": "two officers bought $410k",
+   "excess": -0.012
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "HOOD",
+   "horizon": 20,
+   "p": 0.62,
+   "note": "two officers bought $410k",
+   "excess": 0.1021
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "MRK",
+   "horizon": 5,
+   "p": 0.57,
+   "note": "two officers bought $410k",
+   "excess": 0.042
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "NEM",
+   "horizon": 20,
+   "p": 0.64,
+   "note": "two officers bought $410k",
+   "excess": 0.032
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "ZS",
+   "horizon": 5,
+   "p": 0.59,
+   "note": "two officers bought $410k",
+   "excess": 0.0032
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "SHOP",
+   "horizon": 20,
+   "p": 0.53,
+   "note": "two officers bought $410k",
+   "excess": 0.0351
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "DE",
+   "horizon": 5,
+   "p": 0.67,
+   "note": "two officers bought $410k",
+   "excess": 0.0211
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "LLY",
+   "horizon": 20,
+   "p": 0.52,
+   "note": "two officers bought $410k",
+   "excess": 0.0019
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "LLY",
+   "horizon": 5,
+   "p": 0.67,
+   "note": "two officers bought $410k",
+   "excess": -0.0213
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "CRWD",
+   "horizon": 20,
+   "p": 0.68,
+   "note": "two officers bought $410k",
+   "excess": -0.014
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "PLTR",
+   "horizon": 5,
+   "p": 0.71,
+   "note": "two officers bought $410k",
+   "excess": 0.0486
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "TTD",
+   "horizon": 20,
+   "p": 0.61,
+   "note": "two officers bought $410k",
+   "excess": 0.0249
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "ANET",
+   "horizon": 5,
+   "p": 0.56,
+   "note": "two officers bought $410k",
+   "excess": 0.0078
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "AMD",
+   "horizon": 20,
+   "p": 0.68,
+   "note": "two officers bought $410k",
+   "excess": -0.0798
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "ANET",
+   "horizon": 5,
+   "p": 0.5,
+   "note": "two officers bought $410k",
+   "excess": -0.0005
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "UBER",
+   "horizon": 20,
+   "p": 0.52,
+   "note": "two officers bought $410k",
+   "excess": -0.0142
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "CAT",
+   "horizon": 5,
+   "p": 0.6,
+   "note": "two officers bought $410k",
+   "excess": -0.0019
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "AAPL",
+   "horizon": 20,
+   "p": 0.54,
+   "note": "two officers bought $410k",
+   "excess": 0.0244
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "RKLB",
+   "horizon": 5,
+   "p": 0.51,
+   "note": "two officers bought $410k",
+   "excess": 0.0364
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "APP",
+   "horizon": 20,
+   "p": 0.56,
+   "note": "two officers bought $410k",
+   "excess": -0.0542
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "ANET",
+   "horizon": 5,
+   "p": 0.71,
+   "note": "two officers bought $410k",
+   "excess": 0.0052
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "XOM",
+   "horizon": 20,
+   "p": 0.64,
+   "note": "two officers bought $410k",
+   "excess": 0.0372
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "ABNB",
+   "horizon": 5,
+   "p": 0.65,
+   "note": "two officers bought $410k",
+   "excess": -0.006
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "AAPL",
+   "horizon": 20,
+   "p": 0.62,
+   "note": "two officers bought $410k",
+   "excess": 0.0545
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "JPM",
+   "horizon": 5,
+   "p": 0.56,
+   "note": "two officers bought $410k",
+   "excess": -0.0019
+  }
+ ],
+ "memo": null,
+ "reads": [],
+ "report": "# Insider buying: backtest\n\nWalk-forward from 2020-01-02 to 2025-05-13, costs included. Each refit saw only what was known on its day.\n\n| year | model | index |\n|---|---|---|\n| 2020 | +21.3 % | +18.4 % |\n| 2021 | +24.0 % | +28.7 % |\n\n## What it does not show\n\nCompanies that left the market are missing from free data, so the history flatters every stock picker a little.",
+ "by_year": [
+  {
+   "year": 2020,
+   "ret": 0.2625,
+   "index": 0.184
+  },
+  {
+   "year": 2021,
+   "ret": 0.2508,
+   "index": 0.287
+  },
+  {
+   "year": 2022,
+   "ret": -0.2453,
+   "index": -0.181
+  },
+  {
+   "year": 2023,
+   "ret": -0.04,
+   "index": 0.262
+  },
+  {
+   "year": 2024,
+   "ret": -0.0591,
+   "index": 0.249
+  },
+  {
+   "year": 2025,
+   "ret": -0.0195,
+   "index": 0.071
+  }
+ ]
+}
