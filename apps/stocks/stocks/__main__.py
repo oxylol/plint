@@ -36,6 +36,9 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO, format="%(asctime)s %(name)s: %(message)s",
                         datefmt="%m-%d %H:%M:%S")
+    if not a.verbose:                              # a line per request to the model would bury the evening's own lines
+        for noisy in ("httpx", "httpx2", "httpcore", "anthropic"):
+            logging.getLogger(noisy).setLevel(logging.WARNING)
     cfg = Config.from_env()
     if a.command == "serve":                       # the parent stays small: the page and the clock, nothing heavy
         from .runner import Runner

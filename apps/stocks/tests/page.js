@@ -367,6 +367,13 @@ async function books(browser, size, fixture) {
   check(`${tag} 3 the agent ranks no stocks, so its page has no ranking and no empty place for one`, !ag.secs.includes('sec-today') && !ag.secs.includes('sec-history'), ag.secs.join());
   all = await visibleText(page);
   check(`${tag} no "NaN", "null" or "undefined" on the agent's page`, !BAD_WORDS.test(all), (BAD_WORDS.exec(all) || [])[0]);
+  // a long reason in one column must not squeeze the others: the real desk writes a sentence where the fixture once had three words
+  const split = await page.evaluate((pc) => [...document.querySelectorAll('#detail .tb .sym' + (pc ? ', #detail .tb th' : ''))].filter((e) => {
+    if (!e.offsetParent || !e.textContent.trim()) return false;
+    const r = document.createRange(); r.selectNodeContents(e);
+    return new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size > 1;
+  }).map((e) => e.textContent.trim()).slice(0, 6), size === 'pc');
+  check(`${tag} beside a long reason, no ticker${size === 'pc' ? ' or table heading' : ''} is broken across lines`, !split.length, split.join(' | '));
   const sw2 = await sideways(page);
   check(`${tag} the agent's page does not scroll sideways`, sw2.sw <= sw2.iw && sw2.iw === VIEW[size].viewport.width, JSON.stringify(sw2));
 

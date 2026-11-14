@@ -186,7 +186,10 @@ def build(seed: int = 7, ndays: int = 46):
             detail["signals"] = [{"date": days[-1 - (i // 3)], "symbol": s, "horizon": 20 if i % 2 else 5,
                                   "p": round(r.uniform(0.5, 0.72), 2),
                                   "note": "two officers bought $410k" if mid == "insiders" else
-                                  "+7.2 % on results, 2.4x volume" if mid == "drift" else "raised guidance, quiet reaction",
+                                  "+7.2 % on results, 2.4x volume" if mid == "drift" else
+                                  # the desk's own notes run long: the first sentence of a read, as it wrote it
+                                  ("What changed tonight is a discretionary, sizeable open-market buy by the founder-CEO after a "
+                                   "roughly 30% two-month drawdown and a fresh earnings reset." if i % 3 == 0 else "raised guidance, quiet reaction"),
                                   "excess": round(r.gauss(0.004, 0.04), 4) if i > 18 else None}
                                  for i, s in enumerate(r.choices(SYMS, k=45))]
         if kind == "agent":

@@ -171,6 +171,10 @@ body[data-view="book"] .over { display: none; }
 .tb th:first-child, .tb td:first-child { padding-left: 0; }
 .tb .r { text-align: right; }
 .tb td.r { white-space: nowrap; }
+/* words may break anywhere on this page, so a table with one long column would squeeze the others to a letter:
+   a ticker is never broken to make room, nor (where the tables are tables) a heading or a date */
+.tb .sym { white-space: nowrap; overflow-wrap: normal; }
+@media (min-width: 720px) { .tb th, .tb td.t-date { white-space: nowrap; overflow-wrap: normal; } }
 .tb .t-why { min-width: 12ch; }
 .side { display: inline-block; min-width: 5ch; margin-right: 3px; text-align: center; }     /* buy and sell equally wide, so the symbols line up */
 .scb { display: inline-block; width: 44px; height: 7px; margin-right: 8px; vertical-align: 1px; }
