@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0e11">
+<meta name="color-scheme" content="dark">
+<meta name="referrer" content="same-origin">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stocks">
+<title>Stocks</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230f0e11'/%3E%3Cpath d='M8 40h48' stroke='%23e4f8ea' stroke-opacity='.5' stroke-width='3' stroke-dasharray='5 5'/%3E%3Cpath d='M8 46l12-6 10 4 12-18 14-8' fill='none' stroke='%23e4f8ea' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css">
+</head>
+<body data-view="board">
+<!-- The page of the Stocks app: models trading on paper, side by side. It reads /api/state and /api/model/<id>
+     (PAGE.md) and nothing else. Structure and behaviour: this file, app.css, app.js. The look (Plint Terminal)
+     is theme/apps/stocks.css, slipped in before </head> by Caddy together with the Plint strip. -->
+<header class="stk-head">
+  <div class="who">
+    <h1>Stocks</h1>
+    <p class="sub"><span class="p-ru" aria-hidden="true">АКЦИИ // </span>Models on paper, side by side</p>
+  </div>
+  <p class="mode" id="mode"><i class="p-blk off" aria-hidden="true"></i><span>Paper</span></p>
+</header>
+
+<main id="main">
+  <section class="status" id="status" aria-label="State of the engine" aria-live="polite">
+    <p class="st-line"><span class="st-phase"><span class="p-cursor" aria-hidden="true"></span> Reading the books</span></p>
+  </section>
+
+  <div class="lay">
+    <div class="over" id="over">
+      <section class="tiles" id="tiles" aria-label="The figures at a glance" hidden></section>
+      <section class="board" id="board" aria-label="Every model"></section>
+      <section class="logs" id="log" aria-label="Log" hidden></section>
+    </div>
+    <article class="detail" id="detail" aria-label="The open model" hidden></article>
+  </div>
+</main>
+
+<footer class="foot" id="foot">
+  <p class="paper"><b>Paper only.</b> Every book here is pretend money. Nothing on this page can place a real order.</p>
+  <p class="read" id="read"></p>
+</footer>
+
+<noscript><p class="nojs">This page draws itself with JavaScript.</p></noscript>
+<script src="app.js"></script>
+</body>
+</html>
