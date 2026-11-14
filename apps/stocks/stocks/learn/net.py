@@ -129,11 +129,11 @@ def _loss(pred, y, real, mse: float):
     return -ic + mse * sq
 
 
-def _scores(net, x, ctx, real) -> np.ndarray:
+def _scores(net, x, ctx, real, head: int = MAIN) -> np.ndarray:
     torch = _torch()
     net.eval()
     with torch.no_grad():
-        return net(x, ctx, real)[..., MAIN].numpy()
+        return net(x, ctx, real)[..., head].numpy()
 
 
 def val_ic(net, table: Table, days: list[int], batch_days: int = 16) -> float:
@@ -212,9 +212,9 @@ def _net_of(params: dict):
     return net
 
 
-def predict(params: dict, X: np.ndarray, ctx: np.ndarray) -> np.ndarray:
-    """Scores for one day's stocks."""
+def predict(params: dict, X: np.ndarray, ctx: np.ndarray, head: int = MAIN) -> np.ndarray:
+    """Scores for one day's stocks, from the head for one horizon (HORIZONS[head] days ahead)."""
     torch = _torch()
     x = torch.from_numpy(np.asarray(X, dtype=np.float32)).unsqueeze(0)
     c = torch.from_numpy(np.asarray(ctx, dtype=np.float32)).unsqueeze(0)
-    return _scores(_net_of(params), x, c, torch.ones(1, x.shape[1], dtype=torch.bool))[0]
+    return _scores(_net_of(params), x, c, torch.ones(1, x.shape[1], dtype=torch.bool), head)[0]

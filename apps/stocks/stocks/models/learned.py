@@ -7,6 +7,7 @@ from __future__ import annotations
 import numpy as np
 
 from .. import features
+from ..learn.dataset import MAIN
 from ..learn.fit import ensemble
 from ..portfolio import TopK
 from .base import ScoreModel
@@ -16,6 +17,7 @@ from ..util import quiet
 class Learned(ScoreModel):
     kind = "learned"
     algo = ""
+    head = MAIN                 # which of the network's horizons it trades on (the others have only the 5-day one)
     top = TopK(k=40, hold_frac=0.20, max_new=8, every="day")
     horizon = 5
 
@@ -34,7 +36,7 @@ class Learned(ScoreModel):
             self.env.cache["today"] = features.today(p.tail(features.LOOKBACK), self.env.index)
         X, cols, ctx = self.env.cache["today"]
         if len(cols):
-            S[-1, cols] = ensemble(self.algo, fit["fits"], X, ctx)
+            S[-1, cols] = ensemble(self.algo, fit["fits"], X, ctx, self.head)
         self.fit_day = fit["day"]
         return S
 
@@ -55,6 +57,17 @@ class Trees(Learned):
 class Net(Learned):
     id, title, algo = "net", "Neural network", "net"
     what = "A network trained on ten years of daily prices ranks 1,000 stocks each evening and holds the top 40."
+
+
+class NetFast(Learned):
+    """The same fitted network read at its shortest horizon. Filip, 2026-11-14: "the neural network can trade
+    more often if that is more profitable". Whether it is, is for the backtest and the paper record to say:
+    a one-day view is sharper and decays in a day, so this book turns over many times faster and pays for it."""
+    id, title, algo = "netfast", "Network, fast", "net"
+    what = "The same network trading on its one-day view: up to twenty names change a day. Here to see whether trading more often pays after costs."
+    head = 0
+    horizon = 1
+    top = TopK(k=40, hold_frac=0.08, max_new=20, every="day")
 
 
 class Blend(ScoreModel):

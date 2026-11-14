@@ -97,7 +97,7 @@ class EndToEnd(unittest.TestCase):
 
     # ── research ────────────────────────────────────────────────────────────────────────────────
     def test_reports_written_and_shaped(self):
-        for mid in ("index", "net", "trees", "ridge", "blend", "momentum", "reversal", "trend"):
+        for mid in ("index", "net", "netfast", "trees", "ridge", "blend", "momentum", "reversal", "trend"):
             rep = json.loads((self.tmp / "data" / "reports" / f"{mid}.json").read_text())
             bt = rep["backtest"]
             for k in ("from", "to", "ret_ann", "index_ann", "vs_index_ann", "ci", "sharpe", "max_dd", "turnover", "cost_drag", "ic", "ic_t", "exam"):
@@ -106,6 +106,15 @@ class EndToEnd(unittest.TestCase):
             text = (self.tmp / "data" / "reports" / f"{mid}.md").read_text()
             self.assertIn("What this does not show", text)
         self.assertFalse((self.tmp / "data" / "reports" / "drift.json").exists())      # no filings, no report, no start
+        pace = (self.tmp / "data" / "reports" / "netfast.md").read_text()
+        self.assertIn("Does trading more often pay?", pace)
+        self.assertIn("| Network, fast |", pace)
+
+    def test_the_fast_network_trades_on_the_one_day_view_and_turns_over_more(self):
+        slow, fast = self.detail("net"), self.detail("netfast")
+        self.assertEqual(self.model("netfast")["verdict"]["horizon"], 1)
+        self.assertGreater(self.model("netfast")["trades"], self.model("net")["trades"])
+        self.assertNotEqual([p["symbol"] for p in slow["today"]["top"]], [p["symbol"] for p in fast["today"]["top"]])
 
     def test_planted_reversal_is_found_by_the_learned_models(self):
         got = {m["id"]: m for m in self.research["models"]}
@@ -119,7 +128,7 @@ class EndToEnd(unittest.TestCase):
 
     # ── the evenings after ──────────────────────────────────────────────────────────────────────
     def test_models_run_and_hold_what_their_rules_say(self):
-        for mid, n in (("index", 1), ("net", 40), ("trees", 40), ("ridge", 40), ("blend", 40), ("momentum", 40), ("reversal", 40)):
+        for mid, n in (("index", 1), ("net", 40), ("netfast", 40), ("trees", 40), ("ridge", 40), ("blend", 40), ("momentum", 40), ("reversal", 40)):
             m = self.model(mid)
             self.assertEqual(m["state"], "running", mid)
             self.assertEqual(m["n_pos"], n, mid)

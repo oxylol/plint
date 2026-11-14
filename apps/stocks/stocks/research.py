@@ -50,17 +50,21 @@ def _table(lab: Lab, panel: Panel, say) -> dataset.Table:
     return dataset.build(panel, lab.cfg.index_symbol, out)
 
 
-def _scores(lab: Lab, table: dataset.Table, name: str, algo: str, t0: int, t1: int, n_cols: int, say, **kw) -> np.ndarray:
-    """A walk-forward score table, kept on disk so a crashed run does not start over."""
-    path = lab.cfg.cache_dir / "scores" / f"{name}_{int(table.days[t0])}_{int(table.days[t1])}.npy"
-    if path.exists():
-        S = np.load(path)
-        if S.shape == (table.T, n_cols):
-            return S
-    S = fit.walk_forward(table, algo, t0, t1, n_cols, log=say, **kw)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    np.save(path, S)
-    return S
+def _scores(lab: Lab, table: dataset.Table, name: str, algo: str, t0: int, t1: int, n_cols: int, say, heads=None, **kw):
+    """A walk-forward score table (or, with `heads`, one per horizon), kept on disk so a crashed run does
+    not start over."""
+    folder = lab.cfg.cache_dir / "scores"
+    path = lambda h: folder / f"{name}{'' if h is None else f'_h{h}'}_{int(table.days[t0])}_{int(table.days[t1])}.npy"
+    keys = list(heads) if heads else [None]
+    if all(path(h).exists() for h in keys):
+        got = {h: np.load(path(h)) for h in keys}
+        if all(S.shape == (table.T, n_cols) for S in got.values()):
+            return got if heads else got[None]
+    out = fit.walk_forward(table, algo, t0, t1, n_cols, log=say, heads=heads, **kw)
+    folder.mkdir(parents=True, exist_ok=True)
+    for h in keys:
+        np.save(path(h), out[h] if heads else out)
+    return out
 
 
 def _pct(x, digits: int = 1) -> str:
@@ -140,7 +144,7 @@ def _report(o: backtest.Outcome, days: np.ndarray, t0: int, t1: int, cfg, sens: 
     return "\n".join(lines) + "\n"
 
 
-LEARNED = {"ridge", "trees", "net", "blend"}
+LEARNED = {"ridge", "trees", "net", "netfast", "blend"}
 
 
 def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str, ...] = ()) -> dict:
@@ -171,8 +175,12 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
     fitted = not only or bool(LEARNED & set(only))
     for algo in ("ridge", "trees", "net") if fitted else ():
         say(f"walk-forward fits: {algo}")
-        kw = {**quick, "cfg": NetCfg(epochs=3, patience=2)} if cfg.fast and algo == "net" else quick
-        env.scores[algo] = _scores(lab, table, algo, algo, t0, t1, panel.N, say, **kw)
+        if algo == "net":                            # one set of fits, read at two horizons: 5 days (net) and 1 day (netfast)
+            kw = {**quick, "cfg": NetCfg(epochs=3, patience=2)} if cfg.fast else quick
+            both = _scores(lab, table, algo, algo, t0, t1, panel.N, say, heads=(0, dataset.MAIN), **kw)
+            env.scores["net"], env.scores["netfast"] = both[dataset.MAIN], both[0]
+        else:
+            env.scores[algo] = _scores(lab, table, algo, algo, t0, t1, panel.N, say, **quick)
     ladder = []
     fwd5 = dataset.relative(dataset.forward(panel, 5), panel.member)
     if fitted and not exam and not cfg.fast:
@@ -200,6 +208,7 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
         if name in out and 5 in out[name].ic:
             label = {"ridge": "straight line", "trees": "boosted trees", "net": "network, reading the whole day", "blend": "blend"}[name]
             ladder.append((label, out[name].ic[5]["ic"], out[name].ic[5]["t"]))
+    pace = [(out[n].model.title, out[n].stats, sens[n]) for n in ("net", "netfast") if n in out]
     fwd20 = dataset.relative(dataset.forward(panel, 20), panel.member)
     with quiet():                                    # what holding every stock in the universe equally would have made
         each_day = np.nanmean(np.where(panel.member, panel.ret, np.nan), axis=1)[t0 + 1:t1 + 1]
@@ -222,6 +231,11 @@ def run(lab: Lab, exam: bool = False, say=None, months: int = 6, only: tuple[str
                  "ic": main.get("ic") if main else (ev["mean"] if ev else None),
                  "ic_t": main.get("t") if main else (ev["t"] if ev else None)}
         text = _report(o, days, t0, t1, cfg, sens[mid], ladder, ev, variants, exam_runs, "the exam" if exam else "backtest", basket)
+        if mid in ("net", "netfast") and len(pace) == 2:
+            text += "\n## Does trading more often pay?\n\nThe same fitted network at two paces, after costs.\n\n" \
+                    "| | against the index, a year | turnover (times the book a year) | costs a year | with costs doubled |\n|---|---|---|---|---|\n" \
+                    + "".join(f"| {title} | {_pct(st['vs_index_ann'])} | {_num(st['turnover'], 1)} | {_share(st['cost_drag'])} | {_pct(se.get(2))} |\n"
+                              for title, st, se in pace)
         rep = store.read_json(f"reports/{mid}.json") or {}
         path = Path(store.dir) / "reports" / f"{mid}.md"
         if exam:

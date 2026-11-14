@@ -16,7 +16,7 @@ import numpy as np
 
 from .. import features
 from . import net, ridge, trees
-from .dataset import H_MAX, WARMUP, Table
+from .dataset import H_MAX, MAIN, WARMUP, Table
 
 ALGOS = {"ridge": ridge, "trees": trees, "net": net}
 SEEDS_BACKTEST = {"ridge": 1, "trees": 1, "net": 3}
@@ -55,9 +55,11 @@ def _z(x: np.ndarray) -> np.ndarray:
     return (x - x.mean()) / sd if sd > 0 else np.zeros_like(x)
 
 
-def ensemble(algo: str, fits: list[dict], X: np.ndarray, ctx: np.ndarray) -> np.ndarray:
-    """One day's scores: each seed's output put on a common scale, then averaged."""
-    return np.mean([_z(np.asarray(ALGOS[algo].predict(p, X, ctx), dtype=np.float64)) for p in fits], axis=0).astype(np.float32)
+def ensemble(algo: str, fits: list[dict], X: np.ndarray, ctx: np.ndarray, head: int = MAIN) -> np.ndarray:
+    """One day's scores: each seed's output put on a common scale, then averaged. `head` picks the horizon
+    (only the network has more than the 5-day one)."""
+    kw = {"head": head} if algo == "net" else {}
+    return np.mean([_z(np.asarray(ALGOS[algo].predict(p, X, ctx, **kw), dtype=np.float64)) for p in fits], axis=0).astype(np.float32)
 
 
 def fit_at(table: Table, algo: str, t_fit: int, seeds: int, log: Callable | None = None, **fit_kw) -> list[dict]:
@@ -73,9 +75,11 @@ def fit_at(table: Table, algo: str, t_fit: int, seeds: int, log: Callable | None
 
 
 def walk_forward(table: Table, algo: str, t_first: int, t_last: int, n_cols: int, months: int = 6,
-                 seeds: int | None = None, log: Callable | None = None, **fit_kw) -> np.ndarray:
-    """A score table [T, n_cols] over rows t_first..t_last, every row scored by a fit made before it."""
-    S = np.full((table.T, n_cols), np.nan, dtype=np.float32)
+                 seeds: int | None = None, log: Callable | None = None, heads: tuple[int, ...] | None = None,
+                 **fit_kw):
+    """A score table [T, n_cols] over rows t_first..t_last, every row scored by a fit made before it.
+    With `heads` (the network only), one table per horizon head from the same fits: {head: table}."""
+    tables = {h: np.full((table.T, n_cols), np.nan, dtype=np.float32) for h in (heads or (MAIN,))}
     points = refit_rows(table.days, t_first, t_last, months)
     seeds = seeds or SEEDS_BACKTEST[algo]
     for i, tf in enumerate(points):
@@ -88,8 +92,10 @@ def walk_forward(table: Table, algo: str, t_first: int, t_last: int, n_cols: int
         for t in range(tf, t_end):
             sl = table.rows(t)
             if sl.stop > sl.start:
-                S[t, table.col[sl]] = ensemble(algo, fits, np.asarray(table.X[sl], dtype=np.float32), table.ctx[t])
-    return S
+                X = np.asarray(table.X[sl], dtype=np.float32)
+                for h, S in tables.items():
+                    S[t, table.col[sl]] = ensemble(algo, fits, X, table.ctx[t], h)
+    return tables if heads else tables[MAIN]
 
 
 class Fits:
