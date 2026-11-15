@@ -37,6 +37,7 @@ Built on top of that, each in `apps/` with its own README:
 | **ultron.plint.net** | Ultron: a companion you talk to, in a cloned voice |
 | **accrete.plint.net** | Accrete: an incremental game, a star from dust |
 | **ai.plint.net** | Plint Chat: a Claude-style page that runs Claude Code on the box |
+| *the bedroom TV* | TV home: the TV stick's home screen (YouTube, Stremio), and `plint tv` to drive the stick |
 
 The ready-made services (all but AMP and Stremio), Polybot and Stocks wear one theme, Plint
 Terminal (`theme/`): one dark ground and one light, monospace text, dot-matrix figures, lamps and
@@ -109,6 +110,7 @@ plint logs stremio    follow a container
 plint update          refresh containers (add --os for apt as well)
 plint backup          snapshot now
 plint game            AMP game servers · plint game start|stop nissesky
+plint tv              the TV stick: what is on · plint tv youtube <words> · plint tv help
 plint claude          attach to Claude on the box (Ctrl+B then D to leave)
 ```
 

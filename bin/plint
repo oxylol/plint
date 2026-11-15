@@ -12,6 +12,7 @@
 #    plint claude            attach to Claude on the box (Ctrl+B, D to leave)
 #    plint notify "msg"      push a message to your phone
 #    plint game [start|stop <name>]   AMP game servers (list · start · stop)
+#    plint tv [status|key|open|youtube|screen|…]   the TV stick (plint tv help)
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
 PLINT_DIR="${PLINT_DIR:-/opt/plint}"
@@ -20,7 +21,7 @@ source "${PLINT_DIR}/scripts/lib.sh"
 load_env 2>/dev/null || true
 
 STACKS=(core ops media cnc poly ai ultron accrete stocks)
-usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 
 stacks_for() { case "${1:-all}" in all) printf '%s\n' "${STACKS[@]}";; core|ops|media|cnc|poly|ai|ultron|accrete|stocks) echo "$1";; *) die "unknown stack: $1";; esac; }
 
@@ -290,9 +291,11 @@ cmd_claude() {
 
 cmd_notify() { "$PLINT_DIR/scripts/notify.sh" "Plint" "$*"; ok "sent"; }
 
+cmd_tv() { exec python3 "$PLINT_DIR/scripts/tv.py" "$@"; }
+
 case "${1:-}" in
   status|"") cmd_status;;
-  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game) c="$1"; shift; "cmd_$c" "$@";;
+  up|down|restart|logs|sync|update|backup|doctor|claude|notify|game|tv) c="$1"; shift; "cmd_$c" "$@";;
   -h|--help|help) usage;;
   *) usage 1;;
 esac

@@ -81,6 +81,9 @@ Ready-made:
 
 Also native: Tailscale, and you.
 
+Not on Plint but driven from it: the bedroom TV stick (a Strong Leap-Una on an old Samsung),
+with `plint tv`. Its home screen is built here (`apps/tv-home`).
+
 Gone since 2026-11-14, so nobody goes looking: CNC Twin, Hertz, Plint TV (`tv/`), the Homepage
 dashboard, Plint's own VoiceStudio and the playit.gg tunnel are in git history only. The D&D
 table (Plint Table) is gone for good: its code was never pushed anywhere.
@@ -90,14 +93,14 @@ table (Plint Table) is gone for good: its code was never pushed anywhere.
 ```
 /opt/plint
 ├── install.sh        one-shot bootstrap (idempotent)
-├── bin/plint         the CLI: status · up/down/restart · logs · sync · update · backup · doctor · claude · notify · game
+├── bin/plint         the CLI: status · up/down/restart · logs · sync · update · backup · doctor · claude · notify · game · tv
 ├── .env              secrets + detected values (DOMAIN, SERVER_IP, keys). Never commit. Never print.
 ├── stacks/<stack>/   one compose.yaml each: core · ops · media · cnc · poly · stocks · ultron · accrete · ai
 ├── apps/<app>/       what was built here, each with its README
 ├── caddy/Caddyfile   one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/            Plint Terminal: plint.css/js (tokens, strip) · apps/<app>.css/js · home/ (the home page) · fonts/
 ├── systemd/          plint-claude and plint-chat units, the theme-data timer, cockpit/resolved/sysctl/apt drop-ins
-├── scripts/          setup scripts (adguard, beszel, ntfy, kopia, amp, claude) · theme-data.sh · notify.sh
+├── scripts/          setup scripts (adguard, beszel, ntfy, kopia, amp, claude) · theme-data.sh · notify.sh · tv.py (`plint tv`)
 ├── .claude/          settings.json (what you may run unasked, and what you may never) · skills/spec-build
 ├── .scratch/         working notes and build specs (not in git)
 └── data/             container state (not in git; backed up by Kopia)
@@ -149,6 +152,18 @@ What to know before touching one. The rest is in its README.
   `apps/silk-router/silk-claude` runs Claude Code on it from a shell). Login code by ntfy; tool
   calls wait for Allow/Deny; chats in `data/plint-chat`. As of 2026-11-14 `SILK_API_KEY` is not in
   `.env`: the page opens but cannot answer until Filip adds it.
+- **TV stick**: "Bedroom TV", 1 GB of memory, Android 14, reached over adb on the LAN (its key and
+  address are in `data/tv`). Filip drives it with the stick's own Bluetooth remote; the TV is
+  reached through the stick's HDMI-CEC. Its home screen is Plint's own (`apps/tv-home`: YouTube,
+  Stremio, MORE); the stock one, calendar sync and the setup wizard are switched off
+  (`data/tv/disabled.txt`, `plint tv enable <package>` puts one back; the stick's own
+  `com.droidlogic` switches text-to-speech and the recommendations back on, so those stay).
+  Animations are off. Its Stremio uses Plint's streaming server.
+  Drive it as text, not from screenshots (Filip's word): `plint tv`, `plint tv screen`, links.
+  YouTube shows no text on its screen: search from Plint (`plint tv youtube find`), play by id.
+  Never switch off Bluetooth, anything `com.droidlogic`, Settings or the shell (`plint tv disable`
+  refuses): that is his remote, the HDMI side and the way back in. `plint tv time` and
+  `plint tv reboot` close what is open, so not while something plays (they refuse).
 
 ## How to do things
 
@@ -178,6 +193,10 @@ What to know before touching one. The rest is in its README.
 - **Game servers**: `plint game` lists AMP servers (running? port, connections);
   `plint game start|stop <name>` (name or prefix, e.g. `nissesky`). Stop refuses while players
   are connected unless `--force`. `ampinstmgr` alone only starts the *panels*.
+- **TV stick**: `plint tv` says what it is doing (awake, app in front, what is playing, memory);
+  `plint tv youtube <words|link>` and `plint tv stremio <words>` put something on;
+  `plint tv key …`, `open`, `screen`, `on|off`, `vol` drive it; `plint tv help` lists the rest.
+  After changing the home screen: `apps/tv-home/build.sh --install`.
 - **Backups**: nightly 03:30 via Kopia to `BACKUP_PATH`. `plint backup` snapshots now.
 - **Notify Filip**: `plint notify "message"` (ntfy → phone). Use it when you finish something he
   asked for while away, or when something needs a decision.
