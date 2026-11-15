@@ -198,20 +198,21 @@ def name_of(package):
 
 def cmd_status(args):
     s = stick()
-    try:
-        info = json.load(urlopen(f"http://{s['host']}:8008/setup/eureka_info", timeout=3))
-    except Exception:
-        die(f"the stick is not answering at {s['host']} (off, or its address changed: plint tv find)")
-    print(f"{info.get('name', 'TV stick')} · {s['host']} · on for {int(info.get('uptime', 0)) // 60} min")
-    if not DRY and not port_open(s["host"], 5555, 2):
+    if not DRY and not port_open(s["host"], 5555, 2):   # no way in: the cast side can still say it is there
+        try:
+            info = json.load(urlopen(f"http://{s['host']}:8008/setup/eureka_info", timeout=3))
+        except Exception:
+            die(f"the stick is not answering at {s['host']} (off, or its address changed: plint tv find)")
+        print(f"{info.get('name', 'TV stick')} · {s['host']}")
         print(f"debugging  off: {HOW_TO_DEBUG}")
         return
     out = sh("dumpsys power | grep -m1 mWakefulness=; echo @@;"
              "dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity'; echo @@;"
-             "dumpsys media_session; echo @@; cat /proc/meminfo")
+             "dumpsys media_session; echo @@; cat /proc/meminfo; echo @@; cat /proc/uptime")
     if DRY:
         return
-    power, top, media, mem = (out.split("@@") + [""] * 4)[:4]
+    power, top, media, mem, up = (out.split("@@") + [""] * 5)[:5]
+    print(f"{s.get('name', 'TV stick')} · {s['host']} · on for {int(float((up.split() or ['0'])[0])) // 60} min")
     m = re.search(r" u\d+ ([\w.]+)/([\w.$]+)", top)
     print(f"screen     {(re.search(r'mWakefulness=(\w+)', power) or [0, '?'])[1].lower()}")
     print(f"in front   {name_of(m[1]) if m else '?'}" + (f"  ({m[1]})" if m and name_of(m[1]) != m[1] else ""))
