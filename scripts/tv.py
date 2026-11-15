@@ -16,7 +16,11 @@
   plint tv apps [-a]          apps on the stick (-a: system ones too); off = switched off
   plint tv disable|enable <package>   switch an app off or on again (list in data/tv/disabled.txt)
   plint tv install <file.apk>
-  plint tv time [app...]      milliseconds to open home and each app from cold (stops what is open)
+  plint tv tune               put the stick back in its quick state (animations, apps switched off, apps compiled)
+  plint tv warm               load YouTube and Stremio and return home, so a tile is a quick switch (after a restart)
+  plint tv time [app...]      seconds to open home and each app from cold: first picture, and calm (stops what is open)
+  plint tv smooth <app> [key...]   how fast an app answers the remote: ms to the next frame after each key
+  plint tv switch [app...]    go round the apps: is each still loaded on return, and how long the switch takes
   plint tv reboot             restart the stick and say how long it took
   plint tv sh <command>       a shell command on the stick
 
@@ -458,10 +462,46 @@ def cmd_enable(args):
         OFF_LIST.write_text("".join(l for l in OFF_LIST.read_text().splitlines(True) if l.split()[-1:] != [args[0]]))
 
 
+# What makes this stick quick, in the order it is put back by `plint tv tune`.
+ANIMATIONS = {"window_animation_scale": "0", "transition_animation_scale": "0", "animator_duration_scale": "0.5"}
+COMPILED = ["com.google.android.youtube.tv", "com.stremio.one", "com.android.systemui",
+            "com.android.tv.settings", "com.google.android.gms", "com.android.vending", "com.google.android.webview"]
+
+
+def cmd_tune(args):
+    """Put the stick back in its quick state: animations off, the apps in data/tv/disabled.txt off, and the
+    apps that matter compiled in full (the stick leaves everything uncompiled, and an update undoes it).
+    Safe to run again; compiling takes minutes and keeps the stick busy, so not while something plays."""
+    if busy() and "--force" not in args:
+        die("something is playing: tuning keeps the stick busy for minutes (--force to do it anyway)")
+    for key, want in ANIMATIONS.items():
+        if sh(f"settings get global {key}").strip() != want:
+            sh(f"settings put global {key} {want}")
+            print(f"animations  {key} → {want}")
+    wanted = [l.split()[-1] for l in OFF_LIST.read_text().splitlines() if l.strip()] if OFF_LIST.exists() else []
+    off = set(packages("-d"))
+    for package in wanted:
+        if package not in off:
+            out = sh(f"pm disable-user --user 0 {shlex.quote(package)}").strip()
+            print(f"off again   {package}" if "disabled" in out else f"stays on    {package}: {out}")
+    status = dict(re.findall(r"\[([\w.]+)\]\s+path: \S+\s+\w+: \[status=([\w-]+)\]", sh("dumpsys package dexopt", timeout=90)))
+    have = set(packages())
+    for package in COMPILED:
+        if package in have and status.get(package) != "speed":
+            start = time.time()
+            out = sh(f"cmd package compile -m speed -f {package}", timeout=1800).strip()
+            print(f"compiled    {package} ({status.get(package, '?')} → speed, {time.time() - start:.0f} s): {out}", flush=True)
+    print("✓ tuned")
+
+
 def cmd_install(args):
     args and Path(args[0]).is_file() or die("plint tv install <file.apk>")
     sh("true")
-    r = adb("-s", serial(), "install", "-r", args[0], timeout=600)
+    env = dict(os.environ, HOME=str(DATA), ANDROID_ADB_SERVER_PORT=ADB_PORT)
+    try:
+        r = subprocess.run(["adb", "-s", serial(), "install", "-r", args[0]], capture_output=True, text=True, timeout=240, env=env)
+    except subprocess.TimeoutExpired:           # Play Protect puts a notice on the TV and the install waits for it
+        die(f"not installed after 4 min: the stick is asking something on the TV, read it with plint tv screen ({name_of(front()[0])} is in front)")
     print((r.stdout + r.stderr).strip())
 
 
@@ -482,24 +522,112 @@ def cmd_time(args):
     for app in args or [a for a in ("youtube", "stremio") if APPS[a] in have]:
         targets.append((app, launcher_of(resolve(app))))
     for label, comp in targets:
-        ms = displayed(comp)
-        print(f"{label:<10} {f'{ms / 1000:.1f} s' if ms else 'no picture after 90 s'}", flush=True)
+        shown, drawn, calm = cold(comp)
+        sec = lambda v, word: f"{word} {v:.1f} s" if v else f"no {word}"
+        print(f"{label:<10} {sec(shown, 'picture')} · {sec(drawn, 'drawn') + ' · ' if drawn else ''}"
+              f"{sec(calm, 'calm') if calm else 'still working after a minute'}", flush=True)
         sh("input keyevent 3")
         time.sleep(8)                             # let the stick settle, or the next one pays for this one
 
 
-def displayed(comp, wait=90):
-    """Milliseconds from a cold start to the app's first picture, from the system's own "Displayed" line
-    (`am start -W` gives up after 10 s, which this stick does not manage)."""
+def cold(comp):
+    """A cold start, in seconds: until the first picture and until the app says it is fully drawn (the system's
+    own lines; `am start -W` gives up after 10 s), and until its process uses less than one core, which is
+    when it stops getting in its own way. The loop runs on the stick, so the link does not blur the times."""
     package = comp.split("/")[0]
-    sh(f"logcat -c; am force-stop {package}; sleep 1; am start -n {comp} >/dev/null 2>&1")
-    line = rf"Displayed {re.escape(package)}/[^\s:]+(?: for user \d+)?: \+(?:(\d+)m)?(?:(\d+)s)?(\d+)ms"
-    end = time.time() + wait
-    while time.time() < end:
-        m = re.search(line, sh("logcat -d -s ActivityTaskManager:I"))
-        if m:
-            return int(m[1] or 0) * 60000 + int(m[2] or 0) * 1000 + int(m[3])
-        time.sleep(1)
+    out = sh(f"p={package}; f=/data/local/tmp/plint-atm.log; logcat -c; logcat -s ActivityTaskManager:I > $f & lp=$!; "
+             "am force-stop $p; sleep 1; read a _ < /proc/uptime; t0=${a/./}; "
+             f"am start -n {comp} >/dev/null 2>&1; i=0; last=0; tl=$t0; calm=0; busy=0; "
+             "while [ $i -lt 110 ] && [ $calm -lt 4 ]; do "
+             "pid=$(pidof $p); pid=${pid%% *}; ticks=$last; "
+             "if [ -n \"$pid\" ]; then set -- $(cat /proc/$pid/stat 2>/dev/null); ticks=$((${14:-0}+${15:-0})); fi; "
+             "read a _ < /proc/uptime; t=${a/./}; rate=$(( (ticks-last)*100/(t-tl+1) )); echo \"S $t $rate\"; "
+             "last=$ticks; tl=$t; "                 # rate: 100 is one core
+             "if [ $rate -gt 85 ]; then busy=1; calm=0; elif [ $busy -eq 1 ]; then calm=$((calm+1)); fi; "
+             "sleep 0.5; i=$((i+1)); done; kill $lp; echo \"T $t0 $calm\"; "
+             "grep -E 'Displayed|Fully drawn' $f; rm -f $f", timeout=150)
+    took = lambda word: next((int(m[1] or 0) * 60 + int(m[2] or 0) + int(m[3]) / 1000 for m in re.finditer(
+        rf"{word} {re.escape(package)}/[^\s:]+(?: for user \d+)?: \+(?:(\d+)m)?(?:(\d+)s)?(\d+)ms", out)), None)
+    samples = [int(m[1]) for m in re.finditer(r"^S (\d+) -?\d+", out, re.M)]
+    end = re.search(r"^T (\d+) (\d+)", out, re.M)
+    calm = (samples[-4] - int(end[1])) / 100 if end and int(end[2]) >= 4 and len(samples) >= 4 else None
+    return took("Displayed"), took("Fully drawn"), calm
+
+
+def layer(package):
+    """The surface the app draws its menus on, as SurfaceFlinger names it: its window (video goes on a
+    SurfaceView of its own, which says nothing about the menus)."""
+    names = [l.strip() for l in sh("dumpsys SurfaceFlinger --list").splitlines() if package + "/" in l]
+    names = [n for n in names if not re.match(r"[0-9a-f]{5,8} |ActivityRecord|Bounds for|Background for", n)]
+    return ([n for n in names if not n.startswith("SurfaceView")] or [n for n in names if "(BLAST)" in n] or [None])[-1]
+
+
+def cmd_smooth(args):
+    """How quickly and evenly an app answers the remote: for each key, the time until the next new frame and
+    the frames that follow, from SurfaceFlinger's own times. Sending a key costs the same for every app, so
+    compare with `plint tv smooth home`, which does next to nothing."""
+    args or die("plint tv smooth <app> [key...]")
+    package = HOME_APP if args[0] == "home" else resolve(args[0])
+    keys = [keycode(k) for k in args[1:]] or ["22"] * 4 + ["21"] * 4 + ["20"] * 2 + ["19"] * 2
+    if front()[0] != package:
+        sh(f"am start -n {launcher_of(package)} >/dev/null 2>&1")
+        time.sleep(10)
+    surface = layer(package) or die(f"{name_of(package)} draws on nothing SurfaceFlinger names")
+    out = sh("L=" + shlex.quote(surface) + "; for k in " + " ".join(keys) + "; do dumpsys SurfaceFlinger --latency-clear; "
+             "read a _ < /proc/uptime; input keyevent $k; sleep 0.9; echo \"KEY ${a/./}\"; "
+             "dumpsys SurfaceFlinger --latency \"$L\"; done", timeout=180)
+    waits, gaps, counts = [], [], []
+    for burst in out.split("KEY ")[1:]:
+        sent = int(burst.split()[0]) * 10_000_000     # /proc/uptime is in hundredths; frames are in nanoseconds
+        shown = sorted(int(r[1]) for r in re.findall(r"^(\d+)\t(\d+)\t(\d+)$", burst, re.M) if sent < int(r[1]) < 1 << 62)
+        counts.append(len(shown))
+        if shown:
+            waits.append((shown[0] - sent) / 1e6)
+        gaps += [(b - a) / 1e6 for a, b in zip(shown, shown[1:]) if b - a < 300e6]   # a longer gap is a pause, not a frame
+    if not waits:
+        return print(f"{name_of(package):<12} drew nothing after {len(keys)} keys")
+    waits.sort()
+    gaps.sort()
+    print(f"{name_of(package):<12} answers in {waits[len(waits) // 2]:.0f} ms (slowest {waits[-1]:.0f}) · "
+          f"{sum(counts) / len(counts):.0f} frames a key"
+          + (f" · late {100 * sum(g > 25 for g in gaps) // len(gaps)}%" if gaps else "")
+          + (f" · no answer to {len(counts) - len(waits)} of {len(counts)} keys" if len(waits) < len(counts) else ""))
+
+
+def cmd_switch(args):
+    """Go round the apps: is each still loaded when you come back to it, and how long does the switch take.
+    A stick short of memory closes the app you left, and then every switch is a cold start."""
+    if busy() and "--force" not in args:
+        die("something is playing: this goes from app to app, so not now (--force to do it anyway)")
+    apps = [a for a in args if a != "--force"] or ["youtube", "stremio"]
+    comps = [(a, launcher_of(resolve(a))) for a in apps]
+    for lap in range(3):
+        for app, comp in comps:
+            res = sh(f"am start -W -n {comp}", timeout=60)
+            state = (re.search(r"LaunchState: (\w+)", res) or [0, "?"])[1]
+            took = re.search(r"TotalTime: (\d+)", res)
+            if lap:                               # the first lap only loads them
+                was = {"HOT": "still loaded", "WARM": "still loaded", "COLD": "had been closed"}.get(state, "slow to come")
+                print(f"{app:<10} {was} · {int(took[1]) / 1000:.1f} s" if took else f"{app:<10} {was} · over 10 s", flush=True)
+            time.sleep(4 if lap else 22)
+            sh("input keyevent 3")
+            time.sleep(2)
+    kb = {k: int(v) for k, v in re.findall(r"(MemAvailable|SwapFree):\s+(\d+)", sh("cat /proc/meminfo"))}
+    print(f"memory     {kb.get('MemAvailable', 0) // 1024} MB free, swap {kb.get('SwapFree', 0) // 1024} MB free")
+
+
+def cmd_warm(args):
+    """Load YouTube and Stremio and go back to the home screen, so that a tile is a 0.2 s switch and not a cold
+    start. It shows on the TV for half a minute, and starting an app wakes the stick and with it the TV, so
+    only from the home screen, awake, with nothing playing. For after a restart."""
+    if busy() or front()[0] != HOME_APP or "Awake" not in sh("dumpsys power | grep -m1 mWakefulness="):
+        die("only from the home screen, with the TV on and nothing playing")
+    for app, wait in (("youtube", 18), ("stremio", 12)):
+        if not sh(f"pidof {APPS[app]}").strip():
+            sh(f"am start -n {launcher_of(APPS[app])} >/dev/null 2>&1")
+            time.sleep(wait)
+            print(f"loaded     {app}", flush=True)
+    sh("input keyevent 3")
 
 
 def cmd_reboot(args):
@@ -531,7 +659,7 @@ def cmd_connect(args):
 COMMANDS = {"status": cmd_status, "find": cmd_find, "connect": cmd_connect, "on": cmd_on, "off": cmd_off,
             "key": cmd_key, "vol": cmd_vol, "open": cmd_open, "youtube": cmd_youtube, "stremio": cmd_stremio,
             "type": cmd_type, "screen": cmd_screen, "apps": cmd_apps, "disable": cmd_disable,
-            "enable": cmd_enable, "install": cmd_install, "time": cmd_time, "reboot": cmd_reboot, "sh": cmd_sh}
+            "enable": cmd_enable, "install": cmd_install, "tune": cmd_tune, "warm": cmd_warm, "time": cmd_time, "smooth": cmd_smooth, "switch": cmd_switch, "reboot": cmd_reboot, "sh": cmd_sh}
 
 if __name__ == "__main__":
     name, rest = (sys.argv[1:2] or ["status"])[0], sys.argv[2:]

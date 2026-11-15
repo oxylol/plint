@@ -155,15 +155,25 @@ What to know before touching one. The rest is in its README.
 - **TV stick**: "Bedroom TV", 1 GB of memory, Android 14, reached over adb on the LAN (its key and
   address are in `data/tv`). Filip drives it with the stick's own Bluetooth remote; the TV is
   reached through the stick's HDMI-CEC. Its home screen is Plint's own (`apps/tv-home`: YouTube,
-  Stremio, MORE); the stock one, calendar sync and the setup wizard are switched off
-  (`data/tv/disabled.txt`, `plint tv enable <package>` puts one back; the stick's own
-  `com.droidlogic` switches text-to-speech and the recommendations back on, so those stay).
-  Animations are off. Its Stremio uses Plint's streaming server.
+  Stremio, MORE). Filip's brief is "as fast as possible, change anything". What makes it quick,
+  all put back by `plint tv tune`: animations off; the stock home screen, calendar sync, the setup
+  wizard, the voice assistant (so the remote's mic button does nothing) and the live-subtitle
+  service switched off (`data/tv/disabled.txt`; `plint tv enable <package>` puts one back; the
+  stick's own `com.droidlogic` switches text-to-speech and the recommendations back on, so those
+  stay); YouTube, Stremio and the system's main apps compiled in full (the stick leaves everything
+  uncompiled and an app update undoes it). Its Stremio uses Plint's streaming server.
+  A cold start still takes 5 s (YouTube) or 6 s (Stremio) to draw and 11 to 16 s to settle, and
+  nothing tried shortens it; once both are loaded a switch is under a second, so the gain is in
+  keeping them loaded: do not force-stop them for no reason, and after a restart run
+  `plint tv warm`. `plint tv time`, `smooth` and `switch` measure it. Starting an app wakes the
+  stick and with it the TV. A while after a restart the stick shows a "reconnect your remote"
+  notice (`com.mft.rcupair`) until a key is pressed. SmartTube is not on it: Play Protect blocks
+  it as harmful, and that is Filip's call, not yours.
   Drive it as text, not from screenshots (Filip's word): `plint tv`, `plint tv screen`, links.
   YouTube shows no text on its screen: search from Plint (`plint tv youtube find`), play by id.
   Never switch off Bluetooth, anything `com.droidlogic`, Settings or the shell (`plint tv disable`
-  refuses): that is his remote, the HDMI side and the way back in. `plint tv time` and
-  `plint tv reboot` close what is open, so not while something plays (they refuse).
+  refuses): that is his remote, the HDMI side and the way back in. `plint tv time`, `switch`,
+  `tune` and `reboot` close or slow what is open, so not while something plays (they refuse).
 
 ## How to do things
 
