@@ -157,10 +157,11 @@ What to know before touching one. The rest is in its README.
   reached through the stick's HDMI-CEC. Its home screen is Plint's own (`apps/tv-home`: YouTube,
   Stremio, MORE). Filip's brief is "as fast as possible, change anything". What makes it quick,
   all put back by `plint tv tune`: animations off; the stock home screen, calendar sync, the setup
-  wizard, the voice assistant (so the remote's mic button does nothing) and the live-subtitle
-  service switched off (`data/tv/disabled.txt`; `plint tv enable <package>` puts one back; the
-  stick's own `com.droidlogic` switches text-to-speech and the recommendations back on, so those
-  stay); YouTube, Stremio and the system's main apps compiled in full (the stick leaves everything
+  wizard and the live-subtitle service switched off (`data/tv/disabled.txt`; `plint tv enable
+  <package>` puts one back; the stick's own `com.droidlogic` switches text-to-speech and the
+  recommendations back on, so those stay). The voice assistant (`com.google.android.katniss`)
+  stays on: Filip wants the remote's mic button. YouTube, Stremio and the system's main apps are
+  compiled in full (the stick leaves everything
   uncompiled and an app update undoes it). Its Stremio uses Plint's streaming server.
   A cold start still takes 5 s (YouTube) or 6 s (Stremio) to draw and 11 to 16 s to settle, and
   nothing tried shortens it; once both are loaded a switch is under a second, so the gain is in
