@@ -17,6 +17,7 @@
   plint tv disable|enable <package>   switch an app off or on again (list in data/tv/disabled.txt)
   plint tv install <file.apk>
   plint tv tune               put the stick back in its quick state (animations, apps switched off, apps compiled)
+  plint tv video              how the film in front is really playing: frames a second, hardware or software
   plint tv warm               load YouTube and Stremio and return home, so a tile is a quick switch (after a restart)
   plint tv time [app...]      seconds to open home and each app from cold: first picture, and calm (stops what is open)
   plint tv smooth <app> [key...]   how fast an app answers the remote: ms to the next frame after each key
@@ -594,6 +595,30 @@ def cmd_smooth(args):
           + (f" · no answer to {len(counts) - len(waits)} of {len(counts)} keys" if len(waits) < len(counts) else ""))
 
 
+def cmd_video(args):
+    """How a film is really playing: frames reaching the screen each second (from SurfaceFlinger), and whether
+    the stick's hardware decodes it. Its decoder stops at 1080p and 60 frames a second; a file beyond what it
+    declares (4K, or HEVC above level 4.1) is decoded by the app in software, at a few frames a second."""
+    package = front()[0]
+    surface = next((l.strip() for l in sh("dumpsys SurfaceFlinger --list").splitlines()
+                    if l.strip().startswith(f"SurfaceView[{package}/") and "(BLAST)" in l), None)
+    surface or die(f"{name_of(package)} has no video on screen")
+    out = sh("dumpsys SurfaceFlinger --latency-clear; sleep 5; dumpsys SurfaceFlinger --latency " + shlex.quote(surface) +
+             f"; echo @@; top -H -b -n 1 -p $(pidof {package}) -m 12 -o %CPU,CMD -s 1; echo @@; "
+             "logcat -d -t 3000 | grep -oE 'sync_mode:[a-z ]+' | tail -1", timeout=60)
+    frames, threads, sync = (out.split("@@") + ["", ""])[:3]
+    shown = sorted(int(r[1]) for r in re.findall(r"^(\d+)\t(\d+)\t(\d+)$", frames, re.M) if 0 < int(r[1]) < 1 << 62)
+    gaps = [(b - a) / 1e6 for a, b in zip(shown, shown[1:])]
+    soft = sorted(set(re.findall(r"\bav:(\w+):", threads)))        # ffmpeg's decoder threads: software
+    hard = "MediaCodec_loop" in threads
+    how = f"software ({', '.join(soft)})" if soft else "hardware" if hard else "?"
+    if gaps:
+        print(f"{name_of(package):<10} {len(shown) / 5:.0f} frames a second · worst gap {max(gaps):.0f} ms · decoded in {how}")
+    else:
+        print(f"{name_of(package):<10} no frames through the screen's compositor "
+              f"({'tunnelled playback' if 'sync_mode:tunnel' in sync else 'paused?'}) · decoded in {how}")
+
+
 def cmd_switch(args):
     """Go round the apps: is each still loaded when you come back to it, and how long does the switch take.
     A stick short of memory closes the app you left, and then every switch is a cold start."""
@@ -659,7 +684,7 @@ def cmd_connect(args):
 COMMANDS = {"status": cmd_status, "find": cmd_find, "connect": cmd_connect, "on": cmd_on, "off": cmd_off,
             "key": cmd_key, "vol": cmd_vol, "open": cmd_open, "youtube": cmd_youtube, "stremio": cmd_stremio,
             "type": cmd_type, "screen": cmd_screen, "apps": cmd_apps, "disable": cmd_disable,
-            "enable": cmd_enable, "install": cmd_install, "tune": cmd_tune, "warm": cmd_warm, "time": cmd_time, "smooth": cmd_smooth, "switch": cmd_switch, "reboot": cmd_reboot, "sh": cmd_sh}
+            "enable": cmd_enable, "install": cmd_install, "tune": cmd_tune, "video": cmd_video, "warm": cmd_warm, "time": cmd_time, "smooth": cmd_smooth, "switch": cmd_switch, "reboot": cmd_reboot, "sh": cmd_sh}
 
 if __name__ == "__main__":
     name, rest = (sys.argv[1:2] or ["status"])[0], sys.argv[2:]

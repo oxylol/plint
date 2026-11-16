@@ -170,6 +170,12 @@ What to know before touching one. The rest is in its README.
   stick and with it the TV. A while after a restart the stick shows a "reconnect your remote"
   notice (`com.mft.rcupair`) until a key is pressed. SmartTube is not on it: Play Protect blocks
   it as harmful, and that is Filip's call, not yours.
+  A film that stutters: `plint tv video` while it plays. The stick's hardware decoder stops at
+  1080p, and Stremio's player (Exo) falls back to software, a few frames a second, for 4K and
+  for HEVC it does not declare (level above 4.1: the "HFR", many "HDR"/"DV" releases). The cure is
+  another stream (Torrentio's plain "1080p" ones), not the settings: VLC does not play them, MPV
+  does at half the frame rate and 720p, tunnelled playback changes nothing. Stremio's switches
+  cannot be read as text; that is the one case for a single screenshot.
   Drive it as text, not from screenshots (Filip's word): `plint tv`, `plint tv screen`, links.
   YouTube shows no text on its screen: search from Plint (`plint tv youtube find`), play by id.
   Never switch off Bluetooth, anything `com.droidlogic`, Settings or the shell (`plint tv disable`
