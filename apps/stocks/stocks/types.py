@@ -12,6 +12,9 @@ class Order:
     weight: float
     why: str = ""
 
+    def __post_init__(self):
+        object.__setattr__(self, "weight", float(self.weight))     # a numpy number would not go into the record
+
     def to_json(self) -> dict:
         return asdict(self)
 

@@ -81,7 +81,7 @@ class EventModel(Model):
             want = max(0.0, self.FULL - bought - sum(h.weight for s, h in held.items() if s not in sold))
             have = view.holdings[idx].weight if idx in view.holdings else 0.0
             if abs(want - have) > (0.0 if bought or sold else self.SLACK):     # moved with the trades, else only when it has drifted
-                d.orders.insert(0, Order(idx, round(want, 4) if want >= 0.01 else 0.0, "money not in use waits in the index fund"))
+                d.orders.insert(0, Order(idx, round(float(want), 4) if want >= 0.01 else 0.0, "money not in use waits in the index fund"))
         return d
 
 
