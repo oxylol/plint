@@ -49,6 +49,7 @@ def pretty_name(user_name: str | None, wallet: str) -> str:
 
 class Core:
     MARKET_TTL = timedelta(minutes=10)
+    MARKET_KEEP = 3000   # markets remembered before the stale ones are dropped (18 kB each, tens of thousands a day)
 
     def __init__(self, cfg: Config, store: Store, notifier: Notifier):
         self.cfg = cfg
@@ -59,6 +60,7 @@ class Core:
         self.account: dict = {}
         self.balance: Decimal | None = None
         self._markets: dict[str, tuple[datetime, object]] = {}
+        self._markets_pruned = utcnow()
         self._mids: dict[str, tuple[datetime, Decimal | None]] = {}
         self._warned: dict[str, datetime] = {}
         self.errors: list[dict] = []
@@ -161,11 +163,21 @@ class Core:
             page = self.call(lambda: self.public.list_markets(condition_ids=[condition_id], page_size=1).first_page())
             m = page.items[0] if page.items else None
         self._markets[key] = (utcnow(), m)
+        self.forget_stale_markets()
         return m
 
     def remember_market(self, m) -> None:
         if m is not None and m.condition_id:
             self._markets[str(m.condition_id)] = (utcnow(), m)
+            self.forget_stale_markets()
+
+    def forget_stale_markets(self) -> None:
+        """Drop what is past its TTL once the cache is big (at most once a minute): it used to keep every market it
+        had ever looked up, and the bot ran into its memory limit about once a day."""
+        now = utcnow()
+        if len(self._markets) > self.MARKET_KEEP and now - self._markets_pruned >= timedelta(minutes=1):
+            self._markets = {k: v for k, v in self._markets.items() if now - v[0] < self.MARKET_TTL}
+            self._markets_pruned = now
 
     @staticmethod
     def end_of(m, by_date: bool = False) -> datetime | None:
