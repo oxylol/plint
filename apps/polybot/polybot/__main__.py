@@ -101,12 +101,12 @@ def main(argv: list[str]) -> int:
     web.serve(cfg.port, store, cfg.mode)
     runner.connect()
     log = logging.getLogger("polybot")
-    names = ", ".join(s.label for s in runner.consensus)
-    log.info("Polybot in %s mode: %s · underdog (%s, $%s, +%s%% target)",
-             runner.core.mode, names, "on" if cfg.ud_enabled else "off", cfg.ud_stake_usd, cfg.ud_take_profit_pct)
+    on = [s.name for s in runner.strategies if runner.enabled(s)]
+    off = [s.name for s in runner.strategies if not runner.enabled(s)]
+    log.info("Polybot in %s mode: %d setups running (%s)%s", runner.core.mode, len(on), ", ".join(on),
+             f" · switched off: {', '.join(off)}" if off else "")
     notifier.send("Polybot started",
-                  f"{runner.core.mode} mode · {len(runner.consensus)} consensus setups ({', '.join(s.p.window for s in runner.consensus)})"
-                  f" · underdog: {'on' if cfg.ud_enabled else 'off'}, ${cfg.ud_stake_usd} a game, +{cfg.ud_take_profit_pct}% target",
+                  f"{runner.core.mode} mode · {len(on)} setups running" + (f" · switched off: {', '.join(off)}" if off else ""),
                   priority="low", tags="robot")
 
     stop = threading.Event()

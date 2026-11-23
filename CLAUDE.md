@@ -118,7 +118,9 @@ What to know before touching one. The rest is in its README.
   `apps/cnc-studio`, never overwrite (Plint has its own changes in upstream files, and they are CRLF).
 - **Polybot**: paper mode until `POLY_PRIVATE_KEY`, `POLY_WALLET` and `POLY_LIVE=1` are in `.env`.
   Strategies side by side: consensus (`POLY_*`, extra setups in `POLY_VARIANTS`), credible/smart
-  (`CR_*`), underdog (`UD_*`), forecast (`FC_*`), collector (`CL_*`), afternoon (`AF_*`). Book in
+  (`CR_*`), underdog (`UD_*`), forecast (`FC_*`), collector (`CL_*`), afternoon (`AF_*`). `POLY_OFF` in the
+  stack names the ones switched off (since 2026-11-24 the proven losers: underdog, afternoon, collector, the week
+  and month boards, credible, smart; their books stay; the README's "What runs" has the figures). Book in
   `data/polybot`; its `research*` folders (8.5 GB of raw data) stay, on Filip's word.
   `plint logs polybot` · one cycle with its reasoning: `docker exec polybot python -m polybot once` ·
   account check before going live: `… polybot check`.

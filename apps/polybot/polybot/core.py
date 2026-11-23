@@ -219,6 +219,17 @@ class Core:
                 return cls.trading_id(m, o) or asset_id, o.label
         return asset_id, outcome
 
+    @classmethod
+    def other_outcome(cls, m, asset_id: str) -> tuple[str, str] | None:
+        """The other outcome of a market (every Polymarket market has two): its trading identifier and its label."""
+        outcomes = [m.outcomes.yes, m.outcomes.no]
+        for i, o in enumerate(outcomes):
+            if asset_id in {str(o.token_id or ""), str(o.position_id or "")}:
+                other = outcomes[1 - i]
+                tid = cls.trading_id(m, other)
+                return (tid, other.label or "") if tid else None
+        return None
+
     def estimate(self, asset_id: str, side: str, *, amount: Decimal | None = None, shares: Decimal | None = None) -> Decimal | None:
         """The price a market order would reach right now, or None when the book can't take it."""
         try:

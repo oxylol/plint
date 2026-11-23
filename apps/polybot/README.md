@@ -4,6 +4,25 @@ Two Polymarket strategies, paper-traded side by side so they can be compared,
 with the option to go live. Runs on Plint as the `poly` stack with a page at
 `https://poly.<domain>`.
 
+## What runs (since 2026-11-24)
+
+Three weeks of the ledger and 27 days of paper books (1,844 closed trades) decided this. `POLY_OFF` names the
+setups that are switched off: they buy nothing new, their books stay on the page, and what they still hold is
+priced and closes when its market resolves. To put one back, take its name out of the list in
+`stacks/poly/compose.yaml` (or set `POLY_OFF` in `.env`; `none` runs everything), then `plint sync`.
+
+| | setups | why |
+|---|---|---|
+| on | day, day4, day4pre, day4x, day4model | the only family with a positive result (+9% a signal, range −9 to +27): not proven |
+| on | edge, learned, weather5, weather10, forecast | around zero, still being measured |
+| on | all, all4 | never traded |
+| on | antimonth | new: the other side of month4's signals, at real prices |
+| off | underdog | −18% a trade on 268 |
+| off | afternoon | −20% on 316: filling $5 costs about 13¢ above the middle price, so the other side loses too |
+| off | collector | −43% on 11: the certain winners are not for sale |
+| off | consensus, week4, month, month4 | the week and month boards: −6% to −34% a signal |
+| off | credible, smart | books at −46% and −40% |
+
 ## Strategy 1 · Consensus
 
 Follow the **leaderboard**. Every five minutes the bot
@@ -34,6 +53,13 @@ round-2 data-model setups and the round-3 edge model below
 ```
 week4:min_agree=4;month:window=month;month4:window=month,min_agree=4;day:window=day;day4:window=day,min_agree=4;all:window=all;all4:window=all,min_agree=4;credible:pack=1,window=month,min_agree=2,min_weight=2.5,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Credible pack;smart:pack=1,window=month,min_agree=1,min_weight=1.5,fresh_only=1,adaptive_trust=1,lookback_hours=48,min_hours_to_end=12,max_per_cycle=3,label=Smart money;learned:pack=1,model=1,model_file=model_r2.json,…;weather5:…;weather10:…;edge:pack=1,model=1,model_file=model.json,window=month,min_agree=1,lookback_hours=48,max_per_cycle=3,label=Edge model (round 3)
 ```
+
+`against=1` turns a plain board setup round: every signal that passes the setup's rules at its own real price is
+answered by buying the *other* outcome of that market, at that outcome's own real ask, and holding it to the end
+(never both outcomes of one market; the leaders selling later sells nothing). The ledger logs it at the price
+paid, with `against` and `their_price`. `antimonth` is month4 this way: month4 lost 15% a signal over three
+weeks, which says nothing about the other outcome until it is bought at its real price (a guessed price gave
++14%, range −4 to +40).
 
 Other ideas: `week4:min_agree=4` (a lower bar), `top50:top_n=50` (a bigger
 pack), `politics:category=politics` (one category's board),
@@ -331,6 +357,7 @@ Consensus:
 | `POLY_AUTO_REDEEM` | `1` | claim winnings (needs the Relayer key) |
 | `POLY_POLL_SECONDS` | `300` | how often to look |
 | `POLY_VARIANTS` | the built-in set above | extra setups to compare |
+| `POLY_OFF` | *(nothing)*; the stack sets the nine above | setups that do not run, by name, comma-separated (`none` = all run); a name that is no setup shows as an error on the page |
 | `CR_POOL` / `CR_PACK_SIZE` / `CR_REFRESH_HOURS` | `80` / `12` / `6` | credible pack: how many to measure, keep, how often |
 | `CR_MIN_FILLS_7D` / `CR_MAX_IDLE_HOURS` | `10` / `72` | active right now |
 | `CR_MIN_CLOSED` / `CR_MIN_AGE_DAYS` | `30` / `30` | a real history |

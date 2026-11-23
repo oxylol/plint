@@ -46,6 +46,7 @@ class FakeCore:
         return Decimal(0)
 
     resolve_asset = Core.resolve_asset
+    other_outcome = Core.other_outcome
     trading_id = Core.trading_id
     not_tradeable = Core.not_tradeable
     end_of = Core.end_of

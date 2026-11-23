@@ -68,6 +68,7 @@ class ConsensusParams:
     no_in_play: bool = False     # skip games that have already started
     skip_lo: Decimal = Decimal(0)  # skip buys priced in [skip_lo, skip_hi), e.g. 0.30–0.50: day4's weakest band in the replays
     skip_hi: Decimal = Decimal(0)
+    against: bool = False        # buy the other outcome of every signal that passes the rules, at that outcome's real ask
     overridden: frozenset = frozenset()  # settings given explicitly in POLY_VARIANTS
 
     @classmethod
@@ -113,6 +114,8 @@ class ConsensusParams:
             if p.lookback_hours != self.lookback_hours:
                 bits.append(f"{p.lookback_hours:g} h")
             p = replace(p, label="Consensus · " + " · ".join(bits))
+        if p.against:   # the leaders selling is no reason to sell what was bought against them: held to the end
+            p = replace(p, follow_sells=False)
         p.validate()
         return p
 
@@ -125,6 +128,8 @@ class ConsensusParams:
             raise ValueError(f"variant {self.name}: need 0 < min_price < max_price <= 1")
         if self.poll_seconds < 30:
             raise ValueError(f"variant {self.name}: poll_seconds must be at least 30")
+        if self.against and (self.pack or self.model or self.fresh_only):
+            raise ValueError(f"variant {self.name}: against=1 mirrors a plain board setup (no pack, model or fresh_only)")
 
     def public(self) -> dict:
         out = {}
@@ -302,6 +307,7 @@ class ConsensusStrategy:
                             "end_by_date": True}
             self.p = params = replace(params, **{k: v for k, v in defaults.items() if k not in params.overridden})
         self._est: dict[str, Decimal | None] = {}   # asset → price of a stake-sized buy, this cycle
+        self._other: dict[str, str] = {}            # against=1: a signal's outcome → the other outcome, the one this setup buys
         self._records = {}
         self._sizes: dict[str, float] = {}
         self._preds: dict[str, tuple[float, float, str]] = {}  # signal key → (pred return, win prob, best leader)
@@ -498,7 +504,7 @@ class ConsensusStrategy:
             self.signals, self.fills = [], 0
             self.expire_positions(now)
             return
-        self.note = ""
+        self.note = "This setup buys the other side of every signal below, at that side's real price." if p.against else ""
         self._trades_by_wallet = self.feed.trades(self.leaders, since, now)
         all_trades = [t for ts in self._trades_by_wallet.values() for t in ts]
         self.fills = len(all_trades)
@@ -648,13 +654,15 @@ class ConsensusStrategy:
         what = f"{sig.title} · {sig.outcome}"
         skip = lambda reason: self._skip(sig, what, reason)  # noqa: E731
 
-        if self.store.position(sig.asset_id, self.name):
+        # the outcome this setup would hold: the signal's own, or with against=1 the other one (known once the market was seen)
+        mine = self._other.get(sig.asset_id) if p.against else sig.asset_id
+        if mine and self.store.position(mine, self.name):
             return skip("already holding")
-        last = self.store.acted_at(sig.asset_id, self.name)
+        last = self.store.acted_at(mine, self.name) if mine else None
         if last and now - last < timedelta(hours=p.cooldown_hours):
             return skip("cooling down after the last trade")
         blocked = self.portfolio_block(now)
-        if blocked and self.store.ledger_seen(self.name, sig.asset_id, now, p.cooldown_hours):
+        if blocked and mine and self.store.ledger_seen(self.name, mine, now, p.cooldown_hours):
             return skip(blocked)            # already logged: spare the API
         m = core.market(sig.condition_id, sig.slug)
         if m is None:
@@ -672,7 +680,7 @@ class ConsensusStrategy:
         if p.only and market_category(sig.title, sig.event_slug or sig.slug) not in p.only.split(","):
             return skip(f"not {p.only}")
         asset_id, label = core.resolve_asset(m, sig.asset_id, sig.outcome_index, sig.outcome)
-        if self.store.position(asset_id, self.name):
+        if not p.against and self.store.position(asset_id, self.name):
             return skip("already holding")
         est = self.stake_price(asset_id) if (self.round3 or self.consensus3) else core.estimate(asset_id, "BUY", amount=p.stake_usd)
         if est is None:
@@ -691,9 +699,33 @@ class ConsensusStrategy:
             if not fresh:
                 return skip("no fresh entry: the leaders held this already")
 
+        their_price = theirs = None
+        if p.against:
+            # the signal has passed the board's rules at its own real price: this setup takes the other side of it,
+            # at what that side costs right now
+            other = core.other_outcome(m, asset_id)
+            if other is None:
+                return skip("this market has no other outcome to buy")
+            theirs, their_price, asset_id, label = asset_id, est, other[0], other[1] or f"not {sig.outcome}"
+            self._other[sig.asset_id] = asset_id
+            what = f"{sig.title} · {label}, against {sig.outcome}"
+            if self.store.position(asset_id, self.name):
+                return skip("already holding the other side")
+            last = self.store.acted_at(asset_id, self.name)
+            if last and now - last < timedelta(hours=p.cooldown_hours):
+                return skip("cooling down after the last trade")
+            est = core.estimate(asset_id, "BUY", amount=p.stake_usd)
+            if est is None:
+                return skip("not enough liquidity on the other side")
+            if est >= Decimal("0.99"):
+                return skip(f"the other side costs {est:.2f}: nothing left to win")
+
         # the book's limits
         ev_key = self.event_key(m, sig)
         lead = self._lead.get(sig.key) if self.round3 else None
+        if not blocked and theirs and self.store.position(theirs, self.name):
+            # the board has turned since this setup bought against it: both outcomes of one market only pay the spread
+            blocked = "already holding this market's other outcome"
         if not blocked and p.per_event and ev_key and sum(1 for x in self.store.open_positions(self.name) if x.get("event_key") == ev_key) >= p.per_event:
             blocked = "already holding this event"
         if not blocked and p.leader_cap and lead:
@@ -713,7 +745,8 @@ class ConsensusStrategy:
                 "strategy": self.name, "asset_id": asset_id, "condition_id": sig.condition_id, "slug": sig.slug or m.slug or "",
                 "title": sig.title or m.question or "", "outcome": label or sig.outcome, "price": est, "fee_rate": core.fee_rate(m),
                 "agree": len(sig.agree), "disagree": len(sig.disagree), "leaders_price": sig.avg_price, "in_play": in_play,
-                "taken": blocked is None, "why_not": blocked}, now)
+                "taken": blocked is None, "why_not": blocked,
+                **({"against": sig.outcome, "their_price": their_price} if p.against else {})}, now)
         if blocked:
             return skip(blocked)
         if core.mode == "live" and core.balance is not None and core.balance < amount:
@@ -728,7 +761,9 @@ class ConsensusStrategy:
             "title": sig.title or m.question or "", "outcome": label or sig.outcome,
             "slug": sig.slug or m.slug or "", "event_slug": sig.event_slug or "",
             "agree": len(sig.agree), "disagree": len(sig.disagree), "weight": sig.weight,
-            "agree_wallets": list(sig.agree), "agree_names": {w: self.name_of(w) for w in sig.agree},
+            # (against=1: the leaders are on the other side, so the result is not theirs to be credited with)
+            "agree_wallets": [] if p.against else list(sig.agree), "agree_names": {w: self.name_of(w) for w in sig.agree},
+            **({"against": sig.outcome, "their_price": float(their_price)} if p.against else {}),
             "fresh": [self.name_of(w) for w in fresh], "event_key": ev_key, **({"leader": lead} if lead else {}),
             **({"predicted": round(self.predict(sig)[0], 3), "predicted_by": self.predict(sig)[2]} if self.model is not None else {}),
             "leaders_price": float(sig.avg_price) if sig.avg_price is not None else None,
@@ -737,12 +772,13 @@ class ConsensusStrategy:
         self.store.open_position(rec, now)
         self._bought_this_cycle += 1
         verb = "Bought" if core.mode == "live" else "Paper buy"
-        self.decisions[sig.key] = "bought" if core.mode == "live" else "paper bought"
-        log.info("[%s] %s %s: %s shares at %.2f ($%s) · %d agree, %d against, weight %.1f",
-                 self.name, verb, what, rec["shares"], rec["price"], rec["cost"], len(sig.agree), len(sig.disagree), sig.weight)
+        self.decisions[sig.key] = ("bought" if core.mode == "live" else "paper bought") + (f" the other side: {label} at {est:.2f}" if p.against else "")
+        crowd = (f"{len(sig.agree)} leaders on {sig.outcome} (at {their_price:.2f}), {len(sig.disagree)} with us" if p.against
+                 else f"{len(sig.agree)} leaders agree, {len(sig.disagree)} against")
+        log.info("[%s] %s %s: %s shares at %.2f ($%s) · %s, weight %.1f",
+                 self.name, verb, what, rec["shares"], rec["price"], rec["cost"], crowd, sig.weight)
         core.notifier.send(f"Polybot: {verb.lower()}",
-                           f"[{self.label}] {what}\n{rec['shares']:.2f} shares at {rec['price']:.2f} (${rec['cost']:.2f})\n"
-                           f"{len(sig.agree)} leaders agree, {len(sig.disagree)} against",
+                           f"[{self.label}] {what}\n{rec['shares']:.2f} shares at {rec['price']:.2f} (${rec['cost']:.2f})\n{crowd}",
                            tags="chart_with_upwards_trend")
         return rec
 
@@ -815,7 +851,7 @@ class ConsensusStrategy:
                 "net_usd": float(s.net_usd), "last_at": iso(s.last_at),
                 "price": float(price) if price is not None else None,
                 "decision": decision, "closed": closed,
-                "holding": self.store.position(s.asset_id, self.name) is not None,
+                "holding": self.store.position(self._other.get(s.asset_id, s.asset_id) if self.p.against else s.asset_id, self.name) is not None,
             })
         if self.model is not None:
             rows.sort(key=lambda r: (r["closed"], -(r.get("predicted") if r.get("predicted") is not None else -9)))

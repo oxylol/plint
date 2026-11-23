@@ -15,7 +15,9 @@ VARIANT_KEYS = ("label", "window", "category", "top_n", "min_agree", "lookback_h
                 "pack", "pool", "min_weight", "fresh_only", "adaptive_trust", "max_hold_days", "max_per_cycle", "model", "min_pred", "no_sports", "max_per_day", "only",
                 # round-3 model setups
                 "model_file", "min_show", "per_event", "leader_cap", "max_hours_to_end", "max_signal_age_min", "no_in_play",
-                "skip_lo", "skip_hi")
+                "skip_lo", "skip_hi",
+                # the other side of the board's signals
+                "against")
 DEFAULT_VARIANTS = ";".join([
     "week4:min_agree=4",
     "month:window=month", "month4:window=month,min_agree=4",
@@ -41,8 +43,18 @@ DEFAULT_VARIANTS = ";".join([
     # round 3 (research/REPORT3.md): a fresh single-leader bet scored at the price a buy pays now, anchored on the market;
     # one position per event, a quarter of the book per leader at most; the rest of its policy comes from model.json
     "edge:pack=1,model=1,model_file=model.json,window=month,min_agree=1,lookback_hours=48,max_per_cycle=3,label=Edge model (round 3)",
+    # month4's signals, the other way round: three weeks of its ledger lost 15% a signal, which says nothing about the
+    # other outcome until that is bought at its own real ask (a guessed ask gave +14%, range −4 to +40); held to the end
+    "antimonth:window=month,min_agree=4,against=1,label=Against the month board",
 ])
 RESERVED_NAMES = ("consensus", "underdog")
+OTHER_SETUPS = ("underdog", "forecast", "collector", "afternoon")   # the setups that are not consensus variants
+
+
+def parse_off(raw: str) -> frozenset[str]:
+    """`POLY_OFF=underdog, month4` → the setups that do not run. `none` (or nothing) means every setup runs."""
+    names = {x.strip().lower() for x in (raw or "").split(",")}
+    return frozenset(names - {"", "none"})
 
 
 def parse_variants(raw: str) -> list[tuple[str, dict[str, str]]]:
@@ -122,6 +134,7 @@ class Config:
     auto_redeem: bool
     poll_seconds: int
     variants: str                # extra consensus setups to compare, see parse_variants()
+    off: str                     # setups that do not run, comma-separated (their books stay, what they hold still resolves)
     # Credibility rules for pack=1 setups (CR_*): who on the board is worth copying
     cr_pool: int                 # how many of the board to measure
     cr_pack_size: int            # how many credible traders to follow
@@ -229,6 +242,7 @@ class Config:
             auto_redeem=_bool("POLY_AUTO_REDEEM", True),
             poll_seconds=_int("POLY_POLL_SECONDS", 300),
             variants=_str("POLY_VARIANTS", DEFAULT_VARIANTS),
+            off=_str("POLY_OFF", ""),
             cr_pool=_int("CR_POOL", 200),
             cr_pack_size=_int("CR_PACK_SIZE", 12),
             cr_refresh_hours=float(_str("CR_REFRESH_HOURS", "6")),
@@ -344,6 +358,15 @@ class Config:
                      min_profit_factor=self.cr_min_profit_factor, min_win_rate=self.cr_min_win_rate,
                      max_top_share=self.cr_max_top_share, min_hold_hours=self.cr_min_hold_hours,
                      min_edge=self.cr_min_edge, min_age_days=self.cr_min_age_days, max_two_sided=self.cr_max_two_sided)
+
+    @property
+    def off_names(self) -> frozenset[str]:
+        return parse_off(self.off)
+
+    def unknown_off(self) -> list[str]:
+        """Names in POLY_OFF that are no setup: a typo there would leave a setup running."""
+        known = {"consensus", *OTHER_SETUPS, *(name for name, _ in parse_variants(self.variants))}
+        return sorted(self.off_names - known)
 
     @property
     def can_trade(self) -> bool:

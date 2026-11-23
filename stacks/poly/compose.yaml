@@ -4,8 +4,8 @@
 #  leaderboard's top traders agree on; "underdog" buys the cheaper side of a
 #  game at kickoff; "forecast" bets No on a temperature; "collector" buys what
 #  a finished day has already decided; "afternoon" buys the running high's
-#  bucket at each city's own hour. Source in apps/polybot
-#  (README there). Paper mode until
+#  bucket at each city's own hour. POLY_OFF below names the ones that are
+#  switched off. Source in apps/polybot (README there). Paper mode until
 #  POLY_PRIVATE_KEY + POLY_WALLET are in .env and POLY_LIVE=1. Its book
 #  lives in data/polybot; it pushes trades to the phone through ntfy.
 # ─────────────────────────────────────────────────────────────
@@ -58,6 +58,10 @@ services:
       # setups "credible" (weighted agreement among credible traders) and "smart" (one credible
       # trader's fresh conviction bet, trust adapting to results). See apps/polybot/README.md.
       POLY_VARIANTS: ${POLY_VARIANTS:-}
+      # Setups that do not run (any setup's name, comma-separated; "none" = everything runs). Their books stay on
+      # the page and what they still hold is priced and resolves; they just buy nothing new. Off since 2026-11-24,
+      # on Filip's word after three weeks of the ledger: these lose for sure (apps/polybot/README.md has the figures).
+      POLY_OFF: ${POLY_OFF:-underdog,afternoon,collector,consensus,week4,month,month4,credible,smart}
       # Credibility rules for the pack setups
       CR_POOL: ${CR_POOL:-200}
       CR_PACK_SIZE: ${CR_PACK_SIZE:-12}

@@ -156,6 +156,7 @@
   function link(s) { return s.event_slug ? "https://polymarket.com/event/" + encodeURIComponent(s.event_slug) : s.slug ? "https://polymarket.com/market/" + encodeURIComponent(s.slug) : "https://polymarket.com/"; }
   function tone(n) { return n > 0 ? "up" : n < 0 ? "down" : ""; }
   var LABELS = {};
+  var OFFMSG = '<div class="empty">Switched off: it buys nothing new. Its record stays under Strategies.</div>';
   function stag(name) { var l = LABELS[name] || name; return '<span class="chip sm ' + (name === "underdog" || name === "forecast" || name === "collector" || name === "afternoon" ? "info" : "") + '">' + esc(String(l).replace(/^Consensus · /, "")) + "</span>"; }
 
   var last = null, showAll = false, SHOW = 8, picked = localStorage.getItem("polybot-variant") || "consensus";
@@ -174,7 +175,7 @@
 
     var games = ud.games || [];
     $("stats").innerHTML =
-      '<div class="tile"><b>' + (d.variants || []).length + "</b><span>setups</span></div>" +
+      '<div class="tile"><b>' + rows.filter(function (r) { return r.enabled !== false; }).length + "</b><span>setups on</span></div>" +
       '<div class="tile"><b>' + (ud.games_total || 0) + "</b><span>games " + cfg.ud_lookahead_hours + " h</span></div>" +
       '<div class="tile"><b>' + (t.open || 0) + "</b><span>open</span></div>" +
       '<div class="tile"><b class="' + tone(t.total) + '">' + money(t.total, true) + "</b><span>" + (live ? "P&amp;L" : "paper P&amp;L") + "</span></div>";
@@ -191,13 +192,13 @@
     $("poscount").textContent = pos.length ? money(t.open_cost) + " in · " + money(t.open_value) + " now" : "";
     $("positions").innerHTML = pos.length ? '<table><tr><th>Market</th><th class="r">Shares</th><th class="r">In → now</th><th class="r">P&amp;L</th></tr>' + pos.map(function (p) {
       var extra = p.strategy === "underdog" ? " · sell at " + cents(p.target) + ", stop " + cents(p.stop) + ", out by " + clock(p.deadline) : "";
-      return "<tr><td>" + stag(p.strategy) + ' <a href="' + esc(link(p)) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a><br><span class=\"muted\">" + esc(p.outcome) + " · " + esc(ago(p.opened_at)) + (p.mode === "paper" && live ? " · paper" : "") + esc(extra) + (p.note ? " · " + esc(p.note) : "") + "</span></td>" +
+      return "<tr><td>" + stag(p.strategy) + ' <a href="' + esc(link(p)) + '" target="_blank" rel="noopener">' + esc(p.title) + "</a><br><span class=\"muted\">" + esc(p.outcome) + " · " + esc(ago(p.opened_at)) + (p.against ? " · against " + p.agree + " on " + esc(p.against) : "") + (p.mode === "paper" && live ? " · paper" : "") + esc(extra) + (p.note ? " · " + esc(p.note) : "") + "</span></td>" +
         '<td class="r num">' + Number(p.shares).toFixed(1) + '</td><td class="r num">' + cents(p.price) + " → " + cents(p.current_price) + '</td><td class="r num ' + tone(p.pnl) + '">' + money(p.pnl, true) + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">Nothing open.</div>';
 
     var fc = d.forecast || {}, fr = fc.rows || [];
     $("fcnote").textContent = fc.enabled === false ? "off" : fr.length ? "No on the " + fc.agg + " of " + (fc.models || []).length + " models +" + fc.plus_c + "°C · " + fc.events + " events" : "";
-    $("forecast").innerHTML = fc.enabled === false ? '<div class="empty">Switched off (<code>FC_ENABLED=0</code>).</div>' : fr.length ? '<table><tr><th>City · day</th><th class="r">Forecast</th><th class="r">Bet No on</th><th class="r">No</th></tr>' + fr.map(function (r) {
+    $("forecast").innerHTML = fc.enabled === false ? OFFMSG : fr.length ? '<table><tr><th>City · day</th><th class="r">Forecast</th><th class="r">Bet No on</th><th class="r">No</th></tr>' + fr.map(function (r) {
       var good = /bought|holding/.test(r.decision || "");
       return '<tr><td>' + esc(r.city) + ' <span class="muted">' + esc(r.day ? r.day.slice(5) : "") + (r.station ? " · " + esc(r.station) : "") + (r.local_time ? " · " + esc(r.local_time) : "") + "</span>" + (r.decision ? '<br><span class="' + (good ? "up" : "muted") + '" style="font-size:12px;font-weight:700">→ ' + esc(r.decision) + "</span>" : "") + "</td>" +
         '<td class="r num">' + (r.forecast != null ? r.forecast + "°C" + (r.spread != null ? '<br><span class="muted">±' + r.spread + "</span>" : "") : "–") + "</td>" +
@@ -206,7 +207,7 @@
 
     var cl = d.collector || {}, cr = cl.rows || [];
     $("clnote").textContent = cl.enabled === false ? "off" : cl.events ? "highs set from " + cl.lock_hour + ":00 local, " + cl.margin_c + "°C below · buys up to " + cents(cl.max_price) + " · " + cl.events + " events" + (cl.waiting ? ", " + cl.waiting + " waiting" : "") : "";
-    $("collector").innerHTML = cl.enabled === false ? '<div class="empty">Switched off (<code>CL_ENABLED=0</code>).</div>' : cr.length ? '<table><tr><th>City · day</th><th class="r">Reports</th><th class="r">Set</th><th class="r">Winner</th></tr>' + cr.map(function (r) {
+    $("collector").innerHTML = cl.enabled === false ? OFFMSG : cr.length ? '<table><tr><th>City · day</th><th class="r">Reports</th><th class="r">Set</th><th class="r">Winner</th></tr>' + cr.map(function (r) {
       var good = /bought|held/.test(r.decision || ""), tk = r.tokens || [];
       var detail = tk.length ? tk.map(function (t) { return t.outcome + " " + t.bucket + " " + cents(t.price) + (t.decision ? " · " + t.decision : ""); }).join("<br>") : "";
       return '<tr><td>' + esc(r.city) + ' <span class="muted">' + esc(r.day ? r.day.slice(5) : "") + (r.kind === "lowest" ? " low" : "") + (r.station ? " · " + esc(r.station) : "") + (r.local_time ? " · " + esc(r.local_time) : "") + "</span>" + (r.decision ? '<br><span class="' + (good ? "up" : "muted") + '" style="font-size:12px;font-weight:700">→ ' + esc(r.decision) + "</span>" : "") + (detail ? '<br><span class="muted" style="font-size:12px">' + detail + "</span>" : "") + "</td>" +
@@ -218,7 +219,7 @@
     var af = d.afternoon || {}, ar = af.rows || [];
     var hs = af.hours || {};
     $("afnote").textContent = af.enabled === false ? "off" : af.today ? "Yes on the bucket the high is in at the hour it had landed by on " + Math.round((af.quantile || 0.6) * 100) + "% of the city's days · " + cents(af.min_price) + "–" + cents(af.max_price) + " · " + af.today + " cities today" + (hs["station history"] ? " · " + hs["station history"] + " hours from the archive" : "") : "";
-    $("afternoon").innerHTML = af.enabled === false ? '<div class="empty">Switched off (<code>AF_ENABLED=0</code>).</div>' : ar.length ? '<table><tr><th>City</th><th class="r">High so far</th><th class="r">Bucket</th><th class="r">Yes</th></tr>' + ar.map(function (r) {
+    $("afternoon").innerHTML = af.enabled === false ? OFFMSG : ar.length ? '<table><tr><th>City</th><th class="r">High so far</th><th class="r">Bucket</th><th class="r">Yes</th></tr>' + ar.map(function (r) {
       var good = /bought|holding/.test(r.decision || "");
       return '<tr><td>' + esc(r.city) + ' <span class="muted">' + esc(r.day ? r.day.slice(5) : "") + (r.station ? " · " + esc(r.station) : "") + (r.local_time ? " · " + esc(r.local_time) : "") + (r.hour != null ? " · at " + r.hour + ":00" + (r.median != null ? " (high lands " + r.median + " median" + (r.hour_source === "station history" ? ", " + r.hour_days + " d" : ", shipped") + ")" : "") : "") + "</span>" + (r.decision ? '<br><span class="' + (good ? "up" : "muted") + '" style="font-size:12px;font-weight:700">→ ' + esc(r.decision) + "</span>" : "") + "</td>" +
         '<td class="r num">' + (r.value_c != null ? r.value_c + "°C" + (r.reports ? '<br><span class="muted">' + r.reports + " reports</span>" : "") : "–") + "</td>" +
@@ -226,7 +227,7 @@
     }).join("") + "</table>" : '<div class="empty">No city has reached its afternoon window yet today.</div>';
 
     $("udnote").textContent = ud.enabled === false ? "off" : games.length ? "buys " + cfg.ud_buy_before_min + " min before kickoff · " + cents(cfg.ud_min_price) + "–" + cents(cfg.ud_max_price) : "";
-    $("games").innerHTML = ud.enabled === false ? '<div class="empty">Switched off (<code>UD_ENABLED=0</code>).</div>' : games.length ? '<table><tr><th>Kickoff</th><th>Game</th><th class="r">Dog</th></tr>' + games.map(function (g) {
+    $("games").innerHTML = ud.enabled === false ? OFFMSG : games.length ? '<table><tr><th>Kickoff</th><th>Game</th><th class="r">Dog</th></tr>' + games.map(function (g) {
       var m = g.minutes, whenTxt = m > 0 ? "in " + (m >= 90 ? Math.round(m / 60) + " h" : m + " min") : m === 0 ? "now" : Math.abs(m) + " min ago";
       var dec = g.decision ? '<br><span class="muted">→ ' + esc(g.decision) + "</span>" : g.wanted ? "" : '<br><span class="muted">not in UD_SPORTS</span>';
       return '<tr><td class="muted num">' + esc(whenTxt) + "<br>" + esc(clock(g.game_start)) + '</td><td><a href="' + esc(link(g)) + '" target="_blank" rel="noopener">' + esc(g.title) + '</a> <span class="chip sm dim">' + esc(g.sport) + "</span>" + dec + '</td><td class="r num">' + esc(g.outcome) + "<br>" + cents(g.price) + "</td></tr>";
@@ -236,7 +237,7 @@
     var cur = variants.filter(function (v) { return v.name === picked; })[0] || variants[0] || { leaders: [], signals: [], params: {} };
     var vp = cur.params || {};
     $("picker").innerHTML = variants.length > 1 ? variants.map(function (v) {
-      return '<button type="button" data-v="' + esc(v.name) + '" aria-pressed="' + (v.name === cur.name) + '">' + esc((v.label || v.name).replace(/^Consensus · /, "")) + "</button>";
+      return '<button type="button" data-v="' + esc(v.name) + '" aria-pressed="' + (v.name === cur.name) + '">' + esc((v.label || v.name).replace(/^Consensus · /, "")) + (v.enabled === false ? " · off" : "") + "</button>";
     }).join("") : "";
     Array.prototype.forEach.call($("picker").querySelectorAll("button"), function (b) {
       b.addEventListener("click", function () { picked = b.getAttribute("data-v"); localStorage.setItem("polybot-variant", picked); showAll = false; if (last) render(last); });
@@ -263,7 +264,7 @@
     var tr = d.trades || [];
     $("trades").innerHTML = tr.length ? '<table><tr><th>When</th><th>What</th><th class="r">Shares @</th><th class="r">P&amp;L</th></tr>' + tr.map(function (x) {
       var buy = x.side === "BUY";
-      return '<tr><td class="muted num">' + esc(when(x.at)) + "</td><td>" + stag(x.strategy || "consensus") + ' <span class="chip sm ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span> " + esc(x.title) + '<br><span class="muted">' + esc(x.outcome) + (x.mode ? " · " + esc(x.mode) : "") + (x.reason ? " · " + esc(x.reason) : buy && x.agree ? " · " + x.agree + " agreed" : "") + (x.fee ? " · fee " + money(x.fee) : "") + "</span></td>" +
+      return '<tr><td class="muted num">' + esc(when(x.at)) + "</td><td>" + stag(x.strategy || "consensus") + ' <span class="chip sm ' + (buy ? "" : "sell") + '">' + (buy ? "Buy" : "Sell") + "</span> " + esc(x.title) + '<br><span class="muted">' + esc(x.outcome) + (x.mode ? " · " + esc(x.mode) : "") + (x.reason ? " · " + esc(x.reason) : buy && x.against ? " · against " + x.agree + " on " + esc(x.against) : buy && x.agree ? " · " + x.agree + " agreed" : "") + (x.fee ? " · fee " + money(x.fee) : "") + "</span></td>" +
         '<td class="r num">' + Number(x.shares).toFixed(1) + " @ " + cents(x.price) + '</td><td class="r num ' + (buy ? "muted" : tone(x.pnl)) + '">' + (buy ? money(x.cost) : money(x.pnl, true)) + "</td></tr>";
     }).join("") + "</table>" : '<div class="empty">No trades yet.</div>';
 
@@ -319,6 +320,8 @@
         });
         if (q.model) diffs.push("data model: " + (v.model && v.model.kind ? v.model.kind + " " + (v.model.target || "") : "") + " · cut " + pct(v.model ? v.model.cut : q.min_pred, true) + " · " + (v.model && v.model.policy ? v.model.policy.per_day + " a day · " + (v.model.policy.sports ? "any market" : "no sports") : ""));
         else if (q.pack) diffs.push("credible pack of " + cfg.cr_pack_size + (q.min_weight ? " · weight ≥ " + q.min_weight : "") + (q.fresh_only ? " · fresh entries only" : "") + (q.adaptive_trust ? " · adaptive trust" : "") + (q.max_hold_days ? " · out after " + q.max_hold_days + " d" : ""));
+        if (q.against) diffs.push("buys the other side of each signal");
+        if (v.enabled === false) diffs.unshift("off");
         return "<div><span>" + esc(v.name) + "</span><b>" + esc(diffs.join(" · ") || "same as base") + "</b></div>";
       }).join("") + "</div>" : "") + "<h3>Credibility rules (pack setups)</h3>" + '<div class="kv">' +
       "<div><span>Measured</span><b>top " + cfg.cr_pool + " · keep " + cfg.cr_pack_size + " · every " + cfg.cr_refresh_hours + " h</b></div>" +

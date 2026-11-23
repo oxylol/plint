@@ -45,6 +45,9 @@ class Runner:
         self.collector = CollectorStrategy(self.core)
         self.afternoon = AfternoonStrategy(self.core, self.collector)
         self.strategies = [*self.consensus, self.underdog, self.forecast, self.collector, self.afternoon]
+        self.off = cfg.off_names    # POLY_OFF: these do not run; their books stay and what they hold still resolves
+        if cfg.unknown_off():
+            self.core.record_error(f"POLY_OFF names no setup called {', '.join(cfg.unknown_off())}: check the spelling, it is still running")
         self.last_run: dict[str, datetime] = {}
         self._consensus_status: dict[str, dict] = {}
 
@@ -52,6 +55,8 @@ class Runner:
         self.core.connect()
 
     def enabled(self, strategy) -> bool:
+        if strategy.name in self.off:
+            return False
         if strategy.name == "underdog":
             return self.cfg.ud_enabled
         if strategy.name == "forecast":
@@ -106,6 +111,8 @@ class Runner:
                 self.core.mark(self.store.open_positions("afternoon"))
             if consensus_ran:
                 self.core.mark([p for s in consensus_ran for p in self.store.open_positions(s.name)])
+                # what a switched-off setup still holds is priced too, so its line in the table stays true
+                self.core.mark([p for s in self.strategies if not self.enabled(s) for p in self.store.open_positions(s.name)])
                 if self.core.mode == "live":
                     self.core.refresh_balance()
                     if self.cfg.auto_redeem:
@@ -143,19 +150,29 @@ class Runner:
             strategies.append({**self.store.totals(now, s.name), "name": s.name, "label": s.label if hasattr(s, "label") else "Underdog",
                                "kind": getattr(s, "kind", "underdog"), "enabled": self.enabled(s), "since": self.store.since(s.name),
                                "last_run": iso(self.last_run[s.name]) if s.name in self.last_run else None})
+        config = cfg.public()
+        for key, s in (("ud_enabled", self.underdog), ("fc_enabled", self.forecast), ("cl_enabled", self.collector), ("af_enabled", self.afternoon)):
+            config[key] = self.enabled(s)
+        variants = []
+        for s in self.consensus:
+            on = self.enabled(s)
+            v = self._consensus_status.get(s.name) if on else None
+            if v is None:
+                v = {"name": s.name, "label": s.label, "params": s.p.public(), "leaders": [], "fills": 0, "signals": [],
+                     "note": s.note if on else "Switched off: it buys nothing new. What it holds stays until its market resolves.",
+                     "followed": self.store.leaders_followed(s.name)[:15], **({"pack": s.pack.key} if s.pack else {})}
+            variants.append({**v, "enabled": on})
         return {
             "updated_at": iso(now),
             "next_run_at": iso(self.next_due(now)),
             "mode": core.mode,
-            "config": cfg.public(),
+            "config": config,
             "account": {**core.account, "balance": float(core.balance) if core.balance is not None else None},
-            "variants": [self._consensus_status.get(s.name, {"name": s.name, "label": s.label, "params": s.p.public(), "note": s.note,
-                                                              "leaders": [], "fills": 0, "signals": [], "followed": [],
-                                                              **({"pack": s.pack.key} if s.pack else {})}) for s in self.consensus],
-            "underdog": self.underdog.status(now),
-            "forecast": self.forecast.status(),
-            "collector": self.collector.status(),
-            "afternoon": self.afternoon.status(),
+            "variants": variants,
+            "underdog": {**self.underdog.status(now), "enabled": self.enabled(self.underdog)},
+            "forecast": {**self.forecast.status(), "enabled": self.enabled(self.forecast)},
+            "collector": {**self.collector.status(), "enabled": self.enabled(self.collector)},
+            "afternoon": {**self.afternoon.status(), "enabled": self.enabled(self.afternoon)},
             "positions": positions,
             "trades": self.store.recent_trades(40),
             "totals": self.store.totals(now),
