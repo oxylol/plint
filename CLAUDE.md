@@ -101,7 +101,7 @@ table (Plint Table) is gone for good: its code was never pushed anywhere.
 ├── theme/            Plint Terminal: plint.css/js (tokens, strip) · apps/<app>.css/js · home/ (the home page) · fonts/
 ├── systemd/          plint-claude and plint-chat units, the theme-data timer, cockpit/resolved/sysctl/apt drop-ins
 ├── scripts/          setup scripts (adguard, beszel, ntfy, kopia, amp, claude) · theme-data.sh · notify.sh · tv.py (`plint tv`)
-├── .claude/          settings.json (what you may run unasked, and what you may never) · skills/spec-build
+├── .claude/          settings.json (what you may run unasked, and what you may never) · skills/spec-build, planner
 ├── .scratch/         working notes and build specs (not in git)
 └── data/             container state (not in git; backed up by Kopia)
 ```
