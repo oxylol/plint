@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CHIMERA</title>
+<style>
+  :root { --bg: #030806; --fg: #7dffb0; --dim: #2f6b4a; --hot: #fff27a; --bad: #ff6b6b; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 13px/1.4 ui-monospace, Menlo, monospace; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  body { padding: 14px 16px; display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 12px; }
+  h1 { margin: 0; font-size: 15px; letter-spacing: .25em; font-weight: 600; }
+  h1 small { color: var(--dim); letter-spacing: .05em; font-weight: 400; margin-left: 10px; }
+  .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .head { flex-wrap: nowrap; white-space: nowrap; }
+  /* fixed widths: changing numbers must not move anything */
+  #sr { display: inline-block; width: 8ch; } #blk { display: inline-block; width: 4ch; }
+  #load { display: inline-block; width: 16ch; } #fps { display: inline-block; width: 6ch; }
+  .stat { color: var(--dim); } .stat b { color: var(--fg); font-weight: 400; }
+  .bad { color: var(--bad) !important; }
+  .meter { flex: 1; min-width: 120px; height: 8px; border: 1px solid var(--dim); position: relative; }
+  .meter i { position: absolute; inset: 0 auto 0 0; background: var(--fg); width: 0; }
+  textarea { width: 100%; height: 52px; resize: none; background: transparent; color: var(--fg); border: 1px solid var(--dim); padding: 6px 8px; font: inherit; user-select: text; -webkit-user-select: text; }
+  textarea:focus { outline: none; border-color: var(--fg); }
+  button { background: transparent; color: var(--fg); border: 1px solid var(--dim); font: inherit; padding: 3px 10px; cursor: pointer; }
+  button:hover { border-color: var(--fg); }
+  #syl { display: flex; flex-wrap: wrap; gap: 4px 6px; align-content: flex-start; min-height: 48px; }
+  #syl span { padding: 1px 4px; border: 1px solid transparent; color: var(--dim); }
+  #syl span.next { border-color: var(--dim); color: var(--fg); }
+  #syl span.sung { background: var(--fg); color: var(--bg); }
+  label.slider { display: flex; gap: 8px; align-items: center; }
+  input[type=range] { width: 150px; accent-color: #7dffb0; }
+  .val { width: 9ch; white-space: nowrap; display: inline-block; }
+  .mid { display: grid; grid-template-columns: 1fr 300px; gap: 14px; min-height: 0; }
+  /* the canvas is sized from its box, so it must not size the box (it would grow every frame) */
+  .scopebox { position: relative; min-height: 0; border: 1px solid var(--dim); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #keys { position: relative; height: 70px; }
+  #keys div { position: absolute; top: 0; border: 1px solid var(--dim); }
+  #keys .w { height: 70px; background: transparent; }
+  #keys .b { height: 42px; background: #0b1f15; z-index: 1; }
+  #keys .on { background: var(--fg) !important; }
+  kbd { color: var(--hot); }
+</style>
+</head>
+<body>
+  <div class="row head">
+    <h1>CHIMERA<small>plugin spike</small></h1>
+    <span class="stat">rate <b id="sr">–</b></span>
+    <span class="stat">block <b id="blk">–</b></span>
+    <span class="stat">dsp <b id="load">–</b></span>
+    <span class="stat">ui <b id="fps">–</b></span>
+    <span class="stat" id="fault"></span>
+    <div class="meter"><i id="lvl"></i></div>
+  </div>
+
+  <div>
+    <textarea id="lyrics" spellcheck="false" placeholder="Lyrics: one syllable per note. A '-' holds the vowel onto the next note."></textarea>
+    <div class="row" style="margin-top:6px">
+      <button id="apply">Set lyrics</button>
+      <span class="stat">⌘↩ also sets them · last key seen by the page: <kbd id="key">none</kbd></span>
+    </div>
+  </div>
+
+  <div id="syl"></div>
+
+  <div class="mid">
+    <div class="scopebox"><canvas id="scope"></canvas></div>
+    <div style="display:grid; gap:10px; align-content:start">
+      <label class="slider">gain <input type="range" id="gain" min="0" max="1" step="0.001"><span class="val" id="gainv"></span></label>
+      <label class="slider">vibrato <input type="range" id="vibrato" min="0" max="1" step="0.001"><span class="val" id="vibratov"></span></label>
+      <span class="stat">The sliders are host parameters: automate them in the DAW and they should move here.</span>
+    </div>
+  </div>
+
+  <div id="keys"></div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const send = (msg) => window.ipc.postMessage(JSON.stringify(msg));
+
+// ---- parameters: a drag is one host gesture (begin, set…, end)
+const dragging = new Set();
+for (const id of ["gain", "vibrato"]) {
+  const el = $(id);
+  el.addEventListener("pointerdown", () => { dragging.add(id); send({ type: "param", id, phase: "begin" }); });
+  el.addEventListener("input", () => send({ type: "param", id, phase: "set", value: +el.value }));
+  const end = () => { if (dragging.delete(id)) send({ type: "param", id, phase: "end" }); };
+  el.addEventListener("pointerup", end);
+  el.addEventListener("pointercancel", end);
+}
+
+// ---- lyrics (the keyboard-focus test: can you type here inside the DAW?)
+let lyricsSeen = null;
+const apply = () => send({ type: "lyrics", text: $("lyrics").value });
+$("apply").addEventListener("click", apply);
+$("lyrics").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); apply(); } });
+document.addEventListener("keydown", (e) => { $("key").textContent = (e.metaKey ? "⌘" : "") + (e.altKey ? "⌥" : "") + (e.key === " " ? "space" : e.key); }, true);
+
+// ---- on-screen keys, C3–B4
+const keys = $("keys");
+const W = 100 / 14;
+let w = 0;
+for (let m = 48; m < 72; m++) {
+  const black = [1, 3, 6, 8, 10].includes(m % 12);
+  const k = document.createElement("div");
+  k.className = black ? "b" : "w";
+  k.dataset.midi = m;
+  k.style.left = (black ? w * W - W * 0.3 : w * W) + "%";
+  k.style.width = (black ? W * 0.6 : W) + "%";
+  if (!black) w++;
+  const off = () => { if (k.dataset.down) { delete k.dataset.down; send({ type: "note", midi: m, on: false }); } };
+  k.addEventListener("pointerdown", (e) => { k.setPointerCapture(e.pointerId); k.dataset.down = 1; send({ type: "note", midi: m, on: true }); });
+  k.addEventListener("pointerup", off);
+  k.addEventListener("pointercancel", off);
+  keys.appendChild(k);
+}
+
+// ---- state, pulled at the display's frame rate
+const scope = $("scope"), g = scope.getContext("2d");
+const hist = new Float32Array(240);
+let hi = 0, frames = 0, fpsT = performance.now(), sylKey = "", noteShown = -2;
+// DSP load, shown twice a second: the mean over that time and its worst block
+const dsp = { busy: 0, audio: 0, peak: 0, t: performance.now() };
+
+function draw(s) {
+  $("sr").textContent = (s.sampleRate / 1000).toFixed(1) + " kHz";
+  $("blk").textContent = s.block;
+  dsp.busy += s.busyNs; dsp.audio += s.audioNs; dsp.peak = Math.max(dsp.peak, s.loadPeak);
+  if (performance.now() - dsp.t > 500 && dsp.audio > 0) {
+    const mean = dsp.busy / dsp.audio;
+    $("load").textContent = Math.round(mean * 100) + "% · peak " + Math.round(dsp.peak * 100) + "%";
+    $("load").classList.toggle("bad", dsp.peak > 0.8);
+    Object.assign(dsp, { busy: 0, audio: 0, peak: 0, t: performance.now() });
+  }
+  const lowRate = s.sampleRate > 0 && s.sampleRate < 32000;
+  $("fault").textContent = s.faulted ? "ENGINE FAULT: re-create the plugin" : lowRate ? "needs ≥ 32 kHz: silent" : "";
+  $("fault").classList.toggle("bad", s.faulted || lowRate);
+  $("lvl").style.width = Math.min(100, Math.sqrt(s.level) * 140) + "%";
+  for (const id of ["gain", "vibrato"]) {
+    if (!dragging.has(id)) $(id).value = s.params[id].value;
+    $(id + "v").textContent = s.params[id].text;
+  }
+  if (lyricsSeen !== s.lyrics && document.activeElement !== $("lyrics")) $("lyrics").value = lyricsSeen = s.lyrics;
+
+  const key = s.syllables.join("|") + "/" + s.cursor + "/" + s.sung;
+  if (key !== sylKey) {
+    sylKey = key;
+    $("syl").replaceChildren(...s.syllables.map((t, i) => {
+      const e = document.createElement("span");
+      e.textContent = t;
+      if (i === s.sung) e.className = "sung"; else if (i === s.cursor) e.className = "next";
+      return e;
+    }));
+  }
+  if (s.note !== noteShown) {
+    for (const k of keys.children) k.classList.toggle("on", +k.dataset.midi === s.note);
+    noteShown = s.note;
+  }
+
+  // level history: shows whether the page keeps up at the display rate inside the host
+  hist[hi++ % hist.length] = s.level;
+  const dpr = window.devicePixelRatio || 1, cw = scope.clientWidth * dpr, ch = scope.clientHeight * dpr;
+  if (scope.width !== cw || scope.height !== ch) { scope.width = cw; scope.height = ch; }
+  g.clearRect(0, 0, cw, ch);
+  g.strokeStyle = "#7dffb0"; g.lineWidth = 1.5 * dpr; g.shadowColor = "#7dffb0"; g.shadowBlur = 6 * dpr;
+  g.beginPath();
+  for (let i = 0; i < hist.length; i++) {
+    const v = hist[(hi + i) % hist.length], x = (i / (hist.length - 1)) * cw, y = ch - Math.min(1, Math.sqrt(v) * 1.4) * (ch - 8) - 4;
+    i ? g.lineTo(x, y) : g.moveTo(x, y);
+  }
+  g.stroke();
+}
+
+async function loop() {
+  try {
+    const r = await fetch("/state", { cache: "no-store" });
+    draw(await r.json());
+  } catch (e) {
+    $("fault").textContent = "state: " + e;
+  }
+  frames++;
+  const t = performance.now();
+  if (t - fpsT > 1000) { $("fps").textContent = Math.round(frames * 1000 / (t - fpsT)) + " fps"; frames = 0; fpsT = t; }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

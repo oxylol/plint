@@ -176,6 +176,13 @@
 		reverse_proxy localhost:5240
 	}
 
+	@chimera host chimera.{$DOMAIN}
+	handle @chimera {
+		# Chimera (apps/chimera): a voice from a simulated airway. Own look; the page
+		# runs the engine in the browser, /api/speak renders a WAV on Plint.
+		reverse_proxy localhost:5270
+	}
+
 	@stocks host stocks.{$DOMAIN}
 	handle @stocks {
 		# Stocks (apps/stocks): stock-trading models on paper, side by side. The page and

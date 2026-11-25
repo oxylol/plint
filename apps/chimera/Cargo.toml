@@ -1,0 +1,27 @@
+[workspace]
+resolver = "3"
+members = ["crates/chimera", "crates/chimera-wasm", "crates/chimera-cli", "crates/chimera-plugin", "crates/chimera-serve"]
+
+[workspace.package]
+version = "0.2.1"
+edition = "2024"
+license = "MIT"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+debug = false
+
+# Plugins run inside someone else's process: a panic must unwind (nih-plug catches it at the
+# host boundary) instead of aborting the DAW. Build them with `--profile plugin`.
+[profile.plugin]
+inherits = "release"
+panic = "unwind"
+
+[profile.dev]
+opt-level = 1
+
+[profile.test]
+opt-level = 3

@@ -61,6 +61,7 @@
     ["poly", "poly", "Polybot", 5190],
     ["stocks", "stocks", "Stocks", 5250],
     ["accrete", "accrete", "Accrete", 5240],
+    ["chimera", "chimera", "Chimera", 5270],
     ["stremio", "stremio", "Stremio", 8095],
     ["spiderfoot", "spider", "SpiderFoot", 5260],
     "HEALTH",

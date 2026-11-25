@@ -1,0 +1,467 @@
+/**
+ * The plugin's UI end to end, without a DAW: the real page in headless Chromium, talking to the real
+ * Bridge and Core in `examples/ui_harness.rs` (Rust runs the voice; its audio goes nowhere). The test
+ * also plays the host's part: notes, automation, transport, project restore. Only the webview itself
+ * (WKWebView over the custom scheme) isn't covered.
+ *
+ * Usage: bun run build && cargo build -p chimera-plugin --release --example ui_harness && bun tools/plugin-e2e.ts [outdir]
+ */
+import { chromium } from "playwright-core";
+import { mkdirSync, readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+
+const PORT = 8549;
+const base = `http://127.0.0.1:${PORT}`;
+const outDir = process.argv[2] ?? "out/plugin-e2e";
+mkdirSync(outDir, { recursive: true });
+
+const harness = spawn("target/release/examples/ui_harness", [String(PORT)], { stdio: "inherit" });
+for (let i = 0; i < 100; i++) {
+  try {
+    await fetch(`${base}/params`);
+    break;
+  } catch {
+    await new Promise((r) => setTimeout(r, 100));
+  }
+}
+
+const host = (path: string, body: string | number = "") => fetch(`${base}/test/${path}`, { method: "POST", body: String(body) });
+
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"] });
+// the window's first size: WINDOW_DEFAULT in crates/chimera-plugin/src/bridge.rs
+const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+const errors: string[] = [];
+page.on("console", (m) => {
+  if (m.type() === "error") errors.push(m.text());
+});
+page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+
+let failed = 0;
+function check(name: string, ok: unknown, detail?: unknown): void {
+  console.log(`${ok ? "  ok  " : " FAIL "} ${name}${!ok && detail !== undefined ? `: ${JSON.stringify(detail)}` : ""}`);
+  if (!ok) failed++;
+}
+
+/** Wait for something the page or Rust should come to. Generous: on a loaded machine SwiftShader's
+ * frames, and so the page's polls, can drop to a few a second. */
+async function until(name: string, fn: () => Promise<unknown> | unknown, ms = 10000): Promise<void> {
+  const t0 = Date.now();
+  let last: unknown;
+  while (Date.now() - t0 < ms) {
+    last = await fn();
+    if (last) return check(name, true);
+    await page.waitForTimeout(25);
+  }
+  check(name, false, last);
+}
+
+const state = () => page.evaluate(() => fetch("/state").then((r) => r.json()));
+const tele = () => page.evaluate(() => (window as never as { __chimeraEngine: { latest: { t: { clock: number; voicing: number; gate: number; f0: number }; body: { female: number } } | null } }).__chimeraEngine.latest && { ...(window as never as { __chimeraEngine: { latest: { t: { clock: number; voicing: number; gate: number; f0: number } } } }).__chimeraEngine.latest.t, body: (window as never as { __chimeraEngine: { latest: { body: { female: number; child: number } } } }).__chimeraEngine.latest.body });
+const next = () => page.locator(".syl.next").textContent();
+const params = () => fetch(`${base}/params`).then((r) => r.json() as Promise<Record<string, number>>);
+
+// as WKWebView on a Mac, where the page sends clipboard shortcuts to Rust (pluginBridge.ts)
+await page.addInitScript(() => Object.defineProperty(navigator, "platform", { get: () => "MacIntel" }));
+
+try {
+  await page.goto(base, { waitUntil: "load" });
+  await page.waitForSelector(".topbar");
+  // what the page sends Rust, to look at
+  await page.evaluate(() => {
+    const ipc = window.ipc!, send = ipc.postMessage.bind(ipc);
+    const sent: string[] = ((window as never as { __sent: string[] }).__sent = []);
+    ipc.postMessage = (m: string) => (sent.push(m), send(m));
+  });
+
+  // ---- what the plugin shows
+  const modes = await page.locator(".topbar [role=radiogroup] [role=radio], .topbar .segmented button").allTextContents();
+  check("Sing, Play, Speak and Beatbox are offered, and not Bestiary", modes.includes("Sing") && modes.includes("Play") && modes.includes("Speak") && modes.includes("Beatbox") && !modes.includes("Bestiary"), modes);
+  check("no start prompt: the voice is already running", (await page.locator(".start-prompt").count()) === 0);
+  check("no link away from the plugin", (await page.locator(".repo-link").count()) === 0);
+  check("no Web MIDI button", (await page.locator("button.midi").count()) === 0);
+  check("no demo songs", (await page.locator(".demo-songs").count()) === 0);
+  check("no tune bar: the host plays", (await page.locator(".right-sing .action-bar").count()) === 0);
+  // the REAPER test clicks tabs where host-test/run.sh says they are (from the page's right edge)
+  const runSh = readFileSync("crates/chimera-plugin/host-test/run.sh", "utf8");
+  for (const [name, key] of [["Play", "PLAY_FROM_RIGHT"], ["Beatbox", "BEATBOX_FROM_RIGHT"]]) {
+    const want = Number(runSh.match(new RegExp(`^${key}=(\\d+)`, "m"))?.[1]);
+    const wantY = Number(runSh.match(/^TAB_Y=(\d+)/m)?.[1]);
+    const at = await page.getByRole("radio", { name }).evaluate((e) => {
+      const r = e.getBoundingClientRect();
+      return { fromRight: innerWidth - (r.x + r.width / 2), y: r.y + r.height / 2 };
+    });
+    check(`the ${name} tab is where the host test clicks`, Math.abs(at.fromRight - want) < 4 && Math.abs(at.y - wantY) < 4, `${at.fromRight.toFixed(0)} from the right, ${at.y.toFixed(0)} down; run.sh says ${want}, ${wantY}`);
+  }
+  await until("telemetry reaches the page", async () => (await tele())?.clock);
+  const c0 = (await tele())!.clock;
+  await until("the voice clock moves", async () => (await tele())!.clock > c0);
+  check("the engine load shows", /Engine load \d+ %/.test((await page.locator(".load").textContent()) ?? ""));
+  await until("the load is a real measurement", async () => !/load 0 %/.test((await page.locator(".load").textContent()) ?? ""));
+
+  // ---- lyrics belong to Rust
+  await until("the syllables come from the plugin", async () => (await page.locator(".syl").count()) > 5);
+  await page.locator(".lyrics textarea").fill("one two three");
+  await until("new lyrics come back as syllables", async () => (await page.locator(".syl").count()) === 3);
+  check("the project keeps them", (await state()).settings.lyrics === "one two three");
+  check("the cursor is at the start", (await next()) === "one");
+
+  // ---- the page's keys
+  await page.screenshot({ path: `${outDir}/sing.png` });
+  const key = page.locator(".key.white").nth(9);
+  const box = (await key.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height - 8);
+  await page.mouse.down();
+  await until("a key on the page sings", async () => (await tele())!.voicing > 0.3);
+  await until("and the cursor moves", async () => (await next()) === "two");
+  await until("the sung syllable shows", async () => (await page.locator(".syl.now, .syl.sung").count()) >= 0);
+  await page.screenshot({ path: `${outDir}/sing-note.png` });
+  await page.mouse.up();
+  await until("releasing it ends the note", async () => (await tele())!.voicing < 0.1);
+
+  // ---- the host's keys
+  await host("note", 64);
+  await until("a host note sings the next syllable", async () => (await next()) === "three");
+  await until("the page sees the voice singing", async () => (await tele())!.voicing > 0.3);
+  await host("off", 64);
+  await until("a host note-off ends it", async () => (await tele())!.voicing < 0.1);
+  await host("note", 62);
+  await until("past the last syllable the lyrics wrap", async () => (await next()) === "one");
+  await host("off", 62);
+
+  // ---- the piano roll and the words follow what Rust plays
+  const rollNotes = () => page.evaluate(() => (window as never as { __chimeraRoll: { notes: { midi: number; t0: number; t1: number | null; text: string }[] } }).__chimeraRoll.notes.map((n) => ({ ...n })));
+  await page.locator(".lyrics textarea").fill("la - la");
+  await until("lyrics with a melisma", async () => (await page.locator(".syl").count()) === 3);
+  const seen = (await rollNotes()).length;
+  await host("note", 60);
+  await until("a note goes on the roll", async () => (await rollNotes()).length === seen + 1);
+  await host("note", 64);
+  await until("a melisma adds its pitch to the roll", async () => (await rollNotes()).length === seen + 2);
+  check("as a held vowel, not a new syllable", (await rollNotes()).at(-1)?.text === "~", (await rollNotes()).at(-1));
+  await host("off", 64);
+  await until("releasing it glides back to the key still down", async () => (await rollNotes()).at(-1)?.text === "~");
+  await host("off", 60);
+  await until("the last release ends the note on the roll", async () => (await rollNotes()).at(-1)?.t1 !== null);
+  // the same pitch again, its release and press closer together than a poll
+  await host("note", 60);
+  await until("the next syllable", async () => (await rollNotes()).at(-1)?.t1 === null && (await rollNotes()).at(-1)?.text === "la");
+  const before2 = (await rollNotes()).length;
+  await host("off", 60);
+  await host("note", 60);
+  await until("a repeated pitch is a new note on the roll", async () => (await rollNotes()).length === before2 + 1);
+  await host("off", 60);
+  await page.locator(".lyrics textarea").fill("one two three");
+  await until("back to three syllables", async () => (await page.locator(".syl").count()) === 3);
+
+  // ---- the transport
+  await page.locator(".syl").nth(1).click();
+  await until("a syllable picked while stopped takes the cursor", async () => (await next()) === "two");
+  check("and is saved as where playing starts", (await state()).settings.startSyllable === 1);
+  await host("play");
+  await page.waitForTimeout(100);
+  check("playing starts from it", (await next()) === "two");
+  await host("note", 60);
+  await until("a note moves on", async () => (await next()) === "three");
+  await host("off", 60);
+  await host("stop");
+  await page.waitForTimeout(50);
+  await host("play");
+  await until("playing again goes back to it", async () => (await next()) === "two");
+  await host("stop");
+
+  // ---- parameters: both ways, and one gesture per drag
+  const vibrato = page.getByRole("slider", { name: "Vibrato" });
+  await vibrato.focus();
+  const before = (await params()).vibrato;
+  await page.keyboard.press("PageUp");
+  await page.keyboard.press("PageUp");
+  await until("an encoder moves the host parameter", async () => (await params()).vibrato > before);
+  const opening = await (await host("gestures")).text();
+  check("the gesture is open while moving", opening.includes("begin vibrato") && !opening.includes("end vibrato"), opening);
+  await until("and ends when the moves stop", async () => (await (await host("gestures")).text()).includes("end vibrato"));
+  check("two moves were one gesture", ((await (await host("gestures")).text()).match(/begin vibrato/g) ?? []).length === 1);
+
+  await host("param", "vibrato=12");
+  await until("host automation moves the encoder", async () => (await vibrato.getAttribute("aria-valuetext"))?.startsWith("12 "));
+  await host("param", "gain=-30");
+  await until("host automation moves the volume slider", async () => Number(await page.locator(".volume input").inputValue()) === 0);
+  await host("param", "gain=0");
+
+  // ---- the body
+  await page.getByRole("radio", { name: "Female" }).click();
+  await until("a body change reaches the voice", async () => (await tele())!.body.female === 1);
+  const s1 = await state();
+  check("and the project", s1.settings.body.female === 1 && s1.settings.f0 === 205, s1.settings);
+  await host("note", 69);
+  await until("the new body sings", async () => (await tele())!.voicing > 0.3);
+  await host("off", 69);
+  const clock = (await tele())!.clock;
+  const future = (await rollNotes()).filter((n) => n.t0 > clock + 0.5);
+  check("nothing from the old voice's timeline is on the roll", future.length === 0, future);
+
+  // ---- Play
+  await page.getByRole("radio", { name: "Play" }).click();
+  await until("Play is saved", async () => (await state()).settings.mode === "play");
+  await page.waitForSelector(".right-play");
+  await page.screenshot({ path: `${outDir}/play.png` });
+  // Play's main button: Breathe, then Stop while it breathes
+  await page.getByRole("button", { name: "Breathe" }).click();
+  await until("Breathe breathes", async () => (await tele())!.gate > 0.5);
+  await page.getByRole("button", { name: "Stop" }).click();
+  await until("and stops", async () => (await tele())!.gate < 0.1);
+  await host("note", 69);
+  await until("a host key breathes at its pitch", async () => Math.abs((await tele())!.f0 - 440) < 8);
+  await until("the readout follows it", async () => /440 Hz/.test((await page.locator(".s-keys").textContent()) ?? ""));
+  await host("off", 69);
+  await page.getByRole("button", { name: "Whisper" }).click();
+  await until("a saved setting reaches the project", async () => (await state()).settings.voiced === false);
+  await page.getByRole("button", { name: "Whisper" }).click();
+  // the 3D face is a chunk of its own, over the same protocol
+  await page.getByRole("checkbox", { name: "3D" }).click().catch(() => page.getByText("3D", { exact: true }).click());
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: `${outDir}/play-3d.png` });
+  await page.getByRole("radio", { name: "Sing" }).click();
+  await until("back to Sing", async () => (await state()).settings.mode === "sing");
+
+  // ---- a project restored while the window is open
+  await host("restore", JSON.stringify({ version: 1, lyrics: "la la land", body: { female: 0, child: 1 }, mode: "play", artic: { jaw: 1.5 }, tipFree: true, voiced: true, f0: 300, startSyllable: 0 }));
+  await until("a restore replaces the mode on the page", async () => (await page.locator(".right-play").count()) === 1);
+  // a page that hasn't seen the restore yet can't overwrite it
+  await page.evaluate(() => window.ipc!.postMessage(JSON.stringify({ rev: -2, type: "lyrics", text: "stale" })));
+  await page.waitForTimeout(100);
+  check("a command from before the restore is dropped", (await state()).settings.lyrics === "la la land");
+  check("and the mode", (await state()).settings.mode === "play");
+  await until("and the voice", async () => (await tele())?.body.child === 1);
+  await page.getByRole("radio", { name: "Sing" }).click();
+  await until("the restored lyrics show", async () => (await page.locator(".lyrics textarea").inputValue()) === "la la land");
+  await until("as syllables", async () => (await page.locator(".syl").count()) === 3);
+
+  // ---- a new window starts from the plugin, not from the page's defaults
+  const reopened = await browser.newPage({ viewport: { width: 1280, height: 760 } });
+  await reopened.goto(base, { waitUntil: "load" });
+  await reopened.waitForSelector(".topbar");
+  check("a reopened window shows the project", (await reopened.locator(".lyrics textarea").inputValue()) === "la la land");
+  const after = await state();
+  check("and sent nothing back", after.settings.lyrics === "la la land" && after.settings.body.child === 1 && after.settings.artic.jaw === 1.5 && after.settings.f0 === 300, after.settings);
+  await reopened.close();
+
+  // ---- the live spectrum: the output's samples reach the page's analysers
+  await page.getByRole("radio", { name: /^play$/i }).click();
+  await host("note", 57);
+  await until("a held note shows in the spectrum's data", () => page.evaluate(() => {
+    const an = (window as never as { __chimeraEngine: { analyser: { frequencyBinCount: number; getFloatFrequencyData(o: Float32Array): void }; sampleRate: number } }).__chimeraEngine;
+    const out = new Float32Array(an.analyser.frequencyBinCount);
+    an.analyser.getFloatFrequencyData(out);
+    // the 220 Hz fundamental stands well above the noise floor up at 20 kHz
+    const bin = (f: number) => Math.round((f / an.sampleRate) * 2 * out.length);
+    return out[bin(220)] > -80 && out[bin(220)] > out[bin(20000)] + 20;
+  }));
+  await host("off", 57);
+
+  // ---- Speak: each note says the next line
+  const modeBefore = (await state()).settings.mode as string;
+  await page.getByRole("radio", { name: /^speak$/i }).click();
+  await until("Rust is in Speak", async () => (await state()).settings.mode === "speak");
+  const say = page.getByRole("textbox", { name: "Text to speak" });
+  await say.fill("Hello there, it is so good to see you again.\nNice to meet you.");
+  // in Bitwig ⌘C and ⌘V did nothing here: no Edit menu sends them to the webview, so the page asks Rust
+  const edits = () => page.evaluate(() => (window as never as { __sent: string[] }).__sent.map((m) => JSON.parse(m)).filter((m) => m.type === "edit").map((m) => m.action));
+  await say.press("Meta+A");
+  await say.press("Meta+C");
+  await say.press("Meta+V");
+  await page.getByRole("radio", { name: /^speak$/i }).press("Meta+V");
+  check("⌘A, ⌘C and ⌘V in the text box go to Rust, and not elsewhere", JSON.stringify(await edits()) === '["selectAll","copy","paste"]', await edits());
+  check("and the text box keeps its text", (await say.inputValue()) === "Hello there, it is so good to see you again.\nNice to meet you.");
+  await until("each line of the text is a line", async () => (await page.locator(".say-line").count()) === 2);
+  const nextLine = () => page.locator(".say-line.next").textContent();
+  check("the first is next", (await nextLine()) === "Hello there, it is so good to see you again.");
+  const shown = () => page.locator(".transcription").textContent();
+  check("nothing transcribed until it's said", ((await shown()) ?? "").trim() === "");
+  await host("note", 60);
+  await until("a note says the line: its transcription shows", async () => /^\/.*\/$/.test((await shown()) ?? ""));
+  await until("the voice is voiced", async () => (await tele())!.voicing > 0.3);
+  await until("and the next line is marked", async () => (await nextLine()) === "Nice to meet you.");
+  await until("the page has the plan's words", () => page.evaluate(async () => {
+    const line = await fetch("/speech/0").then((r) => r.json());
+    return line.phrases[0].words[0] === "hello" && line.plan.gestures.length > 0;
+  }));
+  await host("off", 60);
+  await page.waitForTimeout(100);
+  check("a line isn't stopped by its note's release", (await tele())!.voicing > 0.1 || (await page.evaluate(() => fetch("/speech").then((r) => r.ok))));
+  // Speak's main button is Stop while a line sounds (the first line is long, so it still is)
+  await page.getByRole("button", { name: "Stop", exact: true }).click();
+  await until("Stop stops it", async () => (await tele())!.voicing < 0.1);
+  await page.getByRole("button", { name: "Speak", exact: true }).click();
+  await until("the Speak button says the next line", async () => (await nextLine()) === "Hello there, it is so good to see you again." && (await tele())!.voicing > 0.1);
+  // picking a line while stopped is where playing starts
+  await page.locator(".say-line").nth(1).click();
+  await until("a line can be picked", async () => (await nextLine()) === "Nice to meet you." && (await state()).settings.speech.startLine === 1);
+  await host("play");
+  await until("the transport starts from it", async () => (await nextLine()) === "Nice to meet you.");
+  await host("note", 60);
+  await until("and a note says it", async () => (await nextLine()) === "Hello there, it is so good to see you again.");
+  await host("off", 60);
+  await host("stop");
+  await until("the transport's stop silences it", async () => (await tele())!.voicing < 0.1);
+  // the chart says one sound, without moving the place
+  const place = await nextLine();
+  await page.locator("button.ipa", { hasText: /^p$/ }).click();
+  await until("a pad says its sound", async () => /p/.test((await shown()) ?? "") && /ɑ/.test((await shown()) ?? ""));
+  check("and keeps the place", (await nextLine()) === place);
+  // the rate and the IPA toggle replan
+  const planEnd = () => page.evaluate(() => fetch("/speech/0").then((r) => r.json()).then((l) => l.plan.end as number));
+  const slow = await planEnd();
+  await page.getByRole("slider", { name: /rate/i }).first().press("End");
+  await until("a faster rate replans the lines", async () => (await planEnd()) < slow);
+  await page.getByRole("button", { name: "Text is IPA" }).click();
+  await page.getByRole("textbox", { name: "IPA to speak" }).fill("ˈhɛloʊ");
+  await until("IPA is said as written", async () => (await page.locator(".say-line").count()) === 1 && (await state()).settings.speech.ipa === true);
+  await page.getByRole("button", { name: "Text is IPA" }).click();
+  await until("back to text", async () => (await state()).settings.speech.ipa === false);
+  await say.fill("Saved with the project.");
+  await until("the text is in the project's state", async () => (await state()).settings.speech.text === "Saved with the project.");
+  // restored projects bring their text
+  const project = (await state()).settings;
+  project.speech = { text: "From a restored project.", ipa: false, rate: 1, startLine: 0 };
+  await host("restore", JSON.stringify(project));
+  await until("a restore brings its text", async () => (await say.inputValue()) === "From a restored project." && (await page.locator(".say-line").first().textContent()) === "From a restored project.");
+  await page.getByRole("radio", { name: new RegExp(`^${modeBefore}$`, "i") }).click();
+  await until("and out of Speak again", async () => (await state()).settings.mode === modeBefore);
+
+  // ---- Beatbox: the pattern follows the host, and notes are pads or a hum
+  await page.getByRole("radio", { name: /^beatbox$/i }).click();
+  await until("Rust is in Beatbox, in its ready posture", async () => {
+    const s = (await state()).settings;
+    return s.mode === "beatbox" && s.artic.jaw === 0.4;
+  });
+  // Beatbox's main button, and the pattern and tempo it shows (main's action bar and Tempo screen)
+  const playButton = page.locator(".right-beatbox .act-primary");
+  const pattern = () => page.getByRole("combobox", { name: "Pattern" }).evaluate((s: HTMLSelectElement) => s.selectedOptions[0]?.textContent ?? "");
+  // what shows (innerText: not the encoder readout's hidden sizing copies, and in the CSS's capitals)
+  const tempoShown = () => page.locator(".s-transport").innerText();
+  const beatChip = (name: string) => page.locator(".right-beatbox .action-bar .chip", { hasText: name });
+  const playhead = () => page.locator(".seq-row").first().locator(".cell.now").count();
+  check("nothing runs yet", (await playhead()) === 0 && (await playButton.textContent()) === "Play beat");
+  check("the first beat is the saved one", /Boots and cats/.test(await pattern()));
+  // the button, with the host stopped
+  await playButton.click();
+  await until("the button runs the pattern", async () => (await playhead()) === 1);
+  await playButton.click();
+  await until("and stops it", async () => (await playhead()) === 0 && (await playButton.textContent()) === "Play beat");
+  // the host's transport, at its tempo
+  await host("tempo", 140);
+  await host("play");
+  await until("the host's transport runs it", async () => (await playhead()) === 1 && (await playButton.textContent()) === "With host");
+  await until("at the host's tempo", async () => /(^|\D)140\s*bpm/i.test(await tempoShown()));
+  check("and the button stands aside", await playButton.isDisabled());
+  // the playhead moves in step with the transport
+  const steps = new Set<number>();
+  for (let i = 0; i < 40 && steps.size < 4; i++) {
+    steps.add(await page.locator(".seq-row").first().locator(".cell").evaluateAll((cs) => cs.findIndex((c) => c.classList.contains("now"))));
+    await page.waitForTimeout(30);
+  }
+  check("the playhead moves", steps.size >= 4, [...steps]);
+  await host("seek", 8);
+  await until("a seek keeps it running", async () => (await playhead()) === 1);
+  await until("the waterfall has sound in it", () => page.evaluate(() => {
+    const an = (window as never as { __chimeraEngine: { analyserFast: { frequencyBinCount: number; getFloatFrequencyData(o: Float32Array): void } } }).__chimeraEngine.analyserFast;
+    const out = new Float32Array(an.frequencyBinCount);
+    an.getFloatFrequencyData(out);
+    return Math.max(...out) > -70;
+  }));
+  await host("stop");
+  await until("a stop stops it, and the button is back", async () => (await playhead()) === 0 && (await playButton.textContent()) === "Play beat");
+  // told not to follow
+  await beatChip("Follow").click();
+  await until("following is a saved setting", async () => (await state()).settings.beat.follow === false);
+  await host("play");
+  await page.waitForTimeout(150);
+  check("and the host's playing doesn't start it", (await playhead()) === 0);
+  await host("stop");
+  await beatChip("Follow").click();
+  await until("following again", async () => (await state()).settings.beat.follow === true);
+  // editing the pattern
+  const firstCell = page.locator(".seq-row").nth(2).locator(".cell").nth(1);
+  await firstCell.click();
+  await until("a cell edits the saved pattern", async () => {
+    const b = (await state()).settings.beat;
+    return b.preset === null && b.steps[1]?.id === "tss";
+  });
+  await page.getByRole("combobox", { name: "Pattern" }).selectOption("Four on the floor");
+  await until("an example replaces it, with its tempo", async () => {
+    const b = (await state()).settings.beat;
+    return b.preset === "Four on the floor" && b.bpm === 122;
+  });
+  await beatChip("Mic FX").click();
+  await until("the close mic is a saved setting", async () => (await state()).settings.beat.mic === false);
+  await beatChip("Mic FX").click();
+  await until("and on again", async () => (await state()).settings.beat.mic === true);
+  // pads and notes
+  const level = () => page.evaluate(() => {
+    const an = (window as never as { __chimeraEngine: { analyserFast: { frequencyBinCount: number; getFloatFrequencyData(o: Float32Array): void } } }).__chimeraEngine.analyserFast;
+    const out = new Float32Array(an.frequencyBinCount);
+    an.getFloatFrequencyData(out);
+    return Math.max(...out);
+  });
+  await until("it's quiet before the pads", async () => (await level()) < -80);
+  await page.locator(".pad", { hasText: "Kick" }).first().dispatchEvent("pointerdown");
+  await until("a pad plays its sound", async () => (await level()) > -70);
+  await until("and it ends", async () => (await level()) < -80);
+  await host("note", 36);
+  await until("a drum note plays its pad", async () => (await level()) > -70);
+  await host("off", 36);
+  await until("and it ends by itself", async () => (await level()) < -80);
+  await host("note", 72);
+  await until("a high note hums", async () => (await tele())!.voicing > 0.3);
+  await until("two octaves down", async () => Math.abs((await tele())!.f0 - 130.81) < 8);
+  await host("off", 72);
+  await until("and stops", async () => (await tele())!.voicing < 0.1);
+  // a restored project brings its beat
+  const withBeat = (await state()).settings;
+  withBeat.beat = { steps: [{ id: "t" }, null, { id: "Pf" }, null], bpm: 77, swing: 0.1, preset: null, mic: false, follow: false };
+  await host("restore", JSON.stringify(withBeat));
+  await until("a restore brings its beat", async () => /Your beat/.test(await pattern()) && /(^|\D)77\s*bpm/i.test(await tempoShown()) && (await page.locator(".seq-row").first().locator(".cell").count()) === 4);
+  check("and its settings", !/\bon\b/.test((await beatChip("Follow").getAttribute("class")) ?? "") && !/\bon\b/.test((await beatChip("Mic FX").getAttribute("class")) ?? ""));
+  await host("tempo", 120);
+  await page.getByRole("radio", { name: /^sing$/i }).click();
+  await until("and out of Beatbox", async () => (await state()).settings.mode === "sing");
+
+  // ---- the window's grip
+  const grip = page.locator(".resize-grip");
+  const g = (await grip.boundingBox())!;
+  await page.mouse.move(g.x + 8, g.y + 8);
+  await page.mouse.down();
+  await page.mouse.move(g.x + 40, g.y + 30, { steps: 4 });
+  await page.mouse.up();
+  await until("dragging the grip tells Rust", async () => /grip Begin\ngrip Move/.test(await (await host("gestures")).text()));
+  await grip.dblclick();
+  await until("double-clicking it asks for the first size", async () => (await (await host("gestures")).text()).includes("grip Reset"));
+  const scrolls = await page.evaluate(() => document.documentElement.scrollHeight > innerHeight);
+  check("the window's first size doesn't scroll", !scrolls);
+
+  // ---- the window closes with a key held and a gesture open
+  const key2 = page.locator(".key.white").nth(5);
+  const b2 = (await key2.boundingBox())!;
+  await page.mouse.move(b2.x + b2.width / 2, b2.y + b2.height - 8);
+  await page.mouse.down();
+  await until("held", async () => (await tele())!.voicing > 0.3);
+  await page.evaluate(async () => {
+    const { revision } = await fetch("/state").then((r) => r.json());
+    window.ipc!.postMessage(JSON.stringify({ rev: revision, type: "param", id: "fry", value: 0.3 }));
+  });
+  await page.waitForTimeout(50);
+  await host("close");
+  await until("closing the window lifts the key", async () => (await tele())!.voicing < 0.1);
+  await until("and ends the gesture", async () => (await (await host("gestures")).text()).includes("end fry"));
+  await page.mouse.up();
+
+  check("no errors on the page", errors.length === 0, errors);
+} catch (e) {
+  check("the run finished", false, String(e));
+  await page.screenshot({ path: `${outDir}/failure.png` }).catch(() => undefined);
+} finally {
+  await browser.close();
+  harness.kill();
+}
+console.log(failed ? `\n${failed} failed` : "\nall passed");
+process.exit(failed ? 1 : 0);

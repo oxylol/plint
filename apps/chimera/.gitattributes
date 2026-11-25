@@ -1,0 +1,13 @@
+# Text files are LF in every checkout, whatever core.autocrlf says: the tests compare
+# the generated tables byte for byte with what the generators write (LF).
+* text=auto eol=lf
+
+# Never touch binary fixtures and assets.
+*.f32 binary
+*.gz binary
+*.wasm binary
+*.otf binary
+*.woff2 binary
+*.png binary
+*.jpg binary
+*.ico binary

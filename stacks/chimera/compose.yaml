@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · chimera stack
+#  Chimera: a voice from a simulated airway (lungs, folds, tongue, lips), no
+#  samples and no neural net. Plint's fork of jamesondh/chimera-vocal-synth,
+#  source in apps/chimera. The container runs what the host built
+#  (apps/chimera/plint-build.sh: Rust on the host, Filip's choice), so it only
+#  needs the host's own Ubuntu: the page's files and POST /api/speak
+#  (text or a JSON script in, a WAV out).
+# ─────────────────────────────────────────────────────────────
+name: chimera
+
+services:
+  chimera:
+    image: ubuntu:24.04
+    container_name: chimera
+    restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
+    command: ["/app/chimera-serve"]
+    ports:
+      - "127.0.0.1:5270:5270"
+    environment:
+      TZ: ${TZ}
+      HOST: 0.0.0.0
+      PORT: 5270
+      CHIMERA_SITE: /app/site
+      # renders at once: each takes one core for about half the length of what it says
+      CHIMERA_JOBS: 2
+    volumes:
+      - ../../apps/chimera/target/release/chimera-serve:/app/chimera-serve:ro
+      - ../../apps/chimera/dist:/app/site:ro
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 512m
+    cpus: 2
+    networks:
+      - chimera
+
+networks:
+  chimera:
+    name: plint-chimera

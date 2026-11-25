@@ -1,0 +1,169 @@
+# Copy of .github/workflows/plugin.yml: the agents' GitHub App can't write that folder, so changes
+# are staged here for the owner to paste. Each job only calls scripts in crates/chimera-plugin, so
+# it should rarely change. The Windows job (windows/ci.sh) is left out until that build ships.
+name: plugin
+
+on:
+  push:
+    branches: [main, "t3/**"]
+    # a release: CI builds and tests it on each system, then publishes it (GitHub doesn't apply
+    # `paths` to tags)
+    tags: ["plugin-v*"]
+    paths:
+      - "crates/**"
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "bun.lock"
+      - "vite.config.ts"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/plugin.yml"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: plugin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin,wasm32-unknown-unknown
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test the plugin and the engine's live path
+        run: |
+          cargo test -p chimera-plugin --release
+          cargo test -p chimera --release --test singer_alloc
+
+      # Developer ID signing; does nothing without the secrets, as in a fork's pull request
+      - name: Signing certificate
+        run: crates/chimera-plugin/macos/sign.sh keychain
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+
+      - name: Build and install the bundles
+        run: crates/chimera-plugin/macos/build.sh --install
+
+      - name: Notarise
+        run: crates/chimera-plugin/macos/sign.sh notarize
+        env:
+          NOTARY_KEY_P8: ${{ secrets.NOTARY_KEY_P8 }}
+          NOTARY_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.NOTARY_ISSUER_ID }}
+
+      # the release's archive (on a tag, only from a Developer ID build Apple has notarised), and
+      # public/install.sh run on it as a user would
+      - name: Release archive and the installer
+        run: |
+          crates/chimera-plugin/macos/release.sh ${RELEASE_TAG:+--tag "$RELEASE_TAG"}
+          crates/chimera-plugin/install-test.sh
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/plugin-v') && github.ref_name || '' }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: out/release/CHIMERA-macos.zip
+          if-no-files-found: error
+
+      - name: Package
+        run: |
+          mkdir -p out
+          for b in clap vst3 component; do
+            ditto -c -k --keepParent "target/bundled/CHIMERA.$b" "out/CHIMERA.$b.zip"
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chimera-plugin-macos
+          path: out/*.zip
+          if-no-files-found: error
+
+      - name: Validate
+        run: crates/chimera-plugin/macos/validate.sh
+
+      # what the host test rendered and saw, to listen to and look at
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chimera-host-test-macos
+          path: |
+            target/host-test/*.wav
+            target/host-test/*.jpg
+          if-no-files-found: ignore
+
+
+  linux:
+    # the oldest supported Ubuntu, so the build needs no newer glibc than its (linux/ci.sh checks)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          # the editor's page embeds the engine built for the browser (bun run build)
+          targets: wasm32-unknown-unknown
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Test, build, install, validate, and play it in REAPER
+        run: crates/chimera-plugin/linux/ci.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path: out/release/CHIMERA-linux.tar.gz
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: chimera-host-test-linux
+          path: |
+            target/host-test/*.wav
+            target/host-test/*.log
+          if-no-files-found: ignore
+
+  # on a tag, once every system's build has passed everything: one release with all their archives
+  release:
+    if: startsWith(github.ref, 'refs/tags/plugin-v')
+    needs: [macos, linux]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: out/release
+          merge-multiple: true
+
+      - name: Publish the release
+        run: crates/chimera-plugin/publish.sh "${GITHUB_REF_NAME}"

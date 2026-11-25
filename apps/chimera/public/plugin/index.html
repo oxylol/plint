@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CHIMERA plugin</title>
+    <meta name="description" content="CHIMERA, a voice made of air, as a CLAP, VST3 and AU instrument for macOS and Linux." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <style>
+      @font-face {
+        font-family: "Hershey";
+        src: url("/fonts/AVHersheySimplexLight.otf") format("opentype");
+        font-weight: 100 400;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Hershey";
+        src: url("/fonts/AVHersheySimplexMedium.otf") format("opentype");
+        font-weight: 401 900;
+        font-display: swap;
+      }
+      :root {
+        --blue: #4fb6f2;
+        --blue-mid: #3487c4;
+        --frame: #133954;
+        --amber: #ffb340;
+        --white: #eef6f8;
+        /* text: brighter than the app's screen labels, since this page is read, not glanced at */
+        --text: #cde8fa;
+        --text-dim: #93c6ea;
+        --font: "Hershey", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #000;
+        color: var(--text);
+        font-family: var(--font);
+        /* Hershey's medium face: the light one's hairlines are hard to read in paragraphs */
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      main {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 28px 16px 48px;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      .wordmark {
+        color: var(--white);
+        letter-spacing: 0.4em;
+        font-size: 20px;
+        text-decoration: none;
+      }
+      header a.back {
+        color: var(--blue);
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+      header a.back:hover {
+        color: var(--blue);
+      }
+      section {
+        border: 1px solid var(--frame);
+        padding: 18px 18px 20px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-weight: 400;
+        font-size: 22px;
+        letter-spacing: 0.06em;
+        color: var(--white);
+      }
+      h2 {
+        margin: 0 0 10px;
+        font-weight: 500;
+        font-size: 14px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--blue);
+      }
+      p {
+        margin: 0 0 10px;
+      }
+      p:last-child {
+        margin-bottom: 0;
+      }
+      .download {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin: 8px 0 12px;
+        padding: 10px 22px 10px 16px;
+        border: 1.5px solid var(--amber);
+        background: rgba(255, 179, 64, 0.08);
+        color: #fff4dc;
+        font-size: 17px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        text-decoration: none;
+        text-shadow: 0 0 6px rgba(255, 179, 64, 0.55);
+        box-shadow: 0 0 10px rgba(255, 179, 64, 0.3);
+      }
+      .downloads {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 14px;
+      }
+      .download:hover {
+        background: rgba(255, 179, 64, 0.16);
+      }
+      .download::before {
+        content: "";
+        width: 12px;
+        height: 14px;
+        background: var(--amber);
+        clip-path: polygon(0 0, 100% 0, 100% 55%, 50% 100%, 0 55%);
+      }
+      .dim {
+        color: var(--text-dim);
+      }
+      .dim b {
+        font-weight: inherit;
+        color: var(--text);
+      }
+      /* wraps on a phone rather than hiding the end of the command */
+      pre {
+        margin: 6px 0 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--frame);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        color: var(--white);
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+      code {
+        white-space: nowrap;
+        font-family: var(--mono);
+        font-size: 0.86em;
+        color: var(--white);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+      }
+      th {
+        padding: 10px 0 2px;
+        text-align: left;
+        font-weight: 500;
+        color: var(--text-dim);
+      }
+      tr:first-child th {
+        padding-top: 0;
+      }
+      td {
+        padding: 3px 12px 3px 0;
+        vertical-align: top;
+      }
+      td:last-child {
+        padding-right: 0;
+      }
+      td:last-child code {
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      a {
+        color: var(--blue);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="wordmark" href="/">CHIMERA</a>
+        <a class="back" href="/">Open the voice</a>
+      </header>
+
+      <section>
+        <h1>The plugin</h1>
+        <p>CHIMERA in your DAW: notes sing lyrics, say lines or play mouth drums in time with the host. The same voice and screens as this website, saved with your project.</p>
+        <p class="dim"><b>Mac:</b> CLAP, VST3 and AU. macOS 11 or later, Apple silicon and Intel. Signed and notarised. Tried in REAPER, Bitwig and FL Studio.</p>
+        <p class="dim"><b>Linux:</b> CLAP and VST3, x86_64, glibc 2.35 or later (Ubuntu 22.04, Debian 12, Fedora 36 and newer). The plugin's editor opens in your web browser. Tried in REAPER.</p>
+        <div class="downloads">
+          <a class="download" href="https://github.com/jamesondh/chimera-vocal-synth/releases/latest/download/CHIMERA-macos.zip">Download for Mac</a>
+          <a class="download" href="https://github.com/jamesondh/chimera-vocal-synth/releases/latest/download/CHIMERA-linux.tar.gz">Download for Linux</a>
+        </div>
+        <p class="dim">A Windows build isn't released yet.</p>
+      </section>
+
+      <section>
+        <h2>Install from a terminal</h2>
+        <pre>curl -fsSL https://chimera.audio/install.sh | sh</pre>
+        <p>On a Mac or Linux, it downloads the latest release, checks it, and copies the plugins into your own plugin folders. No password needed. Run it again to update.</p>
+        <p class="dim">Only some formats: <code>| sh -s -- --formats clap,vst3</code>. Remove: <code>| sh -s -- --uninstall</code>.</p>
+      </section>
+
+      <section>
+        <h2>Install by hand</h2>
+        <p>Unpack the download and copy each plugin into its folder. On a Mac, Finder's Go &gt; Go to Folder opens a path.</p>
+        <table>
+          <tr><th colspan="2">Mac</th></tr>
+          <tr><td><code>CHIMERA.clap</code></td><td><code>~/Library/Audio/Plug-Ins/CLAP</code></td></tr>
+          <tr><td><code>CHIMERA.vst3</code></td><td><code>~/Library/Audio/Plug-Ins/VST3</code></td></tr>
+          <tr><td><code>CHIMERA.component</code></td><td><code>~/Library/Audio/Plug-Ins/Components</code></td></tr>
+          <tr><th colspan="2">Linux</th></tr>
+          <tr><td><code>CHIMERA.clap</code></td><td><code>~/.clap</code></td></tr>
+          <tr><td><code>CHIMERA.vst3</code></td><td><code>~/.vst3</code></td></tr>
+        </table>
+        <p style="margin-top: 10px">Then rescan plugins in your DAW and put CHIMERA on an instrument track.</p>
+      </section>
+
+      <section>
+        <h2>Feedback</h2>
+        <p>Found a problem, or got it working in a DAW? <a href="https://github.com/jamesondh/chimera-vocal-synth/issues">Open an issue</a> with the DAW, the format and your system. All releases: <a href="https://github.com/jamesondh/chimera-vocal-synth/releases">on GitHub</a>.</p>
+      </section>
+    </main>
+  </body>
+</html>

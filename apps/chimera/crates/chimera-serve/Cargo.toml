@@ -1,0 +1,17 @@
+[package]
+name = "chimera-serve"
+description = "CHIMERA over HTTP: text or a JSON script in, a WAV out, and the web app's files (Plint's addition)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "chimera-serve"
+path = "src/main.rs"
+
+[dependencies]
+chimera = { path = "../chimera" }
+flate2 = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tiny_http = "0.12"

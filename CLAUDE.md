@@ -60,6 +60,7 @@ Built here (source and README in `apps/<app>`):
 | stocks | 5250 | Stocks: stock-trading models on paper, side by side | stack `stocks` |
 | ultron | 5230 | Ultron: a companion you talk to, in a cloned voice | stack `ultron` |
 | accrete | 5240 | Accrete: an incremental game, a star from dust | stack `accrete` |
+| chimera | 5270 | Chimera: a voice from a simulated airway, as a page and a text-to-speech API | stack `chimera` |
 | ai | 5220 | Plint Chat: Claude-style page that runs Claude Code on Silk models | native `plint-chat.service` |
 | (none) | 4141 | silk-router: localhost-only LLM proxy behind Plint Chat | stack `ai` |
 
@@ -96,7 +97,7 @@ table (Plint Table) is gone for good: its code was never pushed anywhere.
 ├── install.sh        one-shot bootstrap (idempotent)
 ├── bin/plint         the CLI: status · up/down/restart · logs · sync · update · backup · doctor · claude · notify · game · tv
 ├── .env              secrets + detected values (DOMAIN, SERVER_IP, keys). Never commit. Never print.
-├── stacks/<stack>/   one compose.yaml each: core · ops · media · cnc · poly · stocks · ultron · accrete · ai · spider
+├── stacks/<stack>/   one compose.yaml each: core · ops · media · cnc · poly · stocks · ultron · accrete · ai · spider · chimera
 ├── apps/<app>/       what was built here, each with its README
 ├── caddy/Caddyfile   one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/            Plint Terminal: plint.css/js (tokens, strip) · apps/<app>.css/js · home/ (the home page) · fonts/
@@ -150,6 +151,15 @@ What to know before touching one. The rest is in its README.
   `apps/accrete/public/js/data.js`; after changing one, let the bot play it
   (`node apps/accrete/test/bot.js --first`). Other checks: `test/unit.js`, `test/rules.js`, and
   `test/page.js` in a browser against a scratch copy (its head says how).
+- **Chimera**: Plint's fork of jamesondh/chimera-vocal-synth (no samples, no neural net), an
+  experiment of its own: how real can the simulation get. English, the male voice first. Its own
+  page, plus `/api/speak` (text or a JSON script in, a WAV out; `?plan=1` gives the script back as
+  phones and gestures). Built on the host, not in the image: `apps/chimera/plint-build.sh`, then
+  `plint restart chimera` (rustup's Rust in `~/.cargo` and Bun in `~/.bun`; Filip's choice, and
+  his word that new parts are written in Rust where they can be). Engine changes go one measured
+  experiment at a time against real speakers (`docs/hill-climb/README.md`; rig on the array,
+  `apps/chimera/PLINT.md`), and Filip's ear decides. Not started: fitting a real voice to the
+  controls. `apps/chimera/CLAUDE.md` and `AGENTS.md` are the upstream author's, not Filip's.
 - **Plint Chat**: Chat and Code tabs; runs Claude Code on Plint, or on other computers through
   `plint-runner`, with models from silk-router (`SILK_API_KEY`; aliases auto-sonnet/haiku/opus;
   `apps/silk-router/silk-claude` runs Claude Code on it from a shell). Login code by ntfy; tool

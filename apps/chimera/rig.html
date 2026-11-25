@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHIMERA body rig</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #4fb6f2; font: 13px/1.4 ui-sans-serif, system-ui, sans-serif; overflow: hidden; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  form { position: fixed; left: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(0, 0, 0, 0.6); padding: 8px 10px; border: 1px solid #133954; border-radius: 6px; }
+  select, input { accent-color: #4fb6f2; background: #000; color: inherit; border: 1px solid #1f5f8c; border-radius: 4px; font: inherit; }
+</style>
+</head>
+<body>
+<canvas></canvas>
+<form>
+  <label>pose <select name="pose"></select></label>
+  <label>mouth <input name="mouth" type="range" min="0" max="1" step="0.01" value="0"></label>
+  <label>head <select name="look"></select></label>
+  <label>motion <input name="motion" type="file" accept=".fbx,.bvh,.glb,.gltf"></label>
+  <select name="clip" hidden></select>
+</form>
+<script type="module" src="/src/rig/demo.ts"></script>
+</body>
+</html>
