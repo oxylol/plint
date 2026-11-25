@@ -186,6 +186,12 @@
 		}
 	}
 
+	@spider host spider.{$DOMAIN}
+	handle @spider {
+		# SpiderFoot (stack spider): OSINT scans. Ready-made, its own look, no login.
+		reverse_proxy localhost:5260
+	}
+
 	@ultron host ultron.{$DOMAIN}
 	handle @ultron {
 		# Ultron (apps/ultron): a companion you talk to. celeris-1 or Haiku thinks,

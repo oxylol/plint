@@ -76,6 +76,7 @@ Ready-made:
 | backup | 51515 | Kopia | stack `ops` |
 | speed | 8075 | Speedtest Tracker | stack `ops` |
 | stremio | 8095 | Stremio | stack `media` |
+| spider | 5260 | SpiderFoot: OSINT scans (README in `stacks/spider`) | stack `spider` |
 | games | 8080 | AMP game servers | native, user `amp` |
 | host | 9090 | Cockpit | native |
 
@@ -95,7 +96,7 @@ table (Plint Table) is gone for good: its code was never pushed anywhere.
 ├── install.sh        one-shot bootstrap (idempotent)
 ├── bin/plint         the CLI: status · up/down/restart · logs · sync · update · backup · doctor · claude · notify · game · tv
 ├── .env              secrets + detected values (DOMAIN, SERVER_IP, keys). Never commit. Never print.
-├── stacks/<stack>/   one compose.yaml each: core · ops · media · cnc · poly · stocks · ultron · accrete · ai
+├── stacks/<stack>/   one compose.yaml each: core · ops · media · cnc · poly · stocks · ultron · accrete · ai · spider
 ├── apps/<app>/       what was built here, each with its README
 ├── caddy/Caddyfile   one site block per service; wildcard cert via Cloudflare DNS
 ├── theme/            Plint Terminal: plint.css/js (tokens, strip) · apps/<app>.css/js · home/ (the home page) · fonts/

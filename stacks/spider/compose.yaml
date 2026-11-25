@@ -1,0 +1,33 @@
+# ─────────────────────────────────────────────────────────────
+#  Plint · spider stack
+#  SpiderFoot: OSINT scans of a domain, IP, email, name, username or
+#  phone number, 200+ modules. Ready-made, built from its own repo
+#  (no official image; the project's last change is Nov 2023, pinned).
+#  Its own look, no login. Scans, settings and API keys live in its
+#  database in data/spiderfoot. Which keys are worth getting: README.md here.
+# ─────────────────────────────────────────────────────────────
+name: spider
+
+services:
+  spiderfoot:
+    build:
+      context: https://github.com/smicallef/spiderfoot.git#0f815a203afebf05c98b605dba5cf0475a0ee5fd
+    image: plint/spiderfoot:local
+    container_name: spiderfoot
+    restart: unless-stopped
+    user: "${PUID:-1002}:${PGID:-1002}"
+    ports:
+      - "127.0.0.1:5260:5001"
+    volumes:
+      - ../../data/spiderfoot:/var/lib/spiderfoot
+      - /etc/localtime:/etc/localtime:ro   # its Alpine has no zoneinfo, so TZ alone would leave it on UTC
+    # Public resolvers, not AdGuard: a scan has to see what a domain really
+    # resolves to, not AdGuard's block answer (0.0.0.0) for a listed one.
+    dns: [1.1.1.1, 9.9.9.9]
+    mem_limit: 1536m
+    networks:
+      - spider
+
+networks:
+  spider:
+    name: plint-spider
