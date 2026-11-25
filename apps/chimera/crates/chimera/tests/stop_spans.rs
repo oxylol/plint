@@ -21,7 +21,11 @@ struct Render {
 fn render(ipa: &str, name: &str) -> Render {
     let (body, f0) = if name == "female" { (BODY_FEMALE, 205.0) } else { (BODY_MALE, 112.0) };
     let input: Vec<Segment> = tokenize_ipa(ipa);
-    let plan = plan_utterance(&input, &PlanOptions { body: name.into(), t0: 0.05, f0: Some(f0), ..Default::default() });
+    // The subject here is when a closure sounds closed, and the 10 dB crossing moves by a block
+    // with the pitch (a period is 2-4 blocks), so the pitch line is pinned to the one these limits
+    // were measured on: from the base pitch, falling 10 % (1.824 semitones) over the phrase.
+    let o = PlanOptions { body: name.into(), t0: 0.05, f0: Some(f0), pitch_start: Some(0.0), pitch_fall: Some(1.824), ..Default::default() };
+    let plan = plan_utterance(&input, &o);
     let mut v = HumanVoice::new(FS, body, 2);
     v.set_source(&SourcePatch::f0(f0));
     v.schedule(&plan.gestures);

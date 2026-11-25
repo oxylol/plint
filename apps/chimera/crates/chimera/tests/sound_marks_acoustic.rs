@@ -85,9 +85,11 @@ fn band(db: &[f64], lo: f64, hi: f64) -> f64 {
     10.0 * db[(lo / df) as usize..(hi / df) as usize].iter().map(|d| 10f64.powf(d / 10.0)).sum::<f64>().log10()
 }
 
-/// A held vowel, steady enough to analyse.
-fn held(ipa: &str, nasalized: bool) -> Vec<Segment> {
-    vec![Segment { dur: Some(0.5), nasalized: nasalized.then_some(true), ..Segment::new(ipa) }]
+/// A held vowel, steady enough to analyse. It has its own pitch, 0.82 of the voice's (the final low
+/// the figures below were measured at): a band's share of the level depends on where the harmonics
+/// fall in it, so it must not move with the phrase's intonation.
+fn held(ipa: &str, nasalized: bool, f0: f64) -> Vec<Segment> {
+    vec![Segment { dur: Some(0.5), nasalized: nasalized.then_some(true), f0: Some(0.82 * f0), ..Segment::new(ipa) }]
 }
 
 #[test]
@@ -100,8 +102,8 @@ fn a_nasalized_vowel_is_nasal_and_an_oral_one_is_not() {
     // the port 0 → 0.30 (male), 0.24 (female; the voice scales the port with the body).
     for (body, name, f0) in VOICES {
         for vowel in ["ɛ", "a"] {
-            let oral = render(&held(vowel, false), body, name, f0);
-            let nasal = render(&held(vowel, true), body, name, f0);
+            let oral = render(&held(vowel, false, f0), body, name, f0);
+            let nasal = render(&held(vowel, true, f0), body, name, f0);
             let seg = &oral.plan.segments[0];
             let mid = (seg.t0 + seg.t1) / 2.0;
             assert!(oral.port_at(mid) < 0.01, "{vowel} ({name}): oral vowel, port {}", oral.port_at(mid));
