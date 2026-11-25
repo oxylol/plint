@@ -58,12 +58,16 @@ class CopyBook(Model):
             return {}, {}
         out: dict[str, float] = {}
         why: dict[str, str] = {}
+        holders: dict[str, list[str]] = {}
         for plan in p.plans:
             for s, w in plan.at(day).items():
                 out[s] = out.get(s, 0.0) + w * p.share
+                holders.setdefault(s, []).append(p.names.get(plan.pid, plan.pid))
             for s, text in plan.note(day).items():
                 who = p.names.get(plan.pid, plan.pid)
                 why[s] = f"{who}: {text}" if len(p.plans) > 1 else text
+        for s, who in holders.items():                 # a stake held from before tonight: say whose it is
+            why.setdefault(s, ("held by " + ", ".join(who)) if len(p.plans) > 1 else "held from an earlier purchase")
         return {s: round(w, 6) for s, w in out.items() if w > 0}, why
 
     def prepare(self, panel: Panel, env: Env) -> None:

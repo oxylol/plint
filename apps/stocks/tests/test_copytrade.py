@@ -328,6 +328,8 @@ class Books(unittest.TestCase):
         target, why = m.target(d1)
         self.assertEqual(target, {a: 0.25, b: 0.125})              # One: 0.5 × 0.25 cap; Two: 0.5 × (0.25, 0.25)
         self.assertTrue(why[a].startswith("Two: bought") or why[a].startswith("One: bought"))
+        later = int(self.days[60])
+        self.assertEqual(m.target(later)[1], {a: "held by One, Two", b: "held by Two"})
 
 
 class NoLookAhead(unittest.TestCase):
