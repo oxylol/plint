@@ -21,7 +21,7 @@ class Env:
     cash: str = "BIL"
     names: dict[str, str] = field(default_factory=dict)
     events: object | None = None            # earnings days and insider buys, when filings are switched on
-    copy: object | None = None              # the copy study's picks and the trades they follow (copytrade.model.CopyData)
+    copy: object | None = None              # the copy study's picks and the trades they follow (models.copy.CopyData)
     fits: object | None = None              # the learned models' fitted parameters (learn.fit.Fits)
     scores: dict[str, np.ndarray] = field(default_factory=dict)   # research: score tables handed in ready-made
     peers: dict[str, "Model"] = field(default_factory=dict)       # the other models, for the blend

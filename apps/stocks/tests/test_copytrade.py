@@ -21,6 +21,8 @@ from stocks.copytrade import plan as P
 from stocks.copytrade import study as ST
 from stocks.copytrade import trades as TT
 from stocks.copytrade.model import Copy, CopyBook, CopyData, Period
+import subprocess
+import sys
 from stocks.models import Env
 from stocks.types import BookView, Holding
 from test_leak import scrambled_after
@@ -30,6 +32,14 @@ FIX = Path(__file__).parent / "fixtures" / "house"
 
 def report(name: str) -> list[dict]:
     return H.parse((FIX / f"{name}.txt").read_text(encoding="utf-8"))
+
+
+class Imports(unittest.TestCase):
+    def test_every_way_in_imports_on_its_own(self):
+        """The clock imports copytrade.live before any model: each module must load first, in a fresh process."""
+        for mod in ("stocks.copytrade.live", "stocks.copytrade.model", "stocks.copytrade.study", "stocks.models", "stocks.runner"):
+            r = subprocess.run([sys.executable, "-c", f"import {mod}"], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, f"{mod}: {r.stderr[-400:]}")
 
 
 class Reading(unittest.TestCase):

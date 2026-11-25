@@ -6,7 +6,7 @@ from .base import Env, Model, ScoreModel
 from .events import Drift, Insiders
 from .learned import Blend, Net, NetFast, Ridge, Trees
 from .rules import Index, Momentum, Reversal, Trend
-from ..copytrade.model import Copy
+from .copy import Copy
 
 # the order the page lists them in when nothing else decides
 CLASSES = (Index, Net, NetFast, Trees, Ridge, Blend, Momentum, Reversal, Drift, Insiders, Copy, Trend)

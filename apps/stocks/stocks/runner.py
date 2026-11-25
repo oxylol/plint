@@ -66,9 +66,15 @@ class Runner:
                 self.child("run")
         if store.read_json("reports/index.json") is not None and store.get("copy_tried") != today \
                 and (not self.cfg.models or "copy" in self.cfg.models):
-            from .copytrade.live import due
-            from .bars import BarStore
-            if due(store, BarStore(self.cfg.cache_dir).last_day(self.cfg.index_symbol)):
+            try:
+                from .copytrade.live import due
+                from .bars import BarStore
+                ready = due(store, BarStore(self.cfg.cache_dir).last_day(self.cfg.index_symbol))
+            except Exception as e:                      # the clock must outlive a fault in one of its jobs
+                store.put("copy_tried", today)
+                store.log(f"copy study: could not tell whether it is due: {e}", "warn")
+                ready = False
+            if ready:
                 store.put("copy_tried", today)          # once a day at most: a broken run must not spin
                 store.log("copy study starting: House reports, every person's copy book, the picks (the first time, hours)")
                 if self.child("copy", nice=15):
