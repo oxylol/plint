@@ -12,7 +12,12 @@ built from the repo's own Dockerfile at the last commit (2023-11-05; v4.0 is fro
 
 ## Running a scan
 
-New Scan → target → **By Use Case**:
+New Scan → target. A name or username goes **in straight double quotes**, or it says
+"invalid target": `"Filip Munkeby"` (a space makes it a name), `"filipm"` (a username).
+Curly quotes from a phone keyboard don't count. A phone number starts with `+` and the
+country code (`+46701234567`). Domains, IPs and emails go in as they are.
+
+Then **By Use Case**:
 - **Passive**: only third-party sources, so the target never sees you. The default for
   looking into someone else.
 - **Footprint / Investigate / All**: also touch the target directly (crawl its site,
