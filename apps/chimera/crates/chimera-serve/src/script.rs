@@ -45,6 +45,11 @@ pub struct Script {
     /// pitch excursion on stressed syllables (fraction)
     #[serde(default)]
     pub accent: Option<f64>,
+    /// where each phrase's pitch starts, in semitones above `f0`, and how far it falls by its end
+    #[serde(default)]
+    pub pitch_start: Option<f64>,
+    #[serde(default)]
+    pub pitch_fall: Option<f64>,
     /// the voice source for the whole render: pressure, breathiness, tension, fry, roughness,
     /// vibratoDepth, vibratoRate, drift, brightness
     #[serde(default)]
@@ -84,6 +89,10 @@ pub struct PhraseScript {
     pub f0: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub accent: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pitch_start: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pitch_fall: Option<f64>,
 }
 
 /// A script with everything decided: what `?plan=1` answers, and itself a script.
@@ -116,6 +125,8 @@ pub fn plan(g: &EnglishG2P, s: &Script) -> Result<Planned, String> {
     let f0 = finite("f0", s.f0, 40.0, 800.0)?.unwrap_or_else(|| default_f0(body));
     let rate = finite("rate", s.rate, 0.25, 4.0)?;
     let accent = finite("accent", s.accent, 0.0, 2.0)?;
+    let pitch_start = finite("pitchStart", s.pitch_start, -24.0, 24.0)?;
+    let pitch_fall = finite("pitchFall", s.pitch_fall, -24.0, 24.0)?;
 
     if let Some(gestures) = &s.gestures {
         if gestures.iter().any(|x| !(x.t0.is_finite() && x.t1.is_finite() && x.t0 >= 0.0 && x.t1 >= x.t0)) {
@@ -143,6 +154,8 @@ pub fn plan(g: &EnglishG2P, s: &Script) -> Result<Planned, String> {
         finite("phrase f0", p.f0, 40.0, 800.0)?;
         finite("phrase accent", p.accent, 0.0, 2.0)?;
         finite("pause", p.pause, 0.0, 10.0)?;
+        finite("phrase pitchStart", p.pitch_start, -24.0, 24.0)?;
+        finite("phrase pitchFall", p.pitch_fall, -24.0, 24.0)?;
         if let Some(segs) = &p.segments {
             phones.push(PhraseScript { text: None, ipa: None, segments: Some(segs.clone()), ..p.clone() });
         } else if let Some(ipa) = &p.ipa {
@@ -184,6 +197,8 @@ pub fn plan(g: &EnglishG2P, s: &Script) -> Result<Planned, String> {
             f0: Some(p.f0.unwrap_or(f0)),
             intonation: Some(p.intonation.unwrap_or_default()),
             accent: p.accent.or(accent),
+            pitch_start: p.pitch_start.or(pitch_start),
+            pitch_fall: p.pitch_fall.or(pitch_fall),
             ..Default::default()
         };
         let plan = plan_utterance(segs, &o);

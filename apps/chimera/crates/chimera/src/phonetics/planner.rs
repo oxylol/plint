@@ -11,7 +11,7 @@ use super::inventory::{Glottal, Manner, PhonemeDef, Voicing, dental_closure, pho
 use super::{Intonation, Plan, PlannedSegment, Segment};
 use crate::anatomy::human::{ArticKey, ArticPatch, BodyMix, BodyName};
 use crate::control::score::{ControlKey, Gesture, Targets};
-use crate::math::{js_max, js_min, js_round};
+use crate::math::{clamp, exp, js_max, js_min, js_round, pow};
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::collections::BTreeMap;
@@ -227,6 +227,12 @@ pub struct PlanOptions {
     /// pitch excursion for stressed syllables (fraction)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub accent: Option<f64>,
+    /// where a phrase's pitch starts, in semitones above `f0` (see [`PITCH_START`])
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pitch_start: Option<f64>,
+    /// how far the pitch falls over a phrase, in semitones (see [`PITCH_FALL`])
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pitch_fall: Option<f64>,
     /// the last segment is held open-ended (a sung note): no end-of-breath release
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub open_end: Option<bool>,
@@ -235,6 +241,27 @@ pub struct PlanOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sung: Option<bool>,
 }
+
+/// Declination: a spoken phrase starts `PITCH_START` semitones above its base pitch and has fallen
+/// `PITCH_FALL` semitones by its end, with the accents on top. Fitted to the TSP men reading the
+/// Harvard sentences (9 training speakers, 540 sentences; semitones re each sentence's median
+/// pitch): their first fifth sits at +3.1, their last at −1.6, a line through a sentence falls 5.8,
+/// and the 10th and 90th percentiles are −2.1 and +3.7. With 5 and 6.5 the male voice reads +3.0,
+/// −1.8 or so, 5.8, −2.5 and +3.0 (docs/hill-climb/log.md, P2). The old plan fell 10 % in a
+/// straight line (1.8 semitones) from the base pitch.
+pub const PITCH_START: f64 = 5.0;
+pub const PITCH_FALL: f64 = 6.5;
+/// How far a stressed vowel's pitch rises above the line (a fraction of it).
+pub const ACCENT: f64 = 0.14;
+/// How early the fall comes: the line falls as 1 − e^(−PITCH_CURVE · progress), so at 3 it has
+/// made 82 % of its fall by the phrase's middle. Towards 0 it is a straight line.
+pub const PITCH_CURVE: f64 = 3.0;
+/// The share of a stressed vowel its accent's peak lasts.
+pub const ACCENT_PEAK: f64 = 0.5;
+/// A statement's last vowel ends this many semitones below where the line ends: the final low.
+/// (The old plan's 0.82 of the base pitch was 1.6 below its line's end; the men's last fifth sits
+/// nearer their median than that.)
+pub const FINAL_DROP: f64 = 1.0;
 
 /// JS truthiness of an optional number (`if (s.f0)`: 0 and NaN are false).
 #[inline]
@@ -652,7 +679,9 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
     }
     // ---- intonation: pitch targets on vowels
     let f0 = o.f0.unwrap_or(110.0);
-    let accent = o.accent.unwrap_or(0.14);
+    let accent = o.accent.unwrap_or(ACCENT);
+    let (pitch_start, pitch_fall) = (o.pitch_start.unwrap_or(PITCH_START), o.pitch_fall.unwrap_or(PITCH_FALL));
+    let final_low = f0 * pow(2.0, (pitch_start - pitch_fall - FINAL_DROP) / 12.0);
     let total = js_max(0.2, end - o.t0);
     // the nuclear accent: the phrase's last primary-stressed vowel, a bigger excursion that falls
     // (statements) into the final low; earlier accents are smaller (a "hat" pattern)
@@ -662,43 +691,63 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
             nuclear = i as isize;
         }
     }
+    // A spoken phrase's pitch is a falling line with peaks on it. The line: each vowel sits on it,
+    // and holds it through the consonants up to the next vowel. A phrase is on its line from its
+    // first sound, so a voiced onset doesn't start down at the base pitch. A stressed vowel's
+    // accent is a peak over the vowel's first part, after which the pitch comes back to the line:
+    // a held accent kept the pitch high through every stressed word, where the TSP men sit near
+    // their low line and only touch the high values (docs/hill-climb/log.md, P2).
+    let line = |t: f64| {
+        let prog = clamp((t - o.t0) / total, 0.0, 1.0);
+        // most of the fall comes early: 0 at the start, 1 at the end, PITCH_CURVE bends it
+        let fallen = (1.0 - exp(-PITCH_CURVE * prog)) / (1.0 - exp(-PITCH_CURVE));
+        f0 * pow(2.0, (pitch_start - pitch_fall * fallen) / 12.0)
+    };
+    let spoken = !sung && !v_idx.is_empty() && !truthy(segs[v_idx[0]].f0);
+    if spoken && times[v_idx[0]].t0 - o.t0 > 0.02 {
+        gestures.push(Gesture::new(o.t0, times[v_idx[0]].t0, 0.03, 0.03, 1.0, one(ControlKey::F0, line(o.t0))).label("pitch"));
+    }
     for (n, &i) in v_idx.iter().enumerate() {
         let s = &segs[i];
         let Span { t0, t1 } = times[i];
         // pitch holds through the consonants up to the next vowel (instead of sagging to the base)
         let hold = if n < v_idx.len() - 1 { js_max(t1, times[v_idx[n + 1]].t0 - 0.03) } else { t1 };
-        let mut target: f64;
         let has_f0 = truthy(s.f0);
         if has_f0 {
-            target = s.f0.unwrap();
-        } else {
-            let prog = (t0 - o.t0) / total;
-            let decl = 1.0 - 0.1 * prog;
-            let is_nuclear = i as isize == nuclear;
-            let acc = if s.stress == Some(1) {
-                1.0 + (if is_nuclear { accent * 1.8 } else { accent })
-            } else if s.stress == Some(2) {
-                1.0 + accent * 0.5
-            } else {
-                1.0
-            };
-            target = f0 * decl * acc;
-            let last = n == v_idx.len() - 1;
-            if last && o.intonation == Some(Intonation::Question) {
-                target = f0 * 1.35;
-            }
-            if last && o.intonation.unwrap_or(Intonation::Statement) == Intonation::Statement {
-                if is_nuclear && t1 - t0 > 0.08 {
-                    // accent peak early in the vowel, then the fall within it
-                    gestures.push(Gesture::new(t0, t0 + 0.35 * (t1 - t0), 0.05, 0.05, 1.0, one(ControlKey::F0, target)).label("pitch"));
-                    gestures.push(Gesture::new(t0 + 0.55 * (t1 - t0), t1, 0.06, 0.06, 1.0, one(ControlKey::F0, f0 * 0.82)).label("pitch"));
-                    continue;
-                }
-                target = f0 * 0.82;
-            }
+            let r = if sung { pitch_ramp(t1 - t0) } else { 0.06 };
+            gestures.push(Gesture::new(t0, t1, r, r, 6.0, one(ControlKey::F0, s.f0.unwrap())).label("pitch"));
+            continue;
         }
-        let r = if has_f0 && sung { pitch_ramp(t1 - t0) } else { 0.06 };
-        gestures.push(Gesture::new(t0, if has_f0 { t1 } else { hold }, r, r, if has_f0 { 6.0 } else { 1.0 }, one(ControlKey::F0, target)).label("pitch"));
+        let base = line(t0);
+        let is_nuclear = i as isize == nuclear;
+        let acc = if s.stress == Some(1) {
+            if is_nuclear { accent * 1.8 } else { accent }
+        } else if s.stress == Some(2) {
+            accent * 0.5
+        } else {
+            0.0
+        };
+        let last = n == v_idx.len() - 1;
+        if last && o.intonation == Some(Intonation::Question) {
+            gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, f0 * 1.35)).label("pitch"));
+            continue;
+        }
+        if last && o.intonation.unwrap_or(Intonation::Statement) == Intonation::Statement {
+            if is_nuclear && t1 - t0 > 0.08 {
+                // accent peak early in the vowel, then the fall within it
+                gestures.push(Gesture::new(t0, t0 + 0.35 * (t1 - t0), 0.05, 0.05, 1.0, one(ControlKey::F0, base * (1.0 + acc))).label("pitch"));
+                gestures.push(Gesture::new(t0 + 0.55 * (t1 - t0), t1, 0.06, 0.06, 1.0, one(ControlKey::F0, final_low)).label("pitch"));
+                continue;
+            }
+            gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, final_low)).label("pitch"));
+            continue;
+        }
+        gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, base)).label("pitch"));
+        if acc > 0.0 {
+            // the peak outweighs the line while it lasts
+            let peak_end = t0 + js_max(ACCENT_PEAK * (t1 - t0), js_min(t1 - t0, 0.05));
+            gestures.push(Gesture::new(t0, peak_end, 0.04, 0.06, 4.0, one(ControlKey::F0, base * (1.0 + acc))).label("accent"));
+        }
     }
     // sung: a consonant given its note's pitch holds it, so the pitch moves during an onset
     // consonant and has arrived when the vowel starts

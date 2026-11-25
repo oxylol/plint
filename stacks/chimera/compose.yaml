@@ -3,7 +3,8 @@
 #  Chimera: a voice from a simulated airway (lungs, folds, tongue, lips), no
 #  samples and no neural net. Plint's fork of jamesondh/chimera-vocal-synth,
 #  source in apps/chimera. The container runs what the host built
-#  (apps/chimera/plint-build.sh: Rust on the host, Filip's choice), so it only
+#  (apps/chimera/plint-build.sh: Rust on the host, Filip's choice; it copies the
+#  server to apps/chimera/deploy, so an experiment's build never reaches this), so it only
 #  needs the host's own Ubuntu: the page's files and POST /api/speak
 #  (text or a JSON script in, a WAV out).
 # ─────────────────────────────────────────────────────────────
@@ -22,12 +23,12 @@ services:
       TZ: ${TZ}
       HOST: 0.0.0.0
       PORT: 5270
-      CHIMERA_SITE: /app/site
+      CHIMERA_SITE: /site
       # renders at once: each takes one core for about half the length of what it says
       CHIMERA_JOBS: 2
     volumes:
-      - ../../apps/chimera/target/release/chimera-serve:/app/chimera-serve:ro
-      - ../../apps/chimera/dist:/app/site:ro
+      - ../../apps/chimera/deploy:/app:ro
+      - ../../apps/chimera/dist:/site:ro
     read_only: true
     tmpfs: [/tmp]
     mem_limit: 512m

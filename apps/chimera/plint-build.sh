@@ -12,4 +12,8 @@ cp target/wasm32-unknown-unknown/release/chimera_wasm.wasm src/wasm/chimera.wasm
 bunx --bun tsc --noEmit
 bunx --bun vite build
 cargo build --release -p chimera-serve -p chimera-cli
-echo "built: dist/ and target/release/chimera-serve"
+# the stack runs this copy, so later experiment builds in target/ leave the live page alone
+mkdir -p deploy
+install -m 0755 target/release/chimera-serve deploy/chimera-serve.new
+mv deploy/chimera-serve.new deploy/chimera-serve
+echo "built: dist/ and deploy/chimera-serve"
