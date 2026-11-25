@@ -6,12 +6,13 @@
 //! [`oral_gestures_into`] (the beat sequencer) build into a caller's `Vec` and allocate nothing
 //! once it has capacity, for up to [`INLINE_SEGMENTS`] segments.
 
-use super::durations::{SegInfo, klatt_durations};
+use super::durations::{SegInfo, klatt_durations_with};
 use super::inventory::{Glottal, Manner, PhonemeDef, Voicing, dental_closure, phoneme};
 use super::{Intonation, Plan, PlannedSegment, Segment};
 use crate::anatomy::human::{ArticKey, ArticPatch, BodyMix, BodyName};
 use crate::control::score::{ControlKey, Gesture, Targets};
 use crate::math::{clamp, exp, js_max, js_min, js_round, pow};
+use crate::tuning::{PlannerTuning, ProsodyTuning};
 use serde::{Deserialize, Serialize};
 use smallvec::SmallVec;
 use std::collections::BTreeMap;
@@ -45,10 +46,11 @@ const BREATH_SUNG_AT: f64 = 0.06;
 /// through constrictions of 0.10-0.18. The pressure behind the constriction then rises and the
 /// voicing weakens by itself, most in /z/, whose constriction is the narrowest. 0.12-0.14 match the
 /// TSP speakers' voicing better; `an_f_does_not_click` stops them (hill-climb log, experiments 23 and 32).
-const VOICED_FRICATIVE_OPENING: f64 = 0.09;
+/// The default of `prosody.voiced_fricative_opening`.
+pub const VOICED_FRICATIVE_OPENING: f64 = 0.09;
 /// /ð/ after a nasal keeps a small opening: the speakers' has no dip there, nasal level throughout, and
-/// this reads about their level (hill-climb log, experiment 24).
-const DH_OPENING: f64 = 0.035;
+/// this reads about their level (hill-climb log, experiment 24). The default of `prosody.dh_opening`.
+pub const DH_OPENING: f64 = 0.035;
 
 const VOWEL_KEYS: [ArticKey; 9] = [ArticKey::TbX, ArticKey::TbY, ArticKey::Jaw, ArticKey::LipAp, ArticKey::LipProt, ArticKey::LipWidth, ArticKey::Root, ArticKey::Larynx, ArticKey::TtCurl];
 
@@ -240,6 +242,12 @@ pub struct PlanOptions {
     /// fit short notes. Speech and live notes leave it unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sung: Option<bool>,
+    /// the planner's and the durations' numbers; unset is the default tuning. An explicit
+    /// `accent`, `pitch_start` or `pitch_fall` above wins over the tuning's. With the tuning's
+    /// `prosody.upstream_line` on, the pitch is planned as before `PITCH_START` and `PITCH_FALL`
+    /// existed, and `pitch_start` and `pitch_fall` are ignored here too.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tuning: Option<ProsodyTuning>,
 }
 
 /// Declination: a spoken phrase starts `PITCH_START` semitones above its base pitch and has fallen
@@ -248,7 +256,8 @@ pub struct PlanOptions {
 /// pitch): their first fifth sits at +3.1, their last at −1.6, a line through a sentence falls 5.8,
 /// and the 10th and 90th percentiles are −2.1 and +3.7. With 5 and 6.5 the male voice reads +3.0,
 /// −1.8 or so, 5.8, −2.5 and +3.0 (docs/hill-climb/log.md, P2). The old plan fell 10 % in a
-/// straight line (1.8 semitones) from the base pitch.
+/// straight line (1.8 semitones) from the base pitch. These six are the defaults of
+/// `prosody.pitch_start` and the rest; the planner reads the tuning.
 pub const PITCH_START: f64 = 5.0;
 pub const PITCH_FALL: f64 = 6.5;
 /// How far a stressed vowel's pitch rises above the line (a fraction of it).
@@ -378,14 +387,16 @@ struct Span {
 
 pub fn plan_utterance(input: &[Segment], o: &PlanOptions) -> Plan {
     let body = o.body;
+    let tuning = o.tuning.unwrap_or_default();
     // durations by the Klatt rules, on whole segments (diphthongs before they are split)
-    let durs = klatt_durations(input, |s| {
+    let info = |s: &Segment| {
         if is_vowel(&s.ipa, body) {
             return SegInfo { vowel: true, ..Default::default() };
         }
         let d = phoneme(&s.ipa, body);
         SegInfo { vowel: false, manner: d.map(|d| d.manner), voiced: Some(d.is_some_and(|d| d.voicing == Voicing::Voiced)), dur: d.map(|d| d.dur) }
-    });
+    };
+    let durs = klatt_durations_with(input, info, &tuning.durations);
     let timed = input.iter().zip(&durs).map(|(s, d)| TimedSegment {
         ipa: &s.ipa,
         dur: *d,
@@ -409,6 +420,8 @@ pub fn plan_utterance(input: &[Segment], o: &PlanOptions) -> Plan {
 pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOptions, gestures: &mut Vec<Gesture>, mut planned: Option<&mut Vec<PlannedSegment>>) -> Timing {
     let rate = o.rate.unwrap_or(1.0);
     let body = o.body;
+    // the fold gestures' and the pitch's numbers (the durations are settled by now)
+    let tn = o.tuning.unwrap_or_default().prosody;
     // what this call adds, for the speaking rate's shortening below
     let first_gesture = gestures.len();
     // expand diphthongs into two vowel targets sharing the duration
@@ -539,7 +552,7 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
                 }
             }
             Manner::Affricate => {
-                let split = t0 + dur * AFFRICATE_CLOSURE;
+                let split = t0 + dur * tn.affricate_closure;
                 add_oral(&def.targets, t0, split, 2.0, def.ipa);
                 // the release is the fricative's own gesture, not a contact release's: it takes
                 // the fricative's articulators (the jaw too) and holds to the span's end, where
@@ -569,7 +582,7 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
         if def.glottal == Some(Glottal::Open) {
             // the folds close 10 ms before the span's end: with the lungs' port fixed, /h/ is 4-5 dB louder and MFA
             // reads it about that much longer than the speakers' (hill-climb log, experiment 32)
-            gestures.push(Gesture::new(t0 - 0.01, t1 - 0.01, 0.03, 0.035, 5.0, one(ControlKey::ABDUCTION, 0.33 * k2)).label("h"));
+            gestures.push(Gesture::new(t0 - tn.h_lead, t1 - tn.h_end_early, tn.h_ramp_in, tn.h_ramp_out, 5.0, one(ControlKey::ABDUCTION, tn.h_opening * k2)).label("h"));
         } else if def.glottal == Some(Glottal::Breathy) {
             gestures.push(Gesture::new(t0, t1, 0.03, 0.03, 5.0, one(ControlKey::ABDUCTION, 0.1 * k2)).label("ɦ"));
         } else if def.glottal == Some(Glottal::Stop) {
@@ -580,7 +593,7 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
                 // affricate the frication is the voice onset time, with no [h] after it, and the
                 // vowel keeps its planned length. A front end that sets `aspirated` or `vot`
                 // (Mandarin's aspirated affricates) gets the stop's gesture below instead.
-                let g = affricate_folds(t0 + 0.15 * dur, t1).label("aspiration");
+                let g = affricate_folds(t0 + tn.affricate_folds_open_at * dur, t1, &tn).label("aspiration");
                 voiced_again = g.end();
                 gestures.push(g);
             } else if def.manner == Manner::Stop || def.manner == Manner::Affricate {
@@ -591,31 +604,32 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
                 // make up the rest of the aspiration); a front end's longer or shorter `vot` moves
                 // that by the whole difference, so the voice onset time it asks for is what it gets
                 let past = match (aspirated, s.vot) {
-                    (true, None) => DEFAULT_VOT / rate * 0.4, // as before, to the bit
-                    (true, Some(v)) => js_max(0.0, 0.4 * DEFAULT_VOT + v - DEFAULT_VOT) / rate,
-                    (false, _) => 0.012 * 0.4,
+                    (true, None) => tn.vot / rate * tn.vot_fold_share, // as before, to the bit
+                    (true, Some(v)) => js_max(0.0, tn.vot_fold_share * tn.vot + v - tn.vot) / rate,
+                    (false, _) => tn.unaspirated_vot * tn.vot_fold_share,
                 };
-                let g = Gesture::new(t0 + 0.25 * dur, t1 + past, 0.035, if aspirated { 0.045 } else { 0.02 }, 6.0, one(ControlKey::ABDUCTION, if aspirated { 0.36 } else { 0.22 })).label("aspiration");
+                let (ramp_out, opening) = if aspirated { (tn.aspirated_ramp_out, tn.aspirated_opening) } else { (tn.unaspirated_ramp_out, tn.unaspirated_opening) };
+                let g = Gesture::new(t0 + tn.stop_folds_open_at * dur, t1 + past, tn.stop_ramp_in, ramp_out, 6.0, one(ControlKey::ABDUCTION, opening)).label("aspiration");
                 voiced_again = g.end();
                 gestures.push(g);
             } else {
-                gestures.push(Gesture::new(t0 - 0.015, t1 + 0.005, 0.03, 0.03, 6.0, one(ControlKey::ABDUCTION, 0.3)).label("voiceless"));
+                gestures.push(Gesture::new(t0 - tn.voiceless_lead, t1 + tn.voiceless_lag, tn.voiceless_ramp_in, tn.voiceless_ramp_out, 6.0, one(ControlKey::ABDUCTION, tn.voiceless_opening)).label("voiceless"));
             }
         } else if def.ipa == "ð" && def.manner == Manner::Stop {
             // apart behind the closure, so it is silent and the voice follows the release by 15-20 ms
             // as the speakers' does. The opening is /v z/'s constant, not a measured one (experiment 24)
-            gestures.push(Gesture::new(t0 - 0.015, t1, 0.03, 0.03, 6.0, one(ControlKey::ABDUCTION, VOICED_FRICATIVE_OPENING)).label("stop-like ð"));
+            gestures.push(Gesture::new(t0 - 0.015, t1, 0.03, 0.03, 6.0, one(ControlKey::ABDUCTION, tn.voiced_fricative_opening)).label("stop-like ð"));
         } else if def.manner == Manner::Fricative {
             // the folds start to part when a voiceless fricative's do, and close as the constriction
             // opens (about 20 ms after t1, for both)
             let after_nasal = prev_seg.and_then(|p| p.def.as_ref()).is_some_and(|d| d.manner == Manner::Nasal);
-            let opening = if def.ipa == "ð" && after_nasal { DH_OPENING } else { VOICED_FRICATIVE_OPENING };
-            gestures.push(Gesture::new(t0 - 0.015, t1, 0.03, 0.03, 3.0, one(ControlKey::ABDUCTION, opening)).label("voiced frication"));
+            let opening = if def.ipa == "ð" && after_nasal { tn.dh_opening } else { tn.voiced_fricative_opening };
+            gestures.push(Gesture::new(t0 - tn.voiced_fricative_lead, t1, tn.voiced_fricative_ramp_in, tn.voiced_fricative_ramp_out, 3.0, one(ControlKey::ABDUCTION, opening)).label("voiced frication"));
         } else if def.manner == Manner::Affricate {
             // the speakers' /dʒ/ differs from their /tʃ/ at its ends, not its frication: voice carries into
             // the closure and fades there, and the frication is as loud and as voiceless as /tʃ/'s
             // (hill-climb log, experiment 29). So the same folds, parted only for the release.
-            gestures.push(affricate_folds(t0 + dur * AFFRICATE_CLOSURE, t1).label("voiced affricate"));
+            gestures.push(affricate_folds(t0 + dur * tn.affricate_closure, t1, &tn).label("voiced affricate"));
         }
         // a breathy-voiced release (Hindi bʱ): the folds part as the closure lets go and stay
         // apart into the start of the vowel
@@ -678,76 +692,11 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
         }
     }
     // ---- intonation: pitch targets on vowels
-    let f0 = o.f0.unwrap_or(110.0);
-    let accent = o.accent.unwrap_or(ACCENT);
-    let (pitch_start, pitch_fall) = (o.pitch_start.unwrap_or(PITCH_START), o.pitch_fall.unwrap_or(PITCH_FALL));
-    let final_low = f0 * pow(2.0, (pitch_start - pitch_fall - FINAL_DROP) / 12.0);
-    let total = js_max(0.2, end - o.t0);
-    // the nuclear accent: the phrase's last primary-stressed vowel, a bigger excursion that falls
-    // (statements) into the final low; earlier accents are smaller (a "hat" pattern)
-    let mut nuclear: isize = -1;
-    for &i in &v_idx {
-        if segs[i].stress == Some(1) && !segs[i].glide_from {
-            nuclear = i as isize;
-        }
-    }
-    // A spoken phrase's pitch is a falling line with peaks on it. The line: each vowel sits on it,
-    // and holds it through the consonants up to the next vowel. A phrase is on its line from its
-    // first sound, so a voiced onset doesn't start down at the base pitch. A stressed vowel's
-    // accent is a peak over the vowel's first part, after which the pitch comes back to the line:
-    // a held accent kept the pitch high through every stressed word, where the TSP men sit near
-    // their low line and only touch the high values (docs/hill-climb/log.md, P2).
-    let line = |t: f64| {
-        let prog = clamp((t - o.t0) / total, 0.0, 1.0);
-        // most of the fall comes early: 0 at the start, 1 at the end, PITCH_CURVE bends it
-        let fallen = (1.0 - exp(-PITCH_CURVE * prog)) / (1.0 - exp(-PITCH_CURVE));
-        f0 * pow(2.0, (pitch_start - pitch_fall * fallen) / 12.0)
-    };
-    let spoken = !sung && !v_idx.is_empty() && !truthy(segs[v_idx[0]].f0);
-    if spoken && times[v_idx[0]].t0 - o.t0 > 0.02 {
-        gestures.push(Gesture::new(o.t0, times[v_idx[0]].t0, 0.03, 0.03, 1.0, one(ControlKey::F0, line(o.t0))).label("pitch"));
-    }
-    for (n, &i) in v_idx.iter().enumerate() {
-        let s = &segs[i];
-        let Span { t0, t1 } = times[i];
-        // pitch holds through the consonants up to the next vowel (instead of sagging to the base)
-        let hold = if n < v_idx.len() - 1 { js_max(t1, times[v_idx[n + 1]].t0 - 0.03) } else { t1 };
-        let has_f0 = truthy(s.f0);
-        if has_f0 {
-            let r = if sung { pitch_ramp(t1 - t0) } else { 0.06 };
-            gestures.push(Gesture::new(t0, t1, r, r, 6.0, one(ControlKey::F0, s.f0.unwrap())).label("pitch"));
-            continue;
-        }
-        let base = line(t0);
-        let is_nuclear = i as isize == nuclear;
-        let acc = if s.stress == Some(1) {
-            if is_nuclear { accent * 1.8 } else { accent }
-        } else if s.stress == Some(2) {
-            accent * 0.5
-        } else {
-            0.0
-        };
-        let last = n == v_idx.len() - 1;
-        if last && o.intonation == Some(Intonation::Question) {
-            gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, f0 * 1.35)).label("pitch"));
-            continue;
-        }
-        if last && o.intonation.unwrap_or(Intonation::Statement) == Intonation::Statement {
-            if is_nuclear && t1 - t0 > 0.08 {
-                // accent peak early in the vowel, then the fall within it
-                gestures.push(Gesture::new(t0, t0 + 0.35 * (t1 - t0), 0.05, 0.05, 1.0, one(ControlKey::F0, base * (1.0 + acc))).label("pitch"));
-                gestures.push(Gesture::new(t0 + 0.55 * (t1 - t0), t1, 0.06, 0.06, 1.0, one(ControlKey::F0, final_low)).label("pitch"));
-                continue;
-            }
-            gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, final_low)).label("pitch"));
-            continue;
-        }
-        gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, base)).label("pitch"));
-        if acc > 0.0 {
-            // the peak outweighs the line while it lasts
-            let peak_end = t0 + js_max(ACCENT_PEAK * (t1 - t0), js_min(t1 - t0, 0.05));
-            gestures.push(Gesture::new(t0, peak_end, 0.04, 0.06, 4.0, one(ControlKey::F0, base * (1.0 + acc))).label("accent"));
-        }
+    let pitch = Pitch { segs: &segs, times: &times, v_idx: &v_idx, o, end, sung };
+    if tn.upstream_line {
+        pitch.upstream_line(&tn, gestures);
+    } else {
+        pitch.falling_line(&tn, gestures);
     }
     // sung: a consonant given its note's pitch holds it, so the pitch moves during an onset
     // consonant and has arrived when the vowel starts
@@ -765,16 +714,165 @@ pub fn plan_timed<'a>(input: impl Iterator<Item = TimedSegment<'a>>, o: &PlanOpt
     Timing { end, last }
 }
 
+/// What a phrase's pitch is planned from: its segments and their spans, which of them are vowels
+/// (`v_idx`), and the phrase's end. Its two methods are the two ways to plan it; each appends F0
+/// gestures and nothing else.
+struct Pitch<'a, 's> {
+    segs: &'a [Seg<'s>],
+    times: &'a [Span],
+    v_idx: &'a [usize],
+    o: &'a PlanOptions,
+    end: f64,
+    sung: bool,
+}
+
+impl Pitch<'_, '_> {
+    /// The nuclear accent: the phrase's last primary-stressed vowel, a bigger excursion that falls
+    /// (statements) into the final low; earlier accents are smaller (a "hat" pattern). −1: none.
+    fn nuclear(&self) -> isize {
+        let mut nuclear: isize = -1;
+        for &i in self.v_idx {
+            if self.segs[i].stress == Some(1) && !self.segs[i].glide_from {
+                nuclear = i as isize;
+            }
+        }
+        nuclear
+    }
+
+    /// Plint's line (P2, `442f784`): a fall in semitones, most of it early, with the accents as
+    /// peaks on it.
+    fn falling_line(&self, tn: &PlannerTuning, gestures: &mut Vec<Gesture>) {
+        let Pitch { segs, times, v_idx, o, end, sung } = *self;
+        let f0 = o.f0.unwrap_or(110.0);
+        let accent = o.accent.unwrap_or(tn.accent);
+        let (pitch_start, pitch_fall) = (o.pitch_start.unwrap_or(tn.pitch_start), o.pitch_fall.unwrap_or(tn.pitch_fall));
+        let final_low = f0 * pow(2.0, (pitch_start - pitch_fall - tn.final_drop) / 12.0);
+        let total = js_max(0.2, end - o.t0);
+        let nuclear = self.nuclear();
+        // A spoken phrase's pitch is a falling line with peaks on it. The line: each vowel sits on it,
+        // and holds it through the consonants up to the next vowel. A phrase is on its line from its
+        // first sound, so a voiced onset doesn't start down at the base pitch. A stressed vowel's
+        // accent is a peak over the vowel's first part, after which the pitch comes back to the line:
+        // a held accent kept the pitch high through every stressed word, where the TSP men sit near
+        // their low line and only touch the high values (docs/hill-climb/log.md, P2).
+        let line = |t: f64| {
+            let prog = clamp((t - o.t0) / total, 0.0, 1.0);
+            // most of the fall comes early: 0 at the start, 1 at the end, `pitch_curve` bends it
+            let fallen = (1.0 - exp(-tn.pitch_curve * prog)) / (1.0 - exp(-tn.pitch_curve));
+            f0 * pow(2.0, (pitch_start - pitch_fall * fallen) / 12.0)
+        };
+        let spoken = !sung && !v_idx.is_empty() && !truthy(segs[v_idx[0]].f0);
+        if spoken && times[v_idx[0]].t0 - o.t0 > 0.02 {
+            gestures.push(Gesture::new(o.t0, times[v_idx[0]].t0, 0.03, 0.03, 1.0, one(ControlKey::F0, line(o.t0))).label("pitch"));
+        }
+        for (n, &i) in v_idx.iter().enumerate() {
+            let s = &segs[i];
+            let Span { t0, t1 } = times[i];
+            // pitch holds through the consonants up to the next vowel (instead of sagging to the base)
+            let hold = if n < v_idx.len() - 1 { js_max(t1, times[v_idx[n + 1]].t0 - 0.03) } else { t1 };
+            let has_f0 = truthy(s.f0);
+            if has_f0 {
+                let r = if sung { pitch_ramp(t1 - t0) } else { 0.06 };
+                gestures.push(Gesture::new(t0, t1, r, r, 6.0, one(ControlKey::F0, s.f0.unwrap())).label("pitch"));
+                continue;
+            }
+            let base = line(t0);
+            let is_nuclear = i as isize == nuclear;
+            let acc = if s.stress == Some(1) {
+                if is_nuclear { accent * tn.nuclear_accent } else { accent }
+            } else if s.stress == Some(2) {
+                accent * tn.secondary_accent
+            } else {
+                0.0
+            };
+            let last = n == v_idx.len() - 1;
+            if last && o.intonation == Some(Intonation::Question) {
+                gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, f0 * 1.35)).label("pitch"));
+                continue;
+            }
+            if last && o.intonation.unwrap_or(Intonation::Statement) == Intonation::Statement {
+                if is_nuclear && t1 - t0 > 0.08 {
+                    // accent peak early in the vowel, then the fall within it
+                    gestures.push(Gesture::new(t0, t0 + 0.35 * (t1 - t0), 0.05, 0.05, 1.0, one(ControlKey::F0, base * (1.0 + acc))).label("pitch"));
+                    gestures.push(Gesture::new(t0 + 0.55 * (t1 - t0), t1, 0.06, 0.06, 1.0, one(ControlKey::F0, final_low)).label("pitch"));
+                    continue;
+                }
+                gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, final_low)).label("pitch"));
+                continue;
+            }
+            gestures.push(Gesture::new(t0, hold, 0.06, 0.06, 1.0, one(ControlKey::F0, base)).label("pitch"));
+            if acc > 0.0 {
+                // the peak outweighs the line while it lasts
+                let peak_end = t0 + js_max(tn.accent_peak * (t1 - t0), js_min(t1 - t0, 0.05));
+                gestures.push(Gesture::new(t0, peak_end, 0.04, 0.06, 4.0, one(ControlKey::F0, base * (1.0 + acc))).label("accent"));
+            }
+        }
+    }
+
+    /// The author's line, the code as it was before P2 (`01755b5`), for `prosody.upstream_line`: a
+    /// straight 10 % fall in Hz from the base pitch, a stressed vowel's accent held through the
+    /// consonants to the next vowel, one gesture a vowel and none before the first, the final low at
+    /// 0.82 of the base pitch. Of the tuning it reads `accent` and the two accent ratios;
+    /// `pitch_start`, `pitch_fall`, `pitch_curve`, `accent_peak` and `final_drop` did not exist
+    /// then and are not read, in the tuning or in `PlanOptions`.
+    fn upstream_line(&self, tn: &PlannerTuning, gestures: &mut Vec<Gesture>) {
+        let Pitch { segs, times, v_idx, o, end, sung } = *self;
+        let f0 = o.f0.unwrap_or(110.0);
+        let accent = o.accent.unwrap_or(tn.accent);
+        let total = js_max(0.2, end - o.t0);
+        let nuclear = self.nuclear();
+        for (n, &i) in v_idx.iter().enumerate() {
+            let s = &segs[i];
+            let Span { t0, t1 } = times[i];
+            // pitch holds through the consonants up to the next vowel (instead of sagging to the base)
+            let hold = if n < v_idx.len() - 1 { js_max(t1, times[v_idx[n + 1]].t0 - 0.03) } else { t1 };
+            let mut target: f64;
+            let has_f0 = truthy(s.f0);
+            if has_f0 {
+                target = s.f0.unwrap();
+            } else {
+                let prog = (t0 - o.t0) / total;
+                let decl = 1.0 - 0.1 * prog;
+                let is_nuclear = i as isize == nuclear;
+                let acc = if s.stress == Some(1) {
+                    1.0 + (if is_nuclear { accent * tn.nuclear_accent } else { accent })
+                } else if s.stress == Some(2) {
+                    1.0 + accent * tn.secondary_accent
+                } else {
+                    1.0
+                };
+                target = f0 * decl * acc;
+                let last = n == v_idx.len() - 1;
+                if last && o.intonation == Some(Intonation::Question) {
+                    target = f0 * 1.35;
+                }
+                if last && o.intonation.unwrap_or(Intonation::Statement) == Intonation::Statement {
+                    if is_nuclear && t1 - t0 > 0.08 {
+                        // accent peak early in the vowel, then the fall within it
+                        gestures.push(Gesture::new(t0, t0 + 0.35 * (t1 - t0), 0.05, 0.05, 1.0, one(ControlKey::F0, target)).label("pitch"));
+                        gestures.push(Gesture::new(t0 + 0.55 * (t1 - t0), t1, 0.06, 0.06, 1.0, one(ControlKey::F0, f0 * 0.82)).label("pitch"));
+                        continue;
+                    }
+                    target = f0 * 0.82;
+                }
+            }
+            let r = if has_f0 && sung { pitch_ramp(t1 - t0) } else { 0.06 };
+            gestures.push(Gesture::new(t0, if has_f0 { t1 } else { hold }, r, r, if has_f0 { 6.0 } else { 1.0 }, one(ControlKey::F0, target)).label("pitch"));
+        }
+    }
+}
+
 /// The share of an affricate's span that is closure, the rest being frication (the TSP speakers'
 /// /tʃ/: about 55 ms of closure, 60-65 ms of frication and a fading tail; their /dʒ/: 45-55, about 45).
-const AFFRICATE_CLOSURE: f64 = 0.45;
+/// The default of `prosody.affricate_closure`.
+pub const AFFRICATE_CLOSURE: f64 = 0.45;
 
 /// An affricate's folds: apart by `open` for the frication, and together again by `t1`, as it ends. A
 /// span too short for the 30 ms closing (a fast sung note) closes faster, so the breath doesn't spill
 /// into the vowel.
-fn affricate_folds(open: f64, t1: f64) -> Gesture {
-    let (hold, closing) = if t1 - open > 0.03 { (t1 - 0.03, 0.03) } else { (open, t1 - open) };
-    Gesture::new(open, hold, 0.035, closing, 6.0, one(ControlKey::ABDUCTION, 0.36))
+fn affricate_folds(open: f64, t1: f64, tn: &PlannerTuning) -> Gesture {
+    let (hold, closing) = if t1 - open > tn.affricate_closing { (t1 - tn.affricate_closing, tn.affricate_closing) } else { (open, t1 - open) };
+    Gesture::new(open, hold, tn.affricate_ramp_in, closing, 6.0, one(ControlKey::ABDUCTION, tn.affricate_opening))
 }
 
 /// How much later a nasal's closure is aimed than its span's start (s). `oral_gestures_into` brings
@@ -868,7 +966,8 @@ fn place_rank(place: &str) -> Option<u8> {
 /// shorter travel saves, so it seals as the front closure opens.
 const PLACED_CLOSURE_DELAY: f64 = 0.025;
 /// An aspirated stop's voice onset time when its front end doesn't say (English's), in seconds.
-const DEFAULT_VOT: f64 = 0.05;
+/// The default of `prosody.vot`.
+pub const DEFAULT_VOT: f64 = 0.05;
 
 /// Whether stop `i` closes behind the closure of the stop before it, with its own articulators
 /// already set by the consonant before that one (/t/ in /ɹpt/: the tip is up for the /ɹ/ and
@@ -980,4 +1079,93 @@ pub fn plan_phrases(phrases: &[PhraseInput], o: &PlanOptions) -> Plan {
         all.end = plan.end;
     }
     all
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::phonetics::ipa::tokenize_ipa;
+    use crate::tuning::Tuning;
+
+    fn male() -> PlanOptions {
+        PlanOptions { body: BodyMix::MALE, ..Default::default() }
+    }
+
+    fn with(set: impl Fn(&mut Tuning)) -> PlanOptions {
+        let mut t = Tuning::default();
+        set(&mut t);
+        PlanOptions { tuning: Some(t.plan()), ..male() }
+    }
+
+    /// a plan as the JSON the UI receives (an unset target is NaN in a `Gesture`, which equals nothing)
+    fn json(plan: &Plan) -> serde_json::Value {
+        serde_json::to_value(plan).unwrap()
+    }
+
+    /// the F0 gestures of a plan: (t0, t1, ramp in, ramp out, strength, Hz)
+    fn pitch(plan: &Plan) -> Vec<(f64, f64, f64, f64, f64, f64)> {
+        plan.gestures.iter().filter_map(|g| g.targets.get(ControlKey::F0).map(|hz| (g.t0, g.t1, g.ramp_in, g.ramp_out, g.strength, hz))).collect()
+    }
+
+    #[test]
+    fn the_default_tuning_plans_as_no_tuning_does_and_another_does_not() {
+        let d = Tuning::default().prosody;
+        assert_eq!((d.voiced_fricative_opening, d.dh_opening, d.affricate_closure, d.vot), (VOICED_FRICATIVE_OPENING, DH_OPENING, AFFRICATE_CLOSURE, DEFAULT_VOT));
+        // stops, fricatives of both kinds, /h/, an affricate, /ð/ after a nasal, a secondary stress
+        let segs = tokenize_ipa("ˈhæpi ˈdʒʌdʒɪz ɪn ðə ˈtʃɝtʃ ˌsɛvən");
+        let plain = plan_utterance(&segs, &male());
+        assert_eq!(json(&plan_utterance(&segs, &with(|_| {}))), json(&plain));
+        assert_ne!(json(&plan_utterance(&segs, &with(|t| t.prosody.vot = 0.07))), json(&plain));
+        // /ð/ after a nasal's own opening, which no golden plan has
+        assert_ne!(json(&plan_utterance(&segs, &with(|t| t.prosody.dh_opening = 0.05))), json(&plain));
+        // the durations' part is read as well, and moves every later span
+        let longer = plan_utterance(&segs, &with(|t| t.durations.unstressed = 0.9));
+        assert!(longer.end > plain.end + 0.01, "{} {}", longer.end, plain.end);
+        // and both parts reach each phrase of `plan_phrases`
+        let phrases = [PhraseInput { segments: segs.clone(), ..Default::default() }, PhraseInput { segments: segs, ..Default::default() }];
+        let plain = plan_phrases(&phrases, &male());
+        assert_eq!(json(&plan_phrases(&phrases, &with(|_| {}))), json(&plain));
+        assert_ne!(json(&plan_phrases(&phrases, &with(|t| t.prosody.h_opening = 0.4))), json(&plain));
+    }
+
+    #[test]
+    fn an_explicit_option_wins_over_the_tuning() {
+        let segs = tokenize_ipa("ˈapə ˈapə");
+        let tuned = with(|t| {
+            t.prosody.pitch_start = 2.0;
+            t.prosody.pitch_fall = 3.0;
+            t.prosody.accent = 0.3;
+        });
+        let by_tuning = plan_utterance(&segs, &tuned);
+        assert_ne!(pitch(&by_tuning), pitch(&plan_utterance(&segs, &male())));
+        // the same numbers as options plan the same pitch, whatever the tuning says
+        let by_options = plan_utterance(&segs, &PlanOptions { pitch_start: Some(2.0), pitch_fall: Some(3.0), accent: Some(0.3), ..male() });
+        assert_eq!(pitch(&by_options), pitch(&by_tuning));
+        let both = plan_utterance(&segs, &PlanOptions { pitch_start: Some(PITCH_START), pitch_fall: Some(PITCH_FALL), accent: Some(ACCENT), ..tuned });
+        assert_eq!(pitch(&both), pitch(&plan_utterance(&segs, &male())));
+        let start_only = plan_utterance(&segs, &PlanOptions { pitch_start: Some(PITCH_START), ..tuned });
+        assert_ne!(pitch(&start_only), pitch(&by_tuning));
+    }
+
+    /// The numbers are the plan of "cons p" in the golden planning fixture as it was at `01755b5`.
+    #[test]
+    fn the_upstream_line_is_the_plan_from_before_the_falling_line() {
+        let segs = tokenize_ipa("ˈapə");
+        let up = PlanOptions { tuning: Some(Tuning::upstream().plan()), ..male() };
+        let old = plan_utterance(&segs, &up);
+        // one gesture a vowel: the accent held to 30 ms before the next vowel, then the final low
+        assert_eq!(pitch(&old), [(0.06, 0.24544200000000002, 0.06, 0.06, 1.0, 135.52235211514832), (0.275442, 0.376002, 0.06, 0.06, 1.0, 90.19999999999999)]);
+        // only the pitch differs from Plint's plan
+        let new = plan_utterance(&segs, &male());
+        assert_ne!(pitch(&new), pitch(&old));
+        let rest = |p: &Plan| json(&Plan { gestures: p.gestures.iter().filter(|g| !g.targets.has(ControlKey::F0)).cloned().collect(), ..p.clone() });
+        assert_eq!(rest(&new), rest(&old));
+        // the switch alone selects it: the five values `Tuning::upstream` sets beside it are not read,
+        // nor are the options that came with the falling line; the accent still is
+        assert_eq!(json(&plan_utterance(&segs, &with(|t| t.prosody.upstream_line = true))), json(&old));
+        assert_eq!(json(&plan_utterance(&segs, &PlanOptions { pitch_start: Some(3.0), pitch_fall: Some(9.0), ..up.clone() })), json(&old));
+        assert_ne!(pitch(&plan_utterance(&segs, &PlanOptions { accent: Some(0.3), ..up })), pitch(&old));
+        // and with it off the tuning plans as none does
+        assert_eq!(json(&plan_utterance(&segs, &with(|t| t.prosody.upstream_line = false))), json(&new));
+    }
 }

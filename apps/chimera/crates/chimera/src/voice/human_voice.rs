@@ -8,8 +8,9 @@ use crate::anatomy::geom::Vec2;
 use crate::anatomy::human::{ArticKey, ArticPatch, BODY_MALE, HumanBody, N_ARTIC};
 use crate::control::articulators::ArticulatorBank;
 use crate::control::score::{Blended, ControlKey, Gesture, GestureScore, Label, N_CONTROL};
-use crate::math::{PI, clamp, exp, js_max, js_min, js_sign, js_trunc_i32, pow, sqrt, tanh};
+use crate::math::{PI, clamp, exp, js_max, js_min, js_sign, js_trunc_i32, log2, pow, sqrt, tanh};
 use crate::physics::CM_H2O;
+use crate::tuning::{SourceTuning, Tuning};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
@@ -53,8 +54,8 @@ pub const DEFAULT_SOURCE: VoiceSource = VoiceSource { f0: 110.0, glide: 0.06, pr
 /// Vocal effort from the lung pressure (cmH₂O). The folds read 0.8 less than the lungs while the
 /// lungs' port took its share, so `(lungs − 3)/10` was this law on the same folds' pressure. The port's fix
 /// moves neither the folds' pressure nor their effort (hill-climb log, experiment 32).
-fn effort_at(pressure: f64) -> f64 {
-    clamp((pressure.abs() - 2.2) / 10.0, 0.0, 1.0)
+fn effort_at(pressure: f64, t: &SourceTuning) -> f64 {
+    clamp((pressure.abs() - t.effort_threshold) / t.effort_span, 0.0, 1.0)
 }
 
 /// `Partial<VoiceSource>`.
@@ -206,6 +207,9 @@ pub struct HumanVoice {
     pub glottis: crate::sources::glottis::ParametricGlottis,
     pub artic: ArticulatorBank,
     pub source: VoiceSource,
+    /// the numbers the voice was built with: `apply_source` and the control step read its
+    /// `source`, and whatever builds this voice's airway or articulators again takes the rest
+    tuning: Tuning,
     dec: Decimator,
     /// internal samples per control step
     ctrl_every: usize,
@@ -268,18 +272,25 @@ pub fn oversample_for(fs_out: f64) -> usize {
 impl HumanVoice {
     /// A voice rendering at `fs_out`, simulating at `fs_out · oversample`.
     pub fn new(fs_out: f64, body: HumanBody, oversample: usize) -> Self {
+        Self::with_tuning(fs_out, body, oversample, &Tuning::default())
+    }
+
+    /// The same voice with every number from `tuning`: the source's here and in the glottis, the
+    /// airway's (`HumanAirway::with_tuning`) and the articulators' speeds.
+    pub fn with_tuning(fs_out: f64, body: HumanBody, oversample: usize, tuning: &Tuning) -> Self {
         let m = oversample;
         let fs = fs_out * m as f64;
-        let airway = HumanAirway::new(fs, body);
+        let airway = HumanAirway::with_tuning(fs, body, tuning);
         let n_tract = airway.n_ph + airway.n_or;
         let mut v = HumanVoice {
             fs_out,
             m,
             fs,
             airway,
-            glottis: crate::sources::glottis::ParametricGlottis::new(fs),
-            artic: ArticulatorBank::new(),
-            source: DEFAULT_SOURCE,
+            glottis: crate::sources::glottis::ParametricGlottis::with_tuning(fs, &tuning.source),
+            artic: ArticulatorBank::with_speeds(tuning.artic.hz()),
+            source: VoiceSource { pressure: tuning.source.pressure, drift: tuning.source.drift, ..DEFAULT_SOURCE },
+            tuning: *tuning,
             dec: Decimator::new(m),
             ctrl_every: 64 * m,
             ctrl_counter: 0,
@@ -338,6 +349,11 @@ impl HumanVoice {
         v
     }
 
+    /// The tuning this voice was built with.
+    pub fn tuning(&self) -> &Tuning {
+        &self.tuning
+    }
+
     /// The defaults the browser uses: male body, oversampled by [`oversample_for`].
     pub fn with_defaults(fs_out: f64) -> Self {
         Self::new(fs_out, BODY_MALE, oversample_for(fs_out))
@@ -377,26 +393,27 @@ impl HumanVoice {
 
     fn apply_source(&mut self) {
         let s = self.source;
+        let t = self.tuning.source;
         let g = &mut self.glottis.params;
         let k2 = self.airway.body.scale * self.airway.body.scale;
         // the pulse's peak area is the vibrating fold's length by how far its edge swings
         let body = self.airway.body;
-        g.amplitude = 0.17 * body.fold_length * body.scale * (if s.voiced { 1.0 } else { 0.0 });
+        g.amplitude = t.amplitude * body.fold_length * body.scale * (if s.voiced { 1.0 } else { 0.0 });
         // A source change in the middle of a scored note keeps what the score has put on the
         // abduction, the vibrato and the effort (the control step sets them again): dropping them
         // until that step made a stream of changes (aftertouch) crackle.
         let scored = g.abduction - self.base_abduction;
-        self.base_abduction = (if s.voiced { 0.1 * s.breathiness * s.breathiness } else { 0.2 + 0.1 * s.breathiness }) * k2;
+        self.base_abduction = (if s.voiced { t.abduction_breathy * s.breathiness * s.breathiness } else { t.whisper_abduction + t.whisper_abduction_breathy * s.breathiness }) * k2;
         g.abduction = self.base_abduction + scored;
         self.base_closure = 0.0;
         // Most voices, women's and trained singers' included, leave a small posterior gap between
         // the arytenoids through the closed phase (Södersten & Lindestad 1990). It leaks a little
         // air and damps the tract, which lifts H1 and the band below 500 Hz.
-        g.chink = (0.008 + 0.03 * s.breathiness) * k2;
-        g.open_quotient = 0.78 - 0.36 * s.tension + body.open_phase;
+        g.chink = (t.chink_base + t.chink_breathy * s.breathiness) * k2;
+        g.open_quotient = t.oq_base - t.oq_tension * s.tension + body.open_phase;
         // Zhang 2016 (JASA 139, 1493, table II): closed quotient −0.0247 per degree of resting angle, in a 3D
         // model whose 0-4° open 0-10.1 mm². It's secondary there to the folds' thickness (hill-climb log, experiment 32)
-        g.open_with_abduction = 0.98;
+        g.open_with_abduction = t.oq_with_abduction;
         // The folds close along their length and depth over a return phase, not all at once, so
         // a sung or spoken voice closes softly (0.22 at tension 0.55): an abrupt closure put
         // 3-8 dB too much energy above 2 kHz. Pressing harder than that brings the abrupt closure
@@ -404,22 +421,22 @@ impl HumanVoice {
         // the closure from there, and shortens or lengthens the closing phase: 0 closes as softly as
         // the model allows, 1 about as abruptly as a pressed voice.
         let bright = s.brightness - DEFAULT_SOURCE.brightness;
-        let by_tension = 0.4 * s.tension + 1.375 * js_max(0.0, s.tension - 0.6);
-        g.closure_sharpness = clamp(by_tension + 0.8 * bright, 0.0, 1.0);
-        g.skew = 0.56 + 0.16 * s.tension + 0.2 * bright;
+        let by_tension = t.closure_tension * s.tension + t.closure_pressed * js_max(0.0, s.tension - t.closure_pressed_from);
+        g.closure_sharpness = clamp(by_tension + t.closure_bright * bright, 0.0, 1.0);
+        g.skew = t.skew_base + t.skew_tension * s.tension + t.skew_bright * bright;
         g.fry = s.fry;
         // Jitter of a healthy, trained voice at the default roughness (0.1): about 0.45 %, well
         // under the clinical threshold (MDVP: 1.04 %).
-        g.jitter = 0.0021 + 0.0245 * s.roughness;
-        g.shimmer = 0.02 + 0.22 * s.roughness;
-        g.diplophonia = if s.roughness > 0.5 { (s.roughness - 0.5) * 1.4 } else { 0.0 };
+        g.jitter = t.jitter_base + t.jitter_rough * s.roughness;
+        g.shimmer = t.shimmer_base + t.shimmer_rough * s.roughness;
+        g.diplophonia = if s.roughness > t.diplophonia_from { (s.roughness - t.diplophonia_from) * t.diplophonia_gain } else { 0.0 };
         g.vibrato_rate = s.vibrato_rate;
         g.drift = s.drift;
         // while a score runs, the control step sets these: the score's vibrato, and the effort from
         // the breath the gate lets through
         if self.score.size() == 0 {
             g.vibrato_depth = s.vibrato_depth;
-            g.effort = effort_at(s.pressure);
+            g.effort = effort_at(s.pressure, &t);
         }
     }
 
@@ -570,9 +587,9 @@ impl HumanVoice {
         // release is for the performer's note-offs
         self.score_breath_hold = if breath_act > 0.0 { 0.15 } else { js_max(0.0, self.score_breath_hold - dt) };
         let tau = if gate_goal > self.gate {
-            0.025
+            self.tuning.source.breath_attack
         } else if self.score_breath_hold > 0.0 {
-            0.02
+            self.tuning.source.breath_release
         } else {
             0.07
         };
@@ -592,11 +609,15 @@ impl HumanVoice {
         self.p_lung_step = (self.p_lung - self.p_lung_now) / self.ctrl_every as f64;
         // vocal effort follows the pressure actually applied: a harder breath (a louder sung note)
         // gives wider, sharper-closing pulses, as in real phonation, not just more flow
-        self.glottis.params.effort = effort_at(self.source.pressure * self.gate);
+        self.glottis.params.effort = effort_at(self.source.pressure * self.gate, &self.tuning.source);
         // pitch glide
-        let g = js_max(0.002, if self.score_f0.is_some() { 0.03 } else { self.source.glide });
+        let g = js_max(0.002, if self.score_f0.is_some() { self.tuning.source.pitch_glide } else { self.source.glide });
         self.f0 *= pow(f0_target * self.bend / self.f0, 1.0 - exp(-dt / g));
         self.glottis.params.f0 = self.f0;
+        // the open quotient's share of the pitch, here and not per sample (110 Hz is the default f0)
+        if self.tuning.source.oq_per_octave != 0.0 {
+            self.glottis.oq_pitch = self.tuning.source.oq_per_octave * log2(self.f0 / 110.0);
+        }
         // smoothed mean flow per tract node (for particle speeds)
         let a = 1.0 - exp(-dt / 0.03);
         let n_ph = self.airway.n_ph;
@@ -723,5 +744,44 @@ impl HumanVoice {
             }
         }
         let _ = n_t;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn held(mut v: HumanVoice) -> Vec<f32> {
+        v.set_gate(1.0);
+        let mut out = vec![0.0f32; 9600];
+        v.render(&mut out);
+        out
+    }
+
+    #[test]
+    fn the_default_tuning_is_the_voice_and_another_is_not() {
+        let plain = held(HumanVoice::new(48000.0, BODY_MALE, 2));
+        assert!(plain.iter().any(|x| *x != 0.0));
+        assert!(plain == held(HumanVoice::with_tuning(48000.0, BODY_MALE, 2, &Tuning::default())));
+        // the default source sits at the default brightness, where `closure_bright` multiplies zero
+        let bright = |t: &Tuning| {
+            let mut v = HumanVoice::with_tuning(48000.0, BODY_MALE, 2, t);
+            v.set_source(&SourcePatch { brightness: Some(0.6), ..Default::default() });
+            held(v)
+        };
+        let mut t = Tuning::default();
+        t.source.closure_bright = 1.2;
+        assert!(bright(&t) != bright(&Tuning::default()));
+        // the open quotient follows pitch only when asked to (an octave up: at 110 Hz the term is zero)
+        let octave = |t: &Tuning| {
+            let mut v = HumanVoice::with_tuning(48000.0, BODY_MALE, 2, t);
+            v.set_source(&SourcePatch::f0(220.0));
+            held(v)
+        };
+        let mut t = Tuning::default();
+        t.source.oq_per_octave = 0.25;
+        let high = octave(&t);
+        assert!(high != octave(&Tuning::default()));
+        assert!(high.iter().all(|x| x.is_finite()) && high.iter().any(|x| x.abs() > 0.01));
     }
 }

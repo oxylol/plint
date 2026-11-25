@@ -6,6 +6,7 @@
 
 pub mod math;
 pub mod physics;
+pub mod tuning;
 
 pub mod airway {
     pub mod decimator;

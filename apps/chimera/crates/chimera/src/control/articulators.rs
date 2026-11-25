@@ -77,7 +77,13 @@ impl Default for ArticulatorBank {
 
 impl ArticulatorBank {
     pub fn new() -> Self {
-        let mut b = ArticulatorBank { x: NEUTRAL, v: [0.0; N_ARTIC], target: NEUTRAL, tip_free: true, speed: [1.0; N_ARTIC], omega: ARTIC_SPECS.map(|s| 2.0 * PI * s.hz), effective: NEUTRAL };
+        Self::with_speeds(ARTIC_SPECS.map(|s| s.hz))
+    }
+
+    /// The same bank with each articulator's natural frequency (Hz) given, in `ArticKey::ALL`
+    /// order (`ARTIC_SPECS`' own are the default of `Tuning`'s `artic`). The ranges stay `ARTIC_SPECS`'.
+    pub fn with_speeds(hz: [f64; N_ARTIC]) -> Self {
+        let mut b = ArticulatorBank { x: NEUTRAL, v: [0.0; N_ARTIC], target: NEUTRAL, tip_free: true, speed: [1.0; N_ARTIC], omega: hz.map(|hz| 2.0 * PI * hz), effective: NEUTRAL };
         let tip = rest_tip(NEUTRAL.jaw, NEUTRAL.tb_x, NEUTRAL.tb_y);
         b.x.tt_x = tip.x;
         b.target.tt_x = tip.x;

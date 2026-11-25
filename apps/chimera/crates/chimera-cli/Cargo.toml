@@ -11,6 +11,8 @@ path = "src/main.rs"
 
 [dependencies]
 chimera = { path = "../chimera" }
+# the JSON script layer only, without the server's HTTP stack
+chimera-serve = { path = "../chimera-serve", default-features = false }
 flate2 = "1"
 serde = "1"
 serde_json = "1"

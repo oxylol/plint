@@ -11,6 +11,9 @@
 //!
 //! `?plan=1` returns layers 2 and 3 for a script instead of the sound, so the answer to one
 //! request is a valid script for the next.
+//!
+//! At any depth a script may carry `tuning`, the engine's own numbers (`chimera::tuning`): the
+//! voice is built from it and every phrase is planned with it.
 
 use chimera::anatomy::human::BodyMix;
 use chimera::control::score::Gesture;
@@ -19,8 +22,10 @@ use chimera::phonetics::english::EnglishG2P;
 use chimera::phonetics::ipa::tokenize_ipa;
 use chimera::phonetics::planner::{PlanOptions, plan_utterance};
 use chimera::phonetics::{Intonation, PlannedSegment, Segment};
+use chimera::tuning::Tuning;
 use chimera::voice::human_voice::{HumanVoice, SourcePatch};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::Value;
 
 /// The output rate of every render.
 pub const FS: f64 = 48000.0;
@@ -54,6 +59,15 @@ pub struct Script {
     /// vibratoDepth, vibratoRate, drift, brightness
     #[serde(default)]
     pub source: Option<SourcePatch>,
+    /// the engine's numbers for the whole script: the string `"upstream"` (the author's voice,
+    /// `Tuning::upstream()`) or a partial tuning object (`{"source":{"oqBase":0.7}}`: what is left
+    /// out keeps its default, and a name that is not a field is refused). The voice is built from
+    /// it and every phrase is planned with it, and a script of gestures alone still takes it for
+    /// the voice. The script's own `accent`, `pitchStart`, `pitchFall` and `source` win over it.
+    /// With `"upstream"` (or `prosody.upstreamLine`) the pitch is the old line, which reads
+    /// neither `pitchStart` nor `pitchFall`: they are accepted and change nothing.
+    #[serde(default, deserialize_with = "tuning_in")]
+    pub tuning: Option<Tuning>,
     #[serde(default)]
     pub text: Option<String>,
     #[serde(default)]
@@ -103,6 +117,9 @@ pub struct Planned {
     pub f0: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<SourcePatch>,
+    /// the script's tuning, whole (`"upstream"` as that word), so the plan sent back sounds the same
+    #[serde(skip_serializing_if = "Option::is_none", serialize_with = "tuning_out")]
+    pub tuning: Option<Tuning>,
     /// the phrases as phones (layer 2)
     pub phrases: Vec<PhraseScript>,
     /// the gestural score (layer 3)
@@ -110,6 +127,31 @@ pub struct Planned {
     pub seconds: f64,
     /// when each phone sounds (information only: ignored when sent back)
     pub timeline: Vec<PlannedSegment>,
+}
+
+/// A tuning as JSON says it, in a script or in a file of its own (`chimera render text --tuning`):
+/// the string `"upstream"` or a partial tuning object.
+pub fn parse_tuning(v: Value) -> Result<Tuning, String> {
+    match v {
+        Value::String(s) if s == "upstream" => Ok(Tuning::upstream()),
+        Value::String(s) => Err(format!("tuning: {s:?} is not a tuning: the only one with a name is \"upstream\"")),
+        v @ Value::Object(_) => serde_json::from_value(v).map_err(|e| format!("tuning: {e}")),
+        _ => Err("tuning: give \"upstream\" or an object of tuning fields".into()),
+    }
+}
+
+fn tuning_in<'de, D: Deserializer<'de>>(d: D) -> Result<Option<Tuning>, D::Error> {
+    match Value::deserialize(d)? {
+        Value::Null => Ok(None),
+        v => parse_tuning(v).map(Some).map_err(serde::de::Error::custom),
+    }
+}
+
+fn tuning_out<S: Serializer>(t: &Option<Tuning>, s: S) -> Result<S::Ok, S::Error> {
+    match t {
+        Some(t) if *t == Tuning::upstream() => s.serialize_str("upstream"),
+        t => t.serialize(s),
+    }
 }
 
 fn finite(name: &str, x: Option<f64>, lo: f64, hi: f64) -> Result<Option<f64>, String> {
@@ -127,6 +169,7 @@ pub fn plan(g: &EnglishG2P, s: &Script) -> Result<Planned, String> {
     let accent = finite("accent", s.accent, 0.0, 2.0)?;
     let pitch_start = finite("pitchStart", s.pitch_start, -24.0, 24.0)?;
     let pitch_fall = finite("pitchFall", s.pitch_fall, -24.0, 24.0)?;
+    let tuning = s.tuning;
 
     if let Some(gestures) = &s.gestures {
         if gestures.iter().any(|x| !(x.t0.is_finite() && x.t1.is_finite() && x.t0 >= 0.0 && x.t1 >= x.t0)) {
@@ -134,7 +177,7 @@ pub fn plan(g: &EnglishG2P, s: &Script) -> Result<Planned, String> {
         }
         let end = gestures.iter().fold(0.0f64, |m, x| m.max(x.t1));
         let seconds = finite("seconds", s.seconds, 0.0, MAX_SECONDS)?.unwrap_or(end + TAIL);
-        return Ok(Planned { body, f0, source: s.source.clone(), phrases: Vec::new(), gestures: gestures.clone(), seconds, timeline: Vec::new() });
+        return Ok(Planned { body, f0, source: s.source.clone(), tuning, phrases: Vec::new(), gestures: gestures.clone(), seconds, timeline: Vec::new() });
     }
 
     // text is a phrase list the G2P writes
@@ -199,6 +242,8 @@ pub fn plan(g: &EnglishG2P, s: &Script) -> Result<Planned, String> {
             accent: p.accent.or(accent),
             pitch_start: p.pitch_start.or(pitch_start),
             pitch_fall: p.pitch_fall.or(pitch_fall),
+            // no tuning in the script is no tuning in the plan: the planner's default
+            tuning: tuning.map(|t| t.plan()),
             ..Default::default()
         };
         let plan = plan_utterance(segs, &o);
@@ -210,7 +255,7 @@ pub fn plan(g: &EnglishG2P, s: &Script) -> Result<Planned, String> {
             return Err(format!("too long: more than {MAX_SECONDS} s of speech in one request"));
         }
     }
-    Ok(Planned { body, f0, source: s.source.clone(), phrases: phones, gestures, seconds: end + TAIL, timeline })
+    Ok(Planned { body, f0, source: s.source.clone(), tuning, phrases: phones, gestures, seconds: end + TAIL, timeline })
 }
 
 /// The sound of a planned script.
@@ -218,7 +263,7 @@ pub fn render(p: &Planned) -> Result<Vec<f32>, String> {
     if !(p.seconds > 0.0 && p.seconds <= MAX_SECONDS) {
         return Err(format!("a render lasts up to {MAX_SECONDS} s"));
     }
-    let mut voice = HumanVoice::new(FS, p.body.body(), 2);
+    let mut voice = HumanVoice::with_tuning(FS, p.body.body(), 2, &p.tuning.unwrap_or_default());
     voice.set_source(&SourcePatch::f0(p.f0));
     if let Some(src) = &p.source {
         // the script's pitch is `f0`; a source patch carries the rest
@@ -311,5 +356,110 @@ mod tests {
         assert!(serde_json::from_str::<Script>(r#"{"txt":"hi"}"#).is_err());
         let long = format!(r#"{{"phrases":[{}]}}"#, vec![r#"{"text":"one two three four five six seven","pause":10}"#; 20].join(","));
         assert!(plan(&g, &script(&long)).is_err());
+    }
+
+    fn said(g: &EnglishG2P, json: &str) -> Vec<f32> {
+        render(&plan(g, &script(json)).unwrap()).unwrap()
+    }
+
+    #[test]
+    fn a_default_tuning_is_no_tuning() {
+        let g = EnglishG2P::new();
+        let plain = said(&g, r#"{"text":"A cat sat."}"#);
+        assert!(plain == said(&g, r#"{"text":"A cat sat.","tuning":{}}"#));
+        assert!(plain == said(&g, r#"{"text":"A cat sat.","tuning":null}"#));
+        let whole = format!(r#"{{"text":"A cat sat.","tuning":{}}}"#, serde_json::to_string(&Tuning::default()).unwrap());
+        assert!(plain == said(&g, &whole));
+    }
+
+    #[test]
+    fn a_tuning_changes_the_sound() {
+        let g = EnglishG2P::new();
+        // `closureBright` multiplies the brightness off its default, so the script's source sets one
+        let bright = said(&g, r#"{"text":"A cat sat.","source":{"brightness":0.6}}"#);
+        assert!(bright != said(&g, r#"{"text":"A cat sat.","source":{"brightness":0.6},"tuning":{"source":{"closureBright":1.2}}}"#));
+        // one field of each part that is wired its own way: the glottis, the airway, the noise
+        // and the losses, the articulators, and the planner's pitch and durations
+        let plain = said(&g, r#"{"text":"A cat sat."}"#);
+        for t in [
+            r#"{"source":{"oqBase":0.7}}"#,
+            r#"{"airway":{"glottisKineticIn":0.5}}"#,
+            r#"{"noise":{"teethGain":4.5e-6}}"#,
+            r#"{"physics":{"wallMass":2.0}}"#,
+            r#"{"artic":{"jaw":7}}"#,
+            r#"{"prosody":{"pitchFall":4}}"#,
+            r#"{"durations":{"vowelFinal":1.6}}"#,
+        ] {
+            let out = said(&g, &format!(r#"{{"text":"A cat sat.","tuning":{t}}}"#));
+            assert!(out != plain, "{t} changed nothing");
+            assert!(out.iter().all(|x| x.is_finite()) && out.iter().any(|x| x.abs() > 0.01), "{t}");
+        }
+        // the script's own source wins over the tuning's
+        let loud = r#"{"text":"A cat sat.","source":{"pressure":9}}"#;
+        assert!(said(&g, loud) == said(&g, r#"{"text":"A cat sat.","source":{"pressure":9},"tuning":{"source":{"pressure":6}}}"#));
+    }
+
+    #[test]
+    fn a_tuning_that_is_not_one_is_refused_by_name() {
+        let refused = |json: &str| serde_json::from_str::<Script>(json).map(|_| ()).unwrap_err().to_string();
+        let e = refused(r#"{"text":"hi","tuning":{"source":{"oqBaze":0.7}}}"#);
+        assert!(e.contains("tuning") && e.contains("oqBaze"), "{e}");
+        let e = refused(r#"{"text":"hi","tuning":{"sauce":{}}}"#);
+        assert!(e.contains("sauce"), "{e}");
+        let e = refused(r#"{"text":"hi","tuning":"upstrem"}"#);
+        assert!(e.contains("upstrem") && e.contains("\"upstream\""), "{e}");
+        assert!(refused(r#"{"text":"hi","tuning":3}"#).contains("tuning"));
+        assert!(refused(r#"{"text":"hi","tuning":{"source":{"oqBase":"high"}}}"#).contains("tuning"));
+        assert_eq!(parse_tuning(serde_json::json!("upstream")), Ok(Tuning::upstream()));
+        assert_eq!(parse_tuning(serde_json::json!({})), Ok(Tuning::default()));
+    }
+
+    #[test]
+    fn upstream_is_the_authors_pitch_line() {
+        use chimera::control::score::ControlKey;
+        let g = EnglishG2P::new();
+        let pitches = |p: &Planned| p.gestures.iter().filter(|x| x.targets.has(ControlKey::F0)).map(|x| x.t0).collect::<Vec<f64>>();
+        let new = plan(&g, &script(r#"{"text":"A cat sat on the mat."}"#)).unwrap();
+        let old = plan(&g, &script(r#"{"text":"A cat sat on the mat.","tuning":"upstream"}"#)).unwrap();
+        assert_eq!(old.tuning, Some(Tuning::upstream()));
+        let vowels: Vec<f64> = old.timeline.iter().filter(|s| s.kind == "vowel").map(|s| s.t0).collect();
+        // the old line: a pitch gesture a vowel (the last vowel's nuclear peak and final low are
+        // two) and none before the first; the new one has a line and an accent, and starts the phrase
+        let (was, now) = (pitches(&old), pitches(&new));
+        assert!(was.len() == vowels.len() || was.len() == vowels.len() + 1, "{} pitch gestures for {} vowels", was.len(), vowels.len());
+        assert!(was.iter().all(|t| *t >= vowels[0]));
+        assert!(now.len() > vowels.len() + 1 && now.iter().any(|t| *t < vowels[0]));
+        // only the pitch differs, and it is heard
+        // (as JSON: an unset target is a NaN, which equals nothing)
+        let json = |x: &[Gesture]| serde_json::to_string(x).unwrap();
+        let rest = |p: &Planned| json(&p.gestures.iter().filter(|x| !x.targets.has(ControlKey::F0)).copied().collect::<Vec<_>>());
+        assert!(rest(&old) == rest(&new));
+        assert!(render(&old).unwrap() != render(&new).unwrap());
+        // the old line knows no `pitchStart` or `pitchFall`: with it they change nothing
+        let moved = plan(&g, &script(r#"{"text":"A cat sat on the mat.","tuning":"upstream","pitchStart":2,"pitchFall":3}"#)).unwrap();
+        assert!(json(&moved.gestures) == json(&old.gestures));
+        // while `accent` is still the script's
+        let flat = plan(&g, &script(r#"{"text":"A cat sat on the mat.","tuning":"upstream","accent":0}"#)).unwrap();
+        assert!(json(&flat.gestures) != json(&old.gestures));
+    }
+
+    #[test]
+    fn a_tuned_plan_sent_back_renders_the_same_sound() {
+        let g = EnglishG2P::new();
+        let plain = said(&g, r#"{"text":"A cat sat."}"#);
+        for t in [r#""upstream""#, r#"{"source":{"oqBase":0.7},"airway":{"lipOpenRate":5},"prosody":{"pitchFall":4}}"#] {
+            let p = plan(&g, &script(&format!(r#"{{"text":"A cat sat.","tuning":{t}}}"#))).unwrap();
+            let a = render(&p).unwrap();
+            assert!(a != plain, "{t}");
+            let sent = serde_json::to_value(&p).unwrap();
+            assert_eq!(sent["tuning"].is_string(), t.starts_with('"'), "upstream goes back as its name");
+            let p2 = plan(&g, &script(&sent.to_string())).unwrap();
+            assert_eq!(p2.tuning, p.tuning);
+            // the plan sent back is its gestures, and the voice that says them still takes the tuning
+            assert!(a == render(&p2).unwrap(), "{t}");
+        }
+        // and a plan without a tuning carries none
+        let p = plan(&g, &script(r#"{"text":"A cat sat."}"#)).unwrap();
+        assert!(serde_json::to_value(&p).unwrap().get("tuning").is_none());
     }
 }

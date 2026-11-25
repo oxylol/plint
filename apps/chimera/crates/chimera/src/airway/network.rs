@@ -186,15 +186,23 @@ pub struct NoiseSpec {
     pub gain: f64,
     pub lowpass_hz: f64,
     pub highpass_hz: f64,
+    /// how steeply the band falls above `lowpass_hz`, in one-pole stages (see `order`)
+    order: f64,
 }
 
 impl NoiseSpec {
     pub fn new(src: usize, fwd: usize, bwd: usize, gain: f64) -> Self {
-        NoiseSpec { src, fwd, bwd, gain, lowpass_hz: 7000.0, highpass_hz: 400.0 }
+        NoiseSpec { src, fwd, bwd, gain, lowpass_hz: 7000.0, highpass_hz: 400.0, order: 2.0 }
     }
     pub fn band(mut self, lowpass_hz: f64, highpass_hz: f64) -> Self {
         self.lowpass_hz = lowpass_hz;
         self.highpass_hz = highpass_hz;
+        self
+    }
+    /// The low-pass's order, 1 to 4 one-pole stages of 6 dB an octave (2 unless set). A whole
+    /// number is that stage's output; a fraction mixes it toward the next stage's.
+    pub fn order(mut self, stages: f64) -> Self {
+        self.order = js_min(4.0, js_max(1.0, stages));
         self
     }
 }
@@ -209,6 +217,10 @@ pub struct NoiseSource {
     hp: f64,
     lp1: f64,
     lp2: f64,
+    /// the stages past the second, run only for a source whose order asks for them
+    lp3: f64,
+    lp4: f64,
+    order: f64,
     lp_coef: f64,
     hp_coef: f64,
     /// last amplitude (telemetry)
@@ -337,6 +349,13 @@ pub struct AirwayNetwork {
     pub viscous_scale: f64,
     /// reference angular frequency for frequency-independent viscous loss
     pub viscous_omega: f64,
+    /// Reynolds number at which a noise source starts (`RE_CRIT` unless a voice sets its own)
+    pub re_crit: f64,
+    /// Reynolds number toward which a noise source's growth levels off
+    pub re_sat: f64,
+    /// scales on the radiation load's inertance and resistance at every open end
+    pub radiation_inertance: f64,
+    pub radiation_resistance: f64,
     /// scale on turbulence noise gain
     pub noise_scale: f64,
     /// last output sample (radiated pressure derivative)
@@ -432,6 +451,10 @@ impl AirwayNetwork {
             min_node_area: 0.02,
             viscous_scale: 1.0,
             viscous_omega: 2.0 * PI * 700.0,
+            re_crit: RE_CRIT,
+            re_sat: 12000.0,
+            radiation_inertance: 1.0,
+            radiation_resistance: 1.0,
             noise_scale: 1.0,
             out: 0.0,
         }
@@ -742,7 +765,7 @@ impl AirwayNetwork {
         let per_node = [&self.p, &self.wall_v, &self.wall_y, &self.vol_src1, &self.vol_src2];
         let per_branch = [&self.u, &self.mom, &self.rad_ul, &self.rad_u];
         let arrays = per_node.iter().chain(per_branch.iter()).map(|a| a.iter().filter(|x| is_denormal(**x)).count()).sum::<usize>();
-        let noise = self.noise.iter().map(|s| [s.hp, s.lp1, s.lp2, s.level].iter().filter(|x| is_denormal(**x)).count()).sum::<usize>();
+        let noise = self.noise.iter().map(|s| [s.hp, s.lp1, s.lp2, s.lp3, s.lp4, s.level].iter().filter(|x| is_denormal(**x)).count()).sum::<usize>();
         arrays + noise + is_denormal(self.rad_prev_total) as usize
     }
 
@@ -776,6 +799,8 @@ impl AirwayNetwork {
             tiny(&mut s.hp);
             tiny(&mut s.lp1);
             tiny(&mut s.lp2);
+            tiny(&mut s.lp3);
+            tiny(&mut s.lp4);
             tiny(&mut s.level);
         }
     }
@@ -794,6 +819,9 @@ impl AirwayNetwork {
                 hp: prev.map_or(0.0, |p| p.hp),
                 lp1: prev.map_or(0.0, |p| p.lp1),
                 lp2: prev.map_or(0.0, |p| p.lp2),
+                lp3: prev.map_or(0.0, |p| p.lp3),
+                lp4: prev.map_or(0.0, |p| p.lp4),
+                order: s.order,
                 lp_coef: 1.0 - exp((-2.0 * PI * s.lowpass_hz) / self.fs),
                 hp_coef: exp((-2.0 * PI * s.highpass_hz) / self.fs),
                 level: 0.0,
@@ -1122,8 +1150,8 @@ impl AirwayNetwork {
             } else {
                 let r = r as usize;
                 let a = if self.area[k] > 1e-4 { self.area[k] } else { 1e-4 };
-                let lr = (8.0 * RHO) / (3.0 * PI * sqrt(PI * a));
-                let rr = (128.0 * RHO * C_SOUND) / (9.0 * PI * PI * a);
+                let lr = ((8.0 * RHO) / (3.0 * PI * sqrt(PI * a))) * self.radiation_inertance;
+                let rr = ((128.0 * RHO * C_SOUND) / (9.0 * PI * PI * a)) * self.radiation_resistance;
                 let p_old = self.p[k];
                 // energy-safe: when the radiation inertance grows (aperture closing) conserve momentum
                 let lp = self.rad_l_prev[r];
@@ -1155,7 +1183,8 @@ impl AirwayNetwork {
     fn compute_noise(&mut self) {
         // white noise power per Hz scales with fs: normalise to a 96 kHz reference
         let scale = self.noise_scale * sqrt(96000.0 / self.fs);
-        let sat = 12000.0 * 12000.0 - RE_CRIT * RE_CRIT;
+        let re_crit = self.re_crit;
+        let sat = self.re_sat * self.re_sat - re_crit * re_crit;
         for i in 0..self.noise.len() {
             let s = &mut self.noise[i];
             let a = self.branch_area[s.src];
@@ -1164,22 +1193,37 @@ impl AirwayNetwork {
             if a > self.closed_area {
                 // Re = v·d_h/ν with d_h = 2√(A/π) → Re = |U|·2/(ν·√(πA))
                 let re = (u.abs() * 2.0) / (NU * sqrt(PI * a));
-                if re > RE_CRIT {
-                    let x = re * re - RE_CRIT * RE_CRIT;
+                if re > re_crit {
+                    let x = re * re - re_crit * re_crit;
                     amp = (s.gain * scale * x) / (1.0 + x / sat); // bounded growth at very high Re
                 }
             }
-            // white → high-pass (1st order) → 2nd-order low-pass
+            // white → high-pass (1st order) → 2nd-order low-pass (another order: see below)
             let w = self.rng.bipolar() * 1.732;
             s.hp += (1.0 - s.hp_coef) * (w - s.hp); // s.hp holds a low-passed copy
             let hp_out = w - s.hp;
             s.lp1 += s.lp_coef * (hp_out - s.lp1);
             s.lp2 += s.lp_coef * (s.lp1 - s.lp2);
+            // two stages are every source's unless it asked for another order: then the whole part
+            // picks the stage and the fraction mixes toward the next
+            let shaped = if s.order == 2.0 {
+                s.lp2
+            } else if s.order < 2.0 {
+                s.lp1 + (s.order - 1.0) * (s.lp2 - s.lp1)
+            } else {
+                s.lp3 += s.lp_coef * (s.lp2 - s.lp3);
+                if s.order > 3.0 {
+                    s.lp4 += s.lp_coef * (s.lp3 - s.lp4);
+                    s.lp3 + (s.order - 3.0) * (s.lp4 - s.lp3)
+                } else {
+                    s.lp2 + (s.order - 2.0) * (s.lp3 - s.lp2)
+                }
+            };
             s.level = amp;
             if amp == 0.0 {
                 continue;
             }
-            let v = amp * s.lp2;
+            let v = amp * shaped;
             if u >= 0.0 {
                 self.psrc[s.fwd] += v;
             } else {

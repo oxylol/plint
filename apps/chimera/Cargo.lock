@@ -234,6 +234,7 @@ name = "chimera-cli"
 version = "0.2.1"
 dependencies = [
  "chimera",
+ "chimera-serve",
  "flate2",
  "serde",
  "serde_json",

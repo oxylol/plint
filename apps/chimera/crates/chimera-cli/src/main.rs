@@ -18,7 +18,9 @@ const USAGE: &str = "\
 usage: chimera <command> [args] [--float]
 
   render speech  <out> [\"ipa / ipa\"] [male|female|child]
-  render text    <out> [\"English text.\"] [male|female|child]
+  render text    <out> [\"English text.\"] [male|female|child] [--tuning file.json]
+                 (--tuning: the engine's numbers from a JSON file, a partial tuning object such as
+                 {\"source\":{\"oqBase\":0.7}} or the string \"upstream\", the author's voice)
   render turkish <out> [\"Türkçe metin.\"] [male|female|child]
   render song    [outdir] [male|female|child]
   render notes   <in.json> <out> [male|female|child] [--artic tracks.json] [--tele voice.tele]

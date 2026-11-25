@@ -8,6 +8,7 @@
 
 use super::Segment;
 use super::inventory::Manner;
+use crate::tuning::DurationsTuning;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -105,6 +106,11 @@ pub struct SegInfo {
 
 /// Durations (s) for one phrase of segments (explicit `dur` values are kept).
 pub fn klatt_durations(segs: &[Segment], info: impl Fn(&Segment) -> SegInfo) -> Vec<f64> {
+    klatt_durations_with(segs, info, &DurationsTuning::default())
+}
+
+/// [`klatt_durations`] with the context factors of `t` (the default's are Klatt's).
+pub fn klatt_durations_with(segs: &[Segment], info: impl Fn(&Segment) -> SegInfo, t: &DurationsTuning) -> Vec<f64> {
     let n = segs.len();
     let inf: Vec<SegInfo> = segs.iter().map(info).collect();
     // words: index ranges split after wordEnd
@@ -151,19 +157,19 @@ pub fn klatt_durations(segs: &[Segment], info: impl Fn(&Segment) -> SegInfo) -> 
                     k += 1;
                 }
                 if final_syl {
-                    p *= 1.4; // clause-final lengthening
+                    p *= t.vowel_final; // clause-final lengthening
                 } else {
-                    p *= 0.6; // non-phrase-final shortening
+                    p *= t.vowel_non_final; // non-phrase-final shortening
                 }
                 if !word_final_syl {
-                    p *= 0.85; // non-word-final shortening
+                    p *= t.vowel_non_word_final; // non-word-final shortening
                 }
                 if vowels_in_word.get(&word[i]).copied().unwrap_or(1) > 1 {
-                    p *= 0.8; // polysyllabic shortening
+                    p *= t.vowel_polysyllabic; // polysyllabic shortening
                 }
                 if stress == 0 {
-                    min *= 0.5; // unstressed: minimum halved, shortened
-                    p *= 0.7;
+                    min *= t.unstressed_min; // unstressed: minimum halved, shortened
+                    p *= t.unstressed;
                 }
                 // the following consonant (same word): voiced fricatives lengthen, voiceless stops shorten
                 let nx = if i + 1 < n && word[i + 1] == word[i] && !inf[i + 1].vowel { Some(inf[i + 1]) } else { None };
@@ -171,43 +177,43 @@ pub fn klatt_durations(segs: &[Segment], info: impl Fn(&Segment) -> SegInfo) -> 
                     let voiced = nx.voiced == Some(true);
                     let mut f = 1.0;
                     if nx.manner == Some(Manner::Fricative) {
-                        f = if voiced { 1.6 } else { 1.0 };
+                        f = if voiced { t.before_voiced_fricative } else { 1.0 };
                     } else if nx.manner == Some(Manner::Stop) || nx.manner == Some(Manner::Affricate) {
-                        f = if voiced { 1.2 } else { 0.7 };
+                        f = if voiced { t.before_voiced_stop } else { t.before_voiceless_stop };
                     } else if nx.manner == Some(Manner::Nasal) {
-                        f = 0.85;
+                        f = t.before_nasal;
                     }
-                    p *= if final_syl { f } else { 0.7 + 0.3 * f };
+                    p *= if final_syl { f } else { t.non_final_cue_base + t.non_final_cue_share * f };
                 }
                 // vowel next to vowel
                 if i + 1 < n && inf[i + 1].vowel {
-                    p *= 1.2;
+                    p *= t.vowel_before_vowel;
                 }
                 if i > 0 && inf[i - 1].vowel {
-                    p *= 0.7;
+                    p *= t.vowel_after_vowel;
                 }
                 let mut d = min + (inh - min) * p;
                 // aspiration after a voiceless stop eats into a stressed vowel's onset: give it back
                 let pv = if i > 0 { Some(inf[i - 1]) } else { None };
                 if stress > 0 && pv.is_some_and(|pv| pv.manner == Some(Manner::Stop) && pv.voiced != Some(true)) {
-                    d += 20.0;
+                    d += t.aspiration_give_back;
                 }
                 return d / 1000.0;
             }
             // consonants
             let word_initial = i == word_start[word[i]];
             if i as isize > last_vowel && matches!(inf[i].manner, Some(Manner::Nasal | Manner::Lateral | Manner::Approximant)) {
-                p *= 1.4;
+                p *= t.final_sonorant;
             }
             if !word_initial {
-                p *= 0.85;
+                p *= t.consonant_non_initial;
             }
             let prev_c = i > 0 && !inf[i - 1].vowel;
             let next_c = i + 1 < n && !inf[i + 1].vowel;
             if prev_c && next_c {
-                p *= 0.5;
+                p *= t.cluster_both;
             } else if prev_c || next_c {
-                p *= 0.7;
+                p *= t.cluster_one;
             }
             (min + (inh - min) * p) / 1000.0
         })

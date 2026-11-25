@@ -26,6 +26,7 @@ use chimera::phonetics::mandarin::{MandarinLexicon, is_han};
 use chimera::phonetics::syllables::{Lang, lyrics_in, lyrics_to_syllables};
 use chimera::phonetics::turkish;
 use chimera::phonetics::{Intonation, Plan, Syllable};
+use chimera::tuning::Tuning;
 use chimera::voice::human_voice::{HumanVoice, SCOPE_POINTS, SourcePatch, VoiceTelemetry};
 use std::io::Read;
 use std::time::Instant;
@@ -92,6 +93,42 @@ mod slug_tests {
     fn a_song_named_in_another_script_keeps_its_name() {
         assert_eq!(super::slug("Twinkle, twinkle"), "twinkle-twinkle");
         assert_eq!(super::slug("Ночной ветер"), "ночной-ветер");
+    }
+}
+
+#[cfg(test)]
+mod tuning_tests {
+    use super::*;
+
+    #[test]
+    fn say_with_the_default_tuning_is_say_and_another_tuning_is_not() {
+        let g = EnglishG2P::new();
+        let plain = say(&g, "A cat sat.", "male").unwrap();
+        let same = say_with(&g, "A cat sat.", "male", &Tuning::default()).unwrap();
+        assert!(plain.out == same.out && plain.plan.end == same.plan.end);
+        let mut t = Tuning::default();
+        t.source.oq_base = 0.7;
+        assert!(say_with(&g, "A cat sat.", "male", &t).unwrap().out != plain.out);
+        // the planner takes it too
+        let old = say_with(&g, "A cat sat.", "male", &Tuning::upstream()).unwrap();
+        assert!(old.plan.gestures.len() < plain.plan.gestures.len() && old.out != plain.out);
+    }
+
+    #[test]
+    fn a_tuning_file_is_a_partial_object_or_upstream() {
+        let path = format!("{}/chimera-tuning-test-{}.json", std::env::temp_dir().display(), std::process::id());
+        let read = |json: &str| {
+            std::fs::write(&path, json).unwrap();
+            let t = tuning_file(&path);
+            std::fs::remove_file(&path).unwrap();
+            t
+        };
+        assert_eq!(read("{}"), Ok(Tuning::default()));
+        assert_eq!(read(r#"{"source":{"oqBase":0.7}}"#).unwrap().source.oq_base, 0.7);
+        assert_eq!(read(r#""upstream""#), Ok(Tuning::upstream()));
+        assert!(read(r#"{"source":{"oqBaze":0.7}}"#).unwrap_err().contains("oqBaze"));
+        assert!(read(r#""downstream""#).unwrap_err().contains("downstream"));
+        assert!(tuning_file(&path).unwrap_err().contains(&path));
     }
 }
 
@@ -179,11 +216,22 @@ pub fn text_f0(body_name: &str) -> f64 {
 /// Say `text` the way `render text` does: CMUdict G2P, the phrase planner from t0 = 50 ms, the
 /// body's speaking f0, 300 ms of tail. `chimera compare tsp` measures exactly these renders.
 pub fn say(g: &EnglishG2P, text: &str, body_name: &str) -> Result<Spoken, String> {
-    say_phrases(&g.to_phrases(text), body_name)
+    say_with(g, text, body_name, &Tuning::default())
+}
+
+/// [`say`] with the engine's numbers from `tuning`: the voice is built from it and the phrases
+/// are planned with it. The default tuning is `say` itself, sample for sample.
+pub fn say_with(g: &EnglishG2P, text: &str, body_name: &str, tuning: &Tuning) -> Result<Spoken, String> {
+    say_phrases_with(&g.to_phrases(text), body_name, tuning)
 }
 
 /// Say phrases from any G2P the way `render text` does (see [`say`]).
 pub fn say_phrases(phrases: &[Phrase], body_name: &str) -> Result<Spoken, String> {
+    say_phrases_with(phrases, body_name, &Tuning::default())
+}
+
+/// [`say_phrases`] with the engine's numbers from `tuning` (see [`say_with`]).
+pub fn say_phrases_with(phrases: &[Phrase], body_name: &str, tuning: &Tuning) -> Result<Spoken, String> {
     let b = body(body_name)?;
     let f0 = text_f0(body_name);
     let shown: Vec<String> = phrases
@@ -201,7 +249,7 @@ pub fn say_phrases(phrases: &[Phrase], body_name: &str) -> Result<Spoken, String
             }
         })
         .collect();
-    let mut voice = HumanVoice::new(FS, b, 2);
+    let mut voice = HumanVoice::with_tuning(FS, b, 2, tuning);
     voice.set_source(&SourcePatch::f0(f0));
     let inputs: Vec<PhraseInput> = phrases
         .iter()
@@ -217,6 +265,7 @@ pub fn say_phrases(phrases: &[Phrase], body_name: &str) -> Result<Spoken, String
             body: body_name.into(),
             t0: 0.05,
             f0: Some(f0),
+            tuning: Some(tuning.plan()),
             ..Default::default()
         },
     );
@@ -227,14 +276,35 @@ pub fn say_phrases(phrases: &[Phrase], body_name: &str) -> Result<Spoken, String
     Ok(Spoken { out, plan, shown: shown.join(" | ") })
 }
 
-/// English text through G2P and the phrase planner. `render text <out> ["Text."] [body]`
+/// A tuning file: JSON that is a partial tuning object (`{"source":{"oqBase":0.7}}`, the rest
+/// stays default) or the string `"upstream"`, read as a script's `tuning` is.
+pub fn tuning_file(path: &str) -> Result<Tuning, String> {
+    let text = std::fs::read_to_string(path).map_err(|e| format!("{path}: {e}"))?;
+    let v = serde_json::from_str(&text).map_err(|e| format!("{path}: {e}"))?;
+    chimera_serve::script::parse_tuning(v).map_err(|e| format!("{path}: {e}"))
+}
+
+/// English text through G2P and the phrase planner.
+/// `render text <out> ["Text."] [body] [--tuning file.json]`: `--tuning` says it with the engine's
+/// numbers from a file (see [`tuning_file`]).
 pub fn text(ctx: &Ctx, a: &[String]) -> Result<(), String> {
+    let mut tuning = Tuning::default();
+    let mut rest = Vec::new();
+    let mut it = a.iter();
+    while let Some(x) = it.next() {
+        if x == "--tuning" {
+            tuning = tuning_file(it.next().ok_or("--tuning needs a file")?)?;
+        } else {
+            rest.push(x.clone());
+        }
+    }
+    let a = &rest[..];
     let name = arg(a, 0, "out/text");
     let text = arg(a, 1, "Hello world.");
     let body_name = arg(a, 2, "male");
     let g = g2p()?;
     let t = Instant::now();
-    let s = say(&g, text, body_name)?;
+    let s = say_with(&g, text, body_name, &tuning)?;
     let ms = ms_since(t);
     println!("{}", s.shown);
     let file = wav_name(name);

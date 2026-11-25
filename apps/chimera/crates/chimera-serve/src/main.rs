@@ -10,10 +10,8 @@
 //! CHIMERA_DICT (cmudict.txt.gz; `<site>/data/cmudict.txt.gz` when absent), CHIMERA_JOBS (renders
 //! at once, 2).
 
-mod script;
-
 use chimera::phonetics::english::EnglishG2P;
-use script::{Planned, Script};
+use chimera_serve::script::{self, Planned, Script};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Condvar, Mutex};

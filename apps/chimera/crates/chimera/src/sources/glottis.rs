@@ -9,6 +9,7 @@
 
 use crate::math::{Drift, PI, Rng, TAU, clamp, cos, exp, js_max, js_min, pow, sin, smoothstep};
 use crate::physics::CM_H2O;
+use crate::tuning::SourceTuning;
 
 #[derive(Clone, Copy, Debug)]
 pub struct GlottisParams {
@@ -105,10 +106,20 @@ pub struct ParametricGlottis {
     closure_sm: f64,
     amp_sm: f64,
     sm_coef: f64,
+    /// the gates' edges and the effort's laws (the coefficients above are made from it once)
+    tuning: SourceTuning,
+    /// what the pitch adds to the open quotient, set at control rate by a voice whose tuning has
+    /// `oq_per_octave`; read only then
+    pub oq_pitch: f64,
 }
 
 impl ParametricGlottis {
     pub fn new(fs: f64) -> Self {
+        Self::with_tuning(fs, &SourceTuning::default())
+    }
+
+    /// A source whose gates, smoothing and effort laws are `tuning`'s.
+    pub fn with_tuning(fs: f64, tuning: &SourceTuning) -> Self {
         ParametricGlottis {
             fs,
             params: DEFAULT_GLOTTIS,
@@ -126,15 +137,17 @@ impl ParametricGlottis {
             voicing: 0.0,
             voicing_sm: 0.0,
             dp_sm: 0.0,
-            dp_coef: 1.0 - exp(-TAU * 30.0 / fs),
-            voice_coef: 1.0 - exp(-TAU * 25.0 / fs),
+            dp_coef: 1.0 - exp(-TAU * tuning.pressure_smooth_hz / fs),
+            voice_coef: 1.0 - exp(-TAU * tuning.voicing_smooth_hz / fs),
             area: 0.0,
             f0_now: 110.0,
-            threshold: 2.5 * CM_H2O,
+            threshold: tuning.threshold_cm * CM_H2O,
             static_sm: 0.0,
             closure_sm: 0.0,
             amp_sm: 0.0,
-            sm_coef: 1.0 - exp(-1.0 / (0.004 * fs)),
+            sm_coef: 1.0 - exp(-1.0 / (tuning.smooth_seconds * fs)),
+            tuning: *tuning,
+            oq_pitch: 0.0,
         }
     }
 
@@ -150,6 +163,7 @@ impl ParametricGlottis {
     #[inline]
     pub fn next(&mut self, dp: f64) -> f64 {
         let p = self.params;
+        let t = self.tuning;
         self.dp_sm += self.dp_coef * (dp - self.dp_sm);
 
         // drift and vibrato evaluated at a decimated rate (pitch modulation is slow)
@@ -172,8 +186,8 @@ impl ParametricGlottis {
         self.f0_now = f0;
 
         // voicing gate: pressure above threshold, adduction sufficient, not forcibly closed
-        let pressure_gate = smoothstep(self.threshold * 0.8, self.threshold * 1.6, self.dp_sm);
-        let adduct_gate = 1.0 - smoothstep(0.08, 0.22, self.static_sm - p.chink);
+        let pressure_gate = smoothstep(self.threshold * t.threshold_lo, self.threshold * t.threshold_hi, self.dp_sm);
+        let adduct_gate = 1.0 - smoothstep(t.adduct_lo, t.adduct_hi, self.static_sm - p.chink);
         let target = pressure_gate * adduct_gate * (1.0 - self.closure_sm);
         self.voicing_sm += self.voice_coef * (target - self.voicing_sm);
         self.voicing = self.voicing_sm;
@@ -202,7 +216,11 @@ impl ParametricGlottis {
         }
 
         // pulse shape within the cycle
-        let mut oq = clamp(p.open_quotient - 0.18 * (p.effort - 0.5), 0.25, 0.98);
+        let mut oq = if t.oq_per_octave != 0.0 {
+            clamp(p.open_quotient - t.oq_effort * (p.effort - t.oq_effort_mid) + self.oq_pitch, 0.25, 0.98)
+        } else {
+            clamp(p.open_quotient - t.oq_effort * (p.effort - t.oq_effort_mid), 0.25, 0.98)
+        };
         // the chink is left out: it's a gap behind folds that still meet
         oq = js_min(0.98, oq + p.open_with_abduction * js_max(0.0, self.static_sm - p.chink));
         if p.fry > 0.0 {
@@ -216,7 +234,7 @@ impl ParametricGlottis {
                 pulse += 0.55 * smoothstep(0.3, 0.8, p.fry) * shape(ph2, oq * 0.8, p.skew, p.closure_sharpness);
             }
         }
-        let effort_scale = 0.45 + 0.75 * p.effort;
+        let effort_scale = t.effort_amp_base + t.effort_amp_gain * p.effort;
         let sc = self.sm_coef;
         self.amp_sm += sc * (p.amplitude * effort_scale - self.amp_sm);
         self.closure_sm += sc * (p.closure - self.closure_sm);

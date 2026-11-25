@@ -5,13 +5,25 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+# The script layer (`script.rs`) is the library, for the CLI too; the server is the binary. Only
+# the binary needs the HTTP stack, so a crate that wants the scripts alone asks for
+# `default-features = false`.
+[lib]
+name = "chimera_serve"
+path = "src/lib.rs"
+
 [[bin]]
 name = "chimera-serve"
 path = "src/main.rs"
+required-features = ["server"]
+
+[features]
+default = ["server"]
+server = ["dep:tiny_http", "dep:flate2"]
 
 [dependencies]
 chimera = { path = "../chimera" }
-flate2 = "1"
+flate2 = { version = "1", optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tiny_http = "0.12"
+tiny_http = { version = "0.12", optional = true }

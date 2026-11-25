@@ -25,11 +25,13 @@ pub struct WallParams {
     pub stiffness: f64,
 }
 
+/// The human airway's own soft wall is `Tuning.physics`'s, whose default is this.
 pub const WALL_SOFT: WallParams = WallParams { mass: 1.5, resistance: 1600.0, stiffness: 3.0e5 };
 /// Cartilaginous trachea: stiffer and lighter.
 pub const WALL_TRACHEA: WallParams = WallParams { mass: 0.6, resistance: 1000.0, stiffness: 1.0e6 };
 /// Nasal mucosa: lossy.
 pub const WALL_NASAL: WallParams = WallParams { mass: 1.0, resistance: 3000.0, stiffness: 1.0e6 };
 
-/// Critical Reynolds number for onset of turbulence noise.
+/// Critical Reynolds number for onset of turbulence noise: what a network starts with (the human
+/// airway sets `Tuning.physics`'s, whose default is this).
 pub const RE_CRIT: f64 = 1800.0;
