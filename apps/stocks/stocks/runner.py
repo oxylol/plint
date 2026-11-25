@@ -64,6 +64,15 @@ class Runner:
             store.put("events_research_tried", today)
             if self.child("research", "--only", "drift,insiders", nice=15):
                 self.child("run")
+        if store.read_json("reports/index.json") is not None and store.get("copy_tried") != today \
+                and (not self.cfg.models or "copy" in self.cfg.models):
+            from .copytrade.live import due
+            from .bars import BarStore
+            if due(store, BarStore(self.cfg.cache_dir).last_day(self.cfg.index_symbol)):
+                store.put("copy_tried", today)          # once a day at most: a broken run must not spin
+                store.log("copy study starting: House reports, every person's copy book, the picks (the first time, hours)")
+                if self.child("copy", nice=15):
+                    self.child("run")
         last = store.get("fitted_at")
         week_old = not last or (now.date() - datetime.fromisoformat(last).date()).days >= 7
         if week_old and now.astimezone(cal.NY).weekday() >= 5:   # at the weekend, when no run is waiting

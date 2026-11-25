@@ -11,7 +11,7 @@
 //     mcr.microsoft.com/playwright:v1.48.2-jammy node /t/page.js
 //
 // /tmp/plint-sketch/node_modules holds playwright 1.48.2 (if /tmp was emptied: npm i playwright@1.48.2 in any
-// folder and mount its node_modules instead). ONLY=board,books,keys,refresh,hostile,look,touch picks groups;
+// folder and mount its node_modules instead). ONLY=board,books,keys,refresh,hostile,look,touch,copy picks groups;
 // SIZES=pc or SIZES=phone picks one size; BASE and SHOTS move the server and the screenshots.
 // The one request that is expected to fail is /_plint/health: the Plint strip asks Uptime Kuma for it through
 // Caddy, and the fixture server has no Kuma behind it.
@@ -21,7 +21,7 @@ const path = require('path');
 
 const BASE = process.env.BASE || 'http://127.0.0.1:5258';
 const SHOTS = process.env.SHOTS || '/shots';
-const ONLY = (process.env.ONLY || 'board,books,keys,refresh,hostile,look,touch').split(',');
+const ONLY = (process.env.ONLY || 'board,books,keys,refresh,hostile,look,touch,copy').split(',');
 const SIZES = (process.env.SIZES || 'pc,phone').split(',');
 const VIEW = {
   pc: { viewport: { width: 1440, height: 900 } },
@@ -392,7 +392,7 @@ async function books(browser, size, fixture) {
     await page.goto(url(fixture, '#/' + m.id)); await bookReady(page);
     const t = await visibleText(page), s = await sideways(page);
     const got = await page.evaluate(() => ({ title: document.getElementById('book-title').textContent, secs: [...document.querySelectorAll('#detail .sec')].map((x) => x.id), pos: document.querySelectorAll('.tb-positions tbody tr').length, tr: document.querySelectorAll('.tb-trades tbody tr').length, sig: document.querySelectorAll('.tb-signals tbody tr').length, hollow: [...document.querySelectorAll('#detail table')].filter((x) => !x.querySelector('tbody tr')).length, state: (document.querySelector('.bk-state') || {}).textContent || null, vd: (document.querySelector('#sec-verdict .vd-line') || {}).textContent }));
-    const want = ['sec-curve', 'sec-verdict', 'sec-pending', ...(d.today ? ['sec-today'] : []), ...(d.ranking_history.length ? ['sec-history'] : []), 'sec-positions', 'sec-trades', ...(d.signals.length ? ['sec-signals'] : []), 'sec-backtest'];
+    const want = ['sec-curve', 'sec-verdict', ...(d.copy ? ['sec-copynow', 'sec-combos', 'sec-people', 'sec-picks'] : []), 'sec-pending', ...(d.today ? ['sec-today'] : []), ...(d.ranking_history.length ? ['sec-history'] : []), 'sec-positions', 'sec-trades', ...(d.signals.length ? ['sec-signals'] : []), 'sec-backtest'];
     if (BAD_WORDS.test(t)) bad.push(`${m.id}: "${BAD_WORDS.exec(t)[0]}"`);
     if (s.sw > s.iw) bad.push(`${m.id}: scrolls sideways`);
     if (got.title !== m.title || got.secs.join() !== want.join() || got.pos !== d.positions.length || got.tr !== d.trades.length || got.sig !== d.signals.length || got.hollow) bad.push(`${m.id}: ${JSON.stringify(got)}`);
@@ -411,6 +411,61 @@ async function books(browser, size, fixture) {
 }
 
 // ── the keyboard, on a PC ───────────────────────────────────────────────────────────────────────────────
+// 8 the copy book: whom it copies, fair beside hindsight, everyone copied with a filter, the picks
+async function copy(browser, size) {
+  const tag = `[${size} copy]`;
+  const c = fx('model_copy.json').copy;
+  const { ctx, page, seen } = await open(browser, size);
+  await page.goto(url('running', '#/copy'));
+  await bookReady(page);
+  await page.waitForSelector('#sec-people', { timeout: 8000 }).catch(() => {});
+  const got = await page.evaluate(() => {
+    const rows = (sel) => [...document.querySelectorAll(sel)].filter((r) => !r.hidden);
+    const cells = (r, k) => (r.querySelector('.t-' + k) || {}).textContent || '';
+    return {
+      order: [...document.querySelectorAll('.bk-body > .sec')].map((s) => s.id),
+      now: rows('.tb-copynow tbody tr').map((r) => [cells(r, 'who'), cells(r, 'vs')]),
+      combos: rows('.tb-combos tbody tr').map((r) => [cells(r, 'vs'), cells(r, 'bk'), cells(r, 'x2')]),
+      hind: (document.querySelector('#sec-combos .cap b') || {}).parentNode ? document.querySelector('#sec-combos .cap b').parentNode.textContent : '',
+      charts: document.querySelectorAll('#sec-combos .chart-curve').length,
+      people: rows('.tb-people tbody tr').map((r) => [cells(r, 'rk'), cells(r, 'who'), cells(r, 'vs')]),
+      more: (document.querySelector('#sec-people .more') || {}).textContent,
+      picks: rows('.tb-picks tbody tr').length, picksMore: (document.querySelector('#sec-picks .more') || {}).textContent,
+      segs: [...document.querySelectorAll('#sec-people .seg')].map((b) => [b.textContent, b.getAttribute('aria-pressed')]),
+    };
+  });
+  check(`${tag} the study comes before what the book holds`, got.order.indexOf('sec-copynow') > 0 && got.order.indexOf('sec-copynow') < got.order.indexOf('sec-positions'), got.order.join(','));
+  check(`${tag} whom it copies now: the fixture's ten, in order, with their figure`, got.now.length === c.now.people.length
+    && got.now.every((r, i) => norm(r[0]).startsWith(c.now.people[i].name) && norm(r[1]) === pct(c.now.people[i].score)), JSON.stringify(got.now.slice(0, 2)));
+  check(`${tag} fair and hindsight side by side: against the index, the basket, costs doubled`, got.combos.length === 2
+    && norm(got.combos[0][0]) === pct(c.fair.vs_index_ann) && norm(got.combos[1][0]) === pct(c.hindsight.vs_index_ann)
+    && norm(got.combos[0][1]) === pct(c.fair.vs_basket) && norm(got.combos[1][2]) === pct(c.hindsight.costs_x2), JSON.stringify(got.combos));
+  check(`${tag} hindsight's ten are named, and both combos have a curve`, c.hindsight.people.every((x) => norm(got.hind).includes(x.name)) && got.charts === 2, got.charts);
+  const ranked = c.people.filter((x) => x.ranked);
+  check(`${tag} everyone copied: the first 12, best first, ranked, and a button for all ${c.people.length}`, got.people.length === 12
+    && got.people.every((r, i) => norm(r[0]) === String(ranked[i].rank) && norm(r[1]).startsWith(ranked[i].name) && norm(r[2]) === pct(ranked[i].vs_index_ann))
+    && norm(got.more) === `Show all ${c.people.length} people`, JSON.stringify(got.people.slice(0, 2)));
+  const nHouse = c.people.filter((x) => x.pool === 'house').length, nIns = c.people.length - nHouse;
+  check(`${tag} the filter says how many are in each and starts on everyone`, got.segs.map((s) => norm(s[0])).join('|') === `Everyone ${c.people.length}|House ${nHouse}|Insiders ${nIns}` && got.segs[0][1] === 'true', JSON.stringify(got.segs));
+  await page.click('#sec-people .seg[data-pool="insider"]');
+  const ins = await page.evaluate(() => ({ labels: [...document.querySelectorAll('.tb-people tbody tr')].map((r) => r.querySelector('.t-who').textContent),
+    pressed: document.querySelector('#sec-people .seg[data-pool="insider"]').getAttribute('aria-pressed'), more: (document.querySelector('#sec-people .more') || {}).textContent }));
+  const insFirst = c.people.filter((x) => x.pool === 'insider');
+  check(`${tag} Insiders shows only insiders, theirs first, and is pressed`, ins.pressed === 'true' && ins.labels.length === insFirst.length
+    && norm(ins.labels[0]).startsWith(insFirst[0].name) && norm(ins.more) === `Show all ${nIns} people`, `${ins.labels.length} ${ins.more}`);
+  await page.click('#sec-people .seg[data-pool="house"]');
+  await page.click('#sec-people .more');
+  const all = await page.evaluate(() => [...document.querySelectorAll('.tb-people tbody tr')].filter((r) => !r.hidden).length);
+  check(`${tag} House, then show all: every House member`, all === nHouse, `${all} of ${nHouse}`);
+  check(`${tag} whom it followed: every half year, newest first, behind a button past 15`, (got.picks === 12 && norm(got.picksMore) === `Show all ${c.picks.length} half years`) || (c.picks.length <= 15 && got.picks === c.picks.length), `${got.picks} ${got.picksMore}`);
+  const sw = await sideways(page);
+  check(`${tag} nothing scrolls sideways`, sw.sw <= sw.cw + 1, sw.sw > sw.cw + 1 ? await wide(page, sw.cw) : '');
+  const bad = (await visibleText(page)).match(BAD_WORDS);
+  check(`${tag} no NaN, null or undefined on the page; no errors`, !bad && !seen.errors.length && !seen.bad.length, (bad || []).join() + seen.errors.join(' | ') + seen.bad.join(' | '));
+  if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `copy-${size}.png`), fullPage: true }).catch(() => {});
+  await ctx.close();
+}
+
 async function keyboard(browser) {
   const tag = '[pc running]';
   const { ctx, page } = await open(browser, 'pc');
@@ -671,6 +726,7 @@ async function touch(browser) {
       if (ONLY.includes('refresh')) await refresh(browser, size);
       if (ONLY.includes('hostile')) await hostileRun(browser, size);
       if (ONLY.includes('look')) await look(browser, size);
+      if (ONLY.includes('copy')) await copy(browser, size);
     }
     if (ONLY.includes('books') && SIZES.includes('pc')) await keyboard(browser);
     if (ONLY.includes('touch') && SIZES.includes('phone')) await touch(browser);

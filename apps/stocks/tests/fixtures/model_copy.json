@@ -1,0 +1,8861 @@
+{
+ "id": "copy",
+ "title": "Copy the best ten",
+ "kind": "copy",
+ "what": "Copies the ten House members and company insiders whose disclosed trades did best against the index over the three years before, re-picked every January and July.",
+ "state": "running",
+ "state_text": "",
+ "since": "2026-09-11",
+ "days": 45,
+ "equity": 10167.45,
+ "ret": 0.01674,
+ "index_ret": 0.00863,
+ "vs_index": 0.00811,
+ "day_ret": 0.00047,
+ "day_vs_index": -0.00052,
+ "max_dd": -0.0603,
+ "n_pos": 40,
+ "cash": 0.0483,
+ "trades": [
+  {
+   "date": "2026-11-13",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 296.44,
+   "price": 682.68,
+   "shares": 0.4342,
+   "cost": 0.07,
+   "why": "rank 32 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 192.73,
+   "price": 841.18,
+   "shares": 0.2291,
+   "cost": 0.061,
+   "why": "fell to rank 280",
+   "ret": 0.1028
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "buy",
+   "usd": 237.22,
+   "price": 52.14,
+   "shares": 4.5497,
+   "cost": 0.066,
+   "why": "rank 25 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "buy",
+   "usd": 215.28,
+   "price": 68.14,
+   "shares": 3.1594,
+   "cost": 0.075,
+   "why": "rank 27 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "buy",
+   "usd": 190.3,
+   "price": 490.62,
+   "shares": 0.3879,
+   "cost": 0.036,
+   "why": "rank 34 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-13",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 281.38,
+   "price": 181.7,
+   "shares": 1.5486,
+   "cost": 0.064,
+   "why": "fell to rank 612",
+   "ret": -0.0397
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "sell",
+   "usd": 241.99,
+   "price": 751.59,
+   "shares": 0.322,
+   "cost": 0.062,
+   "why": "fell to rank 538",
+   "ret": 0.0623
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "buy",
+   "usd": 232.36,
+   "price": 644.55,
+   "shares": 0.3605,
+   "cost": 0.043,
+   "why": "rank 2 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 223.0,
+   "price": 278.13,
+   "shares": 0.8018,
+   "cost": 0.078,
+   "why": "rank 3 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "buy",
+   "usd": 217.44,
+   "price": 30.59,
+   "shares": 7.1082,
+   "cost": 0.073,
+   "why": "rank 33 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "side": "sell",
+   "usd": 290.98,
+   "price": 369.79,
+   "shares": 0.7869,
+   "cost": 0.094,
+   "why": "fell to rank 312",
+   "ret": 0.026
+  },
+  {
+   "date": "2026-11-12",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "sell",
+   "usd": 201.69,
+   "price": 312.01,
+   "shares": 0.6464,
+   "cost": 0.083,
+   "why": "fell to rank 318",
+   "ret": -0.0847
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "buy",
+   "usd": 264.2,
+   "price": 507.0,
+   "shares": 0.5211,
+   "cost": 0.087,
+   "why": "rank 28 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "buy",
+   "usd": 185.37,
+   "price": 329.46,
+   "shares": 0.5626,
+   "cost": 0.078,
+   "why": "rank 30 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "buy",
+   "usd": 228.8,
+   "price": 787.73,
+   "shares": 0.2905,
+   "cost": 0.08,
+   "why": "rank 4 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "buy",
+   "usd": 199.14,
+   "price": 831.05,
+   "shares": 0.2396,
+   "cost": 0.039,
+   "why": "rank 24 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "buy",
+   "usd": 189.28,
+   "price": 322.41,
+   "shares": 0.5871,
+   "cost": 0.038,
+   "why": "rank 26 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-11",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 266.43,
+   "price": 238.86,
+   "shares": 1.1154,
+   "cost": 0.054,
+   "why": "fell to rank 408",
+   "ret": -0.0469
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 297.85,
+   "price": 593.99,
+   "shares": 0.5014,
+   "cost": 0.133,
+   "why": "fell to rank 638",
+   "ret": 0.0993
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "side": "sell",
+   "usd": 208.12,
+   "price": 460.66,
+   "shares": 0.4518,
+   "cost": 0.069,
+   "why": "fell to rank 503",
+   "ret": 0.0411
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "usd": 207.07,
+   "price": 204.89,
+   "shares": 1.0106,
+   "cost": 0.076,
+   "why": "fell to rank 516",
+   "ret": 0.0955
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "side": "sell",
+   "usd": 252.59,
+   "price": 428.79,
+   "shares": 0.5891,
+   "cost": 0.045,
+   "why": "fell to rank 581",
+   "ret": -0.0394
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 269.53,
+   "price": 50.41,
+   "shares": 5.3468,
+   "cost": 0.099,
+   "why": "fell to rank 425",
+   "ret": 0.0612
+  },
+  {
+   "date": "2026-11-10",
+   "symbol": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "side": "buy",
+   "usd": 189.02,
+   "price": 830.1,
+   "shares": 0.2277,
+   "cost": 0.067,
+   "why": "rank 5 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "buy",
+   "usd": 234.83,
+   "price": 33.04,
+   "shares": 7.1074,
+   "cost": 0.056,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "usd": 220.85,
+   "price": 267.82,
+   "shares": 0.8246,
+   "cost": 0.061,
+   "why": "rank 3 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "sell",
+   "usd": 281.07,
+   "price": 52.35,
+   "shares": 5.3691,
+   "cost": 0.079,
+   "why": "fell to rank 639",
+   "ret": 0.0638
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "buy",
+   "usd": 178.31,
+   "price": 433.3,
+   "shares": 0.4115,
+   "cost": 0.032,
+   "why": "rank 20 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 243.79,
+   "price": 829.78,
+   "shares": 0.2938,
+   "cost": 0.046,
+   "why": "fell to rank 299",
+   "ret": 0.0018
+  },
+  {
+   "date": "2026-11-09",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 277.31,
+   "price": 859.04,
+   "shares": 0.3228,
+   "cost": 0.11,
+   "why": "fell to rank 361",
+   "ret": -0.0423
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 249.17,
+   "price": 617.23,
+   "shares": 0.4037,
+   "cost": 0.095,
+   "why": "fell to rank 666",
+   "ret": 0.0453
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "sell",
+   "usd": 266.41,
+   "price": 232.03,
+   "shares": 1.1482,
+   "cost": 0.111,
+   "why": "fell to rank 248",
+   "ret": 0.0196
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 301.69,
+   "price": 816.88,
+   "shares": 0.3693,
+   "cost": 0.111,
+   "why": "rank 11 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 226.87,
+   "price": 257.18,
+   "shares": 0.8821,
+   "cost": 0.099,
+   "why": "fell to rank 614",
+   "ret": -0.0814
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 300.78,
+   "price": 802.08,
+   "shares": 0.375,
+   "cost": 0.082,
+   "why": "fell to rank 341",
+   "ret": 0.0801
+  },
+  {
+   "date": "2026-11-06",
+   "symbol": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "side": "buy",
+   "usd": 194.39,
+   "price": 477.3,
+   "shares": 0.4073,
+   "cost": 0.055,
+   "why": "rank 30 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "side": "sell",
+   "usd": 187.75,
+   "price": 260.33,
+   "shares": 0.7212,
+   "cost": 0.058,
+   "why": "fell to rank 624",
+   "ret": 0.0749
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "sell",
+   "usd": 263.11,
+   "price": 786.65,
+   "shares": 0.3345,
+   "cost": 0.043,
+   "why": "fell to rank 606",
+   "ret": -0.0352
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "buy",
+   "usd": 205.39,
+   "price": 600.0,
+   "shares": 0.3423,
+   "cost": 0.036,
+   "why": "rank 19 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "usd": 220.08,
+   "price": 250.42,
+   "shares": 0.8788,
+   "cost": 0.068,
+   "why": "fell to rank 550",
+   "ret": -0.0241
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 235.99,
+   "price": 212.77,
+   "shares": 1.1091,
+   "cost": 0.086,
+   "why": "fell to rank 360",
+   "ret": 0.0038
+  },
+  {
+   "date": "2026-11-05",
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "side": "sell",
+   "usd": 266.92,
+   "price": 599.54,
+   "shares": 0.4452,
+   "cost": 0.048,
+   "why": "fell to rank 549",
+   "ret": -0.0748
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "sell",
+   "usd": 301.87,
+   "price": 593.32,
+   "shares": 0.5088,
+   "cost": 0.062,
+   "why": "fell to rank 459",
+   "ret": 0.049
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 243.03,
+   "price": 584.81,
+   "shares": 0.4156,
+   "cost": 0.099,
+   "why": "fell to rank 652",
+   "ret": 0.0143
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "buy",
+   "usd": 216.63,
+   "price": 778.59,
+   "shares": 0.2782,
+   "cost": 0.09,
+   "why": "rank 33 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "side": "buy",
+   "usd": 223.47,
+   "price": 279.85,
+   "shares": 0.7985,
+   "cost": 0.097,
+   "why": "rank 28 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "sell",
+   "usd": 267.16,
+   "price": 622.48,
+   "shares": 0.4292,
+   "cost": 0.117,
+   "why": "fell to rank 588",
+   "ret": -0.0529
+  },
+  {
+   "date": "2026-11-04",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 190.21,
+   "price": 598.48,
+   "shares": 0.3178,
+   "cost": 0.057,
+   "why": "fell to rank 657",
+   "ret": -0.0734
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "sell",
+   "usd": 280.44,
+   "price": 183.47,
+   "shares": 1.5285,
+   "cost": 0.057,
+   "why": "fell to rank 302",
+   "ret": 0.1199
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "buy",
+   "usd": 286.58,
+   "price": 255.99,
+   "shares": 1.1195,
+   "cost": 0.056,
+   "why": "rank 3 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 239.11,
+   "price": 254.42,
+   "shares": 0.9398,
+   "cost": 0.105,
+   "why": "fell to rank 499",
+   "ret": -0.1037
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "side": "sell",
+   "usd": 183.31,
+   "price": 175.91,
+   "shares": 1.0421,
+   "cost": 0.05,
+   "why": "fell to rank 556",
+   "ret": 0.0655
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 191.62,
+   "price": 142.11,
+   "shares": 1.3484,
+   "cost": 0.041,
+   "why": "fell to rank 370",
+   "ret": 0.0135
+  },
+  {
+   "date": "2026-11-03",
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "side": "sell",
+   "usd": 179.07,
+   "price": 157.23,
+   "shares": 1.1389,
+   "cost": 0.055,
+   "why": "fell to rank 518",
+   "ret": 0.0775
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "buy",
+   "usd": 213.11,
+   "price": 842.56,
+   "shares": 0.2529,
+   "cost": 0.064,
+   "why": "rank 30 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "buy",
+   "usd": 286.58,
+   "price": 244.83,
+   "shares": 1.1705,
+   "cost": 0.074,
+   "why": "rank 10 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "AMD",
+   "name": "Advanced Micro Devices, Inc.",
+   "side": "sell",
+   "usd": 180.75,
+   "price": 462.46,
+   "shares": 0.3908,
+   "cost": 0.054,
+   "why": "fell to rank 447",
+   "ret": 0.0459
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "sell",
+   "usd": 267.23,
+   "price": 300.99,
+   "shares": 0.8878,
+   "cost": 0.115,
+   "why": "fell to rank 264",
+   "ret": 0.0021
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "buy",
+   "usd": 219.28,
+   "price": 763.92,
+   "shares": 0.287,
+   "cost": 0.071,
+   "why": "rank 30 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-11-02",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "sell",
+   "usd": 189.01,
+   "price": 263.25,
+   "shares": 0.718,
+   "cost": 0.048,
+   "why": "fell to rank 496",
+   "ret": -0.0231
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "buy",
+   "usd": 251.04,
+   "price": 40.44,
+   "shares": 6.2077,
+   "cost": 0.093,
+   "why": "rank 34 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 232.71,
+   "price": 818.16,
+   "shares": 0.2844,
+   "cost": 0.083,
+   "why": "rank 1 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "sell",
+   "usd": 260.94,
+   "price": 786.98,
+   "shares": 0.3316,
+   "cost": 0.079,
+   "why": "fell to rank 436",
+   "ret": 0.0298
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "side": "buy",
+   "usd": 257.11,
+   "price": 201.43,
+   "shares": 1.2764,
+   "cost": 0.088,
+   "why": "rank 3 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "buy",
+   "usd": 244.74,
+   "price": 492.28,
+   "shares": 0.4972,
+   "cost": 0.08,
+   "why": "rank 11 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-30",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "sell",
+   "usd": 269.26,
+   "price": 686.48,
+   "shares": 0.3922,
+   "cost": 0.066,
+   "why": "fell to rank 641",
+   "ret": 0.053
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 226.96,
+   "price": 358.4,
+   "shares": 0.6333,
+   "cost": 0.094,
+   "why": "rank 15 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "CVNA",
+   "name": "Carvana Co.",
+   "side": "buy",
+   "usd": 272.84,
+   "price": 592.95,
+   "shares": 0.4601,
+   "cost": 0.047,
+   "why": "rank 9 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 300.53,
+   "price": 575.42,
+   "shares": 0.5223,
+   "cost": 0.091,
+   "why": "fell to rank 481",
+   "ret": 0.1132
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 245.31,
+   "price": 83.97,
+   "shares": 2.9214,
+   "cost": 0.06,
+   "why": "fell to rank 619",
+   "ret": -0.0154
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 216.24,
+   "price": 196.76,
+   "shares": 1.099,
+   "cost": 0.055,
+   "why": "fell to rank 479",
+   "ret": 0.0111
+  },
+  {
+   "date": "2026-10-29",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "buy",
+   "usd": 198.21,
+   "price": 163.74,
+   "shares": 1.2105,
+   "cost": 0.089,
+   "why": "rank 29 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 267.47,
+   "price": 21.1,
+   "shares": 12.6763,
+   "cost": 0.068,
+   "why": "fell to rank 356",
+   "ret": 0.0346
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 225.63,
+   "price": 371.92,
+   "shares": 0.6067,
+   "cost": 0.048,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 206.6,
+   "price": 677.23,
+   "shares": 0.3051,
+   "cost": 0.091,
+   "why": "fell to rank 213",
+   "ret": 0.0768
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "buy",
+   "usd": 228.69,
+   "price": 475.79,
+   "shares": 0.4807,
+   "cost": 0.089,
+   "why": "rank 17 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "side": "buy",
+   "usd": 269.24,
+   "price": 41.77,
+   "shares": 6.4458,
+   "cost": 0.107,
+   "why": "rank 19 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-28",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "buy",
+   "usd": 247.71,
+   "price": 37.73,
+   "shares": 6.5653,
+   "cost": 0.057,
+   "why": "rank 16 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "CRWD",
+   "name": "CrowdStrike Holdings, Inc.",
+   "side": "buy",
+   "usd": 208.27,
+   "price": 160.43,
+   "shares": 1.2982,
+   "cost": 0.088,
+   "why": "rank 17 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 219.58,
+   "price": 404.4,
+   "shares": 0.543,
+   "cost": 0.089,
+   "why": "fell to rank 561",
+   "ret": -0.0913
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 204.58,
+   "price": 104.43,
+   "shares": 1.959,
+   "cost": 0.047,
+   "why": "fell to rank 497",
+   "ret": 0.1209
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "sell",
+   "usd": 285.2,
+   "price": 397.95,
+   "shares": 0.7167,
+   "cost": 0.046,
+   "why": "fell to rank 650",
+   "ret": -0.007
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 192.08,
+   "price": 99.84,
+   "shares": 1.9239,
+   "cost": 0.052,
+   "why": "fell to rank 535",
+   "ret": -0.0573
+  },
+  {
+   "date": "2026-10-27",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "buy",
+   "usd": 202.98,
+   "price": 512.52,
+   "shares": 0.396,
+   "cost": 0.077,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "buy",
+   "usd": 276.91,
+   "price": 798.89,
+   "shares": 0.3466,
+   "cost": 0.107,
+   "why": "rank 39 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 231.81,
+   "price": 615.29,
+   "shares": 0.3767,
+   "cost": 0.071,
+   "why": "fell to rank 554",
+   "ret": 0.0962
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "side": "buy",
+   "usd": 278.21,
+   "price": 445.18,
+   "shares": 0.6249,
+   "cost": 0.085,
+   "why": "rank 2 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "sell",
+   "usd": 213.58,
+   "price": 649.09,
+   "shares": 0.329,
+   "cost": 0.069,
+   "why": "fell to rank 412",
+   "ret": -0.017
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 244.48,
+   "price": 672.77,
+   "shares": 0.3634,
+   "cost": 0.097,
+   "why": "rank 22 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-26",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 213.68,
+   "price": 368.15,
+   "shares": 0.5804,
+   "cost": 0.084,
+   "why": "rank 13 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "side": "sell",
+   "usd": 223.0,
+   "price": 877.15,
+   "shares": 0.2542,
+   "cost": 0.035,
+   "why": "fell to rank 296",
+   "ret": -0.0509
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "buy",
+   "usd": 293.64,
+   "price": 623.2,
+   "shares": 0.4712,
+   "cost": 0.082,
+   "why": "rank 1 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "CVNA",
+   "name": "Carvana Co.",
+   "side": "sell",
+   "usd": 292.86,
+   "price": 297.47,
+   "shares": 0.9845,
+   "cost": 0.056,
+   "why": "fell to rank 560",
+   "ret": -0.02
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 301.99,
+   "price": 593.34,
+   "shares": 0.509,
+   "cost": 0.133,
+   "why": "rank 25 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "side": "buy",
+   "usd": 301.48,
+   "price": 258.79,
+   "shares": 1.165,
+   "cost": 0.06,
+   "why": "rank 17 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-23",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "buy",
+   "usd": 206.21,
+   "price": 462.98,
+   "shares": 0.4454,
+   "cost": 0.082,
+   "why": "rank 26 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "side": "sell",
+   "usd": 196.85,
+   "price": 390.58,
+   "shares": 0.504,
+   "cost": 0.083,
+   "why": "fell to rank 506",
+   "ret": 0.0192
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "side": "buy",
+   "usd": 263.32,
+   "price": 123.08,
+   "shares": 2.1394,
+   "cost": 0.079,
+   "why": "rank 30 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 179.16,
+   "price": 80.22,
+   "shares": 2.2334,
+   "cost": 0.078,
+   "why": "fell to rank 291",
+   "ret": -0.0878
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 208.86,
+   "price": 563.04,
+   "shares": 0.371,
+   "cost": 0.042,
+   "why": "fell to rank 646",
+   "ret": -0.0828
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "sell",
+   "usd": 242.39,
+   "price": 440.74,
+   "shares": 0.55,
+   "cost": 0.093,
+   "why": "fell to rank 226",
+   "ret": -0.0487
+  },
+  {
+   "date": "2026-10-22",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "buy",
+   "usd": 182.27,
+   "price": 41.23,
+   "shares": 4.4208,
+   "cost": 0.064,
+   "why": "rank 1 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 196.3,
+   "price": 512.6,
+   "shares": 0.3829,
+   "cost": 0.059,
+   "why": "fell to rank 622",
+   "ret": 0.1029
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "CVNA",
+   "name": "Carvana Co.",
+   "side": "buy",
+   "usd": 217.75,
+   "price": 787.31,
+   "shares": 0.2766,
+   "cost": 0.084,
+   "why": "rank 38 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "sell",
+   "usd": 304.54,
+   "price": 724.08,
+   "shares": 0.4206,
+   "cost": 0.067,
+   "why": "fell to rank 662",
+   "ret": -0.0025
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "buy",
+   "usd": 208.41,
+   "price": 417.06,
+   "shares": 0.4997,
+   "cost": 0.047,
+   "why": "rank 39 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "sell",
+   "usd": 253.22,
+   "price": 576.57,
+   "shares": 0.4392,
+   "cost": 0.044,
+   "why": "fell to rank 676",
+   "ret": -0.0164
+  },
+  {
+   "date": "2026-10-21",
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "side": "buy",
+   "usd": 208.52,
+   "price": 317.87,
+   "shares": 0.656,
+   "cost": 0.075,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "buy",
+   "usd": 244.07,
+   "price": 433.29,
+   "shares": 0.5633,
+   "cost": 0.069,
+   "why": "rank 27 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 263.21,
+   "price": 34.19,
+   "shares": 7.6984,
+   "cost": 0.046,
+   "why": "fell to rank 664",
+   "ret": 0.0024
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "side": "sell",
+   "usd": 231.19,
+   "price": 111.24,
+   "shares": 2.0783,
+   "cost": 0.089,
+   "why": "fell to rank 364",
+   "ret": -0.0005
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "buy",
+   "usd": 238.5,
+   "price": 94.88,
+   "shares": 2.5137,
+   "cost": 0.104,
+   "why": "rank 26 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "buy",
+   "usd": 227.56,
+   "price": 666.49,
+   "shares": 0.3414,
+   "cost": 0.063,
+   "why": "rank 19 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-20",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "buy",
+   "usd": 296.34,
+   "price": 245.94,
+   "shares": 1.2049,
+   "cost": 0.064,
+   "why": "rank 34 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "buy",
+   "usd": 181.78,
+   "price": 398.45,
+   "shares": 0.4562,
+   "cost": 0.045,
+   "why": "rank 27 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "buy",
+   "usd": 242.49,
+   "price": 458.47,
+   "shares": 0.5289,
+   "cost": 0.044,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "side": "sell",
+   "usd": 297.66,
+   "price": 345.02,
+   "shares": 0.8627,
+   "cost": 0.061,
+   "why": "fell to rank 683",
+   "ret": -0.0507
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "side": "sell",
+   "usd": 212.0,
+   "price": 699.77,
+   "shares": 0.303,
+   "cost": 0.092,
+   "why": "fell to rank 384",
+   "ret": 0.0302
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 246.89,
+   "price": 776.59,
+   "shares": 0.3179,
+   "cost": 0.109,
+   "why": "fell to rank 677",
+   "ret": 0.089
+  },
+  {
+   "date": "2026-10-19",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "sell",
+   "usd": 240.74,
+   "price": 75.1,
+   "shares": 3.2056,
+   "cost": 0.079,
+   "why": "fell to rank 660",
+   "ret": 0.0523
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "XOM",
+   "name": "Exxon Mobil Corporation",
+   "side": "sell",
+   "usd": 232.73,
+   "price": 269.27,
+   "shares": 0.8643,
+   "cost": 0.055,
+   "why": "fell to rank 358",
+   "ret": 0.0031
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "ZS",
+   "name": "Zscaler, Inc.",
+   "side": "sell",
+   "usd": 215.24,
+   "price": 26.89,
+   "shares": 8.0045,
+   "cost": 0.082,
+   "why": "fell to rank 484",
+   "ret": -0.0503
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "buy",
+   "usd": 185.76,
+   "price": 235.47,
+   "shares": 0.7889,
+   "cost": 0.03,
+   "why": "rank 9 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "buy",
+   "usd": 296.07,
+   "price": 535.07,
+   "shares": 0.5533,
+   "cost": 0.11,
+   "why": "rank 9 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 207.21,
+   "price": 460.5,
+   "shares": 0.45,
+   "cost": 0.032,
+   "why": "fell to rank 305",
+   "ret": 0.1011
+  },
+  {
+   "date": "2026-10-16",
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "side": "buy",
+   "usd": 190.14,
+   "price": 548.03,
+   "shares": 0.347,
+   "cost": 0.056,
+   "why": "rank 11 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "sell",
+   "usd": 237.81,
+   "price": 480.13,
+   "shares": 0.4953,
+   "cost": 0.089,
+   "why": "fell to rank 523",
+   "ret": -0.0148
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 295.09,
+   "price": 126.67,
+   "shares": 2.3296,
+   "cost": 0.1,
+   "why": "rank 18 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "sell",
+   "usd": 200.77,
+   "price": 192.58,
+   "shares": 1.0425,
+   "cost": 0.055,
+   "why": "fell to rank 491",
+   "ret": -0.1054
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "buy",
+   "usd": 238.22,
+   "price": 494.09,
+   "shares": 0.4821,
+   "cost": 0.076,
+   "why": "rank 11 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "buy",
+   "usd": 211.01,
+   "price": 56.12,
+   "shares": 3.76,
+   "cost": 0.042,
+   "why": "rank 33 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-15",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 201.92,
+   "price": 658.12,
+   "shares": 0.3068,
+   "cost": 0.078,
+   "why": "rank 7 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "sell",
+   "usd": 247.98,
+   "price": 624.67,
+   "shares": 0.397,
+   "cost": 0.046,
+   "why": "fell to rank 533",
+   "ret": 0.0381
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "side": "sell",
+   "usd": 251.44,
+   "price": 821.01,
+   "shares": 0.3063,
+   "cost": 0.091,
+   "why": "fell to rank 655",
+   "ret": 0.0481
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "sell",
+   "usd": 195.49,
+   "price": 215.63,
+   "shares": 0.9066,
+   "cost": 0.088,
+   "why": "fell to rank 451",
+   "ret": 0.0696
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "GE",
+   "name": "GE Aerospace",
+   "side": "buy",
+   "usd": 183.34,
+   "price": 24.45,
+   "shares": 7.4986,
+   "cost": 0.057,
+   "why": "rank 12 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "DE",
+   "name": "Deere & Company",
+   "side": "sell",
+   "usd": 235.41,
+   "price": 172.45,
+   "shares": 1.3651,
+   "cost": 0.076,
+   "why": "fell to rank 282",
+   "ret": 0.0188
+  },
+  {
+   "date": "2026-10-14",
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "side": "sell",
+   "usd": 225.86,
+   "price": 422.79,
+   "shares": 0.5342,
+   "cost": 0.056,
+   "why": "fell to rank 465",
+   "ret": 0.0041
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "buy",
+   "usd": 276.2,
+   "price": 762.54,
+   "shares": 0.3622,
+   "cost": 0.043,
+   "why": "rank 16 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "CVNA",
+   "name": "Carvana Co.",
+   "side": "sell",
+   "usd": 198.9,
+   "price": 759.99,
+   "shares": 0.2617,
+   "cost": 0.046,
+   "why": "fell to rank 698",
+   "ret": -0.0298
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 189.54,
+   "price": 686.74,
+   "shares": 0.276,
+   "cost": 0.064,
+   "why": "rank 8 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "ANET",
+   "name": "Arista Networks, Inc.",
+   "side": "sell",
+   "usd": 233.06,
+   "price": 466.6,
+   "shares": 0.4995,
+   "cost": 0.081,
+   "why": "fell to rank 447",
+   "ret": -0.0582
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "side": "sell",
+   "usd": 293.47,
+   "price": 845.87,
+   "shares": 0.3469,
+   "cost": 0.101,
+   "why": "fell to rank 649",
+   "ret": -0.0233
+  },
+  {
+   "date": "2026-10-13",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 228.24,
+   "price": 345.63,
+   "shares": 0.6604,
+   "cost": 0.045,
+   "why": "rank 10 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "NEM",
+   "name": "Newmont Corporation",
+   "side": "buy",
+   "usd": 273.36,
+   "price": 706.54,
+   "shares": 0.3869,
+   "cost": 0.056,
+   "why": "rank 34 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "usd": 300.46,
+   "price": 306.08,
+   "shares": 0.9816,
+   "cost": 0.095,
+   "why": "fell to rank 331",
+   "ret": -0.0372
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "VRT",
+   "name": "Vertiv Holdings Co",
+   "side": "buy",
+   "usd": 230.84,
+   "price": 99.72,
+   "shares": 2.3149,
+   "cost": 0.1,
+   "why": "rank 21 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "side": "sell",
+   "usd": 185.12,
+   "price": 728.37,
+   "shares": 0.2542,
+   "cost": 0.041,
+   "why": "fell to rank 536",
+   "ret": 0.1277
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "sell",
+   "usd": 213.69,
+   "price": 79.85,
+   "shares": 2.6761,
+   "cost": 0.062,
+   "why": "fell to rank 637",
+   "ret": 0.0421
+  },
+  {
+   "date": "2026-10-12",
+   "symbol": "CVNA",
+   "name": "Carvana Co.",
+   "side": "sell",
+   "usd": 280.76,
+   "price": 151.66,
+   "shares": 1.8512,
+   "cost": 0.094,
+   "why": "fell to rank 469",
+   "ret": -0.0035
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "TSLA",
+   "name": "Tesla, Inc.",
+   "side": "buy",
+   "usd": 199.19,
+   "price": 192.38,
+   "shares": 1.0354,
+   "cost": 0.05,
+   "why": "rank 28 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "buy",
+   "usd": 213.71,
+   "price": 173.59,
+   "shares": 1.2311,
+   "cost": 0.049,
+   "why": "rank 37 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "buy",
+   "usd": 278.87,
+   "price": 245.63,
+   "shares": 1.1353,
+   "cost": 0.112,
+   "why": "rank 18 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "side": "buy",
+   "usd": 209.68,
+   "price": 881.56,
+   "shares": 0.2379,
+   "cost": 0.062,
+   "why": "rank 2 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "MSFT",
+   "name": "Microsoft Corporation",
+   "side": "sell",
+   "usd": 204.97,
+   "price": 328.87,
+   "shares": 0.6233,
+   "cost": 0.061,
+   "why": "fell to rank 374",
+   "ret": -0.0113
+  },
+  {
+   "date": "2026-10-09",
+   "symbol": "MU",
+   "name": "Micron Technology, Inc.",
+   "side": "sell",
+   "usd": 277.6,
+   "price": 173.22,
+   "shares": 1.6026,
+   "cost": 0.115,
+   "why": "fell to rank 675",
+   "ret": 0.0154
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "side": "buy",
+   "usd": 217.95,
+   "price": 394.85,
+   "shares": 0.552,
+   "cost": 0.073,
+   "why": "rank 16 of 1000",
+   "ret": null
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "APP",
+   "name": "AppLovin Corporation",
+   "side": "sell",
+   "usd": 254.73,
+   "price": 898.37,
+   "shares": 0.2835,
+   "cost": 0.076,
+   "why": "fell to rank 367",
+   "ret": -0.0534
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "side": "sell",
+   "usd": 265.78,
+   "price": 837.24,
+   "shares": 0.3174,
+   "cost": 0.096,
+   "why": "fell to rank 445",
+   "ret": 0.0014
+  },
+  {
+   "date": "2026-10-08",
+   "symbol": "CAT",
+   "name": "Caterpillar Inc.",
+   "side": "buy",
+   "usd": 293.43,
+   "price": 305.55,
+   "shares": 0.9603,
+   "cost": 0.099,
+   "why": "rank 9 of 1000",
+   "ret": null
+  }
+ ],
+ "costs": 11.52,
+ "turnover": 12.3,
+ "verdict": null,
+ "spark": [
+  1.0,
+  0.99897,
+  1.01013,
+  1.01195,
+  1.01152,
+  1.00134,
+  1.00427,
+  1.01841,
+  1.02918,
+  1.03646,
+  1.03874,
+  1.04252,
+  1.04548,
+  1.03126,
+  1.03618,
+  1.03899,
+  1.03733,
+  1.02071,
+  1.00159,
+  1.00028,
+  0.99189,
+  0.99388,
+  0.98837,
+  0.98844,
+  0.98369,
+  0.98821,
+  0.9859,
+  0.98245,
+  1.00006,
+  1.00863,
+  1.01867,
+  1.01669,
+  1.00847,
+  1.01042,
+  1.01574,
+  1.02156,
+  1.02499,
+  1.02292,
+  1.01525,
+  1.01028,
+  1.02283,
+  1.01623,
+  1.02033,
+  1.03092,
+  1.01627,
+  1.01674
+ ],
+ "spark_index": [
+  1.0,
+  0.99855,
+  1.00324,
+  1.00202,
+  1.0001,
+  0.99326,
+  0.99216,
+  1.00158,
+  1.00558,
+  1.01453,
+  1.01715,
+  1.02098,
+  1.0231,
+  1.01008,
+  1.0176,
+  1.02233,
+  1.02702,
+  1.01374,
+  1.00021,
+  0.99369,
+  0.99057,
+  0.99358,
+  0.99381,
+  0.99855,
+  0.99402,
+  0.99707,
+  1.00081,
+  0.99612,
+  1.0104,
+  1.01551,
+  1.02584,
+  1.02137,
+  1.01594,
+  1.01375,
+  1.0135,
+  1.01923,
+  1.02187,
+  1.01882,
+  1.01163,
+  1.00803,
+  1.01848,
+  1.01251,
+  1.0151,
+  1.01917,
+  1.00763,
+  1.00863
+ ],
+ "backtest": {
+  "from": "2020-01-02",
+  "to": "2025-05-13",
+  "ret_ann": 0.1441,
+  "index_ann": 0.128,
+  "vs_index_ann": 0.0161,
+  "ci": [
+   -0.0289,
+   0.0611
+  ],
+  "sharpe": 0.71,
+  "max_dd": -0.381,
+  "turnover": 13.6,
+  "cost_drag": 0.0127,
+  "ic": null,
+  "ic_t": null,
+  "exam": {
+   "from": "2025-05-14",
+   "to": "2026-11-13",
+   "ret_ann": 0.1911,
+   "index_ann": 0.171,
+   "vs_index_ann": 0.0201,
+   "ci": [
+    -0.0699,
+    0.1101
+   ],
+   "ic": null,
+   "ic_t": null
+  }
+ },
+ "curve": [
+  [
+   "2026-09-11",
+   10000.0,
+   10000.0
+  ],
+  [
+   "2026-09-14",
+   9989.71,
+   9985.53
+  ],
+  [
+   "2026-09-15",
+   10101.26,
+   10032.38
+  ],
+  [
+   "2026-09-16",
+   10119.48,
+   10020.25
+  ],
+  [
+   "2026-09-17",
+   10115.17,
+   10001.01
+  ],
+  [
+   "2026-09-18",
+   10013.38,
+   9932.6
+  ],
+  [
+   "2026-09-21",
+   10042.7,
+   9921.61
+  ],
+  [
+   "2026-09-22",
+   10184.08,
+   10015.82
+  ],
+  [
+   "2026-09-23",
+   10291.82,
+   10055.81
+  ],
+  [
+   "2026-09-24",
+   10364.58,
+   10145.26
+  ],
+  [
+   "2026-09-25",
+   10387.35,
+   10171.55
+  ],
+  [
+   "2026-09-28",
+   10425.22,
+   10209.77
+  ],
+  [
+   "2026-09-29",
+   10454.85,
+   10231.04
+  ],
+  [
+   "2026-09-30",
+   10312.58,
+   10100.81
+  ],
+  [
+   "2026-10-01",
+   10361.78,
+   10175.98
+  ],
+  [
+   "2026-10-02",
+   10389.9,
+   10223.31
+  ],
+  [
+   "2026-10-05",
+   10373.31,
+   10270.24
+  ],
+  [
+   "2026-10-06",
+   10207.06,
+   10137.44
+  ],
+  [
+   "2026-10-07",
+   10015.92,
+   10002.09
+  ],
+  [
+   "2026-10-08",
+   10002.85,
+   9936.91
+  ],
+  [
+   "2026-10-09",
+   9918.88,
+   9905.65
+  ],
+  [
+   "2026-10-12",
+   9938.81,
+   9935.8
+  ],
+  [
+   "2026-10-13",
+   9883.74,
+   9938.11
+  ],
+  [
+   "2026-10-14",
+   9884.42,
+   9985.49
+  ],
+  [
+   "2026-10-15",
+   9836.91,
+   9940.18
+  ],
+  [
+   "2026-10-16",
+   9882.09,
+   9970.69
+  ],
+  [
+   "2026-10-19",
+   9859.0,
+   10008.12
+  ],
+  [
+   "2026-10-20",
+   9824.52,
+   9961.19
+  ],
+  [
+   "2026-10-21",
+   10000.63,
+   10104.03
+  ],
+  [
+   "2026-10-22",
+   10086.25,
+   10155.09
+  ],
+  [
+   "2026-10-23",
+   10186.71,
+   10258.43
+  ],
+  [
+   "2026-10-26",
+   10166.89,
+   10213.67
+  ],
+  [
+   "2026-10-27",
+   10084.7,
+   10159.38
+  ],
+  [
+   "2026-10-28",
+   10104.16,
+   10137.51
+  ],
+  [
+   "2026-10-29",
+   10157.38,
+   10134.96
+  ],
+  [
+   "2026-10-30",
+   10215.57,
+   10192.29
+  ],
+  [
+   "2026-11-02",
+   10249.91,
+   10218.66
+  ],
+  [
+   "2026-11-03",
+   10229.22,
+   10188.22
+  ],
+  [
+   "2026-11-04",
+   10152.51,
+   10116.34
+  ],
+  [
+   "2026-11-05",
+   10102.77,
+   10080.28
+  ],
+  [
+   "2026-11-06",
+   10228.34,
+   10184.78
+  ],
+  [
+   "2026-11-09",
+   10162.32,
+   10125.07
+  ],
+  [
+   "2026-11-10",
+   10203.28,
+   10150.97
+  ],
+  [
+   "2026-11-11",
+   10309.19,
+   10191.69
+  ],
+  [
+   "2026-11-12",
+   10162.7,
+   10076.34
+  ],
+  [
+   "2026-11-13",
+   10167.45,
+   10086.3
+  ]
+ ],
+ "positions": [
+  {
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "weight": 0.0318,
+   "value": 323.32,
+   "since": "2026-10-13",
+   "days": 23,
+   "ret": 0.0091,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "DAL",
+   "name": "Delta Air Lines, Inc.",
+   "weight": 0.0314,
+   "value": 319.26,
+   "since": "2026-11-04",
+   "days": 7,
+   "ret": -0.0173,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "FSLR",
+   "name": "First Solar, Inc.",
+   "weight": 0.0305,
+   "value": 310.11,
+   "since": "2026-11-10",
+   "days": 3,
+   "ret": -0.0069,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "SHOP",
+   "name": "Shopify Inc.",
+   "weight": 0.0291,
+   "value": 295.87,
+   "since": "2026-10-14",
+   "days": 22,
+   "ret": -0.0353,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "LLY",
+   "name": "Eli Lilly and Company",
+   "weight": 0.028,
+   "value": 284.69,
+   "since": "2026-11-12",
+   "days": 1,
+   "ret": -0.0404,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "TTD",
+   "name": "The Trade Desk, Inc.",
+   "weight": 0.0275,
+   "value": 279.6,
+   "since": "2026-11-13",
+   "days": 0,
+   "ret": 0.0633,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "WMT",
+   "name": "Walmart Inc.",
+   "weight": 0.0265,
+   "value": 269.44,
+   "since": "2026-10-28",
+   "days": 12,
+   "ret": 0.0202,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "PLTR",
+   "name": "Palantir Technologies Inc.",
+   "weight": 0.0245,
+   "value": 249.1,
+   "since": "2026-11-10",
+   "days": 3,
+   "ret": -0.0014,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "UBER",
+   "name": "Uber Technologies, Inc.",
+   "weight": 0.0242,
+   "value": 246.05,
+   "since": "2026-10-19",
+   "days": 19,
+   "ret": 0.0403,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "weight": 0.0231,
+   "value": 234.87,
+   "since": "2026-11-13",
+   "days": 0,
+   "ret": 0.0959,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "COST",
+   "name": "Costco Wholesale Corporation",
+   "weight": 0.0225,
+   "value": 228.77,
+   "since": "2026-11-06",
+   "days": 5,
+   "ret": -0.016,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "HOOD",
+   "name": "Robinhood Markets, Inc.",
+   "weight": 0.0224,
+   "value": 227.75,
+   "since": "2026-10-29",
+   "days": 11,
+   "ret": -0.005,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "weight": 0.0214,
+   "value": 217.58,
+   "since": "2026-10-16",
+   "days": 20,
+   "ret": 0.0856,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  },
+  {
+   "symbol": "RKLB",
+   "name": "Rocket Lab Corporation",
+   "weight": 0.02,
+   "value": 203.35,
+   "since": "2026-11-02",
+   "days": 9,
+   "ret": -0.1273,
+   "why": "Nancy Pelosi: bought $32,500, reported 2026-11-10"
+  }
+ ],
+ "pending": [
+  {
+   "symbol": "ABNB",
+   "name": "Airbnb, Inc.",
+   "side": "buy",
+   "weight": 0.025,
+   "why": "rank 2 of 1000"
+  },
+  {
+   "symbol": "MRK",
+   "name": "Merck & Co., Inc.",
+   "side": "buy",
+   "weight": 0.025,
+   "why": "rank 2 of 1000"
+  },
+  {
+   "symbol": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "side": "sell",
+   "weight": 0.0,
+   "why": "fell to rank 312"
+  }
+ ],
+ "today": null,
+ "ranking_history": [],
+ "signals": [],
+ "memo": null,
+ "reads": [],
+ "report": "# Copy the best ten: backtest\n\nWalk-forward from 2020-01-02 to 2025-05-13, costs included. Each refit saw only what was known on its day.\n\n| year | model | index |\n|---|---|---|\n| 2020 | +21.3 % | +18.4 % |\n| 2021 | +24.0 % | +28.7 % |\n\n## What it does not show\n\nCompanies that left the market are missing from free data, so the history flatters every stock picker a little.",
+ "by_year": [
+  {
+   "year": 2020,
+   "ret": 0.2605,
+   "index": 0.184
+  },
+  {
+   "year": 2021,
+   "ret": 0.2901,
+   "index": 0.287
+  },
+  {
+   "year": 2022,
+   "ret": 0.1263,
+   "index": -0.181
+  },
+  {
+   "year": 2023,
+   "ret": 0.2771,
+   "index": 0.262
+  },
+  {
+   "year": 2024,
+   "ret": 0.2286,
+   "index": 0.249
+  },
+  {
+   "year": 2025,
+   "ret": 0.1868,
+   "index": 0.071
+  }
+ ],
+ "copy": {
+  "made_at": "2026-11-13T23:10:00+00:00",
+  "from": "2019-01-02",
+  "to": "2025-05-13",
+  "counts": {
+   "house_people": 288,
+   "insider_people": 9520,
+   "insiders_with_trades": 4210,
+   "people_with_books": 2130,
+   "ranked": 128,
+   "listed": 150,
+   "house_listed": 113,
+   "insider_listed": 37,
+   "house_ranked": 98,
+   "paper_reports": 1520
+  },
+  "rules": {
+   "top": 10,
+   "lookback_years": 3.0,
+   "min_opened": 10
+  },
+  "people": [
+   {
+    "pid": "house:sessions:suzan:tx",
+    "name": "Suzan Sessions 53",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.2725,
+    "vs_index_ann": 0.1445,
+    "max_dd": -0.359,
+    "turnover": 0.99,
+    "opened": 24,
+    "copied": 57,
+    "trades": 82,
+    "first": "2021-06-10",
+    "last": "2025-02-26",
+    "lag_days": 27.0,
+    "ranked": true,
+    "rank": 1
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene 145",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.2505,
+    "vs_index_ann": 0.1225,
+    "max_dd": -0.346,
+    "turnover": 1.51,
+    "opened": 76,
+    "copied": 110,
+    "trades": 113,
+    "first": "2020-06-18",
+    "last": "2025-02-24",
+    "lag_days": 11.0,
+    "ranked": true,
+    "rank": 2
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville 106",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.2361,
+    "vs_index_ann": 0.1081,
+    "max_dd": -0.258,
+    "turnover": 1.1,
+    "opened": 45,
+    "copied": 71,
+    "trades": 54,
+    "first": "2021-07-11",
+    "last": "2025-03-20",
+    "lag_days": 13.0,
+    "ranked": true,
+    "rank": 3
+   },
+   {
+    "pid": "house:manning:zoe:nc",
+    "name": "Zoe Manning 34",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.2308,
+    "vs_index_ann": 0.1028,
+    "max_dd": -0.33,
+    "turnover": 2.68,
+    "opened": 87,
+    "copied": 117,
+    "trades": 109,
+    "first": "2021-02-13",
+    "last": "2023-04-26",
+    "lag_days": 13.0,
+    "ranked": true,
+    "rank": 4
+   },
+   {
+    "pid": "house:manning:zoe:nc",
+    "name": "Zoe Manning 134",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.2306,
+    "vs_index_ann": 0.1026,
+    "max_dd": -0.44,
+    "turnover": 1.67,
+    "opened": 44,
+    "copied": 51,
+    "trades": 86,
+    "first": "2021-03-11",
+    "last": "2025-03-24",
+    "lag_days": 31.0,
+    "ranked": true,
+    "rank": 5
+   },
+   {
+    "pid": "house:foxx:virginia:nc",
+    "name": "Virginia Foxx 30",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.2277,
+    "vs_index_ann": 0.0997,
+    "max_dd": -0.37,
+    "turnover": 3.48,
+    "opened": 56,
+    "copied": 77,
+    "trades": 112,
+    "first": "2021-02-13",
+    "last": "2024-02-23",
+    "lag_days": 12.0,
+    "ranked": true,
+    "rank": 6
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville 126",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.2276,
+    "vs_index_ann": 0.0996,
+    "max_dd": -0.263,
+    "turnover": 2.08,
+    "opened": 47,
+    "copied": 81,
+    "trades": 55,
+    "first": "2021-08-17",
+    "last": "2024-06-20",
+    "lag_days": 15.0,
+    "ranked": true,
+    "rank": 7
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.2191,
+    "vs_index_ann": 0.0911,
+    "max_dd": -0.391,
+    "turnover": 2.56,
+    "opened": 34,
+    "copied": 69,
+    "trades": 43,
+    "first": "2020-02-14",
+    "last": "2024-06-21",
+    "lag_days": 13.0,
+    "ranked": true,
+    "rank": 8
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi 20",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.2141,
+    "vs_index_ann": 0.0861,
+    "max_dd": -0.272,
+    "turnover": 1.67,
+    "opened": 42,
+    "copied": 67,
+    "trades": 53,
+    "first": "2021-02-13",
+    "last": "2023-04-21",
+    "lag_days": 21.0,
+    "ranked": true,
+    "rank": 9
+   },
+   {
+    "pid": "house:foxx:virginia:nc",
+    "name": "Virginia Foxx 130",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.2126,
+    "vs_index_ann": 0.0846,
+    "max_dd": -0.468,
+    "turnover": 3.06,
+    "opened": 56,
+    "copied": 56,
+    "trades": 64,
+    "first": "2019-05-15",
+    "last": "2023-03-25",
+    "lag_days": 19.0,
+    "ranked": true,
+    "rank": 10
+   },
+   {
+    "pid": "in:OWNER 79|AAPL",
+    "name": "Suzan Tuberville",
+    "pool": "insider",
+    "label": "Director at AAPL",
+    "ret_ann": 0.2096,
+    "vs_index_ann": 0.0816,
+    "max_dd": -0.41,
+    "turnover": 3.43,
+    "opened": 89,
+    "copied": 94,
+    "trades": 147,
+    "first": "2020-08-14",
+    "last": "2025-04-22",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 11
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.2066,
+    "vs_index_ann": 0.0786,
+    "max_dd": -0.346,
+    "turnover": 3.16,
+    "opened": 16,
+    "copied": 22,
+    "trades": 52,
+    "first": "2021-08-12",
+    "last": "2025-02-21",
+    "lag_days": 33.0,
+    "ranked": true,
+    "rank": 12
+   },
+   {
+    "pid": "house:frankel:earl:fl",
+    "name": "Earl Frankel 76",
+    "pool": "house",
+    "label": "House, FL",
+    "ret_ann": 0.2048,
+    "vs_index_ann": 0.0768,
+    "max_dd": -0.232,
+    "turnover": 0.46,
+    "opened": 54,
+    "copied": 65,
+    "trades": 93,
+    "first": "2019-08-16",
+    "last": "2023-07-23",
+    "lag_days": 23.0,
+    "ranked": true,
+    "rank": 13
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern 128",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.1982,
+    "vs_index_ann": 0.0702,
+    "max_dd": -0.352,
+    "turnover": 3.86,
+    "opened": 59,
+    "copied": 71,
+    "trades": 84,
+    "first": "2021-08-12",
+    "last": "2025-04-25",
+    "lag_days": 28.0,
+    "ranked": true,
+    "rank": 14
+   },
+   {
+    "pid": "in:OWNER 75|CRWD",
+    "name": "Mark Blumenauer",
+    "pool": "insider",
+    "label": "10 % holder at CRWD",
+    "ret_ann": 0.1979,
+    "vs_index_ann": 0.0699,
+    "max_dd": -0.477,
+    "turnover": 2.03,
+    "opened": 13,
+    "copied": 51,
+    "trades": 72,
+    "first": "2021-05-17",
+    "last": "2023-03-20",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 15
+   },
+   {
+    "pid": "house:sessions:suzan:tx",
+    "name": "Suzan Sessions 33",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.1861,
+    "vs_index_ann": 0.0581,
+    "max_dd": -0.488,
+    "turnover": 3.91,
+    "opened": 47,
+    "copied": 73,
+    "trades": 99,
+    "first": "2020-02-13",
+    "last": "2024-04-26",
+    "lag_days": 34.0,
+    "ranked": true,
+    "rank": 16
+   },
+   {
+    "pid": "house:blumenauer:dan:or",
+    "name": "Dan Blumenauer 72",
+    "pool": "house",
+    "label": "House, OR",
+    "ret_ann": 0.1813,
+    "vs_index_ann": 0.0533,
+    "max_dd": -0.493,
+    "turnover": 3.58,
+    "opened": 32,
+    "copied": 38,
+    "trades": 42,
+    "first": "2021-08-11",
+    "last": "2024-07-22",
+    "lag_days": 25.0,
+    "ranked": true,
+    "rank": 17
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer 121",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.1803,
+    "vs_index_ann": 0.0523,
+    "max_dd": -0.414,
+    "turnover": 3.49,
+    "opened": 36,
+    "copied": 72,
+    "trades": 40,
+    "first": "2019-06-11",
+    "last": "2023-04-21",
+    "lag_days": 11.0,
+    "ranked": true,
+    "rank": 18
+   },
+   {
+    "pid": "in:OWNER 19|ANET",
+    "name": "Zoe Pelosi",
+    "pool": "insider",
+    "label": "CEO at ANET",
+    "ret_ann": 0.1795,
+    "vs_index_ann": 0.0515,
+    "max_dd": -0.286,
+    "turnover": 1.02,
+    "opened": 20,
+    "copied": 37,
+    "trades": 30,
+    "first": "2020-02-14",
+    "last": "2024-08-23",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 19
+   },
+   {
+    "pid": "house:larsen:brian:wa",
+    "name": "Brian Larsen 117",
+    "pool": "house",
+    "label": "House, WA",
+    "ret_ann": 0.1775,
+    "vs_index_ann": 0.0495,
+    "max_dd": -0.45,
+    "turnover": 0.38,
+    "opened": 77,
+    "copied": 82,
+    "trades": 96,
+    "first": "2021-06-10",
+    "last": "2025-03-23",
+    "lag_days": 20.0,
+    "ranked": true,
+    "rank": 20
+   },
+   {
+    "pid": "in:OWNER 91|FSLR",
+    "name": "Marjorie Green",
+    "pool": "insider",
+    "label": "10 % holder at FSLR",
+    "ret_ann": 0.177,
+    "vs_index_ann": 0.049,
+    "max_dd": -0.414,
+    "turnover": 2.09,
+    "opened": 21,
+    "copied": 32,
+    "trades": 47,
+    "first": "2021-05-18",
+    "last": "2025-04-27",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 21
+   },
+   {
+    "pid": "house:frankel:earl:fl",
+    "name": "Earl Frankel 96",
+    "pool": "house",
+    "label": "House, FL",
+    "ret_ann": 0.1769,
+    "vs_index_ann": 0.0489,
+    "max_dd": -0.393,
+    "turnover": 1.82,
+    "opened": 25,
+    "copied": 50,
+    "trades": 33,
+    "first": "2021-02-16",
+    "last": "2023-08-22",
+    "lag_days": 28.0,
+    "ranked": true,
+    "rank": 22
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville 86",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.1753,
+    "vs_index_ann": 0.0473,
+    "max_dd": -0.34,
+    "turnover": 1.83,
+    "opened": 18,
+    "copied": 31,
+    "trades": 72,
+    "first": "2019-02-17",
+    "last": "2024-06-22",
+    "lag_days": 38.0,
+    "ranked": true,
+    "rank": 23
+   },
+   {
+    "pid": "house:blumenauer:dan:or",
+    "name": "Dan Blumenauer 92",
+    "pool": "house",
+    "label": "House, OR",
+    "ret_ann": 0.1728,
+    "vs_index_ann": 0.0448,
+    "max_dd": -0.293,
+    "turnover": 3.79,
+    "opened": 67,
+    "copied": 74,
+    "trades": 113,
+    "first": "2021-01-10",
+    "last": "2025-06-27",
+    "lag_days": 33.0,
+    "ranked": true,
+    "rank": 24
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene 25",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.1721,
+    "vs_index_ann": 0.0441,
+    "max_dd": -0.497,
+    "turnover": 3.37,
+    "opened": 12,
+    "copied": 38,
+    "trades": 65,
+    "first": "2020-08-14",
+    "last": "2025-03-27",
+    "lag_days": 26.0,
+    "ranked": true,
+    "rank": 25
+   },
+   {
+    "pid": "house:larsen:brian:wa",
+    "name": "Brian Larsen 37",
+    "pool": "house",
+    "label": "House, WA",
+    "ret_ann": 0.1716,
+    "vs_index_ann": 0.0436,
+    "max_dd": -0.28,
+    "turnover": 3.23,
+    "opened": 87,
+    "copied": 111,
+    "trades": 91,
+    "first": "2020-08-16",
+    "last": "2024-06-23",
+    "lag_days": 19.0,
+    "ranked": true,
+    "rank": 26
+   },
+   {
+    "pid": "in:OWNER 7|UBER",
+    "name": "Kathy Gottheimer",
+    "pool": "insider",
+    "label": "CEO at UBER",
+    "ret_ann": 0.1706,
+    "vs_index_ann": 0.0426,
+    "max_dd": -0.481,
+    "turnover": 0.9,
+    "opened": 46,
+    "copied": 68,
+    "trades": 92,
+    "first": "2019-06-15",
+    "last": "2024-03-27",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 27
+   },
+   {
+    "pid": "house:lofgren:tommy:ca",
+    "name": "Tommy Lofgren 138",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.1699,
+    "vs_index_ann": 0.0419,
+    "max_dd": -0.246,
+    "turnover": 2.4,
+    "opened": 78,
+    "copied": 100,
+    "trades": 101,
+    "first": "2021-03-10",
+    "last": "2025-02-24",
+    "lag_days": 43.0,
+    "ranked": true,
+    "rank": 28
+   },
+   {
+    "pid": "house:lofgren:tommy:ca",
+    "name": "Tommy Lofgren 78",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.1698,
+    "vs_index_ann": 0.0418,
+    "max_dd": -0.454,
+    "turnover": 1.81,
+    "opened": 48,
+    "copied": 54,
+    "trades": 107,
+    "first": "2019-01-16",
+    "last": "2024-02-21",
+    "lag_days": 41.0,
+    "ranked": true,
+    "rank": 29
+   },
+   {
+    "pid": "in:OWNER 99|BKNG",
+    "name": "Tommy Frankel",
+    "pool": "insider",
+    "label": "CFO at BKNG",
+    "ret_ann": 0.1688,
+    "vs_index_ann": 0.0408,
+    "max_dd": -0.422,
+    "turnover": 1.48,
+    "opened": 88,
+    "copied": 103,
+    "trades": 103,
+    "first": "2021-03-12",
+    "last": "2025-03-26",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 30
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer 61",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.1678,
+    "vs_index_ann": 0.0398,
+    "max_dd": -0.455,
+    "turnover": 2.43,
+    "opened": 46,
+    "copied": 46,
+    "trades": 90,
+    "first": "2020-01-16",
+    "last": "2023-08-26",
+    "lag_days": 23.0,
+    "ranked": true,
+    "rank": 31
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene 65",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.1657,
+    "vs_index_ann": 0.0377,
+    "max_dd": -0.262,
+    "turnover": 3.15,
+    "opened": 12,
+    "copied": 32,
+    "trades": 56,
+    "first": "2019-06-11",
+    "last": "2023-04-25",
+    "lag_days": 9.0,
+    "ranked": true,
+    "rank": 32
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene 125",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.1649,
+    "vs_index_ann": 0.0369,
+    "max_dd": -0.226,
+    "turnover": 2.8,
+    "opened": 82,
+    "copied": 95,
+    "trades": 96,
+    "first": "2020-03-12",
+    "last": "2023-02-21",
+    "lag_days": 34.0,
+    "ranked": true,
+    "rank": 33
+   },
+   {
+    "pid": "house:foxx:virginia:nc",
+    "name": "Virginia Foxx 90",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1629,
+    "vs_index_ann": 0.0349,
+    "max_dd": -0.359,
+    "turnover": 3.34,
+    "opened": 48,
+    "copied": 52,
+    "trades": 69,
+    "first": "2021-02-13",
+    "last": "2025-03-25",
+    "lag_days": 30.0,
+    "ranked": true,
+    "rank": 34
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi 40",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.1557,
+    "vs_index_ann": 0.0277,
+    "max_dd": -0.491,
+    "turnover": 2.36,
+    "opened": 28,
+    "copied": 42,
+    "trades": 64,
+    "first": "2021-01-17",
+    "last": "2023-07-25",
+    "lag_days": 43.0,
+    "ranked": true,
+    "rank": 35
+   },
+   {
+    "pid": "house:manning:zoe:nc",
+    "name": "Zoe Manning 54",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1548,
+    "vs_index_ann": 0.0268,
+    "max_dd": -0.483,
+    "turnover": 2.25,
+    "opened": 44,
+    "copied": 66,
+    "trades": 90,
+    "first": "2019-05-18",
+    "last": "2025-07-23",
+    "lag_days": 36.0,
+    "ranked": true,
+    "rank": 36
+   },
+   {
+    "pid": "house:blumenauer:dan:or",
+    "name": "Dan Blumenauer 32",
+    "pool": "house",
+    "label": "House, OR",
+    "ret_ann": 0.1544,
+    "vs_index_ann": 0.0264,
+    "max_dd": -0.445,
+    "turnover": 0.33,
+    "opened": 61,
+    "copied": 66,
+    "trades": 79,
+    "first": "2021-02-10",
+    "last": "2025-05-20",
+    "lag_days": 17.0,
+    "ranked": true,
+    "rank": 37
+   },
+   {
+    "pid": "in:OWNER 51|NEM",
+    "name": "Kathy Blumenauer",
+    "pool": "insider",
+    "label": "CEO at NEM",
+    "ret_ann": 0.1541,
+    "vs_index_ann": 0.0261,
+    "max_dd": -0.408,
+    "turnover": 0.39,
+    "opened": 55,
+    "copied": 90,
+    "trades": 91,
+    "first": "2020-02-13",
+    "last": "2024-08-25",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 38
+   },
+   {
+    "pid": "in:OWNER 11|MU",
+    "name": "Debbie Pelosi",
+    "pool": "insider",
+    "label": "10 % holder at MU",
+    "ret_ann": 0.1531,
+    "vs_index_ann": 0.0251,
+    "max_dd": -0.472,
+    "turnover": 3.53,
+    "opened": 23,
+    "copied": 35,
+    "trades": 76,
+    "first": "2021-08-17",
+    "last": "2023-07-25",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 39
+   },
+   {
+    "pid": "house:blumenauer:dan:or",
+    "name": "Dan Blumenauer 112",
+    "pool": "house",
+    "label": "House, OR",
+    "ret_ann": 0.1527,
+    "vs_index_ann": 0.0247,
+    "max_dd": -0.254,
+    "turnover": 0.62,
+    "opened": 74,
+    "copied": 75,
+    "trades": 109,
+    "first": "2019-02-11",
+    "last": "2023-01-26",
+    "lag_days": 13.0,
+    "ranked": true,
+    "rank": 40
+   },
+   {
+    "pid": "house:lofgren:tommy:ca",
+    "name": "Tommy Lofgren 98",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.152,
+    "vs_index_ann": 0.024,
+    "max_dd": -0.357,
+    "turnover": 3.73,
+    "opened": 66,
+    "copied": 94,
+    "trades": 108,
+    "first": "2019-06-10",
+    "last": "2023-01-23",
+    "lag_days": 8.0,
+    "ranked": true,
+    "rank": 41
+   },
+   {
+    "pid": "in:OWNER 15|COST",
+    "name": "Virginia Tuberville",
+    "pool": "insider",
+    "label": "10 % holder at COST",
+    "ret_ann": 0.1505,
+    "vs_index_ann": 0.0225,
+    "max_dd": -0.48,
+    "turnover": 1.75,
+    "opened": 38,
+    "copied": 70,
+    "trades": 61,
+    "first": "2019-01-17",
+    "last": "2025-06-26",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 42
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi 60",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.1487,
+    "vs_index_ann": 0.0207,
+    "max_dd": -0.393,
+    "turnover": 2.57,
+    "opened": 34,
+    "copied": 45,
+    "trades": 57,
+    "first": "2020-08-16",
+    "last": "2025-06-27",
+    "lag_days": 35.0,
+    "ranked": true,
+    "rank": 43
+   },
+   {
+    "pid": "in:OWNER 95|UBER",
+    "name": "Lois Frankel",
+    "pool": "insider",
+    "label": "CFO at UBER",
+    "ret_ann": 0.1475,
+    "vs_index_ann": 0.0195,
+    "max_dd": -0.422,
+    "turnover": 0.93,
+    "opened": 37,
+    "copied": 70,
+    "trades": 51,
+    "first": "2021-02-14",
+    "last": "2025-06-21",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 44
+   },
+   {
+    "pid": "in:OWNER 119|PLTR",
+    "name": "Josh Lofgren",
+    "pool": "insider",
+    "label": "CEO at PLTR",
+    "ret_ann": 0.1458,
+    "vs_index_ann": 0.0178,
+    "max_dd": -0.355,
+    "turnover": 2.36,
+    "opened": 44,
+    "copied": 71,
+    "trades": 77,
+    "first": "2021-04-15",
+    "last": "2023-06-26",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 45
+   },
+   {
+    "pid": "house:lofgren:tommy:ca",
+    "name": "Tommy Lofgren 58",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.1454,
+    "vs_index_ann": 0.0174,
+    "max_dd": -0.253,
+    "turnover": 0.71,
+    "opened": 82,
+    "copied": 86,
+    "trades": 119,
+    "first": "2021-05-18",
+    "last": "2024-06-25",
+    "lag_days": 13.0,
+    "ranked": true,
+    "rank": 46
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer 21",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.1448,
+    "vs_index_ann": 0.0168,
+    "max_dd": -0.408,
+    "turnover": 0.35,
+    "opened": 50,
+    "copied": 68,
+    "trades": 79,
+    "first": "2021-04-12",
+    "last": "2024-05-27",
+    "lag_days": 26.0,
+    "ranked": true,
+    "rank": 47
+   },
+   {
+    "pid": "in:OWNER 83|UBER",
+    "name": "Dan Pelosi",
+    "pool": "insider",
+    "label": "CFO at UBER",
+    "ret_ann": 0.1428,
+    "vs_index_ann": 0.0148,
+    "max_dd": -0.278,
+    "turnover": 0.39,
+    "opened": 28,
+    "copied": 57,
+    "trades": 76,
+    "first": "2019-04-17",
+    "last": "2024-06-25",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 48
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul 142",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.1423,
+    "vs_index_ann": 0.0143,
+    "max_dd": -0.379,
+    "turnover": 3.29,
+    "opened": 34,
+    "copied": 69,
+    "trades": 34,
+    "first": "2019-05-14",
+    "last": "2023-01-25",
+    "lag_days": 9.0,
+    "ranked": true,
+    "rank": 49
+   },
+   {
+    "pid": "in:OWNER 47|AMD",
+    "name": "Tommy Pelosi",
+    "pool": "insider",
+    "label": "CEO at AMD",
+    "ret_ann": 0.142,
+    "vs_index_ann": 0.014,
+    "max_dd": -0.45,
+    "turnover": 0.81,
+    "opened": 87,
+    "copied": 115,
+    "trades": 106,
+    "first": "2021-02-11",
+    "last": "2023-02-21",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 50
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi 120",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.139,
+    "vs_index_ann": 0.011,
+    "max_dd": -0.287,
+    "turnover": 1.09,
+    "opened": 36,
+    "copied": 47,
+    "trades": 88,
+    "first": "2019-05-12",
+    "last": "2023-07-20",
+    "lag_days": 15.0,
+    "ranked": true,
+    "rank": 51
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville 26",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.1383,
+    "vs_index_ann": 0.0103,
+    "max_dd": -0.201,
+    "turnover": 3.0,
+    "opened": 61,
+    "copied": 89,
+    "trades": 101,
+    "first": "2021-02-13",
+    "last": "2024-01-20",
+    "lag_days": 32.0,
+    "ranked": true,
+    "rank": 52
+   },
+   {
+    "pid": "in:OWNER 43|CVNA",
+    "name": "Michael Frankel",
+    "pool": "insider",
+    "label": "CEO at CVNA",
+    "ret_ann": 0.1383,
+    "vs_index_ann": 0.0103,
+    "max_dd": -0.214,
+    "turnover": 3.88,
+    "opened": 25,
+    "copied": 52,
+    "trades": 49,
+    "first": "2021-03-14",
+    "last": "2023-02-20",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 53
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville 46",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.1374,
+    "vs_index_ann": 0.0094,
+    "max_dd": -0.392,
+    "turnover": 0.93,
+    "opened": 73,
+    "copied": 95,
+    "trades": 97,
+    "first": "2021-06-13",
+    "last": "2023-08-27",
+    "lag_days": 10.0,
+    "ranked": true,
+    "rank": 54
+   },
+   {
+    "pid": "house:blumenauer:dan:or",
+    "name": "Dan Blumenauer 132",
+    "pool": "house",
+    "label": "House, OR",
+    "ret_ann": 0.137,
+    "vs_index_ann": 0.009,
+    "max_dd": -0.465,
+    "turnover": 1.6,
+    "opened": 52,
+    "copied": 79,
+    "trades": 94,
+    "first": "2020-01-15",
+    "last": "2023-04-27",
+    "lag_days": 22.0,
+    "ranked": true,
+    "rank": 55
+   },
+   {
+    "pid": "in:OWNER 39|PLTR",
+    "name": "Marjorie Frankel",
+    "pool": "insider",
+    "label": "10 % holder at PLTR",
+    "ret_ann": 0.1352,
+    "vs_index_ann": 0.0072,
+    "max_dd": -0.439,
+    "turnover": 0.66,
+    "opened": 85,
+    "copied": 94,
+    "trades": 101,
+    "first": "2021-03-17",
+    "last": "2023-03-27",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 56
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar 149",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": 0.1351,
+    "vs_index_ann": 0.0071,
+    "max_dd": -0.412,
+    "turnover": 0.72,
+    "opened": 85,
+    "copied": 124,
+    "trades": 139,
+    "first": "2021-07-18",
+    "last": "2023-04-26",
+    "lag_days": 11.0,
+    "ranked": true,
+    "rank": 57
+   },
+   {
+    "pid": "house:manning:zoe:nc",
+    "name": "Zoe Manning 114",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1314,
+    "vs_index_ann": 0.0034,
+    "max_dd": -0.493,
+    "turnover": 0.99,
+    "opened": 77,
+    "copied": 81,
+    "trades": 134,
+    "first": "2019-03-10",
+    "last": "2023-01-21",
+    "lag_days": 32.0,
+    "ranked": true,
+    "rank": 58
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern 48",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.1307,
+    "vs_index_ann": 0.0027,
+    "max_dd": -0.456,
+    "turnover": 2.02,
+    "opened": 31,
+    "copied": 35,
+    "trades": 68,
+    "first": "2019-08-15",
+    "last": "2023-06-20",
+    "lag_days": 18.0,
+    "ranked": true,
+    "rank": 59
+   },
+   {
+    "pid": "house:lofgren:tommy:ca",
+    "name": "Tommy Lofgren",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.1296,
+    "vs_index_ann": 0.0016,
+    "max_dd": -0.27,
+    "turnover": 3.21,
+    "opened": 41,
+    "copied": 64,
+    "trades": 74,
+    "first": "2019-06-13",
+    "last": "2023-02-22",
+    "lag_days": 14.0,
+    "ranked": true,
+    "rank": 60
+   },
+   {
+    "pid": "house:larsen:brian:wa",
+    "name": "Brian Larsen 77",
+    "pool": "house",
+    "label": "House, WA",
+    "ret_ann": 0.129,
+    "vs_index_ann": 0.001,
+    "max_dd": -0.468,
+    "turnover": 0.29,
+    "opened": 67,
+    "copied": 71,
+    "trades": 100,
+    "first": "2020-07-10",
+    "last": "2024-04-25",
+    "lag_days": 37.0,
+    "ranked": true,
+    "rank": 61
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.1276,
+    "vs_index_ann": -0.0004,
+    "max_dd": -0.416,
+    "turnover": 2.02,
+    "opened": 81,
+    "copied": 83,
+    "trades": 114,
+    "first": "2021-08-15",
+    "last": "2024-01-20",
+    "lag_days": 27.0,
+    "ranked": true,
+    "rank": 62
+   },
+   {
+    "pid": "in:OWNER 115|TSLA",
+    "name": "Kevin Hern",
+    "pool": "insider",
+    "label": "CFO at TSLA",
+    "ret_ann": 0.1274,
+    "vs_index_ann": -0.0006,
+    "max_dd": -0.203,
+    "turnover": 0.6,
+    "opened": 85,
+    "copied": 109,
+    "trades": 109,
+    "first": "2020-06-13",
+    "last": "2023-04-20",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 63
+   },
+   {
+    "pid": "house:foxx:virginia:nc",
+    "name": "Virginia Foxx",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1267,
+    "vs_index_ann": -0.0013,
+    "max_dd": -0.426,
+    "turnover": 1.75,
+    "opened": 48,
+    "copied": 84,
+    "trades": 80,
+    "first": "2020-04-17",
+    "last": "2024-04-27",
+    "lag_days": 25.0,
+    "ranked": true,
+    "rank": 64
+   },
+   {
+    "pid": "in:OWNER 71|LLY",
+    "name": "Josh Sessions",
+    "pool": "insider",
+    "label": "CEO at LLY",
+    "ret_ann": 0.1266,
+    "vs_index_ann": -0.0014,
+    "max_dd": -0.257,
+    "turnover": 0.22,
+    "opened": 31,
+    "copied": 36,
+    "trades": 64,
+    "first": "2021-05-17",
+    "last": "2024-01-26",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 65
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern 28",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.1213,
+    "vs_index_ann": -0.0067,
+    "max_dd": -0.397,
+    "turnover": 1.08,
+    "opened": 37,
+    "copied": 64,
+    "trades": 37,
+    "first": "2021-02-11",
+    "last": "2023-04-26",
+    "lag_days": 22.0,
+    "ranked": true,
+    "rank": 66
+   },
+   {
+    "pid": "house:blumenauer:dan:or",
+    "name": "Dan Blumenauer",
+    "pool": "house",
+    "label": "House, OR",
+    "ret_ann": 0.1195,
+    "vs_index_ann": -0.0085,
+    "max_dd": -0.294,
+    "turnover": 3.86,
+    "opened": 42,
+    "copied": 46,
+    "trades": 94,
+    "first": "2021-02-10",
+    "last": "2025-08-20",
+    "lag_days": 43.0,
+    "ranked": true,
+    "rank": 67
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern 88",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.1187,
+    "vs_index_ann": -0.0093,
+    "max_dd": -0.467,
+    "turnover": 2.92,
+    "opened": 77,
+    "copied": 87,
+    "trades": 93,
+    "first": "2019-08-12",
+    "last": "2024-05-23",
+    "lag_days": 24.0,
+    "ranked": true,
+    "rank": 68
+   },
+   {
+    "pid": "house:sessions:suzan:tx",
+    "name": "Suzan Sessions 93",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.117,
+    "vs_index_ann": -0.011,
+    "max_dd": -0.431,
+    "turnover": 0.9,
+    "opened": 31,
+    "copied": 33,
+    "trades": 41,
+    "first": "2021-02-15",
+    "last": "2024-06-23",
+    "lag_days": 32.0,
+    "ranked": true,
+    "rank": 69
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer 41",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.1135,
+    "vs_index_ann": -0.0145,
+    "max_dd": -0.413,
+    "turnover": 2.86,
+    "opened": 34,
+    "copied": 60,
+    "trades": 71,
+    "first": "2020-07-12",
+    "last": "2023-05-26",
+    "lag_days": 12.0,
+    "ranked": true,
+    "rank": 70
+   },
+   {
+    "pid": "house:larsen:brian:wa",
+    "name": "Brian Larsen",
+    "pool": "house",
+    "label": "House, WA",
+    "ret_ann": 0.1131,
+    "vs_index_ann": -0.0149,
+    "max_dd": -0.35,
+    "turnover": 0.45,
+    "opened": 44,
+    "copied": 63,
+    "trades": 49,
+    "first": "2019-05-15",
+    "last": "2025-06-27",
+    "lag_days": 16.0,
+    "ranked": true,
+    "rank": 71
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi 100",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.1116,
+    "vs_index_ann": -0.0164,
+    "max_dd": -0.43,
+    "turnover": 1.69,
+    "opened": 21,
+    "copied": 39,
+    "trades": 48,
+    "first": "2020-08-10",
+    "last": "2024-08-25",
+    "lag_days": 27.0,
+    "ranked": true,
+    "rank": 72
+   },
+   {
+    "pid": "house:larsen:brian:wa",
+    "name": "Brian Larsen 137",
+    "pool": "house",
+    "label": "House, WA",
+    "ret_ann": 0.1112,
+    "vs_index_ann": -0.0168,
+    "max_dd": -0.389,
+    "turnover": 3.06,
+    "opened": 39,
+    "copied": 69,
+    "trades": 88,
+    "first": "2020-05-13",
+    "last": "2023-07-26",
+    "lag_days": 25.0,
+    "ranked": true,
+    "rank": 73
+   },
+   {
+    "pid": "in:OWNER 87|COST",
+    "name": "Shri Foxx",
+    "pool": "insider",
+    "label": "CEO at COST",
+    "ret_ann": 0.1091,
+    "vs_index_ann": -0.0189,
+    "max_dd": -0.22,
+    "turnover": 1.73,
+    "opened": 54,
+    "copied": 81,
+    "trades": 83,
+    "first": "2020-07-13",
+    "last": "2024-06-25",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 74
+   },
+   {
+    "pid": "house:frankel:earl:fl",
+    "name": "Earl Frankel 116",
+    "pool": "house",
+    "label": "House, FL",
+    "ret_ann": 0.1059,
+    "vs_index_ann": -0.0221,
+    "max_dd": -0.359,
+    "turnover": 2.17,
+    "opened": 20,
+    "copied": 34,
+    "trades": 79,
+    "first": "2021-06-10",
+    "last": "2025-01-25",
+    "lag_days": 43.0,
+    "ranked": true,
+    "rank": 75
+   },
+   {
+    "pid": "house:sessions:suzan:tx",
+    "name": "Suzan Sessions 73",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.1044,
+    "vs_index_ann": -0.0236,
+    "max_dd": -0.481,
+    "turnover": 2.04,
+    "opened": 55,
+    "copied": 56,
+    "trades": 102,
+    "first": "2019-08-15",
+    "last": "2024-08-26",
+    "lag_days": 11.0,
+    "ranked": true,
+    "rank": 76
+   },
+   {
+    "pid": "in:OWNER 35|NEM",
+    "name": "Tommy Green",
+    "pool": "insider",
+    "label": "CEO at NEM",
+    "ret_ann": 0.1039,
+    "vs_index_ann": -0.0241,
+    "max_dd": -0.465,
+    "turnover": 1.48,
+    "opened": 28,
+    "copied": 45,
+    "trades": 85,
+    "first": "2021-02-13",
+    "last": "2023-01-23",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 77
+   },
+   {
+    "pid": "in:OWNER 123|MRK",
+    "name": "Michael Wasserman Schultz",
+    "pool": "insider",
+    "label": "Director at MRK",
+    "ret_ann": 0.1024,
+    "vs_index_ann": -0.0256,
+    "max_dd": -0.287,
+    "turnover": 3.83,
+    "opened": 17,
+    "copied": 33,
+    "trades": 25,
+    "first": "2019-05-17",
+    "last": "2023-04-23",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 78
+   },
+   {
+    "pid": "in:OWNER 59|CVNA",
+    "name": "Ro Lofgren",
+    "pool": "insider",
+    "label": "10 % holder at CVNA",
+    "ret_ann": 0.1004,
+    "vs_index_ann": -0.0276,
+    "max_dd": -0.228,
+    "turnover": 2.54,
+    "opened": 38,
+    "copied": 70,
+    "trades": 48,
+    "first": "2020-02-12",
+    "last": "2025-08-24",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 79
+   },
+   {
+    "pid": "in:OWNER 139|ABNB",
+    "name": "Nancy Greene",
+    "pool": "insider",
+    "label": "Director at ABNB",
+    "ret_ann": 0.1003,
+    "vs_index_ann": -0.0277,
+    "max_dd": -0.491,
+    "turnover": 1.42,
+    "opened": 12,
+    "copied": 33,
+    "trades": 43,
+    "first": "2020-05-16",
+    "last": "2024-05-27",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 80
+   },
+   {
+    "pid": "house:lofgren:tommy:ca",
+    "name": "Tommy Lofgren 118",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.0983,
+    "vs_index_ann": -0.0297,
+    "max_dd": -0.3,
+    "turnover": 2.04,
+    "opened": 79,
+    "copied": 107,
+    "trades": 90,
+    "first": "2020-01-18",
+    "last": "2025-08-21",
+    "lag_days": 43.0,
+    "ranked": true,
+    "rank": 81
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar 49",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": 0.0981,
+    "vs_index_ann": -0.0299,
+    "max_dd": -0.356,
+    "turnover": 3.31,
+    "opened": 73,
+    "copied": 81,
+    "trades": 132,
+    "first": "2021-02-11",
+    "last": "2024-07-27",
+    "lag_days": 24.0,
+    "ranked": true,
+    "rank": 82
+   },
+   {
+    "pid": "house:manning:zoe:nc",
+    "name": "Zoe Manning 74",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.0961,
+    "vs_index_ann": -0.0319,
+    "max_dd": -0.388,
+    "turnover": 3.5,
+    "opened": 39,
+    "copied": 51,
+    "trades": 42,
+    "first": "2019-01-18",
+    "last": "2024-06-26",
+    "lag_days": 27.0,
+    "ranked": true,
+    "rank": 83
+   },
+   {
+    "pid": "house:larsen:brian:wa",
+    "name": "Brian Larsen 57",
+    "pool": "house",
+    "label": "House, WA",
+    "ret_ann": 0.0956,
+    "vs_index_ann": -0.0324,
+    "max_dd": -0.225,
+    "turnover": 2.6,
+    "opened": 74,
+    "copied": 105,
+    "trades": 104,
+    "first": "2020-08-17",
+    "last": "2023-04-27",
+    "lag_days": 14.0,
+    "ranked": true,
+    "rank": 84
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul 102",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0929,
+    "vs_index_ann": -0.0351,
+    "max_dd": -0.312,
+    "turnover": 0.79,
+    "opened": 43,
+    "copied": 67,
+    "trades": 77,
+    "first": "2021-04-16",
+    "last": "2023-08-26",
+    "lag_days": 8.0,
+    "ranked": true,
+    "rank": 85
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.0907,
+    "vs_index_ann": -0.0373,
+    "max_dd": -0.401,
+    "turnover": 3.99,
+    "opened": 60,
+    "copied": 99,
+    "trades": 78,
+    "first": "2020-06-14",
+    "last": "2023-01-27",
+    "lag_days": 21.0,
+    "ranked": true,
+    "rank": 86
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw 124",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0895,
+    "vs_index_ann": -0.0385,
+    "max_dd": -0.278,
+    "turnover": 1.65,
+    "opened": 35,
+    "copied": 70,
+    "trades": 52,
+    "first": "2021-01-10",
+    "last": "2023-01-23",
+    "lag_days": 27.0,
+    "ranked": true,
+    "rank": 87
+   },
+   {
+    "pid": "house:sessions:suzan:tx",
+    "name": "Suzan Sessions",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0873,
+    "vs_index_ann": -0.0407,
+    "max_dd": -0.44,
+    "turnover": 0.22,
+    "opened": 51,
+    "copied": 56,
+    "trades": 52,
+    "first": "2021-02-11",
+    "last": "2023-04-26",
+    "lag_days": 35.0,
+    "ranked": true,
+    "rank": 88
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw 64",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.087,
+    "vs_index_ann": -0.041,
+    "max_dd": -0.221,
+    "turnover": 3.41,
+    "opened": 49,
+    "copied": 63,
+    "trades": 84,
+    "first": "2021-01-18",
+    "last": "2024-08-24",
+    "lag_days": 20.0,
+    "ranked": true,
+    "rank": 89
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar 129",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": 0.0831,
+    "vs_index_ann": -0.0449,
+    "max_dd": -0.363,
+    "turnover": 3.39,
+    "opened": 19,
+    "copied": 57,
+    "trades": 20,
+    "first": "2021-05-13",
+    "last": "2025-05-20",
+    "lag_days": 43.0,
+    "ranked": true,
+    "rank": 90
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar 69",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": 0.0829,
+    "vs_index_ann": -0.0451,
+    "max_dd": -0.346,
+    "turnover": 1.13,
+    "opened": 79,
+    "copied": 109,
+    "trades": 108,
+    "first": "2020-04-18",
+    "last": "2023-08-26",
+    "lag_days": 21.0,
+    "ranked": true,
+    "rank": 91
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer 81",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.0787,
+    "vs_index_ann": -0.0493,
+    "max_dd": -0.212,
+    "turnover": 1.07,
+    "opened": 70,
+    "copied": 98,
+    "trades": 89,
+    "first": "2021-06-18",
+    "last": "2023-08-26",
+    "lag_days": 13.0,
+    "ranked": true,
+    "rank": 92
+   },
+   {
+    "pid": "house:sessions:suzan:tx",
+    "name": "Suzan Sessions 133",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0781,
+    "vs_index_ann": -0.0499,
+    "max_dd": -0.472,
+    "turnover": 2.82,
+    "opened": 79,
+    "copied": 87,
+    "trades": 137,
+    "first": "2019-02-14",
+    "last": "2025-07-26",
+    "lag_days": 17.0,
+    "ranked": true,
+    "rank": 93
+   },
+   {
+    "pid": "in:OWNER 23|TSLA",
+    "name": "Ro Green",
+    "pool": "insider",
+    "label": "10 % holder at TSLA",
+    "ret_ann": 0.0776,
+    "vs_index_ann": -0.0504,
+    "max_dd": -0.466,
+    "turnover": 1.91,
+    "opened": 82,
+    "copied": 94,
+    "trades": 117,
+    "first": "2021-04-17",
+    "last": "2024-07-20",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 94
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul 82",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.076,
+    "vs_index_ann": -0.052,
+    "max_dd": -0.39,
+    "turnover": 0.42,
+    "opened": 71,
+    "copied": 105,
+    "trades": 115,
+    "first": "2019-07-16",
+    "last": "2024-07-26",
+    "lag_days": 19.0,
+    "ranked": true,
+    "rank": 95
+   },
+   {
+    "pid": "in:OWNER 131|PLTR",
+    "name": "Zoe Wasserman Schultz",
+    "pool": "insider",
+    "label": "CFO at PLTR",
+    "ret_ann": 0.0742,
+    "vs_index_ann": -0.0538,
+    "max_dd": -0.25,
+    "turnover": 1.28,
+    "opened": 28,
+    "copied": 48,
+    "trades": 46,
+    "first": "2019-02-13",
+    "last": "2024-06-21",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 96
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw 144",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0699,
+    "vs_index_ann": -0.0581,
+    "max_dd": -0.326,
+    "turnover": 2.08,
+    "opened": 15,
+    "copied": 47,
+    "trades": 67,
+    "first": "2021-04-10",
+    "last": "2023-07-22",
+    "lag_days": 10.0,
+    "ranked": true,
+    "rank": 97
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville 146",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.0693,
+    "vs_index_ann": -0.0587,
+    "max_dd": -0.263,
+    "turnover": 1.17,
+    "opened": 84,
+    "copied": 97,
+    "trades": 105,
+    "first": "2019-08-13",
+    "last": "2023-08-21",
+    "lag_days": 23.0,
+    "ranked": true,
+    "rank": 98
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul 42",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.068,
+    "vs_index_ann": -0.06,
+    "max_dd": -0.413,
+    "turnover": 2.74,
+    "opened": 88,
+    "copied": 119,
+    "trades": 128,
+    "first": "2020-03-16",
+    "last": "2023-05-20",
+    "lag_days": 17.0,
+    "ranked": true,
+    "rank": 99
+   },
+   {
+    "pid": "house:frankel:earl:fl",
+    "name": "Earl Frankel",
+    "pool": "house",
+    "label": "House, FL",
+    "ret_ann": 0.0658,
+    "vs_index_ann": -0.0622,
+    "max_dd": -0.458,
+    "turnover": 1.32,
+    "opened": 82,
+    "copied": 92,
+    "trades": 137,
+    "first": "2019-03-13",
+    "last": "2024-01-22",
+    "lag_days": 29.0,
+    "ranked": true,
+    "rank": 100
+   },
+   {
+    "pid": "house:larsen:brian:wa",
+    "name": "Brian Larsen 97",
+    "pool": "house",
+    "label": "House, WA",
+    "ret_ann": 0.0657,
+    "vs_index_ann": -0.0623,
+    "max_dd": -0.401,
+    "turnover": 3.59,
+    "opened": 11,
+    "copied": 45,
+    "trades": 53,
+    "first": "2021-03-12",
+    "last": "2024-07-20",
+    "lag_days": 30.0,
+    "ranked": true,
+    "rank": 101
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville 66",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.0652,
+    "vs_index_ann": -0.0628,
+    "max_dd": -0.474,
+    "turnover": 1.5,
+    "opened": 16,
+    "copied": 32,
+    "trades": 64,
+    "first": "2021-07-17",
+    "last": "2024-08-26",
+    "lag_days": 34.0,
+    "ranked": true,
+    "rank": 102
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.0639,
+    "vs_index_ann": -0.0641,
+    "max_dd": -0.403,
+    "turnover": 3.59,
+    "opened": 37,
+    "copied": 52,
+    "trades": 83,
+    "first": "2021-02-10",
+    "last": "2025-02-20",
+    "lag_days": 30.0,
+    "ranked": true,
+    "rank": 103
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw 104",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0634,
+    "vs_index_ann": -0.0646,
+    "max_dd": -0.286,
+    "turnover": 1.02,
+    "opened": 62,
+    "copied": 80,
+    "trades": 63,
+    "first": "2020-01-18",
+    "last": "2023-07-25",
+    "lag_days": 8.0,
+    "ranked": true,
+    "rank": 104
+   },
+   {
+    "pid": "in:OWNER 3|JPM",
+    "name": "Debbie Tuberville",
+    "pool": "insider",
+    "label": "Director at JPM",
+    "ret_ann": 0.0626,
+    "vs_index_ann": -0.0654,
+    "max_dd": -0.447,
+    "turnover": 3.27,
+    "opened": 25,
+    "copied": 32,
+    "trades": 42,
+    "first": "2019-06-13",
+    "last": "2024-05-22",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 105
+   },
+   {
+    "pid": "house:lofgren:tommy:ca",
+    "name": "Tommy Lofgren 38",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.0579,
+    "vs_index_ann": -0.0701,
+    "max_dd": -0.494,
+    "turnover": 3.9,
+    "opened": 44,
+    "copied": 73,
+    "trades": 44,
+    "first": "2020-08-16",
+    "last": "2024-05-23",
+    "lag_days": 21.0,
+    "ranked": true,
+    "rank": 106
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul 62",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.056,
+    "vs_index_ann": -0.072,
+    "max_dd": -0.296,
+    "turnover": 0.7,
+    "opened": 33,
+    "copied": 45,
+    "trades": 85,
+    "first": "2019-02-10",
+    "last": "2025-01-24",
+    "lag_days": 35.0,
+    "ranked": true,
+    "rank": 107
+   },
+   {
+    "pid": "house:sessions:suzan:tx",
+    "name": "Suzan Sessions 113",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0553,
+    "vs_index_ann": -0.0727,
+    "max_dd": -0.485,
+    "turnover": 1.29,
+    "opened": 37,
+    "copied": 68,
+    "trades": 49,
+    "first": "2019-03-12",
+    "last": "2025-08-22",
+    "lag_days": 33.0,
+    "ranked": true,
+    "rank": 108
+   },
+   {
+    "pid": "house:tuberville:michael:al",
+    "name": "Michael Tuberville",
+    "pool": "house",
+    "label": "House, AL",
+    "ret_ann": 0.049,
+    "vs_index_ann": -0.079,
+    "max_dd": -0.451,
+    "turnover": 0.73,
+    "opened": 73,
+    "copied": 82,
+    "trades": 74,
+    "first": "2019-06-11",
+    "last": "2024-06-25",
+    "lag_days": 17.0,
+    "ranked": true,
+    "rank": 109
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern 148",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.0469,
+    "vs_index_ann": -0.0811,
+    "max_dd": -0.259,
+    "turnover": 1.47,
+    "opened": 32,
+    "copied": 68,
+    "trades": 50,
+    "first": "2019-05-10",
+    "last": "2025-01-26",
+    "lag_days": 11.0,
+    "ranked": true,
+    "rank": 110
+   },
+   {
+    "pid": "in:OWNER 143|HOOD",
+    "name": "Tommy Greene",
+    "pool": "insider",
+    "label": "CEO at HOOD",
+    "ret_ann": 0.0411,
+    "vs_index_ann": -0.0869,
+    "max_dd": -0.31,
+    "turnover": 3.35,
+    "opened": 60,
+    "copied": 74,
+    "trades": 103,
+    "first": "2019-07-12",
+    "last": "2024-08-22",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 111
+   },
+   {
+    "pid": "house:frankel:earl:fl",
+    "name": "Earl Frankel 136",
+    "pool": "house",
+    "label": "House, FL",
+    "ret_ann": 0.0391,
+    "vs_index_ann": -0.0889,
+    "max_dd": -0.46,
+    "turnover": 1.37,
+    "opened": 41,
+    "copied": 69,
+    "trades": 66,
+    "first": "2021-05-10",
+    "last": "2023-03-23",
+    "lag_days": 12.0,
+    "ranked": true,
+    "rank": 112
+   },
+   {
+    "pid": "in:OWNER 31|SHOP",
+    "name": "Michael Larsen",
+    "pool": "insider",
+    "label": "Director at SHOP",
+    "ret_ann": 0.039,
+    "vs_index_ann": -0.089,
+    "max_dd": -0.422,
+    "turnover": 2.12,
+    "opened": 42,
+    "copied": 51,
+    "trades": 99,
+    "first": "2020-01-10",
+    "last": "2025-08-21",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 113
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi 140",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.037,
+    "vs_index_ann": -0.091,
+    "max_dd": -0.22,
+    "turnover": 2.81,
+    "opened": 18,
+    "copied": 25,
+    "trades": 71,
+    "first": "2019-03-13",
+    "last": "2025-08-21",
+    "lag_days": 19.0,
+    "ranked": true,
+    "rank": 114
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw 44",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0351,
+    "vs_index_ann": -0.0929,
+    "max_dd": -0.344,
+    "turnover": 1.83,
+    "opened": 38,
+    "copied": 41,
+    "trades": 64,
+    "first": "2021-06-17",
+    "last": "2025-05-21",
+    "lag_days": 39.0,
+    "ranked": true,
+    "rank": 115
+   },
+   {
+    "pid": "in:OWNER 27|ABNB",
+    "name": "Zoe Foxx",
+    "pool": "insider",
+    "label": "CEO at ABNB",
+    "ret_ann": 0.0349,
+    "vs_index_ann": -0.0931,
+    "max_dd": -0.401,
+    "turnover": 1.78,
+    "opened": 24,
+    "copied": 43,
+    "trades": 52,
+    "first": "2020-08-12",
+    "last": "2025-02-26",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 116
+   },
+   {
+    "pid": "house:foxx:virginia:nc",
+    "name": "Virginia Foxx 70",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.0325,
+    "vs_index_ann": -0.0955,
+    "max_dd": -0.272,
+    "turnover": 1.57,
+    "opened": 35,
+    "copied": 62,
+    "trades": 76,
+    "first": "2020-04-11",
+    "last": "2024-03-22",
+    "lag_days": 20.0,
+    "ranked": true,
+    "rank": 117
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer 141",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.0282,
+    "vs_index_ann": -0.0998,
+    "max_dd": -0.288,
+    "turnover": 0.27,
+    "opened": 65,
+    "copied": 81,
+    "trades": 92,
+    "first": "2020-03-12",
+    "last": "2025-03-26",
+    "lag_days": 15.0,
+    "ranked": true,
+    "rank": 118
+   },
+   {
+    "pid": "in:OWNER 103|CRWD",
+    "name": "Virginia Thanedar",
+    "pool": "insider",
+    "label": "CEO at CRWD",
+    "ret_ann": 0.0278,
+    "vs_index_ann": -0.1002,
+    "max_dd": -0.263,
+    "turnover": 3.46,
+    "opened": 54,
+    "copied": 87,
+    "trades": 106,
+    "first": "2020-05-17",
+    "last": "2023-07-27",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 119
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar 89",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": 0.0162,
+    "vs_index_ann": -0.1118,
+    "max_dd": -0.368,
+    "turnover": 1.33,
+    "opened": 66,
+    "copied": 100,
+    "trades": 70,
+    "first": "2021-04-10",
+    "last": "2024-02-27",
+    "lag_days": 11.0,
+    "ranked": true,
+    "rank": 120
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw 24",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0143,
+    "vs_index_ann": -0.1137,
+    "max_dd": -0.346,
+    "turnover": 2.18,
+    "opened": 33,
+    "copied": 41,
+    "trades": 64,
+    "first": "2019-04-15",
+    "last": "2024-03-20",
+    "lag_days": 21.0,
+    "ranked": true,
+    "rank": 121
+   },
+   {
+    "pid": "house:pelosi:nancy:ca",
+    "name": "Nancy Pelosi 80",
+    "pool": "house",
+    "label": "House, CA",
+    "ret_ann": 0.0133,
+    "vs_index_ann": -0.1147,
+    "max_dd": -0.253,
+    "turnover": 1.67,
+    "opened": 14,
+    "copied": 32,
+    "trades": 20,
+    "first": "2021-04-15",
+    "last": "2025-03-21",
+    "lag_days": 28.0,
+    "ranked": true,
+    "rank": 122
+   },
+   {
+    "pid": "in:OWNER 55|NVDA",
+    "name": "Brian Hern",
+    "pool": "insider",
+    "label": "Director at NVDA",
+    "ret_ann": 0.0131,
+    "vs_index_ann": -0.1149,
+    "max_dd": -0.299,
+    "turnover": 1.42,
+    "opened": 80,
+    "copied": 104,
+    "trades": 135,
+    "first": "2019-05-17",
+    "last": "2024-06-20",
+    "lag_days": null,
+    "ranked": true,
+    "rank": 123
+   },
+   {
+    "pid": "house:gottheimer:debbie:nj",
+    "name": "Debbie Gottheimer 101",
+    "pool": "house",
+    "label": "House, NJ",
+    "ret_ann": 0.009,
+    "vs_index_ann": -0.119,
+    "max_dd": -0.439,
+    "turnover": 0.2,
+    "opened": 65,
+    "copied": 97,
+    "trades": 95,
+    "first": "2021-04-17",
+    "last": "2024-01-27",
+    "lag_days": 43.0,
+    "ranked": true,
+    "rank": 124
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar 29",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": 0.0025,
+    "vs_index_ann": -0.1255,
+    "max_dd": -0.348,
+    "turnover": 2.71,
+    "opened": 31,
+    "copied": 65,
+    "trades": 39,
+    "first": "2019-01-13",
+    "last": "2024-02-24",
+    "lag_days": 36.0,
+    "ranked": true,
+    "rank": 125
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar 109",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": -0.001,
+    "vs_index_ann": -0.129,
+    "max_dd": -0.494,
+    "turnover": 0.26,
+    "opened": 88,
+    "copied": 96,
+    "trades": 124,
+    "first": "2021-04-10",
+    "last": "2025-07-25",
+    "lag_days": 25.0,
+    "ranked": true,
+    "rank": 126
+   },
+   {
+    "pid": "house:frankel:earl:fl",
+    "name": "Earl Frankel 56",
+    "pool": "house",
+    "label": "House, FL",
+    "ret_ann": -0.0119,
+    "vs_index_ann": -0.1399,
+    "max_dd": -0.206,
+    "turnover": 3.52,
+    "opened": 55,
+    "copied": 93,
+    "trades": 84,
+    "first": "2020-07-17",
+    "last": "2023-07-22",
+    "lag_days": 29.0,
+    "ranked": true,
+    "rank": 127
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": -0.0591,
+    "vs_index_ann": -0.1871,
+    "max_dd": -0.441,
+    "turnover": 1.07,
+    "opened": 16,
+    "copied": 36,
+    "trades": 59,
+    "first": "2021-04-11",
+    "last": "2024-03-20",
+    "lag_days": 33.0,
+    "ranked": true,
+    "rank": 128
+   },
+   {
+    "pid": "in:OWNER 135|BKNG",
+    "name": "Ro Frankel",
+    "pool": "insider",
+    "label": "CFO at BKNG",
+    "ret_ann": 0.2527,
+    "vs_index_ann": 0.1247,
+    "max_dd": -0.49,
+    "turnover": 2.98,
+    "opened": 6,
+    "copied": 19,
+    "trades": 17,
+    "first": "2021-01-18",
+    "last": "2024-01-27",
+    "lag_days": null,
+    "ranked": false
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern 108",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.2335,
+    "vs_index_ann": 0.1055,
+    "max_dd": -0.448,
+    "turnover": 0.44,
+    "opened": 6,
+    "copied": 22,
+    "trades": 34,
+    "first": "2020-04-11",
+    "last": "2024-07-23",
+    "lag_days": 40.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene 45",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.2052,
+    "vs_index_ann": 0.0772,
+    "max_dd": -0.322,
+    "turnover": 3.33,
+    "opened": 3,
+    "copied": 9,
+    "trades": 48,
+    "first": "2021-06-17",
+    "last": "2023-01-25",
+    "lag_days": 22.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:blumenauer:dan:or",
+    "name": "Dan Blumenauer 52",
+    "pool": "house",
+    "label": "House, OR",
+    "ret_ann": 0.1884,
+    "vs_index_ann": 0.0604,
+    "max_dd": -0.311,
+    "turnover": 2.15,
+    "opened": 3,
+    "copied": 3,
+    "trades": 12,
+    "first": "2019-08-13",
+    "last": "2024-01-24",
+    "lag_days": 10.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene 105",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.1752,
+    "vs_index_ann": 0.0472,
+    "max_dd": -0.492,
+    "turnover": 1.49,
+    "opened": 9,
+    "copied": 17,
+    "trades": 9,
+    "first": "2019-07-16",
+    "last": "2023-02-27",
+    "lag_days": 24.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:frankel:earl:fl",
+    "name": "Earl Frankel 36",
+    "pool": "house",
+    "label": "House, FL",
+    "ret_ann": 0.1489,
+    "vs_index_ann": 0.0209,
+    "max_dd": -0.364,
+    "turnover": 1.92,
+    "opened": 8,
+    "copied": 37,
+    "trades": 29,
+    "first": "2019-01-13",
+    "last": "2024-08-25",
+    "lag_days": 42.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:foxx:virginia:nc",
+    "name": "Virginia Foxx 50",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1427,
+    "vs_index_ann": 0.0147,
+    "max_dd": -0.213,
+    "turnover": 3.65,
+    "opened": 1,
+    "copied": 40,
+    "trades": 29,
+    "first": "2020-02-16",
+    "last": "2024-07-25",
+    "lag_days": 16.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:foxx:virginia:nc",
+    "name": "Virginia Foxx 110",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1409,
+    "vs_index_ann": 0.0129,
+    "max_dd": -0.327,
+    "turnover": 2.24,
+    "opened": 3,
+    "copied": 33,
+    "trades": 48,
+    "first": "2021-08-10",
+    "last": "2025-08-26",
+    "lag_days": 30.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:manning:zoe:nc",
+    "name": "Zoe Manning",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1397,
+    "vs_index_ann": 0.0117,
+    "max_dd": -0.328,
+    "turnover": 2.42,
+    "opened": 8,
+    "copied": 36,
+    "trades": 18,
+    "first": "2020-07-18",
+    "last": "2025-07-23",
+    "lag_days": 31.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:hern:lois:ok",
+    "name": "Lois Hern 68",
+    "pool": "house",
+    "label": "House, OK",
+    "ret_ann": 0.1332,
+    "vs_index_ann": 0.0052,
+    "max_dd": -0.414,
+    "turnover": 0.32,
+    "opened": 1,
+    "copied": 39,
+    "trades": 8,
+    "first": "2021-02-18",
+    "last": "2023-05-20",
+    "lag_days": 28.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:manning:zoe:nc",
+    "name": "Zoe Manning 94",
+    "pool": "house",
+    "label": "House, NC",
+    "ret_ann": 0.1306,
+    "vs_index_ann": 0.0026,
+    "max_dd": -0.395,
+    "turnover": 2.79,
+    "opened": 4,
+    "copied": 32,
+    "trades": 13,
+    "first": "2019-01-15",
+    "last": "2024-02-24",
+    "lag_days": 41.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:greene:mark:ga",
+    "name": "Mark Greene 85",
+    "pool": "house",
+    "label": "House, GA",
+    "ret_ann": 0.1254,
+    "vs_index_ann": -0.0026,
+    "max_dd": -0.35,
+    "turnover": 3.25,
+    "opened": 7,
+    "copied": 30,
+    "trades": 32,
+    "first": "2020-03-18",
+    "last": "2025-05-27",
+    "lag_days": 37.0,
+    "ranked": false
+   },
+   {
+    "pid": "in:OWNER 147|MRK",
+    "name": "Ro Sessions",
+    "pool": "insider",
+    "label": "Director at MRK",
+    "ret_ann": 0.1222,
+    "vs_index_ann": -0.0058,
+    "max_dd": -0.236,
+    "turnover": 3.12,
+    "opened": 1,
+    "copied": 40,
+    "trades": 26,
+    "first": "2021-01-10",
+    "last": "2025-06-25",
+    "lag_days": null,
+    "ranked": false
+   },
+   {
+    "pid": "in:OWNER 107|RKLB",
+    "name": "Nancy DelBene",
+    "pool": "insider",
+    "label": "10 % holder at RKLB",
+    "ret_ann": 0.1096,
+    "vs_index_ann": -0.0184,
+    "max_dd": -0.348,
+    "turnover": 0.71,
+    "opened": 8,
+    "copied": 8,
+    "trades": 19,
+    "first": "2020-05-12",
+    "last": "2024-07-21",
+    "lag_days": null,
+    "ranked": false
+   },
+   {
+    "pid": "in:OWNER 67|ZS",
+    "name": "Pete Thanedar",
+    "pool": "insider",
+    "label": "CEO at ZS",
+    "ret_ann": 0.1051,
+    "vs_index_ann": -0.0229,
+    "max_dd": -0.345,
+    "turnover": 3.85,
+    "opened": 6,
+    "copied": 34,
+    "trades": 32,
+    "first": "2021-03-10",
+    "last": "2024-03-27",
+    "lag_days": null,
+    "ranked": false
+   },
+   {
+    "pid": "in:OWNER 111|CVNA",
+    "name": "Nancy Pelosi",
+    "pool": "insider",
+    "label": "10 % holder at CVNA",
+    "ret_ann": 0.1051,
+    "vs_index_ann": -0.0229,
+    "max_dd": -0.5,
+    "turnover": 0.44,
+    "opened": 8,
+    "copied": 23,
+    "trades": 40,
+    "first": "2019-08-12",
+    "last": "2025-04-25",
+    "lag_days": null,
+    "ranked": false
+   },
+   {
+    "pid": "in:OWNER 63|DAL",
+    "name": "Marjorie Wasserman Schultz",
+    "pool": "insider",
+    "label": "CFO at DAL",
+    "ret_ann": 0.1047,
+    "vs_index_ann": -0.0233,
+    "max_dd": -0.28,
+    "turnover": 1.33,
+    "opened": 1,
+    "copied": 26,
+    "trades": 28,
+    "first": "2020-02-13",
+    "last": "2025-03-24",
+    "lag_days": null,
+    "ranked": false
+   },
+   {
+    "pid": "in:OWNER 127|ABNB",
+    "name": "Virginia Greene",
+    "pool": "insider",
+    "label": "Director at ABNB",
+    "ret_ann": 0.0916,
+    "vs_index_ann": -0.0364,
+    "max_dd": -0.347,
+    "turnover": 1.1,
+    "opened": 6,
+    "copied": 17,
+    "trades": 44,
+    "first": "2020-04-11",
+    "last": "2024-07-25",
+    "lag_days": null,
+    "ranked": false
+   },
+   {
+    "pid": "house:crenshaw:kevin:tx",
+    "name": "Kevin Crenshaw 84",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0656,
+    "vs_index_ann": -0.0624,
+    "max_dd": -0.349,
+    "turnover": 2.05,
+    "opened": 1,
+    "copied": 9,
+    "trades": 51,
+    "first": "2020-06-14",
+    "last": "2025-05-23",
+    "lag_days": 36.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul 122",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.033,
+    "vs_index_ann": -0.095,
+    "max_dd": -0.249,
+    "turnover": 0.45,
+    "opened": 3,
+    "copied": 40,
+    "trades": 27,
+    "first": "2020-06-17",
+    "last": "2025-03-27",
+    "lag_days": 36.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:mccaul:kathy:tx",
+    "name": "Kathy McCaul 22",
+    "pool": "house",
+    "label": "House, TX",
+    "ret_ann": 0.0328,
+    "vs_index_ann": -0.0952,
+    "max_dd": -0.252,
+    "turnover": 1.85,
+    "opened": 1,
+    "copied": 17,
+    "trades": 27,
+    "first": "2021-07-15",
+    "last": "2023-04-27",
+    "lag_days": 40.0,
+    "ranked": false
+   },
+   {
+    "pid": "house:thanedar:ro:mi",
+    "name": "Ro Thanedar",
+    "pool": "house",
+    "label": "House, MI",
+    "ret_ann": 0.0064,
+    "vs_index_ann": -0.1216,
+    "max_dd": -0.263,
+    "turnover": 2.33,
+    "opened": 7,
+    "copied": 40,
+    "trades": 14,
+    "first": "2019-02-17",
+    "last": "2023-01-27",
+    "lag_days": 19.0,
+    "ranked": false
+   }
+  ],
+  "now": {
+   "start": "2026-07-01",
+   "from": "2023-06-29",
+   "to": "2026-06-30",
+   "eligible": 61,
+   "people": [
+    {
+     "pid": "house:pelosi:nancy:ca",
+     "name": "Nancy Pelosi 100",
+     "pool": "house",
+     "label": "House, CA",
+     "score": 0.21
+    },
+    {
+     "pid": "house:greene:mark:ga",
+     "name": "Mark Greene 65",
+     "pool": "house",
+     "label": "House, GA",
+     "score": 0.198
+    },
+    {
+     "pid": "in:OWNER 91|FSLR",
+     "name": "Marjorie Green",
+     "pool": "insider",
+     "label": "10 % holder at FSLR",
+     "score": 0.186
+    },
+    {
+     "pid": "house:foxx:virginia:nc",
+     "name": "Virginia Foxx 30",
+     "pool": "house",
+     "label": "House, NC",
+     "score": 0.174
+    },
+    {
+     "pid": "house:gottheimer:debbie:nj",
+     "name": "Debbie Gottheimer 61",
+     "pool": "house",
+     "label": "House, NJ",
+     "score": 0.162
+    },
+    {
+     "pid": "house:thanedar:ro:mi",
+     "name": "Ro Thanedar 69",
+     "pool": "house",
+     "label": "House, MI",
+     "score": 0.15
+    },
+    {
+     "pid": "house:gottheimer:debbie:nj",
+     "name": "Debbie Gottheimer 81",
+     "pool": "house",
+     "label": "House, NJ",
+     "score": 0.138
+    },
+    {
+     "pid": "house:hern:lois:ok",
+     "name": "Lois Hern 128",
+     "pool": "house",
+     "label": "House, OK",
+     "score": 0.126
+    },
+    {
+     "pid": "house:manning:zoe:nc",
+     "name": "Zoe Manning 74",
+     "pool": "house",
+     "label": "House, NC",
+     "score": 0.114
+    },
+    {
+     "pid": "house:lofgren:tommy:ca",
+     "name": "Tommy Lofgren",
+     "pool": "house",
+     "label": "House, CA",
+     "score": 0.102
+    }
+   ]
+  },
+  "picks": [
+   {
+    "start": "2019-01-02",
+    "people": [
+     "Ro Thanedar 129",
+     "Dan Blumenauer 32",
+     "Earl Frankel",
+     "Michael Larsen",
+     "Mark Greene 145",
+     "Tommy Frankel",
+     "Tommy Lofgren 118",
+     "Lois Hern",
+     "Brian Larsen 97",
+     "Kevin Crenshaw 124"
+    ],
+    "eligible": 82
+   },
+   {
+    "start": "2019-07-01",
+    "people": [
+     "Zoe Manning 34",
+     "Kathy Blumenauer",
+     "Debbie Gottheimer 21",
+     "Michael Tuberville 106",
+     "Debbie Gottheimer",
+     "Kathy McCaul",
+     "Ro Lofgren",
+     "Mark Greene",
+     "Brian Larsen 137",
+     "Tommy Lofgren 78"
+    ],
+    "eligible": 84
+   },
+   {
+    "start": "2020-01-02",
+    "people": [
+     "Kevin Crenshaw",
+     "Tommy Frankel",
+     "Earl Frankel 56",
+     "Kevin Crenshaw 124",
+     "Ro Thanedar 49",
+     "Tommy Lofgren 138",
+     "Michael Tuberville 26",
+     "Shri Foxx",
+     "Kathy Gottheimer",
+     "Kevin Hern"
+    ],
+    "eligible": 72
+   },
+   {
+    "start": "2020-07-01",
+    "people": [
+     "Marjorie Frankel",
+     "Suzan Sessions 73",
+     "Kathy McCaul",
+     "Suzan Sessions 113",
+     "Tommy Lofgren 58",
+     "Michael Tuberville 66",
+     "Tommy Green",
+     "Debbie Gottheimer 41",
+     "Brian Larsen 77",
+     "Michael Tuberville 106"
+    ],
+    "eligible": 89
+   },
+   {
+    "start": "2021-01-02",
+    "people": [
+     "Tommy Green",
+     "Michael Frankel",
+     "Debbie Gottheimer 61",
+     "Zoe Pelosi",
+     "Debbie Gottheimer 141",
+     "Virginia Thanedar",
+     "Kevin Crenshaw",
+     "Zoe Foxx",
+     "Ro Green",
+     "Lois Hern 88"
+    ],
+    "eligible": 60
+   },
+   {
+    "start": "2021-07-01",
+    "people": [
+     "Debbie Gottheimer",
+     "Michael Tuberville",
+     "Michael Tuberville 146",
+     "Tommy Frankel",
+     "Nancy Pelosi 60",
+     "Brian Hern",
+     "Mark Greene 125",
+     "Michael Wasserman Schultz",
+     "Virginia Foxx 90",
+     "Michael Tuberville 106"
+    ],
+    "eligible": 54
+   },
+   {
+    "start": "2022-01-02",
+    "people": [
+     "Brian Larsen 137",
+     "Nancy Pelosi 100",
+     "Lois Hern",
+     "Kevin Crenshaw 144",
+     "Debbie Gottheimer 121",
+     "Lois Hern 28",
+     "Kevin Crenshaw",
+     "Michael Tuberville 66",
+     "Ro Thanedar 69",
+     "Zoe Foxx"
+    ],
+    "eligible": 52
+   },
+   {
+    "start": "2022-07-01",
+    "people": [
+     "Kathy McCaul",
+     "Michael Tuberville 146",
+     "Kevin Crenshaw 64",
+     "Mark Greene 25",
+     "Debbie Gottheimer 41",
+     "Tommy Lofgren",
+     "Kathy McCaul 42",
+     "Kathy Gottheimer",
+     "Virginia Foxx 30",
+     "Michael Frankel"
+    ],
+    "eligible": 89
+   },
+   {
+    "start": "2023-01-02",
+    "people": [
+     "Lois Hern 88",
+     "Suzan Sessions 53",
+     "Kathy Blumenauer",
+     "Tommy Pelosi",
+     "Mark Greene 65",
+     "Mark Greene 125",
+     "Michael Wasserman Schultz",
+     "Debbie Gottheimer 21",
+     "Tommy Green",
+     "Michael Tuberville"
+    ],
+    "eligible": 53
+   },
+   {
+    "start": "2023-07-01",
+    "people": [
+     "Lois Hern 148",
+     "Michael Tuberville 46",
+     "Virginia Foxx 30",
+     "Lois Hern 88",
+     "Tommy Lofgren",
+     "Tommy Lofgren 58",
+     "Kathy McCaul 102",
+     "Kevin Crenshaw 44",
+     "Earl Frankel 136",
+     "Ro Thanedar 89"
+    ],
+    "eligible": 54
+   },
+   {
+    "start": "2024-01-02",
+    "people": [
+     "Lois Hern 128",
+     "Marjorie Green",
+     "Tommy Lofgren 138",
+     "Nancy Pelosi 40",
+     "Earl Frankel 136",
+     "Suzan Sessions 133",
+     "Ro Thanedar 89",
+     "Kevin Crenshaw 124",
+     "Brian Larsen 57",
+     "Michael Wasserman Schultz"
+    ],
+    "eligible": 59
+   },
+   {
+    "start": "2024-07-01",
+    "people": [
+     "Kevin Hern",
+     "Nancy Pelosi",
+     "Michael Tuberville 106",
+     "Kathy McCaul 142",
+     "Debbie Gottheimer 101",
+     "Zoe Foxx",
+     "Nancy Pelosi 40",
+     "Lois Hern 148",
+     "Tommy Green",
+     "Tommy Lofgren"
+    ],
+    "eligible": 75
+   },
+   {
+    "start": "2025-01-02",
+    "people": [
+     "Tommy Lofgren 98",
+     "Ro Thanedar 69",
+     "Kathy Blumenauer",
+     "Josh Sessions",
+     "Brian Larsen 37",
+     "Kevin Crenshaw 64",
+     "Nancy Pelosi 120",
+     "Debbie Gottheimer 141",
+     "Michael Tuberville 86",
+     "Brian Larsen"
+    ],
+    "eligible": 52
+   },
+   {
+    "start": "2025-07-01",
+    "people": [
+     "Dan Pelosi",
+     "Kevin Crenshaw",
+     "Nancy Pelosi 120",
+     "Suzan Sessions 93",
+     "Ro Thanedar 29",
+     "Kathy McCaul 42",
+     "Lois Hern 148",
+     "Michael Tuberville 106",
+     "Tommy Pelosi",
+     "Earl Frankel 96"
+    ],
+    "eligible": 62
+   },
+   {
+    "start": "2026-01-02",
+    "people": [
+     "Lois Hern 48",
+     "Earl Frankel 76",
+     "Tommy Greene",
+     "Debbie Gottheimer 101",
+     "Dan Blumenauer 32",
+     "Nancy Pelosi 140",
+     "Tommy Lofgren 98",
+     "Debbie Gottheimer 121",
+     "Zoe Manning 54",
+     "Dan Blumenauer"
+    ],
+    "eligible": 56
+   },
+   {
+    "start": "2026-07-01",
+    "people": [
+     "Lois Hern 28",
+     "Zoe Foxx",
+     "Ro Thanedar 49",
+     "Michael Tuberville 26",
+     "Suzan Sessions",
+     "Mark Blumenauer",
+     "Brian Larsen",
+     "Ro Thanedar 109",
+     "Mark Greene 125",
+     "Kathy McCaul 62"
+    ],
+    "eligible": 55
+   }
+  ],
+  "fair": {
+   "from": "2019-01-02",
+   "to": "2025-05-13",
+   "ret_ann": 0.141,
+   "index_ann": 0.162,
+   "vs_index_ann": -0.021,
+   "ci": [
+    -0.081,
+    0.039
+   ],
+   "sharpe": 0.8,
+   "max_dd": -0.31,
+   "turnover": 3.1,
+   "cost_drag": 0.004,
+   "basket": 0.134,
+   "vs_basket": 0.007,
+   "costs_x2": -0.025,
+   "costs_x3": -0.029,
+   "fx": -0.031,
+   "by_year": [],
+   "curve": [
+    [
+     "2019-01-15",
+     10000.0,
+     10000.0
+    ],
+    [
+     "2019-01-15",
+     9964.95,
+     10101.56
+    ],
+    [
+     "2019-01-15",
+     9998.48,
+     10071.25
+    ],
+    [
+     "2019-01-15",
+     9894.46,
+     10191.37
+    ],
+    [
+     "2019-01-15",
+     9922.6,
+     10215.47
+    ],
+    [
+     "2019-02-15",
+     9727.75,
+     10172.43
+    ],
+    [
+     "2019-02-15",
+     9668.36,
+     10327.58
+    ],
+    [
+     "2019-02-15",
+     9640.88,
+     10248.64
+    ],
+    [
+     "2019-02-15",
+     9627.5,
+     10164.57
+    ],
+    [
+     "2019-03-15",
+     9564.13,
+     10187.5
+    ],
+    [
+     "2019-03-15",
+     9616.85,
+     10349.57
+    ],
+    [
+     "2019-03-15",
+     9629.44,
+     10127.03
+    ],
+    [
+     "2019-03-15",
+     9868.77,
+     10182.12
+    ],
+    [
+     "2019-04-15",
+     9972.46,
+     10339.7
+    ],
+    [
+     "2019-04-15",
+     9945.83,
+     10356.85
+    ],
+    [
+     "2019-04-15",
+     9634.26,
+     10226.48
+    ],
+    [
+     "2019-04-15",
+     9634.01,
+     10354.94
+    ],
+    [
+     "2019-05-15",
+     9579.05,
+     10364.98
+    ],
+    [
+     "2019-05-15",
+     9578.96,
+     10330.11
+    ],
+    [
+     "2019-05-15",
+     9558.19,
+     10400.73
+    ],
+    [
+     "2019-05-15",
+     9635.86,
+     10305.11
+    ],
+    [
+     "2019-06-15",
+     9801.16,
+     10281.35
+    ],
+    [
+     "2019-06-15",
+     9886.51,
+     10291.13
+    ],
+    [
+     "2019-06-15",
+     9885.12,
+     10346.85
+    ],
+    [
+     "2019-06-15",
+     9884.68,
+     10464.04
+    ],
+    [
+     "2019-06-15",
+     9928.47,
+     10368.58
+    ],
+    [
+     "2019-07-15",
+     9957.47,
+     10319.96
+    ],
+    [
+     "2019-07-15",
+     9852.22,
+     10424.93
+    ],
+    [
+     "2019-07-15",
+     9737.65,
+     10487.16
+    ],
+    [
+     "2019-07-15",
+     9594.2,
+     10465.97
+    ],
+    [
+     "2019-08-15",
+     9557.09,
+     10624.53
+    ],
+    [
+     "2019-08-15",
+     9590.19,
+     10616.03
+    ],
+    [
+     "2019-08-15",
+     9645.83,
+     10790.97
+    ],
+    [
+     "2019-08-15",
+     9735.67,
+     10593.1
+    ],
+    [
+     "2019-09-15",
+     9826.61,
+     10664.57
+    ],
+    [
+     "2019-09-15",
+     9936.37,
+     10604.06
+    ],
+    [
+     "2019-09-15",
+     9814.64,
+     10599.56
+    ],
+    [
+     "2019-09-15",
+     9989.78,
+     10595.04
+    ],
+    [
+     "2019-10-15",
+     10147.28,
+     10603.39
+    ],
+    [
+     "2019-10-15",
+     10019.03,
+     10478.38
+    ],
+    [
+     "2019-10-15",
+     9949.08,
+     10380.37
+    ],
+    [
+     "2019-10-15",
+     9863.7,
+     10171.05
+    ],
+    [
+     "2019-11-15",
+     9833.36,
+     10112.64
+    ],
+    [
+     "2019-11-15",
+     9604.48,
+     10029.57
+    ],
+    [
+     "2019-11-15",
+     9483.84,
+     10086.38
+    ],
+    [
+     "2019-11-15",
+     9352.32,
+     10235.88
+    ],
+    [
+     "2019-11-15",
+     9280.81,
+     10278.15
+    ],
+    [
+     "2019-12-15",
+     9227.2,
+     10207.31
+    ],
+    [
+     "2019-12-15",
+     9310.24,
+     10086.03
+    ],
+    [
+     "2019-12-15",
+     9463.0,
+     10142.59
+    ],
+    [
+     "2019-12-15",
+     9556.08,
+     10053.33
+    ],
+    [
+     "2020-01-15",
+     9519.18,
+     10131.71
+    ],
+    [
+     "2020-01-15",
+     9470.74,
+     10205.57
+    ],
+    [
+     "2020-01-15",
+     9404.46,
+     10249.33
+    ],
+    [
+     "2020-01-15",
+     9354.5,
+     10395.24
+    ],
+    [
+     "2020-02-15",
+     9418.04,
+     10377.54
+    ],
+    [
+     "2020-02-15",
+     9552.28,
+     10405.82
+    ],
+    [
+     "2020-02-15",
+     9535.98,
+     10520.41
+    ],
+    [
+     "2020-02-15",
+     9469.16,
+     10332.92
+    ],
+    [
+     "2020-03-15",
+     9600.91,
+     10211.83
+    ],
+    [
+     "2020-03-15",
+     9740.17,
+     10140.18
+    ],
+    [
+     "2020-03-15",
+     9622.99,
+     10048.33
+    ],
+    [
+     "2020-03-15",
+     9728.56,
+     10117.4
+    ],
+    [
+     "2020-04-15",
+     9646.04,
+     10078.3
+    ],
+    [
+     "2020-04-15",
+     9435.15,
+     10069.09
+    ],
+    [
+     "2020-04-15",
+     9371.49,
+     10098.13
+    ],
+    [
+     "2020-04-15",
+     9421.48,
+     10048.93
+    ],
+    [
+     "2020-04-15",
+     9542.65,
+     10000.3
+    ],
+    [
+     "2020-05-15",
+     9410.18,
+     10133.77
+    ],
+    [
+     "2020-05-15",
+     9344.64,
+     10266.79
+    ],
+    [
+     "2020-05-15",
+     9246.07,
+     10231.24
+    ],
+    [
+     "2020-05-15",
+     9229.21,
+     10161.72
+    ],
+    [
+     "2020-06-15",
+     9058.77,
+     10008.74
+    ],
+    [
+     "2020-06-15",
+     9194.39,
+     10039.56
+    ],
+    [
+     "2020-06-15",
+     9017.19,
+     10035.17
+    ],
+    [
+     "2020-06-15",
+     9048.39,
+     10133.39
+    ],
+    [
+     "2020-07-15",
+     9046.18,
+     10041.13
+    ],
+    [
+     "2020-07-15",
+     9015.69,
+     10196.74
+    ],
+    [
+     "2020-07-15",
+     8930.25,
+     10269.61
+    ],
+    [
+     "2020-07-15",
+     8699.82,
+     10238.65
+    ],
+    [
+     "2020-08-15",
+     8770.99,
+     10233.74
+    ],
+    [
+     "2020-08-15",
+     8774.18,
+     10373.64
+    ],
+    [
+     "2020-08-15",
+     8671.92,
+     10578.25
+    ],
+    [
+     "2020-08-15",
+     8671.89,
+     10481.89
+    ],
+    [
+     "2020-09-15",
+     8750.14,
+     10461.34
+    ],
+    [
+     "2020-09-15",
+     8664.95,
+     10394.54
+    ],
+    [
+     "2020-09-15",
+     8496.11,
+     10296.39
+    ],
+    [
+     "2020-09-15",
+     8469.05,
+     10203.22
+    ],
+    [
+     "2020-09-15",
+     8355.21,
+     10108.67
+    ],
+    [
+     "2020-10-15",
+     8297.96,
+     10065.06
+    ],
+    [
+     "2020-10-15",
+     8295.3,
+     10131.47
+    ],
+    [
+     "2020-10-15",
+     8291.94,
+     10056.02
+    ],
+    [
+     "2020-10-15",
+     8325.92,
+     10193.47
+    ],
+    [
+     "2020-11-15",
+     8245.58,
+     10215.92
+    ],
+    [
+     "2020-11-15",
+     8183.34,
+     10353.38
+    ],
+    [
+     "2020-11-15",
+     8327.42,
+     10291.18
+    ],
+    [
+     "2020-11-15",
+     8262.34,
+     10080.9
+    ],
+    [
+     "2020-12-15",
+     8232.33,
+     10184.03
+    ],
+    [
+     "2020-12-15",
+     8275.12,
+     10295.28
+    ],
+    [
+     "2020-12-15",
+     8334.75,
+     10109.59
+    ],
+    [
+     "2020-12-15",
+     8245.11,
+     10138.05
+    ],
+    [
+     "2021-01-15",
+     8389.46,
+     10358.29
+    ],
+    [
+     "2021-01-15",
+     8261.44,
+     10374.32
+    ],
+    [
+     "2021-01-15",
+     8233.34,
+     10387.31
+    ],
+    [
+     "2021-01-15",
+     8153.23,
+     10156.87
+    ],
+    [
+     "2021-02-15",
+     8202.32,
+     10198.01
+    ],
+    [
+     "2021-02-15",
+     8187.13,
+     10128.4
+    ],
+    [
+     "2021-02-15",
+     8304.52,
+     10185.94
+    ],
+    [
+     "2021-02-15",
+     8314.2,
+     10141.19
+    ],
+    [
+     "2021-02-15",
+     8214.83,
+     10205.72
+    ],
+    [
+     "2021-03-15",
+     8316.55,
+     10071.64
+    ],
+    [
+     "2021-03-15",
+     8551.15,
+     10216.15
+    ],
+    [
+     "2021-03-15",
+     8624.78,
+     10217.69
+    ],
+    [
+     "2021-03-15",
+     8761.45,
+     10182.34
+    ],
+    [
+     "2021-04-15",
+     8803.53,
+     10109.36
+    ],
+    [
+     "2021-04-15",
+     8834.96,
+     10048.52
+    ],
+    [
+     "2021-04-15",
+     8728.2,
+     10135.85
+    ],
+    [
+     "2021-04-15",
+     8761.08,
+     10226.95
+    ],
+    [
+     "2021-05-15",
+     8877.35,
+     10189.24
+    ],
+    [
+     "2021-05-15",
+     8906.48,
+     10221.97
+    ],
+    [
+     "2021-05-15",
+     8990.91,
+     10164.61
+    ],
+    [
+     "2021-05-15",
+     9060.81,
+     10094.48
+    ],
+    [
+     "2021-06-15",
+     9004.74,
+     10147.34
+    ],
+    [
+     "2021-06-15",
+     8915.14,
+     10103.65
+    ],
+    [
+     "2021-06-15",
+     8951.53,
+     10004.8
+    ],
+    [
+     "2021-06-15",
+     9001.75,
+     9737.71
+    ],
+    [
+     "2021-07-15",
+     8941.05,
+     9753.02
+    ],
+    [
+     "2021-07-15",
+     9052.96,
+     9765.48
+    ],
+    [
+     "2021-07-15",
+     8886.52,
+     9773.14
+    ],
+    [
+     "2021-07-15",
+     8946.89,
+     9759.52
+    ],
+    [
+     "2021-07-15",
+     8799.94,
+     9803.77
+    ],
+    [
+     "2021-08-15",
+     8718.68,
+     9815.19
+    ],
+    [
+     "2021-08-15",
+     8623.24,
+     9911.58
+    ],
+    [
+     "2021-08-15",
+     8484.75,
+     9803.16
+    ],
+    [
+     "2021-08-15",
+     8425.55,
+     9923.4
+    ],
+    [
+     "2021-09-15",
+     8485.15,
+     9952.22
+    ],
+    [
+     "2021-09-15",
+     8661.33,
+     10159.12
+    ],
+    [
+     "2021-09-15",
+     8658.14,
+     10111.34
+    ],
+    [
+     "2021-09-15",
+     8555.13,
+     10165.14
+    ],
+    [
+     "2021-10-15",
+     8485.02,
+     10141.79
+    ],
+    [
+     "2021-10-15",
+     8341.11,
+     10194.83
+    ],
+    [
+     "2021-10-15",
+     8392.45,
+     10168.6
+    ],
+    [
+     "2021-10-15",
+     8515.8,
+     10150.56
+    ],
+    [
+     "2021-11-15",
+     8450.75,
+     10234.27
+    ],
+    [
+     "2021-11-15",
+     8335.33,
+     10289.45
+    ],
+    [
+     "2021-11-15",
+     8195.11,
+     10242.43
+    ],
+    [
+     "2021-11-15",
+     8008.83,
+     10360.79
+    ],
+    [
+     "2021-12-15",
+     7994.81,
+     10259.61
+    ],
+    [
+     "2021-12-15",
+     7881.24,
+     9974.87
+    ],
+    [
+     "2021-12-15",
+     7846.91,
+     10107.51
+    ],
+    [
+     "2021-12-15",
+     7862.16,
+     9983.8
+    ],
+    [
+     "2021-12-15",
+     7846.98,
+     10018.74
+    ],
+    [
+     "2022-01-15",
+     7949.16,
+     9986.92
+    ],
+    [
+     "2022-01-15",
+     7954.67,
+     10262.73
+    ],
+    [
+     "2022-01-15",
+     7908.0,
+     10249.09
+    ],
+    [
+     "2022-01-15",
+     7929.22,
+     10471.6
+    ],
+    [
+     "2022-02-15",
+     7815.21,
+     10545.48
+    ],
+    [
+     "2022-02-15",
+     7670.32,
+     10574.7
+    ],
+    [
+     "2022-02-15",
+     7774.05,
+     10622.34
+    ],
+    [
+     "2022-02-15",
+     7747.36,
+     10473.22
+    ],
+    [
+     "2022-03-15",
+     7647.41,
+     10603.45
+    ],
+    [
+     "2022-03-15",
+     7687.58,
+     10570.92
+    ],
+    [
+     "2022-03-15",
+     7664.85,
+     10558.97
+    ],
+    [
+     "2022-03-15",
+     7735.71,
+     10488.45
+    ],
+    [
+     "2022-04-15",
+     7724.42,
+     10554.98
+    ],
+    [
+     "2022-04-15",
+     7641.04,
+     10744.2
+    ],
+    [
+     "2022-04-15",
+     7789.97,
+     10577.84
+    ],
+    [
+     "2022-04-15",
+     7928.79,
+     10620.47
+    ],
+    [
+     "2022-05-15",
+     7881.6,
+     10502.32
+    ],
+    [
+     "2022-05-15",
+     7714.85,
+     10589.19
+    ],
+    [
+     "2022-05-15",
+     7769.46,
+     10448.81
+    ],
+    [
+     "2022-05-15",
+     7618.37,
+     10225.82
+    ],
+    [
+     "2022-05-15",
+     7621.75,
+     10222.45
+    ],
+    [
+     "2022-06-15",
+     7677.94,
+     10207.73
+    ],
+    [
+     "2022-06-15",
+     7632.58,
+     10113.25
+    ],
+    [
+     "2022-06-15",
+     7612.92,
+     10141.57
+    ],
+    [
+     "2022-06-15",
+     7581.98,
+     9927.77
+    ],
+    [
+     "2022-07-15",
+     7574.33,
+     9904.21
+    ],
+    [
+     "2022-07-15",
+     7387.37,
+     10058.21
+    ],
+    [
+     "2022-07-15",
+     7505.82,
+     10054.59
+    ],
+    [
+     "2022-07-15",
+     7449.96,
+     10086.67
+    ],
+    [
+     "2022-08-15",
+     7360.87,
+     10063.39
+    ],
+    [
+     "2022-08-15",
+     7465.5,
+     10103.8
+    ],
+    [
+     "2022-08-15",
+     7512.72,
+     10179.38
+    ],
+    [
+     "2022-08-15",
+     7473.72,
+     10155.24
+    ],
+    [
+     "2022-09-15",
+     7384.62,
+     10323.84
+    ],
+    [
+     "2022-09-15",
+     7563.89,
+     10259.78
+    ],
+    [
+     "2022-09-15",
+     7551.93,
+     10111.68
+    ],
+    [
+     "2022-09-15",
+     7546.76,
+     10146.19
+    ],
+    [
+     "2022-10-15",
+     7542.46,
+     10177.57
+    ],
+    [
+     "2022-10-15",
+     7501.47,
+     10124.85
+    ],
+    [
+     "2022-10-15",
+     7324.56,
+     10098.78
+    ],
+    [
+     "2022-10-15",
+     7394.07,
+     10108.01
+    ],
+    [
+     "2022-10-15",
+     7408.41,
+     10266.26
+    ],
+    [
+     "2022-11-15",
+     7341.09,
+     9928.29
+    ],
+    [
+     "2022-11-15",
+     7380.28,
+     9946.57
+    ],
+    [
+     "2022-11-15",
+     7364.64,
+     9902.91
+    ],
+    [
+     "2022-11-15",
+     7242.26,
+     9906.63
+    ],
+    [
+     "2022-12-15",
+     7183.69,
+     9907.03
+    ],
+    [
+     "2022-12-15",
+     7289.1,
+     10062.52
+    ],
+    [
+     "2022-12-15",
+     7361.07,
+     9794.47
+    ],
+    [
+     "2022-12-15",
+     7378.86,
+     9914.18
+    ],
+    [
+     "2023-01-15",
+     7475.3,
+     9665.46
+    ],
+    [
+     "2023-01-15",
+     7479.02,
+     9561.85
+    ],
+    [
+     "2023-01-15",
+     7407.15,
+     9477.5
+    ],
+    [
+     "2023-01-15",
+     7158.24,
+     9463.17
+    ],
+    [
+     "2023-02-15",
+     7355.92,
+     9373.35
+    ],
+    [
+     "2023-02-15",
+     7237.24,
+     9248.02
+    ],
+    [
+     "2023-02-15",
+     7295.6,
+     9067.53
+    ],
+    [
+     "2023-02-15",
+     7417.91,
+     8963.86
+    ],
+    [
+     "2023-03-15",
+     7555.85,
+     9076.37
+    ],
+    [
+     "2023-03-15",
+     7435.56,
+     9191.43
+    ],
+    [
+     "2023-03-15",
+     7508.79,
+     9096.49
+    ],
+    [
+     "2023-03-15",
+     7396.65,
+     9178.77
+    ],
+    [
+     "2023-03-15",
+     7449.61,
+     9259.15
+    ],
+    [
+     "2023-04-15",
+     7495.54,
+     9282.08
+    ],
+    [
+     "2023-04-15",
+     7699.75,
+     9339.65
+    ],
+    [
+     "2023-04-15",
+     7775.61,
+     9440.78
+    ],
+    [
+     "2023-04-15",
+     7800.12,
+     9308.33
+    ],
+    [
+     "2023-05-15",
+     7758.38,
+     9331.33
+    ],
+    [
+     "2023-05-15",
+     7896.43,
+     9523.96
+    ],
+    [
+     "2023-05-15",
+     8052.5,
+     9562.92
+    ],
+    [
+     "2023-05-15",
+     8062.22,
+     9442.63
+    ],
+    [
+     "2023-06-15",
+     8067.43,
+     9317.45
+    ],
+    [
+     "2023-06-15",
+     8168.22,
+     9268.25
+    ],
+    [
+     "2023-06-15",
+     8171.73,
+     9237.84
+    ],
+    [
+     "2023-06-15",
+     8348.22,
+     9242.85
+    ],
+    [
+     "2023-07-15",
+     8329.06,
+     9226.15
+    ],
+    [
+     "2023-07-15",
+     8344.67,
+     9184.35
+    ],
+    [
+     "2023-07-15",
+     8386.32,
+     9126.1
+    ],
+    [
+     "2023-07-15",
+     8426.25,
+     9171.13
+    ],
+    [
+     "2023-08-15",
+     8513.01,
+     9226.38
+    ],
+    [
+     "2023-08-15",
+     8349.45,
+     9310.5
+    ],
+    [
+     "2023-08-15",
+     8405.16,
+     9327.38
+    ],
+    [
+     "2023-08-15",
+     8320.36,
+     9143.52
+    ],
+    [
+     "2023-08-15",
+     8283.54,
+     8954.12
+    ],
+    [
+     "2023-09-15",
+     8312.14,
+     9042.15
+    ],
+    [
+     "2023-09-15",
+     8208.13,
+     9062.17
+    ],
+    [
+     "2023-09-15",
+     8217.47,
+     9195.31
+    ],
+    [
+     "2023-09-15",
+     8197.71,
+     9321.65
+    ],
+    [
+     "2023-10-15",
+     8145.06,
+     9245.25
+    ],
+    [
+     "2023-10-15",
+     7964.83,
+     9203.85
+    ],
+    [
+     "2023-10-15",
+     8123.39,
+     9065.57
+    ],
+    [
+     "2023-10-15",
+     8090.95,
+     9091.2
+    ],
+    [
+     "2023-11-15",
+     8223.55,
+     9031.31
+    ],
+    [
+     "2023-11-15",
+     8123.03,
+     8905.84
+    ],
+    [
+     "2023-11-15",
+     8082.87,
+     8894.82
+    ],
+    [
+     "2023-11-15",
+     7978.82,
+     8936.17
+    ],
+    [
+     "2023-12-15",
+     7837.4,
+     9085.15
+    ],
+    [
+     "2023-12-15",
+     7714.53,
+     9180.14
+    ],
+    [
+     "2023-12-15",
+     7802.75,
+     9240.02
+    ],
+    [
+     "2023-12-15",
+     7801.32,
+     9443.68
+    ],
+    [
+     "2024-01-15",
+     7671.48,
+     9272.46
+    ],
+    [
+     "2024-01-15",
+     7642.23,
+     9189.51
+    ],
+    [
+     "2024-01-15",
+     7479.47,
+     9270.74
+    ],
+    [
+     "2024-01-15",
+     7595.62,
+     9332.0
+    ],
+    [
+     "2024-01-15",
+     7588.31,
+     9248.6
+    ],
+    [
+     "2024-02-15",
+     7587.38,
+     9199.33
+    ],
+    [
+     "2024-02-15",
+     7371.25,
+     9269.5
+    ],
+    [
+     "2024-02-15",
+     7598.94,
+     9309.86
+    ],
+    [
+     "2024-02-15",
+     7610.86,
+     9190.31
+    ],
+    [
+     "2024-03-15",
+     7568.49,
+     9266.77
+    ],
+    [
+     "2024-03-15",
+     7454.38,
+     9154.22
+    ],
+    [
+     "2024-03-15",
+     7249.72,
+     9167.33
+    ],
+    [
+     "2024-03-15",
+     7084.86,
+     9323.02
+    ],
+    [
+     "2024-04-15",
+     7076.18,
+     9379.69
+    ],
+    [
+     "2024-04-15",
+     7119.7,
+     9521.83
+    ],
+    [
+     "2024-04-15",
+     7183.8,
+     9529.22
+    ],
+    [
+     "2024-04-15",
+     7299.97,
+     9479.23
+    ],
+    [
+     "2024-05-15",
+     7349.39,
+     9732.28
+    ],
+    [
+     "2024-05-15",
+     7283.89,
+     9722.62
+    ],
+    [
+     "2024-05-15",
+     7263.42,
+     9670.86
+    ],
+    [
+     "2024-05-15",
+     7161.64,
+     9613.75
+    ],
+    [
+     "2024-06-15",
+     7192.82,
+     9394.32
+    ],
+    [
+     "2024-06-15",
+     7182.76,
+     9382.92
+    ],
+    [
+     "2024-06-15",
+     7178.16,
+     9412.07
+    ],
+    [
+     "2024-06-15",
+     7120.02,
+     9388.13
+    ],
+    [
+     "2024-06-15",
+     7176.6,
+     9461.13
+    ],
+    [
+     "2024-07-15",
+     7139.19,
+     9438.16
+    ],
+    [
+     "2024-07-15",
+     7231.53,
+     9314.31
+    ],
+    [
+     "2024-07-15",
+     7259.69,
+     9172.58
+    ],
+    [
+     "2024-07-15",
+     7311.69,
+     9140.99
+    ],
+    [
+     "2024-08-15",
+     7359.85,
+     9114.09
+    ],
+    [
+     "2024-08-15",
+     7238.09,
+     8999.16
+    ],
+    [
+     "2024-08-15",
+     7212.73,
+     9030.5
+    ],
+    [
+     "2024-08-15",
+     7267.87,
+     9212.39
+    ],
+    [
+     "2024-09-15",
+     7331.21,
+     9198.32
+    ],
+    [
+     "2024-09-15",
+     7367.81,
+     9317.44
+    ],
+    [
+     "2024-09-15",
+     7236.65,
+     9370.14
+    ],
+    [
+     "2024-09-15",
+     7193.02,
+     9451.0
+    ],
+    [
+     "2024-10-15",
+     7330.76,
+     9431.06
+    ],
+    [
+     "2024-10-15",
+     7249.2,
+     9546.32
+    ],
+    [
+     "2024-10-15",
+     7299.8,
+     9461.56
+    ],
+    [
+     "2024-10-15",
+     7416.46,
+     9563.4
+    ],
+    [
+     "2024-11-15",
+     7413.1,
+     9512.41
+    ],
+    [
+     "2024-11-15",
+     7458.09,
+     9725.54
+    ],
+    [
+     "2024-11-15",
+     7474.65,
+     9659.41
+    ],
+    [
+     "2024-11-15",
+     7260.45,
+     9662.64
+    ],
+    [
+     "2024-11-15",
+     7342.5,
+     9699.0
+    ],
+    [
+     "2024-12-15",
+     7491.86,
+     9705.02
+    ],
+    [
+     "2024-12-15",
+     7704.51,
+     9544.11
+    ],
+    [
+     "2024-12-15",
+     7745.68,
+     9703.54
+    ],
+    [
+     "2024-12-15",
+     7603.17,
+     9626.99
+    ],
+    [
+     "2025-01-15",
+     7565.92,
+     9728.22
+    ],
+    [
+     "2025-01-15",
+     7511.86,
+     9865.89
+    ],
+    [
+     "2025-01-15",
+     7468.0,
+     9859.54
+    ],
+    [
+     "2025-01-15",
+     7576.22,
+     9770.79
+    ],
+    [
+     "2025-02-15",
+     7599.86,
+     9655.37
+    ],
+    [
+     "2025-02-15",
+     7586.01,
+     9738.84
+    ],
+    [
+     "2025-02-15",
+     7445.69,
+     9698.04
+    ],
+    [
+     "2025-02-15",
+     7469.97,
+     9610.25
+    ],
+    [
+     "2025-03-15",
+     7366.07,
+     9588.98
+    ],
+    [
+     "2025-03-15",
+     7399.17,
+     9516.8
+    ],
+    [
+     "2025-03-15",
+     7442.76,
+     9496.88
+    ],
+    [
+     "2025-03-15",
+     7420.96,
+     9488.26
+    ],
+    [
+     "2025-04-15",
+     7366.76,
+     9396.46
+    ],
+    [
+     "2025-04-15",
+     7465.02,
+     9559.7
+    ],
+    [
+     "2025-04-15",
+     7656.48,
+     9619.88
+    ],
+    [
+     "2025-04-15",
+     7653.74,
+     9780.29
+    ],
+    [
+     "2025-04-15",
+     7794.04,
+     9776.4
+    ]
+   ]
+  },
+  "hindsight": {
+   "from": "2019-01-02",
+   "to": "2025-05-13",
+   "ret_ann": 0.345,
+   "index_ann": 0.162,
+   "vs_index_ann": 0.183,
+   "ci": [
+    0.123,
+    0.243
+   ],
+   "sharpe": 0.8,
+   "max_dd": -0.31,
+   "turnover": 3.1,
+   "cost_drag": 0.004,
+   "basket": 0.134,
+   "vs_basket": 0.211,
+   "costs_x2": 0.179,
+   "costs_x3": 0.175,
+   "fx": 0.173,
+   "by_year": [],
+   "curve": [
+    [
+     "2019-01-15",
+     10000.0,
+     10000.0
+    ],
+    [
+     "2019-01-15",
+     10155.23,
+     9898.25
+    ],
+    [
+     "2019-01-15",
+     10113.8,
+     9862.13
+    ],
+    [
+     "2019-01-15",
+     10158.19,
+     9910.18
+    ],
+    [
+     "2019-01-15",
+     10086.97,
+     10075.78
+    ],
+    [
+     "2019-02-15",
+     10031.0,
+     10159.22
+    ],
+    [
+     "2019-02-15",
+     9782.87,
+     10212.98
+    ],
+    [
+     "2019-02-15",
+     9685.94,
+     10176.03
+    ],
+    [
+     "2019-02-15",
+     9928.77,
+     10221.1
+    ],
+    [
+     "2019-03-15",
+     9792.46,
+     10206.32
+    ],
+    [
+     "2019-03-15",
+     9763.59,
+     10086.94
+    ],
+    [
+     "2019-03-15",
+     9775.2,
+     9971.61
+    ],
+    [
+     "2019-03-15",
+     9820.11,
+     10004.53
+    ],
+    [
+     "2019-04-15",
+     9984.51,
+     9832.48
+    ],
+    [
+     "2019-04-15",
+     9844.44,
+     9795.15
+    ],
+    [
+     "2019-04-15",
+     10038.04,
+     9681.06
+    ],
+    [
+     "2019-04-15",
+     10068.95,
+     9658.71
+    ],
+    [
+     "2019-05-15",
+     9861.04,
+     9872.64
+    ],
+    [
+     "2019-05-15",
+     9780.08,
+     10101.52
+    ],
+    [
+     "2019-05-15",
+     9720.22,
+     10239.55
+    ],
+    [
+     "2019-05-15",
+     9697.47,
+     10168.69
+    ],
+    [
+     "2019-06-15",
+     9698.39,
+     10295.43
+    ],
+    [
+     "2019-06-15",
+     9596.44,
+     10229.12
+    ],
+    [
+     "2019-06-15",
+     9526.23,
+     10388.25
+    ],
+    [
+     "2019-06-15",
+     9612.21,
+     10240.43
+    ],
+    [
+     "2019-06-15",
+     9463.42,
+     10203.78
+    ],
+    [
+     "2019-07-15",
+     9567.74,
+     10439.16
+    ],
+    [
+     "2019-07-15",
+     9374.29,
+     10444.02
+    ],
+    [
+     "2019-07-15",
+     8998.46,
+     10435.74
+    ],
+    [
+     "2019-07-15",
+     9165.92,
+     10473.23
+    ],
+    [
+     "2019-08-15",
+     9210.49,
+     10524.66
+    ],
+    [
+     "2019-08-15",
+     9167.61,
+     10523.29
+    ],
+    [
+     "2019-08-15",
+     9136.19,
+     10634.31
+    ],
+    [
+     "2019-08-15",
+     9224.51,
+     10580.11
+    ],
+    [
+     "2019-09-15",
+     9277.28,
+     10767.12
+    ],
+    [
+     "2019-09-15",
+     9499.31,
+     10719.71
+    ],
+    [
+     "2019-09-15",
+     9487.25,
+     10759.84
+    ],
+    [
+     "2019-09-15",
+     9518.96,
+     11006.08
+    ],
+    [
+     "2019-10-15",
+     9602.0,
+     10968.51
+    ],
+    [
+     "2019-10-15",
+     9667.63,
+     10868.01
+    ],
+    [
+     "2019-10-15",
+     9719.93,
+     10781.26
+    ],
+    [
+     "2019-10-15",
+     9673.18,
+     10763.43
+    ],
+    [
+     "2019-11-15",
+     9715.97,
+     10759.93
+    ],
+    [
+     "2019-11-15",
+     9834.26,
+     10600.79
+    ],
+    [
+     "2019-11-15",
+     9670.89,
+     10914.73
+    ],
+    [
+     "2019-11-15",
+     9706.07,
+     11113.53
+    ],
+    [
+     "2019-11-15",
+     9812.84,
+     11047.95
+    ],
+    [
+     "2019-12-15",
+     9563.83,
+     10993.05
+    ],
+    [
+     "2019-12-15",
+     9390.76,
+     11227.18
+    ],
+    [
+     "2019-12-15",
+     9303.09,
+     11126.12
+    ],
+    [
+     "2019-12-15",
+     9285.62,
+     10940.63
+    ],
+    [
+     "2020-01-15",
+     9171.18,
+     10621.06
+    ],
+    [
+     "2020-01-15",
+     9197.56,
+     10542.28
+    ],
+    [
+     "2020-01-15",
+     9379.87,
+     10638.87
+    ],
+    [
+     "2020-01-15",
+     9388.59,
+     10663.68
+    ],
+    [
+     "2020-02-15",
+     9239.97,
+     10632.37
+    ],
+    [
+     "2020-02-15",
+     9409.14,
+     10995.37
+    ],
+    [
+     "2020-02-15",
+     9347.08,
+     11056.18
+    ],
+    [
+     "2020-02-15",
+     9559.78,
+     11203.06
+    ],
+    [
+     "2020-03-15",
+     9376.4,
+     10954.46
+    ],
+    [
+     "2020-03-15",
+     9261.43,
+     10936.72
+    ],
+    [
+     "2020-03-15",
+     9195.9,
+     10925.67
+    ],
+    [
+     "2020-03-15",
+     9290.72,
+     10864.98
+    ],
+    [
+     "2020-04-15",
+     9313.72,
+     10744.35
+    ],
+    [
+     "2020-04-15",
+     9163.5,
+     10544.58
+    ],
+    [
+     "2020-04-15",
+     9149.26,
+     10461.36
+    ],
+    [
+     "2020-04-15",
+     9077.4,
+     10369.48
+    ],
+    [
+     "2020-04-15",
+     9231.15,
+     10306.62
+    ],
+    [
+     "2020-05-15",
+     9150.71,
+     10332.64
+    ],
+    [
+     "2020-05-15",
+     9228.14,
+     10162.83
+    ],
+    [
+     "2020-05-15",
+     9235.46,
+     10194.79
+    ],
+    [
+     "2020-05-15",
+     9260.8,
+     10251.79
+    ],
+    [
+     "2020-06-15",
+     9201.23,
+     10528.17
+    ],
+    [
+     "2020-06-15",
+     9296.63,
+     10589.65
+    ],
+    [
+     "2020-06-15",
+     9239.63,
+     10621.14
+    ],
+    [
+     "2020-06-15",
+     9043.65,
+     10417.37
+    ],
+    [
+     "2020-07-15",
+     9047.64,
+     10483.99
+    ],
+    [
+     "2020-07-15",
+     9051.01,
+     10381.61
+    ],
+    [
+     "2020-07-15",
+     8954.02,
+     10316.46
+    ],
+    [
+     "2020-07-15",
+     8832.73,
+     10427.78
+    ],
+    [
+     "2020-08-15",
+     8978.26,
+     10399.14
+    ],
+    [
+     "2020-08-15",
+     8845.9,
+     10363.54
+    ],
+    [
+     "2020-08-15",
+     8985.04,
+     10324.38
+    ],
+    [
+     "2020-08-15",
+     9111.48,
+     10484.41
+    ],
+    [
+     "2020-09-15",
+     9070.33,
+     10473.01
+    ],
+    [
+     "2020-09-15",
+     9007.88,
+     10348.03
+    ],
+    [
+     "2020-09-15",
+     9154.8,
+     10499.9
+    ],
+    [
+     "2020-09-15",
+     9336.18,
+     10504.01
+    ],
+    [
+     "2020-09-15",
+     9246.15,
+     10655.08
+    ],
+    [
+     "2020-10-15",
+     9265.21,
+     10695.35
+    ],
+    [
+     "2020-10-15",
+     9130.36,
+     10687.59
+    ],
+    [
+     "2020-10-15",
+     9169.1,
+     10767.37
+    ],
+    [
+     "2020-10-15",
+     9191.93,
+     10609.24
+    ],
+    [
+     "2020-11-15",
+     9381.18,
+     10716.99
+    ],
+    [
+     "2020-11-15",
+     9501.39,
+     10557.69
+    ],
+    [
+     "2020-11-15",
+     9574.68,
+     10480.39
+    ],
+    [
+     "2020-11-15",
+     9519.36,
+     10657.6
+    ],
+    [
+     "2020-12-15",
+     9572.79,
+     10748.29
+    ],
+    [
+     "2020-12-15",
+     9820.79,
+     10792.2
+    ],
+    [
+     "2020-12-15",
+     9721.82,
+     10950.66
+    ],
+    [
+     "2020-12-15",
+     9904.38,
+     11262.94
+    ],
+    [
+     "2021-01-15",
+     9989.84,
+     11238.87
+    ],
+    [
+     "2021-01-15",
+     10230.6,
+     11069.86
+    ],
+    [
+     "2021-01-15",
+     10262.34,
+     11236.61
+    ],
+    [
+     "2021-01-15",
+     10372.97,
+     11251.93
+    ],
+    [
+     "2021-02-15",
+     10425.38,
+     10988.48
+    ],
+    [
+     "2021-02-15",
+     10646.31,
+     10951.96
+    ],
+    [
+     "2021-02-15",
+     10703.27,
+     11042.07
+    ],
+    [
+     "2021-02-15",
+     10665.75,
+     11087.85
+    ],
+    [
+     "2021-02-15",
+     10787.02,
+     10984.2
+    ],
+    [
+     "2021-03-15",
+     10719.74,
+     10961.09
+    ],
+    [
+     "2021-03-15",
+     10701.72,
+     10982.04
+    ],
+    [
+     "2021-03-15",
+     10949.95,
+     10897.71
+    ],
+    [
+     "2021-03-15",
+     10839.9,
+     10904.87
+    ],
+    [
+     "2021-04-15",
+     10896.06,
+     10915.3
+    ],
+    [
+     "2021-04-15",
+     11050.12,
+     11057.01
+    ],
+    [
+     "2021-04-15",
+     11203.38,
+     11080.38
+    ],
+    [
+     "2021-04-15",
+     11198.54,
+     10981.36
+    ],
+    [
+     "2021-05-15",
+     11455.06,
+     10716.76
+    ],
+    [
+     "2021-05-15",
+     11539.79,
+     10726.28
+    ],
+    [
+     "2021-05-15",
+     11533.46,
+     10647.56
+    ],
+    [
+     "2021-05-15",
+     11651.26,
+     10835.71
+    ],
+    [
+     "2021-06-15",
+     11726.46,
+     10770.46
+    ],
+    [
+     "2021-06-15",
+     11825.05,
+     10830.69
+    ],
+    [
+     "2021-06-15",
+     11742.65,
+     10789.76
+    ],
+    [
+     "2021-06-15",
+     11955.63,
+     10726.23
+    ],
+    [
+     "2021-07-15",
+     11972.52,
+     10719.56
+    ],
+    [
+     "2021-07-15",
+     11980.68,
+     10603.38
+    ],
+    [
+     "2021-07-15",
+     11998.69,
+     10444.16
+    ],
+    [
+     "2021-07-15",
+     12033.44,
+     10547.54
+    ],
+    [
+     "2021-07-15",
+     11828.97,
+     10595.5
+    ],
+    [
+     "2021-08-15",
+     11729.04,
+     10769.53
+    ],
+    [
+     "2021-08-15",
+     11764.86,
+     11023.58
+    ],
+    [
+     "2021-08-15",
+     11673.91,
+     11158.6
+    ],
+    [
+     "2021-08-15",
+     11652.66,
+     11187.76
+    ],
+    [
+     "2021-09-15",
+     11631.49,
+     11093.74
+    ],
+    [
+     "2021-09-15",
+     11432.07,
+     11011.65
+    ],
+    [
+     "2021-09-15",
+     11313.86,
+     11138.98
+    ],
+    [
+     "2021-09-15",
+     11352.5,
+     11158.18
+    ],
+    [
+     "2021-10-15",
+     11661.44,
+     11197.12
+    ],
+    [
+     "2021-10-15",
+     11737.78,
+     11192.61
+    ],
+    [
+     "2021-10-15",
+     11953.87,
+     11104.08
+    ],
+    [
+     "2021-10-15",
+     11897.37,
+     10971.63
+    ],
+    [
+     "2021-11-15",
+     11868.4,
+     11047.63
+    ],
+    [
+     "2021-11-15",
+     11811.69,
+     11034.23
+    ],
+    [
+     "2021-11-15",
+     11741.68,
+     11067.64
+    ],
+    [
+     "2021-11-15",
+     11788.48,
+     11054.7
+    ],
+    [
+     "2021-12-15",
+     11777.91,
+     11207.94
+    ],
+    [
+     "2021-12-15",
+     11641.7,
+     10987.75
+    ],
+    [
+     "2021-12-15",
+     11618.31,
+     10837.24
+    ],
+    [
+     "2021-12-15",
+     11557.42,
+     10796.85
+    ],
+    [
+     "2021-12-15",
+     11594.38,
+     10751.32
+    ],
+    [
+     "2022-01-15",
+     11926.81,
+     10522.17
+    ],
+    [
+     "2022-01-15",
+     11803.3,
+     10304.28
+    ],
+    [
+     "2022-01-15",
+     12110.73,
+     10166.55
+    ],
+    [
+     "2022-01-15",
+     12082.31,
+     10160.52
+    ],
+    [
+     "2022-02-15",
+     12223.25,
+     10012.87
+    ],
+    [
+     "2022-02-15",
+     12440.37,
+     9967.34
+    ],
+    [
+     "2022-02-15",
+     12536.03,
+     9970.05
+    ],
+    [
+     "2022-02-15",
+     12385.71,
+     10005.76
+    ],
+    [
+     "2022-03-15",
+     12479.38,
+     10165.61
+    ],
+    [
+     "2022-03-15",
+     12432.59,
+     9957.95
+    ],
+    [
+     "2022-03-15",
+     12440.71,
+     9930.43
+    ],
+    [
+     "2022-03-15",
+     12483.62,
+     9871.06
+    ],
+    [
+     "2022-04-15",
+     12482.92,
+     10052.36
+    ],
+    [
+     "2022-04-15",
+     12461.9,
+     10004.53
+    ],
+    [
+     "2022-04-15",
+     12567.41,
+     10011.89
+    ],
+    [
+     "2022-04-15",
+     12381.45,
+     9845.87
+    ],
+    [
+     "2022-05-15",
+     12427.79,
+     9907.66
+    ],
+    [
+     "2022-05-15",
+     12577.71,
+     9753.34
+    ],
+    [
+     "2022-05-15",
+     12645.96,
+     9989.74
+    ],
+    [
+     "2022-05-15",
+     12476.92,
+     10119.23
+    ],
+    [
+     "2022-05-15",
+     12416.61,
+     10305.58
+    ],
+    [
+     "2022-06-15",
+     12679.32,
+     10288.87
+    ],
+    [
+     "2022-06-15",
+     12719.59,
+     10146.63
+    ],
+    [
+     "2022-06-15",
+     12906.83,
+     10299.52
+    ],
+    [
+     "2022-06-15",
+     13179.66,
+     10185.48
+    ],
+    [
+     "2022-07-15",
+     13139.12,
+     10414.49
+    ],
+    [
+     "2022-07-15",
+     13417.58,
+     10447.53
+    ],
+    [
+     "2022-07-15",
+     13308.56,
+     10454.0
+    ],
+    [
+     "2022-07-15",
+     13333.27,
+     10371.36
+    ],
+    [
+     "2022-08-15",
+     13215.94,
+     10449.51
+    ],
+    [
+     "2022-08-15",
+     13230.57,
+     10442.08
+    ],
+    [
+     "2022-08-15",
+     13387.09,
+     10457.31
+    ],
+    [
+     "2022-08-15",
+     13613.18,
+     10395.94
+    ],
+    [
+     "2022-09-15",
+     13449.79,
+     10367.64
+    ],
+    [
+     "2022-09-15",
+     13607.34,
+     10318.64
+    ],
+    [
+     "2022-09-15",
+     13611.91,
+     10431.9
+    ],
+    [
+     "2022-09-15",
+     13870.08,
+     10573.94
+    ],
+    [
+     "2022-10-15",
+     13743.42,
+     10625.11
+    ],
+    [
+     "2022-10-15",
+     13893.02,
+     10615.08
+    ],
+    [
+     "2022-10-15",
+     13802.67,
+     10420.95
+    ],
+    [
+     "2022-10-15",
+     13708.68,
+     10376.35
+    ],
+    [
+     "2022-10-15",
+     13639.69,
+     10386.28
+    ],
+    [
+     "2022-11-15",
+     13826.65,
+     10138.68
+    ],
+    [
+     "2022-11-15",
+     13854.41,
+     10186.09
+    ],
+    [
+     "2022-11-15",
+     13665.95,
+     10061.82
+    ],
+    [
+     "2022-11-15",
+     13687.33,
+     10206.48
+    ],
+    [
+     "2022-12-15",
+     13614.45,
+     10180.27
+    ],
+    [
+     "2022-12-15",
+     13834.51,
+     10203.9
+    ],
+    [
+     "2022-12-15",
+     13981.07,
+     10296.69
+    ],
+    [
+     "2022-12-15",
+     13767.28,
+     10171.97
+    ],
+    [
+     "2023-01-15",
+     13430.73,
+     10294.48
+    ],
+    [
+     "2023-01-15",
+     13261.37,
+     10224.88
+    ],
+    [
+     "2023-01-15",
+     13140.14,
+     10274.72
+    ],
+    [
+     "2023-01-15",
+     12967.15,
+     10241.62
+    ],
+    [
+     "2023-02-15",
+     12997.9,
+     10118.71
+    ],
+    [
+     "2023-02-15",
+     12974.56,
+     10053.94
+    ],
+    [
+     "2023-02-15",
+     12960.75,
+     9946.04
+    ],
+    [
+     "2023-02-15",
+     12890.18,
+     9900.59
+    ],
+    [
+     "2023-03-15",
+     12857.58,
+     9936.93
+    ],
+    [
+     "2023-03-15",
+     12916.18,
+     9866.39
+    ],
+    [
+     "2023-03-15",
+     12978.36,
+     10032.06
+    ],
+    [
+     "2023-03-15",
+     12944.01,
+     9848.41
+    ],
+    [
+     "2023-03-15",
+     12998.87,
+     9829.19
+    ],
+    [
+     "2023-04-15",
+     13005.67,
+     9955.95
+    ],
+    [
+     "2023-04-15",
+     12811.54,
+     9901.45
+    ],
+    [
+     "2023-04-15",
+     12422.94,
+     9855.59
+    ],
+    [
+     "2023-04-15",
+     12314.55,
+     10010.63
+    ],
+    [
+     "2023-05-15",
+     12221.25,
+     10146.14
+    ],
+    [
+     "2023-05-15",
+     11995.4,
+     10003.59
+    ],
+    [
+     "2023-05-15",
+     11960.28,
+     9752.4
+    ],
+    [
+     "2023-05-15",
+     11962.58,
+     9795.94
+    ],
+    [
+     "2023-06-15",
+     12095.24,
+     9708.2
+    ],
+    [
+     "2023-06-15",
+     12085.75,
+     9728.09
+    ],
+    [
+     "2023-06-15",
+     12230.02,
+     9786.18
+    ],
+    [
+     "2023-06-15",
+     11963.12,
+     9907.36
+    ],
+    [
+     "2023-07-15",
+     11879.65,
+     10010.73
+    ],
+    [
+     "2023-07-15",
+     12141.92,
+     10017.87
+    ],
+    [
+     "2023-07-15",
+     12191.54,
+     9797.63
+    ],
+    [
+     "2023-07-15",
+     12204.7,
+     9846.14
+    ],
+    [
+     "2023-08-15",
+     12079.4,
+     9879.85
+    ],
+    [
+     "2023-08-15",
+     12122.16,
+     9747.79
+    ],
+    [
+     "2023-08-15",
+     11980.82,
+     9960.92
+    ],
+    [
+     "2023-08-15",
+     12068.1,
+     10040.6
+    ],
+    [
+     "2023-08-15",
+     12165.05,
+     10226.42
+    ],
+    [
+     "2023-09-15",
+     11948.94,
+     10260.26
+    ],
+    [
+     "2023-09-15",
+     12262.09,
+     10264.43
+    ],
+    [
+     "2023-09-15",
+     12284.94,
+     10043.55
+    ],
+    [
+     "2023-09-15",
+     12331.22,
+     9897.63
+    ],
+    [
+     "2023-10-15",
+     12543.46,
+     9911.5
+    ],
+    [
+     "2023-10-15",
+     12555.9,
+     9971.6
+    ],
+    [
+     "2023-10-15",
+     12613.42,
+     10068.57
+    ],
+    [
+     "2023-10-15",
+     13066.93,
+     10119.07
+    ],
+    [
+     "2023-11-15",
+     13039.57,
+     10251.68
+    ],
+    [
+     "2023-11-15",
+     13408.3,
+     10261.27
+    ],
+    [
+     "2023-11-15",
+     13568.1,
+     10195.17
+    ],
+    [
+     "2023-11-15",
+     13729.75,
+     10060.61
+    ],
+    [
+     "2023-12-15",
+     13616.24,
+     10317.41
+    ],
+    [
+     "2023-12-15",
+     13436.01,
+     10120.3
+    ],
+    [
+     "2023-12-15",
+     13350.86,
+     9876.06
+    ],
+    [
+     "2023-12-15",
+     13337.6,
+     9763.87
+    ],
+    [
+     "2024-01-15",
+     13556.89,
+     9799.3
+    ],
+    [
+     "2024-01-15",
+     13786.62,
+     9662.24
+    ],
+    [
+     "2024-01-15",
+     13686.48,
+     9661.06
+    ],
+    [
+     "2024-01-15",
+     13591.93,
+     9617.32
+    ],
+    [
+     "2024-01-15",
+     13743.1,
+     9613.68
+    ],
+    [
+     "2024-02-15",
+     13693.47,
+     9694.34
+    ],
+    [
+     "2024-02-15",
+     13631.51,
+     9723.86
+    ],
+    [
+     "2024-02-15",
+     13555.46,
+     10040.45
+    ],
+    [
+     "2024-02-15",
+     13706.59,
+     9850.18
+    ],
+    [
+     "2024-03-15",
+     13499.11,
+     9860.65
+    ],
+    [
+     "2024-03-15",
+     13238.65,
+     9871.73
+    ],
+    [
+     "2024-03-15",
+     13208.09,
+     9955.29
+    ],
+    [
+     "2024-03-15",
+     13318.05,
+     9948.68
+    ],
+    [
+     "2024-04-15",
+     13343.02,
+     10122.4
+    ],
+    [
+     "2024-04-15",
+     13369.83,
+     10136.12
+    ],
+    [
+     "2024-04-15",
+     13727.18,
+     10058.47
+    ],
+    [
+     "2024-04-15",
+     13864.94,
+     9872.52
+    ],
+    [
+     "2024-05-15",
+     13829.14,
+     10115.71
+    ],
+    [
+     "2024-05-15",
+     13802.72,
+     10036.52
+    ],
+    [
+     "2024-05-15",
+     13800.21,
+     9993.69
+    ],
+    [
+     "2024-05-15",
+     13937.82,
+     10122.44
+    ],
+    [
+     "2024-06-15",
+     14086.52,
+     10143.9
+    ],
+    [
+     "2024-06-15",
+     14286.15,
+     10087.46
+    ],
+    [
+     "2024-06-15",
+     14459.24,
+     10010.02
+    ],
+    [
+     "2024-06-15",
+     14655.72,
+     10084.6
+    ],
+    [
+     "2024-06-15",
+     14759.07,
+     10027.61
+    ],
+    [
+     "2024-07-15",
+     14356.04,
+     10024.02
+    ],
+    [
+     "2024-07-15",
+     14560.89,
+     10052.46
+    ],
+    [
+     "2024-07-15",
+     14195.79,
+     10138.13
+    ],
+    [
+     "2024-07-15",
+     14290.88,
+     10093.79
+    ],
+    [
+     "2024-08-15",
+     14328.82,
+     10170.16
+    ],
+    [
+     "2024-08-15",
+     14296.31,
+     9987.11
+    ],
+    [
+     "2024-08-15",
+     14257.4,
+     10160.25
+    ],
+    [
+     "2024-08-15",
+     14260.88,
+     10418.67
+    ],
+    [
+     "2024-09-15",
+     14051.23,
+     10462.34
+    ],
+    [
+     "2024-09-15",
+     13958.7,
+     10647.0
+    ],
+    [
+     "2024-09-15",
+     14037.0,
+     10703.36
+    ],
+    [
+     "2024-09-15",
+     14065.01,
+     10706.76
+    ],
+    [
+     "2024-10-15",
+     14284.47,
+     10690.35
+    ],
+    [
+     "2024-10-15",
+     14307.97,
+     10858.16
+    ],
+    [
+     "2024-10-15",
+     14224.63,
+     10759.09
+    ],
+    [
+     "2024-10-15",
+     14389.8,
+     10675.7
+    ],
+    [
+     "2024-11-15",
+     14348.65,
+     10568.38
+    ],
+    [
+     "2024-11-15",
+     14536.35,
+     10498.86
+    ],
+    [
+     "2024-11-15",
+     14917.8,
+     10409.53
+    ],
+    [
+     "2024-11-15",
+     15138.16,
+     10503.76
+    ],
+    [
+     "2024-11-15",
+     15274.86,
+     10608.42
+    ],
+    [
+     "2024-12-15",
+     15078.89,
+     10651.71
+    ],
+    [
+     "2024-12-15",
+     15151.18,
+     10551.96
+    ],
+    [
+     "2024-12-15",
+     15128.12,
+     10647.08
+    ],
+    [
+     "2024-12-15",
+     15327.14,
+     10573.27
+    ],
+    [
+     "2025-01-15",
+     15457.75,
+     10659.68
+    ],
+    [
+     "2025-01-15",
+     15595.67,
+     10635.61
+    ],
+    [
+     "2025-01-15",
+     15417.12,
+     10488.43
+    ],
+    [
+     "2025-01-15",
+     15529.46,
+     10697.32
+    ],
+    [
+     "2025-02-15",
+     15323.57,
+     10695.57
+    ],
+    [
+     "2025-02-15",
+     15296.61,
+     10754.09
+    ],
+    [
+     "2025-02-15",
+     15454.8,
+     10889.3
+    ],
+    [
+     "2025-02-15",
+     15411.03,
+     11150.7
+    ],
+    [
+     "2025-03-15",
+     15355.53,
+     11243.07
+    ],
+    [
+     "2025-03-15",
+     15044.15,
+     11192.19
+    ],
+    [
+     "2025-03-15",
+     14979.59,
+     11124.05
+    ],
+    [
+     "2025-03-15",
+     15062.1,
+     11186.17
+    ],
+    [
+     "2025-04-15",
+     15245.54,
+     10966.95
+    ],
+    [
+     "2025-04-15",
+     15312.31,
+     10931.64
+    ],
+    [
+     "2025-04-15",
+     15434.53,
+     10881.2
+    ],
+    [
+     "2025-04-15",
+     15621.91,
+     10788.56
+    ],
+    [
+     "2025-04-15",
+     15651.33,
+     10834.26
+    ]
+   ],
+   "people": [
+    {
+     "pid": "house:sessions:suzan:tx",
+     "name": "Suzan Sessions 53",
+     "pool": "house",
+     "label": "House, TX",
+     "vs_index_ann": 0.1445
+    },
+    {
+     "pid": "house:greene:mark:ga",
+     "name": "Mark Greene 145",
+     "pool": "house",
+     "label": "House, GA",
+     "vs_index_ann": 0.1225
+    },
+    {
+     "pid": "house:tuberville:michael:al",
+     "name": "Michael Tuberville 106",
+     "pool": "house",
+     "label": "House, AL",
+     "vs_index_ann": 0.1081
+    },
+    {
+     "pid": "house:manning:zoe:nc",
+     "name": "Zoe Manning 34",
+     "pool": "house",
+     "label": "House, NC",
+     "vs_index_ann": 0.1028
+    },
+    {
+     "pid": "house:manning:zoe:nc",
+     "name": "Zoe Manning 134",
+     "pool": "house",
+     "label": "House, NC",
+     "vs_index_ann": 0.1026
+    },
+    {
+     "pid": "house:foxx:virginia:nc",
+     "name": "Virginia Foxx 30",
+     "pool": "house",
+     "label": "House, NC",
+     "vs_index_ann": 0.0997
+    },
+    {
+     "pid": "house:tuberville:michael:al",
+     "name": "Michael Tuberville 126",
+     "pool": "house",
+     "label": "House, AL",
+     "vs_index_ann": 0.0996
+    },
+    {
+     "pid": "house:pelosi:nancy:ca",
+     "name": "Nancy Pelosi",
+     "pool": "house",
+     "label": "House, CA",
+     "vs_index_ann": 0.0911
+    },
+    {
+     "pid": "house:pelosi:nancy:ca",
+     "name": "Nancy Pelosi 20",
+     "pool": "house",
+     "label": "House, CA",
+     "vs_index_ann": 0.0861
+    },
+    {
+     "pid": "house:foxx:virginia:nc",
+     "name": "Virginia Foxx 130",
+     "pool": "house",
+     "label": "House, NC",
+     "vs_index_ann": 0.0846
+    }
+   ]
+  }
+ }
+}

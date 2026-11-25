@@ -97,6 +97,10 @@ class Lab:
         for mid in self.model_ids():
             for dec in self.store.decisions(mid, self.store.since(mid)):
                 syms.update(o.symbol for o in dec.orders)
+        if "copy" in self.model_ids():                   # what the copy combo's people trade, priced or not in the universe
+            from .copytrade import live as copy_live
+            have = self.bars.symbols()
+            syms.update(s for s in copy_live.symbols(copy_live.load(self)) if s in have)
         renamed = self.assets.aliases()                  # a holding follows its company to the new ticker
         syms.update(renamed[s] for s in list(syms) if s in renamed)
         panel = Panel.load(self.bars, sorted(syms), self.cfg.index_symbol, start.year * 10000 + start.month * 100 + start.day, today)
@@ -204,6 +208,19 @@ def read_filings(lab: Lab, members: list[str], now: datetime) -> dict | None:
     return None
 
 
+def read_house(lab: Lab) -> None:
+    """The House trade reports filed since the last look, for the copy combo (once its study has run)."""
+    if "copy" not in lab.model_ids():
+        return
+    try:
+        from .copytrade import live as copy_live
+        lab.doing("reading today's House trade reports")
+        copy_live.refresh(lab)
+    except Exception as e:
+        lab.say(f"House trade reports not read: {e}", "warn")
+        log.debug(traceback.format_exc())
+
+
 def books(lab: Lab, panel: Panel) -> dict[str, Record]:
     """Every model's book, replayed from its decisions."""
     costs = Costs(panel, lab.cfg.slip_bps, lab.cfg.impact_coef)
@@ -230,6 +247,11 @@ def decide(lab: Lab, panel: Panel, recs: dict[str, Record], today_iso: str) -> d
     """Each model's decision for tomorrow's open. Returns the ones made in this run or stored earlier today."""
     env = Env(index=lab.cfg.index_symbol, cash=lab.cfg.cash_symbol, names=lab.assets.names(),
               events=lab.events if (lab.cfg.has_sec or not lab.events.empty()) else None, fits=lab.fits)
+    try:
+        from .copytrade import live as copy_live
+        env.copy = copy_live.load(lab)
+    except Exception as e:
+        lab.say(f"copy: the study's picks could not be read: {e}", "warn")
     models = build(lab.cfg.models)
     for m in models:
         env.peers[m.id] = m
@@ -478,6 +500,7 @@ def evening(lab: Lab, now: datetime | None = None, next_run: datetime | None = N
     panel = lab.live_panel(data_day)
     today_iso = d2s(int(panel.days[-1]))
     read_filings(lab, [panel.syms[j] for j in panel.members(panel.T - 1)], now)
+    read_house(lab)
     recs = books(lab, panel)
     daily_line(lab, panel, recs, today_iso)
     lab.doing("deciding for tomorrow")

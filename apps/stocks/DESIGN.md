@@ -156,6 +156,70 @@ information: what a filing changes about the next quarters, and whether the pric
 **Untrusted text.** Filings and headlines are data, never instructions; every prompt that carries them says
 so, and no order can be placed from triage output alone.
 
+## Copy trades
+
+Written 2026-11-24, before any copy book was replayed. Filip: "see if we can copy anyone's trades like Donald
+Trump's or similar, look at at least 100 and make the most profitable combo". The question is the lab's own:
+does following what someone discloses beat holding the index, after costs, acting only when it is public?
+
+**Whose trades.** Two sources that can be read every evening and are current:
+- *House members*: their periodic transaction reports (STOCK Act), from the Clerk's yearly index and the
+  electronic reports (PDFs with text) since 2016. Paper-filed reports are scans and are not read. About 115
+  members file such reports in a year. Members have up to 45 days to report a trade.
+- *Company insiders*: officers, directors and holders of more than 10 % (Form 4, filed within two business
+  days), the open-market purchases the lab already reads for its insider model. A person is one insider at one
+  company.
+
+Not in: senators (the Senate's site turns Plint away and the free copies of its data end in 2021), Trump (his
+2025 reports are almost all bonds, which the lab cannot price, and the 2026 ones are scans filed a month or
+more late), funds' quarterly 13F holdings (45 days late, four times a year).
+
+**When a copy acts.** On the evening of the first trading day after the report was filed (House: the filing
+date in the Clerk's index; insiders: the day already worked out from the filing's acceptance time), filled at
+the next open. Never on the day the person traded: nobody could have known then.
+
+**What is copied.**
+- House: stocks, funds that have a price here, and call options as their stock; puts, bonds, mutual funds and
+  private holdings are skipped. Every owner on the report counts (the member, a spouse, joint, a dependent).
+  A purchase adds to the stake; a full sale ends it; a partial sale takes its amount off (no further than
+  nothing); exchanges are skipped. A trade reported twice (an amended report) counts once.
+- Insiders: purchases only. Their sales are mostly for tax and diversification, and the lab does not keep
+  them. Each purchase is held for six months (126 trading days) and then lapses.
+- The size of a House trade is the middle of its reported range ("$15,001 - $50,000" is $32,500); "over X"
+  is X. An insider's is the dollars paid.
+- A House stake lapses three years (756 trading days) after its last purchase if no sale has been seen: a
+  sale reported on paper would never be seen.
+- A stock is copied only on evenings it has a price and trades at least $1 million a day (the median of the
+  last 21 days, as the cost model reads it).
+
+**A person's book.** $10,000, like every book here. It holds the open stakes in proportion to their size, no
+stock above 25 % of the book; whatever is not in stakes waits in the index fund. It trades only on evenings a
+stake changes, and then leaves a holding alone unless it is more than a quarter away from its share.
+Same costs, same fills, same `Book` as every model.
+
+**The ranking.** Each person's book against the index over the design stretch (2019-01-02 to 2025-05-13), a
+year. Books start in January 2016, so a stake bought before 2019 is held on into it. A person is ranked if
+their book opened at least 10 positions in the stretch; the rest are listed, unranked. An insider trades one
+company, so for an insider it is 10 copied purchases (changed on 2026-11-25 after the first House-only
+figures had been seen: as first written, no insider could ever reach 10 positions; it is on the list of
+design changes).
+
+**The fair combo** (the `copy` model, a live book). Every January and July, the ten people whose books did
+best against the index over the three years before (at least one year of it), among those whose books opened
+at least 10 positions in those years (an insider: 10 copied purchases) and who had a copied trade made public
+in the last twelve months. Picked
+from records up to the close of the half year's last trading day. Each gets a tenth of the book; their stakes
+inside that tenth as in their own book; what they do not use waits in the index fund. House members and
+insiders are picked from one list.
+
+**The hindsight combo.** The ten best over the whole design stretch, by the same measure and the same
+minimum, replayed over that same stretch. It is the answer to "which combination would have made the most",
+and by construction it looks good; it says nothing about the next year. Shown for comparison, never traded.
+
+**The two stretches** as for every model: the study shows the design stretch; the exam stretch (2025-05-14
+on) is held back until Filip asks. The live combo's picks are made from all the records up to the evening
+they are made, as they would be in real life.
+
 ## The traps, and what closes each
 
 | trap (most of them met in Polybot) | what closes it here |

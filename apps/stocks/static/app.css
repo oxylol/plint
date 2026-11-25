@@ -195,6 +195,15 @@ body[data-view="book"] .over { display: none; }
 .tb-years .dv i { width: 40px; }
 .more { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 40px; margin-top: 12px; padding: 0 16px; border: 0; font: inherit; color: inherit; background: none; cursor: pointer; }
 
+/* the copy study: whose trades, the two combos side by side */
+.segs { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 8px; }
+.seg { min-height: 36px; padding: 0 12px; border: 0; font: inherit; color: inherit; background: none; cursor: pointer; }
+.tb-people .t-who, .tb-copynow .t-who { min-width: 18ch; }
+.tb-combos .t-k { min-width: 22ch; }
+.cmb { display: grid; gap: 26px; margin-top: 18px; }
+.cmb-c { min-width: 0; }
+@media (min-width: 1100px) { .cmb { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 /* a phone: the four long tables become rows of labelled figures, nothing scrolls sideways */
 @media (max-width: 719px) {
   .tb-positions, .tb-positions tbody, .tb-trades, .tb-trades tbody, .tb-pending, .tb-pending tbody, .tb-signals, .tb-signals tbody { display: block; }
@@ -220,6 +229,27 @@ body[data-view="book"] .over { display: none; }
   .tb-signals tr { grid-template-areas: "stock date date res" "hz p why why"; }
   .tb-signals .t-stock { grid-area: stock; } .tb-signals .t-date { grid-area: date; } .tb-signals .t-res { grid-area: res; }
   .tb-signals .t-hz { grid-area: hz; } .tb-signals .t-p { grid-area: p; } .tb-signals .t-why { grid-area: why; }
+  .tb-people, .tb-people tbody, .tb-combos, .tb-combos tbody { display: block; }
+  .tb-people thead, .tb-combos thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .tb-people tr, .tb-combos tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px 12px; padding: 12px 0 13px; }
+  .tb-people td, .tb-combos td { display: block; min-width: 0; padding: 0; white-space: normal; }
+  .tb-people td.r, .tb-combos td.r { text-align: left; }
+  .tb-people .t-ret::before, .tb-people .t-op::before, .tb-people .t-yr::before, .tb-people .t-lag::before,
+  .tb-combos .t-ret::before, .tb-combos .t-bk::before, .tb-combos .t-dd::before, .tb-combos .t-x2::before { content: attr(data-l); display: block; }
+  .tb-people tr { grid-template-columns: 2.4em repeat(3, minmax(0, 1fr)); grid-template-areas: "rk who who vs" "rk ret op lag" "rk yr yr yr"; }
+  .tb-people .t-yr::before { display: inline; content: attr(data-l) "\00a0\00a0"; }
+  .tb-picks, .tb-picks tbody { display: block; }
+  .tb-picks thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .tb-picks tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "date el" "who who"; gap: 6px 12px; padding: 12px 0 13px; }
+  .tb-picks td { display: block; min-width: 0; padding: 0; white-space: normal; }
+  .tb-picks .t-date { grid-area: date; } .tb-picks .t-who { grid-area: who; } .tb-picks .t-el { grid-area: el; }
+  .tb-picks .t-el::before { content: attr(data-l) "\00a0\00a0"; }
+  .tb-people .t-rk { grid-area: rk; text-align: left; } .tb-people .t-who { grid-area: who; min-width: 0; } .tb-people .t-vs { grid-area: vs; text-align: right; }
+  .tb-people .t-ret { grid-area: ret; } .tb-people .t-op { grid-area: op; } .tb-people .t-lag { grid-area: lag; } .tb-people .t-yr { grid-area: yr; }
+  .tb-combos tr { grid-template-areas: "k k k vs" "ret bk dd x2"; }
+  .tb-combos .t-k { grid-area: k; min-width: 0; } .tb-combos .t-vs { grid-area: vs; text-align: right; } .tb-combos .t-ret { grid-area: ret; }
+  .tb-combos .t-bk { grid-area: bk; } .tb-combos .t-dd { grid-area: dd; } .tb-combos .t-x2 { grid-area: x2; }
+  .tb-combos .dv { display: none; }
   .tb-rank .nm { display: block; }
   .tb-years { width: 100%; }
   .tb-years .dv { display: none; }
@@ -295,7 +325,7 @@ body[data-view="book"] .over { display: none; }
   .cols .c-vs { display: block; grid-area: vs; }
   .cols .c-ret, .cols .c-idx, .cols .c-vs, .cols .c-day, .cols .c-dd, .cols .c-tr, .cols .c-cost, .cols .c-since,
   .row-a .c-ret, .row-a .c-idx, .row-a .c-day, .row-a .c-dd, .row-a .c-tr, .row-a .c-cost, .row-a .c-since { text-align: right; }
-  .row-a { min-height: 42px; padding: 6px 0; }
+  .row-a { min-height: 38px; padding: 4px 0; }          /* thirteen books still fit a 900-px screen */
   .c > .k { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .c > .v { display: inline; }
   .c-name { flex-wrap: nowrap; }

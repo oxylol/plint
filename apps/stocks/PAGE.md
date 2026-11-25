@@ -91,8 +91,29 @@ Everything in `ModelSummary`, plus:
              "p5": 0.58, "p20": 0.61, "conviction": 0.4, "risks": "…",
              "sources": [{"title": "…", "url": "…"}]}],                    // agent, ≤ 40
   "report": "markdown" | null,                        // the backtest report
-  "by_year": [{"year": 2020, "ret": 0.21, "index": 0.18}] | null
+  "by_year": [{"year": 2020, "ret": 0.21, "index": 0.18}] | null,
+  "copy": null | CopyStudy                            // the copy model only (copytrade/study.py)
 }
+```
+
+`CopyStudy` (the copy study, DESIGN.md "Copy trades"; figures are the design stretch's):
+
+```
+{
+  "made_at": iso, "from": "2019-01-02", "to": "2025-05-13",
+  "counts": {"house_listed": 180, "insider_listed": 640, "ranked": 300, "listed": 820, "paper_reports": 1500, …},
+  "rules": {"top": 10, "lookback_years": 3.0, "min_opened": 10},
+  "people": [{"pid": "house:pelosi:nancy:ca", "name": "Nancy Pelosi", "pool": "house" | "insider",
+              "label": "House, CA" | "CEO at ABT", "ret_ann": 0.21, "vs_index_ann": 0.05, "max_dd": -0.3,
+              "turnover": 1.2, "opened": 34, "copied": 61, "trades": 80, "first": "2019-02-01", "last": "2025-04-02",
+              "lag_days": 24 | null, "ranked": true, "rank": 8}],      // ranked first, best first
+  "now": null | {"start": "2026-07-01", "from": "2023-06-29", "to": "2026-06-30", "eligible": 61,
+                 "people": [{"pid", "name", "pool", "label", "score": 0.21}]},   // whom the live book follows
+  "picks": [{"start": "2019-01-02", "people": ["name", …], "eligible": 48}],      // oldest first
+  "fair": Combo, "hindsight": Combo + {"people": [{"pid", "name", "pool", "label", "vs_index_ann"}]}
+}
+Combo: {"from", "to", "ret_ann", "index_ann", "vs_index_ann", "ci", "sharpe", "max_dd", "turnover", "cost_drag",
+        "basket", "vs_basket", "costs_x2", "costs_x3", "fx", "by_year": […], "curve": [["2019-01-02", 10000.0, 10000.0], …]}
 ```
 
 ## What the page must let him do (the list in .scratch/spec-stocks.md)
@@ -106,3 +127,5 @@ Everything in `ModelSummary`, plus:
 5. For each model: the backtest in a few figures, the exam beside it, and the report to read in full.
 6. Know at a glance what is missing: a key, the data, a first fit (`phase`, `keys`, `notices`, `state`).
 7. Tell paper from real: this page is paper only, and says so.
+8. The copy book: whom it copies now, the fair combo beside the hindsight one, everyone copied (House members
+   and insiders, with a filter), and whom it followed each half year.

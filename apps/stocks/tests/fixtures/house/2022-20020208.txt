@@ -1,0 +1,27 @@
+Filing ID #20020208
+P t r
+erioDic ranSaction ePort
+Clerk of the House of Representatives • legislative Resource Center • 135 Cannon Building • Washington, DC 20515
+filer information
+name: Hon. Nancy Pelosi
+Status: Member
+State/District: CA12
+tranSactionS
+iD owner asset transaction Date notification amount cap.
+type Date gains >
+$200?
+SP Apple Inc. (AAPl) [ST] S (partial) 12/30/2021 12/30/2021 $500,001 - gfedc
+$1,000,000
+FIlINg STATuS: New
+DESCRIPTION: Contribution of 3,000 shares held personally to the Paul F. Pelosi Endowed Fund at georgetown university.
+SP Apple Inc. (AAPl) [ST] S (partial) 12/30/2021 12/30/2021 $500,001 - gfedc
+$1,000,000
+FIlINg STATuS: New
+DESCRIPTION: Contribution of 3,000 shares held personally to Trinity College.
+* For the complete list of asset type abbreviations, please visit https://fd.house.gov/reference/asset-type-codes.aspx.
+initial Public offeringS
+nmlkj Yes nmlkji No
+certification anD Signature
+gfedcb I CERTIFY that the statements I have made on the attached Periodic Transaction Report are true, complete, and correct to the
+best of my knowledge and belief. Further, I CERTIFY that I have disclosed all transactions as required by the STOCK Act.
+Digitally Signed: Hon. Nancy Pelosi , 01/12/2022

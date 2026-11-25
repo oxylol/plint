@@ -394,7 +394,7 @@
     return o;
   }
   function model(id) { var a = order().all; for (var i = 0; i < a.length; i++) if (txt(a[i].id) === id) return a[i]; return null; }
-  var KIND = { index: "the bar", rule: "rule", learned: "learned", agent: "agent" };
+  var KIND = { index: "the bar", rule: "rule", learned: "learned", agent: "agent", copy: "copies trades" };
   function kindWord(m) { return pick(KIND, m.kind) || txt(m.kind); }
   /* why a model is not running, in the engine's own words */
   function stateWords(m) {
@@ -1123,6 +1123,101 @@
     ], "w");
   }
 
+  /* ── the copy study: who it follows, the two combos, everyone copied (d.copy, PAGE.md) ──────────────────── */
+
+  function who(x) { return [h("b", { class: "pn" }, txt(x.name) || DASH), txt(x.label) ? h("span", { class: "nm" }, " " + txt(x.label)) : null]; }
+
+  function copyNowSec(c) {
+    var now = obj(c.now), ps = arr(now.people).filter(function (x) { return x && typeof x === "object"; });
+    var note = ymd(now.start) ? "since " + dayText(now.start, true) : null;
+    return sec("copynow", "Who it copies", "КОГО", note, ps.length ? [
+      h("p", { class: "cap" }, "The " + plural(ps.length, "person", "people") + " whose copied trades did best against the index from ",
+        dayText(now.from, true), " to ", dayText(now.to, true), ", out of " + (isNum(now.eligible) ? plain(now.eligible, 0) : "the") +
+        " who traded enough to be picked. Each has a tenth of the book; it picks again every January and July."),
+      table("copynow", [["n", "#"], ["who", "Who"], ["vs", "vs index a year", true]], ps.map(function (x, i) {
+        return [count(i + 1), who(x), pct(x.score, { tone: true })];
+      }))
+    ] : empty("Nobody qualified for this half year: the book waits in the index fund."), "w");
+  }
+
+  function combosSec(c) {
+    var f = obj(c.fair), hs = obj(c.hindsight), rows = [], scale = 0;
+    function add(label, x, note) { rows.push([label, note, x]); }
+    add("Fair", f, "re-picked every half year from the three years before: what could have been done then");
+    add("Hindsight", hs, "the ten best over the whole stretch, picked after seeing it");
+    rows.forEach(function (r) { if (isNum(r[2].vs_index_ann)) scale = Math.max(scale, Math.abs(r[2].vs_index_ann)); });
+    var charts = [];
+    [[f, "fair combo"], [hs, "hindsight combo"]].forEach(function (pair) {
+      var cv = arr(pair[0].curve).filter(function (r) { return Array.isArray(r) && ymd(r[0]); });
+      if (cv.length > 2) charts.push(h("div", { class: "cmb-c" }, h("h4", { class: "sub" }, "The " + pair[1] + " against the index"),
+        curveChart(cv, { label: "The " + pair[1] + " against the index, backtest", start: cv[0][1], nameA: pair[1], nameB: "index" })));
+    });
+    return sec("combos", "Fair or hindsight", "СРАВНЕНИЕ", span(f.from, f.to, true) || null, [
+      h("p", { class: "cap" }, "Both combos copy each trade the evening it was made public, filled at the next open, with costs. The hindsight one is bound to look good: the best ten of many, picked afterwards, always do. Only the fair one could have been followed."),
+      table("combos", [["k", "Combo"], ["ret", "A year", true], ["vs", "vs index", true], ["bk", "vs basket", true], ["dd", "Worst drop", true], ["x2", "Costs " + TIMES + "2", true]],
+        rows.map(function (r) {
+          var x = r[2];
+          return [[h("b", null, r[0]), h("span", { class: "why" }, " " + r[1])], pct(x.ret_ann, { tone: true }),
+            [pct(x.vs_index_ann, { tone: true }), sides(x.vs_index_ann, scale)], pct(x.vs_basket, { tone: true }), pct(x.max_dd), pct(x.costs_x2, { tone: true })];
+        })),
+      arr(hs.people).length ? h("p", { class: "cap" }, h("b", null, "Hindsight's ten: "), arr(hs.people).map(function (x) { return txt(x.name); }).filter(Boolean).join(", ") + ".") : null,
+      charts.length ? h("div", { class: "cmb" }, charts) : null
+    ], "w");
+  }
+
+  function peopleSec(c) {
+    var all = arr(c.people).filter(function (x) { return x && typeof x === "object"; }), n = obj(c.counts);
+    var box = h("div", { class: "ppl" }), k = "people", lag = all.some(function (x) { return isNum(x.lag_days); });
+    function rowsFor(pool) {
+      var list = all.filter(function (x) { return pool === "all" || x.pool === pool; });
+      var cols = [["rk", "#", true], ["who", "Who"], ["vs", "vs index a year", true], ["ret", "A year", true], ["op", "Positions", true], ["yr", "Copied"]];
+      if (lag) cols.push(["lag", "Days late", true]);
+      return table("people", cols, list.map(function (x) {
+        var r = [x.ranked && isNum(x.rank) ? count(x.rank) : h("span", { class: "nil", title: "too few positions to rank" }, DASH),
+          [who(x), x.ranked ? null : h("span", { class: "why" }, " too few positions to rank")],
+          pct(x.vs_index_ann, { tone: true }), pct(x.ret_ann, { tone: true }), count(x.opened), span(x.first, x.last, true) || nil()];
+        if (lag) r.push(isNum(x.lag_days) ? count(x.lag_days) : nil());
+        return r;
+      }), { more: "people:" + pool, noun: "people" });
+    }
+    function show() {
+      var pool = S.ui.pool || "all";
+      fill(box, rowsFor(pool));
+      chips.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-pool") === pool ? "true" : "false"); });
+    }
+    var counts = { all: all.length, house: all.filter(function (x) { return x.pool === "house"; }).length };
+    counts.insider = all.length - counts.house;
+    var chips = [["all", "Everyone"], ["house", "House"], ["insider", "Insiders"]].map(function (p) {
+      var b = h("button", { type: "button", class: "seg", "data-pool": p[0], "data-k": "pool:" + p[0] }, p[1] + " " + counts[p[0]]);
+      b.addEventListener("click", function () { S.ui.pool = p[0]; show(); });
+      return b;
+    });
+    show();
+    var said = (isNum(n.house_listed) ? plain(n.house_listed, 0) + " House members and " : "") + (isNum(n.insider_listed) ? plain(n.insider_listed, 0) + " company insiders" : "");
+    return sec(k, "Everyone copied", "ВСЕ", said || null, [
+      h("p", { class: "cap" }, "What copying each person would have made against the index over the backtest, a year, costs in, each trade copied the evening it was made public. Ranked when their copies opened at least " + (isNum(obj(c.rules).min_opened) ? plain(c.rules.min_opened, 0) : "ten") + " positions (an insider, who trades one company: that many purchases). Days late: from a House member's trade to the report, the median." +
+        (isNum(n.insiders_with_trades) && isNum(n.insider_listed) && n.insiders_with_trades > n.insider_listed ? " Insiders are listed when ranked; " + plain(n.insiders_with_trades - n.insider_listed, 0) + " more bought in the stretch, too seldom to rank." : "")),
+      h("div", { class: "segs", role: "group", "aria-label": "Whose trades" }, chips),
+      box
+    ], "w");
+  }
+
+  function picksSec(c) {
+    var ps = arr(c.picks).filter(function (x) { return x && typeof x === "object"; }).slice().reverse();
+    if (!ps.length) return null;
+    return sec("picks", "Who it followed", "ИСТОРИЯ", plural(ps.length, "half year"), [
+      table("picks", [["date", "From"], ["who", "People"], ["el", "Choice of", true]], ps.map(function (x) {
+        return [day(x.start, true), h("span", { class: "why" }, arr(x.people).map(txt).filter(Boolean).join(", ") || "nobody qualified"), count(x.eligible)];
+      }), { more: "picks", noun: "half years" })
+    ], "w");
+  }
+
+  function copySecs(d) {
+    var c = d && d.copy && typeof d.copy === "object" ? d.copy : null;
+    if (!c) return [];
+    return [copyNowSec(c), combosSec(c), peopleSec(c), picksSec(c)];
+  }
+
   function paintBook(reading) {
     var box = $("detail"), id = S.open;
     S.charts = [];
@@ -1154,6 +1249,7 @@
         if (rec) {
           if (isAgent) body.push(spendSec(), verdictSec(m), curveSec(m, d), memoSec(d));
           else body.push(curveSec(m, d), verdictSec(m));
+          body = body.concat(copySecs(d));                  /* the copy book: who it follows comes before what it holds */
           body.push(pendingSec(m, d), todaySec(d), historySec(m, d), positionsSec(m, d), tradesSec(m, d));
           if (isAgent) body.push(readsSec(m, d));
           body.push(signalsSec(m, d), backtestSec(m, d));
@@ -1161,6 +1257,7 @@
           if (isAgent) body.push(spendSec());
           body.push(sec("record", "Record", "ЗАПИСЬ", null, empty("No record yet. Its book opens when it starts to trade.")));
           if (isAgent || m.backtest) body.push(backtestSec(m, d));
+          body = body.concat(copySecs(d));
         }
         kids.push(h("div", { class: "bk-body" }, body));
       }

@@ -5,6 +5,7 @@
     python -m stocks research        fit walk-forward, replay history, write the reports (design stretch)
     python -m stocks research --exam the stretch held back; counted every time it is run
     python -m stocks research --only drift,insiders   just these (nothing is fitted unless a learned model is named)
+    python -m stocks copy            the copy study: House reports, every person's copy book, the picks, the combos
     python -m stocks fit             fit the learned models on everything known now
     python -m stocks review          the agent's weekly look at its own record
     python -m stocks filings         read the SEC now: the ten years of history if not yet in, then the last days
@@ -28,7 +29,7 @@ from .config import Config
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="stocks", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", nargs="?", default="serve",
-                    choices=["serve", "run", "research", "fit", "review", "filings", "universe", "status", "reset", "variant"])
+                    choices=["serve", "run", "research", "copy", "fit", "review", "filings", "universe", "status", "reset", "variant"])
     ap.add_argument("arg", nargs="?")
     ap.add_argument("--exam", action="store_true")
     ap.add_argument("--only", default="", help="research: only these models, comma separated")
@@ -73,6 +74,12 @@ def main(argv: list[str] | None = None) -> int:
                            only=tuple(x for x in a.only.replace(",", " ").split() if x))
         lab.doing(None)
         print(json.dumps(out, indent=1))
+        return 0
+    if a.command == "copy":
+        from .copytrade import study
+        out = study.run(lab, say=lambda t: (print(t, flush=True), lab.doing(t)))
+        lab.doing(None)
+        print(json.dumps(out, indent=1, default=str))
         return 0
     if a.command == "fit":
         from . import research

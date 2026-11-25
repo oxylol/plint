@@ -1,0 +1,46 @@
+Filing ID #20012685
+P t r
+erioDic ranSaction ePort
+Clerk of the House of Representatives • Legislative Resource Center • 135 Cannon building • Washington, DC 20515
+filer information
+name: Hon. Nicholas Van Taylor
+Status: Member
+State/District: TX03
+tranSactionS
+iD owner asset transaction Date notification amount cap.
+type Date gains >
+$200?
+Exxon Mobil Corporation (XoM) S 11/07/2019 11/07/2019 $1,001 - $15,000 gfedcb
+[ST]
+FILING STaTUS: New
+SUbHoLDING oF: Vananne Holdings LLC GP > Dagger Management LP > Leonidas Capital, LP
+DESCRIPTIoN: Exxon Mobil Corporation (XoM), Strike Price $75, EXP 01/17/2020, Call option
+Exxon Mobil Corporation (XoM) S 11/19/2019 11/19/2019 $1,001 - $15,000 gfedcb
+[ST]
+FILING STaTUS: New
+SUbHoLDING oF: Vananne Holdings LLC GP > Dagger Management LP > Leonidas Capital, LP
+DESCRIPTIoN: Exxon Mobil Corporation (XoM), Strike Price $72, EXP 12/20/2019, Call option
+Exxon Mobil Corporation (XoM) S 11/25/2019 11/25/2019 $1,001 - $15,000 gfedcb
+[ST]
+FILING STaTUS: New
+SUbHoLDING oF: Vananne Holdings LLC GP > Dagger Management LP > Leonidas Capital, LP
+DESCRIPTIoN: Exxon Mobil Corporation (XoM), Strike Price $75, EXP 02/21/2020, Call option
+Exxon Mobil Corporation (XoM) P 11/07/2019 11/07/2019 $1,001 - $15,000 gfedc
+[ST]
+FILING STaTUS: New
+SUbHoLDING oF: Vananne Holdings LLC GP > Dagger Management LP > Leonidas Capital, LP
+DESCRIPTIoN: Exxon Mobil Corporation (XoM), Strike Price of $72, EXP 11/08/19, Call option
+* For the complete list of asset type abbreviations, please visit https://fd.house.gov/reference/asset-type-codes.aspx.
+aSSet claSS DetailS
+Vananne Holdings LLC GP
+LoCaTIoN: US
+Vananne Holdings LLC GP ⇒ Dagger Management LP
+LoCaTIoN: US
+Vananne Holdings LLC GP ⇒ Dagger Management LP ⇒ Leonidas Capital, LP
+LoCaTIoN: US
+initial Public offeringS
+nmlkj Yes nmlkji No
+certification anD Signature
+gfedcb I CERTIFY that the statements I have made on the attached Periodic Transaction Report are true, complete, and correct to the
+best of my knowledge and belief.
+Digitally Signed: Hon. Nicholas Van Taylor , 12/09/2019

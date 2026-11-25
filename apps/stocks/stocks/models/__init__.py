@@ -6,12 +6,13 @@ from .base import Env, Model, ScoreModel
 from .events import Drift, Insiders
 from .learned import Blend, Net, NetFast, Ridge, Trees
 from .rules import Index, Momentum, Reversal, Trend
+from ..copytrade.model import Copy
 
 # the order the page lists them in when nothing else decides
-CLASSES = (Index, Net, NetFast, Trees, Ridge, Blend, Momentum, Reversal, Drift, Insiders, Trend)
+CLASSES = (Index, Net, NetFast, Trees, Ridge, Blend, Momentum, Reversal, Drift, Insiders, Copy, Trend)
 AGENT = {"id": "agent", "title": "API agent", "kind": "agent",
          "what": "Claude reads the day's filings and news, writes a memo and trades at most four names a day, on $200 a month."}
-ORDER = ("index", "net", "netfast", "trees", "ridge", "blend", "agent", "momentum", "reversal", "drift", "insiders", "trend")
+ORDER = ("index", "net", "netfast", "trees", "ridge", "blend", "agent", "momentum", "reversal", "drift", "insiders", "copy", "trend")
 
 
 def build(enabled: tuple[str, ...] = ()) -> list[Model]:

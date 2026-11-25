@@ -20,7 +20,7 @@ SUMMARY_KEYS = ("id", "title", "kind", "what", "state", "state_text", "since", "
                 "vs_index", "day_ret", "day_vs_index", "max_dd", "n_pos", "cash", "trades", "costs", "turnover",
                 "verdict", "spark", "spark_index", "backtest")
 DETAIL_KEYS = ("curve", "positions", "pending", "trades", "today", "ranking_history", "signals", "memo", "reads",
-               "report", "by_year")
+               "report", "by_year", "copy")
 
 
 def index_curve(panel: Panel, index_symbol: str, t0: int, start: float) -> np.ndarray:
@@ -114,6 +114,8 @@ def model_json(meta: dict, rec: Record | None, panel: Panel | None, index_symbol
             d["today"] = {"date": dates[-1], "note": today_note,
                           "top": [row(i, sym, v) for i, (sym, v) in enumerate(ranked[:12])],
                           "bottom": [row(n - 1 - i, sym, v) for i, (sym, v) in enumerate(reversed(ranked[-8:]))]}
+    if mid == "copy":
+        d["copy"] = store.read_json("copy/study.json")
     if meta["kind"] == "agent":
         memo = store.memo(mid)
         if memo:

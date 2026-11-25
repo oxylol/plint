@@ -275,6 +275,12 @@ code { font: inherit; padding: 0 4px; box-shadow: inset 0 0 0 1px var(--p-faint)
   .tb-positions td, .tb-trades td, .tb-pending td, .tb-signals td { border-top: 0; }
   .tb-trades .t-date .dt, .tb-signals .t-date .dt { font: 400 9.5px/1.7 var(--p-font); letter-spacing: 0.14em; text-transform: uppercase; color: var(--p-ink2); }
 }
+/* whose trades: a row of keys, the one pressed in inverse video */
+.seg { font: 600 10px/1 var(--p-font); letter-spacing: 0.16em; text-transform: uppercase; box-shadow: inset 0 0 0 1px var(--p-ink2); }
+.seg[aria-pressed="true"] { background: var(--p-ink); color: var(--p-bg); box-shadow: none; }
+@media (hover: hover) and (pointer: fine) { .seg:hover { box-shadow: inset 0 0 0 1px var(--p-ink); } }
+.pn { font-weight: 600; }
+
 /* a block cut like the mark, outlined: show more, show fewer */
 .more {
   position: relative; isolation: isolate; background: var(--p-ink); color: var(--p-ink); clip-path: var(--p-cut);

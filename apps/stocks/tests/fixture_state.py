@@ -39,8 +39,66 @@ MODELS = [
     ("reversal", "Reversal", "rule", "Buys last week's hardest-hit stocks and holds them about a week.", -0.5, 5),
     ("drift", "After-earnings drift", "rule", "Buys a stock the day after a strong earnings reaction and holds it eight weeks.", 0.5, 20),
     ("insiders", "Insider buying", "rule", "Buys when two or more of a company's own officers buy its shares on the open market.", -0.1, 20),
+    ("copy", "Copy the best ten", "copy", "Copies the ten House members and company insiders whose disclosed trades did best against the "
+     "index over the three years before, re-picked every January and July.", 0.3, None),
     ("trend", "Trend filter", "rule", "Holds the index fund while it is above its 200-day average, otherwise Treasury bills.", -0.2, None),
 ]
+GIVEN = ["Nancy", "Josh", "Michael", "Ro", "Dan", "Marjorie", "Tommy", "Debbie", "Kevin", "Shri", "Virginia", "Suzan", "Earl",
+         "Pete", "Kathy", "Mark", "Lois", "Rick", "Zoe", "Brian"]
+FAMILY = ["Pelosi", "Gottheimer", "McCaul", "Khanna", "Crenshaw", "Greene", "Tuberville", "Wasserman Schultz", "Hern", "Thanedar",
+          "Foxx", "DelBene", "Blumenauer", "Sessions", "Manning", "Green", "Frankel", "Larsen", "Lofgren", "Fitzpatrick"]
+STATES = ["CA", "NJ", "TX", "CA", "TX", "GA", "AL", "FL", "OK", "MI", "NC", "WA", "OR", "TX", "NC", "TN", "FL", "WA", "CA", "PA"]
+
+
+def copy_study(r: random.Random, days: list[str]) -> dict:
+    """The copy model's study block (PAGE.md, /api/model/copy → copy): people, the picks, both combos."""
+    people = []
+    for i in range(150):
+        if i % 4 == 3:
+            sym = r.choice(SYMS)
+            p = {"pid": f"in:OWNER {i}|{sym}", "name": f"{r.choice(GIVEN)} {r.choice(FAMILY)}", "pool": "insider",
+                 "label": r.choice(["CEO", "Director", "CFO", "10 % holder"]) + f" at {sym}"}
+        else:
+            k = i % 20
+            p = {"pid": f"house:{FAMILY[k].lower()}:{GIVEN[(i * 7) % 20].lower()}:{STATES[k].lower()}",
+                 "name": f"{GIVEN[(i * 7) % 20]} {FAMILY[k]}" + ("" if i < 20 else f" {i}"), "pool": "house", "label": f"House, {STATES[k]}"}
+        opened = r.randrange(1, 90)
+        vs = round(r.gauss(-0.01, 0.06), 4)
+        p.update({"ret_ann": round(0.128 + vs, 4), "vs_index_ann": vs, "max_dd": round(-0.2 - r.random() * 0.3, 3),
+                  "turnover": round(r.uniform(0.2, 4), 2), "opened": opened, "copied": opened + r.randrange(0, 40),
+                  "trades": opened + r.randrange(0, 60), "first": f"{r.randrange(2019, 2022)}-0{r.randrange(1, 9)}-1{r.randrange(0, 9)}",
+                  "last": f"{r.randrange(2023, 2026)}-0{r.randrange(1, 9)}-2{r.randrange(0, 8)}",
+                  "lag_days": float(r.randrange(8, 44)) if p["pool"] == "house" else None, "ranked": opened >= 10})
+        people.append(p)
+    people.sort(key=lambda x: (not x["ranked"], -x["vs_index_ann"]))
+    for i, x in enumerate(x for x in people if x["ranked"]):
+        x["rank"] = i + 1
+    ranked = [x for x in people if x["ranked"]]
+    now = [{"pid": x["pid"], "name": x["name"], "pool": x["pool"], "label": x["label"], "score": round(0.21 - i * 0.012, 4)}
+           for i, x in enumerate(r.sample(ranked, 10))]
+    picks = [{"start": f"{y}-{'01-02' if h == 1 else '07-01'}", "people": [x["name"] for x in r.sample(ranked, 10)],
+              "eligible": r.randrange(40, 90)} for y in range(2019, 2027) for h in (1, 7)]
+    def combo(edge: float) -> dict:
+        idx, curve, a, b = 0.162, [], 10000.0, 10000.0
+        for k in range(0, 1600, 5):
+            curve.append([f"{2019 + k // 252}-{1 + (k % 252) // 21:02d}-15", round(a, 2), round(b, 2)])
+            a *= 1 + r.gauss(0.0006 + edge / 252, 0.012) * 5 ** 0.5 / 2.2
+            b *= 1 + r.gauss(0.0006, 0.011) * 5 ** 0.5 / 2.2
+        return {"from": "2019-01-02", "to": "2025-05-13", "ret_ann": round(idx + edge, 4), "index_ann": idx, "vs_index_ann": edge,
+                "ci": [round(edge - 0.06, 4), round(edge + 0.06, 4)], "sharpe": 0.8, "max_dd": -0.31, "turnover": 3.1, "cost_drag": 0.004,
+                "basket": 0.134, "vs_basket": round(idx + edge - 0.134, 4), "costs_x2": round(edge - 0.004, 4), "costs_x3": round(edge - 0.008, 4),
+                "fx": round(edge - 0.01, 4), "by_year": [], "curve": curve}
+    hind = combo(0.183)
+    hind["people"] = [{"pid": x["pid"], "name": x["name"], "pool": x["pool"], "label": x["label"], "vs_index_ann": x["vs_index_ann"]}
+                      for x in ranked[:10]]
+    house = [x for x in people if x["pool"] == "house"]
+    return {"made_at": "2026-11-13T23:10:00+00:00", "from": "2019-01-02", "to": "2025-05-13",
+            "counts": {"house_people": 288, "insider_people": 9520, "insiders_with_trades": 4210, "people_with_books": 2130, "ranked": len(ranked), "listed": len(people),
+                       "house_listed": len(house), "insider_listed": len(people) - len(house),
+                       "house_ranked": sum(x["ranked"] for x in house), "paper_reports": 1520},
+            "rules": {"top": 10, "lookback_years": 3.0, "min_opened": 10}, "people": people,
+            "now": {"start": "2026-07-01", "from": "2023-06-29", "to": "2026-06-30", "eligible": 61, "people": now},
+            "picks": picks, "fair": combo(-0.021), "hindsight": hind}
 
 
 def bdays(end: date, n: int) -> list[str]:
@@ -106,7 +164,7 @@ def build(seed: int = 7, ndays: int = 46):
             dd = min(dd, v / peak - 1)
         ret, iret = curve[-1] - 1, index_curve[-1] - 1
         scored = max(0, ndays - (horizon or 5) - 1)
-        if kind in ("index",) or mid == "trend":
+        if kind in ("index", "copy") or mid == "trend":
             verdict = None
         else:
             ic = 0.003 + edge * 0.011 + r.gauss(0, 0.003)
@@ -209,6 +267,10 @@ def build(seed: int = 7, ndays: int = 46):
                                 "risks": "One customer is 22 % of backlog.",
                                 "sources": [{"title": "Form 8-K, 13 Nov 2026", "url": "https://www.sec.gov/Archives/edgar/data/0000000/example.htm"}]}
                                for s in r.sample(SYMS, 6)]
+        if mid == "copy":
+            detail["copy"] = copy_study(r, days)
+            for p in detail["positions"]:
+                p["why"] = "Nancy Pelosi: bought $32,500, reported 2026-11-10"
         summaries.append(summary)
         details[mid] = detail
     spend = {"month": "2026-11", "used": 61.37, "cap": 200.0, "today": 5.84, "calls": 4312, "stopped": None,

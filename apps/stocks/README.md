@@ -7,6 +7,12 @@ money. One run per US trading day after the close; what a model decides is fille
 
 Why it is built the way it is: `DESIGN.md`. The page and its JSON: `PAGE.md`.
 
+**Copy trades** (`copy`, since 2026-11-25): copies the disclosed trades of House members (their STOCK Act
+reports, read from the Clerk's site) and company insiders (Form 4 purchases), each the evening it was made
+public. The study ranks everyone, compares a fair combo (re-picked every January and July from the three years
+before) with the hindsight best ten, and the fair one trades on paper. It runs by itself the first time (an
+hour or two: about 5,000 reports) and again before each half year. Rules: `DESIGN.md`, "Copy trades".
+
 ## Keys (in `/opt/plint/.env`, then `plint up stocks`)
 
 | key | for | without it |
@@ -41,6 +47,7 @@ docker exec stocks python -m stocks status            keys, data, books, spend
 docker exec stocks python -m stocks run               one evening run now
 docker exec stocks python -m stocks research          the design-stretch backtests again
 docker exec stocks python -m stocks research --exam   the held-back stretch (counted every time)
+docker exec stocks python -m stocks copy              the copy study: House reports, every person's copy book, the picks
 docker exec stocks python -m stocks fit               refit the learned models now
 docker exec stocks python -m stocks filings           read the SEC now (the ten years of history first, if not in)
 docker exec stocks python -m stocks review            the agent's weekly look at its own record, now
@@ -60,6 +67,7 @@ stocks/
   features.py                       the 56 figures the learned models read
   book.py  portfolio.py             the paper book; from a ranking to orders
   models/                           the contestants (rules.py, learned.py, events.py)
+  copytrade/                        copy trades: House reports, the plans, the books, the study
   learn/                            the training table, ridge / trees / net, the walk-forward schedule
   agent/                            the desk: prompts, the model calls, the budget
   sec.py  filings.py  events.py     SEC filings: results days, insider purchases
