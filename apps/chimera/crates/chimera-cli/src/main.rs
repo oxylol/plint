@@ -7,6 +7,7 @@ mod calibrate;
 mod compare;
 mod diagnose;
 mod js;
+mod realism;
 mod render;
 mod wav;
 
@@ -36,6 +37,12 @@ usage: chimera <command> [args] [--float]
                  [--against earlier/score.json]  (score.json: distance to the singer, and the verdict)
   compare tsp    [tsp-dir] [outdir] [--speakers FA,MA,…] [--jobs n] [--dump]
                  [--against earlier/score.json]  (distance to 23 real speakers, phone by phone)
+  realism reference <tsp-dir> <out.json> [--sex male] [--speakers MA,MB,…] [--jobs n]
+                 (what real speakers do, from their recordings and the committed alignment)
+  realism score  <reference.json> [--tuning file.json] [--speakers MH,MI,MJ] [--jobs n] [--json out.json]
+                 [--limit n] [--recordings <tsp-dir> | --renders <dir>] [--times mfa:<aligned-dir>] [--body male]
+                 (how far the voice, or with --recordings a real speaker, is from that reference:
+                 timbre, source, noise, pitch, motion; no aligner, phone times from the plan)
   calibrate vowels     [male|female|child|all] [--missing] [--out file]
                        (--missing: fit only vowels the table lacks; existing entries stay untouched)
   calibrate consonants [--out file]
@@ -120,6 +127,7 @@ fn run(args: Vec<String>) -> Result<(), String> {
         }
         ["compare", "csd", ..] => compare::csd(&ctx, &args[2..]),
         ["compare", "tsp", ..] => compare::tsp::run(&ctx, &args[2..]),
+        ["realism", ..] => realism::run(&ctx, &args[1..]),
         ["diagnose", ..] => diagnose::run(&ctx, &args[1..]),
         ["syllables", text] => {
             let lang = match args.get(2).map(String::as_str) {

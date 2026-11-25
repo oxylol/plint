@@ -321,8 +321,8 @@ fn align_synth(
 // ---- measuring one voice on one utterance
 
 /// Spectrum frames: 1024 samples (21 ms at 48 kHz), Hann, every 5 ms.
-const FRAME: usize = 1024;
-const HOP: f64 = 0.005;
+pub(crate) const FRAME: usize = 1024;
+pub(crate) const HOP: f64 = 0.005;
 /// Pitch and formants run on a copy decimated 4:1 (48 → 12 kHz).
 const DEC: usize = 4;
 /// Mel bands for the spectrum measure: 60 Hz–10 kHz (fricatives reach well past the singer
@@ -338,7 +338,7 @@ const ALIGN_FLOOR_DB: f64 = -47.0;
 /// Below this many tokens a speaker's category value is left out.
 const MIN_TOKENS: usize = 3;
 
-const VOWELS: [&str; 17] = ["ɑ", "æ", "ʌ", "ə", "ɔ", "aʊ", "aɪ", "ɛ", "ɝ", "ɚ", "eɪ", "ɪ", "i", "oʊ", "ɔɪ", "ʊ", "u"];
+pub(crate) const VOWELS: [&str; 17] = ["ɑ", "æ", "ʌ", "ə", "ɔ", "aʊ", "aɪ", "ɛ", "ɝ", "ɚ", "eɪ", "ɪ", "i", "oʊ", "ɔɪ", "ʊ", "u"];
 /// vowels whose F1 and F2 are measured: the stressable monophthongs (diphthongs move, and
 /// /ə ɚ/ only occur reduced)
 const MONOPHTHONGS: [&str; 10] = ["i", "ɪ", "ɛ", "æ", "ɑ", "ɔ", "ʌ", "ʊ", "u", "ɝ"];
@@ -350,19 +350,19 @@ const CONSONANTS: [&str; 23] = [
     "p", "t", "k", "b", "d", "g", "tʃ", "dʒ", "f", "v", "θ", "ð", "s", "z", "ʃ", "h", "m", "n", "ŋ", "l", "ɹ", "w", "j",
 ];
 
-fn is_vowel(ipa: &str) -> bool {
+pub(crate) fn is_vowel(ipa: &str) -> bool {
     VOWELS.contains(&ipa)
 }
 
-fn db(ms: f64) -> f64 {
+pub(crate) fn db(ms: f64) -> f64 {
     10.0 * (ms + 1e-30).log10()
 }
 
-fn mean_square(x: &[f64]) -> f64 {
+pub(crate) fn mean_square(x: &[f64]) -> f64 {
     if x.is_empty() { f64::NAN } else { x.iter().map(|v| v * v).sum::<f64>() / x.len() as f64 }
 }
 
-fn percentile(xs: &[f64], q: f64) -> f64 {
+pub(crate) fn percentile(xs: &[f64], q: f64) -> f64 {
     let mut s: Vec<f64> = xs.iter().copied().filter(|x| x.is_finite()).collect();
     if s.is_empty() {
         return f64::NAN;
@@ -420,17 +420,17 @@ const VOICELESS_OBSTRUENTS: [&str; 9] = ["p", "t", "k", "f", "θ", "s", "ʃ", "t
 const VOICED_OBSTRUENTS: [&str; 8] = ["b", "d", "g", "v", "ð", "z", "ʒ", "dʒ"];
 
 /// One voice's signal, prepared once per utterance.
-struct Sig<'a> {
-    x: &'a [f64],
-    fs: f64,
+pub(crate) struct Sig<'a> {
+    pub(crate) x: &'a [f64],
+    pub(crate) fs: f64,
     /// 4:1 decimated copy (12 kHz), for formants
     lo: Vec<f64>,
     /// mean-square noise floor: the 5th percentile of 20 ms frames (0 for a render's silence)
-    noise: f64,
+    pub(crate) noise: f64,
     /// f0 every 10 ms (frame i centred at i·10 ms), 0 when unvoiced: YIN on the band below
     /// 1.2 kHz (3 kHz copy), where voicing is strong and frication weak, so a voiced fricative
     /// or a voice bar reads as voiced
-    f0: Vec<f64>,
+    pub(crate) f0: Vec<f64>,
 }
 
 /// Windowed-sinc low-pass (95 taps, Blackman; cutoff as a fraction of the input rate) and keep
@@ -463,7 +463,7 @@ fn decimate(x: &[f64], fc: f64) -> Vec<f64> {
 }
 
 impl<'a> Sig<'a> {
-    fn new(x: &'a [f64], fs: f64, female: bool) -> Self {
+    pub(crate) fn new(x: &'a [f64], fs: f64, female: bool) -> Self {
         let lo = decimate(x, 5400.0 / fs);
         let band = decimate(&lo, 1200.0 / (fs / DEC as f64));
         let fs_band = fs / (DEC * DEC) as f64;
@@ -492,20 +492,20 @@ impl<'a> Sig<'a> {
         Sig { x, fs, lo, noise, f0 }
     }
 
-    fn slice(&self, a: f64, b: f64) -> &[f64] {
+    pub(crate) fn slice(&self, a: f64, b: f64) -> &[f64] {
         let (i, j) = ((a * self.fs).max(0.0) as usize, ((b * self.fs) as usize).min(self.x.len()));
         if i < j { &self.x[i..j] } else { &[] }
     }
 
     /// The middle half of a phone, at least its centre 10 ms.
-    fn middle(p: &Phone) -> (f64, f64) {
+    pub(crate) fn middle(p: &Phone) -> (f64, f64) {
         let (c, d) = (0.5 * (p.t0 + p.t1), p.t1 - p.t0);
         let half = (0.25 * d).max(0.005);
         (c - half, c + half)
     }
 
     /// Power spectrum averaged over frames centred every HOP in [a, b].
-    fn spectrum(&self, fft: &Fft, win: &[f64], a: f64, b: f64) -> Option<Vec<f64>> {
+    pub(crate) fn spectrum(&self, fft: &Fft, win: &[f64], a: f64, b: f64) -> Option<Vec<f64>> {
         let mut acc = vec![0.0; FRAME / 2 + 1];
         let mut count = 0;
         let mut t = a;
@@ -549,7 +549,7 @@ impl<'a> Sig<'a> {
 
     /// H1−H2 (dB) at time t: a 43 ms frame (resolving harmonics down to 70 Hz) and the f0 of the
     /// pitch frame there; NaN when unvoiced.
-    fn h1h2(&self, tools: &Tools, t: f64) -> f64 {
+    pub(crate) fn h1h2(&self, tools: &Tools, t: f64) -> f64 {
         let f0 = self.f0.get((t / 0.01).round() as usize).copied().unwrap_or(0.0);
         let n = tools.long.n;
         let c = (t * self.fs) as isize - (n / 2) as isize;
@@ -577,7 +577,7 @@ impl<'a> Sig<'a> {
 
 /// Level (dB) of the harmonic near `hz` in a power spectrum with bins `bin` Hz apart: the
 /// strongest bin within ±3 % (at least ±2 bins), refined by a parabola (as the singer judge's).
-fn harmonic_db(p: &[f64], bin: f64, hz: f64) -> f64 {
+pub(crate) fn harmonic_db(p: &[f64], bin: f64, hz: f64) -> f64 {
     let half = (0.03 * hz / bin).max(2.0);
     let (lo, hi) = (((hz / bin - half).floor().max(1.0)) as usize, ((hz / bin + half).ceil()) as usize);
     if hi + 1 >= p.len() {
@@ -590,7 +590,7 @@ fn harmonic_db(p: &[f64], bin: f64, hz: f64) -> f64 {
 }
 
 /// Mel filterbank over FRAME-point FFT bins at `fs`: N_MEL triangles, 60 Hz–MEL_HI.
-fn mel_bank(fs: f64) -> Vec<Vec<(usize, f64)>> {
+pub(crate) fn mel_bank(fs: f64) -> Vec<Vec<(usize, f64)>> {
     let bin = fs / FRAME as f64;
     let (m0, m1) = (hz_to_mel(60.0), hz_to_mel(MEL_HI));
     let edge = |k: usize| {
@@ -618,24 +618,24 @@ fn mel_bank(fs: f64) -> Vec<Vec<(usize, f64)>> {
 }
 
 /// Shared analysis tables.
-struct Tools {
-    fft: Fft,
-    win: Vec<f64>,
+pub(crate) struct Tools {
+    pub(crate) fft: Fft,
+    pub(crate) win: Vec<f64>,
     /// 2048-point frames for H1−H2
-    long: Fft,
-    long_win: Vec<f64>,
-    mel: Vec<Vec<(usize, f64)>>,
-    fs: f64,
+    pub(crate) long: Fft,
+    pub(crate) long_win: Vec<f64>,
+    pub(crate) mel: Vec<Vec<(usize, f64)>>,
+    pub(crate) fs: f64,
 }
 
 impl Tools {
-    fn new(fs: f64) -> Self {
+    pub(crate) fn new(fs: f64) -> Self {
         Tools { fft: Fft::new(FRAME), win: hann(FRAME), long: Fft::new(2 * FRAME), long_win: hann(2 * FRAME), mel: mel_bank(fs), fs }
     }
 }
 
 /// The singer judge's bands (Hz), each re the 0–8 kHz total.
-const BANDS: [(f64, f64); 5] = [(0.0, 500.0), (500.0, 1000.0), (1000.0, 2000.0), (2000.0, 4000.0), (4000.0, 8000.0)];
+pub(crate) const BANDS: [(f64, f64); 5] = [(0.0, 500.0), (500.0, 1000.0), (1000.0, 2000.0), (2000.0, 4000.0), (4000.0, 8000.0)];
 const BAND_NAMES: [&str; 5] = ["0-.5k", ".5-1k", "1-2k", "2-4k", "4-8k"];
 
 /// Utterance-level measures of one voice.
@@ -1046,7 +1046,7 @@ struct Values {
     ceps: BTreeMap<&'static str, [f64; N_CEP]>,
 }
 
-fn cepstrum(logmel: &[f64; N_MEL]) -> [f64; N_CEP] {
+pub(crate) fn cepstrum(logmel: &[f64; N_MEL]) -> [f64; N_CEP] {
     // as the singer judge's note cepstrum (a real cepstrum of ln|X|; c0, the level, excluded)
     std::array::from_fn(|q| {
         let q = q + 1;
@@ -1146,7 +1146,7 @@ fn spread_floor(name: &str) -> f64 {
     }
 }
 
-fn mad_sd(xs: &[f64]) -> f64 {
+pub(crate) fn mad_sd(xs: &[f64]) -> f64 {
     let m = median(xs);
     1.4826 * median(&xs.iter().map(|x| (x - m).abs()).collect::<Vec<_>>())
 }

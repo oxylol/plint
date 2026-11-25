@@ -61,7 +61,7 @@ const BANDS: [(f64, f64); 5] = [
     (4000.0, 8000.0),
 ];
 const BAND_NAMES: [&str; 5] = ["0-.5k", ".5-1k", "1-2k", "2-4k", "4-8k"];
-const N_MEL: usize = 40;
+pub(crate) const N_MEL: usize = 40;
 /// pitch frame hop (s)
 const HOP: f64 = 0.005;
 /// shortest unbroken voiced run (s) searched for vibrato
@@ -72,7 +72,7 @@ const VIB_RATE: (f64, f64) = (4.0, 9.0);
 const MAX_MISALIGN: f64 = 0.03;
 /// frames this far (dB) below a signal's loud level count as silent
 const GATE_DB: f64 = 35.0;
-const N_CEP: usize = 13;
+pub(crate) const N_CEP: usize = 13;
 
 /// CSD's phoneme romanisation → engine IPA, and whether it is a vowel.
 fn csd_ipa(sym: &str) -> Option<(&'static str, bool)> {
@@ -328,7 +328,7 @@ fn render_notes(notes: &[Note], body_name: &str, seconds: f64) -> Result<Render,
 }
 
 /// Mono samples and rate of a PCM (16/24/32-bit) or float WAV; channels are averaged.
-fn read_wav(path: &str) -> Result<(Vec<f64>, f64), String> {
+pub(crate) fn read_wav(path: &str) -> Result<(Vec<f64>, f64), String> {
     let b = std::fs::read(path).map_err(|e| format!("{path}: {e}"))?;
     let bad = || format!("{path}: not a WAV file this reader understands");
     if b.len() < 12 || &b[0..4] != b"RIFF" || &b[8..12] != b"WAVE" {
@@ -407,7 +407,7 @@ struct NoteMeas {
     onset: f64,
 }
 
-fn median(xs: &[f64]) -> f64 {
+pub(crate) fn median(xs: &[f64]) -> f64 {
     let mut s: Vec<f64> = xs.iter().copied().filter(|x| x.is_finite()).collect();
     if s.is_empty() {
         return f64::NAN;
@@ -421,7 +421,7 @@ fn median(xs: &[f64]) -> f64 {
     }
 }
 
-fn mean(xs: &[f64]) -> f64 {
+pub(crate) fn mean(xs: &[f64]) -> f64 {
     let s: Vec<f64> = xs.iter().copied().filter(|x| x.is_finite()).collect();
     if s.is_empty() {
         f64::NAN
@@ -776,7 +776,7 @@ fn fx(x: f64, d: usize) -> String {
 }
 
 /// Mel-cepstral distance (dB) between two note cepstra, the usual 10/ln10·√(2Σ(Δc)²).
-fn mcd(a: &[f64; N_CEP], b: &[f64; N_CEP]) -> f64 {
+pub(crate) fn mcd(a: &[f64; N_CEP], b: &[f64; N_CEP]) -> f64 {
     let s: f64 = a.iter().zip(b).map(|(x, y)| (x - y) * (x - y)).sum();
     10.0 / std::f64::consts::LN_10 * (2.0 * s).sqrt()
 }

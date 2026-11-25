@@ -29,6 +29,7 @@ use chimera::phonetics::{Intonation, Plan, Syllable};
 use chimera::tuning::Tuning;
 use chimera::voice::human_voice::{HumanVoice, SCOPE_POINTS, SourcePatch, VoiceTelemetry};
 use std::io::Read;
+use std::sync::OnceLock;
 use std::time::Instant;
 
 /// Render `out.len()` samples in 128-sample blocks, as the tools did.
@@ -130,6 +131,25 @@ mod tuning_tests {
         assert!(read(r#""downstream""#).unwrap_err().contains("downstream"));
         assert!(tuning_file(&path).unwrap_err().contains(&path));
     }
+
+    /// `CHIMERA_TUNING` as its pure half: the variable itself is process-wide and read once, so no
+    /// test sets it.
+    #[test]
+    fn the_tuning_variable_is_nothing_when_unset_or_empty_and_an_error_when_its_file_is_bad() {
+        assert_eq!(tuning_named(None), Ok(None));
+        assert_eq!(tuning_named(Some("")), Ok(None));
+        let path = format!("{}/chimera-tuning-env-test-{}.json", std::env::temp_dir().display(), std::process::id());
+        let missing = tuning_named(Some(&path)).unwrap_err();
+        assert!(missing.contains(TUNING_ENV) && missing.contains(&path), "{missing}");
+        std::fs::write(&path, r#"{"source":{"oqBase":0.7}}"#).unwrap();
+        let named = tuning_named(Some(&path));
+        std::fs::write(&path, r#"{"source":{"oqBaze":0.7}}"#).unwrap();
+        let misspelt = tuning_named(Some(&path));
+        std::fs::remove_file(&path).unwrap();
+        assert_eq!(named.unwrap().unwrap().source.oq_base, 0.7);
+        let misspelt = misspelt.unwrap_err();
+        assert!(misspelt.contains(TUNING_ENV) && misspelt.contains("oqBaze"), "{misspelt}");
+    }
 }
 
 fn ms_since(t: Instant) -> f64 {
@@ -213,10 +233,44 @@ pub fn text_f0(body_name: &str) -> f64 {
     }
 }
 
+/// The environment variable that names a tuning file for the entry points that take no tuning:
+/// [`say`] and [`say_phrases`] (so `chimera compare tsp` and `render turkish`) and `render text`
+/// without `--tuning`. It lets the author's judges score a tuning without being edited
+/// (`tools/plint/judge.sh --tuning`). Unset or empty: the default tuning. Set to a file that is
+/// missing or not a tuning: an error, never the default. An explicit tuning always wins over it:
+/// [`say_with`], [`say_phrases_with`] and `render text --tuning` do not read it.
+pub const TUNING_ENV: &str = "CHIMERA_TUNING";
+
+/// What [`TUNING_ENV`]'s value asks for: nothing when unset or empty, else the file's tuning.
+fn tuning_named(var: Option<&str>) -> Result<Option<Tuning>, String> {
+    match var {
+        None | Some("") => Ok(None),
+        Some(path) => tuning_file(path).map(Some).map_err(|e| format!("{TUNING_ENV}: {e}")),
+    }
+}
+
+/// [`TUNING_ENV`]'s tuning, read and parsed once per process (the judge says 1374 sentences on
+/// several threads).
+fn env_tuning() -> Result<Option<&'static Tuning>, String> {
+    static READ: OnceLock<Result<Option<Tuning>, String>> = OnceLock::new();
+    READ.get_or_init(|| match std::env::var(TUNING_ENV) {
+        Ok(v) => tuning_named(Some(&v)),
+        Err(std::env::VarError::NotPresent) => Ok(None),
+        Err(e) => Err(format!("{TUNING_ENV}: {e}")),
+    })
+    .as_ref()
+    .map(Option::as_ref)
+    .map_err(String::clone)
+}
+
 /// Say `text` the way `render text` does: CMUdict G2P, the phrase planner from t0 = 50 ms, the
 /// body's speaking f0, 300 ms of tail. `chimera compare tsp` measures exactly these renders.
+/// The tuning is the default, or the file [`TUNING_ENV`] names when it is set.
 pub fn say(g: &EnglishG2P, text: &str, body_name: &str) -> Result<Spoken, String> {
-    say_with(g, text, body_name, &Tuning::default())
+    match env_tuning()? {
+        Some(t) => say_with(g, text, body_name, t),
+        None => say_with(g, text, body_name, &Tuning::default()),
+    }
 }
 
 /// [`say`] with the engine's numbers from `tuning`: the voice is built from it and the phrases
@@ -225,9 +279,12 @@ pub fn say_with(g: &EnglishG2P, text: &str, body_name: &str, tuning: &Tuning) ->
     say_phrases_with(&g.to_phrases(text), body_name, tuning)
 }
 
-/// Say phrases from any G2P the way `render text` does (see [`say`]).
+/// Say phrases from any G2P the way `render text` does (see [`say`], [`TUNING_ENV`] included).
 pub fn say_phrases(phrases: &[Phrase], body_name: &str) -> Result<Spoken, String> {
-    say_phrases_with(phrases, body_name, &Tuning::default())
+    match env_tuning()? {
+        Some(t) => say_phrases_with(phrases, body_name, t),
+        None => say_phrases_with(phrases, body_name, &Tuning::default()),
+    }
 }
 
 /// [`say_phrases`] with the engine's numbers from `tuning` (see [`say_with`]).
@@ -286,14 +343,16 @@ pub fn tuning_file(path: &str) -> Result<Tuning, String> {
 
 /// English text through G2P and the phrase planner.
 /// `render text <out> ["Text."] [body] [--tuning file.json]`: `--tuning` says it with the engine's
-/// numbers from a file (see [`tuning_file`]).
+/// numbers from a file (see [`tuning_file`]). Without the flag, the file the environment variable
+/// `CHIMERA_TUNING` names is used when it is set ([`TUNING_ENV`]); the flag wins over the variable,
+/// which is then not read at all.
 pub fn text(ctx: &Ctx, a: &[String]) -> Result<(), String> {
-    let mut tuning = Tuning::default();
+    let mut tuning: Option<Tuning> = None;
     let mut rest = Vec::new();
     let mut it = a.iter();
     while let Some(x) = it.next() {
         if x == "--tuning" {
-            tuning = tuning_file(it.next().ok_or("--tuning needs a file")?)?;
+            tuning = Some(tuning_file(it.next().ok_or("--tuning needs a file")?)?);
         } else {
             rest.push(x.clone());
         }
@@ -304,7 +363,10 @@ pub fn text(ctx: &Ctx, a: &[String]) -> Result<(), String> {
     let body_name = arg(a, 2, "male");
     let g = g2p()?;
     let t = Instant::now();
-    let s = say_with(&g, text, body_name, &tuning)?;
+    let s = match &tuning {
+        Some(tuning) => say_with(&g, text, body_name, tuning)?,
+        None => say(&g, text, body_name)?,
+    };
     let ms = ms_since(t);
     println!("{}", s.shown);
     let file = wav_name(name);
